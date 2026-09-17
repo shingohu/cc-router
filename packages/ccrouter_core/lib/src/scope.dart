@@ -1,6 +1,9 @@
 part of 'runtime.dart';
 
 /// Internal lifecycle state of an instance-owning Scope.
+///
+/// Runtime internals use these states to reject new work as soon as cleanup
+/// begins and to make repeated close operations deterministic.
 enum CCScopeState {
   /// Accepts new resolutions and owns live instances.
   active,
@@ -13,6 +16,10 @@ enum CCScopeState {
 }
 
 /// Owns service instances, cancellation, and disposal for one lifecycle.
+///
+/// The Runtime creates scopes for App and Session lifetimes now, and will use
+/// the same ownership model for Component and Route lifetimes. Business and
+/// component code must not create or close scopes directly.
 final class CCScope {
   /// Creates an active Scope with the stable [id].
   CCScope(this.id);
@@ -45,6 +52,9 @@ final class CCScope {
   CCScopeState get state => _state;
 
   /// Returns a cached instance for [key] or owns a newly created one.
+  ///
+  /// Runtime service resolution uses this to enforce per-Scope singleton and
+  /// transient ownership while detecting recursive construction.
   T resolve<T extends Object>(
     Object key,
     T Function() create, {
@@ -66,6 +76,9 @@ final class CCScope {
   }
 
   /// Adds [instance] to this Scope's disposal ownership.
+  ///
+  /// Runtime construction uses this for newly created transient and cached
+  /// services so [CCDisposable] instances participate in Scope cleanup.
   T own<T extends Object>(T instance) {
     _ensureActive();
     if (instance is CCDisposable &&
@@ -76,6 +89,9 @@ final class CCScope {
   }
 
   /// Cancels owned work and disposes instances in reverse construction order.
+  ///
+  /// Runtime lifecycle transitions call this on Session close and final host
+  /// shutdown; callers must not use it merely because the App is backgrounded.
   Future<void> close({Duration timeout = const Duration(seconds: 5)}) {
     if (_closeFuture != null) return _closeFuture!;
     _state = CCScopeState.closing;

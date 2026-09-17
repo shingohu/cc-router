@@ -1,0 +1,673 @@
+part of 'runtime.dart';
+
+/// Stores a route definition together with its trusted component owner.
+///
+/// The internal registry uses this record to apply component availability and
+/// ownership rules without accepting an owner supplied by component code.
+final class _RegisteredRoute {
+  /// Creates an active route owned by [ownerComponentId].
+  _RegisteredRoute({required this.ownerComponentId, required this.definition});
+
+  /// Component ID captured from the component-bound Registry.
+  final String ownerComponentId;
+
+  /// Type-erased definition retained by the Runtime route table.
+  final CCRouteDefinition<dynamic, dynamic> definition;
+
+  /// Whether navigation may currently resolve this route.
+  bool active = true;
+}
+
+/// Captures parameters and specificity from one successful pattern match.
+///
+/// Pattern-specific matchers use this value before attaching route ownership,
+/// query parameters, and the normalized location to a final candidate.
+final class _PatternMatch {
+  /// Creates immutable match metadata for one route pattern.
+  _PatternMatch({required this.pathParameters, required this.specificity});
+
+  /// Named values captured by a template or regular expression.
+  final Map<String, String> pathParameters;
+
+  /// Specificity within one pattern priority tier.
+  final int specificity;
+}
+
+/// Candidate produced while comparing one URI against an installed pattern.
+final class _RouteCandidate {
+  /// Creates a candidate with deterministic matching metadata.
+  _RouteCandidate({
+    required this.location,
+    required this.priority,
+    required this.specificity,
+  });
+
+  /// Decoded route location returned to the navigation pipeline.
+  final CCRouteLocation location;
+
+  /// Pattern tier, where URI outranks Path and Path outranks Regex.
+  final int priority;
+
+  /// Specificity within [priority].
+  final int specificity;
+}
+
+/// Registers and resolves the Runtime's component-owned route definitions.
+///
+/// This class is kept inside the Runtime library so component ownership and
+/// active-state checks cannot be bypassed by a public route table API.
+/// Component assembly uses it for registration, while navigation adapters use
+/// it for matching and argument decoding.
+final class _RouteRegistry {
+  /// Creates an empty route registry.
+  _RouteRegistry();
+
+  /// Priority assigned to structured absolute-URI patterns.
+  static const int _uriPriority = 3;
+
+  /// Priority assigned to authority-independent path patterns.
+  static const int _pathPriority = 2;
+
+  /// Priority assigned to full regular-expression compatibility patterns.
+  static const int _regexPriority = 1;
+
+  /// Definitions indexed by stable route ID.
+  final Map<String, _RegisteredRoute> _routes = {};
+
+  /// Stable IDs in deterministic order for diagnostics and tests.
+  List<String> get routeIds => _routes.keys.toList()..sort();
+
+  /// Adds [definition] for [ownerComponentId] after static validation.
+  void register<A, R>(
+    String ownerComponentId,
+    CCRouteDefinition<A, R> definition,
+  ) {
+    _validateDefinition(definition);
+    if (_routes.containsKey(definition.routeId)) {
+      throw CCRouteRegistrationError(
+        'Duplicate route ID "${definition.routeId}".',
+      );
+    }
+    final normalized = definition as CCRouteDefinition<dynamic, dynamic>;
+    for (var index = 0; index < normalized.patterns.length; index++) {
+      for (
+        var otherIndex = index + 1;
+        otherIndex < normalized.patterns.length;
+        otherIndex++
+      ) {
+        final pattern = normalized.patterns[index];
+        final other = normalized.patterns[otherIndex];
+        if (_patternsConflict(pattern, other)) {
+          throw CCRouteRegistrationError(
+            'Route "${definition.routeId}" contains ambiguous patterns '
+            '"${_patternLabel(pattern)}" and "${_patternLabel(other)}".',
+          );
+        }
+      }
+    }
+    for (final existing in _routes.values) {
+      for (final existingPattern in existing.definition.patterns) {
+        for (final pattern in normalized.patterns) {
+          if (_patternsConflict(existingPattern, pattern)) {
+            throw CCRouteRegistrationError(
+              'Pattern "${_patternLabel(pattern)}" conflicts with route '
+              '"${existing.definition.routeId}".',
+            );
+          }
+        }
+      }
+    }
+    _routes[definition.routeId] = _RegisteredRoute(
+      ownerComponentId: ownerComponentId,
+      definition: normalized,
+    );
+  }
+
+  /// Decodes a matched [location] through its generated route codec.
+  Object decode(CCRouteLocation location, {Object? extra}) {
+    final route = _routes[location.routeId];
+    if (route == null) throw CCRouteNotFoundError(location.routeId);
+    if (!route.active) throw CCRouteUnavailableError(location.routeId);
+    try {
+      return route.definition.codec.decode(
+            CCEncodedRouteArguments(
+              path: location.pathParameters,
+              query: location.queryParameters,
+              extra: extra,
+            ),
+          )
+          as Object;
+    } on CCRouteParameterError {
+      rethrow;
+    } catch (error) {
+      throw CCRouteParameterError(
+        'Route "${location.routeId}" parameters are invalid: '
+        '${error.runtimeType}.',
+      );
+    }
+  }
+
+  /// Resolves [location] to an active route allowed for external entry.
+  CCRouteLocation resolve(String location, {bool external = false}) {
+    final uri = _parseLocation(location);
+    final candidates = <_RouteCandidate>[];
+    for (final route in _routes.values) {
+      if (external && route.definition.deepLink == CCDeepLinkPolicy.disabled) {
+        continue;
+      }
+      for (final pattern in route.definition.patterns) {
+        final candidate = _matchPattern(route, pattern, uri);
+        if (candidate != null) candidates.add(candidate);
+      }
+    }
+    if (candidates.isEmpty) throw CCRouteNotFoundError(uri.path);
+    candidates.sort(_compareCandidates);
+    final selected = candidates.first;
+    final ambiguous = candidates
+        .takeWhile(
+          (candidate) =>
+              candidate.priority == selected.priority &&
+              candidate.specificity == selected.specificity,
+        )
+        .toList();
+    if (ambiguous.length > 1) {
+      throw CCRouteAmbiguityError(
+        ambiguous.map((candidate) => candidate.location.routeId),
+      );
+    }
+    final route = _routes[selected.location.routeId]!;
+    if (!route.active) {
+      throw CCRouteUnavailableError(selected.location.routeId);
+    }
+    return selected.location;
+  }
+
+  /// Verifies a generated Intent targets an installed active route.
+  void checkIntent(CCRouteIntent<Object?> intent) {
+    final route = _routes[intent.routeId];
+    if (route == null) {
+      throw CCRouteNotFoundError(intent.routeId);
+    }
+    if (!route.active) throw CCRouteUnavailableError(intent.routeId);
+  }
+
+  /// Marks all routes owned by [componentId] unavailable.
+  ///
+  /// Component lifecycle orchestration uses this to reject new navigation; it
+  /// does not remove existing RouteEntries or unload compiled Dart code.
+  void deactivateComponent(String componentId) {
+    for (final route in _routes.values) {
+      if (route.ownerComponentId == componentId) route.active = false;
+    }
+  }
+
+  /// Reactivates all routes owned by [componentId].
+  ///
+  /// Component lifecycle orchestration uses this after the component and its
+  /// adapter bindings are ready to accept new navigation.
+  void activateComponent(String componentId) {
+    for (final route in _routes.values) {
+      if (route.ownerComponentId == componentId) route.active = true;
+    }
+  }
+
+  /// Validates route identity, canonical pattern, visibility, and expressions.
+  void _validateDefinition<A, R>(CCRouteDefinition<A, R> definition) {
+    final routeId = definition.routeId.trim();
+    if (routeId.isEmpty) {
+      throw const CCRouteRegistrationError('Route ID must not be empty.');
+    }
+    if (definition.patterns.isEmpty) {
+      throw CCRouteRegistrationError('Route "$routeId" has no patterns.');
+    }
+    final primary = definition.patterns
+        .where((pattern) => pattern.primary)
+        .toList();
+    if (primary.length != 1) {
+      throw CCRouteRegistrationError(
+        'Route "$routeId" must have exactly one primary pattern.',
+      );
+    }
+    if (primary.single.matchOnly) {
+      throw CCRouteRegistrationError(
+        'Route "$routeId" primary pattern cannot be matchOnly.',
+      );
+    }
+    if (definition.visibility == CCRouteVisibility.component &&
+        definition.visibleTo.isNotEmpty) {
+      throw CCRouteRegistrationError(
+        'Component route "$routeId" cannot declare visibleTo.',
+      );
+    }
+    final seen = <String>{};
+    for (final pattern in definition.patterns) {
+      _validatePattern(routeId, pattern);
+      final key = _patternKey(pattern);
+      if (!seen.add(key)) {
+        throw CCRouteRegistrationError(
+          'Route "$routeId" contains duplicate pattern '
+          '"${_patternLabel(pattern)}".',
+        );
+      }
+    }
+  }
+
+  /// Validates one concrete [pattern] and all expressions it contains.
+  void _validatePattern(String routeId, CCRoutePattern pattern) {
+    switch (pattern) {
+      case CCPathPattern():
+        _validatePathTemplate(
+          routeId,
+          pattern.template,
+          pattern.constraints,
+          kind: 'path',
+        );
+      case CCUriPattern():
+        final uri = _parseUriPattern(routeId, pattern.template);
+        _validatePathTemplate(
+          routeId,
+          uri.path.isEmpty ? '/' : uri.path,
+          pattern.constraints,
+          kind: 'URI path',
+        );
+      case CCRegexPattern():
+        if (pattern.expression.isEmpty) {
+          throw CCRouteRegistrationError(
+            'Route "$routeId" regex must not be empty.',
+          );
+        }
+        try {
+          RegExp('^(?:${pattern.expression})\$');
+        } on FormatException {
+          throw CCRouteRegistrationError(
+            'Route "$routeId" contains an invalid full regex.',
+          );
+        }
+    }
+  }
+
+  /// Validates template syntax, parameter names, and segment constraints.
+  void _validatePathTemplate(
+    String routeId,
+    String template,
+    Map<String, String> constraints, {
+    required String kind,
+  }) {
+    if (!template.startsWith('/')) {
+      throw CCRouteRegistrationError(
+        'Route "$routeId" $kind must start with "/".',
+      );
+    }
+    if (template.contains('?') || template.contains('#')) {
+      throw CCRouteRegistrationError(
+        'Route "$routeId" $kind cannot contain Query or Fragment text.',
+      );
+    }
+    late final List<String> segments;
+    try {
+      segments = _segments(template);
+    } on FormatException {
+      throw CCRouteRegistrationError(
+        'Route "$routeId" contains an invalid $kind template.',
+      );
+    }
+    final names = <String>{};
+    for (var index = 0; index < segments.length; index++) {
+      final segment = segments[index];
+      if (!segment.startsWith(':') && !segment.startsWith('*')) continue;
+      final name = segment.substring(1);
+      if (!RegExp(r'^[A-Za-z_][A-Za-z0-9_]*$').hasMatch(name)) {
+        throw CCRouteRegistrationError(
+          'Route "$routeId" contains invalid parameter "$name".',
+        );
+      }
+      if (!names.add(name)) {
+        throw CCRouteRegistrationError(
+          'Route "$routeId" repeats parameter "$name".',
+        );
+      }
+      if (segment.startsWith('*') && index != segments.length - 1) {
+        throw CCRouteRegistrationError(
+          'Route "$routeId" wildcard "$name" must be the final segment.',
+        );
+      }
+    }
+    for (final entry in constraints.entries) {
+      if (!names.contains(entry.key)) {
+        throw CCRouteRegistrationError(
+          'Route "$routeId" constrains unknown parameter "${entry.key}".',
+        );
+      }
+      try {
+        RegExp('^(?:${entry.value})\$');
+      } on FormatException {
+        throw CCRouteRegistrationError(
+          'Route "$routeId" has invalid regex for "${entry.key}".',
+        );
+      }
+    }
+  }
+
+  /// Parses and validates one absolute structured URI pattern.
+  Uri _parseUriPattern(String routeId, String template) {
+    late final Uri uri;
+    try {
+      uri = Uri.parse(template);
+    } on FormatException {
+      throw CCRouteRegistrationError(
+        'Route "$routeId" contains an invalid URI pattern.',
+      );
+    }
+    if (!uri.hasScheme || !uri.hasAuthority || uri.host.isEmpty) {
+      throw CCRouteRegistrationError(
+        'Route "$routeId" URI pattern must contain a scheme and host.',
+      );
+    }
+    if (uri.userInfo.isNotEmpty) {
+      throw CCRouteRegistrationError(
+        'Route "$routeId" URI pattern cannot contain user-info.',
+      );
+    }
+    if (uri.hasQuery || uri.hasFragment) {
+      throw CCRouteRegistrationError(
+        'Route "$routeId" URI pattern cannot contain Query or Fragment text.',
+      );
+    }
+    return uri;
+  }
+
+  /// Parses a slash path or URI and normalizes its empty path to `/`.
+  Uri _parseLocation(String location) {
+    try {
+      if (location.isEmpty || location.trim() != location) {
+        throw const FormatException();
+      }
+      final uri = Uri.parse(location);
+      if (!uri.hasScheme && (!location.startsWith('/') || uri.hasAuthority)) {
+        throw const FormatException();
+      }
+      return uri.path.isEmpty ? uri.replace(path: '/') : uri;
+    } on FormatException {
+      throw const CCRouteNotFoundError('/');
+    }
+  }
+
+  /// Dispatches [pattern] to its structural or regular-expression matcher.
+  _RouteCandidate? _matchPattern(
+    _RegisteredRoute route,
+    CCRoutePattern pattern,
+    Uri uri,
+  ) {
+    late final _PatternMatch? match;
+    late final int priority;
+    switch (pattern) {
+      case CCPathPattern():
+        priority = _pathPriority;
+        match = _matchTemplate(
+          pattern.template,
+          pattern.constraints,
+          uri.pathSegments,
+        );
+      case CCUriPattern():
+        priority = _uriPriority;
+        match = _matchUri(pattern, uri);
+      case CCRegexPattern():
+        priority = _regexPriority;
+        match = _matchRegex(pattern, uri);
+    }
+    if (match == null) return null;
+    return _RouteCandidate(
+      location: CCRouteLocation(
+        routeId: route.definition.routeId,
+        path: uri.path,
+        pathParameters: match.pathParameters,
+        queryParameters: _queryParameters(uri),
+      ),
+      priority: priority,
+      specificity: match.specificity,
+    );
+  }
+
+  /// Matches an absolute [uri] against scheme, authority, port, and path.
+  _PatternMatch? _matchUri(CCUriPattern pattern, Uri uri) {
+    if (!uri.hasScheme ||
+        !uri.hasAuthority ||
+        uri.host.isEmpty ||
+        uri.userInfo.isNotEmpty) {
+      return null;
+    }
+    final template = Uri.parse(pattern.template);
+    if (template.scheme.toLowerCase() != uri.scheme.toLowerCase() ||
+        template.host.toLowerCase() != uri.host.toLowerCase() ||
+        template.port != uri.port) {
+      return null;
+    }
+    return _matchTemplate(
+      template.path.isEmpty ? '/' : template.path,
+      pattern.constraints,
+      uri.pathSegments,
+    );
+  }
+
+  /// Full-matches [uri] without Query or Fragment and captures named groups.
+  _PatternMatch? _matchRegex(CCRegexPattern pattern, Uri uri) {
+    final target = _locationWithoutQueryOrFragment(uri);
+    final match = RegExp('^(?:${pattern.expression})\$').firstMatch(target);
+    if (match == null) return null;
+    final parameters = <String, String>{};
+    for (final name in match.groupNames) {
+      final value = match.namedGroup(name);
+      if (value != null) parameters[name] = value;
+    }
+    return _PatternMatch(pathParameters: parameters, specificity: 0);
+  }
+
+  /// Rebuilds [uri] without Query or Fragment for full regex matching.
+  String _locationWithoutQueryOrFragment(Uri uri) {
+    if (uri.hasAuthority) {
+      return Uri(
+        scheme: uri.scheme,
+        userInfo: uri.userInfo,
+        host: uri.host,
+        port: uri.hasPort ? uri.port : null,
+        path: uri.path,
+      ).toString();
+    }
+    if (uri.hasScheme) {
+      return Uri(scheme: uri.scheme, path: uri.path).toString();
+    }
+    return Uri(path: uri.path).toString();
+  }
+
+  /// Matches decoded [actual] segments against one path [template].
+  _PatternMatch? _matchTemplate(
+    String template,
+    Map<String, String> constraints,
+    List<String> actual,
+  ) {
+    final pattern = _segments(template);
+    final parameters = <String, String>{};
+    var specificity = 0;
+    var actualIndex = 0;
+    for (final segment in pattern) {
+      if (segment.startsWith('*')) {
+        final name = segment.substring(1);
+        final value = actual.sublist(actualIndex).join('/');
+        if (!_matchesConstraint(constraints[name], value)) return null;
+        parameters[name] = value;
+        specificity -= 10;
+        actualIndex = actual.length;
+        break;
+      }
+      if (actualIndex >= actual.length) return null;
+      final value = actual[actualIndex++];
+      if (segment.startsWith(':')) {
+        final name = segment.substring(1);
+        final expression = constraints[name];
+        if (!_matchesConstraint(expression, value)) return null;
+        parameters[name] = value;
+        specificity += expression == null ? 10 : 20;
+      } else {
+        if (segment != value) return null;
+        specificity += 100;
+      }
+    }
+    if (actualIndex != actual.length) return null;
+    return _PatternMatch(pathParameters: parameters, specificity: specificity);
+  }
+
+  /// Returns immutable repeated Query values decoded by [uri].
+  Map<String, List<String>> _queryParameters(Uri uri) {
+    final query = <String, List<String>>{};
+    for (final entry in uri.queryParametersAll.entries) {
+      query[entry.key] = List<String>.unmodifiable(entry.value);
+    }
+    return query;
+  }
+
+  /// Compares candidates by fixed tier and then template specificity.
+  int _compareCandidates(_RouteCandidate first, _RouteCandidate second) {
+    final priority = second.priority.compareTo(first.priority);
+    if (priority != 0) return priority;
+    return second.specificity.compareTo(first.specificity);
+  }
+
+  /// Splits and decodes a slash template into non-empty path segments.
+  List<String> _segments(String template) => Uri.parse(template).pathSegments;
+
+  /// Whether [value] satisfies an optional full segment constraint.
+  bool _matchesConstraint(String? expression, String value) =>
+      expression == null || RegExp('^(?:$expression)\$').hasMatch(value);
+
+  /// Creates a stable equality key for duplicate-pattern validation.
+  String _patternKey(CCRoutePattern pattern) {
+    final constraints = switch (pattern) {
+      CCPathPattern() => pattern.constraints,
+      CCUriPattern() => pattern.constraints,
+      CCRegexPattern() => const <String, String>{},
+    };
+    final constraintEntries = constraints.entries.toList()
+      ..sort((first, second) => first.key.compareTo(second.key));
+    final constraintKey = constraintEntries
+        .map((entry) => '${entry.key}=${entry.value}')
+        .join('&');
+    return switch (pattern) {
+      CCPathPattern() => 'path|${pattern.template}|$constraintKey',
+      CCUriPattern() => _uriPatternKey(pattern, constraintKey),
+      CCRegexPattern() => 'regex|${pattern.expression}',
+    };
+  }
+
+  /// Creates a normalized key for a validated structured URI [pattern].
+  String _uriPatternKey(CCUriPattern pattern, String constraintKey) {
+    final uri = Uri.parse(pattern.template);
+    return 'uri|${uri.scheme.toLowerCase()}|${uri.host.toLowerCase()}|'
+        '${uri.port}|${uri.path}|$constraintKey';
+  }
+
+  /// Returns a concise pattern value suitable for registration diagnostics.
+  String _patternLabel(CCRoutePattern pattern) => switch (pattern) {
+    CCPathPattern() => pattern.template,
+    CCUriPattern() => pattern.template,
+    CCRegexPattern() => pattern.expression,
+  };
+
+  /// Whether two same-tier patterns can tie for at least one location.
+  bool _patternsConflict(CCRoutePattern first, CCRoutePattern second) {
+    if (first is CCRegexPattern && second is CCRegexPattern) {
+      return first.expression == second.expression;
+    }
+    if (first is CCPathPattern && second is CCPathPattern) {
+      return _templatesConflict(
+        first.template,
+        first.constraints,
+        second.template,
+        second.constraints,
+      );
+    }
+    if (first is CCUriPattern && second is CCUriPattern) {
+      final firstUri = Uri.parse(first.template);
+      final secondUri = Uri.parse(second.template);
+      if (firstUri.scheme.toLowerCase() != secondUri.scheme.toLowerCase() ||
+          firstUri.host.toLowerCase() != secondUri.host.toLowerCase() ||
+          firstUri.port != secondUri.port) {
+        return false;
+      }
+      return _templatesConflict(
+        firstUri.path.isEmpty ? '/' : firstUri.path,
+        first.constraints,
+        secondUri.path.isEmpty ? '/' : secondUri.path,
+        second.constraints,
+      );
+    }
+    return false;
+  }
+
+  /// Whether two templates can match one path with equal specificity.
+  bool _templatesConflict(
+    String firstTemplate,
+    Map<String, String> firstConstraints,
+    String secondTemplate,
+    Map<String, String> secondConstraints,
+  ) {
+    final first = _segments(firstTemplate);
+    final second = _segments(secondTemplate);
+    final firstHasWildcard = first.isNotEmpty && first.last.startsWith('*');
+    final secondHasWildcard = second.isNotEmpty && second.last.startsWith('*');
+    if (!firstHasWildcard &&
+        !secondHasWildcard &&
+        first.length != second.length) {
+      return false;
+    }
+    final comparedLength = min(first.length, second.length);
+    for (var index = 0; index < comparedLength; index++) {
+      final firstSegment = first[index];
+      final secondSegment = second[index];
+      if (firstSegment.startsWith('*') || secondSegment.startsWith('*')) break;
+      final firstExpression = _segmentExpression(
+        firstSegment,
+        firstConstraints,
+      );
+      final secondExpression = _segmentExpression(
+        secondSegment,
+        secondConstraints,
+      );
+      if (firstExpression == null && secondExpression == null) {
+        if (firstSegment != secondSegment) return false;
+      } else if (firstExpression == null) {
+        if (!_matchesConstraint(secondExpression, firstSegment)) return false;
+      } else if (secondExpression == null) {
+        if (!_matchesConstraint(firstExpression, secondSegment)) return false;
+      }
+    }
+    return _templateSpecificity(first, firstConstraints) ==
+        _templateSpecificity(second, secondConstraints);
+  }
+
+  /// Returns the regular expression for a dynamic segment, or null if static.
+  String? _segmentExpression(String segment, Map<String, String> constraints) {
+    if (segment.startsWith('*')) {
+      return constraints[segment.substring(1)] ?? r'.*';
+    }
+    if (!segment.startsWith(':')) return null;
+    return constraints[segment.substring(1)] ?? r'[^/]+';
+  }
+
+  /// Calculates the same specificity used by the runtime template matcher.
+  int _templateSpecificity(
+    List<String> segments,
+    Map<String, String> constraints,
+  ) {
+    var score = 0;
+    for (final segment in segments) {
+      if (segment.startsWith('*')) {
+        score -= 10;
+      } else if (segment.startsWith(':')) {
+        score += constraints.containsKey(segment.substring(1)) ? 20 : 10;
+      } else {
+        score += 100;
+      }
+    }
+    return score;
+  }
+}

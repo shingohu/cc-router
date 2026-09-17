@@ -18,6 +18,11 @@ generated Android, iOS, macOS, Web, and OHOS platform code.
   is only a minimum check, not the full standard.
 - Explain semantics, ownership, lifecycle, constraints, failure behavior, or
   invariants. Do not merely repeat the declaration name.
+- Document the intended usage scenarios for framework APIs, including when an
+  API should or should not be used when that distinction affects correct use.
+- Whenever behavior, constraints, lifecycle, ownership, or supported scenarios
+  change, review and update the related DartDoc in the same change so comments
+  remain consistent with the implementation.
 - Keep `public_member_api_docs: true` enabled in `analysis_options.yaml`.
 
 ## Isolate API Layers
@@ -50,6 +55,21 @@ Preserve these architecture boundaries:
 - Business code does not construct, open, close, or destroy the Runtime.
 - A component registrar receives `CCRegistry`, never the full Runtime.
 - Scope, dispatch, storage, and host lifecycle implementation stays internal.
+
+## Keep Source Files Cohesive
+
+- Organize framework declarations by one clear domain responsibility. Split a
+  file when it begins mixing independent concerns such as routing, messaging,
+  services, lifecycle, invocation state, or errors.
+- Keep package barrel files stable so file splits do not force consumers to
+  change imports.
+- Keep small, tightly related declarations together; do not mechanically create
+  one file per class.
+- Use normal imports and exports for public contracts. Use `part` / `part of`
+  only when related implementation files must share library-private members.
+- Review the target file's responsibility before adding a new declaration and
+  create or select the appropriate domain file instead of extending a generic
+  catch-all file.
 
 ## Verify Changes
 

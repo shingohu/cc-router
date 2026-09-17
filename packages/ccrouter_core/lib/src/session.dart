@@ -1,6 +1,10 @@
 part of 'runtime.dart';
 
 /// Immutable snapshot of the active authenticated Session.
+///
+/// Business code reads this through `CCRouter.session` for non-sensitive
+/// Session diagnostics. Authentication state remains owned by the application,
+/// and a Session should span page changes and App background transitions.
 final class CCSession {
   /// Creates Runtime-owned Session state from validated host input.
   CCSession._({

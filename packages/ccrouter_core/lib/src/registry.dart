@@ -1,9 +1,15 @@
 part of 'runtime.dart';
 
 /// Creates a service instance inside the active invocation and Scope context.
+///
+/// Component registrars use factories when service construction requires the
+/// Runtime-provided deadline, cancellation, or trace context.
 typedef CCServiceFactory<T> = T Function(CCInvocationContext context);
 
 /// Handles a typed message [M] and returns a synchronous or asynchronous [R].
+///
+/// Use handlers in component registration for Command, Query, Action, and Event
+/// processing; business callers dispatch messages through `CCRouter` instead.
 typedef CCHandler<M, R> =
     FutureOr<R> Function(M message, CCInvocationContext context);
 
@@ -14,24 +20,42 @@ typedef _Handler =
 /// Registration-only surface supplied to component registrars.
 ///
 /// It intentionally exposes no resolution, dispatch, Session, or shutdown API.
+/// Generated or handwritten registrars use it only during Runtime assembly and
+/// must not retain it for later business operations.
 abstract interface class CCRegistry {
   /// Registers one implementation of service contract [T].
+  ///
+  /// Use for capabilities resolved later through `CCRouter.service<T>()`.
   void registerService<T extends Object>(CCServiceProvider<T> provider);
 
   /// Registers the single handler for command type [C].
+  ///
+  /// Use when exactly one component owns a side-effecting operation.
   void registerCommand<C extends CCCommand<R>, R>(CCHandler<C, R> handler);
 
   /// Registers the single handler for query type [Q].
+  ///
+  /// Use when exactly one component owns a side-effect-free read operation.
   void registerQuery<Q extends CCQuery<R>, R>(CCHandler<Q, R> handler);
 
   /// Registers an action handler under the globally stable [id].
+  ///
+  /// Use when multiple components may handle an explicitly requested action.
   void registerAction<A extends CCAction>(
     String id,
     CCHandler<A, void> handler,
   );
 
   /// Registers an event subscriber under the globally stable [id].
+  ///
+  /// Use for independent listeners reacting to an already completed fact.
   void registerEvent<E extends CCEvent>(String id, CCHandler<E, void> handler);
+
+  /// Registers a route definition owned by the current component.
+  ///
+  /// Generated route registrars use this during component assembly; ownership
+  /// is injected by the Runtime and cannot be supplied by component code.
+  void registerRoute<A, R>(CCRouteDefinition<A, R> definition);
 }
 
 /// Component-bound implementation of the restricted registration surface.
@@ -81,9 +105,18 @@ final class _CCComponentRegistry implements CCRegistry {
   void registerEvent<E extends CCEvent>(String id, CCHandler<E, void> handler) {
     runtime._registerEventForComponent(ownerComponentId, id, handler);
   }
+
+  /// Registers a route definition on behalf of the owning component.
+  @override
+  void registerRoute<A, R>(CCRouteDefinition<A, R> definition) {
+    runtime._registerRouteForComponent(ownerComponentId, definition);
+  }
 }
 
 /// Describes how a service implementation is created and owned.
+///
+/// Component registrars use providers to select factory, key, default choice,
+/// and lifecycle Scope for one implementation of a service contract.
 final class CCServiceProvider<T extends Object> {
   /// Creates a provider for service contract [T].
   const CCServiceProvider({

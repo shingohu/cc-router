@@ -9,6 +9,17 @@ final class Registrar implements CCComponentRegistrar {
   void register(CCRegistry registry) => body(registry);
 }
 
+final class StringCodec implements CCRouteCodec<String> {
+  const StringCodec();
+
+  @override
+  String decode(CCEncodedRouteArguments input) => input.path['value']!;
+
+  @override
+  CCEncodedRouteArguments encode(String arguments) =>
+      CCEncodedRouteArguments(path: {'value': arguments});
+}
+
 CCComponentManifest component(
   String id, {
   List<String> dependencies = const [],
@@ -23,6 +34,63 @@ CCComponentManifest component(
 );
 
 void main() {
+  test('route definitions retain page, sheet, and dialog presentation', () {
+    final defaultRoute = CCRouteDefinition<String, void>(
+      routeId: 'orders.default',
+      patterns: [CCPathPattern('/orders/default', primary: true)],
+      codec: const StringCodec(),
+    );
+    final defaultPresentation = defaultRoute.presentation;
+    expect(defaultPresentation, isA<CCPagePresentation>());
+    expect(
+      (defaultPresentation as CCPagePresentation).routeType,
+      CCPageRouteType.platformDefault,
+    );
+    expect(defaultPresentation.opaque, isTrue);
+    expect(defaultPresentation.fullscreenDialog, isFalse);
+
+    const transparentCupertinoPage = CCPagePresentation(
+      routeType: CCPageRouteType.cupertino,
+      opaque: false,
+      fullscreenDialog: true,
+    );
+    expect(transparentCupertinoPage.routeType, CCPageRouteType.cupertino);
+    expect(transparentCupertinoPage.opaque, isFalse);
+    expect(transparentCupertinoPage.fullscreenDialog, isTrue);
+
+    const sheetPresentation = CCModalBottomSheetPresentation(
+      isDismissible: false,
+      enableDrag: false,
+      isScrollControlled: true,
+      showDragHandle: true,
+      useSafeArea: true,
+    );
+    final sheetRoute = CCRouteDefinition<String, void>(
+      routeId: 'orders.filter',
+      patterns: [CCPathPattern('/orders/filter', primary: true)],
+      codec: const StringCodec(),
+      presentation: sheetPresentation,
+    );
+    expect(sheetRoute.presentation, same(sheetPresentation));
+
+    const dialogPresentation = CCDialogPresentation(
+      routeType: CCDialogRouteType.material,
+      barrierDismissible: false,
+      useSafeArea: false,
+    );
+    final dialogRoute = CCRouteDefinition<String, bool>(
+      routeId: 'orders.confirm',
+      patterns: [CCPathPattern('/orders/confirm', primary: true)],
+      codec: const StringCodec(),
+      presentation: dialogPresentation,
+    );
+    expect(dialogRoute.presentation, same(dialogPresentation));
+    expect(dialogPresentation.routeType, CCDialogRouteType.material);
+    expect(dialogPresentation.barrierDismissible, isFalse);
+    expect(dialogPresentation.useSafeArea, isFalse);
+    expect(const CCDialogPresentation().barrierDismissible, isNull);
+  });
+
   test('registrars receive a component-bound registry', () {
     CCRegistry? received;
     final runtime = CCRouterRuntime.forTesting(
@@ -60,6 +128,354 @@ void main() {
     expect(order, ['payment', 'order']);
     expect(runtime.components.map((item) => item.id), order);
     expect(runtime.service<String>(), 'payment');
+    await runtime.dispose();
+  });
+
+  test(
+    'component registrars own route definitions and match constrained paths',
+    () async {
+      final runtime = CCRouterRuntime.forTesting(
+        components: [
+          component(
+            'orders',
+            register: (registry) => registry.registerRoute<String, void>(
+              CCRouteDefinition<String, void>(
+                routeId: 'orders.detail',
+                patterns: [
+                  CCPathPattern(
+                    '/orders/:value',
+                    primary: true,
+                    constraints: {'value': r'\d+'},
+                  ),
+                  CCPathPattern('/orders/latest'),
+                ],
+                codec: const StringCodec(),
+                visibility: CCRouteVisibility.exported,
+                visibleTo: {'checkout'},
+              ),
+            ),
+          ),
+        ],
+      );
+      await runtime.initialize();
+
+      expect(runtime.registeredRouteIds, ['orders.detail']);
+      expect(runtime.resolveRoute('/orders/latest').pathParameters, isEmpty);
+      expect(
+        runtime.decodeRouteArguments(runtime.resolveRoute('/orders/42')),
+        '42',
+      );
+      expect(
+        () => runtime.resolveRoute('/orders/abc'),
+        throwsA(isA<CCRouteNotFoundError>()),
+      );
+
+      runtime.deactivateComponent('orders');
+      expect(
+        () => runtime.resolveRoute('/orders/42'),
+        throwsA(isA<CCRouteUnavailableError>()),
+      );
+      runtime.activateComponent('orders');
+      expect(runtime.resolveRoute('/orders/42').routeId, 'orders.detail');
+      await runtime.dispose();
+    },
+  );
+
+  test('one route resolves path, full URL, custom scheme, and regex', () async {
+    final runtime = CCRouterRuntime.forTesting(
+      components: [
+        component(
+          'orders',
+          register: (registry) => registry.registerRoute<String, void>(
+            CCRouteDefinition<String, void>(
+              routeId: 'orders.detail',
+              patterns: [
+                CCPathPattern('/orders/:value', primary: true),
+                CCUriPattern('https://therouter.com/orders/:value'),
+                CCUriPattern('therouter://orders/detail/:value'),
+                const CCRegexPattern(
+                  r'https://legacy\.example\.com/order/(?<value>\d+)',
+                ),
+              ],
+              codec: const StringCodec(),
+              deepLink: CCDeepLinkPolicy.enabled,
+            ),
+          ),
+        ),
+      ],
+    );
+    await runtime.initialize();
+
+    final path = runtime.resolveRoute('/orders/42');
+    expect(path.routeId, 'orders.detail');
+    expect(runtime.decodeRouteArguments(path), '42');
+
+    final web = runtime.resolveRoute(
+      'HTTPS://THEROUTER.COM/orders/43?tab=items&tab=history#summary',
+      external: true,
+    );
+    expect(web.routeId, 'orders.detail');
+    expect(web.pathParameters, {'value': '43'});
+    expect(web.queryParameters, {
+      'tab': ['items', 'history'],
+    });
+
+    final custom = runtime.resolveRoute(
+      'therouter://orders/detail/44',
+      external: true,
+    );
+    expect(custom.routeId, 'orders.detail');
+    expect(custom.path, '/detail/44');
+    expect(runtime.decodeRouteArguments(custom), '44');
+
+    final legacy = runtime.resolveRoute(
+      'https://legacy.example.com/order/45?source=old#details',
+      external: true,
+    );
+    expect(legacy.routeId, 'orders.detail');
+    expect(runtime.decodeRouteArguments(legacy), '45');
+    expect(legacy.queryParameters, {
+      'source': ['old'],
+    });
+    expect(
+      () => runtime.resolveRoute('https://legacy.example.com/order/45/extra'),
+      throwsA(isA<CCRouteNotFoundError>()),
+    );
+    await runtime.dispose();
+  });
+
+  test(
+    'structured URI outranks a matching authority-independent path',
+    () async {
+      final runtime = CCRouterRuntime.forTesting(
+        components: [
+          component(
+            'generic',
+            register: (registry) => registry.registerRoute<String, void>(
+              CCRouteDefinition<String, void>(
+                routeId: 'generic.detail',
+                patterns: [CCPathPattern('/orders/:value', primary: true)],
+                codec: const StringCodec(),
+              ),
+            ),
+          ),
+          component(
+            'web',
+            register: (registry) => registry.registerRoute<String, void>(
+              CCRouteDefinition<String, void>(
+                routeId: 'web.detail',
+                patterns: [
+                  CCUriPattern(
+                    'https://therouter.com/orders/:value',
+                    primary: true,
+                  ),
+                ],
+                codec: const StringCodec(),
+              ),
+            ),
+          ),
+        ],
+      );
+      await runtime.initialize();
+
+      expect(runtime.resolveRoute('/orders/42').routeId, 'generic.detail');
+      expect(
+        runtime.resolveRoute('https://therouter.com/orders/42').routeId,
+        'web.detail',
+      );
+      await runtime.dispose();
+    },
+  );
+
+  test('external resolution enforces each route deep-link policy', () async {
+    final runtime = CCRouterRuntime.forTesting(
+      components: [
+        component(
+          'orders',
+          register: (registry) => registry.registerRoute<String, void>(
+            CCRouteDefinition<String, void>(
+              routeId: 'orders.internal',
+              patterns: [CCPathPattern('/internal/:value', primary: true)],
+              codec: const StringCodec(),
+            ),
+          ),
+        ),
+      ],
+    );
+    await runtime.initialize();
+
+    expect(runtime.resolveRoute('/internal/42').routeId, 'orders.internal');
+    expect(
+      () => runtime.resolveRoute('/internal/42', external: true),
+      throwsA(isA<CCRouteNotFoundError>()),
+    );
+    expect(
+      () => runtime.resolveRoute('internal/42'),
+      throwsA(isA<CCRouteNotFoundError>()),
+    );
+    await runtime.dispose();
+  });
+
+  test('route registration rejects missing primary and duplicate patterns', () {
+    expect(
+      () => CCRouterRuntime.forTesting(
+        components: [
+          component(
+            'orders',
+            register: (registry) => registry.registerRoute<String, void>(
+              CCRouteDefinition<String, void>(
+                routeId: 'orders.invalid',
+                patterns: [CCPathPattern('/orders/:value')],
+                codec: const StringCodec(),
+              ),
+            ),
+          ),
+        ],
+      ),
+      throwsA(isA<CCRouteRegistrationError>()),
+    );
+    expect(
+      () => CCRouterRuntime.forTesting(
+        components: [
+          component(
+            'a',
+            register: (registry) => registry.registerRoute<String, void>(
+              CCRouteDefinition<String, void>(
+                routeId: 'a.route',
+                patterns: [CCPathPattern('/same', primary: true)],
+                codec: const StringCodec(),
+              ),
+            ),
+          ),
+          component(
+            'b',
+            register: (registry) => registry.registerRoute<String, void>(
+              CCRouteDefinition<String, void>(
+                routeId: 'b.route',
+                patterns: [CCPathPattern('/same', primary: true)],
+                codec: const StringCodec(),
+              ),
+            ),
+          ),
+        ],
+      ),
+      throwsA(isA<CCRouteRegistrationError>()),
+    );
+    expect(
+      () => CCRouterRuntime.forTesting(
+        components: [
+          component(
+            'orders',
+            register: (registry) => registry.registerRoute<String, void>(
+              CCRouteDefinition<String, void>(
+                routeId: 'orders.duplicate',
+                patterns: [
+                  CCPathPattern('/orders/:value', primary: true),
+                  CCPathPattern('/orders/:value'),
+                ],
+                codec: const StringCodec(),
+              ),
+            ),
+          ),
+        ],
+      ),
+      throwsA(isA<CCRouteRegistrationError>()),
+    );
+  });
+
+  test('route registration rejects malformed URI and regex patterns', () {
+    for (final pattern in [
+      CCUriPattern('/orders/:value', primary: true),
+      CCUriPattern(
+        'https://therouter.com/orders/:value?tab=items',
+        primary: true,
+      ),
+      CCUriPattern(
+        'https://therouter.com/orders/:value#summary',
+        primary: true,
+      ),
+      CCUriPattern('therouter://user@orders/detail/:value', primary: true),
+    ]) {
+      expect(
+        () => CCRouterRuntime.forTesting(
+          components: [
+            component(
+              'orders',
+              register: (registry) => registry.registerRoute<String, void>(
+                CCRouteDefinition<String, void>(
+                  routeId: 'orders.invalid',
+                  patterns: [pattern],
+                  codec: const StringCodec(),
+                ),
+              ),
+            ),
+          ],
+        ),
+        throwsA(isA<CCRouteRegistrationError>()),
+      );
+    }
+
+    expect(
+      () => CCRouterRuntime.forTesting(
+        components: [
+          component(
+            'orders',
+            register: (registry) => registry.registerRoute<String, void>(
+              CCRouteDefinition<String, void>(
+                routeId: 'orders.invalid-regex',
+                patterns: [
+                  CCPathPattern('/orders/:value', primary: true),
+                  const CCRegexPattern('['),
+                ],
+                codec: const StringCodec(),
+              ),
+            ),
+          ),
+        ],
+      ),
+      throwsA(isA<CCRouteRegistrationError>()),
+    );
+    expect(const CCRegexPattern('.*').primary, isFalse);
+    expect(const CCRegexPattern('.*').matchOnly, isTrue);
+  });
+
+  test('overlapping regex routes fail resolution explicitly', () async {
+    final runtime = CCRouterRuntime.forTesting(
+      components: [
+        component(
+          'first',
+          register: (registry) => registry.registerRoute<String, void>(
+            CCRouteDefinition<String, void>(
+              routeId: 'first.legacy',
+              patterns: [
+                CCPathPattern('/first/:value', primary: true),
+                const CCRegexPattern(r'https://legacy\.example\.com/.*'),
+              ],
+              codec: const StringCodec(),
+            ),
+          ),
+        ),
+        component(
+          'second',
+          register: (registry) => registry.registerRoute<String, void>(
+            CCRouteDefinition<String, void>(
+              routeId: 'second.legacy',
+              patterns: [
+                CCPathPattern('/second/:value', primary: true),
+                const CCRegexPattern(r'https://legacy\..*'),
+              ],
+              codec: const StringCodec(),
+            ),
+          ),
+        ),
+      ],
+    );
+    await runtime.initialize();
+
+    expect(
+      () => runtime.resolveRoute('https://legacy.example.com/order/42'),
+      throwsA(isA<CCRouteAmbiguityError>()),
+    );
     await runtime.dispose();
   });
 

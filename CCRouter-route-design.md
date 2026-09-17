@@ -3,7 +3,7 @@
 ## 文档状态
 
 - 版本：v0.1 Draft
-- 状态：设计评审，尚未实现
+- 状态：增量实现中，Pattern 契约与 Core 基础匹配已实现
 - 适用范围：Flutter 应用及其组件化路由契约
 - 默认导航后端：`go_router`
 - 核心约束：业务跳转统一通过 `CCRouter.navigator`，Core 不依赖 Flutter、`BuildContext` 或 `go_router`
@@ -17,7 +17,7 @@
 路由子系统需要解决以下问题：
 
 1. 组件通过类型安全的契约跳转，不直接依赖目标页面实现。
-2. 一个路由可以拥有主 Path、历史别名和外部链接 Path，并保持调用端与接收端一致。
+2. 一个路由可以拥有主寻址 Pattern、历史 Path、完整 URL、自定义 Scheme 和正则别名，并保持调用端与接收端一致。
 3. Path、Query 和内存 Extra 参数由生成代码编码、解析并注入页面。
 4. 默认适配 `go_router`，同时允许实现其他导航适配器。
 5. 路由注册、拦截、生命周期、埋点和诊断使用同一条调用链。
@@ -40,19 +40,20 @@ v0.1 不包含：
 
 ## 3. 核心原则
 
-### 3.1 稳定 ID 与 Path 分离
+### 3.1 稳定 ID 与寻址 Pattern 分离
 
-每个路由必须有一个稳定且全局唯一的 `routeId`。Path 是可变的寻址规则，不是路由身份。
+每个路由必须有一个稳定且全局唯一的 `routeId`。Path、完整 URL、自定义 Scheme 和兼容正则都是可变的寻址规则，不是路由身份。
 
 ```text
 routeId: orders.detail
-primaryPath: /orders/:orderId
+primaryPattern: /orders/:orderId
 aliases:
-  - /order/detail/:orderId
-  - /o/:orderId
+  - https://m.example.com/orders/:orderId
+  - ccrouter://orders/detail/:orderId
+  - ^https://legacy\.example\.com/order/(?<orderId>\d+)$
 ```
 
-修改主 Path 或增加别名不能改变 `routeId`。注册冲突、埋点、Trace、组件所有权和文档引用均使用 `routeId`。
+修改主 Pattern 或增加别名不能改变 `routeId`。注册冲突、埋点、Trace、组件所有权和文档引用均使用 `routeId`。
 
 ### 3.2 声明、调用和实现分离
 
@@ -123,14 +124,18 @@ ccrouter_go_router  默认 go_router Adapter
 ```dart
 @CCRoute<OrderResult>(
   id: 'orders.detail',
-  paths: [
-    CCPath(
+  patterns: [
+    CCPathPattern(
       '/orders/:orderId',
       primary: true,
       constraints: {'orderId': r'\d+'},
     ),
-    CCPath('/order/detail/:orderId'),
-    CCPath('/o/:orderId'),
+    CCPathPattern('/order/detail/:orderId'),
+    CCUriPattern('https://m.example.com/orders/:orderId'),
+    CCUriPattern('ccrouter://orders/detail/:orderId'),
+    CCRegexPattern(
+      r'https://legacy\.example\.com/order/(?<orderId>\d+)',
+    ),
   ],
   visibility: CCRouteVisibility.exported,
   visibleTo: ['checkout', 'customer_service'],
@@ -165,16 +170,90 @@ final class OrderDetailPage {
 | 字段 | 必填 | 语义 |
 | --- | --- | --- |
 | `id` | 是 | 全局唯一且稳定的路由身份 |
-| `paths` | 是 | 一个主 Path 和零个或多个匹配别名 |
+| `patterns` | 是 | 一个可反向生成的主 Pattern 和零个或多个 Path、URI 或正则匹配别名 |
 | `visibility` | 否 | 默认仅组件内部可见 |
 | `visibleTo` | 否 | 对外导出时允许消费的组件 ID |
 | `deepLink` | 否 | 是否允许从 App 外部解析 |
 | `description` | 否 | 文档、IDE 提示和诊断说明 |
 | `interceptors` | 否 | 有序的路由级拦截器 ID |
 | `tracking` | 否 | 稳定埋点事件名及静态标签 |
-| `presentation` | 否 | 中立的展示意图，不直接表达 `MaterialPage` 等类型 |
+| `presentation` | 否 | 中立的 Page、底部弹出或 Dialog 展示意图，默认作为平台默认 Page 展示 |
 
-### 5.2 构造器选择
+### 5.2 展示模型
+
+展示模型描述路由拥有者确定的展示语义。调用方不能在单次跳转时覆盖它，否则同一个 Route ID 会产生不稳定的生命周期、返回值和埋点语义。
+
+```dart
+sealed class CCRoutePresentation {
+  const CCRoutePresentation();
+}
+
+enum CCPageRouteType {
+  platformDefault,
+  material,
+  cupertino,
+}
+
+enum CCDialogRouteType {
+  platformDefault,
+  material,
+  cupertino,
+}
+
+final class CCPagePresentation extends CCRoutePresentation {
+  const CCPagePresentation({
+    this.routeType = CCPageRouteType.platformDefault,
+    this.opaque = true,
+    this.fullscreenDialog = false,
+  });
+
+  final CCPageRouteType routeType;
+  final bool opaque;
+  final bool fullscreenDialog;
+}
+
+final class CCModalBottomSheetPresentation extends CCRoutePresentation {
+  const CCModalBottomSheetPresentation({
+    this.isDismissible = true,
+    this.enableDrag = true,
+    this.isScrollControlled = false,
+    this.showDragHandle,
+    this.useSafeArea = false,
+  });
+
+  final bool isDismissible;
+  final bool enableDrag;
+  final bool isScrollControlled;
+  final bool? showDragHandle;
+  final bool useSafeArea;
+}
+
+final class CCDialogPresentation extends CCRoutePresentation {
+  const CCDialogPresentation({
+    this.routeType = CCDialogRouteType.platformDefault,
+    this.barrierDismissible,
+    this.useSafeArea = true,
+  });
+
+  final CCDialogRouteType routeType;
+  final bool? barrierDismissible;
+  final bool useSafeArea;
+}
+```
+
+- `CCPageRouteType` 对应页面 Route 家族，不等同于一个固定动画；Flutter 的 Material Route 仍可通过 `PageTransitionsTheme` 按平台适配。
+- `CCDialogRouteType` 单独描述 Dialog Route 家族，不能复用 Page Route 类型；`platformDefault` 跟随宿主应用的 Dialog 风格。
+- `platformDefault` 由 Adapter、宿主应用类型和目标平台共同决定，普通页面应优先使用该默认值。
+- `opaque` 与 Flutter `Route.opaque` 语义一致；透明页面使用 `false`，不再单独定义 `Surface` 枚举。
+- `fullscreenDialog` 只表示全屏对话式 Page，不表示底部弹出。
+- `CCModalBottomSheetPresentation` 表示进入导航栈的模态底部弹出，适用于筛选、选择和短表单；不会阻止底层交互的持久 BottomSheet 属于页面内部状态，不声明成 Route。
+- `CCDialogPresentation` 表示进入导航栈的居中模态 Dialog，适用于需要跨组件类型安全返回、拦截、埋点或恢复的流程；页面内部临时确认框和错误提示不需要注册成路由。
+- Dialog 的 `barrierDismissible` 为 `null` 时保留平台默认行为：Material 默认可点击遮罩关闭，Cupertino 默认不可关闭；显式布尔值用于跨平台覆盖。
+- 颜色、圆角、阴影等视觉样式由应用主题和 Adapter 配置，不进入跨组件路由契约。
+- Adapter 不支持指定页面类型、透明页面、底部弹出或 Dialog 时，必须在初始化阶段报告能力错误，不能静默改成普通页面。
+- 允许 Deep Link 的底部弹出必须具有可确定的承载页面或父路由；不能在空白导航栈上直接展示。具体关系在 Shell、父路由和 Outlet 模型中声明。
+
+### 5.3 构造器选择
 
 - 默认分析未命名构造器。
 - 页面存在多个可用构造器时必须显式标记目标构造器。
@@ -183,20 +262,21 @@ final class OrderDetailPage {
 
 ---
 
-## 6. 多 Path 与双端统一
+## 6. 多 Pattern 与双端统一
 
-### 6.1 主 Path 和别名
+### 6.1 主 Pattern 和别名
 
-每个路由只能有一个可反向生成的主 Path：
+每个路由只能有一个可反向生成的主 Pattern：
 
-- 业务调用生成地址时始终使用主 Path。
-- 内部旧链接、Web URL 和 Deep Link 可以匹配别名。
+- 业务调用生成地址时始终使用主 Pattern。
+- 主 Pattern 必须是 `CCPathPattern` 或 `CCUriPattern`，不能是 `matchOnly`。
+- 内部旧链接、Web URL、自定义 Scheme 和兼容正则可以作为别名。
 - 匹配别名后，Runtime 仍解析为同一个 `routeId`。
-- 是否把别名重定向到主 Path 由 Adapter 策略决定。
+- 是否把别名重定向到主 Pattern 由 Adapter 策略决定。
 
-### 6.2 内部地址与外部 URI
+### 6.2 Path 与结构化 URI
 
-Runtime 先把外部 URI 归一化为内部 Location：
+Runtime 使用 `Uri` 保留并解析地址结构，不把 Scheme 或 Host 拼接进 Path，也不把完整 URL 当成不透明字符串键：
 
 ```text
 https://m.example.com/orders/100?tab=items
@@ -208,14 +288,19 @@ routeId = orders.detail
 arguments = OrderDetailRouteArgs(orderId: 100, tab: items)
 ```
 
-Scheme 和 Host 白名单属于应用级 Deep Link 配置；路由只声明自己是否允许外部进入。外部 URI 的完整原文默认不进入日志或埋点。
+- `CCPathPattern` 只比较 URI 的 Path，可同时承接应用内 Path 和任意 Authority 下的同 Path 地址。
+- `CCUriPattern` 比较 Scheme、Host、有效端口和 Path；Scheme、Host 不区分大小写，Path 区分大小写。
+- Query 独立解析并保留重复值；Fragment 不参与路由身份匹配。
+- URI Pattern 必须是包含 Scheme、Authority 和 Host 的绝对 URI，且不能内嵌 Query、Fragment 或 User Info。
+
+Scheme 和 Host 的应用级白名单仍属于 Deep Link 入口配置；`CCUriPattern` 只描述某条路由接受的地址，并不能替代入口信任校验。外部 URI 的完整原文默认不进入日志或埋点。
 
 ### 6.3 正则约束
 
 优先支持“Path 模板 + 命名参数正则约束”：
 
 ```dart
-CCPath(
+CCPathPattern(
   '/users/:userId',
   constraints: {'userId': r'[1-9]\d*'},
 )
@@ -225,23 +310,28 @@ CCPath(
 
 - 约束只能引用模板中存在的参数。
 - 正则能够编译。
-- 不允许捕获组影响参数索引；应使用非捕获组。
-- 多个 Path 之间不能形成无法确定优先级的歧义匹配。
+- 多个同层 Pattern 之间不能形成无法确定优先级的歧义匹配。
 
-完整任意正则不是可逆的，不能独立作为主 Path。如果后续支持完整正则，只能作为 `matchOnly` 别名，并且必须同时存在可生成 URL 的主 Path。
+无法用结构化模板表达的兼容地址使用 `CCRegexPattern`。它对移除 Query 和 Fragment 后的完整地址进行全匹配，命名捕获组作为 Path 参数交给 Codec。完整正则不可逆，因此始终是 `matchOnly`，不能作为主 Pattern，并且路由必须同时存在一个可生成地址的主 Pattern。
 
 ### 6.4 匹配顺序
 
 匹配不能依赖注册顺序。生成器和 Runtime 使用固定优先级：
 
 ```text
-静态 Path
+结构化 URI Pattern
+  > Path Pattern
+  > 完整 Regex Pattern
+
+同一结构化层内：
+
+静态段
   > 带正则约束的参数 Path
   > 普通参数 Path
   > catch-all Path
 ```
 
-同优先级存在重叠且无法证明唯一时，应用聚合构建必须失败。
+同优先级、同具体度存在重叠且无法证明唯一时，应用聚合构建必须失败；静态阶段无法判断的正则重叠在 Runtime 命中时抛出 `CCRouteAmbiguityError`，绝不使用声明顺序或 Map 迭代顺序选路。
 
 ---
 
@@ -393,8 +483,10 @@ enum CCRouteVisibility {
 
 - `component`：只生成组件内部调用入口。
 - `exported`：额外生成稳定的对外路由契约。
-- `visibleTo`：可选的允许消费组件列表。
+- `visibleTo`：可选的允许消费组件列表；为空表示不按组件名单限制公开契约，应仅用于有意提供给全应用的稳定入口。
 - 消费方必须显式依赖提供方组件或其契约包。
+
+`CCRouteVisibility` 和 `visibleTo` 只用于生成代码、导出裁剪、文档和 CI 依赖检查。Runtime 不接收可伪造的调用方组件 ID，也不执行调用方可见性校验；它只保存可信的 `ownerComponentId`，用于组件生命周期、诊断、埋点和后续卸载。
 
 Deep Link 可见性独立于组件可见性。`exported` 不表示允许外部 URI；允许 Deep Link 也不表示绕过权限拦截器。
 
@@ -435,7 +527,7 @@ v0.1 只建立所有权模型，不实现运行时激活和停用。
 ```text
 routeId
 ownerComponentId
-paths
+patterns
 visibility
 visibleTo
 deepLinkPolicy
@@ -459,12 +551,14 @@ Registrar 不能解析路由、导航、访问 Adapter 或关闭 Runtime。
 Registry 在冻结前检查：
 
 - 重复 Route ID。
-- 重复或缺失主 Path。
+- 重复、缺失或不可反向生成的主 Pattern。
 - 重复 Interceptor ID。
 - 未声明的所属组件。
 - 未知父路由、Shell 或 Outlet。
-- 非法可见组件。
-- 静态可判断的 Path 冲突。
+- `component` 路由同时声明 `visibleTo` 等定义内冲突。
+- 静态可判断的同层 Pattern 冲突。
+
+`visibleTo` 引用、跨组件依赖和导出范围由生成器、应用聚合检查及 CI 验证，不由 Runtime 根据调用方身份执行。
 
 ---
 
@@ -527,7 +621,7 @@ Adapter 必须报告：
 默认 `CCGoRouterAdapter` 负责：
 
 - 把中立 Route Definition 转换为 `GoRoute`/Shell 路由结构。
-- 注册主 Path 与别名。
+- 注册主 Pattern 与别名。
 - 关联 Path、Query、Extra 和 RouteEntry。
 - 将 `go_router` 栈变化映射为统一生命周期。
 - 将平台传入 URI 交给 `CCRouter.open` 的内部管线处理。
@@ -545,7 +639,7 @@ navigatorOutlet
 routeKind
 ```
 
-Adapter 初始化时声明能力集合。路由要求 Shell、透明页面或自定义转场而 Adapter 不支持时，初始化必须失败，不能静默降级。
+Adapter 初始化时声明能力集合。路由要求 Shell、指定 Page/Dialog Route 类型、透明页面、底部弹出、Dialog 或自定义转场而 Adapter 不支持时，初始化必须失败，不能静默降级。
 
 ### 12.2 BuildContext 与 Outlet 解析
 
@@ -615,13 +709,38 @@ created -> resolving -> pushed -> visible -> hidden
 
 ## 14. Deep Link
 
+### 14.1 外部来源判定
+
+`CCDeepLinkPolicy` 判断的是导航请求的可信入口来源，而不是 URI 的文本形态。完整 `https` URL 可能由应用内部主动打开，平台 Deep Link 也可能被归一化成 `/orders/100`，因此不能根据 Scheme、Host 或是否为绝对 URI 推断外部性。
+
+Runtime 为每次导航保存框架内部的 Origin，至少区分：
+
+```text
+internal            类型安全 Intent、应用内 open、状态恢复
+externalPlatform    Universal Link、App Link、自定义 Scheme、Initial URI
+externalNotification 外部通知载荷中的 URI
+externalQr          扫码等不可信外部输入
+```
+
+- `CCRouterApp`、平台 Adapter 或应用 Composition Root 持有的受控 Host 入口负责创建外部 Origin。
+- 普通业务导航 API 不暴露 `external` 布尔值，也不能把内部请求伪装成外部请求或把外部请求降级为内部请求。
+- `CCRouter.navigator.open(uri)` 默认表示应用内主动打开；外部 URI 必须从受控 Deep Link Ingress 进入。
+- `CCNavigationSource` 是业务可填写的埋点来源，不是安全信任标记；`CCNavigationSource.deepLink(...)` 本身不能启用或绕过 `CCDeepLinkPolicy`。
+- Redirect 必须继承最初 Origin，直到整条导航完成，不能通过重定向绕过 Deep Link Policy。
+- “其他业务组件调用”属于应用内导航，组件契约可见性与 Deep Link 外部来源判定互不替代。
+
+Core 当前的 `external` 参数只作为内部实现阶段的等价信号；接入 `CCRouterApp` 和 Adapter 时必须收敛进不可由业务构造的导航上下文。
+
+### 14.2 外部导航流程
+
 外部导航流程：
 
 ```text
 Platform URI
+  -> 可信 Ingress 标记外部 Origin
   -> Scheme/Host 白名单
-  -> Path 匹配
-  -> Deep Link 可见性检查
+  -> Pattern 匹配
+  -> Deep Link Policy 检查
   -> Codec 参数解析
   -> CCRouter 导航管线
   -> 两层拦截器
@@ -632,6 +751,7 @@ Platform URI
 
 - Scheme 和 Host 使用精确配置，不接受隐式通配。
 - Route 必须显式启用 Deep Link。
+- 外部 Origin 必须由可信入口创建，不能由 URI 形态或埋点 Source 推断。
 - Query 中未知参数默认忽略还是报错需要由路由策略明确声明。
 - 敏感参数不得出现在 URI 中。
 - 外部请求不接受 Extra。
@@ -651,6 +771,8 @@ const CCNavigationSource.feature('home.order_banner');
 const CCNavigationSource.deepLink('universal_link');
 const CCNavigationSource.notification('order_status_push');
 ```
+
+`CCNavigationSource` 只描述产品埋点语义；框架内部 Origin 单独记录入口信任级别并驱动 `CCDeepLinkPolicy`。二者可以相关但不能互相推导，例如应用内部推广位可以打开完整 Web URL，外部平台入口也可能携带普通 Path。
 
 框架自动补充：
 
@@ -726,7 +848,7 @@ cc_routes.md
 
 每条路由包含：
 
-- Route ID、主 Path、别名和正则约束。
+- Route ID、主 Pattern、Path/URI/Regex 别名和正则约束。
 - 所属组件、可见性和 `visibleTo`。
 - 是否支持 Deep Link。
 - 参数名、来源、类型、必填性、默认值和说明。
@@ -754,9 +876,9 @@ public    只包含对外导出的路由契约
 
 ```text
 CCRouteNotFoundError
+CCRouteAmbiguityError
 CCRouteUnavailableError
 CCRouteParameterError
-CCRouteVisibilityError
 CCRouteResultTypeError
 CCRouteRedirectLoopError
 CCRouteCancelledError
@@ -772,9 +894,9 @@ CCNavigationCapabilityError
 
 组件级生成必须检查：
 
-- Route ID、Path 和参数声明格式。
-- 主 Path 唯一且可反向生成。
-- Path 参数与构造参数一致。
+- Route ID、Pattern 和参数声明格式。
+- 主 Pattern 唯一、非 `matchOnly` 且可反向生成。
+- Path 与 URI Pattern 参数和构造参数一致。
 - Query/Extra 注解不冲突。
 - 参数类型存在可用 Codec。
 - Tracking 字段符合隐私与序列化要求。
@@ -783,7 +905,7 @@ CCNavigationCapabilityError
 应用聚合阶段必须检查：
 
 - Route ID 全局唯一。
-- 主 Path、别名和正则匹配不存在确定性冲突。
+- 主 Pattern、别名和正则匹配不存在确定性冲突。
 - `ownerComponentId` 和 `visibleTo` 引用有效组件。
 - 跨组件路由消费满足依赖和可见性约束。
 - Interceptor、Shell、父路由和 Outlet 引用有效。
@@ -828,7 +950,7 @@ Adapter 实现者可以使用单独导出的：
 
 ### 阶段 A：Pure Dart 路由契约
 
-- Route ID、Path、可见性、Intent、Codec 和错误。
+- Route ID、Path/URI/Regex Pattern、可见性、Intent、Codec 和错误。
 - `CCRegistry.registerRoute`。
 - `CCRouter.navigator` 及 `push/replace/go/reset/open/pop/canPop` 门面。
 - 内存测试 Adapter。
@@ -849,7 +971,7 @@ Adapter 实现者可以使用单独导出的：
 
 ### 阶段 D：GoRouter Adapter
 
-- 主 Path、别名、Query、Extra 和返回值。
+- 主 Pattern、别名、Query、Extra 和返回值。
 - Shell、Outlet 和生命周期同步。
 - Deep Link 入口。
 - 可选 BuildContext 的 Outlet 解析和 `CCRouterApp` 集成。
@@ -868,8 +990,8 @@ Adapter 实现者可以使用单独导出的：
 1. 组件内部路由不会出现在对外契约中。
 2. 外部组件只能通过显式导出的类型安全 Intent 调用路由。
 3. 所有业务跳转统一经过 `CCRouter.navigator`，无法通过生成 API 绕过拦截器。
-4. 一个路由可以通过主 Path、历史别名和允许的 Deep Link 解析为同一个 Route ID。
-5. 正则约束失败时返回参数或未匹配错误，不进入页面 Factory。
+4. 一个路由可以通过主 Pattern、完整 URL、自定义 Scheme、历史别名和完整正则解析为同一个 Route ID。
+5. 正则约束失败时返回参数或未匹配错误，不进入页面 Factory；完整正则只允许全匹配。
 6. Path、Query 和 Extra 正确注入类型化页面参数。
 7. 同一路由打开两次时返回值和 Route Scope 不串联。
 8. Global Interceptor 先于 Route Interceptor，Redirect 保留来源并能检测循环。
@@ -894,20 +1016,22 @@ Adapter 实现者可以使用单独导出的：
 - Core 保持 Pure Dart。
 - 默认使用 GoRouter Adapter，允许自定义 Adapter。
 - 生成中立 Definition，不直接生成 `GoRoute`。
-- Route ID 与 Path 分离。
-- 支持一个主 Path、多个别名和参数正则约束。
+- Route ID 与寻址 Pattern 分离。
+- 支持一个可生成地址的主 Pattern，以及多个 Path、结构化 URI、完整 Regex 别名和参数正则约束。
+- Pattern 固定按结构化 URI、Path、完整 Regex 排序；同优先级歧义显式失败。
 - 使用类型安全 Intent 和生成 Codec，不以参数 Map 作为业务契约。
 - 路由默认仅组件内部可见，对外契约显式生成。
+- `visibleTo` 只做生成期和 CI 治理，Runtime 不校验调用方组件身份。
+- 展示契约区分 Page、模态 BottomSheet 与 Dialog；Page 和 Dialog 分别使用独立的 Route Type 表达 Flutter 对应语义。
 - 业务拦截器只有 Global 和 Route 两层。
 - 埋点来源和字段白名单进入统一 Runtime 管线。
+- Deep Link 外部性由可信 Ingress 创建的内部 Origin 决定，不根据 URL 形态或业务 `CCNavigationSource` 推断。
 - 输出 JSON 和带 DartDoc 的 Markdown 路由文档。
 
 ### 待实现时验证
 
-- 完整 `matchOnly` 正则别名是否进入 v0.1。
 - `replace` 对被替换 RouteEntry Future 的标准完成语义。
 - Query 未知字段默认忽略还是严格失败。
-- `visibleTo` 只做构建期治理，还是同时引入可信调用方身份进行 Runtime 校验。
 - GoRouter 对 Shell、多别名和交互式返回的版本兼容范围。
 
 ---
@@ -927,9 +1051,11 @@ Adapter 实现者可以使用单独导出的：
 改造：
 
 - 参数辅助 Map 改为类型安全 Intent 和 Route Codec。
-- 路由名称改为稳定 Route ID、主 Path 和别名的分离模型。
+- 路由名称改为稳定 Route ID、主 Pattern 和别名的分离模型。
 - 页面生命周期改为 Adapter 上报的 RouteEntry 生命周期。
 - 多导航后端改为消费同一份中立 Definition，而不是切换生成模板。
+
+TheRouter 的完整 URL、自定义 Scheme、多 Path 和正则能力用于校准 CCRouter 的能力范围，但不照搬其不透明字符串键与正则启发式检测。CCRouter 使用显式 Pattern 类型、结构化 URI 比较和完整正则匹配，使地址生成、参数注入、冲突诊断和跨端文档都能共享同一语义。
 - 多 Package 扫描改为组件 Registrar 和应用聚合校验。
 
 不采用：

@@ -514,10 +514,12 @@ abstract interface class CCDisposable {
 ### 10.1 基本原则
 
 - 所有业务跳转统一通过 `CCRouter.navigator`，生成的 Route API 只创建类型安全 Intent。
-- Route ID 是稳定身份；一个路由可以拥有一个主 Path 和多个匹配别名。
-- Path 负责匹配页面；`CCRouteEntry` 负责一次导航实例的生命周期和返回值。
+- Route ID 是稳定身份；一个路由可以拥有一个主 Pattern 和多个 Path、完整 URL、自定义 Scheme 或正则别名。
+- Pattern 负责匹配页面；`CCRouteEntry` 负责一次导航实例的生命周期和返回值。
+- Deep Link 外部性由 `CCRouterApp`、平台 Adapter 或受控 Host 入口写入的内部 Origin 决定，不根据 URL 形态或业务埋点 Source 推断；重定向必须继承原始 Origin。
 - Core、Intent 和 Definition 不依赖 Flutter、`BuildContext` 或 `go_router`。
 - 默认提供 GoRouter Adapter，同时允许自定义 Adapter 消费同一份中立 Definition。
+- 路由展示契约区分普通 Page、模态 BottomSheet 与 Dialog；Page 和 Dialog 分别声明平台默认、Material 或 Cupertino Route 类型。
 - 完整设计见 [CCRouter 路由子系统设计](CCRouter-route-design.md)。
 
 ### 10.2 路由声明
@@ -525,7 +527,7 @@ abstract interface class CCDisposable {
 ```dart
 @CCRoute<AddressResult>(
   id: 'address.select',
-  paths: [CCPath('/address/select', primary: true)],
+  patterns: [CCPathPattern('/address/select', primary: true)],
   visibility: CCRouteVisibility.exported,
 )
 final class AddressSelectPage {
@@ -541,13 +543,16 @@ final class AddressSelectPage {
 /order/detail/:orderId
 /order/detail/1001?source=cart
 ccrouter://order/detail/1001?source=cart
+https://m.example.com/order/detail/1001?source=cart
 ```
 
-Path 和 Query 参数由生成的 Route Codec 解析，业务 API 不暴露参数 Map：
+Path Pattern、结构化 URI Pattern 和完整 Regex Pattern 按固定优先级解析；Query 与命名捕获参数交给生成的 Route Codec，业务 API 不暴露参数 Map：
 
 ```text
 URL -> RouteCodec -> Typed Route Args -> Route Factory -> Widget
 ```
+
+完整 URL 不天然等于外部 Deep Link，普通 Path 也不天然等于内部导航。类型安全 Intent 和应用内 `open` 使用内部 Origin；Universal Link、App Link、自定义 Scheme、通知 URI 和扫码输入通过受控 Ingress 使用外部 Origin 并执行 `CCDeepLinkPolicy`。业务可填写的导航 Source 只用于埋点，不能改变该信任属性。
 
 复杂对象默认不直接塞进 URL。需要传递内存对象时可使用 `extra`，但必须标记 `localOnly`，不可用于 Deep Link、跨 Isolate 或状态恢复。
 
@@ -924,7 +929,7 @@ ComponentTestHost
 
 ### 16.2 能力可见性
 
-普通能力可以区分组件内部能力和显式导出的跨组件契约。路由使用更严格的双维模型：`component/exported` 控制组件契约可见性，Deep Link Policy 独立控制是否允许外部 URI。跨组件可见、允许外部进入和运行时授权互不等价，具体规则见 [路由子系统设计](CCRouter-route-design.md#9-组件所有权与可见性)。
+普通能力可以区分组件内部能力和显式导出的跨组件契约。路由使用更严格的双维模型：`component/exported` 控制组件契约可见性，Deep Link Policy 独立控制是否允许外部 URI。跨组件可见、允许外部进入和运行时授权互不等价，具体规则见 [路由子系统设计](CCRouter-route-design.md#9-组件所有权与可见性)。`visibleTo` 由生成器、文档和 CI 执行依赖与导出治理；Runtime 不接收或信任调用方组件 ID，也不把契约可见性作为运行时安全机制。
 
 ### 16.3 多产品装配
 
@@ -998,7 +1003,7 @@ CCRouter.diagnostics.exportReport();
 建议第一阶段完成一条端到端纵向链路，而不是同时铺开所有功能：
 
 1. Component Manifest 和生成 Component Registrar。
-2. Route 注册、URL 匹配、Path/Query Codec。
+2. Route 注册、Path/URI/Regex Pattern 匹配、Path/Query Codec。
 3. `CCRouter.navigator` 及 `push<T>()`、`replace()`、`go()`、`open()` 和 `pop<T>()`。
 4. App、Session、Route 三种 Scope。
 5. 强类型 Service Registry 和构造函数 Factory。
@@ -1021,7 +1026,7 @@ CCRouter.diagnostics.exportReport();
 1. 订单组件调用支付契约，但不引用支付实现。
 2. 同一服务存在多个实现时，默认实现和命名实现都能确定性解析。
 3. 重复 Route、Service、Task ID 在生成阶段失败。
-4. URL Path 和 Query 可以解析为类型化参数。
+4. 标准 Path、完整 URL、自定义 Scheme、完整正则和 Query 可以解析为类型化参数。
 5. 同一 URL 同时打开两次，两个调用方收到各自返回值。
 6. 用户退出登录后，Session Service 被销毁，旧代理不能调用新会话。
 7. 重新登录后，Session Service 按 Factory 创建新实例。

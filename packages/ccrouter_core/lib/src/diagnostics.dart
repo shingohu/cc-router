@@ -1,6 +1,10 @@
 part of 'runtime.dart';
 
 /// Immutable diagnostic outcome for one framework invocation.
+///
+/// Use trace records for development diagnostics, latency inspection, and
+/// sanitized failure reporting. They are not a replacement for business
+/// analytics and intentionally omit arbitrary payload data.
 final class CCTraceRecord {
   /// Creates a completed trace record.
   const CCTraceRecord({

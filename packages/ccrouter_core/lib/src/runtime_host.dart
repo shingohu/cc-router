@@ -3,17 +3,23 @@ part of 'runtime.dart';
 /// Stateful execution kernel used by the framework host and core tests.
 ///
 /// Production applications access it only through the `ccrouter` facade.
+/// Framework hosts use it to isolate one component graph per Dart isolate;
+/// low-level tests may create independent instances to verify Runtime behavior.
 final class CCRouterRuntime {
   /// Creates a Runtime owned by the public framework host.
   ///
   /// Application business code must initialize the framework through the
   /// `ccrouter` facade instead of constructing this low-level engine directly.
+  /// This constructor exists for the facade's application-host integration.
   factory CCRouterRuntime.forHost({
     int traceCapacity = 1000,
     Iterable<CCComponentManifest> components = const [],
   }) => CCRouterRuntime._(traceCapacity: traceCapacity, components: components);
 
   /// Creates an independently owned Runtime for low-level core tests.
+  ///
+  /// Use this only when testing Core semantics without the static business
+  /// facade; application tests will eventually use the `ccrouter_test` host.
   factory CCRouterRuntime.forTesting({
     int traceCapacity = 1000,
     Iterable<CCComponentManifest> components = const [],
@@ -56,6 +62,9 @@ final class CCRouterRuntime {
 
   /// Event subscribers indexed by event type and stable subscriber identifier.
   final Map<Type, Map<String, _Handler>> _events = {};
+
+  /// Component-owned route definitions indexed by stable route ID.
+  final _RouteRegistry _routeRegistry = _RouteRegistry();
 
   /// Bounded completed invocation trace buffer.
   final Queue<CCTraceRecord> _traces = Queue();
@@ -110,6 +119,9 @@ final class CCRouterRuntime {
       List.unmodifiable(_subscriberErrors);
 
   /// Freezes registration and starts accepting operations.
+  ///
+  /// Framework hosts call this after all component registrars complete; no
+  /// capability may be added after initialization.
   Future<void> initialize() async {
     if (_disposed) throw const CCScopeClosedError('runtime');
     if (_initialized) return;
@@ -117,6 +129,9 @@ final class CCRouterRuntime {
   }
 
   /// Registers [provider] after validating key and default conflicts.
+  ///
+  /// This low-level entry point exists for Core tests. Components must register
+  /// through the restricted [CCRegistry] supplied to their Registrar.
   void registerService<T extends Object>(CCServiceProvider<T> provider) {
     _registerServiceForComponent('', provider);
   }
@@ -148,6 +163,9 @@ final class CCRouterRuntime {
   }
 
   /// Registers the single handler for command type [C].
+  ///
+  /// This low-level entry point exists for Core tests; components use the
+  /// component-bound [CCRegistry].
   void registerCommand<C extends CCCommand<R>, R>(CCHandler<C, R> handler) {
     _registerCommandForComponent('', handler);
   }
@@ -165,6 +183,9 @@ final class CCRouterRuntime {
   }
 
   /// Registers the single handler for query type [Q].
+  ///
+  /// This low-level entry point exists for Core tests; components use the
+  /// component-bound [CCRegistry].
   void registerQuery<Q extends CCQuery<R>, R>(CCHandler<Q, R> handler) {
     _registerQueryForComponent('', handler);
   }
@@ -182,6 +203,9 @@ final class CCRouterRuntime {
   }
 
   /// Registers an action [handler] under a globally unique [id].
+  ///
+  /// This low-level entry point exists for Core tests; components use the
+  /// component-bound [CCRegistry].
   void registerAction<A extends CCAction>(
     String id,
     CCHandler<A, void> handler,
@@ -202,6 +226,9 @@ final class CCRouterRuntime {
   }
 
   /// Registers an Event [handler] under a globally unique [id].
+  ///
+  /// This low-level entry point exists for Core tests; components use the
+  /// component-bound [CCRegistry].
   void registerEvent<E extends CCEvent>(String id, CCHandler<E, void> handler) {
     _registerEventForComponent('', id, handler);
   }
@@ -216,6 +243,65 @@ final class CCRouterRuntime {
       await handler(message as E, context);
       return null;
     });
+  }
+
+  /// Registers a route directly for low-level Runtime tests.
+  ///
+  /// Components must use [CCRegistry.registerRoute] so the Runtime can inject a
+  /// trustworthy component owner.
+  void registerRoute<A, R>(CCRouteDefinition<A, R> definition) {
+    _registerRouteForComponent('', definition);
+  }
+
+  /// Registers a route while retaining its trusted component owner.
+  void _registerRouteForComponent<A, R>(
+    String ownerComponentId,
+    CCRouteDefinition<A, R> definition,
+  ) {
+    _ensureConfigurable();
+    _routeRegistry.register(ownerComponentId, definition);
+  }
+
+  /// Stable IDs of all installed route definitions.
+  ///
+  /// Low-level tests and diagnostics use this deterministic snapshot to inspect
+  /// route assembly; business navigation must use generated Intents.
+  List<String> get registeredRouteIds => _routeRegistry.routeIds;
+
+  /// Resolves an internal or external URI to a normalized route location.
+  ///
+  /// Navigation adapters use this for URI and deep-link matching. Business code
+  /// should navigate through `CCRouter.navigator` instead of resolving strings.
+  CCRouteLocation resolveRoute(String location, {bool external = false}) {
+    _ensureInitialized();
+    return _routeRegistry.resolve(location, external: external);
+  }
+
+  /// Decodes a resolved route location into its generated argument type.
+  ///
+  /// Navigation adapters use this after [resolveRoute] to inject typed page
+  /// arguments; business code should not depend on the type-erased result.
+  Object decodeRouteArguments(CCRouteLocation location, {Object? extra}) {
+    _ensureInitialized();
+    return _routeRegistry.decode(location, extra: extra);
+  }
+
+  /// Activates routes owned by [componentId] for future navigation.
+  ///
+  /// Component lifecycle orchestration uses this when re-enabling a compiled-in
+  /// optional component. It is not for login, page visibility, or tab changes.
+  void activateComponent(String componentId) {
+    _ensureInitialized();
+    _routeRegistry.activateComponent(componentId);
+  }
+
+  /// Deactivates routes owned by [componentId] without removing definitions.
+  ///
+  /// Component lifecycle orchestration uses this to reject new navigation while
+  /// a component is unavailable. It is not an authorization or logout API.
+  void deactivateComponent(String componentId) {
+    _ensureInitialized();
+    _routeRegistry.deactivateComponent(componentId);
   }
 
   /// Resolves the default or keyed service implementation for [T].
@@ -331,6 +417,9 @@ final class CCRouterRuntime {
   }
 
   /// Permanently shuts down this Runtime and all of its Scopes.
+  ///
+  /// Hosts use this for final isolate teardown; use [closeSession] for logout so
+  /// App-scoped services remain available.
   Future<void> dispose() {
     if (_disposeFuture != null) return _disposeFuture!;
     _disposed = true;
