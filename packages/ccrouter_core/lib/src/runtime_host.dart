@@ -1,0 +1,636 @@
+part of 'runtime.dart';
+
+/// Stateful execution kernel used by the framework host and core tests.
+///
+/// Production applications access it only through the `ccrouter` facade.
+final class CCRouterRuntime {
+  /// Creates a Runtime owned by the public framework host.
+  ///
+  /// Application business code must initialize the framework through the
+  /// `ccrouter` facade instead of constructing this low-level engine directly.
+  factory CCRouterRuntime.forHost({
+    int traceCapacity = 1000,
+    Iterable<CCComponentManifest> components = const [],
+  }) => CCRouterRuntime._(traceCapacity: traceCapacity, components: components);
+
+  /// Creates an independently owned Runtime for low-level core tests.
+  factory CCRouterRuntime.forTesting({
+    int traceCapacity = 1000,
+    Iterable<CCComponentManifest> components = const [],
+  }) => CCRouterRuntime._(traceCapacity: traceCapacity, components: components);
+
+  /// Creates a Runtime with validated configuration and installed components.
+  CCRouterRuntime._({
+    this.traceCapacity = 1000,
+    Iterable<CCComponentManifest> components = const [],
+  }) {
+    if (traceCapacity < 0)
+      throw ArgumentError.value(traceCapacity, 'traceCapacity');
+    _installComponents(components);
+  }
+
+  /// Zone key carrying the current invocation and its parent trace.
+  static final Object _invocationZoneKey = Object();
+
+  /// Zone key carrying the Scope of a service under construction.
+  static final Object _constructionZoneKey = Object();
+
+  /// Maximum number of trace and subscriber error records retained.
+  final int traceCapacity;
+
+  /// Runtime-specific prefix preventing trace identifiers from colliding.
+  final String _runtimeId =
+      '${DateTime.now().microsecondsSinceEpoch}-${Random.secure().nextInt(1 << 32)}';
+
+  /// Service providers grouped by contract type.
+  final Map<Type, List<_Provider>> _providers = {};
+
+  /// Single command handler indexed by command type.
+  final Map<Type, _Handler> _commands = {};
+
+  /// Single query handler indexed by query type.
+  final Map<Type, _Handler> _queries = {};
+
+  /// Action handlers indexed by action type and stable handler identifier.
+  final Map<Type, Map<String, _Handler>> _actions = {};
+
+  /// Event subscribers indexed by event type and stable subscriber identifier.
+  final Map<Type, Map<String, _Handler>> _events = {};
+
+  /// Bounded completed invocation trace buffer.
+  final Queue<CCTraceRecord> _traces = Queue();
+
+  /// Bounded sanitized failures from isolated Event subscribers.
+  final List<CCInvocationError> _subscriberErrors = [];
+
+  /// Installed components in deterministic dependency order.
+  final List<CCComponentManifest> _components = [];
+
+  /// Scope that owns Runtime-wide service instances.
+  final CCScope appScope = CCScope('app');
+
+  /// Scope that owns services for the active authenticated Session.
+  CCScope? _sessionScope;
+
+  /// Immutable information for the active authenticated Session.
+  CCSession? _session;
+
+  /// Whether initialization completed and operations are accepted.
+  bool _initialized = false;
+
+  /// Whether shutdown permanently closed this Runtime.
+  bool _disposed = false;
+
+  /// Monotonic sequence used in invocation and span identifiers.
+  int _sequence = 0;
+
+  /// Monotonic sequence used in Session identifiers.
+  int _sessionSequence = 0;
+
+  /// Memoized shutdown operation that makes disposal idempotent.
+  Future<void>? _disposeFuture;
+
+  /// Whether this Runtime currently accepts framework operations.
+  bool get isInitialized => _initialized;
+
+  /// Immutable installed component list.
+  List<CCComponentManifest> get components => List.unmodifiable(_components);
+
+  /// Active Session Scope, exposed only to low-level core tests.
+  CCScope? get sessionScope => _sessionScope;
+
+  /// Immutable information for the active Session.
+  CCSession? get session => _session;
+
+  /// Immutable snapshot of the bounded trace buffer.
+  List<CCTraceRecord> get recentTraces => List.unmodifiable(_traces);
+
+  /// Immutable snapshot of sanitized Event subscriber failures.
+  List<CCInvocationError> get subscriberErrors =>
+      List.unmodifiable(_subscriberErrors);
+
+  /// Freezes registration and starts accepting operations.
+  Future<void> initialize() async {
+    if (_disposed) throw const CCScopeClosedError('runtime');
+    if (_initialized) return;
+    _initialized = true;
+  }
+
+  /// Registers [provider] after validating key and default conflicts.
+  void registerService<T extends Object>(CCServiceProvider<T> provider) {
+    _registerServiceForComponent('', provider);
+  }
+
+  /// Registers [provider] while retaining the component owner internally.
+  void _registerServiceForComponent<T extends Object>(
+    String ownerComponentId,
+    CCServiceProvider<T> provider,
+  ) {
+    _ensureConfigurable();
+    if (provider.scope == CCServiceScope.component ||
+        provider.scope == CCServiceScope.route) {
+      throw const CCRegistrationError(
+        'Component and Route scopes are not implemented yet.',
+      );
+    }
+    final providers = _providers.putIfAbsent(T, () => []);
+    final name = provider.key?.name;
+    final isDefault = provider.isDefault || name == null;
+    if (providers.any((item) => item.name == name)) {
+      throw CCRegistrationError('Duplicate service key ($T, $name).');
+    }
+    if (isDefault && providers.any((item) => item.isDefault)) {
+      throw CCRegistrationError('Multiple default providers for $T.');
+    }
+    providers.add(
+      _Provider(T, name, provider.scope, isDefault, provider.factory),
+    );
+  }
+
+  /// Registers the single handler for command type [C].
+  void registerCommand<C extends CCCommand<R>, R>(CCHandler<C, R> handler) {
+    _registerCommandForComponent('', handler);
+  }
+
+  /// Registers a command while retaining the component owner internally.
+  void _registerCommandForComponent<C extends CCCommand<R>, R>(
+    String ownerComponentId,
+    CCHandler<C, R> handler,
+  ) {
+    _registerSingle(
+      _commands,
+      C,
+      (message, context) => handler(message as C, context),
+    );
+  }
+
+  /// Registers the single handler for query type [Q].
+  void registerQuery<Q extends CCQuery<R>, R>(CCHandler<Q, R> handler) {
+    _registerQueryForComponent('', handler);
+  }
+
+  /// Registers a query while retaining the component owner internally.
+  void _registerQueryForComponent<Q extends CCQuery<R>, R>(
+    String ownerComponentId,
+    CCHandler<Q, R> handler,
+  ) {
+    _registerSingle(
+      _queries,
+      Q,
+      (message, context) => handler(message as Q, context),
+    );
+  }
+
+  /// Registers an action [handler] under a globally unique [id].
+  void registerAction<A extends CCAction>(
+    String id,
+    CCHandler<A, void> handler,
+  ) {
+    _registerActionForComponent('', id, handler);
+  }
+
+  /// Registers an action while retaining the component owner internally.
+  void _registerActionForComponent<A extends CCAction>(
+    String ownerComponentId,
+    String id,
+    CCHandler<A, void> handler,
+  ) {
+    _registerMultiple(_actions, A, id, (message, context) async {
+      await handler(message as A, context);
+      return null;
+    });
+  }
+
+  /// Registers an Event [handler] under a globally unique [id].
+  void registerEvent<E extends CCEvent>(String id, CCHandler<E, void> handler) {
+    _registerEventForComponent('', id, handler);
+  }
+
+  /// Registers an event subscriber while retaining the component owner.
+  void _registerEventForComponent<E extends CCEvent>(
+    String ownerComponentId,
+    String id,
+    CCHandler<E, void> handler,
+  ) {
+    _registerMultiple(_events, E, id, (message, context) async {
+      await handler(message as E, context);
+      return null;
+    });
+  }
+
+  /// Resolves the default or keyed service implementation for [T].
+  T service<T extends Object>({CCServiceKey<T>? key}) {
+    _ensureInitialized();
+    final provider = _findProvider<T>(key);
+    if (provider == null)
+      throw CCResolutionError('No provider for $T with key $key.');
+    return _resolve(provider) as T;
+  }
+
+  /// Resolves [T], returning null only when no matching provider exists.
+  T? serviceOrNull<T extends Object>({CCServiceKey<T>? key}) {
+    _ensureInitialized();
+    final provider = _findProvider<T>(key);
+    return provider == null ? null : _resolve(provider) as T;
+  }
+
+  /// Whether a provider for [T] and [key] is registered.
+  bool hasService<T extends Object>({CCServiceKey<T>? key}) {
+    _ensureInitialized();
+    return _findProvider<T>(key) != null;
+  }
+
+  /// Resolves all implementations of [T] in deterministic key order.
+  List<T> services<T extends Object>() {
+    _ensureInitialized();
+    final providers = List<_Provider>.of(_providers[T] ?? [])
+      ..sort((a, b) => (a.name ?? '').compareTo(b.name ?? ''));
+    return List.unmodifiable(
+      providers.map((provider) => _resolve(provider) as T),
+    );
+  }
+
+  /// Dispatches [command] with optional timeout and cancellation constraints.
+  Future<R> command<R>(
+    CCCommand<R> command, {
+    Duration? timeout,
+    CCCancellationToken? cancellation,
+  }) => _dispatch<R>('command', command, _commands, timeout, cancellation);
+
+  /// Dispatches [query] with optional timeout and cancellation constraints.
+  Future<R> query<R>(
+    CCQuery<R> query, {
+    Duration? timeout,
+    CCCancellationToken? cancellation,
+  }) => _dispatch<R>('query', query, _queries, timeout, cancellation);
+
+  /// Runs matching Action handlers serially in stable identifier order.
+  Future<CCActionReport> action(CCAction action) =>
+      _invoke('action', action.runtimeType.toString(), (context) async {
+        final handlers = _sortedHandlers(_actions[action.runtimeType]);
+        for (final handler in handlers) {
+          await handler(action, context);
+        }
+        return CCActionReport(handled: handlers.length);
+      });
+
+  /// Publishes [event] concurrently while isolating subscriber failures.
+  Future<void> event(CCEvent event) =>
+      _invoke('event', event.runtimeType.toString(), (context) async {
+        final handlers = _sortedHandlers(_events[event.runtimeType]);
+        await Future.wait(
+          handlers.map((handler) async {
+            try {
+              await handler(event, context);
+            } catch (error) {
+              if (traceCapacity > 0) {
+                if (_subscriberErrors.length == traceCapacity)
+                  _subscriberErrors.removeAt(0);
+                _subscriberErrors.add(
+                  CCInvocationError('Subscriber failed: ${error.runtimeType}'),
+                );
+              }
+            }
+          }),
+        );
+      });
+
+  /// Opens an authenticated account Session and creates its owning Scope.
+  void openSession({
+    required String accountId,
+    Map<String, Object?> metadata = const {},
+  }) {
+    _ensureInitialized();
+    if (accountId.trim().isEmpty) {
+      throw const CCResolutionError('Session accountId must not be empty.');
+    }
+    if (_sessionScope != null)
+      throw const CCResolutionError(
+        'Close the current Session before opening another.',
+      );
+    final sessionId = 'session-${++_sessionSequence}';
+    _sessionScope = CCScope(sessionId);
+    _session = CCSession._(
+      sessionId: sessionId,
+      accountId: accountId,
+      openedAt: DateTime.now(),
+      metadata: metadata,
+    );
+  }
+
+  /// Closes the active Session and releases Session-owned resources.
+  Future<void> closeSession() async {
+    _ensureInitialized();
+    final scope = _sessionScope;
+    if (scope == null) return;
+    await scope.close();
+    if (identical(_sessionScope, scope)) {
+      _sessionScope = null;
+      _session = null;
+    }
+  }
+
+  /// Permanently shuts down this Runtime and all of its Scopes.
+  Future<void> dispose() {
+    if (_disposeFuture != null) return _disposeFuture!;
+    _disposed = true;
+    _initialized = false;
+    return _disposeFuture = _closeScopes();
+  }
+
+  /// Cancels Runtime work before disposing Session and App Scopes.
+  Future<void> _closeScopes() async {
+    // Stop invocations before awaiting any service disposal.
+    appScope.cancellation.cancel();
+    await _sessionScope?.close();
+    await appScope.close();
+    _sessionScope = null;
+    _session = null;
+  }
+
+  /// Resolves one normalized [provider] in its effective owner Scope.
+  Object _resolve(_Provider provider) {
+    final owner = Zone.current[_constructionZoneKey];
+    final ownerScope =
+        owner is (CCRouterRuntime, CCServiceScope) && identical(owner.$1, this)
+        ? owner.$2
+        : null;
+    if (ownerScope == CCServiceScope.app &&
+        provider.scope == CCServiceScope.session) {
+      throw const CCResolutionError(
+        'An App service cannot depend on a Session service.',
+      );
+    }
+    final scope =
+        (provider.scope == CCServiceScope.session ||
+            provider.scope == CCServiceScope.transient &&
+                ownerScope == CCServiceScope.session)
+        ? _sessionScope
+        : appScope;
+    if (scope == null) throw const CCResolutionError('No active Session.');
+    if (scope.state != CCScopeState.active) throw CCScopeClosedError(scope.id);
+    final context = _context(scope.id, cancellation: scope.cancellation);
+    Object create() => runZoned(
+      () => provider.factory(context),
+      zoneValues: {
+        _invocationZoneKey: (this, context),
+        _constructionZoneKey: (
+          this,
+          provider.scope == CCServiceScope.transient
+              ? ownerScope ?? CCServiceScope.app
+              : provider.scope,
+        ),
+      },
+    );
+    return scope.resolve(
+      (provider.type, provider.name),
+      create,
+      cache: provider.scope != CCServiceScope.transient,
+    );
+  }
+
+  /// Finds the provider selected by service type [T] and optional [key].
+  _Provider? _findProvider<T>(CCServiceKey<T>? key) {
+    for (final provider in _providers[T] ?? <_Provider>[]) {
+      if (key == null ? provider.isDefault : provider.name == key.name)
+        return provider;
+    }
+    return null;
+  }
+
+  /// Resolves a single message handler and invokes it through [_invoke].
+  Future<R> _dispatch<R>(
+    String operation,
+    Object message,
+    Map<Type, _Handler> registry,
+    Duration? timeout,
+    CCCancellationToken? cancellation,
+  ) => _invoke(
+    operation,
+    message.runtimeType.toString(),
+    (context) async {
+      final handler = registry[message.runtimeType];
+      if (handler == null)
+        throw CCResolutionError(
+          'No $operation handler for ${message.runtimeType}.',
+        );
+      return await handler(message, context) as R;
+    },
+    timeout: timeout,
+    cancellation: cancellation,
+  );
+
+  /// Executes [body] with tracing, inherited deadline, and cancellation.
+  Future<R> _invoke<R>(
+    String operation,
+    String target,
+    FutureOr<R> Function(CCInvocationContext) body, {
+    Duration? timeout,
+    CCCancellationToken? cancellation,
+  }) async {
+    _ensureInitialized();
+    final parent = _parentContext;
+    final now = DateTime.now();
+    final requestedDeadline = timeout == null ? null : now.add(timeout);
+    final parentDeadline = parent?.deadline;
+    final deadline = requestedDeadline == null
+        ? parentDeadline
+        : parentDeadline == null
+        ? requestedDeadline
+        : requestedDeadline.isBefore(parentDeadline)
+        ? requestedDeadline
+        : parentDeadline;
+    final context = _context(
+      parent?.scopeId ?? appScope.id,
+      deadline: deadline,
+    );
+    final cancelled = Completer<R>();
+    final removers = <void Function()>[];
+    for (final token in [
+      appScope.cancellation,
+      parent?.cancellation,
+      cancellation,
+    ]) {
+      if (token != null)
+        removers.add(token.addListener(context.cancellation.cancel));
+    }
+    removers.add(
+      context.cancellation.addListener(() {
+        if (!cancelled.isCompleted)
+          cancelled.completeError(const CCInvocationCancelledError());
+      }),
+    );
+    final watch = Stopwatch()..start();
+    var status = 'succeeded';
+    String? errorType;
+    try {
+      final work = Future<R>.sync(() {
+        if (context.cancellation.isCancelled)
+          throw const CCInvocationCancelledError();
+        if (deadline != null && !deadline.isAfter(DateTime.now()))
+          throw const CCInvocationTimeoutError();
+        return runZoned(
+          () => body(context),
+          zoneValues: {_invocationZoneKey: (this, context)},
+        );
+      });
+      final result = Future.any([work, cancelled.future]);
+      if (deadline == null) return await result;
+      final remaining = deadline.difference(DateTime.now());
+      return await result.timeout(
+        remaining.isNegative ? Duration.zero : remaining,
+        onTimeout: () {
+          throw const CCInvocationTimeoutError();
+        },
+      );
+    } catch (error) {
+      status = error is CCInvocationCancelledError
+          ? 'cancelled'
+          : error is CCInvocationTimeoutError
+          ? 'timedOut'
+          : 'failed';
+      errorType = error.runtimeType.toString();
+      if (status == 'timedOut') context.cancellation.cancel();
+      rethrow;
+    } finally {
+      for (final remove in removers) {
+        remove();
+      }
+      watch.stop();
+      if (traceCapacity > 0) {
+        if (_traces.length == traceCapacity) _traces.removeFirst();
+        _traces.add(
+          CCTraceRecord(
+            context: context,
+            operation: operation,
+            target: target,
+            startedAt: now,
+            duration: watch.elapsed,
+            status: status,
+            errorType: errorType,
+          ),
+        );
+      }
+    }
+  }
+
+  /// Parent invocation carried by the current Zone for this Runtime.
+  CCInvocationContext? get _parentContext {
+    final current = Zone.current[_invocationZoneKey];
+    return current is (CCRouterRuntime, CCInvocationContext) &&
+            identical(current.$1, this)
+        ? current.$2
+        : null;
+  }
+
+  /// Creates a child-aware invocation context for [scopeId].
+  CCInvocationContext _context(
+    String scopeId, {
+    DateTime? deadline,
+    CCCancellationToken? cancellation,
+  }) {
+    final id = '$_runtimeId-$scopeId-${++_sequence}';
+    final parent = _parentContext;
+    return CCInvocationContext(
+      invocationId: id,
+      traceId: parent?.traceId ?? id,
+      spanId: id,
+      parentSpanId: parent?.spanId,
+      scopeId: scopeId,
+      deadline: deadline,
+      cancellation: cancellation,
+    );
+  }
+
+  /// Returns handlers sorted by their stable identifiers.
+  List<_Handler> _sortedHandlers(Map<String, _Handler>? handlers) {
+    if (handlers == null) return [];
+    final ids = handlers.keys.toList()..sort();
+    return ids.map((id) => handlers[id]!).toList();
+  }
+
+  /// Inserts one type-indexed handler and rejects duplicate types.
+  void _registerSingle(
+    Map<Type, _Handler> registry,
+    Type type,
+    _Handler handler,
+  ) {
+    _ensureConfigurable();
+    if (registry.containsKey(type))
+      throw CCRegistrationError('Duplicate handler for $type.');
+    registry[type] = handler;
+  }
+
+  /// Inserts one ID-indexed handler and rejects empty or duplicate IDs.
+  void _registerMultiple(
+    Map<Type, Map<String, _Handler>> registry,
+    Type type,
+    String id,
+    _Handler handler,
+  ) {
+    _ensureConfigurable();
+    if (id.isEmpty ||
+        registry.values.any((handlers) => handlers.containsKey(id))) {
+      throw CCRegistrationError('Empty or duplicate handler ID "$id".');
+    }
+    registry.putIfAbsent(type, () => {})[id] = handler;
+  }
+
+  /// Ensures capability registration has not been frozen or disposed.
+  void _ensureConfigurable() {
+    if (_initialized || _disposed)
+      throw const CCRegistrationError('Runtime registration is frozen.');
+  }
+
+  /// Ensures this Runtime currently accepts framework operations.
+  void _ensureInitialized() {
+    if (!_initialized) throw const CCRouterNotInitializedError();
+  }
+
+  /// Validates, topologically orders, and executes component registrars.
+  void _installComponents(Iterable<CCComponentManifest> components) {
+    final byId = <String, CCComponentManifest>{};
+    for (final component in components) {
+      if (component.id.isEmpty || byId.containsKey(component.id)) {
+        throw CCRegistrationError(
+          'Empty or duplicate component ID "${component.id}".',
+        );
+      }
+      byId[component.id] = component;
+    }
+    final visiting = <String>{};
+    final visited = <String>{};
+    void visit(String id) {
+      if (visited.contains(id)) return;
+      if (!visiting.add(id))
+        throw CCRegistrationError('Component dependency cycle at "$id".');
+      final component = byId[id]!;
+      final dependencies = <String>{
+        ...component.dependencies,
+        ...component.optionalDependencies.where(byId.containsKey),
+      }.toList()..sort();
+      for (final dependency in dependencies) {
+        if (!byId.containsKey(dependency)) {
+          throw CCRegistrationError(
+            'Component "$id" requires missing "$dependency".',
+          );
+        }
+        visit(dependency);
+      }
+      visiting.remove(id);
+      visited.add(id);
+      _components.add(component);
+    }
+
+    final ids = byId.keys.toList()..sort();
+    for (final id in ids) {
+      visit(id);
+    }
+    // Validate the entire dependency graph before executing any registrar.
+    for (final component in _components) {
+      component.registrar.register(
+        _CCComponentRegistry(runtime: this, ownerComponentId: component.id),
+      );
+    }
+  }
+}

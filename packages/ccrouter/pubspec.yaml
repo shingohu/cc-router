@@ -1,0 +1,12 @@
+name: ccrouter
+description: Static CCRouter facade for Flutter applications.
+version: 0.1.0
+resolution: workspace
+publish_to: none
+environment:
+  sdk: ^3.9.0
+dependencies:
+  ccrouter_contracts: ^0.1.0
+  ccrouter_core: ^0.1.0
+dev_dependencies:
+  test: ^1.26.0

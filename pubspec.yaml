@@ -1,0 +1,12 @@
+name: ccrouter_workspace
+publish_to: none
+environment:
+  sdk: ^3.9.0
+
+dev_dependencies:
+  test: ^1.26.0
+
+workspace:
+  - packages/ccrouter_contracts
+  - packages/ccrouter_core
+  - packages/ccrouter

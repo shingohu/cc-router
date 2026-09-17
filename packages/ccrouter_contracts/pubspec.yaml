@@ -1,0 +1,7 @@
+name: ccrouter_contracts
+description: Pure Dart contracts and value types for CCRouter.
+version: 0.1.0
+resolution: workspace
+publish_to: none
+environment:
+  sdk: ^3.9.0
