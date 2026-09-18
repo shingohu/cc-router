@@ -14,10 +14,12 @@ final class CCRouterRuntime {
   /// supplied navigation adapter is initialized and disposed by this Runtime.
   factory CCRouterRuntime.forHost({
     int traceCapacity = 1000,
+    int navigationEventCapacity = 1000,
     Iterable<CCComponentManifest> components = const [],
     CCNavigationAdapter? navigationAdapter,
   }) => CCRouterRuntime._(
     traceCapacity: traceCapacity,
+    navigationEventCapacity: navigationEventCapacity,
     components: components,
     navigationAdapter: navigationAdapter,
   );
@@ -30,10 +32,12 @@ final class CCRouterRuntime {
   @visibleForTesting
   factory CCRouterRuntime.forTesting({
     int traceCapacity = 1000,
+    int navigationEventCapacity = 1000,
     Iterable<CCComponentManifest> components = const [],
     CCNavigationAdapter? navigationAdapter,
   }) => CCRouterRuntime._(
     traceCapacity: traceCapacity,
+    navigationEventCapacity: navigationEventCapacity,
     components: components,
     navigationAdapter: navigationAdapter,
   );
@@ -41,12 +45,20 @@ final class CCRouterRuntime {
   /// Creates a Runtime with validated configuration and installed components.
   CCRouterRuntime._({
     this.traceCapacity = 1000,
+    this.navigationEventCapacity = 1000,
     Iterable<CCComponentManifest> components = const [],
     CCNavigationAdapter? navigationAdapter,
   }) {
     _navigationAdapter = navigationAdapter;
-    if (traceCapacity < 0)
+    if (traceCapacity < 0) {
       throw ArgumentError.value(traceCapacity, 'traceCapacity');
+    }
+    if (navigationEventCapacity < 0) {
+      throw ArgumentError.value(
+        navigationEventCapacity,
+        'navigationEventCapacity',
+      );
+    }
     _installComponents(components);
   }
 
@@ -58,6 +70,9 @@ final class CCRouterRuntime {
 
   /// Maximum number of trace and subscriber error records retained.
   final int traceCapacity;
+
+  /// Maximum number of navigation lifecycle events retained for diagnostics.
+  final int navigationEventCapacity;
 
   /// Runtime-specific prefix preventing trace identifiers from colliding.
   final String _runtimeId =
@@ -86,6 +101,12 @@ final class CCRouterRuntime {
 
   /// Bounded completed invocation trace buffer.
   final Queue<CCTraceRecord> _traces = Queue();
+
+  /// Bounded Runtime navigation lifecycle event buffer.
+  final Queue<CCNavigationLifecycleEvent> _navigationEvents = Queue();
+
+  /// Subscribers receiving Runtime navigation lifecycle events.
+  final Set<CCNavigationLifecycleListener> _navigationListeners = {};
 
   /// Bounded sanitized failures from isolated Event subscribers.
   final List<CCInvocationError> _subscriberErrors = [];
@@ -462,6 +483,8 @@ final class CCRouterRuntime {
       _navigationAdapter = null;
       _sessionScope = null;
       _session = null;
+      _navigationListeners.clear();
+      _navigationEvents.clear();
     }
   }
 

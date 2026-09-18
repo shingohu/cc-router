@@ -56,6 +56,22 @@ abstract final class CCRouter {
   /// business events or sensitive request payloads.
   static List<CCTraceRecord> get recentTraces => _runtime.recentTraces;
 
+  /// Bounded snapshot of recent Runtime navigation lifecycle events.
+  ///
+  /// Use this for local diagnostics and sanitized telemetry export. Events do
+  /// not contain typed route arguments, widget instances, or Pop results.
+  static List<CCNavigationLifecycleEvent> get recentNavigationEvents =>
+      _runtime.recentNavigationEvents;
+
+  /// Subscribes to Runtime navigation lifecycle events.
+  ///
+  /// Use this at the application host boundary for navigation metrics. The
+  /// returned callback removes the listener; listener failures do not fail
+  /// navigation operations.
+  static void Function() addNavigationListener(
+    CCNavigationLifecycleListener listener,
+  ) => _runtime.addNavigationListener(listener);
+
   /// Unified business-facing navigation entry point.
   ///
   /// The returned object is stable across Runtime restarts and resolves the
@@ -68,13 +84,15 @@ abstract final class CCRouter {
   /// Call this once during application host startup with the complete component
   /// assembly. When supplied, [navigationAdapter] is owned, initialized, and
   /// disposed by CCRouter. Tests that need isolated hosts should use dedicated
-  /// test support.
+  /// test support. Set [navigationEventCapacity] to bound the in-memory
+  /// navigation telemetry snapshot retained for diagnostics.
   ///
   /// A second call before [shutdown] completes throws
   /// [CCRouterAlreadyInitializedError].
   static Future<void> initialize({
     required Iterable<CCComponentManifest> components,
     int traceCapacity = 1000,
+    int navigationEventCapacity = 1000,
     CCNavigationAdapter? navigationAdapter,
   }) async {
     if (_defaultRuntime != null ||
@@ -86,6 +104,7 @@ abstract final class CCRouter {
     final runtime = CCRouterRuntime.forHost(
       components: components,
       traceCapacity: traceCapacity,
+      navigationEventCapacity: navigationEventCapacity,
       navigationAdapter: navigationAdapter,
     );
     final initializing = runtime.initialize();

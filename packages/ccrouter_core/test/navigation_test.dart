@@ -76,6 +76,43 @@ final class TestIntent<R> implements CCRouteIntent<R> {
   final Object arguments;
 }
 
+final class FailingNavigationAdapter implements CCNavigationAdapter {
+  @override
+  Future<void> initialize(List<CCNavigationRoute> routes) async {}
+
+  @override
+  Future<Object?> navigate(CCNavigationRequest request) async {
+    throw StateError('backend secret should not be recorded');
+  }
+
+  @override
+  Future<bool> maybePop({Object? result}) async => false;
+
+  @override
+  Future<Object?> popAndPush(
+    CCNavigationRequest request, {
+    Object? popResult,
+  }) async => null;
+
+  @override
+  Future<void> popUntil(CCNavigationStackPredicate predicate) async {}
+
+  @override
+  Future<Object?> pushAndRemoveUntil(
+    CCNavigationRequest request,
+    CCNavigationStackPredicate predicate,
+  ) async => null;
+
+  @override
+  void pop({Object? result}) {}
+
+  @override
+  bool canPop() => false;
+
+  @override
+  Future<void> dispose() async {}
+}
+
 CCComponentManifest routeComponent(
   String id,
   void Function(CCRegistry) register,
@@ -99,6 +136,93 @@ CCRouteDefinition<RouteArgs, String> pathRoute({
 );
 
 void main() {
+  test('records a sanitized failed lifecycle event', () async {
+    final runtime = CCRouterRuntime.forTesting(
+      navigationAdapter: FailingNavigationAdapter(),
+      components: [
+        routeComponent(
+          'orders',
+          (registry) => registry.registerRoute(pathRoute()),
+        ),
+      ],
+    );
+    await runtime.initialize();
+
+    await expectLater(
+      runtime.goRoute(const TestIntent<void>('orders.detail', RouteArgs('42'))),
+      throwsA(isA<CCNavigationAdapterError>()),
+    );
+
+    expect(runtime.recentNavigationEvents, hasLength(2));
+    final failed = runtime.recentNavigationEvents.last;
+    expect(failed.phase, CCNavigationLifecyclePhase.failed);
+    expect(failed.errorType, 'StateError');
+    expect(failed.errorType, isNot(contains('secret')));
+    await runtime.dispose();
+  });
+
+  test(
+    'records bounded navigation lifecycle events with attribution',
+    () async {
+      final adapter = CCMemoryNavigationAdapter();
+      final runtime = CCRouterRuntime.forTesting(
+        navigationEventCapacity: 2,
+        navigationAdapter: adapter,
+        components: [
+          routeComponent(
+            'orders',
+            (registry) => registry.registerRoute(pathRoute()),
+          ),
+        ],
+      );
+      await runtime.initialize();
+
+      final events = <CCNavigationLifecycleEvent>[];
+      final removeListener = runtime.addNavigationListener(events.add);
+      const source = CCNavigationSource.feature('home.order_banner');
+      await runtime.goRoute(
+        const TestIntent<void>('orders.detail', RouteArgs('42')),
+        source: source,
+      );
+
+      expect(events, hasLength(2));
+      expect(events.map((event) => event.phase), [
+        CCNavigationLifecyclePhase.requested,
+        CCNavigationLifecyclePhase.completed,
+      ]);
+      expect(
+        events.every(
+          (event) => event.navigationId == events.first.navigationId,
+        ),
+        isTrue,
+      );
+      expect(events.every((event) => event.routeId == 'orders.detail'), isTrue);
+      expect(
+        events.every((event) => event.uri.toString() == '/orders/42'),
+        isTrue,
+      );
+      expect(
+        events.every((event) => event.origin == CCNavigationOrigin.internal),
+        isTrue,
+      );
+      expect(events.every((event) => event.source == source), isTrue);
+      expect(runtime.recentNavigationEvents, hasLength(2));
+
+      removeListener();
+      await runtime.goRoute(
+        const TestIntent<void>('orders.detail', RouteArgs('43')),
+      );
+      expect(events, hasLength(2));
+      expect(
+        runtime.recentNavigationEvents.map((event) => event.uri.toString()),
+        ['/orders/43', '/orders/43'],
+      );
+
+      await runtime.dispose();
+      expect(runtime.recentNavigationEvents, isEmpty);
+    },
+  );
+
   test(
     'typed Push generates the primary path and returns a Pop result',
     () async {

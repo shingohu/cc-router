@@ -54,6 +54,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
       source,
     );
     final result = await _dispatchRequest(
+      request,
       () =>
           _requiredNavigationAdapter.popAndPush(request, popResult: popResult),
     );
@@ -93,6 +94,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
       source,
     );
     final result = await _dispatchRequest(
+      request,
       () => _requiredNavigationAdapter.pushAndRemoveUntil(request, predicate),
     );
     try {
@@ -212,7 +214,10 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
       origin,
       source,
     );
-    return _dispatchRequest(() => _requiredNavigationAdapter.navigate(request));
+    return _dispatchRequest(
+      request,
+      () => _requiredNavigationAdapter.navigate(request),
+    );
   }
 
   /// Creates the immutable request delivered to one Adapter operation.
@@ -235,12 +240,28 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
   );
 
   /// Normalizes Adapter failures while preserving framework errors.
-  Future<Object?> _dispatchRequest(Future<Object?> Function() action) async {
+  Future<Object?> _dispatchRequest(
+    CCNavigationRequest request,
+    Future<Object?> Function() action,
+  ) async {
+    _emitNavigationEvent(request, CCNavigationLifecyclePhase.requested);
     try {
-      return await action();
-    } on CCRouterError {
+      final result = await action();
+      _emitNavigationEvent(request, CCNavigationLifecyclePhase.completed);
+      return result;
+    } on CCRouterError catch (error) {
+      _emitNavigationEvent(
+        request,
+        CCNavigationLifecyclePhase.failed,
+        errorType: error.runtimeType.toString(),
+      );
       rethrow;
     } catch (error) {
+      _emitNavigationEvent(
+        request,
+        CCNavigationLifecyclePhase.failed,
+        errorType: error.runtimeType.toString(),
+      );
       throw CCNavigationAdapterError(
         'Navigation adapter failed: ${error.runtimeType}.',
       );
