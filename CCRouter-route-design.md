@@ -1075,6 +1075,11 @@ GoRouter Adapter 通过 `navigatorKeys` 接收应用拥有的 Outlet Navigator�
 或 Shell 绑定不完整时初始化会明确报告能力错误。已有 `StatefulShellRoute` 的分支
 可以通过 `go` 切换并保留 GoRouter 自己的分支状态；`CCRouteKind.shell`、Shell 自身
 的生成仍不由 Adapter 创建，不会静默把目标栈改成根 Navigator。
+生命周期桥使用 `CCGoRouterNavigationObserver`，由应用添加到 root Navigator、
+`ShellRoute.observers` 或 `StatefulShellBranch.observers`。Observer 只发出带 Outlet
+标识的 Push/Pop/Replace/Remove 事件，适合埋点、诊断和生命周期同步；它不在回调中
+保存 `BuildContext`，也不允许同步触发 CCRouter 导航。当前 Flutter Observer API
+不保证提供 Pop 返回值，因此事件中的 `result` 可能为空。
 
 - 主 Pattern、别名、Query、Extra 和返回值。
 - Shell、Outlet 和生命周期同步。
