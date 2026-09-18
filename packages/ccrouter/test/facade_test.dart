@@ -113,7 +113,7 @@ void main() {
 
     expect(CCRouter.session?.accountId, 'user-42');
     expect(CCRouter.session?.metadata['tenant'], 'cn');
-    expect(CCRouter.session?.sessionId, startsWith('session-'));
+    expect(CCRouter.session?.sessionId, contains('-session-'));
     expect(
       () => CCRouter.session!.metadata['tenant'] = 'changed',
       throwsUnsupportedError,

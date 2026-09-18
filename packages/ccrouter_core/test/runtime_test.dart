@@ -229,7 +229,8 @@ void main() {
       );
       runtime.openSession(accountId: 'account-a');
       expect(runtime.session?.accountId, 'account-a');
-      expect(runtime.session?.sessionId, startsWith('session-'));
+      expect(runtime.session?.sessionId, contains('-session-'));
+      final firstSessionId = runtime.session!.sessionId;
       final first = runtime.service<Counter>();
       expect(
         () => runtime.openSession(accountId: 'account-a'),
@@ -239,9 +240,30 @@ void main() {
       expect(first.disposed, isTrue);
       expect(runtime.session, isNull);
       runtime.openSession(accountId: 'account-a');
+      expect(runtime.session?.sessionId, isNot(firstSessionId));
       expect(runtime.service<Counter>(), isNot(same(first)));
     },
   );
+
+  test('Session IDs are unique across independent Runtime instances', () async {
+    final first = CCRouterRuntime.forTesting(
+      navigationAdapter: CCMemoryNavigationAdapter(),
+    );
+    final second = CCRouterRuntime.forTesting(
+      navigationAdapter: CCMemoryNavigationAdapter(),
+    );
+    try {
+      await Future.wait([first.initialize(), second.initialize()]);
+      first.openSession(accountId: 'account-a');
+      second.openSession(accountId: 'account-a');
+
+      expect(first.session?.sessionId, isNotNull);
+      expect(second.session?.sessionId, isNotNull);
+      expect(first.session?.sessionId, isNot(second.session?.sessionId));
+    } finally {
+      await Future.wait([first.dispose(), second.dispose()]);
+    }
+  });
 
   test('Session requires a non-empty account identity', () async {
     await runtime.initialize();

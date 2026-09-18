@@ -548,7 +548,7 @@ final class CCRouterRuntime {
       throw const CCResolutionError(
         'Close the current Session before opening another.',
       );
-    final sessionId = 'session-${++_sessionSequence}';
+    final sessionId = '$_runtimeId-session-${++_sessionSequence}';
     _sessionScope = CCScope(sessionId);
     _session = CCSession._(
       sessionId: sessionId,
