@@ -820,4 +820,61 @@ void main() {
     expect(await removedThree, isNull);
     expect(find.text('one'), findsOneWidget);
   });
+
+  testWidgets(
+    'synchronizes externally popped entries before composite navigation',
+    (tester) async {
+      final observer = CCGoRouterNavigationObserver(outlet: 'root');
+      final router = GoRouter(
+        initialLocation: '/',
+        observers: [observer],
+        routes: [
+          GoRoute(path: '/', builder: (_, _) => const Text('home')),
+          GoRoute(path: '/one', builder: (_, _) => const Text('one')),
+          GoRoute(path: '/two', builder: (_, _) => const Text('two')),
+        ],
+      );
+      final adapter = CCGoRouterAdapter(router: router, observers: [observer]);
+      final backendEvents = <CCNavigationBackendEvent>[];
+      adapter.addBackendEventListener(backendEvents.add);
+      addTearDown(router.dispose);
+
+      await adapter.initialize([
+        route('one', path: '/one'),
+        route('two', path: '/two'),
+      ]);
+      await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+      await tester.pumpAndSettle();
+
+      final one = adapter.navigate(
+        request(
+          id: 'one',
+          operation: CCNavigationOperation.push,
+          uri: Uri.parse('/one'),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('one'), findsOneWidget);
+
+      router.routerDelegate.navigatorKey.currentState!.pop<void>();
+      await tester.pumpAndSettle();
+      expect(await one, isNull);
+      expect(backendEvents.last.kind, CCNavigationBackendEventKind.pop);
+      expect(backendEvents.last.routeId, isNull);
+
+      final two = adapter.pushAndRemoveUntil(
+        request(
+          id: 'two',
+          operation: CCNavigationOperation.pushAndRemoveUntil,
+          uri: Uri.parse('/two'),
+        ),
+        (_) => false,
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('two'), findsOneWidget);
+      adapter.pop(result: 'done');
+      await tester.pumpAndSettle();
+      expect(await two, 'done');
+    },
+  );
 }

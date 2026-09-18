@@ -107,6 +107,13 @@ final class CCGoRouterAdapter
   /// Entries observed through operations issued by this adapter.
   final List<_CCGoRouterEntry> _entries = [];
 
+  /// Backend transitions expected from the next adapter-owned operations.
+  ///
+  /// Navigator observer callbacks may arrive after the imperative call has
+  /// returned, so a short-lived queue is safer than a synchronous mutation
+  /// flag for distinguishing adapter-owned transitions from external changes.
+  final List<CCGoRouterNavigationEventKind> _expectedBackendEvents = [];
+
   /// Whether [initialize] completed successfully.
   bool _initialized = false;
 
@@ -223,6 +230,8 @@ final class CCGoRouterAdapter
       case CCNavigationOperation.go:
       case CCNavigationOperation.reset:
       case CCNavigationOperation.open:
+        _expectBackendEvent(CCGoRouterNavigationEventKind.remove);
+        _expectBackendEvent(CCGoRouterNavigationEventKind.push);
         _router.go(location, extra: request.extra);
         _replaceTrackedStack(request);
         return Future<Object?>.value();
@@ -240,8 +249,13 @@ final class CCGoRouterAdapter
     _ensureAvailable();
     final navigator = _activeNavigator;
     if (navigator == null) return false;
+    _expectBackendEvent(CCGoRouterNavigationEventKind.pop);
     final didPop = await navigator.maybePop<Object?>(result);
-    if (didPop) _removeTrackedEntry();
+    if (didPop) {
+      _removeTrackedEntry();
+    } else {
+      _discardExpectedBackendEvent(CCGoRouterNavigationEventKind.pop);
+    }
     return didPop;
   }
 
@@ -260,7 +274,9 @@ final class CCGoRouterAdapter
     final location = _locationFor(request.uri);
     if (!canPop()) return _replace(request, location);
     final navigator = _activeNavigator;
+    _expectBackendEvent(CCGoRouterNavigationEventKind.pop);
     if (navigator == null || !await navigator.maybePop<Object?>(popResult)) {
+      _discardExpectedBackendEvent(CCGoRouterNavigationEventKind.pop);
       throw const CCNavigationAdapterError(
         'GoRouter rejected the popAndPush Pop operation.',
       );
@@ -271,16 +287,21 @@ final class CCGoRouterAdapter
 
   /// Pops tracked entries while the predicate does not match.
   ///
-  /// Entries created outside this adapter are not visible to the predicate
-  /// until the adapter receives a backend lifecycle bridge.
+  /// Entries created outside this adapter are conservatively reconciled when
+  /// the configured Navigator observers report backend transitions. Such
+  /// entries are not reconstructed as Runtime route metadata.
   @override
   Future<void> popUntil(CCNavigationStackPredicate predicate) async {
     _ensureAvailable();
     final navigator = _activeNavigator;
     if (navigator == null) return;
     while (_entries.length > 1 && !predicate(_entries.last.snapshot)) {
+      _expectBackendEvent(CCGoRouterNavigationEventKind.pop);
       final didPop = await navigator.maybePop<Object?>();
-      if (!didPop) break;
+      if (!didPop) {
+        _discardExpectedBackendEvent(CCGoRouterNavigationEventKind.pop);
+        break;
+      }
       _removeTrackedEntry();
     }
   }
@@ -300,7 +321,9 @@ final class CCGoRouterAdapter
     _ensureRoute(request.routeId);
     while (_entries.length > 1 && !predicate(_entries.last.snapshot)) {
       final navigator = _activeNavigator;
+      _expectBackendEvent(CCGoRouterNavigationEventKind.pop);
       if (navigator == null || !await navigator.maybePop<Object?>()) {
+        _discardExpectedBackendEvent(CCGoRouterNavigationEventKind.pop);
         throw const CCNavigationAdapterError(
           'GoRouter rejected a pushAndRemoveUntil Pop operation.',
         );
@@ -320,6 +343,7 @@ final class CCGoRouterAdapter
         'GoRouter has no active Navigator for the current Outlet.',
       );
     }
+    _expectBackendEvent(CCGoRouterNavigationEventKind.pop);
     navigator.pop<Object?>(result);
     _removeTrackedEntry();
   }
@@ -345,6 +369,7 @@ final class CCGoRouterAdapter
     _routes.clear();
     _runtimeShells.clear();
     _entries.clear();
+    _expectedBackendEvents.clear();
     _lifecycleEvents.clear();
   }
 
@@ -352,8 +377,12 @@ final class CCGoRouterAdapter
   Future<Object?> _push(CCNavigationRequest request, String location) {
     final entry = _CCGoRouterEntry(request);
     _entries.add(entry);
+    _expectBackendEvent(CCGoRouterNavigationEventKind.push);
     final result = _router.push<Object?>(location, extra: request.extra);
-    result.whenComplete(() => _removeTrackedEntry(entry));
+    result.whenComplete(() {
+      _removeTrackedEntry(entry);
+      _discardExpectedBackendEvent(CCGoRouterNavigationEventKind.push);
+    });
     return result;
   }
 
@@ -362,8 +391,12 @@ final class CCGoRouterAdapter
     _removeTrackedEntry();
     final entry = _CCGoRouterEntry(request);
     _entries.add(entry);
+    _expectBackendEvent(CCGoRouterNavigationEventKind.replace);
     final result = _router.replace<Object?>(location, extra: request.extra);
-    result.whenComplete(() => _removeTrackedEntry(entry));
+    result.whenComplete(() {
+      _removeTrackedEntry(entry);
+      _discardExpectedBackendEvent(CCGoRouterNavigationEventKind.replace);
+    });
     return result;
   }
 
@@ -382,6 +415,25 @@ final class CCGoRouterAdapter
     } else {
       _entries.remove(entry);
     }
+  }
+
+  /// Records one backend transition expected from an Adapter-owned operation.
+  void _expectBackendEvent(CCGoRouterNavigationEventKind kind) {
+    _expectedBackendEvents.add(kind);
+  }
+
+  /// Consumes one matching expected transition, if present.
+  bool _consumeExpectedBackendEvent(CCGoRouterNavigationEventKind kind) {
+    final index = _expectedBackendEvents.indexOf(kind);
+    if (index == -1) return false;
+    _expectedBackendEvents.removeAt(index);
+    return true;
+  }
+
+  /// Removes one expected transition when the backend reports no mutation.
+  void _discardExpectedBackendEvent(CCGoRouterNavigationEventKind kind) {
+    final index = _expectedBackendEvents.indexOf(kind);
+    if (index != -1) _expectedBackendEvents.removeAt(index);
   }
 
   /// Converts an absolute URI into the path location consumed by GoRouter.
@@ -515,12 +567,19 @@ final class CCGoRouterAdapter
       }
       _lifecycleEvents.add(event);
     }
-    _emitBackendEvent(event);
+    final isAdapterOwned = _consumeExpectedBackendEvent(event.kind);
+    _emitBackendEvent(event, correlateRequest: isAdapterOwned);
+    if (!isAdapterOwned) _synchronizeExternalStack(event.kind);
   }
 
   /// Translates a Flutter observer event into the adapter-neutral contract.
-  void _emitBackendEvent(CCGoRouterNavigationEvent event) {
-    final request = _entries.isEmpty ? null : _entries.last.request;
+  void _emitBackendEvent(
+    CCGoRouterNavigationEvent event, {
+    required bool correlateRequest,
+  }) {
+    final request = correlateRequest && _entries.isNotEmpty
+        ? _entries.last.request
+        : null;
     final backendEvent = CCNavigationBackendEvent(
       kind: switch (event.kind) {
         CCGoRouterNavigationEventKind.push => CCNavigationBackendEventKind.push,
@@ -545,6 +604,20 @@ final class CCGoRouterAdapter
       } catch (_) {
         // Backend telemetry must never interrupt a Navigator transition.
       }
+    }
+  }
+
+  /// Conservatively reconciles entries after an external backend mutation.
+  void _synchronizeExternalStack(CCGoRouterNavigationEventKind kind) {
+    switch (kind) {
+      case CCGoRouterNavigationEventKind.push:
+      case CCGoRouterNavigationEventKind.replace:
+        _entries.clear();
+        break;
+      case CCGoRouterNavigationEventKind.pop:
+      case CCGoRouterNavigationEventKind.remove:
+        _removeTrackedEntry();
+        break;
     }
   }
 
