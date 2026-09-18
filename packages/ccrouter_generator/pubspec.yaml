@@ -1,0 +1,12 @@
+name: ccrouter_generator
+description: Build-time typed route generation for CCRouter components.
+version: 0.1.0
+resolution: workspace
+publish_to: none
+environment:
+  sdk: ^3.9.0
+dependencies:
+  analyzer: ^10.0.0
+  build: ^4.0.0
+  ccrouter_contracts: ^0.1.0
+  source_gen: ^4.0.0

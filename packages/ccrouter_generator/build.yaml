@@ -1,0 +1,7 @@
+builders:
+  routes:
+    import: "package:ccrouter_generator/builder.dart"
+    builder_factories: ["ccRouteBuilder"]
+    build_extensions: {".dart": [".ccroute.g.dart"]}
+    auto_apply: dependents
+    build_to: source

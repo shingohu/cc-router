@@ -10,6 +10,12 @@
 
 本文档细化 [CCRouter v0.1 架构设计](CCRouter-v0.1-architecture.md) 中的路由部分。文中的 API 用于冻结语义和实现边界，不表示当前仓库已经提供这些 API。
 
+注解生成器首版已实现页面注解、单库校验、类型安全 Arguments/Intent、标量
+Path/Query/Extra Codec、Definition、注册入口和中立页面工厂。使用 `part` 生成
+`.ccroute.g.dart`，默认 component 契约为 library-private；exported 契约需显式导出。
+首版不生成 GoRoute，也尚未实现下文的组件聚合、独立纯契约文件、消费可见性检查
+及路由文档导出。当前实现范围与命令见 [生成器说明](packages/ccrouter_generator/README.md)。
+
 混合路由的隔离、Foreign Route 兼容和第三方 Popup 改造方案见：[CCRouter 混合路由改造设计](CCRouter-hybrid-routing-design.md)。
 
 ---

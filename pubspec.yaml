@@ -4,6 +4,7 @@ environment:
   sdk: ^3.9.0
 
 dev_dependencies:
+  build_runner: ^2.10.0
   test: ^1.26.0
 
 workspace:
@@ -11,4 +12,7 @@ workspace:
   - packages/ccrouter_core
   - packages/ccrouter
   - packages/ccrouter_go_router
+  - packages/ccrouter_generator
   - packages/ccrouter_test
+  - demo
+  - demo/modules/order

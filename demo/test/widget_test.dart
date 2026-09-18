@@ -21,6 +21,14 @@ void main() {
     await tester.pump(const Duration(milliseconds: 200));
     expect(find.text('订单已创建：¥100'), findsOneWidget);
 
+    await tester.tap(find.text('打开订单详情'));
+    await tester.pumpAndSettle();
+    expect(find.text('订单 #100'), findsOneWidget);
+    expect(find.text('当前标签：items'), findsOneWidget);
+    await tester.tap(find.text('确认订单'));
+    await tester.pumpAndSettle();
+    expect(find.text('confirmed:100'), findsOneWidget);
+
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump();
   });

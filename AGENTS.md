@@ -6,3 +6,6 @@ When a task adds, changes, reviews, or refactors framework production code under
 
 The framework documentation and API-isolation rules in that skill are required.
 They do not apply to demo code, examples, tests, or generated platform code.
+
+New demo component packages belong under `demo/modules/`. Keep platform
+directories in the demo host; ordinary component packages are Flutter libraries.

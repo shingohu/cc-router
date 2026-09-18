@@ -1,7 +1,10 @@
 import 'dart:async';
 
 import 'package:ccrouter/ccrouter.dart';
+import 'package:ccrouter_go_router/ccrouter_go_router.dart';
+import 'package:demo_order/demo_order.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 final class CreateOrder implements CCCommand<String> {
   const CreateOrder(this.amount);
@@ -31,21 +34,81 @@ void main() {
   runApp(const CCRouterApp(child: CCRouterDemoApp()));
 }
 
-final class CCRouterDemoApp extends StatelessWidget {
+final class CCRouterDemoApp extends StatefulWidget {
   const CCRouterDemoApp({super.key});
 
   @override
+  State<CCRouterDemoApp> createState() => _CCRouterDemoAppState();
+}
+
+final class _CCRouterDemoAppState extends State<CCRouterDemoApp> {
+  late final GoRouter _router;
+  late final CCGoRouterAdapter _adapter;
+
+  @override
+  void initState() {
+    super.initState();
+    final navigatorKey = GlobalKey<NavigatorState>();
+    final observer = CCGoRouterNavigationObserver(outlet: 'root');
+    final orderBinding = CCGoRouterRouteBinding(
+      routeId: OrderDetailPageRoute.id,
+      goRoute: GoRoute(
+        path: '/orders/:orderId',
+        builder: (_, state) => OrderDetailPageRoute.build(
+          OrderDetailPageRoute.definition.codec.decode(
+            CCEncodedRouteArguments(
+              path: state.pathParameters,
+              query: state.uri.queryParametersAll,
+              extra: state.extra,
+            ),
+          ),
+        ),
+      ),
+    );
+    _router = GoRouter(
+      navigatorKey: navigatorKey,
+      observers: [observer],
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (_, _) => RuntimePage(navigationAdapter: _adapter),
+        ),
+        orderBinding.goRoute,
+      ],
+    );
+    _adapter = CCGoRouterAdapter(
+      router: _router,
+      bindings: [orderBinding],
+      navigatorKeys: {'root': navigatorKey},
+      observers: [observer],
+    );
+  }
+
+  Future<void> _shutdown() async {
+    await CCRouter.shutdown();
+    _router.dispose();
+  }
+
+  @override
+  void dispose() {
+    unawaited(_shutdown());
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(colorSchemeSeed: Colors.teal, useMaterial3: true),
-      home: const RuntimePage(),
+      routerConfig: _router,
     );
   }
 }
 
 final class RuntimePage extends StatefulWidget {
-  const RuntimePage({super.key});
+  const RuntimePage({required this.navigationAdapter, super.key});
+
+  final CCNavigationAdapter navigationAdapter;
 
   @override
   State<RuntimePage> createState() => _RuntimePageState();
@@ -65,7 +128,11 @@ final class _RuntimePageState extends State<RuntimePage> {
 
   Future<void> _initialize() async {
     await CCRouter.initialize(
-      components: const [DemoComponentRegistrar.manifest],
+      components: const [
+        DemoComponentRegistrar.manifest,
+        OrderComponentRegistrar.manifest,
+      ],
+      navigationAdapter: widget.navigationAdapter,
     );
     if (!mounted) return;
     setState(() {
@@ -104,10 +171,15 @@ final class _RuntimePageState extends State<RuntimePage> {
     }
   }
 
-  @override
-  void dispose() {
-    unawaited(CCRouter.shutdown());
-    super.dispose();
+  Future<void> _openOrder() async {
+    try {
+      final result = await CCRouter.navigator.push<String>(
+        OrderDetailPageRoute.intent(orderId: 100, tab: 'items'),
+      );
+      if (mounted) setState(() => _status = result ?? '订单详情已返回');
+    } on CCRouterError catch (error) {
+      if (mounted) setState(() => _status = error.message);
+    }
   }
 
   @override
@@ -122,10 +194,7 @@ final class _RuntimePageState extends State<RuntimePage> {
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [
-          Text(
-            'Flutter组件化',
-            style: Theme.of(context).textTheme.headlineSmall,
-          ),
+          Text('Flutter组件化', style: Theme.of(context).textTheme.headlineSmall),
           const SizedBox(height: 8),
           Text(_status, key: const ValueKey('status')),
           const SizedBox(height: 24),
@@ -164,6 +233,12 @@ final class _RuntimePageState extends State<RuntimePage> {
                   )
                 : const Icon(Icons.shopping_bag_outlined),
             label: const Text('调用 CreateOrder Command'),
+          ),
+          const SizedBox(height: 12),
+          FilledButton.icon(
+            onPressed: _ready && !_busy ? _openOrder : null,
+            icon: const Icon(Icons.receipt_long),
+            label: const Text('打开订单详情'),
           ),
         ],
       ),
