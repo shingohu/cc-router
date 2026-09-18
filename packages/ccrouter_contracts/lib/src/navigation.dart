@@ -257,9 +257,11 @@ abstract interface class CCNavigationAdapter {
 
   /// Executes a Runtime-validated [request].
   ///
-  /// Push, Replace, PopAndPush, and PushAndRemoveUntil complete with the
-  /// eventual Pop result. Go, Reset, and Open complete after the backend
-  /// accepts the operation.
+  /// Use this operation for one-target commands: Push and Replace complete
+  /// with the eventual Pop result, while Go, Reset, and Open complete after
+  /// the backend accepts the operation. Composite commands such as
+  /// PopAndPush and PushAndRemoveUntil must use their dedicated methods so
+  /// their Pop result or stack Predicate cannot be lost at this boundary.
   Future<Object?> navigate(CCNavigationRequest request);
 
   /// Attempts to remove the current route and reports whether it was removed.
