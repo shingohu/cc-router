@@ -16,7 +16,6 @@ fvm flutter pub get
 dart analyze
 dart test packages/ccrouter_core/test
 fvm flutter test packages/ccrouter/test
-dart run packages/ccrouter/example/main.dart
 
 # Flutter 示例（从 demo 目录执行）
 cd demo
@@ -39,8 +38,6 @@ Command/Query 一对一返回强类型异步结果，支持超时和取消，并
 Action 按 Handler ID 串行执行，首个错误结束调用；Event 并行发送且订阅者失败隔离。Event 返回 `Future<void>`，供调用者等待本次分发完成。诊断记录有界且不记录业务参数或异常消息。
 
 业务工程只导入 `package:ccrouter/ccrouter.dart`。该门面不导出 `CCRouterRuntime`、`CCScope` 或 `CCScopeState`；组件 Registrar 只接收注册能力受限的 `CCRegistry`。`CCRouterRuntime.forTesting` 仅保留给 `ccrouter_core` 自身的低层回归测试使用；面向框架使用者、组件作者、测试宿主、Mock 和集成测试的测试 API 与新增测试统一放入独立的 `ccrouter_test` 包，业务生产代码不得导入 `ccrouter_core/src/` 或依赖 Core 内部测试入口。
-
-示例把订单组件、支付组件和共享契约放在不同文件。订单组件不导入支付实现；装配入口同时导入两个组件，执行下单 Command 并管理 Session。
 
 ## 后续里程碑
 
