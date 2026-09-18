@@ -35,6 +35,50 @@ enum CCPageRouteType {
   cupertino,
 }
 
+/// Selects a portable transition animation for a page presentation.
+///
+/// This describes the page's entrance and reverse transition without exposing
+/// Flutter animation classes through the Pure Dart contracts package. An
+/// adapter may map [platformDefault] to its host transition policy, while
+/// explicit values must be preserved or rejected during initialization.
+enum CCPageTransitionType {
+  /// Uses the selected page family's default transition.
+  ///
+  /// Use this for ordinary pages that should follow the Material, Cupertino,
+  /// or host application transition policy.
+  platformDefault,
+
+  /// Fades the page in and out.
+  ///
+  /// Use this for subtle state changes or an intentionally low-motion page.
+  fade,
+
+  /// Scales the page from a slightly smaller size while fading it in.
+  ///
+  /// Use this for focused content that should feel elevated without being a
+  /// modal dialog.
+  scale,
+
+  /// Slides the page in from the right and reverses back to the right.
+  ///
+  /// Use this when a route should explicitly follow a conventional detail
+  /// navigation transition independent of the host platform.
+  slideFromRight,
+
+  /// Slides a full-screen page in from the bottom and reverses downward.
+  ///
+  /// Use this for full-screen tasks such as a poster-sharing or preview page.
+  /// This is still a normal page route; use [CCModalBottomSheetPresentation]
+  /// when the destination should be a draggable, barrier-backed sheet.
+  slideFromBottom,
+
+  /// Presents the page without an animated transition.
+  ///
+  /// Use this for state restoration, accessibility-sensitive flows, or pages
+  /// whose content supplies its own animation.
+  none,
+}
+
 /// Selects the Flutter dialog-route family requested by a dialog presentation.
 ///
 /// Dialog routes have different transition and modal-barrier conventions from
@@ -71,6 +115,7 @@ final class CCPagePresentation extends CCRoutePresentation {
   /// Creates page presentation metadata.
   const CCPagePresentation({
     this.routeType = CCPageRouteType.platformDefault,
+    this.transition = CCPageTransitionType.platformDefault,
     this.opaque = true,
     this.fullscreenDialog = false,
   });
@@ -81,6 +126,13 @@ final class CCPagePresentation extends CCRoutePresentation {
   /// explicit family is appropriate only when the page interaction depends on
   /// that family's transition or back-navigation semantics.
   final CCPageRouteType routeType;
+
+  /// Entrance and reverse transition requested for this page.
+  ///
+  /// Use [CCPageTransitionType.slideFromBottom] for a full-screen page that
+  /// enters from the bottom, such as a share poster preview. The transition
+  /// does not turn the page into a modal bottom sheet.
+  final CCPageTransitionType transition;
 
   /// Whether the page completely obscures routes below it after transitioning.
   ///

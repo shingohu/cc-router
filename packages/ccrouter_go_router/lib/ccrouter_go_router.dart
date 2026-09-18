@@ -4,5 +4,6 @@ library;
 export 'src/adapter.dart';
 export 'src/modal_pages.dart';
 export 'src/navigation_observer.dart';
+export 'src/page.dart';
 export 'src/route_binding.dart';
 export 'src/shell_binding.dart';

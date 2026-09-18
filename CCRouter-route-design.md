@@ -10,6 +10,8 @@
 
 本文档细化 [CCRouter v0.1 架构设计](CCRouter-v0.1-architecture.md) 中的路由部分。文中的 API 用于冻结语义和实现边界，不表示当前仓库已经提供这些 API。
 
+混合路由的隔离、Foreign Route 兼容和第三方 Popup 改造方案见：[CCRouter 混合路由改造设计](CCRouter-hybrid-routing-design.md)。
+
 ---
 
 ## 1. 目标
@@ -194,6 +196,15 @@ enum CCPageRouteType {
   cupertino,
 }
 
+enum CCPageTransitionType {
+  platformDefault,
+  fade,
+  scale,
+  slideFromRight,
+  slideFromBottom,
+  none,
+}
+
 enum CCDialogRouteType {
   platformDefault,
   material,
@@ -203,11 +214,13 @@ enum CCDialogRouteType {
 final class CCPagePresentation extends CCRoutePresentation {
   const CCPagePresentation({
     this.routeType = CCPageRouteType.platformDefault,
+    this.transition = CCPageTransitionType.platformDefault,
     this.opaque = true,
     this.fullscreenDialog = false,
   });
 
   final CCPageRouteType routeType;
+  final CCPageTransitionType transition;
   final bool opaque;
   final bool fullscreenDialog;
 }
@@ -245,13 +258,36 @@ final class CCDialogPresentation extends CCRoutePresentation {
 - `CCDialogRouteType` 单独描述 Dialog Route 家族，不能复用 Page Route 类型；`platformDefault` 跟随宿主应用的 Dialog 风格。
 - `platformDefault` 由 Adapter、宿主应用类型和目标平台共同决定，普通页面应优先使用该默认值。
 - `opaque` 与 Flutter `Route.opaque` 语义一致；透明页面使用 `false`，不再单独定义 `Surface` 枚举。
+- `transition` 描述普通页面的进入和返回动画；`slideFromBottom` 用于全屏页面从底部滑入，例如海报分享或预览页。它仍然是普通 Page，不等同于模态 BottomSheet。
 - `fullscreenDialog` 只表示全屏对话式 Page，不表示底部弹出。
 - `CCModalBottomSheetPresentation` 表示进入导航栈的模态底部弹出，适用于筛选、选择和短表单；不会阻止底层交互的持久 BottomSheet 属于页面内部状态，不声明成 Route。
 - `CCDialogPresentation` 表示进入导航栈的居中模态 Dialog，适用于需要跨组件类型安全返回、拦截、埋点或恢复的流程；页面内部临时确认框和错误提示不需要注册成路由。
 - Dialog 的 `barrierDismissible` 为 `null` 时保留平台默认行为：Material 默认可点击遮罩关闭，Cupertino 默认不可关闭；显式布尔值用于跨平台覆盖。
 - 颜色、圆角、阴影等视觉样式由应用主题和 Adapter 配置，不进入跨组件路由契约。
 - Adapter 不支持指定页面类型、透明页面、底部弹出或 Dialog 时，必须在初始化阶段报告能力错误，不能静默改成普通页面。
+- GoRouter 绑定需要通过 `ccGoRouterPage(...)` 返回自定义 Page，才能保留非默认转场、透明度或 `fullscreenDialog`；普通 `builder` 不能安全表达这些语义。
 - 允许 Deep Link 的底部弹出必须具有可确定的承载页面或父路由；不能在空白导航栈上直接展示。具体关系在 Shell、父路由和 Outlet 模型中声明。
+
+例如海报分享页可以声明为透明的全屏普通 Page，并从底部滑入：
+
+```dart
+const posterPresentation = CCPagePresentation(
+  transition: CCPageTransitionType.slideFromBottom,
+  opaque: false,
+  fullscreenDialog: true,
+);
+
+GoRoute(
+  path: '/poster/share',
+  pageBuilder: (_, state) => ccGoRouterPage(
+    key: state.pageKey,
+    child: const PosterSharePage(),
+    presentation: posterPresentation,
+  ),
+);
+```
+
+页面本身需要使用透明背景，才能让下方页面可见；如果需要遮罩、拖拽关闭或底部高度约束，应改用 `CCModalBottomSheetPresentation`。
 
 ### 5.3 构造器选择
 
@@ -730,7 +766,21 @@ Shell 负责持久化导航容器和 Outlet，主从容器负责根据屏幕尺�
 - Context 已失效、未挂载或无法解析 Outlet 时返回标准导航错误。
 - Shell 和嵌套 Navigator 必须通过显式 Outlet 关系确定，不能退回全局 Context 猜测。
 
-### 12.5 可选 CCRouterApp Host
+### 12.5 混合路由兼容原则
+
+混合路由的最高优先级是：**经过 CCRouter 的路由必须保持正确；非 CCRouter 路由尽量兼容；无法确认或兼容时，必须隔离外部变化，不能影响 CCRouter 路由。**
+
+具体规则：
+
+- Managed Route 的 RouteEntry、Route Scope、返回值、拦截器和生命周期由 Runtime 完整负责，Adapter 不能用不确定的后端事件覆盖这些状态。
+- Foreign Navigator Route、Overlay、LocalHistoryEntry 和第三方浮层可以被观察，但没有权限关闭或修改 Managed RouteEntry。
+- 外部事件缺少稳定 Backend Entry 身份时，标记为 `foreign` 或 `opaque`，只记录诊断，不根据事件类型猜测删除 CCRouter 栈。
+- 系统返回、手势返回和 `maybePop` 只有在明确确认被移除的是 Managed Entry 时，才能关闭对应 Route Scope。
+- 第三方路由需要完整生命周期同步时，必须通过同一 Navigator 的 Observer、`ForeignRouteBridge` 或自定义 Adapter 显式接入；未接入的外部栈按隔离模式处理。
+- 兼容性降级优先选择“状态未知但不破坏 CCRouter”，而不是“强行同步但可能误删 CCRouter 路由”。
+- 所有无法兼容的外部行为必须进入有界诊断记录，并提供 Host/Adapter 层的修复入口，不能静默改变业务路由结果。
+
+### 12.6 可选 CCRouterApp Host
 
 `CCRouterApp` 是可选的 Flutter 集成 Host，不是业务 App 必须嵌套的第二个 `MaterialApp`。简单应用可以直接把 GoRouter Adapter 绑定到 `MaterialApp.router`；需要 Shell、Outlet、外部 Deep Link、生命周期、埋点或多窗口能力时使用 `CCRouterApp`：
 

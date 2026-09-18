@@ -46,15 +46,24 @@ void main() {
       (defaultPresentation as CCPagePresentation).routeType,
       CCPageRouteType.platformDefault,
     );
+    expect(
+      defaultPresentation.transition,
+      CCPageTransitionType.platformDefault,
+    );
     expect(defaultPresentation.opaque, isTrue);
     expect(defaultPresentation.fullscreenDialog, isFalse);
 
     const transparentCupertinoPage = CCPagePresentation(
       routeType: CCPageRouteType.cupertino,
+      transition: CCPageTransitionType.slideFromBottom,
       opaque: false,
       fullscreenDialog: true,
     );
     expect(transparentCupertinoPage.routeType, CCPageRouteType.cupertino);
+    expect(
+      transparentCupertinoPage.transition,
+      CCPageTransitionType.slideFromBottom,
+    );
     expect(transparentCupertinoPage.opaque, isFalse);
     expect(transparentCupertinoPage.fullscreenDialog, isTrue);
 

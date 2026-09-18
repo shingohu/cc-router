@@ -187,11 +187,14 @@ final class CCGoRouterAdapter
         );
       }
       switch (route.presentation) {
-        case CCPagePresentation():
+        case final CCPagePresentation presentation:
           _validatePresentationBinding(
             route.routeId,
             CCGoRouterPresentationKind.page,
           );
+          if (_requiresCustomPage(presentation)) {
+            _ensureCustomPage(route.routeId);
+          }
           break;
         case CCModalBottomSheetPresentation():
           _validatePresentationBinding(
@@ -531,6 +534,25 @@ final class CCGoRouterAdapter
       );
     }
   }
+
+  /// Requires a custom page builder when a plain GoRoute builder cannot retain
+  /// the route contract's page family, transition, or opacity semantics.
+  void _ensureCustomPage(String routeId) {
+    final binding = _bindingFor(routeId);
+    if (binding == null || !binding.hasCustomPageBuilder) {
+      throw CCNavigationAdapterError(
+        'Page route "$routeId" requires a GoRouter binding with a custom '
+        'pageBuilder returning ccGoRouterPage(...).',
+      );
+    }
+  }
+
+  /// Returns whether a normal GoRoute builder would lose page semantics.
+  bool _requiresCustomPage(CCPagePresentation presentation) =>
+      presentation.routeType != CCPageRouteType.platformDefault ||
+      presentation.transition != CCPageTransitionType.platformDefault ||
+      !presentation.opaque ||
+      presentation.fullscreenDialog;
 
   /// Rejects Shell and non-root Outlet metadata until a matching binding is
   /// supplied by the GoRouter Shell integration.

@@ -143,6 +143,108 @@ void main() {
     expect(find.text('detail:42:items'), findsOneWidget);
   });
 
+  testWidgets('presents a transparent full-screen page from the bottom', (
+    tester,
+  ) async {
+    const presentation = CCPagePresentation(
+      transition: CCPageTransitionType.slideFromBottom,
+      opaque: false,
+      fullscreenDialog: true,
+    );
+    CCGoRouterPage<Object?>? actualPage;
+    final posterRoute = GoRoute(
+      path: '/poster',
+      pageBuilder: (_, state) => actualPage = CCGoRouterPage(
+        key: state.pageKey,
+        child: const ColoredBox(
+          color: Colors.transparent,
+          child: Center(child: Text('poster')),
+        ),
+        presentation: presentation,
+      ),
+    );
+    final router = GoRouter(
+      initialLocation: '/',
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (_, _) => const ColoredBox(
+            color: Colors.white,
+            child: Center(child: Text('home')),
+          ),
+        ),
+        posterRoute,
+      ],
+    );
+    final adapter = CCGoRouterAdapter(
+      router: router,
+      bindings: [
+        CCGoRouterRouteBinding(routeId: 'poster', goRoute: posterRoute),
+      ],
+    );
+    addTearDown(router.dispose);
+    await adapter.initialize([
+      CCNavigationRoute(
+        routeId: 'poster',
+        patterns: [const CCPathPattern('/poster', primary: true)],
+        presentation: presentation,
+        deepLink: CCDeepLinkPolicy.disabled,
+      ),
+    ]);
+    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    await tester.pumpAndSettle();
+
+    final pushed = adapter.navigate(
+      request(
+        id: 'poster',
+        operation: CCNavigationOperation.push,
+        uri: Uri.parse('/poster'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('poster'), findsOneWidget);
+    expect(find.text('home'), findsOneWidget);
+    expect(actualPage, isNotNull);
+    expect(actualPage!.presentation, same(presentation));
+    final pageRoute = ModalRoute.of(tester.element(find.text('poster')))!;
+    expect(pageRoute, isA<PageRoute<Object?>>());
+    final customPageRoute = pageRoute as PageRoute<Object?>;
+    expect(customPageRoute.opaque, isFalse);
+    expect(customPageRoute.fullscreenDialog, isTrue);
+
+    adapter.pop(result: 'closed');
+    await tester.pumpAndSettle();
+    expect(await pushed, 'closed');
+  });
+
+  test(
+    'rejects non-default page presentation without a custom pageBuilder',
+    () async {
+      final router = GoRouter(
+        routes: [GoRoute(path: '/', builder: (_, _) => const SizedBox())],
+      );
+      final adapter = CCGoRouterAdapter(router: router);
+      addTearDown(router.dispose);
+
+      final presentation = const CCPagePresentation(
+        transition: CCPageTransitionType.slideFromBottom,
+        opaque: false,
+      );
+      final configuredRoute = CCNavigationRoute(
+        routeId: 'poster',
+        patterns: [const CCPathPattern('/poster', primary: true)],
+        presentation: presentation,
+        deepLink: CCDeepLinkPolicy.disabled,
+      );
+
+      await expectLater(
+        adapter.initialize([configuredRoute]),
+        throwsA(isA<CCNavigationAdapterError>()),
+      );
+    },
+  );
+
   test(
     'rejects modal presentations until their backend semantics are ready',
     () async {

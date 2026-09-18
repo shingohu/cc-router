@@ -36,8 +36,10 @@ final class CCGoRouterRouteBinding {
   ///
   /// Set this to [CCGoRouterPresentationKind.bottomSheet] or
   /// [CCGoRouterPresentationKind.dialog] when the route uses one of the
-  /// exported modal Page helpers. The Adapter compares this declaration with
-  /// the Runtime route contract during initialization.
+  /// exported modal Page helpers. Normal pages with non-default transition,
+  /// opacity, or full-screen dialog semantics should return
+  /// [ccGoRouterPage] from `pageBuilder`. The Adapter compares this
+  /// declaration with the Runtime route contract during initialization.
   final CCGoRouterPresentationKind presentationKind;
 
   /// Whether this binding supplies a custom GoRouter page constructor.
