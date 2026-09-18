@@ -224,6 +224,9 @@ extension CCRouterRuntimeRouteEntries on CCRouterRuntime {
       }
       _routeEntryEvents.add(event);
     }
+    if (state == CCRouteEntryLifecycleState.visible) {
+      _emitAspectArrival(entry);
+    }
     for (final listener in _routeEntryListeners.toList()) {
       try {
         listener(event);

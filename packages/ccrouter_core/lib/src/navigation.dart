@@ -244,6 +244,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
         source,
         navigationId: navigationId,
       );
+      _emitAspectFound(request);
       if (!_hasInterceptors(request.routeId)) {
         final entry = _createRouteEntry(request);
         return _dispatchRequest(
@@ -285,6 +286,19 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
         }
       } on CCRouterError catch (error) {
         if (!adapterDispatchStarted) {
+          final outcome = error is CCRouteCancelledError
+              ? CCNavigationAspectOutcome.cancelled
+              : CCNavigationAspectOutcome.failed;
+          _emitAspectLost(
+            request,
+            outcome: outcome,
+            errorType: error.runtimeType.toString(),
+          );
+          _emitAspectAfter(
+            request,
+            outcome: outcome,
+            errorType: error.runtimeType.toString(),
+          );
           _emitNavigationEvent(request, CCNavigationLifecyclePhase.requested);
           _emitNavigationEvent(
             request,
@@ -295,6 +309,16 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
         rethrow;
       } catch (error) {
         if (!adapterDispatchStarted) {
+          _emitAspectLost(
+            request,
+            outcome: CCNavigationAspectOutcome.failed,
+            errorType: error.runtimeType.toString(),
+          );
+          _emitAspectAfter(
+            request,
+            outcome: CCNavigationAspectOutcome.failed,
+            errorType: error.runtimeType.toString(),
+          );
           _emitNavigationEvent(request, CCNavigationLifecyclePhase.requested);
           _emitNavigationEvent(
             request,
@@ -320,6 +344,12 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
       cancellation: cancellation,
       redirectDepth: redirectDepth,
     );
+    final aspectDecision = await _runAspectBefore(
+      request,
+      cancellation: cancellation,
+      redirectDepth: redirectDepth,
+    );
+    if (aspectDecision is! CCNavigationProceed) return aspectDecision;
     for (final registration in _globalInterceptors) {
       final decision = await registration.interceptor.intercept(context);
       if (decision is! CCNavigationProceed) return decision;
@@ -335,7 +365,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
 
   /// Returns whether this request needs the asynchronous interception pass.
   bool _hasInterceptors(String routeId) {
-    if (_globalInterceptors.isNotEmpty) return true;
+    if (_globalInterceptors.isNotEmpty || _hasNavigationAspects) return true;
     return _routeRegistry.routeDefinition(routeId).interceptorIds.isNotEmpty;
   }
 
@@ -383,11 +413,29 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
           request.operation != CCNavigationOperation.open) {
         _completeRouteEntry(entry);
       }
+      if (entry != null) {
+        _emitAspectAfter(request, outcome: CCNavigationAspectOutcome.succeeded);
+      }
       _emitNavigationEvent(request, CCNavigationLifecyclePhase.completed);
       return result;
     } on CCRouterError catch (error) {
       if (entry != null && !committed) {
         _removeRouteEntry(entry, reason: 'failed');
+      }
+      final outcome = error is CCRouteCancelledError
+          ? CCNavigationAspectOutcome.cancelled
+          : CCNavigationAspectOutcome.failed;
+      if (entry != null) {
+        _emitAspectLost(
+          request,
+          outcome: outcome,
+          errorType: error.runtimeType.toString(),
+        );
+        _emitAspectAfter(
+          request,
+          outcome: outcome,
+          errorType: error.runtimeType.toString(),
+        );
       }
       _emitNavigationEvent(
         request,
@@ -398,6 +446,18 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     } catch (error) {
       if (entry != null && !committed) {
         _removeRouteEntry(entry, reason: 'failed');
+      }
+      if (entry != null) {
+        _emitAspectLost(
+          request,
+          outcome: CCNavigationAspectOutcome.failed,
+          errorType: error.runtimeType.toString(),
+        );
+        _emitAspectAfter(
+          request,
+          outcome: CCNavigationAspectOutcome.failed,
+          errorType: error.runtimeType.toString(),
+        );
       }
       _emitNavigationEvent(
         request,

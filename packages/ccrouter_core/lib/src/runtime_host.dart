@@ -18,12 +18,14 @@ final class CCRouterRuntime {
     Iterable<CCComponentManifest> components = const [],
     CCNavigationAdapter? navigationAdapter,
     Iterable<CCGlobalNavigationInterceptor> globalInterceptors = const [],
+    Iterable<CCNavigationAspect> navigationAspects = const [],
   }) => CCRouterRuntime._(
     traceCapacity: traceCapacity,
     navigationEventCapacity: navigationEventCapacity,
     components: components,
     navigationAdapter: navigationAdapter,
     globalInterceptors: globalInterceptors,
+    navigationAspects: navigationAspects,
   );
 
   /// Creates an independently owned Runtime for low-level core tests.
@@ -38,12 +40,14 @@ final class CCRouterRuntime {
     Iterable<CCComponentManifest> components = const [],
     CCNavigationAdapter? navigationAdapter,
     Iterable<CCGlobalNavigationInterceptor> globalInterceptors = const [],
+    Iterable<CCNavigationAspect> navigationAspects = const [],
   }) => CCRouterRuntime._(
     traceCapacity: traceCapacity,
     navigationEventCapacity: navigationEventCapacity,
     components: components,
     navigationAdapter: navigationAdapter,
     globalInterceptors: globalInterceptors,
+    navigationAspects: navigationAspects,
   );
 
   /// Creates a Runtime with validated configuration and installed components.
@@ -55,9 +59,11 @@ final class CCRouterRuntime {
     Iterable<CCComponentManifest> components = const [],
     CCNavigationAdapter? navigationAdapter,
     Iterable<CCGlobalNavigationInterceptor> globalInterceptors = const [],
+    Iterable<CCNavigationAspect> navigationAspects = const [],
   }) {
     _navigationAdapter = navigationAdapter;
     _globalInterceptors = _validateGlobalInterceptors(globalInterceptors);
+    _navigationAspects = _validateNavigationAspects(navigationAspects);
     if (traceCapacity < 0) {
       throw ArgumentError.value(traceCapacity, 'traceCapacity');
     }
@@ -124,6 +130,9 @@ final class CCRouterRuntime {
 
   /// Stable, application-owned interceptors executed before route policies.
   late final List<CCGlobalNavigationInterceptor> _globalInterceptors;
+
+  /// Stable, application-owned navigation AOP registrations.
+  late final List<CCNavigationAspect> _navigationAspects;
 
   /// Component-owned route interceptors indexed by stable ID.
   final Map<String, _RegisteredNavigationInterceptor> _routeInterceptors = {};
@@ -848,6 +857,24 @@ final class CCRouterRuntime {
         );
       }
       byId[id] = interceptor;
+    }
+    final ids = byId.keys.toList()..sort();
+    return List.unmodifiable(ids.map((id) => byId[id]!));
+  }
+
+  /// Validates and deterministically orders global navigation aspects.
+  List<CCNavigationAspect> _validateNavigationAspects(
+    Iterable<CCNavigationAspect> aspects,
+  ) {
+    final byId = <String, CCNavigationAspect>{};
+    for (final aspect in aspects) {
+      final id = aspect.id.trim();
+      if (id != aspect.id || id.isEmpty || byId.containsKey(id)) {
+        throw CCRegistrationError(
+          'Empty or duplicate navigation aspect ID "$id".',
+        );
+      }
+      byId[id] = aspect;
     }
     final ids = byId.keys.toList()..sort();
     return List.unmodifiable(ids.map((id) => byId[id]!));

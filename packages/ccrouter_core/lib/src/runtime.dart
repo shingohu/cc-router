@@ -9,6 +9,7 @@ part 'component.dart';
 part 'diagnostics.dart';
 part 'memory_navigation_adapter.dart';
 part 'navigation.dart';
+part 'navigation_aspect.dart';
 part 'navigation_backend.dart';
 part 'navigation_lifecycle.dart';
 part 'registry.dart';

@@ -719,7 +719,7 @@ CCRouter 不直接复制 TheRouter 的无类型 `NavigationCallback` API，而�
 - `onFound`：路由匹配成功但尚未进入页面，优先作为内部解析和性能诊断事件，不作为普通业务页面生命周期依赖。
 - `onResult`：继续使用 `Future<R?>` 返回类型安全的页面结果，不增加无类型回调。
 
-现有 `CCNavigationLifecyclePhase.completed` 不等同于 `onArrival`：对于 `push`，`completed` 可能要等页面 Pop 后才发生。后续应增加独立的 `CCNavigationAspect` 生命周期事件，使到达、失败和结果完成的时机明确；观察回调失败不能影响导航，回调中也不能同步发起新的导航。
+现有 `CCNavigationLifecyclePhase.completed` 不等同于 `onArrival`：对于 `push`，`completed` 可能要等页面 Pop 后才发生。当前由独立的 `CCNavigationAspect` 提供安全快照形式的 `before`、`onFound`、`onArrival`、`onLost` 和 `onAfter` 钩子，使匹配、到达、失败和结果完成的时机明确；观察回调失败会进入有界诊断而不影响导航，回调中也不能同步发起新的导航。
 
 ### 11.5 TheRouter 风格的全局 AOP
 
@@ -733,15 +733,15 @@ CCRouter 参考 TheRouter 的全局 AOP 使用场景，但不直接复制其无�
 | `arrival` | `RouteEntry` 内部有 `visible` 状态，尚无公开全局回调 | 页面曝光、焦点恢复、预加载和跨组件到达通知 |
 | `after` | 有 `requested/completed/failed` 事件，但没有独立 After Hook | 统一观察成功、失败、取消、页面离开和返回结果 |
 
-因此，当前只能完整覆盖全局前置拦截，不能宣称已经实现 TheRouter 风格的四阶段
-全局 AOP。`CCNavigationLifecyclePhase.completed` 也不能直接当作 `arrival`：对
-`push` 来说，它通常要等页面 Pop 后、结果通道完成时才发生。
+因此，`CCNavigationLifecyclePhase.completed` 也不能直接当作 `arrival`：对 `push`
+来说，它通常要等页面 Pop 后、结果通道完成时才发生。当前 `CCNavigationAspect` 已
+覆盖 TheRouter 风格的决策与观察边界，但保留 CCRouter 的类型安全快照和结果通道。
 
-后续新增的全局观察契约应与 `CCGlobalNavigationInterceptor` 分离，统一命名为
+全局观察契约与 `CCGlobalNavigationInterceptor` 分离，统一命名为
 `CCNavigationAspect`：
 
 - `before` 保持决策能力，可以继续、取消或重定向。
-- `found`、`arrival` 和 `after` 默认只观察，不改变目标路由。
+- `onFound`、`onArrival`、`onLost` 和 `onAfter` 默认只观察，不改变目标路由。
 - 所有阶段都接收不可变的导航/路由快照，不暴露 `Widget`、`BuildContext`、
   `Navigator` 或任意业务对象。
 - 观察回调异常必须隔离并进入诊断，不能影响已经接受的导航。
@@ -1244,8 +1244,9 @@ Adapter 实现者可以使用单独导出的：
 `CCGlobalNavigationInterceptor` 提供全局策略，组件通过
 `CCRegistry.registerRouteInterceptor` 注册路由策略，`CCRouteDefinition.interceptorIds`
 保留路由级声明顺序。拦截结果支持继续、类型安全 Intent/URI 重定向和取消；重定向
-沿用原始 `navigationId` 与 `CCNavigationOrigin`，并由 Runtime 限制最大次数。RouteEntry、
-Route Scope、拦截上下文的 Deadline 配置和完整遥测投影仍待后续实现。
+沿用原始 `navigationId` 与 `CCNavigationOrigin`，并由 Runtime 限制最大次数。RouteEntry
+生命周期和 `CCNavigationAspect` 的安全快照钩子已经接入；Route Scope 与拦截上下文的
+Deadline 配置、完整导航结果遥测投影仍待后续实现。
 
 ### 阶段 C：生成器
 

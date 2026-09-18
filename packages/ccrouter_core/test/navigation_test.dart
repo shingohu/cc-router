@@ -322,14 +322,14 @@ void main() {
       expect(entries[2].lifecycleState, CCRouteEntryLifecycleState.visible);
       expect(entries[1].routeId, entries[2].routeId);
 
-    runtime.popRoute(result: 'first');
+      runtime.popRoute(result: 'first');
       expect(await second, 'first');
       expect(runtime.activeRouteEntries, hasLength(2));
       expect(
         runtime.activeRouteEntries.last.lifecycleState,
         CCRouteEntryLifecycleState.visible,
       );
-    runtime.popRoute(result: 'second');
+      runtime.popRoute(result: 'second');
       expect(await first, 'second');
       await Future<void>.delayed(Duration.zero);
       expect(
@@ -363,10 +363,7 @@ void main() {
     await runtime.dispose();
 
     expect(runtime.activeRouteEntries, isEmpty);
-    expect(
-      lifecycle.last.state,
-      CCRouteEntryLifecycleState.disposed,
-    );
+    expect(lifecycle.last.state, CCRouteEntryLifecycleState.disposed);
     expect(lifecycle.last.reason, 'runtimeDispose');
   });
 
@@ -428,6 +425,134 @@ void main() {
       'route.first:orders.detail',
       'route.second:orders.detail',
     ]);
+    await runtime.dispose();
+  });
+
+  test(
+    'runs navigation aspects across match, arrival, and terminal phases',
+    () async {
+      final phases = <CCNavigationAspectPhase>[];
+      final outcomes = <CCNavigationAspectOutcome?>[];
+      final runtime = CCRouterRuntime.forTesting(
+        navigationAdapter: CCMemoryNavigationAdapter(),
+        navigationAspects: [
+          CCNavigationAspect(
+            id: 'telemetry',
+            onFound: (event) {
+              phases.add(event.phase);
+              expect(event.entry, isNull);
+              expect(event.request.uri.toString(), '/orders/42');
+            },
+            onArrival: (event) {
+              phases.add(event.phase);
+              expect(event.entry, isNotNull);
+              expect(
+                event.entry!.lifecycleState,
+                CCRouteEntryLifecycleState.visible,
+              );
+            },
+            onAfter: (event) {
+              phases.add(event.phase);
+              outcomes.add(event.outcome);
+            },
+          ),
+        ],
+        components: [
+          routeComponent(
+            'orders',
+            (registry) => registry.registerRoute(pathRoute()),
+          ),
+        ],
+      );
+      await runtime.initialize();
+
+      await runtime.goRoute(
+        const TestIntent<void>('orders.detail', RouteArgs('42')),
+      );
+
+      expect(phases, [
+        CCNavigationAspectPhase.found,
+        CCNavigationAspectPhase.arrival,
+        CCNavigationAspectPhase.after,
+      ]);
+      expect(outcomes, [CCNavigationAspectOutcome.succeeded]);
+      await runtime.dispose();
+    },
+  );
+
+  test(
+    'aspect before can cancel and emits isolated lost and after hooks',
+    () async {
+      final phases = <CCNavigationAspectPhase>[];
+      final runtime = CCRouterRuntime.forTesting(
+        navigationAdapter: CCMemoryNavigationAdapter(),
+        navigationAspects: [
+          CCNavigationAspect(
+            id: 'policy',
+            before: (_) => const CCNavigationCancel(code: 'blocked'),
+            onFound: (event) => phases.add(event.phase),
+            onLost: (event) {
+              phases.add(event.phase);
+              expect(event.outcome, CCNavigationAspectOutcome.cancelled);
+              expect(event.errorType, 'CCRouteCancelledError');
+            },
+            onAfter: (event) {
+              phases.add(event.phase);
+              expect(event.outcome, CCNavigationAspectOutcome.cancelled);
+            },
+          ),
+        ],
+        components: [
+          routeComponent(
+            'orders',
+            (registry) => registry.registerRoute(pathRoute()),
+          ),
+        ],
+      );
+      await runtime.initialize();
+
+      await expectLater(
+        runtime.goRoute(
+          const TestIntent<void>('orders.detail', RouteArgs('42')),
+        ),
+        throwsA(isA<CCRouteCancelledError>()),
+      );
+      expect(phases, [
+        CCNavigationAspectPhase.found,
+        CCNavigationAspectPhase.lost,
+        CCNavigationAspectPhase.after,
+      ]);
+      expect(runtime.activeRouteEntries, isEmpty);
+      await runtime.dispose();
+    },
+  );
+
+  test('orders aspects by ID and isolates observer failures', () async {
+    final calls = <String>[];
+    final runtime = CCRouterRuntime.forTesting(
+      navigationAdapter: CCMemoryNavigationAdapter(),
+      navigationAspects: [
+        CCNavigationAspect(
+          id: 'z-last',
+          onFound: (_) => throw StateError('aspect failure'),
+        ),
+        CCNavigationAspect(id: 'a-first', onFound: (_) => calls.add('a-first')),
+      ],
+      components: [
+        routeComponent(
+          'orders',
+          (registry) => registry.registerRoute(pathRoute()),
+        ),
+      ],
+    );
+    await runtime.initialize();
+
+    await runtime.goRoute(
+      const TestIntent<void>('orders.detail', RouteArgs('42')),
+    );
+
+    expect(calls, ['a-first']);
+    expect(runtime.subscriberErrors.single.message, contains('StateError'));
     await runtime.dispose();
   });
 
