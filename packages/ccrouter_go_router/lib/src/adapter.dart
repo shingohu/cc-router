@@ -7,6 +7,7 @@ import 'navigation_observer.dart';
 import 'shell_binding.dart';
 
 part 'foreign_route_bridge.dart';
+part 'predictive_back_bridge.dart';
 
 /// Adapts CCRouter navigation requests to an externally configured [GoRouter].
 ///
@@ -25,7 +26,8 @@ final class CCGoRouterAdapter
         CCNavigationAdapterCapabilitySource,
         CCNavigationBackendEventSource,
         CCNavigationBackendSnapshotSource,
-        CCNavigationPopCoordinator {
+        CCNavigationPopCoordinator,
+        CCNavigationPredictiveBackSourceProvider {
   /// Creates an adapter around an application-owned [router].
   factory CCGoRouterAdapter({
     required GoRouter router,
@@ -34,6 +36,7 @@ final class CCGoRouterAdapter
     Map<String, GlobalKey<NavigatorState>> navigatorKeys = const {},
     Iterable<CCGoRouterNavigationObserver> observers = const [],
     int lifecycleEventCapacity = 1000,
+    bool enablePredictiveBack = false,
   }) {
     final shellList = List<CCGoRouterShellBinding>.unmodifiable(shells);
     final observerList = List<CCGoRouterNavigationObserver>.unmodifiable(
@@ -46,6 +49,7 @@ final class CCGoRouterAdapter
       navigatorKeys: navigatorKeys,
       observers: observerList,
       lifecycleEventCapacity: lifecycleEventCapacity,
+      enablePredictiveBack: enablePredictiveBack,
     );
   }
 
@@ -57,12 +61,16 @@ final class CCGoRouterAdapter
     required Map<String, GlobalKey<NavigatorState>> navigatorKeys,
     required Iterable<CCGoRouterNavigationObserver> observers,
     required int lifecycleEventCapacity,
+    required bool enablePredictiveBack,
   }) : _router = router,
        _bindings = List.unmodifiable(bindings),
        _shellBindings = List.unmodifiable(shells),
        _navigatorKeys = _mergeNavigatorKeys(navigatorKeys, shells),
        _observers = List.unmodifiable(observers),
-       _lifecycleEventCapacity = lifecycleEventCapacity {
+       _lifecycleEventCapacity = lifecycleEventCapacity,
+       _predictiveBackBridge = enablePredictiveBack
+           ? CCGoRouterPredictiveBackBridge._()
+           : null {
     if (lifecycleEventCapacity < 0) {
       throw ArgumentError.value(
         lifecycleEventCapacity,
@@ -85,13 +93,14 @@ final class CCGoRouterAdapter
 
   /// Backend capabilities exposed for Host setup and diagnostics.
   ///
-  /// The supplied GoRouter remains application-owned, so predictive-back
-  /// coordination is not claimed until a future integration provides those
-  /// signals. Its current match tree and initial route-information location
-  /// can still be reported as opaque backend entries.
+  /// The supplied GoRouter remains application-owned. Predictive-back support
+  /// is reported only when the host opts into `enablePredictiveBack` and uses
+  /// [predictiveBackBridge] to forward platform phases. Its current match
+  /// tree and initial route-information location can still be reported as
+  /// opaque backend entries when predictive back is disabled.
   @override
   CCNavigationAdapterCapabilities get capabilities =>
-      const CCNavigationAdapterCapabilities(
+      CCNavigationAdapterCapabilities(
         supportsForeignEntryObservation: true,
         supportsBackendEntryIdentity: true,
         supportsInitialStackSnapshot: true,
@@ -101,6 +110,7 @@ final class CCGoRouterAdapter
         supportsStatefulShell: true,
         supportsModalRoutes: true,
         supportsOpaqueUiObservation: true,
+        supportsPredictiveBack: _predictiveBackBridge != null,
       );
 
   /// Host-only bridge for explicitly integrated third-party Navigator routes.
@@ -109,6 +119,19 @@ final class CCGoRouterAdapter
   /// cannot install [CCGoRouterNavigationObserver]. Business features should
   /// continue to navigate only through `CCRouter.navigator`.
   CCGoRouterForeignRouteBridge get foreignRouteBridge => _foreignRouteBridge;
+
+  /// Host-only predictive-back bridge, when explicitly enabled at creation.
+  ///
+  /// The bridge reports platform gesture phases; it does not execute a Pop.
+  /// The host must report a committed phase only after its Navigator has
+  /// completed the corresponding backend removal.
+  CCGoRouterPredictiveBackBridge? get predictiveBackBridge =>
+      _predictiveBackBridge;
+
+  /// Optional predictive-back source consumed by Runtime during initialization.
+  @override
+  CCNavigationPredictiveBackSource? get predictiveBackSource =>
+      _predictiveBackBridge;
 
   /// Reads GoRouter's pre-existing match tree as opaque backend entries.
   ///
@@ -147,6 +170,9 @@ final class CCGoRouterAdapter
 
   /// Adapter-owned third-party route reporting bridge.
   late final CCGoRouterForeignRouteBridge _foreignRouteBridge;
+
+  /// Explicitly enabled host bridge for platform predictive-back phases.
+  final CCGoRouterPredictiveBackBridge? _predictiveBackBridge;
 
   /// Component route bindings used to validate the application route table.
   final List<CCGoRouterRouteBinding> _bindings;
@@ -514,6 +540,7 @@ final class CCGoRouterAdapter
     _runtimeShells.clear();
     _entries.clear();
     _foreignRouteBridge._dispose();
+    _predictiveBackBridge?._dispose();
     _backendIdsByNavigationId.clear();
     _expectedBackendEvents.clear();
     _lifecycleEvents.clear();

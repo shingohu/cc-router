@@ -53,6 +53,52 @@ void main() {
     expect(capabilities.supportsPredictiveBack, isFalse);
   });
 
+  test('enables predictive-back bridge only when explicitly requested', () {
+    final router = GoRouter(
+      routes: [GoRoute(path: '/', builder: (_, _) => const SizedBox())],
+    );
+    final adapter = CCGoRouterAdapter(
+      router: router,
+      enablePredictiveBack: true,
+    );
+    addTearDown(router.dispose);
+
+    final bridge = adapter.predictiveBackBridge;
+    expect(bridge, isNotNull);
+    expect(adapter.capabilities.supportsPredictiveBack, isTrue);
+    final events = <CCPredictiveBackEvent>[];
+    final remove = bridge!.addPredictiveBackListener(events.add);
+
+    bridge.started();
+    bridge.updated(.5);
+    bridge.cancelled(.5);
+    expect(() => bridge.updated(1.1), throwsArgumentError);
+    expect(() => bridge.cancelled(-.1), throwsArgumentError);
+    bridge.committed(
+      const CCPopOutcome(
+        handled: true,
+        removedOwner: CCPopRemovedOwner.managed,
+        removedBackendEntryId: 'managed-1',
+      ),
+    );
+    expect(events.map((event) => event.phase), [
+      CCPredictiveBackPhase.started,
+      CCPredictiveBackPhase.updated,
+      CCPredictiveBackPhase.cancelled,
+      CCPredictiveBackPhase.committed,
+    ]);
+    expect(events[1].progress, .5);
+    expect(events.last.outcome?.removedBackendEntryId, 'managed-1');
+
+    remove();
+    bridge.started();
+    expect(events, hasLength(4));
+    adapter.dispose();
+    expect(adapter.predictiveBackBridge, isNotNull);
+    bridge.started();
+    expect(events, hasLength(4));
+  });
+
   test(
     'reports the initial GoRouter match tree as opaque snapshot entries',
     () async {

@@ -327,6 +327,17 @@ abstract interface class CCNavigationPredictiveBackSource {
   );
 }
 
+/// Optional Adapter SPI that exposes a predictive-back source only when the
+/// host explicitly enables platform integration.
+///
+/// This provider keeps adapters that cannot participate in predictive back
+/// conservative by default while allowing a composition root to opt in to a
+/// host-owned bridge.
+abstract interface class CCNavigationPredictiveBackSourceProvider {
+  /// Active predictive-back source, or null when the feature is disabled.
+  CCNavigationPredictiveBackSource? get predictiveBackSource;
+}
+
 /// Optional Adapter SPI exposing the initial backend stack.
 ///
 /// Implementations call this after [CCNavigationAdapter.initialize] has

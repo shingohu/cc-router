@@ -189,8 +189,8 @@ Runtime 根据能力选择正常执行、明确记录的降级实现或初始化
   关闭 RouteEntry；started、updated、cancelled 都不会销毁 Scope；
 
 系统返回和手势返回已经通过 `maybePopOutcome` 进入同一 ownership 判定管线；预测返回仍由
-`supportsPredictiveBack` 能力声明控制，当前 GoRouter Adapter 保守声明不支持，后续接入平台
-预测手势回调后再完成统一提交和取消阶段。
+`supportsPredictiveBack` 能力声明控制，GoRouter Adapter 默认不支持，但可由宿主显式开启
+`enablePredictiveBack` 并通过 Host-only Bridge 转发平台阶段事件；未开启时仍保持保守隔离。
 
 ### 阶段四：Foreign Route Bridge
 

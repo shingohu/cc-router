@@ -63,9 +63,16 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
       _backendNavigationRemover = (adapter as CCNavigationBackendEventSource)
           .addBackendEventListener(_recordBackendNavigationEvent);
     }
-    if (adapter is CCNavigationPredictiveBackSource) {
-      _predictiveBackRemover = (adapter as CCNavigationPredictiveBackSource)
-          .addPredictiveBackListener(_recordPredictiveBackEvent);
+    final predictiveSource = adapter is CCNavigationPredictiveBackSourceProvider
+        ? (adapter as CCNavigationPredictiveBackSourceProvider)
+              .predictiveBackSource
+        : adapter is CCNavigationPredictiveBackSource
+        ? adapter as CCNavigationPredictiveBackSource
+        : null;
+    if (predictiveSource != null) {
+      _predictiveBackRemover = predictiveSource.addPredictiveBackListener(
+        _recordPredictiveBackEvent,
+      );
     }
   }
 
