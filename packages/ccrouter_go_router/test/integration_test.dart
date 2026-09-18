@@ -45,7 +45,8 @@ final class _OrdersRegistrar implements CCComponentRegistrar {
   }
 }
 
-final class _RecordingNavigationAdapter implements CCNavigationAdapter {
+final class _RecordingNavigationAdapter
+    implements CCNavigationAdapter, CCNavigationBackendEventSource {
   _RecordingNavigationAdapter(this.delegate);
 
   final CCNavigationAdapter delegate;
@@ -54,6 +55,19 @@ final class _RecordingNavigationAdapter implements CCNavigationAdapter {
   @override
   Future<void> initialize(List<CCNavigationRoute> routes) =>
       delegate.initialize(routes);
+
+  @override
+  void Function() addBackendEventListener(
+    CCNavigationBackendEventListener listener,
+  ) {
+    final source = delegate;
+    if (source is CCNavigationBackendEventSource) {
+      return (source as CCNavigationBackendEventSource).addBackendEventListener(
+        listener,
+      );
+    }
+    return () {};
+  }
 
   @override
   Future<Object?> navigate(CCNavigationRequest request) {
@@ -122,10 +136,7 @@ void main() {
       final shellRoute = StatefulShellRoute.indexedStack(
         builder: (_, _, navigationShell) => Scaffold(body: navigationShell),
         branches: [
-          StatefulShellBranch(
-            navigatorKey: homeKey,
-            routes: [homeRoute],
-          ),
+          StatefulShellBranch(navigatorKey: homeKey, routes: [homeRoute]),
           StatefulShellBranch(
             navigatorKey: settingsKey,
             observers: [observer],
@@ -133,10 +144,7 @@ void main() {
           ),
         ],
       );
-      final router = GoRouter(
-        initialLocation: '/home',
-        routes: [shellRoute],
-      );
+      final router = GoRouter(initialLocation: '/home', routes: [shellRoute]);
       final goRouterAdapter = CCGoRouterAdapter(
         router: router,
         observers: [observer],
@@ -181,18 +189,29 @@ void main() {
       expect(find.text('order:42'), findsOneWidget);
       expect(router.state.uri.path, '/settings/orders/42');
       expect(adapter.requests, hasLength(1));
-      expect(adapter.requests.single.origin, CCNavigationOrigin.externalPlatform);
+      expect(
+        adapter.requests.single.origin,
+        CCNavigationOrigin.externalPlatform,
+      );
       expect(adapter.requests.single.source, same(source));
       expect(adapter.requests.single.routeId, 'orders.detail');
-      expect(
-        adapter.requests.single.placement.navigatorOutlet,
-        'settings',
-      );
+      expect(adapter.requests.single.placement.navigatorOutlet, 'settings');
       expect(observedEvents, isNotEmpty);
       expect(observedEvents.last.outlet, 'settings');
       expect(observedEvents.last.location, 'orders/:id');
       expect(settingsKey.currentState, isNotNull);
       expect(homeKey.currentState, isNotNull);
+      final backendEvents = CCRouter.recentBackendNavigationEvents;
+      expect(backendEvents, isNotEmpty);
+      expect(
+        backendEvents.any(
+          (event) =>
+              event.routeId == 'orders.detail' &&
+              event.origin == CCNavigationOrigin.externalPlatform &&
+              event.source == source,
+        ),
+        isTrue,
+      );
     },
   );
 
@@ -212,9 +231,7 @@ void main() {
     );
     final adapter = CCGoRouterAdapter(
       router: router,
-      bindings: [
-        CCGoRouterRouteBinding(routeId: 'internal', goRoute: route),
-      ],
+      bindings: [CCGoRouterRouteBinding(routeId: 'internal', goRoute: route)],
     );
     addTearDown(router.dispose);
 
@@ -250,9 +267,7 @@ final class _DisabledRouteRegistrar implements CCComponentRegistrar {
     registry.registerRoute<_OrderArguments, void>(
       CCRouteDefinition<_OrderArguments, void>(
         routeId: 'internal',
-        patterns: [
-          const CCPathPattern('/internal/:id', primary: true),
-        ],
+        patterns: [const CCPathPattern('/internal/:id', primary: true)],
         codec: const _OrderCodec(),
       ),
     );

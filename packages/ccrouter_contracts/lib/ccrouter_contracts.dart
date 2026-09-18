@@ -9,6 +9,7 @@ export 'src/invocation.dart';
 export 'src/lifecycle.dart';
 export 'src/messaging.dart';
 export 'src/navigation.dart';
+export 'src/navigation_backend.dart';
 export 'src/navigation_lifecycle.dart';
 export 'src/route.dart';
 export 'src/route_pattern.dart';

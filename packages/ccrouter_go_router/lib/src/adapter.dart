@@ -17,7 +17,8 @@ import 'shell_binding.dart';
 /// Modal bottom sheets and dialogs are supported when their bound [GoRoute]
 /// supplies a custom `pageBuilder` returning the corresponding exported modal
 /// Page type. The adapter does not rewrite application-owned GoRoutes.
-final class CCGoRouterAdapter implements CCNavigationAdapter {
+final class CCGoRouterAdapter
+    implements CCNavigationAdapter, CCNavigationBackendEventSource {
   /// Creates an adapter around an application-owned [router].
   factory CCGoRouterAdapter({
     required GoRouter router,
@@ -91,6 +92,9 @@ final class CCGoRouterAdapter implements CCNavigationAdapter {
   /// Listener removers registered against [_observers].
   final List<void Function()> _observerRemovers = [];
 
+  /// Runtime listeners receiving backend Navigator observations.
+  final Set<CCNavigationBackendEventListener> _backendListeners = {};
+
   /// Bounded lifecycle events emitted by configured Navigator observers.
   final List<CCGoRouterNavigationEvent> _lifecycleEvents = [];
 
@@ -127,6 +131,19 @@ final class CCGoRouterAdapter implements CCNavigationAdapter {
   /// Bounded snapshot of observed Navigator lifecycle events.
   List<CCGoRouterNavigationEvent> get lifecycleEvents =>
       List.unmodifiable(_lifecycleEvents);
+
+  /// Subscribes to backend Navigator transitions observed by this adapter.
+  ///
+  /// Runtime uses this optional adapter capability to expose user gesture,
+  /// system back, and application-owned stack changes without importing
+  /// Flutter types into Core. The returned callback removes the listener.
+  @override
+  void Function() addBackendEventListener(
+    CCNavigationBackendEventListener listener,
+  ) {
+    _backendListeners.add(listener);
+    return () => _backendListeners.remove(listener);
+  }
 
   /// Initializes the adapter with Runtime-validated route metadata.
   ///
@@ -311,6 +328,7 @@ final class CCGoRouterAdapter implements CCNavigationAdapter {
       remove();
     }
     _observerRemovers.clear();
+    _backendListeners.clear();
     _routes.clear();
     _entries.clear();
     _lifecycleEvents.clear();
@@ -476,11 +494,44 @@ final class CCGoRouterAdapter implements CCNavigationAdapter {
 
   /// Retains one backend event for diagnostics without exposing mutable state.
   void _recordLifecycleEvent(CCGoRouterNavigationEvent event) {
-    if (_lifecycleEventCapacity == 0 || _disposed) return;
-    if (_lifecycleEvents.length == _lifecycleEventCapacity) {
-      _lifecycleEvents.removeAt(0);
+    if (_disposed) return;
+    if (_lifecycleEventCapacity > 0) {
+      if (_lifecycleEvents.length == _lifecycleEventCapacity) {
+        _lifecycleEvents.removeAt(0);
+      }
+      _lifecycleEvents.add(event);
     }
-    _lifecycleEvents.add(event);
+    _emitBackendEvent(event);
+  }
+
+  /// Translates a Flutter observer event into the adapter-neutral contract.
+  void _emitBackendEvent(CCGoRouterNavigationEvent event) {
+    final request = _entries.isEmpty ? null : _entries.last.request;
+    final backendEvent = CCNavigationBackendEvent(
+      kind: switch (event.kind) {
+        CCGoRouterNavigationEventKind.push => CCNavigationBackendEventKind.push,
+        CCGoRouterNavigationEventKind.pop => CCNavigationBackendEventKind.pop,
+        CCGoRouterNavigationEventKind.replace =>
+          CCNavigationBackendEventKind.replace,
+        CCGoRouterNavigationEventKind.remove =>
+          CCNavigationBackendEventKind.remove,
+      },
+      navigationId: request?.navigationId,
+      routeId: request?.routeId,
+      uri: request?.uri,
+      placement: request?.placement ?? const CCRoutePlacement.root(),
+      location: event.location,
+      origin: request?.origin,
+      source: request?.source,
+      timestamp: DateTime.now(),
+    );
+    for (final listener in _backendListeners.toList()) {
+      try {
+        listener(backendEvent);
+      } catch (_) {
+        // Backend telemetry must never interrupt a Navigator transition.
+      }
+    }
   }
 
   /// Validates Shell type and the complete set of declared branch keys.

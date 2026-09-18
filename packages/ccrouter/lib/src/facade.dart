@@ -63,6 +63,13 @@ abstract final class CCRouter {
   static List<CCNavigationLifecycleEvent> get recentNavigationEvents =>
       _runtime.recentNavigationEvents;
 
+  /// Bounded snapshot of backend Navigator transitions observed by the adapter.
+  ///
+  /// Use this for system back, gesture, and backend-owned stack diagnostics.
+  /// Route metadata can be absent when application code bypasses CCRouter.
+  static List<CCNavigationBackendEvent> get recentBackendNavigationEvents =>
+      _runtime.recentBackendNavigationEvents;
+
   /// Subscribes to Runtime navigation lifecycle events.
   ///
   /// Use this at the application host boundary for navigation metrics. The
@@ -71,6 +78,14 @@ abstract final class CCRouter {
   static void Function() addNavigationListener(
     CCNavigationLifecycleListener listener,
   ) => _runtime.addNavigationListener(listener);
+
+  /// Subscribes to backend Navigator transitions observed by the adapter.
+  ///
+  /// The returned callback removes the listener. Adapters without backend
+  /// observation support do not produce events.
+  static void Function() addBackendNavigationListener(
+    CCNavigationBackendEventListener listener,
+  ) => _runtime.addBackendNavigationListener(listener);
 
   /// Unified business-facing navigation entry point.
   ///

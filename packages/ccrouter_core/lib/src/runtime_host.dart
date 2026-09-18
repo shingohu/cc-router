@@ -108,6 +108,15 @@ final class CCRouterRuntime {
   /// Subscribers receiving Runtime navigation lifecycle events.
   final Set<CCNavigationLifecycleListener> _navigationListeners = {};
 
+  /// Bounded backend Navigator observations collected from the adapter.
+  final Queue<CCNavigationBackendEvent> _backendNavigationEvents = Queue();
+
+  /// Subscribers receiving backend Navigator observations.
+  final Set<CCNavigationBackendEventListener> _backendNavigationListeners = {};
+
+  /// Removes the Runtime subscription from the adapter backend event source.
+  void Function()? _backendNavigationRemover;
+
   /// Bounded sanitized failures from isolated Event subscribers.
   final List<CCInvocationError> _subscriberErrors = [];
 
@@ -169,6 +178,7 @@ final class CCRouterRuntime {
     if (_disposed) throw const CCScopeClosedError('runtime');
     if (_initialized) return;
     await _navigationAdapter?.initialize(_routeRegistry.navigationRoutes);
+    _attachBackendNavigationSource();
     _initialized = true;
   }
 
@@ -476,6 +486,8 @@ final class CCRouterRuntime {
     // Stop invocations before awaiting any service disposal.
     appScope.cancellation.cancel();
     try {
+      _backendNavigationRemover?.call();
+      _backendNavigationRemover = null;
       await _navigationAdapter?.dispose();
     } finally {
       await _sessionScope?.close();
@@ -485,6 +497,8 @@ final class CCRouterRuntime {
       _session = null;
       _navigationListeners.clear();
       _navigationEvents.clear();
+      _backendNavigationListeners.clear();
+      _backendNavigationEvents.clear();
     }
   }
 
