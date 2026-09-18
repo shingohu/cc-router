@@ -664,6 +664,11 @@ navigatorOutlet
 routeKind
 ```
 
+这些字段由 `CCRoutePlacement` 承载。普通单栈页面使用默认的 `root` Outlet；
+Tab、主从双栏或嵌套 Navigator 必须声明稳定的 `shellId`、`parentRouteId` 和
+`navigatorOutlet`。`CCRouteKind.shell` 只用于持久化容器本身，BottomSheet/Dialog
+仍由 Route Presentation 描述，不能用 `routeKind` 代替展示语义。
+
 Adapter 初始化时声明能力集合。路由要求 Shell、指定 Page/Dialog Route 类型、透明页面、底部弹出、Dialog 或自定义转场而 Adapter 不支持时，初始化必须失败，不能静默降级。
 
 ### 12.2 自适应主从布局
@@ -1051,15 +1056,24 @@ Adapter 实现者可以使用单独导出的：
 来源和 URI 由 Core 管理。GoRouter 仍由应用负责创建和提供页面构造器。
 
 组件或应用组合根可以为每个 Runtime 路由提供一个
-`CCGoRouterRouteBinding(routeId, goRoute)`。绑定只关联稳定的 CCRouter Route ID
-与应用拥有的 `GoRoute`，不会注册、修改或销毁 `GoRouter`。当提供绑定集合时，
+`CCGoRouterRouteBinding(routeId, goRoute, presentationKind)`。绑定只关联稳定的 CCRouter Route ID
+与应用拥有的 `GoRoute`，并声明其 `pageBuilder` 返回的 Page 家族，不会注册、修改或销毁 `GoRouter`。当提供绑定集合时，
 Adapter 初始化会校验 Runtime 路由与绑定 ID 一一对应；根页面或其他不属于
 CCRouter 契约的 GoRouter 路由可以继续由应用独立保留。
 
-当前限制：Modal BottomSheet 和 Dialog 需要适配器专用页面构造器，暂未接入；
-`popAndPush`、`popUntil` 和 `pushAndRemoveUntil` 已通过 GoRouter 的 Navigator 与
+当前已支持 Modal BottomSheet 和 Dialog，但必须由绑定的 `GoRoute.pageBuilder`
+显式返回 `CCGoRouterBottomSheetPage` 或 `CCGoRouterDialogPage`；适配器不会改写应用拥有的
+`GoRoute`，也不会把普通 Page 静默降级为模态展示。两类模态 Page 都保留 GoRouter
+栈条目，因此 `push` Future、`pop` 返回值、遮罩/拖拽配置和生命周期仍由 Navigator
+处理。Material 与 Cupertino Dialog 可通过 `CCDialogRouteType` 选择，BottomSheet
+配置映射到 Flutter 的 `ModalBottomSheetRoute`。`popAndPush`、`popUntil` 和 `pushAndRemoveUntil` 已通过 GoRouter 的 Navigator 与
 imperative API 接入。由于 GoRouter 没有完全对应的公开原子组合 API，Adapter 会在
 一次 Runtime 操作内完成后端 Pop/Push 序列，并保持返回值与 Predicate 语义。
+GoRouter Adapter 通过 `navigatorKeys` 接收应用拥有的 Outlet Navigator，并可把带有
+`shellId`/`navigatorOutlet` placement 的子路由映射到已有 `ShellRoute` Navigator；
+未提供对应 key 时初始化会明确报告能力错误。`CCRouteKind.shell`、Shell 自身的
+生成与 `StatefulShellRoute` 分支编排仍待专用 Shell binding 接入，不会静默把目标栈
+改成根 Navigator。
 
 - 主 Pattern、别名、Query、Extra 和返回值。
 - Shell、Outlet 和生命周期同步。

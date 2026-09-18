@@ -7,16 +7,17 @@ import 'package:go_router/go_router.dart';
 
 CCNavigationRoute route(String id, {String path = '/detail/:value'}) =>
     CCNavigationRoute(
-  routeId: id,
-  patterns: [CCPathPattern(path, primary: true)],
-  presentation: const CCPagePresentation(),
-  deepLink: CCDeepLinkPolicy.disabled,
-);
+      routeId: id,
+      patterns: [CCPathPattern(path, primary: true)],
+      presentation: const CCPagePresentation(),
+      deepLink: CCDeepLinkPolicy.disabled,
+    );
 
 CCNavigationRequest request({
   required String id,
   required CCNavigationOperation operation,
   required Uri uri,
+  CCRoutePlacement placement = const CCRoutePlacement.root(),
 }) => CCNavigationRequest(
   navigationId: 'test-$id-${operation.name}',
   operation: operation,
@@ -24,6 +25,7 @@ CCNavigationRequest request({
   uri: uri,
   arguments: const Object(),
   presentation: const CCPagePresentation(),
+  placement: placement,
   origin: CCNavigationOrigin.internal,
 );
 
@@ -34,13 +36,11 @@ void main() {
     final router = GoRouter(
       initialLocation: '/',
       routes: [
-        GoRoute(
-          path: '/',
-          builder: (_, _) => const Text('home'),
-        ),
+        GoRoute(path: '/', builder: (_, _) => const Text('home')),
         GoRoute(
           path: '/detail/:value',
-          builder: (_, state) => Text('detail:${state.pathParameters['value']}'),
+          builder: (_, state) =>
+              Text('detail:${state.pathParameters['value']}'),
         ),
       ],
     );
@@ -72,10 +72,7 @@ void main() {
   ) async {
     final router = GoRouter(
       routes: [
-        GoRoute(
-          path: '/',
-          builder: (_, _) => const Text('home'),
-        ),
+        GoRoute(path: '/', builder: (_, _) => const Text('home')),
         GoRoute(
           path: '/detail/:value',
           builder: (_, state) => Text(
@@ -103,26 +100,151 @@ void main() {
     expect(find.text('detail:42:items'), findsOneWidget);
   });
 
-  test('rejects modal presentations until their backend semantics are ready',
-      () async {
+  test(
+    'rejects modal presentations until their backend semantics are ready',
+    () async {
+      final router = GoRouter(
+        routes: [GoRoute(path: '/', builder: (_, _) => const SizedBox())],
+      );
+      final adapter = CCGoRouterAdapter(router: router);
+      addTearDown(router.dispose);
+
+      final modal = CCNavigationRoute(
+        routeId: 'filters',
+        patterns: [const CCPathPattern('/filters', primary: true)],
+        presentation: const CCModalBottomSheetPresentation(),
+        deepLink: CCDeepLinkPolicy.disabled,
+      );
+
+      await expectLater(
+        adapter.initialize([modal]),
+        throwsA(isA<CCNavigationAdapterError>()),
+      );
+      expect(adapter.isInitialized, isFalse);
+    },
+  );
+
+  testWidgets('presents a bound modal bottom sheet and returns its result', (
+    tester,
+  ) async {
+    final goRoute = GoRoute(
+      path: '/filters',
+      pageBuilder: (_, state) => ccGoRouterBottomSheetPage(
+        key: state.pageKey,
+        child: const Text('filters'),
+        presentation: const CCModalBottomSheetPresentation(
+          isScrollControlled: true,
+        ),
+      ),
+    );
     final router = GoRouter(
-      routes: [GoRoute(path: '/', builder: (_, _) => const SizedBox())],
+      initialLocation: '/',
+      routes: [
+        GoRoute(path: '/', builder: (_, _) => const Text('home')),
+        goRoute,
+      ],
     );
-    final adapter = CCGoRouterAdapter(router: router);
+    final adapter = CCGoRouterAdapter(
+      router: router,
+      bindings: [
+        CCGoRouterRouteBinding(
+          routeId: 'filters',
+          goRoute: goRoute,
+          presentationKind: CCGoRouterPresentationKind.bottomSheet,
+        ),
+      ],
+    );
     addTearDown(router.dispose);
+    await adapter.initialize([
+      CCNavigationRoute(
+        routeId: 'filters',
+        patterns: [const CCPathPattern('/filters', primary: true)],
+        presentation: const CCModalBottomSheetPresentation(
+          isScrollControlled: true,
+        ),
+        deepLink: CCDeepLinkPolicy.disabled,
+      ),
+    ]);
+    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    await tester.pumpAndSettle();
 
-    final modal = CCNavigationRoute(
-      routeId: 'filters',
-      patterns: [const CCPathPattern('/filters', primary: true)],
-      presentation: const CCModalBottomSheetPresentation(),
-      deepLink: CCDeepLinkPolicy.disabled,
+    final pushed = adapter.navigate(
+      request(
+        id: 'filters',
+        operation: CCNavigationOperation.push,
+        uri: Uri.parse('/filters'),
+      ),
     );
+    await tester.pumpAndSettle();
+    expect(find.text('filters'), findsOneWidget);
 
-    await expectLater(
-      adapter.initialize([modal]),
-      throwsA(isA<CCNavigationAdapterError>()),
+    adapter.pop(result: 'selected');
+    await tester.pumpAndSettle();
+    expect(await pushed, 'selected');
+    expect(find.text('home'), findsOneWidget);
+  });
+
+  testWidgets('presents a dialog with a dismissible barrier configuration', (
+    tester,
+  ) async {
+    final goRoute = GoRoute(
+      path: '/confirm',
+      pageBuilder: (_, state) => ccGoRouterDialogPage(
+        key: state.pageKey,
+        child: const Text('confirm'),
+        presentation: const CCDialogPresentation(
+          routeType: CCDialogRouteType.material,
+        ),
+      ),
     );
-    expect(adapter.isInitialized, isFalse);
+    final router = GoRouter(
+      initialLocation: '/',
+      routes: [
+        GoRoute(path: '/', builder: (_, _) => const Text('home')),
+        goRoute,
+      ],
+    );
+    final adapter = CCGoRouterAdapter(
+      router: router,
+      bindings: [
+        CCGoRouterRouteBinding(
+          routeId: 'confirm',
+          goRoute: goRoute,
+          presentationKind: CCGoRouterPresentationKind.dialog,
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
+    await adapter.initialize([
+      CCNavigationRoute(
+        routeId: 'confirm',
+        patterns: [const CCPathPattern('/confirm', primary: true)],
+        presentation: const CCDialogPresentation(
+          routeType: CCDialogRouteType.material,
+        ),
+        deepLink: CCDeepLinkPolicy.disabled,
+      ),
+    ]);
+    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    await tester.pumpAndSettle();
+
+    final pushed = adapter.navigate(
+      request(
+        id: 'confirm',
+        operation: CCNavigationOperation.push,
+        uri: Uri.parse('/confirm'),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('confirm'), findsOneWidget);
+
+    final pages = router.routerDelegate.navigatorKey.currentState!.widget.pages;
+    final dialogPage = pages.whereType<CCGoRouterDialogPage>().single;
+    expect(dialogPage.presentation.barrierDismissible, isNull);
+    adapter.pop();
+    await tester.pumpAndSettle();
+    expect(await pushed, isNull);
+    expect(find.text('home'), findsOneWidget);
   });
 
   test('guards adapter lifecycle transitions', () async {
@@ -152,10 +274,7 @@ void main() {
       () => adapter.navigate(navigation),
       throwsA(isA<CCNavigationAdapterError>()),
     );
-    expect(
-      () => adapter.canPop(),
-      throwsA(isA<CCNavigationAdapterError>()),
-    );
+    expect(() => adapter.canPop(), throwsA(isA<CCNavigationAdapterError>()));
     await expectLater(
       adapter.initialize([route('detail')]),
       throwsA(isA<CCNavigationAdapterError>()),
@@ -195,9 +314,7 @@ void main() {
     );
     final adapter = CCGoRouterAdapter(
       router: router,
-      bindings: [
-        CCGoRouterRouteBinding(routeId: 'detail', goRoute: goRoute),
-      ],
+      bindings: [CCGoRouterRouteBinding(routeId: 'detail', goRoute: goRoute)],
     );
     addTearDown(router.dispose);
 
@@ -230,6 +347,90 @@ void main() {
       throwsA(isA<CCNavigationAdapterError>()),
     );
     expect(adapter.isInitialized, isFalse);
+  });
+
+  test('rejects non-root Outlet routes without a Navigator key', () async {
+    final router = GoRouter(
+      routes: [GoRoute(path: '/', builder: (_, _) => const SizedBox())],
+    );
+    final adapter = CCGoRouterAdapter(router: router);
+    addTearDown(router.dispose);
+
+    final placed = CCNavigationRoute(
+      routeId: 'detail',
+      patterns: [const CCPathPattern('/detail', primary: true)],
+      presentation: const CCPagePresentation(),
+      deepLink: CCDeepLinkPolicy.disabled,
+      placement: const CCRoutePlacement(navigatorOutlet: 'detail'),
+    );
+    await expectLater(
+      adapter.initialize([placed]),
+      throwsA(isA<CCNavigationAdapterError>()),
+    );
+    expect(adapter.isInitialized, isFalse);
+  });
+
+  testWidgets('uses the configured Shell Navigator for an Outlet route', (
+    tester,
+  ) async {
+    final shellNavigatorKey = GlobalKey<NavigatorState>();
+    final detailRoute = GoRoute(
+      path: '/detail',
+      builder: (_, _) => const Text('detail'),
+    );
+    final router = GoRouter(
+      initialLocation: '/home',
+      routes: [
+        ShellRoute(
+          navigatorKey: shellNavigatorKey,
+          builder: (_, _, child) => Scaffold(body: child),
+          routes: [
+            GoRoute(path: '/home', builder: (_, _) => const Text('home')),
+            detailRoute,
+          ],
+        ),
+      ],
+    );
+    final adapter = CCGoRouterAdapter(
+      router: router,
+      navigatorKeys: {'detail': shellNavigatorKey},
+      bindings: [
+        CCGoRouterRouteBinding(routeId: 'detail', goRoute: detailRoute),
+      ],
+    );
+    addTearDown(router.dispose);
+    final placement = const CCRoutePlacement(
+      shellId: 'workspace-shell',
+      navigatorOutlet: 'detail',
+    );
+    await adapter.initialize([
+      CCNavigationRoute(
+        routeId: 'detail',
+        patterns: [const CCPathPattern('/detail', primary: true)],
+        presentation: const CCPagePresentation(),
+        deepLink: CCDeepLinkPolicy.disabled,
+        placement: placement,
+      ),
+    ]);
+    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    await tester.pumpAndSettle();
+
+    final pushed = adapter.navigate(
+      request(
+        id: 'detail',
+        operation: CCNavigationOperation.push,
+        uri: Uri.parse('/detail'),
+        placement: placement,
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('detail'), findsOneWidget);
+    expect(adapter.canPop(), isTrue);
+
+    adapter.pop(result: 'closed');
+    await tester.pumpAndSettle();
+    expect(await pushed, 'closed');
+    expect(find.text('home'), findsOneWidget);
   });
 
   testWidgets('supports popAndPush and completes the removed result', (

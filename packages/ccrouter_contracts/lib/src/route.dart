@@ -1,4 +1,5 @@
 import 'route_pattern.dart';
+import 'route_placement.dart';
 import 'route_presentation.dart';
 
 /// Controls which generated consumers may reference a route contract.
@@ -97,6 +98,7 @@ final class CCRouteDefinition<A, R> {
     Set<String> visibleTo = const {},
     this.deepLink = CCDeepLinkPolicy.disabled,
     this.presentation = const CCPagePresentation(),
+    this.placement = const CCRoutePlacement.root(),
     this.description,
   }) : patterns = List.unmodifiable(patterns),
        visibleTo = Set.unmodifiable(visibleTo);
@@ -136,6 +138,12 @@ final class CCRouteDefinition<A, R> {
   /// workflows; callers cannot change presentation behavior for an individual
   /// navigation.
   final CCRoutePresentation presentation;
+
+  /// Explicit parent, Shell, and Navigator outlet placement.
+  ///
+  /// Leave the default root placement for a single-stack destination. Use a
+  /// named outlet for tabs, master-detail panes, or nested Navigator history.
+  final CCRoutePlacement placement;
 
   /// Optional human-readable documentation description.
   final String? description;

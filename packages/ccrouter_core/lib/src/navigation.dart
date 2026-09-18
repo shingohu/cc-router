@@ -229,6 +229,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     arguments: prepared.arguments,
     extra: prepared.extra,
     presentation: prepared.presentation,
+    placement: prepared.placement,
     origin: origin,
     source: source,
   );

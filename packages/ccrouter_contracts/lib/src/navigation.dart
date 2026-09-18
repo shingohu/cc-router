@@ -1,4 +1,5 @@
 import 'route_pattern.dart';
+import 'route_placement.dart';
 import 'route_presentation.dart';
 import 'route.dart';
 
@@ -150,6 +151,7 @@ final class CCNavigationRoute {
     required List<CCRoutePattern> patterns,
     required this.presentation,
     required this.deepLink,
+    this.placement = const CCRoutePlacement.root(),
   }) : patterns = List.unmodifiable(patterns);
 
   /// Stable route identity shared with generated Intents and diagnostics.
@@ -166,6 +168,9 @@ final class CCNavigationRoute {
   /// Runtime enforces this policy before creating a request. Adapters use the
   /// snapshot only when preparing backend Deep Link route tables.
   final CCDeepLinkPolicy deepLink;
+
+  /// Structural placement consumed by adapters when selecting a Navigator.
+  final CCRoutePlacement placement;
 }
 
 /// Immutable navigation request delivered to an adapter after Runtime checks.
@@ -183,6 +188,7 @@ final class CCNavigationRequest {
     required this.arguments,
     required this.presentation,
     required this.origin,
+    this.placement = const CCRoutePlacement.root(),
     this.extra,
     this.source,
   });
@@ -209,6 +215,12 @@ final class CCNavigationRequest {
 
   /// Presentation behavior that the route owner declared.
   final CCRoutePresentation presentation;
+
+  /// Structural parent, Shell, and Navigator outlet for this request.
+  ///
+  /// Adapters use this to select an explicit stack; business callers cannot
+  /// override it on an individual navigation operation.
+  final CCRoutePlacement placement;
 
   /// Trusted ingress classification assigned by framework infrastructure.
   final CCNavigationOrigin origin;

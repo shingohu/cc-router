@@ -89,6 +89,20 @@ void main() {
     expect(dialogPresentation.barrierDismissible, isFalse);
     expect(dialogPresentation.useSafeArea, isFalse);
     expect(const CCDialogPresentation().barrierDismissible, isNull);
+
+    const placement = CCRoutePlacement(
+      parentRouteId: 'workspace',
+      shellId: 'workspace-shell',
+      navigatorOutlet: 'detail',
+    );
+    final placedRoute = CCRouteDefinition<String, void>(
+      routeId: 'orders.detail',
+      patterns: [CCPathPattern('/orders/detail', primary: true)],
+      codec: const StringCodec(),
+      placement: placement,
+    );
+    expect(placedRoute.placement, same(placement));
+    expect(placement.routeKind, CCRouteKind.page);
   });
 
   test('registrars receive a component-bound registry', () {

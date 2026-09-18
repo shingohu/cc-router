@@ -45,6 +45,7 @@ final class _PreparedRoute {
     required this.arguments,
     required this.extra,
     required this.presentation,
+    required this.placement,
   });
 
   /// Stable route identity selected by Intent or URI resolution.
@@ -61,6 +62,9 @@ final class _PreparedRoute {
 
   /// Adapter-neutral presentation metadata for this route.
   final CCRoutePresentation presentation;
+
+  /// Structural parent, Shell, and Navigator outlet for this request.
+  final CCRoutePlacement placement;
 }
 
 /// Candidate produced while comparing one URI against an installed pattern.
@@ -121,6 +125,7 @@ final class _RouteRegistry {
           patterns: route.definition.patterns,
           presentation: route.definition.presentation,
           deepLink: route.definition.deepLink,
+          placement: route.definition.placement,
         ),
       ),
     );
@@ -226,6 +231,7 @@ final class _RouteRegistry {
       arguments: intent.arguments,
       extra: encoded.extra,
       presentation: route.definition.presentation,
+      placement: route.definition.placement,
     );
   }
 
@@ -241,6 +247,7 @@ final class _RouteRegistry {
       arguments: arguments,
       extra: null,
       presentation: route.definition.presentation,
+      placement: route.definition.placement,
     );
   }
 

@@ -554,11 +554,15 @@ URL -> RouteCodec -> Typed Route Args -> Route Factory -> Widget
 
 完整 URL 不天然等于外部 Deep Link，普通 Path 也不天然等于内部导航。类型安全 Intent 和应用内 `open` 使用内部 Origin；Universal Link、App Link、自定义 Scheme、通知 URI 和扫码输入通过受控 Ingress 使用外部 Origin 并执行 `CCDeepLinkPolicy`。业务可填写的导航 Source 只用于埋点，不能改变该信任属性。
 
-当前基础实现已经提供 Adapter-neutral 的 `CCNavigator`、主 Pattern 地址生成、Runtime 导航请求、Adapter 生命周期、Pure Dart 内存 Adapter、可选 `CCRouterApp`、固定来源的 `CCDeepLinkIngress` 和独立的 `ccrouter_go_router` 基础适配器。GoRouter 适配器目前覆盖 Page 路由及基础栈操作；Modal/Dialog、Shell/Outlet 和平台事件监听仍在后续 Flutter 集成阶段接入，Core 不保存或解释 Flutter 对象。
+当前基础实现已经提供 Adapter-neutral 的 `CCNavigator`、主 Pattern 地址生成、Runtime 导航请求、Adapter 生命周期、Pure Dart 内存 Adapter、可选 `CCRouterApp`、固定来源的 `CCDeepLinkIngress` 和独立的 `ccrouter_go_router` 适配器。GoRouter 适配器覆盖 Page 路由、BottomSheet/Dialog 模态 Page、已有 `ShellRoute` 的 Outlet Navigator 及基础栈操作；Shell 自身生成、`StatefulShellRoute` 分支编排和平台事件监听仍在后续 Flutter 集成阶段接入，Core 不保存或解释 Flutter 对象。模态路由必须在绑定的 `GoRoute.pageBuilder` 中显式返回 `CCGoRouterBottomSheetPage` 或 `CCGoRouterDialogPage`，并声明匹配的 `presentationKind`，适配器不会把普通 Page 静默降级为模态展示。
+GoRouter Adapter 通过 `navigatorKeys` 接收应用拥有的 Outlet Navigator，可将带有
+`shellId`/`navigatorOutlet` placement 的子路由绑定到已有 `ShellRoute` Navigator；
+未提供对应 key 时初始化会拒绝。Shell 自身和 `StatefulShellRoute` 分支编排仍待专用
+Shell binding 接入，这避免导航请求错误地落到根 Navigator。
 
 小屏列表、大屏左列表右详情属于自适应主从布局（Master-Detail/List-Detail），应使用同一组类型安全的列表/详情 Route Contract。小屏采用单列 Navigator 栈，大屏采用显式 List Outlet 与 Detail Outlet；只有在两个区域需要独立导航历史时才由 Shell 承载两个 Navigator。底部 Tab 等多个长期并行分支才使用 `StatefulShellRoute`，不能把所有主从布局都建模为 Stateful Shell。
 
-路由目的地必须与设备形态解耦。后续需要以 Window Size Class（compact/medium/expanded）、折痕与铰链等 Display Feature、Fold Posture、多 Window/Display Host、Adaptive Presentation Policy 和状态恢复标识描述呈现条件；同一 Route Contract 根据窗口条件选择单列、双栏、多 Pane、Dialog、Bottom Sheet 或全屏呈现。导航状态应按 Window/Host 隔离，而不是只依赖进程级单例栈。第一阶段优先实现窗口尺寸自适应、主从双 Outlet、Modal 自适应和旋转/调整大小状态保持，随后扩展折叠姿态、多窗口、指定 Pane 深链、Web 历史、PiP 和预测返回。
+路由目的地必须与设备形态解耦。`CCRoutePlacement` 负责显式声明 parent、Shell、Navigator Outlet 和 route kind；后续再以 Window Size Class（compact/medium/expanded）、折痕与铰链等 Display Feature、Fold Posture、多 Window/Display Host、Adaptive Presentation Policy 和状态恢复标识描述呈现条件。相同 Route Contract 根据窗口条件选择单列、双栏、多 Pane、Dialog、Bottom Sheet 或全屏呈现。导航状态应按 Window/Host 隔离，而不是只依赖进程级单例栈。第一阶段优先实现窗口尺寸自适应、主从双 Outlet、Modal 自适应和旋转/调整大小状态保持，随后扩展折叠姿态、多窗口、指定 Pane 深链、Web 历史、PiP 和预测返回。
 
 复杂对象默认不直接塞进 URL。需要传递内存对象时可使用 `extra`，但必须标记 `localOnly`，不可用于 Deep Link、跨 Isolate 或状态恢复。
 

@@ -11,5 +11,6 @@ export 'src/messaging.dart';
 export 'src/navigation.dart';
 export 'src/route.dart';
 export 'src/route_pattern.dart';
+export 'src/route_placement.dart';
 export 'src/route_presentation.dart';
 export 'src/service.dart';
