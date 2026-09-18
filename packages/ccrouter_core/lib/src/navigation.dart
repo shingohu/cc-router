@@ -338,10 +338,12 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     _PreparedRoute prepared,
     CCNavigationOrigin origin,
     CCNavigationSource? source, {
+    String? navigationId,
     required Future<Object?> Function(CCNavigationRequest request) action,
     void Function(_RouteEntryRecord entry)? commitEntry,
   }) async {
-    final navigationId = '$_runtimeId-navigation-${++_navigationSequence}';
+    final effectiveNavigationId =
+        navigationId ?? '$_runtimeId-navigation-${++_navigationSequence}';
     final cancellation = CCCancellationToken();
     var current = prepared;
     var redirectDepth = 0;
@@ -351,7 +353,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
         current,
         origin,
         source,
-        navigationId: navigationId,
+        navigationId: effectiveNavigationId,
       );
       _emitAspectFound(request);
       if (!_hasInterceptors(request.routeId)) {
@@ -379,6 +381,16 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
               () => action(request),
               entry: entry,
               commitEntry: commitEntry,
+            );
+          case CCNavigationDefer(:final code, :final timeout):
+            return _deferNavigation(
+              request,
+              operation: operation,
+              prepared: current,
+              origin: origin,
+              source: source,
+              code: code,
+              timeout: timeout,
             );
           case CCNavigationCancel(:final code):
             throw CCRouteCancelledError(code);

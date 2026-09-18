@@ -15,6 +15,7 @@ export 'src/navigation_concurrency.dart';
 export 'src/navigation_aspect.dart';
 export 'src/navigation_interceptor.dart';
 export 'src/navigation_lifecycle.dart';
+export 'src/navigation_pending.dart';
 export 'src/route.dart';
 export 'src/route_entry.dart';
 export 'src/route_pattern.dart';

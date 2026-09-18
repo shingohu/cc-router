@@ -700,11 +700,11 @@ hostId + navigatorOutlet + operation + routeId + normalizedUri
 
 ### 11.3 待认证导航与登录后恢复
 
-未登录访问受保护路由时，拦截器可以将请求导向登录页，但完整的“登录后回跳”不能只依赖普通 URI 重定向。后续由 Core 提供通用的 Pending Navigation/Continuation 能力，认证组件决定何时暂停、恢复或取消，不在 Runtime 内硬编码登录业务。
+未登录访问受保护路由时，拦截器可以返回 `CCNavigationDefer`。Core 已提供通用的 Pending Navigation/Continuation 能力，认证组件通过待处理 ID 决定何时恢复或取消，不在 Runtime 内硬编码登录业务。
 
 待恢复导航至少保留：
 
-- 原始 Typed Intent 或动态 URI。
+- Runtime 内部保存原始 Typed Intent 解码结果或动态 URI；对外只提供不含 Typed 参数和 `Extra` 的安全快照。
 - 原始 `navigationId`、`origin`、`source` 和目标组件。
 - 内部导航需要保留的 `Extra`。
 - 原始操作类型和结果完成通道。

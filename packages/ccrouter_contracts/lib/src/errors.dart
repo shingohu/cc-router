@@ -95,6 +95,13 @@ final class CCNavigationDuplicateError extends CCRouterError {
     : super('Navigation for route "$routeId" is already in flight.');
 }
 
+/// Indicates that a requested pending-navigation continuation is unavailable.
+final class CCNavigationPendingNotFoundError extends CCRouterError {
+  /// Creates a pending-navigation lookup error without retaining user input.
+  const CCNavigationPendingNotFoundError()
+    : super('The pending navigation is no longer available.');
+}
+
 /// Indicates that an adapter returned a value incompatible with a typed route.
 ///
 /// Generated typed navigation may surface this when page code Pops a value that

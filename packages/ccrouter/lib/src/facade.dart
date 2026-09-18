@@ -136,6 +136,25 @@ abstract final class CCRouter {
   /// fail with [CCRouterNotInitializedError].
   static CCNavigator get navigator => _navigator;
 
+  /// Snapshot of navigation requests paused by an external policy.
+  ///
+  /// Authentication, consent, onboarding, and device-unlock hosts may inspect
+  /// these IDs and later call [resumePendingNavigation] or
+  /// [cancelPendingNavigation]. Typed arguments remain Runtime-owned.
+  static List<CCPendingNavigation> get pendingNavigations =>
+      _runtime.pendingNavigations;
+
+  /// Resumes a pending navigation through the complete Runtime pipeline.
+  static Future<Object?> resumePendingNavigation(String navigationId) =>
+      _runtime.resumePendingNavigation(navigationId);
+
+  /// Cancels a pending navigation and completes its original Future with a
+  /// standard [CCRouteCancelledError].
+  static bool cancelPendingNavigation(
+    String navigationId, {
+    String code = 'pending_cancelled',
+  }) => _runtime.cancelPendingNavigation(navigationId, code: code);
+
   /// Creates, initializes, and owns the application's default Runtime.
   ///
   /// Call this once during application host startup with the complete component

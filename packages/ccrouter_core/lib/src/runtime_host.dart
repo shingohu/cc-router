@@ -170,6 +170,9 @@ final class CCRouterRuntime {
   final Map<_NavigationConcurrencyKey, Future<Object?>> _inFlightNavigation =
       {};
 
+  /// Runtime-owned continuations waiting for an external policy decision.
+  final Map<String, _PendingNavigationRecord> _pendingNavigations = {};
+
   /// Subscribers receiving Runtime navigation lifecycle events.
   final Set<CCNavigationLifecycleListener> _navigationListeners = {};
 
@@ -663,6 +666,7 @@ final class CCRouterRuntime {
   /// Closes the active Session and releases Session-owned resources.
   Future<void> closeSession() async {
     _ensureInitialized();
+    _cancelAllPendingNavigations(code: 'session_closed');
     final scope = _sessionScope;
     if (scope == null) return;
     await scope.close();
@@ -687,6 +691,7 @@ final class CCRouterRuntime {
   Future<void> _closeScopes() async {
     // Stop invocations before awaiting any service disposal.
     appScope.cancellation.cancel();
+    _cancelAllPendingNavigations(code: 'runtime_disposed');
     _removeAllRouteEntries(reason: 'runtimeDispose');
     await Future.wait(_routeEntryCloseFutures);
     try {

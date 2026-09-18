@@ -68,6 +68,23 @@ final class CCNavigationRedirect extends CCNavigationInterception {
   final Uri? uri;
 }
 
+/// Pauses navigation until an external application policy resumes or cancels it.
+///
+/// Authentication, onboarding, consent, and device-unlock components can use
+/// this result when they need to show UI outside the interceptor. Runtime
+/// stores the validated request and exposes a [CCPendingNavigation] snapshot;
+/// it does not know which business screen will satisfy the policy.
+final class CCNavigationDefer extends CCNavigationInterception {
+  /// Creates a deferred decision with an optional stable reason and timeout.
+  const CCNavigationDefer({this.code = 'deferred', this.timeout});
+
+  /// Stable reason used in diagnostics and cancellation events.
+  final String code;
+
+  /// Optional maximum time to retain the continuation.
+  final Duration? timeout;
+}
+
 /// Executes one global or route-specific navigation policy.
 ///
 /// Implementations may perform asynchronous authorization or feature checks,

@@ -1640,6 +1640,166 @@ void main() {
   });
 
   test(
+    'deferred navigation resumes through the full interceptor pipeline',
+    () async {
+      final adapter = CCMemoryNavigationAdapter();
+      var authorized = false;
+      final calls = <String>[];
+      final runtime = CCRouterRuntime.forTesting(
+        navigationAdapter: adapter,
+        components: [
+          routeComponent('orders', (registry) {
+            registry.registerRouteInterceptor(
+              'orders.auth',
+              TestNavigationInterceptor('orders.auth', (_) {
+                if (!authorized) {
+                  return const CCNavigationDefer(
+                    code: 'login_required',
+                    timeout: Duration(seconds: 1),
+                  );
+                }
+                return const CCNavigationProceed();
+              }, calls),
+            );
+            registry.registerRoute(pathRoute(interceptorIds: ['orders.auth']));
+          }),
+        ],
+      );
+      await runtime.initialize();
+
+      final pushed = runtime.pushRoute<String>(
+        const TestIntent<String>('orders.detail', RouteArgs('42')),
+      );
+      await Future<void>.delayed(Duration.zero);
+      expect(runtime.pendingNavigations, hasLength(1));
+      final pending = runtime.pendingNavigations.single;
+      expect(pending.routeId, 'orders.detail');
+      expect(pending.uri.path, '/orders/42');
+      expect(pending.origin, CCNavigationOrigin.internal);
+      expect(pending.navigationId, isNotEmpty);
+
+      authorized = true;
+      final resumed = runtime.resumePendingNavigation(pending.navigationId);
+      await Future<void>.delayed(Duration.zero);
+      expect(runtime.pendingNavigations, isEmpty);
+      runtime.popRoute(result: 'authorized');
+      expect(await pushed, 'authorized');
+      expect(await resumed, 'authorized');
+      expect(calls, ['orders.auth:orders.detail', 'orders.auth:orders.detail']);
+      await runtime.dispose();
+    },
+  );
+
+  test(
+    'pending navigation is cleared by cancellation and Session close',
+    () async {
+      final runtime = CCRouterRuntime.forTesting(
+        navigationAdapter: CCMemoryNavigationAdapter(),
+        components: [
+          routeComponent('orders', (registry) {
+            registry.registerRouteInterceptor(
+              'orders.defer',
+              TestNavigationInterceptor(
+                'orders.defer',
+                (_) => const CCNavigationDefer(),
+                [],
+              ),
+            );
+            registry.registerRoute(pathRoute(interceptorIds: ['orders.defer']));
+          }),
+        ],
+      );
+      await runtime.initialize();
+      final cancelled = runtime.pushRoute<String>(
+        const TestIntent<String>('orders.detail', RouteArgs('1')),
+      );
+      await Future<void>.delayed(Duration.zero);
+      final first = runtime.pendingNavigations.single.navigationId;
+      expect(runtime.cancelPendingNavigation(first), isTrue);
+      await expectLater(cancelled, throwsA(isA<CCRouteCancelledError>()));
+      expect(runtime.pendingNavigations, isEmpty);
+
+      runtime.openSession(accountId: 'account-1');
+      final closed = runtime.pushRoute<String>(
+        const TestIntent<String>('orders.detail', RouteArgs('2')),
+      );
+      await Future<void>.delayed(Duration.zero);
+      final closedExpectation = expectLater(
+        closed,
+        throwsA(isA<CCRouteCancelledError>()),
+      );
+      await runtime.closeSession();
+      expect(runtime.pendingNavigations, isEmpty);
+      await closedExpectation;
+      await runtime.dispose();
+    },
+  );
+
+  test(
+    'pending navigation timeout and Runtime dispose release continuations',
+    () async {
+      final timeoutRuntime = CCRouterRuntime.forTesting(
+        navigationAdapter: CCMemoryNavigationAdapter(),
+        components: [
+          routeComponent('orders', (registry) {
+            registry.registerRouteInterceptor(
+              'orders.timeout',
+              TestNavigationInterceptor(
+                'orders.timeout',
+                (_) => const CCNavigationDefer(
+                  code: 'timeout',
+                  timeout: Duration(milliseconds: 1),
+                ),
+                [],
+              ),
+            );
+            registry.registerRoute(
+              pathRoute(interceptorIds: ['orders.timeout']),
+            );
+          }),
+        ],
+      );
+      await timeoutRuntime.initialize();
+      final timedOut = timeoutRuntime.pushRoute<String>(
+        const TestIntent<String>('orders.detail', RouteArgs('1')),
+      );
+      await expectLater(timedOut, throwsA(isA<CCRouteCancelledError>()));
+      expect(timeoutRuntime.pendingNavigations, isEmpty);
+      await timeoutRuntime.dispose();
+
+      final disposedRuntime = CCRouterRuntime.forTesting(
+        navigationAdapter: CCMemoryNavigationAdapter(),
+        components: [
+          routeComponent('orders', (registry) {
+            registry.registerRouteInterceptor(
+              'orders.dispose',
+              TestNavigationInterceptor(
+                'orders.dispose',
+                (_) => const CCNavigationDefer(),
+                [],
+              ),
+            );
+            registry.registerRoute(
+              pathRoute(interceptorIds: ['orders.dispose']),
+            );
+          }),
+        ],
+      );
+      await disposedRuntime.initialize();
+      final disposed = disposedRuntime.pushRoute<String>(
+        const TestIntent<String>('orders.detail', RouteArgs('2')),
+      );
+      final disposedExpectation = expectLater(
+        disposed,
+        throwsA(isA<CCRouteCancelledError>()),
+      );
+      await disposedRuntime.dispose();
+      expect(disposedRuntime.pendingNavigations, isEmpty);
+      await disposedExpectation;
+    },
+  );
+
+  test(
     'popAndPush completes the old route and returns the new route result',
     () async {
       final adapter = CCMemoryNavigationAdapter();
