@@ -6,6 +6,8 @@ import 'route_binding.dart';
 import 'navigation_observer.dart';
 import 'shell_binding.dart';
 
+part 'foreign_route_bridge.dart';
+
 /// Adapts CCRouter navigation requests to an externally configured [GoRouter].
 ///
 /// The application owns the [router] and supplies its `GoRoute` page builders.
@@ -66,6 +68,10 @@ final class CCGoRouterAdapter
         'Capacity cannot be negative.',
       );
     }
+    _foreignRouteBridge = CCGoRouterForeignRouteBridge._(
+      allocateBackendEntryId: _nextBackendEntryId,
+      publish: _recordForeignBridgeEvent,
+    );
     for (final observer in _observers) {
       _observerRemovers.add(observer.addListener(_recordLifecycleEvent));
     }
@@ -74,8 +80,18 @@ final class CCGoRouterAdapter
   /// GoRouter instance that receives translated navigation operations.
   GoRouter get router => _router;
 
+  /// Host-only bridge for explicitly integrated third-party Navigator routes.
+  ///
+  /// Application composition roots may use this when an independent Navigator
+  /// cannot install [CCGoRouterNavigationObserver]. Business features should
+  /// continue to navigate only through `CCRouter.navigator`.
+  CCGoRouterForeignRouteBridge get foreignRouteBridge => _foreignRouteBridge;
+
   /// Application-owned GoRouter backend.
   final GoRouter _router;
+
+  /// Adapter-owned third-party route reporting bridge.
+  late final CCGoRouterForeignRouteBridge _foreignRouteBridge;
 
   /// Component route bindings used to validate the application route table.
   final List<CCGoRouterRouteBinding> _bindings;
@@ -420,6 +436,7 @@ final class CCGoRouterAdapter
     _routes.clear();
     _runtimeShells.clear();
     _entries.clear();
+    _foreignRouteBridge._dispose();
     _backendIdsByNavigationId.clear();
     _expectedBackendEvents.clear();
     _lifecycleEvents.clear();
@@ -718,6 +735,36 @@ final class CCGoRouterAdapter
       source: request?.source,
       timestamp: DateTime.now(),
     );
+    _publishBackendEvent(backendEvent);
+  }
+
+  /// Publishes one explicit third-party route transition through the Adapter.
+  void _recordForeignBridgeEvent(
+    CCNavigationBackendEventKind kind,
+    CCGoRouterForeignRouteHandle handle,
+    CCGoRouterForeignRouteHandle? previous,
+  ) {
+    _ensureAvailable();
+    final operationSequence = ++_backendOperationSequence;
+    _publishBackendEvent(
+      CCNavigationBackendEvent(
+        kind: kind,
+        backendEntryId: handle.backendEntryId,
+        backendOperationId: '$_backendAdapterId-operation-$operationSequence',
+        previousBackendEntryId: previous?.backendEntryId,
+        hostId: handle.hostId,
+        navigatorOutlet: handle.navigatorOutlet,
+        sequence: operationSequence,
+        owner: CCBackendEntryOwner.foreign,
+        placement: CCRoutePlacement(navigatorOutlet: handle.navigatorOutlet),
+        location: handle.location,
+        timestamp: DateTime.now(),
+      ),
+    );
+  }
+
+  /// Notifies backend listeners while isolating telemetry failures.
+  void _publishBackendEvent(CCNavigationBackendEvent backendEvent) {
     for (final listener in _backendListeners.toList()) {
       try {
         listener(backendEvent);

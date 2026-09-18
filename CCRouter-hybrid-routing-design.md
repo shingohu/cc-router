@@ -115,6 +115,10 @@ CCPopOutcome
 
 独立 Navigator 未绑定时，按隔离模式处理，不自动纳入 CCRouter，也不影响 CCRouter 栈。Overlay、LocalHistoryEntry 和无法观察的第三方浮层如果需要诊断，必须显式提供 Bridge；没有 Bridge 时只保证不影响 Managed Route。
 
+当前 GoRouter 集成提供 Host-only 的 `CCGoRouterForeignRouteBridge`。应用组合根可以用
+稳定 Handle 显式上报第三方 Route 的 Push、Replace、Pop 和 Remove；Bridge 只产生
+Foreign Backend Entry 诊断，不执行导航，也不创建 RouteEntry、Route Scope 或业务结果。
+
 ## 7. Modal 与 BottomSheet 策略
 
 所有弹窗不默认经过 CCRouter。
@@ -182,8 +186,8 @@ Runtime 根据能力选择正常执行、明确记录的降级实现或初始化
 
 ### 阶段四：Foreign Route Bridge
 
-- 支持第三方 Navigator；
-- 支持外部 Route 观察；
+- [x] 支持第三方 Navigator 通过 Host Bridge 显式上报；
+- [x] 支持外部 Route 的身份和生命周期观察；
 - 为 Overlay 和 LocalHistoryEntry 提供可选诊断桥；
 - 不把 Foreign UI 暴露为业务路由 API。
 

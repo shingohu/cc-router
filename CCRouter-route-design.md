@@ -882,6 +882,7 @@ Shell 负责持久化导航容器和 Outlet，主从容器负责根据屏幕尺�
 - 外部事件缺少稳定 Backend Entry 身份时，标记为 `foreign` 或 `opaque`，只记录诊断，不根据事件类型猜测删除 CCRouter 栈。
 - 系统返回、手势返回和 `maybePop` 只有在明确确认被移除的是 Managed Entry 时，才能关闭对应 Route Scope。
 - 第三方路由需要完整生命周期同步时，必须通过同一 Navigator 的 Observer、`ForeignRouteBridge` 或自定义 Adapter 显式接入；未接入的外部栈按隔离模式处理。
+- GoRouter Host 可通过 `CCGoRouterForeignRouteBridge` 上报第三方 Route 的稳定身份和生命周期；该 Bridge 不属于 `CCRouter.navigator` 业务 API，也不能执行页面跳转。
 - 兼容性降级优先选择“状态未知但不破坏 CCRouter”，而不是“强行同步但可能误删 CCRouter 路由”。
 - 所有无法兼容的外部行为必须进入有界诊断记录，并提供 Host/Adapter 层的修复入口，不能静默改变业务路由结果。
 

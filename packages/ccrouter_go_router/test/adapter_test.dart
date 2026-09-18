@@ -31,6 +31,58 @@ CCNavigationRequest request({
 );
 
 void main() {
+  test('foreign route bridge reports identity without navigating', () async {
+    final router = GoRouter(
+      routes: [GoRoute(path: '/', builder: (_, _) => const SizedBox())],
+    );
+    final adapter = CCGoRouterAdapter(router: router);
+    final events = <CCNavigationBackendEvent>[];
+    adapter.addBackendEventListener(events.add);
+    addTearDown(router.dispose);
+    await adapter.initialize(const []);
+    final locationBeforeBridge = router.routerDelegate.currentConfiguration.uri
+        .toString();
+
+    final pushed = adapter.foreignRouteBridge.push(
+      navigatorOutlet: 'third-party',
+      hostId: 'window.main',
+      location: '/foreign/one',
+    );
+    final replaced = adapter.foreignRouteBridge.replace(
+      pushed,
+      location: '/foreign/two',
+    );
+    adapter.foreignRouteBridge.pop(replaced);
+
+    expect(events.map((event) => event.kind), [
+      CCNavigationBackendEventKind.push,
+      CCNavigationBackendEventKind.replace,
+      CCNavigationBackendEventKind.pop,
+    ]);
+    expect(
+      events.every((event) => event.owner == CCBackendEntryOwner.foreign),
+      isTrue,
+    );
+    expect(events.first.backendEntryId, pushed.backendEntryId);
+    expect(events[1].previousBackendEntryId, pushed.backendEntryId);
+    expect(events[1].backendEntryId, replaced.backendEntryId);
+    expect(events.last.backendEntryId, replaced.backendEntryId);
+    expect(
+      events.every((event) => event.navigatorOutlet == 'third-party'),
+      isTrue,
+    );
+    expect(events.every((event) => event.hostId == 'window.main'), isTrue);
+    expect(
+      () => adapter.foreignRouteBridge.pop(replaced),
+      throwsA(isA<CCNavigationAdapterError>()),
+    );
+    expect(
+      router.routerDelegate.currentConfiguration.uri.toString(),
+      locationBeforeBridge,
+    );
+    await adapter.dispose();
+  });
+
   testWidgets('maps typed Push and Pop through the supplied GoRouter', (
     tester,
   ) async {
