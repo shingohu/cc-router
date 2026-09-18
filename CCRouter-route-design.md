@@ -515,6 +515,10 @@ abstract interface class CCNavigator {
 
 `push<R>` 和 `replace<R>` 返回 `Future<R?>`。系统返回、无值 Pop 或 RouteEntry 被允许取消时完成 `null`；解析、拦截或 Adapter 失败时抛出标准错误。
 
+`maybePopOutcome` 只有在 Adapter 明确返回 `removedOwner == managed` 时才允许
+Runtime 关闭对应 RouteEntry；Foreign、Opaque 或未提供归属的 Pop 只报告结果，不
+按栈顶猜测删除页面。
+
 `BuildContext` 只在调用瞬间用于解析最近的 Navigator Outlet，解析完成后不得保存或传入 Core。未传 Context 时使用 Adapter 配置的默认根 Outlet。非 Widget 调用方后续可以通过显式 Outlet 引用选择非根导航栈。
 
 当前 Pure Dart 导航主链路已经实现 `push/replace/go/reset/open/pop/canPop`，以及 `maybePop`、`maybePopOutcome`、类型安全的 `popAndPush`、`popUntil` 和 `pushAndRemoveUntil`；主 Pattern 地址生成、中立 Adapter SPI 和内存 Adapter 也已实现。`BuildContext` 参数与 Outlet 解析将在 `CCRouterApp` 和 GoRouter Adapter 阶段接入；在此之前所有调用使用 Adapter 的默认导航栈，Core 始终不接收 Flutter 类型。

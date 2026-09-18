@@ -44,7 +44,9 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
       final adapter = _requiredNavigationAdapter;
       if (adapter is CCNavigationPopCoordinator) {
         final coordinator = adapter as CCNavigationPopCoordinator;
-        return await coordinator.maybePopOutcome(result: result);
+        final outcome = await coordinator.maybePopOutcome(result: result);
+        _applyManagedPopOutcome(outcome);
+        return outcome;
       }
       final handled = await adapter.maybePop(result: result);
       return CCPopOutcome(handled: handled);
@@ -55,6 +57,28 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
         'Navigation adapter maybePop failed: ${error.runtimeType}.',
       );
     }
+  }
+
+  /// Closes a RouteEntry only after the Adapter explicitly confirms ownership.
+  void _applyManagedPopOutcome(CCPopOutcome outcome) {
+    if (outcome.removedOwner != CCPopRemovedOwner.managed) return;
+    final backendEntryId = outcome.removedBackendEntryId;
+    if (backendEntryId != null) {
+      final backendEntry = _backendEntries[backendEntryId];
+      final routeEntryId = backendEntry?.routeEntryId;
+      if (routeEntryId != null) {
+        for (final entry in _routeEntries.toList()) {
+          if (entry.id == routeEntryId) {
+            _removeRouteEntry(entry, reason: 'maybePop');
+            return;
+          }
+        }
+      }
+    }
+    // Adapters without a backend ledger may still explicitly guarantee that
+    // the active entry was managed. In that narrow case, only the top entry
+    // can be reconciled; foreign/opaque outcomes never reach this fallback.
+    _removeTopRouteEntry(reason: 'maybePop', preserveRoot: true);
   }
 
   /// Pops the current route and pushes [intent] as one stack operation.

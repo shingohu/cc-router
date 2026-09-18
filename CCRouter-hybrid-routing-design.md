@@ -176,6 +176,7 @@ Runtime 根据能力选择正常执行、明确记录的降级实现或初始化
 ### 阶段三：Pop Coordinator
 
 - [x] 引入 `CCPopOutcome`；
+- [x] Managed outcome 才允许 Runtime 关闭对应 RouteEntry，Foreign/Opaque/None 只返回诊断；
 - [ ] 统一系统返回、手势返回、预测返回和业务 Pop；
 - [ ] 完善 Pop 拒绝、结果和生命周期语义。
 

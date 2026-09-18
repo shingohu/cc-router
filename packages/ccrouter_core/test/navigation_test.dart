@@ -1218,6 +1218,7 @@ void main() {
       expect(handled.removedOwner, CCPopRemovedOwner.managed);
       expect(handled.resultAvailable, isTrue);
       expect(await pushed, 'back');
+      expect(runtime.activeRouteEntries, hasLength(1));
       expect(adapter.entries.map((entry) => entry.uri.path), ['/orders/1']);
       await runtime.dispose();
     },
