@@ -107,6 +107,23 @@ final class CCGoRouterAdapter
   /// Entries observed through operations issued by this adapter.
   final List<_CCGoRouterEntry> _entries = [];
 
+  /// Adapter-local prefix used to keep backend identities unique across
+  /// multiple GoRouter adapters in one process.
+  final String _backendAdapterId =
+      '${DateTime.now().microsecondsSinceEpoch}-${identityHashCode(Object())}';
+
+  /// Monotonic backend Entry sequence for this adapter instance.
+  int _backendEntrySequence = 0;
+
+  /// Monotonic backend operation sequence for this adapter instance.
+  int _backendOperationSequence = 0;
+
+  /// Identity map from Flutter Routes to backend Entry IDs.
+  final Expando<String> _backendRouteIds = Expando<String>();
+
+  /// Managed backend IDs indexed by their Runtime navigation identity.
+  final Map<String, String> _backendIdsByNavigationId = {};
+
   /// Backend transitions expected from the next adapter-owned operations.
   ///
   /// Navigator observer callbacks may arrive after the imperative call has
@@ -375,13 +392,16 @@ final class CCGoRouterAdapter
     _routes.clear();
     _runtimeShells.clear();
     _entries.clear();
+    _backendIdsByNavigationId.clear();
     _expectedBackendEvents.clear();
     _lifecycleEvents.clear();
   }
 
   /// Pushes one location and removes its tracked entry when it completes.
   Future<Object?> _push(CCNavigationRequest request, String location) {
-    final entry = _CCGoRouterEntry(request);
+    final backendEntryId = _nextBackendEntryId();
+    _backendIdsByNavigationId[request.navigationId] = backendEntryId;
+    final entry = _CCGoRouterEntry(request, backendEntryId);
     _entries.add(entry);
     _expectBackendEvent(CCGoRouterNavigationEventKind.push);
     final result = _router.push<Object?>(location, extra: request.extra);
@@ -395,7 +415,9 @@ final class CCGoRouterAdapter
   /// Replaces the tracked top entry and delegates the replacement to GoRouter.
   Future<Object?> _replace(CCNavigationRequest request, String location) {
     _removeTrackedEntry();
-    final entry = _CCGoRouterEntry(request);
+    final backendEntryId = _nextBackendEntryId();
+    _backendIdsByNavigationId[request.navigationId] = backendEntryId;
+    final entry = _CCGoRouterEntry(request, backendEntryId);
     _entries.add(entry);
     _expectBackendEvent(CCGoRouterNavigationEventKind.replace);
     final result = _router.replace<Object?>(location, extra: request.extra);
@@ -408,18 +430,31 @@ final class CCGoRouterAdapter
 
   /// Replaces the locally observed stack after a GoRouter location change.
   void _replaceTrackedStack(CCNavigationRequest request) {
+    final backendEntryId = _nextBackendEntryId();
+    _backendIdsByNavigationId[request.navigationId] = backendEntryId;
     _entries
       ..clear()
-      ..add(_CCGoRouterEntry(request));
+      ..add(_CCGoRouterEntry(request, backendEntryId));
   }
+
+  /// Returns or allocates the adapter identity for one backend Route object.
+  String _backendEntryIdFor(Route<dynamic> route) =>
+      _backendRouteIds[route] ??= _nextBackendEntryId();
+
+  /// Allocates one adapter-scoped backend Entry identity.
+  String _nextBackendEntryId() =>
+      '$_backendAdapterId-entry-${++_backendEntrySequence}';
 
   /// Removes one locally observed entry, or the current top entry.
   void _removeTrackedEntry([_CCGoRouterEntry? entry]) {
     if (_entries.isEmpty) return;
     if (entry == null) {
-      _entries.removeLast();
+      final removed = _entries.removeLast();
+      _backendIdsByNavigationId.remove(removed.request.navigationId);
     } else {
-      _entries.remove(entry);
+      if (_entries.remove(entry)) {
+        _backendIdsByNavigationId.remove(entry.request.navigationId);
+      }
     }
   }
 
@@ -609,6 +644,18 @@ final class CCGoRouterAdapter
     final request = correlateRequest && _entries.isNotEmpty
         ? _entries.last.request
         : null;
+    final trackedBackendEntryId = request == null
+        ? null
+        : _backendIdsByNavigationId[request.navigationId];
+    if (trackedBackendEntryId != null) {
+      _backendRouteIds[event.route] = trackedBackendEntryId;
+    }
+    final backendEntryId =
+        trackedBackendEntryId ?? _backendEntryIdFor(event.route);
+    final previousBackendEntryId = event.previousRoute == null
+        ? null
+        : _backendEntryIdFor(event.previousRoute!);
+    final operationSequence = ++_backendOperationSequence;
     final backendEvent = CCNavigationBackendEvent(
       kind: switch (event.kind) {
         CCGoRouterNavigationEventKind.push => CCNavigationBackendEventKind.push,
@@ -618,6 +665,14 @@ final class CCGoRouterAdapter
         CCGoRouterNavigationEventKind.remove =>
           CCNavigationBackendEventKind.remove,
       },
+      backendEntryId: backendEntryId,
+      backendOperationId: '$_backendAdapterId-operation-$operationSequence',
+      previousBackendEntryId: previousBackendEntryId,
+      navigatorOutlet: event.outlet,
+      sequence: operationSequence,
+      owner: request == null
+          ? CCBackendEntryOwner.foreign
+          : CCBackendEntryOwner.managed,
       navigationId: request?.navigationId,
       routeId: request?.routeId,
       uri: request?.uri,
@@ -761,10 +816,13 @@ final class CCGoRouterAdapter
 /// Internal snapshot used by stack predicates without exposing GoRouter types.
 final class _CCGoRouterEntry {
   /// Creates a tracked entry from one accepted navigation request.
-  _CCGoRouterEntry(this.request);
+  _CCGoRouterEntry(this.request, this.backendEntryId);
 
   /// Request that created this tracked entry.
   final CCNavigationRequest request;
+
+  /// Backend identity associated with the GoRouter Route for this entry.
+  final String backendEntryId;
 
   /// Adapter-neutral identity supplied to a stack predicate.
   CCNavigationEntry get snapshot => CCNavigationEntry(

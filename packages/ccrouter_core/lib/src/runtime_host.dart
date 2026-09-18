@@ -152,6 +152,12 @@ final class CCRouterRuntime {
   /// Bounded backend Navigator observations collected from the adapter.
   final Queue<CCNavigationBackendEvent> _backendNavigationEvents = Queue();
 
+  /// Backend route identities observed by the Runtime ledger.
+  final Map<String, CCBackendEntry> _backendEntries = {};
+
+  /// Adapter operation IDs already reconciled by the backend ledger.
+  final Set<String> _processedBackendOperations = {};
+
   /// Subscribers receiving backend Navigator observations.
   final Set<CCNavigationBackendEventListener> _backendNavigationListeners = {};
 
@@ -613,6 +619,8 @@ final class CCRouterRuntime {
       _routeEntryCloseFutures.clear();
       _backendNavigationListeners.clear();
       _backendNavigationEvents.clear();
+      _backendEntries.clear();
+      _processedBackendOperations.clear();
     }
   }
 

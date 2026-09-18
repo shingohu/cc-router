@@ -70,6 +70,17 @@ abstract final class CCRouter {
   static List<CCNavigationBackendEvent> get recentBackendNavigationEvents =>
       _runtime.recentBackendNavigationEvents;
 
+  /// Snapshot of the adapter-neutral backend Entry ledger.
+  ///
+  /// Use this for hybrid-navigation diagnostics. Foreign and opaque entries
+  /// are immutable observations and cannot be popped or mutated through this
+  /// API.
+  static List<CCBackendEntry> get backendEntries => _runtime.backendEntries;
+
+  /// Snapshot of backend Entries currently active in observed stacks.
+  static List<CCBackendEntry> get activeBackendEntries =>
+      _runtime.activeBackendEntries;
+
   /// Subscribes to Runtime navigation lifecycle events.
   ///
   /// Use this at the application host boundary for navigation metrics. The

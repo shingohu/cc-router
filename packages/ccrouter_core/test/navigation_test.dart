@@ -122,10 +122,26 @@ final class BackendEventNavigationAdapter
   final Set<CCNavigationBackendEventListener> listeners = {};
   bool consumeForeignMaybePop = false;
 
-  void emit(CCNavigationBackendEventKind kind) {
+  void emit(
+    CCNavigationBackendEventKind kind, {
+    String? backendEntryId,
+    String? backendOperationId,
+    String? previousBackendEntryId,
+    String? navigationId,
+    String? routeId,
+    CCBackendEntryOwner? owner,
+    int? sequence,
+  }) {
     final event = CCNavigationBackendEvent(
       kind: kind,
       timestamp: DateTime.now(),
+      backendEntryId: backendEntryId,
+      backendOperationId: backendOperationId,
+      previousBackendEntryId: previousBackendEntryId,
+      navigationId: navigationId,
+      routeId: routeId,
+      owner: owner,
+      sequence: sequence,
       location: 'foreign:${kind.name}',
     );
     for (final listener in listeners.toList()) {
@@ -283,6 +299,79 @@ void main() {
       runtime.popRoute(result: 'managed');
       expect(await pushed, 'managed');
       expect(runtime.activeRouteEntries, hasLength(1));
+      await runtime.dispose();
+    },
+  );
+
+  test(
+    'tracks foreign and managed backend Entry ownership independently',
+    () async {
+      final adapter = BackendEventNavigationAdapter();
+      final runtime = CCRouterRuntime.forTesting(
+        navigationAdapter: adapter,
+        components: [
+          routeComponent(
+            'orders',
+            (registry) => registry.registerRoute(pathRoute()),
+          ),
+        ],
+      );
+      await runtime.initialize();
+
+      adapter.emit(
+        CCNavigationBackendEventKind.push,
+        backendEntryId: 'foreign-1',
+        backendOperationId: 'foreign-op-1',
+        sequence: 1,
+      );
+      expect(
+        runtime.activeBackendEntries.single.owner,
+        CCBackendEntryOwner.foreign,
+      );
+      expect(runtime.activeBackendEntries.single.backendEntryId, 'foreign-1');
+
+      adapter.emit(
+        CCNavigationBackendEventKind.pop,
+        backendEntryId: 'foreign-1',
+        backendOperationId: 'foreign-op-2',
+        sequence: 2,
+      );
+      expect(runtime.activeBackendEntries, isEmpty);
+      expect(
+        runtime.backendEntries.single.lifecycleState,
+        CCBackendEntryLifecycleState.removed,
+      );
+
+      await runtime.goRoute(
+        const TestIntent<void>('orders.detail', RouteArgs('1')),
+      );
+      final managed = runtime.activeRouteEntries.single;
+      adapter.emit(
+        CCNavigationBackendEventKind.push,
+        backendEntryId: 'managed-1',
+        backendOperationId: 'managed-op-1',
+        navigationId: managed.navigationId,
+        routeId: managed.routeId,
+        owner: CCBackendEntryOwner.managed,
+        sequence: 3,
+      );
+      adapter.emit(
+        CCNavigationBackendEventKind.pop,
+        backendEntryId: 'managed-1',
+        backendOperationId: 'managed-op-2',
+        navigationId: managed.navigationId,
+        routeId: managed.routeId,
+        owner: CCBackendEntryOwner.managed,
+        sequence: 4,
+      );
+      expect(
+        runtime.activeRouteEntries.single.routeEntryId,
+        managed.routeEntryId,
+      );
+      expect(
+        runtime.backendEntries.last.lifecycleState,
+        CCBackendEntryLifecycleState.removed,
+      );
       await runtime.dispose();
     },
   );

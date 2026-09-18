@@ -2,6 +2,21 @@ part of 'runtime.dart';
 
 /// Exposes backend Navigator observations collected by Runtime.
 extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
+  /// Returns the backend Entry ledger, including removed entries retained for
+  /// bounded diagnostics until Runtime disposal.
+  List<CCBackendEntry> get backendEntries =>
+      List.unmodifiable(_backendEntries.values);
+
+  /// Returns backend Entries that are currently active in an observed stack.
+  ///
+  /// This snapshot is diagnostic only. It never grants callers permission to
+  /// pop or mutate a backend route.
+  List<CCBackendEntry> get activeBackendEntries => List.unmodifiable(
+    _backendEntries.values.where(
+      (entry) => entry.lifecycleState == CCBackendEntryLifecycleState.active,
+    ),
+  );
+
   /// Returns a bounded immutable snapshot of backend stack events.
   ///
   /// Use this to correlate system back, gestures, or backend-owned stack
@@ -39,6 +54,7 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
   /// or application-owned Navigator route and must never remove a managed
   /// Route Entry by position.
   void _recordBackendNavigationEvent(CCNavigationBackendEvent event) {
+    _reconcileBackendEntry(event);
     if (navigationEventCapacity > 0) {
       if (_backendNavigationEvents.length == navigationEventCapacity) {
         _backendNavigationEvents.removeFirst();
@@ -61,5 +77,77 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
         }
       }
     }
+  }
+
+  /// Reconciles one identity-bearing event without changing Route Entries.
+  void _reconcileBackendEntry(CCNavigationBackendEvent event) {
+    final operationId = event.backendOperationId;
+    if (operationId != null) {
+      if (_processedBackendOperations.contains(operationId)) return;
+      if (navigationEventCapacity > 0) {
+        while (_processedBackendOperations.length >= navigationEventCapacity) {
+          _processedBackendOperations.remove(_processedBackendOperations.first);
+        }
+        _processedBackendOperations.add(operationId);
+      }
+    }
+    final backendEntryId = event.backendEntryId;
+    if (backendEntryId == null || backendEntryId.isEmpty) return;
+
+    _RouteEntryRecord? routeEntry;
+    final navigationId = event.navigationId;
+    if (navigationId != null) {
+      for (final entry in _routeEntries) {
+        if (entry.request.navigationId == navigationId) {
+          routeEntry = entry;
+          break;
+        }
+      }
+    }
+    final existing = _backendEntries[backendEntryId];
+    final owner = routeEntry != null
+        ? CCBackendEntryOwner.managed
+        : existing?.owner == CCBackendEntryOwner.managed
+        ? CCBackendEntryOwner.managed
+        : event.owner ?? CCBackendEntryOwner.foreign;
+    final previous = event.previousBackendEntryId;
+    if (previous != null && previous != backendEntryId) {
+      final previousEntry = _backendEntries[previous];
+      if (previousEntry != null) {
+        _backendEntries[previous] = CCBackendEntry(
+          backendEntryId: previousEntry.backendEntryId,
+          owner: previousEntry.owner,
+          routeEntryId: previousEntry.routeEntryId,
+          routeId: previousEntry.routeId,
+          hostId: previousEntry.hostId,
+          navigatorOutlet: previousEntry.navigatorOutlet,
+          location: previousEntry.location,
+          lifecycleState: CCBackendEntryLifecycleState.removed,
+          lastSequence: event.sequence ?? previousEntry.lastSequence,
+        );
+      }
+    }
+
+    final isRemoved =
+        event.kind == CCNavigationBackendEventKind.pop ||
+        event.kind == CCNavigationBackendEventKind.remove;
+    if (existing == null && navigationEventCapacity > 0) {
+      while (_backendEntries.length >= navigationEventCapacity) {
+        _backendEntries.remove(_backendEntries.keys.first);
+      }
+    }
+    _backendEntries[backendEntryId] = CCBackendEntry(
+      backendEntryId: backendEntryId,
+      owner: owner,
+      routeEntryId: routeEntry?.id ?? existing?.routeEntryId,
+      routeId: event.routeId ?? existing?.routeId,
+      hostId: event.hostId ?? existing?.hostId,
+      navigatorOutlet: event.navigatorOutlet ?? event.placement.navigatorOutlet,
+      location: event.location ?? existing?.location,
+      lifecycleState: isRemoved
+          ? CCBackendEntryLifecycleState.removed
+          : CCBackendEntryLifecycleState.active,
+      lastSequence: event.sequence ?? existing?.lastSequence,
+    );
   }
 }

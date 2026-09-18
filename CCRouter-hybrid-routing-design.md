@@ -3,7 +3,7 @@
 ## 文档状态
 
 - 版本：v0.1 Draft
-- 状态：方案记录，暂不执行实现
+- 状态：阶段一已实现，阶段二核心台账已实现，后续阶段按计划推进
 - 适用范围：CCRouter、GoRouter、Flutter Navigator、第三方 Popup 和多 Window Host
 - 关联设计：[CCRouter 路由子系统设计](CCRouter-route-design.md)
 
@@ -42,7 +42,9 @@ Foreign UI 默认不创建 CCRouter RouteEntry，不创建 Route Scope，也不�
 
 ## 3. Backend Entry 台账
 
-Adapter 和 Runtime 之间增加适配器中立的后端条目模型：
+Adapter 和 Runtime 之间增加适配器中立的后端条目模型。当前已提供不可变的
+`CCBackendEntry` 台账快照，并通过 `CCRouter.backendEntries` 和
+`CCRouter.activeBackendEntries` 提供诊断访问：
 
 ```text
 CCBackendEntry
@@ -66,7 +68,8 @@ CCBackendEntry
 
 ## 4. Backend 事件关联
 
-仅根据 `push`、`pop`、`replace` 事件类型关联是不安全的。后端事件至少需要支持：
+仅根据 `push`、`pop`、`replace` 事件类型关联是不安全的。当前后端事件契约已预留并由
+GoRouter Adapter 填充以下身份字段：
 
 ```text
 backendEntryId
@@ -156,17 +159,19 @@ Runtime 根据能力选择正常执行、明确记录的降级实现或初始化
 
 ### 阶段一：修复错误同步
 
-- 外部未知 Push/Pop 不再直接修改 CCRouter 栈；
-- 增加第三方 Popup 不关闭底层 Route Scope 的测试；
-- 修复 `maybePop` 对 `LocalHistoryEntry` 的误判；
-- 外部事件无法关联时记录有界诊断。
+- [x] 外部未知 Push/Pop 不再直接修改 CCRouter 栈；
+- [x] 增加第三方 Popup 不关闭底层 Route Scope 的测试；
+- [x] 修复 `maybePop` 对 `LocalHistoryEntry` 的误判；
+- [x] 外部事件无法关联时记录有界诊断。
 
 ### 阶段二：Backend Entry 台账
 
-- 增加 `CCBackendEntry`；
-- 增加 Managed/Foreign/Opaque 所有权；
-- 增加 `backendEntryId` 和事件序列；
-- Runtime 仅处理明确关联的 Managed Entry。
+- [x] 增加 `CCBackendEntry`；
+- [x] 增加 Managed/Foreign/Opaque 所有权；
+- [x] 增加 `backendEntryId`、操作 ID 和事件序列；
+- [x] Runtime 仅将身份事件写入台账，不根据台账事件删除 Managed RouteEntry；
+- [ ] 增加初始后端栈快照和多 Host/Outlet 分区；
+- [ ] 将 Pop 协调升级为显式 `CCPopOutcome`。
 
 ### 阶段三：Pop Coordinator
 

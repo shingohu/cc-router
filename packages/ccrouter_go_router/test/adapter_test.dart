@@ -963,6 +963,9 @@ void main() {
       expect(await one, isNull);
       expect(backendEvents.last.kind, CCNavigationBackendEventKind.pop);
       expect(backendEvents.last.routeId, isNull);
+      expect(backendEvents.last.backendEntryId, isNotNull);
+      expect(backendEvents.last.backendOperationId, isNotNull);
+      expect(backendEvents.last.sequence, isNotNull);
 
       final two = adapter.pushAndRemoveUntil(
         request(
