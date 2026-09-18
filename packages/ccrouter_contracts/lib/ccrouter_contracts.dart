@@ -11,6 +11,7 @@ export 'src/messaging.dart';
 export 'src/navigation.dart';
 export 'src/navigation_backend.dart';
 export 'src/navigation_capabilities.dart';
+export 'src/navigation_concurrency.dart';
 export 'src/navigation_aspect.dart';
 export 'src/navigation_interceptor.dart';
 export 'src/navigation_lifecycle.dart';

@@ -21,6 +21,8 @@ final class CCRouterTestHost {
     CCNavigationAdapter? navigationAdapter,
     Iterable<CCGlobalNavigationInterceptor> globalInterceptors = const [],
     Iterable<CCNavigationAspect> navigationAspects = const [],
+    CCNavigationConcurrencyPolicy navigationConcurrencyPolicy =
+        CCNavigationConcurrencyPolicy.allow,
   }) => CCRouterTestHost._(
     CCRouterRuntime.forHost(
       traceCapacity: traceCapacity,
@@ -29,6 +31,7 @@ final class CCRouterTestHost {
       navigationAdapter: navigationAdapter,
       globalInterceptors: globalInterceptors,
       navigationAspects: navigationAspects,
+      navigationConcurrencyPolicy: navigationConcurrencyPolicy,
     ),
   );
 

@@ -156,6 +156,8 @@ abstract final class CCRouter {
     CCNavigationAdapter? navigationAdapter,
     Iterable<CCGlobalNavigationInterceptor> globalInterceptors = const [],
     Iterable<CCNavigationAspect> navigationAspects = const [],
+    CCNavigationConcurrencyPolicy navigationConcurrencyPolicy =
+        CCNavigationConcurrencyPolicy.allow,
   }) async {
     if (_defaultRuntime != null ||
         _initializing != null ||
@@ -170,6 +172,7 @@ abstract final class CCRouter {
       navigationAdapter: navigationAdapter,
       globalInterceptors: globalInterceptors,
       navigationAspects: navigationAspects,
+      navigationConcurrencyPolicy: navigationConcurrencyPolicy,
     );
     final initializing = runtime.initialize();
     _initializing = initializing;

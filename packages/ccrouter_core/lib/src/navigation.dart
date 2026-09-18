@@ -298,6 +298,48 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     CCNavigationSource? source, {
     required Future<Object?> Function(CCNavigationRequest request) action,
     void Function(_RouteEntryRecord entry)? commitEntry,
+  }) {
+    final key = _navigationConcurrencyKey(operation, prepared);
+    final existing = _inFlightNavigation[key];
+    switch (navigationConcurrencyPolicy) {
+      case CCNavigationConcurrencyPolicy.allow:
+        break;
+      case CCNavigationConcurrencyPolicy.rejectDuplicate:
+        if (existing != null) {
+          throw CCNavigationDuplicateError(prepared.routeId);
+        }
+      case CCNavigationConcurrencyPolicy.singleFlight:
+        if (existing != null) return existing;
+    }
+    final pending = _dispatchNavigationUncoordinated(
+      operation,
+      prepared,
+      origin,
+      source,
+      action: action,
+      commitEntry: commitEntry,
+    );
+    if (navigationConcurrencyPolicy != CCNavigationConcurrencyPolicy.allow) {
+      _inFlightNavigation[key] = pending;
+      void clear() {
+        if (identical(_inFlightNavigation[key], pending)) {
+          _inFlightNavigation.remove(key);
+        }
+      }
+
+      unawaited(pending.then<void>((_) => clear(), onError: (_, _) => clear()));
+    }
+    return pending;
+  }
+
+  /// Runs one navigation after the concurrency gate has admitted it.
+  Future<Object?> _dispatchNavigationUncoordinated(
+    CCNavigationOperation operation,
+    _PreparedRoute prepared,
+    CCNavigationOrigin origin,
+    CCNavigationSource? source, {
+    required Future<Object?> Function(CCNavigationRequest request) action,
+    void Function(_RouteEntryRecord entry)? commitEntry,
   }) async {
     final navigationId = '$_runtimeId-navigation-${++_navigationSequence}';
     final cancellation = CCCancellationToken();

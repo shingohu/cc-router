@@ -1524,6 +1524,121 @@ void main() {
     },
   );
 
+  test('allow concurrency policy permits identical pushes', () async {
+    final adapter = CCMemoryNavigationAdapter();
+    final runtime = CCRouterRuntime.forTesting(
+      navigationAdapter: adapter,
+      navigationConcurrencyPolicy: CCNavigationConcurrencyPolicy.allow,
+      components: [
+        routeComponent(
+          'orders',
+          (registry) => registry.registerRoute(pathRoute()),
+        ),
+      ],
+    );
+    await runtime.initialize();
+    await runtime.goRoute(
+      const TestIntent<void>('orders.detail', RouteArgs('1')),
+    );
+
+    final first = runtime.pushRoute<String>(
+      const TestIntent<String>('orders.detail', RouteArgs('2')),
+    );
+    final second = runtime.pushRoute<String>(
+      const TestIntent<String>('orders.detail', RouteArgs('2')),
+    );
+
+    expect(adapter.stack, hasLength(3));
+    runtime.popRoute(result: 'second');
+    expect(await second, 'second');
+    runtime.popRoute(result: 'first');
+    expect(await first, 'first');
+    await runtime.dispose();
+  });
+
+  test(
+    'rejectDuplicate only rejects an identical in-flight navigation',
+    () async {
+      final adapter = CCMemoryNavigationAdapter();
+      final runtime = CCRouterRuntime.forTesting(
+        navigationAdapter: adapter,
+        navigationConcurrencyPolicy:
+            CCNavigationConcurrencyPolicy.rejectDuplicate,
+        components: [
+          routeComponent(
+            'orders',
+            (registry) => registry.registerRoute(pathRoute()),
+          ),
+        ],
+      );
+      await runtime.initialize();
+      await runtime.goRoute(
+        const TestIntent<void>('orders.detail', RouteArgs('1')),
+      );
+
+      final first = runtime.pushRoute<String>(
+        const TestIntent<String>('orders.detail', RouteArgs('2')),
+      );
+      await expectLater(
+        runtime.pushRoute<String>(
+          const TestIntent<String>('orders.detail', RouteArgs('2')),
+        ),
+        throwsA(isA<CCNavigationDuplicateError>()),
+      );
+      final different = runtime.pushRoute<String>(
+        const TestIntent<String>('orders.detail', RouteArgs('3')),
+      );
+      expect(adapter.stack, hasLength(3));
+
+      runtime.popRoute(result: 'different');
+      expect(await different, 'different');
+      runtime.popRoute(result: 'first');
+      expect(await first, 'first');
+      final retry = runtime.pushRoute<String>(
+        const TestIntent<String>('orders.detail', RouteArgs('2')),
+      );
+      runtime.popRoute(result: 'retry');
+      expect(await retry, 'retry');
+      await runtime.dispose();
+    },
+  );
+
+  test('singleFlight shares one in-flight navigation result', () async {
+    final adapter = CCMemoryNavigationAdapter();
+    final runtime = CCRouterRuntime.forTesting(
+      navigationAdapter: adapter,
+      navigationConcurrencyPolicy: CCNavigationConcurrencyPolicy.singleFlight,
+      components: [
+        routeComponent(
+          'orders',
+          (registry) => registry.registerRoute(pathRoute()),
+        ),
+      ],
+    );
+    await runtime.initialize();
+    await runtime.goRoute(
+      const TestIntent<void>('orders.detail', RouteArgs('1')),
+    );
+
+    final first = runtime.pushRoute<String>(
+      const TestIntent<String>('orders.detail', RouteArgs('2')),
+    );
+    final second = runtime.pushRoute<String>(
+      const TestIntent<String>('orders.detail', RouteArgs('2')),
+    );
+    expect(adapter.stack, hasLength(2));
+    runtime.popRoute(result: 'shared');
+    expect(await first, 'shared');
+    expect(await second, 'shared');
+
+    final retry = runtime.pushRoute<String>(
+      const TestIntent<String>('orders.detail', RouteArgs('2')),
+    );
+    runtime.popRoute(result: 'retry');
+    expect(await retry, 'retry');
+    await runtime.dispose();
+  });
+
   test(
     'popAndPush completes the old route and returns the new route result',
     () async {

@@ -682,7 +682,7 @@ cancel    终止导航，返回标准取消原因
 
 重复导航保护属于 Runtime 的并发策略，不作为普通 Route Interceptor 的临时实现。默认策略必须允许合法的重复页面：同一路由、同一 URI 连续 Push 也可以创建两个独立的 RouteEntry、Route Scope 和返回值通道。
 
-后续为路由提供可选的导航去重策略：
+Runtime 已提供可选的导航去重策略：
 
 ```text
 allow           每次调用都执行，默认值。
@@ -696,7 +696,7 @@ singleFlight    相同导航正在执行时复用第一次调用的 Future。
 hostId + navigatorOutlet + operation + routeId + normalizedUri
 ```
 
-相同路由但不同 Path、Query 或 Extra 参数不能被误判为重复；不同 Host、Window、Shell 或 Outlet 也必须隔离。去重状态在拦截取消、重定向失败、Adapter 失败、页面 Pop 和 Runtime dispose 时释放。该策略不采用全局固定时间 debounce，避免延迟正常导航或误伤合法的重复 Push。
+相同路由但不同 Path、Query 或 Extra 参数不能被误判为重复；不同 Host、Window、Shell 或 Outlet 也必须隔离。去重状态在拦截取消、重定向失败、Adapter 失败、页面 Pop 和 Runtime dispose 时释放。`rejectDuplicate` 抛出标准 `CCNavigationDuplicateError`；`singleFlight` 复用同一个逻辑导航结果，不会创建第二个 RouteEntry。该策略不采用全局固定时间 debounce，避免延迟正常导航或误伤合法的重复 Push。
 
 ### 11.3 待认证导航与登录后恢复
 

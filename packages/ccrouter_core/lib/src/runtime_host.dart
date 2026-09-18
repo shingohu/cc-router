@@ -19,6 +19,8 @@ final class CCRouterRuntime {
     CCNavigationAdapter? navigationAdapter,
     Iterable<CCGlobalNavigationInterceptor> globalInterceptors = const [],
     Iterable<CCNavigationAspect> navigationAspects = const [],
+    CCNavigationConcurrencyPolicy navigationConcurrencyPolicy =
+        CCNavigationConcurrencyPolicy.allow,
   }) => CCRouterRuntime._(
     traceCapacity: traceCapacity,
     navigationEventCapacity: navigationEventCapacity,
@@ -26,6 +28,7 @@ final class CCRouterRuntime {
     navigationAdapter: navigationAdapter,
     globalInterceptors: globalInterceptors,
     navigationAspects: navigationAspects,
+    navigationConcurrencyPolicy: navigationConcurrencyPolicy,
   );
 
   /// Creates an independently owned Runtime for low-level core tests.
@@ -41,6 +44,8 @@ final class CCRouterRuntime {
     CCNavigationAdapter? navigationAdapter,
     Iterable<CCGlobalNavigationInterceptor> globalInterceptors = const [],
     Iterable<CCNavigationAspect> navigationAspects = const [],
+    CCNavigationConcurrencyPolicy navigationConcurrencyPolicy =
+        CCNavigationConcurrencyPolicy.allow,
   }) => CCRouterRuntime._(
     traceCapacity: traceCapacity,
     navigationEventCapacity: navigationEventCapacity,
@@ -48,6 +53,7 @@ final class CCRouterRuntime {
     navigationAdapter: navigationAdapter,
     globalInterceptors: globalInterceptors,
     navigationAspects: navigationAspects,
+    navigationConcurrencyPolicy: navigationConcurrencyPolicy,
   );
 
   /// Creates a Runtime with validated configuration and installed components.
@@ -60,6 +66,7 @@ final class CCRouterRuntime {
     CCNavigationAdapter? navigationAdapter,
     Iterable<CCGlobalNavigationInterceptor> globalInterceptors = const [],
     Iterable<CCNavigationAspect> navigationAspects = const [],
+    required this.navigationConcurrencyPolicy,
   }) {
     _navigationAdapter = navigationAdapter;
     _globalInterceptors = _validateGlobalInterceptors(globalInterceptors);
@@ -87,6 +94,13 @@ final class CCRouterRuntime {
 
   /// Maximum number of navigation lifecycle events retained for diagnostics.
   final int navigationEventCapacity;
+
+  /// Policy for overlapping requests with the same structured navigation key.
+  ///
+  /// [CCNavigationConcurrencyPolicy.allow] is the default and preserves
+  /// ordinary repeated pushes. The other policies only affect requests that
+  /// are still pending; completed navigation never remains in this gate.
+  final CCNavigationConcurrencyPolicy navigationConcurrencyPolicy;
 
   /// Runtime-specific prefix preventing trace identifiers from colliding.
   final String _runtimeId =
@@ -151,6 +165,10 @@ final class CCRouterRuntime {
 
   /// Bounded Runtime navigation lifecycle event buffer.
   final Queue<CCNavigationLifecycleEvent> _navigationEvents = Queue();
+
+  /// Futures for requests that have not completed or been rejected.
+  final Map<_NavigationConcurrencyKey, Future<Object?>> _inFlightNavigation =
+      {};
 
   /// Subscribers receiving Runtime navigation lifecycle events.
   final Set<CCNavigationLifecycleListener> _navigationListeners = {};
@@ -694,6 +712,7 @@ final class CCRouterRuntime {
       _backendNavigationEvents.clear();
       _backendEntries.clear();
       _processedBackendOperations.clear();
+      _inFlightNavigation.clear();
     }
   }
 

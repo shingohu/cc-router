@@ -88,6 +88,13 @@ final class CCNavigationAdapterError extends CCRouterError {
   const CCNavigationAdapterError(super.message);
 }
 
+/// Indicates that an identical navigation is already in flight.
+final class CCNavigationDuplicateError extends CCRouterError {
+  /// Creates a duplicate-navigation error for [routeId].
+  const CCNavigationDuplicateError(String routeId)
+    : super('Navigation for route "$routeId" is already in flight.');
+}
+
 /// Indicates that an adapter returned a value incompatible with a typed route.
 ///
 /// Generated typed navigation may surface this when page code Pops a value that
