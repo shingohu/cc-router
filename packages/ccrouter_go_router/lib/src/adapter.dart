@@ -110,7 +110,7 @@ final class CCGoRouterAdapter implements CCNavigationAdapter {
       case CCNavigationOperation.popAndPush:
       case CCNavigationOperation.pushAndRemoveUntil:
         throw const CCNavigationAdapterError(
-          'GoRouter composite stack operations are not supported yet.',
+          'Composite operations must use their dedicated Adapter method.',
         );
     }
   }
@@ -126,16 +126,29 @@ final class CCGoRouterAdapter implements CCNavigationAdapter {
     return didPop;
   }
 
-  /// Reports that GoRouter composite operations are not available yet.
+  /// Pops the active entry and pushes [request] through GoRouter.
+  ///
+  /// GoRouter exposes no single public operation with this exact contract, so
+  /// the adapter performs the Pop through GoRouter's active Navigator and then
+  /// issues its imperative Push. The removed entry receives [popResult].
   @override
   Future<Object?> popAndPush(
     CCNavigationRequest request, {
     Object? popResult,
   }) async {
     _ensureAvailable();
-    throw const CCNavigationAdapterError(
-      'GoRouter composite stack operations are not supported yet.',
-    );
+    _ensureRoute(request.routeId);
+    final location = _locationFor(request.uri);
+    if (!_router.canPop()) return _replace(request, location);
+    final navigator = _router.routerDelegate.navigatorKey.currentState;
+    if (navigator == null ||
+        !await navigator.maybePop<Object?>(popResult)) {
+      throw const CCNavigationAdapterError(
+        'GoRouter rejected the popAndPush Pop operation.',
+      );
+    }
+    _removeTrackedEntry();
+    return _push(request, location);
   }
 
   /// Pops tracked entries while the predicate does not match.
@@ -154,16 +167,29 @@ final class CCGoRouterAdapter implements CCNavigationAdapter {
     }
   }
 
-  /// Reports that GoRouter composite operations are not available yet.
+  /// Pushes [request] after removing tracked entries until [predicate] matches.
+  ///
+  /// Each removed entry is popped through GoRouter so its page lifecycle and
+  /// pending result Future are handled by the backend. The root entry remains
+  /// when no tracked entry satisfies the predicate, matching Navigator and
+  /// memory-adapter behavior.
   @override
   Future<Object?> pushAndRemoveUntil(
     CCNavigationRequest request,
     CCNavigationStackPredicate predicate,
   ) async {
     _ensureAvailable();
-    throw const CCNavigationAdapterError(
-      'GoRouter composite stack operations are not supported yet.',
-    );
+    _ensureRoute(request.routeId);
+    while (_entries.length > 1 && !predicate(_entries.last.snapshot)) {
+      final navigator = _router.routerDelegate.navigatorKey.currentState;
+      if (navigator == null || !await navigator.maybePop<Object?>()) {
+        throw const CCNavigationAdapterError(
+          'GoRouter rejected a pushAndRemoveUntil Pop operation.',
+        );
+      }
+      _removeTrackedEntry();
+    }
+    return _push(request, _locationFor(request.uri));
   }
 
   /// Pops the active GoRouter Navigator route with an optional result.

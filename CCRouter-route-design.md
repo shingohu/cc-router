@@ -1051,9 +1051,10 @@ Adapter 实现者可以使用单独导出的：
 Adapter 初始化会校验 Runtime 路由与绑定 ID 一一对应；根页面或其他不属于
 CCRouter 契约的 GoRouter 路由可以继续由应用独立保留。
 
-当前限制：Modal BottomSheet、Dialog 以及 `popAndPush` / `pushAndRemoveUntil`
-等需要后端原子栈操作的能力暂未接入，适配器会在初始化或调用时明确抛出能力错误，
-不会静默降级。
+当前限制：Modal BottomSheet 和 Dialog 需要适配器专用页面构造器，暂未接入；
+`popAndPush`、`popUntil` 和 `pushAndRemoveUntil` 已通过 GoRouter 的 Navigator 与
+imperative API 接入。由于 GoRouter 没有完全对应的公开原子组合 API，Adapter 会在
+一次 Runtime 操作内完成后端 Pop/Push 序列，并保持返回值与 Predicate 语义。
 
 - 主 Pattern、别名、Query、Extra 和返回值。
 - Shell、Outlet 和生命周期同步。

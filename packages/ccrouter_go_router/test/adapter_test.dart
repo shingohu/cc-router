@@ -5,9 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
-CCNavigationRoute route(String id) => CCNavigationRoute(
+CCNavigationRoute route(String id, {String path = '/detail/:value'}) =>
+    CCNavigationRoute(
   routeId: id,
-  patterns: [const CCPathPattern('/detail/:value', primary: true)],
+  patterns: [CCPathPattern(path, primary: true)],
   presentation: const CCPagePresentation(),
   deepLink: CCDeepLinkPolicy.disabled,
 );
@@ -229,5 +230,176 @@ void main() {
       throwsA(isA<CCNavigationAdapterError>()),
     );
     expect(adapter.isInitialized, isFalse);
+  });
+
+  testWidgets('supports popAndPush and completes the removed result', (
+    tester,
+  ) async {
+    final router = GoRouter(
+      initialLocation: '/',
+      routes: [
+        GoRoute(path: '/', builder: (_, _) => const Text('home')),
+        GoRoute(path: '/one', builder: (_, _) => const Text('one')),
+        GoRoute(path: '/two', builder: (_, _) => const Text('two')),
+        GoRoute(path: '/three', builder: (_, _) => const Text('three')),
+      ],
+    );
+    final adapter = CCGoRouterAdapter(router: router);
+    addTearDown(router.dispose);
+    await adapter.initialize([
+      route('one', path: '/one'),
+      route('two', path: '/two'),
+      route('three', path: '/three'),
+    ]);
+    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    await tester.pumpAndSettle();
+
+    await adapter.navigate(
+      request(
+        id: 'one',
+        operation: CCNavigationOperation.go,
+        uri: Uri.parse('/one'),
+      ),
+    );
+    final removed = adapter.navigate(
+      request(
+        id: 'two',
+        operation: CCNavigationOperation.push,
+        uri: Uri.parse('/two'),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final pushed = adapter.popAndPush(
+      request(
+        id: 'three',
+        operation: CCNavigationOperation.popAndPush,
+        uri: Uri.parse('/three'),
+      ),
+      popResult: 'removed',
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('three'), findsOneWidget);
+    expect(await removed, 'removed');
+    adapter.pop(result: 'done');
+    await tester.pumpAndSettle();
+    expect(await pushed, 'done');
+    expect(find.text('one'), findsOneWidget);
+  });
+
+  testWidgets('supports pushAndRemoveUntil with a route predicate', (
+    tester,
+  ) async {
+    final router = GoRouter(
+      initialLocation: '/',
+      routes: [
+        GoRoute(path: '/', builder: (_, _) => const Text('home')),
+        GoRoute(path: '/one', builder: (_, _) => const Text('one')),
+        GoRoute(path: '/two', builder: (_, _) => const Text('two')),
+        GoRoute(path: '/three', builder: (_, _) => const Text('three')),
+        GoRoute(path: '/four', builder: (_, _) => const Text('four')),
+      ],
+    );
+    final adapter = CCGoRouterAdapter(router: router);
+    addTearDown(router.dispose);
+    await adapter.initialize([
+      route('one', path: '/one'),
+      route('two', path: '/two'),
+      route('three', path: '/three'),
+      route('four', path: '/four'),
+    ]);
+    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    await tester.pumpAndSettle();
+
+    await adapter.navigate(
+      request(
+        id: 'one',
+        operation: CCNavigationOperation.go,
+        uri: Uri.parse('/one'),
+      ),
+    );
+    final removedTwo = adapter.navigate(
+      request(
+        id: 'two',
+        operation: CCNavigationOperation.push,
+        uri: Uri.parse('/two'),
+      ),
+    );
+    final removedThree = adapter.navigate(
+      request(
+        id: 'three',
+        operation: CCNavigationOperation.push,
+        uri: Uri.parse('/three'),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final pushed = adapter.pushAndRemoveUntil(
+      request(
+        id: 'four',
+        operation: CCNavigationOperation.pushAndRemoveUntil,
+        uri: Uri.parse('/four'),
+      ),
+      (entry) => entry.routeId == 'one',
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('four'), findsOneWidget);
+    expect(await removedTwo, isNull);
+    expect(await removedThree, isNull);
+    adapter.pop(result: 'done');
+    await tester.pumpAndSettle();
+    expect(await pushed, 'done');
+    expect(find.text('one'), findsOneWidget);
+  });
+
+  testWidgets('supports popUntil with a route predicate', (tester) async {
+    final router = GoRouter(
+      initialLocation: '/',
+      routes: [
+        GoRoute(path: '/', builder: (_, _) => const Text('home')),
+        GoRoute(path: '/one', builder: (_, _) => const Text('one')),
+        GoRoute(path: '/two', builder: (_, _) => const Text('two')),
+        GoRoute(path: '/three', builder: (_, _) => const Text('three')),
+      ],
+    );
+    final adapter = CCGoRouterAdapter(router: router);
+    addTearDown(router.dispose);
+    await adapter.initialize([
+      route('one', path: '/one'),
+      route('two', path: '/two'),
+      route('three', path: '/three'),
+    ]);
+    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    await tester.pumpAndSettle();
+
+    await adapter.navigate(
+      request(
+        id: 'one',
+        operation: CCNavigationOperation.go,
+        uri: Uri.parse('/one'),
+      ),
+    );
+    final removedTwo = adapter.navigate(
+      request(
+        id: 'two',
+        operation: CCNavigationOperation.push,
+        uri: Uri.parse('/two'),
+      ),
+    );
+    final removedThree = adapter.navigate(
+      request(
+        id: 'three',
+        operation: CCNavigationOperation.push,
+        uri: Uri.parse('/three'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await adapter.popUntil((entry) => entry.routeId == 'one');
+    await tester.pumpAndSettle();
+
+    expect(await removedTwo, isNull);
+    expect(await removedThree, isNull);
+    expect(find.text('one'), findsOneWidget);
   });
 }
