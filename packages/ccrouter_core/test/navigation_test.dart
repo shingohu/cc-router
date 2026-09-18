@@ -290,6 +290,14 @@ void main() {
         runtime.activeBackendEntries.map((entry) => entry.navigatorOutlet),
         ['root', 'detail'],
       );
+      expect(
+        runtime.backendEntriesFor(hostId: 'window-a', activeOnly: true),
+        hasLength(1),
+      );
+      expect(
+        runtime.backendEntriesFor(navigatorOutlet: 'detail').single.hostId,
+        'window-b',
+      );
       expect(runtime.recentBackendNavigationEvents, isEmpty);
       await runtime.dispose();
     },

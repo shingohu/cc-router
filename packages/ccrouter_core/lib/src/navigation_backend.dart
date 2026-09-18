@@ -17,6 +17,25 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
     ),
   );
 
+  /// Returns backend entries filtered by optional Host and Navigator Outlet.
+  ///
+  /// Use this for multi-window, foldable-pane, Shell-branch, or embedded
+  /// Navigator diagnostics. A null filter is a wildcard; filtering never
+  /// changes ownership or grants permission to mutate an entry.
+  List<CCBackendEntry> backendEntriesFor({
+    String? hostId,
+    String? navigatorOutlet,
+    bool activeOnly = false,
+  }) => List.unmodifiable(
+    _backendEntries.values.where(
+      (entry) =>
+          (!activeOnly ||
+              entry.lifecycleState == CCBackendEntryLifecycleState.active) &&
+          (hostId == null || entry.hostId == hostId) &&
+          (navigatorOutlet == null || entry.navigatorOutlet == navigatorOutlet),
+    ),
+  );
+
   /// Returns a bounded immutable snapshot of backend stack events.
   ///
   /// Use this to correlate system back, gestures, or backend-owned stack

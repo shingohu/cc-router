@@ -81,6 +81,21 @@ abstract final class CCRouter {
   static List<CCBackendEntry> get activeBackendEntries =>
       _runtime.activeBackendEntries;
 
+  /// Returns backend entries isolated to an optional Host and Outlet.
+  ///
+  /// Use this for multi-window, foldable-pane, Shell-branch, or embedded
+  /// Navigator diagnostics. Null filters match every Host or Outlet, and the
+  /// result remains observational only.
+  static List<CCBackendEntry> backendEntriesFor({
+    String? hostId,
+    String? navigatorOutlet,
+    bool activeOnly = false,
+  }) => _runtime.backendEntriesFor(
+    hostId: hostId,
+    navigatorOutlet: navigatorOutlet,
+    activeOnly: activeOnly,
+  );
+
   /// Subscribes to Runtime navigation lifecycle events.
   ///
   /// Use this at the application host boundary for navigation metrics. The
