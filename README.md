@@ -35,6 +35,8 @@ Service 支持强类型默认实现、命名实现、懒创建和构造期间的
 
 App 和 Session Scope 缓存实例。用户登录成功或恢复有效登录态后调用 `CCRouter.openSession(accountId: ...)`；主动退出、Token 失效、账号切换或强制下线时调用 `closeSession()`。App 进入后台和页面切换不关闭 Session。关闭时取消 Scope 信号并按逆构造顺序销毁实例，重新登录创建新的 Session ID 和服务实例。App Factory 不允许捕获 Session Service。
 
+每次被 Runtime 接受的导航都会创建独立的 RouteEntry 和 Route Scope。Entry 按 `resolving -> pushed -> visible -> hidden -> popping -> removed -> disposed` 记录生命周期；页面被覆盖、重建或 App 进入后台不会关闭 Scope，只有 Entry 永久离开导航结构时才会关闭。Runtime 销毁时会等待尚未完成的 Route Scope 关闭，并通过有界事件记录提供诊断信息。
+
 Command/Query 一对一返回强类型异步结果，支持超时和取消，并向嵌套调用传递 Deadline、取消信号和 Trace。取消是协作式的：框架结束等待并通知 Handler，不会强行停止 Dart 代码或回滚副作用。同步阻塞代码不能被 Timer 抢占。
 
 Action 按 Handler ID 串行执行，首个错误结束调用；Event 并行发送且订阅者失败隔离。Event 返回 `Future<void>`，供调用者等待本次分发完成。诊断记录有界且不记录业务参数或异常消息。
@@ -43,7 +45,7 @@ Action 按 Handler ID 串行执行，首个错误结束调用；Event 并行发�
 
 ## 后续里程碑
 
-1. Route Contract、URL Codec、RouteEntry、Route Scope 和 Flutter Navigator 2.0 适配器。
+1. Route Contract、URL Codec、RouteEntry、Route Scope 和 Flutter Navigator 2.0 适配器（基础能力已完成，适配器持续补齐后端差异）。
 2. 注解、Registrar 聚合和代码生成阶段校验。
 3. Service Proxy、方法级拦截、Scope 失效检查与 Middleware。
 4. InitTask DAG/Gate、组件作用域、`activateComponent` / `deactivateComponent`、Mock Override 和专用测试包。
@@ -51,6 +53,6 @@ Action 按 Handler ID 串行执行，首个错误结束调用；Event 并行发�
 
 当前返回真实 Service 实例，尚无生成代理，不能拦截旧实例的方法调用或自动追踪 Service 方法。当前 Trace 覆盖消息调度，不包含 Service 方法、导航或 Native 调用。Action 优先级/短路、组件版本兼容与构建期校验也尚未实现。
 
-路由 Runtime 已支持按稳定 ID 排序的全局拦截器、按路由声明顺序执行的路由拦截器、类型安全 Intent/URI 重定向、可信 Origin 继承、取消和重定向循环检测。注解生成器、RouteEntry/Route Scope 和路由文档导出仍待实现。
+路由 Runtime 已支持按稳定 ID 排序的全局拦截器、按路由声明顺序执行的路由拦截器、类型安全 Intent/URI 重定向、可信 Origin 继承、取消和重定向循环检测，以及 RouteEntry/Route Scope 生命周期追踪。注解生成器和路由文档导出仍待实现。
 
 完整目标见 [架构设计](CCRouter-v0.1-architecture.md)，路由的详细设计见 [路由子系统设计](CCRouter-route-design.md)。

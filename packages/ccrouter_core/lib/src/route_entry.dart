@@ -150,6 +150,17 @@ extension CCRouterRuntimeRouteEntries on CCRouterRuntime {
     }
     final close = _closeRouteEntry(entry, reason);
     _routeEntryCloseFutures.add(close);
+    // Retain only pending closes. Runtime shutdown snapshots this collection
+    // before awaiting it, while completed entries do not consume memory for
+    // the lifetime of a long-running host.
+    unawaited(
+      close.then(
+        (_) => _routeEntryCloseFutures.remove(close),
+        onError: (Object _, StackTrace __) {
+          _routeEntryCloseFutures.remove(close);
+        },
+      ),
+    );
     unawaited(close);
   }
 

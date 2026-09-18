@@ -123,7 +123,7 @@ final class _RuntimePageState extends State<RuntimePage> {
         padding: const EdgeInsets.all(24),
         children: [
           Text(
-            'Flutter + OHOS',
+            'Flutter组件化',
             style: Theme.of(context).textTheme.headlineSmall,
           ),
           const SizedBox(height: 8),
