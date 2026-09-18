@@ -27,9 +27,21 @@ final class _CCMemoryNavigationEntry {
 /// integration.
 @visibleForTesting
 final class CCMemoryNavigationAdapter
-    implements CCNavigationAdapter, CCNavigationPopCoordinator {
+    implements
+        CCNavigationAdapter,
+        CCNavigationPopCoordinator,
+        CCNavigationAdapterCapabilitySource {
   /// Creates an uninitialized empty navigation stack.
   CCMemoryNavigationAdapter();
+
+  /// Pure-Dart backend capabilities exposed for test-host diagnostics.
+  @override
+  CCNavigationAdapterCapabilities get capabilities =>
+      const CCNavigationAdapterCapabilities(
+        supportsInitialStackSnapshot: true,
+        supportsAtomicPopAndPush: true,
+        supportsPushAndRemoveUntil: true,
+      );
 
   /// Route descriptions supplied during initialization.
   List<CCNavigationRoute> _routes = const [];

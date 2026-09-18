@@ -3,7 +3,7 @@
 ## 文档状态
 
 - 版本：v0.1 Draft
-- 状态：阶段一已实现，阶段二核心台账已实现，后续阶段按计划推进
+- 状态：阶段一已实现，阶段二核心台账已实现，阶段四桥接和能力声明已部分实现
 - 适用范围：CCRouter、GoRouter、Flutter Navigator、第三方 Popup 和多 Window Host
 - 关联设计：[CCRouter 路由子系统设计](CCRouter-route-design.md)
 
@@ -188,8 +188,12 @@ Runtime 根据能力选择正常执行、明确记录的降级实现或初始化
 
 - [x] 支持第三方 Navigator 通过 Host Bridge 显式上报；
 - [x] 支持外部 Route 的身份和生命周期观察；
-- 为 Overlay 和 LocalHistoryEntry 提供可选诊断桥；
+- [x] 为 Overlay 和 LocalHistoryEntry 提供可选诊断桥；
 - 不把 Foreign UI 暴露为业务路由 API。
+
+Adapter 能力声明已提供为可选的 `CCNavigationAdapterCapabilitySource` SPI。
+GoRouter 和内存 Adapter 会声明各自已实现的组合导航、嵌套 Navigator、模态路由、
+Foreign/Opaque 观察等能力；Runtime 能力门禁和明确降级策略仍待后续接入。
 
 ### 阶段五：Host 与多 Window
 

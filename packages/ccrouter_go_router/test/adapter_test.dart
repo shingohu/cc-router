@@ -31,6 +31,28 @@ CCNavigationRequest request({
 );
 
 void main() {
+  test('declares backend capabilities without exposing navigation control', () {
+    final router = GoRouter(
+      routes: [GoRoute(path: '/', builder: (_, _) => const SizedBox())],
+    );
+    final adapter = CCGoRouterAdapter(router: router);
+    addTearDown(router.dispose);
+
+    expect(adapter, isA<CCNavigationAdapterCapabilitySource>());
+    final capabilities =
+        (adapter as CCNavigationAdapterCapabilitySource).capabilities;
+    expect(capabilities.supportsForeignEntryObservation, isTrue);
+    expect(capabilities.supportsBackendEntryIdentity, isTrue);
+    expect(capabilities.supportsInitialStackSnapshot, isFalse);
+    expect(capabilities.supportsAtomicPopAndPush, isTrue);
+    expect(capabilities.supportsPushAndRemoveUntil, isTrue);
+    expect(capabilities.supportsNestedNavigators, isTrue);
+    expect(capabilities.supportsStatefulShell, isTrue);
+    expect(capabilities.supportsModalRoutes, isTrue);
+    expect(capabilities.supportsOpaqueUiObservation, isTrue);
+    expect(capabilities.supportsPredictiveBack, isFalse);
+  });
+
   test('foreign route bridge reports identity without navigating', () async {
     final router = GoRouter(
       routes: [GoRoute(path: '/', builder: (_, _) => const SizedBox())],

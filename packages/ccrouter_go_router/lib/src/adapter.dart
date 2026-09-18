@@ -22,6 +22,7 @@ part 'foreign_route_bridge.dart';
 final class CCGoRouterAdapter
     implements
         CCNavigationAdapter,
+        CCNavigationAdapterCapabilitySource,
         CCNavigationBackendEventSource,
         CCNavigationPopCoordinator {
   /// Creates an adapter around an application-owned [router].
@@ -80,6 +81,24 @@ final class CCGoRouterAdapter
 
   /// GoRouter instance that receives translated navigation operations.
   GoRouter get router => _router;
+
+  /// Backend capabilities exposed for Host setup and diagnostics.
+  ///
+  /// The supplied GoRouter remains application-owned, so this adapter cannot
+  /// claim an initial stack snapshot or predictive-back coordination unless a
+  /// future integration explicitly provides those signals.
+  @override
+  CCNavigationAdapterCapabilities get capabilities =>
+      const CCNavigationAdapterCapabilities(
+        supportsForeignEntryObservation: true,
+        supportsBackendEntryIdentity: true,
+        supportsAtomicPopAndPush: true,
+        supportsPushAndRemoveUntil: true,
+        supportsNestedNavigators: true,
+        supportsStatefulShell: true,
+        supportsModalRoutes: true,
+        supportsOpaqueUiObservation: true,
+      );
 
   /// Host-only bridge for explicitly integrated third-party Navigator routes.
   ///
