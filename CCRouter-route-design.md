@@ -963,6 +963,12 @@ CCRouter 的 `OverlayEntry`、`MenuAnchor`、`LocalHistoryEntry` 和第三方浮
 Foreign/Backend 生命周期，只能通过显式 Adapter/Bridge 上报；无法确认归属时，
 必须保持 CCRouter 的 Managed RouteEntry 不变。
 
+Runtime 通过 `CCRouteVisibilityEvent` 提供独立的 Managed Route 可见性观察，阶段包括
+`willShow`、`didShow`、`willHide` 和 `didHide`。该事件只描述页面在所属 Outlet 中的
+显示与隐藏，不代表 RouteEntry 已销毁；Route Scope 释放仍以
+`CCRouteEntryLifecycleState.disposed` 为准。App/Window 前后台状态继续由
+`CCRouterApp` 的 Host 生命周期回调提供，不与 Route 可见性混合。
+
 后续 Aspect 事件可提供以下稳定语义，但必须注明事件所属维度和时机：
 
 ```text

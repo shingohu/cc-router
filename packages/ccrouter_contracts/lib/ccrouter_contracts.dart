@@ -19,5 +19,6 @@ export 'src/route_entry.dart';
 export 'src/route_pattern.dart';
 export 'src/route_placement.dart';
 export 'src/route_presentation.dart';
+export 'src/route_visibility.dart';
 export 'src/service.dart';
 export 'src/shell.dart';

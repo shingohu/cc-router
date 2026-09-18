@@ -122,6 +122,12 @@ final class CCRouterRuntime {
   /// Subscribers receiving Route Entry lifecycle transitions.
   final Set<CCRouteEntryLifecycleListener> _routeEntryListeners = {};
 
+  /// Bounded Route Entry visibility observations retained for diagnostics.
+  final Queue<CCRouteVisibilityEvent> _routeVisibilityEvents = Queue();
+
+  /// Subscribers receiving Route Entry visibility observations.
+  final Set<CCRouteVisibilityListener> _routeVisibilityListeners = {};
+
   /// Route Scope close operations that Runtime must await during shutdown.
   final List<Future<void>> _routeEntryCloseFutures = [];
 
@@ -681,6 +687,8 @@ final class CCRouterRuntime {
       _navigationEvents.clear();
       _routeEntryListeners.clear();
       _routeEntryEvents.clear();
+      _routeVisibilityListeners.clear();
+      _routeVisibilityEvents.clear();
       _routeEntryCloseFutures.clear();
       _backendNavigationListeners.clear();
       _backendNavigationEvents.clear();

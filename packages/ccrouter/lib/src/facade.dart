@@ -63,6 +63,14 @@ abstract final class CCRouter {
   static List<CCNavigationLifecycleEvent> get recentNavigationEvents =>
       _runtime.recentNavigationEvents;
 
+  /// Bounded snapshot of managed Route Entry visibility transitions.
+  ///
+  /// Use this for page exposure, focus restoration, and diagnostics. App or
+  /// Window background changes remain available through [CCRouterApp]'s Host
+  /// lifecycle callback and are not represented as Route visibility events.
+  static List<CCRouteVisibilityEvent> get recentRouteVisibilityEvents =>
+      _runtime.recentRouteVisibilityEvents;
+
   /// Bounded snapshot of backend Navigator transitions observed by the adapter.
   ///
   /// Use this for system back, gesture, and backend-owned stack diagnostics.
@@ -104,6 +112,14 @@ abstract final class CCRouter {
   static void Function() addNavigationListener(
     CCNavigationLifecycleListener listener,
   ) => _runtime.addNavigationListener(listener);
+
+  /// Subscribes to managed Route Entry visibility transitions.
+  ///
+  /// The returned callback removes the listener. Listener failures are
+  /// isolated from navigation execution.
+  static void Function() addRouteVisibilityListener(
+    CCRouteVisibilityListener listener,
+  ) => _runtime.addRouteVisibilityListener(listener);
 
   /// Subscribes to backend Navigator transitions observed by the adapter.
   ///

@@ -83,9 +83,11 @@ extension CCRouterRuntimeRouteEntries on CCRouterRuntime {
         break;
     }
     _routeEntries.add(entry);
-    _emitRouteEntryTransition(entry, CCRouteEntryLifecycleState.pushed);
-    _emitRouteEntryTransition(entry, CCRouteEntryLifecycleState.visible);
     _hidePreviousRouteEntry(entry);
+    _emitRouteEntryTransition(entry, CCRouteEntryLifecycleState.pushed);
+    _emitRouteVisibility(entry, CCRouteVisibilityPhase.willShow);
+    _emitRouteEntryTransition(entry, CCRouteEntryLifecycleState.visible);
+    _emitRouteVisibility(entry, CCRouteVisibilityPhase.didShow);
   }
 
   /// Removes entries before [predicate] and commits a new pushed Entry.
@@ -104,9 +106,11 @@ extension CCRouterRuntimeRouteEntries on CCRouterRuntime {
         revealPrevious: false,
       );
     }
-    _emitRouteEntryTransition(entry, CCRouteEntryLifecycleState.pushed);
-    _emitRouteEntryTransition(entry, CCRouteEntryLifecycleState.visible);
     _hidePreviousRouteEntry(entry);
+    _emitRouteEntryTransition(entry, CCRouteEntryLifecycleState.pushed);
+    _emitRouteVisibility(entry, CCRouteVisibilityPhase.willShow);
+    _emitRouteEntryTransition(entry, CCRouteEntryLifecycleState.visible);
+    _emitRouteVisibility(entry, CCRouteVisibilityPhase.didShow);
   }
 
   /// Removes tracked entries until [predicate] matches the current Entry.
@@ -123,7 +127,9 @@ extension CCRouterRuntimeRouteEntries on CCRouterRuntime {
     if (index <= 0) return;
     final previous = _routeEntries[index - 1];
     if (previous.state == CCRouteEntryLifecycleState.visible) {
+      _emitRouteVisibility(previous, CCRouteVisibilityPhase.willHide);
       _emitRouteEntryTransition(previous, CCRouteEntryLifecycleState.hidden);
+      _emitRouteVisibility(previous, CCRouteVisibilityPhase.didHide);
     }
   }
 
@@ -138,14 +144,31 @@ extension CCRouterRuntimeRouteEntries on CCRouterRuntime {
       return;
     }
     _routeEntries.remove(entry);
+    final wasVisible = entry.state == CCRouteEntryLifecycleState.visible;
+    if (wasVisible) {
+      _emitRouteVisibility(
+        entry,
+        CCRouteVisibilityPhase.willHide,
+        reason: reason,
+      );
+    }
     if (entry.state != CCRouteEntryLifecycleState.popping) {
       _emitRouteEntryTransition(entry, CCRouteEntryLifecycleState.popping);
+    }
+    if (wasVisible) {
+      _emitRouteVisibility(
+        entry,
+        CCRouteVisibilityPhase.didHide,
+        reason: reason,
+      );
     }
     _emitRouteEntryTransition(entry, CCRouteEntryLifecycleState.removed);
     if (revealPrevious && _routeEntries.isNotEmpty) {
       final previous = _routeEntries.last;
       if (previous.state == CCRouteEntryLifecycleState.hidden) {
+        _emitRouteVisibility(previous, CCRouteVisibilityPhase.willShow);
         _emitRouteEntryTransition(previous, CCRouteEntryLifecycleState.visible);
+        _emitRouteVisibility(previous, CCRouteVisibilityPhase.didShow);
       }
     }
     final close = _closeRouteEntry(entry, reason);
