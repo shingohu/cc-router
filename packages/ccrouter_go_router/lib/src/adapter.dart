@@ -247,6 +247,11 @@ final class CCGoRouterAdapter
   }
 
   /// Attempts to pop the active GoRouter Navigator route.
+  ///
+  /// A successful `Navigator.maybePop` can consume a LocalHistoryEntry or a
+  /// foreign PopupRoute instead of an adapter-owned route. The managed entry
+  /// list is therefore not changed by position here; a result-bearing managed
+  /// Push removes its own entry when the GoRouter Future completes.
   @override
   Future<bool> maybePop({Object? result}) async {
     _ensureAvailable();
@@ -254,11 +259,9 @@ final class CCGoRouterAdapter
     if (navigator == null) return false;
     _expectBackendEvent(CCGoRouterNavigationEventKind.pop);
     final didPop = await navigator.maybePop<Object?>(result);
-    if (didPop) {
-      _removeTrackedEntry();
-    } else {
-      _discardExpectedBackendEvent(CCGoRouterNavigationEventKind.pop);
-    }
+    // LocalHistoryEntry consumption emits no NavigatorObserver Pop. Remove an
+    // unmatched expectation before it can misclassify a later foreign Pop.
+    _discardExpectedBackendEvent(CCGoRouterNavigationEventKind.pop);
     return didPop;
   }
 
@@ -290,9 +293,9 @@ final class CCGoRouterAdapter
 
   /// Pops tracked entries while the predicate does not match.
   ///
-  /// Entries created outside this adapter are conservatively reconciled when
-  /// the configured Navigator observers report backend transitions. Such
-  /// entries are not reconstructed as Runtime route metadata.
+  /// Entries created outside this adapter are not reconstructed as Runtime
+  /// route metadata. Observer events for those entries remain diagnostic and
+  /// cannot remove adapter-owned entries by stack position.
   @override
   Future<void> popUntil(CCNavigationStackPredicate predicate) async {
     _ensureAvailable();
@@ -581,6 +584,11 @@ final class CCGoRouterAdapter
   }
 
   /// Retains one backend event for diagnostics without exposing mutable state.
+  ///
+  /// Only operations initiated by this adapter can be correlated with a
+  /// Runtime request. Uncorrelated Dialog, PopupRoute, LocalHistoryEntry, and
+  /// application-owned Navigator events are forwarded without reconciling the
+  /// managed entry list because their stack identity is not yet known.
   void _recordLifecycleEvent(CCGoRouterNavigationEvent event) {
     if (_disposed) return;
     if (_lifecycleEventCapacity > 0) {
@@ -591,7 +599,6 @@ final class CCGoRouterAdapter
     }
     final isAdapterOwned = _consumeExpectedBackendEvent(event.kind);
     _emitBackendEvent(event, correlateRequest: isAdapterOwned);
-    if (!isAdapterOwned) _synchronizeExternalStack(event.kind);
   }
 
   /// Translates a Flutter observer event into the adapter-neutral contract.
@@ -626,20 +633,6 @@ final class CCGoRouterAdapter
       } catch (_) {
         // Backend telemetry must never interrupt a Navigator transition.
       }
-    }
-  }
-
-  /// Conservatively reconciles entries after an external backend mutation.
-  void _synchronizeExternalStack(CCGoRouterNavigationEventKind kind) {
-    switch (kind) {
-      case CCGoRouterNavigationEventKind.push:
-      case CCGoRouterNavigationEventKind.replace:
-        _entries.clear();
-        break;
-      case CCGoRouterNavigationEventKind.pop:
-      case CCGoRouterNavigationEventKind.remove:
-        _removeTrackedEntry();
-        break;
     }
   }
 

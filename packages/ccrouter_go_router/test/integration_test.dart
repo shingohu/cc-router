@@ -1,4 +1,5 @@
 import 'package:ccrouter/ccrouter.dart';
+import 'package:ccrouter_core/ccrouter_core.dart';
 import 'package:ccrouter_go_router/ccrouter_go_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -20,6 +21,31 @@ final class _OrderCodec implements CCRouteCodec<_OrderArguments> {
   @override
   CCEncodedRouteArguments encode(_OrderArguments arguments) =>
       CCEncodedRouteArguments(path: {'id': arguments.id});
+}
+
+final class _OrderIntent<R> implements CCRouteIntent<R> {
+  const _OrderIntent(this.arguments);
+
+  @override
+  String get routeId => 'orders.detail';
+
+  @override
+  final _OrderArguments arguments;
+}
+
+final class _SimpleOrdersRegistrar implements CCComponentRegistrar {
+  const _SimpleOrdersRegistrar();
+
+  @override
+  void register(CCRegistry registry) {
+    registry.registerRoute<_OrderArguments, String>(
+      CCRouteDefinition<_OrderArguments, String>(
+        routeId: 'orders.detail',
+        patterns: [const CCPathPattern('/orders/:id', primary: true)],
+        codec: const _OrderCodec(),
+      ),
+    );
+  }
 }
 
 final class _OrdersRegistrar implements CCComponentRegistrar {
@@ -116,6 +142,148 @@ final class _RecordingNavigationAdapter
 
 void main() {
   tearDown(CCRouter.shutdown);
+
+  testWidgets(
+    'foreign routes and local history never remove a managed Route Entry',
+    (tester) async {
+      final observer = CCGoRouterNavigationObserver(outlet: 'root');
+      final scaffoldKey = GlobalKey<ScaffoldState>();
+      final detailRoute = GoRoute(
+        path: '/orders/:id',
+        builder: (_, state) => Scaffold(
+          key: scaffoldKey,
+          body: Text(
+            'order:${state.pathParameters['id']}',
+            key: const ValueKey('managed-order'),
+          ),
+        ),
+      );
+      final router = GoRouter(
+        initialLocation: '/',
+        observers: [observer],
+        routes: [
+          GoRoute(path: '/', builder: (_, _) => const Text('home')),
+          detailRoute,
+        ],
+      );
+      final adapter = CCGoRouterAdapter(
+        router: router,
+        observers: [observer],
+        bindings: [
+          CCGoRouterRouteBinding(
+            routeId: 'orders.detail',
+            goRoute: detailRoute,
+          ),
+        ],
+      );
+      final runtime = CCRouterRuntime.forTesting(
+        navigationAdapter: adapter,
+        components: const [
+          CCComponentManifest(
+            id: 'orders',
+            version: '1.0.0',
+            registrar: _SimpleOrdersRegistrar(),
+          ),
+        ],
+      );
+      addTearDown(runtime.dispose);
+      addTearDown(router.dispose);
+
+      await runtime.initialize();
+      await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+      await tester.pumpAndSettle();
+
+      final managedResult = runtime.pushRoute<String>(
+        const _OrderIntent<String>(_OrderArguments('42')),
+      );
+      await tester.pumpAndSettle();
+      final managedEntryId = runtime.activeRouteEntries.single.routeEntryId;
+      final managedContext = tester.element(
+        find.byKey(const ValueKey('managed-order')),
+      );
+
+      void expectManagedEntryUnchanged() {
+        expect(runtime.activeRouteEntries, hasLength(1));
+        expect(runtime.activeRouteEntries.single.routeEntryId, managedEntryId);
+        expect(
+          runtime.activeRouteEntries.single.lifecycleState,
+          CCRouteEntryLifecycleState.visible,
+        );
+      }
+
+      final dialog = showDialog<void>(
+        context: managedContext,
+        builder: (context) => AlertDialog(
+          key: const ValueKey('foreign-dialog'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('close-dialog'),
+            ),
+          ],
+        ),
+      );
+      await tester.pumpAndSettle();
+      expectManagedEntryUnchanged();
+      await tester.tap(find.text('close-dialog'));
+      await tester.pumpAndSettle();
+      await dialog;
+      expectManagedEntryUnchanged();
+
+      final modal = showModalBottomSheet<void>(
+        context: managedContext,
+        builder: (context) => TextButton(
+          key: const ValueKey('foreign-modal'),
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('close-modal'),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expectManagedEntryUnchanged();
+      await tester.tap(find.text('close-modal'));
+      await tester.pumpAndSettle();
+      await modal;
+      expectManagedEntryUnchanged();
+
+      final bottomSheet = scaffoldKey.currentState!.showBottomSheet(
+        (_) =>
+            const SizedBox(key: ValueKey('foreign-local-history'), height: 80),
+      );
+      await tester.pumpAndSettle();
+      expectManagedEntryUnchanged();
+      expect(await runtime.maybePopRoute(), isTrue);
+      await tester.pumpAndSettle();
+      await bottomSheet.closed;
+      expect(find.byKey(const ValueKey('foreign-local-history')), findsNothing);
+      expectManagedEntryUnchanged();
+
+      final foreignRoute = Navigator.of(managedContext).push<void>(
+        MaterialPageRoute<void>(
+          builder: (_) =>
+              const Text('foreign-page', key: ValueKey('foreign-page')),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expectManagedEntryUnchanged();
+      Navigator.of(
+        tester.element(find.byKey(const ValueKey('foreign-page'))),
+      ).pop();
+      await tester.pumpAndSettle();
+      await foreignRoute;
+      expectManagedEntryUnchanged();
+
+      Navigator.of(managedContext).pop<String>('managed-result');
+      await tester.pumpAndSettle();
+      expect(await managedResult, 'managed-result');
+      expect(runtime.activeRouteEntries, isEmpty);
+      expect(
+        runtime.recentBackendNavigationEvents.where(
+          (event) => event.routeId == null,
+        ),
+        isNotEmpty,
+      );
+    },
+  );
 
   testWidgets(
     'external ingress reaches the bound StatefulShell branch with metadata',

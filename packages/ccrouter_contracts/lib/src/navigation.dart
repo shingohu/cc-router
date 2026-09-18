@@ -264,10 +264,13 @@ abstract interface class CCNavigationAdapter {
   /// their Pop result or stack Predicate cannot be lost at this boundary.
   Future<Object?> navigate(CCNavigationRequest request);
 
-  /// Attempts to remove the current route and reports whether it was removed.
+  /// Asks the backend to handle a Pop and reports whether it was handled.
   ///
   /// Adapters may apply backend-specific Pop vetoes, such as unsaved-form
-  /// guards or gesture state. A `false` result leaves the stack unchanged.
+  /// guards or gesture state. A `true` result may represent removal of a
+  /// managed route, a foreign route, or a LocalHistoryEntry; callers must not
+  /// infer managed Route Entry removal from this Boolean alone. A `false`
+  /// result means that the backend declined the request.
   Future<bool> maybePop({Object? result});
 
   /// Pops the current route and pushes [request] as one atomic stack command.

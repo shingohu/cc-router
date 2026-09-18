@@ -694,6 +694,64 @@ hostId + navigatorOutlet + operation + routeId + normalizedUri
 
 相同路由但不同 Path、Query 或 Extra 参数不能被误判为重复；不同 Host、Window、Shell 或 Outlet 也必须隔离。去重状态在拦截取消、重定向失败、Adapter 失败、页面 Pop 和 Runtime dispose 时释放。该策略不采用全局固定时间 debounce，避免延迟正常导航或误伤合法的重复 Push。
 
+### 11.3 待认证导航与登录后恢复
+
+未登录访问受保护路由时，拦截器可以将请求导向登录页，但完整的“登录后回跳”不能只依赖普通 URI 重定向。后续由 Core 提供通用的 Pending Navigation/Continuation 能力，认证组件决定何时暂停、恢复或取消，不在 Runtime 内硬编码登录业务。
+
+待恢复导航至少保留：
+
+- 原始 Typed Intent 或动态 URI。
+- 原始 `navigationId`、`origin`、`source` 和目标组件。
+- 内部导航需要保留的 `Extra`。
+- 原始操作类型和结果完成通道。
+- 超时、Session 和 Runtime 生命周期状态。
+
+恢复流程必须重新执行路由解析、参数校验、组件激活检查和完整拦截器链，不能直接绕过策略进入页面。登录取消、恢复失败、Session 关闭、超时和 Runtime dispose 都必须清理待恢复导航；外部 Deep Link 的回跳目标还必须经过 Host 和 Deep Link 安全校验。
+
+该能力用于登录、权限提升、首次引导和其他需要用户完成前置流程的场景。简单应用可以继续手动传递 `returnTo`，但不能将其视为跨组件 Typed Intent 和返回值的完整替代方案。
+
+### 11.4 导航观察回调
+
+CCRouter 不直接复制 TheRouter 的无类型 `NavigationCallback` API，而是将导航观察和业务返回值分开：
+
+- `onArrival`：Managed RouteEntry 进入 `visible`，用于页面曝光、埋点、焦点恢复、预加载和跨组件生命周期通知。
+- `onLost`：路由不存在、参数非法、组件不可用、拦截取消或 Adapter 失败时提供标准错误，适用于 Deep Link 兜底和诊断。
+- `onFound`：路由匹配成功但尚未进入页面，优先作为内部解析和性能诊断事件，不作为普通业务页面生命周期依赖。
+- `onResult`：继续使用 `Future<R?>` 返回类型安全的页面结果，不增加无类型回调。
+
+现有 `CCNavigationLifecyclePhase.completed` 不等同于 `onArrival`：对于 `push`，`completed` 可能要等页面 Pop 后才发生。后续应增加独立的 `CCNavigationAspect` 生命周期事件，使到达、失败和结果完成的时机明确；观察回调失败不能影响导航，回调中也不能同步发起新的导航。
+
+### 11.5 TheRouter 风格的全局 AOP
+
+CCRouter 参考 TheRouter 的全局 AOP 使用场景，但不直接复制其无类型的单一
+`NavigationCallback` API。当前能力和目标能力明确区分如下：
+
+| 阶段 | 当前状态 | 目标职责 |
+| --- | --- | --- |
+| `before` | 已支持，由 `CCGlobalNavigationInterceptor` 提供 | 全局登录、权限、维护模式、强制升级、取消和重定向 |
+| `found` | Runtime 内部已有解析过程，尚无公开统一回调 | 记录匹配结果、解析耗时和被拦截前的诊断信息 |
+| `arrival` | `RouteEntry` 内部有 `visible` 状态，尚无公开全局回调 | 页面曝光、焦点恢复、预加载和跨组件到达通知 |
+| `after` | 有 `requested/completed/failed` 事件，但没有独立 After Hook | 统一观察成功、失败、取消、页面离开和返回结果 |
+
+因此，当前只能完整覆盖全局前置拦截，不能宣称已经实现 TheRouter 风格的四阶段
+全局 AOP。`CCNavigationLifecyclePhase.completed` 也不能直接当作 `arrival`：对
+`push` 来说，它通常要等页面 Pop 后、结果通道完成时才发生。
+
+后续新增的全局观察契约应与 `CCGlobalNavigationInterceptor` 分离，统一命名为
+`CCNavigationAspect`：
+
+- `before` 保持决策能力，可以继续、取消或重定向。
+- `found`、`arrival` 和 `after` 默认只观察，不改变目标路由。
+- 所有阶段都接收不可变的导航/路由快照，不暴露 `Widget`、`BuildContext`、
+  `Navigator` 或任意业务对象。
+- 观察回调异常必须隔离并进入诊断，不能影响已经接受的导航。
+- 回调中禁止同步再次发起导航，避免重入和递归导航链。
+- 业务页面结果继续通过类型安全的 `Future<R?>` 返回，不增加无类型结果回调。
+
+“全局唯一”表示所有 Runtime 导航经过同一条有序 AOP 管线，不表示只能注册一个
+业务策略实例。内部仍允许多个具名观察器按稳定顺序组合，以支持埋点、日志、性能
+统计、Deep Link 失败统计、A/B 策略和多 Host 诊断。
+
 ---
 
 ## 12. Navigation Adapter
@@ -878,6 +936,43 @@ created -> resolving -> pushed -> visible -> hidden
 - 交互式返回手势确认前不能销毁 Route Scope。
 - 只有 RouteEntry 永久移出导航结构后才能 dispose。
 - 页面无需继承框架 State 或混入特定 Widget mixin。
+
+### 13.1 多维页面与弹窗生命周期
+
+页面生命周期不使用一个枚举同时表达 App 前后台、Route 显隐和资源销毁，而是
+拆成三个相互独立的维度：
+
+| 维度 | 典型状态 | 语义和来源 |
+| --- | --- | --- |
+| App/Host 生命周期 | `resumed`、`inactive`、`hidden`、`paused`、`detached` | Flutter App 或 Window 状态；由 `CCRouterApp` 转发，不自动 Pop 页面、关闭 Session 或销毁 Route Scope |
+| Route 可见性 | `visible`、`covered`、`hidden`、`revealed` | 当前 Outlet 是否可见，以及是否被另一个 Route 覆盖；由 Runtime 的 RouteEntry 和 Adapter/Observer 协调 |
+| RouteEntry 生命周期 | `created`、`resolving`、`pushed`、`popping`、`removed`、`disposed` | 一次具体打开实例的挂载、移除和 Scope 资源释放 |
+
+这三个维度必须保持独立：App 进入后台不代表页面被 Pop；Shell 或 IndexedStack
+分支变为非活动状态通常只进入 `hidden`，不能销毁 Route Scope；页面被弹窗覆盖
+也不能误判为 RouteEntry 已 `removed`。
+
+经过 CCRouter 的 Dialog、BottomSheet 和透明 Page 都拥有自己的 RouteEntry、返回值
+和 Route Scope，并通过 `CCNavigationAspect` 观察显示、隐藏、返回和销毁。未经过
+CCRouter 的 `OverlayEntry`、`MenuAnchor`、`LocalHistoryEntry` 和第三方浮层属于
+Foreign/Backend 生命周期，只能通过显式 Adapter/Bridge 上报；无法确认归属时，
+必须保持 CCRouter 的 Managed RouteEntry 不变。
+
+后续 Aspect 事件可提供以下稳定语义，但必须注明事件所属维度和时机：
+
+```text
+before       导航决策前，可取消或重定向
+found        路由匹配成功
+willShow     Route/Entry 即将可见
+didShow      Route/Entry 已进入可见状态
+willHide     Route/Entry 即将被覆盖或离开
+didHide      Route/Entry 已离开可见状态
+after        本次导航成功、失败、取消或结果完成
+disposed     Route Scope 已完成释放
+```
+
+`didShow`/`didHide` 不能简单等同于 `NavigatorObserver.didPush`/`didPop`；后者是
+后端栈事件，前者是 CCRouter 对 Managed RouteEntry 的生命周期投影。
 
 ---
 

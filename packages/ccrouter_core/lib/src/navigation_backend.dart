@@ -32,19 +32,13 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
   }
 
   /// Stores and publishes one adapter-observed backend event.
+  ///
+  /// Backend observations are diagnostic until an adapter can correlate them
+  /// with a concrete Runtime Route Entry. In particular, an event without
+  /// managed identity may represent a Dialog, PopupRoute, LocalHistoryEntry,
+  /// or application-owned Navigator route and must never remove a managed
+  /// Route Entry by position.
   void _recordBackendNavigationEvent(CCNavigationBackendEvent event) {
-    if (event.routeId == null) {
-      switch (event.kind) {
-        case CCNavigationBackendEventKind.pop:
-        case CCNavigationBackendEventKind.remove:
-          _removeTopRouteEntry(reason: 'externalBackend', preserveRoot: true);
-          break;
-        case CCNavigationBackendEventKind.push:
-        case CCNavigationBackendEventKind.replace:
-          _removeAllRouteEntries(reason: 'externalBackend');
-          break;
-      }
-    }
     if (navigationEventCapacity > 0) {
       if (_backendNavigationEvents.length == navigationEventCapacity) {
         _backendNavigationEvents.removeFirst();

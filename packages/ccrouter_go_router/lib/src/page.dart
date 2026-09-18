@@ -1,7 +1,6 @@
 import 'package:ccrouter/ccrouter.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 /// Creates a GoRouter page for a normal CCRouter page presentation.
 ///
@@ -29,9 +28,9 @@ Page<Object?> ccGoRouterPage({
 ///
 /// The page chooses Material or Cupertino defaults when the contract leaves
 /// [CCPagePresentation.routeType] as [CCPageRouteType.platformDefault].
-/// Explicit transitions and transparent pages use GoRouter's
-/// [CustomTransitionPage] so that the requested [opaque] and animation
-/// semantics are preserved by the Navigator.
+/// Explicit transitions and transparent pages use [PageRouteBuilder] so that
+/// the resulting route keeps this page as its [Route.settings]. This is
+/// required by page-based Navigators and prevents route/page identity drift.
 final class CCGoRouterPage<T> extends Page<T> {
   /// Creates a normal page with adapter-neutral [presentation] options.
   const CCGoRouterPage({
@@ -68,37 +67,28 @@ final class CCGoRouterPage<T> extends Page<T> {
         presentation.opaque;
     if (useNativePage) {
       if (useCupertino) {
-        return CupertinoPage<T>(
-          key: key,
-          name: name,
-          arguments: arguments,
-          restorationId: restorationId,
+        return CupertinoPageRoute<T>(
+          settings: this,
           fullscreenDialog: presentation.fullscreenDialog,
-          child: child,
-        ).createRoute(context);
+          builder: (_) => child,
+        );
       }
-      return MaterialPage<T>(
-        key: key,
-        name: name,
-        arguments: arguments,
-        restorationId: restorationId,
+      return MaterialPageRoute<T>(
+        settings: this,
         fullscreenDialog: presentation.fullscreenDialog,
-        child: child,
-      ).createRoute(context);
+        builder: (_) => child,
+      );
     }
 
-    return CustomTransitionPage<T>(
-      key: key,
-      name: name,
-      arguments: arguments,
-      restorationId: restorationId,
-      child: child,
+    return PageRouteBuilder<T>(
+      settings: this,
+      pageBuilder: (_, _, _) => child,
       opaque: presentation.opaque,
       fullscreenDialog: presentation.fullscreenDialog,
       transitionDuration: _transitionDuration(presentation.transition),
       reverseTransitionDuration: _transitionDuration(presentation.transition),
       transitionsBuilder: _transitionsBuilder(presentation.transition),
-    ).createRoute(context);
+    );
   }
 
   /// Returns zero duration for page modes that intentionally do not animate.

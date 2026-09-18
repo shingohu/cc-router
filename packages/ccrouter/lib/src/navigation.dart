@@ -13,11 +13,13 @@ abstract interface class CCNavigator {
   /// Replaces the current route and completes with its typed Pop result.
   Future<R?> replace<R>(CCRouteIntent<R> intent, {CCNavigationSource? source});
 
-  /// Attempts to pop the current route and reports whether it was removed.
+  /// Asks the backend to handle a Pop and reports whether it was handled.
   ///
   /// Use this for system back and gesture handling when the active page may
-  /// veto the Pop. It is distinct from [canPop], which cannot account for a
-  /// backend Pop guard.
+  /// veto the Pop. A `true` result may mean that a LocalHistoryEntry or foreign
+  /// PopupRoute consumed the request; it does not prove that a CCRouter Route
+  /// Entry was removed. It is distinct from [canPop], which cannot account for
+  /// a backend Pop guard.
   Future<bool> maybePop<R>({R? result});
 
   /// Pops the current route and pushes [intent] as one stack operation.

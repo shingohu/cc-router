@@ -116,6 +116,72 @@ final class FailingNavigationAdapter implements CCNavigationAdapter {
   Future<void> dispose() async {}
 }
 
+final class BackendEventNavigationAdapter
+    implements CCNavigationAdapter, CCNavigationBackendEventSource {
+  final CCMemoryNavigationAdapter delegate = CCMemoryNavigationAdapter();
+  final Set<CCNavigationBackendEventListener> listeners = {};
+  bool consumeForeignMaybePop = false;
+
+  void emit(CCNavigationBackendEventKind kind) {
+    final event = CCNavigationBackendEvent(
+      kind: kind,
+      timestamp: DateTime.now(),
+      location: 'foreign:${kind.name}',
+    );
+    for (final listener in listeners.toList()) {
+      listener(event);
+    }
+  }
+
+  @override
+  void Function() addBackendEventListener(
+    CCNavigationBackendEventListener listener,
+  ) {
+    listeners.add(listener);
+    return () => listeners.remove(listener);
+  }
+
+  @override
+  bool canPop() => delegate.canPop();
+
+  @override
+  Future<void> dispose() => delegate.dispose();
+
+  @override
+  Future<void> initialize(
+    List<CCNavigationRoute> routes, {
+    List<CCNavigationShell> shells = const [],
+  }) => delegate.initialize(routes, shells: shells);
+
+  @override
+  Future<bool> maybePop({Object? result}) => consumeForeignMaybePop
+      ? Future<bool>.value(true)
+      : delegate.maybePop(result: result);
+
+  @override
+  Future<Object?> navigate(CCNavigationRequest request) =>
+      delegate.navigate(request);
+
+  @override
+  void pop({Object? result}) => delegate.pop(result: result);
+
+  @override
+  Future<Object?> popAndPush(
+    CCNavigationRequest request, {
+    Object? popResult,
+  }) => delegate.popAndPush(request, popResult: popResult);
+
+  @override
+  Future<void> popUntil(CCNavigationStackPredicate predicate) =>
+      delegate.popUntil(predicate);
+
+  @override
+  Future<Object?> pushAndRemoveUntil(
+    CCNavigationRequest request,
+    CCNavigationStackPredicate predicate,
+  ) => delegate.pushAndRemoveUntil(request, predicate);
+}
+
 final class TestNavigationInterceptor implements CCNavigationInterceptor {
   TestNavigationInterceptor(this.id, this.onIntercept, this.calls);
 
@@ -160,6 +226,67 @@ CCRouteDefinition<RouteArgs, String> pathRoute({
 );
 
 void main() {
+  test(
+    'uncorrelated backend events never mutate managed Route Entries',
+    () async {
+      final adapter = BackendEventNavigationAdapter();
+      final runtime = CCRouterRuntime.forTesting(
+        navigationAdapter: adapter,
+        components: [
+          routeComponent(
+            'orders',
+            (registry) => registry.registerRoute(pathRoute()),
+          ),
+        ],
+      );
+      await runtime.initialize();
+      final observed = <CCNavigationBackendEvent>[];
+      runtime.addBackendNavigationListener(observed.add);
+
+      await runtime.goRoute(
+        const TestIntent<void>('orders.detail', RouteArgs('1')),
+      );
+      final pushed = runtime.pushRoute<String>(
+        const TestIntent<String>('orders.detail', RouteArgs('2')),
+      );
+      final before = runtime.activeRouteEntries;
+
+      for (final kind in CCNavigationBackendEventKind.values) {
+        adapter.emit(kind);
+      }
+
+      expect(runtime.activeRouteEntries, hasLength(2));
+      expect(
+        runtime.activeRouteEntries.map((entry) => entry.routeEntryId),
+        before.map((entry) => entry.routeEntryId),
+      );
+      expect(
+        runtime.activeRouteEntries.map((entry) => entry.lifecycleState),
+        before.map((entry) => entry.lifecycleState),
+      );
+      expect(observed.map((event) => event.kind), [
+        CCNavigationBackendEventKind.push,
+        CCNavigationBackendEventKind.pop,
+        CCNavigationBackendEventKind.replace,
+        CCNavigationBackendEventKind.remove,
+      ]);
+      expect(runtime.recentBackendNavigationEvents, observed);
+
+      adapter.consumeForeignMaybePop = true;
+      expect(await runtime.maybePopRoute(), isTrue);
+      expect(runtime.activeRouteEntries, hasLength(2));
+      expect(
+        runtime.activeRouteEntries.last.routeEntryId,
+        before.last.routeEntryId,
+      );
+
+      runtime.popRoute(result: 'managed');
+      expect(await pushed, 'managed');
+      expect(runtime.activeRouteEntries, hasLength(1));
+      await runtime.dispose();
+    },
+  );
+
   test(
     'creates independent Route Entries and scopes for repeated pushes',
     () async {

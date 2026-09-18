@@ -18,19 +18,19 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     CCNavigationSource? source,
   }) => _navigateForResult(CCNavigationOperation.replace, intent, source);
 
-  /// Attempts to pop the current route and reports whether it was removed.
+  /// Asks the backend to handle a Pop and reports whether it was handled.
   ///
   /// Use this for system back and gesture handling when the active page may
   /// veto the Pop. It is distinct from [canPopRoute], which only reports stack
-  /// capability and cannot account for a backend Pop guard.
+  /// capability and cannot account for a backend Pop guard. A successful
+  /// backend Pop may consume a foreign Route or LocalHistoryEntry, so Runtime
+  /// does not remove a managed Route Entry by stack position. Result-bearing
+  /// managed entries close when their Adapter Future completes; complete
+  /// identity synchronization is provided by the future Pop coordinator.
   Future<bool> maybePopRoute<R>({R? result}) async {
     _ensureInitialized();
     try {
-      final didPop = await _requiredNavigationAdapter.maybePop(result: result);
-      if (didPop) {
-        _removeTopRouteEntry(reason: 'maybePop', preserveRoot: true);
-      }
-      return didPop;
+      return await _requiredNavigationAdapter.maybePop(result: result);
     } on CCRouterError {
       rethrow;
     } catch (error) {
