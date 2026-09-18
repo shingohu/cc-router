@@ -241,6 +241,45 @@ void main() {
     expect(find.text('home'), findsOneWidget);
   });
 
+  testWidgets('reports a managed Pop result channel through the coordinator', (
+    tester,
+  ) async {
+    final observer = CCGoRouterNavigationObserver(outlet: 'root');
+    final router = GoRouter(
+      initialLocation: '/',
+      observers: [observer],
+      routes: [
+        GoRoute(path: '/', builder: (_, _) => const Text('home')),
+        GoRoute(
+          path: '/detail/:value',
+          builder: (_, _) => const Text('detail'),
+        ),
+      ],
+    );
+    final adapter = CCGoRouterAdapter(router: router, observers: [observer]);
+    addTearDown(router.dispose);
+    await adapter.initialize([route('detail')]);
+    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    await tester.pumpAndSettle();
+
+    final pushed = adapter.navigate(
+      request(
+        id: 'detail',
+        operation: CCNavigationOperation.push,
+        uri: Uri.parse('/detail/42'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final outcome = await adapter.maybePopOutcome(result: 'back');
+    await tester.pumpAndSettle();
+    expect(outcome.handled, isTrue);
+    expect(outcome.removedOwner, CCPopRemovedOwner.managed);
+    expect(outcome.removedBackendEntryId, isNotNull);
+    expect(outcome.resultAvailable, isTrue);
+    expect(await pushed, 'back');
+  });
+
   testWidgets('Adapter retains bounded Navigator lifecycle events', (
     tester,
   ) async {

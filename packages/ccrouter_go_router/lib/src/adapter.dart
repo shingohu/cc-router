@@ -377,7 +377,7 @@ final class CCGoRouterAdapter
       handled: true,
       removedBackendEntryId: _lastPoppedBackendEntryId,
       removedOwner: _lastPoppedOwner,
-      resultAvailable: false,
+      resultAvailable: _lastPoppedOwner == CCPopRemovedOwner.managed,
     );
   }
 

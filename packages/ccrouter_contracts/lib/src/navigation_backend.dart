@@ -44,7 +44,9 @@ enum CCPopRemovedOwner {
 ///
 /// A handled Pop can still represent a `LocalHistoryEntry` or foreign Popup;
 /// callers must only close a CCRouter Route Scope when [removedOwner] is
-/// [CCPopRemovedOwner.managed].
+/// [CCPopRemovedOwner.managed]. [resultAvailable] is true only when the
+/// adapter can associate the Pop with a managed result channel; it does not
+/// embed or expose the result value itself.
 final class CCPopOutcome {
   /// Creates a Pop result with explicit ownership and result-channel state.
   const CCPopOutcome({
