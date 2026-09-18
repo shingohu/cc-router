@@ -164,6 +164,9 @@ final class CCRouterRuntime {
   /// Removes the Runtime subscription from the adapter backend event source.
   void Function()? _backendNavigationRemover;
 
+  /// Removes the Runtime subscription from predictive-back phase events.
+  void Function()? _predictiveBackRemover;
+
   /// Bounded sanitized failures from isolated Event subscribers.
   final List<CCInvocationError> _subscriberErrors = [];
 
@@ -656,6 +659,8 @@ final class CCRouterRuntime {
     try {
       _backendNavigationRemover?.call();
       _backendNavigationRemover = null;
+      _predictiveBackRemover?.call();
+      _predictiveBackRemover = null;
       await _navigationAdapter?.dispose();
     } finally {
       await _sessionScope?.close();

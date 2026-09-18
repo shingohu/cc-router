@@ -121,15 +121,17 @@ final class BackendEventNavigationAdapter
         CCNavigationAdapter,
         CCNavigationBackendEventSource,
         CCNavigationAdapterCapabilitySource,
-        CCNavigationBackendSnapshotSource {
+        CCNavigationBackendSnapshotSource,
+        CCNavigationPredictiveBackSource {
   final CCMemoryNavigationAdapter delegate = CCMemoryNavigationAdapter();
   final Set<CCNavigationBackendEventListener> listeners = {};
+  final Set<CCPredictiveBackEventListener> predictiveBackListeners = {};
   bool consumeForeignMaybePop = false;
   List<CCNavigationBackendEntrySnapshot> initialSnapshot = const [];
 
   @override
   CCNavigationAdapterCapabilities get capabilities =>
-      const CCNavigationAdapterCapabilities();
+      const CCNavigationAdapterCapabilities(supportsPredictiveBack: true);
 
   @override
   Future<List<CCNavigationBackendEntrySnapshot>>
@@ -162,12 +164,26 @@ final class BackendEventNavigationAdapter
     }
   }
 
+  void emitPredictive(CCPredictiveBackEvent event) {
+    for (final listener in predictiveBackListeners.toList()) {
+      listener(event);
+    }
+  }
+
   @override
   void Function() addBackendEventListener(
     CCNavigationBackendEventListener listener,
   ) {
     listeners.add(listener);
     return () => listeners.remove(listener);
+  }
+
+  @override
+  void Function() addPredictiveBackListener(
+    CCPredictiveBackEventListener listener,
+  ) {
+    predictiveBackListeners.add(listener);
+    return () => predictiveBackListeners.remove(listener);
   }
 
   @override
@@ -484,6 +500,69 @@ void main() {
       await runtime.dispose();
     },
   );
+
+  test('predictive back closes a managed entry only after commit', () async {
+    final adapter = BackendEventNavigationAdapter();
+    final runtime = CCRouterRuntime.forTesting(
+      navigationAdapter: adapter,
+      components: [
+        routeComponent(
+          'orders',
+          (registry) => registry.registerRoute(pathRoute()),
+        ),
+      ],
+    );
+    await runtime.initialize();
+    await runtime.goRoute(
+      const TestIntent<void>('orders.detail', RouteArgs('42')),
+    );
+    final managed = runtime.activeRouteEntries.single;
+    adapter.emit(
+      CCNavigationBackendEventKind.push,
+      backendEntryId: 'managed-predictive',
+      backendOperationId: 'managed-predictive-push',
+      navigationId: managed.navigationId,
+      routeId: managed.routeId,
+      owner: CCBackendEntryOwner.managed,
+      sequence: 1,
+    );
+    const outcome = CCPopOutcome(
+      handled: true,
+      removedBackendEntryId: 'managed-predictive',
+      removedOwner: CCPopRemovedOwner.managed,
+    );
+
+    for (final phase in [
+      CCPredictiveBackPhase.started,
+      CCPredictiveBackPhase.updated,
+      CCPredictiveBackPhase.cancelled,
+    ]) {
+      adapter.emitPredictive(
+        CCPredictiveBackEvent(
+          phase: phase,
+          progress: phase == CCPredictiveBackPhase.updated ? .5 : 0,
+          timestamp: DateTime.now(),
+          outcome: outcome,
+        ),
+      );
+    }
+    expect(runtime.activeRouteEntries, hasLength(1));
+    expect(
+      runtime.activeRouteEntries.single.routeEntryId,
+      managed.routeEntryId,
+    );
+
+    adapter.emitPredictive(
+      CCPredictiveBackEvent(
+        phase: CCPredictiveBackPhase.committed,
+        progress: 1,
+        timestamp: DateTime.now(),
+        outcome: outcome,
+      ),
+    );
+    expect(runtime.activeRouteEntries, isEmpty);
+    await runtime.dispose();
+  });
 
   test(
     'tracks opaque backend Entries without changing managed Route Entries',

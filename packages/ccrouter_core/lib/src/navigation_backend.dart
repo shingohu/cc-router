@@ -63,6 +63,28 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
       _backendNavigationRemover = (adapter as CCNavigationBackendEventSource)
           .addBackendEventListener(_recordBackendNavigationEvent);
     }
+    if (adapter is CCNavigationPredictiveBackSource) {
+      _predictiveBackRemover = (adapter as CCNavigationPredictiveBackSource)
+          .addPredictiveBackListener(_recordPredictiveBackEvent);
+    }
+  }
+
+  /// Applies only a committed ownership-aware predictive Pop.
+  void _recordPredictiveBackEvent(CCPredictiveBackEvent event) {
+    if (event.phase != CCPredictiveBackPhase.committed) return;
+    final outcome = event.outcome;
+    if (outcome == null ||
+        outcome.removedOwner != CCPopRemovedOwner.managed ||
+        outcome.removedBackendEntryId == null) {
+      return;
+    }
+    final backendEntry = _backendEntries[outcome.removedBackendEntryId];
+    final routeEntryId = backendEntry?.routeEntryId;
+    if (backendEntry?.owner != CCBackendEntryOwner.managed ||
+        routeEntryId == null) {
+      return;
+    }
+    _applyManagedPopOutcome(outcome);
   }
 
   /// Imports an optional initial backend stack into the diagnostic ledger.

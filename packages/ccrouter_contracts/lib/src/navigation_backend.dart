@@ -262,6 +262,48 @@ final class CCNavigationBackendEvent {
 typedef CCNavigationBackendEventListener =
     void Function(CCNavigationBackendEvent event);
 
+/// Identifies one phase of a platform predictive-back gesture.
+enum CCPredictiveBackPhase {
+  /// The platform began an interactive back gesture.
+  started,
+
+  /// The platform updated the gesture progress without committing a Pop.
+  updated,
+
+  /// The platform committed the Pop after the gesture crossed its threshold.
+  committed,
+
+  /// The platform cancelled the gesture and restored the current route.
+  cancelled,
+}
+
+/// Adapter-neutral observation of one predictive-back gesture phase.
+final class CCPredictiveBackEvent {
+  /// Creates an immutable predictive-back phase event.
+  const CCPredictiveBackEvent({
+    required this.phase,
+    required this.timestamp,
+    this.progress = 0,
+    this.outcome,
+  }) : assert(progress >= 0 && progress <= 1);
+
+  /// Gesture phase reported by the platform adapter.
+  final CCPredictiveBackPhase phase;
+
+  /// Normalized gesture progress in the inclusive range 0..1.
+  final double progress;
+
+  /// Ownership-aware result supplied when [phase] is [committed].
+  final CCPopOutcome? outcome;
+
+  /// Wall-clock time at which the adapter observed this phase.
+  final DateTime timestamp;
+}
+
+/// Receives predictive-back phase events from a navigation adapter.
+typedef CCPredictiveBackEventListener =
+    void Function(CCPredictiveBackEvent event);
+
 /// Optional adapter capability that exposes backend stack observations.
 ///
 /// Core uses this interface without importing Flutter or another navigation
@@ -270,6 +312,18 @@ abstract interface class CCNavigationBackendEventSource {
   /// Subscribes to backend stack events and returns a removal callback.
   void Function() addBackendEventListener(
     CCNavigationBackendEventListener listener,
+  );
+}
+
+/// Optional Adapter SPI for platform predictive-back coordination.
+///
+/// Implementations must emit a committed event only after the backend has
+/// removed the route and can provide a [CCPopOutcome]. Runtime deliberately
+/// ignores started, updated, and cancelled phases for Route Scope teardown.
+abstract interface class CCNavigationPredictiveBackSource {
+  /// Subscribes to predictive-back phases and returns a removal callback.
+  void Function() addPredictiveBackListener(
+    CCPredictiveBackEventListener listener,
   );
 }
 

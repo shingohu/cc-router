@@ -185,6 +185,8 @@ Runtime 根据能力选择正常执行、明确记录的降级实现或初始化
 - [x] 完善 Pop 拒绝、结果和生命周期语义；
 - [x] 业务 `CCRouter.navigator.pop` 通过 ownership-aware coordinator 执行，Foreign/Opaque
   Entry 不会关闭底层 Managed RouteEntry；
+- [x] 预留预测返回 Adapter SPI，只有 committed 且可关联 Managed identity 的事件才允许
+  关闭 RouteEntry；started、updated、cancelled 都不会销毁 Scope；
 
 系统返回和手势返回已经通过 `maybePopOutcome` 进入同一 ownership 判定管线；预测返回仍由
 `supportsPredictiveBack` 能力声明控制，当前 GoRouter Adapter 保守声明不支持，后续接入平台
