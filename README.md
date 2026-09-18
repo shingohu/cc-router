@@ -7,6 +7,7 @@ Flutter 组件化运行时的 v0.1 原型。目前先实现不依赖 Flutter 和
 - `packages/ccrouter_contracts`：消息契约、Service Key、调用上下文、取消信号与标准错误。
 - `packages/ccrouter_core`：组件装配、服务注册与解析、Scope、消息调度和有界诊断记录。
 - `packages/ccrouter`：公开静态门面和 Zone Runtime 隔离入口。
+- `packages/ccrouter_go_router`：默认的 GoRouter 导航适配器。
 - `demo`：包含 Android、iOS、macOS、Web 和 OHOS 平台目录的 Flutter 开发工程。
 
 要求 Dart SDK >= 3.9。包之间使用 SemVer 依赖，由 Pub Workspace 本地解析，不使用 `path:`。在私有 Hosted 配置完成前，所有包暂时设置为 `publish_to: none`。
@@ -16,6 +17,7 @@ fvm flutter pub get
 dart analyze
 dart test packages/ccrouter_core/test
 fvm flutter test packages/ccrouter/test
+fvm flutter test packages/ccrouter_go_router/test
 
 # Flutter 示例（从 demo 目录执行）
 cd demo

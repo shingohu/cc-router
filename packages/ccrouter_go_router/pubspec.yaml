@@ -1,0 +1,19 @@
+name: ccrouter_go_router
+description: GoRouter adapter for CCRouter navigation contracts.
+version: 0.1.0
+resolution: workspace
+publish_to: none
+
+environment:
+  sdk: ^3.9.0
+
+dependencies:
+  ccrouter: ^0.1.0
+  flutter:
+    sdk: flutter
+  go_router: ^14.8.1
+
+dev_dependencies:
+  ccrouter_core: ^0.1.0
+  flutter_test:
+    sdk: flutter

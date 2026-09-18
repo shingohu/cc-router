@@ -10,3 +10,4 @@ workspace:
   - packages/ccrouter_contracts
   - packages/ccrouter_core
   - packages/ccrouter
+  - packages/ccrouter_go_router

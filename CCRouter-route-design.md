@@ -647,6 +647,12 @@ Adapter 必须报告：
 
 Generator 不直接生成 `GoRoute`。自定义 Adapter 消费同一份 Definition 和 Intent。
 
+Adapter 生命周期由 `CCRouterRuntime` 统一拥有：初始化完成前拒绝导航，成功
+初始化后才进入 active 状态，Runtime dispose 时调用一次 Adapter dispose；dispose
+后不能再次初始化或导航。Session 关闭、组件停用和单个 RouteEntry Pop 只影响各自
+的 Scope 或栈状态，不触发 Adapter dispose。GoRouter Adapter 不销毁应用创建的
+`GoRouter`，只清理自身的绑定和 RouteEntry 状态。
+
 ### 12.1 Shell 与多导航栈
 
 Shell 关系必须显式声明，不能通过 `/index/` 等 Path 前缀猜测：
@@ -1034,6 +1040,20 @@ Adapter 实现者可以使用单独导出的：
 - JSON/Markdown 文档导出。
 
 ### 阶段 D：GoRouter Adapter
+
+当前已建立 `ccrouter_go_router` 包的基础适配器边界。它接收应用自行配置的
+`GoRouter`，将 Runtime 已解析的 Page 请求映射到 GoRouter，并保留路由所有权、
+来源和 URI 由 Core 管理。GoRouter 仍由应用负责创建和提供页面构造器。
+
+组件或应用组合根可以为每个 Runtime 路由提供一个
+`CCGoRouterRouteBinding(routeId, goRoute)`。绑定只关联稳定的 CCRouter Route ID
+与应用拥有的 `GoRoute`，不会注册、修改或销毁 `GoRouter`。当提供绑定集合时，
+Adapter 初始化会校验 Runtime 路由与绑定 ID 一一对应；根页面或其他不属于
+CCRouter 契约的 GoRouter 路由可以继续由应用独立保留。
+
+当前限制：Modal BottomSheet、Dialog 以及 `popAndPush` / `pushAndRemoveUntil`
+等需要后端原子栈操作的能力暂未接入，适配器会在初始化或调用时明确抛出能力错误，
+不会静默降级。
 
 - 主 Pattern、别名、Query、Extra 和返回值。
 - Shell、Outlet 和生命周期同步。
