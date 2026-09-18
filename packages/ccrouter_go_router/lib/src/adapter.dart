@@ -24,6 +24,7 @@ final class CCGoRouterAdapter
         CCNavigationAdapter,
         CCNavigationAdapterCapabilitySource,
         CCNavigationBackendEventSource,
+        CCNavigationBackendSnapshotSource,
         CCNavigationPopCoordinator {
   /// Creates an adapter around an application-owned [router].
   factory CCGoRouterAdapter({
@@ -84,14 +85,16 @@ final class CCGoRouterAdapter
 
   /// Backend capabilities exposed for Host setup and diagnostics.
   ///
-  /// The supplied GoRouter remains application-owned, so this adapter cannot
-  /// claim an initial stack snapshot or predictive-back coordination unless a
-  /// future integration explicitly provides those signals.
+  /// The supplied GoRouter remains application-owned, so predictive-back
+  /// coordination is not claimed until a future integration provides those
+  /// signals. Its current match tree and initial route-information location
+  /// can still be reported as opaque backend entries.
   @override
   CCNavigationAdapterCapabilities get capabilities =>
       const CCNavigationAdapterCapabilities(
         supportsForeignEntryObservation: true,
         supportsBackendEntryIdentity: true,
+        supportsInitialStackSnapshot: true,
         supportsAtomicPopAndPush: true,
         supportsPushAndRemoveUntil: true,
         supportsNestedNavigators: true,
@@ -106,6 +109,38 @@ final class CCGoRouterAdapter
   /// cannot install [CCGoRouterNavigationObserver]. Business features should
   /// continue to navigate only through `CCRouter.navigator`.
   CCGoRouterForeignRouteBridge get foreignRouteBridge => _foreignRouteBridge;
+
+  /// Reads GoRouter's pre-existing match tree as opaque backend entries.
+  ///
+  /// The initial match tree has no CCRouter `navigationId`, so every entry is
+  /// intentionally classified as opaque. Runtime can diagnose the existing
+  /// GoRouter stack and its Shell Outlets, but it cannot create a managed
+  /// RouteEntry or typed result channel from this snapshot.
+  @override
+  Future<List<CCNavigationBackendEntrySnapshot>>
+  readInitialBackendSnapshot() async {
+    _ensureAvailable();
+    final snapshots = <CCNavigationBackendEntrySnapshot>[];
+    _collectInitialMatches(
+      _router.routerDelegate.currentConfiguration.matches,
+      snapshots,
+      outlet: 'root',
+    );
+    if (snapshots.isEmpty) {
+      final initialUri = _router.routeInformationProvider.value.uri;
+      if (initialUri.toString().isNotEmpty) {
+        snapshots.add(
+          CCNavigationBackendEntrySnapshot(
+            backendEntryId: _nextBackendEntryId(),
+            owner: CCBackendEntryOwner.opaque,
+            navigatorOutlet: 'root',
+            location: initialUri.toString(),
+          ),
+        );
+      }
+    }
+    return List.unmodifiable(snapshots);
+  }
 
   /// Application-owned GoRouter backend.
   final GoRouter _router;
@@ -781,6 +816,39 @@ final class CCGoRouterAdapter
         timestamp: DateTime.now(),
       ),
     );
+  }
+
+  /// Flattens one GoRouter match branch while retaining its Navigator Outlet.
+  void _collectInitialMatches(
+    List<RouteMatchBase> matches,
+    List<CCNavigationBackendEntrySnapshot> snapshots, {
+    required String outlet,
+  }) {
+    for (final match in matches) {
+      final matchOutlet = match is ShellRouteMatch
+          ? _outletForNavigatorKey(match.navigatorKey)
+          : outlet;
+      snapshots.add(
+        CCNavigationBackendEntrySnapshot(
+          backendEntryId: _nextBackendEntryId(),
+          owner: CCBackendEntryOwner.opaque,
+          navigatorOutlet: matchOutlet,
+          location: match.matchedLocation,
+        ),
+      );
+      if (match is ShellRouteMatch) {
+        _collectInitialMatches(match.matches, snapshots, outlet: matchOutlet);
+      }
+    }
+  }
+
+  /// Resolves an application-owned Navigator key to its configured Outlet.
+  String _outletForNavigatorKey(GlobalKey<NavigatorState> key) {
+    if (identical(key, _router.routerDelegate.navigatorKey)) return 'root';
+    for (final entry in _navigatorKeys.entries) {
+      if (identical(entry.value, key)) return entry.key;
+    }
+    return 'root';
   }
 
   /// Publishes one opaque UI transition without creating a managed route.

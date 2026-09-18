@@ -43,7 +43,7 @@ void main() {
         (adapter as CCNavigationAdapterCapabilitySource).capabilities;
     expect(capabilities.supportsForeignEntryObservation, isTrue);
     expect(capabilities.supportsBackendEntryIdentity, isTrue);
-    expect(capabilities.supportsInitialStackSnapshot, isFalse);
+    expect(capabilities.supportsInitialStackSnapshot, isTrue);
     expect(capabilities.supportsAtomicPopAndPush, isTrue);
     expect(capabilities.supportsPushAndRemoveUntil, isTrue);
     expect(capabilities.supportsNestedNavigators, isTrue);
@@ -52,6 +52,40 @@ void main() {
     expect(capabilities.supportsOpaqueUiObservation, isTrue);
     expect(capabilities.supportsPredictiveBack, isFalse);
   });
+
+  test(
+    'reports the initial GoRouter match tree as opaque snapshot entries',
+    () async {
+      final router = GoRouter(
+        initialLocation: '/initial',
+        routes: [
+          GoRoute(path: '/', builder: (_, _) => const SizedBox()),
+          GoRoute(path: '/initial', builder: (_, _) => const SizedBox()),
+        ],
+      );
+      final adapter = CCGoRouterAdapter(router: router);
+      addTearDown(router.dispose);
+      await adapter.initialize(const []);
+
+      final snapshots = await adapter.readInitialBackendSnapshot();
+      expect(snapshots, isNotEmpty);
+      expect(
+        snapshots.every(
+          (snapshot) => snapshot.owner == CCBackendEntryOwner.opaque,
+        ),
+        isTrue,
+      );
+      expect(
+        snapshots.any((snapshot) => snapshot.location == '/initial'),
+        isTrue,
+      );
+      expect(
+        snapshots.map((snapshot) => snapshot.backendEntryId).toSet(),
+        hasLength(snapshots.length),
+      );
+      await adapter.dispose();
+    },
+  );
 
   test('foreign route bridge reports identity without navigating', () async {
     final router = GoRouter(
