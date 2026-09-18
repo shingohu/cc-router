@@ -73,6 +73,25 @@ final class CCRouteParameterError extends CCRouterError {
   const CCRouteParameterError(super.message);
 }
 
+/// Indicates that a navigation adapter failed or is not configured.
+///
+/// Business callers may handle this as an unavailable navigation backend;
+/// application hosts use its message to diagnose adapter setup or execution.
+final class CCNavigationAdapterError extends CCRouterError {
+  /// Creates an adapter error with a sanitized [message].
+  const CCNavigationAdapterError(super.message);
+}
+
+/// Indicates that an adapter returned a value incompatible with a typed route.
+///
+/// Generated typed navigation may surface this when page code Pops a value that
+/// does not conform to the route contract's declared result type.
+final class CCRouteResultTypeError extends CCRouterError {
+  /// Creates a result-type error for the affected [routeId].
+  const CCRouteResultTypeError(String routeId)
+    : super('Route "$routeId" returned an incompatible result type.');
+}
+
 /// Indicates that a requested capability or lifecycle owner cannot be resolved.
 final class CCResolutionError extends CCRouterError {
   /// Creates a resolution error with a safe [message].

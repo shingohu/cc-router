@@ -10,26 +10,41 @@ final class CCRouterRuntime {
   ///
   /// Application business code must initialize the framework through the
   /// `ccrouter` facade instead of constructing this low-level engine directly.
-  /// This constructor exists for the facade's application-host integration.
+  /// This constructor exists for the facade's application-host integration. A
+  /// supplied navigation adapter is initialized and disposed by this Runtime.
   factory CCRouterRuntime.forHost({
     int traceCapacity = 1000,
     Iterable<CCComponentManifest> components = const [],
-  }) => CCRouterRuntime._(traceCapacity: traceCapacity, components: components);
+    CCNavigationAdapter? navigationAdapter,
+  }) => CCRouterRuntime._(
+    traceCapacity: traceCapacity,
+    components: components,
+    navigationAdapter: navigationAdapter,
+  );
 
   /// Creates an independently owned Runtime for low-level core tests.
   ///
   /// Use this only when testing Core semantics without the static business
-  /// facade; application tests will eventually use the `ccrouter_test` host.
+  /// facade; application tests will eventually use the `ccrouter_test` host. A
+  /// supplied adapter belongs exclusively to this test Runtime.
+  @visibleForTesting
   factory CCRouterRuntime.forTesting({
     int traceCapacity = 1000,
     Iterable<CCComponentManifest> components = const [],
-  }) => CCRouterRuntime._(traceCapacity: traceCapacity, components: components);
+    CCNavigationAdapter? navigationAdapter,
+  }) => CCRouterRuntime._(
+    traceCapacity: traceCapacity,
+    components: components,
+    navigationAdapter: navigationAdapter,
+  );
 
   /// Creates a Runtime with validated configuration and installed components.
   CCRouterRuntime._({
     this.traceCapacity = 1000,
     Iterable<CCComponentManifest> components = const [],
+    CCNavigationAdapter? navigationAdapter,
   }) {
+    _navigationAdapter = navigationAdapter;
     if (traceCapacity < 0)
       throw ArgumentError.value(traceCapacity, 'traceCapacity');
     _installComponents(components);
@@ -66,6 +81,9 @@ final class CCRouterRuntime {
   /// Component-owned route definitions indexed by stable route ID.
   final _RouteRegistry _routeRegistry = _RouteRegistry();
 
+  /// Optional adapter that executes Runtime-validated navigation requests.
+  CCNavigationAdapter? _navigationAdapter;
+
   /// Bounded completed invocation trace buffer.
   final Queue<CCTraceRecord> _traces = Queue();
 
@@ -96,6 +114,9 @@ final class CCRouterRuntime {
   /// Monotonic sequence used in Session identifiers.
   int _sessionSequence = 0;
 
+  /// Monotonic sequence used in navigation identifiers.
+  int _navigationSequence = 0;
+
   /// Memoized shutdown operation that makes disposal idempotent.
   Future<void>? _disposeFuture;
 
@@ -120,11 +141,13 @@ final class CCRouterRuntime {
 
   /// Freezes registration and starts accepting operations.
   ///
-  /// Framework hosts call this after all component registrars complete; no
-  /// capability may be added after initialization.
+  /// Framework hosts call this after all component registrars complete. The
+  /// navigation adapter receives the stable route table before operations are
+  /// accepted; no capability may be added after initialization.
   Future<void> initialize() async {
     if (_disposed) throw const CCScopeClosedError('runtime');
     if (_initialized) return;
+    await _navigationAdapter?.initialize(_routeRegistry.navigationRoutes);
     _initialized = true;
   }
 
@@ -431,10 +454,15 @@ final class CCRouterRuntime {
   Future<void> _closeScopes() async {
     // Stop invocations before awaiting any service disposal.
     appScope.cancellation.cancel();
-    await _sessionScope?.close();
-    await appScope.close();
-    _sessionScope = null;
-    _session = null;
+    try {
+      await _navigationAdapter?.dispose();
+    } finally {
+      await _sessionScope?.close();
+      await appScope.close();
+      _navigationAdapter = null;
+      _sessionScope = null;
+      _session = null;
+    }
   }
 
   /// Resolves one normalized [provider] in its effective owner Scope.

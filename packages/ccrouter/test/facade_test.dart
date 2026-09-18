@@ -1,4 +1,5 @@
 import 'package:ccrouter/ccrouter.dart';
+import 'package:ccrouter_core/ccrouter_core.dart';
 import 'package:test/test.dart';
 
 final class Read implements CCQuery<String> {}
@@ -11,6 +12,51 @@ final class QueryRegistrar implements CCComponentRegistrar {
   @override
   void register(CCRegistry registry) {
     registry.registerQuery<Read, String>((_, _) => value);
+  }
+}
+
+final class FacadeRouteArgs {
+  const FacadeRouteArgs(this.value);
+
+  final String value;
+}
+
+final class FacadeRouteCodec implements CCRouteCodec<FacadeRouteArgs> {
+  const FacadeRouteCodec();
+
+  @override
+  FacadeRouteArgs decode(CCEncodedRouteArguments input) =>
+      FacadeRouteArgs(input.path['value']!);
+
+  @override
+  CCEncodedRouteArguments encode(FacadeRouteArgs arguments) =>
+      CCEncodedRouteArguments(path: {'value': arguments.value});
+}
+
+final class FacadeRouteIntent implements CCRouteIntent<String> {
+  const FacadeRouteIntent(this.value);
+
+  final String value;
+
+  @override
+  String get routeId => 'facade.detail';
+
+  @override
+  Object get arguments => FacadeRouteArgs(value);
+}
+
+final class FacadeRouteRegistrar implements CCComponentRegistrar {
+  const FacadeRouteRegistrar();
+
+  @override
+  void register(CCRegistry registry) {
+    registry.registerRoute<FacadeRouteArgs, String>(
+      CCRouteDefinition<FacadeRouteArgs, String>(
+        routeId: 'facade.detail',
+        patterns: [const CCPathPattern('/facade/:value', primary: true)],
+        codec: const FacadeRouteCodec(),
+      ),
+    );
   }
 }
 
@@ -76,4 +122,41 @@ void main() {
     await CCRouter.closeSession();
     expect(CCRouter.session, isNull);
   });
+
+  test(
+    'navigator executes typed and dynamic routes through the adapter',
+    () async {
+      final adapter = CCMemoryNavigationAdapter();
+      await CCRouter.initialize(
+        components: const [
+          CCComponentManifest(
+            id: 'facade-routes',
+            version: '0.1.0',
+            registrar: FacadeRouteRegistrar(),
+          ),
+        ],
+        navigationAdapter: adapter,
+      );
+
+      final result = CCRouter.navigator.push(
+        const FacadeRouteIntent('42'),
+        source: const CCNavigationSource.feature('facade_test'),
+      );
+      expect(adapter.currentRequest?.uri.toString(), '/facade/42');
+      expect(CCRouter.navigator.canPop(), isTrue);
+
+      CCRouter.navigator.pop(result: 'done');
+      expect(await result, 'done');
+
+      await CCRouter.navigator.open(Uri.parse('/facade/43'));
+      expect(adapter.currentRequest?.routeId, 'facade.detail');
+      expect(
+        (adapter.currentRequest?.arguments as FacadeRouteArgs).value,
+        '43',
+      );
+
+      await CCRouter.shutdown();
+      expect(adapter.isInitialized, isFalse);
+    },
+  );
 }

@@ -3,7 +3,7 @@
 ## 文档状态
 
 - 版本：v0.1 Draft
-- 状态：增量实现中，Pattern 契约与 Core 基础匹配已实现
+- 状态：增量实现中，Pattern、导航主链路与内存 Adapter 已实现
 - 适用范围：Flutter 应用及其组件化路由契约
 - 默认导航后端：`go_router`
 - 核心约束：业务跳转统一通过 `CCRouter.navigator`，Core 不依赖 Flutter、`BuildContext` 或 `go_router`
@@ -460,9 +460,28 @@ abstract interface class CCNavigator {
 }
 ```
 
+### 8.1 栈操作扩展边界
+
+`CCNavigator` 不机械复制 Flutter `Navigator` 的所有方法，而是只暴露具有稳定跨 Adapter 语义的栈操作。建议分阶段支持：
+
+| 方法 | 决策 | 说明 |
+| --- | --- | --- |
+| `maybePop` | 支持 | 返回 `Future<bool>`，用于系统返回、手势返回和页面自行拒绝返回的场景；不能简单用 `canPop` 加 `pop` 替代。 |
+| `popAndPush` | 支持 | 以类型安全 `CCRouteIntent` 作为新页面目标，旧页面结果使用显式的 `Object?`；不暴露 Flutter `Route`。 |
+| `popUntil` | 支持 | 通过稳定的 Route ID、RouteEntry ID 或框架提供的只读快照谓词定位保留点，不接受 Flutter `RoutePredicate`。 |
+| `popUntilWithResult` | 暂缓后支持 | 需要先定义结果传递给每个被移除 RouteEntry、遇到拒绝 Pop 或没有匹配目标时的完整语义，不能直接照搬第三方扩展方法。 |
+| `pushAndRemoveUntil` | 支持 | 是 `pushNamedAndRemoveUntil` 的类型安全替代；新页面使用 Intent，保留条件使用稳定快照谓词。 |
+| `replaceRouteBelow` | 暂缓 | 依赖可持久引用某个 RouteEntry 的跨 Adapter 句柄，当前 Runtime 尚未公开该句柄。 |
+| `removeRoute` / `removeRouteBelow` | 暂缓 | 属于精确操作某个 RouteEntry 的底层能力；应先设计不暴露 Flutter `Route` 的 `CCRouteEntryHandle` 和结果完成语义。 |
+| `popAndPushNamed` / `pushNamedAndRemoveUntil` | 不提供 | 路由系统使用稳定 Route ID、生成的 Intent 和动态 `open(Uri)`，不再增加字符串 Name API。需要动态地址时使用 `open` 组合操作。 |
+
+带目标页面的组合操作 `popAndPush` 与 `pushAndRemoveUntil` 必须作为一个 Runtime 导航请求进入拦截器、埋点和 Adapter 管线，不能由业务代码先调用 `pop` 再调用 `push` 拼接，否则无法保证导航 ID、失败回滚和结果完成的一致性。`maybePop` 与 `popUntil` 虽然没有目标页面，仍必须经过 Runtime 的 Adapter 控制操作边界。Adapter SPI 不向 Core 暴露 `BuildContext`、Flutter `Route` 或 `NavigatorState`。
+
 `push<R>` 和 `replace<R>` 返回 `Future<R?>`。系统返回、无值 Pop 或 RouteEntry 被允许取消时完成 `null`；解析、拦截或 Adapter 失败时抛出标准错误。
 
 `BuildContext` 只在调用瞬间用于解析最近的 Navigator Outlet，解析完成后不得保存或传入 Core。未传 Context 时使用 Adapter 配置的默认根 Outlet。非 Widget 调用方后续可以通过显式 Outlet 引用选择非根导航栈。
+
+当前 Pure Dart 导航主链路已经实现 `push/replace/go/reset/open/pop/canPop`，以及 `maybePop`、类型安全的 `popAndPush`、`popUntil` 和 `pushAndRemoveUntil`；主 Pattern 地址生成、中立 Adapter SPI 和内存 Adapter 也已实现。`BuildContext` 参数与 Outlet 解析将在 `CCRouterApp` 和 GoRouter Adapter 阶段接入；在此之前所有调用使用 Adapter 的默认导航栈，Core 始终不接收 Flutter 类型。
 
 不提供 `CCRouter.push()` 等重复快捷入口，也不提供绕过 `CCRouter.navigator` 直接执行生成 Intent 的公开方法。
 
@@ -641,7 +660,48 @@ routeKind
 
 Adapter 初始化时声明能力集合。路由要求 Shell、指定 Page/Dialog Route 类型、透明页面、底部弹出、Dialog 或自定义转场而 Adapter 不支持时，初始化必须失败，不能静默降级。
 
-### 12.2 BuildContext 与 Outlet 解析
+### 12.2 自适应主从布局
+
+“小屏列表、大屏左列表右详情”属于自适应主从布局（Master-Detail/List-Detail），不是普通的子路由，也不自动等同于 `ShellRoute` 或 `StatefulShellRoute`。
+
+推荐使用同一组类型安全 Route Contract：
+
+```text
+orders
+├── orders.list
+└── orders.detail
+```
+
+- 小屏使用单列 Navigator 栈，列表打开详情时执行 `push`。
+- 大屏使用显式的 List Outlet 和 Detail Outlet，同时显示列表与当前详情。
+- 详情 Route ID、Intent 和 Codec 在两种布局中保持一致，不能按屏幕尺寸生成两套路由契约。
+- 如果左右区域需要各自保留导航历史，可由 Shell 承载两个独立 Navigator；如果只是列表加当前选中详情，使用自适应页面容器即可。
+- 底部 Tab 等多个长期并行分支才适合 `StatefulShellRoute`；主从布局不能默认建模为 Stateful Shell。
+
+Shell 负责持久化导航容器和 Outlet，主从容器负责根据屏幕尺寸选择栈式或双栏呈现。后续应增加适配器中立的布局/容器元数据，并由 GoRouter Adapter 映射到 `ShellRoute` 或相应的多 Outlet 结构。
+
+### 12.3 大屏、折叠屏与多窗口扩展
+
+路由目的地必须与设备形态解耦。相同的 Route ID、Intent 和参数契约，应根据窗口和显示设备条件选择不同的 Shell、Outlet 和呈现方式，不为手机、平板、折叠屏或桌面分别复制路由。
+
+后续适配模型至少需要覆盖：
+
+- Window Size Class：`compact`、`medium`、`expanded`，并支持窗口自由调整和横竖屏变化。
+- Display Feature：折痕、铰链、屏幕切口和不可用区域，避免内容或交互控件跨越遮挡区域。
+- Fold Posture：平铺、半折、桌面姿态和双屏展开时的布局切换。
+- 多 Window/Display：导航状态按 Window 或 Navigation Host 隔离，不能只依赖进程级单例栈。
+- 自适应 Modal：Dialog、Bottom Sheet 和全屏页面可根据可用空间切换，但 Route Contract 保持不变。
+- 状态恢复：窗口尺寸、当前 Shell 分支、Outlet 栈、选中详情和进程重建后的恢复标识。
+- Web/桌面历史：浏览器前进后退、刷新、外部窗口和 URL 状态同步。
+- 系统返回：键盘、手势、预测返回和多 Pane 场景下的返回目标选择。
+- 无障碍与输入设备：大字体、键盘、鼠标、手写笔等导致布局变化时，导航状态不能丢失。
+- 特殊窗口：画中画、沉浸式全屏和外接屏幕需要独立 Host/Outlet 策略。
+
+建议新增适配器中立的 `Window Context`、`Display Feature` 和 `Adaptive Presentation Policy` 概念。Shell 负责持久化导航容器，Adaptive Layout 负责选择单列、双栏或多 Pane，Window/Display Host 负责绑定实际导航栈。
+
+实现优先级：先完成 Size Class、主从双 Outlet、Modal 自适应和旋转/调整大小状态保持；再支持折叠姿态、多窗口、深链进入指定 Pane 和状态恢复；最后扩展外接屏幕、PiP、预测返回和输入设备驱动的导航策略。
+
+### 12.4 BuildContext 与 Outlet 解析
 
 - 传入 `BuildContext` 时，Flutter 门面解析距离该 Context 最近的 CCRouter Outlet。
 - 未传 Context 时使用 Adapter 初始化时声明的默认根 Outlet。
@@ -649,7 +709,7 @@ Adapter 初始化时声明能力集合。路由要求 Shell、指定 Page/Dialog
 - Context 已失效、未挂载或无法解析 Outlet 时返回标准导航错误。
 - Shell 和嵌套 Navigator 必须通过显式 Outlet 关系确定，不能退回全局 Context 猜测。
 
-### 12.3 CCRouterApp
+### 12.5 CCRouterApp
 
 `CCRouterApp` 是包裹 Flutter App 的集成宿主：
 
@@ -944,16 +1004,20 @@ Adapter 实现者可以使用单独导出的：
 
 业务门面不导出 Runtime 构造、内部 Route Registry、可变 RouteEntry、Scope 或 Adapter 控制器。框架内部跨文件访问使用 library privacy 和 `part` / `part of`。
 
+### 19.4 测试 API
+
+`ccrouter_core/test` 只保留 Core 包内部实现的低层回归测试。面向框架使用者、组件作者、测试宿主、Mock、导航测试和集成测试的新增测试代码与测试 API 统一放入 `ccrouter_test` 包；该包负责提供受控 Test Host、Runtime Overlay、Adapter 替身和断言工具。业务生产代码不得导入 `ccrouter_core/src/` 或依赖 Core 内部测试入口。
+
 ---
 
 ## 20. 实现阶段
 
 ### 阶段 A：Pure Dart 路由契约
 
-- Route ID、Path/URI/Regex Pattern、可见性、Intent、Codec 和错误。
-- `CCRegistry.registerRoute`。
-- `CCRouter.navigator` 及 `push/replace/go/reset/open/pop/canPop` 门面。
-- 内存测试 Adapter。
+- 已实现 Route ID、Path/URI/Regex Pattern、可见性、Intent、Codec 和错误。
+- 已实现 `CCRegistry.registerRoute`。
+- 已实现 `CCRouter.navigator` 及 `push/replace/go/reset/open/pop/canPop`、`maybePop`、`popAndPush`、`popUntil`、`pushAndRemoveUntil` 门面。
+- 已实现主 Pattern 反向生成、动态 URI 解析和内存测试 Adapter。
 
 ### 阶段 B：Runtime 管线
 

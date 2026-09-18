@@ -3,12 +3,17 @@ import 'dart:async';
 import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 import 'package:ccrouter_core/ccrouter_core.dart';
 
+part 'navigation.dart';
+
 /// Static business-facing entry point for all CCRouter capabilities.
 ///
 /// Applications initialize this facade once per isolate and use it for
 /// component services, messages, Sessions, diagnostics, and navigation. Do not
 /// construct or retain the lower-level Runtime in business code.
 abstract final class CCRouter {
+  /// Process-local navigation facade backed by the active Runtime.
+  static final CCNavigator _navigator = _CCNavigator();
+
   /// Runtime owned by the current isolate's application host.
   static CCRouterRuntime? _defaultRuntime;
 
@@ -50,16 +55,26 @@ abstract final class CCRouter {
   /// business events or sensitive request payloads.
   static List<CCTraceRecord> get recentTraces => _runtime.recentTraces;
 
+  /// Unified business-facing navigation entry point.
+  ///
+  /// The returned object is stable across Runtime restarts and resolves the
+  /// currently active Runtime for each operation. Calls before [initialize]
+  /// fail with [CCRouterNotInitializedError].
+  static CCNavigator get navigator => _navigator;
+
   /// Creates, initializes, and owns the application's default Runtime.
   ///
   /// Call this once during application host startup with the complete component
-  /// assembly. Tests that need isolated hosts should use dedicated test support.
+  /// assembly. When supplied, [navigationAdapter] is owned, initialized, and
+  /// disposed by CCRouter. Tests that need isolated hosts should use dedicated
+  /// test support.
   ///
   /// A second call before [shutdown] completes throws
   /// [CCRouterAlreadyInitializedError].
   static Future<void> initialize({
     required Iterable<CCComponentManifest> components,
     int traceCapacity = 1000,
+    CCNavigationAdapter? navigationAdapter,
   }) async {
     if (_defaultRuntime != null ||
         _initializing != null ||
@@ -70,6 +85,7 @@ abstract final class CCRouter {
     final runtime = CCRouterRuntime.forHost(
       components: components,
       traceCapacity: traceCapacity,
+      navigationAdapter: navigationAdapter,
     );
     final initializing = runtime.initialize();
     _initializing = initializing;

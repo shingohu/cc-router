@@ -33,6 +33,36 @@ final class _PatternMatch {
   final int specificity;
 }
 
+/// Route data prepared for one adapter-bound navigation request.
+///
+/// The registry creates this value after availability, Pattern, and Codec checks
+/// so Runtime navigation code does not access mutable registry implementation.
+final class _PreparedRoute {
+  /// Creates a fully validated internal navigation payload.
+  _PreparedRoute({
+    required this.routeId,
+    required this.uri,
+    required this.arguments,
+    required this.extra,
+    required this.presentation,
+  });
+
+  /// Stable route identity selected by Intent or URI resolution.
+  final String routeId;
+
+  /// Canonical generated URI or normalized dynamically supplied URI.
+  final Uri uri;
+
+  /// Typed route arguments accepted or produced by the registered Codec.
+  final Object arguments;
+
+  /// Optional in-memory value retained only for typed internal navigation.
+  final Object? extra;
+
+  /// Adapter-neutral presentation metadata for this route.
+  final CCRoutePresentation presentation;
+}
+
 /// Candidate produced while comparing one URI against an installed pattern.
 final class _RouteCandidate {
   /// Creates a candidate with deterministic matching metadata.
@@ -76,6 +106,25 @@ final class _RouteRegistry {
 
   /// Stable IDs in deterministic order for diagnostics and tests.
   List<String> get routeIds => _routes.keys.toList()..sort();
+
+  /// Adapter-facing snapshots of all installed routes in stable ID order.
+  List<CCNavigationRoute> get navigationRoutes {
+    final routes = _routes.values.toList()
+      ..sort(
+        (first, second) =>
+            first.definition.routeId.compareTo(second.definition.routeId),
+      );
+    return List.unmodifiable(
+      routes.map(
+        (route) => CCNavigationRoute(
+          routeId: route.definition.routeId,
+          patterns: route.definition.patterns,
+          presentation: route.definition.presentation,
+          deepLink: route.definition.deepLink,
+        ),
+      ),
+    );
+  }
 
   /// Adds [definition] for [ownerComponentId] after static validation.
   void register<A, R>(
@@ -150,6 +199,53 @@ final class _RouteRegistry {
   /// Resolves [location] to an active route allowed for external entry.
   CCRouteLocation resolve(String location, {bool external = false}) {
     final uri = _parseLocation(location);
+    return _resolveUri(uri, external: external);
+  }
+
+  /// Encodes a typed [intent] through its route's canonical primary Pattern.
+  _PreparedRoute prepareIntent<R>(CCRouteIntent<R> intent) {
+    final route = _requireActiveRoute(intent.routeId);
+    late final CCEncodedRouteArguments encoded;
+    try {
+      encoded = route.definition.codec.encode(intent.arguments);
+    } on CCRouteParameterError {
+      rethrow;
+    } catch (error) {
+      throw CCRouteParameterError(
+        'Route "${intent.routeId}" arguments could not be encoded: '
+        '${error.runtimeType}.',
+      );
+    }
+    final primary = route.definition.patterns.singleWhere(
+      (pattern) => pattern.primary,
+    );
+    final uri = _generateUri(route.definition.routeId, primary, encoded);
+    return _PreparedRoute(
+      routeId: route.definition.routeId,
+      uri: uri,
+      arguments: intent.arguments,
+      extra: encoded.extra,
+      presentation: route.definition.presentation,
+    );
+  }
+
+  /// Resolves and decodes a dynamic [location] under its trusted [origin].
+  _PreparedRoute prepareUri(Uri location, CCNavigationOrigin origin) {
+    final uri = _parseLocation(location.toString());
+    final resolved = _resolveUri(uri, external: origin.isExternal);
+    final route = _requireActiveRoute(resolved.routeId);
+    final arguments = decode(resolved);
+    return _PreparedRoute(
+      routeId: route.definition.routeId,
+      uri: uri,
+      arguments: arguments,
+      extra: null,
+      presentation: route.definition.presentation,
+    );
+  }
+
+  /// Resolves one already parsed [uri] without depending on registration order.
+  CCRouteLocation _resolveUri(Uri uri, {required bool external}) {
     final candidates = <_RouteCandidate>[];
     for (final route in _routes.values) {
       if (external && route.definition.deepLink == CCDeepLinkPolicy.disabled) {
@@ -184,11 +280,15 @@ final class _RouteRegistry {
 
   /// Verifies a generated Intent targets an installed active route.
   void checkIntent(CCRouteIntent<Object?> intent) {
-    final route = _routes[intent.routeId];
-    if (route == null) {
-      throw CCRouteNotFoundError(intent.routeId);
-    }
-    if (!route.active) throw CCRouteUnavailableError(intent.routeId);
+    _requireActiveRoute(intent.routeId);
+  }
+
+  /// Returns the installed active route identified by [routeId].
+  _RegisteredRoute _requireActiveRoute(String routeId) {
+    final route = _routes[routeId];
+    if (route == null) throw CCRouteNotFoundError(routeId);
+    if (!route.active) throw CCRouteUnavailableError(routeId);
+    return route;
   }
 
   /// Marks all routes owned by [componentId] unavailable.
@@ -390,6 +490,109 @@ final class _RouteRegistry {
     } on FormatException {
       throw const CCRouteNotFoundError('/');
     }
+  }
+
+  /// Generates a canonical URI from [pattern] and encoded route arguments.
+  Uri _generateUri(
+    String routeId,
+    CCRoutePattern pattern,
+    CCEncodedRouteArguments encoded,
+  ) {
+    final template = switch (pattern) {
+      CCPathPattern() => pattern.template,
+      CCUriPattern() => Uri.parse(pattern.template).path,
+      CCRegexPattern() => throw CCRouteParameterError(
+        'Route "$routeId" cannot generate an address from a regex Pattern.',
+      ),
+    };
+    final remaining = Map<String, String>.of(encoded.path);
+    final generatedSegments = <String>[];
+    for (final segment in _segments(template.isEmpty ? '/' : template)) {
+      if (segment.startsWith(':')) {
+        final name = segment.substring(1);
+        final value = remaining.remove(name);
+        if (value == null) {
+          throw CCRouteParameterError(
+            'Route "$routeId" is missing Path parameter "$name".',
+          );
+        }
+        generatedSegments.add(value);
+      } else if (segment.startsWith('*')) {
+        final name = segment.substring(1);
+        final value = remaining.remove(name);
+        if (value == null) {
+          throw CCRouteParameterError(
+            'Route "$routeId" is missing wildcard parameter "$name".',
+          );
+        }
+        if (value.isNotEmpty) generatedSegments.addAll(value.split('/'));
+      } else {
+        generatedSegments.add(segment);
+      }
+    }
+    if (remaining.isNotEmpty) {
+      final names = remaining.keys.toList()..sort();
+      throw CCRouteParameterError(
+        'Route "$routeId" encoded unknown Path parameters: '
+        '${names.join(', ')}.',
+      );
+    }
+
+    final query = _queryForUri(encoded.query);
+    final uri = switch (pattern) {
+      CCPathPattern() =>
+        generatedSegments.isEmpty
+            ? Uri(path: '/', queryParameters: query)
+            : Uri(
+                pathSegments: ['', ...generatedSegments],
+                queryParameters: query,
+              ),
+      CCUriPattern() => _generateStructuredUri(
+        Uri.parse(pattern.template),
+        generatedSegments,
+        query,
+      ),
+      CCRegexPattern() => throw StateError('Regex Pattern cannot be primary.'),
+    };
+    final match = switch (pattern) {
+      CCPathPattern() => _matchTemplate(
+        pattern.template,
+        pattern.constraints,
+        uri.pathSegments,
+      ),
+      CCUriPattern() => _matchUri(pattern, uri),
+      CCRegexPattern() => null,
+    };
+    if (match == null) {
+      throw CCRouteParameterError(
+        'Route "$routeId" encoded Path parameters violate its primary Pattern.',
+      );
+    }
+    return uri;
+  }
+
+  /// Builds an absolute URI while preserving explicit authority semantics.
+  Uri _generateStructuredUri(
+    Uri template,
+    List<String> pathSegments,
+    Map<String, Object>? query,
+  ) => Uri(
+    scheme: template.scheme,
+    host: template.host,
+    port: template.hasPort ? template.port : null,
+    pathSegments: pathSegments,
+    queryParameters: query,
+  );
+
+  /// Converts repeated Codec Query values to values accepted by [Uri].
+  Map<String, Object>? _queryForUri(Map<String, List<String>> query) {
+    if (query.isEmpty) return null;
+    return query.map(
+      (key, values) => MapEntry<String, Object>(
+        key,
+        values.length == 1 ? values.single : List<String>.of(values),
+      ),
+    );
   }
 
   /// Dispatches [pattern] to its structural or regular-expression matcher.

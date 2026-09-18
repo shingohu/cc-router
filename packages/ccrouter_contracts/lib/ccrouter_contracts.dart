@@ -8,6 +8,7 @@ export 'src/errors.dart';
 export 'src/invocation.dart';
 export 'src/lifecycle.dart';
 export 'src/messaging.dart';
+export 'src/navigation.dart';
 export 'src/route.dart';
 export 'src/route_pattern.dart';
 export 'src/route_presentation.dart';

@@ -171,7 +171,7 @@ dependencies:
 
 框架实现文件使用 Dart library privacy 隔离。需要跨文件共享私有 Runtime 构造、Active Runtime 和生命周期入口时，使用 `part`/`part of` 归入同一 library，不为跨文件调用而提升为 public。下划线私有成员承担真正的内部 API；仅通过 barrel export 的显式 `show`/`hide` 控制业务可见面不能替代 library privacy，但可以作为第二层约束。
 
-测试 Runtime 属于 `ccrouter_core` 的低层测试面，不通过 `ccrouter` 门面导出。正式版本由 `ccrouter_test` 提供受控测试宿主，业务生产代码禁止直接导入 `ccrouter_core/src/`。CI/Analyzer 必须启用依赖与实现导入检查，阻止业务 Package 绕过门面依赖内部包。
+测试 Runtime 属于 `ccrouter_core` 的低层测试面，不通过 `ccrouter` 门面导出。`ccrouter_core/test` 只保留 Core 包内部实现的低层回归测试；面向框架使用者、组件作者、测试宿主、Mock、导航测试和集成测试的新增测试代码与测试 API 统一放入独立的 `ccrouter_test` 包，由该包提供受控测试宿主、Override 和断言工具。业务生产代码禁止直接导入 `ccrouter_core/src/` 或依赖任何 Core 内部测试入口。CI/Analyzer 必须启用依赖与实现导入检查，阻止业务 Package 绕过门面依赖内部包。
 
 ---
 
@@ -553,6 +553,12 @@ URL -> RouteCodec -> Typed Route Args -> Route Factory -> Widget
 ```
 
 完整 URL 不天然等于外部 Deep Link，普通 Path 也不天然等于内部导航。类型安全 Intent 和应用内 `open` 使用内部 Origin；Universal Link、App Link、自定义 Scheme、通知 URI 和扫码输入通过受控 Ingress 使用外部 Origin 并执行 `CCDeepLinkPolicy`。业务可填写的导航 Source 只用于埋点，不能改变该信任属性。
+
+当前基础实现已经提供 Adapter-neutral 的 `CCNavigator`、主 Pattern 地址生成、Runtime 导航请求、Adapter 生命周期和 Pure Dart 内存 Adapter。Flutter `BuildContext`/Outlet 解析、`CCRouterApp` 与 GoRouter Adapter 在后续 Flutter 集成阶段接入，Core 不保存或解释 Flutter 对象。
+
+小屏列表、大屏左列表右详情属于自适应主从布局（Master-Detail/List-Detail），应使用同一组类型安全的列表/详情 Route Contract。小屏采用单列 Navigator 栈，大屏采用显式 List Outlet 与 Detail Outlet；只有在两个区域需要独立导航历史时才由 Shell 承载两个 Navigator。底部 Tab 等多个长期并行分支才使用 `StatefulShellRoute`，不能把所有主从布局都建模为 Stateful Shell。
+
+路由目的地必须与设备形态解耦。后续需要以 Window Size Class（compact/medium/expanded）、折痕与铰链等 Display Feature、Fold Posture、多 Window/Display Host、Adaptive Presentation Policy 和状态恢复标识描述呈现条件；同一 Route Contract 根据窗口条件选择单列、双栏、多 Pane、Dialog、Bottom Sheet 或全屏呈现。导航状态应按 Window/Host 隔离，而不是只依赖进程级单例栈。第一阶段优先实现窗口尺寸自适应、主从双 Outlet、Modal 自适应和旋转/调整大小状态保持，随后扩展折叠姿态、多窗口、指定 Pane 深链、Web 历史、PiP 和预测返回。
 
 复杂对象默认不直接塞进 URL。需要传递内存对象时可使用 `extra`，但必须标记 `localOnly`，不可用于 Deep Link、跨 Isolate 或状态恢复。
 
@@ -1004,7 +1010,7 @@ CCRouter.diagnostics.exportReport();
 
 1. Component Manifest 和生成 Component Registrar。
 2. Route 注册、Path/URI/Regex Pattern 匹配、Path/Query Codec。
-3. `CCRouter.navigator` 及 `push<T>()`、`replace()`、`go()`、`open()` 和 `pop<T>()`。
+3. `CCRouter.navigator` 及 `push<T>()`、`replace()`、`go()`、`open()`、`pop<T>()`、`maybePop()`、`popAndPush()`、`popUntil()` 和 `pushAndRemoveUntil()`。
 4. App、Session、Route 三种 Scope。
 5. 强类型 Service Registry 和构造函数 Factory。
 6. Command/Query 调度及基础 Middleware。
@@ -1014,6 +1020,8 @@ CCRouter.diagnostics.exportReport();
 10. 自动 Trace、内存诊断记录和脱敏策略。
 11. `CCRouterTest.run`、Service Override 和独立 Test Host。
 12. 生成冲突检查、依赖检查和契约文档。
+
+`*Named` 方法不纳入 API，`replaceRouteBelow`、`removeRoute` 和 `removeRouteBelow` 在 RouteEntry 句柄与结果语义明确前保持 Adapter 内部能力。`popUntilWithResult` 仍暂缓，待定义多 RouteEntry 结果传递和 Pop 拒绝语义后再实现。
 
 暂缓图形化 DevTools、Native/Isolate RPC、多 Engine 共享、事件持久化和动态交付。
 
