@@ -27,6 +27,34 @@ final class CCGoRouterForeignRouteHandle {
   final String? location;
 }
 
+/// Immutable identity for one explicitly bridged opaque UI surface.
+///
+/// Hosts use this handle for an [OverlayEntry], [MenuAnchor],
+/// `LocalHistoryEntry`, or a third-party overlay whose backend stack identity
+/// is not a Flutter `Route`. The handle is diagnostic only; it cannot create
+/// a CCRouter route, complete a navigation result, or close a Route Scope.
+final class CCGoRouterOpaqueUiHandle {
+  /// Creates a bridge-owned handle for one opaque UI surface.
+  const CCGoRouterOpaqueUiHandle._({
+    required this.backendEntryId,
+    required this.navigatorOutlet,
+    required this.hostId,
+    required this.location,
+  });
+
+  /// Stable backend identity allocated by the owning bridge.
+  final String backendEntryId;
+
+  /// Navigator Outlet whose UI is covered by this surface.
+  final String navigatorOutlet;
+
+  /// Optional Window or display host identity.
+  final String? hostId;
+
+  /// Optional diagnostic location or surface label.
+  final String? location;
+}
+
 /// Host-only bridge for explicitly reporting third-party Navigator routes.
 ///
 /// Use this when an independent or third-party Navigator cannot install a
@@ -45,8 +73,14 @@ final class CCGoRouterForeignRouteBridge {
       CCGoRouterForeignRouteHandle? previous,
     )
     publish,
+    required void Function(
+      CCNavigationBackendEventKind kind,
+      CCGoRouterOpaqueUiHandle handle,
+    )
+    publishOpaque,
   }) : _allocateBackendEntryId = allocateBackendEntryId,
-       _publish = publish;
+       _publish = publish,
+       _publishOpaque = publishOpaque;
 
   /// Allocates backend identities in the owning Adapter namespace.
   final String Function() _allocateBackendEntryId;
@@ -59,8 +93,18 @@ final class CCGoRouterForeignRouteBridge {
   )
   _publish;
 
+  /// Publishes opaque UI events through the owning Adapter event source.
+  final void Function(
+    CCNavigationBackendEventKind kind,
+    CCGoRouterOpaqueUiHandle handle,
+  )
+  _publishOpaque;
+
   /// Active handles owned by this bridge, indexed by backend identity.
   final Map<String, CCGoRouterForeignRouteHandle> _activeHandles = {};
+
+  /// Active opaque UI handles owned by this bridge.
+  final Map<String, CCGoRouterOpaqueUiHandle> _activeOpaqueHandles = {};
 
   /// Reports a foreign route entering one Navigator stack.
   CCGoRouterForeignRouteHandle push({
@@ -112,6 +156,41 @@ final class CCGoRouterForeignRouteBridge {
     _reportRemoval(CCNavigationBackendEventKind.remove, handle);
   }
 
+  /// Reports an opaque UI surface entering an Outlet without creating a Route.
+  ///
+  /// Use this for UI that is visually or interactively above a CCRouter page
+  /// but is not represented by a Navigator `Route`, such as an overlay menu,
+  /// a `LocalHistoryEntry`, or a third-party popup system. Removing the
+  /// surface later only updates diagnostics and never changes CCRouter's
+  /// managed RouteEntry stack.
+  CCGoRouterOpaqueUiHandle pushOpaque({
+    String navigatorOutlet = 'root',
+    String? hostId,
+    String? location,
+  }) {
+    _validateOutlet(navigatorOutlet);
+    final handle = CCGoRouterOpaqueUiHandle._(
+      backendEntryId: _allocateBackendEntryId(),
+      navigatorOutlet: navigatorOutlet,
+      hostId: hostId,
+      location: location,
+    );
+    _publishOpaque(CCNavigationBackendEventKind.push, handle);
+    _activeOpaqueHandles[handle.backendEntryId] = handle;
+    return handle;
+  }
+
+  /// Reports an opaque UI surface leaving an Outlet.
+  ///
+  /// The handle must be active and must have been created by this bridge.
+  /// Calling this twice, or passing a handle from another adapter, throws a
+  /// [CCNavigationAdapterError] instead of affecting any managed route.
+  void removeOpaque(CCGoRouterOpaqueUiHandle handle) {
+    _requireActiveOpaque(handle);
+    _publishOpaque(CCNavigationBackendEventKind.remove, handle);
+    _activeOpaqueHandles.remove(handle.backendEntryId);
+  }
+
   /// Reports and forgets one active bridge-owned handle.
   void _reportRemoval(
     CCNavigationBackendEventKind kind,
@@ -138,8 +217,18 @@ final class CCGoRouterForeignRouteBridge {
     }
   }
 
+  /// Ensures an opaque handle belongs to this bridge and is still active.
+  void _requireActiveOpaque(CCGoRouterOpaqueUiHandle handle) {
+    if (!identical(_activeOpaqueHandles[handle.backendEntryId], handle)) {
+      throw const CCNavigationAdapterError(
+        'Opaque UI handle is inactive or belongs to another bridge.',
+      );
+    }
+  }
+
   /// Forgets active host handles when the owning Adapter is disposed.
   void _dispose() {
     _activeHandles.clear();
+    _activeOpaqueHandles.clear();
   }
 }

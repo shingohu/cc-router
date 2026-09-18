@@ -71,6 +71,7 @@ final class CCGoRouterAdapter
     _foreignRouteBridge = CCGoRouterForeignRouteBridge._(
       allocateBackendEntryId: _nextBackendEntryId,
       publish: _recordForeignBridgeEvent,
+      publishOpaque: _recordOpaqueBridgeEvent,
     );
     for (final observer in _observers) {
       _observerRemovers.add(observer.addListener(_recordLifecycleEvent));
@@ -756,6 +757,34 @@ final class CCGoRouterAdapter
         navigatorOutlet: handle.navigatorOutlet,
         sequence: operationSequence,
         owner: CCBackendEntryOwner.foreign,
+        placement: CCRoutePlacement(navigatorOutlet: handle.navigatorOutlet),
+        location: handle.location,
+        timestamp: DateTime.now(),
+      ),
+    );
+  }
+
+  /// Publishes one opaque UI transition without creating a managed route.
+  ///
+  /// Opaque surfaces include overlays, menus, `LocalHistoryEntry`, and
+  /// third-party popup systems whose lifecycle cannot be represented as a
+  /// Navigator `Route`. They remain isolated from RouteEntry and result
+  /// bookkeeping while still appearing in backend diagnostics.
+  void _recordOpaqueBridgeEvent(
+    CCNavigationBackendEventKind kind,
+    CCGoRouterOpaqueUiHandle handle,
+  ) {
+    _ensureAvailable();
+    final operationSequence = ++_backendOperationSequence;
+    _publishBackendEvent(
+      CCNavigationBackendEvent(
+        kind: kind,
+        backendEntryId: handle.backendEntryId,
+        backendOperationId: '$_backendAdapterId-operation-$operationSequence',
+        hostId: handle.hostId,
+        navigatorOutlet: handle.navigatorOutlet,
+        sequence: operationSequence,
+        owner: CCBackendEntryOwner.opaque,
         placement: CCRoutePlacement(navigatorOutlet: handle.navigatorOutlet),
         location: handle.location,
         timestamp: DateTime.now(),

@@ -377,6 +377,57 @@ void main() {
   );
 
   test(
+    'tracks opaque backend Entries without changing managed Route Entries',
+    () async {
+      final adapter = BackendEventNavigationAdapter();
+      final runtime = CCRouterRuntime.forTesting(
+        navigationAdapter: adapter,
+        components: [
+          routeComponent(
+            'orders',
+            (registry) => registry.registerRoute(pathRoute()),
+          ),
+        ],
+      );
+      await runtime.initialize();
+      await runtime.goRoute(
+        const TestIntent<void>('orders.detail', RouteArgs('1')),
+      );
+      final managedEntry = runtime.activeRouteEntries.single;
+
+      adapter.emit(
+        CCNavigationBackendEventKind.push,
+        backendEntryId: 'opaque-1',
+        backendOperationId: 'opaque-op-1',
+        owner: CCBackendEntryOwner.opaque,
+        sequence: 1,
+      );
+      expect(
+        runtime.activeRouteEntries.single.routeEntryId,
+        managedEntry.routeEntryId,
+      );
+      expect(
+        runtime.activeBackendEntries.single.owner,
+        CCBackendEntryOwner.opaque,
+      );
+
+      adapter.emit(
+        CCNavigationBackendEventKind.remove,
+        backendEntryId: 'opaque-1',
+        backendOperationId: 'opaque-op-2',
+        owner: CCBackendEntryOwner.opaque,
+        sequence: 2,
+      );
+      expect(
+        runtime.activeRouteEntries.single.routeEntryId,
+        managedEntry.routeEntryId,
+      );
+      expect(runtime.activeBackendEntries, isEmpty);
+      await runtime.dispose();
+    },
+  );
+
+  test(
     'creates independent Route Entries and scopes for repeated pushes',
     () async {
       final adapter = CCMemoryNavigationAdapter();

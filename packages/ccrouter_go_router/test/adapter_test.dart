@@ -83,6 +83,71 @@ void main() {
     await adapter.dispose();
   });
 
+  test(
+    'opaque UI bridge reports isolated lifecycle without navigating',
+    () async {
+      final router = GoRouter(
+        routes: [GoRoute(path: '/', builder: (_, _) => const SizedBox())],
+      );
+      final adapter = CCGoRouterAdapter(router: router);
+      final events = <CCNavigationBackendEvent>[];
+      adapter.addBackendEventListener(events.add);
+      addTearDown(router.dispose);
+      await adapter.initialize(const []);
+      final locationBeforeBridge = router
+          .routerDelegate
+          .currentConfiguration
+          .uri
+          .toString();
+
+      final opaque = adapter.foreignRouteBridge.pushOpaque(
+        navigatorOutlet: 'root',
+        hostId: 'window.main',
+        location: 'menu:account',
+      );
+
+      final otherRouter = GoRouter(
+        routes: [GoRoute(path: '/', builder: (_, _) => const SizedBox())],
+      );
+      final otherAdapter = CCGoRouterAdapter(router: otherRouter);
+      addTearDown(otherRouter.dispose);
+      await otherAdapter.initialize(const []);
+      expect(
+        () => otherAdapter.foreignRouteBridge.removeOpaque(opaque),
+        throwsA(isA<CCNavigationAdapterError>()),
+      );
+      await otherAdapter.dispose();
+
+      adapter.foreignRouteBridge.removeOpaque(opaque);
+
+      expect(events.map((event) => event.kind), [
+        CCNavigationBackendEventKind.push,
+        CCNavigationBackendEventKind.remove,
+      ]);
+      expect(
+        events.every((event) => event.owner == CCBackendEntryOwner.opaque),
+        isTrue,
+      );
+      expect(events.every((event) => event.navigationId == null), isTrue);
+      expect(events.every((event) => event.routeId == null), isTrue);
+      expect(
+        events.every((event) => event.backendEntryId == opaque.backendEntryId),
+        isTrue,
+      );
+      expect(events.every((event) => event.navigatorOutlet == 'root'), isTrue);
+      expect(events.every((event) => event.hostId == 'window.main'), isTrue);
+      expect(
+        router.routerDelegate.currentConfiguration.uri.toString(),
+        locationBeforeBridge,
+      );
+      expect(
+        () => adapter.foreignRouteBridge.removeOpaque(opaque),
+        throwsA(isA<CCNavigationAdapterError>()),
+      );
+      await adapter.dispose();
+    },
+  );
+
   testWidgets('maps typed Push and Pop through the supplied GoRouter', (
     tester,
   ) async {
