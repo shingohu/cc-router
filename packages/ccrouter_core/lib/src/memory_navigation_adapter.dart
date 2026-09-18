@@ -205,14 +205,27 @@ final class CCMemoryNavigationAdapter
   /// Pops a removable entry and completes its pending result.
   @override
   void pop({Object? result}) {
-    _ensureAvailable();
-    if (!canPop()) {
+    final outcome = popOutcome(result: result);
+    if (!outcome.handled) {
       throw const CCNavigationAdapterError(
         'The memory navigation stack cannot pop its current root.',
       );
     }
-    final entry = _entries.removeLast();
-    entry.result?.complete(result);
+  }
+
+  /// Pops the current managed entry and reports its ownership synchronously.
+  @override
+  CCPopOutcome popOutcome({Object? result}) {
+    _ensureAvailable();
+    if (!canPop()) {
+      return const CCPopOutcome(handled: false);
+    }
+    _removeCurrent(result: result);
+    return const CCPopOutcome(
+      handled: true,
+      removedOwner: CCPopRemovedOwner.managed,
+      resultAvailable: true,
+    );
   }
 
   /// Whether a non-root or result-bearing entry can be removed.

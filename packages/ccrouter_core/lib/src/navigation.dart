@@ -191,7 +191,17 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
   void popRoute<R>({R? result}) {
     _ensureInitialized();
     try {
-      _requiredNavigationAdapter.pop(result: result);
+      final adapter = _requiredNavigationAdapter;
+      if (adapter is CCNavigationPopCoordinator) {
+        final coordinator = adapter as CCNavigationPopCoordinator;
+        final outcome = coordinator.popOutcome(result: result);
+        _applyManagedPopOutcome(outcome);
+        return;
+      }
+      // Older adapters do not expose ownership-aware direct Pop results. Keep
+      // their historical behavior while newer adapters use the coordinator
+      // above to isolate foreign and opaque backend entries.
+      adapter.pop(result: result);
       _removeTopRouteEntry(reason: 'pop', preserveRoot: true);
     } on CCRouterError {
       rethrow;

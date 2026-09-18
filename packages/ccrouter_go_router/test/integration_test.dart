@@ -274,6 +274,19 @@ void main() {
       await foreignRoute;
       expectManagedEntryUnchanged();
 
+      final secondForeignRoute = Navigator.of(managedContext).push<void>(
+        MaterialPageRoute<void>(
+          builder: (_) =>
+              const Text('foreign-page-2', key: ValueKey('foreign-page-2')),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expectManagedEntryUnchanged();
+      runtime.popRoute();
+      await tester.pumpAndSettle();
+      await secondForeignRoute;
+      expectManagedEntryUnchanged();
+
       Navigator.of(managedContext).pop<String>('managed-result');
       await tester.pumpAndSettle();
       expect(await managedResult, 'managed-result');

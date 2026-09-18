@@ -458,16 +458,38 @@ final class CCGoRouterAdapter
   /// Pops the active GoRouter Navigator route with an optional result.
   @override
   void pop({Object? result}) {
-    _ensureAvailable();
-    final navigator = _activeNavigator;
-    if (navigator == null) {
+    final outcome = popOutcome(result: result);
+    if (!outcome.handled) {
       throw const CCNavigationAdapterError(
-        'GoRouter has no active Navigator for the current Outlet.',
+        'GoRouter has no removable active Navigator route.',
       );
     }
+  }
+
+  /// Pops the active GoRouter route and reports backend ownership.
+  ///
+  /// Navigator observer callbacks are emitted while the adapter's tracked
+  /// entries still contain the route, allowing a direct business Pop to
+  /// distinguish a foreign Popup/Route from a CCRouter-managed entry.
+  @override
+  CCPopOutcome popOutcome({Object? result}) {
+    _ensureAvailable();
+    final navigator = _activeNavigator;
+    if (navigator == null || !navigator.canPop()) {
+      return const CCPopOutcome(handled: false);
+    }
+    _lastPoppedBackendEntryId = null;
+    _lastPoppedOwner = CCPopRemovedOwner.none;
     _expectBackendEvent(CCGoRouterNavigationEventKind.pop);
     navigator.pop<Object?>(result);
+    _discardExpectedBackendEvent(CCGoRouterNavigationEventKind.pop);
     _removeTrackedEntry();
+    return CCPopOutcome(
+      handled: true,
+      removedBackendEntryId: _lastPoppedBackendEntryId,
+      removedOwner: _lastPoppedOwner,
+      resultAvailable: _lastPoppedOwner == CCPopRemovedOwner.managed,
+    );
   }
 
   /// Returns whether GoRouter can pop its current Navigator stack.

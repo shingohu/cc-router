@@ -292,4 +292,13 @@ abstract interface class CCNavigationBackendSnapshotSource {
 abstract interface class CCNavigationPopCoordinator {
   /// Coordinates one Pop and returns the removed backend Entry ownership.
   Future<CCPopOutcome> maybePopOutcome({Object? result});
+
+  /// Executes an explicit business Pop and returns the removed ownership.
+  ///
+  /// Unlike [maybePopOutcome], this operation is initiated by
+  /// `CCRouter.navigator.pop`. Adapters must report a foreign or opaque entry
+  /// without allowing Runtime to close the underlying managed Route Entry.
+  /// Returning `handled: false` preserves the adapter's normal root-Pop
+  /// rejection semantics.
+  CCPopOutcome popOutcome({Object? result});
 }
