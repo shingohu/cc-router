@@ -1071,9 +1071,10 @@ imperative API 接入。由于 GoRouter 没有完全对应的公开原子组合 
 一次 Runtime 操作内完成后端 Pop/Push 序列，并保持返回值与 Predicate 语义。
 GoRouter Adapter 通过 `navigatorKeys` 接收应用拥有的 Outlet Navigator，并可把带有
 `shellId`/`navigatorOutlet` placement 的子路由映射到已有 `ShellRoute` Navigator；
-未提供对应 key 时初始化会明确报告能力错误。`CCRouteKind.shell`、Shell 自身的
-生成与 `StatefulShellRoute` 分支编排仍待专用 Shell binding 接入，不会静默把目标栈
-改成根 Navigator。
+也可以通过 `CCGoRouterShellBinding` 一次声明 Shell 和全部分支 key。未提供对应 key
+或 Shell 绑定不完整时初始化会明确报告能力错误。已有 `StatefulShellRoute` 的分支
+可以通过 `go` 切换并保留 GoRouter 自己的分支状态；`CCRouteKind.shell`、Shell 自身
+的生成仍不由 Adapter 创建，不会静默把目标栈改成根 Navigator。
 
 - 主 Pattern、别名、Query、Extra 和返回值。
 - Shell、Outlet 和生命周期同步。

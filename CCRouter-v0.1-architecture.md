@@ -557,8 +557,10 @@ URL -> RouteCodec -> Typed Route Args -> Route Factory -> Widget
 当前基础实现已经提供 Adapter-neutral 的 `CCNavigator`、主 Pattern 地址生成、Runtime 导航请求、Adapter 生命周期、Pure Dart 内存 Adapter、可选 `CCRouterApp`、固定来源的 `CCDeepLinkIngress` 和独立的 `ccrouter_go_router` 适配器。GoRouter 适配器覆盖 Page 路由、BottomSheet/Dialog 模态 Page、已有 `ShellRoute` 的 Outlet Navigator 及基础栈操作；Shell 自身生成、`StatefulShellRoute` 分支编排和平台事件监听仍在后续 Flutter 集成阶段接入，Core 不保存或解释 Flutter 对象。模态路由必须在绑定的 `GoRoute.pageBuilder` 中显式返回 `CCGoRouterBottomSheetPage` 或 `CCGoRouterDialogPage`，并声明匹配的 `presentationKind`，适配器不会把普通 Page 静默降级为模态展示。
 GoRouter Adapter 通过 `navigatorKeys` 接收应用拥有的 Outlet Navigator，可将带有
 `shellId`/`navigatorOutlet` placement 的子路由绑定到已有 `ShellRoute` Navigator；
-未提供对应 key 时初始化会拒绝。Shell 自身和 `StatefulShellRoute` 分支编排仍待专用
-Shell binding 接入，这避免导航请求错误地落到根 Navigator。
+也可以通过 `CCGoRouterShellBinding` 一次声明 Shell 和全部分支 key。未提供对应 key
+或绑定不完整时初始化会拒绝；已有 `StatefulShellRoute` 可通过 `go` 切换分支并保留
+GoRouter 自己的分支状态。Shell 自身生成仍不由 Adapter 创建，这避免导航请求错误地
+落到根 Navigator。
 
 小屏列表、大屏左列表右详情属于自适应主从布局（Master-Detail/List-Detail），应使用同一组类型安全的列表/详情 Route Contract。小屏采用单列 Navigator 栈，大屏采用显式 List Outlet 与 Detail Outlet；只有在两个区域需要独立导航历史时才由 Shell 承载两个 Navigator。底部 Tab 等多个长期并行分支才使用 `StatefulShellRoute`，不能把所有主从布局都建模为 Stateful Shell。
 

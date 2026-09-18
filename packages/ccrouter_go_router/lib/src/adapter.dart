@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 
 import 'route_binding.dart';
+import 'shell_binding.dart';
 
 /// Adapts CCRouter navigation requests to an externally configured [GoRouter].
 ///
@@ -17,13 +18,31 @@ import 'route_binding.dart';
 /// Page type. The adapter does not rewrite application-owned GoRoutes.
 final class CCGoRouterAdapter implements CCNavigationAdapter {
   /// Creates an adapter around an application-owned [router].
-  CCGoRouterAdapter({
+  factory CCGoRouterAdapter({
     required GoRouter router,
     Iterable<CCGoRouterRouteBinding> bindings = const [],
+    Iterable<CCGoRouterShellBinding> shells = const [],
     Map<String, GlobalKey<NavigatorState>> navigatorKeys = const {},
+  }) {
+    final shellList = List<CCGoRouterShellBinding>.unmodifiable(shells);
+    return CCGoRouterAdapter._(
+      router: router,
+      bindings: bindings,
+      shells: shellList,
+      navigatorKeys: navigatorKeys,
+    );
+  }
+
+  /// Internal constructor used after iterable inputs have been snapshotted.
+  CCGoRouterAdapter._({
+    required GoRouter router,
+    required Iterable<CCGoRouterRouteBinding> bindings,
+    required Iterable<CCGoRouterShellBinding> shells,
+    required Map<String, GlobalKey<NavigatorState>> navigatorKeys,
   }) : _router = router,
        _bindings = List.unmodifiable(bindings),
-       _navigatorKeys = Map.unmodifiable(navigatorKeys);
+       _shells = List.unmodifiable(shells),
+       _navigatorKeys = _mergeNavigatorKeys(navigatorKeys, shells);
 
   /// GoRouter instance that receives translated navigation operations.
   GoRouter get router => _router;
@@ -33,6 +52,9 @@ final class CCGoRouterAdapter implements CCNavigationAdapter {
 
   /// Component route bindings used to validate the application route table.
   final List<CCGoRouterRouteBinding> _bindings;
+
+  /// Application-owned Shell bindings used to validate placement metadata.
+  final List<CCGoRouterShellBinding> _shells;
 
   /// Application-owned Navigator keys indexed by CCRouter Outlet name.
   final Map<String, GlobalKey<NavigatorState>> _navigatorKeys;
@@ -61,6 +83,9 @@ final class CCGoRouterAdapter implements CCNavigationAdapter {
   /// Navigator keys used to resolve explicit non-root Outlet targets.
   Map<String, GlobalKey<NavigatorState>> get navigatorKeys => _navigatorKeys;
 
+  /// Application-owned Shell bindings supplied for Runtime route placement.
+  List<CCGoRouterShellBinding> get shells => _shells;
+
   /// Initializes the adapter with Runtime-validated route metadata.
   ///
   /// The adapter validates presentation capabilities before accepting any
@@ -75,6 +100,7 @@ final class CCGoRouterAdapter implements CCNavigationAdapter {
       );
     }
     final routeIds = <String>{};
+    _validateShellBindings();
     for (final route in routes) {
       if (!routeIds.add(route.routeId)) {
         throw CCNavigationAdapterError(
@@ -392,6 +418,71 @@ final class CCGoRouterAdapter implements CCNavigationAdapter {
         '"${placement.navigatorOutlet}" without a Navigator key.',
       );
     }
+    if (placement.shellId != null &&
+        !_shells.any((shell) => shell.shellId == placement.shellId)) {
+      throw CCNavigationAdapterError(
+        'GoRouter route "${route.routeId}" targets unknown Shell '
+        '"${placement.shellId}".',
+      );
+    }
+  }
+
+  /// Validates Shell type and the complete set of declared branch keys.
+  void _validateShellBindings() {
+    final shellIds = <String>{};
+    for (final binding in _shells) {
+      if (!shellIds.add(binding.shellId)) {
+        throw CCNavigationAdapterError(
+          'Duplicate GoRouter Shell binding "${binding.shellId}".',
+        );
+      }
+      final route = binding.route;
+      if (route is ShellRoute) {
+        if (binding.outlets.length != 1 ||
+            !binding.outlets.values.contains(route.navigatorKey)) {
+          throw CCNavigationAdapterError(
+            'Shell "${binding.shellId}" must bind its ShellRoute navigator '
+            'key to exactly one Outlet.',
+          );
+        }
+      } else if (route is StatefulShellRoute) {
+        final expected = route.branches.map((branch) => branch.navigatorKey);
+        if (binding.outlets.length != route.branches.length ||
+            !binding.outlets.values.toSet().containsAll(expected)) {
+          throw CCNavigationAdapterError(
+            'Stateful Shell "${binding.shellId}" must bind every branch '
+            'Navigator key to a unique Outlet.',
+          );
+        }
+      } else {
+        throw CCNavigationAdapterError(
+          'GoRouter Shell binding "${binding.shellId}" must reference '
+          'ShellRoute or StatefulShellRoute.',
+        );
+      }
+    }
+  }
+
+  /// Combines explicit Outlet keys with keys declared by Shell bindings.
+  static Map<String, GlobalKey<NavigatorState>> _mergeNavigatorKeys(
+    Map<String, GlobalKey<NavigatorState>> explicit,
+    Iterable<CCGoRouterShellBinding> shells,
+  ) {
+    final merged = <String, GlobalKey<NavigatorState>>{...explicit};
+    for (final shell in shells) {
+      for (final entry in shell.outlets.entries) {
+        final existing = merged[entry.key];
+        if (existing != null && !identical(existing, entry.value)) {
+          throw ArgumentError.value(
+            entry.key,
+            'navigatorKeys',
+            'Outlet is declared with different Navigator keys.',
+          );
+        }
+        merged[entry.key] = entry.value;
+      }
+    }
+    return Map.unmodifiable(merged);
   }
 
   /// Finds the Navigator belonging to the currently tracked route.

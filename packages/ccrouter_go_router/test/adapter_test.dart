@@ -378,22 +378,24 @@ void main() {
       path: '/detail',
       builder: (_, _) => const Text('detail'),
     );
-    final router = GoRouter(
-      initialLocation: '/home',
+    final shellRoute = ShellRoute(
+      navigatorKey: shellNavigatorKey,
+      builder: (_, _, child) => Scaffold(body: child),
       routes: [
-        ShellRoute(
-          navigatorKey: shellNavigatorKey,
-          builder: (_, _, child) => Scaffold(body: child),
-          routes: [
-            GoRoute(path: '/home', builder: (_, _) => const Text('home')),
-            detailRoute,
-          ],
-        ),
+        GoRoute(path: '/home', builder: (_, _) => const Text('home')),
+        detailRoute,
       ],
     );
+    final router = GoRouter(initialLocation: '/home', routes: [shellRoute]);
     final adapter = CCGoRouterAdapter(
       router: router,
-      navigatorKeys: {'detail': shellNavigatorKey},
+      shells: [
+        CCGoRouterShellBinding(
+          shellId: 'workspace-shell',
+          route: shellRoute,
+          outlets: {'detail': shellNavigatorKey},
+        ),
+      ],
       bindings: [
         CCGoRouterRouteBinding(routeId: 'detail', goRoute: detailRoute),
       ],
@@ -431,6 +433,77 @@ void main() {
     await tester.pumpAndSettle();
     expect(await pushed, 'closed');
     expect(find.text('home'), findsOneWidget);
+  });
+
+  testWidgets('binds StatefulShellRoute branch Navigators by Outlet', (
+    tester,
+  ) async {
+    final homeKey = GlobalKey<NavigatorState>();
+    final settingsKey = GlobalKey<NavigatorState>();
+    final homeRoute = GoRoute(
+      path: '/home',
+      builder: (_, _) => const Text('home'),
+    );
+    final settingsDetailRoute = GoRoute(
+      path: 'detail',
+      builder: (_, _) => const Text('settings-detail'),
+    );
+    final settingsRoute = GoRoute(
+      path: '/settings',
+      builder: (_, _) => const Text('settings'),
+      routes: [settingsDetailRoute],
+    );
+    final shellRoute = StatefulShellRoute.indexedStack(
+      builder: (_, _, navigationShell) => Scaffold(body: navigationShell),
+      branches: [
+        StatefulShellBranch(navigatorKey: homeKey, routes: [homeRoute]),
+        StatefulShellBranch(navigatorKey: settingsKey, routes: [settingsRoute]),
+      ],
+    );
+    final router = GoRouter(initialLocation: '/home', routes: [shellRoute]);
+    final adapter = CCGoRouterAdapter(
+      router: router,
+      shells: [
+        CCGoRouterShellBinding(
+          shellId: 'tabs',
+          route: shellRoute,
+          outlets: {'home': homeKey, 'settings': settingsKey},
+        ),
+      ],
+      bindings: [
+        CCGoRouterRouteBinding(
+          routeId: 'settings.detail',
+          goRoute: settingsDetailRoute,
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
+    const placement = CCRoutePlacement(
+      shellId: 'tabs',
+      navigatorOutlet: 'settings',
+    );
+    await adapter.initialize([
+      CCNavigationRoute(
+        routeId: 'settings.detail',
+        patterns: [const CCPathPattern('/settings/detail', primary: true)],
+        presentation: const CCPagePresentation(),
+        deepLink: CCDeepLinkPolicy.disabled,
+        placement: placement,
+      ),
+    ]);
+    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    await tester.pumpAndSettle();
+
+    await adapter.navigate(
+      request(
+        id: 'settings.detail',
+        operation: CCNavigationOperation.go,
+        uri: Uri.parse('/settings/detail'),
+        placement: placement,
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('settings-detail'), findsOneWidget);
   });
 
   testWidgets('supports popAndPush and completes the removed result', (
