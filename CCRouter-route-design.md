@@ -652,6 +652,48 @@ cancel    终止导航，返回标准取消原因
 - 错误、取消和重定向均进入 Trace 与路由埋点事件。
 - 所有带目标路由的操作都经过拦截器，包括 Push、Replace、Go、Reset、Open、PopAndPush 和 PushAndRemoveUntil；Pop、MaybePop、PopUntil 只有栈移除目标，不触发目标路由拦截器。
 
+### 11.1 与常见注解路由框架的能力对齐
+
+当前拦截器的基础语义已经覆盖常见注解路由框架的主要前置拦截场景，但不承诺与具体框架 API 逐项兼容：
+
+已具备：
+
+- 全局拦截器和组件路由级拦截器。
+- 异步 `proceed`、`cancel` 和 Typed Intent/URI `redirect`。
+- 登录、权限、Feature Flag、维护模式、首次引导和组件激活状态检查。
+- `push`、`replace`、`go`、`reset`、`open`、`popAndPush` 和 `pushAndRemoveUntil` 的统一前置管线。
+- 保留原始 `navigationId`、`origin` 和 `source` 的重定向，以及最大重定向次数保护。
+
+仍待后续扩展：
+
+- 由注解和生成器自动生成 `interceptorIds`，减少手工注册。
+- 显式拦截器优先级配置；当前全局拦截器按稳定 ID 排序，路由拦截器按声明顺序执行。
+- 独立的 `CCPopGuard`，处理系统返回、预测返回、手势返回和表单保护。
+- 导航完成后的 After Hook，以及拦截器耗时、决策和失败原因的完整诊断投影。
+- 拦截器专用错误类型和真正执行的 Deadline/Timeout。
+
+因此，CCRouter 对齐的是拦截器的行为语义和类型安全边界，不复制 ff_annotation_route 或 TheRouter 的具体 API 形状。
+
+### 11.2 重复导航与防抖策略
+
+重复导航保护属于 Runtime 的并发策略，不作为普通 Route Interceptor 的临时实现。默认策略必须允许合法的重复页面：同一路由、同一 URI 连续 Push 也可以创建两个独立的 RouteEntry、Route Scope 和返回值通道。
+
+后续为路由提供可选的导航去重策略：
+
+```text
+allow           每次调用都执行，默认值。
+rejectDuplicate 相同导航正在执行时拒绝后续调用。
+singleFlight    相同导航正在执行时复用第一次调用的 Future。
+```
+
+重复判断使用结构化 Key：
+
+```text
+hostId + navigatorOutlet + operation + routeId + normalizedUri
+```
+
+相同路由但不同 Path、Query 或 Extra 参数不能被误判为重复；不同 Host、Window、Shell 或 Outlet 也必须隔离。去重状态在拦截取消、重定向失败、Adapter 失败、页面 Pop 和 Runtime dispose 时释放。该策略不采用全局固定时间 debounce，避免延迟正常导航或误伤合法的重复 Push。
+
 ---
 
 ## 12. Navigation Adapter
