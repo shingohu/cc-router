@@ -57,6 +57,13 @@ abstract interface class CCRegistry {
   /// is injected by the Runtime and cannot be supplied by component code.
   void registerRoute<A, R>(CCRouteDefinition<A, R> definition);
 
+  /// Registers a route interceptor owned by the current component.
+  ///
+  /// Route definitions refer to [id] in their `interceptorIds` list. The
+  /// interceptor is invoked only after global interceptors and cannot access
+  /// the Runtime or navigation Adapter directly.
+  void registerRouteInterceptor(String id, CCNavigationInterceptor interceptor);
+
   /// Registers a Shell definition owned by the current component.
   ///
   /// Generated Shell registrars use this for persistent containers and
@@ -117,6 +124,19 @@ final class _CCComponentRegistry implements CCRegistry {
   @override
   void registerRoute<A, R>(CCRouteDefinition<A, R> definition) {
     runtime._registerRouteForComponent(ownerComponentId, definition);
+  }
+
+  /// Registers a route interceptor on behalf of the owning component.
+  @override
+  void registerRouteInterceptor(
+    String id,
+    CCNavigationInterceptor interceptor,
+  ) {
+    runtime._registerRouteInterceptorForComponent(
+      ownerComponentId,
+      id,
+      interceptor,
+    );
   }
 
   /// Registers a Shell definition on behalf of the owning component.

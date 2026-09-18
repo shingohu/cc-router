@@ -1052,6 +1052,13 @@ Adapter 实现者可以使用单独导出的：
 - RouteEntry、返回值和生命周期。
 - Trace 与 Telemetry Observer。
 
+当前已实现 Route Registry 的两层拦截器基础管线：应用宿主通过
+`CCGlobalNavigationInterceptor` 提供全局策略，组件通过
+`CCRegistry.registerRouteInterceptor` 注册路由策略，`CCRouteDefinition.interceptorIds`
+保留路由级声明顺序。拦截结果支持继续、类型安全 Intent/URI 重定向和取消；重定向
+沿用原始 `navigationId` 与 `CCNavigationOrigin`，并由 Runtime 限制最大次数。RouteEntry、
+Route Scope、拦截上下文的 Deadline 配置和完整遥测投影仍待后续实现。
+
 ### 阶段 C：生成器
 
 - 页面和构造参数分析。

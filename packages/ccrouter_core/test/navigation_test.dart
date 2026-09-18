@@ -116,6 +116,25 @@ final class FailingNavigationAdapter implements CCNavigationAdapter {
   Future<void> dispose() async {}
 }
 
+final class TestNavigationInterceptor implements CCNavigationInterceptor {
+  TestNavigationInterceptor(this.id, this.onIntercept, this.calls);
+
+  final String id;
+  final CCNavigationInterception Function(
+    CCNavigationInterceptorContext context,
+  )
+  onIntercept;
+  final List<String> calls;
+
+  @override
+  Future<CCNavigationInterception> intercept(
+    CCNavigationInterceptorContext context,
+  ) async {
+    calls.add('$id:${context.request.routeId}');
+    return onIntercept(context);
+  }
+}
+
 CCComponentManifest routeComponent(
   String id,
   void Function(CCRegistry) register,
@@ -129,6 +148,7 @@ CCRouteDefinition<RouteArgs, String> pathRoute({
   String routeId = 'orders.detail',
   String path = '/orders/:value',
   CCDeepLinkPolicy deepLink = CCDeepLinkPolicy.disabled,
+  List<String> interceptorIds = const [],
 }) => CCRouteDefinition<RouteArgs, String>(
   routeId: routeId,
   patterns: [
@@ -136,9 +156,197 @@ CCRouteDefinition<RouteArgs, String> pathRoute({
   ],
   codec: const RouteArgsCodec(),
   deepLink: deepLink,
+  interceptorIds: interceptorIds,
 );
 
 void main() {
+  test('runs global and route interceptors in deterministic order', () async {
+    final calls = <String>[];
+    final runtime = CCRouterRuntime.forTesting(
+      navigationAdapter: CCMemoryNavigationAdapter(),
+      globalInterceptors: [
+        CCGlobalNavigationInterceptor(
+          id: 'global.z',
+          interceptor: TestNavigationInterceptor(
+            'global.z',
+            (_) => const CCNavigationProceed(),
+            calls,
+          ),
+        ),
+        CCGlobalNavigationInterceptor(
+          id: 'global.a',
+          interceptor: TestNavigationInterceptor(
+            'global.a',
+            (_) => const CCNavigationProceed(),
+            calls,
+          ),
+        ),
+      ],
+      components: [
+        routeComponent('orders', (registry) {
+          registry.registerRouteInterceptor(
+            'route.first',
+            TestNavigationInterceptor(
+              'route.first',
+              (_) => const CCNavigationProceed(),
+              calls,
+            ),
+          );
+          registry.registerRouteInterceptor(
+            'route.second',
+            TestNavigationInterceptor(
+              'route.second',
+              (_) => const CCNavigationProceed(),
+              calls,
+            ),
+          );
+          registry.registerRoute(
+            pathRoute(interceptorIds: ['route.first', 'route.second']),
+          );
+        }),
+      ],
+    );
+    await runtime.initialize();
+
+    await runtime.goRoute(
+      const TestIntent<void>('orders.detail', RouteArgs('42')),
+    );
+
+    expect(calls, [
+      'global.a:orders.detail',
+      'global.z:orders.detail',
+      'route.first:orders.detail',
+      'route.second:orders.detail',
+    ]);
+    await runtime.dispose();
+  });
+
+  test('redirect preserves origin and navigation identity', () async {
+    final calls = <String>[];
+    final seenIds = <String>[];
+    final source = const CCNavigationSource.deepLink('platform');
+    final adapter = CCMemoryNavigationAdapter();
+    final runtime = CCRouterRuntime.forTesting(
+      navigationAdapter: adapter,
+      components: [
+        routeComponent('orders', (registry) {
+          registry.registerRouteInterceptor(
+            'orders.redirect',
+            TestNavigationInterceptor('orders.redirect', (context) {
+              seenIds.add(context.request.navigationId);
+              if (context.request.routeId == 'orders.detail') {
+                return CCNavigationRedirect.toIntent(
+                  const TestIntent<Object?>('auth.login', RouteArgs('1')),
+                );
+              }
+              return const CCNavigationProceed();
+            }, calls),
+          );
+          registry.registerRoute(
+            pathRoute(
+              routeId: 'orders.detail',
+              deepLink: CCDeepLinkPolicy.enabled,
+              interceptorIds: ['orders.redirect'],
+            ),
+          );
+          registry.registerRoute(
+            pathRoute(
+              routeId: 'auth.login',
+              path: '/auth/:value',
+              deepLink: CCDeepLinkPolicy.enabled,
+            ),
+          );
+        }),
+      ],
+    );
+    await runtime.initialize();
+
+    await runtime.openRoute(
+      Uri.parse('/orders/42'),
+      origin: CCNavigationOrigin.externalPlatform,
+      source: source,
+    );
+
+    expect(adapter.currentRequest?.routeId, 'auth.login');
+    expect(adapter.currentRequest?.origin, CCNavigationOrigin.externalPlatform);
+    expect(adapter.currentRequest?.source, same(source));
+    expect(seenIds, hasLength(1));
+    expect(adapter.currentRequest?.navigationId, seenIds.single);
+    expect(calls, ['orders.redirect:orders.detail']);
+    await runtime.dispose();
+  });
+
+  test('cancellation and redirect loops use standard errors', () async {
+    final cancellation = CCRouterRuntime.forTesting(
+      navigationAdapter: CCMemoryNavigationAdapter(),
+      globalInterceptors: [
+        CCGlobalNavigationInterceptor(
+          id: 'deny',
+          interceptor: TestNavigationInterceptor(
+            'deny',
+            (_) => const CCNavigationCancel(code: 'auth.required'),
+            [],
+          ),
+        ),
+      ],
+      components: [
+        routeComponent(
+          'orders',
+          (registry) => registry.registerRoute(pathRoute()),
+        ),
+      ],
+    );
+    await cancellation.initialize();
+    await expectLater(
+      cancellation.goRoute(
+        const TestIntent<void>('orders.detail', RouteArgs('42')),
+      ),
+      throwsA(isA<CCRouteCancelledError>()),
+    );
+    await cancellation.dispose();
+
+    final loop = CCRouterRuntime.forTesting(
+      navigationAdapter: CCMemoryNavigationAdapter(),
+      components: [
+        routeComponent('orders', (registry) {
+          registry.registerRouteInterceptor(
+            'loop',
+            TestNavigationInterceptor(
+              'loop',
+              (_) => CCNavigationRedirect.toUri(Uri(path: '/orders/42')),
+              [],
+            ),
+          );
+          registry.registerRoute(pathRoute(interceptorIds: ['loop']));
+        }),
+      ],
+    );
+    await loop.initialize();
+    await expectLater(
+      loop.openRoute(Uri.parse('/orders/42')),
+      throwsA(isA<CCRouteRedirectLoopError>()),
+    );
+    await loop.dispose();
+  });
+
+  test('rejects route definitions with unknown interceptors', () async {
+    final runtime = CCRouterRuntime.forTesting(
+      navigationAdapter: CCMemoryNavigationAdapter(),
+      components: [
+        routeComponent(
+          'orders',
+          (registry) =>
+              registry.registerRoute(pathRoute(interceptorIds: ['missing'])),
+        ),
+      ],
+    );
+    await expectLater(
+      runtime.initialize(),
+      throwsA(isA<CCRouteRegistrationError>()),
+    );
+    await runtime.dispose();
+  });
+
   test('records a sanitized failed lifecycle event', () async {
     final runtime = CCRouterRuntime.forTesting(
       navigationAdapter: FailingNavigationAdapter(),

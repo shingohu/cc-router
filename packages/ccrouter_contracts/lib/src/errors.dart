@@ -98,6 +98,22 @@ final class CCRouteResultTypeError extends CCRouterError {
     : super('Route "$routeId" returned an incompatible result type.');
 }
 
+/// Indicates that a navigation interceptor intentionally stopped a request.
+final class CCRouteCancelledError extends CCRouterError {
+  /// Creates a cancellation error with a stable non-sensitive [code].
+  const CCRouteCancelledError(this.code) : super('Navigation was cancelled.');
+
+  /// Stable cancellation reason for policy-specific handling and telemetry.
+  final String code;
+}
+
+/// Indicates that redirects exceeded the Runtime safety limit.
+final class CCRouteRedirectLoopError extends CCRouterError {
+  /// Creates a redirect-loop error for the affected [routeId].
+  const CCRouteRedirectLoopError(String routeId)
+    : super('Navigation redirects exceeded the limit near route "$routeId".');
+}
+
 /// Indicates that a requested capability or lifecycle owner cannot be resolved.
 final class CCResolutionError extends CCRouterError {
   /// Creates a resolution error with a safe [message].

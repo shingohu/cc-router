@@ -51,4 +51,6 @@ Action 按 Handler ID 串行执行，首个错误结束调用；Event 并行发�
 
 当前返回真实 Service 实例，尚无生成代理，不能拦截旧实例的方法调用或自动追踪 Service 方法。当前 Trace 覆盖消息调度，不包含 Service 方法、导航或 Native 调用。Action 优先级/短路、组件版本兼容与构建期校验也尚未实现。
 
+路由 Runtime 已支持按稳定 ID 排序的全局拦截器、按路由声明顺序执行的路由拦截器、类型安全 Intent/URI 重定向、可信 Origin 继承、取消和重定向循环检测。注解生成器、RouteEntry/Route Scope 和路由文档导出仍待实现。
+
 完整目标见 [架构设计](CCRouter-v0.1-architecture.md)，路由的详细设计见 [路由子系统设计](CCRouter-route-design.md)。

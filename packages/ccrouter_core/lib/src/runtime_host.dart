@@ -17,11 +17,13 @@ final class CCRouterRuntime {
     int navigationEventCapacity = 1000,
     Iterable<CCComponentManifest> components = const [],
     CCNavigationAdapter? navigationAdapter,
+    Iterable<CCGlobalNavigationInterceptor> globalInterceptors = const [],
   }) => CCRouterRuntime._(
     traceCapacity: traceCapacity,
     navigationEventCapacity: navigationEventCapacity,
     components: components,
     navigationAdapter: navigationAdapter,
+    globalInterceptors: globalInterceptors,
   );
 
   /// Creates an independently owned Runtime for low-level core tests.
@@ -35,21 +37,27 @@ final class CCRouterRuntime {
     int navigationEventCapacity = 1000,
     Iterable<CCComponentManifest> components = const [],
     CCNavigationAdapter? navigationAdapter,
+    Iterable<CCGlobalNavigationInterceptor> globalInterceptors = const [],
   }) => CCRouterRuntime._(
     traceCapacity: traceCapacity,
     navigationEventCapacity: navigationEventCapacity,
     components: components,
     navigationAdapter: navigationAdapter,
+    globalInterceptors: globalInterceptors,
   );
 
   /// Creates a Runtime with validated configuration and installed components.
+  /// Global navigation interceptors are ordered by stable ID before navigation
+  /// begins; component route interceptors are registered by their registrars.
   CCRouterRuntime._({
     this.traceCapacity = 1000,
     this.navigationEventCapacity = 1000,
     Iterable<CCComponentManifest> components = const [],
     CCNavigationAdapter? navigationAdapter,
+    Iterable<CCGlobalNavigationInterceptor> globalInterceptors = const [],
   }) {
     _navigationAdapter = navigationAdapter;
+    _globalInterceptors = _validateGlobalInterceptors(globalInterceptors);
     if (traceCapacity < 0) {
       throw ArgumentError.value(traceCapacity, 'traceCapacity');
     }
@@ -101,6 +109,15 @@ final class CCRouterRuntime {
 
   /// Optional adapter that executes Runtime-validated navigation requests.
   CCNavigationAdapter? _navigationAdapter;
+
+  /// Stable, application-owned interceptors executed before route policies.
+  late final List<CCGlobalNavigationInterceptor> _globalInterceptors;
+
+  /// Component-owned route interceptors indexed by stable ID.
+  final Map<String, _RegisteredNavigationInterceptor> _routeInterceptors = {};
+
+  /// Maximum number of redirects followed for one navigation request.
+  static const int maxNavigationRedirects = 8;
 
   /// Bounded completed invocation trace buffer.
   final Queue<CCTraceRecord> _traces = Queue();
@@ -181,6 +198,7 @@ final class CCRouterRuntime {
     if (_disposed) throw const CCScopeClosedError('runtime');
     if (_initialized) return;
     _routeRegistry.validatePlacements();
+    _routeRegistry.validateInterceptors(_routeInterceptors.keys.toSet());
     await _navigationAdapter?.initialize(
       _routeRegistry.navigationRoutes,
       shells: _shellRegistry.navigationShells,
@@ -321,6 +339,41 @@ final class CCRouterRuntime {
   ) {
     _ensureConfigurable();
     _routeRegistry.register(ownerComponentId, definition);
+  }
+
+  /// Registers a route interceptor for low-level Runtime tests.
+  ///
+  /// Components should register through [CCRegistry.registerRouteInterceptor]
+  /// so Runtime retains the trusted component owner.
+  void registerRouteInterceptor(
+    String id,
+    CCNavigationInterceptor interceptor,
+  ) {
+    _registerRouteInterceptorForComponent('', id, interceptor);
+  }
+
+  /// Registers an interceptor while retaining its trusted component owner.
+  void _registerRouteInterceptorForComponent(
+    String ownerComponentId,
+    String id,
+    CCNavigationInterceptor interceptor,
+  ) {
+    _ensureConfigurable();
+    final normalizedId = id.trim();
+    if (normalizedId != id || normalizedId.isEmpty) {
+      throw const CCRegistrationError(
+        'Route interceptor ID must not be empty.',
+      );
+    }
+    if (_routeInterceptors.containsKey(normalizedId)) {
+      throw CCRegistrationError(
+        'Duplicate route interceptor ID "$normalizedId".',
+      );
+    }
+    _routeInterceptors[normalizedId] = _RegisteredNavigationInterceptor(
+      ownerComponentId: ownerComponentId,
+      interceptor: interceptor,
+    );
   }
 
   /// Registers a Shell directly for low-level Runtime tests.
@@ -762,6 +815,24 @@ final class CCRouterRuntime {
     registry.putIfAbsent(type, () => {})[id] = handler;
   }
 
+  /// Validates and deterministically orders host-provided global interceptors.
+  List<CCGlobalNavigationInterceptor> _validateGlobalInterceptors(
+    Iterable<CCGlobalNavigationInterceptor> interceptors,
+  ) {
+    final byId = <String, CCGlobalNavigationInterceptor>{};
+    for (final interceptor in interceptors) {
+      final id = interceptor.id.trim();
+      if (id != interceptor.id || id.isEmpty || byId.containsKey(id)) {
+        throw CCRegistrationError(
+          'Empty or duplicate global interceptor ID "$id".',
+        );
+      }
+      byId[id] = interceptor;
+    }
+    final ids = byId.keys.toList()..sort();
+    return List.unmodifiable(ids.map((id) => byId[id]!));
+  }
+
   /// Ensures capability registration has not been frozen or disposed.
   void _ensureConfigurable() {
     if (_initialized || _disposed)
@@ -819,4 +890,19 @@ final class CCRouterRuntime {
       );
     }
   }
+}
+
+/// Internal route interceptor registration with trusted component ownership.
+final class _RegisteredNavigationInterceptor {
+  /// Creates an owned route interceptor entry.
+  _RegisteredNavigationInterceptor({
+    required this.ownerComponentId,
+    required this.interceptor,
+  });
+
+  /// Component ID captured during registration.
+  final String ownerComponentId;
+
+  /// Interceptor implementation invoked by Runtime navigation.
+  final CCNavigationInterceptor interceptor;
 }

@@ -104,11 +104,14 @@ abstract final class CCRouter {
   ///
   /// A second call before [shutdown] completes throws
   /// [CCRouterAlreadyInitializedError].
+  /// Global navigation interceptors are ordered by their stable IDs and run
+  /// before route-declared interceptors.
   static Future<void> initialize({
     required Iterable<CCComponentManifest> components,
     int traceCapacity = 1000,
     int navigationEventCapacity = 1000,
     CCNavigationAdapter? navigationAdapter,
+    Iterable<CCGlobalNavigationInterceptor> globalInterceptors = const [],
   }) async {
     if (_defaultRuntime != null ||
         _initializing != null ||
@@ -121,6 +124,7 @@ abstract final class CCRouter {
       traceCapacity: traceCapacity,
       navigationEventCapacity: navigationEventCapacity,
       navigationAdapter: navigationAdapter,
+      globalInterceptors: globalInterceptors,
     );
     final initializing = runtime.initialize();
     _initializing = initializing;

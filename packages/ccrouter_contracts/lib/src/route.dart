@@ -99,8 +99,10 @@ final class CCRouteDefinition<A, R> {
     this.deepLink = CCDeepLinkPolicy.disabled,
     this.presentation = const CCPagePresentation(),
     this.placement = const CCRoutePlacement.root(),
+    List<String> interceptorIds = const [],
     this.description,
   }) : patterns = List.unmodifiable(patterns),
+       interceptorIds = List.unmodifiable(interceptorIds),
        visibleTo = Set.unmodifiable(visibleTo);
 
   /// Stable identity used for tracing, registration, and generated contracts.
@@ -144,6 +146,12 @@ final class CCRouteDefinition<A, R> {
   /// Leave the default root placement for a single-stack destination. Use a
   /// named outlet for tabs, master-detail panes, or nested Navigator history.
   final CCRoutePlacement placement;
+
+  /// Route interceptors executed in this declaration order after globals.
+  ///
+  /// Use this for authorization, feature availability, and route-specific
+  /// policy. The IDs must be registered by the owning component.
+  final List<String> interceptorIds;
 
   /// Optional human-readable documentation description.
   final String? description;

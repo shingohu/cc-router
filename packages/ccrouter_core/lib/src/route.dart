@@ -46,6 +46,7 @@ final class _PreparedRoute {
     required this.extra,
     required this.presentation,
     required this.placement,
+    required this.interceptorIds,
   });
 
   /// Stable route identity selected by Intent or URI resolution.
@@ -65,6 +66,9 @@ final class _PreparedRoute {
 
   /// Structural parent, Shell, and Navigator outlet for this request.
   final CCRoutePlacement placement;
+
+  /// Route interceptor IDs declared by the selected route definition.
+  final List<String> interceptorIds;
 }
 
 /// Candidate produced while comparing one URI against an installed pattern.
@@ -209,8 +213,15 @@ final class _RouteRegistry {
   }
 
   /// Encodes a typed [intent] through its route's canonical primary Pattern.
-  _PreparedRoute prepareIntent<R>(CCRouteIntent<R> intent) {
+  _PreparedRoute prepareIntent<R>(
+    CCRouteIntent<R> intent, {
+    CCNavigationOrigin origin = CCNavigationOrigin.internal,
+  }) {
     final route = _requireActiveRoute(intent.routeId);
+    if (origin.isExternal &&
+        route.definition.deepLink == CCDeepLinkPolicy.disabled) {
+      throw CCRouteUnavailableError(intent.routeId);
+    }
     late final CCEncodedRouteArguments encoded;
     try {
       encoded = route.definition.codec.encode(intent.arguments);
@@ -233,6 +244,7 @@ final class _RouteRegistry {
       extra: encoded.extra,
       presentation: route.definition.presentation,
       placement: route.definition.placement,
+      interceptorIds: route.definition.interceptorIds,
     );
   }
 
@@ -249,6 +261,7 @@ final class _RouteRegistry {
       extra: null,
       presentation: route.definition.presentation,
       placement: route.definition.placement,
+      interceptorIds: route.definition.interceptorIds,
     );
   }
 
@@ -295,6 +308,10 @@ final class _RouteRegistry {
     _requireActiveRoute(intent.routeId);
   }
 
+  /// Returns an installed route definition for Runtime interceptor dispatch.
+  CCRouteDefinition<dynamic, dynamic> routeDefinition(String routeId) =>
+      _requireActiveRoute(routeId).definition;
+
   /// Returns the installed active route identified by [routeId].
   _RegisteredRoute _requireActiveRoute(String routeId) {
     final route = _routes[routeId];
@@ -311,6 +328,20 @@ final class _RouteRegistry {
         route.definition.routeId,
         route.definition.placement,
       );
+    }
+  }
+
+  /// Validates that every route interceptor reference has a registration.
+  void validateInterceptors(Set<String> registeredIds) {
+    for (final route in _routes.values) {
+      for (final id in route.definition.interceptorIds) {
+        if (!registeredIds.contains(id)) {
+          throw CCRouteRegistrationError(
+            'Route "${route.definition.routeId}" references unknown '
+            'interceptor "$id".',
+          );
+        }
+      }
     }
   }
 
@@ -367,6 +398,17 @@ final class _RouteRegistry {
       throw CCRouteRegistrationError(
         'Component route "$routeId" cannot declare visibleTo.',
       );
+    }
+    final interceptorIds = <String>{};
+    for (final id in definition.interceptorIds) {
+      final normalizedId = id.trim();
+      if (normalizedId != id ||
+          normalizedId.isEmpty ||
+          !interceptorIds.add(normalizedId)) {
+        throw CCRouteRegistrationError(
+          'Route "$routeId" contains an empty or duplicate interceptor ID.',
+        );
+      }
     }
     final seen = <String>{};
     for (final pattern in definition.patterns) {

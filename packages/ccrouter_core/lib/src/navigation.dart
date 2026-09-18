@@ -208,16 +208,105 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     CCNavigationOrigin origin,
     CCNavigationSource? source,
   ) async {
-    final request = _buildNavigationRequest(
-      operation,
-      prepared,
-      origin,
-      source,
+    final navigationId = '$_runtimeId-navigation-${++_navigationSequence}';
+    final cancellation = CCCancellationToken();
+    var current = prepared;
+    var redirectDepth = 0;
+    while (true) {
+      final request = _buildNavigationRequest(
+        operation,
+        current,
+        origin,
+        source,
+        navigationId: navigationId,
+      );
+      if (!_hasInterceptors(request.routeId)) {
+        return _dispatchRequest(
+          request,
+          () => _requiredNavigationAdapter.navigate(request),
+        );
+      }
+      var adapterDispatchStarted = false;
+      try {
+        final decision = await _runInterceptors(
+          request,
+          cancellation: cancellation,
+          redirectDepth: redirectDepth,
+        );
+        switch (decision) {
+          case CCNavigationProceed():
+            adapterDispatchStarted = true;
+            return await _dispatchRequest(
+              request,
+              () => _requiredNavigationAdapter.navigate(request),
+            );
+          case CCNavigationCancel(:final code):
+            throw CCRouteCancelledError(code);
+          case CCNavigationRedirect(:final intent, :final uri):
+            if (redirectDepth >= CCRouterRuntime.maxNavigationRedirects) {
+              throw CCRouteRedirectLoopError(request.routeId);
+            }
+            if (intent != null) {
+              current = _routeRegistry.prepareIntent(intent, origin: origin);
+            } else {
+              current = _routeRegistry.prepareUri(uri!, origin);
+            }
+            redirectDepth++;
+        }
+      } on CCRouterError catch (error) {
+        if (!adapterDispatchStarted) {
+          _emitNavigationEvent(request, CCNavigationLifecyclePhase.requested);
+          _emitNavigationEvent(
+            request,
+            CCNavigationLifecyclePhase.failed,
+            errorType: error.runtimeType.toString(),
+          );
+        }
+        rethrow;
+      } catch (error) {
+        if (!adapterDispatchStarted) {
+          _emitNavigationEvent(request, CCNavigationLifecyclePhase.requested);
+          _emitNavigationEvent(
+            request,
+            CCNavigationLifecyclePhase.failed,
+            errorType: error.runtimeType.toString(),
+          );
+        }
+        throw CCNavigationAdapterError(
+          'Navigation interceptor failed: ${error.runtimeType}.',
+        );
+      }
+    }
+  }
+
+  /// Runs global interceptors followed by the selected route interceptors.
+  Future<CCNavigationInterception> _runInterceptors(
+    CCNavigationRequest request, {
+    required CCCancellationToken cancellation,
+    required int redirectDepth,
+  }) async {
+    final context = CCNavigationInterceptorContext(
+      request: request,
+      cancellation: cancellation,
+      redirectDepth: redirectDepth,
     );
-    return _dispatchRequest(
-      request,
-      () => _requiredNavigationAdapter.navigate(request),
-    );
+    for (final registration in _globalInterceptors) {
+      final decision = await registration.interceptor.intercept(context);
+      if (decision is! CCNavigationProceed) return decision;
+    }
+    final route = _routeRegistry.routeDefinition(request.routeId);
+    for (final id in route.interceptorIds) {
+      final registration = _routeInterceptors[id]!;
+      final decision = await registration.interceptor.intercept(context);
+      if (decision is! CCNavigationProceed) return decision;
+    }
+    return const CCNavigationProceed();
+  }
+
+  /// Returns whether this request needs the asynchronous interception pass.
+  bool _hasInterceptors(String routeId) {
+    if (_globalInterceptors.isNotEmpty) return true;
+    return _routeRegistry.routeDefinition(routeId).interceptorIds.isNotEmpty;
   }
 
   /// Creates the immutable request delivered to one Adapter operation.
@@ -225,9 +314,11 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     CCNavigationOperation operation,
     _PreparedRoute prepared,
     CCNavigationOrigin origin,
-    CCNavigationSource? source,
-  ) => CCNavigationRequest(
-    navigationId: '$_runtimeId-navigation-${++_navigationSequence}',
+    CCNavigationSource? source, {
+    String? navigationId,
+  }) => CCNavigationRequest(
+    navigationId:
+        navigationId ?? '$_runtimeId-navigation-${++_navigationSequence}',
     operation: operation,
     routeId: prepared.routeId,
     uri: prepared.uri,
