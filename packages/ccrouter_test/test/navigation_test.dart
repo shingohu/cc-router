@@ -1146,6 +1146,7 @@ void main() {
     expect(failed.phase, CCNavigationLifecyclePhase.failed);
     expect(failed.errorType, 'StateError');
     expect(failed.errorType, isNot(contains('secret')));
+    expect(runtime.activeRouteEntries, isEmpty);
     await runtime.dispose();
   });
 
@@ -1459,6 +1460,10 @@ void main() {
       expect(await pushed, isNull);
       expect(adapter.stack.length, 2);
       expect(adapter.currentRequest?.operation, CCNavigationOperation.replace);
+      expect(
+        runtime.activeRouteEntries.map((entry) => entry.normalizedUri.path),
+        ['/orders/1', '/orders/3'],
+      );
 
       runtime.popRoute(result: 'replacement-result');
       expect(await replaced, 'replacement-result');
@@ -1550,6 +1555,10 @@ void main() {
         '/orders/1',
         '/orders/3',
       ]);
+      expect(
+        runtime.activeRouteEntries.map((entry) => entry.normalizedUri.path),
+        ['/orders/1', '/orders/3'],
+      );
       runtime.popRoute(result: 'replacement');
       expect(await newRoute, 'replacement');
       await runtime.dispose();
@@ -1620,6 +1629,10 @@ void main() {
         '/orders/1',
         '/orders/3',
       ]);
+      expect(
+        runtime.activeRouteEntries.map((entry) => entry.normalizedUri.path),
+        ['/orders/1', '/orders/3'],
+      );
       runtime.popRoute(result: 'done');
       expect(await result, 'done');
       await runtime.dispose();

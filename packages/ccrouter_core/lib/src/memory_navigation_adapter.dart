@@ -169,6 +169,9 @@ final class CCMemoryNavigationAdapter
   }
 
   /// Pops the current entry and pushes [request] as one operation.
+  ///
+  /// The removed entry completes with [popResult], while the returned Future
+  /// belongs exclusively to the newly pushed entry.
   @override
   Future<Object?> popAndPush(CCNavigationRequest request, {Object? popResult}) {
     _ensureAvailable();
@@ -187,6 +190,9 @@ final class CCMemoryNavigationAdapter
   }
 
   /// Pushes [request] and removes previous entries until [predicate] matches.
+  ///
+  /// Removed entries complete with `null`; only the newly pushed entry owns
+  /// the returned result Future.
   @override
   Future<Object?> pushAndRemoveUntil(
     CCNavigationRequest request,

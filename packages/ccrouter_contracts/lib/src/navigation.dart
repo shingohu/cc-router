@@ -276,7 +276,9 @@ abstract interface class CCNavigationAdapter {
   /// Pops the current route and pushes [request] as one atomic stack command.
   ///
   /// [popResult] completes the removed entry's pending result. The returned
-  /// Future completes with the pushed entry's eventual Pop result.
+  /// Future completes with the pushed entry's eventual Pop result. The removed
+  /// entry's Route Scope is closed independently of the pushed entry; a Pop or
+  /// adapter failure must not complete the pushed result as the old result.
   Future<Object?> popAndPush(CCNavigationRequest request, {Object? popResult});
 
   /// Pops entries until [predicate] matches the current entry.
@@ -288,8 +290,10 @@ abstract interface class CCNavigationAdapter {
   /// Pushes [request] and removes previous entries until [predicate] matches.
   ///
   /// The newly pushed entry is never evaluated by [predicate]. Removed
-  /// entries complete with `null`; the returned Future represents the pushed
-  /// entry and completes with its eventual Pop result.
+  /// entries complete with `null` and close their Route Scopes; the returned
+  /// Future represents only the pushed entry and completes with its eventual
+  /// Pop result. A backend failure must not leave the newly allocated Runtime
+  /// entry retained.
   Future<Object?> pushAndRemoveUntil(
     CCNavigationRequest request,
     CCNavigationStackPredicate predicate,

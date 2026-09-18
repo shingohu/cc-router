@@ -466,12 +466,10 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     void Function(_RouteEntryRecord entry)? commitEntry,
   }) async {
     _emitNavigationEvent(request, CCNavigationLifecyclePhase.requested);
-    var committed = false;
     try {
       final pending = action();
       if (entry != null) {
         (commitEntry ?? _commitRouteEntry)(entry);
-        committed = true;
       }
       final result = await pending;
       if (entry != null &&
@@ -486,7 +484,13 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
       _emitNavigationEvent(request, CCNavigationLifecyclePhase.completed);
       return result;
     } on CCRouterError catch (error) {
-      if (entry != null && !committed) {
+      // Adapter Futures represent both immediate acceptance and eventual
+      // route results. If either phase fails, the newly allocated entry must
+      // be discarded so its Scope and pending lifecycle cannot leak. An
+      // adapter that mutates an existing backend stack before reporting an
+      // error must provide its own atomic rollback or capability boundary;
+      // Runtime never guesses how to recreate an older entry.
+      if (entry != null) {
         _removeRouteEntry(entry, reason: 'failed');
       }
       final outcome = error is CCRouteCancelledError
@@ -511,7 +515,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
       );
       rethrow;
     } catch (error) {
-      if (entry != null && !committed) {
+      if (entry != null) {
         _removeRouteEntry(entry, reason: 'failed');
       }
       if (entry != null) {
