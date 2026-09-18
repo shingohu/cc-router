@@ -52,7 +52,7 @@ final class CCGoRouterAdapter
     required int lifecycleEventCapacity,
   }) : _router = router,
        _bindings = List.unmodifiable(bindings),
-       _shells = List.unmodifiable(shells),
+       _shellBindings = List.unmodifiable(shells),
        _navigatorKeys = _mergeNavigatorKeys(navigatorKeys, shells),
        _observers = List.unmodifiable(observers),
        _lifecycleEventCapacity = lifecycleEventCapacity {
@@ -78,7 +78,10 @@ final class CCGoRouterAdapter
   final List<CCGoRouterRouteBinding> _bindings;
 
   /// Application-owned Shell bindings used to validate placement metadata.
-  final List<CCGoRouterShellBinding> _shells;
+  final List<CCGoRouterShellBinding> _shellBindings;
+
+  /// Runtime Shell contracts accepted during initialization.
+  final List<CCNavigationShell> _runtimeShells = [];
 
   /// Application-owned Navigator keys indexed by CCRouter Outlet name.
   final Map<String, GlobalKey<NavigatorState>> _navigatorKeys;
@@ -123,7 +126,11 @@ final class CCGoRouterAdapter
   Map<String, GlobalKey<NavigatorState>> get navigatorKeys => _navigatorKeys;
 
   /// Application-owned Shell bindings supplied for Runtime route placement.
-  List<CCGoRouterShellBinding> get shells => _shells;
+  List<CCGoRouterShellBinding> get shells => _shellBindings;
+
+  /// Runtime Shell contracts validated against application-owned bindings.
+  List<CCNavigationShell> get shellContracts =>
+      List.unmodifiable(_runtimeShells);
 
   /// Navigator observers subscribed by this Adapter.
   List<CCGoRouterNavigationObserver> get observers => _observers;
@@ -151,7 +158,10 @@ final class CCGoRouterAdapter
   /// navigation. GoRouter remains responsible for matching and rendering the
   /// application's concrete `GoRoute` tree.
   @override
-  Future<void> initialize(List<CCNavigationRoute> routes) async {
+  Future<void> initialize(
+    List<CCNavigationRoute> routes, {
+    List<CCNavigationShell> shells = const [],
+  }) async {
     _ensureNotDisposed();
     if (_initialized) {
       throw const CCNavigationAdapterError(
@@ -159,7 +169,10 @@ final class CCGoRouterAdapter
       );
     }
     final routeIds = <String>{};
-    _validateShellBindings();
+    _validateShellBindings(shells);
+    _runtimeShells
+      ..clear()
+      ..addAll(shells);
     for (final route in routes) {
       if (!routeIds.add(route.routeId)) {
         throw CCNavigationAdapterError(
@@ -330,6 +343,7 @@ final class CCGoRouterAdapter
     _observerRemovers.clear();
     _backendListeners.clear();
     _routes.clear();
+    _runtimeShells.clear();
     _entries.clear();
     _lifecycleEvents.clear();
   }
@@ -484,7 +498,7 @@ final class CCGoRouterAdapter
       );
     }
     if (placement.shellId != null &&
-        !_shells.any((shell) => shell.shellId == placement.shellId)) {
+        !_shellBindings.any((shell) => shell.shellId == placement.shellId)) {
       throw CCNavigationAdapterError(
         'GoRouter route "${route.routeId}" targets unknown Shell '
         '"${placement.shellId}".',
@@ -534,40 +548,94 @@ final class CCGoRouterAdapter
     }
   }
 
-  /// Validates Shell type and the complete set of declared branch keys.
-  void _validateShellBindings() {
-    final shellIds = <String>{};
-    for (final binding in _shells) {
-      if (!shellIds.add(binding.shellId)) {
+  /// Validates Shell contracts against application-owned GoRouter bindings.
+  void _validateShellBindings(List<CCNavigationShell> contracts) {
+    final bindingsById = <String, CCGoRouterShellBinding>{};
+    for (final binding in _shellBindings) {
+      if (bindingsById.containsKey(binding.shellId)) {
         throw CCNavigationAdapterError(
           'Duplicate GoRouter Shell binding "${binding.shellId}".',
         );
       }
-      final route = binding.route;
-      if (route is ShellRoute) {
-        if (binding.outlets.length != 1 ||
-            !binding.outlets.values.contains(route.navigatorKey)) {
-          throw CCNavigationAdapterError(
-            'Shell "${binding.shellId}" must bind its ShellRoute navigator '
-            'key to exactly one Outlet.',
-          );
-        }
-      } else if (route is StatefulShellRoute) {
-        final expected = route.branches.map((branch) => branch.navigatorKey);
-        if (binding.outlets.length != route.branches.length ||
-            !binding.outlets.values.toSet().containsAll(expected)) {
-          throw CCNavigationAdapterError(
-            'Stateful Shell "${binding.shellId}" must bind every branch '
-            'Navigator key to a unique Outlet.',
-          );
-        }
-      } else {
+      bindingsById[binding.shellId] = binding;
+    }
+    final contractIds = contracts.map((shell) => shell.shellId).toSet();
+    final unknownBindings = bindingsById.keys.toSet().difference(contractIds);
+    if (unknownBindings.isNotEmpty) {
+      final ids = unknownBindings.toList()..sort();
+      throw CCNavigationAdapterError(
+        'GoRouter Shell bindings have no Runtime contract: ${ids.join(', ')}.',
+      );
+    }
+    for (final contract in contracts) {
+      final binding = bindingsById[contract.shellId];
+      if (binding == null) {
         throw CCNavigationAdapterError(
-          'GoRouter Shell binding "${binding.shellId}" must reference '
-          'ShellRoute or StatefulShellRoute.',
+          'Runtime Shell "${contract.shellId}" has no GoRouter binding.',
         );
       }
+      final boundOutlets = binding.outlets.keys.toList();
+      if (!_sameOrder(boundOutlets, contract.outlets)) {
+        throw CCNavigationAdapterError(
+          'GoRouter Shell "${contract.shellId}" Outlet order does not match '
+          'the Runtime contract.',
+        );
+      }
+      if (binding.initialOutlet != contract.initialOutlet) {
+        throw CCNavigationAdapterError(
+          'GoRouter Shell "${contract.shellId}" initial Outlet '
+          '"${binding.initialOutlet}" does not match Runtime Outlet '
+          '"${contract.initialOutlet}".',
+        );
+      }
+      switch (contract.type) {
+        case CCShellType.singleNavigator:
+          final route = binding.route;
+          if (route is! ShellRoute ||
+              binding.outlets.length != 1 ||
+              !identical(
+                binding.outlets[contract.outlets.single],
+                route.navigatorKey,
+              )) {
+            throw CCNavigationAdapterError(
+              'Single-Navigator Shell "${contract.shellId}" must bind its '
+              'ShellRoute Navigator key to Outlet '
+              '"${contract.outlets.single}".',
+            );
+          }
+          break;
+        case CCShellType.statefulBranches:
+          final route = binding.route;
+          if (route is! StatefulShellRoute ||
+              route.branches.length != contract.outlets.length) {
+            throw CCNavigationAdapterError(
+              'Stateful Shell "${contract.shellId}" must bind one '
+              'StatefulShellRoute branch per declared Outlet.',
+            );
+          }
+          for (var index = 0; index < contract.outlets.length; index++) {
+            final outlet = contract.outlets[index];
+            if (!identical(
+              binding.outlets[outlet],
+              route.branches[index].navigatorKey,
+            )) {
+              throw CCNavigationAdapterError(
+                'Stateful Shell "${contract.shellId}" branch $index does '
+                'not match Outlet "$outlet".',
+              );
+            }
+          }
+      }
     }
+  }
+
+  /// Compares ordered string identities without allocating converted sets.
+  static bool _sameOrder(List<String> first, List<String> second) {
+    if (first.length != second.length) return false;
+    for (var index = 0; index < first.length; index++) {
+      if (first[index] != second[index]) return false;
+    }
+    return true;
   }
 
   /// Combines explicit Outlet keys with keys declared by Shell bindings.

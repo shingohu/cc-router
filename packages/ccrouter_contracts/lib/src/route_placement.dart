@@ -1,9 +1,14 @@
+import 'shell.dart';
+
 /// Identifies the structural role of a route in the navigation tree.
 enum CCRouteKind {
   /// A destination rendered inside an existing Navigator outlet.
   page,
 
   /// A persistent container that owns one or more child outlets.
+  ///
+  /// This legacy value is rejected by Runtime route registration. Register a
+  /// [CCShellDefinition] through `CCRegistry.registerShell` instead.
   shell,
 }
 

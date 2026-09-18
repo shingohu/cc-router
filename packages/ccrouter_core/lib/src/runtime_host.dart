@@ -93,8 +93,11 @@ final class CCRouterRuntime {
   /// Event subscribers indexed by event type and stable subscriber identifier.
   final Map<Type, Map<String, _Handler>> _events = {};
 
+  /// Component-owned Shell definitions indexed by stable Shell ID.
+  final _ShellRegistry _shellRegistry = _ShellRegistry();
+
   /// Component-owned route definitions indexed by stable route ID.
-  final _RouteRegistry _routeRegistry = _RouteRegistry();
+  late final _RouteRegistry _routeRegistry = _RouteRegistry(_shellRegistry);
 
   /// Optional adapter that executes Runtime-validated navigation requests.
   CCNavigationAdapter? _navigationAdapter;
@@ -177,7 +180,11 @@ final class CCRouterRuntime {
   Future<void> initialize() async {
     if (_disposed) throw const CCScopeClosedError('runtime');
     if (_initialized) return;
-    await _navigationAdapter?.initialize(_routeRegistry.navigationRoutes);
+    _routeRegistry.validatePlacements();
+    await _navigationAdapter?.initialize(
+      _routeRegistry.navigationRoutes,
+      shells: _shellRegistry.navigationShells,
+    );
     _attachBackendNavigationSource();
     _initialized = true;
   }
@@ -316,11 +323,34 @@ final class CCRouterRuntime {
     _routeRegistry.register(ownerComponentId, definition);
   }
 
+  /// Registers a Shell directly for low-level Runtime tests.
+  ///
+  /// Components must use [CCRegistry.registerShell] so Runtime can inject a
+  /// trustworthy component owner.
+  void registerShell(CCShellDefinition definition) {
+    _registerShellForComponent('', definition);
+  }
+
+  /// Registers a Shell while retaining its trusted component owner.
+  void _registerShellForComponent(
+    String ownerComponentId,
+    CCShellDefinition definition,
+  ) {
+    _ensureConfigurable();
+    _shellRegistry.register(ownerComponentId, definition);
+  }
+
   /// Stable IDs of all installed route definitions.
   ///
   /// Low-level tests and diagnostics use this deterministic snapshot to inspect
   /// route assembly; business navigation must use generated Intents.
   List<String> get registeredRouteIds => _routeRegistry.routeIds;
+
+  /// Stable IDs of all installed Shell definitions.
+  ///
+  /// Low-level tests and diagnostics use this deterministic snapshot; business
+  /// navigation targets generated routes rather than resolving Shell IDs.
+  List<String> get registeredShellIds => _shellRegistry.shellIds;
 
   /// Resolves an internal or external URI to a normalized route location.
   ///
@@ -346,6 +376,7 @@ final class CCRouterRuntime {
   /// optional component. It is not for login, page visibility, or tab changes.
   void activateComponent(String componentId) {
     _ensureInitialized();
+    _shellRegistry.activateComponent(componentId);
     _routeRegistry.activateComponent(componentId);
   }
 
@@ -356,6 +387,7 @@ final class CCRouterRuntime {
   void deactivateComponent(String componentId) {
     _ensureInitialized();
     _routeRegistry.deactivateComponent(componentId);
+    _shellRegistry.deactivateComponent(componentId);
   }
 
   /// Resolves the default or keyed service implementation for [T].

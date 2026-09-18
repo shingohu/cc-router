@@ -33,6 +33,9 @@ final class CCMemoryNavigationAdapter implements CCNavigationAdapter {
   /// Route descriptions supplied during initialization.
   List<CCNavigationRoute> _routes = const [];
 
+  /// Shell descriptions supplied during initialization.
+  List<CCNavigationShell> _shells = const [];
+
   /// Mutable stack entries retained by this test adapter.
   final List<_CCMemoryNavigationEntry> _entries = [];
 
@@ -48,6 +51,9 @@ final class CCMemoryNavigationAdapter implements CCNavigationAdapter {
   /// Immutable route descriptions received from the Runtime.
   List<CCNavigationRoute> get routes => _routes;
 
+  /// Immutable Shell descriptions received from the Runtime.
+  List<CCNavigationShell> get shells => _shells;
+
   /// Immutable request snapshot in current stack order.
   List<CCNavigationRequest> get stack =>
       List.unmodifiable(_entries.map((entry) => entry.request));
@@ -62,7 +68,10 @@ final class CCMemoryNavigationAdapter implements CCNavigationAdapter {
 
   /// Initializes this adapter once with installed route metadata.
   @override
-  Future<void> initialize(List<CCNavigationRoute> routes) async {
+  Future<void> initialize(
+    List<CCNavigationRoute> routes, {
+    List<CCNavigationShell> shells = const [],
+  }) async {
     if (_disposed) {
       throw const CCNavigationAdapterError(
         'The memory navigation adapter has been disposed.',
@@ -74,6 +83,7 @@ final class CCMemoryNavigationAdapter implements CCNavigationAdapter {
       );
     }
     _routes = List.unmodifiable(routes);
+    _shells = List.unmodifiable(shells);
     _initialized = true;
   }
 
@@ -176,6 +186,7 @@ final class CCMemoryNavigationAdapter implements CCNavigationAdapter {
     _initialized = false;
     _clearEntries();
     _routes = const [];
+    _shells = const [];
   }
 
   /// Adds a result-bearing entry and returns its completion Future.

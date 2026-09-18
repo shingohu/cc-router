@@ -118,6 +118,163 @@ void main() {
     expect(received, isNot(isA<CCRouterRuntime>()));
   });
 
+  test(
+    'Shell contracts validate route placement and follow component state',
+    () async {
+      final adapter = CCMemoryNavigationAdapter();
+      final runtime = CCRouterRuntime.forTesting(
+        navigationAdapter: adapter,
+        components: [
+          component(
+            'app-shell',
+            register: (registry) => registry.registerShell(
+              CCShellDefinition(
+                shellId: 'tabs',
+                type: CCShellType.statefulBranches,
+                outlets: const ['home', 'settings'],
+                initialOutlet: 'home',
+              ),
+            ),
+          ),
+          component(
+            'settings',
+            dependencies: ['app-shell'],
+            register: (registry) => registry.registerRoute<String, void>(
+              CCRouteDefinition<String, void>(
+                routeId: 'settings.detail',
+                patterns: [CCPathPattern('/settings/:value', primary: true)],
+                codec: const StringCodec(),
+                placement: const CCRoutePlacement(
+                  shellId: 'tabs',
+                  navigatorOutlet: 'settings',
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+      await runtime.initialize();
+
+      expect(runtime.registeredShellIds, ['tabs']);
+      expect(adapter.shells, hasLength(1));
+      expect(adapter.shells.single.type, CCShellType.statefulBranches);
+      expect(adapter.shells.single.outlets, ['home', 'settings']);
+      expect(runtime.resolveRoute('/settings/42').routeId, 'settings.detail');
+
+      runtime.deactivateComponent('app-shell');
+      expect(
+        () => runtime.resolveRoute('/settings/42'),
+        throwsA(isA<CCRouteUnavailableError>()),
+      );
+      runtime.activateComponent('app-shell');
+      expect(runtime.resolveRoute('/settings/42').routeId, 'settings.detail');
+      await runtime.dispose();
+    },
+  );
+
+  test(
+    'Shell registration rejects invalid definitions and placements',
+    () async {
+      expect(
+        () => CCRouterRuntime.forTesting(
+          components: [
+            component(
+              'shell',
+              register: (registry) => registry.registerShell(
+                CCShellDefinition(
+                  shellId: 'tabs',
+                  type: CCShellType.singleNavigator,
+                  outlets: const ['home', 'settings'],
+                  initialOutlet: 'home',
+                ),
+              ),
+            ),
+          ],
+        ),
+        throwsA(isA<CCShellRegistrationError>()),
+      );
+      expect(
+        () => CCRouterRuntime.forTesting(
+          components: [
+            component(
+              'legacy-shell',
+              register: (registry) => registry.registerRoute<String, void>(
+                CCRouteDefinition<String, void>(
+                  routeId: 'legacy.shell',
+                  patterns: [CCPathPattern('/legacy', primary: true)],
+                  codec: const StringCodec(),
+                  placement: const CCRoutePlacement(
+                    routeKind: CCRouteKind.shell,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        throwsA(isA<CCRouteRegistrationError>()),
+      );
+
+      final runtime = CCRouterRuntime.forTesting(
+        components: [
+          component(
+            'shell',
+            register: (registry) => registry.registerShell(
+              CCShellDefinition(
+                shellId: 'tabs',
+                type: CCShellType.statefulBranches,
+                outlets: const ['home', 'settings'],
+                initialOutlet: 'home',
+              ),
+            ),
+          ),
+          component(
+            'orders',
+            register: (registry) => registry.registerRoute<String, void>(
+              CCRouteDefinition<String, void>(
+                routeId: 'orders.detail',
+                patterns: [CCPathPattern('/orders/:value', primary: true)],
+                codec: const StringCodec(),
+                placement: const CCRoutePlacement(
+                  shellId: 'tabs',
+                  navigatorOutlet: 'unknown',
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+      await expectLater(
+        runtime.initialize(),
+        throwsA(isA<CCRouteRegistrationError>()),
+      );
+      await runtime.dispose();
+
+      final missingShell = CCRouterRuntime.forTesting(
+        components: [
+          component(
+            'orders',
+            register: (registry) => registry.registerRoute<String, void>(
+              CCRouteDefinition<String, void>(
+                routeId: 'orders.missing-shell',
+                patterns: [CCPathPattern('/missing/:value', primary: true)],
+                codec: const StringCodec(),
+                placement: const CCRoutePlacement(
+                  shellId: 'missing',
+                  navigatorOutlet: 'content',
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+      await expectLater(
+        missingShell.initialize(),
+        throwsA(isA<CCRouteRegistrationError>()),
+      );
+      await missingShell.dispose();
+    },
+  );
+
   test('registrars assemble in deterministic dependency order', () async {
     final order = <String>[];
     final runtime = CCRouterRuntime.forTesting(

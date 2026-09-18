@@ -40,6 +40,12 @@ final class CCRouteRegistrationError extends CCRouterError {
   const CCRouteRegistrationError(super.message);
 }
 
+/// Indicates an invalid or conflicting Shell definition.
+final class CCShellRegistrationError extends CCRouterError {
+  /// Creates a Shell registration error with a safe [message].
+  const CCShellRegistrationError(super.message);
+}
+
 /// Indicates that a URI does not match an installed route.
 final class CCRouteNotFoundError extends CCRouterError {
   /// Creates a route-not-found error without retaining the full URI.

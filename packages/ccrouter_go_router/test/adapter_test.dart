@@ -413,6 +413,84 @@ void main() {
     expect(adapter.isInitialized, isFalse);
   });
 
+  test('rejects Runtime Shell contracts without GoRouter bindings', () async {
+    final router = GoRouter(
+      routes: [GoRoute(path: '/', builder: (_, _) => const SizedBox())],
+    );
+    final adapter = CCGoRouterAdapter(router: router);
+    addTearDown(router.dispose);
+
+    await expectLater(
+      adapter.initialize(
+        const [],
+        shells: [
+          CCNavigationShell(
+            shellId: 'workspace',
+            type: CCShellType.singleNavigator,
+            outlets: const ['content'],
+            initialOutlet: 'content',
+          ),
+        ],
+      ),
+      throwsA(isA<CCNavigationAdapterError>()),
+    );
+    expect(adapter.isInitialized, isFalse);
+  });
+
+  test(
+    'rejects Stateful Shell bindings with mismatched Outlet order',
+    () async {
+      final homeKey = GlobalKey<NavigatorState>();
+      final settingsKey = GlobalKey<NavigatorState>();
+      final shellRoute = StatefulShellRoute.indexedStack(
+        builder: (_, _, navigationShell) => navigationShell,
+        branches: [
+          StatefulShellBranch(
+            navigatorKey: homeKey,
+            routes: [
+              GoRoute(path: '/home', builder: (_, _) => const SizedBox()),
+            ],
+          ),
+          StatefulShellBranch(
+            navigatorKey: settingsKey,
+            routes: [
+              GoRoute(path: '/settings', builder: (_, _) => const SizedBox()),
+            ],
+          ),
+        ],
+      );
+      final router = GoRouter(routes: [shellRoute]);
+      final adapter = CCGoRouterAdapter(
+        router: router,
+        shells: [
+          CCGoRouterShellBinding(
+            shellId: 'tabs',
+            route: shellRoute,
+            initialOutlet: 'home',
+            outlets: {'settings': settingsKey, 'home': homeKey},
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+
+      await expectLater(
+        adapter.initialize(
+          const [],
+          shells: [
+            CCNavigationShell(
+              shellId: 'tabs',
+              type: CCShellType.statefulBranches,
+              outlets: const ['home', 'settings'],
+              initialOutlet: 'home',
+            ),
+          ],
+        ),
+        throwsA(isA<CCNavigationAdapterError>()),
+      );
+      expect(adapter.isInitialized, isFalse);
+    },
+  );
+
   testWidgets('uses the configured Shell Navigator for an Outlet route', (
     tester,
   ) async {
@@ -436,6 +514,7 @@ void main() {
         CCGoRouterShellBinding(
           shellId: 'workspace-shell',
           route: shellRoute,
+          initialOutlet: 'detail',
           outlets: {'detail': shellNavigatorKey},
         ),
       ],
@@ -448,15 +527,25 @@ void main() {
       shellId: 'workspace-shell',
       navigatorOutlet: 'detail',
     );
-    await adapter.initialize([
-      CCNavigationRoute(
-        routeId: 'detail',
-        patterns: [const CCPathPattern('/detail', primary: true)],
-        presentation: const CCPagePresentation(),
-        deepLink: CCDeepLinkPolicy.disabled,
-        placement: placement,
-      ),
-    ]);
+    await adapter.initialize(
+      [
+        CCNavigationRoute(
+          routeId: 'detail',
+          patterns: [const CCPathPattern('/detail', primary: true)],
+          presentation: const CCPagePresentation(),
+          deepLink: CCDeepLinkPolicy.disabled,
+          placement: placement,
+        ),
+      ],
+      shells: [
+        CCNavigationShell(
+          shellId: 'workspace-shell',
+          type: CCShellType.singleNavigator,
+          outlets: const ['detail'],
+          initialOutlet: 'detail',
+        ),
+      ],
+    );
     await tester.pumpWidget(MaterialApp.router(routerConfig: router));
     await tester.pumpAndSettle();
 
@@ -510,6 +599,7 @@ void main() {
         CCGoRouterShellBinding(
           shellId: 'tabs',
           route: shellRoute,
+          initialOutlet: 'home',
           outlets: {'home': homeKey, 'settings': settingsKey},
         ),
       ],
@@ -525,15 +615,25 @@ void main() {
       shellId: 'tabs',
       navigatorOutlet: 'settings',
     );
-    await adapter.initialize([
-      CCNavigationRoute(
-        routeId: 'settings.detail',
-        patterns: [const CCPathPattern('/settings/detail', primary: true)],
-        presentation: const CCPagePresentation(),
-        deepLink: CCDeepLinkPolicy.disabled,
-        placement: placement,
-      ),
-    ]);
+    await adapter.initialize(
+      [
+        CCNavigationRoute(
+          routeId: 'settings.detail',
+          patterns: [const CCPathPattern('/settings/detail', primary: true)],
+          presentation: const CCPagePresentation(),
+          deepLink: CCDeepLinkPolicy.disabled,
+          placement: placement,
+        ),
+      ],
+      shells: [
+        CCNavigationShell(
+          shellId: 'tabs',
+          type: CCShellType.statefulBranches,
+          outlets: const ['home', 'settings'],
+          initialOutlet: 'home',
+        ),
+      ],
+    );
     await tester.pumpWidget(MaterialApp.router(routerConfig: router));
     await tester.pumpAndSettle();
 

@@ -12,6 +12,7 @@ final class CCGoRouterShellBinding {
   CCGoRouterShellBinding({
     required this.shellId,
     required this.route,
+    required this.initialOutlet,
     required Map<String, GlobalKey<NavigatorState>> outlets,
   }) : outlets = Map.unmodifiable(outlets);
 
@@ -20,6 +21,12 @@ final class CCGoRouterShellBinding {
 
   /// Application-owned ShellRoute or StatefulShellRoute.
   final RouteBase route;
+
+  /// Default Outlet configured by the application composition root.
+  ///
+  /// This must match the Runtime Shell contract. For Stateful Shells, the
+  /// application's initial GoRouter location must also resolve to this branch.
+  final String initialOutlet;
 
   /// Navigator keys indexed by CCRouter Outlet name.
   final Map<String, GlobalKey<NavigatorState>> outlets;

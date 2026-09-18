@@ -27,6 +27,14 @@ final class _OrdersRegistrar implements CCComponentRegistrar {
 
   @override
   void register(CCRegistry registry) {
+    registry.registerShell(
+      CCShellDefinition(
+        shellId: 'tabs',
+        type: CCShellType.statefulBranches,
+        outlets: const ['home', 'settings'],
+        initialOutlet: 'home',
+      ),
+    );
     registry.registerRoute<_OrderArguments, void>(
       CCRouteDefinition<_OrderArguments, void>(
         routeId: 'orders.detail',
@@ -53,8 +61,10 @@ final class _RecordingNavigationAdapter
   final List<CCNavigationRequest> requests = [];
 
   @override
-  Future<void> initialize(List<CCNavigationRoute> routes) =>
-      delegate.initialize(routes);
+  Future<void> initialize(
+    List<CCNavigationRoute> routes, {
+    List<CCNavigationShell> shells = const [],
+  }) => delegate.initialize(routes, shells: shells);
 
   @override
   void Function() addBackendEventListener(
@@ -152,6 +162,7 @@ void main() {
           CCGoRouterShellBinding(
             shellId: 'tabs',
             route: shellRoute,
+            initialOutlet: 'home',
             outlets: {'home': homeKey, 'settings': settingsKey},
           ),
         ],

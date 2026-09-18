@@ -661,13 +661,23 @@ Shell 关系必须显式声明，不能通过 `/index/` 等 Path 前缀猜测：
 parentRouteId
 shellId
 navigatorOutlet
-routeKind
 ```
 
 这些字段由 `CCRoutePlacement` 承载。普通单栈页面使用默认的 `root` Outlet；
 Tab、主从双栏或嵌套 Navigator 必须声明稳定的 `shellId`、`parentRouteId` 和
-`navigatorOutlet`。`CCRouteKind.shell` 只用于持久化容器本身，BottomSheet/Dialog
-仍由 Route Presentation 描述，不能用 `routeKind` 代替展示语义。
+`navigatorOutlet`。持久化容器通过组件 Registrar 的 `registerShell` 单独注册
+`CCShellDefinition`，不再把 Shell 伪装成带 Path 和 Codec 的普通 Route。
+
+`CCShellDefinition` 声明稳定的 `shellId`、Shell 类型、有序 Outlet 列表和默认
+Outlet。`CCShellType.singleNavigator` 对应一个共享历史的嵌套 Navigator；
+`CCShellType.statefulBranches` 对应多个保持独立历史的分支。Stateful Shell 的 Outlet
+顺序属于契约，必须与后端分支顺序一致。Shell 定义按组件保存所有权，组件停用时，
+所有指向该 Shell 的路由都会拒绝新的导航；现有页面不会因此自动 Pop。
+
+Runtime 在全部组件注册完成后统一验证 Route Placement，因此跨组件 Shell 引用不依赖
+Registrar 执行顺序。未知 Shell、未知 Outlet、重复 Outlet、无效默认 Outlet，以及旧的
+`CCRouteKind.shell` Route 声明都会在初始化或注册阶段明确失败。BottomSheet/Dialog
+仍由 Route Presentation 描述，不能用 Shell 或 Outlet 代替展示语义。
 
 Adapter 初始化时声明能力集合。路由要求 Shell、指定 Page/Dialog Route 类型、透明页面、底部弹出、Dialog 或自定义转场而 Adapter 不支持时，初始化必须失败，不能静默降级。
 
@@ -1071,10 +1081,12 @@ imperative API 接入。由于 GoRouter 没有完全对应的公开原子组合 
 一次 Runtime 操作内完成后端 Pop/Push 序列，并保持返回值与 Predicate 语义。
 GoRouter Adapter 通过 `navigatorKeys` 接收应用拥有的 Outlet Navigator，并可把带有
 `shellId`/`navigatorOutlet` placement 的子路由映射到已有 `ShellRoute` Navigator；
-也可以通过 `CCGoRouterShellBinding` 一次声明 Shell 和全部分支 key。未提供对应 key
-或 Shell 绑定不完整时初始化会明确报告能力错误。已有 `StatefulShellRoute` 的分支
-可以通过 `go` 切换并保留 GoRouter 自己的分支状态；`CCRouteKind.shell`、Shell 自身
-的生成仍不由 Adapter 创建，不会静默把目标栈改成根 Navigator。
+也可以通过 `CCGoRouterShellBinding` 一次声明 Shell 和全部分支 key。Runtime 会把
+组件注册的 `CCNavigationShell` 快照交给 Adapter；Adapter 校验 Shell 类型、Outlet
+集合、默认 Outlet、Outlet 顺序和实际 Navigator key。缺少绑定、绑定多余、类型不一致或 Stateful
+分支顺序不一致时初始化会明确失败。已有 `StatefulShellRoute` 的分支可以通过 `go`
+切换并保留 GoRouter 自己的分支状态；Shell 的 Widget、Builder 和 GoRouter Route
+仍由应用创建，Adapter 不会修改应用路由树，也不会静默把目标栈改成根 Navigator。
 生命周期桥使用 `CCGoRouterNavigationObserver`，由应用添加到 root Navigator、
 `ShellRoute.observers` 或 `StatefulShellBranch.observers`。Observer 只发出带 Outlet
 标识的 Push/Pop/Replace/Remove 事件，适合埋点、诊断和生命周期同步；它不在回调中

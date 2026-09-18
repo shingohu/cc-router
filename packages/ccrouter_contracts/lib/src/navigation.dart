@@ -2,6 +2,7 @@ import 'route_pattern.dart';
 import 'route_placement.dart';
 import 'route_presentation.dart';
 import 'route.dart';
+import 'shell.dart';
 
 /// Classifies the product-level source attached to one navigation request.
 ///
@@ -236,11 +237,16 @@ final class CCNavigationRequest {
 /// shutdown. Business code navigates through `CCRouter.navigator` and must not
 /// invoke an adapter directly.
 abstract interface class CCNavigationAdapter {
-  /// Prepares the backend for all installed [routes].
+  /// Prepares the backend for all installed [routes] and [shells].
   ///
   /// Implementations validate unsupported presentation requirements here and
-  /// must not begin navigation before this Future completes.
-  Future<void> initialize(List<CCNavigationRoute> routes);
+  /// must not begin navigation before this Future completes. Shell snapshots
+  /// describe structure only; adapters remain responsible for binding their
+  /// application-owned navigation containers.
+  Future<void> initialize(
+    List<CCNavigationRoute> routes, {
+    List<CCNavigationShell> shells = const [],
+  });
 
   /// Executes a Runtime-validated [request].
   ///

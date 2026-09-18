@@ -93,8 +93,11 @@ final class _RouteCandidate {
 /// Component assembly uses it for registration, while navigation adapters use
 /// it for matching and argument decoding.
 final class _RouteRegistry {
-  /// Creates an empty route registry.
-  _RouteRegistry();
+  /// Creates an empty route registry using [shellRegistry] for placement rules.
+  _RouteRegistry(this._shellRegistry);
+
+  /// Installed Shell contracts used to validate and gate route placement.
+  final _ShellRegistry _shellRegistry;
 
   /// Priority assigned to structured absolute-URI patterns.
   static const int _uriPriority = 3;
@@ -179,9 +182,7 @@ final class _RouteRegistry {
 
   /// Decodes a matched [location] through its generated route codec.
   Object decode(CCRouteLocation location, {Object? extra}) {
-    final route = _routes[location.routeId];
-    if (route == null) throw CCRouteNotFoundError(location.routeId);
-    if (!route.active) throw CCRouteUnavailableError(location.routeId);
+    final route = _requireActiveRoute(location.routeId);
     try {
       return route.definition.codec.decode(
             CCEncodedRouteArguments(
@@ -282,6 +283,10 @@ final class _RouteRegistry {
     if (!route.active) {
       throw CCRouteUnavailableError(selected.location.routeId);
     }
+    _shellRegistry.ensureRouteAvailable(
+      selected.location.routeId,
+      route.definition.placement,
+    );
     return selected.location;
   }
 
@@ -295,7 +300,18 @@ final class _RouteRegistry {
     final route = _routes[routeId];
     if (route == null) throw CCRouteNotFoundError(routeId);
     if (!route.active) throw CCRouteUnavailableError(routeId);
+    _shellRegistry.ensureRouteAvailable(routeId, route.definition.placement);
     return route;
+  }
+
+  /// Validates all route placements after every component has registered.
+  void validatePlacements() {
+    for (final route in _routes.values) {
+      _shellRegistry.validateRoutePlacement(
+        route.definition.routeId,
+        route.definition.placement,
+      );
+    }
   }
 
   /// Marks all routes owned by [componentId] unavailable.
@@ -326,6 +342,12 @@ final class _RouteRegistry {
     }
     if (definition.patterns.isEmpty) {
       throw CCRouteRegistrationError('Route "$routeId" has no patterns.');
+    }
+    if (definition.placement.routeKind == CCRouteKind.shell) {
+      throw CCRouteRegistrationError(
+        'Route "$routeId" cannot declare Shell kind; register a '
+        'CCShellDefinition through CCRegistry.registerShell instead.',
+      );
     }
     final primary = definition.patterns
         .where((pattern) => pattern.primary)

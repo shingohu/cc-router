@@ -56,6 +56,13 @@ abstract interface class CCRegistry {
   /// Generated route registrars use this during component assembly; ownership
   /// is injected by the Runtime and cannot be supplied by component code.
   void registerRoute<A, R>(CCRouteDefinition<A, R> definition);
+
+  /// Registers a Shell definition owned by the current component.
+  ///
+  /// Generated Shell registrars use this for persistent containers and
+  /// independent navigation branches. The Runtime injects component ownership;
+  /// component code supplies only the adapter-neutral contract.
+  void registerShell(CCShellDefinition definition);
 }
 
 /// Component-bound implementation of the restricted registration surface.
@@ -110,6 +117,12 @@ final class _CCComponentRegistry implements CCRegistry {
   @override
   void registerRoute<A, R>(CCRouteDefinition<A, R> definition) {
     runtime._registerRouteForComponent(ownerComponentId, definition);
+  }
+
+  /// Registers a Shell definition on behalf of the owning component.
+  @override
+  void registerShell(CCShellDefinition definition) {
+    runtime._registerShellForComponent(ownerComponentId, definition);
   }
 }
 

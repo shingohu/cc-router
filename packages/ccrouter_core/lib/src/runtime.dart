@@ -15,4 +15,5 @@ part 'registry.dart';
 part 'route.dart';
 part 'runtime_host.dart';
 part 'session.dart';
+part 'shell.dart';
 part 'scope.dart';

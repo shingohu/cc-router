@@ -78,7 +78,10 @@ final class TestIntent<R> implements CCRouteIntent<R> {
 
 final class FailingNavigationAdapter implements CCNavigationAdapter {
   @override
-  Future<void> initialize(List<CCNavigationRoute> routes) async {}
+  Future<void> initialize(
+    List<CCNavigationRoute> routes, {
+    List<CCNavigationShell> shells = const [],
+  }) async {}
 
   @override
   Future<Object?> navigate(CCNavigationRequest request) async {
