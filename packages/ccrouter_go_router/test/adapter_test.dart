@@ -295,7 +295,7 @@ void main() {
         CCGoRouterRouteBinding(
           routeId: 'filters',
           goRoute: goRoute,
-          presentationKind: CCGoRouterPresentationKind.bottomSheet,
+          presentationType: CCGoRouterPresentationType.bottomSheet,
         ),
       ],
     );
@@ -355,7 +355,7 @@ void main() {
         CCGoRouterRouteBinding(
           routeId: 'confirm',
           goRoute: goRoute,
-          presentationKind: CCGoRouterPresentationKind.dialog,
+          presentationType: CCGoRouterPresentationType.dialog,
         ),
       ],
     );

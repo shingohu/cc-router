@@ -190,7 +190,7 @@ final class CCGoRouterAdapter
         case final CCPagePresentation presentation:
           _validatePresentationBinding(
             route.routeId,
-            CCGoRouterPresentationKind.page,
+            CCGoRouterPresentationType.page,
           );
           if (_requiresCustomPage(presentation)) {
             _ensureCustomPage(route.routeId);
@@ -199,14 +199,14 @@ final class CCGoRouterAdapter
         case CCModalBottomSheetPresentation():
           _validatePresentationBinding(
             route.routeId,
-            CCGoRouterPresentationKind.bottomSheet,
+            CCGoRouterPresentationType.bottomSheet,
           );
           _ensureCustomModalPage(route.routeId);
           break;
         case CCDialogPresentation():
           _validatePresentationBinding(
             route.routeId,
-            CCGoRouterPresentationKind.dialog,
+            CCGoRouterPresentationType.dialog,
           );
           _ensureCustomModalPage(route.routeId);
       }
@@ -512,13 +512,13 @@ final class CCGoRouterAdapter
   /// Ensures one binding declares the same presentation family as Runtime.
   void _validatePresentationBinding(
     String routeId,
-    CCGoRouterPresentationKind expected,
+    CCGoRouterPresentationType expected,
   ) {
     final binding = _bindingFor(routeId);
-    if (binding != null && binding.presentationKind != expected) {
+    if (binding != null && binding.presentationType != expected) {
       throw CCNavigationAdapterError(
         'GoRouter binding "$routeId" declares '
-        '${binding.presentationKind.name}, but Runtime requires '
+        '${binding.presentationType.name}, but Runtime requires '
         '${expected.name}.',
       );
     }

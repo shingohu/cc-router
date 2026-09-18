@@ -1123,7 +1123,7 @@ Route Scope、拦截上下文的 Deadline 配置和完整遥测投影仍待后�
 来源和 URI 由 Core 管理。GoRouter 仍由应用负责创建和提供页面构造器。
 
 组件或应用组合根可以为每个 Runtime 路由提供一个
-`CCGoRouterRouteBinding(routeId, goRoute, presentationKind)`。绑定只关联稳定的 CCRouter Route ID
+`CCGoRouterRouteBinding(routeId, goRoute, presentationType)`。绑定只关联稳定的 CCRouter Route ID
 与应用拥有的 `GoRoute`，并声明其 `pageBuilder` 返回的 Page 家族，不会注册、修改或销毁 `GoRouter`。当提供绑定集合时，
 Adapter 初始化会校验 Runtime 路由与绑定 ID 一一对应；根页面或其他不属于
 CCRouter 契约的 GoRouter 路由可以继续由应用独立保留。

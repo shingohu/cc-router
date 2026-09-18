@@ -1,7 +1,7 @@
 import 'package:go_router/go_router.dart';
 
 /// Declares which Page family an application-owned GoRoute binding returns.
-enum CCGoRouterPresentationKind {
+enum CCGoRouterPresentationType {
   /// A normal full-screen GoRouter page.
   page,
 
@@ -23,7 +23,7 @@ final class CCGoRouterRouteBinding {
   CCGoRouterRouteBinding({
     required this.routeId,
     required this.goRoute,
-    this.presentationKind = CCGoRouterPresentationKind.page,
+    this.presentationType = CCGoRouterPresentationType.page,
   });
 
   /// Stable CCRouter route ID declared by the component contract.
@@ -34,13 +34,13 @@ final class CCGoRouterRouteBinding {
 
   /// Page family returned by [goRoute]'s `pageBuilder`.
   ///
-  /// Set this to [CCGoRouterPresentationKind.bottomSheet] or
-  /// [CCGoRouterPresentationKind.dialog] when the route uses one of the
+  /// Set this to [CCGoRouterPresentationType.bottomSheet] or
+  /// [CCGoRouterPresentationType.dialog] when the route uses one of the
   /// exported modal Page helpers. Normal pages with non-default transition,
   /// opacity, or full-screen dialog semantics should return
   /// [ccGoRouterPage] from `pageBuilder`. The Adapter compares this
   /// declaration with the Runtime route contract during initialization.
-  final CCGoRouterPresentationKind presentationKind;
+  final CCGoRouterPresentationType presentationType;
 
   /// Whether this binding supplies a custom GoRouter page constructor.
   ///
