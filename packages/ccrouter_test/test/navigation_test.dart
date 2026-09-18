@@ -1778,6 +1778,69 @@ void main() {
   );
 
   test(
+    'deferred resume revalidates active component state and closes timing',
+    () async {
+      var shouldDefer = true;
+      final phases = <CCNavigationAspectPhase>[];
+      final runtime = CCRouterRuntime.forTesting(
+        navigationAdapter: CCMemoryNavigationAdapter(),
+        navigationAspects: [
+          CCNavigationAspect(
+            id: 'resume-diagnostics',
+            onFound: (event) => phases.add(event.phase),
+            onLost: (event) {
+              phases.add(event.phase);
+              expect(event.elapsed, isNotNull);
+            },
+            onAfter: (event) {
+              phases.add(event.phase);
+              expect(event.elapsed, isNotNull);
+            },
+          ),
+        ],
+        components: [
+          routeComponent('orders', (registry) {
+            registry.registerRouteInterceptor(
+              'orders.defer',
+              TestNavigationInterceptor('orders.defer', (_) {
+                if (shouldDefer) {
+                  shouldDefer = false;
+                  return const CCNavigationDefer();
+                }
+                return const CCNavigationProceed();
+              }, []),
+            );
+            registry.registerRoute(pathRoute(interceptorIds: ['orders.defer']));
+          }),
+        ],
+      );
+      await runtime.initialize();
+      final pushed = runtime.pushRoute<String>(
+        const TestIntent<String>('orders.detail', RouteArgs('42')),
+      );
+      await Future<void>.delayed(Duration.zero);
+      final pendingId = runtime.pendingNavigations.single.navigationId;
+      final pushedExpectation = expectLater(
+        pushed,
+        throwsA(isA<CCRouteUnavailableError>()),
+      );
+      runtime.deactivateComponent('orders');
+      await expectLater(
+        runtime.resumePendingNavigation(pendingId),
+        throwsA(isA<CCRouteUnavailableError>()),
+      );
+      await pushedExpectation;
+      expect(phases, [
+        CCNavigationAspectPhase.found,
+        CCNavigationAspectPhase.lost,
+        CCNavigationAspectPhase.after,
+      ]);
+      expect(runtime.pendingNavigations, isEmpty);
+      await runtime.dispose();
+    },
+  );
+
+  test(
     'pending navigation timeout and Runtime dispose release continuations',
     () async {
       final timeoutRuntime = CCRouterRuntime.forTesting(

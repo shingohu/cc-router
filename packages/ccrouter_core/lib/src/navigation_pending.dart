@@ -119,6 +119,7 @@ extension CCRouterRuntimePendingNavigation on CCRouterRuntime {
     final record = _pendingNavigations.remove(navigationId);
     if (record == null) throw const CCNavigationPendingNotFoundError();
     record.timer?.cancel();
+    var dispatchStarted = false;
     try {
       final resolved = _routeRegistry.prepareUri(
         record.request.uri,
@@ -137,6 +138,7 @@ extension CCRouterRuntimePendingNavigation on CCRouterRuntime {
         placement: resolved.placement,
         interceptorIds: resolved.interceptorIds,
       );
+      dispatchStarted = true;
       final result = await _dispatchNavigationUncoordinated(
         record.operation,
         replay,
@@ -147,6 +149,24 @@ extension CCRouterRuntimePendingNavigation on CCRouterRuntime {
       );
       record.completer.complete(result);
     } catch (error, stackTrace) {
+      if (!dispatchStarted) {
+        final errorType = error.runtimeType.toString();
+        _emitAspectLost(
+          record.request,
+          outcome: CCNavigationAspectOutcome.failed,
+          errorType: errorType,
+        );
+        _emitAspectAfter(
+          record.request,
+          outcome: CCNavigationAspectOutcome.failed,
+          errorType: errorType,
+        );
+        _emitNavigationEvent(
+          record.request,
+          CCNavigationLifecyclePhase.failed,
+          errorType: errorType,
+        );
+      }
       record.completer.completeError(error, stackTrace);
     }
     return record.completer.future;
