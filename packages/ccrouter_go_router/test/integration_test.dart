@@ -288,6 +288,97 @@ void main() {
   );
 
   testWidgets(
+    'a rejected Pop keeps the managed Route Entry and pending result alive',
+    (tester) async {
+      final observer = CCGoRouterNavigationObserver(outlet: 'root');
+      final allowPop = ValueNotifier(false);
+      final detailRoute = GoRoute(
+        path: '/orders/:id',
+        builder: (_, state) => ValueListenableBuilder<bool>(
+          valueListenable: allowPop,
+          builder: (_, canPop, _) => PopScope<void>(
+            canPop: canPop,
+            child: Text(
+              'order:${state.pathParameters['id']}',
+              key: const ValueKey('guarded-order'),
+            ),
+          ),
+        ),
+      );
+      final router = GoRouter(
+        initialLocation: '/',
+        observers: [observer],
+        routes: [
+          GoRoute(path: '/', builder: (_, _) => const Text('home')),
+          detailRoute,
+        ],
+      );
+      final adapter = CCGoRouterAdapter(
+        router: router,
+        observers: [observer],
+        bindings: [
+          CCGoRouterRouteBinding(
+            routeId: 'orders.detail',
+            goRoute: detailRoute,
+          ),
+        ],
+      );
+      final runtime = CCRouterRuntime.forTesting(
+        navigationAdapter: adapter,
+        components: const [
+          CCComponentManifest(
+            id: 'orders',
+            version: '1.0.0',
+            registrar: _SimpleOrdersRegistrar(),
+          ),
+        ],
+      );
+      addTearDown(allowPop.dispose);
+      addTearDown(runtime.dispose);
+      addTearDown(router.dispose);
+
+      await runtime.initialize();
+      await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+      await tester.pumpAndSettle();
+
+      final managedResult = runtime.pushRoute<String>(
+        const _OrderIntent<String>(_OrderArguments('guarded')),
+      );
+      await tester.pumpAndSettle();
+      final managedEntryId = runtime.activeRouteEntries.single.routeEntryId;
+      expect(find.byKey(const ValueKey('guarded-order')), findsOneWidget);
+
+      final declined = await runtime.maybePopOutcomeRoute<String>(
+        result: 'rejected',
+      );
+      // PopScope consumes the request even though it refuses to remove the
+      // route. Ownership and result availability carry the rejection detail.
+      expect(declined.handled, isTrue);
+      expect(declined.removedOwner, CCPopRemovedOwner.none);
+      expect(declined.resultAvailable, isFalse);
+      expect(runtime.activeRouteEntries, hasLength(1));
+      expect(runtime.activeRouteEntries.single.routeEntryId, managedEntryId);
+      expect(
+        runtime.activeRouteEntries.single.lifecycleState,
+        CCRouteEntryLifecycleState.visible,
+      );
+      expect(find.byKey(const ValueKey('guarded-order')), findsOneWidget);
+
+      allowPop.value = true;
+      await tester.pump();
+      final accepted = await runtime.maybePopOutcomeRoute<String>(
+        result: 'accepted',
+      );
+      await tester.pumpAndSettle();
+      expect(accepted.handled, isTrue);
+      expect(accepted.removedOwner, CCPopRemovedOwner.managed);
+      expect(accepted.resultAvailable, isTrue);
+      expect(await managedResult, 'accepted');
+      expect(runtime.activeRouteEntries, isEmpty);
+    },
+  );
+
+  testWidgets(
     'external ingress reaches the bound StatefulShell branch with metadata',
     (tester) async {
       final homeKey = GlobalKey<NavigatorState>();
