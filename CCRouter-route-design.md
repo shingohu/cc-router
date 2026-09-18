@@ -650,6 +650,7 @@ cancel    终止导航，返回标准取消原因
 - Runtime 必须检测重定向循环并限制最大重定向次数。
 - Interceptor 不允许直接调用 Adapter。
 - 错误、取消和重定向均进入 Trace 与路由埋点事件。
+- 所有带目标路由的操作都经过拦截器，包括 Push、Replace、Go、Reset、Open、PopAndPush 和 PushAndRemoveUntil；Pop、MaybePop、PopUntil 只有栈移除目标，不触发目标路由拦截器。
 
 ---
 

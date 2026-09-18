@@ -304,6 +304,69 @@ void main() {
     await runtime.dispose();
   });
 
+  test('runs interceptors for composite navigation targets', () async {
+    final calls = <String>[];
+    final runtime = CCRouterRuntime.forTesting(
+      navigationAdapter: CCMemoryNavigationAdapter(),
+      globalInterceptors: [
+        CCGlobalNavigationInterceptor(
+          id: 'global.policy',
+          interceptor: TestNavigationInterceptor(
+            'global.policy',
+            (_) => const CCNavigationProceed(),
+            calls,
+          ),
+        ),
+      ],
+      components: [
+        routeComponent('orders', (registry) {
+          registry.registerRouteInterceptor(
+            'orders.policy',
+            TestNavigationInterceptor(
+              'orders.policy',
+              (_) => const CCNavigationProceed(),
+              calls,
+            ),
+          );
+          registry.registerRoute(pathRoute(interceptorIds: ['orders.policy']));
+        }),
+      ],
+    );
+    await runtime.initialize();
+
+    await runtime.goRoute(
+      const TestIntent<void>('orders.detail', RouteArgs('1')),
+    );
+    calls.clear();
+    final popAndPush = runtime.popAndPushRoute<String>(
+      const TestIntent<String>('orders.detail', RouteArgs('2')),
+    );
+    await Future<void>.delayed(Duration.zero);
+    expect(calls, [
+      'global.policy:orders.detail',
+      'orders.policy:orders.detail',
+    ]);
+    runtime.popRoute(result: 'pop-and-push');
+    expect(await popAndPush, 'pop-and-push');
+
+    await runtime.goRoute(
+      const TestIntent<void>('orders.detail', RouteArgs('3')),
+    );
+    calls.clear();
+    final pushAndRemove = runtime.pushAndRemoveUntilRoute<String>(
+      const TestIntent<String>('orders.detail', RouteArgs('4')),
+      (_) => true,
+    );
+    await Future<void>.delayed(Duration.zero);
+    expect(calls, [
+      'global.policy:orders.detail',
+      'orders.policy:orders.detail',
+    ]);
+    runtime.popRoute(result: 'push-and-remove');
+    expect(await pushAndRemove, 'push-and-remove');
+    await runtime.dispose();
+  });
+
   test('redirect preserves origin and navigation identity', () async {
     final calls = <String>[];
     final seenIds = <String>[];

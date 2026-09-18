@@ -51,18 +51,13 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
   }) async {
     _ensureInitialized();
     final prepared = _routeRegistry.prepareIntent(intent);
-    final request = _buildNavigationRequest(
+    final result = await _dispatchNavigationWithAction(
       CCNavigationOperation.popAndPush,
       prepared,
       CCNavigationOrigin.internal,
       source,
-    );
-    final entry = _createRouteEntry(request);
-    final result = await _dispatchRequest(
-      request,
-      () =>
+      action: (request) =>
           _requiredNavigationAdapter.popAndPush(request, popResult: popResult),
-      entry: entry,
     );
     try {
       return result as R?;
@@ -94,17 +89,13 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
   }) async {
     _ensureInitialized();
     final prepared = _routeRegistry.prepareIntent(intent);
-    final request = _buildNavigationRequest(
+    final result = await _dispatchNavigationWithAction(
       CCNavigationOperation.pushAndRemoveUntil,
       prepared,
       CCNavigationOrigin.internal,
       source,
-    );
-    final entry = _createRouteEntry(request);
-    final result = await _dispatchRequest(
-      request,
-      () => _requiredNavigationAdapter.pushAndRemoveUntil(request, predicate),
-      entry: entry,
+      action: (request) =>
+          _requiredNavigationAdapter.pushAndRemoveUntil(request, predicate),
       commitEntry: (created) =>
           _commitPushAndRemoveRouteEntry(created, predicate),
     );
@@ -219,7 +210,28 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     _PreparedRoute prepared,
     CCNavigationOrigin origin,
     CCNavigationSource? source,
-  ) async {
+  ) => _dispatchNavigationWithAction(
+    operation,
+    prepared,
+    origin,
+    source,
+    action: (request) => _requiredNavigationAdapter.navigate(request),
+  );
+
+  /// Runs the common interception pipeline before one Adapter operation.
+  ///
+  /// [action] receives the final request after all redirects have been
+  /// resolved. Keeping this pipeline shared ensures composite operations such
+  /// as PopAndPush and PushAndRemoveUntil enforce the same access policies as
+  /// ordinary Push and Replace navigation.
+  Future<Object?> _dispatchNavigationWithAction(
+    CCNavigationOperation operation,
+    _PreparedRoute prepared,
+    CCNavigationOrigin origin,
+    CCNavigationSource? source, {
+    required Future<Object?> Function(CCNavigationRequest request) action,
+    void Function(_RouteEntryRecord entry)? commitEntry,
+  }) async {
     final navigationId = '$_runtimeId-navigation-${++_navigationSequence}';
     final cancellation = CCCancellationToken();
     var current = prepared;
@@ -236,8 +248,9 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
         final entry = _createRouteEntry(request);
         return _dispatchRequest(
           request,
-          () => _requiredNavigationAdapter.navigate(request),
+          () => action(request),
           entry: entry,
+          commitEntry: commitEntry,
         );
       }
       var adapterDispatchStarted = false;
@@ -253,8 +266,9 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
             final entry = _createRouteEntry(request);
             return await _dispatchRequest(
               request,
-              () => _requiredNavigationAdapter.navigate(request),
+              () => action(request),
               entry: entry,
+              commitEntry: commitEntry,
             );
           case CCNavigationCancel(:final code):
             throw CCRouteCancelledError(code);
