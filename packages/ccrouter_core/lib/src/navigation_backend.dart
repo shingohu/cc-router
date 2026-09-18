@@ -46,6 +46,44 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
     }
   }
 
+  /// Imports an optional initial backend stack into the diagnostic ledger.
+  ///
+  /// Snapshot entries are deliberately not emitted as transition events: they
+  /// predate Runtime observation and therefore cannot represent a new Push.
+  /// Invalid identities fail initialization rather than entering a ledger
+  /// that could later be mistaken for a correlated managed transition.
+  Future<void> _readInitialBackendSnapshot() async {
+    final adapter = _navigationAdapter;
+    final source = adapter is CCNavigationBackendSnapshotSource
+        ? adapter as CCNavigationBackendSnapshotSource
+        : null;
+    if (source == null) return;
+    final snapshots = await source.readInitialBackendSnapshot();
+    for (final snapshot in snapshots) {
+      if (snapshot.backendEntryId.isEmpty || snapshot.navigatorOutlet.isEmpty) {
+        throw const CCNavigationAdapterError(
+          'Initial backend snapshot contains an invalid entry identity.',
+        );
+      }
+      if (_backendEntries.length >= navigationEventCapacity &&
+          navigationEventCapacity > 0 &&
+          !_backendEntries.containsKey(snapshot.backendEntryId)) {
+        _backendEntries.remove(_backendEntries.keys.first);
+      }
+      _backendEntries[snapshot.backendEntryId] = CCBackendEntry(
+        backendEntryId: snapshot.backendEntryId,
+        owner: snapshot.owner,
+        routeEntryId: snapshot.routeEntryId,
+        routeId: snapshot.routeId,
+        hostId: snapshot.hostId,
+        navigatorOutlet: snapshot.navigatorOutlet,
+        location: snapshot.location,
+        lifecycleState: CCBackendEntryLifecycleState.active,
+        lastSequence: snapshot.sequence,
+      );
+    }
+  }
+
   /// Stores and publishes one adapter-observed backend event.
   ///
   /// Backend observations are diagnostic until an adapter can correlate them

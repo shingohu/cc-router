@@ -30,7 +30,8 @@ final class CCMemoryNavigationAdapter
     implements
         CCNavigationAdapter,
         CCNavigationPopCoordinator,
-        CCNavigationAdapterCapabilitySource {
+        CCNavigationAdapterCapabilitySource,
+        CCNavigationBackendSnapshotSource {
   /// Creates an uninitialized empty navigation stack.
   CCMemoryNavigationAdapter();
 
@@ -44,6 +45,24 @@ final class CCMemoryNavigationAdapter
         supportsNestedNavigators: true,
         supportsStatefulShell: true,
       );
+
+  /// Returns the current in-memory entries as an initialization snapshot.
+  @override
+  Future<List<CCNavigationBackendEntrySnapshot>>
+  readInitialBackendSnapshot() async {
+    _ensureAvailable();
+    return List.unmodifiable(
+      _entries.map(
+        (entry) => CCNavigationBackendEntrySnapshot(
+          backendEntryId: 'memory-${entry.request.navigationId}',
+          owner: CCBackendEntryOwner.managed,
+          routeId: entry.request.routeId,
+          navigatorOutlet: entry.request.placement.navigatorOutlet,
+          location: entry.request.uri.toString(),
+        ),
+      ),
+    );
+  }
 
   /// Route descriptions supplied during initialization.
   List<CCNavigationRoute> _routes = const [];

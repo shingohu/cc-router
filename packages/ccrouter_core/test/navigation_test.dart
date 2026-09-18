@@ -120,14 +120,20 @@ final class BackendEventNavigationAdapter
     implements
         CCNavigationAdapter,
         CCNavigationBackendEventSource,
-        CCNavigationAdapterCapabilitySource {
+        CCNavigationAdapterCapabilitySource,
+        CCNavigationBackendSnapshotSource {
   final CCMemoryNavigationAdapter delegate = CCMemoryNavigationAdapter();
   final Set<CCNavigationBackendEventListener> listeners = {};
   bool consumeForeignMaybePop = false;
+  List<CCNavigationBackendEntrySnapshot> initialSnapshot = const [];
 
   @override
   CCNavigationAdapterCapabilities get capabilities =>
       const CCNavigationAdapterCapabilities();
+
+  @override
+  Future<List<CCNavigationBackendEntrySnapshot>>
+  readInitialBackendSnapshot() async => initialSnapshot;
 
   void emit(
     CCNavigationBackendEventKind kind, {
@@ -251,6 +257,44 @@ CCRouteDefinition<RouteArgs, String> pathRoute({
 );
 
 void main() {
+  test(
+    'imports initial backend snapshots without creating Route Entries',
+    () async {
+      final adapter = BackendEventNavigationAdapter()
+        ..initialSnapshot = const [
+          CCNavigationBackendEntrySnapshot(
+            backendEntryId: 'window-a-root',
+            owner: CCBackendEntryOwner.foreign,
+            hostId: 'window-a',
+            navigatorOutlet: 'root',
+            location: '/external',
+          ),
+          CCNavigationBackendEntrySnapshot(
+            backendEntryId: 'window-b-detail',
+            owner: CCBackendEntryOwner.opaque,
+            hostId: 'window-b',
+            navigatorOutlet: 'detail',
+            location: 'overlay:menu',
+          ),
+        ];
+      final runtime = CCRouterRuntime.forTesting(navigationAdapter: adapter);
+      await runtime.initialize();
+
+      expect(runtime.activeRouteEntries, isEmpty);
+      expect(runtime.activeBackendEntries, hasLength(2));
+      expect(runtime.activeBackendEntries.map((entry) => entry.hostId), [
+        'window-a',
+        'window-b',
+      ]);
+      expect(
+        runtime.activeBackendEntries.map((entry) => entry.navigatorOutlet),
+        ['root', 'detail'],
+      );
+      expect(runtime.recentBackendNavigationEvents, isEmpty);
+      await runtime.dispose();
+    },
+  );
+
   test(
     'capability-aware adapters reject unsupported static and composite work',
     () async {

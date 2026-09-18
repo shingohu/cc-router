@@ -132,6 +132,50 @@ final class CCBackendEntry {
   final int? lastSequence;
 }
 
+/// Immutable active backend entry reported during adapter initialization.
+///
+/// A snapshot describes entries that already exist before Runtime starts
+/// observing transitions. It is diagnostic state only: even a `managed`
+/// snapshot does not create a CCRouter RouteEntry or Route Scope without a
+/// matching Runtime navigation identity.
+final class CCNavigationBackendEntrySnapshot {
+  /// Creates one active backend snapshot entry.
+  const CCNavigationBackendEntrySnapshot({
+    required this.backendEntryId,
+    required this.owner,
+    required this.navigatorOutlet,
+    this.routeEntryId,
+    this.routeId,
+    this.hostId,
+    this.location,
+    this.sequence,
+  });
+
+  /// Stable identity assigned by the backend before Runtime initialization.
+  final String backendEntryId;
+
+  /// Backend ownership classification known at snapshot time.
+  final CCBackendEntryOwner owner;
+
+  /// Navigator Outlet containing this backend entry.
+  final String navigatorOutlet;
+
+  /// Optional matching CCRouter RouteEntry identity from state restoration.
+  final String? routeEntryId;
+
+  /// Optional stable CCRouter route ID supplied by the backend.
+  final String? routeId;
+
+  /// Optional Window or display host identity.
+  final String? hostId;
+
+  /// Optional backend location or settings name.
+  final String? location;
+
+  /// Backend sequence associated with this snapshot, when available.
+  final int? sequence;
+}
+
 /// Immutable, backend-neutral observation of one Navigator stack transition.
 ///
 /// Route metadata is nullable because an application may mutate its own
@@ -225,6 +269,17 @@ abstract interface class CCNavigationBackendEventSource {
   void Function() addBackendEventListener(
     CCNavigationBackendEventListener listener,
   );
+}
+
+/// Optional Adapter SPI exposing the initial backend stack.
+///
+/// Implementations call this after [CCNavigationAdapter.initialize] has
+/// accepted route metadata. Runtime records the result in its Backend Entry
+/// ledger before accepting navigation, while keeping the snapshot separate
+/// from transition events and managed RouteEntry lifecycle.
+abstract interface class CCNavigationBackendSnapshotSource {
+  /// Reads active backend entries that predate Runtime event observation.
+  Future<List<CCNavigationBackendEntrySnapshot>> readInitialBackendSnapshot();
 }
 
 /// Optional Adapter SPI that provides ownership-aware Pop outcomes.

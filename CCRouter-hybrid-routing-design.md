@@ -174,7 +174,7 @@ Runtime 根据能力选择正常执行、明确记录的降级实现或初始化
 - [x] 增加 Managed/Foreign/Opaque 所有权；
 - [x] 增加 `backendEntryId`、操作 ID 和事件序列；
 - [x] Runtime 仅将身份事件写入台账，不根据台账事件删除 Managed RouteEntry；
-- [ ] 增加初始后端栈快照和多 Host/Outlet 分区；
+- [x] 增加初始后端栈快照，并在台账中保留 Host/Outlet 分区；
 - [x] 将 Pop 协调升级为显式 `CCPopOutcome`，旧 Adapter 仍可通过 Boolean API 降级。
 
 ### 阶段三：Pop Coordinator

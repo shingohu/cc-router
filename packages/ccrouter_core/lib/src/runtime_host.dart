@@ -235,6 +235,7 @@ final class CCRouterRuntime {
       shells: _shellRegistry.navigationShells,
     );
     _attachBackendNavigationSource();
+    await _readInitialBackendSnapshot();
     _initialized = true;
   }
 
