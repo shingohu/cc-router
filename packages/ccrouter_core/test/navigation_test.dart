@@ -123,15 +123,20 @@ final class BackendEventNavigationAdapter
         CCNavigationAdapterCapabilitySource,
         CCNavigationBackendSnapshotSource,
         CCNavigationPredictiveBackSource {
+  BackendEventNavigationAdapter({this.predictiveBackSupported = true});
+
   final CCMemoryNavigationAdapter delegate = CCMemoryNavigationAdapter();
   final Set<CCNavigationBackendEventListener> listeners = {};
   final Set<CCPredictiveBackEventListener> predictiveBackListeners = {};
+  final bool predictiveBackSupported;
   bool consumeForeignMaybePop = false;
   List<CCNavigationBackendEntrySnapshot> initialSnapshot = const [];
 
   @override
   CCNavigationAdapterCapabilities get capabilities =>
-      const CCNavigationAdapterCapabilities(supportsPredictiveBack: true);
+      CCNavigationAdapterCapabilities(
+        supportsPredictiveBack: predictiveBackSupported,
+      );
 
   @override
   Future<List<CCNavigationBackendEntrySnapshot>>
@@ -364,6 +369,23 @@ void main() {
         throwsA(isA<CCNavigationAdapterError>()),
       );
       await runtime.dispose();
+
+      final unsupportedPredictiveRuntime = CCRouterRuntime.forTesting(
+        navigationAdapter: BackendEventNavigationAdapter(
+          predictiveBackSupported: false,
+        ),
+        components: [
+          routeComponent(
+            'orders',
+            (registry) => registry.registerRoute(pathRoute()),
+          ),
+        ],
+      );
+      expect(
+        unsupportedPredictiveRuntime.initialize(),
+        throwsA(isA<CCNavigationAdapterError>()),
+      );
+      await unsupportedPredictiveRuntime.dispose();
     },
   );
 

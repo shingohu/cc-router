@@ -258,6 +258,10 @@ final class CCRouterRuntime {
     if (capabilitySource == null) return;
     final capabilities = capabilitySource.capabilities;
     final missing = <String>{};
+    if (adapter is CCNavigationPredictiveBackSource &&
+        !capabilities.supportsPredictiveBack) {
+      missing.add('supportsPredictiveBack');
+    }
     final routes = _routeRegistry.navigationRoutes;
     final hasModalRoute = routes.any(
       (route) =>
