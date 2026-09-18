@@ -554,7 +554,7 @@ URL -> RouteCodec -> Typed Route Args -> Route Factory -> Widget
 
 完整 URL 不天然等于外部 Deep Link，普通 Path 也不天然等于内部导航。类型安全 Intent 和应用内 `open` 使用内部 Origin；Universal Link、App Link、自定义 Scheme、通知 URI 和扫码输入通过受控 Ingress 使用外部 Origin 并执行 `CCDeepLinkPolicy`。业务可填写的导航 Source 只用于埋点，不能改变该信任属性。
 
-当前基础实现已经提供 Adapter-neutral 的 `CCNavigator`、主 Pattern 地址生成、Runtime 导航请求、Adapter 生命周期、Pure Dart 内存 Adapter、可选 `CCRouterApp` 和独立的 `ccrouter_go_router` 基础适配器。GoRouter 适配器目前覆盖 Page 路由及基础栈操作；复合栈原子操作、Modal/Dialog、Shell/Outlet 和受控 Deep Link Ingress 仍在后续 Flutter 集成阶段接入，Core 不保存或解释 Flutter 对象。
+当前基础实现已经提供 Adapter-neutral 的 `CCNavigator`、主 Pattern 地址生成、Runtime 导航请求、Adapter 生命周期、Pure Dart 内存 Adapter、可选 `CCRouterApp`、固定来源的 `CCDeepLinkIngress` 和独立的 `ccrouter_go_router` 基础适配器。GoRouter 适配器目前覆盖 Page 路由及基础栈操作；Modal/Dialog、Shell/Outlet 和平台事件监听仍在后续 Flutter 集成阶段接入，Core 不保存或解释 Flutter 对象。
 
 小屏列表、大屏左列表右详情属于自适应主从布局（Master-Detail/List-Detail），应使用同一组类型安全的列表/详情 Route Contract。小屏采用单列 Navigator 栈，大屏采用显式 List Outlet 与 Detail Outlet；只有在两个区域需要独立导航历史时才由 Shell 承载两个 Navigator。底部 Tab 等多个长期并行分支才使用 `StatefulShellRoute`，不能把所有主从布局都建模为 Stateful Shell。
 

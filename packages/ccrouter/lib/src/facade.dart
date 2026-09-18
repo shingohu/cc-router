@@ -4,6 +4,7 @@ import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 import 'package:ccrouter_core/ccrouter_core.dart';
 
 part 'navigation.dart';
+part 'deep_link.dart';
 
 /// Static business-facing entry point for all CCRouter capabilities.
 ///

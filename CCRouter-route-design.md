@@ -791,11 +791,16 @@ externalQr          扫码等不可信外部输入
 - `CCRouterApp`、平台 Adapter 或应用 Composition Root 持有的受控 Host 入口负责创建外部 Origin。
 - 普通业务导航 API 不暴露 `external` 布尔值，也不能把内部请求伪装成外部请求或把外部请求降级为内部请求。
 - `CCRouter.navigator.open(uri)` 默认表示应用内主动打开；外部 URI 必须从受控 Deep Link Ingress 进入。
+- `CCDeepLinkIngress.fromPlatform(uri)`、`fromNotification(uri)` 和
+  `fromQrCode(uri)` 是当前公开门面中的固定入口；它们不接受任意 Origin 参数，
+  分别写入对应的外部 Origin 后进入同一 Runtime 管线。
 - `CCNavigationSource` 是业务可填写的埋点来源，不是安全信任标记；`CCNavigationSource.deepLink(...)` 本身不能启用或绕过 `CCDeepLinkPolicy`。
 - Redirect 必须继承最初 Origin，直到整条导航完成，不能通过重定向绕过 Deep Link Policy。
 - “其他业务组件调用”属于应用内导航，组件契约可见性与 Deep Link 外部来源判定互不替代。
 
-Core 当前的 `external` 参数只作为内部实现阶段的等价信号；接入 `CCRouterApp` 和 Adapter 时必须收敛进不可由业务构造的导航上下文。
+Core 当前的 `external` 参数只作为内部实现阶段的等价信号；公开门面通过
+`CCDeepLinkIngress` 收敛为固定的不可配置 Origin。`CCRouterApp`、平台 Adapter
+或应用 Composition Root 负责在真实平台事件到达时调用相应入口。
 
 ### 14.2 外部导航流程
 
