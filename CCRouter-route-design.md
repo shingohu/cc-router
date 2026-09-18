@@ -1080,6 +1080,10 @@ GoRouter Adapter 通过 `navigatorKeys` 接收应用拥有的 Outlet Navigator�
 标识的 Push/Pop/Replace/Remove 事件，适合埋点、诊断和生命周期同步；它不在回调中
 保存 `BuildContext`，也不允许同步触发 CCRouter 导航。当前 Flutter Observer API
 不保证提供 Pop 返回值，因此事件中的 `result` 可能为空。
+`CCGoRouterAdapter` 可以通过 `observers` 参数订阅这些事件，并以
+`lifecycleEventCapacity` 保留有界快照；Runtime dispose 时会自动解除订阅。外部
+Deep Link 仍必须先经过 Core 的 `CCDeepLinkIngress` 和策略校验，校验通过后由
+Adapter 的 `go` 进入目标 Shell 分支，不根据 URI 形态绕过策略。
 
 - 主 Pattern、别名、Query、Extra 和返回值。
 - Shell、Outlet 和生命周期同步。

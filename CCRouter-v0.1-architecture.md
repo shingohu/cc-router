@@ -565,6 +565,9 @@ GoRouter 自己的分支状态。Shell 自身生成仍不由 Adapter 创建，�
 Shell branch Navigator；Observer 只输出带 Outlet 的 Push/Pop/Replace/Remove 事件，
 不保存 `BuildContext`，也不在回调内同步发起导航。当前 Flutter SDK 的 Observer
 接口不保证提供 Pop 返回值，返回值仍以 CCRouter Adapter 的 typed Future 为准。
+Adapter 可通过 `observers` 订阅这些事件，并按 `lifecycleEventCapacity` 保留有界
+诊断快照；Runtime dispose 时解除订阅。外部 Deep Link 仍由 Core 先执行 Ingress 与
+Deep Link Policy，之后才通过 Adapter 的 `go` 进入目标 Shell 分支。
 
 小屏列表、大屏左列表右详情属于自适应主从布局（Master-Detail/List-Detail），应使用同一组类型安全的列表/详情 Route Contract。小屏采用单列 Navigator 栈，大屏采用显式 List Outlet 与 Detail Outlet；只有在两个区域需要独立导航历史时才由 Shell 承载两个 Navigator。底部 Tab 等多个长期并行分支才使用 `StatefulShellRoute`，不能把所有主从布局都建模为 Stateful Shell。
 

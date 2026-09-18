@@ -18,6 +18,7 @@ CCNavigationRequest request({
   required CCNavigationOperation operation,
   required Uri uri,
   CCRoutePlacement placement = const CCRoutePlacement.root(),
+  CCNavigationOrigin origin = CCNavigationOrigin.internal,
 }) => CCNavigationRequest(
   navigationId: 'test-$id-${operation.name}',
   operation: operation,
@@ -26,7 +27,7 @@ CCNavigationRequest request({
   arguments: const Object(),
   presentation: const CCPagePresentation(),
   placement: placement,
-  origin: CCNavigationOrigin.internal,
+  origin: origin,
 );
 
 void main() {
@@ -65,6 +66,48 @@ void main() {
     await tester.pumpAndSettle();
     expect(await result, 'done');
     expect(find.text('home'), findsOneWidget);
+  });
+
+  testWidgets('Adapter retains bounded Navigator lifecycle events', (
+    tester,
+  ) async {
+    final observer = CCGoRouterNavigationObserver(outlet: 'root');
+    final router = GoRouter(
+      initialLocation: '/',
+      observers: [observer],
+      routes: [
+        GoRoute(path: '/', builder: (_, _) => const Text('home')),
+        GoRoute(path: '/detail', builder: (_, _) => const Text('detail')),
+      ],
+    );
+    final adapter = CCGoRouterAdapter(
+      router: router,
+      observers: [observer],
+      lifecycleEventCapacity: 2,
+    );
+    addTearDown(router.dispose);
+    await adapter.initialize([route('detail', path: '/detail')]);
+    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    await tester.pumpAndSettle();
+    await adapter.navigate(
+      request(
+        id: 'detail',
+        operation: CCNavigationOperation.go,
+        uri: Uri.parse('/detail'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(adapter.lifecycleEvents, hasLength(2));
+    expect(
+      adapter.lifecycleEvents.map((event) => event.kind),
+      containsAll([
+        CCGoRouterNavigationEventKind.push,
+        CCGoRouterNavigationEventKind.remove,
+      ]),
+    );
+    await adapter.dispose();
+    expect(adapter.lifecycleEvents, isEmpty);
   });
 
   testWidgets('normalizes absolute URI requests to GoRouter paths', (
@@ -498,8 +541,9 @@ void main() {
       request(
         id: 'settings.detail',
         operation: CCNavigationOperation.go,
-        uri: Uri.parse('/settings/detail'),
+        uri: Uri.parse('https://example.com/settings/detail'),
         placement: placement,
+        origin: CCNavigationOrigin.externalPlatform,
       ),
     );
     await tester.pumpAndSettle();

@@ -61,6 +61,18 @@ final class CCGoRouterNavigationObserver extends NavigatorObserver {
   /// Optional callback invoked after each backend transition.
   final void Function(CCGoRouterNavigationEvent event)? onEvent;
 
+  /// Additional listeners used by framework integrations such as the Adapter.
+  final Set<void Function(CCGoRouterNavigationEvent event)> _listeners = {};
+
+  /// Subscribes to lifecycle events and returns a callback that removes the
+  /// subscription. The callback is invoked after [onEvent].
+  void Function() addListener(
+    void Function(CCGoRouterNavigationEvent event) listener,
+  ) {
+    _listeners.add(listener);
+    return () => _listeners.remove(listener);
+  }
+
   @override
   void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
     super.didPush(route, previousRoute);
@@ -116,5 +128,10 @@ final class CCGoRouterNavigationObserver extends NavigatorObserver {
   }
 
   /// Emits one event after Flutter has updated its Navigator state.
-  void _emit(CCGoRouterNavigationEvent event) => onEvent?.call(event);
+  void _emit(CCGoRouterNavigationEvent event) {
+    onEvent?.call(event);
+    for (final listener in _listeners.toList()) {
+      listener(event);
+    }
+  }
 }

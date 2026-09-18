@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 
 import 'route_binding.dart';
+import 'navigation_observer.dart';
 import 'shell_binding.dart';
 
 /// Adapts CCRouter navigation requests to an externally configured [GoRouter].
@@ -23,13 +24,20 @@ final class CCGoRouterAdapter implements CCNavigationAdapter {
     Iterable<CCGoRouterRouteBinding> bindings = const [],
     Iterable<CCGoRouterShellBinding> shells = const [],
     Map<String, GlobalKey<NavigatorState>> navigatorKeys = const {},
+    Iterable<CCGoRouterNavigationObserver> observers = const [],
+    int lifecycleEventCapacity = 1000,
   }) {
     final shellList = List<CCGoRouterShellBinding>.unmodifiable(shells);
+    final observerList = List<CCGoRouterNavigationObserver>.unmodifiable(
+      observers,
+    );
     return CCGoRouterAdapter._(
       router: router,
       bindings: bindings,
       shells: shellList,
       navigatorKeys: navigatorKeys,
+      observers: observerList,
+      lifecycleEventCapacity: lifecycleEventCapacity,
     );
   }
 
@@ -39,10 +47,25 @@ final class CCGoRouterAdapter implements CCNavigationAdapter {
     required Iterable<CCGoRouterRouteBinding> bindings,
     required Iterable<CCGoRouterShellBinding> shells,
     required Map<String, GlobalKey<NavigatorState>> navigatorKeys,
+    required Iterable<CCGoRouterNavigationObserver> observers,
+    required int lifecycleEventCapacity,
   }) : _router = router,
        _bindings = List.unmodifiable(bindings),
        _shells = List.unmodifiable(shells),
-       _navigatorKeys = _mergeNavigatorKeys(navigatorKeys, shells);
+       _navigatorKeys = _mergeNavigatorKeys(navigatorKeys, shells),
+       _observers = List.unmodifiable(observers),
+       _lifecycleEventCapacity = lifecycleEventCapacity {
+    if (lifecycleEventCapacity < 0) {
+      throw ArgumentError.value(
+        lifecycleEventCapacity,
+        'lifecycleEventCapacity',
+        'Capacity cannot be negative.',
+      );
+    }
+    for (final observer in _observers) {
+      _observerRemovers.add(observer.addListener(_recordLifecycleEvent));
+    }
+  }
 
   /// GoRouter instance that receives translated navigation operations.
   GoRouter get router => _router;
@@ -58,6 +81,18 @@ final class CCGoRouterAdapter implements CCNavigationAdapter {
 
   /// Application-owned Navigator keys indexed by CCRouter Outlet name.
   final Map<String, GlobalKey<NavigatorState>> _navigatorKeys;
+
+  /// Observers supplied by the application-owned GoRouter tree.
+  final List<CCGoRouterNavigationObserver> _observers;
+
+  /// Maximum number of lifecycle events retained for diagnostics.
+  final int _lifecycleEventCapacity;
+
+  /// Listener removers registered against [_observers].
+  final List<void Function()> _observerRemovers = [];
+
+  /// Bounded lifecycle events emitted by configured Navigator observers.
+  final List<CCGoRouterNavigationEvent> _lifecycleEvents = [];
 
   /// Route metadata accepted by the Runtime during initialization.
   final List<CCNavigationRoute> _routes = [];
@@ -85,6 +120,13 @@ final class CCGoRouterAdapter implements CCNavigationAdapter {
 
   /// Application-owned Shell bindings supplied for Runtime route placement.
   List<CCGoRouterShellBinding> get shells => _shells;
+
+  /// Navigator observers subscribed by this Adapter.
+  List<CCGoRouterNavigationObserver> get observers => _observers;
+
+  /// Bounded snapshot of observed Navigator lifecycle events.
+  List<CCGoRouterNavigationEvent> get lifecycleEvents =>
+      List.unmodifiable(_lifecycleEvents);
 
   /// Initializes the adapter with Runtime-validated route metadata.
   ///
@@ -265,8 +307,13 @@ final class CCGoRouterAdapter implements CCNavigationAdapter {
     if (_disposed) return;
     _disposed = true;
     _initialized = false;
+    for (final remove in _observerRemovers) {
+      remove();
+    }
+    _observerRemovers.clear();
     _routes.clear();
     _entries.clear();
+    _lifecycleEvents.clear();
   }
 
   /// Pushes one location and removes its tracked entry when it completes.
@@ -425,6 +472,15 @@ final class CCGoRouterAdapter implements CCNavigationAdapter {
         '"${placement.shellId}".',
       );
     }
+  }
+
+  /// Retains one backend event for diagnostics without exposing mutable state.
+  void _recordLifecycleEvent(CCGoRouterNavigationEvent event) {
+    if (_lifecycleEventCapacity == 0 || _disposed) return;
+    if (_lifecycleEvents.length == _lifecycleEventCapacity) {
+      _lifecycleEvents.removeAt(0);
+    }
+    _lifecycleEvents.add(event);
   }
 
   /// Validates Shell type and the complete set of declared branch keys.
