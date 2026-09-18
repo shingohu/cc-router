@@ -22,6 +22,12 @@ abstract interface class CCNavigator {
   /// a backend Pop guard.
   Future<bool> maybePop<R>({R? result});
 
+  /// Coordinates a Pop and reports whether a Managed or foreign entry moved.
+  ///
+  /// Use this when system back, gestures, or modal UI need ownership-aware
+  /// diagnostics. For ordinary back handling, [maybePop] remains sufficient.
+  Future<CCPopOutcome> maybePopOutcome<R>({R? result});
+
   /// Pops the current route and pushes [intent] as one stack operation.
   ///
   /// [popResult] completes the removed route's pending result. The returned
@@ -83,6 +89,11 @@ final class _CCNavigator implements CCNavigator {
   @override
   Future<bool> maybePop<R>({R? result}) =>
       CCRouter._runtime.maybePopRoute(result: result);
+
+  /// Coordinates a Pop through the Runtime-owned Adapter.
+  @override
+  Future<CCPopOutcome> maybePopOutcome<R>({R? result}) =>
+      CCRouter._runtime.maybePopOutcomeRoute(result: result);
 
   /// Pops and pushes through the Runtime owned by [CCRouter].
   @override

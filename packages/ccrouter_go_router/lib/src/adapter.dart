@@ -18,7 +18,10 @@ import 'shell_binding.dart';
 /// supplies a custom `pageBuilder` returning the corresponding exported modal
 /// Page type. The adapter does not rewrite application-owned GoRoutes.
 final class CCGoRouterAdapter
-    implements CCNavigationAdapter, CCNavigationBackendEventSource {
+    implements
+        CCNavigationAdapter,
+        CCNavigationBackendEventSource,
+        CCNavigationPopCoordinator {
   /// Creates an adapter around an application-owned [router].
   factory CCGoRouterAdapter({
     required GoRouter router,
@@ -120,6 +123,12 @@ final class CCGoRouterAdapter
 
   /// Identity map from Flutter Routes to backend Entry IDs.
   final Expando<String> _backendRouteIds = Expando<String>();
+
+  /// Backend Entry ID observed by the most recent Pop callback.
+  String? _lastPoppedBackendEntryId;
+
+  /// Ownership observed for the most recent Pop callback.
+  CCPopRemovedOwner _lastPoppedOwner = CCPopRemovedOwner.none;
 
   /// Managed backend IDs indexed by their Runtime navigation identity.
   final Map<String, String> _backendIdsByNavigationId = {};
@@ -271,15 +280,34 @@ final class CCGoRouterAdapter
   /// Push removes its own entry when the GoRouter Future completes.
   @override
   Future<bool> maybePop({Object? result}) async {
+    final outcome = await maybePopOutcome(result: result);
+    return outcome.handled;
+  }
+
+  /// Coordinates a GoRouter Pop with best-effort backend identity correlation.
+  ///
+  /// A Pop with no Navigator observer event is reported as handled with owner
+  /// `none`; this is the expected result for LocalHistoryEntry and opaque
+  /// backend guards, and it never causes Runtime to remove a managed entry.
+  @override
+  Future<CCPopOutcome> maybePopOutcome({Object? result}) async {
     _ensureAvailable();
     final navigator = _activeNavigator;
-    if (navigator == null) return false;
+    if (navigator == null) return const CCPopOutcome(handled: false);
+    _lastPoppedBackendEntryId = null;
+    _lastPoppedOwner = CCPopRemovedOwner.none;
     _expectBackendEvent(CCGoRouterNavigationEventKind.pop);
     final didPop = await navigator.maybePop<Object?>(result);
     // LocalHistoryEntry consumption emits no NavigatorObserver Pop. Remove an
     // unmatched expectation before it can misclassify a later foreign Pop.
     _discardExpectedBackendEvent(CCGoRouterNavigationEventKind.pop);
-    return didPop;
+    if (!didPop) return const CCPopOutcome(handled: false);
+    return CCPopOutcome(
+      handled: true,
+      removedBackendEntryId: _lastPoppedBackendEntryId,
+      removedOwner: _lastPoppedOwner,
+      resultAvailable: false,
+    );
   }
 
   /// Pops the active entry and pushes [request] through GoRouter.
@@ -633,6 +661,14 @@ final class CCGoRouterAdapter
       _lifecycleEvents.add(event);
     }
     final isAdapterOwned = _consumeExpectedBackendEvent(event.kind);
+    if (event.kind == CCGoRouterNavigationEventKind.pop) {
+      final backendEntryId = _backendEntryIdFor(event.route);
+      _lastPoppedBackendEntryId = backendEntryId;
+      _lastPoppedOwner =
+          _entries.any((entry) => entry.backendEntryId == backendEntryId)
+          ? CCPopRemovedOwner.managed
+          : CCPopRemovedOwner.foreign;
+    }
     _emitBackendEvent(event, correlateRequest: isAdapterOwned);
   }
 

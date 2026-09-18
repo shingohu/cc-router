@@ -28,9 +28,26 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
   /// managed entries close when their Adapter Future completes; complete
   /// identity synchronization is provided by the future Pop coordinator.
   Future<bool> maybePopRoute<R>({R? result}) async {
+    final outcome = await maybePopOutcomeRoute(result: result);
+    return outcome.handled;
+  }
+
+  /// Coordinates a backend Pop and preserves ownership information.
+  ///
+  /// Use this when system back, a gesture, or a form guard must distinguish a
+  /// Managed Route from a foreign Popup or LocalHistoryEntry. Legacy adapters
+  /// that expose only the Boolean Pop API are converted to an outcome with
+  /// [CCPopRemovedOwner.none].
+  Future<CCPopOutcome> maybePopOutcomeRoute<R>({R? result}) async {
     _ensureInitialized();
     try {
-      return await _requiredNavigationAdapter.maybePop(result: result);
+      final adapter = _requiredNavigationAdapter;
+      if (adapter is CCNavigationPopCoordinator) {
+        final coordinator = adapter as CCNavigationPopCoordinator;
+        return await coordinator.maybePopOutcome(result: result);
+      }
+      final handled = await adapter.maybePop(result: result);
+      return CCPopOutcome(handled: handled);
     } on CCRouterError {
       rethrow;
     } catch (error) {

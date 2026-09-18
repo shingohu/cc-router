@@ -251,7 +251,9 @@ void main() {
       );
       await tester.pumpAndSettle();
       expectManagedEntryUnchanged();
-      expect(await runtime.maybePopRoute(), isTrue);
+      final localHistoryPop = await runtime.maybePopOutcomeRoute();
+      expect(localHistoryPop.handled, isTrue);
+      expect(localHistoryPop.removedOwner, CCPopRemovedOwner.none);
       await tester.pumpAndSettle();
       await bottomSheet.closed;
       expect(find.byKey(const ValueKey('foreign-local-history')), findsNothing);

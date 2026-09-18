@@ -1206,12 +1206,17 @@ void main() {
       await runtime.goRoute(
         const TestIntent<void>('orders.detail', RouteArgs('1')),
       );
-      expect(await runtime.maybePopRoute(), isFalse);
+      final declined = await runtime.maybePopOutcomeRoute();
+      expect(declined.handled, isFalse);
+      expect(declined.removedOwner, CCPopRemovedOwner.none);
 
       final pushed = runtime.pushRoute<String>(
         const TestIntent<String>('orders.detail', RouteArgs('2')),
       );
-      expect(await runtime.maybePopRoute(result: 'back'), isTrue);
+      final handled = await runtime.maybePopOutcomeRoute(result: 'back');
+      expect(handled.handled, isTrue);
+      expect(handled.removedOwner, CCPopRemovedOwner.managed);
+      expect(handled.resultAvailable, isTrue);
       expect(await pushed, 'back');
       expect(adapter.entries.map((entry) => entry.uri.path), ['/orders/1']);
       await runtime.dispose();

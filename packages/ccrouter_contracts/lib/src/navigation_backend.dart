@@ -25,6 +25,48 @@ enum CCBackendEntryLifecycleState {
   unknown,
 }
 
+/// Identifies which kind of backend entry consumed a Pop request.
+enum CCPopRemovedOwner {
+  /// No backend entry was confirmed as removed.
+  none,
+
+  /// A CCRouter-managed backend entry was removed.
+  managed,
+
+  /// An application-owned or third-party backend entry was removed.
+  foreign,
+
+  /// An entry was removed but its ownership could not be established.
+  opaque,
+}
+
+/// Adapter-neutral result of one coordinated Pop request.
+///
+/// A handled Pop can still represent a `LocalHistoryEntry` or foreign Popup;
+/// callers must only close a CCRouter Route Scope when [removedOwner] is
+/// [CCPopRemovedOwner.managed].
+final class CCPopOutcome {
+  /// Creates a Pop result with explicit ownership and result-channel state.
+  const CCPopOutcome({
+    required this.handled,
+    this.removedBackendEntryId,
+    this.removedOwner = CCPopRemovedOwner.none,
+    this.resultAvailable = false,
+  });
+
+  /// Whether the backend accepted or consumed the Pop request.
+  final bool handled;
+
+  /// Backend identity removed by the Pop, when the adapter could correlate it.
+  final String? removedBackendEntryId;
+
+  /// Ownership of the backend entry removed by the Pop.
+  final CCPopRemovedOwner removedOwner;
+
+  /// Whether the adapter can provide a result for the removed entry.
+  final bool resultAvailable;
+}
+
 /// Identifies a stack transition observed from a navigation backend.
 ///
 /// Backend events include transitions caused by user gestures, system back,
@@ -183,4 +225,14 @@ abstract interface class CCNavigationBackendEventSource {
   void Function() addBackendEventListener(
     CCNavigationBackendEventListener listener,
   );
+}
+
+/// Optional Adapter SPI that provides ownership-aware Pop outcomes.
+///
+/// Older adapters may implement only [CCNavigationAdapter.maybePop]; Runtime
+/// then preserves compatibility by converting its Boolean result into an
+/// outcome whose removed owner is [CCPopRemovedOwner.none].
+abstract interface class CCNavigationPopCoordinator {
+  /// Coordinates one Pop and returns the removed backend Entry ownership.
+  Future<CCPopOutcome> maybePopOutcome({Object? result});
 }

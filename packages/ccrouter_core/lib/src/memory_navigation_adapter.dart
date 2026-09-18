@@ -26,7 +26,8 @@ final class _CCMemoryNavigationEntry {
 /// should provide a platform navigation adapter such as the future GoRouter
 /// integration.
 @visibleForTesting
-final class CCMemoryNavigationAdapter implements CCNavigationAdapter {
+final class CCMemoryNavigationAdapter
+    implements CCNavigationAdapter, CCNavigationPopCoordinator {
   /// Creates an uninitialized empty navigation stack.
   CCMemoryNavigationAdapter();
 
@@ -117,10 +118,21 @@ final class CCMemoryNavigationAdapter implements CCNavigationAdapter {
   /// Pops the current entry when the in-memory stack permits it.
   @override
   Future<bool> maybePop({Object? result}) async {
+    final outcome = await maybePopOutcome(result: result);
+    return outcome.handled;
+  }
+
+  /// Pops the current entry and reports its managed ownership.
+  @override
+  Future<CCPopOutcome> maybePopOutcome({Object? result}) async {
     _ensureAvailable();
-    if (!canPop()) return false;
+    if (!canPop()) return const CCPopOutcome(handled: false);
     _removeCurrent(result: result);
-    return true;
+    return const CCPopOutcome(
+      handled: true,
+      removedOwner: CCPopRemovedOwner.managed,
+      resultAvailable: true,
+    );
   }
 
   /// Pops the current entry and pushes [request] as one operation.
