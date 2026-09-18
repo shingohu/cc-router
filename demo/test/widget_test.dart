@@ -1,3 +1,4 @@
+import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter_demo/main.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -6,7 +7,7 @@ void main() {
   testWidgets('initializes CCRouter and executes the demo Command', (
     tester,
   ) async {
-    await tester.pumpWidget(const CCRouterDemoApp());
+    await tester.pumpWidget(const CCRouterApp(child: CCRouterDemoApp()));
     await tester.pump();
 
     expect(find.text('Runtime 已初始化'), findsOneWidget);

@@ -12,9 +12,10 @@ Flutter 组件化运行时的 v0.1 原型。目前先实现不依赖 Flutter 和
 要求 Dart SDK >= 3.9。包之间使用 SemVer 依赖，由 Pub Workspace 本地解析，不使用 `path:`。在私有 Hosted 配置完成前，所有包暂时设置为 `publish_to: none`。
 
 ```sh
-dart pub get
+fvm flutter pub get
 dart analyze
-dart test packages/ccrouter_core/test packages/ccrouter/test
+dart test packages/ccrouter_core/test
+fvm flutter test packages/ccrouter/test
 dart run packages/ccrouter/example/main.dart
 
 # Flutter 示例（从 demo 目录执行）

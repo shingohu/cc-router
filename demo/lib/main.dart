@@ -28,7 +28,7 @@ final class DemoComponentRegistrar implements CCComponentRegistrar {
 }
 
 void main() {
-  runApp(const CCRouterDemoApp());
+  runApp(const CCRouterApp(child: CCRouterDemoApp()));
 }
 
 final class CCRouterDemoApp extends StatelessWidget {

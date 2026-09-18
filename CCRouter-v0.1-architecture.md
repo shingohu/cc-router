@@ -302,7 +302,7 @@ abstract final class CCRouter {
 
 ### 6.2 导航适配器绑定
 
-Flutter 应用启动时显式绑定一个导航适配器：
+Flutter 应用启动时显式绑定一个导航适配器。简单应用可以直接将 Adapter 的 router 交给 `MaterialApp.router`；需要 Shell、Outlet、Deep Link、生命周期、埋点或多窗口绑定时，再使用可选的 `CCRouterApp` Host：
 
 ```dart
 await CCRouter.initialize(

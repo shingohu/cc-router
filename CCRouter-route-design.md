@@ -709,9 +709,9 @@ Shell 负责持久化导航容器和 Outlet，主从容器负责根据屏幕尺�
 - Context 已失效、未挂载或无法解析 Outlet 时返回标准导航错误。
 - Shell 和嵌套 Navigator 必须通过显式 Outlet 关系确定，不能退回全局 Context 猜测。
 
-### 12.5 CCRouterApp
+### 12.5 可选 CCRouterApp Host
 
-`CCRouterApp` 是包裹 Flutter App 的集成宿主：
+`CCRouterApp` 是可选的 Flutter 集成 Host，不是业务 App 必须嵌套的第二个 `MaterialApp`。简单应用可以直接把 GoRouter Adapter 绑定到 `MaterialApp.router`；需要 Shell、Outlet、外部 Deep Link、生命周期、埋点或多窗口能力时使用 `CCRouterApp`：
 
 ```dart
 CCRouterApp(

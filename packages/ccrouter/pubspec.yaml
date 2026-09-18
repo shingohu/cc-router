@@ -8,5 +8,9 @@ environment:
 dependencies:
   ccrouter_contracts: ^0.1.0
   ccrouter_core: ^0.1.0
+  flutter:
+    sdk: flutter
 dev_dependencies:
+  flutter_test:
+    sdk: flutter
   test: ^1.26.0
