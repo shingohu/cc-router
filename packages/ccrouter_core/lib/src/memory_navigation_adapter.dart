@@ -41,6 +41,8 @@ final class CCMemoryNavigationAdapter
         supportsInitialStackSnapshot: true,
         supportsAtomicPopAndPush: true,
         supportsPushAndRemoveUntil: true,
+        supportsNestedNavigators: true,
+        supportsStatefulShell: true,
       );
 
   /// Route descriptions supplied during initialization.

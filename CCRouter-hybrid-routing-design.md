@@ -193,7 +193,8 @@ Runtime 根据能力选择正常执行、明确记录的降级实现或初始化
 
 Adapter 能力声明已提供为可选的 `CCNavigationAdapterCapabilitySource` SPI。
 GoRouter 和内存 Adapter 会声明各自已实现的组合导航、嵌套 Navigator、模态路由、
-Foreign/Opaque 观察等能力；Runtime 能力门禁和明确降级策略仍待后续接入。
+Foreign/Opaque 观察等能力；Runtime 已在初始化和组合导航执行前进行能力校验，
+不再静默降级为无法保证语义的操作。
 
 ### 阶段五：Host 与多 Window
 

@@ -117,10 +117,17 @@ final class FailingNavigationAdapter implements CCNavigationAdapter {
 }
 
 final class BackendEventNavigationAdapter
-    implements CCNavigationAdapter, CCNavigationBackendEventSource {
+    implements
+        CCNavigationAdapter,
+        CCNavigationBackendEventSource,
+        CCNavigationAdapterCapabilitySource {
   final CCMemoryNavigationAdapter delegate = CCMemoryNavigationAdapter();
   final Set<CCNavigationBackendEventListener> listeners = {};
   bool consumeForeignMaybePop = false;
+
+  @override
+  CCNavigationAdapterCapabilities get capabilities =>
+      const CCNavigationAdapterCapabilities();
 
   void emit(
     CCNavigationBackendEventKind kind, {
@@ -231,6 +238,7 @@ CCRouteDefinition<RouteArgs, String> pathRoute({
   String path = '/orders/:value',
   CCDeepLinkPolicy deepLink = CCDeepLinkPolicy.disabled,
   List<String> interceptorIds = const [],
+  CCRoutePresentation presentation = const CCPagePresentation(),
 }) => CCRouteDefinition<RouteArgs, String>(
   routeId: routeId,
   patterns: [
@@ -239,9 +247,58 @@ CCRouteDefinition<RouteArgs, String> pathRoute({
   codec: const RouteArgsCodec(),
   deepLink: deepLink,
   interceptorIds: interceptorIds,
+  presentation: presentation,
 );
 
 void main() {
+  test(
+    'capability-aware adapters reject unsupported static and composite work',
+    () async {
+      final modalRuntime = CCRouterRuntime.forTesting(
+        navigationAdapter: BackendEventNavigationAdapter(),
+        components: [
+          routeComponent(
+            'orders',
+            (registry) => registry.registerRoute(
+              pathRoute(presentation: const CCDialogPresentation()),
+            ),
+          ),
+        ],
+      );
+      expect(
+        modalRuntime.initialize(),
+        throwsA(isA<CCNavigationAdapterError>()),
+      );
+      await modalRuntime.dispose();
+
+      final adapter = BackendEventNavigationAdapter();
+      final runtime = CCRouterRuntime.forTesting(
+        navigationAdapter: adapter,
+        components: [
+          routeComponent(
+            'orders',
+            (registry) => registry.registerRoute(pathRoute()),
+          ),
+        ],
+      );
+      await runtime.initialize();
+      await expectLater(
+        runtime.popAndPushRoute<void>(
+          const TestIntent<void>('orders.detail', RouteArgs('1')),
+        ),
+        throwsA(isA<CCNavigationAdapterError>()),
+      );
+      await expectLater(
+        runtime.pushAndRemoveUntilRoute<void>(
+          const TestIntent<void>('orders.detail', RouteArgs('2')),
+          (_) => false,
+        ),
+        throwsA(isA<CCNavigationAdapterError>()),
+      );
+      await runtime.dispose();
+    },
+  );
+
   test(
     'uncorrelated backend events never mutate managed Route Entries',
     () async {

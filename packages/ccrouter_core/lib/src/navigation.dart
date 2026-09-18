@@ -91,6 +91,10 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     CCNavigationSource? source,
   }) async {
     _ensureInitialized();
+    _ensureAdapterCapability(
+      (capabilities) => capabilities.supportsAtomicPopAndPush,
+      'supportsAtomicPopAndPush',
+    );
     final prepared = _routeRegistry.prepareIntent(intent);
     final result = await _dispatchNavigationWithAction(
       CCNavigationOperation.popAndPush,
@@ -129,6 +133,10 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     CCNavigationSource? source,
   }) async {
     _ensureInitialized();
+    _ensureAdapterCapability(
+      (capabilities) => capabilities.supportsPushAndRemoveUntil,
+      'supportsPushAndRemoveUntil',
+    );
     final prepared = _routeRegistry.prepareIntent(intent);
     final result = await _dispatchNavigationWithAction(
       CCNavigationOperation.pushAndRemoveUntil,
@@ -520,5 +528,25 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
       );
     }
     return adapter;
+  }
+
+  /// Rejects an operation when an optional capability-aware Adapter declares
+  /// that its backend cannot preserve the requested contract.
+  ///
+  /// Adapters without capability metadata remain backward compatible and are
+  /// responsible for reporting their own unsupported-operation errors.
+  void _ensureAdapterCapability(
+    bool Function(CCNavigationAdapterCapabilities capabilities) selector,
+    String capabilityName,
+  ) {
+    final adapter = _requiredNavigationAdapter;
+    final capabilitySource = adapter is CCNavigationAdapterCapabilitySource
+        ? adapter as CCNavigationAdapterCapabilitySource
+        : null;
+    if (capabilitySource != null && !selector(capabilitySource.capabilities)) {
+      throw CCNavigationAdapterError(
+        'Navigation adapter does not support $capabilityName.',
+      );
+    }
   }
 }

@@ -229,12 +229,62 @@ final class CCRouterRuntime {
     if (_initialized) return;
     _routeRegistry.validatePlacements();
     _routeRegistry.validateInterceptors(_routeInterceptors.keys.toSet());
+    _validateNavigationAdapterCapabilities();
     await _navigationAdapter?.initialize(
       _routeRegistry.navigationRoutes,
       shells: _shellRegistry.navigationShells,
     );
     _attachBackendNavigationSource();
     _initialized = true;
+  }
+
+  /// Rejects static navigation structures unsupported by a capability-aware
+  /// Adapter before that Adapter mutates its backend state.
+  ///
+  /// Older adapters may omit [CCNavigationAdapterCapabilitySource]; those
+  /// adapters retain their historical behavior and report unsupported
+  /// operations at their own boundary. A capability-aware adapter must fail
+  /// initialization explicitly instead of silently flattening Shell or modal
+  /// semantics into an unrelated backend route.
+  void _validateNavigationAdapterCapabilities() {
+    final adapter = _navigationAdapter;
+    final capabilitySource = adapter is CCNavigationAdapterCapabilitySource
+        ? adapter as CCNavigationAdapterCapabilitySource
+        : null;
+    if (capabilitySource == null) return;
+    final capabilities = capabilitySource.capabilities;
+    final missing = <String>{};
+    final routes = _routeRegistry.navigationRoutes;
+    final hasModalRoute = routes.any(
+      (route) =>
+          route.presentation is CCModalBottomSheetPresentation ||
+          route.presentation is CCDialogPresentation,
+    );
+    if (hasModalRoute && !capabilities.supportsModalRoutes) {
+      missing.add('supportsModalRoutes');
+    }
+    final shells = _shellRegistry.navigationShells;
+    final hasNestedPlacement =
+        shells.isNotEmpty ||
+        routes.any(
+          (route) =>
+              route.placement.parentRouteId != null ||
+              route.placement.shellId != null ||
+              route.placement.navigatorOutlet != 'root',
+        );
+    if (hasNestedPlacement && !capabilities.supportsNestedNavigators) {
+      missing.add('supportsNestedNavigators');
+    }
+    if (shells.any((shell) => shell.type == CCShellType.statefulBranches) &&
+        !capabilities.supportsStatefulShell) {
+      missing.add('supportsStatefulShell');
+    }
+    if (missing.isNotEmpty) {
+      final names = missing.toList()..sort();
+      throw CCNavigationAdapterError(
+        'Navigation adapter lacks required capabilities: ${names.join(', ')}.',
+      );
+    }
   }
 
   /// Registers [provider] after validating key and default conflicts.
