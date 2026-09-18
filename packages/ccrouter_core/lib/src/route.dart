@@ -41,6 +41,7 @@ final class _PreparedRoute {
   /// Creates a fully validated internal navigation payload.
   _PreparedRoute({
     required this.routeId,
+    required this.ownerComponentId,
     required this.uri,
     required this.arguments,
     required this.extra,
@@ -51,6 +52,9 @@ final class _PreparedRoute {
 
   /// Stable route identity selected by Intent or URI resolution.
   final String routeId;
+
+  /// Component that owns the selected route definition.
+  final String ownerComponentId;
 
   /// Canonical generated URI or normalized dynamically supplied URI.
   final Uri uri;
@@ -239,6 +243,7 @@ final class _RouteRegistry {
     final uri = _generateUri(route.definition.routeId, primary, encoded);
     return _PreparedRoute(
       routeId: route.definition.routeId,
+      ownerComponentId: route.ownerComponentId,
       uri: uri,
       arguments: intent.arguments,
       extra: encoded.extra,
@@ -256,6 +261,7 @@ final class _RouteRegistry {
     final arguments = decode(resolved);
     return _PreparedRoute(
       routeId: route.definition.routeId,
+      ownerComponentId: route.ownerComponentId,
       uri: uri,
       arguments: arguments,
       extra: null,

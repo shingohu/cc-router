@@ -33,6 +33,18 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
 
   /// Stores and publishes one adapter-observed backend event.
   void _recordBackendNavigationEvent(CCNavigationBackendEvent event) {
+    if (event.routeId == null) {
+      switch (event.kind) {
+        case CCNavigationBackendEventKind.pop:
+        case CCNavigationBackendEventKind.remove:
+          _removeTopRouteEntry(reason: 'externalBackend', preserveRoot: true);
+          break;
+        case CCNavigationBackendEventKind.push:
+        case CCNavigationBackendEventKind.replace:
+          _removeAllRouteEntries(reason: 'externalBackend');
+          break;
+      }
+    }
     if (navigationEventCapacity > 0) {
       if (_backendNavigationEvents.length == navigationEventCapacity) {
         _backendNavigationEvents.removeFirst();

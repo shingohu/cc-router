@@ -189,6 +189,7 @@ final class CCNavigationRequest {
     required this.arguments,
     required this.presentation,
     required this.origin,
+    this.ownerComponentId = '',
     this.placement = const CCRoutePlacement.root(),
     this.extra,
     this.source,
@@ -225,6 +226,12 @@ final class CCNavigationRequest {
 
   /// Trusted ingress classification assigned by framework infrastructure.
   final CCNavigationOrigin origin;
+
+  /// Trusted owner of the resolved route, when supplied by Runtime.
+  ///
+  /// Business callers cannot override this value; it is used for Route Scope
+  /// ownership and diagnostics rather than authorization.
+  final String ownerComponentId;
 
   /// Optional product attribution supplied for telemetry.
   final CCNavigationSource? source;

@@ -107,6 +107,18 @@ final class CCRouterRuntime {
   /// Component-owned route definitions indexed by stable route ID.
   late final _RouteRegistry _routeRegistry = _RouteRegistry(_shellRegistry);
 
+  /// Concrete Route Entries currently retained by the Runtime.
+  final List<_RouteEntryRecord> _routeEntries = [];
+
+  /// Bounded Route Entry lifecycle transitions retained for diagnostics.
+  final Queue<CCRouteEntryLifecycleEvent> _routeEntryEvents = Queue();
+
+  /// Subscribers receiving Route Entry lifecycle transitions.
+  final Set<CCRouteEntryLifecycleListener> _routeEntryListeners = {};
+
+  /// Route Scope close operations that Runtime must await during shutdown.
+  final List<Future<void>> _routeEntryCloseFutures = [];
+
   /// Optional adapter that executes Runtime-validated navigation requests.
   CCNavigationAdapter? _navigationAdapter;
 
@@ -166,6 +178,9 @@ final class CCRouterRuntime {
 
   /// Monotonic sequence used in navigation identifiers.
   int _navigationSequence = 0;
+
+  /// Monotonic sequence used in Route Entry identities.
+  int _routeEntrySequence = 0;
 
   /// Memoized shutdown operation that makes disposal idempotent.
   Future<void>? _disposeFuture;
@@ -570,6 +585,8 @@ final class CCRouterRuntime {
   Future<void> _closeScopes() async {
     // Stop invocations before awaiting any service disposal.
     appScope.cancellation.cancel();
+    _removeAllRouteEntries(reason: 'runtimeDispose');
+    await Future.wait(_routeEntryCloseFutures);
     try {
       _backendNavigationRemover?.call();
       _backendNavigationRemover = null;
@@ -582,6 +599,9 @@ final class CCRouterRuntime {
       _session = null;
       _navigationListeners.clear();
       _navigationEvents.clear();
+      _routeEntryListeners.clear();
+      _routeEntryEvents.clear();
+      _routeEntryCloseFutures.clear();
       _backendNavigationListeners.clear();
       _backendNavigationEvents.clear();
     }

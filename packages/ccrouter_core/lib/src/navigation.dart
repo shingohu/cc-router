@@ -26,7 +26,11 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
   Future<bool> maybePopRoute<R>({R? result}) async {
     _ensureInitialized();
     try {
-      return await _requiredNavigationAdapter.maybePop(result: result);
+      final didPop = await _requiredNavigationAdapter.maybePop(result: result);
+      if (didPop) {
+        _removeTopRouteEntry(reason: 'maybePop', preserveRoot: true);
+      }
+      return didPop;
     } on CCRouterError {
       rethrow;
     } catch (error) {
@@ -53,10 +57,12 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
       CCNavigationOrigin.internal,
       source,
     );
+    final entry = _createRouteEntry(request);
     final result = await _dispatchRequest(
       request,
       () =>
           _requiredNavigationAdapter.popAndPush(request, popResult: popResult),
+      entry: entry,
     );
     try {
       return result as R?;
@@ -70,6 +76,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     _ensureInitialized();
     try {
       await _requiredNavigationAdapter.popUntil(predicate);
+      _popUntilRouteEntries(predicate);
     } on CCRouterError {
       rethrow;
     } catch (error) {
@@ -93,9 +100,13 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
       CCNavigationOrigin.internal,
       source,
     );
+    final entry = _createRouteEntry(request);
     final result = await _dispatchRequest(
       request,
       () => _requiredNavigationAdapter.pushAndRemoveUntil(request, predicate),
+      entry: entry,
+      commitEntry: (created) =>
+          _commitPushAndRemoveRouteEntry(created, predicate),
     );
     try {
       return result as R?;
@@ -141,6 +152,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     _ensureInitialized();
     try {
       _requiredNavigationAdapter.pop(result: result);
+      _removeTopRouteEntry(reason: 'pop', preserveRoot: true);
     } on CCRouterError {
       rethrow;
     } catch (error) {
@@ -221,9 +233,11 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
         navigationId: navigationId,
       );
       if (!_hasInterceptors(request.routeId)) {
+        final entry = _createRouteEntry(request);
         return _dispatchRequest(
           request,
           () => _requiredNavigationAdapter.navigate(request),
+          entry: entry,
         );
       }
       var adapterDispatchStarted = false;
@@ -236,9 +250,11 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
         switch (decision) {
           case CCNavigationProceed():
             adapterDispatchStarted = true;
+            final entry = _createRouteEntry(request);
             return await _dispatchRequest(
               request,
               () => _requiredNavigationAdapter.navigate(request),
+              entry: entry,
             );
           case CCNavigationCancel(:final code):
             throw CCRouteCancelledError(code);
@@ -327,20 +343,38 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     presentation: prepared.presentation,
     placement: prepared.placement,
     origin: origin,
+    ownerComponentId: prepared.ownerComponentId,
     source: source,
   );
 
   /// Normalizes Adapter failures while preserving framework errors.
   Future<Object?> _dispatchRequest(
     CCNavigationRequest request,
-    Future<Object?> Function() action,
-  ) async {
+    Future<Object?> Function() action, {
+    _RouteEntryRecord? entry,
+    void Function(_RouteEntryRecord entry)? commitEntry,
+  }) async {
     _emitNavigationEvent(request, CCNavigationLifecyclePhase.requested);
+    var committed = false;
     try {
-      final result = await action();
+      final pending = action();
+      if (entry != null) {
+        (commitEntry ?? _commitRouteEntry)(entry);
+        committed = true;
+      }
+      final result = await pending;
+      if (entry != null &&
+          request.operation != CCNavigationOperation.go &&
+          request.operation != CCNavigationOperation.reset &&
+          request.operation != CCNavigationOperation.open) {
+        _completeRouteEntry(entry);
+      }
       _emitNavigationEvent(request, CCNavigationLifecyclePhase.completed);
       return result;
     } on CCRouterError catch (error) {
+      if (entry != null && !committed) {
+        _removeRouteEntry(entry, reason: 'failed');
+      }
       _emitNavigationEvent(
         request,
         CCNavigationLifecyclePhase.failed,
@@ -348,6 +382,9 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
       );
       rethrow;
     } catch (error) {
+      if (entry != null && !committed) {
+        _removeRouteEntry(entry, reason: 'failed');
+      }
       _emitNavigationEvent(
         request,
         CCNavigationLifecyclePhase.failed,

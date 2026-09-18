@@ -13,6 +13,7 @@ export 'src/navigation_backend.dart';
 export 'src/navigation_interceptor.dart';
 export 'src/navigation_lifecycle.dart';
 export 'src/route.dart';
+export 'src/route_entry.dart';
 export 'src/route_pattern.dart';
 export 'src/route_placement.dart';
 export 'src/route_presentation.dart';

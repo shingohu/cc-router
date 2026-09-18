@@ -160,6 +160,89 @@ CCRouteDefinition<RouteArgs, String> pathRoute({
 );
 
 void main() {
+  test(
+    'creates independent Route Entries and scopes for repeated pushes',
+    () async {
+      final adapter = CCMemoryNavigationAdapter();
+      final runtime = CCRouterRuntime.forTesting(
+        navigationAdapter: adapter,
+        components: [
+          routeComponent(
+            'orders',
+            (registry) => registry.registerRoute(pathRoute()),
+          ),
+        ],
+      );
+      await runtime.initialize();
+      final lifecycle = <CCRouteEntryLifecycleEvent>[];
+      runtime.addRouteEntryListener(lifecycle.add);
+
+      await runtime.goRoute(
+        const TestIntent<void>('orders.detail', RouteArgs('1')),
+      );
+      final first = runtime.pushRoute<String>(
+        const TestIntent<String>('orders.detail', RouteArgs('2')),
+      );
+      final second = runtime.pushRoute<String>(
+        const TestIntent<String>('orders.detail', RouteArgs('2')),
+      );
+
+      final entries = runtime.activeRouteEntries;
+      expect(entries, hasLength(3));
+      expect(entries.map((entry) => entry.routeEntryId).toSet(), hasLength(3));
+      expect(entries[0].lifecycleState, CCRouteEntryLifecycleState.hidden);
+      expect(entries[1].lifecycleState, CCRouteEntryLifecycleState.hidden);
+      expect(entries[2].lifecycleState, CCRouteEntryLifecycleState.visible);
+      expect(entries[1].routeId, entries[2].routeId);
+
+    runtime.popRoute(result: 'first');
+      expect(await second, 'first');
+      expect(runtime.activeRouteEntries, hasLength(2));
+      expect(
+        runtime.activeRouteEntries.last.lifecycleState,
+        CCRouteEntryLifecycleState.visible,
+      );
+    runtime.popRoute(result: 'second');
+      expect(await first, 'second');
+      await Future<void>.delayed(Duration.zero);
+      expect(
+        lifecycle.where(
+          (event) => event.state == CCRouteEntryLifecycleState.disposed,
+        ),
+        hasLength(2),
+      );
+      await runtime.dispose();
+    },
+  );
+
+  test('disposes retained Route Scopes during Runtime shutdown', () async {
+    final runtime = CCRouterRuntime.forTesting(
+      navigationAdapter: CCMemoryNavigationAdapter(),
+      components: [
+        routeComponent(
+          'orders',
+          (registry) => registry.registerRoute(pathRoute()),
+        ),
+      ],
+    );
+    await runtime.initialize();
+    final lifecycle = <CCRouteEntryLifecycleEvent>[];
+    runtime.addRouteEntryListener(lifecycle.add);
+    await runtime.goRoute(
+      const TestIntent<void>('orders.detail', RouteArgs('42')),
+    );
+    expect(runtime.activeRouteEntries, hasLength(1));
+
+    await runtime.dispose();
+
+    expect(runtime.activeRouteEntries, isEmpty);
+    expect(
+      lifecycle.last.state,
+      CCRouteEntryLifecycleState.disposed,
+    );
+    expect(lifecycle.last.reason, 'runtimeDispose');
+  });
+
   test('runs global and route interceptors in deterministic order', () async {
     final calls = <String>[];
     final runtime = CCRouterRuntime.forTesting(
