@@ -92,6 +92,7 @@ final class CCNavigationAspectEvent {
     this.entry,
     this.outcome,
     this.errorType,
+    this.elapsed,
   });
 
   /// Hook phase represented by this event.
@@ -108,6 +109,12 @@ final class CCNavigationAspectEvent {
 
   /// Sanitized error type for lost or failed navigation.
   final String? errorType;
+
+  /// Time spent from the first route match until this observation.
+  ///
+  /// This value is suitable for local performance metrics and is not a Widget
+  /// lifetime measurement.
+  final Duration? elapsed;
 
   /// Wall-clock time at which Runtime dispatched this event.
   final DateTime timestamp;

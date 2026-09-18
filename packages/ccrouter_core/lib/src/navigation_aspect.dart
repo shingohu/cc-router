@@ -20,7 +20,13 @@ extension CCRouterRuntimeNavigationAspects on CCRouterRuntime {
     for (final aspect in _navigationAspects) {
       final before = aspect.before;
       if (before == null) continue;
-      final decision = await before(context);
+      _aspectCallbackActive = true;
+      late final CCNavigationInterception decision;
+      try {
+        decision = await before(context);
+      } finally {
+        _aspectCallbackActive = false;
+      }
       if (decision is! CCNavigationProceed) return decision;
     }
     return const CCNavigationProceed();
@@ -28,11 +34,14 @@ extension CCRouterRuntimeNavigationAspects on CCRouterRuntime {
 
   /// Emits a matched-route observation after Runtime resolution.
   void _emitAspectFound(CCNavigationRequest request) {
+    if (!_hasNavigationAspects) return;
+    _navigationAspectStarts.putIfAbsent(request.navigationId, DateTime.now);
     _emitAspectEvent(
       CCNavigationAspectEvent(
         phase: CCNavigationAspectPhase.found,
         request: _aspectRequest(request),
         timestamp: DateTime.now(),
+        elapsed: _aspectElapsed(request.navigationId),
       ),
     );
   }
@@ -45,6 +54,7 @@ extension CCRouterRuntimeNavigationAspects on CCRouterRuntime {
         request: _aspectRequest(entry.request),
         entry: entry.snapshot,
         timestamp: DateTime.now(),
+        elapsed: _aspectElapsed(entry.request.navigationId),
       ),
     );
   }
@@ -62,6 +72,7 @@ extension CCRouterRuntimeNavigationAspects on CCRouterRuntime {
         outcome: outcome,
         errorType: errorType,
         timestamp: DateTime.now(),
+        elapsed: _aspectElapsed(request.navigationId),
       ),
     );
   }
@@ -72,6 +83,7 @@ extension CCRouterRuntimeNavigationAspects on CCRouterRuntime {
     required CCNavigationAspectOutcome outcome,
     String? errorType,
   }) {
+    final elapsed = _aspectElapsed(request.navigationId);
     _emitAspectEvent(
       CCNavigationAspectEvent(
         phase: CCNavigationAspectPhase.after,
@@ -79,8 +91,10 @@ extension CCRouterRuntimeNavigationAspects on CCRouterRuntime {
         outcome: outcome,
         errorType: errorType,
         timestamp: DateTime.now(),
+        elapsed: elapsed,
       ),
     );
+    _navigationAspectStarts.remove(request.navigationId);
   }
 
   /// Converts an internal request into the safe aspect snapshot.
@@ -96,6 +110,12 @@ extension CCRouterRuntimeNavigationAspects on CCRouterRuntime {
         presentation: request.presentation,
       );
 
+  /// Returns elapsed time since the first `found` event for [navigationId].
+  Duration? _aspectElapsed(String navigationId) {
+    final startedAt = _navigationAspectStarts[navigationId];
+    return startedAt == null ? null : DateTime.now().difference(startedAt);
+  }
+
   /// Dispatches an aspect event while isolating callback failures.
   void _emitAspectEvent(CCNavigationAspectEvent event) {
     for (final aspect in _navigationAspects) {
@@ -106,6 +126,7 @@ extension CCRouterRuntimeNavigationAspects on CCRouterRuntime {
         CCNavigationAspectPhase.after => aspect.onAfter,
       };
       if (observer == null) continue;
+      _aspectCallbackActive = true;
       try {
         observer(event);
       } catch (error) {
@@ -117,6 +138,8 @@ extension CCRouterRuntimeNavigationAspects on CCRouterRuntime {
             CCInvocationError('Navigation aspect failed: ${error.runtimeType}'),
           );
         }
+      } finally {
+        _aspectCallbackActive = false;
       }
     }
   }

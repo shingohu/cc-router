@@ -812,6 +812,7 @@ void main() {
     () async {
       final phases = <CCNavigationAspectPhase>[];
       final outcomes = <CCNavigationAspectOutcome?>[];
+      final elapsed = <Duration>[];
       final runtime = CCRouterRuntime.forTesting(
         navigationAdapter: CCMemoryNavigationAdapter(),
         navigationAspects: [
@@ -819,11 +820,13 @@ void main() {
             id: 'telemetry',
             onFound: (event) {
               phases.add(event.phase);
+              elapsed.add(event.elapsed!);
               expect(event.entry, isNull);
               expect(event.request.uri.toString(), '/orders/42');
             },
             onArrival: (event) {
               phases.add(event.phase);
+              elapsed.add(event.elapsed!);
               expect(event.entry, isNotNull);
               expect(
                 event.entry!.lifecycleState,
@@ -832,6 +835,7 @@ void main() {
             },
             onAfter: (event) {
               phases.add(event.phase);
+              elapsed.add(event.elapsed!);
               outcomes.add(event.outcome);
             },
           ),
@@ -855,6 +859,8 @@ void main() {
         CCNavigationAspectPhase.after,
       ]);
       expect(outcomes, [CCNavigationAspectOutcome.succeeded]);
+      expect(elapsed, hasLength(3));
+      expect(elapsed[2], greaterThanOrEqualTo(elapsed[0]));
       await runtime.dispose();
     },
   );
@@ -932,6 +938,42 @@ void main() {
 
     expect(calls, ['a-first']);
     expect(runtime.subscriberErrors.single.message, contains('StateError'));
+    await runtime.dispose();
+  });
+
+  test('Aspect callbacks cannot synchronously re-enter navigation', () async {
+    late CCRouterRuntime runtime;
+    late Future<void> reentry;
+    late Future<void> reentryExpectation;
+    runtime = CCRouterRuntime.forTesting(
+      navigationAdapter: CCMemoryNavigationAdapter(),
+      navigationAspects: [
+        CCNavigationAspect(
+          id: 'reentry',
+          onFound: (_) {
+            reentry = runtime.goRoute(
+              const TestIntent<void>('orders.detail', RouteArgs('43')),
+            );
+            reentryExpectation = expectLater(
+              reentry,
+              throwsA(isA<CCNavigationReentrancyError>()),
+            );
+          },
+        ),
+      ],
+      components: [
+        routeComponent(
+          'orders',
+          (registry) => registry.registerRoute(pathRoute()),
+        ),
+      ],
+    );
+    await runtime.initialize();
+    await runtime.goRoute(
+      const TestIntent<void>('orders.detail', RouteArgs('42')),
+    );
+    await reentryExpectation;
+    expect(runtime.activeRouteEntries, hasLength(1));
     await runtime.dispose();
   });
 

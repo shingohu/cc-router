@@ -173,6 +173,12 @@ final class CCRouterRuntime {
   /// Runtime-owned continuations waiting for an external policy decision.
   final Map<String, _PendingNavigationRecord> _pendingNavigations = {};
 
+  /// Start times for navigation identities currently observed by Aspects.
+  final Map<String, DateTime> _navigationAspectStarts = {};
+
+  /// Whether an Aspect observer is currently executing synchronously.
+  bool _aspectCallbackActive = false;
+
   /// Subscribers receiving Runtime navigation lifecycle events.
   final Set<CCNavigationLifecycleListener> _navigationListeners = {};
 
@@ -718,6 +724,8 @@ final class CCRouterRuntime {
       _backendEntries.clear();
       _processedBackendOperations.clear();
       _inFlightNavigation.clear();
+      _navigationAspectStarts.clear();
+      _aspectCallbackActive = false;
     }
   }
 

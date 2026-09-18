@@ -102,6 +102,13 @@ final class CCNavigationPendingNotFoundError extends CCRouterError {
     : super('The pending navigation is no longer available.');
 }
 
+/// Indicates that an Aspect callback attempted synchronous navigation reentry.
+final class CCNavigationReentrancyError extends CCRouterError {
+  /// Creates a reentrancy error that leaves the active navigation unchanged.
+  const CCNavigationReentrancyError()
+    : super('Navigation cannot be started from an active Aspect callback.');
+}
+
 /// Indicates that an adapter returned a value incompatible with a typed route.
 ///
 /// Generated typed navigation may surface this when page code Pops a value that

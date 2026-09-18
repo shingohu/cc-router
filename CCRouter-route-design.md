@@ -723,7 +723,7 @@ CCRouter 不直接复制 TheRouter 的无类型 `NavigationCallback` API，而�
 - `onFound`：路由匹配成功但尚未进入页面，优先作为内部解析和性能诊断事件，不作为普通业务页面生命周期依赖。
 - `onResult`：继续使用 `Future<R?>` 返回类型安全的页面结果，不增加无类型回调。
 
-现有 `CCNavigationLifecyclePhase.completed` 不等同于 `onArrival`：对于 `push`，`completed` 可能要等页面 Pop 后才发生。当前由独立的 `CCNavigationAspect` 提供安全快照形式的 `before`、`onFound`、`onArrival`、`onLost` 和 `onAfter` 钩子，使匹配、到达、失败和结果完成的时机明确；观察回调失败会进入有界诊断而不影响导航，回调中也不能同步发起新的导航。
+现有 `CCNavigationLifecyclePhase.completed` 不等同于 `onArrival`：对于 `push`，`completed` 可能要等页面 Pop 后才发生。当前由独立的 `CCNavigationAspect` 提供安全快照形式的 `before`、`onFound`、`onArrival`、`onLost` 和 `onAfter` 钩子，并在事件中提供从首次匹配开始的 `elapsed` 耗时，使匹配、到达、失败和结果完成的时机明确；观察回调失败会进入有界诊断而不影响导航，回调中也不能同步发起新的导航。
 
 ### 11.5 TheRouter 风格的全局 AOP
 
@@ -733,9 +733,9 @@ CCRouter 参考 TheRouter 的全局 AOP 使用场景，但不直接复制其无�
 | 阶段 | 当前状态 | 目标职责 |
 | --- | --- | --- |
 | `before` | 已支持，由 `CCGlobalNavigationInterceptor` 提供 | 全局登录、权限、维护模式、强制升级、取消和重定向 |
-| `found` | Runtime 内部已有解析过程，尚无公开统一回调 | 记录匹配结果、解析耗时和被拦截前的诊断信息 |
-| `arrival` | `RouteEntry` 内部有 `visible` 状态，尚无公开全局回调 | 页面曝光、焦点恢复、预加载和跨组件到达通知 |
-| `after` | 有 `requested/completed/failed` 事件，但没有独立 After Hook | 统一观察成功、失败、取消、页面离开和返回结果 |
+| `found` | 已支持，并携带匹配耗时 | 记录匹配结果、解析耗时和被拦截前的诊断信息 |
+| `arrival` | 已支持，并关联 Managed RouteEntry 和耗时 | 页面曝光、焦点恢复、预加载和跨组件到达通知 |
+| `after` | 已支持，并报告成功、失败、取消和耗时 | 统一观察结果完成、失败、取消和页面离开 |
 
 因此，`CCNavigationLifecyclePhase.completed` 也不能直接当作 `arrival`：对 `push`
 来说，它通常要等页面 Pop 后、结果通道完成时才发生。当前 `CCNavigationAspect` 已

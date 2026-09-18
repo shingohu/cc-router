@@ -299,6 +299,9 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     required Future<Object?> Function(CCNavigationRequest request) action,
     void Function(_RouteEntryRecord entry)? commitEntry,
   }) {
+    if (_aspectCallbackActive) {
+      return Future<Object?>.error(const CCNavigationReentrancyError());
+    }
     final key = _navigationConcurrencyKey(operation, prepared);
     final existing = _inFlightNavigation[key];
     switch (navigationConcurrencyPolicy) {
