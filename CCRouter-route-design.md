@@ -859,7 +859,7 @@ Shell 负责持久化导航容器和 Outlet，主从容器负责根据屏幕尺�
 - 无障碍与输入设备：大字体、键盘、鼠标、手写笔等导致布局变化时，导航状态不能丢失。
 - 特殊窗口：画中画、沉浸式全屏和外接屏幕需要独立 Host/Outlet 策略。
 
-建议新增适配器中立的 `Window Context`、`Display Feature` 和 `Adaptive Presentation Policy` 概念。Shell 负责持久化导航容器，Adaptive Layout 负责选择单列、双栏或多 Pane，Window/Display Host 负责绑定实际导航栈。
+已新增适配器中立的 `CCWindowMetrics`、`CCDisplayFeature` 和 `CCAdaptivePresentationPolicy` 合同。Shell 负责持久化导航容器，Adaptive Layout 负责选择单列、双栏或多 Pane，Window/Display Host 负责绑定实际导航栈；`CCRoutePlacement.hostId` 和导航请求的 `hostId` 用于隔离多窗口/外接屏幕栈。
 
 实现优先级：先完成 Size Class、主从双 Outlet、Modal 自适应和旋转/调整大小状态保持；再支持折叠姿态、多窗口、深链进入指定 Pane 和状态恢复；最后扩展外接屏幕、PiP、预测返回和输入设备驱动的导航策略。
 

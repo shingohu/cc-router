@@ -190,6 +190,7 @@ final class CCNavigationRequest {
     required this.presentation,
     required this.origin,
     this.ownerComponentId = '',
+    this.hostId = 'default',
     this.placement = const CCRoutePlacement.root(),
     this.extra,
     this.source,
@@ -232,6 +233,12 @@ final class CCNavigationRequest {
   /// Business callers cannot override this value; it is used for Route Scope
   /// ownership and diagnostics rather than authorization.
   final String ownerComponentId;
+
+  /// Window or display Host selected by the route placement.
+  ///
+  /// Adapters use this to isolate multiple windows or external displays;
+  /// business callers cannot override it on an individual operation.
+  final String hostId;
 
   /// Optional product attribution supplied for telemetry.
   final CCNavigationSource? source;

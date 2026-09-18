@@ -4,6 +4,7 @@
 /// types that do not depend on Flutter or a navigation backend.
 library;
 
+export 'src/adaptive_layout.dart';
 export 'src/errors.dart';
 export 'src/invocation.dart';
 export 'src/lifecycle.dart';

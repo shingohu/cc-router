@@ -1,0 +1,60 @@
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
+import 'package:test/test.dart';
+
+void main() {
+  test('window metrics classify compact, medium, and expanded Hosts', () {
+    final compact = CCWindowMetrics(
+      hostId: 'phone',
+      windowId: 'main',
+      width: 599,
+      height: 800,
+    );
+    final medium = CCWindowMetrics(
+      hostId: 'tablet',
+      windowId: 'main',
+      width: 600,
+      height: 900,
+    );
+    final expanded = CCWindowMetrics(
+      hostId: 'desktop',
+      windowId: 'main',
+      width: 1200,
+      height: 900,
+    );
+
+    expect(compact.sizeClass, CCWindowSizeClass.compact);
+    expect(medium.sizeClass, CCWindowSizeClass.medium);
+    expect(expanded.sizeClass, CCWindowSizeClass.expanded);
+    expect(
+      const CCAdaptivePresentationPolicy().select(compact),
+      CCAdaptiveLayoutKind.singlePane,
+    );
+    expect(
+      const CCAdaptivePresentationPolicy().select(expanded),
+      CCAdaptiveLayoutKind.splitPane,
+    );
+  });
+
+  test('display features and route placement retain Host isolation', () {
+    const hinge = CCDisplayFeature(
+      type: CCDisplayFeatureType.hinge,
+      bounds: CCLayoutRect(left: 500, top: 0, width: 20, height: 800),
+      separating: true,
+    );
+    final metrics = CCWindowMetrics(
+      hostId: 'foldable-main',
+      windowId: 'window-1',
+      width: 1020,
+      height: 800,
+      displayFeatures: [hinge],
+    );
+    final placement = CCRoutePlacement(
+      hostId: metrics.hostId,
+      navigatorOutlet: 'detail',
+    );
+
+    expect(metrics.hasSeparatingFeature, isTrue);
+    expect(placement.hostId, 'foldable-main');
+    expect(placement.navigatorOutlet, 'detail');
+  });
+}

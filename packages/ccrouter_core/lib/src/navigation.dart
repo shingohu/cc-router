@@ -512,6 +512,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     placement: prepared.placement,
     origin: origin,
     ownerComponentId: prepared.ownerComponentId,
+    hostId: prepared.placement.hostId,
     source: source,
   );
 

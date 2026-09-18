@@ -56,6 +56,7 @@ final class CCMemoryNavigationAdapter
         (entry) => CCNavigationBackendEntrySnapshot(
           backendEntryId: 'memory-${entry.request.navigationId}',
           owner: CCBackendEntryOwner.managed,
+          hostId: entry.request.hostId,
           routeId: entry.request.routeId,
           navigatorOutlet: entry.request.placement.navigatorOutlet,
           location: entry.request.uri.toString(),

@@ -23,11 +23,13 @@ enum CCRouteKind {
 final class CCRoutePlacement {
   /// Creates structural placement metadata for one route contract.
   const CCRoutePlacement({
+    this.hostId = 'default',
     this.parentRouteId,
     this.shellId,
     this.navigatorOutlet = 'root',
     this.routeKind = CCRouteKind.page,
-  }) : assert(navigatorOutlet != '', 'navigatorOutlet cannot be empty'),
+  }) : assert(hostId != '', 'hostId cannot be empty'),
+       assert(navigatorOutlet != '', 'navigatorOutlet cannot be empty'),
        assert(parentRouteId != '', 'parentRouteId cannot be empty'),
        assert(shellId != '', 'shellId cannot be empty');
 
@@ -39,6 +41,12 @@ final class CCRoutePlacement {
   /// Use this for child routes that should be resolved below a known parent;
   /// do not use a path prefix as a substitute for this relationship.
   final String? parentRouteId;
+
+  /// Stable Window or display Host targeted by this placement.
+  ///
+  /// Use `default` for the primary application window. A custom Host keeps
+  /// its backend stack and adaptive layout state isolated from other windows.
+  final String hostId;
 
   /// Stable Shell ID that owns this route, if it is rendered in a Shell.
   ///
