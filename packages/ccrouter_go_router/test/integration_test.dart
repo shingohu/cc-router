@@ -391,6 +391,68 @@ void main() {
     },
   );
 
+  testWidgets('an external system Pop closes a managed go route entry', (
+    tester,
+  ) async {
+    final observer = CCGoRouterNavigationObserver(outlet: 'root');
+    final detailRoute = GoRoute(
+      path: ':id',
+      builder: (_, state) => Text(
+        'order:${state.pathParameters['id']}',
+        key: const ValueKey('go-managed-order'),
+      ),
+    );
+    final ordersRoute = GoRoute(
+      path: '/orders',
+      builder: (_, _) => const Text('orders-parent'),
+      routes: [detailRoute],
+    );
+    final router = GoRouter(
+      initialLocation: '/',
+      observers: [observer],
+      routes: [
+        GoRoute(path: '/', builder: (_, _) => const Text('home')),
+        ordersRoute,
+      ],
+    );
+    final adapter = CCGoRouterAdapter(
+      router: router,
+      observers: [observer],
+      bindings: [
+        CCGoRouterRouteBinding(routeId: 'orders.detail', goRoute: detailRoute),
+      ],
+    );
+    final runtime = CCRouterRuntime.forTesting(
+      navigationAdapter: adapter,
+      components: const [
+        CCComponentManifest(
+          id: 'orders',
+          version: '1.0.0',
+          registrar: _SimpleOrdersRegistrar(),
+        ),
+      ],
+    );
+    addTearDown(runtime.dispose);
+    addTearDown(router.dispose);
+
+    await runtime.initialize();
+    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    await tester.pumpAndSettle();
+    await runtime.goRoute(const _OrderIntent<void>(_OrderArguments('42')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('go-managed-order')), findsOneWidget);
+    expect(runtime.activeRouteEntries, hasLength(1));
+
+    final context = tester.element(
+      find.byKey(const ValueKey('go-managed-order')),
+    );
+    Navigator.of(context).pop<void>();
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('go-managed-order')), findsNothing);
+    expect(runtime.activeRouteEntries, isEmpty);
+  });
+
   testWidgets(
     'external ingress reaches the bound StatefulShell branch with metadata',
     (tester) async {

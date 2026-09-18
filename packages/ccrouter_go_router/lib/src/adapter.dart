@@ -111,6 +111,7 @@ final class CCGoRouterAdapter
         supportsModalRoutes: true,
         supportsOpaqueUiObservation: true,
         supportsPredictiveBack: _predictiveBackBridge != null,
+        supportsManagedPopObservation: true,
       );
 
   /// Host-only bridge for explicitly integrated third-party Navigator routes.
@@ -509,7 +510,9 @@ final class CCGoRouterAdapter
     _expectBackendEvent(CCGoRouterNavigationEventKind.pop);
     navigator.pop<Object?>(result);
     _discardExpectedBackendEvent(CCGoRouterNavigationEventKind.pop);
-    _removeTrackedEntry();
+    if (_lastPoppedOwner == CCPopRemovedOwner.managed) {
+      _removeTrackedEntry();
+    }
     return CCPopOutcome(
       handled: true,
       removedBackendEntryId: _lastPoppedBackendEntryId,
@@ -782,6 +785,7 @@ final class CCGoRouterAdapter
       _lifecycleEvents.add(event);
     }
     final isAdapterOwned = _consumeExpectedBackendEvent(event.kind);
+    final matchesActiveRequest = _matchesActiveRequest(event.location);
     if (event.kind == CCGoRouterNavigationEventKind.pop) {
       final backendEntryId = _backendEntryIdFor(event.route);
       _lastPoppedBackendEntryId = backendEntryId;
@@ -790,7 +794,40 @@ final class CCGoRouterAdapter
           ? CCPopRemovedOwner.managed
           : CCPopRemovedOwner.foreign;
     }
-    _emitBackendEvent(event, correlateRequest: isAdapterOwned);
+    final observedBackendEntryId = _backendRouteIds[event.route];
+    final observedManagedRoute =
+        observedBackendEntryId != null &&
+        _entries.any((entry) => entry.backendEntryId == observedBackendEntryId);
+    final canCorrelateAdapterEvent = switch (event.kind) {
+      CCGoRouterNavigationEventKind.push =>
+        matchesActiveRequest ||
+            (_entries.isNotEmpty &&
+                _bindingFor(_entries.last.request.routeId) == null),
+      CCGoRouterNavigationEventKind.pop => observedManagedRoute,
+      _ => true,
+    };
+    _emitBackendEvent(
+      event,
+      correlateRequest:
+          (isAdapterOwned && canCorrelateAdapterEvent) ||
+          (event.kind == CCGoRouterNavigationEventKind.push &&
+              matchesActiveRequest),
+    );
+  }
+
+  /// Whether a backend route location identifies the active CCRouter request.
+  bool _matchesActiveRequest(String? location) {
+    if (location == null || _entries.isEmpty) return false;
+    final request = _entries.last.request;
+    final expected = _locationFor(request.uri);
+    if (location == expected) return true;
+
+    // GoRouter's NavigatorObserver may expose the route-definition fragment
+    // (for example, `:id`) instead of the resolved URI (`/orders/42`). Only
+    // the active request's binding may claim that fragment; comparing against
+    // all bindings would incorrectly associate a parent route with a child.
+    final binding = _bindingFor(request.routeId);
+    return binding?.goRoute.path == location;
   }
 
   /// Translates a Flutter observer event into the adapter-neutral contract.
@@ -798,12 +835,20 @@ final class CCGoRouterAdapter
     CCGoRouterNavigationEvent event, {
     required bool correlateRequest,
   }) {
+    final observedBackendEntryId = _backendRouteIds[event.route];
+    final trackedEntry = observedBackendEntryId == null
+        ? null
+        : _entries.cast<_CCGoRouterEntry?>().firstWhere(
+            (entry) => entry?.backendEntryId == observedBackendEntryId,
+            orElse: () => null,
+          );
     final request = correlateRequest && _entries.isNotEmpty
         ? _entries.last.request
         : null;
     final trackedBackendEntryId = request == null
-        ? null
-        : _backendIdsByNavigationId[request.navigationId];
+        ? observedBackendEntryId
+        : _backendIdsByNavigationId[request.navigationId] ??
+              observedBackendEntryId;
     if (trackedBackendEntryId != null) {
       _backendRouteIds[event.route] = trackedBackendEntryId;
     }
@@ -827,9 +872,16 @@ final class CCGoRouterAdapter
       previousBackendEntryId: previousBackendEntryId,
       navigatorOutlet: event.outlet,
       sequence: operationSequence,
-      owner: request == null
-          ? CCBackendEntryOwner.foreign
-          : CCBackendEntryOwner.managed,
+      // A correlated `remove` is the first half of GoRouter `go`/`reset` and
+      // describes the previous backend page, not the newly requested route.
+      // Keep it diagnostic; externally observed Pops can still use the
+      // identity mapped in [_backendRouteIds].
+      owner:
+          trackedEntry != null && !correlateRequest ||
+              request != null &&
+                  event.kind != CCGoRouterNavigationEventKind.remove
+          ? CCBackendEntryOwner.managed
+          : CCBackendEntryOwner.foreign,
       navigationId: request?.navigationId,
       routeId: request?.routeId,
       uri: request?.uri,

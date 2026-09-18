@@ -17,6 +17,7 @@ final class CCNavigationAdapterCapabilities {
     this.supportsModalRoutes = false,
     this.supportsOpaqueUiObservation = false,
     this.supportsPredictiveBack = false,
+    this.supportsManagedPopObservation = false,
   });
 
   /// Whether application-owned foreign Navigator Routes can be observed.
@@ -62,6 +63,13 @@ final class CCNavigationAdapterCapabilities {
 
   /// Whether the adapter participates in predictive-back coordination.
   final bool supportsPredictiveBack;
+
+  /// Whether identity-bearing backend Pop events can close Managed RouteEntry.
+  ///
+  /// This is reserved for adapters that can distinguish an externally
+  /// triggered Pop of a CCRouter-owned backend route from a Foreign Popup or
+  /// LocalHistoryEntry. Without it, Runtime keeps backend events diagnostic.
+  final bool supportsManagedPopObservation;
 }
 
 /// Optional adapter SPI exposing immutable backend capability metadata.

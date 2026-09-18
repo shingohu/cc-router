@@ -51,6 +51,7 @@ void main() {
     expect(capabilities.supportsModalRoutes, isTrue);
     expect(capabilities.supportsOpaqueUiObservation, isTrue);
     expect(capabilities.supportsPredictiveBack, isFalse);
+    expect(capabilities.supportsManagedPopObservation, isTrue);
   });
 
   test('enables predictive-back bridge only when explicitly requested', () {

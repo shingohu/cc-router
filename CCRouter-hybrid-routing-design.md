@@ -173,7 +173,8 @@ Runtime 根据能力选择正常执行、明确记录的降级实现或初始化
 - [x] 增加 `CCBackendEntry`；
 - [x] 增加 Managed/Foreign/Opaque 所有权；
 - [x] 增加 `backendEntryId`、操作 ID 和事件序列；
-- [x] Runtime 仅将身份事件写入台账，不根据台账事件删除 Managed RouteEntry；
+- [x] Runtime 默认仅将身份事件写入台账；只有声明支持 Managed Pop 观察且带完整 identity
+  的事件，才关闭对应 RouteEntry，不按顶部位置猜测删除；
 - [x] 增加初始后端栈快照，并在台账中保留 Host/Outlet 分区；
 - [x] 将 Pop 协调升级为显式 `CCPopOutcome`，旧 Adapter 仍可通过 Boolean API 降级。
 

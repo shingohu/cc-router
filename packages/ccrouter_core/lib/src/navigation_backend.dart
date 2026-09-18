@@ -135,12 +135,14 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
   /// Stores and publishes one adapter-observed backend event.
   ///
   /// Backend observations are diagnostic until an adapter can correlate them
-  /// with a concrete Runtime Route Entry. In particular, an event without
-  /// managed identity may represent a Dialog, PopupRoute, LocalHistoryEntry,
-  /// or application-owned Navigator route and must never remove a managed
-  /// Route Entry by position.
+  /// with a concrete Runtime Route Entry. Identity-capable adapters may mark
+  /// an externally popped Managed entry; only those events can close the exact
+  /// RouteEntry. An event without managed identity may represent a Dialog,
+  /// PopupRoute, LocalHistoryEntry, or application-owned Navigator route and
+  /// must never remove a managed Route Entry by position.
   void _recordBackendNavigationEvent(CCNavigationBackendEvent event) {
     _reconcileBackendEntry(event);
+    _applyObservedManagedPop(event);
     if (navigationEventCapacity > 0) {
       if (_backendNavigationEvents.length == navigationEventCapacity) {
         _backendNavigationEvents.removeFirst();
@@ -161,6 +163,35 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
             ),
           );
         }
+      }
+    }
+  }
+
+  /// Closes a Managed RouteEntry only for an identity-capable adapter event.
+  void _applyObservedManagedPop(CCNavigationBackendEvent event) {
+    if (event.kind != CCNavigationBackendEventKind.pop &&
+        event.kind != CCNavigationBackendEventKind.remove) {
+      return;
+    }
+    final adapter = _navigationAdapter;
+    final capabilities = adapter is CCNavigationAdapterCapabilitySource
+        ? (adapter as CCNavigationAdapterCapabilitySource).capabilities
+        : null;
+    if (capabilities?.supportsManagedPopObservation != true ||
+        event.owner != CCBackendEntryOwner.managed ||
+        event.backendEntryId == null) {
+      return;
+    }
+    final backendEntry = _backendEntries[event.backendEntryId];
+    final routeEntryId = backendEntry?.routeEntryId;
+    if (backendEntry?.owner != CCBackendEntryOwner.managed ||
+        routeEntryId == null) {
+      return;
+    }
+    for (final entry in _routeEntries.toList()) {
+      if (entry.id == routeEntryId) {
+        _removeRouteEntry(entry, reason: 'backendPop');
+        return;
       }
     }
   }
