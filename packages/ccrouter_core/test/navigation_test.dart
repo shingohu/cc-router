@@ -561,6 +561,35 @@ void main() {
       ),
     );
     expect(runtime.activeRouteEntries, isEmpty);
+
+    await runtime.goRoute(
+      const TestIntent<void>('orders.detail', RouteArgs('43')),
+    );
+    final protected = runtime.activeRouteEntries.single;
+    adapter.emit(
+      CCNavigationBackendEventKind.push,
+      backendEntryId: 'foreign-predictive',
+      backendOperationId: 'foreign-predictive-push',
+      owner: CCBackendEntryOwner.foreign,
+      sequence: 2,
+    );
+    adapter.emitPredictive(
+      CCPredictiveBackEvent(
+        phase: CCPredictiveBackPhase.committed,
+        progress: 1,
+        timestamp: DateTime.now(),
+        outcome: const CCPopOutcome(
+          handled: true,
+          removedBackendEntryId: 'foreign-predictive',
+          removedOwner: CCPopRemovedOwner.foreign,
+        ),
+      ),
+    );
+    expect(runtime.activeRouteEntries, hasLength(1));
+    expect(
+      runtime.activeRouteEntries.single.routeEntryId,
+      protected.routeEntryId,
+    );
     await runtime.dispose();
   });
 
