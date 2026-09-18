@@ -40,6 +40,29 @@ enum CCPopRemovedOwner {
   opaque,
 }
 
+/// Identifies the trigger that entered the ownership-aware Pop pipeline.
+///
+/// System back and ordinary gestures use [system] or [gesture] respectively;
+/// platform predictive back uses [predictiveBack]; direct business calls use
+/// [business]. [unknown] is retained for legacy adapters that only return a
+/// Boolean or an untagged [CCPopOutcome].
+enum CCPopTrigger {
+  /// The operating system requested a normal back operation.
+  system,
+
+  /// A non-predictive interactive gesture requested a back operation.
+  gesture,
+
+  /// A committed platform predictive-back gesture removed the backend entry.
+  predictiveBack,
+
+  /// Business code explicitly called `CCRouter.navigator.pop`.
+  business,
+
+  /// The adapter did not identify the source of the Pop.
+  unknown,
+}
+
 /// Adapter-neutral result of one coordinated Pop request.
 ///
 /// A handled Pop can still represent a `LocalHistoryEntry` or foreign Popup;
@@ -54,6 +77,7 @@ final class CCPopOutcome {
     this.removedBackendEntryId,
     this.removedOwner = CCPopRemovedOwner.none,
     this.resultAvailable = false,
+    this.trigger = CCPopTrigger.unknown,
   });
 
   /// Whether the backend accepted or consumed the Pop request.
@@ -67,6 +91,21 @@ final class CCPopOutcome {
 
   /// Whether the adapter can provide a result for the removed entry.
   final bool resultAvailable;
+
+  /// Trigger that entered the Pop coordination pipeline.
+  final CCPopTrigger trigger;
+
+  /// Returns this outcome with selected diagnostic fields replaced.
+  ///
+  /// Runtime uses this to attach a trusted trigger when an older Adapter
+  /// returns an otherwise complete outcome without source metadata.
+  CCPopOutcome copyWith({CCPopTrigger? trigger}) => CCPopOutcome(
+    handled: handled,
+    removedBackendEntryId: removedBackendEntryId,
+    removedOwner: removedOwner,
+    resultAvailable: resultAvailable,
+    trigger: trigger ?? this.trigger,
+  );
 }
 
 /// Identifies a stack transition observed from a navigation backend.

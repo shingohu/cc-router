@@ -37,19 +37,25 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
   /// Use this when system back, a gesture, or a form guard must distinguish a
   /// Managed Route from a foreign Popup or LocalHistoryEntry. Legacy adapters
   /// that expose only the Boolean Pop API are converted to an outcome with
-  /// [CCPopRemovedOwner.none].
-  Future<CCPopOutcome> maybePopOutcomeRoute<R>({R? result}) async {
+  /// [CCPopRemovedOwner.none]. [trigger] is attached by Runtime so all Pop
+  /// sources share one ownership and lifecycle pipeline.
+  Future<CCPopOutcome> maybePopOutcomeRoute<R>({
+    R? result,
+    CCPopTrigger trigger = CCPopTrigger.system,
+  }) async {
     _ensureInitialized();
     try {
       final adapter = _requiredNavigationAdapter;
       if (adapter is CCNavigationPopCoordinator) {
         final coordinator = adapter as CCNavigationPopCoordinator;
-        final outcome = await coordinator.maybePopOutcome(result: result);
+        final outcome = (await coordinator.maybePopOutcome(
+          result: result,
+        )).copyWith(trigger: trigger);
         _applyManagedPopOutcome(outcome);
         return outcome;
       }
       final handled = await adapter.maybePop(result: result);
-      return CCPopOutcome(handled: handled);
+      return CCPopOutcome(handled: handled, trigger: trigger);
     } on CCRouterError {
       rethrow;
     } catch (error) {
@@ -194,7 +200,9 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
       final adapter = _requiredNavigationAdapter;
       if (adapter is CCNavigationPopCoordinator) {
         final coordinator = adapter as CCNavigationPopCoordinator;
-        final outcome = coordinator.popOutcome(result: result);
+        final outcome = coordinator
+            .popOutcome(result: result)
+            .copyWith(trigger: CCPopTrigger.business);
         _applyManagedPopOutcome(outcome);
         return;
       }

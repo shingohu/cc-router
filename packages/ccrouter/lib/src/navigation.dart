@@ -25,8 +25,13 @@ abstract interface class CCNavigator {
   /// Coordinates a Pop and reports whether a Managed or foreign entry moved.
   ///
   /// Use this when system back, gestures, or modal UI need ownership-aware
-  /// diagnostics. For ordinary back handling, [maybePop] remains sufficient.
-  Future<CCPopOutcome> maybePopOutcome<R>({R? result});
+  /// diagnostics. [trigger] records whether the request came from system back,
+  /// a gesture, or another host integration. For ordinary back handling,
+  /// [maybePop] remains sufficient.
+  Future<CCPopOutcome> maybePopOutcome<R>({
+    R? result,
+    CCPopTrigger trigger = CCPopTrigger.system,
+  });
 
   /// Pops the current route and pushes [intent] as one stack operation.
   ///
@@ -92,8 +97,11 @@ final class _CCNavigator implements CCNavigator {
 
   /// Coordinates a Pop through the Runtime-owned Adapter.
   @override
-  Future<CCPopOutcome> maybePopOutcome<R>({R? result}) =>
-      CCRouter._runtime.maybePopOutcomeRoute(result: result);
+  Future<CCPopOutcome> maybePopOutcome<R>({
+    R? result,
+    CCPopTrigger trigger = CCPopTrigger.system,
+  }) =>
+      CCRouter._runtime.maybePopOutcomeRoute(result: result, trigger: trigger);
 
   /// Pops and pushes through the Runtime owned by [CCRouter].
   @override

@@ -1499,14 +1499,19 @@ void main() {
       final declined = await runtime.maybePopOutcomeRoute();
       expect(declined.handled, isFalse);
       expect(declined.removedOwner, CCPopRemovedOwner.none);
+      expect(declined.trigger, CCPopTrigger.system);
 
       final pushed = runtime.pushRoute<String>(
         const TestIntent<String>('orders.detail', RouteArgs('2')),
       );
-      final handled = await runtime.maybePopOutcomeRoute(result: 'back');
+      final handled = await runtime.maybePopOutcomeRoute(
+        result: 'back',
+        trigger: CCPopTrigger.gesture,
+      );
       expect(handled.handled, isTrue);
       expect(handled.removedOwner, CCPopRemovedOwner.managed);
       expect(handled.resultAvailable, isTrue);
+      expect(handled.trigger, CCPopTrigger.gesture);
       expect(await pushed, 'back');
       expect(runtime.activeRouteEntries, hasLength(1));
       expect(adapter.entries.map((entry) => entry.uri.path), ['/orders/1']);

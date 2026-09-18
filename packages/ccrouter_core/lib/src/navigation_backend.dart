@@ -79,7 +79,9 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
   /// Applies only a committed ownership-aware predictive Pop.
   void _recordPredictiveBackEvent(CCPredictiveBackEvent event) {
     if (event.phase != CCPredictiveBackPhase.committed) return;
-    final outcome = event.outcome;
+    final outcome = event.outcome?.copyWith(
+      trigger: CCPopTrigger.predictiveBack,
+    );
     if (outcome == null ||
         outcome.removedOwner != CCPopRemovedOwner.managed ||
         outcome.removedBackendEntryId == null) {
