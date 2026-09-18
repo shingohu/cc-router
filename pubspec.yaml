@@ -11,3 +11,4 @@ workspace:
   - packages/ccrouter_core
   - packages/ccrouter
   - packages/ccrouter_go_router
+  - packages/ccrouter_test

@@ -1,0 +1,22 @@
+name: ccrouter_test
+description: Stable test hosts and regression tests for CCRouter.
+version: 0.1.0
+resolution: workspace
+publish_to: none
+
+environment:
+  sdk: ^3.9.0
+
+dependencies:
+  ccrouter: ^0.1.0
+  ccrouter_contracts: ^0.1.0
+  ccrouter_core: ^0.1.0
+  ccrouter_go_router: ^0.1.0
+  flutter:
+    sdk: flutter
+  go_router: ^14.8.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  test: ^1.26.0

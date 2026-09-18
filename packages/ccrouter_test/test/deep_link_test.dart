@@ -21,9 +21,7 @@ final class _DeepLinkCodec implements CCRouteCodec<_DeepLinkArgs> {
 }
 
 final class _DeepLinkRegistrar implements CCComponentRegistrar {
-  const _DeepLinkRegistrar({
-    this.deepLink = CCDeepLinkPolicy.enabled,
-  });
+  const _DeepLinkRegistrar({this.deepLink = CCDeepLinkPolicy.enabled});
 
   final CCDeepLinkPolicy deepLink;
 
@@ -64,10 +62,7 @@ void main() {
       Uri.parse('https://example.com/orders/42'),
       source: platformSource,
     );
-    expect(
-      adapter.currentRequest?.origin,
-      CCNavigationOrigin.externalPlatform,
-    );
+    expect(adapter.currentRequest?.origin, CCNavigationOrigin.externalPlatform);
     expect(adapter.currentRequest?.source, same(platformSource));
 
     const notificationSource = CCNavigationSource.notification('order_ready');
@@ -82,10 +77,7 @@ void main() {
     expect(adapter.currentRequest?.source, same(notificationSource));
 
     await CCDeepLinkIngress.fromQrCode(Uri.parse('/orders/44'));
-    expect(
-      adapter.currentRequest?.origin,
-      CCNavigationOrigin.externalQrCode,
-    );
+    expect(adapter.currentRequest?.origin, CCNavigationOrigin.externalQrCode);
   });
 
   test('external ingress still enforces disabled Deep Link policy', () async {
