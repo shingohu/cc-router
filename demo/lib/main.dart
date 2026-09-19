@@ -4,7 +4,6 @@ import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter_go_router/ccrouter_go_router.dart';
 import 'package:demo_order/demo_order.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 final class CreateOrder implements CCCommand<String> {
   const CreateOrder(this.amount);

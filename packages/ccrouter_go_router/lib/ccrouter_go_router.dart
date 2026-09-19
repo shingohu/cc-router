@@ -7,3 +7,14 @@ export 'src/navigation_observer.dart';
 export 'src/page.dart';
 export 'src/route_binding.dart';
 export 'src/shell_binding.dart';
+
+/// Re-exports the GoRouter types required to assemble the application-owned
+/// router and shell bindings without exposing the entire backend library.
+export 'package:go_router/go_router.dart'
+    show
+        GoRouter,
+        GoRoute,
+        RouteBase,
+        ShellRoute,
+        StatefulShellRoute,
+        StatefulShellBranch;
