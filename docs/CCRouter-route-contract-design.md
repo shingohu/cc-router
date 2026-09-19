@@ -2,8 +2,12 @@
 
 ## 文档状态
 
-- 版本：v0.1
-- 状态：统一 Contract-first 公开契约已实现
+- 版本：v0.2
+- 状态：统一 Contract-first 公开契约已实现并与当前生成器对齐
+
+本文只定义路由契约的 Package 边界和 Promotion 规则。路由整体语义以
+[路由子系统设计](CCRouter-route-design.md)为准，完成状态以
+[路由完成计划](CCRouter-route-completion-plan.md)为准。
 
 ## 背景
 
@@ -173,7 +177,10 @@ final class OrderDetailPage extends StatelessWidget {
 Flutter/GoRouter 类型进入独立契约。Result 或 Extra 使用自定义对象时，应将对象移动到
 contracts Package 的公开 Pure Dart model library，并由 schema 通过公开入口显式导入。
 
-## Service Promotion
+## 非路由附录：Service Promotion Proposal
+
+本节只记录未来 Service 契约升级方向，尚未实现，也不属于当前路由完成计划。后续进入
+Service 开发阶段时应迁移到独立 Service 设计文档，不能据此视为已公开 API。
 
 Service 默认仍可按 Dart `Type` 注册和解析。需要跨组件时，在 contracts Package 声明
 接口及 `CCServiceToken<T>`，Provider 同时附加该 Token。Runtime 同时保留旧 Type 索引和

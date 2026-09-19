@@ -2,13 +2,14 @@
 
 ## 文档状态
 
-- 版本：v0.1 Draft
+- 版本：v0.2
+- 状态：已与当前实现对齐；本文只记录外部方案比较和仍可借鉴的工程能力
 - 参考对象：[ff_annotation_route](https://github.com/fluttercandies/ff_annotation_route)
 - 参考范围：上游 `master` 的 README、示例说明和公开生成模型
 - 评估日期：2026-09-19
 - 结论：借鉴工程能力，不直接复制其全局路由表和动态扩展模型
 
-本文档记录 `ff_annotation_route` 对 CCRouter 注解生成器、路由生命周期和多后端设计的参考价值。核心路由契约仍以 [路由子系统设计](CCRouter-route-design.md) 为准。
+本文档记录 `ff_annotation_route` 对 CCRouter 注解生成器、路由生命周期和多后端设计的参考价值，不作为实现完成状态清单。核心路由契约以[路由子系统设计](CCRouter-route-design.md)为准，已完成能力以[路由完成计划](CCRouter-route-completion-plan.md)为准。
 
 ## 1. 总体判断
 
@@ -46,14 +47,16 @@ CCRouter 当前已经有 `RouteEntry` 生命周期、独立的 `CCNavigationHost
   RouteEntry；`OverlayEntry` 等非 Navigator 浮层不改变页面生命周期。
 
 GoRouter 集成通过 `CCGoRouterNavigationObserver.didChangeTop` 上报确认后的当前 Route；
-Stateful Shell 和多 Pane Host 通过 Host SPI 上报活动 Outlet 集合。仍需继续完善的底层
-中立事件模型包括：
+Stateful Shell 和多 Pane Host 通过 Host SPI 上报活动 Outlet 集合。当前底层中立事件模型
+已经包括：
 
 ```text
-CCHostLifecycleEvent
+CCNavigationHostLifecycleEvent
 CCRouteVisibilityEvent
-CCWindowVisibilityEvent
 ```
+
+Window 和 Display 不再增加语义重叠的独立可见性事件；它们通过稳定的 `hostId`、Host
+Registry、活动 Outlet 集合和 Host Lifecycle Event 隔离。
 
 Mixin 和 Listener 都只是 Flutter 业务层的便利接入，不能替代 Runtime 的 RouteEntry、
 Adapter 事件或最终移除埋点。页面创建和销毁继续使用 Flutter `initState` / `dispose`；
@@ -70,19 +73,24 @@ Adapter 事件或最终移除埋点。页面创建和销毁继续使用 Flutter 
 - `StatefulShellRoute` 状态保持；
 - Shell 分支间的返回处理。
 
-CCRouter 已有 `CCRoutePlacement`、`shellId`、`navigatorOutlet`、`CCGoRouterShellBinding` 和 Stateful Shell 能力声明。后续应重点补充真实 Demo 和回归测试，验证系统返回、Tab 切换、Shell 内 Pop 以及 Foreign Popup 不会错误关闭其他 Outlet 的 Route Scope。
+CCRouter 已有 `CCRoutePlacement`、`shellId`、`navigatorOutlet`、
+`CCGoRouterShellBinding` 和 Stateful Shell 能力声明。系统返回、Tab 切换、Shell 内 Pop、
+Foreign Popup 隔离和多 Outlet Route Scope 已有专项回归；后续增加真实业务 Demo 只用于
+改善集成体验，不再是 Runtime 正确性的阻塞项。
 
 ### 2.3 复杂 Query 参数
 
 其 `FFConvert.convert` 支持将 Web Query 转换为集合或自定义 Model。这个方向对筛选条件、分页参数和分享链接有实际价值。
 
-CCRouter 当前主要支持 `String`、`int`、`double`、`bool`、enum、可空值和 `Extra`。后续可以增加显式 Query Codec：
+CCRouter 当前支持 `String`、`int`、`double`、`bool`、enum、可空值、`List<T>`、
+`Set<T>`、`Extra`，并已支持显式 Query Codec：
 
 ```dart
 CCRouteQueryCodec<OrderFilter>
 ```
 
-或在参数注解中声明受约束的 Codec。Codec 必须是显式、可测试、可生成的，不能引入一个运行时动态的全局转换器。
+Codec 通过参数注解显式声明，必须可测试、可生成，且其类型和构造器在生成期校验；不会
+引入运行时动态的全局转换器。
 
 ### 2.4 Monorepo 生成工具体验
 
@@ -110,7 +118,8 @@ Binding；Navigator 1.0 或其他 Navigator 2.0 后端可以复用 Catalog。She
 
 其 `exts` 可以表达分组、排序和其他文档字段。CCRouter 可以吸收这个需求，但不应直接增加 `Map<String, dynamic>` 作为核心契约。
 
-优先考虑结构化元数据，例如：
+如果未来有真实需求，应优先考虑结构化元数据。以下只是 Proposal 示例，当前不存在
+`CCRouteMetadata` API：
 
 ```dart
 CCRouteMetadata(
@@ -167,36 +176,26 @@ CCRouter 应继续要求业务统一通过 `CCRouter.navigator`，让拦截、As
 | 多 Path / URI | 支持部分 | 多 Pattern、主 Pattern 和别名分离 |
 | 路由可见性 | 主要依赖生成文件和包扫描 | 契约形态、Package 依赖、barrel 校验 |
 | 路由生命周期 | Widget Mixin + Observer | Runtime 状态源 + 可选 Mixin/Listener + Adapter `didChangeTop` |
-| App 前后台 | 有生命周期回调 | 已有 Host Lifecycle Event，待扩展多 Window Runtime 调度 |
+| App 前后台 | 有生命周期回调 | 已有 Host Lifecycle Event 和多 Host/Window 隔离 |
 | 全局/路由拦截器 | 支持 | 已支持，并统一经过 CCRouter |
 | GoRouter | 支持 | 独立 GoRouter Adapter |
-| Stateful Shell | 有示例 | 已有 Shell Binding，需要加强回归 |
-| 复杂 Query | 动态转换器 | 当前标量 Codec，后续增加显式 Codec |
+| Stateful Shell | 有示例 | 已有 Shell Binding、分支观察和专项回归 |
+| 复杂 Query | 动态转换器 | 标量、集合和显式 `CCRouteQueryCodec<T>` |
 | 全局 Routes 表 | 支持 | 不采用 |
 | 任意代码注入 | 支持 | 不采用 |
 | 应用路由文档 | 支持 | `cc_routes.json` / `cc_routes.md` |
 
-## 5. 后续优先级
+## 5. 剩余可借鉴项
 
-### P0
+以下是工程体验增强，不代表当前路由闭环缺失：
 
-1. 将已由 `didChangeTop` 确认的页面当前状态继续关联到 Backend Entry identity，使
-   Runtime RouteEntry 可见性和页面便利回调使用同一确认结果。
-2. 完善 StatefulShell、嵌套路由和多 Outlet 回归测试。
-3. 将产品埋点名称与稳定 `routeId` 分离，例如增加结构化 `CCRouteTelemetry`。
-
-### P1
-
-1. 支持集合 Query 和自定义类型 Query Codec。
-2. 增强复杂构造器、继承参数和类型导入分析。
-3. 增加生成器的排除包、分组、排序和缓存能力。
-4. 路由文档按组件、业务分组、Shell 和 Outlet 输出不同视图。
-
-### P2
-
-1. 生成器性能优化，但保持唯一的生成语义。
-2. 提供 IDE 或 CI 友好的路由目录查询接口。
-3. 增加更多 GoRouter、Navigator 2.0 和多 Window 示例。
+1. 为 CLI 增加扫描目录、排除 Package、稳定分组、缓存和 Route Scaffold 支持。
+2. 为应用路由文档增加按组件或业务域组织的可选视图。
+3. 增加更多 GoRouter、Navigator 2.0、多 Window 和 Stateful Shell 集成示例。
+4. 优化生成器和 Workspace 聚合性能，但保持唯一生成语义。
+5. 提供 IDE 或 CI 友好的只读路由目录查询接口。
+6. 如确有产品需求，再设计独立于稳定 `routeId` 的结构化产品埋点名称；该能力目前只是
+   Proposal，不属于已公开 API。
 
 ## 6. 结论
 

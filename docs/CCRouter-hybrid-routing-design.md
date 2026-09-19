@@ -2,8 +2,8 @@
 
 ## 文档状态
 
-- 版本：v0.1 Draft
-- 状态：阶段一已实现，阶段二核心台账已实现，阶段四桥接和能力声明已部分实现
+- 版本：v0.2
+- 状态：当前设计已实现；预测返回需由 Host 显式启用，完整路由状态恢复仍暂缓
 - 适用范围：CCRouter、GoRouter、Flutter Navigator、第三方 Popup 和多 Window Host
 - 关联设计：[CCRouter 路由子系统设计](CCRouter-route-design.md)
 
@@ -24,7 +24,7 @@
 
 ### 2.1 Managed Route
 
-由 CCRouter 创建并管理的路由，包括普通页面、跨组件页面、需要类型安全返回值的 Dialog 或 BottomSheet，以及需要拦截、埋点、Deep Link、恢复或 Route Scope 的业务流程。
+由 CCRouter 创建并管理的路由，包括普通页面、跨组件页面、需要类型安全返回值的 Dialog 或 BottomSheet，以及需要拦截、埋点、Deep Link 或 Route Scope 的业务流程。当前只记录脱敏的状态恢复需求，不执行路由状态恢复。
 
 Managed Route 才拥有 `CCRouteEntry`、Route Scope、类型安全结果和 CCRouter 生命周期。
 
@@ -88,14 +88,16 @@ sequence
 
 ## 5. Pop 协调
 
-`maybePop` 不能只使用一个布尔值表示结果。建议引入：
+`maybePop` 的布尔结果无法表达被移除条目的所有权，因此当前使用：
 
 ```text
 CCPopOutcome
 ├── handled
 ├── removedBackendEntryId?
-├── removedOwner: managed | foreign | none
-└── resultAvailable
+├── removedOwner: managed | foreign | opaque | none
+├── trigger: system | gesture | predictiveBack | business | unknown
+├── guardDeniedCode?
+└── hostId?
 ```
 
 处理规则：
@@ -104,6 +106,7 @@ CCPopOutcome
 - Pop 被 `PopScope`、表单保护或手势状态拒绝时，Managed Route 保持存活；
 - Foreign Popup 消费返回时，只移除 Foreign Entry；
 - 只有 `removedOwner == managed` 时，Runtime 才关闭对应 Route Scope；
+- Typed result 继续由原始 Managed Push Future 管理，不放入 `CCPopOutcome`；
 - 第三方 Route 的结果不能转换为 CCRouter 的泛型返回值；
 - `LocalHistoryEntry` 被消费时不能误认为页面 Route 已经移除。
 
@@ -132,7 +135,7 @@ Foreign Backend Entry 诊断，不执行导航，也不创建 RouteEntry、Route
 
 ### 经过 CCRouter
 
-跨组件打开、需要类型安全参数或返回值、需要权限或登录拦截、需要独立埋点或 Route Scope、需要 Deep Link 或状态恢复，以及属于完整业务流程的 Dialog 或 BottomSheet。
+跨组件打开、需要类型安全参数或返回值、需要权限或登录拦截、需要独立埋点或 Route Scope、需要 Deep Link，以及属于完整业务流程的 Dialog 或 BottomSheet。未来若实现状态恢复，也只覆盖显式加入恢复契约的 Managed Route。
 
 `CCDialogPresentation` 和 `CCModalBottomSheetPresentation` 表示被 CCRouter 管理的模态目的地，不代表所有 Flutter Dialog 或 BottomSheet。
 
@@ -141,22 +144,24 @@ Foreign Backend Entry 诊断，不执行导航，也不创建 RouteEntry、Route
 Adapter 初始化时声明能力：
 
 ```text
-supportsForeignEntryObservation
-supportsBackendEntryIdentity
-supportsInitialStackSnapshot
+supportsBackendVisibilityObservation
 supportsAtomicPopAndPush
 supportsPushAndRemoveUntil
 supportsNestedNavigators
 supportsStatefulShell
 supportsModalRoutes
 supportsPredictiveBack
+supportsManagedPopObservation
 supportsExactEntryRemoval
 supportsExactEntryReplacement
 ```
 
 Runtime 根据能力选择正常执行、明确记录的降级实现或初始化失败。禁止静默把有返回值的组合操作降级为无法保证语义的多个操作。
 
-`supportsInitialStackSnapshot` 不是所有 Flutter Navigator 都能实现的能力。无法提供完整快照时，Adapter 必须明确声明限制，Runtime 进入隔离或不确定状态。
+Foreign/Opaque 变化通过事件身份和 Bridge 隔离，不以一个宽泛 Capability Boolean 承诺。
+初始栈快照同样不使用 Capability Boolean：支持该能力的 Adapter 实现可选 SPI
+`CCNavigationBackendSnapshotSource`，不实现时 Runtime 只从开始观察后的事件建立台账，
+不得猜测观察前的外部栈。
 
 ## 9. 多 Window 与自适应布局
 
@@ -210,8 +215,8 @@ Predictive Back Host 必须在 commit 前调用 Bridge 的 `evaluateStart`。For
 - 不把 Foreign UI 暴露为业务路由 API。
 
 Adapter 能力声明已提供为可选的 `CCNavigationAdapterCapabilitySource` SPI。
-GoRouter 和内存 Adapter 会声明各自已实现的组合导航、嵌套 Navigator、模态路由、
-Foreign/Opaque 观察等能力；Runtime 已在初始化和组合导航执行前进行能力校验，
+GoRouter 和内存 Adapter 会声明各自已实现的可见性观察、Managed Pop 观察、组合导航、
+嵌套 Navigator、模态路由和精确 Entry 操作能力；Runtime 已在初始化和组合导航执行前进行能力校验，
 不再静默降级为无法保证语义的操作。
 
 ### 阶段五：Host 与多 Window

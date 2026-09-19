@@ -2,16 +2,18 @@
 
 ## 文档状态
 
-- 版本：v0.1 Draft
-- 状态：增量实现中，Pattern、导航主链路与内存 Adapter 已实现
+- 版本：v0.2
+- 状态：当前路由闭环已实现；完整 Route Restoration 和调用级 `BuildContext` Outlet 解析暂未实现
 - 适用范围：Flutter 应用及其组件化路由契约
 - 默认导航后端：`go_router`
 - 核心约束：业务跳转统一通过 `CCRouter.navigator`，Core 不依赖 Flutter、`BuildContext` 或 `go_router`
 
-本文档细化 [CCRouter v0.1 架构设计](CCRouter-v0.1-architecture.md) 中的路由部分。文中的 API 用于冻结语义和实现边界，不表示当前仓库已经提供这些 API。
+本文档细化 [CCRouter v0.1 架构设计](CCRouter-v0.1-architecture.md) 中的路由部分。未标记为
+Proposal 或“暂缓”的 API 名称应与当前仓库保持一致；实施完成状态统一以
+[路由完成计划](CCRouter-route-completion-plan.md)为准。
 
 注解生成器已实现页面注解、单库校验、类型安全 Arguments/Intent、标量 Path、标量及
-repeated Query、显式 Query Codec、Extra Codec、Definition、注册入口和中立页面工厂。使用 `part` 生成
+repeated Query、显式 Query Codec、类型安全 Extra 校验、Definition、注册入口和中立页面工厂。使用 `part` 生成
 `.route.g.dart`，页面契约固定为 library-private；Contract-first 公开契约需显式导出。
 生成器同时输出组件级和路由级 JSON/Markdown，并由 workspace 工具聚合检查组件与 Route ID、
 路由所有者、契约 exposure 和实现 Package，输出应用级路由目录。当前仍不生成
@@ -34,11 +36,12 @@ GoRoute。独立纯契约文件的拆分方案见[契约文件设计](CCRouter-r
 5. 路由注册、拦截、生命周期、埋点和诊断使用同一条调用链。
 6. 路由契约按组件和声明形态生成，不创建包含全部业务路由的全局 `Routes` 类。
 7. 生成机器可读及开发者可读的路由文档。
-8. 为后续 `activateComponent` / `deactivateComponent` 保留路由所有权和生命周期信息。
+8. 以组件所有权驱动 Route/Shell 的 `activateComponent` / `deactivateComponent`，并为未来
+   完整动态组件管理保留明确生命周期边界。
 
 ## 2. 非目标
 
-v0.1 不包含：
+当前路由范围不包含：
 
 - 运行时下载或加载未编译进 App 的 Dart 页面。
 - 在 Core 中重新实现 Flutter Navigator 或 `go_router` 的匹配算法。
@@ -157,7 +160,6 @@ const orderComponent = CCComponentDescriptor(
   deepLink: CCDeepLinkPolicy.enabled,
   description: '展示订单详情。',
   interceptors: ['auth.required'],
-  tracking: CCRouteTracking(eventName: 'order_detail_view'),
 )
 final class OrderDetailPage {
   const OrderDetailPage({
@@ -167,7 +169,6 @@ final class OrderDetailPage {
   });
 
   /// 订单 ID。
-  @CCTrackingParam(name: 'order_id')
   final int orderId;
 
   /// 首次展示的标签。
@@ -321,7 +322,7 @@ GoRoute(
   顺序猜测规范地址。
 - `pattern` 与 `patterns` 不能同时设置。
 - 业务调用生成地址时始终使用主 Pattern。
-- 主 Pattern 必须是 `CCPathPattern` 或 `CCUriPattern`，不能是 `matchOnly`。
+- 主 Pattern 必须是可反向生成的 `CCPathPattern` 或 `CCUriPattern`，不能是正则 Pattern。
 - 内部旧链接、Web URL、自定义 Scheme 和兼容正则可以作为别名。
 - 匹配别名后，Runtime 仍解析为同一个 `routeId`。
 - 是否把别名重定向到主 Pattern 由 Adapter 策略决定。
@@ -364,7 +365,7 @@ CCPathPattern(
 - 正则能够编译。
 - 多个同层 Pattern 之间不能形成无法确定优先级的歧义匹配。
 
-无法用结构化模板表达的兼容地址使用 `CCRegexPattern`。它对移除 Query 和 Fragment 后的完整地址进行全匹配，命名捕获组作为 Path 参数交给 Codec。完整正则不可逆，因此始终是 `matchOnly`，不能作为主 Pattern，并且路由必须同时存在一个可生成地址的主 Pattern。
+无法用结构化模板表达的兼容地址使用 `CCRegexPattern`。它对移除 Query 和 Fragment 后的完整地址进行全匹配，命名捕获组作为 Path 参数交给 Codec。完整正则不可逆，不能作为主 Pattern，并且路由必须同时存在一个可生成地址的主 Pattern。
 
 ### 6.4 匹配顺序
 
@@ -474,12 +475,11 @@ abstract final class OrderRoutes {
 ```dart
 final OrderResult? result = await CCRouter.navigator.push<OrderResult>(
   OrderRoutes.detail(orderId: 100, tab: 'items'),
-  context: context,
   source: const CCNavigationSource.feature('home.order_banner'),
 );
 ```
 
-建议的 Flutter 门面 API：
+当前业务门面 API 的核心签名如下；完整定义以 `CCNavigator` 为准：
 
 ```dart
 abstract final class CCRouter {
@@ -487,45 +487,42 @@ abstract final class CCRouter {
 }
 
 abstract interface class CCNavigator {
-  Future<R?> push<R>(
+  Future<R?> push<R>(CCRouteIntent<R> intent, {CCNavigationSource? source});
+  Future<R?> replace<R>(CCRouteIntent<R> intent, {CCNavigationSource? source});
+  Future<bool> maybePop<R>({R? result});
+  Future<CCPopOutcome> maybePopOutcome<R>({
+    R? result,
+    CCPopTrigger trigger = CCPopTrigger.system,
+  });
+  Future<R?> popAndPush<R>(
     CCRouteIntent<R> intent, {
-    BuildContext? context,
+    Object? popResult,
     CCNavigationSource? source,
   });
-
-  Future<R?> replace<R>(
+  Future<void> popUntil(CCNavigationStackPredicate predicate);
+  Future<void> removeRoute(CCRouteEntryHandle handle);
+  Future<void> removeRouteBelow(CCRouteEntryHandle handle);
+  Future<void> replaceRouteBelow<R>(
+    CCRouteEntryHandle handle,
     CCRouteIntent<R> intent, {
-    BuildContext? context,
     CCNavigationSource? source,
   });
-
-  Future<void> go(
-    CCRouteIntent<void> intent, {
-    BuildContext? context,
+  Future<R?> pushAndRemoveUntil<R>(
+    CCRouteIntent<R> intent,
+    CCNavigationStackPredicate predicate, {
     CCNavigationSource? source,
   });
-
-  Future<void> reset(
-    CCRouteIntent<void> intent, {
-    BuildContext? context,
-    CCNavigationSource? source,
-  });
-
-  Future<void> open(
-    Uri uri, {
-    BuildContext? context,
-    CCNavigationSource? source,
-  });
-
-  void pop<R>({R? result, BuildContext? context});
-
-  bool canPop({BuildContext? context});
+  Future<void> go<R>(CCRouteIntent<R> intent, {CCNavigationSource? source});
+  Future<void> reset<R>(CCRouteIntent<R> intent, {CCNavigationSource? source});
+  Future<void> open(Uri uri, {CCNavigationSource? source});
+  void pop<R>({R? result});
+  bool canPop();
 }
 ```
 
 ### 8.1 栈操作扩展边界
 
-`CCNavigator` 不机械复制 Flutter `Navigator` 的所有方法，而是只暴露具有稳定跨 Adapter 语义的栈操作。建议分阶段支持：
+`CCNavigator` 不机械复制 Flutter `Navigator` 的所有方法，而是只暴露具有稳定跨 Adapter 语义的栈操作。当前决策如下：
 
 | 方法 | 决策 | 说明 |
 | --- | --- | --- |
@@ -546,9 +543,14 @@ abstract interface class CCNavigator {
 Runtime 关闭对应 RouteEntry；Foreign、Opaque 或未提供归属的 Pop 只报告结果，不
 按栈顶猜测删除页面。
 
-`BuildContext` 只在调用瞬间用于解析最近的 Navigator Outlet，解析完成后不得保存或传入 Core。未传 Context 时使用 Adapter 配置的默认根 Outlet。非 Widget 调用方后续可以通过显式 Outlet 引用选择非根导航栈。
+当前 `CCNavigator` 不接收 `BuildContext`。Host 和 Outlet 由生成 Intent 中的
+`CCRoutePlacement`、活动 Host Resolver、Shell Binding 和 Adapter 默认 Host 共同解析。
+未来如增加“按调用点选择最近 Outlet”的 Flutter 便利 API，只能在 Flutter 门面即时解析，
+不得把 Context 保存或传入 Core；该 Proposal 不能改变现有无 Context API 的语义。
 
-当前 Pure Dart 导航主链路已经实现 `push/replace/go/reset/open/pop/canPop`，以及 `maybePop`、`maybePopOutcome`、类型安全的 `popAndPush`、`popUntil` 和 `pushAndRemoveUntil`；主 Pattern 地址生成、中立 Adapter SPI 和内存 Adapter 也已实现。`BuildContext` 参数与 Outlet 解析将在 `CCRouterApp` 和 GoRouter Adapter 阶段接入；在此之前所有调用使用 Adapter 的默认导航栈，Core 始终不接收 Flutter 类型。
+当前已实现 `push/replace/go/reset/open/pop/canPop`、`maybePop`、`maybePopOutcome`、类型安全的
+`popAndPush`、`popUntil`、`pushAndRemoveUntil`、精确 Entry 删除和锚点下方替换；主 Pattern
+地址生成、中立 Adapter SPI、内存 Adapter、GoRouter Adapter 与 Host/Outlet 调度也已实现。
 
 不提供 `CCRouter.push()` 等重复快捷入口，也不提供绕过 `CCRouter.navigator` 直接执行生成 Intent 的公开方法。
 
@@ -600,11 +602,14 @@ Dart 没有 package-private 或 friend package。`lib/src`、显式 export、`im
 
 每个 Route Definition 必须记录 `ownerComponentId`。组件停用后：
 
-- 新导航请求返回 `CCRouteUnavailableError`，或由未来的激活策略先调用 `activateComponent`。
-- 已存在 RouteEntry 的处理由停用策略决定，不能静默销毁。
-- Registrar、路由定义和 Adapter binding 必须按组件成组移除。
+- 新导航请求返回 `CCRouteUnavailableError`。
+- 已存在 RouteEntry 保持存活，不能因组件停用被静默销毁或猜测 Pop。
+- Runtime 已提供 Route 和 Shell 的 `activateComponent` / `deactivateComponent` 状态切换，
+  并按组件所有权执行一致校验。
 
-v0.1 只建立所有权模型，不实现运行时激活和停用。
+当前尚未提供面向应用的完整动态组件管理器，也不物理卸载 Registrar、Service、Handler、
+Adapter binding 或依赖图。完整安装/卸载语义属于后续组件生命周期设计，不能由业务直接
+操作隐藏的 Runtime API。
 
 ---
 
@@ -703,10 +708,12 @@ cancel    终止导航，返回标准取消原因
 - 拦截器执行使用真实 Deadline/Timeout，并以专用错误报告超时和执行异常。
 - `CCNavigationDefer` 恢复时保留原始组合操作、Predicate 和 RouteEntry 提交语义。
 
-仍待后续扩展：
+可选后续增强：
 
 - 显式拦截器优先级配置；当前全局拦截器按稳定 ID 排序，路由拦截器按声明顺序执行。
-- 导航完成后的 After Hook，以及拦截器耗时、决策和失败原因的完整诊断投影。
+
+导航完成后的 `onAfter`、失败 `onLost` 和 Resolve/Intercept/Dispatch/Arrival/Stay/Total
+分阶段耗时已经由 `CCNavigationAspect` 提供，不再列为拦截器缺口。
 
 因此，CCRouter 对齐的是拦截器的行为语义和类型安全边界，不复制 ff_annotation_route 或 TheRouter 的具体 API 形状。
 
@@ -891,8 +898,8 @@ Outlet。`CCShellType.singleNavigator` 对应一个共享历史的嵌套 Navigat
 所有指向该 Shell 的路由都会拒绝新的导航；现有页面不会因此自动 Pop。
 
 Runtime 在全部组件注册完成后统一验证 Route Placement，因此跨组件 Shell 引用不依赖
-Registrar 执行顺序。未知 Shell、未知 Outlet、重复 Outlet、无效默认 Outlet，以及旧的
-`CCRouteKind.shell` Route 声明都会在初始化或注册阶段明确失败。BottomSheet/Dialog
+Registrar 执行顺序。未知 Shell、未知 Outlet、重复 Outlet、无效默认 Outlet，以及把
+Shell 错误声明成普通 Route 的情况都会在初始化或注册阶段明确失败。BottomSheet/Dialog
 仍由 Route Presentation 描述，不能用 Shell 或 Outlet 代替展示语义。
 
 Adapter 初始化时声明能力集合。路由要求 Shell、指定 Page/Dialog Route 类型、透明页面、底部弹出、Dialog 或自定义转场而 Adapter 不支持时，初始化必须失败，不能静默降级。
@@ -915,20 +922,23 @@ orders
 - 如果左右区域需要各自保留导航历史，可由 Shell 承载两个独立 Navigator；如果只是列表加当前选中详情，使用自适应页面容器即可。
 - 底部 Tab 等多个长期并行分支才适合 `StatefulShellRoute`；主从布局不能默认建模为 Stateful Shell。
 
-Shell 负责持久化导航容器和 Outlet，主从容器负责根据屏幕尺寸选择栈式或双栏呈现。后续应增加适配器中立的布局/容器元数据，并由 GoRouter Adapter 映射到 `ShellRoute` 或相应的多 Outlet 结构。
+Shell 负责持久化导航容器和 Outlet，主从容器负责根据屏幕尺寸选择栈式或双栏呈现。
+当前已提供适配器中立的 `CCWindowMetrics`、`CCAdaptivePresentationPolicy`、
+`CCAdaptiveOutletPolicy` 和 `CCAdaptiveHostLayout`；Host 根据布局结果切换活动 Outlet，
+具体 Widget 结构和 GoRouter Shell 仍由应用组合根创建。
 
 ### 12.3 大屏、折叠屏与多窗口扩展
 
 路由目的地必须与设备形态解耦。相同的 Route ID、Intent 和参数契约，应根据窗口和显示设备条件选择不同的 Shell、Outlet 和呈现方式，不为手机、平板、折叠屏或桌面分别复制路由。
 
-后续适配模型至少需要覆盖：
+当前契约和 Host 调度已经覆盖：
 
 - Window Size Class：`compact`、`medium`、`expanded`，并支持窗口自由调整和横竖屏变化。
 - Display Feature：折痕、铰链、屏幕切口和不可用区域，避免内容或交互控件跨越遮挡区域。
 - Fold Posture：平铺、半折、桌面姿态和双屏展开时的布局切换。
 - 多 Window/Display：导航状态按 Window 或 Navigation Host 隔离，不能只依赖进程级单例栈。
 - 自适应 Modal：Dialog、Bottom Sheet 和全屏页面可根据可用空间切换，但 Route Contract 保持不变。
-- 状态恢复：窗口尺寸、当前 Shell 分支、Outlet 栈、选中详情和进程重建后的恢复标识。
+- 状态恢复需求观测：只记录脱敏的重建机会，不保存或恢复 Outlet 栈和业务参数。
 - Web/桌面历史：浏览器前进后退、刷新、外部窗口和 URL 状态同步。
 - 系统返回：键盘、手势、预测返回和多 Pane 场景下的返回目标选择。
 - 无障碍与输入设备：大字体、键盘、鼠标、手写笔等导致布局变化时，导航状态不能丢失。
@@ -936,7 +946,9 @@ Shell 负责持久化导航容器和 Outlet，主从容器负责根据屏幕尺�
 
 已新增适配器中立的 `CCWindowMetrics`、`CCDisplayFeature` 和 `CCAdaptivePresentationPolicy` 合同。Shell 负责持久化导航容器，Adaptive Layout 负责选择单列、双栏或多 Pane，Window/Display Host 负责绑定实际导航栈；`CCRoutePlacement.hostId` 和导航请求的 `hostId` 用于隔离多窗口/外接屏幕栈。
 
-实现优先级：先完成 Size Class、主从双 Outlet、Modal 自适应和旋转/调整大小状态保持；再支持折叠姿态、多窗口和深链进入指定 Pane；最后依据真实需求数据决定是否实现状态恢复，并扩展外接屏幕、PiP、预测返回和输入设备驱动的导航策略。
+Size Class、主从双 Outlet、Modal 自适应、Host 隔离和多 Pane Outlet 显示切换已经接入。
+平台仍需按实际设备接入窗口指标、Display Feature、外接屏、PiP 和预测返回信号；完整状态
+恢复只有在真实需求数据证明收益后才重新立项。
 
 #### 12.3.1 状态恢复的当前边界
 
@@ -957,13 +969,14 @@ Restoration、桌面窗口重开或异常 Session Marker 等 Host 证据，并�
 - 契约升级、路由删除、组件缺失和部分失败必须产生明确报告；
 - 不持久化 Widget、BuildContext、Flutter Route、Scope 或返回 Completer。
 
-### 12.4 BuildContext 与 Outlet 解析
+### 12.4 Outlet 解析与 BuildContext 边界
 
-- 传入 `BuildContext` 时，Flutter 门面解析距离该 Context 最近的 CCRouter Outlet。
-- 未传 Context 时使用 Adapter 初始化时声明的默认根 Outlet。
-- Context 不进入 Intent、Route Definition、RouteEntry 或 Core Runtime。
-- Context 已失效、未挂载或无法解析 Outlet 时返回标准导航错误。
-- Shell 和嵌套 Navigator 必须通过显式 Outlet 关系确定，不能退回全局 Context 猜测。
+- 当前 `CCNavigator` 没有 `BuildContext` 参数。
+- Runtime 根据 Route Placement、活动 Host Resolver、Shell 和 Outlet 契约选择目标栈。
+- 未显式指定非默认 Host 时，使用 Adapter 绑定的默认 Host，而不是全局 Context。
+- Shell 和嵌套 Navigator 必须通过显式 Outlet 关系确定，不能用 Context 猜测结构。
+- 调用级最近 Outlet 解析仅保留为未来 Flutter 门面 Proposal；即使实现，Context 也不能进入
+  Intent、Route Definition、RouteEntry 或 Core Runtime。
 
 ### 12.5 混合路由兼容原则
 
@@ -1141,7 +1154,7 @@ disposed     Route Scope 已完成释放
 Runtime 为每次导航保存框架内部的 Origin，至少区分：
 
 ```text
-internal            类型安全 Intent、应用内 open、状态恢复
+internal            类型安全 Intent、应用内 open
 externalPlatform    Universal Link、App Link、自定义 Scheme、Initial URI
 externalNotification 外部通知载荷中的 URI
 externalQr          扫码等不可信外部输入
@@ -1210,58 +1223,63 @@ const CCNavigationSource.notification('order_status_push');
 - 来源组件 ID。
 - 目标 Route ID 和所属组件。
 - push、replace、go、reset 或 deepLink 操作。
-- `navigationId`、`traceId` 和 Session ID。
-- 请求时间、完成时间和耗时。
+- `navigationId`、解析后的 Host、Outlet 和重定向链。
+- 请求时间、阶段耗时和最终结果。
+- Host 可选提供的匿名 `CCNavigationTelemetryContext`。
 
 Redirect 必须保留最初来源和 `navigationId`，同时记录请求路由、实际路由和重定向链。
 
-### 15.2 数据白名单
+### 15.2 数据边界
 
-禁止自动上报全部路由参数。只有显式标记的字段进入埋点投影：
+当前 `CCNavigationAspectRequest` 不包含 Arguments、Path/Query 实际值或 Extra，只提供稳定
+Route Pattern、Route ID、Host、Outlet、owner、referrer、来源和重定向链。完整 URI、页面对象、
+Token、账号 ID、Extra 和返回对象不得进入 Aspect。
 
-```dart
-@CCTrackingParam(name: 'order_id')
-final int orderId;
-```
-
-生成器只允许安全的基础值或经过显式 Serializer 处理的值。Extra、页面对象、Token、完整 URI 和返回对象默认不进入事件。
+参数级产品埋点投影尚未提供公开注解。未来如引入，必须使用独立的显式白名单和 Serializer，
+且不能改变路由 Codec、Pattern 或类型安全契约；该能力当前属于 Proposal。
 
 ### 15.3 事件模型
 
-Runtime 产生以下中立事件：
+Runtime 通过 `CCNavigationAspect` 产生以下只读阶段：
 
 ```text
-requested
-redirected
-blocked
-navigationStarted
-shown
-hidden
-completed
-failed
+found
+arrival
+show
+hide
+removed
+disposed
+lost
+after
 ```
 
-事件至少包含：
+`CCNavigationAspectTiming` 分别提供可观测的 `resolve`、`intercept`、`dispatch`、`arrival`、
+`stay` 和 `total` 耗时。空值表示阶段未发生或后端无法可靠确认，不能伪造时间。
 
-- `navigationId`、`traceId`、RouteEntry ID。
-- 请求路由和最终路由。
-- 来源、操作和组件信息。
-- 安全的静态标签及字段投影。
-- 状态、耗时和安全错误码。
+请求级 `requested/completed/failed` 摘要由独立的 `CCNavigationLifecycleEvent` 保留；
+Route Scope 资源状态由 `CCRouteEntryLifecycleEvent` 描述。它们与 Aspect 有意分离，不能把
+Push Future 完成误当成页面首次到达。
 
-### 15.4 Observer
+### 15.4 Aspect
 
-框架不依赖具体埋点 SDK，只暴露只读观察接口：
+框架不依赖具体埋点 SDK。应用注册一个或多个具名只读 Aspect，并把安全事件投影到自己的
+分析系统：
 
 ```dart
-abstract interface class CCRouteTelemetryObserver {
-  void onRouteEvent(CCRouteTelemetryEvent event);
-}
+CCNavigationAspect(
+  id: 'analytics',
+  onArrival: recordPageView,
+  onShow: recordPageView,
+  onLost: recordNavigationFailure,
+  onAfter: recordNavigationTiming,
+)
 ```
 
-- Observer 失败必须隔离，不能阻塞导航。
+- Aspect 只观察，不能取消或重定向；决策只能由 Global/Route Interceptor 完成。
+- Aspect 异常必须隔离，不能阻塞导航。
+- Aspect 回调中禁止同步发起导航，避免重入。
 - 是否批量、采样和上传由应用集成层决定。
-- Trace 用于技术诊断，Telemetry 用于产品分析，二者共享关联 ID 但不混为同一接口。
+- Trace 用于技术诊断，Telemetry 用于产品分析，两者不能混成一个可变回调接口。
 
 ---
 
@@ -1291,18 +1309,13 @@ cc_routes.md
 - 参数名、来源、类型、必填性、默认值和说明。
 - 返回类型。
 - 两层拦截器中的路由级配置。
-- 埋点事件名、允许字段及说明。
 - Shell、父路由、Outlet 和展示意图。
 - 声明 Package/源码、可用导航来源，以及固定标记为 `unsupported` 的当前恢复能力。
-- 页面与参数 DartDoc。
-- 废弃状态、替代路由和源码位置。
+- 注解中的路由说明与参数 DartDoc。
 
-默认生成两类视图：
-
-```text
-internal  包含当前应用装配的全部路由
-public    只包含对外导出的路由契约
-```
+当前生成一个包含全部已装配路由的应用目录，并在每条记录上保留
+`internal/package/external` exposure。需要公共视图时由文档平台或只读工具按 exposure
+过滤，不额外生成容易与完整目录漂移的第二份路由表。
 
 文档、Intent、Codec 和 Registrar 必须来自同一份分析模型，不能从 `GoRoute` 或运行时代码反向推导。
 
@@ -1321,10 +1334,11 @@ CCRouteResultTypeError
 CCRouteRedirectLoopError
 CCRouteCancelledError
 CCNavigationAdapterError
-CCNavigationCapabilityError
 ```
 
-错误包含安全消息、Route ID、调用或导航 ID 和稳定错误码。原始参数、完整 URI、Extra 和业务返回值不得默认进入错误字符串。
+Adapter 缺失、能力不支持和后端执行失败统一使用 `CCNavigationAdapterError`；不再保留只有
+名称差异、没有独立处理语义的 Capability Error。错误包含安全消息和必要的稳定身份，原始
+参数、完整 URI、Extra 和业务返回值不得默认进入错误字符串。
 
 ---
 
@@ -1333,11 +1347,11 @@ CCNavigationCapabilityError
 组件级生成必须检查：
 
 - Route ID、Pattern 和参数声明格式。
-- 主 Pattern 唯一、非 `matchOnly` 且可反向生成。
+- 主 Pattern 唯一且可反向生成；`CCRegexPattern` 只能作为匹配别名。
 - Path 与 URI Pattern 参数和构造参数一致。
 - Query/Extra 注解不冲突。
 - 参数类型存在可用 Codec。
-- Tracking 字段符合隐私与序列化要求。
+- 生成元数据和文档不得包含运行时参数值或 Extra。
 - 所有生成的公开类型和成员具有 DartDoc。
 
 应用聚合阶段必须检查：
@@ -1403,10 +1417,10 @@ Adapter 实现者可以使用单独导出的：
 
 ### 阶段 B：Runtime 管线
 
-- Route Registry 和确定性匹配。
-- 两层拦截器及 Redirect 循环检测。
-- RouteEntry、返回值和生命周期。
-- Trace 与 Telemetry Observer。
+- 已实现 Route Registry 和确定性匹配。
+- 已实现两层拦截器、Redirect 循环检测和超时/Defer 语义。
+- 已实现 RouteEntry、返回值、Route Scope 和生命周期。
+- 已实现 Trace、`CCNavigationAspect`、安全 Telemetry Context 和分阶段耗时。
 
 当前已实现 Route Registry 的两层拦截器基础管线：应用宿主通过
 `CCGlobalNavigationInterceptor` 提供全局策略，组件通过
@@ -1414,8 +1428,8 @@ Adapter 实现者可以使用单独导出的：
 保留路由级声明顺序。拦截结果支持继续、类型安全 Intent/URI 重定向和取消；重定向
 沿用原始 `navigationId` 与 `CCNavigationOrigin`，并由 Runtime 限制最大次数。RouteEntry
 生命周期和 `CCNavigationAspect` 的安全快照钩子已经接入；Route Scope、拦截上下文的
-真实 Deadline/Timeout 和 Defer 恢复组合导航语义已经闭环，完整分阶段导航结果遥测投影
-仍待后续实现。
+真实 Deadline/Timeout 和 Defer 恢复组合导航语义已经闭环；Resolve、Intercept、Dispatch、
+Arrival、Stay 和 Total 分阶段耗时已经通过 Aspect 提供。
 
 ### 阶段 C：生成器
 
@@ -1478,8 +1492,9 @@ GoRouter Adapter 优先通过 `CCNavigationHost` 接收应用拥有的 Root/Outl
 生命周期桥使用 `CCGoRouterNavigationObserver`，由应用添加到 root Navigator、
 `ShellRoute.observers` 或 `StatefulShellBranch.observers`。Observer 只发出带 Outlet
 和 Host 标识的 Push/Pop/Replace/Remove 事件，适合埋点、诊断和生命周期同步；它不在回调中
-保存 `BuildContext`，也不允许同步触发 CCRouter 导航。当前 Flutter Observer API
-不保证提供 Pop 返回值，因此事件中的 `result` 可能为空。
+保存 `BuildContext`，也不允许同步触发 CCRouter 导航。Flutter `NavigatorObserver` 不提供
+Pop result，因此 `CCGoRouterNavigationEvent` 不包含 `result`；类型安全结果由原始 Managed
+Push Future 管理。
 `CCGoRouterAdapter` 可以通过 `observers` 参数订阅这些事件，并以
 `lifecycleEventCapacity` 保留有界快照；Runtime dispose 时会自动解除订阅。外部
 Deep Link 仍必须先经过 Core 的 `CCDeepLinkIngress` 和策略校验，校验通过后由
@@ -1488,14 +1503,15 @@ Adapter 的 `go` 进入目标 Shell 分支，不根据 URI 形态绕过策略。
 - 主 Pattern、别名、Query、Extra 和返回值。
 - Shell、Outlet 和生命周期同步。
 - Deep Link 入口。
-- 可选 BuildContext 的最近 Outlet 解析；`CCRouterApp` 的 Host、Key 和生命周期最小闭环已完成。
-- Android、iOS、Web 和 OHOS 示例验证。
+- `CCRouterApp` 的 Host、Key 和生命周期最小闭环已完成。
+- 调用级 `BuildContext` 最近 Outlet 解析仍是可选 Proposal，不属于当前 API。
+- 各平台示例验证属于集成工作，不改变 Adapter 契约。
 
 ### 阶段 E：动态组件生命周期
 
-- Route 和 binding 按组件激活、停用。
-- 活跃 RouteEntry 的停用策略。
-- 自动激活策略和诊断事件。
+- Route 和 Shell 已能按组件激活、停用，并拒绝停用组件的新导航。
+- 现有活跃 RouteEntry 不因组件停用被猜测 Pop。
+- Service、Handler、Scope 和依赖级联的完整动态卸载语义不属于本轮路由 API 冻结范围。
 
 ---
 
@@ -1520,12 +1536,13 @@ Adapter 的 `go` 进入目标 Shell 分支，不根据 URI 形态绕过策略。
 
 ---
 
-## 22. 已冻结决策与待评审项
+## 22. 已冻结决策与兼容性观察
 
 ### 已冻结
 
 - 业务导航统一通过 `CCRouter.navigator`。
-- `BuildContext` 可选，仅在 Flutter 门面即时解析 Outlet；无 Context 时使用默认根 Outlet。
+- 当前 `CCNavigator` 不接收 `BuildContext`；Host/Outlet 由契约和 Host Resolver 决定。
+- 调用级 Context 解析仅是未来 Flutter 便利层 Proposal，不得进入 Core。
 - `CCRouterApp` 负责 Flutter 集成，但不保存全局 Context。
 - Core 保持 Pure Dart。
 - 默认使用 GoRouter Adapter，允许自定义 Adapter。
@@ -1538,15 +1555,16 @@ Adapter 的 `go` 进入目标 Shell 分支，不根据 URI 形态绕过策略。
 - 契约 exposure 由声明形态推导；Package 依赖决定编译期可导入范围，Runtime 不校验调用方组件身份。
 - 展示契约区分 Page、模态 BottomSheet 与 Dialog；Page 和 Dialog 分别使用独立的 Route Type 表达 Flutter 对应语义。
 - 业务拦截器只有 Global 和 Route 两层。
-- 埋点来源和字段白名单进入统一 Runtime 管线。
+- 导航来源、安全 Aspect 快照和匿名 Telemetry Context 进入统一 Runtime 管线。
 - Deep Link 外部性由可信 Ingress 创建的内部 Origin 决定，不根据 URL 形态或业务 `CCNavigationSource` 推断。
 - 输出 JSON 和带 DartDoc 的 Markdown 路由文档。
 
-### 待实现时验证
+### 后续兼容性观察
 
-- `replace` 对被替换 RouteEntry Future 的标准完成语义。
-- Query 未知字段默认忽略还是严格失败。
+- 当前生成 Codec 忽略未声明的 Query 字段以保持链接前向兼容；是否提供显式 Strict 模式仍需
+  依据真实安全场景评估。
 - GoRouter 对 Shell、多别名和交互式返回的版本兼容范围。
+- 不同平台 Host 对 Display Feature、PiP 和预测返回信号的接入覆盖。
 
 ---
 
