@@ -9,6 +9,7 @@ import 'package:source_gen/source_gen.dart';
 
 part 'route_model.dart';
 part 'route_emitter.dart';
+part 'component_generator.dart';
 part 'component_metadata_builder.dart';
 part 'route_metadata_builder.dart';
 
@@ -17,6 +18,12 @@ part 'route_metadata_builder.dart';
 /// Kept out of the package barrel; business code consumes generated Intents,
 /// not analyzer elements or generation services.
 Generator ccRouteGenerator() => _RouteGenerator();
+
+/// Creates the internal component Manifest generator for build-runner.
+///
+/// Keeping the implementation in this library lets route and component
+/// generation share descriptor validation without exposing analyzer objects.
+Generator ccComponentGenerator() => _ComponentGenerator();
 
 /// Creates the metadata Builder while keeping its implementation private.
 Builder ccRouteMetadataBuilderInternal() => _RouteMetadataBuilder();
@@ -132,6 +139,18 @@ String _enumValue(DartObject value) {
       .where((field) => field.isEnumConstant)
       .toList();
   return '${type.element.displayName}.${fields[index].displayName}';
+}
+
+/// Converts a component ID into its stable generated Manifest symbol.
+String _componentManifestName(String componentId) {
+  final parts = componentId
+      .split(RegExp(r'[^A-Za-z0-9]+'))
+      .where((part) => part.isNotEmpty)
+      .toList();
+  final first = parts.first;
+  final stem =
+      '${first[0].toLowerCase()}${first.substring(1)}${parts.skip(1).map((part) => '${part[0].toUpperCase()}${part.substring(1)}').join()}';
+  return '${stem}Manifest';
 }
 
 /// Serializes the closed set of declarative route metadata into const source.

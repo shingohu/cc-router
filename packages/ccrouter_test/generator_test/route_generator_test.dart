@@ -87,6 +87,7 @@ final class Probe {
             as Map;
     final route = (json['routes'] as List).single as Map;
     expect((json['componentDeclarations'] as List), isEmpty);
+    expect(json['componentManifests'], isEmpty);
     expect((json['components'] as List).single['version'], '1.2.3');
     expect(route['componentId'], 'probe');
     expect(route['description'], 'Probe details.');
@@ -155,6 +156,7 @@ final class ProbeRegistrar implements CCComponentRegistrar {
             )
             as Map;
     expect(json['componentDeclarations'], ['probe']);
+    expect(json['componentManifests'], {'probe': 'probeManifest'});
     expect((json['routes'] as List), isEmpty);
     expect((json['components'] as List).single, {
       'id': 'probe',
@@ -171,6 +173,93 @@ final class ProbeRegistrar implements CCComponentRegistrar {
     expect(markdown, contains('# CCRouter Components'));
     expect(markdown, contains('`accounts`'));
   });
+
+  test(
+    'component builder generates a Manifest for a private Registrar',
+    () async {
+      await testBuilder(
+        ccComponentBuilder(BuilderOptions.empty),
+        {
+          'ccrouter_test|lib/src/probe_component_registrar.dart': '''
+import 'package:ccrouter/ccrouter.dart';
+part 'ccrouter_generated/probe_component_registrar.component.g.dart';
+const probeComponent = CCComponentDescriptor(
+  id: 'probe_component',
+  version: '1.2.3',
+  dependencies: ['account'],
+  optionalDependencies: ['analytics'],
+);
+@CCComponent(probeComponent)
+final class _ProbeComponentRegistrar implements CCComponentRegistrar {
+  const _ProbeComponentRegistrar();
+  @override
+  void register(CCRegistry registry) {}
+}
+''',
+        },
+        rootPackage: 'ccrouter_test',
+        generateFor: {'ccrouter_test|lib/src/probe_component_registrar.dart'},
+        isInput: (id) =>
+            id == 'ccrouter_test|lib/src/probe_component_registrar.dart',
+        readerWriter: reader,
+        flattenOutput: true,
+      );
+      final code = await reader.readAsString(
+        AssetId(
+          'ccrouter_test',
+          'lib/src/ccrouter_generated/probe_component_registrar.component.g.dart',
+        ),
+      );
+      expect(code, contains('const probeComponentManifest'));
+      expect(code, contains('id: "probe_component"'));
+      expect(code, contains('dependencies: const ["account"]'));
+      expect(code, contains('optionalDependencies: const ["analytics"]'));
+      expect(code, contains('registrar: _ProbeComponentRegistrar()'));
+    },
+  );
+
+  test(
+    'component builder rejects a Registrar without a const constructor',
+    () async {
+      final logs = <String>[];
+      await testBuilder(
+        ccComponentBuilder(BuilderOptions.empty),
+        {
+          'ccrouter_test|lib/src/invalid_component_registrar.dart': '''
+import 'package:ccrouter/ccrouter.dart';
+part 'ccrouter_generated/invalid_component_registrar.component.g.dart';
+const invalidComponent = CCComponentDescriptor(
+  id: 'invalid_component',
+  version: '1.0.0',
+);
+@CCComponent(invalidComponent)
+final class _InvalidComponentRegistrar implements CCComponentRegistrar {
+  _InvalidComponentRegistrar();
+  @override
+  void register(CCRegistry registry) {}
+}
+''',
+        },
+        rootPackage: 'ccrouter_test',
+        generateFor: {'ccrouter_test|lib/src/invalid_component_registrar.dart'},
+        isInput: (id) =>
+            id == 'ccrouter_test|lib/src/invalid_component_registrar.dart',
+        readerWriter: reader,
+        flattenOutput: true,
+        onLog: (log) => logs.add(log.message),
+      );
+      expect(
+        await reader.canRead(
+          AssetId(
+            'ccrouter_test',
+            'lib/src/ccrouter_generated/invalid_component_registrar.component.g.dart',
+          ),
+        ),
+        isFalse,
+      );
+      expect(logs.join('\n'), contains('const unnamed Registrar constructor'));
+    },
+  );
 
   test(
     'builder emits a private component contract and backend-neutral registration',

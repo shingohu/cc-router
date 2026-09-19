@@ -33,13 +33,7 @@ final class _ComponentMetadataBuilder implements Builder {
     for (final annotated in library.annotatedWith(_component)) {
       final element = annotated.element;
       if (element is! ClassElement ||
-          !element.allSupertypes.any(
-            (type) =>
-                type.element.displayName == 'CCComponentRegistrar' &&
-                type.element.library.uri.toString().startsWith(
-                  'package:ccrouter_core/',
-                ),
-          )) {
+          !_ComponentGenerator._implementsComponentRegistrar(element)) {
         _fail(
           'CCComponent must annotate a CCComponentRegistrar implementation.',
           element,
@@ -55,6 +49,10 @@ final class _ComponentMetadataBuilder implements Builder {
       source: buildStep.inputId.path,
       components: components,
       routes: const [],
+      componentManifests: {
+        for (final component in components)
+          component.id: _componentManifestName(component.id),
+      },
     );
     final outputs = buildStep.allowedOutputs.toList();
     final jsonOutput = outputs.singleWhere(

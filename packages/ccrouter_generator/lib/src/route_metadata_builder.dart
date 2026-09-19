@@ -57,6 +57,7 @@ Map<String, Object?> _metadataPayload({
   required List<_ComponentModel> components,
   required List<_RouteModel> routes,
   List<String>? componentDeclarations,
+  Map<String, String> componentManifests = const {},
 }) => {
   'schemaVersion': 1,
   'package': package,
@@ -64,6 +65,7 @@ Map<String, Object?> _metadataPayload({
   'componentDeclarations':
       componentDeclarations ??
       components.map((component) => component.id).toList(),
+  'componentManifests': componentManifests,
   'components': {
     for (final component in [
       ...components,

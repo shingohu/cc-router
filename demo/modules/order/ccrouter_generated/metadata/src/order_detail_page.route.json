@@ -3,6 +3,7 @@
   "package": "demo_order",
   "source": "lib/src/order_detail_page.dart",
   "componentDeclarations": [],
+  "componentManifests": {},
   "components": [
     {
       "id": "demo_order_component",

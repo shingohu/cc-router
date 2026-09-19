@@ -1295,6 +1295,8 @@ Deadline 配置、完整导航结果遥测投影仍待后续实现。
 - 已实现页面级及应用聚合级 JSON/Markdown 文档导出。
 - 已实现组件 `CCFlutterRouteCatalog`、窄 Host integration library 和宿主 Catalog 聚合；
   普通路由变化不再要求宿主逐条维护页面 import、`GoRoute` 与 Binding。
+- 已实现 Registrar 同库的组件 Manifest 生成和宿主 Manifest 聚合；无路由的 Service
+  组件同样参与安装，private Registrar 不需要成为组件公共 API。
 - 待实现独立纯契约文件。
 - 待提供可选的 Route Scaffold CLI，用于创建页面模板、计算并写入正确的
   `.route.g.dart` `part` 路径、补齐 `@CCRoute` 声明，并触发首次标准生成。该工具只改善

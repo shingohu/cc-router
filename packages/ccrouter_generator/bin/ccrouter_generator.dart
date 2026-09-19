@@ -89,7 +89,7 @@ Scans .component.json and .route.json files below scan-root and writes the aggre
 to scan-root/ccrouter_generated/metadata unless --output-dir is provided. When
 --generate-component-registrars is supplied, it also writes deterministic
 component route indexes, narrow package Host entrypoints, and a merged Host
-catalog below scan-root/lib/ccrouter_generated.''';
+component Manifest/catalog assembly below scan-root/lib/ccrouter_generated.''';
 
 final class _Arguments {
   const _Arguments({
@@ -186,7 +186,7 @@ final class _MetadataFile {
   final Map<String, Object?> document;
 }
 
-/// Writes one deterministic route index per component.
+/// Writes deterministic registration, Manifest, and route assembly per component.
 Future<List<_GeneratedComponentCatalog>> _generateComponentRouteIndexes(
   Iterable<_MetadataFile> metadataFiles,
 ) async {
@@ -196,12 +196,17 @@ Future<List<_GeneratedComponentCatalog>> _generateComponentRouteIndexes(
     final document = metadata.document;
     final package = '${document['package'] ?? ''}';
     final source = '${document['source'] ?? ''}';
+    final componentManifests = document['componentManifests'];
+    final manifestMap = componentManifests is Map
+        ? componentManifests.cast<Object?, Object?>()
+        : const <Object?, Object?>{};
     for (final component in _objects(document['components'])) {
       final id = '${component['id']}';
       if (_strings(document['componentDeclarations']).contains(id)) {
         componentSources[id] = _ComponentSource(
           package: package,
           source: source,
+          manifest: '${manifestMap[id] ?? '${_camelIdentifier(id)}Manifest'}',
           metadataFile: metadata.file,
         );
       }
@@ -237,11 +242,12 @@ Future<List<_GeneratedComponentCatalog>> _generateComponentRouteIndexes(
   }
 
   final generatedCatalogs = <_GeneratedComponentCatalog>[];
-  final componentIds = routes.keys.toList()..sort();
+  final componentIds = componentSources.keys.toList()..sort();
   for (final componentId in componentIds) {
     final component = componentSources[componentId];
     if (component == null) continue;
-    final componentRoutes = routes[componentId]!..sort(_compareRoutes);
+    final componentRoutes = routes[componentId] ?? <_RouteRegistration>[];
+    componentRoutes.sort(_compareRoutes);
     final packageRoot = _findPackageRoot(component.metadataFile);
     if (packageRoot == null) continue;
     final outputDirectory = Directory(
@@ -260,6 +266,8 @@ Future<List<_GeneratedComponentCatalog>> _generateComponentRouteIndexes(
         componentId: componentId,
         package: component.package,
         packageRoot: packageRoot,
+        registrarSource: component.source,
+        manifest: component.manifest,
       ),
     );
   }
@@ -354,17 +362,36 @@ Future<void> _generatePackageHostEntrypoints(
   for (final entry in byPackage.entries) {
     final packageCatalogs = entry.value
       ..sort((left, right) => left.componentId.compareTo(right.componentId));
+    final manifestSymbols = <String>{};
+    final catalogSymbols = <String>{};
+    for (final catalog in packageCatalogs) {
+      if (!manifestSymbols.add(catalog.manifest) ||
+          !catalogSymbols.add(
+            '${_camelIdentifier(catalog.componentId)}RouteCatalog',
+          )) {
+        throw StateError(
+          'Generated Host symbols collide in package "${entry.key}". '
+          'Use component IDs with distinct Dart identifier forms.',
+        );
+      }
+    }
     final output = File(
       '${packageCatalogs.first.packageRoot.path}${Platform.pathSeparator}lib${Platform.pathSeparator}${entry.key}_ccrouter.g.dart',
     );
     final out = StringBuffer()
       ..writeln('// GENERATED CODE - DO NOT MODIFY BY HAND')
       ..writeln()
-      ..writeln('/// Host-only generated route catalogs for `${entry.key}`.')
+      ..writeln(
+        '/// Host-only generated component assembly for `${entry.key}`.',
+      )
       ..writeln('library;')
       ..writeln();
     for (final catalog in packageCatalogs) {
       out
+        ..writeln(
+          "export '${catalog.registrarSource.substring('lib/'.length)}'",
+        )
+        ..writeln('    show ${catalog.manifest};')
         ..writeln(
           "export 'src/ccrouter_generated/${_fileStem(catalog.componentId)}.routes.g.dart'",
         )
@@ -376,7 +403,7 @@ Future<void> _generatePackageHostEntrypoints(
   }
 }
 
-/// Writes the Host catalog that merges all scanned component catalogs.
+/// Writes Host Manifest and route catalogs for all scanned components.
 Future<void> _generateHostRouteCatalog(
   Directory root,
   Iterable<_GeneratedComponentCatalog> catalogs,
@@ -395,6 +422,9 @@ Future<void> _generateHostRouteCatalog(
     ..writeln('// GENERATED CODE - DO NOT MODIFY BY HAND')
     ..writeln('// ignore_for_file: type=lint')
     ..writeln()
+    ..writeln(
+      "import 'package:ccrouter/ccrouter.dart' show CCComponentManifest;",
+    )
     ..writeln("import 'package:ccrouter/ccrouter_host.dart';");
   for (final entry
       in aliases.entries.toList()
@@ -404,6 +434,16 @@ Future<void> _generateHostRouteCatalog(
     );
   }
   out
+    ..writeln()
+    ..writeln('/// All generated component Manifests installed in this Host.')
+    ..writeln(
+      'const ccrouterGeneratedComponentManifests = <CCComponentManifest>[',
+    );
+  for (final catalog in sorted) {
+    out.writeln('  ${aliases[catalog.package]}.${catalog.manifest},');
+  }
+  out
+    ..writeln('];')
     ..writeln()
     ..writeln(
       '/// All generated component destinations installed in this Host.',
@@ -513,6 +553,7 @@ final class _ComponentSource {
   const _ComponentSource({
     required this.package,
     required this.source,
+    required this.manifest,
     required this.metadataFile,
   });
 
@@ -521,6 +562,9 @@ final class _ComponentSource {
 
   /// Component registrar source path relative to `lib/`.
   final String source;
+
+  /// Generated Manifest symbol exported through the package Host library.
+  final String manifest;
 
   /// Metadata file used to locate the package root.
   final File metadataFile;
@@ -564,6 +608,8 @@ final class _GeneratedComponentCatalog {
     required this.componentId,
     required this.package,
     required this.packageRoot,
+    required this.registrarSource,
+    required this.manifest,
   });
 
   /// Stable component identity used in generated symbol names.
@@ -574,4 +620,10 @@ final class _GeneratedComponentCatalog {
 
   /// Package root where the Host integration library is written.
   final Directory packageRoot;
+
+  /// Registrar library exported only through the generated Host entrypoint.
+  final String registrarSource;
+
+  /// Generated Manifest symbol consumed by the Host aggregate.
+  final String manifest;
 }

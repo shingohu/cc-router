@@ -6,6 +6,13 @@ builders:
       "^lib/src/{{}}.dart": ["lib/src/ccrouter_generated/{{}}.route.g.dart"]
     auto_apply: dependents
     build_to: source
+  components:
+    import: "package:ccrouter_generator/builder.dart"
+    builder_factories: ["ccComponentBuilder"]
+    build_extensions:
+      "^lib/src/{{}}.dart": ["lib/src/ccrouter_generated/{{}}.component.g.dart"]
+    auto_apply: dependents
+    build_to: source
   component_metadata:
     import: "package:ccrouter_generator/builder.dart"
     builder_factories: ["ccComponentMetadataBuilder"]

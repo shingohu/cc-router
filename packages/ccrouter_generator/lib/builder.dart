@@ -27,6 +27,24 @@ Builder ccRouteBuilder(BuilderOptions options) {
   );
 }
 
+/// Creates a same-library Part containing generated component Manifests.
+///
+/// Annotated Registrar libraries declare a `.component.g.dart` Part so the
+/// generated Manifest can instantiate a private const Registrar while keeping
+/// that implementation outside package and business APIs.
+Builder ccComponentBuilder(BuilderOptions options) {
+  final config = Map<String, dynamic>.from(options.config);
+  config.putIfAbsent('build_extensions', () => _componentBuildExtensions);
+  return PartBuilder(
+    [ccComponentGenerator()],
+    '.component.g.dart',
+    options: BuilderOptions(config, isRoot: options.isRoot),
+    header:
+        '// GENERATED CODE - DO NOT MODIFY BY HAND\n'
+        '// ignore_for_file: type=lint, unused_element',
+  );
+}
+
 /// Emits machine-readable component metadata and component documentation.
 Builder ccComponentMetadataBuilder(BuilderOptions options) =>
     ccComponentMetadataBuilderInternal();
@@ -41,4 +59,9 @@ Builder ccRouteMetadataBuilder(BuilderOptions options) =>
 /// Maps route source libraries under `lib/` to package-level metadata files.
 const _routeBuildExtensions = <String, List<String>>{
   r'^lib/src/{{}}.dart': ['lib/src/ccrouter_generated/{{}}.route.g.dart'],
+};
+
+/// Maps component Registrar libraries to same-library Manifest Parts.
+const _componentBuildExtensions = <String, List<String>>{
+  r'^lib/src/{{}}.dart': ['lib/src/ccrouter_generated/{{}}.component.g.dart'],
 };

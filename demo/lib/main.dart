@@ -119,7 +119,7 @@ final class _RuntimePageState extends State<RuntimePage> {
     await CCRouter.initialize(
       components: const [
         DemoComponentRegistrar.manifest,
-        demoOrderComponentManifest,
+        ...ccrouterGeneratedComponentManifests,
       ],
       navigationAdapter: widget.navigationAdapter,
     );

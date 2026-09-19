@@ -6,8 +6,9 @@ import 'route_presentation.dart';
 /// Compile-time identity and dependency contract shared by routes and Runtime.
 ///
 /// Define one const value in each component and reuse it from every [CCRoute]
-/// plus `CCComponentManifest.fromDescriptor`. This keeps build-time ownership
-/// and Runtime dependency ordering aligned.
+/// plus the Registrar's [CCComponent] annotation. The generator derives the
+/// Runtime Manifest from that annotation so build-time ownership and Runtime
+/// dependency ordering cannot drift.
 final class CCComponentDescriptor {
   /// Creates one stable component contract declaration.
   const CCComponentDescriptor({
@@ -33,7 +34,10 @@ final class CCComponentDescriptor {
 /// Marks the registrar that publishes one [descriptor] to generated metadata.
 ///
 /// Use exactly once per component package. This also describes components that
-/// own no routes, so workspace visibility checks can resolve every consumer.
+/// own no routes, so workspace visibility checks and Host assembly can resolve
+/// every consumer. Registrar libraries include the generated `.component.g.dart`
+/// Part; application code consumes the generated Manifest rather than the
+/// private Registrar.
 final class CCComponent {
   /// Associates a registrar declaration with its shared component descriptor.
   const CCComponent(this.descriptor);

@@ -5,6 +5,9 @@
   "componentDeclarations": [
     "demo_order_component"
   ],
+  "componentManifests": {
+    "demo_order_component": "demoOrderComponentManifest"
+  },
   "components": [
     {
       "id": "demo_order_component",

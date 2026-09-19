@@ -38,6 +38,12 @@ final class DetailPage {
 }
 ```
 
+Registrar 文件还需要声明生成的 Manifest Part：
+
+```dart
+part 'ccrouter_generated/order_component_registrar.component.g.dart';
+```
+
 组件的 `dev_dependencies` 添加 `ccrouter_generator`，workspace 根目录添加
 `build_runner`。本仓库在根目录执行：
 
@@ -58,12 +64,15 @@ fvm dart run ccrouter_generator:ccrouter_generator demo \
 - `DetailPageRoute.definition`：中立路由表定义和私有 Codec。
 - `DetailPageRoute.register(registry)`：组件 Registrar 的注册入口。
 - `DetailPageRoute.build(arguments)`：将解码参数注入页面构造器。
+- `<registrar>.component.g.dart`：在 Registrar 同一 library 中生成
+  `CCComponentManifest`，可以实例化 private Registrar，业务代码无需导出实现类。
 - `<component-id>.routes.g.dart`：组件路由注册索引和后端中立的
   `CCFlutterRouteCatalog`。
-- `<package>_ccrouter.g.dart`：只向应用组合根暴露 Catalog 的窄 Host integration
-  library，不加入组件业务 barrel。
+- `<package>_ccrouter.g.dart`：只向应用组合根暴露 Manifest 与 Catalog 的窄 Host
+  integration library，不加入组件业务 barrel。
 - 宿主 `lib/ccrouter_generated/ccrouter_host.routes.g.dart`：合并所有扫描到的组件
-  Catalog。普通路由新增、删除或参数调整不再修改宿主 `main.dart`。
+  Manifest 与 Catalog。新增无路由的 Service 组件也会进入 Manifest 列表；普通路由或
+  组件增删不再要求宿主逐项维护初始化列表。
 
 组件路由注册索引由 `--generate-component-registrars` 自动生成到
 `lib/src/ccrouter_generated/<component-id>.routes.g.dart`。组件 Registrar 只需调用
@@ -95,8 +104,8 @@ src/order_component.dart
 src/order_component_registrar.dart
 ```
 
-公共 barrel 只导出宿主初始化需要的 `ComponentManifest` 和公开路由契约，
-不导出 Registrar 实现或 descriptor 细节。
+组件业务 barrel 只导出明确公开的路由契约，不导出 Manifest、Registrar 实现或
+descriptor 细节；生成的 `<package>_ccrouter.g.dart` 是唯一 Host 装配入口。
 
 ## 首版约束
 
