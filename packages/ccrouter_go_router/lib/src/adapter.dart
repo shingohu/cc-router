@@ -364,6 +364,7 @@ final class CCGoRouterAdapter
         return Future<Object?>.value();
       case CCNavigationOperation.popAndPush:
       case CCNavigationOperation.pushAndRemoveUntil:
+      case CCNavigationOperation.replaceBelow:
         throw const CCNavigationAdapterError(
           'Composite operations must use their dedicated Adapter method.',
         );

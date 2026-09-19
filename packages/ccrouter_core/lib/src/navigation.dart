@@ -185,6 +185,43 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     }
   }
 
+  /// Replaces the managed Entry immediately below [handle].
+  ///
+  /// This operation returns when the backend accepts the replacement. The new
+  /// Entry remains managed and can later be addressed through its snapshot
+  /// handle; its eventual page result follows ordinary Pop semantics. The
+  /// anchor itself is retained.
+  Future<void> replaceRouteBelow<R>(
+    CCRouteEntryHandle handle,
+    CCRouteIntent<R> intent, {
+    CCNavigationSource? source,
+  }) async {
+    _ensureInitialized();
+    final anchor = _requireRouteEntryHandle(handle);
+    final anchorIndex = _routeEntries.indexOf(anchor);
+    if (anchorIndex < 1) {
+      throw const CCNavigationAdapterError(
+        'The exact Route Entry has no managed Entry below it to replace.',
+      );
+    }
+    final replaced = _routeEntries[anchorIndex - 1];
+    final adapter = _requireExactEntryReplacementAdapter();
+    final prepared = _routeRegistry.prepareIntent(intent);
+    await _dispatchNavigationWithAction(
+      CCNavigationOperation.replaceBelow,
+      prepared,
+      CCNavigationOrigin.internal,
+      source,
+      action: (request) => adapter.replaceManagedEntryBelow(
+        anchorNavigationId: anchor.request.navigationId,
+        anchorBackendEntryId: _backendEntryIdForRouteEntry(anchor.id),
+        request: request,
+      ),
+      commitEntry: (entry) =>
+          _commitReplaceRouteBelowEntry(entry, anchor, replaced),
+    );
+  }
+
   /// Pushes [intent] and removes previous entries until [predicate] matches.
   Future<R?> pushAndRemoveUntilRoute<R>(
     CCRouteIntent<R> intent,
@@ -318,6 +355,26 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
       );
     }
     return adapter as CCNavigationExactEntryRemoval;
+  }
+
+  /// Requires an Adapter that can preserve exact replacement semantics.
+  CCNavigationExactEntryReplacement _requireExactEntryReplacementAdapter() {
+    final adapter = _requiredNavigationAdapter;
+    final capabilitySource = adapter is CCNavigationAdapterCapabilitySource
+        ? adapter as CCNavigationAdapterCapabilitySource
+        : null;
+    if (capabilitySource != null &&
+        !capabilitySource.capabilities.supportsExactEntryReplacement) {
+      throw const CCNavigationAdapterError(
+        'Navigation adapter does not support exact Route Entry replacement.',
+      );
+    }
+    if (adapter is! CCNavigationExactEntryReplacement) {
+      throw const CCNavigationAdapterError(
+        'Navigation adapter does not expose exact Route Entry replacement.',
+      );
+    }
+    return adapter as CCNavigationExactEntryReplacement;
   }
 
   /// Executes a result-bearing typed navigation operation.
@@ -619,7 +676,8 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
       if (entry != null &&
           request.operation != CCNavigationOperation.go &&
           request.operation != CCNavigationOperation.reset &&
-          request.operation != CCNavigationOperation.open) {
+          request.operation != CCNavigationOperation.open &&
+          request.operation != CCNavigationOperation.replaceBelow) {
         _completeRouteEntry(entry);
       }
       if (entry != null) {

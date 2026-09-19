@@ -147,6 +147,8 @@ supportsNestedNavigators
 supportsStatefulShell
 supportsModalRoutes
 supportsPredictiveBack
+supportsExactEntryRemoval
+supportsExactEntryReplacement
 ```
 
 Runtime 根据能力选择正常执行、明确记录的降级实现或初始化失败。禁止静默把有返回值的组合操作降级为无法保证语义的多个操作。

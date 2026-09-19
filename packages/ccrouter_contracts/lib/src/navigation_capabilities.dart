@@ -19,6 +19,7 @@ final class CCNavigationAdapterCapabilities {
     this.supportsPredictiveBack = false,
     this.supportsManagedPopObservation = false,
     this.supportsExactEntryRemoval = false,
+    this.supportsExactEntryReplacement = false,
   });
 
   /// Whether application-owned foreign Navigator Routes can be observed.
@@ -78,6 +79,12 @@ final class CCNavigationAdapterCapabilities {
   /// `removeRouteBelow`. False means Runtime must report a capability error;
   /// it must not emulate the operation by removing the stack top or by index.
   final bool supportsExactEntryRemoval;
+
+  /// Whether the Adapter can replace an Entry below a stable anchor identity.
+  ///
+  /// False means Runtime must report a capability error instead of silently
+  /// replacing a positionally guessed backend Entry.
+  final bool supportsExactEntryReplacement;
 }
 
 /// Optional adapter SPI exposing immutable backend capability metadata.

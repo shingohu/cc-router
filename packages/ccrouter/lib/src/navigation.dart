@@ -58,6 +58,16 @@ abstract interface class CCNavigator {
   /// Adapter must explicitly support exact identity removal.
   Future<void> removeRouteBelow(CCRouteEntryHandle handle);
 
+  /// Replaces the managed Entry immediately below [handle] with [intent].
+  ///
+  /// The Future completes when the Adapter accepts the operation. The anchor
+  /// remains active, and the replacement later follows ordinary Pop lifecycle.
+  Future<void> replaceRouteBelow<R>(
+    CCRouteEntryHandle handle,
+    CCRouteIntent<R> intent, {
+    CCNavigationSource? source,
+  });
+
   /// Pushes [intent] and removes previous entries until [predicate] matches.
   Future<R?> pushAndRemoveUntil<R>(
     CCRouteIntent<R> intent,
@@ -142,6 +152,15 @@ final class _CCNavigator implements CCNavigator {
   @override
   Future<void> removeRouteBelow(CCRouteEntryHandle handle) =>
       CCRouter._runtime.removeRouteBelow(handle);
+
+  /// Replaces one exact Entry below an anchor through the Runtime-owned
+  /// Adapter.
+  @override
+  Future<void> replaceRouteBelow<R>(
+    CCRouteEntryHandle handle,
+    CCRouteIntent<R> intent, {
+    CCNavigationSource? source,
+  }) => CCRouter._runtime.replaceRouteBelow(handle, intent, source: source);
 
   /// Pushes and removes entries through the Runtime owned by [CCRouter].
   @override

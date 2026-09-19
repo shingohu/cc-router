@@ -436,3 +436,22 @@ abstract interface class CCNavigationExactEntryRemoval {
     String? backendEntryId,
   });
 }
+
+/// Optional Adapter SPI for replacing the Entry immediately below an anchor.
+///
+/// Runtime validates the anchor handle and route contract before invoking this
+/// operation. The Adapter must preserve the anchor, replace only the managed
+/// Entry directly below it, and reject a backend that cannot identify that
+/// Entry without relying on stack position alone.
+abstract interface class CCNavigationExactEntryReplacement {
+  /// Replaces the managed Entry directly below the exact anchor.
+  ///
+  /// The returned Future represents backend acceptance. The replacement Entry
+  /// remains managed after acceptance and is removed later by normal Pop or
+  /// exact-handle operations; this method has no separate typed result Future.
+  Future<void> replaceManagedEntryBelow({
+    required String anchorNavigationId,
+    String? anchorBackendEntryId,
+    required CCNavigationRequest request,
+  });
+}

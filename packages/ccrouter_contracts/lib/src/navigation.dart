@@ -111,6 +111,9 @@ enum CCNavigationOperation {
 
   /// Pushes a typed route and removes previous entries by a stack predicate.
   pushAndRemoveUntil,
+
+  /// Replaces the managed entry immediately below an exact anchor entry.
+  replaceBelow,
 }
 
 /// Read-only identity snapshot supplied to stack-operation predicates.

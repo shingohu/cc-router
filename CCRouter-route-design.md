@@ -521,8 +521,8 @@ abstract interface class CCNavigator {
 | `popUntil` | 支持 | 通过稳定的 Route ID、RouteEntry ID 或框架提供的只读快照谓词定位保留点，不接受 Flutter `RoutePredicate`。 |
 | `popUntilWithResult` | 暂缓后支持 | 需要先定义结果传递给每个被移除 RouteEntry、遇到拒绝 Pop 或没有匹配目标时的完整语义，不能直接照搬第三方扩展方法。 |
 | `pushAndRemoveUntil` | 支持 | 是 `pushNamedAndRemoveUntil` 的类型安全替代；新页面使用 Intent，保留条件使用稳定快照谓词。 |
-| `replaceRouteBelow` | 暂缓 | 依赖可持久引用某个 RouteEntry 的跨 Adapter 句柄，当前 Runtime 尚未公开该句柄。 |
-| `removeRoute` / `removeRouteBelow` | 暂缓 | 属于精确操作某个 RouteEntry 的底层能力；应先设计不暴露 Flutter `Route` 的 `CCRouteEntryHandle` 和结果完成语义。 |
+| `replaceRouteBelow` | 支持 | 使用 `CCRouteEntryHandle` 精确定位锚点；只替换其下方的 Managed Entry，Adapter 不支持稳定身份时明确失败。 |
+| `removeRoute` / `removeRouteBelow` | 支持 | 使用不暴露 Flutter `Route` 的 `CCRouteEntryHandle`；Foreign/Opaque Entry 和不支持精确身份的 Adapter 不会被位置猜测影响。 |
 | `popAndPushNamed` / `pushNamedAndRemoveUntil` | 不提供 | 路由系统使用稳定 Route ID、生成的 Intent 和动态 `open(Uri)`，不再增加字符串 Name API。需要动态地址时使用 `open` 组合操作。 |
 
 带目标页面的组合操作 `popAndPush` 与 `pushAndRemoveUntil` 必须作为一个 Runtime 导航请求进入拦截器、埋点和 Adapter 管线，不能由业务代码先调用 `pop` 再调用 `push` 拼接，否则无法保证导航 ID、失败回滚和结果完成的一致性。`maybePop` 与 `popUntil` 虽然没有目标页面，仍必须经过 Runtime 的 Adapter 控制操作边界。Adapter SPI 不向 Core 暴露 `BuildContext`、Flutter `Route` 或 `NavigatorState`。
@@ -1256,7 +1256,8 @@ Adapter 实现者可以使用单独导出的：
 - 已实现 Route ID、Path/URI/Regex Pattern、可见性、Intent、Codec 和错误。
 - 已实现 `CCRegistry.registerRoute`。
 - 已实现 `CCRouter.navigator` 及 `push/replace/go/reset/open/pop/canPop`、`maybePop`、`popAndPush`、`popUntil`、`pushAndRemoveUntil` 门面。
-- 已实现主 Pattern 反向生成、动态 URI 解析和内存测试 Adapter。
+- 已实现主 Pattern 反向生成、动态 URI 解析、内存测试 Adapter，以及基于
+  `CCRouteEntryHandle` 的精确 Entry 删除和锚点下方替换。
 
 ### 阶段 B：Runtime 管线
 

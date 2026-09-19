@@ -78,6 +78,7 @@ extension CCRouterRuntimeRouteEntries on CCRouterRuntime {
       case CCNavigationOperation.popAndPush:
         _removeTopRouteEntry(reason: 'popAndPush', revealPrevious: false);
       case CCNavigationOperation.pushAndRemoveUntil:
+      case CCNavigationOperation.replaceBelow:
       case CCNavigationOperation.push:
       case CCNavigationOperation.open:
         break;
@@ -88,6 +89,29 @@ extension CCRouterRuntimeRouteEntries on CCRouterRuntime {
     _emitRouteVisibility(entry, CCRouteVisibilityPhase.willShow);
     _emitRouteEntryTransition(entry, CCRouteEntryLifecycleState.visible);
     _emitRouteVisibility(entry, CCRouteVisibilityPhase.didShow);
+  }
+
+  /// Commits a replacement Entry immediately below [anchor].
+  void _commitReplaceRouteBelowEntry(
+    _RouteEntryRecord entry,
+    _RouteEntryRecord anchor,
+    _RouteEntryRecord replaced,
+  ) {
+    final anchorIndex = _routeEntries.indexOf(anchor);
+    if (anchorIndex < 1 || !_routeEntries.contains(replaced)) {
+      throw const CCNavigationAdapterError(
+        'The anchor or Entry below it is no longer active.',
+      );
+    }
+    _removeRouteEntry(
+      replaced,
+      reason: 'replaceRouteBelow',
+      revealPrevious: false,
+    );
+    final insertionIndex = _routeEntries.indexOf(anchor);
+    _routeEntries.insert(insertionIndex, entry);
+    _emitRouteEntryTransition(entry, CCRouteEntryLifecycleState.pushed);
+    _emitRouteEntryTransition(entry, CCRouteEntryLifecycleState.hidden);
   }
 
   /// Removes entries before [predicate] and commits a new pushed Entry.

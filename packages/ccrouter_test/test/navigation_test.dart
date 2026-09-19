@@ -847,6 +847,49 @@ void main() {
     },
   );
 
+  test('replaces the managed Entry below an exact anchor', () async {
+    final runtime = CCRouterRuntime.forTesting(
+      navigationAdapter: CCMemoryNavigationAdapter(),
+      components: [
+        routeComponent(
+          'orders',
+          (registry) => registry.registerRoute(pathRoute()),
+        ),
+      ],
+    );
+    await runtime.initialize();
+    await runtime.goRoute(
+      const TestIntent<void>('orders.detail', RouteArgs('1')),
+    );
+    final oldResult = runtime.pushRoute<String>(
+      const TestIntent<String>('orders.detail', RouteArgs('2')),
+    );
+    final anchorResult = runtime.pushRoute<String>(
+      const TestIntent<String>('orders.detail', RouteArgs('3')),
+    );
+    final before = runtime.activeRouteEntries;
+
+    await runtime.replaceRouteBelow(
+      before.last.handle,
+      const TestIntent<void>('orders.detail', RouteArgs('4')),
+    );
+
+    expect(await oldResult, isNull);
+    expect(runtime.activeRouteEntries, hasLength(3));
+    expect(runtime.activeRouteEntries[0].routeEntryId, before[0].routeEntryId);
+    expect(runtime.activeRouteEntries[1].normalizedUri.path, '/orders/4');
+    expect(
+      runtime.activeRouteEntries[1].lifecycleState,
+      CCRouteEntryLifecycleState.hidden,
+    );
+    expect(runtime.activeRouteEntries[2].routeEntryId, before[2].routeEntryId);
+
+    runtime.popRoute(result: 'anchor');
+    expect(await anchorResult, 'anchor');
+    expect(runtime.activeRouteEntries, hasLength(2));
+    await runtime.dispose();
+  });
+
   test('disposes retained Route Scopes during Runtime shutdown', () async {
     final runtime = CCRouterRuntime.forTesting(
       navigationAdapter: CCMemoryNavigationAdapter(),

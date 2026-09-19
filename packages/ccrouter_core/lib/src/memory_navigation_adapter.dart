@@ -34,6 +34,7 @@ final class CCMemoryNavigationAdapter
         CCNavigationAdapter,
         CCNavigationPopCoordinator,
         CCNavigationExactEntryRemoval,
+        CCNavigationExactEntryReplacement,
         CCNavigationAdapterCapabilitySource,
         CCNavigationBackendSnapshotSource {
   /// Creates an uninitialized empty navigation stack.
@@ -49,6 +50,7 @@ final class CCMemoryNavigationAdapter
         supportsNestedNavigators: true,
         supportsStatefulShell: true,
         supportsExactEntryRemoval: true,
+        supportsExactEntryReplacement: true,
       );
 
   /// Returns the current in-memory entries as an initialization snapshot.
@@ -148,6 +150,7 @@ final class CCMemoryNavigationAdapter
         return Future<Object?>.value();
       case CCNavigationOperation.popAndPush:
       case CCNavigationOperation.pushAndRemoveUntil:
+      case CCNavigationOperation.replaceBelow:
         throw const CCNavigationAdapterError(
           'Composite navigation must use its dedicated Adapter operation.',
         );
@@ -236,6 +239,28 @@ final class CCMemoryNavigationAdapter
     for (var index = targetIndex - 1; index >= 0; index--) {
       _removeAt(index);
     }
+  }
+
+  /// Replaces the managed entry directly below an exact anchor identity.
+  @override
+  Future<void> replaceManagedEntryBelow({
+    required String anchorNavigationId,
+    String? anchorBackendEntryId,
+    required CCNavigationRequest request,
+  }) async {
+    _ensureAvailable();
+    _ensureRoute(request);
+    final anchorIndex = _indexForIdentity(
+      anchorNavigationId,
+      anchorBackendEntryId,
+    );
+    if (anchorIndex < 1) {
+      throw const CCNavigationAdapterError(
+        'The exact backend Entry has no entry below it to replace.',
+      );
+    }
+    _removeAt(anchorIndex - 1);
+    _entries.insert(anchorIndex - 1, _CCMemoryNavigationEntry(request));
   }
 
   /// Pops a removable entry and completes its pending result.
