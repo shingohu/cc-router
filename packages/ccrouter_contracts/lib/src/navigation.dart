@@ -104,6 +104,12 @@ enum CCNavigationOperation {
   reset,
 
   /// Opens a dynamically resolved URI without a statically known result type.
+  ///
+  /// Trusted internal calls use push-like stack semantics. External platform,
+  /// notification, and QR ingress replaces the current location so declarative
+  /// Shell branches can be reconstructed without retaining an unrelated app
+  /// stack. The operation completes after backend acceptance rather than
+  /// waiting for a Pop result.
   open,
 
   /// Pops the current route and pushes a typed replacement in one operation.

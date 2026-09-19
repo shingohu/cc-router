@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 2,
+  "package": "demo_navigation_lab",
+  "source": "lib/src/navigation_lab_component_registrar.dart",
+  "componentDeclarations": [
+    "demo_navigation_lab_component"
+  ],
+  "componentManifests": {
+    "demo_navigation_lab_component": "demoNavigationLabComponentManifest"
+  },
+  "components": [
+    {
+      "id": "demo_navigation_lab_component",
+      "version": "0.1.0",
+      "dependencies": [
+        "demo_order_component"
+      ],
+      "optionalDependencies": []
+    }
+  ],
+  "routes": [],
+  "routeImplementations": []
+}

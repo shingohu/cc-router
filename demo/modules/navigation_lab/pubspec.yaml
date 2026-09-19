@@ -1,0 +1,14 @@
+name: demo_navigation_lab
+description: Interactive routing feature lab for the CCRouter demo.
+version: 0.1.0
+publish_to: none
+resolution: workspace
+environment:
+  sdk: ^3.11.5
+dependencies:
+  ccrouter: ^0.1.0
+  demo_order_contracts: ^0.1.0
+  flutter:
+    sdk: flutter
+dev_dependencies:
+  ccrouter_generator: ^0.1.0

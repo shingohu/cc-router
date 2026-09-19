@@ -282,6 +282,10 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
   /// Framework hosts use an external Origin for platform links, notifications,
   /// or scanned input. Ordinary application calls use
   /// [CCNavigationOrigin.internal].
+  /// Internal origins retain push-like stack semantics. External origins
+  /// replace the current location so a platform link does not preserve an
+  /// unrelated in-app stack. The returned Future represents backend acceptance,
+  /// not the destination's eventual Pop result.
   Future<void> openRoute(
     Uri uri, {
     CCNavigationOrigin origin = CCNavigationOrigin.internal,

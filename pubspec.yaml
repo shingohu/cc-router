@@ -18,3 +18,4 @@ workspace:
   - demo/modules/order
   - demo/modules/order_contracts
   - demo/modules/payment
+  - demo/modules/navigation_lab

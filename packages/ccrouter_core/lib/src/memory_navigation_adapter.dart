@@ -144,6 +144,7 @@ final class CCMemoryNavigationAdapter
         _entries.add(_CCMemoryNavigationEntry(request));
         return Future<Object?>.value();
       case CCNavigationOperation.open:
+        if (request.origin.isExternal) _clearEntries();
         _entries.add(_CCMemoryNavigationEntry(request));
         return Future<Object?>.value();
       case CCNavigationOperation.popAndPush:

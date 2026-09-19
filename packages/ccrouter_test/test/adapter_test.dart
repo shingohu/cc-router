@@ -134,12 +134,14 @@ void main() {
     final capabilities =
         (adapter as CCNavigationAdapterCapabilitySource).capabilities;
     expect(capabilities.supportsAtomicPopAndPush, isTrue);
-    expect(capabilities.supportsPushAndRemoveUntil, isTrue);
+    expect(capabilities.supportsPushAndRemoveUntil, isFalse);
     expect(capabilities.supportsNestedNavigators, isTrue);
     expect(capabilities.supportsStatefulShell, isTrue);
     expect(capabilities.supportsModalRoutes, isTrue);
     expect(capabilities.supportsPredictiveBack, isFalse);
     expect(capabilities.supportsManagedPopObservation, isTrue);
+    expect(capabilities.supportsExactEntryRemoval, isFalse);
+    expect(capabilities.supportsExactEntryReplacement, isFalse);
   });
 
   test('enables predictive-back bridge only when explicitly requested', () {
@@ -782,6 +784,48 @@ void main() {
     adapter.dispose();
   });
 
+  testWidgets('dispose terminates a pending managed result channel', (
+    tester,
+  ) async {
+    final router = GoRouter(
+      initialLocation: '/',
+      routes: [
+        GoRoute(path: '/', builder: (_, _) => const Text('home')),
+        GoRoute(path: '/one', builder: (_, _) => const Text('one')),
+      ],
+    );
+    final adapter = CCGoRouterAdapter(router: router);
+    addTearDown(router.dispose);
+    adapter.initialize([route('one', path: '/one')]);
+    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    await tester.pumpAndSettle();
+
+    final pending = adapter.navigate(
+      request(
+        id: 'one',
+        operation: CCNavigationOperation.push,
+        uri: Uri.parse('/one'),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('one'), findsOneWidget);
+
+    final completion = expectLater(
+      pending,
+      throwsA(
+        isA<CCNavigationAdapterError>().having(
+          (error) => error.message,
+          'message',
+          contains('disposed before navigation completed'),
+        ),
+      ),
+    );
+    adapter.dispose();
+
+    await completion;
+    expect(find.text('one'), findsOneWidget);
+  });
+
   test('Runtime owns adapter disposal while Session close does not', () async {
     final router = GoRouter(
       routes: [GoRoute(path: '/', builder: (_, _) => const SizedBox())],
@@ -1169,7 +1213,80 @@ void main() {
     expect(find.text('one'), findsOneWidget);
   });
 
-  testWidgets('supports pushAndRemoveUntil with a route predicate', (
+  testWidgets('go and reset complete displaced managed results', (
+    tester,
+  ) async {
+    final router = GoRouter(
+      initialLocation: '/',
+      routes: [
+        GoRoute(path: '/', builder: (_, _) => const Text('home')),
+        GoRoute(path: '/one', builder: (_, _) => const Text('one')),
+        GoRoute(path: '/two', builder: (_, _) => const Text('two')),
+        GoRoute(path: '/three', builder: (_, _) => const Text('three')),
+        GoRoute(path: '/four', builder: (_, _) => const Text('four')),
+      ],
+    );
+    final adapter = CCGoRouterAdapter(router: router);
+    addTearDown(router.dispose);
+    adapter.initialize([
+      route('one', path: '/one'),
+      route('two', path: '/two'),
+      route('three', path: '/three'),
+      route('four', path: '/four'),
+    ]);
+    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    await tester.pumpAndSettle();
+
+    await adapter.navigate(
+      request(
+        id: 'one',
+        operation: CCNavigationOperation.go,
+        uri: Uri.parse('/one'),
+      ),
+    );
+    final resetDisplaced = adapter.navigate(
+      request(
+        id: 'two',
+        operation: CCNavigationOperation.push,
+        uri: Uri.parse('/two'),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await adapter.navigate(
+      request(
+        id: 'three',
+        operation: CCNavigationOperation.reset,
+        uri: Uri.parse('/three'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(await resetDisplaced, isNull);
+    expect(find.text('three'), findsOneWidget);
+
+    final goDisplaced = adapter.navigate(
+      request(
+        id: 'four',
+        operation: CCNavigationOperation.push,
+        uri: Uri.parse('/four'),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await adapter.navigate(
+      request(
+        id: 'one',
+        operation: CCNavigationOperation.go,
+        uri: Uri.parse('/one'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(await goDisplaced, isNull);
+    expect(find.text('one'), findsOneWidget);
+    adapter.dispose();
+  });
+
+  testWidgets('rejects unsupported pushAndRemoveUntil without stack mutation', (
     tester,
   ) async {
     final router = GoRouter(
@@ -1215,22 +1332,27 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    final pushed = adapter.pushAndRemoveUntil(
-      request(
-        id: 'four',
-        operation: CCNavigationOperation.pushAndRemoveUntil,
-        uri: Uri.parse('/four'),
+    expect(adapter.capabilities.supportsPushAndRemoveUntil, isFalse);
+    expect(
+      () => adapter.pushAndRemoveUntil(
+        request(
+          id: 'four',
+          operation: CCNavigationOperation.pushAndRemoveUntil,
+          uri: Uri.parse('/four'),
+        ),
+        (entry) => entry.routeId == 'one',
       ),
-      (entry) => entry.routeId == 'one',
+      throwsA(isA<CCNavigationAdapterError>()),
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('four'), findsOneWidget);
+    expect(find.text('three'), findsOneWidget);
+    adapter.pop();
+    await tester.pumpAndSettle();
+    adapter.pop();
+    await tester.pumpAndSettle();
     expect(await removedTwo, isNull);
     expect(await removedThree, isNull);
-    adapter.pop(result: 'done');
-    await tester.pumpAndSettle();
-    expect(await pushed, 'done');
     expect(find.text('one'), findsOneWidget);
   });
 
@@ -1286,7 +1408,7 @@ void main() {
   });
 
   testWidgets(
-    'synchronizes externally popped entries before composite navigation',
+    'synchronizes externally popped entries before the next navigation',
     (tester) async {
       final observer = CCGoRouterNavigationObserver(outlet: 'root');
       final router = GoRouter(
@@ -1331,13 +1453,12 @@ void main() {
       expect(popEvent.backendOperationId, isNotNull);
       expect(popEvent.sequence, isNotNull);
 
-      final two = adapter.pushAndRemoveUntil(
+      final two = adapter.navigate(
         request(
           id: 'two',
-          operation: CCNavigationOperation.pushAndRemoveUntil,
+          operation: CCNavigationOperation.push,
           uri: Uri.parse('/two'),
         ),
-        (_) => false,
       );
       await tester.pumpAndSettle();
       expect(find.text('two'), findsOneWidget);

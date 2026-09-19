@@ -94,6 +94,13 @@ extension CCRouterRuntimeRouteEntries on CCRouterRuntime {
       case CCNavigationOperation.replaceBelow:
       case CCNavigationOperation.push:
       case CCNavigationOperation.open:
+        if (entry.request.operation == CCNavigationOperation.open &&
+            entry.request.origin.isExternal) {
+          _removeAllRouteEntries(
+            reason: 'externalOpen',
+            hostId: entry.request.hostId,
+          );
+        }
         break;
     }
     _routeEntries.add(entry);

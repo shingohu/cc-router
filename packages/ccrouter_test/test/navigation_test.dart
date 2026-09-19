@@ -2607,7 +2607,9 @@ void main() {
         components: [
           routeComponent(
             'orders',
-            (registry) => registry.registerRoute(pathRoute()),
+            (registry) => registry.registerRoute(
+              pathRoute(deepLink: CCDeepLinkPolicy.enabled),
+            ),
           ),
         ],
       );
@@ -2649,6 +2651,18 @@ void main() {
       );
       expect(adapter.stack.single.operation, CCNavigationOperation.reset);
       expect(runtime.canPopRoute(), isFalse);
+
+      final pendingBeforeExternalOpen = runtime.pushRoute<String>(
+        const TestIntent<String>('orders.detail', RouteArgs('6')),
+      );
+      await runtime.openRoute(
+        Uri.parse('/orders/7'),
+        origin: CCNavigationOrigin.externalPlatform,
+      );
+      expect(await pendingBeforeExternalOpen, isNull);
+      expect(adapter.stack.single.operation, CCNavigationOperation.open);
+      expect(runtime.canPopRoute(), isFalse);
+      expect(runtime.activeRouteEntries.single.normalizedUri.path, '/orders/7');
       await runtime.dispose();
     },
   );

@@ -18,13 +18,13 @@ Flutter SDK 选择：
 
 工程入口为 `lib/main.dart`。示例在 `runApp` 前显式调用
 `CCRouter.initialize(components: ...)`，再通过 `CCRouterApp.managed` 和
-`CCGoRouterBackend.managed` 自动绑定导航 Backend；业务代码不接触 Adapter。登录会话使用
-带 `accountId` 的 Session，示例同时展示组件 Manifest 和类型安全路由调用。
+`CCGoRouterBackend.managed` 自动创建 Host、GoRouter、Observer 和 Adapter；业务代码不接触
+导航 Backend。
 
-Demo 创建一个 `CCNavigationHost`，并将同一个 Host 的 ID 和根 `navigatorKey` 同时交给
-`CCRouterApp`、`GoRouter`、`CCGoRouterNavigationObserver` 和
-`CCGoRouterAdapter`。Host 与 Outlet 配置不一致会在 Adapter 创建或初始化阶段失败，
-避免后端事件在运行时被归属到错误的 Window 或 Navigator。
+`modules/navigation_lab` 是可交互的路由功能实验室，覆盖 typed navigation、动态 URI、
+栈操作、拦截和重定向、Failure Policy、Aspect、页面/应用生命周期、展示动画、
+Managed Modal 以及 Foreign/Overlay 隔离。完整的 macOS 验证矩阵、已修复问题和
+Adapter 限制见 [路由验证记录](docs/route_validation.md)。
 
 ## 开发命令
 

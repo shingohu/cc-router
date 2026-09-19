@@ -81,11 +81,13 @@ abstract interface class CCNavigator {
   /// Resets navigation state to [intent] as the new root location.
   Future<void> reset<R>(CCRouteIntent<R> intent, {CCNavigationSource? source});
 
-  /// Opens a dynamic internal [uri] after Pattern matching and Codec decoding.
+  /// Pushes a dynamic internal [uri] after Pattern matching and Codec decoding.
   ///
   /// Use this for application-controlled runtime locations. Platform links,
   /// notification URIs, and scanned values must enter through the future
   /// trusted `CCRouterApp` Deep Link ingress so external policy is enforced.
+  /// The Future completes after backend acceptance and does not expose the
+  /// destination's Pop result; use [push] with a generated Intent for that.
   Future<void> open(Uri uri, {CCNavigationSource? source});
 
   /// Pops the active route with an optional typed [result].

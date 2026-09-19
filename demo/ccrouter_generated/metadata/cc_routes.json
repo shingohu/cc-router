@@ -2,6 +2,14 @@
   "schemaVersion": 2,
   "components": [
     {
+      "id": "demo_navigation_lab_component",
+      "version": "0.1.0",
+      "dependencies": [
+        "demo_order_component"
+      ],
+      "optionalDependencies": []
+    },
+    {
       "id": "demo_order_component",
       "version": "0.1.0",
       "dependencies": [],
@@ -17,6 +25,1164 @@
     }
   ],
   "routes": [
+    {
+      "id": "demo_navigation_lab.cancel",
+      "componentId": "demo_navigation_lab_component",
+      "componentVersion": "0.1.0",
+      "exposure": "internal",
+      "deepLink": "disabled",
+      "description": "路由级拦截器取消示例；页面正常情况下不会创建。",
+      "interceptorIds": [
+        "demo_navigation_lab.cancel"
+      ],
+      "popGuardIds": [],
+      "declaration": {
+        "package": "demo_navigation_lab",
+        "library": "lib/src/policy_pages.dart",
+        "kind": "page"
+      },
+      "navigationSources": [
+        "typedIntent",
+        "internalUri"
+      ],
+      "restoration": {
+        "status": "unsupported"
+      },
+      "placement": {
+        "hostId": "default",
+        "parentRouteId": null,
+        "shellId": null,
+        "navigatorOutlet": "root"
+      },
+      "presentation": {
+        "type": "page",
+        "routeType": "platformDefault",
+        "transition": "platformDefault",
+        "opaque": true,
+        "fullscreenDialog": false
+      },
+      "contracts": {
+        "route": "_DemoCancelledPageRoute",
+        "arguments": "_DemoCancelledPageRouteArguments",
+        "package": "demo_navigation_lab",
+        "library": "lib/src/policy_pages.dart"
+      },
+      "registration": "ccrouterRegisterDemoCancelledPageRoute",
+      "destination": {
+        "descriptor": "ccrouterDescribeDemoCancelledPageRoute",
+        "builder": "ccrouterBuildDemoCancelledPageRoute"
+      },
+      "patterns": [
+        {
+          "type": "CCPathPattern",
+          "value": "/lab/policy/cancel",
+          "primary": true,
+          "constraints": {}
+        }
+      ],
+      "parameters": [],
+      "resultType": "void"
+    },
+    {
+      "id": "demo_navigation_lab.defer",
+      "componentId": "demo_navigation_lab_component",
+      "componentVersion": "0.1.0",
+      "exposure": "internal",
+      "deepLink": "disabled",
+      "description": "等待外部同意后恢复的 Deferred Navigation 示例。",
+      "interceptorIds": [
+        "demo_navigation_lab.defer"
+      ],
+      "popGuardIds": [],
+      "declaration": {
+        "package": "demo_navigation_lab",
+        "library": "lib/src/policy_pages.dart",
+        "kind": "page"
+      },
+      "navigationSources": [
+        "typedIntent",
+        "internalUri"
+      ],
+      "restoration": {
+        "status": "unsupported"
+      },
+      "placement": {
+        "hostId": "default",
+        "parentRouteId": null,
+        "shellId": null,
+        "navigatorOutlet": "root"
+      },
+      "presentation": {
+        "type": "page",
+        "routeType": "platformDefault",
+        "transition": "platformDefault",
+        "opaque": true,
+        "fullscreenDialog": false
+      },
+      "contracts": {
+        "route": "_DemoDeferredPageRoute",
+        "arguments": "_DemoDeferredPageRouteArguments",
+        "package": "demo_navigation_lab",
+        "library": "lib/src/policy_pages.dart"
+      },
+      "registration": "ccrouterRegisterDemoDeferredPageRoute",
+      "destination": {
+        "descriptor": "ccrouterDescribeDemoDeferredPageRoute",
+        "builder": "ccrouterBuildDemoDeferredPageRoute"
+      },
+      "patterns": [
+        {
+          "type": "CCPathPattern",
+          "value": "/lab/policy/defer",
+          "primary": true,
+          "constraints": {}
+        }
+      ],
+      "parameters": [],
+      "resultType": "void"
+    },
+    {
+      "id": "demo_navigation_lab.detail",
+      "componentId": "demo_navigation_lab_component",
+      "componentVersion": "0.1.0",
+      "exposure": "internal",
+      "deepLink": "enabled",
+      "description": "验证类型安全参数、Query 集合、多 Path、完整 URL、Scheme 与返回值。",
+      "interceptorIds": [],
+      "popGuardIds": [],
+      "declaration": {
+        "package": "demo_navigation_lab",
+        "library": "lib/src/detail_page.dart",
+        "kind": "page"
+      },
+      "navigationSources": [
+        "typedIntent",
+        "internalUri",
+        "externalDeepLink"
+      ],
+      "restoration": {
+        "status": "unsupported"
+      },
+      "placement": {
+        "hostId": "default",
+        "parentRouteId": null,
+        "shellId": null,
+        "navigatorOutlet": "root"
+      },
+      "presentation": {
+        "type": "page",
+        "routeType": "material",
+        "transition": "slideFromRight",
+        "opaque": true,
+        "fullscreenDialog": false
+      },
+      "contracts": {
+        "route": "_DemoDetailPageRoute",
+        "arguments": "_DemoDetailPageRouteArguments",
+        "package": "demo_navigation_lab",
+        "library": "lib/src/detail_page.dart"
+      },
+      "registration": "ccrouterRegisterDemoDetailPageRoute",
+      "destination": {
+        "descriptor": "ccrouterDescribeDemoDetailPageRoute",
+        "builder": "ccrouterBuildDemoDetailPageRoute"
+      },
+      "patterns": [
+        {
+          "type": "CCPathPattern",
+          "value": "/lab/detail/:id",
+          "primary": true,
+          "constraints": {
+            "id": "\\d+"
+          }
+        },
+        {
+          "type": "CCPathPattern",
+          "value": "/lab/item/:id",
+          "primary": false,
+          "constraints": {}
+        },
+        {
+          "type": "CCUriPattern",
+          "value": "ccrouter://lab/detail/:id",
+          "primary": false,
+          "constraints": {}
+        },
+        {
+          "type": "CCUriPattern",
+          "value": "https://ccrouter.example/lab/detail/:id",
+          "primary": false,
+          "constraints": {}
+        }
+      ],
+      "parameters": [
+        {
+          "name": "id",
+          "wireName": "id",
+          "source": "path",
+          "type": "int",
+          "required": true,
+          "default": null,
+          "description": null
+        },
+        {
+          "name": "title",
+          "wireName": "title",
+          "source": "query",
+          "type": "String",
+          "cardinality": "single",
+          "required": false,
+          "default": "'类型安全详情'",
+          "description": null
+        },
+        {
+          "name": "tags",
+          "wireName": "tags",
+          "source": "query",
+          "type": "List<String>",
+          "cardinality": "repeated",
+          "required": false,
+          "default": "const <String>[]",
+          "description": null
+        }
+      ],
+      "resultType": "String"
+    },
+    {
+      "id": "demo_navigation_lab.failure",
+      "componentId": "demo_navigation_lab_component",
+      "componentVersion": "0.1.0",
+      "exposure": "internal",
+      "deepLink": "disabled",
+      "description": "展示标准导航失败经 Host Failure Policy 恢复后的安全页面。",
+      "interceptorIds": [],
+      "popGuardIds": [],
+      "declaration": {
+        "package": "demo_navigation_lab",
+        "library": "lib/src/failure_page.dart",
+        "kind": "page"
+      },
+      "navigationSources": [
+        "typedIntent",
+        "internalUri"
+      ],
+      "restoration": {
+        "status": "unsupported"
+      },
+      "placement": {
+        "hostId": "default",
+        "parentRouteId": null,
+        "shellId": null,
+        "navigatorOutlet": "root"
+      },
+      "presentation": {
+        "type": "page",
+        "routeType": "platformDefault",
+        "transition": "fade",
+        "opaque": true,
+        "fullscreenDialog": false
+      },
+      "contracts": {
+        "route": "_DemoFailurePageRoute",
+        "arguments": "_DemoFailurePageRouteArguments",
+        "package": "demo_navigation_lab",
+        "library": "lib/src/failure_page.dart"
+      },
+      "registration": "ccrouterRegisterDemoFailurePageRoute",
+      "destination": {
+        "descriptor": "ccrouterDescribeDemoFailurePageRoute",
+        "builder": "ccrouterBuildDemoFailurePageRoute"
+      },
+      "patterns": [
+        {
+          "type": "CCPathPattern",
+          "value": "/lab/failure",
+          "primary": true,
+          "constraints": {}
+        }
+      ],
+      "parameters": [
+        {
+          "name": "stage",
+          "wireName": "stage",
+          "source": "query",
+          "type": "String",
+          "cardinality": "single",
+          "required": true,
+          "default": null,
+          "description": null
+        },
+        {
+          "name": "errorType",
+          "wireName": "errorType",
+          "source": "query",
+          "type": "String",
+          "cardinality": "single",
+          "required": true,
+          "default": null,
+          "description": null
+        }
+      ],
+      "resultType": "void"
+    },
+    {
+      "id": "demo_navigation_lab.guarded",
+      "componentId": "demo_navigation_lab_component",
+      "componentVersion": "0.1.0",
+      "exposure": "internal",
+      "deepLink": "disabled",
+      "description": "未保存状态下拒绝 CCRouter Pop 的路由。",
+      "interceptorIds": [],
+      "popGuardIds": [
+        "demo_navigation_lab.dirty"
+      ],
+      "declaration": {
+        "package": "demo_navigation_lab",
+        "library": "lib/src/policy_pages.dart",
+        "kind": "page"
+      },
+      "navigationSources": [
+        "typedIntent",
+        "internalUri"
+      ],
+      "restoration": {
+        "status": "unsupported"
+      },
+      "placement": {
+        "hostId": "default",
+        "parentRouteId": null,
+        "shellId": null,
+        "navigatorOutlet": "root"
+      },
+      "presentation": {
+        "type": "page",
+        "routeType": "platformDefault",
+        "transition": "platformDefault",
+        "opaque": true,
+        "fullscreenDialog": false
+      },
+      "contracts": {
+        "route": "_DemoGuardedPageRoute",
+        "arguments": "_DemoGuardedPageRouteArguments",
+        "package": "demo_navigation_lab",
+        "library": "lib/src/policy_pages.dart"
+      },
+      "registration": "ccrouterRegisterDemoGuardedPageRoute",
+      "destination": {
+        "descriptor": "ccrouterDescribeDemoGuardedPageRoute",
+        "builder": "ccrouterBuildDemoGuardedPageRoute"
+      },
+      "patterns": [
+        {
+          "type": "CCPathPattern",
+          "value": "/lab/policy/guarded",
+          "primary": true,
+          "constraints": {}
+        }
+      ],
+      "parameters": [],
+      "resultType": "void"
+    },
+    {
+      "id": "demo_navigation_lab.home",
+      "componentId": "demo_navigation_lab_component",
+      "componentVersion": "0.1.0",
+      "exposure": "internal",
+      "deepLink": "disabled",
+      "description": "CCRouter 全功能交互验证首页。",
+      "interceptorIds": [],
+      "popGuardIds": [],
+      "declaration": {
+        "package": "demo_navigation_lab",
+        "library": "lib/src/home_page.dart",
+        "kind": "page"
+      },
+      "navigationSources": [
+        "typedIntent",
+        "internalUri"
+      ],
+      "restoration": {
+        "status": "unsupported"
+      },
+      "placement": {
+        "hostId": "default",
+        "parentRouteId": null,
+        "shellId": null,
+        "navigatorOutlet": "root"
+      },
+      "presentation": {
+        "type": "page",
+        "routeType": "platformDefault",
+        "transition": "none",
+        "opaque": true,
+        "fullscreenDialog": false
+      },
+      "contracts": {
+        "route": "_DemoNavigationHomePageRoute",
+        "arguments": "_DemoNavigationHomePageRouteArguments",
+        "package": "demo_navigation_lab",
+        "library": "lib/src/home_page.dart"
+      },
+      "registration": "ccrouterRegisterDemoNavigationHomePageRoute",
+      "destination": {
+        "descriptor": "ccrouterDescribeDemoNavigationHomePageRoute",
+        "builder": "ccrouterBuildDemoNavigationHomePageRoute"
+      },
+      "patterns": [
+        {
+          "type": "CCPathPattern",
+          "value": "/",
+          "primary": true,
+          "constraints": {}
+        }
+      ],
+      "parameters": [],
+      "resultType": "void"
+    },
+    {
+      "id": "demo_navigation_lab.lifecycle",
+      "componentId": "demo_navigation_lab_component",
+      "componentVersion": "0.1.0",
+      "exposure": "internal",
+      "deepLink": "disabled",
+      "description": "同时验证 CCPageLifecycleMixin 与 Listener 的页面和 App 生命周期。",
+      "interceptorIds": [],
+      "popGuardIds": [],
+      "declaration": {
+        "package": "demo_navigation_lab",
+        "library": "lib/src/lifecycle_page.dart",
+        "kind": "page"
+      },
+      "navigationSources": [
+        "typedIntent",
+        "internalUri"
+      ],
+      "restoration": {
+        "status": "unsupported"
+      },
+      "placement": {
+        "hostId": "default",
+        "parentRouteId": null,
+        "shellId": null,
+        "navigatorOutlet": "root"
+      },
+      "presentation": {
+        "type": "page",
+        "routeType": "platformDefault",
+        "transition": "platformDefault",
+        "opaque": true,
+        "fullscreenDialog": false
+      },
+      "contracts": {
+        "route": "_DemoLifecyclePageRoute",
+        "arguments": "_DemoLifecyclePageRouteArguments",
+        "package": "demo_navigation_lab",
+        "library": "lib/src/lifecycle_page.dart"
+      },
+      "registration": "ccrouterRegisterDemoLifecyclePageRoute",
+      "destination": {
+        "descriptor": "ccrouterDescribeDemoLifecyclePageRoute",
+        "builder": "ccrouterBuildDemoLifecyclePageRoute"
+      },
+      "patterns": [
+        {
+          "type": "CCPathPattern",
+          "value": "/lab/lifecycle",
+          "primary": true,
+          "constraints": {}
+        }
+      ],
+      "parameters": [],
+      "resultType": "void"
+    },
+    {
+      "id": "demo_navigation_lab.presentation.bottom_page",
+      "componentId": "demo_navigation_lab_component",
+      "componentVersion": "0.1.0",
+      "exposure": "internal",
+      "deepLink": "disabled",
+      "description": "普通全屏 Page 从底部滑入，不是 BottomSheet。",
+      "interceptorIds": [],
+      "popGuardIds": [],
+      "declaration": {
+        "package": "demo_navigation_lab",
+        "library": "lib/src/presentation_pages.dart",
+        "kind": "page"
+      },
+      "navigationSources": [
+        "typedIntent",
+        "internalUri"
+      ],
+      "restoration": {
+        "status": "unsupported"
+      },
+      "placement": {
+        "hostId": "default",
+        "parentRouteId": null,
+        "shellId": null,
+        "navigatorOutlet": "root"
+      },
+      "presentation": {
+        "type": "page",
+        "routeType": "platformDefault",
+        "transition": "slideFromBottom",
+        "opaque": true,
+        "fullscreenDialog": true
+      },
+      "contracts": {
+        "route": "_DemoBottomPageRoute",
+        "arguments": "_DemoBottomPageRouteArguments",
+        "package": "demo_navigation_lab",
+        "library": "lib/src/presentation_pages.dart"
+      },
+      "registration": "ccrouterRegisterDemoBottomPageRoute",
+      "destination": {
+        "descriptor": "ccrouterDescribeDemoBottomPageRoute",
+        "builder": "ccrouterBuildDemoBottomPageRoute"
+      },
+      "patterns": [
+        {
+          "type": "CCPathPattern",
+          "value": "/lab/presentation/bottom-page",
+          "primary": true,
+          "constraints": {}
+        }
+      ],
+      "parameters": [],
+      "resultType": "void"
+    },
+    {
+      "id": "demo_navigation_lab.presentation.cupertino",
+      "componentId": "demo_navigation_lab_component",
+      "componentVersion": "0.1.0",
+      "exposure": "internal",
+      "deepLink": "disabled",
+      "description": null,
+      "interceptorIds": [],
+      "popGuardIds": [],
+      "declaration": {
+        "package": "demo_navigation_lab",
+        "library": "lib/src/presentation_pages.dart",
+        "kind": "page"
+      },
+      "navigationSources": [
+        "typedIntent",
+        "internalUri"
+      ],
+      "restoration": {
+        "status": "unsupported"
+      },
+      "placement": {
+        "hostId": "default",
+        "parentRouteId": null,
+        "shellId": null,
+        "navigatorOutlet": "root"
+      },
+      "presentation": {
+        "type": "page",
+        "routeType": "cupertino",
+        "transition": "platformDefault",
+        "opaque": true,
+        "fullscreenDialog": false
+      },
+      "contracts": {
+        "route": "_DemoCupertinoPageRoute",
+        "arguments": "_DemoCupertinoPageRouteArguments",
+        "package": "demo_navigation_lab",
+        "library": "lib/src/presentation_pages.dart"
+      },
+      "registration": "ccrouterRegisterDemoCupertinoPageRoute",
+      "destination": {
+        "descriptor": "ccrouterDescribeDemoCupertinoPageRoute",
+        "builder": "ccrouterBuildDemoCupertinoPageRoute"
+      },
+      "patterns": [
+        {
+          "type": "CCPathPattern",
+          "value": "/lab/presentation/cupertino",
+          "primary": true,
+          "constraints": {}
+        }
+      ],
+      "parameters": [],
+      "resultType": "void"
+    },
+    {
+      "id": "demo_navigation_lab.presentation.dialog",
+      "componentId": "demo_navigation_lab_component",
+      "componentVersion": "0.1.0",
+      "exposure": "internal",
+      "deepLink": "disabled",
+      "description": null,
+      "interceptorIds": [],
+      "popGuardIds": [],
+      "declaration": {
+        "package": "demo_navigation_lab",
+        "library": "lib/src/presentation_pages.dart",
+        "kind": "page"
+      },
+      "navigationSources": [
+        "typedIntent",
+        "internalUri"
+      ],
+      "restoration": {
+        "status": "unsupported"
+      },
+      "placement": {
+        "hostId": "default",
+        "parentRouteId": null,
+        "shellId": null,
+        "navigatorOutlet": "root"
+      },
+      "presentation": {
+        "type": "dialog",
+        "routeType": "material",
+        "barrierDismissible": true,
+        "useSafeArea": true
+      },
+      "contracts": {
+        "route": "_DemoDialogPageRoute",
+        "arguments": "_DemoDialogPageRouteArguments",
+        "package": "demo_navigation_lab",
+        "library": "lib/src/presentation_pages.dart"
+      },
+      "registration": "ccrouterRegisterDemoDialogPageRoute",
+      "destination": {
+        "descriptor": "ccrouterDescribeDemoDialogPageRoute",
+        "builder": "ccrouterBuildDemoDialogPageRoute"
+      },
+      "patterns": [
+        {
+          "type": "CCPathPattern",
+          "value": "/lab/presentation/dialog",
+          "primary": true,
+          "constraints": {}
+        }
+      ],
+      "parameters": [],
+      "resultType": "String"
+    },
+    {
+      "id": "demo_navigation_lab.presentation.fade",
+      "componentId": "demo_navigation_lab_component",
+      "componentVersion": "0.1.0",
+      "exposure": "internal",
+      "deepLink": "disabled",
+      "description": null,
+      "interceptorIds": [],
+      "popGuardIds": [],
+      "declaration": {
+        "package": "demo_navigation_lab",
+        "library": "lib/src/presentation_pages.dart",
+        "kind": "page"
+      },
+      "navigationSources": [
+        "typedIntent",
+        "internalUri"
+      ],
+      "restoration": {
+        "status": "unsupported"
+      },
+      "placement": {
+        "hostId": "default",
+        "parentRouteId": null,
+        "shellId": null,
+        "navigatorOutlet": "root"
+      },
+      "presentation": {
+        "type": "page",
+        "routeType": "platformDefault",
+        "transition": "fade",
+        "opaque": true,
+        "fullscreenDialog": false
+      },
+      "contracts": {
+        "route": "_DemoFadePageRoute",
+        "arguments": "_DemoFadePageRouteArguments",
+        "package": "demo_navigation_lab",
+        "library": "lib/src/presentation_pages.dart"
+      },
+      "registration": "ccrouterRegisterDemoFadePageRoute",
+      "destination": {
+        "descriptor": "ccrouterDescribeDemoFadePageRoute",
+        "builder": "ccrouterBuildDemoFadePageRoute"
+      },
+      "patterns": [
+        {
+          "type": "CCPathPattern",
+          "value": "/lab/presentation/fade",
+          "primary": true,
+          "constraints": {}
+        }
+      ],
+      "parameters": [],
+      "resultType": "void"
+    },
+    {
+      "id": "demo_navigation_lab.presentation.scale",
+      "componentId": "demo_navigation_lab_component",
+      "componentVersion": "0.1.0",
+      "exposure": "internal",
+      "deepLink": "disabled",
+      "description": null,
+      "interceptorIds": [],
+      "popGuardIds": [],
+      "declaration": {
+        "package": "demo_navigation_lab",
+        "library": "lib/src/presentation_pages.dart",
+        "kind": "page"
+      },
+      "navigationSources": [
+        "typedIntent",
+        "internalUri"
+      ],
+      "restoration": {
+        "status": "unsupported"
+      },
+      "placement": {
+        "hostId": "default",
+        "parentRouteId": null,
+        "shellId": null,
+        "navigatorOutlet": "root"
+      },
+      "presentation": {
+        "type": "page",
+        "routeType": "platformDefault",
+        "transition": "scale",
+        "opaque": true,
+        "fullscreenDialog": false
+      },
+      "contracts": {
+        "route": "_DemoScalePageRoute",
+        "arguments": "_DemoScalePageRouteArguments",
+        "package": "demo_navigation_lab",
+        "library": "lib/src/presentation_pages.dart"
+      },
+      "registration": "ccrouterRegisterDemoScalePageRoute",
+      "destination": {
+        "descriptor": "ccrouterDescribeDemoScalePageRoute",
+        "builder": "ccrouterBuildDemoScalePageRoute"
+      },
+      "patterns": [
+        {
+          "type": "CCPathPattern",
+          "value": "/lab/presentation/scale",
+          "primary": true,
+          "constraints": {}
+        }
+      ],
+      "parameters": [],
+      "resultType": "void"
+    },
+    {
+      "id": "demo_navigation_lab.presentation.sheet",
+      "componentId": "demo_navigation_lab_component",
+      "componentVersion": "0.1.0",
+      "exposure": "internal",
+      "deepLink": "disabled",
+      "description": null,
+      "interceptorIds": [],
+      "popGuardIds": [],
+      "declaration": {
+        "package": "demo_navigation_lab",
+        "library": "lib/src/presentation_pages.dart",
+        "kind": "page"
+      },
+      "navigationSources": [
+        "typedIntent",
+        "internalUri"
+      ],
+      "restoration": {
+        "status": "unsupported"
+      },
+      "placement": {
+        "hostId": "default",
+        "parentRouteId": null,
+        "shellId": null,
+        "navigatorOutlet": "root"
+      },
+      "presentation": {
+        "type": "modalBottomSheet",
+        "isDismissible": true,
+        "enableDrag": true,
+        "isScrollControlled": true,
+        "showDragHandle": true,
+        "useSafeArea": true
+      },
+      "contracts": {
+        "route": "_DemoBottomSheetPageRoute",
+        "arguments": "_DemoBottomSheetPageRouteArguments",
+        "package": "demo_navigation_lab",
+        "library": "lib/src/presentation_pages.dart"
+      },
+      "registration": "ccrouterRegisterDemoBottomSheetPageRoute",
+      "destination": {
+        "descriptor": "ccrouterDescribeDemoBottomSheetPageRoute",
+        "builder": "ccrouterBuildDemoBottomSheetPageRoute"
+      },
+      "patterns": [
+        {
+          "type": "CCPathPattern",
+          "value": "/lab/presentation/sheet",
+          "primary": true,
+          "constraints": {}
+        }
+      ],
+      "parameters": [],
+      "resultType": "String"
+    },
+    {
+      "id": "demo_navigation_lab.presentation.transparent",
+      "componentId": "demo_navigation_lab_component",
+      "componentVersion": "0.1.0",
+      "exposure": "internal",
+      "deepLink": "disabled",
+      "description": "用于海报分享预览的透明全屏 Page。",
+      "interceptorIds": [],
+      "popGuardIds": [],
+      "declaration": {
+        "package": "demo_navigation_lab",
+        "library": "lib/src/presentation_pages.dart",
+        "kind": "page"
+      },
+      "navigationSources": [
+        "typedIntent",
+        "internalUri"
+      ],
+      "restoration": {
+        "status": "unsupported"
+      },
+      "placement": {
+        "hostId": "default",
+        "parentRouteId": null,
+        "shellId": null,
+        "navigatorOutlet": "root"
+      },
+      "presentation": {
+        "type": "page",
+        "routeType": "platformDefault",
+        "transition": "slideFromBottom",
+        "opaque": false,
+        "fullscreenDialog": true
+      },
+      "contracts": {
+        "route": "_DemoTransparentPageRoute",
+        "arguments": "_DemoTransparentPageRouteArguments",
+        "package": "demo_navigation_lab",
+        "library": "lib/src/presentation_pages.dart"
+      },
+      "registration": "ccrouterRegisterDemoTransparentPageRoute",
+      "destination": {
+        "descriptor": "ccrouterDescribeDemoTransparentPageRoute",
+        "builder": "ccrouterBuildDemoTransparentPageRoute"
+      },
+      "patterns": [
+        {
+          "type": "CCPathPattern",
+          "value": "/lab/presentation/transparent",
+          "primary": true,
+          "constraints": {}
+        }
+      ],
+      "parameters": [],
+      "resultType": "void"
+    },
+    {
+      "id": "demo_navigation_lab.proceed",
+      "componentId": "demo_navigation_lab_component",
+      "componentVersion": "0.1.0",
+      "exposure": "internal",
+      "deepLink": "disabled",
+      "description": "路由级拦截器放行示例。",
+      "interceptorIds": [
+        "demo_navigation_lab.proceed"
+      ],
+      "popGuardIds": [],
+      "declaration": {
+        "package": "demo_navigation_lab",
+        "library": "lib/src/policy_pages.dart",
+        "kind": "page"
+      },
+      "navigationSources": [
+        "typedIntent",
+        "internalUri"
+      ],
+      "restoration": {
+        "status": "unsupported"
+      },
+      "placement": {
+        "hostId": "default",
+        "parentRouteId": null,
+        "shellId": null,
+        "navigatorOutlet": "root"
+      },
+      "presentation": {
+        "type": "page",
+        "routeType": "platformDefault",
+        "transition": "platformDefault",
+        "opaque": true,
+        "fullscreenDialog": false
+      },
+      "contracts": {
+        "route": "_DemoProceedPageRoute",
+        "arguments": "_DemoProceedPageRouteArguments",
+        "package": "demo_navigation_lab",
+        "library": "lib/src/policy_pages.dart"
+      },
+      "registration": "ccrouterRegisterDemoProceedPageRoute",
+      "destination": {
+        "descriptor": "ccrouterDescribeDemoProceedPageRoute",
+        "builder": "ccrouterBuildDemoProceedPageRoute"
+      },
+      "patterns": [
+        {
+          "type": "CCPathPattern",
+          "value": "/lab/policy/proceed",
+          "primary": true,
+          "constraints": {}
+        }
+      ],
+      "parameters": [],
+      "resultType": "void"
+    },
+    {
+      "id": "demo_navigation_lab.redirect.source",
+      "componentId": "demo_navigation_lab_component",
+      "componentVersion": "0.1.0",
+      "exposure": "internal",
+      "deepLink": "disabled",
+      "description": "路由级拦截器重定向源页面；页面正常情况下不会创建。",
+      "interceptorIds": [
+        "demo_navigation_lab.redirect"
+      ],
+      "popGuardIds": [],
+      "declaration": {
+        "package": "demo_navigation_lab",
+        "library": "lib/src/policy_pages.dart",
+        "kind": "page"
+      },
+      "navigationSources": [
+        "typedIntent",
+        "internalUri"
+      ],
+      "restoration": {
+        "status": "unsupported"
+      },
+      "placement": {
+        "hostId": "default",
+        "parentRouteId": null,
+        "shellId": null,
+        "navigatorOutlet": "root"
+      },
+      "presentation": {
+        "type": "page",
+        "routeType": "platformDefault",
+        "transition": "platformDefault",
+        "opaque": true,
+        "fullscreenDialog": false
+      },
+      "contracts": {
+        "route": "_DemoRedirectSourcePageRoute",
+        "arguments": "_DemoRedirectSourcePageRouteArguments",
+        "package": "demo_navigation_lab",
+        "library": "lib/src/policy_pages.dart"
+      },
+      "registration": "ccrouterRegisterDemoRedirectSourcePageRoute",
+      "destination": {
+        "descriptor": "ccrouterDescribeDemoRedirectSourcePageRoute",
+        "builder": "ccrouterBuildDemoRedirectSourcePageRoute"
+      },
+      "patterns": [
+        {
+          "type": "CCPathPattern",
+          "value": "/lab/policy/redirect-source",
+          "primary": true,
+          "constraints": {}
+        }
+      ],
+      "parameters": [],
+      "resultType": "void"
+    },
+    {
+      "id": "demo_navigation_lab.redirect.target",
+      "componentId": "demo_navigation_lab_component",
+      "componentVersion": "0.1.0",
+      "exposure": "internal",
+      "deepLink": "disabled",
+      "description": "拦截器重定向后的目标页面。",
+      "interceptorIds": [],
+      "popGuardIds": [],
+      "declaration": {
+        "package": "demo_navigation_lab",
+        "library": "lib/src/policy_pages.dart",
+        "kind": "page"
+      },
+      "navigationSources": [
+        "typedIntent",
+        "internalUri"
+      ],
+      "restoration": {
+        "status": "unsupported"
+      },
+      "placement": {
+        "hostId": "default",
+        "parentRouteId": null,
+        "shellId": null,
+        "navigatorOutlet": "root"
+      },
+      "presentation": {
+        "type": "page",
+        "routeType": "platformDefault",
+        "transition": "platformDefault",
+        "opaque": true,
+        "fullscreenDialog": false
+      },
+      "contracts": {
+        "route": "_DemoRedirectTargetPageRoute",
+        "arguments": "_DemoRedirectTargetPageRouteArguments",
+        "package": "demo_navigation_lab",
+        "library": "lib/src/policy_pages.dart"
+      },
+      "registration": "ccrouterRegisterDemoRedirectTargetPageRoute",
+      "destination": {
+        "descriptor": "ccrouterDescribeDemoRedirectTargetPageRoute",
+        "builder": "ccrouterBuildDemoRedirectTargetPageRoute"
+      },
+      "patterns": [
+        {
+          "type": "CCPathPattern",
+          "value": "/lab/policy/redirect-target",
+          "primary": true,
+          "constraints": {}
+        }
+      ],
+      "parameters": [],
+      "resultType": "void"
+    },
+    {
+      "id": "demo_navigation_lab.stack",
+      "componentId": "demo_navigation_lab_component",
+      "componentVersion": "0.1.0",
+      "exposure": "internal",
+      "deepLink": "disabled",
+      "description": "交互验证 Push、Replace、组合栈操作与精确 Route Entry 句柄。",
+      "interceptorIds": [],
+      "popGuardIds": [],
+      "declaration": {
+        "package": "demo_navigation_lab",
+        "library": "lib/src/stack_page.dart",
+        "kind": "page"
+      },
+      "navigationSources": [
+        "typedIntent",
+        "internalUri"
+      ],
+      "restoration": {
+        "status": "unsupported"
+      },
+      "placement": {
+        "hostId": "default",
+        "parentRouteId": null,
+        "shellId": null,
+        "navigatorOutlet": "root"
+      },
+      "presentation": {
+        "type": "page",
+        "routeType": "platformDefault",
+        "transition": "platformDefault",
+        "opaque": true,
+        "fullscreenDialog": false
+      },
+      "contracts": {
+        "route": "_DemoStackPageRoute",
+        "arguments": "_DemoStackPageRouteArguments",
+        "package": "demo_navigation_lab",
+        "library": "lib/src/stack_page.dart"
+      },
+      "registration": "ccrouterRegisterDemoStackPageRoute",
+      "destination": {
+        "descriptor": "ccrouterDescribeDemoStackPageRoute",
+        "builder": "ccrouterBuildDemoStackPageRoute"
+      },
+      "patterns": [
+        {
+          "type": "CCPathPattern",
+          "value": "/lab/stack/:level",
+          "primary": true,
+          "constraints": {}
+        }
+      ],
+      "parameters": [
+        {
+          "name": "level",
+          "wireName": "level",
+          "source": "path",
+          "type": "int",
+          "required": true,
+          "default": null,
+          "description": null
+        }
+      ],
+      "resultType": "String"
+    },
+    {
+      "id": "demo_navigation_lab.timeout",
+      "componentId": "demo_navigation_lab_component",
+      "componentVersion": "0.1.0",
+      "exposure": "internal",
+      "deepLink": "disabled",
+      "description": "触发标准 Interceptor Timeout Error 的示例。",
+      "interceptorIds": [
+        "demo_navigation_lab.timeout"
+      ],
+      "popGuardIds": [],
+      "declaration": {
+        "package": "demo_navigation_lab",
+        "library": "lib/src/policy_pages.dart",
+        "kind": "page"
+      },
+      "navigationSources": [
+        "typedIntent",
+        "internalUri"
+      ],
+      "restoration": {
+        "status": "unsupported"
+      },
+      "placement": {
+        "hostId": "default",
+        "parentRouteId": null,
+        "shellId": null,
+        "navigatorOutlet": "root"
+      },
+      "presentation": {
+        "type": "page",
+        "routeType": "platformDefault",
+        "transition": "platformDefault",
+        "opaque": true,
+        "fullscreenDialog": false
+      },
+      "contracts": {
+        "route": "_DemoTimeoutPageRoute",
+        "arguments": "_DemoTimeoutPageRouteArguments",
+        "package": "demo_navigation_lab",
+        "library": "lib/src/policy_pages.dart"
+      },
+      "registration": "ccrouterRegisterDemoTimeoutPageRoute",
+      "destination": {
+        "descriptor": "ccrouterDescribeDemoTimeoutPageRoute",
+        "builder": "ccrouterBuildDemoTimeoutPageRoute"
+      },
+      "patterns": [
+        {
+          "type": "CCPathPattern",
+          "value": "/lab/policy/timeout",
+          "primary": true,
+          "constraints": {}
+        }
+      ],
+      "parameters": [],
+      "resultType": "void"
+    },
     {
       "id": "order.detail",
       "componentId": "demo_order_component",

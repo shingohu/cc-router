@@ -15,6 +15,7 @@ dependencies:
   demo_order: ^0.1.0
   demo_order_contracts: ^0.1.0
   demo_payment: ^0.1.0
+  demo_navigation_lab: ^0.1.0
 
 dev_dependencies:
   flutter_test:

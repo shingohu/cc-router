@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 2,
+  "package": "demo_navigation_lab",
+  "source": "lib/src/lifecycle_page.dart",
+  "componentDeclarations": [],
+  "componentManifests": {},
+  "components": [
+    {
+      "id": "demo_navigation_lab_component",
+      "version": "0.1.0",
+      "dependencies": [
+        "demo_order_component"
+      ],
+      "optionalDependencies": []
+    }
+  ],
+  "routes": [
+    {
+      "id": "demo_navigation_lab.lifecycle",
+      "componentId": "demo_navigation_lab_component",
+      "componentVersion": "0.1.0",
+      "exposure": "internal",
+      "deepLink": "disabled",
+      "description": "同时验证 CCPageLifecycleMixin 与 Listener 的页面和 App 生命周期。",
+      "interceptorIds": [],
+      "popGuardIds": [],
+      "declaration": {
+        "package": "demo_navigation_lab",
+        "library": "lib/src/lifecycle_page.dart",
+        "kind": "page"
+      },
+      "navigationSources": [
+        "typedIntent",
+        "internalUri"
+      ],
+      "restoration": {
+        "status": "unsupported"
+      },
+      "placement": {
+        "hostId": "default",
+        "parentRouteId": null,
+        "shellId": null,
+        "navigatorOutlet": "root"
+      },
+      "presentation": {
+        "type": "page",
+        "routeType": "platformDefault",
+        "transition": "platformDefault",
+        "opaque": true,
+        "fullscreenDialog": false
+      },
+      "contracts": {
+        "route": "_DemoLifecyclePageRoute",
+        "arguments": "_DemoLifecyclePageRouteArguments",
+        "package": "demo_navigation_lab",
+        "library": "lib/src/lifecycle_page.dart"
+      },
+      "registration": "ccrouterRegisterDemoLifecyclePageRoute",
+      "destination": {
+        "descriptor": "ccrouterDescribeDemoLifecyclePageRoute",
+        "builder": "ccrouterBuildDemoLifecyclePageRoute"
+      },
+      "patterns": [
+        {
+          "type": "CCPathPattern",
+          "value": "/lab/lifecycle",
+          "primary": true,
+          "constraints": {}
+        }
+      ],
+      "parameters": [],
+      "resultType": "void"
+    }
+  ],
+  "routeImplementations": []
+}

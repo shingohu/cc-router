@@ -478,6 +478,211 @@ void main() {
   });
 
   testWidgets(
+    'dynamic open pushes on GoRouter and completes before its later Pop',
+    (tester) async {
+      final observer = CCGoRouterNavigationObserver(outlet: 'root');
+      final detailRoute = GoRoute(
+        path: '/orders/:id',
+        builder: (_, state) => Text(
+          'open-order:${state.pathParameters['id']}',
+          key: const ValueKey('open-managed-order'),
+        ),
+      );
+      final router = GoRouter(
+        initialLocation: '/',
+        observers: [observer],
+        routes: [
+          GoRoute(path: '/', builder: (_, _) => const Text('home')),
+          detailRoute,
+        ],
+      );
+      final adapter = CCGoRouterAdapter(
+        router: router,
+        observers: [observer],
+        bindings: [
+          CCGoRouterRouteBinding(
+            routeId: 'orders.detail',
+            goRoute: detailRoute,
+          ),
+        ],
+      );
+      final runtime = CCRouterRuntime.forTesting(
+        navigationAdapter: adapter,
+        components: const [
+          CCComponentManifest(
+            id: 'orders',
+            version: '1.0.0',
+            registrar: _SimpleOrdersRegistrar(),
+          ),
+        ],
+      );
+      addTearDown(runtime.dispose);
+      addTearDown(router.dispose);
+
+      runtime.initialize();
+      await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+      await tester.pumpAndSettle();
+
+      expect(runtime.activeBackendEntries, hasLength(1));
+
+      await runtime.openRoute(Uri.parse('/orders/42'));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const ValueKey('open-managed-order')), findsOneWidget);
+      expect(runtime.canPopRoute(), isTrue);
+      expect(runtime.activeRouteEntries, hasLength(1));
+      expect(
+        runtime.activeRouteEntries.single.lifecycleState,
+        CCRouteEntryLifecycleState.visible,
+      );
+
+      runtime.popRoute();
+      await tester.pumpAndSettle();
+      expect(find.text('home'), findsOneWidget);
+      expect(runtime.activeRouteEntries, isEmpty);
+    },
+  );
+
+  testWidgets('replace recreates the same route with updated parameters', (
+    tester,
+  ) async {
+    final observer = CCGoRouterNavigationObserver(outlet: 'root');
+    final detailRoute = GoRoute(
+      path: '/orders/:id',
+      pageBuilder: (_, state) => ccGoRouterPage(
+        child: Text(
+          'replace-order:${state.pathParameters['id']}',
+          key: ValueKey('replace-order-${state.pathParameters['id']}'),
+        ),
+        presentation: const CCPagePresentation(),
+        key: state.pageKey,
+        name: 'orders.detail',
+      ),
+    );
+    final router = GoRouter(
+      initialLocation: '/',
+      observers: [observer],
+      routes: [
+        GoRoute(path: '/', builder: (_, _) => const Text('home')),
+        detailRoute,
+      ],
+    );
+    final adapter = CCGoRouterAdapter(
+      router: router,
+      observers: [observer],
+      bindings: [
+        CCGoRouterRouteBinding(routeId: 'orders.detail', goRoute: detailRoute),
+      ],
+    );
+    final runtime = CCRouterRuntime.forTesting(
+      navigationAdapter: adapter,
+      components: const [
+        CCComponentManifest(
+          id: 'orders',
+          version: '1.0.0',
+          registrar: _SimpleOrdersRegistrar(),
+        ),
+      ],
+    );
+    addTearDown(runtime.dispose);
+    addTearDown(router.dispose);
+
+    runtime.initialize();
+    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    await tester.pumpAndSettle();
+
+    final firstResult = runtime.pushRoute<String>(
+      const _OrderIntent<String>(_OrderArguments('1')),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.byKey(const ValueKey('replace-order-1')), findsOneWidget);
+
+    final replacementResult = runtime.replaceRoute<String>(
+      const _OrderIntent<String>(_OrderArguments('2')),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+
+    expect(find.byKey(const ValueKey('replace-order-1')), findsNothing);
+    expect(find.byKey(const ValueKey('replace-order-2')), findsOneWidget);
+    expect(runtime.activeRouteEntries, hasLength(1));
+    expect(runtime.activeRouteEntries.single.normalizedUri.path, '/orders/2');
+
+    runtime.popRoute(result: 'done');
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+    expect(await firstResult.timeout(const Duration(seconds: 2)), isNull);
+    expect(await replacementResult.timeout(const Duration(seconds: 2)), 'done');
+    expect(runtime.activeRouteEntries, isEmpty);
+  });
+
+  testWidgets('Runtime dispose terminates a pending typed Push result', (
+    tester,
+  ) async {
+    final detailRoute = GoRoute(
+      path: '/orders/:id',
+      builder: (_, state) => Text(
+        'dispose-order:${state.pathParameters['id']}',
+        key: const ValueKey('dispose-order'),
+      ),
+    );
+    final router = GoRouter(
+      initialLocation: '/',
+      routes: [
+        GoRoute(path: '/', builder: (_, _) => const Text('home')),
+        detailRoute,
+      ],
+    );
+    final adapter = CCGoRouterAdapter(
+      router: router,
+      bindings: [
+        CCGoRouterRouteBinding(routeId: 'orders.detail', goRoute: detailRoute),
+      ],
+    );
+    final runtime = CCRouterRuntime.forTesting(
+      navigationAdapter: adapter,
+      components: const [
+        CCComponentManifest(
+          id: 'orders',
+          version: '1.0.0',
+          registrar: _SimpleOrdersRegistrar(),
+        ),
+      ],
+    );
+    addTearDown(runtime.dispose);
+    addTearDown(router.dispose);
+
+    runtime.initialize();
+    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    await tester.pumpAndSettle();
+
+    final pending = runtime.pushRoute<String>(
+      const _OrderIntent<String>(_OrderArguments('42')),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('dispose-order')), findsOneWidget);
+
+    final completion = expectLater(
+      pending,
+      throwsA(
+        isA<CCNavigationAdapterError>().having(
+          (error) => error.message,
+          'message',
+          contains('disposed before navigation completed'),
+        ),
+      ),
+    );
+    await tester.runAsync(
+      () => runtime.dispose().timeout(const Duration(seconds: 2)),
+    );
+
+    await tester.runAsync(() => completion.timeout(const Duration(seconds: 2)));
+    expect(runtime.activeRouteEntries, isEmpty);
+    expect(adapter.isInitialized, isFalse);
+  });
+
+  testWidgets(
     'external ingress reaches the bound StatefulShell branch with metadata',
     (tester) async {
       final homeKey = GlobalKey<NavigatorState>();
