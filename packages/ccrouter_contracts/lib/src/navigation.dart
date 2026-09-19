@@ -262,18 +262,21 @@ abstract interface class CCNavigationAdapterHostBinding {
 
 /// Adapter-neutral navigation backend contract owned by one Runtime.
 ///
-/// Application hosts provide one adapter during CCRouter initialization. The
-/// Runtime initializes it after component route registration and disposes it on
-/// shutdown. Business code navigates through `CCRouter.navigator` and must not
-/// invoke an adapter directly.
+/// Application hosts attach one ready adapter after CCRouter initialization.
+/// The Runtime configures it from the registered route catalog and disposes it
+/// during shutdown. Adapter lifecycle operations are synchronous transactions;
+/// asynchronous resource preparation belongs to the Host before attachment.
+/// Business code navigates through `CCRouter.navigator` and must not invoke an
+/// adapter directly.
 abstract interface class CCNavigationAdapter {
-  /// Prepares the backend for all installed [routes] and [shells].
+  /// Configures the ready backend for all installed [routes] and [shells].
   ///
   /// Implementations validate unsupported presentation requirements here and
-  /// must not begin navigation before this Future completes. Shell snapshots
-  /// describe structure only; adapters remain responsible for binding their
-  /// application-owned navigation containers.
-  Future<void> initialize(
+  /// must return only after navigation can begin. This method must perform no
+  /// asynchronous I/O; Hosts prepare such resources before attachment. Shell
+  /// snapshots describe structure only, and adapters remain responsible for
+  /// binding their application-owned navigation containers.
+  void initialize(
     List<CCNavigationRoute> routes, {
     List<CCNavigationShell> shells = const [],
   });
@@ -328,6 +331,10 @@ abstract interface class CCNavigationAdapter {
   /// Whether [pop] can currently remove a route from the active stack.
   bool canPop();
 
-  /// Releases backend resources and completes outstanding navigation safely.
-  Future<void> dispose();
+  /// Releases adapter-owned listeners and in-memory state synchronously.
+  ///
+  /// Implementations must not dispose application-owned Router objects or wait
+  /// for asynchronous I/O. Runtime and Backend shutdown own asynchronous
+  /// business and platform resource release.
+  void dispose();
 }

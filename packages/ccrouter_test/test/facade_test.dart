@@ -1,4 +1,7 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:ccrouter/ccrouter.dart';
+import 'package:ccrouter/ccrouter_host.dart';
 import 'package:ccrouter_core/ccrouter_core.dart';
 import 'package:test/test.dart';
 
@@ -28,6 +31,15 @@ final class ServiceRegistrar implements CCComponentRegistrar {
         factory: (_) => 'promoted',
       ),
     );
+  }
+}
+
+final class FailingRegistrar implements CCComponentRegistrar {
+  const FailingRegistrar();
+
+  @override
+  void register(CCRegistry registry) {
+    throw StateError('registration failed');
   }
 }
 
@@ -94,7 +106,7 @@ void main() {
   });
 
   test('facade creates, owns, and shuts down the default Runtime', () async {
-    await CCRouter.initialize(components: [component('default', 'owned')]);
+    CCRouter.initialize(components: [component('default', 'owned')]);
     expect(CCRouter.isInitialized, isTrue);
     expect(await CCRouter.query(Read()), 'owned');
     expect(CCRouter.registeredComponents.single.id, 'default');
@@ -110,19 +122,19 @@ void main() {
   });
 
   test('reinitialization is rejected until shutdown completes', () async {
-    await CCRouter.initialize(components: [component('a', 'a')]);
-    await expectLater(
-      CCRouter.initialize(components: [component('b', 'b')]),
+    CCRouter.initialize(components: [component('a', 'a')]);
+    expect(
+      () => CCRouter.initialize(components: const []),
       throwsA(isA<CCRouterAlreadyInitializedError>()),
     );
 
     await CCRouter.shutdown();
-    await CCRouter.initialize(components: [component('b', 'b')]);
+    CCRouter.initialize(components: [component('b', 'b')]);
     expect(await CCRouter.query(Read()), 'b');
   });
 
   test('facade resolves a promoted service through its stable token', () async {
-    await CCRouter.initialize(
+    CCRouter.initialize(
       components: const [
         CCComponentManifest(
           id: 'facade-services',
@@ -138,7 +150,7 @@ void main() {
   });
 
   test('Session records account identity and is cleared on close', () async {
-    await CCRouter.initialize(components: const []);
+    CCRouter.initialize(components: const []);
     final metadata = <String, Object?>{'tenant': 'cn'};
     CCRouter.openSession(accountId: 'user-42', metadata: metadata);
     metadata['tenant'] = 'changed';
@@ -159,7 +171,7 @@ void main() {
     'navigator executes typed and dynamic routes through the adapter',
     () async {
       final adapter = CCMemoryNavigationAdapter();
-      await CCRouter.initialize(
+      CCRouter.initialize(
         components: const [
           CCComponentManifest(
             id: 'facade-routes',
@@ -167,8 +179,8 @@ void main() {
             registrar: FacadeRouteRegistrar(),
           ),
         ],
-        navigationAdapter: adapter,
       );
+      CCRouterHostBinding.attachNavigationAdapter(adapter);
 
       final result = CCRouter.navigator.push(
         const FacadeRouteIntent('42'),
@@ -191,4 +203,25 @@ void main() {
       expect(adapter.isInitialized, isFalse);
     },
   );
+
+  test('failed component registration leaves no partial Runtime', () async {
+    expect(
+      () => CCRouter.initialize(
+        components: const [
+          CCComponentManifest(
+            id: 'failing',
+            version: '0.1.0',
+            registrar: FailingRegistrar(),
+          ),
+        ],
+      ),
+      throwsA(isA<StateError>()),
+    );
+
+    expect(CCRouter.isInitialized, isFalse);
+    expect(
+      () => CCRouter.registeredComponents,
+      throwsA(isA<CCRouterNotInitializedError>()),
+    );
+  });
 }

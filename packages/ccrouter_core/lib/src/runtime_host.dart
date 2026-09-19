@@ -14,7 +14,7 @@ final class CCRouterRuntime {
   /// supplied navigation adapter is initialized and disposed by this Runtime.
   factory CCRouterRuntime.forHost({
     int traceCapacity = 1000,
-    int navigationEventCapacity = 1000,
+    int navigationDiagnosticCapacity = 1000,
     Iterable<CCComponentManifest> components = const [],
     CCNavigationAdapter? navigationAdapter,
     Iterable<CCGlobalNavigationInterceptor> globalInterceptors = const [],
@@ -27,7 +27,7 @@ final class CCRouterRuntime {
         CCNavigationConcurrencyPolicy.allow,
   }) => CCRouterRuntime._(
     traceCapacity: traceCapacity,
-    navigationEventCapacity: navigationEventCapacity,
+    navigationDiagnosticCapacity: navigationDiagnosticCapacity,
     components: components,
     navigationAdapter: navigationAdapter,
     globalInterceptors: globalInterceptors,
@@ -47,7 +47,7 @@ final class CCRouterRuntime {
   @visibleForTesting
   factory CCRouterRuntime.forTesting({
     int traceCapacity = 1000,
-    int navigationEventCapacity = 1000,
+    int navigationDiagnosticCapacity = 1000,
     Iterable<CCComponentManifest> components = const [],
     CCNavigationAdapter? navigationAdapter,
     Iterable<CCGlobalNavigationInterceptor> globalInterceptors = const [],
@@ -60,7 +60,7 @@ final class CCRouterRuntime {
         CCNavigationConcurrencyPolicy.allow,
   }) => CCRouterRuntime._(
     traceCapacity: traceCapacity,
-    navigationEventCapacity: navigationEventCapacity,
+    navigationDiagnosticCapacity: navigationDiagnosticCapacity,
     components: components,
     navigationAdapter: navigationAdapter,
     globalInterceptors: globalInterceptors,
@@ -77,7 +77,7 @@ final class CCRouterRuntime {
   /// begins; component route interceptors are registered by their registrars.
   CCRouterRuntime._({
     this.traceCapacity = 1000,
-    this.navigationEventCapacity = 1000,
+    this.navigationDiagnosticCapacity = 1000,
     Iterable<CCComponentManifest> components = const [],
     CCNavigationAdapter? navigationAdapter,
     Iterable<CCGlobalNavigationInterceptor> globalInterceptors = const [],
@@ -95,10 +95,10 @@ final class CCRouterRuntime {
     if (traceCapacity < 0) {
       throw ArgumentError.value(traceCapacity, 'traceCapacity');
     }
-    if (navigationEventCapacity < 0) {
+    if (navigationDiagnosticCapacity < 0) {
       throw ArgumentError.value(
-        navigationEventCapacity,
-        'navigationEventCapacity',
+        navigationDiagnosticCapacity,
+        'navigationDiagnosticCapacity',
       );
     }
     _installComponents(components);
@@ -116,8 +116,13 @@ final class CCRouterRuntime {
   /// Maximum number of trace and subscriber error records retained.
   final int traceCapacity;
 
-  /// Maximum number of navigation lifecycle events retained for diagnostics.
-  final int navigationEventCapacity;
+  /// Maximum retained records in each bounded navigation diagnostic history.
+  ///
+  /// The limit applies independently to lifecycle, failure, visibility, Route
+  /// Entry, Backend, and restoration histories. Active structural state is not
+  /// evicted by this value. Zero disables retained histories while live
+  /// listeners and navigation behavior remain active.
+  final int navigationDiagnosticCapacity;
 
   /// Policy for overlapping requests with the same structured navigation key.
   ///
@@ -330,25 +335,19 @@ final class CCRouterRuntime {
   List<CCInvocationError> get subscriberErrors =>
       List.unmodifiable(_subscriberErrors);
 
-  /// Freezes registration and starts accepting operations.
+  /// Starts the Runtime with its validated framework-wide configuration.
   ///
-  /// Framework hosts call this after all component registrars complete. The
-  /// navigation adapter receives the stable route table before operations are
-  /// accepted; no capability may be added after initialization.
-  Future<void> initialize() async {
+  /// Component manifests supplied to the constructor are installed before this
+  /// call, so initialization validates one complete graph atomically. Hosts may
+  /// bind an Adapter afterward; direct registry mutation remains frozen once
+  /// initialization completes. Successful return means the Runtime is ready;
+  /// this method never schedules asynchronous initialization work.
+  void initialize() {
     if (_disposed) throw const CCScopeClosedError('runtime');
     if (_initialized) return;
-    _routeRegistry.validatePlacements();
-    _routeRegistry.validateInterceptors({
-      for (final entry in _routeInterceptors.entries)
-        entry.key: entry.value.ownerComponentId,
-    });
-    _routeRegistry.validatePopGuards({
-      for (final entry in _routePopGuards.entries)
-        entry.key: entry.value.ownerComponentId,
-    });
+    _validateRouteConfiguration();
     _validateNavigationAdapterCapabilities();
-    await _navigationAdapter?.initialize(
+    _navigationAdapter?.initialize(
       _routeRegistry.navigationRoutes,
       shells: _shellRegistry.navigationShells,
     );
@@ -359,9 +358,67 @@ final class CCRouterRuntime {
       );
     }
     _attachBackendNavigationSource();
-    await _readInitialBackendSnapshot();
+    _readInitialBackendSnapshot();
     _initialized = true;
     _attachRestorationOpportunitySource();
+  }
+
+  /// Attaches and initializes the single navigation Adapter for this Runtime.
+  ///
+  /// Application Host integration calls this after Runtime initialization. The
+  /// operation synchronously validates capabilities, configures the Adapter,
+  /// and imports its initial stack. The Runtime takes ownership only after all
+  /// steps succeed and disposes the Adapter during [dispose]. Business and
+  /// component code must not bind navigation infrastructure directly.
+  void attachNavigationAdapter(CCNavigationAdapter adapter) {
+    _ensureInitialized();
+    if (_navigationAdapter != null) {
+      throw const CCNavigationAdapterError(
+        'A navigation adapter is already bound to this Runtime.',
+      );
+    }
+    _navigationAdapter = adapter;
+    try {
+      _validateNavigationAdapterCapabilities();
+      adapter.initialize(
+        _routeRegistry.navigationRoutes,
+        shells: _shellRegistry.navigationShells,
+      );
+      if (adapter is CCNavigationPopGuardBinding) {
+        (adapter as CCNavigationPopGuardBinding).bindPopGuardEvaluator(
+          _evaluatePopGuardsForActiveEntry,
+        );
+      }
+      _attachBackendNavigationSource();
+      _readInitialBackendSnapshot();
+    } catch (_) {
+      if (adapter is CCNavigationPopGuardBinding) {
+        (adapter as CCNavigationPopGuardBinding).bindPopGuardEvaluator(null);
+      }
+      _backendNavigationRemover?.call();
+      _backendNavigationRemover = null;
+      _predictiveBackRemover?.call();
+      _predictiveBackRemover = null;
+      _backendEntries.clear();
+      _processedBackendOperations.clear();
+      _backendSequencesByHost.clear();
+      _desynchronizedBackendHosts.clear();
+      _navigationAdapter = null;
+      rethrow;
+    }
+  }
+
+  /// Validates cross-route placement and policy references after registration.
+  void _validateRouteConfiguration() {
+    _routeRegistry.validatePlacements();
+    _routeRegistry.validateInterceptors({
+      for (final entry in _routeInterceptors.entries)
+        entry.key: entry.value.ownerComponentId,
+    });
+    _routeRegistry.validatePopGuards({
+      for (final entry in _routePopGuards.entries)
+        entry.key: entry.value.ownerComponentId,
+    });
   }
 
   /// Rejects static navigation structures unsupported by a capability-aware
@@ -905,7 +962,7 @@ final class CCRouterRuntime {
       _predictiveBackRemover = null;
       _restorationOpportunityRemover?.call();
       _restorationOpportunityRemover = null;
-      await _navigationAdapter?.dispose();
+      _navigationAdapter?.dispose();
     } finally {
       await _sessionScope?.close();
       await appScope.close();

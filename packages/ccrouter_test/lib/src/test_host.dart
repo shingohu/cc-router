@@ -11,12 +11,12 @@ import 'package:ccrouter_core/ccrouter_core.dart';
 final class CCRouterTestHost {
   /// Creates an isolated test host from immutable component and adapter input.
   ///
-  /// The host does not initialize synchronously. Call [initialize] before
-  /// using [runtime], then call [dispose] in test teardown even when setup
+  /// Call [initialize] before using [runtime], then await [dispose] in test
+  /// teardown so asynchronous Scope resources are released even when setup
   /// fails part way through.
   factory CCRouterTestHost({
     int traceCapacity = 1000,
-    int navigationEventCapacity = 1000,
+    int navigationDiagnosticCapacity = 1000,
     Iterable<CCComponentManifest> components = const [],
     CCNavigationAdapter? navigationAdapter,
     Iterable<CCGlobalNavigationInterceptor> globalInterceptors = const [],
@@ -30,7 +30,7 @@ final class CCRouterTestHost {
   }) => CCRouterTestHost._(
     CCRouterRuntime.forHost(
       traceCapacity: traceCapacity,
-      navigationEventCapacity: navigationEventCapacity,
+      navigationDiagnosticCapacity: navigationDiagnosticCapacity,
       components: components,
       navigationAdapter: navigationAdapter,
       globalInterceptors: globalInterceptors,
@@ -61,17 +61,17 @@ final class CCRouterTestHost {
   ///
   /// Initialization errors are forwarded unchanged so tests can assert the
   /// same configuration failures that an application host would receive.
-  Future<void> initialize() async {
+  void initialize() {
     if (_disposed) {
       throw StateError('CCRouterTestHost has been disposed.');
     }
-    await runtime.initialize();
+    runtime.initialize();
   }
 
   /// Disposes the Runtime and all resources owned by this test host.
   ///
   /// Teardown is idempotent, which makes it safe to register [dispose] with
-  /// `addTearDown` before an asynchronous test setup has finished.
+  /// `addTearDown` before the test starts resolving scoped resources.
   Future<void> dispose() async {
     if (_disposed) return;
     _disposed = true;

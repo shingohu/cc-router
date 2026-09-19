@@ -34,8 +34,8 @@ extension CCRouterRuntimeRouteVisibility on CCRouterRuntime {
       timestamp: DateTime.now(),
       reason: reason,
     );
-    if (navigationEventCapacity > 0) {
-      if (_routeVisibilityEvents.length == navigationEventCapacity) {
+    if (navigationDiagnosticCapacity > 0) {
+      if (_routeVisibilityEvents.length == navigationDiagnosticCapacity) {
         _routeVisibilityEvents.removeFirst();
       }
       _routeVisibilityEvents.add(event);

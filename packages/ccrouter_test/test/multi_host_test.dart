@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:ccrouter/ccrouter_host.dart';
 import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 import 'package:ccrouter_core/ccrouter_core.dart';
@@ -103,12 +101,12 @@ final class _HostAdapter
   CCNavigationAdapterCapabilities get capabilities => delegate.capabilities;
 
   @override
-  Future<void> initialize(
+  void initialize(
     List<CCNavigationRoute> routes, {
     List<CCNavigationShell> shells = const [],
   }) {
     initializedRouteIds = routes.map((route) => route.routeId).toList();
-    return delegate.initialize(routes, shells: shells);
+    delegate.initialize(routes, shells: shells);
   }
 
   @override
@@ -154,9 +152,9 @@ final class _HostAdapter
   bool canPop() => delegate.canPop();
 
   @override
-  Future<void> dispose() async {
+  void dispose() {
     disposed = true;
-    await delegate.dispose();
+    delegate.dispose();
   }
 }
 
@@ -195,29 +193,33 @@ final class _ExactRemovalHostAdapter extends _HostAdapter
   }
 }
 
-final class _DelayedHostAdapter extends _HostAdapter {
-  _DelayedHostAdapter(super.hostId);
-
-  final Completer<void> initializeGate = Completer<void>();
-
-  bool initializeStarted = false;
+final class _FailingInitializeHostAdapter extends _HostAdapter {
+  _FailingInitializeHostAdapter(super.hostId);
 
   int disposeCalls = 0;
 
   @override
-  Future<void> initialize(
+  void initialize(
     List<CCNavigationRoute> routes, {
     List<CCNavigationShell> shells = const [],
-  }) async {
-    initializeStarted = true;
-    await initializeGate.future;
-    await super.initialize(routes, shells: shells);
+  }) {
+    throw const CCNavigationAdapterError('Synthetic initialization failure.');
   }
 
   @override
-  Future<void> dispose() async {
+  void dispose() {
     disposeCalls++;
-    await super.dispose();
+    super.dispose();
+  }
+}
+
+final class _ThrowingDisposeHostAdapter extends _HostAdapter {
+  _ThrowingDisposeHostAdapter(super.hostId);
+
+  @override
+  void dispose() {
+    super.dispose();
+    throw StateError('Synthetic disposal failure.');
   }
 }
 
@@ -242,7 +244,7 @@ void main() {
         ],
       );
       addTearDown(runtime.dispose);
-      await runtime.initialize();
+      runtime.initialize();
 
       expect(primary.initializedRouteIds, ['shared.detail']);
       expect(secondary.initializedRouteIds, [
@@ -310,7 +312,7 @@ void main() {
       defaultHostId: primary.hostId,
       adapters: {primary.hostId: primary},
     );
-    await registry.initialize([
+    registry.initialize([
       CCNavigationRoute(
         routeId: 'shared.detail',
         patterns: [const CCPathPattern('/shared/:value', primary: true)],
@@ -321,27 +323,27 @@ void main() {
     addTearDown(registry.dispose);
 
     final external = _HostAdapter('window.external');
-    await registry.registerHost(external.hostId, external);
+    registry.registerHost(external.hostId, external);
     expect(registry.registeredHostIds, contains(external.hostId));
     expect(external.initializedRouteIds, ['shared.detail']);
     registry.activateHost(external.hostId);
     expect(registry.activeHostId, external.hostId);
 
-    await registry.unregisterHost(external.hostId);
+    registry.unregisterHost(external.hostId);
     expect(external.disposed, isTrue);
     expect(registry.activeHostId, primary.hostId);
     expect(registry.registeredHostIds, {primary.hostId});
   });
 
   test(
-    'dispose waits for an in-flight Host registration and releases it once',
-    () async {
+    'failed synchronous Host registration is atomic and releases ownership',
+    () {
       final primary = _HostAdapter('window.primary');
       final registry = CCNavigationHostRegistry(
         defaultHostId: primary.hostId,
         adapters: {primary.hostId: primary},
       );
-      await registry.initialize([
+      registry.initialize([
         CCNavigationRoute(
           routeId: 'shared.detail',
           patterns: [const CCPathPattern('/shared/:value', primary: true)],
@@ -349,21 +351,36 @@ void main() {
           deepLink: CCDeepLinkPolicy.disabled,
         ),
       ]);
-      final delayed = _DelayedHostAdapter('window.delayed');
+      final failing = _FailingInitializeHostAdapter('window.failing');
 
-      final registration = registry.registerHost(delayed.hostId, delayed);
-      expect(delayed.initializeStarted, isTrue);
-      final disposal = registry.dispose();
-      expect(identical(disposal, registry.dispose()), isTrue);
-      delayed.initializeGate.complete();
+      expect(
+        () => registry.registerHost(failing.hostId, failing),
+        throwsA(isA<CCNavigationAdapterError>()),
+      );
+      expect(registry.registeredHostIds, isNot(contains(failing.hostId)));
+      expect(failing.disposeCalls, 1);
 
-      await expectLater(registration, throwsA(isA<CCNavigationAdapterError>()));
-      await disposal;
-      expect(delayed.disposeCalls, 1);
+      registry.dispose();
+      registry.dispose();
       expect(primary.disposed, isTrue);
       expect(registry.registeredHostIds, isEmpty);
     },
   );
+
+  test('registry releases every Host when one synchronous dispose fails', () {
+    final failing = _ThrowingDisposeHostAdapter('window.failing');
+    final healthy = _HostAdapter('window.healthy');
+    final registry = CCNavigationHostRegistry(
+      defaultHostId: failing.hostId,
+      adapters: {failing.hostId: failing, healthy.hostId: healthy},
+    );
+    registry.initialize(const []);
+
+    expect(() => registry.dispose(), throwsA(isA<StateError>()));
+    expect(failing.disposed, isTrue);
+    expect(healthy.disposed, isTrue);
+    expect(registry.registeredHostIds, isEmpty);
+  });
 
   test(
     'detaching a Host removes only its Entries and completes pending results',
@@ -385,7 +402,7 @@ void main() {
         ],
       );
       addTearDown(runtime.dispose);
-      await runtime.initialize();
+      runtime.initialize();
 
       await runtime.goRoute(
         const _Intent<void>('shared.detail', _Arguments('primary-root')),
@@ -399,7 +416,7 @@ void main() {
       );
       expect(runtime.activeRouteEntries, hasLength(3));
 
-      await registry.unregisterHost(secondary.hostId);
+      registry.unregisterHost(secondary.hostId);
 
       expect(await secondaryResult, isNull);
       expect(secondary.disposed, isTrue);
@@ -446,7 +463,7 @@ void main() {
       ],
     );
     addTearDown(runtime.dispose);
-    await runtime.initialize();
+    runtime.initialize();
 
     final listResult = runtime.pushRoute<String>(
       const _Intent<String>('workspace.list', _Arguments('all')),
@@ -518,7 +535,7 @@ void main() {
         ],
       );
       addTearDown(runtime.dispose);
-      await runtime.initialize();
+      runtime.initialize();
 
       final result = runtime.pushRoute<String>(
         const _Intent<String>('shared.detail', _Arguments('temporary')),
@@ -558,7 +575,7 @@ void main() {
         ],
       );
       addTearDown(runtime.dispose);
-      await runtime.initialize();
+      runtime.initialize();
 
       await expectLater(
         runtime.pushRoute<String>(

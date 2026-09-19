@@ -42,8 +42,8 @@ extension CCRouterRuntimeNavigationLifecycle on CCRouterRuntime {
       timestamp: DateTime.now(),
       errorType: errorType,
     );
-    if (navigationEventCapacity > 0) {
-      if (_navigationEvents.length == navigationEventCapacity) {
+    if (navigationDiagnosticCapacity > 0) {
+      if (_navigationEvents.length == navigationDiagnosticCapacity) {
         _navigationEvents.removeFirst();
       }
       _navigationEvents.add(event);

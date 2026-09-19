@@ -80,8 +80,9 @@ extension CCRouterRuntimeRestorationDiagnostics on CCRouterRuntime {
       applicationVersion: applicationVersion,
       telemetryContext: _snapshotTelemetryContext(),
     );
-    if (navigationEventCapacity > 0) {
-      if (_restorationOpportunityEvents.length == navigationEventCapacity) {
+    if (navigationDiagnosticCapacity > 0) {
+      if (_restorationOpportunityEvents.length ==
+          navigationDiagnosticCapacity) {
         _restorationOpportunityEvents.removeFirst();
       }
       _restorationOpportunityEvents.add(event);

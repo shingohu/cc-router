@@ -54,7 +54,7 @@ void main() {
         ],
       );
       final runtime = CCRouterRuntime.forTesting(
-        navigationEventCapacity: 2,
+        navigationDiagnosticCapacity: 2,
         restorationOpportunitySource: source,
         telemetryContextProvider: const _TelemetryProvider(),
         components: const [
@@ -65,7 +65,7 @@ void main() {
           ),
         ],
       );
-      await runtime.initialize();
+      runtime.initialize();
 
       final initial = runtime.recentRouteRestorationOpportunities.single;
       expect(initial.reason, isNotNull);

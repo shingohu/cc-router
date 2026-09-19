@@ -104,8 +104,8 @@ abstract interface class CCNavigationInterceptor {
 
 /// Stable registration for one global navigation interceptor.
 ///
-/// Hosts use this value when configuring `CCRouter.initialize`; IDs determine
-/// deterministic global execution order and diagnostic identity.
+/// Hosts use this value in their managed App options; IDs determine deterministic
+/// global execution order and diagnostic identity.
 final class CCGlobalNavigationInterceptor {
   /// Creates a named global interceptor registration.
   const CCGlobalNavigationInterceptor({

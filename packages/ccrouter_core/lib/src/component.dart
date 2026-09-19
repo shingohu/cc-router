@@ -3,7 +3,7 @@ part of 'runtime.dart';
 /// Registers one component's capabilities with the Runtime.
 ///
 /// Generated component code implements this interface to register routes,
-/// services, and handlers during `CCRouter.initialize`. Registrars must not be
+/// services, and handlers during Runtime initialization. Registrars must not be
 /// invoked directly by business code or retain the supplied Registry.
 abstract interface class CCComponentRegistrar {
   /// Adds this component's capabilities to the restricted [registry].
@@ -12,8 +12,8 @@ abstract interface class CCComponentRegistrar {
 
 /// Machine-readable description and capability registrar for one component.
 ///
-/// Application assembly supplies manifests to `CCRouter.initialize` so the
-/// Runtime can validate dependencies and install capabilities deterministically.
+/// Application assembly supplies manifests during Runtime initialization so
+/// dependencies can be validated and capabilities installed deterministically.
 final class CCComponentManifest {
   /// Creates an immutable component manifest.
   const CCComponentManifest({

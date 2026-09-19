@@ -482,7 +482,10 @@ abstract interface class CCNavigationPredictiveBackSourceProvider {
 /// from transition events and managed RouteEntry lifecycle.
 abstract interface class CCNavigationBackendSnapshotSource {
   /// Reads active backend entries that predate Runtime event observation.
-  Future<List<CCNavigationBackendEntrySnapshot>> readInitialBackendSnapshot();
+  ///
+  /// The snapshot must already be available in adapter memory so attachment is
+  /// atomic and navigation cannot race an asynchronous initial-stack import.
+  List<CCNavigationBackendEntrySnapshot> readInitialBackendSnapshot();
 }
 
 /// Optional Adapter SPI that provides ownership-aware Pop outcomes.

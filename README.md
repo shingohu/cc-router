@@ -26,7 +26,7 @@ fvm flutter run
 
 ## 当前行为
 
-业务 App 通过 `CCRouter.initialize(components: ...)` 初始化。`CCRouter` 内部创建并持有默认 Runtime，业务代码不直接管理它；App 退出或宿主销毁时调用 `CCRouter.shutdown()`。默认 Runtime 存活期间重复初始化会明确失败。
+业务 App 通过同步的 `CCRouter.initialize(components: ...)` 原子初始化框架全局配置和完整的启动期组件集合。`CCRouter` 内部创建并持有默认 Runtime，业务代码不直接管理它；App 退出或宿主销毁时等待异步的 `CCRouter.shutdown()`。默认 Runtime 存活期间重复初始化会明确失败，启动组件集合不能在初始化后追加或替换。
 
 组件使用 `CCComponentManifest` 与手工 `CCComponentRegistrar` 装配。Runtime 检查重复组件 ID、必需依赖、循环依赖和重复能力；Registrar 按依赖顺序与稳定 ID 顺序执行。未来生成器生成同样的 Registrar。
 

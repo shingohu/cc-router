@@ -63,7 +63,7 @@ void main() {
         ],
       );
       addTearDown(host.dispose);
-      await host.initialize();
+      host.initialize();
 
       final events = <CCRouteVisibilityEvent>[];
       final removeListener = host.runtime.addRouteVisibilityListener(

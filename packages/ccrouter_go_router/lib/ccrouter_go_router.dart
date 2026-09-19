@@ -3,6 +3,7 @@ library;
 
 export 'src/adapter.dart';
 export 'src/assembler.dart';
+export 'src/backend.dart';
 export 'src/modal_pages.dart';
 export 'src/navigation_observer.dart';
 export 'src/page.dart';

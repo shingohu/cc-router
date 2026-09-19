@@ -54,8 +54,7 @@ final class CCMemoryNavigationAdapter
 
   /// Returns the current in-memory entries as an initialization snapshot.
   @override
-  Future<List<CCNavigationBackendEntrySnapshot>>
-  readInitialBackendSnapshot() async {
+  List<CCNavigationBackendEntrySnapshot> readInitialBackendSnapshot() {
     _ensureAvailable();
     return List.unmodifiable(
       _entries.map(
@@ -109,10 +108,10 @@ final class CCMemoryNavigationAdapter
 
   /// Initializes this adapter once with installed route metadata.
   @override
-  Future<void> initialize(
+  void initialize(
     List<CCNavigationRoute> routes, {
     List<CCNavigationShell> shells = const [],
-  }) async {
+  }) {
     if (_disposed) {
       throw const CCNavigationAdapterError(
         'The memory navigation adapter has been disposed.',
@@ -296,7 +295,7 @@ final class CCMemoryNavigationAdapter
 
   /// Completes outstanding results with null and clears all retained state.
   @override
-  Future<void> dispose() async {
+  void dispose() {
     if (_disposed) return;
     _disposed = true;
     _initialized = false;

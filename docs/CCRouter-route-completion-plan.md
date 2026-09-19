@@ -110,6 +110,20 @@ BuildContext、Flutter Route、Scope、Extra 或返回 Completer。
 - [x] 执行 Listener、Timer、Pending Navigation、Route/Backend Entry 和 Scope 泄漏回归；
 - [x] 完成全部路由专项、Generator 和 Workspace 回归。
 
+### P3 应用集成入口
+
+- [x] 分别生成 Runtime Manifest 集合和后端 Route Catalog，并通过 Catalog 的组件版本来源
+  校验两者一致性；
+- [x] 应用通过 `CCRouter.initialize(components: ...)` 原子初始化，并显式调用 `shutdown`；
+- [x] `CCRouterApp.managed` 只绑定 Host 与 Backend，并在 Adapter 绑定完成前阻止业务子树
+  挂载；
+- [x] Adapter 注入由 `CCRouterApp.managed` 的私有协调器完成，不开放独立 Controller；
+- [x] `CCGoRouterBackend.managed` 自动组装 Root Observer、GoRouter、Binding 和 Adapter；
+- [x] `CCGoRouterBackend.attach` 保留已有 GoRouter 的应用所有权；
+- [x] 默认 `CCRouterApp(child:)` 保持不拥有 Runtime 的兼容语义；
+- [x] 覆盖绑定成功、失败安全 UI、显式销毁顺序、Router 所有权和生成器聚合回归；
+- [ ] 提供 Navigator 1.0 Backend，供无法迁移到 Router API 的已有项目渐进接入。
+
 ## 4. 回归要求
 
 每个阶段至少执行：

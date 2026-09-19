@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 
 import 'app.dart';
@@ -7,7 +5,8 @@ import 'app.dart';
 /// Host-only Adapter registry for multi-window navigation backends.
 ///
 /// Register one independently owned Adapter per Window or display Host, then
-/// pass this registry to `CCRouter.initialize` as its navigation Adapter.
+/// expose this registry through a `CCRouterAppBackend` initialized by
+/// `CCRouterApp.managed`.
 /// Requests with an explicit route Host remain pinned to that Host; routes
 /// using the `default` placement resolve through [activeHostId]. Business code
 /// should not retain this object or select a Host for ordinary navigation.
@@ -208,29 +207,27 @@ final class CCNavigationHostRegistry
   /// A dynamically added Adapter receives the cached route table before it is
   /// exposed to navigation. Failure leaves the registry unchanged and disposes
   /// the rejected Adapter because ownership transferred to this call.
-  Future<void> registerHost(String hostId, CCNavigationAdapter adapter) =>
-      _trackHostOperation(_registerHost(hostId, adapter));
+  void registerHost(String hostId, CCNavigationAdapter adapter) =>
+      _registerHost(hostId, adapter);
 
-  /// Performs one dynamically tracked Host registration.
-  Future<void> _registerHost(String hostId, CCNavigationAdapter adapter) async {
+  /// Performs one atomic Host registration.
+  void _registerHost(String hostId, CCNavigationAdapter adapter) {
     _ensureNotDisposed();
     _validateHost(hostId, adapter);
-    if (_hosts.containsKey(hostId) || !_hostMutations.add(hostId)) {
+    if (_hosts.containsKey(hostId)) {
       throw CCNavigationAdapterError(
-        'Navigation Host "$hostId" is already registered or changing.',
+        'Navigation Host "$hostId" is already registered.',
       );
     }
     final record = _CCNavigationHostAdapterRecord(adapter);
     try {
-      if (_initialized) await _initializeRecord(hostId, record);
+      if (_initialized) _initializeRecord(hostId, record);
       _ensureNotDisposed();
       _hosts[hostId] = record;
       _bindRecord(hostId, record);
     } catch (_) {
-      await record.dispose();
+      record.dispose();
       rethrow;
-    } finally {
-      _hostMutations.remove(hostId);
     }
   }
 
@@ -239,83 +236,68 @@ final class CCNavigationHostRegistry
   /// The last Host cannot be removed from an initialized registry. Runtime is
   /// notified before disposal so entries owned by the removed Host close their
   /// Route Scopes. Live backend pages are never migrated implicitly.
-  Future<void> unregisterHost(String hostId) =>
-      _trackHostOperation(_unregisterHost(hostId));
+  void unregisterHost(String hostId) => _unregisterHost(hostId);
 
-  /// Performs one dynamically tracked Host removal.
-  Future<void> _unregisterHost(String hostId) async {
+  /// Performs one atomic Host removal.
+  void _unregisterHost(String hostId) {
     _ensureAvailable();
     if (_hosts.length == 1) {
       throw const CCNavigationAdapterError(
         'An initialized Host registry must retain at least one Host.',
       );
     }
-    if (!_hostMutations.add(hostId)) {
+    final record = _hosts.remove(hostId);
+    if (record == null) {
       throw CCNavigationAdapterError(
-        'Navigation Host "$hostId" is already changing.',
+        'Navigation Host "$hostId" is not registered.',
       );
     }
-    try {
-      final record = _hosts.remove(hostId);
-      if (record == null) {
-        throw CCNavigationAdapterError(
-          'Navigation Host "$hostId" is not registered.',
-        );
-      }
-      _unbindRecord(record);
-      _hostByNavigationId.removeWhere((_, value) => value == hostId);
-      _adaptiveLayouts.remove(hostId);
-      if (_activeHostId == hostId) _activeHostId = _hosts.keys.first;
-      final sequence = _nextHostSequence(hostId);
-      _publishBackendEvent(
-        CCNavigationBackendEvent(
-          kind: CCNavigationBackendEventKind.hostDetached,
-          timestamp: DateTime.now(),
-          backendOperationId: '$_registryId-$hostId-detached-$sequence',
-          hostId: hostId,
-          sequence: sequence,
-          placement: CCRoutePlacement(hostId: hostId),
-        ),
-      );
-      _sequencesByHost.remove(hostId);
-      await record.dispose();
-    } finally {
-      _hostMutations.remove(hostId);
-    }
+    _unbindRecord(record);
+    _hostByNavigationId.removeWhere((_, value) => value == hostId);
+    _adaptiveLayouts.remove(hostId);
+    if (_activeHostId == hostId) _activeHostId = _hosts.keys.first;
+    final sequence = _nextHostSequence(hostId);
+    _publishBackendEvent(
+      CCNavigationBackendEvent(
+        kind: CCNavigationBackendEventKind.hostDetached,
+        timestamp: DateTime.now(),
+        backendOperationId: '$_registryId-$hostId-detached-$sequence',
+        hostId: hostId,
+        sequence: sequence,
+        placement: CCRoutePlacement(hostId: hostId),
+      ),
+    );
+    _sequencesByHost.remove(hostId);
+    record.dispose();
   }
 
   /// Initializes every registered Host with only its applicable routes.
   @override
-  Future<void> initialize(
+  void initialize(
     List<CCNavigationRoute> routes, {
     List<CCNavigationShell> shells = const [],
-  }) => _trackHostOperation(_initialize(routes, shells: shells));
+  }) => _initialize(routes, shells: shells);
 
-  /// Initializes child Hosts while participating in disposal coordination.
-  Future<void> _initialize(
+  /// Initializes child Hosts as one synchronous configuration transaction.
+  void _initialize(
     List<CCNavigationRoute> routes, {
     required List<CCNavigationShell> shells,
-  }) async {
+  }) {
     _ensureNotDisposed();
-    if (_initialized || _initializing) {
+    if (_initialized) {
       throw const CCNavigationAdapterError(
         'The navigation Host registry is already initialized.',
       );
     }
-    _initializing = true;
     _routes = List.unmodifiable(routes);
     _shells = List.unmodifiable(shells);
-    try {
-      for (final entry in _hosts.entries) {
-        await _initializeRecord(entry.key, entry.value);
-        _ensureNotDisposed();
-        _bindRecord(entry.key, entry.value);
-      }
+    for (final entry in _hosts.entries) {
+      _initializeRecord(entry.key, entry.value);
       _ensureNotDisposed();
-      _initialized = true;
-    } finally {
-      _initializing = false;
+      _bindRecord(entry.key, entry.value);
     }
+    _ensureNotDisposed();
+    _initialized = true;
   }
 
   /// Executes one request on its resolved Host Adapter.
@@ -394,14 +376,13 @@ final class CCNavigationHostRegistry
 
   /// Reads initial stacks from every snapshot-capable Host.
   @override
-  Future<List<CCNavigationBackendEntrySnapshot>>
-  readInitialBackendSnapshot() async {
+  List<CCNavigationBackendEntrySnapshot> readInitialBackendSnapshot() {
     _ensureAvailable();
     final result = <CCNavigationBackendEntrySnapshot>[];
     for (final entry in _hosts.entries) {
       final adapter = entry.value.adapter;
       if (adapter is! CCNavigationBackendSnapshotSource) continue;
-      final snapshots = await (adapter as CCNavigationBackendSnapshotSource)
+      final snapshots = (adapter as CCNavigationBackendSnapshotSource)
           .readInitialBackendSnapshot();
       result.addAll(
         snapshots.map((snapshot) => _snapshotForHost(entry.key, snapshot)),
@@ -508,15 +489,15 @@ final class CCNavigationHostRegistry
 
   /// Disposes every child Adapter and releases all listener bridges.
   @override
-  Future<void> dispose() => _disposeFuture ??= _dispose();
+  void dispose() {
+    if (_disposed) return;
+    _dispose();
+  }
 
-  /// Performs final teardown after every in-flight Host mutation settles.
-  Future<void> _dispose() async {
+  /// Performs final teardown of every synchronously owned child Adapter.
+  void _dispose() {
     _disposed = true;
     _initialized = false;
-    await Future.wait(
-      _hostOperations.toList().map(_ignoreHostOperationFailure),
-    );
     for (final record in _hosts.values) {
       _unbindRecord(record);
       final adapter = record.adapter;
@@ -526,8 +507,6 @@ final class CCNavigationHostRegistry
     }
     final records = _hosts.values.toList();
     _hosts.clear();
-    _hostMutations.clear();
-    _hostOperations.clear();
     _hostByNavigationId.clear();
     _adaptiveLayouts.clear();
     _adaptiveLayoutListeners.clear();
@@ -537,17 +516,23 @@ final class CCNavigationHostRegistry
     _popGuardEvaluator = null;
     _routes = const [];
     _shells = const [];
-    await Future.wait(records.map((record) => record.dispose()));
+    Object? firstError;
+    StackTrace? firstStackTrace;
+    for (final record in records) {
+      try {
+        record.dispose();
+      } catch (error, stackTrace) {
+        firstError ??= error;
+        firstStackTrace ??= stackTrace;
+      }
+    }
+    if (firstError != null) {
+      Error.throwWithStackTrace(firstError, firstStackTrace!);
+    }
   }
 
   /// Registered child Adapters indexed by concrete Host identity.
   final Map<String, _CCNavigationHostAdapterRecord> _hosts = {};
-
-  /// Host mutations currently awaiting child initialization or disposal.
-  final Set<String> _hostMutations = {};
-
-  /// In-flight initialization and dynamic Host mutations awaited by disposal.
-  final Set<Future<void>> _hostOperations = {};
 
   /// Owning Host indexed by Runtime navigation identity.
   final Map<String, String> _hostByNavigationId = {};
@@ -583,17 +568,11 @@ final class CCNavigationHostRegistry
   /// Host selected for placement-default requests and active Pop commands.
   String _activeHostId;
 
-  /// Whether initialization is currently mutating child Adapters.
-  bool _initializing = false;
-
   /// Whether all initial child Adapters accepted their route tables.
   bool _initialized = false;
 
   /// Whether registry ownership has permanently ended.
   bool _disposed = false;
-
-  /// Memoized teardown operation shared by every disposal caller.
-  Future<void>? _disposeFuture;
 
   /// Active child Adapter used for non-targeted Pop operations.
   CCNavigationAdapter get _activeAdapter {
@@ -633,10 +612,7 @@ final class CCNavigationHostRegistry
   }
 
   /// Initializes one child with its Host-specific route and Shell tables.
-  Future<void> _initializeRecord(
-    String hostId,
-    _CCNavigationHostAdapterRecord record,
-  ) {
+  void _initializeRecord(String hostId, _CCNavigationHostAdapterRecord record) {
     final routes = _routes
         .where(
           (route) =>
@@ -651,7 +627,7 @@ final class CCNavigationHostRegistry
     final shells = _shells
         .where((shell) => shellIds.contains(shell.shellId))
         .toList(growable: false);
-    return record.adapter.initialize(routes, shells: shells);
+    record.adapter.initialize(routes, shells: shells);
   }
 
   /// Connects child backend and predictive sources to merged listeners.
@@ -770,29 +746,6 @@ final class CCNavigationHostRegistry
         select((adapter as CCNavigationAdapterCapabilitySource).capabilities);
   });
 
-  /// Tracks one Host mutation until either success or failure is observed.
-  Future<void> _trackHostOperation(Future<void> operation) {
-    _hostOperations.add(operation);
-    unawaited(
-      operation.then<void>(
-        (_) => _hostOperations.remove(operation),
-        onError: (Object _, StackTrace __) {
-          _hostOperations.remove(operation);
-        },
-      ),
-    );
-    return operation;
-  }
-
-  /// Awaits a mutation during teardown without hiding its error from its owner.
-  Future<void> _ignoreHostOperationFailure(Future<void> operation) async {
-    try {
-      await operation;
-    } catch (_) {
-      // The original caller observes the mutation failure; disposal continues.
-    }
-  }
-
   /// Validates one Host identity and its Adapter Host binding.
   void _validateHost(String hostId, CCNavigationAdapter adapter) {
     if (hostId.isEmpty) {
@@ -842,9 +795,13 @@ final class _CCNavigationHostAdapterRecord {
   /// Removes the child predictive-back subscription.
   void Function()? predictiveRemover;
 
-  /// Memoized Adapter teardown used by concurrent rejection and disposal.
-  Future<void>? _disposeFuture;
+  /// Whether this record has already released its exclusively owned Adapter.
+  bool _disposed = false;
 
   /// Disposes the exclusively owned Adapter exactly once.
-  Future<void> dispose() => _disposeFuture ??= adapter.dispose();
+  void dispose() {
+    if (_disposed) return;
+    _disposed = true;
+    adapter.dispose();
+  }
 }

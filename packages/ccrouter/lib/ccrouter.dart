@@ -11,5 +11,5 @@ export 'package:ccrouter_contracts/ccrouter_contracts.dart'
         CCRouteRestorationOpportunitySource;
 export 'package:ccrouter_core/ccrouter_core.dart'
     hide CCRouterRuntime, CCScope, CCScopeState, CCMemoryNavigationAdapter;
-export 'src/app.dart' hide CCPageLifecycleHostBridge;
-export 'src/facade.dart';
+export 'src/app.dart' hide CCRouterAppBackend, CCPageLifecycleHostBridge;
+export 'src/facade.dart' hide CCRouterHostBinding;

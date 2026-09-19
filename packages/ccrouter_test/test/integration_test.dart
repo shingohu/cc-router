@@ -1,4 +1,7 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:ccrouter/ccrouter.dart';
+import 'package:ccrouter/ccrouter_host.dart';
 import 'package:ccrouter_core/ccrouter_core.dart';
 import 'package:ccrouter_go_router/ccrouter_go_router.dart';
 import 'package:flutter/material.dart';
@@ -86,7 +89,7 @@ final class _RecordingNavigationAdapter
   final List<CCNavigationRequest> requests = [];
 
   @override
-  Future<void> initialize(
+  void initialize(
     List<CCNavigationRoute> routes, {
     List<CCNavigationShell> shells = const [],
   }) => delegate.initialize(routes, shells: shells);
@@ -136,7 +139,7 @@ final class _RecordingNavigationAdapter
   bool canPop() => delegate.canPop();
 
   @override
-  Future<void> dispose() => delegate.dispose();
+  void dispose() => delegate.dispose();
 }
 
 void main() {
@@ -194,7 +197,7 @@ void main() {
       addTearDown(runtime.dispose);
       addTearDown(router.dispose);
 
-      await runtime.initialize();
+      runtime.initialize();
       await tester.pumpWidget(
         CCRouterApp(
           host: host,
@@ -372,7 +375,7 @@ void main() {
       addTearDown(runtime.dispose);
       addTearDown(router.dispose);
 
-      await runtime.initialize();
+      runtime.initialize();
       await tester.pumpWidget(MaterialApp.router(routerConfig: router));
       await tester.pumpAndSettle();
 
@@ -456,7 +459,7 @@ void main() {
     addTearDown(runtime.dispose);
     addTearDown(router.dispose);
 
-    await runtime.initialize();
+    runtime.initialize();
     await tester.pumpWidget(MaterialApp.router(routerConfig: router));
     await tester.pumpAndSettle();
     await runtime.goRoute(const _OrderIntent<void>(_OrderArguments('42')));
@@ -533,7 +536,7 @@ void main() {
       final adapter = _RecordingNavigationAdapter(goRouterAdapter);
       addTearDown(router.dispose);
 
-      await CCRouter.initialize(
+      CCRouter.initialize(
         components: const [
           CCComponentManifest(
             id: 'orders',
@@ -541,8 +544,8 @@ void main() {
             registrar: _OrdersRegistrar(),
           ),
         ],
-        navigationAdapter: adapter,
       );
+      CCRouterHostBinding.attachNavigationAdapter(adapter);
       await tester.pumpWidget(MaterialApp.router(routerConfig: router));
       await tester.pumpAndSettle();
 
@@ -604,7 +607,7 @@ void main() {
     addTearDown(router.dispose);
 
     final registrar = _DisabledRouteRegistrar();
-    await CCRouter.initialize(
+    CCRouter.initialize(
       components: [
         CCComponentManifest(
           id: 'internal',
@@ -612,8 +615,8 @@ void main() {
           registrar: registrar,
         ),
       ],
-      navigationAdapter: adapter,
     );
+    CCRouterHostBinding.attachNavigationAdapter(adapter);
     await tester.pumpWidget(MaterialApp.router(routerConfig: router));
     await tester.pumpAndSettle();
 

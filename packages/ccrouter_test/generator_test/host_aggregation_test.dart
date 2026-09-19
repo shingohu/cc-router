@@ -86,6 +86,9 @@ environment:
     expect(aggregate, contains('ccrouterGeneratedComponentManifests'));
     expect(aggregate, contains('fixtureServiceComponentManifest'));
     expect(aggregate, contains('fixtureServiceComponentRouteCatalog'));
+    expect(aggregate, contains('componentVersions: {'));
+    expect(aggregate, contains('manifest.id: manifest.version'));
+    expect(aggregate, isNot(contains('CCRouterGeneratedHost')));
   });
 
   test('host aggregation joins an external contract to its page binding', () async {

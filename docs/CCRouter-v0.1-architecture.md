@@ -306,14 +306,26 @@ Transient   每次获取或调用
 
 ## 6. 静态 API 设计
 
+应用组合根显式建立 Runtime 和组件集合，再通过 managed App 绑定 Backend；初始化成功后的
 业务代码统一从 `CCRouter` 进入：
 
 ```dart
-await CCRouter.initialize(
-  components: [
-    OrderComponentManifest.generated,
-    PaymentComponentManifest.generated,
+CCRouter.initialize(
+  components: ccrouterGeneratedComponentManifests,
+);
+
+final backend = CCGoRouterBackend.managed(
+  catalog: ccrouterGeneratedRouteCatalog,
+  hostRoutes: [
+    GoRoute(path: '/', builder: (_, _) => const HomePage()),
   ],
+);
+
+runApp(
+  CCRouterApp.managed(
+    backend: backend,
+    child: MaterialApp.router(routerConfig: backend.router),
+  ),
 );
 
 CCRouter.openSession(accountId: authenticatedUser.id);
@@ -340,9 +352,8 @@ CCRouter.event(OrderCreatedEvent(order.id));
 
 ```dart
 abstract final class CCRouter {
-  static Future<void> initialize({
+  static void initialize({
     required Iterable<CCComponentManifest> components,
-    required CCNavigationAdapter navigation,
   });
 
   static Future<void> shutdown();
@@ -372,8 +383,16 @@ abstract final class CCRouter {
 
 ### 6.1 静态 API 的内部实现约束
 
-- `CCRouter.initialize()` 创建并持有默认 Runtime；业务 App 不直接创建或销毁 Runtime。
-- `CCRouter.shutdown()` 停止新调用、销毁默认 Runtime 并清除 Active Runtime。
+- `CCRouter` 创建并持有默认 Runtime；应用组合根显式调用 initialize 和 shutdown，但不直接
+  构造或销毁 Runtime。
+- `CCRouterApp.managed` 是 managed Backend 的唯一绑定入口；内部协调器不对 Host 或业务
+  开放，避免 Adapter 在没有 Widget Host 生命周期的情况下被单独绑定。
+- `CCRouter.initialize(components: ...)` 原子初始化全局配置和完整启动期组件集合，不允许
+  业务代码直接注入 Adapter，也不允许初始化后追加启动组件。
+- `CCRouter.initialize`、Adapter attach、Adapter 初始化和初始 Backend Snapshot 读取均为
+  同步事务；成功返回时必须已经可以导航，异步 Backend 准备必须在 attach 前完成。
+- `CCRouter.shutdown()` 停止新调用、销毁默认 Runtime，并在 Adapter 之后释放 Backend
+  自有资源；它仍为异步，因为必须等待 Scope 和业务资源释放。
 - 其余静态方法只负责转发到当前 Active Runtime。
 - 不允许各子系统维护彼此独立的全局静态 Map。
 - 测试和底层多 Engine/Isolate 宿主可以通过明确标记的测试 API 创建隔离 Runtime，并使用 Runtime Overlay，不修改默认 Runtime。
@@ -384,26 +403,30 @@ abstract final class CCRouter {
 
 ### 6.2 导航适配器绑定
 
-Flutter 应用启动时显式绑定一个导航适配器。简单应用可以直接将 Adapter 的 router 交给 `MaterialApp.router`；需要 Shell、Outlet、Deep Link、生命周期、埋点或多窗口绑定时，再使用可选的 `CCRouterApp` Host：
+Flutter 应用启动时选择一个 Backend。新应用使用 managed GoRouter Backend；已有 Router 使用
+attach Backend 并继续由应用持有 Router：
 
 ```dart
-final host = CCNavigationHost();
-final appRouter = GoRouter(navigatorKey: host.navigatorKey, routes: routes);
+CCRouter.initialize(
+  components: ccrouterGeneratedComponentManifests,
+);
 
-await CCRouter.initialize(
-  components: ApplicationManifest.generated,
-  navigationAdapter: CCGoRouterAdapter(router: appRouter, host: host),
+final backend = CCGoRouterBackend.managed(
+  catalog: ccrouterGeneratedRouteCatalog,
+  hostRoutes: [
+    GoRoute(path: '/', builder: (_, _) => const HomePage()),
+  ],
 );
 
 runApp(
-  CCRouterApp(
-    host: host,
-    child: MaterialApp.router(routerConfig: appRouter),
+  CCRouterApp.managed(
+    backend: backend,
+    child: MaterialApp.router(routerConfig: backend.router),
   ),
 );
 ```
 
-适配器内部可以使用 `NavigatorState`、`RouterDelegate` 或其他 Flutter 机制，但这些细节不暴露给组件调用方。`CCRouterApp` 提供生命周期和 Outlet 绑定，不保存全局 `BuildContext`；无 Context 导航由 Adapter 的根 Outlet 执行。
+适配器内部可以使用 `NavigatorState`、`RouterDelegate` 或其他 Flutter 机制，但这些细节不暴露给组件调用方。`CCRouterApp.managed` 只提供 Backend 与 Outlet 绑定，不保存全局 `BuildContext`，也不控制 Runtime 生命周期；无 Context 导航由 Adapter 的根 Outlet 执行。
 默认 Route Placement 不绑定某个字面 Window ID；Runtime 会使用 Adapter 的 Host Binding
 解析真实 Host ID。只有显式声明的非默认 Host 才要求与 Adapter Host 完全一致。
 
@@ -1087,7 +1110,8 @@ ComponentTestHost
 - 存在已激活依赖方时拒绝停用，除非调用方明确选择级联策略。
 - 停用完成后清除该组件拥有的注册、实例、订阅和诊断状态。
 
-在上述能力完成前，组件集合只允许在 `CCRouter.initialize()` 时确定；不得通过简单增加 `unregister()` 绕过生命周期和依赖治理。
+在上述能力完成前，组件集合只允许通过一次 `CCRouter.initialize(components: ...)` 确定；
+不得通过简单增加 `register/unregister` 绕过生命周期和依赖治理。
 
 ---
 
@@ -1110,6 +1134,12 @@ Android/iOS SDK、权限和 MethodChannel/Pigeon 应通过显式 Service 或 Com
 ## 18. 可观测性与诊断 API
 
 v0.1 先提供机器可读诊断接口，图形化 DevTools 后续实现：
+
+`navigationDiagnosticCapacity` 分别限制每一种 Runtime 导航诊断历史，包括
+Lifecycle、Failure、Visibility、Route Entry、Backend Event、Restoration Opportunity
+以及已移除 Backend Entry 的历史。它不是导航栈容量，也不是全部诊断记录共享的总容量。
+设为 `0` 只关闭历史快照留存，不影响实时 Listener、活跃 RouteEntry、Backend Entry
+或正常导航行为。
 
 ```dart
 CCRouter.diagnostics.recentTraces();

@@ -396,8 +396,8 @@ extension CCRouterRuntimeRouteEntries on CCRouterRuntime {
       timestamp: DateTime.now(),
       reason: reason,
     );
-    if (navigationEventCapacity > 0) {
-      if (_routeEntryEvents.length == navigationEventCapacity) {
+    if (navigationDiagnosticCapacity > 0) {
+      if (_routeEntryEvents.length == navigationDiagnosticCapacity) {
         _routeEntryEvents.removeFirst();
       }
       _routeEntryEvents.add(event);

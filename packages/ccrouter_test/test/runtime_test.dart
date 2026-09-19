@@ -41,7 +41,7 @@ void main() {
           factory: (_) => runtime.service<Counter>(),
         ),
       );
-      await runtime.initialize();
+      runtime.initialize();
       expect(
         () => runtime.service<Counter>(),
         throwsA(isA<CCResolutionError>()),
@@ -65,7 +65,7 @@ void main() {
           factory: (_) => runtime.service<Counter>().id,
         ),
       );
-      await runtime.initialize();
+      runtime.initialize();
       runtime.openSession(accountId: 'account-a');
       runtime.service<String>();
       await runtime.closeSession();
@@ -84,8 +84,8 @@ void main() {
         () => runtime.hasService<Counter>(),
         throwsA(isA<CCRouterNotInitializedError>()),
       );
-      await runtime.initialize();
-      await runtime.initialize();
+      runtime.initialize();
+      runtime.initialize();
       expect(
         () => runtime.registerService(
           CCServiceProvider<Counter>(factory: (_) => Counter('a')),
@@ -111,7 +111,7 @@ void main() {
           },
         ),
       );
-      await runtime.initialize();
+      runtime.initialize();
       expect(creations, 0);
       expect(runtime.service<Counter>().id, 'default');
       expect(runtime.service<Counter>(), same(runtime.service<Counter>()));
@@ -133,7 +133,7 @@ void main() {
         factory: (_) => Counter('preferred'),
       ),
     );
-    await runtime.initialize();
+    runtime.initialize();
     expect(
       runtime.service<Counter>(),
       same(runtime.service<Counter>(key: key)),
@@ -150,7 +150,7 @@ void main() {
           factory: (_) => Counter('promoted'),
         ),
       );
-      await runtime.initialize();
+      runtime.initialize();
 
       final legacy = runtime.service<Counter>();
       final promoted = runtime.service<Counter>(contract: contract);
@@ -232,7 +232,7 @@ void main() {
           factory: (_) => 42,
         ),
       );
-      await runtime.initialize();
+      runtime.initialize();
       expect(runtime.service<String>(key: const CCServiceKey('same')), 's');
       expect(runtime.service<int>(key: const CCServiceKey('same')), 42);
     },
@@ -242,7 +242,7 @@ void main() {
     runtime.registerService(
       CCServiceProvider<Counter>(factory: (_) => throw StateError('factory')),
     );
-    await runtime.initialize();
+    runtime.initialize();
     expect(runtime.serviceOrNull<String>(), isNull);
     expect(runtime.hasService<String>(), isFalse);
     expect(() => runtime.serviceOrNull<Counter>(), throwsStateError);
@@ -258,7 +258,7 @@ void main() {
               circular ? runtime.service<Counter>() : Counter('ready'),
         ),
       );
-      await runtime.initialize();
+      runtime.initialize();
       expect(
         () => runtime.service<Counter>(),
         throwsA(isA<CCResolutionError>()),
@@ -277,7 +277,7 @@ void main() {
           factory: (_) => Counter('session'),
         ),
       );
-      await runtime.initialize();
+      runtime.initialize();
       expect(
         () => runtime.service<Counter>(),
         throwsA(isA<CCResolutionError>()),
@@ -308,7 +308,8 @@ void main() {
       navigationAdapter: CCMemoryNavigationAdapter(),
     );
     try {
-      await Future.wait([first.initialize(), second.initialize()]);
+      first.initialize();
+      second.initialize();
       first.openSession(accountId: 'account-a');
       second.openSession(accountId: 'account-a');
 
@@ -321,7 +322,7 @@ void main() {
   });
 
   test('Session requires a non-empty account identity', () async {
-    await runtime.initialize();
+    runtime.initialize();
     expect(
       () => runtime.openSession(accountId: '  '),
       throwsA(isA<CCResolutionError>()),
@@ -336,7 +337,7 @@ void main() {
         factory: (_) => Counter('s', onDispose: () => disposed.future),
       ),
     );
-    await runtime.initialize();
+    runtime.initialize();
     runtime.openSession(accountId: 'account-a');
     runtime.service<Counter>();
     final close = runtime.closeSession();
@@ -359,7 +360,7 @@ void main() {
         factory: (_) => Counter('transient'),
       ),
     );
-    await runtime.initialize();
+    runtime.initialize();
     final a = runtime.service<Counter>();
     final b = runtime.service<Counter>();
     expect(a, isNot(same(b)));
@@ -409,14 +410,14 @@ void main() {
         () => runtime.registerCommand<Add, int>((_, _) => 0),
         throwsA(isA<CCRegistrationError>()),
       );
-      await runtime.initialize();
+      runtime.initialize();
       expect(await runtime.command(Add(4)), 5);
       expect(await runtime.query(Read()), 7);
     },
   );
 
   test('missing handler fails with a diagnostic trace', () async {
-    await runtime.initialize();
+    runtime.initialize();
     await expectLater(
       runtime.command(Add(1)),
       throwsA(isA<CCResolutionError>()),
@@ -430,7 +431,7 @@ void main() {
       context = ctx;
       return Completer<int>().future;
     });
-    await runtime.initialize();
+    runtime.initialize();
     await expectLater(
       runtime.command(Add(1), timeout: const Duration(milliseconds: 20)),
       throwsA(isA<CCInvocationTimeoutError>()),
@@ -442,7 +443,7 @@ void main() {
   test('zero deadline does not invoke handler', () async {
     var calls = 0;
     runtime.registerCommand<Add, int>((_, _) => ++calls);
-    await runtime.initialize();
+    runtime.initialize();
     await expectLater(
       runtime.command(Add(1), timeout: Duration.zero),
       throwsA(isA<CCInvocationTimeoutError>()),
@@ -456,7 +457,7 @@ void main() {
       calls++;
       return Completer<int>().future;
     });
-    await runtime.initialize();
+    runtime.initialize();
     final cancelled = CCCancellationToken()..cancel();
     await expectLater(
       runtime.command(Add(1), cancellation: cancelled),
@@ -483,7 +484,7 @@ void main() {
         outer = ctx;
         return runtime.query(Read());
       });
-      await runtime.initialize();
+      runtime.initialize();
       final token = CCCancellationToken();
       final call = runtime.command(
         Add(1),
@@ -504,7 +505,7 @@ void main() {
     'disposal cancels pending calls and a disposed Runtime cannot restart',
     () async {
       runtime.registerCommand<Add, int>((_, _) => Completer<int>().future);
-      await runtime.initialize();
+      runtime.initialize();
       final call = runtime.command(Add(1));
       final assertion = expectLater(
         call,
@@ -512,10 +513,7 @@ void main() {
       );
       await runtime.dispose();
       await assertion;
-      await expectLater(
-        runtime.initialize(),
-        throwsA(isA<CCScopeClosedError>()),
-      );
+      expect(() => runtime.initialize(), throwsA(isA<CCScopeClosedError>()));
     },
   );
 
@@ -525,7 +523,7 @@ void main() {
       final order = <String>[];
       runtime.registerAction<Run>('z', (_, _) => order.add('z'));
       runtime.registerAction<Run>('a', (_, _) => order.add('a'));
-      await runtime.initialize();
+      runtime.initialize();
       expect((await runtime.action(Run())).handled, 2);
       expect(order, ['a', 'z']);
     },
@@ -542,7 +540,7 @@ void main() {
       runtime.registerEvent<Changed>('healthy', (_, _) {
         received = true;
       });
-      await runtime.initialize();
+      runtime.initialize();
       await runtime.event(Changed());
       expect(received, isTrue);
       expect(
@@ -555,14 +553,14 @@ void main() {
   test('trace buffer is bounded and can be disabled', () async {
     final bounded = CCRouterRuntime.forTesting(traceCapacity: 1);
     bounded.registerQuery<Read, int>((_, _) => 1);
-    await bounded.initialize();
+    bounded.initialize();
     await bounded.query(Read());
     await bounded.query(Read());
     expect(bounded.recentTraces, hasLength(1));
     await bounded.dispose();
     final disabled = CCRouterRuntime.forTesting(traceCapacity: 0);
     disabled.registerQuery<Read, int>((_, _) => 1);
-    await disabled.initialize();
+    disabled.initialize();
     await disabled.query(Read());
     expect(disabled.recentTraces, isEmpty);
     await disabled.dispose();

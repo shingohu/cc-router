@@ -153,13 +153,13 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
   /// predate Runtime observation and therefore cannot represent a new Push.
   /// Invalid identities fail initialization rather than entering a ledger
   /// that could later be mistaken for a correlated managed transition.
-  Future<void> _readInitialBackendSnapshot() async {
+  void _readInitialBackendSnapshot() {
     final adapter = _navigationAdapter;
     final source = adapter is CCNavigationBackendSnapshotSource
         ? adapter as CCNavigationBackendSnapshotSource
         : null;
     if (source == null) return;
-    final snapshots = await source.readInitialBackendSnapshot();
+    final snapshots = source.readInitialBackendSnapshot();
     for (final snapshot in snapshots) {
       if (snapshot.backendEntryId.isEmpty || snapshot.navigatorOutlet.isEmpty) {
         throw const CCNavigationAdapterError(
@@ -194,8 +194,8 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
     _applyObservedHostLifecycle(event);
     _applyObservedManagedPop(event);
     _applyObservedBackendTop(event);
-    if (navigationEventCapacity > 0) {
-      if (_backendNavigationEvents.length == navigationEventCapacity) {
+    if (navigationDiagnosticCapacity > 0) {
+      if (_backendNavigationEvents.length == navigationDiagnosticCapacity) {
         _backendNavigationEvents.removeFirst();
       }
       _backendNavigationEvents.add(event);
@@ -274,7 +274,7 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
     final operationId = event.backendOperationId;
     if (operationId != null) {
       if (_processedBackendOperations.contains(operationId)) return false;
-      final capacity = max(navigationEventCapacity, 64);
+      final capacity = max(navigationDiagnosticCapacity, 64);
       while (_processedBackendOperations.length >= capacity) {
         _processedBackendOperations.remove(_processedBackendOperations.first);
       }
@@ -341,7 +341,7 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
   /// Bounds removed diagnostic history without evicting live backend Entries.
   ///
   /// Active entries are structural state required for ownership and exact
-  /// visibility correlation, so they may exceed [navigationEventCapacity].
+  /// visibility correlation, so they may exceed [navigationDiagnosticCapacity].
   /// A zero capacity keeps active state while retaining no removed history.
   void _trimRemovedBackendEntries() {
     var removedCount = _backendEntries.values
@@ -350,14 +350,14 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
               entry.lifecycleState == CCBackendEntryLifecycleState.removed,
         )
         .length;
-    if (removedCount <= navigationEventCapacity) return;
+    if (removedCount <= navigationDiagnosticCapacity) return;
     for (final entry in _backendEntries.entries.toList()) {
       if (entry.value.lifecycleState != CCBackendEntryLifecycleState.removed) {
         continue;
       }
       _backendEntries.remove(entry.key);
       removedCount--;
-      if (removedCount <= navigationEventCapacity) return;
+      if (removedCount <= navigationDiagnosticCapacity) return;
     }
   }
 

@@ -1,19 +1,17 @@
 import 'package:ccrouter/ccrouter.dart';
+import 'package:ccrouter_demo/ccrouter_generated/ccrouter_host.routes.g.dart';
 import 'package:ccrouter_demo/main.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('initializes CCRouter and executes the demo Command', (
-    tester,
-  ) async {
-    final host = CCNavigationHost();
-    await tester.pumpWidget(
-      CCRouterApp(
-        host: host,
-        child: CCRouterDemoApp(host: host),
-      ),
-    );
+  setUp(() {
+    CCRouter.initialize(components: ccrouterGeneratedComponentManifests);
+  });
+  tearDown(CCRouter.shutdown);
+
+  testWidgets('initializes CCRouter and opens the order route', (tester) async {
+    await tester.pumpWidget(const CCRouterDemoApp());
     await tester.pump();
 
     expect(find.text('Runtime 已初始化'), findsOneWidget);
@@ -22,10 +20,6 @@ void main() {
     await tester.tap(find.text('开启 Session'));
     await tester.pump();
     expect(find.text('关闭 Session'), findsOneWidget);
-
-    await tester.tap(find.text('调用 CreateOrder Command'));
-    await tester.pump(const Duration(milliseconds: 200));
-    expect(find.text('订单已创建：¥100'), findsOneWidget);
 
     await tester.tap(find.text('打开订单详情'));
     await tester.pumpAndSettle();

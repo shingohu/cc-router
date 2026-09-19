@@ -184,7 +184,7 @@ void main() {
           ),
         ],
       );
-      await runtime.initialize();
+      runtime.initialize();
 
       expect(runtime.registeredShellIds, ['tabs']);
       expect(adapter.shells, hasLength(1));
@@ -253,8 +253,8 @@ void main() {
           ),
         ],
       );
-      await expectLater(
-        runtime.initialize(),
+      expect(
+        () => runtime.initialize(),
         throwsA(isA<CCRouteRegistrationError>()),
       );
       await runtime.dispose();
@@ -277,8 +277,8 @@ void main() {
           ),
         ],
       );
-      await expectLater(
-        missingShell.initialize(),
+      expect(
+        () => missingShell.initialize(),
         throwsA(isA<CCRouteRegistrationError>()),
       );
       await missingShell.dispose();
@@ -305,7 +305,7 @@ void main() {
         ),
       ],
     );
-    await runtime.initialize();
+    runtime.initialize();
     expect(order, ['payment', 'order']);
     expect(runtime.components.map((item) => item.id), order);
     expect(runtime.service<String>(), 'payment');
@@ -336,7 +336,7 @@ void main() {
           ),
         ],
       );
-      await runtime.initialize();
+      runtime.initialize();
 
       expect(runtime.registeredRouteIds, ['orders.detail']);
       expect(runtime.resolveRoute('/orders/latest').pathParameters, isEmpty);
@@ -383,7 +383,7 @@ void main() {
         ),
       ],
     );
-    await runtime.initialize();
+    runtime.initialize();
 
     final path = runtime.resolveRoute('/orders/42');
     expect(path.routeId, 'orders.detail');
@@ -454,7 +454,7 @@ void main() {
           ),
         ],
       );
-      await runtime.initialize();
+      runtime.initialize();
 
       expect(runtime.resolveRoute('/orders/42').routeId, 'generic.detail');
       expect(
@@ -480,7 +480,7 @@ void main() {
         ),
       ],
     );
-    await runtime.initialize();
+    runtime.initialize();
 
     expect(runtime.resolveRoute('/internal/42').routeId, 'orders.internal');
     expect(
@@ -648,7 +648,7 @@ void main() {
         ),
       ],
     );
-    await runtime.initialize();
+    runtime.initialize();
 
     expect(
       () => runtime.resolveRoute('https://legacy.example.com/order/42'),
@@ -743,7 +743,7 @@ void main() {
           factory: (_) => double.parse(runtime.service<String>()),
         ),
       );
-      await runtime.initialize();
+      runtime.initialize();
       runtime.openSession(accountId: 'account-a');
       expect(
         () => runtime.service<double>(),
@@ -772,7 +772,7 @@ void main() {
           },
         ),
       );
-      await runtime.initialize();
+      runtime.initialize();
       runtime.service<Resource>();
       await runtime.dispose();
       expect(order, ['consumer', 'dependency']);

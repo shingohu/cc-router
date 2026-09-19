@@ -38,8 +38,16 @@ final class CCFlutterRouteDestination {
 /// libraries or discovering routes at runtime.
 final class CCFlutterRouteCatalog {
   /// Creates a catalog and rejects duplicate route identities.
-  CCFlutterRouteCatalog(Iterable<CCFlutterRouteDestination> destinations)
-    : destinations = List.unmodifiable(destinations) {
+  ///
+  /// Host-generated catalogs provide [componentVersions] so Backend attachment
+  /// can reject a catalog assembled for a different Runtime component set.
+  /// Component-local and test catalogs may omit it until they are merged by a
+  /// Host generator.
+  CCFlutterRouteCatalog(
+    Iterable<CCFlutterRouteDestination> destinations, {
+    Map<String, String> componentVersions = const {},
+  }) : destinations = List.unmodifiable(destinations),
+       componentVersions = Map.unmodifiable(componentVersions) {
     final routeIds = <String>{};
     for (final destination in this.destinations) {
       if (!routeIds.add(destination.routeId)) {
@@ -53,19 +61,31 @@ final class CCFlutterRouteCatalog {
   }
 
   /// Creates an empty catalog for Hosts without generated Flutter routes.
-  const CCFlutterRouteCatalog.empty() : destinations = const [];
+  const CCFlutterRouteCatalog.empty()
+    : destinations = const [],
+      componentVersions = const {};
 
   /// Merges component catalogs while preserving their declared order.
   ///
   /// Host generators use this constructor after sorting components and routes
   /// deterministically. Duplicate IDs remain an error at the final boundary.
   factory CCFlutterRouteCatalog.merge(
-    Iterable<CCFlutterRouteCatalog> catalogs,
-  ) =>
-      CCFlutterRouteCatalog(catalogs.expand((catalog) => catalog.destinations));
+    Iterable<CCFlutterRouteCatalog> catalogs, {
+    Map<String, String> componentVersions = const {},
+  }) => CCFlutterRouteCatalog(
+    catalogs.expand((catalog) => catalog.destinations),
+    componentVersions: componentVersions,
+  );
 
   /// Destinations in deterministic component and route order.
   final List<CCFlutterRouteDestination> destinations;
+
+  /// Component versions used to generate this Host-level route catalog.
+  ///
+  /// Managed Hosts compare this provenance with the Runtime registration before
+  /// attaching an Adapter. It is diagnostic assembly metadata and must not be
+  /// used by feature code for availability or authorization decisions.
+  final Map<String, String> componentVersions;
 
   /// Returns the destination for [routeId], or null when it is not installed.
   CCFlutterRouteDestination? destinationFor(String routeId) {

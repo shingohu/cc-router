@@ -201,8 +201,8 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
       timestamp: DateTime.now(),
       recovered: recovered,
     );
-    if (navigationEventCapacity > 0) {
-      if (_navigationFailures.length == navigationEventCapacity) {
+    if (navigationDiagnosticCapacity > 0) {
+      if (_navigationFailures.length == navigationDiagnosticCapacity) {
         _navigationFailures.removeFirst();
       }
       _navigationFailures.add(event);

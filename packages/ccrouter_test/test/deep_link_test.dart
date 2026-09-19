@@ -1,4 +1,7 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:ccrouter/ccrouter.dart';
+import 'package:ccrouter/ccrouter_host.dart';
 import 'package:ccrouter_core/ccrouter_core.dart';
 import 'package:test/test.dart';
 
@@ -46,7 +49,7 @@ void main() {
 
   test('fixed ingress methods preserve external origin and source', () async {
     final adapter = CCMemoryNavigationAdapter();
-    await CCRouter.initialize(
+    CCRouter.initialize(
       components: const [
         CCComponentManifest(
           id: 'orders',
@@ -54,8 +57,8 @@ void main() {
           registrar: _DeepLinkRegistrar(),
         ),
       ],
-      navigationAdapter: adapter,
     );
+    CCRouterHostBinding.attachNavigationAdapter(adapter);
 
     const platformSource = CCNavigationSource.deepLink('universal_link');
     await CCDeepLinkIngress.fromPlatform(
@@ -82,7 +85,7 @@ void main() {
 
   test('external ingress still enforces disabled Deep Link policy', () async {
     final adapter = CCMemoryNavigationAdapter();
-    await CCRouter.initialize(
+    CCRouter.initialize(
       components: const [
         CCComponentManifest(
           id: 'orders',
@@ -90,8 +93,8 @@ void main() {
           registrar: _DeepLinkRegistrar(deepLink: CCDeepLinkPolicy.disabled),
         ),
       ],
-      navigationAdapter: adapter,
     );
+    CCRouterHostBinding.attachNavigationAdapter(adapter);
 
     await expectLater(
       CCDeepLinkIngress.fromPlatform(Uri.parse('/orders/42')),

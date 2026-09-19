@@ -870,11 +870,17 @@ Adapter 必须报告：
 
 Generator 不直接生成 `GoRoute`。自定义 Adapter 消费同一份 Definition 和 Intent。
 
-Adapter 生命周期由 `CCRouterRuntime` 统一拥有：初始化完成前拒绝导航，成功
-初始化后才进入 active 状态，Runtime dispose 时调用一次 Adapter dispose；dispose
-后不能再次初始化或导航。Session 关闭、组件停用和单个 RouteEntry Pop 只影响各自
-的 Scope 或栈状态，不触发 Adapter dispose。GoRouter Adapter 不销毁应用创建的
-`GoRouter`，只清理自身的绑定和 RouteEntry 状态。
+Adapter 生命周期由 `CCRouterRuntime` 统一拥有。Adapter `initialize`、初始 Backend Snapshot
+读取和 `dispose` 都是同步事务：attach 返回时必须已经可以导航，失败必须在写入 Runtime
+所有权前同步抛出，dispose 返回时监听器和内存索引必须已经清理。Adapter 不允许在这些方法
+中执行网络、磁盘或 MethodChannel 等异步准备；此类资源由 Host 在构造 Backend 前准备。
+
+`CCRouter.initialize` 同样同步完成全局配置和启动组件注册。`CCRouter.shutdown` 仍为异步，
+因为它需要等待 Route/Session/App Scope、业务 Service dispose 和 Backend 自有资源。Session
+关闭、组件停用和单个 RouteEntry Pop 只影响各自的 Scope 或栈状态，不触发 Adapter
+dispose。GoRouter Adapter 自身不销毁 `GoRouter`，只清理绑定和 RouteEntry 状态；
+`CCGoRouterBackend.managed` 创建的 Router 在 Runtime 完成 Adapter dispose 后由 Backend
+释放，attach 模式下应用创建的 Router 始终由应用释放。
 
 ### 12.1 Shell 与多导航栈
 
@@ -993,28 +999,68 @@ Restoration、桌面窗口重开或异常 Session Marker 等 Host 证据，并�
 - 兼容性降级优先选择“状态未知但不破坏 CCRouter”，而不是“强行同步但可能误删 CCRouter 路由”。
 - 所有无法兼容的外部行为必须进入有界诊断记录，并提供 Host/Adapter 层的修复入口，不能静默改变业务路由结果。
 
-### 12.6 可选 CCRouterApp Host
+### 12.6 CCRouterApp 与 Backend 所有权
 
-`CCRouterApp` 是可选的 Flutter 集成 Host，不是业务 App 必须嵌套的第二个 `MaterialApp`。简单应用可以直接把 GoRouter Adapter 绑定到 `MaterialApp.router`；需要 Shell、Outlet、外部 Deep Link、生命周期、埋点或多窗口能力时使用 `CCRouterApp`：
+`CCRouterApp` 提供两种互不混用的接入模式。应用组合根始终显式调用
+`CCRouter.initialize(components: ...)/shutdown`。新应用优先使用 managed 模式绑定 Backend；
+已有应用可继续使用默认构造器作为不拥有 Runtime 的 Host Wrapper，或者将已有 Router
+包装为 attach Backend。
+
+新应用的默认 GoRouter 接入：
 
 ```dart
-final host = CCNavigationHost();
+CCRouter.initialize(
+  components: ccrouterGeneratedComponentManifests,
+);
 
-CCRouterApp(
-  host: host,
+final backend = CCGoRouterBackend.managed(
+  catalog: ccrouterGeneratedRouteCatalog,
+  hostRoutes: [
+    GoRoute(path: '/', builder: (_, _) => const HomePage()),
+  ],
+);
+
+CCRouterApp.managed(
+  backend: backend,
   child: MaterialApp.router(
-    routerConfig: navigationAdapter.router,
+    routerConfig: backend.router,
   ),
 );
 ```
 
-它负责：
+managed 模式负责：
+
+- 校验 Backend Route Catalog 携带的组件身份和版本与已经注册的 Runtime 组件一致，避免
+  组件安装清单与路由 Catalog 漂移。
+- Adapter 绑定成功前不挂载业务 App 子树，框架使用固定的空加载态。
+- Adapter 绑定失败时上报 `FlutterError` 并展示不泄露异常内容的固定安全错误 UI。
+- Widget 卸载只解除 Host 生命周期观察，不关闭 Runtime 或 Backend。
+- 应用调用 `CCRouter.shutdown` 时先释放 Runtime、Adapter、RouteEntry、Scope 和 Listener，
+  再调用 Backend dispose 释放其自有 Router。
+- 不自动打开或关闭 Session；Session 继续由登录、退出、切换账号等业务流程管理。
+
+默认非 managed 构造器只负责：
 
 - 安装 Flutter App 生命周期监听。
 - 提供供 Host/Adapter 集成代码查询的 Inherited Host 作用域。
 - 挂载和卸载 `CCNavigationHost`，并拒绝同一 Host 被两个 Widget Tree 同时持有。
 - 将 Flutter 前后台状态转换为独立的 Host Lifecycle Event。
 - 在卸载时释放 `WidgetsBindingObserver`，但不销毁 Runtime、GoRouter 或 Navigator Key。
+
+所有权矩阵：
+
+| 资源 | managed GoRouter | attach GoRouter | 默认 Wrapper |
+|---|---|---|---|
+| Runtime | `CCRouter` 持有，应用组合根显式控制生命周期 | 同左 | 同左 |
+| Adapter | Runtime 初始化并销毁 | Runtime 初始化并销毁 | 应用组合根注入 Runtime |
+| GoRouter | Backend 创建并在 Runtime 关闭后销毁 | 应用创建并销毁 | 应用创建并销毁 |
+| Host/Key | Backend 提供，App 挂载 | 应用提供，App 挂载 | 应用或 Wrapper 提供 |
+| Session | 登录/退出业务显式管理 | 登录/退出业务显式管理 | 登录/退出业务显式管理 |
+
+`CCRouterApp` 不复制 `MaterialApp` 的 Theme、Locale、Builder 等 UI 配置，也不把 Core
+绑定到 Material 或 GoRouter。它替代的是应用层手写的 Host、Observer 和 Adapter 绑定样板；实际
+Flutter App 仍作为 `child` 使用 `MaterialApp.router`、`CupertinoApp.router` 或其他
+Router Widget。后续 Navigator 1.0 或其他后端通过同一个 `CCRouterAppBackend` 边界接入。
 
 `CCNavigationHost` 保存不可变的 Root/Outlet Navigator Key 注册表。同一个 Host 实例必须
 同时用于 `GoRouter.navigatorKey`、`CCGoRouterNavigationObserver.hostId` 和
@@ -1456,10 +1502,11 @@ Arrival、Stay 和 Total 分阶段耗时已经通过 Aspect 提供。
 
 ### 阶段 D：GoRouter Adapter
 
-当前已建立 `ccrouter_go_router` 包的基础适配器边界。它接收应用自行配置的
-`GoRouter`，将 Runtime 已解析的 Page 请求映射到 GoRouter，并保留路由所有权、
-来源和 URI 由 Core 管理。GoRouter 仍由应用创建和持有，但普通页面构造器由组件生成的
-后端中立 `CCFlutterRouteCatalog` 提供。
+当前已建立 `ccrouter_go_router` 包的基础适配器边界。它将 Runtime 已解析的 Page 请求
+映射到 GoRouter，并保留路由所有权、来源和 URI 由 Core 管理。普通页面构造器由组件
+生成的后端中立 `CCFlutterRouteCatalog` 提供。新应用使用
+`CCGoRouterBackend.managed` 自动创建 Router、Root Observer、Assembler 和 Adapter；
+已有应用使用 `CCGoRouterBackend.attach` 绑定自行配置且继续自行持有的 Router。
 
 `CCGoRouterAssembler` 消费宿主聚合 Catalog，并从同一来源生成 `routes` 和
 `CCGoRouterRouteBinding`，避免路由树与 Adapter 绑定分别维护。组件 Catalog 不引用
@@ -1503,7 +1550,9 @@ Adapter 的 `go` 进入目标 Shell 分支，不根据 URI 形态绕过策略。
 - 主 Pattern、别名、Query、Extra 和返回值。
 - Shell、Outlet 和生命周期同步。
 - Deep Link 入口。
-- `CCRouterApp` 的 Host、Key 和生命周期最小闭环已完成。
+- `CCRouterApp.managed` 与 `CCGoRouterBackend.managed/attach` 的初始化、Host、Key、
+  Adapter 和 Router 所有权闭环已完成。
+- Navigator 1.0 Backend 尚未实现；它应复用相同 App Backend SPI，不修改业务导航 API。
 - 调用级 `BuildContext` 最近 Outlet 解析仍是可选 Proposal，不属于当前 API。
 - 各平台示例验证属于集成工作，不改变 Adapter 契约。
 

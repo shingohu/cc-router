@@ -478,7 +478,10 @@ Future<void> _generateHostRouteCatalog(
     );
   }
   out
-    ..writeln(']);')
+    ..writeln('], componentVersions: {')
+    ..writeln('  for (final manifest in ccrouterGeneratedComponentManifests)')
+    ..writeln('    manifest.id: manifest.version,')
+    ..writeln('});')
     ..writeln();
   await File(
     '${outputDirectory.path}${Platform.pathSeparator}ccrouter_host.routes.g.dart',

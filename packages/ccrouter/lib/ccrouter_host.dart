@@ -12,7 +12,8 @@ export 'package:ccrouter_contracts/ccrouter_contracts.dart'
         CCRouteRestorationOpportunityReason,
         CCRouteRestorationOpportunitySignal,
         CCRouteRestorationOpportunitySource;
-export 'src/app.dart' show CCPageLifecycleHostBridge;
+export 'src/app.dart' show CCRouterAppBackend, CCPageLifecycleHostBridge;
+export 'src/facade.dart' show CCRouterHostBinding;
 export 'src/multi_host.dart';
 export 'src/restoration_diagnostics.dart';
 export 'src/route_catalog.dart';

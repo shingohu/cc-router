@@ -181,8 +181,7 @@ final class CCGoRouterAdapter
   /// GoRouter stack and its Shell Outlets, but it cannot create a managed
   /// RouteEntry or typed result channel from this snapshot.
   @override
-  Future<List<CCNavigationBackendEntrySnapshot>>
-  readInitialBackendSnapshot() async {
+  List<CCNavigationBackendEntrySnapshot> readInitialBackendSnapshot() {
     _ensureAvailable();
     final snapshots = <CCNavigationBackendEntrySnapshot>[];
     _collectInitialMatches(
@@ -358,10 +357,10 @@ final class CCGoRouterAdapter
   /// navigation. GoRouter remains responsible for matching and rendering the
   /// application's concrete `GoRoute` tree.
   @override
-  Future<void> initialize(
+  void initialize(
     List<CCNavigationRoute> routes, {
     List<CCNavigationShell> shells = const [],
-  }) async {
+  }) {
     _ensureNotDisposed();
     if (_initialized) {
       throw const CCNavigationAdapterError(
@@ -603,7 +602,7 @@ final class CCGoRouterAdapter
 
   /// Clears adapter-owned metadata without disposing the application router.
   @override
-  Future<void> dispose() async {
+  void dispose() {
     if (_disposed) return;
     _disposed = true;
     _initialized = false;

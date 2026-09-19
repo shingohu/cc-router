@@ -164,7 +164,7 @@ void main() {
         navigationAdapter: adapter,
       );
       addTearDown(host.dispose);
-      await host.initialize();
+      host.initialize();
       await host.runtime.openRoute(Uri.parse('/position/base'));
       final pending = host.runtime.pushRoute<String>(
         detailIntent(id: 42, search: 'a/b &雪'),

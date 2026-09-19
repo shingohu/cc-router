@@ -44,8 +44,8 @@ Host 扩展和降级语义。
 - 动态 Host detach 会清理该 Host 的 sequence/desync 状态，允许同 ID Window 重新接入。
 - Multi Host Registry 在 RouteEntry 移除和 Adapter dispatch 失败时释放
   `navigationId -> hostId` 索引，不依赖 Backend Observer 必须存在。
-- Multi Host 初始化、动态注册和卸载纳入 dispose 协调；在途注册不能在 Registry dispose 后
-  重新写回，Adapter 只销毁一次，多次 dispose 共享同一 Future。
+- Multi Host 初始化、动态注册和卸载均为同步原子事务；失败注册不会写入 Registry，Adapter
+  只执行一次同步清理。异步 Scope 和 Backend 资源由 `CCRouter.shutdown()` 统一等待。
 - 恢复机会 Controller 的启动前信号缓冲有明确容量，不能在 Runtime 订阅前无限增长。
 - GoRouter Observer、RouterDelegate、Predictive Back、Foreign Route Bridge、页面生命周期和恢复
   信号订阅均有对应 removal/dispose 路径。
@@ -56,6 +56,7 @@ Host 扩展和降级语义。
 
 - `CCRouterRuntime`、`CCScope`、`CCScopeState`；
 - `CCMemoryNavigationAdapter`；
+- `CCRouterAppBackend`；
 - `CCPageLifecycleHostBridge`；
 - `CCRouteRestorationOpportunitySignal`、`CCRouteRestorationOpportunitySource`；
 - `CCNavigationManagedEntryReleaseSink`。
@@ -63,13 +64,18 @@ Host 扩展和降级语义。
 这些能力分别由 Facade、`ccrouter_host.dart` 或 `ccrouter_test` 提供受控入口。组件 Registrar 仍只
 接收受限 `CCRegistry`，业务代码不能创建、关闭或销毁 Runtime 和 Scope。
 
-`CCNavigationAdapter` 保留为公共宿主注入类型，因为 `CCRouter.initialize()` 支持默认 GoRouter
-之外的自定义实现。Dart 无法同时满足“允许宿主实现并注入接口”和“接口对宿主不可见”；框架通过
-以下约束控制所有权，而不是伪造语言级访问限制：
+`CCNavigationAdapter` 仍是 Adapter Package 和 Host SPI 的公共类型，但业务入口不直接
+注入它。`CCRouter.initialize(components: ...)` 原子初始化全局配置和启动期组件集合。新应用由
+`CCRouterAppBackend` 提供 Adapter，`CCRouterApp.managed` 通过框架私有协调器完成所有权转移。
+Dart 无法同时满足“允许 Adapter Package 实现接口”和“接口对业务不可见”，因此通过分层
+barrel 和以下生命周期约束控制边界：
 
-- Adapter 只能由 `CCRouter.initialize()` 注入并由 Runtime 初始化、销毁；
+- Adapter 由 Backend 交给 `CCRouterApp.managed`，再由 Runtime 初始化、销毁；
+- Adapter 初始化、初始 Backend Snapshot 和 dispose 都是同步事务，返回时状态已经稳定；
+- 异步平台资源必须在 Backend 构造前准备，或在 `CCRouter.shutdown()` 阶段释放；
+- Backend 绑定协调器属于框架内部实现，不从 `ccrouter_host.dart` 导出；
 - dispose 后导航必须失败，且 Runtime 不允许重新初始化；
-- `CCGoRouterAdapter.dispose()` 不销毁应用自己创建的 `GoRouter`；
+- managed Backend 在 Runtime 关闭后销毁自有 GoRouter，attach Backend 不销毁应用 Router；
 - Session、组件、页面 Pop 均不能触发 Adapter dispose。
 
 ## 5. 明确保留的字段和能力

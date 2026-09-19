@@ -9,7 +9,7 @@ void main() {
     addTearDown(host.dispose);
 
     expect(host.isInitialized, isFalse);
-    await host.initialize();
+    host.initialize();
 
     expect(host.isInitialized, isTrue);
     expect(adapter.isInitialized, isTrue);
@@ -26,6 +26,6 @@ void main() {
     final host = CCRouterTestHost();
     await host.dispose();
 
-    await expectLater(host.initialize(), throwsA(isA<StateError>()));
+    expect(() => host.initialize(), throwsA(isA<StateError>()));
   });
 }

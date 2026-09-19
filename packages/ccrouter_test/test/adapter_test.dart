@@ -52,14 +52,14 @@ void main() {
     );
     addTearDown(router.dispose);
 
-    await adapter.initialize(const []);
-    final snapshots = await adapter.readInitialBackendSnapshot();
+    adapter.initialize(const []);
+    final snapshots = adapter.readInitialBackendSnapshot();
 
     expect(adapter.hostId, 'window.main');
     expect(adapter.navigatorKeys['root'], same(host.navigatorKey));
     expect(snapshots, isNotEmpty);
     expect(snapshots.every((entry) => entry.hostId == host.id), isTrue);
-    await adapter.dispose();
+    adapter.dispose();
   });
 
   test('rejects inconsistent Host, Router, Observer, and route bindings', () {
@@ -112,8 +112,8 @@ void main() {
     final adapter = CCGoRouterAdapter(router: router, host: host);
     addTearDown(router.dispose);
 
-    await expectLater(
-      adapter.initialize([
+    expect(
+      () => adapter.initialize([
         route(
           'detail',
           placement: const CCRoutePlacement(hostId: 'window.other'),
@@ -208,9 +208,9 @@ void main() {
       );
       final adapter = CCGoRouterAdapter(router: router);
       addTearDown(router.dispose);
-      await adapter.initialize(const []);
+      adapter.initialize(const []);
 
-      final snapshots = await adapter.readInitialBackendSnapshot();
+      final snapshots = adapter.readInitialBackendSnapshot();
       expect(snapshots, isNotEmpty);
       expect(
         snapshots.every(
@@ -226,7 +226,7 @@ void main() {
         snapshots.map((snapshot) => snapshot.backendEntryId).toSet(),
         hasLength(snapshots.length),
       );
-      await adapter.dispose();
+      adapter.dispose();
     },
   );
 
@@ -238,7 +238,7 @@ void main() {
     final events = <CCNavigationBackendEvent>[];
     adapter.addBackendEventListener(events.add);
     addTearDown(router.dispose);
-    await adapter.initialize(const []);
+    adapter.initialize(const []);
     final locationBeforeBridge = router.routerDelegate.currentConfiguration.uri
         .toString();
 
@@ -279,7 +279,7 @@ void main() {
       router.routerDelegate.currentConfiguration.uri.toString(),
       locationBeforeBridge,
     );
-    await adapter.dispose();
+    adapter.dispose();
   });
 
   test(
@@ -292,7 +292,7 @@ void main() {
       final events = <CCNavigationBackendEvent>[];
       adapter.addBackendEventListener(events.add);
       addTearDown(router.dispose);
-      await adapter.initialize(const []);
+      adapter.initialize(const []);
       final locationBeforeBridge = router
           .routerDelegate
           .currentConfiguration
@@ -310,12 +310,12 @@ void main() {
       );
       final otherAdapter = CCGoRouterAdapter(router: otherRouter);
       addTearDown(otherRouter.dispose);
-      await otherAdapter.initialize(const []);
+      otherAdapter.initialize(const []);
       expect(
         () => otherAdapter.foreignRouteBridge.removeOpaque(opaque),
         throwsA(isA<CCNavigationAdapterError>()),
       );
-      await otherAdapter.dispose();
+      otherAdapter.dispose();
 
       adapter.foreignRouteBridge.removeOpaque(opaque);
 
@@ -343,7 +343,7 @@ void main() {
         () => adapter.foreignRouteBridge.removeOpaque(opaque),
         throwsA(isA<CCNavigationAdapterError>()),
       );
-      await adapter.dispose();
+      adapter.dispose();
     },
   );
 
@@ -364,7 +364,7 @@ void main() {
     final adapter = CCGoRouterAdapter(router: router);
     addTearDown(router.dispose);
 
-    await adapter.initialize([route('detail')]);
+    adapter.initialize([route('detail')]);
     await tester.pumpWidget(MaterialApp.router(routerConfig: router));
     await tester.pumpAndSettle();
 
@@ -401,7 +401,7 @@ void main() {
     );
     final adapter = CCGoRouterAdapter(router: router, observers: [observer]);
     addTearDown(router.dispose);
-    await adapter.initialize([route('detail')]);
+    adapter.initialize([route('detail')]);
     await tester.pumpWidget(MaterialApp.router(routerConfig: router));
     await tester.pumpAndSettle();
 
@@ -441,7 +441,7 @@ void main() {
       lifecycleEventCapacity: 2,
     );
     addTearDown(router.dispose);
-    await adapter.initialize([route('detail', path: '/detail')]);
+    adapter.initialize([route('detail', path: '/detail')]);
     await tester.pumpWidget(MaterialApp.router(routerConfig: router));
     await tester.pumpAndSettle();
     await adapter.navigate(
@@ -461,7 +461,7 @@ void main() {
         CCGoRouterNavigationEventKind.topChanged,
       ]),
     );
-    await adapter.dispose();
+    adapter.dispose();
     expect(adapter.lifecycleEvents, isEmpty);
   });
 
@@ -482,7 +482,7 @@ void main() {
     final adapter = CCGoRouterAdapter(router: router);
     addTearDown(router.dispose);
 
-    await adapter.initialize([route('detail')]);
+    adapter.initialize([route('detail')]);
     await tester.pumpWidget(MaterialApp.router(routerConfig: router));
     await tester.pumpAndSettle();
 
@@ -538,7 +538,7 @@ void main() {
       ],
     );
     addTearDown(router.dispose);
-    await adapter.initialize([
+    adapter.initialize([
       CCNavigationRoute(
         routeId: 'poster',
         patterns: [const CCPathPattern('/poster', primary: true)],
@@ -593,8 +593,8 @@ void main() {
         deepLink: CCDeepLinkPolicy.disabled,
       );
 
-      await expectLater(
-        adapter.initialize([configuredRoute]),
+      expect(
+        () => adapter.initialize([configuredRoute]),
         throwsA(isA<CCNavigationAdapterError>()),
       );
     },
@@ -616,8 +616,8 @@ void main() {
         deepLink: CCDeepLinkPolicy.disabled,
       );
 
-      await expectLater(
-        adapter.initialize([modal]),
+      expect(
+        () => adapter.initialize([modal]),
         throwsA(isA<CCNavigationAdapterError>()),
       );
       expect(adapter.isInitialized, isFalse);
@@ -655,7 +655,7 @@ void main() {
       ],
     );
     addTearDown(router.dispose);
-    await adapter.initialize([
+    adapter.initialize([
       CCNavigationRoute(
         routeId: 'filters',
         patterns: [const CCPathPattern('/filters', primary: true)],
@@ -715,7 +715,7 @@ void main() {
       ],
     );
     addTearDown(router.dispose);
-    await adapter.initialize([
+    adapter.initialize([
       CCNavigationRoute(
         routeId: 'confirm',
         patterns: [const CCPathPattern('/confirm', primary: true)],
@@ -763,23 +763,23 @@ void main() {
       () => adapter.navigate(navigation),
       throwsA(isA<CCNavigationAdapterError>()),
     );
-    await adapter.initialize([route('detail')]);
-    await expectLater(
-      adapter.initialize([route('detail')]),
+    adapter.initialize([route('detail')]);
+    expect(
+      () => adapter.initialize([route('detail')]),
       throwsA(isA<CCNavigationAdapterError>()),
     );
-    await adapter.dispose();
+    adapter.dispose();
     expect(adapter.isInitialized, isFalse);
     expect(
       () => adapter.navigate(navigation),
       throwsA(isA<CCNavigationAdapterError>()),
     );
     expect(() => adapter.canPop(), throwsA(isA<CCNavigationAdapterError>()));
-    await expectLater(
-      adapter.initialize([route('detail')]),
+    expect(
+      () => adapter.initialize([route('detail')]),
       throwsA(isA<CCNavigationAdapterError>()),
     );
-    await adapter.dispose();
+    adapter.dispose();
   });
 
   test('Runtime owns adapter disposal while Session close does not', () async {
@@ -793,7 +793,7 @@ void main() {
       components: const [],
     );
 
-    await runtime.initialize();
+    runtime.initialize();
     runtime.openSession(accountId: 'account');
     await runtime.closeSession();
     expect(adapter.isInitialized, isTrue);
@@ -818,10 +818,10 @@ void main() {
     );
     addTearDown(router.dispose);
 
-    await adapter.initialize([route('detail')]);
+    adapter.initialize([route('detail')]);
     expect(adapter.bindings.single.routeId, 'detail');
     expect(adapter.bindings.single.goRoute, same(goRoute));
-    await adapter.dispose();
+    adapter.dispose();
   });
 
   test('rejects missing and unknown route bindings', () async {
@@ -842,8 +842,8 @@ void main() {
     );
     addTearDown(router.dispose);
 
-    await expectLater(
-      adapter.initialize([route('detail')]),
+    expect(
+      () => adapter.initialize([route('detail')]),
       throwsA(isA<CCNavigationAdapterError>()),
     );
     expect(adapter.isInitialized, isFalse);
@@ -863,8 +863,8 @@ void main() {
       deepLink: CCDeepLinkPolicy.disabled,
       placement: const CCRoutePlacement(navigatorOutlet: 'detail'),
     );
-    await expectLater(
-      adapter.initialize([placed]),
+    expect(
+      () => adapter.initialize([placed]),
       throwsA(isA<CCNavigationAdapterError>()),
     );
     expect(adapter.isInitialized, isFalse);
@@ -877,8 +877,8 @@ void main() {
     final adapter = CCGoRouterAdapter(router: router);
     addTearDown(router.dispose);
 
-    await expectLater(
-      adapter.initialize(
+    expect(
+      () => adapter.initialize(
         const [],
         shells: [
           CCNavigationShell(
@@ -930,8 +930,8 @@ void main() {
       );
       addTearDown(router.dispose);
 
-      await expectLater(
-        adapter.initialize(
+      expect(
+        () => adapter.initialize(
           const [],
           shells: [
             CCNavigationShell(
@@ -984,7 +984,7 @@ void main() {
       shellId: 'workspace-shell',
       navigatorOutlet: 'detail',
     );
-    await adapter.initialize(
+    adapter.initialize(
       [
         CCNavigationRoute(
           routeId: 'detail',
@@ -1074,7 +1074,7 @@ void main() {
       shellId: 'tabs',
       navigatorOutlet: 'settings',
     );
-    await adapter.initialize(
+    adapter.initialize(
       [
         CCNavigationRoute(
           routeId: 'settings.detail',
@@ -1128,7 +1128,7 @@ void main() {
     );
     final adapter = CCGoRouterAdapter(router: router);
     addTearDown(router.dispose);
-    await adapter.initialize([
+    adapter.initialize([
       route('one', path: '/one'),
       route('two', path: '/two'),
       route('three', path: '/three'),
@@ -1184,7 +1184,7 @@ void main() {
     );
     final adapter = CCGoRouterAdapter(router: router);
     addTearDown(router.dispose);
-    await adapter.initialize([
+    adapter.initialize([
       route('one', path: '/one'),
       route('two', path: '/two'),
       route('three', path: '/three'),
@@ -1246,7 +1246,7 @@ void main() {
     );
     final adapter = CCGoRouterAdapter(router: router);
     addTearDown(router.dispose);
-    await adapter.initialize([
+    adapter.initialize([
       route('one', path: '/one'),
       route('two', path: '/two'),
       route('three', path: '/three'),
@@ -1303,7 +1303,7 @@ void main() {
       adapter.addBackendEventListener(backendEvents.add);
       addTearDown(router.dispose);
 
-      await adapter.initialize([
+      adapter.initialize([
         route('one', path: '/one'),
         route('two', path: '/two'),
       ]);

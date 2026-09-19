@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 import 'package:ccrouter_core/ccrouter_core.dart';
 
@@ -18,11 +16,11 @@ abstract final class CCRouter {
   /// Runtime owned by the current isolate's application host.
   static CCRouterRuntime? _defaultRuntime;
 
-  /// Initialization operation currently in progress.
-  static Future<void>? _initializing;
-
   /// Shutdown operation currently in progress.
   static Future<void>? _shuttingDown;
+
+  /// Releases Backend-owned resources after Runtime-owned Adapter disposal.
+  static Future<void> Function()? _backendDisposer;
 
   /// Returns the active Runtime or fails when the host is not initialized.
   static CCRouterRuntime get _runtime {
@@ -194,24 +192,26 @@ abstract final class CCRouter {
     String code = 'pending_cancelled',
   }) => _runtime.cancelPendingNavigation(navigationId, code: code);
 
-  /// Creates, initializes, and owns the application's default Runtime.
+  /// Initializes the default Runtime with configuration and startup components.
   ///
-  /// Call this once during application host startup with the complete component
-  /// assembly. When supplied, [navigationAdapter] is owned, initialized, and
-  /// disposed by CCRouter. Tests that need isolated hosts should use dedicated
-  /// test support. Set [navigationEventCapacity] to bound the in-memory
-  /// navigation telemetry snapshot retained for diagnostics.
+  /// Call this once during application startup with the complete [components]
+  /// assembly. Component manifests are validated and registered before the
+  /// Runtime becomes observable, while navigation Backend binding remains the
+  /// responsibility of the Flutter Host. Set [navigationDiagnosticCapacity] to
+  /// bound each in-memory navigation diagnostic history independently; zero
+  /// disables retained histories without disabling live listeners.
   ///
-  /// A second call before [shutdown] completes throws
-  /// [CCRouterAlreadyInitializedError].
+  /// Initialization is synchronous: successful return means the complete
+  /// component graph is available, while configuration failures throw before
+  /// any Runtime becomes observable. A second call before [shutdown] completes
+  /// throws [CCRouterAlreadyInitializedError].
   /// Global navigation interceptors are ordered by their stable IDs and run
   /// before route-declared interceptors. Navigation aspects are ordered by
   /// stable IDs and observe the same Runtime navigation pipeline.
-  static Future<void> initialize({
+  static void initialize({
     required Iterable<CCComponentManifest> components,
     int traceCapacity = 1000,
-    int navigationEventCapacity = 1000,
-    CCNavigationAdapter? navigationAdapter,
+    int navigationDiagnosticCapacity = 1000,
     Iterable<CCGlobalNavigationInterceptor> globalInterceptors = const [],
     Iterable<CCGlobalPopGuard> globalPopGuards = const [],
     CCNavigationFailurePolicy? navigationFailurePolicy,
@@ -220,18 +220,15 @@ abstract final class CCRouter {
     CCRouteRestorationOpportunitySource? restorationOpportunitySource,
     CCNavigationConcurrencyPolicy navigationConcurrencyPolicy =
         CCNavigationConcurrencyPolicy.allow,
-  }) async {
-    if (_defaultRuntime != null ||
-        _initializing != null ||
-        _shuttingDown != null) {
+  }) {
+    if (_defaultRuntime != null || _shuttingDown != null) {
       throw const CCRouterAlreadyInitializedError();
     }
 
     final runtime = CCRouterRuntime.forHost(
       components: components,
       traceCapacity: traceCapacity,
-      navigationEventCapacity: navigationEventCapacity,
-      navigationAdapter: navigationAdapter,
+      navigationDiagnosticCapacity: navigationDiagnosticCapacity,
       globalInterceptors: globalInterceptors,
       globalPopGuards: globalPopGuards,
       navigationFailurePolicy: navigationFailurePolicy,
@@ -240,17 +237,8 @@ abstract final class CCRouter {
       restorationOpportunitySource: restorationOpportunitySource,
       navigationConcurrencyPolicy: navigationConcurrencyPolicy,
     );
-    final initializing = runtime.initialize();
-    _initializing = initializing;
-    try {
-      await initializing;
-      _defaultRuntime = runtime;
-    } catch (_) {
-      await runtime.dispose();
-      rethrow;
-    } finally {
-      if (identical(_initializing, initializing)) _initializing = null;
-    }
+    runtime.initialize();
+    _defaultRuntime = runtime;
   }
 
   /// Resolves the default or keyed implementation of service contract [T].
@@ -339,24 +327,83 @@ abstract final class CCRouter {
 
   /// Stops the default Runtime and releases all lifecycle-owned resources.
   ///
-  /// Application hosts use this when permanently tearing down the current
-  /// isolate or replacing its complete component assembly.
+  /// Application hosts use this when permanently tearing down the framework.
+  /// A Host Backend registered through [CCRouterHostBinding] is released
+  /// automatically after this call disposes the Runtime-owned navigation
+  /// Adapter.
   ///
   /// Calling this method when no Runtime exists is a no-op.
   static Future<void> shutdown() async {
-    if (_initializing != null) await _initializing;
     final existingShutdown = _shuttingDown;
     if (existingShutdown != null) return existingShutdown;
     final active = _defaultRuntime;
-    if (active == null) return;
+    final disposeBackend = _backendDisposer;
+    if (active == null && disposeBackend == null) {
+      return;
+    }
 
     _defaultRuntime = null;
-    final shuttingDown = active.dispose();
+    _backendDisposer = null;
+    final shuttingDown = _disposeRuntimeAndBackend(active, disposeBackend);
     _shuttingDown = shuttingDown;
     try {
       await shuttingDown;
     } finally {
       if (identical(_shuttingDown, shuttingDown)) _shuttingDown = null;
     }
+  }
+
+  /// Disposes Runtime-owned resources before Backend-owned resources.
+  static Future<void> _disposeRuntimeAndBackend(
+    CCRouterRuntime? runtime,
+    Future<void> Function()? disposeBackend,
+  ) async {
+    Object? runtimeError;
+    StackTrace? runtimeStackTrace;
+    try {
+      await runtime?.dispose();
+    } catch (error, stackTrace) {
+      runtimeError = error;
+      runtimeStackTrace = stackTrace;
+    }
+    try {
+      await disposeBackend?.call();
+    } catch (error, stackTrace) {
+      if (runtimeError == null) {
+        Error.throwWithStackTrace(error, stackTrace);
+      }
+    }
+    if (runtimeError != null) {
+      Error.throwWithStackTrace(runtimeError, runtimeStackTrace!);
+    }
+  }
+}
+
+/// Host-only bridge that binds navigation infrastructure to [CCRouter].
+///
+/// Adapter packages and application composition roots use this after
+/// `CCRouter.initialize` installs the startup components. Business and component
+/// code must navigate through `CCRouter.navigator` and must never access this
+/// ownership boundary.
+abstract final class CCRouterHostBinding {
+  /// Synchronously transfers one ready [adapter] into the active Runtime.
+  ///
+  /// The Runtime configures the Adapter from the registered route table and
+  /// imports its initial stack before this method returns. It owns Adapter
+  /// disposal after success. A failed binding leaves Adapter cleanup with the
+  /// caller so Backend-specific resources can be released deterministically.
+  /// When supplied, [disposeBackend] is retained until `CCRouter.shutdown` and
+  /// runs only after Runtime disposal.
+  static void attachNavigationAdapter(
+    CCNavigationAdapter adapter, {
+    Future<void> Function()? disposeBackend,
+  }) {
+    if (CCRouter._backendDisposer != null) {
+      throw const CCNavigationAdapterError(
+        'A navigation Backend is already bound to CCRouter.',
+      );
+    }
+    CCRouter._runtime.attachNavigationAdapter(adapter);
+    CCRouter._backendDisposer = disposeBackend;
   }
 }

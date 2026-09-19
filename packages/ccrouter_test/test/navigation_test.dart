@@ -90,10 +90,10 @@ final class TestTelemetryContextProvider
 
 final class FailingNavigationAdapter implements CCNavigationAdapter {
   @override
-  Future<void> initialize(
+  void initialize(
     List<CCNavigationRoute> routes, {
     List<CCNavigationShell> shells = const [],
-  }) async {}
+  }) {}
 
   @override
   Future<Object?> navigate(CCNavigationRequest request) async {
@@ -125,7 +125,7 @@ final class FailingNavigationAdapter implements CCNavigationAdapter {
   bool canPop() => false;
 
   @override
-  Future<void> dispose() async {}
+  void dispose() {}
 }
 
 final class BackendEventNavigationAdapter
@@ -158,8 +158,8 @@ final class BackendEventNavigationAdapter
       );
 
   @override
-  Future<List<CCNavigationBackendEntrySnapshot>>
-  readInitialBackendSnapshot() async => initialSnapshot;
+  List<CCNavigationBackendEntrySnapshot> readInitialBackendSnapshot() =>
+      initialSnapshot;
 
   void emit(
     CCNavigationBackendEventKind kind, {
@@ -224,10 +224,10 @@ final class BackendEventNavigationAdapter
   bool canPop() => delegate.canPop();
 
   @override
-  Future<void> dispose() => delegate.dispose();
+  void dispose() => delegate.dispose();
 
   @override
-  Future<void> initialize(
+  void initialize(
     List<CCNavigationRoute> routes, {
     List<CCNavigationShell> shells = const [],
   }) => delegate.initialize(routes, shells: shells);
@@ -360,7 +360,7 @@ void main() {
           ),
         ];
       final runtime = CCRouterRuntime.forTesting(navigationAdapter: adapter);
-      await runtime.initialize();
+      runtime.initialize();
 
       expect(runtime.activeRouteEntries, isEmpty);
       expect(runtime.activeBackendEntries, hasLength(2));
@@ -402,10 +402,10 @@ void main() {
           ),
         ];
       final runtime = CCRouterRuntime.forTesting(
-        navigationEventCapacity: 1,
+        navigationDiagnosticCapacity: 1,
         navigationAdapter: adapter,
       );
-      await runtime.initialize();
+      runtime.initialize();
 
       expect(runtime.activeBackendEntries, hasLength(2));
       await runtime.dispose();
@@ -427,7 +427,7 @@ void main() {
         ],
       );
       expect(
-        modalRuntime.initialize(),
+        () => modalRuntime.initialize(),
         throwsA(isA<CCNavigationAdapterError>()),
       );
       await modalRuntime.dispose();
@@ -442,7 +442,7 @@ void main() {
           ),
         ],
       );
-      await runtime.initialize();
+      runtime.initialize();
       await expectLater(
         runtime.popAndPushRoute<void>(
           const TestIntent<void>('orders.detail', RouteArgs('1')),
@@ -470,7 +470,7 @@ void main() {
         ],
       );
       expect(
-        unsupportedPredictiveRuntime.initialize(),
+        () => unsupportedPredictiveRuntime.initialize(),
         throwsA(isA<CCNavigationAdapterError>()),
       );
       await unsupportedPredictiveRuntime.dispose();
@@ -490,7 +490,7 @@ void main() {
           ),
         ],
       );
-      await runtime.initialize();
+      runtime.initialize();
       final observed = <CCNavigationBackendEvent>[];
       runtime.addBackendNavigationListener(observed.add);
 
@@ -553,7 +553,7 @@ void main() {
           ),
         ],
       );
-      await runtime.initialize();
+      runtime.initialize();
 
       adapter.emit(
         CCNavigationBackendEventKind.push,
@@ -616,10 +616,10 @@ void main() {
   test('backend capacity never evicts active structural entries', () async {
     final adapter = BackendEventNavigationAdapter();
     final runtime = CCRouterRuntime.forTesting(
-      navigationEventCapacity: 2,
+      navigationDiagnosticCapacity: 2,
       navigationAdapter: adapter,
     );
-    await runtime.initialize();
+    runtime.initialize();
 
     for (var index = 0; index < 3; index++) {
       adapter.emit(
@@ -652,10 +652,10 @@ void main() {
   test('zero backend history capacity still deduplicates operations', () async {
     final adapter = BackendEventNavigationAdapter();
     final runtime = CCRouterRuntime.forTesting(
-      navigationEventCapacity: 0,
+      navigationDiagnosticCapacity: 0,
       navigationAdapter: adapter,
     );
-    await runtime.initialize();
+    runtime.initialize();
     final observed = <CCNavigationBackendEvent>[];
     runtime.addBackendNavigationListener(observed.add);
 
@@ -683,7 +683,7 @@ void main() {
     () async {
       final adapter = BackendEventNavigationAdapter();
       final runtime = CCRouterRuntime.forTesting(navigationAdapter: adapter);
-      await runtime.initialize();
+      runtime.initialize();
 
       adapter.emit(
         CCNavigationBackendEventKind.push,
@@ -730,7 +730,7 @@ void main() {
           ),
         ],
       );
-      await runtime.initialize();
+      runtime.initialize();
 
       await runtime.goRoute(
         const TestIntent<void>('orders.detail', RouteArgs('1')),
@@ -873,7 +873,7 @@ void main() {
         ),
       ],
     );
-    await runtime.initialize();
+    runtime.initialize();
 
     adapter.emit(
       CCNavigationBackendEventKind.push,
@@ -951,7 +951,7 @@ void main() {
           }),
         ],
       );
-      await runtime.initialize();
+      runtime.initialize();
 
       await runtime.goRoute(
         const TestIntent<void>('home.detail', RouteArgs('1')),
@@ -1048,7 +1048,7 @@ void main() {
         ),
       ],
     );
-    await runtime.initialize();
+    runtime.initialize();
     await runtime.goRoute(
       const TestIntent<void>('orders.detail', RouteArgs('42')),
     );
@@ -1142,7 +1142,7 @@ void main() {
           ),
         ],
       );
-      await runtime.initialize();
+      runtime.initialize();
       await runtime.goRoute(
         const TestIntent<void>('orders.detail', RouteArgs('1')),
       );
@@ -1193,7 +1193,7 @@ void main() {
           ),
         ],
       );
-      await runtime.initialize();
+      runtime.initialize();
       final lifecycle = <CCRouteEntryLifecycleEvent>[];
       runtime.addRouteEntryListener(lifecycle.add);
 
@@ -1248,7 +1248,7 @@ void main() {
           ),
         ],
       );
-      await runtime.initialize();
+      runtime.initialize();
       await runtime.goRoute(
         const TestIntent<void>('orders.detail', RouteArgs('1')),
       );
@@ -1317,14 +1317,14 @@ void main() {
     );
 
     final firstRuntime = createRuntime();
-    await firstRuntime.initialize();
+    firstRuntime.initialize();
     await firstRuntime.goRoute(
       const TestIntent<void>('orders.detail', RouteArgs('1')),
     );
     final handle = firstRuntime.activeRouteEntries.single.handle;
 
     final secondRuntime = createRuntime();
-    await secondRuntime.initialize();
+    secondRuntime.initialize();
     await secondRuntime.goRoute(
       const TestIntent<void>('orders.detail', RouteArgs('2')),
     );
@@ -1350,7 +1350,7 @@ void main() {
           ),
         ],
       );
-      await runtime.initialize();
+      runtime.initialize();
       await runtime.goRoute(
         const TestIntent<void>('orders.detail', RouteArgs('1')),
       );
@@ -1374,7 +1374,7 @@ void main() {
         ),
       ],
     );
-    await runtime.initialize();
+    runtime.initialize();
     await runtime.goRoute(
       const TestIntent<void>('orders.detail', RouteArgs('1')),
     );
@@ -1417,7 +1417,7 @@ void main() {
         ),
       ],
     );
-    await runtime.initialize();
+    runtime.initialize();
     final lifecycle = <CCRouteEntryLifecycleEvent>[];
     runtime.addRouteEntryListener(lifecycle.add);
     await runtime.goRoute(
@@ -1481,7 +1481,7 @@ void main() {
         }),
       ],
     );
-    await runtime.initialize();
+    runtime.initialize();
 
     await runtime.goRoute(
       const TestIntent<void>('orders.detail', RouteArgs('42')),
@@ -1536,7 +1536,7 @@ void main() {
           ),
         ],
       );
-      await runtime.initialize();
+      runtime.initialize();
 
       await runtime.goRoute(
         const TestIntent<void>('orders.detail', RouteArgs('42')),
@@ -1592,7 +1592,7 @@ void main() {
           ),
         ],
       );
-      await runtime.initialize();
+      runtime.initialize();
 
       await expectLater(
         runtime.goRoute(
@@ -1650,7 +1650,7 @@ void main() {
           ),
         ],
       );
-      await runtime.initialize();
+      runtime.initialize();
 
       await runtime.goRoute(
         const TestIntent<void>('orders.detail', RouteArgs('10001')),
@@ -1754,7 +1754,7 @@ void main() {
         ),
       ],
     );
-    await runtime.initialize();
+    runtime.initialize();
 
     await runtime.goRoute(
       const TestIntent<void>('orders.detail', RouteArgs('42')),
@@ -1792,7 +1792,7 @@ void main() {
         ),
       ],
     );
-    await runtime.initialize();
+    runtime.initialize();
     await runtime.goRoute(
       const TestIntent<void>('orders.detail', RouteArgs('42')),
     );
@@ -1829,7 +1829,7 @@ void main() {
         }),
       ],
     );
-    await runtime.initialize();
+    runtime.initialize();
 
     await runtime.goRoute(
       const TestIntent<void>('orders.detail', RouteArgs('1')),
@@ -1909,7 +1909,7 @@ void main() {
         }),
       ],
     );
-    await runtime.initialize();
+    runtime.initialize();
 
     await runtime.openRoute(
       Uri.parse('/orders/42'),
@@ -1947,7 +1947,7 @@ void main() {
         ),
       ],
     );
-    await cancellation.initialize();
+    cancellation.initialize();
     await expectLater(
       cancellation.goRoute(
         const TestIntent<void>('orders.detail', RouteArgs('42')),
@@ -1972,7 +1972,7 @@ void main() {
         }),
       ],
     );
-    await loop.initialize();
+    loop.initialize();
     await expectLater(
       loop.openRoute(Uri.parse('/orders/42')),
       throwsA(isA<CCRouteRedirectLoopError>()),
@@ -1991,8 +1991,8 @@ void main() {
         ),
       ],
     );
-    await expectLater(
-      runtime.initialize(),
+    expect(
+      () => runtime.initialize(),
       throwsA(isA<CCRouteRegistrationError>()),
     );
     await runtime.dispose();
@@ -2022,8 +2022,8 @@ void main() {
       ],
     );
 
-    await expectLater(
-      runtime.initialize(),
+    expect(
+      () => runtime.initialize(),
       throwsA(isA<CCRouteRegistrationError>()),
     );
     await runtime.dispose();
@@ -2054,7 +2054,7 @@ void main() {
           ),
         ],
       );
-      await runtime.initialize();
+      runtime.initialize();
 
       await expectLater(
         runtime.goRoute(
@@ -2095,7 +2095,7 @@ void main() {
         ),
       ],
     );
-    await runtime.initialize();
+    runtime.initialize();
 
     await expectLater(
       runtime.goRoute(const TestIntent<void>('orders.detail', RouteArgs('42'))),
@@ -2127,7 +2127,7 @@ void main() {
         ),
       ],
     );
-    await runtime.initialize();
+    runtime.initialize();
 
     await expectLater(
       runtime.goRoute(const TestIntent<void>('orders.detail', RouteArgs('42'))),
@@ -2148,7 +2148,7 @@ void main() {
     () async {
       final adapter = CCMemoryNavigationAdapter();
       final runtime = CCRouterRuntime.forTesting(
-        navigationEventCapacity: 2,
+        navigationDiagnosticCapacity: 2,
         navigationAdapter: adapter,
         components: [
           routeComponent(
@@ -2157,7 +2157,7 @@ void main() {
           ),
         ],
       );
-      await runtime.initialize();
+      runtime.initialize();
 
       final events = <CCNavigationLifecycleEvent>[];
       final removeListener = runtime.addNavigationListener(events.add);
@@ -2218,7 +2218,7 @@ void main() {
           ),
         ],
       );
-      await runtime.initialize();
+      runtime.initialize();
 
       const source = CCNavigationSource.feature('home.order_banner');
       final result = runtime.pushRoute<String>(
@@ -2271,7 +2271,7 @@ void main() {
         ),
       ],
     );
-    await runtime.initialize();
+    runtime.initialize();
 
     await runtime.goRoute(
       const TestIntent<void>('orders.scheme', RouteArgs('43', tab: 'history')),
@@ -2299,7 +2299,7 @@ void main() {
           ),
         ],
       );
-      await runtime.initialize();
+      runtime.initialize();
 
       await expectLater(
         runtime.goRoute(
@@ -2337,7 +2337,7 @@ void main() {
           }),
         ],
       );
-      await runtime.initialize();
+      runtime.initialize();
 
       final externalRoute = adapter.routes.singleWhere(
         (route) => route.routeId == 'orders.external',
@@ -2401,7 +2401,7 @@ void main() {
           }),
         ],
       );
-      await runtime.initialize();
+      runtime.initialize();
 
       await runtime.openRoute(
         Uri.parse('/orders/42?token=secret'),
@@ -2435,7 +2435,7 @@ void main() {
           (_) => const CCNavigationFailurePropagate(),
         ),
       );
-      await runtime.initialize();
+      runtime.initialize();
 
       await expectLater(
         runtime.openRoute(Uri.parse('/missing/sensitive-value')),
@@ -2465,7 +2465,7 @@ void main() {
           );
         }),
       );
-      await runtime.initialize();
+      runtime.initialize();
 
       await expectLater(
         runtime.openRoute(Uri.parse('/missing')),
@@ -2501,7 +2501,7 @@ void main() {
           ),
         ],
       );
-      await runtime.initialize();
+      runtime.initialize();
 
       await expectLater(
         runtime.goRoute(
@@ -2528,7 +2528,7 @@ void main() {
           ),
         ],
       );
-      await failingRuntime.initialize();
+      failingRuntime.initialize();
       await expectLater(
         failingRuntime.goRoute(
           const TestIntent<void>('orders.detail', RouteArgs('42')),
@@ -2579,7 +2579,7 @@ void main() {
           }),
         ],
       );
-      await runtime.initialize();
+      runtime.initialize();
 
       await expectLater(
         runtime.goRoute(
@@ -2611,7 +2611,7 @@ void main() {
           ),
         ],
       );
-      await runtime.initialize();
+      runtime.initialize();
 
       const root = TestIntent<void>('orders.detail', RouteArgs('1'));
       await runtime.goRoute(root);
@@ -2666,7 +2666,7 @@ void main() {
           ),
         ],
       );
-      await runtime.initialize();
+      runtime.initialize();
 
       await runtime.goRoute(
         const TestIntent<void>('orders.detail', RouteArgs('1')),
@@ -2721,7 +2721,7 @@ void main() {
           }),
         ],
       );
-      await runtime.initialize();
+      runtime.initialize();
       await runtime.goRoute(
         const TestIntent<void>('orders.detail', RouteArgs('1')),
       );
@@ -2761,7 +2761,7 @@ void main() {
         }),
       ],
     );
-    await runtime.initialize();
+    runtime.initialize();
     await runtime.goRoute(
       const TestIntent<void>('orders.detail', RouteArgs('1')),
     );
@@ -2802,7 +2802,7 @@ void main() {
         ),
       ],
     );
-    await runtime.initialize();
+    runtime.initialize();
     await runtime.goRoute(
       const TestIntent<void>('orders.detail', RouteArgs('1')),
     );
@@ -2843,8 +2843,8 @@ void main() {
       ],
     );
 
-    await expectLater(
-      runtime.initialize(),
+    expect(
+      () => runtime.initialize(),
       throwsA(isA<CCRouteRegistrationError>()),
     );
     await runtime.dispose();
@@ -2862,7 +2862,7 @@ void main() {
         ),
       ],
     );
-    await runtime.initialize();
+    runtime.initialize();
     await runtime.goRoute(
       const TestIntent<void>('orders.detail', RouteArgs('1')),
     );
@@ -2897,7 +2897,7 @@ void main() {
           ),
         ],
       );
-      await runtime.initialize();
+      runtime.initialize();
       await runtime.goRoute(
         const TestIntent<void>('orders.detail', RouteArgs('1')),
       );
@@ -2941,7 +2941,7 @@ void main() {
         ),
       ],
     );
-    await runtime.initialize();
+    runtime.initialize();
     await runtime.goRoute(
       const TestIntent<void>('orders.detail', RouteArgs('1')),
     );
@@ -2991,7 +2991,7 @@ void main() {
           }),
         ],
       );
-      await runtime.initialize();
+      runtime.initialize();
 
       final pushed = runtime.pushRoute<String>(
         const TestIntent<String>('orders.detail', RouteArgs('42')),
@@ -3035,7 +3035,7 @@ void main() {
           }),
         ],
       );
-      await runtime.initialize();
+      runtime.initialize();
       final cancelled = runtime.pushRoute<String>(
         const TestIntent<String>('orders.detail', RouteArgs('1')),
       );
@@ -3098,7 +3098,7 @@ void main() {
           }),
         ],
       );
-      await runtime.initialize();
+      runtime.initialize();
       final pushed = runtime.pushRoute<String>(
         const TestIntent<String>('orders.detail', RouteArgs('42')),
       );
@@ -3148,7 +3148,7 @@ void main() {
           }),
         ],
       );
-      await timeoutRuntime.initialize();
+      timeoutRuntime.initialize();
       final timedOut = timeoutRuntime.pushRoute<String>(
         const TestIntent<String>('orders.detail', RouteArgs('1')),
       );
@@ -3174,7 +3174,7 @@ void main() {
           }),
         ],
       );
-      await disposedRuntime.initialize();
+      disposedRuntime.initialize();
       final disposed = disposedRuntime.pushRoute<String>(
         const TestIntent<String>('orders.detail', RouteArgs('2')),
       );
@@ -3201,7 +3201,7 @@ void main() {
           ),
         ],
       );
-      await runtime.initialize();
+      runtime.initialize();
 
       await runtime.goRoute(
         const TestIntent<void>('orders.detail', RouteArgs('1')),
@@ -3249,7 +3249,7 @@ void main() {
         }),
       ],
     );
-    await runtime.initialize();
+    runtime.initialize();
 
     await runtime.goRoute(
       const TestIntent<void>('orders.detail', RouteArgs('1')),
@@ -3296,7 +3296,7 @@ void main() {
           ),
         ],
       );
-      await runtime.initialize();
+      runtime.initialize();
 
       await runtime.goRoute(
         const TestIntent<void>('orders.detail', RouteArgs('1')),
@@ -3329,7 +3329,7 @@ void main() {
           ),
         ],
       );
-      await runtime.initialize();
+      runtime.initialize();
 
       await runtime.goRoute(
         const TestIntent<void>('orders.detail', RouteArgs('1')),
@@ -3379,7 +3379,7 @@ void main() {
           }),
         ],
       );
-      await runtime.initialize();
+      runtime.initialize();
 
       await runtime.goRoute(
         const TestIntent<void>('orders.detail', RouteArgs('1')),
@@ -3421,7 +3421,7 @@ void main() {
         ),
       ],
     );
-    await runtime.initialize();
+    runtime.initialize();
 
     final result = runtime.pushRoute<String>(
       const TestIntent<String>('orders.detail', RouteArgs('42')),
@@ -3440,7 +3440,7 @@ void main() {
         ),
       ],
     );
-    await runtime.initialize();
+    runtime.initialize();
 
     await expectLater(
       runtime.goRoute(const TestIntent<void>('orders.detail', RouteArgs('42'))),

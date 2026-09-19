@@ -140,9 +140,9 @@ final class CCNavigationFailureFallback extends CCNavigationFailureDecision {
 
 /// Host policy that may recover one sanitized navigation failure.
 ///
-/// Applications install at most one policy during `CCRouter.initialize`. The
-/// policy must return a decision instead of navigating directly, which keeps
-/// recovery inside Runtime loop detection, attribution, and interception.
+/// Applications install at most one policy through their managed App options.
+/// The policy must return a decision instead of navigating directly, which
+/// keeps recovery inside Runtime loop detection, attribution, and interception.
 abstract interface class CCNavigationFailurePolicy {
   /// Chooses whether to propagate, redirect, or fall back for [context].
   FutureOr<CCNavigationFailureDecision> onFailure(

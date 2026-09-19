@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter_go_router/ccrouter_go_router.dart';
 import 'package:demo_order_contracts/demo_order_contracts.dart';
@@ -7,139 +5,54 @@ import 'package:flutter/material.dart';
 
 import 'ccrouter_generated/ccrouter_host.routes.g.dart';
 
-final class CreateOrder implements CCCommand<String> {
-  const CreateOrder(this.amount);
-
-  final int amount;
-}
-
-final class DemoComponentRegistrar implements CCComponentRegistrar {
-  const DemoComponentRegistrar();
-
-
-  static const manifest = CCComponentManifest(
-    id: 'demo',
-    version: '0.1.0',
-    registrar: DemoComponentRegistrar(),
-  );
-
-  @override
-  void register(CCRegistry registry) {
-    registry.registerCommand<CreateOrder, String>((command, _) async {
-      await Future<void>.delayed(const Duration(milliseconds: 180));
-      return '订单已创建：¥${command.amount}';
-    });
-  }
-}
-
 void main() {
-  final host = CCNavigationHost();
-  runApp(
-    CCRouterApp(
-      host: host,
-      child: CCRouterDemoApp(host: host),
-    ),
-  );
+  WidgetsFlutterBinding.ensureInitialized();
+  CCRouter.initialize(components: ccrouterGeneratedComponentManifests);
+  runApp(const CCRouterDemoApp());
 }
 
 final class CCRouterDemoApp extends StatefulWidget {
-  const CCRouterDemoApp({required this.host, super.key});
-
-  final CCNavigationHost host;
+  const CCRouterDemoApp({super.key});
 
   @override
   State<CCRouterDemoApp> createState() => _CCRouterDemoAppState();
 }
 
 final class _CCRouterDemoAppState extends State<CCRouterDemoApp> {
-  late final GoRouter _router;
-  late final CCGoRouterAdapter _adapter;
+  late final CCGoRouterBackend _backend;
 
   @override
   void initState() {
     super.initState();
-    final observer = CCGoRouterNavigationObserver(
-      hostId: widget.host.id,
-      outlet: 'root',
-    );
-    final assembly = CCGoRouterAssembler.assemble(
+    _backend = CCGoRouterBackend.managed(
       catalog: ccrouterGeneratedRouteCatalog,
+      hostRoutes: [GoRoute(path: '/', builder: (_, _) => const RuntimePage())],
     );
-    _router = GoRouter(
-      navigatorKey: widget.host.navigatorKey,
-      observers: [observer],
-      routes: [
-        GoRoute(
-          path: '/',
-          builder: (_, _) => RuntimePage(navigationAdapter: _adapter),
-        ),
-        ...assembly.routes,
-      ],
-    );
-    _adapter = CCGoRouterAdapter(
-      router: _router,
-      host: widget.host,
-      bindings: assembly.bindings,
-      observers: [observer],
-    );
-  }
-
-  Future<void> _shutdown() async {
-    await CCRouter.shutdown();
-    _router.dispose();
-  }
-
-  @override
-  void dispose() {
-    unawaited(_shutdown());
-    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(colorSchemeSeed: Colors.teal, useMaterial3: true),
-      routerConfig: _router,
+    return CCRouterApp.managed(
+      backend: _backend,
+      child: MaterialApp.router(
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(colorSchemeSeed: Colors.teal, useMaterial3: true),
+        routerConfig: _backend.router,
+      ),
     );
   }
 }
 
 final class RuntimePage extends StatefulWidget {
-  const RuntimePage({required this.navigationAdapter, super.key});
-
-  final CCNavigationAdapter navigationAdapter;
+  const RuntimePage({super.key});
 
   @override
   State<RuntimePage> createState() => _RuntimePageState();
 }
 
 final class _RuntimePageState extends State<RuntimePage> {
-  String _status = '正在初始化 Runtime';
-  bool _ready = false;
+  String _status = 'Runtime 已初始化';
   bool _sessionOpen = false;
-  bool _busy = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _initialize();
-  }
-
-  Future<void> _initialize() async {
-    await CCRouter.initialize(
-      components: const [
-        DemoComponentRegistrar.manifest,
-        ...ccrouterGeneratedComponentManifests,
-      ],
-      navigationAdapter: widget.navigationAdapter,
-    );
-    if (!mounted) return;
-    setState(() {
-      _ready = true;
-      _status = 'Runtime 已初始化';
-    });
-  }
 
   Future<void> _toggleSession() async {
     if (_sessionOpen) {
@@ -158,19 +71,6 @@ final class _RuntimePageState extends State<RuntimePage> {
     });
   }
 
-  Future<void> _createOrder() async {
-    if (!_ready || _busy) return;
-    setState(() => _busy = true);
-    try {
-      final result = await CCRouter.command(const CreateOrder(100));
-      if (mounted) setState(() => _status = result);
-    } on CCRouterError catch (error) {
-      if (mounted) setState(() => _status = error.message);
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
-  }
-
   Future<void> _openOrder() async {
     try {
       final result = await CCRouter.navigator.push<String>(
@@ -184,11 +84,9 @@ final class _RuntimePageState extends State<RuntimePage> {
 
   @override
   Widget build(BuildContext context) {
-    final componentCount = _ready ? CCRouter.registeredComponents.length : 0;
-    final accountId = _ready && _sessionOpen
-        ? CCRouter.session?.accountId ?? '-'
-        : '-';
-    final traceCount = _ready ? CCRouter.recentTraces.length : 0;
+    final componentCount = CCRouter.registeredComponents.length;
+    final accountId = _sessionOpen ? CCRouter.session?.accountId ?? '-' : '-';
+    final traceCount = CCRouter.recentTraces.length;
     return Scaffold(
       appBar: AppBar(title: const Text('CCRouter Demo')),
       body: ListView(
@@ -219,24 +117,13 @@ final class _RuntimePageState extends State<RuntimePage> {
           ),
           const SizedBox(height: 16),
           FilledButton.icon(
-            onPressed: _ready && !_busy ? _toggleSession : null,
+            onPressed: _toggleSession,
             icon: Icon(_sessionOpen ? Icons.logout : Icons.login),
             label: Text(_sessionOpen ? '关闭 Session' : '开启 Session'),
           ),
           const SizedBox(height: 12),
           FilledButton.icon(
-            onPressed: _ready && !_busy ? _createOrder : null,
-            icon: _busy
-                ? const SizedBox.square(
-                    dimension: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.shopping_bag_outlined),
-            label: const Text('调用 CreateOrder Command'),
-          ),
-          const SizedBox(height: 12),
-          FilledButton.icon(
-            onPressed: _ready && !_busy ? _openOrder : null,
+            onPressed: _openOrder,
             icon: const Icon(Icons.receipt_long),
             label: const Text('打开订单详情'),
           ),

@@ -14,7 +14,13 @@ const ccrouterGeneratedComponentManifests = <CCComponentManifest>[
 ];
 
 /// All generated component destinations installed in this Host.
-final ccrouterGeneratedRouteCatalog = CCFlutterRouteCatalog.merge([
-  component_demo_order.demoOrderComponentRouteCatalog,
-  component_demo_payment.demoPaymentComponentRouteCatalog,
-]);
+final ccrouterGeneratedRouteCatalog = CCFlutterRouteCatalog.merge(
+  [
+    component_demo_order.demoOrderComponentRouteCatalog,
+    component_demo_payment.demoPaymentComponentRouteCatalog,
+  ],
+  componentVersions: {
+    for (final manifest in ccrouterGeneratedComponentManifests)
+      manifest.id: manifest.version,
+  },
+);

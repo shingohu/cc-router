@@ -1,6 +1,152 @@
+import 'dart:async';
+
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 import 'package:flutter/widgets.dart';
 
+import 'facade.dart';
+import 'route_catalog.dart';
+
 part 'page_lifecycle.dart';
+
+/// Backend resources coordinated by a managed [CCRouterApp].
+///
+/// Adapter packages implement this at the application composition boundary.
+/// After successful attachment the Runtime owns [navigationAdapter]; when
+/// attachment is rejected before ownership transfers,
+/// [CCRouterApp.managed] closes the Adapter itself. [dispose] releases only
+/// other resources, such as a Router created by a managed backend. An attached
+/// backend must leave application-owned Router objects untouched.
+abstract interface class CCRouterAppBackend {
+  /// Backend-neutral generated destinations assembled for this Host.
+  ///
+  /// The application passes generated component manifests to
+  /// `CCRouter.initialize` before mounting [CCRouterApp.managed]. The managed
+  /// binding compares their identities and versions with
+  /// [CCFlutterRouteCatalog.componentVersions] so a Backend generated for
+  /// another component set cannot attach.
+  CCFlutterRouteCatalog get routeCatalog;
+
+  /// Stable Flutter navigation Host shared by Router and Adapter objects.
+  CCNavigationHost get host;
+
+  /// Adapter initialized and disposed by the Runtime.
+  CCNavigationAdapter get navigationAdapter;
+
+  /// Releases backend-owned resources after Runtime shutdown.
+  Future<void> dispose();
+}
+
+/// Internal coordinator that transfers one Backend into an initialized Runtime.
+///
+/// [CCRouterApp.managed] is the only public managed-binding entry. Keeping this
+/// coordinator private prevents Hosts from attaching a Backend without mounting
+/// its lifecycle scope, while preserving catalog validation and ordered cleanup.
+abstract final class _CCRouterBackendBinding {
+  /// Backend whose Adapter is currently owned by the active Runtime.
+  static CCRouterAppBackend? _activeBackend;
+
+  /// Attaches [backend] to the explicitly initialized default Runtime.
+  ///
+  /// The application must call `CCRouter.initialize` with its component
+  /// manifests first. On success the Runtime owns the Adapter, and
+  /// `CCRouter.shutdown` later disposes the Adapter before invoking
+  /// [CCRouterAppBackend.dispose]. A rejected Adapter is disposed synchronously
+  /// before the error is rethrown; asynchronous Backend resource cleanup is
+  /// scheduled separately and reports failures through Flutter diagnostics.
+  static void attach({required CCRouterAppBackend backend}) {
+    if (_activeBackend != null) {
+      _disposeRejectedBackend(backend);
+      throw const CCNavigationAdapterError(
+        'A navigation Backend is already attached to CCRouter.',
+      );
+    }
+    _attachAndOwn(backend);
+  }
+
+  /// Transfers Adapter ownership and registers Backend cleanup with shutdown.
+  static void _attachAndOwn(CCRouterAppBackend backend) {
+    Future<void> disposeBackend() async {
+      if (identical(_activeBackend, backend)) _activeBackend = null;
+      await backend.dispose();
+    }
+
+    _activeBackend = backend;
+    try {
+      _validateRouteCatalog(backend.routeCatalog);
+      CCRouterHostBinding.attachNavigationAdapter(
+        backend.navigationAdapter,
+        disposeBackend: disposeBackend,
+      );
+    } catch (error, stackTrace) {
+      if (identical(_activeBackend, backend)) _activeBackend = null;
+      _disposeRejectedBackend(backend);
+      Error.throwWithStackTrace(error, stackTrace);
+    }
+  }
+
+  /// Rejects a Backend assembled from a different component catalog.
+  static void _validateRouteCatalog(CCFlutterRouteCatalog routeCatalog) {
+    final registered = <String, String>{
+      for (final component in CCRouter.registeredComponents)
+        component.id: component.version,
+    };
+    final generated = routeCatalog.componentVersions;
+    if (registered.length != generated.length ||
+        registered.entries.any(
+          (entry) => generated[entry.key] != entry.value,
+        )) {
+      throw const CCRegistrationError(
+        'The navigation Backend component catalog does not match the '
+        'registered Runtime components.',
+      );
+    }
+  }
+
+  /// Releases a Backend whose Adapter ownership transfer did not complete.
+  static void _disposeRejectedBackend(CCRouterAppBackend backend) {
+    try {
+      backend.navigationAdapter.dispose();
+    } catch (error, stackTrace) {
+      _reportDisposalError(
+        error,
+        stackTrace,
+        'while disposing a rejected CCRouter navigation Adapter',
+      );
+    }
+    unawaited(_disposeRejectedBackendResources(backend));
+  }
+
+  /// Releases asynchronous Backend resources after synchronous rejection.
+  static Future<void> _disposeRejectedBackendResources(
+    CCRouterAppBackend backend,
+  ) async {
+    try {
+      await backend.dispose();
+    } catch (error, stackTrace) {
+      _reportDisposalError(
+        error,
+        stackTrace,
+        'while disposing a rejected CCRouter application backend',
+      );
+    }
+  }
+
+  /// Reports a cleanup failure without replacing the attachment failure.
+  static void _reportDisposalError(
+    Object error,
+    StackTrace stackTrace,
+    String context,
+  ) {
+    FlutterError.reportError(
+      FlutterErrorDetails(
+        exception: error,
+        stack: stackTrace,
+        library: 'ccrouter',
+        context: ErrorDescription(context),
+      ),
+    );
+  }
+}
 
 /// Identifies one Flutter navigation Host lifecycle transition.
 ///
@@ -231,21 +377,46 @@ final class CCNavigationHost {
   }
 }
 
-/// Optional Flutter integration Host for CCRouter.
+/// Flutter application integration boundary for CCRouter.
 ///
-/// Simple applications may bind an Adapter directly to `MaterialApp.router`.
-/// Use this Host when the application needs a root navigation host, lifecycle
-/// observation, or a context-bound foundation for future Shell and Outlet
-/// resolution. This widget is not a second `MaterialApp`, does not initialize
-/// or shut down [CCRouter], and never stores a global [BuildContext].
+/// The default constructor is a non-owning Host wrapper for existing
+/// integrations. [CCRouterApp.managed] additionally attaches one navigation
+/// Backend after the application explicitly initializes CCRouter with its
+/// components. Neither mode initializes or shuts down the Runtime, and neither
+/// stores a global [BuildContext].
 final class CCRouterApp extends StatefulWidget {
-  /// Creates a Host around an existing Flutter application widget tree.
+  /// Creates a non-owning Host around an existing Flutter application tree.
+  ///
+  /// Use this compatibility mode when Backend binding remains in an existing
+  /// composition root. Removing this widget never shuts down
+  /// [CCRouter] or disposes the supplied [host]. New applications should prefer
+  /// [CCRouterApp.managed].
   const CCRouterApp({
     required this.child,
     this.host,
     this.onLifecycleChanged,
     super.key,
-  });
+  }) : _backend = null;
+
+  /// Creates an App that attaches and exposes a managed navigation Backend.
+  ///
+  /// Call `CCRouter.initialize` with the startup components before mounting this
+  /// widget. Backend attachment is synchronous, so the [child] is mounted on
+  /// the first build only after the Adapter is fully configured. Removing the
+  /// widget does not shut down CCRouter; the
+  /// application must call `CCRouter.shutdown`, which disposes the Runtime-owned
+  /// Adapter before releasing Backend-owned resources.
+  ///
+  /// Use this mode once at the application composition root. It intentionally
+  /// does not open a Session; authentication flows retain explicit Session
+  /// ownership.
+  CCRouterApp.managed({
+    required CCRouterAppBackend backend,
+    required this.child,
+    this.onLifecycleChanged,
+    super.key,
+  }) : host = null,
+       _backend = backend;
 
   /// Application widget, commonly `MaterialApp.router`.
   final Widget child;
@@ -254,10 +425,16 @@ final class CCRouterApp extends StatefulWidget {
   /// When omitted, the Host creates and retains one for this widget State.
   final CCNavigationHost? host;
 
+  /// Backend whose Adapter and generated assembly are attached in managed mode.
+  ///
+  /// A null value selects the non-owning compatibility constructor.
+  final CCRouterAppBackend? _backend;
+
   /// Optional callback for host-level Flutter lifecycle changes.
   ///
-  /// The callback is observational only; Runtime and Session ownership remain
-  /// with `CCRouter.initialize`, `CCRouter.closeSession`, and `CCRouter.shutdown`.
+  /// The callback is observational only and must not initialize or shut down the
+  /// Runtime. Session ownership remains with explicit login and logout flows in
+  /// both modes.
   final ValueChanged<AppLifecycleState>? onLifecycleChanged;
 
   /// Returns the nearest navigation host and establishes an inherited
@@ -288,17 +465,25 @@ final class CCRouterApp extends StatefulWidget {
   State<CCRouterApp> createState() => _CCRouterAppState();
 }
 
-/// State that bridges Flutter lifecycle notifications to the optional Host
-/// callback without taking ownership of the application Runtime.
+/// State that coordinates Host events and optional Backend attachment.
 final class _CCRouterAppState extends State<CCRouterApp>
     with WidgetsBindingObserver {
+  /// Stable Host mounted by this State for its complete lifetime.
   late CCNavigationHost _host;
 
+  /// Managed Backend captured at attachment so widget updates cannot drift.
+  CCRouterAppBackend? _managedBackend;
+
+  /// Whether synchronous managed attachment failed before the first build.
+  bool _backendAttachmentFailed = false;
+
   @override
-  /// Creates the internal Host and starts observing Flutter lifecycle events.
+  /// Mounts the Host, observes Flutter lifecycle, and attaches the Backend.
   void initState() {
     super.initState();
-    _host = widget.host ?? CCNavigationHost();
+    final backend = widget._backend;
+    _managedBackend = backend;
+    _host = backend?.host ?? widget.host ?? CCNavigationHost();
     _host._mount(this);
     CCPageLifecycleHostBridge._attachHost(
       hostId: _host.id,
@@ -306,12 +491,38 @@ final class _CCRouterAppState extends State<CCRouterApp>
       applicationState: WidgetsBinding.instance.lifecycleState,
     );
     WidgetsBinding.instance.addObserver(this);
+    if (backend != null) {
+      try {
+        _CCRouterBackendBinding.attach(backend: backend);
+      } catch (error, stackTrace) {
+        _backendAttachmentFailed = true;
+        FlutterError.reportError(
+          FlutterErrorDetails(
+            exception: error,
+            stack: stackTrace,
+            library: 'ccrouter',
+            context: ErrorDescription('while attaching CCRouterApp.managed'),
+          ),
+        );
+      }
+    }
   }
 
   @override
-  /// Rebinds the State to a newly supplied externally owned Host.
+  /// Rebinds compatibility mode and rejects managed ownership replacement.
   void didUpdateWidget(covariant CCRouterApp oldWidget) {
     super.didUpdateWidget(oldWidget);
+    final managedBackend = _managedBackend;
+    if (managedBackend != null || widget._backend != null) {
+      if (!identical(managedBackend, widget._backend)) {
+        throw FlutterError(
+          'A mounted CCRouterApp.managed cannot replace its backend or '
+          'route catalog. Recreate it with a different Key after the previous '
+          'managed App has been removed.',
+        );
+      }
+      return;
+    }
     final nextHost = widget.host;
     if (nextHost == null && oldWidget.host == null) return;
     if (nextHost != null && identical(_host, nextHost)) return;
@@ -338,7 +549,7 @@ final class _CCRouterAppState extends State<CCRouterApp>
   }
 
   @override
-  /// Stops lifecycle observation without disposing the application Runtime.
+  /// Stops Host observation without changing the explicit Runtime lifecycle.
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     CCPageLifecycleHostBridge._detachHost(hostId: _host.id, owner: this);
@@ -347,14 +558,27 @@ final class _CCRouterAppState extends State<CCRouterApp>
   }
 
   @override
-  /// Provides the Host scope to the existing application widget tree.
+  /// Provides Host and page-lifecycle scopes around the active App state.
   Widget build(BuildContext context) => _CCRouterHostScope(
     host: _host,
     child: CCPageLifecycleHostBridge._scope(
       hostId: _host.id,
-      child: widget.child,
+      child: _managedContent(),
     ),
   );
+
+  /// Selects application or startup-failure content for managed mode.
+  ///
+  /// Startup failures are already reported through [FlutterError]. This method
+  /// deliberately renders no exception details so production Hosts cannot leak
+  /// component, route, or Adapter configuration through their startup UI.
+  Widget _managedContent() {
+    if (!_backendAttachmentFailed) return widget.child;
+    return const Directionality(
+      textDirection: TextDirection.ltr,
+      child: Center(child: Text('Application failed to start.')),
+    );
+  }
 }
 
 /// Inherited scope that makes one Window's navigation Host discoverable.
