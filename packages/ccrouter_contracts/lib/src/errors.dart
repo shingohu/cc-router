@@ -48,9 +48,9 @@ final class CCShellRegistrationError extends CCRouterError {
 
 /// Indicates that a URI does not match an installed route.
 final class CCRouteNotFoundError extends CCRouterError {
-  /// Creates a route-not-found error without retaining the full URI.
-  const CCRouteNotFoundError(String path)
-    : super('No route matches path "$path".');
+  /// Creates a route-not-found error without retaining the supplied location.
+  const CCRouteNotFoundError(String _)
+    : super('No route matches the supplied location.');
 }
 
 /// Indicates that multiple equally specific routes match one location.
@@ -69,8 +69,32 @@ final class CCRouteAmbiguityError extends CCRouterError {
 /// Indicates that a route was found but its owning component is unavailable.
 final class CCRouteUnavailableError extends CCRouterError {
   /// Creates an unavailable-route error for [routeId].
-  const CCRouteUnavailableError(String routeId)
+  const CCRouteUnavailableError(this.routeId)
     : super('Route "$routeId" is unavailable.');
+
+  /// Stable unavailable route identity suitable for failure policy matching.
+  final String routeId;
+}
+
+/// Indicates that external ingress matched a route that forbids Deep Links.
+///
+/// The error exposes only the stable route ID and never retains the rejected
+/// URI or its query values. Host Failure Policies can use it to show an
+/// unsupported-link destination without weakening the route's security policy.
+final class CCDeepLinkRejectedError extends CCRouterError {
+  /// Creates a rejection for the matched but externally disabled [routeId].
+  const CCDeepLinkRejectedError(this.routeId)
+    : super('Route "$routeId" does not accept external navigation.');
+
+  /// Stable matched route identity without rejected URI values.
+  final String routeId;
+}
+
+/// Indicates that navigation failure recovery exceeded its loop limit.
+final class CCNavigationFailureRecoveryLoopError extends CCRouterError {
+  /// Creates a bounded failure-recovery loop error.
+  const CCNavigationFailureRecoveryLoopError()
+    : super('Navigation failure recovery exceeded the limit.');
 }
 
 /// Indicates invalid values at a route codec boundary.
@@ -102,11 +126,11 @@ final class CCNavigationPendingNotFoundError extends CCRouterError {
     : super('The pending navigation is no longer available.');
 }
 
-/// Indicates that an Aspect callback attempted synchronous navigation reentry.
+/// Indicates that a framework policy or observer attempted navigation reentry.
 final class CCNavigationReentrancyError extends CCRouterError {
-  /// Creates a reentrancy error that leaves the active navigation unchanged.
+  /// Creates a reentrancy error that leaves the active operation unchanged.
   const CCNavigationReentrancyError()
-    : super('Navigation cannot be started from an active Aspect callback.');
+    : super('Navigation cannot start from an active framework callback.');
 }
 
 /// Indicates that an adapter returned a value incompatible with a typed route.
@@ -133,6 +157,46 @@ final class CCRouteRedirectLoopError extends CCRouterError {
   /// Creates a redirect-loop error for the affected [routeId].
   const CCRouteRedirectLoopError(String routeId)
     : super('Navigation redirects exceeded the limit near route "$routeId".');
+}
+
+/// Indicates that a navigation interceptor failed unexpectedly.
+///
+/// The original exception object and message are intentionally omitted so
+/// diagnostics cannot retain business payloads or credentials.
+final class CCNavigationInterceptorError extends CCRouterError {
+  /// Creates a sanitized failure for [interceptorId] and [causeType].
+  const CCNavigationInterceptorError(this.interceptorId, this.causeType)
+    : super('Navigation interceptor "$interceptorId" failed as $causeType.');
+
+  /// Stable interceptor identity used for diagnostics.
+  final String interceptorId;
+
+  /// Runtime type of the isolated failure without its arbitrary message.
+  final String causeType;
+}
+
+/// Indicates that a navigation interceptor exceeded its configured timeout.
+final class CCNavigationInterceptorTimeoutError extends CCRouterError {
+  /// Creates a timeout failure for [interceptorId].
+  const CCNavigationInterceptorTimeoutError(this.interceptorId)
+    : super('Navigation interceptor "$interceptorId" timed out.');
+
+  /// Stable interceptor identity used for diagnostics.
+  final String interceptorId;
+}
+
+/// Indicates that a managed route Pop was rejected by a Pop guard.
+///
+/// Direct business `pop` calls surface this error because their `void` API has
+/// no outcome channel. System and gesture handling should use
+/// `maybePopOutcome`, which reports the same code without throwing.
+final class CCPopGuardDeniedError extends CCRouterError {
+  /// Creates a denial error with a stable, non-sensitive [code].
+  const CCPopGuardDeniedError(this.code)
+    : super('The managed route rejected the Pop request.');
+
+  /// Stable reason supplied by the guard that stopped the Pop.
+  final String code;
 }
 
 /// Indicates that a requested capability or lifecycle owner cannot be resolved.

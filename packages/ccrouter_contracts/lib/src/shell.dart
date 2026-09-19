@@ -25,7 +25,6 @@ final class CCShellDefinition {
     required this.type,
     required List<String> outlets,
     required this.initialOutlet,
-    this.description,
   }) : outlets = List.unmodifiable(outlets);
 
   /// Stable application-wide identity referenced by route placement.
@@ -42,9 +41,6 @@ final class CCShellDefinition {
 
   /// Outlet selected when the Shell has no restored or URI-selected branch.
   final String initialOutlet;
-
-  /// Optional human-readable documentation description.
-  final String? description;
 }
 
 /// Adapter-facing immutable snapshot of one installed Shell contract.

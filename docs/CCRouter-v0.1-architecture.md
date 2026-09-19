@@ -736,6 +736,12 @@ created -> resolving -> pushed -> visible -> hidden
 
 交互式返回手势在确认 Pop 前不得销毁 Scope。
 
+Flutter 页面可以按自身形态选择 `CCPageLifecycleMixin` 或
+`CCPageLifecycleListener`。二者共享 Host 页面台账，提供 `onPageShow`、`onPageHide`、
+`onForeground` 和 `onBackground`，但不把 Widget `dispose` 当成 Route 最终退出。
+GoRouter 由 `CCGoRouterNavigationObserver.didChangeTop` 确认当前 Route；Foreign Route
+可以覆盖页面但不能移除 Managed RouteEntry，Overlay 浮层不改变页面状态。
+
 ### 10.5 导航操作
 
 v0.1 最小 API：

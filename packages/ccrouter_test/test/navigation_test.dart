@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 import 'package:ccrouter_core/ccrouter_core.dart';
 import 'package:test/test.dart';
@@ -76,6 +78,16 @@ final class TestIntent<R> implements CCRouteIntent<R> {
   final Object arguments;
 }
 
+final class TestTelemetryContextProvider
+    implements CCNavigationTelemetryContextProvider {
+  const TestTelemetryContextProvider(this.context);
+
+  final CCNavigationTelemetryContext? context;
+
+  @override
+  CCNavigationTelemetryContext? currentContext() => context;
+}
+
 final class FailingNavigationAdapter implements CCNavigationAdapter {
   @override
   Future<void> initialize(
@@ -123,12 +135,16 @@ final class BackendEventNavigationAdapter
         CCNavigationAdapterCapabilitySource,
         CCNavigationBackendSnapshotSource,
         CCNavigationPredictiveBackSource {
-  BackendEventNavigationAdapter({this.predictiveBackSupported = true});
+  BackendEventNavigationAdapter({
+    this.predictiveBackSupported = true,
+    this.visibilityObservationSupported = false,
+  });
 
   final CCMemoryNavigationAdapter delegate = CCMemoryNavigationAdapter();
   final Set<CCNavigationBackendEventListener> listeners = {};
   final Set<CCPredictiveBackEventListener> predictiveBackListeners = {};
   final bool predictiveBackSupported;
+  final bool visibilityObservationSupported;
   bool consumeForeignMaybePop = false;
   List<CCNavigationBackendEntrySnapshot> initialSnapshot = const [];
 
@@ -136,6 +152,9 @@ final class BackendEventNavigationAdapter
   CCNavigationAdapterCapabilities get capabilities =>
       CCNavigationAdapterCapabilities(
         supportsPredictiveBack: predictiveBackSupported,
+        supportsBackendVisibilityObservation: visibilityObservationSupported,
+        supportsNestedNavigators: true,
+        supportsStatefulShell: true,
       );
 
   @override
@@ -151,6 +170,9 @@ final class BackendEventNavigationAdapter
     String? routeId,
     CCBackendEntryOwner? owner,
     int? sequence,
+    String hostId = 'default',
+    String navigatorOutlet = 'root',
+    String? shellId,
   }) {
     final event = CCNavigationBackendEvent(
       kind: kind,
@@ -162,6 +184,13 @@ final class BackendEventNavigationAdapter
       routeId: routeId,
       owner: owner,
       sequence: sequence,
+      hostId: hostId,
+      navigatorOutlet: navigatorOutlet,
+      placement: CCRoutePlacement(
+        hostId: hostId,
+        shellId: shellId,
+        navigatorOutlet: navigatorOutlet,
+      ),
       location: 'foreign:${kind.name}',
     );
     for (final listener in listeners.toList()) {
@@ -236,7 +265,7 @@ final class TestNavigationInterceptor implements CCNavigationInterceptor {
   TestNavigationInterceptor(this.id, this.onIntercept, this.calls);
 
   final String id;
-  final CCNavigationInterception Function(
+  final FutureOr<CCNavigationInterception> Function(
     CCNavigationInterceptorContext context,
   )
   onIntercept;
@@ -249,6 +278,34 @@ final class TestNavigationInterceptor implements CCNavigationInterceptor {
     calls.add('$id:${context.request.routeId}');
     return onIntercept(context);
   }
+}
+
+final class TestPopGuard implements CCPopGuard {
+  TestPopGuard(this.id, this.calls, this.onEvaluate);
+
+  final String id;
+  final List<String> calls;
+  final CCPopGuardDecision Function(CCPopGuardContext context) onEvaluate;
+
+  @override
+  CCPopGuardDecision evaluate(CCPopGuardContext context) {
+    calls.add('$id:${context.entry.routeId}:${context.trigger.name}');
+    return onEvaluate(context);
+  }
+}
+
+final class TestNavigationFailurePolicy implements CCNavigationFailurePolicy {
+  TestNavigationFailurePolicy(this.callback);
+
+  final FutureOr<CCNavigationFailureDecision> Function(
+    CCNavigationFailureContext context,
+  )
+  callback;
+
+  @override
+  FutureOr<CCNavigationFailureDecision> onFailure(
+    CCNavigationFailureContext context,
+  ) => callback(context);
 }
 
 CCComponentManifest routeComponent(
@@ -265,7 +322,9 @@ CCRouteDefinition<RouteArgs, String> pathRoute({
   String path = '/orders/:value',
   CCDeepLinkPolicy deepLink = CCDeepLinkPolicy.disabled,
   List<String> interceptorIds = const [],
+  List<String> popGuardIds = const [],
   CCRoutePresentation presentation = const CCPagePresentation(),
+  CCRoutePlacement placement = const CCRoutePlacement.root(),
 }) => CCRouteDefinition<RouteArgs, String>(
   routeId: routeId,
   patterns: [
@@ -274,7 +333,9 @@ CCRouteDefinition<RouteArgs, String> pathRoute({
   codec: const RouteArgsCodec(),
   deepLink: deepLink,
   interceptorIds: interceptorIds,
+  popGuardIds: popGuardIds,
   presentation: presentation,
+  placement: placement,
 );
 
 void main() {
@@ -320,6 +381,33 @@ void main() {
         'window-b',
       );
       expect(runtime.recentBackendNavigationEvents, isEmpty);
+      await runtime.dispose();
+    },
+  );
+
+  test(
+    'initial snapshots are structural state beyond event capacity',
+    () async {
+      final adapter = BackendEventNavigationAdapter()
+        ..initialSnapshot = const [
+          CCNavigationBackendEntrySnapshot(
+            backendEntryId: 'first',
+            owner: CCBackendEntryOwner.foreign,
+            navigatorOutlet: 'root',
+          ),
+          CCNavigationBackendEntrySnapshot(
+            backendEntryId: 'second',
+            owner: CCBackendEntryOwner.opaque,
+            navigatorOutlet: 'detail',
+          ),
+        ];
+      final runtime = CCRouterRuntime.forTesting(
+        navigationEventCapacity: 1,
+        navigationAdapter: adapter,
+      );
+      await runtime.initialize();
+
+      expect(runtime.activeBackendEntries, hasLength(2));
       await runtime.dispose();
     },
   );
@@ -414,7 +502,14 @@ void main() {
       );
       final before = runtime.activeRouteEntries;
 
-      for (final kind in CCNavigationBackendEventKind.values) {
+      const entryKinds = [
+        CCNavigationBackendEventKind.push,
+        CCNavigationBackendEventKind.pop,
+        CCNavigationBackendEventKind.replace,
+        CCNavigationBackendEventKind.remove,
+        CCNavigationBackendEventKind.topChanged,
+      ];
+      for (final kind in entryKinds) {
         adapter.emit(kind);
       }
 
@@ -427,12 +522,7 @@ void main() {
         runtime.activeRouteEntries.map((entry) => entry.lifecycleState),
         before.map((entry) => entry.lifecycleState),
       );
-      expect(observed.map((event) => event.kind), [
-        CCNavigationBackendEventKind.push,
-        CCNavigationBackendEventKind.pop,
-        CCNavigationBackendEventKind.replace,
-        CCNavigationBackendEventKind.remove,
-      ]);
+      expect(observed.map((event) => event.kind), entryKinds);
       expect(runtime.recentBackendNavigationEvents, observed);
 
       adapter.consumeForeignMaybePop = true;
@@ -519,6 +609,430 @@ void main() {
         runtime.backendEntries.last.lifecycleState,
         CCBackendEntryLifecycleState.removed,
       );
+      await runtime.dispose();
+    },
+  );
+
+  test('backend capacity never evicts active structural entries', () async {
+    final adapter = BackendEventNavigationAdapter();
+    final runtime = CCRouterRuntime.forTesting(
+      navigationEventCapacity: 2,
+      navigationAdapter: adapter,
+    );
+    await runtime.initialize();
+
+    for (var index = 0; index < 3; index++) {
+      adapter.emit(
+        CCNavigationBackendEventKind.push,
+        backendEntryId: 'active-$index',
+        backendOperationId: 'push-$index',
+        sequence: index + 1,
+      );
+    }
+    expect(runtime.activeBackendEntries, hasLength(3));
+
+    for (var index = 0; index < 3; index++) {
+      adapter.emit(
+        CCNavigationBackendEventKind.pop,
+        backendEntryId: 'removed-$index',
+        backendOperationId: 'pop-$index',
+        sequence: index + 4,
+      );
+    }
+    expect(runtime.activeBackendEntries, hasLength(3));
+    expect(
+      runtime.backendEntries.where(
+        (entry) => entry.lifecycleState == CCBackendEntryLifecycleState.removed,
+      ),
+      hasLength(2),
+    );
+    await runtime.dispose();
+  });
+
+  test('zero backend history capacity still deduplicates operations', () async {
+    final adapter = BackendEventNavigationAdapter();
+    final runtime = CCRouterRuntime.forTesting(
+      navigationEventCapacity: 0,
+      navigationAdapter: adapter,
+    );
+    await runtime.initialize();
+    final observed = <CCNavigationBackendEvent>[];
+    runtime.addBackendNavigationListener(observed.add);
+
+    for (var index = 0; index < 2; index++) {
+      adapter.emit(
+        CCNavigationBackendEventKind.push,
+        backendEntryId: 'active',
+        backendOperationId: 'same-operation',
+      );
+    }
+    expect(runtime.activeBackendEntries, hasLength(1));
+    expect(observed, hasLength(1));
+
+    adapter.emit(
+      CCNavigationBackendEventKind.pop,
+      backendEntryId: 'active',
+      backendOperationId: 'remove-operation',
+    );
+    expect(runtime.backendEntries, isEmpty);
+    await runtime.dispose();
+  });
+
+  test(
+    'Host detach resets sequence state for the same Host identity',
+    () async {
+      final adapter = BackendEventNavigationAdapter();
+      final runtime = CCRouterRuntime.forTesting(navigationAdapter: adapter);
+      await runtime.initialize();
+
+      adapter.emit(
+        CCNavigationBackendEventKind.push,
+        backendEntryId: 'old-entry',
+        backendOperationId: 'old-push',
+        hostId: 'window.reused',
+        sequence: 8,
+      );
+      adapter.emit(
+        CCNavigationBackendEventKind.hostDetached,
+        backendOperationId: 'old-detach',
+        hostId: 'window.reused',
+        sequence: 9,
+      );
+      adapter.emit(
+        CCNavigationBackendEventKind.push,
+        backendEntryId: 'new-entry',
+        backendOperationId: 'new-push',
+        hostId: 'window.reused',
+        sequence: 1,
+      );
+
+      expect(
+        runtime.activeBackendEntries.map((entry) => entry.backendEntryId),
+        ['new-entry'],
+      );
+      expect(runtime.desynchronizedBackendHosts, isEmpty);
+      await runtime.dispose();
+    },
+  );
+
+  test(
+    'confirmed backend tops drive visibility without removing covered entries',
+    () async {
+      final adapter = BackendEventNavigationAdapter(
+        visibilityObservationSupported: true,
+      );
+      final runtime = CCRouterRuntime.forTesting(
+        navigationAdapter: adapter,
+        components: [
+          routeComponent(
+            'orders',
+            (registry) => registry.registerRoute(pathRoute()),
+          ),
+        ],
+      );
+      await runtime.initialize();
+
+      await runtime.goRoute(
+        const TestIntent<void>('orders.detail', RouteArgs('1')),
+      );
+      final first = runtime.activeRouteEntries.single;
+      expect(first.lifecycleState, CCRouteEntryLifecycleState.pushed);
+
+      adapter.emit(
+        CCNavigationBackendEventKind.push,
+        backendEntryId: 'managed-1',
+        backendOperationId: 'managed-push-1',
+        navigationId: first.navigationId,
+        routeId: first.routeId,
+        owner: CCBackendEntryOwner.managed,
+        sequence: 1,
+      );
+      expect(
+        runtime.activeRouteEntries.single.lifecycleState,
+        CCRouteEntryLifecycleState.pushed,
+      );
+      adapter.emit(
+        CCNavigationBackendEventKind.topChanged,
+        backendEntryId: 'managed-1',
+        backendOperationId: 'managed-top-1',
+        navigationId: first.navigationId,
+        routeId: first.routeId,
+        owner: CCBackendEntryOwner.managed,
+        sequence: 2,
+      );
+      expect(
+        runtime.activeRouteEntries.single.lifecycleState,
+        CCRouteEntryLifecycleState.visible,
+      );
+
+      final secondResult = runtime.pushRoute<String>(
+        const TestIntent<String>('orders.detail', RouteArgs('2')),
+      );
+      final second = runtime.activeRouteEntries.last;
+      expect(second.lifecycleState, CCRouteEntryLifecycleState.pushed);
+      adapter.emit(
+        CCNavigationBackendEventKind.push,
+        backendEntryId: 'managed-2',
+        backendOperationId: 'managed-push-2',
+        previousBackendEntryId: 'managed-1',
+        navigationId: second.navigationId,
+        routeId: second.routeId,
+        owner: CCBackendEntryOwner.managed,
+        sequence: 3,
+      );
+      expect(
+        runtime.backendEntries
+            .singleWhere((entry) => entry.backendEntryId == 'managed-1')
+            .lifecycleState,
+        CCBackendEntryLifecycleState.active,
+      );
+      adapter.emit(
+        CCNavigationBackendEventKind.topChanged,
+        backendEntryId: 'managed-2',
+        backendOperationId: 'managed-top-2',
+        previousBackendEntryId: 'managed-1',
+        navigationId: second.navigationId,
+        routeId: second.routeId,
+        owner: CCBackendEntryOwner.managed,
+        sequence: 4,
+      );
+      expect(runtime.activeRouteEntries.map((entry) => entry.lifecycleState), [
+        CCRouteEntryLifecycleState.hidden,
+        CCRouteEntryLifecycleState.visible,
+      ]);
+
+      adapter.emit(
+        CCNavigationBackendEventKind.push,
+        backendEntryId: 'foreign-popup',
+        backendOperationId: 'foreign-push',
+        previousBackendEntryId: 'managed-2',
+        owner: CCBackendEntryOwner.foreign,
+        sequence: 5,
+      );
+      adapter.emit(
+        CCNavigationBackendEventKind.topChanged,
+        backendEntryId: 'foreign-popup',
+        backendOperationId: 'foreign-top',
+        previousBackendEntryId: 'managed-2',
+        owner: CCBackendEntryOwner.foreign,
+        sequence: 6,
+      );
+      expect(
+        runtime.activeRouteEntries.last.lifecycleState,
+        CCRouteEntryLifecycleState.hidden,
+      );
+      expect(runtime.activeRouteEntries, hasLength(2));
+
+      adapter.emit(
+        CCNavigationBackendEventKind.pop,
+        backendEntryId: 'foreign-popup',
+        backendOperationId: 'foreign-pop',
+        previousBackendEntryId: 'managed-2',
+        owner: CCBackendEntryOwner.foreign,
+        sequence: 7,
+      );
+      adapter.emit(
+        CCNavigationBackendEventKind.topChanged,
+        backendEntryId: 'managed-2',
+        backendOperationId: 'managed-top-restored',
+        previousBackendEntryId: 'foreign-popup',
+        owner: CCBackendEntryOwner.managed,
+        sequence: 8,
+      );
+      expect(
+        runtime.activeRouteEntries.last.lifecycleState,
+        CCRouteEntryLifecycleState.visible,
+      );
+
+      final eventCount = runtime.recentRouteVisibilityEvents.length;
+      adapter.emit(
+        CCNavigationBackendEventKind.topChanged,
+        backendEntryId: 'managed-2',
+        backendOperationId: 'managed-top-restored',
+        owner: CCBackendEntryOwner.managed,
+        sequence: 8,
+      );
+      expect(runtime.recentRouteVisibilityEvents, hasLength(eventCount));
+
+      runtime.popRoute(result: 'done');
+      expect(await secondResult, 'done');
+      await runtime.dispose();
+    },
+  );
+
+  test('detects backend sequence gaps and ignores stale repeats', () async {
+    final adapter = BackendEventNavigationAdapter(
+      visibilityObservationSupported: true,
+    );
+    final runtime = CCRouterRuntime.forTesting(
+      navigationAdapter: adapter,
+      components: [
+        routeComponent(
+          'orders',
+          (registry) => registry.registerRoute(pathRoute()),
+        ),
+      ],
+    );
+    await runtime.initialize();
+
+    adapter.emit(
+      CCNavigationBackendEventKind.push,
+      backendEntryId: 'foreign-1',
+      backendOperationId: 'foreign-1-push',
+      sequence: 1,
+      hostId: 'window.main',
+    );
+    adapter.emit(
+      CCNavigationBackendEventKind.topChanged,
+      backendEntryId: 'foreign-1',
+      backendOperationId: 'foreign-1-top',
+      sequence: 3,
+      hostId: 'window.main',
+    );
+    expect(runtime.desynchronizedBackendHosts, contains('window.main'));
+    expect(
+      runtime.visibleBackendEntries.single.visibilityState,
+      CCBackendEntryVisibilityState.visible,
+    );
+
+    final eventCount = runtime.recentBackendNavigationEvents.length;
+    adapter.emit(
+      CCNavigationBackendEventKind.remove,
+      backendEntryId: 'foreign-1',
+      backendOperationId: 'stale-remove',
+      sequence: 2,
+      hostId: 'window.main',
+    );
+    expect(runtime.recentBackendNavigationEvents, hasLength(eventCount));
+    expect(runtime.activeBackendEntries, hasLength(1));
+    await runtime.dispose();
+  });
+
+  test(
+    'Stateful Shell activation hides and restores retained branch entries',
+    () async {
+      final adapter = BackendEventNavigationAdapter(
+        visibilityObservationSupported: true,
+      );
+      const homePlacement = CCRoutePlacement(
+        shellId: 'tabs',
+        navigatorOutlet: 'home',
+      );
+      const settingsPlacement = CCRoutePlacement(
+        shellId: 'tabs',
+        navigatorOutlet: 'settings',
+      );
+      final runtime = CCRouterRuntime.forTesting(
+        navigationAdapter: adapter,
+        components: [
+          routeComponent('shell', (registry) {
+            registry.registerShell(
+              CCShellDefinition(
+                shellId: 'tabs',
+                type: CCShellType.statefulBranches,
+                outlets: const ['home', 'settings'],
+                initialOutlet: 'home',
+              ),
+            );
+            registry.registerRoute(
+              pathRoute(
+                routeId: 'home.detail',
+                path: '/home/:value',
+                placement: homePlacement,
+              ),
+            );
+            registry.registerRoute(
+              pathRoute(
+                routeId: 'settings.detail',
+                path: '/settings/:value',
+                placement: settingsPlacement,
+              ),
+            );
+          }),
+        ],
+      );
+      await runtime.initialize();
+
+      await runtime.goRoute(
+        const TestIntent<void>('home.detail', RouteArgs('1')),
+      );
+      final home = runtime.activeRouteEntries.single;
+      adapter.emit(
+        CCNavigationBackendEventKind.push,
+        backendEntryId: 'home-entry',
+        backendOperationId: 'home-push',
+        navigationId: home.navigationId,
+        routeId: home.routeId,
+        owner: CCBackendEntryOwner.managed,
+        sequence: 1,
+        navigatorOutlet: 'home',
+        shellId: 'tabs',
+      );
+      adapter.emit(
+        CCNavigationBackendEventKind.topChanged,
+        backendEntryId: 'home-entry',
+        backendOperationId: 'home-top',
+        navigationId: home.navigationId,
+        routeId: home.routeId,
+        owner: CCBackendEntryOwner.managed,
+        sequence: 2,
+        navigatorOutlet: 'home',
+        shellId: 'tabs',
+      );
+
+      final settingsResult = runtime.pushRoute<String>(
+        const TestIntent<String>('settings.detail', RouteArgs('2')),
+      );
+      final settings = runtime.activeRouteEntries.last;
+      adapter.emit(
+        CCNavigationBackendEventKind.push,
+        backendEntryId: 'settings-entry',
+        backendOperationId: 'settings-push',
+        navigationId: settings.navigationId,
+        routeId: settings.routeId,
+        owner: CCBackendEntryOwner.managed,
+        sequence: 3,
+        navigatorOutlet: 'settings',
+        shellId: 'tabs',
+      );
+      adapter.emit(
+        CCNavigationBackendEventKind.topChanged,
+        backendEntryId: 'settings-entry',
+        backendOperationId: 'settings-top',
+        navigationId: settings.navigationId,
+        routeId: settings.routeId,
+        owner: CCBackendEntryOwner.managed,
+        sequence: 4,
+        navigatorOutlet: 'settings',
+        shellId: 'tabs',
+      );
+      adapter.emit(
+        CCNavigationBackendEventKind.outletActivated,
+        backendOperationId: 'settings-activated',
+        sequence: 5,
+        navigatorOutlet: 'settings',
+        shellId: 'tabs',
+      );
+      expect(runtime.activeRouteEntries.map((entry) => entry.lifecycleState), [
+        CCRouteEntryLifecycleState.hidden,
+        CCRouteEntryLifecycleState.visible,
+      ]);
+
+      adapter.emit(
+        CCNavigationBackendEventKind.outletActivated,
+        backendOperationId: 'home-activated',
+        sequence: 6,
+        navigatorOutlet: 'home',
+        shellId: 'tabs',
+      );
+      expect(runtime.activeRouteEntries.map((entry) => entry.lifecycleState), [
+        CCRouteEntryLifecycleState.visible,
+        CCRouteEntryLifecycleState.hidden,
+      ]);
+      expect(runtime.activeRouteEntries, hasLength(2));
+
+      runtime.popRoute(result: 'done');
+      expect(await settingsResult, 'done');
       await runtime.dispose();
     },
   );
@@ -713,7 +1227,8 @@ void main() {
       await Future<void>.delayed(Duration.zero);
       expect(
         lifecycle.where(
-          (event) => event.state == CCRouteEntryLifecycleState.disposed,
+          (event) =>
+              event.entry.lifecycleState == CCRouteEntryLifecycleState.disposed,
         ),
         hasLength(2),
       );
@@ -774,7 +1289,9 @@ void main() {
       expect(
         runtime.recentRouteEntryEvents
             .where(
-              (event) => event.state == CCRouteEntryLifecycleState.disposed,
+              (event) =>
+                  event.entry.lifecycleState ==
+                  CCRouteEntryLifecycleState.disposed,
             )
             .length,
         4,
@@ -911,7 +1428,10 @@ void main() {
     await runtime.dispose();
 
     expect(runtime.activeRouteEntries, isEmpty);
-    expect(lifecycle.last.state, CCRouteEntryLifecycleState.disposed);
+    expect(
+      lifecycle.last.entry.lifecycleState,
+      CCRouteEntryLifecycleState.disposed,
+    );
     expect(lifecycle.last.reason, 'runtimeDispose');
   });
 
@@ -991,7 +1511,7 @@ void main() {
               phases.add(event.phase);
               elapsed.add(event.elapsed!);
               expect(event.entry, isNull);
-              expect(event.request.uri.toString(), '/orders/42');
+              expect(event.request.routePattern, '/orders/:value');
             },
             onArrival: (event) {
               phases.add(event.phase);
@@ -1035,15 +1555,24 @@ void main() {
   );
 
   test(
-    'aspect before can cancel and emits isolated lost and after hooks',
+    'global interceptor decisions are observed by read-only aspects',
     () async {
       final phases = <CCNavigationAspectPhase>[];
       final runtime = CCRouterRuntime.forTesting(
         navigationAdapter: CCMemoryNavigationAdapter(),
+        globalInterceptors: [
+          CCGlobalNavigationInterceptor(
+            id: 'policy',
+            interceptor: TestNavigationInterceptor(
+              'policy',
+              (_) => const CCNavigationCancel(code: 'blocked'),
+              [],
+            ),
+          ),
+        ],
         navigationAspects: [
           CCNavigationAspect(
-            id: 'policy',
-            before: (_) => const CCNavigationCancel(code: 'blocked'),
+            id: 'telemetry',
             onFound: (event) => phases.add(event.phase),
             onLost: (event) {
               phases.add(event.phase);
@@ -1077,6 +1606,132 @@ void main() {
         CCNavigationAspectPhase.after,
       ]);
       expect(runtime.activeRouteEntries, isEmpty);
+      await runtime.dispose();
+    },
+  );
+
+  test(
+    'aspects expose safe attribution, stage timing, and Entry visibility',
+    () async {
+      final observed = <CCNavigationAspectEvent>[];
+      final runtime = CCRouterRuntime.forTesting(
+        navigationAdapter: CCMemoryNavigationAdapter(),
+        telemetryContextProvider: const TestTelemetryContextProvider(
+          CCNavigationTelemetryContext(
+            anonymousVisitorId: 'visitor-opaque',
+            applicationSessionId: 'app-session-opaque',
+          ),
+        ),
+        globalInterceptors: [
+          CCGlobalNavigationInterceptor(
+            id: 'timed.policy',
+            interceptor: TestNavigationInterceptor('timed.policy', (_) async {
+              await Future<void>.delayed(const Duration(milliseconds: 1));
+              return const CCNavigationProceed();
+            }, []),
+          ),
+        ],
+        navigationAspects: [
+          CCNavigationAspect(
+            id: 'telemetry',
+            onFound: observed.add,
+            onArrival: observed.add,
+            onShow: observed.add,
+            onHide: observed.add,
+            onRemoved: observed.add,
+            onDisposed: observed.add,
+            onAfter: observed.add,
+          ),
+        ],
+        components: [
+          routeComponent(
+            'orders',
+            (registry) => registry.registerRoute(pathRoute()),
+          ),
+        ],
+      );
+      await runtime.initialize();
+
+      await runtime.goRoute(
+        const TestIntent<void>('orders.detail', RouteArgs('10001')),
+      );
+      final pushed = runtime.pushRoute<String>(
+        const TestIntent<String>(
+          'orders.detail',
+          RouteArgs('20002', payload: Object()),
+        ),
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+      expect(runtime.activeRouteEntries, hasLength(2));
+      runtime.popRoute(result: 'done');
+      expect(await pushed, 'done');
+      await Future<void>.delayed(Duration.zero);
+
+      final childFound = observed.lastWhere(
+        (event) =>
+            event.phase == CCNavigationAspectPhase.found &&
+            event.request.referrerRouteId != null,
+      );
+      expect(childFound.request.resolvedHostId, 'default');
+      expect(childFound.request.navigatorOutlet, 'root');
+      expect(childFound.request.ownerComponentId, 'orders');
+      expect(childFound.request.referrerRouteId, 'orders.detail');
+      expect(childFound.request.redirectChain, ['orders.detail']);
+      expect(
+        childFound.request.telemetryContext?.anonymousVisitorId,
+        'visitor-opaque',
+      );
+      expect(
+        childFound.request.telemetryContext?.applicationSessionId,
+        'app-session-opaque',
+      );
+      expect(childFound.request.toString(), isNot(contains('20002')));
+      expect(childFound.timing?.resolve, isNotNull);
+
+      final childNavigationId = childFound.request.navigationId;
+      final childEvents = observed
+          .where((event) => event.request.navigationId == childNavigationId)
+          .toList();
+      final childPhases = childEvents.map((event) => event.phase).toList();
+      expect(
+        childPhases,
+        containsAll([
+          CCNavigationAspectPhase.found,
+          CCNavigationAspectPhase.arrival,
+          CCNavigationAspectPhase.removed,
+          CCNavigationAspectPhase.disposed,
+          CCNavigationAspectPhase.after,
+        ]),
+      );
+      expect(
+        childPhases.indexOf(CCNavigationAspectPhase.found),
+        lessThan(childPhases.indexOf(CCNavigationAspectPhase.arrival)),
+      );
+      expect(
+        childPhases.indexOf(CCNavigationAspectPhase.arrival),
+        lessThan(childPhases.indexOf(CCNavigationAspectPhase.removed)),
+      );
+      final arrival = childEvents.firstWhere(
+        (event) => event.phase == CCNavigationAspectPhase.arrival,
+      );
+      expect(arrival.timing?.intercept, isNotNull);
+      expect(arrival.timing?.dispatch, isNotNull);
+      expect(arrival.timing?.arrival, isNotNull);
+      final removed = childEvents.firstWhere(
+        (event) => event.phase == CCNavigationAspectPhase.removed,
+      );
+      expect(removed.timing?.stay, isNotNull);
+
+      final rootEvents = observed.where(
+        (event) =>
+            event.request.navigationId != childNavigationId &&
+            (event.phase == CCNavigationAspectPhase.hide ||
+                event.phase == CCNavigationAspectPhase.show),
+      );
+      expect(rootEvents.map((event) => event.phase), [
+        CCNavigationAspectPhase.hide,
+        CCNavigationAspectPhase.show,
+      ]);
       await runtime.dispose();
     },
   );
@@ -1212,10 +1867,17 @@ void main() {
   test('redirect preserves origin and navigation identity', () async {
     final calls = <String>[];
     final seenIds = <String>[];
+    late CCNavigationAspectRequest arrivedRequest;
     final source = const CCNavigationSource.deepLink('platform');
     final adapter = CCMemoryNavigationAdapter();
     final runtime = CCRouterRuntime.forTesting(
       navigationAdapter: adapter,
+      navigationAspects: [
+        CCNavigationAspect(
+          id: 'redirect.trace',
+          onArrival: (event) => arrivedRequest = event.request,
+        ),
+      ],
       components: [
         routeComponent('orders', (registry) {
           registry.registerRouteInterceptor(
@@ -1261,6 +1923,7 @@ void main() {
     expect(seenIds, hasLength(1));
     expect(adapter.currentRequest?.navigationId, seenIds.single);
     expect(calls, ['orders.redirect:orders.detail']);
+    expect(arrivedRequest.redirectChain, ['orders.detail', 'auth.login']);
     await runtime.dispose();
   });
 
@@ -1335,6 +1998,125 @@ void main() {
     await runtime.dispose();
   });
 
+  test('rejects route interceptors owned by another component', () async {
+    final runtime = CCRouterRuntime.forTesting(
+      navigationAdapter: CCMemoryNavigationAdapter(),
+      components: [
+        routeComponent(
+          'auth',
+          (registry) => registry.registerRouteInterceptor(
+            'auth.private',
+            TestNavigationInterceptor(
+              'auth.private',
+              (_) => const CCNavigationProceed(),
+              [],
+            ),
+          ),
+        ),
+        routeComponent(
+          'orders',
+          (registry) => registry.registerRoute(
+            pathRoute(interceptorIds: ['auth.private']),
+          ),
+        ),
+      ],
+    );
+
+    await expectLater(
+      runtime.initialize(),
+      throwsA(isA<CCRouteRegistrationError>()),
+    );
+    await runtime.dispose();
+  });
+
+  test(
+    'interceptor timeout cancels work and reports a dedicated error',
+    () async {
+      CCNavigationInterceptorContext? seenContext;
+      final runtime = CCRouterRuntime.forTesting(
+        navigationAdapter: CCMemoryNavigationAdapter(),
+        globalInterceptors: [
+          CCGlobalNavigationInterceptor(
+            id: 'slow.policy',
+            timeout: const Duration(milliseconds: 1),
+            interceptor: TestNavigationInterceptor('slow.policy', (context) {
+              seenContext = context;
+              return context.cancellation.whenCancelled.then(
+                (_) => const CCNavigationProceed(),
+              );
+            }, []),
+          ),
+        ],
+        components: [
+          routeComponent(
+            'orders',
+            (registry) => registry.registerRoute(pathRoute()),
+          ),
+        ],
+      );
+      await runtime.initialize();
+
+      await expectLater(
+        runtime.goRoute(
+          const TestIntent<void>('orders.detail', RouteArgs('42')),
+        ),
+        throwsA(
+          isA<CCNavigationInterceptorTimeoutError>().having(
+            (error) => error.interceptorId,
+            'interceptorId',
+            'slow.policy',
+          ),
+        ),
+      );
+      expect(seenContext?.deadline, isNotNull);
+      expect(seenContext?.cancellation.isCancelled, isTrue);
+      expect(runtime.activeRouteEntries, isEmpty);
+      await runtime.dispose();
+    },
+  );
+
+  test('interceptor failures use a sanitized dedicated error', () async {
+    final runtime = CCRouterRuntime.forTesting(
+      navigationAdapter: CCMemoryNavigationAdapter(),
+      globalInterceptors: [
+        CCGlobalNavigationInterceptor(
+          id: 'broken.policy',
+          interceptor: TestNavigationInterceptor(
+            'broken.policy',
+            (_) => throw StateError('sensitive policy details'),
+            [],
+          ),
+        ),
+      ],
+      components: [
+        routeComponent(
+          'orders',
+          (registry) => registry.registerRoute(pathRoute()),
+        ),
+      ],
+    );
+    await runtime.initialize();
+
+    await expectLater(
+      runtime.goRoute(const TestIntent<void>('orders.detail', RouteArgs('42'))),
+      throwsA(
+        isA<CCNavigationInterceptorError>()
+            .having(
+              (error) => error.interceptorId,
+              'interceptorId',
+              'broken.policy',
+            )
+            .having((error) => error.causeType, 'causeType', 'StateError')
+            .having(
+              (error) => error.message,
+              'message',
+              isNot(contains('sensitive')),
+            ),
+      ),
+    );
+    await runtime.dispose();
+  });
+
   test('records a sanitized failed lifecycle event', () async {
     final runtime = CCRouterRuntime.forTesting(
       navigationAdapter: FailingNavigationAdapter(),
@@ -1398,7 +2180,7 @@ void main() {
       );
       expect(events.every((event) => event.routeId == 'orders.detail'), isTrue);
       expect(
-        events.every((event) => event.uri.toString() == '/orders/42'),
+        events.every((event) => event.routePattern == '/orders/:value'),
         isTrue,
       );
       expect(
@@ -1414,8 +2196,8 @@ void main() {
       );
       expect(events, hasLength(2));
       expect(
-        runtime.recentNavigationEvents.map((event) => event.uri.toString()),
-        ['/orders/43', '/orders/43'],
+        runtime.recentNavigationEvents.map((event) => event.routePattern),
+        ['/orders/:value', '/orders/:value'],
       );
 
       await runtime.dispose();
@@ -1582,12 +2364,189 @@ void main() {
           Uri.parse('/internal/45'),
           origin: CCNavigationOrigin.externalNotification,
         ),
-        throwsA(isA<CCRouteNotFoundError>()),
+        throwsA(isA<CCDeepLinkRejectedError>()),
       );
       await runtime.openRoute(Uri.parse('/internal/45'));
       expect(adapter.currentRequest?.routeId, 'orders.internal');
       expect(adapter.currentRequest?.origin, CCNavigationOrigin.internal);
       await runtime.dispose();
+    },
+  );
+
+  test(
+    'failure policy falls back with sanitized context and attribution',
+    () async {
+      final contexts = <CCNavigationFailureContext>[];
+      final adapter = CCMemoryNavigationAdapter();
+      const source = CCNavigationSource.deepLink('campaign');
+      final runtime = CCRouterRuntime.forTesting(
+        navigationAdapter: adapter,
+        navigationFailurePolicy: TestNavigationFailurePolicy((context) {
+          contexts.add(context);
+          return const CCNavigationFailureFallback.toIntent(
+            TestIntent<Object?>('routing.error', RouteArgs('404')),
+            operation: CCNavigationOperation.go,
+          );
+        }),
+        components: [
+          routeComponent('orders', (registry) {
+            registry.registerRoute(pathRoute(path: '/orders/:value'));
+            registry.registerRoute(
+              pathRoute(
+                routeId: 'routing.error',
+                path: '/routing-error/:value',
+                deepLink: CCDeepLinkPolicy.enabled,
+              ),
+            );
+          }),
+        ],
+      );
+      await runtime.initialize();
+
+      await runtime.openRoute(
+        Uri.parse('/orders/42?token=secret'),
+        origin: CCNavigationOrigin.externalPlatform,
+        source: source,
+      );
+
+      expect(contexts, hasLength(1));
+      expect(contexts.single.routeId, 'orders.detail');
+      expect(contexts.single.stage, CCNavigationFailureStage.resolution);
+      expect(contexts.single.errorType, 'CCDeepLinkRejectedError');
+      expect(contexts.single.origin, CCNavigationOrigin.externalPlatform);
+      expect(contexts.single.source, same(source));
+      expect(adapter.currentRequest?.routeId, 'routing.error');
+      expect(
+        adapter.currentRequest?.origin,
+        CCNavigationOrigin.externalPlatform,
+      );
+      expect(runtime.recentNavigationFailures, hasLength(1));
+      expect(runtime.recentNavigationFailures.single.recovered, isTrue);
+      await runtime.dispose();
+    },
+  );
+
+  test(
+    'failure policy propagates unresolved routes and records one event',
+    () async {
+      final runtime = CCRouterRuntime.forTesting(
+        navigationAdapter: CCMemoryNavigationAdapter(),
+        navigationFailurePolicy: TestNavigationFailurePolicy(
+          (_) => const CCNavigationFailurePropagate(),
+        ),
+      );
+      await runtime.initialize();
+
+      await expectLater(
+        runtime.openRoute(Uri.parse('/missing/sensitive-value')),
+        throwsA(isA<CCRouteNotFoundError>()),
+      );
+
+      final event = runtime.recentNavigationFailures.single;
+      expect(event.context.routeId, isNull);
+      expect(event.context.stage, CCNavigationFailureStage.resolution);
+      expect(event.context.errorType, 'CCRouteNotFoundError');
+      expect(event.recovered, isFalse);
+      await runtime.dispose();
+    },
+  );
+
+  test(
+    'failure recovery is bounded and preserves one navigation identity',
+    () async {
+      final contexts = <CCNavigationFailureContext>[];
+      final runtime = CCRouterRuntime.forTesting(
+        navigationAdapter: CCMemoryNavigationAdapter(),
+        navigationFailurePolicy: TestNavigationFailurePolicy((context) {
+          contexts.add(context);
+          return CCNavigationFailureRedirect.toUri(
+            Uri.parse('/still-missing/${context.recoveryDepth}'),
+            operation: CCNavigationOperation.go,
+          );
+        }),
+      );
+      await runtime.initialize();
+
+      await expectLater(
+        runtime.openRoute(Uri.parse('/missing')),
+        throwsA(isA<CCNavigationFailureRecoveryLoopError>()),
+      );
+
+      expect(contexts.map((context) => context.recoveryDepth), [0, 1, 2, 3, 4]);
+      expect(
+        contexts.map((context) => context.navigationId).toSet(),
+        hasLength(1),
+      );
+      expect(runtime.recentNavigationFailures, hasLength(5));
+      expect(runtime.recentNavigationFailures.last.recovered, isFalse);
+      await runtime.dispose();
+    },
+  );
+
+  test(
+    'failure events classify parameters, component state, and adapter errors',
+    () async {
+      final contexts = <CCNavigationFailureContext>[];
+      final policy = TestNavigationFailurePolicy((context) {
+        contexts.add(context);
+        return const CCNavigationFailurePropagate();
+      });
+      final runtime = CCRouterRuntime.forTesting(
+        navigationAdapter: CCMemoryNavigationAdapter(),
+        navigationFailurePolicy: policy,
+        components: [
+          routeComponent(
+            'orders',
+            (registry) => registry.registerRoute(pathRoute()),
+          ),
+        ],
+      );
+      await runtime.initialize();
+
+      await expectLater(
+        runtime.goRoute(
+          const TestIntent<void>('orders.detail', RouteArgs('invalid')),
+        ),
+        throwsA(isA<CCRouteParameterError>()),
+      );
+      runtime.deactivateComponent('orders');
+      await expectLater(
+        runtime.goRoute(
+          const TestIntent<void>('orders.detail', RouteArgs('42')),
+        ),
+        throwsA(isA<CCRouteUnavailableError>()),
+      );
+      await runtime.dispose();
+
+      final failingRuntime = CCRouterRuntime.forTesting(
+        navigationAdapter: FailingNavigationAdapter(),
+        navigationFailurePolicy: policy,
+        components: [
+          routeComponent(
+            'orders',
+            (registry) => registry.registerRoute(pathRoute()),
+          ),
+        ],
+      );
+      await failingRuntime.initialize();
+      await expectLater(
+        failingRuntime.goRoute(
+          const TestIntent<void>('orders.detail', RouteArgs('42')),
+        ),
+        throwsA(isA<CCNavigationAdapterError>()),
+      );
+
+      expect(contexts.map((context) => context.stage), [
+        CCNavigationFailureStage.parameters,
+        CCNavigationFailureStage.resolution,
+        CCNavigationFailureStage.dispatch,
+      ]);
+      expect(contexts.map((context) => context.routeId), [
+        'orders.detail',
+        'orders.detail',
+        'orders.detail',
+      ]);
+      await failingRuntime.dispose();
     },
   );
 
@@ -1726,7 +2685,7 @@ void main() {
       );
       expect(handled.handled, isTrue);
       expect(handled.removedOwner, CCPopRemovedOwner.managed);
-      expect(handled.resultAvailable, isTrue);
+      expect(handled.removedOwner, CCPopRemovedOwner.managed);
       expect(handled.trigger, CCPopTrigger.gesture);
       expect(await pushed, 'back');
       expect(runtime.activeRouteEntries, hasLength(1));
@@ -1734,6 +2693,162 @@ void main() {
       await runtime.dispose();
     },
   );
+
+  test(
+    'managed Pop guards run globally then locally and preserve the entry',
+    () async {
+      final calls = <String>[];
+      final adapter = CCMemoryNavigationAdapter();
+      final runtime = CCRouterRuntime.forTesting(
+        navigationAdapter: adapter,
+        globalPopGuards: [
+          CCGlobalPopGuard(
+            id: 'app.guard',
+            guard: TestPopGuard('global', calls, (_) => const CCPopAllow()),
+          ),
+        ],
+        components: [
+          routeComponent('orders', (registry) {
+            registry.registerRoutePopGuard(
+              'orders.dirty',
+              TestPopGuard(
+                'local',
+                calls,
+                (_) => const CCPopDeny(code: 'unsaved_changes'),
+              ),
+            );
+            registry.registerRoute(pathRoute(popGuardIds: ['orders.dirty']));
+          }),
+        ],
+      );
+      await runtime.initialize();
+      await runtime.goRoute(
+        const TestIntent<void>('orders.detail', RouteArgs('1')),
+      );
+
+      final outcome = await runtime.maybePopOutcomeRoute(
+        trigger: CCPopTrigger.gesture,
+      );
+
+      expect(outcome.handled, isTrue);
+      expect(outcome.removedOwner, CCPopRemovedOwner.none);
+      expect(outcome.guardDeniedCode, 'unsaved_changes');
+      expect(calls, [
+        'global:orders.detail:gesture',
+        'local:orders.detail:gesture',
+      ]);
+      expect(runtime.activeRouteEntries, hasLength(1));
+      expect(adapter.entries, hasLength(1));
+      await runtime.dispose();
+    },
+  );
+
+  test('direct business Pop throws a stable guard denial', () async {
+    final adapter = CCMemoryNavigationAdapter();
+    final runtime = CCRouterRuntime.forTesting(
+      navigationAdapter: adapter,
+      components: [
+        routeComponent('orders', (registry) {
+          registry.registerRoutePopGuard(
+            'orders.locked',
+            TestPopGuard(
+              'local',
+              <String>[],
+              (_) => const CCPopDeny(code: 'flow_locked'),
+            ),
+          );
+          registry.registerRoute(pathRoute(popGuardIds: ['orders.locked']));
+        }),
+      ],
+    );
+    await runtime.initialize();
+    await runtime.goRoute(
+      const TestIntent<void>('orders.detail', RouteArgs('1')),
+    );
+
+    expect(
+      () => runtime.popRoute(),
+      throwsA(
+        isA<CCPopGuardDeniedError>().having(
+          (error) => error.code,
+          'code',
+          'flow_locked',
+        ),
+      ),
+    );
+    expect(runtime.activeRouteEntries, hasLength(1));
+    await runtime.dispose();
+  });
+
+  test('foreign top entry bypasses managed Pop guards', () async {
+    final calls = <String>[];
+    final adapter = BackendEventNavigationAdapter();
+    final runtime = CCRouterRuntime.forTesting(
+      navigationAdapter: adapter,
+      globalPopGuards: [
+        CCGlobalPopGuard(
+          id: 'app.guard',
+          guard: TestPopGuard(
+            'global',
+            calls,
+            (_) => const CCPopDeny(code: 'should_not_run'),
+          ),
+        ),
+      ],
+      components: [
+        routeComponent(
+          'orders',
+          (registry) => registry.registerRoute(pathRoute()),
+        ),
+      ],
+    );
+    await runtime.initialize();
+    await runtime.goRoute(
+      const TestIntent<void>('orders.detail', RouteArgs('1')),
+    );
+    adapter.emit(
+      CCNavigationBackendEventKind.push,
+      backendEntryId: 'foreign-popup',
+      backendOperationId: 'foreign-popup-push',
+      owner: CCBackendEntryOwner.foreign,
+      sequence: 100,
+    );
+    adapter.consumeForeignMaybePop = true;
+
+    final outcome = await runtime.maybePopOutcomeRoute();
+
+    expect(outcome.handled, isTrue);
+    expect(outcome.guardDeniedCode, isNull);
+    expect(calls, isEmpty);
+    expect(runtime.activeRouteEntries, hasLength(1));
+    await runtime.dispose();
+  });
+
+  test('route Pop guards must be owned by the route component', () async {
+    final runtime = CCRouterRuntime.forTesting(
+      navigationAdapter: CCMemoryNavigationAdapter(),
+      components: [
+        routeComponent(
+          'auth',
+          (registry) => registry.registerRoutePopGuard(
+            'auth.guard',
+            TestPopGuard('auth', <String>[], (_) => const CCPopAllow()),
+          ),
+        ),
+        routeComponent(
+          'orders',
+          (registry) =>
+              registry.registerRoute(pathRoute(popGuardIds: ['auth.guard'])),
+        ),
+      ],
+    );
+
+    await expectLater(
+      runtime.initialize(),
+      throwsA(isA<CCRouteRegistrationError>()),
+    );
+    await runtime.dispose();
+  });
 
   test('allow concurrency policy permits identical pushes', () async {
     final adapter = CCMemoryNavigationAdapter();
@@ -2114,6 +3229,60 @@ void main() {
     },
   );
 
+  test('deferred popAndPush resumes its exact composite operation', () async {
+    final adapter = CCMemoryNavigationAdapter();
+    var authorized = false;
+    final runtime = CCRouterRuntime.forTesting(
+      navigationAdapter: adapter,
+      components: [
+        routeComponent('orders', (registry) {
+          registry.registerRouteInterceptor(
+            'orders.auth',
+            TestNavigationInterceptor('orders.auth', (context) {
+              if (!authorized && context.request.uri.path == '/orders/3') {
+                return const CCNavigationDefer(code: 'login_required');
+              }
+              return const CCNavigationProceed();
+            }, []),
+          );
+          registry.registerRoute(pathRoute(interceptorIds: ['orders.auth']));
+        }),
+      ],
+    );
+    await runtime.initialize();
+
+    await runtime.goRoute(
+      const TestIntent<void>('orders.detail', RouteArgs('1')),
+    );
+    final oldRoute = runtime.pushRoute<String>(
+      const TestIntent<String>('orders.detail', RouteArgs('2')),
+    );
+    final replacement = runtime.popAndPushRoute<String>(
+      const TestIntent<String>('orders.detail', RouteArgs('3')),
+      popResult: 'selected',
+    );
+    await Future<void>.delayed(Duration.zero);
+    expect(adapter.entries.map((entry) => entry.uri.path), [
+      '/orders/1',
+      '/orders/2',
+    ]);
+
+    authorized = true;
+    final resumed = runtime.resumePendingNavigation(
+      runtime.pendingNavigations.single.navigationId,
+    );
+    await Future<void>.delayed(Duration.zero);
+    expect(await oldRoute, 'selected');
+    expect(adapter.entries.map((entry) => entry.uri.path), [
+      '/orders/1',
+      '/orders/3',
+    ]);
+    runtime.popRoute(result: 'replacement');
+    expect(await replacement, 'replacement');
+    expect(await resumed, 'replacement');
+    await runtime.dispose();
+  });
+
   test(
     'popUntil keeps the first matching entry and cancels removed results',
     () async {
@@ -2184,6 +3353,59 @@ void main() {
       );
       runtime.popRoute(result: 'done');
       expect(await result, 'done');
+      await runtime.dispose();
+    },
+  );
+
+  test(
+    'deferred pushAndRemoveUntil retains its predicate and commit semantics',
+    () async {
+      final adapter = CCMemoryNavigationAdapter();
+      var authorized = false;
+      final runtime = CCRouterRuntime.forTesting(
+        navigationAdapter: adapter,
+        components: [
+          routeComponent('orders', (registry) {
+            registry.registerRouteInterceptor(
+              'orders.auth',
+              TestNavigationInterceptor('orders.auth', (context) {
+                if (!authorized && context.request.uri.path == '/orders/3') {
+                  return const CCNavigationDefer(code: 'login_required');
+                }
+                return const CCNavigationProceed();
+              }, []),
+            );
+            registry.registerRoute(pathRoute(interceptorIds: ['orders.auth']));
+          }),
+        ],
+      );
+      await runtime.initialize();
+
+      await runtime.goRoute(
+        const TestIntent<void>('orders.detail', RouteArgs('1')),
+      );
+      final removed = runtime.pushRoute<String>(
+        const TestIntent<String>('orders.detail', RouteArgs('2')),
+      );
+      final pushed = runtime.pushAndRemoveUntilRoute<String>(
+        const TestIntent<String>('orders.detail', RouteArgs('3')),
+        (entry) => entry.uri.path == '/orders/1',
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      authorized = true;
+      final resumed = runtime.resumePendingNavigation(
+        runtime.pendingNavigations.single.navigationId,
+      );
+      await Future<void>.delayed(Duration.zero);
+      expect(await removed, isNull);
+      expect(adapter.entries.map((entry) => entry.uri.path), [
+        '/orders/1',
+        '/orders/3',
+      ]);
+      runtime.popRoute(result: 'done');
+      expect(await pushed, 'done');
+      expect(await resumed, 'done');
       await runtime.dispose();
     },
   );

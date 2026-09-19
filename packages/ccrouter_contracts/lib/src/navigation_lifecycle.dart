@@ -28,7 +28,7 @@ final class CCNavigationLifecycleEvent {
     required this.phase,
     required this.operation,
     required this.routeId,
-    required this.uri,
+    required this.routePattern,
     required this.placement,
     required this.origin,
     required this.timestamp,
@@ -48,8 +48,11 @@ final class CCNavigationLifecycleEvent {
   /// Stable route contract ID selected by Runtime resolution.
   final String routeId;
 
-  /// Canonical generated or normalized URI sent to the adapter.
-  final Uri uri;
+  /// Canonical route template with parameter names but no parameter values.
+  ///
+  /// Use this for aggregation without exposing actual Path, Query, Fragment,
+  /// or user-info values supplied to the navigation request.
+  final String routePattern;
 
   /// Structural parent, Shell, and Navigator outlet for the route.
   final CCRoutePlacement placement;

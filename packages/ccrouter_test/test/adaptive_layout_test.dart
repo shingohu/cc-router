@@ -57,4 +57,30 @@ void main() {
     expect(placement.hostId, 'foldable-main');
     expect(placement.navigatorOutlet, 'detail');
   });
+
+  test('adaptive Outlet policy maps one, two, and multiple panes', () {
+    final outlets = CCAdaptiveOutletPolicy(
+      primaryOutlet: 'list',
+      secondaryOutlet: 'detail',
+      multiPaneOutlets: const ['inspector'],
+    );
+
+    expect(outlets.activeOutletsFor(CCAdaptiveLayoutKind.singlePane), ['list']);
+    expect(outlets.activeOutletsFor(CCAdaptiveLayoutKind.splitPane), [
+      'list',
+      'detail',
+    ]);
+    expect(outlets.activeOutletsFor(CCAdaptiveLayoutKind.multiPane), [
+      'list',
+      'detail',
+      'inspector',
+    ]);
+    expect(
+      () => CCAdaptiveOutletPolicy(
+        primaryOutlet: 'list',
+        secondaryOutlet: 'list',
+      ),
+      throwsArgumentError,
+    );
+  });
 }

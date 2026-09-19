@@ -273,7 +273,7 @@ String _constant(DartObject value) {
     ),
     'CCRoutePlacement' => (
       <String>[],
-      ['hostId', 'parentRouteId', 'shellId', 'navigatorOutlet', 'routeKind'],
+      ['hostId', 'parentRouteId', 'shellId', 'navigatorOutlet'],
     ),
     _ => throw StateError('Unsupported route metadata: $name'),
   };

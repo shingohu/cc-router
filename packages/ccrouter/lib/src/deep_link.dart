@@ -10,24 +10,20 @@ part of 'facade.dart';
 abstract final class CCDeepLinkIngress {
   /// Opens a URI received from a Universal Link, App Link, custom scheme, or
   /// platform initial location.
-  static Future<void> fromPlatform(
-    Uri uri, {
-    CCNavigationSource? source,
-  }) => CCRouter._runtime.openRoute(
-    uri,
-    origin: CCNavigationOrigin.externalPlatform,
-    source: source,
-  );
+  static Future<void> fromPlatform(Uri uri, {CCNavigationSource? source}) =>
+      CCRouter._runtime.openRoute(
+        uri,
+        origin: CCNavigationOrigin.externalPlatform,
+        source: source,
+      );
 
   /// Opens a URI extracted from an external notification payload.
-  static Future<void> fromNotification(
-    Uri uri, {
-    CCNavigationSource? source,
-  }) => CCRouter._runtime.openRoute(
-    uri,
-    origin: CCNavigationOrigin.externalNotification,
-    source: source,
-  );
+  static Future<void> fromNotification(Uri uri, {CCNavigationSource? source}) =>
+      CCRouter._runtime.openRoute(
+        uri,
+        origin: CCNavigationOrigin.externalNotification,
+        source: source,
+      );
 
   /// Opens a URI obtained from a QR code or equivalent untrusted scan input.
   static Future<void> fromQrCode(Uri uri, {CCNavigationSource? source}) =>

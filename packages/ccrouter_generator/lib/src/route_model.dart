@@ -146,7 +146,9 @@ final class _RouteModel {
     }
     final reversibleIndexes = <int>[
       for (var index = 0; index < patterns.length; index++)
-        if (!_field(patterns[index], 'matchOnly').toBoolValue()!) index,
+        if ((patterns[index].type as InterfaceType).element.displayName !=
+            'CCRegexPattern')
+          index,
     ];
     late final int primaryPatternIndex;
     if (explicitPrimaryIndexes case [final explicitIndex]) {
@@ -280,14 +282,6 @@ final class _RouteModel {
     if (result is DynamicType || result is TypeParameterType) {
       _fail(
         'CCRoute must explicitly specify its result type; use void when absent.',
-        element,
-      );
-    }
-    if (_enumValue(
-      annotation.read('placement').objectValue.getField('routeKind')!,
-    ).endsWith('.shell')) {
-      _fail(
-        'Shell containers must be registered separately, not as pages.',
         element,
       );
     }
@@ -517,7 +511,12 @@ final class _ComponentModel {
 /// One validated constructor argument and its boundary conversion policy.
 final class _ParameterModel {
   /// Captures a constructor parameter with one explicit or inferred source.
-  _ParameterModel(this.element, this.source, this.wireName);
+  _ParameterModel(
+    this.element,
+    this.source,
+    this.wireName, {
+    this.queryCodecType,
+  });
 
   /// Original parameter for Dart defaults, nullability and page invocation.
   final FormalParameterElement element;
@@ -527,6 +526,9 @@ final class _ParameterModel {
 
   /// URI key; Extra uses its Dart name for diagnostic messages only.
   final String wireName;
+
+  /// Explicit complex Query codec validated against the parameter value type.
+  final InterfaceType? queryCodecType;
 
   /// Parameter name retained in typed arguments and page construction.
   String get name => element.displayName;
@@ -543,6 +545,26 @@ final class _ParameterModel {
 
   /// Compiler-parsed default expression reused in the same Dart library.
   String? get defaultCode => element.defaultValueCode;
+
+  /// Whether the Query value uses one repeated key for a `List` or `Set`.
+  bool get isQueryCollection {
+    final type = element.type;
+    return source == 'query' &&
+        type is InterfaceType &&
+        (type.isDartCoreList || type.isDartCoreSet);
+  }
+
+  /// Collection element type, or the scalar parameter type for URI conversion.
+  InterfaceType get queryValueType {
+    final type = element.type as InterfaceType;
+    return isQueryCollection
+        ? type.typeArguments.single as InterfaceType
+        : type;
+  }
+
+  /// Stable cardinality recorded in generated route documentation.
+  String get queryCardinality =>
+      isQueryCollection || queryCodecType != null ? 'repeated' : 'single';
 
   /// Validates supported scalar types and detects conflicting annotations.
   static _ParameterModel? read(
@@ -589,23 +611,34 @@ final class _ParameterModel {
     if (wireName.trim().isEmpty || RegExp(r'[\r\n]').hasMatch(wireName)) {
       _fail('Query names cannot be empty or contain line breaks.', parameter);
     }
-    final model = _ParameterModel(parameter, source, wireName);
+    final codecType = queries.isEmpty
+        ? null
+        : queries.single.getField('codec')?.toTypeValue();
+    final model = _ParameterModel(
+      parameter,
+      source,
+      wireName,
+      queryCodecType: codecType is InterfaceType ? codecType : null,
+    );
+    if (codecType != null && codecType is! InterfaceType) {
+      _fail(
+        'Query codec for "${parameter.displayName}" must be a concrete class type.',
+        parameter,
+      );
+    }
     if (source == 'path' && (model.nullable || model.defaultCode != null)) {
       _fail(
         'Path parameters must be non-nullable without defaults.',
         parameter,
       );
     }
-    if (source != 'extra') {
+    if (model.queryCodecType != null) {
+      _validateQueryCodec(model);
+    } else if (source != 'extra') {
       final type = parameter.type;
-      if (type is! InterfaceType ||
-          !(type.isDartCoreString ||
-              type.isDartCoreInt ||
-              type.isDartCoreDouble ||
-              type.isDartCoreBool ||
-              type.element is EnumElement)) {
+      if (type is! InterfaceType || !_isSupportedUriType(type, source)) {
         _fail(
-          'URI parameters support String, int, double, bool and enums; use Extra for objects.',
+          'URI parameters support String, int, double, bool, enums, and Query-only List/Set collections of those values; use Extra or an explicit Query codec for objects.',
           parameter,
         );
       }
@@ -618,5 +651,86 @@ final class _ParameterModel {
       );
     }
     return model;
+  }
+
+  /// Checks the closed set of scalar and repeated URI parameter types.
+  static bool _isSupportedUriType(InterfaceType type, String source) {
+    if (_isSupportedUriScalar(type)) return true;
+    if (source != 'query' ||
+        (!type.isDartCoreList && !type.isDartCoreSet) ||
+        type.typeArguments.length != 1) {
+      return false;
+    }
+    final element = type.typeArguments.single;
+    return element is InterfaceType &&
+        element.nullabilitySuffix != NullabilitySuffix.question &&
+        _isSupportedUriScalar(element);
+  }
+
+  /// Checks one URI scalar without accepting nested or nullable elements.
+  static bool _isSupportedUriScalar(InterfaceType type) =>
+      type.isDartCoreString ||
+      type.isDartCoreInt ||
+      type.isDartCoreDouble ||
+      type.isDartCoreBool ||
+      type.element is EnumElement;
+
+  /// Validates a stateless complex Query codec and its exact generic contract.
+  static void _validateQueryCodec(_ParameterModel model) {
+    final parameter = model.element;
+    final parameterType = parameter.type;
+    if (model.source != 'query' ||
+        parameterType is! InterfaceType ||
+        _isSupportedUriType(parameterType, 'query')) {
+      _fail(
+        'Query codec for "${parameter.displayName}" is only valid for a non-scalar, non-collection Query object.',
+        parameter,
+      );
+    }
+    final codecType = model.queryCodecType!;
+    final codecElement = codecType.element;
+    if (codecElement is! ClassElement ||
+        codecElement.isAbstract ||
+        codecElement.typeParameters.isNotEmpty) {
+      _fail(
+        'Query codec for "${parameter.displayName}" must be a concrete, non-generic class.',
+        parameter,
+      );
+    }
+    final constructor = codecElement.unnamedConstructor;
+    if (constructor == null ||
+        constructor.isFactory ||
+        !constructor.isConst ||
+        constructor.formalParameters.isNotEmpty) {
+      _fail(
+        'Query codec for "${parameter.displayName}" requires a const unnamed constructor without parameters.',
+        parameter,
+      );
+    }
+    final codecContracts = codecElement.allSupertypes.where(
+      (type) =>
+          type.element.displayName == 'CCRouteQueryCodec' &&
+          type.element.library.uri.toString().startsWith(
+            'package:ccrouter_contracts/',
+          ),
+    );
+    if (codecContracts.length != 1) {
+      _fail(
+        'Query codec for "${parameter.displayName}" must implement CCRouteQueryCodec<T>.',
+        parameter,
+      );
+    }
+    final valueType = codecContracts.single.typeArguments.single;
+    final expectedType = parameter.library!.typeSystem.promoteToNonNull(
+      parameterType,
+    );
+    final typeSystem = parameter.library!.typeSystem;
+    if (!typeSystem.isAssignableTo(valueType, expectedType) ||
+        !typeSystem.isAssignableTo(expectedType, valueType)) {
+      _fail(
+        'Query codec value type for "${parameter.displayName}" must exactly match the parameter type.',
+        parameter,
+      );
+    }
   }
 }

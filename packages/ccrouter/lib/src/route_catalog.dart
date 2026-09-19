@@ -15,23 +15,8 @@ typedef CCFlutterRouteBuilder =
 /// route metadata with the page factory that renders it. GoRouter, Navigator
 /// 1.0, Navigator 2.0, or another backend may consume the same destination.
 final class CCFlutterRouteDestination {
-  /// Creates an immutable destination owned by [componentId].
-  CCFlutterRouteDestination({
-    required this.componentId,
-    required this.route,
-    required this.builder,
-  }) {
-    if (componentId.trim().isEmpty) {
-      throw ArgumentError.value(
-        componentId,
-        'componentId',
-        'A Flutter destination must have a component owner.',
-      );
-    }
-  }
-
-  /// Stable component identity used for composition diagnostics.
-  final String componentId;
+  /// Creates an immutable generated destination for [route].
+  CCFlutterRouteDestination({required this.route, required this.builder});
 
   /// Adapter-neutral route metadata registered with the Runtime.
   final CCNavigationRoute route;

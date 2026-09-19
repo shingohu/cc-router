@@ -18,7 +18,11 @@ final class CCRouterRuntime {
     Iterable<CCComponentManifest> components = const [],
     CCNavigationAdapter? navigationAdapter,
     Iterable<CCGlobalNavigationInterceptor> globalInterceptors = const [],
+    Iterable<CCGlobalPopGuard> globalPopGuards = const [],
+    CCNavigationFailurePolicy? navigationFailurePolicy,
     Iterable<CCNavigationAspect> navigationAspects = const [],
+    CCNavigationTelemetryContextProvider? telemetryContextProvider,
+    CCRouteRestorationOpportunitySource? restorationOpportunitySource,
     CCNavigationConcurrencyPolicy navigationConcurrencyPolicy =
         CCNavigationConcurrencyPolicy.allow,
   }) => CCRouterRuntime._(
@@ -27,7 +31,11 @@ final class CCRouterRuntime {
     components: components,
     navigationAdapter: navigationAdapter,
     globalInterceptors: globalInterceptors,
+    globalPopGuards: globalPopGuards,
+    navigationFailurePolicy: navigationFailurePolicy,
     navigationAspects: navigationAspects,
+    telemetryContextProvider: telemetryContextProvider,
+    restorationOpportunitySource: restorationOpportunitySource,
     navigationConcurrencyPolicy: navigationConcurrencyPolicy,
   );
 
@@ -43,7 +51,11 @@ final class CCRouterRuntime {
     Iterable<CCComponentManifest> components = const [],
     CCNavigationAdapter? navigationAdapter,
     Iterable<CCGlobalNavigationInterceptor> globalInterceptors = const [],
+    Iterable<CCGlobalPopGuard> globalPopGuards = const [],
+    CCNavigationFailurePolicy? navigationFailurePolicy,
     Iterable<CCNavigationAspect> navigationAspects = const [],
+    CCNavigationTelemetryContextProvider? telemetryContextProvider,
+    CCRouteRestorationOpportunitySource? restorationOpportunitySource,
     CCNavigationConcurrencyPolicy navigationConcurrencyPolicy =
         CCNavigationConcurrencyPolicy.allow,
   }) => CCRouterRuntime._(
@@ -52,7 +64,11 @@ final class CCRouterRuntime {
     components: components,
     navigationAdapter: navigationAdapter,
     globalInterceptors: globalInterceptors,
+    globalPopGuards: globalPopGuards,
+    navigationFailurePolicy: navigationFailurePolicy,
     navigationAspects: navigationAspects,
+    telemetryContextProvider: telemetryContextProvider,
+    restorationOpportunitySource: restorationOpportunitySource,
     navigationConcurrencyPolicy: navigationConcurrencyPolicy,
   );
 
@@ -65,11 +81,16 @@ final class CCRouterRuntime {
     Iterable<CCComponentManifest> components = const [],
     CCNavigationAdapter? navigationAdapter,
     Iterable<CCGlobalNavigationInterceptor> globalInterceptors = const [],
+    Iterable<CCGlobalPopGuard> globalPopGuards = const [],
+    this.navigationFailurePolicy,
     Iterable<CCNavigationAspect> navigationAspects = const [],
+    this.telemetryContextProvider,
+    this.restorationOpportunitySource,
     required this.navigationConcurrencyPolicy,
   }) {
     _navigationAdapter = navigationAdapter;
     _globalInterceptors = _validateGlobalInterceptors(globalInterceptors);
+    _globalPopGuards = _validateGlobalPopGuards(globalPopGuards);
     _navigationAspects = _validateNavigationAspects(navigationAspects);
     if (traceCapacity < 0) {
       throw ArgumentError.value(traceCapacity, 'traceCapacity');
@@ -89,6 +110,9 @@ final class CCRouterRuntime {
   /// Zone key carrying the Scope of a service under construction.
   static final Object _constructionZoneKey = Object();
 
+  /// Zone key preventing navigation from asynchronous framework callbacks.
+  static final Object _navigationCallbackZoneKey = Object();
+
   /// Maximum number of trace and subscriber error records retained.
   final int traceCapacity;
 
@@ -101,6 +125,25 @@ final class CCRouterRuntime {
   /// ordinary repeated pushes. The other policies only affect requests that
   /// are still pending; completed navigation never remains in this gate.
   final CCNavigationConcurrencyPolicy navigationConcurrencyPolicy;
+
+  /// Optional Host policy for sanitized route failure recovery.
+  ///
+  /// The policy is immutable for the Runtime lifetime. It receives no route
+  /// parameters or backend objects and must return a decision rather than
+  /// invoking navigation directly.
+  final CCNavigationFailurePolicy? navigationFailurePolicy;
+
+  /// Optional Host SPI used to snapshot anonymous analytics identity.
+  ///
+  /// Runtime calls it only when a navigation observation begins. Business code
+  /// and route implementations never receive the provider itself.
+  final CCNavigationTelemetryContextProvider? telemetryContextProvider;
+
+  /// Optional Host SPI that reports evidence of unmet restoration demand.
+  ///
+  /// The source remains Host-owned. Runtime records sanitized events and only
+  /// owns the subscription installed during initialization.
+  final CCRouteRestorationOpportunitySource? restorationOpportunitySource;
 
   /// Runtime-specific prefix preventing trace identifiers from colliding.
   final String _runtimeId =
@@ -160,6 +203,12 @@ final class CCRouterRuntime {
   /// Component-owned route interceptors indexed by stable ID.
   final Map<String, _RegisteredNavigationInterceptor> _routeInterceptors = {};
 
+  /// Stable application-owned Pop guards evaluated before route-local guards.
+  late final List<CCGlobalPopGuard> _globalPopGuards;
+
+  /// Component-owned route Pop guards indexed by stable ID.
+  final Map<String, _RegisteredPopGuard> _routePopGuards = {};
+
   /// Maximum number of redirects followed for one navigation request.
   static const int maxNavigationRedirects = 8;
 
@@ -169,6 +218,20 @@ final class CCRouterRuntime {
   /// Bounded Runtime navigation lifecycle event buffer.
   final Queue<CCNavigationLifecycleEvent> _navigationEvents = Queue();
 
+  /// Bounded sanitized navigation failures and Host recovery decisions.
+  final Queue<CCNavigationFailureEvent> _navigationFailures = Queue();
+
+  /// Bounded evidence that a prior route state could have been restored.
+  final Queue<CCRouteRestorationOpportunityEvent>
+  _restorationOpportunityEvents = Queue();
+
+  /// Observers exporting sanitized restoration-demand telemetry.
+  final Set<CCRouteRestorationOpportunityListener>
+  _restorationOpportunityListeners = {};
+
+  /// Removes the Runtime subscription from the Host evidence source.
+  void Function()? _restorationOpportunityRemover;
+
   /// Futures for requests that have not completed or been rejected.
   final Map<_NavigationConcurrencyKey, Future<Object?>> _inFlightNavigation =
       {};
@@ -176,14 +239,17 @@ final class CCRouterRuntime {
   /// Runtime-owned continuations waiting for an external policy decision.
   final Map<String, _PendingNavigationRecord> _pendingNavigations = {};
 
-  /// Start times for navigation identities currently observed by Aspects.
-  final Map<String, DateTime> _navigationAspectStarts = {};
+  /// Active or retained observation state indexed by navigation identity.
+  final Map<String, _CCNavigationAspectRecord> _navigationAspectRecords = {};
 
-  /// Whether an Aspect observer is currently executing synchronously.
-  bool _aspectCallbackActive = false;
+  /// Whether a framework policy or observer callback is currently executing.
+  bool _navigationCallbackActive = false;
 
   /// Subscribers receiving Runtime navigation lifecycle events.
   final Set<CCNavigationLifecycleListener> _navigationListeners = {};
+
+  /// Subscribers receiving sanitized Host failure decisions.
+  final Set<CCNavigationFailureListener> _navigationFailureListeners = {};
 
   /// Bounded backend Navigator observations collected from the adapter.
   final Queue<CCNavigationBackendEvent> _backendNavigationEvents = Queue();
@@ -193,6 +259,12 @@ final class CCRouterRuntime {
 
   /// Adapter operation IDs already reconciled by the backend ledger.
   final Set<String> _processedBackendOperations = {};
+
+  /// Last monotonic backend event sequence observed for each Host.
+  final Map<String, int> _backendSequencesByHost = {};
+
+  /// Hosts whose backend event stream skipped at least one sequence.
+  final Set<String> _desynchronizedBackendHosts = {};
 
   /// Subscribers receiving backend Navigator observations.
   final Set<CCNavigationBackendEventListener> _backendNavigationListeners = {};
@@ -267,15 +339,29 @@ final class CCRouterRuntime {
     if (_disposed) throw const CCScopeClosedError('runtime');
     if (_initialized) return;
     _routeRegistry.validatePlacements();
-    _routeRegistry.validateInterceptors(_routeInterceptors.keys.toSet());
+    _routeRegistry.validateInterceptors({
+      for (final entry in _routeInterceptors.entries)
+        entry.key: entry.value.ownerComponentId,
+    });
+    _routeRegistry.validatePopGuards({
+      for (final entry in _routePopGuards.entries)
+        entry.key: entry.value.ownerComponentId,
+    });
     _validateNavigationAdapterCapabilities();
     await _navigationAdapter?.initialize(
       _routeRegistry.navigationRoutes,
       shells: _shellRegistry.navigationShells,
     );
+    final adapter = _navigationAdapter;
+    if (adapter is CCNavigationPopGuardBinding) {
+      (adapter as CCNavigationPopGuardBinding).bindPopGuardEvaluator(
+        _evaluatePopGuardsForActiveEntry,
+      );
+    }
     _attachBackendNavigationSource();
     await _readInitialBackendSnapshot();
     _initialized = true;
+    _attachRestorationOpportunitySource();
   }
 
   /// Rejects static navigation structures unsupported by a capability-aware
@@ -517,17 +603,24 @@ final class CCRouterRuntime {
   /// so Runtime retains the trusted component owner.
   void registerRouteInterceptor(
     String id,
-    CCNavigationInterceptor interceptor,
-  ) {
-    _registerRouteInterceptorForComponent('', id, interceptor);
+    CCNavigationInterceptor interceptor, {
+    Duration? timeout,
+  }) {
+    _registerRouteInterceptorForComponent(
+      '',
+      id,
+      interceptor,
+      timeout: timeout,
+    );
   }
 
   /// Registers an interceptor while retaining its trusted component owner.
   void _registerRouteInterceptorForComponent(
     String ownerComponentId,
     String id,
-    CCNavigationInterceptor interceptor,
-  ) {
+    CCNavigationInterceptor interceptor, {
+    Duration? timeout,
+  }) {
     _ensureConfigurable();
     final normalizedId = id.trim();
     if (normalizedId != id || normalizedId.isEmpty) {
@@ -540,9 +633,45 @@ final class CCRouterRuntime {
         'Duplicate route interceptor ID "$normalizedId".',
       );
     }
+    if (timeout != null && timeout <= Duration.zero) {
+      throw CCRegistrationError(
+        'Route interceptor "$normalizedId" timeout must be positive.',
+      );
+    }
     _routeInterceptors[normalizedId] = _RegisteredNavigationInterceptor(
       ownerComponentId: ownerComponentId,
       interceptor: interceptor,
+      timeout: timeout,
+    );
+  }
+
+  /// Registers a route Pop guard directly for low-level Runtime tests.
+  ///
+  /// Components should use [CCRegistry.registerRoutePopGuard] so Runtime keeps
+  /// the trusted component owner associated with the guard.
+  void registerRoutePopGuard(String id, CCPopGuard guard) {
+    _registerRoutePopGuardForComponent('', id, guard);
+  }
+
+  /// Registers a synchronous Pop guard with its trusted component owner.
+  void _registerRoutePopGuardForComponent(
+    String ownerComponentId,
+    String id,
+    CCPopGuard guard,
+  ) {
+    _ensureConfigurable();
+    final normalizedId = id.trim();
+    if (normalizedId != id || normalizedId.isEmpty) {
+      throw const CCRegistrationError('Route Pop guard ID must not be empty.');
+    }
+    if (_routePopGuards.containsKey(normalizedId)) {
+      throw CCRegistrationError(
+        'Duplicate route Pop guard ID "$normalizedId".',
+      );
+    }
+    _routePopGuards[normalizedId] = _RegisteredPopGuard(
+      ownerComponentId: ownerComponentId,
+      guard: guard,
     );
   }
 
@@ -766,10 +895,16 @@ final class CCRouterRuntime {
     _removeAllRouteEntries(reason: 'runtimeDispose');
     await Future.wait(_routeEntryCloseFutures);
     try {
+      final adapter = _navigationAdapter;
+      if (adapter is CCNavigationPopGuardBinding) {
+        (adapter as CCNavigationPopGuardBinding).bindPopGuardEvaluator(null);
+      }
       _backendNavigationRemover?.call();
       _backendNavigationRemover = null;
       _predictiveBackRemover?.call();
       _predictiveBackRemover = null;
+      _restorationOpportunityRemover?.call();
+      _restorationOpportunityRemover = null;
       await _navigationAdapter?.dispose();
     } finally {
       await _sessionScope?.close();
@@ -779,6 +914,10 @@ final class CCRouterRuntime {
       _session = null;
       _navigationListeners.clear();
       _navigationEvents.clear();
+      _navigationFailureListeners.clear();
+      _navigationFailures.clear();
+      _restorationOpportunityListeners.clear();
+      _restorationOpportunityEvents.clear();
       _routeEntryListeners.clear();
       _routeEntryEvents.clear();
       _routeVisibilityListeners.clear();
@@ -788,9 +927,14 @@ final class CCRouterRuntime {
       _backendNavigationEvents.clear();
       _backendEntries.clear();
       _processedBackendOperations.clear();
+      _backendSequencesByHost.clear();
+      _desynchronizedBackendHosts.clear();
       _inFlightNavigation.clear();
-      _navigationAspectStarts.clear();
-      _aspectCallbackActive = false;
+      for (final record in _navigationAspectRecords.values) {
+        record.clock.stop();
+      }
+      _navigationAspectRecords.clear();
+      _navigationCallbackActive = false;
     }
   }
 
@@ -965,7 +1109,7 @@ final class CCRouterRuntime {
         if (_traces.length == traceCapacity) _traces.removeFirst();
         _traces.add(
           CCTraceRecord(
-            context: context,
+            context: CCTraceContextSnapshot.from(context),
             operation: operation,
             target: target,
             startedAt: now,
@@ -1052,7 +1196,31 @@ final class CCRouterRuntime {
           'Empty or duplicate global interceptor ID "$id".',
         );
       }
+      final timeout = interceptor.timeout;
+      if (timeout != null && timeout <= Duration.zero) {
+        throw CCRegistrationError(
+          'Global interceptor "$id" timeout must be positive.',
+        );
+      }
       byId[id] = interceptor;
+    }
+    final ids = byId.keys.toList()..sort();
+    return List.unmodifiable(ids.map((id) => byId[id]!));
+  }
+
+  /// Validates and deterministically orders host-provided global Pop guards.
+  List<CCGlobalPopGuard> _validateGlobalPopGuards(
+    Iterable<CCGlobalPopGuard> guards,
+  ) {
+    final byId = <String, CCGlobalPopGuard>{};
+    for (final guard in guards) {
+      final id = guard.id.trim();
+      if (id != guard.id || id.isEmpty || byId.containsKey(id)) {
+        throw CCRegistrationError(
+          'Empty or duplicate global Pop guard ID "$id".',
+        );
+      }
+      byId[id] = guard;
     }
     final ids = byId.keys.toList()..sort();
     return List.unmodifiable(ids.map((id) => byId[id]!));
@@ -1141,6 +1309,7 @@ final class _RegisteredNavigationInterceptor {
   _RegisteredNavigationInterceptor({
     required this.ownerComponentId,
     required this.interceptor,
+    required this.timeout,
   });
 
   /// Component ID captured during registration.
@@ -1148,4 +1317,19 @@ final class _RegisteredNavigationInterceptor {
 
   /// Interceptor implementation invoked by Runtime navigation.
   final CCNavigationInterceptor interceptor;
+
+  /// Optional maximum duration allowed for one interception pass.
+  final Duration? timeout;
+}
+
+/// Internal route Pop guard registration with trusted component ownership.
+final class _RegisteredPopGuard {
+  /// Creates an owned route Pop guard entry.
+  _RegisteredPopGuard({required this.ownerComponentId, required this.guard});
+
+  /// Component ID captured during registration.
+  final String ownerComponentId;
+
+  /// Synchronous guard evaluated before the backend receives a managed Pop.
+  final CCPopGuard guard;
 }

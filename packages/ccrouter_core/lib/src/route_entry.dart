@@ -24,8 +24,8 @@ final class _RouteEntryRecord {
     navigationId: request.navigationId,
     routeId: request.routeId,
     ownerComponentId: request.ownerComponentId,
+    hostId: request.hostId,
     normalizedUri: request.uri,
-    arguments: request.arguments,
     placement: request.placement,
     origin: request.origin,
     lifecycleState: state,
@@ -71,12 +71,25 @@ extension CCRouterRuntimeRouteEntries on CCRouterRuntime {
   void _commitRouteEntry(_RouteEntryRecord entry) {
     switch (entry.request.operation) {
       case CCNavigationOperation.replace:
-        _removeTopRouteEntry(reason: 'replace', revealPrevious: false);
+        _removeTopRouteEntry(
+          reason: 'replace',
+          revealPrevious: false,
+          hostId: entry.request.hostId,
+          navigatorOutlet: entry.request.placement.navigatorOutlet,
+        );
       case CCNavigationOperation.go:
       case CCNavigationOperation.reset:
-        _removeAllRouteEntries(reason: entry.request.operation.name);
+        _removeAllRouteEntries(
+          reason: entry.request.operation.name,
+          hostId: entry.request.hostId,
+        );
       case CCNavigationOperation.popAndPush:
-        _removeTopRouteEntry(reason: 'popAndPush', revealPrevious: false);
+        _removeTopRouteEntry(
+          reason: 'popAndPush',
+          revealPrevious: false,
+          hostId: entry.request.hostId,
+          navigatorOutlet: entry.request.placement.navigatorOutlet,
+        );
       case CCNavigationOperation.pushAndRemoveUntil:
       case CCNavigationOperation.replaceBelow:
       case CCNavigationOperation.push:
@@ -84,11 +97,12 @@ extension CCRouterRuntimeRouteEntries on CCRouterRuntime {
         break;
     }
     _routeEntries.add(entry);
-    _hidePreviousRouteEntry(entry);
     _emitRouteEntryTransition(entry, CCRouteEntryLifecycleState.pushed);
-    _emitRouteVisibility(entry, CCRouteVisibilityPhase.willShow);
-    _emitRouteEntryTransition(entry, CCRouteEntryLifecycleState.visible);
-    _emitRouteVisibility(entry, CCRouteVisibilityPhase.didShow);
+    _associateCommittedBackendEntry(entry);
+    if (!_usesBackendVisibilityConfirmationFor(entry.request.hostId)) {
+      _hidePreviousRouteEntry(entry);
+      _setRouteEntryVisible(entry, reason: 'runtimeCommit');
+    }
   }
 
   /// Commits a replacement Entry immediately below [anchor].
@@ -111,7 +125,8 @@ extension CCRouterRuntimeRouteEntries on CCRouterRuntime {
     final insertionIndex = _routeEntries.indexOf(anchor);
     _routeEntries.insert(insertionIndex, entry);
     _emitRouteEntryTransition(entry, CCRouteEntryLifecycleState.pushed);
-    _emitRouteEntryTransition(entry, CCRouteEntryLifecycleState.hidden);
+    _associateCommittedBackendEntry(entry);
+    _setRouteEntryHidden(entry, reason: 'replaceRouteBelow');
   }
 
   /// Removes entries before [predicate] and commits a new pushed Entry.
@@ -120,42 +135,144 @@ extension CCRouterRuntimeRouteEntries on CCRouterRuntime {
     CCNavigationStackPredicate predicate,
   ) {
     _routeEntries.add(entry);
-    while (_routeEntries.length > 1 &&
-        !predicate(
-          _routeEntries[_routeEntries.length - 2].snapshot.navigationEntry,
-        )) {
+    while (true) {
+      final partition = _routeEntries
+          .where((candidate) => _sameRouteEntryPartition(candidate, entry))
+          .toList(growable: false);
+      if (partition.length <= 1 ||
+          predicate(partition[partition.length - 2].snapshot.navigationEntry)) {
+        break;
+      }
       _removeRouteEntry(
-        _routeEntries[_routeEntries.length - 2],
+        partition[partition.length - 2],
         reason: 'remove',
         revealPrevious: false,
       );
     }
-    _hidePreviousRouteEntry(entry);
     _emitRouteEntryTransition(entry, CCRouteEntryLifecycleState.pushed);
-    _emitRouteVisibility(entry, CCRouteVisibilityPhase.willShow);
-    _emitRouteEntryTransition(entry, CCRouteEntryLifecycleState.visible);
-    _emitRouteVisibility(entry, CCRouteVisibilityPhase.didShow);
+    _associateCommittedBackendEntry(entry);
+    if (!_usesBackendVisibilityConfirmationFor(entry.request.hostId)) {
+      _hidePreviousRouteEntry(entry);
+      _setRouteEntryVisible(entry, reason: 'runtimeCommit');
+    }
   }
 
   /// Removes tracked entries until [predicate] matches the current Entry.
   void _popUntilRouteEntries(CCNavigationStackPredicate predicate) {
-    while (_routeEntries.length > 1 &&
-        !predicate(_routeEntries.last.snapshot.navigationEntry)) {
-      _removeTopRouteEntry(reason: 'popUntil', preserveRoot: true);
+    final hostId = _activeRouteEntryHostId;
+    while (true) {
+      final entries = _routeEntries
+          .where((entry) => hostId == null || entry.request.hostId == hostId)
+          .toList(growable: false);
+      if (entries.length <= 1 ||
+          predicate(entries.last.snapshot.navigationEntry)) {
+        return;
+      }
+      _removeRouteEntry(entries.last, reason: 'popUntil');
     }
+  }
+
+  /// Concrete active Host exposed by a Host-bound Adapter, when available.
+  String? get _activeRouteEntryHostId {
+    final adapter = _navigationAdapter;
+    return adapter is CCNavigationAdapterHostBinding
+        ? (adapter as CCNavigationAdapterHostBinding).hostId
+        : null;
   }
 
   /// Hides the preceding top Entry when a new Entry becomes visible.
   void _hidePreviousRouteEntry(_RouteEntryRecord entry) {
     final index = _routeEntries.indexOf(entry);
     if (index <= 0) return;
-    final previous = _routeEntries[index - 1];
-    if (previous.state == CCRouteEntryLifecycleState.visible) {
-      _emitRouteVisibility(previous, CCRouteVisibilityPhase.willHide);
-      _emitRouteEntryTransition(previous, CCRouteEntryLifecycleState.hidden);
-      _emitRouteVisibility(previous, CCRouteVisibilityPhase.didHide);
+    for (
+      var candidateIndex = index - 1;
+      candidateIndex >= 0;
+      candidateIndex--
+    ) {
+      final previous = _routeEntries[candidateIndex];
+      if (!_sameRouteEntryPartition(previous, entry)) continue;
+      _setRouteEntryHidden(previous, reason: 'covered');
+      return;
     }
   }
+
+  /// Applies one confirmed current Entry within a Host and Navigator Outlet.
+  void _synchronizeRouteEntryVisibility({
+    required String hostId,
+    required String navigatorOutlet,
+    required String? visibleRouteEntryId,
+    required String reason,
+  }) {
+    _RouteEntryRecord? visibleEntry;
+    for (final entry in _routeEntries) {
+      if (entry.request.hostId != hostId ||
+          entry.request.placement.navigatorOutlet != navigatorOutlet) {
+        continue;
+      }
+      if (entry.id == visibleRouteEntryId) {
+        visibleEntry = entry;
+      } else {
+        _setRouteEntryHidden(entry, reason: reason);
+      }
+    }
+    if (visibleEntry != null) {
+      _setRouteEntryVisible(visibleEntry, reason: reason);
+    }
+  }
+
+  /// Marks one retained Entry visible and emits one idempotent transition.
+  void _setRouteEntryVisible(
+    _RouteEntryRecord entry, {
+    required String reason,
+  }) {
+    if (entry.state == CCRouteEntryLifecycleState.visible ||
+        entry.state == CCRouteEntryLifecycleState.removed ||
+        entry.state == CCRouteEntryLifecycleState.disposed ||
+        !_routeEntries.contains(entry)) {
+      return;
+    }
+    _emitRouteVisibility(
+      entry,
+      CCRouteVisibilityPhase.willShow,
+      reason: reason,
+    );
+    _emitRouteEntryTransition(entry, CCRouteEntryLifecycleState.visible);
+    _emitRouteVisibility(entry, CCRouteVisibilityPhase.didShow, reason: reason);
+  }
+
+  /// Marks one retained Entry hidden without closing its Route Scope.
+  void _setRouteEntryHidden(_RouteEntryRecord entry, {required String reason}) {
+    if (entry.state == CCRouteEntryLifecycleState.hidden ||
+        entry.state == CCRouteEntryLifecycleState.removed ||
+        entry.state == CCRouteEntryLifecycleState.disposed ||
+        !_routeEntries.contains(entry)) {
+      return;
+    }
+    if (entry.state == CCRouteEntryLifecycleState.visible) {
+      _emitRouteVisibility(
+        entry,
+        CCRouteVisibilityPhase.willHide,
+        reason: reason,
+      );
+      _emitRouteEntryTransition(entry, CCRouteEntryLifecycleState.hidden);
+      _emitRouteVisibility(
+        entry,
+        CCRouteVisibilityPhase.didHide,
+        reason: reason,
+      );
+      return;
+    }
+    _emitRouteEntryTransition(entry, CCRouteEntryLifecycleState.hidden);
+  }
+
+  /// Whether two managed Entries belong to the same backend stack partition.
+  bool _sameRouteEntryPartition(
+    _RouteEntryRecord first,
+    _RouteEntryRecord second,
+  ) =>
+      first.request.hostId == second.request.hostId &&
+      first.request.placement.navigatorOutlet ==
+          second.request.placement.navigatorOutlet;
 
   /// Marks one Entry as removed and closes its Route Scope asynchronously.
   void _removeRouteEntry(
@@ -168,6 +285,12 @@ extension CCRouterRuntimeRouteEntries on CCRouterRuntime {
       return;
     }
     _routeEntries.remove(entry);
+    final adapter = _navigationAdapter;
+    if (adapter is CCNavigationManagedEntryReleaseSink) {
+      (adapter as CCNavigationManagedEntryReleaseSink).releaseManagedNavigation(
+        entry.request.navigationId,
+      );
+    }
     final wasVisible = entry.state == CCRouteEntryLifecycleState.visible;
     if (wasVisible) {
       _emitRouteVisibility(
@@ -187,12 +310,13 @@ extension CCRouterRuntimeRouteEntries on CCRouterRuntime {
       );
     }
     _emitRouteEntryTransition(entry, CCRouteEntryLifecycleState.removed);
-    if (revealPrevious && _routeEntries.isNotEmpty) {
-      final previous = _routeEntries.last;
-      if (previous.state == CCRouteEntryLifecycleState.hidden) {
-        _emitRouteVisibility(previous, CCRouteVisibilityPhase.willShow);
-        _emitRouteEntryTransition(previous, CCRouteEntryLifecycleState.visible);
-        _emitRouteVisibility(previous, CCRouteVisibilityPhase.didShow);
+    if (revealPrevious &&
+        !_usesBackendVisibilityConfirmationFor(entry.request.hostId)) {
+      for (final previous in _routeEntries.reversed) {
+        if (_sameRouteEntryPartition(previous, entry)) {
+          _setRouteEntryVisible(previous, reason: reason);
+          break;
+        }
       }
     }
     final close = _closeRouteEntry(entry, reason);
@@ -228,19 +352,27 @@ extension CCRouterRuntimeRouteEntries on CCRouterRuntime {
     required String reason,
     bool preserveRoot = false,
     bool revealPrevious = true,
+    String? hostId,
+    String? navigatorOutlet,
   }) {
-    if (_routeEntries.isEmpty) return;
-    if (preserveRoot && _routeEntries.length == 1) return;
-    _removeRouteEntry(
-      _routeEntries.last,
-      reason: reason,
-      revealPrevious: revealPrevious,
-    );
+    _RouteEntryRecord? target;
+    var matchingCount = 0;
+    for (final entry in _routeEntries.reversed) {
+      if ((hostId == null || entry.request.hostId == hostId) &&
+          (navigatorOutlet == null ||
+              entry.request.placement.navigatorOutlet == navigatorOutlet)) {
+        matchingCount++;
+        target ??= entry;
+      }
+    }
+    if (target == null || preserveRoot && matchingCount == 1) return;
+    _removeRouteEntry(target, reason: reason, revealPrevious: revealPrevious);
   }
 
-  /// Removes all currently retained Entries.
-  void _removeAllRouteEntries({required String reason}) {
+  /// Removes retained Entries, optionally isolated to one Host.
+  void _removeAllRouteEntries({required String reason, String? hostId}) {
     for (final entry in _routeEntries.toList().reversed) {
+      if (hostId != null && entry.request.hostId != hostId) continue;
       _removeRouteEntry(entry, reason: reason, revealPrevious: false);
     }
   }
@@ -261,7 +393,6 @@ extension CCRouterRuntimeRouteEntries on CCRouterRuntime {
     final event = CCRouteEntryLifecycleEvent(
       entry: entry.snapshot,
       previousState: previousState,
-      state: state,
       timestamp: DateTime.now(),
       reason: reason,
     );
@@ -271,9 +402,7 @@ extension CCRouterRuntimeRouteEntries on CCRouterRuntime {
       }
       _routeEntryEvents.add(event);
     }
-    if (state == CCRouteEntryLifecycleState.visible) {
-      _emitAspectArrival(entry);
-    }
+    _emitAspectEntryState(entry, state);
     for (final listener in _routeEntryListeners.toList()) {
       try {
         listener(event);

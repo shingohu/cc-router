@@ -45,8 +45,8 @@ final class CCRouteEntrySnapshot {
     required this.navigationId,
     required this.routeId,
     required this.ownerComponentId,
+    required this.hostId,
     required this.normalizedUri,
-    required this.arguments,
     required this.placement,
     required this.origin,
     required this.lifecycleState,
@@ -64,13 +64,14 @@ final class CCRouteEntrySnapshot {
   /// Trusted component that owns the destination contract.
   final String ownerComponentId;
 
+  /// Concrete Window or display Host that owns this Entry instance.
+  ///
+  /// Unlike [placement], this value has already resolved the `default` alias
+  /// and is therefore safe for multi-window isolation and diagnostics.
+  final String hostId;
+
   /// Canonical or normalized URI used to create this entry.
   final Uri normalizedUri;
-
-  /// Typed route arguments retained for Adapter SPI and diagnostics tooling.
-  ///
-  /// Implementations must not serialize this value automatically.
-  final Object arguments;
 
   /// Shell, parent, and Navigator Outlet placement for this entry.
   final CCRoutePlacement placement;
@@ -88,10 +89,8 @@ final class CCRouteEntrySnapshot {
   /// Entry has not already been removed before forwarding an operation to an
   /// Adapter. Retaining a handle after the Entry is gone is safe, but using it
   /// then fails with a standard navigation error.
-  CCRouteEntryHandle get handle => CCRouteEntryHandle._(
-    routeEntryId: routeEntryId,
-    navigationId: navigationId,
-  );
+  CCRouteEntryHandle get handle =>
+      CCRouteEntryHandle._(routeEntryId: routeEntryId);
 
   /// Stable identity usable by stack predicates.
   CCNavigationEntry get navigationEntry => CCNavigationEntry(
@@ -109,27 +108,19 @@ final class CCRouteEntrySnapshot {
 /// cannot be reused after that Entry is removed or after its Runtime closes.
 final class CCRouteEntryHandle {
   /// Creates a handle retained by a Route Entry snapshot.
-  const CCRouteEntryHandle._({
-    required this.routeEntryId,
-    required this.navigationId,
-  });
+  const CCRouteEntryHandle._({required this.routeEntryId});
 
   /// Runtime-unique identity of the concrete Entry.
   final String routeEntryId;
 
-  /// Navigation request identity used to cross-check the Entry identity.
-  final String navigationId;
-
   /// Compares handles by their immutable concrete Entry identity.
   @override
   bool operator ==(Object other) =>
-      other is CCRouteEntryHandle &&
-      other.routeEntryId == routeEntryId &&
-      other.navigationId == navigationId;
+      other is CCRouteEntryHandle && other.routeEntryId == routeEntryId;
 
   /// Hashes the concrete Entry identity.
   @override
-  int get hashCode => Object.hash(routeEntryId, navigationId);
+  int get hashCode => routeEntryId.hashCode;
 }
 
 /// Records one Route Entry lifecycle transition.
@@ -142,7 +133,6 @@ final class CCRouteEntryLifecycleEvent {
   const CCRouteEntryLifecycleEvent({
     required this.entry,
     required this.previousState,
-    required this.state,
     required this.timestamp,
     this.reason,
   });
@@ -152,9 +142,6 @@ final class CCRouteEntryLifecycleEvent {
 
   /// State before the transition, or null for the first `created` event.
   final CCRouteEntryLifecycleState? previousState;
-
-  /// State reached by the transition.
-  final CCRouteEntryLifecycleState state;
 
   /// Wall-clock time at which Runtime recorded this transition.
   final DateTime timestamp;

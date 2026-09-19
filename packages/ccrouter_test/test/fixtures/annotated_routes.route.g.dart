@@ -100,10 +100,8 @@ abstract final class _DetailPageRoute {
           parentRouteId: null,
           shellId: null,
           navigatorOutlet: "root",
-          routeKind: CCRouteKind.page,
         ),
         interceptorIds: const ["fixture.auth"],
-        description: "A typed detail route.\nIncludes safe defaults.",
       );
 
   /// Called by the owning component registrar, never by a business caller.
@@ -283,10 +281,8 @@ abstract final class _InternalPageRoute {
           parentRouteId: null,
           shellId: null,
           navigatorOutlet: "root",
-          routeKind: CCRouteKind.page,
         ),
         interceptorIds: const [],
-        description: null,
       );
 
   /// Called by the owning component registrar, never by a business caller.
@@ -383,10 +379,8 @@ abstract final class _PositionalPageRoute {
           parentRouteId: null,
           shellId: null,
           navigatorOutlet: "root",
-          routeKind: CCRouteKind.page,
         ),
         interceptorIds: const [],
-        description: null,
       );
 
   /// Called by the owning component registrar, never by a business caller.
@@ -494,10 +488,8 @@ abstract final class _ExtraPageRoute {
       parentRouteId: null,
       shellId: null,
       navigatorOutlet: "root",
-      routeKind: CCRouteKind.page,
     ),
     interceptorIds: const [],
-    description: null,
   );
 
   /// Called by the owning component registrar, never by a business caller.
@@ -607,10 +599,8 @@ abstract final class _PrefixedPageRoute {
           parentRouteId: null,
           shellId: null,
           navigatorOutlet: "root",
-          routeKind: CCRouteKind.page,
         ),
         interceptorIds: const [],
-        description: null,
       );
 
   /// Called by the owning component registrar, never by a business caller.

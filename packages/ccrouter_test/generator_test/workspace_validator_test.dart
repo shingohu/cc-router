@@ -47,6 +47,20 @@ Map<String, Object?> route(
   'exposure': exposure ?? (publicContract ? 'public' : 'internal'),
   'deepLink': 'disabled',
   'description': 'Documented route.',
+  'declaration': {
+    'package': contractPackage,
+    'library': 'lib/detail.dart',
+    'kind': publicContract ? 'contract' : 'page',
+  },
+  'navigationSources': ['typedIntent', 'internalUri'],
+  'restoration': {'status': 'unsupported'},
+  'placement': {
+    'hostId': 'default',
+    'parentRouteId': null,
+    'shellId': 'orders.shell',
+    'navigatorOutlet': 'detail',
+  },
+  'presentation': {'type': 'page'},
   'contracts': {
     'route': 'DetailRoute',
     'arguments': 'DetailRouteArguments',
@@ -73,6 +87,7 @@ Map<String, Object?> route(
       'wireName': 'id',
       'source': 'path',
       'type': 'int',
+      'cardinality': null,
       'required': true,
       'description': 'Stable identity.',
     },
@@ -115,6 +130,8 @@ void main() {
     expect(result.markdownDocument, contains('`orders.detail`'));
     expect(result.markdownDocument, contains('Exposure: `internal`'));
     expect(result.markdownDocument, contains('Stable identity.'));
+    expect(result.markdownDocument, contains('outlet `detail`'));
+    expect(result.markdownDocument, contains('Restoration: `unsupported`'));
     expect(jsonDecode(result.machineDocumentJson), isA<Map>());
   });
 

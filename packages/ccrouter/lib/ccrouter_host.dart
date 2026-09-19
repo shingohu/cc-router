@@ -6,4 +6,13 @@
 /// only through `CCRouter.navigator`.
 library;
 
+export 'package:ccrouter_contracts/ccrouter_contracts.dart'
+    show
+        CCNavigationManagedEntryReleaseSink,
+        CCRouteRestorationOpportunityReason,
+        CCRouteRestorationOpportunitySignal,
+        CCRouteRestorationOpportunitySource;
+export 'src/app.dart' show CCPageLifecycleHostBridge;
+export 'src/multi_host.dart';
+export 'src/restoration_diagnostics.dart';
 export 'src/route_catalog.dart';

@@ -95,7 +95,7 @@ void main() {
 
     await expectLater(
       CCDeepLinkIngress.fromPlatform(Uri.parse('/orders/42')),
-      throwsA(isA<CCRouteNotFoundError>()),
+      throwsA(isA<CCDeepLinkRejectedError>()),
     );
   });
 }

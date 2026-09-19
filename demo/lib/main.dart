@@ -16,6 +16,7 @@ final class CreateOrder implements CCCommand<String> {
 final class DemoComponentRegistrar implements CCComponentRegistrar {
   const DemoComponentRegistrar();
 
+
   static const manifest = CCComponentManifest(
     id: 'demo',
     version: '0.1.0',

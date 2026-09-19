@@ -91,5 +91,5 @@ String _componentMetadataMarkdown(Map<String, Object?> payload) {
     );
     out.writeln();
   }
-  return out.toString();
+  return '${out.toString().trimRight()}\n';
 }

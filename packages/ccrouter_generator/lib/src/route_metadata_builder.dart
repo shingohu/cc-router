@@ -122,6 +122,7 @@ Map<String, Object?> _routeJson(
 }) => {
   'id': route.id,
   'componentId': route.component.id,
+  'componentVersion': route.component.version,
   'exposure': route.exposure,
   'deepLink': _enumValue(
     route.annotation.read('deepLink').objectValue,
@@ -129,6 +130,34 @@ Map<String, Object?> _routeJson(
   'description': route.annotation.read('description').isNull
       ? null
       : route.annotation.read('description').stringValue,
+  'interceptorIds': route.annotation
+      .read('interceptors')
+      .listValue
+      .map((value) => value.toStringValue())
+      .toList(),
+  'popGuardIds': route.annotation
+      .read('popGuards')
+      .listValue
+      .map((value) => value.toStringValue())
+      .toList(),
+  'declaration': {
+    'package': package,
+    'library': source,
+    'kind': route.contractFirst ? 'contract' : 'page',
+  },
+  'navigationSources': [
+    'typedIntent',
+    'internalUri',
+    if (_enumValue(
+      route.annotation.read('deepLink').objectValue,
+    ).endsWith('.enabled'))
+      'externalDeepLink',
+  ],
+  'restoration': {'status': 'unsupported'},
+  'placement': _placementJson(route.annotation.read('placement').objectValue),
+  'presentation': _presentationJson(
+    route.annotation.read('presentation').objectValue,
+  ),
   'contracts': {
     'route': route.api,
     'arguments': route.arguments,
@@ -166,6 +195,10 @@ Map<String, Object?> _routeJson(
           'wireName': parameter.wireName,
           'source': parameter.source,
           'type': parameter.type,
+          if (parameter.source == 'query')
+            'cardinality': parameter.queryCardinality,
+          if (parameter.queryCodecType case final codecType?)
+            'codec': codecType.getDisplayString(),
           'required': parameter.required,
           'default': parameter.defaultCode,
           'description': _documentation(
@@ -177,6 +210,58 @@ Map<String, Object?> _routeJson(
       .toList(),
   'resultType': route.result,
 };
+
+/// Serializes adapter-neutral Host, Shell, parent, and Outlet placement.
+Map<String, Object?> _placementJson(DartObject placement) => {
+  'hostId': _field(placement, 'hostId').toStringValue(),
+  'parentRouteId': _field(placement, 'parentRouteId').toStringValue(),
+  'shellId': _field(placement, 'shellId').toStringValue(),
+  'navigatorOutlet': _field(placement, 'navigatorOutlet').toStringValue(),
+};
+
+/// Serializes the closed presentation hierarchy without backend-specific APIs.
+Map<String, Object?> _presentationJson(DartObject presentation) {
+  final type = (presentation.type as InterfaceType).element.displayName;
+  return switch (type) {
+    'CCPagePresentation' => {
+      'type': 'page',
+      'routeType': _enumValue(
+        _field(presentation, 'routeType'),
+      ).split('.').last,
+      'transition': _enumValue(
+        _field(presentation, 'transition'),
+      ).split('.').last,
+      'opaque': _field(presentation, 'opaque').toBoolValue(),
+      'fullscreenDialog': _field(
+        presentation,
+        'fullscreenDialog',
+      ).toBoolValue(),
+    },
+    'CCModalBottomSheetPresentation' => {
+      'type': 'modalBottomSheet',
+      'isDismissible': _field(presentation, 'isDismissible').toBoolValue(),
+      'enableDrag': _field(presentation, 'enableDrag').toBoolValue(),
+      'isScrollControlled': _field(
+        presentation,
+        'isScrollControlled',
+      ).toBoolValue(),
+      'showDragHandle': _field(presentation, 'showDragHandle').toBoolValue(),
+      'useSafeArea': _field(presentation, 'useSafeArea').toBoolValue(),
+    },
+    'CCDialogPresentation' => {
+      'type': 'dialog',
+      'routeType': _enumValue(
+        _field(presentation, 'routeType'),
+      ).split('.').last,
+      'barrierDismissible': _field(
+        presentation,
+        'barrierDismissible',
+      ).toBoolValue(),
+      'useSafeArea': _field(presentation, 'useSafeArea').toBoolValue(),
+    },
+    _ => throw StateError('Unsupported route presentation: $type'),
+  };
+}
 
 /// Serializes one page binding without duplicating its public route contract.
 Map<String, Object?> _routeImplementationJson(
@@ -216,9 +301,27 @@ String _metadataMarkdown(Map<String, Object?> payload) {
       out.writeln('$description\n');
     }
     out.writeln('- Owner: `${route['componentId']}`');
+    out.writeln('- Component version: `${route['componentVersion']}`');
     out.writeln('- Exposure: `${route['exposure']}`');
     out.writeln('- Deep link: `${route['deepLink']}`');
     out.writeln('- Result: `${route['resultType']}`');
+    if (route['declaration'] case final Map declaration) {
+      out.writeln(
+        '- Declaration: `${declaration['package']}:${declaration['library']}` (${declaration['kind']})',
+      );
+    }
+    if (route['placement'] case final Map placement) {
+      out.writeln(
+        '- Placement: host `${placement['hostId']}`, outlet `${placement['navigatorOutlet']}`, shell `${placement['shellId'] ?? 'none'}`, parent `${placement['parentRouteId'] ?? 'none'}`',
+      );
+    }
+    if (route['presentation'] case final Map presentation) {
+      out.writeln('- Presentation: `${presentation['type']}`');
+    }
+    final navigationSources = (route['navigationSources']! as List).join(', ');
+    out.writeln('- Navigation sources: `$navigationSources`');
+    final restoration = route['restoration']! as Map;
+    out.writeln('- Restoration: `${restoration['status']}`');
     if (route['contracts'] case final Map contracts) {
       out.writeln(
         '- Contract library: `${contracts['package']}:${contracts['library']}`',
@@ -238,15 +341,15 @@ String _metadataMarkdown(Map<String, Object?> payload) {
     if (parameters.isNotEmpty) {
       out.writeln('- Parameters:\n');
       out.writeln(
-        '| Name | Wire name | Source | Type | Required | Description |',
+        '| Name | Wire name | Source | Type | Cardinality | Codec | Required | Description |',
       );
-      out.writeln('| --- | --- | --- | --- | --- | --- |');
+      out.writeln('| --- | --- | --- | --- | --- | --- | --- | --- |');
       for (final parameter in parameters) {
         final description = '${parameter['description'] ?? ''}'
             .replaceAll('|', r'\|')
             .replaceAll('\n', '<br>');
         out.writeln(
-          '| `${parameter['name']}` | `${parameter['wireName']}` | `${parameter['source']}` | `${parameter['type']}` | ${parameter['required']} | $description |',
+          '| `${parameter['name']}` | `${parameter['wireName']}` | `${parameter['source']}` | `${parameter['type']}` | `${parameter['cardinality'] ?? '-'}` | `${parameter['codec'] ?? '-'}` | ${parameter['required']} | $description |',
         );
       }
     }
@@ -265,5 +368,5 @@ String _metadataMarkdown(Map<String, Object?> payload) {
     }
     out.writeln();
   }
-  return out.toString();
+  return '${out.toString().trimRight()}\n';
 }

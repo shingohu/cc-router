@@ -1,138 +1,119 @@
-# CCRouter 最终 API 收口复审清单
+# CCRouter 最终 API 收口复审
 
-## 1. 目的与执行时机
+## 1. 结论
 
-本文记录开发过程中的 API 精简候选，不代表现在立即删除，也不覆盖已经冻结的
-功能决策。当前阶段继续完成既定能力，避免因为尚未接入的后续实现而误判字段无用。
+本轮已完成路由生产数据流、生成器、Demo 聚合物、公共导出和长生命周期对象持有扫描。
+处理原则不是按引用次数机械删除，而是同时验证类型安全、混合路由隔离、生命周期、诊断、
+Host 扩展和降级语义。
 
-在既定功能全部完成并通过全量回归后，必须重新扫描 `packages/*/lib`、生成器产物、
-Demo 和测试，再逐项确认本文结论。最终处理需要同时满足：
+当前路由 API 可以进入全量回归阶段。Service、Command、Query、Event 及尚未实现的组件动态
+卸载完整语义不属于本轮范围，不能据此扩大或冻结对应 API。
 
-- 生产链路中没有真实消费者，或同一语义可以从其他类型、字段可靠推导。
-- 删除后不会削弱类型安全、混合路由隔离、生命周期、诊断或降级能力。
-- Business API、Component API、Host SPI、Adapter SPI 和 Test API 边界清晰。
-- 不再因为诊断快照持有业务参数、取消对象或其他长生命周期引用。
-- 相关生成器、元数据、文档、测试和迁移说明在同一阶段更新。
+## 2. 已删除的重复或无行为 API
 
-## 2. 最终扫描范围
+以下字段没有独立运行时语义，已从手写代码、生成器、生成物和测试中同步删除：
 
-最终复审不能只统计字段引用次数，还要检查以下真实行为：
+- `CCRouteKind` 与 `CCRoutePlacement.routeKind`：Shell 已由 `CCShellDefinition` 独立表达，
+  普通 Route 不需要只有一个合法值的枚举。
+- Runtime `CCRouteDefinition.description` 和 `CCShellDefinition.description`：描述继续保留在
+  Annotation、JSON 和 Markdown 文档，不随 Route 常驻 Runtime。
+- `CCRoutePattern.matchOnly`：由 `CCRegexPattern` 类型直接推导。
+- `CCActionReport.results`：Action Handler 只返回 `void`，结果列表没有真实数据来源。
+- `CCRouteLocation.path`：生产链路没有独立消费者。
+- `CCRouteEntryLifecycleEvent.state`：始终等于 `event.entry.lifecycleState`。
+- `CCGoRouterNavigationEvent.result`：Flutter `NavigatorObserver` 不提供 Pop result。
+- `CCBackendEntryLifecycleState.unknown`：没有合法创建路径。
+- `CCPopOutcome.resultAvailable`：没有对应的结果值通道；类型安全结果继续由原 Push Future 管理。
+- `CCRouteEntryHandle.navigationId`：`routeEntryId` 已包含 Runtime 唯一前缀，Handle 构造仍由框架控制。
+- `CCFlutterRouteDestination.componentId`：Assembler 不消费；Runtime 单独保存可信组件 owner。
+- 未参与决策的 Capability Boolean：`supportsForeignEntryObservation`、
+  `supportsBackendEntryIdentity`、`supportsInitialStackSnapshot`、
+  `supportsOpaqueUiObservation`。可选能力改由对应 SPI 类型判断。
 
-1. Annotation 到生成代码、组件元数据、宿主聚合物的完整数据流。
-2. Runtime、Adapter、GoRouter、混合路由和 Deep Link 的生产消费路径。
-3. 当前只被测试读取、但没有生产语义的字段和公开 Getter。
-4. 可以由类型、接口实现关系或其他稳定身份推导的重复字段。
-5. 诊断缓冲区、RouteEntry、Trace、Pending Navigation 的对象保留和内存释放。
-6. 未实现、部分实现或只作为未来占位符公开的 API。
-7. `package:ccrouter/ccrouter.dart` 是否仍错误导出 Host、Adapter、Runtime 或测试能力。
+## 3. 已完成的对象持有收敛
 
-## 3. 优先删除候选
+- `CCRouteEntrySnapshot` 不再保存 Arguments，避免历史快照长期持有 `extra` 或业务对象。
+- `CCTraceRecord.context` 改为不可变 `CCTraceContextSnapshot`，不再持有活动
+  `CCCancellationToken` 或其监听器。
+- Route Scope close Future 只在 pending 期间保留，完成或失败后立即移除。
+- Pending Navigation 的 Timer 在恢复、取消、超时、Session 关闭和 Runtime dispose 时取消。
+- Aspect record 只有在导航终态和 RouteEntry dispose 都完成后释放；Runtime dispose 兜底清空。
+- Backend event、failure、visibility、lifecycle、restoration 和 trace 历史均为有界缓冲。
+- Backend ledger 始终保留 active 结构条目，只对 removed 诊断历史做有界淘汰；容量为 0 时
+  不保留 removed 历史，但仍保留 active identity 和有界 operation 去重。
+- 动态 Host detach 会清理该 Host 的 sequence/desync 状态，允许同 ID Window 重新接入。
+- Multi Host Registry 在 RouteEntry 移除和 Adapter dispatch 失败时释放
+  `navigationId -> hostId` 索引，不依赖 Backend Observer 必须存在。
+- Multi Host 初始化、动态注册和卸载纳入 dispose 协调；在途注册不能在 Registry dispose 后
+  重新写回，Adapter 只销毁一次，多次 dispose 共享同一 Future。
+- 恢复机会 Controller 的启动前信号缓冲有明确容量，不能在 Runtime 订阅前无限增长。
+- GoRouter Observer、RouterDelegate、Predictive Back、Foreign Route Bridge、页面生命周期和恢复
+  信号订阅均有对应 removal/dispose 路径。
 
-下列项目在当前实现中没有独立语义，最终扫描时优先确认删除：
+## 4. 公共 API 边界
 
-- `CCRouteKind` 与 `CCRoutePlacement.routeKind`：Shell 已由独立定义表达，Route
-  注册又明确拒绝 `shell`，合法值实际只有 `page`。
-- `CCRouteDefinition.description`：描述只属于 Annotation、JSON 和 Markdown 文档，
-  不应随每条 Route 常驻 Runtime。
-- `CCShellDefinition.description`：当前没有 Runtime 或文档生成消费者。
-- `CCActionReport.results`：Action Handler 返回 `void`，当前结果列表永远为空。
-- `CCNavigationInterceptorContext.deadline`：导航管线当前从未提供该值。
-- `CCRoutePattern.matchOnly`：可以由 `CCRegexPattern` 类型可靠推导。
-- `CCRouteLocation.path`：当前生产链路构造后不再读取。
-- `CCRouteEntryLifecycleEvent.state`：始终等于 `entry.lifecycleState`。
-- `CCGoRouterNavigationEvent.result`：Flutter `NavigatorObserver` 回调不提供 Pop 结果。
-- `CCBackendEntryLifecycleState.unknown`：当前没有生产路径会创建该状态。
-- `CCPopOutcome.resultAvailable`：没有对应的结果值通道，Runtime 也不读取。
-- `CCRouteEntryHandle.navigationId`：若 `routeEntryId` 保持跨 Runtime 唯一，则第二个
-  身份只是在重复校验。
-- `CCFlutterRouteDestination.componentId`：当前 Assembler 不读取，Runtime 已单独保存
-  可信组件所有权。
-- `CCGoRouterShellBinding.initialOutlet`：目前只重复声明 Runtime 值，不能证明
-  GoRouter 的真实初始分支。
+`package:ccrouter/ccrouter.dart` 已隐藏以下内部或 Host-only 能力：
 
-## 4. 重构后再删除或收敛
+- `CCRouterRuntime`、`CCScope`、`CCScopeState`；
+- `CCMemoryNavigationAdapter`；
+- `CCPageLifecycleHostBridge`；
+- `CCRouteRestorationOpportunitySignal`、`CCRouteRestorationOpportunitySource`；
+- `CCNavigationManagedEntryReleaseSink`。
 
-以下项目不能机械删除，需要先建立替代数据流或明确最终语义：
+这些能力分别由 Facade、`ccrouter_host.dart` 或 `ccrouter_test` 提供受控入口。组件 Registrar 仍只
+接收受限 `CCRegistry`，业务代码不能创建、关闭或销毁 Runtime 和 Scope。
 
-- 从 `CCRoutePlacement` 删除静态 `hostId`，改由本次导航的 Context、Host Resolver
-  或显式 Host 选择产生 `CCNavigationRequest.hostId`。
-- 从公共 `CCRouteEntrySnapshot` 删除 `arguments`。Runtime 可在当前 Entry 内部短期
-  保留参数，但生命周期历史不得持续持有 Extra 或任意业务对象。
-- 将 `CCTraceRecord.context` 替换为不包含 `CCCancellationToken` 的不可变 Trace
-  快照，避免诊断缓冲区持有活动对象和监听器。
-- 移除 `CCRoute`、`CCRouteContract` 对完整 `CCComponentDescriptor` 的重复引用。
-  Internal Route 的 owner 应由实现 Package 的唯一组件推导；Contract-first Route
-  在 Workspace 关联 Implementation 后确定 owner。
-- 组件版本尽量从实现 Package 的 `pubspec.yaml` 推导，避免 Descriptor 与 Pub
-  版本漂移。Runtime 只有在真正支持版本约束时才保存版本。
-- 重新评估 `optionalDependencies`。当前它只影响 Registrar 排序，却没有能力探测、
-  条件注册或降级行为。
-- 重新评估 `CCServiceToken` 与 `CCServiceProvider.contract`。在独立 contracts
-  Package 架构下，Dart 接口类型通常已经提供稳定的编译期身份；只有明确需要
-  跨 isolate、动态二进制插件或字符串协议时才保留第二套 Token 身份。
-- 合并 `CCNavigationLifecycleEvent`、`CCNavigationAspect`、
-  `CCRouteVisibilityEvent` 与 `CCRouteEntryLifecycleEvent` 的重叠观察面。真正的
-  Arrival/Visible 必须由已关联的 Backend 事件确认，不能在 Runtime commit 后立即猜测。
-- 精简 `CCNavigationAdapterCapabilities`。可以通过 Optional SPI/interface 判断的
-  Snapshot、Predictive Back、Exact Entry 和组合操作能力，不再同时保留容易矛盾的
-  Boolean；Capability 只表达不能从类型推导的后端语义。
-- 重新定义动态 `open`、`go` 和 `reset`。当前 GoRouter 与 Memory Adapter 对 `open`
-  的栈行为不一致，`go` 与 `reset` 又没有可观察差异；应先明确动态目标解析与栈操作
-  是两个维度，再决定保留哪些 Operation。
+`CCNavigationAdapter` 保留为公共宿主注入类型，因为 `CCRouter.initialize()` 支持默认 GoRouter
+之外的自定义实现。Dart 无法同时满足“允许宿主实现并注入接口”和“接口对宿主不可见”；框架通过
+以下约束控制所有权，而不是伪造语言级访问限制：
 
-## 5. 暂不作为稳定公共 API 的候选
+- Adapter 只能由 `CCRouter.initialize()` 注入并由 Runtime 初始化、销毁；
+- dispose 后导航必须失败，且 Runtime 不允许重新初始化；
+- `CCGoRouterAdapter.dispose()` 不销毁应用自己创建的 `GoRouter`；
+- Session、组件、页面 Pop 均不能触发 Adapter dispose。
 
-下列能力具有真实场景，但当前实现尚未形成完整生产闭环。最终扫描时应选择“完成后
-公开”或“暂时移出公共 Barrel”，不能继续以半实现状态稳定暴露：
+## 5. 明确保留的字段和能力
 
-- Adaptive Layout 契约组：目前只有模型和测试，尚未接入 Host、Outlet 调度或
-  Adapter。
-- `CCServiceScope.component` 与 `CCServiceScope.route`：当前注册时会直接拒绝。
-- `activateComponent` / `deactivateComponent`：当前只处理 Route 和 Shell，没有
-  覆盖 Service、Handler、Scope、依赖级联及并发停用。
-- `CCRouterApp` / `CCNavigationHost`：单 Host 已与 GoRouter、Observer、Adapter 和
-  Backend Event 共享 Host ID 及不可变 Outlet Key，并支持挂载/卸载和前后台事件；
-  Runtime 多 Host Registry、动态 Host Resolver 和多 Window 调度仍未闭环。
-- `CCMemoryNavigationAdapter`、Runtime 的低层注册方法和测试状态 Getter：应迁移到
-  `ccrouter_test` 或仅由测试入口访问。
-- `CCGoRouterAdapter` 中仅供测试读取的 routes、bindings、shellContracts、observers、
-  lifecycleEvents 等快照 Getter。
+- `CCNavigationRoute.deepLink`：GoRouter 可能独立收到平台 URL，Adapter 仍需执行入口约束。
+- `CCNavigationOrigin` 与 `CCNavigationSource`：分别表示可信安全来源和产品埋点归因。
+- `parentRouteId`、`shellId`、`navigatorOutlet`：用于子路由、Shell、嵌套 Navigator 和多 Pane。
+- Page、透明页、Dialog、BottomSheet Presentation：默认 Adapter 均有真实消费路径。
+- `sessionId` 与 `accountId`：分别表示 Session 实例和稳定账号，不可合并。
+- Backend owner、entry ID、operation ID：是混合路由隔离和精确生命周期关联的基础。
+- `CCGoRouterShellBinding.initialOutlet`：Adapter 初始化会校验它与 Runtime Shell contract 一致。
+- Adaptive Layout、`CCRouterApp` 和 Multi Host：已接入 Host/Outlet 调度并形成最小闭环。
 
-## 6. API 边界复审
+## 6. 观察 API 的职责边界
 
-最终应避免 `package:ccrouter/ccrouter.dart` 全量转出 contracts/core。推荐分别审查：
+以下观察面存在字段交集，但当前有不同消费者和生命周期，暂不合并：
 
-- Business API：`CCRouter`、`CCNavigator`、生成的 Intent、业务错误和安全诊断快照。
-- Component Author API：Annotation、Manifest、Registrar、受限 `CCRegistry` 和 Provider。
-- Host API：初始化、Deep Link Ingress、Catalog、Host/Outlet 组合及诊断订阅。
-- Adapter SPI：请求、Backend Entry、能力接口和生命周期上报。
-- Test API：Test Host、Memory Adapter、Fixture、状态断言和故障注入。
+- `CCNavigationLifecycleEvent`：请求的 requested/completed/failed 终态摘要和有界历史。
+- `CCNavigationAspect`：全局 PV、来源、阶段耗时、到达、显示、隐藏和链路观察。
+- `CCRouteVisibilityEvent`：Managed RouteEntry 的 will/did show/hide 配对通知。
+- `CCRouteEntryLifecycleEvent`：Route Scope 从 resolving 到 disposed 的资源生命周期。
+- `CCPageLifecycleMixin` / `CCPageLifecycleListener`：Flutter PageRoute 当前性与 App 前后台回调。
 
-公共业务入口不应暴露 Runtime 构造、Adapter dispose、Backend Bridge、Registrar 执行、
-Scope 控制或测试状态。
+`completed` 对 Push 表示返回 Future 完成，不等于首次 Arrival；页面像素可见性也不能由
+PageShow/PageHide 推导。继续保持这些边界比合并成万能生命周期回调更安全。
 
-## 7. 必须保留或谨慎处理
+## 7. 暂缓能力
 
-以下字段虽然可能存在重复数据，但承载不同安全或运行时语义，不能仅按引用数量删除：
+完整 Route Restoration 仅保留设计和脱敏机会诊断，当前事件固定为 `unsupported`。只有数据证明
+存在真实恢复需求后，才重新设计版本化 Snapshot、路由显式 opt-in、契约升级与部分恢复。
 
-- `CCNavigationRoute.deepLink`：GoRouter 可能独立接收平台 URL；删除前必须先保证后端
-  入口不会绕过 Runtime Deep Link Policy。
-- `CCNavigationOrigin` 与 `CCNavigationSource`：前者是可信安全来源，后者是业务埋点
-  归因，不能合并。
-- `parentRouteId`、`shellId`、`navigatorOutlet`：用于子路由、Shell、嵌套 Navigator
-  和多 Pane 定位。
-- Page、透明页、Dialog、BottomSheet 的 Presentation 字段：默认 Adapter 已有真实
-  消费路径。
-- `sessionId` 与 `accountId`：分别标识一次 Session 实例和稳定账号，语义不同。
-- Backend Entry owner、stable entry ID 和 operation ID：它们是混合路由隔离及防止
-  Foreign/Popup 错误关闭 Managed Route Scope 的基础。
+以下非路由或后续能力不在本轮处理：
 
-## 8. 最终执行顺序
+- `CCServiceScope.component` / `route`；
+- Service Token 与独立 contracts Package 的最终收敛；
+- 组件动态 activate/deactivate 对 Service、Handler、Scope 和依赖级联的完整语义；
+- CLI 创建组件、契约提升与迁移自动化。
 
-1. 完成既定功能，不在中途依据本文提前删除。
-2. 执行全 Workspace 静态引用、生产数据流与 public export 扫描。
-3. 执行全部 Generator、Core、Facade、GoRouter、Demo 和混合路由回归测试。
-4. 增加对象保留、Listener/Timer 清理、Pending Future 和 Route Scope 的泄漏测试。
-5. 先删除无行为字段，再处理需要迁移的数据模型与 API 分层。
-6. 更新生成物 Schema 和迁移说明，重新生成全部 Demo 产物。
-7. 再次执行全量测试、Analyze 和内存回归后，才冻结最终公共 API。
+## 8. 回归门槛
+
+冻结本轮路由 API 前必须全部通过：
+
+1. 六个 framework Package 与 Demo analyze；
+2. `packages/ccrouter_test/test` 全部 Flutter 测试；
+3. `packages/ccrouter_test/generator_test` 全部 Dart 测试；
+4. Demo 测试和标准 Workspace 生成流程；
+5. `git diff --check`、生成物旧字段搜索和未跟踪生成物核对。

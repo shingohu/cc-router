@@ -175,11 +175,14 @@ void main() {
       expect(await pending, 'done');
       expect(host.runtime.activeRouteEntries, hasLength(1));
       for (final uri in ['/legacy/7', 'sample://detail/7', '/old/7']) {
-        await host.runtime.openRoute(Uri.parse(uri));
         expect(
-          detailArgumentId(host.runtime.activeRouteEntries.last.arguments),
+          detailArgumentId(
+            host.runtime.decodeRouteArguments(host.runtime.resolveRoute(uri)),
+          ),
           7,
         );
+        await host.runtime.openRoute(Uri.parse(uri));
+        expect(host.runtime.activeRouteEntries.last.routeId, 'fixture.detail');
         host.runtime.popRoute();
       }
       await host.dispose();

@@ -133,7 +133,7 @@ void main() {
       placement: placement,
     );
     expect(placedRoute.placement, same(placement));
-    expect(placement.routeKind, CCRouteKind.page);
+    expect(placement.navigatorOutlet, 'detail');
   });
 
   test('registrars receive a component-bound registry', () {
@@ -224,27 +224,6 @@ void main() {
         ),
         throwsA(isA<CCShellRegistrationError>()),
       );
-      expect(
-        () => CCRouterRuntime.forTesting(
-          components: [
-            component(
-              'legacy-shell',
-              register: (registry) => registry.registerRoute<String, void>(
-                CCRouteDefinition<String, void>(
-                  routeId: 'legacy.shell',
-                  patterns: [CCPathPattern('/legacy', primary: true)],
-                  codec: const StringCodec(),
-                  placement: const CCRoutePlacement(
-                    routeKind: CCRouteKind.shell,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-        throwsA(isA<CCRouteRegistrationError>()),
-      );
-
       final runtime = CCRouterRuntime.forTesting(
         components: [
           component(
@@ -425,7 +404,6 @@ void main() {
       external: true,
     );
     expect(custom.routeId, 'orders.detail');
-    expect(custom.path, '/detail/44');
     expect(runtime.decodeRouteArguments(custom), '44');
 
     final legacy = runtime.resolveRoute(
@@ -507,7 +485,7 @@ void main() {
     expect(runtime.resolveRoute('/internal/42').routeId, 'orders.internal');
     expect(
       () => runtime.resolveRoute('/internal/42', external: true),
-      throwsA(isA<CCRouteNotFoundError>()),
+      throwsA(isA<CCDeepLinkRejectedError>()),
     );
     expect(
       () => runtime.resolveRoute('internal/42'),
@@ -636,7 +614,7 @@ void main() {
       throwsA(isA<CCRouteRegistrationError>()),
     );
     expect(const CCRegexPattern('.*').primary, isFalse);
-    expect(const CCRegexPattern('.*').matchOnly, isTrue);
+    expect(const CCRegexPattern('.*'), isA<CCRegexPattern>());
   });
 
   test('overlapping regex routes fail resolution explicitly', () async {

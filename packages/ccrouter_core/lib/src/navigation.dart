@@ -45,6 +45,8 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
   }) async {
     _ensureInitialized();
     try {
+      final guarded = _guardedPopOutcome(trigger);
+      if (guarded != null) return guarded;
       final adapter = _requiredNavigationAdapter;
       if (adapter is CCNavigationPopCoordinator) {
         final coordinator = adapter as CCNavigationPopCoordinator;
@@ -55,7 +57,11 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
         return outcome;
       }
       final handled = await adapter.maybePop(result: result);
-      return CCPopOutcome(handled: handled, trigger: trigger);
+      return CCPopOutcome(
+        handled: handled,
+        trigger: trigger,
+        hostId: _activeRouteEntryHostId,
+      );
     } on CCRouterError {
       rethrow;
     } catch (error) {
@@ -84,7 +90,11 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     // Adapters without a backend ledger may still explicitly guarantee that
     // the active entry was managed. In that narrow case, only the top entry
     // can be reconciled; foreign/opaque outcomes never reach this fallback.
-    _removeTopRouteEntry(reason: 'maybePop', preserveRoot: true);
+    _removeTopRouteEntry(
+      reason: 'maybePop',
+      preserveRoot: true,
+      hostId: outcome.hostId,
+    );
   }
 
   /// Pops the current route and pushes [intent] as one stack operation.
@@ -97,23 +107,25 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     CCNavigationSource? source,
   }) async {
     _ensureInitialized();
-    _ensureAdapterCapability(
-      (capabilities) => capabilities.supportsAtomicPopAndPush,
-      'supportsAtomicPopAndPush',
-    );
-    final prepared = _routeRegistry.prepareIntent(intent);
-    final result = await _dispatchNavigationWithAction(
-      CCNavigationOperation.popAndPush,
-      prepared,
-      CCNavigationOrigin.internal,
-      source,
+    final result = await _executeNavigationWithFailurePolicy(
+      operation: CCNavigationOperation.popAndPush,
+      origin: CCNavigationOrigin.internal,
+      source: source,
+      routeIdHint: intent.routeId,
+      prepare: () {
+        _ensureAdapterCapability(
+          (capabilities) => capabilities.supportsAtomicPopAndPush,
+          'supportsAtomicPopAndPush',
+        );
+        return _routeRegistry.prepareIntent(intent);
+      },
       action: (request) =>
           _requiredNavigationAdapter.popAndPush(request, popResult: popResult),
     );
     try {
       return result as R?;
     } on TypeError {
-      throw CCRouteResultTypeError(prepared.routeId);
+      throw CCRouteResultTypeError(intent.routeId);
     }
   }
 
@@ -229,16 +241,18 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     CCNavigationSource? source,
   }) async {
     _ensureInitialized();
-    _ensureAdapterCapability(
-      (capabilities) => capabilities.supportsPushAndRemoveUntil,
-      'supportsPushAndRemoveUntil',
-    );
-    final prepared = _routeRegistry.prepareIntent(intent);
-    final result = await _dispatchNavigationWithAction(
-      CCNavigationOperation.pushAndRemoveUntil,
-      prepared,
-      CCNavigationOrigin.internal,
-      source,
+    final result = await _executeNavigationWithFailurePolicy(
+      operation: CCNavigationOperation.pushAndRemoveUntil,
+      origin: CCNavigationOrigin.internal,
+      source: source,
+      routeIdHint: intent.routeId,
+      prepare: () {
+        _ensureAdapterCapability(
+          (capabilities) => capabilities.supportsPushAndRemoveUntil,
+          'supportsPushAndRemoveUntil',
+        );
+        return _routeRegistry.prepareIntent(intent);
+      },
       action: (request) =>
           _requiredNavigationAdapter.pushAndRemoveUntil(request, predicate),
       commitEntry: (created) =>
@@ -247,7 +261,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     try {
       return result as R?;
     } on TypeError {
-      throw CCRouteResultTypeError(prepared.routeId);
+      throw CCRouteResultTypeError(intent.routeId);
     }
   }
 
@@ -274,12 +288,13 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     CCNavigationSource? source,
   }) async {
     _ensureInitialized();
-    final prepared = _routeRegistry.prepareUri(uri, origin);
-    await _dispatchNavigation(
-      CCNavigationOperation.open,
-      prepared,
-      origin,
-      source,
+    await _executeNavigationWithFailurePolicy(
+      operation: CCNavigationOperation.open,
+      origin: origin,
+      source: source,
+      routeIdHint: null,
+      prepare: () => _routeRegistry.prepareUri(uri, origin),
+      action: (request) => _requiredNavigationAdapter.navigate(request),
     );
   }
 
@@ -287,6 +302,10 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
   void popRoute<R>({R? result}) {
     _ensureInitialized();
     try {
+      final guarded = _guardedPopOutcome(CCPopTrigger.business);
+      if (guarded != null) {
+        throw CCPopGuardDeniedError(guarded.guardDeniedCode!);
+      }
       final adapter = _requiredNavigationAdapter;
       if (adapter is CCNavigationPopCoordinator) {
         final coordinator = adapter as CCNavigationPopCoordinator;
@@ -300,7 +319,11 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
       // their historical behavior while newer adapters use the coordinator
       // above to isolate foreign and opaque backend entries.
       adapter.pop(result: result);
-      _removeTopRouteEntry(reason: 'pop', preserveRoot: true);
+      _removeTopRouteEntry(
+        reason: 'pop',
+        preserveRoot: true,
+        hostId: _activeRouteEntryHostId,
+      );
     } on CCRouterError {
       rethrow;
     } catch (error) {
@@ -327,8 +350,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
   /// Resolves and validates a business-facing exact Entry handle.
   _RouteEntryRecord _requireRouteEntryHandle(CCRouteEntryHandle handle) {
     for (final entry in _routeEntries) {
-      if (entry.id == handle.routeEntryId &&
-          entry.request.navigationId == handle.navigationId) {
+      if (entry.id == handle.routeEntryId) {
         return entry;
       }
     }
@@ -384,17 +406,18 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     CCNavigationSource? source,
   ) async {
     _ensureInitialized();
-    final prepared = _routeRegistry.prepareIntent(intent);
-    final result = await _dispatchNavigation(
-      operation,
-      prepared,
-      CCNavigationOrigin.internal,
-      source,
+    final result = await _executeNavigationWithFailurePolicy(
+      operation: operation,
+      origin: CCNavigationOrigin.internal,
+      source: source,
+      routeIdHint: intent.routeId,
+      prepare: () => _routeRegistry.prepareIntent(intent),
+      action: (request) => _requiredNavigationAdapter.navigate(request),
     );
     try {
       return result as R?;
     } on TypeError {
-      throw CCRouteResultTypeError(prepared.routeId);
+      throw CCRouteResultTypeError(intent.routeId);
     }
   }
 
@@ -405,28 +428,15 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     CCNavigationSource? source,
   ) async {
     _ensureInitialized();
-    final prepared = _routeRegistry.prepareIntent(intent);
-    await _dispatchNavigation(
-      operation,
-      prepared,
-      CCNavigationOrigin.internal,
-      source,
+    await _executeNavigationWithFailurePolicy(
+      operation: operation,
+      origin: CCNavigationOrigin.internal,
+      source: source,
+      routeIdHint: intent.routeId,
+      prepare: () => _routeRegistry.prepareIntent(intent),
+      action: (request) => _requiredNavigationAdapter.navigate(request),
     );
   }
-
-  /// Builds and delivers one validated request to the configured adapter.
-  Future<Object?> _dispatchNavigation(
-    CCNavigationOperation operation,
-    _PreparedRoute prepared,
-    CCNavigationOrigin origin,
-    CCNavigationSource? source,
-  ) => _dispatchNavigationWithAction(
-    operation,
-    prepared,
-    origin,
-    source,
-    action: (request) => _requiredNavigationAdapter.navigate(request),
-  );
 
   /// Runs the common interception pipeline before one Adapter operation.
   ///
@@ -439,10 +449,15 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     _PreparedRoute prepared,
     CCNavigationOrigin origin,
     CCNavigationSource? source, {
+    String? navigationId,
     required Future<Object?> Function(CCNavigationRequest request) action,
     void Function(_RouteEntryRecord entry)? commitEntry,
   }) {
-    if (_aspectCallbackActive) {
+    if (_navigationCallbackActive ||
+        identical(
+          Zone.current[CCRouterRuntime._navigationCallbackZoneKey],
+          this,
+        )) {
       return Future<Object?>.error(const CCNavigationReentrancyError());
     }
     final key = _navigationConcurrencyKey(operation, prepared);
@@ -462,6 +477,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
       prepared,
       origin,
       source,
+      navigationId: navigationId,
       action: action,
       commitEntry: commitEntry,
     );
@@ -513,11 +529,18 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
       }
       var adapterDispatchStarted = false;
       try {
-        final decision = await _runInterceptors(
-          request,
-          cancellation: cancellation,
-          redirectDepth: redirectDepth,
-        );
+        final interceptClock = Stopwatch()..start();
+        late final CCNavigationInterception decision;
+        try {
+          decision = await _runInterceptors(
+            request,
+            cancellation: cancellation,
+            redirectDepth: redirectDepth,
+          );
+        } finally {
+          interceptClock.stop();
+          _recordAspectIntercept(request.navigationId, interceptClock.elapsed);
+        }
         switch (decision) {
           case CCNavigationProceed():
             adapterDispatchStarted = true;
@@ -537,6 +560,8 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
               source: source,
               code: code,
               timeout: timeout,
+              action: action,
+              commitEntry: commitEntry,
             );
           case CCNavigationCancel(:final code):
             throw CCRouteCancelledError(code);
@@ -544,10 +569,19 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
             if (redirectDepth >= CCRouterRuntime.maxNavigationRedirects) {
               throw CCRouteRedirectLoopError(request.routeId);
             }
-            if (intent != null) {
-              current = _routeRegistry.prepareIntent(intent, origin: origin);
-            } else {
-              current = _routeRegistry.prepareUri(uri!, origin);
+            final redirectResolveClock = Stopwatch()..start();
+            try {
+              if (intent != null) {
+                current = _routeRegistry.prepareIntent(intent, origin: origin);
+              } else {
+                current = _routeRegistry.prepareUri(uri!, origin);
+              }
+            } finally {
+              redirectResolveClock.stop();
+              _recordAspectResolve(
+                request.navigationId,
+                redirectResolveClock.elapsed,
+              );
             }
             redirectDepth++;
         }
@@ -606,33 +640,73 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     required CCCancellationToken cancellation,
     required int redirectDepth,
   }) async {
-    final context = CCNavigationInterceptorContext(
-      request: request,
-      cancellation: cancellation,
-      redirectDepth: redirectDepth,
-    );
-    final aspectDecision = await _runAspectBefore(
-      request,
-      cancellation: cancellation,
-      redirectDepth: redirectDepth,
-    );
-    if (aspectDecision is! CCNavigationProceed) return aspectDecision;
     for (final registration in _globalInterceptors) {
-      final decision = await registration.interceptor.intercept(context);
+      final decision = await _invokeNavigationInterceptor(
+        id: registration.id,
+        interceptor: registration.interceptor,
+        timeout: registration.timeout,
+        request: request,
+        cancellation: cancellation,
+        redirectDepth: redirectDepth,
+      );
       if (decision is! CCNavigationProceed) return decision;
     }
     final route = _routeRegistry.routeDefinition(request.routeId);
     for (final id in route.interceptorIds) {
       final registration = _routeInterceptors[id]!;
-      final decision = await registration.interceptor.intercept(context);
+      final decision = await _invokeNavigationInterceptor(
+        id: id,
+        interceptor: registration.interceptor,
+        timeout: registration.timeout,
+        request: request,
+        cancellation: cancellation,
+        redirectDepth: redirectDepth,
+      );
       if (decision is! CCNavigationProceed) return decision;
     }
     return const CCNavigationProceed();
   }
 
+  /// Executes one interceptor with a fresh deadline and sanitized failures.
+  Future<CCNavigationInterception> _invokeNavigationInterceptor({
+    required String id,
+    required CCNavigationInterceptor interceptor,
+    required Duration? timeout,
+    required CCNavigationRequest request,
+    required CCCancellationToken cancellation,
+    required int redirectDepth,
+  }) async {
+    final deadline = timeout == null ? null : DateTime.now().add(timeout);
+    final context = CCNavigationInterceptorContext(
+      request: request,
+      cancellation: cancellation,
+      redirectDepth: redirectDepth,
+      deadline: deadline,
+    );
+    try {
+      var pending = Future<CCNavigationInterception>.sync(
+        () => interceptor.intercept(context),
+      );
+      if (timeout != null) {
+        pending = pending.timeout(
+          timeout,
+          onTimeout: () {
+            cancellation.cancel();
+            throw CCNavigationInterceptorTimeoutError(id);
+          },
+        );
+      }
+      return await pending;
+    } on CCNavigationInterceptorTimeoutError {
+      rethrow;
+    } catch (error) {
+      throw CCNavigationInterceptorError(id, error.runtimeType.toString());
+    }
+  }
+
   /// Returns whether this request needs the asynchronous interception pass.
   bool _hasInterceptors(String routeId) {
-    if (_globalInterceptors.isNotEmpty || _hasNavigationAspects) return true;
+    if (_globalInterceptors.isNotEmpty) return true;
     return _routeRegistry.routeDefinition(routeId).interceptorIds.isNotEmpty;
   }
 
@@ -682,7 +756,14 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
   }) async {
     _emitNavigationEvent(request, CCNavigationLifecyclePhase.requested);
     try {
-      final pending = action();
+      final dispatchClock = Stopwatch()..start();
+      late final Future<Object?> pending;
+      try {
+        pending = action();
+      } finally {
+        dispatchClock.stop();
+        _recordAspectDispatch(request.navigationId, dispatchClock.elapsed);
+      }
       if (entry != null) {
         (commitEntry ?? _commitRouteEntry)(entry);
       }

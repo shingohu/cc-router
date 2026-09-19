@@ -1,5 +1,43 @@
 part of 'runtime.dart';
 
+/// Immutable invocation identity retained by a completed trace record.
+///
+/// Use this snapshot to correlate completed framework work without retaining
+/// the live cancellation token or its listeners. It intentionally contains no
+/// handler arguments, service instances, or arbitrary business values.
+final class CCTraceContextSnapshot {
+  /// Copies safe scalar fields from one live invocation [context].
+  CCTraceContextSnapshot.from(CCInvocationContext context)
+    : invocationId = context.invocationId,
+      traceId = context.traceId,
+      spanId = context.spanId,
+      parentSpanId = context.parentSpanId,
+      scopeId = context.scopeId,
+      deadline = context.deadline,
+      cancellationRequested = context.cancellation.isCancelled;
+
+  /// Identity unique to the completed invocation.
+  final String invocationId;
+
+  /// Identity shared by every span in the completed call chain.
+  final String traceId;
+
+  /// Identity of this completed invocation span.
+  final String spanId;
+
+  /// Parent span identity, or null for a root invocation.
+  final String? parentSpanId;
+
+  /// Lifecycle Scope associated with the invocation, when one existed.
+  final String? scopeId;
+
+  /// Deadline used by the invocation, when configured.
+  final DateTime? deadline;
+
+  /// Whether cancellation had been requested when tracing completed.
+  final bool cancellationRequested;
+}
+
 /// Immutable diagnostic outcome for one framework invocation.
 ///
 /// Use trace records for development diagnostics, latency inspection, and
@@ -17,8 +55,8 @@ final class CCTraceRecord {
     this.errorType,
   });
 
-  /// Context used by the invocation.
-  final CCInvocationContext context;
+  /// Safe identity snapshot captured after the invocation completed.
+  final CCTraceContextSnapshot context;
 
   /// Operation category such as command, query, action, or event.
   final String operation;

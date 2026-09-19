@@ -66,10 +66,9 @@ abstract final class OrderDetailRoute {
           parentRouteId: null,
           shellId: null,
           navigatorOutlet: "root",
-          routeKind: CCRouteKind.page,
         ),
         interceptorIds: const [],
-        description: "订单详情，确认后返回订单编号。",
+        popGuardIds: const [],
       );
 }
 

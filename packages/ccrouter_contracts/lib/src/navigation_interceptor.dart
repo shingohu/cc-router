@@ -26,7 +26,11 @@ final class CCNavigationInterceptorContext {
   /// Number of redirects already followed for this navigation.
   final int redirectDepth;
 
-  /// Optional deadline reserved for host-provided navigation policies.
+  /// Absolute deadline for the interceptor currently evaluating this context.
+  ///
+  /// This is null when the interceptor registration has no timeout. An
+  /// interceptor should observe both this value and [cancellation] when it
+  /// delegates work to a cancellable client.
   final DateTime? deadline;
 }
 
@@ -107,6 +111,7 @@ final class CCGlobalNavigationInterceptor {
   const CCGlobalNavigationInterceptor({
     required this.id,
     required this.interceptor,
+    this.timeout,
   });
 
   /// Stable identifier used for deterministic ordering.
@@ -114,4 +119,10 @@ final class CCGlobalNavigationInterceptor {
 
   /// Interceptor implementation invoked for every navigation request.
   final CCNavigationInterceptor interceptor;
+
+  /// Optional maximum duration allowed for each interception pass.
+  ///
+  /// Redirects start a new pass with a fresh deadline. A timeout cancels the
+  /// current navigation token and throws [CCNavigationInterceptorTimeoutError].
+  final Duration? timeout;
 }

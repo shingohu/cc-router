@@ -14,8 +14,21 @@ final class CCGoRouterPredictiveBackBridge
   /// Runtime listeners receiving platform predictive-back phases.
   final Set<CCPredictiveBackEventListener> _listeners = {};
 
+  /// Runtime-owned synchronous guard evaluator, while the Adapter is active.
+  CCPopGuardEvaluator? _popGuardEvaluator;
+
   /// Whether the owning Adapter has been disposed.
   bool _disposed = false;
+
+  /// Evaluates whether a predictive-back gesture may remove the active route.
+  ///
+  /// The host calls this before allowing the platform gesture to commit. A
+  /// denied result means the host must keep the current route and must not call
+  /// [committed]. Foreign or opaque top entries are allowed by Runtime without
+  /// invoking managed-route guards.
+  CCPopGuardDecision evaluateStart() =>
+      _popGuardEvaluator?.call(CCPopTrigger.predictiveBack) ??
+      const CCPopAllow();
 
   /// Subscribes to predictive-back phases and returns a removal callback.
   @override
@@ -45,6 +58,12 @@ final class CCGoRouterPredictiveBackBridge
   /// Reports a committed Pop after the backend removed its route.
   void committed(CCPopOutcome outcome) {
     _emit(_PredictiveBackReport.committed(outcome));
+  }
+
+  /// Installs or clears the Runtime evaluator owned by the Adapter lifecycle.
+  void _bindPopGuardEvaluator(CCPopGuardEvaluator? evaluator) {
+    if (_disposed && evaluator != null) return;
+    _popGuardEvaluator = evaluator;
   }
 
   /// Rejects platform progress values outside the normalized gesture range.
@@ -79,6 +98,7 @@ final class CCGoRouterPredictiveBackBridge
   /// Permanently detaches Runtime listeners during Adapter disposal.
   void _dispose() {
     _disposed = true;
+    _popGuardEvaluator = null;
     _listeners.clear();
   }
 }

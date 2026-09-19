@@ -66,6 +66,20 @@ abstract interface class CCRouteCodec<A> {
   CCEncodedRouteArguments encode(A arguments);
 }
 
+/// Converts one explicitly annotated complex Query value to repeated strings.
+///
+/// Use a small, stateless implementation for shareable filters or value objects
+/// that have a stable URI representation. Generated codecs isolate malformed
+/// input and reject encoder failures. Do not use this boundary for secrets,
+/// mutable application objects, or values that belong in process-local Extra.
+abstract interface class CCRouteQueryCodec<T> {
+  /// Decodes all values for one query key into a typed value.
+  T decode(List<String> values);
+
+  /// Encodes one typed value as one or more unescaped query values.
+  List<String> encode(T value);
+}
+
 /// Immutable definition registered by one component's generated Registrar.
 ///
 /// Component registrars use definitions to install routes in the Runtime.
@@ -81,9 +95,10 @@ final class CCRouteDefinition<A, R> {
     this.presentation = const CCPagePresentation(),
     this.placement = const CCRoutePlacement.root(),
     List<String> interceptorIds = const [],
-    this.description,
+    List<String> popGuardIds = const [],
   }) : patterns = List.unmodifiable(patterns),
-       interceptorIds = List.unmodifiable(interceptorIds);
+       interceptorIds = List.unmodifiable(interceptorIds),
+       popGuardIds = List.unmodifiable(popGuardIds);
 
   /// Stable identity used for tracing, registration, and generated contracts.
   final String routeId;
@@ -121,8 +136,12 @@ final class CCRouteDefinition<A, R> {
   /// policy. The IDs must be registered by the owning component.
   final List<String> interceptorIds;
 
-  /// Optional human-readable documentation description.
-  final String? description;
+  /// Route-local Pop guards evaluated in declaration order.
+  ///
+  /// Use these for synchronous managed-page exit rules. The IDs must be
+  /// registered by the owning component. Foreign and opaque routes never run
+  /// these guards, and asynchronous confirmation remains a `PopScope` concern.
+  final List<String> popGuardIds;
 }
 
 /// Typed navigation intent created by generated route APIs.
@@ -147,7 +166,6 @@ final class CCRouteLocation {
   /// Creates an immutable route location with decoded string parameters.
   CCRouteLocation({
     required this.routeId,
-    required this.path,
     required Map<String, String> pathParameters,
     required Map<String, List<String>> queryParameters,
   }) : pathParameters = Map.unmodifiable(pathParameters),
@@ -159,9 +177,6 @@ final class CCRouteLocation {
 
   /// Stable route ID selected by the matcher.
   final String routeId;
-
-  /// Normalized path that matched the route.
-  final String path;
 
   /// Named values captured from a path template or full regular expression.
   final Map<String, String> pathParameters;

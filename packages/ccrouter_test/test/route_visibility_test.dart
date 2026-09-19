@@ -117,7 +117,9 @@ void main() {
       expect(
         host.runtime.recentRouteEntryEvents
             .where(
-              (event) => event.state == CCRouteEntryLifecycleState.disposed,
+              (event) =>
+                  event.entry.lifecycleState ==
+                  CCRouteEntryLifecycleState.disposed,
             )
             .map((event) => event.entry.normalizedUri.path),
         containsAll(['/visibility/first', '/visibility/second']),

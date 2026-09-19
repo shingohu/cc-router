@@ -34,13 +34,20 @@ onRouteHide
 这些事件覆盖页面曝光、页面被覆盖、App 前后台、Dialog/BottomSheet 显示隐藏等场景。
 
 CCRouter 当前已经有 `RouteEntry` 生命周期、独立的 `CCNavigationHost` 前后台事件和
-`CCNavigationAspect` 的 `before`、`found`、`arrival`、`lost`、`after` 阶段，但还需要补充：
+`CCNavigationAspect` 的 `found`、`arrival`、`lost`、`after` 只读观察阶段；跳转前的
+继续、取消和重定向决策由 Global/Route Interceptor 提供。Flutter
+业务层另外提供共享同一 Host 台账的 `CCPageLifecycleMixin` 和
+`CCPageLifecycleListener`，二者均支持：
 
-- Route 显示、隐藏和焦点变化；
-- Shell 分支切换导致的页面失焦；
-- 多 Window 的独立生命周期。
+- `onPageShow` / `onPageHide`：只表示 `PageRoute` 是否为所属活动 Outlet 的当前主
+  Route，不表示像素是否仍然可见；
+- `onForeground` / `onBackground`：只在当前页面经历后续 App 前后台转换时触发；
+- Foreign `PageRoute` / `PopupRoute` 可以覆盖和恢复 Managed 页面，但不能移除其
+  RouteEntry；`OverlayEntry` 等非 Navigator 浮层不改变页面生命周期。
 
-建议增加 Adapter 上报的中立事件模型，例如：
+GoRouter 集成通过 `CCGoRouterNavigationObserver.didChangeTop` 上报确认后的当前 Route；
+Stateful Shell 和多 Pane Host 通过 Host SPI 上报活动 Outlet 集合。仍需继续完善的底层
+中立事件模型包括：
 
 ```text
 CCHostLifecycleEvent
@@ -48,7 +55,10 @@ CCRouteVisibilityEvent
 CCWindowVisibilityEvent
 ```
 
-不建议把 Widget Mixin 作为 Core 生命周期模型。Mixin 可以作为 Flutter 层的便利接入，但不能替代 Runtime 的 RouteEntry 和 Adapter 事件。
+Mixin 和 Listener 都只是 Flutter 业务层的便利接入，不能替代 Runtime 的 RouteEntry、
+Adapter 事件或最终移除埋点。页面创建和销毁继续使用 Flutter `initState` / `dispose`；
+页面最终退出统计使用 Navigation Aspect 或 RouteEntry removed/disposed 事件，不增加
+含义不可靠的 `onPageDispose`。
 
 ### 2.2 StatefulShell 和嵌套路由
 
@@ -156,7 +166,7 @@ CCRouter 应继续要求业务统一通过 `CCRouter.navigator`，让拦截、As
 | 注解参数辅助 | 支持 | 生成强类型 Arguments/Intent |
 | 多 Path / URI | 支持部分 | 多 Pattern、主 Pattern 和别名分离 |
 | 路由可见性 | 主要依赖生成文件和包扫描 | 契约形态、Package 依赖、barrel 校验 |
-| 路由生命周期 | Widget Mixin + Observer | Runtime RouteEntry + Aspect + Adapter 事件 |
+| 路由生命周期 | Widget Mixin + Observer | Runtime 状态源 + 可选 Mixin/Listener + Adapter `didChangeTop` |
 | App 前后台 | 有生命周期回调 | 已有 Host Lifecycle Event，待扩展多 Window Runtime 调度 |
 | 全局/路由拦截器 | 支持 | 已支持，并统一经过 CCRouter |
 | GoRouter | 支持 | 独立 GoRouter Adapter |
@@ -170,7 +180,8 @@ CCRouter 应继续要求业务统一通过 `CCRouter.navigator`，让拦截、As
 
 ### P0
 
-1. 让 Route 显示、隐藏和焦点变化由 Backend identity 精确确认。
+1. 将已由 `didChangeTop` 确认的页面当前状态继续关联到 Backend Entry identity，使
+   Runtime RouteEntry 可见性和页面便利回调使用同一确认结果。
 2. 完善 StatefulShell、嵌套路由和多 Outlet 回归测试。
 3. 将产品埋点名称与稳定 `routeId` 分离，例如增加结构化 `CCRouteTelemetry`。
 

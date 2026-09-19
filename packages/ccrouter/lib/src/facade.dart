@@ -63,6 +63,21 @@ abstract final class CCRouter {
   static List<CCNavigationLifecycleEvent> get recentNavigationEvents =>
       _runtime.recentNavigationEvents;
 
+  /// Bounded snapshot of sanitized navigation failures and recovery choices.
+  ///
+  /// Events contain stable routing identities and error types only. They never
+  /// expose URI parameters, typed arguments, Pop results, or `extra` values.
+  static List<CCNavigationFailureEvent> get recentNavigationFailures =>
+      _runtime.recentNavigationFailures;
+
+  /// Bounded evidence that a previous route state could have been restored.
+  ///
+  /// Events always report `unsupported`; they measure demand and contain no
+  /// replayable navigation state, URI parameters, arguments, or account IDs.
+  static List<CCRouteRestorationOpportunityEvent>
+  get recentRouteRestorationOpportunities =>
+      _runtime.recentRouteRestorationOpportunities;
+
   /// Bounded snapshot of managed Route Entry visibility transitions.
   ///
   /// Use this for page exposure, focus restoration, and diagnostics. App or
@@ -120,6 +135,22 @@ abstract final class CCRouter {
   static void Function() addNavigationListener(
     CCNavigationLifecycleListener listener,
   ) => _runtime.addNavigationListener(listener);
+
+  /// Subscribes to sanitized navigation failure decisions.
+  ///
+  /// Use this at the application Host boundary for failure-rate telemetry. The
+  /// returned callback removes the listener, and listener failures are isolated.
+  static void Function() addNavigationFailureListener(
+    CCNavigationFailureListener listener,
+  ) => _runtime.addNavigationFailureListener(listener);
+
+  /// Subscribes to sanitized route-restoration demand observations.
+  ///
+  /// Analytics hosts use this to estimate whether full restoration is valuable.
+  /// The returned callback removes the listener without affecting the source.
+  static void Function() addRouteRestorationOpportunityListener(
+    CCRouteRestorationOpportunityListener listener,
+  ) => _runtime.addRouteRestorationOpportunityListener(listener);
 
   /// Subscribes to managed Route Entry visibility transitions.
   ///
@@ -182,7 +213,11 @@ abstract final class CCRouter {
     int navigationEventCapacity = 1000,
     CCNavigationAdapter? navigationAdapter,
     Iterable<CCGlobalNavigationInterceptor> globalInterceptors = const [],
+    Iterable<CCGlobalPopGuard> globalPopGuards = const [],
+    CCNavigationFailurePolicy? navigationFailurePolicy,
     Iterable<CCNavigationAspect> navigationAspects = const [],
+    CCNavigationTelemetryContextProvider? telemetryContextProvider,
+    CCRouteRestorationOpportunitySource? restorationOpportunitySource,
     CCNavigationConcurrencyPolicy navigationConcurrencyPolicy =
         CCNavigationConcurrencyPolicy.allow,
   }) async {
@@ -198,7 +233,11 @@ abstract final class CCRouter {
       navigationEventCapacity: navigationEventCapacity,
       navigationAdapter: navigationAdapter,
       globalInterceptors: globalInterceptors,
+      globalPopGuards: globalPopGuards,
+      navigationFailurePolicy: navigationFailurePolicy,
       navigationAspects: navigationAspects,
+      telemetryContextProvider: telemetryContextProvider,
+      restorationOpportunitySource: restorationOpportunitySource,
       navigationConcurrencyPolicy: navigationConcurrencyPolicy,
     );
     final initializing = runtime.initialize();

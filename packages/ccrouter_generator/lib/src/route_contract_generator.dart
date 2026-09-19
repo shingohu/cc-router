@@ -81,6 +81,9 @@ final class _ContractImportPlan {
       _collectType(route.resultType, route.page, uris);
       for (final parameter in route.parameters) {
         _collectType(parameter.element.type, parameter.element, uris);
+        if (parameter.queryCodecType case final codecType?) {
+          _collectType(codecType, parameter.element, uris);
+        }
         if (parameter.defaultCode != null) {
           _renderDefault(parameter, aliases: const {});
         }

@@ -170,8 +170,13 @@ descriptor 细节；生成的 `<package>_ccrouter.g.dart` 是唯一 Host 装配�
 - 页面必须为非抽象、非泛型类，有未命名的 generative constructor。
 - 必须显式指定结果类型；无结果使用 `CCRoute<void>`。
 - Path 按构造参数名称自动推断，不可为空或带默认值。
-- Query 显式注解，可指定 URI key；支持 String、int、double、bool、enum
-  及可空值、构造器默认值。bool 只接受 `true/false`，double 拒绝非有限值。
+- Query 显式注解，可指定 URI key；支持 String、int、double、bool、enum、由这些标量组成的
+  `List<T>`/`Set<T>`，以及通过 `CCRouteQueryCodec<T>` 显式声明的复杂 shareable value。
+  支持可空值和构造器默认值；bool 只接受 `true/false`，double 拒绝非有限值。
+- Query 集合编码为 repeated key。List 保序，Set 去重并按 wire value 生成稳定顺序；生成的
+  Arguments 和解码结果都会复制为不可变集合。空集合因无法与缺失 key 区分而被拒绝。
+- 自定义 Query Codec 必须是 concrete、non-generic、无参 const 构造，并与参数非空类型精确
+  匹配；Codec 异常和空编码结果统一转换为脱敏的 `CCRouteParameterError`。
 - 标量 Query 重复、缺失必需值、非法类型会抛出 `CCRouteParameterError`；
   消息包含路由和参数名称，不包含原始参数内容。
 - 最多一个显式 Extra，保持对象身份；启用 Deep Link 时不能要求必需 Extra。
@@ -182,7 +187,8 @@ descriptor 细节；生成的 `<package>_ccrouter.g.dart` 是唯一 Host 装配�
   URI、Regex Pattern 以及 Presentation、Placement、拦截器 ID 元数据。
 - 组件生成物不生成 GoRoute、不选择路由后端；宿主生成物只聚合中立 Catalog。
 
-集合 Query、自定义字段 Codec 以及具名/Factory 页面构造器留到后续阶段。聚合校验同时
+具名/Factory 页面构造器留到后续阶段；未命名构造器的继承参数、required positional、
+optional positional、named 参数、默认值和跨 Package import 已覆盖。聚合校验同时
 检查同层、同具体度且能够静态证明的
 Path/URI/Regex Pattern 冲突；约束表达式仅在可证明互斥时排除重叠，复杂正则歧义仍由
 Runtime 注册兜底。

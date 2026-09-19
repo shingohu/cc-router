@@ -62,7 +62,18 @@ abstract interface class CCRegistry {
   /// Route definitions refer to [id] in their `interceptorIds` list. The
   /// interceptor is invoked only after global interceptors and cannot access
   /// the Runtime or navigation Adapter directly.
-  void registerRouteInterceptor(String id, CCNavigationInterceptor interceptor);
+  void registerRouteInterceptor(
+    String id,
+    CCNavigationInterceptor interceptor, {
+    Duration? timeout,
+  });
+
+  /// Registers a synchronous Pop guard owned by the current component.
+  ///
+  /// Route definitions refer to [id] in their `popGuardIds` list. Use this for
+  /// managed-route exit rules that can be decided from current in-memory state;
+  /// asynchronous confirmation UI should use Flutter `PopScope` instead.
+  void registerRoutePopGuard(String id, CCPopGuard guard);
 
   /// Registers a Shell definition owned by the current component.
   ///
@@ -130,13 +141,21 @@ final class _CCComponentRegistry implements CCRegistry {
   @override
   void registerRouteInterceptor(
     String id,
-    CCNavigationInterceptor interceptor,
-  ) {
+    CCNavigationInterceptor interceptor, {
+    Duration? timeout,
+  }) {
     runtime._registerRouteInterceptorForComponent(
       ownerComponentId,
       id,
       interceptor,
+      timeout: timeout,
     );
+  }
+
+  /// Registers a route Pop guard on behalf of the owning component.
+  @override
+  void registerRoutePopGuard(String id, CCPopGuard guard) {
+    runtime._registerRoutePopGuardForComponent(ownerComponentId, id, guard);
   }
 
   /// Registers a Shell definition on behalf of the owning component.

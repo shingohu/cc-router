@@ -133,15 +133,11 @@ void main() {
     expect(adapter, isA<CCNavigationAdapterCapabilitySource>());
     final capabilities =
         (adapter as CCNavigationAdapterCapabilitySource).capabilities;
-    expect(capabilities.supportsForeignEntryObservation, isTrue);
-    expect(capabilities.supportsBackendEntryIdentity, isTrue);
-    expect(capabilities.supportsInitialStackSnapshot, isTrue);
     expect(capabilities.supportsAtomicPopAndPush, isTrue);
     expect(capabilities.supportsPushAndRemoveUntil, isTrue);
     expect(capabilities.supportsNestedNavigators, isTrue);
     expect(capabilities.supportsStatefulShell, isTrue);
     expect(capabilities.supportsModalRoutes, isTrue);
-    expect(capabilities.supportsOpaqueUiObservation, isTrue);
     expect(capabilities.supportsPredictiveBack, isFalse);
     expect(capabilities.supportsManagedPopObservation, isTrue);
   });
@@ -159,8 +155,15 @@ void main() {
     final bridge = adapter.predictiveBackBridge;
     expect(bridge, isNotNull);
     expect(adapter.capabilities.supportsPredictiveBack, isTrue);
+    adapter.bindPopGuardEvaluator((trigger) {
+      expect(trigger, CCPopTrigger.predictiveBack);
+      return const CCPopDeny(code: 'predictive_blocked');
+    });
+    final guarded = bridge!.evaluateStart();
+    expect(guarded, isA<CCPopDeny>());
+    expect((guarded as CCPopDeny).code, 'predictive_blocked');
     final events = <CCPredictiveBackEvent>[];
-    final remove = bridge!.addPredictiveBackListener(events.add);
+    final remove = bridge.addPredictiveBackListener(events.add);
 
     bridge.started();
     bridge.updated(.5);
@@ -188,6 +191,7 @@ void main() {
     expect(events, hasLength(4));
     adapter.dispose();
     expect(adapter.predictiveBackBridge, isNotNull);
+    expect(bridge.evaluateStart(), isA<CCPopAllow>());
     bridge.started();
     expect(events, hasLength(4));
   });
@@ -415,7 +419,7 @@ void main() {
     expect(outcome.handled, isTrue);
     expect(outcome.removedOwner, CCPopRemovedOwner.managed);
     expect(outcome.removedBackendEntryId, isNotNull);
-    expect(outcome.resultAvailable, isTrue);
+    expect(outcome.removedOwner, CCPopRemovedOwner.managed);
     expect(await pushed, 'back');
   });
 
@@ -453,8 +457,8 @@ void main() {
     expect(
       adapter.lifecycleEvents.map((event) => event.kind),
       containsAll([
-        CCGoRouterNavigationEventKind.push,
         CCGoRouterNavigationEventKind.remove,
+        CCGoRouterNavigationEventKind.topChanged,
       ]),
     );
     await adapter.dispose();
@@ -1063,6 +1067,8 @@ void main() {
         ),
       ],
     );
+    final backendEvents = <CCNavigationBackendEvent>[];
+    adapter.addBackendEventListener(backendEvents.add);
     addTearDown(router.dispose);
     const placement = CCRoutePlacement(
       shellId: 'tabs',
@@ -1101,6 +1107,11 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.text('settings-detail'), findsOneWidget);
+    final activation = backendEvents.lastWhere(
+      (event) => event.kind == CCNavigationBackendEventKind.outletActivated,
+    );
+    expect(activation.placement.shellId, 'tabs');
+    expect(activation.navigatorOutlet, 'settings');
   });
 
   testWidgets('supports popAndPush and completes the removed result', (
@@ -1312,11 +1323,13 @@ void main() {
       router.routerDelegate.navigatorKey.currentState!.pop<void>();
       await tester.pumpAndSettle();
       expect(await one, isNull);
-      expect(backendEvents.last.kind, CCNavigationBackendEventKind.pop);
-      expect(backendEvents.last.routeId, isNull);
-      expect(backendEvents.last.backendEntryId, isNotNull);
-      expect(backendEvents.last.backendOperationId, isNotNull);
-      expect(backendEvents.last.sequence, isNotNull);
+      final popEvent = backendEvents.lastWhere(
+        (event) => event.kind == CCNavigationBackendEventKind.pop,
+      );
+      expect(popEvent.routeId, isNull);
+      expect(popEvent.backendEntryId, isNotNull);
+      expect(popEvent.backendOperationId, isNotNull);
+      expect(popEvent.sequence, isNotNull);
 
       final two = adapter.pushAndRemoveUntil(
         request(

@@ -20,7 +20,11 @@ final class CCRouterTestHost {
     Iterable<CCComponentManifest> components = const [],
     CCNavigationAdapter? navigationAdapter,
     Iterable<CCGlobalNavigationInterceptor> globalInterceptors = const [],
+    Iterable<CCGlobalPopGuard> globalPopGuards = const [],
+    CCNavigationFailurePolicy? navigationFailurePolicy,
     Iterable<CCNavigationAspect> navigationAspects = const [],
+    CCNavigationTelemetryContextProvider? telemetryContextProvider,
+    CCRouteRestorationOpportunitySource? restorationOpportunitySource,
     CCNavigationConcurrencyPolicy navigationConcurrencyPolicy =
         CCNavigationConcurrencyPolicy.allow,
   }) => CCRouterTestHost._(
@@ -30,7 +34,11 @@ final class CCRouterTestHost {
       components: components,
       navigationAdapter: navigationAdapter,
       globalInterceptors: globalInterceptors,
+      globalPopGuards: globalPopGuards,
+      navigationFailurePolicy: navigationFailurePolicy,
       navigationAspects: navigationAspects,
+      telemetryContextProvider: telemetryContextProvider,
+      restorationOpportunitySource: restorationOpportunitySource,
       navigationConcurrencyPolicy: navigationConcurrencyPolicy,
     ),
   );

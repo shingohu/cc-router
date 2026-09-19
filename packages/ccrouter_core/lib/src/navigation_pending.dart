@@ -11,6 +11,8 @@ final class _PendingNavigationRecord {
     required this.source,
     required this.createdAt,
     required this.completer,
+    required this.action,
+    required this.commitEntry,
     this.code = 'deferred',
     this.expiresAt,
   });
@@ -41,6 +43,12 @@ final class _PendingNavigationRecord {
 
   /// Completes the original typed navigation Future after resume or cancel.
   final Completer<Object?> completer;
+
+  /// Exact Adapter operation retained for composite navigation semantics.
+  final Future<Object?> Function(CCNavigationRequest request) action;
+
+  /// Optional RouteEntry commit strategy retained with the operation.
+  final void Function(_RouteEntryRecord entry)? commitEntry;
 
   /// Timer responsible for bounded retention when a timeout was requested.
   Timer? timer;
@@ -78,6 +86,8 @@ extension CCRouterRuntimePendingNavigation on CCRouterRuntime {
     required CCNavigationSource? source,
     required String code,
     required Duration? timeout,
+    required Future<Object?> Function(CCNavigationRequest request) action,
+    required void Function(_RouteEntryRecord entry)? commitEntry,
   }) {
     final completer = Completer<Object?>();
     if (_disposed) {
@@ -96,6 +106,8 @@ extension CCRouterRuntimePendingNavigation on CCRouterRuntime {
       createdAt: now,
       expiresAt: expiresAt,
       completer: completer,
+      action: action,
+      commitEntry: commitEntry,
     );
     _pendingNavigations[request.navigationId] = record;
     if (timeout != null) {
@@ -121,10 +133,14 @@ extension CCRouterRuntimePendingNavigation on CCRouterRuntime {
     record.timer?.cancel();
     var dispatchStarted = false;
     try {
-      final resolved = _routeRegistry.prepareUri(
-        record.request.uri,
-        record.origin,
-      );
+      final resolveClock = Stopwatch()..start();
+      late final _PreparedRoute resolved;
+      try {
+        resolved = _routeRegistry.prepareUri(record.request.uri, record.origin);
+      } finally {
+        resolveClock.stop();
+        _recordAspectResolve(navigationId, resolveClock.elapsed);
+      }
       if (resolved.routeId != record.request.routeId) {
         throw CCRouteUnavailableError(record.request.routeId);
       }
@@ -137,6 +153,7 @@ extension CCRouterRuntimePendingNavigation on CCRouterRuntime {
         presentation: resolved.presentation,
         placement: resolved.placement,
         interceptorIds: resolved.interceptorIds,
+        popGuardIds: resolved.popGuardIds,
       );
       dispatchStarted = true;
       final result = await _dispatchNavigationUncoordinated(
@@ -145,7 +162,8 @@ extension CCRouterRuntimePendingNavigation on CCRouterRuntime {
         record.origin,
         record.source,
         navigationId: record.request.navigationId,
-        action: (request) => _requiredNavigationAdapter.navigate(request),
+        action: record.action,
+        commitEntry: record.commitEntry,
       );
       record.completer.complete(result);
     } catch (error, stackTrace) {

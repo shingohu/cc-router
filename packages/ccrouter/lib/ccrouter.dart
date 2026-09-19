@@ -4,8 +4,12 @@
 /// contracts and the static facade. Runtime internals remain hidden.
 library;
 
-export 'package:ccrouter_contracts/ccrouter_contracts.dart';
+export 'package:ccrouter_contracts/ccrouter_contracts.dart'
+    hide
+        CCNavigationManagedEntryReleaseSink,
+        CCRouteRestorationOpportunitySignal,
+        CCRouteRestorationOpportunitySource;
 export 'package:ccrouter_core/ccrouter_core.dart'
     hide CCRouterRuntime, CCScope, CCScopeState, CCMemoryNavigationAdapter;
-export 'src/app.dart';
+export 'src/app.dart' hide CCPageLifecycleHostBridge;
 export 'src/facade.dart';

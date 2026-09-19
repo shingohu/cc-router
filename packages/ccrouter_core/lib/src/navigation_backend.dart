@@ -2,6 +2,21 @@ part of 'runtime.dart';
 
 /// Exposes backend Navigator observations collected by Runtime.
 extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
+  /// Whether the active Adapter confirms managed visibility from backend tops.
+  bool _usesBackendVisibilityConfirmationFor(String hostId) {
+    final adapter = _navigationAdapter;
+    if (adapter is CCNavigationHostCapabilitySource) {
+      return (adapter as CCNavigationHostCapabilitySource)
+              .capabilitiesForHost(hostId)
+              ?.supportsBackendVisibilityObservation ==
+          true;
+    }
+    return adapter is CCNavigationAdapterCapabilitySource &&
+        (adapter as CCNavigationAdapterCapabilitySource)
+            .capabilities
+            .supportsBackendVisibilityObservation;
+  }
+
   /// Finds the stable backend identity associated with one managed Entry.
   ///
   /// A null result is valid for adapters that do not emit a backend ledger;
@@ -30,6 +45,28 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
       (entry) => entry.lifecycleState == CCBackendEntryLifecycleState.active,
     ),
   );
+
+  /// Returns active backend Entries confirmed as current in their Outlets.
+  ///
+  /// Use this for diagnostics across root, Shell, and nested Navigators. An
+  /// empty result can mean that the Adapter does not support visibility
+  /// confirmation; it must not be interpreted as an empty navigation stack.
+  List<CCBackendEntry> get visibleBackendEntries => List.unmodifiable(
+    _backendEntries.values.where(
+      (entry) =>
+          entry.lifecycleState == CCBackendEntryLifecycleState.active &&
+          entry.visibilityState == CCBackendEntryVisibilityState.visible,
+    ),
+  );
+
+  /// Returns Host IDs whose backend event sequence contains a detected gap.
+  ///
+  /// A desynchronized Host continues to accept exact identity events, but
+  /// Runtime never reconstructs missing foreign or managed transitions by
+  /// position. A fresh Runtime/backend snapshot is required to clear this
+  /// diagnostic state.
+  Set<String> get desynchronizedBackendHosts =>
+      Set.unmodifiable(_desynchronizedBackendHosts);
 
   /// Returns backend entries filtered by optional Host and Navigator Outlet.
   ///
@@ -129,11 +166,6 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
           'Initial backend snapshot contains an invalid entry identity.',
         );
       }
-      if (_backendEntries.length >= navigationEventCapacity &&
-          navigationEventCapacity > 0 &&
-          !_backendEntries.containsKey(snapshot.backendEntryId)) {
-        _backendEntries.remove(_backendEntries.keys.first);
-      }
       _backendEntries[snapshot.backendEntryId] = CCBackendEntry(
         backendEntryId: snapshot.backendEntryId,
         owner: snapshot.owner,
@@ -143,6 +175,7 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
         navigatorOutlet: snapshot.navigatorOutlet,
         location: snapshot.location,
         lifecycleState: CCBackendEntryLifecycleState.active,
+        visibilityState: snapshot.visibilityState,
         lastSequence: snapshot.sequence,
       );
     }
@@ -157,8 +190,10 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
   /// PopupRoute, LocalHistoryEntry, or application-owned Navigator route and
   /// must never remove a managed Route Entry by position.
   void _recordBackendNavigationEvent(CCNavigationBackendEvent event) {
-    _reconcileBackendEntry(event);
+    if (!_reconcileBackendEntry(event)) return;
+    _applyObservedHostLifecycle(event);
     _applyObservedManagedPop(event);
+    _applyObservedBackendTop(event);
     if (navigationEventCapacity > 0) {
       if (_backendNavigationEvents.length == navigationEventCapacity) {
         _backendNavigationEvents.removeFirst();
@@ -181,6 +216,28 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
         }
       }
     }
+  }
+
+  /// Tears down one detached Host without guessing cross-window migration.
+  void _applyObservedHostLifecycle(CCNavigationBackendEvent event) {
+    if (event.kind != CCNavigationBackendEventKind.hostDetached) return;
+    final hostId = event.hostId ?? event.placement.hostId;
+    _removeAllRouteEntries(reason: 'hostDetached', hostId: hostId);
+    for (final ledgerEntry in _backendEntries.entries.toList()) {
+      final entry = ledgerEntry.value;
+      if (entry.hostId == hostId &&
+          entry.lifecycleState == CCBackendEntryLifecycleState.active) {
+        _backendEntries[ledgerEntry.key] = _copyBackendEntry(
+          entry,
+          lifecycleState: CCBackendEntryLifecycleState.removed,
+          visibilityState: CCBackendEntryVisibilityState.hidden,
+          lastSequence: event.sequence ?? entry.lastSequence,
+        );
+      }
+    }
+    _trimRemovedBackendEntries();
+    _backendSequencesByHost.remove(hostId);
+    _desynchronizedBackendHosts.remove(hostId);
   }
 
   /// Closes a Managed RouteEntry only for an identity-capable adapter event.
@@ -212,20 +269,20 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
     }
   }
 
-  /// Reconciles one identity-bearing event without changing Route Entries.
-  void _reconcileBackendEntry(CCNavigationBackendEvent event) {
+  /// Reconciles one identity-bearing event and rejects duplicates or stale data.
+  bool _reconcileBackendEntry(CCNavigationBackendEvent event) {
     final operationId = event.backendOperationId;
     if (operationId != null) {
-      if (_processedBackendOperations.contains(operationId)) return;
-      if (navigationEventCapacity > 0) {
-        while (_processedBackendOperations.length >= navigationEventCapacity) {
-          _processedBackendOperations.remove(_processedBackendOperations.first);
-        }
-        _processedBackendOperations.add(operationId);
+      if (_processedBackendOperations.contains(operationId)) return false;
+      final capacity = max(navigationEventCapacity, 64);
+      while (_processedBackendOperations.length >= capacity) {
+        _processedBackendOperations.remove(_processedBackendOperations.first);
       }
+      _processedBackendOperations.add(operationId);
     }
+    if (!_acceptBackendSequence(event)) return false;
     final backendEntryId = event.backendEntryId;
-    if (backendEntryId == null || backendEntryId.isEmpty) return;
+    if (backendEntryId == null || backendEntryId.isEmpty) return true;
 
     _RouteEntryRecord? routeEntry;
     final navigationId = event.navigationId;
@@ -244,17 +301,13 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
         ? CCBackendEntryOwner.managed
         : event.owner ?? CCBackendEntryOwner.foreign;
     final previous = event.previousBackendEntryId;
-    if (previous != null && previous != backendEntryId) {
+    if (event.kind == CCNavigationBackendEventKind.replace &&
+        previous != null &&
+        previous != backendEntryId) {
       final previousEntry = _backendEntries[previous];
       if (previousEntry != null) {
-        _backendEntries[previous] = CCBackendEntry(
-          backendEntryId: previousEntry.backendEntryId,
-          owner: previousEntry.owner,
-          routeEntryId: previousEntry.routeEntryId,
-          routeId: previousEntry.routeId,
-          hostId: previousEntry.hostId,
-          navigatorOutlet: previousEntry.navigatorOutlet,
-          location: previousEntry.location,
+        _backendEntries[previous] = _copyBackendEntry(
+          previousEntry,
           lifecycleState: CCBackendEntryLifecycleState.removed,
           lastSequence: event.sequence ?? previousEntry.lastSequence,
         );
@@ -264,15 +317,11 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
     final isRemoved =
         event.kind == CCNavigationBackendEventKind.pop ||
         event.kind == CCNavigationBackendEventKind.remove;
-    if (existing == null && navigationEventCapacity > 0) {
-      while (_backendEntries.length >= navigationEventCapacity) {
-        _backendEntries.remove(_backendEntries.keys.first);
-      }
-    }
     _backendEntries[backendEntryId] = CCBackendEntry(
       backendEntryId: backendEntryId,
       owner: owner,
       routeEntryId: routeEntry?.id ?? existing?.routeEntryId,
+      navigationId: navigationId ?? existing?.navigationId,
       routeId: event.routeId ?? existing?.routeId,
       hostId: event.hostId ?? existing?.hostId,
       navigatorOutlet: event.navigatorOutlet ?? event.placement.navigatorOutlet,
@@ -280,7 +329,228 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
       lifecycleState: isRemoved
           ? CCBackendEntryLifecycleState.removed
           : CCBackendEntryLifecycleState.active,
+      visibilityState: isRemoved
+          ? CCBackendEntryVisibilityState.hidden
+          : existing?.visibilityState ?? CCBackendEntryVisibilityState.unknown,
       lastSequence: event.sequence ?? existing?.lastSequence,
     );
+    _trimRemovedBackendEntries();
+    return true;
   }
+
+  /// Bounds removed diagnostic history without evicting live backend Entries.
+  ///
+  /// Active entries are structural state required for ownership and exact
+  /// visibility correlation, so they may exceed [navigationEventCapacity].
+  /// A zero capacity keeps active state while retaining no removed history.
+  void _trimRemovedBackendEntries() {
+    var removedCount = _backendEntries.values
+        .where(
+          (entry) =>
+              entry.lifecycleState == CCBackendEntryLifecycleState.removed,
+        )
+        .length;
+    if (removedCount <= navigationEventCapacity) return;
+    for (final entry in _backendEntries.entries.toList()) {
+      if (entry.value.lifecycleState != CCBackendEntryLifecycleState.removed) {
+        continue;
+      }
+      _backendEntries.remove(entry.key);
+      removedCount--;
+      if (removedCount <= navigationEventCapacity) return;
+    }
+  }
+
+  /// Accepts a monotonic Host event or records a non-recoverable sequence gap.
+  bool _acceptBackendSequence(CCNavigationBackendEvent event) {
+    final sequence = event.sequence;
+    if (sequence == null) return true;
+    final hostId = event.hostId ?? event.placement.hostId;
+    final previous = _backendSequencesByHost[hostId];
+    if (previous != null && sequence <= previous) return false;
+    if (previous != null && sequence > previous + 1) {
+      _desynchronizedBackendHosts.add(hostId);
+      for (final ledgerEntry in _backendEntries.entries.toList()) {
+        final entry = ledgerEntry.value;
+        if (entry.hostId == hostId &&
+            entry.lifecycleState == CCBackendEntryLifecycleState.active) {
+          _backendEntries[ledgerEntry.key] = _copyBackendEntry(
+            entry,
+            visibilityState: CCBackendEntryVisibilityState.unknown,
+          );
+        }
+      }
+    }
+    _backendSequencesByHost[hostId] = sequence;
+    return true;
+  }
+
+  /// Applies one confirmed backend top without inferring structural removal.
+  void _applyObservedBackendTop(CCNavigationBackendEvent event) {
+    if (event.kind == CCNavigationBackendEventKind.outletsChanged) {
+      _applyActiveOutlets(
+        hostId: event.hostId ?? event.placement.hostId,
+        shellId: event.placement.shellId,
+        activeOutlets: event.activeNavigatorOutlets,
+        reason: 'adaptiveOutletsChanged',
+      );
+      return;
+    }
+    if (event.kind == CCNavigationBackendEventKind.outletActivated) {
+      _applyActivatedOutlet(event);
+      return;
+    }
+    if (event.kind != CCNavigationBackendEventKind.topChanged) return;
+    final eventHostId = event.hostId ?? event.placement.hostId;
+    if (!_usesBackendVisibilityConfirmationFor(eventHostId)) return;
+    final backendEntryId = event.backendEntryId;
+    if (backendEntryId == null) return;
+    final current = _backendEntries[backendEntryId];
+    if (current == null ||
+        current.lifecycleState != CCBackendEntryLifecycleState.active) {
+      return;
+    }
+    final hostId = current.hostId ?? event.hostId ?? event.placement.hostId;
+    final outlet = current.navigatorOutlet;
+    for (final ledgerEntry in _backendEntries.entries.toList()) {
+      final entry = ledgerEntry.value;
+      if (entry.lifecycleState != CCBackendEntryLifecycleState.active ||
+          (entry.hostId ?? hostId) != hostId ||
+          entry.navigatorOutlet != outlet) {
+        continue;
+      }
+      final visibility = entry.backendEntryId == backendEntryId
+          ? CCBackendEntryVisibilityState.visible
+          : CCBackendEntryVisibilityState.hidden;
+      if (entry.visibilityState != visibility) {
+        _backendEntries[ledgerEntry.key] = _copyBackendEntry(
+          entry,
+          visibilityState: visibility,
+          lastSequence: event.sequence ?? entry.lastSequence,
+        );
+      }
+    }
+    _synchronizeRouteEntryVisibility(
+      hostId: hostId,
+      navigatorOutlet: outlet,
+      visibleRouteEntryId: current.routeEntryId,
+      reason: 'backendTopChanged',
+    );
+  }
+
+  /// Switches visible managed state between persistent Stateful Shell branches.
+  void _applyActivatedOutlet(CCNavigationBackendEvent event) {
+    final shellId = event.placement.shellId;
+    if (shellId == null) return;
+    final hostId = event.hostId ?? event.placement.hostId;
+    final activeOutlet =
+        event.navigatorOutlet ?? event.placement.navigatorOutlet;
+    _applyActiveOutlets(
+      hostId: hostId,
+      shellId: shellId,
+      activeOutlets: [activeOutlet],
+      reason: 'outletActivated',
+    );
+  }
+
+  /// Reconciles one Host's visible Outlets without changing stack ownership.
+  void _applyActiveOutlets({
+    required String hostId,
+    required String? shellId,
+    required Iterable<String> activeOutlets,
+    required String reason,
+  }) {
+    final active = activeOutlets.toSet();
+    for (final entry in _routeEntries) {
+      if (entry.request.hostId == hostId &&
+          (shellId == null || entry.request.placement.shellId == shellId) &&
+          !active.contains(entry.request.placement.navigatorOutlet)) {
+        _setRouteEntryHidden(entry, reason: reason);
+      }
+    }
+
+    for (final activeOutlet in active) {
+      CCBackendEntry? current;
+      for (final entry in _backendEntries.values) {
+        if (entry.lifecycleState != CCBackendEntryLifecycleState.active ||
+            entry.visibilityState != CCBackendEntryVisibilityState.visible ||
+            (entry.hostId ?? hostId) != hostId ||
+            entry.navigatorOutlet != activeOutlet) {
+          continue;
+        }
+        if (current == null ||
+            (entry.lastSequence ?? -1) >= (current.lastSequence ?? -1)) {
+          current = entry;
+        }
+      }
+      String? visibleRouteEntryId = current?.routeEntryId;
+      if (current == null) {
+        for (final entry in _routeEntries.reversed) {
+          if (entry.request.hostId == hostId &&
+              entry.request.placement.navigatorOutlet == activeOutlet &&
+              (shellId == null || entry.request.placement.shellId == shellId)) {
+            visibleRouteEntryId = entry.id;
+            break;
+          }
+        }
+      }
+      _synchronizeRouteEntryVisibility(
+        hostId: hostId,
+        navigatorOutlet: activeOutlet,
+        visibleRouteEntryId: visibleRouteEntryId,
+        reason: reason,
+      );
+    }
+  }
+
+  /// Associates a committed Runtime Entry with callbacks received synchronously.
+  void _associateCommittedBackendEntry(_RouteEntryRecord routeEntry) {
+    for (final ledgerEntry in _backendEntries.entries.toList()) {
+      final entry = ledgerEntry.value;
+      if (entry.navigationId != routeEntry.request.navigationId) continue;
+      final associated = _copyBackendEntry(
+        entry,
+        owner: CCBackendEntryOwner.managed,
+        routeEntryId: routeEntry.id,
+        routeId: routeEntry.request.routeId,
+      );
+      _backendEntries[ledgerEntry.key] = associated;
+      switch (associated.visibilityState) {
+        case CCBackendEntryVisibilityState.visible:
+          _synchronizeRouteEntryVisibility(
+            hostId: associated.hostId ?? routeEntry.request.hostId,
+            navigatorOutlet: associated.navigatorOutlet,
+            visibleRouteEntryId: routeEntry.id,
+            reason: 'backendTopConfirmed',
+          );
+        case CCBackendEntryVisibilityState.hidden:
+          _setRouteEntryHidden(routeEntry, reason: 'backendTopConfirmed');
+        case CCBackendEntryVisibilityState.unknown:
+          break;
+      }
+    }
+  }
+
+  /// Copies an immutable backend ledger Entry with selected state changes.
+  CCBackendEntry _copyBackendEntry(
+    CCBackendEntry entry, {
+    CCBackendEntryOwner? owner,
+    String? routeEntryId,
+    String? routeId,
+    CCBackendEntryLifecycleState? lifecycleState,
+    CCBackendEntryVisibilityState? visibilityState,
+    int? lastSequence,
+  }) => CCBackendEntry(
+    backendEntryId: entry.backendEntryId,
+    owner: owner ?? entry.owner,
+    routeEntryId: routeEntryId ?? entry.routeEntryId,
+    navigationId: entry.navigationId,
+    routeId: routeId ?? entry.routeId,
+    hostId: entry.hostId,
+    navigatorOutlet: entry.navigatorOutlet,
+    location: entry.location,
+    lifecycleState: lifecycleState ?? entry.lifecycleState,
+    visibilityState: visibilityState ?? entry.visibilityState,
+    lastSequence: lastSequence ?? entry.lastSequence,
+  );
 }

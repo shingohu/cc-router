@@ -1,8 +1,5 @@
-import 'dart:async';
-
-import 'invocation.dart';
 import 'navigation.dart';
-import 'navigation_interceptor.dart';
+import 'navigation_telemetry.dart';
 import 'route_entry.dart';
 import 'route_placement.dart';
 import 'route_presentation.dart';
@@ -14,6 +11,18 @@ enum CCNavigationAspectPhase {
 
   /// A managed Route Entry became the visible destination in its Outlet.
   arrival,
+
+  /// A previously hidden managed Route Entry became current again.
+  show,
+
+  /// A managed Route Entry remained mounted but stopped being current.
+  hide,
+
+  /// A managed Route Entry left its backend navigation structure.
+  removed,
+
+  /// Runtime finished disposing the managed Route Entry Scope.
+  disposed,
 
   /// Navigation did not reach its requested destination.
   lost,
@@ -42,16 +51,22 @@ enum CCNavigationAspectOutcome {
 /// application objects or sensitive navigation data.
 final class CCNavigationAspectRequest {
   /// Creates an immutable aspect request snapshot.
-  const CCNavigationAspectRequest({
+  CCNavigationAspectRequest({
     required this.navigationId,
     required this.operation,
     required this.routeId,
-    required this.uri,
+    required this.routePattern,
+    required this.resolvedHostId,
+    required this.navigatorOutlet,
+    required this.ownerComponentId,
     required this.placement,
     required this.origin,
     required this.source,
     required this.presentation,
-  });
+    this.referrerRouteId,
+    this.telemetryContext,
+    List<String> redirectChain = const [],
+  }) : redirectChain = List.unmodifiable(redirectChain);
 
   /// Runtime-unique identity shared by all hooks for one navigation.
   final String navigationId;
@@ -62,8 +77,32 @@ final class CCNavigationAspectRequest {
   /// Stable route contract selected by Runtime resolution.
   final String routeId;
 
-  /// Canonical or normalized URI selected by Runtime resolution.
-  final Uri uri;
+  /// Canonical route template with parameter names but no parameter values.
+  final String routePattern;
+
+  /// Concrete Window or display Host selected for this request.
+  ///
+  /// Unlike [placement], this value never contains the unresolved `default`
+  /// alias after Runtime request construction.
+  final String resolvedHostId;
+
+  /// Navigator Outlet selected inside [resolvedHostId].
+  final String navigatorOutlet;
+
+  /// Trusted component that registered the resolved route definition.
+  final String ownerComponentId;
+
+  /// Best-known managed route that referred into this navigation.
+  ///
+  /// Runtime derives this from the current visible managed Entry. The value is
+  /// null when navigation originated outside an observed managed stack or when
+  /// no deterministic referrer exists.
+  final String? referrerRouteId;
+
+  /// Route IDs visited by interceptor redirects and failure recovery.
+  ///
+  /// Values contain contract identities only and never URI parameters.
+  final List<String> redirectChain;
 
   /// Shell, parent, and Navigator Outlet placement for the route.
   final CCRoutePlacement placement;
@@ -76,13 +115,51 @@ final class CCNavigationAspectRequest {
 
   /// Adapter-neutral presentation contract of the destination.
   final CCRoutePresentation presentation;
+
+  /// Anonymous Host telemetry captured when this navigation started.
+  final CCNavigationTelemetryContext? telemetryContext;
+}
+
+/// Cumulative stage durations captured for one navigation observation.
+///
+/// A null stage has not happened or cannot be observed reliably. Durations are
+/// monotonic within one Runtime process and never include route parameters or
+/// arbitrary application payloads.
+final class CCNavigationAspectTiming {
+  /// Creates one immutable timing snapshot.
+  const CCNavigationAspectTiming({
+    this.resolve,
+    this.intercept,
+    this.dispatch,
+    this.arrival,
+    this.stay,
+    this.total,
+  });
+
+  /// Time spent synchronously resolving and decoding route targets.
+  final Duration? resolve;
+
+  /// Cumulative time spent awaiting global and route interceptors.
+  final Duration? intercept;
+
+  /// Time spent entering the Adapter until synchronous acceptance returned.
+  final Duration? dispatch;
+
+  /// Time from navigation start until the first confirmed visible state.
+  final Duration? arrival;
+
+  /// Cumulative time for which the managed Entry was current in its Outlet.
+  final Duration? stay;
+
+  /// Time from navigation start until this observation was created.
+  final Duration? total;
 }
 
 /// Immutable event delivered to one navigation aspect hook.
 ///
-/// [entry] is present for [CCNavigationAspectPhase.arrival]. [outcome] is
-/// present for [CCNavigationAspectPhase.after]. Errors contain only a stable
-/// runtime type, never an arbitrary exception message or payload.
+/// [entry] is present for managed Entry phases from Arrival through Disposed.
+/// [outcome] is present for Lost and After. Errors contain only a stable runtime
+/// type, never an arbitrary exception message or payload.
 final class CCNavigationAspectEvent {
   /// Creates one sanitized aspect event.
   const CCNavigationAspectEvent({
@@ -93,6 +170,7 @@ final class CCNavigationAspectEvent {
     this.outcome,
     this.errorType,
     this.elapsed,
+    this.timing,
   });
 
   /// Hook phase represented by this event.
@@ -101,7 +179,7 @@ final class CCNavigationAspectEvent {
   /// Sanitized request identity and route metadata.
   final CCNavigationAspectRequest request;
 
-  /// Managed Route Entry that became visible, when this is an arrival event.
+  /// Managed Route Entry associated with an Entry lifecycle observation.
   final CCRouteEntrySnapshot? entry;
 
   /// Terminal operation outcome, when this is an after event.
@@ -116,56 +194,37 @@ final class CCNavigationAspectEvent {
   /// lifetime measurement.
   final Duration? elapsed;
 
+  /// Stage-specific performance snapshot for this observation.
+  ///
+  /// Prefer this field over [elapsed] when distinguishing framework work from
+  /// page stay time. [elapsed] remains the total duration for compatibility.
+  final CCNavigationAspectTiming? timing;
+
   /// Wall-clock time at which Runtime dispatched this event.
   final DateTime timestamp;
 }
-
-/// Context supplied to the decision-capable [CCNavigationAspect.before] hook.
-///
-/// Aspects may return a normal, cancel, or redirect interception. The context
-/// omits typed arguments and must not be retained after the callback returns.
-final class CCNavigationAspectContext {
-  /// Creates one before-hook context.
-  const CCNavigationAspectContext({
-    required this.request,
-    required this.cancellation,
-    required this.redirectDepth,
-  });
-
-  /// Sanitized request being considered.
-  final CCNavigationAspectRequest request;
-
-  /// Cooperative cancellation signal for asynchronous policy work.
-  final CCCancellationToken cancellation;
-
-  /// Number of redirects already followed for this navigation identity.
-  final int redirectDepth;
-}
-
-/// Decision callback for the [CCNavigationAspect.before] hook.
-typedef CCNavigationAspectBefore =
-    FutureOr<CCNavigationInterception> Function(
-      CCNavigationAspectContext context,
-    );
 
 /// Observation callback used by the non-decision aspect hooks.
 typedef CCNavigationAspectObserver =
     void Function(CCNavigationAspectEvent event);
 
-/// One named global navigation AOP policy and observation registration.
+/// One named global navigation observation registration.
 ///
-/// Use [before] for cross-cutting cancellation or redirection such as login,
-/// maintenance mode, or forced upgrade. Use [onFound], [onArrival], [onLost],
-/// and [onAfter] for diagnostics, exposure tracking, performance metrics, and
-/// failure handling. Observation callbacks must return quickly and must not
+/// Use this for diagnostics, exposure tracking, performance metrics, and
+/// failure observation. Aspects never influence navigation decisions; use a
+/// [CCGlobalNavigationInterceptor] or route interceptor for cancellation and
+/// redirection. Observation callbacks must return quickly and must not
 /// synchronously start another navigation.
 final class CCNavigationAspect {
-  /// Creates a named aspect with optional decision and observation hooks.
+  /// Creates a named aspect with optional observation hooks.
   const CCNavigationAspect({
     required this.id,
-    this.before,
     this.onFound,
     this.onArrival,
+    this.onShow,
+    this.onHide,
+    this.onRemoved,
+    this.onDisposed,
     this.onLost,
     this.onAfter,
   });
@@ -173,14 +232,26 @@ final class CCNavigationAspect {
   /// Stable identifier used for deterministic aspect ordering.
   final String id;
 
-  /// Optional cross-cutting decision hook executed before route interceptors.
-  final CCNavigationAspectBefore? before;
-
   /// Called after a route has matched and before Adapter dispatch.
   final CCNavigationAspectObserver? onFound;
 
   /// Called when a managed Route Entry enters the visible state.
   final CCNavigationAspectObserver? onArrival;
+
+  /// Called when a hidden managed Entry becomes current again.
+  ///
+  /// Analytics integrations normally count both Arrival and Show as page-view
+  /// opportunities, while deduplicating according to their own product rules.
+  final CCNavigationAspectObserver? onShow;
+
+  /// Called when a managed Entry becomes hidden but remains alive.
+  final CCNavigationAspectObserver? onHide;
+
+  /// Called when a managed Entry permanently leaves navigation structure.
+  final CCNavigationAspectObserver? onRemoved;
+
+  /// Called after Runtime finishes disposing the Entry's Route Scope.
+  final CCNavigationAspectObserver? onDisposed;
 
   /// Called when a request is cancelled or fails before reaching its target.
   final CCNavigationAspectObserver? onLost;

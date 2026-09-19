@@ -48,6 +48,7 @@ final class _PreparedRoute {
     required this.presentation,
     required this.placement,
     required this.interceptorIds,
+    required this.popGuardIds,
   });
 
   /// Stable route identity selected by Intent or URI resolution.
@@ -73,6 +74,9 @@ final class _PreparedRoute {
 
   /// Route interceptor IDs declared by the selected route definition.
   final List<String> interceptorIds;
+
+  /// Route Pop guard IDs declared by the selected route definition.
+  final List<String> popGuardIds;
 }
 
 /// Candidate produced while comparing one URI against an installed pattern.
@@ -250,6 +254,7 @@ final class _RouteRegistry {
       presentation: route.definition.presentation,
       placement: route.definition.placement,
       interceptorIds: route.definition.interceptorIds,
+      popGuardIds: route.definition.popGuardIds,
     );
   }
 
@@ -268,6 +273,7 @@ final class _RouteRegistry {
       presentation: route.definition.presentation,
       placement: route.definition.placement,
       interceptorIds: route.definition.interceptorIds,
+      popGuardIds: route.definition.popGuardIds,
     );
   }
 
@@ -275,9 +281,6 @@ final class _RouteRegistry {
   CCRouteLocation _resolveUri(Uri uri, {required bool external}) {
     final candidates = <_RouteCandidate>[];
     for (final route in _routes.values) {
-      if (external && route.definition.deepLink == CCDeepLinkPolicy.disabled) {
-        continue;
-      }
       for (final pattern in route.definition.patterns) {
         final candidate = _matchPattern(route, pattern, uri);
         if (candidate != null) candidates.add(candidate);
@@ -299,6 +302,9 @@ final class _RouteRegistry {
       );
     }
     final route = _routes[selected.location.routeId]!;
+    if (external && route.definition.deepLink == CCDeepLinkPolicy.disabled) {
+      throw CCDeepLinkRejectedError(selected.location.routeId);
+    }
     if (!route.active) {
       throw CCRouteUnavailableError(selected.location.routeId);
     }
@@ -317,6 +323,29 @@ final class _RouteRegistry {
   /// Returns an installed route definition for Runtime interceptor dispatch.
   CCRouteDefinition<dynamic, dynamic> routeDefinition(String routeId) =>
       _requireActiveRoute(routeId).definition;
+
+  /// Returns the canonical template used by safe telemetry snapshots.
+  String routePattern(String routeId) {
+    final primary = retainedRouteDefinition(
+      routeId,
+    ).patterns.singleWhere((pattern) => pattern.primary);
+    return switch (primary) {
+      CCPathPattern(:final template) ||
+      CCUriPattern(:final template) => template,
+      CCRegexPattern(:final expression) => expression,
+    };
+  }
+
+  /// Returns an installed definition even when new navigation is deactivated.
+  ///
+  /// Existing Route Entries still need their Pop policy while a component is
+  /// inactive. This lookup never resolves a new request or bypasses placement
+  /// checks and remains internal to retained-entry lifecycle handling.
+  CCRouteDefinition<dynamic, dynamic> retainedRouteDefinition(String routeId) {
+    final route = _routes[routeId];
+    if (route == null) throw CCRouteNotFoundError(routeId);
+    return route.definition;
+  }
 
   /// Returns the installed active route identified by [routeId].
   _RegisteredRoute _requireActiveRoute(String routeId) {
@@ -337,14 +366,50 @@ final class _RouteRegistry {
     }
   }
 
-  /// Validates that every route interceptor reference has a registration.
-  void validateInterceptors(Set<String> registeredIds) {
+  /// Validates interceptor existence and component-private ownership.
+  ///
+  /// An empty registered owner is accepted only for low-level Runtime tests.
+  /// Production component routes must reference interceptors registered by the
+  /// same component; shared application policies belong in the global layer.
+  void validateInterceptors(Map<String, String> registeredOwners) {
     for (final route in _routes.values) {
       for (final id in route.definition.interceptorIds) {
-        if (!registeredIds.contains(id)) {
+        final interceptorOwner = registeredOwners[id];
+        if (interceptorOwner == null) {
           throw CCRouteRegistrationError(
             'Route "${route.definition.routeId}" references unknown '
             'interceptor "$id".',
+          );
+        }
+        if (interceptorOwner.isNotEmpty &&
+            interceptorOwner != route.ownerComponentId) {
+          throw CCRouteRegistrationError(
+            'Route "${route.definition.routeId}" cannot reference '
+            'interceptor "$id" owned by component "$interceptorOwner".',
+          );
+        }
+      }
+    }
+  }
+
+  /// Validates Pop guard existence and component-private ownership.
+  ///
+  /// Route-local guards belong to their route's component. Application-wide
+  /// policies use host-provided global guards instead of cross-component IDs.
+  void validatePopGuards(Map<String, String> registeredOwners) {
+    for (final route in _routes.values) {
+      for (final id in route.definition.popGuardIds) {
+        final guardOwner = registeredOwners[id];
+        if (guardOwner == null) {
+          throw CCRouteRegistrationError(
+            'Route "${route.definition.routeId}" references unknown '
+            'Pop guard "$id".',
+          );
+        }
+        if (guardOwner.isNotEmpty && guardOwner != route.ownerComponentId) {
+          throw CCRouteRegistrationError(
+            'Route "${route.definition.routeId}" cannot reference Pop guard '
+            '"$id" owned by component "$guardOwner".',
           );
         }
       }
@@ -380,12 +445,6 @@ final class _RouteRegistry {
     if (definition.patterns.isEmpty) {
       throw CCRouteRegistrationError('Route "$routeId" has no patterns.');
     }
-    if (definition.placement.routeKind == CCRouteKind.shell) {
-      throw CCRouteRegistrationError(
-        'Route "$routeId" cannot declare Shell kind; register a '
-        'CCShellDefinition through CCRegistry.registerShell instead.',
-      );
-    }
     final primary = definition.patterns
         .where((pattern) => pattern.primary)
         .toList();
@@ -394,9 +453,9 @@ final class _RouteRegistry {
         'Route "$routeId" must have exactly one primary pattern.',
       );
     }
-    if (primary.single.matchOnly) {
+    if (primary.single is CCRegexPattern) {
       throw CCRouteRegistrationError(
-        'Route "$routeId" primary pattern cannot be matchOnly.',
+        'Route "$routeId" primary pattern must be reversible.',
       );
     }
     final interceptorIds = <String>{};
@@ -693,7 +752,6 @@ final class _RouteRegistry {
     return _RouteCandidate(
       location: CCRouteLocation(
         routeId: route.definition.routeId,
-        path: uri.path,
         pathParameters: match.pathParameters,
         queryParameters: _queryParameters(uri),
       ),

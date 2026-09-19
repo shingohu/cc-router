@@ -44,7 +44,6 @@ final class CCMemoryNavigationAdapter
   @override
   CCNavigationAdapterCapabilities get capabilities =>
       const CCNavigationAdapterCapabilities(
-        supportsInitialStackSnapshot: true,
         supportsAtomicPopAndPush: true,
         supportsPushAndRemoveUntil: true,
         supportsNestedNavigators: true,
@@ -173,7 +172,6 @@ final class CCMemoryNavigationAdapter
     return const CCPopOutcome(
       handled: true,
       removedOwner: CCPopRemovedOwner.managed,
-      resultAvailable: true,
     );
   }
 
@@ -285,7 +283,6 @@ final class CCMemoryNavigationAdapter
     return const CCPopOutcome(
       handled: true,
       removedOwner: CCPopRemovedOwner.managed,
-      resultAvailable: true,
     );
   }
 

@@ -13,7 +13,6 @@ CCFlutterRouteDestination destination({
   CCRoutePresentation presentation = const CCPagePresentation(),
   CCRoutePlacement placement = const CCRoutePlacement.root(),
 }) => CCFlutterRouteDestination(
-  componentId: 'orders',
   route: CCNavigationRoute(
     routeId: routeId,
     patterns: patterns,
@@ -39,7 +38,10 @@ void main() {
 
     final merged = CCFlutterRouteCatalog.merge([orders, account]);
     expect(merged.destinations, hasLength(2));
-    expect(merged.destinationFor('account.profile')?.componentId, 'orders');
+    expect(
+      merged.destinationFor('account.profile')?.routeId,
+      'account.profile',
+    );
     expect(merged.destinationFor('missing'), isNull);
     expect(
       () => CCFlutterRouteCatalog([destination(), destination()]),

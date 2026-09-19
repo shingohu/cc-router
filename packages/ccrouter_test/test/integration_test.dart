@@ -225,13 +225,12 @@ void main() {
         find.byKey(const ValueKey('managed-order')),
       );
 
-      void expectManagedEntryUnchanged() {
+      void expectManagedEntryAlive({
+        CCRouteEntryLifecycleState state = CCRouteEntryLifecycleState.visible,
+      }) {
         expect(runtime.activeRouteEntries, hasLength(1));
         expect(runtime.activeRouteEntries.single.routeEntryId, managedEntryId);
-        expect(
-          runtime.activeRouteEntries.single.lifecycleState,
-          CCRouteEntryLifecycleState.visible,
-        );
+        expect(runtime.activeRouteEntries.single.lifecycleState, state);
       }
 
       final dialog = showDialog<void>(
@@ -247,11 +246,11 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expectManagedEntryUnchanged();
+      expectManagedEntryAlive(state: CCRouteEntryLifecycleState.hidden);
       await tester.tap(find.text('close-dialog'));
       await tester.pumpAndSettle();
       await dialog;
-      expectManagedEntryUnchanged();
+      expectManagedEntryAlive();
 
       final modal = showModalBottomSheet<void>(
         context: managedContext,
@@ -262,25 +261,25 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expectManagedEntryUnchanged();
+      expectManagedEntryAlive(state: CCRouteEntryLifecycleState.hidden);
       await tester.tap(find.text('close-modal'));
       await tester.pumpAndSettle();
       await modal;
-      expectManagedEntryUnchanged();
+      expectManagedEntryAlive();
 
       final bottomSheet = scaffoldKey.currentState!.showBottomSheet(
         (_) =>
             const SizedBox(key: ValueKey('foreign-local-history'), height: 80),
       );
       await tester.pumpAndSettle();
-      expectManagedEntryUnchanged();
+      expectManagedEntryAlive();
       final localHistoryPop = await runtime.maybePopOutcomeRoute();
       expect(localHistoryPop.handled, isTrue);
       expect(localHistoryPop.removedOwner, CCPopRemovedOwner.none);
       await tester.pumpAndSettle();
       await bottomSheet.closed;
       expect(find.byKey(const ValueKey('foreign-local-history')), findsNothing);
-      expectManagedEntryUnchanged();
+      expectManagedEntryAlive();
 
       final foreignRoute = Navigator.of(managedContext).push<void>(
         MaterialPageRoute<void>(
@@ -289,13 +288,13 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expectManagedEntryUnchanged();
+      expectManagedEntryAlive(state: CCRouteEntryLifecycleState.hidden);
       Navigator.of(
         tester.element(find.byKey(const ValueKey('foreign-page'))),
       ).pop();
       await tester.pumpAndSettle();
       await foreignRoute;
-      expectManagedEntryUnchanged();
+      expectManagedEntryAlive();
 
       final secondForeignRoute = Navigator.of(managedContext).push<void>(
         MaterialPageRoute<void>(
@@ -304,11 +303,11 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expectManagedEntryUnchanged();
+      expectManagedEntryAlive(state: CCRouteEntryLifecycleState.hidden);
       runtime.popRoute();
       await tester.pumpAndSettle();
       await secondForeignRoute;
-      expectManagedEntryUnchanged();
+      expectManagedEntryAlive();
 
       Navigator.of(managedContext).pop<String>('managed-result');
       await tester.pumpAndSettle();
@@ -391,7 +390,6 @@ void main() {
       // route. Ownership and result availability carry the rejection detail.
       expect(declined.handled, isTrue);
       expect(declined.removedOwner, CCPopRemovedOwner.none);
-      expect(declined.resultAvailable, isFalse);
       expect(runtime.activeRouteEntries, hasLength(1));
       expect(runtime.activeRouteEntries.single.routeEntryId, managedEntryId);
       expect(
@@ -408,7 +406,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(accepted.handled, isTrue);
       expect(accepted.removedOwner, CCPopRemovedOwner.managed);
-      expect(accepted.resultAvailable, isTrue);
+      expect(accepted.removedOwner, CCPopRemovedOwner.managed);
       expect(await managedResult, 'accepted');
       expect(runtime.activeRouteEntries, isEmpty);
     },
@@ -624,7 +622,7 @@ void main() {
         Uri.parse('/internal/7'),
         source: const CCNavigationSource.notification('order_ready'),
       ),
-      throwsA(isA<CCRouteNotFoundError>()),
+      throwsA(isA<CCDeepLinkRejectedError>()),
     );
     expect(router.state.uri.path, '/');
     expect(find.text('home'), findsOneWidget);

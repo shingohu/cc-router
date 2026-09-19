@@ -6,9 +6,12 @@ typedef _ParameterTypeEmitter = String Function(_ParameterModel parameter);
 /// Resolves one constructor default for the selected output library.
 typedef _ParameterDefaultEmitter = String? Function(_ParameterModel parameter);
 
+/// Resolves an analyzer type in the namespace of the selected output library.
+typedef _DartTypeEmitter = String Function(DartType type, Element owner);
+
 /// Emits one library-private page contract and its owner-only glue.
 String _emitRoute(_RouteModel route) =>
-    '${_emitTypedRouteContract(route, parameterType: (parameter) => parameter.type, resultType: route.result, parameterDefault: (parameter) => parameter.defaultCode, includeOwnerMethods: true)}\n${_emitRouteGlue(route, embedded: true)}';
+    '${_emitTypedRouteContract(route, parameterType: (parameter) => parameter.type, typeSource: (type, owner) => _typeSource(type, route.page.library), resultType: route.result, parameterDefault: (parameter) => parameter.defaultCode, includeOwnerMethods: true)}\n${_emitRouteGlue(route, embedded: true)}';
 
 /// Emits a Pure Dart contract without page construction or registration APIs.
 String _emitPublicRouteContract(
@@ -17,6 +20,7 @@ String _emitPublicRouteContract(
 ) => _emitTypedRouteContract(
   route,
   parameterType: imports.parameterType,
+  typeSource: imports.typeSource,
   resultType: imports.typeSource(route.resultType, route.page),
   parameterDefault: imports.parameterDefault,
   includeOwnerMethods: false,
@@ -26,6 +30,7 @@ String _emitPublicRouteContract(
 String _emitTypedRouteContract(
   _RouteModel route, {
   required _ParameterTypeEmitter parameterType,
+  required _DartTypeEmitter typeSource,
   required String resultType,
   required _ParameterDefaultEmitter parameterDefault,
   required bool includeOwnerMethods,
@@ -38,14 +43,32 @@ String _emitTypedRouteContract(
         return '${parameter.required ? 'required ' : ''}${parameterType(parameter)} ${parameter.name}${defaultCode == null ? '' : ' = $defaultCode'}';
       })
       .join(', ');
-  final fields = params
+  final constructorParameters = params
       .map((parameter) {
         final defaultCode = parameterDefault(parameter);
-        return '${parameter.required ? 'required ' : ''}this.${parameter.name}${defaultCode == null ? '' : ' = $defaultCode'}';
+        final declaration = parameter.isQueryCollection
+            ? '${parameterType(parameter)} ${parameter.name}'
+            : 'this.${parameter.name}';
+        return '${parameter.required ? 'required ' : ''}$declaration${defaultCode == null ? '' : ' = $defaultCode'}';
+      })
+      .join(', ');
+  final collectionInitializers = params
+      .where((parameter) => parameter.isQueryCollection)
+      .map((parameter) {
+        final collectionType = parameter.element.type as InterfaceType;
+        final copy = collectionType.isDartCoreSet
+            ? 'Set.unmodifiable(${parameter.name})'
+            : 'List.unmodifiable(${parameter.name})';
+        return '${parameter.name} = ${parameter.nullable ? '${parameter.name} == null ? null : ' : ''}$copy';
       })
       .join(', ');
   final signature = params.isEmpty ? '()' : '({$declarations})';
-  final argsSignature = params.isEmpty ? '()' : '({$fields})';
+  final argsSignature = params.isEmpty
+      ? '()'
+      : '({$constructorParameters})${collectionInitializers.isEmpty ? '' : ' : $collectionInitializers'}';
+  final argumentsConstructorPrefix = collectionInitializers.isEmpty
+      ? 'const '
+      : '';
   final assignments = params
       .map((parameter) => '${parameter.name}: ${parameter.name}')
       .join(', ');
@@ -53,7 +76,7 @@ String _emitTypedRouteContract(
 /// Immutable arguments for route ${route.id}; URI values remain typed.
 final class ${route.arguments} {
   /// Creates arguments without navigating or retaining a backend context.
-  const ${route.arguments}$argsSignature;
+  $argumentsConstructorPrefix${route.arguments}$argsSignature;
 ''');
   for (final parameter in params) {
     out.writeln(
@@ -80,7 +103,7 @@ abstract final class ${route.api} {
     presentation: ${_constant(route.annotation.read('presentation').objectValue)},
     placement: ${_constant(route.annotation.read('placement').objectValue)},
     interceptorIds: ${_constant(route.annotation.read('interceptors').objectValue)},
-    description: ${_constant(route.annotation.objectValue.getField('description')!)},
+    popGuardIds: ${_constant(route.annotation.read('popGuards').objectValue)},
   );
 ''');
   if (includeOwnerMethods) {
@@ -113,6 +136,7 @@ final class ${route.intent} implements CCRouteIntent<$resultType> {
     out,
     route,
     parameterType: parameterType,
+    typeSource: typeSource,
     parameterDefault: parameterDefault,
   );
   return out.toString();
@@ -206,6 +230,7 @@ void _emitRouteCodec(
   StringBuffer out,
   _RouteModel route, {
   required _ParameterTypeEmitter parameterType,
+  required _DartTypeEmitter typeSource,
   required _ParameterDefaultEmitter parameterDefault,
 }) {
   final params = route.parameters;
@@ -222,7 +247,8 @@ final class ${route.codec} implements CCRouteCodec<${route.arguments}> {
   for (final parameter in params.where(
     (parameter) =>
         parameter.source != 'extra' &&
-        (parameter.element.type as InterfaceType).isDartCoreDouble,
+        parameter.queryCodecType == null &&
+        parameter.queryValueType.isDartCoreDouble,
   )) {
     out.writeln('''
     double _parse_${parameter.name}(String raw) {
@@ -254,6 +280,32 @@ final class ${route.codec} implements CCRouteCodec<${route.arguments}> {
       out.writeln(
         'final _values_${parameter.name} = input.query[${_quote(parameter.wireName)}];',
       );
+      if (parameter.queryCodecType != null || parameter.isQueryCollection) {
+        out.writeln(
+          'if (_values_${parameter.name} != null && _values_${parameter.name}.isEmpty) throw CCRouteParameterError($error);',
+        );
+        final decoded = parameter.queryCodecType == null
+            ? _decodeQueryCollection(
+                parameter,
+                error,
+                valueType: typeSource(
+                  parameter.queryValueType,
+                  parameter.element,
+                ),
+              )
+            : _decodeCustomQuery(
+                parameter,
+                error,
+                codecType: typeSource(
+                  parameter.queryCodecType!,
+                  parameter.element,
+                ),
+              );
+        out.writeln(
+          'final ${parameterType(parameter)} _value_${parameter.name} = _values_${parameter.name} == null ? $missing : $decoded;',
+        );
+        continue;
+      }
       out.writeln(
         'if (_values_${parameter.name} != null && _values_${parameter.name}.length != 1) throw CCRouteParameterError($error);',
       );
@@ -266,7 +318,7 @@ final class ${route.codec} implements CCRouteCodec<${route.arguments}> {
       );
     }
     out.writeln(
-      'final ${parameterType(parameter)} _value_${parameter.name} = _raw_${parameter.name} == null ? $missing : ${_decodeValue(parameter, error, type: parameterType(parameter))};',
+      'final ${parameterType(parameter)} _value_${parameter.name} = _raw_${parameter.name} == null ? $missing : ${_decodeScalarValue(parameter.queryValueType, '_raw_${parameter.name}', error, type: typeSource(parameter.queryValueType, parameter.element), doubleParser: '_parse_${parameter.name}')};',
     );
   }
   out.writeln(
@@ -279,26 +331,51 @@ final class ${route.codec} implements CCRouteCodec<${route.arguments}> {
 ''');
   for (final parameter in params.where(
     (parameter) =>
-        parameter.element.type is InterfaceType &&
-        (parameter.element.type as InterfaceType).isDartCoreDouble &&
+        parameter.queryCodecType == null &&
+        parameter.queryValueType.isDartCoreDouble &&
         parameter.source != 'extra',
   )) {
+    final value = 'arguments.${parameter.name}${parameter.nullable ? '!' : ''}';
+    final invalid = parameter.isQueryCollection
+        ? '$value.any((value) => !value.isFinite)'
+        : '!$value.isFinite';
     out.writeln(
-      'if (${parameter.nullable ? 'arguments.${parameter.name} != null && !arguments.${parameter.name}!.isFinite' : '!arguments.${parameter.name}.isFinite'}) throw CCRouteParameterError(${_quote('Route "${route.id}" parameter "${parameter.wireName}" must be finite.')});',
+      'if (${parameter.nullable ? 'arguments.${parameter.name} != null && ' : ''}$invalid) throw CCRouteParameterError(${_quote('Route "${route.id}" parameter "${parameter.wireName}" must be finite.')});',
+    );
+  }
+  for (final parameter in params.where(
+    (parameter) => parameter.isQueryCollection,
+  )) {
+    final value = 'arguments.${parameter.name}${parameter.nullable ? '!' : ''}';
+    out.writeln(
+      'if (${parameter.nullable ? 'arguments.${parameter.name} != null && ' : ''}$value.isEmpty) throw CCRouteParameterError(${_quote('Route "${route.id}" parameter "${parameter.wireName}" cannot encode an empty collection.')});',
     );
   }
   out.writeln('return CCEncodedRouteArguments(path: {');
   for (final parameter in params.where(
     (parameter) => parameter.source == 'path',
   )) {
-    out.writeln('${_quote(parameter.wireName)}: ${_encodeValue(parameter)},');
+    out.writeln(
+      '${_quote(parameter.wireName)}: ${_encodeScalarValue(parameter.queryValueType, 'arguments.${parameter.name}')},',
+    );
   }
   out.writeln('}, query: {');
   for (final parameter in params.where(
     (parameter) => parameter.source == 'query',
   )) {
+    final encoded = parameter.queryCodecType != null
+        ? _encodeCustomQuery(
+            parameter,
+            _quote(
+              'Route "${route.id}" parameter "${parameter.wireName}" is invalid.',
+            ),
+            codecType: typeSource(parameter.queryCodecType!, parameter.element),
+          )
+        : parameter.isQueryCollection
+        ? _encodeQueryCollection(parameter)
+        : '[${_encodeScalarValue(parameter.queryValueType, 'arguments.${parameter.name}${parameter.nullable ? '!' : ''}')}]';
     out.writeln(
-      '${parameter.nullable ? 'if (arguments.${parameter.name} != null) ' : ''}${_quote(parameter.wireName)}: [${_encodeValue(parameter)}],',
+      '${parameter.nullable ? 'if (arguments.${parameter.name} != null) ' : ''}${_quote(parameter.wireName)}: $encoded,',
     );
   }
   out.writeln(
@@ -342,18 +419,18 @@ String _pageArgumentsFromDecoded(
 }
 
 /// Emits strict scalar parsing with safe, route-specific error information.
-String _decodeValue(
-  _ParameterModel parameter,
+String _decodeScalarValue(
+  InterfaceType interfaceType,
+  String raw,
   String error, {
   required String type,
+  required String doubleParser,
 }) {
-  final interfaceType = parameter.element.type as InterfaceType;
-  final raw = '_raw_${parameter.name}';
   if (interfaceType.isDartCoreString) return raw;
   if (interfaceType.isDartCoreInt) {
     return '(int.tryParse($raw) ?? (throw CCRouteParameterError($error)))';
   }
-  if (interfaceType.isDartCoreDouble) return '_parse_${parameter.name}($raw)';
+  if (interfaceType.isDartCoreDouble) return '$doubleParser($raw)';
   if (interfaceType.isDartCoreBool) {
     return 'switch ($raw) { "true" => true, "false" => false, _ => throw CCRouteParameterError($error) }';
   }
@@ -369,10 +446,57 @@ String _decodeValue(
 }
 
 /// Emits scalar strings without URL encoding; enum wire values are stable names.
-String _encodeValue(_ParameterModel parameter) {
-  final type = parameter.element.type as InterfaceType;
-  final value = 'arguments.${parameter.name}${parameter.nullable ? '!' : ''}';
+String _encodeScalarValue(InterfaceType type, String value) {
   if (type.isDartCoreString) return value;
   if (type.element is EnumElement) return 'EnumName($value).name';
   return '$value.toString()';
+}
+
+/// Emits repeated Query decoding while preserving List order and Set semantics.
+String _decodeQueryCollection(
+  _ParameterModel parameter,
+  String error, {
+  required String valueType,
+}) {
+  final raw = 'raw_${parameter.name}';
+  final decoded = _decodeScalarValue(
+    parameter.queryValueType,
+    raw,
+    error,
+    type: valueType,
+    doubleParser: '_parse_${parameter.name}',
+  );
+  final conversion = '_values_${parameter.name}.map(($raw) => $decoded)';
+  final collectionType = parameter.element.type as InterfaceType;
+  return collectionType.isDartCoreSet
+      ? 'Set<$valueType>.unmodifiable($conversion)'
+      : 'List<$valueType>.unmodifiable($conversion)';
+}
+
+/// Emits a sanitized custom Query decode boundary without leaking raw values.
+String _decodeCustomQuery(
+  _ParameterModel parameter,
+  String error, {
+  required String codecType,
+}) =>
+    '(() { try { return const $codecType().decode(List<String>.unmodifiable(_values_${parameter.name})); } catch (_) { throw CCRouteParameterError($error); } })()';
+
+/// Emits repeated Query encoding; Set values are sorted for canonical URIs.
+String _encodeQueryCollection(_ParameterModel parameter) {
+  final value = 'arguments.${parameter.name}${parameter.nullable ? '!' : ''}';
+  final encoded = _encodeScalarValue(parameter.queryValueType, 'value');
+  final values = '[for (final value in $value) $encoded]';
+  final collectionType = parameter.element.type as InterfaceType;
+  if (!collectionType.isDartCoreSet) return values;
+  return '(() { final values = <String>$values; values.sort(); return values; })()';
+}
+
+/// Emits a sanitized custom Query encode boundary with non-empty output.
+String _encodeCustomQuery(
+  _ParameterModel parameter,
+  String error, {
+  required String codecType,
+}) {
+  final value = 'arguments.${parameter.name}${parameter.nullable ? '!' : ''}';
+  return '(() { try { final values = const $codecType().encode($value); if (values.isEmpty) throw const FormatException(); return List<String>.unmodifiable(values); } catch (_) { throw CCRouteParameterError($error); } })()';
 }

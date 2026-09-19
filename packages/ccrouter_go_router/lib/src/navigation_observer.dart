@@ -1,3 +1,4 @@
+import 'package:ccrouter/ccrouter_host.dart';
 import 'package:flutter/widgets.dart';
 
 /// Identifies a backend Navigator lifecycle transition.
@@ -13,6 +14,9 @@ enum CCGoRouterNavigationEventKind {
 
   /// A route was removed without becoming the active route.
   remove,
+
+  /// Flutter confirmed a different top Route for this Navigator.
+  topChanged,
 }
 
 /// Immutable lifecycle data emitted by [CCGoRouterNavigationObserver].
@@ -24,7 +28,6 @@ final class CCGoRouterNavigationEvent {
     required this.outlet,
     required this.route,
     this.previousRoute,
-    this.result,
   });
 
   /// Transition kind observed from Flutter's Navigator.
@@ -41,9 +44,6 @@ final class CCGoRouterNavigationEvent {
 
   /// Route that was active before the transition, when Flutter supplies one.
   final Route<dynamic>? previousRoute;
-
-  /// Pop result when the backend observer API provides it; otherwise null.
-  final Object? result;
 
   /// Route settings name, typically the GoRouter location.
   String? get location => route.settings.name;
@@ -89,6 +89,27 @@ final class CCGoRouterNavigationObserver extends NavigatorObserver {
 
   /// Additional listeners used by framework integrations such as the Adapter.
   final Set<void Function(CCGoRouterNavigationEvent event)> _listeners = {};
+
+  @override
+  /// Reports the confirmed current Route to CCRouter's Host lifecycle ledger.
+  void didChangeTop(Route<dynamic> topRoute, Route<dynamic>? previousTopRoute) {
+    super.didChangeTop(topRoute, previousTopRoute);
+    CCPageLifecycleHostBridge.didChangeTop(
+      hostId: hostId,
+      outlet: outlet,
+      topRoute: topRoute,
+      previousTopRoute: previousTopRoute,
+    );
+    _emit(
+      CCGoRouterNavigationEvent(
+        kind: CCGoRouterNavigationEventKind.topChanged,
+        hostId: hostId,
+        outlet: outlet,
+        route: topRoute,
+        previousRoute: previousTopRoute,
+      ),
+    );
+  }
 
   /// Subscribes to lifecycle events and returns a callback that removes the
   /// subscription. The callback is invoked after [onEvent].

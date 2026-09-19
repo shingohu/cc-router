@@ -35,7 +35,7 @@ extension CCRouterRuntimeNavigationLifecycle on CCRouterRuntime {
       phase: phase,
       operation: request.operation,
       routeId: request.routeId,
-      uri: request.uri,
+      routePattern: _routeRegistry.routePattern(request.routeId),
       placement: request.placement,
       origin: request.origin,
       source: request.source,

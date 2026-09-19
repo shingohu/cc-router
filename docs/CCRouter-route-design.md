@@ -10,8 +10,8 @@
 
 本文档细化 [CCRouter v0.1 架构设计](CCRouter-v0.1-architecture.md) 中的路由部分。文中的 API 用于冻结语义和实现边界，不表示当前仓库已经提供这些 API。
 
-注解生成器首版已实现页面注解、单库校验、类型安全 Arguments/Intent、标量
-Path/Query/Extra Codec、Definition、注册入口和中立页面工厂。使用 `part` 生成
+注解生成器已实现页面注解、单库校验、类型安全 Arguments/Intent、标量 Path、标量及
+repeated Query、显式 Query Codec、Extra Codec、Definition、注册入口和中立页面工厂。使用 `part` 生成
 `.route.g.dart`，页面契约固定为 library-private；Contract-first 公开契约需显式导出。
 生成器同时输出组件级和路由级 JSON/Markdown，并由 workspace 工具聚合检查组件与 Route ID、
 路由所有者、契约 exposure 和实现 Package，输出应用级路由目录。当前仍不生成
@@ -426,6 +426,17 @@ Codec 负责：
 - 通过显式注册的字段 Codec 支持自定义值类型。
 - 输出带路由 ID、参数名和安全原因的 `CCRouteParameterError`。
 
+Query 集合只支持 `List<T>` 和 `Set<T>`，其中 `T` 必须是非空类型的 `String`、`int`、
+`double`、`bool` 或 enum。集合使用 repeated key，例如 `?tag=a&tag=b`；List 保留顺序，
+Set 解码时去重、编码时按 wire value 排序以生成稳定 URI。Intent 创建和 URI 解码都会复制为
+不可变集合，调用方后续修改原集合不会改变导航参数。空集合没有可逆 URI 表达，因此编码和显式
+空列表解码都会失败；需要表达特殊空状态时应设计明确的标量值或自定义 Codec。
+
+复杂 Query 对象通过 `@CCQueryParam(codec: XxxQueryCodec)` 显式声明。Codec 必须是 concrete、
+non-generic，并提供无参 `const` 未命名构造器，且 `CCRouteQueryCodec<T>` 的 `T` 必须与参数的
+非空类型完全一致。生成边界会复制输入/输出字符串列表并把 Codec 异常统一转换为脱敏的
+`CCRouteParameterError`；Codec 不应用于 secret、可变业务对象或仅进程内有效的数据。
+
 业务 API、Route Intent 和拦截器不暴露 `Map<String, dynamic>`。Map 只允许出现在生成器内部或受控的编码边界。
 
 ### 7.3 Extra 约束
@@ -657,15 +668,16 @@ Navigation Adapter
 拦截结果使用明确语义：
 
 ```text
-proceed   继续，可携带修改后的 Intent
+proceed   继续当前请求，不改写 Intent
 redirect  改为新的 Intent，并保留原始导航上下文
 cancel    终止导航，返回标准取消原因
 ```
 
 规则：
 
-- Global 按稳定 ID 排序或显式顺序执行。
+- Global 按稳定 ID 排序执行，当前不提供显式优先级。
 - Route Interceptor 按注解声明顺序执行。
+- Route Interceptor 只能由同组件的路由引用；跨组件共享策略必须注册为 Global Interceptor。
 - Interceptor 可以异步执行并接收取消信号与 Deadline。
 - Redirect 重新进入必要的解析和拦截流程。
 - Runtime 必须检测重定向循环并限制最大重定向次数。
@@ -685,17 +697,62 @@ cancel    终止导航，返回标准取消原因
 - `push`、`replace`、`go`、`reset`、`open`、`popAndPush` 和 `pushAndRemoveUntil` 的统一前置管线。
 - 保留原始 `navigationId`、`origin` 和 `source` 的重定向，以及最大重定向次数保护。
 
+已完成的增强：
+
+- 注解和生成器自动生成 `interceptorIds`，减少手工维护。
+- 拦截器执行使用真实 Deadline/Timeout，并以专用错误报告超时和执行异常。
+- `CCNavigationDefer` 恢复时保留原始组合操作、Predicate 和 RouteEntry 提交语义。
+
 仍待后续扩展：
 
-- 由注解和生成器自动生成 `interceptorIds`，减少手工注册。
 - 显式拦截器优先级配置；当前全局拦截器按稳定 ID 排序，路由拦截器按声明顺序执行。
-- 独立的 `CCPopGuard`，处理系统返回、预测返回、手势返回和表单保护。
 - 导航完成后的 After Hook，以及拦截器耗时、决策和失败原因的完整诊断投影。
-- 拦截器专用错误类型和真正执行的 Deadline/Timeout。
 
 因此，CCRouter 对齐的是拦截器的行为语义和类型安全边界，不复制 ff_annotation_route 或 TheRouter 的具体 API 形状。
 
-### 11.2 重复导航与防抖策略
+### 11.2 Pop Guard
+
+`CCPopGuard` 是独立于前置导航拦截器的同步退出决策。Host 提供的 Global Pop Guard 按
+稳定 ID 排序，随后执行当前 Managed Route 在注解中声明的 `popGuards`。路由 Guard
+只能引用同组件通过 `CCRegistry.registerRoutePopGuard` 注册的 ID。
+
+系统返回、普通手势和业务 Pop 在 Adapter 执行前进入同一 Guard 管线。Predictive Back
+由 Host 在平台 commit 前调用 `CCGoRouterPredictiveBackBridge.evaluateStart`；commit 后的
+事件只用于确认 Backend Entry identity，不能再撤销系统手势。
+
+Guard 只在即将移除的顶部 Backend Entry 被确认属于 CCRouter 时执行。Foreign、Opaque、
+`LocalHistoryEntry` 和无法确认归属的第三方 UI 不执行底层页面 Guard，也不关闭 Managed
+RouteEntry 或 Route Scope。拒绝结果保留当前 Entry，并通过 `guardDeniedCode` 提供稳定、
+不含业务数据的原因；直接业务 `pop` 使用 `CCPopGuardDeniedError` 报告拒绝。
+
+Guard 必须同步、快速且无副作用，适合脏状态、强制流程和本地内存策略。需要弹确认框的
+异步流程继续使用 Flutter `PopScope`，确认后再重新发起导航，避免阻塞 Predictive Back。
+
+### 11.3 失败与兜底
+
+Host 可以在初始化时提供唯一的 `CCNavigationFailurePolicy`，统一处理路由未找到、参数
+非法、Deep Link 拒绝、组件不可用、拦截失败和 Adapter 失败。Policy 只接收
+`CCNavigationFailureContext`：稳定 Navigation/Route ID、原始 Operation、Origin、Source、
+失败阶段和错误类型；不接收原始 URI、Path/Query 值、Arguments、Extra、Pop result 或
+backend Route。
+
+Policy 可以明确选择：
+
+- `CCNavigationFailurePropagate`：保留原错误；
+- `CCNavigationFailureRedirect`：将原调用重定向到类型兼容目标；
+- `CCNavigationFailureFallback`：打开 404、链接不支持或组件不可用页面，并让原调用以
+  `null` 完成。
+
+恢复目标必须是非组合操作，并重新执行解析、Deep Link Policy、组件状态、参数 Codec 和
+完整拦截器链。恢复过程保留原始 `navigationId`、`origin` 和 `source`，最多连续恢复四次；
+超出后抛出 `CCNavigationFailureRecoveryLoopError`。Policy 必须返回 Decision，不能直接
+调用导航，避免重入和绕过循环检测。
+
+所有决策以 `CCNavigationFailureEvent` 进入有界诊断。Aspect 和普通 Navigation Lifecycle
+事件只暴露参数化的 `routePattern`，不再暴露实际 URI 值。Deep Link 命中但被路由策略
+禁用时使用独立 `CCDeepLinkRejectedError`，与真正未匹配的 `CCRouteNotFoundError` 区分。
+
+### 11.4 重复导航与防抖策略
 
 重复导航保护属于 Runtime 的并发策略，不作为普通 Route Interceptor 的临时实现。默认策略必须允许合法的重复页面：同一路由、同一 URI 连续 Push 也可以创建两个独立的 RouteEntry、Route Scope 和返回值通道。
 
@@ -715,7 +772,7 @@ hostId + navigatorOutlet + operation + routeId + normalizedUri
 
 相同路由但不同 Path、Query 或 Extra 参数不能被误判为重复；不同 Host、Window、Shell 或 Outlet 也必须隔离。去重状态在拦截取消、重定向失败、Adapter 失败、页面 Pop 和 Runtime dispose 时释放。`rejectDuplicate` 抛出标准 `CCNavigationDuplicateError`；`singleFlight` 复用同一个逻辑导航结果，不会创建第二个 RouteEntry。该策略不采用全局固定时间 debounce，避免延迟正常导航或误伤合法的重复 Push。
 
-### 11.3 待认证导航与登录后恢复
+### 11.5 待认证导航与登录后恢复
 
 未登录访问受保护路由时，拦截器可以返回 `CCNavigationDefer`。Core 已提供通用的 Pending Navigation/Continuation 能力，认证组件通过待处理 ID 决定何时恢复或取消，不在 Runtime 内硬编码登录业务。
 
@@ -731,18 +788,18 @@ hostId + navigatorOutlet + operation + routeId + normalizedUri
 
 该能力用于登录、权限提升、首次引导和其他需要用户完成前置流程的场景。简单应用可以继续手动传递 `returnTo`，但不能将其视为跨组件 Typed Intent 和返回值的完整替代方案。
 
-### 11.4 导航观察回调
+### 11.6 导航观察回调
 
 CCRouter 不直接复制 TheRouter 的无类型 `NavigationCallback` API，而是将导航观察和业务返回值分开：
 
 - `onArrival`：Managed RouteEntry 进入 `visible`，用于页面曝光、埋点、焦点恢复、预加载和跨组件生命周期通知。
-- `onLost`：路由不存在、参数非法、组件不可用、拦截取消或 Adapter 失败时提供标准错误，适用于 Deep Link 兜底和诊断。
+- `onLost`：已建立安全请求后的拦截或 Adapter 失败会提供标准错误；路由未找到、参数非法、Deep Link 拒绝和组件不可用等解析前失败由 `CCNavigationFailureEvent` 覆盖。
 - `onFound`：路由匹配成功但尚未进入页面，优先作为内部解析和性能诊断事件，不作为普通业务页面生命周期依赖。
 - `onResult`：继续使用 `Future<R?>` 返回类型安全的页面结果，不增加无类型回调。
 
-现有 `CCNavigationLifecyclePhase.completed` 不等同于 `onArrival`：对于 `push`，`completed` 可能要等页面 Pop 后才发生。当前由独立的 `CCNavigationAspect` 提供安全快照形式的 `before`、`onFound`、`onArrival`、`onLost` 和 `onAfter` 钩子，并在事件中提供从首次匹配开始的 `elapsed` 耗时，使匹配、到达、失败和结果完成的时机明确；观察回调失败会进入有界诊断而不影响导航，回调中也不能同步发起新的导航。
+现有 `CCNavigationLifecyclePhase.completed` 不等同于 `onArrival`：对于 `push`，`completed` 可能要等页面 Pop 后才发生。当前由独立的 `CCNavigationAspect` 提供安全快照形式的 `onFound`、`onArrival`、`onLost` 和 `onAfter` 钩子，并在事件中提供从首次匹配开始的 `elapsed` 耗时，使匹配、到达、失败和结果完成的时机明确；跳转前决策统一由 Global/Route Interceptor 承担。观察回调失败会进入有界诊断而不影响导航，回调中也不能同步发起新的导航。
 
-### 11.5 TheRouter 风格的全局 AOP
+### 11.7 TheRouter 风格的全局 AOP
 
 CCRouter 参考 TheRouter 的全局 AOP 使用场景，但不直接复制其无类型的单一
 `NavigationCallback` API。当前能力和目标能力明确区分如下：
@@ -755,13 +812,14 @@ CCRouter 参考 TheRouter 的全局 AOP 使用场景，但不直接复制其无�
 | `after` | 已支持，并报告成功、失败、取消和耗时 | 统一观察结果完成、失败、取消和页面离开 |
 
 因此，`CCNavigationLifecyclePhase.completed` 也不能直接当作 `arrival`：对 `push`
-来说，它通常要等页面 Pop 后、结果通道完成时才发生。当前 `CCNavigationAspect` 已
-覆盖 TheRouter 风格的决策与观察边界，但保留 CCRouter 的类型安全快照和结果通道。
+来说，它通常要等页面 Pop 后、结果通道完成时才发生。当前 Global/Route Interceptor
+与 `CCNavigationAspect` 共同覆盖 TheRouter 风格的决策与观察边界，同时保留 CCRouter
+的类型安全快照和结果通道。
 
 全局观察契约与 `CCGlobalNavigationInterceptor` 分离，统一命名为
 `CCNavigationAspect`：
 
-- `before` 保持决策能力，可以继续、取消或重定向。
+- 跳转前决策由 Global/Route Interceptor 提供，可以继续、取消或重定向。
 - `onFound`、`onArrival`、`onLost` 和 `onAfter` 默认只观察，不改变目标路由。
 - 所有阶段都接收不可变的导航/路由快照，不暴露 `Widget`、`BuildContext`、
   `Navigator` 或任意业务对象。
@@ -878,7 +936,26 @@ Shell 负责持久化导航容器和 Outlet，主从容器负责根据屏幕尺�
 
 已新增适配器中立的 `CCWindowMetrics`、`CCDisplayFeature` 和 `CCAdaptivePresentationPolicy` 合同。Shell 负责持久化导航容器，Adaptive Layout 负责选择单列、双栏或多 Pane，Window/Display Host 负责绑定实际导航栈；`CCRoutePlacement.hostId` 和导航请求的 `hostId` 用于隔离多窗口/外接屏幕栈。
 
-实现优先级：先完成 Size Class、主从双 Outlet、Modal 自适应和旋转/调整大小状态保持；再支持折叠姿态、多窗口、深链进入指定 Pane 和状态恢复；最后扩展外接屏幕、PiP、预测返回和输入设备驱动的导航策略。
+实现优先级：先完成 Size Class、主从双 Outlet、Modal 自适应和旋转/调整大小状态保持；再支持折叠姿态、多窗口和深链进入指定 Pane；最后依据真实需求数据决定是否实现状态恢复，并扩展外接屏幕、PiP、预测返回和输入设备驱动的导航策略。
+
+#### 12.3.1 状态恢复的当前边界
+
+当前版本不实现 Route Restoration，也不提供 Snapshot、restore API 或路由级恢复标记。框架只通过
+`CCRouteRestorationOpportunitySource` 接收 Android Activity recreation、Apple State
+Restoration、桌面窗口重开或异常 Session Marker 等 Host 证据，并记录固定为 `unsupported` 的
+`CCRouteRestorationOpportunityEvent`。
+
+该事件用于评估需求，不是恢复输入。事件只能包含上次顶部 Route ID、Host/Outlet 数量、应用版本、
+组件目录指纹和匿名 Telemetry Context；禁止记录完整 URI、Path/Query 参数、Arguments、Extra、账号
+标识或任意业务对象。普通冷启动和单纯前后台切换不能上报为恢复机会。
+
+后续只有在恢复机会率、受影响 Route 分布和多窗口恢复占比证明收益后才重新立项。完整实现必须满足：
+
+- 路由显式 opt-in，支付、登录、授权、一次性确认和依赖 Extra 的页面默认禁止恢复；
+- Snapshot 版本化且 Adapter-neutral，只保存可序列化的 Route ID、规范 URI 和 Host/Outlet 结构；
+- 恢复时重新执行路由解析、组件可用性、安全策略和 Interceptor；
+- 契约升级、路由删除、组件缺失和部分失败必须产生明确报告；
+- 不持久化 Widget、BuildContext、Flutter Route、Scope 或返回 Completer。
 
 ### 12.4 BuildContext 与 Outlet 解析
 
@@ -968,7 +1045,8 @@ created -> resolving -> pushed -> visible -> hidden
 - IndexedStack 非活动分支视为 hidden，但不销毁 Route Scope。
 - 交互式返回手势确认前不能销毁 Route Scope。
 - 只有 RouteEntry 永久移出导航结构后才能 dispose。
-- 页面无需继承框架 State 或混入特定 Widget mixin。
+- 页面无需继承框架 State；需要便利回调时可以选择 Mixin 或 Listener，不接入的页面
+  不受影响。
 
 ### 13.1 多维页面与弹窗生命周期
 
@@ -986,16 +1064,55 @@ created -> resolving -> pushed -> visible -> hidden
 也不能误判为 RouteEntry 已 `removed`。
 
 经过 CCRouter 的 Dialog、BottomSheet 和透明 Page 都拥有自己的 RouteEntry、返回值
-和 Route Scope，并通过 `CCNavigationAspect` 观察显示、隐藏、返回和销毁。未经过
-CCRouter 的 `OverlayEntry`、`MenuAnchor`、`LocalHistoryEntry` 和第三方浮层属于
-Foreign/Backend 生命周期，只能通过显式 Adapter/Bridge 上报；无法确认归属时，
-必须保持 CCRouter 的 Managed RouteEntry 不变。
+和 Route Scope。Navigation Aspect 观察导航尝试与最终结果，页面/Route 当前状态由
+Backend Observer 确认，资源销毁由 RouteEntry 生命周期确认。未经过 CCRouter 的
+`OverlayEntry`、`MenuAnchor`、`LocalHistoryEntry` 和第三方浮层属于 Foreign/Backend
+生命周期；无法确认归属时，必须保持 CCRouter 的 Managed RouteEntry 不变。
 
 Runtime 通过 `CCRouteVisibilityEvent` 提供独立的 Managed Route 可见性观察，阶段包括
 `willShow`、`didShow`、`willHide` 和 `didHide`。该事件只描述页面在所属 Outlet 中的
 显示与隐藏，不代表 RouteEntry 已销毁；Route Scope 释放仍以
 `CCRouteEntryLifecycleState.disposed` 为准。App/Window 前后台状态继续由
 `CCRouterApp` 的 Host 生命周期回调提供，不与 Route 可见性混合。
+
+Flutter 页面按需使用以下任一便利 API，两者共享同一个 Host 页面台账：
+
+```dart
+class _OrderPageState extends State<OrderPage>
+    with CCPageLifecycleMixin<OrderPage> {
+  @override
+  void onPageShow() {}
+
+  @override
+  void onPageHide() {}
+
+  @override
+  void onForeground() {}
+
+  @override
+  void onBackground() {}
+}
+
+CCPageLifecycleListener(
+  onPageShow: () {},
+  onPageHide: () {},
+  onForeground: () {},
+  onBackground: () {},
+  child: const OrderPage(),
+);
+```
+
+`onPageShow/onPageHide` 保持 `RouteAware` 的原始 PageRoute 语义：页面 Push、上层 Route
+Pop、被另一 Route 覆盖或自身移除时触发，不表示透明 Route 下的像素可见性。Widget
+rebuild 不产生事件；`onForeground/onBackground` 不替代 Page Show/Hide。页面对象的
+创建和销毁继续使用 Flutter `initState/dispose`，最终 Route 退出埋点使用 Aspect 或
+RouteEntry removed/disposed，不提供 `onPageDispose`。
+
+`CCGoRouterNavigationObserver.didChangeTop` 向 Host 台账报告确认后的顶部 Route，因此
+Foreign Dialog、BottomSheet 和普通 Navigator Push 可以 Hide/Show Managed 页面，但
+不能删除它。非 Navigator `OverlayEntry` 不产生 Page 生命周期。Stateful Shell 切换和
+多 Pane 同时显示由 Host SPI 更新活动 Outlet 集合，inactive Outlet 只 Hide、不销毁
+Route Scope。
 
 后续 Aspect 事件可提供以下稳定语义，但必须注明事件所属维度和时机：
 
@@ -1176,6 +1293,7 @@ cc_routes.md
 - 两层拦截器中的路由级配置。
 - 埋点事件名、允许字段及说明。
 - Shell、父路由、Outlet 和展示意图。
+- 声明 Package/源码、可用导航来源，以及固定标记为 `unsupported` 的当前恢复能力。
 - 页面与参数 DartDoc。
 - 废弃状态、替代路由和源码位置。
 
@@ -1295,8 +1413,9 @@ Adapter 实现者可以使用单独导出的：
 `CCRegistry.registerRouteInterceptor` 注册路由策略，`CCRouteDefinition.interceptorIds`
 保留路由级声明顺序。拦截结果支持继续、类型安全 Intent/URI 重定向和取消；重定向
 沿用原始 `navigationId` 与 `CCNavigationOrigin`，并由 Runtime 限制最大次数。RouteEntry
-生命周期和 `CCNavigationAspect` 的安全快照钩子已经接入；Route Scope 与拦截上下文的
-Deadline 配置、完整导航结果遥测投影仍待后续实现。
+生命周期和 `CCNavigationAspect` 的安全快照钩子已经接入；Route Scope、拦截上下文的
+真实 Deadline/Timeout 和 Defer 恢复组合导航语义已经闭环，完整分阶段导航结果遥测投影
+仍待后续实现。
 
 ### 阶段 C：生成器
 
@@ -1312,6 +1431,9 @@ Deadline 配置、完整导航结果遥测投影仍待后续实现。
 - 已实现 Contract-first 路由的独立 Pure Dart 契约文件；页面 `@CCRoute` 固定保持内部，
   `@CCRouteImplementation` 的页面 Part 只保留 owner 注册和构造 glue，workspace 校验要求
   公共 barrel 指向生成契约。
+- 已实现 `List<T>`/`Set<T>` repeated Query、自定义 `CCRouteQueryCodec<T>`、继承参数、混合
+  构造器和跨 Package Codec import 校验；生成文档已包含组件版本、声明来源、Host、Shell、
+  Outlet、presentation、导航来源及当前 `restoration: unsupported` 能力视图。
 - 待提供可选的 Route Scaffold CLI，用于创建页面模板、计算并写入正确的
   `.route.g.dart` `part` 路径、补齐 `@CCRoute` 声明，并触发首次标准生成。该工具只改善
   开发体验，不替代 `build_runner`、Analyzer 校验或 workspace 聚合校验，也不直接修改

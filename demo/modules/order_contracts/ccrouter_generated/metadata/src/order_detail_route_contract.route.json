@@ -16,9 +16,37 @@
     {
       "id": "order.detail",
       "componentId": "demo_order_component",
+      "componentVersion": "0.1.0",
       "exposure": "public",
       "deepLink": "disabled",
       "description": "订单详情，确认后返回订单编号。",
+      "interceptorIds": [],
+      "popGuardIds": [],
+      "declaration": {
+        "package": "demo_order_contracts",
+        "library": "lib/src/order_detail_route_contract.dart",
+        "kind": "contract"
+      },
+      "navigationSources": [
+        "typedIntent",
+        "internalUri"
+      ],
+      "restoration": {
+        "status": "unsupported"
+      },
+      "placement": {
+        "hostId": "default",
+        "parentRouteId": null,
+        "shellId": null,
+        "navigatorOutlet": "root"
+      },
+      "presentation": {
+        "type": "page",
+        "routeType": "platformDefault",
+        "transition": "platformDefault",
+        "opaque": true,
+        "fullscreenDialog": false
+      },
       "contracts": {
         "route": "OrderDetailRoute",
         "arguments": "OrderDetailRouteArguments",
@@ -54,6 +82,7 @@
           "wireName": "tab",
           "source": "query",
           "type": "String",
+          "cardinality": "single",
           "required": false,
           "default": "'summary'",
           "description": "Initially selected detail tab encoded as a query value."

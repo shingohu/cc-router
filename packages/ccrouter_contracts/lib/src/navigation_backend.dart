@@ -20,9 +20,23 @@ enum CCBackendEntryLifecycleState {
 
   /// Backend reported that the entry left its stack.
   removed,
+}
 
-  /// Backend identity was observed without a reliable lifecycle conclusion.
+/// Describes whether one active backend Entry is current in its Outlet.
+///
+/// This state is separate from [CCBackendEntryLifecycleState]: a hidden Entry
+/// remains active in the backend stack and must keep its managed Route Scope.
+/// Hosts use this distinction for covered pages, nested Navigators, and
+/// stateful Shell branches where inactive stacks remain mounted.
+enum CCBackendEntryVisibilityState {
+  /// The Adapter has not confirmed whether the Entry is current.
   unknown,
+
+  /// The Entry is the confirmed current backend destination in its Outlet.
+  visible,
+
+  /// The Entry remains active but another destination is current.
+  hidden,
 }
 
 /// Identifies which kind of backend entry consumed a Pop request.
@@ -67,17 +81,17 @@ enum CCPopTrigger {
 ///
 /// A handled Pop can still represent a `LocalHistoryEntry` or foreign Popup;
 /// callers must only close a CCRouter Route Scope when [removedOwner] is
-/// [CCPopRemovedOwner.managed]. [resultAvailable] is true only when the
-/// adapter can associate the Pop with a managed result channel; it does not
-/// embed or expose the result value itself.
+/// [CCPopRemovedOwner.managed]. Typed result delivery remains owned by the
+/// original managed navigation Future and is never embedded in this outcome.
 final class CCPopOutcome {
   /// Creates a Pop result with explicit ownership and result-channel state.
   const CCPopOutcome({
     required this.handled,
     this.removedBackendEntryId,
     this.removedOwner = CCPopRemovedOwner.none,
-    this.resultAvailable = false,
     this.trigger = CCPopTrigger.unknown,
+    this.guardDeniedCode,
+    this.hostId,
   });
 
   /// Whether the backend accepted or consumed the Pop request.
@@ -89,23 +103,34 @@ final class CCPopOutcome {
   /// Ownership of the backend entry removed by the Pop.
   final CCPopRemovedOwner removedOwner;
 
-  /// Whether the adapter can provide a result for the removed entry.
-  final bool resultAvailable;
-
   /// Trigger that entered the Pop coordination pipeline.
   final CCPopTrigger trigger;
+
+  /// Stable reason supplied when a Runtime Pop guard consumed the request.
+  ///
+  /// A non-null value implies [handled] is true while [removedOwner] remains
+  /// [CCPopRemovedOwner.none]. No backend entry or Route Scope was removed.
+  final String? guardDeniedCode;
+
+  /// Concrete Host that consumed the Pop, when known.
+  ///
+  /// Multi-window Runtime reconciliation uses this only to scope a legacy
+  /// managed fallback when no backend Entry identity is available.
+  final String? hostId;
 
   /// Returns this outcome with selected diagnostic fields replaced.
   ///
   /// Runtime uses this to attach a trusted trigger when an older Adapter
   /// returns an otherwise complete outcome without source metadata.
-  CCPopOutcome copyWith({CCPopTrigger? trigger}) => CCPopOutcome(
-    handled: handled,
-    removedBackendEntryId: removedBackendEntryId,
-    removedOwner: removedOwner,
-    resultAvailable: resultAvailable,
-    trigger: trigger ?? this.trigger,
-  );
+  CCPopOutcome copyWith({CCPopTrigger? trigger, String? hostId}) =>
+      CCPopOutcome(
+        handled: handled,
+        removedBackendEntryId: removedBackendEntryId,
+        removedOwner: removedOwner,
+        trigger: trigger ?? this.trigger,
+        guardDeniedCode: guardDeniedCode,
+        hostId: hostId ?? this.hostId,
+      );
 }
 
 /// Identifies a stack transition observed from a navigation backend.
@@ -124,6 +149,36 @@ enum CCNavigationBackendEventKind {
 
   /// A backend route was removed without becoming active.
   remove,
+
+  /// The backend confirmed a new current Entry in one Navigator Outlet.
+  ///
+  /// Unlike Push or Pop, this event describes the post-transition top Route.
+  /// Runtime uses it to drive managed visibility without guessing from stack
+  /// mutations. Adapters should emit it from a confirmed backend callback such
+  /// as Flutter's `NavigatorObserver.didChangeTop`.
+  topChanged,
+
+  /// A persistent Shell branch became the foreground Outlet.
+  ///
+  /// Stateful Shell Navigators keep inactive branch tops mounted, so their
+  /// Navigator top does not necessarily change during a tab switch. Adapters
+  /// emit this separate event to let Runtime hide the old branch and restore
+  /// the already-current Entry in the newly active branch without disposal.
+  outletActivated,
+
+  /// A Host changed the set of simultaneously visible Navigator Outlets.
+  ///
+  /// Adaptive split-pane and multi-pane layouts use this event when window or
+  /// fold state changes. Entries in inactive Outlets remain mounted and hidden;
+  /// Runtime must not interpret the change as stack removal.
+  outletsChanged,
+
+  /// A Window or display Host detached permanently from this Runtime.
+  ///
+  /// Runtime removes managed entries owned by that Host and closes their Route
+  /// Scopes. Live Routes are never migrated implicitly to another Window;
+  /// restoration or an explicit new navigation must recreate them there.
+  hostDetached,
 }
 
 /// Immutable ledger entry for one backend Navigator route.
@@ -138,7 +193,9 @@ final class CCBackendEntry {
     required this.owner,
     required this.lifecycleState,
     required this.navigatorOutlet,
+    this.visibilityState = CCBackendEntryVisibilityState.unknown,
     this.routeEntryId,
+    this.navigationId,
     this.routeId,
     this.hostId,
     this.location,
@@ -154,6 +211,12 @@ final class CCBackendEntry {
   /// CCRouter RouteEntry identity when [owner] is [managed].
   final String? routeEntryId;
 
+  /// Runtime navigation identity correlated with this backend Entry.
+  ///
+  /// This stable identifier lets Runtime finish association when a synchronous
+  /// backend callback arrives before the corresponding RouteEntry is committed.
+  final String? navigationId;
+
   /// Stable route contract ID when the backend supplied one.
   final String? routeId;
 
@@ -162,6 +225,9 @@ final class CCBackendEntry {
 
   /// Navigator Outlet containing this backend entry.
   final String navigatorOutlet;
+
+  /// Confirmed current/hidden state within [navigatorOutlet].
+  final CCBackendEntryVisibilityState visibilityState;
 
   /// Backend location or settings name, when available.
   final String? location;
@@ -185,6 +251,7 @@ final class CCNavigationBackendEntrySnapshot {
     required this.backendEntryId,
     required this.owner,
     required this.navigatorOutlet,
+    this.visibilityState = CCBackendEntryVisibilityState.unknown,
     this.routeEntryId,
     this.routeId,
     this.hostId,
@@ -200,6 +267,10 @@ final class CCNavigationBackendEntrySnapshot {
 
   /// Navigator Outlet containing this backend entry.
   final String navigatorOutlet;
+
+  /// Current/hidden state known at snapshot time, or `unknown` when the
+  /// backend cannot safely reconstruct its top Entry.
+  final CCBackendEntryVisibilityState visibilityState;
 
   /// Optional matching CCRouter RouteEntry identity from state restoration.
   final String? routeEntryId;
@@ -225,7 +296,7 @@ final class CCNavigationBackendEntrySnapshot {
 /// placement, origin, and source from its internal RouteEntry.
 final class CCNavigationBackendEvent {
   /// Creates one immutable backend lifecycle event.
-  const CCNavigationBackendEvent({
+  CCNavigationBackendEvent({
     required this.kind,
     required this.timestamp,
     this.backendEntryId,
@@ -242,7 +313,8 @@ final class CCNavigationBackendEvent {
     this.location,
     this.origin,
     this.source,
-  });
+    Iterable<String> activeNavigatorOutlets = const [],
+  }) : activeNavigatorOutlets = List.unmodifiable(activeNavigatorOutlets);
 
   /// Backend stack transition observed by the adapter.
   final CCNavigationBackendEventKind kind;
@@ -253,7 +325,12 @@ final class CCNavigationBackendEvent {
   /// Adapter operation identity used for duplicate-event suppression.
   final String? backendOperationId;
 
-  /// Backend entry that preceded the affected entry, when known.
+  /// Backend Entry related to the affected Entry, when known.
+  ///
+  /// For Push and `topChanged`, this is the previously current Entry. For Pop,
+  /// it is the newly revealed Entry. For Replace, it is the replaced Entry.
+  /// Runtime must interpret the field together with [kind] and must never
+  /// assume it was removed for every event kind.
   final String? previousBackendEntryId;
 
   /// Host or Window identity associated with this event, when supported.
@@ -261,6 +338,12 @@ final class CCNavigationBackendEvent {
 
   /// Navigator Outlet that emitted this event.
   final String? navigatorOutlet;
+
+  /// Outlets simultaneously visible after an `outletsChanged` event.
+  ///
+  /// The list is empty for ordinary stack events and must not be interpreted
+  /// as a request to hide every Outlet unless [kind] is `outletsChanged`.
+  final List<String> activeNavigatorOutlets;
 
   /// Monotonic adapter sequence for this backend event.
   final int? sequence;
@@ -352,6 +435,20 @@ abstract interface class CCNavigationBackendEventSource {
   void Function() addBackendEventListener(
     CCNavigationBackendEventListener listener,
   );
+}
+
+/// Optional Adapter SPI receiving definitive managed-entry release signals.
+///
+/// Composite Host adapters use this signal to release navigation-to-backend
+/// routing indexes after Runtime has removed the corresponding RouteEntry.
+/// Ordinary backend adapters that do not retain per-navigation routing state
+/// should omit this interface. Business code must never invoke it directly.
+abstract interface class CCNavigationManagedEntryReleaseSink {
+  /// Releases Adapter bookkeeping for one removed managed navigation.
+  ///
+  /// Implementations must make repeated calls harmless because a backend
+  /// removal event may have already released the same identity.
+  void releaseManagedNavigation(String navigationId);
 }
 
 /// Optional Adapter SPI for platform predictive-back coordination.

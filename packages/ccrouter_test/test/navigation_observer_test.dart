@@ -33,18 +33,29 @@ void main() {
     navigatorKey.currentState!.pop('selected');
     await tester.pumpAndSettle();
 
-    expect(events.length, greaterThanOrEqualTo(4));
+    expect(events.length, greaterThanOrEqualTo(7));
     expect(
-      events.map((event) => event.kind).toList().sublist(events.length - 3),
+      events
+          .where(
+            (event) => event.kind != CCGoRouterNavigationEventKind.topChanged,
+          )
+          .map((event) => event.kind)
+          .toList()
+          .sublist(1),
       [
         CCGoRouterNavigationEventKind.push,
         CCGoRouterNavigationEventKind.replace,
         CCGoRouterNavigationEventKind.pop,
       ],
     );
+    expect(
+      events.where(
+        (event) => event.kind == CCGoRouterNavigationEventKind.topChanged,
+      ),
+      isNotEmpty,
+    );
     expect(events.every((event) => event.hostId == 'window.main'), isTrue);
     expect(events.every((event) => event.outlet == 'root'), isTrue);
     // NavigatorObserver in the current Flutter SDK does not expose Pop result.
-    expect(events.last.result, isNull);
   });
 }

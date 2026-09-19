@@ -4,10 +4,11 @@
 /// patterns when one destination must accept multiple address forms. Exactly
 /// one non-match-only pattern in each route is marked [primary] for canonical
 /// address generation; every pattern still resolves to the same stable route
-/// ID.
+/// ID. Regular-expression patterns are the only match-only form; callers can
+/// determine reversibility from the concrete pattern type.
 sealed class CCRoutePattern {
   /// Creates declarative pattern metadata usable in const route annotations.
-  const CCRoutePattern({required this.primary, required this.matchOnly});
+  const CCRoutePattern({required this.primary});
 
   /// Whether this pattern is the canonical address-generation source.
   ///
@@ -15,12 +16,6 @@ sealed class CCRoutePattern {
   /// compatibility and external entry instead of changing the primary pattern
   /// when a previously published address must remain valid.
   final bool primary;
-
-  /// Whether this pattern may match input but cannot generate an address.
-  ///
-  /// Full regular expressions are always match-only because arbitrary regexes
-  /// are not reliably reversible into a URI.
-  final bool matchOnly;
 }
 
 /// Matches a slash-prefixed path template independently of URI authority.
@@ -35,7 +30,7 @@ final class CCPathPattern extends CCRoutePattern {
     this.template, {
     bool primary = false,
     this.constraints = const {},
-  }) : super(primary: primary, matchOnly: false);
+  }) : super(primary: primary);
 
   /// Slash-prefixed template such as `/orders/:orderId`.
   final String template;
@@ -62,7 +57,7 @@ final class CCUriPattern extends CCRoutePattern {
     this.template, {
     bool primary = false,
     this.constraints = const {},
-  }) : super(primary: primary, matchOnly: false);
+  }) : super(primary: primary);
 
   /// Absolute URI template containing a scheme, host, and optional path.
   final String template;
@@ -84,8 +79,7 @@ final class CCUriPattern extends CCRoutePattern {
 /// be the canonical generation source.
 final class CCRegexPattern extends CCRoutePattern {
   /// Creates a match-only full regular-expression pattern.
-  const CCRegexPattern(this.expression)
-    : super(primary: false, matchOnly: true);
+  const CCRegexPattern(this.expression) : super(primary: false);
 
   /// Dart regular expression applied to the complete location without Query or
   /// Fragment text.

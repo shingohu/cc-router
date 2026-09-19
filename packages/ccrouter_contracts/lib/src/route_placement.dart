@@ -1,17 +1,3 @@
-import 'shell.dart';
-
-/// Identifies the structural role of a route in the navigation tree.
-enum CCRouteKind {
-  /// A destination rendered inside an existing Navigator outlet.
-  page,
-
-  /// A persistent container that owns one or more child outlets.
-  ///
-  /// This legacy value is rejected by Runtime route registration. Register a
-  /// [CCShellDefinition] through `CCRegistry.registerShell` instead.
-  shell,
-}
-
 /// Declares the explicit parent, Shell, and Navigator outlet for a route.
 ///
 /// Route placement is adapter-neutral metadata. It prevents adapters from
@@ -27,7 +13,6 @@ final class CCRoutePlacement {
     this.parentRouteId,
     this.shellId,
     this.navigatorOutlet = 'root',
-    this.routeKind = CCRouteKind.page,
   }) : assert(hostId != '', 'hostId cannot be empty'),
        assert(navigatorOutlet != '', 'navigatorOutlet cannot be empty'),
        assert(parentRouteId != '', 'parentRouteId cannot be empty'),
@@ -59,7 +44,4 @@ final class CCRoutePlacement {
   /// Use names such as `root`, `list`, `detail`, or `tab.settings` when a
   /// route must target a specific independently managed stack.
   final String navigatorOutlet;
-
-  /// Structural role of this route in the navigation tree.
-  final CCRouteKind routeKind;
 }

@@ -25,14 +25,11 @@ abstract interface class CCEvent {}
 /// Summarizes the handlers that processed an action.
 ///
 /// Callers use this report when they need to observe how many action handlers
-/// completed or inspect results retained by the configured action policy.
+/// completed. Actions intentionally do not expose handler result values.
 final class CCActionReport {
   /// Creates an immutable action dispatch report.
-  const CCActionReport({this.handled = 0, this.results = const []});
+  const CCActionReport({this.handled = 0});
 
   /// Number of handlers that completed successfully.
   final int handled;
-
-  /// Optional handler results retained by an action policy.
-  final List<Object?> results;
 }

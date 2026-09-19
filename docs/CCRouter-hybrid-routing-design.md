@@ -51,11 +51,13 @@ CCBackendEntry
 ├── backendEntryId
 ├── owner: managed | foreign | opaque
 ├── routeEntryId?
+├── navigationId?
 ├── routeId?
 ├── hostId
 ├── navigatorOutlet
 ├── location?
-└── lifecycleState
+├── lifecycleState
+└── visibilityState: visible | hidden | unknown
 ```
 
 规则：
@@ -63,6 +65,7 @@ CCBackendEntry
 - `managed` 条目由 CCRouter 创建，可以驱动 RouteEntry 生命周期；
 - `foreign` 条目由外部 Navigator 或第三方组件创建，只参与观察；
 - `opaque` 条目无法可靠识别，只保留隔离状态和诊断信息；
+- Backend Entry 是否仍在栈内与是否为 Outlet 当前页是两个独立维度；
 - 只有明确关联到 `routeEntryId` 的条目才能关闭 Route Scope；
 - 未知外部 Push/Pop 不得默认清空或删除 Managed 栈。
 
@@ -81,7 +84,7 @@ navigatorOutlet
 sequence
 ```
 
-事件处理必须按 Host 和 Outlet 分区、串行处理、支持重复事件去重、检测事件序列断层、区分 CCRouter 发起的操作和外部操作，并在关联失败时进入 `opaque` 或 `desynchronized` 状态，而不是猜测删除。
+事件处理必须按 Host 和 Outlet 分区、串行处理、支持重复事件去重、检测事件序列断层、区分 CCRouter 发起的操作和外部操作，并在关联失败时进入 `opaque` 或 `desynchronized` 状态，而不是猜测删除。Push、Pop、Replace 和 Remove 只描述结构变化，页面显示状态由 `topChanged` 确认；StatefulShell 分支切换由 `outletActivated` 确认。
 
 ## 5. Pop 协调
 
@@ -157,9 +160,9 @@ Runtime 根据能力选择正常执行、明确记录的降级实现或初始化
 
 ## 9. 多 Window 与自适应布局
 
-后续将 `hostId` 加入 `CCNavigationRequest`、`CCRouteEntrySnapshot`、`CCBackendEntry`、导航生命周期事件、后端事件和诊断记录。
+当前 `hostId` 已进入 `CCNavigationRequest`、`CCRouteEntrySnapshot`、`CCBackendEntry`、后端事件和诊断记录。`CCNavigationHostRegistry` 将默认 Placement 动态解析到活动 Host，同时保持显式 Host 路由固定归属。
 
-不同 Window、折叠屏 Pane、外接显示器和多 Display Host 的导航栈必须相互隔离。Route Contract、Intent 和参数保持一致，呈现方式由 Host、Shell 和 Adaptive Layout 决定。
+不同 Window、折叠屏 Pane、外接显示器和多 Display Host 的导航栈相互隔离。Route Contract、Intent 和参数保持一致，呈现方式由 Host、Shell 和 Adaptive Layout 决定。Host 卸载只销毁该 Host 的 Managed Entry 和 Scope，不把 Live Route 隐式迁移到其他窗口。
 
 ## 10. 分阶段实施
 
@@ -184,7 +187,7 @@ Runtime 根据能力选择正常执行、明确记录的降级实现或初始化
 
 - [x] 引入 `CCPopOutcome`；
 - [x] Managed outcome 才允许 Runtime 关闭对应 RouteEntry，Foreign/Opaque/None 只返回诊断；
-- [ ] 统一系统返回、手势返回、预测返回和业务 Pop；
+- [x] 统一系统返回、手势返回、预测返回和业务 Pop；
 - [x] 完善 Pop 拒绝、结果和生命周期语义；
 - [x] 业务 `CCRouter.navigator.pop` 通过 ownership-aware coordinator 执行，Foreign/Opaque
   Entry 不会关闭底层 Managed RouteEntry；
@@ -194,6 +197,10 @@ Runtime 根据能力选择正常执行、明确记录的降级实现或初始化
 系统返回和手势返回已经通过 `maybePopOutcome` 进入同一 ownership 判定管线；预测返回仍由
 `supportsPredictiveBack` 能力声明控制，GoRouter Adapter 默认不支持，但可由宿主显式开启
 `enablePredictiveBack` 并通过 Host-only Bridge 转发平台阶段事件；未开启时仍保持保守隔离。
+同步 `CCPopGuard` 在 Managed Entry 的业务 Pop、系统返回和手势进入 Adapter 前执行；
+Predictive Back Host 必须在 commit 前调用 Bridge 的 `evaluateStart`。Foreign、Opaque 和
+`LocalHistoryEntry` 不运行底层 Managed Entry 的 Guard。异步确认继续由 Flutter
+`PopScope` 承担。
 
 ### 阶段四：Foreign Route Bridge
 
@@ -213,9 +220,10 @@ Foreign/Opaque 观察等能力；Runtime 已在初始化和组合导航执行前
 - [x] 让 GoRouter、Observer、Adapter 和 Backend Event 使用同一个 Host ID；
 - [x] 将 Route Placement 的 `default` Host 解析成 Adapter 绑定的真实 Host ID；
 - [x] 增加独立于 Route 可见性的 Flutter Host 前后台生命周期事件；
-- [ ] 建立 Runtime 多 Host Registry 和动态 Host Resolver；
-- 增加 Window/Display 隔离；
-- 支持折叠屏、多 Pane 和多窗口状态。
+- [x] 建立 Runtime 多 Host Registry 和动态 Host Resolver；
+- [x] 增加 Window/Display 隔离；
+- [x] 支持 Size Class 驱动的单 Pane、双 Pane 和多 Pane Outlet 显示切换；
+- [x] Host 卸载时精确清理所属 Entry、Scope、pending result 和 listener bridge。
 
 ## 11. 验收用例
 

@@ -95,7 +95,7 @@ final class ProbeRegistrar implements CCComponentRegistrar {
   @override
   void register(CCRegistry registry) {}
 }
-@CCRoute<void>(component: probeComponent, id: 'probe.detail', pattern: CCPathPattern('/probe/:id', constraints: {'id': r'\\d+'}), description: 'Probe details.')
+@CCRoute<void>(component: probeComponent, id: 'probe.detail', pattern: CCPathPattern('/probe/:id', constraints: {'id': r'\\d+'}), deepLink: CCDeepLinkPolicy.enabled, presentation: CCPagePresentation(transition: CCPageTransitionType.slideFromBottom, opaque: false), placement: CCRoutePlacement(hostId: 'secondary', parentRouteId: 'probe.root', shellId: 'probe.shell', navigatorOutlet: 'detail'), interceptors: ['probe.auth'], popGuards: ['probe.dirty'], description: 'Probe details.')
 final class Probe {
   const Probe({required this.id});
   /// Documented identity.
@@ -124,8 +124,35 @@ final class Probe {
     expect(json['componentManifests'], isEmpty);
     expect((json['components'] as List).single['version'], '1.2.3');
     expect(route['componentId'], 'probe');
+    expect(route['componentVersion'], '1.2.3');
     expect(route['exposure'], 'internal');
     expect(route['description'], 'Probe details.');
+    expect(route['interceptorIds'], ['probe.auth']);
+    expect(route['popGuardIds'], ['probe.dirty']);
+    expect(route['declaration'], {
+      'package': 'ccrouter_test',
+      'library': 'lib/src/orders/probe.dart',
+      'kind': 'page',
+    });
+    expect(route['navigationSources'], [
+      'typedIntent',
+      'internalUri',
+      'externalDeepLink',
+    ]);
+    expect(route['restoration'], {'status': 'unsupported'});
+    expect(route['placement'], {
+      'hostId': 'secondary',
+      'parentRouteId': 'probe.root',
+      'shellId': 'probe.shell',
+      'navigatorOutlet': 'detail',
+    });
+    expect(route['presentation'], {
+      'type': 'page',
+      'routeType': 'platformDefault',
+      'transition': 'slideFromBottom',
+      'opaque': false,
+      'fullscreenDialog': false,
+    });
     expect(route['contracts'], {
       'route': '_ProbeRoute',
       'arguments': '_ProbeRouteArguments',
@@ -153,6 +180,56 @@ final class Probe {
     );
     expect(markdown, contains('`probe.detail`'));
     expect(markdown, contains('Documented identity.'));
+    expect(markdown, contains('host `secondary`, outlet `detail`'));
+    expect(markdown, contains('Restoration: `unsupported`'));
+  });
+
+  test('metadata serializes modal presentation intent', () async {
+    await testBuilder(
+      ccRouteMetadataBuilder(BuilderOptions.empty),
+      {
+        'ccrouter_test|lib/src/modal_probe.dart': r'''
+import 'package:ccrouter/ccrouter.dart';
+const probeComponent = CCComponentDescriptor(id: 'probe', version: '1.0.0');
+@CCRoute<void>(component: probeComponent, id: 'probe.sheet', pattern: CCPathPattern('/sheet'), presentation: CCModalBottomSheetPresentation(isDismissible: false, enableDrag: false, isScrollControlled: true, showDragHandle: true, useSafeArea: true))
+final class SheetProbe { const SheetProbe(); }
+@CCRoute<void>(component: probeComponent, id: 'probe.dialog', pattern: CCPathPattern('/dialog'), presentation: CCDialogPresentation(routeType: CCDialogRouteType.cupertino, barrierDismissible: false, useSafeArea: false))
+final class DialogProbe { const DialogProbe(); }
+''',
+      },
+      rootPackage: 'ccrouter_test',
+      generateFor: {'ccrouter_test|lib/src/modal_probe.dart'},
+      isInput: (id) => id == 'ccrouter_test|lib/src/modal_probe.dart',
+      readerWriter: reader,
+      flattenOutput: true,
+    );
+    final json =
+        jsonDecode(
+              await reader.readAsString(
+                AssetId(
+                  'ccrouter_test',
+                  'ccrouter_generated/metadata/src/modal_probe.route.json',
+                ),
+              ),
+            )
+            as Map;
+    final routes = (json['routes'] as List).cast<Map>();
+    final sheet = routes.singleWhere((route) => route['id'] == 'probe.sheet');
+    final dialog = routes.singleWhere((route) => route['id'] == 'probe.dialog');
+    expect(sheet['presentation'], {
+      'type': 'modalBottomSheet',
+      'isDismissible': false,
+      'enableDrag': false,
+      'isScrollControlled': true,
+      'showDragHandle': true,
+      'useSafeArea': true,
+    });
+    expect(dialog['presentation'], {
+      'type': 'dialog',
+      'routeType': 'cupertino',
+      'barrierDismissible': false,
+      'useSafeArea': false,
+    });
   });
 
   test('metadata records the public contract library', () async {
@@ -400,7 +477,7 @@ final class _InvalidComponentRegistrar implements CCComponentRegistrar {
     'builder emits a private component contract and backend-neutral registration',
     () async {
       final code = await generate('''
-@CCRoute<void>(component: probeComponent, id: 'probe', patterns: [CCPathPattern('/probe/:id', primary: true)])
+@CCRoute<void>(component: probeComponent, id: 'probe', patterns: [CCPathPattern('/probe/:id', primary: true)], popGuards: ['probe.dirty'])
 final class Probe { const Probe({required this.id}); final int id; }
 ''');
       expect(code, contains('part of'));
@@ -411,6 +488,7 @@ final class Probe { const Probe({required this.id}); final int id; }
       expect(code, contains('ccrouterDescribeProbeRoute'));
       expect(code, contains('ccrouterBuildProbeRoute'));
       expect(code, contains('CCNavigationRoute('));
+      expect(code, contains('popGuardIds: const ["probe.dirty"]'));
       expect(code, isNot(contains('GoRoute(')));
       expect(code, isNot(contains('CCRouter.navigator.push')));
     },
@@ -437,14 +515,15 @@ final class Probe { const Probe(); }
   });
 
   test(
-    'builder keeps embedded contracts private and escapes metadata',
+    'builder keeps embedded contracts private and documents metadata',
     () async {
       final code = await generate(r'''
 @CCRoute<String>(component: probeComponent, id: 'probe', patterns: [CCPathPattern('/probe', primary: true)], description: r'$secret')
 final class Probe { const Probe(); }
 ''');
       expect(code, contains('abstract final class _ProbeRoute'));
-      expect(code, contains(r'\$secret'));
+      expect(code, contains(r'/// $secret'));
+      expect(code, isNot(contains('description:')));
     },
   );
 
@@ -629,6 +708,180 @@ final class ProbePayload { const ProbePayload(); }
     expect(code, contains('this.status = contract_type_0.ProbeStatus.pending'));
   });
 
+  test('builder emits repeated Query codecs for List and Set values', () async {
+    final code = await generate(r'''
+enum ProbeState { pending, completed }
+@CCRoute<void>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe'))
+final class Probe {
+  const Probe({
+    @CCQueryParam() required this.tags,
+    @CCQueryParam() this.ids = const {2, 1},
+    @CCQueryParam() this.states,
+  });
+  final List<String> tags;
+  final Set<int> ids;
+  final List<ProbeState>? states;
+}
+''');
+    expect(
+      code,
+      contains(
+        'List<String>.unmodifiable(_values_tags.map((raw_tags) => raw_tags))',
+      ),
+    );
+    expect(code, contains('int.tryParse(raw_ids)'));
+    expect(code, contains('"pending" => ProbeState.pending'));
+    expect(code, contains('arguments.tags.isEmpty'));
+    expect(code, contains('tags = List.unmodifiable(tags)'));
+    expect(code, contains('ids = Set.unmodifiable(ids)'));
+    expect(code, contains('final values = <String>['));
+    expect(code, contains('values.sort()'));
+    expect(code, contains('if (arguments.states != null)'));
+    expect(code, contains('"states": ['));
+  });
+
+  test('builder emits an isolated custom Query codec boundary', () async {
+    final code = await generate(r'''
+final class ProbeFilter { const ProbeFilter(this.value); final String value; }
+final class ProbeFilterCodec implements CCRouteQueryCodec<ProbeFilter> {
+  const ProbeFilterCodec();
+  @override
+  ProbeFilter decode(List<String> values) => ProbeFilter(values.single);
+  @override
+  List<String> encode(ProbeFilter value) => [value.value];
+}
+@CCRoute<void>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe'))
+final class Probe {
+  const Probe({@CCQueryParam(codec: ProbeFilterCodec) required this.filter});
+  final ProbeFilter filter;
+}
+''');
+    expect(code, contains('return const ProbeFilterCodec().decode('));
+    expect(code, contains('List<String>.unmodifiable(_values_filter)'));
+    expect(code, contains('const ProbeFilterCodec().encode(arguments.filter)'));
+    expect(code, contains('if (values.isEmpty)'));
+    expect(code, contains('catch (_)'));
+  });
+
+  test(
+    'contract builder imports public Query value and codec types once',
+    () async {
+      final code = await generateContract(
+        r'''
+@CCRouteContract<void>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe'))
+abstract class ProbeRouteContract {
+  const ProbeRouteContract({@CCQueryParam(codec: ProbeFilterCodec) required this.filter});
+  final ProbeFilter filter;
+}
+''',
+        imports: "import 'package:ccrouter_test/probe_filter.dart';",
+        additionalAssets: {
+          'ccrouter_test|lib/probe_filter.dart': r'''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
+final class ProbeFilter { const ProbeFilter(this.value); final String value; }
+final class ProbeFilterCodec implements CCRouteQueryCodec<ProbeFilter> {
+  const ProbeFilterCodec();
+  @override
+  ProbeFilter decode(List<String> values) => ProbeFilter(values.single);
+  @override
+  List<String> encode(ProbeFilter value) => [value.value];
+}
+''',
+        },
+      );
+      expect(
+        RegExp(
+          "import 'package:ccrouter_test/probe_filter.dart' as contract_type_0;",
+        ).allMatches(code),
+        hasLength(1),
+      );
+      expect(code, contains('final contract_type_0.ProbeFilter filter'));
+      expect(code, contains('const contract_type_0.ProbeFilterCodec().decode'));
+    },
+  );
+
+  test('metadata documents repeated and custom Query parameters', () async {
+    await testBuilder(
+      ccRouteMetadataBuilder(BuilderOptions.empty),
+      {
+        'ccrouter_test|lib/src/query_probe.dart': r'''
+import 'package:ccrouter/ccrouter.dart';
+const probeComponent = CCComponentDescriptor(id: 'probe', version: '1.0.0');
+final class ProbeFilter { const ProbeFilter(); }
+final class ProbeFilterCodec implements CCRouteQueryCodec<ProbeFilter> {
+  const ProbeFilterCodec();
+  @override
+  ProbeFilter decode(List<String> values) => const ProbeFilter();
+  @override
+  List<String> encode(ProbeFilter value) => const ['filter'];
+}
+@CCRoute<void>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe'))
+final class Probe {
+  const Probe({@CCQueryParam() required this.tags, @CCQueryParam(codec: ProbeFilterCodec) required this.filter});
+  final List<String> tags;
+  final ProbeFilter filter;
+}
+''',
+      },
+      rootPackage: 'ccrouter_test',
+      generateFor: {'ccrouter_test|lib/src/query_probe.dart'},
+      isInput: (id) => id == 'ccrouter_test|lib/src/query_probe.dart',
+      readerWriter: reader,
+      flattenOutput: true,
+    );
+    final json =
+        jsonDecode(
+              await reader.readAsString(
+                AssetId(
+                  'ccrouter_test',
+                  'ccrouter_generated/metadata/src/query_probe.route.json',
+                ),
+              ),
+            )
+            as Map;
+    final parameters =
+        ((json['routes'] as List).single as Map)['parameters'] as List;
+    expect(parameters[0]['cardinality'], 'repeated');
+    expect(parameters[0].containsKey('codec'), isFalse);
+    expect(parameters[1]['cardinality'], 'repeated');
+    expect(parameters[1]['codec'], 'ProbeFilterCodec');
+    final markdown = await reader.readAsString(
+      AssetId(
+        'ccrouter_test',
+        'ccrouter_generated/metadata/src/query_probe.route.md',
+      ),
+    );
+    expect(markdown, contains('Cardinality'));
+    expect(markdown, contains('ProbeFilterCodec'));
+  });
+
+  test(
+    'builder supports super formals and mixed constructor parameters',
+    () async {
+      final code = await generate(r'''
+abstract class ProbeBase {
+  const ProbeBase(this.id);
+  final int id;
+}
+@CCRoute<void>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe/:id'))
+final class Probe extends ProbeBase {
+  const Probe(super.id, {@CCQueryParam() this.tab = 'summary', @CCQueryParam() this.page = 1});
+  final String tab;
+  final int page;
+}
+''');
+      expect(
+        code,
+        contains(
+          'Probe(arguments.id, tab: arguments.tab, page: arguments.page)',
+        ),
+      );
+      expect(code, contains('required int id'));
+      expect(code, contains("String tab = 'summary'"));
+      expect(code, contains('int page = 1'));
+    },
+  );
+
   test(
     'contract builder reuses the unprefixed framework contract import',
     () async {
@@ -707,6 +960,38 @@ final class Probe { const Probe(); }
     'unsupported query object': (
       "@CCRoute<void>(component: probeComponent, id: 'probe', patterns: [CCPathPattern('/probe', primary: true)]) final class Probe { const Probe({@CCQueryParam() this.value}); final Object? value; }",
       'URI parameters support',
+    ),
+    'nested query collection': (
+      "@CCRoute<void>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe')) final class Probe { const Probe({@CCQueryParam() required this.values}); final List<List<String>> values; }",
+      'URI parameters support',
+    ),
+    'nullable query collection element': (
+      "@CCRoute<void>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe')) final class Probe { const Probe({@CCQueryParam() required this.values}); final List<String?> values; }",
+      'URI parameters support',
+    ),
+    'unsupported query collection element': (
+      "@CCRoute<void>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe')) final class Probe { const Probe({@CCQueryParam() required this.values}); final Set<Object> values; }",
+      'URI parameters support',
+    ),
+    'query codec without interface': (
+      "final class BadCodec { const BadCodec(); } final class Value { const Value(); } @CCRoute<void>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe')) final class Probe { const Probe({@CCQueryParam(codec: BadCodec) required this.value}); final Value value; }",
+      'must implement CCRouteQueryCodec',
+    ),
+    'query codec value mismatch': (
+      "final class BadCodec implements CCRouteQueryCodec<String> { const BadCodec(); String decode(List<String> values) => ''; List<String> encode(String value) => [value]; } final class Value { const Value(); } @CCRoute<void>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe')) final class Probe { const Probe({@CCQueryParam(codec: BadCodec) required this.value}); final Value value; }",
+      'must exactly match',
+    ),
+    'query codec without const no-argument constructor': (
+      "final class BadCodec implements CCRouteQueryCodec<Value> { BadCodec(this.seed); final String seed; Value decode(List<String> values) => const Value(); List<String> encode(Value value) => ['value']; } final class Value { const Value(); } @CCRoute<void>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe')) final class Probe { const Probe({@CCQueryParam(codec: BadCodec) required this.value}); final Value value; }",
+      'const unnamed constructor without parameters',
+    ),
+    'scalar query with custom codec': (
+      "final class BadCodec implements CCRouteQueryCodec<String> { const BadCodec(); String decode(List<String> values) => values.single; List<String> encode(String value) => [value]; } @CCRoute<void>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe')) final class Probe { const Probe({@CCQueryParam(codec: BadCodec) required this.value}); final String value; }",
+      'only valid for a non-scalar',
+    ),
+    'collection query with custom codec': (
+      "final class BadCodec implements CCRouteQueryCodec<List<String>> { const BadCodec(); List<String> decode(List<String> values) => values; List<String> encode(List<String> value) => value; } @CCRoute<void>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe')) final class Probe { const Probe({@CCQueryParam(codec: BadCodec) required this.value}); final List<String> value; }",
+      'only valid for a non-scalar',
     ),
     'duplicate query keys': (
       "@CCRoute<void>(component: probeComponent, id: 'probe', patterns: [CCPathPattern('/probe', primary: true)]) final class Probe { const Probe({@CCQueryParam(name: 'q') this.a, @CCQueryParam(name: 'q') this.b}); final String? a; final String? b; }",

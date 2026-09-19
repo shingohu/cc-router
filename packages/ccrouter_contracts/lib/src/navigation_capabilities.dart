@@ -7,38 +7,25 @@
 final class CCNavigationAdapterCapabilities {
   /// Creates a capability snapshot with conservative false defaults.
   const CCNavigationAdapterCapabilities({
-    this.supportsForeignEntryObservation = false,
-    this.supportsBackendEntryIdentity = false,
-    this.supportsInitialStackSnapshot = false,
+    this.supportsBackendVisibilityObservation = false,
     this.supportsAtomicPopAndPush = false,
     this.supportsPushAndRemoveUntil = false,
     this.supportsNestedNavigators = false,
     this.supportsStatefulShell = false,
     this.supportsModalRoutes = false,
-    this.supportsOpaqueUiObservation = false,
     this.supportsPredictiveBack = false,
     this.supportsManagedPopObservation = false,
     this.supportsExactEntryRemoval = false,
     this.supportsExactEntryReplacement = false,
   });
 
-  /// Whether application-owned foreign Navigator Routes can be observed.
+  /// Whether the Adapter confirms the current Entry for every managed Outlet.
   ///
-  /// This does not include arbitrary overlays or independent Navigators unless
-  /// the adapter explicitly provides a corresponding bridge.
-  final bool supportsForeignEntryObservation;
-
-  /// Whether backend entries receive stable identities for lifecycle events.
-  ///
-  /// Without this capability, Runtime must not infer ownership from stack
-  /// position after an uncorrelated backend event.
-  final bool supportsBackendEntryIdentity;
-
-  /// Whether the adapter can report its complete initial backend stack.
-  ///
-  /// A false value means pre-existing backend entries remain isolated until
-  /// later events identify them.
-  final bool supportsInitialStackSnapshot;
+  /// Runtime delays `visible` and `arrival` lifecycle events only when this is
+  /// true. Adapters should declare it only when all registered managed routes
+  /// are covered by a reliable top-route callback; partial observer coverage
+  /// must remain false so unobserved pages do not stay indefinitely pending.
+  final bool supportsBackendVisibilityObservation;
 
   /// Whether Pop and Push can preserve one composite operation contract.
   ///
@@ -56,12 +43,6 @@ final class CCNavigationAdapterCapabilities {
 
   /// Whether route presentation contracts for Dialog and BottomSheet are kept.
   final bool supportsModalRoutes;
-
-  /// Whether non-Route UI can be explicitly reported as opaque diagnostics.
-  ///
-  /// This does not turn an OverlayEntry, MenuAnchor, or LocalHistoryEntry into
-  /// a CCRouter route or give it a typed result channel.
-  final bool supportsOpaqueUiObservation;
 
   /// Whether the adapter participates in predictive-back coordination.
   final bool supportsPredictiveBack;
@@ -96,4 +77,15 @@ final class CCNavigationAdapterCapabilities {
 abstract interface class CCNavigationAdapterCapabilitySource {
   /// Backend capabilities declared by the adapter implementation.
   CCNavigationAdapterCapabilities get capabilities;
+}
+
+/// Optional Adapter SPI exposing capabilities for one concrete Host.
+///
+/// Multi-window adapters use this when child backends differ. Runtime prefers
+/// this query for request-scoped behavior such as confirmed visibility, while
+/// [CCNavigationAdapterCapabilitySource.capabilities] remains the conservative
+/// aggregate used during static route-table validation.
+abstract interface class CCNavigationHostCapabilitySource {
+  /// Returns capabilities for [hostId], or null when that Host is unavailable.
+  CCNavigationAdapterCapabilities? capabilitiesForHost(String hostId);
 }

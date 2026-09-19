@@ -145,3 +145,96 @@ final class CCAdaptivePresentationPolicy {
         CCWindowSizeClass.expanded => expanded,
       };
 }
+
+/// Maps adaptive layout kinds to the Navigator Outlets visible in one Host.
+///
+/// Use this at the application composition root for list/detail, foldable, or
+/// desktop layouts. Route contracts still own destination placement; this
+/// policy only determines which retained Outlet tops participate in display.
+final class CCAdaptiveOutletPolicy {
+  /// Creates an immutable Outlet policy.
+  CCAdaptiveOutletPolicy({
+    required this.primaryOutlet,
+    this.secondaryOutlet,
+    Iterable<String> multiPaneOutlets = const [],
+  }) : multiPaneOutlets = List.unmodifiable(multiPaneOutlets) {
+    if (primaryOutlet.isEmpty) {
+      throw ArgumentError.value(
+        primaryOutlet,
+        'primaryOutlet',
+        'Primary Outlet cannot be empty.',
+      );
+    }
+    if (secondaryOutlet?.isEmpty ?? false) {
+      throw ArgumentError.value(
+        secondaryOutlet,
+        'secondaryOutlet',
+        'Secondary Outlet cannot be empty.',
+      );
+    }
+    final identities = <String>{primaryOutlet};
+    if (secondaryOutlet != null && !identities.add(secondaryOutlet!)) {
+      throw ArgumentError.value(
+        secondaryOutlet,
+        'secondaryOutlet',
+        'Adaptive Outlets must be unique.',
+      );
+    }
+    for (final outlet in this.multiPaneOutlets) {
+      if (outlet.isEmpty || !identities.add(outlet)) {
+        throw ArgumentError.value(
+          outlet,
+          'multiPaneOutlets',
+          'Adaptive Outlets must be non-empty and unique.',
+        );
+      }
+    }
+  }
+
+  /// Outlet retained in every layout size.
+  final String primaryOutlet;
+
+  /// Optional detail or supporting Outlet added for split layouts.
+  final String? secondaryOutlet;
+
+  /// Additional Outlets displayed only for a multi-pane layout.
+  final List<String> multiPaneOutlets;
+
+  /// Resolves the active Outlets for [layout] without mutating navigation.
+  List<String> activeOutletsFor(CCAdaptiveLayoutKind layout) =>
+      List.unmodifiable(switch (layout) {
+        CCAdaptiveLayoutKind.singlePane => [primaryOutlet],
+        CCAdaptiveLayoutKind.splitPane => [
+          primaryOutlet,
+          if (secondaryOutlet != null) secondaryOutlet!,
+        ],
+        CCAdaptiveLayoutKind.multiPane => [
+          primaryOutlet,
+          if (secondaryOutlet != null) secondaryOutlet!,
+          ...multiPaneOutlets,
+        ],
+      });
+}
+
+/// Immutable adaptive navigation state for one Window Host.
+final class CCAdaptiveHostLayout {
+  /// Creates one resolved Host layout snapshot.
+  CCAdaptiveHostLayout({
+    required this.metrics,
+    required this.layout,
+    required Iterable<String> activeOutlets,
+  }) : activeOutlets = List.unmodifiable(activeOutlets);
+
+  /// Window and display-feature inputs used for this decision.
+  final CCWindowMetrics metrics;
+
+  /// Layout kind selected by the presentation policy.
+  final CCAdaptiveLayoutKind layout;
+
+  /// Navigator Outlets participating in display simultaneously.
+  final List<String> activeOutlets;
+}
+
+/// Receives adaptive Host layout changes for UI composition and diagnostics.
+typedef CCAdaptiveHostLayoutListener =
+    void Function(CCAdaptiveHostLayout event);

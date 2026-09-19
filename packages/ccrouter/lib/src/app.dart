@@ -1,5 +1,7 @@
 import 'package:flutter/widgets.dart';
 
+part 'page_lifecycle.dart';
+
 /// Identifies one Flutter navigation Host lifecycle transition.
 ///
 /// Host lifecycle is intentionally separate from managed route visibility.
@@ -298,6 +300,11 @@ final class _CCRouterAppState extends State<CCRouterApp>
     super.initState();
     _host = widget.host ?? CCNavigationHost();
     _host._mount(this);
+    CCPageLifecycleHostBridge._attachHost(
+      hostId: _host.id,
+      owner: this,
+      applicationState: WidgetsBinding.instance.lifecycleState,
+    );
     WidgetsBinding.instance.addObserver(this);
   }
 
@@ -308,15 +315,25 @@ final class _CCRouterAppState extends State<CCRouterApp>
     final nextHost = widget.host;
     if (nextHost == null && oldWidget.host == null) return;
     if (nextHost != null && identical(_host, nextHost)) return;
+    CCPageLifecycleHostBridge._detachHost(hostId: _host.id, owner: this);
     _host._unmount(this);
     _host = nextHost ?? CCNavigationHost();
     _host._mount(this);
+    CCPageLifecycleHostBridge._attachHost(
+      hostId: _host.id,
+      owner: this,
+      applicationState: WidgetsBinding.instance.lifecycleState,
+    );
   }
 
   @override
   /// Forwards the lifecycle event to the optional observational callback.
   void didChangeAppLifecycleState(AppLifecycleState state) {
     _host._updateLifecycle(state);
+    CCPageLifecycleHostBridge._updateApplicationState(
+      hostId: _host.id,
+      state: state,
+    );
     widget.onLifecycleChanged?.call(state);
   }
 
@@ -324,14 +341,20 @@ final class _CCRouterAppState extends State<CCRouterApp>
   /// Stops lifecycle observation without disposing the application Runtime.
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    CCPageLifecycleHostBridge._detachHost(hostId: _host.id, owner: this);
     _host._unmount(this);
     super.dispose();
   }
 
   @override
   /// Provides the Host scope to the existing application widget tree.
-  Widget build(BuildContext context) =>
-      _CCRouterHostScope(host: _host, child: widget.child);
+  Widget build(BuildContext context) => _CCRouterHostScope(
+    host: _host,
+    child: CCPageLifecycleHostBridge._scope(
+      hostId: _host.id,
+      child: widget.child,
+    ),
+  );
 }
 
 /// Inherited scope that makes one Window's navigation Host discoverable.

@@ -440,6 +440,30 @@ abstract final class CCRouteWorkspaceValidator {
             '- Implementation: `${implementation['package'] ?? 'unknown'}:${implementation['source'] ?? 'unknown'}`',
           );
         }
+        if (route['declaration'] case final Map declaration) {
+          out.writeln(
+            '- Declaration: `${declaration['package'] ?? 'unknown'}:${declaration['library'] ?? 'unknown'}` (${declaration['kind'] ?? 'unknown'})',
+          );
+        }
+        if (route['placement'] case final Map placement) {
+          out.writeln(
+            '- Placement: host `${placement['hostId'] ?? 'default'}`, outlet `${placement['navigatorOutlet'] ?? 'root'}`, shell `${placement['shellId'] ?? 'none'}`, parent `${placement['parentRouteId'] ?? 'none'}`',
+          );
+        }
+        if (route['presentation'] case final Map presentation) {
+          out.writeln('- Presentation: `${presentation['type'] ?? 'unknown'}`');
+        }
+        final navigationSources = _strings(route['navigationSources']);
+        if (navigationSources.isNotEmpty) {
+          out.writeln(
+            '- Navigation sources: `${navigationSources.join(', ')}`',
+          );
+        }
+        if (route['restoration'] case final Map restoration) {
+          out.writeln(
+            '- Restoration: `${restoration['status'] ?? 'unsupported'}`',
+          );
+        }
         out.writeln('- Patterns:');
         for (final pattern in _objects(route['patterns'])) {
           out.writeln(
@@ -454,21 +478,21 @@ abstract final class CCRouteWorkspaceValidator {
         if (parameters.isNotEmpty) {
           out.writeln('- Parameters:\n');
           out.writeln(
-            '| Name | Wire | Source | Type | Required | Description |',
+            '| Name | Wire | Source | Type | Cardinality | Codec | Required | Description |',
           );
-          out.writeln('| --- | --- | --- | --- | --- | --- |');
+          out.writeln('| --- | --- | --- | --- | --- | --- | --- | --- |');
           for (final parameter in parameters) {
             final description = '${parameter['description'] ?? ''}'
                 .replaceAll('|', r'\|')
                 .replaceAll('\n', '<br>');
             out.writeln(
-              '| `${parameter['name']}` | `${parameter['wireName']}` | `${parameter['source']}` | `${parameter['type']}` | ${parameter['required']} | $description |',
+              '| `${parameter['name']}` | `${parameter['wireName']}` | `${parameter['source']}` | `${parameter['type']}` | `${parameter['cardinality'] ?? '-'}` | `${parameter['codec'] ?? '-'}` | ${parameter['required']} | $description |',
             );
           }
         }
         out.writeln();
       }
     }
-    return out.toString();
+    return '${out.toString().trimRight()}\n';
   }
 }

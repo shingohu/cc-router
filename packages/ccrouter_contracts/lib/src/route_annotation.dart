@@ -69,6 +69,7 @@ final class CCRoute<R> {
     this.presentation = const CCPagePresentation(),
     this.placement = const CCRoutePlacement.root(),
     this.interceptors = const [],
+    this.popGuards = const [],
     this.description,
   });
 
@@ -106,6 +107,13 @@ final class CCRoute<R> {
   /// Registered route-level interceptor identities in execution order.
   final List<String> interceptors;
 
+  /// Registered route-local Pop guard identities in execution order.
+  ///
+  /// Use synchronous guards for managed-route exit rules. The generator emits
+  /// these IDs into the route definition and Runtime validates component
+  /// ownership before navigation starts.
+  final List<String> popGuards;
+
   /// Route purpose included in generated JSON and Markdown documentation.
   final String? description;
 }
@@ -140,6 +148,7 @@ final class CCRouteContract<R> {
     this.presentation = const CCPagePresentation(),
     this.placement = const CCRoutePlacement.root(),
     this.interceptors = const [],
+    this.popGuards = const [],
     this.description,
   });
 
@@ -167,6 +176,9 @@ final class CCRouteContract<R> {
   /// Route interceptor identities applied after global navigation policies.
   final List<String> interceptors;
 
+  /// Route-local Pop guard identities applied to the managed implementation.
+  final List<String> popGuards;
+
   /// Stable purpose included in generated catalogs and review documentation.
   final String? description;
 }
@@ -189,17 +201,27 @@ final class CCRouteImplementation {
   final Type contract;
 }
 
-/// Marks a constructor parameter as a single URI query value.
+/// Marks a constructor parameter as one typed URI Query value.
 ///
-/// Use for optional filters or a required query value. Scalars support String,
-/// int, double, bool and enums. Missing optional values use the constructor
-/// default or null; repeated scalar values and invalid values are rejected.
+/// Use scalars for ordinary filters and `List<T>` or `Set<T>` when one key may
+/// repeat, such as `?tag=a&tag=b`. Generated conversion supports String, int,
+/// double, bool, and enum values. Missing optional values use the constructor
+/// default or null. Empty collections are rejected because a URI cannot
+/// distinguish them from an absent key. Complex shareable values require an
+/// explicit [codec]; process-local or secret objects belong in [CCExtraParam].
 final class CCQueryParam {
   /// Uses the constructor parameter's name unless [name] supplies a wire name.
-  const CCQueryParam({this.name});
+  const CCQueryParam({this.name, this.codec});
 
   /// URI query key, independent of the generated Dart parameter name.
   final String? name;
+
+  /// Optional const-constructible [CCRouteQueryCodec] implementation type.
+  ///
+  /// Supply this only for a complex value with a stable URI representation,
+  /// for example `codec: OrderFilterQueryCodec`. Scalar and collection Query
+  /// parameters use generated conversion and must leave this null.
+  final Type? codec;
 }
 
 /// Marks the one in-memory constructor parameter carried outside the URI.

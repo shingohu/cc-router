@@ -360,7 +360,6 @@ String _emitComponentRouteIndex(
     final alias = imports[route.source]!;
     out
       ..writeln('  CCFlutterRouteDestination(')
-      ..writeln('    componentId: ${jsonEncode(componentId)},')
       ..writeln('    route:')
       ..writeln('        $alias.${route.descriptor}(),')
       ..writeln('    builder: (arguments) =>')
