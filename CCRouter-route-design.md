@@ -15,7 +15,8 @@ Path/Query/Extra Codec、Definition、注册入口和中立页面工厂。使用
 `.ccroute.g.dart`，默认 component 契约为 library-private；exported 契约需显式导出。
 生成器同时输出页面级 JSON/Markdown，并由 workspace 工具聚合检查组件与 Route ID、
 路由所有者、`visibleTo` 消费目标和组件依赖，输出应用级路由目录。当前仍不生成
-GoRoute，也尚未拆出独立纯契约文件或实现静态 Pattern 重叠证明。实现范围与命令见
+GoRoute。独立纯契约文件的拆分方案见[契约文件设计](CCRouter-route-contract-design.md)，
+实现范围与命令见
 [生成器说明](packages/ccrouter_generator/README.md)。
 
 混合路由的隔离、Foreign Route 兼容和第三方 Popup 改造方案见：[CCRouter 混合路由改造设计](CCRouter-hybrid-routing-design.md)。
