@@ -17,7 +17,7 @@ Path/Query/Extra Codec、Definition、注册入口和中立页面工厂。使用
 路由所有者、`visibleTo` 消费目标和组件依赖，输出应用级路由目录。当前仍不生成
 GoRoute。独立纯契约文件的拆分方案见[契约文件设计](CCRouter-route-contract-design.md)，
 实现范围与命令见
-[生成器说明](packages/ccrouter_generator/README.md)。
+[生成器说明](../packages/ccrouter_generator/README.md)。
 
 混合路由的隔离、Foreign Route 兼容和第三方 Popup 改造方案见：[CCRouter 混合路由改造设计](CCRouter-hybrid-routing-design.md)。
 
@@ -1142,7 +1142,7 @@ abstract interface class CCRouteTelemetryObserver {
 
 ## 16. 路由文档生成
 
-生成器输出两种格式：
+生成器按应用输出两种格式，默认放在应用的 `docs/generated/` 目录：
 
 ```text
 cc_routes.json
