@@ -3,7 +3,7 @@
 ## 背景
 
 当前生成器把 `Arguments`、`Intent`、`Definition`、Codec 和页面 `build` 工厂
-放在同一个 `.ccroute.g.dart` library part 中。这样可以访问私有页面构造器，
+放在同一个 `.route.g.dart` library part 中。这样可以访问私有页面构造器，
 但组件消费者为了获得类型安全的 Intent，仍然需要导入页面 library。公共 barrel
 虽然可以用 `show` 裁剪页面符号，但它不是编译层面的纯契约边界。
 
@@ -36,12 +36,12 @@ Flutter Widget 或页面所在 library。它不改变 Runtime 的注册所有权
 lib/
 ├── order_route_contracts.dart
 ├── src/order_detail_page.dart
-├── src/order_detail_page.ccroute.g.dart
-└── src/order_detail_page.ccroute.contract.g.dart
+├── src/ccrouter_generated/order_detail_page.route.g.dart
+└── src/ccrouter_generated/order_detail_page.route.contract.g.dart
 ```
 
 `order_route_contracts.dart` 是组件作者维护的公共 barrel，只导出
-`*.ccroute.contract.g.dart` 中的 exported 契约，并使用 `show` 明确列出
+`*.route.contract.g.dart` 中的 exported 契约，并使用 `show` 明确列出
 Route 和 Arguments 类型。页面专用 `.g.dart` 只保留页面构造和 owner 注册 glue，
 不从公共 barrel 导出。
 
@@ -63,7 +63,7 @@ Route 和 Arguments 类型。页面专用 `.g.dart` 只保留页面构造和 own
 
 ## 生成与兼容策略
 
-1. 首个实现阶段保留当前 `.ccroute.g.dart` 输出，新增纯契约文件和显式 opt-in
+1. 首个实现阶段保留当前 `.route.g.dart` 输出，新增纯契约文件和显式 opt-in
    barrel，避免一次生成升级破坏已有组件。
 2. 组件启用纯契约后，生成器检查 page library 是否导入契约文件，并检查 owner
    glue 与契约使用同一个 Route ID、Codec 和 Definition。
@@ -82,5 +82,4 @@ demo 和组件的增量迁移路径。
 - Intent 的 `routeId`、结果泛型、Codec 编解码和主 Pattern 与页面 glue 完全一致。
 - 内部路由不生成纯契约，跨组件 `visibleTo` 和依赖检查语义不变。
 - barrel 缺少 `show`、导出 glue 或契约与页面 Route ID 不一致时，构建失败。
-- 旧 `.ccroute.g.dart` 迁移期间必须保持现有生成测试和 Runtime 回归通过。
-
+- 生成文件布局迁移期间必须保持现有生成测试和 Runtime 回归通过。

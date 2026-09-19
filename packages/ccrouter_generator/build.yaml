@@ -2,12 +2,25 @@ builders:
   routes:
     import: "package:ccrouter_generator/builder.dart"
     builder_factories: ["ccRouteBuilder"]
-    build_extensions: {".dart": [".ccroute.g.dart"]}
+    build_extensions:
+      "^lib/src/{{}}.dart": ["lib/src/ccrouter_generated/{{}}.route.g.dart"]
+    auto_apply: dependents
+    build_to: source
+  component_metadata:
+    import: "package:ccrouter_generator/builder.dart"
+    builder_factories: ["ccComponentMetadataBuilder"]
+    build_extensions:
+      "^lib/{{}}.dart":
+        - "ccrouter_generated/metadata/{{}}.component.json"
+        - "ccrouter_generated/metadata/{{}}.component.md"
     auto_apply: dependents
     build_to: source
   route_metadata:
     import: "package:ccrouter_generator/builder.dart"
     builder_factories: ["ccRouteMetadataBuilder"]
-    build_extensions: {".dart": [".ccroute.json", ".ccroute.md"]}
+    build_extensions:
+      "^lib/{{}}.dart":
+        - "ccrouter_generated/metadata/{{}}.route.json"
+        - "ccrouter_generated/metadata/{{}}.route.md"
     auto_apply: dependents
     build_to: source

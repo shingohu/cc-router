@@ -3,7 +3,7 @@
 
 // ignore_for_file: type=lint, unused_element
 
-part of 'order_detail_page.dart';
+part of '../order_detail_page.dart';
 
 // **************************************************************************
 // _RouteGenerator

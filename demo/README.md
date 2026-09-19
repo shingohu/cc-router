@@ -36,7 +36,9 @@ devecocli build
 ## 组件模块与生成
 
 新增组件统一放到 `modules/`，作为独立 Flutter 库包；平台目录由 demo 宿主持有。
-当前 `modules/order` 展示页面注解、生成契约、组件注册和类型安全页面返回。
+当前 `modules/order` 展示页面注解、生成契约、组件注册和类型安全页面返回；组件身份与
+Registrar 分别位于 `lib/src/demo_order_component.dart` 和
+`lib/src/demo_order_component_registrar.dart`。
 宿主负责 GoRouter 绑定，业务跳转仍统一通过 `CCRouter.navigator`。
 
 demo 和组件包已加入根 Dart workspace，使用本仓库内框架源码与统一锁文件，

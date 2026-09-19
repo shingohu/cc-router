@@ -12,8 +12,8 @@
 
 注解生成器首版已实现页面注解、单库校验、类型安全 Arguments/Intent、标量
 Path/Query/Extra Codec、Definition、注册入口和中立页面工厂。使用 `part` 生成
-`.ccroute.g.dart`，默认 component 契约为 library-private；exported 契约需显式导出。
-生成器同时输出页面级 JSON/Markdown，并由 workspace 工具聚合检查组件与 Route ID、
+`.route.g.dart`，默认 component 契约为 library-private；exported 契约需显式导出。
+生成器同时输出组件级和路由级 JSON/Markdown，并由 workspace 工具聚合检查组件与 Route ID、
 路由所有者、`visibleTo` 消费目标和组件依赖，输出应用级路由目录。当前仍不生成
 GoRoute。独立纯契约文件的拆分方案见[契约文件设计](CCRouter-route-contract-design.md)，
 实现范围与命令见

@@ -1,22 +1,24 @@
 part of 'route_generator.dart';
 
-/// Emits structured component and route metadata for documentation and CI.
+/// Emits structured route metadata for documentation and CI.
 final class _RouteMetadataBuilder implements Builder {
-  /// Matches registrar annotations from the canonical contracts package.
-  static const _component = TypeChecker.typeNamedLiterally(
-    'CCComponent',
-    inPackage: 'ccrouter_contracts',
-  );
+  /// Creates the route metadata builder with package-level output paths.
+  _RouteMetadataBuilder()
+    : buildExtensions = const {
+        r'^lib/{{}}.dart': [
+          'ccrouter_generated/metadata/{{}}.route.json',
+          'ccrouter_generated/metadata/{{}}.route.md',
+        ],
+      };
 
-  /// Colocates generated metadata with the annotated source.
+  /// Writes route metadata while preserving the source-relative path.
   @override
-  Map<String, List<String>> get buildExtensions => const {
-    '.dart': ['.ccroute.json', '.ccroute.md'],
-  };
+  final Map<String, List<String>> buildExtensions;
 
-  /// Emits no files for libraries unrelated to component routing.
+  /// Emits no files for libraries without route declarations.
   @override
   Future<void> build(BuildStep buildStep) async {
+    if (buildStep.inputId.path.contains('/ccrouter_generated/')) return;
     if (!await buildStep.resolver.isLibrary(buildStep.inputId)) return;
     final library = LibraryReader(
       await buildStep.resolver.libraryFor(buildStep.inputId),
@@ -25,45 +27,26 @@ final class _RouteMetadataBuilder implements Builder {
     for (final annotated in library.annotatedWith(_RouteGenerator._route)) {
       routes.add(_RouteModel.read(annotated.element, annotated.annotation));
     }
-    final components = <_ComponentModel>[];
-    for (final annotated in library.annotatedWith(_component)) {
-      final element = annotated.element;
-      if (element is! ClassElement ||
-          !element.allSupertypes.any(
-            (type) =>
-                type.element.displayName == 'CCComponentRegistrar' &&
-                type.element.library.uri.toString().startsWith(
-                  'package:ccrouter_core/',
-                ),
-          )) {
-        _fail(
-          'CCComponent must annotate a CCComponentRegistrar implementation.',
-          element,
-        );
-      }
-      components.add(
-        _ComponentModel.read(annotated.annotation.read('descriptor'), element),
-      );
-    }
-    if (routes.isEmpty && components.isEmpty) return;
+    if (routes.isEmpty) return;
     final payload = _metadataPayload(
       package: buildStep.inputId.package,
       source: buildStep.inputId.path,
-      components: components,
+      components: routes.map((route) => route.component).toList(),
       routes: routes,
+      componentDeclarations: const [],
     );
-    final base = buildStep.inputId.path.substring(
-      0,
-      buildStep.inputId.path.length - '.dart'.length,
+    final outputs = buildStep.allowedOutputs.toList();
+    final jsonOutput = outputs.singleWhere(
+      (output) => output.path.endsWith('.route.json'),
+    );
+    final markdownOutput = outputs.singleWhere(
+      (output) => output.path.endsWith('.route.md'),
     );
     await buildStep.writeAsString(
-      AssetId(buildStep.inputId.package, '$base.ccroute.json'),
+      jsonOutput,
       '${const JsonEncoder.withIndent('  ').convert(payload)}\n',
     );
-    await buildStep.writeAsString(
-      AssetId(buildStep.inputId.package, '$base.ccroute.md'),
-      _metadataMarkdown(payload),
-    );
+    await buildStep.writeAsString(markdownOutput, _metadataMarkdown(payload));
   }
 }
 
@@ -73,11 +56,14 @@ Map<String, Object?> _metadataPayload({
   required String source,
   required List<_ComponentModel> components,
   required List<_RouteModel> routes,
+  List<String>? componentDeclarations,
 }) => {
   'schemaVersion': 1,
   'package': package,
   'source': source,
-  'componentDeclarations': components.map((component) => component.id).toList(),
+  'componentDeclarations':
+      componentDeclarations ??
+      components.map((component) => component.id).toList(),
   'components': {
     for (final component in [
       ...components,

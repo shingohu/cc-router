@@ -9,6 +9,7 @@ import 'package:source_gen/source_gen.dart';
 
 part 'route_model.dart';
 part 'route_emitter.dart';
+part 'component_metadata_builder.dart';
 part 'route_metadata_builder.dart';
 
 /// Creates the internal generator for the build-runner factory only.
@@ -19,6 +20,9 @@ Generator ccRouteGenerator() => _RouteGenerator();
 
 /// Creates the metadata Builder while keeping its implementation private.
 Builder ccRouteMetadataBuilderInternal() => _RouteMetadataBuilder();
+
+/// Creates the component metadata Builder while keeping its implementation private.
+Builder ccComponentMetadataBuilderInternal() => _ComponentMetadataBuilder();
 
 /// Finds route declarations and validates a complete library before emitting.
 final class _RouteGenerator extends Generator {
@@ -36,7 +40,7 @@ final class _RouteGenerator extends Generator {
     final names = library.allElements
         .where(
           (element) => !element.firstFragment.libraryFragment!.source.uri.path
-              .endsWith('.ccroute.g.dart'),
+              .endsWith('.route.g.dart'),
         )
         .map((element) => element.displayName)
         .toSet();

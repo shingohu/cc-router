@@ -1,12 +1,12 @@
 import 'package:ccrouter/ccrouter.dart';
 import 'package:flutter/material.dart';
 
-import 'order_component.dart';
+import 'demo_order_component.dart';
 
-part 'order_detail_page.ccroute.g.dart';
+part 'ccrouter_generated/order_detail_page.route.g.dart';
 
 @CCRoute<String>(
-  component: orderComponent,
+  component: demoOrderComponent,
   id: 'order.detail',
   patterns: [
     CCPathPattern('/orders/:orderId', primary: true),

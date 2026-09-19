@@ -19,22 +19,28 @@ void main() {
     await reader.testing.loadIsolateSources();
   });
 
-  Future<String> generate(String declarations, {bool fails = false}) async {
+  Future<String> generate(
+    String declarations, {
+    bool fails = false,
+    String sourcePath = 'lib/src/probe.dart',
+    String partUri = 'ccrouter_generated/probe.route.g.dart',
+    String outputPath = 'lib/src/ccrouter_generated/probe.route.g.dart',
+  }) async {
     final logs = <String>[];
     await testBuilder(
       ccRouteBuilder(BuilderOptions.empty),
       {
-        'ccrouter_test|lib/probe.dart':
-            "import 'package:ccrouter/ccrouter.dart';\npart 'probe.ccroute.g.dart';\nconst probeComponent = CCComponentDescriptor(id: 'probe', version: '1.0.0');\n$declarations",
+        'ccrouter_test|$sourcePath':
+            "import 'package:ccrouter/ccrouter.dart';\npart '$partUri';\nconst probeComponent = CCComponentDescriptor(id: 'probe', version: '1.0.0');\n$declarations",
       },
       rootPackage: 'ccrouter_test',
-      generateFor: {'ccrouter_test|lib/probe.dart'},
-      isInput: (id) => id == 'ccrouter_test|lib/probe.dart',
+      generateFor: {'ccrouter_test|$sourcePath'},
+      isInput: (id) => id == 'ccrouter_test|$sourcePath',
       readerWriter: reader,
       flattenOutput: true,
       onLog: (log) => logs.add(log.message),
     );
-    final output = AssetId('ccrouter_test', 'lib/probe.ccroute.g.dart');
+    final output = AssetId('ccrouter_test', outputPath);
     if (fails) {
       expect(await reader.canRead(output), isFalse);
       return logs.join('\n');
@@ -46,7 +52,7 @@ void main() {
     await testBuilder(
       ccRouteMetadataBuilder(BuilderOptions.empty),
       {
-        'ccrouter_test|lib/probe.dart': '''
+        'ccrouter_test|lib/src/orders/probe.dart': '''
 import 'package:ccrouter/ccrouter.dart';
 const probeComponent = CCComponentDescriptor(id: 'probe', version: '1.2.3');
 @CCComponent(probeComponent)
@@ -64,19 +70,23 @@ final class Probe {
 ''',
       },
       rootPackage: 'ccrouter_test',
-      generateFor: {'ccrouter_test|lib/probe.dart'},
-      isInput: (id) => id == 'ccrouter_test|lib/probe.dart',
+      generateFor: {'ccrouter_test|lib/src/orders/probe.dart'},
+      isInput: (id) => id == 'ccrouter_test|lib/src/orders/probe.dart',
       readerWriter: reader,
       flattenOutput: true,
     );
     final json =
         jsonDecode(
               await reader.readAsString(
-                AssetId('ccrouter_test', 'lib/probe.ccroute.json'),
+                AssetId(
+                  'ccrouter_test',
+                  'ccrouter_generated/metadata/src/orders/probe.route.json',
+                ),
               ),
             )
             as Map;
     final route = (json['routes'] as List).single as Map;
+    expect((json['componentDeclarations'] as List), isEmpty);
     expect((json['components'] as List).single['version'], '1.2.3');
     expect(route['componentId'], 'probe');
     expect(route['description'], 'Probe details.');
@@ -93,10 +103,68 @@ final class Probe {
       'Documented identity.',
     );
     final markdown = await reader.readAsString(
-      AssetId('ccrouter_test', 'lib/probe.ccroute.md'),
+      AssetId(
+        'ccrouter_test',
+        'ccrouter_generated/metadata/src/orders/probe.route.md',
+      ),
     );
     expect(markdown, contains('`probe.detail`'));
     expect(markdown, contains('Documented identity.'));
+  });
+
+  test('component metadata builder emits identity and dependencies', () async {
+    await testBuilder(
+      ccComponentMetadataBuilder(BuilderOptions.empty),
+      {
+        'ccrouter_test|lib/src/orders/probe_component.dart': '''
+import 'package:ccrouter/ccrouter.dart';
+const probeComponent = CCComponentDescriptor(
+  id: 'probe',
+  version: '1.2.3',
+  dependencies: ['accounts'],
+  optionalDependencies: ['analytics'],
+);
+@CCComponent(probeComponent)
+final class ProbeRegistrar implements CCComponentRegistrar {
+  const ProbeRegistrar();
+  @override
+  void register(CCRegistry registry) {}
+}
+''',
+      },
+      rootPackage: 'ccrouter_test',
+      generateFor: {'ccrouter_test|lib/src/orders/probe_component.dart'},
+      isInput: (id) =>
+          id == 'ccrouter_test|lib/src/orders/probe_component.dart',
+      readerWriter: reader,
+      flattenOutput: true,
+    );
+    final json =
+        jsonDecode(
+              await reader.readAsString(
+                AssetId(
+                  'ccrouter_test',
+          'ccrouter_generated/metadata/src/orders/probe_component.component.json',
+                ),
+              ),
+            )
+            as Map;
+    expect(json['componentDeclarations'], ['probe']);
+    expect((json['routes'] as List), isEmpty);
+    expect((json['components'] as List).single, {
+      'id': 'probe',
+      'version': '1.2.3',
+      'dependencies': ['accounts'],
+      'optionalDependencies': ['analytics'],
+    });
+    final markdown = await reader.readAsString(
+      AssetId(
+        'ccrouter_test',
+        'ccrouter_generated/metadata/src/orders/probe_component.component.md',
+      ),
+    );
+    expect(markdown, contains('# CCRouter Components'));
+    expect(markdown, contains('`accounts`'));
   });
 
   test(
@@ -122,6 +190,17 @@ final class Probe { const Probe(); }
 ''');
     expect(code, contains('primary: true'));
     expect(code, contains('const CCRegexPattern("/legacy")'));
+  });
+
+  test('preserves nested source directories in generated route paths', () async {
+    final code = await generate(
+      "@CCRoute<void>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe')) final class Probe { const Probe(); }",
+      sourcePath: 'lib/src/orders/probe.dart',
+      partUri: '../ccrouter_generated/orders/probe.route.g.dart',
+      outputPath: 'lib/src/ccrouter_generated/orders/probe.route.g.dart',
+    );
+    expect(code, contains("part of '../../orders/probe.dart'"));
+    expect(code, contains('abstract final class _ProbeRoute'));
   });
 
   test(

@@ -23,7 +23,11 @@ Future<void> main(List<String> arguments) async {
   ).absolute;
   final documents = <Map<String, Object?>>[];
   await for (final entity in root.list(recursive: true, followLinks: false)) {
-    if (entity is! File || !entity.path.endsWith('.ccroute.json')) continue;
+    if (entity is! File ||
+        (!entity.path.endsWith('.route.json') &&
+            !entity.path.endsWith('.component.json'))) {
+      continue;
+    }
     if (entity.path.contains(
           '${Platform.pathSeparator}.dart_tool${Platform.pathSeparator}',
         ) ||
@@ -71,7 +75,7 @@ Future<void> main(List<String> arguments) async {
 const _usage =
     '''Usage: ccrouter_generator [scan-root] [--output-dir <directory>]
 
-Scans .ccroute.json files below scan-root and writes the aggregate route catalog
+Scans .component.json and .route.json files below scan-root and writes the aggregate route catalog
 to scan-root/docs/generated unless --output-dir is provided.''';
 
 final class _Arguments {

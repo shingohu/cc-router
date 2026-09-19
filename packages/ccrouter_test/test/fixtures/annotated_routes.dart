@@ -1,7 +1,7 @@
 import 'package:ccrouter/ccrouter.dart';
 import 'route_types.dart' as types;
 
-part 'annotated_routes.ccroute.g.dart';
+part 'annotated_routes.route.g.dart';
 
 const fixtureComponent = CCComponentDescriptor(id: 'fixture', version: '1.0.0');
 

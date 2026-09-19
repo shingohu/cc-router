@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "package": "demo_order",
-  "source": "lib/demo_order.dart",
+  "package": "ccrouter_test",
+  "source": "test/fixtures/annotated_routes.dart",
   "componentDeclarations": [
-    "order"
+    "fixture"
   ],
   "components": [
     {
-      "id": "order",
-      "version": "0.1.0",
+      "id": "fixture",
+      "version": "1.0.0",
       "dependencies": [],
       "optionalDependencies": []
     }

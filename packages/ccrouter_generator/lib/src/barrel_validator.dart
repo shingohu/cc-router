@@ -14,9 +14,10 @@ import 'package:analyzer/dart/ast/ast.dart';
 final class CCRouteBarrelExportValidator {
   /// Finds missing or incomplete public barrel exports below [workspaceRoot].
   ///
-  /// [documents] must be the decoded `.ccroute.json` files emitted by the
-  /// metadata builder. The method only reports exported routes whose source
-  /// file is inside a package `lib` directory; test fixtures are ignored.
+  /// [documents] must be the decoded component and route metadata files
+  /// emitted by the metadata builders. The method only reports exported routes
+  /// whose source file is inside a package `lib` directory; test fixtures are
+  /// ignored.
   static List<String> validate(
     Directory workspaceRoot,
     Iterable<Map<String, Object?>> documents,

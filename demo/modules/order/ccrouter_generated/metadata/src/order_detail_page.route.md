@@ -6,7 +6,7 @@ Generated from `lib/src/order_detail_page.dart`. Do not edit by hand.
 
 订单详情，确认后返回订单编号。
 
-- Owner: `order`
+- Owner: `demo_order_component`
 - Visibility: `exported`
 - Deep link: `disabled`
 - Result: `String`

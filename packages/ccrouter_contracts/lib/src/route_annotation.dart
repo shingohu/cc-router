@@ -45,7 +45,7 @@ final class CCComponent {
 /// Declares a destination whose typed contract is generated at build time.
 ///
 /// Component authors annotate a concrete page with an unnamed constructor,
-/// then include its `.ccroute.g.dart` file using `part`. The generator creates
+/// then include its `.route.g.dart` file using `part`. The generator creates
 /// arguments, an Intent factory, a codec, a definition and a page factory. It
 /// never navigates or selects a backend. [R] is the page's return type; use
 /// `void` for destinations without a business result.

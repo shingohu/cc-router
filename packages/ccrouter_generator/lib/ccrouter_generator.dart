@@ -1,4 +1,4 @@
-/// Workspace-level route metadata validation and documentation tooling.
+/// Workspace-level component and route metadata validation and documentation tooling.
 ///
 /// This library is intended for build scripts and CI. Flutter business code
 /// should import only `package:ccrouter/ccrouter.dart`.

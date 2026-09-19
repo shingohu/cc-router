@@ -136,7 +136,7 @@ void main() {
     final result = CCRouteWorkspaceValidator.validate([
       {'schemaVersion': 2, 'source': 'future.json'},
     ]);
-    expect(result.errors.single, contains('Unsupported route metadata schema'));
+    expect(result.errors.single, contains('Unsupported metadata schema'));
   });
 
   test('rejects equal-specificity overlapping path patterns', () {
@@ -257,7 +257,7 @@ void main() {
       ).writeAsStringSync('name: demo_order\n');
       File(
         '${package.path}/lib/src/detail.dart',
-      ).writeAsStringSync("part 'detail.ccroute.g.dart';\n");
+      ).writeAsStringSync("part 'detail.route.g.dart';\n");
       File('${package.path}/lib/demo_order.dart').writeAsStringSync(
         "export 'src/detail.dart' show DetailRoute, DetailRouteArguments;\n",
       );

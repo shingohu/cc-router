@@ -5,7 +5,7 @@
   "componentDeclarations": [],
   "components": [
     {
-      "id": "order",
+      "id": "demo_order_component",
       "version": "0.1.0",
       "dependencies": [],
       "optionalDependencies": []
@@ -14,7 +14,7 @@
   "routes": [
     {
       "id": "order.detail",
-      "componentId": "order",
+      "componentId": "demo_order_component",
       "visibility": "exported",
       "visibleTo": [],
       "deepLink": "disabled",

@@ -3,8 +3,9 @@
 组件的开发工具，不属于运行时依赖。页面库使用业务门面（非前缀导入）：
 
 ```dart
+// lib/src/detail_page.dart
 import 'package:ccrouter/ccrouter.dart';
-part 'detail_page.ccroute.g.dart';
+part 'ccrouter_generated/detail_page.route.g.dart';
 
 const orderComponent = CCComponentDescriptor(
   id: 'order',
@@ -52,9 +53,25 @@ fvm dart run ccrouter_generator:ccrouter_generator demo
 - `DetailPageRoute.register(registry)`：组件 Registrar 的注册入口。
 - `DetailPageRoute.build(arguments)`：将解码参数注入页面构造器；Host 自己绑定后端。
 
+路由生成文件统一使用 `.route.g.dart` 后缀并写入
+`lib/src/ccrouter_generated/`；后续 Service 生成器预留 `.service.g.dart` 后缀，
+本版本尚不生成 Service 代码。组件元数据使用 `.component.json` 和 `.component.md`，
+路由元数据使用 `.route.json` 和 `.route.md`，统一写入包根目录的
+`ccrouter_generated/metadata/`，并保留输入文件相对 `lib/` 的目录层级。
+
 默认 `component` 可见性在同一 library 中生成 `_DetailPageRoute` 及私有参数类型。
 只有 `exported` 生成公开类型，组件仍需通过 barrel 的 `show` 显式导出。
 私有页面仍可以通过 `part` 使用生成的内部契约。
+
+组件身份和注册实现建议放在 `lib/src/` 的独立文件中：
+
+```text
+src/order_component.dart
+src/order_component_registrar.dart
+```
+
+公共 barrel 只导出宿主初始化需要的 `ComponentManifest` 和公开路由契约，
+不导出 Registrar 实现或 descriptor 细节。
 
 ## 首版约束
 
@@ -88,10 +105,12 @@ fvm flutter test packages/ccrouter_test/test demo/test
 fvm flutter analyze packages demo
 ```
 
-生成样例和测试 Fixture 的 `.ccroute.g.dart` 纳入版本管理，方便直接打开 demo；
-修改声明后必须重新生成并做静态检查。
+生成样例和测试 Fixture 的 `.route.g.dart` 纳入版本管理，方便直接打开 demo；
+路由源码放在 `lib/src/` 时，生成文件会保留源码相对目录并写入
+`lib/src/ccrouter_generated/`。修改声明后必须重新生成并做静态检查。
 
-第二条命令聚合全部 `.ccroute.json`，校验组件/路由 ID、路由所有者、
+第二条命令聚合全部 `ccrouter_generated/metadata/**/*.component.json` 和
+`ccrouter_generated/metadata/**/*.route.json`，校验组件/路由 ID、路由所有者、
 `visibleTo` 目标、消费组件对路由所有者的显式依赖、静态 Pattern 冲突，以及
 `exported` 路由是否由公共 barrel 使用 `show` 同时导出 Route 和 Arguments 契约；
 它会在扫描根目录的 `docs/generated/` 下生成 `cc_routes.json` 和

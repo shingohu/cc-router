@@ -26,13 +26,14 @@ final class CCRouteWorkspaceValidationResult {
       '${const JsonEncoder.withIndent('  ').convert(machineDocument)}\n';
 }
 
-/// Validates generated route metadata across a complete application workspace.
+/// Validates generated component and route metadata across a complete application workspace.
 ///
 /// Use after route generation in CI. Local builders enforce declaration shape;
 /// this validator handles relationships that require seeing every component:
 /// unique IDs, declared owners, `visibleTo` targets, and consumer dependencies.
 abstract final class CCRouteWorkspaceValidator {
-  /// Validates decoded `.ccroute.json` documents and aggregates route docs.
+  /// Validates decoded `.component.json` and `.route.json` documents and
+  /// aggregates route docs.
   static CCRouteWorkspaceValidationResult validate(
     Iterable<Map<String, Object?>> documents,
   ) {
@@ -43,7 +44,7 @@ abstract final class CCRouteWorkspaceValidator {
     for (final document in documents) {
       if (document['schemaVersion'] != 1) {
         errors.add(
-          'Unsupported route metadata schema in ${document['source'] ?? 'unknown source'}.',
+          'Unsupported metadata schema in ${document['source'] ?? 'unknown source'}.',
         );
         continue;
       }

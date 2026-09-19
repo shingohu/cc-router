@@ -2,9 +2,7 @@
   "schemaVersion": 1,
   "package": "ccrouter_test",
   "source": "test/fixtures/annotated_routes.dart",
-  "componentDeclarations": [
-    "fixture"
-  ],
+  "componentDeclarations": [],
   "components": [
     {
       "id": "fixture",
