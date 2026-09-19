@@ -1,9 +1,12 @@
 import 'package:ccrouter/ccrouter.dart';
 import 'package:flutter/material.dart';
 
+import 'order_component.dart';
+
 part 'order_detail_page.ccroute.g.dart';
 
 @CCRoute<String>(
+  component: orderComponent,
   id: 'order.detail',
   patterns: [
     CCPathPattern('/orders/:orderId', primary: true),
@@ -19,7 +22,10 @@ final class OrderDetailPage extends StatelessWidget {
     super.key,
   });
 
+  /// 需要展示的稳定订单 ID。
   final int orderId;
+
+  /// 首次展示的详情标签。
   final String tab;
 
   @override

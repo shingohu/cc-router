@@ -607,9 +607,15 @@ abstract interface class CCDisposable {
 ### 10.2 路由声明
 
 ```dart
+const addressComponent = CCComponentDescriptor(
+  id: 'address',
+  version: '1.0.0',
+);
+
 @CCRoute<AddressResult>(
+  component: addressComponent,
   id: 'address.select',
-  patterns: [CCPathPattern('/address/select', primary: true)],
+  patterns: [CCPathPattern('/address/select/:cityId', primary: true)],
   visibility: CCRouteVisibility.exported,
 )
 final class AddressSelectPage {

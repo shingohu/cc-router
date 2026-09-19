@@ -6,6 +6,7 @@ final class _RouteModel {
   _RouteModel(
     this.page,
     this.annotation,
+    this.component,
     this.id,
     this.parameters,
     this.result,
@@ -16,6 +17,9 @@ final class _RouteModel {
 
   /// Evaluated immutable annotation metadata.
   final ConstantReader annotation;
+
+  /// Validated component owner shared with generated workspace metadata.
+  final _ComponentModel component;
 
   /// Stable, non-empty route identity.
   final String id;
@@ -194,12 +198,99 @@ final class _RouteModel {
         element,
       );
     }
+    final component = _ComponentModel.read(
+      annotation.read('component'),
+      element,
+    );
+    final visibleTo = annotation
+        .read('visibleTo')
+        .setValue
+        .map((value) => value.toStringValue()!)
+        .toSet();
+    final exported = _enumValue(
+      annotation.read('visibility').objectValue,
+    ).endsWith('.exported');
+    if (!exported && visibleTo.isNotEmpty) {
+      _fail(
+        'Component-only route "$id" cannot declare visibleTo consumers.',
+        element,
+      );
+    }
+    if (visibleTo.contains(component.id)) {
+      _fail(
+        'Route "$id" cannot list its owning component in visibleTo.',
+        element,
+      );
+    }
     return _RouteModel(
       element,
       annotation,
+      component,
       id,
       parameters,
       _typeSource(result, element.library),
+    );
+  }
+}
+
+/// Validated compile-time component identity used by route metadata builders.
+final class _ComponentModel {
+  /// Stores normalized descriptor fields after local structural validation.
+  const _ComponentModel({
+    required this.id,
+    required this.version,
+    required this.dependencies,
+    required this.optionalDependencies,
+  });
+
+  /// Stable component ID.
+  final String id;
+
+  /// Semantic contract version.
+  final String version;
+
+  /// Required dependency IDs.
+  final List<String> dependencies;
+
+  /// Optional dependency IDs.
+  final List<String> optionalDependencies;
+
+  /// Validates a descriptor used by either a route or component annotation.
+  static _ComponentModel read(ConstantReader descriptor, Element element) {
+    final id = descriptor.read('id').stringValue;
+    final version = descriptor.read('version').stringValue;
+    final dependencies = descriptor
+        .read('dependencies')
+        .listValue
+        .map((value) => value.toStringValue()!)
+        .toList(growable: false);
+    final optionalDependencies = descriptor
+        .read('optionalDependencies')
+        .listValue
+        .map((value) => value.toStringValue()!)
+        .toList(growable: false);
+    final idPattern = RegExp(r'^[a-z][a-z0-9_.-]*$');
+    if (!idPattern.hasMatch(id)) {
+      _fail('Component ID "$id" is invalid.', element);
+    }
+    if (!RegExp(r'^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$').hasMatch(version)) {
+      _fail('Component "$id" must use a semantic version.', element);
+    }
+    final all = [...dependencies, ...optionalDependencies];
+    if (all.any(
+          (dependency) => !idPattern.hasMatch(dependency) || dependency == id,
+        ) ||
+        all.toSet().length != all.length) {
+      _fail(
+        'Component "$id" has invalid, duplicate or self dependencies.',
+        element,
+      );
+    }
+    return _ComponentModel(
+      id: id,
+      version: version,
+      dependencies: dependencies,
+      optionalDependencies: optionalDependencies,
     );
   }
 }

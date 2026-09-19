@@ -6,26 +6,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'fixtures/annotated_routes.dart';
 import 'fixtures/route_types.dart' as types;
 
-final class _Registrar implements CCComponentRegistrar {
-  const _Registrar();
-
-  @override
-  void register(CCRegistry registry) {
-    DetailPageRoute.register(registry);
-    PositionalPageRoute.register(registry);
-    ExtraPageRoute.register(registry);
-    registerInternal(registry);
-    registry.registerRouteInterceptor('fixture.auth', const _Proceed());
-  }
-}
-
-final class _Proceed implements CCNavigationInterceptor {
-  const _Proceed();
-  @override
-  CCNavigationInterception intercept(CCNavigationInterceptorContext context) =>
-      const CCNavigationProceed();
-}
-
 void main() {
   final codec = DetailPageRoute.definition.codec;
 
@@ -186,10 +166,9 @@ void main() {
       final adapter = CCMemoryNavigationAdapter();
       final host = CCRouterTestHost(
         components: const [
-          CCComponentManifest(
-            id: 'fixture',
-            version: '1',
-            registrar: _Registrar(),
+          CCComponentManifest.fromDescriptor(
+            descriptor: fixtureComponent,
+            registrar: FixtureComponentRegistrar(),
           ),
         ],
         navigationAdapter: adapter,

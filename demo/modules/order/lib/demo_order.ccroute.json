@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "package": "demo_order",
+  "source": "lib/demo_order.dart",
+  "componentDeclarations": [
+    "order"
+  ],
+  "components": [
+    {
+      "id": "order",
+      "version": "0.1.0",
+      "dependencies": [],
+      "optionalDependencies": []
+    }
+  ],
+  "routes": []
+}

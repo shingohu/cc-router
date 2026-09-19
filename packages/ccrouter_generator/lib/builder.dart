@@ -21,3 +21,10 @@ Builder ccRouteBuilder(BuilderOptions options) => PartBuilder(
       '// GENERATED CODE - DO NOT MODIFY BY HAND\n'
       '// ignore_for_file: type=lint, unused_element',
 );
+
+/// Emits machine-readable metadata and colocated route documentation.
+///
+/// Workspace CI consumes JSON for cross-component visibility validation;
+/// Markdown is intended for review rather than application runtime loading.
+Builder ccRouteMetadataBuilder(BuilderOptions options) =>
+    ccRouteMetadataBuilderInternal();

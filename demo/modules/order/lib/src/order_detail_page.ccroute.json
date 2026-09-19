@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "package": "demo_order",
+  "source": "lib/src/order_detail_page.dart",
+  "componentDeclarations": [],
+  "components": [
+    {
+      "id": "order",
+      "version": "0.1.0",
+      "dependencies": [],
+      "optionalDependencies": []
+    }
+  ],
+  "routes": [
+    {
+      "id": "order.detail",
+      "componentId": "order",
+      "visibility": "exported",
+      "visibleTo": [],
+      "deepLink": "disabled",
+      "description": "订单详情，确认后返回订单编号。",
+      "patterns": [
+        {
+          "type": "CCPathPattern",
+          "value": "/orders/:orderId",
+          "primary": true
+        },
+        {
+          "type": "CCPathPattern",
+          "value": "/order/:orderId",
+          "primary": false
+        }
+      ],
+      "parameters": [
+        {
+          "name": "orderId",
+          "wireName": "orderId",
+          "source": "path",
+          "type": "int",
+          "required": true,
+          "default": null,
+          "description": "需要展示的稳定订单 ID。"
+        },
+        {
+          "name": "tab",
+          "wireName": "tab",
+          "source": "query",
+          "type": "String",
+          "required": false,
+          "default": "'summary'",
+          "description": "首次展示的详情标签。"
+        }
+      ],
+      "resultType": "String"
+    }
+  ]
+}

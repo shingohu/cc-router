@@ -5,3 +5,9 @@ builders:
     build_extensions: {".dart": [".ccroute.g.dart"]}
     auto_apply: dependents
     build_to: source
+  route_metadata:
+    import: "package:ccrouter_generator/builder.dart"
+    builder_factories: ["ccRouteMetadataBuilder"]
+    build_extensions: {".dart": [".ccroute.json", ".ccroute.md"]}
+    auto_apply: dependents
+    build_to: source

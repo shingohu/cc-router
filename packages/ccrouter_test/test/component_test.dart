@@ -34,6 +34,28 @@ CCComponentManifest component(
 );
 
 void main() {
+  test('descriptor-backed manifests share build-time component metadata', () {
+    const descriptor = CCComponentDescriptor(
+      id: 'checkout',
+      version: '2.1.0',
+      dependencies: ['orders'],
+      optionalDependencies: ['campaign'],
+    );
+    final registrar = Registrar((_) {});
+    final manifest = CCComponentManifest.fromDescriptor(
+      descriptor: descriptor,
+      registrar: registrar,
+    );
+    expect(manifest.id, descriptor.id);
+    expect(manifest.version, descriptor.version);
+    expect(manifest.dependencies, same(descriptor.dependencies));
+    expect(
+      manifest.optionalDependencies,
+      same(descriptor.optionalDependencies),
+    );
+    expect(manifest.registrar, same(registrar));
+  });
+
   test('route definitions retain page, sheet, and dialog presentation', () {
     final defaultRoute = CCRouteDefinition<String, void>(
       routeId: 'orders.default',

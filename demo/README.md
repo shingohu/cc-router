@@ -47,6 +47,7 @@ demo 和组件包已加入根 Dart workspace，使用本仓库内框架源码与
 
 ```sh
 fvm dart run build_runner build --workspace
+fvm dart run ccrouter_generator:ccrouter_generator
 ```
 
 路由声明参考 `modules/order/lib/src/order_detail_page.dart`，生成器约束与测试命令见

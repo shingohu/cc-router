@@ -3,6 +3,45 @@ import 'route_pattern.dart';
 import 'route_placement.dart';
 import 'route_presentation.dart';
 
+/// Compile-time identity and dependency contract shared by routes and Runtime.
+///
+/// Define one const value in each component and reuse it from every [CCRoute]
+/// plus `CCComponentManifest.fromDescriptor`. This keeps build-time ownership
+/// and Runtime dependency ordering aligned.
+final class CCComponentDescriptor {
+  /// Creates one stable component contract declaration.
+  const CCComponentDescriptor({
+    required this.id,
+    required this.version,
+    this.dependencies = const [],
+    this.optionalDependencies = const [],
+  });
+
+  /// Globally unique component identifier used by route ownership metadata.
+  final String id;
+
+  /// Semantic contract version displayed in generated route documentation.
+  final String version;
+
+  /// Component IDs that must be installed before this component.
+  final List<String> dependencies;
+
+  /// Component IDs ordered first only when present in the application.
+  final List<String> optionalDependencies;
+}
+
+/// Marks the registrar that publishes one [descriptor] to generated metadata.
+///
+/// Use exactly once per component package. This also describes components that
+/// own no routes, so workspace visibility checks can resolve every consumer.
+final class CCComponent {
+  /// Associates a registrar declaration with its shared component descriptor.
+  const CCComponent(this.descriptor);
+
+  /// Single source of component identity, version and dependency information.
+  final CCComponentDescriptor descriptor;
+}
+
 /// Declares a destination whose typed contract is generated at build time.
 ///
 /// Component authors annotate a concrete page with an unnamed constructor,
@@ -13,6 +52,7 @@ import 'route_presentation.dart';
 final class CCRoute<R> {
   /// Creates compile-time route metadata owned by the registering component.
   const CCRoute({
+    required this.component,
     required this.id,
     required this.patterns,
     this.visibility = CCRouteVisibility.component,
@@ -23,6 +63,9 @@ final class CCRoute<R> {
     this.interceptors = const [],
     this.description,
   });
+
+  /// Component that owns registration, visibility and generated documentation.
+  final CCComponentDescriptor component;
 
   /// Stable route identity shared by tracing, registration and typed Intents.
   final String id;
@@ -37,7 +80,7 @@ final class CCRoute<R> {
   /// cross-package dependency and allowlist checks are a separate build stage.
   final CCRouteVisibility visibility;
 
-  /// Consumers permitted by the future component aggregation validator.
+  /// Consumers permitted by the workspace component aggregation validator.
   ///
   /// Preserved in the definition, not interpreted as Runtime authorization.
   final Set<String> visibleTo;
@@ -54,7 +97,7 @@ final class CCRoute<R> {
   /// Registered route-level interceptor identities in execution order.
   final List<String> interceptors;
 
-  /// Route purpose for IDE documentation and future document exports.
+  /// Route purpose included in generated JSON and Markdown documentation.
   final String? description;
 }
 

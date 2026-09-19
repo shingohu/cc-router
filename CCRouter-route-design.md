@@ -13,8 +13,10 @@
 注解生成器首版已实现页面注解、单库校验、类型安全 Arguments/Intent、标量
 Path/Query/Extra Codec、Definition、注册入口和中立页面工厂。使用 `part` 生成
 `.ccroute.g.dart`，默认 component 契约为 library-private；exported 契约需显式导出。
-首版不生成 GoRoute，也尚未实现下文的组件聚合、独立纯契约文件、消费可见性检查
-及路由文档导出。当前实现范围与命令见 [生成器说明](packages/ccrouter_generator/README.md)。
+生成器同时输出页面级 JSON/Markdown，并由 workspace 工具聚合检查组件与 Route ID、
+路由所有者、`visibleTo` 消费目标和组件依赖，输出应用级路由目录。当前仍不生成
+GoRoute，也尚未拆出独立纯契约文件或实现静态 Pattern 重叠证明。实现范围与命令见
+[生成器说明](packages/ccrouter_generator/README.md)。
 
 混合路由的隔离、Foreign Route 兼容和第三方 Popup 改造方案见：[CCRouter 混合路由改造设计](CCRouter-hybrid-routing-design.md)。
 
@@ -130,7 +132,13 @@ ccrouter_go_router  默认 go_router Adapter
 建议的声明形式如下：
 
 ```dart
+const orderComponent = CCComponentDescriptor(
+  id: 'orders',
+  version: '1.0.0',
+);
+
 @CCRoute<OrderResult>(
+  component: orderComponent,
   id: 'orders.detail',
   patterns: [
     CCPathPattern(
@@ -1267,10 +1275,11 @@ Deadline 配置、完整导航结果遥测投影仍待后续实现。
 
 ### 阶段 C：生成器
 
-- 页面和构造参数分析。
-- Intent、Codec、Definition、Registrar 和组件契约生成。
-- 跨组件可见性及聚合校验。
-- JSON/Markdown 文档导出。
+- 已实现页面和构造参数分析。
+- 已实现 Intent、Codec、Definition、注册入口和组件契约生成。
+- 已实现组件所有者、Route ID、`visibleTo` 和依赖边的聚合校验。
+- 已实现页面级及应用聚合级 JSON/Markdown 文档导出。
+- 待实现静态 Pattern 重叠证明、公开 barrel 检查及独立纯契约文件。
 
 ### 阶段 D：GoRouter Adapter
 

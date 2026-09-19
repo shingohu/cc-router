@@ -3,6 +3,31 @@ import 'route_types.dart' as types;
 
 part 'annotated_routes.ccroute.g.dart';
 
+const fixtureComponent = CCComponentDescriptor(id: 'fixture', version: '1.0.0');
+
+@CCComponent(fixtureComponent)
+final class FixtureComponentRegistrar implements CCComponentRegistrar {
+  const FixtureComponentRegistrar();
+
+  @override
+  void register(CCRegistry registry) {
+    DetailPageRoute.register(registry);
+    PositionalPageRoute.register(registry);
+    ExtraPageRoute.register(registry);
+    PrefixedPageRoute.register(registry);
+    _InternalPageRoute.register(registry);
+    registry.registerRouteInterceptor('fixture.auth', const FixtureProceed());
+  }
+}
+
+final class FixtureProceed implements CCNavigationInterceptor {
+  const FixtureProceed();
+
+  @override
+  CCNavigationInterception intercept(CCNavigationInterceptorContext context) =>
+      const CCNavigationProceed();
+}
+
 enum DetailTab { summary, items }
 
 final class Snapshot {
@@ -11,6 +36,7 @@ final class Snapshot {
 }
 
 @CCRoute<String>(
+  component: fixtureComponent,
   id: 'fixture.detail',
   patterns: [
     CCPathPattern('/detail/:id', primary: true, constraints: {'id': r'\d+'}),
@@ -39,7 +65,10 @@ final class DetailPage {
     @CCExtraParam() this.snapshot,
   });
 
+  /// Stable fixture identity shown in generated route documentation.
   final int id;
+
+  /// Optional filter whose wire name differs from this field name.
   final String? search;
   final DetailTab tab;
   final bool enabled;
@@ -48,6 +77,7 @@ final class DetailPage {
 }
 
 @CCRoute<void>(
+  component: fixtureComponent,
   id: 'fixture.internal',
   patterns: [CCPathPattern('/internal', primary: true)],
 )
@@ -60,6 +90,7 @@ void registerInternal(CCRegistry registry) =>
     _InternalPageRoute.register(registry);
 
 @CCRoute<int>(
+  component: fixtureComponent,
   id: 'fixture.positional',
   patterns: [CCPathPattern('/position/:value', primary: true)],
   visibility: CCRouteVisibility.exported,
@@ -71,6 +102,7 @@ final class PositionalPage {
 }
 
 @CCRoute<bool>(
+  component: fixtureComponent,
   id: 'fixture.extra',
   patterns: [CCPathPattern('/extra', primary: true)],
   visibility: CCRouteVisibility.exported,
@@ -81,6 +113,7 @@ final class ExtraPage {
 }
 
 @CCRoute<types.Result>(
+  component: fixtureComponent,
   id: 'fixture.prefixed',
   patterns: [CCPathPattern('/prefixed', primary: true)],
   visibility: CCRouteVisibility.exported,

@@ -17,25 +17,59 @@ abstract interface class CCComponentRegistrar {
 final class CCComponentManifest {
   /// Creates an immutable component manifest.
   const CCComponentManifest({
-    required this.id,
-    required this.version,
+    required String id,
+    required String version,
     required this.registrar,
-    this.dependencies = const [],
-    this.optionalDependencies = const [],
-  });
+    List<String> dependencies = const [],
+    List<String> optionalDependencies = const [],
+  }) : _descriptor = null,
+       _id = id,
+       _version = version,
+       _dependencies = dependencies,
+       _optionalDependencies = optionalDependencies;
+
+  /// Creates Runtime metadata from the descriptor used by route tooling.
+  ///
+  /// Generated-route components use this constructor so ownership and
+  /// dependency information has one source while [registrar] remains a
+  /// Runtime capability rather than part of the pure-Dart descriptor.
+  const CCComponentManifest.fromDescriptor({
+    required CCComponentDescriptor descriptor,
+    required this.registrar,
+  }) : _descriptor = descriptor,
+       _id = null,
+       _version = null,
+       _dependencies = null,
+       _optionalDependencies = null;
+
+  /// Descriptor retained by generated-route components, when supplied.
+  final CCComponentDescriptor? _descriptor;
+
+  /// Legacy direct ID storage used by handwritten manifests.
+  final String? _id;
+
+  /// Legacy direct version storage used by handwritten manifests.
+  final String? _version;
+
+  /// Legacy direct dependency storage used by handwritten manifests.
+  final List<String>? _dependencies;
+
+  /// Legacy direct optional dependency storage used by handwritten manifests.
+  final List<String>? _optionalDependencies;
 
   /// Globally unique stable component identifier.
-  final String id;
+  String get id => _descriptor?.id ?? _id!;
 
   /// Semantic version of the component contract.
-  final String version;
+  String get version => _descriptor?.version ?? _version!;
 
   /// Generated or handwritten capability registrar.
   final CCComponentRegistrar registrar;
 
   /// Component identifiers that must be installed.
-  final List<String> dependencies;
+  List<String> get dependencies => _descriptor?.dependencies ?? _dependencies!;
 
   /// Component identifiers ordered first only when present.
-  final List<String> optionalDependencies;
+  List<String> get optionalDependencies =>
+      _descriptor?.optionalDependencies ?? _optionalDependencies!;
 }

@@ -9,12 +9,16 @@ import 'package:source_gen/source_gen.dart';
 
 part 'route_model.dart';
 part 'route_emitter.dart';
+part 'route_metadata_builder.dart';
 
 /// Creates the internal generator for the build-runner factory only.
 ///
 /// Kept out of the package barrel; business code consumes generated Intents,
 /// not analyzer elements or generation services.
 Generator ccRouteGenerator() => _RouteGenerator();
+
+/// Creates the metadata Builder while keeping its implementation private.
+Builder ccRouteMetadataBuilderInternal() => _RouteMetadataBuilder();
 
 /// Finds route declarations and validates a complete library before emitting.
 final class _RouteGenerator extends Generator {

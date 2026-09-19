@@ -1,0 +1,223 @@
+{
+  "schemaVersion": 1,
+  "package": "ccrouter_test",
+  "source": "test/fixtures/annotated_routes.dart",
+  "componentDeclarations": [
+    "fixture"
+  ],
+  "components": [
+    {
+      "id": "fixture",
+      "version": "1.0.0",
+      "dependencies": [],
+      "optionalDependencies": []
+    }
+  ],
+  "routes": [
+    {
+      "id": "fixture.detail",
+      "componentId": "fixture",
+      "visibility": "exported",
+      "visibleTo": [
+        "home"
+      ],
+      "deepLink": "enabled",
+      "description": "A typed detail route.\nIncludes safe defaults.",
+      "patterns": [
+        {
+          "type": "CCPathPattern",
+          "value": "/detail/:id",
+          "primary": true
+        },
+        {
+          "type": "CCPathPattern",
+          "value": "/legacy/:id",
+          "primary": false
+        },
+        {
+          "type": "CCUriPattern",
+          "value": "sample://detail/:id",
+          "primary": false
+        },
+        {
+          "type": "CCRegexPattern",
+          "value": "/old/(?<id>\\d+)",
+          "primary": false
+        }
+      ],
+      "parameters": [
+        {
+          "name": "id",
+          "wireName": "id",
+          "source": "path",
+          "type": "int",
+          "required": true,
+          "default": null,
+          "description": "Stable fixture identity shown in generated route documentation."
+        },
+        {
+          "name": "search",
+          "wireName": "text",
+          "source": "query",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "Optional filter whose wire name differs from this field name."
+        },
+        {
+          "name": "tab",
+          "wireName": "tab",
+          "source": "query",
+          "type": "DetailTab",
+          "required": false,
+          "default": "DetailTab.summary",
+          "description": null
+        },
+        {
+          "name": "enabled",
+          "wireName": "enabled",
+          "source": "query",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": null
+        },
+        {
+          "name": "ratio",
+          "wireName": "ratio",
+          "source": "query",
+          "type": "double",
+          "required": false,
+          "default": "1.0",
+          "description": null
+        },
+        {
+          "name": "snapshot",
+          "wireName": "snapshot",
+          "source": "extra",
+          "type": "Snapshot?",
+          "required": false,
+          "default": null,
+          "description": null
+        }
+      ],
+      "resultType": "String"
+    },
+    {
+      "id": "fixture.internal",
+      "componentId": "fixture",
+      "visibility": "component",
+      "visibleTo": [],
+      "deepLink": "disabled",
+      "description": null,
+      "patterns": [
+        {
+          "type": "CCPathPattern",
+          "value": "/internal",
+          "primary": true
+        }
+      ],
+      "parameters": [],
+      "resultType": "void"
+    },
+    {
+      "id": "fixture.positional",
+      "componentId": "fixture",
+      "visibility": "exported",
+      "visibleTo": [],
+      "deepLink": "disabled",
+      "description": null,
+      "patterns": [
+        {
+          "type": "CCPathPattern",
+          "value": "/position/:value",
+          "primary": true
+        }
+      ],
+      "parameters": [
+        {
+          "name": "value",
+          "wireName": "value",
+          "source": "path",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": null
+        },
+        {
+          "name": "input",
+          "wireName": "input",
+          "source": "query",
+          "type": "String",
+          "required": false,
+          "default": "'default'",
+          "description": null
+        }
+      ],
+      "resultType": "int"
+    },
+    {
+      "id": "fixture.extra",
+      "componentId": "fixture",
+      "visibility": "exported",
+      "visibleTo": [],
+      "deepLink": "disabled",
+      "description": null,
+      "patterns": [
+        {
+          "type": "CCPathPattern",
+          "value": "/extra",
+          "primary": true
+        }
+      ],
+      "parameters": [
+        {
+          "name": "snapshot",
+          "wireName": "snapshot",
+          "source": "extra",
+          "type": "Snapshot",
+          "required": true,
+          "default": null,
+          "description": null
+        }
+      ],
+      "resultType": "bool"
+    },
+    {
+      "id": "fixture.prefixed",
+      "componentId": "fixture",
+      "visibility": "exported",
+      "visibleTo": [],
+      "deepLink": "disabled",
+      "description": null,
+      "patterns": [
+        {
+          "type": "CCPathPattern",
+          "value": "/prefixed",
+          "primary": true
+        }
+      ],
+      "parameters": [
+        {
+          "name": "mode",
+          "wireName": "mode",
+          "source": "query",
+          "type": "types.Mode",
+          "required": false,
+          "default": "types.Mode.normal",
+          "description": null
+        },
+        {
+          "name": "payload",
+          "wireName": "payload",
+          "source": "extra",
+          "type": "types.Payload?",
+          "required": false,
+          "default": null,
+          "description": null
+        }
+      ],
+      "resultType": "types.Result"
+    }
+  ]
+}

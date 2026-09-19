@@ -6,7 +6,18 @@
 import 'package:ccrouter/ccrouter.dart';
 part 'detail_page.ccroute.g.dart';
 
+const orderComponent = CCComponentDescriptor(
+  id: 'order',
+  version: '1.0.0',
+);
+
+@CCComponent(orderComponent)
+final class OrderComponentRegistrar implements CCComponentRegistrar {
+  // Register generated routes through the restricted CCRegistry.
+}
+
 @CCRoute<String>(
+  component: orderComponent,
   id: 'order.detail',
   patterns: [CCPathPattern('/orders/:orderId', primary: true)],
   visibility: CCRouteVisibility.exported,
@@ -27,6 +38,7 @@ final class DetailPage {
 ```sh
 fvm flutter pub get
 fvm dart run build_runner build --workspace
+fvm dart run ccrouter_generator:ccrouter_generator
 ```
 
 非 workspace 包在自己的目录执行 `dart run build_runner build`。
@@ -59,9 +71,9 @@ fvm dart run build_runner build --workspace
   Pattern 以及 Presentation、Placement、拦截器 ID 元数据。
 - 不生成 GoRoute，不选择路由后端，不替宿主维护 Navigator。
 
-集合 Query、自定义字段 Codec、具名/Factory 页面构造器、跨库/跨组件路由聚合冲突
-校验、`visibleTo` 消费依赖校验、分离的纯契约文件及路由文档导出留到后续阶段。
-本阶段只检查单个源 library；应用级重复和歧义仍由 Runtime 注册校验兜底。
+集合 Query、自定义字段 Codec、具名/Factory 页面构造器、分离的纯契约文件、
+静态 Pattern 重叠证明以及公开 barrel 导出检查留到后续阶段。当前聚合校验覆盖组件与
+Route ID、所有者、`visibleTo` 和依赖边；复杂 Pattern 歧义仍由 Runtime 注册兜底。
 
 ## 回归
 
@@ -75,3 +87,7 @@ fvm flutter analyze packages demo
 
 生成样例和测试 Fixture 的 `.ccroute.g.dart` 纳入版本管理，方便直接打开 demo；
 修改声明后必须重新生成并做静态检查。
+
+第二条命令聚合全部 `.ccroute.json`，校验组件/路由 ID、路由所有者、
+`visibleTo` 目标以及消费组件对路由所有者的显式依赖，并在仓库根目录生成
+`CCRouter-routes.json` 和 `CCRouter-routes.md`。校验失败时返回非零退出码。
