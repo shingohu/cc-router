@@ -4,8 +4,8 @@
 
 - 日期：2026-09-20
 - 平台：macOS 真实 Flutter 应用
-- Backend：`CCGoRouterBackend.managed`
-- SDK：FVM `ohos/oh-3.41.9-release`
+- Backend：`CCGoRouterBackend.managed`，`go_router 17.5.0`
+- SDK：FVM `ohos/oh-3.41.9-release`（Flutter 3.41.10 OHOS / Dart 3.11.5）
 - 组件：3
 - 生成路由：20
 
@@ -48,10 +48,11 @@ Demo 的交互实现位于 `modules/navigation_lab`，宿主只负责初始化 C
 3. CCRouter `replace` 曾映射到 GoRouter `replace()`，后者复用 Page key 和 State，与 Route Scope 替换语义冲突。现改为 `pushReplacement()`，并由 Adapter 自有结果通道完成被替换页面的 Future，避免 GoRouter 14.8.1 遗留未完成 completer。
 4. Failure fallback 默认 Replace 后不可 Pop，Demo 却使用内部 `open('/')` 返回，造成隐藏 Entry 残留。Demo 现显式使用 Push fallback，返回后为 `0 managed`。
 5. GoRouter Adapter 在 Go、Reset 或 Runtime shutdown 时曾直接清空本地 Entry，导致已返回给业务的 typed result Future 永久等待，并残留 navigation/backend identity 映射。现在 Go/Reset 以 `null` 结束被移除页面的结果，shutdown 以 `CCNavigationAdapterError` 结束未完成结果，同时清理身份映射；动态 open 不创建对业务暴露的错误结果通道。
+6. GoRouter 17 默认把 Shell 分支的 Navigator 事件转发给 root observers，曾导致同一个分支 Route 同时被标记为 root 和真实 Outlet。`CCGoRouterNavigationObserver` 现在忽略不属于其 Navigator 的转发事件，由对应 Outlet observer 保留唯一、准确的生命周期身份。
 
 ## 已确认限制
 
-1. `CCGoRouterAdapter` 暂不声明 `supportsPushAndRemoveUntil`。GoRouter 14 没有公开的原子 API，可以在保留任意 predicate 历史的同时 Push 一个带结果页面。旧的“连续 Pop 再 Push”会与 RouterDelegate 异步配置更新竞争，现在改为变更栈之前显式报 capability error。
+1. `CCGoRouterAdapter` 暂不声明 `supportsPushAndRemoveUntil`。GoRouter 17.5.0 没有公开的原子 API，可以在保留任意 predicate 历史的同时 Push 一个带结果页面。旧的“连续 Pop 再 Push”会与 RouterDelegate 异步配置更新竞争，现在改为变更栈之前显式报 capability error。
 2. GoRouter Adapter 暂不支持 `removeRoute`、`removeRouteBelow` 和 `replaceRouteBelow` 的精确 Entry 操作。Memory Adapter 和 Core 回归已验证这些契约；Demo 保留入口并验证标准能力错误不会改变栈。
 3. Predictive Back 不适用于 macOS 实测，已由 bridge 单测覆盖；最终仍需 Android 设备回归手势进度与取消。
 4. StatefulShell、多 Window/Display 和自适应多 Outlet 已有 Integration Test，但本 Demo 仍是单 Host / root Outlet，需单独的设备形态 Demo。

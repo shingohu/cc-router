@@ -5,13 +5,13 @@ resolution: workspace
 publish_to: none
 
 environment:
-  sdk: ^3.9.0
+  sdk: ^3.10.0
 
 dependencies:
   ccrouter: ^0.1.0
   flutter:
     sdk: flutter
-  go_router: ^14.8.1
+  go_router: ^17.5.0
 
 dev_dependencies:
   ccrouter_core: ^0.1.0

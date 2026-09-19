@@ -55,6 +55,12 @@ final class CCGoRouterNavigationEvent {
 /// `StatefulShellBranch.observers`, or root Navigator observer list. Keep the
 /// callback focused on telemetry, lifecycle bridging, or diagnostics; it must
 /// not call CCRouter navigation synchronously from inside the callback.
+///
+/// GoRouter 17 forwards nested Shell transitions to root observers by default.
+/// This observer ignores a forwarded transition when its Route belongs to a
+/// different Navigator, preserving the configured [outlet] identity. Install a
+/// dedicated observer on every managed Shell Outlet that needs lifecycle
+/// tracking.
 final class CCGoRouterNavigationObserver extends NavigatorObserver {
   /// Creates an observer for one [hostId] and [outlet] pair.
   ///
@@ -94,6 +100,7 @@ final class CCGoRouterNavigationObserver extends NavigatorObserver {
   /// Reports the confirmed current Route to CCRouter's Host lifecycle ledger.
   void didChangeTop(Route<dynamic> topRoute, Route<dynamic>? previousTopRoute) {
     super.didChangeTop(topRoute, previousTopRoute);
+    if (!_observesRoute(topRoute)) return;
     CCPageLifecycleHostBridge.didChangeTop(
       hostId: hostId,
       outlet: outlet,
@@ -123,6 +130,7 @@ final class CCGoRouterNavigationObserver extends NavigatorObserver {
   @override
   void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
     super.didPush(route, previousRoute);
+    if (!_observesRoute(route)) return;
     _emit(
       CCGoRouterNavigationEvent(
         kind: CCGoRouterNavigationEventKind.push,
@@ -137,6 +145,7 @@ final class CCGoRouterNavigationObserver extends NavigatorObserver {
   @override
   void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
     super.didPop(route, previousRoute);
+    if (!_observesRoute(route)) return;
     _emit(
       CCGoRouterNavigationEvent(
         kind: CCGoRouterNavigationEventKind.pop,
@@ -153,6 +162,7 @@ final class CCGoRouterNavigationObserver extends NavigatorObserver {
     super.didReplace(newRoute: newRoute, oldRoute: oldRoute);
     final route = newRoute ?? oldRoute;
     if (route == null) return;
+    if (!_observesRoute(route)) return;
     _emit(
       CCGoRouterNavigationEvent(
         kind: CCGoRouterNavigationEventKind.replace,
@@ -167,6 +177,7 @@ final class CCGoRouterNavigationObserver extends NavigatorObserver {
   @override
   void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) {
     super.didRemove(route, previousRoute);
+    if (!_observesRoute(route)) return;
     _emit(
       CCGoRouterNavigationEvent(
         kind: CCGoRouterNavigationEventKind.remove,
@@ -184,5 +195,15 @@ final class CCGoRouterNavigationObserver extends NavigatorObserver {
     for (final listener in _listeners.toList()) {
       listener(event);
     }
+  }
+
+  /// Returns whether [route] is installed in this observer's Navigator.
+  ///
+  /// A null Route navigator is accepted for direct observer tests and for
+  /// framework callbacks that occur before attachment. A non-null mismatch is
+  /// a GoRouter-forwarded nested transition and must retain its real Outlet.
+  bool _observesRoute(Route<dynamic> route) {
+    final routeNavigator = route.navigator;
+    return routeNavigator == null || identical(routeNavigator, navigator);
   }
 }

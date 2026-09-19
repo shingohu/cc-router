@@ -58,4 +58,61 @@ void main() {
     expect(events.every((event) => event.outlet == 'root'), isTrue);
     // NavigatorObserver in the current Flutter SDK does not expose Pop result.
   });
+
+  testWidgets(
+    'keeps GoRouter 17 forwarded Shell events on their actual Outlet',
+    (tester) async {
+      final rootEvents = <CCGoRouterNavigationEvent>[];
+      final outletEvents = <CCGoRouterNavigationEvent>[];
+      final rootKey = GlobalKey<NavigatorState>();
+      final outletKey = GlobalKey<NavigatorState>();
+      final rootObserver = CCGoRouterNavigationObserver(
+        outlet: 'root',
+        onEvent: rootEvents.add,
+      );
+      final outletObserver = CCGoRouterNavigationObserver(
+        outlet: 'content',
+        onEvent: outletEvents.add,
+      );
+      final router = GoRouter(
+        navigatorKey: rootKey,
+        initialLocation: '/home',
+        observers: [rootObserver],
+        routes: [
+          ShellRoute(
+            navigatorKey: outletKey,
+            observers: [outletObserver],
+            builder: (_, _, child) => child,
+            routes: [
+              GoRoute(path: '/home', builder: (_, _) => const Text('home')),
+              GoRoute(path: '/detail', builder: (_, _) => const Text('detail')),
+            ],
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+
+      await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+      await tester.pumpAndSettle();
+      rootEvents.clear();
+      outletEvents.clear();
+
+      final pushed = router.push<void>('/detail');
+      await tester.pumpAndSettle();
+
+      expect(find.text('detail'), findsOneWidget);
+      expect(
+        outletEvents.where(
+          (event) => event.kind == CCGoRouterNavigationEventKind.push,
+        ),
+        isNotEmpty,
+      );
+      expect(outletEvents.every((event) => event.outlet == 'content'), isTrue);
+      expect(rootEvents, isEmpty);
+
+      router.pop();
+      await tester.pumpAndSettle();
+      await pushed;
+    },
+  );
 }
