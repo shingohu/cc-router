@@ -71,6 +71,14 @@ abstract final class CCRouter {
   static List<CCRouteVisibilityEvent> get recentRouteVisibilityEvents =>
       _runtime.recentRouteVisibilityEvents;
 
+  /// Snapshot of currently retained managed Route Entries in stack order.
+  ///
+  /// Each snapshot exposes an exact [CCRouteEntrySnapshot.handle] for targeted
+  /// removal. The snapshots do not expose Route Scopes, Widgets, or backend
+  /// Navigator objects.
+  static List<CCRouteEntrySnapshot> get activeRouteEntries =>
+      _runtime.activeRouteEntries;
+
   /// Bounded snapshot of backend Navigator transitions observed by the adapter.
   ///
   /// Use this for system back, gesture, and backend-owned stack diagnostics.

@@ -406,3 +406,33 @@ abstract interface class CCNavigationPopCoordinator {
   /// rejection semantics.
   CCPopOutcome popOutcome({Object? result});
 }
+
+/// Optional Adapter SPI for exact removal of CCRouter-managed backend Entries.
+///
+/// Runtime calls this only after validating a [CCRouteEntryHandle] against its
+/// own live Entry ledger. Implementations must use [navigationId] and the
+/// optional [backendEntryId] as identity, never stack position. A backend that
+/// cannot preserve this contract must omit the SPI and report the corresponding
+/// capability as unsupported; Runtime will then fail explicitly instead of
+/// guessing which page to remove.
+abstract interface class CCNavigationExactEntryRemoval {
+  /// Removes exactly the managed Entry identified by [navigationId].
+  ///
+  /// [backendEntryId] is supplied when the backend ledger has a stable identity.
+  /// The operation must complete only after the backend accepted the removal.
+  /// It must not remove foreign, opaque, or unrelated backend Entries.
+  Future<void> removeManagedEntry({
+    required String navigationId,
+    String? backendEntryId,
+  });
+
+  /// Removes managed Entries below the exact target identified by [navigationId].
+  ///
+  /// The target itself remains in the backend. Entries owned by foreign or
+  /// opaque navigation systems must remain untouched even when they appear
+  /// between managed Entries.
+  Future<void> removeManagedEntriesBelow({
+    required String navigationId,
+    String? backendEntryId,
+  });
+}

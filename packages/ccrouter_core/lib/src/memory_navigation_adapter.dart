@@ -8,6 +8,9 @@ final class _CCMemoryNavigationEntry {
   /// Validated request represented by this stack entry.
   final CCNavigationRequest request;
 
+  /// Stable backend identity derived from the Runtime navigation identity.
+  String get backendEntryId => 'memory-${request.navigationId}';
+
   /// Result completed when a Push or Replace entry is popped or discarded.
   final Completer<Object?>? result;
 
@@ -30,6 +33,7 @@ final class CCMemoryNavigationAdapter
     implements
         CCNavigationAdapter,
         CCNavigationPopCoordinator,
+        CCNavigationExactEntryRemoval,
         CCNavigationAdapterCapabilitySource,
         CCNavigationBackendSnapshotSource {
   /// Creates an uninitialized empty navigation stack.
@@ -44,6 +48,7 @@ final class CCMemoryNavigationAdapter
         supportsPushAndRemoveUntil: true,
         supportsNestedNavigators: true,
         supportsStatefulShell: true,
+        supportsExactEntryRemoval: true,
       );
 
   /// Returns the current in-memory entries as an initialization snapshot.
@@ -54,7 +59,7 @@ final class CCMemoryNavigationAdapter
     return List.unmodifiable(
       _entries.map(
         (entry) => CCNavigationBackendEntrySnapshot(
-          backendEntryId: 'memory-${entry.request.navigationId}',
+          backendEntryId: entry.backendEntryId,
           owner: CCBackendEntryOwner.managed,
           hostId: entry.request.hostId,
           routeId: entry.request.routeId,
@@ -209,6 +214,30 @@ final class CCMemoryNavigationAdapter
     return future;
   }
 
+  /// Removes exactly one managed entry by its Runtime navigation identity.
+  @override
+  Future<void> removeManagedEntry({
+    required String navigationId,
+    String? backendEntryId,
+  }) async {
+    _ensureAvailable();
+    final index = _indexForIdentity(navigationId, backendEntryId);
+    _removeAt(index);
+  }
+
+  /// Removes all managed entries below the exact target entry.
+  @override
+  Future<void> removeManagedEntriesBelow({
+    required String navigationId,
+    String? backendEntryId,
+  }) async {
+    _ensureAvailable();
+    final targetIndex = _indexForIdentity(navigationId, backendEntryId);
+    for (var index = targetIndex - 1; index >= 0; index--) {
+      _removeAt(index);
+    }
+  }
+
   /// Pops a removable entry and completes its pending result.
   @override
   void pop({Object? result}) {
@@ -272,6 +301,21 @@ final class CCMemoryNavigationAdapter
   void _removeAt(int index) {
     final removed = _entries.removeAt(index);
     removed.result?.complete();
+  }
+
+  /// Resolves one exact backend identity or reports that it is unavailable.
+  int _indexForIdentity(String navigationId, String? backendEntryId) {
+    final index = _entries.indexWhere(
+      (entry) =>
+          entry.request.navigationId == navigationId &&
+          (backendEntryId == null || entry.backendEntryId == backendEntryId),
+    );
+    if (index == -1) {
+      throw const CCNavigationAdapterError(
+        'The requested managed backend Entry is no longer active.',
+      );
+    }
+    return index;
   }
 
   /// Clears all entries while safely completing pending result Futures.

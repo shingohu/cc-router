@@ -132,6 +132,59 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     }
   }
 
+  /// Removes exactly the managed Route Entry identified by [handle].
+  ///
+  /// Use this for a targeted removal when stack position may have changed due
+  /// to repeated pushes or hybrid navigation. The handle must come from the
+  /// corresponding [CCRouteEntrySnapshot]. Foreign, opaque, stale, and
+  /// cross-Runtime handles fail with a standard navigation error.
+  Future<void> removeRoute(CCRouteEntryHandle handle) async {
+    _ensureInitialized();
+    final entry = _requireRouteEntryHandle(handle);
+    final adapter = _requireExactEntryRemovalAdapter();
+    await adapter.removeManagedEntry(
+      navigationId: entry.request.navigationId,
+      backendEntryId: _backendEntryIdForRouteEntry(entry.id),
+    );
+    _removeRouteEntry(entry, reason: 'removeRoute');
+  }
+
+  /// Removes managed Route Entries below [handle], retaining the target.
+  ///
+  /// The target itself and any foreign or opaque backend Entries remain. This
+  /// is useful for clearing stale history beneath a selected page while
+  /// preserving that page's Scope and pending result channel.
+  Future<void> removeRouteBelow(CCRouteEntryHandle handle) async {
+    _ensureInitialized();
+    final target = _requireRouteEntryHandle(handle);
+    if (_routeEntries.first == target) return;
+    final adapter = _requireExactEntryRemovalAdapter();
+    await adapter.removeManagedEntriesBelow(
+      navigationId: target.request.navigationId,
+      backendEntryId: _backendEntryIdForRouteEntry(target.id),
+    );
+    if (!_routeEntries.contains(target)) {
+      throw const CCNavigationAdapterError(
+        'The target Route Entry was removed during exact history removal.',
+      );
+    }
+    // Completing a removed entry's pending result can reconcile that entry
+    // while the Adapter Future is awaited. Recompute the prefix after the
+    // await so the retained target is never included by a stale index.
+    final entriesBelow = <_RouteEntryRecord>[];
+    for (final entry in _routeEntries) {
+      if (identical(entry, target)) break;
+      entriesBelow.add(entry);
+    }
+    for (final entry in entriesBelow.reversed) {
+      _removeRouteEntry(
+        entry,
+        reason: 'removeRouteBelow',
+        revealPrevious: false,
+      );
+    }
+  }
+
   /// Pushes [intent] and removes previous entries until [predicate] matches.
   Future<R?> pushAndRemoveUntilRoute<R>(
     CCRouteIntent<R> intent,
@@ -232,6 +285,39 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
         'Navigation adapter canPop failed: ${error.runtimeType}.',
       );
     }
+  }
+
+  /// Resolves and validates a business-facing exact Entry handle.
+  _RouteEntryRecord _requireRouteEntryHandle(CCRouteEntryHandle handle) {
+    for (final entry in _routeEntries) {
+      if (entry.id == handle.routeEntryId &&
+          entry.request.navigationId == handle.navigationId) {
+        return entry;
+      }
+    }
+    throw const CCNavigationAdapterError(
+      'The requested Route Entry handle is stale or belongs to another Runtime.',
+    );
+  }
+
+  /// Requires an Adapter that can preserve exact Entry removal semantics.
+  CCNavigationExactEntryRemoval _requireExactEntryRemovalAdapter() {
+    final adapter = _requiredNavigationAdapter;
+    final capabilitySource = adapter is CCNavigationAdapterCapabilitySource
+        ? adapter as CCNavigationAdapterCapabilitySource
+        : null;
+    if (capabilitySource != null &&
+        !capabilitySource.capabilities.supportsExactEntryRemoval) {
+      throw const CCNavigationAdapterError(
+        'Navigation adapter does not support exact Route Entry removal.',
+      );
+    }
+    if (adapter is! CCNavigationExactEntryRemoval) {
+      throw const CCNavigationAdapterError(
+        'Navigation adapter does not expose exact Route Entry removal.',
+      );
+    }
+    return adapter as CCNavigationExactEntryRemoval;
   }
 
   /// Executes a result-bearing typed navigation operation.

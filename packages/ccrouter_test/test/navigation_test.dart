@@ -721,6 +721,132 @@ void main() {
     },
   );
 
+  test(
+    'removes exact managed Entries and preserves the handle target',
+    () async {
+      final runtime = CCRouterRuntime.forTesting(
+        navigationAdapter: CCMemoryNavigationAdapter(),
+        components: [
+          routeComponent(
+            'orders',
+            (registry) => registry.registerRoute(pathRoute()),
+          ),
+        ],
+      );
+      await runtime.initialize();
+      await runtime.goRoute(
+        const TestIntent<void>('orders.detail', RouteArgs('1')),
+      );
+      final firstResult = runtime.pushRoute<String>(
+        const TestIntent<String>('orders.detail', RouteArgs('2')),
+      );
+      final secondResult = runtime.pushRoute<String>(
+        const TestIntent<String>('orders.detail', RouteArgs('3')),
+      );
+      final thirdResult = runtime.pushRoute<String>(
+        const TestIntent<String>('orders.detail', RouteArgs('4')),
+      );
+      final entries = runtime.activeRouteEntries;
+      final first = entries[1];
+      final second = entries[2];
+      final third = entries[3];
+
+      await runtime.removeRoute(second.handle);
+      expect(await secondResult, isNull);
+      expect(runtime.activeRouteEntries.map((entry) => entry.routeEntryId), [
+        entries[0].routeEntryId,
+        first.routeEntryId,
+        third.routeEntryId,
+      ]);
+
+      await runtime.removeRouteBelow(third.handle);
+      expect(await firstResult, isNull);
+      expect(runtime.activeRouteEntries, hasLength(1));
+      expect(
+        runtime.activeRouteEntries.single.routeEntryId,
+        third.routeEntryId,
+      );
+
+      await runtime.removeRoute(third.handle);
+      expect(await thirdResult, isNull);
+      expect(runtime.activeRouteEntries, isEmpty);
+      await Future<void>.delayed(Duration.zero);
+      expect(
+        runtime.recentRouteEntryEvents
+            .where(
+              (event) => event.state == CCRouteEntryLifecycleState.disposed,
+            )
+            .length,
+        4,
+      );
+
+      expect(
+        () => runtime.removeRoute(second.handle),
+        throwsA(isA<CCNavigationAdapterError>()),
+      );
+      await runtime.dispose();
+    },
+  );
+
+  test('rejects exact handles from another Runtime', () async {
+    CCRouterRuntime createRuntime() => CCRouterRuntime.forTesting(
+      navigationAdapter: CCMemoryNavigationAdapter(),
+      components: [
+        routeComponent(
+          'orders',
+          (registry) => registry.registerRoute(pathRoute()),
+        ),
+      ],
+    );
+
+    final firstRuntime = createRuntime();
+    await firstRuntime.initialize();
+    await firstRuntime.goRoute(
+      const TestIntent<void>('orders.detail', RouteArgs('1')),
+    );
+    final handle = firstRuntime.activeRouteEntries.single.handle;
+
+    final secondRuntime = createRuntime();
+    await secondRuntime.initialize();
+    await secondRuntime.goRoute(
+      const TestIntent<void>('orders.detail', RouteArgs('2')),
+    );
+    expect(
+      () => secondRuntime.removeRoute(handle),
+      throwsA(isA<CCNavigationAdapterError>()),
+    );
+    expect(secondRuntime.activeRouteEntries, hasLength(1));
+    await firstRuntime.dispose();
+    await secondRuntime.dispose();
+  });
+
+  test(
+    'reports exact removal capability errors instead of removing by position',
+    () async {
+      final adapter = BackendEventNavigationAdapter();
+      final runtime = CCRouterRuntime.forTesting(
+        navigationAdapter: adapter,
+        components: [
+          routeComponent(
+            'orders',
+            (registry) => registry.registerRoute(pathRoute()),
+          ),
+        ],
+      );
+      await runtime.initialize();
+      await runtime.goRoute(
+        const TestIntent<void>('orders.detail', RouteArgs('1')),
+      );
+      final handle = runtime.activeRouteEntries.single.handle;
+      expect(
+        () => runtime.removeRoute(handle),
+        throwsA(isA<CCNavigationAdapterError>()),
+      );
+      expect(runtime.activeRouteEntries, hasLength(1));
+      await runtime.dispose();
+    },
+  );
+
   test('disposes retained Route Scopes during Runtime shutdown', () async {
     final runtime = CCRouterRuntime.forTesting(
       navigationAdapter: CCMemoryNavigationAdapter(),

@@ -46,6 +46,18 @@ abstract interface class CCNavigator {
   /// Pops entries until the current entry satisfies [predicate].
   Future<void> popUntil(CCNavigationStackPredicate predicate);
 
+  /// Removes exactly the managed Entry identified by [handle].
+  ///
+  /// Obtain [handle] from `CCRouter.activeRouteEntries`. Stale, foreign, and
+  /// cross-Runtime handles fail with [CCNavigationAdapterError].
+  Future<void> removeRoute(CCRouteEntryHandle handle);
+
+  /// Removes managed Entries below [handle], retaining the target Entry.
+  ///
+  /// Foreign and opaque backend Entries remain untouched. The configured
+  /// Adapter must explicitly support exact identity removal.
+  Future<void> removeRouteBelow(CCRouteEntryHandle handle);
+
   /// Pushes [intent] and removes previous entries until [predicate] matches.
   Future<R?> pushAndRemoveUntil<R>(
     CCRouteIntent<R> intent,
@@ -119,6 +131,17 @@ final class _CCNavigator implements CCNavigator {
   @override
   Future<void> popUntil(CCNavigationStackPredicate predicate) =>
       CCRouter._runtime.popUntilRoute(predicate);
+
+  /// Removes one exact managed Entry through the Runtime-owned Adapter.
+  @override
+  Future<void> removeRoute(CCRouteEntryHandle handle) =>
+      CCRouter._runtime.removeRoute(handle);
+
+  /// Removes managed Entries below one exact Entry through the Runtime-owned
+  /// Adapter.
+  @override
+  Future<void> removeRouteBelow(CCRouteEntryHandle handle) =>
+      CCRouter._runtime.removeRouteBelow(handle);
 
   /// Pushes and removes entries through the Runtime owned by [CCRouter].
   @override

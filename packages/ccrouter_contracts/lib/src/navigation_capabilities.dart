@@ -18,6 +18,7 @@ final class CCNavigationAdapterCapabilities {
     this.supportsOpaqueUiObservation = false,
     this.supportsPredictiveBack = false,
     this.supportsManagedPopObservation = false,
+    this.supportsExactEntryRemoval = false,
   });
 
   /// Whether application-owned foreign Navigator Routes can be observed.
@@ -70,6 +71,13 @@ final class CCNavigationAdapterCapabilities {
   /// triggered Pop of a CCRouter-owned backend route from a Foreign Popup or
   /// LocalHistoryEntry. Without it, Runtime keeps backend events diagnostic.
   final bool supportsManagedPopObservation;
+
+  /// Whether the Adapter can remove a managed backend Entry by stable identity.
+  ///
+  /// This is required for `CCRouter.navigator.removeRoute` and
+  /// `removeRouteBelow`. False means Runtime must report a capability error;
+  /// it must not emulate the operation by removing the stack top or by index.
+  final bool supportsExactEntryRemoval;
 }
 
 /// Optional adapter SPI exposing immutable backend capability metadata.

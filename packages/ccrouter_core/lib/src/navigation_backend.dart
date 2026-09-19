@@ -2,6 +2,20 @@ part of 'runtime.dart';
 
 /// Exposes backend Navigator observations collected by Runtime.
 extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
+  /// Finds the stable backend identity associated with one managed Entry.
+  ///
+  /// A null result is valid for adapters that do not emit a backend ledger;
+  /// their exact-removal SPI may still resolve the Runtime navigation ID.
+  String? _backendEntryIdForRouteEntry(String routeEntryId) {
+    for (final backendEntry in _backendEntries.values) {
+      if (backendEntry.routeEntryId == routeEntryId &&
+          backendEntry.lifecycleState == CCBackendEntryLifecycleState.active) {
+        return backendEntry.backendEntryId;
+      }
+    }
+    return null;
+  }
+
   /// Returns the backend Entry ledger, including removed entries retained for
   /// bounded diagnostics until Runtime disposal.
   List<CCBackendEntry> get backendEntries =>
