@@ -105,6 +105,25 @@ final class _OrderDetailPageRouteIntent implements CCRouteIntent<String> {
 void ccrouterRegisterOrderDetailPageRoute(CCRegistry registry) =>
     OrderDetailPageRoute.register(registry);
 
+/// Package-internal adapter-neutral metadata bridge used by Host generation.
+CCNavigationRoute ccrouterDescribeOrderDetailPageRoute() {
+  final definition = OrderDetailPageRoute.definition;
+  return CCNavigationRoute(
+    routeId: definition.routeId,
+    patterns: definition.patterns,
+    presentation: definition.presentation,
+    deepLink: definition.deepLink,
+    placement: definition.placement,
+  );
+}
+
+/// Package-internal page factory bridge used by generated Flutter catalogs.
+OrderDetailPage ccrouterBuildOrderDetailPageRoute(
+  CCEncodedRouteArguments arguments,
+) => OrderDetailPageRoute.build(
+  OrderDetailPageRoute.definition.codec.decode(arguments),
+);
+
 /// Private boundary conversion; raw input is never included in error messages.
 final class _OrderDetailPageRouteCodec
     implements CCRouteCodec<OrderDetailPageRouteArguments> {

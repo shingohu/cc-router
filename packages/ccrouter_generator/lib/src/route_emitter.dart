@@ -83,6 +83,23 @@ final class ${route.intent} implements CCRouteIntent<${route.result}> {
 void ${route.registrationFunction}(CCRegistry registry) =>
     ${route.api}.register(registry);
 
+/// Package-internal adapter-neutral metadata bridge used by Host generation.
+CCNavigationRoute ${route.descriptorFunction}() {
+  final definition = ${route.api}.definition;
+  return CCNavigationRoute(
+    routeId: definition.routeId,
+    patterns: definition.patterns,
+    presentation: definition.presentation,
+    deepLink: definition.deepLink,
+    placement: definition.placement,
+  );
+}
+
+/// Package-internal page factory bridge used by generated Flutter catalogs.
+${route.page.displayName} ${route.builderFunction}(
+  CCEncodedRouteArguments arguments,
+) => ${route.api}.build(${route.api}.definition.codec.decode(arguments));
+
 /// Private boundary conversion; raw input is never included in error messages.
 final class ${route.codec} implements CCRouteCodec<${route.arguments}> {
   /// Stateless codec shared by the component's route definition.

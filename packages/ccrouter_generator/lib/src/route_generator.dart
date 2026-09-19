@@ -59,6 +59,8 @@ final class _RouteGenerator extends Generator {
         model.codec,
         model.intent,
         model.registrationFunction,
+        model.descriptorFunction,
+        model.builderFunction,
       ]) {
         if (!names.add(name)) {
           _fail(

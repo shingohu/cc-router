@@ -101,6 +101,11 @@ Map<String, Object?> _routeJson(_RouteModel route) => {
       ? null
       : route.annotation.read('description').stringValue,
   'contracts': {'route': route.api, 'arguments': route.arguments},
+  'registration': route.registrationFunction,
+  'destination': {
+    'descriptor': route.descriptorFunction,
+    'builder': route.builderFunction,
+  },
   'patterns': route.patterns.indexed.map((entry) {
     final index = entry.$1;
     final pattern = entry.$2;

@@ -94,6 +94,11 @@ final class Probe {
       'route': 'ProbeRoute',
       'arguments': 'ProbeRouteArguments',
     });
+    expect(route['registration'], 'ccrouterRegisterProbeRoute');
+    expect(route['destination'], {
+      'descriptor': 'ccrouterDescribeProbeRoute',
+      'builder': 'ccrouterBuildProbeRoute',
+    });
     expect(((route['patterns'] as List).single as Map)['constraints'], {
       'id': r'\d+',
     });
@@ -179,6 +184,9 @@ final class Probe { const Probe({required this.id}); final int id; }
       expect(code, contains('CCRouteIntent<void>'));
       expect(code, contains('registry.registerRoute(definition)'));
       expect(code, contains('ccrouterRegisterProbeRoute'));
+      expect(code, contains('ccrouterDescribeProbeRoute'));
+      expect(code, contains('ccrouterBuildProbeRoute'));
+      expect(code, contains('CCNavigationRoute('));
       expect(code, isNot(contains('GoRoute(')));
       expect(code, isNot(contains('CCRouter.navigator.push')));
     },

@@ -39,7 +39,8 @@ devecocli build
 当前 `modules/order` 展示页面注解、生成契约、组件注册和类型安全页面返回；组件身份与
 Registrar 分别位于 `lib/src/demo_order_component.dart` 和
 `lib/src/demo_order_component_registrar.dart`。
-宿主负责 GoRouter 绑定，业务跳转仍统一通过 `CCRouter.navigator`。
+组件生成后端中立的页面 Catalog，宿主通过 `CCGoRouterAssembler` 一次性生成
+GoRouter routes 和 Adapter bindings；业务跳转仍统一通过 `CCRouter.navigator`。
 
 demo 和组件包已加入根 Dart workspace，使用本仓库内框架源码与统一锁文件，
 不再需要 `pubspec_overrides.yaml` 路径覆盖。新增组件时也应加入根 `workspace` 列表，
@@ -54,7 +55,9 @@ fvm dart run ccrouter_generator:ccrouter_generator demo \
 ```
 
 聚合路由目录生成到 `demo/ccrouter_generated/metadata/cc_routes.json` 和
-`demo/ccrouter_generated/metadata/cc_routes.md`。
+`demo/ccrouter_generated/metadata/cc_routes.md`；宿主可执行的 Catalog 生成到
+`demo/lib/ccrouter_generated/ccrouter_host.routes.g.dart`。组件增删普通页面后重新运行
+上述命令即可，`main.dart` 不再逐条添加 `GoRoute` 或 `CCGoRouterRouteBinding`。
 
 路由声明参考 `modules/order/lib/src/order_detail_page.dart`，生成器约束与测试命令见
 [生成器说明](../packages/ccrouter_generator/README.md)。

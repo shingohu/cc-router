@@ -2,6 +2,11 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:ccrouter_generator/ccrouter_generator.dart';
+import 'package:dart_style/dart_style.dart';
+
+final _dartFormatter = DartFormatter(
+  languageVersion: DartFormatter.latestLanguageVersion,
+);
 
 Future<void> main(List<String> arguments) async {
   final parsed = _parseArguments(arguments);
@@ -62,7 +67,8 @@ Future<void> main(List<String> arguments) async {
     return;
   }
   if (parsed.generateComponentRegistrars) {
-    await _generateComponentRouteIndexes(metadataFiles);
+    final catalogs = await _generateComponentRouteIndexes(metadataFiles);
+    await _generateHostRouteCatalog(root, catalogs);
   }
   await outputDirectory.create(recursive: true);
   await File(
@@ -82,7 +88,8 @@ const _usage =
 Scans .component.json and .route.json files below scan-root and writes the aggregate route catalog
 to scan-root/ccrouter_generated/metadata unless --output-dir is provided. When
 --generate-component-registrars is supplied, it also writes deterministic
-component route indexes below each package's lib/src/ccrouter_generated.''';
+component route indexes, narrow package Host entrypoints, and a merged Host
+catalog below scan-root/lib/ccrouter_generated.''';
 
 final class _Arguments {
   const _Arguments({
@@ -180,7 +187,7 @@ final class _MetadataFile {
 }
 
 /// Writes one deterministic route index per component.
-Future<void> _generateComponentRouteIndexes(
+Future<List<_GeneratedComponentCatalog>> _generateComponentRouteIndexes(
   Iterable<_MetadataFile> metadataFiles,
 ) async {
   final componentSources = <String, _ComponentSource>{};
@@ -208,6 +215,10 @@ Future<void> _generateComponentRouteIndexes(
       final registration = '${route['registration'] ?? ''}'.trim().isEmpty
           ? _registrationFromContract(routeContract)
           : '${route['registration']}';
+      final destination = route['destination'];
+      final destinationMap = destination is Map
+          ? destination.cast<Object?, Object?>()
+          : const <Object?, Object?>{};
       routes
           .putIfAbsent(componentId, () => [])
           .add(
@@ -216,11 +227,16 @@ Future<void> _generateComponentRouteIndexes(
               source: source,
               routeId: '${route['id'] ?? ''}',
               registration: registration,
+              descriptor:
+                  '${destinationMap['descriptor'] ?? _descriptorFromContract(routeContract)}',
+              builder:
+                  '${destinationMap['builder'] ?? _builderFromContract(routeContract)}',
             ),
           );
     }
   }
 
+  final generatedCatalogs = <_GeneratedComponentCatalog>[];
   final componentIds = routes.keys.toList()..sort();
   for (final componentId in componentIds) {
     final component = componentSources[componentId];
@@ -235,9 +251,20 @@ Future<void> _generateComponentRouteIndexes(
       '${outputDirectory.path}${Platform.pathSeparator}${_fileStem(componentId)}.routes.g.dart',
     );
     await output.writeAsString(
-      _emitComponentRouteIndex(componentId, componentRoutes),
+      _dartFormatter.format(
+        _emitComponentRouteIndex(componentId, componentRoutes),
+      ),
+    );
+    generatedCatalogs.add(
+      _GeneratedComponentCatalog(
+        componentId: componentId,
+        package: component.package,
+        packageRoot: packageRoot,
+      ),
     );
   }
+  await _generatePackageHostEntrypoints(generatedCatalogs);
+  return generatedCatalogs;
 }
 
 /// Generates a component registrar source with stable imports and ordering.
@@ -255,7 +282,8 @@ String _emitComponentRouteIndex(
     ..writeln('// GENERATED CODE - DO NOT MODIFY BY HAND')
     ..writeln('// ignore_for_file: type=lint, unused_element')
     ..writeln()
-    ..writeln("import 'package:ccrouter/ccrouter.dart';");
+    ..writeln("import 'package:ccrouter/ccrouter.dart';")
+    ..writeln("import 'package:ccrouter/ccrouter_host.dart';");
   for (final entry
       in imports.entries.toList()
         ..sort((left, right) => left.key.compareTo(right.key))) {
@@ -280,7 +308,10 @@ String _emitComponentRouteIndex(
     ..writeln('  void register(CCRegistry registry) {');
   for (final route in routes) {
     final alias = imports[route.source]!;
-    out.writeln('    $alias.${route.registration}(registry);');
+    out
+      ..writeln('    $alias.${route.registration}(')
+      ..writeln('      registry,')
+      ..writeln('    );');
   }
   out
     ..writeln('  }')
@@ -288,8 +319,109 @@ String _emitComponentRouteIndex(
     ..writeln()
     ..writeln('/// Shared generated index used by the component Registrar.')
     ..writeln('const $constantName = $className();')
+    ..writeln()
+    ..writeln(
+      '/// Backend-neutral Flutter destinations owned by `$componentId`.',
+    )
+    ..writeln(
+      'final ${_camelIdentifier(componentId)}RouteCatalog = CCFlutterRouteCatalog([',
+    );
+  for (final route in routes) {
+    final alias = imports[route.source]!;
+    out
+      ..writeln('  CCFlutterRouteDestination(')
+      ..writeln('    componentId: ${jsonEncode(componentId)},')
+      ..writeln('    route:')
+      ..writeln('        $alias.${route.descriptor}(),')
+      ..writeln('    builder: (arguments) =>')
+      ..writeln('        $alias.${route.builder}(arguments),')
+      ..writeln('  ),');
+  }
+  out
+    ..writeln(']);')
     ..writeln();
   return out.toString();
+}
+
+/// Writes one public Host-only integration library per component package.
+Future<void> _generatePackageHostEntrypoints(
+  Iterable<_GeneratedComponentCatalog> catalogs,
+) async {
+  final byPackage = <String, List<_GeneratedComponentCatalog>>{};
+  for (final catalog in catalogs) {
+    byPackage.putIfAbsent(catalog.package, () => []).add(catalog);
+  }
+  for (final entry in byPackage.entries) {
+    final packageCatalogs = entry.value
+      ..sort((left, right) => left.componentId.compareTo(right.componentId));
+    final output = File(
+      '${packageCatalogs.first.packageRoot.path}${Platform.pathSeparator}lib${Platform.pathSeparator}${entry.key}_ccrouter.g.dart',
+    );
+    final out = StringBuffer()
+      ..writeln('// GENERATED CODE - DO NOT MODIFY BY HAND')
+      ..writeln()
+      ..writeln('/// Host-only generated route catalogs for `${entry.key}`.')
+      ..writeln('library;')
+      ..writeln();
+    for (final catalog in packageCatalogs) {
+      out
+        ..writeln(
+          "export 'src/ccrouter_generated/${_fileStem(catalog.componentId)}.routes.g.dart'",
+        )
+        ..writeln(
+          '    show ${_camelIdentifier(catalog.componentId)}RouteCatalog;',
+        );
+    }
+    await output.writeAsString(_dartFormatter.format(out.toString()));
+  }
+}
+
+/// Writes the Host catalog that merges all scanned component catalogs.
+Future<void> _generateHostRouteCatalog(
+  Directory root,
+  Iterable<_GeneratedComponentCatalog> catalogs,
+) async {
+  final sorted = catalogs.toList()
+    ..sort((left, right) => left.componentId.compareTo(right.componentId));
+  final outputDirectory = Directory(
+    '${root.path}${Platform.pathSeparator}lib${Platform.pathSeparator}ccrouter_generated',
+  );
+  await outputDirectory.create(recursive: true);
+  final aliases = <String, String>{};
+  for (final package in sorted.map((catalog) => catalog.package).toSet()) {
+    aliases[package] = 'component_${_snakeIdentifier(package)}';
+  }
+  final out = StringBuffer()
+    ..writeln('// GENERATED CODE - DO NOT MODIFY BY HAND')
+    ..writeln('// ignore_for_file: type=lint')
+    ..writeln()
+    ..writeln("import 'package:ccrouter/ccrouter_host.dart';");
+  for (final entry
+      in aliases.entries.toList()
+        ..sort((left, right) => left.key.compareTo(right.key))) {
+    out.writeln(
+      "import 'package:${entry.key}/${entry.key}_ccrouter.g.dart' as ${entry.value};",
+    );
+  }
+  out
+    ..writeln()
+    ..writeln(
+      '/// All generated component destinations installed in this Host.',
+    )
+    ..writeln(
+      'final ccrouterGeneratedRouteCatalog = CCFlutterRouteCatalog.merge([',
+    );
+  for (final catalog in sorted) {
+    out.writeln(
+      '  ${aliases[catalog.package]}.${_camelIdentifier(catalog.componentId)}RouteCatalog,',
+    );
+  }
+  out
+    ..writeln(']);')
+    ..writeln();
+  await File(
+    '${outputDirectory.path}${Platform.pathSeparator}ccrouter_host.routes.g.dart',
+  ).writeAsString(_dartFormatter.format(out.toString()));
 }
 
 /// Finds a package root by walking up from one metadata file.
@@ -318,6 +450,16 @@ String _pascalIdentifier(String value) => value
     .map((part) => '${part[0].toUpperCase()}${part.substring(1)}')
     .join();
 
+/// Converts a component ID into a lower-camel generated symbol stem.
+String _camelIdentifier(String value) {
+  final pascal = _pascalIdentifier(value);
+  return '${pascal[0].toLowerCase()}${pascal.substring(1)}';
+}
+
+/// Converts a package name into a valid snake-style import alias.
+String _snakeIdentifier(String value) =>
+    value.replaceAll(RegExp(r'[^A-Za-z0-9_]'), '_');
+
 /// Converts a component ID into a stable generated file stem.
 String _fileStem(String value) =>
     value.replaceAll(RegExp(r'[^A-Za-z0-9_.-]'), '_');
@@ -328,6 +470,22 @@ String _registrationFromContract(String contract) {
       .replaceFirst(RegExp(r'^_'), '')
       .replaceFirst(RegExp(r'Route$'), '');
   return 'ccrouterRegister${name}Route';
+}
+
+/// Derives a descriptor bridge name for metadata generated by older versions.
+String _descriptorFromContract(String contract) {
+  final name = contract
+      .replaceFirst(RegExp(r'^_'), '')
+      .replaceFirst(RegExp(r'Route$'), '');
+  return 'ccrouterDescribe${name}Route';
+}
+
+/// Derives a page-builder bridge name for metadata generated by older versions.
+String _builderFromContract(String contract) {
+  final name = contract
+      .replaceFirst(RegExp(r'^_'), '')
+      .replaceFirst(RegExp(r'Route$'), '');
+  return 'ccrouterBuild${name}Route';
 }
 
 /// Sorts route contributions independently of filesystem traversal order.
@@ -376,6 +534,8 @@ final class _RouteRegistration {
     required this.source,
     required this.routeId,
     required this.registration,
+    required this.descriptor,
+    required this.builder,
   });
 
   /// Package name used by generated package imports.
@@ -389,4 +549,29 @@ final class _RouteRegistration {
 
   /// Generated bridge symbol exposed only to package-internal code.
   final String registration;
+
+  /// Generated bridge returning adapter-neutral route metadata.
+  final String descriptor;
+
+  /// Generated bridge decoding arguments and creating the Flutter page.
+  final String builder;
+}
+
+/// Describes one generated component catalog and its public Host entrypoint.
+final class _GeneratedComponentCatalog {
+  /// Creates a generated catalog record used for package and Host aggregation.
+  const _GeneratedComponentCatalog({
+    required this.componentId,
+    required this.package,
+    required this.packageRoot,
+  });
+
+  /// Stable component identity used in generated symbol names.
+  final String componentId;
+
+  /// Dart package containing the generated component catalog.
+  final String package;
+
+  /// Package root where the Host integration library is written.
+  final Directory packageRoot;
 }

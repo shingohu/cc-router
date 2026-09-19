@@ -57,7 +57,13 @@ fvm dart run ccrouter_generator:ccrouter_generator demo \
   `CCRouter.navigator.push<String>(...)` 导航。
 - `DetailPageRoute.definition`：中立路由表定义和私有 Codec。
 - `DetailPageRoute.register(registry)`：组件 Registrar 的注册入口。
-- `DetailPageRoute.build(arguments)`：将解码参数注入页面构造器；Host 自己绑定后端。
+- `DetailPageRoute.build(arguments)`：将解码参数注入页面构造器。
+- `<component-id>.routes.g.dart`：组件路由注册索引和后端中立的
+  `CCFlutterRouteCatalog`。
+- `<package>_ccrouter.g.dart`：只向应用组合根暴露 Catalog 的窄 Host integration
+  library，不加入组件业务 barrel。
+- 宿主 `lib/ccrouter_generated/ccrouter_host.routes.g.dart`：合并所有扫描到的组件
+  Catalog。普通路由新增、删除或参数调整不再修改宿主 `main.dart`。
 
 组件路由注册索引由 `--generate-component-registrars` 自动生成到
 `lib/src/ccrouter_generated/<component-id>.routes.g.dart`。组件 Registrar 只需调用
@@ -65,6 +71,12 @@ fvm dart run ccrouter_generator:ccrouter_generator demo \
 索引按源文件和 route ID 稳定排序，并通过页面生成文件中的 package-internal
 registration bridge 完成注册，因此组件内部路由仍不会成为公共契约。索引文件禁止手工编辑，
 CI 应在生成后检查工作区无未提交差异。
+
+Catalog 只包含 Flutter 页面工厂和 `CCNavigationRoute`，不包含 `GoRoute`。GoRouter
+宿主使用 `CCGoRouterAssembler` 同源生成 `routes` 与 `bindings`；以后接入 Navigator
+1.0、其他 Navigator 2.0 实现或自定义后端时，可以复用同一 Catalog，仅替换
+Assembler/Adapter。Shell、嵌套路由、完整 Regex 兼容入口等后端特有结构必须由宿主
+提供显式 Override，不能被自动扁平化。
 
 路由生成文件统一使用 `.route.g.dart` 后缀并写入
 `lib/src/ccrouter_generated/`；后续 Service 生成器预留 `.service.g.dart` 后缀，
@@ -101,7 +113,7 @@ src/order_component_registrar.dart
   两者不能同时设置。多值只有一个可逆 Pattern 时自动补齐 primary，存在多个可逆
   Pattern 时必须显式指定一个 primary。别名必须捕获相同的 Path 参数；支持 Path、
   URI、Regex Pattern 以及 Presentation、Placement、拦截器 ID 元数据。
-- 不生成 GoRoute，不选择路由后端，不替宿主维护 Navigator。
+- 组件生成物不生成 GoRoute、不选择路由后端；宿主生成物只聚合中立 Catalog。
 
 集合 Query、自定义字段 Codec 以及具名/Factory 页面构造器、分离的纯契约文件留到后续
 阶段。聚合校验同时检查同层、同具体度且能够静态证明的

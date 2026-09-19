@@ -20,6 +20,11 @@
         "route": "OrderDetailPageRoute",
         "arguments": "OrderDetailPageRouteArguments"
       },
+      "registration": "ccrouterRegisterOrderDetailPageRoute",
+      "destination": {
+        "descriptor": "ccrouterDescribeOrderDetailPageRoute",
+        "builder": "ccrouterBuildOrderDetailPageRoute"
+      },
       "patterns": [
         {
           "type": "CCPathPattern",

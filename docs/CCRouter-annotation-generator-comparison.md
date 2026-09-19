@@ -78,6 +78,12 @@ CCRouteQueryCodec<OrderFilter>
 
 其生成器支持多 Package 扫描、排除包、分组和排序。CCRouter 已经有组件级 `ccrouter_generated/metadata/**/*.component.json`、路由级 `ccrouter_generated/metadata/**/*.route.json`、workspace 聚合校验和应用级 `cc_routes.json` / `cc_routes.md`，并且额外校验组件所有权、`visibleTo` 和依赖边界。
 
+已参考其“生成统一 Route Settings 列表、宿主批量转换”的思路，但没有照搬动态参数
+Map 或组件直接依赖 GoRouter。CCRouter 生成 `CCFlutterRouteCatalog`，由宿主生成器跨组件
+聚合，再交给具体后端 Assembler。当前 `CCGoRouterAssembler` 同源产生 `GoRoute` 与
+Binding；Navigator 1.0 或其他 Navigator 2.0 后端可以复用 Catalog。Shell、嵌套 Outlet
+和完整 Regex 入口使用显式 Override，避免根据 path 前缀猜测结构。
+
 后续可以改进 CLI：
 
 - 指定扫描目录；

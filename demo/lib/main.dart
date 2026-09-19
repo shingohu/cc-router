@@ -5,6 +5,8 @@ import 'package:ccrouter_go_router/ccrouter_go_router.dart';
 import 'package:demo_order/demo_order.dart';
 import 'package:flutter/material.dart';
 
+import 'ccrouter_generated/ccrouter_host.routes.g.dart';
+
 final class CreateOrder implements CCCommand<String> {
   const CreateOrder(this.amount);
 
@@ -49,20 +51,8 @@ final class _CCRouterDemoAppState extends State<CCRouterDemoApp> {
     super.initState();
     final navigatorKey = GlobalKey<NavigatorState>();
     final observer = CCGoRouterNavigationObserver(outlet: 'root');
-    final orderBinding = CCGoRouterRouteBinding(
-      routeId: OrderDetailPageRoute.id,
-      goRoute: GoRoute(
-        path: '/orders/:orderId',
-        builder: (_, state) => OrderDetailPageRoute.build(
-          OrderDetailPageRoute.definition.codec.decode(
-            CCEncodedRouteArguments(
-              path: state.pathParameters,
-              query: state.uri.queryParametersAll,
-              extra: state.extra,
-            ),
-          ),
-        ),
-      ),
+    final assembly = CCGoRouterAssembler.assemble(
+      catalog: ccrouterGeneratedRouteCatalog,
     );
     _router = GoRouter(
       navigatorKey: navigatorKey,
@@ -72,12 +62,12 @@ final class _CCRouterDemoAppState extends State<CCRouterDemoApp> {
           path: '/',
           builder: (_, _) => RuntimePage(navigationAdapter: _adapter),
         ),
-        orderBinding.goRoute,
+        ...assembly.routes,
       ],
     );
     _adapter = CCGoRouterAdapter(
       router: _router,
-      bindings: [orderBinding],
+      bindings: assembly.bindings,
       navigatorKeys: {'root': navigatorKey},
       observers: [observer],
     );

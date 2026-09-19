@@ -64,6 +64,14 @@ final class _RouteModel {
   String get registrationFunction =>
       'ccrouterRegister${page.displayName.replaceFirst(RegExp(r'^_'), '')}Route';
 
+  /// Stable package-internal bridge exposing adapter-neutral route metadata.
+  String get descriptorFunction =>
+      'ccrouterDescribe${page.displayName.replaceFirst(RegExp(r'^_'), '')}Route';
+
+  /// Stable package-internal bridge decoding arguments and building the page.
+  String get builderFunction =>
+      'ccrouterBuild${page.displayName.replaceFirst(RegExp(r'^_'), '')}Route';
+
   /// Validates metadata and constructor injection without backend assumptions.
   static _RouteModel read(Element element, ConstantReader annotation) {
     if (element is! ClassElement ||

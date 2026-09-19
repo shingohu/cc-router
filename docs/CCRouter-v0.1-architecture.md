@@ -642,7 +642,7 @@ URL -> RouteCodec -> Typed Route Args -> Route Factory -> Widget
 
 完整 URL 不天然等于外部 Deep Link，普通 Path 也不天然等于内部导航。类型安全 Intent 和应用内 `open` 使用内部 Origin；Universal Link、App Link、自定义 Scheme、通知 URI 和扫码输入通过受控 Ingress 使用外部 Origin 并执行 `CCDeepLinkPolicy`。业务可填写的导航 Source 只用于埋点，不能改变该信任属性。
 
-当前基础实现已经提供 Adapter-neutral 的 `CCNavigator`、主 Pattern 地址生成、Runtime 导航请求、Adapter 生命周期、Pure Dart 内存 Adapter、可选 `CCRouterApp`、固定来源的 `CCDeepLinkIngress` 和独立的 `ccrouter_go_router` 适配器。GoRouter 适配器覆盖 Page 路由、BottomSheet/Dialog 模态 Page、已有 `ShellRoute` 的 Outlet Navigator 及基础栈操作；Shell 自身生成、`StatefulShellRoute` 分支编排和平台事件监听仍在后续 Flutter 集成阶段接入，Core 不保存或解释 Flutter 对象。模态路由必须在绑定的 `GoRoute.pageBuilder` 中显式返回 `CCGoRouterBottomSheetPage` 或 `CCGoRouterDialogPage`，并声明匹配的 `presentationType`，适配器不会把普通 Page 静默降级为模态展示。
+当前基础实现已经提供 Adapter-neutral 的 `CCNavigator`、主 Pattern 地址生成、Runtime 导航请求、Adapter 生命周期、Pure Dart 内存 Adapter、可选 `CCRouterApp`、固定来源的 `CCDeepLinkIngress` 和独立的 `ccrouter_go_router` 适配器。组件生成后端中立的 `CCFlutterRouteCatalog`，宿主聚合后由 `CCGoRouterAssembler` 从同一来源产生普通 `GoRoute` 与 Adapter Binding；更换后端时组件 Catalog、类型安全 Contract 和业务调用保持不变。GoRouter 适配器覆盖 Page 路由、BottomSheet/Dialog 模态 Page、已有 `ShellRoute` 的 Outlet Navigator 及基础栈操作；Shell 自身生成、`StatefulShellRoute` 分支编排和平台事件监听仍在后续 Flutter 集成阶段接入，Core 不保存或解释 Flutter 对象。自动装配根据 Presentation 选择对应 Page；手写 Override 必须返回匹配的 `CCGoRouterBottomSheetPage`、`CCGoRouterDialogPage` 或普通 `CCGoRouterPage`，适配器不会静默改变页面语义。
 GoRouter Adapter 通过 `navigatorKeys` 接收应用拥有的 Outlet Navigator，可将带有
 `shellId`/`navigatorOutlet` placement 的子路由绑定到已有 `ShellRoute` Navigator；
 也可以通过 `CCGoRouterShellBinding` 一次声明 Shell 和全部分支 key。未提供对应 key

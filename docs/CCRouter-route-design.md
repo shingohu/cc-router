@@ -1293,6 +1293,8 @@ Deadline 配置、完整导航结果遥测投影仍待后续实现。
 - 已实现组件所有者、Route ID、`visibleTo`、依赖边、静态 Pattern 重叠以及公开 barrel
   `show` 导出的聚合校验。
 - 已实现页面级及应用聚合级 JSON/Markdown 文档导出。
+- 已实现组件 `CCFlutterRouteCatalog`、窄 Host integration library 和宿主 Catalog 聚合；
+  普通路由变化不再要求宿主逐条维护页面 import、`GoRoute` 与 Binding。
 - 待实现独立纯契约文件。
 - 待提供可选的 Route Scaffold CLI，用于创建页面模板、计算并写入正确的
   `.route.g.dart` `part` 路径、补齐 `@CCRoute` 声明，并触发首次标准生成。该工具只改善
@@ -1304,17 +1306,23 @@ Deadline 配置、完整导航结果遥测投影仍待后续实现。
 
 当前已建立 `ccrouter_go_router` 包的基础适配器边界。它接收应用自行配置的
 `GoRouter`，将 Runtime 已解析的 Page 请求映射到 GoRouter，并保留路由所有权、
-来源和 URI 由 Core 管理。GoRouter 仍由应用负责创建和提供页面构造器。
+来源和 URI 由 Core 管理。GoRouter 仍由应用创建和持有，但普通页面构造器由组件生成的
+后端中立 `CCFlutterRouteCatalog` 提供。
 
-组件或应用组合根可以为每个 Runtime 路由提供一个
-`CCGoRouterRouteBinding(routeId, goRoute, presentationType)`。绑定只关联稳定的 CCRouter Route ID
+`CCGoRouterAssembler` 消费宿主聚合 Catalog，并从同一来源生成 `routes` 和
+`CCGoRouterRouteBinding`，避免路由树与 Adapter 绑定分别维护。组件 Catalog 不引用
+GoRouter，因此 Navigator 1.0、其他 Navigator 2.0 或自定义后端可以提供自己的
+Assembler/Adapter。Shell、嵌套 Outlet、完整 Regex 兼容入口和自定义 Redirect 继续由
+应用组合根通过 `CCGoRouterRouteOverride` 显式编排，自动装配不会猜测或扁平化结构。
+
+`CCGoRouterRouteBinding(routeId, goRoute, presentationType)` 只关联稳定的 CCRouter Route ID
 与应用拥有的 `GoRoute`，并声明其 `pageBuilder` 返回的 Page 家族，不会注册、修改或销毁 `GoRouter`。当提供绑定集合时，
 Adapter 初始化会校验 Runtime 路由与绑定 ID 一一对应；根页面或其他不属于
 CCRouter 契约的 GoRouter 路由可以继续由应用独立保留。
 
-当前已支持 Modal BottomSheet 和 Dialog，但必须由绑定的 `GoRoute.pageBuilder`
-显式返回 `CCGoRouterBottomSheetPage` 或 `CCGoRouterDialogPage`；适配器不会改写应用拥有的
-`GoRoute`，也不会把普通 Page 静默降级为模态展示。两类模态 Page 都保留 GoRouter
+当前已支持 Modal BottomSheet 和 Dialog。自动装配根据 Presentation 生成对应 Page；
+手写 Override 必须由 `GoRoute.pageBuilder` 显式返回 `CCGoRouterBottomSheetPage` 或
+`CCGoRouterDialogPage`。适配器不会把普通 Page 静默降级为模态展示。两类模态 Page 都保留 GoRouter
 栈条目，因此 `push` Future、`pop` 返回值、遮罩/拖拽配置和生命周期仍由 Navigator
 处理。Material 与 Cupertino Dialog 可通过 `CCDialogRouteType` 选择，BottomSheet
 配置映射到 Flutter 的 `ModalBottomSheetRoute`。`popAndPush`、`popUntil` 和 `pushAndRemoveUntil` 已通过 GoRouter 的 Navigator 与

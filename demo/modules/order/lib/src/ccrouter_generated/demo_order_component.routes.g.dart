@@ -2,6 +2,7 @@
 // ignore_for_file: type=lint, unused_element
 
 import 'package:ccrouter/ccrouter.dart';
+import 'package:ccrouter/ccrouter_host.dart';
 import 'package:demo_order/src/order_detail_page.dart'
     as route_src_order_detail_page_dart;
 
@@ -20,3 +21,14 @@ final class DemoOrderComponentGeneratedRoutes {
 
 /// Shared generated index used by the component Registrar.
 const demoOrderComponentGeneratedRoutes = DemoOrderComponentGeneratedRoutes();
+
+/// Backend-neutral Flutter destinations owned by `demo_order_component`.
+final demoOrderComponentRouteCatalog = CCFlutterRouteCatalog([
+  CCFlutterRouteDestination(
+    componentId: "demo_order_component",
+    route: route_src_order_detail_page_dart
+        .ccrouterDescribeOrderDetailPageRoute(),
+    builder: (arguments) => route_src_order_detail_page_dart
+        .ccrouterBuildOrderDetailPageRoute(arguments),
+  ),
+]);
