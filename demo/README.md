@@ -53,8 +53,8 @@ fvm dart run ccrouter_generator:ccrouter_generator demo \
   --generate-component-registrars
 ```
 
-聚合路由目录生成到 `demo/docs/generated/cc_routes.json` 和
-`demo/docs/generated/cc_routes.md`。
+聚合路由目录生成到 `demo/ccrouter_generated/metadata/cc_routes.json` 和
+`demo/ccrouter_generated/metadata/cc_routes.md`。
 
 路由声明参考 `modules/order/lib/src/order_detail_page.dart`，生成器约束与测试命令见
 [生成器说明](../packages/ccrouter_generator/README.md)。

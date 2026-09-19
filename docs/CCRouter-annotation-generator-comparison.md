@@ -86,6 +86,9 @@ CCRouteQueryCodec<OrderFilter>
 - 稳定排序；
 - 可选输出目录；
 - 增量或缓存扫描。
+- 提供可选的 Route Scaffold 子命令，创建页面模板并写入正确的生成 `part` 路径，随后
+  调用标准 `build_runner` 和组件路由索引生成流程。它不作为另一套生成语义，也不自动
+  修改公共 barrel 或 GoRouter 路由树，以免把开发便利性变成隐式 API 暴露或宿主侵入。
 
 ### 2.5 路由元数据扩展
 

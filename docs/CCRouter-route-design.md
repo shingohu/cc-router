@@ -1142,7 +1142,7 @@ abstract interface class CCRouteTelemetryObserver {
 
 ## 16. 路由文档生成
 
-生成器按应用输出两种格式，默认放在应用的 `docs/generated/` 目录：
+生成器按应用输出两种格式，默认放在应用的 `ccrouter_generated/metadata/` 目录：
 
 ```text
 cc_routes.json
@@ -1150,6 +1150,10 @@ cc_routes.md
 ```
 
 `cc_routes.json` 用于 CI、跨端工具和文档平台；描述信息作为结构化字段保存，不使用 JSON 注释。`cc_routes.md` 用于开发者阅读。
+
+应用聚合元数据与组件级元数据统一位于项目根的 `ccrouter_generated/metadata/`；参与
+编译的 Dart 生成代码仍写入包内的 `lib/src/ccrouter_generated/`。生成文档不进入
+手写 `docs/`，避免机器产物与架构设计文档混合。
 
 每条路由包含：
 
@@ -1290,6 +1294,11 @@ Deadline 配置、完整导航结果遥测投影仍待后续实现。
   `show` 导出的聚合校验。
 - 已实现页面级及应用聚合级 JSON/Markdown 文档导出。
 - 待实现独立纯契约文件。
+- 待提供可选的 Route Scaffold CLI，用于创建页面模板、计算并写入正确的
+  `.route.g.dart` `part` 路径、补齐 `@CCRoute` 声明，并触发首次标准生成。该工具只改善
+  开发体验，不替代 `build_runner`、Analyzer 校验或 workspace 聚合校验，也不直接修改
+  已有业务页面、公共 barrel 或 GoRouter 路由树；需要公开契约和后端绑定时只生成明确的
+  待办提示，避免无意扩大 API 或改写应用导航结构。
 
 ### 阶段 D：GoRouter Adapter
 

@@ -19,7 +19,7 @@ Future<void> main(List<String> arguments) async {
   final root = Directory(parsed.rootPath).absolute;
   final outputDirectory = Directory(
     parsed.outputDirectoryPath ??
-        '${root.path}${Platform.pathSeparator}docs${Platform.pathSeparator}generated',
+        '${root.path}${Platform.pathSeparator}ccrouter_generated${Platform.pathSeparator}metadata',
   ).absolute;
   final metadataFiles = <_MetadataFile>[];
   await for (final entity in root.list(recursive: true, followLinks: false)) {
@@ -80,7 +80,7 @@ const _usage =
     '''Usage: ccrouter_generator [scan-root] [--output-dir <directory>] [--generate-component-registrars]
 
 Scans .component.json and .route.json files below scan-root and writes the aggregate route catalog
-to scan-root/docs/generated unless --output-dir is provided. When
+to scan-root/ccrouter_generated/metadata unless --output-dir is provided. When
 --generate-component-registrars is supplied, it also writes deterministic
 component route indexes below each package's lib/src/ccrouter_generated.''';
 

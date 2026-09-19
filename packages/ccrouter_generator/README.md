@@ -126,6 +126,7 @@ fvm flutter analyze packages demo
 `ccrouter_generated/metadata/**/*.route.json`，校验组件/路由 ID、路由所有者、
 `visibleTo` 目标、消费组件对路由所有者的显式依赖、静态 Pattern 冲突，以及
 `exported` 路由是否由公共 barrel 使用 `show` 同时导出 Route 和 Arguments 契约；
-它会在扫描根目录的 `docs/generated/` 下生成 `cc_routes.json` 和
+它会在扫描根目录的 `ccrouter_generated/metadata/` 下生成 `cc_routes.json` 和
 `cc_routes.md`。本仓库的扫描根目录是 `demo`，因此输出位于
-`demo/docs/generated/`。也可以通过 `--output-dir <directory>` 指定其他输出目录；校验失败时返回非零退出码。
+`demo/ccrouter_generated/metadata/`。也可以通过 `--output-dir <directory>` 指定其他
+输出目录；校验失败时返回非零退出码。
