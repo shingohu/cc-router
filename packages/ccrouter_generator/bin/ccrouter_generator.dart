@@ -31,8 +31,12 @@ Future<void> main(List<String> arguments) async {
     }
   }
   final result = CCRouteWorkspaceValidator.validate(documents);
-  if (!result.isValid) {
-    for (final error in result.errors) {
+  final errors = [
+    ...result.errors,
+    ...CCRouteBarrelExportValidator.validate(root, documents),
+  ]..sort();
+  if (errors.isNotEmpty) {
+    for (final error in errors) {
       stderr.writeln('error: $error');
     }
     exitCode = 1;

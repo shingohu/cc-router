@@ -16,16 +16,22 @@
       "visibleTo": [],
       "deepLink": "disabled",
       "description": "订单详情，确认后返回订单编号。",
+      "contracts": {
+        "route": "OrderDetailPageRoute",
+        "arguments": "OrderDetailPageRouteArguments"
+      },
       "patterns": [
         {
           "type": "CCPathPattern",
           "value": "/orders/:orderId",
-          "primary": true
+          "primary": true,
+          "constraints": {}
         },
         {
           "type": "CCPathPattern",
           "value": "/order/:orderId",
-          "primary": false
+          "primary": false,
+          "constraints": {}
         }
       ],
       "parameters": [

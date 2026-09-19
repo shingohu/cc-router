@@ -5,3 +5,4 @@
 library;
 
 export 'src/workspace_validator.dart';
+export 'src/barrel_validator.dart';

@@ -1280,9 +1280,10 @@ Deadline 配置、完整导航结果遥测投影仍待后续实现。
 
 - 已实现页面和构造参数分析。
 - 已实现 Intent、Codec、Definition、注册入口和组件契约生成。
-- 已实现组件所有者、Route ID、`visibleTo`、依赖边以及静态 Pattern 重叠的聚合校验。
+- 已实现组件所有者、Route ID、`visibleTo`、依赖边、静态 Pattern 重叠以及公开 barrel
+  `show` 导出的聚合校验。
 - 已实现页面级及应用聚合级 JSON/Markdown 文档导出。
-- 待实现公开 barrel 检查及独立纯契约文件。
+- 待实现独立纯契约文件。
 
 ### 阶段 D：GoRouter Adapter
 

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:ccrouter_generator/ccrouter_generator.dart';
 import 'package:test/test.dart';
@@ -244,5 +245,43 @@ void main() {
       ),
     ]);
     expect(result.errors, isEmpty);
+  });
+
+  test('requires exported route contracts in a public barrel show list', () {
+    final root = Directory.systemTemp.createTempSync('ccrouter-barrel-test-');
+    try {
+      final package = Directory('${root.path}/demo_order')..createSync();
+      Directory('${package.path}/lib/src').createSync(recursive: true);
+      File(
+        '${package.path}/pubspec.yaml',
+      ).writeAsStringSync('name: demo_order\n');
+      File(
+        '${package.path}/lib/src/detail.dart',
+      ).writeAsStringSync("part 'detail.ccroute.g.dart';\n");
+      File('${package.path}/lib/demo_order.dart').writeAsStringSync(
+        "export 'src/detail.dart' show DetailRoute, DetailRouteArguments;\n",
+      );
+      final metadata = document(
+        source: 'lib/src/detail.dart',
+        components: [component('orders')],
+        routes: [
+          route('orders.detail', 'orders')
+            ..['contracts'] = {
+              'route': 'DetailRoute',
+              'arguments': 'DetailRouteArguments',
+            },
+        ],
+      )..['package'] = 'demo_order';
+      expect(CCRouteBarrelExportValidator.validate(root, [metadata]), isEmpty);
+      File(
+        '${package.path}/lib/demo_order.dart',
+      ).writeAsStringSync("export 'src/detail.dart';\n");
+      expect(
+        CCRouteBarrelExportValidator.validate(root, [metadata]),
+        contains(contains('must be re-exported')),
+      );
+    } finally {
+      root.deleteSync(recursive: true);
+    }
   });
 }

@@ -13,6 +13,7 @@ Includes safe defaults.
 - Result: `String`
 - Patterns:
   - `/detail/:id` (CCPathPattern, primary)
+    - Constraints: `{"id":"\\d+"}`
   - `/legacy/:id` (CCPathPattern)
   - `sample://detail/:id` (CCUriPattern)
   - `/old/(?<id>\d+)` (CCRegexPattern)

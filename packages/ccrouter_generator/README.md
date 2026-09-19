@@ -71,8 +71,8 @@ fvm dart run ccrouter_generator:ccrouter_generator
   Pattern 以及 Presentation、Placement、拦截器 ID 元数据。
 - 不生成 GoRoute，不选择路由后端，不替宿主维护 Navigator。
 
-集合 Query、自定义字段 Codec、具名/Factory 页面构造器、分离的纯契约文件以及公开
-barrel 导出检查留到后续阶段。聚合校验同时检查同层、同具体度且能够静态证明的
+集合 Query、自定义字段 Codec 以及具名/Factory 页面构造器、分离的纯契约文件留到后续
+阶段。聚合校验同时检查同层、同具体度且能够静态证明的
 Path/URI/Regex Pattern 冲突；约束表达式仅在可证明互斥时排除重叠，复杂正则歧义仍由
 Runtime 注册兜底。
 
@@ -90,5 +90,7 @@ fvm flutter analyze packages demo
 修改声明后必须重新生成并做静态检查。
 
 第二条命令聚合全部 `.ccroute.json`，校验组件/路由 ID、路由所有者、
-`visibleTo` 目标以及消费组件对路由所有者的显式依赖，并在仓库根目录生成
-`CCRouter-routes.json` 和 `CCRouter-routes.md`。校验失败时返回非零退出码。
+`visibleTo` 目标、消费组件对路由所有者的显式依赖、静态 Pattern 冲突，以及
+`exported` 路由是否由公共 barrel 使用 `show` 同时导出 Route 和 Arguments 契约；
+它会在仓库根目录生成 `CCRouter-routes.json` 和 `CCRouter-routes.md`。校验失败时返回
+非零退出码。

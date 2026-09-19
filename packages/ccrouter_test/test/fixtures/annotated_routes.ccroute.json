@@ -23,21 +23,30 @@
       ],
       "deepLink": "enabled",
       "description": "A typed detail route.\nIncludes safe defaults.",
+      "contracts": {
+        "route": "DetailPageRoute",
+        "arguments": "DetailPageRouteArguments"
+      },
       "patterns": [
         {
           "type": "CCPathPattern",
           "value": "/detail/:id",
-          "primary": true
+          "primary": true,
+          "constraints": {
+            "id": "\\d+"
+          }
         },
         {
           "type": "CCPathPattern",
           "value": "/legacy/:id",
-          "primary": false
+          "primary": false,
+          "constraints": {}
         },
         {
           "type": "CCUriPattern",
           "value": "sample://detail/:id",
-          "primary": false
+          "primary": false,
+          "constraints": {}
         },
         {
           "type": "CCRegexPattern",
@@ -110,11 +119,16 @@
       "visibleTo": [],
       "deepLink": "disabled",
       "description": null,
+      "contracts": {
+        "route": "_InternalPageRoute",
+        "arguments": "_InternalPageRouteArguments"
+      },
       "patterns": [
         {
           "type": "CCPathPattern",
           "value": "/internal",
-          "primary": true
+          "primary": true,
+          "constraints": {}
         }
       ],
       "parameters": [],
@@ -127,11 +141,16 @@
       "visibleTo": [],
       "deepLink": "disabled",
       "description": null,
+      "contracts": {
+        "route": "PositionalPageRoute",
+        "arguments": "PositionalPageRouteArguments"
+      },
       "patterns": [
         {
           "type": "CCPathPattern",
           "value": "/position/:value",
-          "primary": true
+          "primary": true,
+          "constraints": {}
         }
       ],
       "parameters": [
@@ -163,11 +182,16 @@
       "visibleTo": [],
       "deepLink": "disabled",
       "description": null,
+      "contracts": {
+        "route": "ExtraPageRoute",
+        "arguments": "ExtraPageRouteArguments"
+      },
       "patterns": [
         {
           "type": "CCPathPattern",
           "value": "/extra",
-          "primary": true
+          "primary": true,
+          "constraints": {}
         }
       ],
       "parameters": [
@@ -190,11 +214,16 @@
       "visibleTo": [],
       "deepLink": "disabled",
       "description": null,
+      "contracts": {
+        "route": "PrefixedPageRoute",
+        "arguments": "PrefixedPageRouteArguments"
+      },
       "patterns": [
         {
           "type": "CCPathPattern",
           "value": "/prefixed",
-          "primary": true
+          "primary": true,
+          "constraints": {}
         }
       ],
       "parameters": [

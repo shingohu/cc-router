@@ -80,6 +80,10 @@ final class Probe {
     expect((json['components'] as List).single['version'], '1.2.3');
     expect(route['componentId'], 'probe');
     expect(route['description'], 'Probe details.');
+    expect(route['contracts'], {
+      'route': 'ProbeRoute',
+      'arguments': 'ProbeRouteArguments',
+    });
     expect(((route['patterns'] as List).single as Map)['constraints'], {
       'id': r'\d+',
     });

@@ -114,6 +114,7 @@ Map<String, Object?> _routeJson(_RouteModel route) => {
   'description': route.annotation.read('description').isNull
       ? null
       : route.annotation.read('description').stringValue,
+  'contracts': {'route': route.api, 'arguments': route.arguments},
   'patterns': route.annotation.read('patterns').listValue.map((pattern) {
     final type = (pattern.type as InterfaceType).element.displayName;
     return <String, Object?>{
