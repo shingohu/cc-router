@@ -27,12 +27,30 @@ final class _RouteMetadataBuilder implements Builder {
     for (final annotated in library.annotatedWith(_RouteGenerator._route)) {
       routes.add(_RouteModel.read(annotated.element, annotated.annotation));
     }
-    if (routes.isEmpty) return;
+    for (final annotated in library.annotatedWith(
+      _RouteContractGenerator._contract,
+    )) {
+      routes.add(
+        _RouteModel.read(
+          annotated.element,
+          annotated.annotation,
+          contractFirst: true,
+        ),
+      );
+    }
+    final implementations = _readRouteImplementationModels(library);
+    if (routes.isEmpty && implementations.isEmpty) return;
     final payload = _metadataPayload(
       package: buildStep.inputId.package,
       source: buildStep.inputId.path,
-      components: routes.map((route) => route.component).toList(),
+      components: [
+        ...routes.map((route) => route.component),
+        ...implementations.map(
+          (implementation) => implementation.contract.component,
+        ),
+      ],
       routes: routes,
+      routeImplementations: implementations,
       componentDeclarations: const [],
     );
     final outputs = buildStep.allowedOutputs.toList();
@@ -56,10 +74,11 @@ Map<String, Object?> _metadataPayload({
   required String source,
   required List<_ComponentModel> components,
   required List<_RouteModel> routes,
+  List<_RouteImplementationModel> routeImplementations = const [],
   List<String>? componentDeclarations,
   Map<String, String> componentManifests = const {},
 }) => {
-  'schemaVersion': 1,
+  'schemaVersion': 2,
   'package': package,
   'source': source,
   'componentDeclarations':
@@ -73,7 +92,18 @@ Map<String, Object?> _metadataPayload({
     ])
       component.id: _componentJson(component),
   }.values.toList(),
-  'routes': routes.map(_routeJson).toList(),
+  'routes': routes
+      .map((route) => _routeJson(route, package: package, source: source))
+      .toList(),
+  'routeImplementations': routeImplementations
+      .map(
+        (implementation) => _routeImplementationJson(
+          implementation,
+          package: package,
+          source: source,
+        ),
+      )
+      .toList(),
 };
 
 /// Serializes one component descriptor deterministically.
@@ -84,30 +114,33 @@ Map<String, Object?> _componentJson(_ComponentModel component) => {
   'optionalDependencies': component.optionalDependencies,
 };
 
-/// Serializes ownership, visibility, addresses and documented parameters.
-Map<String, Object?> _routeJson(_RouteModel route) => {
+/// Serializes ownership, derived exposure, addresses and documented parameters.
+Map<String, Object?> _routeJson(
+  _RouteModel route, {
+  required String package,
+  required String source,
+}) => {
   'id': route.id,
   'componentId': route.component.id,
-  'visibility': route.exported ? 'exported' : 'component',
-  'visibleTo':
-      route.annotation
-          .read('visibleTo')
-          .setValue
-          .map((value) => value.toStringValue()!)
-          .toList()
-        ..sort(),
+  'exposure': route.exposure,
   'deepLink': _enumValue(
     route.annotation.read('deepLink').objectValue,
   ).split('.').last,
   'description': route.annotation.read('description').isNull
       ? null
       : route.annotation.read('description').stringValue,
-  'contracts': {'route': route.api, 'arguments': route.arguments},
-  'registration': route.registrationFunction,
-  'destination': {
-    'descriptor': route.descriptorFunction,
-    'builder': route.builderFunction,
+  'contracts': {
+    'route': route.api,
+    'arguments': route.arguments,
+    'package': package,
+    'library': route.contractFirst ? _routeContractOutputPath(source) : source,
   },
+  if (!route.contractFirst) 'registration': route.registrationFunction,
+  if (!route.contractFirst)
+    'destination': {
+      'descriptor': route.descriptorFunction,
+      'builder': route.builderFunction,
+    },
   'patterns': route.patterns.indexed.map((entry) {
     final index = entry.$1;
     final pattern = entry.$2;
@@ -145,6 +178,23 @@ Map<String, Object?> _routeJson(_RouteModel route) => {
   'resultType': route.result,
 };
 
+/// Serializes one page binding without duplicating its public route contract.
+Map<String, Object?> _routeImplementationJson(
+  _RouteImplementationModel implementation, {
+  required String package,
+  required String source,
+}) => {
+  'routeId': implementation.contract.id,
+  'componentId': implementation.contract.component.id,
+  'package': package,
+  'source': source,
+  'registration': implementation.registrationFunction,
+  'destination': {
+    'descriptor': implementation.descriptorFunction,
+    'builder': implementation.builderFunction,
+  },
+};
+
 /// Removes source comment markers while retaining authored explanations.
 String? _documentation(String? comment) {
   if (comment == null) return null;
@@ -166,9 +216,14 @@ String _metadataMarkdown(Map<String, Object?> payload) {
       out.writeln('$description\n');
     }
     out.writeln('- Owner: `${route['componentId']}`');
-    out.writeln('- Visibility: `${route['visibility']}`');
+    out.writeln('- Exposure: `${route['exposure']}`');
     out.writeln('- Deep link: `${route['deepLink']}`');
     out.writeln('- Result: `${route['resultType']}`');
+    if (route['contracts'] case final Map contracts) {
+      out.writeln(
+        '- Contract library: `${contracts['package']}:${contracts['library']}`',
+      );
+    }
     out.writeln('- Patterns:');
     for (final pattern in (route['patterns']! as List).cast<Map>()) {
       out.writeln(
@@ -194,6 +249,19 @@ String _metadataMarkdown(Map<String, Object?> payload) {
           '| `${parameter['name']}` | `${parameter['wireName']}` | `${parameter['source']}` | `${parameter['type']}` | ${parameter['required']} | $description |',
         );
       }
+    }
+    out.writeln();
+  }
+  final implementations = (payload['routeImplementations']! as List)
+      .cast<Map<String, Object?>>();
+  if (implementations.isNotEmpty) {
+    out.writeln('## Route Implementations\n');
+    for (final implementation in implementations) {
+      out.writeln(
+        '- `${implementation['routeId']}` implemented by '
+        '`${implementation['package']}:${implementation['source']}` '
+        'for `${implementation['componentId']}`.',
+      );
     }
     out.writeln();
   }

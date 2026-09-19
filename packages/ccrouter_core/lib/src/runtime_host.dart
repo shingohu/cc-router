@@ -109,6 +109,9 @@ final class CCRouterRuntime {
   /// Service providers grouped by contract type.
   final Map<Type, List<_Provider>> _providers = {};
 
+  /// Promoted service providers grouped by stable cross-package identity.
+  final Map<String, List<_Provider>> _providersByContractId = {};
+
   /// Single command handler indexed by command type.
   final Map<Type, _Handler> _commands = {};
 
@@ -353,18 +356,59 @@ final class CCRouterRuntime {
         'Component and Route scopes are not implemented yet.',
       );
     }
-    final providers = _providers.putIfAbsent(T, () => []);
+    final providers = _providers[T] ?? <_Provider>[];
+    final contractId = provider.contract?.id;
+    if (contractId != null &&
+        !RegExp(r'^[a-z][a-z0-9_.-]*$').hasMatch(contractId)) {
+      throw CCRegistrationError(
+        'Service contract ID "$contractId" is invalid.',
+      );
+    }
+    final contractProviders = contractId == null
+        ? null
+        : _providersByContractId[contractId] ?? <_Provider>[];
     final name = provider.key?.name;
     final isDefault = provider.isDefault || name == null;
+    if (contractProviders != null &&
+        contractProviders.any((item) => item.type != T)) {
+      throw CCRegistrationError(
+        'Service contract ID "$contractId" is already registered for '
+        '${contractProviders.first.type}, not $T.',
+      );
+    }
     if (providers.any((item) => item.name == name)) {
       throw CCRegistrationError('Duplicate service key ($T, $name).');
     }
     if (isDefault && providers.any((item) => item.isDefault)) {
       throw CCRegistrationError('Multiple default providers for $T.');
     }
-    providers.add(
-      _Provider(T, name, provider.scope, isDefault, provider.factory),
+    if (contractProviders != null &&
+        contractProviders.any((item) => item.name == name)) {
+      throw CCRegistrationError(
+        'Duplicate service contract key ($contractId, $name).',
+      );
+    }
+    if (contractProviders != null &&
+        isDefault &&
+        contractProviders.any((item) => item.isDefault)) {
+      throw CCRegistrationError(
+        'Multiple default providers for service contract "$contractId".',
+      );
+    }
+    final normalized = _Provider(
+      T,
+      contractId,
+      name,
+      provider.scope,
+      isDefault,
+      provider.factory,
     );
+    providers.add(normalized);
+    _providers[T] = providers;
+    if (contractProviders != null) {
+      contractProviders.add(normalized);
+      _providersByContractId[contractId!] = contractProviders;
+    }
   }
 
   /// Registers the single handler for command type [C].
@@ -570,31 +614,52 @@ final class CCRouterRuntime {
   }
 
   /// Resolves the default or keyed service implementation for [T].
-  T service<T extends Object>({CCServiceKey<T>? key}) {
+  ///
+  /// [contract] selects the stable identity used after cross-package promotion;
+  /// omitting it preserves the legacy type-based lookup path.
+  T service<T extends Object>({
+    CCServiceToken<T>? contract,
+    CCServiceKey<T>? key,
+  }) {
     _ensureInitialized();
-    final provider = _findProvider<T>(key);
+    final provider = _findProvider<T>(contract: contract, key: key);
     if (provider == null)
-      throw CCResolutionError('No provider for $T with key $key.');
+      throw CCResolutionError(
+        'No provider for ${contract?.id ?? T} with key $key.',
+      );
     return _resolve(provider) as T;
   }
 
   /// Resolves [T], returning null only when no matching provider exists.
-  T? serviceOrNull<T extends Object>({CCServiceKey<T>? key}) {
+  ///
+  /// Use [contract] for optional promoted capabilities and omit it for internal
+  /// services that intentionally remain coupled to their Dart type.
+  T? serviceOrNull<T extends Object>({
+    CCServiceToken<T>? contract,
+    CCServiceKey<T>? key,
+  }) {
     _ensureInitialized();
-    final provider = _findProvider<T>(key);
+    final provider = _findProvider<T>(contract: contract, key: key);
     return provider == null ? null : _resolve(provider) as T;
   }
 
   /// Whether a provider for [T] and [key] is registered.
-  bool hasService<T extends Object>({CCServiceKey<T>? key}) {
+  ///
+  /// [contract] performs discovery by stable ID without instantiating a service.
+  bool hasService<T extends Object>({
+    CCServiceToken<T>? contract,
+    CCServiceKey<T>? key,
+  }) {
     _ensureInitialized();
-    return _findProvider<T>(key) != null;
+    return _findProvider<T>(contract: contract, key: key) != null;
   }
 
   /// Resolves all implementations of [T] in deterministic key order.
-  List<T> services<T extends Object>() {
+  ///
+  /// [contract] selects all providers attached to one promoted service API.
+  List<T> services<T extends Object>({CCServiceToken<T>? contract}) {
     _ensureInitialized();
-    final providers = List<_Provider>.of(_providers[T] ?? [])
+    final providers = List<_Provider>.of(_providersFor<T>(contract))
       ..sort((a, b) => (a.name ?? '').compareTo(b.name ?? ''));
     return List.unmodifiable(
       providers.map((provider) => _resolve(provider) as T),
@@ -764,19 +829,37 @@ final class CCRouterRuntime {
       },
     );
     return scope.resolve(
-      (provider.type, provider.name),
+      (provider.contractId ?? provider.type, provider.name),
       create,
       cache: provider.scope != CCServiceScope.transient,
     );
   }
 
-  /// Finds the provider selected by service type [T] and optional [key].
-  _Provider? _findProvider<T>(CCServiceKey<T>? key) {
-    for (final provider in _providers[T] ?? <_Provider>[]) {
+  /// Finds a provider by stable promoted contract or legacy Dart type.
+  _Provider? _findProvider<T extends Object>({
+    required CCServiceToken<T>? contract,
+    required CCServiceKey<T>? key,
+  }) {
+    final providers = _providersFor<T>(contract);
+    for (final provider in providers) {
       if (key == null ? provider.isDefault : provider.name == key.name)
         return provider;
     }
     return null;
+  }
+
+  /// Selects a service provider group and rejects forged token type mismatches.
+  List<_Provider> _providersFor<T extends Object>(CCServiceToken<T>? contract) {
+    final providers = contract == null
+        ? _providers[T] ?? <_Provider>[]
+        : _providersByContractId[contract.id] ?? <_Provider>[];
+    if (contract != null && providers.isNotEmpty && providers.first.type != T) {
+      throw CCResolutionError(
+        'Service contract "${contract.id}" is registered for '
+        '${providers.first.type}, not $T.',
+      );
+    }
+    return providers;
   }
 
   /// Resolves a single message handler and invokes it through [_invoke].

@@ -1,24 +1,14 @@
 import 'package:ccrouter/ccrouter.dart';
+import 'package:demo_order_contracts/demo_order_contracts_owner.dart';
 import 'package:flutter/material.dart';
-
-import 'demo_order_component.dart';
 
 part 'ccrouter_generated/order_detail_page.route.g.dart';
 
-@CCRoute<String>(
-  component: demoOrderComponent,
-  id: 'order.detail',
-  patterns: [
-    CCPathPattern('/orders/:orderId', primary: true),
-    CCPathPattern('/order/:orderId'),
-  ],
-  visibility: CCRouteVisibility.exported,
-  description: '订单详情，确认后返回订单编号。',
-)
+@CCRouteImplementation(OrderDetailRouteContract)
 final class OrderDetailPage extends StatelessWidget {
   const OrderDetailPage({
     required this.orderId,
-    @CCQueryParam() this.tab = 'summary',
+    this.tab = 'summary',
     super.key,
   });
 

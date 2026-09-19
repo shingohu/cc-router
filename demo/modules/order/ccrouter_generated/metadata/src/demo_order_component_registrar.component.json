@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "package": "demo_order",
   "source": "lib/src/demo_order_component_registrar.dart",
   "componentDeclarations": [
@@ -16,5 +16,6 @@
       "optionalDependencies": []
     }
   ],
-  "routes": []
+  "routes": [],
+  "routeImplementations": []
 }

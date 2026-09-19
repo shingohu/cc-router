@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "package": "ccrouter_test",
   "source": "test/fixtures/annotated_routes.dart",
   "componentDeclarations": [],
@@ -15,15 +15,14 @@
     {
       "id": "fixture.detail",
       "componentId": "fixture",
-      "visibility": "exported",
-      "visibleTo": [
-        "home"
-      ],
+      "exposure": "internal",
       "deepLink": "enabled",
       "description": "A typed detail route.\nIncludes safe defaults.",
       "contracts": {
-        "route": "DetailPageRoute",
-        "arguments": "DetailPageRouteArguments"
+        "route": "_DetailPageRoute",
+        "arguments": "_DetailPageRouteArguments",
+        "package": "ccrouter_test",
+        "library": "test/fixtures/annotated_routes.dart"
       },
       "patterns": [
         {
@@ -113,13 +112,14 @@
     {
       "id": "fixture.internal",
       "componentId": "fixture",
-      "visibility": "component",
-      "visibleTo": [],
+      "exposure": "internal",
       "deepLink": "disabled",
       "description": null,
       "contracts": {
         "route": "_InternalPageRoute",
-        "arguments": "_InternalPageRouteArguments"
+        "arguments": "_InternalPageRouteArguments",
+        "package": "ccrouter_test",
+        "library": "test/fixtures/annotated_routes.dart"
       },
       "patterns": [
         {
@@ -135,13 +135,14 @@
     {
       "id": "fixture.positional",
       "componentId": "fixture",
-      "visibility": "exported",
-      "visibleTo": [],
+      "exposure": "internal",
       "deepLink": "disabled",
       "description": null,
       "contracts": {
-        "route": "PositionalPageRoute",
-        "arguments": "PositionalPageRouteArguments"
+        "route": "_PositionalPageRoute",
+        "arguments": "_PositionalPageRouteArguments",
+        "package": "ccrouter_test",
+        "library": "test/fixtures/annotated_routes.dart"
       },
       "patterns": [
         {
@@ -176,13 +177,14 @@
     {
       "id": "fixture.extra",
       "componentId": "fixture",
-      "visibility": "exported",
-      "visibleTo": [],
+      "exposure": "internal",
       "deepLink": "disabled",
       "description": null,
       "contracts": {
-        "route": "ExtraPageRoute",
-        "arguments": "ExtraPageRouteArguments"
+        "route": "_ExtraPageRoute",
+        "arguments": "_ExtraPageRouteArguments",
+        "package": "ccrouter_test",
+        "library": "test/fixtures/annotated_routes.dart"
       },
       "patterns": [
         {
@@ -208,13 +210,14 @@
     {
       "id": "fixture.prefixed",
       "componentId": "fixture",
-      "visibility": "exported",
-      "visibleTo": [],
+      "exposure": "internal",
       "deepLink": "disabled",
       "description": null,
       "contracts": {
-        "route": "PrefixedPageRoute",
-        "arguments": "PrefixedPageRouteArguments"
+        "route": "_PrefixedPageRoute",
+        "arguments": "_PrefixedPageRouteArguments",
+        "package": "ccrouter_test",
+        "library": "test/fixtures/annotated_routes.dart"
       },
       "patterns": [
         {

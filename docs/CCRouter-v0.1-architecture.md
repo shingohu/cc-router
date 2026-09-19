@@ -108,7 +108,7 @@ CCRouter 的目标不是再提供一个单纯的路由库，而是提供一套�
    - 新增 public 声明必须说明使用场景、所有者、生命周期、错误和是否存在更窄的替代接口；否则保持 `library private` 或 `part of` 内部实现。
 
 7. **编译器校验、类型安全（错误尽量前移）**
-   - Route ID、Pattern 冲突、参数类型、Codec、组件依赖、可见性、拦截器引用和 Adapter 能力优先在 Analyzer/Generator/CI 阶段失败。
+   - Route ID、Pattern 冲突、参数类型、Codec、组件依赖、契约 exposure、拦截器引用和 Adapter 能力优先在 Analyzer/Generator/CI 阶段失败。
    - 业务导航使用生成的 Intent 和结果类型；`Map<String, dynamic>`、反射和任意代码注入不能成为公开契约。
    - Runtime 仍需做边界校验，但不以运行时校验替代本可在编译期发现的问题。
 
@@ -120,7 +120,7 @@ CCRouter 的目标不是再提供一个单纯的路由库，而是提供一套�
 9. **可降级回退（能力不足要安全、明确地退化）**
    - Adapter 或可选组件能力不足时，优先使用声明过的安全回退；无法保持语义时必须返回稳定错误，不能静默把 Dialog 变成 Page 或丢失返回值。
    - 降级必须可观测，记录能力、原因、原始操作和最终行为；不得通过模糊捕获异常掩盖配置错误。
-   - 回退策略不绕过 Deep Link、权限、可见性和生命周期约束。
+   - 回退策略不绕过 Deep Link、权限、Package 契约边界和生命周期约束。
 
 10. **明确生命周期（谁创建，谁拥有，谁销毁）**
     - 每个 Runtime、Component、Service、Session、RouteEntry、Adapter 和测试替身都必须有明确 Owner 和 Scope。
@@ -356,10 +356,10 @@ abstract final class CCRouter {
 
   static CCNavigator get navigator;
 
-  static T service<T>({CCServiceKey<T>? key});
-  static T? serviceOrNull<T>({CCServiceKey<T>? key});
-  static List<T> services<T>();
-  static bool hasService<T>({CCServiceKey<T>? key});
+  static T service<T>({CCServiceToken<T>? contract, CCServiceKey<T>? key});
+  static T? serviceOrNull<T>({CCServiceToken<T>? contract, CCServiceKey<T>? key});
+  static List<T> services<T>({CCServiceToken<T>? contract});
+  static bool hasService<T>({CCServiceToken<T>? contract, CCServiceKey<T>? key});
 
   static Future<R> command<R>(CCCommand<R> command);
   static Future<R> query<R>(CCQuery<R> query);
@@ -505,7 +505,20 @@ final all = CCRouter.services<PaymentService>();
 - `services<T>()` 返回稳定排序的全部实现。
 - App 装配或测试 Overlay 可以显式 Override。
 
-### 8.3 服务代理
+### 8.3 内部 Service 升级为跨组件契约
+
+组件内部 Service 默认按 Dart `Type` 解析，不要求提前创建 contracts Package。出现真实
+跨组件消费者时，将接口和 DTO 移入领域 contracts Package，并声明稳定 Token：
+
+```dart
+const paymentService = CCServiceToken<PaymentService>('payment.service');
+```
+
+Provider 通过 `contract` 附加 Token；旧的 Type 调用与新的 Token 调用解析到同一个
+Provider 和 Scope 实例。稳定 ID 在接口移动 Package 时不变，泛型仍负责静态类型检查。
+Token ID 全局唯一，命名实现继续使用 `CCServiceKey<T>` 作为 qualifier。
+
+### 8.4 服务代理
 
 跨组件核心 Service 由生成器生成 Proxy：
 
@@ -616,7 +629,6 @@ const addressComponent = CCComponentDescriptor(
   component: addressComponent,
   id: 'address.select',
   patterns: [CCPathPattern('/address/select/:cityId', primary: true)],
-  visibility: CCRouteVisibility.exported,
 )
 final class AddressSelectPage {
   const AddressSelectPage({required this.cityId});
@@ -1036,7 +1048,7 @@ ComponentTestHost
 
 ### 16.2 能力可见性
 
-普通能力可以区分组件内部能力和显式导出的跨组件契约。路由使用更严格的双维模型：`component/exported` 控制组件契约可见性，Deep Link Policy 独立控制是否允许外部 URI。跨组件可见、允许外部进入和运行时授权互不等价，具体规则见 [路由子系统设计](CCRouter-route-design.md#9-组件所有权与可见性)。`visibleTo` 由生成器、文档和 CI 执行依赖与导出治理；Runtime 不接收或信任调用方组件 ID，也不把契约可见性作为运行时安全机制。
+普通能力可以区分组件内部能力和显式导出的跨组件契约。路由由声明形态和 Package 位置自动确定 exposure：页面上的 `@CCRoute` 为 internal；`@CCRouteContract` 与实现位于同一 Package 时为 package，位于独立 contracts Package 时为 external。Deep Link Policy 独立控制是否允许外部 URI；跨组件导入、允许外部进入和运行时授权互不等价。公共 barrel、Pub 直接依赖和 Analyzer 形成编译期访问边界，真正的运行时授权仍由拦截器执行。
 
 ### 16.3 多产品装配
 

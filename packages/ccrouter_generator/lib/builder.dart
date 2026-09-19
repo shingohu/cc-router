@@ -27,6 +27,25 @@ Builder ccRouteBuilder(BuilderOptions options) {
   );
 }
 
+/// Creates standalone Pure Dart libraries for public contract schemas.
+///
+/// Component packages add `ccrouter_contracts` as a direct dependency and
+/// export these generated libraries through their explicit contract barrel.
+/// Only `CCRouteContract` schemas emit content; page-level `CCRoute`
+/// declarations remain embedded and do not produce this output.
+Builder ccRouteContractBuilder(BuilderOptions options) {
+  final config = Map<String, dynamic>.from(options.config);
+  config.putIfAbsent('build_extensions', () => _routeContractBuildExtensions);
+  return LibraryBuilder(
+    ccRouteContractGenerator(),
+    generatedExtension: '.route.contract.g.dart',
+    options: BuilderOptions(config, isRoot: options.isRoot),
+    header:
+        '// GENERATED CODE - DO NOT MODIFY BY HAND\n'
+        '// ignore_for_file: type=lint, unused_element',
+  );
+}
+
 /// Creates a same-library Part containing generated component Manifests.
 ///
 /// Annotated Registrar libraries declare a `.component.g.dart` Part so the
@@ -51,7 +70,7 @@ Builder ccComponentMetadataBuilder(BuilderOptions options) =>
 
 /// Emits machine-readable route metadata and route documentation.
 ///
-/// Workspace CI consumes JSON for cross-component visibility validation;
+/// Workspace CI consumes JSON for ownership and contract-exposure validation;
 /// Markdown is intended for review rather than application runtime loading.
 Builder ccRouteMetadataBuilder(BuilderOptions options) =>
     ccRouteMetadataBuilderInternal();
@@ -59,6 +78,13 @@ Builder ccRouteMetadataBuilder(BuilderOptions options) =>
 /// Maps route source libraries under `lib/` to package-level metadata files.
 const _routeBuildExtensions = <String, List<String>>{
   r'^lib/src/{{}}.dart': ['lib/src/ccrouter_generated/{{}}.route.g.dart'],
+};
+
+/// Maps route sources to standalone Pure Dart contract libraries.
+const _routeContractBuildExtensions = <String, List<String>>{
+  r'^lib/src/{{}}.dart': [
+    'lib/src/ccrouter_generated/{{}}.route.contract.g.dart',
+  ],
 };
 
 /// Maps component Registrar libraries to same-library Manifest Parts.

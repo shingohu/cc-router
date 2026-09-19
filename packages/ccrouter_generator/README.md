@@ -26,7 +26,6 @@ final class OrderComponentRegistrar implements CCComponentRegistrar {
   component: orderComponent,
   id: 'order.detail',
   pattern: CCPathPattern('/orders/:orderId'),
-  visibility: CCRouteVisibility.exported,
 )
 final class DetailPage {
   const DetailPage({
@@ -38,10 +37,57 @@ final class DetailPage {
 }
 ```
 
+稳定跨组件入口使用独立 contracts Package，而不是让消费者依赖页面组件。契约包声明：
+
+```dart
+@CCRouteContract<String>(
+  component: orderComponent,
+  id: 'order.detail',
+  pattern: CCPathPattern('/orders/:orderId'),
+)
+abstract class OrderDetailRouteContract {
+  const OrderDetailRouteContract({required this.orderId});
+  final int orderId;
+}
+```
+
+实现组件绑定页面：
+
+```dart
+import 'package:order_contracts/order_contracts_owner.dart';
+
+part 'ccrouter_generated/order_detail_page.route.g.dart';
+
+@CCRouteImplementation(OrderDetailRouteContract)
+final class OrderDetailPage {
+  const OrderDetailPage({required this.orderId});
+  final int orderId;
+}
+```
+
+contracts Package 只依赖 `ccrouter_contracts`，生成 `OrderDetailRoute.intent(...)`；页面
+组件依赖 contracts Package 并生成 owner glue。Workspace 聚合器要求公开契约恰好
+存在一个实现。普通内部页面继续使用 `@CCRoute`，无需提前拆包。
+
 Registrar 文件还需要声明生成的 Manifest Part：
 
 ```dart
 part 'ccrouter_generated/order_component_registrar.component.g.dart';
+```
+
+声明 `@CCRouteContract` 的 Package 需要直接依赖 `ccrouter_contracts`，公共 barrel 只导出
+生成的契约 library。同 Package Contract-first 可用于渐进迁移；独立 contracts Package
+用于稳定的跨组件边界：
+
+```yaml
+dependencies:
+  ccrouter: ^0.1.0
+  ccrouter_contracts: ^0.1.0
+```
+
+```dart
+export 'src/ccrouter_generated/detail_page.route.contract.g.dart'
+    show DetailPageRoute, DetailPageRouteArguments;
 ```
 
 组件的 `dev_dependencies` 添加 `ccrouter_generator`，workspace 根目录添加
@@ -58,12 +104,14 @@ fvm dart run ccrouter_generator:ccrouter_generator demo \
 
 生成结果：
 
-- `DetailPageRouteArguments`：不可变字段的参数对象。
-- `DetailPageRoute.intent(...)`：只构造 `CCRouteIntent<String>`，通过
+- `@CCRoute` 的 `<page>.route.g.dart`：页面同库的私有 Arguments、Intent、Definition、
+  Codec，以及注册、描述和构造 glue。
+- `@CCRouteContract` 的 `<schema>.route.contract.g.dart`：生成公开 Pure Dart Arguments、
+  Intent、Definition 和私有 Codec；不包含页面、Registrar、Flutter 或路由后端类型。
+- `@CCRouteImplementation` 的 `<page>.route.g.dart`：只生成 owner 注册、描述和页面构造
+  glue，不重复生成业务契约。
+- 公开 `DetailRoute.intent(...)` 只构造 `CCRouteIntent<String>`，仍通过
   `CCRouter.navigator.push<String>(...)` 导航。
-- `DetailPageRoute.definition`：中立路由表定义和私有 Codec。
-- `DetailPageRoute.register(registry)`：组件 Registrar 的注册入口。
-- `DetailPageRoute.build(arguments)`：将解码参数注入页面构造器。
 - `<registrar>.component.g.dart`：在 Registrar 同一 library 中生成
   `CCComponentManifest`，可以实例化 private Registrar，业务代码无需导出实现类。
 - `<component-id>.routes.g.dart`：组件路由注册索引和后端中立的
@@ -87,15 +135,25 @@ Catalog 只包含 Flutter 页面工厂和 `CCNavigationRoute`，不包含 `GoRou
 Assembler/Adapter。Shell、嵌套路由、完整 Regex 兼容入口等后端特有结构必须由宿主
 提供显式 Override，不能被自动扁平化。
 
-路由生成文件统一使用 `.route.g.dart` 后缀并写入
+页面 glue 使用 `.route.g.dart`，独立契约使用 `.route.contract.g.dart`，均写入
 `lib/src/ccrouter_generated/`；后续 Service 生成器预留 `.service.g.dart` 后缀，
 本版本尚不生成 Service 代码。组件元数据使用 `.component.json` 和 `.component.md`，
 路由元数据使用 `.route.json` 和 `.route.md`，统一写入包根目录的
 `ccrouter_generated/metadata/`，并保留输入文件相对 `lib/` 的目录层级。
 
-默认 `component` 可见性在同一 library 中生成 `_DetailPageRoute` 及私有参数类型。
-只有 `exported` 生成公开类型，组件仍需通过 barrel 的 `show` 显式导出。
-私有页面仍可以通过 `part` 使用生成的内部契约。
+`@CCRoute` 始终在页面 library 中生成 `_DetailPageRoute` 及私有参数类型。
+`@CCRouteContract` 始终生成公开的独立纯契约；schema 与实现位于同一 Package 时聚合为
+`package` exposure，位于独立 contracts Package 时聚合为 `external` exposure。契约 Package
+必须通过 barrel 的 `show` 显式导出生成 library，消费者必须声明直接 Pub 依赖。框架不再
+维护额外的契约模式、可见性枚举或调用方 allowlist。
+
+独立契约只允许 Dart Core 类型和页面通过显式 public package import 引入的 Pure Dart
+类型。页面本地类型、private 类型、`package:*/src/`、Flutter、`dart:ui` 和 GoRouter
+类型会在生成阶段失败；复杂默认值暂时只支持 primitive 或 enum 常量。
+
+内部路由需要升级时保持原 `routeId` 和参数 wire name，把路由元数据移动到
+`@CCRouteContract` schema，再将页面注解替换为 `@CCRouteImplementation`。实现 Package
+可以临时 re-export 新契约兼容旧 import；新消费者必须直接依赖 contracts Package。
 
 组件身份和注册实现建议放在 `lib/src/` 的独立文件中：
 
@@ -124,8 +182,8 @@ descriptor 细节；生成的 `<package>_ccrouter.g.dart` 是唯一 Host 装配�
   URI、Regex Pattern 以及 Presentation、Placement、拦截器 ID 元数据。
 - 组件生成物不生成 GoRoute、不选择路由后端；宿主生成物只聚合中立 Catalog。
 
-集合 Query、自定义字段 Codec 以及具名/Factory 页面构造器、分离的纯契约文件留到后续
-阶段。聚合校验同时检查同层、同具体度且能够静态证明的
+集合 Query、自定义字段 Codec 以及具名/Factory 页面构造器留到后续阶段。聚合校验同时
+检查同层、同具体度且能够静态证明的
 Path/URI/Regex Pattern 冲突；约束表达式仅在可证明互斥时排除重叠，复杂正则歧义仍由
 Runtime 注册兜底。
 
@@ -145,8 +203,8 @@ fvm flutter analyze packages demo
 
 第二条命令聚合全部 `ccrouter_generated/metadata/**/*.component.json` 和
 `ccrouter_generated/metadata/**/*.route.json`，校验组件/路由 ID、路由所有者、
-`visibleTo` 目标、消费组件对路由所有者的显式依赖、静态 Pattern 冲突，以及
-`exported` 路由是否由公共 barrel 使用 `show` 同时导出 Route 和 Arguments 契约；
+契约 exposure 与声明形态是否一致、external 实现所有权、静态 Pattern 冲突，以及
+所有非 internal 路由是否由公共 barrel 使用 `show` 同时导出 Route 和 Arguments 契约；
 它会在扫描根目录的 `ccrouter_generated/metadata/` 下生成 `cc_routes.json` 和
 `cc_routes.md`。本仓库的扫描根目录是 `demo`，因此输出位于
 `demo/ccrouter_generated/metadata/`。也可以通过 `--output-dir <directory>` 指定其他

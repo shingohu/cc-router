@@ -34,7 +34,7 @@ final class CCComponentDescriptor {
 /// Marks the registrar that publishes one [descriptor] to generated metadata.
 ///
 /// Use exactly once per component package. This also describes components that
-/// own no routes, so workspace visibility checks and Host assembly can resolve
+/// own no routes, so workspace ownership checks and Host assembly can resolve
 /// every consumer. Registrar libraries include the generated `.component.g.dart`
 /// Part; application code consumes the generated Manifest rather than the
 /// private Registrar.
@@ -49,10 +49,12 @@ final class CCComponent {
 /// Declares a destination whose typed contract is generated at build time.
 ///
 /// Component authors annotate a concrete page with an unnamed constructor,
-/// then include its `.route.g.dart` file using `part`. The generator creates
-/// arguments, an Intent factory, a codec, a definition and a page factory. It
-/// never navigates or selects a backend. [R] is the page's return type; use
-/// `void` for destinations without a business result.
+/// then include its `.route.g.dart` file using `part`. The generator keeps the
+/// complete contract library-private in that Part, making this declaration the
+/// component-internal route form. Use [CCRouteContract] plus
+/// [CCRouteImplementation] when a route must become a public contract. This
+/// annotation neither navigates nor selects a backend. [R] is the page's return
+/// type; use `void` when no business result exists.
 final class CCRoute<R> {
   /// Creates route metadata with exactly one of [pattern] or [patterns].
   ///
@@ -63,8 +65,6 @@ final class CCRoute<R> {
     required this.id,
     this.pattern,
     this.patterns = const [],
-    this.visibility = CCRouteVisibility.component,
-    this.visibleTo = const {},
     this.deepLink = CCDeepLinkPolicy.disabled,
     this.presentation = const CCPagePresentation(),
     this.placement = const CCRoutePlacement.root(),
@@ -72,7 +72,7 @@ final class CCRoute<R> {
     this.description,
   });
 
-  /// Component that owns registration, visibility and generated documentation.
+  /// Component that owns registration and generated documentation.
   final CCComponentDescriptor component;
 
   /// Stable route identity shared by tracing, registration and typed Intents.
@@ -94,18 +94,6 @@ final class CCRoute<R> {
   /// reversible entries require exactly one explicit primary declaration.
   final List<CCRoutePattern> patterns;
 
-  /// Whether the generated contract is library-private or explicitly exported.
-  ///
-  /// Component-only routes generate private declarations in the page library.
-  /// Exported declarations require a deliberate component barrel export;
-  /// cross-package dependency and allowlist checks are a separate build stage.
-  final CCRouteVisibility visibility;
-
-  /// Consumers permitted by the workspace component aggregation validator.
-  ///
-  /// Preserved in the definition, not interpreted as Runtime authorization.
-  final Set<String> visibleTo;
-
   /// Whether a controlled external ingress may resolve this destination.
   final CCDeepLinkPolicy deepLink;
 
@@ -120,6 +108,85 @@ final class CCRoute<R> {
 
   /// Route purpose included in generated JSON and Markdown documentation.
   final String? description;
+}
+
+/// Declares a Pure Dart route contract independently from its Flutter page.
+///
+/// Place this annotation on an abstract, non-generic schema class inside a
+/// public contract library when a route must be consumed outside its page
+/// library. The schema's unnamed constructor defines typed route parameters;
+/// the generator emits Arguments, Intent, Definition, and Codec beside that
+/// schema. A Flutter component binds the destination separately with
+/// [CCRouteImplementation]. Keep the schema in the implementation Package for
+/// a Package-public contract, or move it to a dedicated Pure Dart contracts
+/// Package for a cross-component contract.
+///
+/// Keep routes on [CCRoute] while they are component-internal. Promote them to
+/// this annotation only when another component needs the contract, preserving
+/// the existing route ID, patterns, parameter semantics, and result type.
+final class CCRouteContract<R> {
+  /// Creates a public Contract-first route declaration.
+  ///
+  /// Exactly one of [pattern] or [patterns] must be supplied. Contract-first
+  /// routes are always public because their purpose is use outside the page
+  /// library. Consumers must explicitly depend on and import the Package that
+  /// owns the contract.
+  const CCRouteContract({
+    required this.component,
+    required this.id,
+    this.pattern,
+    this.patterns = const [],
+    this.deepLink = CCDeepLinkPolicy.disabled,
+    this.presentation = const CCPagePresentation(),
+    this.placement = const CCRoutePlacement.root(),
+    this.interceptors = const [],
+    this.description,
+  });
+
+  /// Component that owns the contract and its eventual page implementation.
+  final CCComponentDescriptor component;
+
+  /// Stable identity retained when an internal route is promoted.
+  final String id;
+
+  /// Single canonical address used by the common one-pattern declaration.
+  final CCRoutePattern? pattern;
+
+  /// Canonical address and aliases accepted by the same destination contract.
+  final List<CCRoutePattern> patterns;
+
+  /// Whether controlled external ingress may resolve this contract.
+  final CCDeepLinkPolicy deepLink;
+
+  /// Adapter-neutral visual presentation requested by the destination.
+  final CCRoutePresentation presentation;
+
+  /// Host, Shell, parent, and Navigator Outlet placement metadata.
+  final CCRoutePlacement placement;
+
+  /// Route interceptor identities applied after global navigation policies.
+  final List<String> interceptors;
+
+  /// Stable purpose included in generated catalogs and review documentation.
+  final String? description;
+}
+
+/// Binds a concrete Flutter page to one Contract-first route declaration.
+///
+/// Use this only in the component that implements the route. The generator
+/// validates the page's unnamed constructor against the referenced schema and
+/// emits registration, description, and page-construction glue without
+/// duplicating the public contract. Business callers never use this annotation
+/// or import the implementation package.
+final class CCRouteImplementation {
+  /// Associates a page with the annotated schema [contract].
+  ///
+  /// The referenced type must carry [CCRouteContract], and workspace assembly
+  /// rejects missing or duplicate implementations for the stable route ID.
+  const CCRouteImplementation(this.contract);
+
+  /// Abstract Contract-first schema implemented by the annotated page.
+  final Type contract;
 }
 
 /// Marks a constructor parameter as a single URI query value.

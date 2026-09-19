@@ -371,7 +371,7 @@ final class _RouteRegistry {
     }
   }
 
-  /// Validates route identity, canonical pattern, visibility, and expressions.
+  /// Validates route identity, canonical pattern, and expressions.
   void _validateDefinition<A, R>(CCRouteDefinition<A, R> definition) {
     final routeId = definition.routeId.trim();
     if (routeId.isEmpty) {
@@ -397,12 +397,6 @@ final class _RouteRegistry {
     if (primary.single.matchOnly) {
       throw CCRouteRegistrationError(
         'Route "$routeId" primary pattern cannot be matchOnly.',
-      );
-    }
-    if (definition.visibility == CCRouteVisibility.component &&
-        definition.visibleTo.isNotEmpty) {
-      throw CCRouteRegistrationError(
-        'Component route "$routeId" cannot declare visibleTo.',
       );
     }
     final interceptorIds = <String>{};

@@ -13,6 +13,8 @@ dependencies:
   ccrouter: ^0.1.0
   ccrouter_go_router: ^0.1.0
   demo_order: ^0.1.0
+  demo_order_contracts: ^0.1.0
+  demo_payment: ^0.1.0
 
 dev_dependencies:
   flutter_test:

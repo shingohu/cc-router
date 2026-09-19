@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "package": "demo_order",
   "source": "lib/src/order_detail_page.dart",
   "componentDeclarations": [],
@@ -12,58 +12,18 @@
       "optionalDependencies": []
     }
   ],
-  "routes": [
+  "routes": [],
+  "routeImplementations": [
     {
-      "id": "order.detail",
+      "routeId": "order.detail",
       "componentId": "demo_order_component",
-      "visibility": "exported",
-      "visibleTo": [],
-      "deepLink": "disabled",
-      "description": "订单详情，确认后返回订单编号。",
-      "contracts": {
-        "route": "OrderDetailPageRoute",
-        "arguments": "OrderDetailPageRouteArguments"
-      },
+      "package": "demo_order",
+      "source": "lib/src/order_detail_page.dart",
       "registration": "ccrouterRegisterOrderDetailPageRoute",
       "destination": {
         "descriptor": "ccrouterDescribeOrderDetailPageRoute",
         "builder": "ccrouterBuildOrderDetailPageRoute"
-      },
-      "patterns": [
-        {
-          "type": "CCPathPattern",
-          "value": "/orders/:orderId",
-          "primary": true,
-          "constraints": {}
-        },
-        {
-          "type": "CCPathPattern",
-          "value": "/order/:orderId",
-          "primary": false,
-          "constraints": {}
-        }
-      ],
-      "parameters": [
-        {
-          "name": "orderId",
-          "wireName": "orderId",
-          "source": "path",
-          "type": "int",
-          "required": true,
-          "default": null,
-          "description": "需要展示的稳定订单 ID。"
-        },
-        {
-          "name": "tab",
-          "wireName": "tab",
-          "source": "query",
-          "type": "String",
-          "required": false,
-          "default": "'summary'",
-          "description": "首次展示的详情标签。"
-        }
-      ],
-      "resultType": "String"
+      }
     }
   ]
 }

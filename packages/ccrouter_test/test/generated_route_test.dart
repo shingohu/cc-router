@@ -7,11 +7,11 @@ import 'fixtures/annotated_routes.dart';
 import 'fixtures/route_types.dart' as types;
 
 void main() {
-  final codec = DetailPageRoute.definition.codec;
+  final codec = detailCodec;
 
   test('generated arguments inject defaults and typed scalar values', () {
     final arguments = codec.decode(CCEncodedRouteArguments(path: {'id': '42'}));
-    final page = DetailPageRoute.build(arguments);
+    final page = buildDetailPage(arguments);
     expect(page.id, 42);
     expect(page.tab, DetailTab.summary);
     expect(page.enabled, isFalse);
@@ -20,7 +20,7 @@ void main() {
     expect(page.snapshot, isNull);
 
     const snapshot = Snapshot('cached');
-    final intent = DetailPageRoute.intent(
+    final intent = detailIntent(
       id: 42,
       search: '空 格&?/%',
       tab: DetailTab.items,
@@ -28,8 +28,8 @@ void main() {
       ratio: 2.5,
       snapshot: snapshot,
     );
-    final encoded = codec.encode(intent.arguments as DetailPageRouteArguments);
-    final roundtrip = DetailPageRoute.build(codec.decode(encoded));
+    final encoded = codec.encode(intent.arguments);
+    final roundtrip = buildDetailPage(codec.decode(encoded));
     expect(roundtrip.search, '空 格&?/%');
     expect(roundtrip.tab, DetailTab.items);
     expect(roundtrip.enabled, isTrue);
@@ -37,20 +37,16 @@ void main() {
     expect(roundtrip.snapshot, same(snapshot));
   });
 
-  test(
-    'metadata keeps aliases, visibility, presentation and interceptor order',
-    () {
-      final definition = DetailPageRoute.definition;
-      expect(definition.patterns, hasLength(4));
-      expect(definition.visibleTo, {'home'});
-      expect(definition.deepLink, CCDeepLinkPolicy.enabled);
-      expect(definition.interceptorIds, ['fixture.auth']);
-      final presentation = definition.presentation as CCPagePresentation;
-      expect(presentation.transition, CCPageTransitionType.slideFromBottom);
-      expect(presentation.opaque, isFalse);
-      expect(internalIntent().routeId, 'fixture.internal');
-    },
-  );
+  test('metadata keeps aliases, presentation and interceptor order', () {
+    final definition = detailDefinition;
+    expect(definition.patterns, hasLength(4));
+    expect(definition.deepLink, CCDeepLinkPolicy.enabled);
+    expect(definition.interceptorIds, ['fixture.auth']);
+    final presentation = definition.presentation as CCPagePresentation;
+    expect(presentation.transition, CCPageTransitionType.slideFromBottom);
+    expect(presentation.opaque, isFalse);
+    expect(internalIntent().routeId, 'fixture.internal');
+  });
 
   test(
     'generated codec rejects malformed input without exposing raw values',
@@ -104,9 +100,7 @@ void main() {
         );
       }
       expect(
-        () => codec.encode(
-          const DetailPageRouteArguments(id: 1, ratio: double.nan),
-        ),
+        () => codec.encode(detailArguments(id: 1, ratio: double.nan)),
         throwsA(isA<CCRouteParameterError>()),
       );
     },
@@ -115,26 +109,24 @@ void main() {
   test(
     'required Extra and positional constructors preserve typed semantics',
     () {
-      final extraCodec = ExtraPageRoute.definition.codec;
+      final extraRouteCodec = extraCodec;
       expect(
-        () => extraCodec.decode(CCEncodedRouteArguments()),
+        () => extraRouteCodec.decode(CCEncodedRouteArguments()),
         throwsA(isA<CCRouteParameterError>()),
       );
       expect(
-        () => extraCodec.decode(CCEncodedRouteArguments(extra: 'wrong')),
+        () => extraRouteCodec.decode(CCEncodedRouteArguments(extra: 'wrong')),
         throwsA(isA<CCRouteParameterError>()),
       );
       const snapshot = Snapshot('required');
       expect(
-        ExtraPageRoute.build(
-          extraCodec.decode(CCEncodedRouteArguments(extra: snapshot)),
+        buildExtraPage(
+          extraRouteCodec.decode(CCEncodedRouteArguments(extra: snapshot)),
         ).snapshot,
         same(snapshot),
       );
-      final positional = PositionalPageRoute.build(
-        PositionalPageRoute.definition.codec.decode(
-          CCEncodedRouteArguments(path: {'value': '你好'}),
-        ),
+      final positional = buildPositionalPage(
+        positionalCodec.decode(CCEncodedRouteArguments(path: {'value': '你好'})),
       );
       expect(positional.value, '你好');
       expect(positional.input, 'default');
@@ -145,15 +137,13 @@ void main() {
     'prefixed enum, Extra and result types remain accessible in generated parts',
     () {
       const payload = types.Payload();
-      final CCRouteIntent<types.Result> intent = PrefixedPageRoute.intent(
+      final CCRouteIntent<types.Result> intent = prefixedIntent(
         mode: types.Mode.alternate,
         payload: payload,
       );
-      final codec = PrefixedPageRoute.definition.codec;
-      final page = PrefixedPageRoute.build(
-        codec.decode(
-          codec.encode(intent.arguments as PrefixedPageRouteArguments),
-        ),
+      final codec = prefixedCodec;
+      final page = buildPrefixedPage(
+        codec.decode(codec.encode(intent.arguments)),
       );
       expect(page.mode, types.Mode.alternate);
       expect(page.payload, same(payload));
@@ -177,7 +167,7 @@ void main() {
       await host.initialize();
       await host.runtime.openRoute(Uri.parse('/position/base'));
       final pending = host.runtime.pushRoute<String>(
-        DetailPageRoute.intent(id: 42, search: 'a/b &雪'),
+        detailIntent(id: 42, search: 'a/b &雪'),
       );
       await Future<void>.delayed(Duration.zero);
       expect(host.runtime.activeRouteEntries.last.routeId, 'fixture.detail');
@@ -187,9 +177,7 @@ void main() {
       for (final uri in ['/legacy/7', 'sample://detail/7', '/old/7']) {
         await host.runtime.openRoute(Uri.parse(uri));
         expect(
-          (host.runtime.activeRouteEntries.last.arguments
-                  as DetailPageRouteArguments)
-              .id,
+          detailArgumentId(host.runtime.activeRouteEntries.last.arguments),
           7,
         );
         host.runtime.popRoute();

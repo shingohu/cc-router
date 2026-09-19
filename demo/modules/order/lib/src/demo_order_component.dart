@@ -1,6 +1,2 @@
-import 'package:ccrouter/ccrouter.dart';
-
-const demoOrderComponent = CCComponentDescriptor(
-  id: 'demo_order_component',
-  version: '0.1.0',
-);
+export 'package:demo_order_contracts/demo_order_contracts_owner.dart'
+    show demoOrderComponent, OrderDetailRoute, OrderDetailRouteContract;

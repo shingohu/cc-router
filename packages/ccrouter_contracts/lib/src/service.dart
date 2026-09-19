@@ -1,3 +1,30 @@
+/// Stable identity of a service contract across package-boundary promotion.
+///
+/// Declare a const token in the domain contracts package when a service becomes
+/// cross-component. Callers pass it to `CCRouter.service`, while the owning
+/// component attaches it to its provider. The string [id], rather than the Dart
+/// library identity of [T], remains stable if the interface moves packages.
+final class CCServiceToken<T extends Object> {
+  /// Creates a typed token with a globally stable, non-empty [id].
+  const CCServiceToken(this.id) : assert(id != '');
+
+  /// Globally stable service contract identity used by Runtime registration.
+  final String id;
+
+  /// Compares stable identities so diagnostic collections survive type moves.
+  @override
+  bool operator ==(Object other) =>
+      other is CCServiceToken<Object> && other.id == id;
+
+  /// Hashes only the stable identity used by Runtime lookup.
+  @override
+  int get hashCode => id.hashCode;
+
+  /// Returns a diagnostic representation without exposing an implementation.
+  @override
+  String toString() => 'CCServiceToken<$T>($id)';
+}
+
 /// Identifies one named implementation of service contract [T].
 ///
 /// Use a key when multiple implementations of the same service contract are

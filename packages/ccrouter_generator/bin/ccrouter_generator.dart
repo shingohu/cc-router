@@ -224,6 +224,10 @@ Future<List<_GeneratedComponentCatalog>> _generateComponentRouteIndexes(
       final destinationMap = destination is Map
           ? destination.cast<Object?, Object?>()
           : const <Object?, Object?>{};
+      if ('${route['registration'] ?? ''}'.trim().isEmpty &&
+          destinationMap.isEmpty) {
+        continue;
+      }
       routes
           .putIfAbsent(componentId, () => [])
           .add(
@@ -236,6 +240,24 @@ Future<List<_GeneratedComponentCatalog>> _generateComponentRouteIndexes(
                   '${destinationMap['descriptor'] ?? _descriptorFromContract(routeContract)}',
               builder:
                   '${destinationMap['builder'] ?? _builderFromContract(routeContract)}',
+            ),
+          );
+    }
+    for (final implementation in _objects(document['routeImplementations'])) {
+      final destination = implementation['destination'];
+      final destinationMap = destination is Map
+          ? destination.cast<Object?, Object?>()
+          : const <Object?, Object?>{};
+      routes
+          .putIfAbsent('${implementation['componentId'] ?? ''}', () => [])
+          .add(
+            _RouteRegistration(
+              package: package,
+              source: source,
+              routeId: '${implementation['routeId'] ?? ''}',
+              registration: '${implementation['registration'] ?? ''}',
+              descriptor: '${destinationMap['descriptor'] ?? ''}',
+              builder: '${destinationMap['builder'] ?? ''}',
             ),
           );
     }

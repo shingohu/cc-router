@@ -10,9 +10,9 @@ part of 'annotated_routes.dart';
 // **************************************************************************
 
 /// Immutable arguments for route fixture.detail; URI values remain typed.
-final class DetailPageRouteArguments {
+final class _DetailPageRouteArguments {
   /// Creates arguments without navigating or retaining a backend context.
-  const DetailPageRouteArguments({
+  const _DetailPageRouteArguments({
     required this.id,
     this.search,
     this.tab = DetailTab.summary,
@@ -42,7 +42,7 @@ final class DetailPageRouteArguments {
 
 /// A typed detail route.
 /// Includes safe defaults.
-abstract final class DetailPageRoute {
+abstract final class _DetailPageRoute {
   /// Stable identity used by registration, diagnostics and typed navigation.
   static const id = "fixture.detail";
 
@@ -55,7 +55,7 @@ abstract final class DetailPageRoute {
     double ratio = 1.0,
     Snapshot? snapshot,
   }) => _DetailPageRouteIntent(
-    DetailPageRouteArguments(
+    _DetailPageRouteArguments(
       id: id,
       search: search,
       tab: tab,
@@ -66,53 +66,52 @@ abstract final class DetailPageRoute {
   );
 
   /// Component-owned definition; registration does not select a backend.
-  static final definition = CCRouteDefinition<DetailPageRouteArguments, String>(
-    routeId: id,
-    patterns: const [
-      const CCPathPattern(
-        "/detail/:id",
-        primary: true,
-        constraints: const <String, String>{"id": "\\d+"},
-      ),
-      const CCPathPattern(
-        "/legacy/:id",
-        primary: false,
-        constraints: const <String, String>{},
-      ),
-      const CCUriPattern(
-        "sample://detail/:id",
-        primary: false,
-        constraints: const <String, String>{},
-      ),
-      const CCRegexPattern("/old/(?<id>\\d+)"),
-    ],
-    codec: const _DetailPageRouteCodec(),
-    visibility: CCRouteVisibility.exported,
-    visibleTo: const <String>{"home"},
-    deepLink: CCDeepLinkPolicy.enabled,
-    presentation: const CCPagePresentation(
-      routeType: CCPageRouteType.platformDefault,
-      transition: CCPageTransitionType.slideFromBottom,
-      opaque: false,
-      fullscreenDialog: false,
-    ),
-    placement: const CCRoutePlacement(
-      hostId: "default",
-      parentRouteId: null,
-      shellId: null,
-      navigatorOutlet: "root",
-      routeKind: CCRouteKind.page,
-    ),
-    interceptorIds: const ["fixture.auth"],
-    description: "A typed detail route.\nIncludes safe defaults.",
-  );
+  static final definition =
+      CCRouteDefinition<_DetailPageRouteArguments, String>(
+        routeId: id,
+        patterns: const [
+          const CCPathPattern(
+            "/detail/:id",
+            primary: true,
+            constraints: const <String, String>{"id": "\\d+"},
+          ),
+          const CCPathPattern(
+            "/legacy/:id",
+            primary: false,
+            constraints: const <String, String>{},
+          ),
+          const CCUriPattern(
+            "sample://detail/:id",
+            primary: false,
+            constraints: const <String, String>{},
+          ),
+          const CCRegexPattern("/old/(?<id>\\d+)"),
+        ],
+        codec: const _DetailPageRouteCodec(),
+        deepLink: CCDeepLinkPolicy.enabled,
+        presentation: const CCPagePresentation(
+          routeType: CCPageRouteType.platformDefault,
+          transition: CCPageTransitionType.slideFromBottom,
+          opaque: false,
+          fullscreenDialog: false,
+        ),
+        placement: const CCRoutePlacement(
+          hostId: "default",
+          parentRouteId: null,
+          shellId: null,
+          navigatorOutlet: "root",
+          routeKind: CCRouteKind.page,
+        ),
+        interceptorIds: const ["fixture.auth"],
+        description: "A typed detail route.\nIncludes safe defaults.",
+      );
 
   /// Called by the owning component registrar, never by a business caller.
   static void register(CCRegistry registry) =>
       registry.registerRoute(definition);
 
   /// Injects already decoded arguments into the page without backend coupling.
-  static DetailPage build(DetailPageRouteArguments arguments) => DetailPage(
+  static DetailPage build(_DetailPageRouteArguments arguments) => DetailPage(
     id: arguments.id,
     search: arguments.search,
     tab: arguments.tab,
@@ -129,22 +128,22 @@ final class _DetailPageRouteIntent implements CCRouteIntent<String> {
 
   /// Stable identity of the owned destination.
   @override
-  String get routeId => DetailPageRoute.id;
+  String get routeId => _DetailPageRoute.id;
 
   /// Typed payload consumed only by the matching route codec.
   @override
-  final DetailPageRouteArguments arguments;
+  final _DetailPageRouteArguments arguments;
 }
 
 /// Private boundary conversion; raw input is never included in error messages.
 final class _DetailPageRouteCodec
-    implements CCRouteCodec<DetailPageRouteArguments> {
+    implements CCRouteCodec<_DetailPageRouteArguments> {
   /// Stateless codec shared by the component's route definition.
   const _DetailPageRouteCodec();
 
   /// Rejects missing, repeated or malformed values before creating a page.
   @override
-  DetailPageRouteArguments decode(CCEncodedRouteArguments input) {
+  _DetailPageRouteArguments decode(CCEncodedRouteArguments input) {
     double _parse_ratio(String raw) {
       final value = double.tryParse(raw);
       if (value == null || !value.isFinite) {
@@ -215,7 +214,7 @@ final class _DetailPageRouteCodec
       throw CCRouteParameterError(
         "Route \"fixture.detail\" parameter \"snapshot\" is invalid.",
       );
-    return DetailPageRouteArguments(
+    return _DetailPageRouteArguments(
       id: _value_id,
       search: _value_search,
       tab: _value_tab,
@@ -227,7 +226,7 @@ final class _DetailPageRouteCodec
 
   /// Encodes unescaped scalar values; Runtime owns URI escaping exactly once.
   @override
-  CCEncodedRouteArguments encode(DetailPageRouteArguments arguments) {
+  CCEncodedRouteArguments encode(_DetailPageRouteArguments arguments) {
     if (!arguments.ratio.isFinite)
       throw CCRouteParameterError(
         "Route \"fixture.detail\" parameter \"ratio\" must be finite.",
@@ -272,8 +271,6 @@ abstract final class _InternalPageRoute {
           ),
         ],
         codec: const _InternalPageRouteCodec(),
-        visibility: CCRouteVisibility.component,
-        visibleTo: const <String>{},
         deepLink: CCDeepLinkPolicy.disabled,
         presentation: const CCPagePresentation(
           routeType: CCPageRouteType.platformDefault,
@@ -335,9 +332,9 @@ final class _InternalPageRouteCodec
 }
 
 /// Immutable arguments for route fixture.positional; URI values remain typed.
-final class PositionalPageRouteArguments {
+final class _PositionalPageRouteArguments {
   /// Creates arguments without navigating or retaining a backend context.
-  const PositionalPageRouteArguments({
+  const _PositionalPageRouteArguments({
     required this.value,
     this.input = 'default',
   });
@@ -350,7 +347,7 @@ final class PositionalPageRouteArguments {
 }
 
 /// Typed contract for fixture.positional.
-abstract final class PositionalPageRoute {
+abstract final class _PositionalPageRoute {
   /// Stable identity used by registration, diagnostics and typed navigation.
   static const id = "fixture.positional";
 
@@ -359,12 +356,12 @@ abstract final class PositionalPageRoute {
     required String value,
     String input = 'default',
   }) => _PositionalPageRouteIntent(
-    PositionalPageRouteArguments(value: value, input: input),
+    _PositionalPageRouteArguments(value: value, input: input),
   );
 
   /// Component-owned definition; registration does not select a backend.
   static final definition =
-      CCRouteDefinition<PositionalPageRouteArguments, int>(
+      CCRouteDefinition<_PositionalPageRouteArguments, int>(
         routeId: id,
         patterns: const [
           const CCPathPattern(
@@ -374,8 +371,6 @@ abstract final class PositionalPageRoute {
           ),
         ],
         codec: const _PositionalPageRouteCodec(),
-        visibility: CCRouteVisibility.exported,
-        visibleTo: const <String>{},
         deepLink: CCDeepLinkPolicy.disabled,
         presentation: const CCPagePresentation(
           routeType: CCPageRouteType.platformDefault,
@@ -399,7 +394,7 @@ abstract final class PositionalPageRoute {
       registry.registerRoute(definition);
 
   /// Injects already decoded arguments into the page without backend coupling.
-  static PositionalPage build(PositionalPageRouteArguments arguments) =>
+  static PositionalPage build(_PositionalPageRouteArguments arguments) =>
       PositionalPage(arguments.value, arguments.input);
 }
 
@@ -410,22 +405,22 @@ final class _PositionalPageRouteIntent implements CCRouteIntent<int> {
 
   /// Stable identity of the owned destination.
   @override
-  String get routeId => PositionalPageRoute.id;
+  String get routeId => _PositionalPageRoute.id;
 
   /// Typed payload consumed only by the matching route codec.
   @override
-  final PositionalPageRouteArguments arguments;
+  final _PositionalPageRouteArguments arguments;
 }
 
 /// Private boundary conversion; raw input is never included in error messages.
 final class _PositionalPageRouteCodec
-    implements CCRouteCodec<PositionalPageRouteArguments> {
+    implements CCRouteCodec<_PositionalPageRouteArguments> {
   /// Stateless codec shared by the component's route definition.
   const _PositionalPageRouteCodec();
 
   /// Rejects missing, repeated or malformed values before creating a page.
   @override
-  PositionalPageRouteArguments decode(CCEncodedRouteArguments input) {
+  _PositionalPageRouteArguments decode(CCEncodedRouteArguments input) {
     final _raw_value = input.path["value"];
     final String _value_value = _raw_value == null
         ? throw CCRouteParameterError(
@@ -439,7 +434,7 @@ final class _PositionalPageRouteCodec
       );
     final _raw_input = _values_input?.single;
     final String _value_input = _raw_input == null ? 'default' : _raw_input;
-    return PositionalPageRouteArguments(
+    return _PositionalPageRouteArguments(
       value: _value_value,
       input: _value_input,
     );
@@ -447,7 +442,7 @@ final class _PositionalPageRouteCodec
 
   /// Encodes unescaped scalar values; Runtime owns URI escaping exactly once.
   @override
-  CCEncodedRouteArguments encode(PositionalPageRouteArguments arguments) {
+  CCEncodedRouteArguments encode(_PositionalPageRouteArguments arguments) {
     return CCEncodedRouteArguments(
       path: {"value": arguments.value},
       query: {
@@ -459,25 +454,25 @@ final class _PositionalPageRouteCodec
 }
 
 /// Immutable arguments for route fixture.extra; URI values remain typed.
-final class ExtraPageRouteArguments {
+final class _ExtraPageRouteArguments {
   /// Creates arguments without navigating or retaining a backend context.
-  const ExtraPageRouteArguments({required this.snapshot});
+  const _ExtraPageRouteArguments({required this.snapshot});
 
   /// extra parameter snapshot for fixture.extra.
   final Snapshot snapshot;
 }
 
 /// Typed contract for fixture.extra.
-abstract final class ExtraPageRoute {
+abstract final class _ExtraPageRoute {
   /// Stable identity used by registration, diagnostics and typed navigation.
   static const id = "fixture.extra";
 
   /// Creates a typed Intent; navigate through CCRouter.navigator.
   static CCRouteIntent<bool> intent({required Snapshot snapshot}) =>
-      _ExtraPageRouteIntent(ExtraPageRouteArguments(snapshot: snapshot));
+      _ExtraPageRouteIntent(_ExtraPageRouteArguments(snapshot: snapshot));
 
   /// Component-owned definition; registration does not select a backend.
-  static final definition = CCRouteDefinition<ExtraPageRouteArguments, bool>(
+  static final definition = CCRouteDefinition<_ExtraPageRouteArguments, bool>(
     routeId: id,
     patterns: const [
       const CCPathPattern(
@@ -487,8 +482,6 @@ abstract final class ExtraPageRoute {
       ),
     ],
     codec: const _ExtraPageRouteCodec(),
-    visibility: CCRouteVisibility.exported,
-    visibleTo: const <String>{},
     deepLink: CCDeepLinkPolicy.disabled,
     presentation: const CCPagePresentation(
       routeType: CCPageRouteType.platformDefault,
@@ -512,7 +505,7 @@ abstract final class ExtraPageRoute {
       registry.registerRoute(definition);
 
   /// Injects already decoded arguments into the page without backend coupling.
-  static ExtraPage build(ExtraPageRouteArguments arguments) =>
+  static ExtraPage build(_ExtraPageRouteArguments arguments) =>
       ExtraPage(snapshot: arguments.snapshot);
 }
 
@@ -523,22 +516,22 @@ final class _ExtraPageRouteIntent implements CCRouteIntent<bool> {
 
   /// Stable identity of the owned destination.
   @override
-  String get routeId => ExtraPageRoute.id;
+  String get routeId => _ExtraPageRoute.id;
 
   /// Typed payload consumed only by the matching route codec.
   @override
-  final ExtraPageRouteArguments arguments;
+  final _ExtraPageRouteArguments arguments;
 }
 
 /// Private boundary conversion; raw input is never included in error messages.
 final class _ExtraPageRouteCodec
-    implements CCRouteCodec<ExtraPageRouteArguments> {
+    implements CCRouteCodec<_ExtraPageRouteArguments> {
   /// Stateless codec shared by the component's route definition.
   const _ExtraPageRouteCodec();
 
   /// Rejects missing, repeated or malformed values before creating a page.
   @override
-  ExtraPageRouteArguments decode(CCEncodedRouteArguments input) {
+  _ExtraPageRouteArguments decode(CCEncodedRouteArguments input) {
     final _value_snapshot = input.extra == null
         ? throw CCRouteParameterError(
             "Route \"fixture.extra\" parameter \"snapshot\" is invalid.",
@@ -548,12 +541,12 @@ final class _ExtraPageRouteCodec
       throw CCRouteParameterError(
         "Route \"fixture.extra\" parameter \"snapshot\" is invalid.",
       );
-    return ExtraPageRouteArguments(snapshot: _value_snapshot);
+    return _ExtraPageRouteArguments(snapshot: _value_snapshot);
   }
 
   /// Encodes unescaped scalar values; Runtime owns URI escaping exactly once.
   @override
-  CCEncodedRouteArguments encode(ExtraPageRouteArguments arguments) {
+  CCEncodedRouteArguments encode(_ExtraPageRouteArguments arguments) {
     return CCEncodedRouteArguments(
       path: {},
       query: {},
@@ -563,9 +556,9 @@ final class _ExtraPageRouteCodec
 }
 
 /// Immutable arguments for route fixture.prefixed; URI values remain typed.
-final class PrefixedPageRouteArguments {
+final class _PrefixedPageRouteArguments {
   /// Creates arguments without navigating or retaining a backend context.
-  const PrefixedPageRouteArguments({
+  const _PrefixedPageRouteArguments({
     this.mode = types.Mode.normal,
     this.payload,
   });
@@ -578,7 +571,7 @@ final class PrefixedPageRouteArguments {
 }
 
 /// Typed contract for fixture.prefixed.
-abstract final class PrefixedPageRoute {
+abstract final class _PrefixedPageRoute {
   /// Stable identity used by registration, diagnostics and typed navigation.
   static const id = "fixture.prefixed";
 
@@ -587,12 +580,12 @@ abstract final class PrefixedPageRoute {
     types.Mode mode = types.Mode.normal,
     types.Payload? payload,
   }) => _PrefixedPageRouteIntent(
-    PrefixedPageRouteArguments(mode: mode, payload: payload),
+    _PrefixedPageRouteArguments(mode: mode, payload: payload),
   );
 
   /// Component-owned definition; registration does not select a backend.
   static final definition =
-      CCRouteDefinition<PrefixedPageRouteArguments, types.Result>(
+      CCRouteDefinition<_PrefixedPageRouteArguments, types.Result>(
         routeId: id,
         patterns: const [
           const CCPathPattern(
@@ -602,8 +595,6 @@ abstract final class PrefixedPageRoute {
           ),
         ],
         codec: const _PrefixedPageRouteCodec(),
-        visibility: CCRouteVisibility.exported,
-        visibleTo: const <String>{},
         deepLink: CCDeepLinkPolicy.disabled,
         presentation: const CCPagePresentation(
           routeType: CCPageRouteType.platformDefault,
@@ -627,7 +618,7 @@ abstract final class PrefixedPageRoute {
       registry.registerRoute(definition);
 
   /// Injects already decoded arguments into the page without backend coupling.
-  static PrefixedPage build(PrefixedPageRouteArguments arguments) =>
+  static PrefixedPage build(_PrefixedPageRouteArguments arguments) =>
       PrefixedPage(mode: arguments.mode, payload: arguments.payload);
 }
 
@@ -638,22 +629,22 @@ final class _PrefixedPageRouteIntent implements CCRouteIntent<types.Result> {
 
   /// Stable identity of the owned destination.
   @override
-  String get routeId => PrefixedPageRoute.id;
+  String get routeId => _PrefixedPageRoute.id;
 
   /// Typed payload consumed only by the matching route codec.
   @override
-  final PrefixedPageRouteArguments arguments;
+  final _PrefixedPageRouteArguments arguments;
 }
 
 /// Private boundary conversion; raw input is never included in error messages.
 final class _PrefixedPageRouteCodec
-    implements CCRouteCodec<PrefixedPageRouteArguments> {
+    implements CCRouteCodec<_PrefixedPageRouteArguments> {
   /// Stateless codec shared by the component's route definition.
   const _PrefixedPageRouteCodec();
 
   /// Rejects missing, repeated or malformed values before creating a page.
   @override
-  PrefixedPageRouteArguments decode(CCEncodedRouteArguments input) {
+  _PrefixedPageRouteArguments decode(CCEncodedRouteArguments input) {
     final _values_mode = input.query["mode"];
     if (_values_mode != null && _values_mode.length != 1)
       throw CCRouteParameterError(
@@ -674,7 +665,7 @@ final class _PrefixedPageRouteCodec
       throw CCRouteParameterError(
         "Route \"fixture.prefixed\" parameter \"payload\" is invalid.",
       );
-    return PrefixedPageRouteArguments(
+    return _PrefixedPageRouteArguments(
       mode: _value_mode,
       payload: _value_payload,
     );
@@ -682,7 +673,7 @@ final class _PrefixedPageRouteCodec
 
   /// Encodes unescaped scalar values; Runtime owns URI escaping exactly once.
   @override
-  CCEncodedRouteArguments encode(PrefixedPageRouteArguments arguments) {
+  CCEncodedRouteArguments encode(_PrefixedPageRouteArguments arguments) {
     return CCEncodedRouteArguments(
       path: {},
       query: {

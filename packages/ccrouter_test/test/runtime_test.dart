@@ -140,6 +140,61 @@ void main() {
     );
   });
 
+  test(
+    'stable service token and legacy type lookup share one instance',
+    () async {
+      const contract = CCServiceToken<Counter>('counter.service');
+      runtime.registerService(
+        CCServiceProvider<Counter>(
+          contract: contract,
+          factory: (_) => Counter('promoted'),
+        ),
+      );
+      await runtime.initialize();
+
+      final legacy = runtime.service<Counter>();
+      final promoted = runtime.service<Counter>(contract: contract);
+
+      expect(promoted, same(legacy));
+      expect(runtime.hasService<Counter>(contract: contract), isTrue);
+      expect(runtime.services<Counter>(contract: contract), [same(legacy)]);
+      expect(
+        () => runtime.service<String>(
+          contract: const CCServiceToken('counter.service'),
+        ),
+        throwsA(isA<CCResolutionError>()),
+      );
+    },
+  );
+
+  test('stable service contract IDs are globally unique and validated', () {
+    runtime.registerService(
+      CCServiceProvider<Counter>(
+        contract: const CCServiceToken('shared.service'),
+        factory: (_) => Counter('counter'),
+      ),
+    );
+    expect(
+      () => runtime.registerService(
+        CCServiceProvider<String>(
+          contract: const CCServiceToken('shared.service'),
+          key: const CCServiceKey('different-key'),
+          factory: (_) => 'duplicate',
+        ),
+      ),
+      throwsA(isA<CCRegistrationError>()),
+    );
+    expect(
+      () => runtime.registerService(
+        CCServiceProvider<int>(
+          contract: const CCServiceToken('Invalid service'),
+          factory: (_) => 1,
+        ),
+      ),
+      throwsA(isA<CCRegistrationError>()),
+    );
+  });
+
   test('duplicate service keys and multiple defaults fail', () {
     runtime.registerService(
       CCServiceProvider<Counter>(factory: (_) => Counter('a')),

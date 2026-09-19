@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter_go_router/ccrouter_go_router.dart';
-import 'package:demo_order/demo_order.dart';
+import 'package:demo_order_contracts/demo_order_contracts.dart';
 import 'package:flutter/material.dart';
 
 import 'ccrouter_generated/ccrouter_host.routes.g.dart';
@@ -41,7 +41,6 @@ final class CCRouterDemoApp extends StatefulWidget {
   @override
   State<CCRouterDemoApp> createState() => _CCRouterDemoAppState();
 }
-
 final class _CCRouterDemoAppState extends State<CCRouterDemoApp> {
   late final GoRouter _router;
   late final CCGoRouterAdapter _adapter;
@@ -163,7 +162,7 @@ final class _RuntimePageState extends State<RuntimePage> {
   Future<void> _openOrder() async {
     try {
       final result = await CCRouter.navigator.push<String>(
-        OrderDetailPageRoute.intent(orderId: 100, tab: 'items'),
+        OrderDetailRoute.intent(orderId: 100, tab: 'items'),
       );
       if (mounted) setState(() => _status = result ?? '订单详情已返回');
     } on CCRouterError catch (error) {

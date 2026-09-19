@@ -216,27 +216,39 @@ abstract final class CCRouter {
 
   /// Resolves the default or keyed implementation of service contract [T].
   ///
-  /// Use when the capability is required and absence is a configuration error.
-  static T service<T extends Object>({CCServiceKey<T>? key}) =>
-      _runtime.service<T>(key: key);
+  /// Use [contract] after an internal service is promoted across packages; omit
+  /// it for legacy or component-internal type lookup. Absence is a configuration
+  /// error in either mode.
+  static T service<T extends Object>({
+    CCServiceToken<T>? contract,
+    CCServiceKey<T>? key,
+  }) => _runtime.service<T>(contract: contract, key: key);
 
   /// Resolves service contract [T], returning null only when it is unregistered.
   ///
-  /// Use for genuinely optional integrations; factory and lifecycle failures
-  /// still propagate and are not converted to null.
-  static T? serviceOrNull<T extends Object>({CCServiceKey<T>? key}) =>
-      _runtime.serviceOrNull<T>(key: key);
+  /// Pass [contract] for a promoted cross-package capability. Use this only for
+  /// genuinely optional integrations; factory and lifecycle failures still
+  /// propagate and are not converted to null.
+  static T? serviceOrNull<T extends Object>({
+    CCServiceToken<T>? contract,
+    CCServiceKey<T>? key,
+  }) => _runtime.serviceOrNull<T>(contract: contract, key: key);
 
   /// Resolves every registered implementation of service contract [T].
   ///
+  /// Pass [contract] when implementations share a promoted stable identity.
   /// Use when a caller intentionally composes all installed implementations.
-  static List<T> services<T extends Object>() => _runtime.services<T>();
+  static List<T> services<T extends Object>({CCServiceToken<T>? contract}) =>
+      _runtime.services<T>(contract: contract);
 
   /// Whether service contract [T] has a matching registration.
   ///
-  /// Use for capability discovery without constructing the service instance.
-  static bool hasService<T extends Object>({CCServiceKey<T>? key}) =>
-      _runtime.hasService<T>(key: key);
+  /// Pass [contract] for promoted cross-package capability discovery without
+  /// constructing the service instance.
+  static bool hasService<T extends Object>({
+    CCServiceToken<T>? contract,
+    CCServiceKey<T>? key,
+  }) => _runtime.hasService<T>(contract: contract, key: key);
 
   /// Dispatches [command] to its single handler.
   ///

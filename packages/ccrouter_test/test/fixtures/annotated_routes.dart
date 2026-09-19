@@ -11,10 +11,10 @@ final class FixtureComponentRegistrar implements CCComponentRegistrar {
 
   @override
   void register(CCRegistry registry) {
-    DetailPageRoute.register(registry);
-    PositionalPageRoute.register(registry);
-    ExtraPageRoute.register(registry);
-    PrefixedPageRoute.register(registry);
+    _DetailPageRoute.register(registry);
+    _PositionalPageRoute.register(registry);
+    _ExtraPageRoute.register(registry);
+    _PrefixedPageRoute.register(registry);
     _InternalPageRoute.register(registry);
     registry.registerRouteInterceptor('fixture.auth', const FixtureProceed());
   }
@@ -44,8 +44,6 @@ final class Snapshot {
     CCUriPattern('sample://detail/:id'),
     CCRegexPattern(r'/old/(?<id>\d+)'),
   ],
-  visibility: CCRouteVisibility.exported,
-  visibleTo: {'home'},
   deepLink: CCDeepLinkPolicy.enabled,
   presentation: CCPagePresentation(
     transition: CCPageTransitionType.slideFromBottom,
@@ -93,7 +91,6 @@ void registerInternal(CCRegistry registry) =>
   component: fixtureComponent,
   id: 'fixture.positional',
   patterns: [CCPathPattern('/position/:value', primary: true)],
-  visibility: CCRouteVisibility.exported,
 )
 final class PositionalPage {
   const PositionalPage(this.value, [@CCQueryParam() this.input = 'default']);
@@ -105,7 +102,6 @@ final class PositionalPage {
   component: fixtureComponent,
   id: 'fixture.extra',
   patterns: [CCPathPattern('/extra', primary: true)],
-  visibility: CCRouteVisibility.exported,
 )
 final class ExtraPage {
   const ExtraPage({@CCExtraParam() required this.snapshot});
@@ -116,7 +112,6 @@ final class ExtraPage {
   component: fixtureComponent,
   id: 'fixture.prefixed',
   patterns: [CCPathPattern('/prefixed', primary: true)],
-  visibility: CCRouteVisibility.exported,
 )
 final class PrefixedPage {
   const PrefixedPage({
@@ -127,3 +122,45 @@ final class PrefixedPage {
   final types.Mode mode;
   final types.Payload? payload;
 }
+
+CCRouteDefinition<dynamic, String> get detailDefinition =>
+    _DetailPageRoute.definition;
+CCRouteCodec<dynamic> get detailCodec => _DetailPageRoute.definition.codec;
+DetailPage buildDetailPage(dynamic arguments) =>
+    _DetailPageRoute.build(arguments as _DetailPageRouteArguments);
+CCRouteIntent<String> detailIntent({
+  required int id,
+  String? search,
+  DetailTab tab = DetailTab.summary,
+  bool enabled = false,
+  double ratio = 1.0,
+  Snapshot? snapshot,
+}) => _DetailPageRoute.intent(
+  id: id,
+  search: search,
+  tab: tab,
+  enabled: enabled,
+  ratio: ratio,
+  snapshot: snapshot,
+);
+dynamic detailArguments({required int id, double ratio = 1.0}) =>
+    _DetailPageRouteArguments(id: id, ratio: ratio);
+int detailArgumentId(Object? arguments) =>
+    (arguments as _DetailPageRouteArguments).id;
+
+CCRouteCodec<dynamic> get positionalCodec =>
+    _PositionalPageRoute.definition.codec;
+PositionalPage buildPositionalPage(dynamic arguments) =>
+    _PositionalPageRoute.build(arguments as _PositionalPageRouteArguments);
+
+CCRouteCodec<dynamic> get extraCodec => _ExtraPageRoute.definition.codec;
+ExtraPage buildExtraPage(dynamic arguments) =>
+    _ExtraPageRoute.build(arguments as _ExtraPageRouteArguments);
+
+CCRouteCodec<dynamic> get prefixedCodec => _PrefixedPageRoute.definition.codec;
+PrefixedPage buildPrefixedPage(dynamic arguments) =>
+    _PrefixedPageRoute.build(arguments as _PrefixedPageRouteArguments);
+CCRouteIntent<types.Result> prefixedIntent({
+  types.Mode mode = types.Mode.normal,
+  types.Payload? payload,
+}) => _PrefixedPageRoute.intent(mode: mode, payload: payload);

@@ -76,7 +76,7 @@ CCRouteQueryCodec<OrderFilter>
 
 ### 2.4 Monorepo 生成工具体验
 
-其生成器支持多 Package 扫描、排除包、分组和排序。CCRouter 已经有组件级 `ccrouter_generated/metadata/**/*.component.json`、路由级 `ccrouter_generated/metadata/**/*.route.json`、workspace 聚合校验和应用级 `cc_routes.json` / `cc_routes.md`，并且额外校验组件所有权、`visibleTo` 和依赖边界。
+其生成器支持多 Package 扫描、排除包、分组和排序。CCRouter 已经有组件级 `ccrouter_generated/metadata/**/*.component.json`、路由级 `ccrouter_generated/metadata/**/*.route.json`、workspace 聚合校验和应用级 `cc_routes.json` / `cc_routes.md`，并且额外校验组件所有权、契约 exposure 和实现边界。
 
 已参考其“生成统一 Route Settings 列表、宿主批量转换”的思路，但没有照搬动态参数
 Map 或组件直接依赖 GoRouter。CCRouter 生成 `CCFlutterRouteCatalog`，由宿主生成器跨组件
@@ -120,7 +120,7 @@ CCRouteMetadata(
 
 - 所有路由都会出现在一个全局符号表中；
 - 组件内部路由更容易被外部发现；
-- `visibleTo` 难以成为真实的编译期边界；
+- 手写消费者 allowlist 难以成为真实的编译期边界；
 - 组件依赖会变成隐式关系；
 - 大型生成文件会增加冲突和增量构建成本。
 
@@ -155,7 +155,7 @@ CCRouter 应继续要求业务统一通过 `CCRouter.navigator`，让拦截、As
 | --- | --- | --- |
 | 注解参数辅助 | 支持 | 生成强类型 Arguments/Intent |
 | 多 Path / URI | 支持部分 | 多 Pattern、主 Pattern 和别名分离 |
-| 路由可见性 | 主要依赖生成文件和包扫描 | Component Owner、`visibleTo`、barrel 校验 |
+| 路由可见性 | 主要依赖生成文件和包扫描 | 契约形态、Package 依赖、barrel 校验 |
 | 路由生命周期 | Widget Mixin + Observer | Runtime RouteEntry + Aspect + Adapter 事件 |
 | App 前后台 | 有生命周期回调 | 需要补 Host/Window Lifecycle Bridge |
 | 全局/路由拦截器 | 支持 | 已支持，并统一经过 CCRouter |

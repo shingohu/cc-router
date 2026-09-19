@@ -5,7 +5,7 @@ import 'package:analyzer/dart/analysis/results.dart';
 import 'package:analyzer/dart/analysis/utilities.dart';
 import 'package:analyzer/dart/ast/ast.dart';
 
-/// Checks that exported generated route contracts are deliberately re-exported.
+/// Checks that public generated contracts are deliberately re-exported.
 ///
 /// Run this check from the workspace route-catalog command. Component authors
 /// keep generated parts beside their page declarations, while a public barrel
@@ -15,9 +15,9 @@ final class CCRouteBarrelExportValidator {
   /// Finds missing or incomplete public barrel exports below [workspaceRoot].
   ///
   /// [documents] must be the decoded component and route metadata files
-  /// emitted by the metadata builders. The method only reports exported routes
-  /// whose source file is inside a package `lib` directory; test fixtures are
-  /// ignored.
+  /// emitted by the metadata builders. The method only reports public
+  /// Contract-first declarations whose source file is inside a package `lib`
+  /// directory; test fixtures are ignored.
   static List<String> validate(
     Directory workspaceRoot,
     Iterable<Map<String, Object?>> documents,
@@ -37,16 +37,19 @@ final class CCRouteBarrelExportValidator {
           .where((file) => _hasExportDirective(file))
           .toList();
       for (final route in _objects(document['routes'])) {
-        if (route['visibility'] != 'exported') continue;
+        if (route['exposure'] == 'internal') continue;
         final contracts = route['contracts'];
         if (contracts is! Map) continue;
         final required = <String>{
           '${contracts['route']}',
           '${contracts['arguments']}',
         };
-        if (_isShownByBarrel(sourceFile, required, barrels)) continue;
+        final contractLibrary = '${contracts['library'] ?? source}';
+        final contractFile = File(_join(packageRoot.path, contractLibrary));
+        if (_isShownByBarrel(contractFile, required, barrels)) continue;
         errors.add(
-          'Exported route "${route['id']}" in $source must be re-exported '
+          'Public route "${route['id']}" in $source must be re-exported '
+          'from $contractLibrary '
           'with both generated contracts in a public barrel using `show`.',
         );
       }

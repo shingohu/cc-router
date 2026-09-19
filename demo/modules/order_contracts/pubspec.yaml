@@ -1,0 +1,11 @@
+name: demo_order_contracts
+description: Pure Dart public contracts owned by the demo order component.
+version: 0.1.0
+publish_to: none
+resolution: workspace
+environment:
+  sdk: ^3.11.5
+dependencies:
+  ccrouter_contracts: ^0.1.0
+dev_dependencies:
+  ccrouter_generator: ^0.1.0

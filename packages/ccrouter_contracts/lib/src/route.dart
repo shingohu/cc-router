@@ -2,30 +2,13 @@ import 'route_pattern.dart';
 import 'route_placement.dart';
 import 'route_presentation.dart';
 
-/// Controls which generated consumers may reference a route contract.
-///
-/// Use component visibility for implementation-only pages and exported
-/// visibility for stable cross-component navigation contracts. This is an
-/// API-generation boundary, not a security authorization mechanism.
-enum CCRouteVisibility {
-  /// Keeps the route available only to its owning component.
-  ///
-  /// Use for workflow steps and implementation pages with no external caller.
-  component,
-
-  /// Allows the generator to export the route to explicitly listed consumers.
-  ///
-  /// Use for stable entry points intentionally consumed by other components.
-  exported,
-}
-
 /// Controls whether a route may be entered from an external URI.
 ///
 /// External entry includes Universal Links, App Links, custom schemes, QR
 /// codes, notification links, and links opened by another application. This
 /// policy only decides whether the route may enter the deep-link pipeline; it
-/// does not grant component visibility or bypass authentication, authorization,
-/// host allowlists, parameter validation, or route interceptors.
+/// does not publish a component-internal contract or bypass authentication,
+/// authorization, host allowlists, parameter validation, or route interceptors.
 enum CCDeepLinkPolicy {
   /// Rejects platform and browser deep-link entry for the route.
   ///
@@ -94,16 +77,13 @@ final class CCRouteDefinition<A, R> {
     required this.routeId,
     required List<CCRoutePattern> patterns,
     required this.codec,
-    this.visibility = CCRouteVisibility.component,
-    Set<String> visibleTo = const {},
     this.deepLink = CCDeepLinkPolicy.disabled,
     this.presentation = const CCPagePresentation(),
     this.placement = const CCRoutePlacement.root(),
     List<String> interceptorIds = const [],
     this.description,
   }) : patterns = List.unmodifiable(patterns),
-       interceptorIds = List.unmodifiable(interceptorIds),
-       visibleTo = Set.unmodifiable(visibleTo);
+       interceptorIds = List.unmodifiable(interceptorIds);
 
   /// Stable identity used for tracing, registration, and generated contracts.
   final String routeId;
@@ -117,18 +97,6 @@ final class CCRouteDefinition<A, R> {
 
   /// Typed argument codec generated for this route.
   final CCRouteCodec<A> codec;
-
-  /// Component-only or explicitly exported visibility policy.
-  final CCRouteVisibility visibility;
-
-  /// Component IDs for which generators may expose this exported contract.
-  ///
-  /// An empty set leaves the exported contract unrestricted by a component
-  /// allowlist. Use that form sparingly for intentionally application-wide APIs.
-  ///
-  /// Build tooling and CI validate this allowlist and component dependencies.
-  /// Runtime navigation does not treat it as caller identity or authorization.
-  final Set<String> visibleTo;
 
   /// Whether external URI entry is permitted for this route.
   final CCDeepLinkPolicy deepLink;

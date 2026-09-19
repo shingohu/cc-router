@@ -11,10 +11,11 @@ final class _RouteModel {
     this.patterns,
     this.primaryPatternIndex,
     this.parameters,
-    this.result,
+    this.resultType,
+    this.contractFirst,
   );
 
-  /// Concrete annotated destination; it may be private to its Dart library.
+  /// Annotated page or abstract schema supplying the normalized route model.
   final ClassElement page;
 
   /// Evaluated immutable annotation metadata.
@@ -36,18 +37,32 @@ final class _RouteModel {
   final List<_ParameterModel> parameters;
 
   /// Return type inferred from the annotation's generic argument.
-  final String result;
+  final DartType resultType;
 
-  /// Whether declarations intentionally form a cross-library contract.
-  bool get exported => _enumValue(
-    annotation.read('visibility').objectValue,
-  ).endsWith('.exported');
+  /// Whether the source is an abstract Contract-first schema rather than UI.
+  final bool contractFirst;
+
+  /// Return type rendered for the source library's existing import namespace.
+  String get result => _typeSource(resultType, page.library);
+
+  /// Source-level import boundary recorded before workspace aggregation.
+  ///
+  /// Page annotations are library-private. Contract-first declarations are
+  /// public, while the workspace later derives whether their implementation is
+  /// in the same Package or an external contracts Package.
+  String get exposure => contractFirst ? 'public' : 'internal';
+
+  /// Stable generated API stem shared by contract and implementation packages.
+  String get apiStem {
+    final name = page.displayName.replaceFirst(RegExp(r'^_'), '');
+    if (!contractFirst) return '${name}Route';
+    return name.substring(0, name.length - 'Contract'.length);
+  }
 
   /// Public exported or library-private route API name.
-  String get api =>
-      '${exported ? '' : '_'}${page.displayName.replaceFirst(RegExp(r'^_'), '')}Route';
+  String get api => '${contractFirst ? '' : '_'}$apiStem';
 
-  /// Immutable argument type kept at the same visibility as the route API.
+  /// Immutable argument type kept at the same exposure as the route API.
   String get arguments => '${api}Arguments';
 
   /// Library-private boundary codec, never exported as a business API.
@@ -73,11 +88,28 @@ final class _RouteModel {
       'ccrouterBuild${page.displayName.replaceFirst(RegExp(r'^_'), '')}Route';
 
   /// Validates metadata and constructor injection without backend assumptions.
-  static _RouteModel read(Element element, ConstantReader annotation) {
+  static _RouteModel read(
+    Element element,
+    ConstantReader annotation, {
+    bool contractFirst = false,
+  }) {
     if (element is! ClassElement ||
-        element.isAbstract ||
+        element.isAbstract != contractFirst ||
         element.typeParameters.isNotEmpty) {
-      _fail('CCRoute requires a concrete, non-generic page class.', element);
+      _fail(
+        contractFirst
+            ? 'CCRouteContract requires an abstract, non-generic schema class.'
+            : 'CCRoute requires a concrete, non-generic page class.',
+        element,
+      );
+    }
+    if (contractFirst &&
+        (!element.displayName.endsWith('RouteContract') ||
+            element.displayName == 'RouteContract')) {
+      _fail(
+        'CCRouteContract schema names must end with RouteContract.',
+        element,
+      );
     }
     final id = annotation.read('id').stringValue;
     if (id.isEmpty || RegExp(r'\s').hasMatch(id)) {
@@ -263,26 +295,6 @@ final class _RouteModel {
       annotation.read('component'),
       element,
     );
-    final visibleTo = annotation
-        .read('visibleTo')
-        .setValue
-        .map((value) => value.toStringValue()!)
-        .toSet();
-    final exported = _enumValue(
-      annotation.read('visibility').objectValue,
-    ).endsWith('.exported');
-    if (!exported && visibleTo.isNotEmpty) {
-      _fail(
-        'Component-only route "$id" cannot declare visibleTo consumers.',
-        element,
-      );
-    }
-    if (visibleTo.contains(component.id)) {
-      _fail(
-        'Route "$id" cannot list its owning component in visibleTo.',
-        element,
-      );
-    }
     return _RouteModel(
       element,
       annotation,
@@ -291,7 +303,151 @@ final class _RouteModel {
       patterns,
       primaryPatternIndex,
       parameters,
-      _typeSource(result, element.library),
+      result,
+      contractFirst,
+    );
+  }
+}
+
+/// Validated binding between one Contract-first schema and its concrete page.
+final class _RouteImplementationModel {
+  /// Stores the destination after constructor compatibility has been proven.
+  const _RouteImplementationModel({
+    required this.page,
+    required this.contract,
+    required this.contractPrefix,
+  });
+
+  /// Concrete Flutter destination owned by the implementing component.
+  final ClassElement page;
+
+  /// Pure Dart route contract imported from the domain contracts package.
+  final _RouteModel contract;
+
+  /// Import prefix used by the page library for the contract package.
+  final String contractPrefix;
+
+  /// Generated route API as referenced from the implementation library.
+  String get contractApi => '$contractPrefix${contract.api}';
+
+  /// Stable package-internal bridge used by the generated component index.
+  String get registrationFunction =>
+      'ccrouterRegister${page.displayName.replaceFirst(RegExp(r'^_'), '')}Route';
+
+  /// Adapter-neutral metadata bridge consumed by Host generation.
+  String get descriptorFunction =>
+      'ccrouterDescribe${page.displayName.replaceFirst(RegExp(r'^_'), '')}Route';
+
+  /// Page-construction bridge that decodes through the external contract.
+  String get builderFunction =>
+      'ccrouterBuild${page.displayName.replaceFirst(RegExp(r'^_'), '')}Route';
+
+  /// Reads the referenced contract and verifies exact constructor compatibility.
+  static _RouteImplementationModel read(
+    Element element,
+    ConstantReader annotation,
+  ) {
+    if (element is! ClassElement ||
+        element.isAbstract ||
+        element.typeParameters.isNotEmpty) {
+      _fail(
+        'CCRouteImplementation requires a concrete, non-generic page class.',
+        element,
+      );
+    }
+    final constructor = element.unnamedConstructor;
+    if (constructor == null || constructor.isFactory) {
+      _fail(
+        'CCRouteImplementation requires an unnamed generative constructor.',
+        element,
+      );
+    }
+    final contractType = annotation.read('contract').typeValue;
+    final contractElement = contractType.element;
+    if (contractElement is! ClassElement) {
+      _fail(
+        'CCRouteImplementation must reference a CCRouteContract schema class.',
+        element,
+      );
+    }
+    const checker = TypeChecker.typeNamedLiterally(
+      'CCRouteContract',
+      inPackage: 'ccrouter_contracts',
+    );
+    final contractAnnotations = checker
+        .annotationsOfExact(contractElement)
+        .toList(growable: false);
+    if (contractAnnotations.length != 1) {
+      _fail(
+        'CCRouteImplementation must reference exactly one CCRouteContract declaration.',
+        element,
+      );
+    }
+    final contract = _RouteModel.read(
+      contractElement,
+      ConstantReader(contractAnnotations.single),
+      contractFirst: true,
+    );
+    String? contractPrefix;
+    for (final fragment in element.library.fragments) {
+      for (final directive in fragment.libraryImports) {
+        final prefix = directive.prefix?.element.displayName;
+        final visible =
+            directive.namespace.get2(contractElement.displayName) ==
+                contractElement ||
+            (prefix != null &&
+                directive.namespace.getPrefixed2(
+                      prefix,
+                      contractElement.displayName,
+                    ) ==
+                    contractElement);
+        if (visible) {
+          contractPrefix = prefix == null ? '' : '$prefix.';
+          break;
+        }
+      }
+      if (contractPrefix != null) break;
+    }
+    if (contractPrefix == null) {
+      _fail(
+        'CCRouteImplementation contract must be available through an explicit import.',
+        element,
+      );
+    }
+    final pageParameters = constructor.formalParameters
+        .where(
+          (parameter) =>
+              !(parameter.displayName == 'key' &&
+                  parameter.isOptional &&
+                  parameter.isNamed),
+        )
+        .toList(growable: false);
+    if (pageParameters.length != contract.parameters.length) {
+      _fail(
+        'Route implementation for "${contract.id}" must declare exactly the contract parameters plus an optional key.',
+        element,
+      );
+    }
+    for (var index = 0; index < contract.parameters.length; index++) {
+      final expected = contract.parameters[index].element;
+      final actual = pageParameters[index];
+      final typeSystem = element.library.typeSystem;
+      final sameType =
+          typeSystem.isAssignableTo(actual.type, expected.type) &&
+          typeSystem.isAssignableTo(expected.type, actual.type);
+      if (actual.displayName != expected.displayName ||
+          actual.isNamed != expected.isNamed ||
+          !sameType) {
+        _fail(
+          'Route implementation parameter "${actual.displayName}" does not match contract parameter "${expected.displayName}".',
+          actual,
+        );
+      }
+    }
+    return _RouteImplementationModel(
+      page: element,
+      contract: contract,
+      contractPrefix: contractPrefix,
     );
   }
 }

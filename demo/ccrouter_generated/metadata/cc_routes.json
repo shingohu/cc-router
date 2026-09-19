@@ -1,10 +1,18 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "components": [
     {
       "id": "demo_order_component",
       "version": "0.1.0",
       "dependencies": [],
+      "optionalDependencies": []
+    },
+    {
+      "id": "demo_payment_component",
+      "version": "0.1.0",
+      "dependencies": [
+        "demo_order_component"
+      ],
       "optionalDependencies": []
     }
   ],
@@ -12,18 +20,14 @@
     {
       "id": "order.detail",
       "componentId": "demo_order_component",
-      "visibility": "exported",
-      "visibleTo": [],
+      "exposure": "external",
       "deepLink": "disabled",
       "description": "订单详情，确认后返回订单编号。",
       "contracts": {
-        "route": "OrderDetailPageRoute",
-        "arguments": "OrderDetailPageRouteArguments"
-      },
-      "registration": "ccrouterRegisterOrderDetailPageRoute",
-      "destination": {
-        "descriptor": "ccrouterDescribeOrderDetailPageRoute",
-        "builder": "ccrouterBuildOrderDetailPageRoute"
+        "route": "OrderDetailRoute",
+        "arguments": "OrderDetailRouteArguments",
+        "package": "demo_order_contracts",
+        "library": "lib/src/ccrouter_generated/order_detail_route_contract.route.contract.g.dart"
       },
       "patterns": [
         {
@@ -47,7 +51,7 @@
           "type": "int",
           "required": true,
           "default": null,
-          "description": "需要展示的稳定订单 ID。"
+          "description": "Stable order identity encoded in the path."
         },
         {
           "name": "tab",
@@ -56,10 +60,21 @@
           "type": "String",
           "required": false,
           "default": "'summary'",
-          "description": "首次展示的详情标签。"
+          "description": "Initially selected detail tab encoded as a query value."
         }
       ],
-      "resultType": "String"
+      "resultType": "String",
+      "implementation": {
+        "routeId": "order.detail",
+        "componentId": "demo_order_component",
+        "package": "demo_order",
+        "source": "lib/src/order_detail_page.dart",
+        "registration": "ccrouterRegisterOrderDetailPageRoute",
+        "destination": {
+          "descriptor": "ccrouterDescribeOrderDetailPageRoute",
+          "builder": "ccrouterBuildOrderDetailPageRoute"
+        }
+      }
     }
   ]
 }

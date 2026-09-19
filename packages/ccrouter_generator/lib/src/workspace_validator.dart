@@ -30,7 +30,10 @@ final class CCRouteWorkspaceValidationResult {
 ///
 /// Use after route generation in CI. Local builders enforce declaration shape;
 /// this validator handles relationships that require seeing every component:
-/// unique IDs, declared owners, `visibleTo` targets, and consumer dependencies.
+/// unique IDs, declared owners, public-contract implementation ownership, and
+/// route pattern conflicts. Cross-Package import access is enforced by public
+/// barrels, Pub dependencies, and the Dart analyzer rather than a second
+/// allowlist.
 abstract final class CCRouteWorkspaceValidator {
   /// Validates decoded `.component.json` and `.route.json` documents and
   /// aggregates route docs.
@@ -40,9 +43,11 @@ abstract final class CCRouteWorkspaceValidator {
     final errors = <String>[];
     final components = <String, Map<String, Object?>>{};
     final componentDeclarationCounts = <String, int>{};
+    final componentDeclarationPackages = <String, String>{};
     final routes = <String, Map<String, Object?>>{};
+    final routeImplementations = <String, Map<String, Object?>>{};
     for (final document in documents) {
-      if (document['schemaVersion'] != 1) {
+      if (document['schemaVersion'] != 2) {
         errors.add(
           'Unsupported metadata schema in ${document['source'] ?? 'unknown source'}.',
         );
@@ -51,6 +56,8 @@ abstract final class CCRouteWorkspaceValidator {
       for (final id in _strings(document['componentDeclarations'])) {
         componentDeclarationCounts[id] =
             (componentDeclarationCounts[id] ?? 0) + 1;
+        final package = '${document['package'] ?? ''}';
+        if (package.isNotEmpty) componentDeclarationPackages[id] = package;
       }
       for (final component in _objects(document['components'])) {
         final id = '${component['id']}';
@@ -67,6 +74,14 @@ abstract final class CCRouteWorkspaceValidator {
           errors.add('Route ID "$id" is declared more than once.');
         } else {
           routes[id] = route;
+        }
+      }
+      for (final implementation in _objects(document['routeImplementations'])) {
+        final routeId = '${implementation['routeId']}';
+        if (routeImplementations.containsKey(routeId)) {
+          errors.add('Route "$routeId" has more than one implementation.');
+        } else {
+          routeImplementations[routeId] = implementation;
         }
       }
     }
@@ -88,42 +103,69 @@ abstract final class CCRouteWorkspaceValidator {
           'Route "$routeId" references unknown owner component "$ownerId".',
         );
       }
-      final visibleTo = _strings(route['visibleTo']);
-      if (route['visibility'] == 'component' && visibleTo.isNotEmpty) {
-        errors.add('Component route "$routeId" cannot declare visibleTo.');
+      final sourceExposure = '${route['exposure'] ?? ''}';
+      if (sourceExposure != 'internal' && sourceExposure != 'public') {
+        errors.add(
+          'Route "$routeId" has unknown source exposure "$sourceExposure".',
+        );
       }
-      for (final consumerId in visibleTo) {
-        final consumer = components[consumerId];
-        if (consumer == null) {
-          errors.add(
-            'Route "$routeId" references unknown consumer "$consumerId".',
-          );
-          continue;
-        }
-        final dependencies = {
-          ..._strings(consumer['dependencies']),
-          ..._strings(consumer['optionalDependencies']),
-        };
-        if (!dependencies.contains(ownerId)) {
-          errors.add(
-            'Consumer "$consumerId" must depend on "$ownerId" to access route "$routeId".',
-          );
-        }
+      final implementation = routeImplementations[routeId];
+      if (sourceExposure == 'public' && implementation == null) {
+        errors.add(
+          'Public route contract "$routeId" has no CCRouteImplementation.',
+        );
+      }
+      if (sourceExposure == 'internal' && implementation != null) {
+        errors.add(
+          'Route "$routeId" cannot combine a page declaration with CCRouteImplementation.',
+        );
+      }
+      if (implementation != null && implementation['componentId'] != ownerId) {
+        errors.add(
+          'Route implementation "$routeId" belongs to "${implementation['componentId']}" instead of owner "$ownerId".',
+        );
+      }
+      final implementationPackage = '${implementation?['package'] ?? ''}';
+      final ownerPackage = componentDeclarationPackages[ownerId];
+      if (implementationPackage.isNotEmpty &&
+          ownerPackage != null &&
+          implementationPackage != ownerPackage) {
+        errors.add(
+          'Route implementation "$routeId" is in package '
+          '"$implementationPackage" instead of owner package "$ownerPackage".',
+        );
+      }
+    }
+    for (final implementation in routeImplementations.values) {
+      final routeId = '${implementation['routeId']}';
+      if (!routes.containsKey(routeId)) {
+        errors.add(
+          'CCRouteImplementation references unknown route contract "$routeId".',
+        );
       }
     }
     _validatePatternConflicts(routes.values, errors);
     errors.sort();
     final componentList = components.values.toList()
       ..sort((left, right) => '${left['id']}'.compareTo('${right['id']}'));
-    final routeList = routes.values.toList()
-      ..sort((left, right) {
-        final owner = '${left['componentId']}'.compareTo(
-          '${right['componentId']}',
-        );
-        return owner != 0 ? owner : '${left['id']}'.compareTo('${right['id']}');
-      });
+    final routeList =
+        routes.values.map((route) {
+          final implementation = routeImplementations['${route['id']}'];
+          return <String, Object?>{
+            ...route,
+            'exposure': _resolvedExposure(route, componentDeclarationPackages),
+            if (implementation != null) 'implementation': implementation,
+          };
+        }).toList()..sort((left, right) {
+          final owner = '${left['componentId']}'.compareTo(
+            '${right['componentId']}',
+          );
+          return owner != 0
+              ? owner
+              : '${left['id']}'.compareTo('${right['id']}');
+        });
     final machineDocument = <String, Object?>{
-      'schemaVersion': 1,
+      'schemaVersion': 2,
       'components': componentList,
       'routes': routeList,
     };
@@ -146,6 +188,28 @@ abstract final class CCRouteWorkspaceValidator {
   static List<String> _strings(Object? value) => value is List
       ? value.whereType<String>().toList(growable: false)
       : const [];
+
+  /// Resolves a public contract to a same-Package or cross-Package boundary.
+  ///
+  /// Source builders can only distinguish private page contracts from public
+  /// schema contracts. Workspace aggregation can additionally compare the
+  /// contract Package with the component owner's implementation Package.
+  static String _resolvedExposure(
+    Map<String, Object?> route,
+    Map<String, String> componentDeclarationPackages,
+  ) {
+    if (route['exposure'] == 'internal') return 'internal';
+    final contracts = route['contracts'];
+    final contractPackage = contracts is Map
+        ? '${contracts['package'] ?? ''}'
+        : '';
+    final ownerPackage =
+        componentDeclarationPackages['${route['componentId']}'];
+    if (contractPackage.isNotEmpty && contractPackage == ownerPackage) {
+      return 'package';
+    }
+    return 'external';
+  }
 
   /// Reports only cross-route pattern overlaps that are statically provable.
   ///
@@ -364,12 +428,16 @@ abstract final class CCRouteWorkspaceValidator {
           out.writeln('$description\n');
         }
         out.writeln(
-          '- Visibility: `${route['visibility']}`; deep link: `${route['deepLink']}`; result: `${route['resultType']}`',
+          '- Exposure: `${route['exposure']}`; deep link: `${route['deepLink']}`; result: `${route['resultType']}`',
         );
-        final visibleTo = _strings(route['visibleTo']);
-        if (visibleTo.isNotEmpty) {
+        if (route['contracts'] case final Map contracts) {
           out.writeln(
-            '- Visible to: ${visibleTo.map((value) => '`$value`').join(', ')}',
+            '- Contract library: `${contracts['package'] ?? 'unknown'}:${contracts['library']}`',
+          );
+        }
+        if (route['implementation'] case final Map implementation) {
+          out.writeln(
+            '- Implementation: `${implementation['package'] ?? 'unknown'}:${implementation['source'] ?? 'unknown'}`',
           );
         }
         out.writeln('- Patterns:');

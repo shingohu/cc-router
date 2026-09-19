@@ -1,4 +1,12 @@
 builders:
+  route_contracts:
+    import: "package:ccrouter_generator/builder.dart"
+    builder_factories: ["ccRouteContractBuilder"]
+    build_extensions:
+      "^lib/src/{{}}.dart": ["lib/src/ccrouter_generated/{{}}.route.contract.g.dart"]
+    auto_apply: dependents
+    build_to: source
+    runs_before: ["ccrouter_generator:routes", "ccrouter_generator:route_metadata"]
   routes:
     import: "package:ccrouter_generator/builder.dart"
     builder_factories: ["ccRouteBuilder"]

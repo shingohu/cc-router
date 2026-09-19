@@ -15,6 +15,22 @@ final class QueryRegistrar implements CCComponentRegistrar {
   }
 }
 
+const facadeMessageService = CCServiceToken<String>('facade.message');
+
+final class ServiceRegistrar implements CCComponentRegistrar {
+  const ServiceRegistrar();
+
+  @override
+  void register(CCRegistry registry) {
+    registry.registerService<String>(
+      CCServiceProvider(
+        contract: facadeMessageService,
+        factory: (_) => 'promoted',
+      ),
+    );
+  }
+}
+
 final class FacadeRouteArgs {
   const FacadeRouteArgs(this.value);
 
@@ -103,6 +119,22 @@ void main() {
     await CCRouter.shutdown();
     await CCRouter.initialize(components: [component('b', 'b')]);
     expect(await CCRouter.query(Read()), 'b');
+  });
+
+  test('facade resolves a promoted service through its stable token', () async {
+    await CCRouter.initialize(
+      components: const [
+        CCComponentManifest(
+          id: 'facade-services',
+          version: '0.1.0',
+          registrar: ServiceRegistrar(),
+        ),
+      ],
+    );
+
+    expect(CCRouter.service(contract: facadeMessageService), 'promoted');
+    expect(CCRouter.hasService(contract: facadeMessageService), isTrue);
+    expect(CCRouter.services(contract: facadeMessageService), ['promoted']);
   });
 
   test('Session records account identity and is cleared on close', () async {

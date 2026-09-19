@@ -3,7 +3,6 @@ import 'package:ccrouter_core/ccrouter_core.dart';
 import 'package:ccrouter_go_router/ccrouter_go_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:go_router/go_router.dart';
 
 final class _OrderArguments {
   const _OrderArguments(this.id);

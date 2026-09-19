@@ -9,6 +9,7 @@ import 'package:source_gen/source_gen.dart';
 
 part 'route_model.dart';
 part 'route_emitter.dart';
+part 'route_contract_generator.dart';
 part 'component_generator.dart';
 part 'component_metadata_builder.dart';
 part 'route_metadata_builder.dart';
@@ -18,6 +19,12 @@ part 'route_metadata_builder.dart';
 /// Kept out of the package barrel; business code consumes generated Intents,
 /// not analyzer elements or generation services.
 Generator ccRouteGenerator() => _RouteGenerator();
+
+/// Creates the standalone Pure Dart route-contract generator.
+///
+/// Only explicit `CCRouteContract` schemas emit output; page-level `CCRoute`
+/// declarations remain library-private and never create a public contract.
+Generator ccRouteContractGenerator() => _RouteContractGenerator();
 
 /// Creates the internal component Manifest generator for build-runner.
 ///
@@ -39,47 +46,104 @@ final class _RouteGenerator extends Generator {
     inPackage: 'ccrouter_contracts',
   );
 
+  /// Matches page bindings to Contract-first declarations.
+  static const _implementation = TypeChecker.typeNamedLiterally(
+    'CCRouteImplementation',
+    inPackage: 'ccrouter_contracts',
+  );
+
   /// Generates private implementation and deliberately exported contracts.
   @override
   String generate(LibraryReader library, BuildStep buildStep) {
     if (buildStep.inputId.path.contains('/ccrouter_generated/')) return '';
-    final routes = <_RouteModel>[];
-    final ids = <String>{};
-    final names = library.allElements
-        .where(
-          (element) => !element.firstFragment.libraryFragment!.source.uri.path
-              .endsWith('.route.g.dart'),
-        )
-        .map((element) => element.displayName)
-        .toSet();
-    for (final annotated in library.annotatedWith(_route)) {
-      final model = _RouteModel.read(annotated.element, annotated.annotation);
-      if (!ids.add(model.id)) {
+    return [
+      ..._readRouteModels(library).map(_emitRoute),
+      ..._readRouteImplementationModels(library).map(_emitImplementationGlue),
+    ].join('\n');
+  }
+}
+
+/// Reads and collision-checks every route declared by one source library.
+List<_RouteModel> _readRouteModels(LibraryReader library) {
+  final routes = <_RouteModel>[];
+  final ids = <String>{};
+  final names = library.allElements
+      .where(
+        (element) => !element.firstFragment.libraryFragment!.source.uri.path
+            .endsWith('.route.g.dart'),
+      )
+      .map((element) => element.displayName)
+      .toSet();
+  for (final annotated in library.annotatedWith(_RouteGenerator._route)) {
+    final model = _RouteModel.read(annotated.element, annotated.annotation);
+    if (!ids.add(model.id)) {
+      _fail(
+        'Duplicate route ID "${model.id}" in this library.',
+        annotated.element,
+      );
+    }
+    for (final name in [
+      model.api,
+      model.arguments,
+      model.codec,
+      model.intent,
+      model.registrationFunction,
+      model.descriptorFunction,
+      model.builderFunction,
+    ]) {
+      if (!names.add(name)) {
         _fail(
-          'Duplicate route ID "${model.id}" in this library.',
+          'Generated declaration "$name" collides with another declaration.',
           annotated.element,
         );
       }
-      for (final name in [
-        model.api,
-        model.arguments,
-        model.codec,
-        model.intent,
-        model.registrationFunction,
-        model.descriptorFunction,
-        model.builderFunction,
-      ]) {
-        if (!names.add(name)) {
-          _fail(
-            'Generated declaration "$name" collides with another declaration.',
-            annotated.element,
-          );
-        }
-      }
-      routes.add(model);
     }
-    return routes.map(_emitRoute).join('\n');
+    routes.add(model);
   }
+  return routes;
+}
+
+/// Reads and collision-checks Contract-first page bindings in one library.
+List<_RouteImplementationModel> _readRouteImplementationModels(
+  LibraryReader library,
+) {
+  final implementations = <_RouteImplementationModel>[];
+  final routeIds = <String>{};
+  final names = library.allElements
+      .where(
+        (element) => !element.firstFragment.libraryFragment!.source.uri.path
+            .endsWith('.route.g.dart'),
+      )
+      .map((element) => element.displayName)
+      .toSet();
+  for (final annotated in library.annotatedWith(
+    _RouteGenerator._implementation,
+  )) {
+    final model = _RouteImplementationModel.read(
+      annotated.element,
+      annotated.annotation,
+    );
+    if (!routeIds.add(model.contract.id)) {
+      _fail(
+        'Route "${model.contract.id}" is implemented more than once in this library.',
+        annotated.element,
+      );
+    }
+    for (final name in [
+      model.registrationFunction,
+      model.descriptorFunction,
+      model.builderFunction,
+    ]) {
+      if (!names.add(name)) {
+        _fail(
+          'Generated declaration "$name" collides with another declaration.',
+          annotated.element,
+        );
+      }
+    }
+    implementations.add(model);
+  }
+  return implementations;
 }
 
 /// Reports a compile-time declaration error at the owning source element.
@@ -151,6 +215,17 @@ String _componentManifestName(String componentId) {
   final stem =
       '${first[0].toLowerCase()}${first.substring(1)}${parts.skip(1).map((part) => '${part[0].toUpperCase()}${part.substring(1)}').join()}';
   return '${stem}Manifest';
+}
+
+/// Derives the standalone contract output for one `lib/src` route source.
+String _routeContractOutputPath(String sourcePath) {
+  const prefix = 'lib/src/';
+  if (!sourcePath.startsWith(prefix) || !sourcePath.endsWith('.dart')) {
+    throw StateError('Route source must be a Dart library below lib/src/.');
+  }
+  final relative = sourcePath.substring(prefix.length);
+  final stem = relative.substring(0, relative.length - '.dart'.length);
+  return 'lib/src/ccrouter_generated/$stem.route.contract.g.dart';
 }
 
 /// Serializes the closed set of declarative route metadata into const source.

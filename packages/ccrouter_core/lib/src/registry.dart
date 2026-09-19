@@ -154,6 +154,7 @@ final class CCServiceProvider<T extends Object> {
   /// Creates a provider for service contract [T].
   const CCServiceProvider({
     required this.factory,
+    this.contract,
     this.key,
     this.scope = CCServiceScope.app,
     this.isDefault = false,
@@ -161,6 +162,13 @@ final class CCServiceProvider<T extends Object> {
 
   /// Factory invoked lazily when the service is first resolved.
   final CCServiceFactory<T> factory;
+
+  /// Stable cross-package contract token, when this service is promoted.
+  ///
+  /// Omit for component-internal services. Supplying a token keeps legacy
+  /// type-based lookup available while enabling callers to migrate to a stable
+  /// identity without creating a second provider or service instance.
+  final CCServiceToken<T>? contract;
 
   /// Optional typed key identifying a named implementation.
   final CCServiceKey<T>? key;
@@ -175,10 +183,20 @@ final class CCServiceProvider<T extends Object> {
 /// Type-erased internal service provider record.
 final class _Provider {
   /// Creates the normalized provider stored in the registry.
-  _Provider(this.type, this.name, this.scope, this.isDefault, this.factory);
+  _Provider(
+    this.type,
+    this.contractId,
+    this.name,
+    this.scope,
+    this.isDefault,
+    this.factory,
+  );
 
   /// Service contract type.
   final Type type;
+
+  /// Stable promoted contract identity, or null for internal type-only lookup.
+  final String? contractId;
 
   /// Named implementation key, or null for an unkeyed provider.
   final String? name;

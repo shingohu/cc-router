@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "package": "ccrouter_test",
   "source": "test/fixtures/annotated_routes.dart",
   "componentDeclarations": [

@@ -12,9 +12,9 @@
 
 注解生成器首版已实现页面注解、单库校验、类型安全 Arguments/Intent、标量
 Path/Query/Extra Codec、Definition、注册入口和中立页面工厂。使用 `part` 生成
-`.route.g.dart`，默认 component 契约为 library-private；exported 契约需显式导出。
+`.route.g.dart`，页面契约固定为 library-private；Contract-first 公开契约需显式导出。
 生成器同时输出组件级和路由级 JSON/Markdown，并由 workspace 工具聚合检查组件与 Route ID、
-路由所有者、`visibleTo` 消费目标和组件依赖，输出应用级路由目录。当前仍不生成
+路由所有者、契约 exposure 和实现 Package，输出应用级路由目录。当前仍不生成
 GoRoute。独立纯契约文件的拆分方案见[契约文件设计](CCRouter-route-contract-design.md)，
 实现范围与命令见
 [生成器说明](../packages/ccrouter_generator/README.md)。
@@ -32,7 +32,7 @@ GoRoute。独立纯契约文件的拆分方案见[契约文件设计](CCRouter-r
 3. Path、Query 和内存 Extra 参数由生成代码编码、解析并注入页面。
 4. 默认适配 `go_router`，同时允许实现其他导航适配器。
 5. 路由注册、拦截、生命周期、埋点和诊断使用同一条调用链。
-6. 路由契约按组件和可见性生成，不创建包含全部业务路由的全局 `Routes` 类。
+6. 路由契约按组件和声明形态生成，不创建包含全部业务路由的全局 `Routes` 类。
 7. 生成机器可读及开发者可读的路由文档。
 8. 为后续 `activateComponent` / `deactivateComponent` 保留路由所有权和生命周期信息。
 
@@ -44,7 +44,7 @@ v0.1 不包含：
 - 在 Core 中重新实现 Flutter Navigator 或 `go_router` 的匹配算法。
 - 通过任意字符串代码、反射或 `Map<String, dynamic>` 构造页面。
 - 同时内置 Navigator 1.0、GetX 等多个后端。
-- 把路由可见性当作登录、权限或数据安全机制。
+- 把 Package 契约 exposure 当作登录、权限或数据安全机制。
 - 自动采集和上报全部路由参数。
 
 ---
@@ -154,8 +154,6 @@ const orderComponent = CCComponentDescriptor(
       r'https://legacy\.example\.com/order/(?<orderId>\d+)',
     ),
   ],
-  visibility: CCRouteVisibility.exported,
-  visibleTo: ['checkout', 'customer_service'],
   deepLink: CCDeepLinkPolicy.enabled,
   description: '展示订单详情。',
   interceptors: ['auth.required'],
@@ -188,8 +186,6 @@ final class OrderDetailPage {
 | --- | --- | --- |
 | `id` | 是 | 全局唯一且稳定的路由身份 |
 | `pattern` / `patterns` | 二选一 | 单值自动作为主 Pattern；多值包含一个可反向生成的主 Pattern 和零个或多个 Path、URI 或正则匹配别名 |
-| `visibility` | 否 | 默认仅组件内部可见 |
-| `visibleTo` | 否 | 对外导出时允许消费的组件 ID |
 | `deepLink` | 否 | 是否允许从 App 外部解析 |
 | `description` | 否 | 文档、IDE 提示和诊断说明 |
 | `interceptors` | 否 | 有序的路由级拦截器 ID |
@@ -547,43 +543,45 @@ Runtime 关闭对应 RouteEntry；Foreign、Opaque 或未提供归属的 Pop 只
 
 ---
 
-## 9. 组件所有权与可见性
+## 9. 组件所有权与契约 Exposure
 
-### 9.1 可见性模型
+### 9.1 自动推导模型
 
-路由默认只对所属组件可见：
+路由不再声明 `visibility` 或消费者 allowlist，生成器根据契约形态唯一推导 exposure：
 
-```dart
-enum CCRouteVisibility {
-  component,
-  exported,
-}
-```
+| 契约形态 | Exposure | 导入边界 |
+| --- | --- | --- |
+| 页面上的 `@CCRoute` | internal | 页面 library 内部 |
+| 同 Package 的 `@CCRouteContract` + `@CCRouteImplementation` | package | 实现 Package 的公共 barrel |
+| 独立 contracts Package 的 `@CCRouteContract` + 实现 Package 的 `@CCRouteImplementation` | external | contracts Package 的公共 barrel |
 
-- `component`：只生成组件内部调用入口。
-- `exported`：额外生成稳定的对外路由契约。
-- `visibleTo`：可选的允许消费组件列表；为空表示不按组件名单限制公开契约，应仅用于有意提供给全应用的稳定入口。
-- 消费方必须显式依赖提供方组件或其契约包。
+消费者必须在 `pubspec.yaml` 中直接依赖公开契约所在 Package，并通过该 Package 的
+公共 barrel 导入生成的 Route 与 Arguments。Dart analyzer 和
+`depend_on_referenced_packages` 负责验证真实依赖，避免维护一套无法限制 import 的
+`visibleTo` 平行名单。
 
-`CCRouteVisibility` 和 `visibleTo` 只用于生成代码、导出裁剪、文档和 CI 依赖检查。Runtime 不接收可伪造的调用方组件 ID，也不执行调用方可见性校验；它只保存可信的 `ownerComponentId`，用于组件生命周期、诊断、埋点和后续卸载。
-
-Deep Link 可见性独立于组件可见性。`exported` 不表示允许外部 URI；允许 Deep Link 也不表示绕过权限拦截器。
+Runtime 不接收可伪造的调用方组件 ID，也不把 Package exposure 当作授权机制；它只
+保存可信的 `ownerComponentId`，用于组件生命周期、诊断、埋点和后续卸载。Deep Link
+Policy 同样独立：公开契约不表示允许外部 URI，允许 Deep Link 也不表示绕过权限拦截器。
 
 ### 9.2 生成文件布局
 
 ```text
-order_component/lib/
-├── order_route_contracts.dart
-└── src/generated/
-    ├── order_routes.internal.g.dart
-    ├── order_route_codecs.g.dart
-    └── order_route_registrar.g.dart
+order_contracts/lib/
+├── order_contracts.dart
+├── order_contracts_owner.dart
+└── src/ccrouter_generated/order_detail_route_contract.route.contract.g.dart
+
+order_component/lib/src/
+├── order_detail_page.dart
+└── ccrouter_generated/order_detail_page.route.g.dart
 ```
 
-- `order_route_contracts.dart` 只导出 `exported` 路由及其参数、结果契约。
+- `order_contracts.dart` 只导出明确选定的 external 路由及其参数、结果契约。
+- `order_contracts_owner.dart` 只供 owner 实现组件绑定 schema，不供业务调用方导入。
 - 内部文件包含组件全部路由，但不从公共 barrel 导出。
 - 应用级生成器不生成暴露全部路由的全局 `Routes` 类。
-- Registrar 注册全部已装配路由，与业务 API 的可见性裁剪相互独立。
+- Registrar 注册全部已装配路由，与业务 API 的 Package 导出边界相互独立。
 
 Dart 没有 package-private 或 friend package。`lib/src`、显式 export、`implementation_imports` lint、组件依赖检查和 CI 共同形成工程边界，但不是安全边界。真正的授权仍由 Runtime 和拦截器完成。
 
@@ -607,8 +605,7 @@ v0.1 只建立所有权模型，不实现运行时激活和停用。
 routeId
 ownerComponentId
 patterns
-visibility
-visibleTo
+contract exposure（由声明形态生成，仅进入元数据）
 deepLinkPolicy
 codec
 interceptorIds
@@ -634,10 +631,10 @@ Registry 在冻结前检查：
 - 重复 Interceptor ID。
 - 未声明的所属组件。
 - 未知父路由、Shell 或 Outlet。
-- `component` 路由同时声明 `visibleTo` 等定义内冲突。
+- 公开契约缺少实现，或实现不属于声明的 owner Package。
 - 静态可判断的同层 Pattern 冲突。
 
-`visibleTo` 引用、跨组件依赖和导出范围由生成器、应用聚合检查及 CI 验证，不由 Runtime 根据调用方身份执行。
+跨组件导入范围由公共 barrel、Pub 依赖、Analyzer 和 CI 验证，不由 Runtime 根据调用方身份执行。
 
 ---
 
@@ -1030,7 +1027,7 @@ externalQr          扫码等不可信外部输入
   分别写入对应的外部 Origin 后进入同一 Runtime 管线。
 - `CCNavigationSource` 是业务可填写的埋点来源，不是安全信任标记；`CCNavigationSource.deepLink(...)` 本身不能启用或绕过 `CCDeepLinkPolicy`。
 - Redirect 必须继承最初 Origin，直到整条导航完成，不能通过重定向绕过 Deep Link Policy。
-- “其他业务组件调用”属于应用内导航，组件契约可见性与 Deep Link 外部来源判定互不替代。
+- “其他业务组件调用”属于应用内导航，Package 契约 exposure 与 Deep Link 外部来源判定互不替代。
 
 Core 当前的 `external` 参数只作为内部实现阶段的等价信号；公开门面通过
 `CCDeepLinkIngress` 收敛为固定的不可配置 Origin。`CCRouterApp`、平台 Adapter
@@ -1151,6 +1148,9 @@ cc_routes.md
 
 `cc_routes.json` 用于 CI、跨端工具和文档平台；描述信息作为结构化字段保存，不使用 JSON 注释。`cc_routes.md` 用于开发者阅读。
 
+当前元数据使用 schema v2：移除手写 `visibility/visibleTo`，改为记录由契约形态自动
+推导的 `exposure`。聚合器拒绝旧 schema，要求重新运行标准生成流程，避免新旧语义混用。
+
 应用聚合元数据与组件级元数据统一位于项目根的 `ccrouter_generated/metadata/`；参与
 编译的 Dart 生成代码仍写入包内的 `lib/src/ccrouter_generated/`。生成文档不进入
 手写 `docs/`，避免机器产物与架构设计文档混合。
@@ -1158,7 +1158,7 @@ cc_routes.md
 每条路由包含：
 
 - Route ID、主 Pattern、Path/URI/Regex 别名和正则约束。
-- 所属组件、可见性和 `visibleTo`。
+- 所属组件，以及自动推导的 internal/package/external exposure。
 - 是否支持 Deep Link。
 - 参数名、来源、类型、必填性、默认值和说明。
 - 返回类型。
@@ -1215,8 +1215,9 @@ CCNavigationCapabilityError
 
 - Route ID 全局唯一。
 - 主 Pattern、别名和正则匹配不存在确定性冲突。
-- `ownerComponentId` 和 `visibleTo` 引用有效组件。
-- 跨组件路由消费满足依赖和可见性约束。
+- `ownerComponentId` 引用有效组件。
+- 公开契约存在且仅存在一个 owner 实现，并根据契约与实现 Package 自动推导 exposure。
+- 非 internal 契约由公共 barrel 显式导出；消费者声明直接 Package 依赖。
 - Interceptor、Shell、父路由和 Outlet 引用有效。
 - Adapter 支持所有已装配路由要求的能力。
 - 同层、同具体度且能够静态证明的 Path/URI/Regex Pattern 冲突；无法证明的复杂正则
@@ -1265,7 +1266,7 @@ Adapter 实现者可以使用单独导出的：
 
 ### 阶段 A：Pure Dart 路由契约
 
-- 已实现 Route ID、Path/URI/Regex Pattern、可见性、Intent、Codec 和错误。
+- 已实现 Route ID、Path/URI/Regex Pattern、契约 exposure、Intent、Codec 和错误。
 - 已实现 `CCRegistry.registerRoute`。
 - 已实现 `CCRouter.navigator` 及 `push/replace/go/reset/open/pop/canPop`、`maybePop`、`popAndPush`、`popUntil`、`pushAndRemoveUntil` 门面。
 - 已实现主 Pattern 反向生成、动态 URI 解析、内存测试 Adapter，以及基于
@@ -1290,14 +1291,16 @@ Deadline 配置、完整导航结果遥测投影仍待后续实现。
 
 - 已实现页面和构造参数分析。
 - 已实现 Intent、Codec、Definition、注册入口和组件契约生成。
-- 已实现组件所有者、Route ID、`visibleTo`、依赖边、静态 Pattern 重叠以及公开 barrel
+- 已实现组件所有者、Route ID、契约 exposure、公开契约实现所有权、静态 Pattern 重叠以及公开 barrel
   `show` 导出的聚合校验。
 - 已实现页面级及应用聚合级 JSON/Markdown 文档导出。
 - 已实现组件 `CCFlutterRouteCatalog`、窄 Host integration library 和宿主 Catalog 聚合；
   普通路由变化不再要求宿主逐条维护页面 import、`GoRoute` 与 Binding。
 - 已实现 Registrar 同库的组件 Manifest 生成和宿主 Manifest 聚合；无路由的 Service
   组件同样参与安装，private Registrar 不需要成为组件公共 API。
-- 待实现独立纯契约文件。
+- 已实现 Contract-first 路由的独立 Pure Dart 契约文件；页面 `@CCRoute` 固定保持内部，
+  `@CCRouteImplementation` 的页面 Part 只保留 owner 注册和构造 glue，workspace 校验要求
+  公共 barrel 指向生成契约。
 - 待提供可选的 Route Scaffold CLI，用于创建页面模板、计算并写入正确的
   `.route.g.dart` `part` 路径、补齐 `@CCRoute` 声明，并触发首次标准生成。该工具只改善
   开发体验，不替代 `build_runner`、Analyzer 校验或 workspace 聚合校验，也不直接修改
@@ -1374,7 +1377,7 @@ Adapter 的 `go` 进入目标 Shell 分支，不根据 URI 形态绕过策略。
 8. Global Interceptor 先于 Route Interceptor，Redirect 保留来源并能检测循环。
 9. 未激活组件的路由不能导航。
 10. Shell 非活动分支触发 hidden，但不销毁 Route Scope。
-11. Deep Link 必须同时通过 Host 白名单、路由外部可见性和权限拦截器。
+11. Deep Link 必须同时通过 Host 白名单、路由 Deep Link Policy 和权限拦截器。
 12. 埋点记录来源、重定向链和安全字段，不泄漏 Extra 或完整 URI。
 13. Observer 异常不影响导航结果。
 14. 自定义 Adapter 与 GoRouter Adapter 消费相同的 Route Definition。
@@ -1397,8 +1400,8 @@ Adapter 的 `go` 进入目标 Shell 分支，不根据 URI 形态绕过策略。
 - 支持一个可生成地址的主 Pattern，以及多个 Path、结构化 URI、完整 Regex 别名和参数正则约束。
 - Pattern 固定按结构化 URI、Path、完整 Regex 排序；同优先级歧义显式失败。
 - 使用类型安全 Intent 和生成 Codec，不以参数 Map 作为业务契约。
-- 路由默认仅组件内部可见，对外契约显式生成。
-- `visibleTo` 只做生成期和 CI 治理，Runtime 不校验调用方组件身份。
+- 路由默认仅组件内部可见，对外契约统一通过 Contract-first 声明显式生成。
+- 契约 exposure 由声明形态推导；Package 依赖决定编译期可导入范围，Runtime 不校验调用方组件身份。
 - 展示契约区分 Page、模态 BottomSheet 与 Dialog；Page 和 Dialog 分别使用独立的 Route Type 表达 Flutter 对应语义。
 - 业务拦截器只有 Global 和 Route 两层。
 - 埋点来源和字段白名单进入统一 Runtime 管线。

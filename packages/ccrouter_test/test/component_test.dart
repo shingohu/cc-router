@@ -352,8 +352,6 @@ void main() {
                   CCPathPattern('/orders/latest'),
                 ],
                 codec: const StringCodec(),
-                visibility: CCRouteVisibility.exported,
-                visibleTo: {'checkout'},
               ),
             ),
           ),
