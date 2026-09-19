@@ -75,6 +75,14 @@ final class ${route.intent} implements CCRouteIntent<${route.result}> {
   final ${route.arguments} arguments;
 }
 
+/// Package-internal bridge used by the generated component route index.
+///
+/// Keep this symbol out of public package barrels. It exists so a component
+/// registrar can register library-private routes without exposing their
+/// typed contracts to business code.
+void ${route.registrationFunction}(CCRegistry registry) =>
+    ${route.api}.register(registry);
+
 /// Private boundary conversion; raw input is never included in error messages.
 final class ${route.codec} implements CCRouteCodec<${route.arguments}> {
   /// Stateless codec shared by the component's route definition.

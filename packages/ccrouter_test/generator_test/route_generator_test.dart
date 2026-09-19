@@ -144,7 +144,7 @@ final class ProbeRegistrar implements CCComponentRegistrar {
               await reader.readAsString(
                 AssetId(
                   'ccrouter_test',
-          'ccrouter_generated/metadata/src/orders/probe_component.component.json',
+                  'ccrouter_generated/metadata/src/orders/probe_component.component.json',
                 ),
               ),
             )
@@ -178,6 +178,7 @@ final class Probe { const Probe({required this.id}); final int id; }
       expect(code, contains('abstract final class _ProbeRoute'));
       expect(code, contains('CCRouteIntent<void>'));
       expect(code, contains('registry.registerRoute(definition)'));
+      expect(code, contains('ccrouterRegisterProbeRoute'));
       expect(code, isNot(contains('GoRoute(')));
       expect(code, isNot(contains('CCRouter.navigator.push')));
     },
@@ -214,6 +215,15 @@ final class Probe { const Probe(); }
       expect(code, contains(r'\$secret'));
     },
   );
+
+  test('builder rejects registration bridge name collisions', () async {
+    final logs = await generate(r'''
+void ccrouterRegisterProbeRoute(CCRegistry registry) {}
+@CCRoute<void>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe'))
+final class Probe { const Probe(); }
+''', fails: true);
+    expect(logs, contains('Generated declaration'));
+  });
 
   final invalid = <String, (String, String)>{
     'invalid component ID': (

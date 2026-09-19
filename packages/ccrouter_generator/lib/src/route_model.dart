@@ -56,6 +56,14 @@ final class _RouteModel {
   /// Library-private Intent implementation behind the typed factory.
   String get intent => '_${api.replaceFirst(RegExp(r'^_'), '')}Intent';
 
+  /// Stable package-internal bridge used by the generated component index.
+  ///
+  /// The bridge is emitted in the page's own library so it can call a
+  /// library-private route contract. It is intentionally not exported from a
+  /// package barrel and is only consumed by generated component code.
+  String get registrationFunction =>
+      'ccrouterRegister${page.displayName.replaceFirst(RegExp(r'^_'), '')}Route';
+
   /// Validates metadata and constructor injection without backend assumptions.
   static _RouteModel read(Element element, ConstantReader annotation) {
     if (element is! ClassElement ||

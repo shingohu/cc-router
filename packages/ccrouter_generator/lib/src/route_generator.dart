@@ -35,6 +35,7 @@ final class _RouteGenerator extends Generator {
   /// Generates private implementation and deliberately exported contracts.
   @override
   String generate(LibraryReader library, BuildStep buildStep) {
+    if (buildStep.inputId.path.contains('/ccrouter_generated/')) return '';
     final routes = <_RouteModel>[];
     final ids = <String>{};
     final names = library.allElements
@@ -57,6 +58,7 @@ final class _RouteGenerator extends Generator {
         model.arguments,
         model.codec,
         model.intent,
+        model.registrationFunction,
       ]) {
         if (!names.add(name)) {
           _fail(

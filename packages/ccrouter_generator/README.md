@@ -14,7 +14,12 @@ const orderComponent = CCComponentDescriptor(
 
 @CCComponent(orderComponent)
 final class OrderComponentRegistrar implements CCComponentRegistrar {
-  // Register generated routes through the restricted CCRegistry.
+  const OrderComponentRegistrar();
+
+  @override
+  void register(CCRegistry registry) {
+    orderGeneratedRoutes.register(registry);
+  }
 }
 
 @CCRoute<String>(
@@ -39,7 +44,8 @@ final class DetailPage {
 ```sh
 fvm flutter pub get
 fvm dart run build_runner build --workspace
-fvm dart run ccrouter_generator:ccrouter_generator demo
+fvm dart run ccrouter_generator:ccrouter_generator demo \
+  --generate-component-registrars
 ```
 
 非 workspace 包在自己的目录执行 `dart run build_runner build`。
@@ -52,6 +58,13 @@ fvm dart run ccrouter_generator:ccrouter_generator demo
 - `DetailPageRoute.definition`：中立路由表定义和私有 Codec。
 - `DetailPageRoute.register(registry)`：组件 Registrar 的注册入口。
 - `DetailPageRoute.build(arguments)`：将解码参数注入页面构造器；Host 自己绑定后端。
+
+组件路由注册索引由 `--generate-component-registrars` 自动生成到
+`lib/src/ccrouter_generated/<component-id>.routes.g.dart`。组件 Registrar 只需调用
+一次生成的 `...GeneratedRoutes.register(registry)`；新增页面不会再修改 Registrar。
+索引按源文件和 route ID 稳定排序，并通过页面生成文件中的 package-internal
+registration bridge 完成注册，因此组件内部路由仍不会成为公共契约。索引文件禁止手工编辑，
+CI 应在生成后检查工作区无未提交差异。
 
 路由生成文件统一使用 `.route.g.dart` 后缀并写入
 `lib/src/ccrouter_generated/`；后续 Service 生成器预留 `.service.g.dart` 后缀，

@@ -1,7 +1,7 @@
 import 'package:ccrouter/ccrouter.dart';
 
+import 'ccrouter_generated/demo_order_component.routes.g.dart';
 import 'demo_order_component.dart';
-import 'order_detail_page.dart';
 
 @CCComponent(demoOrderComponent)
 final class _DemoOrderComponentRegistrar implements CCComponentRegistrar {
@@ -9,7 +9,7 @@ final class _DemoOrderComponentRegistrar implements CCComponentRegistrar {
 
   @override
   void register(CCRegistry registry) {
-    OrderDetailPageRoute.register(registry);
+    demoOrderComponentGeneratedRoutes.register(registry);
   }
 }
 

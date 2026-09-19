@@ -49,7 +49,8 @@ demo 和组件包已加入根 Dart workspace，使用本仓库内框架源码与
 
 ```sh
 fvm dart run build_runner build --workspace
-fvm dart run ccrouter_generator:ccrouter_generator demo
+fvm dart run ccrouter_generator:ccrouter_generator demo \
+  --generate-component-registrars
 ```
 
 聚合路由目录生成到 `demo/docs/generated/cc_routes.json` 和
