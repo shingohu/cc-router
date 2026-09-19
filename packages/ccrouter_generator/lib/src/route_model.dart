@@ -8,6 +8,8 @@ final class _RouteModel {
     this.annotation,
     this.component,
     this.id,
+    this.patterns,
+    this.primaryPatternIndex,
     this.parameters,
     this.result,
   );
@@ -23,6 +25,12 @@ final class _RouteModel {
 
   /// Stable, non-empty route identity.
   final String id;
+
+  /// Normalized one-to-many patterns supplied by either annotation field.
+  final List<DartObject> patterns;
+
+  /// Effective reversible primary pattern after applying safe inference rules.
+  final int primaryPatternIndex;
 
   /// Constructor parameters with unambiguous URI or Extra sources.
   final List<_ParameterModel> parameters;
@@ -63,14 +71,51 @@ final class _RouteModel {
     if (constructor == null || constructor.isFactory) {
       _fail('CCRoute requires an unnamed generative constructor.', element);
     }
-    final patterns = annotation.read('patterns').listValue;
-    final primary = patterns
-        .where((pattern) => _field(pattern, 'primary').toBoolValue()!)
-        .toList();
-    if (primary.length != 1 ||
-        _field(primary.single, 'matchOnly').toBoolValue()!) {
+    final pattern = annotation.read('pattern');
+    final declaredPatterns = annotation.read('patterns').listValue;
+    final hasSinglePattern = !pattern.isNull;
+    if (hasSinglePattern && declaredPatterns.isNotEmpty) {
+      _fail(
+        'Route "$id" cannot set both pattern and patterns; keep only patterns when declaring multiple addresses.',
+        element,
+      );
+    }
+    if (!hasSinglePattern && declaredPatterns.isEmpty) {
+      _fail('Route "$id" must set pattern or patterns.', element);
+    }
+    final patterns = hasSinglePattern
+        ? <DartObject>[pattern.objectValue]
+        : declaredPatterns;
+    final explicitPrimaryIndexes = <int>[
+      for (var index = 0; index < patterns.length; index++)
+        if (_field(patterns[index], 'primary').toBoolValue()!) index,
+    ];
+    if (explicitPrimaryIndexes.length > 1) {
       _fail(
         'Route "$id" needs exactly one reversible primary pattern.',
+        element,
+      );
+    }
+    final reversibleIndexes = <int>[
+      for (var index = 0; index < patterns.length; index++)
+        if (!_field(patterns[index], 'matchOnly').toBoolValue()!) index,
+    ];
+    late final int primaryPatternIndex;
+    if (explicitPrimaryIndexes case [final explicitIndex]) {
+      if (!reversibleIndexes.contains(explicitIndex)) {
+        _fail('Route "$id" primary pattern must be reversible.', element);
+      }
+      primaryPatternIndex = explicitIndex;
+    } else if (reversibleIndexes case [final inferredIndex]) {
+      primaryPatternIndex = inferredIndex;
+    } else if (reversibleIndexes.isEmpty) {
+      _fail(
+        'Route "$id" needs a reversible Path or URI pattern; Regex patterns are match-only.',
+        element,
+      );
+    } else {
+      _fail(
+        'Route "$id" has multiple reversible patterns; mark exactly one as primary.',
         element,
       );
     }
@@ -227,6 +272,8 @@ final class _RouteModel {
       annotation,
       component,
       id,
+      patterns,
+      primaryPatternIndex,
       parameters,
       _typeSource(result, element.library),
     );

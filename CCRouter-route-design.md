@@ -187,7 +187,7 @@ final class OrderDetailPage {
 | 字段 | 必填 | 语义 |
 | --- | --- | --- |
 | `id` | 是 | 全局唯一且稳定的路由身份 |
-| `patterns` | 是 | 一个可反向生成的主 Pattern 和零个或多个 Path、URI 或正则匹配别名 |
+| `pattern` / `patterns` | 二选一 | 单值自动作为主 Pattern；多值包含一个可反向生成的主 Pattern 和零个或多个 Path、URI 或正则匹配别名 |
 | `visibility` | 否 | 默认仅组件内部可见 |
 | `visibleTo` | 否 | 对外导出时允许消费的组件 ID |
 | `deepLink` | 否 | 是否允许从 App 外部解析 |
@@ -319,6 +319,11 @@ GoRoute(
 
 每个路由只能有一个可反向生成的主 Pattern：
 
+- 单地址路由使用 `pattern`，生成器自动将可逆的 Path/URI Pattern 设为 primary。
+- 多地址路由使用 `patterns`；如果其中只有一个可逆 Pattern，生成器自动设为 primary。
+- 多地址路由存在多个可逆 Pattern 时必须显式指定 primary，不能根据匹配优先级或声明
+  顺序猜测规范地址。
+- `pattern` 与 `patterns` 不能同时设置。
 - 业务调用生成地址时始终使用主 Pattern。
 - 主 Pattern 必须是 `CCPathPattern` 或 `CCUriPattern`，不能是 `matchOnly`。
 - 内部旧链接、Web URL、自定义 Scheme 和兼容正则可以作为别名。

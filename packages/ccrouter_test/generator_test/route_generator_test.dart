@@ -55,7 +55,7 @@ final class ProbeRegistrar implements CCComponentRegistrar {
   @override
   void register(CCRegistry registry) {}
 }
-@CCRoute<void>(component: probeComponent, id: 'probe.detail', patterns: [CCPathPattern('/probe/:id', primary: true, constraints: {'id': r'\\d+'})], visibility: CCRouteVisibility.exported, description: 'Probe details.')
+@CCRoute<void>(component: probeComponent, id: 'probe.detail', pattern: CCPathPattern('/probe/:id', constraints: {'id': r'\\d+'}), visibility: CCRouteVisibility.exported, description: 'Probe details.')
 final class Probe {
   const Probe({required this.id});
   /// Documented identity.
@@ -87,6 +87,7 @@ final class Probe {
     expect(((route['patterns'] as List).single as Map)['constraints'], {
       'id': r'\d+',
     });
+    expect(((route['patterns'] as List).single as Map)['primary'], isTrue);
     expect(
       (route['parameters'] as List).single['description'],
       'Documented identity.',
@@ -113,6 +114,15 @@ final class Probe { const Probe({required this.id}); final int id; }
       expect(code, isNot(contains('CCRouter.navigator.push')));
     },
   );
+
+  test('infers the sole reversible primary in a Pattern list', () async {
+    final code = await generate(r'''
+@CCRoute<void>(component: probeComponent, id: 'probe', patterns: [CCRegexPattern(r'/legacy'), CCPathPattern('/probe')])
+final class Probe { const Probe(); }
+''');
+    expect(code, contains('primary: true'));
+    expect(code, contains('const CCRegexPattern("/legacy")'));
+  });
 
   test(
     'builder emits public contracts only for exported routes and escapes metadata',
@@ -147,13 +157,29 @@ final class Probe { const Probe(); }
       "@CCRoute<void>(component: probeComponent, id: 'probe', patterns: [CCPathPattern('/probe', primary: true)], visibility: CCRouteVisibility.exported, visibleTo: {'probe'}) final class Probe { const Probe(); }",
       'cannot list its owning component',
     ),
-    'missing primary': (
-      "@CCRoute<void>(component: probeComponent, id: 'probe', patterns: [CCPathPattern('/probe')]) final class Probe { const Probe(); }",
-      'exactly one reversible primary',
+    'ambiguous inferred primary': (
+      "@CCRoute<void>(component: probeComponent, id: 'probe', patterns: [CCPathPattern('/probe'), CCPathPattern('/legacy')]) final class Probe { const Probe(); }",
+      'multiple reversible patterns',
     ),
     'duplicate primaries': (
       "@CCRoute<void>(component: probeComponent, id: 'probe', patterns: [CCPathPattern('/a', primary: true), CCPathPattern('/b', primary: true)]) final class Probe { const Probe(); }",
       'exactly one reversible primary',
+    ),
+    'single and plural patterns': (
+      "@CCRoute<void>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe'), patterns: [CCPathPattern('/legacy')]) final class Probe { const Probe(); }",
+      'cannot set both pattern and patterns',
+    ),
+    'missing patterns': (
+      "@CCRoute<void>(component: probeComponent, id: 'probe') final class Probe { const Probe(); }",
+      'must set pattern or patterns',
+    ),
+    'single regex pattern': (
+      "@CCRoute<void>(component: probeComponent, id: 'probe', pattern: CCRegexPattern('/probe')) final class Probe { const Probe(); }",
+      'Regex patterns are match-only',
+    ),
+    'regex-only pattern list': (
+      "@CCRoute<void>(component: probeComponent, id: 'probe', patterns: [CCRegexPattern('/probe')]) final class Probe { const Probe(); }",
+      'Regex patterns are match-only',
     ),
     'unmapped parameter': (
       "@CCRoute<void>(component: probeComponent, id: 'probe', patterns: [CCPathPattern('/probe', primary: true)]) final class Probe { const Probe(this.value); final int value; }",

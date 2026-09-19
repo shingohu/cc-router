@@ -44,7 +44,7 @@ abstract final class ${route.api} {
   /// Component-owned definition; registration does not select a backend.
   static final definition = CCRouteDefinition<${route.arguments}, ${route.result}>(
     routeId: id,
-    patterns: ${_constant(route.annotation.read('patterns').objectValue)},
+    patterns: ${_emitPatterns(route)},
     codec: const ${route.codec}(),
     visibility: ${_constant(route.annotation.read('visibility').objectValue)},
     visibleTo: ${_constant(route.annotation.read('visibleTo').objectValue)},
@@ -162,6 +162,17 @@ final class ${route.codec} implements CCRouteCodec<${route.arguments}> {
     '}, extra: ${params.where((p) => p.source == 'extra').isEmpty ? 'null' : 'arguments.${params.singleWhere((p) => p.source == 'extra').name}'});\n}\n}',
   );
   return out.toString();
+}
+
+/// Emits the normalized route patterns with one effective primary entry.
+String _emitPatterns(_RouteModel route) =>
+    'const [${route.patterns.indexed.map((entry) => _emitPattern(entry.$2, primary: entry.$1 == route.primaryPatternIndex)).join(', ')}]';
+
+/// Serializes one supported pattern while applying its effective primary flag.
+String _emitPattern(DartObject pattern, {required bool primary}) {
+  final type = (pattern.type as InterfaceType).element.displayName;
+  if (type == 'CCRegexPattern') return _constant(pattern);
+  return 'const $type(${_constant(_field(pattern, 'template'))}, primary: $primary, constraints: ${_constant(_field(pattern, 'constraints'))})';
 }
 
 /// Converts multiline metadata into line-comment text, never source directives.

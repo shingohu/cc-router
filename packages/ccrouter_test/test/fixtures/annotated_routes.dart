@@ -79,7 +79,7 @@ final class DetailPage {
 @CCRoute<void>(
   component: fixtureComponent,
   id: 'fixture.internal',
-  patterns: [CCPathPattern('/internal', primary: true)],
+  pattern: CCPathPattern('/internal'),
 )
 final class _InternalPage {
   const _InternalPage();

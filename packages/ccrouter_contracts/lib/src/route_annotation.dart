@@ -50,11 +50,15 @@ final class CCComponent {
 /// never navigates or selects a backend. [R] is the page's return type; use
 /// `void` for destinations without a business result.
 final class CCRoute<R> {
-  /// Creates compile-time route metadata owned by the registering component.
+  /// Creates route metadata with exactly one of [pattern] or [patterns].
+  ///
+  /// The generator rejects missing or simultaneous declarations and resolves
+  /// the one effective primary before emitting the Runtime definition.
   const CCRoute({
     required this.component,
     required this.id,
-    required this.patterns,
+    this.pattern,
+    this.patterns = const [],
     this.visibility = CCRouteVisibility.component,
     this.visibleTo = const {},
     this.deepLink = CCDeepLinkPolicy.disabled,
@@ -70,7 +74,20 @@ final class CCRoute<R> {
   /// Stable route identity shared by tracing, registration and typed Intents.
   final String id;
 
-  /// Canonical pattern and aliases; exactly one reversible pattern is primary.
+  /// Single canonical pattern for the common one-address route declaration.
+  ///
+  /// Use this instead of [patterns] when the destination has no aliases. The
+  /// generator promotes a reversible Path or URI pattern to primary, so callers
+  /// do not need to set `primary: true`. It is a build error to set both fields
+  /// or to provide a match-only regular expression here.
+  final CCRoutePattern? pattern;
+
+  /// Canonical pattern and aliases for destinations with multiple addresses.
+  ///
+  /// Use this instead of [pattern] when compatibility paths, full URLs, custom
+  /// schemes, or regular-expression aliases resolve to one route. If exactly
+  /// one entry is reversible, the generator promotes it to primary. Multiple
+  /// reversible entries require exactly one explicit primary declaration.
   final List<CCRoutePattern> patterns;
 
   /// Whether the generated contract is library-private or explicitly exported.

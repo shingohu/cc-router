@@ -19,7 +19,7 @@ final class OrderComponentRegistrar implements CCComponentRegistrar {
 @CCRoute<String>(
   component: orderComponent,
   id: 'order.detail',
-  patterns: [CCPathPattern('/orders/:orderId', primary: true)],
+  pattern: CCPathPattern('/orders/:orderId'),
   visibility: CCRouteVisibility.exported,
 )
 final class DetailPage {
@@ -67,8 +67,10 @@ fvm dart run ccrouter_generator:ccrouter_generator
   消息包含路由和参数名称，不包含原始参数内容。
 - 最多一个显式 Extra，保持对象身份；启用 Deep Link 时不能要求必需 Extra。
 - 可选且未注解的 Flutter `key` 不进入契约；其他未映射参数构建失败。
-- 主 Pattern 只能有一个，别名必须捕获相同的 Path 参数；支持现有 Path、URI、Regex
-  Pattern 以及 Presentation、Placement、拦截器 ID 元数据。
+- 单地址路由使用 `pattern`，生成器自动补齐 primary；多地址路由使用 `patterns`。
+  两者不能同时设置。多值只有一个可逆 Pattern 时自动补齐 primary，存在多个可逆
+  Pattern 时必须显式指定一个 primary。别名必须捕获相同的 Path 参数；支持 Path、
+  URI、Regex Pattern 以及 Presentation、Placement、拦截器 ID 元数据。
 - 不生成 GoRoute，不选择路由后端，不替宿主维护 Navigator。
 
 集合 Query、自定义字段 Codec 以及具名/Factory 页面构造器、分离的纯契约文件留到后续

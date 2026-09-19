@@ -115,7 +115,9 @@ Map<String, Object?> _routeJson(_RouteModel route) => {
       ? null
       : route.annotation.read('description').stringValue,
   'contracts': {'route': route.api, 'arguments': route.arguments},
-  'patterns': route.annotation.read('patterns').listValue.map((pattern) {
+  'patterns': route.patterns.indexed.map((entry) {
+    final index = entry.$1;
+    final pattern = entry.$2;
     final type = (pattern.type as InterfaceType).element.displayName;
     return <String, Object?>{
       'type': type,
@@ -123,7 +125,7 @@ Map<String, Object?> _routeJson(_RouteModel route) => {
         pattern,
         type == 'CCRegexPattern' ? 'expression' : 'template',
       ).toStringValue(),
-      'primary': _field(pattern, 'primary').toBoolValue(),
+      'primary': index == route.primaryPatternIndex,
       if (type != 'CCRegexPattern')
         'constraints': _field(pattern, 'constraints').toMapValue()!.map(
           (key, value) =>
