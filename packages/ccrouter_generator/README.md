@@ -71,9 +71,10 @@ fvm dart run ccrouter_generator:ccrouter_generator
   Pattern 以及 Presentation、Placement、拦截器 ID 元数据。
 - 不生成 GoRoute，不选择路由后端，不替宿主维护 Navigator。
 
-集合 Query、自定义字段 Codec、具名/Factory 页面构造器、分离的纯契约文件、
-静态 Pattern 重叠证明以及公开 barrel 导出检查留到后续阶段。当前聚合校验覆盖组件与
-Route ID、所有者、`visibleTo` 和依赖边；复杂 Pattern 歧义仍由 Runtime 注册兜底。
+集合 Query、自定义字段 Codec、具名/Factory 页面构造器、分离的纯契约文件以及公开
+barrel 导出检查留到后续阶段。聚合校验同时检查同层、同具体度且能够静态证明的
+Path/URI/Regex Pattern 冲突；约束表达式仅在可证明互斥时排除重叠，复杂正则歧义仍由
+Runtime 注册兜底。
 
 ## 回归
 

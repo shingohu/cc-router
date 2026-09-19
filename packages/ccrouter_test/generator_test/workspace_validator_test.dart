@@ -32,6 +32,9 @@ Map<String, Object?> route(
   String owner, {
   String visibility = 'exported',
   List<String> visibleTo = const [],
+  String pattern = '/detail/:id',
+  String patternType = 'CCPathPattern',
+  Map<String, String> constraints = const {},
 }) => {
   'id': id,
   'componentId': owner,
@@ -40,7 +43,12 @@ Map<String, Object?> route(
   'deepLink': 'disabled',
   'description': 'Documented route.',
   'patterns': [
-    {'type': 'CCPathPattern', 'value': '/detail/:id', 'primary': true},
+    {
+      'type': patternType,
+      'value': pattern,
+      'primary': true,
+      if (patternType != 'CCRegexPattern') 'constraints': constraints,
+    },
   ],
   'parameters': [
     {
@@ -128,5 +136,113 @@ void main() {
       {'schemaVersion': 2, 'source': 'future.json'},
     ]);
     expect(result.errors.single, contains('Unsupported route metadata schema'));
+  });
+
+  test('rejects equal-specificity overlapping path patterns', () {
+    final result = CCRouteWorkspaceValidator.validate([
+      document(
+        components: [component('orders')],
+        routes: [
+          route('orders.byId', 'orders'),
+          route('orders.byOrder', 'orders', pattern: '/detail/:orderId'),
+        ],
+      ),
+    ]);
+    expect(result.errors, contains(contains('ambiguous patterns')));
+  });
+
+  test('accepts path patterns with different fixed segments', () {
+    final result = CCRouteWorkspaceValidator.validate([
+      document(
+        components: [component('orders')],
+        routes: [
+          route('orders.detail', 'orders'),
+          route('orders.summary', 'orders', pattern: '/summary/:id'),
+        ],
+      ),
+    ]);
+    expect(result.errors, isEmpty);
+  });
+
+  test('accepts provably disjoint path constraints', () {
+    final result = CCRouteWorkspaceValidator.validate([
+      document(
+        components: [component('orders')],
+        routes: [
+          route('orders.numeric', 'orders', constraints: {'id': r'\d+'}),
+          route('orders.alpha', 'orders', constraints: {'id': r'[a-z]+'}),
+        ],
+      ),
+    ]);
+    expect(result.errors, isEmpty);
+  });
+
+  test('does not compare URI patterns with different authorities', () {
+    final result = CCRouteWorkspaceValidator.validate([
+      document(
+        components: [component('orders')],
+        routes: [
+          route(
+            'orders.primary',
+            'orders',
+            patternType: 'CCUriPattern',
+            pattern: 'app://orders/detail/:id',
+          ),
+          route(
+            'orders.otherHost',
+            'orders',
+            patternType: 'CCUriPattern',
+            pattern: 'app://checkout/detail/:id',
+          ),
+        ],
+      ),
+    ]);
+    expect(result.errors, isEmpty);
+  });
+
+  test('rejects identical regex patterns', () {
+    final result = CCRouteWorkspaceValidator.validate([
+      document(
+        components: [component('orders')],
+        routes: [
+          route(
+            'orders.first',
+            'orders',
+            patternType: 'CCRegexPattern',
+            pattern: r'/orders/(?<id>\d+)',
+          ),
+          route(
+            'orders.second',
+            'orders',
+            patternType: 'CCRegexPattern',
+            pattern: r'/orders/(?<id>\d+)',
+          ),
+        ],
+      ),
+    ]);
+    expect(result.errors, contains(contains('ambiguous patterns')));
+  });
+
+  test('leaves complex regex overlap to runtime validation', () {
+    final result = CCRouteWorkspaceValidator.validate([
+      document(
+        components: [component('orders')],
+        routes: [
+          route(
+            'orders.first',
+            'orders',
+            patternType: 'CCRegexPattern',
+            pattern: r'/orders/(?:a|b)',
+          ),
+          route(
+            'orders.second',
+            'orders',
+            patternType: 'CCRegexPattern',
+            pattern: r'/orders/(?:b|c)',
+          ),
+        ],
+      ),
+    ]);
+    expect(result.errors, isEmpty);
   });
 }

@@ -1209,6 +1209,8 @@ CCNavigationCapabilityError
 - 跨组件路由消费满足依赖和可见性约束。
 - Interceptor、Shell、父路由和 Outlet 引用有效。
 - Adapter 支持所有已装配路由要求的能力。
+- 同层、同具体度且能够静态证明的 Path/URI/Regex Pattern 冲突；无法证明的复杂正则
+  交由 Runtime 注册阶段处理。
 - 生成排序稳定，重复构建产物一致。
 
 ---
@@ -1278,9 +1280,9 @@ Deadline 配置、完整导航结果遥测投影仍待后续实现。
 
 - 已实现页面和构造参数分析。
 - 已实现 Intent、Codec、Definition、注册入口和组件契约生成。
-- 已实现组件所有者、Route ID、`visibleTo` 和依赖边的聚合校验。
+- 已实现组件所有者、Route ID、`visibleTo`、依赖边以及静态 Pattern 重叠的聚合校验。
 - 已实现页面级及应用聚合级 JSON/Markdown 文档导出。
-- 待实现静态 Pattern 重叠证明、公开 barrel 检查及独立纯契约文件。
+- 待实现公开 barrel 检查及独立纯契约文件。
 
 ### 阶段 D：GoRouter Adapter
 

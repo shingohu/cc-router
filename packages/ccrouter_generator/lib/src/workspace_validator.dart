@@ -110,6 +110,7 @@ abstract final class CCRouteWorkspaceValidator {
         }
       }
     }
+    _validatePatternConflicts(routes.values, errors);
     errors.sort();
     final componentList = components.values.toList()
       ..sort((left, right) => '${left['id']}'.compareTo('${right['id']}'));
@@ -144,6 +145,201 @@ abstract final class CCRouteWorkspaceValidator {
   static List<String> _strings(Object? value) => value is List
       ? value.whereType<String>().toList(growable: false)
       : const [];
+
+  /// Reports only cross-route pattern overlaps that are statically provable.
+  ///
+  /// Runtime registration remains authoritative for expressions whose language
+  /// cannot be compared safely during generation.
+  static void _validatePatternConflicts(
+    Iterable<Map<String, Object?>> routes,
+    List<String> errors,
+  ) {
+    final ordered = routes.toList()
+      ..sort((first, second) => '${first['id']}'.compareTo('${second['id']}'));
+    for (var firstIndex = 0; firstIndex < ordered.length; firstIndex++) {
+      final firstRoute = ordered[firstIndex];
+      for (
+        var secondIndex = firstIndex + 1;
+        secondIndex < ordered.length;
+        secondIndex++
+      ) {
+        final secondRoute = ordered[secondIndex];
+        for (final firstPattern in _objects(firstRoute['patterns'])) {
+          for (final secondPattern in _objects(secondRoute['patterns'])) {
+            if (!_patternsConflict(firstPattern, secondPattern)) continue;
+            errors.add(
+              'Routes "${firstRoute['id']}" and "${secondRoute['id']}" '
+              'have ambiguous patterns "${_patternLabel(firstPattern)}" '
+              'and "${_patternLabel(secondPattern)}" with equal specificity.',
+            );
+          }
+        }
+      }
+    }
+  }
+
+  /// Compares two metadata patterns using the runtime's same-tier rules.
+  static bool _patternsConflict(
+    Map<String, Object?> first,
+    Map<String, Object?> second,
+  ) {
+    final firstType = '${first['type']}';
+    if (firstType != second['type']) return false;
+    if (firstType == 'CCRegexPattern') {
+      return first['value'] == second['value'];
+    }
+    final firstTemplate = '${first['value']}';
+    final secondTemplate = '${second['value']}';
+    if (firstType == 'CCUriPattern') {
+      final firstUri = Uri.tryParse(firstTemplate);
+      final secondUri = Uri.tryParse(secondTemplate);
+      if (firstUri == null || secondUri == null) return false;
+      if (firstUri.scheme.toLowerCase() != secondUri.scheme.toLowerCase() ||
+          firstUri.host.toLowerCase() != secondUri.host.toLowerCase() ||
+          firstUri.port != secondUri.port) {
+        return false;
+      }
+      return _templatesConflict(
+        firstUri.path.isEmpty ? '/' : firstUri.path,
+        _constraints(first),
+        secondUri.path.isEmpty ? '/' : secondUri.path,
+        _constraints(second),
+      );
+    }
+    if (firstType == 'CCPathPattern') {
+      return _templatesConflict(
+        firstTemplate,
+        _constraints(first),
+        secondTemplate,
+        _constraints(second),
+      );
+    }
+    return false;
+  }
+
+  /// Whether two same-tier templates can match one location equally.
+  static bool _templatesConflict(
+    String firstTemplate,
+    Map<String, String> firstConstraints,
+    String secondTemplate,
+    Map<String, String> secondConstraints,
+  ) {
+    final first = Uri.parse(firstTemplate).pathSegments;
+    final second = Uri.parse(secondTemplate).pathSegments;
+    final firstHasWildcard = first.isNotEmpty && first.last.startsWith('*');
+    final secondHasWildcard = second.isNotEmpty && second.last.startsWith('*');
+    if (!firstHasWildcard &&
+        !secondHasWildcard &&
+        first.length != second.length) {
+      return false;
+    }
+    final comparedLength = first.length < second.length
+        ? first.length
+        : second.length;
+    for (var index = 0; index < comparedLength; index++) {
+      final firstSegment = first[index];
+      final secondSegment = second[index];
+      if (firstSegment.startsWith('*') || secondSegment.startsWith('*')) break;
+      final firstExpression = _segmentExpression(
+        firstSegment,
+        firstConstraints,
+      );
+      final secondExpression = _segmentExpression(
+        secondSegment,
+        secondConstraints,
+      );
+      if (firstExpression == null && secondExpression == null) {
+        if (firstSegment != secondSegment) return false;
+      } else if (firstExpression == null) {
+        if (!_matchesConstraint(secondExpression!, firstSegment)) return false;
+      } else if (secondExpression == null) {
+        if (!_matchesConstraint(firstExpression, secondSegment)) return false;
+      } else if (!_constraintsMayOverlap(firstExpression, secondExpression)) {
+        return false;
+      }
+    }
+    return _templateSpecificity(first, firstConstraints) ==
+        _templateSpecificity(second, secondConstraints);
+  }
+
+  /// Returns a dynamic segment constraint, or null for a fixed segment.
+  static String? _segmentExpression(
+    String segment,
+    Map<String, String> constraints,
+  ) {
+    if (segment.startsWith('*')) {
+      return constraints[segment.substring(1)] ?? r'.*';
+    }
+    if (!segment.startsWith(':')) return null;
+    return constraints[segment.substring(1)] ?? r'[^/]+';
+  }
+
+  /// Conservatively proves whether two segment languages may intersect.
+  static bool _constraintsMayOverlap(String first, String second) {
+    if (first == second) return true;
+    final firstLiteral = _literalExpression(first);
+    final secondLiteral = _literalExpression(second);
+    if (firstLiteral != null && secondLiteral != null) {
+      return firstLiteral == secondLiteral;
+    }
+    if (_isDigits(first) && _isLetters(second) ||
+        _isLetters(first) && _isDigits(second)) {
+      return false;
+    }
+    return true;
+  }
+
+  /// Returns an exact literal represented by a simple expression.
+  static String? _literalExpression(String expression) =>
+      RegExp(r'^[A-Za-z0-9_-]+$').hasMatch(expression) ? expression : null;
+
+  /// Recognizes common digit-only constraints without guessing complex regexes.
+  static bool _isDigits(String expression) => RegExp(
+    r'^(?:\\d|\[0-9\])(?:\+|\*|\{\d+(?:,\d*)?\})$',
+  ).hasMatch(expression);
+
+  /// Recognizes common ASCII-letter-only constraints without guessing regexes.
+  static bool _isLetters(String expression) => RegExp(
+    r'^(?:\[a-z\]|\[A-Za-z\]|\[A-Z\])(?:\+|\*|\{\d+(?:,\d*)?\})$',
+  ).hasMatch(expression);
+
+  /// Matches a fixed segment against a full constraint expression.
+  static bool _matchesConstraint(String expression, String value) {
+    try {
+      return RegExp('^(?:$expression)\$').hasMatch(value);
+    } on FormatException {
+      return true;
+    }
+  }
+
+  /// Calculates the same specificity score used by runtime template matching.
+  static int _templateSpecificity(
+    List<String> segments,
+    Map<String, String> constraints,
+  ) {
+    var score = 0;
+    for (final segment in segments) {
+      if (segment.startsWith('*')) {
+        score -= 10;
+      } else if (segment.startsWith(':')) {
+        score += constraints.containsKey(segment.substring(1)) ? 20 : 10;
+      } else {
+        score += 100;
+      }
+    }
+    return score;
+  }
+
+  /// Reads validated string constraints from one metadata pattern.
+  static Map<String, String> _constraints(Map<String, Object?> pattern) {
+    final value = pattern['constraints'];
+    if (value is! Map) return const {};
+    return value.map((key, value) => MapEntry('$key', '$value'));
+  }
+
+  /// Returns a stable human-readable pattern value for diagnostics.
+  static String _patternLabel(Map<String, Object?> pattern) =>
+      '${pattern['value']}';
 
   /// Builds a concise aggregate document without embedding runtime objects.
   static String _markdown(
@@ -180,6 +376,10 @@ abstract final class CCRouteWorkspaceValidator {
           out.writeln(
             '  - `${pattern['value']}` (${pattern['type']}${pattern['primary'] == true ? ', primary' : ''})',
           );
+          final constraints = pattern['constraints'];
+          if (constraints is Map && constraints.isNotEmpty) {
+            out.writeln('    - Constraints: `${jsonEncode(constraints)}`');
+          }
         }
         final parameters = _objects(route['parameters']).toList();
         if (parameters.isNotEmpty) {

@@ -123,6 +123,11 @@ Map<String, Object?> _routeJson(_RouteModel route) => {
         type == 'CCRegexPattern' ? 'expression' : 'template',
       ).toStringValue(),
       'primary': _field(pattern, 'primary').toBoolValue(),
+      if (type != 'CCRegexPattern')
+        'constraints': _field(pattern, 'constraints').toMapValue()!.map(
+          (key, value) =>
+              MapEntry(key!.toStringValue()!, value!.toStringValue()!),
+        ),
     };
   }).toList(),
   'parameters': route.parameters
@@ -173,6 +178,10 @@ String _metadataMarkdown(Map<String, Object?> payload) {
       out.writeln(
         '  - `${pattern['value']}` (${pattern['type']}${pattern['primary'] == true ? ', primary' : ''})',
       );
+      final constraints = pattern['constraints'];
+      if (constraints is Map && constraints.isNotEmpty) {
+        out.writeln('    - Constraints: `${jsonEncode(constraints)}`');
+      }
     }
     final parameters = (route['parameters']! as List).cast<Map>();
     if (parameters.isNotEmpty) {

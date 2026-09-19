@@ -55,7 +55,7 @@ final class ProbeRegistrar implements CCComponentRegistrar {
   @override
   void register(CCRegistry registry) {}
 }
-@CCRoute<void>(component: probeComponent, id: 'probe.detail', patterns: [CCPathPattern('/probe/:id', primary: true)], visibility: CCRouteVisibility.exported, description: 'Probe details.')
+@CCRoute<void>(component: probeComponent, id: 'probe.detail', patterns: [CCPathPattern('/probe/:id', primary: true, constraints: {'id': r'\\d+'})], visibility: CCRouteVisibility.exported, description: 'Probe details.')
 final class Probe {
   const Probe({required this.id});
   /// Documented identity.
@@ -80,6 +80,9 @@ final class Probe {
     expect((json['components'] as List).single['version'], '1.2.3');
     expect(route['componentId'], 'probe');
     expect(route['description'], 'Probe details.');
+    expect(((route['patterns'] as List).single as Map)['constraints'], {
+      'id': r'\d+',
+    });
     expect(
       (route['parameters'] as List).single['description'],
       'Documented identity.',
