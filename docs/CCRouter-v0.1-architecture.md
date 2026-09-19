@@ -387,19 +387,25 @@ abstract final class CCRouter {
 Flutter 应用启动时显式绑定一个导航适配器。简单应用可以直接将 Adapter 的 router 交给 `MaterialApp.router`；需要 Shell、Outlet、Deep Link、生命周期、埋点或多窗口绑定时，再使用可选的 `CCRouterApp` Host：
 
 ```dart
+final host = CCNavigationHost();
+final appRouter = GoRouter(navigatorKey: host.navigatorKey, routes: routes);
+
 await CCRouter.initialize(
   components: ApplicationManifest.generated,
-  navigation: CCGoRouterAdapter(router: appRouter),
+  navigationAdapter: CCGoRouterAdapter(router: appRouter, host: host),
 );
 
 runApp(
   CCRouterApp(
+    host: host,
     child: MaterialApp.router(routerConfig: appRouter),
   ),
 );
 ```
 
 适配器内部可以使用 `NavigatorState`、`RouterDelegate` 或其他 Flutter 机制，但这些细节不暴露给组件调用方。`CCRouterApp` 提供生命周期和 Outlet 绑定，不保存全局 `BuildContext`；无 Context 导航由 Adapter 的根 Outlet 执行。
+默认 Route Placement 不绑定某个字面 Window ID；Runtime 会使用 Adapter 的 Host Binding
+解析真实 Host ID。只有显式声明的非默认 Host 才要求与 Adapter Host 完全一致。
 
 ---
 
@@ -655,14 +661,15 @@ URL -> RouteCodec -> Typed Route Args -> Route Factory -> Widget
 完整 URL 不天然等于外部 Deep Link，普通 Path 也不天然等于内部导航。类型安全 Intent 和应用内 `open` 使用内部 Origin；Universal Link、App Link、自定义 Scheme、通知 URI 和扫码输入通过受控 Ingress 使用外部 Origin 并执行 `CCDeepLinkPolicy`。业务可填写的导航 Source 只用于埋点，不能改变该信任属性。
 
 当前基础实现已经提供 Adapter-neutral 的 `CCNavigator`、主 Pattern 地址生成、Runtime 导航请求、Adapter 生命周期、Pure Dart 内存 Adapter、可选 `CCRouterApp`、固定来源的 `CCDeepLinkIngress` 和独立的 `ccrouter_go_router` 适配器。组件 Registrar 同库生成 Manifest，宿主自动聚合所有组件（包括无路由组件）；private Registrar 不进入业务 API。组件同时生成后端中立的 `CCFlutterRouteCatalog`，宿主聚合后由 `CCGoRouterAssembler` 从同一来源产生普通 `GoRoute` 与 Adapter Binding；更换后端时组件 Catalog、类型安全 Contract 和业务调用保持不变。GoRouter 适配器覆盖 Page 路由、BottomSheet/Dialog 模态 Page、已有 `ShellRoute` 的 Outlet Navigator 及基础栈操作；Shell 自身生成、`StatefulShellRoute` 分支编排和平台事件监听仍在后续 Flutter 集成阶段接入，Core 不保存或解释 Flutter 对象。自动装配根据 Presentation 选择对应 Page；手写 Override 必须返回匹配的 `CCGoRouterBottomSheetPage`、`CCGoRouterDialogPage` 或普通 `CCGoRouterPage`，适配器不会静默改变页面语义。
-GoRouter Adapter 通过 `navigatorKeys` 接收应用拥有的 Outlet Navigator，可将带有
+GoRouter Adapter 优先通过 `CCNavigationHost` 接收应用拥有的 Root/Outlet Navigator，
+并保留 `navigatorKeys` 兼容入口，可将带有
 `shellId`/`navigatorOutlet` placement 的子路由绑定到已有 `ShellRoute` Navigator；
 也可以通过 `CCGoRouterShellBinding` 一次声明 Shell 和全部分支 key。未提供对应 key
 或绑定不完整时初始化会拒绝；已有 `StatefulShellRoute` 可通过 `go` 切换分支并保留
 GoRouter 自己的分支状态。Shell 自身生成仍不由 Adapter 创建，这避免导航请求错误地
 落到根 Navigator。
 生命周期通过 `CCGoRouterNavigationObserver` 由宿主添加到 root、Shell 或 Stateful
-Shell branch Navigator；Observer 只输出带 Outlet 的 Push/Pop/Replace/Remove 事件，
+Shell branch Navigator；Observer 只输出带 Host/Outlet 的 Push/Pop/Replace/Remove 事件，
 不保存 `BuildContext`，也不在回调内同步发起导航。当前 Flutter SDK 的 Observer
 接口不保证提供 Pop 返回值，返回值仍以 CCRouter Adapter 的 typed Future 为准。
 Adapter 可通过 `observers` 订阅这些事件，并按 `lifecycleEventCapacity` 保留有界

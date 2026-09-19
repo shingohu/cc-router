@@ -209,7 +209,11 @@ Foreign/Opaque 观察等能力；Runtime 已在初始化和组合导航执行前
 
 ### 阶段五：Host 与多 Window
 
-- 完善 Host/Outlet 注册；
+- [x] 完成单 Host 的不可变 Root/Outlet Key 注册、挂载、卸载和重复绑定校验；
+- [x] 让 GoRouter、Observer、Adapter 和 Backend Event 使用同一个 Host ID；
+- [x] 将 Route Placement 的 `default` Host 解析成 Adapter 绑定的真实 Host ID；
+- [x] 增加独立于 Route 可见性的 Flutter Host 前后台生命周期事件；
+- [ ] 建立 Runtime 多 Host Registry 和动态 Host Resolver；
 - 增加 Window/Display 隔离；
 - 支持折叠屏、多 Pane 和多窗口状态。
 

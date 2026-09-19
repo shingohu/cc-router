@@ -145,7 +145,11 @@ void main() {
   testWidgets(
     'foreign routes and local history never remove a managed Route Entry',
     (tester) async {
-      final observer = CCGoRouterNavigationObserver(outlet: 'root');
+      final host = CCNavigationHost(id: 'window.main');
+      final observer = CCGoRouterNavigationObserver(
+        hostId: host.id,
+        outlet: 'root',
+      );
       final scaffoldKey = GlobalKey<ScaffoldState>();
       final detailRoute = GoRoute(
         path: '/orders/:id',
@@ -158,6 +162,7 @@ void main() {
         ),
       );
       final router = GoRouter(
+        navigatorKey: host.navigatorKey,
         initialLocation: '/',
         observers: [observer],
         routes: [
@@ -167,6 +172,7 @@ void main() {
       );
       final adapter = CCGoRouterAdapter(
         router: router,
+        host: host,
         observers: [observer],
         bindings: [
           CCGoRouterRouteBinding(
@@ -189,7 +195,12 @@ void main() {
       addTearDown(router.dispose);
 
       await runtime.initialize();
-      await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+      await tester.pumpWidget(
+        CCRouterApp(
+          host: host,
+          child: MaterialApp.router(routerConfig: router),
+        ),
+      );
       await tester.pumpAndSettle();
 
       final managedResult = runtime.pushRoute<String>(
@@ -197,6 +208,19 @@ void main() {
       );
       await tester.pumpAndSettle();
       final managedEntryId = runtime.activeRouteEntries.single.routeEntryId;
+      final managedBackendEntries = runtime.activeBackendEntries.where(
+        (entry) => entry.owner == CCBackendEntryOwner.managed,
+      );
+      expect(managedBackendEntries, isNotEmpty);
+      expect(
+        managedBackendEntries.every((entry) => entry.hostId == host.id),
+        isTrue,
+      );
+      final managedPushEvent = runtime.recentBackendNavigationEvents.lastWhere(
+        (event) => event.routeId == 'orders.detail',
+      );
+      expect(managedPushEvent.hostId, host.id);
+      expect(managedPushEvent.placement.hostId, host.id);
       final managedContext = tester.element(
         find.byKey(const ValueKey('managed-order')),
       );

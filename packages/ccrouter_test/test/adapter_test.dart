@@ -4,13 +4,17 @@ import 'package:ccrouter_go_router/ccrouter_go_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-CCNavigationRoute route(String id, {String path = '/detail/:value'}) =>
-    CCNavigationRoute(
-      routeId: id,
-      patterns: [CCPathPattern(path, primary: true)],
-      presentation: const CCPagePresentation(),
-      deepLink: CCDeepLinkPolicy.disabled,
-    );
+CCNavigationRoute route(
+  String id, {
+  String path = '/detail/:value',
+  CCRoutePlacement placement = const CCRoutePlacement.root(),
+}) => CCNavigationRoute(
+  routeId: id,
+  patterns: [CCPathPattern(path, primary: true)],
+  presentation: const CCPagePresentation(),
+  deepLink: CCDeepLinkPolicy.disabled,
+  placement: placement,
+);
 
 CCNavigationRequest request({
   required String id,
@@ -30,6 +34,95 @@ CCNavigationRequest request({
 );
 
 void main() {
+  test('binds one immutable Flutter Host and tags initial snapshots', () async {
+    final host = CCNavigationHost(id: 'window.main');
+    final observer = CCGoRouterNavigationObserver(
+      hostId: host.id,
+      outlet: 'root',
+    );
+    final router = GoRouter(
+      navigatorKey: host.navigatorKey,
+      observers: [observer],
+      routes: [GoRoute(path: '/', builder: (_, _) => const SizedBox())],
+    );
+    final adapter = CCGoRouterAdapter(
+      router: router,
+      host: host,
+      observers: [observer],
+    );
+    addTearDown(router.dispose);
+
+    await adapter.initialize(const []);
+    final snapshots = await adapter.readInitialBackendSnapshot();
+
+    expect(adapter.hostId, 'window.main');
+    expect(adapter.navigatorKeys['root'], same(host.navigatorKey));
+    expect(snapshots, isNotEmpty);
+    expect(snapshots.every((entry) => entry.hostId == host.id), isTrue);
+    await adapter.dispose();
+  });
+
+  test('rejects inconsistent Host, Router, Observer, and route bindings', () {
+    final host = CCNavigationHost(id: 'window.main');
+    final otherRoot = GlobalKey<NavigatorState>();
+    final mismatchedRouter = GoRouter(
+      navigatorKey: otherRoot,
+      routes: [GoRoute(path: '/', builder: (_, _) => const SizedBox())],
+    );
+    addTearDown(mismatchedRouter.dispose);
+
+    expect(
+      () => CCGoRouterAdapter(router: mismatchedRouter, host: host),
+      throwsArgumentError,
+    );
+
+    final router = GoRouter(
+      navigatorKey: host.navigatorKey,
+      routes: [GoRoute(path: '/', builder: (_, _) => const SizedBox())],
+    );
+    addTearDown(router.dispose);
+    expect(
+      () => CCGoRouterAdapter(
+        router: router,
+        host: host,
+        observers: [
+          CCGoRouterNavigationObserver(hostId: 'window.other', outlet: 'root'),
+        ],
+      ),
+      throwsArgumentError,
+    );
+    expect(
+      () => CCGoRouterAdapter(
+        router: router,
+        host: host,
+        observers: [
+          CCGoRouterNavigationObserver(hostId: host.id, outlet: 'detail'),
+        ],
+      ),
+      throwsArgumentError,
+    );
+  });
+
+  test('rejects a route assigned to another Host', () async {
+    final host = CCNavigationHost(id: 'window.main');
+    final router = GoRouter(
+      navigatorKey: host.navigatorKey,
+      routes: [GoRoute(path: '/', builder: (_, _) => const SizedBox())],
+    );
+    final adapter = CCGoRouterAdapter(router: router, host: host);
+    addTearDown(router.dispose);
+
+    await expectLater(
+      adapter.initialize([
+        route(
+          'detail',
+          placement: const CCRoutePlacement(hostId: 'window.other'),
+        ),
+      ]),
+      throwsA(isA<CCNavigationAdapterError>()),
+    );
+  });
+
   test('declares backend capabilities without exposing navigation control', () {
     final router = GoRouter(
       routes: [GoRoute(path: '/', builder: (_, _) => const SizedBox())],

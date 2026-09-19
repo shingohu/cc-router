@@ -52,7 +52,7 @@ extension CCRouterRuntimeNavigationConcurrency on CCRouterRuntime {
     CCNavigationOperation operation,
     _PreparedRoute prepared,
   ) => _NavigationConcurrencyKey(
-    hostId: prepared.placement.hostId,
+    hostId: _resolveNavigationHostId(prepared.placement),
     navigatorOutlet: prepared.placement.navigatorOutlet,
     operation: operation,
     routeId: prepared.routeId,

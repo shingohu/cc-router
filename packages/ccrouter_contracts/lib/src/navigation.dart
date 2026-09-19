@@ -237,14 +237,27 @@ final class CCNavigationRequest {
   /// ownership and diagnostics rather than authorization.
   final String ownerComponentId;
 
-  /// Window or display Host selected by the route placement.
+  /// Window or display Host resolved for this navigation operation.
   ///
-  /// Adapters use this to isolate multiple windows or external displays;
-  /// business callers cannot override it on an individual operation.
+  /// When a route uses the default placement, Runtime resolves this value from
+  /// an optional [CCNavigationAdapterHostBinding]. Adapters use the resolved
+  /// identity to isolate windows or external displays; business callers cannot
+  /// override it on an individual operation.
   final String hostId;
 
   /// Optional product attribution supplied for telemetry.
   final CCNavigationSource? source;
+}
+
+/// Supplies the default Host identity served by one navigation Adapter.
+///
+/// Flutter and multi-window Adapters implement this SPI when the route
+/// contract's `default` Host must resolve to a concrete Window identity.
+/// Runtime reads the value while creating requests and concurrency keys;
+/// business code must not use it to bypass generated route placement.
+abstract interface class CCNavigationAdapterHostBinding {
+  /// Stable non-empty Host identity used for default route placement.
+  String get hostId;
 }
 
 /// Adapter-neutral navigation backend contract owned by one Runtime.

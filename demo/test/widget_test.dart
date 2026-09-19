@@ -7,7 +7,13 @@ void main() {
   testWidgets('initializes CCRouter and executes the demo Command', (
     tester,
   ) async {
-    await tester.pumpWidget(const CCRouterApp(child: CCRouterDemoApp()));
+    final host = CCNavigationHost();
+    await tester.pumpWidget(
+      CCRouterApp(
+        host: host,
+        child: CCRouterDemoApp(host: host),
+      ),
+    );
     await tester.pump();
 
     expect(find.text('Runtime 已初始化'), findsOneWidget);

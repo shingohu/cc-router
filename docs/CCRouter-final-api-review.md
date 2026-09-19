@@ -90,8 +90,9 @@ Demo 和测试，再逐项确认本文结论。最终处理需要同时满足：
 - `CCServiceScope.component` 与 `CCServiceScope.route`：当前注册时会直接拒绝。
 - `activateComponent` / `deactivateComponent`：当前只处理 Route 和 Shell，没有
   覆盖 Service、Handler、Scope、依赖级联及并发停用。
-- `CCRouterApp` / `CCNavigationHost`：当前 Host ID 与 Navigator Key 尚未进入
-  Runtime 或 Adapter 的 Host Registry。
+- `CCRouterApp` / `CCNavigationHost`：单 Host 已与 GoRouter、Observer、Adapter 和
+  Backend Event 共享 Host ID 及不可变 Outlet Key，并支持挂载/卸载和前后台事件；
+  Runtime 多 Host Registry、动态 Host Resolver 和多 Window 调度仍未闭环。
 - `CCMemoryNavigationAdapter`、Runtime 的低层注册方法和测试状态 Getter：应迁移到
   `ccrouter_test` 或仅由测试入口访问。
 - `CCGoRouterAdapter` 中仅供测试读取的 routes、bindings、shellContracts、observers、

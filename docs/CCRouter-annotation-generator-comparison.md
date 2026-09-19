@@ -33,9 +33,9 @@ onRouteHide
 
 这些事件覆盖页面曝光、页面被覆盖、App 前后台、Dialog/BottomSheet 显示隐藏等场景。
 
-CCRouter 当前已经有 `RouteEntry` 生命周期和 `CCNavigationAspect` 的 `before`、`found`、`arrival`、`lost`、`after` 阶段，但还需要补充：
+CCRouter 当前已经有 `RouteEntry` 生命周期、独立的 `CCNavigationHost` 前后台事件和
+`CCNavigationAspect` 的 `before`、`found`、`arrival`、`lost`、`after` 阶段，但还需要补充：
 
-- App/Window 前后台事件；
 - Route 显示、隐藏和焦点变化；
 - Shell 分支切换导致的页面失焦；
 - 多 Window 的独立生命周期。
@@ -157,7 +157,7 @@ CCRouter 应继续要求业务统一通过 `CCRouter.navigator`，让拦截、As
 | 多 Path / URI | 支持部分 | 多 Pattern、主 Pattern 和别名分离 |
 | 路由可见性 | 主要依赖生成文件和包扫描 | 契约形态、Package 依赖、barrel 校验 |
 | 路由生命周期 | Widget Mixin + Observer | Runtime RouteEntry + Aspect + Adapter 事件 |
-| App 前后台 | 有生命周期回调 | 需要补 Host/Window Lifecycle Bridge |
+| App 前后台 | 有生命周期回调 | 已有 Host Lifecycle Event，待扩展多 Window Runtime 调度 |
 | 全局/路由拦截器 | 支持 | 已支持，并统一经过 CCRouter |
 | GoRouter | 支持 | 独立 GoRouter Adapter |
 | Stateful Shell | 有示例 | 已有 Shell Binding，需要加强回归 |
@@ -170,10 +170,9 @@ CCRouter 应继续要求业务统一通过 `CCRouter.navigator`，让拦截、As
 
 ### P0
 
-1. 增加 Host/Window 前后台生命周期事件。
-2. 增加 Route 显示、隐藏和焦点变化事件。
-3. 完善 StatefulShell、嵌套路由和多 Outlet 回归测试。
-4. 将产品埋点名称与稳定 `routeId` 分离，例如增加结构化 `CCRouteTelemetry`。
+1. 让 Route 显示、隐藏和焦点变化由 Backend identity 精确确认。
+2. 完善 StatefulShell、嵌套路由和多 Outlet 回归测试。
+3. 将产品埋点名称与稳定 `routeId` 分离，例如增加结构化 `CCRouteTelemetry`。
 
 ### P1
 

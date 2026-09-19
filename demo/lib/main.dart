@@ -32,15 +32,24 @@ final class DemoComponentRegistrar implements CCComponentRegistrar {
 }
 
 void main() {
-  runApp(const CCRouterApp(child: CCRouterDemoApp()));
+  final host = CCNavigationHost();
+  runApp(
+    CCRouterApp(
+      host: host,
+      child: CCRouterDemoApp(host: host),
+    ),
+  );
 }
 
 final class CCRouterDemoApp extends StatefulWidget {
-  const CCRouterDemoApp({super.key});
+  const CCRouterDemoApp({required this.host, super.key});
+
+  final CCNavigationHost host;
 
   @override
   State<CCRouterDemoApp> createState() => _CCRouterDemoAppState();
 }
+
 final class _CCRouterDemoAppState extends State<CCRouterDemoApp> {
   late final GoRouter _router;
   late final CCGoRouterAdapter _adapter;
@@ -48,13 +57,15 @@ final class _CCRouterDemoAppState extends State<CCRouterDemoApp> {
   @override
   void initState() {
     super.initState();
-    final navigatorKey = GlobalKey<NavigatorState>();
-    final observer = CCGoRouterNavigationObserver(outlet: 'root');
+    final observer = CCGoRouterNavigationObserver(
+      hostId: widget.host.id,
+      outlet: 'root',
+    );
     final assembly = CCGoRouterAssembler.assemble(
       catalog: ccrouterGeneratedRouteCatalog,
     );
     _router = GoRouter(
-      navigatorKey: navigatorKey,
+      navigatorKey: widget.host.navigatorKey,
       observers: [observer],
       routes: [
         GoRoute(
@@ -66,8 +77,8 @@ final class _CCRouterDemoAppState extends State<CCRouterDemoApp> {
     );
     _adapter = CCGoRouterAdapter(
       router: _router,
+      host: widget.host,
       bindings: assembly.bindings,
-      navigatorKeys: {'root': navigatorKey},
       observers: [observer],
     );
   }

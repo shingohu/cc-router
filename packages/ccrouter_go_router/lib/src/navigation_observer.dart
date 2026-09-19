@@ -20,6 +20,7 @@ final class CCGoRouterNavigationEvent {
   /// Creates an event for one observed Navigator transition.
   const CCGoRouterNavigationEvent({
     required this.kind,
+    required this.hostId,
     required this.outlet,
     required this.route,
     this.previousRoute,
@@ -28,6 +29,9 @@ final class CCGoRouterNavigationEvent {
 
   /// Transition kind observed from Flutter's Navigator.
   final CCGoRouterNavigationEventKind kind;
+
+  /// Stable Flutter Host identity associated with the observed Navigator.
+  final String hostId;
 
   /// CCRouter Outlet name associated with the observer instance.
   final String outlet;
@@ -52,8 +56,30 @@ final class CCGoRouterNavigationEvent {
 /// callback focused on telemetry, lifecycle bridging, or diagnostics; it must
 /// not call CCRouter navigation synchronously from inside the callback.
 final class CCGoRouterNavigationObserver extends NavigatorObserver {
-  /// Creates an observer for [outlet].
-  CCGoRouterNavigationObserver({required this.outlet, this.onEvent});
+  /// Creates an observer for one [hostId] and [outlet] pair.
+  ///
+  /// Use the same Host identity supplied to `CCGoRouterAdapter`. The default
+  /// identity preserves single-window integrations that target the framework's
+  /// default Host.
+  CCGoRouterNavigationObserver({
+    this.hostId = 'default',
+    required this.outlet,
+    this.onEvent,
+  }) {
+    if (hostId.isEmpty) {
+      throw ArgumentError.value(hostId, 'hostId', 'Host ID cannot be empty.');
+    }
+    if (outlet.isEmpty) {
+      throw ArgumentError.value(
+        outlet,
+        'outlet',
+        'Navigator Outlet cannot be empty.',
+      );
+    }
+  }
+
+  /// Stable Flutter Host identity associated with this Navigator.
+  final String hostId;
 
   /// Stable CCRouter Outlet name associated with this Navigator.
   final String outlet;
@@ -79,6 +105,7 @@ final class CCGoRouterNavigationObserver extends NavigatorObserver {
     _emit(
       CCGoRouterNavigationEvent(
         kind: CCGoRouterNavigationEventKind.push,
+        hostId: hostId,
         outlet: outlet,
         route: route,
         previousRoute: previousRoute,
@@ -92,6 +119,7 @@ final class CCGoRouterNavigationObserver extends NavigatorObserver {
     _emit(
       CCGoRouterNavigationEvent(
         kind: CCGoRouterNavigationEventKind.pop,
+        hostId: hostId,
         outlet: outlet,
         route: route,
         previousRoute: previousRoute,
@@ -107,6 +135,7 @@ final class CCGoRouterNavigationObserver extends NavigatorObserver {
     _emit(
       CCGoRouterNavigationEvent(
         kind: CCGoRouterNavigationEventKind.replace,
+        hostId: hostId,
         outlet: outlet,
         route: route,
         previousRoute: oldRoute,
@@ -120,6 +149,7 @@ final class CCGoRouterNavigationObserver extends NavigatorObserver {
     _emit(
       CCGoRouterNavigationEvent(
         kind: CCGoRouterNavigationEventKind.remove,
+        hostId: hostId,
         outlet: outlet,
         route: route,
         previousRoute: previousRoute,

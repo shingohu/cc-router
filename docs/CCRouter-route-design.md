@@ -908,7 +908,10 @@ Shell 负责持久化导航容器和 Outlet，主从容器负责根据屏幕尺�
 `CCRouterApp` 是可选的 Flutter 集成 Host，不是业务 App 必须嵌套的第二个 `MaterialApp`。简单应用可以直接把 GoRouter Adapter 绑定到 `MaterialApp.router`；需要 Shell、Outlet、外部 Deep Link、生命周期、埋点或多窗口能力时使用 `CCRouterApp`：
 
 ```dart
+final host = CCNavigationHost();
+
 CCRouterApp(
+  host: host,
   child: MaterialApp.router(
     routerConfig: navigationAdapter.router,
   ),
@@ -918,10 +921,18 @@ CCRouterApp(
 它负责：
 
 - 安装 Flutter App 生命周期监听。
-- 提供供页面 Context 查询的 Inherited 路由作用域。
-- 绑定默认根 Outlet、Navigator Observer 和 Adapter 生命周期。
-- 将 Flutter 页面挂载关系关联到 RouteEntry。
-- 宿主销毁时释放 Flutter 侧订阅和引用。
+- 提供供 Host/Adapter 集成代码查询的 Inherited Host 作用域。
+- 挂载和卸载 `CCNavigationHost`，并拒绝同一 Host 被两个 Widget Tree 同时持有。
+- 将 Flutter 前后台状态转换为独立的 Host Lifecycle Event。
+- 在卸载时释放 `WidgetsBindingObserver`，但不销毁 Runtime、GoRouter 或 Navigator Key。
+
+`CCNavigationHost` 保存不可变的 Root/Outlet Navigator Key 注册表。同一个 Host 实例必须
+同时用于 `GoRouter.navigatorKey`、`CCGoRouterNavigationObserver.hostId` 和
+`CCGoRouterAdapter.host`。Adapter 会在启动阶段检查 Host、Router、Shell Outlet 和
+Observer 是否一致；旧的 `navigatorKeys` 参数仍作为不使用 `CCRouterApp` 时的兼容路径。
+路由 Placement 中的 `hostId: default` 是“当前 Adapter 的默认 Host”别名，Runtime 在
+创建 `CCNavigationRequest` 和并发键时将其解析成 Adapter 的真实 Host ID；显式填写的
+非默认 Host ID 不会被重写，交给单 Host Adapter 时会明确失败。
 
 `CCRouterApp` 不保存所谓全局 `BuildContext`。Wrapper Context 可能位于 `MaterialApp` 或 Navigator 上方，也可能在重建后失效；无 Context 导航必须使用 Adapter 持有的 `GoRouter` 或根 `navigatorKey`。
 
@@ -1333,7 +1344,8 @@ CCRouter 契约的 GoRouter 路由可以继续由应用独立保留。
 配置映射到 Flutter 的 `ModalBottomSheetRoute`。`popAndPush`、`popUntil` 和 `pushAndRemoveUntil` 已通过 GoRouter 的 Navigator 与
 imperative API 接入。由于 GoRouter 没有完全对应的公开原子组合 API，Adapter 会在
 一次 Runtime 操作内完成后端 Pop/Push 序列，并保持返回值与 Predicate 语义。
-GoRouter Adapter 通过 `navigatorKeys` 接收应用拥有的 Outlet Navigator，并可把带有
+GoRouter Adapter 优先通过 `CCNavigationHost` 接收应用拥有的 Root/Outlet Navigator，
+也保留 `navigatorKeys` 兼容入口，并可把带有
 `shellId`/`navigatorOutlet` placement 的子路由映射到已有 `ShellRoute` Navigator；
 也可以通过 `CCGoRouterShellBinding` 一次声明 Shell 和全部分支 key。Runtime 会把
 组件注册的 `CCNavigationShell` 快照交给 Adapter；Adapter 校验 Shell 类型、Outlet
@@ -1343,7 +1355,7 @@ GoRouter Adapter 通过 `navigatorKeys` 接收应用拥有的 Outlet Navigator�
 仍由应用创建，Adapter 不会修改应用路由树，也不会静默把目标栈改成根 Navigator。
 生命周期桥使用 `CCGoRouterNavigationObserver`，由应用添加到 root Navigator、
 `ShellRoute.observers` 或 `StatefulShellBranch.observers`。Observer 只发出带 Outlet
-标识的 Push/Pop/Replace/Remove 事件，适合埋点、诊断和生命周期同步；它不在回调中
+和 Host 标识的 Push/Pop/Replace/Remove 事件，适合埋点、诊断和生命周期同步；它不在回调中
 保存 `BuildContext`，也不允许同步触发 CCRouter 导航。当前 Flutter Observer API
 不保证提供 Pop 返回值，因此事件中的 `result` 可能为空。
 `CCGoRouterAdapter` 可以通过 `observers` 参数订阅这些事件，并以
@@ -1354,7 +1366,7 @@ Adapter 的 `go` 进入目标 Shell 分支，不根据 URI 形态绕过策略。
 - 主 Pattern、别名、Query、Extra 和返回值。
 - Shell、Outlet 和生命周期同步。
 - Deep Link 入口。
-- 可选 BuildContext 的 Outlet 解析和 `CCRouterApp` 集成。
+- 可选 BuildContext 的最近 Outlet 解析；`CCRouterApp` 的 Host、Key 和生命周期最小闭环已完成。
 - Android、iOS、Web 和 OHOS 示例验证。
 
 ### 阶段 E：动态组件生命周期

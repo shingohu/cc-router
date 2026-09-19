@@ -1,22 +1,232 @@
 import 'package:flutter/widgets.dart';
 
+/// Identifies one Flutter navigation Host lifecycle transition.
+///
+/// Host lifecycle is intentionally separate from managed route visibility.
+/// Use it for application-window foreground/background state and Host resource
+/// ownership; do not interpret it as a page exposure event.
+enum CCNavigationHostLifecycleState {
+  /// The Host was attached to a [CCRouterApp] widget tree.
+  mounted,
+
+  /// Flutter reports that the Host is active and receiving user input.
+  resumed,
+
+  /// Flutter reports that the Host is temporarily inactive.
+  inactive,
+
+  /// Flutter reports that every view belonging to the Host is hidden.
+  hidden,
+
+  /// Flutter reports that the Host is not currently visible to the user.
+  paused,
+
+  /// Flutter reports that the Host is detached from its engine view.
+  detached,
+
+  /// The Host was removed from its [CCRouterApp] widget tree.
+  unmounted,
+}
+
+/// Immutable observation emitted when a Flutter navigation Host changes state.
+///
+/// Host integrations use this event for window-level telemetry and resource
+/// suspension. Route exposure must instead use `CCRouteVisibilityEvent`.
+final class CCNavigationHostLifecycleEvent {
+  /// Creates one lifecycle observation for [hostId].
+  const CCNavigationHostLifecycleEvent({
+    required this.hostId,
+    required this.state,
+    required this.timestamp,
+  });
+
+  /// Stable identity of the Host that changed state.
+  final String hostId;
+
+  /// New lifecycle state of the Host.
+  final CCNavigationHostLifecycleState state;
+
+  /// Time at which the Flutter Host observed the transition.
+  final DateTime timestamp;
+}
+
+/// Receives one immutable Flutter navigation Host lifecycle observation.
+typedef CCNavigationHostLifecycleListener =
+    void Function(CCNavigationHostLifecycleEvent event);
+
 /// Identifies the Flutter navigation host associated with one application
 /// window.
 ///
-/// The host owns a root [navigatorKey] that an Adapter may bind to its Router
-/// or Navigator. It does not retain a global [BuildContext], and one host may
-/// be created for each Window when an application has multiple windows.
+/// The Host owns a stable set of Navigator Outlet keys shared by
+/// [CCRouterApp], the application Router, and its navigation Adapter. It does
+/// not retain a global [BuildContext]. Create one Host per application Window;
+/// a single Host cannot be mounted by two [CCRouterApp] instances at once.
 final class CCNavigationHost {
-  /// Creates a host with a stable [id] and optional root Navigator key.
-  CCNavigationHost({this.id = 'root', GlobalKey<NavigatorState>? navigatorKey})
-    : navigatorKey =
-          navigatorKey ?? GlobalKey<NavigatorState>(debugLabel: 'CCRouter');
+  /// Creates a Host with a stable [id] and immutable Navigator Outlet keys.
+  ///
+  /// [navigatorKey] identifies the required `root` Outlet. Additional keys are
+  /// supplied by [navigatorKeys]. Supplying `root` in both inputs is valid only
+  /// when both values are the same object. Outlet names and key identities must
+  /// be unique so backend events cannot be attributed to two stacks.
+  CCNavigationHost({
+    this.id = 'default',
+    GlobalKey<NavigatorState>? navigatorKey,
+    Map<String, GlobalKey<NavigatorState>> navigatorKeys = const {},
+  }) : _navigatorKeys = _buildNavigatorKeys(navigatorKey, navigatorKeys) {
+    if (id.isEmpty) {
+      throw ArgumentError.value(id, 'id', 'Host ID cannot be empty.');
+    }
+  }
 
   /// Stable host identity used to associate Adapter and Outlet state.
   final String id;
 
-  /// Root Navigator key consumed by a Flutter navigation Adapter.
-  final GlobalKey<NavigatorState> navigatorKey;
+  /// Immutable Navigator keys indexed by stable Outlet name.
+  final Map<String, GlobalKey<NavigatorState>> _navigatorKeys;
+
+  /// Host lifecycle observers owned by composition-root integrations.
+  final Set<CCNavigationHostLifecycleListener> _lifecycleListeners = {};
+
+  /// Current Host lifecycle state.
+  CCNavigationHostLifecycleState _lifecycleState =
+      CCNavigationHostLifecycleState.unmounted;
+
+  /// Exact Widget State currently owning this Host attachment.
+  Object? _mountOwner;
+
+  /// Root Navigator key consumed by the application Router and Adapter.
+  GlobalKey<NavigatorState> get navigatorKey => _navigatorKeys['root']!;
+
+  /// Immutable Navigator keys indexed by stable Outlet name.
+  ///
+  /// Pass this exact map to a legacy Adapter integration only when that Adapter
+  /// cannot consume [CCNavigationHost] directly. Callers must not copy keys from
+  /// another Host or mutate the returned map.
+  Map<String, GlobalKey<NavigatorState>> get navigatorKeys => _navigatorKeys;
+
+  /// Current lifecycle state reported by [CCRouterApp].
+  CCNavigationHostLifecycleState get lifecycleState => _lifecycleState;
+
+  /// Returns whether this Host declares [outlet].
+  bool containsOutlet(String outlet) => _navigatorKeys.containsKey(outlet);
+
+  /// Returns the Navigator key registered for [outlet].
+  ///
+  /// Host and Adapter setup code use this to bind Shell or Pane Navigators.
+  /// An unknown Outlet is a configuration error and throws [ArgumentError].
+  GlobalKey<NavigatorState> navigatorKeyFor(String outlet) {
+    final key = _navigatorKeys[outlet];
+    if (key == null) {
+      throw ArgumentError.value(
+        outlet,
+        'outlet',
+        'Navigator Outlet is not registered by Host "$id".',
+      );
+    }
+    return key;
+  }
+
+  /// Subscribes to Host lifecycle changes and returns a removal callback.
+  ///
+  /// Use this at the application composition root for window-level telemetry
+  /// or resource suspension. Listener failures are isolated from Flutter's
+  /// lifecycle dispatch and from other listeners.
+  void Function() addLifecycleListener(
+    CCNavigationHostLifecycleListener listener,
+  ) {
+    _lifecycleListeners.add(listener);
+    return () => _lifecycleListeners.remove(listener);
+  }
+
+  /// Attaches this Host to one widget tree and rejects duplicate ownership.
+  void _mount(Object owner) {
+    if (_mountOwner != null && !identical(_mountOwner, owner)) {
+      throw FlutterError(
+        'CCNavigationHost "$id" is already mounted by another CCRouterApp.',
+      );
+    }
+    if (identical(_mountOwner, owner)) return;
+    _mountOwner = owner;
+    _emitLifecycle(CCNavigationHostLifecycleState.mounted);
+  }
+
+  /// Converts one Flutter application lifecycle state into a Host event.
+  void _updateLifecycle(AppLifecycleState state) {
+    if (_mountOwner == null) return;
+    _emitLifecycle(switch (state) {
+      AppLifecycleState.resumed => CCNavigationHostLifecycleState.resumed,
+      AppLifecycleState.inactive => CCNavigationHostLifecycleState.inactive,
+      AppLifecycleState.hidden => CCNavigationHostLifecycleState.hidden,
+      AppLifecycleState.paused => CCNavigationHostLifecycleState.paused,
+      AppLifecycleState.detached => CCNavigationHostLifecycleState.detached,
+    });
+  }
+
+  /// Detaches this Host from its widget tree without disposing Navigator keys.
+  void _unmount(Object owner) {
+    if (!identical(_mountOwner, owner)) return;
+    _mountOwner = null;
+    _emitLifecycle(CCNavigationHostLifecycleState.unmounted);
+  }
+
+  /// Publishes one lifecycle transition while isolating listener failures.
+  void _emitLifecycle(CCNavigationHostLifecycleState state) {
+    _lifecycleState = state;
+    final event = CCNavigationHostLifecycleEvent(
+      hostId: id,
+      state: state,
+      timestamp: DateTime.now(),
+    );
+    for (final listener in _lifecycleListeners.toList()) {
+      try {
+        listener(event);
+      } catch (_) {
+        // Host telemetry must never interrupt Flutter lifecycle delivery.
+      }
+    }
+  }
+
+  /// Builds the immutable Outlet registry and validates identity ambiguity.
+  static Map<String, GlobalKey<NavigatorState>> _buildNavigatorKeys(
+    GlobalKey<NavigatorState>? root,
+    Map<String, GlobalKey<NavigatorState>> outlets,
+  ) {
+    final declaredRoot = outlets['root'];
+    if (root != null &&
+        declaredRoot != null &&
+        !identical(root, declaredRoot)) {
+      throw ArgumentError.value(
+        outlets,
+        'navigatorKeys',
+        'The root Outlet is declared with two different Navigator keys.',
+      );
+    }
+    final keys = <String, GlobalKey<NavigatorState>>{
+      ...outlets,
+      'root':
+          root ??
+          declaredRoot ??
+          GlobalKey<NavigatorState>(debugLabel: 'CCRouter.root'),
+    };
+    final identities = <GlobalKey<NavigatorState>>{};
+    for (final entry in keys.entries) {
+      if (entry.key.isEmpty) {
+        throw ArgumentError.value(
+          entry.key,
+          'navigatorKeys',
+          'Navigator Outlet name cannot be empty.',
+        );
+      }
+      if (!identities.add(entry.value)) {
+        throw ArgumentError.value(
+          entry.key,
+          'navigatorKeys',
+          'One Navigator key cannot represent multiple Outlets.',
+        );
+      }
+    }
+    return Map.unmodifiable(keys);
+  }
 }
 
 /// Optional Flutter integration Host for CCRouter.
@@ -87,6 +297,7 @@ final class _CCRouterAppState extends State<CCRouterApp>
   void initState() {
     super.initState();
     _host = widget.host ?? CCNavigationHost();
+    _host._mount(this);
     WidgetsBinding.instance.addObserver(this);
   }
 
@@ -94,16 +305,18 @@ final class _CCRouterAppState extends State<CCRouterApp>
   /// Rebinds the State to a newly supplied externally owned Host.
   void didUpdateWidget(covariant CCRouterApp oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.host != null) {
-      _host = widget.host!;
-    } else if (oldWidget.host != null) {
-      _host = CCNavigationHost();
-    }
+    final nextHost = widget.host;
+    if (nextHost == null && oldWidget.host == null) return;
+    if (nextHost != null && identical(_host, nextHost)) return;
+    _host._unmount(this);
+    _host = nextHost ?? CCNavigationHost();
+    _host._mount(this);
   }
 
   @override
   /// Forwards the lifecycle event to the optional observational callback.
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    _host._updateLifecycle(state);
     widget.onLifecycleChanged?.call(state);
   }
 
@@ -111,6 +324,7 @@ final class _CCRouterAppState extends State<CCRouterApp>
   /// Stops lifecycle observation without disposing the application Runtime.
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _host._unmount(this);
     super.dispose();
   }
 

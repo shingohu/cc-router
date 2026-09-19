@@ -18,6 +18,11 @@ Flutter SDK 选择：
 
 工程入口为 `lib/main.dart`。示例通过 `CCRouter.initialize(components: ...)` 让门面创建并持有 Runtime，通过 `CCRouter.shutdown()` 统一销毁；应用本身不直接管理 Runtime。登录会话使用带 `accountId` 的 Session，示例同时展示组件 Manifest 和 Command 调用。
 
+Demo 创建一个 `CCNavigationHost`，并将同一个 Host 的 ID 和根 `navigatorKey` 同时交给
+`CCRouterApp`、`GoRouter`、`CCGoRouterNavigationObserver` 和
+`CCGoRouterAdapter`。Host 与 Outlet 配置不一致会在 Adapter 创建或初始化阶段失败，
+避免后端事件在运行时被归属到错误的 Window 或 Navigator。
+
 ## 开发命令
 
 ```sh

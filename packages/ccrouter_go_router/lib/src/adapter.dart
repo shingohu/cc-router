@@ -23,6 +23,7 @@ part 'predictive_back_bridge.dart';
 final class CCGoRouterAdapter
     implements
         CCNavigationAdapter,
+        CCNavigationAdapterHostBinding,
         CCNavigationAdapterCapabilitySource,
         CCNavigationBackendEventSource,
         CCNavigationBackendSnapshotSource,
@@ -33,6 +34,7 @@ final class CCGoRouterAdapter
     required GoRouter router,
     Iterable<CCGoRouterRouteBinding> bindings = const [],
     Iterable<CCGoRouterShellBinding> shells = const [],
+    CCNavigationHost? host,
     Map<String, GlobalKey<NavigatorState>> navigatorKeys = const {},
     Iterable<CCGoRouterNavigationObserver> observers = const [],
     int lifecycleEventCapacity = 1000,
@@ -42,11 +44,36 @@ final class CCGoRouterAdapter
     final observerList = List<CCGoRouterNavigationObserver>.unmodifiable(
       observers,
     );
+    if (host != null && navigatorKeys.isNotEmpty) {
+      throw ArgumentError.value(
+        navigatorKeys,
+        'navigatorKeys',
+        'Supply either a CCNavigationHost or legacy navigatorKeys, not both.',
+      );
+    }
+    if (host != null &&
+        !identical(host.navigatorKey, router.routerDelegate.navigatorKey)) {
+      throw ArgumentError.value(
+        host,
+        'host',
+        'The Host root Navigator key must be used by the supplied GoRouter.',
+      );
+    }
+    final hostId = host?.id ?? 'default';
+    final mergedNavigatorKeys = _mergeNavigatorKeys(
+      host?.navigatorKeys ?? navigatorKeys,
+      shellList,
+    );
+    if (host != null) {
+      _validateHostNavigatorKeys(host, mergedNavigatorKeys);
+    }
+    _validateObserverBindings(hostId, mergedNavigatorKeys, observerList);
     return CCGoRouterAdapter._(
       router: router,
       bindings: bindings,
       shells: shellList,
-      navigatorKeys: navigatorKeys,
+      hostId: hostId,
+      navigatorKeys: mergedNavigatorKeys,
       observers: observerList,
       lifecycleEventCapacity: lifecycleEventCapacity,
       enablePredictiveBack: enablePredictiveBack,
@@ -58,6 +85,7 @@ final class CCGoRouterAdapter
     required GoRouter router,
     required Iterable<CCGoRouterRouteBinding> bindings,
     required Iterable<CCGoRouterShellBinding> shells,
+    required String hostId,
     required Map<String, GlobalKey<NavigatorState>> navigatorKeys,
     required Iterable<CCGoRouterNavigationObserver> observers,
     required int lifecycleEventCapacity,
@@ -65,7 +93,8 @@ final class CCGoRouterAdapter
   }) : _router = router,
        _bindings = List.unmodifiable(bindings),
        _shellBindings = List.unmodifiable(shells),
-       _navigatorKeys = _mergeNavigatorKeys(navigatorKeys, shells),
+       _hostId = hostId,
+       _navigatorKeys = navigatorKeys,
        _observers = List.unmodifiable(observers),
        _lifecycleEventCapacity = lifecycleEventCapacity,
        _predictiveBackBridge = enablePredictiveBack
@@ -157,6 +186,7 @@ final class CCGoRouterAdapter
           CCNavigationBackendEntrySnapshot(
             backendEntryId: _nextBackendEntryId(),
             owner: CCBackendEntryOwner.opaque,
+            hostId: _hostId,
             navigatorOutlet: 'root',
             location: initialUri.toString(),
           ),
@@ -168,6 +198,9 @@ final class CCGoRouterAdapter
 
   /// Application-owned GoRouter backend.
   final GoRouter _router;
+
+  /// Stable Flutter Host identity served by this Adapter instance.
+  final String _hostId;
 
   /// Adapter-owned third-party route reporting bridge.
   late final CCGoRouterForeignRouteBridge _foreignRouteBridge;
@@ -255,6 +288,13 @@ final class CCGoRouterAdapter
 
   /// Navigator keys used to resolve explicit non-root Outlet targets.
   Map<String, GlobalKey<NavigatorState>> get navigatorKeys => _navigatorKeys;
+
+  /// Stable Flutter Host identity associated with backend observations.
+  ///
+  /// Use this only for Host diagnostics and Adapter configuration validation;
+  /// business navigation continues to target generated route contracts.
+  @override
+  String get hostId => _hostId;
 
   /// Application-owned Shell bindings supplied for Runtime route placement.
   List<CCGoRouterShellBinding> get shells => _shellBindings;
@@ -347,6 +387,7 @@ final class CCGoRouterAdapter
   @override
   Future<Object?> navigate(CCNavigationRequest request) {
     _ensureAvailable();
+    _ensureRequestHost(request);
     _ensureRoute(request.routeId);
     final location = _locationFor(request.uri);
     switch (request.operation) {
@@ -420,6 +461,7 @@ final class CCGoRouterAdapter
     Object? popResult,
   }) async {
     _ensureAvailable();
+    _ensureRequestHost(request);
     _ensureRoute(request.routeId);
     final location = _locationFor(request.uri);
     if (!canPop()) return _replace(request, location);
@@ -468,6 +510,7 @@ final class CCGoRouterAdapter
     CCNavigationStackPredicate predicate,
   ) async {
     _ensureAvailable();
+    _ensureRequestHost(request);
     _ensureRoute(request.routeId);
     while (_entries.length > 1 && !predicate(_entries.last.snapshot)) {
       final navigator = _activeNavigator;
@@ -667,6 +710,16 @@ final class CCGoRouterAdapter
     }
   }
 
+  /// Rejects a request resolved for another Window or display Host.
+  void _ensureRequestHost(CCNavigationRequest request) {
+    if (request.hostId != _hostId) {
+      throw CCNavigationAdapterError(
+        'Navigation request "${request.navigationId}" targets Host '
+        '"${request.hostId}", but this Adapter serves Host "$_hostId".',
+      );
+    }
+  }
+
   /// Validates the optional binding set against Runtime route IDs.
   void _validateBindings(Set<String> routeIds) {
     if (_bindings.isEmpty) return;
@@ -749,6 +802,12 @@ final class CCGoRouterAdapter
   /// supplied by the GoRouter Shell integration.
   void _validatePlacement(CCNavigationRoute route) {
     final placement = route.placement;
+    if (placement.hostId != 'default' && placement.hostId != _hostId) {
+      throw CCNavigationAdapterError(
+        'GoRouter route "${route.routeId}" targets Host '
+        '"${placement.hostId}", but this Adapter serves Host "$_hostId".',
+      );
+    }
     if (placement.routeKind == CCRouteKind.shell) {
       throw CCNavigationAdapterError(
         'GoRouter route "${route.routeId}" is a Shell route. Shell '
@@ -871,6 +930,7 @@ final class CCGoRouterAdapter
       backendEntryId: backendEntryId,
       backendOperationId: '$_backendAdapterId-operation-$operationSequence',
       previousBackendEntryId: previousBackendEntryId,
+      hostId: event.hostId,
       navigatorOutlet: event.outlet,
       sequence: operationSequence,
       // A correlated `remove` is the first half of GoRouter `go`/`reset` and
@@ -886,13 +946,34 @@ final class CCGoRouterAdapter
       navigationId: request?.navigationId,
       routeId: request?.routeId,
       uri: request?.uri,
-      placement: request?.placement ?? const CCRoutePlacement.root(),
+      placement: request == null
+          ? CCRoutePlacement(
+              hostId: event.hostId,
+              navigatorOutlet: event.outlet,
+            )
+          : _resolvedPlacement(request),
       location: event.location,
       origin: request?.origin,
       source: request?.source,
       timestamp: DateTime.now(),
     );
     _publishBackendEvent(backendEvent);
+  }
+
+  /// Copies structural placement with the request's resolved Host identity.
+  ///
+  /// Route contracts retain `default` as an Adapter-neutral alias, while
+  /// backend diagnostics must expose one concrete Host consistently in both
+  /// the event and its placement snapshot.
+  CCRoutePlacement _resolvedPlacement(CCNavigationRequest request) {
+    final placement = request.placement;
+    return CCRoutePlacement(
+      hostId: request.hostId,
+      parentRouteId: placement.parentRouteId,
+      shellId: placement.shellId,
+      navigatorOutlet: placement.navigatorOutlet,
+      routeKind: placement.routeKind,
+    );
   }
 
   /// Publishes one explicit third-party route transition through the Adapter.
@@ -909,11 +990,14 @@ final class CCGoRouterAdapter
         backendEntryId: handle.backendEntryId,
         backendOperationId: '$_backendAdapterId-operation-$operationSequence',
         previousBackendEntryId: previous?.backendEntryId,
-        hostId: handle.hostId,
+        hostId: handle.hostId ?? _hostId,
         navigatorOutlet: handle.navigatorOutlet,
         sequence: operationSequence,
         owner: CCBackendEntryOwner.foreign,
-        placement: CCRoutePlacement(navigatorOutlet: handle.navigatorOutlet),
+        placement: CCRoutePlacement(
+          hostId: handle.hostId ?? _hostId,
+          navigatorOutlet: handle.navigatorOutlet,
+        ),
         location: handle.location,
         timestamp: DateTime.now(),
       ),
@@ -934,6 +1018,7 @@ final class CCGoRouterAdapter
         CCNavigationBackendEntrySnapshot(
           backendEntryId: _nextBackendEntryId(),
           owner: CCBackendEntryOwner.opaque,
+          hostId: _hostId,
           navigatorOutlet: matchOutlet,
           location: match.matchedLocation,
         ),
@@ -970,11 +1055,14 @@ final class CCGoRouterAdapter
         kind: kind,
         backendEntryId: handle.backendEntryId,
         backendOperationId: '$_backendAdapterId-operation-$operationSequence',
-        hostId: handle.hostId,
+        hostId: handle.hostId ?? _hostId,
         navigatorOutlet: handle.navigatorOutlet,
         sequence: operationSequence,
         owner: CCBackendEntryOwner.opaque,
-        placement: CCRoutePlacement(navigatorOutlet: handle.navigatorOutlet),
+        placement: CCRoutePlacement(
+          hostId: handle.hostId ?? _hostId,
+          navigatorOutlet: handle.navigatorOutlet,
+        ),
         location: handle.location,
         timestamp: DateTime.now(),
       ),
@@ -1102,6 +1190,49 @@ final class CCGoRouterAdapter
       }
     }
     return Map.unmodifiable(merged);
+  }
+
+  /// Ensures Shell bindings do not introduce keys outside the immutable Host.
+  static void _validateHostNavigatorKeys(
+    CCNavigationHost host,
+    Map<String, GlobalKey<NavigatorState>> merged,
+  ) {
+    for (final entry in merged.entries) {
+      if (!host.containsOutlet(entry.key) ||
+          !identical(host.navigatorKeyFor(entry.key), entry.value)) {
+        throw ArgumentError.value(
+          entry.key,
+          'shells',
+          'Shell Outlet must use the Navigator key registered by Host '
+              '"${host.id}".',
+        );
+      }
+    }
+  }
+
+  /// Validates that every Observer belongs to this Adapter's Host and Outlet.
+  static void _validateObserverBindings(
+    String hostId,
+    Map<String, GlobalKey<NavigatorState>> navigatorKeys,
+    Iterable<CCGoRouterNavigationObserver> observers,
+  ) {
+    for (final observer in observers) {
+      if (observer.hostId != hostId) {
+        throw ArgumentError.value(
+          observer.hostId,
+          'observers',
+          'Observer Host does not match Adapter Host "$hostId".',
+        );
+      }
+      if (observer.outlet != 'root' &&
+          !navigatorKeys.containsKey(observer.outlet)) {
+        throw ArgumentError.value(
+          observer.outlet,
+          'observers',
+          'Observer Outlet has no registered Navigator key.',
+        );
+      }
+    }
   }
 
   /// Finds the Navigator belonging to the currently tracked route.

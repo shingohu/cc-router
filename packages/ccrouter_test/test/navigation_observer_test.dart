@@ -8,6 +8,7 @@ void main() {
   ) async {
     final events = <CCGoRouterNavigationEvent>[];
     final observer = CCGoRouterNavigationObserver(
+      hostId: 'window.main',
       outlet: 'root',
       onEvent: events.add,
     );
@@ -41,6 +42,7 @@ void main() {
         CCGoRouterNavigationEventKind.pop,
       ],
     );
+    expect(events.every((event) => event.hostId == 'window.main'), isTrue);
     expect(events.every((event) => event.outlet == 'root'), isTrue);
     // NavigatorObserver in the current Flutter SDK does not expose Pop result.
     expect(events.last.result, isNull);

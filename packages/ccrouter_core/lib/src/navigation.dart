@@ -636,6 +636,20 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     return _routeRegistry.routeDefinition(routeId).interceptorIds.isNotEmpty;
   }
 
+  /// Resolves the route's default Host through the active Adapter binding.
+  ///
+  /// Explicit non-default placement remains unchanged so a single-Host
+  /// Adapter can reject requests intended for another Window.
+  String _resolveNavigationHostId(CCRoutePlacement placement) {
+    if (placement.hostId != 'default') return placement.hostId;
+    final adapter = _navigationAdapter;
+    if (adapter is CCNavigationAdapterHostBinding) {
+      final binding = adapter as CCNavigationAdapterHostBinding;
+      if (binding.hostId.isNotEmpty) return binding.hostId;
+    }
+    return placement.hostId;
+  }
+
   /// Creates the immutable request delivered to one Adapter operation.
   CCNavigationRequest _buildNavigationRequest(
     CCNavigationOperation operation,
@@ -655,7 +669,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     placement: prepared.placement,
     origin: origin,
     ownerComponentId: prepared.ownerComponentId,
-    hostId: prepared.placement.hostId,
+    hostId: _resolveNavigationHostId(prepared.placement),
     source: source,
   );
 
