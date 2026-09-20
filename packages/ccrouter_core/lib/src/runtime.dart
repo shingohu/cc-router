@@ -32,6 +32,9 @@ part 'scope.dart';
 /// Maximum length accepted for framework-owned stable identifiers.
 const int _maxStableIdentifierLength = 128;
 
+/// Maximum length accepted for caller-provided telemetry attribution IDs.
+const int _maxTelemetryIdentifierLength = 64;
+
 /// Maximum length accepted for full route regular expressions.
 const int _maxRouteRegularExpressionLength = 2048;
 
@@ -44,6 +47,11 @@ const int _maxConstraintRegularExpressionLength = 256;
 /// Stable identifier syntax used at handwritten Runtime boundaries.
 final RegExp _stableIdentifierPattern = RegExp(
   r'^[a-z][A-Za-z0-9]*(?:[._-][A-Za-z0-9]+)*$',
+);
+
+/// Opaque analytics syntax that accepts UUID-style leading digits.
+final RegExp _anonymousTelemetryIdentifierPattern = RegExp(
+  r'^[A-Za-z0-9][A-Za-z0-9._-]*$',
 );
 
 /// Lowercase package-style syntax retained for component ownership IDs.
@@ -63,6 +71,16 @@ final RegExp _semanticVersionPattern = RegExp(
 bool _isStableIdentifier(String value) =>
     value.length <= _maxStableIdentifierLength &&
     _stableIdentifierPattern.hasMatch(value);
+
+/// Whether [value] is a bounded stable product navigation source ID.
+bool _isNavigationSourceIdentifier(String value) =>
+    value.length <= _maxTelemetryIdentifierLength &&
+    _stableIdentifierPattern.hasMatch(value);
+
+/// Whether [value] is a bounded opaque analytics correlation ID.
+bool _isAnonymousTelemetryIdentifier(String value) =>
+    value.length <= _maxTelemetryIdentifierLength &&
+    _anonymousTelemetryIdentifierPattern.hasMatch(value);
 
 /// Whether [value] can identify a component in generated Package metadata.
 bool _isComponentIdentifier(String value) =>

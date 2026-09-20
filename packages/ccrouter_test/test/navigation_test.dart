@@ -88,6 +88,16 @@ final class TestTelemetryContextProvider
   CCNavigationTelemetryContext? currentContext() => context;
 }
 
+final class MutableTelemetryContextProvider
+    implements CCNavigationTelemetryContextProvider {
+  MutableTelemetryContextProvider(this.context);
+
+  CCNavigationTelemetryContext? context;
+
+  @override
+  CCNavigationTelemetryContext? currentContext() => context;
+}
+
 final class FailingNavigationAdapter implements CCNavigationAdapter {
   @override
   void initialize(
@@ -2311,6 +2321,123 @@ void main() {
 
       await runtime.dispose();
       expect(runtime.recentNavigationEvents, isEmpty);
+    },
+  );
+
+  test(
+    'invalid navigation source IDs degrade without leaking attribution',
+    () async {
+      final adapter = CCMemoryNavigationAdapter();
+      final runtime = CCRouterRuntime.forTesting(
+        navigationAdapter: adapter,
+        components: [
+          routeComponent(
+            'orders',
+            (registry) => registry.registerRoute(pathRoute()),
+          ),
+        ],
+      );
+      runtime.initialize();
+
+      final invalidSources = <CCNavigationSource>[
+        const CCNavigationSource.feature(''),
+        const CCNavigationSource.feature(' account.id'),
+        const CCNavigationSource.feature('account@example.com'),
+        const CCNavigationSource.deepLink('https://example.com/campaign'),
+        CCNavigationSource.feature('a${'b' * 64}'),
+      ];
+      for (var index = 0; index < invalidSources.length; index++) {
+        await runtime.goRoute(
+          TestIntent<void>('orders.detail', RouteArgs('$index')),
+          source: invalidSources[index],
+        );
+        expect(adapter.currentRequest!.source, isNull);
+        expect(runtime.recentNavigationEvents.last.source, isNull);
+      }
+
+      const valid = CCNavigationSource.feature('home.order_banner');
+      await runtime.goRoute(
+        const TestIntent<void>('orders.detail', RouteArgs('100')),
+        source: valid,
+      );
+      expect(adapter.currentRequest!.source, same(valid));
+      expect(
+        runtime.subscriberErrors
+            .where((error) => error.message.contains('invalid stable ID'))
+            .length,
+        invalidSources.length,
+      );
+      expect(
+        runtime.subscriberErrors.map((error) => error.message).join(),
+        isNot(contains('example.com')),
+      );
+      await runtime.dispose();
+    },
+  );
+
+  test(
+    'telemetry context accepts opaque IDs and drops malformed snapshots',
+    () async {
+      final provider = MutableTelemetryContextProvider(
+        const CCNavigationTelemetryContext(
+          anonymousVisitorId: '123e4567-e89b-12d3-a456-426614174000',
+          applicationSessionId: 'run_2026.09-20',
+        ),
+      );
+      final observed = <CCNavigationAspectEvent>[];
+      final runtime = CCRouterRuntime.forTesting(
+        navigationAdapter: CCMemoryNavigationAdapter(),
+        telemetryContextProvider: provider,
+        navigationAspects: [
+          CCNavigationAspect(id: 'telemetry', onFound: observed.add),
+        ],
+        components: [
+          routeComponent(
+            'orders',
+            (registry) => registry.registerRoute(pathRoute()),
+          ),
+        ],
+      );
+      runtime.initialize();
+
+      await runtime.goRoute(
+        const TestIntent<void>('orders.detail', RouteArgs('200')),
+      );
+      await Future<void>.delayed(Duration.zero);
+      expect(
+        observed.last.request.telemetryContext?.anonymousVisitorId,
+        '123e4567-e89b-12d3-a456-426614174000',
+      );
+
+      final invalidContexts = <CCNavigationTelemetryContext>[
+        const CCNavigationTelemetryContext(
+          anonymousVisitorId: 'account@example.com',
+        ),
+        const CCNavigationTelemetryContext(
+          anonymousVisitorId: 'anonymous',
+          applicationSessionId: 'https://example.com/session',
+        ),
+        CCNavigationTelemetryContext(anonymousVisitorId: 'v${'x' * 64}'),
+      ];
+      for (var index = 0; index < invalidContexts.length; index++) {
+        provider.context = invalidContexts[index];
+        await runtime.goRoute(
+          TestIntent<void>('orders.detail', RouteArgs('${201 + index}')),
+        );
+        await Future<void>.delayed(Duration.zero);
+        expect(observed.last.request.telemetryContext, isNull);
+      }
+      expect(
+        runtime.subscriberErrors
+            .where((error) => error.message.contains('invalid anonymous ID'))
+            .length,
+        invalidContexts.length,
+      );
+      expect(
+        runtime.subscriberErrors.map((error) => error.message).join(),
+        isNot(contains('example.com')),
+      );
+      await runtime.dispose();
     },
   );
 

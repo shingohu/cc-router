@@ -34,6 +34,7 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
     void Function(_RouteEntryRecord entry)? commitEntry,
   }) async {
     _ensureNavigationCanStart();
+    final effectiveSource = _validatedNavigationSource(source);
     final navigationId = '$_runtimeId-navigation-${++_navigationSequence}';
     _beginNavigationObservation(navigationId);
     var recoveryDepth = 0;
@@ -61,7 +62,7 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
                 prepared,
                 origin,
                 currentOpenMode,
-                source,
+                effectiveSource,
                 navigationId: navigationId,
                 action: currentAction,
                 commitEntry: currentCommitEntry,
@@ -71,7 +72,7 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
                 prepared,
                 origin,
                 currentOpenMode,
-                source,
+                effectiveSource,
                 navigationId: navigationId,
                 action: currentAction,
                 commitEntry: currentCommitEntry,
@@ -87,7 +88,7 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
               _navigationFailureRouteId(error),
           origin: origin,
           openMode: openMode,
-          source: source,
+          source: effectiveSource,
           stage: _navigationFailureStage(error),
           errorType: error.runtimeType.toString(),
           recoveryDepth: recoveryDepth,
@@ -142,6 +143,21 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
         suppressRecoveryResult = decision is CCNavigationFailureFallback;
       }
     }
+  }
+
+  /// Removes malformed caller attribution before any observable request data.
+  ///
+  /// Navigation remains available when attribution is invalid, while a
+  /// bounded sanitized diagnostic makes the integration error visible without
+  /// retaining the rejected identifier.
+  CCNavigationSource? _validatedNavigationSource(CCNavigationSource? source) {
+    if (source == null || _isNavigationSourceIdentifier(source.id)) {
+      return source;
+    }
+    _recordNavigationCallbackFailure(
+      'Navigation source contained an invalid stable ID.',
+    );
+    return null;
   }
 
   /// Normalizes redirect and fallback decisions into one internal target.

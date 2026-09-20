@@ -309,15 +309,9 @@ extension CCRouterRuntimeNavigationAspects on CCRouterRuntime {
     if (context == null) return null;
     final visitor = context.anonymousVisitorId;
     final session = context.applicationSessionId;
-    final validVisitor =
-        visitor.isNotEmpty &&
-        visitor == visitor.trim() &&
-        visitor.length <= 256;
+    final validVisitor = _isAnonymousTelemetryIdentifier(visitor);
     final validSession =
-        session == null ||
-        session.isNotEmpty &&
-            session == session.trim() &&
-            session.length <= 256;
+        session == null || _isAnonymousTelemetryIdentifier(session);
     if (!validVisitor || !validSession) {
       _recordNavigationCallbackFailure(
         'Navigation telemetry context contained an invalid anonymous ID.',

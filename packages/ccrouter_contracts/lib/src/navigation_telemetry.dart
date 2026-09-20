@@ -9,15 +9,23 @@ final class CCNavigationTelemetryContext {
   ///
   /// Identifiers must be opaque values generated for analytics use. Do not pass
   /// an account ID, email, phone number, authentication token, or device ID.
+  /// Runtime accepts at most 64 ASCII letters, digits, `.`, `_`, or `-`, and
+  /// drops the complete context with a sanitized diagnostic when either value
+  /// is malformed.
   const CCNavigationTelemetryContext({
     required this.anonymousVisitorId,
     this.applicationSessionId,
   });
 
   /// Stable pseudonymous visitor identity used for external UV aggregation.
+  ///
+  /// UUID-style leading digits are valid; whitespace and URI punctuation are
+  /// rejected before the value reaches navigation observations.
   final String anonymousVisitorId;
 
   /// Optional identity for one application process or analytics session.
+  ///
+  /// It follows the same bounded opaque syntax as [anonymousVisitorId].
   final String? applicationSessionId;
 }
 

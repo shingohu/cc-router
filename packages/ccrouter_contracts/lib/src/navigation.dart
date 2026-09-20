@@ -29,8 +29,11 @@ enum CCNavigationSourceType {
 /// Describes a non-sensitive product source for navigation telemetry.
 ///
 /// Use stable identifiers such as `home.order_banner`; do not include complete
-/// URIs, user input, tokens, or business payloads. Runtime trust decisions use
-/// [CCNavigationOrigin] instead of this caller-provided metadata.
+/// URIs, user input, tokens, or business payloads. IDs must start with a
+/// lowercase letter, contain only alphanumeric stable segments separated by
+/// `.`, `_`, or `-`, and contain at most 64 characters. Runtime drops malformed
+/// attribution with a sanitized diagnostic rather than failing navigation.
+/// Trust decisions use [CCNavigationOrigin] instead of this metadata.
 final class CCNavigationSource {
   /// Creates source metadata with an explicit [type] and stable [id].
   const CCNavigationSource({required this.type, required this.id});
@@ -60,7 +63,7 @@ final class CCNavigationSource {
   /// Product-level category used by telemetry consumers.
   final CCNavigationSourceType type;
 
-  /// Stable, non-sensitive source identifier.
+  /// Stable, non-sensitive source identifier validated by Runtime.
   final String id;
 }
 
