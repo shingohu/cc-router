@@ -561,6 +561,50 @@ void main() {
     expect(result.errors, isEmpty);
   });
 
+  test('indexed candidates retain swapped fixed and dynamic conflicts', () {
+    final result = CCRouteWorkspaceValidator.validate([
+      document(
+        components: [component('orders')],
+        routes: [
+          route('orders.bySection', 'orders', pattern: '/detail/:section/item'),
+          route('orders.byItem', 'orders', pattern: '/detail/item/:id'),
+        ],
+      ),
+    ]);
+    expect(result.errors, contains(contains('ambiguous patterns')));
+  });
+
+  test('indexed candidates retain wildcard conflicts', () {
+    final result = CCRouteWorkspaceValidator.validate([
+      document(
+        components: [component('orders')],
+        routes: [
+          route('orders.firstFiles', 'orders', pattern: '/files/*rest'),
+          route('orders.secondFiles', 'orders', pattern: '/files/*path'),
+        ],
+      ),
+    ]);
+    expect(result.errors, contains(contains('ambiguous patterns')));
+  });
+
+  test('validates a large fixed-path catalog without conflict diagnostics', () {
+    final result = CCRouteWorkspaceValidator.validate([
+      document(
+        components: [component('orders')],
+        routes: [
+          for (var index = 0; index < 2000; index++)
+            route(
+              'orders.route.$index',
+              'orders',
+              pattern: '/catalog/$index/:id',
+            ),
+        ],
+      ),
+    ]);
+    expect(result.errors, isEmpty);
+    expect(result.machineDocument['routes'], hasLength(2000));
+  });
+
   test('accepts provably disjoint path constraints', () {
     final result = CCRouteWorkspaceValidator.validate([
       document(

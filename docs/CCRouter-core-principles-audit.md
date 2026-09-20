@@ -5,7 +5,7 @@
 - 审查日期：2026-09-20
 - 审查范围：路由 Runtime、业务 Facade、Host/Adapter SPI、GoRouter Adapter、生成器、
   Demo、测试与诊断模型。
-- 自动化基线：`dart analyze` 通过；Framework 225 项、Demo 19 项、Generator 91 项测试通过；
+- 自动化基线：`dart analyze` 通过；Framework 235 项、Demo 20 项、Generator 119 项测试通过；
   最近一次 macOS debug build 和交互验证通过。
 - 总体结论：13 条约定的架构方向成立，但当前不能认定为全部对齐。没有阻断 Demo 的 P0
   或 P1 问题；并发安全、retained diagnostics 数据边界、观察回调热路径和组件依赖图前移校验
@@ -21,7 +21,7 @@
 | 2 | 简单易用 | 基本满足 | Demo 宿主只需 `CCRouter.initialize`、`CCGoRouterBackend.managed`、`CCRouterApp.managed` 和 `MaterialApp.router`；生成也已收敛为一条命令。Shell、Multi Host、Aspect 和 CI check 等高级能力保持可选。 |
 | 3 | 功能强大 | 基本满足 | 已覆盖类型安全导航、Deep Link、拦截、生命周期、混合路由、诊断和多种 Presentation，没有万能 Map 导航接口。组合栈事务与精确 Entry 操作已从 v0.1 API 删除并标记 Deferred；设备 Predictive Back 和 Restoration 仍是明确限制。 |
 | 4 | 可扩展性 | 基本满足 | Core 使用中立 Route Definition；Catalog、Assembler、Adapter 与能力 SPI 分层。新后端可复用 Contract/Catalog；Host/Adapter 实现通过独立 `ccrouter_host.dart` 获取 SPI，业务 barrel 不再暴露该能力。 |
-| 5 | 可测试 | 基本满足 | Pure Dart Runtime/Memory Adapter、Flutter Adapter、生成器和 Demo 都有回归；`ccrouter_test` 已提供 Test Host。尚无正式性能、长时间运行和大规模路由表基准。 |
+| 5 | 可测试 | 基本满足 | Pure Dart Runtime/Memory Adapter、Flutter Adapter、生成器和 Demo 都有回归；`ccrouter_test` 已提供 Test Host，并具备 5000 Route Generator 与 1000 Route Runtime 非门禁基准。长时间运行与跨版本内存趋势仍需持续积累。 |
 | 6 | 最小公开 API | 基本满足 | Runtime、Scope、Memory Adapter、Host binding 以及 Adapter/Request/Capability/Backend 控制 SPI 已从业务 barrel 隐藏；Registrar 只拿到 `CCRegistry`，Host 组合根按需导入 `ccrouter_host.dart`。API surface 快照测试防止 SPI 意外回流。 |
 | 7 | 编译器校验与类型安全 | 部分满足 | 参数、Codec、Route ID、Pattern、Contract exposure、页面实现、barrel 导出和组件依赖图已有生成期校验。拦截器/PopGuard 引用和 Adapter 能力主要仍在 Runtime 才失败。 |
 | 8 | 非侵入式 | 满足 | 不要求页面基类或 Mixin，不保存全局 `BuildContext`；可继续使用应用自己的 `MaterialApp.router`/`GoRouter`；attached Adapter 不销毁应用 Router。 |
@@ -29,7 +29,7 @@
 | 10 | 明确生命周期 | 基本满足 | Runtime、Session、RouteEntry、Scope、Adapter、Backend 的 Owner 和销毁顺序明确，幂等与 pending Future 已有测试。组件 activate/deactivate 当前只覆盖 Route/Shell，完整 Service/Handler/Scope 生命周期仍按设计暂缓。 |
 | 11 | 可观测可诊断可溯源 | 基本满足 | navigationId、来源、Owner、阶段耗时、bounded history、Listener 异常隔离均已具备。Pending、RouteEntry、Backend history/ledger 已使用安全地址摘要，完整 URI/location 只留在即时 operational pipeline；request 创建前的解析/参数失败和实际能力回退也有独立安全事件。 |
 | 12 | 并发安全 | 基本满足 | 初始化/销毁、Session、Adapter 生命周期和导航并发策略已有确定语义，Defer/Timeout/Cancel 有回归。并发短路具有完整 Aspect 终态；Extra 请求明确独立执行；Interceptor、Policy、Guard、Aspect 和普通 Listener 统一使用 Zone 重入保护。 |
-| 13 | 性能和稳定 | 部分满足 | 热路径无反射，路由 ID 使用索引，缓存与观察队列有界，纯观察回调不再同步阻塞导航，错误不被吞掉。生成器复用 build_runner 增量图，只扫描 Host 依赖闭包中的 Package metadata，使用内容指纹缓存、write-if-changed、并发锁和全量回退；仍缺少正式 benchmark、内存增长门槛或版本对比，动态 URI 解析仍为线性工作。 |
+| 13 | 性能和稳定 | 部分满足 | 热路径无反射，路由 ID 与 Workspace Pattern 候选均使用索引，缓存与观察队列有界，纯观察回调不再同步阻塞导航，错误不被吞掉。生成器复用 build_runner 增量图，只扫描 Host 依赖闭包中的 Package metadata，使用内容指纹缓存、write-if-changed、并发锁和全量回退；已建立同机 benchmark，但仍缺少内存增长门槛和跨版本趋势，动态 URI 解析仍为线性工作。 |
 
 ## 3. P1 问题
 
@@ -140,23 +140,29 @@ PII/凭证。框架无法证明匿名性，但可以减少明显误用。
 
 ### P2-6 性能与稳定性基准尚不完整
 
-仓库没有 benchmark/perf suite，也没有冷启动、初始化、路由规模、并发、销毁和内存增长基线。
-当前 dynamic URI resolution 会遍历所有 Route/Pattern；生成器虽已改为精确闭包、单 Package
-Index 和内容缓存，但小 Demo 的热运行数据仍不能证明 500/1000 Route 大型工程稳定。
+仓库已提供非门禁式 Generator 与 Runtime scaling benchmark，覆盖 Workspace 校验、Runtime 初始化、
+动态 URI 解析和销毁。动态 URI resolution 仍会遍历所有 Route/Pattern；生成器虽已改为精确闭包、
+单 Package Index、内容缓存和 Pattern 候选索引，但基准只用于同机版本对比，不能把一次本机结果
+视为跨机器性能承诺。
 
-建议首批建立 10/100/1000 Route 的初始化与解析 benchmark、1 万次并发门回归、持续 Push/Pop 后
-内存台账稳定性、Runtime dispose p95，以及生成器冷/热运行指标。指标先记录基线，再决定优化。
+10/100/1000 Route 初始化、动态解析和 Runtime dispose p50/p95 已形成首批基线；持续 Push/Pop
+后的台账有界性由回归测试覆盖。后续继续补充 1 万次并发压力、真实 RSS/Heap 趋势和生成器完整
+冷/热流程的跨版本数据。指标先记录基线，再决定优化。
 
 生成器聚合已增加非门禁式基准脚本：
 
 ```sh
 fvm dart run packages/ccrouter_test/benchmark/generator_scaling.dart
+fvm dart run packages/ccrouter_test/benchmark/runtime_scaling.dart
 ```
 
-2026-09-20 本机 Dart JIT 预热后单次 Validator 基线为：10 Route `0.93ms`、100 Route
-`6.47ms`、500 Route `107.94ms`、1000 Route `422.89ms`。数据表明 Pattern 冲突检查当前存在明显
-二次增长；1000 Route 尚可用，但不能把该结果视为跨机器性能门槛。后续应为 Pattern 建立静态前缀
-分桶后再比较，并补齐 Runtime 初始化、动态解析、并发与内存基准。
+2026-09-20 本机 Dart JIT 预热后，旧 Validator 在 10/100/500/1000 Route 下分别为
+`0.88ms`、`6.36ms`、`108.84ms`、`447.00ms`。加入 Type、URI Authority、Specificity 和固定段
+倒排候选索引后，同一输入分别为 `0.88ms`、`2.78ms`、`6.02ms`、`19.31ms`，5000 Route 为
+`60.74ms`。索引只筛选候选，最终冲突仍由原精确比较器确认；Wildcard 保守回退到同优先级全比较。
+同机 Runtime 20 次生命周期与 100 次动态打开样本中，1000 Route 初始化 p50/p95 为
+`461us/565us`，动态 URI 打开为 `375us/560us`，dispose 为 `37us/42us`。后续仍需补充并发压力
+和跨版本内存趋势基线。
 
 ## 5. 已确认符合且应保持的边界
 

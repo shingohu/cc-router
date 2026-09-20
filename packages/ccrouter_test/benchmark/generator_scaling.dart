@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:ccrouter_generator/ccrouter_generator.dart';
 
 void main() {
-  const sizes = [10, 100, 500, 1000];
+  const sizes = [10, 100, 500, 1000, 5000];
   for (final size in sizes) {
     final documents = [_document(size)];
     CCRouteWorkspaceValidator.validate(documents);
@@ -15,6 +15,7 @@ void main() {
     }
     print(
       jsonEncode({
+        'scenario': 'unique-fixed-paths',
         'routes': size,
         'validateMs': watch.elapsedMicroseconds / 1000,
         'machineDocumentBytes': utf8.encode(result.machineDocumentJson).length,

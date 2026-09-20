@@ -21,6 +21,114 @@ final RegExp _workspaceSemanticVersionPattern = RegExp(
   r'(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$',
 );
 
+/// Coarse key that groups only patterns which can have equal routing priority.
+typedef _PatternConflictBucketKey = ({
+  String type,
+  String scope,
+  int specificity,
+});
+
+/// Precomputed shape used to query possible conflicts without scanning all patterns.
+final class _IndexedWorkspacePattern {
+  /// Creates one immutable Pattern candidate owned by [routeId].
+  const _IndexedWorkspacePattern({
+    required this.routeId,
+    required this.pattern,
+    required this.bucketKey,
+    required this.fixedSegments,
+    required this.dynamicPositions,
+    required this.wildcardPosition,
+  });
+
+  /// Route that declared this Pattern.
+  final String routeId;
+
+  /// Original metadata retained for the authoritative conflict comparison.
+  final Map<String, Object?> pattern;
+
+  /// Type, authority and specificity tier shared by possible conflicts.
+  final _PatternConflictBucketKey bucketKey;
+
+  /// Fixed path segment values indexed by their zero-based position.
+  final Map<int, String> fixedSegments;
+
+  /// Dynamic, non-wildcard segment positions that may accept a fixed value.
+  final Set<int> dynamicPositions;
+
+  /// First wildcard position, or null when the Pattern has fixed length.
+  final int? wildcardPosition;
+}
+
+/// Inverted index for one same-type, same-authority, same-specificity tier.
+///
+/// The index is deliberately conservative: it can retain false-positive
+/// candidates, while the existing exact comparator remains authoritative.
+final class _WorkspacePatternConflictIndex {
+  /// Previously visited patterns in stable insertion order.
+  final List<_IndexedWorkspacePattern> _entries = [];
+
+  /// Entry IDs grouped by fixed segment position and value.
+  final Map<int, Map<String, Set<int>>> _fixedEntries = {};
+
+  /// Entry IDs grouped by dynamic segment position.
+  final Map<int, Set<int>> _dynamicEntries = {};
+
+  /// Entry IDs containing a wildcard that can consume later positions.
+  final Set<int> _wildcardEntries = {};
+
+  /// Returns prior entries that may match every fixed anchor in [pattern].
+  ///
+  /// Wildcard Patterns intentionally scan their complete priority tier because
+  /// the legacy comparator permits variable-length comparisons. Ordinary
+  /// Patterns use the rarest fixed segment as a safe candidate anchor.
+  Iterable<_IndexedWorkspacePattern> candidatesFor(
+    _IndexedWorkspacePattern pattern,
+  ) sync* {
+    if (pattern.wildcardPosition != null || pattern.fixedSegments.isEmpty) {
+      yield* _entries;
+      return;
+    }
+    Set<int>? smallestCandidateIds;
+    for (final anchor in pattern.fixedSegments.entries) {
+      final candidateIds = <int>{
+        ...?_fixedEntries[anchor.key]?[anchor.value],
+        ...?_dynamicEntries[anchor.key],
+      };
+      for (final entryId in _wildcardEntries) {
+        if (_entries[entryId].wildcardPosition! <= anchor.key) {
+          candidateIds.add(entryId);
+        }
+      }
+      if (smallestCandidateIds == null ||
+          candidateIds.length < smallestCandidateIds.length) {
+        smallestCandidateIds = candidateIds;
+      }
+      if (smallestCandidateIds.isEmpty) break;
+    }
+    for (final entryId in smallestCandidateIds ?? const <int>{}) {
+      yield _entries[entryId];
+    }
+  }
+
+  /// Adds [pattern] after it has been compared with all earlier candidates.
+  void add(_IndexedWorkspacePattern pattern) {
+    final entryId = _entries.length;
+    _entries.add(pattern);
+    for (final segment in pattern.fixedSegments.entries) {
+      _fixedEntries
+          .putIfAbsent(segment.key, () => {})
+          .putIfAbsent(segment.value, () => {})
+          .add(entryId);
+    }
+    for (final position in pattern.dynamicPositions) {
+      _dynamicEntries.putIfAbsent(position, () => {}).add(entryId);
+    }
+    if (pattern.wildcardPosition != null) {
+      _wildcardEntries.add(entryId);
+    }
+  }
+}
+
 /// Result of validating every generated component and route metadata document.
 final class CCRouteWorkspaceValidationResult {
   /// Creates an immutable validation result and aggregate documentation.
@@ -470,26 +578,93 @@ abstract final class CCRouteWorkspaceValidator {
   ) {
     final ordered = routes.toList()
       ..sort((first, second) => '${first['id']}'.compareTo('${second['id']}'));
-    for (var firstIndex = 0; firstIndex < ordered.length; firstIndex++) {
-      final firstRoute = ordered[firstIndex];
-      for (
-        var secondIndex = firstIndex + 1;
-        secondIndex < ordered.length;
-        secondIndex++
-      ) {
-        final secondRoute = ordered[secondIndex];
-        for (final firstPattern in _objects(firstRoute['patterns'])) {
-          for (final secondPattern in _objects(secondRoute['patterns'])) {
-            if (!_patternsConflict(firstPattern, secondPattern)) continue;
-            errors.add(
-              'Routes "${firstRoute['id']}" and "${secondRoute['id']}" '
-              'have ambiguous patterns "${_patternLabel(firstPattern)}" '
-              'and "${_patternLabel(secondPattern)}" with equal specificity.',
-            );
+    final indexes =
+        <_PatternConflictBucketKey, _WorkspacePatternConflictIndex>{};
+    for (final route in ordered) {
+      final routeId = '${route['id']}';
+      for (final pattern in _objects(route['patterns'])) {
+        final indexed = _indexPattern(routeId, pattern);
+        if (indexed == null) continue;
+        final index = indexes.putIfAbsent(
+          indexed.bucketKey,
+          _WorkspacePatternConflictIndex.new,
+        );
+        for (final candidate in index.candidatesFor(indexed)) {
+          if (candidate.routeId == routeId ||
+              !_patternsConflict(candidate.pattern, pattern)) {
+            continue;
           }
+          errors.add(
+            'Routes "${candidate.routeId}" and "$routeId" '
+            'have ambiguous patterns "${_patternLabel(candidate.pattern)}" '
+            'and "${_patternLabel(pattern)}" with equal specificity.',
+          );
         }
+        index.add(indexed);
       }
     }
+  }
+
+  /// Builds a conservative index shape for one validated metadata Pattern.
+  static _IndexedWorkspacePattern? _indexPattern(
+    String routeId,
+    Map<String, Object?> pattern,
+  ) {
+    final type = '${pattern['type']}';
+    if (type == 'CCRegexPattern') {
+      return _IndexedWorkspacePattern(
+        routeId: routeId,
+        pattern: pattern,
+        bucketKey: (type: type, scope: '${pattern['value']}', specificity: 0),
+        fixedSegments: const {},
+        dynamicPositions: const {},
+        wildcardPosition: null,
+      );
+    }
+    final template = '${pattern['value']}';
+    late final String scope;
+    late final List<String> segments;
+    if (type == 'CCUriPattern') {
+      final uri = Uri.tryParse(template);
+      if (uri == null) return null;
+      scope =
+          '${uri.scheme.toLowerCase()}://${uri.host.toLowerCase()}:${uri.port}';
+      segments = uri.path.isEmpty ? const [] : uri.pathSegments;
+    } else if (type == 'CCPathPattern') {
+      scope = '';
+      try {
+        segments = Uri.parse(template).pathSegments;
+      } on FormatException {
+        return null;
+      }
+    } else {
+      return null;
+    }
+    final fixedSegments = <int, String>{};
+    final dynamicPositions = <int>{};
+    int? wildcardPosition;
+    for (var position = 0; position < segments.length; position++) {
+      final segment = segments[position];
+      if (segment.startsWith('*')) {
+        wildcardPosition ??= position;
+      } else if (segment.startsWith(':')) {
+        dynamicPositions.add(position);
+      } else {
+        fixedSegments[position] = segment;
+      }
+    }
+    return _IndexedWorkspacePattern(
+      routeId: routeId,
+      pattern: pattern,
+      bucketKey: (
+        type: type,
+        scope: scope,
+        specificity: _templateSpecificity(segments, _constraints(pattern)),
+      ),
+      fixedSegments: fixedSegments,
+      dynamicPositions: dynamicPositions,
+      wildcardPosition: wildcardPosition,
+    );
   }
 
   /// Compares two metadata patterns using the runtime's same-tier rules.
