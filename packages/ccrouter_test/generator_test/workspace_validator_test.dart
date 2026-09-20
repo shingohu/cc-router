@@ -25,11 +25,12 @@ Map<String, Object?> document({
 Map<String, Object?> component(
   String id, {
   List<String> dependencies = const [],
+  List<String> optionalDependencies = const [],
 }) => {
   'id': id,
   'version': '1.0.0',
   'dependencies': dependencies,
-  'optionalDependencies': <String>[],
+  'optionalDependencies': optionalDependencies,
 };
 
 Map<String, Object?> route(
@@ -134,6 +135,111 @@ void main() {
     expect(result.markdownDocument, contains('Restoration: `unsupported`'));
     expect(jsonDecode(result.machineDocumentJson), isA<Map>());
   });
+
+  test('rejects missing required component dependencies', () {
+    final result = CCRouteWorkspaceValidator.validate([
+      document(
+        components: [
+          component('checkout', dependencies: ['orders']),
+        ],
+        routes: const [],
+      ),
+    ]);
+
+    expect(
+      result.errors,
+      contains('Component "checkout" requires missing "orders".'),
+    );
+  });
+
+  test('rejects required and optional self dependencies', () {
+    final result = CCRouteWorkspaceValidator.validate([
+      document(
+        components: [
+          component('orders', dependencies: ['orders']),
+          component('payments', optionalDependencies: ['payments']),
+        ],
+        routes: const [],
+      ),
+    ]);
+
+    expect(
+      result.errors,
+      containsAll([
+        'Component "orders" cannot depend on itself.',
+        'Component "payments" cannot depend on itself.',
+      ]),
+    );
+  });
+
+  test('rejects cycles across required and present optional dependencies', () {
+    final result = CCRouteWorkspaceValidator.validate([
+      document(
+        components: [
+          component('account', dependencies: ['orders']),
+          component('orders', optionalDependencies: ['payment']),
+          component('payment', dependencies: ['account']),
+        ],
+        routes: const [],
+      ),
+    ]);
+
+    expect(
+      result.errors,
+      contains(
+        'Component dependency cycle: account -> orders -> payment -> account.',
+      ),
+    );
+  });
+
+  test('ignores absent optional dependencies', () {
+    final result = CCRouteWorkspaceValidator.validate([
+      document(
+        components: [
+          component('orders', optionalDependencies: ['campaign']),
+        ],
+        routes: const [],
+      ),
+    ]);
+
+    expect(result.errors, isEmpty);
+    expect(
+      (result.machineDocument['components'] as List).map(
+        (component) => (component as Map)['id'],
+      ),
+      ['orders'],
+    );
+  });
+
+  test(
+    'orders present optional and required dependencies deterministically',
+    () {
+      final result = CCRouteWorkspaceValidator.validate([
+        document(
+          components: [
+            component(
+              'checkout',
+              dependencies: ['orders'],
+              optionalDependencies: ['analytics'],
+            ),
+            component('orders', dependencies: ['account']),
+            component('unrelated'),
+            component('analytics'),
+            component('account'),
+          ],
+          routes: const [],
+        ),
+      ]);
+
+      expect(result.errors, isEmpty);
+      expect(
+        (result.machineDocument['components'] as List).map(
+          (component) => (component as Map)['id'],
+        ),
+        ['account', 'analytics', 'orders', 'checkout', 'unrelated'],
+      );
+    },
+  );
 
   test('rejects unknown route owners', () {
     final result = CCRouteWorkspaceValidator.validate([

@@ -313,6 +313,34 @@ void main() {
   });
 
   test(
+    'component assembly matches workspace required and optional ordering',
+    () async {
+      final runtime = CCRouterRuntime.forTesting(
+        components: [
+          component(
+            'checkout',
+            dependencies: ['orders'],
+            optional: ['analytics'],
+          ),
+          component('orders', dependencies: ['account']),
+          component('unrelated'),
+          component('analytics'),
+          component('account'),
+        ],
+      );
+
+      expect(runtime.components.map((component) => component.id), [
+        'account',
+        'analytics',
+        'orders',
+        'checkout',
+        'unrelated',
+      ]);
+      await runtime.dispose();
+    },
+  );
+
+  test(
     'component registrars own route definitions and match constrained paths',
     () async {
       final runtime = CCRouterRuntime.forTesting(

@@ -30,10 +30,10 @@ final class CCRouteWorkspaceValidationResult {
 ///
 /// Use after route generation in CI. Local builders enforce declaration shape;
 /// this validator handles relationships that require seeing every component:
-/// unique IDs, declared owners, public-contract implementation ownership, and
-/// route pattern conflicts. Cross-Package import access is enforced by public
-/// barrels, Pub dependencies, and the Dart analyzer rather than a second
-/// allowlist.
+/// unique IDs, dependency graphs, declared owners, public-contract
+/// implementation ownership, and route pattern conflicts. Cross-Package import
+/// access is enforced by public barrels, Pub dependencies, and the Dart
+/// analyzer rather than a second allowlist.
 abstract final class CCRouteWorkspaceValidator {
   /// Validates decoded `.component.json` and `.route.json` documents and
   /// aggregates route docs.
@@ -95,6 +95,7 @@ abstract final class CCRouteWorkspaceValidator {
         );
       }
     }
+    final componentList = _validateAndOrderComponents(components, errors);
     for (final route in routes.values) {
       final routeId = '${route['id']}';
       final ownerId = '${route['componentId']}';
@@ -146,8 +147,6 @@ abstract final class CCRouteWorkspaceValidator {
     }
     _validatePatternConflicts(routes.values, errors);
     errors.sort();
-    final componentList = components.values.toList()
-      ..sort((left, right) => '${left['id']}'.compareTo('${right['id']}'));
     final routeList =
         routes.values.map((route) {
           final implementation = routeImplementations['${route['id']}'];
@@ -188,6 +187,69 @@ abstract final class CCRouteWorkspaceValidator {
   static List<String> _strings(Object? value) => value is List
       ? value.whereType<String>().toList(growable: false)
       : const [];
+
+  /// Validates the complete dependency graph and returns Runtime-aligned order.
+  ///
+  /// Required dependencies must exist. Optional dependencies are ignored when
+  /// absent and become ordinary ordering edges when present. The sorted DFS is
+  /// deliberately equivalent to Runtime component assembly: dependencies are
+  /// emitted before consumers, while otherwise unrelated IDs remain stable.
+  static List<Map<String, Object?>> _validateAndOrderComponents(
+    Map<String, Map<String, Object?>> components,
+    List<String> errors,
+  ) {
+    final dependenciesById = <String, List<String>>{};
+    final ids = components.keys.toList()..sort();
+    for (final id in ids) {
+      final component = components[id]!;
+      final required = _strings(component['dependencies']);
+      final optional = _strings(component['optionalDependencies']);
+      final all = <String>{...required, ...optional};
+      if (all.remove(id)) {
+        errors.add('Component "$id" cannot depend on itself.');
+      }
+      for (final dependency in required.toSet().toList()..sort()) {
+        if (!components.containsKey(dependency)) {
+          errors.add('Component "$id" requires missing "$dependency".');
+        }
+      }
+      dependenciesById[id] = all.where(components.containsKey).toList()..sort();
+    }
+
+    final visiting = <String>{};
+    final visited = <String>{};
+    final path = <String>[];
+    final reportedCycles = <String>{};
+    final orderedIds = <String>[];
+
+    void visit(String id) {
+      if (visited.contains(id)) return;
+      if (!visiting.add(id)) {
+        final cycleStart = path.indexOf(id);
+        final cycle = <String>[
+          ...path.sublist(cycleStart < 0 ? 0 : cycleStart),
+          id,
+        ];
+        final message = cycle.join(' -> ');
+        if (reportedCycles.add(message)) {
+          errors.add('Component dependency cycle: $message.');
+        }
+        return;
+      }
+      path.add(id);
+      for (final dependency in dependenciesById[id]!) {
+        visit(dependency);
+      }
+      path.removeLast();
+      visiting.remove(id);
+      if (visited.add(id)) orderedIds.add(id);
+    }
+
+    for (final id in ids) {
+      visit(id);
+    }
+    return orderedIds.map((id) => components[id]!).toList(growable: false);
+  }
 
   /// Resolves a public contract to a same-Package or cross-Package boundary.
   ///

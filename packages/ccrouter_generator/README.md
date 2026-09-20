@@ -209,8 +209,10 @@ fvm flutter analyze packages demo
 
 第二条命令聚合全部 `ccrouter_generated/metadata/**/*.component.json` 和
 `ccrouter_generated/metadata/**/*.route.json`，校验组件/路由 ID、路由所有者、
-契约 exposure 与声明形态是否一致、external 实现所有权、静态 Pattern 冲突，以及
+required dependency 缺失、自依赖、依赖环、契约 exposure 与声明形态是否一致、external
+实现所有权、静态 Pattern 冲突，以及
 所有非 internal 路由是否由公共 barrel 使用 `show` 同时导出 Route 和 Arguments 契约；
+不存在的 optional dependency 被忽略，存在时参与与 Runtime 一致的确定性拓扑排序；
 它会在扫描根目录的 `ccrouter_generated/metadata/` 下生成 `cc_routes.json` 和
 `cc_routes.md`。本仓库的扫描根目录是 `demo`，因此输出位于
 `demo/ccrouter_generated/metadata/`。也可以通过 `--output-dir <directory>` 指定其他

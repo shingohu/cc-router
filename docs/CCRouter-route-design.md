@@ -1438,6 +1438,11 @@ cc_routes.md
 当前元数据使用 schema v2：移除手写 `visibility/visibleTo`，改为记录由契约形态自动
 推导的 `exposure`。聚合器拒绝旧 schema，要求重新运行标准生成流程，避免新旧语义混用。
 
+Workspace 聚合器同时校验完整组件依赖图。required dependency 缺失、自依赖以及由
+required/optional dependency 共同形成的环都会让生成失败；不存在的 optional dependency
+不会阻断构建，存在时则参与环检测和顺序计算。`cc_routes.json` 中的组件按与 Runtime 装配一致的
+确定性拓扑顺序输出：依赖先于消费者，组件 ID 和依赖 ID 作为稳定排序依据。
+
 应用聚合元数据与组件级元数据统一位于项目根的 `ccrouter_generated/metadata/`；参与
 编译的 Dart 生成代码仍写入包内的 `lib/src/ccrouter_generated/`。生成文档不进入
 手写 `docs/`，避免机器产物与架构设计文档混合。

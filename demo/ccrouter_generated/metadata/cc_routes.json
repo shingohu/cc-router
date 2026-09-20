@@ -2,6 +2,18 @@
   "schemaVersion": 2,
   "components": [
     {
+      "id": "demo_order_component",
+      "version": "0.1.0",
+      "dependencies": [],
+      "optionalDependencies": []
+    },
+    {
+      "id": "demo_web_component",
+      "version": "0.1.0",
+      "dependencies": [],
+      "optionalDependencies": []
+    },
+    {
       "id": "demo_navigation_lab_component",
       "version": "0.1.0",
       "dependencies": [
@@ -11,23 +23,11 @@
       "optionalDependencies": []
     },
     {
-      "id": "demo_order_component",
-      "version": "0.1.0",
-      "dependencies": [],
-      "optionalDependencies": []
-    },
-    {
       "id": "demo_payment_component",
       "version": "0.1.0",
       "dependencies": [
         "demo_order_component"
       ],
-      "optionalDependencies": []
-    },
-    {
-      "id": "demo_web_component",
-      "version": "0.1.0",
-      "dependencies": [],
       "optionalDependencies": []
     }
   ],

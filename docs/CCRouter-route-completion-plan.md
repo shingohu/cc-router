@@ -127,6 +127,7 @@ BuildContext、Flutter Route、Scope、Extra 或返回 Completer。
 - [x] 隔离业务 barrel 与 Host/Adapter SPI，并以 API surface 快照测试锁定 hide/show 集合；
 - [x] 页面生成 glue 只返回 Route Definition，由 Host catalog 负责转换 Adapter-facing Route；
 - [x] 无 Failure Policy 时仍记录 request 创建前失败，并独立记录实际 Adapter capability 回退；
+- [x] Workspace 聚合前移校验 required 缺失、自依赖和依赖环，并按 Runtime 语义确定性排序；
 - [x] 支持显式集合 Query 和自定义 Query Codec；
 - [x] 完善继承参数、复杂构造器和导入分析；
 - [x] 路由文档增加组件、Shell、Outlet、来源和“当前不支持恢复”的能力视图；

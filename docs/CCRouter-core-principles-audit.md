@@ -5,11 +5,11 @@
 - 审查日期：2026-09-20
 - 审查范围：路由 Runtime、业务 Facade、Host/Adapter SPI、GoRouter Adapter、生成器、
   Demo、测试与诊断模型。
-- 自动化基线：`dart analyze` 通过；Framework 218 项、Demo 19 项、Generator 78 项测试通过；
+- 自动化基线：`dart analyze` 通过；Framework 219 项、Demo 19 项、Generator 83 项测试通过；
   最近一次 macOS debug build 和交互验证通过。
 - 总体结论：13 条约定的架构方向成立，但当前不能认定为全部对齐。没有阻断 Demo 的 P0
-  或 P1 问题；并发安全、retained diagnostics 数据边界和观察回调热路径已完成收口，仍有
-  4 项 P2 欠账。
+  或 P1 问题；并发安全、retained diagnostics 数据边界、观察回调热路径和组件依赖图前移校验
+  已完成收口，仍有 3 项 P2 欠账。
 
 本审查只记录事实和后续门槛，不因为某项容易实现就扩展公开 API。
 
@@ -23,7 +23,7 @@
 | 4 | 可扩展性 | 基本满足 | Core 使用中立 Route Definition；Catalog、Assembler、Adapter 与能力 SPI 分层。新后端可复用 Contract/Catalog；Host/Adapter 实现通过独立 `ccrouter_host.dart` 获取 SPI，业务 barrel 不再暴露该能力。 |
 | 5 | 可测试 | 基本满足 | Pure Dart Runtime/Memory Adapter、Flutter Adapter、生成器和 Demo 都有回归；`ccrouter_test` 已提供 Test Host。尚无正式性能、长时间运行和大规模路由表基准。 |
 | 6 | 最小公开 API | 基本满足 | Runtime、Scope、Memory Adapter、Host binding 以及 Adapter/Request/Capability/Backend 控制 SPI 已从业务 barrel 隐藏；Registrar 只拿到 `CCRegistry`，Host 组合根按需导入 `ccrouter_host.dart`。API surface 快照测试防止 SPI 意外回流。 |
-| 7 | 编译器校验与类型安全 | 部分满足 | 参数、Codec、Route ID、Pattern、Contract exposure、页面实现和 barrel 导出已有生成期校验。组件依赖缺失/环、拦截器/PopGuard 引用和 Adapter 能力主要仍在 Runtime 才失败。 |
+| 7 | 编译器校验与类型安全 | 部分满足 | 参数、Codec、Route ID、Pattern、Contract exposure、页面实现、barrel 导出和组件依赖图已有生成期校验。拦截器/PopGuard 引用和 Adapter 能力主要仍在 Runtime 才失败。 |
 | 8 | 非侵入式 | 满足 | 不要求页面基类或 Mixin，不保存全局 `BuildContext`；可继续使用应用自己的 `MaterialApp.router`/`GoRouter`；attached Adapter 不销毁应用 Router。 |
 | 9 | 可降级回退 | 基本满足 | 无法可靠降级的组合栈事务与精确 Entry 操作已从公开能力链删除，不再静默模拟。解析前失败始终进入 Failure 记录；实际采用 Runtime visibility 或 partition-local reconciliation 时产生独立 capability fallback 事件。 |
 | 10 | 明确生命周期 | 基本满足 | Runtime、Session、RouteEntry、Scope、Adapter、Backend 的 Owner 和销毁顺序明确，幂等与 pending Future 已有测试。组件 activate/deactivate 当前只覆盖 Route/Shell，完整 Service/Handler/Scope 生命周期仍按设计暂缓。 |
@@ -101,13 +101,13 @@
 - 两类事件都使用有界 history；Listener 通过 Runtime FIFO 队列异步分发，capability fallback 作为
   非终态诊断可在队列压力下丢弃，failure 终态保持 backpressure 语义。
 
-### P2-3 Workspace Validator 不校验组件依赖图
+### 已完成：P2-3 Workspace Validator 组件依赖图校验
 
-组件 metadata 已包含 `dependencies/optionalDependencies`，但 Workspace Validator 目前只输出它们；
-缺失依赖和依赖环仍由 Runtime 初始化发现。这类错误可以在聚合阶段前移。
-
-建议：在 Validator 中增加 missing required dependency、self dependency、cycle 和可选依赖排序校验，
-并复用 Runtime 的确定性拓扑规则测试向量。
+- required dependency 缺失、自依赖和 required/optional 混合依赖环在 Workspace 聚合阶段失败；
+- 不存在的 optional dependency 保持允许，存在时作为普通依赖边参与排序和环检测；
+- 聚合组件列表复用 Runtime 的确定性语义：组件 ID 与依赖 ID 均稳定排序，依赖先于消费者；
+- Generator 专项测试覆盖缺失、自依赖、混合环、optional 缺失和确定性拓扑顺序，避免构建期与
+  Runtime 初始化对同一合法依赖图产生不同装配顺序。
 
 ### P2-4 Host 聚合仍是第二条手动命令
 
