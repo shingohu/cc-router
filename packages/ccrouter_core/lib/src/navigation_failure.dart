@@ -1,15 +1,15 @@
 part of 'runtime.dart';
 
-/// Applies Host-owned recovery to sanitized navigation failures.
+/// Records sanitized navigation failures and applies optional Host recovery.
 extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
   /// Maximum number of fallback or redirect decisions in one failure chain.
   static const int _maxNavigationFailureRecoveries = 4;
 
-  /// Returns a bounded snapshot of sanitized navigation failure decisions.
+  /// Returns a bounded snapshot of sanitized navigation failure outcomes.
   List<CCNavigationFailureEvent> get recentNavigationFailures =>
       List.unmodifiable(_navigationFailures);
 
-  /// Subscribes to sanitized failure decisions.
+  /// Subscribes to sanitized failure outcomes.
   ///
   /// Terminal events are delivered by the bounded FIFO observer queue. The
   /// returned callback removes the listener and cancels its queued deliveries.
@@ -78,11 +78,6 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
               ));
         return suppressRecoveryResult ? null : result;
       } catch (error, stackTrace) {
-        final policy = navigationFailurePolicy;
-        if (policy == null) {
-          if (prepared == null) _discardNavigationObservation(navigationId);
-          rethrow;
-        }
         final context = CCNavigationFailureContext(
           navigationId: navigationId,
           operation: operation,
@@ -97,6 +92,12 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
           errorType: error.runtimeType.toString(),
           recoveryDepth: recoveryDepth,
         );
+        final policy = navigationFailurePolicy;
+        if (policy == null) {
+          _emitNavigationFailure(context, recovered: false);
+          if (prepared == null) _discardNavigationObservation(navigationId);
+          rethrow;
+        }
         late final CCNavigationFailureDecision decision;
         try {
           decision = await _runAsyncNavigationDecisionCallback(

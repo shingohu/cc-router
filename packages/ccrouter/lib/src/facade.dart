@@ -68,6 +68,15 @@ abstract final class CCRouter {
   static List<CCNavigationFailureEvent> get recentNavigationFailures =>
       _runtime.recentNavigationFailures;
 
+  /// Bounded snapshot of safe Adapter capability fallbacks used by navigation.
+  ///
+  /// Events identify only stable Route, Host, Outlet, capability, and behavior
+  /// values. They never retain concrete URI values, arguments, `extra`, Widget,
+  /// Navigator, or backend Route objects.
+  static List<CCNavigationCapabilityFallbackEvent>
+  get recentNavigationCapabilityFallbacks =>
+      _runtime.recentNavigationCapabilityFallbacks;
+
   /// Bounded evidence that a previous route state could have been restored.
   ///
   /// Events always report `unsupported`; they measure demand and contain no
@@ -136,13 +145,23 @@ abstract final class CCRouter {
     CCNavigationLifecycleListener listener,
   ) => _runtime.addNavigationListener(listener);
 
-  /// Subscribes to sanitized navigation failure decisions.
+  /// Subscribes to sanitized navigation failure outcomes.
   ///
   /// Use this at the application Host boundary for failure-rate telemetry. The
+  /// Runtime also reports failures when no recovery Policy is installed. The
   /// returned callback removes the listener, and listener failures are isolated.
   static void Function() addNavigationFailureListener(
     CCNavigationFailureListener listener,
   ) => _runtime.addNavigationFailureListener(listener);
+
+  /// Subscribes to safe Adapter capability fallback observations.
+  ///
+  /// Host diagnostics use this to measure incomplete Observer or backend
+  /// integration. Callbacks are asynchronous, cannot alter the fallback, and
+  /// are isolated from navigation results.
+  static void Function() addNavigationCapabilityFallbackListener(
+    CCNavigationCapabilityFallbackListener listener,
+  ) => _runtime.addNavigationCapabilityFallbackListener(listener);
 
   /// Subscribes to sanitized route-restoration demand observations.
   ///

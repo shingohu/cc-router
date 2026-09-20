@@ -101,6 +101,12 @@ extension CCRouterRuntimeRouteEntries on CCRouterRuntime {
     _emitRouteEntryTransition(entry, CCRouteEntryLifecycleState.pushed);
     _associateCommittedBackendEntry(entry);
     if (!_usesBackendVisibilityConfirmationFor(entry.request.hostId)) {
+      _emitNavigationCapabilityFallback(
+        entry.request,
+        capability: CCNavigationCapabilityType.backendVisibilityObservation,
+        behavior:
+            CCNavigationCapabilityFallbackBehavior.runtimeCommitVisibility,
+      );
       _hidePreviousRouteEntry(entry);
       _setRouteEntryVisible(entry, reason: 'runtimeCommit');
     }
@@ -220,6 +226,17 @@ extension CCRouterRuntimeRouteEntries on CCRouterRuntime {
     required String reason,
   }) {
     if (_usesManagedRemovalConfirmationFor(entry.request.hostId)) return;
+    final hasPartitionEntries = _routeEntries.any(
+      (candidate) => _sameRouteEntryPartition(candidate, entry),
+    );
+    if (hasPartitionEntries) {
+      _emitNavigationCapabilityFallback(
+        entry.request,
+        capability: CCNavigationCapabilityType.managedPopObservation,
+        behavior:
+            CCNavigationCapabilityFallbackBehavior.partitionLocalReconciliation,
+      );
+    }
     _removeRouteEntriesInPartition(
       reason: reason,
       hostId: entry.request.hostId,

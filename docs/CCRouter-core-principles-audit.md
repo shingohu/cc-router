@@ -5,11 +5,11 @@
 - 审查日期：2026-09-20
 - 审查范围：路由 Runtime、业务 Facade、Host/Adapter SPI、GoRouter Adapter、生成器、
   Demo、测试与诊断模型。
-- 自动化基线：`dart analyze` 通过；Framework 216 项、Demo 19 项、Generator 78 项测试通过；
+- 自动化基线：`dart analyze` 通过；Framework 218 项、Demo 19 项、Generator 78 项测试通过；
   最近一次 macOS debug build 和交互验证通过。
 - 总体结论：13 条约定的架构方向成立，但当前不能认定为全部对齐。没有阻断 Demo 的 P0
   或 P1 问题；并发安全、retained diagnostics 数据边界和观察回调热路径已完成收口，仍有
-  5 项 P2 欠账。
+  4 项 P2 欠账。
 
 本审查只记录事实和后续门槛，不因为某项容易实现就扩展公开 API。
 
@@ -25,9 +25,9 @@
 | 6 | 最小公开 API | 基本满足 | Runtime、Scope、Memory Adapter、Host binding 以及 Adapter/Request/Capability/Backend 控制 SPI 已从业务 barrel 隐藏；Registrar 只拿到 `CCRegistry`，Host 组合根按需导入 `ccrouter_host.dart`。API surface 快照测试防止 SPI 意外回流。 |
 | 7 | 编译器校验与类型安全 | 部分满足 | 参数、Codec、Route ID、Pattern、Contract exposure、页面实现和 barrel 导出已有生成期校验。组件依赖缺失/环、拦截器/PopGuard 引用和 Adapter 能力主要仍在 Runtime 才失败。 |
 | 8 | 非侵入式 | 满足 | 不要求页面基类或 Mixin，不保存全局 `BuildContext`；可继续使用应用自己的 `MaterialApp.router`/`GoRouter`；attached Adapter 不销毁应用 Router。 |
-| 9 | 可降级回退 | 部分满足 | 无法可靠降级的组合栈事务与精确 Entry 操作已从公开能力链删除，不再静默模拟。解析前失败和观察能力降级仍没有统一进入 failure/diagnostic 记录。 |
+| 9 | 可降级回退 | 基本满足 | 无法可靠降级的组合栈事务与精确 Entry 操作已从公开能力链删除，不再静默模拟。解析前失败始终进入 Failure 记录；实际采用 Runtime visibility 或 partition-local reconciliation 时产生独立 capability fallback 事件。 |
 | 10 | 明确生命周期 | 基本满足 | Runtime、Session、RouteEntry、Scope、Adapter、Backend 的 Owner 和销毁顺序明确，幂等与 pending Future 已有测试。组件 activate/deactivate 当前只覆盖 Route/Shell，完整 Service/Handler/Scope 生命周期仍按设计暂缓。 |
-| 11 | 可观测可诊断可溯源 | 基本满足 | navigationId、来源、Owner、阶段耗时、bounded history、Listener 异常隔离均已具备。Pending、RouteEntry、Backend history/ledger 已使用安全地址摘要，完整 URI/location 只留在即时 operational pipeline；剩余缺口是部分前置失败没有事件。 |
+| 11 | 可观测可诊断可溯源 | 基本满足 | navigationId、来源、Owner、阶段耗时、bounded history、Listener 异常隔离均已具备。Pending、RouteEntry、Backend history/ledger 已使用安全地址摘要，完整 URI/location 只留在即时 operational pipeline；request 创建前的解析/参数失败和实际能力回退也有独立安全事件。 |
 | 12 | 并发安全 | 基本满足 | 初始化/销毁、Session、Adapter 生命周期和导航并发策略已有确定语义，Defer/Timeout/Cancel 有回归。并发短路具有完整 Aspect 终态；Extra 请求明确独立执行；Interceptor、Policy、Guard、Aspect 和普通 Listener 统一使用 Zone 重入保护。 |
 | 13 | 性能和稳定 | 部分满足 | 热路径无反射，路由 ID 使用索引，缓存与观察队列有界，纯观察回调不再同步阻塞导航，错误不被吞掉。但没有 benchmark、内存增长门槛或版本对比；动态 URI 解析和 Workspace 扫描仍为线性全量工作。 |
 
@@ -86,14 +86,20 @@
   library 不需要也不能额外导入 Host SPI；
 - API surface 快照测试同时锁定业务隐藏集合、Host 导出集合和主要 SPI 类型可解析性。
 
-### P2-2 前置失败和能力降级的诊断不完整
+### 已完成：P2-2 前置失败和能力降级诊断
 
-当 Route resolution、参数准备或 `_ensureAdapterCapability` 在 request 创建前失败，且没有安装
-Failure Policy 时，调用方能收到标准错误，但 `recentNavigationFailures`、Lifecycle 和 Aspect 中没有
-统一的终态记录。Observer coverage 的安全降级也只有 capability 状态，没有一次明确事件。
-
-建议：增加不含 URI/Arguments 的 pre-dispatch failure envelope，记录 operation、routeId hint、stage、
-capability、error type 和 fallback outcome。
+- Route resolution、参数准备、拦截和 Adapter 失败无论是否安装 Failure Policy，都会进入有界
+  `CCNavigationFailureEvent`；事件只记录 navigation ID、operation、route ID hint、origin、stage、
+  error type、recovery depth 和是否恢复；
+- request 创建前无法可靠得到 Pattern、Placement、Owner 和 Host，因此不伪造 Lifecycle/Aspect
+  request；Failure Event 是该阶段的权威终态 envelope；
+- Observer 能力不足但可以保持语义时，独立记录
+  `CCNavigationCapabilityFallbackEvent`，区分 backend visibility 的 Runtime commit 回退和
+  managed removal 的 Host/Outlet partition-local reconciliation；
+- capability fallback 只在实际采用回退时记录，包含稳定 Route/Host/Outlet 与枚举，不包含 URI、
+  Arguments、Extra、Widget、Navigator 或 backend Route；
+- 两类事件都使用有界 history；Listener 通过 Runtime FIFO 队列异步分发，capability fallback 作为
+  非终态诊断可在队列压力下丢弃，failure 终态保持 backpressure 语义。
 
 ### P2-3 Workspace Validator 不校验组件依赖图
 

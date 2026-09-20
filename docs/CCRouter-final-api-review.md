@@ -103,13 +103,17 @@ Host/Adapter 的生命周期约束如下：
 以下观察面存在字段交集，但当前有不同消费者和生命周期，暂不合并：
 
 - `CCNavigationLifecycleEvent`：请求的 requested/completed/failed 终态摘要和有界历史。
+- `CCNavigationFailureEvent`：包括无 Failure Policy 时 request 创建前失败的安全终态 envelope。
+- `CCNavigationCapabilityFallbackEvent`：Adapter 观察能力不足时实际采用的安全回退行为。
 - `CCNavigationAspect`：全局 PV、来源、阶段耗时、到达、显示、隐藏和链路观察。
 - `CCRouteVisibilityEvent`：Managed RouteEntry 的 will/did show/hide 配对通知。
 - `CCRouteEntryLifecycleEvent`：Route Scope 从 resolving 到 disposed 的资源生命周期。
 - `CCPageLifecycleMixin` / `CCPageLifecycleListener`：Flutter PageRoute 当前性与 App 前后台回调。
 
 `completed` 对 Push 表示返回 Future 完成，不等于首次 Arrival；页面像素可见性也不能由
-PageShow/PageHide 推导。继续保持这些边界比合并成万能生命周期回调更安全。
+PageShow/PageHide 推导。request 创建前没有可信的 Pattern、Placement、Owner 或 Host，不能为
+Lifecycle/Aspect 伪造请求；该阶段由 Failure Event 承担。继续保持这些边界比合并成万能生命周期
+回调更安全。
 
 ## 7. 暂缓能力
 

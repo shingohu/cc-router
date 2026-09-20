@@ -758,9 +758,12 @@ Redirect/Fallback 未指定 `operation` 时继承原调用的栈操作，避免 
 超出后抛出 `CCNavigationFailureRecoveryLoopError`。Policy 必须返回 Decision，不能直接
 调用导航，避免重入和绕过循环检测。
 
-所有决策以 `CCNavigationFailureEvent` 进入有界诊断。Aspect 和普通 Navigation Lifecycle
-事件只暴露参数化的 `routePattern`，不再暴露实际 URI 值。Deep Link 命中但被路由策略
-禁用时使用独立 `CCDeepLinkRejectedError`，与真正未匹配的 `CCRouteNotFoundError` 区分。
+所有失败无论是否安装 Policy，都以 `CCNavigationFailureEvent` 进入有界诊断；`recovered`
+表示 Policy 是否选择 Redirect 或 Fallback。request 创建前无法可靠得到 Pattern、Placement、
+Owner 和 Host，因此该阶段不伪造 Lifecycle/Aspect request，Failure Event 是权威终态 envelope。
+Aspect 和普通 Navigation Lifecycle 只暴露已经解析出的参数化 `routePattern`，不再暴露实际 URI
+值。Deep Link 命中但被路由策略禁用时使用独立 `CCDeepLinkRejectedError`，与真正未匹配的
+`CCRouteNotFoundError` 区分。
 
 ### 11.4 重复导航与防抖策略
 
@@ -919,6 +922,12 @@ Shell 错误声明成普通 Route 的情况都会在初始化或注册阶段明�
 仍由 Route Presentation 描述，不能用 Shell 或 Outlet 代替展示语义。
 
 Adapter 初始化时声明能力集合。路由要求 Shell、指定 Page/Dialog Route 类型、透明页面、底部弹出、Dialog 或自定义转场而 Adapter 不支持时，初始化必须失败，不能静默降级。
+
+只有能够保持安全边界的观察能力允许显式回退：缺少完整 backend visibility observation 时，
+Runtime 在 commit 后维护 managed visibility；缺少 managed removal observation 时，Go/Open-Go
+只 reconcile 目标 Host/Outlet partition。每次实际采用回退都会产生有界、脱敏的
+`CCNavigationCapabilityFallbackEvent`，记录 Navigation/Route/Host/Outlet、缺失能力和最终行为，
+不记录 URI、Arguments、Extra 或 backend Route。空 partition 不产生 removal 回退事件。
 
 ### 12.2 自适应主从布局
 

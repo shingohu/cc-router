@@ -2623,6 +2623,130 @@ void main() {
   );
 
   test(
+    'failures are recorded without a recovery policy before request creation',
+    () async {
+      final observed = <CCNavigationFailureEvent>[];
+      final runtime = CCRouterRuntime.forTesting(
+        navigationAdapter: CCMemoryNavigationAdapter(),
+        navigationDiagnosticCapacity: 1,
+        components: [
+          routeComponent(
+            'orders',
+            (registry) => registry.registerRoute(pathRoute()),
+          ),
+        ],
+      );
+      runtime.initialize();
+      final removeListener = runtime.addNavigationFailureListener(observed.add);
+
+      await expectLater(
+        runtime.openRoute(Uri.parse('/missing/private?token=secret')),
+        throwsA(isA<CCRouteNotFoundError>()),
+      );
+      await expectLater(
+        runtime.goRoute(
+          const TestIntent<void>('orders.detail', RouteArgs('invalid')),
+        ),
+        throwsA(isA<CCRouteParameterError>()),
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      expect(runtime.recentNavigationFailures, hasLength(1));
+      expect(
+        runtime.recentNavigationFailures.single.context.stage,
+        CCNavigationFailureStage.parameters,
+      );
+      expect(observed, hasLength(2));
+      expect(observed.map((event) => event.context.operation), [
+        CCNavigationOperation.open,
+        CCNavigationOperation.go,
+      ]);
+      expect(observed.map((event) => event.context.routeId), [
+        null,
+        'orders.detail',
+      ]);
+      expect(observed.map((event) => event.context.stage), [
+        CCNavigationFailureStage.resolution,
+        CCNavigationFailureStage.parameters,
+      ]);
+      expect(observed.map((event) => event.context.errorType), [
+        'CCRouteNotFoundError',
+        'CCRouteParameterError',
+      ]);
+      expect(observed.every((event) => !event.recovered), isTrue);
+
+      removeListener();
+      await runtime.dispose();
+    },
+  );
+
+  test(
+    'capability fallbacks are bounded sanitized asynchronous observations',
+    () async {
+      final observed = <CCNavigationCapabilityFallbackEvent>[];
+      final runtime = CCRouterRuntime.forTesting(
+        navigationAdapter: CCMemoryNavigationAdapter(),
+        navigationDiagnosticCapacity: 1,
+        components: [
+          routeComponent(
+            'orders',
+            (registry) => registry.registerRoute(pathRoute()),
+          ),
+        ],
+      );
+      runtime.initialize();
+      final removeListener = runtime.addNavigationCapabilityFallbackListener(
+        observed.add,
+      );
+
+      await runtime.goRoute(
+        const TestIntent<void>('orders.detail', RouteArgs('1')),
+      );
+      await Future<void>.delayed(Duration.zero);
+      expect(
+        observed.single.capability,
+        CCNavigationCapabilityType.backendVisibilityObservation,
+      );
+      observed.clear();
+
+      await runtime.goRoute(
+        const TestIntent<void>('orders.detail', RouteArgs('42')),
+      );
+
+      expect(observed, isEmpty);
+      expect(runtime.recentNavigationCapabilityFallbacks, hasLength(1));
+      await Future<void>.delayed(Duration.zero);
+
+      expect(observed, hasLength(2));
+      expect(observed.map((event) => event.capability), [
+        CCNavigationCapabilityType.managedPopObservation,
+        CCNavigationCapabilityType.backendVisibilityObservation,
+      ]);
+      expect(observed.map((event) => event.behavior), [
+        CCNavigationCapabilityFallbackBehavior.partitionLocalReconciliation,
+        CCNavigationCapabilityFallbackBehavior.runtimeCommitVisibility,
+      ]);
+      expect(observed.map((event) => event.navigationId).toSet(), hasLength(1));
+      expect(
+        observed.every((event) => event.routeId == 'orders.detail'),
+        isTrue,
+      );
+      expect(observed.every((event) => event.hostId == 'default'), isTrue);
+      expect(
+        observed.every((event) => event.navigatorOutlet == 'root'),
+        isTrue,
+      );
+      expect(
+        runtime.recentNavigationCapabilityFallbacks.single.capability,
+        CCNavigationCapabilityType.backendVisibilityObservation,
+      );
+
+      removeListener();
+      await runtime.dispose();
+    },
+  );
+
+  test(
     'failure recovery is bounded and preserves one navigation identity',
     () async {
       final contexts = <CCNavigationFailureContext>[];

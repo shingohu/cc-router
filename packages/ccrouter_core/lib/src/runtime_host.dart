@@ -126,10 +126,11 @@ final class CCRouterRuntime {
 
   /// Maximum retained records in each bounded navigation diagnostic history.
   ///
-  /// The limit applies independently to lifecycle, failure, visibility, Route
-  /// Entry, Backend, and restoration histories. Active structural state is not
-  /// evicted by this value. Zero disables retained histories while live
-  /// listeners and navigation behavior remain active.
+  /// The limit applies independently to lifecycle, failure, capability
+  /// fallback, visibility, Route Entry, Backend, and restoration histories.
+  /// Active structural state is not evicted by this value. Zero disables
+  /// retained histories while live listeners and navigation behavior remain
+  /// active.
   final int navigationDiagnosticCapacity;
 
   /// Policy for overlapping requests with the same structured navigation key.
@@ -242,8 +243,12 @@ final class CCRouterRuntime {
   /// Bounded Runtime navigation lifecycle event buffer.
   final Queue<CCNavigationLifecycleEvent> _navigationEvents = Queue();
 
-  /// Bounded sanitized navigation failures and Host recovery decisions.
+  /// Bounded sanitized navigation failures and optional recovery outcomes.
   final Queue<CCNavigationFailureEvent> _navigationFailures = Queue();
+
+  /// Bounded records of safe behavior selected for missing Adapter capability.
+  final Queue<CCNavigationCapabilityFallbackEvent>
+  _navigationCapabilityFallbacks = Queue();
 
   /// Bounded evidence that a prior route state could have been restored.
   final Queue<CCRouteRestorationOpportunityEvent>
@@ -269,8 +274,12 @@ final class CCRouterRuntime {
   /// Subscribers receiving Runtime navigation lifecycle events.
   final Set<CCNavigationLifecycleListener> _navigationListeners = {};
 
-  /// Subscribers receiving sanitized Host failure decisions.
+  /// Subscribers receiving sanitized navigation failure outcomes.
   final Set<CCNavigationFailureListener> _navigationFailureListeners = {};
+
+  /// Subscribers receiving safe Adapter capability fallback observations.
+  final Set<CCNavigationCapabilityFallbackListener>
+  _navigationCapabilityFallbackListeners = {};
 
   /// Bounded backend Navigator observations collected from the adapter.
   final Queue<CCNavigationBackendDiagnosticEvent> _backendNavigationEvents =
@@ -1016,6 +1025,8 @@ final class CCRouterRuntime {
       _navigationEvents.clear();
       _navigationFailureListeners.clear();
       _navigationFailures.clear();
+      _navigationCapabilityFallbackListeners.clear();
+      _navigationCapabilityFallbacks.clear();
       _restorationOpportunityListeners.clear();
       _restorationOpportunityEvents.clear();
       _routeEntryListeners.clear();

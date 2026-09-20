@@ -180,7 +180,11 @@ abstract interface class CCNavigationFailurePolicy {
   );
 }
 
-/// Records one sanitized failure decision for diagnostics and telemetry.
+/// Records one sanitized failure and its recovery outcome.
+///
+/// Runtime emits this event even when no [CCNavigationFailurePolicy] is
+/// installed, so route resolution and parameter failures that happen before a
+/// complete navigation request still have one terminal diagnostic envelope.
 final class CCNavigationFailureEvent {
   /// Creates an immutable failure event.
   const CCNavigationFailureEvent({
@@ -189,21 +193,24 @@ final class CCNavigationFailureEvent {
     required this.recovered,
   });
 
-  /// Sanitized context presented to the Host policy.
+  /// Sanitized context optionally presented to the Host policy.
   final CCNavigationFailureContext context;
 
-  /// Whether the policy selected redirect or fallback recovery.
+  /// Whether a policy selected redirect or fallback recovery.
+  ///
+  /// This remains false when no policy exists, the policy propagates, the
+  /// policy fails, or the bounded recovery limit is reached.
   final bool recovered;
 
-  /// Wall-clock time at which Runtime completed the policy decision.
+  /// Wall-clock time at which Runtime finalized the failure outcome.
   final DateTime timestamp;
 }
 
-/// Receives sanitized navigation failure decisions.
+/// Receives sanitized navigation failure outcomes.
 ///
 /// Runtime delivers this terminal observation in FIFO order on a later
 /// event-loop turn and preserves it during queue pressure. Listeners must
 /// remain observational and must not start navigation. Use the Failure Policy
-/// decision itself when the Host needs a redirect or fallback.
+/// itself when the Host needs to select a redirect or fallback.
 typedef CCNavigationFailureListener =
     void Function(CCNavigationFailureEvent event);

@@ -1,9 +1,12 @@
+import 'navigation.dart';
+
 /// Immutable capability declaration for one navigation backend.
 ///
 /// Hosts use this snapshot during composition and diagnostics to understand
 /// which backend semantics are available. A capability does not grant access
-/// to the adapter or change business navigation APIs; Runtime integration may
-/// use it later to reject unsupported requests or select an explicit fallback.
+/// to the adapter or change business navigation APIs. Runtime rejects static
+/// structures whose semantics cannot be preserved and records an explicit
+/// fallback event when a documented safe behavior is selected.
 final class CCNavigationAdapterCapabilities {
   /// Creates a capability snapshot with conservative false defaults.
   const CCNavigationAdapterCapabilities({
@@ -64,3 +67,82 @@ abstract interface class CCNavigationHostCapabilitySource {
   /// Returns capabilities for [hostId], or null when that Host is unavailable.
   CCNavigationAdapterCapabilities? capabilitiesForHost(String hostId);
 }
+
+/// Identifies an optional backend capability whose absence selected a fallback.
+///
+/// These values describe behavior differences that preserve navigation safety;
+/// unsupported route structures that cannot preserve semantics still fail
+/// Adapter initialization instead of producing a fallback event.
+enum CCNavigationCapabilityType {
+  /// Exact backend callbacks cannot confirm the current managed Route Entry.
+  backendVisibilityObservation,
+
+  /// Exact backend callbacks cannot confirm managed Route Entry removals.
+  managedPopObservation,
+}
+
+/// Identifies the safe Runtime behavior selected for a missing capability.
+enum CCNavigationCapabilityFallbackBehavior {
+  /// Runtime marks the committed managed Entry visible immediately.
+  ///
+  /// This preserves usable page lifecycle for adapters without complete
+  /// Navigator observer coverage, but it cannot prove backend arrival timing.
+  runtimeCommitVisibility,
+
+  /// Runtime reconciles only the target Host and Outlet partition.
+  ///
+  /// This is used for declarative Go operations when the backend cannot report
+  /// exact managed removals. Other Hosts, panes, and Shell Outlets are retained.
+  partitionLocalReconciliation,
+}
+
+/// Sanitized record of one navigation that used a capability fallback.
+///
+/// Use this event to measure real fallback usage before requiring stronger
+/// Adapter integration. It intentionally contains no URI, Path/Query values,
+/// typed arguments, `extra`, backend Route object, or Pop result.
+final class CCNavigationCapabilityFallbackEvent {
+  /// Creates an immutable capability fallback observation.
+  const CCNavigationCapabilityFallbackEvent({
+    required this.navigationId,
+    required this.operation,
+    required this.routeId,
+    required this.hostId,
+    required this.navigatorOutlet,
+    required this.capability,
+    required this.behavior,
+    required this.timestamp,
+  });
+
+  /// Runtime navigation identity shared with other sanitized diagnostics.
+  final String navigationId;
+
+  /// Stack operation whose execution required the fallback.
+  final CCNavigationOperation operation;
+
+  /// Stable route contract identity without concrete address values.
+  final String routeId;
+
+  /// Concrete Host whose backend capability was unavailable.
+  final String hostId;
+
+  /// Navigator Outlet isolated by the fallback behavior.
+  final String navigatorOutlet;
+
+  /// Optional backend capability that was unavailable.
+  final CCNavigationCapabilityType capability;
+
+  /// Safe behavior selected instead of the unavailable capability.
+  final CCNavigationCapabilityFallbackBehavior behavior;
+
+  /// Wall-clock time at which Runtime selected the fallback.
+  final DateTime timestamp;
+}
+
+/// Receives sanitized capability fallback observations.
+///
+/// Runtime delivers callbacks in FIFO order on a later event-loop turn. These
+/// non-terminal diagnostics may be dropped under observer queue pressure;
+/// listeners must not start navigation or alter the selected fallback.
+typedef CCNavigationCapabilityFallbackListener =
+    void Function(CCNavigationCapabilityFallbackEvent event);
