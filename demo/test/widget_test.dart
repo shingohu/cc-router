@@ -212,10 +212,8 @@ void main() {
     expect(find.text('docs.flutter.dev'), findsWidgets);
     expect(find.text('WebView 平台未加载，但路由参数已验证'), findsOneWidget);
     expect(CCRouter.activeRouteEntries.last.routeId, DemoPublicWebRoute.id);
-    expect(
-      CCRouter.activeRouteEntries.last.normalizedUri.queryParameters['url'],
-      'https://docs.flutter.dev/ui/navigation',
-    );
+    expect(CCRouter.activeRouteEntries.last.address.routePattern, '/web');
+    expect(CCRouter.activeRouteEntries.last.address.hasQueryParameters, isTrue);
     await tester.tap(find.byTooltip('返回'));
     await tester.pumpAndSettle();
     expect(find.text('CCRouter Lab'), findsOneWidget);
@@ -248,12 +246,12 @@ void main() {
     expect(find.textContaining('runtime-only'), findsNothing);
     expect(CCRouter.activeRouteEntries.last.routeId, DemoPrivateWebRoute.id);
     expect(
-      CCRouter.activeRouteEntries.last.normalizedUri.toString(),
+      CCRouter.activeRouteEntries.last.address.routePattern,
       '/web/private',
     );
     expect(
-      CCRouter.activeRouteEntries.last.normalizedUri.toString(),
-      isNot(contains('runtime-only')),
+      CCRouter.activeRouteEntries.last.address.hasQueryParameters,
+      isFalse,
     );
 
     await _unmountDemo(tester);
@@ -583,10 +581,7 @@ void main() {
       find.textContaining('owner=navigation_lab · revision=3'),
       findsOneWidget,
     );
-    expect(
-      CCRouter.activeRouteEntries.last.normalizedUri.toString(),
-      '/lab/extra',
-    );
+    expect(CCRouter.activeRouteEntries.last.address.routePattern, '/lab/extra');
     await tester.tap(find.text('关闭'));
     await tester.pumpAndSettle();
 

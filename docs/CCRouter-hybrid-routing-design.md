@@ -43,11 +43,12 @@ Foreign UI 默认不创建 CCRouter RouteEntry，不创建 Route Scope，也不�
 ## 3. Backend Entry 台账
 
 Adapter 和 Runtime 之间增加适配器中立的后端条目模型。当前已提供不可变的
-`CCBackendEntry` 台账快照，并通过 `CCRouter.backendEntries` 和
+内部 `_BackendEntryRecord` identity 台账，并通过安全的 `CCBackendEntrySnapshot` 和
+`CCRouter.backendEntries`、
 `CCRouter.activeBackendEntries` 提供诊断访问：
 
 ```text
-CCBackendEntry
+CCBackendEntrySnapshot
 ├── backendEntryId
 ├── owner: managed | foreign | opaque
 ├── routeEntryId?
@@ -55,7 +56,7 @@ CCBackendEntry
 ├── routeId?
 ├── hostId
 ├── navigatorOutlet
-├── location?
+├── address: routePattern + parameter presence
 ├── lifecycleState
 └── visibilityState: visible | hidden | unknown
 ```
@@ -68,6 +69,7 @@ CCBackendEntry
 - Backend Entry 是否仍在栈内与是否为 Outlet 当前页是两个独立维度；
 - 只有明确关联到 `routeEntryId` 的条目才能关闭 Route Scope；
 - 未知外部 Push/Pop 不得默认清空或删除 Managed 栈。
+- Adapter 提供的完整 URI/location 只在原始事件回调中即时消费，不写入 Backend history 或 ledger。
 
 ## 4. Backend 事件关联
 
@@ -166,7 +168,9 @@ Foreign/Opaque 变化通过事件身份和 Bridge 隔离，不以一个宽泛 Ca
 
 ## 9. 多 Host 与自适应布局
 
-当前 `hostId` 已进入 `CCNavigationRequest`、`CCRouteEntrySnapshot`、`CCBackendEntry`、后端事件和诊断记录。`CCNavigationHostRegistry` 将默认 Placement 动态解析到活动 Host，同时保持显式 Host 路由固定归属。
+当前 `hostId` 已进入 `CCNavigationRequest`、`CCRouteEntrySnapshot`、
+`CCBackendEntrySnapshot`、后端事件和诊断记录。`CCNavigationHostRegistry` 将默认 Placement
+动态解析到活动 Host，同时保持显式 Host 路由固定归属。
 
 不同 Navigation Host 的导航栈相互隔离。一个 Host 可以填满 Flutter View，也可以表示
 同一 View 内的嵌入式独立 Router；折叠屏 Pane 继续使用同一 Host 下的 Outlet，而不是
@@ -185,7 +189,7 @@ Adaptive Layout 决定。Host 卸载只销毁该 Host 的 Managed Entry 和 Scop
 
 ### 阶段二：Backend Entry 台账
 
-- [x] 增加 `CCBackendEntry`；
+- [x] 增加内部 Backend Entry identity 台账和安全的 `CCBackendEntrySnapshot`；
 - [x] 增加 Managed/Foreign/Opaque 所有权；
 - [x] 增加 `backendEntryId`、操作 ID 和事件序列；
 - [x] Runtime 默认仅将身份事件写入台账；只有声明支持 Managed Pop 观察且带完整 identity

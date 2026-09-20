@@ -24,6 +24,7 @@ export 'src/navigation_restoration_diagnostics.dart';
 export 'src/navigation_telemetry.dart';
 export 'src/route.dart';
 export 'src/route_annotation.dart';
+export 'src/route_diagnostics.dart';
 export 'src/route_entry.dart';
 export 'src/route_pattern.dart';
 export 'src/route_placement.dart';

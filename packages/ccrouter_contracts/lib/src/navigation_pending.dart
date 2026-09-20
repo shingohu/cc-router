@@ -1,4 +1,5 @@
 import 'navigation.dart';
+import 'route_diagnostics.dart';
 
 /// Public snapshot of a navigation paused by an external application policy.
 ///
@@ -11,7 +12,7 @@ final class CCPendingNavigation {
     required this.navigationId,
     required this.operation,
     required this.routeId,
-    required this.uri,
+    required this.address,
     required this.origin,
     required this.openMode,
     required this.source,
@@ -28,8 +29,11 @@ final class CCPendingNavigation {
   /// Stable resolved route ID.
   final String routeId;
 
-  /// Normalized URI of the paused target.
-  final Uri uri;
+  /// Sanitized target address retained for host UI and diagnostics.
+  ///
+  /// Runtime keeps the concrete URI privately so resume can repeat resolution;
+  /// this public value cannot reveal Path, Query, or Fragment values.
+  final CCRouteAddressSummary address;
 
   /// Trusted ingress classification retained for policy checks.
   final CCNavigationOrigin origin;

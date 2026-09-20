@@ -164,6 +164,8 @@ final class BackendEventNavigationAdapter
     String? routeId,
     CCBackendEntryOwner? owner,
     int? sequence,
+    Uri? uri,
+    String? location,
     String hostId = 'default',
     String navigatorOutlet = 'root',
     String? shellId,
@@ -176,6 +178,7 @@ final class BackendEventNavigationAdapter
       previousBackendEntryId: previousBackendEntryId,
       navigationId: navigationId,
       routeId: routeId,
+      uri: uri,
       owner: owner,
       sequence: sequence,
       hostId: hostId,
@@ -185,7 +188,7 @@ final class BackendEventNavigationAdapter
         shellId: shellId,
         navigatorOutlet: navigatorOutlet,
       ),
-      location: 'foreign:${kind.name}',
+      location: location ?? 'foreign:${kind.name}',
     );
     for (final listener in listeners.toList()) {
       listener(event);
@@ -384,7 +387,7 @@ void main() {
             owner: CCBackendEntryOwner.foreign,
             hostId: 'window-a',
             navigatorOutlet: 'root',
-            location: '/external',
+            location: '/external/customer-42?token=secret-token#private',
           ),
           CCNavigationBackendEntrySnapshot(
             backendEntryId: 'window-b-detail',
@@ -415,7 +418,107 @@ void main() {
         runtime.backendEntriesFor(navigatorOutlet: 'detail').single.hostId,
         'window-b',
       );
+      final sanitized = runtime.backendEntries.first.address;
+      expect(sanitized.routePattern, isNull);
+      expect(sanitized.hasQueryParameters, isTrue);
+      expect(sanitized.hasFragment, isTrue);
       expect(runtime.recentBackendNavigationEvents, isEmpty);
+      await runtime.dispose();
+    },
+  );
+
+  test(
+    'retained diagnostics summarize addresses without parameter values',
+    () async {
+      const pathValue = '42001';
+      const queryValue = 'secret-token';
+      const fragmentValue = 'private-fragment';
+      var authorized = false;
+      final adapter = BackendEventNavigationAdapter();
+      final runtime = CCRouterRuntime.forTesting(
+        navigationAdapter: adapter,
+        components: [
+          routeComponent('orders', (registry) {
+            registry.registerRouteInterceptor(
+              'orders.auth',
+              TestNavigationInterceptor(
+                'orders.auth',
+                (_) => authorized
+                    ? const CCNavigationProceed()
+                    : const CCNavigationDefer(code: 'login_required'),
+                [],
+              ),
+            );
+            registry.registerRoute(
+              pathRoute(interceptorIds: const ['orders.auth']),
+            );
+          }),
+        ],
+      );
+      runtime.initialize();
+
+      final deferred = runtime.pushRoute<String>(
+        const TestIntent<String>(
+          'orders.detail',
+          RouteArgs(pathValue, tab: queryValue),
+        ),
+      );
+      await Future<void>.delayed(Duration.zero);
+      final pending = runtime.pendingNavigations.single;
+      expect(pending.address.routePattern, '/orders/:value');
+      expect(pending.address.hasPathParameters, isTrue);
+      expect(pending.address.hasQueryParameters, isTrue);
+      final deferredFailure = expectLater(
+        deferred,
+        throwsA(isA<CCRouteCancelledError>()),
+      );
+      runtime.cancelPendingNavigation(pending.navigationId);
+      await deferredFailure;
+
+      authorized = true;
+      final pushed = runtime.pushRoute<String>(
+        const TestIntent<String>(
+          'orders.detail',
+          RouteArgs(pathValue, tab: queryValue),
+        ),
+      );
+      await Future<void>.delayed(Duration.zero);
+      final routeEntry = runtime.activeRouteEntries.single;
+      final sensitiveUri = Uri.parse(
+        '/orders/$pathValue?tab=$queryValue#$fragmentValue',
+      );
+      adapter.emit(
+        CCNavigationBackendEventKind.push,
+        backendEntryId: 'managed-sensitive-entry',
+        navigationId: routeEntry.navigationId,
+        routeId: routeEntry.routeId,
+        owner: CCBackendEntryOwner.managed,
+        uri: sensitiveUri,
+        location: sensitiveUri.toString(),
+      );
+
+      final backendEvent = runtime.recentBackendNavigationEvents.single;
+      final backendEntry = runtime.backendEntries.single;
+      for (final address in [
+        routeEntry.address,
+        runtime.recentRouteEntryEvents.last.entry.address,
+        runtime.recentRouteVisibilityEvents.last.entry.address,
+        backendEvent.address,
+        backendEntry.address,
+      ]) {
+        expect(address.routePattern, '/orders/:value');
+        expect(address.hasPathParameters, isTrue);
+        expect(address.toString(), isNot(contains(pathValue)));
+        expect(address.toString(), isNot(contains(queryValue)));
+        expect(address.toString(), isNot(contains(fragmentValue)));
+      }
+      expect(backendEvent.address.hasQueryParameters, isTrue);
+      expect(backendEvent.address.hasFragment, isTrue);
+      expect(backendEntry.address.hasQueryParameters, isTrue);
+      expect(backendEntry.address.hasFragment, isTrue);
+
+      runtime.popRoute();
+      expect(await pushed, isNull);
       await runtime.dispose();
     },
   );
@@ -513,7 +616,7 @@ void main() {
         ],
       );
       runtime.initialize();
-      final observed = <CCNavigationBackendEvent>[];
+      final observed = <CCNavigationBackendDiagnosticEvent>[];
       runtime.addBackendNavigationListener(observed.add);
 
       await runtime.goRoute(
@@ -678,7 +781,7 @@ void main() {
       navigationAdapter: adapter,
     );
     runtime.initialize();
-    final observed = <CCNavigationBackendEvent>[];
+    final observed = <CCNavigationBackendDiagnosticEvent>[];
     runtime.addBackendNavigationListener(observed.add);
 
     for (var index = 0; index < 2; index++) {
@@ -2551,10 +2654,10 @@ void main() {
       expect(await pushed, isNull);
       expect(adapter.stack.length, 2);
       expect(adapter.currentRequest?.operation, CCNavigationOperation.replace);
-      expect(
-        runtime.activeRouteEntries.map((entry) => entry.normalizedUri.path),
-        ['/orders/1', '/orders/3'],
-      );
+      expect(adapter.stack.map((entry) => entry.uri.path), [
+        '/orders/1',
+        '/orders/3',
+      ]);
 
       runtime.popRoute(result: 'replacement-result');
       expect(await replaced, 'replacement-result');
@@ -2583,10 +2686,11 @@ void main() {
       expect(pendingCompleted, isFalse);
       expect(adapter.stack, hasLength(3));
       expect(runtime.canPopRoute(), isTrue);
-      expect(
-        runtime.activeRouteEntries.map((entry) => entry.normalizedUri.path),
-        ['/orders/5', '/orders/6', '/orders/7'],
-      );
+      expect(adapter.stack.map((entry) => entry.uri.path), [
+        '/orders/5',
+        '/orders/6',
+        '/orders/7',
+      ]);
       runtime.popRoute();
       runtime.popRoute(result: 'preserved');
       expect(await pendingBeforeExternalOpen, 'preserved');
@@ -2603,7 +2707,7 @@ void main() {
       expect(adapter.stack.single.operation, CCNavigationOperation.open);
       expect(adapter.currentRequest?.openMode, CCDeepLinkOpenMode.go);
       expect(runtime.canPopRoute(), isFalse);
-      expect(runtime.activeRouteEntries.single.normalizedUri.path, '/orders/9');
+      expect(adapter.currentRequest?.uri.path, '/orders/9');
       await runtime.dispose();
     },
   );
@@ -3283,7 +3387,7 @@ void main() {
       const TestIntent<void>('orders.detail', RouteArgs('42')),
     );
     await reentryExpectation;
-    expect(runtime.activeRouteEntries.single.normalizedUri.path, '/orders/42');
+    expect(runtime.activeRouteEntries.single.routeId, 'orders.detail');
     await runtime.dispose();
   });
 
@@ -3321,7 +3425,7 @@ void main() {
       const TestIntent<void>('orders.detail', RouteArgs('42')),
     );
     await reentryExpectation;
-    expect(runtime.activeRouteEntries.single.normalizedUri.path, '/orders/42');
+    expect(runtime.activeRouteEntries.single.routeId, 'orders.detail');
     await runtime.dispose();
   });
 
@@ -3360,7 +3464,8 @@ void main() {
       expect(runtime.pendingNavigations, hasLength(1));
       final pending = runtime.pendingNavigations.single;
       expect(pending.routeId, 'orders.detail');
-      expect(pending.uri.path, '/orders/42');
+      expect(pending.address.routePattern, '/orders/:value');
+      expect(pending.address.hasPathParameters, isTrue);
       expect(pending.origin, CCNavigationOrigin.internal);
       expect(pending.navigationId, isNotEmpty);
 

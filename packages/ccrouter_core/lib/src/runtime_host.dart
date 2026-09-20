@@ -273,10 +273,11 @@ final class CCRouterRuntime {
   final Set<CCNavigationFailureListener> _navigationFailureListeners = {};
 
   /// Bounded backend Navigator observations collected from the adapter.
-  final Queue<CCNavigationBackendEvent> _backendNavigationEvents = Queue();
+  final Queue<CCNavigationBackendDiagnosticEvent> _backendNavigationEvents =
+      Queue();
 
   /// Backend route identities observed by the Runtime ledger.
-  final Map<String, CCBackendEntry> _backendEntries = {};
+  final Map<String, _BackendEntryRecord> _backendEntries = {};
 
   /// Adapter operation IDs already reconciled by the backend ledger.
   final Set<String> _processedBackendOperations = {};
@@ -288,7 +289,8 @@ final class CCRouterRuntime {
   final Set<String> _desynchronizedBackendHosts = {};
 
   /// Subscribers receiving backend Navigator observations.
-  final Set<CCNavigationBackendEventListener> _backendNavigationListeners = {};
+  final Set<CCNavigationBackendDiagnosticListener> _backendNavigationListeners =
+      {};
 
   /// Removes the Runtime subscription from the adapter backend event source.
   void Function()? _backendNavigationRemover;

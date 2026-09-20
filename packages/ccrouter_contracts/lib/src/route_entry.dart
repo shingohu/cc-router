@@ -1,4 +1,5 @@
 import 'navigation.dart';
+import 'route_diagnostics.dart';
 import 'route_placement.dart';
 
 /// Describes the lifecycle of one concrete navigation entry.
@@ -46,7 +47,7 @@ final class CCRouteEntrySnapshot {
     required this.routeId,
     required this.ownerComponentId,
     required this.hostId,
-    required this.normalizedUri,
+    required this.address,
     required this.placement,
     required this.origin,
     required this.lifecycleState,
@@ -70,8 +71,11 @@ final class CCRouteEntrySnapshot {
   /// and is therefore safe for multi-Host isolation and diagnostics.
   final String hostId;
 
-  /// Canonical or normalized URI used to create this entry.
-  final Uri normalizedUri;
+  /// Sanitized address metadata for this Entry.
+  ///
+  /// The concrete URI remains Runtime-owned because active and historical
+  /// snapshots are commonly exported to logs or telemetry.
+  final CCRouteAddressSummary address;
 
   /// Shell, parent, and Navigator Outlet placement for this entry.
   final CCRoutePlacement placement;

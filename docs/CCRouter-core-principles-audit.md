@@ -5,11 +5,11 @@
 - 审查日期：2026-09-20
 - 审查范围：路由 Runtime、业务 Facade、Host/Adapter SPI、GoRouter Adapter、生成器、
   Demo、测试与诊断模型。
-- 自动化基线：`dart analyze` 通过；Framework 208 项、Demo 19 项、Generator 78 项测试通过；
+- 自动化基线：`dart analyze` 通过；Framework 209 项、Demo 19 项、Generator 78 项测试通过；
   最近一次 macOS debug build 和交互验证通过。
 - 总体结论：13 条约定的架构方向成立，但当前不能认定为全部对齐。没有阻断 Demo 的 P0
-  问题；并发 Observation、Extra 去重和回调重入 3 项正确性问题已完成收口，仍存在 2 项 P1
-  和 6 项 P2 欠账，应在冻结路由公开 API 前继续处理 P1。
+  问题；并发安全和 retained diagnostics 数据边界已完成收口，仍存在 1 项 P1 和 6 项 P2
+  欠账，应在冻结路由公开 API 前继续处理 P1。
 
 本审查只记录事实和后续门槛，不因为某项容易实现就扩展公开 API。
 
@@ -27,7 +27,7 @@
 | 8 | 非侵入式 | 满足 | 不要求页面基类或 Mixin，不保存全局 `BuildContext`；可继续使用应用自己的 `MaterialApp.router`/`GoRouter`；attached Adapter 不销毁应用 Router。 |
 | 9 | 可降级回退 | 部分满足 | 无法可靠降级的组合栈事务与精确 Entry 操作已从公开能力链删除，不再静默模拟。解析前失败和观察能力降级仍没有统一进入 failure/diagnostic 记录。 |
 | 10 | 明确生命周期 | 基本满足 | Runtime、Session、RouteEntry、Scope、Adapter、Backend 的 Owner 和销毁顺序明确，幂等与 pending Future 已有测试。组件 activate/deactivate 当前只覆盖 Route/Shell，完整 Service/Handler/Scope 生命周期仍按设计暂缓。 |
-| 11 | 可观测可诊断可溯源 | 部分满足 | navigationId、来源、Owner、阶段耗时、bounded history、Listener 异常隔离均已具备。RouteEntry、Backend 和 Pending 快照仍可能保留完整 URI/location；部分前置失败没有事件。 |
+| 11 | 可观测可诊断可溯源 | 基本满足 | navigationId、来源、Owner、阶段耗时、bounded history、Listener 异常隔离均已具备。Pending、RouteEntry、Backend history/ledger 已使用安全地址摘要，完整 URI/location 只留在即时 operational pipeline；剩余缺口是部分前置失败没有事件。 |
 | 12 | 并发安全 | 基本满足 | 初始化/销毁、Session、Adapter 生命周期和导航并发策略已有确定语义，Defer/Timeout/Cancel 有回归。并发短路具有完整 Aspect 终态；Extra 请求明确独立执行；Interceptor、Policy、Guard、Aspect 和普通 Listener 统一使用 Zone 重入保护。 |
 | 13 | 性能和稳定 | 未形成量化闭环 | 热路径无反射，路由 ID 使用索引，缓存有界，错误不被吞掉。但没有 benchmark、内存增长门槛或版本对比；动态 URI 解析和 Workspace 扫描仍为线性全量工作，观察回调同步阻塞导航。 |
 
@@ -45,21 +45,20 @@
   `CCNavigationReentrancyError`；
 - 专项测试覆盖拒绝、共享、Extra 独立执行、Interceptor 重入和 Listener 重入。
 
-### P1-1 Retained diagnostics 仍包含完整 URI/location
+### 已完成：P1-1 Retained diagnostics 数据边界
 
-以下公开或有界历史会保存参数值：
-
-- `CCPendingNavigation.uri`；
-- `CCRouteEntrySnapshot.normalizedUri`，以及包含该快照的 Visibility/Entry 事件；
-- `CCNavigationBackendEvent.uri/location`；
-- `CCBackendEntry.location`。
-
-这些字段可能包含 Query、Path 用户标识或第三方 RouteSettings 内容，与“日志/诊断默认不记录完整
-URI”不一致。
-
-建议：拆分 operational snapshot 与 sanitized diagnostic snapshot。栈 predicate 所需 URI 只留在
-Runtime/Adapter 控制面；业务诊断默认只暴露 routeId、routePattern、Host/Outlet 和参数 presence。
-确需原始位置时使用 Host-only、即时读取、显式 opt-in，且不得进入 retained history。
+- `CCPendingNavigation` 和 `CCRouteEntrySnapshot` 只暴露 `CCRouteAddressSummary`；
+- Visibility 与 RouteEntry lifecycle 自动复用同一安全 Entry 快照；
+- Adapter 原始 `CCNavigationBackendEvent` 只在回调调用栈中完成 identity 与 lifecycle 协调，进入
+  Runtime history 和业务 Listener 前转换为 `CCNavigationBackendDiagnosticEvent`；
+- Runtime backend ledger 不再保存 `location`，只保存 `CCRouteAddressSummary`，业务通过
+  `CCBackendEntrySnapshot` 观察；
+- 摘要仅包含 canonical `routePattern` 和 Path/Query/Fragment presence；Pattern 可以包含声明期
+  Path 占位符名称，但不包含 Path 值、动态 Query 名和值、完整 URI 或第三方 RouteSettings
+  location；
+- Pending resume、Route 匹配和 Adapter 调度仍使用 Runtime 私有 request/record 中的 operational URI，
+  不因脱敏改变导航语义；
+- 专项测试覆盖带 Path 用户标识、Query Token、Fragment 和外部 backend location 的输入。
 
 ### P1-2 同步 Observer 可阻塞导航热路径
 
@@ -139,11 +138,10 @@ PII/凭证。框架无法证明匿名性，但可以减少明显误用。
 
 ## 6. 推荐处理顺序
 
-1. 设计 sanitized diagnostic snapshot，处理 P1-1；这是数据边界变更，应先写迁移说明。
-2. 将纯观察回调改为有界异步分发，解决 P1-2，并建立顺序/overflow 测试。
-3. 收口业务 barrel 的 Adapter SPI，补 API surface 快照测试。
-4. 补 pre-dispatch failure/capability fallback 事件和 Workspace 依赖图校验。
-5. 合并生成入口并建立 benchmark；得到基线前不做缓存和索引优化。
+1. 将纯观察回调改为有界异步分发，解决 P1-2，并建立顺序/overflow 测试。
+2. 收口业务 barrel 的 Adapter SPI，补 API surface 快照测试。
+3. 补 pre-dispatch failure/capability fallback 事件和 Workspace 依赖图校验。
+4. 合并生成入口并建立 benchmark；得到基线前不做缓存和索引优化。
 
 每一项完成后必须运行 analyze、Framework/Demo/Generator 全量测试，并重新执行 macOS Demo
 交互回归。涉及 Android Predictive Back 时另加真实 Android 设备验证。

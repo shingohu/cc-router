@@ -3,7 +3,7 @@
 ## 文档状态
 
 - 版本：v0.2
-- 状态：P0、P1 和 P2 路由闭环已完成；完整 Route Restoration 明确暂缓
+- 状态：功能闭环已完成；API 冻结前仍需完成 Observer 有界异步分发，完整 Route Restoration 明确暂缓
 - 职责：五份路由文档中的唯一实施状态清单，不替代路由语义、契约或混合路由设计
 
 本文中的勾选项表示当前仓库已实现并具有对应回归覆盖。其他设计文档不再重复维护任务
@@ -97,6 +97,9 @@ Live Route 的跨 Host 迁移存在 Widget、Scope、返回值和后端状态所
 - [x] 拆分 Resolve、Intercept、Dispatch、Arrival、Stay 和 Total 耗时；
 - [x] 提供 Telemetry Context SPI，不暴露原始账号或任意业务对象；
 - [x] 明确 PV 由 Arrival/Show 产生，UV 由外部分析层结合匿名访客身份聚合。
+- [x] 拆分 operational address 与 retained diagnostic snapshot，所有业务历史使用不含参数值的
+  `CCRouteAddressSummary`；
+- [ ] 将纯观察回调改为有界异步分发，并覆盖顺序、overflow 和终态不可丢失语义。
 
 ### P1-3 路由状态恢复（暂缓，仅保留设计与需求观测）
 

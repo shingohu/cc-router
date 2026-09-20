@@ -13,6 +13,7 @@ part 'navigation_aspect.dart';
 part 'navigation_backend.dart';
 part 'navigation_callback.dart';
 part 'navigation_concurrency.dart';
+part 'navigation_diagnostics.dart';
 part 'navigation_failure.dart';
 part 'navigation_lifecycle.dart';
 part 'navigation_pending.dart';

@@ -3,14 +3,20 @@ part of 'runtime.dart';
 /// Internal mutable Route Entry owned by one Runtime and one Route Scope.
 final class _RouteEntryRecord {
   /// Creates an entry in the `created` state.
-  _RouteEntryRecord({required this.id, required this.request})
-    : scope = CCScope('route-$id');
+  _RouteEntryRecord({
+    required this.id,
+    required this.request,
+    required this.address,
+  }) : scope = CCScope('route-$id');
 
   /// Stable identity for this concrete route opening.
   final String id;
 
   /// Immutable request that created this entry.
   final CCNavigationRequest request;
+
+  /// Sanitized address metadata copied into retained public snapshots.
+  final CCRouteAddressSummary address;
 
   /// Scope owning services and cancellation tied to this route opening.
   final CCScope scope;
@@ -25,7 +31,7 @@ final class _RouteEntryRecord {
     routeId: request.routeId,
     ownerComponentId: request.ownerComponentId,
     hostId: request.hostId,
-    normalizedUri: request.uri,
+    address: address,
     placement: request.placement,
     origin: request.origin,
     lifecycleState: state,
@@ -62,6 +68,7 @@ extension CCRouterRuntimeRouteEntries on CCRouterRuntime {
     final entry = _RouteEntryRecord(
       id: '$_runtimeId-entry-${++_routeEntrySequence}',
       request: request,
+      address: _addressSummaryFor(routeId: request.routeId, uri: request.uri),
     );
     _emitRouteEntryTransition(entry, CCRouteEntryLifecycleState.resolving);
     return entry;

@@ -46,7 +46,7 @@ extension CCRouterRuntimePopGuard on CCRouterRuntime {
   /// stack from inferred positional changes. Adapters without a ledger use the
   /// Runtime top Entry as their documented compatibility behavior.
   _RouteEntryRecord? _managedPopTarget(CCNavigationPopTarget? target) {
-    CCBackendEntry? topBackendEntry;
+    _BackendEntryRecord? topBackendEntry;
     for (final backendEntry in _backendEntries.values) {
       if (backendEntry.lifecycleState != CCBackendEntryLifecycleState.active) {
         continue;

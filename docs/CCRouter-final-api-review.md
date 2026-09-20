@@ -33,6 +33,9 @@ Host 扩展和降级语义。
 ## 3. 已完成的对象持有收敛
 
 - `CCRouteEntrySnapshot` 不再保存 Arguments，避免历史快照长期持有 `extra` 或业务对象。
+- `CCRouteEntrySnapshot`、Pending Navigation 和 Backend 诊断统一使用
+  `CCRouteAddressSummary`；Backend ledger 不再保存完整 location，原始 Adapter event 也不会进入
+  retained history。
 - `CCTraceRecord.context` 改为不可变 `CCTraceContextSnapshot`，不再持有活动
   `CCCancellationToken` 或其监听器。
 - Route Scope close Future 只在 pending 期间保留，完成或失败后立即移除。

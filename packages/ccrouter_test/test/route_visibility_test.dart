@@ -73,10 +73,12 @@ void main() {
         const _VisibilityIntent<void>('first'),
       );
       await Future<void>.delayed(Duration.zero);
+      final firstEntryId = host.runtime.activeRouteEntries.single.routeEntryId;
       final second = host.runtime.pushRoute<void>(
         const _VisibilityIntent<void>('second'),
       );
       await Future<void>.delayed(Duration.zero);
+      final secondEntryId = host.runtime.activeRouteEntries.last.routeEntryId;
 
       host.runtime.popRoute();
       await second;
@@ -86,9 +88,7 @@ void main() {
 
       expect(
         events
-            .where(
-              (event) => event.entry.normalizedUri.path == '/visibility/first',
-            )
+            .where((event) => event.entry.routeEntryId == firstEntryId)
             .map((event) => event.phase),
         [
           CCRouteVisibilityPhase.willShow,
@@ -103,9 +103,7 @@ void main() {
       );
       expect(
         events
-            .where(
-              (event) => event.entry.normalizedUri.path == '/visibility/second',
-            )
+            .where((event) => event.entry.routeEntryId == secondEntryId)
             .map((event) => event.phase),
         [
           CCRouteVisibilityPhase.willShow,
@@ -121,8 +119,8 @@ void main() {
                   event.entry.lifecycleState ==
                   CCRouteEntryLifecycleState.disposed,
             )
-            .map((event) => event.entry.normalizedUri.path),
-        containsAll(['/visibility/first', '/visibility/second']),
+            .map((event) => event.entry.routeEntryId),
+        containsAll([firstEntryId, secondEntryId]),
       );
 
       removeListener();

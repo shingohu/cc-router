@@ -10,6 +10,7 @@ final class _PendingNavigationRecord {
     required this.origin,
     required this.openMode,
     required this.source,
+    required this.address,
     required this.createdAt,
     required this.completer,
     required this.action,
@@ -35,6 +36,9 @@ final class _PendingNavigationRecord {
 
   /// Product attribution retained for diagnostics.
   final CCNavigationSource? source;
+
+  /// Sanitized address metadata exposed by the public pending snapshot.
+  final CCRouteAddressSummary address;
 
   /// Reason supplied by the interceptor.
   final String code;
@@ -62,7 +66,7 @@ final class _PendingNavigationRecord {
     navigationId: request.navigationId,
     operation: operation,
     routeId: request.routeId,
-    uri: request.uri,
+    address: address,
     origin: origin,
     openMode: openMode,
     source: source,
@@ -109,6 +113,7 @@ extension CCRouterRuntimePendingNavigation on CCRouterRuntime {
       origin: origin,
       openMode: openMode,
       source: source,
+      address: _addressSummaryFor(routeId: request.routeId, uri: request.uri),
       code: code,
       createdAt: now,
       expiresAt: expiresAt,

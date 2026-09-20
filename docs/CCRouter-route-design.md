@@ -1096,7 +1096,8 @@ CCRouteEntry<R>
 ├── routeEntryId
 ├── routeId
 ├── ownerComponentId
-├── normalizedUri
+├── operational normalizedUri (Runtime private)
+├── diagnostic address summary (public snapshot)
 ├── arguments
 ├── navigationContext
 ├── resultCompleter<R?>
@@ -1335,6 +1336,29 @@ Redirect 必须保留最初来源和 `navigationId`，同时记录请求路由�
 当前 `CCNavigationAspectRequest` 不包含 Arguments、Path/Query 实际值或 Extra，只提供稳定
 Route Pattern、Route ID、Host、Outlet、owner、referrer、来源和重定向链。完整 URI、页面对象、
 Token、账号 ID、Extra 和返回对象不得进入 Aspect。
+
+Runtime 明确拆分 operational address 与 retained diagnostics：
+
+- `CCNavigationRequest`、Pending internal record 和 Adapter 原始 backend event 可以在受控调用链内
+  使用完整 URI，以完成匹配、恢复和 backend 协调；
+- `CCPendingNavigation`、`CCRouteEntrySnapshot`、Visibility/Entry lifecycle、Backend history 和
+  Backend ledger 只暴露 `CCRouteAddressSummary`；
+- 摘要只保留 canonical `routePattern` 以及 Path/Query/Fragment 是否存在；Pattern 可以包含声明期
+  Path 占位符名称，但不保留 Path 值、动态 Query 名和值、Fragment 文本或第三方 backend
+  location；
+- Adapter 原始 `CCNavigationBackendEvent` 不进入 retained history，Runtime 在同一回调调用栈完成
+  协调后转换为 `CCNavigationBackendDiagnosticEvent`；
+- 需要断言精确地址的 Host/Adapter 测试必须读取其自身 Router 或 Adapter operational state，不能把
+  业务诊断快照作为可重放路由状态。
+
+数据边界迁移关系：
+
+```text
+CCPendingNavigation.uri                  -> address
+CCRouteEntrySnapshot.normalizedUri       -> address
+CCNavigationBackendEvent retained view   -> CCNavigationBackendDiagnosticEvent
+CCRouter.backendEntries location view    -> CCBackendEntrySnapshot.address
+```
 
 参数级产品埋点投影尚未提供公开注解。未来如引入，必须使用独立的显式白名单和 Serializer，
 且不能改变路由 Codec、Pattern 或类型安全契约；该能力当前属于 Proposal。

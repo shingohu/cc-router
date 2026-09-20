@@ -97,18 +97,19 @@ abstract final class CCRouter {
   ///
   /// Use this for system back, gesture, and backend-owned stack diagnostics.
   /// Route metadata can be absent when application code bypasses CCRouter.
-  static List<CCNavigationBackendEvent> get recentBackendNavigationEvents =>
-      _runtime.recentBackendNavigationEvents;
+  static List<CCNavigationBackendDiagnosticEvent>
+  get recentBackendNavigationEvents => _runtime.recentBackendNavigationEvents;
 
   /// Snapshot of the adapter-neutral backend Entry ledger.
   ///
   /// Use this for hybrid-navigation diagnostics. Foreign and opaque entries
   /// are immutable observations and cannot be popped or mutated through this
   /// API.
-  static List<CCBackendEntry> get backendEntries => _runtime.backendEntries;
+  static List<CCBackendEntrySnapshot> get backendEntries =>
+      _runtime.backendEntries;
 
   /// Snapshot of backend Entries currently active in observed stacks.
-  static List<CCBackendEntry> get activeBackendEntries =>
+  static List<CCBackendEntrySnapshot> get activeBackendEntries =>
       _runtime.activeBackendEntries;
 
   /// Returns backend entries isolated to an optional Host and Outlet.
@@ -116,7 +117,7 @@ abstract final class CCRouter {
   /// Use this for multi-Host, foldable-pane, Shell-branch, or embedded
   /// Navigator diagnostics. Null filters match every Host or Outlet, and the
   /// result remains observational only.
-  static List<CCBackendEntry> backendEntriesFor({
+  static List<CCBackendEntrySnapshot> backendEntriesFor({
     String? hostId,
     String? navigatorOutlet,
     bool activeOnly = false,
@@ -164,7 +165,7 @@ abstract final class CCRouter {
   /// The returned callback removes the listener. Adapters without backend
   /// observation support do not produce events.
   static void Function() addBackendNavigationListener(
-    CCNavigationBackendEventListener listener,
+    CCNavigationBackendDiagnosticListener listener,
   ) => _runtime.addBackendNavigationListener(listener);
 
   /// Unified business-facing navigation entry point.

@@ -376,6 +376,15 @@ final class _RouteRegistry {
     };
   }
 
+  /// Returns a canonical pattern only when [routeId] is registered.
+  ///
+  /// Diagnostic conversion uses this non-throwing lookup for foreign backend
+  /// entries whose optional route ID is not owned by CCRouter.
+  String? routePatternOrNull(String? routeId) {
+    if (routeId == null || !_routes.containsKey(routeId)) return null;
+    return routePattern(routeId);
+  }
+
   /// Returns an installed definition even when new navigation is deactivated.
   ///
   /// Existing Route Entries still need their Pop policy while a component is

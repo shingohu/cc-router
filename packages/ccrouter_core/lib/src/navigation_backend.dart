@@ -1,5 +1,61 @@
 part of 'runtime.dart';
 
+/// Runtime-owned structural record for one observed backend Entry.
+///
+/// This record is library-private because only Runtime may reconcile ownership,
+/// lifecycle, and identity. It stores a sanitized address summary rather than
+/// the concrete Adapter location; business diagnostics receive a separate
+/// immutable [CCBackendEntrySnapshot].
+final class _BackendEntryRecord {
+  /// Creates one retained backend Entry record.
+  const _BackendEntryRecord({
+    required this.backendEntryId,
+    required this.owner,
+    required this.lifecycleState,
+    required this.navigatorOutlet,
+    required this.address,
+    this.visibilityState = CCBackendEntryVisibilityState.unknown,
+    this.routeEntryId,
+    this.navigationId,
+    this.routeId,
+    this.hostId,
+    this.lastSequence,
+  });
+
+  /// Stable identity assigned by the navigation adapter.
+  final String backendEntryId;
+
+  /// Ownership classification protecting managed Route Entries.
+  final CCBackendEntryOwner owner;
+
+  /// CCRouter RouteEntry identity when [owner] is managed.
+  final String? routeEntryId;
+
+  /// Runtime navigation identity correlated with this backend Entry.
+  final String? navigationId;
+
+  /// Stable route contract ID supplied by the backend, when known.
+  final String? routeId;
+
+  /// Navigation Host containing this entry, when known.
+  final String? hostId;
+
+  /// Navigator Outlet containing this backend entry.
+  final String navigatorOutlet;
+
+  /// Confirmed current or hidden state within [navigatorOutlet].
+  final CCBackendEntryVisibilityState visibilityState;
+
+  /// Sanitized declaration and parameter-presence metadata.
+  final CCRouteAddressSummary address;
+
+  /// Current state in Runtime's backend ledger.
+  final CCBackendEntryLifecycleState lifecycleState;
+
+  /// Last adapter sequence observed for this entry.
+  final int? lastSequence;
+}
+
 /// Exposes backend Navigator observations collected by Runtime.
 extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
   /// Whether one Host reports exact managed removals after backend mutations.
@@ -38,17 +94,20 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
 
   /// Returns the backend Entry ledger, including removed entries retained for
   /// bounded diagnostics until Runtime disposal.
-  List<CCBackendEntry> get backendEntries =>
-      List.unmodifiable(_backendEntries.values);
+  List<CCBackendEntrySnapshot> get backendEntries =>
+      List.unmodifiable(_backendEntries.values.map(_backendEntrySnapshot));
 
   /// Returns backend Entries that are currently active in an observed stack.
   ///
   /// This snapshot is diagnostic only. It never grants callers permission to
   /// pop or mutate a backend route.
-  List<CCBackendEntry> get activeBackendEntries => List.unmodifiable(
-    _backendEntries.values.where(
-      (entry) => entry.lifecycleState == CCBackendEntryLifecycleState.active,
-    ),
+  List<CCBackendEntrySnapshot> get activeBackendEntries => List.unmodifiable(
+    _backendEntries.values
+        .where(
+          (entry) =>
+              entry.lifecycleState == CCBackendEntryLifecycleState.active,
+        )
+        .map(_backendEntrySnapshot),
   );
 
   /// Returns active backend Entries confirmed as current in their Outlets.
@@ -56,12 +115,14 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
   /// Use this for diagnostics across root, Shell, and nested Navigators. An
   /// empty result can mean that the Adapter does not support visibility
   /// confirmation; it must not be interpreted as an empty navigation stack.
-  List<CCBackendEntry> get visibleBackendEntries => List.unmodifiable(
-    _backendEntries.values.where(
-      (entry) =>
-          entry.lifecycleState == CCBackendEntryLifecycleState.active &&
-          entry.visibilityState == CCBackendEntryVisibilityState.visible,
-    ),
+  List<CCBackendEntrySnapshot> get visibleBackendEntries => List.unmodifiable(
+    _backendEntries.values
+        .where(
+          (entry) =>
+              entry.lifecycleState == CCBackendEntryLifecycleState.active &&
+              entry.visibilityState == CCBackendEntryVisibilityState.visible,
+        )
+        .map(_backendEntrySnapshot),
   );
 
   /// Returns Host IDs whose backend event sequence contains a detected gap.
@@ -78,18 +139,22 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
   /// Use this for multi-Host, foldable-pane, Shell-branch, or embedded
   /// Navigator diagnostics. A null filter is a wildcard; filtering never
   /// changes ownership or grants permission to mutate an entry.
-  List<CCBackendEntry> backendEntriesFor({
+  List<CCBackendEntrySnapshot> backendEntriesFor({
     String? hostId,
     String? navigatorOutlet,
     bool activeOnly = false,
   }) => List.unmodifiable(
-    _backendEntries.values.where(
-      (entry) =>
-          (!activeOnly ||
-              entry.lifecycleState == CCBackendEntryLifecycleState.active) &&
-          (hostId == null || entry.hostId == hostId) &&
-          (navigatorOutlet == null || entry.navigatorOutlet == navigatorOutlet),
-    ),
+    _backendEntries.values
+        .where(
+          (entry) =>
+              (!activeOnly ||
+                  entry.lifecycleState ==
+                      CCBackendEntryLifecycleState.active) &&
+              (hostId == null || entry.hostId == hostId) &&
+              (navigatorOutlet == null ||
+                  entry.navigatorOutlet == navigatorOutlet),
+        )
+        .map(_backendEntrySnapshot),
   );
 
   /// Returns a bounded immutable snapshot of backend stack events.
@@ -97,7 +162,7 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
   /// Use this to correlate system back, gestures, or backend-owned stack
   /// changes with Runtime request telemetry. Events may omit route metadata
   /// when the application changed its backend stack independently.
-  List<CCNavigationBackendEvent> get recentBackendNavigationEvents =>
+  List<CCNavigationBackendDiagnosticEvent> get recentBackendNavigationEvents =>
       List.unmodifiable(_backendNavigationEvents);
 
   /// Subscribes to backend Navigator observations from the configured adapter.
@@ -105,7 +170,7 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
   /// The returned callback removes the listener. This capability is optional;
   /// adapters without backend observation support simply produce no events.
   void Function() addBackendNavigationListener(
-    CCNavigationBackendEventListener listener,
+    CCNavigationBackendDiagnosticListener listener,
   ) {
     _ensureInitialized();
     _backendNavigationListeners.add(listener);
@@ -171,14 +236,17 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
           'Initial backend snapshot contains an invalid entry identity.',
         );
       }
-      _backendEntries[snapshot.backendEntryId] = CCBackendEntry(
+      _backendEntries[snapshot.backendEntryId] = _BackendEntryRecord(
         backendEntryId: snapshot.backendEntryId,
         owner: snapshot.owner,
         routeEntryId: snapshot.routeEntryId,
         routeId: snapshot.routeId,
         hostId: snapshot.hostId,
         navigatorOutlet: snapshot.navigatorOutlet,
-        location: snapshot.location,
+        address: _addressSummaryFor(
+          routeId: snapshot.routeId,
+          location: snapshot.location,
+        ),
         lifecycleState: CCBackendEntryLifecycleState.active,
         visibilityState: snapshot.visibilityState,
         lastSequence: snapshot.sequence,
@@ -199,15 +267,16 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
     _applyObservedHostLifecycle(event);
     _applyObservedManagedPop(event);
     _applyObservedBackendTop(event);
+    final diagnosticEvent = _backendDiagnosticEvent(event);
     if (navigationDiagnosticCapacity > 0) {
       if (_backendNavigationEvents.length == navigationDiagnosticCapacity) {
         _backendNavigationEvents.removeFirst();
       }
-      _backendNavigationEvents.add(event);
+      _backendNavigationEvents.add(diagnosticEvent);
     }
     for (final listener in _backendNavigationListeners.toList()) {
       _notifyNavigationObserver(
-        () => listener(event),
+        () => listener(diagnosticEvent),
         failureLabel: 'Backend navigation listener',
       );
     }
@@ -312,7 +381,7 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
     final isRemoved =
         event.kind == CCNavigationBackendEventKind.pop ||
         event.kind == CCNavigationBackendEventKind.remove;
-    _backendEntries[backendEntryId] = CCBackendEntry(
+    _backendEntries[backendEntryId] = _BackendEntryRecord(
       backendEntryId: backendEntryId,
       owner: owner,
       routeEntryId: routeEntry?.id ?? existing?.routeEntryId,
@@ -320,7 +389,13 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
       routeId: event.routeId ?? existing?.routeId,
       hostId: event.hostId ?? existing?.hostId,
       navigatorOutlet: event.navigatorOutlet ?? event.placement.navigatorOutlet,
-      location: event.location ?? existing?.location,
+      address: event.uri != null || event.location != null
+          ? _addressSummaryFor(
+              routeId: event.routeId ?? existing?.routeId,
+              uri: event.uri,
+              location: event.location,
+            )
+          : existing?.address ?? _addressSummaryFor(routeId: event.routeId),
       lifecycleState: isRemoved
           ? CCBackendEntryLifecycleState.removed
           : CCBackendEntryLifecycleState.active,
@@ -465,7 +540,7 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
     }
 
     for (final activeOutlet in active) {
-      CCBackendEntry? current;
+      _BackendEntryRecord? current;
       for (final entry in _backendEntries.values) {
         if (entry.lifecycleState != CCBackendEntryLifecycleState.active ||
             entry.visibilityState != CCBackendEntryVisibilityState.visible ||
@@ -527,15 +602,15 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
   }
 
   /// Copies an immutable backend ledger Entry with selected state changes.
-  CCBackendEntry _copyBackendEntry(
-    CCBackendEntry entry, {
+  _BackendEntryRecord _copyBackendEntry(
+    _BackendEntryRecord entry, {
     CCBackendEntryOwner? owner,
     String? routeEntryId,
     String? routeId,
     CCBackendEntryLifecycleState? lifecycleState,
     CCBackendEntryVisibilityState? visibilityState,
     int? lastSequence,
-  }) => CCBackendEntry(
+  }) => _BackendEntryRecord(
     backendEntryId: entry.backendEntryId,
     owner: owner ?? entry.owner,
     routeEntryId: routeEntryId ?? entry.routeEntryId,
@@ -543,7 +618,7 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
     routeId: routeId ?? entry.routeId,
     hostId: entry.hostId,
     navigatorOutlet: entry.navigatorOutlet,
-    location: entry.location,
+    address: entry.address,
     lifecycleState: lifecycleState ?? entry.lifecycleState,
     visibilityState: visibilityState ?? entry.visibilityState,
     lastSequence: lastSequence ?? entry.lastSequence,

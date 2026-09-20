@@ -1,4 +1,5 @@
 import 'navigation.dart';
+import 'route_diagnostics.dart';
 import 'route_placement.dart';
 
 /// Identifies who owns one backend navigation entry.
@@ -218,70 +219,70 @@ enum CCNavigationBackendEventKind {
   hostDetached,
 }
 
-/// Immutable ledger entry for one backend Navigator route.
+/// Sanitized retained snapshot of one backend Navigator entry.
 ///
-/// Runtime keeps this record separate from [CCRouteEntrySnapshot]. Foreign and
-/// opaque entries can therefore be diagnosed without acquiring a Route Scope
-/// or changing the CCRouter-managed navigation stack.
-final class CCBackendEntry {
-  /// Creates one immutable backend ledger entry.
-  const CCBackendEntry({
+/// Runtime exposes this type for hybrid-navigation diagnostics. It preserves
+/// ownership and exact identity while replacing the concrete backend location
+/// with an address summary that cannot be replayed or logged with parameter
+/// values.
+final class CCBackendEntrySnapshot {
+  /// Creates one immutable sanitized backend ledger snapshot.
+  const CCBackendEntrySnapshot({
     required this.backendEntryId,
     required this.owner,
     required this.lifecycleState,
     required this.navigatorOutlet,
+    required this.address,
     this.visibilityState = CCBackendEntryVisibilityState.unknown,
     this.routeEntryId,
     this.navigationId,
     this.routeId,
     this.hostId,
-    this.location,
     this.lastSequence,
   });
 
   /// Stable identity assigned by the navigation adapter.
   final String backendEntryId;
 
-  /// Ownership classification used to protect Managed Route Entries.
+  /// Ownership classification protecting managed Route Entries.
   final CCBackendEntryOwner owner;
 
-  /// CCRouter RouteEntry identity when [owner] is [managed].
+  /// CCRouter RouteEntry identity when [owner] is managed.
   final String? routeEntryId;
 
   /// Runtime navigation identity correlated with this backend Entry.
-  ///
-  /// This stable identifier lets Runtime finish association when a synchronous
-  /// backend callback arrives before the corresponding RouteEntry is committed.
   final String? navigationId;
 
-  /// Stable route contract ID when the backend supplied one.
+  /// Stable registered route ID, when known.
   final String? routeId;
 
-  /// Navigation Host identity, when the adapter supports multiple hosts.
+  /// Navigation Host containing this entry, when known.
   final String? hostId;
 
   /// Navigator Outlet containing this backend entry.
   final String navigatorOutlet;
 
-  /// Confirmed current/hidden state within [navigatorOutlet].
+  /// Confirmed current or hidden state in [navigatorOutlet].
   final CCBackendEntryVisibilityState visibilityState;
 
-  /// Backend location or settings name, when available.
-  final String? location;
+  /// Sanitized address metadata without a concrete backend location.
+  final CCRouteAddressSummary address;
 
-  /// Current state in the backend ledger.
+  /// Current retained lifecycle state in the backend ledger.
   final CCBackendEntryLifecycleState lifecycleState;
 
   /// Last adapter sequence observed for this entry.
   final int? lastSequence;
 }
 
-/// Immutable active backend entry reported during adapter initialization.
+/// Immutable operational backend entry reported during adapter initialization.
 ///
 /// A snapshot describes entries that already exist before Runtime starts
-/// observing transitions. It is diagnostic state only: even a `managed`
-/// snapshot does not create a CCRouter RouteEntry or Route Scope without a
-/// matching Runtime navigation identity.
+/// observing transitions. Runtime consumes it once to establish structural
+/// identity: even a `managed` snapshot does not create a CCRouter RouteEntry or
+/// Route Scope without a matching Runtime navigation identity. [location] may
+/// contain sensitive values and must be converted to [CCRouteAddressSummary]
+/// rather than retained or exposed to business diagnostics.
 final class CCNavigationBackendEntrySnapshot {
   /// Creates one active backend snapshot entry.
   const CCNavigationBackendEntrySnapshot({
@@ -318,19 +319,25 @@ final class CCNavigationBackendEntrySnapshot {
   /// Optional navigation Host identity.
   final String? hostId;
 
-  /// Optional backend location or settings name.
+  /// Optional backend location or settings name used during initial import.
+  ///
+  /// This operational value may contain sensitive data and must not enter a
+  /// retained history or business-facing diagnostic API.
   final String? location;
 
   /// Backend sequence associated with this snapshot, when available.
   final int? sequence;
 }
 
-/// Immutable, backend-neutral observation of one Navigator stack transition.
+/// Immutable operational observation of one Navigator stack transition.
 ///
 /// Route metadata is nullable because an application may mutate its own
 /// backend stack without first creating a CCRouter request. When the adapter
 /// can correlate the transition, it supplies [navigationId], [routeId], URI,
-/// placement, origin, and source from its internal RouteEntry.
+/// placement, origin, and source from its internal RouteEntry. URI and location
+/// are immediate Adapter SPI data and must be converted to
+/// [CCNavigationBackendDiagnosticEvent] before entering retained histories or
+/// business-facing listeners.
 final class CCNavigationBackendEvent {
   /// Creates one immutable backend lifecycle event.
   CCNavigationBackendEvent({
@@ -394,13 +401,19 @@ final class CCNavigationBackendEvent {
   /// CCRouter route ID when this transition matched a tracked request.
   final String? routeId;
 
-  /// Request URI when this transition matched a tracked request.
+  /// Request URI used for immediate Runtime reconciliation.
+  ///
+  /// This may contain sensitive values and must not be retained by diagnostic
+  /// consumers.
   final Uri? uri;
 
   /// Shell and Navigator outlet associated with the transition.
   final CCRoutePlacement placement;
 
-  /// Backend route settings location, when the backend exposes one.
+  /// Backend route settings location used for immediate reconciliation.
+  ///
+  /// This may contain sensitive values and must not be retained by diagnostic
+  /// consumers.
   final String? location;
 
   /// Trusted request origin when the transition matched a tracked request.
@@ -412,6 +425,89 @@ final class CCNavigationBackendEvent {
   /// Wall-clock time at which the adapter observed the transition.
   final DateTime timestamp;
 }
+
+/// Sanitized retained observation of one backend stack transition.
+///
+/// This event is suitable for business diagnostics and telemetry. It carries
+/// correlation, ownership, Host, and Outlet metadata but never a concrete URI,
+/// backend location, Path value, Query value, or Fragment text.
+final class CCNavigationBackendDiagnosticEvent {
+  /// Creates one immutable sanitized backend transition event.
+  CCNavigationBackendDiagnosticEvent({
+    required this.kind,
+    required this.timestamp,
+    required this.address,
+    this.backendEntryId,
+    this.backendOperationId,
+    this.previousBackendEntryId,
+    this.hostId,
+    this.navigatorOutlet,
+    this.sequence,
+    this.owner,
+    this.navigationId,
+    this.routeId,
+    this.placement = const CCRoutePlacement.root(),
+    this.origin,
+    this.source,
+    Iterable<String> activeNavigatorOutlets = const [],
+  }) : activeNavigatorOutlets = List.unmodifiable(activeNavigatorOutlets);
+
+  /// Backend stack transition observed by the adapter.
+  final CCNavigationBackendEventKind kind;
+
+  /// Backend route identity affected by this transition, when available.
+  final String? backendEntryId;
+
+  /// Adapter operation identity used for duplicate-event suppression.
+  final String? backendOperationId;
+
+  /// Backend Entry related to the affected Entry, when known.
+  final String? previousBackendEntryId;
+
+  /// Navigation Host associated with the transition, when known.
+  final String? hostId;
+
+  /// Navigator Outlet that emitted the transition, when known.
+  final String? navigatorOutlet;
+
+  /// Outlets simultaneously visible after an `outletsChanged` event.
+  final List<String> activeNavigatorOutlets;
+
+  /// Monotonic adapter sequence for this backend event.
+  final int? sequence;
+
+  /// Adapter ownership classification, when known.
+  final CCBackendEntryOwner? owner;
+
+  /// Runtime navigation ID correlated with the transition, when known.
+  final String? navigationId;
+
+  /// Stable CCRouter route ID correlated with the transition, when known.
+  final String? routeId;
+
+  /// Sanitized address metadata without concrete route values.
+  final CCRouteAddressSummary address;
+
+  /// Shell and Navigator Outlet associated with the transition.
+  final CCRoutePlacement placement;
+
+  /// Trusted ingress classification, when correlated with a managed request.
+  final CCNavigationOrigin? origin;
+
+  /// Non-sensitive product source, when correlated with a managed request.
+  final CCNavigationSource? source;
+
+  /// Wall-clock time at which the adapter observed the transition.
+  final DateTime timestamp;
+}
+
+/// Receives sanitized backend transition diagnostics from Runtime.
+///
+/// Business and telemetry subscribers use this callback instead of the raw
+/// Adapter SPI listener so concrete locations cannot escape into retained
+/// state. Callbacks remain observational and cannot start navigation.
+typedef CCNavigationBackendDiagnosticListener =
+    void Function(CCNavigationBackendDiagnosticEvent event);
 
 /// Receives backend Navigator transition events from a navigation adapter.
 ///

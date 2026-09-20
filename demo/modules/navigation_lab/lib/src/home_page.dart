@@ -793,7 +793,9 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
                   ? Icons.check_circle_outline
                   : Icons.extension_outlined,
             ),
-            title: Text(entry.routeId ?? entry.location ?? 'opaque'),
+            title: Text(
+              entry.routeId ?? entry.address.routePattern ?? 'opaque',
+            ),
             subtitle: Text(
               '${entry.owner.name} · ${entry.lifecycleState.name}',
             ),

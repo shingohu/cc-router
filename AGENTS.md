@@ -45,3 +45,6 @@ They do not apply to demo code, examples, tests, or generated platform code.
 
 New demo component packages belong under `demo/modules/`. Keep platform
 directories in the demo host; ordinary component packages are Flutter libraries.
+
+When reviewing Flutter or Dart changes for memory leaks and lifecycle cleanup
+bugs, load and follow `skills/memory-leak/SKILL.md`.

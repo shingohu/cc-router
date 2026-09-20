@@ -730,7 +730,8 @@ CCRouter.navigator.pop(
 ```text
 CCRouteEntry<R>
 ├── routeEntryId
-├── normalizedUri
+├── operational normalizedUri（Runtime 私有）
+├── diagnostic address summary（公开快照）
 ├── routeDescriptor
 ├── resultCompleter<R?>
 ├── routeScope

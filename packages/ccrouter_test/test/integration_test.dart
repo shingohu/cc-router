@@ -591,7 +591,10 @@ void main() {
     expect(find.byKey(const ValueKey('replace-order-1')), findsNothing);
     expect(find.byKey(const ValueKey('replace-order-2')), findsOneWidget);
     expect(runtime.activeRouteEntries, hasLength(1));
-    expect(runtime.activeRouteEntries.single.normalizedUri.path, '/orders/2');
+    expect(
+      runtime.activeRouteEntries.single.address.routePattern,
+      '/orders/:id',
+    );
 
     runtime.popRoute(result: 'done');
     await tester.pump();
