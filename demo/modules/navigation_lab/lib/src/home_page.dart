@@ -384,7 +384,7 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
     _ActionTile(
       icon: Icons.view_stream_outlined,
       title: '进入栈操作工作台',
-      subtitle: 'Replace、PopAndPush、PopUntil、PushAndRemoveUntil、精确句柄。',
+      subtitle: 'Push、Replace、Pop、Go、Reset 与返回结果。',
       onTap: () => _run(
         'Stack workbench',
         () => CCRouter.navigator.push<String>(demoStackIntent(level: 1)),

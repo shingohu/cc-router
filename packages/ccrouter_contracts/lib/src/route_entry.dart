@@ -81,46 +81,6 @@ final class CCRouteEntrySnapshot {
 
   /// Current lifecycle state of this entry.
   final CCRouteEntryLifecycleState lifecycleState;
-
-  /// Returns an immutable handle for removing this exact managed Entry.
-  ///
-  /// The handle identifies this concrete opening, not the route definition.
-  /// Runtime validates that it still belongs to the active Runtime and that the
-  /// Entry has not already been removed before forwarding an operation to an
-  /// Adapter. Retaining a handle after the Entry is gone is safe, but using it
-  /// then fails with a standard navigation error.
-  CCRouteEntryHandle get handle =>
-      CCRouteEntryHandle._(routeEntryId: routeEntryId);
-
-  /// Stable identity usable by stack predicates.
-  CCNavigationEntry get navigationEntry => CCNavigationEntry(
-    navigationId: navigationId,
-    routeId: routeId,
-    uri: normalizedUri,
-  );
-}
-
-/// Opaque business-facing identity for one concrete managed Route Entry.
-///
-/// Obtain this value from [CCRouteEntrySnapshot.handle]. It never exposes a
-/// Flutter `Route`, `Navigator`, GoRouter object, Scope, or mutable backend
-/// state. The handle is intentionally tied to one Runtime-created Entry and
-/// cannot be reused after that Entry is removed or after its Runtime closes.
-final class CCRouteEntryHandle {
-  /// Creates a handle retained by a Route Entry snapshot.
-  const CCRouteEntryHandle._({required this.routeEntryId});
-
-  /// Runtime-unique identity of the concrete Entry.
-  final String routeEntryId;
-
-  /// Compares handles by their immutable concrete Entry identity.
-  @override
-  bool operator ==(Object other) =>
-      other is CCRouteEntryHandle && other.routeEntryId == routeEntryId;
-
-  /// Hashes the concrete Entry identity.
-  @override
-  int get hashCode => routeEntryId.hashCode;
 }
 
 /// Records one Route Entry lifecycle transition.

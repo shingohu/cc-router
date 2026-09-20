@@ -1166,7 +1166,7 @@ CCRouter.diagnostics.exportReport();
 
 1. Component Manifest 和生成 Component Registrar。
 2. Route 注册、Path/URI/Regex Pattern 匹配、Path/Query Codec。
-3. `CCRouter.navigator` 及 `push<T>()`、`replace()`、`go()`、`open()`、`pop<T>()`、`maybePop()`、`popAndPush()`、`popUntil()` 和 `pushAndRemoveUntil()`。
+3. `CCRouter.navigator` 及 `push<T>()`、`replace()`、`go()`、`reset()`、`open()`、`pop<T>()`、`maybePop()` 和 `maybePopOutcome()`。
 4. App、Session、Route 三种 Scope。
 5. 强类型 Service Registry 和构造函数 Factory。
 6. Command/Query 调度及基础 Middleware。
@@ -1177,7 +1177,7 @@ CCRouter.diagnostics.exportReport();
 11. `CCRouterTest.run`、Service Override 和独立 Test Host。
 12. 生成冲突检查、依赖检查和契约文档。
 
-`*Named` 方法不纳入 API，`replaceRouteBelow`、`removeRoute` 和 `removeRouteBelow` 在 RouteEntry 句柄与结果语义明确前保持 Adapter 内部能力。`popUntilWithResult` 仍暂缓，待定义多 RouteEntry 结果传递和 Pop 拒绝语义后再实现。
+`*Named` 方法不纳入 API。`popAndPush`、`popUntil`、`pushAndRemoveUntil`、`replaceRouteBelow`、`removeRoute`、`removeRouteBelow` 和对应 Handle/Predicate/SPI 已从 v0.1 整条能力链删除。它们仅在后端具备稳定 Entry identity、原子目标栈提交、混合栈隔离、Pop 拒绝、失败回滚和结果/Scope 生命周期保证后，通过可选版本化栈事务 SPI 重新评估。`popUntilWithResult` 同样保持 Deferred。
 
 暂缓图形化 DevTools、Native/Isolate RPC、多 Engine 共享、事件持久化和动态交付。
 

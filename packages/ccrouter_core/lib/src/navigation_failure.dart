@@ -148,7 +148,7 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
     ),
   };
 
-  /// Rejects composite or Pop-only operations for failure recovery.
+  /// Validates operations accepted by failure recovery.
   void _validateFailureRecoveryOperation(CCNavigationOperation operation) {
     switch (operation) {
       case CCNavigationOperation.push:
@@ -157,12 +157,6 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
       case CCNavigationOperation.reset:
       case CCNavigationOperation.open:
         return;
-      case CCNavigationOperation.popAndPush:
-      case CCNavigationOperation.pushAndRemoveUntil:
-      case CCNavigationOperation.replaceBelow:
-        throw const CCNavigationAdapterError(
-          'Failure recovery requires a non-composite navigation operation.',
-        );
     }
   }
 

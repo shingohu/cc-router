@@ -123,25 +123,6 @@ final class _HostAdapter
       delegate.maybePopOutcome(result: result);
 
   @override
-  Future<Object?> popAndPush(CCNavigationRequest request, {Object? popResult}) {
-    requests.add(request);
-    return delegate.popAndPush(request, popResult: popResult);
-  }
-
-  @override
-  Future<void> popUntil(CCNavigationStackPredicate predicate) =>
-      delegate.popUntil(predicate);
-
-  @override
-  Future<Object?> pushAndRemoveUntil(
-    CCNavigationRequest request,
-    CCNavigationStackPredicate predicate,
-  ) {
-    requests.add(request);
-    return delegate.pushAndRemoveUntil(request, predicate);
-  }
-
-  @override
   void pop({Object? result}) => delegate.pop(result: result);
 
   @override
@@ -155,41 +136,6 @@ final class _HostAdapter
   void dispose() {
     disposed = true;
     delegate.dispose();
-  }
-}
-
-final class _ExactRemovalHostAdapter extends _HostAdapter
-    implements CCNavigationExactEntryRemoval {
-  _ExactRemovalHostAdapter(super.hostId);
-
-  int exactRemovalCalls = 0;
-
-  bool failNextNavigation = false;
-
-  @override
-  Future<Object?> navigate(CCNavigationRequest request) {
-    if (failNextNavigation) {
-      failNextNavigation = false;
-      requests.add(request);
-      throw const CCNavigationAdapterError('Synthetic navigation failure.');
-    }
-    return super.navigate(request);
-  }
-
-  @override
-  Future<void> removeManagedEntriesBelow({
-    required String navigationId,
-    String? backendEntryId,
-  }) async {
-    exactRemovalCalls++;
-  }
-
-  @override
-  Future<void> removeManagedEntry({
-    required String navigationId,
-    String? backendEntryId,
-  }) async {
-    exactRemovalCalls++;
   }
 }
 
@@ -515,81 +461,4 @@ void main() {
     expect(await listResult, isNull);
     expect(await detailResult, isNull);
   });
-
-  test(
-    'releases Host routing indexes when Runtime removes managed entries',
-    () async {
-      final primary = _ExactRemovalHostAdapter('window.primary');
-      final registry = CCNavigationHostRegistry(
-        defaultHostId: primary.hostId,
-        adapters: {primary.hostId: primary},
-      );
-      final runtime = CCRouterRuntime.forTesting(
-        navigationAdapter: registry,
-        components: const [
-          CCComponentManifest(
-            id: 'routes',
-            version: '1.0.0',
-            registrar: _Registrar(),
-          ),
-        ],
-      );
-      addTearDown(runtime.dispose);
-      runtime.initialize();
-
-      final result = runtime.pushRoute<String>(
-        const _Intent<String>('shared.detail', _Arguments('temporary')),
-      );
-      final navigationId = runtime.activeRouteEntries.single.navigationId;
-
-      await registry.removeManagedEntry(navigationId: navigationId);
-      expect(primary.exactRemovalCalls, 1);
-
-      runtime.popRoute(result: 'done');
-      expect(await result, 'done');
-      expect(
-        () => registry.removeManagedEntry(navigationId: navigationId),
-        throwsA(isA<CCNavigationAdapterError>()),
-      );
-      expect(primary.exactRemovalCalls, 1);
-    },
-  );
-
-  test(
-    'releases Host routing indexes after Adapter dispatch failure',
-    () async {
-      final primary = _ExactRemovalHostAdapter('window.primary')
-        ..failNextNavigation = true;
-      final registry = CCNavigationHostRegistry(
-        defaultHostId: primary.hostId,
-        adapters: {primary.hostId: primary},
-      );
-      final runtime = CCRouterRuntime.forTesting(
-        navigationAdapter: registry,
-        components: const [
-          CCComponentManifest(
-            id: 'routes',
-            version: '1.0.0',
-            registrar: _Registrar(),
-          ),
-        ],
-      );
-      addTearDown(runtime.dispose);
-      runtime.initialize();
-
-      await expectLater(
-        runtime.pushRoute<String>(
-          const _Intent<String>('shared.detail', _Arguments('failure')),
-        ),
-        throwsA(isA<CCNavigationAdapterError>()),
-      );
-      final navigationId = primary.requests.single.navigationId;
-      expect(runtime.activeRouteEntries, isEmpty);
-      expect(
-        () => registry.removeManagedEntry(navigationId: navigationId),
-        throwsA(isA<CCNavigationAdapterError>()),
-      );
-      expect(primary.exactRemovalCalls, 0);
-    },
-  );
 }

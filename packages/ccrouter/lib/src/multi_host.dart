@@ -20,8 +20,6 @@ final class CCNavigationHostRegistry
         CCNavigationManagedEntryReleaseSink,
         CCNavigationBackendSnapshotSource,
         CCNavigationPopCoordinator,
-        CCNavigationExactEntryRemoval,
-        CCNavigationExactEntryReplacement,
         CCNavigationPopGuardBinding,
         CCNavigationPredictiveBackSourceProvider,
         CCNavigationPredictiveBackSource {
@@ -76,12 +74,6 @@ final class CCNavigationHostRegistry
   CCNavigationAdapterCapabilities get capabilities =>
       CCNavigationAdapterCapabilities(
         supportsBackendVisibilityObservation: false,
-        supportsAtomicPopAndPush: _anyCapability(
-          (value) => value.supportsAtomicPopAndPush,
-        ),
-        supportsPushAndRemoveUntil: _anyCapability(
-          (value) => value.supportsPushAndRemoveUntil,
-        ),
         supportsNestedNavigators: _anyCapability(
           (value) => value.supportsNestedNavigators,
         ),
@@ -96,12 +88,6 @@ final class CCNavigationHostRegistry
         ),
         supportsManagedPopObservation: _anyCapability(
           (value) => value.supportsManagedPopObservation,
-        ),
-        supportsExactEntryRemoval: _anyCapability(
-          (value) => value.supportsExactEntryRemoval,
-        ),
-        supportsExactEntryReplacement: _anyCapability(
-          (value) => value.supportsExactEntryReplacement,
         ),
       );
 
@@ -329,30 +315,6 @@ final class CCNavigationHostRegistry
               );
   }
 
-  /// Executes Pop-and-Push on the request's resolved Host.
-  @override
-  Future<Object?> popAndPush(CCNavigationRequest request, {Object? popResult}) {
-    final adapter = _adapterForRequest(request);
-    _hostByNavigationId[request.navigationId] = request.hostId;
-    return adapter.popAndPush(request, popResult: popResult);
-  }
-
-  /// Pops the active Host stack until [predicate] matches.
-  @override
-  Future<void> popUntil(CCNavigationStackPredicate predicate) =>
-      _activeAdapter.popUntil(predicate);
-
-  /// Executes Push-and-Remove-Until on the request's resolved Host.
-  @override
-  Future<Object?> pushAndRemoveUntil(
-    CCNavigationRequest request,
-    CCNavigationStackPredicate predicate,
-  ) {
-    final adapter = _adapterForRequest(request);
-    _hostByNavigationId[request.navigationId] = request.hostId;
-    return adapter.pushAndRemoveUntil(request, predicate);
-  }
-
   /// Pops the current entry from the active Host.
   @override
   void pop({Object? result}) => _activeAdapter.pop(result: result);
@@ -431,60 +393,6 @@ final class CCNavigationHostRegistry
         );
       }
     }
-  }
-
-  /// Removes the exact managed Entry from the Host that created it.
-  @override
-  Future<void> removeManagedEntry({
-    required String navigationId,
-    String? backendEntryId,
-  }) {
-    final adapter = _exactRemovalAdapter(navigationId);
-    return adapter.removeManagedEntry(
-      navigationId: navigationId,
-      backendEntryId: backendEntryId,
-    );
-  }
-
-  /// Removes managed history below an exact Entry in its owning Host.
-  @override
-  Future<void> removeManagedEntriesBelow({
-    required String navigationId,
-    String? backendEntryId,
-  }) {
-    final adapter = _exactRemovalAdapter(navigationId);
-    return adapter.removeManagedEntriesBelow(
-      navigationId: navigationId,
-      backendEntryId: backendEntryId,
-    );
-  }
-
-  /// Replaces the Entry below an anchor within one Host.
-  @override
-  Future<void> replaceManagedEntryBelow({
-    required String anchorNavigationId,
-    String? anchorBackendEntryId,
-    required CCNavigationRequest request,
-  }) {
-    final hostId = _hostByNavigationId[anchorNavigationId];
-    if (hostId == null || hostId != request.hostId) {
-      throw const CCNavigationAdapterError(
-        'Exact replacement cannot cross navigation Hosts.',
-      );
-    }
-    final adapter = _hosts[hostId]!.adapter;
-    if (adapter is! CCNavigationExactEntryReplacement) {
-      throw CCNavigationAdapterError(
-        'Navigation Host "$hostId" does not support exact replacement.',
-      );
-    }
-    _hostByNavigationId[request.navigationId] = hostId;
-    return (adapter as CCNavigationExactEntryReplacement)
-        .replaceManagedEntryBelow(
-          anchorNavigationId: anchorNavigationId,
-          anchorBackendEntryId: anchorBackendEntryId,
-          request: request,
-        );
   }
 
   /// Disposes every child Adapter and releases all listener bridges.
@@ -596,19 +504,6 @@ final class CCNavigationHostRegistry
       );
     }
     return adapter;
-  }
-
-  /// Returns the exact-removal SPI for a recorded navigation identity.
-  CCNavigationExactEntryRemoval _exactRemovalAdapter(String navigationId) {
-    _ensureAvailable();
-    final hostId = _hostByNavigationId[navigationId];
-    final adapter = hostId == null ? null : _hosts[hostId]?.adapter;
-    if (adapter is! CCNavigationExactEntryRemoval) {
-      throw const CCNavigationAdapterError(
-        'The owning navigation Host does not support exact Entry removal.',
-      );
-    }
-    return adapter as CCNavigationExactEntryRemoval;
   }
 
   /// Initializes one child with its Host-specific route and Shell tables.

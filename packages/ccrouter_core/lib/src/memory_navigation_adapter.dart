@@ -13,13 +13,6 @@ final class _CCMemoryNavigationEntry {
 
   /// Result completed when a Push or Replace entry is popped or discarded.
   final Completer<Object?>? result;
-
-  /// Exposes only stable identity to stack predicates.
-  CCNavigationEntry get snapshot => CCNavigationEntry(
-    navigationId: request.navigationId,
-    routeId: request.routeId,
-    uri: request.uri,
-  );
 }
 
 /// Deterministic in-memory adapter for Core and facade navigation tests.
@@ -33,8 +26,6 @@ final class CCMemoryNavigationAdapter
     implements
         CCNavigationAdapter,
         CCNavigationPopCoordinator,
-        CCNavigationExactEntryRemoval,
-        CCNavigationExactEntryReplacement,
         CCNavigationAdapterCapabilitySource,
         CCNavigationBackendSnapshotSource {
   /// Creates an uninitialized empty navigation stack.
@@ -44,12 +35,8 @@ final class CCMemoryNavigationAdapter
   @override
   CCNavigationAdapterCapabilities get capabilities =>
       const CCNavigationAdapterCapabilities(
-        supportsAtomicPopAndPush: true,
-        supportsPushAndRemoveUntil: true,
         supportsNestedNavigators: true,
         supportsStatefulShell: true,
-        supportsExactEntryRemoval: true,
-        supportsExactEntryReplacement: true,
       );
 
   /// Returns the current in-memory entries as an initialization snapshot.
@@ -98,10 +85,6 @@ final class CCMemoryNavigationAdapter
   List<CCNavigationRequest> get stack =>
       List.unmodifiable(_entries.map((entry) => entry.request));
 
-  /// Immutable route-entry snapshots used to inspect the current stack.
-  List<CCNavigationEntry> get entries =>
-      List.unmodifiable(_entries.map((entry) => entry.snapshot));
-
   /// Most recently retained request, or null when the stack is empty.
   CCNavigationRequest? get currentRequest =>
       _entries.isEmpty ? null : _entries.last.request;
@@ -147,12 +130,6 @@ final class CCMemoryNavigationAdapter
         if (request.origin.isExternal) _clearEntries();
         _entries.add(_CCMemoryNavigationEntry(request));
         return Future<Object?>.value();
-      case CCNavigationOperation.popAndPush:
-      case CCNavigationOperation.pushAndRemoveUntil:
-      case CCNavigationOperation.replaceBelow:
-        throw const CCNavigationAdapterError(
-          'Composite navigation must use its dedicated Adapter operation.',
-        );
     }
   }
 
@@ -173,92 +150,6 @@ final class CCMemoryNavigationAdapter
       handled: true,
       removedOwner: CCPopRemovedOwner.managed,
     );
-  }
-
-  /// Pops the current entry and pushes [request] as one operation.
-  ///
-  /// The removed entry completes with [popResult], while the returned Future
-  /// belongs exclusively to the newly pushed entry.
-  @override
-  Future<Object?> popAndPush(CCNavigationRequest request, {Object? popResult}) {
-    _ensureAvailable();
-    _ensureRoute(request);
-    _removeCurrent(result: popResult);
-    return _addResultEntry(request);
-  }
-
-  /// Pops entries until [predicate] matches the current entry.
-  @override
-  Future<void> popUntil(CCNavigationStackPredicate predicate) async {
-    _ensureAvailable();
-    while (_entries.length > 1 && !predicate(_entries.last.snapshot)) {
-      _removeCurrent();
-    }
-  }
-
-  /// Pushes [request] and removes previous entries until [predicate] matches.
-  ///
-  /// Removed entries complete with `null`; only the newly pushed entry owns
-  /// the returned result Future.
-  @override
-  Future<Object?> pushAndRemoveUntil(
-    CCNavigationRequest request,
-    CCNavigationStackPredicate predicate,
-  ) {
-    _ensureAvailable();
-    _ensureRoute(request);
-    final future = _addResultEntry(request);
-    while (_entries.length > 1 &&
-        !predicate(_entries[_entries.length - 2].snapshot)) {
-      _removeAt(_entries.length - 2);
-    }
-    return future;
-  }
-
-  /// Removes exactly one managed entry by its Runtime navigation identity.
-  @override
-  Future<void> removeManagedEntry({
-    required String navigationId,
-    String? backendEntryId,
-  }) async {
-    _ensureAvailable();
-    final index = _indexForIdentity(navigationId, backendEntryId);
-    _removeAt(index);
-  }
-
-  /// Removes all managed entries below the exact target entry.
-  @override
-  Future<void> removeManagedEntriesBelow({
-    required String navigationId,
-    String? backendEntryId,
-  }) async {
-    _ensureAvailable();
-    final targetIndex = _indexForIdentity(navigationId, backendEntryId);
-    for (var index = targetIndex - 1; index >= 0; index--) {
-      _removeAt(index);
-    }
-  }
-
-  /// Replaces the managed entry directly below an exact anchor identity.
-  @override
-  Future<void> replaceManagedEntryBelow({
-    required String anchorNavigationId,
-    String? anchorBackendEntryId,
-    required CCNavigationRequest request,
-  }) async {
-    _ensureAvailable();
-    _ensureRoute(request);
-    final anchorIndex = _indexForIdentity(
-      anchorNavigationId,
-      anchorBackendEntryId,
-    );
-    if (anchorIndex < 1) {
-      throw const CCNavigationAdapterError(
-        'The exact backend Entry has no entry below it to replace.',
-      );
-    }
-    _removeAt(anchorIndex - 1);
-    _entries.insert(anchorIndex - 1, _CCMemoryNavigationEntry(request));
   }
 
   /// Pops a removable entry and completes its pending result.
@@ -317,27 +208,6 @@ final class CCMemoryNavigationAdapter
     if (_entries.isEmpty) return;
     final removed = _entries.removeLast();
     removed.result?.complete(result);
-  }
-
-  /// Removes one entry at [index] and completes its pending result.
-  void _removeAt(int index) {
-    final removed = _entries.removeAt(index);
-    removed.result?.complete();
-  }
-
-  /// Resolves one exact backend identity or reports that it is unavailable.
-  int _indexForIdentity(String navigationId, String? backendEntryId) {
-    final index = _entries.indexWhere(
-      (entry) =>
-          entry.request.navigationId == navigationId &&
-          (backendEntryId == null || entry.backendEntryId == backendEntryId),
-    );
-    if (index == -1) {
-      throw const CCNavigationAdapterError(
-        'The requested managed backend Entry is no longer active.',
-      );
-    }
-    return index;
   }
 
   /// Clears all entries while safely completing pending result Futures.

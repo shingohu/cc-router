@@ -97,174 +97,6 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     );
   }
 
-  /// Pops the current route and pushes [intent] as one stack operation.
-  ///
-  /// [popResult] completes the removed route's pending result. The returned
-  /// Future completes with the new route's typed Pop result.
-  Future<R?> popAndPushRoute<R>(
-    CCRouteIntent<R> intent, {
-    Object? popResult,
-    CCNavigationSource? source,
-  }) async {
-    _ensureInitialized();
-    final result = await _executeNavigationWithFailurePolicy(
-      operation: CCNavigationOperation.popAndPush,
-      origin: CCNavigationOrigin.internal,
-      source: source,
-      routeIdHint: intent.routeId,
-      prepare: () {
-        _ensureAdapterCapability(
-          (capabilities) => capabilities.supportsAtomicPopAndPush,
-          'supportsAtomicPopAndPush',
-        );
-        return _routeRegistry.prepareIntent(intent);
-      },
-      action: (request) =>
-          _requiredNavigationAdapter.popAndPush(request, popResult: popResult),
-    );
-    try {
-      return result as R?;
-    } on TypeError {
-      throw CCRouteResultTypeError(intent.routeId);
-    }
-  }
-
-  /// Pops entries until the current entry satisfies [predicate].
-  Future<void> popUntilRoute(CCNavigationStackPredicate predicate) async {
-    _ensureInitialized();
-    try {
-      await _requiredNavigationAdapter.popUntil(predicate);
-      _popUntilRouteEntries(predicate);
-    } on CCRouterError {
-      rethrow;
-    } catch (error) {
-      throw CCNavigationAdapterError(
-        'Navigation adapter popUntil failed: ${error.runtimeType}.',
-      );
-    }
-  }
-
-  /// Removes exactly the managed Route Entry identified by [handle].
-  ///
-  /// Use this for a targeted removal when stack position may have changed due
-  /// to repeated pushes or hybrid navigation. The handle must come from the
-  /// corresponding [CCRouteEntrySnapshot]. Foreign, opaque, stale, and
-  /// cross-Runtime handles fail with a standard navigation error.
-  Future<void> removeRoute(CCRouteEntryHandle handle) async {
-    _ensureInitialized();
-    final entry = _requireRouteEntryHandle(handle);
-    final adapter = _requireExactEntryRemovalAdapter();
-    await adapter.removeManagedEntry(
-      navigationId: entry.request.navigationId,
-      backendEntryId: _backendEntryIdForRouteEntry(entry.id),
-    );
-    _removeRouteEntry(entry, reason: 'removeRoute');
-  }
-
-  /// Removes managed Route Entries below [handle], retaining the target.
-  ///
-  /// The target itself and any foreign or opaque backend Entries remain. This
-  /// is useful for clearing stale history beneath a selected page while
-  /// preserving that page's Scope and pending result channel.
-  Future<void> removeRouteBelow(CCRouteEntryHandle handle) async {
-    _ensureInitialized();
-    final target = _requireRouteEntryHandle(handle);
-    if (_routeEntries.first == target) return;
-    final adapter = _requireExactEntryRemovalAdapter();
-    await adapter.removeManagedEntriesBelow(
-      navigationId: target.request.navigationId,
-      backendEntryId: _backendEntryIdForRouteEntry(target.id),
-    );
-    if (!_routeEntries.contains(target)) {
-      throw const CCNavigationAdapterError(
-        'The target Route Entry was removed during exact history removal.',
-      );
-    }
-    // Completing a removed entry's pending result can reconcile that entry
-    // while the Adapter Future is awaited. Recompute the prefix after the
-    // await so the retained target is never included by a stale index.
-    final entriesBelow = <_RouteEntryRecord>[];
-    for (final entry in _routeEntries) {
-      if (identical(entry, target)) break;
-      entriesBelow.add(entry);
-    }
-    for (final entry in entriesBelow.reversed) {
-      _removeRouteEntry(
-        entry,
-        reason: 'removeRouteBelow',
-        revealPrevious: false,
-      );
-    }
-  }
-
-  /// Replaces the managed Entry immediately below [handle].
-  ///
-  /// This operation returns when the backend accepts the replacement. The new
-  /// Entry remains managed and can later be addressed through its snapshot
-  /// handle; its eventual page result follows ordinary Pop semantics. The
-  /// anchor itself is retained.
-  Future<void> replaceRouteBelow<R>(
-    CCRouteEntryHandle handle,
-    CCRouteIntent<R> intent, {
-    CCNavigationSource? source,
-  }) async {
-    _ensureInitialized();
-    final anchor = _requireRouteEntryHandle(handle);
-    final anchorIndex = _routeEntries.indexOf(anchor);
-    if (anchorIndex < 1) {
-      throw const CCNavigationAdapterError(
-        'The exact Route Entry has no managed Entry below it to replace.',
-      );
-    }
-    final replaced = _routeEntries[anchorIndex - 1];
-    final adapter = _requireExactEntryReplacementAdapter();
-    final prepared = _routeRegistry.prepareIntent(intent);
-    await _dispatchNavigationWithAction(
-      CCNavigationOperation.replaceBelow,
-      prepared,
-      CCNavigationOrigin.internal,
-      source,
-      action: (request) => adapter.replaceManagedEntryBelow(
-        anchorNavigationId: anchor.request.navigationId,
-        anchorBackendEntryId: _backendEntryIdForRouteEntry(anchor.id),
-        request: request,
-      ),
-      commitEntry: (entry) =>
-          _commitReplaceRouteBelowEntry(entry, anchor, replaced),
-    );
-  }
-
-  /// Pushes [intent] and removes previous entries until [predicate] matches.
-  Future<R?> pushAndRemoveUntilRoute<R>(
-    CCRouteIntent<R> intent,
-    CCNavigationStackPredicate predicate, {
-    CCNavigationSource? source,
-  }) async {
-    _ensureInitialized();
-    final result = await _executeNavigationWithFailurePolicy(
-      operation: CCNavigationOperation.pushAndRemoveUntil,
-      origin: CCNavigationOrigin.internal,
-      source: source,
-      routeIdHint: intent.routeId,
-      prepare: () {
-        _ensureAdapterCapability(
-          (capabilities) => capabilities.supportsPushAndRemoveUntil,
-          'supportsPushAndRemoveUntil',
-        );
-        return _routeRegistry.prepareIntent(intent);
-      },
-      action: (request) =>
-          _requiredNavigationAdapter.pushAndRemoveUntil(request, predicate),
-      commitEntry: (created) =>
-          _commitPushAndRemoveRouteEntry(created, predicate),
-    );
-    try {
-      return result as R?;
-    } on TypeError {
-      throw CCRouteResultTypeError(intent.routeId);
-    }
-  }
-
   /// Changes the current location to the route targeted by [intent].
   Future<void> goRoute<R>(
     CCRouteIntent<R> intent, {
@@ -349,58 +181,6 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
         'Navigation adapter canPop failed: ${error.runtimeType}.',
       );
     }
-  }
-
-  /// Resolves and validates a business-facing exact Entry handle.
-  _RouteEntryRecord _requireRouteEntryHandle(CCRouteEntryHandle handle) {
-    for (final entry in _routeEntries) {
-      if (entry.id == handle.routeEntryId) {
-        return entry;
-      }
-    }
-    throw const CCNavigationAdapterError(
-      'The requested Route Entry handle is stale or belongs to another Runtime.',
-    );
-  }
-
-  /// Requires an Adapter that can preserve exact Entry removal semantics.
-  CCNavigationExactEntryRemoval _requireExactEntryRemovalAdapter() {
-    final adapter = _requiredNavigationAdapter;
-    final capabilitySource = adapter is CCNavigationAdapterCapabilitySource
-        ? adapter as CCNavigationAdapterCapabilitySource
-        : null;
-    if (capabilitySource != null &&
-        !capabilitySource.capabilities.supportsExactEntryRemoval) {
-      throw const CCNavigationAdapterError(
-        'Navigation adapter does not support exact Route Entry removal.',
-      );
-    }
-    if (adapter is! CCNavigationExactEntryRemoval) {
-      throw const CCNavigationAdapterError(
-        'Navigation adapter does not expose exact Route Entry removal.',
-      );
-    }
-    return adapter as CCNavigationExactEntryRemoval;
-  }
-
-  /// Requires an Adapter that can preserve exact replacement semantics.
-  CCNavigationExactEntryReplacement _requireExactEntryReplacementAdapter() {
-    final adapter = _requiredNavigationAdapter;
-    final capabilitySource = adapter is CCNavigationAdapterCapabilitySource
-        ? adapter as CCNavigationAdapterCapabilitySource
-        : null;
-    if (capabilitySource != null &&
-        !capabilitySource.capabilities.supportsExactEntryReplacement) {
-      throw const CCNavigationAdapterError(
-        'Navigation adapter does not support exact Route Entry replacement.',
-      );
-    }
-    if (adapter is! CCNavigationExactEntryReplacement) {
-      throw const CCNavigationAdapterError(
-        'Navigation adapter does not expose exact Route Entry replacement.',
-      );
-    }
-    return adapter as CCNavigationExactEntryReplacement;
   }
 
   /// Executes a result-bearing typed navigation operation.
@@ -775,8 +555,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
       if (entry != null &&
           request.operation != CCNavigationOperation.go &&
           request.operation != CCNavigationOperation.reset &&
-          request.operation != CCNavigationOperation.open &&
-          request.operation != CCNavigationOperation.replaceBelow) {
+          request.operation != CCNavigationOperation.open) {
         _completeRouteEntry(entry);
       }
       if (entry != null) {
@@ -851,25 +630,5 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
       );
     }
     return adapter;
-  }
-
-  /// Rejects an operation when an optional capability-aware Adapter declares
-  /// that its backend cannot preserve the requested contract.
-  ///
-  /// Adapters without capability metadata remain backward compatible and are
-  /// responsible for reporting their own unsupported-operation errors.
-  void _ensureAdapterCapability(
-    bool Function(CCNavigationAdapterCapabilities capabilities) selector,
-    String capabilityName,
-  ) {
-    final adapter = _requiredNavigationAdapter;
-    final capabilitySource = adapter is CCNavigationAdapterCapabilitySource
-        ? adapter as CCNavigationAdapterCapabilitySource
-        : null;
-    if (capabilitySource != null && !selector(capabilitySource.capabilities)) {
-      throw CCNavigationAdapterError(
-        'Navigation adapter does not support $capabilityName.',
-      );
-    }
   }
 }

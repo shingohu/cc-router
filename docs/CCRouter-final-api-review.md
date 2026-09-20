@@ -24,7 +24,7 @@ Host 扩展和降级语义。
 - `CCGoRouterNavigationEvent.result`：Flutter `NavigatorObserver` 不提供 Pop result。
 - `CCBackendEntryLifecycleState.unknown`：没有合法创建路径。
 - `CCPopOutcome.resultAvailable`：没有对应的结果值通道；类型安全结果继续由原 Push Future 管理。
-- `CCRouteEntryHandle.navigationId`：`routeEntryId` 已包含 Runtime 唯一前缀，Handle 构造仍由框架控制。
+- `CCRouteEntryHandle` 及精确 Entry 操作链：当前后端无法统一保证稳定身份、原子提交和混合栈隔离，完整删除并转为 Deferred 设计。
 - `CCFlutterRouteDestination.componentId`：Assembler 不消费；Runtime 单独保存可信组件 owner。
 - 未参与决策的 Capability Boolean：`supportsForeignEntryObservation`、
   `supportsBackendEntryIdentity`、`supportsInitialStackSnapshot`、

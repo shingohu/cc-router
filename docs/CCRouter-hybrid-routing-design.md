@@ -145,18 +145,14 @@ Adapter 初始化时声明能力：
 
 ```text
 supportsBackendVisibilityObservation
-supportsAtomicPopAndPush
-supportsPushAndRemoveUntil
 supportsNestedNavigators
 supportsStatefulShell
 supportsModalRoutes
 supportsPredictiveBack
 supportsManagedPopObservation
-supportsExactEntryRemoval
-supportsExactEntryReplacement
 ```
 
-Runtime 根据能力选择正常执行、明确记录的降级实现或初始化失败。禁止静默把有返回值的组合操作降级为无法保证语义的多个操作。
+Runtime 根据能力选择正常执行、明确记录的降级实现或初始化失败。组合栈事务和精确 Entry 操作当前不属于基础 Adapter 能力；后续只有在稳定身份、原子提交、混合栈隔离、失败回滚和生命周期语义完整时，才通过可选版本化 SPI 重新接入。禁止静默把有返回值的组合操作降级为无法保证语义的多个操作。
 
 Foreign/Opaque 变化通过事件身份和 Bridge 隔离，不以一个宽泛 Capability Boolean 承诺。
 初始栈快照同样不使用 Capability Boolean：支持该能力的 Adapter 实现可选 SPI

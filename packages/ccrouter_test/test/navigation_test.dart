@@ -104,21 +104,6 @@ final class FailingNavigationAdapter implements CCNavigationAdapter {
   Future<bool> maybePop({Object? result}) async => false;
 
   @override
-  Future<Object?> popAndPush(
-    CCNavigationRequest request, {
-    Object? popResult,
-  }) async => null;
-
-  @override
-  Future<void> popUntil(CCNavigationStackPredicate predicate) async {}
-
-  @override
-  Future<Object?> pushAndRemoveUntil(
-    CCNavigationRequest request,
-    CCNavigationStackPredicate predicate,
-  ) async => null;
-
-  @override
   void pop({Object? result}) {}
 
   @override
@@ -243,22 +228,6 @@ final class BackendEventNavigationAdapter
 
   @override
   void pop({Object? result}) => delegate.pop(result: result);
-
-  @override
-  Future<Object?> popAndPush(
-    CCNavigationRequest request, {
-    Object? popResult,
-  }) => delegate.popAndPush(request, popResult: popResult);
-
-  @override
-  Future<void> popUntil(CCNavigationStackPredicate predicate) =>
-      delegate.popUntil(predicate);
-
-  @override
-  Future<Object?> pushAndRemoveUntil(
-    CCNavigationRequest request,
-    CCNavigationStackPredicate predicate,
-  ) => delegate.pushAndRemoveUntil(request, predicate);
 }
 
 final class TestNavigationInterceptor implements CCNavigationInterceptor {
@@ -443,19 +412,6 @@ void main() {
         ],
       );
       runtime.initialize();
-      await expectLater(
-        runtime.popAndPushRoute<void>(
-          const TestIntent<void>('orders.detail', RouteArgs('1')),
-        ),
-        throwsA(isA<CCNavigationAdapterError>()),
-      );
-      await expectLater(
-        runtime.pushAndRemoveUntilRoute<void>(
-          const TestIntent<void>('orders.detail', RouteArgs('2')),
-          (_) => false,
-        ),
-        throwsA(isA<CCNavigationAdapterError>()),
-      );
       await runtime.dispose();
 
       final unsupportedPredictiveRuntime = CCRouterRuntime.forTesting(
@@ -1236,177 +1192,6 @@ void main() {
     },
   );
 
-  test(
-    'removes exact managed Entries and preserves the handle target',
-    () async {
-      final runtime = CCRouterRuntime.forTesting(
-        navigationAdapter: CCMemoryNavigationAdapter(),
-        components: [
-          routeComponent(
-            'orders',
-            (registry) => registry.registerRoute(pathRoute()),
-          ),
-        ],
-      );
-      runtime.initialize();
-      await runtime.goRoute(
-        const TestIntent<void>('orders.detail', RouteArgs('1')),
-      );
-      final firstResult = runtime.pushRoute<String>(
-        const TestIntent<String>('orders.detail', RouteArgs('2')),
-      );
-      final secondResult = runtime.pushRoute<String>(
-        const TestIntent<String>('orders.detail', RouteArgs('3')),
-      );
-      final thirdResult = runtime.pushRoute<String>(
-        const TestIntent<String>('orders.detail', RouteArgs('4')),
-      );
-      final entries = runtime.activeRouteEntries;
-      final first = entries[1];
-      final second = entries[2];
-      final third = entries[3];
-
-      await runtime.removeRoute(second.handle);
-      expect(await secondResult, isNull);
-      expect(runtime.activeRouteEntries.map((entry) => entry.routeEntryId), [
-        entries[0].routeEntryId,
-        first.routeEntryId,
-        third.routeEntryId,
-      ]);
-
-      await runtime.removeRouteBelow(third.handle);
-      expect(await firstResult, isNull);
-      expect(runtime.activeRouteEntries, hasLength(1));
-      expect(
-        runtime.activeRouteEntries.single.routeEntryId,
-        third.routeEntryId,
-      );
-
-      await runtime.removeRoute(third.handle);
-      expect(await thirdResult, isNull);
-      expect(runtime.activeRouteEntries, isEmpty);
-      await Future<void>.delayed(Duration.zero);
-      expect(
-        runtime.recentRouteEntryEvents
-            .where(
-              (event) =>
-                  event.entry.lifecycleState ==
-                  CCRouteEntryLifecycleState.disposed,
-            )
-            .length,
-        4,
-      );
-
-      expect(
-        () => runtime.removeRoute(second.handle),
-        throwsA(isA<CCNavigationAdapterError>()),
-      );
-      await runtime.dispose();
-    },
-  );
-
-  test('rejects exact handles from another Runtime', () async {
-    CCRouterRuntime createRuntime() => CCRouterRuntime.forTesting(
-      navigationAdapter: CCMemoryNavigationAdapter(),
-      components: [
-        routeComponent(
-          'orders',
-          (registry) => registry.registerRoute(pathRoute()),
-        ),
-      ],
-    );
-
-    final firstRuntime = createRuntime();
-    firstRuntime.initialize();
-    await firstRuntime.goRoute(
-      const TestIntent<void>('orders.detail', RouteArgs('1')),
-    );
-    final handle = firstRuntime.activeRouteEntries.single.handle;
-
-    final secondRuntime = createRuntime();
-    secondRuntime.initialize();
-    await secondRuntime.goRoute(
-      const TestIntent<void>('orders.detail', RouteArgs('2')),
-    );
-    expect(
-      () => secondRuntime.removeRoute(handle),
-      throwsA(isA<CCNavigationAdapterError>()),
-    );
-    expect(secondRuntime.activeRouteEntries, hasLength(1));
-    await firstRuntime.dispose();
-    await secondRuntime.dispose();
-  });
-
-  test(
-    'reports exact removal capability errors instead of removing by position',
-    () async {
-      final adapter = BackendEventNavigationAdapter();
-      final runtime = CCRouterRuntime.forTesting(
-        navigationAdapter: adapter,
-        components: [
-          routeComponent(
-            'orders',
-            (registry) => registry.registerRoute(pathRoute()),
-          ),
-        ],
-      );
-      runtime.initialize();
-      await runtime.goRoute(
-        const TestIntent<void>('orders.detail', RouteArgs('1')),
-      );
-      final handle = runtime.activeRouteEntries.single.handle;
-      expect(
-        () => runtime.removeRoute(handle),
-        throwsA(isA<CCNavigationAdapterError>()),
-      );
-      expect(runtime.activeRouteEntries, hasLength(1));
-      await runtime.dispose();
-    },
-  );
-
-  test('replaces the managed Entry below an exact anchor', () async {
-    final runtime = CCRouterRuntime.forTesting(
-      navigationAdapter: CCMemoryNavigationAdapter(),
-      components: [
-        routeComponent(
-          'orders',
-          (registry) => registry.registerRoute(pathRoute()),
-        ),
-      ],
-    );
-    runtime.initialize();
-    await runtime.goRoute(
-      const TestIntent<void>('orders.detail', RouteArgs('1')),
-    );
-    final oldResult = runtime.pushRoute<String>(
-      const TestIntent<String>('orders.detail', RouteArgs('2')),
-    );
-    final anchorResult = runtime.pushRoute<String>(
-      const TestIntent<String>('orders.detail', RouteArgs('3')),
-    );
-    final before = runtime.activeRouteEntries;
-
-    await runtime.replaceRouteBelow(
-      before.last.handle,
-      const TestIntent<void>('orders.detail', RouteArgs('4')),
-    );
-
-    expect(await oldResult, isNull);
-    expect(runtime.activeRouteEntries, hasLength(3));
-    expect(runtime.activeRouteEntries[0].routeEntryId, before[0].routeEntryId);
-    expect(runtime.activeRouteEntries[1].normalizedUri.path, '/orders/4');
-    expect(
-      runtime.activeRouteEntries[1].lifecycleState,
-      CCRouteEntryLifecycleState.hidden,
-    );
-    expect(runtime.activeRouteEntries[2].routeEntryId, before[2].routeEntryId);
-
-    runtime.popRoute(result: 'anchor');
-    expect(await anchorResult, 'anchor');
-    expect(runtime.activeRouteEntries, hasLength(2));
-    await runtime.dispose();
-  });
-
   test('disposes retained Route Scopes during Runtime shutdown', () async {
     final runtime = CCRouterRuntime.forTesting(
       navigationAdapter: CCMemoryNavigationAdapter(),
@@ -1798,69 +1583,6 @@ void main() {
     );
     await reentryExpectation;
     expect(runtime.activeRouteEntries, hasLength(1));
-    await runtime.dispose();
-  });
-
-  test('runs interceptors for composite navigation targets', () async {
-    final calls = <String>[];
-    final runtime = CCRouterRuntime.forTesting(
-      navigationAdapter: CCMemoryNavigationAdapter(),
-      globalInterceptors: [
-        CCGlobalNavigationInterceptor(
-          id: 'global.policy',
-          interceptor: TestNavigationInterceptor(
-            'global.policy',
-            (_) => const CCNavigationProceed(),
-            calls,
-          ),
-        ),
-      ],
-      components: [
-        routeComponent('orders', (registry) {
-          registry.registerRouteInterceptor(
-            'orders.policy',
-            TestNavigationInterceptor(
-              'orders.policy',
-              (_) => const CCNavigationProceed(),
-              calls,
-            ),
-          );
-          registry.registerRoute(pathRoute(interceptorIds: ['orders.policy']));
-        }),
-      ],
-    );
-    runtime.initialize();
-
-    await runtime.goRoute(
-      const TestIntent<void>('orders.detail', RouteArgs('1')),
-    );
-    calls.clear();
-    final popAndPush = runtime.popAndPushRoute<String>(
-      const TestIntent<String>('orders.detail', RouteArgs('2')),
-    );
-    await Future<void>.delayed(Duration.zero);
-    expect(calls, [
-      'global.policy:orders.detail',
-      'orders.policy:orders.detail',
-    ]);
-    runtime.popRoute(result: 'pop-and-push');
-    expect(await popAndPush, 'pop-and-push');
-
-    await runtime.goRoute(
-      const TestIntent<void>('orders.detail', RouteArgs('3')),
-    );
-    calls.clear();
-    final pushAndRemove = runtime.pushAndRemoveUntilRoute<String>(
-      const TestIntent<String>('orders.detail', RouteArgs('4')),
-      (_) => true,
-    );
-    await Future<void>.delayed(Duration.zero);
-    expect(calls, [
-      'global.policy:orders.detail',
-      'orders.policy:orders.detail',
-    ]);
-    runtime.popRoute(result: 'push-and-remove');
-    expect(await pushAndRemove, 'push-and-remove');
     await runtime.dispose();
   });
 
@@ -2703,7 +2425,7 @@ void main() {
       expect(handled.trigger, CCPopTrigger.gesture);
       expect(await pushed, 'back');
       expect(runtime.activeRouteEntries, hasLength(1));
-      expect(adapter.entries.map((entry) => entry.uri.path), ['/orders/1']);
+      expect(adapter.stack.map((entry) => entry.uri.path), ['/orders/1']);
       await runtime.dispose();
     },
   );
@@ -2752,7 +2474,7 @@ void main() {
         'local:orders.detail:gesture',
       ]);
       expect(runtime.activeRouteEntries, hasLength(1));
-      expect(adapter.entries, hasLength(1));
+      expect(adapter.stack, hasLength(1));
       await runtime.dispose();
     },
   );
@@ -3199,228 +2921,6 @@ void main() {
       await disposedRuntime.dispose();
       expect(disposedRuntime.pendingNavigations, isEmpty);
       await disposedExpectation;
-    },
-  );
-
-  test(
-    'popAndPush completes the old route and returns the new route result',
-    () async {
-      final adapter = CCMemoryNavigationAdapter();
-      final runtime = CCRouterRuntime.forTesting(
-        navigationAdapter: adapter,
-        components: [
-          routeComponent(
-            'orders',
-            (registry) => registry.registerRoute(pathRoute()),
-          ),
-        ],
-      );
-      runtime.initialize();
-
-      await runtime.goRoute(
-        const TestIntent<void>('orders.detail', RouteArgs('1')),
-      );
-      final oldRoute = runtime.pushRoute<String>(
-        const TestIntent<String>('orders.detail', RouteArgs('2')),
-      );
-      final newRoute = runtime.popAndPushRoute<String>(
-        const TestIntent<String>('orders.detail', RouteArgs('3')),
-        popResult: 'selected',
-      );
-
-      expect(await oldRoute, 'selected');
-      expect(adapter.entries.map((entry) => entry.uri.path), [
-        '/orders/1',
-        '/orders/3',
-      ]);
-      expect(
-        runtime.activeRouteEntries.map((entry) => entry.normalizedUri.path),
-        ['/orders/1', '/orders/3'],
-      );
-      runtime.popRoute(result: 'replacement');
-      expect(await newRoute, 'replacement');
-      await runtime.dispose();
-    },
-  );
-
-  test('deferred popAndPush resumes its exact composite operation', () async {
-    final adapter = CCMemoryNavigationAdapter();
-    var authorized = false;
-    final runtime = CCRouterRuntime.forTesting(
-      navigationAdapter: adapter,
-      components: [
-        routeComponent('orders', (registry) {
-          registry.registerRouteInterceptor(
-            'orders.auth',
-            TestNavigationInterceptor('orders.auth', (context) {
-              if (!authorized && context.request.uri.path == '/orders/3') {
-                return const CCNavigationDefer(code: 'login_required');
-              }
-              return const CCNavigationProceed();
-            }, []),
-          );
-          registry.registerRoute(pathRoute(interceptorIds: ['orders.auth']));
-        }),
-      ],
-    );
-    runtime.initialize();
-
-    await runtime.goRoute(
-      const TestIntent<void>('orders.detail', RouteArgs('1')),
-    );
-    final oldRoute = runtime.pushRoute<String>(
-      const TestIntent<String>('orders.detail', RouteArgs('2')),
-    );
-    final replacement = runtime.popAndPushRoute<String>(
-      const TestIntent<String>('orders.detail', RouteArgs('3')),
-      popResult: 'selected',
-    );
-    await Future<void>.delayed(Duration.zero);
-    expect(adapter.entries.map((entry) => entry.uri.path), [
-      '/orders/1',
-      '/orders/2',
-    ]);
-
-    authorized = true;
-    final resumed = runtime.resumePendingNavigation(
-      runtime.pendingNavigations.single.navigationId,
-    );
-    await Future<void>.delayed(Duration.zero);
-    expect(await oldRoute, 'selected');
-    expect(adapter.entries.map((entry) => entry.uri.path), [
-      '/orders/1',
-      '/orders/3',
-    ]);
-    runtime.popRoute(result: 'replacement');
-    expect(await replacement, 'replacement');
-    expect(await resumed, 'replacement');
-    await runtime.dispose();
-  });
-
-  test(
-    'popUntil keeps the first matching entry and cancels removed results',
-    () async {
-      final adapter = CCMemoryNavigationAdapter();
-      final runtime = CCRouterRuntime.forTesting(
-        navigationAdapter: adapter,
-        components: [
-          routeComponent(
-            'orders',
-            (registry) => registry.registerRoute(pathRoute()),
-          ),
-        ],
-      );
-      runtime.initialize();
-
-      await runtime.goRoute(
-        const TestIntent<void>('orders.detail', RouteArgs('1')),
-      );
-      final second = runtime.pushRoute<String>(
-        const TestIntent<String>('orders.detail', RouteArgs('2')),
-      );
-      final third = runtime.pushRoute<String>(
-        const TestIntent<String>('orders.detail', RouteArgs('3')),
-      );
-
-      await runtime.popUntilRoute((entry) => entry.uri.path == '/orders/1');
-      expect(adapter.entries.map((entry) => entry.uri.path), ['/orders/1']);
-      expect(await third, isNull);
-      expect(await second, isNull);
-      await runtime.dispose();
-    },
-  );
-
-  test(
-    'pushAndRemoveUntil keeps the matched old entry and never tests the new one',
-    () async {
-      final adapter = CCMemoryNavigationAdapter();
-      final runtime = CCRouterRuntime.forTesting(
-        navigationAdapter: adapter,
-        components: [
-          routeComponent(
-            'orders',
-            (registry) => registry.registerRoute(pathRoute()),
-          ),
-        ],
-      );
-      runtime.initialize();
-
-      await runtime.goRoute(
-        const TestIntent<void>('orders.detail', RouteArgs('1')),
-      );
-      final removed = runtime.pushRoute<String>(
-        const TestIntent<String>('orders.detail', RouteArgs('2')),
-      );
-      final result = runtime.pushAndRemoveUntilRoute<String>(
-        const TestIntent<String>('orders.detail', RouteArgs('3')),
-        (entry) => entry.uri.path == '/orders/1',
-      );
-
-      expect(await removed, isNull);
-      expect(adapter.entries.map((entry) => entry.uri.path), [
-        '/orders/1',
-        '/orders/3',
-      ]);
-      expect(
-        runtime.activeRouteEntries.map((entry) => entry.normalizedUri.path),
-        ['/orders/1', '/orders/3'],
-      );
-      runtime.popRoute(result: 'done');
-      expect(await result, 'done');
-      await runtime.dispose();
-    },
-  );
-
-  test(
-    'deferred pushAndRemoveUntil retains its predicate and commit semantics',
-    () async {
-      final adapter = CCMemoryNavigationAdapter();
-      var authorized = false;
-      final runtime = CCRouterRuntime.forTesting(
-        navigationAdapter: adapter,
-        components: [
-          routeComponent('orders', (registry) {
-            registry.registerRouteInterceptor(
-              'orders.auth',
-              TestNavigationInterceptor('orders.auth', (context) {
-                if (!authorized && context.request.uri.path == '/orders/3') {
-                  return const CCNavigationDefer(code: 'login_required');
-                }
-                return const CCNavigationProceed();
-              }, []),
-            );
-            registry.registerRoute(pathRoute(interceptorIds: ['orders.auth']));
-          }),
-        ],
-      );
-      runtime.initialize();
-
-      await runtime.goRoute(
-        const TestIntent<void>('orders.detail', RouteArgs('1')),
-      );
-      final removed = runtime.pushRoute<String>(
-        const TestIntent<String>('orders.detail', RouteArgs('2')),
-      );
-      final pushed = runtime.pushAndRemoveUntilRoute<String>(
-        const TestIntent<String>('orders.detail', RouteArgs('3')),
-        (entry) => entry.uri.path == '/orders/1',
-      );
-      await Future<void>.delayed(Duration.zero);
-
-      authorized = true;
-      final resumed = runtime.resumePendingNavigation(
-        runtime.pendingNavigations.single.navigationId,
-      );
-      await Future<void>.delayed(Duration.zero);
-      expect(await removed, isNull);
-      expect(adapter.entries.map((entry) => entry.uri.path), [
-        '/orders/1',
-        '/orders/3',
-      ]);
-      runtime.popRoute(result: 'done');
-      expect(await pushed, 'done');
-      expect(await resumed, 'done');
-      await runtime.dispose();
     },
   );
 

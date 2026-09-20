@@ -5,7 +5,7 @@
 - 审查日期：2026-09-20
 - 审查范围：路由 Runtime、业务 Facade、Host/Adapter SPI、GoRouter Adapter、生成器、
   Demo、测试与诊断模型。
-- 自动化基线：`dart analyze` 通过；Framework 206 项、Demo 7 项、Generator 78 项测试通过；
+- 自动化基线：`dart analyze` 通过；Framework 192 项、Demo 6 项、Generator 78 项测试通过；
   macOS debug build 和交互验证通过。
 - 总体结论：13 条约定的架构方向成立，但当前不能认定为全部对齐。没有阻断 Demo 的 P0
   问题；存在 5 项 P1 和 6 项 P2 欠账，应在冻结路由公开 API 前优先处理 P1。
@@ -18,13 +18,13 @@
 | --- | --- | --- | --- |
 | 1 | 智能 | 部分满足 | Route/Codec/Manifest/组件索引/Host Catalog/文档均可生成；Runtime 自动校验并装配。缺口是 Workspace 聚合仍需在 `build_runner` 后手动执行第二条 CLI，且无增量缓存或生成物陈旧门禁。 |
 | 2 | 简单易用 | 基本满足 | Demo 宿主只需 `CCRouter.initialize`、`CCGoRouterBackend.managed`、`CCRouterApp.managed` 和 `MaterialApp.router`。Shell、Multi Host、Aspect 等均为可选能力；生成阶段的两条命令仍增加首次接入成本。 |
-| 3 | 功能强大 | 基本满足 | 已覆盖类型安全导航、Deep Link、拦截、生命周期、混合路由、诊断和多种 Presentation，没有万能 Map 导航接口。GoRouter 的精确 Entry 操作、原子 `pushAndRemoveUntil`、设备 Predictive Back 和 Restoration 仍是明确限制。 |
+| 3 | 功能强大 | 基本满足 | 已覆盖类型安全导航、Deep Link、拦截、生命周期、混合路由、诊断和多种 Presentation，没有万能 Map 导航接口。组合栈事务与精确 Entry 操作已从 v0.1 API 删除并标记 Deferred；设备 Predictive Back 和 Restoration 仍是明确限制。 |
 | 4 | 可扩展性 | 基本满足 | Core 使用中立 Route Definition；Catalog、Assembler、Adapter 与能力 SPI 分层。新后端可复用 Contract/Catalog。业务 barrel 仍透出 Adapter SPI，边界尚未完全收口。 |
 | 5 | 可测试 | 基本满足 | Pure Dart Runtime/Memory Adapter、Flutter Adapter、生成器和 Demo 都有回归；`ccrouter_test` 已提供 Test Host。尚无正式性能、长时间运行和大规模路由表基准。 |
 | 6 | 最小公开 API | 部分满足 | Runtime、Scope、Memory Adapter 和 Host binding 已从业务 barrel 隐藏；Registrar 只拿到 `CCRegistry`。但 `ccrouter.dart` 仍通过 contracts barrel 暴露 Adapter、Request、Capability 和多个后端控制 SPI。 |
 | 7 | 编译器校验与类型安全 | 部分满足 | 参数、Codec、Route ID、Pattern、Contract exposure、页面实现和 barrel 导出已有生成期校验。组件依赖缺失/环、拦截器/PopGuard 引用和 Adapter 能力主要仍在 Runtime 才失败。 |
 | 8 | 非侵入式 | 满足 | 不要求页面基类或 Mixin，不保存全局 `BuildContext`；可继续使用应用自己的 `MaterialApp.router`/`GoRouter`；attached Adapter 不销毁应用 Router。 |
-| 9 | 可降级回退 | 部分满足 | 不支持的 GoRouter 能力会在变更栈前返回稳定错误，不会静默改变语义。能力拒绝、解析前失败和观察能力降级没有统一进入 failure/diagnostic 记录。 |
+| 9 | 可降级回退 | 部分满足 | 无法可靠降级的组合栈事务与精确 Entry 操作已从公开能力链删除，不再静默模拟。解析前失败和观察能力降级仍没有统一进入 failure/diagnostic 记录。 |
 | 10 | 明确生命周期 | 基本满足 | Runtime、Session、RouteEntry、Scope、Adapter、Backend 的 Owner 和销毁顺序明确，幂等与 pending Future 已有测试。组件 activate/deactivate 当前只覆盖 Route/Shell，完整 Service/Handler/Scope 生命周期仍按设计暂缓。 |
 | 11 | 可观测可诊断可溯源 | 部分满足 | navigationId、来源、Owner、阶段耗时、bounded history、Listener 异常隔离均已具备。RouteEntry、Backend 和 Pending 快照仍可能保留完整 URI/location；部分前置失败没有事件。 |
 | 12 | 并发安全 | 部分满足 | 初始化/销毁、Session、Adapter 生命周期和导航并发策略已有确定语义，Defer/Timeout/Cancel 有回归。拦截器及普通 Listener 的重入保护不完整，并发 key 未覆盖 Extra，且并发短路会遗留 Aspect record。 |

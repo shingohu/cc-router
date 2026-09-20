@@ -494,24 +494,6 @@ abstract interface class CCNavigator {
     R? result,
     CCPopTrigger trigger = CCPopTrigger.system,
   });
-  Future<R?> popAndPush<R>(
-    CCRouteIntent<R> intent, {
-    Object? popResult,
-    CCNavigationSource? source,
-  });
-  Future<void> popUntil(CCNavigationStackPredicate predicate);
-  Future<void> removeRoute(CCRouteEntryHandle handle);
-  Future<void> removeRouteBelow(CCRouteEntryHandle handle);
-  Future<void> replaceRouteBelow<R>(
-    CCRouteEntryHandle handle,
-    CCRouteIntent<R> intent, {
-    CCNavigationSource? source,
-  });
-  Future<R?> pushAndRemoveUntil<R>(
-    CCRouteIntent<R> intent,
-    CCNavigationStackPredicate predicate, {
-    CCNavigationSource? source,
-  });
   Future<void> go<R>(CCRouteIntent<R> intent, {CCNavigationSource? source});
   Future<void> reset<R>(CCRouteIntent<R> intent, {CCNavigationSource? source});
   Future<void> open(Uri uri, {CCNavigationSource? source});
@@ -527,15 +509,15 @@ abstract interface class CCNavigator {
 | 方法 | 决策 | 说明 |
 | --- | --- | --- |
 | `maybePop` | 支持 | 保留 `Future<bool>` 兼容入口；需要归属信息时使用 `maybePopOutcome` 获取 `CCPopOutcome`，不能简单用 `canPop` 加 `pop` 替代。 |
-| `popAndPush` | 支持 | 以类型安全 `CCRouteIntent` 作为新页面目标，旧页面结果使用显式的 `Object?`；不暴露 Flutter `Route`。 |
-| `popUntil` | 支持 | 通过稳定的 Route ID、RouteEntry ID 或框架提供的只读快照谓词定位保留点，不接受 Flutter `RoutePredicate`。 |
+| `popAndPush` | Deferred | 当前后端不能可靠保证 Pop 拒绝、旧页面结果、新页面结果和失败回滚属于同一个原子事务。 |
+| `popUntil` | Deferred | 混合栈中必须先能按稳定后端身份区分 Managed、Foreign 和 Opaque Entry，并处理逐次 Pop 被拒绝。 |
 | `popUntilWithResult` | 暂缓后支持 | 需要先定义结果传递给每个被移除 RouteEntry、遇到拒绝 Pop 或没有匹配目标时的完整语义，不能直接照搬第三方扩展方法。 |
-| `pushAndRemoveUntil` | 支持 | 是 `pushNamedAndRemoveUntil` 的类型安全替代；新页面使用 Intent，保留条件使用稳定快照谓词。 |
-| `replaceRouteBelow` | 支持 | 使用 `CCRouteEntryHandle` 精确定位锚点；只替换其下方的 Managed Entry，Adapter 不支持稳定身份时明确失败。 |
-| `removeRoute` / `removeRouteBelow` | 支持 | 使用不暴露 Flutter `Route` 的 `CCRouteEntryHandle`；Foreign/Opaque Entry 和不支持精确身份的 Adapter 不会被位置猜测影响。 |
+| `pushAndRemoveUntil` | Deferred | 需要后端一次性提交目标栈，并保证失败回滚、pending result 和 Route Scope 一致。 |
+| `replaceRouteBelow` | Deferred | 需要稳定 backend Entry identity 和不依赖栈位置的原子替换能力。 |
+| `removeRoute` / `removeRouteBelow` | Deferred | 需要稳定 backend Entry identity，并保证 Foreign/Opaque Entry 不受影响。 |
 | `popAndPushNamed` / `pushNamedAndRemoveUntil` | 不提供 | 路由系统使用稳定 Route ID、生成的 Intent 和动态 `open(Uri)`，不再增加字符串 Name API。需要动态地址时使用 `open` 组合操作。 |
 
-带目标页面的组合操作 `popAndPush` 与 `pushAndRemoveUntil` 必须作为一个 Runtime 导航请求进入拦截器、埋点和 Adapter 管线，不能由业务代码先调用 `pop` 再调用 `push` 拼接，否则无法保证导航 ID、失败回滚和结果完成的一致性。`maybePop` 与 `popUntil` 虽然没有目标页面，仍必须经过 Runtime 的 Adapter 控制操作边界。Adapter SPI 不向 Core 暴露 `BuildContext`、Flutter `Route` 或 `NavigatorState`。
+上述 Deferred 操作已从业务 API、Runtime、基础 Adapter SPI、Capability、内置 Adapter、Demo 和测试中完整删除，不以多个现有操作拼接模拟。重新接入时应使用可选、版本化的栈事务 SPI，而不是继续扩张所有 Adapter 必须实现的基础接口。接入门槛包括：稳定 backend Entry identity、一次性或原子提交目标栈、Managed/Foreign/Opaque 隔离、Shell/Outlet/MultiHost 分区、PopGuard 拒绝语义、失败回滚，以及 pending result 与 Route Scope 生命周期一致。Adapter SPI 不向 Core 暴露 `BuildContext`、Flutter `Route` 或 `NavigatorState`。
 
 `push<R>` 和 `replace<R>` 返回 `Future<R?>`。系统返回、无值 Pop 或 RouteEntry 被允许取消时完成 `null`；解析、拦截或 Adapter 失败时抛出标准错误。
 
@@ -548,9 +530,9 @@ Runtime 关闭对应 RouteEntry；Foreign、Opaque 或未提供归属的 Pop 只
 未来如增加“按调用点选择最近 Outlet”的 Flutter 便利 API，只能在 Flutter 门面即时解析，
 不得把 Context 保存或传入 Core；该 Proposal 不能改变现有无 Context API 的语义。
 
-当前已实现 `push/replace/go/reset/open/pop/canPop`、`maybePop`、`maybePopOutcome`、类型安全的
-`popAndPush`、`popUntil`、`pushAndRemoveUntil`、精确 Entry 删除和锚点下方替换；主 Pattern
-地址生成、中立 Adapter SPI、内存 Adapter、GoRouter Adapter 与 Host/Outlet 调度也已实现。
+当前已实现 `push/replace/go/reset/open/pop/canPop`、`maybePop` 和 `maybePopOutcome`；
+主 Pattern 地址生成、中立 Adapter SPI、内存 Adapter、GoRouter Adapter 与 Host/Outlet
+调度也已实现。
 
 不提供 `CCRouter.push()` 等重复快捷入口，也不提供绕过 `CCRouter.navigator` 直接执行生成 Intent 的公开方法。
 
@@ -688,7 +670,7 @@ cancel    终止导航，返回标准取消原因
 - Runtime 必须检测重定向循环并限制最大重定向次数。
 - Interceptor 不允许直接调用 Adapter。
 - 错误、取消和重定向均进入 Trace 与路由埋点事件。
-- 所有带目标路由的操作都经过拦截器，包括 Push、Replace、Go、Reset、Open、PopAndPush 和 PushAndRemoveUntil；Pop、MaybePop、PopUntil 只有栈移除目标，不触发目标路由拦截器。
+- 所有带目标路由的操作都经过拦截器，包括 Push、Replace、Go、Reset 和 Open；Pop 与 MaybePop 只有栈移除目标，不触发目标路由拦截器。
 
 ### 11.1 与常见注解路由框架的能力对齐
 
@@ -699,14 +681,14 @@ cancel    终止导航，返回标准取消原因
 - 全局拦截器和组件路由级拦截器。
 - 异步 `proceed`、`cancel` 和 Typed Intent/URI `redirect`。
 - 登录、权限、Feature Flag、维护模式、首次引导和组件激活状态检查。
-- `push`、`replace`、`go`、`reset`、`open`、`popAndPush` 和 `pushAndRemoveUntil` 的统一前置管线。
+- `push`、`replace`、`go`、`reset` 和 `open` 的统一前置管线。
 - 保留原始 `navigationId`、`origin` 和 `source` 的重定向，以及最大重定向次数保护。
 
 已完成的增强：
 
 - 注解和生成器自动生成 `interceptorIds`，减少手工维护。
 - 拦截器执行使用真实 Deadline/Timeout，并以专用错误报告超时和执行异常。
-- `CCNavigationDefer` 恢复时保留原始组合操作、Predicate 和 RouteEntry 提交语义。
+- `CCNavigationDefer` 恢复时保留原始操作、目标和 RouteEntry 提交语义。
 
 可选后续增强：
 
@@ -1457,9 +1439,8 @@ Adapter 实现者可以使用单独导出的：
 
 - 已实现 Route ID、Path/URI/Regex Pattern、契约 exposure、Intent、Codec 和错误。
 - 已实现 `CCRegistry.registerRoute`。
-- 已实现 `CCRouter.navigator` 及 `push/replace/go/reset/open/pop/canPop`、`maybePop`、`popAndPush`、`popUntil`、`pushAndRemoveUntil` 门面。
-- 已实现主 Pattern 反向生成、动态 URI 解析、内存测试 Adapter，以及基于
-  `CCRouteEntryHandle` 的精确 Entry 删除和锚点下方替换。
+- 已实现 `CCRouter.navigator` 及 `push/replace/go/reset/open/pop/canPop`、`maybePop` 和 `maybePopOutcome` 门面。
+- 已实现主 Pattern 反向生成、动态 URI 解析和内存测试 Adapter。
 
 ### 阶段 B：Runtime 管线
 
@@ -1524,9 +1505,9 @@ CCRouter 契约的 GoRouter 路由可以继续由应用独立保留。
 `CCGoRouterDialogPage`。适配器不会把普通 Page 静默降级为模态展示。两类模态 Page 都保留 GoRouter
 栈条目，因此 `push` Future、`pop` 返回值、遮罩/拖拽配置和生命周期仍由 Navigator
 处理。Material 与 Cupertino Dialog 可通过 `CCDialogRouteType` 选择，BottomSheet
-配置映射到 Flutter 的 `ModalBottomSheetRoute`。`popAndPush`、`popUntil` 和 `pushAndRemoveUntil` 已通过 GoRouter 的 Navigator 与
-imperative API 接入。由于 GoRouter 没有完全对应的公开原子组合 API，Adapter 会在
-一次 Runtime 操作内完成后端 Pop/Push 序列，并保持返回值与 Predicate 语义。
+配置映射到 Flutter 的 `ModalBottomSheetRoute`。GoRouter 没有公开的原子栈事务 API，
+因此 `popAndPush`、`popUntil`、`pushAndRemoveUntil` 和精确 Entry 操作当前不属于
+CCRouter 能力，Adapter 也不会用多个 imperative 操作模拟。
 GoRouter Adapter 优先通过 `CCNavigationHost` 接收应用拥有的 Root/Outlet Navigator，
 也保留 `navigatorKeys` 兼容入口，并可把带有
 `shellId`/`navigatorOutlet` placement 的子路由映射到已有 `ShellRoute` Navigator；

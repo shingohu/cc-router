@@ -111,43 +111,7 @@ enum CCNavigationOperation {
   /// stack. The operation completes after backend acceptance rather than
   /// waiting for a Pop result.
   open,
-
-  /// Pops the current route and pushes a typed replacement in one operation.
-  popAndPush,
-
-  /// Pushes a typed route and removes previous entries by a stack predicate.
-  pushAndRemoveUntil,
-
-  /// Replaces the managed entry immediately below an exact anchor entry.
-  replaceBelow,
 }
-
-/// Read-only identity snapshot supplied to stack-operation predicates.
-///
-/// Predicates may inspect stable route identity and normalized URI, but they do
-/// not receive mutable Adapter entries, Flutter `Route` objects, or business
-/// result values. A later operation evaluates the predicate against the current
-/// stack rather than relying on a retained snapshot.
-final class CCNavigationEntry {
-  /// Creates an immutable stack-entry snapshot.
-  const CCNavigationEntry({
-    required this.navigationId,
-    required this.routeId,
-    required this.uri,
-  });
-
-  /// Runtime-unique identity of the stack entry.
-  final String navigationId;
-
-  /// Stable registered route ID represented by the entry.
-  final String routeId;
-
-  /// Normalized address used to create the entry.
-  final Uri uri;
-}
-
-/// Selects the stack entry at which a pop or removal operation must stop.
-typedef CCNavigationStackPredicate = bool Function(CCNavigationEntry entry);
 
 /// Adapter-facing immutable description of one registered route.
 ///
@@ -289,11 +253,8 @@ abstract interface class CCNavigationAdapter {
 
   /// Executes a Runtime-validated [request].
   ///
-  /// Use this operation for one-target commands: Push and Replace complete
-  /// with the eventual Pop result, while Go, Reset, and Open complete after
-  /// the backend accepts the operation. Composite commands such as
-  /// PopAndPush and PushAndRemoveUntil must use their dedicated methods so
-  /// their Pop result or stack Predicate cannot be lost at this boundary.
+  /// Push and Replace complete with the eventual Pop result, while Go, Reset,
+  /// and Open complete after the backend accepts the operation.
   Future<Object?> navigate(CCNavigationRequest request);
 
   /// Asks the backend to handle a Pop and reports whether it was handled.
@@ -304,32 +265,6 @@ abstract interface class CCNavigationAdapter {
   /// infer managed Route Entry removal from this Boolean alone. A `false`
   /// result means that the backend declined the request.
   Future<bool> maybePop({Object? result});
-
-  /// Pops the current route and pushes [request] as one atomic stack command.
-  ///
-  /// [popResult] completes the removed entry's pending result. The returned
-  /// Future completes with the pushed entry's eventual Pop result. The removed
-  /// entry's Route Scope is closed independently of the pushed entry; a Pop or
-  /// adapter failure must not complete the pushed result as the old result.
-  Future<Object?> popAndPush(CCNavigationRequest request, {Object? popResult});
-
-  /// Pops entries until [predicate] matches the current entry.
-  ///
-  /// Removed entries complete with `null` because this operation has one
-  /// aggregate completion and no per-entry result channel.
-  Future<void> popUntil(CCNavigationStackPredicate predicate);
-
-  /// Pushes [request] and removes previous entries until [predicate] matches.
-  ///
-  /// The newly pushed entry is never evaluated by [predicate]. Removed
-  /// entries complete with `null` and close their Route Scopes; the returned
-  /// Future represents only the pushed entry and completes with its eventual
-  /// Pop result. A backend failure must not leave the newly allocated Runtime
-  /// entry retained.
-  Future<Object?> pushAndRemoveUntil(
-    CCNavigationRequest request,
-    CCNavigationStackPredicate predicate,
-  );
 
   /// Removes the current route and optionally completes it with [result].
   void pop({Object? result});

@@ -33,48 +33,6 @@ abstract interface class CCNavigator {
     CCPopTrigger trigger = CCPopTrigger.system,
   });
 
-  /// Pops the current route and pushes [intent] as one stack operation.
-  ///
-  /// [popResult] completes the removed route's pending result. The returned
-  /// Future completes with the new route's typed Pop result.
-  Future<R?> popAndPush<R>(
-    CCRouteIntent<R> intent, {
-    Object? popResult,
-    CCNavigationSource? source,
-  });
-
-  /// Pops entries until the current entry satisfies [predicate].
-  Future<void> popUntil(CCNavigationStackPredicate predicate);
-
-  /// Removes exactly the managed Entry identified by [handle].
-  ///
-  /// Obtain [handle] from `CCRouter.activeRouteEntries`. Stale, foreign, and
-  /// cross-Runtime handles fail with [CCNavigationAdapterError].
-  Future<void> removeRoute(CCRouteEntryHandle handle);
-
-  /// Removes managed Entries below [handle], retaining the target Entry.
-  ///
-  /// Foreign and opaque backend Entries remain untouched. The configured
-  /// Adapter must explicitly support exact identity removal.
-  Future<void> removeRouteBelow(CCRouteEntryHandle handle);
-
-  /// Replaces the managed Entry immediately below [handle] with [intent].
-  ///
-  /// The Future completes when the Adapter accepts the operation. The anchor
-  /// remains active, and the replacement later follows ordinary Pop lifecycle.
-  Future<void> replaceRouteBelow<R>(
-    CCRouteEntryHandle handle,
-    CCRouteIntent<R> intent, {
-    CCNavigationSource? source,
-  });
-
-  /// Pushes [intent] and removes previous entries until [predicate] matches.
-  Future<R?> pushAndRemoveUntil<R>(
-    CCRouteIntent<R> intent,
-    CCNavigationStackPredicate predicate, {
-    CCNavigationSource? source,
-  });
-
   /// Changes the current location to [intent] without a typed result.
   Future<void> go<R>(CCRouteIntent<R> intent, {CCNavigationSource? source});
 
@@ -126,55 +84,6 @@ final class _CCNavigator implements CCNavigator {
     CCPopTrigger trigger = CCPopTrigger.system,
   }) =>
       CCRouter._runtime.maybePopOutcomeRoute(result: result, trigger: trigger);
-
-  /// Pops and pushes through the Runtime owned by [CCRouter].
-  @override
-  Future<R?> popAndPush<R>(
-    CCRouteIntent<R> intent, {
-    Object? popResult,
-    CCNavigationSource? source,
-  }) => CCRouter._runtime.popAndPushRoute(
-    intent,
-    popResult: popResult,
-    source: source,
-  );
-
-  /// Pops through the Runtime until [predicate] matches.
-  @override
-  Future<void> popUntil(CCNavigationStackPredicate predicate) =>
-      CCRouter._runtime.popUntilRoute(predicate);
-
-  /// Removes one exact managed Entry through the Runtime-owned Adapter.
-  @override
-  Future<void> removeRoute(CCRouteEntryHandle handle) =>
-      CCRouter._runtime.removeRoute(handle);
-
-  /// Removes managed Entries below one exact Entry through the Runtime-owned
-  /// Adapter.
-  @override
-  Future<void> removeRouteBelow(CCRouteEntryHandle handle) =>
-      CCRouter._runtime.removeRouteBelow(handle);
-
-  /// Replaces one exact Entry below an anchor through the Runtime-owned
-  /// Adapter.
-  @override
-  Future<void> replaceRouteBelow<R>(
-    CCRouteEntryHandle handle,
-    CCRouteIntent<R> intent, {
-    CCNavigationSource? source,
-  }) => CCRouter._runtime.replaceRouteBelow(handle, intent, source: source);
-
-  /// Pushes and removes entries through the Runtime owned by [CCRouter].
-  @override
-  Future<R?> pushAndRemoveUntil<R>(
-    CCRouteIntent<R> intent,
-    CCNavigationStackPredicate predicate, {
-    CCNavigationSource? source,
-  }) => CCRouter._runtime.pushAndRemoveUntilRoute(
-    intent,
-    predicate,
-    source: source,
-  );
 
   /// Changes location through the Runtime owned by [CCRouter].
   @override

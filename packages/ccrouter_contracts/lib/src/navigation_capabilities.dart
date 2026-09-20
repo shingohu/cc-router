@@ -8,15 +8,11 @@ final class CCNavigationAdapterCapabilities {
   /// Creates a capability snapshot with conservative false defaults.
   const CCNavigationAdapterCapabilities({
     this.supportsBackendVisibilityObservation = false,
-    this.supportsAtomicPopAndPush = false,
-    this.supportsPushAndRemoveUntil = false,
     this.supportsNestedNavigators = false,
     this.supportsStatefulShell = false,
     this.supportsModalRoutes = false,
     this.supportsPredictiveBack = false,
     this.supportsManagedPopObservation = false,
-    this.supportsExactEntryRemoval = false,
-    this.supportsExactEntryReplacement = false,
   });
 
   /// Whether the Adapter confirms the current Entry for every managed Outlet.
@@ -26,14 +22,6 @@ final class CCNavigationAdapterCapabilities {
   /// are covered by a reliable top-route callback; partial observer coverage
   /// must remain false so unobserved pages do not stay indefinitely pending.
   final bool supportsBackendVisibilityObservation;
-
-  /// Whether Pop and Push can preserve one composite operation contract.
-  ///
-  /// This includes the removed result and the new entry's result Future.
-  final bool supportsAtomicPopAndPush;
-
-  /// Whether Push followed by predicate-based removal preserves stack order.
-  final bool supportsPushAndRemoveUntil;
 
   /// Whether the adapter can target nested Navigator Outlets.
   final bool supportsNestedNavigators;
@@ -53,19 +41,6 @@ final class CCNavigationAdapterCapabilities {
   /// triggered Pop of a CCRouter-owned backend route from a Foreign Popup or
   /// LocalHistoryEntry. Without it, Runtime keeps backend events diagnostic.
   final bool supportsManagedPopObservation;
-
-  /// Whether the Adapter can remove a managed backend Entry by stable identity.
-  ///
-  /// This is required for `CCRouter.navigator.removeRoute` and
-  /// `removeRouteBelow`. False means Runtime must report a capability error;
-  /// it must not emulate the operation by removing the stack top or by index.
-  final bool supportsExactEntryRemoval;
-
-  /// Whether the Adapter can replace an Entry below a stable anchor identity.
-  ///
-  /// False means Runtime must report a capability error instead of silently
-  /// replacing a positionally guessed backend Entry.
-  final bool supportsExactEntryReplacement;
 }
 
 /// Optional adapter SPI exposing immutable backend capability metadata.

@@ -21,8 +21,6 @@ Demo 的交互实现位于 `modules/navigation_lab`，宿主只负责初始化 C
 | Path / Query 参数注入 | `int` 和 `List<String>` | 通过 |
 | Replace | 同 routeId 更换 Level 参数 | 通过，旧 State 和 Route Scope 销毁 |
 | Pop / maybePop | Detail、Stack、PopGuard | 通过 |
-| PopAndPush | Stack Workbench | 通过 |
-| PopUntil | Stack Workbench | 通过 |
 | Go / Reset | Stack Workbench | 通过 |
 | Global / Route Interceptor | Proceed / Cancel | 通过 |
 | Redirect / Defer / resume / Timeout | Policy Lab | 通过 |
@@ -52,11 +50,10 @@ Demo 的交互实现位于 `modules/navigation_lab`，宿主只负责初始化 C
 
 ## 已确认限制
 
-1. `CCGoRouterAdapter` 暂不声明 `supportsPushAndRemoveUntil`。GoRouter 17.5.0 没有公开的原子 API，可以在保留任意 predicate 历史的同时 Push 一个带结果页面。旧的“连续 Pop 再 Push”会与 RouterDelegate 异步配置更新竞争，现在改为变更栈之前显式报 capability error。
-2. GoRouter Adapter 暂不支持 `removeRoute`、`removeRouteBelow` 和 `replaceRouteBelow` 的精确 Entry 操作。Memory Adapter 和 Core 回归已验证这些契约；Demo 保留入口并验证标准能力错误不会改变栈。
-3. Predictive Back 不适用于 macOS 实测，已由 bridge 单测覆盖；最终仍需 Android 设备回归手势进度与取消。
-4. StatefulShell、多 Window/Display 和自适应多 Outlet 已有 Integration Test，但本 Demo 仍是单 Host / root Outlet，需单独的设备形态 Demo。
-5. 完整 Route Restoration 按设计暂缓；当前只保留 restoration opportunity 诊断，不宣称可恢复业务栈。
+1. `popAndPush`、`popUntil`、`pushAndRemoveUntil`、`removeRoute`、`removeRouteBelow` 和 `replaceRouteBelow` 已从业务 API、Runtime、Adapter SPI、Capability、内置 Adapter、Demo 与测试完整删除，不再以 capability error 或多步操作模拟。重新接入需先具备稳定 Entry identity、原子目标栈提交、混合栈隔离、PopGuard、失败回滚和结果/Scope 生命周期保证。
+2. Predictive Back 不适用于 macOS 实测，已由 bridge 单测覆盖；最终仍需 Android 设备回归手势进度与取消。
+3. StatefulShell、多 Window/Display 和自适应多 Outlet 已有 Integration Test，但本 Demo 仍是单 Host / root Outlet，需单独的设备形态 Demo。
+4. 完整 Route Restoration 按设计暂缓；当前只保留 restoration opportunity 诊断，不宣称可恢复业务栈。
 
 ## 回归命令
 

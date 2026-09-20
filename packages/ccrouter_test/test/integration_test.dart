@@ -117,22 +117,6 @@ final class _RecordingNavigationAdapter
   Future<bool> maybePop({Object? result}) => delegate.maybePop(result: result);
 
   @override
-  Future<Object?> popAndPush(
-    CCNavigationRequest request, {
-    Object? popResult,
-  }) => delegate.popAndPush(request, popResult: popResult);
-
-  @override
-  Future<void> popUntil(CCNavigationStackPredicate predicate) =>
-      delegate.popUntil(predicate);
-
-  @override
-  Future<Object?> pushAndRemoveUntil(
-    CCNavigationRequest request,
-    CCNavigationStackPredicate predicate,
-  ) => delegate.pushAndRemoveUntil(request, predicate);
-
-  @override
   void pop({Object? result}) => delegate.pop(result: result);
 
   @override

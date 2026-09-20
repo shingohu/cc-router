@@ -137,8 +137,6 @@ final class CCGoRouterAdapter
       CCNavigationAdapterCapabilities(
         supportsBackendVisibilityObservation:
             _hasCompleteVisibilityObserverCoverage,
-        supportsAtomicPopAndPush: true,
-        supportsPushAndRemoveUntil: false,
         supportsNestedNavigators: true,
         supportsStatefulShell: true,
         supportsModalRoutes: true,
@@ -459,12 +457,6 @@ final class CCGoRouterAdapter
           return Future<Object?>.value();
         }
         return _open(request, location);
-      case CCNavigationOperation.popAndPush:
-      case CCNavigationOperation.pushAndRemoveUntil:
-      case CCNavigationOperation.replaceBelow:
-        throw const CCNavigationAdapterError(
-          'Composite operations must use their dedicated Adapter method.',
-        );
     }
   }
 
@@ -503,78 +495,6 @@ final class CCGoRouterAdapter
       removedBackendEntryId: _lastPoppedBackendEntryId,
       removedOwner: _lastPoppedOwner,
       hostId: _hostId,
-    );
-  }
-
-  /// Pops the active entry and pushes [request] through GoRouter.
-  ///
-  /// GoRouter exposes no single public operation with this exact contract, so
-  /// the adapter performs the Pop through GoRouter's active Navigator and then
-  /// issues its imperative Push. The removed entry receives [popResult].
-  @override
-  Future<Object?> popAndPush(
-    CCNavigationRequest request, {
-    Object? popResult,
-  }) async {
-    _ensureAvailable();
-    _ensureRequestHost(request);
-    _ensureRoute(request.routeId);
-    final location = _locationFor(request.uri);
-    if (!canPop()) return _replace(request, location);
-    final navigator = _activeNavigator;
-    final removedEntry = _entries.isEmpty ? null : _entries.last;
-    _expectBackendEvent(CCGoRouterNavigationEventKind.pop);
-    if (navigator == null || !await navigator.maybePop<Object?>(popResult)) {
-      _discardExpectedBackendEvent(CCGoRouterNavigationEventKind.pop);
-      throw const CCNavigationAdapterError(
-        'GoRouter rejected the popAndPush Pop operation.',
-      );
-    }
-    if (removedEntry != null) _removeTrackedEntry(removedEntry);
-    return _push(request, location);
-  }
-
-  /// Pops tracked entries while the predicate does not match.
-  ///
-  /// Entries created outside this adapter are not reconstructed as Runtime
-  /// route metadata. Observer events for those entries remain diagnostic and
-  /// cannot remove adapter-owned entries by stack position. The Navigator's
-  /// actual `maybePop` result defines the root boundary because the first
-  /// tracked entry may still sit above an untracked initial GoRouter page.
-  @override
-  Future<void> popUntil(CCNavigationStackPredicate predicate) async {
-    _ensureAvailable();
-    final navigator = _activeNavigator;
-    if (navigator == null) return;
-    while (_entries.isNotEmpty && !predicate(_entries.last.snapshot)) {
-      final removedEntry = _entries.last;
-      _expectBackendEvent(CCGoRouterNavigationEventKind.pop);
-      final didPop = await navigator.maybePop<Object?>();
-      if (!didPop) {
-        _discardExpectedBackendEvent(CCGoRouterNavigationEventKind.pop);
-        break;
-      }
-      _removeTrackedEntry(removedEntry);
-    }
-  }
-
-  /// Pushes [request] after removing tracked entries until [predicate] matches.
-  ///
-  /// GoRouter has no public atomic primitive that can retain an arbitrary
-  /// predicate-selected history while pushing a result-bearing page. Runtime
-  /// rejects this operation from [capabilities] before reaching the method;
-  /// the defensive error also protects direct Adapter callers.
-  @override
-  Future<Object?> pushAndRemoveUntil(
-    CCNavigationRequest request,
-    CCNavigationStackPredicate predicate,
-  ) {
-    _ensureAvailable();
-    _ensureRequestHost(request);
-    _ensureRoute(request.routeId);
-    throw const CCNavigationAdapterError(
-      'GoRouter cannot atomically preserve predicate-based history while '
-      'pushing a result-bearing route.',
     );
   }
 
@@ -1502,13 +1422,6 @@ final class _CCGoRouterEntry {
       completer.completeError(error, stackTrace);
     }
   }
-
-  /// Adapter-neutral identity supplied to a stack predicate.
-  CCNavigationEntry get snapshot => CCNavigationEntry(
-    navigationId: request.navigationId,
-    routeId: request.routeId,
-    uri: request.uri,
-  );
 }
 
 /// Initial backend identity awaiting a concrete Flutter Route association.

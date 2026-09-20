@@ -161,36 +161,6 @@ void main() {
     await _unmountDemo(tester);
   });
 
-  testWidgets('unsupported GoRouter stack operations fail without mutation', (
-    tester,
-  ) async {
-    await _pumpDemo(tester);
-    await tester.tap(find.text('导航'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('进入栈操作工作台'));
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('PushAndRemoveUntil（GoRouter 暂不支持）'));
-    await tester.pumpAndSettle();
-    expect(find.textContaining('CCNavigationAdapterError'), findsOneWidget);
-    expect(find.text('栈操作 · Level 1'), findsOneWidget);
-    expect(CCRouter.activeRouteEntries, hasLength(1));
-
-    await tester.tap(find.text('Push 下一层'));
-    await tester.pumpAndSettle();
-    expect(find.text('栈操作 · Level 2'), findsOneWidget);
-    await tester.tap(find.text('精确移除前一 Entry（GoRouter 暂不支持）'));
-    await tester.pumpAndSettle();
-    expect(find.textContaining('CCNavigationAdapterError'), findsOneWidget);
-    expect(CCRouter.activeRouteEntries, hasLength(2));
-
-    CCRouter.navigator.pop();
-    await tester.pumpAndSettle();
-    CCRouter.navigator.pop();
-    await tester.pumpAndSettle();
-    await _unmountDemo(tester);
-  });
-
   testWidgets('managed and foreign modal routes preserve ownership', (
     tester,
   ) async {

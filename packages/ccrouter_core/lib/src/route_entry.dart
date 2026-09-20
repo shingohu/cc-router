@@ -83,15 +83,6 @@ extension CCRouterRuntimeRouteEntries on CCRouterRuntime {
           reason: entry.request.operation.name,
           hostId: entry.request.hostId,
         );
-      case CCNavigationOperation.popAndPush:
-        _removeTopRouteEntry(
-          reason: 'popAndPush',
-          revealPrevious: false,
-          hostId: entry.request.hostId,
-          navigatorOutlet: entry.request.placement.navigatorOutlet,
-        );
-      case CCNavigationOperation.pushAndRemoveUntil:
-      case CCNavigationOperation.replaceBelow:
       case CCNavigationOperation.push:
       case CCNavigationOperation.open:
         if (entry.request.operation == CCNavigationOperation.open &&
@@ -109,73 +100,6 @@ extension CCRouterRuntimeRouteEntries on CCRouterRuntime {
     if (!_usesBackendVisibilityConfirmationFor(entry.request.hostId)) {
       _hidePreviousRouteEntry(entry);
       _setRouteEntryVisible(entry, reason: 'runtimeCommit');
-    }
-  }
-
-  /// Commits a replacement Entry immediately below [anchor].
-  void _commitReplaceRouteBelowEntry(
-    _RouteEntryRecord entry,
-    _RouteEntryRecord anchor,
-    _RouteEntryRecord replaced,
-  ) {
-    final anchorIndex = _routeEntries.indexOf(anchor);
-    if (anchorIndex < 1 || !_routeEntries.contains(replaced)) {
-      throw const CCNavigationAdapterError(
-        'The anchor or Entry below it is no longer active.',
-      );
-    }
-    _removeRouteEntry(
-      replaced,
-      reason: 'replaceRouteBelow',
-      revealPrevious: false,
-    );
-    final insertionIndex = _routeEntries.indexOf(anchor);
-    _routeEntries.insert(insertionIndex, entry);
-    _emitRouteEntryTransition(entry, CCRouteEntryLifecycleState.pushed);
-    _associateCommittedBackendEntry(entry);
-    _setRouteEntryHidden(entry, reason: 'replaceRouteBelow');
-  }
-
-  /// Removes entries before [predicate] and commits a new pushed Entry.
-  void _commitPushAndRemoveRouteEntry(
-    _RouteEntryRecord entry,
-    CCNavigationStackPredicate predicate,
-  ) {
-    _routeEntries.add(entry);
-    while (true) {
-      final partition = _routeEntries
-          .where((candidate) => _sameRouteEntryPartition(candidate, entry))
-          .toList(growable: false);
-      if (partition.length <= 1 ||
-          predicate(partition[partition.length - 2].snapshot.navigationEntry)) {
-        break;
-      }
-      _removeRouteEntry(
-        partition[partition.length - 2],
-        reason: 'remove',
-        revealPrevious: false,
-      );
-    }
-    _emitRouteEntryTransition(entry, CCRouteEntryLifecycleState.pushed);
-    _associateCommittedBackendEntry(entry);
-    if (!_usesBackendVisibilityConfirmationFor(entry.request.hostId)) {
-      _hidePreviousRouteEntry(entry);
-      _setRouteEntryVisible(entry, reason: 'runtimeCommit');
-    }
-  }
-
-  /// Removes tracked entries until [predicate] matches the current Entry.
-  void _popUntilRouteEntries(CCNavigationStackPredicate predicate) {
-    final hostId = _activeRouteEntryHostId;
-    while (true) {
-      final entries = _routeEntries
-          .where((entry) => hostId == null || entry.request.hostId == hostId)
-          .toList(growable: false);
-      if (entries.length <= 1 ||
-          predicate(entries.last.snapshot.navigationEntry)) {
-        return;
-      }
-      _removeRouteEntry(entries.last, reason: 'popUntil');
     }
   }
 
