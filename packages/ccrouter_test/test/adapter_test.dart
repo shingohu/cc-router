@@ -22,6 +22,7 @@ CCNavigationRequest request({
   required Uri uri,
   CCRoutePlacement placement = const CCRoutePlacement.root(),
   CCNavigationOrigin origin = CCNavigationOrigin.internal,
+  CCDeepLinkOpenMode openMode = CCDeepLinkOpenMode.push,
 }) => CCNavigationRequest(
   navigationId: 'test-$id-${operation.name}',
   operation: operation,
@@ -31,6 +32,7 @@ CCNavigationRequest request({
   presentation: const CCPagePresentation(),
   placement: placement,
   origin: origin,
+  openMode: operation == CCNavigationOperation.open ? openMode : null,
 );
 
 void main() {
@@ -1224,6 +1226,53 @@ void main() {
 
     expect(await goDisplaced, isNull);
     expect(find.text('one'), findsOneWidget);
+    adapter.dispose();
+  });
+
+  testWidgets('dynamic Open selects Push or Go independently of origin', (
+    tester,
+  ) async {
+    final router = GoRouter(
+      initialLocation: '/',
+      routes: [
+        GoRoute(path: '/', builder: (_, _) => const Text('home')),
+        GoRoute(path: '/one', builder: (_, _) => const Text('one')),
+      ],
+    );
+    final adapter = CCGoRouterAdapter(router: router);
+    addTearDown(router.dispose);
+    adapter.initialize([route('one', path: '/one')]);
+    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    await tester.pumpAndSettle();
+
+    await adapter.navigate(
+      request(
+        id: 'one',
+        operation: CCNavigationOperation.open,
+        uri: Uri.parse('/one'),
+        origin: CCNavigationOrigin.externalPlatform,
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('one'), findsOneWidget);
+    expect(adapter.canPop(), isTrue);
+
+    adapter.pop();
+    await tester.pumpAndSettle();
+    expect(find.text('home'), findsOneWidget);
+
+    await adapter.navigate(
+      request(
+        id: 'one',
+        operation: CCNavigationOperation.open,
+        uri: Uri.parse('/one'),
+        origin: CCNavigationOrigin.internal,
+        openMode: CCDeepLinkOpenMode.go,
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('one'), findsOneWidget);
+    expect(adapter.canPop(), isFalse);
     adapter.dispose();
   });
 

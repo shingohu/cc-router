@@ -35,6 +35,7 @@ final class CCNavigationFailureContext {
     required this.navigationId,
     required this.operation,
     required this.origin,
+    required this.openMode,
     required this.stage,
     required this.errorType,
     required this.recoveryDepth,
@@ -53,6 +54,12 @@ final class CCNavigationFailureContext {
 
   /// Trusted ingress classification preserved from the original attempt.
   final CCNavigationOrigin origin;
+
+  /// Original dynamic Open stack behavior, or null for typed operations.
+  ///
+  /// Failure policies may use this sanitized value to preserve the intended
+  /// Host history when selecting a URI recovery destination.
+  final CCDeepLinkOpenMode? openMode;
 
   /// Optional stable product attribution supplied by the caller.
   final CCNavigationSource? source;

@@ -233,6 +233,7 @@ extension CCRouterRuntimeNavigationAspects on CCRouterRuntime {
       redirectChain: record?.routeChain ?? const [],
       placement: request.placement,
       origin: request.origin,
+      openMode: request.openMode,
       source: request.source,
       presentation: request.presentation,
       telemetryContext: record?.telemetryContext,

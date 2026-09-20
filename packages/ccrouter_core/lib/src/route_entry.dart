@@ -86,9 +86,9 @@ extension CCRouterRuntimeRouteEntries on CCRouterRuntime {
       case CCNavigationOperation.push:
       case CCNavigationOperation.open:
         if (entry.request.operation == CCNavigationOperation.open &&
-            entry.request.origin.isExternal) {
+            entry.request.openMode == CCDeepLinkOpenMode.go) {
           _removeAllRouteEntries(
-            reason: 'externalOpen',
+            reason: 'openGo',
             hostId: entry.request.hostId,
           );
         }

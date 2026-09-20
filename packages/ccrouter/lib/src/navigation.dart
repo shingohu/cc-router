@@ -99,8 +99,13 @@ final class _CCNavigator implements CCNavigator {
 
   /// Opens one dynamic application-controlled URI through the Runtime.
   @override
-  Future<void> open(Uri uri, {CCNavigationSource? source}) => CCRouter._runtime
-      .openRoute(uri, origin: CCNavigationOrigin.internal, source: source);
+  Future<void> open(Uri uri, {CCNavigationSource? source}) =>
+      CCRouter._runtime.openRoute(
+        uri,
+        origin: CCNavigationOrigin.internal,
+        mode: CCDeepLinkOpenMode.push,
+        source: source,
+      );
 
   /// Pops through the Runtime owned by [CCRouter].
   @override

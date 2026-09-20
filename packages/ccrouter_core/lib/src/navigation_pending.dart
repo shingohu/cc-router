@@ -8,6 +8,7 @@ final class _PendingNavigationRecord {
     required this.operation,
     required this.prepared,
     required this.origin,
+    required this.openMode,
     required this.source,
     required this.createdAt,
     required this.completer,
@@ -28,6 +29,9 @@ final class _PendingNavigationRecord {
 
   /// Trusted origin retained for the second interception pass.
   final CCNavigationOrigin origin;
+
+  /// Dynamic Open stack behavior retained for deterministic replay.
+  final CCDeepLinkOpenMode? openMode;
 
   /// Product attribution retained for diagnostics.
   final CCNavigationSource? source;
@@ -60,6 +64,7 @@ final class _PendingNavigationRecord {
     routeId: request.routeId,
     uri: request.uri,
     origin: origin,
+    openMode: openMode,
     source: source,
     createdAt: createdAt,
     expiresAt: expiresAt,
@@ -83,6 +88,7 @@ extension CCRouterRuntimePendingNavigation on CCRouterRuntime {
     required CCNavigationOperation operation,
     required _PreparedRoute prepared,
     required CCNavigationOrigin origin,
+    required CCDeepLinkOpenMode? openMode,
     required CCNavigationSource? source,
     required String code,
     required Duration? timeout,
@@ -101,6 +107,7 @@ extension CCRouterRuntimePendingNavigation on CCRouterRuntime {
       operation: operation,
       prepared: prepared,
       origin: origin,
+      openMode: openMode,
       source: source,
       code: code,
       createdAt: now,
@@ -160,6 +167,7 @@ extension CCRouterRuntimePendingNavigation on CCRouterRuntime {
         record.operation,
         replay,
         record.origin,
+        record.openMode,
         record.source,
         navigationId: record.request.navigationId,
         action: record.action,

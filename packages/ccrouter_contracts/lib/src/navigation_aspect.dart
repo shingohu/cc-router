@@ -61,6 +61,7 @@ final class CCNavigationAspectRequest {
     required this.ownerComponentId,
     required this.placement,
     required this.origin,
+    required this.openMode,
     required this.source,
     required this.presentation,
     this.referrerRouteId,
@@ -109,6 +110,13 @@ final class CCNavigationAspectRequest {
 
   /// Trusted ingress origin attached by framework infrastructure.
   final CCNavigationOrigin origin;
+
+  /// Stack behavior selected for a dynamic Open request.
+  ///
+  /// This is null for typed Push, Replace, Go, and Reset operations. Use it to
+  /// distinguish an external link layered above the current page from one that
+  /// rebuilt the Host's declarative location without inspecting URI payloads.
+  final CCDeepLinkOpenMode? openMode;
 
   /// Product attribution supplied by the caller, when available.
   final CCNavigationSource? source;

@@ -13,6 +13,7 @@ final class CCPendingNavigation {
     required this.routeId,
     required this.uri,
     required this.origin,
+    required this.openMode,
     required this.source,
     required this.createdAt,
     required this.expiresAt,
@@ -32,6 +33,12 @@ final class CCPendingNavigation {
 
   /// Trusted ingress classification retained for policy checks.
   final CCNavigationOrigin origin;
+
+  /// Dynamic Open stack behavior retained for resume, or null otherwise.
+  ///
+  /// Authentication and consent flows can inspect this value without receiving
+  /// route arguments or other sensitive payloads.
+  final CCDeepLinkOpenMode? openMode;
 
   /// Non-sensitive product attribution retained for telemetry.
   final CCNavigationSource? source;

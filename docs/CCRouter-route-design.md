@@ -1217,6 +1217,15 @@ externalQr          扫码等不可信外部输入
 - `CCDeepLinkIngress.fromPlatform(uri)`、`fromNotification(uri)` 和
   `fromQrCode(uri)` 是当前公开门面中的固定入口；它们不接受任意 Origin 参数，
   分别写入对应的外部 Origin 后进入同一 Runtime 管线。
+- 外部 Origin 只表达安全信任边界，不决定导航栈行为。三个入口通过
+  `CCDeepLinkOpenMode` 独立选择 `push` 或 `go`，默认 `push`，以保留固定 Root、
+  主 Tab 和返回路径。
+- `CCDeepLinkOpenMode.go` 用于需要按 URI 重建声明式 Shell/Outlet location 的入口；
+  它清理目标 Host 的 Managed RouteEntry。当前不提供语义含糊且难以跨 Adapter
+  保证一致的独立 `reset` mode。
+- GoRouter 的 `push` 不等价于 StatefulShell branch 切换。外部链接需要激活另一个
+  Bottom Tab 或重建父 Shell 时应选 `go`；`push` 适合当前 Navigator 上方的详情页，
+  不能承诺把此前 branch 转换为一条可 Pop 的页面历史。
 - `CCNavigationSource` 是业务可填写的埋点来源，不是安全信任标记；`CCNavigationSource.deepLink(...)` 本身不能启用或绕过 `CCDeepLinkPolicy`。
 - Redirect 必须继承最初 Origin，直到整条导航完成，不能通过重定向绕过 Deep Link Policy。
 - Redirect 到动态 URI 时必须重新执行 Host 入口白名单，不能借由已通过校验的初始地址扩大可信 Authority。
@@ -1233,6 +1242,7 @@ Core 当前的 `external` 参数只作为内部实现阶段的等价信号；公
 ```text
 Platform URI
   -> 可信 Ingress 标记外部 Origin
+  -> 选择 Push（默认）或 Go 栈行为
   -> Scheme/Host 白名单
   -> Pattern 匹配
   -> Deep Link Policy 检查
@@ -1269,6 +1279,13 @@ CCRouter.initialize(
     ],
     allowRelativePaths: true,
   ),
+);
+
+await CCDeepLinkIngress.fromPlatform(uri); // 默认 Push，保留 Root/主 Tab
+
+await CCDeepLinkIngress.fromPlatform(
+  uri,
+  mode: CCDeepLinkOpenMode.go, // 按 URI 重建声明式 location
 );
 ```
 

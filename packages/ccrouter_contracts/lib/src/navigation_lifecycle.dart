@@ -31,6 +31,7 @@ final class CCNavigationLifecycleEvent {
     required this.routePattern,
     required this.placement,
     required this.origin,
+    required this.openMode,
     required this.timestamp,
     this.source,
     this.errorType,
@@ -59,6 +60,12 @@ final class CCNavigationLifecycleEvent {
 
   /// Trusted ingress classification attached by framework infrastructure.
   final CCNavigationOrigin origin;
+
+  /// Stack behavior used by a dynamic Open request, or null otherwise.
+  ///
+  /// Telemetry can use this to compare Push and Go ingress outcomes without
+  /// retaining the incoming URI or its parameters.
+  final CCDeepLinkOpenMode? openMode;
 
   /// Product attribution used by telemetry, when supplied by the caller.
   final CCNavigationSource? source;

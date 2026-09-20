@@ -38,6 +38,7 @@ extension CCRouterRuntimeNavigationLifecycle on CCRouterRuntime {
       routePattern: _routeRegistry.routePattern(request.routeId),
       placement: request.placement,
       origin: request.origin,
+      openMode: request.openMode,
       source: request.source,
       timestamp: DateTime.now(),
       errorType: errorType,

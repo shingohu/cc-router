@@ -1637,16 +1637,19 @@ void main() {
     await runtime.openRoute(
       Uri.parse('/orders/42'),
       origin: CCNavigationOrigin.externalPlatform,
+      mode: CCDeepLinkOpenMode.go,
       source: source,
     );
 
     expect(adapter.currentRequest?.routeId, 'auth.login');
     expect(adapter.currentRequest?.origin, CCNavigationOrigin.externalPlatform);
+    expect(adapter.currentRequest?.openMode, CCDeepLinkOpenMode.go);
     expect(adapter.currentRequest?.source, same(source));
     expect(seenIds, hasLength(1));
     expect(adapter.currentRequest?.navigationId, seenIds.single);
     expect(calls, ['orders.redirect:orders.detail']);
     expect(arrivedRequest.redirectChain, ['orders.detail', 'auth.login']);
+    expect(arrivedRequest.openMode, CCDeepLinkOpenMode.go);
     await runtime.dispose();
   });
 
@@ -2200,6 +2203,7 @@ void main() {
       await runtime.openRoute(
         Uri.parse('/orders/42?token=secret'),
         origin: CCNavigationOrigin.externalPlatform,
+        mode: CCDeepLinkOpenMode.go,
         source: source,
       );
 
@@ -2208,6 +2212,7 @@ void main() {
       expect(contexts.single.stage, CCNavigationFailureStage.resolution);
       expect(contexts.single.errorType, 'CCDeepLinkRejectedError');
       expect(contexts.single.origin, CCNavigationOrigin.externalPlatform);
+      expect(contexts.single.openMode, CCDeepLinkOpenMode.go);
       expect(contexts.single.source, same(source));
       expect(adapter.currentRequest?.routeId, 'routing.error');
       expect(
@@ -2452,14 +2457,36 @@ void main() {
       final pendingBeforeExternalOpen = runtime.pushRoute<String>(
         const TestIntent<String>('orders.detail', RouteArgs('6')),
       );
+      var pendingCompleted = false;
+      pendingBeforeExternalOpen.whenComplete(() => pendingCompleted = true);
       await runtime.openRoute(
         Uri.parse('/orders/7'),
         origin: CCNavigationOrigin.externalPlatform,
       );
-      expect(await pendingBeforeExternalOpen, isNull);
+      expect(pendingCompleted, isFalse);
+      expect(adapter.stack, hasLength(3));
+      expect(runtime.canPopRoute(), isTrue);
+      expect(
+        runtime.activeRouteEntries.map((entry) => entry.normalizedUri.path),
+        ['/orders/5', '/orders/6', '/orders/7'],
+      );
+      runtime.popRoute();
+      runtime.popRoute(result: 'preserved');
+      expect(await pendingBeforeExternalOpen, 'preserved');
+
+      final displacedByGo = runtime.pushRoute<String>(
+        const TestIntent<String>('orders.detail', RouteArgs('8')),
+      );
+      await runtime.openRoute(
+        Uri.parse('/orders/9'),
+        origin: CCNavigationOrigin.externalPlatform,
+        mode: CCDeepLinkOpenMode.go,
+      );
+      expect(await displacedByGo, isNull);
       expect(adapter.stack.single.operation, CCNavigationOperation.open);
+      expect(adapter.currentRequest?.openMode, CCDeepLinkOpenMode.go);
       expect(runtime.canPopRoute(), isFalse);
-      expect(runtime.activeRouteEntries.single.normalizedUri.path, '/orders/7');
+      expect(runtime.activeRouteEntries.single.normalizedUri.path, '/orders/9');
       await runtime.dispose();
     },
   );
@@ -2826,6 +2853,56 @@ void main() {
       await runtime.dispose();
     },
   );
+
+  test('deferred dynamic Open preserves its selected stack behavior', () async {
+    final adapter = CCMemoryNavigationAdapter();
+    var authorized = false;
+    final runtime = CCRouterRuntime.forTesting(
+      navigationAdapter: adapter,
+      deepLinkIngressPolicy: CCDeepLinkIngressPolicy(allowRelativePaths: true),
+      components: [
+        routeComponent('orders', (registry) {
+          registry.registerRouteInterceptor(
+            'orders.auth',
+            TestNavigationInterceptor('orders.auth', (_) {
+              if (!authorized) return const CCNavigationDefer();
+              return const CCNavigationProceed();
+            }, []),
+          );
+          registry.registerRoute(
+            pathRoute(routeId: 'home', path: '/home/:value'),
+          );
+          registry.registerRoute(
+            pathRoute(
+              deepLink: CCDeepLinkPolicy.enabled,
+              interceptorIds: ['orders.auth'],
+            ),
+          );
+        }),
+      ],
+    );
+    runtime.initialize();
+    await runtime.goRoute<void>(const TestIntent<void>('home', RouteArgs('1')));
+
+    final opened = runtime.openRoute(
+      Uri.parse('/orders/42'),
+      origin: CCNavigationOrigin.externalNotification,
+      mode: CCDeepLinkOpenMode.go,
+    );
+    await Future<void>.delayed(Duration.zero);
+    final pending = runtime.pendingNavigations.single;
+    expect(pending.openMode, CCDeepLinkOpenMode.go);
+    expect(adapter.stack.single.routeId, 'home');
+
+    authorized = true;
+    await runtime.resumePendingNavigation(pending.navigationId);
+    await opened;
+    expect(adapter.stack, hasLength(1));
+    expect(adapter.currentRequest?.routeId, 'orders.detail');
+    expect(adapter.currentRequest?.openMode, CCDeepLinkOpenMode.go);
+    expect(runtime.activeRouteEntries.single.routeId, 'orders.detail');
+    await runtime.dispose();
+  });
 
   test(
     'pending navigation is cleared by cancellation and Session close',

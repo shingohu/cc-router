@@ -113,20 +113,21 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
   ///
   /// Framework hosts use an external Origin for platform links, notifications,
   /// or scanned input. Ordinary application calls use
-  /// [CCNavigationOrigin.internal].
-  /// Internal origins retain push-like stack semantics. External origins
-  /// replace the current location so a platform link does not preserve an
-  /// unrelated in-app stack. The returned Future represents backend acceptance,
-  /// not the destination's eventual Pop result.
+  /// [CCNavigationOrigin.internal]. [mode] independently selects whether the
+  /// resolved destination is pushed above the current page or becomes the
+  /// Host's declarative location. The returned Future represents backend
+  /// acceptance, not the destination's eventual Pop result.
   Future<void> openRoute(
     Uri uri, {
     CCNavigationOrigin origin = CCNavigationOrigin.internal,
+    CCDeepLinkOpenMode mode = CCDeepLinkOpenMode.push,
     CCNavigationSource? source,
   }) async {
     _ensureInitialized();
     await _executeNavigationWithFailurePolicy(
       operation: CCNavigationOperation.open,
       origin: origin,
+      openMode: mode,
       source: source,
       routeIdHint: null,
       prepare: () => _routeRegistry.prepareUri(uri, origin),
@@ -193,6 +194,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     final result = await _executeNavigationWithFailurePolicy(
       operation: operation,
       origin: CCNavigationOrigin.internal,
+      openMode: null,
       source: source,
       routeIdHint: intent.routeId,
       prepare: () => _routeRegistry.prepareIntent(intent),
@@ -215,6 +217,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     await _executeNavigationWithFailurePolicy(
       operation: operation,
       origin: CCNavigationOrigin.internal,
+      openMode: null,
       source: source,
       routeIdHint: intent.routeId,
       prepare: () => _routeRegistry.prepareIntent(intent),
@@ -232,6 +235,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     CCNavigationOperation operation,
     _PreparedRoute prepared,
     CCNavigationOrigin origin,
+    CCDeepLinkOpenMode? openMode,
     CCNavigationSource? source, {
     String? navigationId,
     required Future<Object?> Function(CCNavigationRequest request) action,
@@ -244,7 +248,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
         )) {
       return Future<Object?>.error(const CCNavigationReentrancyError());
     }
-    final key = _navigationConcurrencyKey(operation, prepared);
+    final key = _navigationConcurrencyKey(operation, prepared, openMode);
     final existing = _inFlightNavigation[key];
     switch (navigationConcurrencyPolicy) {
       case CCNavigationConcurrencyPolicy.allow:
@@ -260,6 +264,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
       operation,
       prepared,
       origin,
+      openMode,
       source,
       navigationId: navigationId,
       action: action,
@@ -283,6 +288,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     CCNavigationOperation operation,
     _PreparedRoute prepared,
     CCNavigationOrigin origin,
+    CCDeepLinkOpenMode? openMode,
     CCNavigationSource? source, {
     String? navigationId,
     required Future<Object?> Function(CCNavigationRequest request) action,
@@ -298,6 +304,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
         operation,
         current,
         origin,
+        openMode,
         source,
         navigationId: effectiveNavigationId,
       );
@@ -341,6 +348,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
               operation: operation,
               prepared: current,
               origin: origin,
+              openMode: openMode,
               source: source,
               code: code,
               timeout: timeout,
@@ -513,6 +521,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     CCNavigationOperation operation,
     _PreparedRoute prepared,
     CCNavigationOrigin origin,
+    CCDeepLinkOpenMode? openMode,
     CCNavigationSource? source, {
     String? navigationId,
   }) => CCNavigationRequest(
@@ -526,6 +535,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     presentation: prepared.presentation,
     placement: prepared.placement,
     origin: origin,
+    openMode: openMode,
     ownerComponentId: prepared.ownerComponentId,
     hostId: _resolveNavigationHostId(prepared.placement),
     source: source,

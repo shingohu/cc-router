@@ -127,7 +127,7 @@ final class CCMemoryNavigationAdapter
         _entries.add(_CCMemoryNavigationEntry(request));
         return Future<Object?>.value();
       case CCNavigationOperation.open:
-        if (request.origin.isExternal) _clearEntries();
+        if (request.openMode == CCDeepLinkOpenMode.go) _clearEntries();
         _entries.add(_CCMemoryNavigationEntry(request));
         return Future<Object?>.value();
     }

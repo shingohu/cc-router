@@ -25,6 +25,7 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
   Future<Object?> _executeNavigationWithFailurePolicy({
     required CCNavigationOperation operation,
     required CCNavigationOrigin origin,
+    required CCDeepLinkOpenMode? openMode,
     required CCNavigationSource? source,
     required String? routeIdHint,
     required _PreparedRoute Function() prepare,
@@ -35,6 +36,7 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
     _beginNavigationObservation(navigationId);
     var recoveryDepth = 0;
     var currentOperation = operation;
+    var currentOpenMode = openMode;
     var currentRouteIdHint = routeIdHint;
     var currentPrepare = prepare;
     var currentAction = action;
@@ -56,6 +58,7 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
                 currentOperation,
                 prepared,
                 origin,
+                currentOpenMode,
                 source,
                 navigationId: navigationId,
                 action: currentAction,
@@ -65,6 +68,7 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
                 currentOperation,
                 prepared,
                 origin,
+                currentOpenMode,
                 source,
                 navigationId: navigationId,
                 action: currentAction,
@@ -85,6 +89,7 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
               currentRouteIdHint ??
               _navigationFailureRouteId(error),
           origin: origin,
+          openMode: openMode,
           source: source,
           stage: _navigationFailureStage(error),
           errorType: error.runtimeType.toString(),
@@ -121,6 +126,9 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
         _emitNavigationFailure(context, recovered: true);
         recoveryDepth++;
         currentOperation = target.operation;
+        currentOpenMode = target.operation == CCNavigationOperation.open
+            ? openMode ?? CCDeepLinkOpenMode.push
+            : null;
         currentRouteIdHint = target.intent?.routeId;
         currentPrepare = target.intent == null
             ? () => _routeRegistry.prepareUri(target.uri!, origin)

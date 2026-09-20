@@ -449,7 +449,7 @@ final class CCGoRouterAdapter
         _replaceTrackedStack(request);
         return Future<Object?>.value();
       case CCNavigationOperation.open:
-        if (request.origin.isExternal) {
+        if (request.openMode == CCDeepLinkOpenMode.go) {
           _expectBackendEvent(CCGoRouterNavigationEventKind.remove);
           _expectBackendEvent(CCGoRouterNavigationEventKind.push);
           _router.go(location, extra: request.extra);
@@ -622,9 +622,9 @@ final class CCGoRouterAdapter
   /// Runtime `open` completes after backend acceptance, while the created
   /// route remains tracked until its later Pop. This preserves the same
   /// push-like stack semantics as the in-memory Adapter without turning an
-  /// untyped dynamic location into a result-bearing business API. External
-  /// ingress uses location replacement in [navigate] so platform links can
-  /// activate the complete declarative GoRouter branch.
+  /// untyped dynamic location into a result-bearing business API. An Open
+  /// request explicitly using [CCDeepLinkOpenMode.go] takes the declarative
+  /// location path in [navigate] instead.
   Future<Object?> _open(CCNavigationRequest request, String location) {
     return _pushTracked(request, location, exposesResult: false);
   }

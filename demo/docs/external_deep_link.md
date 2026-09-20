@@ -13,6 +13,26 @@ Demo 提供两个不同层级的入口：
 仅给 `CCRouter.navigator.open` 传入 `CCNavigationSource.deepLink` 不会把请求变成外部入口；
 Source 只用于来源归因，是否外部由受控 Ingress 设置的 `CCNavigationOrigin` 决定。
 
+外部来源和栈行为相互独立。三个 `CCDeepLinkIngress` 入口默认使用
+`CCDeepLinkOpenMode.push`，因此运行中打开链接会覆盖到当前页面上方，返回时仍可回到固定
+Root 或主 Tab。需要按 URI 重建 GoRouter 的声明式 Shell/Outlet location 时，宿主可以显式
+选择：
+
+```dart
+await CCDeepLinkIngress.fromPlatform(
+  uri,
+  mode: CCDeepLinkOpenMode.go,
+);
+```
+
+`go` 会替换当前 Host 的 Managed location；它不改变 Origin，也不会绕过 Host Authority
+白名单、Route Deep Link Policy、参数 Codec 或拦截器。Demo 的平台桥保持默认 `push`，用于
+验证固定首页不会被外部链接清除。
+
+当目标位于另一个 `StatefulShellRoute` branch（例如外部链接要求切到另一个 Bottom Tab）
+时，应显式使用 `go`。GoRouter 的 `push` 可以打开 location，但 branch 切换本身不是一条
+可靠的可 Pop 页面历史，不能用它承诺“返回到原 Tab”。
+
 Demo 在 `CCRouter.initialize` 中配置 `demoDeepLinkIngressPolicy`：只接受
 `ccrouter://lab/...`、`https://ccrouter.example/...`，并允许经过 Host mapper
 验证后生成的绝对 Path。框架默认策略是 `denyAll`，所以新增生产域名或自定义 Scheme
@@ -33,7 +53,8 @@ fvm flutter run -d macos
 open 'ccrouter://lab/detail/88?title=macOS%20External%20Deep%20Link&tags=terminal&tags=app-links'
 ```
 
-应用应切换到 ID 为 `88` 的详情页，并显示两个 tags。返回首页后打开“诊断”页，可看到：
+应用应在当前页面上方 Push ID 为 `88` 的详情页，并显示两个 tags；返回后应回到此前页面。
+再打开“诊断”页，可看到：
 
 ```text
 Platform Deep Link received · scheme=ccrouter · host=lab

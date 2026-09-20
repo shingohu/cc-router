@@ -135,6 +135,31 @@ void main() {
     await _unmountDemo(tester);
   });
 
+  testWidgets('simulated external Deep Link can select Go semantics', (
+    tester,
+  ) async {
+    await _pumpDemo(tester);
+    await tester.tap(find.text('导航'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('模拟外部 Deep Link · Go'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('External Deep Link Go'), findsOneWidget);
+    expect(find.text('ID 47'), findsOneWidget);
+    expect(
+      CCRouter.recentNavigationEvents.last.openMode,
+      CCDeepLinkOpenMode.go,
+    );
+    expect(
+      demoNavigationLabStore.events.any(
+        (event) => event.contains('source=demo.simulated_external_go'),
+      ),
+      isTrue,
+    );
+
+    await _unmountDemo(tester);
+  });
+
   testWidgets('platform link stream handles a cold-start URI after attach', (
     tester,
   ) async {
@@ -262,8 +287,8 @@ void main() {
       ),
       isTrue,
     );
-    expect(CCRouter.navigator.canPop(), isFalse);
-    expect(find.byTooltip('返回'), findsNothing);
+    expect(CCRouter.navigator.canPop(), isTrue);
+    expect(find.byTooltip('返回'), findsOneWidget);
 
     await _unmountDemo(tester);
   });
@@ -509,7 +534,11 @@ void main() {
     await _pumpDemo(tester);
     await tester.tap(find.text('导航'));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('进入 StatefulShellRoute'));
+    await tester.scrollUntilVisible(
+      find.text('进入 StatefulShellRoute'),
+      300,
+      scrollable: find.byType(Scrollable).last,
+    );
     await tester.tap(find.text('进入 StatefulShellRoute'));
     await tester.pumpAndSettle();
 

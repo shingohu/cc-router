@@ -89,6 +89,27 @@ enum CCNavigationOrigin {
   final bool isExternal;
 }
 
+/// Selects how a dynamically resolved URI changes its navigation Host stack.
+///
+/// External ingress defaults to [push] so fixed root and main-Tab pages remain
+/// available through Back navigation. Application Host integrations may choose
+/// [go] for Universal Links or other entry points that must rebuild a
+/// declarative Shell hierarchy independently of the current in-app stack. This
+/// value never changes [CCNavigationOrigin] or bypasses Deep Link policy.
+enum CCDeepLinkOpenMode {
+  /// Adds the resolved destination above the current backend location.
+  ///
+  /// Use this for ordinary notification, QR, and running-application links
+  /// where returning to the existing root or Tab is expected.
+  push,
+
+  /// Replaces the current declarative location with the resolved destination.
+  ///
+  /// Use this for entry points whose URI must reconstruct its complete parent,
+  /// Shell, and Outlet hierarchy without retaining an unrelated route stack.
+  go,
+}
+
 /// Selects the stack operation requested from a navigation adapter.
 enum CCNavigationOperation {
   /// Adds a route and completes with its eventual Pop result.
@@ -105,11 +126,10 @@ enum CCNavigationOperation {
 
   /// Opens a dynamically resolved URI without a statically known result type.
   ///
-  /// Trusted internal calls use push-like stack semantics. External platform,
-  /// notification, and QR ingress replaces the current location so declarative
-  /// Shell branches can be reconstructed without retaining an unrelated app
-  /// stack. The operation completes after backend acceptance rather than
-  /// waiting for a Pop result.
+  /// [CCNavigationRequest.openMode] selects Push or declarative Go semantics
+  /// independently of the request's trusted ingress origin. The
+  /// operation completes after backend acceptance rather than waiting for a
+  /// Pop result.
   open,
 }
 
@@ -162,12 +182,18 @@ final class CCNavigationRequest {
     required this.arguments,
     required this.presentation,
     required this.origin,
+    required this.openMode,
     this.ownerComponentId = '',
     this.hostId = 'default',
     this.placement = const CCRoutePlacement.root(),
     this.extra,
     this.source,
-  });
+  }) : assert(
+         operation == CCNavigationOperation.open
+             ? openMode != null
+             : openMode == null,
+         'openMode is required only for CCNavigationOperation.open.',
+       );
 
   /// Runtime-unique identity used to correlate execution and diagnostics.
   final String navigationId;
@@ -200,6 +226,13 @@ final class CCNavigationRequest {
 
   /// Trusted ingress classification assigned by framework infrastructure.
   final CCNavigationOrigin origin;
+
+  /// Stack behavior for a dynamic [CCNavigationOperation.open] request.
+  ///
+  /// Runtime supplies a non-null value only for `open`; Adapter implementations
+  /// select Push or Go behavior from it. Origin remains an independent security
+  /// boundary and cannot be inferred from this behavior.
+  final CCDeepLinkOpenMode? openMode;
 
   /// Trusted owner of the resolved route, when supplied by Runtime.
   ///

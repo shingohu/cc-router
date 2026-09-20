@@ -349,7 +349,7 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
     _ActionTile(
       icon: Icons.link,
       title: 'Open Path alias',
-      subtitle: '/lab/item/43 与主 Path 指向同一页面。Open 使用 location 语义。',
+      subtitle: '/lab/item/43 与主 Path 指向同一页面。应用内 Open 默认 Push。',
       onTap: () => _run(
         'Open path alias',
         () => CCRouter.navigator.open(
@@ -373,7 +373,7 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
     _ActionTile(
       icon: Icons.input,
       title: '模拟外部 Deep Link',
-      subtitle: '通过受控 Platform Ingress 进入，并执行 Deep Link Policy。',
+      subtitle: '默认 Push，保留当前页面和返回路径，并执行 Deep Link Policy。',
       onTap: () => _run(
         'External Deep Link',
         () => CCDeepLinkIngress.fromPlatform(
@@ -382,6 +382,24 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
             '&tags=external&tags=platform',
           ),
           source: const CCNavigationSource.deepLink('demo.simulated_external'),
+        ),
+      ),
+    ),
+    _ActionTile(
+      icon: Icons.alt_route,
+      title: '模拟外部 Deep Link · Go',
+      subtitle: '声明式切换 location，适合重建 Shell 或切换 Tab。',
+      onTap: () => _run(
+        'External Deep Link · Go',
+        () => CCDeepLinkIngress.fromPlatform(
+          Uri.parse(
+            'ccrouter://lab/detail/47?title=External%20Deep%20Link%20Go'
+            '&tags=external&tags=go',
+          ),
+          mode: CCDeepLinkOpenMode.go,
+          source: const CCNavigationSource.deepLink(
+            'demo.simulated_external_go',
+          ),
         ),
       ),
     ),

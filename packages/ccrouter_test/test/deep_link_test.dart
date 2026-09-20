@@ -74,6 +74,7 @@ void main() {
       source: platformSource,
     );
     expect(adapter.currentRequest?.origin, CCNavigationOrigin.externalPlatform);
+    expect(adapter.currentRequest?.openMode, CCDeepLinkOpenMode.push);
     expect(adapter.currentRequest?.source, same(platformSource));
 
     const notificationSource = CCNavigationSource.notification('order_ready');
@@ -85,10 +86,26 @@ void main() {
       adapter.currentRequest?.origin,
       CCNavigationOrigin.externalNotification,
     );
+    expect(adapter.currentRequest?.openMode, CCDeepLinkOpenMode.push);
     expect(adapter.currentRequest?.source, same(notificationSource));
 
     await CCDeepLinkIngress.fromQrCode(Uri.parse('/orders/44'));
     expect(adapter.currentRequest?.origin, CCNavigationOrigin.externalQrCode);
+    expect(adapter.currentRequest?.openMode, CCDeepLinkOpenMode.push);
+    expect(adapter.stack, hasLength(3));
+
+    await CCDeepLinkIngress.fromPlatform(
+      Uri.parse('https://example.com/orders/45'),
+      mode: CCDeepLinkOpenMode.go,
+    );
+    expect(adapter.currentRequest?.origin, CCNavigationOrigin.externalPlatform);
+    expect(adapter.currentRequest?.openMode, CCDeepLinkOpenMode.go);
+    expect(adapter.stack, hasLength(1));
+    expect(CCRouter.activeRouteEntries, hasLength(1));
+    expect(
+      CCRouter.recentNavigationEvents.last.openMode,
+      CCDeepLinkOpenMode.go,
+    );
   });
 
   test('external ingress still enforces disabled Deep Link policy', () async {

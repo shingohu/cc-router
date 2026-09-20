@@ -12,6 +12,7 @@ final class _NavigationConcurrencyKey {
     required this.hostId,
     required this.navigatorOutlet,
     required this.operation,
+    required this.openMode,
     required this.routeId,
     required this.normalizedUri,
   });
@@ -25,6 +26,12 @@ final class _NavigationConcurrencyKey {
   /// Stack operation being coordinated.
   final CCNavigationOperation operation;
 
+  /// Dynamic Open stack behavior, or null for typed operations.
+  ///
+  /// Keeping this in the key prevents simultaneous Push and Go ingress for the
+  /// same URI from sharing a single-flight result with different stack effects.
+  final CCDeepLinkOpenMode? openMode;
+
   /// Stable route identity.
   final String routeId;
 
@@ -37,12 +44,19 @@ final class _NavigationConcurrencyKey {
       other.hostId == hostId &&
       other.navigatorOutlet == navigatorOutlet &&
       other.operation == operation &&
+      other.openMode == openMode &&
       other.routeId == routeId &&
       other.normalizedUri == normalizedUri;
 
   @override
-  int get hashCode =>
-      Object.hash(hostId, navigatorOutlet, operation, routeId, normalizedUri);
+  int get hashCode => Object.hash(
+    hostId,
+    navigatorOutlet,
+    operation,
+    openMode,
+    routeId,
+    normalizedUri,
+  );
 }
 
 /// Adds concurrency coordination to Runtime navigation dispatch.
@@ -51,10 +65,12 @@ extension CCRouterRuntimeNavigationConcurrency on CCRouterRuntime {
   _NavigationConcurrencyKey _navigationConcurrencyKey(
     CCNavigationOperation operation,
     _PreparedRoute prepared,
+    CCDeepLinkOpenMode? openMode,
   ) => _NavigationConcurrencyKey(
     hostId: _resolveNavigationHostId(prepared.placement),
     navigatorOutlet: prepared.placement.navigatorOutlet,
     operation: operation,
+    openMode: openMode,
     routeId: prepared.routeId,
     normalizedUri: prepared.uri,
   );

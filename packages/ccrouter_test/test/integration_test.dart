@@ -743,9 +743,10 @@ void main() {
       await tester.pumpWidget(MaterialApp.router(routerConfig: router));
       await tester.pumpAndSettle();
 
-      const source = CCNavigationSource.deepLink('universal_link.orders');
+      const source = CCNavigationSource.deepLink('initial_location.orders');
       await CCDeepLinkIngress.fromPlatform(
         Uri.parse('https://example.com/settings/orders/42'),
+        mode: CCDeepLinkOpenMode.go,
         source: source,
       );
       await tester.pumpAndSettle();
@@ -759,13 +760,14 @@ void main() {
         CCNavigationOrigin.externalPlatform,
       );
       expect(adapter.requests.single.source, same(source));
+      expect(adapter.requests.single.openMode, CCDeepLinkOpenMode.go);
       expect(adapter.requests.single.routeId, 'orders.detail');
       expect(adapter.requests.single.placement.navigatorOutlet, 'settings');
+      expect(settingsKey.currentState, isNotNull);
+      expect(homeKey.currentState, isNotNull);
       expect(observedEvents, isNotEmpty);
       expect(observedEvents.last.outlet, 'settings');
       expect(observedEvents.last.location, 'orders/:id');
-      expect(settingsKey.currentState, isNotNull);
-      expect(homeKey.currentState, isNotNull);
       final backendEvents = CCRouter.recentBackendNavigationEvents;
       expect(backendEvents, isNotEmpty);
       expect(
