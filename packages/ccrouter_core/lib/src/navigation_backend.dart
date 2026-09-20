@@ -206,20 +206,10 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
       _backendNavigationEvents.add(event);
     }
     for (final listener in _backendNavigationListeners.toList()) {
-      try {
-        listener(event);
-      } catch (error) {
-        if (traceCapacity > 0) {
-          if (_subscriberErrors.length == traceCapacity) {
-            _subscriberErrors.removeAt(0);
-          }
-          _subscriberErrors.add(
-            CCInvocationError(
-              'Backend navigation listener failed: ${error.runtimeType}',
-            ),
-          );
-        }
-      }
+      _notifyNavigationObserver(
+        () => listener(event),
+        failureLabel: 'Backend navigation listener',
+      );
     }
   }
 

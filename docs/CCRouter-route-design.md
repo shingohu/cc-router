@@ -780,7 +780,7 @@ singleFlight    相同导航正在执行时复用第一次调用的 Future。
 hostId + navigatorOutlet + operation + routeId + normalizedUri
 ```
 
-相同路由但不同 Path、Query 或 Extra 参数不能被误判为重复；不同 Host、Window、Shell 或 Outlet 也必须隔离。去重状态在拦截取消、重定向失败、Adapter 失败、页面 Pop 和 Runtime dispose 时释放。`rejectDuplicate` 抛出标准 `CCNavigationDuplicateError`；`singleFlight` 复用同一个逻辑导航结果，不会创建第二个 RouteEntry。该策略不采用全局固定时间 debounce，避免延迟正常导航或误伤合法的重复 Push。
+相同路由但不同 Path 或 Query 参数不能被误判为重复；不同 Host、Shell 或 Outlet 也必须隔离。携带进程内 Extra 的请求不参与自动去重：Runtime 不能安全比较、序列化或哈希任意业务对象，因此 `rejectDuplicate` 和 `singleFlight` 都将其作为独立导航执行。去重状态在拦截取消、重定向失败、Adapter 失败、页面 Pop 和 Runtime dispose 时释放。`rejectDuplicate` 抛出标准 `CCNavigationDuplicateError` 并产生完整 `found/lost/after` 观察终态；`singleFlight` 复用同一个逻辑导航结果，不会创建第二个 RouteEntry，但共享调用仍拥有独立 Navigation ID、Lifecycle 和 `after` 终态。该策略不采用全局固定时间 debounce，避免延迟正常导航或误伤合法的重复 Push。
 
 ### 11.5 待认证导航与登录后恢复
 

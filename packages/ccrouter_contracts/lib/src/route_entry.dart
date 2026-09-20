@@ -112,5 +112,8 @@ final class CCRouteEntryLifecycleEvent {
 }
 
 /// Receives Route Entry lifecycle transitions.
+///
+/// Listeners must remain observational and must not start navigation from the
+/// callback. Runtime rejects work spawned there as reentrant.
 typedef CCRouteEntryLifecycleListener =
     void Function(CCRouteEntryLifecycleEvent event);

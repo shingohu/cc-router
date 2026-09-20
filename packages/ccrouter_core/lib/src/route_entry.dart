@@ -367,20 +367,10 @@ extension CCRouterRuntimeRouteEntries on CCRouterRuntime {
     }
     _emitAspectEntryState(entry, state);
     for (final listener in _routeEntryListeners.toList()) {
-      try {
-        listener(event);
-      } catch (error) {
-        if (traceCapacity > 0) {
-          if (_subscriberErrors.length == traceCapacity) {
-            _subscriberErrors.removeAt(0);
-          }
-          _subscriberErrors.add(
-            CCInvocationError(
-              'Route Entry listener failed: ${error.runtimeType}',
-            ),
-          );
-        }
-      }
+      _notifyNavigationObserver(
+        () => listener(event),
+        failureLabel: 'Route Entry listener',
+      );
     }
   }
 }

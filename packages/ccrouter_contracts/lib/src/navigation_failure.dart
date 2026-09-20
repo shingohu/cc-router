@@ -200,5 +200,8 @@ final class CCNavigationFailureEvent {
 }
 
 /// Receives sanitized navigation failure decisions.
+///
+/// Listeners must remain observational and must not start navigation. Use the
+/// Failure Policy decision itself when the Host needs a redirect or fallback.
 typedef CCNavigationFailureListener =
     void Function(CCNavigationFailureEvent event);

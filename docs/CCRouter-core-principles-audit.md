@@ -5,10 +5,11 @@
 - 审查日期：2026-09-20
 - 审查范围：路由 Runtime、业务 Facade、Host/Adapter SPI、GoRouter Adapter、生成器、
   Demo、测试与诊断模型。
-- 自动化基线：`dart analyze` 通过；Framework 192 项、Demo 6 项、Generator 78 项测试通过；
-  macOS debug build 和交互验证通过。
+- 自动化基线：`dart analyze` 通过；Framework 208 项、Demo 19 项、Generator 78 项测试通过；
+  最近一次 macOS debug build 和交互验证通过。
 - 总体结论：13 条约定的架构方向成立，但当前不能认定为全部对齐。没有阻断 Demo 的 P0
-  问题；存在 5 项 P1 和 6 项 P2 欠账，应在冻结路由公开 API 前优先处理 P1。
+  问题；并发 Observation、Extra 去重和回调重入 3 项正确性问题已完成收口，仍存在 2 项 P1
+  和 6 项 P2 欠账，应在冻结路由公开 API 前继续处理 P1。
 
 本审查只记录事实和后续门槛，不因为某项容易实现就扩展公开 API。
 
@@ -27,38 +28,24 @@
 | 9 | 可降级回退 | 部分满足 | 无法可靠降级的组合栈事务与精确 Entry 操作已从公开能力链删除，不再静默模拟。解析前失败和观察能力降级仍没有统一进入 failure/diagnostic 记录。 |
 | 10 | 明确生命周期 | 基本满足 | Runtime、Session、RouteEntry、Scope、Adapter、Backend 的 Owner 和销毁顺序明确，幂等与 pending Future 已有测试。组件 activate/deactivate 当前只覆盖 Route/Shell，完整 Service/Handler/Scope 生命周期仍按设计暂缓。 |
 | 11 | 可观测可诊断可溯源 | 部分满足 | navigationId、来源、Owner、阶段耗时、bounded history、Listener 异常隔离均已具备。RouteEntry、Backend 和 Pending 快照仍可能保留完整 URI/location；部分前置失败没有事件。 |
-| 12 | 并发安全 | 部分满足 | 初始化/销毁、Session、Adapter 生命周期和导航并发策略已有确定语义，Defer/Timeout/Cancel 有回归。拦截器及普通 Listener 的重入保护不完整，并发 key 未覆盖 Extra，且并发短路会遗留 Aspect record。 |
+| 12 | 并发安全 | 基本满足 | 初始化/销毁、Session、Adapter 生命周期和导航并发策略已有确定语义，Defer/Timeout/Cancel 有回归。并发短路具有完整 Aspect 终态；Extra 请求明确独立执行；Interceptor、Policy、Guard、Aspect 和普通 Listener 统一使用 Zone 重入保护。 |
 | 13 | 性能和稳定 | 未形成量化闭环 | 热路径无反射，路由 ID 使用索引，缓存有界，错误不被吞掉。但没有 benchmark、内存增长门槛或版本对比；动态 URI 解析和 Workspace 扫描仍为线性全量工作，观察回调同步阻塞导航。 |
 
 ## 3. P1 问题
 
-### P1-1 并发短路会遗留 Navigation Aspect record
+### 已完成：并发 Observation、Extra 与回调重入
 
-`_executeNavigationWithFailurePolicy` 在进入并发门前创建 Aspect record。`rejectDuplicate`
-抛错或 `singleFlight` 直接返回已有 Future 时，没有生成本次 request 的 `after/lost`，也没有调用
-`_discardNavigationObservation`。重复触发会让 `_navigationAspectRecords` 增长到 Runtime dispose。
+- `rejectDuplicate` 为被拒请求产生独立 Navigation ID 和 `found/lost/after`，随后释放
+  Observation；
+- `singleFlight` 共享第一个 Future，但跟随调用保留独立 Navigation ID、Lifecycle 和 `after`
+  终态，不创建第二个 RouteEntry；
+- 携带 Extra 的请求不参与自动去重，避免比较、哈希或合并任意业务对象；
+- Interceptor、Failure Policy、PopGuard、Telemetry Provider、Aspect 和所有 Runtime 路由 Listener
+  统一进入 Runtime Zone；回调内同步调用及其派生异步任务发起导航均抛出
+  `CCNavigationReentrancyError`；
+- 专项测试覆盖拒绝、共享、Extra 独立执行、Interceptor 重入和 Listener 重入。
 
-建议：让并发门返回结构化结果 `accepted/rejected/shared`。Rejected 必须发出稳定 lost/after；Shared
-必须记录 coalesced 关系并释放第二个 observation。补充重复调用、长时间循环和 dispose 回归。
-
-### P1-2 并发 key 忽略 Extra，可能错误合并不同请求
-
-当前 key 只包含 Host、Outlet、Operation、Route ID 和 normalized URI。两个 URI 相同但 Extra
-不同的 typed navigation 在 `singleFlight` 下会共享第一个页面和结果，在 `rejectDuplicate` 下会误拒绝。
-
-建议：首版对含 Extra 的 Route 禁止 `singleFlight/rejectDuplicate`，或增加由生成契约提供的稳定
-dedupe key。不能对任意业务对象调用 `toString`、深比较或持久 hash。
-
-### P1-3 重入保护没有覆盖 Interceptor 和普通 Listener
-
-Aspect、Failure Policy 和 PopGuard 有 `_navigationCallbackActive`/Zone 保护，但
-`CCNavigationInterceptor.intercept`、Navigation/Failure/Visibility/RouteEntry/Backend Listener
-没有统一进入受控回调区。注释虽然禁止递归导航，Runtime 仍可能同步进入第二次 Adapter 操作。
-
-建议：所有框架回调统一通过内部 callback runner，明确 decision callback 与 observer callback；
-回调内同步导航稳定抛 `CCNavigationReentrancyError`，异步排队只能通过显式 post-navigation API。
-
-### P1-4 Retained diagnostics 仍包含完整 URI/location
+### P1-1 Retained diagnostics 仍包含完整 URI/location
 
 以下公开或有界历史会保存参数值：
 
@@ -74,7 +61,7 @@ URI”不一致。
 Runtime/Adapter 控制面；业务诊断默认只暴露 routeId、routePattern、Host/Outlet 和参数 presence。
 确需原始位置时使用 Host-only、即时读取、显式 opt-in，且不得进入 retained history。
 
-### P1-5 同步 Observer 可阻塞导航热路径
+### P1-2 同步 Observer 可阻塞导航热路径
 
 Aspect、Navigation Listener、RouteEntry/Visibility Listener 和 Backend Listener 都在导航或
 Navigator callback 栈内同步执行。异常已隔离，但长耗时 CPU、同步 IO 或大量 listener 仍会直接增加
@@ -152,12 +139,11 @@ PII/凭证。框架无法证明匿名性，但可以减少明显误用。
 
 ## 6. 推荐处理顺序
 
-1. 修复 P1-1、P1-2、P1-3，并增加并发循环、重入和 Aspect 释放测试。
-2. 设计 sanitized diagnostic snapshot，处理 P1-4；这是数据边界变更，应先写迁移说明。
-3. 将纯观察回调改为有界异步分发，解决 P1-5，并建立顺序/overflow 测试。
-4. 收口业务 barrel 的 Adapter SPI，补 API surface 快照测试。
-5. 补 pre-dispatch failure/capability fallback 事件和 Workspace 依赖图校验。
-6. 合并生成入口并建立 benchmark；得到基线前不做缓存和索引优化。
+1. 设计 sanitized diagnostic snapshot，处理 P1-1；这是数据边界变更，应先写迁移说明。
+2. 将纯观察回调改为有界异步分发，解决 P1-2，并建立顺序/overflow 测试。
+3. 收口业务 barrel 的 Adapter SPI，补 API surface 快照测试。
+4. 补 pre-dispatch failure/capability fallback 事件和 Workspace 依赖图校验。
+5. 合并生成入口并建立 benchmark；得到基线前不做缓存和索引优化。
 
 每一项完成后必须运行 analyze、Framework/Demo/Generator 全量测试，并重新执行 macOS Demo
 交互回归。涉及 Android Predictive Back 时另加真实 Android 设备验证。

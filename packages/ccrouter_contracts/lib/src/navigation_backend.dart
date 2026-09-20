@@ -417,7 +417,8 @@ final class CCNavigationBackendEvent {
 ///
 /// Runtime hosts subscribe to this optional adapter capability. Implementations
 /// should invoke listeners after the backend observer callback and must not
-/// allow listener failures to alter backend navigation.
+/// allow listener failures to alter backend navigation. Host listeners must
+/// remain observational and cannot start another Runtime navigation.
 typedef CCNavigationBackendEventListener =
     void Function(CCNavigationBackendEvent event);
 

@@ -88,13 +88,10 @@ extension CCRouterRuntimeRestorationDiagnostics on CCRouterRuntime {
       _restorationOpportunityEvents.add(event);
     }
     for (final listener in _restorationOpportunityListeners.toList()) {
-      try {
-        listener(event);
-      } catch (error) {
-        _recordNavigationCallbackFailure(
-          'Route restoration listener failed: ${error.runtimeType}.',
-        );
-      }
+      _notifyNavigationObserver(
+        () => listener(event),
+        failureLabel: 'Route restoration listener',
+      );
     }
   }
 

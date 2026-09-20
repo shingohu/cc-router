@@ -94,8 +94,7 @@ extension CCRouterRuntimePopGuard on CCRouterRuntime {
     required CCPopGuardContext context,
   }) {
     try {
-      _navigationCallbackActive = true;
-      return guard.evaluate(context);
+      return _runNavigationDecisionCallback(() => guard.evaluate(context));
     } catch (error) {
       if (traceCapacity > 0) {
         if (_subscriberErrors.length == traceCapacity) {
@@ -106,8 +105,6 @@ extension CCRouterRuntimePopGuard on CCRouterRuntime {
         );
       }
       return const CCPopDeny(code: 'pop_guard_failed');
-    } finally {
-      _navigationCallbackActive = false;
     }
   }
 

@@ -39,6 +39,9 @@ Flutter Facade、GoRouter Adapter、路由 Generator、Demo 路由接入、测�
 - [x] 修复 `CCNavigationDefer` 恢复组合导航时退化为普通 `navigate` 的问题；
 - [x] 为 Interceptor 增加真实 Deadline/Timeout 和专用错误；
 - [x] 校验路由级 Interceptor 的组件所有权；
+- [x] 为并发拒绝和共享请求补齐独立 Navigation ID、Lifecycle 与 Aspect 终态；
+- [x] 禁止对任意 Extra 对象做隐式去重，携带 Extra 的请求保持独立执行；
+- [x] 统一 Interceptor、Policy、Guard、Aspect 和 Listener 的 Zone 重入保护；
 - [x] 覆盖 Redirect、Cancel、Defer、超时、异常、Session/Runtime 清理和内存释放。
 
 ### P0-2 Pop 决策

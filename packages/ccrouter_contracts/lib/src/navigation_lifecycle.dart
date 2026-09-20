@@ -6,13 +6,16 @@ import 'route_placement.dart';
 /// Telemetry consumers can pair a [requested] event with a later [completed]
 /// or [failed] event through [CCNavigationLifecycleEvent.navigationId].
 enum CCNavigationLifecyclePhase {
-  /// Runtime accepted the request and is dispatching it to the adapter.
+  /// Runtime accepted the request for interception, coordination, or dispatch.
+  ///
+  /// A single-flight follower emits this phase while awaiting the admitted
+  /// request and does not perform a second Adapter operation.
   requested,
 
-  /// The adapter completed the requested operation successfully.
+  /// The requested operation or its shared single-flight result succeeded.
   completed,
 
-  /// The adapter or backend rejected the requested operation.
+  /// Runtime policy, an interceptor, the adapter, or the backend rejected it.
   failed,
 }
 
@@ -81,6 +84,7 @@ final class CCNavigationLifecycleEvent {
 /// Receives Runtime navigation lifecycle events.
 ///
 /// Listeners should enqueue or export telemetry and return quickly. They must
-/// not synchronously start another navigation from inside the callback.
+/// not start navigation from inside the callback; Runtime rejects synchronous
+/// calls and asynchronous work spawned in the callback as reentrant.
 typedef CCNavigationLifecycleListener =
     void Function(CCNavigationLifecycleEvent event);

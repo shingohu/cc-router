@@ -41,20 +41,10 @@ extension CCRouterRuntimeRouteVisibility on CCRouterRuntime {
       _routeVisibilityEvents.add(event);
     }
     for (final listener in _routeVisibilityListeners.toList()) {
-      try {
-        listener(event);
-      } catch (error) {
-        if (traceCapacity > 0) {
-          if (_subscriberErrors.length == traceCapacity) {
-            _subscriberErrors.removeAt(0);
-          }
-          _subscriberErrors.add(
-            CCInvocationError(
-              'Route visibility listener failed: ${error.runtimeType}',
-            ),
-          );
-        }
-      }
+      _notifyNavigationObserver(
+        () => listener(event),
+        failureLabel: 'Route visibility listener',
+      );
     }
   }
 }

@@ -50,20 +50,10 @@ extension CCRouterRuntimeNavigationLifecycle on CCRouterRuntime {
       _navigationEvents.add(event);
     }
     for (final listener in _navigationListeners.toList()) {
-      try {
-        listener(event);
-      } catch (error) {
-        if (traceCapacity > 0) {
-          if (_subscriberErrors.length == traceCapacity) {
-            _subscriberErrors.removeAt(0);
-          }
-          _subscriberErrors.add(
-            CCInvocationError(
-              'Navigation listener failed: ${error.runtimeType}',
-            ),
-          );
-        }
-      }
+      _notifyNavigationObserver(
+        () => listener(event),
+        failureLabel: 'Navigation listener',
+      );
     }
   }
 }

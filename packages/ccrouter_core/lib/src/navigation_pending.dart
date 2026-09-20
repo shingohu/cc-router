@@ -134,6 +134,7 @@ extension CCRouterRuntimePendingNavigation on CCRouterRuntime {
   /// executing the complete interception chain again. A policy that still
   /// returns [CCNavigationDefer] creates a fresh bounded continuation.
   Future<Object?> resumePendingNavigation(String navigationId) async {
+    _ensureNavigationCanStart();
     _ensureInitialized();
     final record = _pendingNavigations.remove(navigationId);
     if (record == null) throw const CCNavigationPendingNotFoundError();

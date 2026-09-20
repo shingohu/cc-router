@@ -137,6 +137,8 @@ final class CCRouterRuntime {
   /// [CCNavigationConcurrencyPolicy.allow] is the default and preserves
   /// ordinary repeated pushes. The other policies only affect requests that
   /// are still pending; completed navigation never remains in this gate.
+  /// Requests carrying process-local Extra always execute independently
+  /// because Runtime cannot derive a stable equality key for arbitrary values.
   final CCNavigationConcurrencyPolicy navigationConcurrencyPolicy;
 
   /// Host-owned trust boundary applied to every external URI resolution.
@@ -263,9 +265,6 @@ final class CCRouterRuntime {
 
   /// Active or retained observation state indexed by navigation identity.
   final Map<String, _CCNavigationAspectRecord> _navigationAspectRecords = {};
-
-  /// Whether a framework policy or observer callback is currently executing.
-  bool _navigationCallbackActive = false;
 
   /// Subscribers receiving Runtime navigation lifecycle events.
   final Set<CCNavigationLifecycleListener> _navigationListeners = {};
@@ -1008,7 +1007,6 @@ final class CCRouterRuntime {
         record.clock.stop();
       }
       _navigationAspectRecords.clear();
-      _navigationCallbackActive = false;
     }
   }
 

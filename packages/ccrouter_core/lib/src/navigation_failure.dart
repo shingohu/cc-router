@@ -32,6 +32,7 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
     required Future<Object?> Function(CCNavigationRequest request) action,
     void Function(_RouteEntryRecord entry)? commitEntry,
   }) async {
+    _ensureNavigationCanStart();
     final navigationId = '$_runtimeId-navigation-${++_navigationSequence}';
     _beginNavigationObservation(navigationId);
     var recoveryDepth = 0;
@@ -97,11 +98,8 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
         );
         late final CCNavigationFailureDecision decision;
         try {
-          decision = await runZoned(
-            () => Future<CCNavigationFailureDecision>.sync(
-              () => policy.onFailure(context),
-            ),
-            zoneValues: {CCRouterRuntime._navigationCallbackZoneKey: this},
+          decision = await _runAsyncNavigationDecisionCallback(
+            () => policy.onFailure(context),
           );
         } catch (policyError) {
           _recordNavigationCallbackFailure(
@@ -273,13 +271,10 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
       _navigationFailures.add(event);
     }
     for (final listener in _navigationFailureListeners.toList()) {
-      try {
-        listener(event);
-      } catch (error) {
-        _recordNavigationCallbackFailure(
-          'Navigation failure listener failed: ${error.runtimeType}.',
-        );
-      }
+      _notifyNavigationObserver(
+        () => listener(event),
+        failureLabel: 'Navigation failure listener',
+      );
     }
   }
 

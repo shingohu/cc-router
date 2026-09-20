@@ -3094,6 +3094,238 @@ void main() {
   });
 
   test(
+    'rejectDuplicate terminates the rejected navigation observation',
+    () async {
+      final observed = <CCNavigationAspectEvent>[];
+      final runtime = CCRouterRuntime.forTesting(
+        navigationAdapter: CCMemoryNavigationAdapter(),
+        navigationConcurrencyPolicy:
+            CCNavigationConcurrencyPolicy.rejectDuplicate,
+        navigationAspects: [
+          CCNavigationAspect(
+            id: 'concurrency',
+            onFound: observed.add,
+            onLost: observed.add,
+            onAfter: observed.add,
+          ),
+        ],
+        components: [
+          routeComponent(
+            'orders',
+            (registry) => registry.registerRoute(pathRoute()),
+          ),
+        ],
+      );
+      runtime.initialize();
+
+      final first = runtime.pushRoute<String>(
+        const TestIntent<String>('orders.detail', RouteArgs('2')),
+      );
+      await expectLater(
+        runtime.pushRoute<String>(
+          const TestIntent<String>('orders.detail', RouteArgs('2')),
+        ),
+        throwsA(isA<CCNavigationDuplicateError>()),
+      );
+
+      final failed = observed.where(
+        (event) => event.errorType == 'CCNavigationDuplicateError',
+      );
+      expect(failed.map((event) => event.phase), [
+        CCNavigationAspectPhase.lost,
+        CCNavigationAspectPhase.after,
+      ]);
+      expect(
+        failed.map((event) => event.request.navigationId).toSet(),
+        hasLength(1),
+      );
+
+      runtime.popRoute(result: 'first');
+      expect(await first, 'first');
+      await runtime.dispose();
+    },
+  );
+
+  test('singleFlight terminates the shared navigation observation', () async {
+    final observed = <CCNavigationAspectEvent>[];
+    final runtime = CCRouterRuntime.forTesting(
+      navigationAdapter: CCMemoryNavigationAdapter(),
+      navigationConcurrencyPolicy: CCNavigationConcurrencyPolicy.singleFlight,
+      navigationAspects: [
+        CCNavigationAspect(
+          id: 'concurrency',
+          onFound: observed.add,
+          onArrival: observed.add,
+          onLost: observed.add,
+          onAfter: observed.add,
+        ),
+      ],
+      components: [
+        routeComponent(
+          'orders',
+          (registry) => registry.registerRoute(pathRoute()),
+        ),
+      ],
+    );
+    runtime.initialize();
+
+    final first = runtime.pushRoute<String>(
+      const TestIntent<String>('orders.detail', RouteArgs('2')),
+    );
+    final second = runtime.pushRoute<String>(
+      const TestIntent<String>('orders.detail', RouteArgs('2')),
+    );
+    runtime.popRoute(result: 'shared');
+    expect(await first, 'shared');
+    expect(await second, 'shared');
+
+    final foundIds = observed
+        .where((event) => event.phase == CCNavigationAspectPhase.found)
+        .map((event) => event.request.navigationId)
+        .toSet();
+    final arrivalIds = observed
+        .where((event) => event.phase == CCNavigationAspectPhase.arrival)
+        .map((event) => event.request.navigationId)
+        .toSet();
+    final afterIds = observed
+        .where((event) => event.phase == CCNavigationAspectPhase.after)
+        .map((event) => event.request.navigationId)
+        .toSet();
+    expect(foundIds, hasLength(2));
+    expect(arrivalIds, hasLength(1));
+    expect(afterIds, foundIds);
+    expect(
+      observed.where((event) => event.phase == CCNavigationAspectPhase.lost),
+      isEmpty,
+    );
+    await runtime.dispose();
+  });
+
+  test(
+    'concurrency policies keep Extra-bearing navigations independent',
+    () async {
+      for (final policy in [
+        CCNavigationConcurrencyPolicy.rejectDuplicate,
+        CCNavigationConcurrencyPolicy.singleFlight,
+      ]) {
+        final adapter = CCMemoryNavigationAdapter();
+        final runtime = CCRouterRuntime.forTesting(
+          navigationAdapter: adapter,
+          navigationConcurrencyPolicy: policy,
+          components: [
+            routeComponent(
+              'orders',
+              (registry) => registry.registerRoute(pathRoute()),
+            ),
+          ],
+        );
+        runtime.initialize();
+
+        final first = runtime.pushRoute<String>(
+          TestIntent<String>(
+            'orders.detail',
+            RouteArgs('2', payload: Object()),
+          ),
+        );
+        final second = runtime.pushRoute<String>(
+          TestIntent<String>(
+            'orders.detail',
+            RouteArgs('2', payload: Object()),
+          ),
+        );
+        expect(adapter.stack, hasLength(2), reason: policy.name);
+        expect(runtime.activeRouteEntries, hasLength(2), reason: policy.name);
+
+        runtime.popRoute(result: 'second');
+        expect(await second, 'second', reason: policy.name);
+        runtime.popRoute(result: 'first');
+        expect(await first, 'first', reason: policy.name);
+        await runtime.dispose();
+      }
+    },
+  );
+
+  test('interceptor callbacks cannot re-enter navigation', () async {
+    late CCRouterRuntime runtime;
+    late Future<void> reentry;
+    late Future<void> reentryExpectation;
+    var attempted = false;
+    runtime = CCRouterRuntime.forTesting(
+      navigationAdapter: CCMemoryNavigationAdapter(),
+      globalInterceptors: [
+        CCGlobalNavigationInterceptor(
+          id: 'reentry',
+          interceptor: TestNavigationInterceptor('reentry', (_) {
+            if (!attempted) {
+              attempted = true;
+              reentry = runtime.goRoute(
+                const TestIntent<void>('orders.detail', RouteArgs('43')),
+              );
+              reentryExpectation = expectLater(
+                reentry,
+                throwsA(isA<CCNavigationReentrancyError>()),
+              );
+            }
+            return const CCNavigationProceed();
+          }, []),
+        ),
+      ],
+      components: [
+        routeComponent(
+          'orders',
+          (registry) => registry.registerRoute(pathRoute()),
+        ),
+      ],
+    );
+    runtime.initialize();
+
+    await runtime.goRoute(
+      const TestIntent<void>('orders.detail', RouteArgs('42')),
+    );
+    await reentryExpectation;
+    expect(runtime.activeRouteEntries.single.normalizedUri.path, '/orders/42');
+    await runtime.dispose();
+  });
+
+  test('navigation listener tasks cannot re-enter navigation', () async {
+    late CCRouterRuntime runtime;
+    late Future<void> reentry;
+    late Future<void> reentryExpectation;
+    var attempted = false;
+    runtime = CCRouterRuntime.forTesting(
+      navigationAdapter: CCMemoryNavigationAdapter(),
+      components: [
+        routeComponent(
+          'orders',
+          (registry) => registry.registerRoute(pathRoute()),
+        ),
+      ],
+    );
+    runtime.initialize();
+    runtime.addNavigationListener((event) {
+      if (!attempted && event.phase == CCNavigationLifecyclePhase.requested) {
+        attempted = true;
+        reentry = Future<void>.microtask(
+          () => runtime.goRoute(
+            const TestIntent<void>('orders.detail', RouteArgs('43')),
+          ),
+        );
+        reentryExpectation = expectLater(
+          reentry,
+          throwsA(isA<CCNavigationReentrancyError>()),
+        );
+      }
+    });
+
+    await runtime.goRoute(
+      const TestIntent<void>('orders.detail', RouteArgs('42')),
+    );
+    await reentryExpectation;
+    expect(runtime.activeRouteEntries.single.normalizedUri.path, '/orders/42');
+    await runtime.dispose();
+  });
+
+  test(
     'deferred navigation resumes through the full interceptor pipeline',
     () async {
       final adapter = CCMemoryNavigationAdapter();

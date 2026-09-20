@@ -291,7 +291,9 @@ extension CCRouterRuntimeNavigationAspects on CCRouterRuntime {
     final provider = telemetryContextProvider;
     if (provider == null) return null;
     try {
-      return _validatedTelemetryContext(provider.currentContext());
+      return _validatedTelemetryContext(
+        _runNavigationDecisionCallback(provider.currentContext),
+      );
     } catch (error) {
       _recordNavigationCallbackFailure(
         'Navigation telemetry context failed: ${error.runtimeType}.',
@@ -348,21 +350,10 @@ extension CCRouterRuntimeNavigationAspects on CCRouterRuntime {
         CCNavigationAspectPhase.after => aspect.onAfter,
       };
       if (observer == null) continue;
-      _navigationCallbackActive = true;
-      try {
-        observer(event);
-      } catch (error) {
-        if (traceCapacity > 0) {
-          if (_subscriberErrors.length == traceCapacity) {
-            _subscriberErrors.removeAt(0);
-          }
-          _subscriberErrors.add(
-            CCInvocationError('Navigation aspect failed: ${error.runtimeType}'),
-          );
-        }
-      } finally {
-        _navigationCallbackActive = false;
-      }
+      _notifyNavigationObserver(
+        () => observer(event),
+        failureLabel: 'Navigation aspect',
+      );
     }
   }
 }

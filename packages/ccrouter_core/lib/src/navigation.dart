@@ -43,6 +43,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     R? result,
     CCPopTrigger trigger = CCPopTrigger.system,
   }) async {
+    _ensureNavigationCanStart();
     _ensureInitialized();
     try {
       final guarded = _guardedPopOutcome(trigger);
@@ -147,6 +148,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
 
   /// Pops the active adapter route with an optional typed [result].
   void popRoute<R>({R? result}) {
+    _ensureNavigationCanStart();
     _ensureInitialized();
     try {
       final guarded = _guardedPopOutcome(CCPopTrigger.business);
@@ -233,9 +235,8 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
   /// Runs the common interception pipeline before one Adapter operation.
   ///
   /// [action] receives the final request after all redirects have been
-  /// resolved. Keeping this pipeline shared ensures composite operations such
-  /// as PopAndPush and PushAndRemoveUntil enforce the same access policies as
-  /// ordinary Push and Replace navigation.
+  /// resolved. Keeping this pipeline shared ensures Push, Replace, Go, Reset,
+  /// and dynamic Open apply the same concurrency and access-policy boundaries.
   Future<Object?> _dispatchNavigationWithAction(
     CCNavigationOperation operation,
     _PreparedRoute prepared,
@@ -246,12 +247,17 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     required Future<Object?> Function(CCNavigationRequest request) action,
     void Function(_RouteEntryRecord entry)? commitEntry,
   }) {
-    if (_navigationCallbackActive ||
-        identical(
-          Zone.current[CCRouterRuntime._navigationCallbackZoneKey],
-          this,
-        )) {
-      return Future<Object?>.error(const CCNavigationReentrancyError());
+    if (prepared.extra != null) {
+      return _dispatchNavigationUncoordinated(
+        operation,
+        prepared,
+        origin,
+        openMode,
+        source,
+        navigationId: navigationId,
+        action: action,
+        commitEntry: commitEntry,
+      );
     }
     final key = _navigationConcurrencyKey(operation, prepared, openMode);
     final existing = _inFlightNavigation[key];
@@ -260,10 +266,32 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
         break;
       case CCNavigationConcurrencyPolicy.rejectDuplicate:
         if (existing != null) {
-          throw CCNavigationDuplicateError(prepared.routeId);
+          final request = _buildNavigationRequest(
+            operation,
+            prepared,
+            origin,
+            openMode,
+            source,
+            navigationId: navigationId,
+          );
+          final error = CCNavigationDuplicateError(prepared.routeId);
+          _emitAspectFound(request);
+          _emitShortCircuitedNavigationFailure(request, error);
+          throw error;
         }
       case CCNavigationConcurrencyPolicy.singleFlight:
-        if (existing != null) return existing;
+        if (existing != null) {
+          final request = _buildNavigationRequest(
+            operation,
+            prepared,
+            origin,
+            openMode,
+            source,
+            navigationId: navigationId,
+          );
+          _emitAspectFound(request);
+          return _observeSharedNavigation(request, existing);
+        }
     }
     final pending = _dispatchNavigationUncoordinated(
       operation,
@@ -286,6 +314,66 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
       unawaited(pending.then<void>((_) => clear(), onError: (_, _) => clear()));
     }
     return pending;
+  }
+
+  /// Publishes the terminal state of a request rejected before interception.
+  void _emitShortCircuitedNavigationFailure(
+    CCNavigationRequest request,
+    CCRouterError error,
+  ) {
+    final errorType = error.runtimeType.toString();
+    _emitAspectLost(
+      request,
+      outcome: CCNavigationAspectOutcome.failed,
+      errorType: errorType,
+    );
+    _emitAspectAfter(
+      request,
+      outcome: CCNavigationAspectOutcome.failed,
+      errorType: errorType,
+    );
+    _emitNavigationEvent(request, CCNavigationLifecyclePhase.requested);
+    _emitNavigationEvent(
+      request,
+      CCNavigationLifecyclePhase.failed,
+      errorType: errorType,
+    );
+  }
+
+  /// Mirrors one admitted request's result into a distinct shared observation.
+  ///
+  /// The shared request has its own navigation identity but does not allocate a
+  /// Route Entry or emit Arrival. Its terminal result follows the first request
+  /// while preserving the original error object and stack trace for callers.
+  Future<Object?> _observeSharedNavigation(
+    CCNavigationRequest request,
+    Future<Object?> shared,
+  ) async {
+    _emitNavigationEvent(request, CCNavigationLifecyclePhase.requested);
+    try {
+      final result = await shared;
+      _emitAspectAfter(request, outcome: CCNavigationAspectOutcome.succeeded);
+      _emitNavigationEvent(request, CCNavigationLifecyclePhase.completed);
+      return result;
+    } catch (error, stackTrace) {
+      final errorType = error.runtimeType.toString();
+      _emitAspectLost(
+        request,
+        outcome: CCNavigationAspectOutcome.failed,
+        errorType: errorType,
+      );
+      _emitAspectAfter(
+        request,
+        outcome: CCNavigationAspectOutcome.failed,
+        errorType: errorType,
+      );
+      _emitNavigationEvent(
+        request,
+        CCNavigationLifecyclePhase.failed,
+        errorType: errorType,
+      );
+      Error.throwWithStackTrace(error, stackTrace);
+    }
   }
 
   /// Runs one navigation after the concurrency gate has admitted it.
@@ -481,7 +569,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
       deadline: deadline,
     );
     try {
-      var pending = Future<CCNavigationInterception>.sync(
+      var pending = _runAsyncNavigationDecisionCallback(
         () => interceptor.intercept(context),
       );
       if (timeout != null) {

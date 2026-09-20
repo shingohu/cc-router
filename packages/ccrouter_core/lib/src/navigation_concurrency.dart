@@ -5,7 +5,9 @@ part of 'runtime.dart';
 /// The key deliberately contains route placement and normalized URI so two
 /// Shell outlets or two parameterized destinations cannot suppress one
 /// another accidentally. Host identity isolates independently owned navigation
-/// backends and is empty until an adapter supplies one.
+/// backends and is empty until an adapter supplies one. Requests carrying
+/// process-local Extra data never create this key because arbitrary objects do
+/// not have a stable, type-safe equality contract.
 final class _NavigationConcurrencyKey {
   /// Creates a key from the immutable target metadata.
   const _NavigationConcurrencyKey({
