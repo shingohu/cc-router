@@ -9,7 +9,8 @@ extension CCRouterRuntimePopGuard on CCRouterRuntime {
   /// underlying CCRouter page. Guard failures fail closed with a stable code.
   CCPopGuardDecision _evaluatePopGuardsForActiveEntry(CCPopTrigger trigger) {
     if (!_initialized || _disposed) return const CCPopAllow();
-    final entry = _managedPopTarget();
+    final target = _activePopTarget;
+    final entry = _managedPopTarget(target);
     if (entry == null) return const CCPopAllow();
     final context = CCPopGuardContext(entry: entry.snapshot, trigger: trigger);
     for (final registration in _globalPopGuards) {
@@ -44,10 +45,19 @@ extension CCRouterRuntimePopGuard on CCRouterRuntime {
   /// A foreign or opaque top therefore returns null and protects the managed
   /// stack from inferred positional changes. Adapters without a ledger use the
   /// Runtime top Entry as their documented compatibility behavior.
-  _RouteEntryRecord? _managedPopTarget() {
+  _RouteEntryRecord? _managedPopTarget(CCNavigationPopTarget? target) {
     CCBackendEntry? topBackendEntry;
     for (final backendEntry in _backendEntries.values) {
       if (backendEntry.lifecycleState != CCBackendEntryLifecycleState.active) {
+        continue;
+      }
+      if (target != null &&
+          ((backendEntry.hostId ?? target.hostId) != target.hostId ||
+              backendEntry.navigatorOutlet != target.navigatorOutlet)) {
+        continue;
+      }
+      if (target?.backendEntryId != null &&
+          backendEntry.backendEntryId != target!.backendEntryId) {
         continue;
       }
       final currentSequence = topBackendEntry?.lastSequence ?? -1;
@@ -65,9 +75,12 @@ extension CCRouterRuntimePopGuard on CCRouterRuntime {
       }
       return null;
     }
-    final activeHostId = _activeRouteEntryHostId;
+    final activeHostId = target?.hostId ?? _activeRouteEntryHostId;
     for (final entry in _routeEntries.reversed) {
-      if (activeHostId == null || entry.request.hostId == activeHostId) {
+      if ((activeHostId == null || entry.request.hostId == activeHostId) &&
+          (target == null ||
+              entry.request.placement.navigatorOutlet ==
+                  target.navigatorOutlet)) {
         return entry;
       }
     }
@@ -106,7 +119,16 @@ extension CCRouterRuntimePopGuard on CCRouterRuntime {
       handled: true,
       trigger: trigger,
       guardDeniedCode: decision.code,
-      hostId: _activeRouteEntryHostId,
+      hostId: _activePopTarget?.hostId ?? _activeRouteEntryHostId,
+      navigatorOutlet: _activePopTarget?.navigatorOutlet,
     );
+  }
+
+  /// Returns the Adapter-declared Pop partition when available.
+  CCNavigationPopTarget? get _activePopTarget {
+    final adapter = _navigationAdapter;
+    return adapter is CCNavigationPopTargetSource
+        ? (adapter as CCNavigationPopTargetSource).activePopTarget
+        : null;
   }
 }

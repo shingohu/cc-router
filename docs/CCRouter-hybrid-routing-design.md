@@ -97,12 +97,16 @@ CCPopOutcome
 ├── removedOwner: managed | foreign | opaque | none
 ├── trigger: system | gesture | predictiveBack | business | unknown
 ├── guardDeniedCode?
-└── hostId?
+├── hostId?
+└── navigatorOutlet?
 ```
 
 处理规则：
 
 - 系统返回、手势返回和预测返回优先经过 Adapter 的 Pop Coordinator；
+- Guard 通过 `CCNavigationPopTarget` 先锁定 active Host/Outlet，不能跨 Host 比较局部 sequence；
+- Managed outcome 必须携带可关联的 `backendEntryId` 才能关闭 RouteEntry；缺失 identity 时
+  标记 Host desynchronized，不按顶部位置兼容删除；
 - Pop 被 `PopScope`、表单保护或手势状态拒绝时，Managed Route 保持存活；
 - Foreign Popup 消费返回时，只移除 Foreign Entry；
 - 只有 `removedOwner == managed` 时，Runtime 才关闭对应 Route Scope；
@@ -230,6 +234,7 @@ GoRouter 和内存 Adapter 会声明各自已实现的可见性观察、Managed 
 - [x] 增加逻辑 Navigation Host 隔离；
 - [x] 支持 Size Class 驱动的单 Pane、双 Pane 和多 Pane Outlet 显示切换；
 - [x] Host 卸载时精确清理所属 Entry、Scope、pending result 和 listener bridge。
+- [x] 注销 active Host 时要求显式 `replacementActiveHostId`，不按 Map 插入顺序选择接替 Host。
 - [ ] 等 Flutter 多窗口能力稳定后接入原生 Window/Flutter View 生命周期与 Root Host 映射。
 
 ## 11. 验收用例

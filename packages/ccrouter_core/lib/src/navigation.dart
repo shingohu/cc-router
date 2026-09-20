@@ -75,26 +75,36 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
   void _applyManagedPopOutcome(CCPopOutcome outcome) {
     if (outcome.removedOwner != CCPopRemovedOwner.managed) return;
     final backendEntryId = outcome.removedBackendEntryId;
-    if (backendEntryId != null) {
-      final backendEntry = _backendEntries[backendEntryId];
-      final routeEntryId = backendEntry?.routeEntryId;
-      if (routeEntryId != null) {
-        for (final entry in _routeEntries.toList()) {
-          if (entry.id == routeEntryId) {
-            _removeRouteEntry(entry, reason: 'maybePop');
-            return;
-          }
+    if (backendEntryId == null) {
+      _recordUncorrelatedManagedPop(outcome);
+      return;
+    }
+    final backendEntry = _backendEntries[backendEntryId];
+    final routeEntryId = backendEntry?.routeEntryId;
+    if (routeEntryId != null) {
+      for (final entry in _routeEntries.toList()) {
+        if (entry.id == routeEntryId) {
+          _removeRouteEntry(entry, reason: 'maybePop');
+          return;
         }
       }
     }
-    // Adapters without a backend ledger may still explicitly guarantee that
-    // the active entry was managed. In that narrow case, only the top entry
-    // can be reconciled; foreign/opaque outcomes never reach this fallback.
-    _removeTopRouteEntry(
-      reason: 'maybePop',
-      preserveRoot: true,
-      hostId: outcome.hostId,
-    );
+    if (_usesManagedRemovalConfirmationFor(
+      outcome.hostId ?? _activeRouteEntryHostId ?? 'default',
+    )) {
+      _recordUncorrelatedManagedPop(outcome);
+    }
+  }
+
+  /// Records an identity contract violation without guessing a RouteEntry.
+  ///
+  /// A managed outcome without an associated ledger Entry may have consumed a
+  /// foreign route, a sibling Outlet, or an already removed page. Marking the
+  /// Host desynchronized keeps the failure observable while preserving every
+  /// managed Scope until a later exact event or result Future resolves it.
+  void _recordUncorrelatedManagedPop(CCPopOutcome outcome) {
+    final hostId = outcome.hostId ?? _activeRouteEntryHostId;
+    if (hostId != null) _desynchronizedBackendHosts.add(hostId);
   }
 
   /// Changes the current location to the route targeted by [intent].
@@ -152,15 +162,10 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
         _applyManagedPopOutcome(outcome);
         return;
       }
-      // Older adapters do not expose ownership-aware direct Pop results. Keep
-      // their historical behavior while newer adapters use the coordinator
-      // above to isolate foreign and opaque backend entries.
+      // Legacy adapters cannot prove which backend Entry they removed. Their
+      // result-bearing navigation Future may still close the matching Runtime
+      // Entry, but Runtime never mutates managed state by stack position.
       adapter.pop(result: result);
-      _removeTopRouteEntry(
-        reason: 'pop',
-        preserveRoot: true,
-        hostId: _activeRouteEntryHostId,
-      );
     } on CCRouterError {
       rethrow;
     } catch (error) {

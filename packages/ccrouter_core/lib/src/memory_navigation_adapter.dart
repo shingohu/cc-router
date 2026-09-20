@@ -26,6 +26,7 @@ final class CCMemoryNavigationAdapter
     implements
         CCNavigationAdapter,
         CCNavigationPopCoordinator,
+        CCNavigationPopTargetSource,
         CCNavigationAdapterCapabilitySource,
         CCNavigationBackendSnapshotSource {
   /// Creates an uninitialized empty navigation stack.
@@ -89,6 +90,18 @@ final class CCMemoryNavigationAdapter
   CCNavigationRequest? get currentRequest =>
       _entries.isEmpty ? null : _entries.last.request;
 
+  /// Exact partition targeted by this deterministic adapter's next Pop.
+  @override
+  CCNavigationPopTarget? get activePopTarget {
+    final request = currentRequest;
+    if (request == null) return null;
+    return CCNavigationPopTarget(
+      hostId: request.hostId,
+      navigatorOutlet: request.placement.navigatorOutlet,
+      backendEntryId: 'memory-${request.navigationId}',
+    );
+  }
+
   /// Initializes this adapter once with installed route metadata.
   @override
   void initialize(
@@ -119,15 +132,20 @@ final class CCMemoryNavigationAdapter
       case CCNavigationOperation.push:
         return _addResultEntry(request);
       case CCNavigationOperation.replace:
-        _removeCurrent();
+        _removeCurrentInPartition(request);
         return _addResultEntry(request);
       case CCNavigationOperation.go:
+        _clearPartition(request);
+        _entries.add(_CCMemoryNavigationEntry(request));
+        return Future<Object?>.value();
       case CCNavigationOperation.reset:
-        _clearEntries();
+        _clearHost(request.hostId);
         _entries.add(_CCMemoryNavigationEntry(request));
         return Future<Object?>.value();
       case CCNavigationOperation.open:
-        if (request.openMode == CCDeepLinkOpenMode.go) _clearEntries();
+        if (request.openMode == CCDeepLinkOpenMode.go) {
+          _clearPartition(request);
+        }
         _entries.add(_CCMemoryNavigationEntry(request));
         return Future<Object?>.value();
     }
@@ -209,6 +227,41 @@ final class CCMemoryNavigationAdapter
     final removed = _entries.removeLast();
     removed.result?.complete(result);
   }
+
+  /// Removes the newest Entry in the request's exact Host/Outlet partition.
+  void _removeCurrentInPartition(CCNavigationRequest request) {
+    final index = _entries.lastIndexWhere(
+      (entry) => _samePartition(entry.request, request),
+    );
+    if (index == -1) return;
+    final removed = _entries.removeAt(index);
+    removed.result?.complete();
+  }
+
+  /// Clears only the declarative page-tree partition targeted by [request].
+  void _clearPartition(CCNavigationRequest request) {
+    _removeEntriesWhere((entry) => _samePartition(entry.request, request));
+  }
+
+  /// Clears every retained Entry owned by one Host for explicit Reset.
+  void _clearHost(String hostId) {
+    _removeEntriesWhere((entry) => entry.request.hostId == hostId);
+  }
+
+  /// Completes and removes entries selected by one deterministic predicate.
+  void _removeEntriesWhere(bool Function(_CCMemoryNavigationEntry) test) {
+    for (var index = _entries.length - 1; index >= 0; index--) {
+      final entry = _entries[index];
+      if (!test(entry)) continue;
+      _entries.removeAt(index);
+      entry.result?.complete();
+    }
+  }
+
+  /// Whether two requests address the same Host and Navigator Outlet.
+  bool _samePartition(CCNavigationRequest first, CCNavigationRequest second) =>
+      first.hostId == second.hostId &&
+      first.placement.navigatorOutlet == second.placement.navigatorOutlet;
 
   /// Clears all entries while safely completing pending result Futures.
   void _clearEntries() {

@@ -727,6 +727,10 @@ Guard 只在即将移除的顶部 Backend Entry 被确认属于 CCRouter 时执�
 RouteEntry 或 Route Scope。拒绝结果保留当前 Entry，并通过 `guardDeniedCode` 提供稳定、
 不含业务数据的原因；直接业务 `pop` 使用 `CCPopGuardDeniedError` 报告拒绝。
 
+多 Host 或多 Outlet 场景通过 Adapter 的只读 `CCNavigationPopTarget` 先确定 active Host/Outlet，
+再在该分区的 Backend Entry 台账中选择 Guard 目标。不同 Host 的事件 sequence 不参与比较；
+managed outcome 缺少 `backendEntryId` 时只记录 Host desynchronized，不按 Runtime 顶部猜测删除。
+
 Guard 必须同步、快速且无副作用，适合脏状态、强制流程和本地内存策略。需要弹确认框的
 异步流程继续使用 Flutter `PopScope`，确认后再重新发起导航，避免阻塞 Predictive Back。
 
@@ -744,6 +748,10 @@ Policy 可以明确选择：
 - `CCNavigationFailureRedirect`：将原调用重定向到类型兼容目标；
 - `CCNavigationFailureFallback`：打开 404、链接不支持或组件不可用页面，并让原调用以
   `null` 完成。
+
+Redirect/Fallback 未指定 `operation` 时继承原调用的栈操作，避免 Push 失败后默认 Replace
+并删除当前正常页面。显式指定 `open` 时可以同时提供独立 `openMode`，未提供时采用 Push；
+继承原始 Open 时则保留原始 Open mode。
 
 恢复目标必须是非组合操作，并重新执行解析、Deep Link Policy、组件状态、参数 Codec 和
 完整拦截器链。恢复过程保留原始 `navigationId`、`origin` 和 `source`，最多连续恢复四次；
@@ -1221,8 +1229,10 @@ externalQr          扫码等不可信外部输入
   `CCDeepLinkOpenMode` 独立选择 `push` 或 `go`，默认 `push`，以保留固定 Root、
   主 Tab 和返回路径。
 - `CCDeepLinkOpenMode.go` 用于需要按 URI 重建声明式 Shell/Outlet location 的入口；
-  它清理目标 Host 的 Managed RouteEntry。当前不提供语义含糊且难以跨 Adapter
-  保证一致的独立 `reset` mode。
+  它与 GoRouter `go` 一致，只结束后端确认已离栈的 Managed RouteEntry；StatefulShell
+  的 inactive branch 保持存活。`open-go` 复用同一语义，不升级成 Reset。
+- 类型安全 `CCRouter.navigator.reset` 是独立的 Host 级重置操作，会结束目标 Host 的
+  Managed RouteEntry 后建立新 location；不能用 `go` 或外部 Deep Link mode 隐式替代。
 - GoRouter 的 `push` 不等价于 StatefulShell branch 切换。外部链接需要激活另一个
   Bottom Tab 或重建父 Shell 时应选 `go`；`push` 适合当前 Navigator 上方的详情页，
   不能承诺把此前 branch 转换为一条可 Pop 的页面历史。
@@ -1590,6 +1600,12 @@ Push Future 管理。
 `lifecycleEventCapacity` 保留有界快照；Runtime dispose 时会自动解除订阅。外部
 Deep Link 仍必须先经过 Core 的 `CCDeepLinkIngress` 和策略校验，校验通过后由
 Adapter 的 `go` 进入目标 Shell 分支，不根据 URI 形态绕过策略。
+
+Go/Pop 的精确生命周期要求所有 Managed Outlet 安装对应 Observer。覆盖完整时，Go 只根据
+真实 Remove/Pop identity 结束离栈 Entry；覆盖不完整时能力声明为 false，并使用仅替换目标
+Host/Outlet 分区的确定性 fallback，不跨 sibling Outlet。Pop 目标从当前 GoRouter match tree
+和每个 Route 的 `parentNavigatorKey` 推导，Root Modal 覆盖 Shell branch 时优先 Pop Root；
+未挂载的非 Root Outlet 不回退 Root Navigator。
 
 - 主 Pattern、别名、Query、Extra 和返回值。
 - Shell、Outlet 和生命周期同步。

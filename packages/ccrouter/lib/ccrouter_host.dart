@@ -9,6 +9,8 @@ library;
 export 'package:ccrouter_contracts/ccrouter_contracts.dart'
     show
         CCNavigationManagedEntryReleaseSink,
+        CCNavigationPopTarget,
+        CCNavigationPopTargetSource,
         CCRouteRestorationOpportunityReason,
         CCRouteRestorationOpportunitySignal,
         CCRouteRestorationOpportunitySource;

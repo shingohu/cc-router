@@ -121,14 +121,16 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
           if (prepared == null) _discardNavigationObservation(navigationId);
           throw const CCNavigationFailureRecoveryLoopError();
         }
-        final target = _failureRecoveryTarget(decision);
+        final target = _failureRecoveryTarget(
+          decision,
+          inheritedOperation: currentOperation,
+          inheritedOpenMode: currentOpenMode,
+        );
         _validateFailureRecoveryOperation(target.operation);
         _emitNavigationFailure(context, recovered: true);
         recoveryDepth++;
         currentOperation = target.operation;
-        currentOpenMode = target.operation == CCNavigationOperation.open
-            ? openMode ?? CCDeepLinkOpenMode.push
-            : null;
+        currentOpenMode = target.openMode;
         currentRouteIdHint = target.intent?.routeId;
         currentPrepare = target.intent == null
             ? () => _routeRegistry.prepareUri(target.uri!, origin)
@@ -143,18 +145,78 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
   }
 
   /// Normalizes redirect and fallback decisions into one internal target.
-  ({CCRouteIntent<Object?>? intent, Uri? uri, CCNavigationOperation operation})
+  ({
+    CCRouteIntent<Object?>? intent,
+    Uri? uri,
+    CCNavigationOperation operation,
+    CCDeepLinkOpenMode? openMode,
+  })
   _failureRecoveryTarget(
-    CCNavigationFailureDecision decision,
-  ) => switch (decision) {
-    CCNavigationFailureRedirect(:final intent, :final uri, :final operation) =>
-      (intent: intent, uri: uri, operation: operation),
-    CCNavigationFailureFallback(:final intent, :final uri, :final operation) =>
-      (intent: intent, uri: uri, operation: operation),
+    CCNavigationFailureDecision decision, {
+    required CCNavigationOperation inheritedOperation,
+    required CCDeepLinkOpenMode? inheritedOpenMode,
+  }) => switch (decision) {
+    CCNavigationFailureRedirect(
+      :final intent,
+      :final uri,
+      :final operation,
+      :final openMode,
+    ) =>
+      _resolveFailureRecoveryTarget(
+        intent: intent,
+        uri: uri,
+        operation: operation,
+        openMode: openMode,
+        inheritedOperation: inheritedOperation,
+        inheritedOpenMode: inheritedOpenMode,
+      ),
+    CCNavigationFailureFallback(
+      :final intent,
+      :final uri,
+      :final operation,
+      :final openMode,
+    ) =>
+      _resolveFailureRecoveryTarget(
+        intent: intent,
+        uri: uri,
+        operation: operation,
+        openMode: openMode,
+        inheritedOperation: inheritedOperation,
+        inheritedOpenMode: inheritedOpenMode,
+      ),
     CCNavigationFailurePropagate() => throw StateError(
       'A propagate decision has no recovery target.',
     ),
   };
+
+  /// Resolves inherited versus explicitly overridden recovery stack behavior.
+  ({
+    CCRouteIntent<Object?>? intent,
+    Uri? uri,
+    CCNavigationOperation operation,
+    CCDeepLinkOpenMode? openMode,
+  })
+  _resolveFailureRecoveryTarget({
+    required CCRouteIntent<Object?>? intent,
+    required Uri? uri,
+    required CCNavigationOperation? operation,
+    required CCDeepLinkOpenMode? openMode,
+    required CCNavigationOperation inheritedOperation,
+    required CCDeepLinkOpenMode? inheritedOpenMode,
+  }) {
+    final resolvedOperation = operation ?? inheritedOperation;
+    final resolvedOpenMode = resolvedOperation == CCNavigationOperation.open
+        ? operation == null
+              ? inheritedOpenMode ?? CCDeepLinkOpenMode.push
+              : openMode ?? CCDeepLinkOpenMode.push
+        : null;
+    return (
+      intent: intent,
+      uri: uri,
+      operation: resolvedOperation,
+      openMode: resolvedOpenMode,
+    );
+  }
 
   /// Validates operations accepted by failure recovery.
   void _validateFailureRecoveryOperation(CCNavigationOperation operation) {

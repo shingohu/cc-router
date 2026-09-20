@@ -63,6 +63,9 @@ Flutter Facade、GoRouter Adapter、路由 Generator、Demo 路由接入、测�
 - [x] 关联 GoRouter root、Shell Observer，并通过 RouterDelegate 自动观察 StatefulShell 分支；
 - [x] 覆盖 Foreign PageRoute、PopupRoute、独立 Navigator、事件重复和序列断层；
 - [x] StatefulShell 切换只 Hide/Show，不销毁非活动分支 Scope。
+- [x] 拆分 Go、Reset 与 Open-Go 生命周期：Go/Open-Go 按真实 backend diff 清理，Reset 才执行 Host 级重置；Observer 不完整时只降级到目标 Host/Outlet 分区。
+- [x] Replace、Pop 和 Pop Guard 使用精确 Host/Outlet；Root Modal 覆盖 Shell branch 时按 `parentNavigatorKey` 选择 Root。
+- [x] 移除 Managed Pop 缺少 Entry identity 时删除 Runtime 顶部的兼容猜测。
 
 GoRouter 的 Observer 必须在应用构建 Router 时由 Host/Assembler 安装，Flutter 不支持在 Router
 创建后安全注入 Observer。Adapter 对已安装的 Observer 自动完成 Backend identity 关联；如果
@@ -80,6 +83,8 @@ Observer 只覆盖部分 Managed Outlet，Adapter 会关闭延迟 Arrival，避�
 
 Host 卸载会关闭该 Host 的 RouteEntry 和 Scope，并安全完成 pending result；其他 Host 不受影响。
 Live Route 的跨 Host 迁移存在 Widget、Scope、返回值和后端状态所有权问题，因此不做隐式迁移。
+注销当前 active Host 必须原子指定已注册的 `replacementActiveHostId`，不能依赖注册顺序隐式
+选取接替 Host。
 未来如需迁移，只能通过显式新导航或单独设计的状态恢复流程重建。
 
 ### P1-2 可观测性

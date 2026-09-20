@@ -7,6 +7,8 @@ library;
 export 'package:ccrouter_contracts/ccrouter_contracts.dart'
     hide
         CCNavigationManagedEntryReleaseSink,
+        CCNavigationPopTarget,
+        CCNavigationPopTargetSource,
         CCRouteRestorationOpportunitySignal,
         CCRouteRestorationOpportunitySource;
 export 'package:ccrouter_core/ccrouter_core.dart'

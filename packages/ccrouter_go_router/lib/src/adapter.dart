@@ -31,6 +31,7 @@ final class CCGoRouterAdapter
         CCNavigationBackendEventSource,
         CCNavigationBackendSnapshotSource,
         CCNavigationPopCoordinator,
+        CCNavigationPopTargetSource,
         CCNavigationPopGuardBinding,
         CCNavigationPredictiveBackSourceProvider {
   /// Creates an adapter around an application-owned [router].
@@ -141,7 +142,7 @@ final class CCGoRouterAdapter
         supportsStatefulShell: true,
         supportsModalRoutes: true,
         supportsPredictiveBack: _predictiveBackBridge != null,
-        supportsManagedPopObservation: true,
+        supportsManagedPopObservation: _hasCompleteVisibilityObserverCoverage,
       );
 
   /// Host-only bridge for explicitly integrated third-party Navigator routes.
@@ -163,6 +164,18 @@ final class CCGoRouterAdapter
   @override
   CCNavigationPredictiveBackSource? get predictiveBackSource =>
       _predictiveBackBridge;
+
+  /// Exact Host/Outlet partition targeted by the next GoRouter Pop.
+  ///
+  /// The backend Entry is deliberately omitted because a foreign PopupRoute
+  /// may sit above the newest managed Entry. Runtime resolves ownership from
+  /// its observer ledger inside this partition instead of guessing by request
+  /// insertion order.
+  @override
+  CCNavigationPopTarget get activePopTarget => CCNavigationPopTarget(
+    hostId: _hostId,
+    navigatorOutlet: _activeNavigatorOutlet,
+  );
 
   /// Binds Runtime Pop policy to the optional platform back bridge.
   ///
@@ -442,19 +455,12 @@ final class CCGoRouterAdapter
       case CCNavigationOperation.replace:
         return _replace(request, location);
       case CCNavigationOperation.go:
+        return _go(request, location);
       case CCNavigationOperation.reset:
-        _expectBackendEvent(CCGoRouterNavigationEventKind.remove);
-        _expectBackendEvent(CCGoRouterNavigationEventKind.push);
-        _router.go(location, extra: request.extra);
-        _replaceTrackedStack(request);
-        return Future<Object?>.value();
+        return _reset(request, location);
       case CCNavigationOperation.open:
         if (request.openMode == CCDeepLinkOpenMode.go) {
-          _expectBackendEvent(CCGoRouterNavigationEventKind.remove);
-          _expectBackendEvent(CCGoRouterNavigationEventKind.push);
-          _router.go(location, extra: request.extra);
-          _replaceTrackedStack(request);
-          return Future<Object?>.value();
+          return _go(request, location);
         }
         return _open(request, location);
     }
@@ -480,8 +486,15 @@ final class CCGoRouterAdapter
   @override
   Future<CCPopOutcome> maybePopOutcome({Object? result}) async {
     _ensureAvailable();
-    final navigator = _activeNavigator;
-    if (navigator == null) return CCPopOutcome(handled: false, hostId: _hostId);
+    final outlet = _activeNavigatorOutlet;
+    final navigator = _navigatorForOutlet(outlet);
+    if (navigator == null) {
+      return CCPopOutcome(
+        handled: false,
+        hostId: _hostId,
+        navigatorOutlet: outlet,
+      );
+    }
     _lastPoppedBackendEntryId = null;
     _lastPoppedOwner = CCPopRemovedOwner.none;
     _expectBackendEvent(CCGoRouterNavigationEventKind.pop);
@@ -489,12 +502,19 @@ final class CCGoRouterAdapter
     // LocalHistoryEntry consumption emits no NavigatorObserver Pop. Remove an
     // unmatched expectation before it can misclassify a later foreign Pop.
     _discardExpectedBackendEvent(CCGoRouterNavigationEventKind.pop);
-    if (!didPop) return CCPopOutcome(handled: false, hostId: _hostId);
+    if (!didPop) {
+      return CCPopOutcome(
+        handled: false,
+        hostId: _hostId,
+        navigatorOutlet: outlet,
+      );
+    }
     return CCPopOutcome(
       handled: true,
       removedBackendEntryId: _lastPoppedBackendEntryId,
       removedOwner: _lastPoppedOwner,
       hostId: _hostId,
+      navigatorOutlet: outlet,
     );
   }
 
@@ -517,13 +537,18 @@ final class CCGoRouterAdapter
   @override
   CCPopOutcome popOutcome({Object? result}) {
     _ensureAvailable();
-    final navigator = _activeNavigator;
+    final outlet = _activeNavigatorOutlet;
+    final navigator = _navigatorForOutlet(outlet);
     if (navigator == null || !navigator.canPop()) {
-      return CCPopOutcome(handled: false, hostId: _hostId);
+      return CCPopOutcome(
+        handled: false,
+        hostId: _hostId,
+        navigatorOutlet: outlet,
+      );
     }
     _lastPoppedBackendEntryId = null;
     _lastPoppedOwner = CCPopRemovedOwner.none;
-    final removedEntry = _entries.isEmpty ? null : _entries.last;
+    final removedEntry = _lastTrackedEntryInOutlet(outlet);
     _expectBackendEvent(CCGoRouterNavigationEventKind.pop);
     navigator.pop<Object?>(result);
     _discardExpectedBackendEvent(CCGoRouterNavigationEventKind.pop);
@@ -535,6 +560,7 @@ final class CCGoRouterAdapter
       removedBackendEntryId: _lastPoppedBackendEntryId,
       removedOwner: _lastPoppedOwner,
       hostId: _hostId,
+      navigatorOutlet: outlet,
     );
   }
 
@@ -542,7 +568,7 @@ final class CCGoRouterAdapter
   @override
   bool canPop() {
     _ensureAvailable();
-    return _activeNavigator?.canPop() ?? false;
+    return _navigatorForOutlet(_activeNavigatorOutlet)?.canPop() ?? false;
   }
 
   /// Permanently closes adapter-owned state without disposing [router].
@@ -629,6 +655,64 @@ final class CCGoRouterAdapter
     return _pushTracked(request, location, exposesResult: false);
   }
 
+  /// Changes GoRouter's declarative location and waits for its exact stack diff.
+  ///
+  /// Existing tracked Entries remain alive until Navigator observations prove
+  /// that a concrete backend Route left the page tree. This preserves retained
+  /// Stateful Shell branches and completes only genuinely displaced Push
+  /// results with `null`.
+  Future<Object?> _go(CCNavigationRequest request, String location) {
+    if (_hasCompleteVisibilityObserverCoverage) {
+      _trackDeclarativeEntry(request);
+    } else {
+      _replaceTrackedPartition(request);
+    }
+    _expectBackendEvent(CCGoRouterNavigationEventKind.remove);
+    _expectBackendEvent(CCGoRouterNavigationEventKind.push);
+    _router.go(location, extra: request.extra);
+    return Future<Object?>.value();
+  }
+
+  /// Performs an explicit Host reset before selecting a new GoRouter location.
+  ///
+  /// Unlike [_go], Reset intentionally completes every managed result and
+  /// discards all tracked Entries owned by this Host before the new location is
+  /// established.
+  Future<Object?> _reset(CCNavigationRequest request, String location) {
+    _replaceTrackedStack(request);
+    _expectBackendEvent(CCGoRouterNavigationEventKind.remove);
+    _expectBackendEvent(CCGoRouterNavigationEventKind.push);
+    _router.go(location, extra: request.extra);
+    return Future<Object?>.value();
+  }
+
+  /// Adds one fire-and-forget Entry for a declarative location request.
+  void _trackDeclarativeEntry(CCNavigationRequest request) {
+    final backendEntryId = _nextBackendEntryId();
+    _backendIdsByNavigationId[request.navigationId] = backendEntryId;
+    _entries.add(
+      _CCGoRouterEntry(request, backendEntryId, exposesResult: false),
+    );
+  }
+
+  /// Applies the deterministic Go fallback when exact observers are absent.
+  ///
+  /// Only the target Host/Outlet partition is replaced. This cannot reproduce
+  /// every nested GoRouter match-tree retention rule, but it preserves sibling
+  /// Shell branches and makes the capability limitation explicit to Runtime.
+  void _replaceTrackedPartition(CCNavigationRequest request) {
+    for (final entry in _entries.toList().reversed) {
+      if (entry.request.hostId != request.hostId ||
+          entry.request.placement.navigatorOutlet !=
+              request.placement.navigatorOutlet) {
+        continue;
+      }
+      entry.completeResult(null);
+      _removeTrackedEntry(entry);
+    }
+    _trackDeclarativeEntry(request);
+  }
+
   /// Replaces the tracked top entry with a new GoRouter page identity.
   ///
   /// GoRouter's `replace` deliberately reuses the existing Page key and keeps
@@ -636,7 +720,7 @@ final class CCGoRouterAdapter
   /// maps to `pushReplacement` to preserve Flutter's ordinary replacement
   /// lifecycle even when the destination has the same route ID.
   Future<Object?> _replace(CCNavigationRequest request, String location) {
-    final replaced = _removeTrackedEntry();
+    final replaced = _removeTrackedEntryInPartition(request);
     replaced?.completeResult(null);
     final backendEntryId = _nextBackendEntryId();
     _backendIdsByNavigationId[request.navigationId] = backendEntryId;
@@ -705,6 +789,27 @@ final class CCGoRouterAdapter
     }
     return null;
   }
+
+  /// Removes the newest tracked Entry from one exact Host/Outlet partition.
+  _CCGoRouterEntry? _removeTrackedEntryInPartition(
+    CCNavigationRequest request,
+  ) {
+    final entry = _entries.cast<_CCGoRouterEntry?>().lastWhere(
+      (candidate) =>
+          candidate?.request.hostId == request.hostId &&
+          candidate?.request.placement.navigatorOutlet ==
+              request.placement.navigatorOutlet,
+      orElse: () => null,
+    );
+    return entry == null ? null : _removeTrackedEntry(entry);
+  }
+
+  /// Returns the newest tracked Entry in [outlet], if one exists.
+  _CCGoRouterEntry? _lastTrackedEntryInOutlet(String outlet) =>
+      _entries.cast<_CCGoRouterEntry?>().lastWhere(
+        (entry) => entry?.request.placement.navigatorOutlet == outlet,
+        orElse: () => null,
+      );
 
   /// Records one backend transition expected from an Adapter-owned operation.
   void _expectBackendEvent(CCGoRouterNavigationEventKind kind) {
@@ -921,6 +1026,19 @@ final class CCGoRouterAdapter
           (event.kind == CCGoRouterNavigationEventKind.push &&
               matchesActiveRequest),
     );
+    if (event.kind == CCGoRouterNavigationEventKind.remove) {
+      final backendEntryId = _backendRouteIds[event.route];
+      final removed = backendEntryId == null
+          ? null
+          : _entries.cast<_CCGoRouterEntry?>().firstWhere(
+              (entry) => entry?.backendEntryId == backendEntryId,
+              orElse: () => null,
+            );
+      if (removed != null) {
+        removed.completeResult(null);
+        _removeTrackedEntry(removed);
+      }
+    }
   }
 
   /// Reports foreground Stateful Shell branch changes from GoRouter state.
@@ -1011,10 +1129,13 @@ final class CCGoRouterAdapter
             (entry) => entry?.backendEntryId == observedBackendEntryId,
             orElse: () => null,
           );
-    final request = correlateRequest
-        ? trackedEntry?.request ??
-              (_entries.isNotEmpty ? _entries.last.request : null)
-        : null;
+    final request =
+        trackedEntry?.request ??
+        (correlateRequest &&
+                event.kind != CCGoRouterNavigationEventKind.remove &&
+                _entries.isNotEmpty
+            ? _entries.last.request
+            : null);
     final trackedBackendEntryId = request == null
         ? observedBackendEntryId
         : _backendIdsByNavigationId[request.navigationId] ??
@@ -1050,7 +1171,7 @@ final class CCGoRouterAdapter
       // Keep it diagnostic; externally observed Pops can still use the
       // identity mapped in [_backendRouteIds].
       owner:
-          trackedEntry != null && !correlateRequest ||
+          trackedEntry != null ||
               request != null &&
                   event.kind != CCGoRouterNavigationEventKind.remove
           ? CCBackendEntryOwner.managed
@@ -1374,13 +1495,40 @@ final class CCGoRouterAdapter
     }
   }
 
-  /// Finds the Navigator belonging to the currently tracked route.
-  NavigatorState? get _activeNavigator {
-    final key = _entries.isEmpty
-        ? null
-        : _navigatorKeys[_entries.last.request.placement.navigatorOutlet];
-    return key?.currentState ??
-        _router.routerDelegate.navigatorKey.currentState;
+  /// Resolves the deepest active Navigator Outlet from GoRouter's match tree.
+  ///
+  /// The Router configuration is authoritative for Shell branch activation;
+  /// request insertion order is not, because inactive Stateful Shell branches
+  /// stay mounted and retain their Entries.
+  String get _activeNavigatorOutlet {
+    String visit(List<RouteMatchBase> matches, String scopedOutlet) {
+      var result = scopedOutlet;
+      for (final match in matches) {
+        if (match is ShellRouteMatch) {
+          final childOutlet = _outletForNavigatorKey(match.navigatorKey);
+          result = visit(match.matches, childOutlet);
+          continue;
+        }
+        final parentKey = match.route.parentNavigatorKey;
+        result = parentKey == null
+            ? scopedOutlet
+            : _outletForNavigatorKey(parentKey);
+      }
+      return result;
+    }
+
+    return visit(_router.routerDelegate.currentConfiguration.matches, 'root');
+  }
+
+  /// Returns the Navigator mounted for [outlet] without cross-Outlet fallback.
+  ///
+  /// An unavailable non-root Outlet is a declined Pop. Falling back to root
+  /// could remove a page from a different Shell branch or adaptive pane.
+  NavigatorState? _navigatorForOutlet(String outlet) {
+    if (outlet == 'root') {
+      return _router.routerDelegate.navigatorKey.currentState;
+    }
+    return _navigatorKeys[outlet]?.currentState;
   }
 }
 

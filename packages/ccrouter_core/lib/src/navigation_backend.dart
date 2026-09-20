@@ -2,6 +2,25 @@ part of 'runtime.dart';
 
 /// Exposes backend Navigator observations collected by Runtime.
 extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
+  /// Whether one Host reports exact managed removals after backend mutations.
+  ///
+  /// Runtime uses this to preserve Route Scopes during declarative `go`
+  /// transitions until the backend identifies the entries that truly left its
+  /// page tree. A false result selects the documented partition-local fallback.
+  bool _usesManagedRemovalConfirmationFor(String hostId) {
+    final adapter = _navigationAdapter;
+    if (adapter is CCNavigationHostCapabilitySource) {
+      return (adapter as CCNavigationHostCapabilitySource)
+              .capabilitiesForHost(hostId)
+              ?.supportsManagedPopObservation ==
+          true;
+    }
+    return adapter is CCNavigationAdapterCapabilitySource &&
+        (adapter as CCNavigationAdapterCapabilitySource)
+            .capabilities
+            .supportsManagedPopObservation;
+  }
+
   /// Whether the active Adapter confirms managed visibility from backend tops.
   bool _usesBackendVisibilityConfirmationFor(String hostId) {
     final adapter = _navigationAdapter;

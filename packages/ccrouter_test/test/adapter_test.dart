@@ -139,7 +139,7 @@ void main() {
     expect(capabilities.supportsStatefulShell, isTrue);
     expect(capabilities.supportsModalRoutes, isTrue);
     expect(capabilities.supportsPredictiveBack, isFalse);
-    expect(capabilities.supportsManagedPopObservation, isTrue);
+    expect(capabilities.supportsManagedPopObservation, isFalse);
   });
 
   test('enables predictive-back bridge only when explicitly requested', () {
@@ -1069,6 +1069,7 @@ void main() {
   testWidgets('binds StatefulShellRoute branch Navigators by Outlet', (
     tester,
   ) async {
+    final rootKey = GlobalKey<NavigatorState>();
     final homeKey = GlobalKey<NavigatorState>();
     final settingsKey = GlobalKey<NavigatorState>();
     final homeRoute = GoRoute(
@@ -1079,10 +1080,15 @@ void main() {
       path: 'detail',
       builder: (_, _) => const Text('settings-detail'),
     );
+    final rootModalRoute = GoRoute(
+      path: 'modal',
+      parentNavigatorKey: rootKey,
+      builder: (_, _) => const Text('root-modal'),
+    );
     final settingsRoute = GoRoute(
       path: '/settings',
       builder: (_, _) => const Text('settings'),
-      routes: [settingsDetailRoute],
+      routes: [settingsDetailRoute, rootModalRoute],
     );
     final shellRoute = StatefulShellRoute.indexedStack(
       builder: (_, _, navigationShell) => Scaffold(body: navigationShell),
@@ -1091,7 +1097,11 @@ void main() {
         StatefulShellBranch(navigatorKey: settingsKey, routes: [settingsRoute]),
       ],
     );
-    final router = GoRouter(initialLocation: '/home', routes: [shellRoute]);
+    final router = GoRouter(
+      navigatorKey: rootKey,
+      initialLocation: '/home',
+      routes: [shellRoute],
+    );
     final adapter = CCGoRouterAdapter(
       router: router,
       shells: [
@@ -1107,6 +1117,7 @@ void main() {
           routeId: 'settings.detail',
           goRoute: settingsDetailRoute,
         ),
+        CCGoRouterRouteBinding(routeId: 'root.modal', goRoute: rootModalRoute),
       ],
     );
     final backendEvents = <CCNavigationBackendEvent>[];
@@ -1124,6 +1135,12 @@ void main() {
           presentation: const CCPagePresentation(),
           deepLink: CCDeepLinkPolicy.disabled,
           placement: placement,
+        ),
+        CCNavigationRoute(
+          routeId: 'root.modal',
+          patterns: [const CCPathPattern('/settings/modal', primary: true)],
+          presentation: const CCPagePresentation(),
+          deepLink: CCDeepLinkPolicy.disabled,
         ),
       ],
       shells: [
@@ -1154,6 +1171,28 @@ void main() {
     );
     expect(activation.placement.shellId, 'tabs');
     expect(activation.navigatorOutlet, 'settings');
+
+    expect(adapter.activePopTarget.hostId, 'default');
+    expect(adapter.activePopTarget.navigatorOutlet, 'settings');
+    final modalResult = adapter.navigate(
+      request(
+        id: 'root.modal',
+        operation: CCNavigationOperation.push,
+        uri: Uri.parse('/settings/modal'),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('root-modal'), findsOneWidget);
+    expect(adapter.activePopTarget.navigatorOutlet, 'root');
+    expect(adapter.popOutcome(result: 'closed').handled, isTrue);
+    await tester.pumpAndSettle();
+    expect(await modalResult, 'closed');
+    expect(find.text('settings-detail'), findsOneWidget);
+
+    router.go('/home');
+    await tester.pumpAndSettle();
+    expect(adapter.activePopTarget.navigatorOutlet, 'home');
+    expect(adapter.popOutcome().handled, isFalse);
   });
 
   testWidgets('go and reset complete displaced managed results', (
@@ -1317,7 +1356,8 @@ void main() {
       final popEvent = backendEvents.lastWhere(
         (event) => event.kind == CCNavigationBackendEventKind.pop,
       );
-      expect(popEvent.routeId, isNull);
+      expect(popEvent.routeId, 'one');
+      expect(popEvent.owner, CCBackendEntryOwner.managed);
       expect(popEvent.backendEntryId, isNotNull);
       expect(popEvent.backendOperationId, isNotNull);
       expect(popEvent.sequence, isNotNull);

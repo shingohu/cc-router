@@ -119,6 +119,7 @@ final class BackendEventNavigationAdapter
         CCNavigationBackendEventSource,
         CCNavigationAdapterCapabilitySource,
         CCNavigationBackendSnapshotSource,
+        CCNavigationPopTargetSource,
         CCNavigationPredictiveBackSource {
   BackendEventNavigationAdapter({
     this.predictiveBackSupported = true,
@@ -131,7 +132,15 @@ final class BackendEventNavigationAdapter
   final bool predictiveBackSupported;
   final bool visibilityObservationSupported;
   bool consumeForeignMaybePop = false;
+  String activePopHostId = 'default';
+  String activePopOutlet = 'root';
   List<CCNavigationBackendEntrySnapshot> initialSnapshot = const [];
+
+  @override
+  CCNavigationPopTarget get activePopTarget => CCNavigationPopTarget(
+    hostId: activePopHostId,
+    navigatorOutlet: activePopOutlet,
+  );
 
   @override
   CCNavigationAdapterCapabilities get capabilities =>
@@ -228,6 +237,63 @@ final class BackendEventNavigationAdapter
 
   @override
   void pop({Object? result}) => delegate.pop(result: result);
+}
+
+final class UnidentifiedManagedPopAdapter
+    implements
+        CCNavigationAdapter,
+        CCNavigationPopCoordinator,
+        CCNavigationAdapterHostBinding,
+        CCNavigationAdapterCapabilitySource {
+  final CCMemoryNavigationAdapter delegate = CCMemoryNavigationAdapter();
+
+  @override
+  String get hostId => 'window.main';
+
+  @override
+  CCNavigationAdapterCapabilities get capabilities =>
+      const CCNavigationAdapterCapabilities(
+        supportsManagedPopObservation: true,
+      );
+
+  @override
+  bool canPop() => delegate.canPop();
+
+  @override
+  void dispose() => delegate.dispose();
+
+  @override
+  void initialize(
+    List<CCNavigationRoute> routes, {
+    List<CCNavigationShell> shells = const [],
+  }) => delegate.initialize(routes, shells: shells);
+
+  @override
+  Future<bool> maybePop({Object? result}) async => true;
+
+  @override
+  Future<CCPopOutcome> maybePopOutcome({Object? result}) async =>
+      const CCPopOutcome(
+        handled: true,
+        removedOwner: CCPopRemovedOwner.managed,
+        hostId: 'window.main',
+        navigatorOutlet: 'root',
+      );
+
+  @override
+  Future<Object?> navigate(CCNavigationRequest request) =>
+      delegate.navigate(request);
+
+  @override
+  void pop({Object? result}) {}
+
+  @override
+  CCPopOutcome popOutcome({Object? result}) => const CCPopOutcome(
+    handled: true,
+    removedOwner: CCPopRemovedOwner.managed,
+    hostId: 'window.main',
+    navigatorOutlet: 'root',
+  );
 }
 
 final class TestNavigationInterceptor implements CCNavigationInterceptor {
@@ -2226,6 +2292,57 @@ void main() {
   );
 
   test(
+    'failure recovery inherits Push semantics instead of replacing top',
+    () async {
+      final adapter = CCMemoryNavigationAdapter();
+      final runtime = CCRouterRuntime.forTesting(
+        navigationAdapter: adapter,
+        deepLinkIngressPolicy: CCDeepLinkIngressPolicy(
+          allowRelativePaths: true,
+        ),
+        navigationFailurePolicy: TestNavigationFailurePolicy(
+          (_) => const CCNavigationFailureFallback.toIntent(
+            TestIntent<Object?>('routing.error', RouteArgs('404')),
+          ),
+        ),
+        components: [
+          routeComponent('orders', (registry) {
+            registry.registerRoute(pathRoute());
+            registry.registerRoute(
+              pathRoute(
+                routeId: 'routing.error',
+                path: '/routing-error/:value',
+                deepLink: CCDeepLinkPolicy.enabled,
+              ),
+            );
+          }),
+        ],
+      );
+      runtime.initialize();
+      await runtime.goRoute(
+        const TestIntent<void>('orders.detail', RouteArgs('1')),
+      );
+      final pending = runtime.pushRoute<String>(
+        const TestIntent<String>('orders.detail', RouteArgs('2')),
+      );
+
+      await runtime.openRoute(Uri.parse('/missing'));
+
+      expect(adapter.currentRequest?.operation, CCNavigationOperation.open);
+      expect(adapter.currentRequest?.openMode, CCDeepLinkOpenMode.push);
+      expect(runtime.activeRouteEntries.map((entry) => entry.routeId), [
+        'orders.detail',
+        'orders.detail',
+        'routing.error',
+      ]);
+      runtime.popRoute();
+      runtime.popRoute(result: 'preserved');
+      expect(await pending, 'preserved');
+      await runtime.dispose();
+    },
+  );
+
+  test(
     'failure policy propagates unresolved routes and records one event',
     () async {
       final runtime = CCRouterRuntime.forTesting(
@@ -2492,6 +2609,58 @@ void main() {
   );
 
   test(
+    'Go preserves sibling Outlets while Reset clears the target Host',
+    () async {
+      final adapter = CCMemoryNavigationAdapter();
+      final runtime = CCRouterRuntime.forTesting(
+        navigationAdapter: adapter,
+        components: [
+          routeComponent('workspace', (registry) {
+            registry.registerRoute(
+              pathRoute(routeId: 'workspace.root', path: '/root/:value'),
+            );
+            registry.registerRoute(
+              pathRoute(
+                routeId: 'workspace.detail',
+                path: '/detail/:value',
+                placement: const CCRoutePlacement(navigatorOutlet: 'detail'),
+              ),
+            );
+          }),
+        ],
+      );
+      runtime.initialize();
+
+      await runtime.goRoute(
+        const TestIntent<void>('workspace.root', RouteArgs('1')),
+      );
+      final detail = runtime.pushRoute<String>(
+        const TestIntent<String>('workspace.detail', RouteArgs('2')),
+      );
+      await runtime.goRoute(
+        const TestIntent<void>('workspace.root', RouteArgs('3')),
+      );
+
+      expect(runtime.activeRouteEntries.map((entry) => entry.routeId), [
+        'workspace.detail',
+        'workspace.root',
+      ]);
+      expect(adapter.stack.map((entry) => entry.routeId), [
+        'workspace.detail',
+        'workspace.root',
+      ]);
+
+      await runtime.resetRoute(
+        const TestIntent<void>('workspace.root', RouteArgs('4')),
+      );
+      expect(await detail, isNull);
+      expect(runtime.activeRouteEntries.single.routeId, 'workspace.root');
+      expect(adapter.stack.single.operation, CCNavigationOperation.reset);
+      await runtime.dispose();
+    },
+  );
+
+  test(
     'maybePop respects the root and completes a pushed route with its result',
     () async {
       final adapter = CCMemoryNavigationAdapter();
@@ -2659,6 +2828,127 @@ void main() {
     expect(outcome.guardDeniedCode, isNull);
     expect(calls, isEmpty);
     expect(runtime.activeRouteEntries, hasLength(1));
+    await runtime.dispose();
+  });
+
+  test(
+    'managed Pop without Entry identity never removes Runtime top',
+    () async {
+      final adapter = UnidentifiedManagedPopAdapter();
+      final runtime = CCRouterRuntime.forTesting(
+        navigationAdapter: adapter,
+        components: [
+          routeComponent(
+            'orders',
+            (registry) => registry.registerRoute(pathRoute()),
+          ),
+        ],
+      );
+      runtime.initialize();
+      await runtime.goRoute(
+        const TestIntent<void>('orders.detail', RouteArgs('1')),
+      );
+
+      final outcome = await runtime.maybePopOutcomeRoute();
+
+      expect(outcome.handled, isTrue);
+      expect(outcome.removedBackendEntryId, isNull);
+      expect(runtime.activeRouteEntries, hasLength(1));
+      expect(runtime.desynchronizedBackendHosts, {'window.main'});
+      await runtime.dispose();
+    },
+  );
+
+  test('Pop guards select only the active Host and Outlet partition', () async {
+    final calls = <String>[];
+    final adapter = BackendEventNavigationAdapter()..activePopOutlet = 'home';
+    const homePlacement = CCRoutePlacement(
+      shellId: 'tabs',
+      navigatorOutlet: 'home',
+    );
+    const settingsPlacement = CCRoutePlacement(
+      shellId: 'tabs',
+      navigatorOutlet: 'settings',
+    );
+    final runtime = CCRouterRuntime.forTesting(
+      navigationAdapter: adapter,
+      components: [
+        routeComponent('shell', (registry) {
+          registry.registerShell(
+            CCShellDefinition(
+              shellId: 'tabs',
+              type: CCShellType.statefulBranches,
+              outlets: const ['home', 'settings'],
+              initialOutlet: 'home',
+            ),
+          );
+          registry.registerRoutePopGuard(
+            'shell.home',
+            TestPopGuard(
+              'home',
+              calls,
+              (_) => const CCPopDeny(code: 'home_blocked'),
+            ),
+          );
+          registry.registerRoutePopGuard(
+            'shell.settings',
+            TestPopGuard('settings', calls, (_) => const CCPopAllow()),
+          );
+          registry.registerRoute(
+            pathRoute(
+              routeId: 'shell.home',
+              path: '/home/:value',
+              placement: homePlacement,
+              popGuardIds: ['shell.home'],
+            ),
+          );
+          registry.registerRoute(
+            pathRoute(
+              routeId: 'shell.settings',
+              path: '/settings/:value',
+              placement: settingsPlacement,
+              popGuardIds: ['shell.settings'],
+            ),
+          );
+        }),
+      ],
+    );
+    runtime.initialize();
+
+    await runtime.goRoute(const TestIntent<void>('shell.home', RouteArgs('1')));
+    final home = runtime.activeRouteEntries.single;
+    adapter.emit(
+      CCNavigationBackendEventKind.push,
+      backendEntryId: 'home-managed',
+      navigationId: home.navigationId,
+      routeId: home.routeId,
+      owner: CCBackendEntryOwner.managed,
+      sequence: 1,
+      navigatorOutlet: 'home',
+      shellId: 'tabs',
+    );
+    runtime.pushRoute<String>(
+      const TestIntent<String>('shell.settings', RouteArgs('2')),
+    );
+    final settings = runtime.activeRouteEntries.last;
+    adapter.emit(
+      CCNavigationBackendEventKind.push,
+      backendEntryId: 'settings-managed',
+      navigationId: settings.navigationId,
+      routeId: settings.routeId,
+      owner: CCBackendEntryOwner.managed,
+      sequence: 2,
+      navigatorOutlet: 'settings',
+      shellId: 'tabs',
+    );
+
+    final outcome = await runtime.maybePopOutcomeRoute();
+
+    expect(outcome.guardDeniedCode, 'home_blocked');
+    expect(outcome.hostId, 'default');
+    expect(outcome.navigatorOutlet, 'home');
+    expect(calls, ['home:shell.home:system']);
+    expect(runtime.activeRouteEntries, hasLength(2));
     await runtime.dispose();
   });
 

@@ -78,19 +78,14 @@ extension CCRouterRuntimeRouteEntries on CCRouterRuntime {
           navigatorOutlet: entry.request.placement.navigatorOutlet,
         );
       case CCNavigationOperation.go:
+        _prepareDeclarativeRouteEntry(entry, reason: 'go');
       case CCNavigationOperation.reset:
-        _removeAllRouteEntries(
-          reason: entry.request.operation.name,
-          hostId: entry.request.hostId,
-        );
+        _removeAllRouteEntries(reason: 'reset', hostId: entry.request.hostId);
       case CCNavigationOperation.push:
       case CCNavigationOperation.open:
         if (entry.request.operation == CCNavigationOperation.open &&
             entry.request.openMode == CCDeepLinkOpenMode.go) {
-          _removeAllRouteEntries(
-            reason: 'openGo',
-            hostId: entry.request.hostId,
-          );
+          _prepareDeclarativeRouteEntry(entry, reason: 'openGo');
         }
         break;
     }
@@ -205,6 +200,25 @@ extension CCRouterRuntimeRouteEntries on CCRouterRuntime {
       first.request.placement.navigatorOutlet ==
           second.request.placement.navigatorOutlet;
 
+  /// Prepares a declarative location change without treating it as a reset.
+  ///
+  /// Identity-aware backends report the concrete Entries removed by their
+  /// rebuilt page tree, so Runtime keeps every Scope until those events arrive.
+  /// Simpler adapters cannot report that diff; for them the documented fallback
+  /// replaces only the target Host and Outlet partition and never destroys an
+  /// inactive Shell branch or another pane.
+  void _prepareDeclarativeRouteEntry(
+    _RouteEntryRecord entry, {
+    required String reason,
+  }) {
+    if (_usesManagedRemovalConfirmationFor(entry.request.hostId)) return;
+    _removeRouteEntriesInPartition(
+      reason: reason,
+      hostId: entry.request.hostId,
+      navigatorOutlet: entry.request.placement.navigatorOutlet,
+    );
+  }
+
   /// Marks one Entry as removed and closes its Route Scope asynchronously.
   void _removeRouteEntry(
     _RouteEntryRecord entry, {
@@ -304,6 +318,24 @@ extension CCRouterRuntimeRouteEntries on CCRouterRuntime {
   void _removeAllRouteEntries({required String reason, String? hostId}) {
     for (final entry in _routeEntries.toList().reversed) {
       if (hostId != null && entry.request.hostId != hostId) continue;
+      _removeRouteEntry(entry, reason: reason, revealPrevious: false);
+    }
+  }
+
+  /// Removes retained Entries from one exact Host and Navigator Outlet.
+  ///
+  /// This fallback is used only by adapters that cannot report an identity-
+  /// based declarative stack diff. It deliberately preserves sibling Outlets.
+  void _removeRouteEntriesInPartition({
+    required String reason,
+    required String hostId,
+    required String navigatorOutlet,
+  }) {
+    for (final entry in _routeEntries.toList().reversed) {
+      if (entry.request.hostId != hostId ||
+          entry.request.placement.navigatorOutlet != navigatorOutlet) {
+        continue;
+      }
       _removeRouteEntry(entry, reason: reason, revealPrevious: false);
     }
   }

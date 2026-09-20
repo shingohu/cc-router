@@ -94,14 +94,16 @@ final class CCNavigationFailureRedirect extends CCNavigationFailureDecision {
   /// Redirects to a generated typed [intent].
   const CCNavigationFailureRedirect.toIntent(
     CCRouteIntent<Object?> intent, {
-    this.operation = CCNavigationOperation.replace,
+    this.operation,
+    this.openMode,
   }) : intent = intent,
        uri = null;
 
   /// Redirects to a dynamically resolved [uri].
   const CCNavigationFailureRedirect.toUri(
     Uri uri, {
-    this.operation = CCNavigationOperation.replace,
+    this.operation,
+    this.openMode,
   }) : intent = null,
        uri = uri;
 
@@ -111,8 +113,19 @@ final class CCNavigationFailureRedirect extends CCNavigationFailureDecision {
   /// Dynamic recovery target, when supplied.
   final Uri? uri;
 
-  /// Non-composite stack operation used for the recovery destination.
-  final CCNavigationOperation operation;
+  /// Optional stack operation override for the recovery destination.
+  ///
+  /// When omitted, Runtime preserves the original caller's operation. This
+  /// prevents a failed Push from replacing an unrelated current page while
+  /// retaining explicit Go, Reset, and Replace intent.
+  final CCNavigationOperation? operation;
+
+  /// Dynamic Open behavior when [operation] explicitly selects Open.
+  ///
+  /// An explicit Open defaults to Push when this is null. When [operation] is
+  /// omitted and the original operation was Open, Runtime instead preserves
+  /// the original request's Open mode.
+  final CCDeepLinkOpenMode? openMode;
 }
 
 /// Opens a fallback destination and suppresses the original failure.
@@ -124,14 +137,16 @@ final class CCNavigationFailureFallback extends CCNavigationFailureDecision {
   /// Falls back to a generated typed [intent].
   const CCNavigationFailureFallback.toIntent(
     CCRouteIntent<Object?> intent, {
-    this.operation = CCNavigationOperation.replace,
+    this.operation,
+    this.openMode,
   }) : intent = intent,
        uri = null;
 
   /// Falls back to a dynamically resolved [uri].
   const CCNavigationFailureFallback.toUri(
     Uri uri, {
-    this.operation = CCNavigationOperation.replace,
+    this.operation,
+    this.openMode,
   }) : intent = null,
        uri = uri;
 
@@ -141,8 +156,16 @@ final class CCNavigationFailureFallback extends CCNavigationFailureDecision {
   /// Dynamic fallback target, when supplied.
   final Uri? uri;
 
-  /// Non-composite stack operation used for the fallback destination.
-  final CCNavigationOperation operation;
+  /// Optional stack operation override for the fallback destination.
+  ///
+  /// A null value inherits the original request operation so recovery does not
+  /// introduce an unrelated destructive stack mutation.
+  final CCNavigationOperation? operation;
+
+  /// Dynamic Open behavior when [operation] explicitly selects Open.
+  ///
+  /// See [CCNavigationFailureRedirect.openMode] for inheritance semantics.
+  final CCDeepLinkOpenMode? openMode;
 }
 
 /// Host policy that may recover one sanitized navigation failure.

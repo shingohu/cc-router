@@ -275,7 +275,18 @@ void main() {
     registry.activateHost(external.hostId);
     expect(registry.activeHostId, external.hostId);
 
-    registry.unregisterHost(external.hostId);
+    expect(
+      () => registry.unregisterHost(external.hostId),
+      throwsA(isA<CCNavigationAdapterError>()),
+    );
+    expect(external.disposed, isFalse);
+    expect(registry.activeHostId, external.hostId);
+    expect(registry.registeredHostIds, {primary.hostId, external.hostId});
+
+    registry.unregisterHost(
+      external.hostId,
+      replacementActiveHostId: primary.hostId,
+    );
     expect(external.disposed, isTrue);
     expect(registry.activeHostId, primary.hostId);
     expect(registry.registeredHostIds, {primary.hostId});
@@ -362,7 +373,10 @@ void main() {
       );
       expect(runtime.activeRouteEntries, hasLength(3));
 
-      registry.unregisterHost(secondary.hostId);
+      registry.unregisterHost(
+        secondary.hostId,
+        replacementActiveHostId: primary.hostId,
+      );
 
       expect(await secondaryResult, isNull);
       expect(secondary.disposed, isTrue);

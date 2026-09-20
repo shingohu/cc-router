@@ -92,6 +92,7 @@ final class CCPopOutcome {
     this.trigger = CCPopTrigger.unknown,
     this.guardDeniedCode,
     this.hostId,
+    this.navigatorOutlet,
   });
 
   /// Whether the backend accepted or consumed the Pop request.
@@ -114,23 +115,59 @@ final class CCPopOutcome {
 
   /// Concrete Host that consumed the Pop, when known.
   ///
-  /// Multi-Host Runtime reconciliation uses this only to scope a legacy
-  /// managed fallback when no backend Entry identity is available.
+  /// Multi-Host Runtime reconciliation uses this to validate exact backend
+  /// identity. It never authorizes positional removal when Entry identity is
+  /// unavailable.
   final String? hostId;
+
+  /// Navigator Outlet that consumed the Pop, when known.
+  ///
+  /// Runtime and Host infrastructure use this together with [hostId] to avoid
+  /// applying a nested-Navigator Pop to a sibling Shell branch or adaptive
+  /// pane. Business callers should treat it as diagnostic metadata.
+  final String? navigatorOutlet;
 
   /// Returns this outcome with selected diagnostic fields replaced.
   ///
   /// Runtime uses this to attach a trusted trigger when an older Adapter
   /// returns an otherwise complete outcome without source metadata.
-  CCPopOutcome copyWith({CCPopTrigger? trigger, String? hostId}) =>
-      CCPopOutcome(
-        handled: handled,
-        removedBackendEntryId: removedBackendEntryId,
-        removedOwner: removedOwner,
-        trigger: trigger ?? this.trigger,
-        guardDeniedCode: guardDeniedCode,
-        hostId: hostId ?? this.hostId,
-      );
+  CCPopOutcome copyWith({
+    CCPopTrigger? trigger,
+    String? hostId,
+    String? navigatorOutlet,
+  }) => CCPopOutcome(
+    handled: handled,
+    removedBackendEntryId: removedBackendEntryId,
+    removedOwner: removedOwner,
+    trigger: trigger ?? this.trigger,
+    guardDeniedCode: guardDeniedCode,
+    hostId: hostId ?? this.hostId,
+    navigatorOutlet: navigatorOutlet ?? this.navigatorOutlet,
+  );
+}
+
+/// Immutable backend partition targeted by an upcoming Pop operation.
+///
+/// Adapter and Host infrastructure expose this snapshot so Runtime can select
+/// the correct managed Pop Guard without retaining a Navigator or other
+/// backend object. A null [backendEntryId] means ownership must be resolved
+/// from Runtime's ledger within the exact Host/Outlet partition.
+final class CCNavigationPopTarget {
+  /// Creates one exact Host/Outlet Pop target.
+  const CCNavigationPopTarget({
+    required this.hostId,
+    required this.navigatorOutlet,
+    this.backendEntryId,
+  });
+
+  /// Concrete navigation Host receiving the Pop.
+  final String hostId;
+
+  /// Navigator Outlet receiving the Pop.
+  final String navigatorOutlet;
+
+  /// Exact backend Entry expected to leave, when the adapter can prove it.
+  final String? backendEntryId;
 }
 
 /// Identifies a stack transition observed from a navigation backend.
@@ -505,4 +542,14 @@ abstract interface class CCNavigationPopCoordinator {
   /// Returning `handled: false` preserves the adapter's normal root-Pop
   /// rejection semantics.
   CCPopOutcome popOutcome({Object? result});
+}
+
+/// Optional Adapter SPI exposing the target of its next Pop operation.
+///
+/// Multi-Host and nested-Navigator adapters should implement this whenever
+/// Pop Guard selection would otherwise depend on global insertion order.
+/// Business code must not use this interface to choose a navigation target.
+abstract interface class CCNavigationPopTargetSource {
+  /// Returns the active Pop partition, or null when no target is available.
+  CCNavigationPopTarget? get activePopTarget;
 }

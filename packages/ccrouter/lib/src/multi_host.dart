@@ -20,6 +20,7 @@ final class CCNavigationHostRegistry
         CCNavigationManagedEntryReleaseSink,
         CCNavigationBackendSnapshotSource,
         CCNavigationPopCoordinator,
+        CCNavigationPopTargetSource,
         CCNavigationPopGuardBinding,
         CCNavigationPredictiveBackSourceProvider,
         CCNavigationPredictiveBackSource {
@@ -64,6 +65,20 @@ final class CCNavigationHostRegistry
   /// Default Host identity consumed by Runtime request construction.
   @override
   String get hostId => _activeHostId;
+
+  /// Active child Adapter partition used for Pop Guard selection.
+  @override
+  CCNavigationPopTarget get activePopTarget {
+    final adapter = _activeAdapter;
+    final target = adapter is CCNavigationPopTargetSource
+        ? (adapter as CCNavigationPopTargetSource).activePopTarget
+        : null;
+    return CCNavigationPopTarget(
+      hostId: _activeHostId,
+      navigatorOutlet: target?.navigatorOutlet ?? 'root',
+      backendEntryId: target?.backendEntryId,
+    );
+  }
 
   /// Conservative aggregate capabilities used for route-table validation.
   ///
@@ -221,27 +236,51 @@ final class CCNavigationHostRegistry
   ///
   /// The last Host cannot be removed from an initialized registry. Runtime is
   /// notified before disposal so entries owned by the removed Host close their
-  /// Route Scopes. Live backend pages are never migrated implicitly.
-  void unregisterHost(String hostId) => _unregisterHost(hostId);
+  /// Route Scopes. Live backend pages are never migrated implicitly. Removing
+  /// the active Host requires [replacementActiveHostId], which must identify a
+  /// different registered Host; no replacement is selected by insertion order.
+  void unregisterHost(String hostId, {String? replacementActiveHostId}) =>
+      _unregisterHost(hostId, replacementActiveHostId: replacementActiveHostId);
 
   /// Performs one atomic Host removal.
-  void _unregisterHost(String hostId) {
+  void _unregisterHost(
+    String hostId, {
+    required String? replacementActiveHostId,
+  }) {
     _ensureAvailable();
     if (_hosts.length == 1) {
       throw const CCNavigationAdapterError(
         'An initialized Host registry must retain at least one Host.',
       );
     }
-    final record = _hosts.remove(hostId);
+    final record = _hosts[hostId];
     if (record == null) {
       throw CCNavigationAdapterError(
         'Navigation Host "$hostId" is not registered.',
       );
     }
+    if (_activeHostId == hostId) {
+      if (replacementActiveHostId == null ||
+          replacementActiveHostId == hostId ||
+          !_hosts.containsKey(replacementActiveHostId)) {
+        throw CCNavigationAdapterError(
+          'Removing active navigation Host "$hostId" requires a different '
+          'registered replacementActiveHostId.',
+        );
+      }
+    } else if (replacementActiveHostId != null) {
+      throw const CCNavigationAdapterError(
+        'replacementActiveHostId is accepted only when removing the active '
+        'navigation Host.',
+      );
+    }
+    _hosts.remove(hostId);
+    if (_activeHostId == hostId) {
+      _activeHostId = replacementActiveHostId!;
+    }
     _unbindRecord(record);
     _hostByNavigationId.removeWhere((_, value) => value == hostId);
     _adaptiveLayouts.remove(hostId);
-    if (_activeHostId == hostId) _activeHostId = _hosts.keys.first;
     final sequence = _nextHostSequence(hostId);
     _publishBackendEvent(
       CCNavigationBackendEvent(
@@ -306,7 +345,14 @@ final class CCNavigationHostRegistry
     return adapter is CCNavigationPopCoordinator
         ? (adapter as CCNavigationPopCoordinator)
               .maybePopOutcome(result: result)
-              .then((outcome) => outcome.copyWith(hostId: _activeHostId))
+              .then(
+                (outcome) => outcome.copyWith(
+                  hostId: _activeHostId,
+                  navigatorOutlet:
+                      outcome.navigatorOutlet ??
+                      activePopTarget.navigatorOutlet,
+                ),
+              )
         : adapter
               .maybePop(result: result)
               .then(
@@ -326,7 +372,10 @@ final class CCNavigationHostRegistry
     if (adapter is CCNavigationPopCoordinator) {
       return (adapter as CCNavigationPopCoordinator)
           .popOutcome(result: result)
-          .copyWith(hostId: _activeHostId);
+          .copyWith(
+            hostId: _activeHostId,
+            navigatorOutlet: activePopTarget.navigatorOutlet,
+          );
     }
     adapter.pop(result: result);
     return CCPopOutcome(handled: true, hostId: _activeHostId);
