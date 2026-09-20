@@ -4,7 +4,7 @@ Generated from `lib/src/stack_page.dart`. Do not edit by hand.
 
 ## `demo_navigation_lab.stack`
 
-交互验证 Push、Replace、组合栈操作与精确 Route Entry 句柄。
+交互验证 Push、Replace、Pop、Go 与 Reset。
 
 - Owner: `demo_navigation_lab_component`
 - Component version: `0.1.0`

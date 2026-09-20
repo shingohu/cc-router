@@ -4,6 +4,7 @@ import 'package:demo_navigation_lab/demo_navigation_lab.dart';
 import 'package:flutter/material.dart';
 
 import 'ccrouter_generated/ccrouter_host.routes.g.dart';
+import 'demo_router_backend.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,7 +24,9 @@ void main() {
 }
 
 final class CCRouterDemoApp extends StatefulWidget {
-  const CCRouterDemoApp({super.key});
+  const CCRouterDemoApp({this.initialLocation = '/', super.key});
+
+  final String initialLocation;
 
   @override
   State<CCRouterDemoApp> createState() => _CCRouterDemoAppState();
@@ -35,8 +38,9 @@ final class _CCRouterDemoAppState extends State<CCRouterDemoApp> {
   @override
   void initState() {
     super.initState();
-    _backend = CCGoRouterBackend.managed(
+    _backend = createDemoRouterBackend(
       catalog: ccrouterGeneratedRouteCatalog,
+      initialLocation: widget.initialLocation,
     );
   }
 

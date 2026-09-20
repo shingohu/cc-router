@@ -7,7 +7,7 @@
 - Backend：`CCGoRouterBackend.managed`，`go_router 17.5.0`
 - SDK：FVM `ohos/oh-3.41.9-release`（Flutter 3.41.10 OHOS / Dart 3.11.5）
 - 组件：3
-- 生成路由：20
+- 生成路由：28
 
 Demo 的交互实现位于 `modules/navigation_lab`，宿主只负责初始化 CCRouter、
 安装生成组件清单并挂载 GoRouter Backend。
@@ -22,6 +22,14 @@ Demo 的交互实现位于 `modules/navigation_lab`，宿主只负责初始化 C
 | Replace | 同 routeId 更换 Level 参数 | 通过，旧 State 和 Route Scope 销毁 |
 | Pop / maybePop | Detail、Stack、PopGuard | 通过 |
 | Go / Reset | Stack Workbench | 通过 |
+| Nested Route | Shell Feed -> Detail | 通过，子路由保持在声明的 Outlet |
+| ShellRoute | Feed / Settings 共享 Shell | 通过 |
+| Root Route from Shell | Shell 内打开透明全屏页 | 通过，不污染 Shell Outlet |
+| StatefulShellRoute | Home / Activity / Profile | 通过，分支历史与 Widget State 保持 |
+| Initial Deep Link into Shell | `/workspace/home/73` | 通过，直接进入 Home Outlet 的详情页 |
+| Typed Extra | `DemoExtraPayload` | 通过，仅进程内传递，不进入 URL 或诊断 |
+| Multi Host | Primary / Secondary 双 Router | 通过，Host 路由状态相互隔离 |
+| Multi Outlet | Shell + 三个 Stateful Branch Outlet | 通过，每个 Outlet 独立 Key 与 Observer |
 | Global / Route Interceptor | Proceed / Cancel | 通过 |
 | Redirect / Defer / resume / Timeout | Policy Lab | 通过 |
 | PopGuard | 未保存表单 | 拒绝和放行均通过 |
@@ -47,13 +55,20 @@ Demo 的交互实现位于 `modules/navigation_lab`，宿主只负责初始化 C
 4. Failure fallback 默认 Replace 后不可 Pop，Demo 却使用内部 `open('/')` 返回，造成隐藏 Entry 残留。Demo 现显式使用 Push fallback，返回后为 `0 managed`。
 5. GoRouter Adapter 在 Go、Reset 或 Runtime shutdown 时曾直接清空本地 Entry，导致已返回给业务的 typed result Future 永久等待，并残留 navigation/backend identity 映射。现在 Go/Reset 以 `null` 结束被移除页面的结果，shutdown 以 `CCNavigationAdapterError` 结束未完成结果，同时清理身份映射；动态 open 不创建对业务暴露的错误结果通道。
 6. GoRouter 17 默认把 Shell 分支的 Navigator 事件转发给 root observers，曾导致同一个分支 Route 同时被标记为 root 和真实 Outlet。`CCGoRouterNavigationObserver` 现在忽略不属于其 Navigator 的转发事件，由对应 Outlet observer 保留唯一、准确的生命周期身份。
+7. 双 Host Demo 启动时窗口宽度跨越布局断点，`Column`/`Row` 子树替换曾让 secondary Host 在旧 Owner 释放前被新 Owner 挂载。示例现保持同一 `Flex` 子树并只切换方向，回归测试会从窄屏扩到宽屏并检查 Flutter 异常。
 
 ## 已确认限制
 
 1. `popAndPush`、`popUntil`、`pushAndRemoveUntil`、`removeRoute`、`removeRouteBelow` 和 `replaceRouteBelow` 已从业务 API、Runtime、Adapter SPI、Capability、内置 Adapter、Demo 与测试完整删除，不再以 capability error 或多步操作模拟。重新接入需先具备稳定 Entry identity、原子目标栈提交、混合栈隔离、PopGuard、失败回滚和结果/Scope 生命周期保证。
 2. Predictive Back 不适用于 macOS 实测，已由 bridge 单测覆盖；最终仍需 Android 设备回归手势进度与取消。
-3. StatefulShell、多 Window/Display 和自适应多 Outlet 已有 Integration Test，但本 Demo 仍是单 Host / root Outlet，需单独的设备形态 Demo。
+3. Demo 已覆盖单 View 内的双 Host、Shell 和多 Outlet，但不等同于 macOS/iPadOS 原生多 Window 或多 Flutter Engine。原生 Window/Display 创建、销毁、恢复和 Host 迁移仍需平台接入后验证。
 4. 完整 Route Restoration 按设计暂缓；当前只保留 restoration opportunity 诊断，不宣称可恢复业务栈。
+
+## 官方 GoRouter 示例对照
+
+本 Demo 不逐份复制 GoRouter 官方示例，而是验证后端中立的 CCRouter 等价语义。
+完整映射、刻意不支持项和延后项见
+[GoRouter 示例覆盖对照](go_router_example_coverage.md)。
 
 ## 回归命令
 

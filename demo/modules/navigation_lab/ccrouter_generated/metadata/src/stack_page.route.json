@@ -21,7 +21,7 @@
       "componentVersion": "0.1.0",
       "exposure": "internal",
       "deepLink": "disabled",
-      "description": "交互验证 Push、Replace、组合栈操作与精确 Route Entry 句柄。",
+      "description": "交互验证 Push、Replace、Pop、Go 与 Reset。",
       "interceptorIds": [],
       "popGuardIds": [],
       "declaration": {

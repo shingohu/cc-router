@@ -23,8 +23,20 @@ Flutter SDK 选择：
 
 `modules/navigation_lab` 是可交互的路由功能实验室，覆盖 typed navigation、动态 URI、
 栈操作、拦截和重定向、Failure Policy、Aspect、页面/应用生命周期、展示动画、
-Managed Modal 以及 Foreign/Overlay 隔离。完整的 macOS 验证矩阵、已修复问题和
-Adapter 限制见 [路由验证记录](docs/route_validation.md)。
+Managed Modal、Foreign/Overlay 隔离、ShellRoute、StatefulShellRoute、嵌套子路由和
+typed Extra。完整的 macOS 验证矩阵、已修复问题和 Adapter 限制见
+[路由验证记录](docs/route_validation.md)，与 Flutter 官方 GoRouter 示例的差异见
+[GoRouter 示例覆盖对照](docs/go_router_example_coverage.md)。
+
+双 Host / 多 Outlet 示例把两个独立 GoRouter 同时显示在一个 Flutter View 中，用来验证
+Host 选择、路由栈和 RouteEntry 生命周期互不串扰：
+
+```sh
+fvm flutter run -d macos -t lib/examples/multi_host_demo.dart
+```
+
+该入口验证框架的多 Host 语义，不等同于 macOS 原生多 Window；后者仍需要平台 Window
+和 Flutter Engine 生命周期接入。
 
 ## 开发命令
 

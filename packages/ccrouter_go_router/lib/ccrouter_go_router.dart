@@ -18,5 +18,6 @@ export 'package:go_router/go_router.dart'
         GoRoute,
         RouteBase,
         ShellRoute,
+        StatefulNavigationShell,
         StatefulShellRoute,
         StatefulShellBranch;

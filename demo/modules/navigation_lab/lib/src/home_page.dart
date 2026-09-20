@@ -10,6 +10,7 @@ import 'lifecycle_page.dart';
 import 'navigation_lab_component.dart';
 import 'policy_pages.dart';
 import 'presentation_pages.dart';
+import 'shell_pages.dart';
 import 'stack_page.dart';
 
 part 'ccrouter_generated/home_page.route.g.dart';
@@ -388,6 +389,37 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
       onTap: () => _run(
         'Stack workbench',
         () => CCRouter.navigator.push<String>(demoStackIntent(level: 1)),
+      ),
+    ),
+    _ActionTile(
+      icon: Icons.web_asset_outlined,
+      title: '进入 ShellRoute',
+      subtitle: '共享 Scaffold、单嵌套 Navigator、Shell 内详情与 Root 页面。',
+      onTap: () => _run('ShellRoute', () async {
+        await CCRouter.navigator.go(demoShellFeedIntent());
+        return null;
+      }),
+    ),
+    _ActionTile(
+      icon: Icons.space_dashboard_outlined,
+      title: '进入 StatefulShellRoute',
+      subtitle: '三个持久 Outlet、独立历史和分支内 State。',
+      onTap: () => _run('StatefulShellRoute', () async {
+        await CCRouter.navigator.go(demoWorkspaceHomeIntent());
+        return null;
+      }),
+    ),
+    _ActionTile(
+      icon: Icons.data_object,
+      title: '打开 Typed Extra',
+      subtitle: '复杂对象只在进程内传递，不写入 URL 或诊断记录。',
+      onTap: () => _run(
+        'Typed Extra',
+        () => CCRouter.navigator.push<void>(
+          demoExtraIntent(
+            const DemoExtraPayload(owner: 'navigation_lab', revision: 3),
+          ),
+        ),
       ),
     ),
     _ActionTile(

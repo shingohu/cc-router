@@ -18,7 +18,7 @@ final class _DemoStackPageRouteArguments {
   final int level;
 }
 
-/// 交互验证 Push、Replace、组合栈操作与精确 Route Entry 句柄。
+/// 交互验证 Push、Replace、Pop、Go 与 Reset。
 abstract final class _DemoStackPageRoute {
   /// Stable identity used by registration, diagnostics and typed navigation.
   static const id = "demo_navigation_lab.stack";

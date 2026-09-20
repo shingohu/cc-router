@@ -15,6 +15,8 @@ import 'package:demo_navigation_lab/src/policy_pages.dart'
     as route_src_policy_pages_dart;
 import 'package:demo_navigation_lab/src/presentation_pages.dart'
     as route_src_presentation_pages_dart;
+import 'package:demo_navigation_lab/src/shell_pages.dart'
+    as route_src_shell_pages_dart;
 import 'package:demo_navigation_lab/src/stack_page.dart'
     as route_src_stack_page_dart;
 
@@ -65,6 +67,26 @@ final class DemoNavigationLabComponentGeneratedRoutes {
       registry,
     );
     route_src_presentation_pages_dart.ccrouterRegisterDemoTransparentPageRoute(
+      registry,
+    );
+    route_src_shell_pages_dart.ccrouterRegisterDemoExtraPageRoute(registry);
+    route_src_shell_pages_dart.ccrouterRegisterDemoShellDetailPageRoute(
+      registry,
+    );
+    route_src_shell_pages_dart.ccrouterRegisterDemoShellFeedPageRoute(registry);
+    route_src_shell_pages_dart.ccrouterRegisterDemoShellSettingsPageRoute(
+      registry,
+    );
+    route_src_shell_pages_dart.ccrouterRegisterDemoWorkspaceActivityPageRoute(
+      registry,
+    );
+    route_src_shell_pages_dart.ccrouterRegisterDemoWorkspaceDetailPageRoute(
+      registry,
+    );
+    route_src_shell_pages_dart.ccrouterRegisterDemoWorkspaceHomePageRoute(
+      registry,
+    );
+    route_src_shell_pages_dart.ccrouterRegisterDemoWorkspaceProfilePageRoute(
       registry,
     );
     route_src_stack_page_dart.ccrouterRegisterDemoStackPageRoute(registry);
@@ -177,6 +199,52 @@ final demoNavigationLabComponentRouteCatalog = CCFlutterRouteCatalog([
         .ccrouterDescribeDemoTransparentPageRoute(),
     builder: (arguments) => route_src_presentation_pages_dart
         .ccrouterBuildDemoTransparentPageRoute(arguments),
+  ),
+  CCFlutterRouteDestination(
+    route: route_src_shell_pages_dart.ccrouterDescribeDemoExtraPageRoute(),
+    builder: (arguments) =>
+        route_src_shell_pages_dart.ccrouterBuildDemoExtraPageRoute(arguments),
+  ),
+  CCFlutterRouteDestination(
+    route: route_src_shell_pages_dart
+        .ccrouterDescribeDemoShellDetailPageRoute(),
+    builder: (arguments) => route_src_shell_pages_dart
+        .ccrouterBuildDemoShellDetailPageRoute(arguments),
+  ),
+  CCFlutterRouteDestination(
+    route: route_src_shell_pages_dart.ccrouterDescribeDemoShellFeedPageRoute(),
+    builder: (arguments) => route_src_shell_pages_dart
+        .ccrouterBuildDemoShellFeedPageRoute(arguments),
+  ),
+  CCFlutterRouteDestination(
+    route: route_src_shell_pages_dart
+        .ccrouterDescribeDemoShellSettingsPageRoute(),
+    builder: (arguments) => route_src_shell_pages_dart
+        .ccrouterBuildDemoShellSettingsPageRoute(arguments),
+  ),
+  CCFlutterRouteDestination(
+    route: route_src_shell_pages_dart
+        .ccrouterDescribeDemoWorkspaceActivityPageRoute(),
+    builder: (arguments) => route_src_shell_pages_dart
+        .ccrouterBuildDemoWorkspaceActivityPageRoute(arguments),
+  ),
+  CCFlutterRouteDestination(
+    route: route_src_shell_pages_dart
+        .ccrouterDescribeDemoWorkspaceDetailPageRoute(),
+    builder: (arguments) => route_src_shell_pages_dart
+        .ccrouterBuildDemoWorkspaceDetailPageRoute(arguments),
+  ),
+  CCFlutterRouteDestination(
+    route: route_src_shell_pages_dart
+        .ccrouterDescribeDemoWorkspaceHomePageRoute(),
+    builder: (arguments) => route_src_shell_pages_dart
+        .ccrouterBuildDemoWorkspaceHomePageRoute(arguments),
+  ),
+  CCFlutterRouteDestination(
+    route: route_src_shell_pages_dart
+        .ccrouterDescribeDemoWorkspaceProfilePageRoute(),
+    builder: (arguments) => route_src_shell_pages_dart
+        .ccrouterBuildDemoWorkspaceProfilePageRoute(arguments),
   ),
   CCFlutterRouteDestination(
     route: route_src_stack_page_dart.ccrouterDescribeDemoStackPageRoute(),

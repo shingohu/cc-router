@@ -244,6 +244,126 @@ void main() {
 
     await _unmountDemo(tester);
   });
+
+  testWidgets('single Shell keeps nested routes inside its outlet', (
+    tester,
+  ) async {
+    await _pumpDemo(tester);
+    await tester.tap(find.text('导航'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('进入 ShellRoute'));
+    await tester.tap(find.text('进入 ShellRoute'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Shell Feed'), findsOneWidget);
+    expect(find.text('Feed'), findsOneWidget);
+    expect(find.text('Settings'), findsOneWidget);
+    await tester.tap(find.text('在 Shell Outlet 内打开详情'));
+    await tester.pumpAndSettle();
+    expect(find.text('Shell Detail #7'), findsOneWidget);
+    expect(
+      CCRouter.activeRouteEntries.last.placement.navigatorOutlet,
+      'shell.content',
+    );
+
+    await tester.tap(find.text('返回 Feed'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Settings'));
+    await tester.pumpAndSettle();
+    expect(find.text('Shell Settings'), findsOneWidget);
+
+    await tester.tap(find.text('Feed'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('在 Root Navigator 打开透明页'));
+    await tester.pumpAndSettle();
+    expect(find.text('透明全屏海报预览'), findsOneWidget);
+    expect(CCRouter.activeRouteEntries.last.placement.navigatorOutlet, 'root');
+    await tester.tap(find.byTooltip('关闭'));
+    await tester.pumpAndSettle();
+    expect(find.text('Shell Feed'), findsOneWidget);
+
+    await _unmountDemo(tester);
+  });
+
+  testWidgets('StatefulShell accepts an initial deep link into a branch', (
+    tester,
+  ) async {
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    tester.view.physicalSize = const Size(1280, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      const CCRouterDemoApp(initialLocation: '/workspace/home/73'),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Workspace Detail #73'), findsOneWidget);
+    expect(find.text('Home'), findsOneWidget);
+    expect(
+      CCRouter.activeBackendEntries.last.navigatorOutlet,
+      'workspace.home',
+    );
+
+    await _unmountDemo(tester);
+  });
+
+  testWidgets('StatefulShell preserves branch state and history', (
+    tester,
+  ) async {
+    await _pumpDemo(tester);
+    await tester.tap(find.text('导航'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('进入 StatefulShellRoute'));
+    await tester.tap(find.text('进入 StatefulShellRoute'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Workspace Home'), findsOneWidget);
+    await tester.tap(find.text('打开 Home 分支详情'));
+    await tester.pumpAndSettle();
+    expect(find.text('Workspace Detail #42'), findsOneWidget);
+
+    await tester.tap(find.text('Activity'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('增加分支内状态'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('本地计数：1'), findsOneWidget);
+
+    await tester.tap(find.text('Profile'));
+    await tester.pumpAndSettle();
+    expect(find.text('Workspace Profile'), findsOneWidget);
+    await tester.tap(find.text('Activity'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('本地计数：1'), findsOneWidget);
+    await tester.tap(find.text('Home'));
+    await tester.pumpAndSettle();
+    expect(find.text('Workspace Detail #42'), findsOneWidget);
+
+    await _unmountDemo(tester);
+  });
+
+  testWidgets('typed Extra remains an in-process typed value', (tester) async {
+    await _pumpDemo(tester);
+    await tester.tap(find.text('导航'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('打开 Typed Extra'));
+    await tester.tap(find.text('打开 Typed Extra'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Typed Extra'), findsOneWidget);
+    expect(
+      find.textContaining('owner=navigation_lab · revision=3'),
+      findsOneWidget,
+    );
+    expect(
+      CCRouter.activeRouteEntries.last.normalizedUri.toString(),
+      '/lab/extra',
+    );
+    await tester.tap(find.text('关闭'));
+    await tester.pumpAndSettle();
+
+    await _unmountDemo(tester);
+  });
 }
 
 Future<void> _pumpDemo(WidgetTester tester) async {
