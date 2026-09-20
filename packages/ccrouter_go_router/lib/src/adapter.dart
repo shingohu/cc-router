@@ -762,7 +762,7 @@ final class CCGoRouterAdapter
     }
   }
 
-  /// Rejects a request resolved for another Window or display Host.
+  /// Rejects a request resolved for another navigation Host.
   void _ensureRequestHost(CCNavigationRequest request) {
     if (request.hostId != _hostId) {
       throw CCNavigationAdapterError(

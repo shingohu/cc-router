@@ -426,13 +426,8 @@ void main() {
       primaryOutlet: 'list',
       secondaryOutlet: 'detail',
     );
-    final compact = registry.updateWindowMetrics(
-      CCWindowMetrics(
-        hostId: primary.hostId,
-        windowId: 'main',
-        width: 500,
-        height: 800,
-      ),
+    final compact = registry.updateHostLayout(
+      CCHostLayoutMetrics(hostId: primary.hostId, width: 500, height: 800),
       outletPolicy: outlets,
     );
     expect(compact.layout, CCAdaptiveLayoutKind.singlePane);
@@ -442,13 +437,8 @@ void main() {
       CCRouteEntryLifecycleState.hidden,
     ]);
 
-    final expanded = registry.updateWindowMetrics(
-      CCWindowMetrics(
-        hostId: primary.hostId,
-        windowId: 'main',
-        width: 1200,
-        height: 800,
-      ),
+    final expanded = registry.updateHostLayout(
+      CCHostLayoutMetrics(hostId: primary.hostId, width: 1200, height: 800),
       outletPolicy: outlets,
     );
     expect(expanded.layout, CCAdaptiveLayoutKind.splitPane);

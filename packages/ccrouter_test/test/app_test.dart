@@ -65,45 +65,34 @@ void main() {
   testWidgets('CCRouterApp forwards lifecycle changes without owning Runtime', (
     tester,
   ) async {
-    AppLifecycleState? lifecycle;
-    final host = CCNavigationHost(id: 'window.main');
-    final hostStates = <CCNavigationHostLifecycleState>[];
-    final removeThrowingListener = host.addLifecycleListener((_) {
-      throw StateError('isolated');
-    });
-    final removeListener = host.addLifecycleListener(
-      (event) => hostStates.add(event.state),
-    );
+    final lifecycleStates = <AppLifecycleState>[];
+    final host = CCNavigationHost(id: 'host.main');
 
     await tester.pumpWidget(
       CCRouterApp(
         host: host,
-        onLifecycleChanged: (state) => lifecycle = state,
+        onLifecycleChanged: lifecycleStates.add,
         child: const SizedBox(),
       ),
     );
 
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
-    expect(lifecycle, AppLifecycleState.paused);
-    expect(host.lifecycleState, CCNavigationHostLifecycleState.paused);
-    expect(hostStates, [
-      CCNavigationHostLifecycleState.mounted,
-      CCNavigationHostLifecycleState.paused,
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    expect(lifecycleStates, [
+      AppLifecycleState.paused,
+      AppLifecycleState.resumed,
     ]);
 
-    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
     await tester.pumpWidget(const SizedBox());
-    expect(host.lifecycleState, CCNavigationHostLifecycleState.unmounted);
-    expect(hostStates.last, CCNavigationHostLifecycleState.unmounted);
-    removeThrowingListener();
-    removeListener();
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    expect(lifecycleStates, hasLength(2));
   });
 
   test('CCNavigationHost owns one immutable key per Outlet', () {
     final root = GlobalKey<NavigatorState>();
     final detail = GlobalKey<NavigatorState>();
     final host = CCNavigationHost(
-      id: 'window.main',
+      id: 'host.main',
       navigatorKey: root,
       navigatorKeys: {'detail': detail},
     );
@@ -127,7 +116,7 @@ void main() {
   testWidgets('one Host cannot be mounted by two CCRouterApp trees', (
     tester,
   ) async {
-    final host = CCNavigationHost(id: 'window.shared');
+    final host = CCNavigationHost(id: 'host.shared');
 
     await tester.pumpWidget(
       Stack(
@@ -141,7 +130,6 @@ void main() {
         ],
       ),
     );
-    expect(host.lifecycleState, CCNavigationHostLifecycleState.mounted);
 
     await tester.pumpWidget(
       Stack(
@@ -158,7 +146,6 @@ void main() {
     );
 
     expect(tester.takeException(), isA<FlutterError>());
-    expect(host.lifecycleState, CCNavigationHostLifecycleState.mounted);
   });
 
   testWidgets('managed App attaches Backend without owning Runtime lifecycle', (

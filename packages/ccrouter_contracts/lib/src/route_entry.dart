@@ -64,10 +64,10 @@ final class CCRouteEntrySnapshot {
   /// Trusted component that owns the destination contract.
   final String ownerComponentId;
 
-  /// Concrete Window or display Host that owns this Entry instance.
+  /// Concrete navigation Host that owns this Entry instance.
   ///
   /// Unlike [placement], this value has already resolved the `default` alias
-  /// and is therefore safe for multi-window isolation and diagnostics.
+  /// and is therefore safe for multi-Host isolation and diagnostics.
   final String hostId;
 
   /// Canonical or normalized URI used to create this entry.

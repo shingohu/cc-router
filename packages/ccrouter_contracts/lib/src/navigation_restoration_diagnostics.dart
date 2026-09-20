@@ -11,7 +11,7 @@ enum CCRouteRestorationOpportunityReason {
   /// iOS or macOS requested scene or application state restoration.
   appleStateRestoration,
 
-  /// A desktop Host reopened a previously existing Window identity.
+  /// A future desktop platform bridge reported a reopened native Window.
   desktopWindowReopened,
 
   /// A persisted Host marker indicates the previous session ended uncleanly.

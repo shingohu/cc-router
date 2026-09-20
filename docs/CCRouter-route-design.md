@@ -924,11 +924,11 @@ orders
 - 底部 Tab 等多个长期并行分支才适合 `StatefulShellRoute`；主从布局不能默认建模为 Stateful Shell。
 
 Shell 负责持久化导航容器和 Outlet，主从容器负责根据屏幕尺寸选择栈式或双栏呈现。
-当前已提供适配器中立的 `CCWindowMetrics`、`CCAdaptivePresentationPolicy`、
+当前已提供适配器中立的 `CCHostLayoutMetrics`、`CCAdaptivePresentationPolicy`、
 `CCAdaptiveOutletPolicy` 和 `CCAdaptiveHostLayout`；Host 根据布局结果切换活动 Outlet，
 具体 Widget 结构和 GoRouter Shell 仍由应用组合根创建。
 
-### 12.3 大屏、折叠屏与多窗口扩展
+### 12.3 大屏、折叠屏与未来原生多窗口
 
 路由目的地必须与设备形态解耦。相同的 Route ID、Intent 和参数契约，应根据窗口和显示设备条件选择不同的 Shell、Outlet 和呈现方式，不为手机、平板、折叠屏或桌面分别复制路由。
 
@@ -937,7 +937,7 @@ Shell 负责持久化导航容器和 Outlet，主从容器负责根据屏幕尺�
 - Window Size Class：`compact`、`medium`、`expanded`，并支持窗口自由调整和横竖屏变化。
 - Display Feature：折痕、铰链、屏幕切口和不可用区域，避免内容或交互控件跨越遮挡区域。
 - Fold Posture：平铺、半折、桌面姿态和双屏展开时的布局切换。
-- 多 Window/Display：导航状态按 Window 或 Navigation Host 隔离，不能只依赖进程级单例栈。
+- 多 Host：独立 Router 或导航表面的状态按 Navigation Host 隔离，不能只依赖进程级单例栈。
 - 自适应 Modal：Dialog、Bottom Sheet 和全屏页面可根据可用空间切换，但 Route Contract 保持不变。
 - 状态恢复需求观测：只记录脱敏的重建机会，不保存或恢复 Outlet 栈和业务参数。
 - Web/桌面历史：浏览器前进后退、刷新、外部窗口和 URL 状态同步。
@@ -945,11 +945,18 @@ Shell 负责持久化导航容器和 Outlet，主从容器负责根据屏幕尺�
 - 无障碍与输入设备：大字体、键盘、鼠标、手写笔等导致布局变化时，导航状态不能丢失。
 - 特殊窗口：画中画、沉浸式全屏和外接屏幕需要独立 Host/Outlet 策略。
 
-已新增适配器中立的 `CCWindowMetrics`、`CCDisplayFeature` 和 `CCAdaptivePresentationPolicy` 合同。Shell 负责持久化导航容器，Adaptive Layout 负责选择单列、双栏或多 Pane，Window/Display Host 负责绑定实际导航栈；`CCRoutePlacement.hostId` 和导航请求的 `hostId` 用于隔离多窗口/外接屏幕栈。
+已新增适配器中立的 `CCHostLayoutMetrics`、`CCDisplayFeature` 和
+`CCAdaptivePresentationPolicy` 合同。Shell 负责持久化导航容器，Adaptive Layout
+负责选择单列、双栏或多 Pane，Navigation Host 负责绑定实际导航栈；
+`CCRoutePlacement.hostId` 和导航请求的 `hostId` 用于隔离逻辑 Host。
 
 Size Class、主从双 Outlet、Modal 自适应、Host 隔离和多 Pane Outlet 显示切换已经接入。
-平台仍需按实际设备接入窗口指标、Display Feature、外接屏、PiP 和预测返回信号；完整状态
-恢复只有在真实需求数据证明收益后才重新立项。
+当前没有创建、识别或监听 macOS、Windows、iPadOS 原生 Window，也没有维护平台
+Window ID。未来 Flutter 多窗口能力稳定后，平台桥接层负责把每个 Native Window 或
+Flutter View 映射到一个 Root `CCNavigationHost`，并转发创建、激活、关闭和恢复信号。
+Host 仍可在单 Flutter View 中表示嵌入式独立 Router，因此不是平台 Window 本身。
+平台仍需按实际设备接入 Display Feature、外接屏、PiP 和预测返回信号；完整状态恢复
+只有在真实需求数据证明收益后才重新立项。
 
 #### 12.3.1 状态恢复的当前边界
 
@@ -1029,7 +1036,7 @@ managed 模式负责：
   组件安装清单与路由 Catalog 漂移。
 - Adapter 绑定成功前不挂载业务 App 子树，框架使用固定的空加载态。
 - Adapter 绑定失败时上报 `FlutterError` 并展示不泄露异常内容的固定安全错误 UI。
-- Widget 卸载只解除 Host 生命周期观察，不关闭 Runtime 或 Backend。
+- Widget 卸载只解除 App 生命周期和 Host 挂载观察，不关闭 Runtime 或 Backend。
 - 应用调用 `CCRouter.shutdown` 时先释放 Runtime、Adapter、RouteEntry、Scope 和 Listener，
   再调用 Backend dispose 释放其自有 Router。
 - 不自动打开或关闭 Session；Session 继续由登录、退出、切换账号等业务流程管理。
@@ -1039,7 +1046,7 @@ managed 模式负责：
 - 安装 Flutter App 生命周期监听。
 - 提供供 Host/Adapter 集成代码查询的 Inherited Host 作用域。
 - 挂载和卸载 `CCNavigationHost`，并拒绝同一 Host 被两个 Widget Tree 同时持有。
-- 将 Flutter 前后台状态转换为独立的 Host Lifecycle Event。
+- 将 Flutter App 前后台状态转发给 `onLifecycleChanged` 和内部页面生命周期桥。
 - 在卸载时释放 `WidgetsBindingObserver`，但不销毁 Runtime、GoRouter 或 Navigator Key。
 
 所有权矩阵：
@@ -1057,7 +1064,10 @@ managed 模式负责：
 Flutter App 仍作为 `child` 使用 `MaterialApp.router`、`CupertinoApp.router` 或其他
 Router Widget。后续 Navigator 1.0 或其他后端通过同一个 `CCRouterAppBackend` 边界接入。
 
-`CCNavigationHost` 保存不可变的 Root/Outlet Navigator Key 注册表。同一个 Host 实例必须
+`CCNavigationHost` 是独立导航所有权域，保存不可变的 Root/Outlet Navigator Key
+注册表。它可以填满一个 Flutter View，也可以表示同一 View 内的嵌入式独立 Router；
+未来原生多窗口桥接为每个 Native Window 或 Flutter View 创建一个 Root Host。
+同一个 Host 实例必须
 同时用于 `GoRouter.navigatorKey`、`CCGoRouterNavigationObserver.hostId` 和
 `CCGoRouterAdapter.host`。Adapter 会在启动阶段检查 Host、Router、Shell Outlet 和
 Observer 是否一致；旧的 `navigatorKeys` 参数仍作为不使用 `CCRouterApp` 时的兼容路径。
@@ -1109,7 +1119,7 @@ created -> resolving -> pushed -> visible -> hidden
 
 | 维度 | 典型状态 | 语义和来源 |
 | --- | --- | --- |
-| App/Host 生命周期 | `resumed`、`inactive`、`hidden`、`paused`、`detached` | Flutter App 或 Window 状态；由 `CCRouterApp` 转发，不自动 Pop 页面、关闭 Session 或销毁 Route Scope |
+| App 生命周期 | `resumed`、`inactive`、`hidden`、`paused`、`detached` | Flutter `AppLifecycleState`；由 `CCRouterApp.onLifecycleChanged` 和内部页面桥转发，不代表原生 Window 焦点，不自动 Pop 页面、关闭 Session 或销毁 Route Scope |
 | Route 可见性 | `visible`、`covered`、`hidden`、`revealed` | 当前 Outlet 是否可见，以及是否被另一个 Route 覆盖；由 Runtime 的 RouteEntry 和 Adapter/Observer 协调 |
 | RouteEntry 生命周期 | `created`、`resolving`、`pushed`、`popping`、`removed`、`disposed` | 一次具体打开实例的挂载、移除和 Scope 资源释放 |
 
@@ -1126,8 +1136,8 @@ Backend Observer 确认，资源销毁由 RouteEntry 生命周期确认。未经
 Runtime 通过 `CCRouteVisibilityEvent` 提供独立的 Managed Route 可见性观察，阶段包括
 `willShow`、`didShow`、`willHide` 和 `didHide`。该事件只描述页面在所属 Outlet 中的
 显示与隐藏，不代表 RouteEntry 已销毁；Route Scope 释放仍以
-`CCRouteEntryLifecycleState.disposed` 为准。App/Window 前后台状态继续由
-`CCRouterApp` 的 Host 生命周期回调提供，不与 Route 可见性混合。
+`CCRouteEntryLifecycleState.disposed` 为准。Flutter App 前后台状态继续由
+`CCRouterApp.onLifecycleChanged` 提供，不与 Route 可见性或未来原生 Window 生命周期混合。
 
 Flutter 页面按需使用以下任一便利 API，两者共享同一个 Host 页面台账：
 
@@ -1631,6 +1641,7 @@ Adapter 的 `go` 进入目标 Shell 分支，不根据 URI 形态绕过策略。
   依据真实安全场景评估。
 - GoRouter 对 Shell、多别名和交互式返回的版本兼容范围。
 - 不同平台 Host 对 Display Feature、PiP 和预测返回信号的接入覆盖。
+- 原生 macOS、Windows、iPadOS Window/Flutter View 与 Root Host 的平台桥接。
 
 ---
 

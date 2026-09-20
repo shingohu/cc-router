@@ -80,7 +80,7 @@ final class CCNavigationAspectRequest {
   /// Canonical route template with parameter names but no parameter values.
   final String routePattern;
 
-  /// Concrete Window or display Host selected for this request.
+  /// Concrete navigation Host selected for this request.
   ///
   /// Unlike [placement], this value never contains the unresolved `default`
   /// alias after Runtime request construction.

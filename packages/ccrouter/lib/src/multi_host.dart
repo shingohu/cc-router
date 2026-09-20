@@ -2,9 +2,9 @@ import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 
 import 'app.dart';
 
-/// Host-only Adapter registry for multi-window navigation backends.
+/// Host-only Adapter registry for independent navigation backends.
 ///
-/// Register one independently owned Adapter per Window or display Host, then
+/// Register one independently owned Adapter per navigation Host, then
 /// expose this registry through a `CCRouterAppBackend` initialized by
 /// `CCRouterApp.managed`.
 /// Requests with an explicit route Host remain pinned to that Host; routes
@@ -107,8 +107,8 @@ final class CCNavigationHostRegistry
 
   /// Makes [hostId] the target for subsequent default-placement requests.
   ///
-  /// Window focus and display-host infrastructure call this when foreground
-  /// ownership changes. Existing RouteEntries keep their original Host.
+  /// Composition-root infrastructure calls this when the default navigation
+  /// surface changes. Existing RouteEntries keep their original Host.
   void activateHost(String hostId) {
     _ensureAvailable();
     if (!_hosts.containsKey(hostId)) {
@@ -119,14 +119,14 @@ final class CCNavigationHostRegistry
     _activeHostId = hostId;
   }
 
-  /// Resolves and publishes adaptive Outlet visibility for one Host Window.
+  /// Resolves and publishes adaptive Outlet visibility for one Host layout.
   ///
-  /// Call this from platform Window or Flutter layout infrastructure when
-  /// width, display features, or fold posture changes. The operation never
-  /// pushes, removes, or migrates routes; it only changes which retained
-  /// Outlet tops are considered shown.
-  CCAdaptiveHostLayout updateWindowMetrics(
-    CCWindowMetrics metrics, {
+  /// Call this from Flutter layout infrastructure when available width,
+  /// display features, or fold posture changes. The operation never pushes,
+  /// removes, or migrates routes; it only changes which retained Outlet tops
+  /// are considered shown.
+  CCAdaptiveHostLayout updateHostLayout(
+    CCHostLayoutMetrics metrics, {
     CCAdaptivePresentationPolicy presentationPolicy =
         const CCAdaptivePresentationPolicy(),
     required CCAdaptiveOutletPolicy outletPolicy,

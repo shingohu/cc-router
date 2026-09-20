@@ -119,7 +119,7 @@ final class _MultiHostWorkspaceState extends State<_MultiHostWorkspace> {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
-      title: const Text('Multi Host / Window Isolation'),
+      title: const Text('Multi Host Isolation'),
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(28),
         child: Padding(

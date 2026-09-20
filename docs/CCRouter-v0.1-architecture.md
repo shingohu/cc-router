@@ -701,7 +701,7 @@ Deep Link Policy，之后才通过 Adapter 的 `go` 进入目标 Shell 分支。
 
 小屏列表、大屏左列表右详情属于自适应主从布局（Master-Detail/List-Detail），应使用同一组类型安全的列表/详情 Route Contract。小屏采用单列 Navigator 栈，大屏采用显式 List Outlet 与 Detail Outlet；只有在两个区域需要独立导航历史时才由 Shell 承载两个 Navigator。底部 Tab 等多个长期并行分支才使用 `StatefulShellRoute`，不能把所有主从布局都建模为 Stateful Shell。
 
-路由目的地必须与设备形态解耦。`CCRoutePlacement` 负责显式声明 parent、Shell、Navigator Outlet 和 route kind；后续再以 Window Size Class（compact/medium/expanded）、折痕与铰链等 Display Feature、Fold Posture、多 Window/Display Host、Adaptive Presentation Policy 和状态恢复标识描述呈现条件。相同 Route Contract 根据窗口条件选择单列、双栏、多 Pane、Dialog、Bottom Sheet 或全屏呈现。导航状态应按 Window/Host 隔离，而不是只依赖进程级单例栈。第一阶段优先实现窗口尺寸自适应、主从双 Outlet、Modal 自适应和旋转/调整大小状态保持，随后扩展折叠姿态、多窗口、指定 Pane 深链、Web 历史、PiP 和预测返回。
+路由目的地必须与设备形态解耦。`CCRoutePlacement` 负责显式声明 parent、Shell、Navigator Outlet 和 route kind；后续再以 Window Size Class（compact/medium/expanded）、折痕与铰链等 Display Feature、Fold Posture、多 Host、Adaptive Presentation Policy 和状态恢复标识描述呈现条件。相同 Route Contract 根据可用布局空间选择单列、双栏、多 Pane、Dialog、Bottom Sheet 或全屏呈现。导航状态应按 Navigation Host 隔离，而不是只依赖进程级单例栈。第一阶段实现 Host 尺寸自适应、主从双 Outlet、Modal 自适应和旋转/调整大小状态保持；原生多窗口等待 Flutter 平台能力稳定后通过 Window/Flutter View 到 Root Host 的桥接接入。
 
 复杂对象默认不直接塞进 URL。需要传递内存对象时可使用 `extra`，但必须标记 `localOnly`，不可用于 Deep Link、跨 Isolate 或状态恢复。
 

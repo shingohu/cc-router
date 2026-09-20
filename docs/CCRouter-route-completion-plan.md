@@ -70,15 +70,16 @@ Observer 只覆盖部分 Managed Outlet，Adapter 会关闭延迟 Arrival，避�
 `pushed`。StatefulShell 分支切换不依赖 Navigator top 变化，由 RouterDelegate 单独上报
 `outletActivated`。
 
-### P1-1 Host、窗口与自适应布局
+### P1-1 Host 与自适应布局
 
 - [x] 增加 Runtime 多 Host Registry 和动态 Host Resolver；
-- [x] 隔离 Window、Display、Shell 和 Outlet 的栈、返回与诊断状态；
+- [x] 隔离 Host、Shell 和 Outlet 的栈、返回与诊断状态；
 - [x] 将 Adaptive Layout 契约接入 Host/Outlet 调度；
-- [x] 支持单 Pane、双 Pane和折叠状态变化，并明确窗口关闭时不隐式迁移 Live Route。
+- [x] 支持单 Pane、双 Pane 和折叠状态变化，并明确 Host 卸载时不隐式迁移 Live Route；
+- [ ] 接入原生 macOS、Windows、iPadOS Window/Flutter View 的创建、激活、关闭和恢复生命周期。
 
 Host 卸载会关闭该 Host 的 RouteEntry 和 Scope，并安全完成 pending result；其他 Host 不受影响。
-Live Route 的跨窗口迁移存在 Widget、Scope、返回值和后端状态所有权问题，因此不做隐式迁移。
+Live Route 的跨 Host 迁移存在 Widget、Scope、返回值和后端状态所有权问题，因此不做隐式迁移。
 未来如需迁移，只能通过显式新导航或单独设计的状态恢复流程重建。
 
 ### P1-2 可观测性

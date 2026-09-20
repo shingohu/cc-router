@@ -3,8 +3,8 @@
 ## 文档状态
 
 - 版本：v0.2
-- 状态：当前设计已实现；预测返回需由 Host 显式启用，完整路由状态恢复仍暂缓
-- 适用范围：CCRouter、GoRouter、Flutter Navigator、第三方 Popup 和多 Window Host
+- 状态：混合路由与多 Host 隔离已实现；原生多窗口桥接和完整路由状态恢复仍暂缓
+- 适用范围：CCRouter、GoRouter、Flutter Navigator、第三方 Popup 和独立 Navigation Host
 - 关联设计：[CCRouter 路由子系统设计](CCRouter-route-design.md)
 
 ## 1. 总体原则
@@ -112,7 +112,8 @@ CCPopOutcome
 
 ## 6. 外部路由接入
 
-`CCRouterApp` 作为 Host 注册中心，管理 Root Navigator、Shell Navigator、第三方 Navigator、Window/Display Host、Observer、Outlet 和生命周期桥接。
+`CCRouterApp` 作为 Host 组合入口，管理 Root Navigator、Shell Navigator、第三方
+Navigator、Observer、Outlet 和 Flutter App 生命周期桥接。它不创建或观察原生 Window。
 
 第三方路由有两种接入方式：
 
@@ -159,11 +160,15 @@ Foreign/Opaque 变化通过事件身份和 Bridge 隔离，不以一个宽泛 Ca
 `CCNavigationBackendSnapshotSource`，不实现时 Runtime 只从开始观察后的事件建立台账，
 不得猜测观察前的外部栈。
 
-## 9. 多 Window 与自适应布局
+## 9. 多 Host 与自适应布局
 
 当前 `hostId` 已进入 `CCNavigationRequest`、`CCRouteEntrySnapshot`、`CCBackendEntry`、后端事件和诊断记录。`CCNavigationHostRegistry` 将默认 Placement 动态解析到活动 Host，同时保持显式 Host 路由固定归属。
 
-不同 Window、折叠屏 Pane、外接显示器和多 Display Host 的导航栈相互隔离。Route Contract、Intent 和参数保持一致，呈现方式由 Host、Shell 和 Adaptive Layout 决定。Host 卸载只销毁该 Host 的 Managed Entry 和 Scope，不把 Live Route 隐式迁移到其他窗口。
+不同 Navigation Host 的导航栈相互隔离。一个 Host 可以填满 Flutter View，也可以表示
+同一 View 内的嵌入式独立 Router；折叠屏 Pane 继续使用同一 Host 下的 Outlet，而不是
+伪装成平台 Window。Route Contract、Intent 和参数保持一致，呈现方式由 Host、Shell 和
+Adaptive Layout 决定。Host 卸载只销毁该 Host 的 Managed Entry 和 Scope，不把 Live Route
+隐式迁移到其他 Host。原生 Window/Flutter View 映射留给未来平台桥接。
 
 ## 10. 分阶段实施
 
@@ -215,16 +220,17 @@ GoRouter 和内存 Adapter 会声明各自已实现的可见性观察、Managed 
 嵌套 Navigator、模态路由和精确 Entry 操作能力；Runtime 已在初始化和组合导航执行前进行能力校验，
 不再静默降级为无法保证语义的操作。
 
-### 阶段五：Host 与多 Window
+### 阶段五：多 Host 与未来平台 Window
 
 - [x] 完成单 Host 的不可变 Root/Outlet Key 注册、挂载、卸载和重复绑定校验；
 - [x] 让 GoRouter、Observer、Adapter 和 Backend Event 使用同一个 Host ID；
 - [x] 将 Route Placement 的 `default` Host 解析成 Adapter 绑定的真实 Host ID；
-- [x] 增加独立于 Route 可见性的 Flutter Host 前后台生命周期事件；
+- [x] 将 Flutter App 生命周期与 Route 可见性保持独立；
 - [x] 建立 Runtime 多 Host Registry 和动态 Host Resolver；
-- [x] 增加 Window/Display 隔离；
+- [x] 增加逻辑 Navigation Host 隔离；
 - [x] 支持 Size Class 驱动的单 Pane、双 Pane 和多 Pane Outlet 显示切换；
 - [x] Host 卸载时精确清理所属 Entry、Scope、pending result 和 listener bridge。
+- [ ] 等 Flutter 多窗口能力稳定后接入原生 Window/Flutter View 生命周期与 Root Host 映射。
 
 ## 11. 验收用例
 
@@ -239,7 +245,7 @@ GoRouter 和内存 Adapter 会声明各自已实现的可见性观察、Managed 
 9. `maybePop` 被拒绝时 RouteEntry 保持存活。
 10. 直接 `Navigator.pop(result)` 能完成 CCRouter 自己的 Push Future。
 11. 多 Shell 分支上的 Foreign Popup 只影响所属 Outlet。
-12. 多 Window 的 RouteEntry 和 Backend Entry 互不串扰。
+12. 多 Host 的 RouteEntry 和 Backend Entry 互不串扰。
 
 ## 12. 非目标
 

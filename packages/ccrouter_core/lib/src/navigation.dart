@@ -497,7 +497,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
   /// Resolves the route's default Host through the active Adapter binding.
   ///
   /// Explicit non-default placement remains unchanged so a single-Host
-  /// Adapter can reject requests intended for another Window.
+  /// Adapter can reject requests intended for another Host.
   String _resolveNavigationHostId(CCRoutePlacement placement) {
     if (placement.hostId != 'default') return placement.hostId;
     final adapter = _navigationAdapter;

@@ -27,10 +27,11 @@ final class CCRoutePlacement {
   /// do not use a path prefix as a substitute for this relationship.
   final String? parentRouteId;
 
-  /// Stable Window or display Host targeted by this placement.
+  /// Stable navigation Host targeted by this placement.
   ///
-  /// Use `default` for the primary application window. A custom Host keeps
-  /// its backend stack and adaptive layout state isolated from other windows.
+  /// Use `default` for the composition root's active Host. A custom Host keeps
+  /// its backend stack and adaptive layout state isolated from other navigation
+  /// surfaces. Native Window mapping belongs to a future platform bridge.
   final String hostId;
 
   /// Stable Shell ID that owns this route, if it is rendered in a Shell.

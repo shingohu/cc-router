@@ -114,7 +114,7 @@ final class CCPopOutcome {
 
   /// Concrete Host that consumed the Pop, when known.
   ///
-  /// Multi-window Runtime reconciliation uses this only to scope a legacy
+  /// Multi-Host Runtime reconciliation uses this only to scope a legacy
   /// managed fallback when no backend Entry identity is available.
   final String? hostId;
 
@@ -168,16 +168,16 @@ enum CCNavigationBackendEventKind {
 
   /// A Host changed the set of simultaneously visible Navigator Outlets.
   ///
-  /// Adaptive split-pane and multi-pane layouts use this event when window or
-  /// fold state changes. Entries in inactive Outlets remain mounted and hidden;
-  /// Runtime must not interpret the change as stack removal.
+  /// Adaptive split-pane and multi-pane layouts use this event when available
+  /// space or fold state changes. Entries in inactive Outlets remain mounted
+  /// and hidden; Runtime must not interpret the change as stack removal.
   outletsChanged,
 
-  /// A Window or display Host detached permanently from this Runtime.
+  /// A navigation Host backend detached permanently from this Runtime.
   ///
   /// Runtime removes managed entries owned by that Host and closes their Route
-  /// Scopes. Live Routes are never migrated implicitly to another Window;
-  /// restoration or an explicit new navigation must recreate them there.
+  /// Scopes. Live Routes are never migrated implicitly to another Host;
+  /// an explicit new navigation must recreate them there.
   hostDetached,
 }
 
@@ -220,7 +220,7 @@ final class CCBackendEntry {
   /// Stable route contract ID when the backend supplied one.
   final String? routeId;
 
-  /// Host or Window identity, when the adapter supports multiple hosts.
+  /// Navigation Host identity, when the adapter supports multiple hosts.
   final String? hostId;
 
   /// Navigator Outlet containing this backend entry.
@@ -278,7 +278,7 @@ final class CCNavigationBackendEntrySnapshot {
   /// Optional stable CCRouter route ID supplied by the backend.
   final String? routeId;
 
-  /// Optional Window or display host identity.
+  /// Optional navigation Host identity.
   final String? hostId;
 
   /// Optional backend location or settings name.
@@ -333,7 +333,7 @@ final class CCNavigationBackendEvent {
   /// assume it was removed for every event kind.
   final String? previousBackendEntryId;
 
-  /// Host or Window identity associated with this event, when supported.
+  /// Navigation Host identity associated with this event, when supported.
   final String? hostId;
 
   /// Navigator Outlet that emitted this event.

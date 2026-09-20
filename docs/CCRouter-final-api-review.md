@@ -41,7 +41,7 @@ Host 扩展和降级语义。
 - Backend event、failure、visibility、lifecycle、restoration 和 trace 历史均为有界缓冲。
 - Backend ledger 始终保留 active 结构条目，只对 removed 诊断历史做有界淘汰；容量为 0 时
   不保留 removed 历史，但仍保留 active identity 和有界 operation 去重。
-- 动态 Host detach 会清理该 Host 的 sequence/desync 状态，允许同 ID Window 重新接入。
+- 动态 Host detach 会清理该 Host 的 sequence/desync 状态，允许同 ID Host 重新接入。
 - Multi Host Registry 在 RouteEntry 移除和 Adapter dispatch 失败时释放
   `navigationId -> hostId` 索引，不依赖 Backend Observer 必须存在。
 - Multi Host 初始化、动态注册和卸载均为同步原子事务；失败注册不会写入 Registry，Adapter

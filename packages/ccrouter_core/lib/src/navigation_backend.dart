@@ -56,7 +56,7 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
 
   /// Returns backend entries filtered by optional Host and Navigator Outlet.
   ///
-  /// Use this for multi-window, foldable-pane, Shell-branch, or embedded
+  /// Use this for multi-Host, foldable-pane, Shell-branch, or embedded
   /// Navigator diagnostics. A null filter is a wildcard; filtering never
   /// changes ownership or grants permission to mutate an entry.
   List<CCBackendEntry> backendEntriesFor({

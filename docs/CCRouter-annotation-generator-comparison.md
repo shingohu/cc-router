@@ -34,7 +34,7 @@ onRouteHide
 
 这些事件覆盖页面曝光、页面被覆盖、App 前后台、Dialog/BottomSheet 显示隐藏等场景。
 
-CCRouter 当前已经有 `RouteEntry` 生命周期、独立的 `CCNavigationHost` 前后台事件和
+CCRouter 当前已经有 `RouteEntry` 生命周期、Flutter App 前后台转发和
 `CCNavigationAspect` 的 `found`、`arrival`、`lost`、`after` 只读观察阶段；跳转前的
 继续、取消和重定向决策由 Global/Route Interceptor 提供。Flutter
 业务层另外提供共享同一 Host 台账的 `CCPageLifecycleMixin` 和
@@ -51,12 +51,12 @@ Stateful Shell 和多 Pane Host 通过 Host SPI 上报活动 Outlet 集合。当
 已经包括：
 
 ```text
-CCNavigationHostLifecycleEvent
+AppLifecycleState
 CCRouteVisibilityEvent
 ```
 
-Window 和 Display 不再增加语义重叠的独立可见性事件；它们通过稳定的 `hostId`、Host
-Registry、活动 Outlet 集合和 Host Lifecycle Event 隔离。
+当前不伪造 Window 或 Display 生命周期。逻辑导航状态通过稳定的 `hostId`、Host
+Registry 和活动 Outlet 集合隔离；未来原生 Window 事件由独立平台桥接提供。
 
 Mixin 和 Listener 都只是 Flutter 业务层的便利接入，不能替代 Runtime 的 RouteEntry、
 Adapter 事件或最终移除埋点。页面创建和销毁继续使用 Flutter `initState` / `dispose`；
@@ -176,7 +176,7 @@ CCRouter 应继续要求业务统一通过 `CCRouter.navigator`，让拦截、As
 | 多 Path / URI | 支持部分 | 多 Pattern、主 Pattern 和别名分离 |
 | 路由可见性 | 主要依赖生成文件和包扫描 | 契约形态、Package 依赖、barrel 校验 |
 | 路由生命周期 | Widget Mixin + Observer | Runtime 状态源 + 可选 Mixin/Listener + Adapter `didChangeTop` |
-| App 前后台 | 有生命周期回调 | 已有 Host Lifecycle Event 和多 Host/Window 隔离 |
+| App 前后台 | 有生命周期回调 | 已有 Flutter App 生命周期回调和多 Host 隔离；原生 Window 生命周期待平台桥接 |
 | 全局/路由拦截器 | 支持 | 已支持，并统一经过 CCRouter |
 | GoRouter | 支持 | 独立 GoRouter Adapter |
 | Stateful Shell | 有示例 | 已有 Shell Binding、分支观察和专项回归 |
@@ -191,7 +191,8 @@ CCRouter 应继续要求业务统一通过 `CCRouter.navigator`，让拦截、As
 
 1. 为 CLI 增加扫描目录、排除 Package、稳定分组、缓存和 Route Scaffold 支持。
 2. 为应用路由文档增加按组件或业务域组织的可选视图。
-3. 增加更多 GoRouter、Navigator 2.0、多 Window 和 Stateful Shell 集成示例。
+3. 增加更多 GoRouter、Navigator 2.0、多 Host 和 Stateful Shell 集成示例；原生多
+   Window 示例等待 Flutter 平台能力稳定后补充。
 4. 优化生成器和 Workspace 聚合性能，但保持唯一生成语义。
 5. 提供 IDE 或 CI 友好的只读路由目录查询接口。
 6. 如确有产品需求，再设计独立于稳定 `routeId` 的结构化产品埋点名称；该能力目前只是

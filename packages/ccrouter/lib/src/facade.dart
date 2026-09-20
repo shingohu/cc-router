@@ -78,9 +78,10 @@ abstract final class CCRouter {
 
   /// Bounded snapshot of managed Route Entry visibility transitions.
   ///
-  /// Use this for page exposure, focus restoration, and diagnostics. App or
-  /// Window background changes remain available through [CCRouterApp]'s Host
-  /// lifecycle callback and are not represented as Route visibility events.
+  /// Use this for page exposure, focus restoration, and diagnostics. Flutter
+  /// application lifecycle changes remain available through
+  /// [CCRouterApp.onLifecycleChanged] and are not represented as Route
+  /// visibility events.
   static List<CCRouteVisibilityEvent> get recentRouteVisibilityEvents =>
       _runtime.recentRouteVisibilityEvents;
 
@@ -112,7 +113,7 @@ abstract final class CCRouter {
 
   /// Returns backend entries isolated to an optional Host and Outlet.
   ///
-  /// Use this for multi-window, foldable-pane, Shell-branch, or embedded
+  /// Use this for multi-Host, foldable-pane, Shell-branch, or embedded
   /// Navigator diagnostics. Null filters match every Host or Outlet, and the
   /// result remains observational only.
   static List<CCBackendEntry> backendEntriesFor({

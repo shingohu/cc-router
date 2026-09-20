@@ -56,7 +56,7 @@ abstract interface class CCNavigationAdapterCapabilitySource {
 
 /// Optional Adapter SPI exposing capabilities for one concrete Host.
 ///
-/// Multi-window adapters use this when child backends differ. Runtime prefers
+/// Composite multi-Host adapters use this when child backends differ. Runtime prefers
 /// this query for request-scoped behavior such as confirmed visibility, while
 /// [CCNavigationAdapterCapabilitySource.capabilities] remains the conservative
 /// aggregate used during static route-table validation.

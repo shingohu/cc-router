@@ -2,22 +2,19 @@ import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 import 'package:test/test.dart';
 
 void main() {
-  test('window metrics classify compact, medium, and expanded Hosts', () {
-    final compact = CCWindowMetrics(
+  test('Host layout metrics classify compact, medium, and expanded', () {
+    final compact = CCHostLayoutMetrics(
       hostId: 'phone',
-      windowId: 'main',
       width: 599,
       height: 800,
     );
-    final medium = CCWindowMetrics(
+    final medium = CCHostLayoutMetrics(
       hostId: 'tablet',
-      windowId: 'main',
       width: 600,
       height: 900,
     );
-    final expanded = CCWindowMetrics(
+    final expanded = CCHostLayoutMetrics(
       hostId: 'desktop',
-      windowId: 'main',
       width: 1200,
       height: 900,
     );
@@ -41,9 +38,8 @@ void main() {
       bounds: CCLayoutRect(left: 500, top: 0, width: 20, height: 800),
       separating: true,
     );
-    final metrics = CCWindowMetrics(
+    final metrics = CCHostLayoutMetrics(
       hostId: 'foldable-main',
-      windowId: 'window-1',
       width: 1020,
       height: 800,
       displayFeatures: [hinge],

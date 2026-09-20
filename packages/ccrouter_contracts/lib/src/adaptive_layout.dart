@@ -1,7 +1,8 @@
-/// Adapter-neutral window and adaptive-layout contracts.
+/// Adapter-neutral Host geometry and adaptive-layout contracts.
 ///
-/// These values describe host geometry and presentation intent without
-/// importing Flutter, platform display APIs, or Widget types.
+/// These values describe one navigation Host's available layout space and
+/// presentation intent without claiming that the Host is a native platform
+/// Window or importing Flutter, display APIs, or Widget types.
 
 /// Broad width class used by adaptive navigation policies.
 enum CCWindowSizeClass {
@@ -62,7 +63,7 @@ enum CCDisplayFeatureType {
   cutout,
 }
 
-/// Physical display feature reported for one Window Host.
+/// Physical display feature reported for one navigation Host layout.
 final class CCDisplayFeature {
   /// Creates a display-feature observation.
   const CCDisplayFeature({
@@ -81,12 +82,15 @@ final class CCDisplayFeature {
   final bool separating;
 }
 
-/// Immutable geometry and display state for one navigation Host.
-final class CCWindowMetrics {
-  /// Creates metrics for [hostId] and [windowId].
-  CCWindowMetrics({
+/// Immutable geometry and display state for one navigation Host layout.
+///
+/// A Host may fill a Flutter View or occupy an embedded navigation surface.
+/// Native Window identity is deliberately absent until a platform multi-window
+/// bridge can supply and own that lifecycle.
+final class CCHostLayoutMetrics {
+  /// Creates one layout snapshot for [hostId].
+  CCHostLayoutMetrics({
     required this.hostId,
-    required this.windowId,
     required this.width,
     required this.height,
     List<CCDisplayFeature> displayFeatures = const [],
@@ -95,13 +99,10 @@ final class CCWindowMetrics {
   /// Stable navigation Host identity.
   final String hostId;
 
-  /// Stable platform Window identity within the Host.
-  final String windowId;
-
-  /// Logical width of the window.
+  /// Logical width available to the Host.
   final double width;
 
-  /// Logical height of the window.
+  /// Logical height available to the Host.
   final double height;
 
   /// Fold, hinge, and cutout observations affecting placement.
@@ -138,7 +139,7 @@ final class CCAdaptivePresentationPolicy {
   final CCAdaptiveLayoutKind expanded;
 
   /// Selects the layout for [metrics] without mutating navigation state.
-  CCAdaptiveLayoutKind select(CCWindowMetrics metrics) =>
+  CCAdaptiveLayoutKind select(CCHostLayoutMetrics metrics) =>
       switch (metrics.sizeClass) {
         CCWindowSizeClass.compact => compact,
         CCWindowSizeClass.medium => medium,
@@ -216,7 +217,7 @@ final class CCAdaptiveOutletPolicy {
       });
 }
 
-/// Immutable adaptive navigation state for one Window Host.
+/// Immutable adaptive navigation state for one Host layout surface.
 final class CCAdaptiveHostLayout {
   /// Creates one resolved Host layout snapshot.
   CCAdaptiveHostLayout({
@@ -225,8 +226,8 @@ final class CCAdaptiveHostLayout {
     required Iterable<String> activeOutlets,
   }) : activeOutlets = List.unmodifiable(activeOutlets);
 
-  /// Window and display-feature inputs used for this decision.
-  final CCWindowMetrics metrics;
+  /// Host geometry and display-feature inputs used for this decision.
+  final CCHostLayoutMetrics metrics;
 
   /// Layout kind selected by the presentation policy.
   final CCAdaptiveLayoutKind layout;
