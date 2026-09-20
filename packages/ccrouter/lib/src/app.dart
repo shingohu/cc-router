@@ -8,6 +8,19 @@ import 'route_catalog.dart';
 
 part 'page_lifecycle.dart';
 
+/// Maximum length accepted for Host and Navigator Outlet identifiers.
+const int _maxNavigationIdentifierLength = 128;
+
+/// Stable identifier syntax used by Flutter Host integration.
+final RegExp _navigationIdentifierPattern = RegExp(
+  r'^[a-z][A-Za-z0-9]*(?:[._-][A-Za-z0-9]+)*$',
+);
+
+/// Whether [value] can safely identify one Host or Navigator Outlet.
+bool _isNavigationIdentifier(String value) =>
+    value.length <= _maxNavigationIdentifierLength &&
+    _navigationIdentifierPattern.hasMatch(value);
+
 /// Backend resources coordinated by a managed [CCRouterApp].
 ///
 /// Adapter packages implement this at the application composition boundary.
@@ -163,14 +176,21 @@ final class CCNavigationHost {
   /// [navigatorKey] identifies the required `root` Outlet. Additional keys are
   /// supplied by [navigatorKeys]. Supplying `root` in both inputs is valid only
   /// when both values are the same object. Outlet names and key identities must
-  /// be unique so backend events cannot be attributed to two stacks.
+  /// be unique so backend events cannot be attributed to two stacks. Host and
+  /// Outlet IDs start with lowercase and use case-sensitive alphanumeric
+  /// segments separated by `.`, `_`, or `-`, with at most 128 characters.
   CCNavigationHost({
     this.id = 'default',
     GlobalKey<NavigatorState>? navigatorKey,
     Map<String, GlobalKey<NavigatorState>> navigatorKeys = const {},
   }) : _navigatorKeys = _buildNavigatorKeys(navigatorKey, navigatorKeys) {
-    if (id.isEmpty) {
-      throw ArgumentError.value(id, 'id', 'Host ID cannot be empty.');
+    if (!_isNavigationIdentifier(id)) {
+      throw ArgumentError.value(
+        id,
+        'id',
+        'Host ID must start with lowercase and use alphanumeric segments separated by '
+            '".", "_", or "-".',
+      );
     }
   }
 
@@ -253,11 +273,11 @@ final class CCNavigationHost {
     };
     final identities = <GlobalKey<NavigatorState>>{};
     for (final entry in keys.entries) {
-      if (entry.key.isEmpty) {
+      if (!_isNavigationIdentifier(entry.key)) {
         throw ArgumentError.value(
           entry.key,
           'navigatorKeys',
-          'Navigator Outlet name cannot be empty.',
+          'Navigator Outlet ID is invalid.',
         );
       }
       if (!identities.add(entry.value)) {

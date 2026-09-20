@@ -726,6 +726,162 @@ void main() {
     expect(const CCRegexPattern('.*'), isA<CCRegexPattern>());
   });
 
+  test('runtime rejects invalid handwritten route identities and policies', () {
+    final invalidDefinitions = <CCRouteDefinition<String, void>>[
+      CCRouteDefinition<String, void>(
+        routeId: 'Orders.detail',
+        patterns: [CCPathPattern('/orders/:value', primary: true)],
+        codec: const StringCodec(),
+      ),
+      CCRouteDefinition<String, void>(
+        routeId: 'orders.detail',
+        patterns: [CCPathPattern('/orders/:value', primary: true)],
+        codec: const StringCodec(),
+        placement: const CCRoutePlacement(hostId: 'Host.Main'),
+      ),
+      CCRouteDefinition<String, void>(
+        routeId: 'orders.detail',
+        patterns: [CCPathPattern('/orders/:value', primary: true)],
+        codec: const StringCodec(),
+        interceptorIds: const ['orders.auth', 'orders.auth'],
+      ),
+      CCRouteDefinition<String, void>(
+        routeId: 'orders.detail',
+        patterns: [CCPathPattern('/orders/:value', primary: true)],
+        codec: const StringCodec(),
+        popGuardIds: const ['orders.dirty', 'orders.dirty'],
+      ),
+    ];
+
+    for (final definition in invalidDefinitions) {
+      expect(
+        () => CCRouterRuntime.forTesting(
+          components: [
+            component(
+              'orders',
+              register: (registry) => registry.registerRoute(definition),
+            ),
+          ],
+        ),
+        throwsA(isA<CCRouteRegistrationError>()),
+      );
+    }
+  });
+
+  test('runtime bounds handwritten route regular expressions', () {
+    final oversized = List<String>.filled(2049, 'a').join();
+    expect(
+      () => CCRouterRuntime.forTesting(
+        components: [
+          component(
+            'orders',
+            register: (registry) => registry.registerRoute<String, void>(
+              CCRouteDefinition<String, void>(
+                routeId: 'orders.regex',
+                patterns: [
+                  CCPathPattern('/orders/:value', primary: true),
+                  CCRegexPattern(oversized),
+                ],
+                codec: const StringCodec(),
+              ),
+            ),
+          ),
+        ],
+      ),
+      throwsA(isA<CCRouteRegistrationError>()),
+    );
+  });
+
+  test('runtime validates component identity, SemVer, and dependencies', () {
+    for (final manifest in [
+      component('Bad ID'),
+      CCComponentManifest(
+        id: 'orders',
+        version: '1.0.0-01',
+        registrar: Registrar((_) {}),
+      ),
+      component('orders', dependencies: const ['orders']),
+      component('orders', dependencies: const ['account', 'account']),
+    ]) {
+      expect(
+        () => CCRouterRuntime.forTesting(components: [manifest]),
+        throwsA(isA<CCRegistrationError>()),
+      );
+    }
+  });
+
+  test('runtime rejects invalid Shell and Outlet identities', () {
+    expect(
+      () => CCRouterRuntime.forTesting(
+        components: [
+          component(
+            'orders',
+            register: (registry) => registry.registerShell(
+              CCShellDefinition(
+                shellId: 'Orders.Tabs',
+                type: CCShellType.singleNavigator,
+                outlets: const ['Root'],
+                initialOutlet: 'Root',
+              ),
+            ),
+          ),
+        ],
+      ),
+      throwsA(isA<CCShellRegistrationError>()),
+    );
+  });
+
+  test(
+    'runtime rejects missing, cyclic, and mismatched route parents',
+    () async {
+      CCRouterRuntime buildRuntime({
+        bool cycle = false,
+        bool missing = false,
+        bool mismatch = false,
+      }) {
+        return CCRouterRuntime.forTesting(
+          components: [
+            component(
+              'orders',
+              register: (registry) {
+                registry.registerRoute<String, void>(
+                  CCRouteDefinition<String, void>(
+                    routeId: 'orders.root',
+                    patterns: [CCPathPattern('/root/:value', primary: true)],
+                    codec: const StringCodec(),
+                    placement: CCRoutePlacement(
+                      parentRouteId: cycle ? 'orders.detail' : null,
+                    ),
+                  ),
+                );
+                registry.registerRoute<String, void>(
+                  CCRouteDefinition<String, void>(
+                    routeId: 'orders.detail',
+                    patterns: [CCPathPattern('/detail/:value', primary: true)],
+                    codec: const StringCodec(),
+                    placement: CCRoutePlacement(
+                      parentRouteId: missing ? 'orders.missing' : 'orders.root',
+                      navigatorOutlet: mismatch ? 'detail' : 'root',
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
+        );
+      }
+
+      for (final runtime in [
+        buildRuntime(missing: true),
+        buildRuntime(cycle: true),
+        buildRuntime(mismatch: true),
+      ]) {
+        expect(runtime.initialize, throwsA(isA<CCRouteRegistrationError>()));
+        await runtime.dispose();
+      }
+    },
+  );
+
   test('overlapping regex routes fail resolution explicitly', () async {
     final runtime = CCRouterRuntime.forTesting(
       components: [

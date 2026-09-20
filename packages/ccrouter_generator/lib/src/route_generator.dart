@@ -14,6 +14,62 @@ part 'component_generator.dart';
 part 'component_metadata_builder.dart';
 part 'route_metadata_builder.dart';
 
+/// Maximum length of a stable framework identifier.
+const int _maxStableIdLength = 128;
+
+/// Maximum accepted length of a full route regular expression.
+const int _maxRouteRegexLength = 2048;
+
+/// Maximum accepted number of named captures in one route expression.
+const int _maxRouteRegexCaptures = 32;
+
+/// Maximum accepted length of a path-parameter constraint expression.
+const int _maxConstraintRegexLength = 256;
+
+/// Maximum description length retained in generated catalogs.
+const int _maxRouteDescriptionLength = 4096;
+
+/// Stable identifier syntax shared by generated navigation metadata.
+final RegExp _stableIdPattern = RegExp(
+  r'^[a-z][A-Za-z0-9]*(?:[._-][A-Za-z0-9]+)*$',
+);
+
+/// Lowercase package-style syntax retained for component ownership IDs.
+final RegExp _componentIdPattern = RegExp(
+  r'^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$',
+);
+
+/// Full SemVer 2.0 syntax used by component contract versions.
+final RegExp _semanticVersionPattern = RegExp(
+  r'^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)'
+  r'(?:-(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)'
+  r'(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*)?'
+  r'(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$',
+);
+
+/// Validates a generated identifier without publishing a framework utility.
+void _validateStableId(String value, String kind, Element element) {
+  if (value.length > _maxStableIdLength || !_stableIdPattern.hasMatch(value)) {
+    _fail(
+      '$kind "$value" is invalid; start with lowercase and use alphanumeric segments '
+      'separated by ".", "_", or "-" (maximum $_maxStableIdLength characters).',
+      element,
+    );
+  }
+}
+
+/// Validates one component ID against its stricter package-style syntax.
+void _validateComponentId(String value, Element element) {
+  if (value.length > _maxStableIdLength ||
+      !_componentIdPattern.hasMatch(value)) {
+    _fail(
+      'Component ID "$value" is invalid; use lowercase alphanumeric segments '
+      'separated by ".", "_", or "-" (maximum $_maxStableIdLength characters).',
+      element,
+    );
+  }
+}
+
 /// Creates the internal generator for the build-runner factory only.
 ///
 /// Kept out of the package barrel; business code consumes generated Intents,

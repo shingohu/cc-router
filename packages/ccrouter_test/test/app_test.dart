@@ -9,6 +9,23 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   tearDown(CCRouter.shutdown);
 
+  test('navigation Host validates stable Host and Outlet identities', () {
+    expect(() => CCNavigationHost(id: 'Host Main'), throwsArgumentError);
+    expect(
+      () => CCNavigationHost(
+        navigatorKeys: {'Detail Pane': GlobalKey<NavigatorState>()},
+      ),
+      throwsArgumentError,
+    );
+    expect(
+      CCNavigationHost(
+        id: 'host.main-1',
+        navigatorKeys: {'tab.settings': GlobalKey<NavigatorState>()},
+      ).containsOutlet('tab.settings'),
+      isTrue,
+    );
+  });
+
   testWidgets('CCRouterApp exposes the supplied navigation host', (
     tester,
   ) async {

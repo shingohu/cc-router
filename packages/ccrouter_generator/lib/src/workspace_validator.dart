@@ -1,5 +1,26 @@
 import 'dart:convert';
 
+/// Maximum supported length of an identifier carried by generated metadata.
+const int _workspaceIdentifierLength = 128;
+
+/// Stable identifier syntax rechecked at Package and Host aggregation.
+final RegExp _workspaceIdentifierPattern = RegExp(
+  r'^[a-z][A-Za-z0-9]*(?:[._-][A-Za-z0-9]+)*$',
+);
+
+/// Lowercase package-style syntax retained for component ownership IDs.
+final RegExp _workspaceComponentIdPattern = RegExp(
+  r'^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$',
+);
+
+/// Full SemVer 2.0 syntax rechecked for external Package indexes.
+final RegExp _workspaceSemanticVersionPattern = RegExp(
+  r'^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)'
+  r'(?:-(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)'
+  r'(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*)?'
+  r'(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$',
+);
+
 /// Result of validating every generated component and route metadata document.
 final class CCRouteWorkspaceValidationResult {
   /// Creates an immutable validation result and aggregate documentation.
@@ -95,6 +116,7 @@ abstract final class CCRouteWorkspaceValidator {
         );
       }
     }
+    _validateMetadataFields(components, routes, errors);
     final componentList = _validateAndOrderComponents(components, errors);
     for (final route in routes.values) {
       final routeId = '${route['id']}';
@@ -145,6 +167,7 @@ abstract final class CCRouteWorkspaceValidator {
         );
       }
     }
+    _validateParentRelationships(components, routes, errors);
     _validatePatternConflicts(routes.values, errors);
     errors.sort();
     final routeList =
@@ -187,6 +210,170 @@ abstract final class CCRouteWorkspaceValidator {
   static List<String> _strings(Object? value) => value is List
       ? value.whereType<String>().toList(growable: false)
       : const [];
+
+  /// Rechecks persisted metadata before trusting external Package indexes.
+  static void _validateMetadataFields(
+    Map<String, Map<String, Object?>> components,
+    Map<String, Map<String, Object?>> routes,
+    List<String> errors,
+  ) {
+    for (final component in components.values) {
+      final id = '${component['id']}';
+      if (!_validComponentId(id)) {
+        errors.add('Component ID "$id" is invalid.');
+      }
+      final version = '${component['version']}';
+      if (!_workspaceSemanticVersionPattern.hasMatch(version)) {
+        errors.add('Component "$id" must use a SemVer 2.0 version.');
+      }
+      final dependencies = [
+        ..._strings(component['dependencies']),
+        ..._strings(component['optionalDependencies']),
+      ];
+      final seen = <String>{};
+      for (final dependency in dependencies) {
+        if (!_validIdentifier(dependency) || !seen.add(dependency)) {
+          errors.add(
+            'Component "$id" has invalid or duplicate dependency '
+            '"$dependency".',
+          );
+        }
+      }
+    }
+    for (final route in routes.values) {
+      final routeId = '${route['id']}';
+      if (!_validIdentifier(routeId)) {
+        errors.add('Route ID "$routeId" is invalid.');
+      }
+      final placement = route['placement'];
+      if (placement is! Map) continue;
+      for (final field in ['hostId', 'navigatorOutlet']) {
+        final value = '${placement[field] ?? ''}';
+        if (!_validIdentifier(value)) {
+          errors.add('Route "$routeId" has invalid $field "$value".');
+        }
+      }
+      for (final field in ['parentRouteId', 'shellId']) {
+        final value = placement[field];
+        if (value != null && !_validIdentifier('$value')) {
+          errors.add('Route "$routeId" has invalid $field "$value".');
+        }
+      }
+      for (final field in ['interceptorIds', 'popGuardIds']) {
+        final seen = <String>{};
+        for (final id in _strings(route[field])) {
+          if (!_validIdentifier(id) || !seen.add(id)) {
+            errors.add(
+              'Route "$routeId" has invalid or duplicate $field entry "$id".',
+            );
+          }
+        }
+      }
+    }
+  }
+
+  /// Validates explicit parent links, visibility, cycles, and stack placement.
+  static void _validateParentRelationships(
+    Map<String, Map<String, Object?>> components,
+    Map<String, Map<String, Object?>> routes,
+    List<String> errors,
+  ) {
+    final parentByRoute = <String, String>{};
+    for (final route in routes.values) {
+      final routeId = '${route['id']}';
+      final placement = route['placement'];
+      if (placement is! Map || placement['parentRouteId'] == null) continue;
+      final parentId = '${placement['parentRouteId']}';
+      parentByRoute[routeId] = parentId;
+      if (parentId == routeId) {
+        errors.add('Route "$routeId" cannot be its own parent.');
+        continue;
+      }
+      final parent = routes[parentId];
+      if (parent == null) {
+        errors.add('Route "$routeId" references unknown parent "$parentId".');
+        continue;
+      }
+      final ownerId = '${route['componentId']}';
+      final parentOwnerId = '${parent['componentId']}';
+      if (ownerId != parentOwnerId) {
+        final dependencies = _transitiveDependencies(ownerId, components);
+        if (!dependencies.contains(parentOwnerId) ||
+            parent['exposure'] != 'public') {
+          errors.add(
+            'Route "$routeId" cannot reference parent "$parentId" because '
+            'component "$parentOwnerId" is not a visible public dependency.',
+          );
+        }
+      }
+      final parentPlacement = parent['placement'];
+      if (parentPlacement is Map) {
+        for (final field in ['hostId', 'shellId', 'navigatorOutlet']) {
+          if (placement[field] != parentPlacement[field]) {
+            errors.add(
+              'Route "$routeId" parent "$parentId" must use the same $field.',
+            );
+          }
+        }
+      }
+    }
+
+    final completed = <String>{};
+    final visiting = <String>[];
+    final reported = <String>{};
+    void visit(String routeId) {
+      if (completed.contains(routeId)) return;
+      final cycleIndex = visiting.indexOf(routeId);
+      if (cycleIndex >= 0) {
+        final cycle = [...visiting.sublist(cycleIndex), routeId].join(' -> ');
+        if (reported.add(cycle)) errors.add('Route parent cycle: $cycle.');
+        return;
+      }
+      visiting.add(routeId);
+      final parentId = parentByRoute[routeId];
+      if (parentId != null && routes.containsKey(parentId)) visit(parentId);
+      visiting.removeLast();
+      completed.add(routeId);
+    }
+
+    final routeIds = parentByRoute.keys.toList()..sort();
+    for (final routeId in routeIds) {
+      visit(routeId);
+    }
+  }
+
+  /// Returns component dependencies reachable through present graph edges.
+  static Set<String> _transitiveDependencies(
+    String componentId,
+    Map<String, Map<String, Object?>> components,
+  ) {
+    final found = <String>{};
+    void visit(String id) {
+      final component = components[id];
+      if (component == null) return;
+      for (final dependency in [
+        ..._strings(component['dependencies']),
+        ..._strings(component['optionalDependencies']),
+      ]) {
+        if (components.containsKey(dependency) && found.add(dependency)) {
+          visit(dependency);
+        }
+      }
+    }
+
+    visit(componentId);
+    return found;
+  }
+
+  /// Whether [value] satisfies the persisted stable identifier contract.
+  static bool _validIdentifier(String value) =>
+      value.length <= _workspaceIdentifierLength &&
+      _workspaceIdentifierPattern.hasMatch(value);
+
+  /// Whether [value] satisfies the stricter component identifier contract.
+  static bool _validComponentId(String value) =>
+      value.length <= _workspaceIdentifierLength &&
+      _workspaceComponentIdPattern.hasMatch(value);
 
   /// Validates the complete dependency graph and returns Runtime-aligned order.
   ///

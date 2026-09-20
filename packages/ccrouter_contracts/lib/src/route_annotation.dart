@@ -19,9 +19,17 @@ final class CCComponentDescriptor {
   });
 
   /// Globally unique component identifier used by route ownership metadata.
+  ///
+  /// Use lowercase alphanumeric segments separated by `.`, `_`, or `-`, with
+  /// at most 128 characters. The generator and Runtime reject other forms so
+  /// Package indexes and diagnostics use one portable identity syntax.
   final String id;
 
-  /// Semantic contract version displayed in generated route documentation.
+  /// SemVer 2.0 contract version displayed in generated route documentation.
+  ///
+  /// Use this to communicate component-contract compatibility; build metadata
+  /// is allowed, while numeric pre-release identifiers cannot contain leading
+  /// zeroes.
   final String version;
 
   /// Component IDs that must be installed before this component.
@@ -77,6 +85,10 @@ final class CCRoute<R> {
   final CCComponentDescriptor component;
 
   /// Stable route identity shared by tracing, registration and typed Intents.
+  ///
+  /// IDs start with lowercase and use case-sensitive alphanumeric segments
+  /// separated by `.`, `_`, or `-`. They should normally start with the owning
+  /// component ID, though the generator does not force that convention.
   final String id;
 
   /// Single canonical pattern for the common one-address route declaration.
@@ -105,13 +117,17 @@ final class CCRoute<R> {
   final CCRoutePlacement placement;
 
   /// Registered route-level interceptor identities in execution order.
+  ///
+  /// IDs use the stable segment syntax and cannot repeat because a
+  /// duplicate would execute the same policy twice for one request.
   final List<String> interceptors;
 
   /// Registered route-local Pop guard identities in execution order.
   ///
   /// Use synchronous guards for managed-route exit rules. The generator emits
   /// these IDs into the route definition and Runtime validates component
-  /// ownership before navigation starts.
+  /// ownership before navigation starts. IDs use the stable segment
+  /// syntax and cannot repeat.
   final List<String> popGuards;
 
   /// Route purpose included in generated JSON and Markdown documentation.
@@ -156,6 +172,8 @@ final class CCRouteContract<R> {
   final CCComponentDescriptor component;
 
   /// Stable identity retained when an internal route is promoted.
+  ///
+  /// It uses the same bounded stable segment syntax as [CCRoute.id].
   final String id;
 
   /// Single canonical address used by the common one-pattern declaration.
@@ -174,9 +192,15 @@ final class CCRouteContract<R> {
   final CCRoutePlacement placement;
 
   /// Route interceptor identities applied after global navigation policies.
+  ///
+  /// IDs must be unique within this ordered list and use the stable
+  /// segment syntax.
   final List<String> interceptors;
 
   /// Route-local Pop guard identities applied to the managed implementation.
+  ///
+  /// IDs must be unique within this ordered list and use the stable
+  /// segment syntax.
   final List<String> popGuards;
 
   /// Stable purpose included in generated catalogs and review documentation.

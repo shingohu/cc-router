@@ -24,25 +24,31 @@ final class CCRoutePlacement {
   /// Stable route ID of the explicit parent, if this route is nested.
   ///
   /// Use this for child routes that should be resolved below a known parent;
-  /// do not use a path prefix as a substitute for this relationship.
+  /// do not use a path prefix as a substitute for this relationship. Parent
+  /// and child must target the same Host, Shell, and Outlet, and the workspace
+  /// rejects missing, invisible, self-referencing, or cyclic parent links.
   final String? parentRouteId;
 
   /// Stable navigation Host targeted by this placement.
   ///
   /// Use `default` for the composition root's active Host. A custom Host keeps
   /// its backend stack and adaptive layout state isolated from other navigation
-  /// surfaces. Native Window mapping belongs to a future platform bridge.
+  /// surfaces. Native Window mapping belongs to a future platform bridge. IDs
+  /// start with lowercase and use case-sensitive alphanumeric segments
+  /// separated by `.`, `_`, or `-`.
   final String hostId;
 
   /// Stable Shell ID that owns this route, if it is rendered in a Shell.
   ///
   /// Use the same value for routes sharing a persistent Shell container. A
   /// Shell is a layout and navigation-history boundary, not a component ID.
+  /// IDs use the same bounded stable segment syntax as Host IDs.
   final String? shellId;
 
   /// Stable Navigator outlet name within the parent or Shell.
   ///
   /// Use names such as `root`, `list`, `detail`, or `tab.settings` when a
-  /// route must target a specific independently managed stack.
+  /// route must target a specific independently managed stack. IDs use the
+  /// same bounded stable segment syntax as Host IDs.
   final String navigatorOutlet;
 }

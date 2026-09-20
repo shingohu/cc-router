@@ -730,23 +730,18 @@ final class CCRouterRuntime {
     Duration? timeout,
   }) {
     _ensureConfigurable();
-    final normalizedId = id.trim();
-    if (normalizedId != id || normalizedId.isEmpty) {
-      throw const CCRegistrationError(
-        'Route interceptor ID must not be empty.',
-      );
+    if (!_isStableIdentifier(id)) {
+      throw CCRegistrationError('Route interceptor ID "$id" is invalid.');
     }
-    if (_routeInterceptors.containsKey(normalizedId)) {
-      throw CCRegistrationError(
-        'Duplicate route interceptor ID "$normalizedId".',
-      );
+    if (_routeInterceptors.containsKey(id)) {
+      throw CCRegistrationError('Duplicate route interceptor ID "$id".');
     }
     if (timeout != null && timeout <= Duration.zero) {
       throw CCRegistrationError(
-        'Route interceptor "$normalizedId" timeout must be positive.',
+        'Route interceptor "$id" timeout must be positive.',
       );
     }
-    _routeInterceptors[normalizedId] = _RegisteredNavigationInterceptor(
+    _routeInterceptors[id] = _RegisteredNavigationInterceptor(
       ownerComponentId: ownerComponentId,
       interceptor: interceptor,
       timeout: timeout,
@@ -768,16 +763,13 @@ final class CCRouterRuntime {
     CCPopGuard guard,
   ) {
     _ensureConfigurable();
-    final normalizedId = id.trim();
-    if (normalizedId != id || normalizedId.isEmpty) {
-      throw const CCRegistrationError('Route Pop guard ID must not be empty.');
+    if (!_isStableIdentifier(id)) {
+      throw CCRegistrationError('Route Pop guard ID "$id" is invalid.');
     }
-    if (_routePopGuards.containsKey(normalizedId)) {
-      throw CCRegistrationError(
-        'Duplicate route Pop guard ID "$normalizedId".',
-      );
+    if (_routePopGuards.containsKey(id)) {
+      throw CCRegistrationError('Duplicate route Pop guard ID "$id".');
     }
-    _routePopGuards[normalizedId] = _RegisteredPopGuard(
+    _routePopGuards[id] = _RegisteredPopGuard(
       ownerComponentId: ownerComponentId,
       guard: guard,
     );
@@ -1300,10 +1292,10 @@ final class CCRouterRuntime {
   ) {
     final byId = <String, CCGlobalNavigationInterceptor>{};
     for (final interceptor in interceptors) {
-      final id = interceptor.id.trim();
-      if (id != interceptor.id || id.isEmpty || byId.containsKey(id)) {
+      final id = interceptor.id;
+      if (!_isStableIdentifier(id) || byId.containsKey(id)) {
         throw CCRegistrationError(
-          'Empty or duplicate global interceptor ID "$id".',
+          'Invalid or duplicate global interceptor ID "$id".',
         );
       }
       final timeout = interceptor.timeout;
@@ -1324,10 +1316,10 @@ final class CCRouterRuntime {
   ) {
     final byId = <String, CCGlobalPopGuard>{};
     for (final guard in guards) {
-      final id = guard.id.trim();
-      if (id != guard.id || id.isEmpty || byId.containsKey(id)) {
+      final id = guard.id;
+      if (!_isStableIdentifier(id) || byId.containsKey(id)) {
         throw CCRegistrationError(
-          'Empty or duplicate global Pop guard ID "$id".',
+          'Invalid or duplicate global Pop guard ID "$id".',
         );
       }
       byId[id] = guard;
@@ -1342,10 +1334,10 @@ final class CCRouterRuntime {
   ) {
     final byId = <String, CCNavigationAspect>{};
     for (final aspect in aspects) {
-      final id = aspect.id.trim();
-      if (id != aspect.id || id.isEmpty || byId.containsKey(id)) {
+      final id = aspect.id;
+      if (!_isStableIdentifier(id) || byId.containsKey(id)) {
         throw CCRegistrationError(
-          'Empty or duplicate navigation aspect ID "$id".',
+          'Invalid or duplicate navigation aspect ID "$id".',
         );
       }
       byId[id] = aspect;
@@ -1369,10 +1361,30 @@ final class CCRouterRuntime {
   void _installComponents(Iterable<CCComponentManifest> components) {
     final byId = <String, CCComponentManifest>{};
     for (final component in components) {
-      if (component.id.isEmpty || byId.containsKey(component.id)) {
+      if (!_isComponentIdentifier(component.id) ||
+          byId.containsKey(component.id)) {
         throw CCRegistrationError(
-          'Empty or duplicate component ID "${component.id}".',
+          'Invalid or duplicate component ID "${component.id}".',
         );
+      }
+      if (!_semanticVersionPattern.hasMatch(component.version)) {
+        throw CCRegistrationError(
+          'Component "${component.id}" must use a SemVer 2.0 version.',
+        );
+      }
+      final declaredDependencies = <String>{};
+      for (final dependency in [
+        ...component.dependencies,
+        ...component.optionalDependencies,
+      ]) {
+        if (!_isComponentIdentifier(dependency) ||
+            dependency == component.id ||
+            !declaredDependencies.add(dependency)) {
+          throw CCRegistrationError(
+            'Component "${component.id}" has an invalid, duplicate, or '
+            'self dependency "$dependency".',
+          );
+        }
       }
       byId[component.id] = component;
     }

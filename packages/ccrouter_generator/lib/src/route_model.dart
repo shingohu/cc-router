@@ -112,8 +112,43 @@ final class _RouteModel {
       );
     }
     final id = annotation.read('id').stringValue;
-    if (id.isEmpty || RegExp(r'\s').hasMatch(id)) {
-      _fail('Route ID must be non-empty without whitespace.', element);
+    _validateStableId(id, 'Route ID', element);
+    final interceptorIds = annotation
+        .read('interceptors')
+        .listValue
+        .map((value) => value.toStringValue()!)
+        .toList(growable: false);
+    final popGuardIds = annotation
+        .read('popGuards')
+        .listValue
+        .map((value) => value.toStringValue()!)
+        .toList(growable: false);
+    _validatePolicyIds(interceptorIds, 'Route interceptor ID', element);
+    _validatePolicyIds(popGuardIds, 'Route Pop guard ID', element);
+    final placement = annotation.read('placement').objectValue;
+    final hostId = _field(placement, 'hostId').toStringValue()!;
+    final parentRouteId = _field(placement, 'parentRouteId').toStringValue();
+    final shellId = _field(placement, 'shellId').toStringValue();
+    final navigatorOutlet = _field(
+      placement,
+      'navigatorOutlet',
+    ).toStringValue()!;
+    _validateStableId(hostId, 'Host ID', element);
+    _validateStableId(navigatorOutlet, 'Navigator Outlet ID', element);
+    if (parentRouteId != null) {
+      _validateStableId(parentRouteId, 'Parent Route ID', element);
+      if (parentRouteId == id) {
+        _fail('Route "$id" cannot be its own parent.', element);
+      }
+    }
+    if (shellId != null) _validateStableId(shellId, 'Shell ID', element);
+    final description = annotation.read('description');
+    if (!description.isNull &&
+        description.stringValue.length > _maxRouteDescriptionLength) {
+      _fail(
+        'Route "$id" description exceeds $_maxRouteDescriptionLength characters.',
+        element,
+      );
     }
     final constructor = element.unnamedConstructor;
     if (constructor == null || constructor.isFactory) {
@@ -182,14 +217,27 @@ final class _RouteModel {
       }
       Set<String> patternKeys;
       if (type == 'CCRegexPattern') {
+        if (template.length > _maxRouteRegexLength) {
+          _fail(
+            'Route "$id" regular expression exceeds $_maxRouteRegexLength characters.',
+            element,
+          );
+        }
         try {
           RegExp(template);
         } on FormatException {
           _fail('Route "$id" has an invalid regular expression.', element);
         }
-        patternKeys = RegExp(
+        final captures = RegExp(
           r'\(\?<([a-zA-Z_]\w*)>',
-        ).allMatches(template).map((match) => match[1]!).toSet();
+        ).allMatches(template).toList(growable: false);
+        if (captures.length > _maxRouteRegexCaptures) {
+          _fail(
+            'Route "$id" regular expression exceeds $_maxRouteRegexCaptures named captures.',
+            element,
+          );
+        }
+        patternKeys = captures.map((match) => match[1]!).toSet();
       } else {
         final uri = Uri.tryParse(template);
         if (uri == null ||
@@ -223,8 +271,16 @@ final class _RouteModel {
           if (!patternKeys.contains(entry.key!.toStringValue())) {
             _fail('Route "$id" constrains an unknown path parameter.', element);
           }
+          final constraint = entry.value!.toStringValue()!;
+          if (constraint.length > _maxConstraintRegexLength) {
+            _fail(
+              'Route "$id" parameter constraint exceeds '
+              '$_maxConstraintRegexLength characters.',
+              element,
+            );
+          }
           try {
-            RegExp(entry.value!.toStringValue()!);
+            RegExp(constraint);
           } on FormatException {
             _fail('Route "$id" has an invalid parameter constraint.', element);
           }
@@ -300,6 +356,15 @@ final class _RouteModel {
       result,
       contractFirst,
     );
+  }
+}
+
+/// Validates ordered policy references and rejects duplicate execution entries.
+void _validatePolicyIds(List<String> ids, String kind, Element element) {
+  final seen = <String>{};
+  for (final id in ids) {
+    _validateStableId(id, kind, element);
+    if (!seen.add(id)) _fail('Duplicate $kind "$id".', element);
   }
 }
 
@@ -482,16 +547,16 @@ final class _ComponentModel {
         .listValue
         .map((value) => value.toStringValue()!)
         .toList(growable: false);
-    final idPattern = RegExp(r'^[a-z][a-z0-9_.-]*$');
-    if (!idPattern.hasMatch(id)) {
-      _fail('Component ID "$id" is invalid.', element);
-    }
-    if (!RegExp(r'^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$').hasMatch(version)) {
-      _fail('Component "$id" must use a semantic version.', element);
+    _validateComponentId(id, element);
+    if (!_semanticVersionPattern.hasMatch(version)) {
+      _fail('Component "$id" must use a SemVer 2.0 version.', element);
     }
     final all = [...dependencies, ...optionalDependencies];
     if (all.any(
-          (dependency) => !idPattern.hasMatch(dependency) || dependency == id,
+          (dependency) =>
+              dependency.length > _maxStableIdLength ||
+              !_componentIdPattern.hasMatch(dependency) ||
+              dependency == id,
         ) ||
         all.toSet().length != all.length) {
       _fail(

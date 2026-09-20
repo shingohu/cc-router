@@ -42,6 +42,12 @@ Map<String, Object?> route(
   Map<String, String> constraints = const {},
   bool publicContract = false,
   String contractPackage = 'orders',
+  String hostId = 'default',
+  String? parentRouteId,
+  String? shellId = 'orders.shell',
+  String navigatorOutlet = 'detail',
+  List<String> interceptorIds = const [],
+  List<String> popGuardIds = const [],
 }) => {
   'id': id,
   'componentId': owner,
@@ -56,11 +62,13 @@ Map<String, Object?> route(
   'navigationSources': ['typedIntent', 'internalUri'],
   'restoration': {'status': 'unsupported'},
   'placement': {
-    'hostId': 'default',
-    'parentRouteId': null,
-    'shellId': 'orders.shell',
-    'navigatorOutlet': 'detail',
+    'hostId': hostId,
+    'parentRouteId': parentRouteId,
+    'shellId': shellId,
+    'navigatorOutlet': navigatorOutlet,
   },
+  'interceptorIds': interceptorIds,
+  'popGuardIds': popGuardIds,
   'presentation': {'type': 'page'},
   'contracts': {
     'route': 'DetailRoute',
@@ -393,6 +401,138 @@ void main() {
       {'schemaVersion': 4, 'source': 'future.json'},
     ]);
     expect(result.errors.single, contains('Unsupported metadata schema'));
+  });
+
+  test('rejects invalid persisted identifiers and SemVer values', () {
+    final invalidComponent = component('Bad ID')..['version'] = '1.0.0-01';
+    final result = CCRouteWorkspaceValidator.validate([
+      document(
+        components: [invalidComponent],
+        routes: [
+          route(
+            'Bad.route',
+            'Bad ID',
+            hostId: 'Host.Main',
+            interceptorIds: const ['bad id', 'bad id'],
+          ),
+        ],
+      ),
+    ]);
+
+    expect(result.errors, contains(contains('Component ID')));
+    expect(result.errors, contains(contains('SemVer 2.0')));
+    expect(result.errors, contains(contains('Route ID')));
+    expect(result.errors, contains(contains('invalid hostId')));
+    expect(result.errors, contains(contains('interceptorIds')));
+  });
+
+  test('rejects missing, self-referencing, and cyclic route parents', () {
+    final result = CCRouteWorkspaceValidator.validate([
+      document(
+        components: [component('orders')],
+        routes: [
+          route(
+            'orders.missing',
+            'orders',
+            pattern: '/missing/:id',
+            parentRouteId: 'orders.unknown',
+          ),
+          route(
+            'orders.self',
+            'orders',
+            pattern: '/self/:id',
+            parentRouteId: 'orders.self',
+          ),
+          route(
+            'orders.a',
+            'orders',
+            pattern: '/a/:id',
+            parentRouteId: 'orders.b',
+          ),
+          route(
+            'orders.b',
+            'orders',
+            pattern: '/b/:id',
+            parentRouteId: 'orders.a',
+          ),
+        ],
+      ),
+    ]);
+
+    expect(result.errors, contains(contains('unknown parent')));
+    expect(result.errors, contains(contains('cannot be its own parent')));
+    expect(result.errors, contains(contains('Route parent cycle')));
+  });
+
+  test('rejects parent placement mismatches', () {
+    final result = CCRouteWorkspaceValidator.validate([
+      document(
+        components: [component('orders')],
+        routes: [
+          route('orders.root', 'orders', pattern: '/root/:id'),
+          route(
+            'orders.detail',
+            'orders',
+            parentRouteId: 'orders.root',
+            navigatorOutlet: 'other',
+          ),
+        ],
+      ),
+    ]);
+
+    expect(result.errors, contains(contains('same navigatorOutlet')));
+  });
+
+  test('requires cross-component parents to be visible dependencies', () {
+    final hidden = CCRouteWorkspaceValidator.validate([
+      document(
+        components: [component('orders'), component('checkout')],
+        routes: [
+          route(
+            'orders.root',
+            'orders',
+            pattern: '/root/:id',
+            publicContract: true,
+          ),
+          route(
+            'checkout.detail',
+            'checkout',
+            pattern: '/checkout/:id',
+            parentRouteId: 'orders.root',
+          ),
+        ],
+        routeImplementations: [implementation('orders.root', 'orders')],
+      ),
+    ]);
+    expect(
+      hidden.errors,
+      contains(contains('not a visible public dependency')),
+    );
+
+    final visible = CCRouteWorkspaceValidator.validate([
+      document(
+        components: [
+          component('orders'),
+          component('checkout', dependencies: ['orders']),
+        ],
+        routes: [
+          route(
+            'orders.root',
+            'orders',
+            pattern: '/root/:id',
+            publicContract: true,
+          ),
+          route(
+            'checkout.detail',
+            'checkout',
+            pattern: '/checkout/:id',
+            parentRouteId: 'orders.root',
+          ),
+        ],
+        routeImplementations: [implementation('orders.root', 'orders')],
+      ),
+    ]);
+    expect(visible.errors, isEmpty);
   });
 
   test('rejects equal-specificity overlapping path patterns', () {

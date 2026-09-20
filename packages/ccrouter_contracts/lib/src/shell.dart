@@ -28,6 +28,9 @@ final class CCShellDefinition {
   }) : outlets = List.unmodifiable(outlets);
 
   /// Stable application-wide identity referenced by route placement.
+  ///
+  /// Start with lowercase and use case-sensitive alphanumeric segments
+  /// separated by `.`, `_`, or `-`, with at most 128 characters.
   final String shellId;
 
   /// Single-Navigator or stateful multi-branch navigation structure.
@@ -36,7 +39,8 @@ final class CCShellDefinition {
   /// Ordered stable Outlet names owned by this Shell.
   ///
   /// For stateful branches, order is part of the contract and must match the
-  /// backend branch order. Use stable names rather than visual positions.
+  /// backend branch order. Use stable names rather than visual positions. Each
+  /// Outlet uses the same bounded stable segment syntax as [shellId].
   final List<String> outlets;
 
   /// Outlet selected when the Shell has no restored or URI-selected branch.

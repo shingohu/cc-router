@@ -101,6 +101,10 @@ final class CCRouteDefinition<A, R> {
        popGuardIds = List.unmodifiable(popGuardIds);
 
   /// Stable identity used for tracing, registration, and generated contracts.
+  ///
+  /// Handwritten definitions start with lowercase and use case-sensitive
+  /// alphanumeric segments separated by `.`, `_`, or `-`, with at most 128
+  /// characters. Generated definitions use the same rule.
   final String routeId;
 
   /// Canonical address pattern followed by compatible matching aliases.
@@ -133,13 +137,15 @@ final class CCRouteDefinition<A, R> {
   /// Route interceptors executed in this declaration order after globals.
   ///
   /// Use this for authorization, feature availability, and route-specific
-  /// policy. The IDs must be registered by the owning component.
+  /// policy. The IDs must be registered by the owning component, use the stable
+  /// identifier syntax, and occur only once in this ordered list.
   final List<String> interceptorIds;
 
   /// Route-local Pop guards evaluated in declaration order.
   ///
   /// Use these for synchronous managed-page exit rules. The IDs must be
-  /// registered by the owning component. Foreign and opaque routes never run
+  /// registered by the owning component, use the stable identifier syntax, and
+  /// occur only once in this ordered list. Foreign and opaque routes never run
   /// these guards, and asynchronous confirmation remains a `PopScope` concern.
   final List<String> popGuardIds;
 }

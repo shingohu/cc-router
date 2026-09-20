@@ -937,6 +937,29 @@ final class Probe { const Probe(); }
     expect(logs, contains('Generated declaration'));
   });
 
+  test('builder accepts complete SemVer 2.0 component versions', () async {
+    final code = await generate(r'''
+const versionedComponent = CCComponentDescriptor(
+  id: 'versioned',
+  version: '1.2.3-alpha.1+build.5',
+);
+@CCRoute<void>(
+  component: versionedComponent,
+  id: 'versioned.detail',
+  pattern: CCPathPattern('/versioned'),
+)
+final class VersionedPage { const VersionedPage(); }
+''');
+    expect(code, contains('versioned.detail'));
+  });
+
+  final longRegex = List<String>.filled(2049, 'a').join();
+  final manyCaptures = List<String>.generate(
+    33,
+    (index) => '(?<p$index>a)',
+  ).join();
+  final longConstraint = List<String>.filled(257, 'a').join();
+  final longDescription = List<String>.filled(4097, 'x').join();
   final invalid = <String, (String, String)>{
     'invalid component ID': (
       "const bad = CCComponentDescriptor(id: 'Bad ID', version: '1.0.0'); @CCRoute<void>(component: bad, id: 'probe', patterns: [CCPathPattern('/probe', primary: true)]) final class Probe { const Probe(); }",
@@ -944,7 +967,11 @@ final class Probe { const Probe(); }
     ),
     'invalid component version': (
       "const bad = CCComponentDescriptor(id: 'bad', version: 'latest'); @CCRoute<void>(component: bad, id: 'probe', patterns: [CCPathPattern('/probe', primary: true)]) final class Probe { const Probe(); }",
-      'semantic version',
+      'SemVer 2.0',
+    ),
+    'invalid numeric prerelease version': (
+      "const bad = CCComponentDescriptor(id: 'bad', version: '1.0.0-01'); @CCRoute<void>(component: bad, id: 'probe', pattern: CCPathPattern('/probe')) final class Probe { const Probe(); }",
+      'SemVer 2.0',
     ),
     'invalid component dependencies': (
       "const bad = CCComponentDescriptor(id: 'bad', version: '1.0.0', dependencies: ['bad']); @CCRoute<void>(component: bad, id: 'probe', patterns: [CCPathPattern('/probe', primary: true)]) final class Probe { const Probe(); }",
@@ -953,6 +980,34 @@ final class Probe { const Probe(); }
     'ambiguous inferred primary': (
       "@CCRoute<void>(component: probeComponent, id: 'probe', patterns: [CCPathPattern('/probe'), CCPathPattern('/legacy')]) final class Probe { const Probe(); }",
       'multiple reversible patterns',
+    ),
+    'invalid route ID': (
+      "@CCRoute<void>(component: probeComponent, id: 'Probe.detail', pattern: CCPathPattern('/probe')) final class Probe { const Probe(); }",
+      'Route ID',
+    ),
+    'invalid repeated route separator': (
+      "@CCRoute<void>(component: probeComponent, id: 'probe..detail', pattern: CCPathPattern('/probe')) final class Probe { const Probe(); }",
+      'Route ID',
+    ),
+    'invalid interceptor ID': (
+      "@CCRoute<void>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe'), interceptors: ['probe auth']) final class Probe { const Probe(); }",
+      'Route interceptor ID',
+    ),
+    'duplicate interceptor ID': (
+      "@CCRoute<void>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe'), interceptors: ['probe.auth', 'probe.auth']) final class Probe { const Probe(); }",
+      'Duplicate Route interceptor ID',
+    ),
+    'duplicate Pop guard ID': (
+      "@CCRoute<void>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe'), popGuards: ['probe.dirty', 'probe.dirty']) final class Probe { const Probe(); }",
+      'Duplicate Route Pop guard ID',
+    ),
+    'invalid placement ID': (
+      "@CCRoute<void>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe'), placement: CCRoutePlacement(hostId: 'Host.Main')) final class Probe { const Probe(); }",
+      'Host ID',
+    ),
+    'self parent': (
+      "@CCRoute<void>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe'), placement: CCRoutePlacement(parentRouteId: 'probe')) final class Probe { const Probe(); }",
+      'cannot be its own parent',
     ),
     'duplicate primaries': (
       "@CCRoute<void>(component: probeComponent, id: 'probe', patterns: [CCPathPattern('/a', primary: true), CCPathPattern('/b', primary: true)]) final class Probe { const Probe(); }",
@@ -1046,9 +1101,25 @@ final class Probe { const Probe(); }
       "@CCRoute<void>(component: probeComponent, id: 'probe', patterns: [CCPathPattern('/probe', primary: true), CCRegexPattern('[')]) final class Probe { const Probe(); }",
       'invalid regular expression',
     ),
+    'oversized regex': (
+      "@CCRoute<void>(component: probeComponent, id: 'probe', patterns: [CCPathPattern('/probe', primary: true), CCRegexPattern('$longRegex')]) final class Probe { const Probe(); }",
+      'regular expression exceeds 2048',
+    ),
+    'too many regex captures': (
+      "@CCRoute<void>(component: probeComponent, id: 'probe', patterns: [CCPathPattern('/probe', primary: true), CCRegexPattern('$manyCaptures')]) final class Probe { const Probe(); }",
+      'exceeds 32 named captures',
+    ),
     'bad constraint': (
       "@CCRoute<void>(component: probeComponent, id: 'probe', patterns: [CCPathPattern('/probe/:id', primary: true, constraints: {'id': '['})]) final class Probe { const Probe({required this.id}); final int id; }",
       'invalid parameter constraint',
+    ),
+    'oversized constraint': (
+      "@CCRoute<void>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe/:id', constraints: {'id': '$longConstraint'})) final class Probe { const Probe({required this.id}); final String id; }",
+      'parameter constraint exceeds 256',
+    ),
+    'oversized description': (
+      "@CCRoute<void>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe'), description: '$longDescription') final class Probe { const Probe(); }",
+      'description exceeds 4096',
     ),
     'duplicate ID': (
       "@CCRoute<void>(component: probeComponent, id: 'probe', patterns: [CCPathPattern('/a', primary: true)]) final class A { const A(); } @CCRoute<void>(component: probeComponent, id: 'probe', patterns: [CCPathPattern('/b', primary: true)]) final class B { const B(); }",

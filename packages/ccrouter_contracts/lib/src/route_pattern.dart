@@ -91,6 +91,8 @@ final class CCRegexPattern extends CCRoutePattern {
   /// captures such as `(?<id>[^/]+)` when encoded forms of otherwise
   /// unreserved characters must be accepted; decoded type validation belongs
   /// in the generated Codec. A literal `+` remains `+` because this is a Path
-  /// capture rather than form-encoded Query data.
+  /// capture rather than form-encoded Query data. Generator and Runtime accept
+  /// at most 2048 expression characters and 32 named captures to keep matching
+  /// metadata bounded; they validate syntax but do not guess backtracking cost.
   final String expression;
 }

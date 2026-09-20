@@ -58,9 +58,12 @@ final class CCComponentManifest {
   final List<String>? _optionalDependencies;
 
   /// Globally unique stable component identifier.
+  ///
+  /// Handwritten manifests follow the generated descriptor's bounded lowercase
+  /// segment syntax and are rejected before any Registrar executes otherwise.
   String get id => _descriptor?.id ?? _id!;
 
-  /// Semantic version of the component contract.
+  /// SemVer 2.0 version of the component contract.
   String get version => _descriptor?.version ?? _version!;
 
   /// Generated or handwritten capability registrar.

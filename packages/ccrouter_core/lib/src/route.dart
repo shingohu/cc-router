@@ -407,11 +407,60 @@ final class _RouteRegistry {
 
   /// Validates all route placements after every component has registered.
   void validatePlacements() {
+    _validateParentRelationships();
     for (final route in _routes.values) {
       _shellRegistry.validateRoutePlacement(
         route.definition.routeId,
         route.definition.placement,
       );
+    }
+  }
+
+  /// Validates handwritten parent links without inferring missing structure.
+  void _validateParentRelationships() {
+    final parentByRoute = <String, String>{};
+    for (final route in _routes.values) {
+      final routeId = route.definition.routeId;
+      final parentId = route.definition.placement.parentRouteId;
+      if (parentId == null) continue;
+      parentByRoute[routeId] = parentId;
+      final parent = _routes[parentId];
+      if (parent == null) {
+        throw CCRouteRegistrationError(
+          'Route "$routeId" references unknown parent "$parentId".',
+        );
+      }
+      final placement = route.definition.placement;
+      final parentPlacement = parent.definition.placement;
+      if (placement.hostId != parentPlacement.hostId ||
+          placement.shellId != parentPlacement.shellId ||
+          placement.navigatorOutlet != parentPlacement.navigatorOutlet) {
+        throw CCRouteRegistrationError(
+          'Route "$routeId" and parent "$parentId" must target the same '
+          'Host, Shell, and Navigator Outlet.',
+        );
+      }
+    }
+
+    final completed = <String>{};
+    final visiting = <String>[];
+    void visit(String routeId) {
+      if (completed.contains(routeId)) return;
+      final cycleIndex = visiting.indexOf(routeId);
+      if (cycleIndex >= 0) {
+        final cycle = [...visiting.sublist(cycleIndex), routeId].join(' -> ');
+        throw CCRouteRegistrationError('Route parent cycle: $cycle.');
+      }
+      visiting.add(routeId);
+      final parentId = parentByRoute[routeId];
+      if (parentId != null) visit(parentId);
+      visiting.removeLast();
+      completed.add(routeId);
+    }
+
+    final routeIds = parentByRoute.keys.toList()..sort();
+    for (final routeId in routeIds) {
+      visit(routeId);
     }
   }
 
@@ -487,9 +536,12 @@ final class _RouteRegistry {
 
   /// Validates route identity, canonical pattern, and expressions.
   void _validateDefinition<A, R>(CCRouteDefinition<A, R> definition) {
-    final routeId = definition.routeId.trim();
-    if (routeId.isEmpty) {
-      throw const CCRouteRegistrationError('Route ID must not be empty.');
+    final routeId = definition.routeId;
+    if (!_isStableIdentifier(routeId)) {
+      throw CCRouteRegistrationError(
+        'Route ID "$routeId" is invalid; start with lowercase and use alphanumeric '
+        'segments separated by ".", "_", or "-".',
+      );
     }
     if (definition.patterns.isEmpty) {
       throw CCRouteRegistrationError('Route "$routeId" has no patterns.');
@@ -509,14 +561,44 @@ final class _RouteRegistry {
     }
     final interceptorIds = <String>{};
     for (final id in definition.interceptorIds) {
-      final normalizedId = id.trim();
-      if (normalizedId != id ||
-          normalizedId.isEmpty ||
-          !interceptorIds.add(normalizedId)) {
+      if (!_isStableIdentifier(id) || !interceptorIds.add(id)) {
         throw CCRouteRegistrationError(
-          'Route "$routeId" contains an empty or duplicate interceptor ID.',
+          'Route "$routeId" contains an invalid or duplicate interceptor ID.',
         );
       }
+    }
+    final popGuardIds = <String>{};
+    for (final id in definition.popGuardIds) {
+      if (!_isStableIdentifier(id) || !popGuardIds.add(id)) {
+        throw CCRouteRegistrationError(
+          'Route "$routeId" contains an invalid or duplicate Pop guard ID.',
+        );
+      }
+    }
+    final placement = definition.placement;
+    if (!_isStableIdentifier(placement.hostId)) {
+      throw CCRouteRegistrationError(
+        'Route "$routeId" contains invalid Host ID "${placement.hostId}".',
+      );
+    }
+    if (!_isStableIdentifier(placement.navigatorOutlet)) {
+      throw CCRouteRegistrationError(
+        'Route "$routeId" contains invalid Navigator Outlet ID '
+        '"${placement.navigatorOutlet}".',
+      );
+    }
+    final parentRouteId = placement.parentRouteId;
+    if (parentRouteId != null &&
+        (!_isStableIdentifier(parentRouteId) || parentRouteId == routeId)) {
+      throw CCRouteRegistrationError(
+        'Route "$routeId" contains invalid Parent Route ID "$parentRouteId".',
+      );
+    }
+    final shellId = placement.shellId;
+    if (shellId != null && !_isStableIdentifier(shellId)) {
+      throw CCRouteRegistrationError(
+        'Route "$routeId" contains invalid Shell ID "$shellId".',
+      );
     }
     final seen = <String>{};
     for (final pattern in definition.patterns) {
@@ -553,6 +635,21 @@ final class _RouteRegistry {
         if (pattern.expression.isEmpty) {
           throw CCRouteRegistrationError(
             'Route "$routeId" regex must not be empty.',
+          );
+        }
+        if (pattern.expression.length > _maxRouteRegularExpressionLength) {
+          throw CCRouteRegistrationError(
+            'Route "$routeId" regex exceeds '
+            '$_maxRouteRegularExpressionLength characters.',
+          );
+        }
+        final captures = RegExp(
+          r'\(\?<([a-zA-Z_]\w*)>',
+        ).allMatches(pattern.expression).length;
+        if (captures > _maxRouteRegularExpressionCaptures) {
+          throw CCRouteRegistrationError(
+            'Route "$routeId" regex exceeds '
+            '$_maxRouteRegularExpressionCaptures named captures.',
           );
         }
         try {
@@ -615,6 +712,12 @@ final class _RouteRegistry {
       if (!names.contains(entry.key)) {
         throw CCRouteRegistrationError(
           'Route "$routeId" constrains unknown parameter "${entry.key}".',
+        );
+      }
+      if (entry.value.length > _maxConstraintRegularExpressionLength) {
+        throw CCRouteRegistrationError(
+          'Route "$routeId" regex for "${entry.key}" exceeds '
+          '$_maxConstraintRegularExpressionLength characters.',
         );
       }
       try {

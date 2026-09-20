@@ -103,9 +103,12 @@ final class _ShellRegistry {
 
   /// Validates identity, ordered Outlets, and default Outlet rules.
   void _validateDefinition(CCShellDefinition definition) {
-    final shellId = definition.shellId.trim();
-    if (shellId.isEmpty) {
-      throw const CCShellRegistrationError('Shell ID must not be empty.');
+    final shellId = definition.shellId;
+    if (!_isStableIdentifier(shellId)) {
+      throw CCShellRegistrationError(
+        'Shell ID "$shellId" is invalid; use lowercase alphanumeric '
+        'segments separated by ".", "_", or "-".',
+      );
     }
     if (definition.outlets.isEmpty) {
       throw CCShellRegistrationError(
@@ -114,9 +117,9 @@ final class _ShellRegistry {
     }
     final seen = <String>{};
     for (final outlet in definition.outlets) {
-      if (outlet.trim().isEmpty || !seen.add(outlet)) {
+      if (!_isStableIdentifier(outlet) || !seen.add(outlet)) {
         throw CCShellRegistrationError(
-          'Shell "$shellId" contains an empty or duplicate Outlet.',
+          'Shell "$shellId" contains an invalid or duplicate Outlet ID.',
         );
       }
     }
