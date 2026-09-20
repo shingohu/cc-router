@@ -1523,13 +1523,17 @@ Adapter 缺失、能力不支持和后端执行失败统一使用 `CCNavigationA
 
 ### 19.3 Adapter SPI
 
-Adapter 实现者可以使用单独导出的：
+Adapter 实现者和应用组合根只通过 `package:ccrouter/ccrouter_host.dart` 使用单独导出的：
 
 - `CCNavigationAdapter`
-- RouteEntry 只读快照
-- Adapter capability 和生命周期报告接口
+- `CCNavigationRequest`、`CCNavigationRoute` 与只读 Backend 快照
+- Adapter capability、Host binding、Pop 协调、Predictive Back 和生命周期报告接口
 
-业务门面不导出 Runtime 构造、内部 Route Registry、可变 RouteEntry、Scope 或 Adapter 控制器。框架内部跨文件访问使用 library privacy 和 `part` / `part of`。
+页面生成 glue 只向 Host catalog 返回已有的 `CCRouteDefinition`，由
+`CCFlutterRouteDestination.fromDefinition` 在 Host 边界转换成 `CCNavigationRoute`，避免业务
+页面为了生成代码导入 Host SPI。业务门面不导出 Runtime 构造、内部 Route Registry、可变
+RouteEntry、Scope、Adapter 控制器或上述 Host SPI。框架内部跨文件访问使用 library privacy 和
+`part` / `part of`。
 
 ### 19.4 测试 API
 

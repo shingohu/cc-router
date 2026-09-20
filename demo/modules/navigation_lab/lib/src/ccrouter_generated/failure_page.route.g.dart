@@ -147,17 +147,9 @@ final class _DemoFailurePageRouteCodec
 void ccrouterRegisterDemoFailurePageRoute(CCRegistry registry) =>
     _DemoFailurePageRoute.register(registry);
 
-/// Package-internal adapter-neutral metadata bridge used by Host generation.
-CCNavigationRoute ccrouterDescribeDemoFailurePageRoute() {
-  final definition = _DemoFailurePageRoute.definition;
-  return CCNavigationRoute(
-    routeId: definition.routeId,
-    patterns: definition.patterns,
-    presentation: definition.presentation,
-    deepLink: definition.deepLink,
-    placement: definition.placement,
-  );
-}
+/// Package-internal route definition bridge used by Host generation.
+CCRouteDefinition<dynamic, dynamic> ccrouterDescribeDemoFailurePageRoute() =>
+    _DemoFailurePageRoute.definition;
 
 /// Package-internal page factory bridge used by generated Flutter catalogs.
 DemoFailurePage ccrouterBuildDemoFailurePageRoute(

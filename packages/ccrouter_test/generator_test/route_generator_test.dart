@@ -487,7 +487,13 @@ final class Probe { const Probe({required this.id}); final int id; }
       expect(code, contains('ccrouterRegisterProbeRoute'));
       expect(code, contains('ccrouterDescribeProbeRoute'));
       expect(code, contains('ccrouterBuildProbeRoute'));
-      expect(code, contains('CCNavigationRoute('));
+      expect(
+        code,
+        contains(
+          'CCRouteDefinition<dynamic, dynamic> ccrouterDescribeProbeRoute()',
+        ),
+      );
+      expect(code, isNot(contains('CCNavigationRoute(')));
       expect(code, contains('popGuardIds: const ["probe.dirty"]'));
       expect(code, isNot(contains('GoRoute(')));
       expect(code, isNot(contains('CCRouter.navigator.push')));

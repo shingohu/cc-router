@@ -99,155 +99,163 @@ const demoNavigationLabComponentGeneratedRoutes =
 
 /// Backend-neutral Flutter destinations owned by `demo_navigation_lab_component`.
 final demoNavigationLabComponentRouteCatalog = CCFlutterRouteCatalog([
-  CCFlutterRouteDestination(
-    route: route_src_detail_page_dart.ccrouterDescribeDemoDetailPageRoute(),
+  CCFlutterRouteDestination.fromDefinition(
+    definition: route_src_detail_page_dart
+        .ccrouterDescribeDemoDetailPageRoute(),
     builder: (arguments) =>
         route_src_detail_page_dart.ccrouterBuildDemoDetailPageRoute(arguments),
   ),
-  CCFlutterRouteDestination(
-    route: route_src_failure_page_dart.ccrouterDescribeDemoFailurePageRoute(),
+  CCFlutterRouteDestination.fromDefinition(
+    definition: route_src_failure_page_dart
+        .ccrouterDescribeDemoFailurePageRoute(),
     builder: (arguments) => route_src_failure_page_dart
         .ccrouterBuildDemoFailurePageRoute(arguments),
   ),
-  CCFlutterRouteDestination(
-    route: route_src_home_page_dart
+  CCFlutterRouteDestination.fromDefinition(
+    definition: route_src_home_page_dart
         .ccrouterDescribeDemoNavigationHomePageRoute(),
     builder: (arguments) => route_src_home_page_dart
         .ccrouterBuildDemoNavigationHomePageRoute(arguments),
   ),
-  CCFlutterRouteDestination(
-    route: route_src_lifecycle_page_dart
+  CCFlutterRouteDestination.fromDefinition(
+    definition: route_src_lifecycle_page_dart
         .ccrouterDescribeDemoLifecyclePageRoute(),
     builder: (arguments) => route_src_lifecycle_page_dart
         .ccrouterBuildDemoLifecyclePageRoute(arguments),
   ),
-  CCFlutterRouteDestination(
-    route: route_src_policy_pages_dart.ccrouterDescribeDemoCancelledPageRoute(),
+  CCFlutterRouteDestination.fromDefinition(
+    definition: route_src_policy_pages_dart
+        .ccrouterDescribeDemoCancelledPageRoute(),
     builder: (arguments) => route_src_policy_pages_dart
         .ccrouterBuildDemoCancelledPageRoute(arguments),
   ),
-  CCFlutterRouteDestination(
-    route: route_src_policy_pages_dart.ccrouterDescribeDemoDeferredPageRoute(),
+  CCFlutterRouteDestination.fromDefinition(
+    definition: route_src_policy_pages_dart
+        .ccrouterDescribeDemoDeferredPageRoute(),
     builder: (arguments) => route_src_policy_pages_dart
         .ccrouterBuildDemoDeferredPageRoute(arguments),
   ),
-  CCFlutterRouteDestination(
-    route: route_src_policy_pages_dart.ccrouterDescribeDemoGuardedPageRoute(),
+  CCFlutterRouteDestination.fromDefinition(
+    definition: route_src_policy_pages_dart
+        .ccrouterDescribeDemoGuardedPageRoute(),
     builder: (arguments) => route_src_policy_pages_dart
         .ccrouterBuildDemoGuardedPageRoute(arguments),
   ),
-  CCFlutterRouteDestination(
-    route: route_src_policy_pages_dart.ccrouterDescribeDemoProceedPageRoute(),
+  CCFlutterRouteDestination.fromDefinition(
+    definition: route_src_policy_pages_dart
+        .ccrouterDescribeDemoProceedPageRoute(),
     builder: (arguments) => route_src_policy_pages_dart
         .ccrouterBuildDemoProceedPageRoute(arguments),
   ),
-  CCFlutterRouteDestination(
-    route: route_src_policy_pages_dart
+  CCFlutterRouteDestination.fromDefinition(
+    definition: route_src_policy_pages_dart
         .ccrouterDescribeDemoRedirectSourcePageRoute(),
     builder: (arguments) => route_src_policy_pages_dart
         .ccrouterBuildDemoRedirectSourcePageRoute(arguments),
   ),
-  CCFlutterRouteDestination(
-    route: route_src_policy_pages_dart
+  CCFlutterRouteDestination.fromDefinition(
+    definition: route_src_policy_pages_dart
         .ccrouterDescribeDemoRedirectTargetPageRoute(),
     builder: (arguments) => route_src_policy_pages_dart
         .ccrouterBuildDemoRedirectTargetPageRoute(arguments),
   ),
-  CCFlutterRouteDestination(
-    route: route_src_policy_pages_dart.ccrouterDescribeDemoTimeoutPageRoute(),
+  CCFlutterRouteDestination.fromDefinition(
+    definition: route_src_policy_pages_dart
+        .ccrouterDescribeDemoTimeoutPageRoute(),
     builder: (arguments) => route_src_policy_pages_dart
         .ccrouterBuildDemoTimeoutPageRoute(arguments),
   ),
-  CCFlutterRouteDestination(
-    route: route_src_presentation_pages_dart
+  CCFlutterRouteDestination.fromDefinition(
+    definition: route_src_presentation_pages_dart
         .ccrouterDescribeDemoBottomPageRoute(),
     builder: (arguments) => route_src_presentation_pages_dart
         .ccrouterBuildDemoBottomPageRoute(arguments),
   ),
-  CCFlutterRouteDestination(
-    route: route_src_presentation_pages_dart
+  CCFlutterRouteDestination.fromDefinition(
+    definition: route_src_presentation_pages_dart
         .ccrouterDescribeDemoCupertinoPageRoute(),
     builder: (arguments) => route_src_presentation_pages_dart
         .ccrouterBuildDemoCupertinoPageRoute(arguments),
   ),
-  CCFlutterRouteDestination(
-    route: route_src_presentation_pages_dart
+  CCFlutterRouteDestination.fromDefinition(
+    definition: route_src_presentation_pages_dart
         .ccrouterDescribeDemoDialogPageRoute(),
     builder: (arguments) => route_src_presentation_pages_dart
         .ccrouterBuildDemoDialogPageRoute(arguments),
   ),
-  CCFlutterRouteDestination(
-    route: route_src_presentation_pages_dart
+  CCFlutterRouteDestination.fromDefinition(
+    definition: route_src_presentation_pages_dart
         .ccrouterDescribeDemoFadePageRoute(),
     builder: (arguments) => route_src_presentation_pages_dart
         .ccrouterBuildDemoFadePageRoute(arguments),
   ),
-  CCFlutterRouteDestination(
-    route: route_src_presentation_pages_dart
+  CCFlutterRouteDestination.fromDefinition(
+    definition: route_src_presentation_pages_dart
         .ccrouterDescribeDemoScalePageRoute(),
     builder: (arguments) => route_src_presentation_pages_dart
         .ccrouterBuildDemoScalePageRoute(arguments),
   ),
-  CCFlutterRouteDestination(
-    route: route_src_presentation_pages_dart
+  CCFlutterRouteDestination.fromDefinition(
+    definition: route_src_presentation_pages_dart
         .ccrouterDescribeDemoBottomSheetPageRoute(),
     builder: (arguments) => route_src_presentation_pages_dart
         .ccrouterBuildDemoBottomSheetPageRoute(arguments),
   ),
-  CCFlutterRouteDestination(
-    route: route_src_presentation_pages_dart
+  CCFlutterRouteDestination.fromDefinition(
+    definition: route_src_presentation_pages_dart
         .ccrouterDescribeDemoTransparentPageRoute(),
     builder: (arguments) => route_src_presentation_pages_dart
         .ccrouterBuildDemoTransparentPageRoute(arguments),
   ),
-  CCFlutterRouteDestination(
-    route: route_src_shell_pages_dart.ccrouterDescribeDemoExtraPageRoute(),
+  CCFlutterRouteDestination.fromDefinition(
+    definition: route_src_shell_pages_dart.ccrouterDescribeDemoExtraPageRoute(),
     builder: (arguments) =>
         route_src_shell_pages_dart.ccrouterBuildDemoExtraPageRoute(arguments),
   ),
-  CCFlutterRouteDestination(
-    route: route_src_shell_pages_dart
+  CCFlutterRouteDestination.fromDefinition(
+    definition: route_src_shell_pages_dart
         .ccrouterDescribeDemoShellDetailPageRoute(),
     builder: (arguments) => route_src_shell_pages_dart
         .ccrouterBuildDemoShellDetailPageRoute(arguments),
   ),
-  CCFlutterRouteDestination(
-    route: route_src_shell_pages_dart.ccrouterDescribeDemoShellFeedPageRoute(),
+  CCFlutterRouteDestination.fromDefinition(
+    definition: route_src_shell_pages_dart
+        .ccrouterDescribeDemoShellFeedPageRoute(),
     builder: (arguments) => route_src_shell_pages_dart
         .ccrouterBuildDemoShellFeedPageRoute(arguments),
   ),
-  CCFlutterRouteDestination(
-    route: route_src_shell_pages_dart
+  CCFlutterRouteDestination.fromDefinition(
+    definition: route_src_shell_pages_dart
         .ccrouterDescribeDemoShellSettingsPageRoute(),
     builder: (arguments) => route_src_shell_pages_dart
         .ccrouterBuildDemoShellSettingsPageRoute(arguments),
   ),
-  CCFlutterRouteDestination(
-    route: route_src_shell_pages_dart
+  CCFlutterRouteDestination.fromDefinition(
+    definition: route_src_shell_pages_dart
         .ccrouterDescribeDemoWorkspaceActivityPageRoute(),
     builder: (arguments) => route_src_shell_pages_dart
         .ccrouterBuildDemoWorkspaceActivityPageRoute(arguments),
   ),
-  CCFlutterRouteDestination(
-    route: route_src_shell_pages_dart
+  CCFlutterRouteDestination.fromDefinition(
+    definition: route_src_shell_pages_dart
         .ccrouterDescribeDemoWorkspaceDetailPageRoute(),
     builder: (arguments) => route_src_shell_pages_dart
         .ccrouterBuildDemoWorkspaceDetailPageRoute(arguments),
   ),
-  CCFlutterRouteDestination(
-    route: route_src_shell_pages_dart
+  CCFlutterRouteDestination.fromDefinition(
+    definition: route_src_shell_pages_dart
         .ccrouterDescribeDemoWorkspaceHomePageRoute(),
     builder: (arguments) => route_src_shell_pages_dart
         .ccrouterBuildDemoWorkspaceHomePageRoute(arguments),
   ),
-  CCFlutterRouteDestination(
-    route: route_src_shell_pages_dart
+  CCFlutterRouteDestination.fromDefinition(
+    definition: route_src_shell_pages_dart
         .ccrouterDescribeDemoWorkspaceProfilePageRoute(),
     builder: (arguments) => route_src_shell_pages_dart
         .ccrouterBuildDemoWorkspaceProfilePageRoute(arguments),
   ),
-  CCFlutterRouteDestination(
-    route: route_src_stack_page_dart.ccrouterDescribeDemoStackPageRoute(),
+  CCFlutterRouteDestination.fromDefinition(
+    definition: route_src_stack_page_dart.ccrouterDescribeDemoStackPageRoute(),
     builder: (arguments) =>
         route_src_stack_page_dart.ccrouterBuildDemoStackPageRoute(arguments),
   ),

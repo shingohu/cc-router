@@ -61,17 +61,23 @@ Host 扩展和降级语义。
 - `CCMemoryNavigationAdapter`；
 - `CCRouterAppBackend`；
 - `CCPageLifecycleHostBridge`；
-- `CCRouteRestorationOpportunitySignal`、`CCRouteRestorationOpportunitySource`；
-- `CCNavigationManagedEntryReleaseSink`。
+- Adapter、Request、Route 和 Shell SPI；
+- Capability、Host binding、Backend Event/Snapshot 和 Managed Entry release SPI；
+- Pop Coordinator、Pop Target、Pop Guard binding 和 evaluator SPI；
+- Predictive Back 与 Restoration Source/Signal SPI。
 
 这些能力分别由 Facade、`ccrouter_host.dart` 或 `ccrouter_test` 提供受控入口。组件 Registrar 仍只
 接收受限 `CCRegistry`，业务代码不能创建、关闭或销毁 Runtime 和 Scope。
 
-`CCNavigationAdapter` 仍是 Adapter Package 和 Host SPI 的公共类型，但业务入口不直接
-注入它。`CCRouter.initialize(components: ...)` 原子初始化全局配置和启动期组件集合。新应用由
+`CCNavigationAdapter` 仍是 Adapter Package 和 Host SPI 的公共类型，但只由
+`package:ccrouter/ccrouter_host.dart` 显式导出，`package:ccrouter/ccrouter.dart` 使用对应
+`hide` 清单保证业务入口不可见。页面生成 glue 返回 `CCRouteDefinition`，Host catalog 再通过
+`CCFlutterRouteDestination.fromDefinition` 创建 Adapter-facing `CCNavigationRoute`，因此页面
+library 不需要依赖 Host SPI。API surface 快照测试锁定两侧导出集合。
+
+`CCRouter.initialize(components: ...)` 原子初始化全局配置和启动期组件集合。新应用由
 `CCRouterAppBackend` 提供 Adapter，`CCRouterApp.managed` 通过框架私有协调器完成所有权转移。
-Dart 无法同时满足“允许 Adapter Package 实现接口”和“接口对业务不可见”，因此通过分层
-barrel 和以下生命周期约束控制边界：
+Host/Adapter 的生命周期约束如下：
 
 - Adapter 由 Backend 交给 `CCRouterApp.managed`，再由 Runtime 初始化、销毁；
 - Adapter 初始化、初始 Backend Snapshot 和 dispose 都是同步事务，返回时状态已经稳定；

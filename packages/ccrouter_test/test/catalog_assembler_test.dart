@@ -12,10 +12,11 @@ CCFlutterRouteDestination destination({
   ],
   CCRoutePresentation presentation = const CCPagePresentation(),
   CCRoutePlacement placement = const CCRoutePlacement.root(),
-}) => CCFlutterRouteDestination(
-  route: CCNavigationRoute(
+}) => CCFlutterRouteDestination.fromDefinition(
+  definition: CCRouteDefinition<Object?, Object?>(
     routeId: routeId,
     patterns: patterns,
+    codec: _ObjectCodec(),
     presentation: presentation,
     deepLink: CCDeepLinkPolicy.disabled,
     placement: placement,
@@ -25,6 +26,17 @@ CCFlutterRouteDestination destination({
     textDirection: TextDirection.ltr,
   ),
 );
+
+final class _ObjectCodec implements CCRouteCodec<Object?> {
+  const _ObjectCodec();
+
+  @override
+  Object? decode(CCEncodedRouteArguments input) => null;
+
+  @override
+  CCEncodedRouteArguments encode(Object? arguments) =>
+      CCEncodedRouteArguments();
+}
 
 void main() {
   test('catalog merges components and rejects duplicate route IDs', () {

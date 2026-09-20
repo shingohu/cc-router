@@ -359,8 +359,8 @@ String _emitComponentRouteIndex(
   for (final route in routes) {
     final alias = imports[route.source]!;
     out
-      ..writeln('  CCFlutterRouteDestination(')
-      ..writeln('    route:')
+      ..writeln('  CCFlutterRouteDestination.fromDefinition(')
+      ..writeln('    definition:')
       ..writeln('        $alias.${route.descriptor}(),')
       ..writeln('    builder: (arguments) =>')
       ..writeln('        $alias.${route.builder}(arguments),')

@@ -16,17 +16,9 @@ part of '../order_detail_page.dart';
 void ccrouterRegisterOrderDetailPageRoute(CCRegistry registry) =>
     registry.registerRoute(OrderDetailRoute.definition);
 
-/// Package-internal adapter-neutral metadata bridge used by Host generation.
-CCNavigationRoute ccrouterDescribeOrderDetailPageRoute() {
-  final definition = OrderDetailRoute.definition;
-  return CCNavigationRoute(
-    routeId: definition.routeId,
-    patterns: definition.patterns,
-    presentation: definition.presentation,
-    deepLink: definition.deepLink,
-    placement: definition.placement,
-  );
-}
+/// Package-internal route definition bridge used by Host generation.
+CCRouteDefinition<dynamic, dynamic> ccrouterDescribeOrderDetailPageRoute() =>
+    OrderDetailRoute.definition;
 
 /// Package-internal page factory bound to the public route contract.
 OrderDetailPage ccrouterBuildOrderDetailPageRoute(

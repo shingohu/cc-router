@@ -18,6 +18,26 @@ final class CCFlutterRouteDestination {
   /// Creates an immutable generated destination for [route].
   CCFlutterRouteDestination({required this.route, required this.builder});
 
+  /// Creates a Host destination from one component-owned [definition].
+  ///
+  /// Generated Host catalogs use this factory to cross the component-to-Host
+  /// boundary without exposing adapter-facing [CCNavigationRoute] snapshots to
+  /// feature libraries. The Runtime continues to own the full definition and
+  /// its codec; only adapter-neutral route metadata is copied for assembly.
+  static CCFlutterRouteDestination fromDefinition<A, R>({
+    required CCRouteDefinition<A, R> definition,
+    required CCFlutterRouteBuilder builder,
+  }) => CCFlutterRouteDestination(
+    route: CCNavigationRoute(
+      routeId: definition.routeId,
+      patterns: definition.patterns,
+      presentation: definition.presentation,
+      deepLink: definition.deepLink,
+      placement: definition.placement,
+    ),
+    builder: builder,
+  );
+
   /// Adapter-neutral route metadata registered with the Runtime.
   final CCNavigationRoute route;
 

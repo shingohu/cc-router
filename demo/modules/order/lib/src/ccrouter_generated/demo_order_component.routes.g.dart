@@ -24,8 +24,8 @@ const demoOrderComponentGeneratedRoutes = DemoOrderComponentGeneratedRoutes();
 
 /// Backend-neutral Flutter destinations owned by `demo_order_component`.
 final demoOrderComponentRouteCatalog = CCFlutterRouteCatalog([
-  CCFlutterRouteDestination(
-    route: route_src_order_detail_page_dart
+  CCFlutterRouteDestination.fromDefinition(
+    definition: route_src_order_detail_page_dart
         .ccrouterDescribeOrderDetailPageRoute(),
     builder: (arguments) => route_src_order_detail_page_dart
         .ccrouterBuildOrderDetailPageRoute(arguments),

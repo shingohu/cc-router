@@ -5,11 +5,11 @@
 - 审查日期：2026-09-20
 - 审查范围：路由 Runtime、业务 Facade、Host/Adapter SPI、GoRouter Adapter、生成器、
   Demo、测试与诊断模型。
-- 自动化基线：`dart analyze` 通过；Framework 214 项、Demo 19 项、Generator 78 项测试通过；
+- 自动化基线：`dart analyze` 通过；Framework 216 项、Demo 19 项、Generator 78 项测试通过；
   最近一次 macOS debug build 和交互验证通过。
 - 总体结论：13 条约定的架构方向成立，但当前不能认定为全部对齐。没有阻断 Demo 的 P0
   或 P1 问题；并发安全、retained diagnostics 数据边界和观察回调热路径已完成收口，仍有
-  6 项 P2 欠账。
+  5 项 P2 欠账。
 
 本审查只记录事实和后续门槛，不因为某项容易实现就扩展公开 API。
 
@@ -20,9 +20,9 @@
 | 1 | 智能 | 部分满足 | Route/Codec/Manifest/组件索引/Host Catalog/文档均可生成；Runtime 自动校验并装配。缺口是 Workspace 聚合仍需在 `build_runner` 后手动执行第二条 CLI，且无增量缓存或生成物陈旧门禁。 |
 | 2 | 简单易用 | 基本满足 | Demo 宿主只需 `CCRouter.initialize`、`CCGoRouterBackend.managed`、`CCRouterApp.managed` 和 `MaterialApp.router`。Shell、Multi Host、Aspect 等均为可选能力；生成阶段的两条命令仍增加首次接入成本。 |
 | 3 | 功能强大 | 基本满足 | 已覆盖类型安全导航、Deep Link、拦截、生命周期、混合路由、诊断和多种 Presentation，没有万能 Map 导航接口。组合栈事务与精确 Entry 操作已从 v0.1 API 删除并标记 Deferred；设备 Predictive Back 和 Restoration 仍是明确限制。 |
-| 4 | 可扩展性 | 基本满足 | Core 使用中立 Route Definition；Catalog、Assembler、Adapter 与能力 SPI 分层。新后端可复用 Contract/Catalog。业务 barrel 仍透出 Adapter SPI，边界尚未完全收口。 |
+| 4 | 可扩展性 | 基本满足 | Core 使用中立 Route Definition；Catalog、Assembler、Adapter 与能力 SPI 分层。新后端可复用 Contract/Catalog；Host/Adapter 实现通过独立 `ccrouter_host.dart` 获取 SPI，业务 barrel 不再暴露该能力。 |
 | 5 | 可测试 | 基本满足 | Pure Dart Runtime/Memory Adapter、Flutter Adapter、生成器和 Demo 都有回归；`ccrouter_test` 已提供 Test Host。尚无正式性能、长时间运行和大规模路由表基准。 |
-| 6 | 最小公开 API | 部分满足 | Runtime、Scope、Memory Adapter 和 Host binding 已从业务 barrel 隐藏；Registrar 只拿到 `CCRegistry`。但 `ccrouter.dart` 仍通过 contracts barrel 暴露 Adapter、Request、Capability 和多个后端控制 SPI。 |
+| 6 | 最小公开 API | 基本满足 | Runtime、Scope、Memory Adapter、Host binding 以及 Adapter/Request/Capability/Backend 控制 SPI 已从业务 barrel 隐藏；Registrar 只拿到 `CCRegistry`，Host 组合根按需导入 `ccrouter_host.dart`。API surface 快照测试防止 SPI 意外回流。 |
 | 7 | 编译器校验与类型安全 | 部分满足 | 参数、Codec、Route ID、Pattern、Contract exposure、页面实现和 barrel 导出已有生成期校验。组件依赖缺失/环、拦截器/PopGuard 引用和 Adapter 能力主要仍在 Runtime 才失败。 |
 | 8 | 非侵入式 | 满足 | 不要求页面基类或 Mixin，不保存全局 `BuildContext`；可继续使用应用自己的 `MaterialApp.router`/`GoRouter`；attached Adapter 不销毁应用 Router。 |
 | 9 | 可降级回退 | 部分满足 | 无法可靠降级的组合栈事务与精确 Entry 操作已从公开能力链删除，不再静默模拟。解析前失败和观察能力降级仍没有统一进入 failure/diagnostic 记录。 |
@@ -76,14 +76,15 @@
 
 ## 4. P2 问题
 
-### P2-1 业务 barrel 暴露了 Host/Adapter SPI
+### 已完成：P2-1 业务 barrel 与 Host/Adapter SPI 隔离
 
-`package:ccrouter/ccrouter.dart` 直接导出大部分 `ccrouter_contracts`，因此业务可以看到并实现
-`CCNavigationAdapter`、`CCNavigationRequest`、Capability Source、Backend Source、Pop
-Coordinator 和 Exact Entry SPI。虽然正常入口不会使用它们，但没有满足最小权限。
-
-建议：将 SPI 拆到独立 `ccrouter_host`/`ccrouter_adapter_contracts` library，或在业务 barrel 使用
-完整 hide/show 清单；Adapter package 直接依赖 SPI library。
+- `package:ccrouter/ccrouter.dart` 使用完整 `hide` 清单隔离 Adapter、Request、Route、Capability、
+  Backend Event/Snapshot、Pop Coordinator、Predictive Back 和 Restoration Source 等 Host SPI；
+- `package:ccrouter/ccrouter_host.dart` 使用对应 `show` 清单提供 Host/Adapter 实现入口；
+- 页面生成 glue 只返回组件已有的 `CCRouteDefinition`，由
+  `CCFlutterRouteDestination.fromDefinition` 在 Host catalog 边界生成 `CCNavigationRoute`，页面
+  library 不需要也不能额外导入 Host SPI；
+- API surface 快照测试同时锁定业务隐藏集合、Host 导出集合和主要 SPI 类型可解析性。
 
 ### P2-2 前置失败和能力降级的诊断不完整
 
@@ -143,9 +144,8 @@ PII/凭证。框架无法证明匿名性，但可以减少明显误用。
 
 ## 6. 推荐处理顺序
 
-1. 收口业务 barrel 的 Adapter SPI，补 API surface 快照测试。
-2. 补 pre-dispatch failure/capability fallback 事件和 Workspace 依赖图校验。
-3. 合并生成入口并建立 benchmark；得到基线前不做缓存和索引优化。
+1. 补 pre-dispatch failure/capability fallback 事件和 Workspace 依赖图校验。
+2. 合并生成入口并建立 benchmark；得到基线前不做缓存和索引优化。
 
 每一项完成后必须运行 analyze、Framework/Demo/Generator 全量测试，并重新执行 macOS Demo
 交互回归。涉及 Android Predictive Back 时另加真实 Android 设备验证。

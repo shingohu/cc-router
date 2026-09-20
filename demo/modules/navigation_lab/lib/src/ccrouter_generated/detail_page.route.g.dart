@@ -178,17 +178,9 @@ final class _DemoDetailPageRouteCodec
 void ccrouterRegisterDemoDetailPageRoute(CCRegistry registry) =>
     _DemoDetailPageRoute.register(registry);
 
-/// Package-internal adapter-neutral metadata bridge used by Host generation.
-CCNavigationRoute ccrouterDescribeDemoDetailPageRoute() {
-  final definition = _DemoDetailPageRoute.definition;
-  return CCNavigationRoute(
-    routeId: definition.routeId,
-    patterns: definition.patterns,
-    presentation: definition.presentation,
-    deepLink: definition.deepLink,
-    placement: definition.placement,
-  );
-}
+/// Package-internal route definition bridge used by Host generation.
+CCRouteDefinition<dynamic, dynamic> ccrouterDescribeDemoDetailPageRoute() =>
+    _DemoDetailPageRoute.definition;
 
 /// Package-internal page factory bridge used by generated Flutter catalogs.
 DemoDetailPage ccrouterBuildDemoDetailPageRoute(

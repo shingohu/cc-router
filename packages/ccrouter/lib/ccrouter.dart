@@ -6,9 +6,30 @@ library;
 
 export 'package:ccrouter_contracts/ccrouter_contracts.dart'
     hide
+        CCNavigationAdapter,
+        CCNavigationAdapterCapabilities,
+        CCNavigationAdapterCapabilitySource,
+        CCNavigationAdapterHostBinding,
+        CCNavigationBackendEntrySnapshot,
+        CCNavigationBackendEvent,
+        CCNavigationBackendEventListener,
+        CCNavigationBackendEventSource,
+        CCNavigationBackendSnapshotSource,
+        CCNavigationHostCapabilitySource,
         CCNavigationManagedEntryReleaseSink,
+        CCNavigationPopCoordinator,
+        CCNavigationPopGuardBinding,
         CCNavigationPopTarget,
         CCNavigationPopTargetSource,
+        CCNavigationPredictiveBackSource,
+        CCNavigationPredictiveBackSourceProvider,
+        CCNavigationRoute,
+        CCNavigationRequest,
+        CCNavigationShell,
+        CCPopGuardEvaluator,
+        CCPredictiveBackEvent,
+        CCPredictiveBackEventListener,
+        CCPredictiveBackPhase,
         CCRouteRestorationOpportunitySignal,
         CCRouteRestorationOpportunitySource;
 export 'package:ccrouter_core/ccrouter_core.dart'

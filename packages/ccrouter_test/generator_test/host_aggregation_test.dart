@@ -253,6 +253,11 @@ environment:
     expect(componentIndex, contains('ccrouterRegisterDetailPageRoute'));
     expect(
       componentIndex,
+      contains('CCFlutterRouteDestination.fromDefinition('),
+    );
+    expect(componentIndex, contains('definition:'));
+    expect(
+      componentIndex,
       isNot(contains('package:fixture_order_contracts/src/detail.dart')),
     );
   });

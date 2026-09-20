@@ -155,17 +155,9 @@ String _emitRouteGlue(_RouteModel route, {required bool embedded}) {
 /// registrar can register library-private routes without exposing owner APIs.
 void ${route.registrationFunction}(CCRegistry registry) => $registration;
 
-/// Package-internal adapter-neutral metadata bridge used by Host generation.
-CCNavigationRoute ${route.descriptorFunction}() {
-  final definition = ${route.api}.definition;
-  return CCNavigationRoute(
-    routeId: definition.routeId,
-    patterns: definition.patterns,
-    presentation: definition.presentation,
-    deepLink: definition.deepLink,
-    placement: definition.placement,
-  );
-}
+/// Package-internal route definition bridge used by Host generation.
+CCRouteDefinition<dynamic, dynamic> ${route.descriptorFunction}() =>
+    ${route.api}.definition;
 
 /// Package-internal page factory bridge used by generated Flutter catalogs.
 ${route.page.displayName} ${route.builderFunction}(
@@ -201,17 +193,9 @@ String _emitImplementationGlue(_RouteImplementationModel implementation) {
 void ${implementation.registrationFunction}(CCRegistry registry) =>
     registry.registerRoute($api.definition);
 
-/// Package-internal adapter-neutral metadata bridge used by Host generation.
-CCNavigationRoute ${implementation.descriptorFunction}() {
-  final definition = $api.definition;
-  return CCNavigationRoute(
-    routeId: definition.routeId,
-    patterns: definition.patterns,
-    presentation: definition.presentation,
-    deepLink: definition.deepLink,
-    placement: definition.placement,
-  );
-}
+/// Package-internal route definition bridge used by Host generation.
+CCRouteDefinition<dynamic, dynamic> ${implementation.descriptorFunction}() =>
+    $api.definition;
 
 /// Package-internal page factory bound to the public route contract.
 ${implementation.page.displayName} ${implementation.builderFunction}(

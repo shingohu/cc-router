@@ -102,17 +102,9 @@ final class _DemoShellFeedPageRouteCodec
 void ccrouterRegisterDemoShellFeedPageRoute(CCRegistry registry) =>
     _DemoShellFeedPageRoute.register(registry);
 
-/// Package-internal adapter-neutral metadata bridge used by Host generation.
-CCNavigationRoute ccrouterDescribeDemoShellFeedPageRoute() {
-  final definition = _DemoShellFeedPageRoute.definition;
-  return CCNavigationRoute(
-    routeId: definition.routeId,
-    patterns: definition.patterns,
-    presentation: definition.presentation,
-    deepLink: definition.deepLink,
-    placement: definition.placement,
-  );
-}
+/// Package-internal route definition bridge used by Host generation.
+CCRouteDefinition<dynamic, dynamic> ccrouterDescribeDemoShellFeedPageRoute() =>
+    _DemoShellFeedPageRoute.definition;
 
 /// Package-internal page factory bridge used by generated Flutter catalogs.
 DemoShellFeedPage ccrouterBuildDemoShellFeedPageRoute(
@@ -233,17 +225,10 @@ final class _DemoShellDetailPageRouteCodec
 void ccrouterRegisterDemoShellDetailPageRoute(CCRegistry registry) =>
     _DemoShellDetailPageRoute.register(registry);
 
-/// Package-internal adapter-neutral metadata bridge used by Host generation.
-CCNavigationRoute ccrouterDescribeDemoShellDetailPageRoute() {
-  final definition = _DemoShellDetailPageRoute.definition;
-  return CCNavigationRoute(
-    routeId: definition.routeId,
-    patterns: definition.patterns,
-    presentation: definition.presentation,
-    deepLink: definition.deepLink,
-    placement: definition.placement,
-  );
-}
+/// Package-internal route definition bridge used by Host generation.
+CCRouteDefinition<dynamic, dynamic>
+ccrouterDescribeDemoShellDetailPageRoute() =>
+    _DemoShellDetailPageRoute.definition;
 
 /// Package-internal page factory bridge used by generated Flutter catalogs.
 DemoShellDetailPage ccrouterBuildDemoShellDetailPageRoute(
@@ -348,17 +333,10 @@ final class _DemoShellSettingsPageRouteCodec
 void ccrouterRegisterDemoShellSettingsPageRoute(CCRegistry registry) =>
     _DemoShellSettingsPageRoute.register(registry);
 
-/// Package-internal adapter-neutral metadata bridge used by Host generation.
-CCNavigationRoute ccrouterDescribeDemoShellSettingsPageRoute() {
-  final definition = _DemoShellSettingsPageRoute.definition;
-  return CCNavigationRoute(
-    routeId: definition.routeId,
-    patterns: definition.patterns,
-    presentation: definition.presentation,
-    deepLink: definition.deepLink,
-    placement: definition.placement,
-  );
-}
+/// Package-internal route definition bridge used by Host generation.
+CCRouteDefinition<dynamic, dynamic>
+ccrouterDescribeDemoShellSettingsPageRoute() =>
+    _DemoShellSettingsPageRoute.definition;
 
 /// Package-internal page factory bridge used by generated Flutter catalogs.
 DemoShellSettingsPage ccrouterBuildDemoShellSettingsPageRoute(
@@ -463,17 +441,10 @@ final class _DemoWorkspaceHomePageRouteCodec
 void ccrouterRegisterDemoWorkspaceHomePageRoute(CCRegistry registry) =>
     _DemoWorkspaceHomePageRoute.register(registry);
 
-/// Package-internal adapter-neutral metadata bridge used by Host generation.
-CCNavigationRoute ccrouterDescribeDemoWorkspaceHomePageRoute() {
-  final definition = _DemoWorkspaceHomePageRoute.definition;
-  return CCNavigationRoute(
-    routeId: definition.routeId,
-    patterns: definition.patterns,
-    presentation: definition.presentation,
-    deepLink: definition.deepLink,
-    placement: definition.placement,
-  );
-}
+/// Package-internal route definition bridge used by Host generation.
+CCRouteDefinition<dynamic, dynamic>
+ccrouterDescribeDemoWorkspaceHomePageRoute() =>
+    _DemoWorkspaceHomePageRoute.definition;
 
 /// Package-internal page factory bridge used by generated Flutter catalogs.
 DemoWorkspaceHomePage ccrouterBuildDemoWorkspaceHomePageRoute(
@@ -596,17 +567,10 @@ final class _DemoWorkspaceDetailPageRouteCodec
 void ccrouterRegisterDemoWorkspaceDetailPageRoute(CCRegistry registry) =>
     _DemoWorkspaceDetailPageRoute.register(registry);
 
-/// Package-internal adapter-neutral metadata bridge used by Host generation.
-CCNavigationRoute ccrouterDescribeDemoWorkspaceDetailPageRoute() {
-  final definition = _DemoWorkspaceDetailPageRoute.definition;
-  return CCNavigationRoute(
-    routeId: definition.routeId,
-    patterns: definition.patterns,
-    presentation: definition.presentation,
-    deepLink: definition.deepLink,
-    placement: definition.placement,
-  );
-}
+/// Package-internal route definition bridge used by Host generation.
+CCRouteDefinition<dynamic, dynamic>
+ccrouterDescribeDemoWorkspaceDetailPageRoute() =>
+    _DemoWorkspaceDetailPageRoute.definition;
 
 /// Package-internal page factory bridge used by generated Flutter catalogs.
 DemoWorkspaceDetailPage ccrouterBuildDemoWorkspaceDetailPageRoute(
@@ -715,17 +679,10 @@ final class _DemoWorkspaceActivityPageRouteCodec
 void ccrouterRegisterDemoWorkspaceActivityPageRoute(CCRegistry registry) =>
     _DemoWorkspaceActivityPageRoute.register(registry);
 
-/// Package-internal adapter-neutral metadata bridge used by Host generation.
-CCNavigationRoute ccrouterDescribeDemoWorkspaceActivityPageRoute() {
-  final definition = _DemoWorkspaceActivityPageRoute.definition;
-  return CCNavigationRoute(
-    routeId: definition.routeId,
-    patterns: definition.patterns,
-    presentation: definition.presentation,
-    deepLink: definition.deepLink,
-    placement: definition.placement,
-  );
-}
+/// Package-internal route definition bridge used by Host generation.
+CCRouteDefinition<dynamic, dynamic>
+ccrouterDescribeDemoWorkspaceActivityPageRoute() =>
+    _DemoWorkspaceActivityPageRoute.definition;
 
 /// Package-internal page factory bridge used by generated Flutter catalogs.
 DemoWorkspaceActivityPage ccrouterBuildDemoWorkspaceActivityPageRoute(
@@ -834,17 +791,10 @@ final class _DemoWorkspaceProfilePageRouteCodec
 void ccrouterRegisterDemoWorkspaceProfilePageRoute(CCRegistry registry) =>
     _DemoWorkspaceProfilePageRoute.register(registry);
 
-/// Package-internal adapter-neutral metadata bridge used by Host generation.
-CCNavigationRoute ccrouterDescribeDemoWorkspaceProfilePageRoute() {
-  final definition = _DemoWorkspaceProfilePageRoute.definition;
-  return CCNavigationRoute(
-    routeId: definition.routeId,
-    patterns: definition.patterns,
-    presentation: definition.presentation,
-    deepLink: definition.deepLink,
-    placement: definition.placement,
-  );
-}
+/// Package-internal route definition bridge used by Host generation.
+CCRouteDefinition<dynamic, dynamic>
+ccrouterDescribeDemoWorkspaceProfilePageRoute() =>
+    _DemoWorkspaceProfilePageRoute.definition;
 
 /// Package-internal page factory bridge used by generated Flutter catalogs.
 DemoWorkspaceProfilePage ccrouterBuildDemoWorkspaceProfilePageRoute(
@@ -962,17 +912,9 @@ final class _DemoExtraPageRouteCodec
 void ccrouterRegisterDemoExtraPageRoute(CCRegistry registry) =>
     _DemoExtraPageRoute.register(registry);
 
-/// Package-internal adapter-neutral metadata bridge used by Host generation.
-CCNavigationRoute ccrouterDescribeDemoExtraPageRoute() {
-  final definition = _DemoExtraPageRoute.definition;
-  return CCNavigationRoute(
-    routeId: definition.routeId,
-    patterns: definition.patterns,
-    presentation: definition.presentation,
-    deepLink: definition.deepLink,
-    placement: definition.placement,
-  );
-}
+/// Package-internal route definition bridge used by Host generation.
+CCRouteDefinition<dynamic, dynamic> ccrouterDescribeDemoExtraPageRoute() =>
+    _DemoExtraPageRoute.definition;
 
 /// Package-internal page factory bridge used by generated Flutter catalogs.
 DemoExtraPage ccrouterBuildDemoExtraPageRoute(

@@ -22,13 +22,15 @@ const demoWebComponentGeneratedRoutes = DemoWebComponentGeneratedRoutes();
 
 /// Backend-neutral Flutter destinations owned by `demo_web_component`.
 final demoWebComponentRouteCatalog = CCFlutterRouteCatalog([
-  CCFlutterRouteDestination(
-    route: route_src_web_pages_dart.ccrouterDescribeDemoPrivateWebPageRoute(),
+  CCFlutterRouteDestination.fromDefinition(
+    definition: route_src_web_pages_dart
+        .ccrouterDescribeDemoPrivateWebPageRoute(),
     builder: (arguments) => route_src_web_pages_dart
         .ccrouterBuildDemoPrivateWebPageRoute(arguments),
   ),
-  CCFlutterRouteDestination(
-    route: route_src_web_pages_dart.ccrouterDescribeDemoPublicWebPageRoute(),
+  CCFlutterRouteDestination.fromDefinition(
+    definition: route_src_web_pages_dart
+        .ccrouterDescribeDemoPublicWebPageRoute(),
     builder: (arguments) =>
         route_src_web_pages_dart.ccrouterBuildDemoPublicWebPageRoute(arguments),
   ),

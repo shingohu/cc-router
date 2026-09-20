@@ -16,17 +16,9 @@ part of '../web_pages.dart';
 void ccrouterRegisterDemoPublicWebPageRoute(CCRegistry registry) =>
     registry.registerRoute(DemoPublicWebRoute.definition);
 
-/// Package-internal adapter-neutral metadata bridge used by Host generation.
-CCNavigationRoute ccrouterDescribeDemoPublicWebPageRoute() {
-  final definition = DemoPublicWebRoute.definition;
-  return CCNavigationRoute(
-    routeId: definition.routeId,
-    patterns: definition.patterns,
-    presentation: definition.presentation,
-    deepLink: definition.deepLink,
-    placement: definition.placement,
-  );
-}
+/// Package-internal route definition bridge used by Host generation.
+CCRouteDefinition<dynamic, dynamic> ccrouterDescribeDemoPublicWebPageRoute() =>
+    DemoPublicWebRoute.definition;
 
 /// Package-internal page factory bound to the public route contract.
 DemoPublicWebPage ccrouterBuildDemoPublicWebPageRoute(
@@ -43,17 +35,9 @@ DemoPublicWebPage ccrouterBuildDemoPublicWebPageRoute(
 void ccrouterRegisterDemoPrivateWebPageRoute(CCRegistry registry) =>
     registry.registerRoute(DemoPrivateWebRoute.definition);
 
-/// Package-internal adapter-neutral metadata bridge used by Host generation.
-CCNavigationRoute ccrouterDescribeDemoPrivateWebPageRoute() {
-  final definition = DemoPrivateWebRoute.definition;
-  return CCNavigationRoute(
-    routeId: definition.routeId,
-    patterns: definition.patterns,
-    presentation: definition.presentation,
-    deepLink: definition.deepLink,
-    placement: definition.placement,
-  );
-}
+/// Package-internal route definition bridge used by Host generation.
+CCRouteDefinition<dynamic, dynamic> ccrouterDescribeDemoPrivateWebPageRoute() =>
+    DemoPrivateWebRoute.definition;
 
 /// Package-internal page factory bound to the public route contract.
 DemoPrivateWebPage ccrouterBuildDemoPrivateWebPageRoute(
