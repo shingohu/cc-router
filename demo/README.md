@@ -36,15 +36,18 @@ Query Codec，认证 URL 与 Header 使用进程内 Extra；标准 HTTPS 外部�
 macOS 外部 URL Scheme、冷启动和运行中唤醒的手动验证步骤见
 [外部 Deep Link 验证](docs/external_deep_link.md)。
 
-双 Host / 多 Outlet 示例把两个独立 GoRouter 同时显示在一个 Flutter View 中，用来验证
-Host 选择、路由栈和 RouteEntry 生命周期互不串扰：
+Host 与自适应布局示例提供两个模式：双 Host 模式把两个独立 GoRouter 同时显示在一个
+Flutter View 中，验证 Host 选择、路由栈和 RouteEntry 生命周期互不串扰；自适应模式
+保持同一个 Host，根据手机横竖屏、桌面窗口缩放和模拟 hinge 更新
+`CCHostLayoutMetrics`，并在单 `adaptive.list` Outlet 与大屏 list/detail 双 Outlet
+之间切换：
 
 ```sh
 fvm flutter run -d macos -t lib/examples/multi_host_demo.dart
 ```
 
-该入口验证框架的多 Host 语义，不等同于 macOS 原生多 Window；后者仍需要平台 Window
-和 Flutter Engine 生命周期接入。
+该入口验证框架的多 Host、自适应布局和 Display Feature 语义，不等同于 macOS 原生多
+Window；后者仍需要平台 Window 和 Flutter Engine 生命周期接入。
 
 ## 开发命令
 

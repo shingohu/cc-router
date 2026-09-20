@@ -50,8 +50,10 @@
 | `routing_config.dart` | 不支持业务任意替换完整路由表 | 通过组件 `activate/deactivate` 提供有所有权和生命周期的动态路由 |
 | `state_restoration/*` | 仅记录 restoration opportunity 诊断 | 完成 Route/Result/Session/Host 一致的恢复模型 |
 
-## 多 Host 补充验证
+## Host 与自适应布局补充验证
 
 `lib/examples/multi_host_demo.dart` 不是 GoRouter 官方示例的复制。它在单个 Flutter View
 内同时挂载两个 Host 和两个 GoRouter，用于验证 Host 选择、RouteEntry、Observer 与路由
-状态隔离。它不代表原生多 Window 已完成；平台 Window/Engine 生命周期仍属于后续工作。
+状态隔离；同一入口还验证一个 Host 在横竖屏、桌面窗口缩放和模拟 hinge 下更新
+`CCHostLayoutMetrics`，并切换 list/detail Outlet。它不代表原生多 Window 已完成；平台
+Window/Engine 生命周期仍属于后续工作。

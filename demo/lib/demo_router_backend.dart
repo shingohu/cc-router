@@ -7,6 +7,9 @@ import 'package:demo_navigation_lab/demo_navigation_lab.dart';
 import 'package:demo_navigation_lab/demo_navigation_lab_host.dart';
 import 'package:flutter/material.dart';
 
+const demoAdaptiveListOutlet = 'adaptive.list';
+const demoAdaptiveDetailOutlet = 'adaptive.detail';
+
 CCGoRouterBackend createDemoRouterBackend({
   required CCFlutterRouteCatalog catalog,
   String hostId = 'default',
@@ -24,6 +27,12 @@ CCGoRouterBackend createDemoRouterBackend({
   final workspaceProfileKey = GlobalKey<NavigatorState>(
     debugLabel: '$hostId.$demoWorkspaceProfileOutlet',
   );
+  final adaptiveListKey = GlobalKey<NavigatorState>(
+    debugLabel: '$hostId.$demoAdaptiveListOutlet',
+  );
+  final adaptiveDetailKey = GlobalKey<NavigatorState>(
+    debugLabel: '$hostId.$demoAdaptiveDetailOutlet',
+  );
   final host = CCNavigationHost(
     id: hostId,
     navigatorKeys: {
@@ -31,6 +40,8 @@ CCGoRouterBackend createDemoRouterBackend({
       demoWorkspaceHomeOutlet: workspaceHomeKey,
       demoWorkspaceActivityOutlet: workspaceActivityKey,
       demoWorkspaceProfileOutlet: workspaceProfileKey,
+      demoAdaptiveListOutlet: adaptiveListKey,
+      demoAdaptiveDetailOutlet: adaptiveDetailKey,
     },
   );
 

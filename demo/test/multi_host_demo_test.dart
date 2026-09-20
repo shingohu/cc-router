@@ -18,7 +18,7 @@ void main() {
   testWidgets('two Hosts retain independent visible navigation state', (
     tester,
   ) async {
-    tester.view.physicalSize = const Size(760, 900);
+    tester.view.physicalSize = const Size(800, 620);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -35,21 +35,74 @@ void main() {
     final navigateButtons = find.byTooltip('打开隔离栈页');
     expect(navigateButtons, findsNWidgets(2));
 
+    await tester.ensureVisible(navigateButtons.at(1));
     await tester.tap(navigateButtons.at(1));
     await tester.pumpAndSettle();
     expect(find.text('栈操作 · Level 202'), findsOneWidget);
-    expect(CCRouter.activeRouteEntries.single.hostId, 'window.secondary');
+    expect(CCRouter.activeRouteEntries.single.hostId, 'host.secondary');
 
+    await tester.ensureVisible(navigateButtons.at(0));
     await tester.tap(navigateButtons.at(0));
     await tester.pumpAndSettle();
     expect(find.text('栈操作 · Level 101'), findsOneWidget);
     expect(find.text('栈操作 · Level 202'), findsOneWidget);
     expect(CCRouter.activeRouteEntries.map((entry) => entry.hostId).toSet(), {
-      'window.primary',
-      'window.secondary',
+      'host.primary',
+      'host.secondary',
     });
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pumpAndSettle();
   });
+
+  testWidgets(
+    'one Host adapts orientation, list-detail Outlets, and display features',
+    (tester) async {
+      tester.view.physicalSize = const Size(520, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(createMultiHostDemoApp());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('自适应布局'));
+      await tester.pumpAndSettle();
+      expect(find.text('同一 Host：host.primary'), findsOneWidget);
+      expect(find.byKey(const ValueKey('adaptive-list-pane')), findsOneWidget);
+      expect(find.byKey(const ValueKey('adaptive-detail-pane')), findsNothing);
+      expect(find.textContaining('纵向 · compact'), findsOneWidget);
+      expect(find.text('Active Outlet：adaptive.list'), findsOneWidget);
+
+      await tester.tap(find.text('Item 2'));
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey('adaptive-detail-pane')),
+        findsOneWidget,
+      );
+      expect(find.text('Item 2'), findsOneWidget);
+
+      tester.view.physicalSize = const Size(1200, 700);
+      await tester.pumpAndSettle();
+      expect(find.text('同一 Host：host.primary'), findsOneWidget);
+      expect(find.textContaining('横向 · expanded'), findsOneWidget);
+      expect(find.byKey(const ValueKey('adaptive-list-pane')), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('adaptive-detail-pane')),
+        findsOneWidget,
+      );
+      expect(
+        find.text('Active Outlet：adaptive.list + adaptive.detail'),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.byKey(const ValueKey('simulate-hinge')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('adaptive-hinge')), findsOneWidget);
+      expect(find.textContaining('1 个 Display Feature'), findsOneWidget);
+      expect(find.text('同一 Host：host.primary'), findsOneWidget);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpAndSettle();
+    },
+  );
 }

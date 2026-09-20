@@ -32,6 +32,9 @@ Demo 的交互实现位于 `modules/navigation_lab`，宿主只负责初始化 C
 | Typed Extra | `DemoExtraPayload` | 通过，仅进程内传递，不进入 URL 或诊断 |
 | Shared WebView | public Query Codec + private Extra | 通过，私密 URL/Header 不进入 normalized URI |
 | Multi Host | Primary / Secondary 双 Router | 通过，Host 路由状态相互隔离 |
+| Host resize / orientation | 同一 `host.primary` 更新 `CCHostLayoutMetrics` | 通过，Host ID 与路由所有权不变 |
+| Fold / hinge | 模拟 separating `CCDisplayFeature` | 通过，不创建 Host，只切换活动 Outlet |
+| Adaptive list-detail | compact 单 Outlet / expanded 双 Outlet | 通过，`adaptive.list` 与 `adaptive.detail` 属于同一 Host |
 | Multi Outlet | Shell + 三个 Stateful Branch Outlet | 通过，每个 Outlet 独立 Key 与 Observer |
 | Global / Route Interceptor | Proceed / Cancel | 通过 |
 | Redirect / Defer / resume / Timeout | Policy Lab | 通过 |
@@ -58,13 +61,13 @@ Demo 的交互实现位于 `modules/navigation_lab`，宿主只负责初始化 C
 4. Failure fallback 默认 Replace 后不可 Pop，Demo 却使用内部 `open('/')` 返回，造成隐藏 Entry 残留。Demo 现显式使用 Push fallback，返回后为 `0 managed`。
 5. GoRouter Adapter 在 Go、Reset 或 Runtime shutdown 时曾直接清空本地 Entry，导致已返回给业务的 typed result Future 永久等待，并残留 navigation/backend identity 映射。现在 Go/Reset 以 `null` 结束被移除页面的结果，shutdown 以 `CCNavigationAdapterError` 结束未完成结果，同时清理身份映射；动态 open 不创建对业务暴露的错误结果通道。
 6. GoRouter 17 默认把 Shell 分支的 Navigator 事件转发给 root observers，曾导致同一个分支 Route 同时被标记为 root 和真实 Outlet。`CCGoRouterNavigationObserver` 现在忽略不属于其 Navigator 的转发事件，由对应 Outlet observer 保留唯一、准确的生命周期身份。
-7. 双 Host Demo 启动时窗口宽度跨越布局断点，`Column`/`Row` 子树替换曾让 secondary Host 在旧 Owner 释放前被新 Owner 挂载。示例现保持同一 `Flex` 子树并只切换方向，回归测试会从窄屏扩到宽屏并检查 Flutter 异常。
+7. 双 Host Demo 曾在默认 macOS 窗口高度下使用上下布局，导致两个嵌入 App 的底部各溢出 16px；直接在断点切换不同布局子树又会让 secondary Host 在旧 Owner 释放前被新 Owner 挂载。示例现始终保持同一 `SingleChildScrollView -> SizedBox -> Row` 子树，窄窗口只增加横向滚动；回归测试使用接近真实默认窗口的尺寸并跨越宽度断点检查溢出和重复挂载异常。
 
 ## 已确认限制
 
 1. `popAndPush`、`popUntil`、`pushAndRemoveUntil`、`removeRoute`、`removeRouteBelow` 和 `replaceRouteBelow` 已从业务 API、Runtime、Adapter SPI、Capability、内置 Adapter、Demo 与测试完整删除，不再以 capability error 或多步操作模拟。重新接入需先具备稳定 Entry identity、原子目标栈提交、混合栈隔离、PopGuard、失败回滚和结果/Scope 生命周期保证。
 2. Predictive Back 不适用于 macOS 实测，已由 bridge 单测覆盖；最终仍需 Android 设备回归手势进度与取消。
-3. Demo 已覆盖单 View 内的双 Host、Shell 和多 Outlet，但不等同于 macOS/iPadOS 原生多 Window 或多 Flutter Engine。原生 Window/Display 创建、销毁、恢复和 Host 迁移仍需平台接入后验证。
+3. Demo 已覆盖单 View 内的双 Host、窗口缩放/方向变化、模拟 hinge、list-detail、Shell 和多 Outlet，但不等同于 macOS/iPadOS 原生多 Window 或多 Flutter Engine。原生 Window/Display 创建、销毁、恢复和 Host 迁移仍需平台接入后验证。
 4. 完整 Route Restoration 按设计暂缓；当前只保留 restoration opportunity 诊断，不宣称可恢复业务栈。
 5. 标准 HTTPS Universal Link 的系统唤醒依赖应用 entitlement、Associated Domains 与服务端 AASA；Demo 只实测 Host mapper 和 WebView，不能用不受控制的公共域名伪造系统关联。
 6. 私密 Web 示例的自定义 Header 只用于初始请求；生产认证仍需设计 Cookie/会话桥接、登出清理和多账号隔离，不能假设 Header 自动跨重定向持续注入。
