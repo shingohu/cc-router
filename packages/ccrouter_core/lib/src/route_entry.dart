@@ -53,8 +53,9 @@ extension CCRouterRuntimeRouteEntries on CCRouterRuntime {
 
   /// Subscribes to Route Entry lifecycle transitions.
   ///
-  /// Listener failures are isolated from navigation. The returned callback
-  /// removes the listener.
+  /// Transitions are delivered by the bounded FIFO observer queue. Listener
+  /// failures are isolated from navigation. The returned callback removes the
+  /// listener and cancels its queued deliveries.
   void Function() addRouteEntryListener(
     CCRouteEntryLifecycleListener listener,
   ) {
@@ -373,11 +374,14 @@ extension CCRouterRuntimeRouteEntries on CCRouterRuntime {
       _routeEntryEvents.add(event);
     }
     _emitAspectEntryState(entry, state);
-    for (final listener in _routeEntryListeners.toList()) {
-      _notifyNavigationObserver(
-        () => listener(event),
-        failureLabel: 'Route Entry listener',
-      );
-    }
+    _enqueueNavigationObserverBatch(
+      _routeEntryListeners,
+      (listener) => listener(event),
+      isActive: _routeEntryListeners.contains,
+      failureLabel: 'Route Entry listener',
+      critical:
+          state == CCRouteEntryLifecycleState.removed ||
+          state == CCRouteEntryLifecycleState.disposed,
+    );
   }
 }

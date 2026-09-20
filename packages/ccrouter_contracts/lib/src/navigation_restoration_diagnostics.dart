@@ -122,8 +122,10 @@ final class CCRouteRestorationOpportunityEvent {
 
 /// Receives one sanitized restoration-demand diagnostic event.
 ///
-/// Listeners must only export or aggregate evidence; Runtime rejects navigation
-/// started directly or asynchronously from this callback as reentrant.
+/// Runtime delivers observations in FIFO order on a later event-loop turn;
+/// these diagnostic events may be dropped under queue pressure. Listeners must
+/// only export or aggregate evidence; Runtime rejects navigation started
+/// directly or asynchronously from this callback as reentrant.
 typedef CCRouteRestorationOpportunityListener =
     void Function(CCRouteRestorationOpportunityEvent event);
 

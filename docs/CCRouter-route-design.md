@@ -807,7 +807,14 @@ CCRouter 不直接复制 TheRouter 的无类型 `NavigationCallback` API，而�
 - `onFound`：路由匹配成功但尚未进入页面，优先作为内部解析和性能诊断事件，不作为普通业务页面生命周期依赖。
 - `onResult`：继续使用 `Future<R?>` 返回类型安全的页面结果，不增加无类型回调。
 
-现有 `CCNavigationLifecyclePhase.completed` 不等同于 `onArrival`：对于 `push`，`completed` 可能要等页面 Pop 后才发生。当前由独立的 `CCNavigationAspect` 提供安全快照形式的 `onFound`、`onArrival`、`onLost` 和 `onAfter` 钩子，并在事件中提供从首次匹配开始的 `elapsed` 耗时，使匹配、到达、失败和结果完成的时机明确；跳转前决策统一由 Global/Route Interceptor 承担。观察回调失败会进入有界诊断而不影响导航，回调中也不能同步发起新的导航。
+现有 `CCNavigationLifecyclePhase.completed` 不等同于 `onArrival`：对于 `push`，`completed` 可能要等页面 Pop 后才发生。当前由独立的 `CCNavigationAspect` 提供安全快照形式的 `onFound`、`onArrival`、`onLost` 和 `onAfter` 钩子，并在事件中提供从首次匹配开始的 `elapsed` 耗时，使匹配、到达、失败和结果完成的时机明确；跳转前决策统一由 Global/Route Interceptor 承担。
+
+所有纯观察回调统一进入 Runtime 私有的有界 FIFO 队列，并在下一轮 event loop 分发，不占用
+正常导航调用栈。诊断历史仍同步写入，调用方无需等待 Listener 才能读取快照。队列容量至少为
+64 个事件批次并复用 Host 的 `navigationDiagnosticCapacity` 上限；overflow 优先丢弃最旧
+非终态事件，终态事件通过明确 backpressure 保证不静默丢失。取消订阅会使尚未分发的回调失效；
+Runtime dispose 会停止事件源、取消 Timer、flush 队列并清理 Listener/闭包。观察回调失败进入
+有界诊断而不影响导航，回调及其派生异步任务都不能再次发起 Runtime 导航。
 
 ### 11.7 TheRouter 风格的全局 AOP
 
@@ -834,7 +841,7 @@ CCRouter 参考 TheRouter 的全局 AOP 使用场景，但不直接复制其无�
 - 所有阶段都接收不可变的导航/路由快照，不暴露 `Widget`、`BuildContext`、
   `Navigator` 或任意业务对象。
 - 观察回调异常必须隔离并进入诊断，不能影响已经接受的导航。
-- 回调中禁止同步再次发起导航，避免重入和递归导航链。
+- 回调及其派生异步任务中禁止再次发起导航，避免重入和递归导航链。
 - 业务页面结果继续通过类型安全的 `Future<R?>` 返回，不增加无类型结果回调。
 
 “全局唯一”表示所有 Runtime 导航经过同一条有序 AOP 管线，不表示只能注册一个

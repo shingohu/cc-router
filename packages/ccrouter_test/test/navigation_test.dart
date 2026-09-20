@@ -637,6 +637,7 @@ void main() {
       for (final kind in entryKinds) {
         adapter.emit(kind);
       }
+      await Future<void>.delayed(Duration.zero);
 
       expect(runtime.activeRouteEntries, hasLength(2));
       expect(
@@ -791,6 +792,7 @@ void main() {
         backendOperationId: 'same-operation',
       );
     }
+    await Future<void>.delayed(Duration.zero);
     expect(runtime.activeBackendEntries, hasLength(1));
     expect(observed, hasLength(1));
 
@@ -802,6 +804,150 @@ void main() {
     expect(runtime.backendEntries, isEmpty);
     await runtime.dispose();
   });
+
+  test('observer delivery is asynchronous, FIFO, and cancellable', () async {
+    final adapter = BackendEventNavigationAdapter();
+    final runtime = CCRouterRuntime.forTesting(navigationAdapter: adapter);
+    runtime.initialize();
+    final observed = <CCNavigationBackendEventKind>[];
+    final removeListener = runtime.addBackendNavigationListener(
+      (event) => observed.add(event.kind),
+    );
+
+    adapter.emit(
+      CCNavigationBackendEventKind.push,
+      backendOperationId: 'async-push',
+    );
+    adapter.emit(
+      CCNavigationBackendEventKind.replace,
+      backendOperationId: 'async-replace',
+    );
+    adapter.emit(
+      CCNavigationBackendEventKind.topChanged,
+      backendOperationId: 'async-top',
+    );
+
+    expect(observed, isEmpty);
+    await Future<void>.delayed(Duration.zero);
+    expect(observed, [
+      CCNavigationBackendEventKind.push,
+      CCNavigationBackendEventKind.replace,
+      CCNavigationBackendEventKind.topChanged,
+    ]);
+
+    adapter.emit(
+      CCNavigationBackendEventKind.push,
+      backendOperationId: 'cancelled-before-drain',
+    );
+    removeListener();
+    await Future<void>.delayed(Duration.zero);
+    expect(observed, hasLength(3));
+    await runtime.dispose();
+  });
+
+  test('observer-produced events wait for the next drain cycle', () async {
+    final adapter = BackendEventNavigationAdapter();
+    final runtime = CCRouterRuntime.forTesting(navigationAdapter: adapter);
+    runtime.initialize();
+    final observed = <CCNavigationBackendEventKind>[];
+    runtime.addBackendNavigationListener((event) {
+      observed.add(event.kind);
+      if (event.kind == CCNavigationBackendEventKind.push) {
+        adapter.emit(
+          CCNavigationBackendEventKind.replace,
+          backendOperationId: 'observer-produced-replace',
+        );
+      }
+    });
+
+    adapter.emit(
+      CCNavigationBackendEventKind.push,
+      backendOperationId: 'observer-source-push',
+    );
+    await Future<void>.delayed(Duration.zero);
+    expect(observed, [CCNavigationBackendEventKind.push]);
+    await Future<void>.delayed(Duration.zero);
+    expect(observed, [
+      CCNavigationBackendEventKind.push,
+      CCNavigationBackendEventKind.replace,
+    ]);
+    await runtime.dispose();
+  });
+
+  test('observer queue drops oldest non-terminal batches when full', () async {
+    final adapter = BackendEventNavigationAdapter();
+    final runtime = CCRouterRuntime.forTesting(
+      navigationDiagnosticCapacity: 0,
+      navigationAdapter: adapter,
+    );
+    runtime.initialize();
+    final observed = <CCNavigationBackendDiagnosticEvent>[];
+    runtime.addBackendNavigationListener(observed.add);
+
+    for (var index = 0; index < 65; index++) {
+      adapter.emit(
+        CCNavigationBackendEventKind.push,
+        backendOperationId: 'non-terminal-$index',
+      );
+    }
+
+    expect(observed, isEmpty);
+    await Future<void>.delayed(Duration.zero);
+    expect(observed, hasLength(64));
+    expect(
+      runtime.subscriberErrors.single.message,
+      contains('non-terminal batch was dropped'),
+    );
+    await runtime.dispose();
+  });
+
+  test('observer queue never drops terminal batches when full', () async {
+    final adapter = BackendEventNavigationAdapter();
+    final runtime = CCRouterRuntime.forTesting(
+      navigationDiagnosticCapacity: 0,
+      navigationAdapter: adapter,
+    );
+    runtime.initialize();
+    final observed = <CCNavigationBackendDiagnosticEvent>[];
+    runtime.addBackendNavigationListener(observed.add);
+
+    for (var index = 0; index < 65; index++) {
+      adapter.emit(
+        CCNavigationBackendEventKind.pop,
+        backendOperationId: 'terminal-$index',
+      );
+    }
+
+    expect(observed, hasLength(1));
+    await Future<void>.delayed(Duration.zero);
+    expect(observed, hasLength(65));
+    expect(
+      runtime.subscriberErrors.single.message,
+      contains('terminal batch was delivered with backpressure'),
+    );
+    await runtime.dispose();
+  });
+
+  test(
+    'Runtime dispose flushes queued observations and cancels drain',
+    () async {
+      final adapter = BackendEventNavigationAdapter();
+      final runtime = CCRouterRuntime.forTesting(navigationAdapter: adapter);
+      runtime.initialize();
+      final observed = <CCNavigationBackendDiagnosticEvent>[];
+      runtime.addBackendNavigationListener(observed.add);
+      adapter.emit(
+        CCNavigationBackendEventKind.push,
+        backendOperationId: 'dispose-flush',
+      );
+
+      expect(observed, isEmpty);
+      await runtime.dispose();
+      expect(observed, hasLength(1));
+      await Future<void>.delayed(Duration.zero);
+      expect(observed, hasLength(1));
+    },
+  );
 
   test(
     'Host detach resets sequence state for the same Host identity',
@@ -1495,6 +1641,7 @@ void main() {
       await runtime.goRoute(
         const TestIntent<void>('orders.detail', RouteArgs('42')),
       );
+      await Future<void>.delayed(Duration.zero);
 
       expect(phases, [
         CCNavigationAspectPhase.found,
@@ -1554,6 +1701,7 @@ void main() {
         ),
         throwsA(isA<CCRouteCancelledError>()),
       );
+      await Future<void>.delayed(Duration.zero);
       expect(phases, [
         CCNavigationAspectPhase.found,
         CCNavigationAspectPhase.lost,
@@ -1713,6 +1861,7 @@ void main() {
     await runtime.goRoute(
       const TestIntent<void>('orders.detail', RouteArgs('42')),
     );
+    await Future<void>.delayed(Duration.zero);
 
     expect(calls, ['a-first']);
     expect(runtime.subscriberErrors.single.message, contains('StateError'));
@@ -1750,6 +1899,7 @@ void main() {
     await runtime.goRoute(
       const TestIntent<void>('orders.detail', RouteArgs('42')),
     );
+    await Future<void>.delayed(Duration.zero);
     await reentryExpectation;
     expect(runtime.activeRouteEntries, hasLength(1));
     await runtime.dispose();
@@ -1809,6 +1959,7 @@ void main() {
       mode: CCDeepLinkOpenMode.go,
       source: source,
     );
+    await Future<void>.delayed(Duration.zero);
 
     expect(adapter.currentRequest?.routeId, 'auth.login');
     expect(adapter.currentRequest?.origin, CCNavigationOrigin.externalPlatform);
@@ -2123,6 +2274,7 @@ void main() {
         const TestIntent<void>('orders.detail', RouteArgs('42')),
         source: source,
       );
+      await Future<void>.delayed(Duration.zero);
 
       expect(events, hasLength(2));
       expect(events.map((event) => event.phase), [
@@ -3231,6 +3383,7 @@ void main() {
         ),
         throwsA(isA<CCNavigationDuplicateError>()),
       );
+      await Future<void>.delayed(Duration.zero);
 
       final failed = observed.where(
         (event) => event.errorType == 'CCNavigationDuplicateError',
@@ -3282,6 +3435,7 @@ void main() {
     runtime.popRoute(result: 'shared');
     expect(await first, 'shared');
     expect(await second, 'shared');
+    await Future<void>.delayed(Duration.zero);
 
     final foundIds = observed
         .where((event) => event.phase == CCNavigationAspectPhase.found)
@@ -3386,6 +3540,7 @@ void main() {
     await runtime.goRoute(
       const TestIntent<void>('orders.detail', RouteArgs('42')),
     );
+    await Future<void>.delayed(Duration.zero);
     await reentryExpectation;
     expect(runtime.activeRouteEntries.single.routeId, 'orders.detail');
     await runtime.dispose();
@@ -3424,6 +3579,7 @@ void main() {
     await runtime.goRoute(
       const TestIntent<void>('orders.detail', RouteArgs('42')),
     );
+    await Future<void>.delayed(Duration.zero);
     await reentryExpectation;
     expect(runtime.activeRouteEntries.single.routeId, 'orders.detail');
     await runtime.dispose();
@@ -3629,6 +3785,7 @@ void main() {
         throwsA(isA<CCRouteUnavailableError>()),
       );
       await pushedExpectation;
+      await Future<void>.delayed(Duration.zero);
       expect(phases, [
         CCNavigationAspectPhase.found,
         CCNavigationAspectPhase.lost,

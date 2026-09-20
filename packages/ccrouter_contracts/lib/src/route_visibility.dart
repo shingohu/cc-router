@@ -50,8 +50,10 @@ final class CCRouteVisibilityEvent {
 
 /// Receives managed Route Entry visibility observations.
 ///
-/// Listeners should perform short, observational work and must not start
-/// navigation from the callback. Runtime rejects synchronous calls and
-/// asynchronous work spawned there as reentrant. Listener failures are
-/// isolated from Runtime transitions.
+/// Runtime delivers observations in FIFO order on a later event-loop turn;
+/// these non-terminal events may be dropped under queue pressure. Listeners
+/// should perform short, observational work and must not start navigation from
+/// the callback. Runtime rejects synchronous calls and asynchronous work
+/// spawned there as reentrant. Listener failures are isolated from Runtime
+/// transitions.
 typedef CCRouteVisibilityListener = void Function(CCRouteVisibilityEvent event);

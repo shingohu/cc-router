@@ -167,8 +167,10 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
 
   /// Subscribes to backend Navigator observations from the configured adapter.
   ///
-  /// The returned callback removes the listener. This capability is optional;
-  /// adapters without backend observation support simply produce no events.
+  /// Events are delivered by the bounded FIFO observer queue. The returned
+  /// callback removes the listener and cancels its queued deliveries. This
+  /// capability is optional; adapters without backend observation support
+  /// simply produce no events.
   void Function() addBackendNavigationListener(
     CCNavigationBackendDiagnosticListener listener,
   ) {
@@ -274,12 +276,18 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
       }
       _backendNavigationEvents.add(diagnosticEvent);
     }
-    for (final listener in _backendNavigationListeners.toList()) {
-      _notifyNavigationObserver(
-        () => listener(diagnosticEvent),
-        failureLabel: 'Backend navigation listener',
-      );
-    }
+    _enqueueNavigationObserverBatch(
+      _backendNavigationListeners,
+      (listener) => listener(diagnosticEvent),
+      isActive: _backendNavigationListeners.contains,
+      failureLabel: 'Backend navigation listener',
+      critical: switch (event.kind) {
+        CCNavigationBackendEventKind.pop ||
+        CCNavigationBackendEventKind.remove ||
+        CCNavigationBackendEventKind.hostDetached => true,
+        _ => false,
+      },
+    );
   }
 
   /// Tears down one detached Host without guessing cross-window migration.

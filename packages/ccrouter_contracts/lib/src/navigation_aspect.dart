@@ -221,8 +221,11 @@ typedef CCNavigationAspectObserver =
 /// Use this for diagnostics, exposure tracking, performance metrics, and
 /// failure observation. Aspects never influence navigation decisions; use a
 /// [CCGlobalNavigationInterceptor] or route interceptor for cancellation and
-/// redirection. Observation callbacks must return quickly and must not start
-/// navigation directly or from asynchronous work spawned by the callback.
+/// redirection. Runtime dispatches hooks in FIFO order on a later event-loop
+/// turn; non-terminal hooks may be dropped under queue pressure while terminal
+/// hooks remain lossless through explicit backpressure. Observation callbacks
+/// must return quickly and must not start navigation directly or from
+/// asynchronous work spawned by the callback.
 final class CCNavigationAspect {
   /// Creates a named aspect with optional observation hooks.
   const CCNavigationAspect({

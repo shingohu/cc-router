@@ -117,7 +117,10 @@ final class CCRouteEntryLifecycleEvent {
 
 /// Receives Route Entry lifecycle transitions.
 ///
-/// Listeners must remain observational and must not start navigation from the
-/// callback. Runtime rejects work spawned there as reentrant.
+/// Runtime delivers transitions in FIFO order on a later event-loop turn.
+/// Non-terminal transitions may be dropped under queue pressure; `removed` and
+/// `disposed` remain lossless through explicit backpressure. Listeners must
+/// remain observational and must not start navigation from the callback.
+/// Runtime rejects work spawned there as reentrant.
 typedef CCRouteEntryLifecycleListener =
     void Function(CCRouteEntryLifecycleEvent event);

@@ -3,7 +3,7 @@
 ## 文档状态
 
 - 版本：v0.2
-- 状态：功能闭环已完成；API 冻结前仍需完成 Observer 有界异步分发，完整 Route Restoration 明确暂缓
+- 状态：路由功能闭环与 Observer 有界异步分发已完成；完整 Route Restoration 明确暂缓
 - 职责：五份路由文档中的唯一实施状态清单，不替代路由语义、契约或混合路由设计
 
 本文中的勾选项表示当前仓库已实现并具有对应回归覆盖。其他设计文档不再重复维护任务
@@ -99,7 +99,15 @@ Live Route 的跨 Host 迁移存在 Widget、Scope、返回值和后端状态所
 - [x] 明确 PV 由 Arrival/Show 产生，UV 由外部分析层结合匿名访客身份聚合。
 - [x] 拆分 operational address 与 retained diagnostic snapshot，所有业务历史使用不含参数值的
   `CCRouteAddressSummary`；
-- [ ] 将纯观察回调改为有界异步分发，并覆盖顺序、overflow 和终态不可丢失语义。
+- [x] 将纯观察回调改为有界 FIFO 异步分发，并覆盖顺序、取消订阅、overflow、终态不可丢失和 Runtime dispose 清理语义。
+
+Runtime 同步写入有界诊断历史，但在下一轮 event loop 才通知 Aspect 与普通 Listener。观察
+队列容量复用 `navigationDiagnosticCapacity` 且最少为 64 个事件批次；overflow 优先丢弃
+最旧非终态批次，若队列只含终态则丢弃新到达的非终态。新终态进入全终态满队列时，通过
+显式 backpressure 交付最旧终态，因此 `completed/failed`、Failure、RouteEntry
+`removed/disposed`、Aspect `lost/after/removed/disposed` 和 Backend
+`pop/remove/hostDetached` 不会静默丢失。取消订阅会跳过尚未分发的回调；Runtime dispose
+会取消 Timer、flush 队列并清除 Listener 与闭包引用。
 
 ### P1-3 路由状态恢复（暂缓，仅保留设计与需求观测）
 

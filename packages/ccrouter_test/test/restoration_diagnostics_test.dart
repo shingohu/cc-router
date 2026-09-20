@@ -87,6 +87,7 @@ void main() {
           previousHostCount: -1,
         ),
       );
+      await Future<void>.delayed(Duration.zero);
 
       expect(observed, hasLength(1));
       expect(observed.single.previousTopRouteId, isNull);

@@ -505,7 +505,10 @@ final class CCNavigationBackendDiagnosticEvent {
 ///
 /// Business and telemetry subscribers use this callback instead of the raw
 /// Adapter SPI listener so concrete locations cannot escape into retained
-/// state. Callbacks remain observational and cannot start navigation.
+/// state. Runtime delivers callbacks in FIFO order on a later event-loop turn.
+/// Non-terminal events may be dropped under queue pressure; Pop, Remove, and
+/// Host-detach observations remain lossless through explicit backpressure.
+/// Callbacks remain observational and cannot start navigation.
 typedef CCNavigationBackendDiagnosticListener =
     void Function(CCNavigationBackendDiagnosticEvent event);
 

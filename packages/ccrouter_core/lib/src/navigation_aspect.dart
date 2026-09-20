@@ -338,6 +338,7 @@ extension CCRouterRuntimeNavigationAspects on CCRouterRuntime {
 
   /// Dispatches an aspect event while isolating callback failures.
   void _emitAspectEvent(CCNavigationAspectEvent event) {
+    final observers = <CCNavigationAspectObserver>[];
     for (final aspect in _navigationAspects) {
       final observer = switch (event.phase) {
         CCNavigationAspectPhase.found => aspect.onFound,
@@ -350,10 +351,20 @@ extension CCRouterRuntimeNavigationAspects on CCRouterRuntime {
         CCNavigationAspectPhase.after => aspect.onAfter,
       };
       if (observer == null) continue;
-      _notifyNavigationObserver(
-        () => observer(event),
-        failureLabel: 'Navigation aspect',
-      );
+      observers.add(observer);
     }
+    _enqueueNavigationObserverBatch(
+      observers,
+      (observer) => observer(event),
+      isActive: (_) => true,
+      failureLabel: 'Navigation aspect',
+      critical: switch (event.phase) {
+        CCNavigationAspectPhase.removed ||
+        CCNavigationAspectPhase.disposed ||
+        CCNavigationAspectPhase.lost ||
+        CCNavigationAspectPhase.after => true,
+        _ => false,
+      },
+    );
   }
 }

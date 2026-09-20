@@ -14,8 +14,10 @@ extension CCRouterRuntimeNavigationLifecycle on CCRouterRuntime {
   /// Subscribes to Runtime navigation lifecycle events.
   ///
   /// Use this at the application host boundary to forward navigation metrics
-  /// to an analytics or diagnostics pipeline. The returned callback removes the
-  /// listener; listener failures are isolated from navigation execution.
+  /// to an analytics or diagnostics pipeline. Events are delivered by the
+  /// bounded FIFO observer queue on a later event-loop turn. The returned
+  /// callback removes the listener and cancels its queued deliveries; listener
+  /// failures are isolated from navigation execution.
   void Function() addNavigationListener(
     CCNavigationLifecycleListener listener,
   ) {
@@ -49,11 +51,12 @@ extension CCRouterRuntimeNavigationLifecycle on CCRouterRuntime {
       }
       _navigationEvents.add(event);
     }
-    for (final listener in _navigationListeners.toList()) {
-      _notifyNavigationObserver(
-        () => listener(event),
-        failureLabel: 'Navigation listener',
-      );
-    }
+    _enqueueNavigationObserverBatch(
+      _navigationListeners,
+      (listener) => listener(event),
+      isActive: _navigationListeners.contains,
+      failureLabel: 'Navigation listener',
+      critical: phase != CCNavigationLifecyclePhase.requested,
+    );
   }
 }

@@ -13,8 +13,9 @@ extension CCRouterRuntimeRestorationDiagnostics on CCRouterRuntime {
 
   /// Subscribes to restoration-demand events at the application Host boundary.
   ///
-  /// The returned callback removes the listener. Listener failures are isolated
-  /// and never affect startup, navigation, or platform lifecycle processing.
+  /// Events are delivered by the bounded FIFO observer queue. The returned
+  /// callback removes the listener and cancels its queued deliveries. Listener
+  /// failures never affect startup, navigation, or platform lifecycle work.
   void Function() addRouteRestorationOpportunityListener(
     CCRouteRestorationOpportunityListener listener,
   ) {
@@ -87,12 +88,12 @@ extension CCRouterRuntimeRestorationDiagnostics on CCRouterRuntime {
       }
       _restorationOpportunityEvents.add(event);
     }
-    for (final listener in _restorationOpportunityListeners.toList()) {
-      _notifyNavigationObserver(
-        () => listener(event),
-        failureLabel: 'Route restoration listener',
-      );
-    }
+    _enqueueNavigationObserverBatch(
+      _restorationOpportunityListeners,
+      (listener) => listener(event),
+      isActive: _restorationOpportunityListeners.contains,
+      failureLabel: 'Route restoration listener',
+    );
   }
 
   /// Returns one bounded label or drops invalid Host-provided text.

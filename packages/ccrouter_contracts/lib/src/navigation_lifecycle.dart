@@ -83,8 +83,12 @@ final class CCNavigationLifecycleEvent {
 
 /// Receives Runtime navigation lifecycle events.
 ///
-/// Listeners should enqueue or export telemetry and return quickly. They must
-/// not start navigation from inside the callback; Runtime rejects synchronous
-/// calls and asynchronous work spawned in the callback as reentrant.
+/// Runtime delivers listeners in FIFO order on a later event-loop turn so
+/// telemetry cannot block the accepted navigation call stack. Non-terminal
+/// events may be dropped under queue pressure; `completed` and `failed` remain
+/// lossless through explicit backpressure. Removing a listener before delivery
+/// cancels its queued callbacks. Listeners must not start navigation from the
+/// callback or asynchronous work spawned there; Runtime rejects both as
+/// reentrant.
 typedef CCNavigationLifecycleListener =
     void Function(CCNavigationLifecycleEvent event);

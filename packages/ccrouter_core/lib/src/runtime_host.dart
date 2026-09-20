@@ -292,6 +292,22 @@ final class CCRouterRuntime {
   final Set<CCNavigationBackendDiagnosticListener> _backendNavigationListeners =
       {};
 
+  /// FIFO batches waiting for isolated observer delivery.
+  final Queue<_QueuedNavigationObservation> _navigationObservationQueue =
+      Queue();
+
+  /// Event-loop task currently scheduled to drain observer batches.
+  Timer? _navigationObservationTimer;
+
+  /// Whether a queue drain is already active on this Runtime.
+  bool _drainingNavigationObservations = false;
+
+  /// Whether event producers may enqueue new observer batches.
+  bool _acceptingNavigationObservations = true;
+
+  /// Whether the current drain cycle already recorded an overflow diagnostic.
+  bool _navigationObservationOverflowRecorded = false;
+
   /// Removes the Runtime subscription from the adapter backend event source.
   void Function()? _backendNavigationRemover;
 
@@ -333,6 +349,14 @@ final class CCRouterRuntime {
 
   /// Memoized shutdown operation that makes disposal idempotent.
   Future<void>? _disposeFuture;
+
+  /// Maximum queued observation batches before overflow policy is applied.
+  ///
+  /// A small diagnostic history setting must not make ordinary multi-phase
+  /// navigation synchronously invoke observers, so the queue keeps a minimum
+  /// operational capacity independent from retained history.
+  int get _navigationObservationCapacity =>
+      max(64, navigationDiagnosticCapacity);
 
   /// Whether this Runtime currently accepts framework operations.
   bool get isInitialized => _initialized;
@@ -982,6 +1006,7 @@ final class CCRouterRuntime {
       _restorationOpportunityRemover = null;
       _navigationAdapter?.dispose();
     } finally {
+      _disposeNavigationObservations();
       await _sessionScope?.close();
       await appScope.close();
       _navigationAdapter = null;

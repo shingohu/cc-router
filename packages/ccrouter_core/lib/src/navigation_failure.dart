@@ -11,8 +11,9 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
 
   /// Subscribes to sanitized failure decisions.
   ///
-  /// The returned callback removes the listener. Listener failures are
-  /// isolated and never alter the selected recovery or original error.
+  /// Terminal events are delivered by the bounded FIFO observer queue. The
+  /// returned callback removes the listener and cancels its queued deliveries.
+  /// Listener failures never alter the selected recovery or original error.
   void Function() addNavigationFailureListener(
     CCNavigationFailureListener listener,
   ) {
@@ -270,12 +271,13 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
       }
       _navigationFailures.add(event);
     }
-    for (final listener in _navigationFailureListeners.toList()) {
-      _notifyNavigationObserver(
-        () => listener(event),
-        failureLabel: 'Navigation failure listener',
-      );
-    }
+    _enqueueNavigationObserverBatch(
+      _navigationFailureListeners,
+      (listener) => listener(event),
+      isActive: _navigationFailureListeners.contains,
+      failureLabel: 'Navigation failure listener',
+      critical: true,
+    );
   }
 
   /// Retains a bounded sanitized framework callback failure.

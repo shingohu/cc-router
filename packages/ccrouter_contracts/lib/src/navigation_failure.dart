@@ -201,7 +201,9 @@ final class CCNavigationFailureEvent {
 
 /// Receives sanitized navigation failure decisions.
 ///
-/// Listeners must remain observational and must not start navigation. Use the
-/// Failure Policy decision itself when the Host needs a redirect or fallback.
+/// Runtime delivers this terminal observation in FIFO order on a later
+/// event-loop turn and preserves it during queue pressure. Listeners must
+/// remain observational and must not start navigation. Use the Failure Policy
+/// decision itself when the Host needs a redirect or fallback.
 typedef CCNavigationFailureListener =
     void Function(CCNavigationFailureEvent event);
