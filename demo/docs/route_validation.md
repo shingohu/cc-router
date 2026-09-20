@@ -6,8 +6,8 @@
 - 平台：macOS 真实 Flutter 应用
 - Backend：`CCGoRouterBackend.managed`，`go_router 17.5.0`
 - SDK：FVM `ohos/oh-3.41.9-release`（Flutter 3.41.10 OHOS / Dart 3.11.5）
-- 组件：3
-- 生成路由：28
+- 组件：4
+- 生成路由：30
 
 Demo 的交互实现位于 `modules/navigation_lab`，宿主只负责初始化 CCRouter、
 安装生成组件清单并挂载 GoRouter Backend。
@@ -19,6 +19,7 @@ Demo 的交互实现位于 `modules/navigation_lab`，宿主只负责初始化 C
 | Typed Push / result | Detail Page | 通过 |
 | Path alias / custom scheme / full URL | Detail Page 多 Pattern | 通过 |
 | External Deep Link ingress | UI 模拟 + macOS `ccrouter://` Scheme | 通过，保留 external origin 与 source |
+| Standard HTTPS Web Link | Host allowlist mapper -> public Web route | 通过，保留 external origin，拒绝非 allowlist URL |
 | Path / Query 参数注入 | `int` 和 `List<String>` | 通过 |
 | Replace | 同 routeId 更换 Level 参数 | 通过，旧 State 和 Route Scope 销毁 |
 | Pop / maybePop | Detail、Stack、PopGuard | 通过 |
@@ -29,6 +30,7 @@ Demo 的交互实现位于 `modules/navigation_lab`，宿主只负责初始化 C
 | StatefulShellRoute | Home / Activity / Profile | 通过，分支历史与 Widget State 保持 |
 | Initial Deep Link into Shell | `/workspace/home/73` | 通过，直接进入 Home Outlet 的详情页 |
 | Typed Extra | `DemoExtraPayload` | 通过，仅进程内传递，不进入 URL 或诊断 |
+| Shared WebView | public Query Codec + private Extra | 通过，私密 URL/Header 不进入 normalized URI |
 | Multi Host | Primary / Secondary 双 Router | 通过，Host 路由状态相互隔离 |
 | Multi Outlet | Shell + 三个 Stateful Branch Outlet | 通过，每个 Outlet 独立 Key 与 Observer |
 | Global / Route Interceptor | Proceed / Cancel | 通过 |
@@ -64,6 +66,8 @@ Demo 的交互实现位于 `modules/navigation_lab`，宿主只负责初始化 C
 2. Predictive Back 不适用于 macOS 实测，已由 bridge 单测覆盖；最终仍需 Android 设备回归手势进度与取消。
 3. Demo 已覆盖单 View 内的双 Host、Shell 和多 Outlet，但不等同于 macOS/iPadOS 原生多 Window 或多 Flutter Engine。原生 Window/Display 创建、销毁、恢复和 Host 迁移仍需平台接入后验证。
 4. 完整 Route Restoration 按设计暂缓；当前只保留 restoration opportunity 诊断，不宣称可恢复业务栈。
+5. 标准 HTTPS Universal Link 的系统唤醒依赖应用 entitlement、Associated Domains 与服务端 AASA；Demo 只实测 Host mapper 和 WebView，不能用不受控制的公共域名伪造系统关联。
+6. 私密 Web 示例的自定义 Header 只用于初始请求；生产认证仍需设计 Cookie/会话桥接、登出清理和多账号隔离，不能假设 Header 自动跨重定向持续注入。
 
 ## 官方 GoRouter 示例对照
 

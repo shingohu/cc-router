@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:app_links/app_links.dart';
 import 'package:ccrouter/ccrouter.dart';
 import 'package:demo_navigation_lab/demo_navigation_lab.dart';
+import 'package:demo_web_contracts/demo_web_contracts.dart';
 import 'package:flutter/widgets.dart';
 
 final class DemoPlatformDeepLinkBridge extends StatefulWidget {
@@ -59,14 +60,18 @@ final class _DemoPlatformDeepLinkBridgeState
 
   void _dispatch(Uri uri) {
     _dispatchQueue = _dispatchQueue.then((_) async {
+      final mappedWebUri = demoMapExternalWebUri(uri);
+      final ingressUri = mappedWebUri ?? uri;
       demoNavigationLabStore.record(
         'Platform Deep Link received · scheme=${uri.scheme} · '
         'host=${uri.host.isEmpty ? '-' : uri.host}',
       );
       try {
         await CCDeepLinkIngress.fromPlatform(
-          uri,
-          source: const CCNavigationSource.deepLink('platform.app_link'),
+          ingressUri,
+          source: CCNavigationSource.deepLink(
+            mappedWebUri == null ? 'platform.app_link' : 'platform.web_link',
+          ),
         );
         demoNavigationLabStore.record('Platform Deep Link dispatch complete');
       } on Object catch (error) {

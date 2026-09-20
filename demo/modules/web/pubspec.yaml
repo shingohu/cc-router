@@ -1,0 +1,15 @@
+name: demo_web
+description: Shared WebView component implementing the demo Web contracts.
+version: 0.1.0
+publish_to: none
+resolution: workspace
+environment:
+  sdk: ^3.11.5
+dependencies:
+  ccrouter: ^0.1.0
+  demo_web_contracts: ^0.1.0
+  flutter:
+    sdk: flutter
+  webview_flutter: ^4.14.1
+dev_dependencies:
+  ccrouter_generator: ^0.1.0

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:ccrouter/ccrouter.dart';
 import 'package:demo_order_contracts/demo_order_contracts.dart';
+import 'package:demo_web_contracts/demo_web_contracts.dart';
 import 'package:flutter/material.dart';
 
 import 'detail_page.dart';
@@ -380,9 +381,7 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
             'ccrouter://lab/detail/46?title=Simulated%20External%20Deep%20Link'
             '&tags=external&tags=platform',
           ),
-          source: const CCNavigationSource.deepLink(
-            'demo.simulated_external',
-          ),
+          source: const CCNavigationSource.deepLink('demo.simulated_external'),
         ),
       ),
     ),
@@ -398,6 +397,25 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
           ),
         ),
       ),
+    ),
+    _ActionTile(
+      icon: Icons.travel_explore,
+      title: '模拟外部 HTTPS Web Link',
+      subtitle: 'Host allowlist mapper 将标准网页 URL 转成公开 Web 路由。',
+      onTap: () {
+        final mapped = demoMapExternalWebUri(
+          Uri.parse(
+            'https://docs.flutter.dev/ui/navigation?source=ccrouter-demo',
+          ),
+        );
+        return _run(
+          'External HTTPS Web Link',
+          () => CCDeepLinkIngress.fromPlatform(
+            mapped!,
+            source: const CCNavigationSource.deepLink('platform.web_link'),
+          ),
+        );
+      },
     ),
     _ActionTile(
       icon: Icons.view_stream_outlined,
@@ -436,6 +454,39 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
           demoExtraIntent(
             const DemoExtraPayload(owner: 'navigation_lab', revision: 3),
           ),
+        ),
+      ),
+    ),
+    _ActionTile(
+      icon: Icons.public,
+      title: '打开公开 Web 容器',
+      subtitle: 'Allowlist HTTPS URL 通过 Query Codec 序列化，可用于 Deep Link。',
+      onTap: () => _run(
+        'Public Web',
+        () => CCRouter.navigator.push<void>(
+          DemoPublicWebRoute.intent(
+            target: DemoPublicWebTarget(
+              Uri.parse('https://docs.flutter.dev/ui/navigation'),
+            ),
+          ),
+          source: const CCNavigationSource.feature('navigation.public_web'),
+        ),
+      ),
+    ),
+    _ActionTile(
+      icon: Icons.lock_outline,
+      title: '打开私密 Web 容器',
+      subtitle: 'URL、Header 和 JavaScript policy 通过 Extra 传递，不写入路由 URI。',
+      onTap: () => _run(
+        'Private Web',
+        () => CCRouter.navigator.push<void>(
+          DemoPrivateWebRoute.intent(
+            request: DemoPrivateWebRequest(
+              uri: Uri.parse('https://example.com/private'),
+              headers: const {'X-Demo-Session': 'runtime-only'},
+            ),
+          ),
+          source: const CCNavigationSource.feature('navigation.private_web'),
         ),
       ),
     ),

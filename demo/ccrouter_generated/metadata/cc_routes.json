@@ -5,7 +5,8 @@
       "id": "demo_navigation_lab_component",
       "version": "0.1.0",
       "dependencies": [
-        "demo_order_component"
+        "demo_order_component",
+        "demo_web_component"
       ],
       "optionalDependencies": []
     },
@@ -21,6 +22,12 @@
       "dependencies": [
         "demo_order_component"
       ],
+      "optionalDependencies": []
+    },
+    {
+      "id": "demo_web_component",
+      "version": "0.1.0",
+      "dependencies": [],
       "optionalDependencies": []
     }
   ],
@@ -1747,6 +1754,153 @@
         "destination": {
           "descriptor": "ccrouterDescribeOrderDetailPageRoute",
           "builder": "ccrouterBuildOrderDetailPageRoute"
+        }
+      }
+    },
+    {
+      "id": "demo_web.private",
+      "componentId": "demo_web_component",
+      "componentVersion": "0.1.0",
+      "exposure": "external",
+      "deepLink": "disabled",
+      "description": "Loads a sensitive process-local request without URI serialization.",
+      "interceptorIds": [],
+      "popGuardIds": [],
+      "declaration": {
+        "package": "demo_web_contracts",
+        "library": "lib/src/web_route_contracts.dart",
+        "kind": "contract"
+      },
+      "navigationSources": [
+        "typedIntent",
+        "internalUri"
+      ],
+      "restoration": {
+        "status": "unsupported"
+      },
+      "placement": {
+        "hostId": "default",
+        "parentRouteId": null,
+        "shellId": null,
+        "navigatorOutlet": "root"
+      },
+      "presentation": {
+        "type": "page",
+        "routeType": "platformDefault",
+        "transition": "platformDefault",
+        "opaque": true,
+        "fullscreenDialog": false
+      },
+      "contracts": {
+        "route": "DemoPrivateWebRoute",
+        "arguments": "DemoPrivateWebRouteArguments",
+        "package": "demo_web_contracts",
+        "library": "lib/src/ccrouter_generated/web_route_contracts.route.contract.g.dart"
+      },
+      "patterns": [
+        {
+          "type": "CCPathPattern",
+          "value": "/web/private",
+          "primary": true,
+          "constraints": {}
+        }
+      ],
+      "parameters": [
+        {
+          "name": "request",
+          "wireName": "request",
+          "source": "extra",
+          "type": "DemoPrivateWebRequest",
+          "required": true,
+          "default": null,
+          "description": "URL, headers, and JavaScript policy retained outside the route URI."
+        }
+      ],
+      "resultType": "void",
+      "implementation": {
+        "routeId": "demo_web.private",
+        "componentId": "demo_web_component",
+        "package": "demo_web",
+        "source": "lib/src/web_pages.dart",
+        "registration": "ccrouterRegisterDemoPrivateWebPageRoute",
+        "destination": {
+          "descriptor": "ccrouterDescribeDemoPrivateWebPageRoute",
+          "builder": "ccrouterBuildDemoPrivateWebPageRoute"
+        }
+      }
+    },
+    {
+      "id": "demo_web.public",
+      "componentId": "demo_web_component",
+      "componentVersion": "0.1.0",
+      "exposure": "external",
+      "deepLink": "enabled",
+      "description": "Loads one allowlisted public HTTPS URL in the shared Web container.",
+      "interceptorIds": [],
+      "popGuardIds": [],
+      "declaration": {
+        "package": "demo_web_contracts",
+        "library": "lib/src/web_route_contracts.dart",
+        "kind": "contract"
+      },
+      "navigationSources": [
+        "typedIntent",
+        "internalUri",
+        "externalDeepLink"
+      ],
+      "restoration": {
+        "status": "unsupported"
+      },
+      "placement": {
+        "hostId": "default",
+        "parentRouteId": null,
+        "shellId": null,
+        "navigatorOutlet": "root"
+      },
+      "presentation": {
+        "type": "page",
+        "routeType": "platformDefault",
+        "transition": "platformDefault",
+        "opaque": true,
+        "fullscreenDialog": false
+      },
+      "contracts": {
+        "route": "DemoPublicWebRoute",
+        "arguments": "DemoPublicWebRouteArguments",
+        "package": "demo_web_contracts",
+        "library": "lib/src/ccrouter_generated/web_route_contracts.route.contract.g.dart"
+      },
+      "patterns": [
+        {
+          "type": "CCPathPattern",
+          "value": "/web",
+          "primary": true,
+          "constraints": {}
+        }
+      ],
+      "parameters": [
+        {
+          "name": "target",
+          "wireName": "url",
+          "source": "query",
+          "type": "DemoPublicWebTarget",
+          "cardinality": "repeated",
+          "codec": "DemoPublicWebTargetCodec",
+          "required": true,
+          "default": null,
+          "description": "Public URL safe to serialize into navigation state."
+        }
+      ],
+      "resultType": "void",
+      "implementation": {
+        "routeId": "demo_web.public",
+        "componentId": "demo_web_component",
+        "package": "demo_web",
+        "source": "lib/src/web_pages.dart",
+        "registration": "ccrouterRegisterDemoPublicWebPageRoute",
+        "destination": {
+          "descriptor": "ccrouterDescribeDemoPublicWebPageRoute",
+          "builder": "ccrouterBuildDemoPublicWebPageRoute"
         }
       }
     }

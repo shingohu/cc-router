@@ -19,3 +19,5 @@ workspace:
   - demo/modules/order_contracts
   - demo/modules/payment
   - demo/modules/navigation_lab
+  - demo/modules/web_contracts
+  - demo/modules/web

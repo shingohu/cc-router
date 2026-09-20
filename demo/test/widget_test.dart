@@ -4,6 +4,7 @@ import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter_demo/ccrouter_generated/ccrouter_host.routes.g.dart';
 import 'package:ccrouter_demo/main.dart';
 import 'package:demo_navigation_lab/demo_navigation_lab.dart';
+import 'package:demo_web_contracts/demo_web_contracts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -37,7 +38,7 @@ void main() {
 
     expect(find.text('CCRouter Lab'), findsOneWidget);
     expect(find.text('运行总览'), findsOneWidget);
-    expect(find.text('3'), findsWidgets);
+    expect(find.text('4'), findsWidgets);
 
     await tester.tap(find.text('导航'));
     await tester.pumpAndSettle();
@@ -166,6 +167,132 @@ void main() {
     );
 
     await _unmountDemo(tester);
+  });
+
+  testWidgets('public Web route serializes a validated URL', (tester) async {
+    await _pumpDemo(tester);
+    await tester.tap(find.text('导航'));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.text('打开公开 Web 容器'),
+      500,
+      scrollable: find.byType(Scrollable).last,
+    );
+    await tester.tap(find.text('打开公开 Web 容器'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('公开 Web 页面'), findsOneWidget);
+    expect(find.text('docs.flutter.dev'), findsWidgets);
+    expect(find.text('WebView 平台未加载，但路由参数已验证'), findsOneWidget);
+    expect(CCRouter.activeRouteEntries.last.routeId, DemoPublicWebRoute.id);
+    expect(
+      CCRouter.activeRouteEntries.last.normalizedUri.queryParameters['url'],
+      'https://docs.flutter.dev/ui/navigation',
+    );
+    await tester.tap(find.byTooltip('返回'));
+    await tester.pumpAndSettle();
+    expect(find.text('CCRouter Lab'), findsOneWidget);
+    expect(
+      CCRouter.activeRouteEntries.any(
+        (entry) => entry.routeId == DemoPublicWebRoute.id,
+      ),
+      isFalse,
+    );
+
+    await _unmountDemo(tester);
+  });
+
+  testWidgets('private Web route keeps URL and headers out of its URI', (
+    tester,
+  ) async {
+    await _pumpDemo(tester);
+    await tester.tap(find.text('导航'));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.text('打开私密 Web 容器'),
+      500,
+      scrollable: find.byType(Scrollable).last,
+    );
+    await tester.tap(find.text('打开私密 Web 容器'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('私密 Web 页面'), findsOneWidget);
+    expect(find.text('Header names: X-Demo-Session'), findsOneWidget);
+    expect(find.textContaining('runtime-only'), findsNothing);
+    expect(CCRouter.activeRouteEntries.last.routeId, DemoPrivateWebRoute.id);
+    expect(
+      CCRouter.activeRouteEntries.last.normalizedUri.toString(),
+      '/web/private',
+    );
+    expect(
+      CCRouter.activeRouteEntries.last.normalizedUri.toString(),
+      isNot(contains('runtime-only')),
+    );
+
+    await _unmountDemo(tester);
+  });
+
+  testWidgets('allowlisted HTTPS platform link opens the public Web route', (
+    tester,
+  ) async {
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    tester.view.physicalSize = const Size(1280, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      CCRouterDemoApp(
+        platformLinkStream: Stream<Uri>.value(
+          Uri.parse('https://docs.flutter.dev/ui/navigation?source=ccrouter'),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(CCRouter.activeRouteEntries.last.routeId, DemoPublicWebRoute.id);
+    expect(
+      CCRouter.activeRouteEntries.last.origin,
+      CCNavigationOrigin.externalPlatform,
+    );
+    expect(
+      demoNavigationLabStore.events.any(
+        (event) => event.contains('source=platform.web_link'),
+      ),
+      isTrue,
+    );
+    expect(CCRouter.navigator.canPop(), isFalse);
+    expect(find.byTooltip('返回'), findsNothing);
+
+    await _unmountDemo(tester);
+  });
+
+  test('public Web mapper rejects unsafe and unowned URLs', () {
+    expect(
+      demoMapExternalWebUri(Uri.parse('https://docs.flutter.dev/ui')),
+      isNotNull,
+    );
+    expect(
+      demoMapExternalWebUri(Uri.parse('http://docs.flutter.dev/ui')),
+      isNull,
+    );
+    expect(
+      demoMapExternalWebUri(Uri.parse('https://attacker.example/ui')),
+      isNull,
+    );
+    expect(
+      demoMapExternalWebUri(
+        Uri.parse('https://user:secret@docs.flutter.dev/ui'),
+      ),
+      isNull,
+    );
+    expect(
+      demoMapExternalWebUri(Uri.parse('https://docs.flutter.dev:8443/ui')),
+      isNull,
+    );
+    expect(
+      () => DemoPublicWebTarget(Uri.parse('javascript:alert(1)')),
+      throwsArgumentError,
+    );
   });
 
   testWidgets('runs interceptor cancel, redirect and deferred resume', (
@@ -412,7 +539,11 @@ void main() {
     await _pumpDemo(tester);
     await tester.tap(find.text('导航'));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('打开 Typed Extra'));
+    await tester.scrollUntilVisible(
+      find.text('打开 Typed Extra'),
+      500,
+      scrollable: find.byType(Scrollable).last,
+    );
     await tester.tap(find.text('打开 Typed Extra'));
     await tester.pumpAndSettle();
 

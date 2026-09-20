@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 2,
+  "package": "demo_web",
+  "source": "lib/src/demo_web_component_registrar.dart",
+  "componentDeclarations": [
+    "demo_web_component"
+  ],
+  "componentManifests": {
+    "demo_web_component": "demoWebComponentManifest"
+  },
+  "components": [
+    {
+      "id": "demo_web_component",
+      "version": "0.1.0",
+      "dependencies": [],
+      "optionalDependencies": []
+    }
+  ],
+  "routes": [],
+  "routeImplementations": []
+}

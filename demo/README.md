@@ -28,6 +28,11 @@ typed Extra。完整的 macOS 验证矩阵、已修复问题和 Adapter 限制�
 [路由验证记录](docs/route_validation.md)，与 Flutter 官方 GoRouter 示例的差异见
 [GoRouter 示例覆盖对照](docs/go_router_example_coverage.md)。
 
+`modules/web_contracts` 和 `modules/web` 展示共享 WebView 容器：公开 allowlist URL 使用
+Query Codec，认证 URL 与 Header 使用进程内 Extra；标准 HTTPS 外部链接由 Host mapper
+转换后进入 CCRouter。契约、安全边界和手动验证见
+[共享 WebView 容器路由](docs/web_container_routing.md)。
+
 macOS 外部 URL Scheme、冷启动和运行中唤醒的手动验证步骤见
 [外部 Deep Link 验证](docs/external_deep_link.md)。
 
@@ -59,7 +64,8 @@ devecocli build
 ## 组件模块与生成
 
 新增组件统一放到 `modules/`，作为独立 Flutter 库包；平台目录由 demo 宿主持有。
-当前 `modules/order_contracts` 是不依赖 Flutter 的 Contract-first Package；
+当前 `modules/order_contracts` 和 `modules/web_contracts` 是不依赖 Flutter 的
+Contract-first Package；
 `modules/order` 只提供订单页面实现，`modules/payment` 只依赖订单契约而不依赖订单页面。
 订单组件身份与 Registrar 分别通过 owner contract 和
 `lib/src/demo_order_component_registrar.dart` 管理。

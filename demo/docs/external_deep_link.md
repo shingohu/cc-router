@@ -78,3 +78,5 @@ https://ccrouter.example/lab/detail/:id
 
 自定义 Scheme 可直接通过上述 macOS 命令验证。HTTPS Universal Link 还需要域名上的
 Associated Domains 文件和 macOS entitlement，本 Demo 目前没有伪造这部分生产配置。
+允许的标准 HTTPS 网页地址如何映射到共享 WebView，以及为何不能使用 catch-all 路由，见
+[共享 WebView 容器路由](web_container_routing.md)。

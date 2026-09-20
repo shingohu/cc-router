@@ -17,7 +17,7 @@ const demoNavigationLabComponentManifest = CCComponentManifest.fromDescriptor(
   descriptor: CCComponentDescriptor(
     id: "demo_navigation_lab_component",
     version: "0.1.0",
-    dependencies: const ["demo_order_component"],
+    dependencies: const ["demo_order_component", "demo_web_component"],
     optionalDependencies: const [],
   ),
   registrar: _DemoNavigationLabComponentRegistrar(),
