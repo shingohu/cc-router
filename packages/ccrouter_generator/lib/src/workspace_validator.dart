@@ -47,7 +47,7 @@ abstract final class CCRouteWorkspaceValidator {
     final routes = <String, Map<String, Object?>>{};
     final routeImplementations = <String, Map<String, Object?>>{};
     for (final document in documents) {
-      if (document['schemaVersion'] != 2) {
+      if (document['schemaVersion'] != 2 && document['schemaVersion'] != 3) {
         errors.add(
           'Unsupported metadata schema in ${document['source'] ?? 'unknown source'}.',
         );

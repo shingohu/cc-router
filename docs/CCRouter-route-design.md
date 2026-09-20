@@ -15,8 +15,9 @@ Proposal 或“暂缓”的 API 名称应与当前仓库保持一致；实施完
 注解生成器已实现页面注解、单库校验、类型安全 Arguments/Intent、标量 Path、标量及
 repeated Query、显式 Query Codec、类型安全 Extra 校验、Definition、注册入口和中立页面工厂。使用 `part` 生成
 `.route.g.dart`，页面契约固定为 library-private；Contract-first 公开契约需显式导出。
-生成器同时输出组件级和路由级 JSON/Markdown，并由 workspace 工具聚合检查组件与 Route ID、
-路由所有者、契约 exposure 和实现 Package，输出应用级路由目录。当前仍不生成
+生成器同时输出组件级和路由级 JSON/Markdown，并按 Host 的已解析运行时 Package 依赖闭包
+聚合检查组件与 Route ID、路由所有者、契约 exposure 和实现 Package，输出发布级 Package
+Index、分层 Host Bundle 与应用级路由目录。当前仍不生成
 GoRoute。独立纯契约文件的拆分方案见[契约文件设计](CCRouter-route-contract-design.md)，
 实现范围与命令见
 [生成器说明](../packages/ccrouter_generator/README.md)。
@@ -100,7 +101,8 @@ CCNavigationAdapter
 - 不使用 `dart:mirrors` 或运行时反射。
 - 参数类型、默认值、可空性和 import 由 Analyzer 解析。
 - 生成使用标准 Dart Builder / `build_runner`，支持增量构建。
-- 本地构建与 CI 使用同一套分析语义，不提供正确性不同的 fast/full 模式。
+- 本地构建与 CI 使用同一套分析语义；默认内容寻址缓存与 `--no-cache` 全量参考路径必须输出
+  逐字节一致结果，缓存损坏或依赖身份变化时自动回退全量解析。
 
 ---
 
@@ -1426,7 +1428,7 @@ CCNavigationAspect(
 
 ## 16. 路由文档生成
 
-生成器按应用输出两种格式，默认放在应用的 `ccrouter_generated/metadata/` 目录：
+生成器按应用输出两种格式，默认直接放在应用的 `ccrouter_generated/` 目录：
 
 ```text
 cc_routes.json
@@ -1435,17 +1437,23 @@ cc_routes.md
 
 `cc_routes.json` 用于 CI、跨端工具和文档平台；描述信息作为结构化字段保存，不使用 JSON 注释。`cc_routes.md` 用于开发者阅读。
 
-当前元数据使用 schema v2：移除手写 `visibility/visibleTo`，改为记录由契约形态自动
-推导的 `exposure`。聚合器拒绝旧 schema，要求重新运行标准生成流程，避免新旧语义混用。
+当前 Builder 元数据使用 schema v3：除由契约形态自动推导的 `exposure` 外，还记录
+可移植的源码声明位置。聚合器兼容 schema v2 的文件级定位，并拒绝其它未知 schema。
 
 Workspace 聚合器同时校验完整组件依赖图。required dependency 缺失、自依赖以及由
 required/optional dependency 共同形成的环都会让生成失败；不存在的 optional dependency
 不会阻断构建，存在时则参与环检测和顺序计算。`cc_routes.json` 中的组件按与 Runtime 装配一致的
 确定性拓扑顺序输出：依赖先于消费者，组件 ID 和依赖 ID 作为稳定排序依据。
 
-应用聚合元数据与组件级元数据统一位于项目根的 `ccrouter_generated/metadata/`；参与
+应用聚合元数据与组件级元数据统一位于项目根的 `ccrouter_generated/`；参与
 编译的 Dart 生成代码仍写入包内的 `lib/src/ccrouter_generated/`。生成文档不进入
 手写 `docs/`，避免机器产物与架构设计文档混合。
+
+标准入口是单一 `ccrouter generate` 编排命令：它复用 build_runner 生成 Package 内产物，
+随后完成 Workspace 校验、组件索引、Host Catalog 和文档聚合，不实现第二套 Builder 语义。
+`generate --check` 仅快照 CCRouter 管理的输出，发现陈旧产物时恢复原现场并返回非零；该门禁
+不依赖 Git 工作区状态。普通生成会删除带框架生成标记但已失去组件所有者的孤立聚合索引，
+不会删除手写文件或其它工具的输出。
 
 每条路由包含：
 
@@ -1745,6 +1753,8 @@ Host/Outlet 分区的确定性 fallback，不跨 sibling Outlet。Pop 目标从�
 - 路由名称改为稳定 Route ID、主 Pattern 和别名的分离模型。
 - 页面生命周期改为 Adapter 上报的 RouteEntry 生命周期。
 - 多导航后端改为消费同一份中立 Definition，而不是切换生成模板。
+- 统一生成 CLI 负责 Package 精确发现、增量生成、聚合和只读校验；缓存与无缓存路径必须
+  生成逐字节一致的结果。
 
 TheRouter 的完整 URL、自定义 Scheme、多 Path 和正则能力用于校准 CCRouter 的能力范围，但不照搬其不透明字符串键与正则启发式检测。CCRouter 使用显式 Pattern 类型、结构化 URI 比较和完整正则匹配，使地址生成、参数注入、冲突诊断和跨端文档都能共享同一语义。
 - 多 Package 扫描改为组件 Registrar 和应用聚合校验。
@@ -1755,5 +1765,22 @@ TheRouter 的完整 URL、自定义 Scheme、多 Path 和正则能力用于校�
 - `codes`、`exts`、原始 import 字符串和任意代码注入。
 - 全局可变参数转换器、全局 Navigator 或生命周期单例。
 - 页面必须继承特定 State 或混入 Widget 生命周期类型。
-- 自定义 CLI 作为主要生成入口，以及正确性不同的 fast/full 模式。
 - 通过 Path 前缀猜测 Shell 结构。
+
+## 24. Capability Source Catalog
+
+组件化后 Route 的声明、契约和页面实现可能分布在不同 Package。统一生成命令因此维护一份
+版本化 Capability Source Catalog，并生成便于浏览的 `ccrouter_generated/cc_sources.md`：
+
+- 组件 Package 只展示本 Package 贡献的能力；Host 展示运行时依赖闭包的合并视图。
+- Source Reference 使用 Package URI 与 1-based line/column，不记录本机绝对路径。
+- Contract-first Route 同时关联契约声明和页面实现；普通 `@CCRoute` 的声明与实现指向同一
+  页面源码。
+- Package Index 是机器事实来源，Markdown、后续 `ccrouter find` 和 DevTools 视图均由其
+  派生，不能各自维护扫描规则。
+- 当前只发布 Route 记录。Service、Command、Action、Event 需要等静态生成链路存在后再接入，
+  不从手写 Registrar 启发式推断，避免目录看似完整但实际错误。
+
+未来 DevTools 将静态 Catalog 与 Runtime 的 Host、RouteEntry、Trace 和诊断快照按稳定 ID、
+Package 版本及内容指纹关联。静态目录回答“代码和契约在哪里”，Runtime 快照回答“当前发生了
+什么”；本阶段不引入 VM Service Extension 或 Inspector 依赖。

@@ -114,7 +114,7 @@ final class Probe {
               await reader.readAsString(
                 AssetId(
                   'ccrouter_test',
-                  'ccrouter_generated/metadata/src/orders/probe.route.json',
+                  'ccrouter_generated/src/orders/probe.route.json',
                 ),
               ),
             )
@@ -129,11 +129,17 @@ final class Probe {
     expect(route['description'], 'Probe details.');
     expect(route['interceptorIds'], ['probe.auth']);
     expect(route['popGuardIds'], ['probe.dirty']);
-    expect(route['declaration'], {
-      'package': 'ccrouter_test',
-      'library': 'lib/src/orders/probe.dart',
-      'kind': 'page',
-    });
+    final declaration = route['declaration'] as Map;
+    expect(declaration['package'], 'ccrouter_test');
+    expect(declaration['library'], 'lib/src/orders/probe.dart');
+    expect(declaration['kind'], 'page');
+    expect(declaration['symbol'], 'Probe');
+    expect(
+      declaration['packageUri'],
+      'package:ccrouter_test/src/orders/probe.dart',
+    );
+    expect(declaration['line'], isA<int>());
+    expect(declaration['column'], isA<int>());
     expect(route['navigationSources'], [
       'typedIntent',
       'internalUri',
@@ -164,6 +170,12 @@ final class Probe {
       'descriptor': 'ccrouterDescribeProbeRoute',
       'builder': 'ccrouterBuildProbeRoute',
     });
+    expect((route['generatedArtifacts'] as List).single, {
+      'role': 'routePart',
+      'symbol': '_ProbeRoute',
+      'packageUri':
+          'package:ccrouter_test/src/ccrouter_generated/orders/probe.route.g.dart',
+    });
     expect(((route['patterns'] as List).single as Map)['constraints'], {
       'id': r'\d+',
     });
@@ -173,10 +185,7 @@ final class Probe {
       'Documented identity.',
     );
     final markdown = await reader.readAsString(
-      AssetId(
-        'ccrouter_test',
-        'ccrouter_generated/metadata/src/orders/probe.route.md',
-      ),
+      AssetId('ccrouter_test', 'ccrouter_generated/src/orders/probe.route.md'),
     );
     expect(markdown, contains('`probe.detail`'));
     expect(markdown, contains('Documented identity.'));
@@ -208,7 +217,7 @@ final class DialogProbe { const DialogProbe(); }
               await reader.readAsString(
                 AssetId(
                   'ccrouter_test',
-                  'ccrouter_generated/metadata/src/modal_probe.route.json',
+                  'ccrouter_generated/src/modal_probe.route.json',
                 ),
               ),
             )
@@ -254,7 +263,7 @@ abstract class ProbeRouteContract { const ProbeRouteContract(); }
               await reader.readAsString(
                 AssetId(
                   'ccrouter_test',
-                  'ccrouter_generated/metadata/src/orders/probe_contract.route.json',
+                  'ccrouter_generated/src/orders/probe_contract.route.json',
                 ),
               ),
             )
@@ -267,6 +276,13 @@ abstract class ProbeRouteContract { const ProbeRouteContract(); }
       'package': 'ccrouter_test',
       'library':
           'lib/src/ccrouter_generated/orders/probe_contract.route.contract.g.dart',
+    });
+    expect((route['declaration'] as Map)['symbol'], 'ProbeRouteContract');
+    expect((route['generatedArtifacts'] as List).single, {
+      'role': 'routeContract',
+      'symbol': 'ProbeRoute',
+      'packageUri':
+          'package:ccrouter_test/src/ccrouter_generated/orders/probe_contract.route.contract.g.dart',
     });
   });
 
@@ -306,7 +322,7 @@ final class ProbePage {
                 await reader.readAsString(
                   AssetId(
                     'ccrouter_test',
-                    'ccrouter_generated/metadata/src/probe_page.route.json',
+                    'ccrouter_generated/src/probe_page.route.json',
                   ),
                 ),
               )
@@ -319,11 +335,21 @@ final class ProbePage {
       expect(implementation['package'], 'ccrouter_test');
       expect(implementation['source'], 'lib/src/probe_page.dart');
       expect(implementation['registration'], 'ccrouterRegisterProbePageRoute');
+      expect(
+        (implementation['contract'] as Map)['symbol'],
+        'ProbeDetailRouteContract',
+      );
+      expect(
+        (implementation['contract'] as Map)['packageUri'],
+        'package:ccrouter_test/probe_route_contract.dart',
+      );
+      expect((implementation['implementation'] as Map)['symbol'], 'ProbePage');
+      expect(
+        (implementation['implementation'] as Map)['packageUri'],
+        'package:ccrouter_test/src/probe_page.dart',
+      );
       final markdown = await reader.readAsString(
-        AssetId(
-          'ccrouter_test',
-          'ccrouter_generated/metadata/src/probe_page.route.md',
-        ),
+        AssetId('ccrouter_test', 'ccrouter_generated/src/probe_page.route.md'),
       );
       expect(markdown, contains('Route Implementations'));
       expect(markdown, contains('ccrouter_test:lib/src/probe_page.dart'));
@@ -362,7 +388,7 @@ final class ProbeRegistrar implements CCComponentRegistrar {
               await reader.readAsString(
                 AssetId(
                   'ccrouter_test',
-                  'ccrouter_generated/metadata/src/orders/probe_component.component.json',
+                  'ccrouter_generated/src/orders/probe_component.component.json',
                 ),
               ),
             )
@@ -379,7 +405,7 @@ final class ProbeRegistrar implements CCComponentRegistrar {
     final markdown = await reader.readAsString(
       AssetId(
         'ccrouter_test',
-        'ccrouter_generated/metadata/src/orders/probe_component.component.md',
+        'ccrouter_generated/src/orders/probe_component.component.md',
       ),
     );
     expect(markdown, contains('# CCRouter Components'));
@@ -840,7 +866,7 @@ final class Probe {
               await reader.readAsString(
                 AssetId(
                   'ccrouter_test',
-                  'ccrouter_generated/metadata/src/query_probe.route.json',
+                  'ccrouter_generated/src/query_probe.route.json',
                 ),
               ),
             )
@@ -852,10 +878,7 @@ final class Probe {
     expect(parameters[1]['cardinality'], 'repeated');
     expect(parameters[1]['codec'], 'ProbeFilterCodec');
     final markdown = await reader.readAsString(
-      AssetId(
-        'ccrouter_test',
-        'ccrouter_generated/metadata/src/query_probe.route.md',
-      ),
+      AssetId('ccrouter_test', 'ccrouter_generated/src/query_probe.route.md'),
     );
     expect(markdown, contains('Cardinality'));
     expect(markdown, contains('ProbeFilterCodec'));

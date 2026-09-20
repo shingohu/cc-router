@@ -1,0 +1,127 @@
+{
+  "schemaVersion": 3,
+  "package": "ccrouter_test",
+  "source": "lib/src/query_codec_fixture.dart",
+  "componentDeclarations": [],
+  "componentManifests": {},
+  "components": [
+    {
+      "id": "query_codec_fixture",
+      "version": "1.0.0",
+      "dependencies": [],
+      "optionalDependencies": []
+    }
+  ],
+  "routes": [
+    {
+      "id": "query_codec_fixture.detail",
+      "componentId": "query_codec_fixture",
+      "componentVersion": "1.0.0",
+      "exposure": "internal",
+      "deepLink": "disabled",
+      "description": null,
+      "interceptorIds": [],
+      "popGuardIds": [],
+      "declaration": {
+        "package": "ccrouter_test",
+        "library": "lib/src/query_codec_fixture.dart",
+        "kind": "page",
+        "symbol": "QueryCodecFixturePage",
+        "packageUri": "package:ccrouter_test/src/query_codec_fixture.dart",
+        "line": 56,
+        "column": 13
+      },
+      "navigationSources": [
+        "typedIntent",
+        "internalUri"
+      ],
+      "restoration": {
+        "status": "unsupported"
+      },
+      "placement": {
+        "hostId": "default",
+        "parentRouteId": null,
+        "shellId": null,
+        "navigatorOutlet": "root"
+      },
+      "presentation": {
+        "type": "page",
+        "routeType": "platformDefault",
+        "transition": "platformDefault",
+        "opaque": true,
+        "fullscreenDialog": false
+      },
+      "contracts": {
+        "route": "_QueryCodecFixturePageRoute",
+        "arguments": "_QueryCodecFixturePageRouteArguments",
+        "package": "ccrouter_test",
+        "library": "lib/src/query_codec_fixture.dart"
+      },
+      "registration": "ccrouterRegisterQueryCodecFixturePageRoute",
+      "destination": {
+        "descriptor": "ccrouterDescribeQueryCodecFixturePageRoute",
+        "builder": "ccrouterBuildQueryCodecFixturePageRoute"
+      },
+      "generatedArtifacts": [
+        {
+          "role": "routePart",
+          "symbol": "_QueryCodecFixturePageRoute",
+          "packageUri": "package:ccrouter_test/src/ccrouter_generated/query_codec_fixture.route.g.dart"
+        }
+      ],
+      "patterns": [
+        {
+          "type": "CCPathPattern",
+          "value": "/query-codec-fixture",
+          "primary": true,
+          "constraints": {}
+        }
+      ],
+      "parameters": [
+        {
+          "name": "tags",
+          "wireName": "tags",
+          "source": "query",
+          "type": "List<String>",
+          "cardinality": "repeated",
+          "required": true,
+          "default": null,
+          "description": "Ordered repeated text values."
+        },
+        {
+          "name": "ids",
+          "wireName": "ids",
+          "source": "query",
+          "type": "Set<int>",
+          "cardinality": "repeated",
+          "required": true,
+          "default": null,
+          "description": "Unordered repeated integer values."
+        },
+        {
+          "name": "states",
+          "wireName": "states",
+          "source": "query",
+          "type": "List<QueryCodecFixtureState>?",
+          "cardinality": "repeated",
+          "required": false,
+          "default": null,
+          "description": "Optional repeated enum values."
+        },
+        {
+          "name": "filter",
+          "wireName": "filter",
+          "source": "query",
+          "type": "QueryCodecFixtureFilter?",
+          "cardinality": "repeated",
+          "codec": "QueryCodecFixtureFilterCodec",
+          "required": false,
+          "default": null,
+          "description": "Optional complex Query value."
+        }
+      ],
+      "resultType": "void"
+    }
+  ],
+  "routeImplementations": []
+}

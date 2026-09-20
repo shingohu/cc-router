@@ -59,6 +59,10 @@ const _hostSpiTypes = <Type>[
   host.CCNavigationShell,
   host.CCPredictiveBackEvent,
   host.CCRouteRestorationOpportunityReason,
+  host.CCGeneratedPackageBundle,
+  host.CCGeneratedHostAssembly,
+  host.CCGeneratedPackageBundleError,
+  host.CCGeneratedPackageBundleErrorType,
 ];
 
 void main() {
@@ -78,7 +82,7 @@ void main() {
     ).readAsStringSync();
 
     expect(_contractCombinatorNames(hostBarrel, 'show'), _hostContractNames);
-    expect(_hostSpiTypes, hasLength(21));
+    expect(_hostSpiTypes, hasLength(25));
   });
 }
 

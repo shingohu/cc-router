@@ -91,15 +91,22 @@ demo 和组件包已加入根 Dart workspace，使用本仓库内框架源码与
 在仓库根目录生成 Demo 的全部组件路由：
 
 ```sh
-fvm dart run build_runner build --workspace
-fvm dart run ccrouter_generator:ccrouter_generator demo \
-  --generate-component-registrars
+fvm dart run ccrouter_generator:ccrouter generate demo
 ```
 
-聚合路由目录生成到 `demo/ccrouter_generated/metadata/cc_routes.json` 和
-`demo/ccrouter_generated/metadata/cc_routes.md`；宿主可执行的 Catalog 生成到
-`demo/lib/ccrouter_generated/ccrouter_host.routes.g.dart`。组件增删普通页面后重新运行
-上述命令即可，`main.dart` 不再逐条添加组件 Manifest、`GoRoute` 或
+CI 或提交前以只读方式检查生成物是否已同步：
+
+```sh
+fvm dart run ccrouter_generator:ccrouter generate demo --check
+```
+
+聚合路由目录生成到 `demo/ccrouter_generated/cc_routes.json` 和
+`demo/ccrouter_generated/cc_routes.md`；宿主可执行的 Catalog 生成到
+`demo/lib/ccrouter_generated/ccrouter_host.routes.g.dart`。每个参与 Package 同时在
+`lib/ccrouter_generated/ccrouter_package.json` 发布 Index；Runtime 组件通过
+`lib/<package>_ccrouter.g.dart` 的分层 Bundle 装配，纯 contracts Package 保持 Pure Dart，
+只发布 Index。组件增删普通页面后重新运行
+上述统一命令即可，`main.dart` 不再逐条添加组件 Manifest、`GoRoute` 或
 `CCGoRouterRouteBinding`。宿主自身未注解的本地组件仍由应用显式安装。
 
 契约声明参考 `modules/order_contracts/lib/src/order_detail_route_contract.dart`，页面绑定参考

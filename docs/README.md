@@ -11,5 +11,5 @@
 - [核心价值与开发约定回归](CCRouter-core-principles-audit.md)
 
 生成器输出的应用路由目录不属于手写设计文档。当前 Demo 的聚合路由目录位于
-`demo/ccrouter_generated/metadata/cc_routes.json` 和
-`demo/ccrouter_generated/metadata/cc_routes.md`。
+`demo/ccrouter_generated/cc_routes.json` 和
+`demo/ccrouter_generated/cc_routes.md`。

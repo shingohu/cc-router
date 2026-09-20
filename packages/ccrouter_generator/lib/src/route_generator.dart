@@ -228,6 +228,20 @@ String _routeContractOutputPath(String sourcePath) {
   return 'lib/src/ccrouter_generated/$stem.route.contract.g.dart';
 }
 
+/// Derives the same-library route Part output for one `lib/src` source.
+///
+/// Source catalogs use this path to locate generated owner glue without
+/// parsing build-runner output or duplicating its path convention elsewhere.
+String _routePartOutputPath(String sourcePath) {
+  const prefix = 'lib/src/';
+  if (!sourcePath.startsWith(prefix) || !sourcePath.endsWith('.dart')) {
+    throw StateError('Route source must be a Dart library below lib/src/.');
+  }
+  final relative = sourcePath.substring(prefix.length);
+  final stem = relative.substring(0, relative.length - '.dart'.length);
+  return 'lib/src/ccrouter_generated/$stem.route.g.dart';
+}
+
 /// Serializes the closed set of declarative route metadata into const source.
 ///
 /// Only evaluated structured constants are accepted; no annotation string is

@@ -31,7 +31,6 @@ environment:
       path.join(
         component.path,
         'ccrouter_generated',
-        'metadata',
         'src',
         'fixture_service_component_registrar.component.json',
       ),
@@ -49,6 +48,37 @@ environment:
         'routes': <Object>[],
       })}\n',
     );
+    final obsoleteIndex = File(
+      path.join(
+        component.path,
+        'lib',
+        'src',
+        'ccrouter_generated',
+        'removed.routes.g.dart',
+      ),
+    )..createSync(recursive: true);
+    obsoleteIndex.writeAsStringSync(
+      '// GENERATED CODE - DO NOT MODIFY BY HAND\n'
+      '/// Generated registration index for component `removed`.\n',
+    );
+    final handwrittenIndex = File(
+      path.join(
+        component.path,
+        'lib',
+        'src',
+        'ccrouter_generated',
+        'keep.routes.g.dart',
+      ),
+    )..writeAsStringSync('// Handwritten fixture.\n');
+    final foreignGeneratedIndex = File(
+      path.join(
+        component.path,
+        'lib',
+        'src',
+        'ccrouter_generated',
+        'foreign.routes.g.dart',
+      ),
+    )..writeAsStringSync('// GENERATED CODE - DO NOT MODIFY BY HAND\n');
 
     final result = await Process.run(Platform.resolvedExecutable, [
       'run',
@@ -89,6 +119,9 @@ environment:
     expect(aggregate, contains('componentVersions: {'));
     expect(aggregate, contains('manifest.id: manifest.version'));
     expect(aggregate, isNot(contains('CCRouterGeneratedHost')));
+    expect(obsoleteIndex.existsSync(), isFalse);
+    expect(handwrittenIndex.existsSync(), isTrue);
+    expect(foreignGeneratedIndex.existsSync(), isTrue);
   });
 
   test('host aggregation joins an external contract to its page binding', () async {
@@ -134,7 +167,6 @@ export 'src/ccrouter_generated/detail.route.contract.g.dart'
       path.join(
         contracts.path,
         'ccrouter_generated',
-        'metadata',
         'src',
         'detail.route.json',
       ),
@@ -179,7 +211,6 @@ environment:
       path.join(
         implementation.path,
         'ccrouter_generated',
-        'metadata',
         'src',
         'order_registrar.component.json',
       ),
@@ -202,7 +233,6 @@ environment:
       path.join(
         implementation.path,
         'ccrouter_generated',
-        'metadata',
         'src',
         'detail_page.route.json',
       ),

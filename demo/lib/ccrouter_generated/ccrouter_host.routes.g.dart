@@ -2,32 +2,19 @@
 // ignore_for_file: type=lint
 
 import 'package:ccrouter/ccrouter.dart' show CCComponentManifest;
-import 'package:ccrouter/ccrouter_host.dart';
-import 'package:demo_navigation_lab/demo_navigation_lab_ccrouter.g.dart'
-    as component_demo_navigation_lab;
-import 'package:demo_order/demo_order_ccrouter.g.dart' as component_demo_order;
-import 'package:demo_payment/demo_payment_ccrouter.g.dart'
-    as component_demo_payment;
-import 'package:demo_web/demo_web_ccrouter.g.dart' as component_demo_web;
+import 'package:ccrouter/ccrouter_host.dart'
+    show CCFlutterRouteCatalog, CCGeneratedPackageBundle;
+import 'package:ccrouter_demo/ccrouter_demo_ccrouter.g.dart' as host_package;
+
+/// Validated generated Package graph installed in this Host.
+final ccrouterGeneratedHostAssembly = CCGeneratedPackageBundle.resolve([
+  host_package.ccrouterGeneratedPackageBundle,
+]);
 
 /// All generated component Manifests installed in this Host.
-const ccrouterGeneratedComponentManifests = <CCComponentManifest>[
-  component_demo_navigation_lab.demoNavigationLabComponentManifest,
-  component_demo_order.demoOrderComponentManifest,
-  component_demo_payment.demoPaymentComponentManifest,
-  component_demo_web.demoWebComponentManifest,
-];
+final List<CCComponentManifest> ccrouterGeneratedComponentManifests =
+    ccrouterGeneratedHostAssembly.componentManifests;
 
 /// All generated component destinations installed in this Host.
-final ccrouterGeneratedRouteCatalog = CCFlutterRouteCatalog.merge(
-  [
-    component_demo_navigation_lab.demoNavigationLabComponentRouteCatalog,
-    component_demo_order.demoOrderComponentRouteCatalog,
-    component_demo_payment.demoPaymentComponentRouteCatalog,
-    component_demo_web.demoWebComponentRouteCatalog,
-  ],
-  componentVersions: {
-    for (final manifest in ccrouterGeneratedComponentManifests)
-      manifest.id: manifest.version,
-  },
-);
+final CCFlutterRouteCatalog ccrouterGeneratedRouteCatalog =
+    ccrouterGeneratedHostAssembly.routeCatalog;

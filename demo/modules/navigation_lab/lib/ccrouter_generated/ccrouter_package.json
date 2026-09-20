@@ -1,0 +1,2833 @@
+{
+  "schemaVersion": 2,
+  "generatorVersion": "0.1.0",
+  "package": {
+    "name": "demo_navigation_lab",
+    "version": "0.1.0"
+  },
+  "contentFingerprint": "82423546c50b9ff4abb54aae470d900d158ee4e95e0ed6ca6580e3cf2c64d1c6",
+  "bundle": {
+    "library": "lib/demo_navigation_lab_ccrouter.g.dart",
+    "symbol": "ccrouterGeneratedPackageBundle"
+  },
+  "dependencies": [
+    {
+      "name": "demo_order_contracts",
+      "version": "0.1.0",
+      "contentFingerprint": "f313db9d1385aca087775b69771b2f59eab591725636f2e1dfd1566c5c3318ca"
+    },
+    {
+      "name": "demo_web_contracts",
+      "version": "0.1.0",
+      "contentFingerprint": "791be5c2664eb8cebc4f24b26ba56ac513e8f6d0154274b9b2c18841aaf37211"
+    }
+  ],
+  "metadata": [
+    {
+      "schemaVersion": 3,
+      "package": "demo_navigation_lab",
+      "source": "lib/src/detail_page.dart",
+      "componentDeclarations": [],
+      "componentManifests": {},
+      "components": [
+        {
+          "id": "demo_navigation_lab_component",
+          "version": "0.1.0",
+          "dependencies": [
+            "demo_order_component",
+            "demo_web_component"
+          ],
+          "optionalDependencies": []
+        }
+      ],
+      "routes": [
+        {
+          "id": "demo_navigation_lab.detail",
+          "componentId": "demo_navigation_lab_component",
+          "componentVersion": "0.1.0",
+          "exposure": "internal",
+          "deepLink": "enabled",
+          "description": "验证类型安全参数、Query 集合、多 Path、完整 URL、Scheme 与返回值。",
+          "interceptorIds": [],
+          "popGuardIds": [],
+          "declaration": {
+            "package": "demo_navigation_lab",
+            "library": "lib/src/detail_page.dart",
+            "kind": "page",
+            "symbol": "DemoDetailPage",
+            "packageUri": "package:demo_navigation_lab/src/detail_page.dart",
+            "line": 31,
+            "column": 13
+          },
+          "navigationSources": [
+            "typedIntent",
+            "internalUri",
+            "externalDeepLink"
+          ],
+          "restoration": {
+            "status": "unsupported"
+          },
+          "placement": {
+            "hostId": "default",
+            "parentRouteId": null,
+            "shellId": null,
+            "navigatorOutlet": "root"
+          },
+          "presentation": {
+            "type": "page",
+            "routeType": "material",
+            "transition": "slideFromRight",
+            "opaque": true,
+            "fullscreenDialog": false
+          },
+          "contracts": {
+            "route": "_DemoDetailPageRoute",
+            "arguments": "_DemoDetailPageRouteArguments",
+            "package": "demo_navigation_lab",
+            "library": "lib/src/detail_page.dart"
+          },
+          "registration": "ccrouterRegisterDemoDetailPageRoute",
+          "destination": {
+            "descriptor": "ccrouterDescribeDemoDetailPageRoute",
+            "builder": "ccrouterBuildDemoDetailPageRoute"
+          },
+          "generatedArtifacts": [
+            {
+              "role": "routePart",
+              "symbol": "_DemoDetailPageRoute",
+              "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/detail_page.route.g.dart"
+            }
+          ],
+          "patterns": [
+            {
+              "type": "CCPathPattern",
+              "value": "/lab/detail/:id",
+              "primary": true,
+              "constraints": {
+                "id": "\\d+"
+              }
+            },
+            {
+              "type": "CCPathPattern",
+              "value": "/lab/item/:id",
+              "primary": false,
+              "constraints": {}
+            },
+            {
+              "type": "CCUriPattern",
+              "value": "ccrouter://lab/detail/:id",
+              "primary": false,
+              "constraints": {}
+            },
+            {
+              "type": "CCUriPattern",
+              "value": "https://ccrouter.example/lab/detail/:id",
+              "primary": false,
+              "constraints": {}
+            }
+          ],
+          "parameters": [
+            {
+              "name": "id",
+              "wireName": "id",
+              "source": "path",
+              "type": "int",
+              "required": true,
+              "default": null,
+              "description": null
+            },
+            {
+              "name": "title",
+              "wireName": "title",
+              "source": "query",
+              "type": "String",
+              "cardinality": "single",
+              "required": false,
+              "default": "'类型安全详情'",
+              "description": null
+            },
+            {
+              "name": "tags",
+              "wireName": "tags",
+              "source": "query",
+              "type": "List<String>",
+              "cardinality": "repeated",
+              "required": false,
+              "default": "const <String>[]",
+              "description": null
+            }
+          ],
+          "resultType": "String"
+        }
+      ],
+      "routeImplementations": []
+    },
+    {
+      "schemaVersion": 3,
+      "package": "demo_navigation_lab",
+      "source": "lib/src/failure_page.dart",
+      "componentDeclarations": [],
+      "componentManifests": {},
+      "components": [
+        {
+          "id": "demo_navigation_lab_component",
+          "version": "0.1.0",
+          "dependencies": [
+            "demo_order_component",
+            "demo_web_component"
+          ],
+          "optionalDependencies": []
+        }
+      ],
+      "routes": [
+        {
+          "id": "demo_navigation_lab.failure",
+          "componentId": "demo_navigation_lab_component",
+          "componentVersion": "0.1.0",
+          "exposure": "internal",
+          "deepLink": "disabled",
+          "description": "展示标准导航失败经 Host Failure Policy 恢复后的安全页面。",
+          "interceptorIds": [],
+          "popGuardIds": [],
+          "declaration": {
+            "package": "demo_navigation_lab",
+            "library": "lib/src/failure_page.dart",
+            "kind": "page",
+            "symbol": "DemoFailurePage",
+            "packageUri": "package:demo_navigation_lab/src/failure_page.dart",
+            "line": 17,
+            "column": 13
+          },
+          "navigationSources": [
+            "typedIntent",
+            "internalUri"
+          ],
+          "restoration": {
+            "status": "unsupported"
+          },
+          "placement": {
+            "hostId": "default",
+            "parentRouteId": null,
+            "shellId": null,
+            "navigatorOutlet": "root"
+          },
+          "presentation": {
+            "type": "page",
+            "routeType": "platformDefault",
+            "transition": "fade",
+            "opaque": true,
+            "fullscreenDialog": false
+          },
+          "contracts": {
+            "route": "_DemoFailurePageRoute",
+            "arguments": "_DemoFailurePageRouteArguments",
+            "package": "demo_navigation_lab",
+            "library": "lib/src/failure_page.dart"
+          },
+          "registration": "ccrouterRegisterDemoFailurePageRoute",
+          "destination": {
+            "descriptor": "ccrouterDescribeDemoFailurePageRoute",
+            "builder": "ccrouterBuildDemoFailurePageRoute"
+          },
+          "generatedArtifacts": [
+            {
+              "role": "routePart",
+              "symbol": "_DemoFailurePageRoute",
+              "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/failure_page.route.g.dart"
+            }
+          ],
+          "patterns": [
+            {
+              "type": "CCPathPattern",
+              "value": "/lab/failure",
+              "primary": true,
+              "constraints": {}
+            }
+          ],
+          "parameters": [
+            {
+              "name": "stage",
+              "wireName": "stage",
+              "source": "query",
+              "type": "String",
+              "cardinality": "single",
+              "required": true,
+              "default": null,
+              "description": null
+            },
+            {
+              "name": "errorType",
+              "wireName": "errorType",
+              "source": "query",
+              "type": "String",
+              "cardinality": "single",
+              "required": true,
+              "default": null,
+              "description": null
+            }
+          ],
+          "resultType": "void"
+        }
+      ],
+      "routeImplementations": []
+    },
+    {
+      "schemaVersion": 3,
+      "package": "demo_navigation_lab",
+      "source": "lib/src/home_page.dart",
+      "componentDeclarations": [],
+      "componentManifests": {},
+      "components": [
+        {
+          "id": "demo_navigation_lab_component",
+          "version": "0.1.0",
+          "dependencies": [
+            "demo_order_component",
+            "demo_web_component"
+          ],
+          "optionalDependencies": []
+        }
+      ],
+      "routes": [
+        {
+          "id": "demo_navigation_lab.home",
+          "componentId": "demo_navigation_lab_component",
+          "componentVersion": "0.1.0",
+          "exposure": "internal",
+          "deepLink": "disabled",
+          "description": "CCRouter 全功能交互验证首页。",
+          "interceptorIds": [],
+          "popGuardIds": [],
+          "declaration": {
+            "package": "demo_navigation_lab",
+            "library": "lib/src/home_page.dart",
+            "kind": "page",
+            "symbol": "DemoNavigationHomePage",
+            "packageUri": "package:demo_navigation_lab/src/home_page.dart",
+            "line": 26,
+            "column": 13
+          },
+          "navigationSources": [
+            "typedIntent",
+            "internalUri"
+          ],
+          "restoration": {
+            "status": "unsupported"
+          },
+          "placement": {
+            "hostId": "default",
+            "parentRouteId": null,
+            "shellId": null,
+            "navigatorOutlet": "root"
+          },
+          "presentation": {
+            "type": "page",
+            "routeType": "platformDefault",
+            "transition": "none",
+            "opaque": true,
+            "fullscreenDialog": false
+          },
+          "contracts": {
+            "route": "_DemoNavigationHomePageRoute",
+            "arguments": "_DemoNavigationHomePageRouteArguments",
+            "package": "demo_navigation_lab",
+            "library": "lib/src/home_page.dart"
+          },
+          "registration": "ccrouterRegisterDemoNavigationHomePageRoute",
+          "destination": {
+            "descriptor": "ccrouterDescribeDemoNavigationHomePageRoute",
+            "builder": "ccrouterBuildDemoNavigationHomePageRoute"
+          },
+          "generatedArtifacts": [
+            {
+              "role": "routePart",
+              "symbol": "_DemoNavigationHomePageRoute",
+              "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/home_page.route.g.dart"
+            }
+          ],
+          "patterns": [
+            {
+              "type": "CCPathPattern",
+              "value": "/",
+              "primary": true,
+              "constraints": {}
+            }
+          ],
+          "parameters": [],
+          "resultType": "void"
+        }
+      ],
+      "routeImplementations": []
+    },
+    {
+      "schemaVersion": 3,
+      "package": "demo_navigation_lab",
+      "source": "lib/src/lifecycle_page.dart",
+      "componentDeclarations": [],
+      "componentManifests": {},
+      "components": [
+        {
+          "id": "demo_navigation_lab_component",
+          "version": "0.1.0",
+          "dependencies": [
+            "demo_order_component",
+            "demo_web_component"
+          ],
+          "optionalDependencies": []
+        }
+      ],
+      "routes": [
+        {
+          "id": "demo_navigation_lab.lifecycle",
+          "componentId": "demo_navigation_lab_component",
+          "componentVersion": "0.1.0",
+          "exposure": "internal",
+          "deepLink": "disabled",
+          "description": "同时验证 CCPageLifecycleMixin 与 Listener 的页面和 App 生命周期。",
+          "interceptorIds": [],
+          "popGuardIds": [],
+          "declaration": {
+            "package": "demo_navigation_lab",
+            "library": "lib/src/lifecycle_page.dart",
+            "kind": "page",
+            "symbol": "DemoLifecyclePage",
+            "packageUri": "package:demo_navigation_lab/src/lifecycle_page.dart",
+            "line": 16,
+            "column": 13
+          },
+          "navigationSources": [
+            "typedIntent",
+            "internalUri"
+          ],
+          "restoration": {
+            "status": "unsupported"
+          },
+          "placement": {
+            "hostId": "default",
+            "parentRouteId": null,
+            "shellId": null,
+            "navigatorOutlet": "root"
+          },
+          "presentation": {
+            "type": "page",
+            "routeType": "platformDefault",
+            "transition": "platformDefault",
+            "opaque": true,
+            "fullscreenDialog": false
+          },
+          "contracts": {
+            "route": "_DemoLifecyclePageRoute",
+            "arguments": "_DemoLifecyclePageRouteArguments",
+            "package": "demo_navigation_lab",
+            "library": "lib/src/lifecycle_page.dart"
+          },
+          "registration": "ccrouterRegisterDemoLifecyclePageRoute",
+          "destination": {
+            "descriptor": "ccrouterDescribeDemoLifecyclePageRoute",
+            "builder": "ccrouterBuildDemoLifecyclePageRoute"
+          },
+          "generatedArtifacts": [
+            {
+              "role": "routePart",
+              "symbol": "_DemoLifecyclePageRoute",
+              "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/lifecycle_page.route.g.dart"
+            }
+          ],
+          "patterns": [
+            {
+              "type": "CCPathPattern",
+              "value": "/lab/lifecycle",
+              "primary": true,
+              "constraints": {}
+            }
+          ],
+          "parameters": [],
+          "resultType": "void"
+        }
+      ],
+      "routeImplementations": []
+    },
+    {
+      "schemaVersion": 3,
+      "package": "demo_navigation_lab",
+      "source": "lib/src/navigation_lab_component_registrar.dart",
+      "componentDeclarations": [
+        "demo_navigation_lab_component"
+      ],
+      "componentManifests": {
+        "demo_navigation_lab_component": "demoNavigationLabComponentManifest"
+      },
+      "components": [
+        {
+          "id": "demo_navigation_lab_component",
+          "version": "0.1.0",
+          "dependencies": [
+            "demo_order_component",
+            "demo_web_component"
+          ],
+          "optionalDependencies": []
+        }
+      ],
+      "routes": [],
+      "routeImplementations": []
+    },
+    {
+      "schemaVersion": 3,
+      "package": "demo_navigation_lab",
+      "source": "lib/src/policy_pages.dart",
+      "componentDeclarations": [],
+      "componentManifests": {},
+      "components": [
+        {
+          "id": "demo_navigation_lab_component",
+          "version": "0.1.0",
+          "dependencies": [
+            "demo_order_component",
+            "demo_web_component"
+          ],
+          "optionalDependencies": []
+        }
+      ],
+      "routes": [
+        {
+          "id": "demo_navigation_lab.proceed",
+          "componentId": "demo_navigation_lab_component",
+          "componentVersion": "0.1.0",
+          "exposure": "internal",
+          "deepLink": "disabled",
+          "description": "路由级拦截器放行示例。",
+          "interceptorIds": [
+            "demo_navigation_lab.proceed"
+          ],
+          "popGuardIds": [],
+          "declaration": {
+            "package": "demo_navigation_lab",
+            "library": "lib/src/policy_pages.dart",
+            "kind": "page",
+            "symbol": "DemoProceedPage",
+            "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
+            "line": 128,
+            "column": 13
+          },
+          "navigationSources": [
+            "typedIntent",
+            "internalUri"
+          ],
+          "restoration": {
+            "status": "unsupported"
+          },
+          "placement": {
+            "hostId": "default",
+            "parentRouteId": null,
+            "shellId": null,
+            "navigatorOutlet": "root"
+          },
+          "presentation": {
+            "type": "page",
+            "routeType": "platformDefault",
+            "transition": "platformDefault",
+            "opaque": true,
+            "fullscreenDialog": false
+          },
+          "contracts": {
+            "route": "_DemoProceedPageRoute",
+            "arguments": "_DemoProceedPageRouteArguments",
+            "package": "demo_navigation_lab",
+            "library": "lib/src/policy_pages.dart"
+          },
+          "registration": "ccrouterRegisterDemoProceedPageRoute",
+          "destination": {
+            "descriptor": "ccrouterDescribeDemoProceedPageRoute",
+            "builder": "ccrouterBuildDemoProceedPageRoute"
+          },
+          "generatedArtifacts": [
+            {
+              "role": "routePart",
+              "symbol": "_DemoProceedPageRoute",
+              "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/policy_pages.route.g.dart"
+            }
+          ],
+          "patterns": [
+            {
+              "type": "CCPathPattern",
+              "value": "/lab/policy/proceed",
+              "primary": true,
+              "constraints": {}
+            }
+          ],
+          "parameters": [],
+          "resultType": "void"
+        },
+        {
+          "id": "demo_navigation_lab.cancel",
+          "componentId": "demo_navigation_lab_component",
+          "componentVersion": "0.1.0",
+          "exposure": "internal",
+          "deepLink": "disabled",
+          "description": "路由级拦截器取消示例；页面正常情况下不会创建。",
+          "interceptorIds": [
+            "demo_navigation_lab.cancel"
+          ],
+          "popGuardIds": [],
+          "declaration": {
+            "package": "demo_navigation_lab",
+            "library": "lib/src/policy_pages.dart",
+            "kind": "page",
+            "symbol": "DemoCancelledPage",
+            "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
+            "line": 145,
+            "column": 13
+          },
+          "navigationSources": [
+            "typedIntent",
+            "internalUri"
+          ],
+          "restoration": {
+            "status": "unsupported"
+          },
+          "placement": {
+            "hostId": "default",
+            "parentRouteId": null,
+            "shellId": null,
+            "navigatorOutlet": "root"
+          },
+          "presentation": {
+            "type": "page",
+            "routeType": "platformDefault",
+            "transition": "platformDefault",
+            "opaque": true,
+            "fullscreenDialog": false
+          },
+          "contracts": {
+            "route": "_DemoCancelledPageRoute",
+            "arguments": "_DemoCancelledPageRouteArguments",
+            "package": "demo_navigation_lab",
+            "library": "lib/src/policy_pages.dart"
+          },
+          "registration": "ccrouterRegisterDemoCancelledPageRoute",
+          "destination": {
+            "descriptor": "ccrouterDescribeDemoCancelledPageRoute",
+            "builder": "ccrouterBuildDemoCancelledPageRoute"
+          },
+          "generatedArtifacts": [
+            {
+              "role": "routePart",
+              "symbol": "_DemoCancelledPageRoute",
+              "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/policy_pages.route.g.dart"
+            }
+          ],
+          "patterns": [
+            {
+              "type": "CCPathPattern",
+              "value": "/lab/policy/cancel",
+              "primary": true,
+              "constraints": {}
+            }
+          ],
+          "parameters": [],
+          "resultType": "void"
+        },
+        {
+          "id": "demo_navigation_lab.redirect.source",
+          "componentId": "demo_navigation_lab_component",
+          "componentVersion": "0.1.0",
+          "exposure": "internal",
+          "deepLink": "disabled",
+          "description": "路由级拦截器重定向源页面；页面正常情况下不会创建。",
+          "interceptorIds": [
+            "demo_navigation_lab.redirect"
+          ],
+          "popGuardIds": [],
+          "declaration": {
+            "package": "demo_navigation_lab",
+            "library": "lib/src/policy_pages.dart",
+            "kind": "page",
+            "symbol": "DemoRedirectSourcePage",
+            "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
+            "line": 160,
+            "column": 13
+          },
+          "navigationSources": [
+            "typedIntent",
+            "internalUri"
+          ],
+          "restoration": {
+            "status": "unsupported"
+          },
+          "placement": {
+            "hostId": "default",
+            "parentRouteId": null,
+            "shellId": null,
+            "navigatorOutlet": "root"
+          },
+          "presentation": {
+            "type": "page",
+            "routeType": "platformDefault",
+            "transition": "platformDefault",
+            "opaque": true,
+            "fullscreenDialog": false
+          },
+          "contracts": {
+            "route": "_DemoRedirectSourcePageRoute",
+            "arguments": "_DemoRedirectSourcePageRouteArguments",
+            "package": "demo_navigation_lab",
+            "library": "lib/src/policy_pages.dart"
+          },
+          "registration": "ccrouterRegisterDemoRedirectSourcePageRoute",
+          "destination": {
+            "descriptor": "ccrouterDescribeDemoRedirectSourcePageRoute",
+            "builder": "ccrouterBuildDemoRedirectSourcePageRoute"
+          },
+          "generatedArtifacts": [
+            {
+              "role": "routePart",
+              "symbol": "_DemoRedirectSourcePageRoute",
+              "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/policy_pages.route.g.dart"
+            }
+          ],
+          "patterns": [
+            {
+              "type": "CCPathPattern",
+              "value": "/lab/policy/redirect-source",
+              "primary": true,
+              "constraints": {}
+            }
+          ],
+          "parameters": [],
+          "resultType": "void"
+        },
+        {
+          "id": "demo_navigation_lab.redirect.target",
+          "componentId": "demo_navigation_lab_component",
+          "componentVersion": "0.1.0",
+          "exposure": "internal",
+          "deepLink": "disabled",
+          "description": "拦截器重定向后的目标页面。",
+          "interceptorIds": [],
+          "popGuardIds": [],
+          "declaration": {
+            "package": "demo_navigation_lab",
+            "library": "lib/src/policy_pages.dart",
+            "kind": "page",
+            "symbol": "DemoRedirectTargetPage",
+            "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
+            "line": 174,
+            "column": 13
+          },
+          "navigationSources": [
+            "typedIntent",
+            "internalUri"
+          ],
+          "restoration": {
+            "status": "unsupported"
+          },
+          "placement": {
+            "hostId": "default",
+            "parentRouteId": null,
+            "shellId": null,
+            "navigatorOutlet": "root"
+          },
+          "presentation": {
+            "type": "page",
+            "routeType": "platformDefault",
+            "transition": "platformDefault",
+            "opaque": true,
+            "fullscreenDialog": false
+          },
+          "contracts": {
+            "route": "_DemoRedirectTargetPageRoute",
+            "arguments": "_DemoRedirectTargetPageRouteArguments",
+            "package": "demo_navigation_lab",
+            "library": "lib/src/policy_pages.dart"
+          },
+          "registration": "ccrouterRegisterDemoRedirectTargetPageRoute",
+          "destination": {
+            "descriptor": "ccrouterDescribeDemoRedirectTargetPageRoute",
+            "builder": "ccrouterBuildDemoRedirectTargetPageRoute"
+          },
+          "generatedArtifacts": [
+            {
+              "role": "routePart",
+              "symbol": "_DemoRedirectTargetPageRoute",
+              "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/policy_pages.route.g.dart"
+            }
+          ],
+          "patterns": [
+            {
+              "type": "CCPathPattern",
+              "value": "/lab/policy/redirect-target",
+              "primary": true,
+              "constraints": {}
+            }
+          ],
+          "parameters": [],
+          "resultType": "void"
+        },
+        {
+          "id": "demo_navigation_lab.defer",
+          "componentId": "demo_navigation_lab_component",
+          "componentVersion": "0.1.0",
+          "exposure": "internal",
+          "deepLink": "disabled",
+          "description": "等待外部同意后恢复的 Deferred Navigation 示例。",
+          "interceptorIds": [
+            "demo_navigation_lab.defer"
+          ],
+          "popGuardIds": [],
+          "declaration": {
+            "package": "demo_navigation_lab",
+            "library": "lib/src/policy_pages.dart",
+            "kind": "page",
+            "symbol": "DemoDeferredPage",
+            "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
+            "line": 189,
+            "column": 13
+          },
+          "navigationSources": [
+            "typedIntent",
+            "internalUri"
+          ],
+          "restoration": {
+            "status": "unsupported"
+          },
+          "placement": {
+            "hostId": "default",
+            "parentRouteId": null,
+            "shellId": null,
+            "navigatorOutlet": "root"
+          },
+          "presentation": {
+            "type": "page",
+            "routeType": "platformDefault",
+            "transition": "platformDefault",
+            "opaque": true,
+            "fullscreenDialog": false
+          },
+          "contracts": {
+            "route": "_DemoDeferredPageRoute",
+            "arguments": "_DemoDeferredPageRouteArguments",
+            "package": "demo_navigation_lab",
+            "library": "lib/src/policy_pages.dart"
+          },
+          "registration": "ccrouterRegisterDemoDeferredPageRoute",
+          "destination": {
+            "descriptor": "ccrouterDescribeDemoDeferredPageRoute",
+            "builder": "ccrouterBuildDemoDeferredPageRoute"
+          },
+          "generatedArtifacts": [
+            {
+              "role": "routePart",
+              "symbol": "_DemoDeferredPageRoute",
+              "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/policy_pages.route.g.dart"
+            }
+          ],
+          "patterns": [
+            {
+              "type": "CCPathPattern",
+              "value": "/lab/policy/defer",
+              "primary": true,
+              "constraints": {}
+            }
+          ],
+          "parameters": [],
+          "resultType": "void"
+        },
+        {
+          "id": "demo_navigation_lab.timeout",
+          "componentId": "demo_navigation_lab_component",
+          "componentVersion": "0.1.0",
+          "exposure": "internal",
+          "deepLink": "disabled",
+          "description": "触发标准 Interceptor Timeout Error 的示例。",
+          "interceptorIds": [
+            "demo_navigation_lab.timeout"
+          ],
+          "popGuardIds": [],
+          "declaration": {
+            "package": "demo_navigation_lab",
+            "library": "lib/src/policy_pages.dart",
+            "kind": "page",
+            "symbol": "DemoTimeoutPage",
+            "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
+            "line": 206,
+            "column": 13
+          },
+          "navigationSources": [
+            "typedIntent",
+            "internalUri"
+          ],
+          "restoration": {
+            "status": "unsupported"
+          },
+          "placement": {
+            "hostId": "default",
+            "parentRouteId": null,
+            "shellId": null,
+            "navigatorOutlet": "root"
+          },
+          "presentation": {
+            "type": "page",
+            "routeType": "platformDefault",
+            "transition": "platformDefault",
+            "opaque": true,
+            "fullscreenDialog": false
+          },
+          "contracts": {
+            "route": "_DemoTimeoutPageRoute",
+            "arguments": "_DemoTimeoutPageRouteArguments",
+            "package": "demo_navigation_lab",
+            "library": "lib/src/policy_pages.dart"
+          },
+          "registration": "ccrouterRegisterDemoTimeoutPageRoute",
+          "destination": {
+            "descriptor": "ccrouterDescribeDemoTimeoutPageRoute",
+            "builder": "ccrouterBuildDemoTimeoutPageRoute"
+          },
+          "generatedArtifacts": [
+            {
+              "role": "routePart",
+              "symbol": "_DemoTimeoutPageRoute",
+              "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/policy_pages.route.g.dart"
+            }
+          ],
+          "patterns": [
+            {
+              "type": "CCPathPattern",
+              "value": "/lab/policy/timeout",
+              "primary": true,
+              "constraints": {}
+            }
+          ],
+          "parameters": [],
+          "resultType": "void"
+        },
+        {
+          "id": "demo_navigation_lab.guarded",
+          "componentId": "demo_navigation_lab_component",
+          "componentVersion": "0.1.0",
+          "exposure": "internal",
+          "deepLink": "disabled",
+          "description": "未保存状态下拒绝 CCRouter Pop 的路由。",
+          "interceptorIds": [],
+          "popGuardIds": [
+            "demo_navigation_lab.dirty"
+          ],
+          "declaration": {
+            "package": "demo_navigation_lab",
+            "library": "lib/src/policy_pages.dart",
+            "kind": "page",
+            "symbol": "DemoGuardedPage",
+            "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
+            "line": 223,
+            "column": 13
+          },
+          "navigationSources": [
+            "typedIntent",
+            "internalUri"
+          ],
+          "restoration": {
+            "status": "unsupported"
+          },
+          "placement": {
+            "hostId": "default",
+            "parentRouteId": null,
+            "shellId": null,
+            "navigatorOutlet": "root"
+          },
+          "presentation": {
+            "type": "page",
+            "routeType": "platformDefault",
+            "transition": "platformDefault",
+            "opaque": true,
+            "fullscreenDialog": false
+          },
+          "contracts": {
+            "route": "_DemoGuardedPageRoute",
+            "arguments": "_DemoGuardedPageRouteArguments",
+            "package": "demo_navigation_lab",
+            "library": "lib/src/policy_pages.dart"
+          },
+          "registration": "ccrouterRegisterDemoGuardedPageRoute",
+          "destination": {
+            "descriptor": "ccrouterDescribeDemoGuardedPageRoute",
+            "builder": "ccrouterBuildDemoGuardedPageRoute"
+          },
+          "generatedArtifacts": [
+            {
+              "role": "routePart",
+              "symbol": "_DemoGuardedPageRoute",
+              "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/policy_pages.route.g.dart"
+            }
+          ],
+          "patterns": [
+            {
+              "type": "CCPathPattern",
+              "value": "/lab/policy/guarded",
+              "primary": true,
+              "constraints": {}
+            }
+          ],
+          "parameters": [],
+          "resultType": "void"
+        }
+      ],
+      "routeImplementations": []
+    },
+    {
+      "schemaVersion": 3,
+      "package": "demo_navigation_lab",
+      "source": "lib/src/presentation_pages.dart",
+      "componentDeclarations": [],
+      "componentManifests": {},
+      "components": [
+        {
+          "id": "demo_navigation_lab_component",
+          "version": "0.1.0",
+          "dependencies": [
+            "demo_order_component",
+            "demo_web_component"
+          ],
+          "optionalDependencies": []
+        }
+      ],
+      "routes": [
+        {
+          "id": "demo_navigation_lab.presentation.fade",
+          "componentId": "demo_navigation_lab_component",
+          "componentVersion": "0.1.0",
+          "exposure": "internal",
+          "deepLink": "disabled",
+          "description": null,
+          "interceptorIds": [],
+          "popGuardIds": [],
+          "declaration": {
+            "package": "demo_navigation_lab",
+            "library": "lib/src/presentation_pages.dart",
+            "kind": "page",
+            "symbol": "DemoFadePage",
+            "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
+            "line": 15,
+            "column": 13
+          },
+          "navigationSources": [
+            "typedIntent",
+            "internalUri"
+          ],
+          "restoration": {
+            "status": "unsupported"
+          },
+          "placement": {
+            "hostId": "default",
+            "parentRouteId": null,
+            "shellId": null,
+            "navigatorOutlet": "root"
+          },
+          "presentation": {
+            "type": "page",
+            "routeType": "platformDefault",
+            "transition": "fade",
+            "opaque": true,
+            "fullscreenDialog": false
+          },
+          "contracts": {
+            "route": "_DemoFadePageRoute",
+            "arguments": "_DemoFadePageRouteArguments",
+            "package": "demo_navigation_lab",
+            "library": "lib/src/presentation_pages.dart"
+          },
+          "registration": "ccrouterRegisterDemoFadePageRoute",
+          "destination": {
+            "descriptor": "ccrouterDescribeDemoFadePageRoute",
+            "builder": "ccrouterBuildDemoFadePageRoute"
+          },
+          "generatedArtifacts": [
+            {
+              "role": "routePart",
+              "symbol": "_DemoFadePageRoute",
+              "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/presentation_pages.route.g.dart"
+            }
+          ],
+          "patterns": [
+            {
+              "type": "CCPathPattern",
+              "value": "/lab/presentation/fade",
+              "primary": true,
+              "constraints": {}
+            }
+          ],
+          "parameters": [],
+          "resultType": "void"
+        },
+        {
+          "id": "demo_navigation_lab.presentation.scale",
+          "componentId": "demo_navigation_lab_component",
+          "componentVersion": "0.1.0",
+          "exposure": "internal",
+          "deepLink": "disabled",
+          "description": null,
+          "interceptorIds": [],
+          "popGuardIds": [],
+          "declaration": {
+            "package": "demo_navigation_lab",
+            "library": "lib/src/presentation_pages.dart",
+            "kind": "page",
+            "symbol": "DemoScalePage",
+            "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
+            "line": 32,
+            "column": 13
+          },
+          "navigationSources": [
+            "typedIntent",
+            "internalUri"
+          ],
+          "restoration": {
+            "status": "unsupported"
+          },
+          "placement": {
+            "hostId": "default",
+            "parentRouteId": null,
+            "shellId": null,
+            "navigatorOutlet": "root"
+          },
+          "presentation": {
+            "type": "page",
+            "routeType": "platformDefault",
+            "transition": "scale",
+            "opaque": true,
+            "fullscreenDialog": false
+          },
+          "contracts": {
+            "route": "_DemoScalePageRoute",
+            "arguments": "_DemoScalePageRouteArguments",
+            "package": "demo_navigation_lab",
+            "library": "lib/src/presentation_pages.dart"
+          },
+          "registration": "ccrouterRegisterDemoScalePageRoute",
+          "destination": {
+            "descriptor": "ccrouterDescribeDemoScalePageRoute",
+            "builder": "ccrouterBuildDemoScalePageRoute"
+          },
+          "generatedArtifacts": [
+            {
+              "role": "routePart",
+              "symbol": "_DemoScalePageRoute",
+              "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/presentation_pages.route.g.dart"
+            }
+          ],
+          "patterns": [
+            {
+              "type": "CCPathPattern",
+              "value": "/lab/presentation/scale",
+              "primary": true,
+              "constraints": {}
+            }
+          ],
+          "parameters": [],
+          "resultType": "void"
+        },
+        {
+          "id": "demo_navigation_lab.presentation.cupertino",
+          "componentId": "demo_navigation_lab_component",
+          "componentVersion": "0.1.0",
+          "exposure": "internal",
+          "deepLink": "disabled",
+          "description": null,
+          "interceptorIds": [],
+          "popGuardIds": [],
+          "declaration": {
+            "package": "demo_navigation_lab",
+            "library": "lib/src/presentation_pages.dart",
+            "kind": "page",
+            "symbol": "DemoCupertinoPage",
+            "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
+            "line": 49,
+            "column": 13
+          },
+          "navigationSources": [
+            "typedIntent",
+            "internalUri"
+          ],
+          "restoration": {
+            "status": "unsupported"
+          },
+          "placement": {
+            "hostId": "default",
+            "parentRouteId": null,
+            "shellId": null,
+            "navigatorOutlet": "root"
+          },
+          "presentation": {
+            "type": "page",
+            "routeType": "cupertino",
+            "transition": "platformDefault",
+            "opaque": true,
+            "fullscreenDialog": false
+          },
+          "contracts": {
+            "route": "_DemoCupertinoPageRoute",
+            "arguments": "_DemoCupertinoPageRouteArguments",
+            "package": "demo_navigation_lab",
+            "library": "lib/src/presentation_pages.dart"
+          },
+          "registration": "ccrouterRegisterDemoCupertinoPageRoute",
+          "destination": {
+            "descriptor": "ccrouterDescribeDemoCupertinoPageRoute",
+            "builder": "ccrouterBuildDemoCupertinoPageRoute"
+          },
+          "generatedArtifacts": [
+            {
+              "role": "routePart",
+              "symbol": "_DemoCupertinoPageRoute",
+              "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/presentation_pages.route.g.dart"
+            }
+          ],
+          "patterns": [
+            {
+              "type": "CCPathPattern",
+              "value": "/lab/presentation/cupertino",
+              "primary": true,
+              "constraints": {}
+            }
+          ],
+          "parameters": [],
+          "resultType": "void"
+        },
+        {
+          "id": "demo_navigation_lab.presentation.bottom_page",
+          "componentId": "demo_navigation_lab_component",
+          "componentVersion": "0.1.0",
+          "exposure": "internal",
+          "deepLink": "disabled",
+          "description": "普通全屏 Page 从底部滑入，不是 BottomSheet。",
+          "interceptorIds": [],
+          "popGuardIds": [],
+          "declaration": {
+            "package": "demo_navigation_lab",
+            "library": "lib/src/presentation_pages.dart",
+            "kind": "page",
+            "symbol": "DemoBottomPage",
+            "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
+            "line": 69,
+            "column": 13
+          },
+          "navigationSources": [
+            "typedIntent",
+            "internalUri"
+          ],
+          "restoration": {
+            "status": "unsupported"
+          },
+          "placement": {
+            "hostId": "default",
+            "parentRouteId": null,
+            "shellId": null,
+            "navigatorOutlet": "root"
+          },
+          "presentation": {
+            "type": "page",
+            "routeType": "platformDefault",
+            "transition": "slideFromBottom",
+            "opaque": true,
+            "fullscreenDialog": true
+          },
+          "contracts": {
+            "route": "_DemoBottomPageRoute",
+            "arguments": "_DemoBottomPageRouteArguments",
+            "package": "demo_navigation_lab",
+            "library": "lib/src/presentation_pages.dart"
+          },
+          "registration": "ccrouterRegisterDemoBottomPageRoute",
+          "destination": {
+            "descriptor": "ccrouterDescribeDemoBottomPageRoute",
+            "builder": "ccrouterBuildDemoBottomPageRoute"
+          },
+          "generatedArtifacts": [
+            {
+              "role": "routePart",
+              "symbol": "_DemoBottomPageRoute",
+              "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/presentation_pages.route.g.dart"
+            }
+          ],
+          "patterns": [
+            {
+              "type": "CCPathPattern",
+              "value": "/lab/presentation/bottom-page",
+              "primary": true,
+              "constraints": {}
+            }
+          ],
+          "parameters": [],
+          "resultType": "void"
+        },
+        {
+          "id": "demo_navigation_lab.presentation.transparent",
+          "componentId": "demo_navigation_lab_component",
+          "componentVersion": "0.1.0",
+          "exposure": "internal",
+          "deepLink": "disabled",
+          "description": "用于海报分享预览的透明全屏 Page。",
+          "interceptorIds": [],
+          "popGuardIds": [],
+          "declaration": {
+            "package": "demo_navigation_lab",
+            "library": "lib/src/presentation_pages.dart",
+            "kind": "page",
+            "symbol": "DemoTransparentPage",
+            "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
+            "line": 91,
+            "column": 13
+          },
+          "navigationSources": [
+            "typedIntent",
+            "internalUri"
+          ],
+          "restoration": {
+            "status": "unsupported"
+          },
+          "placement": {
+            "hostId": "default",
+            "parentRouteId": null,
+            "shellId": null,
+            "navigatorOutlet": "root"
+          },
+          "presentation": {
+            "type": "page",
+            "routeType": "platformDefault",
+            "transition": "slideFromBottom",
+            "opaque": false,
+            "fullscreenDialog": true
+          },
+          "contracts": {
+            "route": "_DemoTransparentPageRoute",
+            "arguments": "_DemoTransparentPageRouteArguments",
+            "package": "demo_navigation_lab",
+            "library": "lib/src/presentation_pages.dart"
+          },
+          "registration": "ccrouterRegisterDemoTransparentPageRoute",
+          "destination": {
+            "descriptor": "ccrouterDescribeDemoTransparentPageRoute",
+            "builder": "ccrouterBuildDemoTransparentPageRoute"
+          },
+          "generatedArtifacts": [
+            {
+              "role": "routePart",
+              "symbol": "_DemoTransparentPageRoute",
+              "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/presentation_pages.route.g.dart"
+            }
+          ],
+          "patterns": [
+            {
+              "type": "CCPathPattern",
+              "value": "/lab/presentation/transparent",
+              "primary": true,
+              "constraints": {}
+            }
+          ],
+          "parameters": [],
+          "resultType": "void"
+        },
+        {
+          "id": "demo_navigation_lab.presentation.dialog",
+          "componentId": "demo_navigation_lab_component",
+          "componentVersion": "0.1.0",
+          "exposure": "internal",
+          "deepLink": "disabled",
+          "description": null,
+          "interceptorIds": [],
+          "popGuardIds": [],
+          "declaration": {
+            "package": "demo_navigation_lab",
+            "library": "lib/src/presentation_pages.dart",
+            "kind": "page",
+            "symbol": "DemoDialogPage",
+            "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
+            "line": 149,
+            "column": 13
+          },
+          "navigationSources": [
+            "typedIntent",
+            "internalUri"
+          ],
+          "restoration": {
+            "status": "unsupported"
+          },
+          "placement": {
+            "hostId": "default",
+            "parentRouteId": null,
+            "shellId": null,
+            "navigatorOutlet": "root"
+          },
+          "presentation": {
+            "type": "dialog",
+            "routeType": "material",
+            "barrierDismissible": true,
+            "useSafeArea": true
+          },
+          "contracts": {
+            "route": "_DemoDialogPageRoute",
+            "arguments": "_DemoDialogPageRouteArguments",
+            "package": "demo_navigation_lab",
+            "library": "lib/src/presentation_pages.dart"
+          },
+          "registration": "ccrouterRegisterDemoDialogPageRoute",
+          "destination": {
+            "descriptor": "ccrouterDescribeDemoDialogPageRoute",
+            "builder": "ccrouterBuildDemoDialogPageRoute"
+          },
+          "generatedArtifacts": [
+            {
+              "role": "routePart",
+              "symbol": "_DemoDialogPageRoute",
+              "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/presentation_pages.route.g.dart"
+            }
+          ],
+          "patterns": [
+            {
+              "type": "CCPathPattern",
+              "value": "/lab/presentation/dialog",
+              "primary": true,
+              "constraints": {}
+            }
+          ],
+          "parameters": [],
+          "resultType": "String"
+        },
+        {
+          "id": "demo_navigation_lab.presentation.sheet",
+          "componentId": "demo_navigation_lab_component",
+          "componentVersion": "0.1.0",
+          "exposure": "internal",
+          "deepLink": "disabled",
+          "description": null,
+          "interceptorIds": [],
+          "popGuardIds": [],
+          "declaration": {
+            "package": "demo_navigation_lab",
+            "library": "lib/src/presentation_pages.dart",
+            "kind": "page",
+            "symbol": "DemoBottomSheetPage",
+            "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
+            "line": 179,
+            "column": 13
+          },
+          "navigationSources": [
+            "typedIntent",
+            "internalUri"
+          ],
+          "restoration": {
+            "status": "unsupported"
+          },
+          "placement": {
+            "hostId": "default",
+            "parentRouteId": null,
+            "shellId": null,
+            "navigatorOutlet": "root"
+          },
+          "presentation": {
+            "type": "modalBottomSheet",
+            "isDismissible": true,
+            "enableDrag": true,
+            "isScrollControlled": true,
+            "showDragHandle": true,
+            "useSafeArea": true
+          },
+          "contracts": {
+            "route": "_DemoBottomSheetPageRoute",
+            "arguments": "_DemoBottomSheetPageRouteArguments",
+            "package": "demo_navigation_lab",
+            "library": "lib/src/presentation_pages.dart"
+          },
+          "registration": "ccrouterRegisterDemoBottomSheetPageRoute",
+          "destination": {
+            "descriptor": "ccrouterDescribeDemoBottomSheetPageRoute",
+            "builder": "ccrouterBuildDemoBottomSheetPageRoute"
+          },
+          "generatedArtifacts": [
+            {
+              "role": "routePart",
+              "symbol": "_DemoBottomSheetPageRoute",
+              "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/presentation_pages.route.g.dart"
+            }
+          ],
+          "patterns": [
+            {
+              "type": "CCPathPattern",
+              "value": "/lab/presentation/sheet",
+              "primary": true,
+              "constraints": {}
+            }
+          ],
+          "parameters": [],
+          "resultType": "String"
+        }
+      ],
+      "routeImplementations": []
+    },
+    {
+      "schemaVersion": 3,
+      "package": "demo_navigation_lab",
+      "source": "lib/src/shell_pages.dart",
+      "componentDeclarations": [],
+      "componentManifests": {},
+      "components": [
+        {
+          "id": "demo_navigation_lab_component",
+          "version": "0.1.0",
+          "dependencies": [
+            "demo_order_component",
+            "demo_web_component"
+          ],
+          "optionalDependencies": []
+        }
+      ],
+      "routes": [
+        {
+          "id": "demo_navigation_lab.shell.feed",
+          "componentId": "demo_navigation_lab_component",
+          "componentVersion": "0.1.0",
+          "exposure": "internal",
+          "deepLink": "disabled",
+          "description": "ShellRoute 共享框架中的内容首页。",
+          "interceptorIds": [],
+          "popGuardIds": [],
+          "declaration": {
+            "package": "demo_navigation_lab",
+            "library": "lib/src/shell_pages.dart",
+            "kind": "page",
+            "symbol": "DemoShellFeedPage",
+            "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
+            "line": 22,
+            "column": 13
+          },
+          "navigationSources": [
+            "typedIntent",
+            "internalUri"
+          ],
+          "restoration": {
+            "status": "unsupported"
+          },
+          "placement": {
+            "hostId": "default",
+            "parentRouteId": null,
+            "shellId": "demo_navigation_lab.single_shell",
+            "navigatorOutlet": "shell.content"
+          },
+          "presentation": {
+            "type": "page",
+            "routeType": "platformDefault",
+            "transition": "platformDefault",
+            "opaque": true,
+            "fullscreenDialog": false
+          },
+          "contracts": {
+            "route": "_DemoShellFeedPageRoute",
+            "arguments": "_DemoShellFeedPageRouteArguments",
+            "package": "demo_navigation_lab",
+            "library": "lib/src/shell_pages.dart"
+          },
+          "registration": "ccrouterRegisterDemoShellFeedPageRoute",
+          "destination": {
+            "descriptor": "ccrouterDescribeDemoShellFeedPageRoute",
+            "builder": "ccrouterBuildDemoShellFeedPageRoute"
+          },
+          "generatedArtifacts": [
+            {
+              "role": "routePart",
+              "symbol": "_DemoShellFeedPageRoute",
+              "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/shell_pages.route.g.dart"
+            }
+          ],
+          "patterns": [
+            {
+              "type": "CCPathPattern",
+              "value": "/shell/feed",
+              "primary": true,
+              "constraints": {}
+            }
+          ],
+          "parameters": [],
+          "resultType": "void"
+        },
+        {
+          "id": "demo_navigation_lab.shell.detail",
+          "componentId": "demo_navigation_lab_component",
+          "componentVersion": "0.1.0",
+          "exposure": "internal",
+          "deepLink": "disabled",
+          "description": "ShellRoute 嵌套子路由。",
+          "interceptorIds": [],
+          "popGuardIds": [],
+          "declaration": {
+            "package": "demo_navigation_lab",
+            "library": "lib/src/shell_pages.dart",
+            "kind": "page",
+            "symbol": "DemoShellDetailPage",
+            "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
+            "line": 59,
+            "column": 13
+          },
+          "navigationSources": [
+            "typedIntent",
+            "internalUri"
+          ],
+          "restoration": {
+            "status": "unsupported"
+          },
+          "placement": {
+            "hostId": "default",
+            "parentRouteId": "demo_navigation_lab.shell.feed",
+            "shellId": "demo_navigation_lab.single_shell",
+            "navigatorOutlet": "shell.content"
+          },
+          "presentation": {
+            "type": "page",
+            "routeType": "platformDefault",
+            "transition": "platformDefault",
+            "opaque": true,
+            "fullscreenDialog": false
+          },
+          "contracts": {
+            "route": "_DemoShellDetailPageRoute",
+            "arguments": "_DemoShellDetailPageRouteArguments",
+            "package": "demo_navigation_lab",
+            "library": "lib/src/shell_pages.dart"
+          },
+          "registration": "ccrouterRegisterDemoShellDetailPageRoute",
+          "destination": {
+            "descriptor": "ccrouterDescribeDemoShellDetailPageRoute",
+            "builder": "ccrouterBuildDemoShellDetailPageRoute"
+          },
+          "generatedArtifacts": [
+            {
+              "role": "routePart",
+              "symbol": "_DemoShellDetailPageRoute",
+              "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/shell_pages.route.g.dart"
+            }
+          ],
+          "patterns": [
+            {
+              "type": "CCPathPattern",
+              "value": "/shell/feed/:item",
+              "primary": true,
+              "constraints": {}
+            }
+          ],
+          "parameters": [
+            {
+              "name": "item",
+              "wireName": "item",
+              "source": "path",
+              "type": "int",
+              "required": true,
+              "default": null,
+              "description": null
+            }
+          ],
+          "resultType": "void"
+        },
+        {
+          "id": "demo_navigation_lab.shell.settings",
+          "componentId": "demo_navigation_lab_component",
+          "componentVersion": "0.1.0",
+          "exposure": "internal",
+          "deepLink": "disabled",
+          "description": "ShellRoute 共享框架中的设置页。",
+          "interceptorIds": [],
+          "popGuardIds": [],
+          "declaration": {
+            "package": "demo_navigation_lab",
+            "library": "lib/src/shell_pages.dart",
+            "kind": "page",
+            "symbol": "DemoShellSettingsPage",
+            "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
+            "line": 89,
+            "column": 13
+          },
+          "navigationSources": [
+            "typedIntent",
+            "internalUri"
+          ],
+          "restoration": {
+            "status": "unsupported"
+          },
+          "placement": {
+            "hostId": "default",
+            "parentRouteId": null,
+            "shellId": "demo_navigation_lab.single_shell",
+            "navigatorOutlet": "shell.content"
+          },
+          "presentation": {
+            "type": "page",
+            "routeType": "platformDefault",
+            "transition": "platformDefault",
+            "opaque": true,
+            "fullscreenDialog": false
+          },
+          "contracts": {
+            "route": "_DemoShellSettingsPageRoute",
+            "arguments": "_DemoShellSettingsPageRouteArguments",
+            "package": "demo_navigation_lab",
+            "library": "lib/src/shell_pages.dart"
+          },
+          "registration": "ccrouterRegisterDemoShellSettingsPageRoute",
+          "destination": {
+            "descriptor": "ccrouterDescribeDemoShellSettingsPageRoute",
+            "builder": "ccrouterBuildDemoShellSettingsPageRoute"
+          },
+          "generatedArtifacts": [
+            {
+              "role": "routePart",
+              "symbol": "_DemoShellSettingsPageRoute",
+              "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/shell_pages.route.g.dart"
+            }
+          ],
+          "patterns": [
+            {
+              "type": "CCPathPattern",
+              "value": "/shell/settings",
+              "primary": true,
+              "constraints": {}
+            }
+          ],
+          "parameters": [],
+          "resultType": "void"
+        },
+        {
+          "id": "demo_navigation_lab.workspace.home",
+          "componentId": "demo_navigation_lab_component",
+          "componentVersion": "0.1.0",
+          "exposure": "internal",
+          "deepLink": "disabled",
+          "description": "StatefulShellRoute 首页分支。",
+          "interceptorIds": [],
+          "popGuardIds": [],
+          "declaration": {
+            "package": "demo_navigation_lab",
+            "library": "lib/src/shell_pages.dart",
+            "kind": "page",
+            "symbol": "DemoWorkspaceHomePage",
+            "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
+            "line": 110,
+            "column": 13
+          },
+          "navigationSources": [
+            "typedIntent",
+            "internalUri"
+          ],
+          "restoration": {
+            "status": "unsupported"
+          },
+          "placement": {
+            "hostId": "default",
+            "parentRouteId": null,
+            "shellId": "demo_navigation_lab.workspace_shell",
+            "navigatorOutlet": "workspace.home"
+          },
+          "presentation": {
+            "type": "page",
+            "routeType": "platformDefault",
+            "transition": "platformDefault",
+            "opaque": true,
+            "fullscreenDialog": false
+          },
+          "contracts": {
+            "route": "_DemoWorkspaceHomePageRoute",
+            "arguments": "_DemoWorkspaceHomePageRouteArguments",
+            "package": "demo_navigation_lab",
+            "library": "lib/src/shell_pages.dart"
+          },
+          "registration": "ccrouterRegisterDemoWorkspaceHomePageRoute",
+          "destination": {
+            "descriptor": "ccrouterDescribeDemoWorkspaceHomePageRoute",
+            "builder": "ccrouterBuildDemoWorkspaceHomePageRoute"
+          },
+          "generatedArtifacts": [
+            {
+              "role": "routePart",
+              "symbol": "_DemoWorkspaceHomePageRoute",
+              "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/shell_pages.route.g.dart"
+            }
+          ],
+          "patterns": [
+            {
+              "type": "CCPathPattern",
+              "value": "/workspace/home",
+              "primary": true,
+              "constraints": {}
+            }
+          ],
+          "parameters": [],
+          "resultType": "void"
+        },
+        {
+          "id": "demo_navigation_lab.workspace.detail",
+          "componentId": "demo_navigation_lab_component",
+          "componentVersion": "0.1.0",
+          "exposure": "internal",
+          "deepLink": "enabled",
+          "description": "StatefulShellRoute 首页分支的可 Deep Link 子路由。",
+          "interceptorIds": [],
+          "popGuardIds": [],
+          "declaration": {
+            "package": "demo_navigation_lab",
+            "library": "lib/src/shell_pages.dart",
+            "kind": "page",
+            "symbol": "DemoWorkspaceDetailPage",
+            "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
+            "line": 142,
+            "column": 13
+          },
+          "navigationSources": [
+            "typedIntent",
+            "internalUri",
+            "externalDeepLink"
+          ],
+          "restoration": {
+            "status": "unsupported"
+          },
+          "placement": {
+            "hostId": "default",
+            "parentRouteId": "demo_navigation_lab.workspace.home",
+            "shellId": "demo_navigation_lab.workspace_shell",
+            "navigatorOutlet": "workspace.home"
+          },
+          "presentation": {
+            "type": "page",
+            "routeType": "platformDefault",
+            "transition": "platformDefault",
+            "opaque": true,
+            "fullscreenDialog": false
+          },
+          "contracts": {
+            "route": "_DemoWorkspaceDetailPageRoute",
+            "arguments": "_DemoWorkspaceDetailPageRouteArguments",
+            "package": "demo_navigation_lab",
+            "library": "lib/src/shell_pages.dart"
+          },
+          "registration": "ccrouterRegisterDemoWorkspaceDetailPageRoute",
+          "destination": {
+            "descriptor": "ccrouterDescribeDemoWorkspaceDetailPageRoute",
+            "builder": "ccrouterBuildDemoWorkspaceDetailPageRoute"
+          },
+          "generatedArtifacts": [
+            {
+              "role": "routePart",
+              "symbol": "_DemoWorkspaceDetailPageRoute",
+              "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/shell_pages.route.g.dart"
+            }
+          ],
+          "patterns": [
+            {
+              "type": "CCPathPattern",
+              "value": "/workspace/home/:item",
+              "primary": true,
+              "constraints": {}
+            }
+          ],
+          "parameters": [
+            {
+              "name": "item",
+              "wireName": "item",
+              "source": "path",
+              "type": "int",
+              "required": true,
+              "default": null,
+              "description": null
+            }
+          ],
+          "resultType": "void"
+        },
+        {
+          "id": "demo_navigation_lab.workspace.activity",
+          "componentId": "demo_navigation_lab_component",
+          "componentVersion": "0.1.0",
+          "exposure": "internal",
+          "deepLink": "disabled",
+          "description": "StatefulShellRoute 活动分支。",
+          "interceptorIds": [],
+          "popGuardIds": [],
+          "declaration": {
+            "package": "demo_navigation_lab",
+            "library": "lib/src/shell_pages.dart",
+            "kind": "page",
+            "symbol": "DemoWorkspaceActivityPage",
+            "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
+            "line": 172,
+            "column": 13
+          },
+          "navigationSources": [
+            "typedIntent",
+            "internalUri"
+          ],
+          "restoration": {
+            "status": "unsupported"
+          },
+          "placement": {
+            "hostId": "default",
+            "parentRouteId": null,
+            "shellId": "demo_navigation_lab.workspace_shell",
+            "navigatorOutlet": "workspace.activity"
+          },
+          "presentation": {
+            "type": "page",
+            "routeType": "platformDefault",
+            "transition": "platformDefault",
+            "opaque": true,
+            "fullscreenDialog": false
+          },
+          "contracts": {
+            "route": "_DemoWorkspaceActivityPageRoute",
+            "arguments": "_DemoWorkspaceActivityPageRouteArguments",
+            "package": "demo_navigation_lab",
+            "library": "lib/src/shell_pages.dart"
+          },
+          "registration": "ccrouterRegisterDemoWorkspaceActivityPageRoute",
+          "destination": {
+            "descriptor": "ccrouterDescribeDemoWorkspaceActivityPageRoute",
+            "builder": "ccrouterBuildDemoWorkspaceActivityPageRoute"
+          },
+          "generatedArtifacts": [
+            {
+              "role": "routePart",
+              "symbol": "_DemoWorkspaceActivityPageRoute",
+              "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/shell_pages.route.g.dart"
+            }
+          ],
+          "patterns": [
+            {
+              "type": "CCPathPattern",
+              "value": "/workspace/activity",
+              "primary": true,
+              "constraints": {}
+            }
+          ],
+          "parameters": [],
+          "resultType": "void"
+        },
+        {
+          "id": "demo_navigation_lab.workspace.profile",
+          "componentId": "demo_navigation_lab_component",
+          "componentVersion": "0.1.0",
+          "exposure": "internal",
+          "deepLink": "disabled",
+          "description": "StatefulShellRoute 个人分支。",
+          "interceptorIds": [],
+          "popGuardIds": [],
+          "declaration": {
+            "package": "demo_navigation_lab",
+            "library": "lib/src/shell_pages.dart",
+            "kind": "page",
+            "symbol": "DemoWorkspaceProfilePage",
+            "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
+            "line": 209,
+            "column": 13
+          },
+          "navigationSources": [
+            "typedIntent",
+            "internalUri"
+          ],
+          "restoration": {
+            "status": "unsupported"
+          },
+          "placement": {
+            "hostId": "default",
+            "parentRouteId": null,
+            "shellId": "demo_navigation_lab.workspace_shell",
+            "navigatorOutlet": "workspace.profile"
+          },
+          "presentation": {
+            "type": "page",
+            "routeType": "platformDefault",
+            "transition": "platformDefault",
+            "opaque": true,
+            "fullscreenDialog": false
+          },
+          "contracts": {
+            "route": "_DemoWorkspaceProfilePageRoute",
+            "arguments": "_DemoWorkspaceProfilePageRouteArguments",
+            "package": "demo_navigation_lab",
+            "library": "lib/src/shell_pages.dart"
+          },
+          "registration": "ccrouterRegisterDemoWorkspaceProfilePageRoute",
+          "destination": {
+            "descriptor": "ccrouterDescribeDemoWorkspaceProfilePageRoute",
+            "builder": "ccrouterBuildDemoWorkspaceProfilePageRoute"
+          },
+          "generatedArtifacts": [
+            {
+              "role": "routePart",
+              "symbol": "_DemoWorkspaceProfilePageRoute",
+              "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/shell_pages.route.g.dart"
+            }
+          ],
+          "patterns": [
+            {
+              "type": "CCPathPattern",
+              "value": "/workspace/profile",
+              "primary": true,
+              "constraints": {}
+            }
+          ],
+          "parameters": [],
+          "resultType": "void"
+        },
+        {
+          "id": "demo_navigation_lab.extra",
+          "componentId": "demo_navigation_lab_component",
+          "componentVersion": "0.1.0",
+          "exposure": "internal",
+          "deepLink": "disabled",
+          "description": "展示仅在进程内传递的类型安全 Extra 对象。",
+          "interceptorIds": [],
+          "popGuardIds": [],
+          "declaration": {
+            "package": "demo_navigation_lab",
+            "library": "lib/src/shell_pages.dart",
+            "kind": "page",
+            "symbol": "DemoExtraPage",
+            "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
+            "line": 233,
+            "column": 13
+          },
+          "navigationSources": [
+            "typedIntent",
+            "internalUri"
+          ],
+          "restoration": {
+            "status": "unsupported"
+          },
+          "placement": {
+            "hostId": "default",
+            "parentRouteId": null,
+            "shellId": null,
+            "navigatorOutlet": "root"
+          },
+          "presentation": {
+            "type": "page",
+            "routeType": "platformDefault",
+            "transition": "platformDefault",
+            "opaque": true,
+            "fullscreenDialog": false
+          },
+          "contracts": {
+            "route": "_DemoExtraPageRoute",
+            "arguments": "_DemoExtraPageRouteArguments",
+            "package": "demo_navigation_lab",
+            "library": "lib/src/shell_pages.dart"
+          },
+          "registration": "ccrouterRegisterDemoExtraPageRoute",
+          "destination": {
+            "descriptor": "ccrouterDescribeDemoExtraPageRoute",
+            "builder": "ccrouterBuildDemoExtraPageRoute"
+          },
+          "generatedArtifacts": [
+            {
+              "role": "routePart",
+              "symbol": "_DemoExtraPageRoute",
+              "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/shell_pages.route.g.dart"
+            }
+          ],
+          "patterns": [
+            {
+              "type": "CCPathPattern",
+              "value": "/lab/extra",
+              "primary": true,
+              "constraints": {}
+            }
+          ],
+          "parameters": [
+            {
+              "name": "payload",
+              "wireName": "payload",
+              "source": "extra",
+              "type": "DemoExtraPayload",
+              "required": true,
+              "default": null,
+              "description": null
+            }
+          ],
+          "resultType": "void"
+        }
+      ],
+      "routeImplementations": []
+    },
+    {
+      "schemaVersion": 3,
+      "package": "demo_navigation_lab",
+      "source": "lib/src/stack_page.dart",
+      "componentDeclarations": [],
+      "componentManifests": {},
+      "components": [
+        {
+          "id": "demo_navigation_lab_component",
+          "version": "0.1.0",
+          "dependencies": [
+            "demo_order_component",
+            "demo_web_component"
+          ],
+          "optionalDependencies": []
+        }
+      ],
+      "routes": [
+        {
+          "id": "demo_navigation_lab.stack",
+          "componentId": "demo_navigation_lab_component",
+          "componentVersion": "0.1.0",
+          "exposure": "internal",
+          "deepLink": "disabled",
+          "description": "交互验证 Push、Replace、Pop、Go 与 Reset。",
+          "interceptorIds": [],
+          "popGuardIds": [],
+          "declaration": {
+            "package": "demo_navigation_lab",
+            "library": "lib/src/stack_page.dart",
+            "kind": "page",
+            "symbol": "DemoStackPage",
+            "packageUri": "package:demo_navigation_lab/src/stack_page.dart",
+            "line": 17,
+            "column": 13
+          },
+          "navigationSources": [
+            "typedIntent",
+            "internalUri"
+          ],
+          "restoration": {
+            "status": "unsupported"
+          },
+          "placement": {
+            "hostId": "default",
+            "parentRouteId": null,
+            "shellId": null,
+            "navigatorOutlet": "root"
+          },
+          "presentation": {
+            "type": "page",
+            "routeType": "platformDefault",
+            "transition": "platformDefault",
+            "opaque": true,
+            "fullscreenDialog": false
+          },
+          "contracts": {
+            "route": "_DemoStackPageRoute",
+            "arguments": "_DemoStackPageRouteArguments",
+            "package": "demo_navigation_lab",
+            "library": "lib/src/stack_page.dart"
+          },
+          "registration": "ccrouterRegisterDemoStackPageRoute",
+          "destination": {
+            "descriptor": "ccrouterDescribeDemoStackPageRoute",
+            "builder": "ccrouterBuildDemoStackPageRoute"
+          },
+          "generatedArtifacts": [
+            {
+              "role": "routePart",
+              "symbol": "_DemoStackPageRoute",
+              "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/stack_page.route.g.dart"
+            }
+          ],
+          "patterns": [
+            {
+              "type": "CCPathPattern",
+              "value": "/lab/stack/:level",
+              "primary": true,
+              "constraints": {}
+            }
+          ],
+          "parameters": [
+            {
+              "name": "level",
+              "wireName": "level",
+              "source": "path",
+              "type": "int",
+              "required": true,
+              "default": null,
+              "description": null
+            }
+          ],
+          "resultType": "String"
+        }
+      ],
+      "routeImplementations": []
+    }
+  ],
+  "capabilityCatalog": {
+    "schemaVersion": 1,
+    "records": [
+      {
+        "kind": "route",
+        "id": "demo_navigation_lab.cancel",
+        "componentId": "demo_navigation_lab_component",
+        "packageName": "demo_navigation_lab",
+        "contract": {
+          "symbol": "DemoCancelledPage",
+          "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
+          "line": 145,
+          "column": 13
+        },
+        "implementation": {
+          "symbol": "DemoCancelledPage",
+          "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
+          "line": 145,
+          "column": 13
+        },
+        "generatedArtifacts": [
+          {
+            "role": "routePart",
+            "symbol": "_DemoCancelledPageRoute",
+            "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/policy_pages.route.g.dart"
+          }
+        ]
+      },
+      {
+        "kind": "route",
+        "id": "demo_navigation_lab.defer",
+        "componentId": "demo_navigation_lab_component",
+        "packageName": "demo_navigation_lab",
+        "contract": {
+          "symbol": "DemoDeferredPage",
+          "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
+          "line": 189,
+          "column": 13
+        },
+        "implementation": {
+          "symbol": "DemoDeferredPage",
+          "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
+          "line": 189,
+          "column": 13
+        },
+        "generatedArtifacts": [
+          {
+            "role": "routePart",
+            "symbol": "_DemoDeferredPageRoute",
+            "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/policy_pages.route.g.dart"
+          }
+        ]
+      },
+      {
+        "kind": "route",
+        "id": "demo_navigation_lab.detail",
+        "componentId": "demo_navigation_lab_component",
+        "packageName": "demo_navigation_lab",
+        "contract": {
+          "symbol": "DemoDetailPage",
+          "packageUri": "package:demo_navigation_lab/src/detail_page.dart",
+          "line": 31,
+          "column": 13
+        },
+        "implementation": {
+          "symbol": "DemoDetailPage",
+          "packageUri": "package:demo_navigation_lab/src/detail_page.dart",
+          "line": 31,
+          "column": 13
+        },
+        "generatedArtifacts": [
+          {
+            "role": "routePart",
+            "symbol": "_DemoDetailPageRoute",
+            "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/detail_page.route.g.dart"
+          }
+        ]
+      },
+      {
+        "kind": "route",
+        "id": "demo_navigation_lab.extra",
+        "componentId": "demo_navigation_lab_component",
+        "packageName": "demo_navigation_lab",
+        "contract": {
+          "symbol": "DemoExtraPage",
+          "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
+          "line": 233,
+          "column": 13
+        },
+        "implementation": {
+          "symbol": "DemoExtraPage",
+          "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
+          "line": 233,
+          "column": 13
+        },
+        "generatedArtifacts": [
+          {
+            "role": "routePart",
+            "symbol": "_DemoExtraPageRoute",
+            "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/shell_pages.route.g.dart"
+          }
+        ]
+      },
+      {
+        "kind": "route",
+        "id": "demo_navigation_lab.failure",
+        "componentId": "demo_navigation_lab_component",
+        "packageName": "demo_navigation_lab",
+        "contract": {
+          "symbol": "DemoFailurePage",
+          "packageUri": "package:demo_navigation_lab/src/failure_page.dart",
+          "line": 17,
+          "column": 13
+        },
+        "implementation": {
+          "symbol": "DemoFailurePage",
+          "packageUri": "package:demo_navigation_lab/src/failure_page.dart",
+          "line": 17,
+          "column": 13
+        },
+        "generatedArtifacts": [
+          {
+            "role": "routePart",
+            "symbol": "_DemoFailurePageRoute",
+            "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/failure_page.route.g.dart"
+          }
+        ]
+      },
+      {
+        "kind": "route",
+        "id": "demo_navigation_lab.guarded",
+        "componentId": "demo_navigation_lab_component",
+        "packageName": "demo_navigation_lab",
+        "contract": {
+          "symbol": "DemoGuardedPage",
+          "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
+          "line": 223,
+          "column": 13
+        },
+        "implementation": {
+          "symbol": "DemoGuardedPage",
+          "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
+          "line": 223,
+          "column": 13
+        },
+        "generatedArtifacts": [
+          {
+            "role": "routePart",
+            "symbol": "_DemoGuardedPageRoute",
+            "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/policy_pages.route.g.dart"
+          }
+        ]
+      },
+      {
+        "kind": "route",
+        "id": "demo_navigation_lab.home",
+        "componentId": "demo_navigation_lab_component",
+        "packageName": "demo_navigation_lab",
+        "contract": {
+          "symbol": "DemoNavigationHomePage",
+          "packageUri": "package:demo_navigation_lab/src/home_page.dart",
+          "line": 26,
+          "column": 13
+        },
+        "implementation": {
+          "symbol": "DemoNavigationHomePage",
+          "packageUri": "package:demo_navigation_lab/src/home_page.dart",
+          "line": 26,
+          "column": 13
+        },
+        "generatedArtifacts": [
+          {
+            "role": "routePart",
+            "symbol": "_DemoNavigationHomePageRoute",
+            "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/home_page.route.g.dart"
+          }
+        ]
+      },
+      {
+        "kind": "route",
+        "id": "demo_navigation_lab.lifecycle",
+        "componentId": "demo_navigation_lab_component",
+        "packageName": "demo_navigation_lab",
+        "contract": {
+          "symbol": "DemoLifecyclePage",
+          "packageUri": "package:demo_navigation_lab/src/lifecycle_page.dart",
+          "line": 16,
+          "column": 13
+        },
+        "implementation": {
+          "symbol": "DemoLifecyclePage",
+          "packageUri": "package:demo_navigation_lab/src/lifecycle_page.dart",
+          "line": 16,
+          "column": 13
+        },
+        "generatedArtifacts": [
+          {
+            "role": "routePart",
+            "symbol": "_DemoLifecyclePageRoute",
+            "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/lifecycle_page.route.g.dart"
+          }
+        ]
+      },
+      {
+        "kind": "route",
+        "id": "demo_navigation_lab.presentation.bottom_page",
+        "componentId": "demo_navigation_lab_component",
+        "packageName": "demo_navigation_lab",
+        "contract": {
+          "symbol": "DemoBottomPage",
+          "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
+          "line": 69,
+          "column": 13
+        },
+        "implementation": {
+          "symbol": "DemoBottomPage",
+          "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
+          "line": 69,
+          "column": 13
+        },
+        "generatedArtifacts": [
+          {
+            "role": "routePart",
+            "symbol": "_DemoBottomPageRoute",
+            "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/presentation_pages.route.g.dart"
+          }
+        ]
+      },
+      {
+        "kind": "route",
+        "id": "demo_navigation_lab.presentation.cupertino",
+        "componentId": "demo_navigation_lab_component",
+        "packageName": "demo_navigation_lab",
+        "contract": {
+          "symbol": "DemoCupertinoPage",
+          "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
+          "line": 49,
+          "column": 13
+        },
+        "implementation": {
+          "symbol": "DemoCupertinoPage",
+          "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
+          "line": 49,
+          "column": 13
+        },
+        "generatedArtifacts": [
+          {
+            "role": "routePart",
+            "symbol": "_DemoCupertinoPageRoute",
+            "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/presentation_pages.route.g.dart"
+          }
+        ]
+      },
+      {
+        "kind": "route",
+        "id": "demo_navigation_lab.presentation.dialog",
+        "componentId": "demo_navigation_lab_component",
+        "packageName": "demo_navigation_lab",
+        "contract": {
+          "symbol": "DemoDialogPage",
+          "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
+          "line": 149,
+          "column": 13
+        },
+        "implementation": {
+          "symbol": "DemoDialogPage",
+          "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
+          "line": 149,
+          "column": 13
+        },
+        "generatedArtifacts": [
+          {
+            "role": "routePart",
+            "symbol": "_DemoDialogPageRoute",
+            "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/presentation_pages.route.g.dart"
+          }
+        ]
+      },
+      {
+        "kind": "route",
+        "id": "demo_navigation_lab.presentation.fade",
+        "componentId": "demo_navigation_lab_component",
+        "packageName": "demo_navigation_lab",
+        "contract": {
+          "symbol": "DemoFadePage",
+          "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
+          "line": 15,
+          "column": 13
+        },
+        "implementation": {
+          "symbol": "DemoFadePage",
+          "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
+          "line": 15,
+          "column": 13
+        },
+        "generatedArtifacts": [
+          {
+            "role": "routePart",
+            "symbol": "_DemoFadePageRoute",
+            "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/presentation_pages.route.g.dart"
+          }
+        ]
+      },
+      {
+        "kind": "route",
+        "id": "demo_navigation_lab.presentation.scale",
+        "componentId": "demo_navigation_lab_component",
+        "packageName": "demo_navigation_lab",
+        "contract": {
+          "symbol": "DemoScalePage",
+          "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
+          "line": 32,
+          "column": 13
+        },
+        "implementation": {
+          "symbol": "DemoScalePage",
+          "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
+          "line": 32,
+          "column": 13
+        },
+        "generatedArtifacts": [
+          {
+            "role": "routePart",
+            "symbol": "_DemoScalePageRoute",
+            "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/presentation_pages.route.g.dart"
+          }
+        ]
+      },
+      {
+        "kind": "route",
+        "id": "demo_navigation_lab.presentation.sheet",
+        "componentId": "demo_navigation_lab_component",
+        "packageName": "demo_navigation_lab",
+        "contract": {
+          "symbol": "DemoBottomSheetPage",
+          "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
+          "line": 179,
+          "column": 13
+        },
+        "implementation": {
+          "symbol": "DemoBottomSheetPage",
+          "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
+          "line": 179,
+          "column": 13
+        },
+        "generatedArtifacts": [
+          {
+            "role": "routePart",
+            "symbol": "_DemoBottomSheetPageRoute",
+            "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/presentation_pages.route.g.dart"
+          }
+        ]
+      },
+      {
+        "kind": "route",
+        "id": "demo_navigation_lab.presentation.transparent",
+        "componentId": "demo_navigation_lab_component",
+        "packageName": "demo_navigation_lab",
+        "contract": {
+          "symbol": "DemoTransparentPage",
+          "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
+          "line": 91,
+          "column": 13
+        },
+        "implementation": {
+          "symbol": "DemoTransparentPage",
+          "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
+          "line": 91,
+          "column": 13
+        },
+        "generatedArtifacts": [
+          {
+            "role": "routePart",
+            "symbol": "_DemoTransparentPageRoute",
+            "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/presentation_pages.route.g.dart"
+          }
+        ]
+      },
+      {
+        "kind": "route",
+        "id": "demo_navigation_lab.proceed",
+        "componentId": "demo_navigation_lab_component",
+        "packageName": "demo_navigation_lab",
+        "contract": {
+          "symbol": "DemoProceedPage",
+          "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
+          "line": 128,
+          "column": 13
+        },
+        "implementation": {
+          "symbol": "DemoProceedPage",
+          "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
+          "line": 128,
+          "column": 13
+        },
+        "generatedArtifacts": [
+          {
+            "role": "routePart",
+            "symbol": "_DemoProceedPageRoute",
+            "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/policy_pages.route.g.dart"
+          }
+        ]
+      },
+      {
+        "kind": "route",
+        "id": "demo_navigation_lab.redirect.source",
+        "componentId": "demo_navigation_lab_component",
+        "packageName": "demo_navigation_lab",
+        "contract": {
+          "symbol": "DemoRedirectSourcePage",
+          "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
+          "line": 160,
+          "column": 13
+        },
+        "implementation": {
+          "symbol": "DemoRedirectSourcePage",
+          "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
+          "line": 160,
+          "column": 13
+        },
+        "generatedArtifacts": [
+          {
+            "role": "routePart",
+            "symbol": "_DemoRedirectSourcePageRoute",
+            "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/policy_pages.route.g.dart"
+          }
+        ]
+      },
+      {
+        "kind": "route",
+        "id": "demo_navigation_lab.redirect.target",
+        "componentId": "demo_navigation_lab_component",
+        "packageName": "demo_navigation_lab",
+        "contract": {
+          "symbol": "DemoRedirectTargetPage",
+          "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
+          "line": 174,
+          "column": 13
+        },
+        "implementation": {
+          "symbol": "DemoRedirectTargetPage",
+          "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
+          "line": 174,
+          "column": 13
+        },
+        "generatedArtifacts": [
+          {
+            "role": "routePart",
+            "symbol": "_DemoRedirectTargetPageRoute",
+            "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/policy_pages.route.g.dart"
+          }
+        ]
+      },
+      {
+        "kind": "route",
+        "id": "demo_navigation_lab.shell.detail",
+        "componentId": "demo_navigation_lab_component",
+        "packageName": "demo_navigation_lab",
+        "contract": {
+          "symbol": "DemoShellDetailPage",
+          "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
+          "line": 59,
+          "column": 13
+        },
+        "implementation": {
+          "symbol": "DemoShellDetailPage",
+          "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
+          "line": 59,
+          "column": 13
+        },
+        "generatedArtifacts": [
+          {
+            "role": "routePart",
+            "symbol": "_DemoShellDetailPageRoute",
+            "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/shell_pages.route.g.dart"
+          }
+        ]
+      },
+      {
+        "kind": "route",
+        "id": "demo_navigation_lab.shell.feed",
+        "componentId": "demo_navigation_lab_component",
+        "packageName": "demo_navigation_lab",
+        "contract": {
+          "symbol": "DemoShellFeedPage",
+          "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
+          "line": 22,
+          "column": 13
+        },
+        "implementation": {
+          "symbol": "DemoShellFeedPage",
+          "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
+          "line": 22,
+          "column": 13
+        },
+        "generatedArtifacts": [
+          {
+            "role": "routePart",
+            "symbol": "_DemoShellFeedPageRoute",
+            "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/shell_pages.route.g.dart"
+          }
+        ]
+      },
+      {
+        "kind": "route",
+        "id": "demo_navigation_lab.shell.settings",
+        "componentId": "demo_navigation_lab_component",
+        "packageName": "demo_navigation_lab",
+        "contract": {
+          "symbol": "DemoShellSettingsPage",
+          "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
+          "line": 89,
+          "column": 13
+        },
+        "implementation": {
+          "symbol": "DemoShellSettingsPage",
+          "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
+          "line": 89,
+          "column": 13
+        },
+        "generatedArtifacts": [
+          {
+            "role": "routePart",
+            "symbol": "_DemoShellSettingsPageRoute",
+            "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/shell_pages.route.g.dart"
+          }
+        ]
+      },
+      {
+        "kind": "route",
+        "id": "demo_navigation_lab.stack",
+        "componentId": "demo_navigation_lab_component",
+        "packageName": "demo_navigation_lab",
+        "contract": {
+          "symbol": "DemoStackPage",
+          "packageUri": "package:demo_navigation_lab/src/stack_page.dart",
+          "line": 17,
+          "column": 13
+        },
+        "implementation": {
+          "symbol": "DemoStackPage",
+          "packageUri": "package:demo_navigation_lab/src/stack_page.dart",
+          "line": 17,
+          "column": 13
+        },
+        "generatedArtifacts": [
+          {
+            "role": "routePart",
+            "symbol": "_DemoStackPageRoute",
+            "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/stack_page.route.g.dart"
+          }
+        ]
+      },
+      {
+        "kind": "route",
+        "id": "demo_navigation_lab.timeout",
+        "componentId": "demo_navigation_lab_component",
+        "packageName": "demo_navigation_lab",
+        "contract": {
+          "symbol": "DemoTimeoutPage",
+          "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
+          "line": 206,
+          "column": 13
+        },
+        "implementation": {
+          "symbol": "DemoTimeoutPage",
+          "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
+          "line": 206,
+          "column": 13
+        },
+        "generatedArtifacts": [
+          {
+            "role": "routePart",
+            "symbol": "_DemoTimeoutPageRoute",
+            "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/policy_pages.route.g.dart"
+          }
+        ]
+      },
+      {
+        "kind": "route",
+        "id": "demo_navigation_lab.workspace.activity",
+        "componentId": "demo_navigation_lab_component",
+        "packageName": "demo_navigation_lab",
+        "contract": {
+          "symbol": "DemoWorkspaceActivityPage",
+          "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
+          "line": 172,
+          "column": 13
+        },
+        "implementation": {
+          "symbol": "DemoWorkspaceActivityPage",
+          "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
+          "line": 172,
+          "column": 13
+        },
+        "generatedArtifacts": [
+          {
+            "role": "routePart",
+            "symbol": "_DemoWorkspaceActivityPageRoute",
+            "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/shell_pages.route.g.dart"
+          }
+        ]
+      },
+      {
+        "kind": "route",
+        "id": "demo_navigation_lab.workspace.detail",
+        "componentId": "demo_navigation_lab_component",
+        "packageName": "demo_navigation_lab",
+        "contract": {
+          "symbol": "DemoWorkspaceDetailPage",
+          "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
+          "line": 142,
+          "column": 13
+        },
+        "implementation": {
+          "symbol": "DemoWorkspaceDetailPage",
+          "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
+          "line": 142,
+          "column": 13
+        },
+        "generatedArtifacts": [
+          {
+            "role": "routePart",
+            "symbol": "_DemoWorkspaceDetailPageRoute",
+            "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/shell_pages.route.g.dart"
+          }
+        ]
+      },
+      {
+        "kind": "route",
+        "id": "demo_navigation_lab.workspace.home",
+        "componentId": "demo_navigation_lab_component",
+        "packageName": "demo_navigation_lab",
+        "contract": {
+          "symbol": "DemoWorkspaceHomePage",
+          "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
+          "line": 110,
+          "column": 13
+        },
+        "implementation": {
+          "symbol": "DemoWorkspaceHomePage",
+          "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
+          "line": 110,
+          "column": 13
+        },
+        "generatedArtifacts": [
+          {
+            "role": "routePart",
+            "symbol": "_DemoWorkspaceHomePageRoute",
+            "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/shell_pages.route.g.dart"
+          }
+        ]
+      },
+      {
+        "kind": "route",
+        "id": "demo_navigation_lab.workspace.profile",
+        "componentId": "demo_navigation_lab_component",
+        "packageName": "demo_navigation_lab",
+        "contract": {
+          "symbol": "DemoWorkspaceProfilePage",
+          "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
+          "line": 209,
+          "column": 13
+        },
+        "implementation": {
+          "symbol": "DemoWorkspaceProfilePage",
+          "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
+          "line": 209,
+          "column": 13
+        },
+        "generatedArtifacts": [
+          {
+            "role": "routePart",
+            "symbol": "_DemoWorkspaceProfilePageRoute",
+            "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/shell_pages.route.g.dart"
+          }
+        ]
+      }
+    ]
+  }
+}

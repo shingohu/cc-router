@@ -1,0 +1,121 @@
+{
+  "schemaVersion": 2,
+  "generatorVersion": "0.1.0",
+  "package": {
+    "name": "demo_order",
+    "version": "0.1.0"
+  },
+  "contentFingerprint": "84f5f499131b005a8bfa1b43043ddbf8ed4baa8a7fc0ec8db18d0bcc93c496ab",
+  "bundle": {
+    "library": "lib/demo_order_ccrouter.g.dart",
+    "symbol": "ccrouterGeneratedPackageBundle"
+  },
+  "dependencies": [
+    {
+      "name": "demo_order_contracts",
+      "version": "0.1.0",
+      "contentFingerprint": "f313db9d1385aca087775b69771b2f59eab591725636f2e1dfd1566c5c3318ca"
+    }
+  ],
+  "metadata": [
+    {
+      "schemaVersion": 3,
+      "package": "demo_order",
+      "source": "lib/src/demo_order_component_registrar.dart",
+      "componentDeclarations": [
+        "demo_order_component"
+      ],
+      "componentManifests": {
+        "demo_order_component": "demoOrderComponentManifest"
+      },
+      "components": [
+        {
+          "id": "demo_order_component",
+          "version": "0.1.0",
+          "dependencies": [],
+          "optionalDependencies": []
+        }
+      ],
+      "routes": [],
+      "routeImplementations": []
+    },
+    {
+      "schemaVersion": 3,
+      "package": "demo_order",
+      "source": "lib/src/order_detail_page.dart",
+      "componentDeclarations": [],
+      "componentManifests": {},
+      "components": [
+        {
+          "id": "demo_order_component",
+          "version": "0.1.0",
+          "dependencies": [],
+          "optionalDependencies": []
+        }
+      ],
+      "routes": [],
+      "routeImplementations": [
+        {
+          "routeId": "order.detail",
+          "componentId": "demo_order_component",
+          "package": "demo_order",
+          "source": "lib/src/order_detail_page.dart",
+          "contract": {
+            "symbol": "OrderDetailRouteContract",
+            "packageUri": "package:demo_order_contracts/src/order_detail_route_contract.dart",
+            "line": 19,
+            "column": 16
+          },
+          "implementation": {
+            "symbol": "OrderDetailPage",
+            "packageUri": "package:demo_order/src/order_detail_page.dart",
+            "line": 8,
+            "column": 13
+          },
+          "registration": "ccrouterRegisterOrderDetailPageRoute",
+          "destination": {
+            "descriptor": "ccrouterDescribeOrderDetailPageRoute",
+            "builder": "ccrouterBuildOrderDetailPageRoute"
+          },
+          "generatedArtifacts": [
+            {
+              "role": "routePart",
+              "symbol": "ccrouterRegisterOrderDetailPageRoute",
+              "packageUri": "package:demo_order/src/ccrouter_generated/order_detail_page.route.g.dart"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "capabilityCatalog": {
+    "schemaVersion": 1,
+    "records": [
+      {
+        "kind": "route",
+        "id": "order.detail",
+        "componentId": "demo_order_component",
+        "packageName": "demo_order_contracts",
+        "contract": {
+          "symbol": "OrderDetailRouteContract",
+          "packageUri": "package:demo_order_contracts/src/order_detail_route_contract.dart",
+          "line": 19,
+          "column": 16
+        },
+        "implementation": {
+          "symbol": "OrderDetailPage",
+          "packageUri": "package:demo_order/src/order_detail_page.dart",
+          "line": 8,
+          "column": 13
+        },
+        "generatedArtifacts": [
+          {
+            "role": "routePart",
+            "symbol": "ccrouterRegisterOrderDetailPageRoute",
+            "packageUri": "package:demo_order/src/ccrouter_generated/order_detail_page.route.g.dart"
+          }
+        ]
+      }
+    ]
+  }
+}

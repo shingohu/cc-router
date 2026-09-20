@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 3,
+  "package": "demo_payment",
+  "source": "lib/src/demo_payment_component_registrar.dart",
+  "componentDeclarations": [
+    "demo_payment_component"
+  ],
+  "componentManifests": {
+    "demo_payment_component": "demoPaymentComponentManifest"
+  },
+  "components": [
+    {
+      "id": "demo_payment_component",
+      "version": "0.1.0",
+      "dependencies": [
+        "demo_order_component"
+      ],
+      "optionalDependencies": []
+    }
+  ],
+  "routes": [],
+  "routeImplementations": []
+}

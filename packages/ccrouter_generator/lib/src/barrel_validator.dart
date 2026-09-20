@@ -17,12 +17,15 @@ final class CCRouteBarrelExportValidator {
   /// [documents] must be the decoded component and route metadata files
   /// emitted by the metadata builders. The method only reports public
   /// Contract-first declarations whose source file is inside a package `lib`
-  /// directory; test fixtures are ignored.
+  /// directory; test fixtures are ignored. Resolved Host generation supplies
+  /// [packageRoots] to avoid scanning unrelated workspace Packages; the legacy
+  /// aggregate command may omit it and discover roots below [workspaceRoot].
   static List<String> validate(
     Directory workspaceRoot,
-    Iterable<Map<String, Object?>> documents,
-  ) {
-    final packages = _packageRoots(workspaceRoot);
+    Iterable<Map<String, Object?>> documents, {
+    Map<String, Directory>? packageRoots,
+  }) {
+    final packages = packageRoots ?? _packageRoots(workspaceRoot);
     final errors = <String>[];
     for (final document in documents) {
       final packageName = '${document['package'] ?? ''}';

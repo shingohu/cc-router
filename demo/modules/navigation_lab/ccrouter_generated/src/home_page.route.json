@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 3,
+  "package": "demo_navigation_lab",
+  "source": "lib/src/home_page.dart",
+  "componentDeclarations": [],
+  "componentManifests": {},
+  "components": [
+    {
+      "id": "demo_navigation_lab_component",
+      "version": "0.1.0",
+      "dependencies": [
+        "demo_order_component",
+        "demo_web_component"
+      ],
+      "optionalDependencies": []
+    }
+  ],
+  "routes": [
+    {
+      "id": "demo_navigation_lab.home",
+      "componentId": "demo_navigation_lab_component",
+      "componentVersion": "0.1.0",
+      "exposure": "internal",
+      "deepLink": "disabled",
+      "description": "CCRouter 全功能交互验证首页。",
+      "interceptorIds": [],
+      "popGuardIds": [],
+      "declaration": {
+        "package": "demo_navigation_lab",
+        "library": "lib/src/home_page.dart",
+        "kind": "page",
+        "symbol": "DemoNavigationHomePage",
+        "packageUri": "package:demo_navigation_lab/src/home_page.dart",
+        "line": 26,
+        "column": 13
+      },
+      "navigationSources": [
+        "typedIntent",
+        "internalUri"
+      ],
+      "restoration": {
+        "status": "unsupported"
+      },
+      "placement": {
+        "hostId": "default",
+        "parentRouteId": null,
+        "shellId": null,
+        "navigatorOutlet": "root"
+      },
+      "presentation": {
+        "type": "page",
+        "routeType": "platformDefault",
+        "transition": "none",
+        "opaque": true,
+        "fullscreenDialog": false
+      },
+      "contracts": {
+        "route": "_DemoNavigationHomePageRoute",
+        "arguments": "_DemoNavigationHomePageRouteArguments",
+        "package": "demo_navigation_lab",
+        "library": "lib/src/home_page.dart"
+      },
+      "registration": "ccrouterRegisterDemoNavigationHomePageRoute",
+      "destination": {
+        "descriptor": "ccrouterDescribeDemoNavigationHomePageRoute",
+        "builder": "ccrouterBuildDemoNavigationHomePageRoute"
+      },
+      "generatedArtifacts": [
+        {
+          "role": "routePart",
+          "symbol": "_DemoNavigationHomePageRoute",
+          "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/home_page.route.g.dart"
+        }
+      ],
+      "patterns": [
+        {
+          "type": "CCPathPattern",
+          "value": "/",
+          "primary": true,
+          "constraints": {}
+        }
+      ],
+      "parameters": [],
+      "resultType": "void"
+    }
+  ],
+  "routeImplementations": []
+}

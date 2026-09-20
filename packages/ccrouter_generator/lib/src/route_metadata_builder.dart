@@ -6,8 +6,8 @@ final class _RouteMetadataBuilder implements Builder {
   _RouteMetadataBuilder()
     : buildExtensions = const {
         r'^lib/{{}}.dart': [
-          'ccrouter_generated/metadata/{{}}.route.json',
-          'ccrouter_generated/metadata/{{}}.route.md',
+          'ccrouter_generated/{{}}.route.json',
+          'ccrouter_generated/{{}}.route.md',
         ],
       };
 
@@ -78,7 +78,7 @@ Map<String, Object?> _metadataPayload({
   List<String>? componentDeclarations,
   Map<String, String> componentManifests = const {},
 }) => {
-  'schemaVersion': 2,
+  'schemaVersion': 3,
   'package': package,
   'source': source,
   'componentDeclarations':
@@ -144,6 +144,7 @@ Map<String, Object?> _routeJson(
     'package': package,
     'library': source,
     'kind': route.contractFirst ? 'contract' : 'page',
+    ..._sourceReference(route.page),
   },
   'navigationSources': [
     'typedIntent',
@@ -170,6 +171,18 @@ Map<String, Object?> _routeJson(
       'descriptor': route.descriptorFunction,
       'builder': route.builderFunction,
     },
+  'generatedArtifacts': [
+    {
+      'role': route.contractFirst ? 'routeContract' : 'routePart',
+      'symbol': route.api,
+      'packageUri': _packageUri(
+        package,
+        route.contractFirst
+            ? _routeContractOutputPath(source)
+            : _routePartOutputPath(source),
+      ),
+    },
+  ],
   'patterns': route.patterns.indexed.map((entry) {
     final index = entry.$1;
     final pattern = entry.$2;
@@ -273,12 +286,48 @@ Map<String, Object?> _routeImplementationJson(
   'componentId': implementation.contract.component.id,
   'package': package,
   'source': source,
+  'contract': _sourceReference(implementation.contract.page),
+  'implementation': _sourceReference(implementation.page),
   'registration': implementation.registrationFunction,
   'destination': {
     'descriptor': implementation.descriptorFunction,
     'builder': implementation.builderFunction,
   },
+  'generatedArtifacts': [
+    {
+      'role': 'routePart',
+      'symbol': implementation.registrationFunction,
+      'packageUri': _packageUri(package, _routePartOutputPath(source)),
+    },
+  ],
 };
+
+/// Encodes an Analyzer declaration as a portable Package URI and exact span.
+///
+/// The generated metadata never stores an absolute checkout path. CLI and IDE
+/// tooling can resolve the Package URI through `package_config.json` on the
+/// machine where a developer is inspecting the catalog.
+Map<String, Object?> _sourceReference(Element element) {
+  final fragment = element.firstFragment;
+  final libraryFragment = fragment.libraryFragment!;
+  final location = libraryFragment.lineInfo.getLocation(
+    fragment.nameOffset ?? fragment.offset,
+  );
+  return <String, Object?>{
+    'symbol': element.displayName,
+    'packageUri': libraryFragment.source.uri.toString(),
+    'line': location.lineNumber,
+    'column': location.columnNumber,
+  };
+}
+
+/// Converts a Package-relative `lib/` path into a portable Package URI.
+String _packageUri(String package, String libraryPath) {
+  if (!libraryPath.startsWith('lib/')) {
+    throw StateError('Generated library must be below lib/.');
+  }
+  return 'package:$package/${libraryPath.substring('lib/'.length)}';
+}
 
 /// Removes source comment markers while retaining authored explanations.
 String? _documentation(String? comment) {

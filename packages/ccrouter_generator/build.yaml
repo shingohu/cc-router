@@ -7,6 +7,9 @@ builders:
     auto_apply: dependents
     build_to: source
     runs_before: ["ccrouter_generator:routes", "ccrouter_generator:route_metadata"]
+    defaults:
+      generate_for:
+        exclude: ["lib/**/ccrouter_generated/**"]
   routes:
     import: "package:ccrouter_generator/builder.dart"
     builder_factories: ["ccRouteBuilder"]
@@ -14,6 +17,9 @@ builders:
       "^lib/src/{{}}.dart": ["lib/src/ccrouter_generated/{{}}.route.g.dart"]
     auto_apply: dependents
     build_to: source
+    defaults:
+      generate_for:
+        exclude: ["lib/**/ccrouter_generated/**"]
   components:
     import: "package:ccrouter_generator/builder.dart"
     builder_factories: ["ccComponentBuilder"]
@@ -21,21 +27,30 @@ builders:
       "^lib/src/{{}}.dart": ["lib/src/ccrouter_generated/{{}}.component.g.dart"]
     auto_apply: dependents
     build_to: source
+    defaults:
+      generate_for:
+        exclude: ["lib/**/ccrouter_generated/**"]
   component_metadata:
     import: "package:ccrouter_generator/builder.dart"
     builder_factories: ["ccComponentMetadataBuilder"]
     build_extensions:
       "^lib/{{}}.dart":
-        - "ccrouter_generated/metadata/{{}}.component.json"
-        - "ccrouter_generated/metadata/{{}}.component.md"
+        - "ccrouter_generated/{{}}.component.json"
+        - "ccrouter_generated/{{}}.component.md"
     auto_apply: dependents
     build_to: source
+    defaults:
+      generate_for:
+        exclude: ["lib/**/ccrouter_generated/**"]
   route_metadata:
     import: "package:ccrouter_generator/builder.dart"
     builder_factories: ["ccRouteMetadataBuilder"]
     build_extensions:
       "^lib/{{}}.dart":
-        - "ccrouter_generated/metadata/{{}}.route.json"
-        - "ccrouter_generated/metadata/{{}}.route.md"
+        - "ccrouter_generated/{{}}.route.json"
+        - "ccrouter_generated/{{}}.route.md"
     auto_apply: dependents
     build_to: source
+    defaults:
+      generate_for:
+        exclude: ["lib/**/ccrouter_generated/**"]

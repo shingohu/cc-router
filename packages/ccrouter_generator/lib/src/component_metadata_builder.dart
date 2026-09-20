@@ -6,8 +6,8 @@ final class _ComponentMetadataBuilder implements Builder {
   _ComponentMetadataBuilder()
     : buildExtensions = const {
         r'^lib/{{}}.dart': [
-          'ccrouter_generated/metadata/{{}}.component.json',
-          'ccrouter_generated/metadata/{{}}.component.md',
+          'ccrouter_generated/{{}}.component.json',
+          'ccrouter_generated/{{}}.component.md',
         ],
       };
 

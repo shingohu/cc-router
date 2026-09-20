@@ -128,6 +128,11 @@ BuildContext、Flutter Route、Scope、Extra 或返回 Completer。
 - [x] 页面生成 glue 只返回 Route Definition，由 Host catalog 负责转换 Adapter-facing Route；
 - [x] 无 Failure Policy 时仍记录 request 创建前失败，并独立记录实际 Adapter capability 回退；
 - [x] Workspace 聚合前移校验 required 缺失、自依赖和依赖环，并按 Runtime 语义确定性排序；
+- [x] 单一 `ccrouter generate` 编排 Package 生成与 Host 聚合，并提供只读陈旧产物门禁；
+- [x] 从 Host 的 Pub 运行时依赖闭包精确发现 workspace/path/Git/pub 与传递 Package，排除无关
+  workspace Package 和 dev dependency；
+- [x] 生成发布级 Package Index 与 direct-dependency Bundle，支持 Diamond 去重、外部只读校验、
+  内容指纹、原子单文件提交、并发锁、缓存失效全量回退及 `--no-cache/--profile`；
 - [x] 支持显式集合 Query 和自定义 Query Codec；
 - [x] 完善继承参数、复杂构造器和导入分析；
 - [x] 路由文档增加组件、Shell、Outlet、来源和“当前不支持恢复”的能力视图；

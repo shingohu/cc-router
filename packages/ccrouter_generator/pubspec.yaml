@@ -3,11 +3,16 @@ description: Build-time typed route generation for CCRouter components.
 version: 0.1.0
 resolution: workspace
 publish_to: none
+executables:
+  ccrouter: ccrouter
+  ccrouter_generator: ccrouter_generator
 environment:
   sdk: ^3.9.0
 dependencies:
   analyzer: ^10.0.0
   build: ^4.0.0
   ccrouter_contracts: ^0.1.0
+  crypto: ^3.0.6
   dart_style: ^3.1.7
+  path: ^1.9.0
   source_gen: ^4.0.0

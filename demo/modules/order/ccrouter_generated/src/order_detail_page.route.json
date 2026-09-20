@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 3,
+  "package": "demo_order",
+  "source": "lib/src/order_detail_page.dart",
+  "componentDeclarations": [],
+  "componentManifests": {},
+  "components": [
+    {
+      "id": "demo_order_component",
+      "version": "0.1.0",
+      "dependencies": [],
+      "optionalDependencies": []
+    }
+  ],
+  "routes": [],
+  "routeImplementations": [
+    {
+      "routeId": "order.detail",
+      "componentId": "demo_order_component",
+      "package": "demo_order",
+      "source": "lib/src/order_detail_page.dart",
+      "contract": {
+        "symbol": "OrderDetailRouteContract",
+        "packageUri": "package:demo_order_contracts/src/order_detail_route_contract.dart",
+        "line": 19,
+        "column": 16
+      },
+      "implementation": {
+        "symbol": "OrderDetailPage",
+        "packageUri": "package:demo_order/src/order_detail_page.dart",
+        "line": 8,
+        "column": 13
+      },
+      "registration": "ccrouterRegisterOrderDetailPageRoute",
+      "destination": {
+        "descriptor": "ccrouterDescribeOrderDetailPageRoute",
+        "builder": "ccrouterBuildOrderDetailPageRoute"
+      },
+      "generatedArtifacts": [
+        {
+          "role": "routePart",
+          "symbol": "ccrouterRegisterOrderDetailPageRoute",
+          "packageUri": "package:demo_order/src/ccrouter_generated/order_detail_page.route.g.dart"
+        }
+      ]
+    }
+  ]
+}

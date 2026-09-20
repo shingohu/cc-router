@@ -94,7 +94,7 @@ Codec 通过参数注解显式声明，必须可测试、可生成，且其类�
 
 ### 2.4 Monorepo 生成工具体验
 
-其生成器支持多 Package 扫描、排除包、分组和排序。CCRouter 已经有组件级 `ccrouter_generated/metadata/**/*.component.json`、路由级 `ccrouter_generated/metadata/**/*.route.json`、workspace 聚合校验和应用级 `cc_routes.json` / `cc_routes.md`，并且额外校验组件所有权、契约 exposure 和实现边界。
+其生成器支持多 Package 扫描、排除包、分组和排序。CCRouter 已经有组件级 `ccrouter_generated/**/*.component.json`、路由级 `ccrouter_generated/**/*.route.json`、workspace 聚合校验和应用级 `cc_routes.json` / `cc_routes.md`，并且额外校验组件所有权、契约 exposure 和实现边界。
 
 已参考其“生成统一 Route Settings 列表、宿主批量转换”的思路，但没有照搬动态参数
 Map 或组件直接依赖 GoRouter。CCRouter 生成 `CCFlutterRouteCatalog`，由宿主生成器跨组件

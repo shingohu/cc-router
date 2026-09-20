@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 3,
+  "package": "demo_navigation_lab",
+  "source": "lib/src/failure_page.dart",
+  "componentDeclarations": [],
+  "componentManifests": {},
+  "components": [
+    {
+      "id": "demo_navigation_lab_component",
+      "version": "0.1.0",
+      "dependencies": [
+        "demo_order_component",
+        "demo_web_component"
+      ],
+      "optionalDependencies": []
+    }
+  ],
+  "routes": [
+    {
+      "id": "demo_navigation_lab.failure",
+      "componentId": "demo_navigation_lab_component",
+      "componentVersion": "0.1.0",
+      "exposure": "internal",
+      "deepLink": "disabled",
+      "description": "展示标准导航失败经 Host Failure Policy 恢复后的安全页面。",
+      "interceptorIds": [],
+      "popGuardIds": [],
+      "declaration": {
+        "package": "demo_navigation_lab",
+        "library": "lib/src/failure_page.dart",
+        "kind": "page",
+        "symbol": "DemoFailurePage",
+        "packageUri": "package:demo_navigation_lab/src/failure_page.dart",
+        "line": 17,
+        "column": 13
+      },
+      "navigationSources": [
+        "typedIntent",
+        "internalUri"
+      ],
+      "restoration": {
+        "status": "unsupported"
+      },
+      "placement": {
+        "hostId": "default",
+        "parentRouteId": null,
+        "shellId": null,
+        "navigatorOutlet": "root"
+      },
+      "presentation": {
+        "type": "page",
+        "routeType": "platformDefault",
+        "transition": "fade",
+        "opaque": true,
+        "fullscreenDialog": false
+      },
+      "contracts": {
+        "route": "_DemoFailurePageRoute",
+        "arguments": "_DemoFailurePageRouteArguments",
+        "package": "demo_navigation_lab",
+        "library": "lib/src/failure_page.dart"
+      },
+      "registration": "ccrouterRegisterDemoFailurePageRoute",
+      "destination": {
+        "descriptor": "ccrouterDescribeDemoFailurePageRoute",
+        "builder": "ccrouterBuildDemoFailurePageRoute"
+      },
+      "generatedArtifacts": [
+        {
+          "role": "routePart",
+          "symbol": "_DemoFailurePageRoute",
+          "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/failure_page.route.g.dart"
+        }
+      ],
+      "patterns": [
+        {
+          "type": "CCPathPattern",
+          "value": "/lab/failure",
+          "primary": true,
+          "constraints": {}
+        }
+      ],
+      "parameters": [
+        {
+          "name": "stage",
+          "wireName": "stage",
+          "source": "query",
+          "type": "String",
+          "cardinality": "single",
+          "required": true,
+          "default": null,
+          "description": null
+        },
+        {
+          "name": "errorType",
+          "wireName": "errorType",
+          "source": "query",
+          "type": "String",
+          "cardinality": "single",
+          "required": true,
+          "default": null,
+          "description": null
+        }
+      ],
+      "resultType": "void"
+    }
+  ],
+  "routeImplementations": []
+}

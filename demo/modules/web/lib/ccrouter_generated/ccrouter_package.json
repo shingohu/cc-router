@@ -1,0 +1,176 @@
+{
+  "schemaVersion": 2,
+  "generatorVersion": "0.1.0",
+  "package": {
+    "name": "demo_web",
+    "version": "0.1.0"
+  },
+  "contentFingerprint": "bf8556d9a967469b6d58290866ff2e08fc638501558b8a177e1e73a2ec67231b",
+  "bundle": {
+    "library": "lib/demo_web_ccrouter.g.dart",
+    "symbol": "ccrouterGeneratedPackageBundle"
+  },
+  "dependencies": [
+    {
+      "name": "demo_web_contracts",
+      "version": "0.1.0",
+      "contentFingerprint": "791be5c2664eb8cebc4f24b26ba56ac513e8f6d0154274b9b2c18841aaf37211"
+    }
+  ],
+  "metadata": [
+    {
+      "schemaVersion": 3,
+      "package": "demo_web",
+      "source": "lib/src/demo_web_component_registrar.dart",
+      "componentDeclarations": [
+        "demo_web_component"
+      ],
+      "componentManifests": {
+        "demo_web_component": "demoWebComponentManifest"
+      },
+      "components": [
+        {
+          "id": "demo_web_component",
+          "version": "0.1.0",
+          "dependencies": [],
+          "optionalDependencies": []
+        }
+      ],
+      "routes": [],
+      "routeImplementations": []
+    },
+    {
+      "schemaVersion": 3,
+      "package": "demo_web",
+      "source": "lib/src/web_pages.dart",
+      "componentDeclarations": [],
+      "componentManifests": {},
+      "components": [
+        {
+          "id": "demo_web_component",
+          "version": "0.1.0",
+          "dependencies": [],
+          "optionalDependencies": []
+        }
+      ],
+      "routes": [],
+      "routeImplementations": [
+        {
+          "routeId": "demo_web.public",
+          "componentId": "demo_web_component",
+          "package": "demo_web",
+          "source": "lib/src/web_pages.dart",
+          "contract": {
+            "symbol": "DemoPublicWebRouteContract",
+            "packageUri": "package:demo_web_contracts/src/web_route_contracts.dart",
+            "line": 20,
+            "column": 16
+          },
+          "implementation": {
+            "symbol": "DemoPublicWebPage",
+            "packageUri": "package:demo_web/src/web_pages.dart",
+            "line": 11,
+            "column": 13
+          },
+          "registration": "ccrouterRegisterDemoPublicWebPageRoute",
+          "destination": {
+            "descriptor": "ccrouterDescribeDemoPublicWebPageRoute",
+            "builder": "ccrouterBuildDemoPublicWebPageRoute"
+          },
+          "generatedArtifacts": [
+            {
+              "role": "routePart",
+              "symbol": "ccrouterRegisterDemoPublicWebPageRoute",
+              "packageUri": "package:demo_web/src/ccrouter_generated/web_pages.route.g.dart"
+            }
+          ]
+        },
+        {
+          "routeId": "demo_web.private",
+          "componentId": "demo_web_component",
+          "package": "demo_web",
+          "source": "lib/src/web_pages.dart",
+          "contract": {
+            "symbol": "DemoPrivateWebRouteContract",
+            "packageUri": "package:demo_web_contracts/src/web_route_contracts.dart",
+            "line": 39,
+            "column": 16
+          },
+          "implementation": {
+            "symbol": "DemoPrivateWebPage",
+            "packageUri": "package:demo_web/src/web_pages.dart",
+            "line": 32,
+            "column": 13
+          },
+          "registration": "ccrouterRegisterDemoPrivateWebPageRoute",
+          "destination": {
+            "descriptor": "ccrouterDescribeDemoPrivateWebPageRoute",
+            "builder": "ccrouterBuildDemoPrivateWebPageRoute"
+          },
+          "generatedArtifacts": [
+            {
+              "role": "routePart",
+              "symbol": "ccrouterRegisterDemoPrivateWebPageRoute",
+              "packageUri": "package:demo_web/src/ccrouter_generated/web_pages.route.g.dart"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "capabilityCatalog": {
+    "schemaVersion": 1,
+    "records": [
+      {
+        "kind": "route",
+        "id": "demo_web.private",
+        "componentId": "demo_web_component",
+        "packageName": "demo_web_contracts",
+        "contract": {
+          "symbol": "DemoPrivateWebRouteContract",
+          "packageUri": "package:demo_web_contracts/src/web_route_contracts.dart",
+          "line": 39,
+          "column": 16
+        },
+        "implementation": {
+          "symbol": "DemoPrivateWebPage",
+          "packageUri": "package:demo_web/src/web_pages.dart",
+          "line": 32,
+          "column": 13
+        },
+        "generatedArtifacts": [
+          {
+            "role": "routePart",
+            "symbol": "ccrouterRegisterDemoPrivateWebPageRoute",
+            "packageUri": "package:demo_web/src/ccrouter_generated/web_pages.route.g.dart"
+          }
+        ]
+      },
+      {
+        "kind": "route",
+        "id": "demo_web.public",
+        "componentId": "demo_web_component",
+        "packageName": "demo_web_contracts",
+        "contract": {
+          "symbol": "DemoPublicWebRouteContract",
+          "packageUri": "package:demo_web_contracts/src/web_route_contracts.dart",
+          "line": 20,
+          "column": 16
+        },
+        "implementation": {
+          "symbol": "DemoPublicWebPage",
+          "packageUri": "package:demo_web/src/web_pages.dart",
+          "line": 11,
+          "column": 13
+        },
+        "generatedArtifacts": [
+          {
+            "role": "routePart",
+            "symbol": "ccrouterRegisterDemoPublicWebPageRoute",
+            "packageUri": "package:demo_web/src/ccrouter_generated/web_pages.route.g.dart"
+          }
+        ]
+      }
+    ]
+  }
+}
