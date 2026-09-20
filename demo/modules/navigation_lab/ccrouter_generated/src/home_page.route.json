@@ -31,7 +31,7 @@
         "kind": "page",
         "symbol": "DemoNavigationHomePage",
         "packageUri": "package:demo_navigation_lab/src/home_page.dart",
-        "line": 26,
+        "line": 20,
         "column": 13
       },
       "navigationSources": [
@@ -58,18 +58,27 @@
         "route": "_DemoNavigationHomePageRoute",
         "arguments": "_DemoNavigationHomePageRouteArguments",
         "package": "demo_navigation_lab",
-        "library": "lib/src/home_page.dart"
+        "library": "lib/src/ccrouter_generated/home_page.route.g.dart",
+        "intentFactory": "CCGeneratedDemoNavigationHomePageRouteFactory"
       },
       "registration": "ccrouterRegisterDemoNavigationHomePageRoute",
+      "registrationLibrary": "lib/src/ccrouter_generated/home_page.route.g.dart",
       "destination": {
         "descriptor": "ccrouterDescribeDemoNavigationHomePageRoute",
-        "builder": "ccrouterBuildDemoNavigationHomePageRoute"
+        "builder": "ccrouterBuildDemoNavigationHomePageRoute",
+        "library": "lib/src/ccrouter_generated/home_page.route.g.dart",
+        "builderLibrary": "lib/src/ccrouter_generated/home_page.route_binding.g.dart"
       },
       "generatedArtifacts": [
         {
-          "role": "routePart",
+          "role": "routeLibrary",
           "symbol": "_DemoNavigationHomePageRoute",
           "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/home_page.route.g.dart"
+        },
+        {
+          "role": "routeBinding",
+          "symbol": "ccrouterBuildDemoNavigationHomePageRoute",
+          "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/home_page.route_binding.g.dart"
         }
       ],
       "patterns": [

@@ -8,6 +8,13 @@ const demoWorkspaceHomeOutlet = 'workspace.home';
 const demoWorkspaceActivityOutlet = 'workspace.activity';
 const demoWorkspaceProfileOutlet = 'workspace.profile';
 
+final class DemoExtraPayload {
+  const DemoExtraPayload({required this.owner, required this.revision});
+
+  final String owner;
+  final int revision;
+}
+
 final demoSingleShellDefinition = CCShellDefinition(
   shellId: demoSingleShellId,
   type: CCShellType.singleNavigator,

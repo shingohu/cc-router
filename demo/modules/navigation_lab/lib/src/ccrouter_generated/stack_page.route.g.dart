@@ -3,11 +3,11 @@
 
 // ignore_for_file: type=lint, unused_element
 
-part of '../stack_page.dart';
-
 // **************************************************************************
 // _RouteGenerator
 // **************************************************************************
+
+import 'package:ccrouter/ccrouter.dart';
 
 /// Immutable arguments for route demo_navigation_lab.stack; URI values remain typed.
 final class _DemoStackPageRouteArguments {
@@ -55,14 +55,6 @@ abstract final class _DemoStackPageRoute {
         interceptorIds: const [],
         popGuardIds: const [],
       );
-
-  /// Called by the owning component registrar, never by a business caller.
-  static void register(CCRegistry registry) =>
-      registry.registerRoute(definition);
-
-  /// Injects already decoded arguments into the page without backend coupling.
-  static DemoStackPage build(_DemoStackPageRouteArguments arguments) =>
-      DemoStackPage(level: arguments.level);
 }
 
 /// Private data-only Intent carrying this route's typed result contract.
@@ -111,20 +103,23 @@ final class _DemoStackPageRouteCodec
   }
 }
 
+/// Package-internal typed factory surfaced by the generated component API.
+final class CCGeneratedDemoStackPageRouteFactory {
+  /// Creates the stateless factory used by generated static route members.
+  const CCGeneratedDemoStackPageRouteFactory();
+
+  /// Creates an immutable Intent without performing navigation.
+  CCRouteIntent<String> call({required int level}) =>
+      _DemoStackPageRoute.intent(level: level);
+}
+
 /// Package-internal bridge used by the generated component route index.
 ///
 /// Keep this symbol out of public package barrels. It exists so a component
 /// registrar can register library-private routes without exposing owner APIs.
 void ccrouterRegisterDemoStackPageRoute(CCRegistry registry) =>
-    _DemoStackPageRoute.register(registry);
+    registry.registerRoute(_DemoStackPageRoute.definition);
 
 /// Package-internal route definition bridge used by Host generation.
 CCRouteDefinition<dynamic, dynamic> ccrouterDescribeDemoStackPageRoute() =>
     _DemoStackPageRoute.definition;
-
-/// Package-internal page factory bridge used by generated Flutter catalogs.
-DemoStackPage ccrouterBuildDemoStackPageRoute(
-  CCEncodedRouteArguments arguments,
-) => _DemoStackPageRoute.build(
-  _DemoStackPageRoute.definition.codec.decode(arguments),
-);

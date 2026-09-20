@@ -5,16 +5,10 @@ import 'package:demo_order_contracts/demo_order_contracts.dart';
 import 'package:demo_web_contracts/demo_web_contracts.dart';
 import 'package:flutter/material.dart';
 
-import 'detail_page.dart';
 import 'lab_configuration.dart';
-import 'lifecycle_page.dart';
 import 'navigation_lab_component.dart';
-import 'policy_pages.dart';
-import 'presentation_pages.dart';
-import 'shell_pages.dart';
-import 'stack_page.dart';
-
-part 'ccrouter_generated/home_page.route.g.dart';
+import 'shell_contract.dart';
+import 'ccrouter_generated/demo_navigation_lab_component.route_api.g.dart';
 
 @CCRoute<void>(
   component: demoNavigationLabComponent,
@@ -85,7 +79,7 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
     unawaited(
       CCRouter.navigator
           .push<void>(
-            demoDeferredIntent(),
+            DemoNavigationLabRoutes.defer(),
             source: const CCNavigationSource.feature('policies.defer'),
           )
           .then((_) => _setStatus('Defer · 已完成'))
@@ -341,7 +335,10 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
       onTap: () => _run(
         'Push typed detail',
         () => CCRouter.navigator.push<String>(
-          demoDetailIntent(id: 42, tags: const ['typed', 'query', 'result']),
+          DemoNavigationLabRoutes.detail(
+            id: 42,
+            tags: const ['typed', 'query', 'result'],
+          ),
           source: const CCNavigationSource.feature('navigation.typed'),
         ),
       ),
@@ -441,7 +438,9 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
       subtitle: 'Push、Replace、Pop、Go、Reset 与返回结果。',
       onTap: () => _run(
         'Stack workbench',
-        () => CCRouter.navigator.push<String>(demoStackIntent(level: 1)),
+        () => CCRouter.navigator.push<String>(
+          DemoNavigationLabRoutes.stack(level: 1),
+        ),
       ),
     ),
     _ActionTile(
@@ -449,7 +448,7 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
       title: '进入 ShellRoute',
       subtitle: '共享 Scaffold、单嵌套 Navigator、Shell 内详情与 Root 页面。',
       onTap: () => _run('ShellRoute', () async {
-        await CCRouter.navigator.go(demoShellFeedIntent());
+        await CCRouter.navigator.go(DemoNavigationLabRoutes.shellFeed());
         return null;
       }),
     ),
@@ -458,7 +457,7 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
       title: '进入 StatefulShellRoute',
       subtitle: '三个持久 Outlet、独立历史和分支内 State。',
       onTap: () => _run('StatefulShellRoute', () async {
-        await CCRouter.navigator.go(demoWorkspaceHomeIntent());
+        await CCRouter.navigator.go(DemoNavigationLabRoutes.workspaceHome());
         return null;
       }),
     ),
@@ -469,8 +468,11 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
       onTap: () => _run(
         'Typed Extra',
         () => CCRouter.navigator.push<void>(
-          demoExtraIntent(
-            const DemoExtraPayload(owner: 'navigation_lab', revision: 3),
+          DemoNavigationLabRoutes.extra(
+            payload: const DemoExtraPayload(
+              owner: 'navigation_lab',
+              revision: 3,
+            ),
           ),
         ),
       ),
@@ -513,7 +515,7 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
       title: 'Go 到栈页',
       subtitle: '验证声明式 location 替换；栈页可通过 Open / 回退恢复首页。',
       onTap: () => _run('Go', () async {
-        await CCRouter.navigator.go(demoStackIntent(level: 10));
+        await CCRouter.navigator.go(DemoNavigationLabRoutes.stack(level: 10));
         return null;
       }),
     ),
@@ -522,97 +524,107 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
       title: 'Reset 到栈页',
       subtitle: '将 Managed 导航状态重置为单一目标。',
       onTap: () => _run('Reset', () async {
-        await CCRouter.navigator.reset(demoStackIntent(level: 20));
+        await CCRouter.navigator.reset(
+          DemoNavigationLabRoutes.stack(level: 20),
+        );
         return null;
       }),
     ),
   ]);
 
-  Widget _policies(BuildContext context) =>
-      AnimatedBuilder(
-        animation: demoNavigationLabStore,
-        builder: (context, _) => _page(
-          '策略与失败',
-          'Global / Route Interceptor、Redirect、Defer、Timeout、PopGuard 与兜底。',
-          [
-            SwitchListTile(
-              value: demoNavigationLabStore.blockDetailGlobally,
-              onChanged: demoNavigationLabStore.setBlockDetailGlobally,
-              title: const Text('全局阻止 Detail Route'),
-              subtitle: const Text('打开后，任意 Detail 请求在 Adapter 前被取消。'),
-            ),
-            _ActionTile(
-              icon: Icons.verified_outlined,
-              title: 'Route Interceptor · Proceed',
-              subtitle: '先执行 Global，再执行 Route interceptor。',
-              onTap: () => _run(
-                'Proceed interceptor',
-                () => CCRouter.navigator.push<void>(demoProceedIntent()),
-              ),
-            ),
-            _ActionTile(
-              icon: Icons.block,
-              title: 'Route Interceptor · Cancel',
-              subtitle: '返回标准 CCRouteCancelledError，页面不会创建。',
-              onTap: () => _run(
-                'Cancel interceptor',
-                () => CCRouter.navigator.push<void>(demoCancelIntent()),
-              ),
-            ),
-            _ActionTile(
-              icon: Icons.alt_route,
-              title: 'Route Interceptor · Redirect',
-              subtitle: '保留 navigationId/source/redirect chain 后进入目标页。',
-              onTap: () => _run(
-                'Redirect interceptor',
-                () => CCRouter.navigator.push<void>(demoRedirectSourceIntent()),
-              ),
-            ),
-            _ActionTile(
-              icon: Icons.pause_circle_outline,
-              title: 'Defer Navigation',
-              subtitle: '创建 Pending Navigation，模拟等待登录、授权或同意。',
-              onTap: _openDeferred,
-            ),
-            _ActionTile(
-              icon: Icons.play_circle_outline,
-              title: '恢复第一个 Pending Navigation',
-              subtitle: '当前 pending: ${CCRouter.pendingNavigations.length}',
-              onTap: _resumeDeferred,
-            ),
-            _ActionTile(
-              icon: Icons.timer_off_outlined,
-              title: 'Interceptor Timeout',
-              subtitle: '180ms deadline 中断 2s interceptor。',
-              onTap: () => _run(
-                'Timeout interceptor',
-                () => CCRouter.navigator.push<void>(demoTimeoutIntent()),
-              ),
-            ),
-            _ActionTile(
-              icon: Icons.edit_note,
-              title: 'PopGuard 未保存表单',
-              subtitle: '通过 CCRouter maybePop 返回时同步拒绝或放行。',
-              onTap: () {
-                demoNavigationLabStore.setDirtyForm(true);
-                return _run(
-                  'PopGuard route',
-                  () => CCRouter.navigator.push<void>(demoGuardedIntent()),
-                );
-              },
-            ),
-            _ActionTile(
-              icon: Icons.question_mark,
-              title: '打开不存在的路由',
-              subtitle: 'Failure Policy 将 resolution failure 恢复到安全兜底页。',
-              onTap: () => _run(
-                'Failure fallback',
-                () => CCRouter.navigator.open(Uri.parse('/lab/not-found')),
-              ),
-            ),
-          ],
+  Widget _policies(BuildContext context) => AnimatedBuilder(
+    animation: demoNavigationLabStore,
+    builder: (context, _) => _page(
+      '策略与失败',
+      'Global / Route Interceptor、Redirect、Defer、Timeout、PopGuard 与兜底。',
+      [
+        SwitchListTile(
+          value: demoNavigationLabStore.blockDetailGlobally,
+          onChanged: demoNavigationLabStore.setBlockDetailGlobally,
+          title: const Text('全局阻止 Detail Route'),
+          subtitle: const Text('打开后，任意 Detail 请求在 Adapter 前被取消。'),
         ),
-      );
+        _ActionTile(
+          icon: Icons.verified_outlined,
+          title: 'Route Interceptor · Proceed',
+          subtitle: '先执行 Global，再执行 Route interceptor。',
+          onTap: () => _run(
+            'Proceed interceptor',
+            () => CCRouter.navigator.push<void>(
+              DemoNavigationLabRoutes.proceed(),
+            ),
+          ),
+        ),
+        _ActionTile(
+          icon: Icons.block,
+          title: 'Route Interceptor · Cancel',
+          subtitle: '返回标准 CCRouteCancelledError，页面不会创建。',
+          onTap: () => _run(
+            'Cancel interceptor',
+            () =>
+                CCRouter.navigator.push<void>(DemoNavigationLabRoutes.cancel()),
+          ),
+        ),
+        _ActionTile(
+          icon: Icons.alt_route,
+          title: 'Route Interceptor · Redirect',
+          subtitle: '保留 navigationId/source/redirect chain 后进入目标页。',
+          onTap: () => _run(
+            'Redirect interceptor',
+            () => CCRouter.navigator.push<void>(
+              DemoNavigationLabRoutes.redirectSource(),
+            ),
+          ),
+        ),
+        _ActionTile(
+          icon: Icons.pause_circle_outline,
+          title: 'Defer Navigation',
+          subtitle: '创建 Pending Navigation，模拟等待登录、授权或同意。',
+          onTap: _openDeferred,
+        ),
+        _ActionTile(
+          icon: Icons.play_circle_outline,
+          title: '恢复第一个 Pending Navigation',
+          subtitle: '当前 pending: ${CCRouter.pendingNavigations.length}',
+          onTap: _resumeDeferred,
+        ),
+        _ActionTile(
+          icon: Icons.timer_off_outlined,
+          title: 'Interceptor Timeout',
+          subtitle: '180ms deadline 中断 2s interceptor。',
+          onTap: () => _run(
+            'Timeout interceptor',
+            () => CCRouter.navigator.push<void>(
+              DemoNavigationLabRoutes.timeout(),
+            ),
+          ),
+        ),
+        _ActionTile(
+          icon: Icons.edit_note,
+          title: 'PopGuard 未保存表单',
+          subtitle: '通过 CCRouter maybePop 返回时同步拒绝或放行。',
+          onTap: () {
+            demoNavigationLabStore.setDirtyForm(true);
+            return _run(
+              'PopGuard route',
+              () => CCRouter.navigator.push<void>(
+                DemoNavigationLabRoutes.guarded(),
+              ),
+            );
+          },
+        ),
+        _ActionTile(
+          icon: Icons.question_mark,
+          title: '打开不存在的路由',
+          subtitle: 'Failure Policy 将 resolution failure 恢复到安全兜底页。',
+          onTap: () => _run(
+            'Failure fallback',
+            () => CCRouter.navigator.open(Uri.parse('/lab/not-found')),
+          ),
+        ),
+      ],
+    ),
+  );
 
   Widget _presentation(BuildContext context) => _page(
     '展示与混合导航',
@@ -622,31 +634,41 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
         icon: Icons.blur_on,
         title: 'Fade Page',
         subtitle: 'CCPageTransitionType.fade',
-        onTap: () => CCRouter.navigator.push<void>(demoFadeIntent()),
+        onTap: () => CCRouter.navigator.push<void>(
+          DemoNavigationLabRoutes.presentationFade(),
+        ),
       ),
       _ActionTile(
         icon: Icons.zoom_out_map,
         title: 'Scale Page',
         subtitle: 'CCPageTransitionType.scale',
-        onTap: () => CCRouter.navigator.push<void>(demoScaleIntent()),
+        onTap: () => CCRouter.navigator.push<void>(
+          DemoNavigationLabRoutes.presentationScale(),
+        ),
       ),
       _ActionTile(
         icon: Icons.phone_iphone,
         title: 'Cupertino PageRoute',
         subtitle: '显式 Cupertino route family。',
-        onTap: () => CCRouter.navigator.push<void>(demoCupertinoIntent()),
+        onTap: () => CCRouter.navigator.push<void>(
+          DemoNavigationLabRoutes.presentationCupertino(),
+        ),
       ),
       _ActionTile(
         icon: Icons.vertical_align_top,
         title: '全屏页面从底部滑入',
         subtitle: '普通 Page，不是 BottomSheet。',
-        onTap: () => CCRouter.navigator.push<void>(demoBottomPageIntent()),
+        onTap: () => CCRouter.navigator.push<void>(
+          DemoNavigationLabRoutes.presentationBottomPage(),
+        ),
       ),
       _ActionTile(
         icon: Icons.image_outlined,
         title: '透明全屏海报页',
         subtitle: 'opaque=false + slideFromBottom。',
-        onTap: () => CCRouter.navigator.push<void>(demoTransparentIntent()),
+        onTap: () => CCRouter.navigator.push<void>(
+          DemoNavigationLabRoutes.presentationTransparent(),
+        ),
       ),
       _ActionTile(
         icon: Icons.chat_bubble_outline,
@@ -654,7 +676,9 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
         subtitle: '具备 typed result 与完整 RouteEntry 生命周期。',
         onTap: () => _run(
           'Managed Dialog',
-          () => CCRouter.navigator.push<String>(demoDialogIntent()),
+          () => CCRouter.navigator.push<String>(
+            DemoNavigationLabRoutes.presentationDialog(),
+          ),
         ),
       ),
       _ActionTile(
@@ -663,7 +687,9 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
         subtitle: '拖拽/Barrier/Pop 都应精确关闭自身。',
         onTap: () => _run(
           'Managed BottomSheet',
-          () => CCRouter.navigator.push<String>(demoBottomSheetIntent()),
+          () => CCRouter.navigator.push<String>(
+            DemoNavigationLabRoutes.presentationSheet(),
+          ),
         ),
       ),
       const Divider(height: 32),
@@ -749,7 +775,9 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
           icon: Icons.sync_alt,
           title: '打开生命周期实验页',
           subtitle: '同时使用 CCPageLifecycleMixin 与 CCPageLifecycleListener。',
-          onTap: () => CCRouter.navigator.push<void>(demoLifecycleIntent()),
+          onTap: () => CCRouter.navigator.push<void>(
+            DemoNavigationLabRoutes.lifecycle(),
+          ),
         ),
         const SizedBox(height: 12),
         const Text(
@@ -906,4 +934,4 @@ final class _ForeignPage extends StatelessWidget {
   );
 }
 
-CCRouteIntent<void> demoHomeIntent() => _DemoNavigationHomePageRoute.intent();
+CCRouteIntent<void> demoHomeIntent() => DemoNavigationLabRoutes.home();

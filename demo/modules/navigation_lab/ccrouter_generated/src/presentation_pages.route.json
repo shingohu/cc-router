@@ -31,7 +31,7 @@
         "kind": "page",
         "symbol": "DemoFadePage",
         "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
-        "line": 15,
+        "line": 13,
         "column": 13
       },
       "navigationSources": [
@@ -58,18 +58,27 @@
         "route": "_DemoFadePageRoute",
         "arguments": "_DemoFadePageRouteArguments",
         "package": "demo_navigation_lab",
-        "library": "lib/src/presentation_pages.dart"
+        "library": "lib/src/ccrouter_generated/presentation_pages.route.g.dart",
+        "intentFactory": "CCGeneratedDemoFadePageRouteFactory"
       },
       "registration": "ccrouterRegisterDemoFadePageRoute",
+      "registrationLibrary": "lib/src/ccrouter_generated/presentation_pages.route.g.dart",
       "destination": {
         "descriptor": "ccrouterDescribeDemoFadePageRoute",
-        "builder": "ccrouterBuildDemoFadePageRoute"
+        "builder": "ccrouterBuildDemoFadePageRoute",
+        "library": "lib/src/ccrouter_generated/presentation_pages.route.g.dart",
+        "builderLibrary": "lib/src/ccrouter_generated/presentation_pages.route_binding.g.dart"
       },
       "generatedArtifacts": [
         {
-          "role": "routePart",
+          "role": "routeLibrary",
           "symbol": "_DemoFadePageRoute",
           "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/presentation_pages.route.g.dart"
+        },
+        {
+          "role": "routeBinding",
+          "symbol": "ccrouterBuildDemoFadePageRoute",
+          "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/presentation_pages.route_binding.g.dart"
         }
       ],
       "patterns": [
@@ -98,7 +107,7 @@
         "kind": "page",
         "symbol": "DemoScalePage",
         "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
-        "line": 32,
+        "line": 30,
         "column": 13
       },
       "navigationSources": [
@@ -125,18 +134,27 @@
         "route": "_DemoScalePageRoute",
         "arguments": "_DemoScalePageRouteArguments",
         "package": "demo_navigation_lab",
-        "library": "lib/src/presentation_pages.dart"
+        "library": "lib/src/ccrouter_generated/presentation_pages.route.g.dart",
+        "intentFactory": "CCGeneratedDemoScalePageRouteFactory"
       },
       "registration": "ccrouterRegisterDemoScalePageRoute",
+      "registrationLibrary": "lib/src/ccrouter_generated/presentation_pages.route.g.dart",
       "destination": {
         "descriptor": "ccrouterDescribeDemoScalePageRoute",
-        "builder": "ccrouterBuildDemoScalePageRoute"
+        "builder": "ccrouterBuildDemoScalePageRoute",
+        "library": "lib/src/ccrouter_generated/presentation_pages.route.g.dart",
+        "builderLibrary": "lib/src/ccrouter_generated/presentation_pages.route_binding.g.dart"
       },
       "generatedArtifacts": [
         {
-          "role": "routePart",
+          "role": "routeLibrary",
           "symbol": "_DemoScalePageRoute",
           "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/presentation_pages.route.g.dart"
+        },
+        {
+          "role": "routeBinding",
+          "symbol": "ccrouterBuildDemoScalePageRoute",
+          "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/presentation_pages.route_binding.g.dart"
         }
       ],
       "patterns": [
@@ -165,7 +183,7 @@
         "kind": "page",
         "symbol": "DemoCupertinoPage",
         "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
-        "line": 49,
+        "line": 47,
         "column": 13
       },
       "navigationSources": [
@@ -192,18 +210,27 @@
         "route": "_DemoCupertinoPageRoute",
         "arguments": "_DemoCupertinoPageRouteArguments",
         "package": "demo_navigation_lab",
-        "library": "lib/src/presentation_pages.dart"
+        "library": "lib/src/ccrouter_generated/presentation_pages.route.g.dart",
+        "intentFactory": "CCGeneratedDemoCupertinoPageRouteFactory"
       },
       "registration": "ccrouterRegisterDemoCupertinoPageRoute",
+      "registrationLibrary": "lib/src/ccrouter_generated/presentation_pages.route.g.dart",
       "destination": {
         "descriptor": "ccrouterDescribeDemoCupertinoPageRoute",
-        "builder": "ccrouterBuildDemoCupertinoPageRoute"
+        "builder": "ccrouterBuildDemoCupertinoPageRoute",
+        "library": "lib/src/ccrouter_generated/presentation_pages.route.g.dart",
+        "builderLibrary": "lib/src/ccrouter_generated/presentation_pages.route_binding.g.dart"
       },
       "generatedArtifacts": [
         {
-          "role": "routePart",
+          "role": "routeLibrary",
           "symbol": "_DemoCupertinoPageRoute",
           "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/presentation_pages.route.g.dart"
+        },
+        {
+          "role": "routeBinding",
+          "symbol": "ccrouterBuildDemoCupertinoPageRoute",
+          "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/presentation_pages.route_binding.g.dart"
         }
       ],
       "patterns": [
@@ -232,7 +259,7 @@
         "kind": "page",
         "symbol": "DemoBottomPage",
         "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
-        "line": 69,
+        "line": 67,
         "column": 13
       },
       "navigationSources": [
@@ -259,18 +286,27 @@
         "route": "_DemoBottomPageRoute",
         "arguments": "_DemoBottomPageRouteArguments",
         "package": "demo_navigation_lab",
-        "library": "lib/src/presentation_pages.dart"
+        "library": "lib/src/ccrouter_generated/presentation_pages.route.g.dart",
+        "intentFactory": "CCGeneratedDemoBottomPageRouteFactory"
       },
       "registration": "ccrouterRegisterDemoBottomPageRoute",
+      "registrationLibrary": "lib/src/ccrouter_generated/presentation_pages.route.g.dart",
       "destination": {
         "descriptor": "ccrouterDescribeDemoBottomPageRoute",
-        "builder": "ccrouterBuildDemoBottomPageRoute"
+        "builder": "ccrouterBuildDemoBottomPageRoute",
+        "library": "lib/src/ccrouter_generated/presentation_pages.route.g.dart",
+        "builderLibrary": "lib/src/ccrouter_generated/presentation_pages.route_binding.g.dart"
       },
       "generatedArtifacts": [
         {
-          "role": "routePart",
+          "role": "routeLibrary",
           "symbol": "_DemoBottomPageRoute",
           "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/presentation_pages.route.g.dart"
+        },
+        {
+          "role": "routeBinding",
+          "symbol": "ccrouterBuildDemoBottomPageRoute",
+          "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/presentation_pages.route_binding.g.dart"
         }
       ],
       "patterns": [
@@ -299,7 +335,7 @@
         "kind": "page",
         "symbol": "DemoTransparentPage",
         "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
-        "line": 91,
+        "line": 89,
         "column": 13
       },
       "navigationSources": [
@@ -326,18 +362,27 @@
         "route": "_DemoTransparentPageRoute",
         "arguments": "_DemoTransparentPageRouteArguments",
         "package": "demo_navigation_lab",
-        "library": "lib/src/presentation_pages.dart"
+        "library": "lib/src/ccrouter_generated/presentation_pages.route.g.dart",
+        "intentFactory": "CCGeneratedDemoTransparentPageRouteFactory"
       },
       "registration": "ccrouterRegisterDemoTransparentPageRoute",
+      "registrationLibrary": "lib/src/ccrouter_generated/presentation_pages.route.g.dart",
       "destination": {
         "descriptor": "ccrouterDescribeDemoTransparentPageRoute",
-        "builder": "ccrouterBuildDemoTransparentPageRoute"
+        "builder": "ccrouterBuildDemoTransparentPageRoute",
+        "library": "lib/src/ccrouter_generated/presentation_pages.route.g.dart",
+        "builderLibrary": "lib/src/ccrouter_generated/presentation_pages.route_binding.g.dart"
       },
       "generatedArtifacts": [
         {
-          "role": "routePart",
+          "role": "routeLibrary",
           "symbol": "_DemoTransparentPageRoute",
           "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/presentation_pages.route.g.dart"
+        },
+        {
+          "role": "routeBinding",
+          "symbol": "ccrouterBuildDemoTransparentPageRoute",
+          "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/presentation_pages.route_binding.g.dart"
         }
       ],
       "patterns": [
@@ -366,7 +411,7 @@
         "kind": "page",
         "symbol": "DemoDialogPage",
         "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
-        "line": 149,
+        "line": 147,
         "column": 13
       },
       "navigationSources": [
@@ -392,18 +437,27 @@
         "route": "_DemoDialogPageRoute",
         "arguments": "_DemoDialogPageRouteArguments",
         "package": "demo_navigation_lab",
-        "library": "lib/src/presentation_pages.dart"
+        "library": "lib/src/ccrouter_generated/presentation_pages.route.g.dart",
+        "intentFactory": "CCGeneratedDemoDialogPageRouteFactory"
       },
       "registration": "ccrouterRegisterDemoDialogPageRoute",
+      "registrationLibrary": "lib/src/ccrouter_generated/presentation_pages.route.g.dart",
       "destination": {
         "descriptor": "ccrouterDescribeDemoDialogPageRoute",
-        "builder": "ccrouterBuildDemoDialogPageRoute"
+        "builder": "ccrouterBuildDemoDialogPageRoute",
+        "library": "lib/src/ccrouter_generated/presentation_pages.route.g.dart",
+        "builderLibrary": "lib/src/ccrouter_generated/presentation_pages.route_binding.g.dart"
       },
       "generatedArtifacts": [
         {
-          "role": "routePart",
+          "role": "routeLibrary",
           "symbol": "_DemoDialogPageRoute",
           "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/presentation_pages.route.g.dart"
+        },
+        {
+          "role": "routeBinding",
+          "symbol": "ccrouterBuildDemoDialogPageRoute",
+          "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/presentation_pages.route_binding.g.dart"
         }
       ],
       "patterns": [
@@ -432,7 +486,7 @@
         "kind": "page",
         "symbol": "DemoBottomSheetPage",
         "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
-        "line": 179,
+        "line": 177,
         "column": 13
       },
       "navigationSources": [
@@ -460,18 +514,27 @@
         "route": "_DemoBottomSheetPageRoute",
         "arguments": "_DemoBottomSheetPageRouteArguments",
         "package": "demo_navigation_lab",
-        "library": "lib/src/presentation_pages.dart"
+        "library": "lib/src/ccrouter_generated/presentation_pages.route.g.dart",
+        "intentFactory": "CCGeneratedDemoBottomSheetPageRouteFactory"
       },
       "registration": "ccrouterRegisterDemoBottomSheetPageRoute",
+      "registrationLibrary": "lib/src/ccrouter_generated/presentation_pages.route.g.dart",
       "destination": {
         "descriptor": "ccrouterDescribeDemoBottomSheetPageRoute",
-        "builder": "ccrouterBuildDemoBottomSheetPageRoute"
+        "builder": "ccrouterBuildDemoBottomSheetPageRoute",
+        "library": "lib/src/ccrouter_generated/presentation_pages.route.g.dart",
+        "builderLibrary": "lib/src/ccrouter_generated/presentation_pages.route_binding.g.dart"
       },
       "generatedArtifacts": [
         {
-          "role": "routePart",
+          "role": "routeLibrary",
           "symbol": "_DemoBottomSheetPageRoute",
           "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/presentation_pages.route.g.dart"
+        },
+        {
+          "role": "routeBinding",
+          "symbol": "ccrouterBuildDemoBottomSheetPageRoute",
+          "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/presentation_pages.route_binding.g.dart"
         }
       ],
       "patterns": [

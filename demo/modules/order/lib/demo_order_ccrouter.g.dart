@@ -15,7 +15,7 @@ final ccrouterGeneratedPackageBundle = CCGeneratedPackageBundle(
   packageName: 'demo_order',
   packageVersion: '0.1.0',
   contentFingerprint:
-      '84f5f499131b005a8bfa1b43043ddbf8ed4baa8a7fc0ec8db18d0bcc93c496ab',
+      'c40ae1dfed8ac13922e9edb170317061b59a5cfb1642cbf189aea185da0daa08',
   componentManifests: [component_0.demoOrderComponentManifest],
   routeCatalog: CCFlutterRouteCatalog.merge([
     component_routes_0.demoOrderComponentRouteCatalog,

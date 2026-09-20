@@ -31,7 +31,7 @@
         "kind": "page",
         "symbol": "DemoFailurePage",
         "packageUri": "package:demo_navigation_lab/src/failure_page.dart",
-        "line": 17,
+        "line": 16,
         "column": 13
       },
       "navigationSources": [
@@ -58,18 +58,27 @@
         "route": "_DemoFailurePageRoute",
         "arguments": "_DemoFailurePageRouteArguments",
         "package": "demo_navigation_lab",
-        "library": "lib/src/failure_page.dart"
+        "library": "lib/src/ccrouter_generated/failure_page.route.g.dart",
+        "intentFactory": "CCGeneratedDemoFailurePageRouteFactory"
       },
       "registration": "ccrouterRegisterDemoFailurePageRoute",
+      "registrationLibrary": "lib/src/ccrouter_generated/failure_page.route.g.dart",
       "destination": {
         "descriptor": "ccrouterDescribeDemoFailurePageRoute",
-        "builder": "ccrouterBuildDemoFailurePageRoute"
+        "builder": "ccrouterBuildDemoFailurePageRoute",
+        "library": "lib/src/ccrouter_generated/failure_page.route.g.dart",
+        "builderLibrary": "lib/src/ccrouter_generated/failure_page.route_binding.g.dart"
       },
       "generatedArtifacts": [
         {
-          "role": "routePart",
+          "role": "routeLibrary",
           "symbol": "_DemoFailurePageRoute",
           "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/failure_page.route.g.dart"
+        },
+        {
+          "role": "routeBinding",
+          "symbol": "ccrouterBuildDemoFailurePageRoute",
+          "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/failure_page.route_binding.g.dart"
         }
       ],
       "patterns": [

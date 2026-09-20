@@ -33,7 +33,7 @@
         "kind": "page",
         "symbol": "DemoProceedPage",
         "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-        "line": 128,
+        "line": 127,
         "column": 13
       },
       "navigationSources": [
@@ -60,18 +60,27 @@
         "route": "_DemoProceedPageRoute",
         "arguments": "_DemoProceedPageRouteArguments",
         "package": "demo_navigation_lab",
-        "library": "lib/src/policy_pages.dart"
+        "library": "lib/src/ccrouter_generated/policy_pages.route.g.dart",
+        "intentFactory": "CCGeneratedDemoProceedPageRouteFactory"
       },
       "registration": "ccrouterRegisterDemoProceedPageRoute",
+      "registrationLibrary": "lib/src/ccrouter_generated/policy_pages.route.g.dart",
       "destination": {
         "descriptor": "ccrouterDescribeDemoProceedPageRoute",
-        "builder": "ccrouterBuildDemoProceedPageRoute"
+        "builder": "ccrouterBuildDemoProceedPageRoute",
+        "library": "lib/src/ccrouter_generated/policy_pages.route.g.dart",
+        "builderLibrary": "lib/src/ccrouter_generated/policy_pages.route_binding.g.dart"
       },
       "generatedArtifacts": [
         {
-          "role": "routePart",
+          "role": "routeLibrary",
           "symbol": "_DemoProceedPageRoute",
           "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/policy_pages.route.g.dart"
+        },
+        {
+          "role": "routeBinding",
+          "symbol": "ccrouterBuildDemoProceedPageRoute",
+          "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/policy_pages.route_binding.g.dart"
         }
       ],
       "patterns": [
@@ -102,7 +111,7 @@
         "kind": "page",
         "symbol": "DemoCancelledPage",
         "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-        "line": 145,
+        "line": 144,
         "column": 13
       },
       "navigationSources": [
@@ -129,18 +138,27 @@
         "route": "_DemoCancelledPageRoute",
         "arguments": "_DemoCancelledPageRouteArguments",
         "package": "demo_navigation_lab",
-        "library": "lib/src/policy_pages.dart"
+        "library": "lib/src/ccrouter_generated/policy_pages.route.g.dart",
+        "intentFactory": "CCGeneratedDemoCancelledPageRouteFactory"
       },
       "registration": "ccrouterRegisterDemoCancelledPageRoute",
+      "registrationLibrary": "lib/src/ccrouter_generated/policy_pages.route.g.dart",
       "destination": {
         "descriptor": "ccrouterDescribeDemoCancelledPageRoute",
-        "builder": "ccrouterBuildDemoCancelledPageRoute"
+        "builder": "ccrouterBuildDemoCancelledPageRoute",
+        "library": "lib/src/ccrouter_generated/policy_pages.route.g.dart",
+        "builderLibrary": "lib/src/ccrouter_generated/policy_pages.route_binding.g.dart"
       },
       "generatedArtifacts": [
         {
-          "role": "routePart",
+          "role": "routeLibrary",
           "symbol": "_DemoCancelledPageRoute",
           "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/policy_pages.route.g.dart"
+        },
+        {
+          "role": "routeBinding",
+          "symbol": "ccrouterBuildDemoCancelledPageRoute",
+          "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/policy_pages.route_binding.g.dart"
         }
       ],
       "patterns": [
@@ -171,7 +189,7 @@
         "kind": "page",
         "symbol": "DemoRedirectSourcePage",
         "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-        "line": 160,
+        "line": 159,
         "column": 13
       },
       "navigationSources": [
@@ -198,18 +216,27 @@
         "route": "_DemoRedirectSourcePageRoute",
         "arguments": "_DemoRedirectSourcePageRouteArguments",
         "package": "demo_navigation_lab",
-        "library": "lib/src/policy_pages.dart"
+        "library": "lib/src/ccrouter_generated/policy_pages.route.g.dart",
+        "intentFactory": "CCGeneratedDemoRedirectSourcePageRouteFactory"
       },
       "registration": "ccrouterRegisterDemoRedirectSourcePageRoute",
+      "registrationLibrary": "lib/src/ccrouter_generated/policy_pages.route.g.dart",
       "destination": {
         "descriptor": "ccrouterDescribeDemoRedirectSourcePageRoute",
-        "builder": "ccrouterBuildDemoRedirectSourcePageRoute"
+        "builder": "ccrouterBuildDemoRedirectSourcePageRoute",
+        "library": "lib/src/ccrouter_generated/policy_pages.route.g.dart",
+        "builderLibrary": "lib/src/ccrouter_generated/policy_pages.route_binding.g.dart"
       },
       "generatedArtifacts": [
         {
-          "role": "routePart",
+          "role": "routeLibrary",
           "symbol": "_DemoRedirectSourcePageRoute",
           "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/policy_pages.route.g.dart"
+        },
+        {
+          "role": "routeBinding",
+          "symbol": "ccrouterBuildDemoRedirectSourcePageRoute",
+          "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/policy_pages.route_binding.g.dart"
         }
       ],
       "patterns": [
@@ -238,7 +265,7 @@
         "kind": "page",
         "symbol": "DemoRedirectTargetPage",
         "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-        "line": 174,
+        "line": 173,
         "column": 13
       },
       "navigationSources": [
@@ -265,18 +292,27 @@
         "route": "_DemoRedirectTargetPageRoute",
         "arguments": "_DemoRedirectTargetPageRouteArguments",
         "package": "demo_navigation_lab",
-        "library": "lib/src/policy_pages.dart"
+        "library": "lib/src/ccrouter_generated/policy_pages.route.g.dart",
+        "intentFactory": "CCGeneratedDemoRedirectTargetPageRouteFactory"
       },
       "registration": "ccrouterRegisterDemoRedirectTargetPageRoute",
+      "registrationLibrary": "lib/src/ccrouter_generated/policy_pages.route.g.dart",
       "destination": {
         "descriptor": "ccrouterDescribeDemoRedirectTargetPageRoute",
-        "builder": "ccrouterBuildDemoRedirectTargetPageRoute"
+        "builder": "ccrouterBuildDemoRedirectTargetPageRoute",
+        "library": "lib/src/ccrouter_generated/policy_pages.route.g.dart",
+        "builderLibrary": "lib/src/ccrouter_generated/policy_pages.route_binding.g.dart"
       },
       "generatedArtifacts": [
         {
-          "role": "routePart",
+          "role": "routeLibrary",
           "symbol": "_DemoRedirectTargetPageRoute",
           "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/policy_pages.route.g.dart"
+        },
+        {
+          "role": "routeBinding",
+          "symbol": "ccrouterBuildDemoRedirectTargetPageRoute",
+          "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/policy_pages.route_binding.g.dart"
         }
       ],
       "patterns": [
@@ -307,7 +343,7 @@
         "kind": "page",
         "symbol": "DemoDeferredPage",
         "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-        "line": 189,
+        "line": 188,
         "column": 13
       },
       "navigationSources": [
@@ -334,18 +370,27 @@
         "route": "_DemoDeferredPageRoute",
         "arguments": "_DemoDeferredPageRouteArguments",
         "package": "demo_navigation_lab",
-        "library": "lib/src/policy_pages.dart"
+        "library": "lib/src/ccrouter_generated/policy_pages.route.g.dart",
+        "intentFactory": "CCGeneratedDemoDeferredPageRouteFactory"
       },
       "registration": "ccrouterRegisterDemoDeferredPageRoute",
+      "registrationLibrary": "lib/src/ccrouter_generated/policy_pages.route.g.dart",
       "destination": {
         "descriptor": "ccrouterDescribeDemoDeferredPageRoute",
-        "builder": "ccrouterBuildDemoDeferredPageRoute"
+        "builder": "ccrouterBuildDemoDeferredPageRoute",
+        "library": "lib/src/ccrouter_generated/policy_pages.route.g.dart",
+        "builderLibrary": "lib/src/ccrouter_generated/policy_pages.route_binding.g.dart"
       },
       "generatedArtifacts": [
         {
-          "role": "routePart",
+          "role": "routeLibrary",
           "symbol": "_DemoDeferredPageRoute",
           "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/policy_pages.route.g.dart"
+        },
+        {
+          "role": "routeBinding",
+          "symbol": "ccrouterBuildDemoDeferredPageRoute",
+          "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/policy_pages.route_binding.g.dart"
         }
       ],
       "patterns": [
@@ -376,7 +421,7 @@
         "kind": "page",
         "symbol": "DemoTimeoutPage",
         "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-        "line": 206,
+        "line": 205,
         "column": 13
       },
       "navigationSources": [
@@ -403,18 +448,27 @@
         "route": "_DemoTimeoutPageRoute",
         "arguments": "_DemoTimeoutPageRouteArguments",
         "package": "demo_navigation_lab",
-        "library": "lib/src/policy_pages.dart"
+        "library": "lib/src/ccrouter_generated/policy_pages.route.g.dart",
+        "intentFactory": "CCGeneratedDemoTimeoutPageRouteFactory"
       },
       "registration": "ccrouterRegisterDemoTimeoutPageRoute",
+      "registrationLibrary": "lib/src/ccrouter_generated/policy_pages.route.g.dart",
       "destination": {
         "descriptor": "ccrouterDescribeDemoTimeoutPageRoute",
-        "builder": "ccrouterBuildDemoTimeoutPageRoute"
+        "builder": "ccrouterBuildDemoTimeoutPageRoute",
+        "library": "lib/src/ccrouter_generated/policy_pages.route.g.dart",
+        "builderLibrary": "lib/src/ccrouter_generated/policy_pages.route_binding.g.dart"
       },
       "generatedArtifacts": [
         {
-          "role": "routePart",
+          "role": "routeLibrary",
           "symbol": "_DemoTimeoutPageRoute",
           "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/policy_pages.route.g.dart"
+        },
+        {
+          "role": "routeBinding",
+          "symbol": "ccrouterBuildDemoTimeoutPageRoute",
+          "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/policy_pages.route_binding.g.dart"
         }
       ],
       "patterns": [
@@ -445,7 +499,7 @@
         "kind": "page",
         "symbol": "DemoGuardedPage",
         "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-        "line": 223,
+        "line": 222,
         "column": 13
       },
       "navigationSources": [
@@ -472,18 +526,27 @@
         "route": "_DemoGuardedPageRoute",
         "arguments": "_DemoGuardedPageRouteArguments",
         "package": "demo_navigation_lab",
-        "library": "lib/src/policy_pages.dart"
+        "library": "lib/src/ccrouter_generated/policy_pages.route.g.dart",
+        "intentFactory": "CCGeneratedDemoGuardedPageRouteFactory"
       },
       "registration": "ccrouterRegisterDemoGuardedPageRoute",
+      "registrationLibrary": "lib/src/ccrouter_generated/policy_pages.route.g.dart",
       "destination": {
         "descriptor": "ccrouterDescribeDemoGuardedPageRoute",
-        "builder": "ccrouterBuildDemoGuardedPageRoute"
+        "builder": "ccrouterBuildDemoGuardedPageRoute",
+        "library": "lib/src/ccrouter_generated/policy_pages.route.g.dart",
+        "builderLibrary": "lib/src/ccrouter_generated/policy_pages.route_binding.g.dart"
       },
       "generatedArtifacts": [
         {
-          "role": "routePart",
+          "role": "routeLibrary",
           "symbol": "_DemoGuardedPageRoute",
           "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/policy_pages.route.g.dart"
+        },
+        {
+          "role": "routeBinding",
+          "symbol": "ccrouterBuildDemoGuardedPageRoute",
+          "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/policy_pages.route_binding.g.dart"
         }
       ],
       "patterns": [

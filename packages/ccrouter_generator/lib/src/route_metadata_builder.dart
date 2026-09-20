@@ -163,25 +163,38 @@ Map<String, Object?> _routeJson(
     'route': route.api,
     'arguments': route.arguments,
     'package': package,
-    'library': route.contractFirst ? _routeContractOutputPath(source) : source,
+    'library': route.contractFirst
+        ? _routeContractOutputPath(source)
+        : _routeLibraryOutputPath(source),
+    if (!route.contractFirst) 'intentFactory': route.intentFactory,
   },
   if (!route.contractFirst) 'registration': route.registrationFunction,
+  if (!route.contractFirst)
+    'registrationLibrary': _routeLibraryOutputPath(source),
   if (!route.contractFirst)
     'destination': {
       'descriptor': route.descriptorFunction,
       'builder': route.builderFunction,
+      'library': _routeLibraryOutputPath(source),
+      'builderLibrary': _routeBindingOutputPath(source),
     },
   'generatedArtifacts': [
     {
-      'role': route.contractFirst ? 'routeContract' : 'routePart',
+      'role': route.contractFirst ? 'routeContract' : 'routeLibrary',
       'symbol': route.api,
       'packageUri': _packageUri(
         package,
         route.contractFirst
             ? _routeContractOutputPath(source)
-            : _routePartOutputPath(source),
+            : _routeLibraryOutputPath(source),
       ),
     },
+    if (!route.contractFirst)
+      {
+        'role': 'routeBinding',
+        'symbol': route.builderFunction,
+        'packageUri': _packageUri(package, _routeBindingOutputPath(source)),
+      },
   ],
   'patterns': route.patterns.indexed.map((entry) {
     final index = entry.$1;
@@ -289,15 +302,18 @@ Map<String, Object?> _routeImplementationJson(
   'contract': _sourceReference(implementation.contract.page),
   'implementation': _sourceReference(implementation.page),
   'registration': implementation.registrationFunction,
+  'registrationLibrary': _routeBindingOutputPath(source),
   'destination': {
     'descriptor': implementation.descriptorFunction,
     'builder': implementation.builderFunction,
+    'library': _routeBindingOutputPath(source),
+    'builderLibrary': _routeBindingOutputPath(source),
   },
   'generatedArtifacts': [
     {
-      'role': 'routePart',
+      'role': 'routeBinding',
       'symbol': implementation.registrationFunction,
-      'packageUri': _packageUri(package, _routePartOutputPath(source)),
+      'packageUri': _packageUri(package, _routeBindingOutputPath(source)),
     },
   ],
 };

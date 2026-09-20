@@ -5,8 +5,7 @@ import 'package:flutter/material.dart';
 
 import 'lab_configuration.dart';
 import 'navigation_lab_component.dart';
-
-part 'ccrouter_generated/policy_pages.route.g.dart';
+import 'ccrouter_generated/demo_navigation_lab_component.route_api.g.dart';
 
 const _proceedInterceptorId = 'demo_navigation_lab.proceed';
 const _cancelInterceptorId = 'demo_navigation_lab.cancel';
@@ -67,7 +66,7 @@ final class _DemoRedirectInterceptor implements CCNavigationInterceptor {
   CCNavigationInterception intercept(CCNavigationInterceptorContext context) {
     demoNavigationLabStore.record('Route interceptor · redirect');
     return CCNavigationRedirect.toIntent(
-      demoRedirectTargetIntent() as CCRouteIntent<Object?>,
+      DemoNavigationLabRoutes.redirectTarget() as CCRouteIntent<Object?>,
     );
   }
 }
@@ -317,13 +316,3 @@ final class _PolicyResultPage extends StatelessWidget {
     ),
   );
 }
-
-CCRouteIntent<void> demoProceedIntent() => _DemoProceedPageRoute.intent();
-CCRouteIntent<void> demoCancelIntent() => _DemoCancelledPageRoute.intent();
-CCRouteIntent<void> demoRedirectSourceIntent() =>
-    _DemoRedirectSourcePageRoute.intent();
-CCRouteIntent<void> demoRedirectTargetIntent() =>
-    _DemoRedirectTargetPageRoute.intent();
-CCRouteIntent<void> demoDeferredIntent() => _DemoDeferredPageRoute.intent();
-CCRouteIntent<void> demoTimeoutIntent() => _DemoTimeoutPageRoute.intent();
-CCRouteIntent<void> demoGuardedIntent() => _DemoGuardedPageRoute.intent();

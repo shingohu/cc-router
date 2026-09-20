@@ -5,8 +5,7 @@ import 'package:flutter/material.dart';
 
 import 'lab_configuration.dart';
 import 'navigation_lab_component.dart';
-
-part 'ccrouter_generated/detail_page.route.g.dart';
+import 'ccrouter_generated/demo_navigation_lab_component.route_api.g.dart';
 
 @CCRoute<String>(
   component: demoNavigationLabComponent,
@@ -118,4 +117,4 @@ CCRouteIntent<String> demoDetailIntent({
   required int id,
   String title = '类型安全详情',
   List<String> tags = const <String>[],
-}) => _DemoDetailPageRoute.intent(id: id, title: title, tags: tags);
+}) => DemoNavigationLabRoutes.detail(id: id, title: title, tags: tags);

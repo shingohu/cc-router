@@ -3,19 +3,19 @@
 
 // ignore_for_file: type=lint, unused_element
 
-part of '../detail_page.dart';
-
 // **************************************************************************
 // _RouteGenerator
 // **************************************************************************
+
+import 'package:ccrouter/ccrouter.dart';
 
 /// Immutable arguments for route demo_navigation_lab.detail; URI values remain typed.
 final class _DemoDetailPageRouteArguments {
   /// Creates arguments without navigating or retaining a backend context.
   _DemoDetailPageRouteArguments({
     required this.id,
-    this.title = '类型安全详情',
-    List<String> tags = const <String>[],
+    this.title = "类型安全详情",
+    List<String> tags = const [],
   }) : tags = List.unmodifiable(tags);
 
   /// path parameter id for demo_navigation_lab.detail.
@@ -36,8 +36,8 @@ abstract final class _DemoDetailPageRoute {
   /// Creates a typed Intent; navigate through CCRouter.navigator.
   static CCRouteIntent<String> intent({
     required int id,
-    String title = '类型安全详情',
-    List<String> tags = const <String>[],
+    String title = "类型安全详情",
+    List<String> tags = const [],
   }) => _DemoDetailPageRouteIntent(
     _DemoDetailPageRouteArguments(id: id, title: title, tags: tags),
   );
@@ -85,18 +85,6 @@ abstract final class _DemoDetailPageRoute {
         interceptorIds: const [],
         popGuardIds: const [],
       );
-
-  /// Called by the owning component registrar, never by a business caller.
-  static void register(CCRegistry registry) =>
-      registry.registerRoute(definition);
-
-  /// Injects already decoded arguments into the page without backend coupling.
-  static DemoDetailPage build(_DemoDetailPageRouteArguments arguments) =>
-      DemoDetailPage(
-        id: arguments.id,
-        title: arguments.title,
-        tags: arguments.tags,
-      );
 }
 
 /// Private data-only Intent carrying this route's typed result contract.
@@ -137,14 +125,14 @@ final class _DemoDetailPageRouteCodec
         "Route \"demo_navigation_lab.detail\" parameter \"title\" is invalid.",
       );
     final _raw_title = _values_title?.single;
-    final String _value_title = _raw_title == null ? '类型安全详情' : _raw_title;
+    final String _value_title = _raw_title == null ? "类型安全详情" : _raw_title;
     final _values_tags = input.query["tags"];
     if (_values_tags != null && _values_tags.isEmpty)
       throw CCRouteParameterError(
         "Route \"demo_navigation_lab.detail\" parameter \"tags\" is invalid.",
       );
     final List<String> _value_tags = _values_tags == null
-        ? const <String>[]
+        ? const []
         : List<String>.unmodifiable(_values_tags.map((raw_tags) => raw_tags));
     return _DemoDetailPageRouteArguments(
       id: _value_id,
@@ -171,20 +159,26 @@ final class _DemoDetailPageRouteCodec
   }
 }
 
+/// Package-internal typed factory surfaced by the generated component API.
+final class CCGeneratedDemoDetailPageRouteFactory {
+  /// Creates the stateless factory used by generated static route members.
+  const CCGeneratedDemoDetailPageRouteFactory();
+
+  /// Creates an immutable Intent without performing navigation.
+  CCRouteIntent<String> call({
+    required int id,
+    String title = "类型安全详情",
+    List<String> tags = const [],
+  }) => _DemoDetailPageRoute.intent(id: id, title: title, tags: tags);
+}
+
 /// Package-internal bridge used by the generated component route index.
 ///
 /// Keep this symbol out of public package barrels. It exists so a component
 /// registrar can register library-private routes without exposing owner APIs.
 void ccrouterRegisterDemoDetailPageRoute(CCRegistry registry) =>
-    _DemoDetailPageRoute.register(registry);
+    registry.registerRoute(_DemoDetailPageRoute.definition);
 
 /// Package-internal route definition bridge used by Host generation.
 CCRouteDefinition<dynamic, dynamic> ccrouterDescribeDemoDetailPageRoute() =>
     _DemoDetailPageRoute.definition;
-
-/// Package-internal page factory bridge used by generated Flutter catalogs.
-DemoDetailPage ccrouterBuildDemoDetailPageRoute(
-  CCEncodedRouteArguments arguments,
-) => _DemoDetailPageRoute.build(
-  _DemoDetailPageRoute.definition.codec.decode(arguments),
-);

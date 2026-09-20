@@ -4,8 +4,7 @@ import 'package:ccrouter/ccrouter.dart';
 import 'package:flutter/material.dart';
 
 import 'navigation_lab_component.dart';
-
-part 'ccrouter_generated/failure_page.route.g.dart';
+import 'ccrouter_generated/demo_navigation_lab_component.route_api.g.dart';
 
 @CCRoute<void>(
   component: demoNavigationLabComponent,
@@ -64,4 +63,4 @@ final class DemoFailurePage extends StatelessWidget {
 CCRouteIntent<void> demoFailureIntent({
   required String stage,
   required String errorType,
-}) => _DemoFailurePageRoute.intent(stage: stage, errorType: errorType);
+}) => DemoNavigationLabRoutes.failure(stage: stage, errorType: errorType);

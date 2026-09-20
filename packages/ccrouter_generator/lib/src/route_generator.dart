@@ -9,6 +9,8 @@ import 'package:source_gen/source_gen.dart';
 
 part 'route_model.dart';
 part 'route_emitter.dart';
+part 'route_standalone_generator.dart';
+part 'route_binding_generator.dart';
 part 'route_contract_generator.dart';
 part 'component_generator.dart';
 part 'component_metadata_builder.dart';
@@ -76,6 +78,9 @@ void _validateComponentId(String value, Element element) {
 /// not analyzer elements or generation services.
 Generator ccRouteGenerator() => _RouteGenerator();
 
+/// Creates the Generator that binds standalone contracts to Flutter pages.
+Generator ccRouteBindingGenerator() => _RouteBindingGenerator();
+
 /// Creates the standalone Pure Dart route-contract generator.
 ///
 /// Only explicit `CCRouteContract` schemas emit output; page-level `CCRoute`
@@ -94,7 +99,7 @@ Builder ccRouteMetadataBuilderInternal() => _RouteMetadataBuilder();
 /// Creates the component metadata Builder while keeping its implementation private.
 Builder ccComponentMetadataBuilderInternal() => _ComponentMetadataBuilder();
 
-/// Finds route declarations and validates a complete library before emitting.
+/// Finds route declarations and emits one standalone package-internal library.
 final class _RouteGenerator extends Generator {
   /// Matches only CCRouter's annotation, not unrelated same-named classes.
   static const _route = TypeChecker.typeNamedLiterally(
@@ -108,14 +113,13 @@ final class _RouteGenerator extends Generator {
     inPackage: 'ccrouter_contracts',
   );
 
-  /// Generates private implementation and deliberately exported contracts.
+  /// Generates private route contracts plus narrow package-internal bridges.
   @override
   String generate(LibraryReader library, BuildStep buildStep) {
     if (buildStep.inputId.path.contains('/ccrouter_generated/')) return '';
-    return [
-      ..._readRouteModels(library).map(_emitRoute),
-      ..._readRouteImplementationModels(library).map(_emitImplementationGlue),
-    ].join('\n');
+    final routes = _readRouteModels(library);
+    if (routes.isEmpty) return '';
+    return _emitStandaloneRouteLibrary(library, buildStep, routes);
   }
 }
 
@@ -123,13 +127,7 @@ final class _RouteGenerator extends Generator {
 List<_RouteModel> _readRouteModels(LibraryReader library) {
   final routes = <_RouteModel>[];
   final ids = <String>{};
-  final names = library.allElements
-      .where(
-        (element) => !element.firstFragment.libraryFragment!.source.uri.path
-            .endsWith('.route.g.dart'),
-      )
-      .map((element) => element.displayName)
-      .toSet();
+  final names = <String>{};
   for (final annotated in library.annotatedWith(_RouteGenerator._route)) {
     final model = _RouteModel.read(annotated.element, annotated.annotation);
     if (!ids.add(model.id)) {
@@ -146,6 +144,7 @@ List<_RouteModel> _readRouteModels(LibraryReader library) {
       model.registrationFunction,
       model.descriptorFunction,
       model.builderFunction,
+      model.intentFactory,
     ]) {
       if (!names.add(name)) {
         _fail(
@@ -165,13 +164,7 @@ List<_RouteImplementationModel> _readRouteImplementationModels(
 ) {
   final implementations = <_RouteImplementationModel>[];
   final routeIds = <String>{};
-  final names = library.allElements
-      .where(
-        (element) => !element.firstFragment.libraryFragment!.source.uri.path
-            .endsWith('.route.g.dart'),
-      )
-      .map((element) => element.displayName)
-      .toSet();
+  final names = <String>{};
   for (final annotated in library.annotatedWith(
     _RouteGenerator._implementation,
   )) {
@@ -284,11 +277,11 @@ String _routeContractOutputPath(String sourcePath) {
   return 'lib/src/ccrouter_generated/$stem.route.contract.g.dart';
 }
 
-/// Derives the same-library route Part output for one `lib/src` source.
+/// Derives the standalone route-library output for one `lib/src` source.
 ///
 /// Source catalogs use this path to locate generated owner glue without
 /// parsing build-runner output or duplicating its path convention elsewhere.
-String _routePartOutputPath(String sourcePath) {
+String _routeLibraryOutputPath(String sourcePath) {
   const prefix = 'lib/src/';
   if (!sourcePath.startsWith(prefix) || !sourcePath.endsWith('.dart')) {
     throw StateError('Route source must be a Dart library below lib/src/.');
@@ -296,6 +289,17 @@ String _routePartOutputPath(String sourcePath) {
   final relative = sourcePath.substring(prefix.length);
   final stem = relative.substring(0, relative.length - '.dart'.length);
   return 'lib/src/ccrouter_generated/$stem.route.g.dart';
+}
+
+/// Derives the isolated Flutter binding output for one route source.
+String _routeBindingOutputPath(String sourcePath) {
+  const prefix = 'lib/src/';
+  if (!sourcePath.startsWith(prefix) || !sourcePath.endsWith('.dart')) {
+    throw StateError('Route source must be a Dart library below lib/src/.');
+  }
+  final relative = sourcePath.substring(prefix.length);
+  final stem = relative.substring(0, relative.length - '.dart'.length);
+  return 'lib/src/ccrouter_generated/$stem.route_binding.g.dart';
 }
 
 /// Serializes the closed set of declarative route metadata into const source.

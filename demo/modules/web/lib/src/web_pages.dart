@@ -5,8 +5,6 @@ import 'package:demo_web_contracts/demo_web_contracts_owner.dart';
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
-part 'ccrouter_generated/web_pages.route.g.dart';
-
 @CCRouteImplementation(DemoPublicWebRouteContract)
 final class DemoPublicWebPage extends StatelessWidget {
   const DemoPublicWebPage({required this.target, super.key});

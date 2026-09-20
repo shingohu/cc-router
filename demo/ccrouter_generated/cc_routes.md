@@ -84,7 +84,7 @@ Loads one allowlisted public HTTPS URL in the shared Web container.
 路由级拦截器取消示例；页面正常情况下不会创建。
 
 - Exposure: `internal`; deep link: `disabled`; result: `void`
-- Contract library: `demo_navigation_lab:lib/src/policy_pages.dart`
+- Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/policy_pages.route.g.dart`
 - Declaration: `demo_navigation_lab:lib/src/policy_pages.dart` (page)
 - Placement: host `default`, outlet `root`, shell `none`, parent `none`
 - Presentation: `page`
@@ -98,7 +98,7 @@ Loads one allowlisted public HTTPS URL in the shared Web container.
 等待外部同意后恢复的 Deferred Navigation 示例。
 
 - Exposure: `internal`; deep link: `disabled`; result: `void`
-- Contract library: `demo_navigation_lab:lib/src/policy_pages.dart`
+- Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/policy_pages.route.g.dart`
 - Declaration: `demo_navigation_lab:lib/src/policy_pages.dart` (page)
 - Placement: host `default`, outlet `root`, shell `none`, parent `none`
 - Presentation: `page`
@@ -112,7 +112,7 @@ Loads one allowlisted public HTTPS URL in the shared Web container.
 验证类型安全参数、Query 集合、多 Path、完整 URL、Scheme 与返回值。
 
 - Exposure: `internal`; deep link: `enabled`; result: `String`
-- Contract library: `demo_navigation_lab:lib/src/detail_page.dart`
+- Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/detail_page.route.g.dart`
 - Declaration: `demo_navigation_lab:lib/src/detail_page.dart` (page)
 - Placement: host `default`, outlet `root`, shell `none`, parent `none`
 - Presentation: `page`
@@ -137,7 +137,7 @@ Loads one allowlisted public HTTPS URL in the shared Web container.
 展示仅在进程内传递的类型安全 Extra 对象。
 
 - Exposure: `internal`; deep link: `disabled`; result: `void`
-- Contract library: `demo_navigation_lab:lib/src/shell_pages.dart`
+- Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/shell_pages.route.g.dart`
 - Declaration: `demo_navigation_lab:lib/src/shell_pages.dart` (page)
 - Placement: host `default`, outlet `root`, shell `none`, parent `none`
 - Presentation: `page`
@@ -156,7 +156,7 @@ Loads one allowlisted public HTTPS URL in the shared Web container.
 展示标准导航失败经 Host Failure Policy 恢复后的安全页面。
 
 - Exposure: `internal`; deep link: `disabled`; result: `void`
-- Contract library: `demo_navigation_lab:lib/src/failure_page.dart`
+- Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/failure_page.route.g.dart`
 - Declaration: `demo_navigation_lab:lib/src/failure_page.dart` (page)
 - Placement: host `default`, outlet `root`, shell `none`, parent `none`
 - Presentation: `page`
@@ -176,7 +176,7 @@ Loads one allowlisted public HTTPS URL in the shared Web container.
 未保存状态下拒绝 CCRouter Pop 的路由。
 
 - Exposure: `internal`; deep link: `disabled`; result: `void`
-- Contract library: `demo_navigation_lab:lib/src/policy_pages.dart`
+- Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/policy_pages.route.g.dart`
 - Declaration: `demo_navigation_lab:lib/src/policy_pages.dart` (page)
 - Placement: host `default`, outlet `root`, shell `none`, parent `none`
 - Presentation: `page`
@@ -190,7 +190,7 @@ Loads one allowlisted public HTTPS URL in the shared Web container.
 CCRouter 全功能交互验证首页。
 
 - Exposure: `internal`; deep link: `disabled`; result: `void`
-- Contract library: `demo_navigation_lab:lib/src/home_page.dart`
+- Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/home_page.route.g.dart`
 - Declaration: `demo_navigation_lab:lib/src/home_page.dart` (page)
 - Placement: host `default`, outlet `root`, shell `none`, parent `none`
 - Presentation: `page`
@@ -204,7 +204,7 @@ CCRouter 全功能交互验证首页。
 同时验证 CCPageLifecycleMixin 与 Listener 的页面和 App 生命周期。
 
 - Exposure: `internal`; deep link: `disabled`; result: `void`
-- Contract library: `demo_navigation_lab:lib/src/lifecycle_page.dart`
+- Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/lifecycle_page.route.g.dart`
 - Declaration: `demo_navigation_lab:lib/src/lifecycle_page.dart` (page)
 - Placement: host `default`, outlet `root`, shell `none`, parent `none`
 - Presentation: `page`
@@ -218,7 +218,7 @@ CCRouter 全功能交互验证首页。
 普通全屏 Page 从底部滑入，不是 BottomSheet。
 
 - Exposure: `internal`; deep link: `disabled`; result: `void`
-- Contract library: `demo_navigation_lab:lib/src/presentation_pages.dart`
+- Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/presentation_pages.route.g.dart`
 - Declaration: `demo_navigation_lab:lib/src/presentation_pages.dart` (page)
 - Placement: host `default`, outlet `root`, shell `none`, parent `none`
 - Presentation: `page`
@@ -230,7 +230,7 @@ CCRouter 全功能交互验证首页。
 ### `demo_navigation_lab.presentation.cupertino`
 
 - Exposure: `internal`; deep link: `disabled`; result: `void`
-- Contract library: `demo_navigation_lab:lib/src/presentation_pages.dart`
+- Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/presentation_pages.route.g.dart`
 - Declaration: `demo_navigation_lab:lib/src/presentation_pages.dart` (page)
 - Placement: host `default`, outlet `root`, shell `none`, parent `none`
 - Presentation: `page`
@@ -242,7 +242,7 @@ CCRouter 全功能交互验证首页。
 ### `demo_navigation_lab.presentation.dialog`
 
 - Exposure: `internal`; deep link: `disabled`; result: `String`
-- Contract library: `demo_navigation_lab:lib/src/presentation_pages.dart`
+- Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/presentation_pages.route.g.dart`
 - Declaration: `demo_navigation_lab:lib/src/presentation_pages.dart` (page)
 - Placement: host `default`, outlet `root`, shell `none`, parent `none`
 - Presentation: `dialog`
@@ -254,7 +254,7 @@ CCRouter 全功能交互验证首页。
 ### `demo_navigation_lab.presentation.fade`
 
 - Exposure: `internal`; deep link: `disabled`; result: `void`
-- Contract library: `demo_navigation_lab:lib/src/presentation_pages.dart`
+- Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/presentation_pages.route.g.dart`
 - Declaration: `demo_navigation_lab:lib/src/presentation_pages.dart` (page)
 - Placement: host `default`, outlet `root`, shell `none`, parent `none`
 - Presentation: `page`
@@ -266,7 +266,7 @@ CCRouter 全功能交互验证首页。
 ### `demo_navigation_lab.presentation.scale`
 
 - Exposure: `internal`; deep link: `disabled`; result: `void`
-- Contract library: `demo_navigation_lab:lib/src/presentation_pages.dart`
+- Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/presentation_pages.route.g.dart`
 - Declaration: `demo_navigation_lab:lib/src/presentation_pages.dart` (page)
 - Placement: host `default`, outlet `root`, shell `none`, parent `none`
 - Presentation: `page`
@@ -278,7 +278,7 @@ CCRouter 全功能交互验证首页。
 ### `demo_navigation_lab.presentation.sheet`
 
 - Exposure: `internal`; deep link: `disabled`; result: `String`
-- Contract library: `demo_navigation_lab:lib/src/presentation_pages.dart`
+- Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/presentation_pages.route.g.dart`
 - Declaration: `demo_navigation_lab:lib/src/presentation_pages.dart` (page)
 - Placement: host `default`, outlet `root`, shell `none`, parent `none`
 - Presentation: `modalBottomSheet`
@@ -292,7 +292,7 @@ CCRouter 全功能交互验证首页。
 用于海报分享预览的透明全屏 Page。
 
 - Exposure: `internal`; deep link: `disabled`; result: `void`
-- Contract library: `demo_navigation_lab:lib/src/presentation_pages.dart`
+- Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/presentation_pages.route.g.dart`
 - Declaration: `demo_navigation_lab:lib/src/presentation_pages.dart` (page)
 - Placement: host `default`, outlet `root`, shell `none`, parent `none`
 - Presentation: `page`
@@ -306,7 +306,7 @@ CCRouter 全功能交互验证首页。
 路由级拦截器放行示例。
 
 - Exposure: `internal`; deep link: `disabled`; result: `void`
-- Contract library: `demo_navigation_lab:lib/src/policy_pages.dart`
+- Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/policy_pages.route.g.dart`
 - Declaration: `demo_navigation_lab:lib/src/policy_pages.dart` (page)
 - Placement: host `default`, outlet `root`, shell `none`, parent `none`
 - Presentation: `page`
@@ -320,7 +320,7 @@ CCRouter 全功能交互验证首页。
 路由级拦截器重定向源页面；页面正常情况下不会创建。
 
 - Exposure: `internal`; deep link: `disabled`; result: `void`
-- Contract library: `demo_navigation_lab:lib/src/policy_pages.dart`
+- Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/policy_pages.route.g.dart`
 - Declaration: `demo_navigation_lab:lib/src/policy_pages.dart` (page)
 - Placement: host `default`, outlet `root`, shell `none`, parent `none`
 - Presentation: `page`
@@ -334,7 +334,7 @@ CCRouter 全功能交互验证首页。
 拦截器重定向后的目标页面。
 
 - Exposure: `internal`; deep link: `disabled`; result: `void`
-- Contract library: `demo_navigation_lab:lib/src/policy_pages.dart`
+- Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/policy_pages.route.g.dart`
 - Declaration: `demo_navigation_lab:lib/src/policy_pages.dart` (page)
 - Placement: host `default`, outlet `root`, shell `none`, parent `none`
 - Presentation: `page`
@@ -348,7 +348,7 @@ CCRouter 全功能交互验证首页。
 ShellRoute 嵌套子路由。
 
 - Exposure: `internal`; deep link: `disabled`; result: `void`
-- Contract library: `demo_navigation_lab:lib/src/shell_pages.dart`
+- Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/shell_pages.route.g.dart`
 - Declaration: `demo_navigation_lab:lib/src/shell_pages.dart` (page)
 - Placement: host `default`, outlet `shell.content`, shell `demo_navigation_lab.single_shell`, parent `demo_navigation_lab.shell.feed`
 - Presentation: `page`
@@ -367,7 +367,7 @@ ShellRoute 嵌套子路由。
 ShellRoute 共享框架中的内容首页。
 
 - Exposure: `internal`; deep link: `disabled`; result: `void`
-- Contract library: `demo_navigation_lab:lib/src/shell_pages.dart`
+- Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/shell_pages.route.g.dart`
 - Declaration: `demo_navigation_lab:lib/src/shell_pages.dart` (page)
 - Placement: host `default`, outlet `shell.content`, shell `demo_navigation_lab.single_shell`, parent `none`
 - Presentation: `page`
@@ -381,7 +381,7 @@ ShellRoute 共享框架中的内容首页。
 ShellRoute 共享框架中的设置页。
 
 - Exposure: `internal`; deep link: `disabled`; result: `void`
-- Contract library: `demo_navigation_lab:lib/src/shell_pages.dart`
+- Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/shell_pages.route.g.dart`
 - Declaration: `demo_navigation_lab:lib/src/shell_pages.dart` (page)
 - Placement: host `default`, outlet `shell.content`, shell `demo_navigation_lab.single_shell`, parent `none`
 - Presentation: `page`
@@ -395,7 +395,7 @@ ShellRoute 共享框架中的设置页。
 交互验证 Push、Replace、Pop、Go 与 Reset。
 
 - Exposure: `internal`; deep link: `disabled`; result: `String`
-- Contract library: `demo_navigation_lab:lib/src/stack_page.dart`
+- Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/stack_page.route.g.dart`
 - Declaration: `demo_navigation_lab:lib/src/stack_page.dart` (page)
 - Placement: host `default`, outlet `root`, shell `none`, parent `none`
 - Presentation: `page`
@@ -414,7 +414,7 @@ ShellRoute 共享框架中的设置页。
 触发标准 Interceptor Timeout Error 的示例。
 
 - Exposure: `internal`; deep link: `disabled`; result: `void`
-- Contract library: `demo_navigation_lab:lib/src/policy_pages.dart`
+- Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/policy_pages.route.g.dart`
 - Declaration: `demo_navigation_lab:lib/src/policy_pages.dart` (page)
 - Placement: host `default`, outlet `root`, shell `none`, parent `none`
 - Presentation: `page`
@@ -428,7 +428,7 @@ ShellRoute 共享框架中的设置页。
 StatefulShellRoute 活动分支。
 
 - Exposure: `internal`; deep link: `disabled`; result: `void`
-- Contract library: `demo_navigation_lab:lib/src/shell_pages.dart`
+- Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/shell_pages.route.g.dart`
 - Declaration: `demo_navigation_lab:lib/src/shell_pages.dart` (page)
 - Placement: host `default`, outlet `workspace.activity`, shell `demo_navigation_lab.workspace_shell`, parent `none`
 - Presentation: `page`
@@ -442,7 +442,7 @@ StatefulShellRoute 活动分支。
 StatefulShellRoute 首页分支的可 Deep Link 子路由。
 
 - Exposure: `internal`; deep link: `enabled`; result: `void`
-- Contract library: `demo_navigation_lab:lib/src/shell_pages.dart`
+- Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/shell_pages.route.g.dart`
 - Declaration: `demo_navigation_lab:lib/src/shell_pages.dart` (page)
 - Placement: host `default`, outlet `workspace.home`, shell `demo_navigation_lab.workspace_shell`, parent `demo_navigation_lab.workspace.home`
 - Presentation: `page`
@@ -461,7 +461,7 @@ StatefulShellRoute 首页分支的可 Deep Link 子路由。
 StatefulShellRoute 首页分支。
 
 - Exposure: `internal`; deep link: `disabled`; result: `void`
-- Contract library: `demo_navigation_lab:lib/src/shell_pages.dart`
+- Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/shell_pages.route.g.dart`
 - Declaration: `demo_navigation_lab:lib/src/shell_pages.dart` (page)
 - Placement: host `default`, outlet `workspace.home`, shell `demo_navigation_lab.workspace_shell`, parent `none`
 - Presentation: `page`
@@ -475,7 +475,7 @@ StatefulShellRoute 首页分支。
 StatefulShellRoute 个人分支。
 
 - Exposure: `internal`; deep link: `disabled`; result: `void`
-- Contract library: `demo_navigation_lab:lib/src/shell_pages.dart`
+- Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/shell_pages.route.g.dart`
 - Declaration: `demo_navigation_lab:lib/src/shell_pages.dart` (page)
 - Placement: host `default`, outlet `workspace.profile`, shell `demo_navigation_lab.workspace_shell`, parent `none`
 - Presentation: `page`

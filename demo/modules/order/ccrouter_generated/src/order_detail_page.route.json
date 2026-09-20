@@ -28,19 +28,22 @@
       "implementation": {
         "symbol": "OrderDetailPage",
         "packageUri": "package:demo_order/src/order_detail_page.dart",
-        "line": 8,
+        "line": 6,
         "column": 13
       },
       "registration": "ccrouterRegisterOrderDetailPageRoute",
+      "registrationLibrary": "lib/src/ccrouter_generated/order_detail_page.route_binding.g.dart",
       "destination": {
         "descriptor": "ccrouterDescribeOrderDetailPageRoute",
-        "builder": "ccrouterBuildOrderDetailPageRoute"
+        "builder": "ccrouterBuildOrderDetailPageRoute",
+        "library": "lib/src/ccrouter_generated/order_detail_page.route_binding.g.dart",
+        "builderLibrary": "lib/src/ccrouter_generated/order_detail_page.route_binding.g.dart"
       },
       "generatedArtifacts": [
         {
-          "role": "routePart",
+          "role": "routeBinding",
           "symbol": "ccrouterRegisterOrderDetailPageRoute",
-          "packageUri": "package:demo_order/src/ccrouter_generated/order_detail_page.route.g.dart"
+          "packageUri": "package:demo_order/src/ccrouter_generated/order_detail_page.route_binding.g.dart"
         }
       ]
     }

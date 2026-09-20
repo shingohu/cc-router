@@ -4,8 +4,6 @@ import 'package:flutter/material.dart';
 
 import 'navigation_lab_component.dart';
 
-part 'ccrouter_generated/presentation_pages.route.g.dart';
-
 @CCRoute<void>(
   component: demoNavigationLabComponent,
   id: 'demo_navigation_lab.presentation.fade',
@@ -234,13 +232,3 @@ final class _PresentationPage extends StatelessWidget {
     ),
   );
 }
-
-CCRouteIntent<void> demoFadeIntent() => _DemoFadePageRoute.intent();
-CCRouteIntent<void> demoScaleIntent() => _DemoScalePageRoute.intent();
-CCRouteIntent<void> demoCupertinoIntent() => _DemoCupertinoPageRoute.intent();
-CCRouteIntent<void> demoBottomPageIntent() => _DemoBottomPageRoute.intent();
-CCRouteIntent<void> demoTransparentIntent() =>
-    _DemoTransparentPageRoute.intent();
-CCRouteIntent<String> demoDialogIntent() => _DemoDialogPageRoute.intent();
-CCRouteIntent<String> demoBottomSheetIntent() =>
-    _DemoBottomSheetPageRoute.intent();

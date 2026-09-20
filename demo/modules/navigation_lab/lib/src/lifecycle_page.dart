@@ -1,11 +1,9 @@
 import 'package:ccrouter/ccrouter.dart';
 import 'package:flutter/material.dart';
 
-import 'detail_page.dart';
 import 'lab_configuration.dart';
 import 'navigation_lab_component.dart';
-
-part 'ccrouter_generated/lifecycle_page.route.g.dart';
+import 'ccrouter_generated/demo_navigation_lab_component.route_api.g.dart';
 
 @CCRoute<void>(
   component: demoNavigationLabComponent,
@@ -75,7 +73,7 @@ final class _DemoLifecyclePageState extends State<DemoLifecyclePage>
           const SizedBox(height: 20),
           FilledButton.icon(
             onPressed: () => CCRouter.navigator.push<String>(
-              demoDetailIntent(
+              DemoNavigationLabRoutes.detail(
                 id: 88,
                 title: '生命周期覆盖页',
                 tags: const ['hide', 'show'],
@@ -113,5 +111,3 @@ final class _DemoLifecyclePageState extends State<DemoLifecyclePage>
     ),
   );
 }
-
-CCRouteIntent<void> demoLifecycleIntent() => _DemoLifecyclePageRoute.intent();

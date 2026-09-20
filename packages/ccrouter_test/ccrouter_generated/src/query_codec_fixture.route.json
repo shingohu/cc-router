@@ -28,7 +28,7 @@
         "kind": "page",
         "symbol": "QueryCodecFixturePage",
         "packageUri": "package:ccrouter_test/src/query_codec_fixture.dart",
-        "line": 56,
+        "line": 19,
         "column": 13
       },
       "navigationSources": [
@@ -55,18 +55,27 @@
         "route": "_QueryCodecFixturePageRoute",
         "arguments": "_QueryCodecFixturePageRouteArguments",
         "package": "ccrouter_test",
-        "library": "lib/src/query_codec_fixture.dart"
+        "library": "lib/src/ccrouter_generated/query_codec_fixture.route.g.dart",
+        "intentFactory": "CCGeneratedQueryCodecFixturePageRouteFactory"
       },
       "registration": "ccrouterRegisterQueryCodecFixturePageRoute",
+      "registrationLibrary": "lib/src/ccrouter_generated/query_codec_fixture.route.g.dart",
       "destination": {
         "descriptor": "ccrouterDescribeQueryCodecFixturePageRoute",
-        "builder": "ccrouterBuildQueryCodecFixturePageRoute"
+        "builder": "ccrouterBuildQueryCodecFixturePageRoute",
+        "library": "lib/src/ccrouter_generated/query_codec_fixture.route.g.dart",
+        "builderLibrary": "lib/src/ccrouter_generated/query_codec_fixture.route_binding.g.dart"
       },
       "generatedArtifacts": [
         {
-          "role": "routePart",
+          "role": "routeLibrary",
           "symbol": "_QueryCodecFixturePageRoute",
           "packageUri": "package:ccrouter_test/src/ccrouter_generated/query_codec_fixture.route.g.dart"
+        },
+        {
+          "role": "routeBinding",
+          "symbol": "ccrouterBuildQueryCodecFixturePageRoute",
+          "packageUri": "package:ccrouter_test/src/ccrouter_generated/query_codec_fixture.route_binding.g.dart"
         }
       ],
       "patterns": [

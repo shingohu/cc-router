@@ -3,11 +3,12 @@
 
 // ignore_for_file: type=lint, unused_element
 
-part of '../shell_pages.dart';
-
 // **************************************************************************
 // _RouteGenerator
 // **************************************************************************
+
+import 'package:ccrouter/ccrouter.dart';
+import 'package:demo_navigation_lab/src/shell_contract.dart' as route_type_0;
 
 /// Immutable arguments for route demo_navigation_lab.shell.feed; URI values remain typed.
 final class _DemoShellFeedPageRouteArguments {
@@ -52,14 +53,6 @@ abstract final class _DemoShellFeedPageRoute {
         interceptorIds: const [],
         popGuardIds: const [],
       );
-
-  /// Called by the owning component registrar, never by a business caller.
-  static void register(CCRegistry registry) =>
-      registry.registerRoute(definition);
-
-  /// Injects already decoded arguments into the page without backend coupling.
-  static DemoShellFeedPage build(_DemoShellFeedPageRouteArguments arguments) =>
-      DemoShellFeedPage();
 }
 
 /// Private data-only Intent carrying this route's typed result contract.
@@ -95,23 +88,25 @@ final class _DemoShellFeedPageRouteCodec
   }
 }
 
+/// Package-internal typed factory surfaced by the generated component API.
+final class CCGeneratedDemoShellFeedPageRouteFactory {
+  /// Creates the stateless factory used by generated static route members.
+  const CCGeneratedDemoShellFeedPageRouteFactory();
+
+  /// Creates an immutable Intent without performing navigation.
+  CCRouteIntent<void> call() => _DemoShellFeedPageRoute.intent();
+}
+
 /// Package-internal bridge used by the generated component route index.
 ///
 /// Keep this symbol out of public package barrels. It exists so a component
 /// registrar can register library-private routes without exposing owner APIs.
 void ccrouterRegisterDemoShellFeedPageRoute(CCRegistry registry) =>
-    _DemoShellFeedPageRoute.register(registry);
+    registry.registerRoute(_DemoShellFeedPageRoute.definition);
 
 /// Package-internal route definition bridge used by Host generation.
 CCRouteDefinition<dynamic, dynamic> ccrouterDescribeDemoShellFeedPageRoute() =>
     _DemoShellFeedPageRoute.definition;
-
-/// Package-internal page factory bridge used by generated Flutter catalogs.
-DemoShellFeedPage ccrouterBuildDemoShellFeedPageRoute(
-  CCEncodedRouteArguments arguments,
-) => _DemoShellFeedPageRoute.build(
-  _DemoShellFeedPageRoute.definition.codec.decode(arguments),
-);
 
 /// Immutable arguments for route demo_navigation_lab.shell.detail; URI values remain typed.
 final class _DemoShellDetailPageRouteArguments {
@@ -161,15 +156,6 @@ abstract final class _DemoShellDetailPageRoute {
         interceptorIds: const [],
         popGuardIds: const [],
       );
-
-  /// Called by the owning component registrar, never by a business caller.
-  static void register(CCRegistry registry) =>
-      registry.registerRoute(definition);
-
-  /// Injects already decoded arguments into the page without backend coupling.
-  static DemoShellDetailPage build(
-    _DemoShellDetailPageRouteArguments arguments,
-  ) => DemoShellDetailPage(item: arguments.item);
 }
 
 /// Private data-only Intent carrying this route's typed result contract.
@@ -218,24 +204,27 @@ final class _DemoShellDetailPageRouteCodec
   }
 }
 
+/// Package-internal typed factory surfaced by the generated component API.
+final class CCGeneratedDemoShellDetailPageRouteFactory {
+  /// Creates the stateless factory used by generated static route members.
+  const CCGeneratedDemoShellDetailPageRouteFactory();
+
+  /// Creates an immutable Intent without performing navigation.
+  CCRouteIntent<void> call({required int item}) =>
+      _DemoShellDetailPageRoute.intent(item: item);
+}
+
 /// Package-internal bridge used by the generated component route index.
 ///
 /// Keep this symbol out of public package barrels. It exists so a component
 /// registrar can register library-private routes without exposing owner APIs.
 void ccrouterRegisterDemoShellDetailPageRoute(CCRegistry registry) =>
-    _DemoShellDetailPageRoute.register(registry);
+    registry.registerRoute(_DemoShellDetailPageRoute.definition);
 
 /// Package-internal route definition bridge used by Host generation.
 CCRouteDefinition<dynamic, dynamic>
 ccrouterDescribeDemoShellDetailPageRoute() =>
     _DemoShellDetailPageRoute.definition;
-
-/// Package-internal page factory bridge used by generated Flutter catalogs.
-DemoShellDetailPage ccrouterBuildDemoShellDetailPageRoute(
-  CCEncodedRouteArguments arguments,
-) => _DemoShellDetailPageRoute.build(
-  _DemoShellDetailPageRoute.definition.codec.decode(arguments),
-);
 
 /// Immutable arguments for route demo_navigation_lab.shell.settings; URI values remain typed.
 final class _DemoShellSettingsPageRouteArguments {
@@ -280,15 +269,6 @@ abstract final class _DemoShellSettingsPageRoute {
         interceptorIds: const [],
         popGuardIds: const [],
       );
-
-  /// Called by the owning component registrar, never by a business caller.
-  static void register(CCRegistry registry) =>
-      registry.registerRoute(definition);
-
-  /// Injects already decoded arguments into the page without backend coupling.
-  static DemoShellSettingsPage build(
-    _DemoShellSettingsPageRouteArguments arguments,
-  ) => DemoShellSettingsPage();
 }
 
 /// Private data-only Intent carrying this route's typed result contract.
@@ -326,24 +306,26 @@ final class _DemoShellSettingsPageRouteCodec
   }
 }
 
+/// Package-internal typed factory surfaced by the generated component API.
+final class CCGeneratedDemoShellSettingsPageRouteFactory {
+  /// Creates the stateless factory used by generated static route members.
+  const CCGeneratedDemoShellSettingsPageRouteFactory();
+
+  /// Creates an immutable Intent without performing navigation.
+  CCRouteIntent<void> call() => _DemoShellSettingsPageRoute.intent();
+}
+
 /// Package-internal bridge used by the generated component route index.
 ///
 /// Keep this symbol out of public package barrels. It exists so a component
 /// registrar can register library-private routes without exposing owner APIs.
 void ccrouterRegisterDemoShellSettingsPageRoute(CCRegistry registry) =>
-    _DemoShellSettingsPageRoute.register(registry);
+    registry.registerRoute(_DemoShellSettingsPageRoute.definition);
 
 /// Package-internal route definition bridge used by Host generation.
 CCRouteDefinition<dynamic, dynamic>
 ccrouterDescribeDemoShellSettingsPageRoute() =>
     _DemoShellSettingsPageRoute.definition;
-
-/// Package-internal page factory bridge used by generated Flutter catalogs.
-DemoShellSettingsPage ccrouterBuildDemoShellSettingsPageRoute(
-  CCEncodedRouteArguments arguments,
-) => _DemoShellSettingsPageRoute.build(
-  _DemoShellSettingsPageRoute.definition.codec.decode(arguments),
-);
 
 /// Immutable arguments for route demo_navigation_lab.workspace.home; URI values remain typed.
 final class _DemoWorkspaceHomePageRouteArguments {
@@ -388,15 +370,6 @@ abstract final class _DemoWorkspaceHomePageRoute {
         interceptorIds: const [],
         popGuardIds: const [],
       );
-
-  /// Called by the owning component registrar, never by a business caller.
-  static void register(CCRegistry registry) =>
-      registry.registerRoute(definition);
-
-  /// Injects already decoded arguments into the page without backend coupling.
-  static DemoWorkspaceHomePage build(
-    _DemoWorkspaceHomePageRouteArguments arguments,
-  ) => DemoWorkspaceHomePage();
 }
 
 /// Private data-only Intent carrying this route's typed result contract.
@@ -434,24 +407,26 @@ final class _DemoWorkspaceHomePageRouteCodec
   }
 }
 
+/// Package-internal typed factory surfaced by the generated component API.
+final class CCGeneratedDemoWorkspaceHomePageRouteFactory {
+  /// Creates the stateless factory used by generated static route members.
+  const CCGeneratedDemoWorkspaceHomePageRouteFactory();
+
+  /// Creates an immutable Intent without performing navigation.
+  CCRouteIntent<void> call() => _DemoWorkspaceHomePageRoute.intent();
+}
+
 /// Package-internal bridge used by the generated component route index.
 ///
 /// Keep this symbol out of public package barrels. It exists so a component
 /// registrar can register library-private routes without exposing owner APIs.
 void ccrouterRegisterDemoWorkspaceHomePageRoute(CCRegistry registry) =>
-    _DemoWorkspaceHomePageRoute.register(registry);
+    registry.registerRoute(_DemoWorkspaceHomePageRoute.definition);
 
 /// Package-internal route definition bridge used by Host generation.
 CCRouteDefinition<dynamic, dynamic>
 ccrouterDescribeDemoWorkspaceHomePageRoute() =>
     _DemoWorkspaceHomePageRoute.definition;
-
-/// Package-internal page factory bridge used by generated Flutter catalogs.
-DemoWorkspaceHomePage ccrouterBuildDemoWorkspaceHomePageRoute(
-  CCEncodedRouteArguments arguments,
-) => _DemoWorkspaceHomePageRoute.build(
-  _DemoWorkspaceHomePageRoute.definition.codec.decode(arguments),
-);
 
 /// Immutable arguments for route demo_navigation_lab.workspace.detail; URI values remain typed.
 final class _DemoWorkspaceDetailPageRouteArguments {
@@ -501,15 +476,6 @@ abstract final class _DemoWorkspaceDetailPageRoute {
         interceptorIds: const [],
         popGuardIds: const [],
       );
-
-  /// Called by the owning component registrar, never by a business caller.
-  static void register(CCRegistry registry) =>
-      registry.registerRoute(definition);
-
-  /// Injects already decoded arguments into the page without backend coupling.
-  static DemoWorkspaceDetailPage build(
-    _DemoWorkspaceDetailPageRouteArguments arguments,
-  ) => DemoWorkspaceDetailPage(item: arguments.item);
 }
 
 /// Private data-only Intent carrying this route's typed result contract.
@@ -560,24 +526,27 @@ final class _DemoWorkspaceDetailPageRouteCodec
   }
 }
 
+/// Package-internal typed factory surfaced by the generated component API.
+final class CCGeneratedDemoWorkspaceDetailPageRouteFactory {
+  /// Creates the stateless factory used by generated static route members.
+  const CCGeneratedDemoWorkspaceDetailPageRouteFactory();
+
+  /// Creates an immutable Intent without performing navigation.
+  CCRouteIntent<void> call({required int item}) =>
+      _DemoWorkspaceDetailPageRoute.intent(item: item);
+}
+
 /// Package-internal bridge used by the generated component route index.
 ///
 /// Keep this symbol out of public package barrels. It exists so a component
 /// registrar can register library-private routes without exposing owner APIs.
 void ccrouterRegisterDemoWorkspaceDetailPageRoute(CCRegistry registry) =>
-    _DemoWorkspaceDetailPageRoute.register(registry);
+    registry.registerRoute(_DemoWorkspaceDetailPageRoute.definition);
 
 /// Package-internal route definition bridge used by Host generation.
 CCRouteDefinition<dynamic, dynamic>
 ccrouterDescribeDemoWorkspaceDetailPageRoute() =>
     _DemoWorkspaceDetailPageRoute.definition;
-
-/// Package-internal page factory bridge used by generated Flutter catalogs.
-DemoWorkspaceDetailPage ccrouterBuildDemoWorkspaceDetailPageRoute(
-  CCEncodedRouteArguments arguments,
-) => _DemoWorkspaceDetailPageRoute.build(
-  _DemoWorkspaceDetailPageRoute.definition.codec.decode(arguments),
-);
 
 /// Immutable arguments for route demo_navigation_lab.workspace.activity; URI values remain typed.
 final class _DemoWorkspaceActivityPageRouteArguments {
@@ -623,15 +592,6 @@ abstract final class _DemoWorkspaceActivityPageRoute {
         interceptorIds: const [],
         popGuardIds: const [],
       );
-
-  /// Called by the owning component registrar, never by a business caller.
-  static void register(CCRegistry registry) =>
-      registry.registerRoute(definition);
-
-  /// Injects already decoded arguments into the page without backend coupling.
-  static DemoWorkspaceActivityPage build(
-    _DemoWorkspaceActivityPageRouteArguments arguments,
-  ) => DemoWorkspaceActivityPage();
 }
 
 /// Private data-only Intent carrying this route's typed result contract.
@@ -672,24 +632,26 @@ final class _DemoWorkspaceActivityPageRouteCodec
   }
 }
 
+/// Package-internal typed factory surfaced by the generated component API.
+final class CCGeneratedDemoWorkspaceActivityPageRouteFactory {
+  /// Creates the stateless factory used by generated static route members.
+  const CCGeneratedDemoWorkspaceActivityPageRouteFactory();
+
+  /// Creates an immutable Intent without performing navigation.
+  CCRouteIntent<void> call() => _DemoWorkspaceActivityPageRoute.intent();
+}
+
 /// Package-internal bridge used by the generated component route index.
 ///
 /// Keep this symbol out of public package barrels. It exists so a component
 /// registrar can register library-private routes without exposing owner APIs.
 void ccrouterRegisterDemoWorkspaceActivityPageRoute(CCRegistry registry) =>
-    _DemoWorkspaceActivityPageRoute.register(registry);
+    registry.registerRoute(_DemoWorkspaceActivityPageRoute.definition);
 
 /// Package-internal route definition bridge used by Host generation.
 CCRouteDefinition<dynamic, dynamic>
 ccrouterDescribeDemoWorkspaceActivityPageRoute() =>
     _DemoWorkspaceActivityPageRoute.definition;
-
-/// Package-internal page factory bridge used by generated Flutter catalogs.
-DemoWorkspaceActivityPage ccrouterBuildDemoWorkspaceActivityPageRoute(
-  CCEncodedRouteArguments arguments,
-) => _DemoWorkspaceActivityPageRoute.build(
-  _DemoWorkspaceActivityPageRoute.definition.codec.decode(arguments),
-);
 
 /// Immutable arguments for route demo_navigation_lab.workspace.profile; URI values remain typed.
 final class _DemoWorkspaceProfilePageRouteArguments {
@@ -735,15 +697,6 @@ abstract final class _DemoWorkspaceProfilePageRoute {
         interceptorIds: const [],
         popGuardIds: const [],
       );
-
-  /// Called by the owning component registrar, never by a business caller.
-  static void register(CCRegistry registry) =>
-      registry.registerRoute(definition);
-
-  /// Injects already decoded arguments into the page without backend coupling.
-  static DemoWorkspaceProfilePage build(
-    _DemoWorkspaceProfilePageRouteArguments arguments,
-  ) => DemoWorkspaceProfilePage();
 }
 
 /// Private data-only Intent carrying this route's typed result contract.
@@ -784,24 +737,26 @@ final class _DemoWorkspaceProfilePageRouteCodec
   }
 }
 
+/// Package-internal typed factory surfaced by the generated component API.
+final class CCGeneratedDemoWorkspaceProfilePageRouteFactory {
+  /// Creates the stateless factory used by generated static route members.
+  const CCGeneratedDemoWorkspaceProfilePageRouteFactory();
+
+  /// Creates an immutable Intent without performing navigation.
+  CCRouteIntent<void> call() => _DemoWorkspaceProfilePageRoute.intent();
+}
+
 /// Package-internal bridge used by the generated component route index.
 ///
 /// Keep this symbol out of public package barrels. It exists so a component
 /// registrar can register library-private routes without exposing owner APIs.
 void ccrouterRegisterDemoWorkspaceProfilePageRoute(CCRegistry registry) =>
-    _DemoWorkspaceProfilePageRoute.register(registry);
+    registry.registerRoute(_DemoWorkspaceProfilePageRoute.definition);
 
 /// Package-internal route definition bridge used by Host generation.
 CCRouteDefinition<dynamic, dynamic>
 ccrouterDescribeDemoWorkspaceProfilePageRoute() =>
     _DemoWorkspaceProfilePageRoute.definition;
-
-/// Package-internal page factory bridge used by generated Flutter catalogs.
-DemoWorkspaceProfilePage ccrouterBuildDemoWorkspaceProfilePageRoute(
-  CCEncodedRouteArguments arguments,
-) => _DemoWorkspaceProfilePageRoute.build(
-  _DemoWorkspaceProfilePageRoute.definition.codec.decode(arguments),
-);
 
 /// Immutable arguments for route demo_navigation_lab.extra; URI values remain typed.
 final class _DemoExtraPageRouteArguments {
@@ -809,7 +764,7 @@ final class _DemoExtraPageRouteArguments {
   const _DemoExtraPageRouteArguments({required this.payload});
 
   /// extra parameter payload for demo_navigation_lab.extra.
-  final DemoExtraPayload payload;
+  final route_type_0.DemoExtraPayload payload;
 }
 
 /// 展示仅在进程内传递的类型安全 Extra 对象。
@@ -818,7 +773,9 @@ abstract final class _DemoExtraPageRoute {
   static const id = "demo_navigation_lab.extra";
 
   /// Creates a typed Intent; navigate through CCRouter.navigator.
-  static CCRouteIntent<void> intent({required DemoExtraPayload payload}) =>
+  static CCRouteIntent<void> intent({
+    required route_type_0.DemoExtraPayload payload,
+  }) =>
       _DemoExtraPageRouteIntent(_DemoExtraPageRouteArguments(payload: payload));
 
   /// Component-owned definition; business callers should use [intent].
@@ -849,14 +806,6 @@ abstract final class _DemoExtraPageRoute {
         interceptorIds: const [],
         popGuardIds: const [],
       );
-
-  /// Called by the owning component registrar, never by a business caller.
-  static void register(CCRegistry registry) =>
-      registry.registerRoute(definition);
-
-  /// Injects already decoded arguments into the page without backend coupling.
-  static DemoExtraPage build(_DemoExtraPageRouteArguments arguments) =>
-      DemoExtraPage(arguments.payload);
 }
 
 /// Private data-only Intent carrying this route's typed result contract.
@@ -887,7 +836,7 @@ final class _DemoExtraPageRouteCodec
             "Route \"demo_navigation_lab.extra\" parameter \"payload\" is invalid.",
           )
         : input.extra;
-    if (_value_payload is! DemoExtraPayload)
+    if (_value_payload is! route_type_0.DemoExtraPayload)
       throw CCRouteParameterError(
         "Route \"demo_navigation_lab.extra\" parameter \"payload\" is invalid.",
       );
@@ -905,20 +854,23 @@ final class _DemoExtraPageRouteCodec
   }
 }
 
+/// Package-internal typed factory surfaced by the generated component API.
+final class CCGeneratedDemoExtraPageRouteFactory {
+  /// Creates the stateless factory used by generated static route members.
+  const CCGeneratedDemoExtraPageRouteFactory();
+
+  /// Creates an immutable Intent without performing navigation.
+  CCRouteIntent<void> call({required route_type_0.DemoExtraPayload payload}) =>
+      _DemoExtraPageRoute.intent(payload: payload);
+}
+
 /// Package-internal bridge used by the generated component route index.
 ///
 /// Keep this symbol out of public package barrels. It exists so a component
 /// registrar can register library-private routes without exposing owner APIs.
 void ccrouterRegisterDemoExtraPageRoute(CCRegistry registry) =>
-    _DemoExtraPageRoute.register(registry);
+    registry.registerRoute(_DemoExtraPageRoute.definition);
 
 /// Package-internal route definition bridge used by Host generation.
 CCRouteDefinition<dynamic, dynamic> ccrouterDescribeDemoExtraPageRoute() =>
     _DemoExtraPageRoute.definition;
-
-/// Package-internal page factory bridge used by generated Flutter catalogs.
-DemoExtraPage ccrouterBuildDemoExtraPageRoute(
-  CCEncodedRouteArguments arguments,
-) => _DemoExtraPageRoute.build(
-  _DemoExtraPageRoute.definition.codec.decode(arguments),
-);

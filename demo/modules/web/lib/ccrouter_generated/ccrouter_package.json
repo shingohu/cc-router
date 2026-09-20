@@ -5,7 +5,7 @@
     "name": "demo_web",
     "version": "0.1.0"
   },
-  "contentFingerprint": "bf8556d9a967469b6d58290866ff2e08fc638501558b8a177e1e73a2ec67231b",
+  "contentFingerprint": "c7ec3b536abf8946b4b6edcd8ef5f52adfdc433bbefe00af65e3a4cbf638185e",
   "bundle": {
     "library": "lib/demo_web_ccrouter.g.dart",
     "symbol": "ccrouterGeneratedPackageBundle"
@@ -69,19 +69,22 @@
           "implementation": {
             "symbol": "DemoPublicWebPage",
             "packageUri": "package:demo_web/src/web_pages.dart",
-            "line": 11,
+            "line": 9,
             "column": 13
           },
           "registration": "ccrouterRegisterDemoPublicWebPageRoute",
+          "registrationLibrary": "lib/src/ccrouter_generated/web_pages.route_binding.g.dart",
           "destination": {
             "descriptor": "ccrouterDescribeDemoPublicWebPageRoute",
-            "builder": "ccrouterBuildDemoPublicWebPageRoute"
+            "builder": "ccrouterBuildDemoPublicWebPageRoute",
+            "library": "lib/src/ccrouter_generated/web_pages.route_binding.g.dart",
+            "builderLibrary": "lib/src/ccrouter_generated/web_pages.route_binding.g.dart"
           },
           "generatedArtifacts": [
             {
-              "role": "routePart",
+              "role": "routeBinding",
               "symbol": "ccrouterRegisterDemoPublicWebPageRoute",
-              "packageUri": "package:demo_web/src/ccrouter_generated/web_pages.route.g.dart"
+              "packageUri": "package:demo_web/src/ccrouter_generated/web_pages.route_binding.g.dart"
             }
           ]
         },
@@ -99,19 +102,22 @@
           "implementation": {
             "symbol": "DemoPrivateWebPage",
             "packageUri": "package:demo_web/src/web_pages.dart",
-            "line": 32,
+            "line": 30,
             "column": 13
           },
           "registration": "ccrouterRegisterDemoPrivateWebPageRoute",
+          "registrationLibrary": "lib/src/ccrouter_generated/web_pages.route_binding.g.dart",
           "destination": {
             "descriptor": "ccrouterDescribeDemoPrivateWebPageRoute",
-            "builder": "ccrouterBuildDemoPrivateWebPageRoute"
+            "builder": "ccrouterBuildDemoPrivateWebPageRoute",
+            "library": "lib/src/ccrouter_generated/web_pages.route_binding.g.dart",
+            "builderLibrary": "lib/src/ccrouter_generated/web_pages.route_binding.g.dart"
           },
           "generatedArtifacts": [
             {
-              "role": "routePart",
+              "role": "routeBinding",
               "symbol": "ccrouterRegisterDemoPrivateWebPageRoute",
-              "packageUri": "package:demo_web/src/ccrouter_generated/web_pages.route.g.dart"
+              "packageUri": "package:demo_web/src/ccrouter_generated/web_pages.route_binding.g.dart"
             }
           ]
         }
@@ -135,14 +141,14 @@
         "implementation": {
           "symbol": "DemoPrivateWebPage",
           "packageUri": "package:demo_web/src/web_pages.dart",
-          "line": 32,
+          "line": 30,
           "column": 13
         },
         "generatedArtifacts": [
           {
-            "role": "routePart",
+            "role": "routeBinding",
             "symbol": "ccrouterRegisterDemoPrivateWebPageRoute",
-            "packageUri": "package:demo_web/src/ccrouter_generated/web_pages.route.g.dart"
+            "packageUri": "package:demo_web/src/ccrouter_generated/web_pages.route_binding.g.dart"
           }
         ]
       },
@@ -160,14 +166,14 @@
         "implementation": {
           "symbol": "DemoPublicWebPage",
           "packageUri": "package:demo_web/src/web_pages.dart",
-          "line": 11,
+          "line": 9,
           "column": 13
         },
         "generatedArtifacts": [
           {
-            "role": "routePart",
+            "role": "routeBinding",
             "symbol": "ccrouterRegisterDemoPublicWebPageRoute",
-            "packageUri": "package:demo_web/src/ccrouter_generated/web_pages.route.g.dart"
+            "packageUri": "package:demo_web/src/ccrouter_generated/web_pages.route_binding.g.dart"
           }
         ]
       }

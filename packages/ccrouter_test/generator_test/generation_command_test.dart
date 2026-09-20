@@ -146,6 +146,58 @@ void main() {
       ).readAsStringSync();
       expect(packageSources, contains('Scope: `package:demo_order`'));
       expect(packageSources, contains('### Route `order.detail`'));
+      final navigationPackage = path.join(
+        Directory.current.path,
+        'demo',
+        'modules',
+        'navigation_lab',
+      );
+      final routeApi = File(
+        path.join(
+          navigationPackage,
+          'lib',
+          'src',
+          'ccrouter_generated',
+          'demo_navigation_lab_component.route_api.g.dart',
+        ),
+      ).readAsStringSync();
+      expect(
+        routeApi,
+        contains('abstract final class DemoNavigationLabRoutes'),
+      );
+      expect(routeApi, contains('static const detail ='));
+      expect(routeApi, contains('static const presentationBottomPage ='));
+      expect(routeApi, isNot(contains('route_binding.g.dart')));
+      final navigationBarrel = File(
+        path.join(navigationPackage, 'lib', 'demo_navigation_lab.dart'),
+      ).readAsStringSync();
+      expect(
+        navigationBarrel,
+        isNot(contains('demo_navigation_lab_component.route_api.g.dart')),
+      );
+      for (final package in ['order', 'payment', 'web']) {
+        final component = package == 'order'
+            ? 'demo_order_component'
+            : package == 'payment'
+            ? 'demo_payment_component'
+            : 'demo_web_component';
+        expect(
+          File(
+            path.join(
+              Directory.current.path,
+              'demo',
+              'modules',
+              package,
+              'lib',
+              'src',
+              'ccrouter_generated',
+              '$component.route_api.g.dart',
+            ),
+          ).existsSync(),
+          isFalse,
+          reason: '$package must not retain an empty component Route API.',
+        );
+      }
       expect(
         File(
           path.join(

@@ -31,7 +31,7 @@
         "kind": "page",
         "symbol": "DemoShellFeedPage",
         "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
-        "line": 22,
+        "line": 20,
         "column": 13
       },
       "navigationSources": [
@@ -58,18 +58,27 @@
         "route": "_DemoShellFeedPageRoute",
         "arguments": "_DemoShellFeedPageRouteArguments",
         "package": "demo_navigation_lab",
-        "library": "lib/src/shell_pages.dart"
+        "library": "lib/src/ccrouter_generated/shell_pages.route.g.dart",
+        "intentFactory": "CCGeneratedDemoShellFeedPageRouteFactory"
       },
       "registration": "ccrouterRegisterDemoShellFeedPageRoute",
+      "registrationLibrary": "lib/src/ccrouter_generated/shell_pages.route.g.dart",
       "destination": {
         "descriptor": "ccrouterDescribeDemoShellFeedPageRoute",
-        "builder": "ccrouterBuildDemoShellFeedPageRoute"
+        "builder": "ccrouterBuildDemoShellFeedPageRoute",
+        "library": "lib/src/ccrouter_generated/shell_pages.route.g.dart",
+        "builderLibrary": "lib/src/ccrouter_generated/shell_pages.route_binding.g.dart"
       },
       "generatedArtifacts": [
         {
-          "role": "routePart",
+          "role": "routeLibrary",
           "symbol": "_DemoShellFeedPageRoute",
           "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/shell_pages.route.g.dart"
+        },
+        {
+          "role": "routeBinding",
+          "symbol": "ccrouterBuildDemoShellFeedPageRoute",
+          "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/shell_pages.route_binding.g.dart"
         }
       ],
       "patterns": [
@@ -98,7 +107,7 @@
         "kind": "page",
         "symbol": "DemoShellDetailPage",
         "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
-        "line": 59,
+        "line": 62,
         "column": 13
       },
       "navigationSources": [
@@ -125,18 +134,27 @@
         "route": "_DemoShellDetailPageRoute",
         "arguments": "_DemoShellDetailPageRouteArguments",
         "package": "demo_navigation_lab",
-        "library": "lib/src/shell_pages.dart"
+        "library": "lib/src/ccrouter_generated/shell_pages.route.g.dart",
+        "intentFactory": "CCGeneratedDemoShellDetailPageRouteFactory"
       },
       "registration": "ccrouterRegisterDemoShellDetailPageRoute",
+      "registrationLibrary": "lib/src/ccrouter_generated/shell_pages.route.g.dart",
       "destination": {
         "descriptor": "ccrouterDescribeDemoShellDetailPageRoute",
-        "builder": "ccrouterBuildDemoShellDetailPageRoute"
+        "builder": "ccrouterBuildDemoShellDetailPageRoute",
+        "library": "lib/src/ccrouter_generated/shell_pages.route.g.dart",
+        "builderLibrary": "lib/src/ccrouter_generated/shell_pages.route_binding.g.dart"
       },
       "generatedArtifacts": [
         {
-          "role": "routePart",
+          "role": "routeLibrary",
           "symbol": "_DemoShellDetailPageRoute",
           "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/shell_pages.route.g.dart"
+        },
+        {
+          "role": "routeBinding",
+          "symbol": "ccrouterBuildDemoShellDetailPageRoute",
+          "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/shell_pages.route_binding.g.dart"
         }
       ],
       "patterns": [
@@ -175,7 +193,7 @@
         "kind": "page",
         "symbol": "DemoShellSettingsPage",
         "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
-        "line": 89,
+        "line": 92,
         "column": 13
       },
       "navigationSources": [
@@ -202,18 +220,27 @@
         "route": "_DemoShellSettingsPageRoute",
         "arguments": "_DemoShellSettingsPageRouteArguments",
         "package": "demo_navigation_lab",
-        "library": "lib/src/shell_pages.dart"
+        "library": "lib/src/ccrouter_generated/shell_pages.route.g.dart",
+        "intentFactory": "CCGeneratedDemoShellSettingsPageRouteFactory"
       },
       "registration": "ccrouterRegisterDemoShellSettingsPageRoute",
+      "registrationLibrary": "lib/src/ccrouter_generated/shell_pages.route.g.dart",
       "destination": {
         "descriptor": "ccrouterDescribeDemoShellSettingsPageRoute",
-        "builder": "ccrouterBuildDemoShellSettingsPageRoute"
+        "builder": "ccrouterBuildDemoShellSettingsPageRoute",
+        "library": "lib/src/ccrouter_generated/shell_pages.route.g.dart",
+        "builderLibrary": "lib/src/ccrouter_generated/shell_pages.route_binding.g.dart"
       },
       "generatedArtifacts": [
         {
-          "role": "routePart",
+          "role": "routeLibrary",
           "symbol": "_DemoShellSettingsPageRoute",
           "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/shell_pages.route.g.dart"
+        },
+        {
+          "role": "routeBinding",
+          "symbol": "ccrouterBuildDemoShellSettingsPageRoute",
+          "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/shell_pages.route_binding.g.dart"
         }
       ],
       "patterns": [
@@ -242,7 +269,7 @@
         "kind": "page",
         "symbol": "DemoWorkspaceHomePage",
         "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
-        "line": 110,
+        "line": 113,
         "column": 13
       },
       "navigationSources": [
@@ -269,18 +296,27 @@
         "route": "_DemoWorkspaceHomePageRoute",
         "arguments": "_DemoWorkspaceHomePageRouteArguments",
         "package": "demo_navigation_lab",
-        "library": "lib/src/shell_pages.dart"
+        "library": "lib/src/ccrouter_generated/shell_pages.route.g.dart",
+        "intentFactory": "CCGeneratedDemoWorkspaceHomePageRouteFactory"
       },
       "registration": "ccrouterRegisterDemoWorkspaceHomePageRoute",
+      "registrationLibrary": "lib/src/ccrouter_generated/shell_pages.route.g.dart",
       "destination": {
         "descriptor": "ccrouterDescribeDemoWorkspaceHomePageRoute",
-        "builder": "ccrouterBuildDemoWorkspaceHomePageRoute"
+        "builder": "ccrouterBuildDemoWorkspaceHomePageRoute",
+        "library": "lib/src/ccrouter_generated/shell_pages.route.g.dart",
+        "builderLibrary": "lib/src/ccrouter_generated/shell_pages.route_binding.g.dart"
       },
       "generatedArtifacts": [
         {
-          "role": "routePart",
+          "role": "routeLibrary",
           "symbol": "_DemoWorkspaceHomePageRoute",
           "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/shell_pages.route.g.dart"
+        },
+        {
+          "role": "routeBinding",
+          "symbol": "ccrouterBuildDemoWorkspaceHomePageRoute",
+          "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/shell_pages.route_binding.g.dart"
         }
       ],
       "patterns": [
@@ -309,7 +345,7 @@
         "kind": "page",
         "symbol": "DemoWorkspaceDetailPage",
         "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
-        "line": 142,
+        "line": 147,
         "column": 13
       },
       "navigationSources": [
@@ -337,18 +373,27 @@
         "route": "_DemoWorkspaceDetailPageRoute",
         "arguments": "_DemoWorkspaceDetailPageRouteArguments",
         "package": "demo_navigation_lab",
-        "library": "lib/src/shell_pages.dart"
+        "library": "lib/src/ccrouter_generated/shell_pages.route.g.dart",
+        "intentFactory": "CCGeneratedDemoWorkspaceDetailPageRouteFactory"
       },
       "registration": "ccrouterRegisterDemoWorkspaceDetailPageRoute",
+      "registrationLibrary": "lib/src/ccrouter_generated/shell_pages.route.g.dart",
       "destination": {
         "descriptor": "ccrouterDescribeDemoWorkspaceDetailPageRoute",
-        "builder": "ccrouterBuildDemoWorkspaceDetailPageRoute"
+        "builder": "ccrouterBuildDemoWorkspaceDetailPageRoute",
+        "library": "lib/src/ccrouter_generated/shell_pages.route.g.dart",
+        "builderLibrary": "lib/src/ccrouter_generated/shell_pages.route_binding.g.dart"
       },
       "generatedArtifacts": [
         {
-          "role": "routePart",
+          "role": "routeLibrary",
           "symbol": "_DemoWorkspaceDetailPageRoute",
           "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/shell_pages.route.g.dart"
+        },
+        {
+          "role": "routeBinding",
+          "symbol": "ccrouterBuildDemoWorkspaceDetailPageRoute",
+          "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/shell_pages.route_binding.g.dart"
         }
       ],
       "patterns": [
@@ -387,7 +432,7 @@
         "kind": "page",
         "symbol": "DemoWorkspaceActivityPage",
         "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
-        "line": 172,
+        "line": 177,
         "column": 13
       },
       "navigationSources": [
@@ -414,18 +459,27 @@
         "route": "_DemoWorkspaceActivityPageRoute",
         "arguments": "_DemoWorkspaceActivityPageRouteArguments",
         "package": "demo_navigation_lab",
-        "library": "lib/src/shell_pages.dart"
+        "library": "lib/src/ccrouter_generated/shell_pages.route.g.dart",
+        "intentFactory": "CCGeneratedDemoWorkspaceActivityPageRouteFactory"
       },
       "registration": "ccrouterRegisterDemoWorkspaceActivityPageRoute",
+      "registrationLibrary": "lib/src/ccrouter_generated/shell_pages.route.g.dart",
       "destination": {
         "descriptor": "ccrouterDescribeDemoWorkspaceActivityPageRoute",
-        "builder": "ccrouterBuildDemoWorkspaceActivityPageRoute"
+        "builder": "ccrouterBuildDemoWorkspaceActivityPageRoute",
+        "library": "lib/src/ccrouter_generated/shell_pages.route.g.dart",
+        "builderLibrary": "lib/src/ccrouter_generated/shell_pages.route_binding.g.dart"
       },
       "generatedArtifacts": [
         {
-          "role": "routePart",
+          "role": "routeLibrary",
           "symbol": "_DemoWorkspaceActivityPageRoute",
           "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/shell_pages.route.g.dart"
+        },
+        {
+          "role": "routeBinding",
+          "symbol": "ccrouterBuildDemoWorkspaceActivityPageRoute",
+          "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/shell_pages.route_binding.g.dart"
         }
       ],
       "patterns": [
@@ -454,7 +508,7 @@
         "kind": "page",
         "symbol": "DemoWorkspaceProfilePage",
         "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
-        "line": 209,
+        "line": 214,
         "column": 13
       },
       "navigationSources": [
@@ -481,18 +535,27 @@
         "route": "_DemoWorkspaceProfilePageRoute",
         "arguments": "_DemoWorkspaceProfilePageRouteArguments",
         "package": "demo_navigation_lab",
-        "library": "lib/src/shell_pages.dart"
+        "library": "lib/src/ccrouter_generated/shell_pages.route.g.dart",
+        "intentFactory": "CCGeneratedDemoWorkspaceProfilePageRouteFactory"
       },
       "registration": "ccrouterRegisterDemoWorkspaceProfilePageRoute",
+      "registrationLibrary": "lib/src/ccrouter_generated/shell_pages.route.g.dart",
       "destination": {
         "descriptor": "ccrouterDescribeDemoWorkspaceProfilePageRoute",
-        "builder": "ccrouterBuildDemoWorkspaceProfilePageRoute"
+        "builder": "ccrouterBuildDemoWorkspaceProfilePageRoute",
+        "library": "lib/src/ccrouter_generated/shell_pages.route.g.dart",
+        "builderLibrary": "lib/src/ccrouter_generated/shell_pages.route_binding.g.dart"
       },
       "generatedArtifacts": [
         {
-          "role": "routePart",
+          "role": "routeLibrary",
           "symbol": "_DemoWorkspaceProfilePageRoute",
           "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/shell_pages.route.g.dart"
+        },
+        {
+          "role": "routeBinding",
+          "symbol": "ccrouterBuildDemoWorkspaceProfilePageRoute",
+          "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/shell_pages.route_binding.g.dart"
         }
       ],
       "patterns": [
@@ -521,7 +584,7 @@
         "kind": "page",
         "symbol": "DemoExtraPage",
         "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
-        "line": 233,
+        "line": 231,
         "column": 13
       },
       "navigationSources": [
@@ -548,18 +611,27 @@
         "route": "_DemoExtraPageRoute",
         "arguments": "_DemoExtraPageRouteArguments",
         "package": "demo_navigation_lab",
-        "library": "lib/src/shell_pages.dart"
+        "library": "lib/src/ccrouter_generated/shell_pages.route.g.dart",
+        "intentFactory": "CCGeneratedDemoExtraPageRouteFactory"
       },
       "registration": "ccrouterRegisterDemoExtraPageRoute",
+      "registrationLibrary": "lib/src/ccrouter_generated/shell_pages.route.g.dart",
       "destination": {
         "descriptor": "ccrouterDescribeDemoExtraPageRoute",
-        "builder": "ccrouterBuildDemoExtraPageRoute"
+        "builder": "ccrouterBuildDemoExtraPageRoute",
+        "library": "lib/src/ccrouter_generated/shell_pages.route.g.dart",
+        "builderLibrary": "lib/src/ccrouter_generated/shell_pages.route_binding.g.dart"
       },
       "generatedArtifacts": [
         {
-          "role": "routePart",
+          "role": "routeLibrary",
           "symbol": "_DemoExtraPageRoute",
           "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/shell_pages.route.g.dart"
+        },
+        {
+          "role": "routeBinding",
+          "symbol": "ccrouterBuildDemoExtraPageRoute",
+          "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/shell_pages.route_binding.g.dart"
         }
       ],
       "patterns": [

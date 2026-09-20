@@ -2,8 +2,6 @@ import 'package:ccrouter/ccrouter.dart';
 import 'package:demo_order_contracts/demo_order_contracts_owner.dart';
 import 'package:flutter/material.dart';
 
-part 'ccrouter_generated/order_detail_page.route.g.dart';
-
 @CCRouteImplementation(OrderDetailRouteContract)
 final class OrderDetailPage extends StatelessWidget {
   const OrderDetailPage({

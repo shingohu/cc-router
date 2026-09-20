@@ -3,11 +3,12 @@
 
 // ignore_for_file: type=lint, unused_element
 
-part of '../query_codec_fixture.dart';
-
 // **************************************************************************
 // _RouteGenerator
 // **************************************************************************
+
+import 'package:ccrouter/ccrouter.dart';
+import 'package:ccrouter_test/src/query_codec_types.dart' as route_type_0;
 
 /// Immutable arguments for route query_codec_fixture.detail; URI values remain typed.
 final class _QueryCodecFixturePageRouteArguments {
@@ -15,7 +16,7 @@ final class _QueryCodecFixturePageRouteArguments {
   _QueryCodecFixturePageRouteArguments({
     required List<String> tags,
     required Set<int> ids,
-    List<QueryCodecFixtureState>? states,
+    List<route_type_0.QueryCodecFixtureState>? states,
     this.filter,
   }) : tags = List.unmodifiable(tags),
        ids = Set.unmodifiable(ids),
@@ -28,10 +29,10 @@ final class _QueryCodecFixturePageRouteArguments {
   final Set<int> ids;
 
   /// query parameter states for query_codec_fixture.detail.
-  final List<QueryCodecFixtureState>? states;
+  final List<route_type_0.QueryCodecFixtureState>? states;
 
   /// query parameter filter for query_codec_fixture.detail.
-  final QueryCodecFixtureFilter? filter;
+  final route_type_0.QueryCodecFixtureFilter? filter;
 }
 
 /// Typed contract for query_codec_fixture.detail.
@@ -43,8 +44,8 @@ abstract final class _QueryCodecFixturePageRoute {
   static CCRouteIntent<void> intent({
     required List<String> tags,
     required Set<int> ids,
-    List<QueryCodecFixtureState>? states,
-    QueryCodecFixtureFilter? filter,
+    List<route_type_0.QueryCodecFixtureState>? states,
+    route_type_0.QueryCodecFixtureFilter? filter,
   }) => _QueryCodecFixturePageRouteIntent(
     _QueryCodecFixturePageRouteArguments(
       tags: tags,
@@ -82,20 +83,6 @@ abstract final class _QueryCodecFixturePageRoute {
         interceptorIds: const [],
         popGuardIds: const [],
       );
-
-  /// Called by the owning component registrar, never by a business caller.
-  static void register(CCRegistry registry) =>
-      registry.registerRoute(definition);
-
-  /// Injects already decoded arguments into the page without backend coupling.
-  static QueryCodecFixturePage build(
-    _QueryCodecFixturePageRouteArguments arguments,
-  ) => QueryCodecFixturePage(
-    tags: arguments.tags,
-    ids: arguments.ids,
-    states: arguments.states,
-    filter: arguments.filter,
-  );
 }
 
 /// Private data-only Intent carrying this route's typed result contract.
@@ -154,13 +141,14 @@ final class _QueryCodecFixturePageRouteCodec
       throw CCRouteParameterError(
         "Route \"query_codec_fixture.detail\" parameter \"states\" is invalid.",
       );
-    final List<QueryCodecFixtureState>? _value_states = _values_states == null
+    final List<route_type_0.QueryCodecFixtureState>? _value_states =
+        _values_states == null
         ? null
-        : List<QueryCodecFixtureState>.unmodifiable(
+        : List<route_type_0.QueryCodecFixtureState>.unmodifiable(
             _values_states.map(
               (raw_states) => switch (raw_states) {
-                "pending" => QueryCodecFixtureState.pending,
-                "completed" => QueryCodecFixtureState.completed,
+                "pending" => route_type_0.QueryCodecFixtureState.pending,
+                "completed" => route_type_0.QueryCodecFixtureState.completed,
                 _ => throw CCRouteParameterError(
                   "Route \"query_codec_fixture.detail\" parameter \"states\" is invalid.",
                 ),
@@ -172,11 +160,12 @@ final class _QueryCodecFixturePageRouteCodec
       throw CCRouteParameterError(
         "Route \"query_codec_fixture.detail\" parameter \"filter\" is invalid.",
       );
-    final QueryCodecFixtureFilter? _value_filter = _values_filter == null
+    final route_type_0.QueryCodecFixtureFilter? _value_filter =
+        _values_filter == null
         ? null
         : (() {
             try {
-              return const QueryCodecFixtureFilterCodec().decode(
+              return const route_type_0.QueryCodecFixtureFilterCodec().decode(
                 List<String>.unmodifiable(_values_filter),
               );
             } catch (_) {
@@ -228,9 +217,8 @@ final class _QueryCodecFixturePageRouteCodec
         if (arguments.filter != null)
           "filter": (() {
             try {
-              final values = const QueryCodecFixtureFilterCodec().encode(
-                arguments.filter!,
-              );
+              final values = const route_type_0.QueryCodecFixtureFilterCodec()
+                  .encode(arguments.filter!);
               if (values.isEmpty) throw const FormatException();
               return List<String>.unmodifiable(values);
             } catch (_) {
@@ -245,21 +233,33 @@ final class _QueryCodecFixturePageRouteCodec
   }
 }
 
+/// Package-internal typed factory surfaced by the generated component API.
+final class CCGeneratedQueryCodecFixturePageRouteFactory {
+  /// Creates the stateless factory used by generated static route members.
+  const CCGeneratedQueryCodecFixturePageRouteFactory();
+
+  /// Creates an immutable Intent without performing navigation.
+  CCRouteIntent<void> call({
+    required List<String> tags,
+    required Set<int> ids,
+    List<route_type_0.QueryCodecFixtureState>? states,
+    route_type_0.QueryCodecFixtureFilter? filter,
+  }) => _QueryCodecFixturePageRoute.intent(
+    tags: tags,
+    ids: ids,
+    states: states,
+    filter: filter,
+  );
+}
+
 /// Package-internal bridge used by the generated component route index.
 ///
 /// Keep this symbol out of public package barrels. It exists so a component
 /// registrar can register library-private routes without exposing owner APIs.
 void ccrouterRegisterQueryCodecFixturePageRoute(CCRegistry registry) =>
-    _QueryCodecFixturePageRoute.register(registry);
+    registry.registerRoute(_QueryCodecFixturePageRoute.definition);
 
 /// Package-internal route definition bridge used by Host generation.
 CCRouteDefinition<dynamic, dynamic>
 ccrouterDescribeQueryCodecFixturePageRoute() =>
     _QueryCodecFixturePageRoute.definition;
-
-/// Package-internal page factory bridge used by generated Flutter catalogs.
-QueryCodecFixturePage ccrouterBuildQueryCodecFixturePageRoute(
-  CCEncodedRouteArguments arguments,
-) => _QueryCodecFixturePageRoute.build(
-  _QueryCodecFixturePageRoute.definition.codec.decode(arguments),
-);

@@ -1233,6 +1233,14 @@ Future<List<_GeneratedComponentCatalog>> _generateComponentRouteIndexes(
       final destinationMap = destination is Map
           ? destination.cast<Object?, Object?>()
           : const <Object?, Object?>{};
+      final internalRoute = '${route['exposure'] ?? ''}' == 'internal';
+      final registrationLibrary =
+          '${route['registrationLibrary'] ?? destinationMap['library'] ?? (internalRoute ? _generatedRouteLibraryPath(source) : source)}';
+      final builderLibrary =
+          '${destinationMap['builderLibrary'] ?? (internalRoute ? _generatedRouteBindingPath(source) : registrationLibrary)}';
+      final intentFactory = contracts is Map
+          ? '${contracts['intentFactory'] ?? (internalRoute ? _intentFactoryFromContract(routeContract) : '')}'
+          : '';
       if ('${route['registration'] ?? ''}'.trim().isEmpty &&
           destinationMap.isEmpty) {
         continue;
@@ -1242,13 +1250,15 @@ Future<List<_GeneratedComponentCatalog>> _generateComponentRouteIndexes(
           .add(
             _RouteRegistration(
               package: package,
-              source: source,
+              source: registrationLibrary,
+              builderSource: builderLibrary,
               routeId: '${route['id'] ?? ''}',
               registration: registration,
               descriptor:
                   '${destinationMap['descriptor'] ?? _descriptorFromContract(routeContract)}',
               builder:
                   '${destinationMap['builder'] ?? _builderFromContract(routeContract)}',
+              intentFactory: intentFactory,
             ),
           );
     }
@@ -1257,16 +1267,22 @@ Future<List<_GeneratedComponentCatalog>> _generateComponentRouteIndexes(
       final destinationMap = destination is Map
           ? destination.cast<Object?, Object?>()
           : const <Object?, Object?>{};
+      final registrationLibrary =
+          '${implementation['registrationLibrary'] ?? destinationMap['library'] ?? source}';
+      final builderLibrary =
+          '${destinationMap['builderLibrary'] ?? registrationLibrary}';
       routes
           .putIfAbsent('${implementation['componentId'] ?? ''}', () => [])
           .add(
             _RouteRegistration(
               package: package,
-              source: source,
+              source: registrationLibrary,
+              builderSource: builderLibrary,
               routeId: '${implementation['routeId'] ?? ''}',
               registration: '${implementation['registration'] ?? ''}',
               descriptor: '${destinationMap['descriptor'] ?? ''}',
               builder: '${destinationMap['builder'] ?? ''}',
+              intentFactory: '',
             ),
           );
     }
@@ -1292,6 +1308,19 @@ Future<List<_GeneratedComponentCatalog>> _generateComponentRouteIndexes(
         _emitComponentRouteIndex(componentId, componentRoutes),
       ),
     );
+    final hasRouteApi = componentRoutes.any(
+      (route) => route.intentFactory.isNotEmpty,
+    );
+    if (hasRouteApi) {
+      final routeApiOutput = File(
+        '${outputDirectory.path}${Platform.pathSeparator}${_fileStem(componentId)}.route_api.g.dart',
+      );
+      await routeApiOutput.writeAsString(
+        _dartFormatter.format(
+          _emitComponentRouteApi(componentId, componentRoutes),
+        ),
+      );
+    }
     generatedCatalogs.add(
       _GeneratedComponentCatalog(
         componentId: componentId,
@@ -1299,6 +1328,7 @@ Future<List<_GeneratedComponentCatalog>> _generateComponentRouteIndexes(
         packageRoot: packageRoot,
         registrarSource: component.source,
         manifest: component.manifest,
+        hasRouteApi: hasRouteApi,
       ),
     );
   }
@@ -1318,6 +1348,10 @@ String _emitComponentRouteIndex(
   final imports = <String, String>{};
   for (final route in routes) {
     imports.putIfAbsent(route.source, () => _sourceAlias(route.source));
+    imports.putIfAbsent(
+      route.builderSource,
+      () => _sourceAlias(route.builderSource),
+    );
   }
   final out = StringBuffer()
     ..writeln('// GENERATED CODE - DO NOT MODIFY BY HAND')
@@ -1329,11 +1363,8 @@ String _emitComponentRouteIndex(
       in imports.entries.toList()
         ..sort((left, right) => left.key.compareTo(right.key))) {
     final source = entry.key;
-    final package = routes
-        .firstWhere((route) => route.source == source)
-        .package;
     out.writeln(
-      "import 'package:$package/${source.substring('lib/'.length)}' as ${entry.value};",
+      "import '${_componentGeneratedImport(source)}' as ${entry.value};",
     );
   }
   out
@@ -1368,19 +1399,126 @@ String _emitComponentRouteIndex(
       'final ${_camelIdentifier(componentId)}RouteCatalog = CCFlutterRouteCatalog([',
     );
   for (final route in routes) {
-    final alias = imports[route.source]!;
+    final descriptorAlias = imports[route.source]!;
+    final builderAlias = imports[route.builderSource]!;
     out
       ..writeln('  CCFlutterRouteDestination.fromDefinition(')
       ..writeln('    definition:')
-      ..writeln('        $alias.${route.descriptor}(),')
+      ..writeln('        $descriptorAlias.${route.descriptor}(),')
       ..writeln('    builder: (arguments) =>')
-      ..writeln('        $alias.${route.builder}(arguments),')
+      ..writeln('        $builderAlias.${route.builder}(arguments),')
       ..writeln('  ),');
   }
   out
     ..writeln(']);')
     ..writeln();
   return out.toString();
+}
+
+/// Generates the component's single typed API for its internal routes.
+String _emitComponentRouteApi(
+  String componentId,
+  List<_RouteRegistration> routes,
+) {
+  final internalRoutes = routes
+      .where((route) => route.intentFactory.isNotEmpty)
+      .toList(growable: false);
+  final className =
+      '${_pascalIdentifier(_componentApiOwner(componentId))}Routes';
+  final imports = <String, String>{};
+  final members = <String, _RouteRegistration>{};
+  for (final route in internalRoutes) {
+    imports.putIfAbsent(route.source, () => _sourceAlias(route.source));
+    final member = _componentRouteMember(componentId, route.routeId);
+    final previous = members[member];
+    if (previous != null) {
+      throw CCPackageWorkspaceException(
+        'Routes "${previous.routeId}" and "${route.routeId}" both generate '
+        'component Route API member "$member". Rename one Route ID.',
+      );
+    }
+    members[member] = route;
+  }
+  final out = StringBuffer()
+    ..writeln('// GENERATED CODE - DO NOT MODIFY BY HAND')
+    ..writeln('// ignore_for_file: type=lint')
+    ..writeln();
+  for (final entry
+      in imports.entries.toList()
+        ..sort((left, right) => left.key.compareTo(right.key))) {
+    out.writeln(
+      "import '${_componentGeneratedImport(entry.key)}' as ${entry.value};",
+    );
+  }
+  if (imports.isNotEmpty) out.writeln();
+  out
+    ..writeln(
+      '/// Typed navigation entry points for routes internal to `$componentId`.',
+    )
+    ..writeln('abstract final class $className {');
+  for (final entry
+      in members.entries.toList()
+        ..sort((left, right) => left.key.compareTo(right.key))) {
+    final route = entry.value;
+    final alias = imports[route.source]!;
+    out
+      ..writeln('  /// Creates an Intent for `${route.routeId}`.')
+      ..writeln(
+        '  static const ${entry.key} = $alias.${route.intentFactory}();',
+      );
+  }
+  out
+    ..writeln('}')
+    ..writeln();
+  return out.toString();
+}
+
+/// Derives one short lower-camel member from a component-owned Route ID.
+String _componentRouteMember(String componentId, String routeId) {
+  final owner = _componentApiOwner(componentId);
+  final local = routeId.startsWith('$owner.')
+      ? routeId.substring(owner.length + 1)
+      : routeId;
+  return _camelIdentifier(local);
+}
+
+/// Makes generated component imports relative to their shared output root.
+String _componentGeneratedImport(String library) {
+  const root = 'lib/src/ccrouter_generated/';
+  if (!library.startsWith(root)) {
+    throw CCPackageWorkspaceException(
+      'Component generated library must remain below $root: $library',
+    );
+  }
+  return library.substring(root.length);
+}
+
+/// Removes a conventional descriptor suffix from generated business API names.
+String _componentApiOwner(String componentId) =>
+    componentId.endsWith('_component')
+    ? componentId.substring(0, componentId.length - '_component'.length)
+    : componentId;
+
+/// Derives the migration-safe standalone route output from a source library.
+String _generatedRouteLibraryPath(String source) {
+  const prefix = 'lib/src/';
+  if (!source.startsWith(prefix) || !source.endsWith('.dart')) return source;
+  final relative = source.substring(prefix.length, source.length - 5);
+  return 'lib/src/ccrouter_generated/$relative.route.g.dart';
+}
+
+/// Derives the migration-safe page-binding output from a source library.
+String _generatedRouteBindingPath(String source) {
+  const prefix = 'lib/src/';
+  if (!source.startsWith(prefix) || !source.endsWith('.dart')) return source;
+  final relative = source.substring(prefix.length, source.length - 5);
+  return 'lib/src/ccrouter_generated/$relative.route_binding.g.dart';
+}
+
+/// Derives the callable factory emitted for one legacy internal route record.
+String _intentFactoryFromContract(String contract) {
+  final stem = contract.startsWith('_') ? contract.substring(1) : contract;
+  return stem.isEmpty ? '' : 'CCGenerated${stem}Factory';
 }
 
 /// Writes Package Bundles without importing any transitive Pub dependency.
@@ -1651,6 +1789,17 @@ Future<void> _deleteObsoleteResolvedOutputs({
           '${_fileStem(catalog.componentId)}.routes.g.dart',
         ),
       ),
+    for (final catalog in catalogs)
+      if (catalog.hasRouteApi)
+        path.normalize(
+          path.join(
+            catalog.packageRoot.path,
+            'lib',
+            'src',
+            'ccrouter_generated',
+            '${_fileStem(catalog.componentId)}.route_api.g.dart',
+          ),
+        ),
   };
   for (final package in workspace.packages.values.where(
     (package) => package.writable,
@@ -1664,7 +1813,9 @@ Future<void> _deleteObsoleteResolvedOutputs({
         recursive: false,
         followLinks: false,
       )) {
-        if (entity is File && entity.path.endsWith('.routes.g.dart')) {
+        if (entity is File &&
+            (entity.path.endsWith('.routes.g.dart') ||
+                entity.path.endsWith('.route_api.g.dart'))) {
           candidates.add(entity);
         }
       }
@@ -1815,8 +1966,9 @@ Future<void> _generateHostRouteCatalog(
 /// Deletes obsolete aggregate indexes that no current component can own.
 ///
 /// Only files with CCRouter-specific aggregate signatures and suffixes are
-/// eligible. Builder-owned route Parts, handwritten sources, and another
-/// generator's files remain untouched even if they share the standard header.
+/// eligible. Builder-owned route libraries and bindings, handwritten sources,
+/// and another generator's files remain untouched even if they share the
+/// standard header.
 Future<void> _deleteObsoleteAggregateOutputs(
   Directory root,
   Iterable<_GeneratedComponentCatalog> catalogs,
@@ -1828,6 +1980,11 @@ Future<void> _deleteObsoleteAggregateOutputs(
     expected.add(
       '${catalog.packageRoot.absolute.path}${Platform.pathSeparator}lib${Platform.pathSeparator}src${Platform.pathSeparator}ccrouter_generated${Platform.pathSeparator}${_fileStem(catalog.componentId)}.routes.g.dart',
     );
+    if (catalog.hasRouteApi) {
+      expected.add(
+        '${catalog.packageRoot.absolute.path}${Platform.pathSeparator}lib${Platform.pathSeparator}src${Platform.pathSeparator}ccrouter_generated${Platform.pathSeparator}${_fileStem(catalog.componentId)}.route_api.g.dart',
+      );
+    }
     expected.add(
       '${catalog.packageRoot.absolute.path}${Platform.pathSeparator}lib${Platform.pathSeparator}${catalog.package}_ccrouter.g.dart',
     );
@@ -1839,6 +1996,7 @@ Future<void> _deleteObsoleteAggregateOutputs(
     if (segments.contains('.dart_tool') || segments.contains('build')) continue;
     final name = entity.uri.pathSegments.last;
     if (!name.endsWith('.routes.g.dart') &&
+        !name.endsWith('.route_api.g.dart') &&
         !name.endsWith('_ccrouter.g.dart')) {
       continue;
     }
@@ -1861,6 +2019,11 @@ bool _isCCRouterAggregateOutput(String name, String contents) {
   if (name == 'ccrouter_host.routes.g.dart') {
     return contents.contains('ccrouterGeneratedComponentManifests') &&
         contents.contains('ccrouterGeneratedRouteCatalog');
+  }
+  if (name.endsWith('.route_api.g.dart')) {
+    return contents.contains(
+      'Typed navigation entry points for routes internal',
+    );
   }
   return name.endsWith('.routes.g.dart') &&
       contents.contains('Generated registration index for component');
@@ -1978,10 +2141,12 @@ final class _RouteRegistration {
   const _RouteRegistration({
     required this.package,
     required this.source,
+    required this.builderSource,
     required this.routeId,
     required this.registration,
     required this.descriptor,
     required this.builder,
+    required this.intentFactory,
   });
 
   /// Package name used by generated package imports.
@@ -1989,6 +2154,9 @@ final class _RouteRegistration {
 
   /// Source library containing the generated registration bridge.
   final String source;
+
+  /// Generated library containing the Flutter page-construction bridge.
+  final String builderSource;
 
   /// Stable route ID used for deterministic sorting.
   final String routeId;
@@ -2001,6 +2169,9 @@ final class _RouteRegistration {
 
   /// Generated bridge decoding arguments and creating the Flutter page.
   final String builder;
+
+  /// Callable factory exported through the component Route API when internal.
+  final String intentFactory;
 }
 
 /// Describes one generated component catalog and its public Host entrypoint.
@@ -2012,6 +2183,7 @@ final class _GeneratedComponentCatalog {
     required this.packageRoot,
     required this.registrarSource,
     required this.manifest,
+    required this.hasRouteApi,
   });
 
   /// Stable component identity used in generated symbol names.
@@ -2028,4 +2200,7 @@ final class _GeneratedComponentCatalog {
 
   /// Generated Manifest symbol consumed by the Host aggregate.
   final String manifest;
+
+  /// Whether the component owns internal routes needing a typed package API.
+  final bool hasRouteApi;
 }

@@ -31,7 +31,7 @@
         "kind": "page",
         "symbol": "DemoLifecyclePage",
         "packageUri": "package:demo_navigation_lab/src/lifecycle_page.dart",
-        "line": 16,
+        "line": 14,
         "column": 13
       },
       "navigationSources": [
@@ -58,18 +58,27 @@
         "route": "_DemoLifecyclePageRoute",
         "arguments": "_DemoLifecyclePageRouteArguments",
         "package": "demo_navigation_lab",
-        "library": "lib/src/lifecycle_page.dart"
+        "library": "lib/src/ccrouter_generated/lifecycle_page.route.g.dart",
+        "intentFactory": "CCGeneratedDemoLifecyclePageRouteFactory"
       },
       "registration": "ccrouterRegisterDemoLifecyclePageRoute",
+      "registrationLibrary": "lib/src/ccrouter_generated/lifecycle_page.route.g.dart",
       "destination": {
         "descriptor": "ccrouterDescribeDemoLifecyclePageRoute",
-        "builder": "ccrouterBuildDemoLifecyclePageRoute"
+        "builder": "ccrouterBuildDemoLifecyclePageRoute",
+        "library": "lib/src/ccrouter_generated/lifecycle_page.route.g.dart",
+        "builderLibrary": "lib/src/ccrouter_generated/lifecycle_page.route_binding.g.dart"
       },
       "generatedArtifacts": [
         {
-          "role": "routePart",
+          "role": "routeLibrary",
           "symbol": "_DemoLifecyclePageRoute",
           "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/lifecycle_page.route.g.dart"
+        },
+        {
+          "role": "routeBinding",
+          "symbol": "ccrouterBuildDemoLifecyclePageRoute",
+          "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/lifecycle_page.route_binding.g.dart"
         }
       ],
       "patterns": [

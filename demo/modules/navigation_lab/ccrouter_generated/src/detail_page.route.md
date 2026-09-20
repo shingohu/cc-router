@@ -16,7 +16,7 @@ Generated from `lib/src/detail_page.dart`. Do not edit by hand.
 - Presentation: `page`
 - Navigation sources: `typedIntent, internalUri, externalDeepLink`
 - Restoration: `unsupported`
-- Contract library: `demo_navigation_lab:lib/src/detail_page.dart`
+- Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/detail_page.route.g.dart`
 - Patterns:
   - `/lab/detail/:id` (CCPathPattern, primary)
     - Constraints: `{"id":"\\d+"}`

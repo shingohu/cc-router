@@ -14,7 +14,7 @@ Generated from `lib/src/query_codec_fixture.dart`. Do not edit by hand.
 - Presentation: `page`
 - Navigation sources: `typedIntent, internalUri`
 - Restoration: `unsupported`
-- Contract library: `ccrouter_test:lib/src/query_codec_fixture.dart`
+- Contract library: `ccrouter_test:lib/src/ccrouter_generated/query_codec_fixture.route.g.dart`
 - Patterns:
   - `/query-codec-fixture` (CCPathPattern, primary)
 - Parameters:

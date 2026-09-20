@@ -16,6 +16,6 @@ CCRouter 全功能交互验证首页。
 - Presentation: `page`
 - Navigation sources: `typedIntent, internalUri`
 - Restoration: `unsupported`
-- Contract library: `demo_navigation_lab:lib/src/home_page.dart`
+- Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/home_page.route.g.dart`
 - Patterns:
   - `/` (CCPathPattern, primary)

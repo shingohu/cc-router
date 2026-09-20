@@ -71,11 +71,14 @@ final class _RouteModel {
   /// Library-private Intent implementation behind the typed factory.
   String get intent => '_${api.replaceFirst(RegExp(r'^_'), '')}Intent';
 
+  /// Package-internal callable type consumed by the component Route API.
+  String get intentFactory => 'CCGenerated${apiStem}Factory';
+
   /// Stable package-internal bridge used by the generated component index.
   ///
-  /// The bridge is emitted in the page's own library so it can call a
-  /// library-private route contract. It is intentionally not exported from a
-  /// package barrel and is only consumed by generated component code.
+  /// The bridge is emitted in the standalone route library beside its private
+  /// route contract. It is intentionally not exported from a package barrel
+  /// and is consumed only by generated component registration code.
   String get registrationFunction =>
       'ccrouterRegister${page.displayName.replaceFirst(RegExp(r'^_'), '')}Route';
 
@@ -108,6 +111,13 @@ final class _RouteModel {
             element.displayName == 'RouteContract')) {
       _fail(
         'CCRouteContract schema names must end with RouteContract.',
+        element,
+      );
+    }
+    if (!contractFirst && element.displayName.startsWith('_')) {
+      _fail(
+        'CCRoute page classes must be public because generated route libraries '
+        'cannot access private declarations.',
         element,
       );
     }
@@ -411,6 +421,13 @@ final class _RouteImplementationModel {
         element.typeParameters.isNotEmpty) {
       _fail(
         'CCRouteImplementation requires a concrete, non-generic page class.',
+        element,
+      );
+    }
+    if (element.displayName.startsWith('_')) {
+      _fail(
+        'CCRouteImplementation page classes must be public because generated '
+        'route libraries cannot access private declarations.',
         element,
       );
     }

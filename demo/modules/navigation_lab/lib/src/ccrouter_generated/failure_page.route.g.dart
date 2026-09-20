@@ -3,11 +3,11 @@
 
 // ignore_for_file: type=lint, unused_element
 
-part of '../failure_page.dart';
-
 // **************************************************************************
 // _RouteGenerator
 // **************************************************************************
+
+import 'package:ccrouter/ccrouter.dart';
 
 /// Immutable arguments for route demo_navigation_lab.failure; URI values remain typed.
 final class _DemoFailurePageRouteArguments {
@@ -65,14 +65,6 @@ abstract final class _DemoFailurePageRoute {
         interceptorIds: const [],
         popGuardIds: const [],
       );
-
-  /// Called by the owning component registrar, never by a business caller.
-  static void register(CCRegistry registry) =>
-      registry.registerRoute(definition);
-
-  /// Injects already decoded arguments into the page without backend coupling.
-  static DemoFailurePage build(_DemoFailurePageRouteArguments arguments) =>
-      DemoFailurePage(stage: arguments.stage, errorType: arguments.errorType);
 }
 
 /// Private data-only Intent carrying this route's typed result contract.
@@ -140,20 +132,25 @@ final class _DemoFailurePageRouteCodec
   }
 }
 
+/// Package-internal typed factory surfaced by the generated component API.
+final class CCGeneratedDemoFailurePageRouteFactory {
+  /// Creates the stateless factory used by generated static route members.
+  const CCGeneratedDemoFailurePageRouteFactory();
+
+  /// Creates an immutable Intent without performing navigation.
+  CCRouteIntent<void> call({
+    required String stage,
+    required String errorType,
+  }) => _DemoFailurePageRoute.intent(stage: stage, errorType: errorType);
+}
+
 /// Package-internal bridge used by the generated component route index.
 ///
 /// Keep this symbol out of public package barrels. It exists so a component
 /// registrar can register library-private routes without exposing owner APIs.
 void ccrouterRegisterDemoFailurePageRoute(CCRegistry registry) =>
-    _DemoFailurePageRoute.register(registry);
+    registry.registerRoute(_DemoFailurePageRoute.definition);
 
 /// Package-internal route definition bridge used by Host generation.
 CCRouteDefinition<dynamic, dynamic> ccrouterDescribeDemoFailurePageRoute() =>
     _DemoFailurePageRoute.definition;
-
-/// Package-internal page factory bridge used by generated Flutter catalogs.
-DemoFailurePage ccrouterBuildDemoFailurePageRoute(
-  CCEncodedRouteArguments arguments,
-) => _DemoFailurePageRoute.build(
-  _DemoFailurePageRoute.definition.codec.decode(arguments),
-);

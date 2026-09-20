@@ -16,6 +16,6 @@ Generated from `lib/src/lifecycle_page.dart`. Do not edit by hand.
 - Presentation: `page`
 - Navigation sources: `typedIntent, internalUri`
 - Restoration: `unsupported`
-- Contract library: `demo_navigation_lab:lib/src/lifecycle_page.dart`
+- Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/lifecycle_page.route.g.dart`
 - Patterns:
   - `/lab/lifecycle` (CCPathPattern, primary)

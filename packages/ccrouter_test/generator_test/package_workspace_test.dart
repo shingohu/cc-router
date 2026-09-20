@@ -239,10 +239,10 @@ void main() {
             },
             'generatedArtifacts': [
               {
-                'role': 'routePart',
+                'role': 'routeBinding',
                 'symbol': 'ccrouterRegisterOrderDetailPageRoute',
                 'packageUri':
-                    'package:orders/src/ccrouter_generated/order_page.route.g.dart',
+                    'package:orders/src/ccrouter_generated/order_page.route_binding.g.dart',
               },
             ],
           },

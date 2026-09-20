@@ -5,8 +5,7 @@ import 'package:flutter/material.dart';
 
 import 'lab_configuration.dart';
 import 'navigation_lab_component.dart';
-
-part 'ccrouter_generated/stack_page.route.g.dart';
+import 'ccrouter_generated/demo_navigation_lab_component.route_api.g.dart';
 
 @CCRoute<String>(
   component: demoNavigationLabComponent,
@@ -74,7 +73,7 @@ final class _DemoStackPageState extends State<DemoStackPage> {
             onPressed: () => _run(
               'push',
               () => CCRouter.navigator.push<String>(
-                demoStackIntent(level: widget.level + 1),
+                DemoNavigationLabRoutes.stack(level: widget.level + 1),
                 source: const CCNavigationSource.feature('stack.push'),
               ),
             ),
@@ -85,7 +84,7 @@ final class _DemoStackPageState extends State<DemoStackPage> {
             onPressed: () => _run(
               'replace',
               () => CCRouter.navigator.replace<String>(
-                demoStackIntent(level: widget.level + 1),
+                DemoNavigationLabRoutes.stack(level: widget.level + 1),
               ),
             ),
           ),
@@ -122,4 +121,4 @@ final class _StackAction extends StatelessWidget {
 }
 
 CCRouteIntent<String> demoStackIntent({required int level}) =>
-    _DemoStackPageRoute.intent(level: level);
+    DemoNavigationLabRoutes.stack(level: level);

@@ -16,7 +16,7 @@ ShellRoute 共享框架中的内容首页。
 - Presentation: `page`
 - Navigation sources: `typedIntent, internalUri`
 - Restoration: `unsupported`
-- Contract library: `demo_navigation_lab:lib/src/shell_pages.dart`
+- Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/shell_pages.route.g.dart`
 - Patterns:
   - `/shell/feed` (CCPathPattern, primary)
 
@@ -34,7 +34,7 @@ ShellRoute 嵌套子路由。
 - Presentation: `page`
 - Navigation sources: `typedIntent, internalUri`
 - Restoration: `unsupported`
-- Contract library: `demo_navigation_lab:lib/src/shell_pages.dart`
+- Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/shell_pages.route.g.dart`
 - Patterns:
   - `/shell/feed/:item` (CCPathPattern, primary)
 - Parameters:
@@ -57,7 +57,7 @@ ShellRoute 共享框架中的设置页。
 - Presentation: `page`
 - Navigation sources: `typedIntent, internalUri`
 - Restoration: `unsupported`
-- Contract library: `demo_navigation_lab:lib/src/shell_pages.dart`
+- Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/shell_pages.route.g.dart`
 - Patterns:
   - `/shell/settings` (CCPathPattern, primary)
 
@@ -75,7 +75,7 @@ StatefulShellRoute 首页分支。
 - Presentation: `page`
 - Navigation sources: `typedIntent, internalUri`
 - Restoration: `unsupported`
-- Contract library: `demo_navigation_lab:lib/src/shell_pages.dart`
+- Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/shell_pages.route.g.dart`
 - Patterns:
   - `/workspace/home` (CCPathPattern, primary)
 
@@ -93,7 +93,7 @@ StatefulShellRoute 首页分支的可 Deep Link 子路由。
 - Presentation: `page`
 - Navigation sources: `typedIntent, internalUri, externalDeepLink`
 - Restoration: `unsupported`
-- Contract library: `demo_navigation_lab:lib/src/shell_pages.dart`
+- Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/shell_pages.route.g.dart`
 - Patterns:
   - `/workspace/home/:item` (CCPathPattern, primary)
 - Parameters:
@@ -116,7 +116,7 @@ StatefulShellRoute 活动分支。
 - Presentation: `page`
 - Navigation sources: `typedIntent, internalUri`
 - Restoration: `unsupported`
-- Contract library: `demo_navigation_lab:lib/src/shell_pages.dart`
+- Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/shell_pages.route.g.dart`
 - Patterns:
   - `/workspace/activity` (CCPathPattern, primary)
 
@@ -134,7 +134,7 @@ StatefulShellRoute 个人分支。
 - Presentation: `page`
 - Navigation sources: `typedIntent, internalUri`
 - Restoration: `unsupported`
-- Contract library: `demo_navigation_lab:lib/src/shell_pages.dart`
+- Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/shell_pages.route.g.dart`
 - Patterns:
   - `/workspace/profile` (CCPathPattern, primary)
 
@@ -152,7 +152,7 @@ StatefulShellRoute 个人分支。
 - Presentation: `page`
 - Navigation sources: `typedIntent, internalUri`
 - Restoration: `unsupported`
-- Contract library: `demo_navigation_lab:lib/src/shell_pages.dart`
+- Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/shell_pages.route.g.dart`
 - Patterns:
   - `/lab/extra` (CCPathPattern, primary)
 - Parameters:

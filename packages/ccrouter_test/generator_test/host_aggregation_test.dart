@@ -253,7 +253,8 @@ environment:
             'routeId': 'order.detail',
             'componentId': 'order',
             'registration': 'ccrouterRegisterDetailPageRoute',
-            'destination': {'descriptor': 'ccrouterDescribeDetailPageRoute', 'builder': 'ccrouterBuildDetailPageRoute'},
+            'registrationLibrary': 'lib/src/ccrouter_generated/detail_page.route_binding.g.dart',
+            'destination': {'descriptor': 'ccrouterDescribeDetailPageRoute', 'builder': 'ccrouterBuildDetailPageRoute', 'library': 'lib/src/ccrouter_generated/detail_page.route_binding.g.dart', 'builderLibrary': 'lib/src/ccrouter_generated/detail_page.route_binding.g.dart'},
           },
         ],
       })}\n',
@@ -278,7 +279,7 @@ environment:
     ).readAsStringSync();
     expect(
       componentIndex,
-      contains('package:fixture_order/src/detail_page.dart'),
+      contains("import 'detail_page.route_binding.g.dart'"),
     );
     expect(componentIndex, contains('ccrouterRegisterDetailPageRoute'));
     expect(
@@ -290,5 +291,86 @@ environment:
       componentIndex,
       isNot(contains('package:fixture_order_contracts/src/detail.dart')),
     );
+  });
+
+  test('component Route API rejects colliding generated member names', () async {
+    final temporary = await Directory.systemTemp.createTemp(
+      'ccrouter_route_api_collision_',
+    );
+    addTearDown(() => temporary.delete(recursive: true));
+    final host = Directory(path.join(temporary.path, 'host'))
+      ..createSync(recursive: true);
+    File(path.join(host.path, 'pubspec.yaml')).writeAsStringSync('''
+name: fixture_host
+environment:
+  sdk: ^3.9.0
+''');
+    final component = Directory(path.join(host.path, 'modules', 'feature'))
+      ..createSync(recursive: true);
+    File(path.join(component.path, 'pubspec.yaml')).writeAsStringSync('''
+name: fixture_feature
+environment:
+  sdk: ^3.9.0
+''');
+    final metadata = File(
+      path.join(
+        component.path,
+        'ccrouter_generated',
+        'src',
+        'feature_component.route.json',
+      ),
+    )..createSync(recursive: true);
+    Map<String, Object?> route(String id, String page) => {
+      'id': id,
+      'componentId': 'feature_component',
+      'exposure': 'internal',
+      'contracts': {
+        'route': '_${page}Route',
+        'arguments': '_${page}RouteArguments',
+        'intentFactory': 'CCGenerated${page}RouteFactory',
+      },
+      'registration': 'ccrouterRegister${page}Route',
+      'registrationLibrary': 'lib/src/ccrouter_generated/feature.route.g.dart',
+      'destination': {
+        'descriptor': 'ccrouterDescribe${page}Route',
+        'builder': 'ccrouterBuild${page}Route',
+        'library': 'lib/src/ccrouter_generated/feature.route.g.dart',
+        'builderLibrary':
+            'lib/src/ccrouter_generated/feature.route_binding.g.dart',
+      },
+      'patterns': [
+        {
+          'type': 'CCPathPattern',
+          'value': '/${id.split('.').last}',
+          'primary': true,
+          'constraints': <String, String>{},
+        },
+      ],
+    };
+    metadata.writeAsStringSync(
+      '${const JsonEncoder.withIndent('  ').convert({
+        'schemaVersion': 2,
+        'package': 'fixture_feature',
+        'source': 'lib/src/feature.dart',
+        'componentDeclarations': ['feature_component'],
+        'componentManifests': {'feature_component': 'featureManifest'},
+        'components': [
+          {'id': 'feature_component', 'version': '1.0.0', 'dependencies': <String>[], 'optionalDependencies': <String>[]},
+        ],
+        'routes': [route('feature.foo-bar', 'FooDashPage'), route('feature.foo_bar', 'FooUnderscorePage')],
+        'routeImplementations': <Object>[],
+      })}\n',
+    );
+
+    final result = await Process.run(Platform.resolvedExecutable, [
+      'run',
+      'ccrouter_generator:ccrouter_generator',
+      host.path,
+      '--generate-component-registrars',
+    ], workingDirectory: Directory.current.path);
+
+    expect(result.exitCode, isNot(0));
+    expect('${result.stderr}', contains('both generate'));
+    expect('${result.stderr}', contains('fooBar'));
   });
 }

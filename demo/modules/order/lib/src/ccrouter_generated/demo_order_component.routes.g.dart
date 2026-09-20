@@ -3,8 +3,8 @@
 
 import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter/ccrouter_host.dart';
-import 'package:demo_order/src/order_detail_page.dart'
-    as route_src_order_detail_page_dart;
+import 'order_detail_page.route_binding.g.dart'
+    as route_src_ccrouter_generated_order_detail_page_route_binding_g_dart;
 
 /// Generated registration index for component `demo_order_component`.
 final class DemoOrderComponentGeneratedRoutes {
@@ -13,9 +13,8 @@ final class DemoOrderComponentGeneratedRoutes {
 
   /// Registers every route owned by `demo_order_component` in stable order.
   void register(CCRegistry registry) {
-    route_src_order_detail_page_dart.ccrouterRegisterOrderDetailPageRoute(
-      registry,
-    );
+    route_src_ccrouter_generated_order_detail_page_route_binding_g_dart
+        .ccrouterRegisterOrderDetailPageRoute(registry);
   }
 }
 
@@ -25,9 +24,11 @@ const demoOrderComponentGeneratedRoutes = DemoOrderComponentGeneratedRoutes();
 /// Backend-neutral Flutter destinations owned by `demo_order_component`.
 final demoOrderComponentRouteCatalog = CCFlutterRouteCatalog([
   CCFlutterRouteDestination.fromDefinition(
-    definition: route_src_order_detail_page_dart
-        .ccrouterDescribeOrderDetailPageRoute(),
-    builder: (arguments) => route_src_order_detail_page_dart
-        .ccrouterBuildOrderDetailPageRoute(arguments),
+    definition:
+        route_src_ccrouter_generated_order_detail_page_route_binding_g_dart
+            .ccrouterDescribeOrderDetailPageRoute(),
+    builder: (arguments) =>
+        route_src_ccrouter_generated_order_detail_page_route_binding_g_dart
+            .ccrouterBuildOrderDetailPageRoute(arguments),
   ),
 ]);

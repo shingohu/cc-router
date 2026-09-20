@@ -4,10 +4,8 @@ import 'package:ccrouter/ccrouter.dart';
 import 'package:flutter/material.dart';
 
 import 'navigation_lab_component.dart';
-import 'presentation_pages.dart';
 import 'shell_contract.dart';
-
-part 'ccrouter_generated/shell_pages.route.g.dart';
+import 'ccrouter_generated/demo_navigation_lab_component.route_api.g.dart';
 
 @CCRoute<void>(
   component: demoNavigationLabComponent,
@@ -30,14 +28,19 @@ final class DemoShellFeedPage extends StatelessWidget {
     actions: [
       FilledButton.icon(
         onPressed: () => unawaited(
-          CCRouter.navigator.push<void>(demoShellDetailIntent(item: 7)),
+          CCRouter.navigator.push<void>(
+            DemoNavigationLabRoutes.shellDetail(item: 7),
+          ),
         ),
         icon: const Icon(Icons.open_in_new),
         label: const Text('在 Shell Outlet 内打开详情'),
       ),
       OutlinedButton.icon(
-        onPressed: () =>
-            unawaited(CCRouter.navigator.push<void>(demoTransparentIntent())),
+        onPressed: () => unawaited(
+          CCRouter.navigator.push<void>(
+            DemoNavigationLabRoutes.presentationTransparent(),
+          ),
+        ),
         icon: const Icon(Icons.layers_outlined),
         label: const Text('在 Root Navigator 打开透明页'),
       ),
@@ -118,7 +121,9 @@ final class DemoWorkspaceHomePage extends StatelessWidget {
     actions: [
       FilledButton.icon(
         onPressed: () => unawaited(
-          CCRouter.navigator.push<void>(demoWorkspaceDetailIntent(item: 42)),
+          CCRouter.navigator.push<void>(
+            DemoNavigationLabRoutes.workspaceDetail(item: 42),
+          ),
         ),
         icon: const Icon(Icons.open_in_new),
         label: const Text('打开 Home 分支详情'),
@@ -217,13 +222,6 @@ final class DemoWorkspaceProfilePage extends StatelessWidget {
   );
 }
 
-final class DemoExtraPayload {
-  const DemoExtraPayload({required this.owner, required this.revision});
-
-  final String owner;
-  final int revision;
-}
-
 @CCRoute<void>(
   component: demoNavigationLabComponent,
   id: 'demo_navigation_lab.extra',
@@ -295,18 +293,13 @@ final class _ShellPage extends StatelessWidget {
   );
 }
 
-CCRouteIntent<void> demoShellFeedIntent() => _DemoShellFeedPageRoute.intent();
+CCRouteIntent<void> demoShellFeedIntent() =>
+    DemoNavigationLabRoutes.shellFeed();
 CCRouteIntent<void> demoShellSettingsIntent() =>
-    _DemoShellSettingsPageRoute.intent();
-CCRouteIntent<void> demoShellDetailIntent({required int item}) =>
-    _DemoShellDetailPageRoute.intent(item: item);
+    DemoNavigationLabRoutes.shellSettings();
 CCRouteIntent<void> demoWorkspaceHomeIntent() =>
-    _DemoWorkspaceHomePageRoute.intent();
-CCRouteIntent<void> demoWorkspaceDetailIntent({required int item}) =>
-    _DemoWorkspaceDetailPageRoute.intent(item: item);
+    DemoNavigationLabRoutes.workspaceHome();
 CCRouteIntent<void> demoWorkspaceActivityIntent() =>
-    _DemoWorkspaceActivityPageRoute.intent();
+    DemoNavigationLabRoutes.workspaceActivity();
 CCRouteIntent<void> demoWorkspaceProfileIntent() =>
-    _DemoWorkspaceProfilePageRoute.intent();
-CCRouteIntent<void> demoExtraIntent(DemoExtraPayload payload) =>
-    _DemoExtraPageRoute.intent(payload: payload);
+    DemoNavigationLabRoutes.workspaceProfile();

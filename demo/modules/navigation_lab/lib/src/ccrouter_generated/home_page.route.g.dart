@@ -3,11 +3,11 @@
 
 // ignore_for_file: type=lint, unused_element
 
-part of '../home_page.dart';
-
 // **************************************************************************
 // _RouteGenerator
 // **************************************************************************
+
+import 'package:ccrouter/ccrouter.dart';
 
 /// Immutable arguments for route demo_navigation_lab.home; URI values remain typed.
 final class _DemoNavigationHomePageRouteArguments {
@@ -53,15 +53,6 @@ abstract final class _DemoNavigationHomePageRoute {
         interceptorIds: const [],
         popGuardIds: const [],
       );
-
-  /// Called by the owning component registrar, never by a business caller.
-  static void register(CCRegistry registry) =>
-      registry.registerRoute(definition);
-
-  /// Injects already decoded arguments into the page without backend coupling.
-  static DemoNavigationHomePage build(
-    _DemoNavigationHomePageRouteArguments arguments,
-  ) => DemoNavigationHomePage();
 }
 
 /// Private data-only Intent carrying this route's typed result contract.
@@ -99,21 +90,23 @@ final class _DemoNavigationHomePageRouteCodec
   }
 }
 
+/// Package-internal typed factory surfaced by the generated component API.
+final class CCGeneratedDemoNavigationHomePageRouteFactory {
+  /// Creates the stateless factory used by generated static route members.
+  const CCGeneratedDemoNavigationHomePageRouteFactory();
+
+  /// Creates an immutable Intent without performing navigation.
+  CCRouteIntent<void> call() => _DemoNavigationHomePageRoute.intent();
+}
+
 /// Package-internal bridge used by the generated component route index.
 ///
 /// Keep this symbol out of public package barrels. It exists so a component
 /// registrar can register library-private routes without exposing owner APIs.
 void ccrouterRegisterDemoNavigationHomePageRoute(CCRegistry registry) =>
-    _DemoNavigationHomePageRoute.register(registry);
+    registry.registerRoute(_DemoNavigationHomePageRoute.definition);
 
 /// Package-internal route definition bridge used by Host generation.
 CCRouteDefinition<dynamic, dynamic>
 ccrouterDescribeDemoNavigationHomePageRoute() =>
     _DemoNavigationHomePageRoute.definition;
-
-/// Package-internal page factory bridge used by generated Flutter catalogs.
-DemoNavigationHomePage ccrouterBuildDemoNavigationHomePageRoute(
-  CCEncodedRouteArguments arguments,
-) => _DemoNavigationHomePageRoute.build(
-  _DemoNavigationHomePageRoute.definition.codec.decode(arguments),
-);

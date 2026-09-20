@@ -9,9 +9,14 @@ typedef _ParameterDefaultEmitter = String? Function(_ParameterModel parameter);
 /// Resolves an analyzer type in the namespace of the selected output library.
 typedef _DartTypeEmitter = String Function(DartType type, Element owner);
 
-/// Emits one library-private page contract and its owner-only glue.
-String _emitRoute(_RouteModel route) =>
-    '${_emitTypedRouteContract(route, parameterType: (parameter) => parameter.type, typeSource: (type, owner) => _typeSource(type, route.page.library), resultType: route.result, parameterDefault: (parameter) => parameter.defaultCode, includeOwnerMethods: true)}\n${_emitRouteGlue(route, embedded: true)}';
+/// Emits one standalone typed contract, callable factory, and registration.
+String _emitStandaloneRoute(
+  _RouteModel route, {
+  required _ParameterTypeEmitter parameterType,
+  required _DartTypeEmitter typeSource,
+  required _ParameterDefaultEmitter parameterDefault,
+}) =>
+    '${_emitTypedRouteContract(route, parameterType: parameterType, typeSource: typeSource, resultType: typeSource(route.resultType, route.page), parameterDefault: parameterDefault, includeOwnerMethods: false)}\n${_emitIntentFactory(route, parameterType: parameterType, resultType: typeSource(route.resultType, route.page), parameterDefault: parameterDefault)}\n${_emitRouteOwnerGlue(route)}';
 
 /// Emits a Pure Dart contract without page construction or registration APIs.
 String _emitPublicRouteContract(
@@ -142,69 +147,101 @@ final class ${route.intent} implements CCRouteIntent<$resultType> {
   return out.toString();
 }
 
-/// Emits owner-only registration, metadata, and page construction bridges.
-String _emitRouteGlue(_RouteModel route, {required bool embedded}) {
-  final registration = embedded
-      ? '${route.api}.register(registry)'
-      : 'registry.registerRoute(${route.api}.definition)';
-  final out = StringBuffer()
-    ..writeln('''
+/// Emits owner-only registration and metadata bridges without importing UI.
+String _emitRouteOwnerGlue(_RouteModel route) =>
+    '''
 /// Package-internal bridge used by the generated component route index.
 ///
 /// Keep this symbol out of public package barrels. It exists so a component
 /// registrar can register library-private routes without exposing owner APIs.
-void ${route.registrationFunction}(CCRegistry registry) => $registration;
+void ${route.registrationFunction}(CCRegistry registry) =>
+    registry.registerRoute(${route.api}.definition);
 
 /// Package-internal route definition bridge used by Host generation.
 CCRouteDefinition<dynamic, dynamic> ${route.descriptorFunction}() =>
     ${route.api}.definition;
+''';
 
+/// Emits the page construction bridge in an isolated Flutter binding library.
+String _emitRouteBinding(
+  _RouteModel route, {
+  required String pageType,
+  required String definition,
+}) {
+  final out = StringBuffer()
+    ..writeln('''
 /// Package-internal page factory bridge used by generated Flutter catalogs.
-${route.page.displayName} ${route.builderFunction}(
-  CCEncodedRouteArguments arguments,
+$pageType ${route.builderFunction}(
+  CCEncodedRouteArguments ${route.parameters.isEmpty ? '_' : 'arguments'},
 )''');
-  if (embedded) {
-    out.writeln(
-      '    => ${route.api}.build(${route.api}.definition.codec.decode(arguments));',
-    );
-  } else {
-    out
-      ..writeln('{')
-      ..writeln(
-        '  final decoded = ${route.api}.definition.codec.decode(arguments);',
-      )
-      ..writeln(
-        '  return ${route.page.displayName}(${_pageArgumentsFromDecoded(route.parameters, 'decoded')});',
-      )
-      ..writeln('}');
+  if (route.parameters.isEmpty) {
+    out.writeln('    => $pageType();');
+    return out.toString();
   }
+  out
+    ..writeln('{')
+    ..writeln('  final decoded = $definition.codec.decode(arguments);')
+    ..writeln(
+      '  return $pageType(${_pageArgumentsFromDecoded(route.parameters, 'decoded')});',
+    )
+    ..writeln('}');
   return out.toString();
 }
 
+/// Emits the callable factory re-exported by the component's unique Route API.
+String _emitIntentFactory(
+  _RouteModel route, {
+  required _ParameterTypeEmitter parameterType,
+  required String resultType,
+  required _ParameterDefaultEmitter parameterDefault,
+}) {
+  final declarations = route.parameters
+      .map((parameter) {
+        final defaultCode = parameterDefault(parameter);
+        return '${parameter.required ? 'required ' : ''}${parameterType(parameter)} ${parameter.name}${defaultCode == null ? '' : ' = $defaultCode'}';
+      })
+      .join(', ');
+  final signature = route.parameters.isEmpty ? '()' : '({$declarations})';
+  final arguments = route.parameters
+      .map((parameter) => '${parameter.name}: ${parameter.name}')
+      .join(', ');
+  return '''
+/// Package-internal typed factory surfaced by the generated component API.
+final class ${route.intentFactory} {
+  /// Creates the stateless factory used by generated static route members.
+  const ${route.intentFactory}();
+
+  /// Creates an immutable Intent without performing navigation.
+  CCRouteIntent<$resultType> call$signature =>
+      ${route.api}.intent($arguments);
+}
+''';
+}
+
 /// Emits implementation-only glue for a Contract-first destination page.
-String _emitImplementationGlue(_RouteImplementationModel implementation) {
+String _emitImplementationGlue(
+  _RouteImplementationModel implementation, {
+  required String pageType,
+  required String contractApi,
+}) {
   final route = implementation.contract;
-  final api = implementation.contractApi;
   return '''
 /// Package-internal bridge used by the generated component route index.
 ///
 /// Registration retains the external Pure Dart contract as the single source
 /// of route identity, parameters, and navigation policy.
 void ${implementation.registrationFunction}(CCRegistry registry) =>
-    registry.registerRoute($api.definition);
+    registry.registerRoute($contractApi.definition);
 
 /// Package-internal route definition bridge used by Host generation.
 CCRouteDefinition<dynamic, dynamic> ${implementation.descriptorFunction}() =>
-    $api.definition;
+    $contractApi.definition;
 
 /// Package-internal page factory bound to the public route contract.
-${implementation.page.displayName} ${implementation.builderFunction}(
-  CCEncodedRouteArguments arguments,
+$pageType ${implementation.builderFunction}(
+  CCEncodedRouteArguments ${route.parameters.isEmpty ? '_' : 'arguments'},
 ) {
-  final decoded = $api.definition.codec.decode(arguments);
-  return ${implementation.page.displayName}(
-    ${_pageArgumentsFromDecoded(route.parameters, 'decoded')}
-  );
+  ${route.parameters.isEmpty ? 'return $pageType();' : 'final decoded = $contractApi.definition.codec.decode(arguments);\n  return $pageType(\n    ${_pageArgumentsFromDecoded(route.parameters, 'decoded')}\n  );'}
 }
 ''';
 }

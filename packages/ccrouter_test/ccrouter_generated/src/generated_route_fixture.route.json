@@ -1,0 +1,529 @@
+{
+  "schemaVersion": 3,
+  "package": "ccrouter_test",
+  "source": "lib/src/generated_route_fixture.dart",
+  "componentDeclarations": [],
+  "componentManifests": {},
+  "components": [
+    {
+      "id": "generated_route_fixture",
+      "version": "1.0.0",
+      "dependencies": [],
+      "optionalDependencies": []
+    }
+  ],
+  "routes": [
+    {
+      "id": "generated_route_fixture.detail",
+      "componentId": "generated_route_fixture",
+      "componentVersion": "1.0.0",
+      "exposure": "internal",
+      "deepLink": "enabled",
+      "description": "Generated route fixture with safe defaults.",
+      "interceptorIds": [
+        "generated_route_fixture.auth"
+      ],
+      "popGuardIds": [],
+      "declaration": {
+        "package": "ccrouter_test",
+        "library": "lib/src/generated_route_fixture.dart",
+        "kind": "page",
+        "symbol": "GeneratedDetailPage",
+        "packageUri": "package:ccrouter_test/src/generated_route_fixture.dart",
+        "line": 69,
+        "column": 13
+      },
+      "navigationSources": [
+        "typedIntent",
+        "internalUri",
+        "externalDeepLink"
+      ],
+      "restoration": {
+        "status": "unsupported"
+      },
+      "placement": {
+        "hostId": "default",
+        "parentRouteId": null,
+        "shellId": null,
+        "navigatorOutlet": "root"
+      },
+      "presentation": {
+        "type": "page",
+        "routeType": "platformDefault",
+        "transition": "slideFromBottom",
+        "opaque": false,
+        "fullscreenDialog": false
+      },
+      "contracts": {
+        "route": "_GeneratedDetailPageRoute",
+        "arguments": "_GeneratedDetailPageRouteArguments",
+        "package": "ccrouter_test",
+        "library": "lib/src/ccrouter_generated/generated_route_fixture.route.g.dart",
+        "intentFactory": "CCGeneratedGeneratedDetailPageRouteFactory"
+      },
+      "registration": "ccrouterRegisterGeneratedDetailPageRoute",
+      "registrationLibrary": "lib/src/ccrouter_generated/generated_route_fixture.route.g.dart",
+      "destination": {
+        "descriptor": "ccrouterDescribeGeneratedDetailPageRoute",
+        "builder": "ccrouterBuildGeneratedDetailPageRoute",
+        "library": "lib/src/ccrouter_generated/generated_route_fixture.route.g.dart",
+        "builderLibrary": "lib/src/ccrouter_generated/generated_route_fixture.route_binding.g.dart"
+      },
+      "generatedArtifacts": [
+        {
+          "role": "routeLibrary",
+          "symbol": "_GeneratedDetailPageRoute",
+          "packageUri": "package:ccrouter_test/src/ccrouter_generated/generated_route_fixture.route.g.dart"
+        },
+        {
+          "role": "routeBinding",
+          "symbol": "ccrouterBuildGeneratedDetailPageRoute",
+          "packageUri": "package:ccrouter_test/src/ccrouter_generated/generated_route_fixture.route_binding.g.dart"
+        }
+      ],
+      "patterns": [
+        {
+          "type": "CCPathPattern",
+          "value": "/generated/detail/:id",
+          "primary": true,
+          "constraints": {
+            "id": "\\d+"
+          }
+        },
+        {
+          "type": "CCPathPattern",
+          "value": "/generated/legacy/:id",
+          "primary": false,
+          "constraints": {}
+        },
+        {
+          "type": "CCUriPattern",
+          "value": "generated://detail/:id",
+          "primary": false,
+          "constraints": {}
+        },
+        {
+          "type": "CCRegexPattern",
+          "value": "/generated/old/(?<id>\\d+)",
+          "primary": false
+        }
+      ],
+      "parameters": [
+        {
+          "name": "id",
+          "wireName": "id",
+          "source": "path",
+          "type": "int",
+          "required": true,
+          "default": null,
+          "description": "Stable fixture identity."
+        },
+        {
+          "name": "search",
+          "wireName": "text",
+          "source": "query",
+          "type": "String?",
+          "cardinality": "single",
+          "required": false,
+          "default": null,
+          "description": "Optional search text."
+        },
+        {
+          "name": "tab",
+          "wireName": "tab",
+          "source": "query",
+          "type": "GeneratedDetailTab",
+          "cardinality": "single",
+          "required": false,
+          "default": "GeneratedDetailTab.summary",
+          "description": "Selected tab."
+        },
+        {
+          "name": "enabled",
+          "wireName": "enabled",
+          "source": "query",
+          "type": "bool",
+          "cardinality": "single",
+          "required": false,
+          "default": "false",
+          "description": "Boolean scalar codec probe."
+        },
+        {
+          "name": "ratio",
+          "wireName": "ratio",
+          "source": "query",
+          "type": "double",
+          "cardinality": "single",
+          "required": false,
+          "default": "1.0",
+          "description": "Finite double codec probe."
+        },
+        {
+          "name": "snapshot",
+          "wireName": "snapshot",
+          "source": "extra",
+          "type": "GeneratedSnapshot?",
+          "required": false,
+          "default": null,
+          "description": "Optional in-memory snapshot."
+        }
+      ],
+      "resultType": "String"
+    },
+    {
+      "id": "generated_route_fixture.internal",
+      "componentId": "generated_route_fixture",
+      "componentVersion": "1.0.0",
+      "exposure": "internal",
+      "deepLink": "disabled",
+      "description": null,
+      "interceptorIds": [],
+      "popGuardIds": [],
+      "declaration": {
+        "package": "ccrouter_test",
+        "library": "lib/src/generated_route_fixture.dart",
+        "kind": "page",
+        "symbol": "GeneratedInternalPage",
+        "packageUri": "package:ccrouter_test/src/generated_route_fixture.dart",
+        "line": 105,
+        "column": 13
+      },
+      "navigationSources": [
+        "typedIntent",
+        "internalUri"
+      ],
+      "restoration": {
+        "status": "unsupported"
+      },
+      "placement": {
+        "hostId": "default",
+        "parentRouteId": null,
+        "shellId": null,
+        "navigatorOutlet": "root"
+      },
+      "presentation": {
+        "type": "page",
+        "routeType": "platformDefault",
+        "transition": "platformDefault",
+        "opaque": true,
+        "fullscreenDialog": false
+      },
+      "contracts": {
+        "route": "_GeneratedInternalPageRoute",
+        "arguments": "_GeneratedInternalPageRouteArguments",
+        "package": "ccrouter_test",
+        "library": "lib/src/ccrouter_generated/generated_route_fixture.route.g.dart",
+        "intentFactory": "CCGeneratedGeneratedInternalPageRouteFactory"
+      },
+      "registration": "ccrouterRegisterGeneratedInternalPageRoute",
+      "registrationLibrary": "lib/src/ccrouter_generated/generated_route_fixture.route.g.dart",
+      "destination": {
+        "descriptor": "ccrouterDescribeGeneratedInternalPageRoute",
+        "builder": "ccrouterBuildGeneratedInternalPageRoute",
+        "library": "lib/src/ccrouter_generated/generated_route_fixture.route.g.dart",
+        "builderLibrary": "lib/src/ccrouter_generated/generated_route_fixture.route_binding.g.dart"
+      },
+      "generatedArtifacts": [
+        {
+          "role": "routeLibrary",
+          "symbol": "_GeneratedInternalPageRoute",
+          "packageUri": "package:ccrouter_test/src/ccrouter_generated/generated_route_fixture.route.g.dart"
+        },
+        {
+          "role": "routeBinding",
+          "symbol": "ccrouterBuildGeneratedInternalPageRoute",
+          "packageUri": "package:ccrouter_test/src/ccrouter_generated/generated_route_fixture.route_binding.g.dart"
+        }
+      ],
+      "patterns": [
+        {
+          "type": "CCPathPattern",
+          "value": "/generated/internal",
+          "primary": true,
+          "constraints": {}
+        }
+      ],
+      "parameters": [],
+      "resultType": "void"
+    },
+    {
+      "id": "generated_route_fixture.positional",
+      "componentId": "generated_route_fixture",
+      "componentVersion": "1.0.0",
+      "exposure": "internal",
+      "deepLink": "disabled",
+      "description": null,
+      "interceptorIds": [],
+      "popGuardIds": [],
+      "declaration": {
+        "package": "ccrouter_test",
+        "library": "lib/src/generated_route_fixture.dart",
+        "kind": "page",
+        "symbol": "GeneratedPositionalPage",
+        "packageUri": "package:ccrouter_test/src/generated_route_fixture.dart",
+        "line": 116,
+        "column": 13
+      },
+      "navigationSources": [
+        "typedIntent",
+        "internalUri"
+      ],
+      "restoration": {
+        "status": "unsupported"
+      },
+      "placement": {
+        "hostId": "default",
+        "parentRouteId": null,
+        "shellId": null,
+        "navigatorOutlet": "root"
+      },
+      "presentation": {
+        "type": "page",
+        "routeType": "platformDefault",
+        "transition": "platformDefault",
+        "opaque": true,
+        "fullscreenDialog": false
+      },
+      "contracts": {
+        "route": "_GeneratedPositionalPageRoute",
+        "arguments": "_GeneratedPositionalPageRouteArguments",
+        "package": "ccrouter_test",
+        "library": "lib/src/ccrouter_generated/generated_route_fixture.route.g.dart",
+        "intentFactory": "CCGeneratedGeneratedPositionalPageRouteFactory"
+      },
+      "registration": "ccrouterRegisterGeneratedPositionalPageRoute",
+      "registrationLibrary": "lib/src/ccrouter_generated/generated_route_fixture.route.g.dart",
+      "destination": {
+        "descriptor": "ccrouterDescribeGeneratedPositionalPageRoute",
+        "builder": "ccrouterBuildGeneratedPositionalPageRoute",
+        "library": "lib/src/ccrouter_generated/generated_route_fixture.route.g.dart",
+        "builderLibrary": "lib/src/ccrouter_generated/generated_route_fixture.route_binding.g.dart"
+      },
+      "generatedArtifacts": [
+        {
+          "role": "routeLibrary",
+          "symbol": "_GeneratedPositionalPageRoute",
+          "packageUri": "package:ccrouter_test/src/ccrouter_generated/generated_route_fixture.route.g.dart"
+        },
+        {
+          "role": "routeBinding",
+          "symbol": "ccrouterBuildGeneratedPositionalPageRoute",
+          "packageUri": "package:ccrouter_test/src/ccrouter_generated/generated_route_fixture.route_binding.g.dart"
+        }
+      ],
+      "patterns": [
+        {
+          "type": "CCPathPattern",
+          "value": "/generated/position/:value",
+          "primary": true,
+          "constraints": {}
+        }
+      ],
+      "parameters": [
+        {
+          "name": "value",
+          "wireName": "value",
+          "source": "path",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "Path value."
+        },
+        {
+          "name": "input",
+          "wireName": "input",
+          "source": "query",
+          "type": "String",
+          "cardinality": "single",
+          "required": false,
+          "default": "'default'",
+          "description": "Optional positional query value."
+        }
+      ],
+      "resultType": "int"
+    },
+    {
+      "id": "generated_route_fixture.extra",
+      "componentId": "generated_route_fixture",
+      "componentVersion": "1.0.0",
+      "exposure": "internal",
+      "deepLink": "disabled",
+      "description": null,
+      "interceptorIds": [],
+      "popGuardIds": [],
+      "declaration": {
+        "package": "ccrouter_test",
+        "library": "lib/src/generated_route_fixture.dart",
+        "kind": "page",
+        "symbol": "GeneratedExtraPage",
+        "packageUri": "package:ccrouter_test/src/generated_route_fixture.dart",
+        "line": 136,
+        "column": 13
+      },
+      "navigationSources": [
+        "typedIntent",
+        "internalUri"
+      ],
+      "restoration": {
+        "status": "unsupported"
+      },
+      "placement": {
+        "hostId": "default",
+        "parentRouteId": null,
+        "shellId": null,
+        "navigatorOutlet": "root"
+      },
+      "presentation": {
+        "type": "page",
+        "routeType": "platformDefault",
+        "transition": "platformDefault",
+        "opaque": true,
+        "fullscreenDialog": false
+      },
+      "contracts": {
+        "route": "_GeneratedExtraPageRoute",
+        "arguments": "_GeneratedExtraPageRouteArguments",
+        "package": "ccrouter_test",
+        "library": "lib/src/ccrouter_generated/generated_route_fixture.route.g.dart",
+        "intentFactory": "CCGeneratedGeneratedExtraPageRouteFactory"
+      },
+      "registration": "ccrouterRegisterGeneratedExtraPageRoute",
+      "registrationLibrary": "lib/src/ccrouter_generated/generated_route_fixture.route.g.dart",
+      "destination": {
+        "descriptor": "ccrouterDescribeGeneratedExtraPageRoute",
+        "builder": "ccrouterBuildGeneratedExtraPageRoute",
+        "library": "lib/src/ccrouter_generated/generated_route_fixture.route.g.dart",
+        "builderLibrary": "lib/src/ccrouter_generated/generated_route_fixture.route_binding.g.dart"
+      },
+      "generatedArtifacts": [
+        {
+          "role": "routeLibrary",
+          "symbol": "_GeneratedExtraPageRoute",
+          "packageUri": "package:ccrouter_test/src/ccrouter_generated/generated_route_fixture.route.g.dart"
+        },
+        {
+          "role": "routeBinding",
+          "symbol": "ccrouterBuildGeneratedExtraPageRoute",
+          "packageUri": "package:ccrouter_test/src/ccrouter_generated/generated_route_fixture.route_binding.g.dart"
+        }
+      ],
+      "patterns": [
+        {
+          "type": "CCPathPattern",
+          "value": "/generated/extra",
+          "primary": true,
+          "constraints": {}
+        }
+      ],
+      "parameters": [
+        {
+          "name": "snapshot",
+          "wireName": "snapshot",
+          "source": "extra",
+          "type": "GeneratedSnapshot",
+          "required": true,
+          "default": null,
+          "description": "Required snapshot retained by identity."
+        }
+      ],
+      "resultType": "bool"
+    },
+    {
+      "id": "generated_route_fixture.prefixed",
+      "componentId": "generated_route_fixture",
+      "componentVersion": "1.0.0",
+      "exposure": "internal",
+      "deepLink": "disabled",
+      "description": null,
+      "interceptorIds": [],
+      "popGuardIds": [],
+      "declaration": {
+        "package": "ccrouter_test",
+        "library": "lib/src/generated_route_fixture.dart",
+        "kind": "page",
+        "symbol": "GeneratedPrefixedPage",
+        "packageUri": "package:ccrouter_test/src/generated_route_fixture.dart",
+        "line": 150,
+        "column": 13
+      },
+      "navigationSources": [
+        "typedIntent",
+        "internalUri"
+      ],
+      "restoration": {
+        "status": "unsupported"
+      },
+      "placement": {
+        "hostId": "default",
+        "parentRouteId": null,
+        "shellId": null,
+        "navigatorOutlet": "root"
+      },
+      "presentation": {
+        "type": "page",
+        "routeType": "platformDefault",
+        "transition": "platformDefault",
+        "opaque": true,
+        "fullscreenDialog": false
+      },
+      "contracts": {
+        "route": "_GeneratedPrefixedPageRoute",
+        "arguments": "_GeneratedPrefixedPageRouteArguments",
+        "package": "ccrouter_test",
+        "library": "lib/src/ccrouter_generated/generated_route_fixture.route.g.dart",
+        "intentFactory": "CCGeneratedGeneratedPrefixedPageRouteFactory"
+      },
+      "registration": "ccrouterRegisterGeneratedPrefixedPageRoute",
+      "registrationLibrary": "lib/src/ccrouter_generated/generated_route_fixture.route.g.dart",
+      "destination": {
+        "descriptor": "ccrouterDescribeGeneratedPrefixedPageRoute",
+        "builder": "ccrouterBuildGeneratedPrefixedPageRoute",
+        "library": "lib/src/ccrouter_generated/generated_route_fixture.route.g.dart",
+        "builderLibrary": "lib/src/ccrouter_generated/generated_route_fixture.route_binding.g.dart"
+      },
+      "generatedArtifacts": [
+        {
+          "role": "routeLibrary",
+          "symbol": "_GeneratedPrefixedPageRoute",
+          "packageUri": "package:ccrouter_test/src/ccrouter_generated/generated_route_fixture.route.g.dart"
+        },
+        {
+          "role": "routeBinding",
+          "symbol": "ccrouterBuildGeneratedPrefixedPageRoute",
+          "packageUri": "package:ccrouter_test/src/ccrouter_generated/generated_route_fixture.route_binding.g.dart"
+        }
+      ],
+      "patterns": [
+        {
+          "type": "CCPathPattern",
+          "value": "/generated/prefixed",
+          "primary": true,
+          "constraints": {}
+        }
+      ],
+      "parameters": [
+        {
+          "name": "mode",
+          "wireName": "mode",
+          "source": "query",
+          "type": "GeneratedRouteMode",
+          "cardinality": "single",
+          "required": false,
+          "default": "GeneratedRouteMode.normal",
+          "description": "Imported enum value."
+        },
+        {
+          "name": "payload",
+          "wireName": "payload",
+          "source": "extra",
+          "type": "GeneratedRoutePayload?",
+          "required": false,
+          "default": null,
+          "description": "Optional imported payload."
+        }
+      ],
+      "resultType": "GeneratedRouteResult"
+    }
+  ],
+  "routeImplementations": []
+}

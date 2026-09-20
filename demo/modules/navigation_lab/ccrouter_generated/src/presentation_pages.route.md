@@ -14,7 +14,7 @@ Generated from `lib/src/presentation_pages.dart`. Do not edit by hand.
 - Presentation: `page`
 - Navigation sources: `typedIntent, internalUri`
 - Restoration: `unsupported`
-- Contract library: `demo_navigation_lab:lib/src/presentation_pages.dart`
+- Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/presentation_pages.route.g.dart`
 - Patterns:
   - `/lab/presentation/fade` (CCPathPattern, primary)
 
@@ -30,7 +30,7 @@ Generated from `lib/src/presentation_pages.dart`. Do not edit by hand.
 - Presentation: `page`
 - Navigation sources: `typedIntent, internalUri`
 - Restoration: `unsupported`
-- Contract library: `demo_navigation_lab:lib/src/presentation_pages.dart`
+- Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/presentation_pages.route.g.dart`
 - Patterns:
   - `/lab/presentation/scale` (CCPathPattern, primary)
 
@@ -46,7 +46,7 @@ Generated from `lib/src/presentation_pages.dart`. Do not edit by hand.
 - Presentation: `page`
 - Navigation sources: `typedIntent, internalUri`
 - Restoration: `unsupported`
-- Contract library: `demo_navigation_lab:lib/src/presentation_pages.dart`
+- Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/presentation_pages.route.g.dart`
 - Patterns:
   - `/lab/presentation/cupertino` (CCPathPattern, primary)
 
@@ -64,7 +64,7 @@ Generated from `lib/src/presentation_pages.dart`. Do not edit by hand.
 - Presentation: `page`
 - Navigation sources: `typedIntent, internalUri`
 - Restoration: `unsupported`
-- Contract library: `demo_navigation_lab:lib/src/presentation_pages.dart`
+- Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/presentation_pages.route.g.dart`
 - Patterns:
   - `/lab/presentation/bottom-page` (CCPathPattern, primary)
 
@@ -82,7 +82,7 @@ Generated from `lib/src/presentation_pages.dart`. Do not edit by hand.
 - Presentation: `page`
 - Navigation sources: `typedIntent, internalUri`
 - Restoration: `unsupported`
-- Contract library: `demo_navigation_lab:lib/src/presentation_pages.dart`
+- Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/presentation_pages.route.g.dart`
 - Patterns:
   - `/lab/presentation/transparent` (CCPathPattern, primary)
 
@@ -98,7 +98,7 @@ Generated from `lib/src/presentation_pages.dart`. Do not edit by hand.
 - Presentation: `dialog`
 - Navigation sources: `typedIntent, internalUri`
 - Restoration: `unsupported`
-- Contract library: `demo_navigation_lab:lib/src/presentation_pages.dart`
+- Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/presentation_pages.route.g.dart`
 - Patterns:
   - `/lab/presentation/dialog` (CCPathPattern, primary)
 
@@ -114,6 +114,6 @@ Generated from `lib/src/presentation_pages.dart`. Do not edit by hand.
 - Presentation: `modalBottomSheet`
 - Navigation sources: `typedIntent, internalUri`
 - Restoration: `unsupported`
-- Contract library: `demo_navigation_lab:lib/src/presentation_pages.dart`
+- Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/presentation_pages.route.g.dart`
 - Patterns:
   - `/lab/presentation/sheet` (CCPathPattern, primary)

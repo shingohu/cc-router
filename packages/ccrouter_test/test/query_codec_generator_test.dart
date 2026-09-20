@@ -1,5 +1,5 @@
 import 'package:ccrouter/ccrouter.dart';
-import 'package:ccrouter_test/src/query_codec_fixture.dart';
+import 'package:ccrouter_test/src/query_codec_fixture_access.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

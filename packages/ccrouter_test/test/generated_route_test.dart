@@ -1,10 +1,9 @@
 import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter_core/ccrouter_core.dart';
 import 'package:ccrouter_test/ccrouter_test.dart';
+import 'package:ccrouter_test/src/generated_route_fixture_access.dart';
+import 'package:ccrouter_test/src/generated_route_types.dart' as types;
 import 'package:flutter_test/flutter_test.dart';
-
-import 'fixtures/annotated_routes.dart';
-import 'fixtures/route_types.dart' as types;
 
 void main() {
   final codec = detailCodec;
@@ -13,17 +12,17 @@ void main() {
     final arguments = codec.decode(CCEncodedRouteArguments(path: {'id': '42'}));
     final page = buildDetailPage(arguments);
     expect(page.id, 42);
-    expect(page.tab, DetailTab.summary);
+    expect(page.tab, GeneratedDetailTab.summary);
     expect(page.enabled, isFalse);
     expect(page.ratio, 1.0);
     expect(page.search, isNull);
     expect(page.snapshot, isNull);
 
-    const snapshot = Snapshot('cached');
+    const snapshot = GeneratedSnapshot('cached');
     final intent = detailIntent(
       id: 42,
       search: '空 格&?/%',
-      tab: DetailTab.items,
+      tab: GeneratedDetailTab.items,
       enabled: true,
       ratio: 2.5,
       snapshot: snapshot,
@@ -31,7 +30,7 @@ void main() {
     final encoded = codec.encode(intent.arguments);
     final roundtrip = buildDetailPage(codec.decode(encoded));
     expect(roundtrip.search, '空 格&?/%');
-    expect(roundtrip.tab, DetailTab.items);
+    expect(roundtrip.tab, GeneratedDetailTab.items);
     expect(roundtrip.enabled, isTrue);
     expect(roundtrip.ratio, 2.5);
     expect(roundtrip.snapshot, same(snapshot));
@@ -41,11 +40,11 @@ void main() {
     final definition = detailDefinition;
     expect(definition.patterns, hasLength(4));
     expect(definition.deepLink, CCDeepLinkPolicy.enabled);
-    expect(definition.interceptorIds, ['fixture.auth']);
+    expect(definition.interceptorIds, ['generated_route_fixture.auth']);
     final presentation = definition.presentation as CCPagePresentation;
     expect(presentation.transition, CCPageTransitionType.slideFromBottom);
     expect(presentation.opaque, isFalse);
-    expect(internalIntent().routeId, 'fixture.internal');
+    expect(internalIntent().routeId, 'generated_route_fixture.internal');
   });
 
   test(
@@ -94,7 +93,10 @@ void main() {
             isA<CCRouteParameterError>().having(
               (e) => e.message,
               'safe message',
-              allOf(contains('fixture.detail'), isNot(contains('secret'))),
+              allOf(
+                contains('generated_route_fixture.detail'),
+                isNot(contains('secret')),
+              ),
             ),
           ),
         );
@@ -118,7 +120,7 @@ void main() {
         () => extraRouteCodec.decode(CCEncodedRouteArguments(extra: 'wrong')),
         throwsA(isA<CCRouteParameterError>()),
       );
-      const snapshot = Snapshot('required');
+      const snapshot = GeneratedSnapshot('required');
       expect(
         buildExtraPage(
           extraRouteCodec.decode(CCEncodedRouteArguments(extra: snapshot)),
@@ -136,16 +138,16 @@ void main() {
   test(
     'prefixed enum, Extra and result types remain accessible in generated parts',
     () {
-      const payload = types.Payload();
-      final CCRouteIntent<types.Result> intent = prefixedIntent(
-        mode: types.Mode.alternate,
+      const payload = types.GeneratedRoutePayload();
+      final CCRouteIntent<types.GeneratedRouteResult> intent = prefixedIntent(
+        mode: types.GeneratedRouteMode.alternate,
         payload: payload,
       );
       final codec = prefixedCodec;
       final page = buildPrefixedPage(
         codec.decode(codec.encode(intent.arguments)),
       );
-      expect(page.mode, types.Mode.alternate);
+      expect(page.mode, types.GeneratedRouteMode.alternate);
       expect(page.payload, same(payload));
     },
   );
@@ -157,24 +159,31 @@ void main() {
       final host = CCRouterTestHost(
         components: const [
           CCComponentManifest.fromDescriptor(
-            descriptor: fixtureComponent,
-            registrar: FixtureComponentRegistrar(),
+            descriptor: generatedRouteFixtureComponent,
+            registrar: GeneratedRouteFixtureRegistrar(),
           ),
         ],
         navigationAdapter: adapter,
       );
       addTearDown(host.dispose);
       host.initialize();
-      await host.runtime.openRoute(Uri.parse('/position/base'));
+      await host.runtime.openRoute(Uri.parse('/generated/position/base'));
       final pending = host.runtime.pushRoute<String>(
         detailIntent(id: 42, search: 'a/b &雪'),
       );
       await Future<void>.delayed(Duration.zero);
-      expect(host.runtime.activeRouteEntries.last.routeId, 'fixture.detail');
+      expect(
+        host.runtime.activeRouteEntries.last.routeId,
+        'generated_route_fixture.detail',
+      );
       host.runtime.popRoute(result: 'done');
       expect(await pending, 'done');
       expect(host.runtime.activeRouteEntries, hasLength(1));
-      for (final uri in ['/legacy/7', 'sample://detail/7', '/old/7']) {
+      for (final uri in [
+        '/generated/legacy/7',
+        'generated://detail/7',
+        '/generated/old/7',
+      ]) {
         expect(
           detailArgumentId(
             host.runtime.decodeRouteArguments(host.runtime.resolveRoute(uri)),
@@ -182,7 +191,10 @@ void main() {
           7,
         );
         await host.runtime.openRoute(Uri.parse(uri));
-        expect(host.runtime.activeRouteEntries.last.routeId, 'fixture.detail');
+        expect(
+          host.runtime.activeRouteEntries.last.routeId,
+          'generated_route_fixture.detail',
+        );
         host.runtime.popRoute();
       }
       await host.dispose();

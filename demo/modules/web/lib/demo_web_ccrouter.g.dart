@@ -15,7 +15,7 @@ final ccrouterGeneratedPackageBundle = CCGeneratedPackageBundle(
   packageName: 'demo_web',
   packageVersion: '0.1.0',
   contentFingerprint:
-      'bf8556d9a967469b6d58290866ff2e08fc638501558b8a177e1e73a2ec67231b',
+      'c7ec3b536abf8946b4b6edcd8ef5f52adfdc433bbefe00af65e3a4cbf638185e',
   componentManifests: [component_0.demoWebComponentManifest],
   routeCatalog: CCFlutterRouteCatalog.merge([
     component_routes_0.demoWebComponentRouteCatalog,

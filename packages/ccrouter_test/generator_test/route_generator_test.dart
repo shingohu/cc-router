@@ -25,7 +25,6 @@ void main() {
     String imports = '',
     Map<String, String> additionalAssets = const {},
     String sourcePath = 'lib/src/probe.dart',
-    String partUri = 'ccrouter_generated/probe.route.g.dart',
     String outputPath = 'lib/src/ccrouter_generated/probe.route.g.dart',
   }) async {
     final logs = <String>[];
@@ -34,7 +33,7 @@ void main() {
       {
         ...additionalAssets,
         'ccrouter_test|$sourcePath':
-            "import 'package:ccrouter/ccrouter.dart';\n$imports\npart '$partUri';\nconst probeComponent = CCComponentDescriptor(id: 'probe', version: '1.0.0');\n$declarations",
+            "import 'package:ccrouter/ccrouter.dart';\n$imports\nconst probeComponent = CCComponentDescriptor(id: 'probe', version: '1.0.0');\n$declarations",
       },
       rootPackage: 'ccrouter_test',
       generateFor: {'ccrouter_test|$sourcePath'},
@@ -62,6 +61,37 @@ void main() {
     const outputPath = 'lib/src/ccrouter_generated/probe.route.contract.g.dart';
     await testBuilder(
       ccRouteContractBuilder(BuilderOptions.empty),
+      {
+        ...additionalAssets,
+        'ccrouter_test|$sourcePath':
+            "import 'package:ccrouter/ccrouter.dart';\n$imports\nconst probeComponent = CCComponentDescriptor(id: 'probe', version: '1.0.0');\n$declarations",
+      },
+      rootPackage: 'ccrouter_test',
+      generateFor: {'ccrouter_test|$sourcePath'},
+      isInput: (id) => id == 'ccrouter_test|$sourcePath',
+      readerWriter: reader,
+      flattenOutput: true,
+      onLog: (log) => logs.add(log.message),
+    );
+    final output = AssetId('ccrouter_test', outputPath);
+    if (fails) {
+      expect(await reader.canRead(output), isFalse);
+      return logs.join('\n');
+    }
+    return reader.readAsString(output);
+  }
+
+  Future<String> generateBinding(
+    String declarations, {
+    bool fails = false,
+    String imports = '',
+    Map<String, String> additionalAssets = const {},
+    String sourcePath = 'lib/src/probe.dart',
+    String outputPath = 'lib/src/ccrouter_generated/probe.route_binding.g.dart',
+  }) async {
+    final logs = <String>[];
+    await testBuilder(
+      ccRouteBindingBuilder(BuilderOptions.empty),
       {
         ...additionalAssets,
         'ccrouter_test|$sourcePath':
@@ -163,19 +193,35 @@ final class Probe {
       'route': '_ProbeRoute',
       'arguments': '_ProbeRouteArguments',
       'package': 'ccrouter_test',
-      'library': 'lib/src/orders/probe.dart',
+      'library': 'lib/src/ccrouter_generated/orders/probe.route.g.dart',
+      'intentFactory': 'CCGeneratedProbeRouteFactory',
     });
     expect(route['registration'], 'ccrouterRegisterProbeRoute');
+    expect(
+      route['registrationLibrary'],
+      'lib/src/ccrouter_generated/orders/probe.route.g.dart',
+    );
     expect(route['destination'], {
       'descriptor': 'ccrouterDescribeProbeRoute',
       'builder': 'ccrouterBuildProbeRoute',
+      'library': 'lib/src/ccrouter_generated/orders/probe.route.g.dart',
+      'builderLibrary':
+          'lib/src/ccrouter_generated/orders/probe.route_binding.g.dart',
     });
-    expect((route['generatedArtifacts'] as List).single, {
-      'role': 'routePart',
-      'symbol': '_ProbeRoute',
-      'packageUri':
-          'package:ccrouter_test/src/ccrouter_generated/orders/probe.route.g.dart',
-    });
+    expect(route['generatedArtifacts'], [
+      {
+        'role': 'routeLibrary',
+        'symbol': '_ProbeRoute',
+        'packageUri':
+            'package:ccrouter_test/src/ccrouter_generated/orders/probe.route.g.dart',
+      },
+      {
+        'role': 'routeBinding',
+        'symbol': 'ccrouterBuildProbeRoute',
+        'packageUri':
+            'package:ccrouter_test/src/ccrouter_generated/orders/probe.route_binding.g.dart',
+      },
+    ]);
     expect(((route['patterns'] as List).single as Map)['constraints'], {
       'id': r'\d+',
     });
@@ -502,17 +548,27 @@ final class _InvalidComponentRegistrar implements CCComponentRegistrar {
   test(
     'builder emits a private component contract and backend-neutral registration',
     () async {
-      final code = await generate('''
+      const declarations = '''
 @CCRoute<void>(component: probeComponent, id: 'probe', patterns: [CCPathPattern('/probe/:id', primary: true)], popGuards: ['probe.dirty'])
 final class Probe { const Probe({required this.id}); final int id; }
-''');
-      expect(code, contains('part of'));
+''';
+      final code = await generate(declarations);
+      final binding = await generateBinding(declarations);
+      expect(code, isNot(contains("package:ccrouter_test/src/probe.dart")));
+      expect(
+        binding,
+        contains(
+          "import 'package:ccrouter_test/src/probe.dart' as route_page;",
+        ),
+      );
       expect(code, contains('abstract final class _ProbeRoute'));
+      expect(code, contains('final class CCGeneratedProbeRouteFactory'));
       expect(code, contains('CCRouteIntent<void>'));
-      expect(code, contains('registry.registerRoute(definition)'));
+      expect(code, contains('registry.registerRoute(_ProbeRoute.definition)'));
       expect(code, contains('ccrouterRegisterProbeRoute'));
       expect(code, contains('ccrouterDescribeProbeRoute'));
-      expect(code, contains('ccrouterBuildProbeRoute'));
+      expect(code, isNot(contains('ccrouterBuildProbeRoute')));
+      expect(binding, contains('ccrouterBuildProbeRoute'));
       expect(
         code,
         contains(
@@ -536,13 +592,29 @@ final class Probe { const Probe(); }
   });
 
   test('preserves nested source directories in generated route paths', () async {
+    const declarations =
+        "@CCRoute<void>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe')) final class Probe { const Probe(); }";
     final code = await generate(
-      "@CCRoute<void>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe')) final class Probe { const Probe(); }",
+      declarations,
       sourcePath: 'lib/src/orders/probe.dart',
-      partUri: '../ccrouter_generated/orders/probe.route.g.dart',
       outputPath: 'lib/src/ccrouter_generated/orders/probe.route.g.dart',
     );
-    expect(code, contains("part of '../../orders/probe.dart'"));
+    final binding = await generateBinding(
+      declarations,
+      sourcePath: 'lib/src/orders/probe.dart',
+      outputPath:
+          'lib/src/ccrouter_generated/orders/probe.route_binding.g.dart',
+    );
+    expect(
+      code,
+      isNot(contains('package:ccrouter_test/src/orders/probe.dart')),
+    );
+    expect(
+      binding,
+      contains(
+        "import 'package:ccrouter_test/src/orders/probe.dart' as route_page;",
+      ),
+    );
     expect(code, contains('abstract final class _ProbeRoute'));
   });
 
@@ -610,7 +682,7 @@ abstract class ProbeDetailRouteContract {
   test(
     'page builder binds a Contract-first route without duplicating it',
     () async {
-      final code = await generate(
+      final code = await generateBinding(
         r'''
 @CCRouteImplementation(ProbeDetailRouteContract)
 final class ProbePage {
@@ -619,9 +691,10 @@ final class ProbePage {
   final String tab;
 }
 ''',
-        imports: "import 'package:ccrouter_test/probe_route_contract.dart';",
+        imports:
+            "import 'package:ccrouter_test/src/probe_route_contract.dart';",
         additionalAssets: {
-          'ccrouter_test|lib/probe_route_contract.dart': r'''
+          'ccrouter_test|lib/src/probe_route_contract.dart': r'''
 import 'package:ccrouter/ccrouter.dart';
 const probeOwner = CCComponentDescriptor(id: 'probe', version: '1.0.0');
 @CCRouteContract<String>(component: probeOwner, id: 'probe.detail', pattern: CCPathPattern('/probe/:id'))
@@ -630,6 +703,10 @@ abstract class ProbeDetailRouteContract {
   final int id;
   final String tab;
 }
+''',
+          'ccrouter_test|lib/src/ccrouter_generated/probe_route_contract.route.contract.g.dart':
+              r'''
+import 'package:ccrouter/ccrouter.dart';
 abstract final class ProbeDetailRoute {
   static final definition = CCRouteDefinition<ProbeDetailRouteArguments, String>(
     routeId: 'probe.detail',
@@ -654,13 +731,17 @@ final class _ProbeCodec implements CCRouteCodec<ProbeDetailRouteArguments> {
       );
       expect(
         code,
-        contains('registry.registerRoute(ProbeDetailRoute.definition)'),
+        contains(
+          'registry.registerRoute(route_contract_0.ProbeDetailRoute.definition)',
+        ),
       );
       expect(
         code,
-        contains('final decoded = ProbeDetailRoute.definition.codec'),
+        contains(
+          'final decoded = route_contract_0.ProbeDetailRoute.definition.codec',
+        ),
       );
-      expect(code, contains('return ProbePage('));
+      expect(code, contains('return route_page.ProbePage('));
       expect(code, contains('id: decoded.id'));
       expect(code, contains('tab: decoded.tab'));
       expect(code, isNot(contains('final class ProbeDetailRouteArguments')));
@@ -668,7 +749,7 @@ final class _ProbeCodec implements CCRouteCodec<ProbeDetailRouteArguments> {
   );
 
   test('page builder rejects a Contract-first constructor mismatch', () async {
-    final logs = await generate(
+    final logs = await generateBinding(
       r'''
 @CCRouteImplementation(ProbeDetailRouteContract)
 final class ProbePage {
@@ -762,7 +843,7 @@ final class Probe {
       ),
     );
     expect(code, contains('int.tryParse(raw_ids)'));
-    expect(code, contains('"pending" => ProbeState.pending'));
+    expect(code, contains('"pending" => route_source.ProbeState.pending'));
     expect(code, contains('arguments.tags.isEmpty'));
     expect(code, contains('tags = List.unmodifiable(tags)'));
     expect(code, contains('ids = Set.unmodifiable(ids)'));
@@ -788,9 +869,17 @@ final class Probe {
   final ProbeFilter filter;
 }
 ''');
-    expect(code, contains('return const ProbeFilterCodec().decode('));
+    expect(
+      code,
+      contains('return const route_source.ProbeFilterCodec().decode('),
+    );
     expect(code, contains('List<String>.unmodifiable(_values_filter)'));
-    expect(code, contains('const ProbeFilterCodec().encode(arguments.filter)'));
+    expect(
+      code,
+      contains(
+        'const route_source.ProbeFilterCodec().encode(\n              arguments.filter',
+      ),
+    );
     expect(code, contains('if (values.isEmpty)'));
     expect(code, contains('catch (_)'));
   });
@@ -887,7 +976,7 @@ final class Probe {
   test(
     'builder supports super formals and mixed constructor parameters',
     () async {
-      final code = await generate(r'''
+      const declarations = r'''
 abstract class ProbeBase {
   const ProbeBase(this.id);
   final int id;
@@ -898,15 +987,17 @@ final class Probe extends ProbeBase {
   final String tab;
   final int page;
 }
-''');
+''';
+      final code = await generate(declarations);
+      final binding = await generateBinding(declarations);
       expect(
-        code,
+        binding,
         contains(
-          'Probe(arguments.id, tab: arguments.tab, page: arguments.page)',
+          'route_page.Probe(decoded.id, tab: decoded.tab, page: decoded.page)',
         ),
       );
       expect(code, contains('required int id'));
-      expect(code, contains("String tab = 'summary'"));
+      expect(code, contains('String tab = "summary"'));
       expect(code, contains('int page = 1'));
     },
   );
@@ -928,14 +1019,17 @@ abstract class ProbeRouteContract { const ProbeRouteContract(); }
     },
   );
 
-  test('builder rejects registration bridge name collisions', () async {
-    final logs = await generate(r'''
+  test(
+    'standalone library isolates generated names from page declarations',
+    () async {
+      final code = await generate(r'''
 void ccrouterRegisterProbeRoute(CCRegistry registry) {}
 @CCRoute<void>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe'))
 final class Probe { const Probe(); }
-''', fails: true);
-    expect(logs, contains('Generated declaration'));
-  });
+''');
+      expect(code, contains('void ccrouterRegisterProbeRoute'));
+    },
+  );
 
   test('builder accepts complete SemVer 2.0 component versions', () async {
     final code = await generate(r'''
@@ -1125,9 +1219,13 @@ final class VersionedPage { const VersionedPage(); }
       "@CCRoute<void>(component: probeComponent, id: 'probe', patterns: [CCPathPattern('/a', primary: true)]) final class A { const A(); } @CCRoute<void>(component: probeComponent, id: 'probe', patterns: [CCPathPattern('/b', primary: true)]) final class B { const B(); }",
       'Duplicate route ID',
     ),
-    'generated name collision': (
-      "@CCRoute<void>(component: probeComponent, id: 'probe', patterns: [CCPathPattern('/a', primary: true)]) final class A { const A(); } final class _ARoute {}",
-      'collides',
+    'private page': (
+      "@CCRoute<void>(component: probeComponent, id: 'probe', patterns: [CCPathPattern('/a', primary: true)]) final class _A { const _A(); }",
+      'page classes must be public',
+    ),
+    'private parameter type': (
+      "final class _Payload { const _Payload(); } @CCRoute<void>(component: probeComponent, id: 'probe', patterns: [CCPathPattern('/a', primary: true)]) final class A { const A({@CCExtraParam() required this.payload}); final _Payload payload; }",
+      'must be public',
     ),
     'implicit result type': (
       "@CCRoute(component: probeComponent, id: 'probe', patterns: [CCPathPattern('/a', primary: true)]) final class A { const A(); }",

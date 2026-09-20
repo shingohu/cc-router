@@ -326,7 +326,7 @@ final class CCGeneratedArtifact {
     required this.packageUri,
   });
 
-  /// Stable artifact role such as `routePart` or `routeContract`.
+  /// Stable artifact role such as `routeLibrary` or `routeContract`.
   final String role;
 
   /// Primary generated symbol useful for text search and diagnostics.

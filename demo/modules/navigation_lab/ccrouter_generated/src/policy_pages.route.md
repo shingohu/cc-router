@@ -16,7 +16,7 @@ Generated from `lib/src/policy_pages.dart`. Do not edit by hand.
 - Presentation: `page`
 - Navigation sources: `typedIntent, internalUri`
 - Restoration: `unsupported`
-- Contract library: `demo_navigation_lab:lib/src/policy_pages.dart`
+- Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/policy_pages.route.g.dart`
 - Patterns:
   - `/lab/policy/proceed` (CCPathPattern, primary)
 
@@ -34,7 +34,7 @@ Generated from `lib/src/policy_pages.dart`. Do not edit by hand.
 - Presentation: `page`
 - Navigation sources: `typedIntent, internalUri`
 - Restoration: `unsupported`
-- Contract library: `demo_navigation_lab:lib/src/policy_pages.dart`
+- Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/policy_pages.route.g.dart`
 - Patterns:
   - `/lab/policy/cancel` (CCPathPattern, primary)
 
@@ -52,7 +52,7 @@ Generated from `lib/src/policy_pages.dart`. Do not edit by hand.
 - Presentation: `page`
 - Navigation sources: `typedIntent, internalUri`
 - Restoration: `unsupported`
-- Contract library: `demo_navigation_lab:lib/src/policy_pages.dart`
+- Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/policy_pages.route.g.dart`
 - Patterns:
   - `/lab/policy/redirect-source` (CCPathPattern, primary)
 
@@ -70,7 +70,7 @@ Generated from `lib/src/policy_pages.dart`. Do not edit by hand.
 - Presentation: `page`
 - Navigation sources: `typedIntent, internalUri`
 - Restoration: `unsupported`
-- Contract library: `demo_navigation_lab:lib/src/policy_pages.dart`
+- Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/policy_pages.route.g.dart`
 - Patterns:
   - `/lab/policy/redirect-target` (CCPathPattern, primary)
 
@@ -88,7 +88,7 @@ Generated from `lib/src/policy_pages.dart`. Do not edit by hand.
 - Presentation: `page`
 - Navigation sources: `typedIntent, internalUri`
 - Restoration: `unsupported`
-- Contract library: `demo_navigation_lab:lib/src/policy_pages.dart`
+- Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/policy_pages.route.g.dart`
 - Patterns:
   - `/lab/policy/defer` (CCPathPattern, primary)
 
@@ -106,7 +106,7 @@ Generated from `lib/src/policy_pages.dart`. Do not edit by hand.
 - Presentation: `page`
 - Navigation sources: `typedIntent, internalUri`
 - Restoration: `unsupported`
-- Contract library: `demo_navigation_lab:lib/src/policy_pages.dart`
+- Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/policy_pages.route.g.dart`
 - Patterns:
   - `/lab/policy/timeout` (CCPathPattern, primary)
 
@@ -124,6 +124,6 @@ Generated from `lib/src/policy_pages.dart`. Do not edit by hand.
 - Presentation: `page`
 - Navigation sources: `typedIntent, internalUri`
 - Restoration: `unsupported`
-- Contract library: `demo_navigation_lab:lib/src/policy_pages.dart`
+- Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/policy_pages.route.g.dart`
 - Patterns:
   - `/lab/policy/guarded` (CCPathPattern, primary)
