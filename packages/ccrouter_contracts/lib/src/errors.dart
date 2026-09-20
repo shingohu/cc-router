@@ -90,6 +90,32 @@ final class CCDeepLinkRejectedError extends CCRouterError {
   final String routeId;
 }
 
+/// Identifies why the Host rejected an external location before route matching.
+enum CCDeepLinkIngressRejectionReason {
+  /// A Path-only external location was supplied while the Host forbids it.
+  relativePathNotAllowed,
+
+  /// The location has a malformed or unsafe Scheme/authority shape.
+  invalidAuthority,
+
+  /// No exact Host rule accepts the location's Scheme, Host, and effective Port.
+  authorityNotAllowed,
+}
+
+/// Indicates that external input failed the application Host trust policy.
+///
+/// The error intentionally retains no URI, Host, query value, or path value.
+/// Diagnostics can use [reason] to distinguish configuration and trust failures
+/// without exposing the rejected input.
+final class CCDeepLinkIngressRejectedError extends CCRouterError {
+  /// Creates a sanitized ingress rejection for the stable [reason].
+  const CCDeepLinkIngressRejectedError(this.reason)
+    : super('External navigation was rejected by the Host ingress policy.');
+
+  /// Stable rejection category safe for failure handling and telemetry.
+  final CCDeepLinkIngressRejectionReason reason;
+}
+
 /// Indicates that navigation failure recovery exceeded its loop limit.
 final class CCNavigationFailureRecoveryLoopError extends CCRouterError {
   /// Creates a bounded failure-recovery loop error.

@@ -1594,6 +1594,7 @@ void main() {
     final adapter = CCMemoryNavigationAdapter();
     final runtime = CCRouterRuntime.forTesting(
       navigationAdapter: adapter,
+      deepLinkIngressPolicy: CCDeepLinkIngressPolicy(allowRelativePaths: true),
       navigationAspects: [
         CCNavigationAspect(
           id: 'redirect.trace',
@@ -1646,6 +1647,68 @@ void main() {
     expect(adapter.currentRequest?.navigationId, seenIds.single);
     expect(calls, ['orders.redirect:orders.detail']);
     expect(arrivedRequest.redirectChain, ['orders.detail', 'auth.login']);
+    await runtime.dispose();
+  });
+
+  test('URI redirect cannot bypass the Host authority allowlist', () async {
+    final adapter = CCMemoryNavigationAdapter();
+    final runtime = CCRouterRuntime.forTesting(
+      navigationAdapter: adapter,
+      deepLinkIngressPolicy: CCDeepLinkIngressPolicy(
+        allowRelativePaths: true,
+        allowedAuthorities: [
+          CCDeepLinkAuthorityRule(scheme: 'https', host: 'trusted.example'),
+        ],
+      ),
+      components: [
+        routeComponent('orders', (registry) {
+          registry.registerRouteInterceptor(
+            'orders.external.redirect',
+            TestNavigationInterceptor(
+              'orders.external.redirect',
+              (_) => CCNavigationRedirect.toUri(
+                Uri.parse('https://evil.example/target/42'),
+              ),
+              <String>[],
+            ),
+          );
+          registry.registerRoute(
+            pathRoute(
+              routeId: 'orders.detail',
+              deepLink: CCDeepLinkPolicy.enabled,
+              interceptorIds: ['orders.external.redirect'],
+            ),
+          );
+          registry.registerRoute<RouteArgs, void>(
+            CCRouteDefinition<RouteArgs, void>(
+              routeId: 'orders.target',
+              patterns: const [
+                CCPathPattern('/target/:value', primary: true),
+                CCUriPattern('https://evil.example/target/:value'),
+              ],
+              codec: const RouteArgsCodec(),
+              deepLink: CCDeepLinkPolicy.enabled,
+            ),
+          );
+        }),
+      ],
+    );
+    runtime.initialize();
+
+    await expectLater(
+      runtime.openRoute(
+        Uri.parse('/orders/42'),
+        origin: CCNavigationOrigin.externalPlatform,
+      ),
+      throwsA(
+        isA<CCDeepLinkIngressRejectedError>().having(
+          (error) => error.reason,
+          'reason',
+          CCDeepLinkIngressRejectionReason.authorityNotAllowed,
+        ),
+      ),
+    );
+    expect(adapter.stack, isEmpty);
     await runtime.dispose();
   });
 
@@ -2040,6 +2103,12 @@ void main() {
       final adapter = CCMemoryNavigationAdapter();
       final runtime = CCRouterRuntime.forTesting(
         navigationAdapter: adapter,
+        deepLinkIngressPolicy: CCDeepLinkIngressPolicy(
+          allowedAuthorities: [
+            CCDeepLinkAuthorityRule(scheme: 'https', host: 'therouter.com'),
+          ],
+          allowRelativePaths: true,
+        ),
         components: [
           routeComponent('orders', (registry) {
             registry.registerRoute<RouteArgs, String>(
@@ -2103,6 +2172,9 @@ void main() {
       const source = CCNavigationSource.deepLink('campaign');
       final runtime = CCRouterRuntime.forTesting(
         navigationAdapter: adapter,
+        deepLinkIngressPolicy: CCDeepLinkIngressPolicy(
+          allowRelativePaths: true,
+        ),
         navigationFailurePolicy: TestNavigationFailurePolicy((context) {
           contexts.add(context);
           return const CCNavigationFailureFallback.toIntent(
@@ -2326,6 +2398,9 @@ void main() {
       final adapter = CCMemoryNavigationAdapter();
       final runtime = CCRouterRuntime.forTesting(
         navigationAdapter: adapter,
+        deepLinkIngressPolicy: CCDeepLinkIngressPolicy(
+          allowRelativePaths: true,
+        ),
         components: [
           routeComponent(
             'orders',

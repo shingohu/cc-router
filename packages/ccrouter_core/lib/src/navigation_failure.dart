@@ -166,6 +166,7 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
         CCRouteNotFoundError() ||
         CCRouteAmbiguityError() ||
         CCRouteUnavailableError() ||
+        CCDeepLinkIngressRejectedError() ||
         CCDeepLinkRejectedError() => CCNavigationFailureStage.resolution,
         CCRouteParameterError() => CCNavigationFailureStage.parameters,
         CCRouteCancelledError() ||

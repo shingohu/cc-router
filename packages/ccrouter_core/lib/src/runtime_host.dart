@@ -25,6 +25,8 @@ final class CCRouterRuntime {
     CCRouteRestorationOpportunitySource? restorationOpportunitySource,
     CCNavigationConcurrencyPolicy navigationConcurrencyPolicy =
         CCNavigationConcurrencyPolicy.allow,
+    CCDeepLinkIngressPolicy deepLinkIngressPolicy =
+        CCDeepLinkIngressPolicy.denyAll,
   }) => CCRouterRuntime._(
     traceCapacity: traceCapacity,
     navigationDiagnosticCapacity: navigationDiagnosticCapacity,
@@ -37,6 +39,7 @@ final class CCRouterRuntime {
     telemetryContextProvider: telemetryContextProvider,
     restorationOpportunitySource: restorationOpportunitySource,
     navigationConcurrencyPolicy: navigationConcurrencyPolicy,
+    deepLinkIngressPolicy: deepLinkIngressPolicy,
   );
 
   /// Creates an independently owned Runtime for low-level core tests.
@@ -58,6 +61,8 @@ final class CCRouterRuntime {
     CCRouteRestorationOpportunitySource? restorationOpportunitySource,
     CCNavigationConcurrencyPolicy navigationConcurrencyPolicy =
         CCNavigationConcurrencyPolicy.allow,
+    CCDeepLinkIngressPolicy deepLinkIngressPolicy =
+        CCDeepLinkIngressPolicy.denyAll,
   }) => CCRouterRuntime._(
     traceCapacity: traceCapacity,
     navigationDiagnosticCapacity: navigationDiagnosticCapacity,
@@ -70,6 +75,7 @@ final class CCRouterRuntime {
     telemetryContextProvider: telemetryContextProvider,
     restorationOpportunitySource: restorationOpportunitySource,
     navigationConcurrencyPolicy: navigationConcurrencyPolicy,
+    deepLinkIngressPolicy: deepLinkIngressPolicy,
   );
 
   /// Creates a Runtime with validated configuration and installed components.
@@ -87,7 +93,9 @@ final class CCRouterRuntime {
     this.telemetryContextProvider,
     this.restorationOpportunitySource,
     required this.navigationConcurrencyPolicy,
+    required CCDeepLinkIngressPolicy deepLinkIngressPolicy,
   }) {
+    _deepLinkIngressPolicy = deepLinkIngressPolicy;
     _navigationAdapter = navigationAdapter;
     _globalInterceptors = _validateGlobalInterceptors(globalInterceptors);
     _globalPopGuards = _validateGlobalPopGuards(globalPopGuards);
@@ -130,6 +138,12 @@ final class CCRouterRuntime {
   /// ordinary repeated pushes. The other policies only affect requests that
   /// are still pending; completed navigation never remains in this gate.
   final CCNavigationConcurrencyPolicy navigationConcurrencyPolicy;
+
+  /// Host-owned trust boundary applied to every external URI resolution.
+  ///
+  /// The Runtime retains the immutable policy for its complete lifetime so a
+  /// component or navigation callback cannot broaden accepted authorities.
+  late final CCDeepLinkIngressPolicy _deepLinkIngressPolicy;
 
   /// Optional Host policy for sanitized route failure recovery.
   ///
@@ -176,7 +190,10 @@ final class CCRouterRuntime {
   final _ShellRegistry _shellRegistry = _ShellRegistry();
 
   /// Component-owned route definitions indexed by stable route ID.
-  late final _RouteRegistry _routeRegistry = _RouteRegistry(_shellRegistry);
+  late final _RouteRegistry _routeRegistry = _RouteRegistry(
+    _shellRegistry,
+    _deepLinkIngressPolicy,
+  );
 
   /// Concrete Route Entries currently retained by the Runtime.
   final List<_RouteEntryRecord> _routeEntries = [];

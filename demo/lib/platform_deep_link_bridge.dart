@@ -6,6 +6,18 @@ import 'package:demo_navigation_lab/demo_navigation_lab.dart';
 import 'package:demo_web_contracts/demo_web_contracts.dart';
 import 'package:flutter/widgets.dart';
 
+/// Host-owned external URI namespaces accepted by the demonstration app.
+///
+/// Relative Paths are enabled because the platform mapper converts validated
+/// public Web URLs into `/web` and notifications may provide normalized paths.
+final demoDeepLinkIngressPolicy = CCDeepLinkIngressPolicy(
+  allowedAuthorities: [
+    CCDeepLinkAuthorityRule(scheme: 'ccrouter', host: 'lab'),
+    CCDeepLinkAuthorityRule(scheme: 'https', host: 'ccrouter.example'),
+  ],
+  allowRelativePaths: true,
+);
+
 final class DemoPlatformDeepLinkBridge extends StatefulWidget {
   const DemoPlatformDeepLinkBridge({
     required this.child,

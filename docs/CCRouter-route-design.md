@@ -346,7 +346,9 @@ arguments = OrderDetailRouteArgs(orderId: 100, tab: items)
 - Query 独立解析并保留重复值；Fragment 不参与路由身份匹配。
 - URI Pattern 必须是包含 Scheme、Authority 和 Host 的绝对 URI，且不能内嵌 Query、Fragment 或 User Info。
 
-Scheme 和 Host 的应用级白名单仍属于 Deep Link 入口配置；`CCUriPattern` 只描述某条路由接受的地址，并不能替代入口信任校验。外部 URI 的完整原文默认不进入日志或埋点。
+Scheme、Host 和有效端口的应用级白名单由 `CCDeepLinkIngressPolicy` 配置；
+`CCUriPattern` 只描述某条路由接受的地址，并不能替代入口信任校验。外部 URI
+的完整原文默认不进入日志或埋点。
 
 ### 6.3 正则约束
 
@@ -1207,6 +1209,7 @@ externalQr          扫码等不可信外部输入
   分别写入对应的外部 Origin 后进入同一 Runtime 管线。
 - `CCNavigationSource` 是业务可填写的埋点来源，不是安全信任标记；`CCNavigationSource.deepLink(...)` 本身不能启用或绕过 `CCDeepLinkPolicy`。
 - Redirect 必须继承最初 Origin，直到整条导航完成，不能通过重定向绕过 Deep Link Policy。
+- Redirect 到动态 URI 时必须重新执行 Host 入口白名单，不能借由已通过校验的初始地址扩大可信 Authority。
 - “其他业务组件调用”属于应用内导航，Package 契约 exposure 与 Deep Link 外部来源判定互不替代。
 
 Core 当前的 `external` 参数只作为内部实现阶段的等价信号；公开门面通过
@@ -1231,7 +1234,11 @@ Platform URI
 
 安全规则：
 
-- Scheme 和 Host 使用精确配置，不接受隐式通配。
+- Host 在 `CCRouter.initialize(deepLinkIngressPolicy: ...)` 中配置应用拥有的
+  Scheme、Host 和有效端口；默认 `denyAll`，不接受隐式通配。
+- Path-only 外部输入默认拒绝。仅当 Host 已经验证或归一化通知、扫码或 Web
+  输入时，才显式设置 `allowRelativePaths: true`；它仍不能绕过路由级策略。
+- User Info、缺失 Scheme/Authority/Host 的绝对输入在 Pattern 匹配前拒绝。
 - Route 必须显式启用 Deep Link。
 - 外部 Origin 必须由可信入口创建，不能由 URI 形态或埋点 Source 推断。
 - Query 中未知参数默认忽略还是报错需要由路由策略明确声明。
@@ -1239,6 +1246,24 @@ Platform URI
 - 外部请求不接受 Extra。
 - 所有外部导航仍经过权限和登录拦截器。
 - 白名单配置必须真实参与解析流程，并有拒绝场景测试。
+
+示例：
+
+```dart
+CCRouter.initialize(
+  components: components,
+  deepLinkIngressPolicy: CCDeepLinkIngressPolicy(
+    allowedAuthorities: [
+      CCDeepLinkAuthorityRule(scheme: 'https', host: 'm.example.com'),
+      CCDeepLinkAuthorityRule(scheme: 'ccrouter', host: 'orders'),
+    ],
+    allowRelativePaths: true,
+  ),
+);
+```
+
+未通过入口策略时抛出 `CCDeepLinkIngressRejectedError`；匹配到路由但该路由未开放
+外部访问时抛出 `CCDeepLinkRejectedError`。两类错误均不保留原 URI。
 
 ---
 

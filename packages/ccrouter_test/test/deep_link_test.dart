@@ -44,12 +44,20 @@ final class _DeepLinkRegistrar implements CCComponentRegistrar {
   }
 }
 
+final _deepLinkPolicy = CCDeepLinkIngressPolicy(
+  allowedAuthorities: [
+    CCDeepLinkAuthorityRule(scheme: 'https', host: 'example.com'),
+  ],
+  allowRelativePaths: true,
+);
+
 void main() {
   tearDown(CCRouter.shutdown);
 
   test('fixed ingress methods preserve external origin and source', () async {
     final adapter = CCMemoryNavigationAdapter();
     CCRouter.initialize(
+      deepLinkIngressPolicy: _deepLinkPolicy,
       components: const [
         CCComponentManifest(
           id: 'orders',
@@ -86,6 +94,7 @@ void main() {
   test('external ingress still enforces disabled Deep Link policy', () async {
     final adapter = CCMemoryNavigationAdapter();
     CCRouter.initialize(
+      deepLinkIngressPolicy: _deepLinkPolicy,
       components: const [
         CCComponentManifest(
           id: 'orders',
@@ -100,5 +109,120 @@ void main() {
       CCDeepLinkIngress.fromPlatform(Uri.parse('/orders/42')),
       throwsA(isA<CCDeepLinkRejectedError>()),
     );
+  });
+
+  test(
+    'default Host policy rejects absolute and relative external input',
+    () async {
+      final adapter = CCMemoryNavigationAdapter();
+      CCRouter.initialize(
+        components: const [
+          CCComponentManifest(
+            id: 'orders',
+            version: '0.1.0',
+            registrar: _DeepLinkRegistrar(),
+          ),
+        ],
+      );
+      CCRouterHostBinding.attachNavigationAdapter(adapter);
+
+      await expectLater(
+        CCDeepLinkIngress.fromPlatform(
+          Uri.parse('https://example.com/orders/42'),
+        ),
+        throwsA(
+          isA<CCDeepLinkIngressRejectedError>().having(
+            (error) => error.reason,
+            'reason',
+            CCDeepLinkIngressRejectionReason.authorityNotAllowed,
+          ),
+        ),
+      );
+      await expectLater(
+        CCDeepLinkIngress.fromNotification(Uri.parse('/orders/42')),
+        throwsA(
+          isA<CCDeepLinkIngressRejectedError>().having(
+            (error) => error.reason,
+            'reason',
+            CCDeepLinkIngressRejectionReason.relativePathNotAllowed,
+          ),
+        ),
+      );
+      expect(adapter.currentRequest, isNull);
+    },
+  );
+
+  test(
+    'authority rules match case and effective default Port exactly',
+    () async {
+      final adapter = CCMemoryNavigationAdapter();
+      CCRouter.initialize(
+        deepLinkIngressPolicy: CCDeepLinkIngressPolicy(
+          allowedAuthorities: [
+            CCDeepLinkAuthorityRule(scheme: 'HTTPS', host: 'EXAMPLE.COM'),
+          ],
+        ),
+        components: const [
+          CCComponentManifest(
+            id: 'orders',
+            version: '0.1.0',
+            registrar: _DeepLinkRegistrar(),
+          ),
+        ],
+      );
+      CCRouterHostBinding.attachNavigationAdapter(adapter);
+
+      await CCDeepLinkIngress.fromPlatform(
+        Uri.parse('https://EXAMPLE.com:443/orders/42'),
+      );
+      expect(adapter.currentRequest?.routeId, 'orders.detail');
+
+      await expectLater(
+        CCDeepLinkIngress.fromPlatform(
+          Uri.parse('https://example.com:8443/orders/43'),
+        ),
+        throwsA(isA<CCDeepLinkIngressRejectedError>()),
+      );
+      await expectLater(
+        CCDeepLinkIngress.fromPlatform(
+          Uri.parse('https://user@example.com/orders/44'),
+        ),
+        throwsA(
+          isA<CCDeepLinkIngressRejectedError>().having(
+            (error) => error.reason,
+            'reason',
+            CCDeepLinkIngressRejectionReason.invalidAuthority,
+          ),
+        ),
+      );
+    },
+  );
+
+  test('Host policy rejects wildcard and invalid authority configuration', () {
+    expect(
+      () => CCDeepLinkAuthorityRule(scheme: 'https', host: '*.example.com'),
+      throwsArgumentError,
+    );
+    expect(
+      () =>
+          CCDeepLinkAuthorityRule(scheme: 'not a scheme', host: 'example.com'),
+      throwsArgumentError,
+    );
+    expect(
+      () => CCDeepLinkAuthorityRule(
+        scheme: 'https',
+        host: 'example.com',
+        port: 70000,
+      ),
+      throwsArgumentError,
+    );
+
+    final mutableRules = <CCDeepLinkAuthorityRule>[
+      CCDeepLinkAuthorityRule(scheme: 'https', host: 'example.com'),
+    ];
+    final policy = CCDeepLinkIngressPolicy(allowedAuthorities: mutableRules);
+    mutableRules.clear();
+    expect(policy.allowedAuthorities, hasLength(1));
+    expect(() => policy.allowedAuthorities.clear(), throwsUnsupportedError);
   });
 }

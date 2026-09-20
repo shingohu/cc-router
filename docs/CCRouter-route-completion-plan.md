@@ -50,6 +50,7 @@ Flutter Facade、GoRouter Adapter、路由 Generator、Demo 路由接入、测�
 
 ### P0-3 失败与兜底
 
+- [x] 增加默认拒绝的 Host Deep Link Scheme/Host/Port 白名单，并显式控制相对 Path；
 - [x] 统一路由未找到、参数非法、Deep Link 拒绝、组件不可用和 Adapter 失败事件；
 - [x] 增加 Host 级只读 Failure Policy，支持明确的兜底或重定向；
 - [x] 兜底链保留 Origin、Source、Navigation ID，并限制循环；

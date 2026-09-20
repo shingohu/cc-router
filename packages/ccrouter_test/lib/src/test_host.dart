@@ -27,6 +27,8 @@ final class CCRouterTestHost {
     CCRouteRestorationOpportunitySource? restorationOpportunitySource,
     CCNavigationConcurrencyPolicy navigationConcurrencyPolicy =
         CCNavigationConcurrencyPolicy.allow,
+    CCDeepLinkIngressPolicy deepLinkIngressPolicy =
+        CCDeepLinkIngressPolicy.denyAll,
   }) => CCRouterTestHost._(
     CCRouterRuntime.forHost(
       traceCapacity: traceCapacity,
@@ -40,6 +42,7 @@ final class CCRouterTestHost {
       telemetryContextProvider: telemetryContextProvider,
       restorationOpportunitySource: restorationOpportunitySource,
       navigationConcurrencyPolicy: navigationConcurrencyPolicy,
+      deepLinkIngressPolicy: deepLinkIngressPolicy,
     ),
   );
 

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter_demo/ccrouter_generated/ccrouter_host.routes.g.dart';
 import 'package:ccrouter_demo/main.dart';
+import 'package:ccrouter_demo/platform_deep_link_bridge.dart';
 import 'package:demo_navigation_lab/demo_navigation_lab.dart';
 import 'package:demo_web_contracts/demo_web_contracts.dart';
 import 'package:flutter/material.dart';
@@ -17,6 +18,7 @@ void main() {
       ..clear();
     CCRouter.initialize(
       components: ccrouterGeneratedComponentManifests,
+      deepLinkIngressPolicy: demoDeepLinkIngressPolicy,
       globalInterceptors: const [
         CCGlobalNavigationInterceptor(
           id: 'demo.global.policy',

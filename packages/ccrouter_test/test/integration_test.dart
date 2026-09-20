@@ -726,6 +726,11 @@ void main() {
       addTearDown(router.dispose);
 
       CCRouter.initialize(
+        deepLinkIngressPolicy: CCDeepLinkIngressPolicy(
+          allowedAuthorities: [
+            CCDeepLinkAuthorityRule(scheme: 'https', host: 'example.com'),
+          ],
+        ),
         components: const [
           CCComponentManifest(
             id: 'orders',
@@ -797,6 +802,7 @@ void main() {
 
     final registrar = _DisabledRouteRegistrar();
     CCRouter.initialize(
+      deepLinkIngressPolicy: CCDeepLinkIngressPolicy(allowRelativePaths: true),
       components: [
         CCComponentManifest(
           id: 'internal',

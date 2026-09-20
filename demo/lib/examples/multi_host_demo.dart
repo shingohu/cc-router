@@ -8,9 +8,14 @@ import 'package:ccrouter_go_router/ccrouter_go_router.dart';
 import 'package:demo_navigation_lab/demo_navigation_lab.dart';
 import 'package:flutter/material.dart';
 
+import '../platform_deep_link_bridge.dart';
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  CCRouter.initialize(components: ccrouterGeneratedComponentManifests);
+  CCRouter.initialize(
+    components: ccrouterGeneratedComponentManifests,
+    deepLinkIngressPolicy: demoDeepLinkIngressPolicy,
+  );
   runApp(createMultiHostDemoApp());
 }
 

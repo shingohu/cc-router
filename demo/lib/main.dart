@@ -13,6 +13,7 @@ void main() {
   WidgetsFlutterBinding.ensureInitialized();
   CCRouter.initialize(
     components: ccrouterGeneratedComponentManifests,
+    deepLinkIngressPolicy: demoDeepLinkIngressPolicy,
     globalInterceptors: const [
       CCGlobalNavigationInterceptor(
         id: 'demo.global.policy',

@@ -208,6 +208,9 @@ abstract final class CCRouter {
   /// Global navigation interceptors are ordered by their stable IDs and run
   /// before route-declared interceptors. Navigation aspects are ordered by
   /// stable IDs and observe the same Runtime navigation pipeline.
+  /// [deepLinkIngressPolicy] is Host-owned and defaults to rejecting every
+  /// external authority and relative Path; configure exact rules only for URI
+  /// namespaces the application intentionally owns.
   static void initialize({
     required Iterable<CCComponentManifest> components,
     int traceCapacity = 1000,
@@ -220,6 +223,8 @@ abstract final class CCRouter {
     CCRouteRestorationOpportunitySource? restorationOpportunitySource,
     CCNavigationConcurrencyPolicy navigationConcurrencyPolicy =
         CCNavigationConcurrencyPolicy.allow,
+    CCDeepLinkIngressPolicy deepLinkIngressPolicy =
+        CCDeepLinkIngressPolicy.denyAll,
   }) {
     if (_defaultRuntime != null || _shuttingDown != null) {
       throw const CCRouterAlreadyInitializedError();
@@ -236,6 +241,7 @@ abstract final class CCRouter {
       telemetryContextProvider: telemetryContextProvider,
       restorationOpportunitySource: restorationOpportunitySource,
       navigationConcurrencyPolicy: navigationConcurrencyPolicy,
+      deepLinkIngressPolicy: deepLinkIngressPolicy,
     );
     runtime.initialize();
     _defaultRuntime = runtime;

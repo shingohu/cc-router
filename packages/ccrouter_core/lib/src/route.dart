@@ -105,11 +105,14 @@ final class _RouteCandidate {
 /// Component assembly uses it for registration, while navigation adapters use
 /// it for matching and argument decoding.
 final class _RouteRegistry {
-  /// Creates an empty route registry using [shellRegistry] for placement rules.
-  _RouteRegistry(this._shellRegistry);
+  /// Creates a registry with Host placement and external-ingress policies.
+  _RouteRegistry(this._shellRegistry, this._deepLinkIngressPolicy);
 
   /// Installed Shell contracts used to validate and gate route placement.
   final _ShellRegistry _shellRegistry;
+
+  /// Immutable Host allowlist checked before external route matching.
+  final CCDeepLinkIngressPolicy _deepLinkIngressPolicy;
 
   /// Priority assigned to structured absolute-URI patterns.
   static const int _uriPriority = 3;
@@ -261,6 +264,7 @@ final class _RouteRegistry {
   /// Resolves and decodes a dynamic [location] under its trusted [origin].
   _PreparedRoute prepareUri(Uri location, CCNavigationOrigin origin) {
     final uri = _parseLocation(location.toString());
+    if (origin.isExternal) _validateDeepLinkIngress(uri);
     final resolved = _resolveUri(uri, external: origin.isExternal);
     final route = _requireActiveRoute(resolved.routeId);
     final arguments = decode(resolved);
@@ -274,6 +278,42 @@ final class _RouteRegistry {
       placement: route.definition.placement,
       interceptorIds: route.definition.interceptorIds,
       popGuardIds: route.definition.popGuardIds,
+    );
+  }
+
+  /// Rejects untrusted external authority data before any route can match it.
+  void _validateDeepLinkIngress(Uri uri) {
+    if (!uri.hasScheme && !uri.hasAuthority) {
+      if (_deepLinkIngressPolicy.allowRelativePaths &&
+          uri.path.startsWith('/')) {
+        return;
+      }
+      throw const CCDeepLinkIngressRejectedError(
+        CCDeepLinkIngressRejectionReason.relativePathNotAllowed,
+      );
+    }
+    if (!uri.hasScheme ||
+        !uri.hasAuthority ||
+        uri.host.isEmpty ||
+        uri.userInfo.isNotEmpty) {
+      throw const CCDeepLinkIngressRejectedError(
+        CCDeepLinkIngressRejectionReason.invalidAuthority,
+      );
+    }
+    for (final rule in _deepLinkIngressPolicy.allowedAuthorities) {
+      final rulePort = Uri(
+        scheme: rule.scheme,
+        host: rule.host,
+        port: rule.port,
+      ).port;
+      if (rule.scheme == uri.scheme.toLowerCase() &&
+          rule.host == uri.host.toLowerCase() &&
+          rulePort == uri.port) {
+        return;
+      }
+    }
+    throw const CCDeepLinkIngressRejectedError(
+      CCDeepLinkIngressRejectionReason.authorityNotAllowed,
     );
   }
 

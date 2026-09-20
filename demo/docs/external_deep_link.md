@@ -13,6 +13,11 @@ Demo 提供两个不同层级的入口：
 仅给 `CCRouter.navigator.open` 传入 `CCNavigationSource.deepLink` 不会把请求变成外部入口；
 Source 只用于来源归因，是否外部由受控 Ingress 设置的 `CCNavigationOrigin` 决定。
 
+Demo 在 `CCRouter.initialize` 中配置 `demoDeepLinkIngressPolicy`：只接受
+`ccrouter://lab/...`、`https://ccrouter.example/...`，并允许经过 Host mapper
+验证后生成的绝对 Path。框架默认策略是 `denyAll`，所以新增生产域名或自定义 Scheme
+时必须由宿主显式添加精确的 `CCDeepLinkAuthorityRule`，仅新增 `CCUriPattern` 不会放行。
+
 ## 运行中唤醒
 
 先启动 Demo，并保持终端中的 `flutter run` 继续运行：
@@ -68,7 +73,8 @@ open 'ccrouter://lab/detail/89?title=Cold%20Start%20Deep%20Link&tags=cold-start'
 
 ## 路由约束
 
-外部链接只能进入声明了 `deepLink: CCDeepLinkPolicy.enabled` 的路由。当前可测试地址：
+外部链接必须先命中 Host 的 Scheme/Host/Port 白名单，然后只能进入声明了
+`deepLink: CCDeepLinkPolicy.enabled` 的路由。当前可测试地址：
 
 ```text
 ccrouter://lab/detail/:id
