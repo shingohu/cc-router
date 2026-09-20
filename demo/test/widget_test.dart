@@ -68,6 +68,32 @@ void main() {
     await _unmountDemo(tester);
   });
 
+  testWidgets('OverlayEntry releases resources on close and page teardown', (
+    tester,
+  ) async {
+    await _pumpDemo(tester);
+    await tester.tap(find.text('展示'));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.text('Toggle OverlayEntry'),
+      400,
+      scrollable: find.byType(Scrollable).last,
+    );
+
+    await tester.tap(find.text('Toggle OverlayEntry'));
+    await tester.pump();
+    expect(find.text('Overlay 不进入 Navigator 栈'), findsOneWidget);
+    await tester.tap(find.byTooltip('关闭 Overlay'));
+    await tester.pump();
+    expect(find.text('Overlay 不进入 Navigator 栈'), findsNothing);
+
+    await tester.tap(find.text('Toggle OverlayEntry'));
+    await tester.pump();
+    expect(find.text('Overlay 不进入 Navigator 栈'), findsOneWidget);
+    await _unmountDemo(tester);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('dynamic URI Pop releases its managed Route Entry', (
     tester,
   ) async {

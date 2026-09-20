@@ -54,8 +54,7 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
 
   @override
   void dispose() {
-    _overlayEntry?.remove();
-    _overlayEntry = null;
+    _removeOverlay();
     super.dispose();
   }
 
@@ -104,8 +103,7 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
 
   void _showOverlay(BuildContext context) {
     if (_overlayEntry != null) {
-      _overlayEntry?.remove();
-      _overlayEntry = null;
+      _removeOverlay();
       _setStatus('Foreign OverlayEntry 已移除');
       return;
     }
@@ -141,6 +139,14 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
     _overlayEntry = entry;
     overlay.insert(entry);
     _setStatus('Foreign OverlayEntry 已显示，Managed 栈不应变化');
+  }
+
+  void _removeOverlay() {
+    final entry = _overlayEntry;
+    if (entry == null) return;
+    entry.remove();
+    entry.dispose();
+    _overlayEntry = null;
   }
 
   @override

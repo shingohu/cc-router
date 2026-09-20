@@ -43,6 +43,7 @@ void main() {
       await tester.pump();
       expect(rootEvents, ['root:show']);
       overlay.remove();
+      overlay.dispose();
       await tester.pump();
       expect(rootEvents, ['root:show']);
 
