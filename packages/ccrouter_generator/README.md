@@ -126,12 +126,15 @@ Host 依赖闭包内、明确可写且声明 `ccrouter_generator` 的 Package，
 
 生成结果：
 
-- `@CCRoute` 的 `<page>.route.g.dart`：页面同库的私有 Arguments、Intent、Definition、
-  Codec，以及注册、描述和构造 glue。
+- `@CCRoute` 的 `<page>.route.g.dart`：生成独立的 Package-private Arguments、Intent、
+  Definition、Codec，以及注册和描述 bridge；页面源码不需要 `part`。
+- `<page>.route_binding.g.dart`：隔离 Flutter Page 构造，只由组件 Route Catalog 引用；
+  不进入 Route API 或业务 barrel。
 - `@CCRouteContract` 的 `<schema>.route.contract.g.dart`：生成公开 Pure Dart Arguments、
   Intent、Definition 和私有 Codec；不包含页面、Registrar、Flutter 或路由后端类型。
-- `@CCRouteImplementation` 的 `<page>.route.g.dart`：只生成 owner 注册、描述和页面构造
-  glue，不重复生成业务契约。
+- `@CCRouteImplementation` 的 `<page>.route.g.dart` 与
+  `<page>.route_binding.g.dart`：分别生成 owner 注册/描述 bridge 和页面构造 bridge，
+  不重复生成业务契约。
 - 公开 `DetailRoute.intent(...)` 只构造 `CCRouteIntent<String>`，仍通过
   `CCRouter.navigator.push<String>(...)` 导航。
 - `<registrar>.component.g.dart`：在 Registrar 同一 library 中生成
@@ -147,13 +150,13 @@ Host 依赖闭包内、明确可写且声明 `ccrouter_generator` 的 Package，
 - 宿主 `lib/ccrouter_generated/ccrouter_host.routes.g.dart`：从宿主自己的 Bundle 解析传递
   Package 图，Diamond 依赖去重后生成 Manifest 与 Catalog。新增无路由的 Service 组件也会
   进入 Manifest 列表；普通路由或组件增删不再要求宿主逐项维护初始化列表。
-- Package 根目录 `ccrouter_generated/cc_sources.md`：按 Component 和 Capability ID 展示
+- Package 根目录 `ccrouter_generated/cc_catalog.md`：仅在 Package 存在 Capability 时生成，按 Component 和 Capability ID 展示
   Route 的契约声明、页面实现及相关生成物。源码位置统一记录为可移植的
   `package:name/path.dart:line:column`，不把开发机绝对路径写入生成物。组件 Package
   生成局部视图，Host 生成完整依赖闭包的全局视图；Contract-first Route 会同时显示
   contracts Package 的 schema 与实现 Package 的 Page。
 
-`ccrouter_package.json` 是 Capability Source Catalog 的机器事实来源，`cc_sources.md` 只由
+`ccrouter_package.json` 是 Capability Source Catalog 的机器事实来源，`cc_catalog.md` 只由
 它和同轮 metadata 派生，不维护第二套手工索引。当前只生成已具备静态声明链路的 Route；
 Service、Command、Action 和 Event 将在各自生成器落地后接入同一 Catalog Schema，现阶段不会
 通过扫描 Registrar 源码猜测注册关系。未来 CLI 查找和 DevTools 应消费版本化 Catalog 与
@@ -173,13 +176,16 @@ Catalog 只包含 Flutter 页面工厂和 `CCNavigationRoute`，不包含 `GoRou
 Assembler/Adapter。Shell、嵌套路由、完整 Regex 兼容入口等后端特有结构必须由宿主
 提供显式 Override，不能被自动扁平化。
 
-页面 glue 使用 `.route.g.dart`，独立契约使用 `.route.contract.g.dart`，均写入
-`lib/src/ccrouter_generated/`；后续 Service 生成器预留 `.service.g.dart` 后缀，
-本版本尚不生成 Service 代码。组件元数据使用 `.component.json` 和 `.component.md`，
-路由元数据使用 `.route.json` 和 `.route.md`，统一写入包根目录的
-`ccrouter_generated/`，并保留输入文件相对 `lib/` 的目录层级。
+路由契约/注册 bridge 使用 `.route.g.dart`，Flutter 页面构造 bridge 使用
+`.route_binding.g.dart`，独立契约使用 `.route.contract.g.dart`，均写入
+`lib/src/ccrouter_generated/`；后续 Service 生成器预留 `.service.g.dart` 后缀，本版本尚不
+生成 Service 代码。组件与路由的逐源码 JSON 仅存在于
+`.dart_tool/build/generated/<package>/ccrouter_generated/`，是可丢弃的 Builder 到 CLI
+中间数据，不属于源码或发布物；不再生成逐源码 Markdown。开发者只阅读 Package/Host 的
+`cc_catalog.md`，外部工具消费 `ccrouter_package.json` 或 Host `cc_routes.json`。
 
-`@CCRoute` 始终在页面 library 中生成 `_DetailPageRoute` 及私有参数类型。
+`@CCRoute` 在独立生成 library 中生成 Package 内部使用的 `_DetailPageRoute` 及参数类型，
+页面 library 不需要声明生成 `part`；组件唯一 Route API 提供 IDE 可发现的调用入口。
 `@CCRouteContract` 始终生成公开的独立纯契约；schema 与实现位于同一 Package 时聚合为
 `package` exposure，位于独立 contracts Package 时聚合为 `external` exposure。契约 Package
 必须通过 barrel 的 `show` 显式导出生成 library，消费者必须声明直接 Pub 依赖。框架不再
@@ -248,9 +254,10 @@ fvm flutter analyze packages demo
 统一命令首先从 Host 对应的 `.dart_tool/package_graph.json` 沿正式 `dependencies` 计算运行时
 闭包，再由 `.dart_tool/package_config.json` 精确定位 workspace/path/Git/pub Package。它不会
 扫描无关 workspace Package，也不会纳入 `devDependencies`；缺少解析图时明确要求先执行 Pub
-get，不回退为全仓扫描。本地可写 Package 只读取各自
-`ccrouter_generated/**/*.component.json` 和 `*.route.json`，外部只读 Package 只读取
-发布的单一 Package Index，Host 不会写入 path/Git/pub 依赖或 Pub cache。
+get，不回退为全仓扫描。本地可写 Package 只读取当前 workspace 对应的
+`.dart_tool/build/generated/<package>/ccrouter_generated/**/*.component.json` 和
+`*.route.json`，不会回退扫描源码树；外部只读 Package 只读取发布的单一 Package Index，
+Host 不会写入 path/Git/pub 依赖或 Pub cache。
 
 嵌套依赖通过分层 Bundle 连接：Host 只 import 直接依赖，直接依赖再 import 自己的直接依赖。
 同 Package ID 的版本或指纹不一致、外部 Package 缺少/损坏/Schema 不兼容的 Index、嵌套
@@ -264,7 +271,7 @@ required dependency 缺失、自依赖、依赖环、契约 exposure 与声明�
 实现所有权、静态 Pattern 冲突，以及
 所有非 internal 路由是否由公共 barrel 使用 `show` 同时导出 Route 和 Arguments 契约；
 不存在的 optional dependency 被忽略，存在时参与与 Runtime 一致的确定性拓扑排序；
-它会在 Host 的 `ccrouter_generated/` 下生成 `cc_routes.json` 和
-`cc_routes.md`。本仓库的扫描根目录是 `demo`，因此输出位于
+它会在 Host 的 `ccrouter_generated/` 下生成机器可读的 `cc_routes.json` 和合并路由定义、
+源码位置、生成物位置的人类可读 `cc_catalog.md`。本仓库的扫描根目录是 `demo`，因此输出位于
 `demo/ccrouter_generated/`。也可以通过 `--output-dir <directory>` 指定其他
 输出目录；校验失败时返回非零退出码。

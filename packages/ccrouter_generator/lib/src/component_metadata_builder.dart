@@ -5,10 +5,7 @@ final class _ComponentMetadataBuilder implements Builder {
   /// Creates the component metadata builder with package-level output paths.
   _ComponentMetadataBuilder()
     : buildExtensions = const {
-        r'^lib/{{}}.dart': [
-          'ccrouter_generated/{{}}.component.json',
-          'ccrouter_generated/{{}}.component.md',
-        ],
+        r'^lib/{{}}.dart': ['ccrouter_generated/{{}}.component.json'],
       };
 
   /// Matches registrar annotations from the canonical contracts package.
@@ -54,42 +51,12 @@ final class _ComponentMetadataBuilder implements Builder {
           component.id: _componentManifestName(component.id),
       },
     );
-    final outputs = buildStep.allowedOutputs.toList();
-    final jsonOutput = outputs.singleWhere(
+    final jsonOutput = buildStep.allowedOutputs.singleWhere(
       (output) => output.path.endsWith('.component.json'),
-    );
-    final markdownOutput = outputs.singleWhere(
-      (output) => output.path.endsWith('.component.md'),
     );
     await buildStep.writeAsString(
       jsonOutput,
       '${const JsonEncoder.withIndent('  ').convert(payload)}\n',
     );
-    await buildStep.writeAsString(
-      markdownOutput,
-      _componentMetadataMarkdown(payload),
-    );
   }
-}
-
-/// Produces readable documentation for one component metadata document.
-String _componentMetadataMarkdown(Map<String, Object?> payload) {
-  final out = StringBuffer('# CCRouter Components\n\n');
-  out.writeln('Generated from `${payload['source']}`. Do not edit by hand.\n');
-  for (final component
-      in (payload['components']! as List).cast<Map<String, Object?>>()) {
-    out.writeln('## `${component['id']}`\n');
-    out.writeln('- Version: `${component['version']}`');
-    final dependencies = (component['dependencies']! as List).cast<String>();
-    final optional = (component['optionalDependencies']! as List)
-        .cast<String>();
-    out.writeln(
-      '- Dependencies: ${dependencies.isEmpty ? 'none' : dependencies.map((id) => '`$id`').join(', ')}',
-    );
-    out.writeln(
-      '- Optional dependencies: ${optional.isEmpty ? 'none' : optional.map((id) => '`$id`').join(', ')}',
-    );
-    out.writeln();
-  }
-  return '${out.toString().trimRight()}\n';
 }

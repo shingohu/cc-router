@@ -82,14 +82,14 @@ Builder ccComponentBuilder(BuilderOptions options) {
   );
 }
 
-/// Emits machine-readable component metadata and component documentation.
+/// Emits disposable machine-readable component metadata into the build cache.
 Builder ccComponentMetadataBuilder(BuilderOptions options) =>
     ccComponentMetadataBuilderInternal();
 
-/// Emits machine-readable route metadata and route documentation.
+/// Emits disposable machine-readable route metadata into the build cache.
 ///
-/// Workspace CI consumes JSON for ownership and contract-exposure validation;
-/// Markdown is intended for review rather than application runtime loading.
+/// Workspace generation consumes the JSON for ownership and contract-exposure
+/// validation, then publishes one Package Index and optional readable catalog.
 Builder ccRouteMetadataBuilder(BuilderOptions options) =>
     ccRouteMetadataBuilderInternal();
 

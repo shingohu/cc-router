@@ -230,13 +230,15 @@ final class Probe {
       (route['parameters'] as List).single['description'],
       'Documented identity.',
     );
-    final markdown = await reader.readAsString(
-      AssetId('ccrouter_test', 'ccrouter_generated/src/orders/probe.route.md'),
+    expect(
+      await reader.canRead(
+        AssetId(
+          'ccrouter_test',
+          'ccrouter_generated/src/orders/probe.route.md',
+        ),
+      ),
+      isFalse,
     );
-    expect(markdown, contains('`probe.detail`'));
-    expect(markdown, contains('Documented identity.'));
-    expect(markdown, contains('host `secondary`, outlet `detail`'));
-    expect(markdown, contains('Restoration: `unsupported`'));
   });
 
   test('metadata serializes modal presentation intent', () async {
@@ -394,11 +396,15 @@ final class ProbePage {
         (implementation['implementation'] as Map)['packageUri'],
         'package:ccrouter_test/src/probe_page.dart',
       );
-      final markdown = await reader.readAsString(
-        AssetId('ccrouter_test', 'ccrouter_generated/src/probe_page.route.md'),
+      expect(
+        await reader.canRead(
+          AssetId(
+            'ccrouter_test',
+            'ccrouter_generated/src/probe_page.route.md',
+          ),
+        ),
+        isFalse,
       );
-      expect(markdown, contains('Route Implementations'));
-      expect(markdown, contains('ccrouter_test:lib/src/probe_page.dart'));
     },
   );
 
@@ -448,14 +454,15 @@ final class ProbeRegistrar implements CCComponentRegistrar {
       'dependencies': ['accounts'],
       'optionalDependencies': ['analytics'],
     });
-    final markdown = await reader.readAsString(
-      AssetId(
-        'ccrouter_test',
-        'ccrouter_generated/src/orders/probe_component.component.md',
+    expect(
+      await reader.canRead(
+        AssetId(
+          'ccrouter_test',
+          'ccrouter_generated/src/orders/probe_component.component.md',
+        ),
       ),
+      isFalse,
     );
-    expect(markdown, contains('# CCRouter Components'));
-    expect(markdown, contains('`accounts`'));
   });
 
   test(
@@ -966,11 +973,12 @@ final class Probe {
     expect(parameters[0].containsKey('codec'), isFalse);
     expect(parameters[1]['cardinality'], 'repeated');
     expect(parameters[1]['codec'], 'ProbeFilterCodec');
-    final markdown = await reader.readAsString(
-      AssetId('ccrouter_test', 'ccrouter_generated/src/query_probe.route.md'),
+    expect(
+      await reader.canRead(
+        AssetId('ccrouter_test', 'ccrouter_generated/src/query_probe.route.md'),
+      ),
+      isFalse,
     );
-    expect(markdown, contains('Cardinality'));
-    expect(markdown, contains('ProbeFilterCodec'));
   });
 
   test(

@@ -325,23 +325,33 @@ void main() {
         'ccrouter_metadata_cache_',
       );
       addTearDown(() => root.delete(recursive: true));
-      final package = CCResolvedPackage(
-        name: 'feature',
-        version: '1.0.0',
-        root: root,
-        dependencies: const [],
-        devDependencies: const ['ccrouter_generator'],
-        writable: true,
-      );
-      final generatedDirectory = package.generatedDirectory
-        ..createSync(recursive: true);
+      final generatedDirectory = Directory(
+        path.join(
+          root.path,
+          '.dart_tool',
+          'build',
+          'generated',
+          'feature',
+          'ccrouter_generated',
+        ),
+      )..createSync(recursive: true);
       final firstFile = File(
         path.join(generatedDirectory.path, 'first.route.json'),
       );
       firstFile.writeAsStringSync(
         jsonEncode({'package': 'feature', 'source': 'lib/first.dart'}),
       );
-      final first = await readCCPackageMetadata(package);
+      final first = await readCCPackageMetadata(generatedDirectory);
+      final sourceTreeMetadata =
+          File(path.join(root.path, 'ccrouter_generated', 'source.route.json'))
+            ..createSync(recursive: true)
+            ..writeAsStringSync(
+              jsonEncode({'package': 'feature', 'source': 'lib/source.dart'}),
+            );
+      final ignoresSourceTree = await readCCPackageMetadata(generatedDirectory);
+      expect(ignoresSourceTree.fingerprint, first.fingerprint);
+      expect(ignoresSourceTree.documents, first.documents);
+      expect(sourceTreeMetadata.existsSync(), isTrue);
       final legacyFile =
           File(
               path.join(
@@ -354,12 +364,12 @@ void main() {
             ..writeAsStringSync(
               jsonEncode({'package': 'feature', 'source': 'lib/legacy.dart'}),
             );
-      final ignoresLegacy = await readCCPackageMetadata(package);
+      final ignoresLegacy = await readCCPackageMetadata(generatedDirectory);
       expect(ignoresLegacy.fingerprint, first.fingerprint);
       expect(ignoresLegacy.documents, first.documents);
       expect(legacyFile.existsSync(), isTrue);
       final hit = await readCCPackageMetadata(
-        package,
+        generatedDirectory,
         cachedFingerprint: first.fingerprint,
         cachedDocuments: first.documents,
       );
@@ -371,7 +381,7 @@ void main() {
       );
       firstFile.setLastModifiedSync(originalModified);
       final changed = await readCCPackageMetadata(
-        package,
+        generatedDirectory,
         cachedFingerprint: first.fingerprint,
         cachedDocuments: first.documents,
       );
@@ -384,18 +394,18 @@ void main() {
       addedFile.writeAsStringSync(
         jsonEncode({'package': 'feature', 'source': 'lib/second.dart'}),
       );
-      final added = await readCCPackageMetadata(package);
+      final added = await readCCPackageMetadata(generatedDirectory);
       expect(added.fingerprint, isNot(changed.fingerprint));
 
       final renamedFile = File(
         path.join(generatedDirectory.path, 'renamed.route.json'),
       );
       addedFile.renameSync(renamedFile.path);
-      final renamed = await readCCPackageMetadata(package);
+      final renamed = await readCCPackageMetadata(generatedDirectory);
       expect(renamed.fingerprint, isNot(added.fingerprint));
 
       renamedFile.deleteSync();
-      final deleted = await readCCPackageMetadata(package);
+      final deleted = await readCCPackageMetadata(generatedDirectory);
       expect(deleted.fingerprint, isNot(renamed.fingerprint));
     },
   );

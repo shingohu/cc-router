@@ -66,6 +66,21 @@ void main() {
             'order_detail_page.route.json',
           ),
         ).existsSync(),
+        isFalse,
+      );
+      expect(
+        File(
+          path.join(
+            Directory.current.path,
+            '.dart_tool',
+            'build',
+            'generated',
+            'demo_order',
+            'ccrouter_generated',
+            'src',
+            'order_detail_page.route.json',
+          ),
+        ).existsSync(),
         isTrue,
       );
       final hostBundle = File(
@@ -121,31 +136,59 @@ void main() {
               as List;
       expect(contractCapabilities, isNotEmpty);
       expect((contractCapabilities.single as Map)['id'], 'order.detail');
-      final hostSources = File(
+      final hostCatalogDocument = File(
         path.join(
           Directory.current.path,
           'demo',
           'ccrouter_generated',
-          'cc_sources.md',
+          'cc_catalog.md',
         ),
       ).readAsStringSync();
-      expect(hostSources, contains('### Route `order.detail`'));
+      expect(hostCatalogDocument, contains('## Route Definitions'));
+      expect(hostCatalogDocument, contains('## Capability Sources'));
+      expect(hostCatalogDocument, contains('### Route `order.detail`'));
       expect(
-        hostSources,
+        hostCatalogDocument,
         contains('package:demo_order/src/order_detail_page.dart'),
       );
-      final packageSources = File(
+      final packageCatalogDocument = File(
         path.join(
           Directory.current.path,
           'demo',
           'modules',
           'order',
           'ccrouter_generated',
-          'cc_sources.md',
+          'cc_catalog.md',
         ),
       ).readAsStringSync();
-      expect(packageSources, contains('Scope: `package:demo_order`'));
-      expect(packageSources, contains('### Route `order.detail`'));
+      expect(packageCatalogDocument, contains('Scope: `package:demo_order`'));
+      expect(packageCatalogDocument, contains('### Route `order.detail`'));
+      expect(
+        File(
+          path.join(
+            Directory.current.path,
+            'demo',
+            'modules',
+            'payment',
+            'ccrouter_generated',
+            'cc_catalog.md',
+          ),
+        ).existsSync(),
+        isFalse,
+      );
+      for (final legacyName in ['cc_routes.md', 'cc_sources.md']) {
+        expect(
+          File(
+            path.join(
+              Directory.current.path,
+              'demo',
+              'ccrouter_generated',
+              legacyName,
+            ),
+          ).existsSync(),
+          isFalse,
+        );
+      }
       final navigationPackage = path.join(
         Directory.current.path,
         'demo',
@@ -237,7 +280,7 @@ void main() {
       expect('${stale.stderr}', contains('generated artifacts are stale'));
       expect('${stale.stderr}', contains('added:'));
       expect(File(path.join(probe.path, 'cc_routes.json')).existsSync(), false);
-      expect(File(path.join(probe.path, 'cc_routes.md')).existsSync(), false);
+      expect(File(path.join(probe.path, 'cc_catalog.md')).existsSync(), false);
     },
     timeout: const Timeout(Duration(minutes: 2)),
   );
@@ -262,6 +305,66 @@ void main() {
       }
     },
     timeout: const Timeout(Duration(minutes: 3)),
+  );
+
+  test(
+    'generation removes only obsolete source-tree metadata',
+    () async {
+      final generatedDirectory = Directory(
+        path.join(
+          Directory.current.path,
+          'demo',
+          'modules',
+          'payment',
+          'ccrouter_generated',
+          '.migration_probe_$pid',
+        ),
+      )..createSync(recursive: true);
+      addTearDown(() {
+        if (generatedDirectory.existsSync()) {
+          generatedDirectory.deleteSync(recursive: true);
+        }
+      });
+      final obsoleteJson = File(
+        path.join(generatedDirectory.path, 'probe.route.json'),
+      )..writeAsStringSync('{}');
+      final obsoleteMarkdown = File(
+        path.join(generatedDirectory.path, 'probe.component.md'),
+      )..writeAsStringSync('# generated');
+      final unknown = File(path.join(generatedDirectory.path, 'keep.txt'))
+        ..writeAsStringSync('user-owned');
+
+      final result = await Process.run(Platform.resolvedExecutable, [
+        'run',
+        'ccrouter_generator:ccrouter',
+        'generate',
+        'demo',
+      ], workingDirectory: Directory.current.path);
+
+      expect(result.exitCode, 0, reason: '${result.stderr}');
+      expect(obsoleteJson.existsSync(), isFalse);
+      expect(obsoleteMarkdown.existsSync(), isFalse);
+      expect(unknown.readAsStringSync(), 'user-owned');
+    },
+    timeout: const Timeout(Duration(minutes: 2)),
+  );
+
+  test(
+    'cached and no-cache generation produce identical artifacts',
+    () async {
+      final before = await _readDemoGeneratedArtifacts();
+      final result = await Process.run(Platform.resolvedExecutable, [
+        'run',
+        'ccrouter_generator:ccrouter',
+        'generate',
+        'demo',
+        '--no-cache',
+      ], workingDirectory: Directory.current.path);
+
+      expect(result.exitCode, 0, reason: '${result.stderr}');
+      expect(await _readDemoGeneratedArtifacts(), before);
+    },
+    timeout: const Timeout(Duration(minutes: 2)),
   );
 
   test(
@@ -307,4 +410,24 @@ void main() {
     },
     timeout: const Timeout(Duration(minutes: 2)),
   );
+}
+
+Future<Map<String, String>> _readDemoGeneratedArtifacts() async {
+  final root = Directory(path.join(Directory.current.path, 'demo'));
+  final artifacts = <String, String>{};
+  await for (final entity in root.list(recursive: true, followLinks: false)) {
+    if (entity is! File) continue;
+    final relative = path
+        .relative(entity.path, from: root.path)
+        .replaceAll(path.separator, '/');
+    final segments = relative.split('/');
+    final name = segments.last;
+    if (!segments.contains('ccrouter_generated') &&
+        !name.endsWith('_ccrouter.g.dart')) {
+      continue;
+    }
+    if (name == '.DS_Store') continue;
+    artifacts[relative] = await entity.readAsString();
+  }
+  return Map.unmodifiable(artifacts);
 }

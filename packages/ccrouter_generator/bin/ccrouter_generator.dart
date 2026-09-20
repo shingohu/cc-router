@@ -152,7 +152,11 @@ Future<bool> _aggregate(Directory root, _Arguments parsed) async {
           source.startsWith('integration_test/')) {
         continue;
       }
-      metadataFiles.add(_MetadataFile(entity, document));
+      final packageRoot = _findPackageRoot(entity);
+      if (packageRoot == null) continue;
+      metadataFiles.add(
+        _MetadataFile(entity, document, packageRoot: packageRoot),
+      );
     }
   }
   final documents = metadataFiles.map((entry) => entry.document).toList();
@@ -176,9 +180,21 @@ Future<bool> _aggregate(Directory root, _Arguments parsed) async {
   await File(
     '${outputDirectory.path}${Platform.pathSeparator}cc_routes.json',
   ).writeAsString(result.machineDocumentJson);
+  final sourceCatalog = CCCapabilitySourceCatalog.fromMetadata(
+    documents,
+  ).toMarkdown(scope: 'host:${root.uri.pathSegments.last}');
   await File(
-    '${outputDirectory.path}${Platform.pathSeparator}cc_routes.md',
-  ).writeAsString(result.markdownDocument);
+    '${outputDirectory.path}${Platform.pathSeparator}cc_catalog.md',
+  ).writeAsString(
+    _catalogMarkdown(
+      routeCatalog: result.markdownDocument,
+      sourceCatalog: sourceCatalog,
+    ),
+  );
+  await _deleteManagedCatalogFiles(outputDirectory, const [
+    'cc_routes.md',
+    'cc_sources.md',
+  ]);
   await _removeLegacyMetadataArtifacts([
     Directory(path.join(root.path, 'ccrouter_generated')),
   ]);
@@ -245,7 +261,7 @@ Future<bool> _generateResolvedWorkspace(
     if (package.writable) {
       final cached = parsed.noCache ? null : cache.entries[package.name];
       final snapshot = await readCCPackageMetadata(
-        package,
+        workspace.intermediateMetadataDirectory(package),
         cachedFingerprint: cached?.fingerprint,
         cachedDocuments: cached?.documents,
       );
@@ -421,9 +437,7 @@ Future<bool> _generateResolvedWorkspace(
   validationWatch.stop();
 
   final aggregateWatch = Stopwatch()..start();
-  final localFiles = await _readWritableMetadataFiles(
-    workspace.packages.values.where((package) => package.writable),
-  );
+  final localFiles = await _readWritableMetadataFiles(workspace);
   final catalogs = await _generateComponentRouteIndexes(
     localFiles,
     generateLegacyEntrypoints: false,
@@ -441,11 +455,7 @@ Future<bool> _generateResolvedWorkspace(
     if (!package.writable || index == null) continue;
     await _writeIfChanged(package.indexFile, index.toJson());
   }
-  await _writeCapabilitySourceCatalogs(
-    workspace: workspace,
-    indexes: indexes,
-    hostDocuments: documents,
-  );
+  await _writePackageCapabilityCatalogs(workspace: workspace, indexes: indexes);
   await _deleteObsoleteResolvedOutputs(
     workspace: workspace,
     runtimeBundles: runtimeBundles,
@@ -462,13 +472,22 @@ Future<bool> _generateResolvedWorkspace(
     validation.machineDocumentJson,
   );
   await _writeIfChanged(
-    File(path.join(outputDirectory.path, 'cc_routes.md')),
-    validation.markdownDocument,
+    File(path.join(outputDirectory.path, 'cc_catalog.md')),
+    _catalogMarkdown(
+      routeCatalog: validation.markdownDocument,
+      sourceCatalog: CCCapabilitySourceCatalog.fromMetadata(
+        documents,
+      ).toMarkdown(scope: 'host:${workspace.host.name}'),
+    ),
   );
+  await _deleteManagedCatalogFiles(outputDirectory, const [
+    'cc_routes.md',
+    'cc_sources.md',
+  ]);
   await _removeLegacyMetadataArtifacts(
     workspace.packages.values
         .where((package) => package.writable)
-        .map((package) => package.generatedDirectory),
+        .map((package) => package.catalogDirectory),
   );
   stdout.writeln(
     'Validated ${validation.machineDocument['components'] is List ? (validation.machineDocument['components']! as List).length : 0} components and ${validation.machineDocument['routes'] is List ? (validation.machineDocument['routes']! as List).length : 0} routes across ${indexes.length} generated Packages.',
@@ -493,34 +512,77 @@ Future<bool> _generateResolvedWorkspace(
   return true;
 }
 
-/// Writes Package-local and Host-wide capability source discovery views.
+/// Writes non-empty Package-local capability discovery views.
 ///
-/// The Host view merges its resolved dependency closure, while component and
-/// contracts Packages retain a narrow local view suitable for code review.
-/// Read-only Pub or Git dependencies are never modified.
-Future<void> _writeCapabilitySourceCatalogs({
+/// The Host catalog is written separately because it combines route contracts
+/// with the complete source index. Read-only Pub or Git dependencies are never
+/// modified, and empty local catalogs are deleted instead of being published.
+Future<void> _writePackageCapabilityCatalogs({
   required CCPackageWorkspace workspace,
   required Map<String, CCPackageIndex> indexes,
-  required List<Map<String, Object?>> hostDocuments,
 }) async {
-  final hostCatalog = CCCapabilitySourceCatalog.fromMetadata(hostDocuments);
   for (final package in workspace.packages.values) {
-    if (!package.writable) continue;
+    if (!package.writable || package.name == workspace.host.name) continue;
     final index = indexes[package.name];
     if (index == null) continue;
-    final isHost = package.name == workspace.host.name;
-    final catalog = isHost ? hostCatalog : index.capabilityCatalog;
+    final catalog = index.capabilityCatalog;
     final output = File(
-      path.join(package.root.path, 'ccrouter_generated', 'cc_sources.md'),
+      path.join(package.root.path, 'ccrouter_generated', 'cc_catalog.md'),
     );
-    await _writeIfChanged(
-      output,
-      catalog.toMarkdown(
-        scope: isHost
-            ? 'host:${workspace.host.name}'
-            : 'package:${package.name}',
-      ),
+    if (catalog.records.isEmpty) {
+      if (output.existsSync()) await output.delete();
+    } else {
+      await _writeIfChanged(
+        output,
+        _catalogMarkdown(
+          sourceCatalog: catalog.toMarkdown(scope: 'package:${package.name}'),
+        ),
+      );
+    }
+    await _deleteManagedCatalogFiles(
+      Directory(path.join(package.root.path, 'ccrouter_generated')),
+      const ['cc_sources.md'],
     );
+  }
+}
+
+/// Combines machine-derived route and source views into one readable catalog.
+String _catalogMarkdown({String? routeCatalog, required String sourceCatalog}) {
+  final out = StringBuffer('# CCRouter Catalog\n\n')
+    ..writeln('Generated by `ccrouter_generator`. Do not edit by hand.\n');
+  if (routeCatalog != null) {
+    out
+      ..writeln('## Route Definitions\n')
+      ..writeln(_catalogBody(routeCatalog))
+      ..writeln();
+  }
+  out
+    ..writeln('## Capability Sources\n')
+    ..writeln(_catalogBody(sourceCatalog));
+  return '${out.toString().trimRight()}\n';
+}
+
+/// Removes one generated document's top-level heading before nesting it.
+String _catalogBody(String document) {
+  final lines = document.trim().split('\n');
+  if (lines.isNotEmpty && lines.first.startsWith('# ')) lines.removeAt(0);
+  while (lines.isNotEmpty && lines.first.trim().isEmpty) {
+    lines.removeAt(0);
+  }
+  return lines.join('\n').trimRight();
+}
+
+/// Deletes known obsolete catalog names inside one generated directory.
+Future<void> _deleteManagedCatalogFiles(
+  Directory directory,
+  Iterable<String> names,
+) async {
+  for (final name in names) {
+    final file = File(path.join(directory.path, name));
+    if (!file.existsSync()) continue;
+    final contents = await file.readAsString();
+    if (!contents.startsWith('# CCRouter ')) continue;
+    await file.delete();
   }
 }
 
@@ -564,13 +626,15 @@ List<String> _dependencyOrder(
   return ordered;
 }
 
-/// Reads file-associated metadata only from writable resolved Packages.
+/// Reads current file-associated metadata from writable build caches only.
 Future<List<_MetadataFile>> _readWritableMetadataFiles(
-  Iterable<CCResolvedPackage> packages,
+  CCPackageWorkspace workspace,
 ) async {
   final result = <_MetadataFile>[];
-  for (final package in packages) {
-    final directory = package.generatedDirectory;
+  for (final package in workspace.packages.values.where(
+    (package) => package.writable,
+  )) {
+    final directory = workspace.intermediateMetadataDirectory(package);
     if (!directory.existsSync()) continue;
     final files = <File>[];
     await for (final entity in directory.list(
@@ -578,10 +642,6 @@ Future<List<_MetadataFile>> _readWritableMetadataFiles(
       followLinks: false,
     )) {
       if (entity is File &&
-          !path
-              .relative(entity.path, from: directory.path)
-              .replaceAll(path.separator, '/')
-              .startsWith('metadata/') &&
           (entity.path.endsWith('.route.json') ||
               entity.path.endsWith('.component.json'))) {
         files.add(entity);
@@ -598,7 +658,7 @@ Future<List<_MetadataFile>> _readWritableMetadataFiles(
           source.startsWith('integration_test/')) {
         continue;
       }
-      result.add(_MetadataFile(file, document));
+      result.add(_MetadataFile(file, document, packageRoot: package.root));
     }
   }
   return result;
@@ -979,8 +1039,9 @@ _BuildContext? _findBuildContext(Directory scanRoot) {
 
 /// Runs build_runner only for writable generator Packages in the Host closure.
 ///
-/// Build filters include both `lib/` code and Package-root metadata outputs;
-/// external path/Git/pub dependencies remain read-only and consume indexes.
+/// Build filters include source code and logical metadata output assets. Cache
+/// builders materialize the latter below `.dart_tool/build/generated`; external
+/// path/Git/pub dependencies remain read-only and consume published indexes.
 Future<bool> _runBuildRunner(_BuildContext context, Directory hostRoot) async {
   final workspace = await CCPackageWorkspace.load(
     buildRoot: context.root,
@@ -1145,13 +1206,29 @@ Future<Map<String, List<int>>> _readManagedGeneratedFiles(
     final segments = relative.split('/');
     if (segments.contains('.dart_tool') || segments.contains('build')) continue;
     final name = segments.last;
-    if (!segments.contains('ccrouter_generated') &&
-        !name.endsWith('_ccrouter.g.dart')) {
-      continue;
-    }
+    if (!_isManagedGeneratedArtifact(segments, name)) continue;
     files[relative] = await entity.readAsBytes();
   }
   return files;
+}
+
+/// Whether a source-tree file is owned by CCRouter generation.
+///
+/// Unknown files below a generated directory remain user-owned and are not
+/// compared, restored, or deleted by `--check`.
+bool _isManagedGeneratedArtifact(List<String> segments, String name) {
+  if (name.endsWith('_ccrouter.g.dart')) return true;
+  if (!segments.contains('ccrouter_generated')) return false;
+  return name.endsWith('.g.dart') ||
+      name == 'ccrouter_package.json' ||
+      name == 'cc_routes.json' ||
+      name == 'cc_catalog.md' ||
+      name == 'cc_routes.md' ||
+      name == 'cc_sources.md' ||
+      name.endsWith('.route.json') ||
+      name.endsWith('.route.md') ||
+      name.endsWith('.component.json') ||
+      name.endsWith('.component.md');
 }
 
 /// Compares exact file bytes without retaining mutable aliases.
@@ -1185,13 +1262,16 @@ bool _isWithin(Directory root, Directory candidate) {
 /// Associates one generated metadata document with its source file on disk.
 final class _MetadataFile {
   /// Creates a metadata record used by workspace validation and codegen.
-  const _MetadataFile(this.file, this.document);
+  const _MetadataFile(this.file, this.document, {required this.packageRoot});
 
   /// Generated JSON file containing [document].
   final File file;
 
   /// Decoded component or route metadata payload.
   final Map<String, Object?> document;
+
+  /// Source Package root that owns this metadata document.
+  final Directory packageRoot;
 }
 
 /// Writes deterministic registration, Manifest, and route assembly per component.
@@ -1216,7 +1296,7 @@ Future<List<_GeneratedComponentCatalog>> _generateComponentRouteIndexes(
           package: package,
           source: source,
           manifest: '${manifestMap[id] ?? '${_camelIdentifier(id)}Manifest'}',
-          metadataFile: metadata.file,
+          packageRoot: metadata.packageRoot,
         );
       }
     }
@@ -1295,8 +1375,7 @@ Future<List<_GeneratedComponentCatalog>> _generateComponentRouteIndexes(
     if (component == null) continue;
     final componentRoutes = routes[componentId] ?? <_RouteRegistration>[];
     componentRoutes.sort(_compareRoutes);
-    final packageRoot = _findPackageRoot(component.metadataFile);
-    if (packageRoot == null) continue;
+    final packageRoot = component.packageRoot;
     final outputDirectory = Directory(
       '${packageRoot.path}${Platform.pathSeparator}lib${Platform.pathSeparator}src${Platform.pathSeparator}ccrouter_generated',
     )..createSync(recursive: true);
@@ -1699,33 +1778,33 @@ Future<bool> _writeIfChanged(File file, String contents) async {
   return true;
 }
 
-/// Removes known outputs from the former nested `metadata/` directory.
+/// Removes obsolete per-source metadata and documentation from source trees.
 ///
 /// Migration runs only after new outputs have been validated and written.
-/// Unknown files are preserved and reported instead of deleting an entire
-/// directory that may contain user-owned data.
+/// Host aggregates, current catalogs, and unknown user files are preserved;
+/// only CCRouter-owned per-source suffixes and the former nested `metadata/`
+/// contents are eligible for deletion.
 Future<void> _removeLegacyMetadataArtifacts(
   Iterable<Directory> generatedDirectories,
 ) async {
   for (final generatedDirectory in generatedDirectories) {
-    final legacyDirectory = Directory(
-      path.join(generatedDirectory.path, 'metadata'),
-    );
-    if (!legacyDirectory.existsSync()) continue;
-    final directories = <Directory>[legacyDirectory];
+    if (!generatedDirectory.existsSync()) continue;
+    final directories = <Directory>[];
     final unknownFiles = <String>[];
-    await for (final entity in legacyDirectory.list(
+    await for (final entity in generatedDirectory.list(
       recursive: true,
       followLinks: false,
     )) {
       if (entity is Directory) {
-        directories.add(entity);
+        if (!path.equals(entity.path, generatedDirectory.path)) {
+          directories.add(entity);
+        }
         continue;
       }
       if (entity is! File) continue;
       if (_isLegacyMetadataArtifact(entity)) {
         await entity.delete();
-      } else {
+      } else if (_isWithinLegacyMetadataDirectory(generatedDirectory, entity)) {
         unknownFiles.add(entity.path);
       }
     }
@@ -1741,7 +1820,7 @@ Future<void> _removeLegacyMetadataArtifacts(
       unknownFiles.sort();
       stderr.writeln(
         'warning: Preserved unknown files in legacy CCRouter metadata '
-        'directory ${legacyDirectory.path}:',
+        'directory ${path.join(generatedDirectory.path, 'metadata')}:',
       );
       for (final file in unknownFiles) {
         stderr.writeln('  $file');
@@ -1750,12 +1829,21 @@ Future<void> _removeLegacyMetadataArtifacts(
   }
 }
 
+/// Whether [file] is nested below the former `metadata/` directory.
+bool _isWithinLegacyMetadataDirectory(Directory generatedDirectory, File file) {
+  final legacyDirectory = Directory(
+    path.join(generatedDirectory.path, 'metadata'),
+  );
+  return path.isWithin(
+    path.normalize(legacyDirectory.absolute.path),
+    path.normalize(file.absolute.path),
+  );
+}
+
 /// Whether [file] is an obsolete CCRouter-owned metadata or route-doc output.
 bool _isLegacyMetadataArtifact(File file) {
   final name = path.basename(file.path);
-  return name == 'cc_routes.json' ||
-      name == 'cc_routes.md' ||
-      name.endsWith('.route.json') ||
+  return name.endsWith('.route.json') ||
       name.endsWith('.route.md') ||
       name.endsWith('.component.json') ||
       name.endsWith('.component.md');
@@ -2119,7 +2207,7 @@ final class _ComponentSource {
     required this.package,
     required this.source,
     required this.manifest,
-    required this.metadataFile,
+    required this.packageRoot,
   });
 
   /// Package name used by generated package imports.
@@ -2131,8 +2219,8 @@ final class _ComponentSource {
   /// Generated Manifest symbol exported through the package Host library.
   final String manifest;
 
-  /// Metadata file used to locate the package root.
-  final File metadataFile;
+  /// Source Package root where generated registration code is published.
+  final Directory packageRoot;
 }
 
 /// Describes one route contribution for a generated component index.

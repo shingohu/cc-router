@@ -5,10 +5,7 @@ final class _RouteMetadataBuilder implements Builder {
   /// Creates the route metadata builder with package-level output paths.
   _RouteMetadataBuilder()
     : buildExtensions = const {
-        r'^lib/{{}}.dart': [
-          'ccrouter_generated/{{}}.route.json',
-          'ccrouter_generated/{{}}.route.md',
-        ],
+        r'^lib/{{}}.dart': ['ccrouter_generated/{{}}.route.json'],
       };
 
   /// Writes route metadata while preserving the source-relative path.
@@ -53,18 +50,13 @@ final class _RouteMetadataBuilder implements Builder {
       routeImplementations: implementations,
       componentDeclarations: const [],
     );
-    final outputs = buildStep.allowedOutputs.toList();
-    final jsonOutput = outputs.singleWhere(
+    final jsonOutput = buildStep.allowedOutputs.singleWhere(
       (output) => output.path.endsWith('.route.json'),
-    );
-    final markdownOutput = outputs.singleWhere(
-      (output) => output.path.endsWith('.route.md'),
     );
     await buildStep.writeAsString(
       jsonOutput,
       '${const JsonEncoder.withIndent('  ').convert(payload)}\n',
     );
-    await buildStep.writeAsString(markdownOutput, _metadataMarkdown(payload));
   }
 }
 
@@ -353,85 +345,4 @@ String? _documentation(String? comment) {
       .map((line) => line.replaceFirst(RegExp(r'^\s*/// ?'), ''))
       .join('\n')
       .trim();
-}
-
-/// Produces readable documentation for one annotated source library.
-String _metadataMarkdown(Map<String, Object?> payload) {
-  final out = StringBuffer('# CCRouter Routes\n\n');
-  out.writeln('Generated from `${payload['source']}`. Do not edit by hand.\n');
-  for (final route
-      in (payload['routes']! as List).cast<Map<String, Object?>>()) {
-    out.writeln('## `${route['id']}`\n');
-    if (route['description'] case final String description) {
-      out.writeln('$description\n');
-    }
-    out.writeln('- Owner: `${route['componentId']}`');
-    out.writeln('- Component version: `${route['componentVersion']}`');
-    out.writeln('- Exposure: `${route['exposure']}`');
-    out.writeln('- Deep link: `${route['deepLink']}`');
-    out.writeln('- Result: `${route['resultType']}`');
-    if (route['declaration'] case final Map declaration) {
-      out.writeln(
-        '- Declaration: `${declaration['package']}:${declaration['library']}` (${declaration['kind']})',
-      );
-    }
-    if (route['placement'] case final Map placement) {
-      out.writeln(
-        '- Placement: host `${placement['hostId']}`, outlet `${placement['navigatorOutlet']}`, shell `${placement['shellId'] ?? 'none'}`, parent `${placement['parentRouteId'] ?? 'none'}`',
-      );
-    }
-    if (route['presentation'] case final Map presentation) {
-      out.writeln('- Presentation: `${presentation['type']}`');
-    }
-    final navigationSources = (route['navigationSources']! as List).join(', ');
-    out.writeln('- Navigation sources: `$navigationSources`');
-    final restoration = route['restoration']! as Map;
-    out.writeln('- Restoration: `${restoration['status']}`');
-    if (route['contracts'] case final Map contracts) {
-      out.writeln(
-        '- Contract library: `${contracts['package']}:${contracts['library']}`',
-      );
-    }
-    out.writeln('- Patterns:');
-    for (final pattern in (route['patterns']! as List).cast<Map>()) {
-      out.writeln(
-        '  - `${pattern['value']}` (${pattern['type']}${pattern['primary'] == true ? ', primary' : ''})',
-      );
-      final constraints = pattern['constraints'];
-      if (constraints is Map && constraints.isNotEmpty) {
-        out.writeln('    - Constraints: `${jsonEncode(constraints)}`');
-      }
-    }
-    final parameters = (route['parameters']! as List).cast<Map>();
-    if (parameters.isNotEmpty) {
-      out.writeln('- Parameters:\n');
-      out.writeln(
-        '| Name | Wire name | Source | Type | Cardinality | Codec | Required | Description |',
-      );
-      out.writeln('| --- | --- | --- | --- | --- | --- | --- | --- |');
-      for (final parameter in parameters) {
-        final description = '${parameter['description'] ?? ''}'
-            .replaceAll('|', r'\|')
-            .replaceAll('\n', '<br>');
-        out.writeln(
-          '| `${parameter['name']}` | `${parameter['wireName']}` | `${parameter['source']}` | `${parameter['type']}` | `${parameter['cardinality'] ?? '-'}` | `${parameter['codec'] ?? '-'}` | ${parameter['required']} | $description |',
-        );
-      }
-    }
-    out.writeln();
-  }
-  final implementations = (payload['routeImplementations']! as List)
-      .cast<Map<String, Object?>>();
-  if (implementations.isNotEmpty) {
-    out.writeln('## Route Implementations\n');
-    for (final implementation in implementations) {
-      out.writeln(
-        '- `${implementation['routeId']}` implemented by '
-        '`${implementation['package']}:${implementation['source']}` '
-        'for `${implementation['componentId']}`.',
-      );
-    }
-    out.writeln();
-  }
-  return '${out.toString().trimRight()}\n';
 }

@@ -64,12 +64,11 @@ final class CCResolvedPackage {
   File get bundleFile =>
       File(path.join(root.path, 'lib', '${name}_ccrouter.g.dart'));
 
-  /// Package-root directory containing metadata and readable generated views.
+  /// Package-root directory containing the optional readable capability view.
   ///
-  /// Builders preserve each input's path below `lib/` directly under this
-  /// directory. Runtime Package indexes remain separately published below
-  /// `lib/ccrouter_generated/` and are never scanned as Builder metadata.
-  Directory get generatedDirectory =>
+  /// Builder intermediates never live here; they remain in build_runner's
+  /// disposable cache while the published machine index lives below `lib/`.
+  Directory get catalogDirectory =>
       Directory(path.join(root.path, 'ccrouter_generated'));
 
   /// Whether Package tooling declares an intent to produce CCRouter artifacts.
@@ -120,6 +119,23 @@ final class CCPackageWorkspace {
 
   /// Runtime dependency closure keyed by Package name.
   final Map<String, CCResolvedPackage> packages;
+
+  /// Locates one writable Package's Builder-owned intermediate metadata.
+  ///
+  /// The path follows build_runner's `build_to: cache` layout under this
+  /// resolved workspace. It is never published and never used for read-only
+  /// dependencies, which are consumed only through their Package Index.
+  Directory intermediateMetadataDirectory(CCResolvedPackage package) =>
+      Directory(
+        path.join(
+          buildRoot.path,
+          '.dart_tool',
+          'build',
+          'generated',
+          package.name,
+          'ccrouter_generated',
+        ),
+      );
 
   /// Loads resolved Pub state and computes the Host-only runtime closure.
   ///
@@ -472,18 +488,18 @@ final class CCPackageMetadataSnapshot {
   final bool cacheHit;
 }
 
-/// Reads only Builder-owned metadata from one Package's generated directory.
+/// Reads only Builder-owned metadata from an explicit build cache directory.
 ///
 /// Exact bytes are always hashed. [cachedDocuments] are reused only when their
 /// [cachedFingerprint] matches, so timestamp preservation or equal file sizes
-/// cannot produce a false cache hit. The former nested `metadata/` directory
-/// is ignored during migration so stale files cannot duplicate new records.
+/// cannot produce a false cache hit. Callers resolve [metadataDirectory] from
+/// the active workspace; this function never falls back to Package sources.
 Future<CCPackageMetadataSnapshot> readCCPackageMetadata(
-  CCResolvedPackage package, {
+  Directory metadataDirectory, {
   String? cachedFingerprint,
   Iterable<Map<String, Object?>>? cachedDocuments,
 }) async {
-  final directory = package.generatedDirectory;
+  final directory = metadataDirectory;
   if (!directory.existsSync()) {
     final fingerprint = sha256.convert(const <int>[]).toString();
     return CCPackageMetadataSnapshot(
