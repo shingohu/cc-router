@@ -375,6 +375,9 @@ void main() {
                 const CCRegexPattern(
                   r'https://legacy\.example\.com/order/(?<value>\d+)',
                 ),
+                const CCRegexPattern(
+                  r'https://legacy\.example\.com/encoded/(?<value>[^/?#]+)',
+                ),
               ],
               codec: const StringCodec(),
               deepLink: CCDeepLinkPolicy.enabled,
@@ -388,6 +391,16 @@ void main() {
     final path = runtime.resolveRoute('/orders/42');
     expect(path.routeId, 'orders.detail');
     expect(runtime.decodeRouteArguments(path), '42');
+    expect(
+      runtime.decodeRouteArguments(runtime.resolveRoute('/orders/a%2Fb')),
+      'a/b',
+    );
+    expect(
+      runtime.decodeRouteArguments(
+        runtime.resolveRoute('/orders/%E5%BC%A0%E4%B8%89'),
+      ),
+      '张三',
+    );
 
     final web = runtime.resolveRoute(
       'HTTPS://THEROUTER.COM/orders/43?tab=items&tab=history#summary',
@@ -398,6 +411,15 @@ void main() {
     expect(web.queryParameters, {
       'tab': ['items', 'history'],
     });
+    expect(
+      runtime.decodeRouteArguments(
+        runtime.resolveRoute(
+          'https://therouter.com/orders/%252F',
+          external: true,
+        ),
+      ),
+      '%2F',
+    );
 
     final custom = runtime.resolveRoute(
       'therouter://orders/detail/44',
@@ -405,6 +427,12 @@ void main() {
     );
     expect(custom.routeId, 'orders.detail');
     expect(runtime.decodeRouteArguments(custom), '44');
+    expect(
+      runtime.decodeRouteArguments(
+        runtime.resolveRoute('therouter://orders/detail/a+b', external: true),
+      ),
+      'a+b',
+    );
 
     final legacy = runtime.resolveRoute(
       'https://legacy.example.com/order/45?source=old#details',
@@ -415,12 +443,65 @@ void main() {
     expect(legacy.queryParameters, {
       'source': ['old'],
     });
+    final encodedCaptures = <String, String>{
+      'https://legacy.example.com/encoded/%E5%BC%A0%E4%B8%89': '张三',
+      'https://legacy.example.com/encoded/a%2Fb': 'a/b',
+      'https://legacy.example.com/encoded/%25': '%',
+      'https://legacy.example.com/encoded/%252F': '%2F',
+      'https://legacy.example.com/encoded/a+b': 'a+b',
+    };
+    for (final entry in encodedCaptures.entries) {
+      final location = runtime.resolveRoute(entry.key, external: true);
+      expect(
+        runtime.decodeRouteArguments(location),
+        entry.value,
+        reason: entry.key,
+      );
+    }
+    final encodedQuery = runtime.resolveRoute(
+      'https://legacy.example.com/encoded/value?space=a+b&plus=a%2Bb',
+      external: true,
+    );
+    expect(encodedQuery.queryParameters, {
+      'space': ['a b'],
+      'plus': ['a+b'],
+    });
     expect(
       () => runtime.resolveRoute('https://legacy.example.com/order/45/extra'),
       throwsA(isA<CCRouteNotFoundError>()),
     );
     await runtime.dispose();
   });
+
+  test(
+    'regex rejects a named capture that splits an encoded code point',
+    () async {
+      final runtime = CCRouterRuntime.forTesting(
+        components: [
+          component(
+            'legacy',
+            register: (registry) => registry.registerRoute<String, void>(
+              CCRouteDefinition<String, void>(
+                routeId: 'legacy.partial-encoding',
+                patterns: [
+                  CCPathPattern('/fallback/:value', primary: true),
+                  const CCRegexPattern(r'/legacy/(?<value>%E5)%BC%A0'),
+                ],
+                codec: const StringCodec(),
+              ),
+            ),
+          ),
+        ],
+      );
+      runtime.initialize();
+
+      expect(
+        () => runtime.resolveRoute('/legacy/%E5%BC%A0'),
+        throwsA(isA<CCRouteNotFoundError>()),
+      );
+      await runtime.dispose();
+    },
+  );
 
   test(
     'structured URI outranks a matching authority-independent path',

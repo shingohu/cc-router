@@ -84,7 +84,13 @@ final class CCRegexPattern extends CCRoutePattern {
   /// Dart regular expression applied to the complete location without Query or
   /// Fragment text.
   ///
-  /// The Runtime adds full-match boundaries, so callers should describe the
-  /// intended location rather than depending on substring matching.
+  /// The expression matches the normalized percent-encoded URI so an encoded
+  /// separator such as `%2F` cannot alter the Path structure before matching.
+  /// After a full match, the Runtime percent-decodes every named capture
+  /// exactly once before passing it to the route Codec. Use broad segment
+  /// captures such as `(?<id>[^/]+)` when encoded forms of otherwise
+  /// unreserved characters must be accepted; decoded type validation belongs
+  /// in the generated Codec. A literal `+` remains `+` because this is a Path
+  /// capture rather than form-encoded Query data.
   final String expression;
 }

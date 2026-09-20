@@ -781,7 +781,14 @@ final class _RouteRegistry {
     );
   }
 
-  /// Full-matches [uri] without Query or Fragment and captures named groups.
+  /// Full-matches the encoded [uri] and decodes each named capture once.
+  ///
+  /// Matching retains percent-encoded separators so `%2F` cannot change the
+  /// route structure before a Pattern accepts it. Captures are decoded only
+  /// after the full match so every route codec receives the same value
+  /// semantics as structural Path and URI Patterns. A capture that splits an
+  /// encoded code point is treated as a non-match instead of exposing a raw
+  /// decoder failure.
   _PatternMatch? _matchRegex(CCRegexPattern pattern, Uri uri) {
     final target = _locationWithoutQueryOrFragment(uri);
     final match = RegExp('^(?:${pattern.expression})\$').firstMatch(target);
@@ -789,7 +796,12 @@ final class _RouteRegistry {
     final parameters = <String, String>{};
     for (final name in match.groupNames) {
       final value = match.namedGroup(name);
-      if (value != null) parameters[name] = value;
+      if (value == null) continue;
+      try {
+        parameters[name] = Uri.decodeComponent(value);
+      } on FormatException {
+        return null;
+      }
     }
     return _PatternMatch(pathParameters: parameters, specificity: 0);
   }

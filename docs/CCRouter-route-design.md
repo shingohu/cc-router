@@ -365,7 +365,18 @@ CCPathPattern(
 - 正则能够编译。
 - 多个同层 Pattern 之间不能形成无法确定优先级的歧义匹配。
 
-无法用结构化模板表达的兼容地址使用 `CCRegexPattern`。它对移除 Query 和 Fragment 后的完整地址进行全匹配，命名捕获组作为 Path 参数交给 Codec。完整正则不可逆，不能作为主 Pattern，并且路由必须同时存在一个可生成地址的主 Pattern。
+无法用结构化模板表达的兼容地址使用 `CCRegexPattern`。它对移除 Query 和 Fragment 后的
+normalized encoded URI 进行全匹配；只有匹配成功后，Runtime 才会将每个命名捕获组
+percent-decode 一次，再作为 Path 参数交给 Codec。这样 `%2F` 在匹配前仍是参数数据而不是
+Path 分隔符，同时 Path、URI 和 Regex 三种 Pattern 最终交给 Codec 的参数均为 decoded
+value。`+` 在 Path capture 中保持 `+`；只有 Query 使用 form encoding 语义将裸 `+`
+解析为空格。
+
+Regex 表达式本身看到的是 encoded URI。例如需要兼容参数的任意 percent-encoded 表达时，
+应使用 `(?<value>[^/]+)` 捕获后交给 Codec 校验，而不是使用只接受 decoded 字符的表达式。
+`%252F` 只解码一次得到 `%2F`，不能继续解码为 `/`。命名捕获如果截断 percent escape 或
+UTF-8 code point，则该 Pattern 视为不匹配，不向业务暴露原值或底层 `FormatException`。
+完整正则不可逆，不能作为主 Pattern，并且路由必须同时存在一个可生成地址的主 Pattern。
 
 ### 6.4 匹配顺序
 
