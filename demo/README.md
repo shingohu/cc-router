@@ -28,6 +28,9 @@ typed Extra。完整的 macOS 验证矩阵、已修复问题和 Adapter 限制�
 [路由验证记录](docs/route_validation.md)，与 Flutter 官方 GoRouter 示例的差异见
 [GoRouter 示例覆盖对照](docs/go_router_example_coverage.md)。
 
+macOS 外部 URL Scheme、冷启动和运行中唤醒的手动验证步骤见
+[外部 Deep Link 验证](docs/external_deep_link.md)。
+
 双 Host / 多 Outlet 示例把两个独立 GoRouter 同时显示在一个 Flutter View 中，用来验证
 Host 选择、路由栈和 RouteEntry 生命周期互不串扰：
 

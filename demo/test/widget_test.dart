@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter_demo/ccrouter_generated/ccrouter_host.routes.g.dart';
 import 'package:ccrouter_demo/main.dart';
@@ -98,6 +100,67 @@ void main() {
       demoNavigationLabStore.events.any(
         (event) =>
             event.contains('Aspect disposed · demo_navigation_lab.detail'),
+      ),
+      isTrue,
+    );
+
+    await _unmountDemo(tester);
+  });
+
+  testWidgets('simulated external Deep Link preserves platform origin', (
+    tester,
+  ) async {
+    await _pumpDemo(tester);
+    await tester.tap(find.text('导航'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('模拟外部 Deep Link'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Simulated External Deep Link'), findsOneWidget);
+    expect(find.text('ID 46'), findsOneWidget);
+    expect(
+      CCRouter.activeRouteEntries.last.origin,
+      CCNavigationOrigin.externalPlatform,
+    );
+    expect(
+      demoNavigationLabStore.events.any(
+        (event) => event.contains('source=demo.simulated_external'),
+      ),
+      isTrue,
+    );
+
+    await _unmountDemo(tester);
+  });
+
+  testWidgets('platform link stream handles a cold-start URI after attach', (
+    tester,
+  ) async {
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    tester.view.physicalSize = const Size(1280, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      CCRouterDemoApp(
+        platformLinkStream: Stream<Uri>.value(
+          Uri.parse(
+            'ccrouter://lab/detail/88?title=macOS%20External%20Deep%20Link'
+            '&tags=terminal&tags=app-links',
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('macOS External Deep Link'), findsOneWidget);
+    expect(find.text('ID 88'), findsOneWidget);
+    expect(
+      CCRouter.activeRouteEntries.last.origin,
+      CCNavigationOrigin.externalPlatform,
+    );
+    expect(
+      demoNavigationLabStore.events.any(
+        (event) => event.contains('Platform Deep Link dispatch complete'),
       ),
       isTrue,
     );
@@ -294,7 +357,10 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(
-      const CCRouterDemoApp(initialLocation: '/workspace/home/73'),
+      const CCRouterDemoApp(
+        initialLocation: '/workspace/home/73',
+        listenForPlatformLinks: false,
+      ),
     );
     await tester.pumpAndSettle();
 
@@ -372,7 +438,7 @@ Future<void> _pumpDemo(WidgetTester tester) async {
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
-  await tester.pumpWidget(const CCRouterDemoApp());
+  await tester.pumpWidget(const CCRouterDemoApp(listenForPlatformLinks: false));
   await tester.pumpAndSettle();
 }
 

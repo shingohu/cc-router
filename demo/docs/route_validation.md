@@ -18,6 +18,7 @@ Demo 的交互实现位于 `modules/navigation_lab`，宿主只负责初始化 C
 | --- | --- | --- |
 | Typed Push / result | Detail Page | 通过 |
 | Path alias / custom scheme / full URL | Detail Page 多 Pattern | 通过 |
+| External Deep Link ingress | UI 模拟 + macOS `ccrouter://` Scheme | 通过，保留 external origin 与 source |
 | Path / Query 参数注入 | `int` 和 `List<String>` | 通过 |
 | Replace | 同 routeId 更换 Level 参数 | 通过，旧 State 和 Route Scope 销毁 |
 | Pop / maybePop | Detail、Stack、PopGuard | 通过 |

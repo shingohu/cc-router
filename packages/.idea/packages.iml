@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="JAVA_MODULE" version="4">
+  <component name="NewModuleRootManager" inherit-compiler-output="true">
+    <exclude-output />
+    <content url="file://$MODULE_DIR$">
+      <excludeFolder url="file://$MODULE_DIR$/ccrouter/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/ccrouter/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/ccrouter/build" />
+      <excludeFolder url="file://$MODULE_DIR$/ccrouter_contracts/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/ccrouter_contracts/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/ccrouter_contracts/build" />
+      <excludeFolder url="file://$MODULE_DIR$/ccrouter_core/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/ccrouter_core/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/ccrouter_core/build" />
+      <excludeFolder url="file://$MODULE_DIR$/ccrouter_generator/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/ccrouter_generator/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/ccrouter_generator/build" />
+      <excludeFolder url="file://$MODULE_DIR$/ccrouter_go_router/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/ccrouter_go_router/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/ccrouter_go_router/build" />
+      <excludeFolder url="file://$MODULE_DIR$/ccrouter_test/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/ccrouter_test/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/ccrouter_test/build" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+</module>

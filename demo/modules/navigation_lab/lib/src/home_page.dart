@@ -360,12 +360,29 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
     _ActionTile(
       icon: Icons.public,
       title: 'Open custom scheme',
-      subtitle: 'ccrouter://lab/detail/44，经 Runtime 匹配后映射到 GoRouter path。',
+      subtitle: '应用内 URI 导航，不会标记为 external origin。',
       onTap: () => _run(
         'Open custom scheme',
         () => CCRouter.navigator.open(
           Uri.parse('ccrouter://lab/detail/44?title=Custom%20Scheme&tags=uri'),
           source: const CCNavigationSource.deepLink('navigation.scheme_demo'),
+        ),
+      ),
+    ),
+    _ActionTile(
+      icon: Icons.input,
+      title: '模拟外部 Deep Link',
+      subtitle: '通过受控 Platform Ingress 进入，并执行 Deep Link Policy。',
+      onTap: () => _run(
+        'External Deep Link',
+        () => CCDeepLinkIngress.fromPlatform(
+          Uri.parse(
+            'ccrouter://lab/detail/46?title=Simulated%20External%20Deep%20Link'
+            '&tags=external&tags=platform',
+          ),
+          source: const CCNavigationSource.deepLink(
+            'demo.simulated_external',
+          ),
         ),
       ),
     ),

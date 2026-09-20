@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter_go_router/ccrouter_go_router.dart';
 import 'package:demo_navigation_lab/demo_navigation_lab.dart';
@@ -5,6 +7,7 @@ import 'package:flutter/material.dart';
 
 import 'ccrouter_generated/ccrouter_host.routes.g.dart';
 import 'demo_router_backend.dart';
+import 'platform_deep_link_bridge.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,9 +27,16 @@ void main() {
 }
 
 final class CCRouterDemoApp extends StatefulWidget {
-  const CCRouterDemoApp({this.initialLocation = '/', super.key});
+  const CCRouterDemoApp({
+    this.initialLocation = '/',
+    this.listenForPlatformLinks = true,
+    this.platformLinkStream,
+    super.key,
+  });
 
   final String initialLocation;
+  final bool listenForPlatformLinks;
+  final Stream<Uri>? platformLinkStream;
 
   @override
   State<CCRouterDemoApp> createState() => _CCRouterDemoAppState();
@@ -46,7 +56,7 @@ final class _CCRouterDemoAppState extends State<CCRouterDemoApp> {
 
   @override
   Widget build(BuildContext context) {
-    return CCRouterApp.managed(
+    final app = CCRouterApp.managed(
       backend: _backend,
       onLifecycleChanged: (state) =>
           demoNavigationLabStore.record('App lifecycle · ${state.name}'),
@@ -59,6 +69,11 @@ final class _CCRouterDemoAppState extends State<CCRouterDemoApp> {
         ),
         routerConfig: _backend.router,
       ),
+    );
+    if (!widget.listenForPlatformLinks) return app;
+    return DemoPlatformDeepLinkBridge(
+      linkStream: widget.platformLinkStream,
+      child: app,
     );
   }
 }
