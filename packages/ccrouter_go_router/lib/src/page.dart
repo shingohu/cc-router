@@ -113,29 +113,31 @@ final class CCGoRouterPage<T> extends Page<T> {
         return (_, _, _, child) => child;
       case CCPageTransitionType.fade:
         return (_, animation, _, child) => FadeTransition(
-          opacity: CurvedAnimation(parent: animation, curve: Curves.easeInOut),
+          opacity: animation.drive(CurveTween(curve: Curves.easeInOut)),
           child: child,
         );
       case CCPageTransitionType.scale:
         return (_, animation, _, child) => ScaleTransition(
-          scale: Tween<double>(begin: 0.94, end: 1).animate(
-            CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
-          ),
+          scale: animation
+              .drive(CurveTween(curve: Curves.easeOutCubic))
+              .drive(Tween<double>(begin: 0.94, end: 1)),
           child: FadeTransition(opacity: animation, child: child),
         );
       case CCPageTransitionType.slideFromRight:
         return (_, animation, _, child) => SlideTransition(
-          position: Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero)
-              .animate(
-                CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
+          position: animation
+              .drive(CurveTween(curve: Curves.easeOutCubic))
+              .drive(
+                Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero),
               ),
           child: child,
         );
       case CCPageTransitionType.slideFromBottom:
         return (_, animation, _, child) => SlideTransition(
-          position: Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
-              .animate(
-                CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
+          position: animation
+              .drive(CurveTween(curve: Curves.easeOutCubic))
+              .drive(
+                Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero),
               ),
           child: child,
         );

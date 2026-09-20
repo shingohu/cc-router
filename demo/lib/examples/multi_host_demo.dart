@@ -5,7 +5,7 @@ import 'package:ccrouter/ccrouter_host.dart';
 import 'package:ccrouter_demo/ccrouter_generated/ccrouter_host.routes.g.dart';
 import 'package:ccrouter_demo/demo_router_backend.dart';
 import 'package:ccrouter_go_router/ccrouter_go_router.dart';
-import 'package:demo_navigation_lab/demo_navigation_lab.dart';
+import 'package:demo_navigation_lab/demo_navigation_lab_host.dart';
 import 'package:flutter/material.dart';
 
 import '../platform_deep_link_bridge.dart';

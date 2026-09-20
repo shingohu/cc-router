@@ -135,4 +135,35 @@ void main() {
       await tester.pumpAndSettle();
     },
   );
+
+  testWidgets(
+    'custom page transitions release animation resources after removal',
+    experimentalLeakTesting: leakSettings,
+    (tester) async {
+      final navigatorKey = GlobalKey<NavigatorState>();
+      await tester.pumpWidget(
+        MaterialApp(navigatorKey: navigatorKey, home: const Text('root')),
+      );
+      await tester.pumpAndSettle();
+
+      for (final transition in CCPageTransitionType.values.where(
+        (value) =>
+            value != CCPageTransitionType.platformDefault &&
+            value != CCPageTransitionType.none,
+      )) {
+        final page = CCGoRouterPage<void>(
+          child: Text(transition.name),
+          presentation: CCPagePresentation(transition: transition),
+        );
+        final route = page.createRoute(navigatorKey.currentContext!);
+        navigatorKey.currentState!.push<void>(route);
+        await tester.pumpAndSettle();
+        navigatorKey.currentState!.pop();
+        await tester.pumpAndSettle();
+      }
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpAndSettle();
+    },
+  );
 }

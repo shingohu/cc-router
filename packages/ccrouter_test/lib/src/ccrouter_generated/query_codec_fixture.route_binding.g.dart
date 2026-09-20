@@ -23,6 +23,7 @@ route_page.QueryCodecFixturePage ccrouterBuildQueryCodecFixturePageRoute(
   return route_page.QueryCodecFixturePage(
     tags: decoded.tags,
     ids: decoded.ids,
+    labels: decoded.labels,
     states: decoded.states,
     filter: decoded.filter,
   );

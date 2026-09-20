@@ -5,11 +5,13 @@
 - 审查日期：2026-09-20
 - 审查范围：路由 Runtime、业务 Facade、Host/Adapter SPI、GoRouter Adapter、生成器、
   Demo、测试与诊断模型。
-- 自动化基线：`dart analyze` 通过；Framework 235 项、Demo 20 项、Generator 119 项测试通过；
-  最近一次 macOS debug build 和交互验证通过。
-- 总体结论：13 条约定的架构方向成立，但当前不能认定为全部对齐。没有阻断 Demo 的 P0
-  或 P1 问题；并发安全、retained diagnostics 数据边界、观察回调热路径和组件依赖图前移校验
-  和统一生成门禁已完成收口，仍有 2 项 P2 欠账。
+- 自动化基线：`dart analyze` 与 Demo Analyzer 通过；Framework 236 项、Demo 20 项、
+  Generator 120 项测试通过；默认缓存和 `--no-cache` 生成检查逐字节等价；macOS debug
+  build 通过。
+- 总体结论：当前实现满足 13 条约定在 v0.1 路由范围内的发布门槛，没有 P0 或 P1 问题。
+  生成物职责、API 隔离、增量/全量等价、生命周期和资源释放已完成本轮收口；Adapter 能力的
+  更多构建期前移、Restoration、真实平台多窗口和长期 RSS/Heap 趋势仍是明确的后续能力，不能
+  因本轮通过而视为已经实现。
 
 本审查只记录事实和后续门槛，不因为某项容易实现就扩展公开 API。
 
@@ -29,7 +31,7 @@
 | 10 | 明确生命周期 | 基本满足 | Runtime、Session、RouteEntry、Scope、Adapter、Backend 的 Owner 和销毁顺序明确，幂等与 pending Future 已有测试。组件 activate/deactivate 当前只覆盖 Route/Shell，完整 Service/Handler/Scope 生命周期仍按设计暂缓。 |
 | 11 | 可观测可诊断可溯源 | 基本满足 | navigationId、来源、Owner、阶段耗时、bounded history、Listener 异常隔离均已具备。Pending、RouteEntry、Backend history/ledger 已使用安全地址摘要，完整 URI/location 只留在即时 operational pipeline；request 创建前的解析/参数失败和实际能力回退也有独立安全事件。 |
 | 12 | 并发安全 | 基本满足 | 初始化/销毁、Session、Adapter 生命周期和导航并发策略已有确定语义，Defer/Timeout/Cancel 有回归。并发短路具有完整 Aspect 终态；Extra 请求明确独立执行；Interceptor、Policy、Guard、Aspect 和普通 Listener 统一使用 Zone 重入保护。 |
-| 13 | 性能和稳定 | 部分满足 | 热路径无反射，路由 ID 与 Workspace Pattern 候选均使用索引，缓存与观察队列有界，纯观察回调不再同步阻塞导航，错误不被吞掉。生成器复用 build_runner 增量图，只扫描 Host 依赖闭包中的 Package metadata，使用内容指纹缓存、write-if-changed、并发锁和全量回退；已建立同机 benchmark，但仍缺少内存增长门槛和跨版本趋势，动态 URI 解析仍为线性工作。 |
+| 13 | 性能和稳定 | 基本满足 | 热路径无反射，路由 ID 与 Workspace Pattern 候选均使用索引，缓存与观察队列有界，纯观察回调不再同步阻塞导航，错误不被吞掉。生成器复用 build_runner 增量图，只扫描 Host 依赖闭包中的 Package metadata，使用内容指纹缓存、write-if-changed、并发锁和全量回退；已建立同机 benchmark 和资源生命周期回归。长期内存趋势仍需版本间持续采样，动态 URI 解析仍为线性工作。 |
 
 ## 3. P1 问题
 
@@ -130,15 +132,14 @@
 - 两个生成进程通过版本化文件锁串行化，write-if-changed 使用同目录临时文件提交。正式规模
   benchmark 仍归 P2-6，不能用缓存掩盖全量路径错误。
 
-### P2-5 Telemetry/source 标识只有弱校验
+### 已完成：P2-5 Telemetry/source 稳定标识校验
 
-匿名 telemetry ID 只校验 trim 和长度，`CCNavigationSource.id` 没有运行时格式限制。调用方仍可误把
-账号、URL 或 Token 放入这些字段。
+- `CCNavigationSource.id` 使用最大 64 字符的稳定分段标识语法，拒绝空白、URL 和凭证式字符；
+- 匿名 Visitor/App Session ID 使用独立的有界 opaque 语法，允许 UUID 风格的数字开头；
+- 非法来源和 Telemetry Context 安全降级为无 attribution 导航，并记录不包含原值的有界诊断；
+- Framework DartDoc 和回归测试明确禁止账号、完整 URI、Token、设备 ID 与业务 Payload。
 
-建议：定义稳定标识字符集和较小长度上限；提供 debug 校验及 release 安全降级，文档继续明确禁止
-PII/凭证。框架无法证明匿名性，但可以减少明显误用。
-
-### P2-6 性能与稳定性基准尚不完整
+### 已完成首批基线：P2-6 性能与稳定性基准
 
 仓库已提供非门禁式 Generator 与 Runtime scaling benchmark，覆盖 Workspace 校验、Runtime 初始化、
 动态 URI 解析和销毁。动态 URI resolution 仍会遍历所有 Route/Pattern；生成器虽已改为精确闭包、
@@ -162,7 +163,29 @@ fvm dart run packages/ccrouter_test/benchmark/runtime_scaling.dart
 `60.74ms`。索引只筛选候选，最终冲突仍由原精确比较器确认；Wildcard 保守回退到同优先级全比较。
 同机 Runtime 20 次生命周期与 100 次动态打开样本中，1000 Route 初始化 p50/p95 为
 `461us/565us`，动态 URI 打开为 `375us/560us`，dispose 为 `37us/42us`。后续仍需补充并发压力
-和跨版本内存趋势基线。
+和跨版本内存趋势基线。后两项属于持续观测工作，不是通过一次本机运行即可关闭的功能项。
+
+### 已完成：P2-7 生成物最终审计
+
+- 页面源码保持零 `part`、零生成文件 import；组件唯一 Route API 聚合内部 Intent factory，业务侧
+  通过单一 generated API 获得 IDE 补全和自动导包；
+- 单源码 Route、Route Binding、组件 Route Catalog、Package Bundle/Index、Host Catalog 和文档
+  各自只有一个职责，没有重复声明公开 Intent 或重复构造 Runtime Route Definition；
+- 组件业务 barrel 不再导出 Host-only intent；Host 装配入口集中在独立 host barrel，业务依赖不会
+  意外获得 Host SPI；
+- 非 nullable 且具有编译期空 List/Set 默认值的 Query 参数将空集合编码为缺失 key，解码恢复默认值；
+  required、nullable 和非空默认集合继续严格拒绝无法无损表达的空集合；
+- 默认缓存与 `--no-cache --check` 均验证 4 个组件、30 条路由和 7 个生成 Package，输出无差异；
+  测试同时覆盖缓存损坏全量回退、并发生成锁、write-if-changed 和 stale cleanup。
+
+### 已完成：P2-8 资源生命周期回归
+
+- Runtime 连续 250 次 Push/Pop 后 Route Entry、Backend Entry 和 Pending Navigation 均为空，诊断
+  history 保持容量上限；
+- Host、Navigator Observer 和页面生命周期对象通过 leak tracker 回归；
+- 自定义页面转场不再在 builder 中创建需要手动 dispose 的 `CurvedAnimation`，改用无独立所有权的
+  `CurveTween` 链，并覆盖 Fade、Scale、右侧滑入和底部滑入的重复创建/销毁测试；
+- 本轮基于 `not-disposed` 与 `not-GCed` 证据标准复查后，没有剩余高置信内存泄漏。
 
 ## 5. 已确认符合且应保持的边界
 
@@ -177,10 +200,15 @@ fvm dart run packages/ccrouter_test/benchmark/runtime_scaling.dart
 - 页面生命周期不要求业务继承基类；Mixin 和 Listener 均为可选。
 - contracts Package 可以保持 Pure Dart，页面实现和后端依赖不进入跨组件契约。
 
-## 6. 推荐处理顺序
+## 6. 本轮最终门禁
 
-1. 收紧 Telemetry/source 稳定标识校验，同时保持匿名降级和诊断数据边界。
-2. 建立 benchmark；得到基线前不做 Workspace 缓存和路由索引优化。
+- `fvm dart test packages/ccrouter_test/generator_test`：120 项通过；
+- `fvm flutter test packages/ccrouter_test/test`：236 项通过；
+- `fvm flutter test demo/test`：20 项通过；
+- `fvm dart analyze`、`fvm flutter analyze demo`：无问题；
+- `ccrouter generate demo --check` 与 `--no-cache --check`：生成物同步且等价；
+- `fvm flutter build macos --debug`：成功生成 `ccrouter_demo.app`；
+- `git diff --check`：通过。
 
-每一项完成后必须运行 analyze、Framework/Demo/Generator 全量测试，并重新执行 macOS Demo
-交互回归。涉及 Android Predictive Back 时另加真实 Android 设备验证。
+后续增加 Android Predictive Back、Restoration、真实平台多窗口或新 Adapter 时，必须补对应平台
+真机验证和能力回归；它们不属于本轮已经实现的路由能力。

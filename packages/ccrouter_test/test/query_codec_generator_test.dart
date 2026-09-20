@@ -26,12 +26,14 @@ void main() {
 
       expect(encoded.query['tags'], ['first', 'second']);
       expect(encoded.query['ids'], ['20', '3']);
+      expect(encoded.query, isNot(contains('labels')));
       expect(encoded.query['states'], ['completed', 'pending']);
       expect(encoded.query['filter'], ['active']);
 
       final page = buildQueryCodecFixturePage(codec.decode(encoded));
       expect(page.tags, ['first', 'second']);
       expect(page.ids, {20, 3});
+      expect(page.labels, isEmpty);
       expect(page.states, [
         QueryCodecFixtureState.completed,
         QueryCodecFixtureState.pending,
@@ -39,6 +41,19 @@ void main() {
       expect(page.filter?.value, 'active');
       expect(() => page.tags.add('third'), throwsUnsupportedError);
       expect(() => page.ids.add(4), throwsUnsupportedError);
+
+      final labels = buildQueryCodecFixturePage(
+        codec.decode(
+          codec.encode(
+            queryCodecFixtureArguments(
+              tags: const ['tag'],
+              ids: const {1},
+              labels: const ['generated'],
+            ),
+          ),
+        ),
+      );
+      expect(labels.labels, ['generated']);
 
       final deduplicated = buildQueryCodecFixturePage(
         codec.decode(

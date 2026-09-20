@@ -15,11 +15,13 @@ CCRouteCodec<dynamic> get queryCodecFixtureCodec =>
 Object queryCodecFixtureArguments({
   required List<String> tags,
   required Set<int> ids,
+  List<String> labels = const [],
   List<QueryCodecFixtureState>? states,
   QueryCodecFixtureFilter? filter,
 }) => const route_contract.CCGeneratedQueryCodecFixturePageRouteFactory()(
   tags: tags,
   ids: ids,
+  labels: labels,
   states: states,
   filter: filter,
 ).arguments;

@@ -367,6 +367,7 @@ final class ${route.codec} implements CCRouteCodec<${route.arguments}> {
   for (final parameter in params.where(
     (parameter) => parameter.isQueryCollection,
   )) {
+    if (parameter.encodesEmptyQueryCollectionAsAbsent) continue;
     final value = 'arguments.${parameter.name}${parameter.nullable ? '!' : ''}';
     out.writeln(
       'if (${parameter.nullable ? 'arguments.${parameter.name} != null && ' : ''}$value.isEmpty) throw CCRouteParameterError(${_quote('Route "${route.id}" parameter "${parameter.wireName}" cannot encode an empty collection.')});',
@@ -395,9 +396,12 @@ final class ${route.codec} implements CCRouteCodec<${route.arguments}> {
         : parameter.isQueryCollection
         ? _encodeQueryCollection(parameter)
         : '[${_encodeScalarValue(parameter.queryValueType, 'arguments.${parameter.name}${parameter.nullable ? '!' : ''}')}]';
-    out.writeln(
-      '${parameter.nullable ? 'if (arguments.${parameter.name} != null) ' : ''}${_quote(parameter.wireName)}: $encoded,',
-    );
+    final inclusion = parameter.nullable
+        ? 'if (arguments.${parameter.name} != null) '
+        : parameter.encodesEmptyQueryCollectionAsAbsent
+        ? 'if (arguments.${parameter.name}.isNotEmpty) '
+        : '';
+    out.writeln('$inclusion${_quote(parameter.wireName)}: $encoded,');
   }
   out.writeln(
     '}, extra: ${params.where((parameter) => parameter.source == 'extra').isEmpty ? 'null' : 'arguments.${params.singleWhere((parameter) => parameter.source == 'extra').name}'});\n}\n}',

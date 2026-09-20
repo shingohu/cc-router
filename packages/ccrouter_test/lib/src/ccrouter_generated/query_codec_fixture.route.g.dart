@@ -16,10 +16,12 @@ final class _QueryCodecFixturePageRouteArguments {
   _QueryCodecFixturePageRouteArguments({
     required List<String> tags,
     required Set<int> ids,
+    List<String> labels = const [],
     List<route_type_0.QueryCodecFixtureState>? states,
     this.filter,
   }) : tags = List.unmodifiable(tags),
        ids = Set.unmodifiable(ids),
+       labels = List.unmodifiable(labels),
        states = states == null ? null : List.unmodifiable(states);
 
   /// query parameter tags for query_codec_fixture.detail.
@@ -27,6 +29,9 @@ final class _QueryCodecFixturePageRouteArguments {
 
   /// query parameter ids for query_codec_fixture.detail.
   final Set<int> ids;
+
+  /// query parameter labels for query_codec_fixture.detail.
+  final List<String> labels;
 
   /// query parameter states for query_codec_fixture.detail.
   final List<route_type_0.QueryCodecFixtureState>? states;
@@ -44,12 +49,14 @@ abstract final class _QueryCodecFixturePageRoute {
   static CCRouteIntent<void> intent({
     required List<String> tags,
     required Set<int> ids,
+    List<String> labels = const [],
     List<route_type_0.QueryCodecFixtureState>? states,
     route_type_0.QueryCodecFixtureFilter? filter,
   }) => _QueryCodecFixturePageRouteIntent(
     _QueryCodecFixturePageRouteArguments(
       tags: tags,
       ids: ids,
+      labels: labels,
       states: states,
       filter: filter,
     ),
@@ -136,6 +143,16 @@ final class _QueryCodecFixturePageRouteCodec
                   ))),
             ),
           );
+    final _values_labels = input.query["labels"];
+    if (_values_labels != null && _values_labels.isEmpty)
+      throw CCRouteParameterError(
+        "Route \"query_codec_fixture.detail\" parameter \"labels\" is invalid.",
+      );
+    final List<String> _value_labels = _values_labels == null
+        ? const []
+        : List<String>.unmodifiable(
+            _values_labels.map((raw_labels) => raw_labels),
+          );
     final _values_states = input.query["states"];
     if (_values_states != null && _values_states.isEmpty)
       throw CCRouteParameterError(
@@ -177,6 +194,7 @@ final class _QueryCodecFixturePageRouteCodec
     return _QueryCodecFixturePageRouteArguments(
       tags: _value_tags,
       ids: _value_ids,
+      labels: _value_labels,
       states: _value_states,
       filter: _value_filter,
     );
@@ -210,6 +228,8 @@ final class _QueryCodecFixturePageRouteCodec
           values.sort();
           return values;
         })(),
+        if (arguments.labels.isNotEmpty)
+          "labels": [for (final value in arguments.labels) value],
         if (arguments.states != null)
           "states": [
             for (final value in arguments.states!) EnumName(value).name,
@@ -242,11 +262,13 @@ final class CCGeneratedQueryCodecFixturePageRouteFactory {
   CCRouteIntent<void> call({
     required List<String> tags,
     required Set<int> ids,
+    List<String> labels = const [],
     List<route_type_0.QueryCodecFixtureState>? states,
     route_type_0.QueryCodecFixtureFilter? filter,
   }) => _QueryCodecFixturePageRoute.intent(
     tags: tags,
     ids: ids,
+    labels: labels,
     states: states,
     filter: filter,
   );

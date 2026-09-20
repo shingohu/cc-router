@@ -144,15 +144,12 @@ final class _DemoDetailPageRouteCodec
   /// Encodes unescaped scalar values; Runtime owns URI escaping exactly once.
   @override
   CCEncodedRouteArguments encode(_DemoDetailPageRouteArguments arguments) {
-    if (arguments.tags.isEmpty)
-      throw CCRouteParameterError(
-        "Route \"demo_navigation_lab.detail\" parameter \"tags\" cannot encode an empty collection.",
-      );
     return CCEncodedRouteArguments(
       path: {"id": arguments.id.toString()},
       query: {
         "title": [arguments.title],
-        "tags": [for (final value in arguments.tags) value],
+        if (arguments.tags.isNotEmpty)
+          "tags": [for (final value in arguments.tags) value],
       },
       extra: null,
     );

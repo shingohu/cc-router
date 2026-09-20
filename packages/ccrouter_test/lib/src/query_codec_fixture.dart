@@ -21,6 +21,7 @@ final class QueryCodecFixturePage {
   const QueryCodecFixturePage({
     @CCQueryParam() required this.tags,
     @CCQueryParam() required this.ids,
+    @CCQueryParam() this.labels = const [],
     @CCQueryParam() this.states,
     @CCQueryParam(codec: QueryCodecFixtureFilterCodec) this.filter,
   });
@@ -30,6 +31,9 @@ final class QueryCodecFixturePage {
 
   /// Unordered repeated integer values.
   final Set<int> ids;
+
+  /// Optional repeated labels whose empty default is encoded by omission.
+  final List<String> labels;
 
   /// Optional repeated enum values.
   final List<QueryCodecFixtureState>? states;

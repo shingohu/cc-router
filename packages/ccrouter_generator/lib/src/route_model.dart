@@ -636,6 +636,22 @@ final class _ParameterModel {
         (type.isDartCoreList || type.isDartCoreSet);
   }
 
+  /// Whether an empty repeated Query value can round-trip as an absent key.
+  ///
+  /// This is safe only for a non-nullable collection whose compile-time
+  /// default is also empty. Required collections, nullable collections and
+  /// non-empty defaults retain strict rejection because omission would decode
+  /// to a different value.
+  bool get encodesEmptyQueryCollectionAsAbsent {
+    if (!isQueryCollection || nullable || defaultCode == null) return false;
+    final value = element.computeConstantValue();
+    final collectionType = element.type as InterfaceType;
+    if (collectionType.isDartCoreList) {
+      return value?.toListValue()?.isEmpty ?? false;
+    }
+    return value?.toSetValue()?.isEmpty ?? false;
+  }
+
   /// Collection element type, or the scalar parameter type for URI conversion.
   InterfaceType get queryValueType {
     final type = element.type as InterfaceType;

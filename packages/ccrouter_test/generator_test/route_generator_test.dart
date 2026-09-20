@@ -860,6 +860,29 @@ final class Probe {
     expect(code, contains('"states": ['));
   });
 
+  test('builder omits an empty collection that equals its default', () async {
+    final code = await generate(r'''
+@CCRoute<void>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe'))
+final class Probe {
+  const Probe({
+    @CCQueryParam() this.tags = const [],
+    @CCQueryParam() this.ids = const <int>{},
+    @CCQueryParam() this.states = const ['pending'],
+  });
+  final List<String> tags;
+  final Set<int> ids;
+  final List<String> states;
+}
+''');
+    expect(code, isNot(contains('if (arguments.tags.isEmpty)')));
+    expect(code, contains('if (arguments.tags.isNotEmpty)'));
+    expect(code, contains('"tags": [for (final value in arguments.tags)'));
+    expect(code, isNot(contains('if (arguments.ids.isEmpty)')));
+    expect(code, contains('if (arguments.ids.isNotEmpty)'));
+    expect(code, contains('arguments.states.isEmpty'));
+    expect(code, contains('"states": [for (final value in arguments.states)'));
+  });
+
   test('builder emits an isolated custom Query codec boundary', () async {
     final code = await generate(r'''
 final class ProbeFilter { const ProbeFilter(this.value); final String value; }
