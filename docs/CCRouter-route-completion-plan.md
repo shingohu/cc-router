@@ -370,3 +370,17 @@ git diff --check
 
 Demo 中与本轮无关的用户工作区改动不回退；如果其未完成代码阻止 Demo analyze，单独记录，
 不以修改或删除用户代码作为绕过方式。
+
+### 1.x 生成物边界全量回归（第 6 项）
+
+- `fvm dart analyze`：Workspace 无问题；`packages/ccrouter_test/test`：244 项通过；
+  `packages/ccrouter_test/generator_test`：124 项通过；`demo/test`：22 项通过。
+- `fvm flutter run -d macos --no-pub` 构建并启动 Demo，实际查看首屏与导航页；
+  点击类型安全 Push 和确认返回后，获得 `detail:42:confirmed`，Managed Route Entry 回到 0。
+  启动日志报告窗口未自动置前，但窗口及页面实际可见，未观察到运行异常。
+- 新增的跨 Package 生成 API 校验器只在 CLI 校验期间读取源码并解析 AST，不持有
+  Listener、Timer、Overlay 或运行时 Route；测试创建的临时目录使用 teardown 清理。
+  现有路由测试覆盖 Host、Scope、pending result 与销毁路径；本轮未执行长时间运行的
+  堆快照或压力测试，因此不能据此宣称不存在任何长期内存增长。
+- 无缓存全量聚合与 `--check --no-cache` 的产物一致性结果见 P2-1；macOS 手工操作
+  只验证了首屏和类型安全 Push/Pop，其他 UI 路径依赖上述自动化测试，未逐页手工遍历。
