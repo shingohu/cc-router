@@ -177,15 +177,15 @@ Future<bool> _aggregate(Directory root, _Arguments parsed) async {
     await _deleteObsoleteAggregateOutputs(root, catalogs);
   }
   await outputDirectory.create(recursive: true);
-  await File(
-    '${outputDirectory.path}${Platform.pathSeparator}cc_routes.json',
-  ).writeAsString(result.machineDocumentJson);
+  await _writeIfChanged(
+    File('${outputDirectory.path}${Platform.pathSeparator}cc_routes.json'),
+    result.machineDocumentJson,
+  );
   final sourceCatalog = CCCapabilitySourceCatalog.fromMetadata(
     documents,
   ).toMarkdown(scope: 'host:${root.uri.pathSegments.last}');
-  await File(
-    '${outputDirectory.path}${Platform.pathSeparator}cc_catalog.md',
-  ).writeAsString(
+  await _writeIfChanged(
+    File('${outputDirectory.path}${Platform.pathSeparator}cc_catalog.md'),
     _catalogMarkdown(
       routeCatalog: result.markdownDocument,
       sourceCatalog: sourceCatalog,
@@ -1382,7 +1382,8 @@ Future<List<_GeneratedComponentCatalog>> _generateComponentRouteIndexes(
     final output = File(
       '${outputDirectory.path}${Platform.pathSeparator}${_fileStem(componentId)}.routes.g.dart',
     );
-    await output.writeAsString(
+    await _writeIfChanged(
+      output,
       _dartFormatter.format(
         _emitComponentRouteIndex(componentId, componentRoutes),
       ),
@@ -1394,7 +1395,8 @@ Future<List<_GeneratedComponentCatalog>> _generateComponentRouteIndexes(
       final routeApiOutput = File(
         '${outputDirectory.path}${Platform.pathSeparator}${_fileStem(componentId)}.route_api.g.dart',
       );
-      await routeApiOutput.writeAsString(
+      await _writeIfChanged(
+        routeApiOutput,
         _dartFormatter.format(
           _emitComponentRouteApi(componentId, componentRoutes),
         ),
