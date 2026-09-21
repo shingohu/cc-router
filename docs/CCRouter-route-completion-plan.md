@@ -292,20 +292,22 @@ IDE 可发现性属于方案验收条件：生成完成且 Workspace Analyzer �
   字段和其他实现仍可保持私有；
 - [x] Route 参数、结果类型、Extra 类型、Query Codec 和默认值必须可由生成 Library 稳定引用或
   重建；复用 Contract Generator 的确定性 Import Plan 和常量渲染，禁止复制未经解析的源码表达式；
-- [ ] Package-internal 生成 API 的 `@internal` 标记和跨 Package 误用诊断尚需专项验证；
-  `implementation_imports`、Barrel Validator 与 API Surface Test 已提供基础约束，跨组件公开
-  能力使用 `CCRouteContract`；
+- [ ] Package-internal 生成 API 的 `@internal` 标记和跨 Package 强制误用诊断尚未实现；
+  `implementation_imports`、Barrel Validator 与 API Surface Test 只能提供基础约束，不能替代
+  Generator 边界校验；跨组件公开能力继续使用 `CCRouteContract`；
 - [x] Component Route API 是内部 Route Intent 的唯一生成声明位置，逐源码中间生成物不重复
   暴露同名 Route API；
 - [x] Component Route Index 只负责 Runtime 注册和 Flutter Destination Catalog，不成为业务
   导航入口，也不把 `ccrouter_host.dart` 泄漏给组件业务代码；
 - [x] 独立 Library 已成为默认模式；Demo、生成器和导航回归通过，旧页面 Route Part 已清理；
-- [ ] 补充 IDE 唯一自动导包和源码重命名/移动的专项验收；现有测试覆盖多 Route 单源码、
-  源码子目录、私有声明拒绝、集合默认值、Extra 和 Contract-first Implementation。
+- [x] IDE 组件内唯一自动导包已通过 Android Studio 验收；源码重命名/移动后的补全刷新仍
+  需要后续人工回归。现有测试覆盖多 Route 单源码、源码子目录、私有声明拒绝、集合默认值、
+  Extra 和 Contract-first Implementation。
 
-该方案已经启用：内部 Route API 从 Dart library-private 变为受 Analyzer 和 Package 边界保护的
-package-internal。页面零样板、组件内稳定入口和默认值生成已有回归；IDE 自动导包与跨包误用
-的专项验收仍未完成。
+该方案已经启用：内部 Route API 从页面级 `part` 迁移为独立生成 Library，并通过组件命名空间
+和公共 Barrel 边界控制可发现性。`lib/src` 与 `implementation_imports` 不是语言级访问控制；
+`@internal` 标记、Analyzer error 和 Generator 跨 Package 边界校验仍属于后续收口任务。
+页面零样板、组件内稳定入口、默认值生成和 IDE 唯一自动导包已有回归。
 
 #### P2-4 生成器与 API 边界审查（部分完成）
 
@@ -317,8 +319,18 @@ package-internal。页面零样板、组件内稳定入口和默认值生成已�
   Host Catalog，未发现业务 Barrel 导出 Binding、Registrar 或 Package Bundle。
 - [x] API Surface 测试锁定业务 Barrel 的 `hide/show` 集合；生成器测试覆盖目标路径、相对
   import、Package URI、旧元数据清理和 Host Bundle 首次创建。
-- [ ] 在 IDE 验证生成 Route API 的唯一自动导包，并用跨 Package 负向编译测试验证 `src/`
-  内部声明的误用诊断；Barrel 静态审查不等同于完整的 API 隔离验收。
+- [x] 用独立 Package 探针验证跨 Package Route API 边界：直接导入 `src/` 的生成 API 在
+  当前 Dart SDK 中可以编译，公共 Barrel 不导出该符号时会得到 `undefined_identifier`。
+  这证明 `src/` 是约定和导出边界，不是 Dart 语言级 package-private；`implementation_imports`
+  也不能当作强制封锁（当前 SDK 对该规则不产生预期诊断）。专项回归位于
+  `packages/ccrouter_test/generator_test/route_api_boundary_test.dart`。
+- [x] 在 Android Studio 中验证组件内部生成 Route API 的唯一自动导包：在
+  `demo/modules/navigation_lab/lib/src/home_page.dart` 输入 `DemoNavigationLabRoutes` 时，
+  只有一个 Route API 候选，来源为
+  `package:demo_navigation_lab/src/ccrouter_generated/component/demo_navigation_lab_component.route_api.g.dart`。
+  `DemoNavigationLabComponentGeneratedRoutes` 是 Runtime 注册索引，不是重复的业务 Route API。
+  宿主 Package 仍不会得到该内部候选；源码重命名/移动后的补全刷新仍需后续人工回归。
+  Analysis Server 协议探针对未导入符号返回空候选，不能替代真实 IDE 验收。
 
 ### P3 应用集成入口
 
