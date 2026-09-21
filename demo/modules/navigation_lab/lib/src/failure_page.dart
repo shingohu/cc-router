@@ -16,12 +16,18 @@ import 'ccrouter_generated/demo_navigation_lab_component.route_api.g.dart';
 final class DemoFailurePage extends StatelessWidget {
   const DemoFailurePage({
     @CCQueryParam() required this.stage,
+    @CCQueryParam() required this.reason,
     @CCQueryParam() required this.errorType,
+    @CCQueryParam() this.initialRouteId,
+    @CCQueryParam() this.routeId,
     super.key,
   });
 
   final String stage;
+  final String reason;
   final String errorType;
+  final String? initialRouteId;
+  final String? routeId;
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -39,7 +45,10 @@ final class DemoFailurePage extends StatelessWidget {
               Text('原目标不可用', style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 12),
               Text('stage: $stage'),
+              Text('reason: $reason'),
               Text('error: $errorType'),
+              Text('initial route: ${initialRouteId ?? '-'}'),
+              Text('failed route: ${routeId ?? '-'}'),
               const SizedBox(height: 20),
               FilledButton.icon(
                 onPressed: () {
@@ -62,5 +71,14 @@ final class DemoFailurePage extends StatelessWidget {
 
 CCRouteIntent<void> demoFailureIntent({
   required String stage,
+  required String reason,
   required String errorType,
-}) => DemoNavigationLabRoutes.failure(stage: stage, errorType: errorType);
+  String? initialRouteId,
+  String? routeId,
+}) => DemoNavigationLabRoutes.failure(
+  stage: stage,
+  reason: reason,
+  errorType: errorType,
+  initialRouteId: initialRouteId,
+  routeId: routeId,
+);

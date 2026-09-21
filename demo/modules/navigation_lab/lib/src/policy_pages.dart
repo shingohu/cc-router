@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:ccrouter/ccrouter.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'lab_configuration.dart';
 import 'navigation_lab_component.dart';
@@ -237,6 +238,16 @@ final class _DemoGuardedPageState extends State<DemoGuardedPage> {
     ).showSnackBar(const SnackBar(content: Text('PopGuard 已拒绝返回，请先保存表单')));
   }
 
+  /// Simulates the Router-level back dispatch used by platform hosts. The
+  /// route itself must not call `Navigator.pop` or bypass the Router boundary.
+  Future<void> _trySystemBack() async {
+    await Router.of(context).routerDelegate.popRoute();
+    if (!mounted || !ModalRoute.of(context)!.isCurrent) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('系统返回已交给 PopGuard')));
+  }
+
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
     animation: demoNavigationLabStore,
@@ -279,6 +290,12 @@ final class _DemoGuardedPageState extends State<DemoGuardedPage> {
                   onPressed: _tryPop,
                   icon: const Icon(Icons.arrow_back),
                   label: const Text('尝试返回'),
+                ),
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  onPressed: _trySystemBack,
+                  icon: const Icon(Icons.system_update_alt),
+                  label: const Text('模拟系统返回'),
                 ),
               ],
             ),

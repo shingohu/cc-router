@@ -80,13 +80,18 @@ final class DemoNavigationFailurePolicy implements CCNavigationFailurePolicy {
   @override
   CCNavigationFailureDecision onFailure(CCNavigationFailureContext context) {
     demoNavigationLabStore.record(
-      'Failure · ${context.stage.name} · ${context.errorType}',
+      'Failure · ${context.stage.name}/${context.reason.name} · '
+      '${context.initialRouteId ?? '-'} -> ${context.routeId ?? '-'} · '
+      '${context.errorType}',
     );
     if (context.stage == CCNavigationFailureStage.resolution) {
       return CCNavigationFailureFallback.toIntent(
         DemoNavigationLabRoutes.failure(
               stage: context.stage.name,
+              reason: context.reason.name,
               errorType: context.errorType,
+              initialRouteId: context.initialRouteId,
+              routeId: context.routeId,
             )
             as CCRouteIntent<Object?>,
         operation: CCNavigationOperation.push,

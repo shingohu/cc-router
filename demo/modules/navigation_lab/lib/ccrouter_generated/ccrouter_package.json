@@ -5,7 +5,7 @@
     "name": "demo_navigation_lab",
     "version": "0.1.0"
   },
-  "contentFingerprint": "b6622eee50665cd5691b0d75965d1fd596b4a8b70372c7d227084b741802da0e",
+  "contentFingerprint": "03cb324cec9695344140d8515d3ded7e94ce26149f0cb997d288b41d92b2ca0d",
   "bundle": {
     "library": "lib/demo_navigation_lab_ccrouter.g.dart",
     "symbol": "ccrouterGeneratedPackageBundle"
@@ -274,12 +274,42 @@
               "description": null
             },
             {
+              "name": "reason",
+              "wireName": "reason",
+              "source": "query",
+              "type": "String",
+              "cardinality": "single",
+              "required": true,
+              "default": null,
+              "description": null
+            },
+            {
               "name": "errorType",
               "wireName": "errorType",
               "source": "query",
               "type": "String",
               "cardinality": "single",
               "required": true,
+              "default": null,
+              "description": null
+            },
+            {
+              "name": "initialRouteId",
+              "wireName": "initialRouteId",
+              "source": "query",
+              "type": "String?",
+              "cardinality": "single",
+              "required": false,
+              "default": null,
+              "description": null
+            },
+            {
+              "name": "routeId",
+              "wireName": "routeId",
+              "source": "query",
+              "type": "String?",
+              "cardinality": "single",
+              "required": false,
               "default": null,
               "description": null
             }

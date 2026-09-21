@@ -173,7 +173,10 @@ Loads one allowlisted public HTTPS URL in the shared Web container.
 | Name | Wire | Source | Type | Cardinality | Codec | Required | Description |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `stage` | `stage` | `query` | `String` | `single` | `-` | true |  |
+| `reason` | `reason` | `query` | `String` | `single` | `-` | true |  |
 | `errorType` | `errorType` | `query` | `String` | `single` | `-` | true |  |
+| `initialRouteId` | `initialRouteId` | `query` | `String?` | `single` | `-` | false |  |
+| `routeId` | `routeId` | `query` | `String?` | `single` | `-` | false |  |
 
 ### `demo_navigation_lab.guarded`
 

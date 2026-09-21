@@ -22,6 +22,9 @@ route_page.DemoFailurePage ccrouterBuildDemoFailurePageRoute(
       .decode(arguments);
   return route_page.DemoFailurePage(
     stage: decoded.stage,
+    reason: decoded.reason,
     errorType: decoded.errorType,
+    initialRouteId: decoded.initialRouteId,
+    routeId: decoded.routeId,
   );
 }

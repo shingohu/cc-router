@@ -486,12 +486,42 @@
           "description": null
         },
         {
+          "name": "reason",
+          "wireName": "reason",
+          "source": "query",
+          "type": "String",
+          "cardinality": "single",
+          "required": true,
+          "default": null,
+          "description": null
+        },
+        {
           "name": "errorType",
           "wireName": "errorType",
           "source": "query",
           "type": "String",
           "cardinality": "single",
           "required": true,
+          "default": null,
+          "description": null
+        },
+        {
+          "name": "initialRouteId",
+          "wireName": "initialRouteId",
+          "source": "query",
+          "type": "String?",
+          "cardinality": "single",
+          "required": false,
+          "default": null,
+          "description": null
+        },
+        {
+          "name": "routeId",
+          "wireName": "routeId",
+          "source": "query",
+          "type": "String?",
+          "cardinality": "single",
+          "required": false,
           "default": null,
           "description": null
         }

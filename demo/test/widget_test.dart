@@ -379,6 +379,42 @@ void main() {
     await _unmountDemo(tester);
   });
 
+  testWidgets('system back is evaluated by the managed PopGuard', (
+    tester,
+  ) async {
+    await _pumpDemo(tester);
+    await tester.tap(find.text('策略'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('PopGuard 未保存表单'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('PopGuard'), findsOneWidget);
+    await tester.tap(find.text('模拟系统返回'));
+    await tester.pumpAndSettle();
+    expect(find.text('PopGuard'), findsOneWidget);
+    expect(
+      demoNavigationLabStore.events.any(
+        (event) => event.contains('PopGuard · system · deny'),
+      ),
+      isTrue,
+    );
+    expect(CCRouter.activeRouteEntries, hasLength(1));
+
+    await tester.tap(find.text('存在未保存修改'));
+    await tester.tap(find.text('模拟系统返回'));
+    await tester.pumpAndSettle();
+    expect(find.text('CCRouter Lab'), findsOneWidget);
+    expect(CCRouter.activeRouteEntries, isEmpty);
+    expect(
+      demoNavigationLabStore.events.any(
+        (event) => event.contains('PopGuard · system · allow'),
+      ),
+      isTrue,
+    );
+
+    await _unmountDemo(tester);
+  });
+
   testWidgets('failure fallback can return without leaking Route Entries', (
     tester,
   ) async {
@@ -390,6 +426,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('导航兜底'), findsOneWidget);
+    expect(find.text('reason: routeNotFound'), findsOneWidget);
+    expect(find.text('initial route: -'), findsOneWidget);
+    expect(find.text('failed route: -'), findsOneWidget);
     expect(CCRouter.navigator.canPop(), isTrue);
     expect(CCRouter.activeRouteEntries, hasLength(1));
 
@@ -398,6 +437,28 @@ void main() {
 
     expect(find.text('CCRouter Lab'), findsOneWidget);
     expect(CCRouter.activeRouteEntries, isEmpty);
+
+    await _unmountDemo(tester);
+  });
+
+  testWidgets('typed result mismatch is visible and does not leak an entry', (
+    tester,
+  ) async {
+    await _pumpDemo(tester);
+    await tester.tap(find.text('导航'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('进入栈操作工作台'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('故意返回错误类型'));
+    await tester.pumpAndSettle();
+    expect(find.text('CCRouter Lab'), findsOneWidget);
+    expect(find.textContaining('CCRouteResultTypeError'), findsOneWidget);
+    expect(CCRouter.activeRouteEntries, isEmpty);
+    expect(
+      CCRouter.recentNavigationFailures.single.context.reason,
+      CCNavigationFailureReason.resultTypeMismatch,
+    );
 
     await _unmountDemo(tester);
   });

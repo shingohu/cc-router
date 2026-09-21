@@ -14,14 +14,26 @@ final class _DemoFailurePageRouteArguments {
   /// Creates arguments without navigating or retaining a backend context.
   const _DemoFailurePageRouteArguments({
     required this.stage,
+    required this.reason,
     required this.errorType,
+    this.initialRouteId,
+    this.routeId,
   });
 
   /// query parameter stage for demo_navigation_lab.failure.
   final String stage;
 
+  /// query parameter reason for demo_navigation_lab.failure.
+  final String reason;
+
   /// query parameter errorType for demo_navigation_lab.failure.
   final String errorType;
+
+  /// query parameter initialRouteId for demo_navigation_lab.failure.
+  final String? initialRouteId;
+
+  /// query parameter routeId for demo_navigation_lab.failure.
+  final String? routeId;
 }
 
 /// 展示标准导航失败经 Host Failure Policy 恢复后的安全页面。
@@ -32,9 +44,18 @@ abstract final class _DemoFailurePageRoute {
   /// Creates a typed Intent; navigate through CCRouter.navigator.
   static CCRouteIntent<void> intent({
     required String stage,
+    required String reason,
     required String errorType,
+    String? initialRouteId,
+    String? routeId,
   }) => _DemoFailurePageRouteIntent(
-    _DemoFailurePageRouteArguments(stage: stage, errorType: errorType),
+    _DemoFailurePageRouteArguments(
+      stage: stage,
+      reason: reason,
+      errorType: errorType,
+      initialRouteId: initialRouteId,
+      routeId: routeId,
+    ),
   );
 
   /// Component-owned definition; business callers should use [intent].
@@ -101,6 +122,17 @@ final class _DemoFailurePageRouteCodec
             "Route \"demo_navigation_lab.failure\" parameter \"stage\" is invalid.",
           )
         : _raw_stage;
+    final _values_reason = input.query["reason"];
+    if (_values_reason != null && _values_reason.length != 1)
+      throw CCRouteParameterError(
+        "Route \"demo_navigation_lab.failure\" parameter \"reason\" is invalid.",
+      );
+    final _raw_reason = _values_reason?.single;
+    final String _value_reason = _raw_reason == null
+        ? throw CCRouteParameterError(
+            "Route \"demo_navigation_lab.failure\" parameter \"reason\" is invalid.",
+          )
+        : _raw_reason;
     final _values_errorType = input.query["errorType"];
     if (_values_errorType != null && _values_errorType.length != 1)
       throw CCRouteParameterError(
@@ -112,9 +144,28 @@ final class _DemoFailurePageRouteCodec
             "Route \"demo_navigation_lab.failure\" parameter \"errorType\" is invalid.",
           )
         : _raw_errorType;
+    final _values_initialRouteId = input.query["initialRouteId"];
+    if (_values_initialRouteId != null && _values_initialRouteId.length != 1)
+      throw CCRouteParameterError(
+        "Route \"demo_navigation_lab.failure\" parameter \"initialRouteId\" is invalid.",
+      );
+    final _raw_initialRouteId = _values_initialRouteId?.single;
+    final String? _value_initialRouteId = _raw_initialRouteId == null
+        ? null
+        : _raw_initialRouteId;
+    final _values_routeId = input.query["routeId"];
+    if (_values_routeId != null && _values_routeId.length != 1)
+      throw CCRouteParameterError(
+        "Route \"demo_navigation_lab.failure\" parameter \"routeId\" is invalid.",
+      );
+    final _raw_routeId = _values_routeId?.single;
+    final String? _value_routeId = _raw_routeId == null ? null : _raw_routeId;
     return _DemoFailurePageRouteArguments(
       stage: _value_stage,
+      reason: _value_reason,
       errorType: _value_errorType,
+      initialRouteId: _value_initialRouteId,
+      routeId: _value_routeId,
     );
   }
 
@@ -125,7 +176,11 @@ final class _DemoFailurePageRouteCodec
       path: {},
       query: {
         "stage": [arguments.stage],
+        "reason": [arguments.reason],
         "errorType": [arguments.errorType],
+        if (arguments.initialRouteId != null)
+          "initialRouteId": [arguments.initialRouteId!],
+        if (arguments.routeId != null) "routeId": [arguments.routeId!],
       },
       extra: null,
     );
@@ -140,8 +195,17 @@ final class CCGeneratedDemoFailurePageRouteFactory {
   /// Creates an immutable Intent without performing navigation.
   CCRouteIntent<void> call({
     required String stage,
+    required String reason,
     required String errorType,
-  }) => _DemoFailurePageRoute.intent(stage: stage, errorType: errorType);
+    String? initialRouteId,
+    String? routeId,
+  }) => _DemoFailurePageRoute.intent(
+    stage: stage,
+    reason: reason,
+    errorType: errorType,
+    initialRouteId: initialRouteId,
+    routeId: routeId,
+  );
 }
 
 /// Package-internal bridge used by the generated component route index.

@@ -52,6 +52,12 @@ final class _DemoStackPageState extends State<DemoStackPage> {
     unawaited(CCRouter.navigator.open(Uri.parse('/')));
   }
 
+  void _completeWithWrongType() {
+    if (CCRouter.navigator.canPop()) {
+      CCRouter.navigator.pop(result: 42);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final entries = CCRouter.activeRouteEntries;
@@ -93,6 +99,18 @@ final class _DemoStackPageState extends State<DemoStackPage> {
             onPressed: _complete,
             icon: const Icon(Icons.check),
             label: const Text('Pop 并返回结果'),
+          ),
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            onPressed: _completeWithWrongType,
+            icon: const Icon(Icons.warning_amber_outlined),
+            label: const Text('故意返回错误类型'),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'String 路由收到 int 结果时，Runtime 应报告 resultTypeMismatch，'
+            '并清理当前 RouteEntry。',
+            style: Theme.of(context).textTheme.bodySmall,
           ),
         ],
       ),
