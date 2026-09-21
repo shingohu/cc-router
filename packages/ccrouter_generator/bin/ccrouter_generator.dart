@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:ccrouter_generator/ccrouter_generator.dart';
+import 'package:ccrouter_generator/src/internal_api_boundary_validator.dart';
 import 'package:ccrouter_generator/src/package_workspace.dart';
 import 'package:dart_style/dart_style.dart';
 import 'package:path/path.dart' as path;
@@ -236,6 +237,15 @@ Future<bool> _generateResolvedWorkspace(
     return false;
   }
   discoveryWatch.stop();
+  final internalApiErrors = CCGeneratedInternalApiBoundaryValidator.validate(
+    workspace.packages.values,
+  );
+  if (internalApiErrors.isNotEmpty) {
+    for (final error in internalApiErrors) {
+      stderr.writeln('error: $error');
+    }
+    return false;
+  }
   if (!workspace.host.dependencies.contains('ccrouter')) {
     stderr.writeln(
       'error: Host Package "${workspace.host.name}" must directly depend on '
@@ -1554,7 +1564,8 @@ String _emitComponentRouteApi(
   final out = StringBuffer()
     ..writeln('// GENERATED CODE - DO NOT MODIFY BY HAND')
     ..writeln('// ignore_for_file: type=lint')
-    ..writeln();
+    ..writeln()
+    ..writeln("import 'package:flutter/foundation.dart' show internal;");
   for (final entry
       in imports.entries.toList()
         ..sort((left, right) => left.key.compareTo(right.key))) {
@@ -1567,6 +1578,7 @@ String _emitComponentRouteApi(
     ..writeln(
       '/// Typed navigation entry points for routes internal to `$componentId`.',
     )
+    ..writeln('@internal')
     ..writeln('abstract final class $className {');
   for (final entry
       in members.entries.toList()

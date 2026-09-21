@@ -7,7 +7,7 @@ import 'package:path/path.dart' as path;
 import 'package:test/test.dart';
 
 void main() {
-  test('another Package can import src but not the public Route API', () async {
+  test('another Package reports internal use and hides the public Route API', () async {
     final root = _workspaceRoot();
     final probeDirectory = Directory(
       path.join(root.path, 'demo', 'test', '_ccrouter_route_api_probe'),
@@ -33,7 +33,19 @@ void probe() {
 }
 ''');
     final defaultAnalysis = await _analyze(probe);
-    expect(defaultAnalysis.stdout, contains('No issues found!'));
+    expect(defaultAnalysis.stdout, contains('invalid_use_of_internal_member'));
+    expect(defaultAnalysis.exitCode, isNonZero);
+
+    probe.writeAsStringSync('''
+import 'package:demo_navigation_lab/src/ccrouter_generated/component/demo_navigation_lab_component.route_api.g.dart';
+
+void probe() {
+  // ignore: invalid_use_of_internal_member
+  DemoNavigationLabRoutes.detail(id: 1);
+}
+''');
+    final ignored = await _analyze(probe);
+    expect(ignored.stdout, contains('No issues found!'));
 
     probe.writeAsStringSync('''
 import 'package:demo_navigation_lab/demo_navigation_lab.dart';

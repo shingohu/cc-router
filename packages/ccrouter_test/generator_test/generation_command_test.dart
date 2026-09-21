@@ -9,6 +9,42 @@ import 'package:test/test.dart';
 
 void main() {
   test(
+    'generate check rejects cross-Package internal imports despite ignores',
+    () async {
+      final probe = File(path.join(
+        Directory.current.path,
+        'demo',
+        'lib',
+        '_ccrouter_internal_api_probe.dart',
+      ));
+      expect(probe.existsSync(), isFalse);
+      addTearDown(() {
+        if (probe.existsSync()) probe.deleteSync();
+      });
+      probe.writeAsStringSync('''
+import 'package:demo_navigation_lab/src/ccrouter_generated/component/demo_navigation_lab_component.route_api.g.dart';
+
+void probe() {
+  // ignore: invalid_use_of_internal_member
+  DemoNavigationLabRoutes.detail(id: 1);
+}
+''');
+      final rejected = await Process.run(Platform.resolvedExecutable, [
+        'run',
+        'ccrouter_generator:ccrouter',
+        'generate',
+        'demo',
+        '--check',
+      ], workingDirectory: Directory.current.path);
+      expect(rejected.exitCode, 1);
+      expect('${rejected.stderr}', contains('ccrouter_demo:lib/_ccrouter_internal_api_probe.dart:1'));
+      expect('${rejected.stderr}', contains('public Contract or Host barrel'));
+      expect(probe.existsSync(), isTrue);
+    },
+    timeout: const Timeout(Duration(minutes: 2)),
+  );
+
+  test(
     'unified generation checks workspace outputs and restores stale probes',
     () async {
       final outsideOutput = path.join(
@@ -233,6 +269,14 @@ void main() {
       expect(
         routeApi,
         contains('abstract final class DemoNavigationLabRoutes'),
+      );
+      expect(
+        routeApi,
+        contains("import 'package:flutter/foundation.dart' show internal;"),
+      );
+      expect(
+        routeApi,
+        contains('@internal\nabstract final class DemoNavigationLabRoutes'),
       );
       expect(routeApi, contains('static const detail ='));
       expect(routeApi, contains('static const presentationBottomPage ='));

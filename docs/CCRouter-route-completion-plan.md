@@ -293,9 +293,10 @@ IDE 可发现性属于方案验收条件：生成完成且 Workspace Analyzer �
   字段和其他实现仍可保持私有；
 - [x] Route 参数、结果类型、Extra 类型、Query Codec 和默认值必须可由生成 Library 稳定引用或
   重建；复用 Contract Generator 的确定性 Import Plan 和常量渲染，禁止复制未经解析的源码表达式；
-- [ ] Package-internal 生成 API 的 `@internal` 标记和跨 Package 强制误用诊断尚未实现；
-  `implementation_imports`、Barrel Validator 与 API Surface Test 只能提供基础约束，不能替代
-  Generator 边界校验；跨组件公开能力继续使用 `CCRouteContract`；
+- [x] Package-internal 生成 Route API 使用 `@internal`，Analyzer 对跨 Package 使用报
+  `invalid_use_of_internal_member`；`ccrouter generate --check` 还会拒绝依赖闭包内可写
+  Package 的手写生产源码跨包导入/导出 `src/ccrouter_generated`，即使使用 Analyzer ignore
+  也不会放行。自动生成的 Host/Binding 胶水合法互访不受影响，公开能力仍通过 Contract；
 - [x] Component Route API 是内部 Route Intent 的唯一生成声明位置，逐源码中间生成物不重复
   暴露同名 Route API；
 - [x] Component Route Index 只负责 Runtime 注册和 Flutter Destination Catalog，不成为业务
@@ -307,7 +308,8 @@ IDE 可发现性属于方案验收条件：生成完成且 Workspace Analyzer �
 
 该方案已经启用：内部 Route API 从页面级 `part` 迁移为独立生成 Library，并通过组件命名空间
 和公共 Barrel 边界控制可发现性。`lib/src` 与 `implementation_imports` 不是语言级访问控制；
-`@internal` 标记、Analyzer error 和 Generator 跨 Package 边界校验仍属于后续收口任务。
+`@internal`、Analyzer error 和 Generator 边界校验建立了工程级保护，不改变 Dart 语言本身的
+可导入性；后者仅覆盖参与当前 Host 依赖闭包的可写 Package 生产源码。
 页面零样板、组件内稳定入口、默认值生成和 IDE 唯一自动导包已有回归。
 
 #### P2-4 生成器与 API 边界审查（部分完成）

@@ -62,6 +62,17 @@ Component ID 沿用更严格的 Package 风格，只允许小写字母、数字�
 Runtime 保留注册及解析边界校验。后续增加字段时，必须同步指定失败阶段、正/负例和对应测试入口，
 不能只在生成器中新增校验。
 
+## 内部生成 API 边界
+
+组件级 `XxxRoutes` 仅供所属 Package 使用，生成类标记 `@internal`。Workspace 与 Demo
+将 `invalid_use_of_internal_member` 提升为 Analyzer error。`ccrouter generate` 和 `--check`
+额外解析 Host 运行时依赖闭包中可写 Package 的手写 `lib/**/*.dart` import/export 指令，禁止引用
+另一 Package 的 `src/ccrouter_generated`；条件导入与跨 Package 相对路径同样检查。自动生成的
+Host/Binding 胶水可以跨 Package 连接内部 Bundle，公开 Contract/Host barrel 可以正常使用。
+规则不扫描无关 Package、第三方只读依赖或测试源码，也不通过字符串搜索解释注释和普通字符串。
+这是一条构建门禁，不是 Dart 编译器级私有权限；CI 应执行 `ccrouter generate --check`
+和 `dart analyze`，并要求每个消费方使用相同的 Analyzer error 配置。
+
 Interceptor 与 Pop Guard 列表保留声明顺序。重复项是构建错误，框架不会通过去重改变策略执行
 次数。注册存在性与 Owner 关系仍在 Runtime 初始化时验证，因为当前生成元数据不包含完整策略
 注册表。

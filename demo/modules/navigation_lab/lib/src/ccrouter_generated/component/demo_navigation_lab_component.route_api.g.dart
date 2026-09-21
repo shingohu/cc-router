@@ -1,6 +1,7 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint
 
+import 'package:flutter/foundation.dart' show internal;
 import '../route/detail_page.route.g.dart'
     as route_src_ccrouter_generated_route_detail_page_route_g_dart;
 import '../route/failure_page.route.g.dart'
@@ -19,6 +20,7 @@ import '../route/stack_page.route.g.dart'
     as route_src_ccrouter_generated_route_stack_page_route_g_dart;
 
 /// Typed navigation entry points for routes internal to `demo_navigation_lab_component`.
+@internal
 abstract final class DemoNavigationLabRoutes {
   /// Creates an Intent for `demo_navigation_lab.cancel`.
   static const cancel =
