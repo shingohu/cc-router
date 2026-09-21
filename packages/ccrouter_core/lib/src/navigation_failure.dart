@@ -32,6 +32,7 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
     required _PreparedRoute Function() prepare,
     required Future<Object?> Function(CCNavigationRequest request) action,
     void Function(_RouteEntryRecord entry)? commitEntry,
+    void Function(Object? result)? validateResult,
   }) async {
     _ensureNavigationCanStart();
     final effectiveSource = _validatedNavigationSource(source);
@@ -44,6 +45,7 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
     var currentPrepare = prepare;
     var currentAction = action;
     var currentCommitEntry = commitEntry;
+    var currentValidateResult = validateResult;
     var suppressRecoveryResult = false;
     var attemptedRouteId = routeIdHint;
     String? initialRouteId = routeIdHint;
@@ -70,6 +72,7 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
                 navigationId: navigationId,
                 action: currentAction,
                 commitEntry: currentCommitEntry,
+                validateResult: currentValidateResult,
                 onAttempt: (routeId) => attemptedRouteId = routeId,
               )
             : _dispatchNavigationUncoordinated(
@@ -81,6 +84,7 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
                 navigationId: navigationId,
                 action: currentAction,
                 commitEntry: currentCommitEntry,
+                validateResult: currentValidateResult,
                 onAttempt: (routeId) => attemptedRouteId = routeId,
               ));
         return suppressRecoveryResult ? null : result;

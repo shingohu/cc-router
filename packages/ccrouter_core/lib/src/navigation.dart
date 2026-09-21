@@ -206,12 +206,15 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
       routeIdHint: intent.routeId,
       prepare: () => _routeRegistry.prepareIntent(intent),
       action: (request) => _requiredNavigationAdapter.navigate(request),
+      validateResult: (result) {
+        try {
+          result as R?;
+        } on TypeError {
+          throw CCRouteResultTypeError(intent.routeId);
+        }
+      },
     );
-    try {
-      return result as R?;
-    } on TypeError {
-      throw CCRouteResultTypeError(intent.routeId);
-    }
+    return result as R?;
   }
 
   /// Executes a typed navigation operation that has no business result.
@@ -246,6 +249,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     String? navigationId,
     required Future<Object?> Function(CCNavigationRequest request) action,
     void Function(_RouteEntryRecord entry)? commitEntry,
+    void Function(Object? result)? validateResult,
     void Function(String routeId)? onAttempt,
   }) {
     if (prepared.extra != null) {
@@ -258,6 +262,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
         navigationId: navigationId,
         action: action,
         commitEntry: commitEntry,
+        validateResult: validateResult,
         onAttempt: onAttempt,
       );
     }
@@ -304,6 +309,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
       navigationId: navigationId,
       action: action,
       commitEntry: commitEntry,
+      validateResult: validateResult,
       onAttempt: onAttempt,
     );
     if (navigationConcurrencyPolicy != CCNavigationConcurrencyPolicy.allow) {
@@ -389,6 +395,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     String? navigationId,
     required Future<Object?> Function(CCNavigationRequest request) action,
     void Function(_RouteEntryRecord entry)? commitEntry,
+    void Function(Object? result)? validateResult,
     void Function(String routeId)? onAttempt,
   }) async {
     final effectiveNavigationId =
@@ -414,6 +421,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
           () => action(request),
           entry: entry,
           commitEntry: commitEntry,
+          validateResult: validateResult,
         );
       }
       var adapterDispatchStarted = false;
@@ -439,6 +447,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
               () => action(request),
               entry: entry,
               commitEntry: commitEntry,
+              validateResult: validateResult,
             );
           case CCNavigationDefer(:final code, :final timeout):
             return _deferNavigation(
@@ -646,6 +655,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     Future<Object?> Function() action, {
     _RouteEntryRecord? entry,
     void Function(_RouteEntryRecord entry)? commitEntry,
+    void Function(Object? result)? validateResult,
   }) async {
     _emitNavigationEvent(request, CCNavigationLifecyclePhase.requested);
     try {
@@ -661,6 +671,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
         (commitEntry ?? _commitRouteEntry)(entry);
       }
       final result = await pending;
+      validateResult?.call(result);
       if (entry != null &&
           request.operation != CCNavigationOperation.go &&
           request.operation != CCNavigationOperation.reset &&

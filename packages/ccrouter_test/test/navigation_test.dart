@@ -4216,6 +4216,19 @@ void main() {
     );
     runtime.popRoute(result: 42);
     await expectLater(result, throwsA(isA<CCRouteResultTypeError>()));
+    expect(runtime.recentNavigationEvents.map((event) => event.phase), [
+      CCNavigationLifecyclePhase.requested,
+      CCNavigationLifecyclePhase.failed,
+    ]);
+    expect(runtime.activeRouteEntries, isEmpty);
+    expect(
+      runtime.recentNavigationFailures.single.context.stage,
+      CCNavigationFailureStage.result,
+    );
+    expect(
+      runtime.recentNavigationFailures.single.context.reason,
+      CCNavigationFailureReason.resultTypeMismatch,
+    );
     await runtime.dispose();
   });
 
