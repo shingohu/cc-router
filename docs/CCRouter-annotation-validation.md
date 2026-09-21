@@ -35,6 +35,33 @@ Component ID 沿用更严格的 Package 风格，只允许小写字母、数字�
 | 参数 Constraint | 语法、256 字符、Capture 对应关系 | 保留生成结果 | 手写 Pattern 使用相同上限 |
 | Description | Unicode/Markdown 自由文本，最大 4096 字符 | 安全序列化 | 不参与 Runtime 行为 |
 
+## 逐规则回归映射
+
+测试入口：[G：Route Generator](../packages/ccrouter_test/generator_test/route_generator_test.dart)、
+[W：Workspace Validator](../packages/ccrouter_test/generator_test/workspace_validator_test.dart)、
+[R：手写 Definition/Runtime](../packages/ccrouter_test/test/component_test.dart)、
+[N：导航策略](../packages/ccrouter_test/test/navigation_test.dart)。没有足够静态事实的阶段会在表中
+标明责任边界，不能理解为跳过最终验证。
+
+| 不变量 | Generator 测试 G | Workspace 测试 W | Runtime/手写测试 R、N |
+| --- | --- | --- | --- |
+| Component ID、Version、依赖合法性 | `builder rejects invalid component ID/version/dependencies`、`accepts complete SemVer` | `rejects invalid persisted identifiers and SemVer`、`rejects missing/self/cyclic dependencies` | R `runtime validates component identity, SemVer, and dependencies` |
+| Route ID、Route Owner、重复注册 | `builder rejects invalid route ID/duplicate ID` | `rejects unknown route owners`、`rejects duplicate routes` | R `runtime rejects invalid handwritten route identities and policies`、`route registration rejects missing primary and duplicate patterns` |
+| 单值/多值 Pattern、唯一可逆 Primary | `builder rejects missing/single+plural/regex-only/duplicate primaries` | 复用生成元数据，不推断 Primary | R `route registration rejects missing primary and duplicate patterns` |
+| Path/URI/Regex 语法与重复 Pattern | `builder rejects bad regex`、路径与 URI 元数据测试 | `rejects equal-specificity overlapping path patterns`、`rejects identical regex patterns` | R `route registration rejects malformed URI and regex patterns`、`route registration rejects missing primary and duplicate patterns` |
+| Regex 长度/Capture 与 Constraint 语法/长度 | `builder rejects oversized regex/too many regex captures/bad constraint/oversized constraint` | 仅校验可静态证明的 Pattern 冲突 | R `runtime bounds handwritten route regular expressions`、`runtime applies generator expression bounds to handwritten routes` |
+| Path 参数、Query 类型/Codec、Extra 边界 | `builder rejects unmapped/missing/nullable path`、`unsupported query object/codec mismatch/duplicate query keys`、`required external Extra/multiple Extras` | 不重建源码类型；验证 Contract 实现关系 | R `route registration rejects malformed URI and regex patterns`；手写 Codec 的业务正确性在 decode/encode 边界校验，不能静态推断 |
+| Interceptor/PopGuard ID 与重复引用 | `builder rejects invalid/duplicate interceptor ID`、`duplicate Pop guard ID` | `rejects invalid persisted identifiers and SemVer` | R `runtime rejects invalid handwritten route identities and policies`；N `rejects route definitions with unknown interceptors`、`rejects route interceptors owned by another component` |
+| Host/Shell/Outlet ID 与 Placement | `builder rejects invalid placement ID` | `rejects invalid persisted identifiers and SemVer`、`rejects parent placement mismatches` | R `runtime rejects invalid Shell and Outlet identities`、`runtime rejects missing, cyclic, and mismatched route parents` |
+| Parent 存在、自引用、环、依赖可见性 | `builder rejects self parent` | `rejects missing, self-referencing, and cyclic route parents`、`requires cross-component parents to be visible dependencies` | R `runtime rejects missing, cyclic, and mismatched route parents` |
+| Contract exposure、实现与公共导出 | `contract builder emits a standalone Pure Dart contract`、`page builder rejects a Contract-first constructor mismatch` | `rejects missing, duplicate, and unknown public implementations`、`requires public contracts to export the generated library` | Runtime 验证注册后的 Route ID/Owner；静态 Barrel/export 由 Workspace 负责 |
+| Description 大小和安全序列化 | `builder rejects oversized description`、`metadata builder emits documented ownership and parameters` | 只消费已序列化的元数据 | 不影响运行时路由语义，无手写 Definition 字段 |
+
+动态策略注册、Host 绑定、Adapter 能力不能由 Generator 从注解推断；Runtime 初始化/绑定时拒绝
+缺失或不一致的关系。路径表达式的复杂重叠也不能可靠静态判定，Workspace 只拦截可证明冲突，
+Runtime 保留注册及解析边界校验。后续增加字段时，必须同步指定失败阶段、正/负例和对应测试入口，
+不能只在生成器中新增校验。
+
 Interceptor 与 Pop Guard 列表保留声明顺序。重复项是构建错误，框架不会通过去重改变策略执行
 次数。注册存在性与 Owner 关系仍在 Runtime 初始化时验证，因为当前生成元数据不包含完整策略
 注册表。

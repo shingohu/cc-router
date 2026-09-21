@@ -213,8 +213,9 @@ Route 和动态 Host/Shell/Interceptor 配置的最后防线。
   上限；无法可靠判断的灾难性回溯只做明确诊断或文档提示，不使用高误报启发式规则阻断构建；
 - [x] 对 Description 和源码注释保持自由文本语义，只做安全转义、确定性换行和必要的生成物大小
   保护，不限制业务语言、Markdown 或 Unicode；
-- [ ] 建立 Generator、Workspace 与手写 `CCRouteDefinition` 的逐规则测试映射，核对尚未覆盖的
-  失败边界，防止三层语义漂移。
+- [x] 建立 Generator、Workspace 与手写 `CCRouteDefinition` 的逐规则测试映射，明确动态校验
+  与不适用边界，并补齐手写 Definition 的 Regex Capture/Constraint 上限负向回归；详见
+  [注解字段与兼容性校验](CCRouter-annotation-validation.md#逐规则回归映射)。
 
 校验失败时机必须稳定：静态字段由 Generator/Workspace 直接阻断生成；动态注册关系在
 `CCRouter.initialize()` 阶段以稳定的 Registration Error 失败；外部 URI 的实际参数值由生成的

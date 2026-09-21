@@ -792,6 +792,51 @@ void main() {
     );
   });
 
+  test('runtime applies generator expression bounds to handwritten routes', () {
+    final tooManyCaptures = List<String>.generate(
+      33,
+      (index) => '(?<part$index>a)',
+    ).join();
+    final oversizedConstraint = List<String>.filled(257, 'a').join();
+    for (final (pattern, diagnostic) in [
+      (CCRegexPattern(tooManyCaptures), 'named captures'),
+      (
+        CCPathPattern(
+          '/orders/:value',
+          constraints: {'value': oversizedConstraint},
+        ),
+        'characters',
+      ),
+    ]) {
+      expect(
+        () => CCRouterRuntime.forTesting(
+          components: [
+            component(
+              'orders',
+              register: (registry) => registry.registerRoute<String, void>(
+                CCRouteDefinition<String, void>(
+                  routeId: 'orders.bounds',
+                  patterns: [
+                    const CCPathPattern('/orders/:value', primary: true),
+                    pattern,
+                  ],
+                  codec: const StringCodec(),
+                ),
+              ),
+            ),
+          ],
+        ),
+        throwsA(
+          isA<CCRouteRegistrationError>().having(
+            (error) => error.message,
+            'message',
+            contains(diagnostic),
+          ),
+        ),
+      );
+    }
+  });
+
   test('runtime validates component identity, SemVer, and dependencies', () {
     for (final manifest in [
       component('Bad ID'),
