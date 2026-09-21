@@ -182,6 +182,10 @@ Catalog 和 Host Route Catalog 保留各自的消费边界。收敛必须保持�
 
 上述目录和数据边界已经迁移。生成器测试覆盖增量缓存、`--check`、空 Catalog、陈旧输出清理、
 并发锁和无缓存逐字节一致性；后续新增 Capability 仍必须复用同一 Package Index 与 Catalog。
+本轮以 `ccrouter generate demo --no-cache --profile` 执行全量元数据解析（缓存命中 0/11），再用
+`--check --no-cache` 校验受控生成物稳定：7 个 Package、4 个组件、30 条路由；旧路径扫描无残留，
+Git 工作区无新差异。没有物理删除生成目录；Builder 中间缓存仍由 build_runner 增量管理，
+不把“无缓存聚合”误称为全新 Builder 冷构建。
 
 #### P2-2 注解字段合法性校验（已落地，动态注册关系保留运行时校验）
 
