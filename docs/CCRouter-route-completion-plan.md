@@ -306,8 +306,8 @@ IDE 可发现性属于方案验收条件：生成完成且 Workspace Analyzer �
 - [x] Component Route Index 只负责 Runtime 注册和 Flutter Destination Catalog，不成为业务
   导航入口，也不把 `ccrouter_host.dart` 泄漏给组件业务代码；
 - [x] 独立 Library 已成为默认模式；Demo、生成器和导航回归通过，旧页面 Route Part 已清理；
-- [x] IDE 组件内唯一自动导包已通过 Android Studio 验收；源码重命名/移动后的补全刷新仍
-  需要后续人工回归。现有测试覆盖多 Route 单源码、源码子目录、私有声明拒绝、集合默认值、
+- [x] IDE 组件内唯一来源 Library 的自动导包已通过 Android Studio 验收；临时源码重命名/
+  移动后已复验生成结果及调用点导包。现有测试覆盖多 Route 单源码、源码子目录、私有声明拒绝、集合默认值、
   Extra 和 Contract-first Implementation。
 
 该方案已经启用：内部 Route API 从页面级 `part` 迁移为独立生成 Library，并通过组件命名空间
@@ -336,7 +336,7 @@ IDE 可发现性属于方案验收条件：生成完成且 Workspace Analyzer �
   只有一个 Route API 候选，来源为
   `package:demo_navigation_lab/src/ccrouter_generated/component/demo_navigation_lab_component.route_api.g.dart`。
   `DemoNavigationLabComponentGeneratedRoutes` 是 Runtime 注册索引，不是重复的业务 Route API。
-  宿主 Package 仍不会得到该内部候选；源码重命名/移动后的补全刷新仍需后续人工回归。
+  宿主 Package 仍不会得到该内部候选；临时页面增删改移验收见 6.1。
   Analysis Server 协议探针对未导入符号返回空候选，不能替代真实 IDE 验收。
 - [x] 内部 API 边界增量回归：Generator 专项 124 项、API Surface 与组件注册 29 项通过；
   `ccrouter_generator/lib`、`bin`、`generator_test` 静态分析及 Demo analyze 均无问题。
@@ -416,8 +416,37 @@ Metrics/Display Features，不自动产生原生窗口。未来每个 Flutter Vi
 3. 完整 Route Restoration 只有在恢复机会 Telemetry 证明收益后另立项；继续保持
    `unsupported` 诊断，不提供伪恢复语义。
 4. `ccrouter watch`、CLI 快速单次生成与 DevTools 可视化属于开发体验后续工作；
-   当前以显式生成、`--check` 和 Package/Host Catalog 为确定性基础。源码重命名或移动后
-   的 IDE 补全刷新尚需人工回归，不能将既有唯一自动导包验收外推到这些场景。
+   当前以显式生成、`--check` 和 Package/Host Catalog 为确定性基础。临时页面的源码
+   重命名/移动与 IDE 导包已验收，但不外推至 IDE 重启或大型外部依赖工程。
 
 后续扩展必须保留本轮测试门禁与可回退的 Backend/Generator 边界；涉及新公开能力时先补
 失败边界和能力声明，再实施并分别执行 Generator、Runtime、Demo 与 Workspace 回归。
+
+## 6. 生成体验验收
+
+### 6.1 页面增删改移与 IDE（已验证）
+
+在 Demo 的 `demo_navigation_lab` 内使用临时、无业务引用的页面，按顺序执行
+新增、类名重命名、移动到 `lib/src/probe/`、删除；每一步运行
+`fvm dart run ccrouter_generator:ccrouter generate demo --profile`。以下为本机单次观测，
+不是跨机器性能基准：
+
+| 操作 | 总耗时 | Builder | 结果 |
+| --- | ---: | ---: | --- |
+| 初始空改动 `--check` | 2060 ms | 1255 ms | 0 输出，缓存 11/11 |
+| 新增 Route | 5458 ms | 4847 ms | 31 条路由，Route/Binding、组件 API、Host Catalog 均更新 |
+| 重命名页面类 | 5807 ms | 5094 ms | ID 不变；生成类型与 Catalog 符号更新，无旧类引用 |
+| 移动源码目录 | 4867 ms | 4359 ms | 新子目录生成物与源码定位正确，旧位置生成物消失 |
+| 删除临时页面 | 7689 ms | 6794 ms | 回到 30 条路由，Route API、Host Catalog 与旧产物均清理 |
+| 删除后稳定空改动 `--check` | 2275 ms | 1367 ms | 0 输出，缓存 11/11，工作区干净 |
+
+在 Android Studio 的本仓库窗口，对组件内临时未导包调用点请求 Quick Fix：
+`DemoNavigationLabRoutes` 的导入建议均指向同一个生成 Library，IDE 同时提供相对路径、
+Package 路径和 `show` 变体。选择相对路径建议后，调用
+`DemoNavigationLabRoutes.generationProbe()` 可解析。这里验收的是**唯一来源 Library**，
+不是声称 IDE 只显示一条菜单项。生成前尚无符号，不能依赖 IDE 猜测新增 Route。
+
+临时页面与 IDE 调用点均已清理；删除后的 `--check` 与 Workspace analyze 通过。
+首次删除后的 Builder 有失效图重建，稳定的再次执行已回到 0 输出；不能把这两个测量
+当作重复空改动的平均值。该验收不包含同时编辑多个组件、IDE 重启或大型外部依赖工程。
+Generator 全套 124 项、Demo 22 项通过；受管生成物无残留或 Git 差异。
