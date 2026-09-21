@@ -316,7 +316,7 @@ IDE 可发现性属于方案验收条件：生成完成且 Workspace Analyzer �
 可导入性；后者仅覆盖参与当前 Host 依赖闭包的可写 Package 生产源码。
 页面零样板、组件内稳定入口、默认值生成和 IDE 唯一自动导包已有回归。
 
-#### P2-4 生成器与 API 边界审查（部分完成）
+#### P2-4 生成器与 API 边界审查（当前 1.x 范围已完成）
 
 - [x] `package:ccrouter/ccrouter.dart` 不暴露 Runtime、Scope、Memory Adapter 或 Host/Adapter SPI。
 - [x] Host/Adapter SPI 有独立 `ccrouter_host.dart` 与 `ccrouter_go_router.dart` 入口；当前 Demo
@@ -384,3 +384,40 @@ Demo 中与本轮无关的用户工作区改动不回退；如果其未完成代
   堆快照或压力测试，因此不能据此宣称不存在任何长期内存增长。
 - 无缓存全量聚合与 `--check --no-cache` 的产物一致性结果见 P2-1；macOS 手工操作
   只验证了首屏和类型安全 Push/Pop，其他 UI 路径依赖上述自动化测试，未逐页手工遍历。
+
+## 5. 1.x 路由边界冻结（第 7 项）
+
+当前版本的交付边界如下；本节只固定已验收能力与延期范围，不增加新的公开 API。
+
+| 领域 | 1.x 已交付边界 | 不应推断为已支持 |
+| --- | --- | --- |
+| 应用导航 | `CCRouter` 统一导航、Runtime/RouteEntry 生命周期、GoRouter Backend、Host/Outlet、Shell 与 StatefulShell 接入 | Navigator 1.0 Backend 或原生 Window 创建与监听 |
+| 组件路由 | 注解生成 Package/Host Catalog、内部 Route API、跨组件 Contract 与公共 Barrel；页面无需 `part` | 未生成符号的 IDE 补全，或跨 Package 任意导入内部 Route API |
+| 生成校验 | Analyzer、Generator、Workspace 和 Runtime 分层校验；增量与无缓存聚合一致性已回归 | 动态注册关系全部可在编译时证明，或仅靠 `lib/src` 实现语言级隔离 |
+| 诊断与恢复 | 有界观察事件、Route/Backend identity 和恢复机会事件（固定 `unsupported`） | Route Restoration Snapshot、页面自动恢复或长期内存压力测试结论 |
+
+内部生成 API 的保护由公共 Barrel 不导出、`@internal` 的 Analyzer error，以及
+`ccrouter generate` / `--check` 的 AST 门禁共同实现。Dart 仍允许显式导入其他
+Package 的 `src`；CLI 门禁只扫描当前 Host 已解析依赖闭包中**可写 Package 的手写生产
+`lib/**/*.dart`**，不覆盖只读第三方、无关 Package 和测试源码；自动生成的 Host/Binding
+胶水可以合法互访。该边界是工程级约束，不是语言级访问控制。
+
+Host 表示一组受框架管理的导航上下文；目前一个 Host 可有多个 Outlet，布局变化只更新
+Metrics/Display Features，不自动产生原生窗口。未来每个 Flutter View 或原生 Window 可映射
+一个 Root Host，但平台窗口生命周期桥接尚未实现。`CCRouterApp` 不强制接管已有应用的
+`MaterialApp.router` 或应用拥有的 GoRouter。
+
+下列工作延期，不能作为 1.x API 冻结的隐含验收条件：
+
+1. Navigator 1.0 Backend 留到架构 2.0；先以独立 Backend 复用 Route Definition 和
+   `CCRouterAppBackend` SPI，验证 Pop/Observer/返回值与能力降级，不改业务导航入口。
+2. 原生多窗口桥接等待平台稳定接入能力；先验证 Window/View 到 Root Host 的身份映射、
+   激活、关闭和失效释放，不把同一窗口的旋转、折叠或多个 Outlet 当成新 Window。
+3. 完整 Route Restoration 只有在恢复机会 Telemetry 证明收益后另立项；继续保持
+   `unsupported` 诊断，不提供伪恢复语义。
+4. `ccrouter watch`、CLI 快速单次生成与 DevTools 可视化属于开发体验后续工作；
+   当前以显式生成、`--check` 和 Package/Host Catalog 为确定性基础。源码重命名或移动后
+   的 IDE 补全刷新尚需人工回归，不能将既有唯一自动导包验收外推到这些场景。
+
+后续扩展必须保留本轮测试门禁与可回退的 Backend/Generator 边界；涉及新公开能力时先补
+失败边界和能力声明，再实施并分别执行 Generator、Runtime、Demo 与 Workspace 回归。
