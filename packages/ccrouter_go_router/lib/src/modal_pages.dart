@@ -1,13 +1,9 @@
 import 'package:ccrouter/ccrouter.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
+import 'package:ccrouter/ccrouter_host.dart'
+    show CCFlutterBottomSheetPage, CCFlutterDialogPage;
+import 'package:flutter/widgets.dart';
 
-/// Creates a GoRouter page that presents [child] as a modal bottom sheet.
-///
-/// Use this function from a bound `GoRoute.pageBuilder` for a route whose
-/// contract uses [CCModalBottomSheetPresentation]. The route remains a real
-/// GoRouter entry, so its typed push Future completes with the value supplied
-/// to `pop` or by a dismiss gesture.
+/// Creates a GoRouter-compatible Page for a modal bottom sheet.
 Page<Object?> ccGoRouterBottomSheetPage({
   required Widget child,
   required CCModalBottomSheetPresentation presentation,
@@ -24,11 +20,7 @@ Page<Object?> ccGoRouterBottomSheetPage({
   restorationId: restorationId,
 );
 
-/// Creates a GoRouter page that presents [child] as a modal dialog.
-///
-/// The selected dialog family is resolved by the surrounding Flutter app when
-/// [CCDialogRouteType.platformDefault] is used. Material and Cupertino can be
-/// requested explicitly through the route contract.
+/// Creates a GoRouter-compatible Page for a Material or Cupertino dialog.
 Page<Object?> ccGoRouterDialogPage({
   required Widget child,
   required CCDialogPresentation presentation,
@@ -45,78 +37,28 @@ Page<Object?> ccGoRouterDialogPage({
   restorationId: restorationId,
 );
 
-/// A GoRouter [Page] backed by Flutter's modal bottom-sheet route.
-final class CCGoRouterBottomSheetPage<T> extends Page<T> {
-  /// Creates a bottom-sheet page with adapter-neutral [presentation] options.
+/// Compatibility bottom-sheet Page retaining the existing GoRouter type.
+final class CCGoRouterBottomSheetPage<T> extends CCFlutterBottomSheetPage<T> {
+  /// Creates a GoRouter sheet with the existing constructor and settings.
   const CCGoRouterBottomSheetPage({
-    required this.child,
-    required this.presentation,
+    required super.child,
+    required super.presentation,
     super.key,
     super.name,
     super.arguments,
     super.restorationId,
   });
-
-  /// Widget displayed inside the sheet.
-  final Widget child;
-
-  /// Bottom-sheet behavior declared by the CCRouter route contract.
-  final CCModalBottomSheetPresentation presentation;
-
-  @override
-  Route<T> createRoute(BuildContext context) => ModalBottomSheetRoute<T>(
-    builder: (_) => child,
-    isDismissible: presentation.isDismissible,
-    enableDrag: presentation.enableDrag,
-    isScrollControlled: presentation.isScrollControlled,
-    showDragHandle: presentation.showDragHandle,
-    useSafeArea: presentation.useSafeArea,
-    settings: this,
-  );
 }
 
-/// A GoRouter [Page] backed by a Material or Cupertino dialog route.
-final class CCGoRouterDialogPage<T> extends Page<T> {
-  /// Creates a dialog page with adapter-neutral [presentation] options.
+/// Compatibility dialog Page retaining the existing GoRouter type.
+final class CCGoRouterDialogPage<T> extends CCFlutterDialogPage<T> {
+  /// Creates a GoRouter dialog with the existing constructor and settings.
   const CCGoRouterDialogPage({
-    required this.child,
-    required this.presentation,
+    required super.child,
+    required super.presentation,
     super.key,
     super.name,
     super.arguments,
     super.restorationId,
   });
-
-  /// Widget displayed inside the dialog.
-  final Widget child;
-
-  /// Dialog behavior declared by the CCRouter route contract.
-  final CCDialogPresentation presentation;
-
-  @override
-  Route<T> createRoute(BuildContext context) {
-    final useCupertino = switch (presentation.routeType) {
-      CCDialogRouteType.cupertino => true,
-      CCDialogRouteType.material => false,
-      CCDialogRouteType.platformDefault =>
-        context.dependOnInheritedWidgetOfExactType<InheritedCupertinoTheme>() !=
-            null,
-    };
-    final dismissible = presentation.barrierDismissible ?? !useCupertino;
-    if (useCupertino) {
-      return CupertinoDialogRoute<T>(
-        context: context,
-        builder: (_) => child,
-        barrierDismissible: dismissible,
-        settings: this,
-      );
-    }
-    return DialogRoute<T>(
-      context: context,
-      builder: (_) => child,
-      barrierDismissible: dismissible,
-      useSafeArea: presentation.useSafeArea,
-      settings: this,
-    );
-  }
 }

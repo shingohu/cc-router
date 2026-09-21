@@ -43,8 +43,10 @@ Pages Backend 作为下一独立阶段。暂不实现通用 RouterDelegate attac
 
 当前 GoRouter 包中的 `CCGoRouterPage`、`CCGoRouterBottomSheetPage` 和
 `CCGoRouterDialogPage` 实际是 Flutter `Page`/`Route` 工厂，不依赖 GoRouter 匹配逻辑。
-新 Backend 不应复制这些 Presentation 代码。实施前应先提取为 Host-only 的中立
-Flutter Route/Page Factory，并让现有 GoRouter API 通过兼容包装继续工作。
+这部分已提取为 `ccrouter` Host-only 层的 `CCFlutterRouteFactory`、
+`CCFlutterPage`、`CCFlutterBottomSheetPage` 和 `CCFlutterDialogPage`。现有 GoRouter
+API 通过兼容包装继续保留原类型和函数名；新 Backend 必须复用中立 Factory，不得复制
+Material、Cupertino、透明转场、Dialog 或 BottomSheet 的 Presentation 实现。
 
 ## 3. Flutter API 事实
 
@@ -226,6 +228,10 @@ CCRouter.navigator.pop(...);
 ## 7. 分阶段实施计划
 
 ### 阶段 0：共享 Flutter Route Factory
+
+当前进度：Factory 提取、GoRouter 兼容包装和 Presentation 回归测试已完成；Host
+readiness handshake 与 root Outlet bootstrap 仍未实现，不能据此宣称 Navigator 1 Backend
+已经可用。
 
 1. 将 Page/Route Presentation 构建从 `ccrouter_go_router` 提取到 `ccrouter` Host-only 层；
 2. GoRouter 旧函数和类型使用兼容包装，行为与 public API 不变；

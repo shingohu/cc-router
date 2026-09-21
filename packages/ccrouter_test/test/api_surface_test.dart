@@ -63,6 +63,10 @@ const _hostSpiTypes = <Type>[
   host.CCGeneratedHostAssembly,
   host.CCGeneratedPackageBundleError,
   host.CCGeneratedPackageBundleErrorType,
+  host.CCFlutterRouteFactory,
+  host.CCFlutterPage,
+  host.CCFlutterBottomSheetPage,
+  host.CCFlutterDialogPage,
 ];
 
 void main() {
@@ -82,7 +86,7 @@ void main() {
     ).readAsStringSync();
 
     expect(_contractCombinatorNames(hostBarrel, 'show'), _hostContractNames);
-    expect(_hostSpiTypes, hasLength(25));
+    expect(_hostSpiTypes, hasLength(29));
   });
 }
 
