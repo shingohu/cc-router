@@ -62,8 +62,8 @@ lib/
 ├── order_route_contracts.dart
 ├── src/order_detail_route_contract.dart
 ├── src/order_detail_page.dart
-├── src/ccrouter_generated/order_detail_route_contract.route.contract.g.dart
-└── src/ccrouter_generated/order_detail_page.route.g.dart
+├── src/ccrouter_generated/contract/order_detail_route_contract.route.contract.g.dart
+└── src/ccrouter_generated/route/order_detail_page.route.g.dart
 ```
 
 `order_route_contracts.dart` 是组件作者维护的公共 barrel，只导出
@@ -78,11 +78,11 @@ demo_order_contracts/
 ├── lib/demo_order_contracts.dart
 ├── lib/demo_order_contracts_owner.dart
 ├── lib/src/order_detail_route_contract.dart
-└── lib/src/ccrouter_generated/order_detail_route_contract.route.contract.g.dart
+└── lib/src/ccrouter_generated/contract/order_detail_route_contract.route.contract.g.dart
 
 demo_order/
 ├── lib/src/order_detail_page.dart
-└── lib/src/ccrouter_generated/order_detail_page.route.g.dart
+└── lib/src/ccrouter_generated/route/order_detail_page.route.g.dart
 ```
 
 业务调用方只导入 `demo_order_contracts.dart`。实现组件导入 owner integration library，

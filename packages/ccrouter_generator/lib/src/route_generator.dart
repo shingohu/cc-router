@@ -274,7 +274,7 @@ String _routeContractOutputPath(String sourcePath) {
   }
   final relative = sourcePath.substring(prefix.length);
   final stem = relative.substring(0, relative.length - '.dart'.length);
-  return 'lib/src/ccrouter_generated/$stem.route.contract.g.dart';
+  return 'lib/src/ccrouter_generated/contract/$stem.route.contract.g.dart';
 }
 
 /// Derives the standalone route-library output for one `lib/src` source.
@@ -288,7 +288,7 @@ String _routeLibraryOutputPath(String sourcePath) {
   }
   final relative = sourcePath.substring(prefix.length);
   final stem = relative.substring(0, relative.length - '.dart'.length);
-  return 'lib/src/ccrouter_generated/$stem.route.g.dart';
+  return 'lib/src/ccrouter_generated/route/$stem.route.g.dart';
 }
 
 /// Derives the isolated Flutter binding output for one route source.
@@ -299,7 +299,7 @@ String _routeBindingOutputPath(String sourcePath) {
   }
   final relative = sourcePath.substring(prefix.length);
   final stem = relative.substring(0, relative.length - '.dart'.length);
-  return 'lib/src/ccrouter_generated/$stem.route_binding.g.dart';
+  return 'lib/src/ccrouter_generated/binding/$stem.route_binding.g.dart';
 }
 
 /// Serializes the closed set of declarative route metadata into const source.

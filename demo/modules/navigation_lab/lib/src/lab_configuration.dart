@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:ccrouter/ccrouter.dart';
 import 'package:flutter/foundation.dart';
 
-import 'ccrouter_generated/demo_navigation_lab_component.route_api.g.dart';
+import 'ccrouter_generated/component/demo_navigation_lab_component.route_api.g.dart';
 
 final demoNavigationLabStore = DemoNavigationLabStore();
 

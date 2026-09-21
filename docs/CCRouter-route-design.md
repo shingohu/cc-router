@@ -580,11 +580,11 @@ Policy 同样独立：公开契约不表示允许外部 URI，允许 Deep Link �
 order_contracts/lib/
 ├── order_contracts.dart
 ├── order_contracts_owner.dart
-└── src/ccrouter_generated/order_detail_route_contract.route.contract.g.dart
+└── src/ccrouter_generated/contract/order_detail_route_contract.route.contract.g.dart
 
 order_component/lib/src/
 ├── order_detail_page.dart
-└── ccrouter_generated/order_detail_page.route.g.dart
+└── ccrouter_generated/route/order_detail_page.route.g.dart
 ```
 
 - `order_contracts.dart` 只导出明确选定的 external 路由及其参数、结果契约。
@@ -1428,7 +1428,9 @@ CCNavigationAspect(
 
 ## 16. 路由文档生成
 
-生成器按应用输出两种格式，默认直接放在应用的 `ccrouter_generated/` 目录：
+生成器按 Package 输出机器目录和可读目录，统一放在各 Package 的
+`lib/src/ccrouter_generated/metadata/`；可执行的 Dart 聚合代码放在同一根目录下的
+`route/`、`binding/`、`contract/`、`component/` 和 `host/` 子目录：
 
 ```text
 cc_routes.json
@@ -1445,8 +1447,9 @@ required/optional dependency 共同形成的环都会让生成失败；不存在
 不会阻断构建，存在时则参与环检测和顺序计算。`cc_routes.json` 中的组件按与 Runtime 装配一致的
 确定性拓扑顺序输出：依赖先于消费者，组件 ID 和依赖 ID 作为稳定排序依据。
 
-应用聚合元数据与组件级元数据统一位于项目根的 `ccrouter_generated/`；参与
-编译的 Dart 生成代码仍写入包内的 `lib/src/ccrouter_generated/`。生成文档不进入
+应用聚合元数据与组件级元数据统一位于 Host/Package 各自的
+`lib/src/ccrouter_generated/metadata/`；参与
+编译的 Dart 生成代码仍写入同一根目录的职责子目录。生成文档不进入
 手写 `docs/`，避免机器产物与架构设计文档混合。
 
 标准入口是单一 `ccrouter generate` 编排命令：它复用 build_runner 生成 Package 内产物，
@@ -1770,7 +1773,8 @@ TheRouter 的完整 URL、自定义 Scheme、多 Path 和正则能力用于校�
 ## 24. Capability Source Catalog
 
 组件化后 Route 的声明、契约和页面实现可能分布在不同 Package。统一生成命令因此维护一份
-版本化 Capability Source Catalog，并生成便于浏览的 `ccrouter_generated/cc_sources.md`：
+版本化 Capability Source Catalog，并生成便于浏览的
+`lib/src/ccrouter_generated/metadata/cc_catalog.md`：
 
 - 组件 Package 只展示本 Package 贡献的能力；Host 展示运行时依赖闭包的合并视图。
 - Source Reference 使用 Package URI 与 1-based line/column，不记录本机绝对路径。

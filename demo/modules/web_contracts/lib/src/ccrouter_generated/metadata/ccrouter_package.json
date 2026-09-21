@@ -1,0 +1,223 @@
+{
+  "schemaVersion": 2,
+  "generatorVersion": "0.1.0",
+  "package": {
+    "name": "demo_web_contracts",
+    "version": "0.1.0"
+  },
+  "contentFingerprint": "0ff5a3562ace5f1f44feabeed73406a412c56cb180728ea9a4d9f16f36949a53",
+  "bundle": null,
+  "dependencies": [],
+  "metadata": [
+    {
+      "schemaVersion": 3,
+      "package": "demo_web_contracts",
+      "source": "lib/src/web_route_contracts.dart",
+      "componentDeclarations": [],
+      "componentManifests": {},
+      "components": [
+        {
+          "id": "demo_web_component",
+          "version": "0.1.0",
+          "dependencies": [],
+          "optionalDependencies": []
+        }
+      ],
+      "routes": [
+        {
+          "id": "demo_web.public",
+          "componentId": "demo_web_component",
+          "componentVersion": "0.1.0",
+          "exposure": "public",
+          "deepLink": "enabled",
+          "description": "Loads one allowlisted public HTTPS URL in the shared Web container.",
+          "interceptorIds": [],
+          "popGuardIds": [],
+          "declaration": {
+            "package": "demo_web_contracts",
+            "library": "lib/src/web_route_contracts.dart",
+            "kind": "contract",
+            "symbol": "DemoPublicWebRouteContract",
+            "packageUri": "package:demo_web_contracts/src/web_route_contracts.dart",
+            "line": 20,
+            "column": 16
+          },
+          "navigationSources": [
+            "typedIntent",
+            "internalUri",
+            "externalDeepLink"
+          ],
+          "restoration": {
+            "status": "unsupported"
+          },
+          "placement": {
+            "hostId": "default",
+            "parentRouteId": null,
+            "shellId": null,
+            "navigatorOutlet": "root"
+          },
+          "presentation": {
+            "type": "page",
+            "routeType": "platformDefault",
+            "transition": "platformDefault",
+            "opaque": true,
+            "fullscreenDialog": false
+          },
+          "contracts": {
+            "route": "DemoPublicWebRoute",
+            "arguments": "DemoPublicWebRouteArguments",
+            "package": "demo_web_contracts",
+            "library": "lib/src/ccrouter_generated/contract/web_route_contracts.route.contract.g.dart"
+          },
+          "generatedArtifacts": [
+            {
+              "role": "routeContract",
+              "symbol": "DemoPublicWebRoute",
+              "packageUri": "package:demo_web_contracts/src/ccrouter_generated/contract/web_route_contracts.route.contract.g.dart"
+            }
+          ],
+          "patterns": [
+            {
+              "type": "CCPathPattern",
+              "value": "/web",
+              "primary": true,
+              "constraints": {}
+            }
+          ],
+          "parameters": [
+            {
+              "name": "target",
+              "wireName": "url",
+              "source": "query",
+              "type": "DemoPublicWebTarget",
+              "cardinality": "repeated",
+              "codec": "DemoPublicWebTargetCodec",
+              "required": true,
+              "default": null,
+              "description": "Public URL safe to serialize into navigation state."
+            }
+          ],
+          "resultType": "void"
+        },
+        {
+          "id": "demo_web.private",
+          "componentId": "demo_web_component",
+          "componentVersion": "0.1.0",
+          "exposure": "public",
+          "deepLink": "disabled",
+          "description": "Loads a sensitive process-local request without URI serialization.",
+          "interceptorIds": [],
+          "popGuardIds": [],
+          "declaration": {
+            "package": "demo_web_contracts",
+            "library": "lib/src/web_route_contracts.dart",
+            "kind": "contract",
+            "symbol": "DemoPrivateWebRouteContract",
+            "packageUri": "package:demo_web_contracts/src/web_route_contracts.dart",
+            "line": 39,
+            "column": 16
+          },
+          "navigationSources": [
+            "typedIntent",
+            "internalUri"
+          ],
+          "restoration": {
+            "status": "unsupported"
+          },
+          "placement": {
+            "hostId": "default",
+            "parentRouteId": null,
+            "shellId": null,
+            "navigatorOutlet": "root"
+          },
+          "presentation": {
+            "type": "page",
+            "routeType": "platformDefault",
+            "transition": "platformDefault",
+            "opaque": true,
+            "fullscreenDialog": false
+          },
+          "contracts": {
+            "route": "DemoPrivateWebRoute",
+            "arguments": "DemoPrivateWebRouteArguments",
+            "package": "demo_web_contracts",
+            "library": "lib/src/ccrouter_generated/contract/web_route_contracts.route.contract.g.dart"
+          },
+          "generatedArtifacts": [
+            {
+              "role": "routeContract",
+              "symbol": "DemoPrivateWebRoute",
+              "packageUri": "package:demo_web_contracts/src/ccrouter_generated/contract/web_route_contracts.route.contract.g.dart"
+            }
+          ],
+          "patterns": [
+            {
+              "type": "CCPathPattern",
+              "value": "/web/private",
+              "primary": true,
+              "constraints": {}
+            }
+          ],
+          "parameters": [
+            {
+              "name": "request",
+              "wireName": "request",
+              "source": "extra",
+              "type": "DemoPrivateWebRequest",
+              "required": true,
+              "default": null,
+              "description": "URL, headers, and JavaScript policy retained outside the route URI."
+            }
+          ],
+          "resultType": "void"
+        }
+      ],
+      "routeImplementations": []
+    }
+  ],
+  "capabilityCatalog": {
+    "schemaVersion": 1,
+    "records": [
+      {
+        "kind": "route",
+        "id": "demo_web.private",
+        "componentId": "demo_web_component",
+        "packageName": "demo_web_contracts",
+        "contract": {
+          "symbol": "DemoPrivateWebRouteContract",
+          "packageUri": "package:demo_web_contracts/src/web_route_contracts.dart",
+          "line": 39,
+          "column": 16
+        },
+        "implementation": null,
+        "generatedArtifacts": [
+          {
+            "role": "routeContract",
+            "symbol": "DemoPrivateWebRoute",
+            "packageUri": "package:demo_web_contracts/src/ccrouter_generated/contract/web_route_contracts.route.contract.g.dart"
+          }
+        ]
+      },
+      {
+        "kind": "route",
+        "id": "demo_web.public",
+        "componentId": "demo_web_component",
+        "packageName": "demo_web_contracts",
+        "contract": {
+          "symbol": "DemoPublicWebRouteContract",
+          "packageUri": "package:demo_web_contracts/src/web_route_contracts.dart",
+          "line": 20,
+          "column": 16
+        },
+        "implementation": null,
+        "generatedArtifacts": [
+          {
+            "role": "routeContract",
+            "symbol": "DemoPublicWebRoute",
+            "packageUri": "package:demo_web_contracts/src/ccrouter_generated/contract/web_route_contracts.route.contract.g.dart"
+          }
+        ]
+      }
+    ]
+  }
+}

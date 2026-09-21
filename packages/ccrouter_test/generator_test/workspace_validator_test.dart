@@ -719,16 +719,16 @@ void main() {
     try {
       final package = Directory('${root.path}/demo_order')..createSync();
       Directory(
-        '${package.path}/lib/src/ccrouter_generated',
+        '${package.path}/lib/src/ccrouter_generated/contract',
       ).createSync(recursive: true);
       File(
         '${package.path}/pubspec.yaml',
       ).writeAsStringSync('name: demo_order\n');
+      File('${package.path}/lib/src/detail.dart').writeAsStringSync(
+        "part 'ccrouter_generated/route/detail.route.g.dart';\n",
+      );
       File(
-        '${package.path}/lib/src/detail.dart',
-      ).writeAsStringSync("part 'ccrouter_generated/detail.route.g.dart';\n");
-      File(
-        '${package.path}/lib/src/ccrouter_generated/detail.route.contract.g.dart',
+        '${package.path}/lib/src/ccrouter_generated/contract/detail.route.contract.g.dart',
       ).writeAsStringSync('library;\n');
       final metadata = document(
         source: 'lib/src/detail.dart',
@@ -740,13 +740,13 @@ void main() {
               'arguments': 'DetailRouteArguments',
               'package': 'demo_order',
               'library':
-                  'lib/src/ccrouter_generated/detail.route.contract.g.dart',
+                  'lib/src/ccrouter_generated/contract/detail.route.contract.g.dart',
             },
         ],
       )..['package'] = 'demo_order';
       final barrel = File('${package.path}/lib/demo_order.dart');
       barrel.writeAsStringSync(
-        "export 'src/ccrouter_generated/detail.route.contract.g.dart' show DetailRoute, DetailRouteArguments;\n",
+        "export 'src/ccrouter_generated/contract/detail.route.contract.g.dart' show DetailRoute, DetailRouteArguments;\n",
       );
       expect(CCRouteBarrelExportValidator.validate(root, [metadata]), isEmpty);
       barrel.writeAsStringSync(

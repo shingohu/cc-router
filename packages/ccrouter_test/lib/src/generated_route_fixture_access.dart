@@ -3,9 +3,9 @@ import 'package:ccrouter/ccrouter.dart';
 export 'generated_route_fixture.dart';
 
 import 'generated_route_fixture.dart';
-import 'ccrouter_generated/generated_route_fixture.route.g.dart'
+import 'ccrouter_generated/route/generated_route_fixture.route.g.dart'
     as route_contract;
-import 'ccrouter_generated/generated_route_fixture.route_binding.g.dart'
+import 'ccrouter_generated/binding/generated_route_fixture.route_binding.g.dart'
     as route_binding;
 
 /// Generated detail definition used by runtime regression tests.

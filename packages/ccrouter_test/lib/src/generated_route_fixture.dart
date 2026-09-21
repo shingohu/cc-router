@@ -3,7 +3,7 @@ import 'package:ccrouter/ccrouter.dart';
 export 'generated_route_types.dart';
 
 import 'generated_route_types.dart';
-import 'ccrouter_generated/generated_route_fixture.route.g.dart'
+import 'ccrouter_generated/route/generated_route_fixture.route.g.dart'
     as route_contract;
 
 /// Component identity for standalone generated route regression tests.

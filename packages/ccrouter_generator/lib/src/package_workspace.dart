@@ -57,19 +57,36 @@ final class CCResolvedPackage {
 
   /// Published Package index location included by Git and Pub archives.
   File get indexFile => File(
-    path.join(root.path, 'lib', 'ccrouter_generated', 'ccrouter_package.json'),
+    path.join(
+      root.path,
+      'lib',
+      'src',
+      'ccrouter_generated',
+      'metadata',
+      'ccrouter_package.json',
+    ),
   );
 
   /// Generated Dart Bundle entrypoint consumed by direct dependants.
-  File get bundleFile =>
-      File(path.join(root.path, 'lib', '${name}_ccrouter.g.dart'));
+  File get bundleFile => File(
+    path.join(
+      root.path,
+      'lib',
+      'src',
+      'ccrouter_generated',
+      'host',
+      '${name}_ccrouter.g.dart',
+    ),
+  );
 
-  /// Package-root directory containing the optional readable capability view.
+  /// Generated metadata directory containing indexes and readable catalogs.
   ///
   /// Builder intermediates never live here; they remain in build_runner's
-  /// disposable cache while the published machine index lives below `lib/`.
-  Directory get catalogDirectory =>
-      Directory(path.join(root.path, 'ccrouter_generated'));
+  /// disposable cache while the published machine index lives below
+  /// `lib/src/ccrouter_generated/metadata`.
+  Directory get catalogDirectory => Directory(
+    path.join(root.path, 'lib', 'src', 'ccrouter_generated', 'metadata'),
+  );
 
   /// Whether Package tooling declares an intent to produce CCRouter artifacts.
   bool get declaresGenerationIntent =>
@@ -133,7 +150,10 @@ final class CCPackageWorkspace {
           'build',
           'generated',
           package.name,
+          'lib',
+          'src',
           'ccrouter_generated',
+          'metadata',
         ),
       );
 
@@ -558,14 +578,13 @@ Future<CCPackageMetadataSnapshot> readCCPackageMetadata(
   );
 }
 
-/// Whether [file] is current metadata rather than a legacy nested artifact.
+/// Whether [file] is a current metadata artifact in the canonical directory.
 bool _isCurrentPackageMetadataFile(File file, Directory generatedDirectory) {
   final relative = path
       .relative(file.path, from: generatedDirectory.path)
       .replaceAll(path.separator, '/');
-  return !relative.startsWith('metadata/') &&
-      (relative.endsWith('.route.json') ||
-          relative.endsWith('.component.json'));
+  return relative.endsWith('.route.json') ||
+      relative.endsWith('.component.json');
 }
 
 /// Computes the canonical SHA-256 digest stored in a Package index and Bundle.

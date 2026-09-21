@@ -76,7 +76,10 @@ void main() {
             'build',
             'generated',
             'demo_order',
+            'lib',
+            'src',
             'ccrouter_generated',
+            'metadata',
             'src',
             'order_detail_page.route.json',
           ),
@@ -88,16 +91,23 @@ void main() {
           Directory.current.path,
           'demo',
           'lib',
+          'src',
+          'ccrouter_generated',
+          'host',
           'ccrouter_demo_ccrouter.g.dart',
         ),
       ).readAsStringSync();
       expect(
         hostBundle,
-        contains('package:demo_order/demo_order_ccrouter.g.dart'),
+        contains(
+          'package:demo_order/src/ccrouter_generated/host/demo_order_ccrouter.g.dart',
+        ),
       );
       expect(
         hostBundle,
-        contains('package:demo_payment/demo_payment_ccrouter.g.dart'),
+        contains(
+          'package:demo_payment/src/ccrouter_generated/host/demo_payment_ccrouter.g.dart',
+        ),
       );
       expect(hostBundle, isNot(contains('package:demo_order_contracts/')));
       final hostCatalog = File(
@@ -105,13 +115,17 @@ void main() {
           Directory.current.path,
           'demo',
           'lib',
+          'src',
           'ccrouter_generated',
+          'host',
           'ccrouter_host.routes.g.dart',
         ),
       ).readAsStringSync();
       expect(
         hostCatalog,
-        contains('package:ccrouter_demo/ccrouter_demo_ccrouter.g.dart'),
+        contains(
+          'package:ccrouter_demo/src/ccrouter_generated/host/ccrouter_demo_ccrouter.g.dart',
+        ),
       );
       expect(hostCatalog, isNot(contains('package:demo_order/')));
       final contractIndex =
@@ -123,7 +137,9 @@ void main() {
                     'modules',
                     'order_contracts',
                     'lib',
+                    'src',
                     'ccrouter_generated',
+                    'metadata',
                     'ccrouter_package.json',
                   ),
                 ).readAsStringSync(),
@@ -140,7 +156,10 @@ void main() {
         path.join(
           Directory.current.path,
           'demo',
+          'lib',
+          'src',
           'ccrouter_generated',
+          'metadata',
           'cc_catalog.md',
         ),
       ).readAsStringSync();
@@ -157,7 +176,10 @@ void main() {
           'demo',
           'modules',
           'order',
+          'lib',
+          'src',
           'ccrouter_generated',
+          'metadata',
           'cc_catalog.md',
         ),
       ).readAsStringSync();
@@ -170,7 +192,10 @@ void main() {
             'demo',
             'modules',
             'payment',
+            'lib',
+            'src',
             'ccrouter_generated',
+            'metadata',
             'cc_catalog.md',
           ),
         ).existsSync(),
@@ -201,6 +226,7 @@ void main() {
           'lib',
           'src',
           'ccrouter_generated',
+          'component',
           'demo_navigation_lab_component.route_api.g.dart',
         ),
       ).readAsStringSync();
@@ -234,6 +260,7 @@ void main() {
               'lib',
               'src',
               'ccrouter_generated',
+              'component',
               '$component.route_api.g.dart',
             ),
           ).existsSync(),
@@ -248,7 +275,9 @@ void main() {
             'packages',
             'ccrouter_test',
             'lib',
+            'src',
             'ccrouter_generated',
+            'metadata',
             'ccrouter_package.json',
           ),
         ).existsSync(),
@@ -259,7 +288,10 @@ void main() {
         path.join(
           Directory.current.path,
           'demo',
+          'lib',
+          'src',
           'ccrouter_generated',
+          'metadata',
           '.command_check_probe_$pid',
         ),
       );

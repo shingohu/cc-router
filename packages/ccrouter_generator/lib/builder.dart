@@ -95,24 +95,26 @@ Builder ccRouteMetadataBuilder(BuilderOptions options) =>
 
 /// Maps route source libraries under `lib/` to package-level metadata files.
 const _routeBuildExtensions = <String, List<String>>{
-  r'^lib/src/{{}}.dart': ['lib/src/ccrouter_generated/{{}}.route.g.dart'],
+  r'^lib/src/{{}}.dart': ['lib/src/ccrouter_generated/route/{{}}.route.g.dart'],
 };
 
 /// Maps route sources to isolated Flutter page-binding libraries.
 const _routeBindingBuildExtensions = <String, List<String>>{
   r'^lib/src/{{}}.dart': [
-    'lib/src/ccrouter_generated/{{}}.route_binding.g.dart',
+    'lib/src/ccrouter_generated/binding/{{}}.route_binding.g.dart',
   ],
 };
 
 /// Maps route sources to standalone Pure Dart contract libraries.
 const _routeContractBuildExtensions = <String, List<String>>{
   r'^lib/src/{{}}.dart': [
-    'lib/src/ccrouter_generated/{{}}.route.contract.g.dart',
+    'lib/src/ccrouter_generated/contract/{{}}.route.contract.g.dart',
   ],
 };
 
 /// Maps component Registrar libraries to same-library Manifest Parts.
 const _componentBuildExtensions = <String, List<String>>{
-  r'^lib/src/{{}}.dart': ['lib/src/ccrouter_generated/{{}}.component.g.dart'],
+  r'^lib/src/{{}}.dart': [
+    'lib/src/ccrouter_generated/component/{{}}.component.g.dart',
+  ],
 };

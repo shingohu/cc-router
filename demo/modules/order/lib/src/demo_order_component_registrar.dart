@@ -1,11 +1,11 @@
 import 'package:ccrouter/ccrouter.dart';
 import 'package:demo_order_contracts/demo_order_contracts.dart';
 
-import 'ccrouter_generated/demo_order_component.routes.g.dart';
+import 'ccrouter_generated/component/demo_order_component.routes.g.dart';
 import 'demo_order_component.dart';
 import 'order_summary_service.dart';
 
-part 'ccrouter_generated/demo_order_component_registrar.component.g.dart';
+part 'ccrouter_generated/component/demo_order_component_registrar.component.g.dart';
 
 @CCComponent(demoOrderComponent)
 final class _DemoOrderComponentRegistrar implements CCComponentRegistrar {

@@ -3,8 +3,9 @@ import 'package:ccrouter/ccrouter.dart';
 export 'query_codec_fixture.dart';
 
 import 'query_codec_fixture.dart';
-import 'ccrouter_generated/query_codec_fixture.route.g.dart' as route_contract;
-import 'ccrouter_generated/query_codec_fixture.route_binding.g.dart'
+import 'ccrouter_generated/route/query_codec_fixture.route.g.dart'
+    as route_contract;
+import 'ccrouter_generated/binding/query_codec_fixture.route_binding.g.dart'
     as route_binding;
 
 /// Exposes the generated codec only to the dedicated test package.

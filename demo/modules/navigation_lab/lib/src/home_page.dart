@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'lab_configuration.dart';
 import 'navigation_lab_component.dart';
 import 'shell_contract.dart';
-import 'ccrouter_generated/demo_navigation_lab_component.route_api.g.dart';
+import 'ccrouter_generated/component/demo_navigation_lab_component.route_api.g.dart';
 
 @CCRoute<void>(
   component: demoNavigationLabComponent,
@@ -597,7 +597,7 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
         _ActionTile(
           icon: Icons.timer_off_outlined,
           title: 'Interceptor Timeout',
-          subtitle: '180ms deadline 中断 2s interceptor。',
+          subtitle: '180ms deadline 触发失败，异步任务需协作取消。',
           onTap: () => _run(
             'Timeout interceptor',
             () => CCRouter.navigator.push<void>(

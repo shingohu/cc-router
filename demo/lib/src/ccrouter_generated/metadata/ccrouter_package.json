@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 2,
+  "generatorVersion": "0.1.0",
+  "package": {
+    "name": "ccrouter_demo",
+    "version": "0.1.0+1"
+  },
+  "contentFingerprint": "871030ede101b5655ee0dd8aab26de3a420ce49a13b2f136850b4e565e1f4ee2",
+  "bundle": {
+    "library": "lib/src/ccrouter_generated/host/ccrouter_demo_ccrouter.g.dart",
+    "symbol": "ccrouterGeneratedPackageBundle"
+  },
+  "dependencies": [
+    {
+      "name": "demo_navigation_lab",
+      "version": "0.1.0",
+      "contentFingerprint": "ff419313964750b9f53f48d38bc6d5bcedd46304de5346342f642a9727309ebf"
+    },
+    {
+      "name": "demo_order",
+      "version": "0.1.0",
+      "contentFingerprint": "ea66bc5d0244afbfb1dd92fc9f37ac36cd9724a385a4d27c4e49284fbf3a3fe0"
+    },
+    {
+      "name": "demo_order_contracts",
+      "version": "0.1.0",
+      "contentFingerprint": "7f90a4fb91d78a1bc7ff05e6df9171d7d83a295f8ead2b044815a9c4109ed5fe"
+    },
+    {
+      "name": "demo_payment",
+      "version": "0.1.0",
+      "contentFingerprint": "11f5095aeb56a3cabebfd27195bc87f0efcf0fb84857d10045c358e2ef378a60"
+    },
+    {
+      "name": "demo_web",
+      "version": "0.1.0",
+      "contentFingerprint": "831b7602dd1498d1a60ef1966f9f0add4b03bdf3bb6e4aa1b4f3c4feb20575a1"
+    },
+    {
+      "name": "demo_web_contracts",
+      "version": "0.1.0",
+      "contentFingerprint": "0ff5a3562ace5f1f44feabeed73406a412c56cb180728ea9a4d9f16f36949a53"
+    }
+  ],
+  "metadata": [],
+  "capabilityCatalog": {
+    "schemaVersion": 1,
+    "records": []
+  }
+}

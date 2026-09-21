@@ -1,0 +1,124 @@
+{
+  "schemaVersion": 2,
+  "generatorVersion": "0.1.0",
+  "package": {
+    "name": "demo_order",
+    "version": "0.1.0"
+  },
+  "contentFingerprint": "ea66bc5d0244afbfb1dd92fc9f37ac36cd9724a385a4d27c4e49284fbf3a3fe0",
+  "bundle": {
+    "library": "lib/src/ccrouter_generated/host/demo_order_ccrouter.g.dart",
+    "symbol": "ccrouterGeneratedPackageBundle"
+  },
+  "dependencies": [
+    {
+      "name": "demo_order_contracts",
+      "version": "0.1.0",
+      "contentFingerprint": "7f90a4fb91d78a1bc7ff05e6df9171d7d83a295f8ead2b044815a9c4109ed5fe"
+    }
+  ],
+  "metadata": [
+    {
+      "schemaVersion": 3,
+      "package": "demo_order",
+      "source": "lib/src/demo_order_component_registrar.dart",
+      "componentDeclarations": [
+        "demo_order_component"
+      ],
+      "componentManifests": {
+        "demo_order_component": "demoOrderComponentManifest"
+      },
+      "components": [
+        {
+          "id": "demo_order_component",
+          "version": "0.1.0",
+          "dependencies": [],
+          "optionalDependencies": []
+        }
+      ],
+      "routes": [],
+      "routeImplementations": []
+    },
+    {
+      "schemaVersion": 3,
+      "package": "demo_order",
+      "source": "lib/src/order_detail_page.dart",
+      "componentDeclarations": [],
+      "componentManifests": {},
+      "components": [
+        {
+          "id": "demo_order_component",
+          "version": "0.1.0",
+          "dependencies": [],
+          "optionalDependencies": []
+        }
+      ],
+      "routes": [],
+      "routeImplementations": [
+        {
+          "routeId": "order.detail",
+          "componentId": "demo_order_component",
+          "package": "demo_order",
+          "source": "lib/src/order_detail_page.dart",
+          "contract": {
+            "symbol": "OrderDetailRouteContract",
+            "packageUri": "package:demo_order_contracts/src/order_detail_route_contract.dart",
+            "line": 19,
+            "column": 16
+          },
+          "implementation": {
+            "symbol": "OrderDetailPage",
+            "packageUri": "package:demo_order/src/order_detail_page.dart",
+            "line": 6,
+            "column": 13
+          },
+          "registration": "ccrouterRegisterOrderDetailPageRoute",
+          "registrationLibrary": "lib/src/ccrouter_generated/binding/order_detail_page.route_binding.g.dart",
+          "destination": {
+            "descriptor": "ccrouterDescribeOrderDetailPageRoute",
+            "builder": "ccrouterBuildOrderDetailPageRoute",
+            "library": "lib/src/ccrouter_generated/binding/order_detail_page.route_binding.g.dart",
+            "builderLibrary": "lib/src/ccrouter_generated/binding/order_detail_page.route_binding.g.dart"
+          },
+          "generatedArtifacts": [
+            {
+              "role": "routeBinding",
+              "symbol": "ccrouterRegisterOrderDetailPageRoute",
+              "packageUri": "package:demo_order/src/ccrouter_generated/binding/order_detail_page.route_binding.g.dart"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "capabilityCatalog": {
+    "schemaVersion": 1,
+    "records": [
+      {
+        "kind": "route",
+        "id": "order.detail",
+        "componentId": "demo_order_component",
+        "packageName": "demo_order_contracts",
+        "contract": {
+          "symbol": "OrderDetailRouteContract",
+          "packageUri": "package:demo_order_contracts/src/order_detail_route_contract.dart",
+          "line": 19,
+          "column": 16
+        },
+        "implementation": {
+          "symbol": "OrderDetailPage",
+          "packageUri": "package:demo_order/src/order_detail_page.dart",
+          "line": 6,
+          "column": 13
+        },
+        "generatedArtifacts": [
+          {
+            "role": "routeBinding",
+            "symbol": "ccrouterRegisterOrderDetailPageRoute",
+            "packageUri": "package:demo_order/src/ccrouter_generated/binding/order_detail_page.route_binding.g.dart"
+          }
+        ]
+      }
+    ]
+  }
+}

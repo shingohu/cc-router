@@ -270,6 +270,7 @@ Uri _generatedContractUri(Element contract) {
       segments.first,
       'src',
       'ccrouter_generated',
+      'contract',
       ...segments.skip(2).take(segments.length - 3),
       generated,
     ],

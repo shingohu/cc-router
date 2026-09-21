@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:ccrouter/ccrouter.dart';
-import 'package:ccrouter_demo/ccrouter_generated/ccrouter_host.routes.g.dart';
+import 'package:ccrouter_demo/ccrouter_demo.dart';
 import 'package:ccrouter_demo/main.dart';
 import 'package:ccrouter_demo/platform_deep_link_bridge.dart';
 import 'package:demo_navigation_lab/demo_navigation_lab.dart';

@@ -5,7 +5,9 @@ final class _ComponentMetadataBuilder implements Builder {
   /// Creates the component metadata builder with package-level output paths.
   _ComponentMetadataBuilder()
     : buildExtensions = const {
-        r'^lib/{{}}.dart': ['ccrouter_generated/{{}}.component.json'],
+        r'^lib/{{}}.dart': [
+          'lib/src/ccrouter_generated/metadata/{{}}.component.json',
+        ],
       };
 
   /// Matches registrar annotations from the canonical contracts package.

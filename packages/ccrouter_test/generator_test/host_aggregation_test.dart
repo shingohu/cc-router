@@ -94,13 +94,21 @@ environment:
         'lib',
         'src',
         'ccrouter_generated',
+        'component',
         'fixture_service_component.routes.g.dart',
       ),
     ).readAsStringSync();
     expect(componentIndex, contains('CCFlutterRouteCatalog([])'));
 
     final integration = File(
-      path.join(component.path, 'lib', 'fixture_service_ccrouter.g.dart'),
+      path.join(
+        component.path,
+        'lib',
+        'src',
+        'ccrouter_generated',
+        'host',
+        'fixture_service_ccrouter.g.dart',
+      ),
     ).readAsStringSync();
     expect(integration, contains('fixtureServiceComponentManifest'));
     expect(integration, contains('fixtureServiceComponentRouteCatalog'));
@@ -109,7 +117,9 @@ environment:
       path.join(
         host.path,
         'lib',
+        'src',
         'ccrouter_generated',
+        'host',
         'ccrouter_host.routes.g.dart',
       ),
     ).readAsStringSync();
@@ -150,6 +160,7 @@ environment:
         'lib',
         'src',
         'ccrouter_generated',
+        'contract',
         'detail.route.contract.g.dart',
       ),
     )..createSync(recursive: true);
@@ -160,7 +171,7 @@ abstract final class DetailRoute {}
     File(
       path.join(contracts.path, 'lib', 'fixture_order_contracts.dart'),
     ).writeAsStringSync('''
-export 'src/ccrouter_generated/detail.route.contract.g.dart'
+export 'src/ccrouter_generated/contract/detail.route.contract.g.dart'
     show DetailRoute, DetailRouteArguments;
 ''');
     final contractMetadata = File(
@@ -188,7 +199,7 @@ export 'src/ccrouter_generated/detail.route.contract.g.dart'
             'exposure': 'public',
             'deepLink': 'disabled',
             'description': 'Order detail.',
-            'contracts': {'route': 'DetailRoute', 'arguments': 'DetailRouteArguments', 'package': 'fixture_order_contracts', 'library': 'lib/src/ccrouter_generated/detail.route.contract.g.dart'},
+            'contracts': {'route': 'DetailRoute', 'arguments': 'DetailRouteArguments', 'package': 'fixture_order_contracts', 'library': 'lib/src/ccrouter_generated/contract/detail.route.contract.g.dart'},
             'patterns': [
               {'type': 'CCPathPattern', 'value': '/orders/:id', 'primary': true, 'constraints': <String, String>{}},
             ],
@@ -253,8 +264,8 @@ environment:
             'routeId': 'order.detail',
             'componentId': 'order',
             'registration': 'ccrouterRegisterDetailPageRoute',
-            'registrationLibrary': 'lib/src/ccrouter_generated/detail_page.route_binding.g.dart',
-            'destination': {'descriptor': 'ccrouterDescribeDetailPageRoute', 'builder': 'ccrouterBuildDetailPageRoute', 'library': 'lib/src/ccrouter_generated/detail_page.route_binding.g.dart', 'builderLibrary': 'lib/src/ccrouter_generated/detail_page.route_binding.g.dart'},
+            'registrationLibrary': 'lib/src/ccrouter_generated/binding/detail_page.route_binding.g.dart',
+            'destination': {'descriptor': 'ccrouterDescribeDetailPageRoute', 'builder': 'ccrouterBuildDetailPageRoute', 'library': 'lib/src/ccrouter_generated/binding/detail_page.route_binding.g.dart', 'builderLibrary': 'lib/src/ccrouter_generated/binding/detail_page.route_binding.g.dart'},
           },
         ],
       })}\n',
@@ -274,12 +285,13 @@ environment:
         'lib',
         'src',
         'ccrouter_generated',
+        'component',
         'order.routes.g.dart',
       ),
     ).readAsStringSync();
     expect(
       componentIndex,
-      contains("import 'detail_page.route_binding.g.dart'"),
+      contains("import '../binding/detail_page.route_binding.g.dart'"),
     );
     expect(componentIndex, contains('ccrouterRegisterDetailPageRoute'));
     expect(
@@ -330,13 +342,14 @@ environment:
         'intentFactory': 'CCGenerated${page}RouteFactory',
       },
       'registration': 'ccrouterRegister${page}Route',
-      'registrationLibrary': 'lib/src/ccrouter_generated/feature.route.g.dart',
+      'registrationLibrary':
+          'lib/src/ccrouter_generated/route/feature.route.g.dart',
       'destination': {
         'descriptor': 'ccrouterDescribe${page}Route',
         'builder': 'ccrouterBuild${page}Route',
-        'library': 'lib/src/ccrouter_generated/feature.route.g.dart',
+        'library': 'lib/src/ccrouter_generated/route/feature.route.g.dart',
         'builderLibrary':
-            'lib/src/ccrouter_generated/feature.route_binding.g.dart',
+            'lib/src/ccrouter_generated/binding/feature.route_binding.g.dart',
       },
       'patterns': [
         {

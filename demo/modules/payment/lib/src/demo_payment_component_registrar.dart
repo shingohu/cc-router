@@ -1,9 +1,9 @@
 import 'package:ccrouter/ccrouter.dart';
 
-import 'ccrouter_generated/demo_payment_component.routes.g.dart';
+import 'ccrouter_generated/component/demo_payment_component.routes.g.dart';
 import 'demo_payment_component.dart';
 
-part 'ccrouter_generated/demo_payment_component_registrar.component.g.dart';
+part 'ccrouter_generated/component/demo_payment_component_registrar.component.g.dart';
 
 /// Registers the payment component without exposing Runtime internals.
 @CCComponent(demoPaymentComponent)

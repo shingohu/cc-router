@@ -5,7 +5,9 @@ final class _RouteMetadataBuilder implements Builder {
   /// Creates the route metadata builder with package-level output paths.
   _RouteMetadataBuilder()
     : buildExtensions = const {
-        r'^lib/{{}}.dart': ['ccrouter_generated/{{}}.route.json'],
+        r'^lib/{{}}.dart': [
+          'lib/src/ccrouter_generated/metadata/{{}}.route.json',
+        ],
       };
 
   /// Writes route metadata while preserving the source-relative path.

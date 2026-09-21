@@ -208,7 +208,7 @@ void main() {
                 'role': 'routeContract',
                 'symbol': 'OrderDetailRoute',
                 'packageUri':
-                    'package:orders_contracts/src/ccrouter_generated/order_route.route.contract.g.dart',
+                    'package:orders_contracts/src/ccrouter_generated/contract/order_route.route.contract.g.dart',
               },
             ],
           },
@@ -242,7 +242,7 @@ void main() {
                 'role': 'routeBinding',
                 'symbol': 'ccrouterRegisterOrderDetailPageRoute',
                 'packageUri':
-                    'package:orders/src/ccrouter_generated/order_page.route_binding.g.dart',
+                    'package:orders/src/ccrouter_generated/binding/order_page.route_binding.g.dart',
               },
             ],
           },
@@ -333,6 +333,7 @@ void main() {
           'generated',
           'feature',
           'ccrouter_generated',
+          'metadata',
         ),
       )..createSync(recursive: true);
       final firstFile = File(
@@ -352,22 +353,6 @@ void main() {
       expect(ignoresSourceTree.fingerprint, first.fingerprint);
       expect(ignoresSourceTree.documents, first.documents);
       expect(sourceTreeMetadata.existsSync(), isTrue);
-      final legacyFile =
-          File(
-              path.join(
-                generatedDirectory.path,
-                'metadata',
-                'legacy.route.json',
-              ),
-            )
-            ..createSync(recursive: true)
-            ..writeAsStringSync(
-              jsonEncode({'package': 'feature', 'source': 'lib/legacy.dart'}),
-            );
-      final ignoresLegacy = await readCCPackageMetadata(generatedDirectory);
-      expect(ignoresLegacy.fingerprint, first.fingerprint);
-      expect(ignoresLegacy.documents, first.documents);
-      expect(legacyFile.existsSync(), isTrue);
       final hit = await readCCPackageMetadata(
         generatedDirectory,
         cachedFingerprint: first.fingerprint,

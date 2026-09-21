@@ -121,7 +121,7 @@ Future<void> main(List<String> arguments) async {
 Future<bool> _aggregate(Directory root, _Arguments parsed) async {
   final outputDirectory = Directory(
     parsed.outputDirectoryPath ??
-        '${root.path}${Platform.pathSeparator}ccrouter_generated',
+        path.join(root.path, 'lib', 'src', 'ccrouter_generated', 'metadata'),
   ).absolute;
   final metadataFiles = <_MetadataFile>[];
   await for (final entity in root.list(recursive: true, followLinks: false)) {
@@ -197,6 +197,7 @@ Future<bool> _aggregate(Directory root, _Arguments parsed) async {
   ]);
   await _removeLegacyMetadataArtifacts([
     Directory(path.join(root.path, 'ccrouter_generated')),
+    Directory(path.join(root.path, 'lib', 'ccrouter_generated')),
   ]);
   stdout.writeln(
     'Validated ${result.machineDocument['components'] is List ? (result.machineDocument['components']! as List).length : 0} components and ${result.machineDocument['routes'] is List ? (result.machineDocument['routes']! as List).length : 0} routes.',
@@ -288,7 +289,7 @@ Future<bool> _generateResolvedWorkspace(
         package.requiresPackageIndex) {
       stderr.writeln(
         'error: Read-only CCRouter Package "${package.name}" has no published '
-        'lib/ccrouter_generated/ccrouter_package.json. Regenerate that '
+        'lib/src/ccrouter_generated/metadata/ccrouter_package.json. Regenerate that '
         'Package before consuming it.',
       );
       return false;
@@ -358,7 +359,9 @@ Future<bool> _generateResolvedWorkspace(
     }
     dependencyIndexes.sort((left, right) => left.name.compareTo(right.name));
     final hasBundle = runtimeBundles.contains(name);
-    final bundleLibrary = hasBundle ? 'lib/${name}_ccrouter.g.dart' : null;
+    final bundleLibrary = hasBundle
+        ? 'lib/src/ccrouter_generated/host/${name}_ccrouter.g.dart'
+        : null;
     const bundleSymbol = 'ccrouterGeneratedPackageBundle';
     final metadata = localMetadata[name] ?? const <Map<String, Object?>>[];
     final fingerprint = computeCCPackageFingerprint(
@@ -464,7 +467,13 @@ Future<bool> _generateResolvedWorkspace(
 
   final outputDirectory = Directory(
     parsed.outputDirectoryPath ??
-        path.join(hostRoot.path, 'ccrouter_generated'),
+        path.join(
+          hostRoot.path,
+          'lib',
+          'src',
+          'ccrouter_generated',
+          'metadata',
+        ),
   ).absolute;
   await outputDirectory.create(recursive: true);
   await _writeIfChanged(
@@ -487,7 +496,14 @@ Future<bool> _generateResolvedWorkspace(
   await _removeLegacyMetadataArtifacts(
     workspace.packages.values
         .where((package) => package.writable)
-        .map((package) => package.catalogDirectory),
+        .expand(
+          (package) => [
+            Directory(path.join(package.root.path, 'ccrouter_generated')),
+            Directory(
+              path.join(package.root.path, 'lib', 'ccrouter_generated'),
+            ),
+          ],
+        ),
   );
   stdout.writeln(
     'Validated ${validation.machineDocument['components'] is List ? (validation.machineDocument['components']! as List).length : 0} components and ${validation.machineDocument['routes'] is List ? (validation.machineDocument['routes']! as List).length : 0} routes across ${indexes.length} generated Packages.',
@@ -527,7 +543,14 @@ Future<void> _writePackageCapabilityCatalogs({
     if (index == null) continue;
     final catalog = index.capabilityCatalog;
     final output = File(
-      path.join(package.root.path, 'ccrouter_generated', 'cc_catalog.md'),
+      path.join(
+        package.root.path,
+        'lib',
+        'src',
+        'ccrouter_generated',
+        'metadata',
+        'cc_catalog.md',
+      ),
     );
     if (catalog.records.isEmpty) {
       if (output.existsSync()) await output.delete();
@@ -540,7 +563,15 @@ Future<void> _writePackageCapabilityCatalogs({
       );
     }
     await _deleteManagedCatalogFiles(
-      Directory(path.join(package.root.path, 'ccrouter_generated')),
+      Directory(
+        path.join(
+          package.root.path,
+          'lib',
+          'src',
+          'ccrouter_generated',
+          'metadata',
+        ),
+      ),
       const ['cc_sources.md'],
     );
   }
@@ -1377,7 +1408,7 @@ Future<List<_GeneratedComponentCatalog>> _generateComponentRouteIndexes(
     componentRoutes.sort(_compareRoutes);
     final packageRoot = component.packageRoot;
     final outputDirectory = Directory(
-      '${packageRoot.path}${Platform.pathSeparator}lib${Platform.pathSeparator}src${Platform.pathSeparator}ccrouter_generated',
+      '${packageRoot.path}${Platform.pathSeparator}lib${Platform.pathSeparator}src${Platform.pathSeparator}ccrouter_generated${Platform.pathSeparator}component',
     )..createSync(recursive: true);
     final output = File(
       '${outputDirectory.path}${Platform.pathSeparator}${_fileStem(componentId)}.routes.g.dart',
@@ -1571,7 +1602,7 @@ String _componentGeneratedImport(String library) {
       'Component generated library must remain below $root: $library',
     );
   }
-  return library.substring(root.length);
+  return '../${library.substring(root.length)}';
 }
 
 /// Removes a conventional descriptor suffix from generated business API names.
@@ -1585,7 +1616,7 @@ String _generatedRouteLibraryPath(String source) {
   const prefix = 'lib/src/';
   if (!source.startsWith(prefix) || !source.endsWith('.dart')) return source;
   final relative = source.substring(prefix.length, source.length - 5);
-  return 'lib/src/ccrouter_generated/$relative.route.g.dart';
+  return 'lib/src/ccrouter_generated/route/$relative.route.g.dart';
 }
 
 /// Derives the migration-safe page-binding output from a source library.
@@ -1593,7 +1624,7 @@ String _generatedRouteBindingPath(String source) {
   const prefix = 'lib/src/';
   if (!source.startsWith(prefix) || !source.endsWith('.dart')) return source;
   final relative = source.substring(prefix.length, source.length - 5);
-  return 'lib/src/ccrouter_generated/$relative.route_binding.g.dart';
+  return 'lib/src/ccrouter_generated/binding/$relative.route_binding.g.dart';
 }
 
 /// Derives the callable factory emitted for one legacy internal route record.
@@ -1638,11 +1669,11 @@ Future<void> _generateResolvedPackageBundles({
       final catalog = packageCatalogs[index];
       out
         ..writeln(
-          "import '${catalog.registrarSource.substring('lib/'.length)}' "
+          "import 'package:${catalog.package}/${catalog.registrarSource.substring('lib/'.length)}' "
           'as component_$index;',
         )
         ..writeln(
-          "import 'src/ccrouter_generated/${_fileStem(catalog.componentId)}.routes.g.dart' "
+          "import 'package:${catalog.package}/src/ccrouter_generated/component/${_fileStem(catalog.componentId)}.routes.g.dart' "
           'as component_routes_$index;',
         );
     }
@@ -1721,7 +1752,9 @@ Future<void> _generateResolvedHostCatalog(
     path.join(
       host.root.path,
       'lib',
+      'src',
       'ccrouter_generated',
+      'host',
       'ccrouter_host.routes.g.dart',
     ),
   );
@@ -1732,7 +1765,8 @@ Future<void> _generateResolvedHostCatalog(
 import 'package:ccrouter/ccrouter.dart' show CCComponentManifest;
 import 'package:ccrouter/ccrouter_host.dart'
     show CCFlutterRouteCatalog, CCGeneratedPackageBundle;
-import 'package:${host.name}/${host.name}_ccrouter.g.dart' as host_package;
+import 'package:${host.name}/src/ccrouter_generated/host/${host.name}_ccrouter.g.dart'
+    as host_package;
 
 /// Validated generated Package graph installed in this Host.
 final ccrouterGeneratedHostAssembly = CCGeneratedPackageBundle.resolve([
@@ -1845,7 +1879,12 @@ bool _isWithinLegacyMetadataDirectory(Directory generatedDirectory, File file) {
 /// Whether [file] is an obsolete CCRouter-owned metadata or route-doc output.
 bool _isLegacyMetadataArtifact(File file) {
   final name = path.basename(file.path);
-  return name.endsWith('.route.json') ||
+  return name == 'ccrouter_package.json' ||
+      name == 'cc_catalog.md' ||
+      name == 'cc_routes.json' ||
+      name == 'cc_routes.md' ||
+      name == 'cc_sources.md' ||
+      name.endsWith('.route.json') ||
       name.endsWith('.route.md') ||
       name.endsWith('.component.json') ||
       name.endsWith('.component.md');
@@ -1862,7 +1901,9 @@ Future<void> _deleteObsoleteResolvedOutputs({
       path.join(
         workspace.host.root.path,
         'lib',
+        'src',
         'ccrouter_generated',
+        'host',
         'ccrouter_host.routes.g.dart',
       ),
     ),
@@ -1876,6 +1917,7 @@ Future<void> _deleteObsoleteResolvedOutputs({
           'lib',
           'src',
           'ccrouter_generated',
+          'component',
           '${_fileStem(catalog.componentId)}.routes.g.dart',
         ),
       ),
@@ -1887,6 +1929,7 @@ Future<void> _deleteObsoleteResolvedOutputs({
             'lib',
             'src',
             'ccrouter_generated',
+            'component',
             '${_fileStem(catalog.componentId)}.route_api.g.dart',
           ),
         ),
@@ -1900,7 +1943,7 @@ Future<void> _deleteObsoleteResolvedOutputs({
     );
     if (generatedSource.existsSync()) {
       await for (final entity in generatedSource.list(
-        recursive: false,
+        recursive: true,
         followLinks: false,
       )) {
         if (entity is File &&
@@ -1912,8 +1955,23 @@ Future<void> _deleteObsoleteResolvedOutputs({
     }
     final packageBundle = package.bundleFile;
     if (packageBundle.existsSync()) candidates.add(packageBundle);
+    final legacyPackageBundle = File(
+      path.join(package.root.path, 'lib', '${package.name}_ccrouter.g.dart'),
+    );
+    if (legacyPackageBundle.existsSync()) candidates.add(legacyPackageBundle);
     if (package.name == workspace.host.name) {
       final hostCatalog = File(
+        path.join(
+          package.root.path,
+          'lib',
+          'src',
+          'ccrouter_generated',
+          'host',
+          'ccrouter_host.routes.g.dart',
+        ),
+      );
+      if (hostCatalog.existsSync()) candidates.add(hostCatalog);
+      final legacyHostCatalog = File(
         path.join(
           package.root.path,
           'lib',
@@ -1921,7 +1979,19 @@ Future<void> _deleteObsoleteResolvedOutputs({
           'ccrouter_host.routes.g.dart',
         ),
       );
-      if (hostCatalog.existsSync()) candidates.add(hostCatalog);
+      if (legacyHostCatalog.existsSync()) candidates.add(legacyHostCatalog);
+      final nestedLegacyHostCatalog = File(
+        path.join(
+          package.root.path,
+          'lib',
+          'ccrouter_generated',
+          'host',
+          'ccrouter_host.routes.g.dart',
+        ),
+      );
+      if (nestedLegacyHostCatalog.existsSync()) {
+        candidates.add(nestedLegacyHostCatalog);
+      }
     }
     for (final candidate in candidates) {
       if (expected.contains(path.normalize(candidate.path))) continue;
@@ -1962,7 +2032,7 @@ Future<void> _generatePackageHostEntrypoints(
       }
     }
     final output = File(
-      '${packageCatalogs.first.packageRoot.path}${Platform.pathSeparator}lib${Platform.pathSeparator}${entry.key}_ccrouter.g.dart',
+      '${packageCatalogs.first.packageRoot.path}${Platform.pathSeparator}lib${Platform.pathSeparator}src${Platform.pathSeparator}ccrouter_generated${Platform.pathSeparator}host${Platform.pathSeparator}${entry.key}_ccrouter.g.dart',
     );
     final out = StringBuffer()
       ..writeln('// GENERATED CODE - DO NOT MODIFY BY HAND')
@@ -1975,17 +2045,18 @@ Future<void> _generatePackageHostEntrypoints(
     for (final catalog in packageCatalogs) {
       out
         ..writeln(
-          "export '${catalog.registrarSource.substring('lib/'.length)}'",
+          "export 'package:${entry.key}/${catalog.registrarSource.substring('lib/'.length)}'",
         )
         ..writeln('    show ${catalog.manifest};')
         ..writeln(
-          "export 'src/ccrouter_generated/${_fileStem(catalog.componentId)}.routes.g.dart'",
+          "export 'package:${entry.key}/src/ccrouter_generated/component/${_fileStem(catalog.componentId)}.routes.g.dart'",
         )
         ..writeln(
           '    show ${_camelIdentifier(catalog.componentId)}RouteCatalog;',
         );
     }
-    await output.writeAsString(_dartFormatter.format(out.toString()));
+    await output.parent.create(recursive: true);
+    await _writeIfChanged(output, _dartFormatter.format(out.toString()));
   }
 }
 
@@ -1997,7 +2068,7 @@ Future<void> _generateHostRouteCatalog(
   final sorted = catalogs.toList()
     ..sort((left, right) => left.componentId.compareTo(right.componentId));
   final outputDirectory = Directory(
-    '${root.path}${Platform.pathSeparator}lib${Platform.pathSeparator}ccrouter_generated',
+    '${root.path}${Platform.pathSeparator}lib${Platform.pathSeparator}src${Platform.pathSeparator}ccrouter_generated${Platform.pathSeparator}host',
   );
   await outputDirectory.create(recursive: true);
   final aliases = <String, String>{};
@@ -2016,7 +2087,7 @@ Future<void> _generateHostRouteCatalog(
       in aliases.entries.toList()
         ..sort((left, right) => left.key.compareTo(right.key))) {
     out.writeln(
-      "import 'package:${entry.key}/${entry.key}_ccrouter.g.dart' as ${entry.value};",
+      "import 'package:${entry.key}/src/ccrouter_generated/host/${entry.key}_ccrouter.g.dart' as ${entry.value};",
     );
   }
   out
@@ -2064,19 +2135,19 @@ Future<void> _deleteObsoleteAggregateOutputs(
   Iterable<_GeneratedComponentCatalog> catalogs,
 ) async {
   final expected = <String>{
-    '${root.absolute.path}${Platform.pathSeparator}lib${Platform.pathSeparator}ccrouter_generated${Platform.pathSeparator}ccrouter_host.routes.g.dart',
+    '${root.absolute.path}${Platform.pathSeparator}lib${Platform.pathSeparator}src${Platform.pathSeparator}ccrouter_generated${Platform.pathSeparator}host${Platform.pathSeparator}ccrouter_host.routes.g.dart',
   };
   for (final catalog in catalogs) {
     expected.add(
-      '${catalog.packageRoot.absolute.path}${Platform.pathSeparator}lib${Platform.pathSeparator}src${Platform.pathSeparator}ccrouter_generated${Platform.pathSeparator}${_fileStem(catalog.componentId)}.routes.g.dart',
+      '${catalog.packageRoot.absolute.path}${Platform.pathSeparator}lib${Platform.pathSeparator}src${Platform.pathSeparator}ccrouter_generated${Platform.pathSeparator}component${Platform.pathSeparator}${_fileStem(catalog.componentId)}.routes.g.dart',
     );
     if (catalog.hasRouteApi) {
       expected.add(
-        '${catalog.packageRoot.absolute.path}${Platform.pathSeparator}lib${Platform.pathSeparator}src${Platform.pathSeparator}ccrouter_generated${Platform.pathSeparator}${_fileStem(catalog.componentId)}.route_api.g.dart',
+        '${catalog.packageRoot.absolute.path}${Platform.pathSeparator}lib${Platform.pathSeparator}src${Platform.pathSeparator}ccrouter_generated${Platform.pathSeparator}component${Platform.pathSeparator}${_fileStem(catalog.componentId)}.route_api.g.dart',
       );
     }
     expected.add(
-      '${catalog.packageRoot.absolute.path}${Platform.pathSeparator}lib${Platform.pathSeparator}${catalog.package}_ccrouter.g.dart',
+      '${catalog.packageRoot.absolute.path}${Platform.pathSeparator}lib${Platform.pathSeparator}src${Platform.pathSeparator}ccrouter_generated${Platform.pathSeparator}host${Platform.pathSeparator}${catalog.package}_ccrouter.g.dart',
     );
   }
 

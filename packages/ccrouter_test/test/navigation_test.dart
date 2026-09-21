@@ -2206,15 +2206,21 @@ void main() {
     'interceptor timeout cancels work and reports a dedicated error',
     () async {
       CCNavigationInterceptorContext? seenContext;
+      var cancellationObserved = false;
+      final lateResult = Completer<void>();
+      final adapter = CCMemoryNavigationAdapter();
       final runtime = CCRouterRuntime.forTesting(
-        navigationAdapter: CCMemoryNavigationAdapter(),
+        navigationAdapter: adapter,
         globalInterceptors: [
           CCGlobalNavigationInterceptor(
             id: 'slow.policy',
             timeout: const Duration(milliseconds: 1),
             interceptor: TestNavigationInterceptor('slow.policy', (context) {
               seenContext = context;
-              return context.cancellation.whenCancelled.then(
+              context.cancellation.addListener(() {
+                cancellationObserved = true;
+              });
+              return lateResult.future.then<CCNavigationInterception>(
                 (_) => const CCNavigationProceed(),
               );
             }, []),
@@ -2243,7 +2249,18 @@ void main() {
       );
       expect(seenContext?.deadline, isNotNull);
       expect(seenContext?.cancellation.isCancelled, isTrue);
+      expect(cancellationObserved, isTrue);
       expect(runtime.activeRouteEntries, isEmpty);
+      expect(runtime.pendingNavigations, isEmpty);
+      expect(adapter.stack, isEmpty);
+
+      // A slow interceptor may finish after its deadline. Its late
+      // result must be ignored and must not dispatch the timed-out request.
+      lateResult.complete();
+      await Future<void>.delayed(Duration.zero);
+      expect(runtime.activeRouteEntries, isEmpty);
+      expect(runtime.pendingNavigations, isEmpty);
+      expect(adapter.stack, isEmpty);
       await runtime.dispose();
     },
   );
