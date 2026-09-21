@@ -98,6 +98,10 @@ fvm dart run ccrouter_generator:ccrouter generate demo
 
 该命令自动寻找包或 Dart workspace 根目录，先调用现有 build_runner，再执行 metadata 校验、
 组件索引、Host Catalog 和文档聚合。非 workspace 包也使用同一命令，不需要自行拼接两步流程。
+新增或修改注解页面后再次运行相同命令；源码无需添加 `part` 或手动更新 Registrar。
+首次生成前 IDE 不会提供尚不存在的 Route API 符号；生成完成后可使用 IDE 自动导入
+本组件的 `src/ccrouter_generated/component/<component>.route_api.g.dart`。
+页面重命名、移动或删除也使用相同命令清理旧生成物，并可用 `--check` 验证产物同步。
 CI 使用只读门禁：
 
 ```sh
