@@ -2148,6 +2148,61 @@ void main() {
   });
 
   test(
+    'failure context keeps original and current IDs for typed redirect errors',
+    () async {
+      final contexts = <CCNavigationFailureContext>[];
+      final runtime = CCRouterRuntime.forTesting(
+        navigationAdapter: CCMemoryNavigationAdapter(),
+        navigationFailurePolicy: TestNavigationFailurePolicy((context) {
+          contexts.add(context);
+          return const CCNavigationFailurePropagate();
+        }),
+        components: [
+          routeComponent('orders', (registry) {
+            registry.registerRoute(
+              pathRoute(
+                routeId: 'orders.detail',
+                interceptorIds: const ['orders.redirect'],
+              ),
+            );
+            registry.registerRoute(
+              pathRoute(routeId: 'auth.login', path: '/auth/:value'),
+            );
+            registry.registerRouteInterceptor(
+              'orders.redirect',
+              TestNavigationInterceptor(
+                'orders.redirect',
+                (_) => const CCNavigationRedirect.toIntent(
+                  TestIntent<Object?>('auth.login', RouteArgs('invalid')),
+                ),
+                <String>[],
+              ),
+            );
+          }),
+        ],
+      );
+      runtime.initialize();
+
+      await expectLater(
+        runtime.pushRoute<void>(
+          const TestIntent<void>('orders.detail', RouteArgs('42')),
+        ),
+        throwsA(isA<CCRouteParameterError>()),
+      );
+
+      expect(contexts, hasLength(1));
+      expect(contexts.single.initialRouteId, 'orders.detail');
+      expect(contexts.single.routeId, 'auth.login');
+      expect(contexts.single.stage, CCNavigationFailureStage.parameters);
+      expect(
+        contexts.single.reason,
+        CCNavigationFailureReason.invalidParameters,
+      );
+      await runtime.dispose();
+    },
+  );
+
+  test(
     'interceptor timeout cancels work and reports a dedicated error',
     () async {
       CCNavigationInterceptorContext? seenContext;
@@ -2657,7 +2712,12 @@ void main() {
 
       expect(contexts, hasLength(1));
       expect(contexts.single.routeId, 'orders.detail');
+      expect(contexts.single.initialRouteId, 'orders.detail');
       expect(contexts.single.stage, CCNavigationFailureStage.resolution);
+      expect(
+        contexts.single.reason,
+        CCNavigationFailureReason.deepLinkRejected,
+      );
       expect(contexts.single.errorType, 'CCDeepLinkRejectedError');
       expect(contexts.single.origin, CCNavigationOrigin.externalPlatform);
       expect(contexts.single.openMode, CCDeepLinkOpenMode.go);
@@ -2742,7 +2802,9 @@ void main() {
 
       final event = runtime.recentNavigationFailures.single;
       expect(event.context.routeId, isNull);
+      expect(event.context.initialRouteId, isNull);
       expect(event.context.stage, CCNavigationFailureStage.resolution);
+      expect(event.context.reason, CCNavigationFailureReason.routeNotFound);
       expect(event.context.errorType, 'CCRouteNotFoundError');
       expect(event.recovered, isFalse);
       await runtime.dispose();
@@ -2795,6 +2857,10 @@ void main() {
       expect(observed.map((event) => event.context.stage), [
         CCNavigationFailureStage.resolution,
         CCNavigationFailureStage.parameters,
+      ]);
+      expect(observed.map((event) => event.context.reason), [
+        CCNavigationFailureReason.routeNotFound,
+        CCNavigationFailureReason.invalidParameters,
       ]);
       expect(observed.map((event) => event.context.errorType), [
         'CCRouteNotFoundError',
@@ -2901,6 +2967,17 @@ void main() {
       );
       expect(runtime.recentNavigationFailures, hasLength(5));
       expect(runtime.recentNavigationFailures.last.recovered, isFalse);
+      expect(contexts.map((context) => context.reason), [
+        CCNavigationFailureReason.routeNotFound,
+        CCNavigationFailureReason.routeNotFound,
+        CCNavigationFailureReason.routeNotFound,
+        CCNavigationFailureReason.routeNotFound,
+        CCNavigationFailureReason.recoveryLoop,
+      ]);
+      expect(
+        contexts.map((context) => context.initialRouteId),
+        everyElement(isNull),
+      );
       await runtime.dispose();
     },
   );
@@ -2967,6 +3044,16 @@ void main() {
         'orders.detail',
         'orders.detail',
         'orders.detail',
+      ]);
+      expect(contexts.map((context) => context.initialRouteId), [
+        'orders.detail',
+        'orders.detail',
+        'orders.detail',
+      ]);
+      expect(contexts.map((context) => context.reason), [
+        CCNavigationFailureReason.invalidParameters,
+        CCNavigationFailureReason.routeUnavailable,
+        CCNavigationFailureReason.adapterFailed,
       ]);
       await failingRuntime.dispose();
     },

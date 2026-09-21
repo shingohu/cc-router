@@ -24,6 +24,66 @@ enum CCNavigationFailureStage {
   unknown,
 }
 
+/// Identifies the stable cause of one failed navigation attempt.
+///
+/// [CCNavigationFailureStage] describes where the pipeline stopped, while this
+/// value describes why it stopped. Keep policies on this enum when they need
+/// to distinguish a missing route from a rejected external Deep Link; both
+/// failures intentionally remain in the [CCNavigationFailureStage.resolution]
+/// stage.
+enum CCNavigationFailureReason {
+  /// No registered route matched the supplied location.
+  routeNotFound,
+
+  /// Multiple route definitions matched with the same specificity.
+  routeAmbiguous,
+
+  /// A matched route exists but its component or lifecycle is unavailable.
+  routeUnavailable,
+
+  /// External input was rejected before route matching by Host trust policy.
+  deepLinkIngressRejected,
+
+  /// A matched route rejected external ingress by its route policy.
+  deepLinkRejected,
+
+  /// A route codec rejected path, query, or typed argument values.
+  invalidParameters,
+
+  /// An interceptor intentionally cancelled the request.
+  cancelled,
+
+  /// Interceptor redirects exceeded the redirect limit.
+  redirectLoop,
+
+  /// Failure recovery redirects or fallbacks exceeded their limit.
+  recoveryLoop,
+
+  /// An interceptor failed unexpectedly.
+  interceptorFailed,
+
+  /// An interceptor exceeded its configured timeout.
+  interceptorTimedOut,
+
+  /// The navigation adapter rejected or failed the backend operation.
+  adapterFailed,
+
+  /// The backend returned a value incompatible with the route contract.
+  resultTypeMismatch,
+
+  /// A duplicate navigation was rejected by the concurrency policy.
+  duplicate,
+
+  /// Navigation was attempted reentrantly from a framework callback.
+  reentrant,
+
+  /// A deferred navigation continuation no longer exists.
+  pendingNotFound,
+
+  /// The failure did not match a more specific framework cause.
+  unknown,
+}
+
 /// Sanitized Host-facing context for one failed navigation attempt.
 ///
 /// The context intentionally omits URI values, Path and Query parameters,
@@ -39,7 +99,9 @@ final class CCNavigationFailureContext {
     required this.stage,
     required this.errorType,
     required this.recoveryDepth,
+    this.reason = CCNavigationFailureReason.unknown,
     this.routeId,
+    this.initialRouteId,
     this.source,
   });
 
@@ -49,8 +111,15 @@ final class CCNavigationFailureContext {
   /// Original stack operation requested by the caller.
   final CCNavigationOperation operation;
 
-  /// Stable route ID when it was known without exposing route parameters.
+  /// Stable route ID of the attempt that failed, when known without exposing
+  /// route parameters. For a redirected request this is the redirected target,
+  /// not necessarily the original caller target.
   final String? routeId;
+
+  /// Stable route ID resolved before any interceptor or failure-policy
+  /// redirect. This lets a policy distinguish the original request from the
+  /// current failed recovery target.
+  final String? initialRouteId;
 
   /// Trusted ingress classification preserved from the original attempt.
   final CCNavigationOrigin origin;
@@ -66,6 +135,9 @@ final class CCNavigationFailureContext {
 
   /// Framework stage that produced the failure.
   final CCNavigationFailureStage stage;
+
+  /// Stable cause of the failure within [stage].
+  final CCNavigationFailureReason reason;
 
   /// Sanitized concrete error type without its arbitrary message.
   final String errorType;

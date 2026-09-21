@@ -45,6 +45,8 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
     var currentAction = action;
     var currentCommitEntry = commitEntry;
     var suppressRecoveryResult = false;
+    var attemptedRouteId = routeIdHint;
+    String? initialRouteId = routeIdHint;
 
     while (true) {
       _PreparedRoute? prepared;
@@ -52,6 +54,8 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
         final resolveClock = Stopwatch()..start();
         try {
           prepared = currentPrepare();
+          attemptedRouteId = prepared.routeId;
+          initialRouteId ??= prepared.routeId;
         } finally {
           resolveClock.stop();
           _recordAspectResolve(navigationId, resolveClock.elapsed);
@@ -66,6 +70,7 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
                 navigationId: navigationId,
                 action: currentAction,
                 commitEntry: currentCommitEntry,
+                onAttempt: (routeId) => attemptedRouteId = routeId,
               )
             : _dispatchNavigationUncoordinated(
                 currentOperation,
@@ -76,6 +81,7 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
                 navigationId: navigationId,
                 action: currentAction,
                 commitEntry: currentCommitEntry,
+                onAttempt: (routeId) => attemptedRouteId = routeId,
               ));
         return suppressRecoveryResult ? null : result;
       } catch (error, stackTrace) {
@@ -83,13 +89,21 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
           navigationId: navigationId,
           operation: operation,
           routeId:
+              attemptedRouteId ??
               prepared?.routeId ??
               currentRouteIdHint ??
+              _navigationFailureRouteId(error),
+          initialRouteId:
+              initialRouteId ??
+              attemptedRouteId ??
               _navigationFailureRouteId(error),
           origin: origin,
           openMode: openMode,
           source: effectiveSource,
           stage: _navigationFailureStage(error),
+          reason: recoveryDepth >= _maxNavigationFailureRecoveries
+              ? CCNavigationFailureReason.recoveryLoop
+              : _navigationFailureReason(error),
           errorType: error.runtimeType.toString(),
           recoveryDepth: recoveryDepth,
         );
@@ -133,6 +147,7 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
         currentOperation = target.operation;
         currentOpenMode = target.openMode;
         currentRouteIdHint = target.intent?.routeId;
+        attemptedRouteId = currentRouteIdHint;
         currentPrepare = target.intent == null
             ? () => _routeRegistry.prepareUri(target.uri!, origin)
             : () =>
@@ -257,12 +272,41 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
         CCRouteParameterError() => CCNavigationFailureStage.parameters,
         CCRouteCancelledError() ||
         CCRouteRedirectLoopError() ||
+        CCNavigationFailureRecoveryLoopError() ||
         CCNavigationInterceptorError() ||
         CCNavigationInterceptorTimeoutError() =>
           CCNavigationFailureStage.interception,
         CCNavigationAdapterError() => CCNavigationFailureStage.dispatch,
         CCRouteResultTypeError() => CCNavigationFailureStage.result,
         _ => CCNavigationFailureStage.unknown,
+      };
+
+  /// Maps one framework error to a stable, policy-friendly failure reason.
+  CCNavigationFailureReason _navigationFailureReason(Object error) =>
+      switch (error) {
+        CCRouteNotFoundError() => CCNavigationFailureReason.routeNotFound,
+        CCRouteAmbiguityError() => CCNavigationFailureReason.routeAmbiguous,
+        CCRouteUnavailableError() => CCNavigationFailureReason.routeUnavailable,
+        CCDeepLinkIngressRejectedError() =>
+          CCNavigationFailureReason.deepLinkIngressRejected,
+        CCDeepLinkRejectedError() => CCNavigationFailureReason.deepLinkRejected,
+        CCRouteParameterError() => CCNavigationFailureReason.invalidParameters,
+        CCRouteCancelledError() => CCNavigationFailureReason.cancelled,
+        CCRouteRedirectLoopError() => CCNavigationFailureReason.redirectLoop,
+        CCNavigationFailureRecoveryLoopError() =>
+          CCNavigationFailureReason.recoveryLoop,
+        CCNavigationInterceptorError() =>
+          CCNavigationFailureReason.interceptorFailed,
+        CCNavigationInterceptorTimeoutError() =>
+          CCNavigationFailureReason.interceptorTimedOut,
+        CCNavigationAdapterError() => CCNavigationFailureReason.adapterFailed,
+        CCRouteResultTypeError() =>
+          CCNavigationFailureReason.resultTypeMismatch,
+        CCNavigationDuplicateError() => CCNavigationFailureReason.duplicate,
+        CCNavigationReentrancyError() => CCNavigationFailureReason.reentrant,
+        CCNavigationPendingNotFoundError() =>
+          CCNavigationFailureReason.pendingNotFound,
+        _ => CCNavigationFailureReason.unknown,
       };
 
   /// Extracts only stable route identity carried by selected framework errors.

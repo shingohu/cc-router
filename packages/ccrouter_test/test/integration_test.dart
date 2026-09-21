@@ -50,6 +50,44 @@ final class _SimpleOrdersRegistrar implements CCComponentRegistrar {
   }
 }
 
+final class _GuardedOrdersRegistrar implements CCComponentRegistrar {
+  _GuardedOrdersRegistrar(this.allowPop, this.triggers);
+
+  final ValueNotifier<bool> allowPop;
+  final List<CCPopTrigger> triggers;
+
+  @override
+  void register(CCRegistry registry) {
+    registry.registerRoutePopGuard(
+      'orders.system-back',
+      _SystemBackPopGuard(allowPop, triggers),
+    );
+    registry.registerRoute<_OrderArguments, String>(
+      CCRouteDefinition<_OrderArguments, String>(
+        routeId: 'orders.detail',
+        patterns: [const CCPathPattern('/orders/:id', primary: true)],
+        codec: const _OrderCodec(),
+        popGuardIds: const ['orders.system-back'],
+      ),
+    );
+  }
+}
+
+final class _SystemBackPopGuard implements CCPopGuard {
+  _SystemBackPopGuard(this.allowPop, this.triggers);
+
+  final ValueNotifier<bool> allowPop;
+  final List<CCPopTrigger> triggers;
+
+  @override
+  CCPopGuardDecision evaluate(CCPopGuardContext context) {
+    triggers.add(context.trigger);
+    return allowPop.value
+        ? const CCPopAllow()
+        : const CCPopDeny(code: 'unsaved_changes');
+  }
+}
+
 final class _OrdersRegistrar implements CCComponentRegistrar {
   const _OrdersRegistrar();
 
@@ -460,6 +498,84 @@ void main() {
     expect(find.byKey(const ValueKey('go-managed-order')), findsNothing);
     expect(runtime.activeRouteEntries, isEmpty);
   });
+
+  testWidgets(
+    'GoRouter system back evaluates the Runtime PopGuard before removal',
+    (tester) async {
+      final observer = CCGoRouterNavigationObserver(outlet: 'root');
+      final allowPop = ValueNotifier(false);
+      final triggers = <CCPopTrigger>[];
+      final detailRoute = GoRoute(
+        path: '/orders/:id',
+        builder: (_, state) => Text(
+          'order:${state.pathParameters['id']}',
+          key: const ValueKey('system-guarded-order'),
+        ),
+      );
+      final router = GoRouter(
+        initialLocation: '/',
+        observers: [observer],
+        routes: [
+          GoRoute(path: '/', builder: (_, _) => const Text('home')),
+          detailRoute,
+        ],
+      );
+      final adapter = CCGoRouterAdapter(
+        router: router,
+        observers: [observer],
+        bindings: [
+          CCGoRouterRouteBinding(
+            routeId: 'orders.detail',
+            goRoute: detailRoute,
+          ),
+        ],
+      );
+      final runtime = CCRouterRuntime.forTesting(
+        navigationAdapter: adapter,
+        components: [
+          CCComponentManifest(
+            id: 'orders',
+            version: '1.0.0',
+            registrar: _GuardedOrdersRegistrar(allowPop, triggers),
+          ),
+        ],
+      );
+      addTearDown(allowPop.dispose);
+      addTearDown(runtime.dispose);
+      addTearDown(router.dispose);
+
+      runtime.initialize();
+      await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+      await tester.pumpAndSettle();
+
+      final result = runtime.pushRoute<String>(
+        const _OrderIntent<String>(_OrderArguments('system-guard')),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey('system-guarded-order')),
+        findsOneWidget,
+      );
+
+      final denied = await router.routerDelegate.popRoute();
+      await tester.pumpAndSettle();
+      expect(denied, isTrue);
+      expect(triggers, [CCPopTrigger.system]);
+      expect(runtime.activeRouteEntries, hasLength(1));
+      expect(
+        find.byKey(const ValueKey('system-guarded-order')),
+        findsOneWidget,
+      );
+
+      allowPop.value = true;
+      final accepted = await router.routerDelegate.popRoute();
+      await tester.pumpAndSettle();
+      expect(accepted, isTrue);
+      expect(triggers, [CCPopTrigger.system, CCPopTrigger.system]);
+      expect(await result, isNull);
+      expect(runtime.activeRouteEntries, isEmpty);
+    },
+  );
 
   testWidgets(
     'dynamic open pushes on GoRouter and completes before its later Pop',

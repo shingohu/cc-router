@@ -140,6 +140,176 @@ BuildContext、Flutter Route、Scope、Extra 或返回 Completer。
 - [x] 执行 Listener、Timer、Pending Navigation、Route/Backend Entry 和 Scope 泄漏回归；
 - [x] 完成全部路由专项、Generator 和 Workspace 回归。
 
+#### P2-1 生成物收敛（已审计，待执行）
+
+当前生成链同时保存源码级 JSON/Markdown、Package Index、Package/Host Capability Source
+Catalog 和 Host Route Catalog。同一份路由事实存在多种派生表示；当前体积不是风险，但文件数量、
+Git 噪声和后续 Capability 扩展会随源码文件数线性增长。收敛必须保持“单一机器事实来源”，且
+不能以减少文件为由破坏 Dart library privacy、Package 发布边界或增量生成正确性。
+
+第一阶段进行低风险清理：
+
+- [ ] 停止生成逐源码 `*.route.md` 和 `*.component.md`；这些文件不参与编译、校验或 Host 聚合，
+  开发者视图由 Package/Host Catalog 覆盖；
+- [ ] Capability Catalog 没有记录时不生成空的 Package 文档，并在能力从空变为非空或反向变化时
+  正确创建、删除陈旧文件；
+- [ ] 将 Host 的 `cc_routes.md` 与 `cc_sources.md` 合并为统一的人类可读
+  `cc_catalog.md`，同时包含契约、源码位置和生成物位置；Package 也使用局部
+  `cc_catalog.md`，为后续 Route、Service、Action 和 DevTools 共用同一视图；
+- [ ] 保留 Host `cc_routes.json` 作为 CI、跨端工具和自动校验使用的机器路由目录，不以 Markdown
+  替代结构化契约；
+- [ ] 补齐生成、`--check`、空 Catalog、陈旧文件清理和全量回归测试。
+
+第二阶段独立迁移 Builder 中间数据：
+
+- [ ] 将逐源码 `*.route.json` 和 `*.component.json` 从源码树迁入 `.dart_tool/ccrouter/` 或等价的
+  Build Cache；它们只作为 Builder 到 CLI 的中间输入，不作为 Package 发布物；
+- [ ] 每个 Package 仅发布 `lib/ccrouter_generated/ccrouter_package.json` 机器 Index，Host 只通过
+  已解析依赖闭包读取 Package Index；
+- [ ] 迁移时同步处理 `build_to`、增量失效、缓存回退、并发锁、原子写入、外部只读 Package、
+  `--check` 快照和旧路径清理，禁止采用“生成后删除中间文件”导致每次全量重建；
+- [ ] 评估 Package Index 中由 `metadata` 可确定推导的 `capabilityCatalog` 是否继续持久化；如果
+  删除或统一 Schema，必须保留版本兼容、指纹校验和 DevTools 的稳定读取边界。
+
+以下 Dart 生成物职责不同，默认保留，不以文件数量为目标强行合并：
+
+- `*.route.g.dart`：与页面源码共享 library privacy，并承载参数 Codec 和页面构建桥接；
+- `*.route.contract.g.dart`：跨组件 Pure Dart 类型安全契约；
+- `*.component.g.dart`：访问私有 Registrar 并生成 Runtime Manifest；
+- `<component>.routes.g.dart`：独立 import 页面库，供 Registrar 和 Package Bundle 共同消费；
+- `<package>_ccrouter.g.dart`：发布跨 Package 运行时 Bundle 和直接依赖图；
+- `ccrouter_host.routes.g.dart`：向 Host 提供隔离 Package Bundle SPI 的窄门面。
+
+本节只记录审计结论，不表示上述收敛已经实现。实施时先完成第一阶段并验证生成性能与输出稳定性，
+再单独迁移中间 JSON，避免把文档清理、Schema 变更和 Build Cache 改造混入同一变更。
+
+#### P2-2 注解字段合法性校验（已审计，待执行）
+
+生成器必须校验所有可在构建期确定的字段语义，但不能对 Description、URL、Query Key 等不同领域
+的字符串套用同一条通用正则。最终采用分层校验：Dart Analyzer 保证类型和 const 合法性，单
+Package Generator 校验局部结构，Workspace 校验跨源码与跨 Package 关系，Runtime 保留手写
+Route 和动态 Host/Shell/Interceptor 配置的最后防线。
+
+当前已具备以下生成期校验，后续修改不得退化：
+
+- Component ID、版本基本格式、依赖 ID、重复依赖和自依赖；
+- `pattern` / `patterns` 互斥、唯一可逆 Primary、重复 Pattern、Path/URI/Regex 语法、参数
+  Capture 和 Constraint；
+- Path、Query、Extra 参数来源、支持类型、Query Key 冲突、Codec 类型与构造器；
+- Route Contract/Page 的类形态、构造器、结果类型和实现参数一致性；
+- Workspace 内 Component/Route 唯一性、Owner、依赖缺失与环、Contract Implementation 和
+  可静态证明的 Pattern 冲突。
+
+需要补齐以下静态规则：
+
+- [ ] 为 Route、Component、Interceptor、Pop Guard、Host、Shell 和 Outlet 分别定义稳定的 ID
+  语法；Route ID 不能继续只检查非空和空白，所有 ID 的前后空白、非法字符和重复值必须在生成期
+  给出指向注解声明的错误；
+- [ ] Generator 校验 `interceptors`、`popGuards` 内的空值、格式和重复项；Workspace 在未来具备
+  对应注册元数据后校验存在性与 Owner，在此之前仍由 Runtime 初始化校验动态注册关系；
+- [ ] Workspace 校验 `parentRouteId` 存在、自引用、依赖可见性和 Parent 环，并校验可静态确定的
+  Host、Shell、Outlet 结构兼容性；动态 Host 和 Adapter Binding 仍在初始化阶段校验；
+- [ ] 明确 Component Version 使用完整 SemVer 2.0，或将当前近似格式命名为 CCRouter Version
+  Format，避免错误宣称完整 SemVer；
+- [ ] 对 `CCRegexPattern` 和参数 Constraint 保持语法硬校验，并增加长度、Capture 数量等确定性
+  上限；无法可靠判断的灾难性回溯只做明确诊断或文档提示，不使用高误报启发式规则阻断构建；
+- [ ] 对 Description 和源码注释保持自由文本语义，只做安全转义、确定性换行和必要的生成物大小
+  保护，不限制业务语言、Markdown 或 Unicode；
+- [ ] 为每条 Generator 规则增加失败测试，为每条跨 Package 规则增加 Workspace 测试，并为手写
+  `CCRouteDefinition` 增加对应 Runtime 防线测试，防止三层语义漂移。
+
+校验失败时机必须稳定：静态字段由 Generator/Workspace 直接阻断生成；动态注册关系在
+`CCRouter.initialize()` 阶段以稳定的 Registration Error 失败；外部 URI 的实际参数值由生成的
+Codec 在解析边界返回标准 `CCRouteParameterError`。不得把本可在构建期发现的错误延迟到首次
+页面跳转，也不得为了提前失败而让 Generator 猜测运行时 Host 或 Adapter 状态。
+
+本节只记录校验目标，尚未表示 Route ID、Placement、Parent、Pop Guard 去重或 Regex 上限已经
+实现。实施前应先形成字段规则表和兼容性清单，确认现有 Demo 与已发布契约不会因语法收紧而静默
+改变含义。
+
+#### P2-3 页面零 Part 与可发现 Route API（方案已确认，待执行）
+
+当前内部路由通过页面侧 `part 'ccrouter_generated/xxx.route.g.dart';` 与生成代码共享 Dart
+library，以获得真正的 library privacy，并访问页面构造器、私有类型和默认表达式。但该声明需要
+开发者根据源码相对路径手工维护，新增、移动页面时容易遗漏，错误通常延迟到 Component Route
+Index，违背自动配置和低成本接入原则。
+
+最终采用独立生成 Library，页面只保留注解和页面声明，不再 import 或 `part` 任何路由生成物：
+
+```dart
+@CCRoute<void>(
+  component: demoNavigationLabComponent,
+  id: 'demo_navigation_lab.detail',
+  pattern: CCPathPattern('/lab/detail/:id'),
+)
+final class DemoDetailPage extends StatelessWidget {
+  const DemoDetailPage({required this.id, super.key});
+
+  final int id;
+}
+```
+
+每个组件生成唯一的内部 Route API Library，Route API 的真实声明只存在于该文件，不通过多个
+逐 Route 文件重复导出，避免 IDE 给出多个等价 import 候选：
+
+```text
+lib/src/ccrouter_generated/
+├── demo_navigation_lab_component.route_api.g.dart
+└── demo_navigation_lab_component.routes.g.dart
+```
+
+组件内部调用统一使用组件命名空间：
+
+```dart
+CCRouter.navigator.push(
+  DemoNavigationLabRoutes.detail(id: 1),
+);
+```
+
+跨组件公开契约继续使用独立 Route 类型：
+
+```dart
+CCRouter.navigator.push(
+  OrderDetailRoute.intent(orderId: 1),
+);
+```
+
+两种形式的边界固定为：
+
+- `XxxRoutes.method(...)` 是当前组件的 Package-internal 路由集合，只生成在
+  `lib/src/ccrouter_generated`，不从 Package 公共 barrel 导出；
+- `XxxRoute.intent(...)` 是 `CCRouteContract` 生成的跨组件 Pure Dart 契约，只能由显式依赖的
+  Contract Package 公共导出；
+- Runtime 注册和 Flutter Catalog 继续由 `<component>.routes.g.dart` 消费，不要求业务导入
+  Host/Adapter SPI。
+
+IDE 可发现性属于方案验收条件：生成完成且 Workspace Analyzer 使用根目录 Package Config 时，
+输入 `DemoNavigationLabRoutes` 必须能得到代码补全和唯一的自动导包动作。新注解尚未生成时 IDE
+不能虚构符号，因此后续 CLI 应提供快速单次生成，并评估 `ccrouter watch`，但不能通过自动修改
+业务源码插入 `part` 或 import 来模拟智能化。
+
+独立 Library 无法访问另一个 Library 的私有声明，迁移时必须显式校验以下规则：
+
+- [ ] 被 `@CCRoute` 标记的 Page 类及未命名构造器必须能被生成 Library 访问；Page 的 State、
+  字段和其他实现仍可保持私有；
+- [ ] Route 参数、结果类型、Extra 类型、Query Codec 和默认值必须可由生成 Library 稳定引用或
+  重建；复用 Contract Generator 的确定性 Import Plan 和常量渲染，禁止复制未经解析的源码表达式；
+- [ ] Package-internal 生成 API 使用 `@internal`、`implementation_imports`、Barrel Validator 和
+  API Surface Test 共同阻止跨 Package 误用；公开跨组件能力必须提升为 `CCRouteContract`；
+- [ ] Component Route API 是内部 Route Intent 的唯一声明位置，逐源码中间生成物不得再次暴露
+  同名 public Route API，保证 IDE 只有一个规范 import；
+- [ ] Component Route Index 只负责 Runtime 注册和 Flutter Destination Catalog，不成为业务
+  导航入口，也不把 `ccrouter_host.dart` 泄漏给组件业务代码；
+- [ ] 先以可回退的 `standalone` 生成模式迁移 Demo 和测试，对比生成结果、导航行为、API surface
+  和生成性能，验证后设为默认，再删除旧 `part` 模式及陈旧 Part 文件；
+- [ ] 覆盖多 Route 单源码、源码子目录、私有 Page、私有参数类型、枚举/集合默认值、Extra、
+  Contract-first Implementation、重命名/移动源码、自动导包唯一性和陈旧输出清理测试。
+
+该方案接受一个明确权衡：内部 Route API 从 Dart library-private 变为受 Analyzer 和 Package
+边界保护的 package-internal。收益是页面零样板、无需计算生成路径、IDE 可发现且组件内只有一个
+稳定入口；跨组件能力仍保持独立 Contract Package 和编译期类型安全。若实现无法满足唯一导包、
+公共 barrel 隔离或默认值确定性，不得直接替换现有 Part 模式。
+
 ### P3 应用集成入口
 
 - [x] 分别生成 Runtime Manifest 集合和后端 Route Catalog，并通过 Catalog 的组件版本来源
@@ -152,7 +322,8 @@ BuildContext、Flutter Route、Scope、Extra 或返回 Completer。
 - [x] `CCGoRouterBackend.attach` 保留已有 GoRouter 的应用所有权；
 - [x] 默认 `CCRouterApp(child:)` 保持不拥有 Runtime 的兼容语义；
 - [x] 覆盖绑定成功、失败安全 UI、显式销毁顺序、Router 所有权和生成器聚合回归；
-- [ ] 提供 Navigator 1.0 Backend，供无法迁移到 Router API 的已有项目渐进接入。
+- [ ] 提供 Navigator 1.0 Backend，供无法迁移到 Router API 的已有项目渐进接入（延期至架构 2.0，
+  不计入当前 1.x 实施范围）。
 
 ## 4. 回归要求
 

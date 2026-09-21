@@ -246,6 +246,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     String? navigationId,
     required Future<Object?> Function(CCNavigationRequest request) action,
     void Function(_RouteEntryRecord entry)? commitEntry,
+    void Function(String routeId)? onAttempt,
   }) {
     if (prepared.extra != null) {
       return _dispatchNavigationUncoordinated(
@@ -257,6 +258,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
         navigationId: navigationId,
         action: action,
         commitEntry: commitEntry,
+        onAttempt: onAttempt,
       );
     }
     final key = _navigationConcurrencyKey(operation, prepared, openMode);
@@ -302,6 +304,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
       navigationId: navigationId,
       action: action,
       commitEntry: commitEntry,
+      onAttempt: onAttempt,
     );
     if (navigationConcurrencyPolicy != CCNavigationConcurrencyPolicy.allow) {
       _inFlightNavigation[key] = pending;
@@ -386,6 +389,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     String? navigationId,
     required Future<Object?> Function(CCNavigationRequest request) action,
     void Function(_RouteEntryRecord entry)? commitEntry,
+    void Function(String routeId)? onAttempt,
   }) async {
     final effectiveNavigationId =
         navigationId ?? '$_runtimeId-navigation-${++_navigationSequence}';
@@ -401,6 +405,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
         source,
         navigationId: effectiveNavigationId,
       );
+      onAttempt?.call(request.routeId);
       _emitAspectFound(request);
       if (!_hasInterceptors(request.routeId)) {
         final entry = _createRouteEntry(request);
@@ -457,6 +462,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
             final redirectResolveClock = Stopwatch()..start();
             try {
               if (intent != null) {
+                onAttempt?.call(intent.routeId);
                 current = _routeRegistry.prepareIntent(intent, origin: origin);
               } else {
                 current = _routeRegistry.prepareUri(uri!, origin);

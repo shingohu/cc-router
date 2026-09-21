@@ -7,9 +7,10 @@ Flutter `3.41.10-ohos-1.0.0`、Dart `3.11.5` 的 Framework 源码。
 
 结论分为四点：
 
-1. **Navigator 1.0 可实现可靠的渐进式 Backend**，优先解决仍使用
-   `MaterialApp`、`navigatorKey`、`Navigator.push` 的既有工程；前提是每个接入的
-   Navigator 都安装 CCRouter Observer，并明确 Adapter 是否拥有整个栈。
+1. **Navigator 1.0 可实现可靠的渐进式 Backend**，但暂不纳入当前架构版本；在
+   架构 2.0 重新评估时，才考虑解决仍使用 `MaterialApp`、`navigatorKey`、
+   `Navigator.push` 的既有工程。届时每个接入的 Navigator 都必须安装 CCRouter
+   Observer，并明确 Adapter 是否拥有整个栈。
 2. **Navigator 2.0 不是一个可直接适配的具体路由后端**。任意
    `RouterDelegate` 只统一提供 `setNewRoutePath`、`popRoute`、`build` 和可选
    `currentConfiguration`，没有统一的 Push、Replace、页面构建、Entry identity
@@ -22,8 +23,10 @@ Flutter `3.41.10-ohos-1.0.0`、Dart `3.11.5` 的 Framework 源码。
    Push/Replace/Go/Reset、栈快照和 Entry 事件接入 CCRouter；框架不能通过反射、
    `BuildContext` 或猜测 Delegate 内部状态完成自动适配。
 
-推荐顺序是：先实现 Navigator 1.0 root Outlet 最小闭环，再补混合路由和多 Outlet；
-Pages Backend 作为下一独立阶段。暂不实现通用 RouterDelegate attach。
+当前 1.x 的范围保持为 GoRouter Backend 和中立 Flutter Route/Page Factory。Navigator 1.0
+root Outlet、混合路由、多 Outlet 及其 readiness handshake 统一保留到架构 2.0 再评估；
+Pages Backend 仍作为独立候选阶段，不与当前 GoRouter 改造混合。暂不实现通用 RouterDelegate
+attach。
 
 ## 2. 当前架构提供的基础
 
@@ -157,7 +160,7 @@ Widget 挂载后才存在。禁止保存全局 `BuildContext`、静默排队无�
 产生的是该初始 Route 的兄弟节点，不在 CCRouterApp 的 Inherited Host scope 下，页面生命周期
 Mixin/Listener 会失效。两种直接拼接方式都不应进入正式 API。
 
-阶段 0 必须先增加一个窄的 Host readiness handshake：
+如果架构 2.0 重新启动 Navigator 1 Backend，必须先增加一个窄的 Host readiness handshake：
 
 - `CCRouterApp` 仍位于 `MaterialApp`/Router 之上，确保所有 Route 都继承同一 Host scope；
 - Navigator package 提供 root Outlet bootstrap，只挂载 Navigator 基础结构，在 Backend attach
@@ -168,7 +171,8 @@ Mixin/Listener 会失效。两种直接拼接方式都不应进入正式 API。
 - attach 后若 Navigator 被替换或 Observer 脱离，Host 进入明确 detached/error 状态，不继续导航。
 
 这个 handshake 属于 Host/Backend SPI，不进入业务 barrel，也不能改变 GoRouter Backend 当前的
-同步 ready 快路径。没有完成该前置改造前，不应开始实现 Navigator 1 Adapter。
+同步 ready 快路径。没有完成该前置改造前，不应开始实现 Navigator 1 Adapter；该前置改造当前
+不实施。
 
 Pages Backend 的状态模型可在 Router Widget 挂载前接受配置，因此没有相同的 key readiness
 问题；Page 实际渲染仍由正常 Flutter 生命周期负责。
@@ -229,9 +233,9 @@ CCRouter.navigator.pop(...);
 
 ### 阶段 0：共享 Flutter Route Factory
 
-当前进度：Factory 提取、GoRouter 兼容包装和 Presentation 回归测试已完成；Host
-readiness handshake 与 root Outlet bootstrap 仍未实现，不能据此宣称 Navigator 1 Backend
-已经可用。
+当前进度：Factory 提取、GoRouter 兼容包装和 Presentation 回归测试已完成。Host
+readiness handshake 与 root Outlet bootstrap 随 Navigator 1 Backend 延后到架构 2.0，
+当前不实现，也不宣称 Navigator 1 Backend 已可用。
 
 1. 将 Page/Route Presentation 构建从 `ccrouter_go_router` 提取到 `ccrouter` Host-only 层；
 2. GoRouter 旧函数和类型使用兼容包装，行为与 public API 不变；
@@ -243,7 +247,10 @@ readiness handshake 与 root Outlet bootstrap 仍未实现，不能据此宣称 
 
 预计 2～4 个工程日。
 
-### 阶段 1：Navigator 1 root Outlet 最小闭环
+### 阶段 1（架构 2.0 候选）：Navigator 1 root Outlet 最小闭环
+
+当前状态：延期，不进入 1.x 实施计划。只有在架构 2.0 明确重新纳入 Navigator 1 Backend
+后才启动本阶段。
 
 1. 新建 `ccrouter_navigator` Package；
 2. 实现 routeId 到 `CCFlutterRouteDestination` 的 O(1) 索引；
@@ -258,7 +265,9 @@ readiness handshake 与 root Outlet bootstrap 仍未实现，不能据此宣称 
 
 预计 4～6 个工程日。
 
-### 阶段 2：混合路由、多 Outlet 和 Host
+### 阶段 2（架构 2.0 候选）：混合路由、多 Outlet 和 Host
+
+当前状态：依赖阶段 1，随 Navigator 1 Backend 一并延期。
 
 1. 增加显式 `CCNavigatorOutletBinding`，逐 Outlet 校验 key 与 Observer；
 2. 同 Navigator 的普通 Route、PopupRoute 和直接 `Navigator.pop(result)` 进入 Foreign/Managed

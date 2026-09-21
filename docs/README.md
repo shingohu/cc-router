@@ -9,6 +9,7 @@
 - [注解路由生成器对比与借鉴记录](CCRouter-annotation-generator-comparison.md)
 - [最终 API 收口复审清单](CCRouter-final-api-review.md)
 - [核心价值与开发约定回归](CCRouter-core-principles-audit.md)
+- [路由专项问题分析](CCRouter-route-follow-up-analysis.md)
 
 生成器输出的应用路由目录不属于手写设计文档。当前 Demo 的聚合路由目录位于
 `demo/ccrouter_generated/cc_routes.json` 和
