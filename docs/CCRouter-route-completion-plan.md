@@ -334,6 +334,8 @@ IDE 可发现性属于方案验收条件：生成完成且 Workspace Analyzer �
   `DemoNavigationLabComponentGeneratedRoutes` 是 Runtime 注册索引，不是重复的业务 Route API。
   宿主 Package 仍不会得到该内部候选；源码重命名/移动后的补全刷新仍需后续人工回归。
   Analysis Server 协议探针对未导入符号返回空候选，不能替代真实 IDE 验收。
+- [x] 内部 API 边界增量回归：Generator 专项 124 项、API Surface 与组件注册 29 项通过；
+  `ccrouter_generator/lib`、`bin`、`generator_test` 静态分析及 Demo analyze 均无问题。
 
 ### P3 应用集成入口
 
