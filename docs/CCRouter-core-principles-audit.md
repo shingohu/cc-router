@@ -2,11 +2,11 @@
 
 ## 1. 审查结论
 
-- 审查日期：2026-09-20
+- 审查日期：2026-09-22
 - 审查范围：路由 Runtime、业务 Facade、Host/Adapter SPI、GoRouter Adapter、生成器、
   Demo、测试与诊断模型。
-- 自动化基线：`dart analyze` 与 Demo Analyzer 通过；Framework 236 项、Demo 20 项、
-  Generator 120 项测试通过；默认缓存和 `--no-cache` 生成检查逐字节等价；macOS debug
+- 自动化基线：`dart analyze` 与 Demo Analyzer 通过；Framework 248 项、Demo 25 项、
+  Generator 131 项测试通过；默认缓存和 `--no-cache` 生成检查逐字节等价；macOS debug
   build 通过。
 - 总体结论：当前实现满足 13 条约定在 v0.1 路由范围内的发布门槛，没有 P0 或 P1 问题。
   生成物职责、API 隔离、增量/全量等价、生命周期和资源释放已完成本轮收口；Adapter 能力的
@@ -199,6 +199,12 @@ fvm dart run packages/ccrouter_test/benchmark/runtime_concurrency.dart
 - GoRouter managed/attach 所有权不同，attach 不销毁应用 Router。
 - 外部 Popup、Overlay 和 LocalHistory 不会按位置误删 Managed RouteEntry。
 - Adapter 不支持某项语义时在变更栈前失败，不做不等价模拟。
+- `CCNavigationFailureAttempt` 区分原始请求、拦截器重定向、Failure Policy 恢复和 pending
+  resume；Failure Policy 不再通过模糊的 stage 或异常文本猜测来源。
+- `ccrouter clean` 只删除可写 Package 中带 CCRouter 标记的生成源码，用户文件、只读依赖和
+  build_runner 缓存均保留；清理后可由 `generate` 完整恢复。
+- Managed Cupertino Route 安装 PopGuard 时禁用交互侧滑，保证手势不能绕过 Guard；Foreign
+  Popup/LocalHistory 仍只影响自身，不会关闭底层 Managed Route Scope。
 - Route/Session/Adapter pending Future 在 Pop、Reset、Go 和 shutdown 路径都有终止行为。
 - Trace、Lifecycle、Failure、Aspect 和 Backend 历史均有容量边界，subscriber error 有界。
 - 页面生命周期不要求业务继承基类；Mixin 和 Listener 均为可选。
@@ -206,9 +212,9 @@ fvm dart run packages/ccrouter_test/benchmark/runtime_concurrency.dart
 
 ## 6. 本轮最终门禁
 
-- `fvm dart test packages/ccrouter_test/generator_test`：120 项通过；
-- `fvm flutter test packages/ccrouter_test/test`：236 项通过；
-- `fvm flutter test demo/test`：20 项通过；
+- `fvm dart test packages/ccrouter_test/generator_test`：131 项通过；
+- `fvm flutter test packages/ccrouter_test/test`：248 项通过；
+- `fvm flutter test demo/test`：25 项通过；
 - `fvm dart analyze`、`fvm flutter analyze demo`：无问题；
 - `ccrouter generate demo --check` 与 `--no-cache --check`：生成物同步且等价；
 - `fvm flutter build macos --debug`：成功生成 `ccrouter_demo.app`；

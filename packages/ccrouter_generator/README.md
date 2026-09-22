@@ -112,6 +112,17 @@ fvm dart run ccrouter_generator:ccrouter generate demo --check
 非零退出码，不依赖 Git，也不会把业务源码或其它工具的改动算作陈旧生成物。旧的
 `ccrouter_generator aggregate` metadata-only 入口仅为脚本兼容保留，新项目不应使用。
 
+如果需要在重新生成前清理当前 Host 运行时依赖闭包中的 CCRouter 生成物，使用：
+
+```sh
+fvm dart run ccrouter_generator:ccrouter clean demo
+```
+
+`clean` 只删除框架标记且位于可写 Package 的 `lib/src/ccrouter_generated/` 下的受管源码输出；
+会保留业务源码、手写同名文件、只读依赖、`.dart_tool/build` 缓存和平台构建产物。清理后可
+再次执行 `generate` 完整恢复。它不是通用的 `clean` 或 `flutter clean`，不会删除 Package
+之外的文件。
+
 查找已生成路由的组件、契约和页面源码位置时使用只读命令：
 
 ```sh
@@ -177,6 +188,18 @@ Host 依赖闭包内、明确可写且声明 `ccrouter_generator` 的 Package，
 Service、Command、Action 和 Event 将在各自生成器落地后接入同一 Catalog Schema，现阶段不会
 通过扫描 Registrar 源码猜测注册关系。只读 `ccrouter find` 和未来 DevTools 应消费版本化 Catalog 与
 Runtime 快照，而不是解析 Markdown 或直接绑定 Builder 的原始 JSON。
+
+导航失败诊断中的 `CCNavigationFailureAttempt` 用于区分同一恢复链中的失败来源：原始请求
+(`request`)、拦截器重定向 (`interceptorRedirect`)、Failure Policy 恢复
+(`failureRecovery`) 和 Deferred Navigation 恢复 (`pendingResume`)。它只用于稳定诊断和
+策略归因，不替代 `CCNavigationFailureStage`/`CCNavigationFailureReason`，也不携带 URI、Query、
+Extra 或业务返回值。
+
+Managed Route 的 PopGuard 会在业务 Pop、系统返回、Cupertino 手势和预测返回进入后端提交前
+执行。Foreign Route、PopupRoute 和 `LocalHistoryEntry` 消费返回时不会关闭 CCRouter 的
+Managed Route Scope。当前 Flutter/Cupertino 的保守语义是：只要 Managed Route 安装了 PopGuard，
+交互式侧滑会被禁用，以防手势绕过 Guard；Guard 允许时恢复侧滑仍是后续 Flutter Route API
+能力候选，不应由业务页面自行补一套拦截逻辑。
 
 组件路由注册索引由统一 `generate` 命令自动生成到
 `lib/src/ccrouter_generated/component/<component-id>.routes.g.dart`。组件 Registrar 只需调用

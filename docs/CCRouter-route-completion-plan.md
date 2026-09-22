@@ -49,7 +49,9 @@ Flutter Facade、GoRouter Adapter、路由 Generator、Demo 路由接入、测�
 - [x] 增加 Adapter 中立的 `CCPopGuard` 决策契约；
 - [x] 统一业务 Pop、系统返回、手势返回和预测返回的 Guard 管线；
 - [x] Guard 拒绝或交互手势取消时不得关闭 RouteEntry 和 Scope；
-- [x] Foreign、Opaque 和 LocalHistoryEntry 消费返回时不得触发 Managed Guard 销毁语义。
+- [x] Foreign、Opaque 和 LocalHistoryEntry 消费返回时不得触发 Managed Guard 销毁语义；
+- [x] Managed PopGuard 安装在 Cupertino Route 时采用保守交互语义：禁用侧滑以避免绕过 Guard；
+  Guard 允许时恢复侧滑仍作为 Flutter Route API 能力候选，不由业务页面自行补拦截。
 
 ### P0-3 失败与兜底
 
@@ -57,6 +59,8 @@ Flutter Facade、GoRouter Adapter、路由 Generator、Demo 路由接入、测�
 - [x] 统一路由未找到、参数非法、Deep Link 拒绝、组件不可用和 Adapter 失败事件；
 - [x] 增加 Host 级只读 Failure Policy，支持明确的兜底或重定向；
 - [x] 兜底链保留 Origin、Source、Navigation ID，并限制循环；
+- [x] Failure Context 增加 `CCNavigationFailureAttempt`，区分原始请求、拦截器重定向、Failure
+  Policy 恢复和 pending resume，避免恢复链中的失败被错误归因；
 - [x] 参数和 Extra 不进入不受控日志、Aspect 或持久化数据。
 
 ### P0-4 Backend Identity 与可见性
@@ -340,7 +344,7 @@ IDE 可发现性属于方案验收条件：生成完成且 Workspace Analyzer �
   `DemoNavigationLabComponentGeneratedRoutes` 是 Runtime 注册索引，不是重复的业务 Route API。
   宿主 Package 仍不会得到该内部候选；临时页面增删改移验收见 6.1。
   Analysis Server 协议探针对未导入符号返回空候选，不能替代真实 IDE 验收。
-- [x] 内部 API 边界增量回归：Generator 专项 124 项、API Surface 与组件注册 29 项通过；
+- [x] 内部 API 边界增量回归：Generator 专项 131 项、API Surface 与组件注册 29 项通过；
   `ccrouter_generator/lib`、`bin`、`generator_test` 静态分析及 Demo analyze 均无问题。
 
 ### P3 应用集成入口
@@ -377,8 +381,11 @@ Demo 中与本轮无关的用户工作区改动不回退；如果其未完成代
 
 ### 1.x 生成物边界全量回归（第 6 项）
 
-- `fvm dart analyze`：Workspace 无问题；`packages/ccrouter_test/test`：244 项通过；
-  `packages/ccrouter_test/generator_test`：124 项通过；`demo/test`：22 项通过。
+- `fvm dart analyze`：Workspace 无问题；`packages/ccrouter_test/test`：248 项通过；
+  `packages/ccrouter_test/generator_test`：131 项通过；`demo/test`：25 项通过。
+- `fvm dart run ccrouter_generator:ccrouter generate demo --check`：7 个生成 Package、4 个组件、
+  30 条路由均为最新，未产生差异；`clean demo` 的安全清理、用户文件保留和重新生成恢复已由
+  Generator 专项测试覆盖。
 - `fvm flutter run -d macos --no-pub` 构建并启动 Demo，实际查看首屏与导航页；
   点击类型安全 Push 和确认返回后，获得 `detail:42:confirmed`，Managed Route Entry 回到 0。
   启动日志报告窗口未自动置前，但窗口及页面实际可见，未观察到运行异常。
@@ -461,7 +468,7 @@ Package 路径和 `show` 变体。选择相对路径建议后，调用
 临时页面与 IDE 调用点均已清理；删除后的 `--check` 与 Workspace analyze 通过。
 首次删除后的 Builder 有失效图重建，稳定的再次执行已回到 0 输出；不能把这两个测量
 当作重复空改动的平均值。该验收不包含同时编辑多个组件、IDE 重启或大型外部依赖工程。
-Generator 全套 124 项、Demo 22 项通过；受管生成物无残留或 Git 差异。
+Generator 全套 131 项、Demo 25 项通过；受管生成物无残留或 Git 差异。
 
 ### 6.2 快速单次生成命令（本轮不新增）
 
