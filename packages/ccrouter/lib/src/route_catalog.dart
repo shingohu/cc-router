@@ -33,6 +33,7 @@ final class CCFlutterRouteDestination {
       patterns: definition.patterns,
       presentation: definition.presentation,
       deepLink: definition.deepLink,
+      hasPopGuard: definition.popGuardIds.isNotEmpty,
       placement: definition.placement,
     ),
     builder: builder,

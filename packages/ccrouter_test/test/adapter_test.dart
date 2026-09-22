@@ -9,11 +9,13 @@ CCNavigationRoute route(
   String id, {
   String path = '/detail/:value',
   CCRoutePlacement placement = const CCRoutePlacement.root(),
+  bool hasPopGuard = false,
 }) => CCNavigationRoute(
   routeId: id,
   patterns: [CCPathPattern(path, primary: true)],
   presentation: const CCPagePresentation(),
   deepLink: CCDeepLinkPolicy.disabled,
+  hasPopGuard: hasPopGuard,
   placement: placement,
 );
 
@@ -422,6 +424,93 @@ void main() {
     expect(outcome.removedBackendEntryId, isNotNull);
     expect(outcome.removedOwner, CCPopRemovedOwner.managed);
     expect(await pushed, 'back');
+  });
+
+  testWidgets('does not gate an unprotected managed page', (tester) async {
+    final observer = CCGoRouterNavigationObserver(outlet: 'root');
+    final detailRoute = GoRoute(
+      path: '/detail/:value',
+      builder: (_, state) => Text('detail:${state.pathParameters['value']}'),
+    );
+    final router = GoRouter(
+      initialLocation: '/',
+      observers: [observer],
+      routes: [
+        GoRoute(path: '/', builder: (_, _) => const Text('home')),
+        detailRoute,
+      ],
+    );
+    final adapter = CCGoRouterAdapter(
+      router: router,
+      observers: [observer],
+      bindings: [
+        CCGoRouterRouteBinding(routeId: 'detail', goRoute: detailRoute),
+      ],
+    );
+    addTearDown(router.dispose);
+
+    adapter.initialize([route('detail')]);
+    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    await tester.pumpAndSettle();
+    final pushed = adapter.navigate(
+      request(
+        id: 'detail',
+        operation: CCNavigationOperation.push,
+        uri: Uri.parse('/detail/42'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final pageRoute = ModalRoute.of(tester.element(find.text('detail:42')))!;
+    expect(pageRoute.popDisposition, RoutePopDisposition.pop);
+    adapter.pop(result: null);
+    await tester.pumpAndSettle();
+    await pushed;
+    adapter.dispose();
+  });
+
+  testWidgets('closes the platform Pop gate for a protected page', (
+    tester,
+  ) async {
+    final observer = CCGoRouterNavigationObserver(outlet: 'root');
+    final detailRoute = GoRoute(
+      path: '/detail/:value',
+      builder: (_, state) => Text('guarded:${state.pathParameters['value']}'),
+    );
+    final router = GoRouter(
+      initialLocation: '/',
+      observers: [observer],
+      routes: [
+        GoRoute(path: '/', builder: (_, _) => const Text('home')),
+        detailRoute,
+      ],
+    );
+    final adapter = CCGoRouterAdapter(
+      router: router,
+      observers: [observer],
+      bindings: [
+        CCGoRouterRouteBinding(routeId: 'detail', goRoute: detailRoute),
+      ],
+    );
+    addTearDown(router.dispose);
+
+    adapter.initialize([route('detail', hasPopGuard: true)]);
+    adapter.bindPopGuardEvaluator((_) => const CCPopDeny());
+    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    await tester.pumpAndSettle();
+    final pushed = adapter.navigate(
+      request(
+        id: 'detail',
+        operation: CCNavigationOperation.push,
+        uri: Uri.parse('/detail/42'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final pageRoute = ModalRoute.of(tester.element(find.text('guarded:42')))!;
+    expect(pageRoute.popDisposition, RoutePopDisposition.doNotPop);
+    adapter.dispose();
+    await expectLater(pushed, throwsA(isA<CCNavigationAdapterError>()));
   });
 
   testWidgets('Adapter retains bounded Navigator lifecycle events', (

@@ -2,7 +2,7 @@
 
 ## 1. 文档状态
 
-- 状态：设计记录，暂不实施
+- 状态：第一阶段已实施，动态 Guard 手势能力继续观察
 - 范围：GoRouter/Flutter Adapter 中 Managed Cupertino Page 的交互式返回手势
 - 不改变：Core `CCPopGuard` 契约、业务导航入口和当前安全回退行为
 
@@ -11,9 +11,8 @@ Guard 的前提下尽量保留系统边缘右滑返回体验。
 
 ## 2. 当前行为
 
-当前 Adapter 使用 Route 级 Pop gate，在系统返回、业务 `maybePop` 和交互式返回提交前
-调用 Runtime 的同步 PopGuard。由于 Flutter 不能可靠地在交互式手势开始时等待一个异步
-框架回调，受保护的 Cupertino Route 采用保守策略：
+Adapter 使用 Flutter `PopEntry` 在受保护页面上建立 Route 级 Pop gate。由于 Flutter 不能
+可靠地在交互式手势开始时等待 Runtime 决策，受保护的 Cupertino Route 采用保守策略：
 
 ```text
 Managed Route 没有 PopGuard -> 保留 Cupertino 默认右滑
@@ -26,14 +25,19 @@ Foreign Route、PopupRoute、LocalHistoryEntry -> 只影响自身，不关闭底
 
 ## 3. 目标行为
 
-在 Flutter Route API 能够提供可靠的动态 Pop Gate 时，支持以下行为：
+当前第一阶段已确认并实现以下行为：
 
 ```text
-开始右滑
+系统返回/业务 maybePop
     -> 解析精确的 Host / Outlet / Backend Entry
     -> 执行同步 CCPopGuard
-    -> Allow：允许交互式 Pop 并完成一次 Runtime reconciliation
-    -> Deny：不启动或取消手势，RouteEntry、Scope 和结果 Future 保持不变
+    -> Allow：业务 maybePop 临时打开 PopEntry 并完成一次 Runtime reconciliation；
+             系统返回从 PopEntry 回调受控重试 Navigator Pop
+    -> Deny：RouteEntry、Scope 和结果 Future 保持不变
+
+受保护页面的交互式右滑仍然禁用，这是安全回退；无 PopGuard 页面不注册 PopEntry，因此
+保留 Flutter/平台默认手势。`CCPagePresentation` 未显式指定 `CCPageRouteType` 时仍使用
+`platformDefault`，由 Host/Adapter 选择 Material 或 Cupertino 默认行为。
 ```
 
 优化只针对 CCRouter 自己拥有的 Managed Cupertino Page，不把 Foreign Popup、Overlay、
@@ -51,14 +55,15 @@ Foreign Route、PopupRoute、LocalHistoryEntry -> 只影响自身，不关闭底
 
 ### 4.2 Adapter 动态 Pop Gate
 
-Adapter 优先使用 Flutter 当前支持的 `PopScope`/`PopEntry` 等 Route 级能力，为每个 Managed
-Route 维护同步 `canPop` 状态：
+Adapter 使用 Flutter 当前支持的 `PopEntry` Route 级能力，为每个受保护 Managed Route
+维护同步 `canPop` 状态：
 
 - `true`：允许 Flutter 启动交互式返回；
 - `false`：阻止交互式返回；
 - Route 被移除、替换、停用或 Adapter dispose 时，解除所有 Pop Gate 引用。
 
-动态 Gate 必须由精确 Backend Entry identity 驱动，不能根据 Runtime 全局顶部 Entry 猜测。
+Gate 只对 Runtime 传入 `hasPopGuard` 的受保护路由安装，并由精确 Backend Entry identity
+关联，不能根据 Runtime 全局顶部 Entry 猜测。该标记不暴露 Guard ID 或可变 Runtime 状态。
 Observer 仍只负责事实观察和关联，不能在手势已经提交后补做 veto。
 
 ### 4.3 能力探测与安全回退
@@ -110,22 +115,19 @@ Observer 回调发生在 Route 状态变化之后，无法可靠阻止已经开�
 
 ## 6. 实施步骤
 
-1. 确认目标 Flutter SDK 中 `PopScope`/`PopEntry` 的动态行为、预测返回兼容性和 Cupertino
-   交互式 Pop 时序。
-2. 在 GoRouter Adapter 内提取 Managed Route Pop Gate SPI，保留当前禁用侧滑逻辑作为 fallback。
-3. 将 Gate 与 Backend Entry identity、Host、Outlet 和 Route Scope 生命周期绑定。
-4. 增加 `gesture` 触发来源和一次性 resume token，防止异步确认重复 Pop。
-5. 增加能力回退诊断，区分动态 Gate 成功、主动禁用和 API 不支持。
-6. 先在 Demo 开启内部实验开关，与当前保守模式做 A/B 回归；通过后再决定是否默认启用。
-7. 只有在 Flutter SDK 和 GoRouter 的时序行为稳定后，才考虑移除实验开关。
+1. 已在 GoRouter Adapter 内以 `PopEntry` 替换 deprecated 的 scoped will-pop callback。
+2. 已将 Gate 与 `hasPopGuard` 路由元数据、Backend Route、Host/Outlet 和 Route 生命周期绑定。
+3. 已保留受保护页面禁用交互式右滑的安全 fallback；无 Guard 页面不安装 Gate。
+4. 已覆盖业务 `maybePop`、系统返回、Foreign Popup/LocalHistory 和 Adapter dispose 回归。
+5. 后续若 Flutter 提供可在手势开始前可靠执行同步 Guard 的动态能力，再评估允许受保护页手势。
 
 ## 7. 回归测试
 
 至少覆盖：
 
-1. 无 PopGuard 的 Cupertino Page 保留右滑。
-2. Guard 允许时右滑成功，RouteEntry、Scope 和 Push Future 只完成一次。
-3. Guard 拒绝时右滑不启动或被取消，页面和 Scope 保持存活。
+1. 无 PopGuard 的 Cupertino Page 不注册 PopEntry，保留平台默认右滑。
+2. Guard 允许时业务/系统返回只完成一次，RouteEntry、Scope 和 Push Future 一致。
+3. Guard 拒绝时系统返回不移除页面，受保护页右滑保持禁用。
 4. Guard 异常时 fail closed，并产生稳定诊断。
 5. 异步确认取消、确认和重复触发均不会重复 Pop。
 6. Foreign Popup、Overlay 和 LocalHistoryEntry 覆盖时不影响底层 Managed Route。
@@ -146,4 +148,4 @@ Observer 回调发生在 Route 状态变化之后，无法可靠阻止已经开�
 - 通过 Core、GoRouter、Demo、生命周期和资源释放回归。
 
 如果任一 Flutter SDK 版本无法在手势开始前可靠执行同步 Guard，则继续使用当前保守策略，
-不为了保留动画而引入不确定的栈状态。
+不为了保留动画而引入不确定的栈状态。当前 SDK 已满足无 Guard 页面恢复平台手势的要求。

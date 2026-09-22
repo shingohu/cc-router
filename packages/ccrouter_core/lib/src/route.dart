@@ -143,6 +143,7 @@ final class _RouteRegistry {
           patterns: route.definition.patterns,
           presentation: route.definition.presentation,
           deepLink: route.definition.deepLink,
+          hasPopGuard: route.definition.popGuardIds.isNotEmpty,
           placement: route.definition.placement,
         ),
       ),

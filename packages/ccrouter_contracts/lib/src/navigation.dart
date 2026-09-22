@@ -148,6 +148,7 @@ final class CCNavigationRoute {
     required List<CCRoutePattern> patterns,
     required this.presentation,
     required this.deepLink,
+    this.hasPopGuard = false,
     this.placement = const CCRoutePlacement.root(),
   }) : patterns = List.unmodifiable(patterns);
 
@@ -165,6 +166,14 @@ final class CCNavigationRoute {
   /// Runtime enforces this policy before creating a request. Adapters use the
   /// snapshot only when preparing backend Deep Link route tables.
   final CCDeepLinkPolicy deepLink;
+
+  /// Whether the Runtime requires a synchronous Pop gate for this route.
+  ///
+  /// This is an adapter-facing safety hint, not a list of guard IDs. It is
+  /// true when the route declares local guards or when the Runtime has a
+  /// global guard policy. Adapters use it only to preserve platform back
+  /// semantics; guard ownership and evaluation remain inside the Runtime.
+  final bool hasPopGuard;
 
   /// Structural placement consumed by adapters when selecting a Navigator.
   final CCRoutePlacement placement;

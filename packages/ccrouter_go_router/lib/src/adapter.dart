@@ -277,12 +277,12 @@ final class CCGoRouterAdapter
   /// so foreign PopupRoutes and other GoRouter instances remain isolated.
   CCPopGuardEvaluator? _popGuardEvaluator;
 
-  /// Pop callbacks installed on active Managed Routes.
+  /// Pop entries installed on protected Managed Routes.
   ///
-  /// The callbacks are removed when Flutter reports route removal or when the
+  /// The entries are removed when Flutter reports route removal or when the
   /// Adapter is disposed, preventing closed Routes from being retained.
-  final Map<ModalRoute<Object?>, Future<bool> Function()>
-  _managedPopGuardCallbacks = {};
+  final Map<ModalRoute<Object?>, _CCManagedPopEntry> _managedPopGuardEntries =
+      {};
 
   /// Routes waiting for their first mounted frame before gate registration.
   final Set<Route<dynamic>> _pendingManagedPopGuardRoutes = {};
@@ -520,10 +520,12 @@ final class CCGoRouterAdapter
     _lastPoppedOwner = CCPopRemovedOwner.none;
     _expectBackendEvent(CCGoRouterNavigationEventKind.pop);
     _runtimeGuardedPopInProgress = true;
+    _setManagedPopEntriesCanPop(true);
     late final bool didPop;
     try {
       didPop = await navigator.maybePop<Object?>(result);
     } finally {
+      _setManagedPopEntriesCanPop(false);
       _runtimeGuardedPopInProgress = false;
     }
     // LocalHistoryEntry consumption emits no NavigatorObserver Pop. Remove an
@@ -543,6 +545,17 @@ final class CCGoRouterAdapter
       hostId: _hostId,
       navigatorOutlet: outlet,
     );
+  }
+
+  /// Temporarily opens or closes managed Pop gates for Runtime-owned Pops.
+  ///
+  /// Runtime has already evaluated the guard before calling the Adapter. The
+  /// temporary opening lets `Navigator.maybePop` perform that approved Pop;
+  /// system and foreign Pops continue to see the conservative closed state.
+  void _setManagedPopEntriesCanPop(bool value) {
+    for (final entry in _managedPopGuardEntries.values) {
+      entry.canPopNotifier.value = value;
+    }
   }
 
   /// Pops the active GoRouter Navigator route with an optional result.
@@ -1176,7 +1189,9 @@ final class CCGoRouterAdapter
     if (trackedBackendEntryId != null) {
       _backendRouteIds[event.route] = trackedBackendEntryId;
     }
-    if (request != null && event.kind != CCGoRouterNavigationEventKind.remove) {
+    if (request != null &&
+        event.kind != CCGoRouterNavigationEventKind.remove &&
+        _routeRequiresPopGuard(request.routeId)) {
       _installManagedPopGuard(event.route);
     }
     final backendEntryId =
@@ -1229,18 +1244,21 @@ final class CCGoRouterAdapter
     _publishBackendEvent(backendEvent);
   }
 
-  /// Installs a system-back gate after a Route is correlated to a Managed
-  /// CCRouter request.
+  /// Whether the adapter snapshot marks [routeId] as requiring a Pop gate.
+  bool _routeRequiresPopGuard(String routeId) =>
+      _routes.any((route) => route.routeId == routeId && route.hasPopGuard);
+
+  /// Installs a system-back gate after a protected Managed Route is correlated.
   ///
-  /// Flutter cannot await a framework callback before an interactive gesture
-  /// starts. A scoped callback makes Flutter consult the synchronous Runtime
-  /// decision during `maybePop`; Flutter consequently disables the interactive
-  /// gesture for this protected Route instead of allowing it to bypass a Pop
-  /// guard.
+  /// A `PopEntry` is used instead of the deprecated scoped will-pop callback.
+  /// Its conservative `canPop = false` state disables an interactive gesture
+  /// that cannot synchronously await Runtime policy. A system back attempt
+  /// still invokes the entry callback; an allow decision retries the concrete
+  /// Navigator pop under the adapter's re-entrancy guard.
   void _installManagedPopGuard(Route<dynamic> route) {
     final evaluator = _popGuardEvaluator;
     if (evaluator == null || route is! ModalRoute<Object?>) return;
-    if (_managedPopGuardCallbacks.containsKey(route) ||
+    if (_managedPopGuardEntries.containsKey(route) ||
         _pendingManagedPopGuardRoutes.contains(route)) {
       return;
     }
@@ -1258,41 +1276,46 @@ final class CCGoRouterAdapter
   /// Registers a gate once the Route's ModalScope has been mounted.
   void _attachManagedPopGuard(ModalRoute<Object?> route) {
     final evaluator = _popGuardEvaluator;
-    if (evaluator == null || _managedPopGuardCallbacks.containsKey(route)) {
+    if (evaluator == null || _managedPopGuardEntries.containsKey(route)) {
       return;
     }
-    Future<bool> callback() async {
-      if (_runtimeGuardedPopInProgress) return true;
-      final decision = evaluator(CCPopTrigger.system);
-      return decision is! CCPopDeny;
-    }
-
-    // The callback is scoped to the concrete Managed Route. It cannot observe
-    // or veto a foreign PopupRoute above this page.
-    // ignore: deprecated_member_use
-    route.addScopedWillPopCallback(callback);
-    _managedPopGuardCallbacks[route] = callback;
+    final entry = _CCManagedPopEntry(
+      onInvoked: (didPop, result) {
+        if (didPop || _runtimeGuardedPopInProgress) return;
+        final currentEvaluator = _popGuardEvaluator;
+        if (currentEvaluator == null || !route.isActive) return;
+        final decision = currentEvaluator(CCPopTrigger.system);
+        if (decision is! CCPopAllow || route.navigator == null) return;
+        _runtimeGuardedPopInProgress = true;
+        try {
+          route.navigator!.pop<Object?>(result);
+        } finally {
+          _runtimeGuardedPopInProgress = false;
+        }
+      },
+    );
+    route.registerPopEntry(entry);
+    _managedPopGuardEntries[route] = entry;
   }
 
   /// Removes one route-scoped gate after Flutter reports route removal.
   void _removeManagedPopGuard(Route<dynamic> route) {
     final modalRoute = route is ModalRoute<Object?> ? route : null;
     if (modalRoute == null) return;
-    final callback = _managedPopGuardCallbacks.remove(modalRoute);
-    if (callback == null || !modalRoute.isActive) return;
-    // ignore: deprecated_member_use
-    modalRoute.removeScopedWillPopCallback(callback);
+    final entry = _managedPopGuardEntries.remove(modalRoute);
+    if (entry == null) return;
+    if (modalRoute.isActive) modalRoute.unregisterPopEntry(entry);
+    entry.dispose();
   }
 
   /// Removes all route-scoped gates during Adapter disposal or unbinding.
   void _removeAllManagedPopGuards() {
     _pendingManagedPopGuardRoutes.clear();
-    final callbacks = _managedPopGuardCallbacks.entries.toList();
-    _managedPopGuardCallbacks.clear();
-    for (final entry in callbacks) {
-      if (!entry.key.isActive) continue;
-      // ignore: deprecated_member_use
-      entry.key.removeScopedWillPopCallback(entry.value);
+    final entries = _managedPopGuardEntries.entries.toList();
+    _managedPopGuardEntries.clear();
+    for (final entry in entries) {
+      if (entry.key.isActive) entry.key.unregisterPopEntry(entry.value);
+      entry.value.dispose();
     }
   }
 
@@ -1692,4 +1715,31 @@ final class _CCInitialBackendEntry {
 
   /// Resolved location captured from GoRouter's initial match tree.
   final String? location;
+}
+
+/// Adapter-owned PopEntry used to bridge synchronous Runtime policy to Flutter.
+///
+/// The entry starts closed because Flutter cannot await a guard before an
+/// interactive gesture begins. The adapter opens it only for a Pop already
+/// approved by Runtime, or retries an allowed system back from the callback.
+final class _CCManagedPopEntry extends PopEntry<Object?> {
+  /// Creates a closed PopEntry with a post-attempt callback.
+  _CCManagedPopEntry({required this.onInvoked})
+    : canPopNotifier = ValueNotifier<bool>(false);
+
+  /// Callback invoked by Flutter after a Pop attempt or blocked gesture.
+  final void Function(bool didPop, Object? result) onInvoked;
+
+  /// Mutable gate consumed by [ModalRoute.popDisposition].
+  @override
+  final ValueNotifier<bool> canPopNotifier;
+
+  /// Forwards Flutter's result-aware Pop notification to the adapter.
+  @override
+  void onPopInvokedWithResult(bool didPop, Object? result) {
+    onInvoked(didPop, result);
+  }
+
+  /// Releases the notifier after the route unregisters this entry.
+  void dispose() => canPopNotifier.dispose();
 }

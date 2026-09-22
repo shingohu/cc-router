@@ -404,7 +404,7 @@ final class CCRouterRuntime {
     _validateRouteConfiguration();
     _validateNavigationAdapterCapabilities();
     _navigationAdapter?.initialize(
-      _routeRegistry.navigationRoutes,
+      _navigationRoutesForAdapter(),
       shells: _shellRegistry.navigationShells,
     );
     final adapter = _navigationAdapter;
@@ -437,7 +437,7 @@ final class CCRouterRuntime {
     try {
       _validateNavigationAdapterCapabilities();
       adapter.initialize(
-        _routeRegistry.navigationRoutes,
+        _navigationRoutesForAdapter(),
         shells: _shellRegistry.navigationShells,
       );
       if (adapter is CCNavigationPopGuardBinding) {
@@ -462,6 +462,31 @@ final class CCRouterRuntime {
       _navigationAdapter = null;
       rethrow;
     }
+  }
+
+  /// Builds the adapter route snapshot with Runtime-wide Pop policy metadata.
+  ///
+  /// Route-local guard ownership remains in the private route registry. A
+  /// global guard, however, applies to every managed route, so adapters need a
+  /// single boolean hint to install a platform back gate without receiving
+  /// guard IDs or mutable Runtime state.
+  List<CCNavigationRoute> _navigationRoutesForAdapter() {
+    final routes = _routeRegistry.navigationRoutes;
+    if (_globalPopGuards.isEmpty) return routes;
+    return List.unmodifiable(
+      routes.map(
+        (route) => route.hasPopGuard
+            ? route
+            : CCNavigationRoute(
+                routeId: route.routeId,
+                patterns: route.patterns,
+                presentation: route.presentation,
+                deepLink: route.deepLink,
+                hasPopGuard: true,
+                placement: route.placement,
+              ),
+      ),
+    );
   }
 
   /// Validates cross-route placement and policy references after registration.
