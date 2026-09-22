@@ -112,6 +112,20 @@ fvm dart run ccrouter_generator:ccrouter generate demo --check
 非零退出码，不依赖 Git，也不会把业务源码或其它工具的改动算作陈旧生成物。旧的
 `ccrouter_generator aggregate` metadata-only 入口仅为脚本兼容保留，新项目不应使用。
 
+查找已生成路由的组件、契约和页面源码位置时使用只读命令：
+
+```sh
+fvm dart run ccrouter_generator:ccrouter find order.detail demo
+fvm dart run ccrouter_generator:ccrouter find '/order/:orderId' demo
+```
+
+`find` 读取指定 Host 的 Pub 运行时依赖闭包内已发布的 Package Index，不启动
+build_runner，也不修改生成物。查询是大小写敏感的精确 Route ID 或声明的 Pattern 文本；
+`/order/42` 这类带实际参数的 URL 不等同于 `/order/:orderId`，不会由查找命令执行路由解析。
+从 Host Package 目录执行时可省略最后的 `demo` 参数。契约与页面分处不同 Package 时会合并
+显示源码位置；无匹配、Index 缺失或损坏、依赖 Index 版本混用时返回非零状态。改动源码后先运行 `generate`，
+必要时使用 `generate --check` 验证 Index 未过期；`find` 不扫描源文件来猜测未生成的声明。
+
 大型工程可以观察分阶段耗时和缓存命中率，或强制走无缓存参考路径：
 
 ```sh
@@ -161,7 +175,7 @@ Host 依赖闭包内、明确可写且声明 `ccrouter_generator` 的 Package，
 `ccrouter_package.json` 是 Capability Source Catalog 的机器事实来源，`cc_catalog.md` 只由
 它和同轮 metadata 派生，不维护第二套手工索引。当前只生成已具备静态声明链路的 Route；
 Service、Command、Action 和 Event 将在各自生成器落地后接入同一 Catalog Schema，现阶段不会
-通过扫描 Registrar 源码猜测注册关系。未来 CLI 查找和 DevTools 应消费版本化 Catalog 与
+通过扫描 Registrar 源码猜测注册关系。只读 `ccrouter find` 和未来 DevTools 应消费版本化 Catalog 与
 Runtime 快照，而不是解析 Markdown 或直接绑定 Builder 的原始 JSON。
 
 组件路由注册索引由统一 `generate` 命令自动生成到

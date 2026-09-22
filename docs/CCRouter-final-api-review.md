@@ -117,10 +117,10 @@ Lifecycle/Aspect 伪造请求；该阶段由 Failure Event 承担。继续保持
 
 ## 7. 暂缓能力
 
-完整 Route Restoration 仅保留设计和脱敏机会诊断，当前事件固定为 `unsupported`。只有数据证明
+完整 Route Restoration 仅保留设计和脱敏机会诊断，当前事件固定为 `unsupported`。2.0 只有数据证明
 存在真实恢复需求后，才重新设计版本化 Snapshot、路由显式 opt-in、契约升级与部分恢复。
 
-以下非路由或后续能力不在本轮处理：
+以下非路由能力统一列入架构 2.0 规划，需独立设计和验收，不作为路由 1.x 或 2.0 的必选依赖：
 
 - `CCServiceScope.component` / `route`；
 - Service Token 与独立 contracts Package 的最终收敛；

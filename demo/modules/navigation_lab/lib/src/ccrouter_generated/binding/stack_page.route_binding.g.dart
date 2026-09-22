@@ -20,5 +20,8 @@ route_page.DemoStackPage ccrouterBuildDemoStackPageRoute(
       .ccrouterDescribeDemoStackPageRoute()
       .codec
       .decode(arguments);
-  return route_page.DemoStackPage(level: decoded.level);
+  return route_page.DemoStackPage(
+    level: decoded.level,
+    returnsResult: decoded.returnsResult,
+  );
 }

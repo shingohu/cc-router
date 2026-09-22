@@ -3,7 +3,8 @@
 ## 文档状态
 
 - 版本：v0.2
-- 状态：当前路由闭环已实现；完整 Route Restoration 和调用级 `BuildContext` Outlet 解析暂未实现
+- 状态：路由 1.x 闭环已实现；完整 Route Restoration 和调用级 `BuildContext` Outlet 解析
+  归入 2.0 候选
 - 适用范围：Flutter 应用及其组件化路由契约
 - 默认导航后端：`go_router`
 - 核心约束：业务跳转统一通过 `CCRouter.navigator`，Core 不依赖 Flutter、`BuildContext` 或 `go_router`
@@ -532,7 +533,7 @@ abstract interface class CCNavigator {
 | `removeRoute` / `removeRouteBelow` | Deferred | 需要稳定 backend Entry identity，并保证 Foreign/Opaque Entry 不受影响。 |
 | `popAndPushNamed` / `pushNamedAndRemoveUntil` | 不提供 | 路由系统使用稳定 Route ID、生成的 Intent 和动态 `open(Uri)`，不再增加字符串 Name API。需要动态地址时使用 `open` 组合操作。 |
 
-上述 Deferred 操作已从业务 API、Runtime、基础 Adapter SPI、Capability、内置 Adapter、Demo 和测试中完整删除，不以多个现有操作拼接模拟。重新接入时应使用可选、版本化的栈事务 SPI，而不是继续扩张所有 Adapter 必须实现的基础接口。接入门槛包括：稳定 backend Entry identity、一次性或原子提交目标栈、Managed/Foreign/Opaque 隔离、Shell/Outlet/MultiHost 分区、PopGuard 拒绝语义、失败回滚，以及 pending result 与 Route Scope 生命周期一致。Adapter SPI 不向 Core 暴露 `BuildContext`、Flutter `Route` 或 `NavigatorState`。
+上述 Deferred 操作已从业务 API、Runtime、基础 Adapter SPI、Capability、内置 Adapter、Demo 和测试中完整删除，不以多个现有操作拼接模拟。统一留待 2.0 评估；重新接入时应使用可选、版本化的栈事务 SPI，而不是继续扩张所有 Adapter 必须实现的基础接口。接入门槛包括：稳定 backend Entry identity、一次性或原子提交目标栈、Managed/Foreign/Opaque 隔离、Shell/Outlet/MultiHost 分区、PopGuard 拒绝语义、失败回滚，以及 pending result 与 Route Scope 生命周期一致。Adapter SPI 不向 Core 暴露 `BuildContext`、Flutter `Route` 或 `NavigatorState`。
 
 `push<R>` 和 `replace<R>` 返回 `Future<R?>`。系统返回、无值 Pop 或 RouteEntry 被允许取消时完成 `null`；解析、拦截或 Adapter 失败时抛出标准错误。
 
@@ -542,7 +543,8 @@ Runtime 关闭对应 RouteEntry；Foreign、Opaque 或未提供归属的 Pop 只
 
 当前 `CCNavigator` 不接收 `BuildContext`。Host 和 Outlet 由生成 Intent 中的
 `CCRoutePlacement`、活动 Host Resolver、Shell Binding 和 Adapter 默认 Host 共同解析。
-未来如增加“按调用点选择最近 Outlet”的 Flutter 便利 API，只能在 Flutter 门面即时解析，
+2.0 若有真实调用点需求而增加“按调用点选择最近 Outlet”的 Flutter 便利 API，只能在
+Flutter 门面即时解析，
 不得把 Context 保存或传入 Core；该 Proposal 不能改变现有无 Context API 的语义。
 
 当前已实现 `push/replace/go/reset/open/pop/canPop`、`maybePop` 和 `maybePopOutcome`；
@@ -978,11 +980,11 @@ Shell 负责持久化导航容器和 Outlet，主从容器负责根据屏幕尺�
 
 Size Class、主从双 Outlet、Modal 自适应、Host 隔离和多 Pane Outlet 显示切换已经接入。
 当前没有创建、识别或监听 macOS、Windows、iPadOS 原生 Window，也没有维护平台
-Window ID。未来 Flutter 多窗口能力稳定后，平台桥接层负责把每个 Native Window 或
+Window ID。2.0 若 Flutter 多窗口能力稳定，平台桥接层负责把每个 Native Window 或
 Flutter View 映射到一个 Root `CCNavigationHost`，并转发创建、激活、关闭和恢复信号。
 Host 仍可在单 Flutter View 中表示嵌入式独立 Router，因此不是平台 Window 本身。
 平台仍需按实际设备接入 Display Feature、外接屏、PiP 和预测返回信号；完整状态恢复
-只有在真实需求数据证明收益后才重新立项。
+在 2.0 只有真实需求数据证明收益后才启动实施。
 
 #### 12.3.1 状态恢复的当前边界
 
@@ -995,7 +997,7 @@ Restoration、桌面窗口重开或异常 Session Marker 等 Host 证据，并�
 组件目录指纹和匿名 Telemetry Context；禁止记录完整 URI、Path/Query 参数、Arguments、Extra、账号
 标识或任意业务对象。普通冷启动和单纯前后台切换不能上报为恢复机会。
 
-后续只有在恢复机会率、受影响 Route 分布和多窗口恢复占比证明收益后才重新立项。完整实现必须满足：
+2.0 只有在恢复机会率、受影响 Route 分布和多窗口恢复占比证明收益后才启动实施。完整实现必须满足：
 
 - 路由显式 opt-in，支付、登录、授权、一次性确认和依赖 Extra 的页面默认禁止恢复；
 - Snapshot 版本化且 Adapter-neutral，只保存可序列化的 Route ID、规范 URI 和 Host/Outlet 结构；
@@ -1009,7 +1011,7 @@ Restoration、桌面窗口重开或异常 Session Marker 等 Host 证据，并�
 - Runtime 根据 Route Placement、活动 Host Resolver、Shell 和 Outlet 契约选择目标栈。
 - 未显式指定非默认 Host 时，使用 Adapter 绑定的默认 Host，而不是全局 Context。
 - Shell 和嵌套 Navigator 必须通过显式 Outlet 关系确定，不能用 Context 猜测结构。
-- 调用级最近 Outlet 解析仅保留为未来 Flutter 门面 Proposal；即使实现，Context 也不能进入
+- 调用级最近 Outlet 解析仅保留为 2.0 Flutter 门面候选；即使实现，Context 也不能进入
   Intent、Route Definition、RouteEntry 或 Core Runtime。
 
 ### 12.5 混合路由兼容原则
@@ -1780,11 +1782,11 @@ TheRouter 的完整 URL、自定义 Scheme、多 Path 和正则能力用于校�
 - Source Reference 使用 Package URI 与 1-based line/column，不记录本机绝对路径。
 - Contract-first Route 同时关联契约声明和页面实现；普通 `@CCRoute` 的声明与实现指向同一
   页面源码。
-- Package Index 是机器事实来源，Markdown、后续 `ccrouter find` 和 DevTools 视图均由其
+- Package Index 是机器事实来源，Markdown、只读 `ccrouter find` 和未来 DevTools 视图均由其
   派生，不能各自维护扫描规则。
 - 当前只发布 Route 记录。Service、Command、Action、Event 需要等静态生成链路存在后再接入，
   不从手写 Registrar 启发式推断，避免目录看似完整但实际错误。
 
-未来 DevTools 将静态 Catalog 与 Runtime 的 Host、RouteEntry、Trace 和诊断快照按稳定 ID、
+2.0 DevTools 候选将静态 Catalog 与 Runtime 的 Host、RouteEntry、Trace 和诊断快照按稳定 ID、
 Package 版本及内容指纹关联。静态目录回答“代码和契约在哪里”，Runtime 快照回答“当前发生了
-什么”；本阶段不引入 VM Service Extension 或 Inspector 依赖。
+什么”；1.x 不引入 VM Service Extension 或 Inspector 依赖。

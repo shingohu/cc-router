@@ -160,7 +160,7 @@ final class OrderDetailPage extends StatelessWidget {
 5. 原实现 Package 可临时 re-export 新契约，给旧调用方提供迁移窗口。
 6. 聚合器确保同一时刻只有一个 Definition 和一个页面实现。
 
-未来 CLI 可以提供 `promote route` 脚手架、依赖修改和 dry-run，但标准生成与校验不能
+2.0 可评估提供 CLI `promote route` 脚手架、依赖修改和 dry-run，但标准生成与校验不能
 依赖 CLI。手动建立 contracts Package 后仍必须能用 `build_runner` 完成全部生成。
 
 ## 验证要求
@@ -179,7 +179,7 @@ contracts Package 的公开 Pure Dart model library，并由 schema 通过公开
 
 ## 非路由附录：Service Promotion Proposal
 
-本节只记录未来 Service 契约升级方向，尚未实现，也不属于当前路由完成计划。后续进入
+本节只记录架构 2.0 的 Service 契约升级候选，尚未实现，也不属于路由完成计划。进入
 Service 开发阶段时应迁移到独立 Service 设计文档，不能据此视为已公开 API。
 
 Service 默认仍可按 Dart `Type` 注册和解析。需要跨组件时，在 contracts Package 声明

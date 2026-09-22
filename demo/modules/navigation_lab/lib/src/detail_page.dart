@@ -74,7 +74,7 @@ final class _DemoDetailPageState extends State<DemoDetailPage>
       CCRouter.navigator.pop(result: 'detail:${widget.id}:confirmed');
       return;
     }
-    unawaited(CCRouter.navigator.open(Uri.parse('/')));
+    unawaited(CCRouter.navigator.go(DemoNavigationLabRoutes.home()));
   }
 
   @override

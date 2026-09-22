@@ -1842,6 +1842,16 @@
           "required": true,
           "default": null,
           "description": null
+        },
+        {
+          "name": "returnsResult",
+          "wireName": "returnsResult",
+          "source": "query",
+          "type": "bool",
+          "cardinality": "single",
+          "required": false,
+          "default": "false",
+          "description": null
         }
       ],
       "resultType": "String"

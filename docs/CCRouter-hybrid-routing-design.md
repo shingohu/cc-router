@@ -3,7 +3,7 @@
 ## 文档状态
 
 - 版本：v0.2
-- 状态：混合路由与多 Host 隔离已实现；原生多窗口桥接和完整路由状态恢复仍暂缓
+- 状态：混合路由与多 Host 隔离已实现；原生多窗口桥接和完整路由状态恢复归入 2.0 候选
 - 适用范围：CCRouter、GoRouter、Flutter Navigator、第三方 Popup 和独立 Navigation Host
 - 关联设计：[CCRouter 路由子系统设计](CCRouter-route-design.md)
 
@@ -239,7 +239,7 @@ GoRouter 和内存 Adapter 会声明各自已实现的可见性观察、Managed 
 - [x] 支持 Size Class 驱动的单 Pane、双 Pane 和多 Pane Outlet 显示切换；
 - [x] Host 卸载时精确清理所属 Entry、Scope、pending result 和 listener bridge。
 - [x] 注销 active Host 时要求显式 `replacementActiveHostId`，不按 Map 插入顺序选择接替 Host。
-- [ ] 等 Flutter 多窗口能力稳定后接入原生 Window/Flutter View 生命周期与 Root Host 映射。
+- [ ] 2.0 候选：等 Flutter 多窗口能力稳定后接入原生 Window/Flutter View 生命周期与 Root Host 映射。
 
 ## 11. 验收用例
 

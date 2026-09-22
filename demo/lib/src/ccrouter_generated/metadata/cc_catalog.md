@@ -415,6 +415,7 @@ ShellRoute 共享框架中的设置页。
 | Name | Wire | Source | Type | Cardinality | Codec | Required | Description |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `level` | `level` | `path` | `int` | `-` | `-` | true |  |
+| `returnsResult` | `returnsResult` | `query` | `bool` | `single` | `-` | false |  |
 
 ### `demo_navigation_lab.timeout`
 

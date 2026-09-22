@@ -445,7 +445,7 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
       onTap: () => _run(
         'Stack workbench',
         () => CCRouter.navigator.push<String>(
-          DemoNavigationLabRoutes.stack(level: 1),
+          DemoNavigationLabRoutes.stack(level: 1, returnsResult: true),
         ),
       ),
     ),

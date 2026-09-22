@@ -7,6 +7,8 @@ import 'package:ccrouter_generator/src/package_workspace.dart';
 import 'package:dart_style/dart_style.dart';
 import 'package:path/path.dart' as path;
 
+import 'src/route_find.dart' as route_find;
+
 final _dartFormatter = DartFormatter(
   languageVersion: DartFormatter.latestLanguageVersion,
 );
@@ -34,15 +36,34 @@ Future<void> main(List<String> arguments) async {
     exitCode = 2;
     return;
   }
-  final buildContext = parsed.command == _GeneratorCommand.generate
+  final buildContext = parsed.command != _GeneratorCommand.aggregate
       ? _findBuildContext(root)
       : null;
-  if (parsed.command == _GeneratorCommand.generate && buildContext == null) {
+  if (parsed.command != _GeneratorCommand.aggregate && buildContext == null) {
     stderr.writeln(
       'error: No standalone Package or enclosing Dart workspace was found '
       'for ${root.path}.',
     );
     exitCode = 2;
+    return;
+  }
+  if (parsed.command == _GeneratorCommand.find) {
+    try {
+      if (!await route_find.findRoute(
+        buildRoot: buildContext!.root,
+        hostRoot: root,
+        workspace: buildContext.workspace,
+        query: parsed.query!,
+      )) {
+        exitCode = 1;
+      }
+    } on CCPackageWorkspaceException catch (error) {
+      stderr.writeln('error: ${error.message}');
+      exitCode = 1;
+    } on FormatException catch (error) {
+      stderr.writeln('error: ${error.message}');
+      exitCode = 1;
+    }
     return;
   }
   if (parsed.check &&
@@ -208,14 +229,16 @@ Future<bool> _aggregate(Directory root, _Arguments parsed) async {
 
 const _usage = '''Usage:
   ccrouter generate [scan-root] [--output-dir <directory>] [--check] [--no-cache] [--profile]
+  ccrouter find <route-id-or-declared-pattern> [host-root]
   ccrouter aggregate [scan-root] [--output-dir <directory>] [--generate-component-registrars]
 
 `generate` runs build_runner for the enclosing Dart workspace or package, then
 validates metadata and writes component indexes, Host assembly, and route docs.
 `--check` restores the original files and fails when generation would change a
 CCRouter-managed artifact. `--no-cache` forces the reference full-parse path.
-`--profile` reports phase timings and cache hits. `aggregate` preserves the
-metadata-only legacy path.''';
+`--profile` reports phase timings and cache hits. `find` reads existing Package
+indexes without generating and matches exact IDs or declared Pattern values.
+`aggregate` preserves the metadata-only legacy path.''';
 
 /// Runs dependency-accurate Package generation for one resolved Host.
 Future<bool> _generateResolvedWorkspace(
@@ -712,13 +735,18 @@ enum _GeneratorCommand {
 
   /// Runs build_runner before producing every aggregate artifact.
   generate,
+
+  /// Searches validated Package indexes without generating artifacts.
+  find,
 }
 
+/// Parsed inputs shared by generation, aggregation, and read-only lookup.
 final class _Arguments {
   const _Arguments({
     required this.command,
     required this.rootPath,
     required this.outputDirectoryPath,
+    this.query,
     this.generateComponentRegistrars = false,
     this.check = false,
     this.noCache = false,
@@ -735,6 +763,9 @@ final class _Arguments {
 
   /// Optional override for aggregate JSON and Markdown output.
   final String? outputDirectoryPath;
+
+  /// Exact Route ID or declared Pattern used only by `find`.
+  final String? query;
 
   /// Whether component indexes and Host assembly are emitted.
   final bool generateComponentRegistrars;
@@ -764,10 +795,14 @@ _Arguments _parseArguments(List<String> arguments) {
     argumentStart = 1;
   } else if (arguments.isNotEmpty && arguments.first == 'aggregate') {
     argumentStart = 1;
+  } else if (arguments.isNotEmpty && arguments.first == 'find') {
+    command = _GeneratorCommand.find;
+    argumentStart = 1;
   }
   var rootPath = Directory.current.path;
   String? outputDirectoryPath;
   var rootProvided = false;
+  String? query;
   var generateComponentRegistrars = command == _GeneratorCommand.generate;
   var check = false;
   var noCache = false;
@@ -840,8 +875,34 @@ _Arguments _parseArguments(List<String> arguments) {
         error: 'Only one scan root may be provided.',
       );
     }
+    if (command == _GeneratorCommand.find && query == null) {
+      query = argument;
+      continue;
+    }
     rootPath = argument;
     rootProvided = true;
+  }
+
+  if (command == _GeneratorCommand.find && query == null) {
+    return _Arguments(
+      command: command,
+      rootPath: '',
+      outputDirectoryPath: null,
+      error: 'find requires a Route ID or declared Pattern.',
+    );
+  }
+  if (command == _GeneratorCommand.find &&
+      (outputDirectoryPath != null ||
+          generateComponentRegistrars ||
+          check ||
+          noCache ||
+          profile)) {
+    return _Arguments(
+      command: command,
+      rootPath: '',
+      outputDirectoryPath: null,
+      error: 'find accepts only a query and optional Host root.',
+    );
   }
 
   if (check && command != _GeneratorCommand.generate) {
@@ -865,6 +926,7 @@ _Arguments _parseArguments(List<String> arguments) {
     command: command,
     rootPath: rootPath,
     outputDirectoryPath: outputDirectoryPath,
+    query: query,
     generateComponentRegistrars: generateComponentRegistrars,
     check: check,
     noCache: noCache,

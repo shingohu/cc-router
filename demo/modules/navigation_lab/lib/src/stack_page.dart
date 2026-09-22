@@ -14,9 +14,14 @@ import 'ccrouter_generated/component/demo_navigation_lab_component.route_api.g.d
   description: '交互验证 Push、Replace、Pop、Go 与 Reset。',
 )
 final class DemoStackPage extends StatefulWidget {
-  const DemoStackPage({required this.level, super.key});
+  const DemoStackPage({
+    required this.level,
+    @CCQueryParam() this.returnsResult = false,
+    super.key,
+  });
 
   final int level;
+  final bool returnsResult;
 
   @override
   State<DemoStackPage> createState() => _DemoStackPageState();
@@ -45,15 +50,15 @@ final class _DemoStackPageState extends State<DemoStackPage> {
   }
 
   void _complete() {
-    if (CCRouter.navigator.canPop()) {
+    if (widget.returnsResult && CCRouter.navigator.canPop()) {
       CCRouter.navigator.pop(result: 'stack:${widget.level}:done');
       return;
     }
-    unawaited(CCRouter.navigator.open(Uri.parse('/')));
+    unawaited(CCRouter.navigator.go(DemoNavigationLabRoutes.home()));
   }
 
   void _completeWithWrongType() {
-    if (CCRouter.navigator.canPop()) {
+    if (widget.returnsResult && CCRouter.navigator.canPop()) {
       CCRouter.navigator.pop(result: 42);
     }
   }
@@ -61,6 +66,7 @@ final class _DemoStackPageState extends State<DemoStackPage> {
   @override
   Widget build(BuildContext context) {
     final entries = CCRouter.activeRouteEntries;
+    final returnsResult = widget.returnsResult && CCRouter.navigator.canPop();
     return Scaffold(
       appBar: AppBar(title: Text('栈操作 · Level ${widget.level}')),
       body: ListView(
@@ -79,7 +85,10 @@ final class _DemoStackPageState extends State<DemoStackPage> {
             onPressed: () => _run(
               'push',
               () => CCRouter.navigator.push<String>(
-                DemoNavigationLabRoutes.stack(level: widget.level + 1),
+                DemoNavigationLabRoutes.stack(
+                  level: widget.level + 1,
+                  returnsResult: true,
+                ),
                 source: const CCNavigationSource.feature('stack.push'),
               ),
             ),
@@ -97,19 +106,24 @@ final class _DemoStackPageState extends State<DemoStackPage> {
           const SizedBox(height: 16),
           FilledButton.icon(
             onPressed: _complete,
-            icon: const Icon(Icons.check),
-            label: const Text('Pop 并返回结果'),
+            icon: Icon(returnsResult ? Icons.check : Icons.home_outlined),
+            label: Text(returnsResult ? 'Pop 并返回结果' : 'Go 返回首页'),
           ),
-          const SizedBox(height: 12),
-          OutlinedButton.icon(
-            onPressed: _completeWithWrongType,
-            icon: const Icon(Icons.warning_amber_outlined),
-            label: const Text('故意返回错误类型'),
-          ),
+          if (returnsResult) ...[
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: _completeWithWrongType,
+              icon: const Icon(Icons.warning_amber_outlined),
+              label: const Text('故意返回错误类型'),
+            ),
+          ],
           const SizedBox(height: 8),
           Text(
-            'String 路由收到 int 结果时，Runtime 应报告 resultTypeMismatch，'
-            '并清理当前 RouteEntry。',
+            returnsResult
+                ? 'String 路由收到 int 结果时，Runtime 应报告 resultTypeMismatch，'
+                      '并清理当前 RouteEntry。'
+                : 'Go / Reset 不提供页面返回结果；返回首页使用声明式 Go，'
+                      '不会在首页下面保留当前页面。',
             style: Theme.of(context).textTheme.bodySmall,
           ),
         ],
@@ -138,5 +152,7 @@ final class _StackAction extends StatelessWidget {
   );
 }
 
-CCRouteIntent<String> demoStackIntent({required int level}) =>
-    DemoNavigationLabRoutes.stack(level: level);
+CCRouteIntent<String> demoStackIntent({
+  required int level,
+  bool returnsResult = false,
+}) => DemoNavigationLabRoutes.stack(level: level, returnsResult: returnsResult);

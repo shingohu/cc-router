@@ -183,6 +183,67 @@ void main() {
       isTrue,
     );
 
+    await tester.tap(find.text('确认并返回类型安全结果'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('CCRouter Lab'), findsOneWidget);
+    expect(CCRouter.navigator.canPop(), isFalse);
+    expect(find.byType(BackButton), findsNothing);
+
+    await _unmountDemo(tester);
+  });
+
+  testWidgets('Go stack returns home without retaining the stack page', (
+    tester,
+  ) async {
+    await _pumpDemo(tester);
+    await tester.tap(find.text('导航'));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.text('Go 到栈页'),
+      500,
+      scrollable: find.byType(Scrollable).last,
+    );
+    await tester.tap(find.text('Go 到栈页'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('栈操作 · Level 10'), findsOneWidget);
+    expect(find.text('故意返回错误类型'), findsNothing);
+    expect(find.text('Go 返回首页'), findsOneWidget);
+    await tester.tap(find.text('Go 返回首页'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('CCRouter Lab'), findsOneWidget);
+    expect(CCRouter.navigator.canPop(), isFalse);
+    expect(find.byType(BackButton), findsNothing);
+
+    await _unmountDemo(tester);
+  });
+
+  testWidgets('Reset stack returns home without retaining the stack page', (
+    tester,
+  ) async {
+    await _pumpDemo(tester);
+    await tester.tap(find.text('导航'));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.text('Reset 到栈页'),
+      500,
+      scrollable: find.byType(Scrollable).last,
+    );
+    await tester.tap(find.text('Reset 到栈页'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('栈操作 · Level 20'), findsOneWidget);
+    expect(find.text('故意返回错误类型'), findsNothing);
+    expect(find.text('Go 返回首页'), findsOneWidget);
+    await tester.tap(find.text('Go 返回首页'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('CCRouter Lab'), findsOneWidget);
+    expect(CCRouter.navigator.canPop(), isFalse);
+    expect(find.byType(BackButton), findsNothing);
+
     await _unmountDemo(tester);
   });
 

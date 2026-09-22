@@ -12,10 +12,16 @@ import 'package:ccrouter/ccrouter.dart';
 /// Immutable arguments for route demo_navigation_lab.stack; URI values remain typed.
 final class _DemoStackPageRouteArguments {
   /// Creates arguments without navigating or retaining a backend context.
-  const _DemoStackPageRouteArguments({required this.level});
+  const _DemoStackPageRouteArguments({
+    required this.level,
+    this.returnsResult = false,
+  });
 
   /// path parameter level for demo_navigation_lab.stack.
   final int level;
+
+  /// query parameter returnsResult for demo_navigation_lab.stack.
+  final bool returnsResult;
 }
 
 /// 交互验证 Push、Replace、Pop、Go 与 Reset。
@@ -24,8 +30,12 @@ abstract final class _DemoStackPageRoute {
   static const id = "demo_navigation_lab.stack";
 
   /// Creates a typed Intent; navigate through CCRouter.navigator.
-  static CCRouteIntent<String> intent({required int level}) =>
-      _DemoStackPageRouteIntent(_DemoStackPageRouteArguments(level: level));
+  static CCRouteIntent<String> intent({
+    required int level,
+    bool returnsResult = false,
+  }) => _DemoStackPageRouteIntent(
+    _DemoStackPageRouteArguments(level: level, returnsResult: returnsResult),
+  );
 
   /// Component-owned definition; business callers should use [intent].
   static final definition =
@@ -89,7 +99,25 @@ final class _DemoStackPageRouteCodec
               (throw CCRouteParameterError(
                 "Route \"demo_navigation_lab.stack\" parameter \"level\" is invalid.",
               )));
-    return _DemoStackPageRouteArguments(level: _value_level);
+    final _values_returnsResult = input.query["returnsResult"];
+    if (_values_returnsResult != null && _values_returnsResult.length != 1)
+      throw CCRouteParameterError(
+        "Route \"demo_navigation_lab.stack\" parameter \"returnsResult\" is invalid.",
+      );
+    final _raw_returnsResult = _values_returnsResult?.single;
+    final bool _value_returnsResult = _raw_returnsResult == null
+        ? false
+        : switch (_raw_returnsResult) {
+            "true" => true,
+            "false" => false,
+            _ => throw CCRouteParameterError(
+              "Route \"demo_navigation_lab.stack\" parameter \"returnsResult\" is invalid.",
+            ),
+          };
+    return _DemoStackPageRouteArguments(
+      level: _value_level,
+      returnsResult: _value_returnsResult,
+    );
   }
 
   /// Encodes unescaped scalar values; Runtime owns URI escaping exactly once.
@@ -97,7 +125,9 @@ final class _DemoStackPageRouteCodec
   CCEncodedRouteArguments encode(_DemoStackPageRouteArguments arguments) {
     return CCEncodedRouteArguments(
       path: {"level": arguments.level.toString()},
-      query: {},
+      query: {
+        "returnsResult": [arguments.returnsResult.toString()],
+      },
       extra: null,
     );
   }
@@ -109,8 +139,10 @@ final class CCGeneratedDemoStackPageRouteFactory {
   const CCGeneratedDemoStackPageRouteFactory();
 
   /// Creates an immutable Intent without performing navigation.
-  CCRouteIntent<String> call({required int level}) =>
-      _DemoStackPageRoute.intent(level: level);
+  CCRouteIntent<String> call({
+    required int level,
+    bool returnsResult = false,
+  }) => _DemoStackPageRoute.intent(level: level, returnsResult: returnsResult);
 }
 
 /// Package-internal bridge used by the generated component route index.

@@ -3,7 +3,7 @@
 ## 文档状态
 
 - 版本：v0.2
-- 状态：路由功能闭环与 Observer 有界异步分发已完成；完整 Route Restoration 明确暂缓
+- 状态：路由 1.x 功能闭环与 Observer 有界异步分发已完成；新增候选能力统一进入 2.0 规划
 - 职责：五份路由文档中的唯一实施状态清单，不替代路由语义、契约或混合路由设计
 
 本文中的勾选项表示当前仓库已实现并具有对应回归覆盖。其他设计文档不再重复维护任务
@@ -82,7 +82,8 @@ Observer 只覆盖部分 Managed Outlet，Adapter 会关闭延迟 Arrival，避�
 - [x] 隔离 Host、Shell 和 Outlet 的栈、返回与诊断状态；
 - [x] 将 Adaptive Layout 契约接入 Host/Outlet 调度；
 - [x] 支持单 Pane、双 Pane 和折叠状态变化，并明确 Host 卸载时不隐式迁移 Live Route；
-- [ ] 接入原生 macOS、Windows、iPadOS Window/Flutter View 的创建、激活、关闭和恢复生命周期。
+- [ ] 2.0 候选：接入原生 macOS、Windows、iPadOS Window/Flutter View 的创建、激活、关闭
+  和恢复生命周期。
 
 Host 卸载会关闭该 Host 的 RouteEntry 和 Scope，并安全完成 pending result；其他 Host 不受影响。
 Live Route 的跨 Host 迁移存在 Widget、Scope、返回值和后端状态所有权问题，因此不做隐式迁移。
@@ -115,12 +116,13 @@ Runtime 同步写入有界诊断历史，但在下一轮 event loop 才通知 As
 - [x] 事件固定标记 `unsupported`，不伪装已经执行恢复；
 - [x] 只记录 Route ID、Host/Outlet 数量、版本指纹和匿名 Telemetry Context；
 - [x] 禁止记录完整 URI、参数、账号、Arguments、Extra 或任意业务对象；
-- [ ] 定义版本化、Adapter 中立的 Route Restoration Snapshot（数据证明有需求后再启动）；
-- [ ] 实现重新解析、安全校验、契约升级和部分恢复（非当前版本阻塞项）。
+- [ ] 2.0 候选：定义版本化、Adapter 中立的 Route Restoration Snapshot（数据证明有需求后
+  再启动）；
+- [ ] 2.0 候选：实现重新解析、安全校验、契约升级和部分恢复（非 1.x 阻塞项）。
 
-完整状态恢复暂不进入生产 API。后续只有在恢复机会率、受影响 Route 分布、多窗口恢复占比等
-Telemetry 数据证明收益后才重新立项；届时必须采用路由显式 opt-in，且不能持久化 Widget、
-BuildContext、Flutter Route、Scope、Extra 或返回 Completer。
+完整状态恢复暂不进入 1.x 生产 API。2.0 阶段只有在恢复机会率、受影响 Route 分布、
+多窗口恢复占比等 Telemetry 数据证明收益后才启动实施；届时必须采用路由显式 opt-in，
+且不能持久化 Widget、BuildContext、Flutter Route、Scope、Extra 或返回 Completer。
 
 ### P2 生成器与最终收口
 
@@ -407,17 +409,26 @@ Metrics/Display Features，不自动产生原生窗口。未来每个 Flutter Vi
 一个 Root Host，但平台窗口生命周期桥接尚未实现。`CCRouterApp` 不强制接管已有应用的
 `MaterialApp.router` 或应用拥有的 GoRouter。
 
-下列工作延期，不能作为 1.x API 冻结的隐含验收条件：
+下列能力统一归入 2.0 规划，不作为 1.x API 冻结的隐含验收条件。2.0 是最早评估和实施阶段，
+不是无条件发布承诺；前置条件不成立时继续延期，不以填满功能清单为目标。
 
 1. Navigator 1.0 Backend 留到架构 2.0；先以独立 Backend 复用 Route Definition 和
    `CCRouterAppBackend` SPI，验证 Pop/Observer/返回值与能力降级，不改业务导航入口。
-2. 原生多窗口桥接等待平台稳定接入能力；先验证 Window/View 到 Root Host 的身份映射、
+2. 原生多窗口桥接在 2.0 等待平台稳定接入能力；先验证 Window/View 到 Root Host 的身份映射、
    激活、关闭和失效释放，不把同一窗口的旋转、折叠或多个 Outlet 当成新 Window。
-3. 完整 Route Restoration 只有在恢复机会 Telemetry 证明收益后另立项；继续保持
+3. 完整 Route Restoration 在 2.0 只有恢复机会 Telemetry 证明收益后才实施；此前保持
    `unsupported` 诊断，不提供伪恢复语义。
-4. `ccrouter watch`、CLI 快速单次生成与 DevTools 可视化属于开发体验后续工作；
+4. `ccrouter watch`、CLI 快速单次生成与 DevTools 可视化属于 2.0 开发体验候选；
    当前以显式生成、`--check` 和 Package/Host Catalog 为确定性基础。临时页面的源码
    重命名/移动与 IDE 导包已验收，但不外推至 IDE 重启或大型外部依赖工程。
+5. 原子组合栈事务、精确 Route Entry 操作和调用级 `BuildContext` 最近 Outlet 解析在 2.0
+   重新评估；分别以稳定身份、原子回滚、混合栈隔离和真实调用点场景为准，不能在 1.x
+   通过拼接已有操作或保存全局 Context 模拟。
+
+Service/Handler/Scope 的完整组件动态停用、Service 契约收敛、组件创建与契约提升 CLI
+也归入架构 2.0 的**非路由工作流**，需要独立设计和验收，不是路由 2.0 的必选依赖。
+与新增能力不同，文档状态纠偏、当前改动的测试/提交，以及内存和性能的持续采样仍属于
+1.x 日常质量维护，不能因规划 2.0 而暂停。
 
 后续扩展必须保留本轮测试门禁与可回退的 Backend/Generator 边界；涉及新公开能力时先补
 失败边界和能力声明，再实施并分别执行 Generator、Runtime、Demo 与 Workspace 回归。
@@ -467,12 +478,12 @@ Generator 全套 124 项、Demo 22 项通过；受管生成物无残留或 Git �
 - 绕过 build_runner 直接生成单文件：速度可能更快，但会复制 Builder 语义、缓存和校验边界，
   不符合“生成快且不出错”的优先级。
 
-本轮未观察到需要牺牲一致性来优化的阻塞性延迟，因此不新增命令或公共参数。
-若目标业务仓库对至少 20 次页面增删改移的增量操作测得 P95 超过 10 秒，先用
+1.x 不新增命令或公共参数。2.0 若目标业务仓库对至少 20 次页面增删改移的增量操作
+测得 P95 超过 10 秒，先用
 `--profile` 确认 Builder/解析/聚合瓶颈，再做可回退的独立快速路径，与统一命令逐字节
 比对生成物、错误和清理结果；不能把只更新页面文件的命令命名为完整生成。
 
-### 6.3 `ccrouter watch`（具备监听基础，暂不实现）
+### 6.3 `ccrouter watch`（2.0 候选，具备监听基础）
 
 本机 `build_runner watch --help` 确认支持 `--workspace` 与多个 `--build-filter`，
 理论上可监听 6.1 的可写依赖闭包；稳定的构建完成事件接入仍须验证。
@@ -481,7 +492,7 @@ Generator 全套 124 项、Demo 22 项通过；受管生成物无残留或 Git �
 校验、聚合、清理与发布 Catalog。简单地把 `build` 改成常驻 `watch` 会永远等不到聚合；
 让常驻进程一直持锁也会阻塞手动 `generate` / `--check`。
 
-若未来因实际页面编辑频率或 P95 延迟需要实施，应作为独立可选命令，不改变现有
+2.0 若实际页面编辑频率或 P95 延迟证明有需求，应作为独立可选命令，不改变现有
 `generate` 的行为，并按下列顺序实现与验收：
 
 1. 用可靠的 Builder 完成信号触发聚合，不解析易变的终端输出；多次文件事件合并，
@@ -496,4 +507,14 @@ Generator 全套 124 项、Demo 22 项通过；受管生成物无残留或 Git �
    实测数据后，再决定是否提供默认启用或 IDE 集成。
 
 当前 Demo 改一页约 5–8 秒、稳定空改动约 2 秒，尚不足以证明常驻监听的维护与资源成本
-值得承担。本轮不启动后台服务，也不扩展公开 API；大型项目的实际 P95 是重新决策的依据。
+值得承担。1.x 不启动后台服务，也不扩展公开 API；大型项目的实际 P95 是 2.0 决策的依据。
+
+### 6.4 路由源码定位命令（已落地）
+
+`ccrouter find <route-id-or-declared-pattern> [host-root]` 只读取当前 Host 的 Pub 运行时
+依赖闭包与已发布的 Package Index，使用同一 Capability Source Catalog 合并跨 Package
+契约和实现位置，按精确 Route ID 或声明的 Pattern 文本返回组件、Package、源码坐标和别名。
+不启动 Builder、不写入生成物、不扫描源码或猜测实际 URL 的动态参数；缺失或损坏的 Index
+以及依赖指纹不一致的混合版本 Index 必须报错，不能静默回退到旧文档。生成前新增的
+Route 不可发现；源码修改后的新鲜度仍由 `generate --check` 负责。CLI 专项测试覆盖
+跨包合并、Path/URI 别名、Host 闭包、无结果、参数错误和 Index 失败。
