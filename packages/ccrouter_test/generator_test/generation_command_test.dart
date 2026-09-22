@@ -11,12 +11,14 @@ void main() {
   test(
     'generate check rejects cross-Package internal imports despite ignores',
     () async {
-      final probe = File(path.join(
-        Directory.current.path,
-        'demo',
-        'lib',
-        '_ccrouter_internal_api_probe.dart',
-      ));
+      final probe = File(
+        path.join(
+          Directory.current.path,
+          'demo',
+          'lib',
+          '_ccrouter_internal_api_probe.dart',
+        ),
+      );
       expect(probe.existsSync(), isFalse);
       addTearDown(() {
         if (probe.existsSync()) probe.deleteSync();
@@ -37,7 +39,10 @@ void probe() {
         '--check',
       ], workingDirectory: Directory.current.path);
       expect(rejected.exitCode, 1);
-      expect('${rejected.stderr}', contains('ccrouter_demo:lib/_ccrouter_internal_api_probe.dart:1'));
+      expect(
+        '${rejected.stderr}',
+        contains('ccrouter_demo:lib/_ccrouter_internal_api_probe.dart:1'),
+      );
       expect('${rejected.stderr}', contains('public Contract or Host barrel'));
       expect(probe.existsSync(), isTrue);
     },
@@ -423,6 +428,60 @@ void probe() {
       expect(unknown.readAsStringSync(), 'user-owned');
     },
     timeout: const Timeout(Duration(minutes: 2)),
+  );
+
+  test(
+    'clean removes managed outputs but preserves user files and rebuilds',
+    () async {
+      final demoRoot = Directory(path.join(Directory.current.path, 'demo'));
+      final sentinel = File(
+        path.join(
+          demoRoot.path,
+          'modules',
+          'navigation_lab',
+          'lib',
+          'src',
+          'ccrouter_generated',
+          'clean_probe.txt',
+        ),
+      )..writeAsStringSync('user-owned');
+      final generatedRouteApi = File(
+        path.join(
+          demoRoot.path,
+          'modules',
+          'navigation_lab',
+          'lib',
+          'src',
+          'ccrouter_generated',
+          'component',
+          'demo_navigation_lab_component.route_api.g.dart',
+        ),
+      );
+      expect(generatedRouteApi.existsSync(), isTrue);
+      try {
+        final cleaned = await Process.run(Platform.resolvedExecutable, [
+          'run',
+          'ccrouter_generator:ccrouter',
+          'clean',
+          'demo',
+        ], workingDirectory: Directory.current.path);
+        expect(cleaned.exitCode, 0, reason: '${cleaned.stderr}');
+        expect('${cleaned.stdout}', contains('Removed '));
+        expect(generatedRouteApi.existsSync(), isFalse);
+        expect(sentinel.readAsStringSync(), 'user-owned');
+      } finally {
+        final regenerated = await Process.run(Platform.resolvedExecutable, [
+          'run',
+          'ccrouter_generator:ccrouter',
+          'generate',
+          'demo',
+        ], workingDirectory: Directory.current.path);
+        expect(regenerated.exitCode, 0, reason: '${regenerated.stderr}');
+        if (sentinel.existsSync()) sentinel.deleteSync();
+      }
+      expect(generatedRouteApi.existsSync(), isTrue);
+    },
+    timeout: const Timeout(Duration(minutes: 4)),
   );
 
   test(

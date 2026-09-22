@@ -66,6 +66,22 @@ Future<void> main(List<String> arguments) async {
     }
     return;
   }
+  if (parsed.command == _GeneratorCommand.clean) {
+    _GenerationLock? cleanLock;
+    try {
+      cleanLock = await _GenerationLock.acquire(buildContext!.root);
+      if (!await _cleanResolvedWorkspace(root, buildContext)) {
+        exitCode = 1;
+      }
+    } on CCPackageWorkspaceException catch (error) {
+      stderr.writeln('error: ${error.message}');
+      exitCode = 1;
+    } finally {
+      await cleanLock?.release();
+      totalWatch.stop();
+    }
+    return;
+  }
   if (parsed.check &&
       parsed.outputDirectoryPath != null &&
       !_isWithin(
@@ -227,9 +243,63 @@ Future<bool> _aggregate(Directory root, _Arguments parsed) async {
   return true;
 }
 
+/// Removes only CCRouter-owned source outputs from writable Packages.
+///
+/// The command deliberately leaves build_runner caches, user files below a
+/// generated directory, read-only dependency Packages, and application build
+/// products untouched. Run `generate` afterwards to recreate the source
+/// catalogs and Dart glue.
+Future<bool> _cleanResolvedWorkspace(
+  Directory hostRoot,
+  _BuildContext buildContext,
+) async {
+  final workspace = await CCPackageWorkspace.load(
+    buildRoot: buildContext.root,
+    hostRoot: hostRoot,
+    workspace: buildContext.workspace,
+  );
+  var removed = 0;
+  for (final package in workspace.packages.values.where(
+    (package) => package.writable,
+  )) {
+    final generated = await _readManagedGeneratedFiles(package.root);
+    for (final relative in generated.keys) {
+      final file = File(_absolutePath(package.root, relative));
+      if (!file.existsSync()) continue;
+      await file.delete();
+      removed++;
+    }
+    final legacyDirectories = [
+      Directory(path.join(package.root.path, 'ccrouter_generated')),
+      Directory(path.join(package.root.path, 'lib', 'ccrouter_generated')),
+    ];
+    final beforeLegacy = await _countExistingFiles(legacyDirectories);
+    await _removeLegacyMetadataArtifacts(legacyDirectories);
+    removed += beforeLegacy;
+  }
+  stdout.writeln('Removed $removed CCRouter generated source artifact(s).');
+  return true;
+}
+
+/// Counts files in legacy generated directories before migration cleanup.
+Future<int> _countExistingFiles(Iterable<Directory> directories) async {
+  var count = 0;
+  for (final directory in directories) {
+    if (!directory.existsSync()) continue;
+    await for (final entity in directory.list(
+      recursive: true,
+      followLinks: false,
+    )) {
+      if (entity is File && _isLegacyMetadataArtifact(entity)) count++;
+    }
+  }
+  return count;
+}
+
 const _usage = '''Usage:
   ccrouter generate [scan-root] [--output-dir <directory>] [--check] [--no-cache] [--profile]
   ccrouter find <route-id-or-declared-pattern> [host-root]
+  ccrouter clean [host-root]
   ccrouter aggregate [scan-root] [--output-dir <directory>] [--generate-component-registrars]
 
 `generate` runs build_runner for the enclosing Dart workspace or package, then
@@ -238,6 +308,8 @@ validates metadata and writes component indexes, Host assembly, and route docs.
 CCRouter-managed artifact. `--no-cache` forces the reference full-parse path.
 `--profile` reports phase timings and cache hits. `find` reads existing Package
 indexes without generating and matches exact IDs or declared Pattern values.
+`clean` removes only CCRouter-owned source outputs in writable Packages; it
+preserves build caches, read-only dependencies, and unknown user files.
 `aggregate` preserves the metadata-only legacy path.''';
 
 /// Runs dependency-accurate Package generation for one resolved Host.
@@ -738,6 +810,9 @@ enum _GeneratorCommand {
 
   /// Searches validated Package indexes without generating artifacts.
   find,
+
+  /// Removes CCRouter-owned source artifacts from writable Packages.
+  clean,
 }
 
 /// Parsed inputs shared by generation, aggregation, and read-only lookup.
@@ -797,6 +872,9 @@ _Arguments _parseArguments(List<String> arguments) {
     argumentStart = 1;
   } else if (arguments.isNotEmpty && arguments.first == 'find') {
     command = _GeneratorCommand.find;
+    argumentStart = 1;
+  } else if (arguments.isNotEmpty && arguments.first == 'clean') {
+    command = _GeneratorCommand.clean;
     argumentStart = 1;
   }
   var rootPath = Directory.current.path;
@@ -902,6 +980,20 @@ _Arguments _parseArguments(List<String> arguments) {
       rootPath: '',
       outputDirectoryPath: null,
       error: 'find accepts only a query and optional Host root.',
+    );
+  }
+
+  if (command == _GeneratorCommand.clean &&
+      (outputDirectoryPath != null ||
+          generateComponentRegistrars ||
+          check ||
+          noCache ||
+          profile)) {
+    return _Arguments(
+      command: command,
+      rootPath: '',
+      outputDirectoryPath: null,
+      error: 'clean accepts only an optional Host root.',
     );
   }
 
