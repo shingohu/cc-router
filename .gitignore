@@ -3,3 +3,7 @@ build/
 coverage/
 pubspec_overrides.yaml
 .DS_Store
+
+# Android Studio / IntelliJ local project state
+.idea/
+*.iml
