@@ -4,7 +4,7 @@ version: 0.1.0
 resolution: workspace
 publish_to: none
 environment:
-  sdk: ^3.9.0
+  sdk: ^3.10.0
 dependencies:
   ccrouter_contracts: ^0.1.0
   ccrouter_core: ^0.1.0

@@ -141,20 +141,24 @@
 
 ### 已完成首批基线：P2-6 性能与稳定性基准
 
-仓库已提供非门禁式 Generator 与 Runtime scaling benchmark，覆盖 Workspace 校验、Runtime 初始化、
-动态 URI 解析和销毁。动态 URI resolution 仍会遍历所有 Route/Pattern；生成器虽已改为精确闭包、
+仓库已提供非门禁式 Generator、Runtime scaling 和并发回收 benchmark，覆盖 Workspace 校验、Runtime 初始化、
+动态 URI 解析、并发 Push/Pop 和销毁。动态 URI resolution 仍会遍历所有 Route/Pattern；生成器虽已改为精确闭包、
 单 Package Index、内容缓存和 Pattern 候选索引，但基准只用于同机版本对比，不能把一次本机结果
 视为跨机器性能承诺。
 
 10/100/1000 Route 初始化、动态解析和 Runtime dispose p50/p95 已形成首批基线；持续 Push/Pop
-后的台账有界性由回归测试覆盖。后续继续补充 1 万次并发压力、真实 RSS/Heap 趋势和生成器完整
-冷/热流程的跨版本数据。指标先记录基线，再决定优化。
+后的台账有界性由回归测试覆盖。新增 10 轮、每轮 100 个并发 Push/Pop 的回收基准，峰值
+`activeRouteEntries=101`，每轮结束均回到 1 个根 Entry，`pendingNavigations=0`，Adapter 栈也回到 1。
+这验证了可观测的 Runtime 保留状态边界，但不替代真实 RSS/Heap 趋势；后者仍需在目标平台和应用中持续采样。
+本次 OHOS SDK 本机 JIT 运行的 10 轮耗时为 `cycleUsP50=6994`、`cycleUsP95=10363`，仅作为同机
+回归参考，不作为跨平台阈值。
 
 生成器聚合已增加非门禁式基准脚本：
 
 ```sh
 fvm dart run packages/ccrouter_test/benchmark/generator_scaling.dart
 fvm dart run packages/ccrouter_test/benchmark/runtime_scaling.dart
+fvm dart run packages/ccrouter_test/benchmark/runtime_concurrency.dart
 ```
 
 2026-09-20 本机 Dart JIT 预热后，旧 Validator 在 10/100/500/1000 Route 下分别为
