@@ -246,6 +246,11 @@ final class CCRouterRuntime {
   /// Bounded sanitized navigation failures and optional recovery outcomes.
   final Queue<CCNavigationFailureEvent> _navigationFailures = Queue();
 
+  /// Navigation IDs whose deferred resume failed before the original Future
+  /// completed. The outer navigation pipeline consumes this marker so one
+  /// failure produces one event with the correct attempt category.
+  final Set<String> _pendingResumeFailures = {};
+
   /// Bounded records of safe behavior selected for missing Adapter capability.
   final Queue<CCNavigationCapabilityFallbackEvent>
   _navigationCapabilityFallbacks = Queue();
@@ -1017,6 +1022,7 @@ final class CCRouterRuntime {
       _navigationEvents.clear();
       _navigationFailureListeners.clear();
       _navigationFailures.clear();
+      _pendingResumeFailures.clear();
       _navigationCapabilityFallbackListeners.clear();
       _navigationCapabilityFallbacks.clear();
       _restorationOpportunityListeners.clear();

@@ -2228,6 +2228,10 @@ void main() {
         contexts.single.reason,
         CCNavigationFailureReason.invalidParameters,
       );
+      expect(
+        contexts.single.attempt,
+        CCNavigationFailureAttempt.interceptorRedirect,
+      );
       await runtime.dispose();
     },
   );
@@ -3020,6 +3024,13 @@ void main() {
         CCNavigationFailureReason.routeNotFound,
         CCNavigationFailureReason.routeNotFound,
         CCNavigationFailureReason.recoveryLoop,
+      ]);
+      expect(contexts.map((context) => context.attempt), [
+        CCNavigationFailureAttempt.request,
+        CCNavigationFailureAttempt.failureRecovery,
+        CCNavigationFailureAttempt.failureRecovery,
+        CCNavigationFailureAttempt.failureRecovery,
+        CCNavigationFailureAttempt.failureRecovery,
       ]);
       expect(
         contexts.map((context) => context.initialRouteId),
@@ -4018,6 +4029,48 @@ void main() {
       expect(await pushed, 'authorized');
       expect(await resumed, 'authorized');
       expect(calls, ['orders.auth:orders.detail', 'orders.auth:orders.detail']);
+      await runtime.dispose();
+    },
+  );
+
+  test(
+    'failed deferred resume records a pending-resume failure attempt',
+    () async {
+      var authorized = false;
+      final runtime = CCRouterRuntime.forTesting(
+        navigationAdapter: CCMemoryNavigationAdapter(),
+        components: [
+          routeComponent('orders', (registry) {
+            registry.registerRouteInterceptor(
+              'orders.auth',
+              TestNavigationInterceptor('orders.auth', (_) {
+                if (!authorized) return const CCNavigationDefer();
+                return const CCNavigationProceed();
+              }, <String>[]),
+            );
+            registry.registerRoute(
+              pathRoute(interceptorIds: const ['orders.auth']),
+            );
+          }),
+        ],
+      );
+      runtime.initialize();
+      final pushed = runtime.pushRoute<void>(
+        const TestIntent<void>('orders.detail', RouteArgs('42')),
+      );
+      pushed.then<void>((_) {}, onError: (Object _, StackTrace __) {});
+      await Future<void>.delayed(Duration.zero);
+      final pending = runtime.pendingNavigations.single;
+      runtime.deactivateComponent('orders');
+      authorized = true;
+
+      await expectLater(
+        runtime.resumePendingNavigation(pending.navigationId),
+        throwsA(isA<CCRouteUnavailableError>()),
+      );
+      final failure = runtime.recentNavigationFailures.last.context;
+      expect(failure.attempt, CCNavigationFailureAttempt.pendingResume);
+      expect(failure.reason, CCNavigationFailureReason.routeUnavailable);
       await runtime.dispose();
     },
   );

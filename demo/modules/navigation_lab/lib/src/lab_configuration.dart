@@ -84,7 +84,7 @@ final class DemoNavigationFailurePolicy implements CCNavigationFailurePolicy {
       '${context.initialRouteId ?? '-'} -> ${context.routeId ?? '-'} · '
       '${context.errorType}',
     );
-    if (context.stage == CCNavigationFailureStage.resolution) {
+    if (context.reason == CCNavigationFailureReason.routeNotFound) {
       return CCNavigationFailureFallback.toIntent(
         DemoNavigationLabRoutes.failure(
               stage: context.stage.name,

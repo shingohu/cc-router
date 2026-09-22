@@ -298,6 +298,9 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
   /// [action] receives the final request after all redirects have been
   /// resolved. Keeping this pipeline shared ensures Push, Replace, Go, Reset,
   /// and dynamic Open apply the same concurrency and access-policy boundaries.
+  /// [onInterceptorRedirect] marks a redirect before its replacement target
+  /// is resolved, so Failure Policy diagnostics can retain the correct attempt
+  /// category without exposing redirect payloads.
   Future<Object?> _dispatchNavigationWithAction(
     CCNavigationOperation operation,
     _PreparedRoute prepared,
@@ -310,6 +313,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     void Function(_RouteEntryRecord entry)? commitEntry,
     void Function(Object? result)? validateResult,
     void Function(String routeId)? onAttempt,
+    void Function()? onInterceptorRedirect,
   }) {
     if (prepared.extra != null) {
       return _dispatchNavigationUncoordinated(
@@ -324,6 +328,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
         commitEntry: commitEntry,
         validateResult: validateResult,
         onAttempt: onAttempt,
+        onInterceptorRedirect: onInterceptorRedirect,
       );
     }
     final key = _navigationConcurrencyKey(operation, prepared, openMode);
@@ -372,6 +377,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
       commitEntry: commitEntry,
       validateResult: validateResult,
       onAttempt: onAttempt,
+      onInterceptorRedirect: onInterceptorRedirect,
     );
     if (navigationConcurrencyPolicy != CCNavigationConcurrencyPolicy.allow) {
       _inFlightNavigation[key] = pending;
@@ -447,6 +453,9 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
   }
 
   /// Runs one navigation after the concurrency gate has admitted it.
+  ///
+  /// [onInterceptorRedirect] is an internal diagnostic hook only; it never
+  /// changes the selected navigation operation or adapter behavior.
   Future<Object?> _dispatchNavigationUncoordinated(
     CCNavigationOperation operation,
     _PreparedRoute prepared,
@@ -459,6 +468,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     void Function(_RouteEntryRecord entry)? commitEntry,
     void Function(Object? result)? validateResult,
     void Function(String routeId)? onAttempt,
+    void Function()? onInterceptorRedirect,
   }) async {
     final effectiveNavigationId =
         navigationId ?? '$_runtimeId-navigation-${++_navigationSequence}';
@@ -527,6 +537,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
           case CCNavigationCancel(:final code):
             throw CCRouteCancelledError(code);
           case CCNavigationRedirect(:final intent, :final uri):
+            onInterceptorRedirect?.call();
             if (redirectDepth >= CCRouterRuntime.maxNavigationRedirects) {
               throw CCRouteRedirectLoopError(request.routeId);
             }

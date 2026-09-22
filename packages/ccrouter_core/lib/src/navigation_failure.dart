@@ -50,6 +50,7 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
     var suppressRecoveryResult = false;
     var attemptedRouteId = routeIdHint;
     String? initialRouteId = routeIdHint;
+    var failureAttempt = CCNavigationFailureAttempt.request;
 
     while (true) {
       _PreparedRoute? prepared;
@@ -76,6 +77,10 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
                 commitEntry: currentCommitEntry,
                 validateResult: currentValidateResult,
                 onAttempt: (routeId) => attemptedRouteId = routeId,
+                onInterceptorRedirect: () {
+                  failureAttempt =
+                      CCNavigationFailureAttempt.interceptorRedirect;
+                },
               )
             : _dispatchNavigationUncoordinated(
                 currentOperation,
@@ -89,9 +94,14 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
                 commitEntry: currentCommitEntry,
                 validateResult: currentValidateResult,
                 onAttempt: (routeId) => attemptedRouteId = routeId,
+                onInterceptorRedirect: () {
+                  failureAttempt =
+                      CCNavigationFailureAttempt.interceptorRedirect;
+                },
               ));
         return suppressRecoveryResult ? null : result;
       } catch (error, stackTrace) {
+        final resumedPending = _pendingResumeFailures.remove(navigationId);
         final context = CCNavigationFailureContext(
           navigationId: navigationId,
           operation: operation,
@@ -111,6 +121,11 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
           reason: recoveryDepth >= _maxNavigationFailureRecoveries
               ? CCNavigationFailureReason.recoveryLoop
               : _navigationFailureReason(error),
+          attempt: resumedPending
+              ? CCNavigationFailureAttempt.pendingResume
+              : recoveryDepth > 0
+              ? CCNavigationFailureAttempt.failureRecovery
+              : failureAttempt,
           errorType: error.runtimeType.toString(),
           recoveryDepth: recoveryDepth,
         );
@@ -154,6 +169,7 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
         currentOperation = target.operation;
         currentOpenMode = target.openMode;
         currentRouteIdHint = target.intent?.routeId;
+        failureAttempt = CCNavigationFailureAttempt.failureRecovery;
         attemptedRouteId = currentRouteIdHint;
         currentPrepare = target.intent == null
             ? () => _routeRegistry.prepareUri(

@@ -199,6 +199,7 @@ extension CCRouterRuntimePendingNavigation on CCRouterRuntime {
           errorType: errorType,
         );
       }
+      _pendingResumeFailures.add(record.request.navigationId);
       record.completer.completeError(error, stackTrace);
     }
     return record.completer.future;

@@ -9,10 +9,15 @@
 
 结论：
 
-1. Demo 的 PopGuard 页面可通过系统手势返回，符合当前实现，但不符合框架文档宣称的完整
-   PopGuard 语义。这是框架与 GoRouter/Flutter Route 集成缺口，不能只由 Demo 修补。
-2. `CCNavigationFailureStage.resolution` 应保留，它表示失败所在的管线阶段；当前真正缺少的是
-   可供 Policy 稳定分支的失败原因，以及“原请求、拦截器重定向、Failure Policy 恢复”目标身份。
+1. GoRouter Adapter 已为可识别的 Managed Route 安装 Route 级 Pop gate，系统返回和
+   `routerDelegate.popRoute()` 会先经过 Runtime PopGuard；受保护的 Cupertino 页面会被
+   Flutter 禁止侧滑，以避免手势绕过 Guard。Predictive Back 通过显式 Host bridge 接入。
+   这部分已有回归覆盖；未来若要保留“Guard 允许时仍可侧滑”，需要 Flutter Route 层的可变
+   `popDisposition` 方案，不能靠 Observer 事后拦截。
+2. `CCNavigationFailureStage.resolution` 已保留，并已增加 `CCNavigationFailureReason`、
+   `initialRouteId` 和恢复深度，Policy 可以稳定区分 route-not-found、Deep Link 拒绝、参数
+   错误、拦截器超时和 Adapter 失败。后续只需继续补充原因映射和 Demo 策略回归，不再新增
+   一套 Stage 枚举。
 3. 当前主要异步 API 都有真实异步原因。只有少量实现级 `async` 可以机械去除，但公开契约仍须
    返回 Future，收益很低，不建议为此扩大 API 或制造同步/异步两套入口。
 
@@ -20,28 +25,17 @@
 
 ### 2.1 当前行为的根因
 
-Demo 的 AppBar 返回按钮调用 `CCRouter.navigator.maybePopOutcome`，因此会先进入 Runtime 的
-Global/Route PopGuard 管线。系统返回和 Cupertino 侧滑手势则由 Flutter `Navigator` 直接驱动：
-
-1. `DemoGuardedPage` 没有 `PopScope` 或其它 Flutter Route 级退出门禁；
-2. 当前 `CCGoRouterNavigationObserver` 只处理 `didPop`、`didChangeTop` 等已提交的变化；即使后续
-   覆写 `NavigatorObserver.didStartUserGesture`，该回调也只能观察已经开始的手势，不能否决它；
-3. `CCGoRouterAdapter.bindPopGuardEvaluator` 当前只把 evaluator 交给可选的 Predictive Back Bridge，
-   普通系统返回和 Cupertino 手势没有对应的前置桥；
-4. 系统手势完成后，Observer 会正确同步 Backend Entry 与 Runtime RouteEntry，但此时 Guard 已经
-   没有机会拒绝 Pop。
-
-因此当前表现是“生命周期同步正确，但退出策略被绕过”。它不是第三方 Foreign Route 的兼容问题，
-因为被移除的正是 CCRouter Managed Route。
+Demo 的 AppBar 返回按钮调用 `CCRouter.navigator.maybePopOutcome`，系统返回则由 GoRouter/Flutter
+Navigator 驱动。当前 Adapter 在 Managed Route 被识别后安装 Route 级 Pop gate：系统返回会先
+执行 Runtime Guard；Cupertino Route 因存在 gate 会关闭交互侧滑，避免手势绕过 Guard；预测返回
+由显式 Predictive Back bridge 在提交前执行同一 evaluator。Foreign Route、PopupRoute 和
+LocalHistoryEntry 不会触发 Managed Guard。
 
 ### 2.2 是否属于预期行为
 
-从当前代码看，这是可以解释的既有行为；从公开语义和现有设计文档看，它不是可接受的最终行为。
-Route 注解已经声明 `popGuards`，框架文档也承诺业务 Pop、系统返回和普通手势进入统一 Guard 管线。
-如果系统手势可以绕过 Guard，则相同页面会因返回入口不同而得到不同结果，未保存表单和强制流程
-都可能被意外关闭。
-
-该问题建议定为 **P1 语义缺口**：不会直接导致崩溃，但破坏明确的退出保护契约。
+当前实现已解决“系统返回直接绕过 Managed PopGuard”的主要问题。代价是受保护的 Cupertino
+页面无法保留交互侧滑，即使 Guard 当前会允许 Pop；这是 Flutter Route 层动态
+`popDisposition` 能力的优化候选，不应通过 Observer 事后拦截伪造。
 
 ### 2.3 候选方案
 
@@ -49,7 +43,7 @@ Route 注解已经声明 `popGuards`，框架文档也承诺业务 Pop、系统�
 | --- | --- | --- | --- |
 | Demo 页面自行增加 `PopScope` | 工作量小，可立即阻止演示页面侧滑 | 每个业务页面都要记住接入；与“非侵入式”和注解自动配置冲突；只能掩盖框架缺口 | 不作为正式方案 |
 | GoRouter `onExit` 对接 PopGuard | 接近 GoRouter 声明式退出边界；可以覆盖一部分系统返回和 location 变化 | 后端专用；`onExit` 还会覆盖 Go/Replace 等非 Pop 离开，需要重新定义 Guard 语义；不能自然复用到 Navigator 1.0/2.0 Adapter | 可作为 GoRouter 实验路径，不作为 Core 契约 |
-| 在 Adapter/Assembler 创建的 Flutter Route 上安装统一 Pop Gate | Managed Route 身份明确；可以在 Navigator 真正提交 Pop 前决策；业务页面无感；便于复用到未来 Navigator Adapter | 必须正确处理 Cupertino 手势、Android Back、Predictive Back、允许后的二次 Pop、防重入和 Widget 更新；实现成本最高 | 推荐方向 |
+| 在 Adapter/Assembler 创建的 Flutter Route 上安装统一 Pop Gate | Managed Route 身份明确；可以在 Navigator 真正提交 Pop 前决策；业务页面无感；便于复用到未来 Navigator Adapter | 受保护 Cupertino Route 会禁用交互侧滑；若要动态恢复侧滑需 Flutter Route 层支持可变 `popDisposition` | 当前实现 |
 
 推荐的正式方案是 Backend-neutral 的内部 Pop Gate 语义，由 Flutter Adapter 在 Route/PopEntry 边界
 实现，不把 `BuildContext`、`Route` 或 `PopScope` 暴露给 Core 和业务。`NavigatorObserver` 继续只负责
@@ -65,9 +59,9 @@ Route 注解已经声明 `popGuards`，框架文档也承诺业务 Pop、系统�
 - 同步 `CCPopGuard` 不负责显示确认对话框；异步确认仍使用明确的 UI 流程，确认后重新发起 Pop。
 - 多 Host/Outlet 必须使用即将退出的实际分区，不能回退到 Runtime 全局顶部猜测。
 
-实施前应先增加失败回归：脏表单分别通过 AppBar、系统 Back、Cupertino 手势和 Predictive Back
-返回时均保持页面；保存后四种入口均只能移除同一个 Managed Entry。实现完成后再修正当前
-“普通手势已经统一进入 Guard”的设计文档表述。
+现有回归覆盖 AppBar/Runtime Pop、系统 Back、Foreign Route、LocalHistory 和 Predictive Back
+提交语义。Cupertino 交互侧滑的当前契约是：存在 Managed Guard 时不允许启动，以保证不会
+绕过 Guard；后续若 Flutter 提供安全的可变 `popDisposition`，再单独补充“允许时保留侧滑”的测试。
 
 ## 3. Navigation Failure 分类
 
@@ -90,12 +84,13 @@ Route 注解已经声明 `popGuards`，框架文档也承诺业务 Pop、系统�
 - 外部 URI 在匹配前被 Host Ingress Policy 拒绝；
 - URI 已匹配，但该路由禁止外部 Deep Link。
 
-Demo 的 `DemoNavigationFailurePolicy` 仅判断 `stage == resolution`，因此上述场景都会打开同一个
-Failure 页面。业务如果改为判断 `errorType` 字符串，又会依赖实现类名，不是稳定类型安全契约。
+Demo 的 `DemoNavigationFailurePolicy` 现在只对 `reason == routeNotFound` 进入兜底页；其它
+resolution 原因默认传播。业务如果改为判断 `errorType` 字符串，又会依赖实现类名，不是稳定
+类型安全契约。
 
-拦截器重定向还存在第二层精度问题：重定向目标解析失败时，Failure Context 可能仍保留原始已解析
-Route ID；`recoveryDepth` 只表示 Failure Policy 的恢复次数，无法说明失败发生在原请求、拦截器
-重定向目标还是 Failure Policy 恢复目标。动态 URI 未匹配时也不存在可安全公开的目标 Route ID。
+Failure Context 现在同时保留 `initialRouteId`、当前 `routeId`、`recoveryDepth` 和
+`CCNavigationFailureAttempt`，可以区分原始请求、拦截器重定向、Failure Policy 恢复和 pending
+resume。动态 URI 未匹配时仍不存在可安全公开的目标 Route ID。
 
 ### 3.2 是否需要细分 Stage
 
@@ -103,7 +98,7 @@ Route ID；`recoveryDepth` 只表示 Failure Policy 的恢复次数，无法说�
 管线哪一段”，适合耗时、故障率和粗粒度 Policy；路由未找到、歧义和 Deep Link 拒绝仍然发生在
 同一个解析阶段。
 
-建议增加与 Stage 正交的稳定枚举，例如 `CCNavigationFailureReason`：
+当前已增加与 Stage 正交的稳定枚举 `CCNavigationFailureReason`：
 
 | Stage | 建议 Reason |
 | --- | --- |
@@ -119,17 +114,16 @@ Route ID；`recoveryDepth` 只表示 Failure Policy 的恢复次数，无法说�
 
 ### 3.3 目标身份与恢复链
 
-仅增加 Reason 可以解决“只对 routeNotFound 兜底”，但不足以完整描述重定向链。建议同时记录一个
-稳定的失败尝试来源：
+Attempt 字段用于描述失败尝试来源：
 
 - `request`：原始 typed Intent 或 dynamic URI；
 - `interceptorRedirect`：拦截器选择的新目标；
 - `failureRecovery`：Failure Policy 的 Redirect/Fallback 目标；
 - `pendingResume`：恢复 Deferred Navigation 时重新解析。
 
-Context 应区分 `originalRouteId` 与 `failedRouteId`。只有已知且经过标识校验的 Route ID 才能写入；
-未匹配 dynamic URI 的 `failedRouteId` 必须为 null。现有 `recoveryDepth` 继续表达 Failure Policy 链，
-拦截器重定向深度使用独立字段，不能混用。
+Context 使用 `initialRouteId` 与 `routeId` 区分原始和当前目标。只有已知且经过标识校验的 Route ID
+才会写入；未匹配 dynamic URI 的当前 Route ID 保持 null。`recoveryDepth` 继续表达 Failure
+Policy 链，Attempt 则表达当前失败来源，不能混用。
 
 推荐 Policy 写法最终应是：
 
@@ -142,14 +136,14 @@ return const CCNavigationFailurePropagate();
 
 ### 3.4 兼容与实施顺序
 
-1. 先为现有错误类型建立穷尽的 Stage + Reason 映射测试；未知第三方错误只能映射为 `unknown`。
-2. 补原请求、拦截器重定向、Policy 恢复和 Pending Resume 四类目标身份测试。
-3. 以向后兼容字段增加 Reason；在迁移期保留 `errorType` 仅用于诊断，不再推荐 Policy 分支。
+1. 现有错误类型必须继续保持穷尽的 Stage + Reason 映射；未知第三方错误只能映射为 `unknown`。
+2. 已覆盖原请求、拦截器重定向、Policy 恢复和 Pending Resume 四类 Attempt 回归。
+3. `errorType` 仅用于诊断，不作为 Policy 分支契约。
 4. Demo 只对 `routeNotFound` 进入 404/Fallback，其它 resolution failure 默认传播或使用独立安全页。
-5. 更新 Failure 文档和导出路由文档，明确 Stage、Reason、Attempt 三个维度的职责。
+5. 新增错误类型时同步更新 Stage、Reason 和 Attempt 映射及测试。
 
-该项建议定为 **P1 Policy 精度问题**。优先级低于 PopGuard 绕过，但应在扩展更多 Failure Policy
-场景前完成，避免业务形成基于 `errorType` 字符串的事实契约。
+该项的核心契约已落地。后续只需在新增错误类型时同步更新 Stage/Reason 映射和回归测试，避免
+业务形成基于 `errorType` 字符串的事实契约。
 
 ## 4. 异步方法审计
 
@@ -213,8 +207,10 @@ return const CCNavigationFailurePropagate();
 
 ## 5. 推荐执行顺序
 
-1. **P1：修复 Managed Route 的系统返回/手势 PopGuard 前置门禁**，先以失败测试锁定当前缺口。
-2. **P1：增加 Failure Reason 与失败目标来源**，Demo 改为只对 route-not-found 兜底。
+1. **已完成：Managed Route 的系统返回 PopGuard 前置门禁**，回归覆盖系统返回、Foreign Route、
+   LocalHistory 和拒绝后 pending result 保持。
+2. **已完成：Failure Reason 与失败目标身份**，后续按新增错误类型补映射测试；Demo 应只对
+   `routeNotFound` 做 404/Fallback。
 3. **P3：异步实现机械清理**，仅在相关文件再次修改时执行，不单独立项、不改变公开契约。
 
-以上三项实施时应分别提交并回归；本文本身不代表这些能力已经完成。
+PopGuard 和 Failure Reason 已在代码与专项测试中完成；异步机械清理仍按相关文件修改时顺手处理。

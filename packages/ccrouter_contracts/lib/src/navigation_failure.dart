@@ -84,6 +84,27 @@ enum CCNavigationFailureReason {
   unknown,
 }
 
+/// Identifies which navigation attempt produced a failure.
+///
+/// The attempt is orthogonal to [CCNavigationFailureStage] and
+/// [CCNavigationFailureReason]. Use it when a Host needs to distinguish the
+/// caller's original target from an interceptor redirect, a Failure Policy
+/// recovery, or a resumed deferred navigation. It contains no URI, argument,
+/// or backend object and is safe for bounded diagnostics.
+enum CCNavigationFailureAttempt {
+  /// The original typed Intent or dynamic URI supplied by the caller.
+  request,
+
+  /// A target selected by a route or global navigation interceptor.
+  interceptorRedirect,
+
+  /// A target selected by a Failure Policy redirect or fallback.
+  failureRecovery,
+
+  /// A deferred navigation replayed after the caller resumed it.
+  pendingResume,
+}
+
 /// Sanitized Host-facing context for one failed navigation attempt.
 ///
 /// The context intentionally omits URI values, Path and Query parameters,
@@ -100,6 +121,7 @@ final class CCNavigationFailureContext {
     required this.errorType,
     required this.recoveryDepth,
     this.reason = CCNavigationFailureReason.unknown,
+    this.attempt = CCNavigationFailureAttempt.request,
     this.routeId,
     this.initialRouteId,
     this.source,
@@ -138,6 +160,9 @@ final class CCNavigationFailureContext {
 
   /// Stable cause of the failure within [stage].
   final CCNavigationFailureReason reason;
+
+  /// Attempt category that produced the failure.
+  final CCNavigationFailureAttempt attempt;
 
   /// Sanitized concrete error type without its arbitrary message.
   final String errorType;
