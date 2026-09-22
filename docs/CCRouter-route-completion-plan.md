@@ -423,9 +423,8 @@ Metrics/Display Features，不自动产生原生窗口。未来每个 Flutter Vi
 4. `ccrouter watch`、CLI 快速单次生成与 DevTools 可视化属于 2.0 开发体验候选；
    当前以显式生成、`--check` 和 Package/Host Catalog 为确定性基础。临时页面的源码
    重命名/移动与 IDE 导包已验收，但不外推至 IDE 重启或大型外部依赖工程。
-5. 原子组合栈事务、精确 Route Entry 操作和调用级 `BuildContext` 最近 Outlet 解析在 2.0
-   重新评估；分别以稳定身份、原子回滚、混合栈隔离和真实调用点场景为准，不能在 1.x
-   通过拼接已有操作或保存全局 Context 模拟。
+5. 原子组合栈事务和精确 Route Entry 操作在 2.0 重新评估；分别以稳定身份、原子回滚和
+   混合栈隔离为准，不能在 1.x 通过拼接已有操作模拟。
 
 Service/Handler/Scope 的完整组件动态停用、Service 契约收敛、组件创建与契约提升 CLI
 也归入架构 2.0 的**非路由工作流**，需要独立设计和验收，不是路由 2.0 的必选依赖。

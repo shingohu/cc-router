@@ -3,8 +3,8 @@
 ## 文档状态
 
 - 版本：v0.2
-- 状态：路由 1.x 闭环已实现；完整 Route Restoration 和调用级 `BuildContext` Outlet 解析
-  归入 2.0 候选
+- 状态：路由 1.x 闭环已实现；完整 Route Restoration 归入 2.0 候选，调用级
+  `BuildContext` Outlet 解析已作为 Flutter 门面能力交付
 - 适用范围：Flutter 应用及其组件化路由契约
 - 默认导航后端：`go_router`
 - 核心约束：业务跳转统一通过 `CCRouter.navigator`，Core 不依赖 Flutter、`BuildContext` 或 `go_router`
@@ -541,11 +541,11 @@ abstract interface class CCNavigator {
 Runtime 关闭对应 RouteEntry；Foreign、Opaque 或未提供归属的 Pop 只报告结果，不
 按栈顶猜测删除页面。
 
-当前 `CCNavigator` 不接收 `BuildContext`。Host 和 Outlet 由生成 Intent 中的
-`CCRoutePlacement`、活动 Host Resolver、Shell Binding 和 Adapter 默认 Host 共同解析。
-2.0 若有真实调用点需求而增加“按调用点选择最近 Outlet”的 Flutter 便利 API，只能在
-Flutter 门面即时解析，
-不得把 Context 保存或传入 Core；该 Proposal 不能改变现有无 Context API 的语义。
+`CCNavigator` 支持可选的 `BuildContext`。不传 Context 时，Host 和 Outlet 仍由生成 Intent
+中的 `CCRoutePlacement`、活动 Host Resolver、Shell Binding 和 Adapter 默认 Host 共同解析，
+因此保持原有行为。传入 Context 时，Flutter 门面只在当前 `CCRouterApp` Host Scope 中匹配
+已注册的 Navigator；无法匹配时抛出 `CCNavigationOutletResolutionError`，不会静默回退到
+root。显式 Route Placement 始终优先，Context 不会被保存或传入 Core。
 
 当前已实现 `push/replace/go/reset/open/pop/canPop`、`maybePop` 和 `maybePopOutcome`；
 主 Pattern 地址生成、中立 Adapter SPI、内存 Adapter、GoRouter Adapter 与 Host/Outlet
@@ -1680,7 +1680,8 @@ Host/Outlet 分区的确定性 fallback，不跨 sibling Outlet。Pop 目标从�
 - `CCRouterApp.managed` 与 `CCGoRouterBackend.managed/attach` 的初始化、Host、Key、
   Adapter 和 Router 所有权闭环已完成。
 - Navigator 1.0 Backend 尚未实现；它应复用相同 App Backend SPI，不修改业务导航 API。
-- 调用级 `BuildContext` 最近 Outlet 解析仍是可选 Proposal，不属于当前 API。
+- 调用级 `BuildContext` 最近 Outlet 解析已由 Flutter 门面以可选参数提供；失败时不静默
+  回退 root，且不进入 Core。
 - 各平台示例验证属于集成工作，不改变 Adapter 契约。
 
 ### 阶段 E：动态组件生命周期
@@ -1717,8 +1718,8 @@ Host/Outlet 分区的确定性 fallback，不跨 sibling Outlet。Pop 目标从�
 ### 已冻结
 
 - 业务导航统一通过 `CCRouter.navigator`。
-- 当前 `CCNavigator` 不接收 `BuildContext`；Host/Outlet 由契约和 Host Resolver 决定。
-- 调用级 Context 解析仅是未来 Flutter 便利层 Proposal，不得进入 Core。
+- `CCNavigator` 支持可选 `BuildContext`；不传时 Host/Outlet 仍由契约和 Host Resolver 决定，
+  保持原有行为。传入时只由 Flutter 门面即时解析，不能保存或传入 Core。
 - `CCRouterApp` 负责 Flutter 集成，但不保存全局 Context。
 - Core 保持 Pure Dart。
 - 默认使用 GoRouter Adapter，允许自定义 Adapter。
