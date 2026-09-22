@@ -170,7 +170,7 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              Text('${CCRouter.activeRouteEntries.length} managed'),
+              Text('${CCRouter.activeRouteEntries.length} Route Entries'),
             ],
           ),
         ),
