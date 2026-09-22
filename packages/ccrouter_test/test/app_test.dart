@@ -6,6 +6,51 @@ import 'package:ccrouter_core/ccrouter_core.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+final class _ContextRouteArgs {
+  const _ContextRouteArgs(this.value);
+
+  final String value;
+}
+
+final class _ContextRouteCodec implements CCRouteCodec<_ContextRouteArgs> {
+  const _ContextRouteCodec();
+
+  @override
+  _ContextRouteArgs decode(CCEncodedRouteArguments input) =>
+      _ContextRouteArgs(input.path['value']!);
+
+  @override
+  CCEncodedRouteArguments encode(_ContextRouteArgs arguments) =>
+      CCEncodedRouteArguments(path: {'value': arguments.value});
+}
+
+final class _ContextRouteIntent implements CCRouteIntent<String> {
+  const _ContextRouteIntent(this.value);
+
+  final String value;
+
+  @override
+  String get routeId => 'context.detail';
+
+  @override
+  Object get arguments => _ContextRouteArgs(value);
+}
+
+final class _ContextRouteRegistrar implements CCComponentRegistrar {
+  const _ContextRouteRegistrar();
+
+  @override
+  void register(CCRegistry registry) {
+    registry.registerRoute<_ContextRouteArgs, String>(
+      CCRouteDefinition<_ContextRouteArgs, String>(
+        routeId: 'context.detail',
+        patterns: [const CCPathPattern('/context/:value', primary: true)],
+        codec: const _ContextRouteCodec(),
+      ),
+    );
+  }
+}
+
 void main() {
   tearDown(CCRouter.shutdown);
 
@@ -47,6 +92,134 @@ void main() {
     expect(identical(resolved, host), isTrue);
     expect(resolved.id, 'main');
     expect(resolved.navigatorKey, same(host.navigatorKey));
+  });
+
+  testWidgets('Host resolves a call-site Context to its registered Outlet', (
+    tester,
+  ) async {
+    final rootKey = GlobalKey<NavigatorState>();
+    final detailKey = GlobalKey<NavigatorState>();
+    final host = CCNavigationHost(
+      navigatorKey: rootKey,
+      navigatorKeys: {'detail': detailKey},
+    );
+    String? rootOutlet;
+    String? detailOutlet;
+    late BuildContext unboundContext;
+
+    await tester.pumpWidget(
+      CCRouterApp(
+        host: host,
+        child: Directionality(
+          textDirection: TextDirection.ltr,
+          child: Navigator(
+            key: rootKey,
+            onGenerateRoute: (_) => PageRouteBuilder<void>(
+              pageBuilder: (context, _, _) => Builder(
+                builder: (context) {
+                  rootOutlet = host.resolveOutlet(context);
+                  return Column(
+                    children: [
+                      SizedBox(
+                        height: 20,
+                        child: Navigator(
+                          key: detailKey,
+                          onGenerateRoute: (_) => PageRouteBuilder<void>(
+                            pageBuilder: (_, _, _) => Builder(
+                              builder: (context) {
+                                detailOutlet = host.resolveOutlet(context);
+                                return const SizedBox();
+                              },
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        height: 20,
+                        child: Navigator(
+                          onGenerateRoute: (_) => PageRouteBuilder<void>(
+                            pageBuilder: (_, _, _) => Builder(
+                              builder: (context) {
+                                unboundContext = context;
+                                return const SizedBox();
+                              },
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(rootOutlet, 'root');
+    expect(detailOutlet, 'detail');
+    expect(
+      () => host.resolveOutlet(unboundContext),
+      throwsA(isA<CCNavigationOutletResolutionError>()),
+    );
+  });
+
+  testWidgets('navigator Context targets the resolved Outlet', (tester) async {
+    final rootKey = GlobalKey<NavigatorState>();
+    final detailKey = GlobalKey<NavigatorState>();
+    final host = CCNavigationHost(
+      navigatorKey: rootKey,
+      navigatorKeys: {'detail': detailKey},
+    );
+    final adapter = CCMemoryNavigationAdapter();
+    CCRouter.initialize(
+      components: const [
+        CCComponentManifest(
+          id: 'context-routing',
+          version: '0.1.0',
+          registrar: _ContextRouteRegistrar(),
+        ),
+      ],
+    );
+    CCRouterHostBinding.attachNavigationAdapter(adapter);
+    late Future<String?> pending;
+
+    await tester.pumpWidget(
+      CCRouterApp(
+        host: host,
+        child: Directionality(
+          textDirection: TextDirection.ltr,
+          child: Navigator(
+            key: rootKey,
+            onGenerateRoute: (_) => PageRouteBuilder<void>(
+              pageBuilder: (_, _, _) => SizedBox(
+                height: 40,
+                child: Navigator(
+                  key: detailKey,
+                  onGenerateRoute: (_) => PageRouteBuilder<void>(
+                    pageBuilder: (_, _, _) => Builder(
+                      builder: (context) {
+                        pending = CCRouter.navigator.push(
+                          const _ContextRouteIntent('42'),
+                          context: context,
+                        );
+                        return const SizedBox();
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(adapter.currentRequest?.placement.hostId, host.id);
+    expect(adapter.currentRequest?.placement.navigatorOutlet, 'detail');
+    adapter.pop(result: 'done');
+    expect(await pending, 'done');
   });
 
   testWidgets('CCRouterApp creates an internal host and removes its scope', (

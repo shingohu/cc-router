@@ -224,9 +224,14 @@ final class _RouteRegistry {
   }
 
   /// Encodes a typed [intent] through its route's canonical primary Pattern.
+  ///
+  /// [placementOverride] is applied only to a route that declares the default
+  /// root placement. It is a Host-layer convenience and never overrides an
+  /// explicit Shell, Parent, Host, or named Outlet declaration.
   _PreparedRoute prepareIntent<R>(
     CCRouteIntent<R> intent, {
     CCNavigationOrigin origin = CCNavigationOrigin.internal,
+    CCRoutePlacement? placementOverride,
   }) {
     final route = _requireActiveRoute(intent.routeId);
     if (origin.isExternal &&
@@ -255,14 +260,24 @@ final class _RouteRegistry {
       arguments: intent.arguments,
       extra: encoded.extra,
       presentation: route.definition.presentation,
-      placement: route.definition.placement,
+      placement: _effectivePlacement(
+        route.definition.placement,
+        placementOverride,
+      ),
       interceptorIds: route.definition.interceptorIds,
       popGuardIds: route.definition.popGuardIds,
     );
   }
 
   /// Resolves and decodes a dynamic [location] under its trusted [origin].
-  _PreparedRoute prepareUri(Uri location, CCNavigationOrigin origin) {
+  ///
+  /// [placementOverride] follows the same default-placement-only rule as the
+  /// typed Intent path and does not bypass Deep Link validation.
+  _PreparedRoute prepareUri(
+    Uri location,
+    CCNavigationOrigin origin, {
+    CCRoutePlacement? placementOverride,
+  }) {
     final uri = _parseLocation(location.toString());
     if (origin.isExternal) _validateDeepLinkIngress(uri);
     final resolved = _resolveUri(uri, external: origin.isExternal);
@@ -275,10 +290,30 @@ final class _RouteRegistry {
       arguments: arguments,
       extra: null,
       presentation: route.definition.presentation,
-      placement: route.definition.placement,
+      placement: _effectivePlacement(
+        route.definition.placement,
+        placementOverride,
+      ),
       interceptorIds: route.definition.interceptorIds,
       popGuardIds: route.definition.popGuardIds,
     );
+  }
+
+  /// Applies a call-site placement only when the route left placement at the
+  /// default root. Explicit route placement is a stronger contract and must
+  /// not be silently redirected by an unrelated widget context.
+  CCRoutePlacement _effectivePlacement(
+    CCRoutePlacement declared,
+    CCRoutePlacement? override,
+  ) {
+    if (override == null ||
+        declared.hostId != 'default' ||
+        declared.shellId != null ||
+        declared.parentRouteId != null ||
+        declared.navigatorOutlet != 'root') {
+      return declared;
+    }
+    return override;
   }
 
   /// Rejects untrusted external authority data before any route can match it.

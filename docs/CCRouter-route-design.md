@@ -1007,12 +1007,17 @@ Restoration、桌面窗口重开或异常 Session Marker 等 Host 证据，并�
 
 ### 12.4 Outlet 解析与 BuildContext 边界
 
-- 当前 `CCNavigator` 没有 `BuildContext` 参数。
-- Runtime 根据 Route Placement、活动 Host Resolver、Shell 和 Outlet 契约选择目标栈。
-- 未显式指定非默认 Host 时，使用 Adapter 绑定的默认 Host，而不是全局 Context。
-- Shell 和嵌套 Navigator 必须通过显式 Outlet 关系确定，不能用 Context 猜测结构。
-- 调用级最近 Outlet 解析仅保留为 2.0 Flutter 门面候选；即使实现，Context 也不能进入
-  Intent、Route Definition、RouteEntry 或 Core Runtime。
+- `CCNavigator.push/replace/go/reset/open` 支持可选 Flutter `BuildContext`，仅作为调用侧
+  的 Outlet 解析提示，不进入 Intent、Route Definition、RouteEntry 或持久化诊断。
+- Context 必须位于 `CCRouterApp` Host Scope 下，且最近的 Navigator 必须使用 Host 已注册的
+  `GlobalKey`；未挂载、未注册或属于其他 Host 的 Navigator 直接抛出
+  `CCNavigationOutletResolutionError`，绝不回退到 `root`。
+- 解析出的 Host/Outlet 只覆盖默认 root placement；路由声明的非默认 Host、Shell、Parent 或
+  named Outlet 具有更高优先级，不会被 Context 隐式改写。
+- Runtime 仍根据最终 Route Placement、活动 Host Resolver、Shell 和 Outlet 契约选择目标栈；
+  Core 不依赖 Flutter `BuildContext`。
+- 该能力是可选的 Flutter 便利层，不要求页面保存 Context，也不改变没有 Context 时的既有
+  `CCRouter.navigator` 语义。
 
 ### 12.5 混合路由兼容原则
 

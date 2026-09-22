@@ -8,10 +8,24 @@ part of 'facade.dart';
 /// matching, policy checks, and Codec decoding.
 abstract interface class CCNavigator {
   /// Pushes [intent] and completes with the route's typed Pop result.
-  Future<R?> push<R>(CCRouteIntent<R> intent, {CCNavigationSource? source});
+  ///
+  /// When [context] is supplied, the nearest registered Host Outlet is used
+  /// only for routes with the default root placement. Resolution is strict and
+  /// never falls back to another Host or Outlet.
+  Future<R?> push<R>(
+    CCRouteIntent<R> intent, {
+    CCNavigationSource? source,
+    BuildContext? context,
+  });
 
   /// Replaces the current route and completes with its typed Pop result.
-  Future<R?> replace<R>(CCRouteIntent<R> intent, {CCNavigationSource? source});
+  ///
+  /// [context] applies the same optional call-site Outlet resolution as [push].
+  Future<R?> replace<R>(
+    CCRouteIntent<R> intent, {
+    CCNavigationSource? source,
+    BuildContext? context,
+  });
 
   /// Asks the backend to handle a Pop and reports whether it was handled.
   ///
@@ -34,10 +48,22 @@ abstract interface class CCNavigator {
   });
 
   /// Changes the current location to [intent] without a typed result.
-  Future<void> go<R>(CCRouteIntent<R> intent, {CCNavigationSource? source});
+  ///
+  /// [context] applies the same optional call-site Outlet resolution as [push].
+  Future<void> go<R>(
+    CCRouteIntent<R> intent, {
+    CCNavigationSource? source,
+    BuildContext? context,
+  });
 
   /// Resets navigation state to [intent] as the new root location.
-  Future<void> reset<R>(CCRouteIntent<R> intent, {CCNavigationSource? source});
+  ///
+  /// [context] applies the same optional call-site Outlet resolution as [push].
+  Future<void> reset<R>(
+    CCRouteIntent<R> intent, {
+    CCNavigationSource? source,
+    BuildContext? context,
+  });
 
   /// Pushes a dynamic internal [uri] after Pattern matching and Codec decoding.
   ///
@@ -46,7 +72,12 @@ abstract interface class CCNavigator {
   /// trusted `CCRouterApp` Deep Link ingress so external policy is enforced.
   /// The Future completes after backend acceptance and does not expose the
   /// destination's Pop result; use [push] with a generated Intent for that.
-  Future<void> open(Uri uri, {CCNavigationSource? source});
+  /// [context] applies the resolved Outlet to the dynamic location.
+  Future<void> open(
+    Uri uri, {
+    CCNavigationSource? source,
+    BuildContext? context,
+  });
 
   /// Pops the active route with an optional typed [result].
   void pop<R>({R? result});
@@ -62,15 +93,27 @@ final class _CCNavigator implements CCNavigator {
 
   /// Pushes through the Runtime owned by [CCRouter].
   @override
-  Future<R?> push<R>(CCRouteIntent<R> intent, {CCNavigationSource? source}) =>
-      CCRouter._runtime.pushRoute(intent, source: source);
+  Future<R?> push<R>(
+    CCRouteIntent<R> intent, {
+    CCNavigationSource? source,
+    BuildContext? context,
+  }) => CCRouter._runtime.pushRoute(
+    intent,
+    source: source,
+    placementOverride: _resolvePlacement(context),
+  );
 
   /// Replaces through the Runtime owned by [CCRouter].
   @override
   Future<R?> replace<R>(
     CCRouteIntent<R> intent, {
     CCNavigationSource? source,
-  }) => CCRouter._runtime.replaceRoute(intent, source: source);
+    BuildContext? context,
+  }) => CCRouter._runtime.replaceRoute(
+    intent,
+    source: source,
+    placementOverride: _resolvePlacement(context),
+  );
 
   /// Attempts to pop through the Runtime owned by [CCRouter].
   @override
@@ -87,25 +130,41 @@ final class _CCNavigator implements CCNavigator {
 
   /// Changes location through the Runtime owned by [CCRouter].
   @override
-  Future<void> go<R>(CCRouteIntent<R> intent, {CCNavigationSource? source}) =>
-      CCRouter._runtime.goRoute(intent, source: source);
+  Future<void> go<R>(
+    CCRouteIntent<R> intent, {
+    CCNavigationSource? source,
+    BuildContext? context,
+  }) => CCRouter._runtime.goRoute(
+    intent,
+    source: source,
+    placementOverride: _resolvePlacement(context),
+  );
 
   /// Resets navigation state through the Runtime owned by [CCRouter].
   @override
   Future<void> reset<R>(
     CCRouteIntent<R> intent, {
     CCNavigationSource? source,
-  }) => CCRouter._runtime.resetRoute(intent, source: source);
+    BuildContext? context,
+  }) => CCRouter._runtime.resetRoute(
+    intent,
+    source: source,
+    placementOverride: _resolvePlacement(context),
+  );
 
   /// Opens one dynamic application-controlled URI through the Runtime.
   @override
-  Future<void> open(Uri uri, {CCNavigationSource? source}) =>
-      CCRouter._runtime.openRoute(
-        uri,
-        origin: CCNavigationOrigin.internal,
-        mode: CCDeepLinkOpenMode.push,
-        source: source,
-      );
+  Future<void> open(
+    Uri uri, {
+    CCNavigationSource? source,
+    BuildContext? context,
+  }) => CCRouter._runtime.openRoute(
+    uri,
+    origin: CCNavigationOrigin.internal,
+    mode: CCDeepLinkOpenMode.push,
+    source: source,
+    placementOverride: _resolvePlacement(context),
+  );
 
   /// Pops through the Runtime owned by [CCRouter].
   @override
@@ -114,4 +173,9 @@ final class _CCNavigator implements CCNavigator {
   /// Reads Pop capability from the configured Runtime adapter.
   @override
   bool canPop() => CCRouter._runtime.canPopRoute();
+
+  /// Converts an optional Flutter Context into a strict route placement.
+  CCRoutePlacement? _resolvePlacement(BuildContext? context) {
+    return _resolveContextPlacement(context);
+  }
 }

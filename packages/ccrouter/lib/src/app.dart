@@ -232,6 +232,31 @@ final class CCNavigationHost {
     return key;
   }
 
+  /// Resolves the registered Outlet containing [context].
+  ///
+  /// This is an optional Flutter convenience for call-site navigation in
+  /// nested Navigator, Shell, and master-detail layouts. The Context must be
+  /// below this Host's `CCRouterApp` scope and its nearest Navigator must be
+  /// one of the Host's registered keys. Resolution is deliberately strict: an
+  /// unrelated or not-yet-mounted Navigator throws
+  /// `CCNavigationOutletResolutionError` instead of silently targeting `root`.
+  /// Route declarations with an explicit non-root placement remain authoritative
+  /// when the resolved placement is applied to a navigation request.
+  String resolveOutlet(BuildContext context) {
+    final scopedHost = CCRouterApp.maybeOf(context);
+    if (!identical(scopedHost, this)) {
+      throw const CCNavigationOutletResolutionError();
+    }
+    final navigator = Navigator.maybeOf(context);
+    if (navigator == null) {
+      throw const CCNavigationOutletResolutionError();
+    }
+    for (final entry in _navigatorKeys.entries) {
+      if (identical(entry.value.currentState, navigator)) return entry.key;
+    }
+    throw const CCNavigationOutletResolutionError();
+  }
+
   /// Attaches this Host to one widget tree and rejects duplicate ownership.
   void _mount(Object owner) {
     if (_mountOwner != null && !identical(_mountOwner, owner)) {

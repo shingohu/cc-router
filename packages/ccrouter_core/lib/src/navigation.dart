@@ -7,16 +7,36 @@ part of 'runtime.dart';
 /// invoke a Runtime instance.
 extension CCRouterRuntimeNavigation on CCRouterRuntime {
   /// Pushes a typed [intent] and completes with its eventual Pop result.
+  ///
+  /// A Host-only Flutter facade may pass [placementOverride] after resolving a
+  /// call-site Outlet. The route's explicit non-root placement always wins;
+  /// Core never reads a Flutter `BuildContext`.
   Future<R?> pushRoute<R>(
     CCRouteIntent<R> intent, {
     CCNavigationSource? source,
-  }) => _navigateForResult(CCNavigationOperation.push, intent, source);
+    CCRoutePlacement? placementOverride,
+  }) => _navigateForResult(
+    CCNavigationOperation.push,
+    intent,
+    source,
+    placementOverride,
+  );
 
   /// Replaces the current route and completes with the new route's Pop result.
+  ///
+  /// [placementOverride] is an optional Host-layer placement for a route that
+  /// uses the default root placement. It is ignored for explicit route
+  /// placement and has no effect on the result contract.
   Future<R?> replaceRoute<R>(
     CCRouteIntent<R> intent, {
     CCNavigationSource? source,
-  }) => _navigateForResult(CCNavigationOperation.replace, intent, source);
+    CCRoutePlacement? placementOverride,
+  }) => _navigateForResult(
+    CCNavigationOperation.replace,
+    intent,
+    source,
+    placementOverride,
+  );
 
   /// Asks the backend to handle a Pop and reports whether it was handled.
   ///
@@ -109,16 +129,34 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
   }
 
   /// Changes the current location to the route targeted by [intent].
+  ///
+  /// [placementOverride] is supplied only by a Host integration after strict
+  /// call-site resolution; it never changes an explicit route placement.
   Future<void> goRoute<R>(
     CCRouteIntent<R> intent, {
     CCNavigationSource? source,
-  }) => _navigateWithoutResult(CCNavigationOperation.go, intent, source);
+    CCRoutePlacement? placementOverride,
+  }) => _navigateWithoutResult(
+    CCNavigationOperation.go,
+    intent,
+    source,
+    placementOverride,
+  );
 
   /// Resets navigation state to the route targeted by [intent].
+  ///
+  /// [placementOverride] is supplied only by a Host integration after strict
+  /// call-site resolution; it never changes an explicit route placement.
   Future<void> resetRoute<R>(
     CCRouteIntent<R> intent, {
     CCNavigationSource? source,
-  }) => _navigateWithoutResult(CCNavigationOperation.reset, intent, source);
+    CCRoutePlacement? placementOverride,
+  }) => _navigateWithoutResult(
+    CCNavigationOperation.reset,
+    intent,
+    source,
+    placementOverride,
+  );
 
   /// Resolves and opens a dynamic [uri] under the trusted ingress [origin].
   ///
@@ -128,11 +166,16 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
   /// resolved destination is pushed above the current page or becomes the
   /// Host's declarative location. The returned Future represents backend
   /// acceptance, not the destination's eventual Pop result.
+  ///
+  /// [placementOverride] is an optional Host-layer placement for a route that
+  /// uses the default root placement. It does not weaken external ingress
+  /// policy or change an explicit route placement.
   Future<void> openRoute(
     Uri uri, {
     CCNavigationOrigin origin = CCNavigationOrigin.internal,
     CCDeepLinkOpenMode mode = CCDeepLinkOpenMode.push,
     CCNavigationSource? source,
+    CCRoutePlacement? placementOverride,
   }) async {
     _ensureInitialized();
     await _executeNavigationWithFailurePolicy(
@@ -141,7 +184,12 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
       openMode: mode,
       source: source,
       routeIdHint: null,
-      prepare: () => _routeRegistry.prepareUri(uri, origin),
+      placementOverride: placementOverride,
+      prepare: () => _routeRegistry.prepareUri(
+        uri,
+        origin,
+        placementOverride: placementOverride,
+      ),
       action: (request) => _requiredNavigationAdapter.navigate(request),
     );
   }
@@ -196,6 +244,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     CCNavigationOperation operation,
     CCRouteIntent<R> intent,
     CCNavigationSource? source,
+    CCRoutePlacement? placementOverride,
   ) async {
     _ensureInitialized();
     final result = await _executeNavigationWithFailurePolicy(
@@ -204,7 +253,11 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
       openMode: null,
       source: source,
       routeIdHint: intent.routeId,
-      prepare: () => _routeRegistry.prepareIntent(intent),
+      placementOverride: placementOverride,
+      prepare: () => _routeRegistry.prepareIntent(
+        intent,
+        placementOverride: placementOverride,
+      ),
       action: (request) => _requiredNavigationAdapter.navigate(request),
       validateResult: (result) {
         try {
@@ -222,6 +275,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     CCNavigationOperation operation,
     CCRouteIntent<R> intent,
     CCNavigationSource? source,
+    CCRoutePlacement? placementOverride,
   ) async {
     _ensureInitialized();
     await _executeNavigationWithFailurePolicy(
@@ -230,7 +284,11 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
       openMode: null,
       source: source,
       routeIdHint: intent.routeId,
-      prepare: () => _routeRegistry.prepareIntent(intent),
+      placementOverride: placementOverride,
+      prepare: () => _routeRegistry.prepareIntent(
+        intent,
+        placementOverride: placementOverride,
+      ),
       action: (request) => _requiredNavigationAdapter.navigate(request),
     );
   }
@@ -247,6 +305,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     CCDeepLinkOpenMode? openMode,
     CCNavigationSource? source, {
     String? navigationId,
+    CCRoutePlacement? placementOverride,
     required Future<Object?> Function(CCNavigationRequest request) action,
     void Function(_RouteEntryRecord entry)? commitEntry,
     void Function(Object? result)? validateResult,
@@ -260,6 +319,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
         openMode,
         source,
         navigationId: navigationId,
+        placementOverride: placementOverride,
         action: action,
         commitEntry: commitEntry,
         validateResult: validateResult,
@@ -307,6 +367,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
       openMode,
       source,
       navigationId: navigationId,
+      placementOverride: placementOverride,
       action: action,
       commitEntry: commitEntry,
       validateResult: validateResult,
@@ -393,6 +454,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     CCDeepLinkOpenMode? openMode,
     CCNavigationSource? source, {
     String? navigationId,
+    CCRoutePlacement? placementOverride,
     required Future<Object?> Function(CCNavigationRequest request) action,
     void Function(_RouteEntryRecord entry)? commitEntry,
     void Function(Object? result)? validateResult,
@@ -472,9 +534,17 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
             try {
               if (intent != null) {
                 onAttempt?.call(intent.routeId);
-                current = _routeRegistry.prepareIntent(intent, origin: origin);
+                current = _routeRegistry.prepareIntent(
+                  intent,
+                  origin: origin,
+                  placementOverride: placementOverride,
+                );
               } else {
-                current = _routeRegistry.prepareUri(uri!, origin);
+                current = _routeRegistry.prepareUri(
+                  uri!,
+                  origin,
+                  placementOverride: placementOverride,
+                );
               }
             } finally {
               redirectResolveClock.stop();

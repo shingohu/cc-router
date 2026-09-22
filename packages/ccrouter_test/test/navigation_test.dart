@@ -388,6 +388,36 @@ CCRouteDefinition<RouteArgs, String> pathRoute({
 
 void main() {
   test(
+    'call-site placement overrides only a default route placement',
+    () async {
+      final adapter = CCMemoryNavigationAdapter();
+      final runtime = CCRouterRuntime.forTesting(
+        navigationAdapter: adapter,
+        components: [
+          routeComponent('placement', (registry) {
+            registry.registerRoute<RouteArgs, String>(pathRoute());
+          }),
+        ],
+      );
+      runtime.initialize();
+
+      final pending = runtime.pushRoute(
+        const TestIntent<String>('orders.detail', RouteArgs('42')),
+        placementOverride: const CCRoutePlacement(
+          hostId: 'main',
+          navigatorOutlet: 'detail',
+        ),
+      );
+      expect(adapter.currentRequest?.placement.hostId, 'main');
+      expect(adapter.currentRequest?.placement.navigatorOutlet, 'detail');
+
+      runtime.popRoute(result: 'done');
+      expect(await pending, 'done');
+      await runtime.dispose();
+    },
+  );
+
+  test(
     'imports initial backend snapshots without creating Route Entries',
     () async {
       final adapter = BackendEventNavigationAdapter()

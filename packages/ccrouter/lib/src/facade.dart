@@ -1,8 +1,21 @@
 import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 import 'package:ccrouter_core/ccrouter_core.dart';
+import 'package:flutter/widgets.dart';
+
+import 'app.dart';
 
 part 'navigation.dart';
 part 'deep_link.dart';
+
+/// Resolves a strict call-site placement for the Flutter navigation facade.
+CCRoutePlacement? _resolveContextPlacement(BuildContext? context) {
+  if (context == null) return null;
+  final host = CCRouterApp.of(context);
+  return CCRoutePlacement(
+    hostId: host.id,
+    navigatorOutlet: host.resolveOutlet(context),
+  );
+}
 
 /// Static business-facing entry point for all CCRouter capabilities.
 ///

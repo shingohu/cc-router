@@ -29,6 +29,7 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
     required CCDeepLinkOpenMode? openMode,
     required CCNavigationSource? source,
     required String? routeIdHint,
+    CCRoutePlacement? placementOverride,
     required _PreparedRoute Function() prepare,
     required Future<Object?> Function(CCNavigationRequest request) action,
     void Function(_RouteEntryRecord entry)? commitEntry,
@@ -70,6 +71,7 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
                 currentOpenMode,
                 effectiveSource,
                 navigationId: navigationId,
+                placementOverride: placementOverride,
                 action: currentAction,
                 commitEntry: currentCommitEntry,
                 validateResult: currentValidateResult,
@@ -82,6 +84,7 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
                 currentOpenMode,
                 effectiveSource,
                 navigationId: navigationId,
+                placementOverride: placementOverride,
                 action: currentAction,
                 commitEntry: currentCommitEntry,
                 validateResult: currentValidateResult,
@@ -153,9 +156,16 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
         currentRouteIdHint = target.intent?.routeId;
         attemptedRouteId = currentRouteIdHint;
         currentPrepare = target.intent == null
-            ? () => _routeRegistry.prepareUri(target.uri!, origin)
-            : () =>
-                  _routeRegistry.prepareIntent(target.intent!, origin: origin);
+            ? () => _routeRegistry.prepareUri(
+                target.uri!,
+                origin,
+                placementOverride: placementOverride,
+              )
+            : () => _routeRegistry.prepareIntent(
+                target.intent!,
+                origin: origin,
+                placementOverride: placementOverride,
+              );
         currentAction = (request) =>
             _requiredNavigationAdapter.navigate(request);
         currentCommitEntry = null;

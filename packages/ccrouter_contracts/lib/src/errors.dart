@@ -231,6 +231,18 @@ final class CCResolutionError extends CCRouterError {
   const CCResolutionError(super.message);
 }
 
+/// Indicates that a Flutter `BuildContext` cannot be mapped to a bound Outlet.
+///
+/// This is returned by the optional call-site Outlet resolver when the Context
+/// is outside a `CCRouterApp`, belongs to an unregistered Navigator, or is
+/// evaluated before its Navigator is mounted. The resolver never falls back to
+/// the root Outlet because doing so could silently target the wrong stack.
+final class CCNavigationOutletResolutionError extends CCRouterError {
+  /// Creates a sanitized call-site Outlet resolution failure.
+  const CCNavigationOutletResolutionError()
+    : super('The navigation Context is not inside a bound CCRouter Outlet.');
+}
+
 /// Indicates access to a Scope that is closing or closed.
 final class CCScopeClosedError extends CCRouterError {
   /// Creates an error for the closed Scope identified by [scopeId].

@@ -354,6 +354,8 @@ IDE 可发现性属于方案验收条件：生成完成且 Workspace Analyzer �
 - [x] `CCGoRouterBackend.managed` 自动组装 Root Observer、GoRouter、Binding 和 Adapter；
 - [x] `CCGoRouterBackend.attach` 保留已有 GoRouter 的应用所有权；
 - [x] 默认 `CCRouterApp(child:)` 保持不拥有 Runtime 的兼容语义；
+- [x] Flutter 门面支持可选调用级 `BuildContext` Outlet 解析：只匹配当前 Host 已注册的
+  Navigator，解析失败不猜测 root，显式 Route Placement 优先；
 - [x] 覆盖绑定成功、失败安全 UI、显式销毁顺序、Router 所有权和生成器聚合回归；
 - [ ] 提供 Navigator 1.0 Backend，供无法迁移到 Router API 的已有项目渐进接入（延期至架构 2.0，
   不计入当前 1.x 实施范围）。
