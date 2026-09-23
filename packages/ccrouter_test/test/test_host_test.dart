@@ -57,6 +57,22 @@ final class SessionPaymentRegistrar implements CCComponentRegistrar {
   }
 }
 
+var productionInitializerCalls = 0;
+
+final class ReadyPaymentRegistrar implements CCComponentRegistrar {
+  const ReadyPaymentRegistrar();
+
+  @override
+  void register(CCRegistry registry) {
+    registry.registerService<TestPaymentService>(
+      CCServiceProvider(
+        factory: (_) => TestPaymentService('production'),
+        initializer: (_, _) => productionInitializerCalls++,
+      ),
+    );
+  }
+}
+
 void main() {
   test('test host overlays the static facade only inside its Zone', () async {
     final first = CCRouterTestHost(
@@ -185,6 +201,63 @@ void main() {
           .value,
       'fake',
     );
+  });
+
+  test('override clears the production readiness initializer', () async {
+    productionInitializerCalls = 0;
+    final fake = TestPaymentService('fake');
+    final host = CCRouterTestHost(
+      components: const [
+        CCComponentManifest(
+          id: 'ready-payment',
+          version: '0.1.0',
+          registrar: ReadyPaymentRegistrar(),
+        ),
+      ],
+      overrides: [CCServiceOverride<TestPaymentService>.value(fake)],
+    );
+    addTearDown(host.dispose);
+    host.initialize();
+
+    expect(host.runtime.service<TestPaymentService>(), same(fake));
+    expect(await host.runtime.serviceAsync<TestPaymentService>(), same(fake));
+    expect(productionInitializerCalls, 0);
+  });
+
+  test('override can install test-owned readiness', () async {
+    productionInitializerCalls = 0;
+    var testInitializerCalls = 0;
+    final host = CCRouterTestHost(
+      components: const [
+        CCComponentManifest(
+          id: 'ready-payment',
+          version: '0.1.0',
+          registrar: ReadyPaymentRegistrar(),
+        ),
+      ],
+      overrides: [
+        CCServiceOverride<TestPaymentService>.factory(
+          create: (_) => TestPaymentService('fake'),
+          initializer: (service, _) {
+            expect(service.value, 'fake');
+            testInitializerCalls++;
+          },
+        ),
+      ],
+    );
+    addTearDown(host.dispose);
+    host.initialize();
+
+    expect(
+      () => host.runtime.service<TestPaymentService>(),
+      throwsA(isA<CCServiceNotReadyError>()),
+    );
+    expect(
+      (await host.runtime.serviceAsync<TestPaymentService>()).value,
+      'fake',
+    );
+    expect(testInitializerCalls, 1);
+    expect(productionInitializerCalls, 0);
   });
 
   test('override keeps the original Session ownership boundary', () async {

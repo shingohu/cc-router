@@ -124,7 +124,8 @@ CCRouter 采用相同的维度拆分，但保留组件所有权、RouteEntry 精
 - App、Session、Route 与 Singleton/Factory 已实现；Factory 使用
   `CCServiceCreationPolicy.factory`。
 - `ccrouter_test` 已提供隔离 Test Host 的 Service Override；Override 只能替换已注册
-  Provider，沿用原 Scope 和创建策略，缺失或重复目标在 Host 创建阶段失败。
+  Provider，沿用原 Scope 和创建策略，默认清除生产 initializer 并可选替换为测试
+  readiness；缺失或重复目标在 Host 创建阶段失败。
 - Component Lifetime 已从 1.x 移除。
 - Route Lifetime 已接入 Core、Flutter Facade 和 GoRouter 自动 Assembler。
 - 可选 lazy async initializer、single-flight readiness、稳定失败、循环检测以及 Scope/caller

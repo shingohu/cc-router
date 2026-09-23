@@ -21,7 +21,8 @@
 - `CCServiceToken<T>` 支持跨 Package 稳定契约身份。
 - `CCServiceKey<T>` 支持同一契约的命名实现。
 - `ccrouter_test` 提供 `CCServiceOverride<T>`，可在隔离 `CCRouterTestHost`
-  中按类型、Token 和 Key 替换已注册 Provider；替身沿用原 Provider 的 Scope、创建策略和销毁边界。
+  中按类型、Token 和 Key 替换已注册 Provider；替身沿用原 Provider 的 Scope、
+  创建策略和销毁边界，但默认清除生产 initializer，可显式安装测试 readiness。
 - 未命名 Provider 自动作为默认实现；多个默认实现和重复 Key 在注册时失败。
 - Provider Factory 接收 `CCInvocationContext`，可以读取当前 Scope 的取消和 Deadline 信息。
 - Provider 可声明 lazy async `initializer`；`serviceAsync` 与生成代理会等待 Ready，Singleton

@@ -264,9 +264,12 @@ final class _Provider {
   /// Type-erased lazy readiness initializer, when configured.
   final CCServiceInitializer<Object>? initializer;
 
-  /// Creates a provider with the same identity and lifecycle policy but a new
-  /// factory supplied by a test replacement.
-  _Provider replacingFactory(CCServiceFactory<Object> replacement) => _Provider(
+  /// Creates a provider with unchanged identity and lifecycle policy but
+  /// test-owned construction and readiness behavior.
+  _Provider replacing({
+    required CCServiceFactory<Object> factory,
+    CCServiceInitializer<Object>? initializer,
+  }) => _Provider(
     type,
     contractId,
     name,
@@ -274,7 +277,7 @@ final class _Provider {
     scope,
     creationPolicy,
     isDefault,
-    replacement,
+    factory,
     initializer,
   );
 }
@@ -293,12 +296,19 @@ final class CCServiceOverrideEntry<T extends Object> {
   /// and optionally narrowed by [key].
   const CCServiceOverrideEntry({
     required this.factory,
+    this.initializer,
     this.contract,
     this.key,
   });
 
   /// Replacement factory invoked with the owning Scope context.
   final CCServiceFactory<T> factory;
+
+  /// Optional test-owned readiness initializer for replacement instances.
+  ///
+  /// Null deliberately clears the production Provider's initializer so a fake
+  /// never triggers production I/O or SDK setup implicitly.
+  final CCServiceInitializer<Object>? initializer;
 
   /// Promoted contract identity to replace, when this service uses one.
   final CCServiceToken<T>? contract;

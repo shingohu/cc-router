@@ -2168,7 +2168,9 @@ final class CCRouterRuntime {
   /// selects the same Provider identity that production would resolve. The
   /// original lifecycle Scope and creation policy remain in force; a test
   /// cannot accidentally turn a Session service into an App service or bypass
-  /// disposal ownership. Missing or repeated targets fail during construction.
+  /// disposal ownership. Production readiness is removed unless the override
+  /// supplies its own initializer. Missing or repeated targets fail during
+  /// construction.
   void _applyServiceOverrides(
     Iterable<CCServiceOverrideEntry<Object>> overrides,
   ) {
@@ -2207,8 +2209,9 @@ final class CCRouterRuntime {
           'Service Provider "$identity" was overridden more than once.',
         );
       }
-      final replacement = original.replacingFactory(
-        (context) => override.factory(context),
+      final replacement = original.replacing(
+        factory: (context) => override.factory(context),
+        initializer: override.initializer,
       );
       replaced.add(replacement);
       final providers = _providers[original.type];

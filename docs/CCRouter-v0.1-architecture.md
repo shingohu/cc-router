@@ -1089,9 +1089,13 @@ await host.dispose();
 
 ```dart
 CCServiceOverride<T>.value(instance)
-CCServiceOverride<T>.factory(create: ...)
+CCServiceOverride<T>.factory(create: ..., initializer: ...)
 CCRouterTestHost(navigationAdapter: testAdapter)
 ```
+
+Override 始终沿用生产 Provider 的 Scope 与 Creation Policy，但默认清除生产
+initializer，避免 Fake 意外执行数据库、网络或 Native SDK 初始化。需要验证
+readiness 时，由 Override 显式传入测试 initializer。
 
 需要验证静态 Facade 或生成 Proxy 时，使用 `CCRouterTestHost.run`。它通过
 Zone-local Runtime Overlay 让当前同步和异步调用链解析到 Test Host，不修改
