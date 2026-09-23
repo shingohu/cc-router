@@ -1,5 +1,18 @@
 part of 'runtime.dart';
 
+/// Isolated single-flight state for one singleton Service initializer.
+///
+/// A pending Future retains this small record rather than its owning Scope, so
+/// an initializer that ignores cooperative cancellation cannot by itself keep
+/// every Scope-owned instance reachable after the Scope clears its map.
+final class _ServiceReadinessRecord {
+  /// Readiness operation shared by concurrent callers.
+  late final Future<void> future;
+
+  /// Whether the operation completed successfully before Scope cancellation.
+  bool ready = false;
+}
+
 /// Internal lifecycle state of an instance-owning Scope.
 ///
 /// Runtime internals use these states to reject new work as soon as cleanup
@@ -35,6 +48,9 @@ final class CCScope {
 
   /// Provider keys currently being constructed for cycle detection.
   final Set<Object> _constructing = {};
+
+  /// Single-flight readiness records retained for singleton providers.
+  final Map<Object, _ServiceReadinessRecord> _serviceReadiness = {};
 
   /// Cancellation signal shared by work owned by this Scope.
   final CCCancellationToken cancellation = CCCancellationToken();
@@ -88,6 +104,32 @@ final class CCScope {
     return instance;
   }
 
+  /// Whether the singleton identified by [key] completed initialization.
+  bool isServiceReady(Object key) => _serviceReadiness[key]?.ready ?? false;
+
+  /// Runs one cached readiness operation for the singleton [key].
+  ///
+  /// Success and failure are both stable for this Scope lifetime. Runtime does
+  /// not retry failed initialization implicitly because initializers may have
+  /// externally visible side effects; retry belongs inside the initializer.
+  Future<void> ensureServiceReady(
+    Object key,
+    Future<void> Function() initialize,
+  ) {
+    _ensureActive();
+    final existing = _serviceReadiness[key];
+    if (existing != null) return existing.future;
+    final record = _ServiceReadinessRecord();
+    final cancellationSignal = cancellation;
+    final scopeId = id;
+    record.future = Future<void>.sync(initialize).then((_) {
+      if (cancellationSignal.isCancelled) throw CCScopeClosedError(scopeId);
+      record.ready = true;
+    });
+    _serviceReadiness[key] = record;
+    return record.future;
+  }
+
   /// Cancels owned work and disposes instances in reverse construction order.
   ///
   /// Runtime lifecycle transitions call this on Session close and final host
@@ -110,6 +152,7 @@ final class CCScope {
     }
     _instances.clear();
     _disposables.clear();
+    _serviceReadiness.clear();
     _state = CCScopeState.closed;
   }
 

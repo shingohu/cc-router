@@ -27,6 +27,10 @@ final class Run implements CCAction {}
 
 final class Changed implements CCEvent {}
 
+final class ReadyA {}
+
+final class ReadyB {}
+
 void main() {
   late CCRouterRuntime runtime;
   setUp(() => runtime = CCRouterRuntime.forTesting());
@@ -265,6 +269,222 @@ void main() {
     expect(runtime.serviceOrNull<String>(), isNull);
     expect(runtime.hasService<String>(), isFalse);
     expect(() => runtime.serviceOrNull<Counter>(), throwsStateError);
+  });
+
+  test('lazy Service readiness is single-flight per singleton', () async {
+    var creations = 0;
+    var initializations = 0;
+    final gate = Completer<void>();
+    runtime.registerService(
+      CCServiceProvider<Counter>(
+        factory: (_) {
+          creations++;
+          return Counter('ready');
+        },
+        initializer: (service, context) async {
+          initializations++;
+          expect(service.id, 'ready');
+          expect(context.operation, 'serviceInitialize');
+          await gate.future;
+        },
+      ),
+    );
+    runtime.initialize();
+
+    expect(
+      () => runtime.service<Counter>(),
+      throwsA(isA<CCServiceNotReadyError>()),
+    );
+    expect(creations, 0);
+    final first = runtime.serviceAsync<Counter>();
+    final second = runtime.serviceAsync<Counter>();
+    await Future<void>.delayed(Duration.zero);
+    expect(creations, 1);
+    expect(initializations, 1);
+    gate.complete();
+    final resolved = await Future.wait([first, second]);
+    expect(resolved.first, same(resolved.last));
+    expect(runtime.service<Counter>(), same(resolved.first));
+    expect(
+      runtime.recentTraces.where((trace) => trace.operation == 'serviceReady'),
+      hasLength(2),
+    );
+  });
+
+  test('Factory Service readiness runs for every async resolution', () async {
+    var creations = 0;
+    var initializations = 0;
+    runtime.registerService(
+      CCServiceProvider<Counter>(
+        creationPolicy: CCServiceCreationPolicy.factory,
+        factory: (_) => Counter('factory-${++creations}'),
+        initializer: (_, _) => initializations++,
+      ),
+    );
+    runtime.initialize();
+
+    expect(
+      () => runtime.service<Counter>(),
+      throwsA(isA<CCServiceNotReadyError>()),
+    );
+    expect(creations, 0);
+    final first = await runtime.serviceAsync<Counter>();
+    final second = await runtime.serviceAsync<Counter>();
+    expect(first, isNot(same(second)));
+    expect(creations, 2);
+    expect(initializations, 2);
+  });
+
+  test('all asynchronous Services preserve deterministic key order', () async {
+    final initialized = <String>[];
+    runtime.registerService(
+      CCServiceProvider<Counter>(
+        key: const CCServiceKey('z'),
+        factory: (_) => Counter('z'),
+        initializer: (service, _) => initialized.add(service.id),
+      ),
+    );
+    runtime.registerService(
+      CCServiceProvider<Counter>(
+        key: const CCServiceKey('a'),
+        factory: (_) => Counter('a'),
+        initializer: (service, _) => initialized.add(service.id),
+      ),
+    );
+    runtime.initialize();
+
+    final services = await runtime.servicesAsync<Counter>();
+    expect(services.map((service) => service.id), ['a', 'z']);
+    expect(initialized, containsAll(['a', 'z']));
+  });
+
+  test('Service readiness failure is sanitized and stable', () async {
+    var initializations = 0;
+    runtime.registerService(
+      CCServiceProvider<Counter>(
+        factory: (_) => Counter('failure'),
+        initializer: (_, _) {
+          initializations++;
+          throw StateError('private initialization details');
+        },
+      ),
+    );
+    runtime.initialize();
+
+    for (var attempt = 0; attempt < 2; attempt++) {
+      await expectLater(
+        runtime.serviceAsync<Counter>(),
+        throwsA(
+          isA<CCServiceInitializationError>()
+              .having((error) => error.causeType, 'causeType', 'StateError')
+              .having(
+                (error) => error.message,
+                'message',
+                isNot(contains('private initialization details')),
+              ),
+        ),
+      );
+    }
+    expect(initializations, 1);
+    expect(
+      () => runtime.service<Counter>(),
+      throwsA(isA<CCServiceNotReadyError>()),
+    );
+  });
+
+  test('caller timeout does not poison shared Service readiness', () async {
+    final pending = Completer<void>();
+    late CCInvocationContext initializerContext;
+    runtime.registerService(
+      CCServiceProvider<Counter>(
+        factory: (_) => Counter('timeout'),
+        initializer: (_, context) {
+          initializerContext = context;
+          return pending.future;
+        },
+      ),
+    );
+    runtime.initialize();
+
+    await expectLater(
+      runtime.serviceAsync<Counter>(timeout: const Duration(milliseconds: 10)),
+      throwsA(isA<CCInvocationTimeoutError>()),
+    );
+    expect(initializerContext.cancellation.isCancelled, isFalse);
+    pending.complete();
+    await Future<void>.delayed(Duration.zero);
+    expect(runtime.service<Counter>().id, 'timeout');
+  });
+
+  test('Service readiness detects asynchronous dependency cycles', () async {
+    runtime.registerService(
+      CCServiceProvider<ReadyA>(
+        factory: (_) => ReadyA(),
+        initializer: (_, _) async {
+          await runtime.serviceAsync<ReadyB>();
+        },
+      ),
+    );
+    runtime.registerService(
+      CCServiceProvider<ReadyB>(
+        factory: (_) => ReadyB(),
+        initializer: (_, _) async {
+          await runtime.serviceAsync<ReadyA>();
+        },
+      ),
+    );
+    runtime.initialize();
+
+    await expectLater(
+      runtime.serviceAsync<ReadyA>(),
+      throwsA(isA<CCCircularServiceDependencyError>()),
+    );
+  });
+
+  test('Session close cancels pending Service readiness', () async {
+    final pending = Completer<void>();
+    final started = Completer<CCInvocationContext>();
+    late Counter service;
+    runtime.registerService(
+      CCServiceProvider<Counter>(
+        scope: CCServiceScope.session,
+        factory: (_) => service = Counter('session-ready'),
+        initializer: (_, context) {
+          started.complete(context);
+          return pending.future;
+        },
+      ),
+    );
+    runtime.initialize();
+    runtime.openSession(accountId: 'account-a');
+    final resolving = runtime.serviceAsync<Counter>();
+    final context = await started.future;
+
+    final assertion = expectLater(
+      resolving,
+      throwsA(isA<CCInvocationCancelledError>()),
+    );
+    await runtime.closeSession();
+    await assertion;
+    expect(context.cancellation.isCancelled, isTrue);
+    expect(service.disposed, isTrue);
+    pending.complete();
+  });
+
+  test('optional async lookup suppresses only missing registration', () async {
+    runtime.registerService(
+      CCServiceProvider<Counter>(
+        factory: (_) => Counter('failure'),
+        initializer: (_, _) => throw StateError('failure'),
+      ),
+    );
+    runtime.initialize();
+
+    expect(await runtime.serviceOrNullAsync<String>(), isNull);
+    await expectLater(
+      runtime.serviceOrNullAsync<Counter>(),
+      throwsA(isA<CCServiceInitializationError>()),
+    );
   });
 
   test('missing service reports stable identity and requested key', () {

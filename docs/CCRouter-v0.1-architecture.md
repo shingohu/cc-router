@@ -372,7 +372,18 @@ abstract final class CCRouter {
 
   static T service<T>({CCServiceToken<T>? contract, CCServiceKey<T>? key});
   static T? serviceOrNull<T>({CCServiceToken<T>? contract, CCServiceKey<T>? key});
+  static Future<T> serviceAsync<T>({
+    CCServiceToken<T>? contract,
+    CCServiceKey<T>? key,
+    Duration? timeout,
+    CCCancellationToken? cancellation,
+  });
   static List<T> services<T>({CCServiceToken<T>? contract});
+  static Future<List<T>> servicesAsync<T>({
+    CCServiceToken<T>? contract,
+    Duration? timeout,
+    CCCancellationToken? cancellation,
+  });
   static bool hasService<T>({CCServiceToken<T>? contract, CCServiceKey<T>? key});
 
   static Future<R> command<R>(CCCommand<R> command);
@@ -569,7 +580,7 @@ Scope 和终态。参数、返回对象和任意业务文本不进入 Trace。Se
 Runtime shutdown 会通过 Scope cancellation 结束对应调用；Route Service 必须传递精确的
 Managed Navigation ID，不能猜测当前页面。
 
-### 8.4 服务错误
+### 8.5 服务错误
 
 至少定义：
 
@@ -581,8 +592,20 @@ ServiceNotReadyError
 ServiceScopeUnavailableError
 CircularServiceDependencyError
 ServiceCreationFailedError
+ServiceInitializationError
 ServiceScopeClosedError
 ```
+
+### 8.6 异步 Readiness
+
+Service Factory 保持同步，使实例在任何异步工作开始前已经归属 App、Session 或 Route Scope。
+Provider 可选 `initializer` 表达 lazy async readiness：`serviceAsync` 与生成 Proxy 等待它，
+同步 `service` 在未 Ready 时返回 `ServiceNotReadyError`，不会在同步调用中隐式启动 I/O。
+
+Singleton readiness 在每个 Scope 内 single-flight，成功或失败均保持稳定；框架不自动重试可能
+带副作用的初始化。单个等待者的 cancellation/timeout 不取消共享初始化，避免短生命周期调用者
+污染整个 Scope。Factory 每次解析初始化新实例，随 caller 和 Owner Scope 取消，且不把
+readiness record 无界保留到 Scope 结束。Runtime 不宣称能够强制取消任意 Dart Future。
 
 ---
 

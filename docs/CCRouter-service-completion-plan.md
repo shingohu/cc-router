@@ -24,6 +24,10 @@
   中按类型、Token 和 Key 替换已注册 Provider；替身沿用原 Provider 的 Scope、创建策略和销毁边界。
 - 未命名 Provider 自动作为默认实现；多个默认实现和重复 Key 在注册时失败。
 - Provider Factory 接收 `CCInvocationContext`，可以读取当前 Scope 的取消和 Deadline 信息。
+- Provider 可声明 lazy async `initializer`；`serviceAsync` 与生成代理会等待 Ready，Singleton
+  在每个 Scope 内 single-flight，Factory 每次初始化，原同步 API 不会偷偷启动异步工作。
+- Readiness 失败被脱敏并在当前 Singleton/Scope 内保持稳定；初始化依赖循环会确定失败，新的
+  Session/Route Scope 拥有新的 readiness 状态。
 - 跨组件生成代理可通过独立的 `ccrouter_generated.dart` 边界执行方法级 Service
   Invocation；普通业务 barrel 不导出底层 callback bridge。
 - Service Invocation 会记录 Token、Key、method ID、显式 caller component、Provider owner、
@@ -85,7 +89,19 @@ Session Scope 均返回稳定的 Service 错误子类型；缺失命名实现会
 - 下一步实现可选的跨组件强类型 Proxy；Proxy 只生成接口中可验证的方法，不采用反射、方法名
   字符串分派、万能 `Map` 或运行时参数 Codec。
 
-### 4.4 生成器与 CLI
+### 4.4 Async Service Readiness（已完成）
+
+- Factory 保持同步并先把实例交给 Scope；可选 initializer 只表达 readiness，不改变 Owner。
+- `serviceAsync`、`serviceOrNullAsync` 和对应 Route API 提供显式等待；同步 API 对尚未 Ready 的
+  Provider 返回 `CCServiceNotReadyError`。
+- Singleton 初始化成功或失败都在当前 Scope 内保持稳定，防止并发重复副作用；Runtime 不猜测
+  retry。Factory 每次独立初始化且不在 Scope 内累计 readiness record。
+- Session/Route/App Owner Scope cancellation 会终止对应 initializer；单个等待者的 caller
+  cancellation/deadline 只停止等待，不污染共享 Singleton readiness。Factory readiness 随调用
+  取消，因为其实例不与其他等待者共享。
+- 初始化错误只记录 Service identity 与 error type，不保留业务错误消息、参数或返回对象。
+
+### 4.5 生成器与 CLI
 
 - Service Registrar 先保持手动维护，避免为低频变化的能力增加生成冲突。
 - 只有在跨 Package Service 契约数量和手动错误达到可量化阈值后，才设计 Service metadata、

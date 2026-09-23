@@ -339,6 +339,39 @@ abstract final class CCRouter {
     CCServiceKey<T>? key,
   }) => _runtime.serviceOrNull<T>(contract: contract, key: key);
 
+  /// Resolves a Service and awaits its optional lazy readiness initializer.
+  ///
+  /// Use this for a Provider that declares asynchronous setup. Existing purely
+  /// synchronous Providers also work and complete after a lightweight traced
+  /// readiness boundary. Initialization is single-flight per singleton and
+  /// Scope; timeout and cancellation never change ownership of the instance.
+  static Future<T> serviceAsync<T extends Object>({
+    CCServiceToken<T>? contract,
+    CCServiceKey<T>? key,
+    Duration? timeout,
+    CCCancellationToken? cancellation,
+  }) => _runtime.serviceAsync<T>(
+    contract: contract,
+    key: key,
+    timeout: timeout,
+    cancellation: cancellation,
+  );
+
+  /// Resolves an optional Service asynchronously, returning null only if absent.
+  ///
+  /// Readiness, timeout, cancellation, and Scope failures remain explicit.
+  static Future<T?> serviceOrNullAsync<T extends Object>({
+    CCServiceToken<T>? contract,
+    CCServiceKey<T>? key,
+    Duration? timeout,
+    CCCancellationToken? cancellation,
+  }) => _runtime.serviceOrNullAsync<T>(
+    contract: contract,
+    key: key,
+    timeout: timeout,
+    cancellation: cancellation,
+  );
+
   /// Resolves a Route-scoped Service owned by the managed Page at [context].
   ///
   /// Use this for page-instance resources such as draft controllers that must
@@ -388,12 +421,76 @@ abstract final class CCRouter {
     );
   }
 
+  /// Resolves and readies a Route Service owned by [context]'s exact Page.
+  ///
+  /// Removing the managed RouteEntry cancels pending readiness. The Context is
+  /// used only to read the immutable Navigation ID and never owns the Service.
+  static Future<T> routeServiceAsync<T extends Object>(
+    BuildContext context, {
+    CCServiceToken<T>? contract,
+    CCServiceKey<T>? key,
+    Duration? timeout,
+    CCCancellationToken? cancellation,
+  }) {
+    final binding = context
+        .getInheritedWidgetOfExactType<_CCRouteServiceBinding>();
+    if (binding == null) {
+      throw const CCServiceScopeUnavailableError(CCServiceScope.route);
+    }
+    return _runtime.serviceForRouteAsync<T>(
+      navigationId: binding.navigationId,
+      contract: contract,
+      key: key,
+      timeout: timeout,
+      cancellation: cancellation,
+    );
+  }
+
+  /// Resolves an optional Route Service asynchronously for [context]'s Page.
+  ///
+  /// Null means no Provider is registered; missing Route ownership and failed
+  /// readiness remain lifecycle or initialization errors.
+  static Future<T?> routeServiceOrNullAsync<T extends Object>(
+    BuildContext context, {
+    CCServiceToken<T>? contract,
+    CCServiceKey<T>? key,
+    Duration? timeout,
+    CCCancellationToken? cancellation,
+  }) {
+    final binding = context
+        .getInheritedWidgetOfExactType<_CCRouteServiceBinding>();
+    if (binding == null) {
+      throw const CCServiceScopeUnavailableError(CCServiceScope.route);
+    }
+    return _runtime.serviceForRouteOrNullAsync<T>(
+      navigationId: binding.navigationId,
+      contract: contract,
+      key: key,
+      timeout: timeout,
+      cancellation: cancellation,
+    );
+  }
+
   /// Resolves every registered implementation of service contract [T].
   ///
   /// Pass [contract] when implementations share a promoted stable identity.
   /// Use when a caller intentionally composes all installed implementations.
   static List<T> services<T extends Object>({CCServiceToken<T>? contract}) =>
       _runtime.services<T>(contract: contract);
+
+  /// Resolves all implementations and awaits each optional readiness hook.
+  ///
+  /// The result preserves deterministic key order. Use the synchronous
+  /// [services] only when every matching Provider is synchronously ready.
+  static Future<List<T>> servicesAsync<T extends Object>({
+    CCServiceToken<T>? contract,
+    Duration? timeout,
+    CCCancellationToken? cancellation,
+  }) => _runtime.servicesAsync<T>(
+    contract: contract,
+    timeout: timeout,
+    cancellation: cancellation,
+  );
 
   /// Whether service contract [T] has a matching registration.
   ///

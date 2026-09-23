@@ -1107,6 +1107,46 @@ void main() {
     },
   );
 
+  test('generated Service invocation awaits lazy readiness', () async {
+    const contract = CCServiceToken<ComponentService>('feature.ready-counter');
+    var initializations = 0;
+    final runtime = CCRouterRuntime.forTesting(
+      components: [
+        component(
+          'feature',
+          register: (registry) {
+            registry.registerService<ComponentService>(
+              CCServiceProvider(
+                contract: contract,
+                factory: (_) => ComponentService('ready'),
+                initializer: (_, context) async {
+                  expect(context.operation, 'serviceInitialize');
+                  initializations++;
+                },
+              ),
+            );
+          },
+        ),
+      ],
+    );
+    runtime.initialize();
+
+    expect(
+      () => runtime.service<ComponentService>(contract: contract),
+      throwsA(isA<CCServiceNotReadyError>()),
+    );
+    final result = await runtime.invokeService<ComponentService, String>(
+      contract: contract,
+      methodId: 'read',
+      call: (service, _) => service.id,
+    );
+    expect(result, 'ready');
+    expect(initializations, 1);
+    expect(runtime.service<ComponentService>(contract: contract).id, 'ready');
+
+    await runtime.dispose();
+  });
+
   test('nested Command and Service invocation share a trace tree', () async {
     const contract = CCServiceToken<ComponentService>('feature.counter');
     late CCInvocationContext commandContext;
@@ -1512,6 +1552,68 @@ void main() {
       throwsA(isA<CCServiceScopeUnavailableError>()),
     );
 
+    await runtime.dispose();
+  });
+
+  test('Route Pop cancels pending Route Service readiness', () async {
+    const contract = CCServiceToken<ComponentService>('feature.route-ready');
+    final adapter = CCMemoryNavigationAdapter();
+    final pending = Completer<void>();
+    final started = Completer<CCInvocationContext>();
+    late ComponentService service;
+    final runtime = CCRouterRuntime.forTesting(
+      navigationAdapter: adapter,
+      components: [
+        component(
+          'feature',
+          register: (registry) {
+            registry.registerService<ComponentService>(
+              CCServiceProvider(
+                contract: contract,
+                scope: CCServiceScope.route,
+                factory: (_) => service = ComponentService('route-ready'),
+                initializer: (_, context) {
+                  started.complete(context);
+                  return pending.future;
+                },
+              ),
+            );
+            registry.registerRoute<String, void>(
+              CCRouteDefinition(
+                routeId: 'feature.route-ready',
+                patterns: [
+                  CCPathPattern('/feature/route-ready/:value', primary: true),
+                ],
+                codec: const StringCodec(),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+    runtime.initialize();
+    final pushed = runtime.pushRoute<void>(
+      const StringIntent('feature.route-ready', 'first'),
+    );
+    await Future<void>.delayed(Duration.zero);
+    final navigationId = runtime.activeRouteEntries.single.navigationId;
+    final resolving = runtime.serviceForRouteAsync<ComponentService>(
+      navigationId: navigationId,
+      contract: contract,
+    );
+    final context = await started.future;
+
+    final assertion = expectLater(
+      resolving,
+      throwsA(isA<CCInvocationCancelledError>()),
+    );
+    runtime.popRoute();
+    await pushed;
+    await assertion;
+    expect(context.cancellation.isCancelled, isTrue);
+    await Future<void>.delayed(Duration.zero);
+    expect(service.disposed, isTrue);
+    pending.complete();
     await runtime.dispose();
   });
 

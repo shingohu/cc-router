@@ -303,6 +303,38 @@ final class CCServiceScopeUnavailableError extends CCServiceError {
   final CCServiceScope scope;
 }
 
+/// Indicates that a lazily initialized Service is not ready for sync access.
+///
+/// Callers should await the corresponding asynchronous Service lookup or use a
+/// generated asynchronous proxy. Repeating the same synchronous lookup cannot
+/// start initialization and will produce the same error until readiness has
+/// completed successfully.
+final class CCServiceNotReadyError extends CCServiceError {
+  /// Creates a not-ready failure for the stable [identity].
+  const CCServiceNotReadyError(this.identity)
+    : super('Service "$identity" is not ready for synchronous access.');
+
+  /// Stable Token ID or Dart type label used for the lookup.
+  final String identity;
+}
+
+/// Indicates that a Service's lazy readiness initializer failed.
+///
+/// The original error object and message are intentionally not retained. Use
+/// [causeType] and the invocation trace for sanitized diagnostics; retry policy
+/// belongs inside the initializer and is not inferred by Runtime.
+final class CCServiceInitializationError extends CCServiceError {
+  /// Creates an initialization failure for [identity] and safe [causeType].
+  const CCServiceInitializationError(this.identity, this.causeType)
+    : super('Service "$identity" failed to initialize ($causeType).');
+
+  /// Stable Token ID or Dart type label identifying the Service.
+  final String identity;
+
+  /// Runtime type of the underlying failure without its message or payload.
+  final String causeType;
+}
+
 /// Indicates that a Flutter `BuildContext` cannot be mapped to a bound Outlet.
 ///
 /// This is returned by the optional call-site Outlet resolver when the Context

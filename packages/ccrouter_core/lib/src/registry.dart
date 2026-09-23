@@ -6,6 +6,15 @@ part of 'runtime.dart';
 /// Runtime-provided deadline, cancellation, or trace context.
 typedef CCServiceFactory<T> = T Function(CCInvocationContext context);
 
+/// Lazily prepares a Scope-owned Service for asynchronous use.
+///
+/// The synchronous [CCServiceFactory] creates and transfers ownership first;
+/// this initializer then performs optional I/O or asynchronous setup exactly
+/// once per singleton instance. It must observe context cancellation because
+/// its Session, Route, or Runtime Scope may close while setup is pending.
+typedef CCServiceInitializer<T> =
+    FutureOr<void> Function(T service, CCInvocationContext context);
+
 /// Handles a typed message [M] and returns a synchronous or asynchronous [R].
 ///
 /// Use handlers in component registration for Command, Query, Action, and Event
@@ -175,6 +184,7 @@ final class CCServiceProvider<T extends Object> {
   /// Creates a provider for service contract [T].
   const CCServiceProvider({
     required this.factory,
+    this.initializer,
     this.contract,
     this.key,
     this.scope = CCServiceScope.app,
@@ -184,6 +194,13 @@ final class CCServiceProvider<T extends Object> {
 
   /// Factory invoked lazily when the service is first resolved.
   final CCServiceFactory<T> factory;
+
+  /// Optional lazy asynchronous readiness initializer.
+  ///
+  /// Use only when the Service cannot safely serve methods until asynchronous
+  /// setup completes. Runtime starts it through `serviceAsync` or a generated
+  /// proxy, never during synchronous registration or application startup.
+  final CCServiceInitializer<T>? initializer;
 
   /// Stable cross-package contract token, when this service is promoted.
   ///
@@ -217,6 +234,7 @@ final class _Provider {
     this.creationPolicy,
     this.isDefault,
     this.factory,
+    this.initializer,
   );
 
   /// Service contract type.
@@ -243,6 +261,9 @@ final class _Provider {
   /// Type-erased instance factory.
   final CCServiceFactory<Object> factory;
 
+  /// Type-erased lazy readiness initializer, when configured.
+  final CCServiceInitializer<Object>? initializer;
+
   /// Creates a provider with the same identity and lifecycle policy but a new
   /// factory supplied by a test replacement.
   _Provider replacingFactory(CCServiceFactory<Object> replacement) => _Provider(
@@ -254,6 +275,7 @@ final class _Provider {
     creationPolicy,
     isDefault,
     replacement,
+    initializer,
   );
 }
 

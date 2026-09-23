@@ -13,6 +13,7 @@ Service 生命周期回答“谁拥有实例、何时销毁”；实例创建方
 ```text
 Service Lifetime        App / Session / Route
 Service Creation Policy Singleton / Factory
+Service Readiness       Synchronous / Lazy async initializer
 ```
 
 ### 2.1 Lifetime
@@ -38,7 +39,28 @@ Factory 不代表“调用结束立即销毁”。同步解析没有可靠的 en
 实例实现 `CCDisposable`，仍由当前父 Scope 持有并在 Scope 关闭时释放。因此需要严格释放的
 资源应使用 Scope-owned Singleton 或显式操作对象，不应把 Factory 当作临时资源容器。
 
-### 2.3 依赖生命周期矩阵
+### 2.3 Readiness
+
+Provider Factory 始终同步创建实例，使 Runtime 可以先把实例纳入明确 Scope。确实需要 I/O
+或异步准备的 Provider 可以额外声明 `initializer`：
+
+- `CCRouter.serviceAsync<T>()` 或生成的 Service Proxy 首次触发初始化；框架启动不因此变成异步。
+- Singleton 在每个 Scope 内 single-flight 初始化一次；并发调用等待同一个 Future。
+- Factory 每次异步解析创建并初始化一个新实例，仍由当前 Scope 负责最终释放。
+- `service<T>()` 不会隐式启动异步工作；初始化完成前返回 `CCServiceNotReadyError`。
+- 初始化失败在当前 Singleton/Scope 内保持稳定，不自动重试有副作用的操作；业务重试策略应写在
+  initializer 内。新的 Session 或 Route Scope 会获得新的实例和 readiness 状态。
+- Session close、RouteEntry 移除和 Runtime shutdown 会取消 Owner Scope 的 readiness context；
+  initializer 必须配合 cancellation，Dart Future 本身不能被强制终止。
+- Singleton 初始化由 Scope 共享：单个等待者的 cancellation/timeout 只停止该等待者，不能让
+  一个短生命周期调用者永久破坏整个 Scope 的共享 Service。Factory readiness 不共享实例，
+  因此同时服从 caller 和 Owner Scope cancellation。
+- 参数、实例和错误消息不进入 Trace；失败只保留稳定 Service identity 与 error type。
+
+异步 Factory 返回 `Future<T>` 不纳入 1.x：实例完成前没有可交付的 Scope 所有权，关闭与晚到
+结果的销毁容易产生竞态。同步 Factory + 可选 initializer 将所有权和 readiness 两个维度分开。
+
+### 2.4 依赖生命周期矩阵
 
 | Consumer | 允许依赖 |
 | --- | --- |
@@ -103,8 +125,10 @@ CCRouter 采用相同的维度拆分，但保留组件所有权、RouteEntry 精
   Provider，沿用原 Scope 和创建策略，缺失或重复目标在 Host 创建阶段失败。
 - Component Lifetime 已从 1.x 移除。
 - Route Lifetime 已接入 Core、Flutter Facade 和 GoRouter 自动 Assembler。
+- 可选 lazy async initializer、single-flight readiness、稳定失败、循环检测以及 Scope/caller
+  cancellation 已实现；普通同步 Provider 不增加初始化成本。
 - Page 生命周期与 Service 生命周期保持独立。
-- Service Proxy、异步 Ready、动态注册/卸载和生成器继续后置。
+- Service Proxy、动态注册/卸载和生成器继续后置。
 
 完整动态组件治理属于 2.0 候选。重新评估前必须同时解决组件依赖级联、能力原子切换、
 活跃 Route 协调，以及 Handler、订阅和诊断状态的确定性清理，不能只关闭一部分 Service。
@@ -116,3 +140,5 @@ CCRouter 采用相同的维度拆分，但保留组件所有权、RouteEntry 精
 - Factory 的 `CCDisposable` 不得在单次解析结束时被错误销毁。
 - Route Scope 只能由精确 RouteEntry 关闭，不能由 PageHide、Popup 或未知外部 Pop 触发。
 - 所有生命周期关闭必须可取消、可等待、幂等，并通过纯 Dart 测试验证。
+- Readiness 不改变实例 Owner；失败不隐式重试，等待者取消不污染 Singleton readiness，
+  Factory readiness 不被 Scope 无界缓存。

@@ -10,6 +10,8 @@ final class _GreetingServiceImpl implements _GreetingService {
   String greet() => 'hello';
 }
 
+var _initializations = 0;
+
 final class _Registrar implements CCComponentRegistrar {
   const _Registrar();
 
@@ -19,6 +21,9 @@ final class _Registrar implements CCComponentRegistrar {
       CCServiceProvider(
         contract: _contract,
         factory: (_) => _GreetingServiceImpl(),
+        initializer: (_, _) async {
+          _initializations++;
+        },
       ),
     );
   }
@@ -32,6 +37,7 @@ void main() {
   });
 
   test('generated-only binding delegates to the active Runtime', () async {
+    _initializations = 0;
     CCRouter.initialize(
       components: const [
         CCComponentManifest(
@@ -40,6 +46,11 @@ void main() {
           registrar: _Registrar(),
         ),
       ],
+    );
+
+    expect(
+      () => CCRouter.service<_GreetingService>(contract: _contract),
+      throwsA(isA<CCServiceNotReadyError>()),
     );
 
     final result =
@@ -51,6 +62,7 @@ void main() {
         );
 
     expect(result, 'hello');
+    expect(_initializations, 1);
     expect(CCRouter.recentTraces.single.operation, 'service');
     expect(CCRouter.recentTraces.single.target, 'fixture.greeting.greet');
   });

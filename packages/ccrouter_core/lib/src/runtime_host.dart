@@ -153,6 +153,9 @@ final class CCRouterRuntime {
   /// Zone key carrying the Scope of a service under construction.
   static final Object _constructionZoneKey = Object();
 
+  /// Zone key carrying provider identities in a readiness dependency chain.
+  static final Object _readinessZoneKey = Object();
+
   /// Zone key preventing navigation from asynchronous framework callbacks.
   static final Object _navigationCallbackZoneKey = Object();
 
@@ -664,6 +667,9 @@ final class CCRouterRuntime {
       provider.creationPolicy,
       isDefault,
       provider.factory,
+      provider.initializer == null
+          ? null
+          : (service, context) => provider.initializer!(service as T, context),
     );
     providers.add(normalized);
     _providers[T] = providers;
@@ -925,6 +931,54 @@ final class CCRouterRuntime {
     return provider == null ? null : _resolve(provider) as T;
   }
 
+  /// Resolves [T] and awaits its optional lazy readiness initializer.
+  ///
+  /// Existing synchronous Providers complete without an asynchronous setup
+  /// step. Providers with an initializer use one single-flight operation per
+  /// singleton and Scope; Factory Providers initialize every new instance.
+  Future<T> serviceAsync<T extends Object>({
+    CCServiceToken<T>? contract,
+    CCServiceKey<T>? key,
+    Duration? timeout,
+    CCCancellationToken? cancellation,
+  }) {
+    _ensureInitialized();
+    final provider = _findProvider<T>(contract: contract, key: key);
+    if (provider == null) {
+      throw CCServiceNotFoundError(
+        contract?.id ?? T.toString(),
+        key: key?.name,
+      );
+    }
+    return _readyService<T>(
+      provider,
+      contract: contract,
+      timeout: timeout,
+      cancellation: cancellation,
+    );
+  }
+
+  /// Resolves optional [T] asynchronously, returning null only when absent.
+  ///
+  /// Initialization, lifecycle, timeout, and cancellation failures propagate
+  /// unchanged and are never converted to null.
+  Future<T?> serviceOrNullAsync<T extends Object>({
+    CCServiceToken<T>? contract,
+    CCServiceKey<T>? key,
+    Duration? timeout,
+    CCCancellationToken? cancellation,
+  }) {
+    _ensureInitialized();
+    final provider = _findProvider<T>(contract: contract, key: key);
+    if (provider == null) return Future<T?>.value();
+    return _readyService<T>(
+      provider,
+      contract: contract,
+      timeout: timeout,
+      cancellation: cancellation,
+    );
+  }
+
   /// Resolves a Route-scoped Service for one exact managed navigation.
   ///
   /// Flutter Host integration obtains [navigationId] from the backend payload
@@ -981,6 +1035,76 @@ final class CCRouterRuntime {
     return _resolve(provider, routeEntry: entry) as T;
   }
 
+  /// Resolves and readies a Route Service for one exact managed navigation.
+  ///
+  /// [navigationId] must still identify a retained RouteEntry when lookup
+  /// begins. Removing that Entry cancels pending initialization through its
+  /// Route Scope and prevents the instance from becoming ready afterward.
+  Future<T> serviceForRouteAsync<T extends Object>({
+    required String navigationId,
+    CCServiceToken<T>? contract,
+    CCServiceKey<T>? key,
+    Duration? timeout,
+    CCCancellationToken? cancellation,
+  }) {
+    _ensureInitialized();
+    final provider = _findProvider<T>(contract: contract, key: key);
+    if (provider == null) {
+      throw CCServiceNotFoundError(
+        contract?.id ?? T.toString(),
+        key: key?.name,
+      );
+    }
+    if (provider.scope != CCServiceScope.route) {
+      throw const CCResolutionError(
+        'Route-bound resolution requires a Route-scoped Service provider.',
+      );
+    }
+    final entry = _routeEntryForNavigation(navigationId);
+    if (entry == null) {
+      throw const CCServiceScopeUnavailableError(CCServiceScope.route);
+    }
+    return _readyService<T>(
+      provider,
+      contract: contract,
+      routeEntry: entry,
+      timeout: timeout,
+      cancellation: cancellation,
+    );
+  }
+
+  /// Resolves an optional Route Service asynchronously for one exact Entry.
+  ///
+  /// Null means only that the Provider is absent. Missing Route ownership and
+  /// readiness failures remain explicit errors.
+  Future<T?> serviceForRouteOrNullAsync<T extends Object>({
+    required String navigationId,
+    CCServiceToken<T>? contract,
+    CCServiceKey<T>? key,
+    Duration? timeout,
+    CCCancellationToken? cancellation,
+  }) {
+    _ensureInitialized();
+    final provider = _findProvider<T>(contract: contract, key: key);
+    if (provider == null) return Future<T?>.value();
+    if (provider.scope != CCServiceScope.route) {
+      throw const CCResolutionError(
+        'Route-bound resolution requires a Route-scoped Service provider.',
+      );
+    }
+    final entry = _routeEntryForNavigation(navigationId);
+    if (entry == null) {
+      throw const CCServiceScopeUnavailableError(CCServiceScope.route);
+    }
+    return _readyService<T>(
+      provider,
+      contract: contract,
+      routeEntry: entry,
+      timeout: timeout,
+      cancellation: cancellation,
+    );
+  }
+
   /// Whether a provider for [T] and [key] is registered.
   ///
   /// [contract] performs discovery by stable ID without instantiating a service.
@@ -1002,6 +1126,32 @@ final class CCRouterRuntime {
     return List.unmodifiable(
       providers.map((provider) => _resolve(provider) as T),
     );
+  }
+
+  /// Resolves every implementation of [T] and awaits optional readiness.
+  ///
+  /// Providers retain deterministic key order in the returned list. Readiness
+  /// may proceed concurrently because each Provider has independent Scope and
+  /// single-flight state; one failure completes the aggregate with that error.
+  Future<List<T>> servicesAsync<T extends Object>({
+    CCServiceToken<T>? contract,
+    Duration? timeout,
+    CCCancellationToken? cancellation,
+  }) async {
+    _ensureInitialized();
+    final providers = List<_Provider>.of(_providersFor<T>(contract))
+      ..sort((a, b) => (a.name ?? '').compareTo(b.name ?? ''));
+    final services = await Future.wait(
+      providers.map(
+        (provider) => _readyService<T>(
+          provider,
+          contract: contract,
+          timeout: timeout,
+          cancellation: cancellation,
+        ),
+      ),
+    );
+    return List.unmodifiable(services);
   }
 
   /// Invokes one generated method on a promoted Service contract.
@@ -1075,8 +1225,9 @@ final class CCRouterRuntime {
     return _invoke(
       'service',
       target,
-      (context) {
-        final resolved = _resolve(provider, routeEntry: routeEntry) as T;
+      (context) async {
+        final resolved =
+            await _resolveReady(provider, context, routeEntry: routeEntry) as T;
         return call(resolved, context);
       },
       ownerScope: scope,
@@ -1235,8 +1386,65 @@ final class CCRouterRuntime {
     }
   }
 
+  /// Awaits one Provider's readiness inside a traced Scope-owned invocation.
+  Future<T> _readyService<T extends Object>(
+    _Provider provider, {
+    required CCServiceToken<T>? contract,
+    _RouteEntryRecord? routeEntry,
+    Duration? timeout,
+    CCCancellationToken? cancellation,
+  }) {
+    final zoneOwner = Zone.current[_constructionZoneKey];
+    final owner =
+        zoneOwner is _ServiceConstructionOwner &&
+            identical(zoneOwner.runtime, this)
+        ? zoneOwner
+        : null;
+    _validateServiceDependency(owner, provider);
+    final effectiveRouteEntry = routeEntry ?? owner?.routeEntry;
+    final providerScope = _scopeForProvider(provider, effectiveRouteEntry);
+    final useParentScope =
+        provider.creationPolicy == CCServiceCreationPolicy.factory &&
+        owner != null &&
+        provider.scope != owner.serviceScope;
+    final scope = useParentScope ? owner.instanceScope : providerScope;
+    if (scope == null) {
+      throw CCServiceScopeUnavailableError(provider.scope);
+    }
+    if (scope.state != CCScopeState.active) {
+      throw CCScopeClosedError(scope.id);
+    }
+    final target = _serviceInvocationTarget(
+      contractId:
+          contract?.id ?? provider.contractId ?? provider.type.toString(),
+      key: provider.name,
+      methodId: 'ready',
+    );
+    return _invoke(
+      'serviceReady',
+      target,
+      (context) async =>
+          await _resolveReady(
+                provider,
+                context,
+                routeEntry: effectiveRouteEntry,
+              )
+              as T,
+      ownerScope: scope,
+      timeout: timeout,
+      cancellation: cancellation,
+      targetComponentId: provider.ownerComponentId.isEmpty
+          ? null
+          : provider.ownerComponentId,
+    );
+  }
+
   /// Resolves one normalized [provider] in its effective owner Scope.
-  Object _resolve(_Provider provider, {_RouteEntryRecord? routeEntry}) {
+  Object _resolve(
+    _Provider provider, {
+    _RouteEntryRecord? routeEntry,
+    bool allowUnready = false,
+  }) {
     final zoneOwner = Zone.current[_constructionZoneKey];
     final owner =
         zoneOwner is _ServiceConstructionOwner &&
@@ -1255,6 +1463,13 @@ final class CCRouterRuntime {
       throw CCServiceScopeUnavailableError(provider.scope);
     }
     if (scope.state != CCScopeState.active) throw CCScopeClosedError(scope.id);
+    final providerKey = _providerKey(provider);
+    if (!allowUnready &&
+        provider.initializer != null &&
+        (provider.creationPolicy == CCServiceCreationPolicy.factory ||
+            !scope.isServiceReady(providerKey))) {
+      throw CCServiceNotReadyError(_providerIdentity(provider));
+    }
     final context = _context(scope.id, cancellation: scope.cancellation);
     Object create() => runZoned(
       () => provider.factory(context),
@@ -1272,11 +1487,127 @@ final class CCRouterRuntime {
       },
     );
     return scope.resolve(
-      (provider.contractId ?? provider.type, provider.name),
+      providerKey,
       create,
       cache: provider.creationPolicy == CCServiceCreationPolicy.singleton,
     );
   }
+
+  /// Resolves one Service and completes its optional readiness initializer.
+  Future<Object> _resolveReady(
+    _Provider provider,
+    CCInvocationContext context, {
+    _RouteEntryRecord? routeEntry,
+  }) async {
+    final zoneOwner = Zone.current[_constructionZoneKey];
+    final owner =
+        zoneOwner is _ServiceConstructionOwner &&
+            identical(zoneOwner.runtime, this)
+        ? zoneOwner
+        : null;
+    _validateServiceDependency(owner, provider);
+    final effectiveRouteEntry = routeEntry ?? owner?.routeEntry;
+    final providerScope = _scopeForProvider(provider, effectiveRouteEntry);
+    final useParentScope =
+        provider.creationPolicy == CCServiceCreationPolicy.factory &&
+        owner != null &&
+        provider.scope != owner.serviceScope;
+    final scope = useParentScope ? owner.instanceScope : providerScope;
+    if (scope == null) {
+      throw CCServiceScopeUnavailableError(provider.scope);
+    }
+    if (scope.state != CCScopeState.active) throw CCScopeClosedError(scope.id);
+    final instance = _resolve(
+      provider,
+      routeEntry: effectiveRouteEntry,
+      allowUnready: true,
+    );
+    final initializer = provider.initializer;
+    if (initializer == null) return instance;
+
+    final providerKey = _providerKey(provider);
+    final inheritedChain = Zone.current[_readinessZoneKey];
+    final chain = inheritedChain is Set<Object>
+        ? inheritedChain
+        : const <Object>{};
+    if (chain.contains(providerKey)) {
+      throw CCCircularServiceDependencyError(_providerIdentity(provider));
+    }
+    final nextChain = {...chain, providerKey};
+    final constructionOwner = _ServiceConstructionOwner(
+      runtime: this,
+      serviceScope: useParentScope ? owner.serviceScope : provider.scope,
+      instanceScope: scope,
+      ownerComponentId: useParentScope
+          ? owner.ownerComponentId
+          : provider.ownerComponentId,
+      routeEntry: effectiveRouteEntry,
+    );
+
+    final initializerContext =
+        provider.creationPolicy == CCServiceCreationPolicy.singleton
+        ? _context(
+            scope.id,
+            operation: 'serviceInitialize',
+            target: _serviceInvocationTarget(
+              contractId: _providerContractIdentity(provider),
+              key: provider.name,
+              methodId: 'ready',
+            ),
+            targetComponentId: provider.ownerComponentId.isEmpty
+                ? null
+                : provider.ownerComponentId,
+            cancellation: scope.cancellation,
+          )
+        : context;
+
+    Future<void> initialize() => runZoned(
+      () async {
+        try {
+          await initializer(instance, initializerContext);
+          if (initializerContext.cancellation.isCancelled) {
+            throw const CCInvocationCancelledError();
+          }
+        } on CCRouterError {
+          rethrow;
+        } catch (error) {
+          throw CCServiceInitializationError(
+            _providerIdentity(provider),
+            error.runtimeType.toString(),
+          );
+        }
+      },
+      zoneValues: {
+        _invocationZoneKey: (this, initializerContext),
+        _constructionZoneKey: constructionOwner,
+        _readinessZoneKey: nextChain,
+      },
+    );
+
+    if (provider.creationPolicy == CCServiceCreationPolicy.singleton) {
+      await scope.ensureServiceReady(providerKey, initialize);
+    } else {
+      await initialize();
+    }
+    if (context.cancellation.isCancelled) {
+      throw const CCInvocationCancelledError();
+    }
+    return instance;
+  }
+
+  /// Returns the stable Scope cache key for one normalized Provider.
+  Object _providerKey(_Provider provider) =>
+      (provider.contractId ?? provider.type, provider.name);
+
+  /// Returns a sanitized identity for Service readiness errors.
+  String _providerIdentity(_Provider provider) {
+    final contract = _providerContractIdentity(provider);
+    return provider.name == null ? contract : '$contract#${provider.name}';
+  }
+
+  /// Returns the promoted Token ID or safe Dart type label for a Provider.
+  String _providerContractIdentity(_Provider provider) =>
+      provider.contractId ?? provider.type.toString();
 
   /// Returns the active concrete Scope selected by [provider].
   CCScope? _scopeForProvider(
