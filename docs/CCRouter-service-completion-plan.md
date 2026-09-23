@@ -36,7 +36,8 @@
   Invocation；调用方也可以提供更短的 timeout 或 cancellation token。
 - `CCDisposable` 实例由 Scope 按逆创建顺序销毁，单项失败和超时不会阻塞其它实例。
 - Session 关闭会拒绝新的 Session Service 解析，并释放 Session-owned 实例。
-- 服务仍由组件 Registrar 手动注册；当前没有 Service 注解生成器或方法 Proxy。
+- 服务仍由组件 Registrar 手动注册；Demo 已用消费方强类型 Proxy 验证跨组件
+  Invocation 边界，当前仍没有 Service 注解生成器或自动 Proxy 生成。
 - 静态 `CCRouter` Facade 的全局 Runtime Overlay 尚未实现，测试替身不得注入生产
   `CCRouter.initialize`；需要 Facade 语义的测试仍应使用独立 Test Host 的 Runtime。
 
@@ -86,8 +87,15 @@ Session Scope 均返回稳定的 Service 错误子类型；缺失命名实现会
   Navigation ID，不能静默忽略过期页面身份。
 - 普通本地 Service 不生成 Proxy，保持直接 `CCRouter.service<T>()`；跨组件 Service 再按契约
   选择生成方法代理，避免对每个本地调用增加 Future、Zone 和 Trace 成本。
-- 下一步实现可选的跨组件强类型 Proxy；Proxy 只生成接口中可验证的方法，不采用反射、方法名
-  字符串分派、万能 `Map` 或运行时参数 Codec。
+- Runtime 与 Demo 已验证可选的跨组件强类型 Proxy；同步契约经 `invokeSync`
+  保持同步返回类型，异步契约经 `invoke` 承载 readiness、timeout 和 cancellation。
+- 同步 Proxy 不会暗中启动 initializer；Provider 未 Ready 时抛出
+  `CCServiceNotReadyError`。Factory + initializer 每次都需要异步准备，因此不能供
+  同步 Proxy 方法直接调用。
+- Demo 中 `demo_payment` 和 `demo_navigation_lab` 各自持有消费方 Proxy，并固定精确
+  caller component identity。这是生成形态验证，不是要求业务长期手写。
+- 后续自动 Proxy 只生成接口中可验证的方法，不采用反射、方法名字符串分派、
+  万能 `Map` 或运行时参数 Codec。
 
 ### 4.4 Async Service Readiness（已完成）
 

@@ -1176,6 +1176,91 @@ final class CCRouterRuntime {
     CCCancellationToken? cancellation,
     required FutureOr<R> Function(T service, CCInvocationContext context) call,
   }) {
+    final invocation = _prepareServiceInvocation(
+      contract: contract,
+      key: key,
+      methodId: methodId,
+      callerComponentId: callerComponentId,
+      navigationId: navigationId,
+    );
+    return _invoke(
+      'service',
+      invocation.target,
+      (context) async {
+        final resolved =
+            await _resolveReady(
+                  invocation.provider,
+                  context,
+                  routeEntry: invocation.routeEntry,
+                )
+                as T;
+        return call(resolved, context);
+      },
+      ownerScope: invocation.scope,
+      timeout: timeout,
+      cancellation: cancellation,
+      callerComponentId: callerComponentId,
+      targetComponentId: invocation.provider.ownerComponentId.isEmpty
+          ? null
+          : invocation.provider.ownerComponentId,
+    );
+  }
+
+  /// Invokes one synchronous generated method on a promoted Service contract.
+  ///
+  /// Generated proxies use this boundary only for methods whose declared
+  /// return type is synchronous. It preserves the contract signature and
+  /// records the same ownership trace as [invokeService], but it never starts
+  /// asynchronous readiness work. A Provider with an unfinished initializer
+  /// therefore fails with [CCServiceNotReadyError]. Synchronous work cannot be
+  /// preempted, so this API intentionally exposes no timeout or caller
+  /// cancellation parameter.
+  R invokeServiceSync<T extends Object, R>({
+    required CCServiceToken<T> contract,
+    CCServiceKey<T>? key,
+    required String methodId,
+    String? callerComponentId,
+    String? navigationId,
+    required R Function(T service, CCInvocationContext context) call,
+  }) {
+    final invocation = _prepareServiceInvocation(
+      contract: contract,
+      key: key,
+      methodId: methodId,
+      callerComponentId: callerComponentId,
+      navigationId: navigationId,
+    );
+    return _invokeSync(
+      'service',
+      invocation.target,
+      (context) {
+        final resolved =
+            _resolve(invocation.provider, routeEntry: invocation.routeEntry)
+                as T;
+        return call(resolved, context);
+      },
+      ownerScope: invocation.scope,
+      callerComponentId: callerComponentId,
+      targetComponentId: invocation.provider.ownerComponentId.isEmpty
+          ? null
+          : invocation.provider.ownerComponentId,
+    );
+  }
+
+  /// Validates and resolves stable ownership for one generated Service call.
+  ({
+    _Provider provider,
+    _RouteEntryRecord? routeEntry,
+    CCScope scope,
+    String target,
+  })
+  _prepareServiceInvocation<T extends Object>({
+    required CCServiceToken<T> contract,
+    CCServiceKey<T>? key,
+    required String methodId,
+    String? callerComponentId,
+    String? navigationId,
+  }) {
     _ensureInitialized();
     if (!_isStableIdentifier(contract.id)) {
       throw const CCInvocationError(
@@ -1217,26 +1302,15 @@ final class CCRouterRuntime {
     if (scope.state != CCScopeState.active) {
       throw CCScopeClosedError(scope.id);
     }
-    final target = _serviceInvocationTarget(
-      contractId: contract.id,
-      key: key?.name,
-      methodId: methodId,
-    );
-    return _invoke(
-      'service',
-      target,
-      (context) async {
-        final resolved =
-            await _resolveReady(provider, context, routeEntry: routeEntry) as T;
-        return call(resolved, context);
-      },
-      ownerScope: scope,
-      timeout: timeout,
-      cancellation: cancellation,
-      callerComponentId: callerComponentId,
-      targetComponentId: provider.ownerComponentId.isEmpty
-          ? null
-          : provider.ownerComponentId,
+    return (
+      provider: provider,
+      routeEntry: routeEntry,
+      scope: scope,
+      target: _serviceInvocationTarget(
+        contractId: contract.id,
+        key: key?.name,
+        methodId: methodId,
+      ),
     );
   }
 
@@ -1692,6 +1766,84 @@ final class CCRouterRuntime {
     timeout: timeout,
     cancellation: cancellation,
   );
+
+  /// Executes a synchronous [body] with tracing and inherited invocation data.
+  ///
+  /// Cancellation and an inherited deadline are checked before execution.
+  /// Dart cannot preempt synchronous work after [body] starts, so callers must
+  /// not interpret this boundary as a synchronous timeout mechanism.
+  R _invokeSync<R>(
+    String operation,
+    String target,
+    R Function(CCInvocationContext) body, {
+    CCScope? ownerScope,
+    String? callerComponentId,
+    String? targetComponentId,
+  }) {
+    _ensureInitialized();
+    final parent = _parentContext;
+    final now = DateTime.now();
+    final context = _context(
+      ownerScope?.id ?? parent?.scopeId ?? appScope.id,
+      operation: operation,
+      target: target,
+      callerComponentId: callerComponentId,
+      targetComponentId: targetComponentId,
+      deadline: parent?.deadline,
+    );
+    final removers = <void Function()>[];
+    final linkedTokens = <CCCancellationToken>{
+      appScope.cancellation,
+      if (ownerScope != null) ownerScope.cancellation,
+      if (parent != null) parent.cancellation,
+    };
+    for (final token in linkedTokens) {
+      removers.add(token.addListener(context.cancellation.cancel));
+    }
+    final watch = Stopwatch()..start();
+    var status = 'succeeded';
+    String? errorType;
+    try {
+      if (context.cancellation.isCancelled) {
+        throw const CCInvocationCancelledError();
+      }
+      final deadline = context.deadline;
+      if (deadline != null && !deadline.isAfter(DateTime.now())) {
+        throw const CCInvocationTimeoutError();
+      }
+      return runZoned(
+        () => body(context),
+        zoneValues: {_invocationZoneKey: (this, context)},
+      );
+    } catch (error) {
+      status = error is CCInvocationCancelledError
+          ? 'cancelled'
+          : error is CCInvocationTimeoutError
+          ? 'timedOut'
+          : 'failed';
+      errorType = error.runtimeType.toString();
+      rethrow;
+    } finally {
+      for (final remove in removers) {
+        remove();
+      }
+      watch.stop();
+      if (traceCapacity > 0) {
+        if (_traces.length == traceCapacity) _traces.removeFirst();
+        _traces.add(
+          CCTraceRecord(
+            context: CCTraceContextSnapshot.from(context),
+            operation: operation,
+            target: target,
+            startedAt: now,
+            duration: watch.elapsed,
+            status: status,
+            errorType: errorType,
+          ),
+        );
+      }
+    }
+  }
 
   /// Executes [body] with tracing, inherited deadline, and cancellation.
   Future<R> _invoke<R>(

@@ -52,6 +52,16 @@ void main() {
       () => CCRouter.service<_GreetingService>(contract: _contract),
       throwsA(isA<CCServiceNotReadyError>()),
     );
+    expect(
+      () =>
+          CCRouterGeneratedServiceBinding.invokeSync<_GreetingService, String>(
+            contract: _contract,
+            methodId: 'greet',
+            callerComponentId: 'consumer',
+            call: (service, _) => service.greet(),
+          ),
+      throwsA(isA<CCServiceNotReadyError>()),
+    );
 
     final result =
         await CCRouterGeneratedServiceBinding.invoke<_GreetingService, String>(
@@ -63,7 +73,22 @@ void main() {
 
     expect(result, 'hello');
     expect(_initializations, 1);
-    expect(CCRouter.recentTraces.single.operation, 'service');
-    expect(CCRouter.recentTraces.single.target, 'fixture.greeting.greet');
+    expect(
+      CCRouterGeneratedServiceBinding.invokeSync<_GreetingService, String>(
+        contract: _contract,
+        methodId: 'greet',
+        callerComponentId: 'consumer',
+        call: (service, _) => service.greet(),
+      ),
+      'hello',
+    );
+    final traces = CCRouter.recentTraces
+        .where((trace) => trace.operation == 'service')
+        .toList();
+    expect(traces, hasLength(3));
+    expect(traces.first.status, 'failed');
+    expect(traces.first.errorType, 'CCServiceNotReadyError');
+    expect(traces.last.status, 'succeeded');
+    expect(traces.last.target, 'fixture.greeting.greet');
   });
 }

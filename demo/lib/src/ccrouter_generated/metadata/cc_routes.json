@@ -621,7 +621,7 @@
         "kind": "page",
         "symbol": "DemoNavigationHomePage",
         "packageUri": "package:demo_navigation_lab/src/home_page.dart",
-        "line": 20,
+        "line": 21,
         "column": 13
       },
       "navigationSources": [

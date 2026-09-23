@@ -574,6 +574,9 @@ caller -> Service Proxy -> Middleware/Trace/Scope Check -> implementation
 Proxy 用于记录方法级调用、检查 Scope、传播取消和标准化错误。普通的纯本地工具服务不生成
 方法代理。跨组件 Proxy 通过生成代码专用的 `ccrouter_generated.dart` 调用 Runtime
 Invocation primitive；普通 `ccrouter.dart` 不导出该 callback bridge。
+生成器保留契约方法原始的同步/异步返回类型：同步方法经 `invokeSync` 执行，只读取
+已 Ready 实例；异步方法经 `invoke` 等待 readiness，并支持 timeout 与 cancellation。
+框架不会为了代理机制将纯同步业务契约改写为 `Future`。
 
 方法级 Trace 只包含稳定 Token、Key、method ID、显式 caller component、Provider owner、
 Scope 和终态。参数、返回对象和任意业务文本不进入 Trace。Session 关闭、RouteEntry 移除或
@@ -599,8 +602,9 @@ ServiceScopeClosedError
 ### 8.6 异步 Readiness
 
 Service Factory 保持同步，使实例在任何异步工作开始前已经归属 App、Session 或 Route Scope。
-Provider 可选 `initializer` 表达 lazy async readiness：`serviceAsync` 与生成 Proxy 等待它，
-同步 `service` 在未 Ready 时返回 `ServiceNotReadyError`，不会在同步调用中隐式启动 I/O。
+Provider 可选 `initializer` 表达 lazy async readiness：`serviceAsync` 与生成 Proxy 的异步方法
+等待它，同步 `service` 和同步 Proxy 方法在未 Ready 时返回
+`ServiceNotReadyError`，不会在同步调用中隐式启动 I/O。
 
 Singleton readiness 在每个 Scope 内 single-flight，成功或失败均保持稳定；框架不自动重试可能
 带副作用的初始化。单个等待者的 cancellation/timeout 不取消共享初始化，避免短生命周期调用者

@@ -562,8 +562,8 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 ### Route `demo_navigation_lab.home`
 
 - Declaring package: `demo_navigation_lab`
-- Contract/declaration: `package:demo_navigation_lab/src/home_page.dart:20:13` (`DemoNavigationHomePage`)
-- Implementation: `package:demo_navigation_lab/src/home_page.dart:20:13` (`DemoNavigationHomePage`)
+- Contract/declaration: `package:demo_navigation_lab/src/home_page.dart:21:13` (`DemoNavigationHomePage`)
+- Implementation: `package:demo_navigation_lab/src/home_page.dart:21:13` (`DemoNavigationHomePage`)
 - Generated artifacts:
   - `routeLibrary`: `package:demo_navigation_lab/src/ccrouter_generated/route/home_page.route.g.dart` (`_DemoNavigationHomePageRoute`)
   - `routeBinding`: `package:demo_navigation_lab/src/ccrouter_generated/binding/home_page.route_binding.g.dart` (`ccrouterBuildDemoNavigationHomePageRoute`)

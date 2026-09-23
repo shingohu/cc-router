@@ -1107,6 +1107,52 @@ void main() {
     },
   );
 
+  test(
+    'generated synchronous Service invocation preserves its result type',
+    () async {
+      const contract = CCServiceToken<ComponentService>('feature.sync-counter');
+      late CCInvocationContext invocation;
+      final runtime = CCRouterRuntime.forTesting(
+        components: [
+          component(
+            'feature',
+            register: (registry) {
+              registry.registerService<ComponentService>(
+                CCServiceProvider(
+                  contract: contract,
+                  factory: (_) => ComponentService('sync'),
+                ),
+              );
+            },
+          ),
+        ],
+      );
+      runtime.initialize();
+
+      final result = runtime.invokeServiceSync<ComponentService, String>(
+        contract: contract,
+        methodId: 'read',
+        callerComponentId: 'consumer',
+        call: (service, context) {
+          invocation = context;
+          return service.id;
+        },
+      );
+
+      expect(result, 'sync');
+      expect(invocation.operation, 'service');
+      expect(invocation.target, 'feature.sync-counter.read');
+      expect(invocation.callerComponentId, 'consumer');
+      expect(invocation.targetComponentId, 'feature');
+      final trace = runtime.recentTraces.single;
+      expect(trace.status, 'succeeded');
+      expect(trace.context.callerComponentId, 'consumer');
+      expect(trace.context.targetComponentId, 'feature');
+
+      await runtime.dispose();
+    },
+  );
+
   test('generated Service invocation awaits lazy readiness', () async {
     const contract = CCServiceToken<ComponentService>('feature.ready-counter');
     var initializations = 0;

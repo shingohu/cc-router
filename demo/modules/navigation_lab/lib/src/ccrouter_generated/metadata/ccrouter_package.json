@@ -5,7 +5,7 @@
     "name": "demo_navigation_lab",
     "version": "0.1.0"
   },
-  "contentFingerprint": "afd13a879536f0ff2b53a55d4dc20f19dbb6b1e5707b2ca5ee4cde80234e7e46",
+  "contentFingerprint": "a6484fe7528fcd554a897b45b8a8109d16a0980cf4c47dec37cf7b9f312896a6",
   "bundle": {
     "library": "lib/src/ccrouter_generated/host/demo_navigation_lab_ccrouter.g.dart",
     "symbol": "ccrouterGeneratedPackageBundle"
@@ -352,7 +352,7 @@
             "kind": "page",
             "symbol": "DemoNavigationHomePage",
             "packageUri": "package:demo_navigation_lab/src/home_page.dart",
-            "line": 20,
+            "line": 21,
             "column": 13
           },
           "navigationSources": [
@@ -2624,13 +2624,13 @@
         "contract": {
           "symbol": "DemoNavigationHomePage",
           "packageUri": "package:demo_navigation_lab/src/home_page.dart",
-          "line": 20,
+          "line": 21,
           "column": 13
         },
         "implementation": {
           "symbol": "DemoNavigationHomePage",
           "packageUri": "package:demo_navigation_lab/src/home_page.dart",
-          "line": 20,
+          "line": 21,
           "column": 13
         },
         "generatedArtifacts": [

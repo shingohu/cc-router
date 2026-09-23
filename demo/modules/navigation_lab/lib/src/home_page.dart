@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 
 import 'lab_configuration.dart';
 import 'navigation_lab_component.dart';
+import 'order_summary_service_proxy.dart';
 import 'shell_contract.dart';
 import 'ccrouter_generated/component/demo_navigation_lab_component.route_api.g.dart';
 
@@ -26,6 +27,9 @@ final class DemoNavigationHomePage extends StatefulWidget {
 
 final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
     with CCPageLifecycleMixin<DemoNavigationHomePage> {
+  static const OrderSummaryService _orderSummaryService =
+      OrderSummaryServiceProxy();
+
   int _section = 0;
   String _status = 'Ready · 选择一个场景开始验证';
   OverlayEntry? _overlayEntry;
@@ -320,11 +324,9 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
       _ActionTile(
         icon: Icons.data_object,
         title: '解析订单组件 Service Contract',
-        subtitle: '路由 Demo 同时确认组件依赖和 Runtime 注册图一致。',
+        subtitle: '强类型 Proxy 验证跨组件调用、来源归属和 Trace。',
         onTap: () {
-          final summary = CCRouter.service(
-            contract: demoOrderSummaryService,
-          ).summaryFor(2048);
+          final summary = _orderSummaryService.summaryFor(2048);
           _setStatus('Service 返回 · $summary');
         },
       ),

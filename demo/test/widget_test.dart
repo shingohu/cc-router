@@ -69,6 +69,26 @@ void main() {
     await _unmountDemo(tester);
   });
 
+  testWidgets('cross-component Service proxy records caller and target', (
+    tester,
+  ) async {
+    await _pumpDemo(tester);
+
+    await tester.tap(find.text('解析订单组件 Service Contract'));
+    await tester.pump();
+
+    expect(find.textContaining('Service 返回 · 订单 #2048'), findsOneWidget);
+    final trace = CCRouter.recentTraces.lastWhere(
+      (record) => record.operation == 'service',
+    );
+    expect(trace.target, 'demo_order.summary.summaryFor');
+    expect(trace.context.callerComponentId, 'demo_navigation_lab_component');
+    expect(trace.context.targetComponentId, 'demo_order_component');
+    expect(trace.status, 'succeeded');
+
+    await _unmountDemo(tester);
+  });
+
   testWidgets('typed result page keeps the iOS edge-back gesture', (
     tester,
   ) async {

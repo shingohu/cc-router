@@ -44,7 +44,9 @@ Factory 不代表“调用结束立即销毁”。同步解析没有可靠的 en
 Provider Factory 始终同步创建实例，使 Runtime 可以先把实例纳入明确 Scope。确实需要 I/O
 或异步准备的 Provider 可以额外声明 `initializer`：
 
-- `CCRouter.serviceAsync<T>()` 或生成的 Service Proxy 首次触发初始化；框架启动不因此变成异步。
+- `CCRouter.serviceAsync<T>()` 或生成 Proxy 的异步方法首次触发初始化；框架启动不因此变成异步。
+- 同步 Proxy 方法保留契约原本的返回类型，不会隐式等待或启动 initializer；它在
+  Provider 未 Ready 时抛出 `CCServiceNotReadyError`。
 - Singleton 在每个 Scope 内 single-flight 初始化一次；并发调用等待同一个 Future。
 - Factory 每次异步解析创建并初始化一个新实例，仍由当前 Scope 负责最终释放。
 - `service<T>()` 不会隐式启动异步工作；初始化完成前返回 `CCServiceNotReadyError`。

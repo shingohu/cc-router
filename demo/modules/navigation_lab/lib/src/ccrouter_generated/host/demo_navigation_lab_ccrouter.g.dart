@@ -16,7 +16,7 @@ final ccrouterGeneratedPackageBundle = CCGeneratedPackageBundle(
   packageName: 'demo_navigation_lab',
   packageVersion: '0.1.0',
   contentFingerprint:
-      'afd13a879536f0ff2b53a55d4dc20f19dbb6b1e5707b2ca5ee4cde80234e7e46',
+      'a6484fe7528fcd554a897b45b8a8109d16a0980cf4c47dec37cf7b9f312896a6',
   componentManifests: [component_0.demoNavigationLabComponentManifest],
   routeCatalog: CCFlutterRouteCatalog.merge([
     component_routes_0.demoNavigationLabComponentRouteCatalog,
