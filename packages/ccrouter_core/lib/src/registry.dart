@@ -167,8 +167,10 @@ final class _CCComponentRegistry implements CCRegistry {
 
 /// Describes how a service implementation is created and owned.
 ///
-/// Component registrars use providers to select factory, key, default choice,
-/// and lifecycle Scope for one implementation of a service contract.
+/// Component registrars use providers to select the factory, contract, key,
+/// default choice, ownership Scope, and creation policy for one implementation
+/// of a service contract. Scope controls disposal ownership; creation policy
+/// controls whether the instance is cached within that Scope.
 final class CCServiceProvider<T extends Object> {
   /// Creates a provider for service contract [T].
   const CCServiceProvider({
@@ -176,6 +178,7 @@ final class CCServiceProvider<T extends Object> {
     this.contract,
     this.key,
     this.scope = CCServiceScope.app,
+    this.creationPolicy = CCServiceCreationPolicy.singleton,
     this.isDefault = false,
   });
 
@@ -195,6 +198,9 @@ final class CCServiceProvider<T extends Object> {
   /// Lifecycle Scope that owns created instances.
   final CCServiceScope scope;
 
+  /// Whether the owning Scope caches or recreates the service.
+  final CCServiceCreationPolicy creationPolicy;
+
   /// Whether this provider is selected when no key is supplied.
   final bool isDefault;
 }
@@ -207,6 +213,7 @@ final class _Provider {
     this.contractId,
     this.name,
     this.scope,
+    this.creationPolicy,
     this.isDefault,
     this.factory,
   );
@@ -223,9 +230,55 @@ final class _Provider {
   /// Lifecycle Scope assigned to created instances.
   final CCServiceScope scope;
 
+  /// Creation policy applied inside [scope].
+  final CCServiceCreationPolicy creationPolicy;
+
   /// Whether unkeyed resolution selects this provider.
   final bool isDefault;
 
   /// Type-erased instance factory.
   final CCServiceFactory<Object> factory;
+
+  /// Creates a provider with the same identity and lifecycle policy but a new
+  /// factory supplied by a test replacement.
+  _Provider replacingFactory(CCServiceFactory<Object> replacement) => _Provider(
+    type,
+    contractId,
+    name,
+    scope,
+    creationPolicy,
+    isDefault,
+    replacement,
+  );
+}
+
+/// Internal test-only description of one Service Provider replacement.
+///
+/// The Core Runtime consumes this value only through
+/// [CCRouterRuntime.forTesting]. The public test package wraps it in
+/// `CCServiceOverride`, so production applications cannot install replacements
+/// through `CCRouter.initialize`. The target Provider must already be
+/// registered; its Scope, creation policy, key, and contract identity remain
+/// authoritative for the replacement.
+@visibleForTesting
+final class CCServiceOverrideEntry<T extends Object> {
+  /// Creates a replacement for the Provider identified by [contract] or [T]
+  /// and optionally narrowed by [key].
+  const CCServiceOverrideEntry({
+    required this.factory,
+    this.contract,
+    this.key,
+  });
+
+  /// Replacement factory invoked with the owning Scope context.
+  final CCServiceFactory<T> factory;
+
+  /// Promoted contract identity to replace, when this service uses one.
+  final CCServiceToken<T>? contract;
+
+  /// Named implementation to replace, or null for the default Provider.
+  final CCServiceKey<T>? key;
+
+  /// Runtime Dart type used for type-only replacement lookup.
+  Type get type => T;
 }

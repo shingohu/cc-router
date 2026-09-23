@@ -2,3 +2,4 @@
 library;
 
 export 'src/test_host.dart';
+export 'src/service_override.dart';

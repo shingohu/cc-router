@@ -285,7 +285,9 @@ abstract final class CCRouter {
   ///
   /// Use [contract] after an internal service is promoted across packages; omit
   /// it for legacy or component-internal type lookup. Absence is a configuration
-  /// error in either mode.
+  /// error in either mode and is reported as [CCServiceNotFoundError]. Token
+  /// type mismatches and inactive Session Scopes use their corresponding
+  /// Service-specific errors.
   static T service<T extends Object>({
     CCServiceToken<T>? contract,
     CCServiceKey<T>? key,

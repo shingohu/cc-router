@@ -1,3 +1,5 @@
+import 'service.dart';
+
 /// Base class for failures with stable CCRouter semantics.
 ///
 /// Business callers may catch this type when they need one framework-level
@@ -226,9 +228,75 @@ final class CCPopGuardDeniedError extends CCRouterError {
 }
 
 /// Indicates that a requested capability or lifecycle owner cannot be resolved.
-final class CCResolutionError extends CCRouterError {
+class CCResolutionError extends CCRouterError {
   /// Creates a resolution error with a safe [message].
   const CCResolutionError(super.message);
+}
+
+/// Base class for deterministic Service provider resolution failures.
+///
+/// Service-specific failures remain catchable as [CCResolutionError] for
+/// compatibility, while callers that need a precise recovery policy can match
+/// the narrower subclasses below.
+sealed class CCServiceError extends CCResolutionError {
+  /// Creates a Service resolution failure with a safe [message].
+  const CCServiceError(super.message);
+}
+
+/// Indicates that no Provider matches a requested Service identity.
+final class CCServiceNotFoundError extends CCServiceError {
+  /// Creates a missing-provider failure for the stable [identity].
+  const CCServiceNotFoundError(this.identity, {this.key})
+    : super(
+        'No Service Provider is registered for "$identity"'
+        '${key == null ? '' : ' with key "$key"'}.',
+      );
+
+  /// Stable Token ID or Dart type label used for the lookup.
+  final String identity;
+
+  /// Stable named implementation key, when the lookup requested one.
+  final String? key;
+}
+
+/// Indicates that a Token was registered for a different Dart Service type.
+final class CCServiceTypeMismatchError extends CCServiceError {
+  /// Creates a type mismatch for [contractId] and [registeredType].
+  const CCServiceTypeMismatchError(this.contractId, this.registeredType)
+    : super(
+        'Service contract "$contractId" is registered for $registeredType.',
+      );
+
+  /// Stable promoted Service Token ID.
+  final String contractId;
+
+  /// Safe diagnostic label of the type used during registration.
+  final String registeredType;
+}
+
+/// Indicates that a Service Factory recursively requested its own Provider.
+final class CCCircularServiceDependencyError extends CCServiceError {
+  /// Creates a circular-construction failure for a sanitized [identity].
+  const CCCircularServiceDependencyError(this.identity)
+    : super('Circular Service construction was detected for "$identity".');
+
+  /// Provider identity involved in the recursive construction.
+  final String identity;
+}
+
+/// Indicates that a Service requires a lifecycle Scope that is not active.
+///
+/// The usual case is resolving a Session-scoped Service before a Session is
+/// opened, or after its close has started. Callers should open the required
+/// Session or treat the capability as unavailable; retrying the same lookup
+/// without a lifecycle transition cannot make it succeed.
+final class CCServiceScopeUnavailableError extends CCServiceError {
+  /// Creates a failure for the unavailable [scope].
+  const CCServiceScopeUnavailableError(this.scope)
+    : super('The required Service scope is not active.');
+
+  /// Scope required by the Service Provider.
+  final CCServiceScope scope;
 }
 
 /// Indicates that a Flutter `BuildContext` cannot be mapped to a bound Outlet.

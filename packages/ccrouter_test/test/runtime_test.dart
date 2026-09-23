@@ -33,30 +33,30 @@ void main() {
   tearDown(() => runtime.dispose());
 
   test(
-    'Transient construction detects cycles without caching instances',
+    'Factory construction detects cycles without caching instances',
     () async {
       runtime.registerService(
         CCServiceProvider<Counter>(
-          scope: CCServiceScope.transient,
+          creationPolicy: CCServiceCreationPolicy.factory,
           factory: (_) => runtime.service<Counter>(),
         ),
       );
       runtime.initialize();
       expect(
         () => runtime.service<Counter>(),
-        throwsA(isA<CCResolutionError>()),
+        throwsA(isA<CCCircularServiceDependencyError>()),
       );
     },
   );
 
   test(
-    'Transient constructed for a Session is disposed with that Session',
+    'Factory constructed for a Session is disposed with that Session',
     () async {
       Counter? dependency;
       runtime.registerService(
         CCServiceProvider<Counter>(
-          scope: CCServiceScope.transient,
-          factory: (_) => dependency = Counter('transient'),
+          creationPolicy: CCServiceCreationPolicy.factory,
+          factory: (_) => dependency = Counter('factory'),
         ),
       );
       runtime.registerService(
@@ -162,12 +162,13 @@ void main() {
         () => runtime.service<String>(
           contract: const CCServiceToken('counter.service'),
         ),
-        throwsA(isA<CCResolutionError>()),
+        throwsA(isA<CCServiceTypeMismatchError>()),
       );
     },
   );
 
   test('stable service contract IDs are globally unique and validated', () {
+    final overlongId = 'a' * 129;
     runtime.registerService(
       CCServiceProvider<Counter>(
         contract: const CCServiceToken('shared.service'),
@@ -188,6 +189,24 @@ void main() {
       () => runtime.registerService(
         CCServiceProvider<int>(
           contract: const CCServiceToken('Invalid service'),
+          factory: (_) => 1,
+        ),
+      ),
+      throwsA(isA<CCRegistrationError>()),
+    );
+    expect(
+      () => runtime.registerService(
+        CCServiceProvider<bool>(
+          contract: CCServiceToken<bool>(overlongId),
+          factory: (_) => true,
+        ),
+      ),
+      throwsA(isA<CCRegistrationError>()),
+    );
+    expect(
+      () => runtime.registerService(
+        CCServiceProvider<double>(
+          key: const CCServiceKey('Invalid key'),
           factory: (_) => 1,
         ),
       ),
@@ -248,6 +267,20 @@ void main() {
     expect(() => runtime.serviceOrNull<Counter>(), throwsStateError);
   });
 
+  test('missing service reports stable identity and requested key', () {
+    runtime.initialize();
+    expect(
+      () => runtime.service<Counter>(key: const CCServiceKey('missing')),
+      throwsA(
+        isA<CCServiceNotFoundError>().having(
+          (error) => error.key,
+          'key',
+          'missing',
+        ),
+      ),
+    );
+  });
+
   test(
     'circular construction is detected and failed construction can retry',
     () async {
@@ -261,7 +294,7 @@ void main() {
       runtime.initialize();
       expect(
         () => runtime.service<Counter>(),
-        throwsA(isA<CCResolutionError>()),
+        throwsA(isA<CCCircularServiceDependencyError>()),
       );
       circular = false;
       expect(runtime.service<Counter>().id, 'ready');
@@ -280,7 +313,13 @@ void main() {
       runtime.initialize();
       expect(
         () => runtime.service<Counter>(),
-        throwsA(isA<CCResolutionError>()),
+        throwsA(
+          isA<CCServiceScopeUnavailableError>().having(
+            (error) => error.scope,
+            'scope',
+            CCServiceScope.session,
+          ),
+        ),
       );
       runtime.openSession(accountId: 'account-a');
       expect(runtime.session?.accountId, 'account-a');
@@ -353,11 +392,11 @@ void main() {
     await close;
   });
 
-  test('transient instances are fresh and owned by App', () async {
+  test('factory instances are fresh and owned by App', () async {
     runtime.registerService(
       CCServiceProvider<Counter>(
-        scope: CCServiceScope.transient,
-        factory: (_) => Counter('transient'),
+        creationPolicy: CCServiceCreationPolicy.factory,
+        factory: (_) => Counter('factory'),
       ),
     );
     runtime.initialize();

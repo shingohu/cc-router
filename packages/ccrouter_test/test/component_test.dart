@@ -1033,7 +1033,7 @@ void main() {
   });
 
   test(
-    'App service cannot capture Session service, including via Transient',
+    'App service cannot capture Session service through a Factory',
     () async {
       final runtime = CCRouterRuntime.forTesting();
       runtime.registerService(
@@ -1044,7 +1044,7 @@ void main() {
       );
       runtime.registerService(
         CCServiceProvider<String>(
-          scope: CCServiceScope.transient,
+          creationPolicy: CCServiceCreationPolicy.factory,
           factory: (_) => '${runtime.service<int>()}',
         ),
       );

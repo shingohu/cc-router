@@ -1,5 +1,10 @@
+// Test support intentionally consumes Core's visible-for-testing boundary.
+// ignore_for_file: invalid_use_of_visible_for_testing_member
+
 import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 import 'package:ccrouter_core/ccrouter_core.dart';
+
+import 'service_override.dart';
 
 /// Owns one isolated Runtime for framework and integration tests.
 ///
@@ -9,11 +14,13 @@ import 'package:ccrouter_core/ccrouter_core.dart';
 /// the optional adapter passed to it; [dispose] releases both through the
 /// Runtime's normal shutdown path.
 final class CCRouterTestHost {
-  /// Creates an isolated test host from immutable component and adapter input.
+  /// Creates an isolated test host from immutable component, adapter, and
+  /// Service replacement input.
   ///
   /// Call [initialize] before using [runtime], then await [dispose] in test
   /// teardown so asynchronous Scope resources are released even when setup
-  /// fails part way through.
+  /// fails part way through. [overrides] replace already registered Providers
+  /// without changing their Scope or creation policy.
   factory CCRouterTestHost({
     int traceCapacity = 1000,
     int navigationDiagnosticCapacity = 1000,
@@ -29,8 +36,9 @@ final class CCRouterTestHost {
         CCNavigationConcurrencyPolicy.allow,
     CCDeepLinkIngressPolicy deepLinkIngressPolicy =
         CCDeepLinkIngressPolicy.denyAll,
+    Iterable<CCServiceOverride<Object>> overrides = const [],
   }) => CCRouterTestHost._(
-    CCRouterRuntime.forHost(
+    CCRouterRuntime.forTesting(
       traceCapacity: traceCapacity,
       navigationDiagnosticCapacity: navigationDiagnosticCapacity,
       components: components,
@@ -43,6 +51,9 @@ final class CCRouterTestHost {
       restorationOpportunitySource: restorationOpportunitySource,
       navigationConcurrencyPolicy: navigationConcurrencyPolicy,
       deepLinkIngressPolicy: deepLinkIngressPolicy,
+      serviceOverrides: overrides
+          .map((override) => override.toEntry())
+          .toList(growable: false),
     ),
   );
 

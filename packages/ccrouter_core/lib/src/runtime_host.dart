@@ -63,6 +63,7 @@ final class CCRouterRuntime {
         CCNavigationConcurrencyPolicy.allow,
     CCDeepLinkIngressPolicy deepLinkIngressPolicy =
         CCDeepLinkIngressPolicy.denyAll,
+    Iterable<CCServiceOverrideEntry<Object>> serviceOverrides = const [],
   }) => CCRouterRuntime._(
     traceCapacity: traceCapacity,
     navigationDiagnosticCapacity: navigationDiagnosticCapacity,
@@ -76,6 +77,7 @@ final class CCRouterRuntime {
     restorationOpportunitySource: restorationOpportunitySource,
     navigationConcurrencyPolicy: navigationConcurrencyPolicy,
     deepLinkIngressPolicy: deepLinkIngressPolicy,
+    serviceOverrides: serviceOverrides,
   );
 
   /// Creates a Runtime with validated configuration and installed components.
@@ -94,6 +96,7 @@ final class CCRouterRuntime {
     this.restorationOpportunitySource,
     required this.navigationConcurrencyPolicy,
     required CCDeepLinkIngressPolicy deepLinkIngressPolicy,
+    Iterable<CCServiceOverrideEntry<Object>> serviceOverrides = const [],
   }) {
     _deepLinkIngressPolicy = deepLinkIngressPolicy;
     _navigationAdapter = navigationAdapter;
@@ -110,6 +113,7 @@ final class CCRouterRuntime {
       );
     }
     _installComponents(components);
+    _applyServiceOverrides(serviceOverrides);
   }
 
   /// Zone key carrying the current invocation and its parent trace.
@@ -582,8 +586,7 @@ final class CCRouterRuntime {
     }
     final providers = _providers[T] ?? <_Provider>[];
     final contractId = provider.contract?.id;
-    if (contractId != null &&
-        !RegExp(r'^[a-z][a-z0-9_.-]*$').hasMatch(contractId)) {
+    if (contractId != null && !_isStableIdentifier(contractId)) {
       throw CCRegistrationError(
         'Service contract ID "$contractId" is invalid.',
       );
@@ -592,6 +595,9 @@ final class CCRouterRuntime {
         ? null
         : _providersByContractId[contractId] ?? <_Provider>[];
     final name = provider.key?.name;
+    if (name != null && !_isStableIdentifier(name)) {
+      throw CCRegistrationError('Service key "$name" is invalid.');
+    }
     final isDefault = provider.isDefault || name == null;
     if (contractProviders != null &&
         contractProviders.any((item) => item.type != T)) {
@@ -624,6 +630,7 @@ final class CCRouterRuntime {
       contractId,
       name,
       provider.scope,
+      provider.creationPolicy,
       isDefault,
       provider.factory,
     );
@@ -876,6 +883,10 @@ final class CCRouterRuntime {
   ///
   /// [contract] selects the stable identity used after cross-package promotion;
   /// omitting it preserves the legacy type-based lookup path.
+  /// Throws [CCServiceNotFoundError] when no matching Provider exists,
+  /// [CCServiceTypeMismatchError] when a Token is used with the wrong type, or
+  /// [CCServiceScopeUnavailableError] when the Provider's required Scope is
+  /// inactive.
   T service<T extends Object>({
     CCServiceToken<T>? contract,
     CCServiceKey<T>? key,
@@ -883,8 +894,9 @@ final class CCRouterRuntime {
     _ensureInitialized();
     final provider = _findProvider<T>(contract: contract, key: key);
     if (provider == null)
-      throw CCResolutionError(
-        'No provider for ${contract?.id ?? T} with key $key.',
+      throw CCServiceNotFoundError(
+        contract?.id ?? T.toString(),
+        key: key?.name,
       );
     return _resolve(provider) as T;
   }
@@ -1086,11 +1098,13 @@ final class CCRouterRuntime {
     }
     final scope =
         (provider.scope == CCServiceScope.session ||
-            provider.scope == CCServiceScope.transient &&
+            provider.creationPolicy == CCServiceCreationPolicy.factory &&
                 ownerScope == CCServiceScope.session)
         ? _sessionScope
         : appScope;
-    if (scope == null) throw const CCResolutionError('No active Session.');
+    if (scope == null) {
+      throw const CCServiceScopeUnavailableError(CCServiceScope.session);
+    }
     if (scope.state != CCScopeState.active) throw CCScopeClosedError(scope.id);
     final context = _context(scope.id, cancellation: scope.cancellation);
     Object create() => runZoned(
@@ -1099,7 +1113,7 @@ final class CCRouterRuntime {
         _invocationZoneKey: (this, context),
         _constructionZoneKey: (
           this,
-          provider.scope == CCServiceScope.transient
+          provider.creationPolicy == CCServiceCreationPolicy.factory
               ? ownerScope ?? CCServiceScope.app
               : provider.scope,
         ),
@@ -1108,7 +1122,7 @@ final class CCRouterRuntime {
     return scope.resolve(
       (provider.contractId ?? provider.type, provider.name),
       create,
-      cache: provider.scope != CCServiceScope.transient,
+      cache: provider.creationPolicy == CCServiceCreationPolicy.singleton,
     );
   }
 
@@ -1131,9 +1145,9 @@ final class CCRouterRuntime {
         ? _providers[T] ?? <_Provider>[]
         : _providersByContractId[contract.id] ?? <_Provider>[];
     if (contract != null && providers.isNotEmpty && providers.first.type != T) {
-      throw CCResolutionError(
-        'Service contract "${contract.id}" is registered for '
-        '${providers.first.type}, not $T.',
+      throw CCServiceTypeMismatchError(
+        contract.id,
+        providers.first.type.toString(),
       );
     }
     return providers;
@@ -1452,6 +1466,70 @@ final class CCRouterRuntime {
       component.registrar.register(
         _CCComponentRegistry(runtime: this, ownerComponentId: component.id),
       );
+    }
+  }
+
+  /// Replaces already registered Providers for an isolated test Runtime.
+  ///
+  /// Replacement happens after all component registrars have run, so the test
+  /// selects the same Provider identity that production would resolve. The
+  /// original lifecycle Scope and creation policy remain in force; a test
+  /// cannot accidentally turn a Session service into an App service or bypass
+  /// disposal ownership. Missing or repeated targets fail during construction.
+  void _applyServiceOverrides(
+    Iterable<CCServiceOverrideEntry<Object>> overrides,
+  ) {
+    final replaced = <_Provider>{};
+    for (final override in overrides) {
+      final candidates = override.contract == null
+          ? (_providers[override.type] ?? const <_Provider>[])
+          : (_providersByContractId[override.contract!.id] ??
+                const <_Provider>[]);
+      if (override.contract != null &&
+          candidates.isNotEmpty &&
+          candidates.any((provider) => provider.type != override.type)) {
+        throw CCRegistrationError(
+          'Service override contract "${override.contract!.id}" has a type '
+          'mismatch.',
+        );
+      }
+      final target = candidates.where((provider) {
+        if (override.key == null) return provider.isDefault;
+        return provider.name == override.key!.name;
+      }).toList();
+      if (target.length != 1) {
+        final identity = override.contract?.id ?? override.type.toString();
+        final keySuffix = override.key == null
+            ? ''
+            : ' with key "${override.key!.name}"';
+        throw CCRegistrationError(
+          'Service override target "$identity"$keySuffix was not found '
+          'or is ambiguous.',
+        );
+      }
+      final original = target.single;
+      if (!replaced.add(original)) {
+        final identity = override.contract?.id ?? override.type.toString();
+        throw CCRegistrationError(
+          'Service Provider "$identity" was overridden more than once.',
+        );
+      }
+      final replacement = original.replacingFactory(
+        (context) => override.factory(context),
+      );
+      replaced.add(replacement);
+      final providers = _providers[original.type];
+      if (providers != null) {
+        final index = providers.indexOf(original);
+        if (index >= 0) providers[index] = replacement;
+      }
+      if (original.contractId != null) {
+        final contractProviders = _providersByContractId[original.contractId!];
+        if (contractProviders != null) {
+          final index = contractProviders.indexOf(original);
+          if (index >= 0) contractProviders[index] = replacement;
+        }
+      }
     }
   }
 }

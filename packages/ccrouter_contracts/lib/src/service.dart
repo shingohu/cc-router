@@ -53,7 +53,9 @@ final class CCServiceKey<T> {
 /// Defines the lifetime that owns a service instance.
 ///
 /// Choose the narrowest scope that matches the instance's state and cleanup
-/// needs; do not use a longer-lived scope for dependencies with shorter lives.
+/// needs. This enum answers who owns the instance; it does not decide whether
+/// the provider caches or recreates the instance. Use [CCServiceCreationPolicy]
+/// for that independent choice.
 enum CCServiceScope {
   /// Lives until the owning Runtime shuts down.
   ///
@@ -74,9 +76,21 @@ enum CCServiceScope {
   ///
   /// Use for controllers and resources owned by one page instance.
   route,
+}
 
-  /// Creates a fresh instance for every resolution.
+/// Defines how a Provider creates instances inside its owning Scope.
+///
+/// Creation policy is intentionally separate from [CCServiceScope]. A factory
+/// service is recreated on every lookup, but any disposable instance is still
+/// owned by the active parent Scope because a synchronous lookup has no safe
+/// end-of-use signal. Prefer factories for stateless or immutable helpers.
+enum CCServiceCreationPolicy {
+  /// Creates one lazily initialized instance per owning Scope.
+  singleton,
+
+  /// Creates a new instance for every resolution in the owning Scope.
   ///
-  /// Use for lightweight, stateful helpers that must never be shared.
-  transient,
+  /// Do not use this for resources that require immediate per-call disposal;
+  /// use a Scope-owned singleton or an explicit operation object instead.
+  factory,
 }

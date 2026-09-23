@@ -27,7 +27,7 @@ final class CCScope {
   /// Stable diagnostic identity of this Scope.
   final String id;
 
-  /// Cached non-transient instances indexed by provider identity.
+  /// Cached singleton instances indexed by provider identity.
   final Map<Object, Object> _instances = {};
 
   /// Disposable instances in construction order.
@@ -54,7 +54,7 @@ final class CCScope {
   /// Returns a cached instance for [key] or owns a newly created one.
   ///
   /// Runtime service resolution uses this to enforce per-Scope singleton and
-  /// transient ownership while detecting recursive construction.
+  /// factory ownership while detecting recursive construction.
   T resolve<T extends Object>(
     Object key,
     T Function() create, {
@@ -64,7 +64,7 @@ final class CCScope {
     final existing = _instances[key];
     if (cache && existing != null) return existing as T;
     if (!_constructing.add(key)) {
-      throw CCResolutionError('Circular service construction at $key.');
+      throw CCCircularServiceDependencyError(key.toString());
     }
     try {
       final value = own(create());
@@ -77,7 +77,7 @@ final class CCScope {
 
   /// Adds [instance] to this Scope's disposal ownership.
   ///
-  /// Runtime construction uses this for newly created transient and cached
+  /// Runtime construction uses this for newly created factory and cached
   /// services so [CCDisposable] instances participate in Scope cleanup.
   T own<T extends Object>(T instance) {
     _ensureActive();

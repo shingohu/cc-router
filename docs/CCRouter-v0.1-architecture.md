@@ -45,7 +45,7 @@ CCRouter 的目标不是再提供一个单纯的路由库，而是提供一套�
 - 同步或异步请求响应、超时、取消和标准错误。
 - 全局及局部拦截器和可追踪调用链。
 - 初始化任务 DAG、自定义 Gate 和失败策略。
-- App、Session、Component、Route、Transient 作用域。
+- App、Session、Component、Route 生命周期作用域；Singleton/Factory 创建策略独立于 Scope。
 - 组件独立运行、Mock 覆盖和测试 Runtime。
 - 代码生成、冲突检查、依赖检查和契约文档生成。
 
@@ -299,7 +299,7 @@ App        Runtime 存活期间
 Session    一次登录会话
 Component  组件启用期间
 Route      一次具体路由实例
-Transient   每次获取或调用
+Factory     每次解析创建新实例，由当前父 Scope 负责最终释放
 ```
 
 ---
@@ -491,6 +491,7 @@ abstract interface class PaymentService {
 @CCService(
   contract: PaymentService,
   scope: CCServiceScope.session,
+  creationPolicy: CCServiceCreationPolicy.singleton,
   exported: true,
 )
 final class PaymentServiceImpl implements PaymentService {
@@ -511,6 +512,7 @@ final result = await payment.pay(request);
 ```
 
 服务需要提前注册 Provider 描述，但不需要提前实例化，也不要求业务手动字段注入。默认使用构造函数注入和懒创建。
+`scope` 只表示实例所有权，`creationPolicy` 单独表示 Scope 内是 Singleton 还是 Factory。
 
 ### 8.2 多实现
 
@@ -1017,21 +1019,22 @@ ContractVersionError
 
 ### 15.1 测试 Runtime
 
-由于公开 API 是静态的，测试不能直接修改永久全局注册表。`CCRouterTest.run` 创建隔离的 Test Runtime Overlay：
+由于公开 API 是静态的，测试不能直接修改永久全局注册表。当前使用
+`CCRouterTestHost` 创建隔离 Runtime，并通过 `overrides` 安装测试替身：
 
 ```dart
-await CCRouterTest.run(
+final host = CCRouterTestHost(
   components: [OrderComponentManifest.generated],
   overrides: [
     CCServiceOverride<PaymentService>.factory(
       create: (_) => FakePaymentService(),
     ),
   ],
-  body: () async {
-    final service = CCRouter.service<PaymentService>();
-    // 组件业务代码不需要测试分支。
-  },
 );
+host.initialize();
+final service = host.runtime.service<PaymentService>();
+// 组件业务代码不需要测试分支。
+await host.dispose();
 ```
 
 支持：
@@ -1039,8 +1042,11 @@ await CCRouterTest.run(
 ```dart
 CCServiceOverride<T>.value(instance)
 CCServiceOverride<T>.factory(create: ...)
-CCRouterTestHost(initialLocation: ...)
+CCRouterTestHost(navigationAdapter: testAdapter)
 ```
+
+静态 `CCRouter` Facade 的 Runtime Overlay 需要额外的生命周期切换契约，当前不作为
+测试 API 暴露；测试代码不得为了替身改写应用全局 Runtime。
 
 具有 Route 或 Session Scope 的替身必须使用 Factory，避免多个 Scope 共享同一个有状态实例。
 
