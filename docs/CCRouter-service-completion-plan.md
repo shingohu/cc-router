@@ -4,7 +4,7 @@
 
 ## 1. 文档状态
 
-- 状态：Service 子系统实施清单，生命周期模型已重新收敛，Component Scope 已落地
+- 状态：Service 子系统实施清单，1.x 生命周期模型已收敛为 App、Session、Route
 - 范围：Service Provider、Token/Key、Scope、生命周期和跨组件契约
 - 不包含：CLI 2.0、Service 代码生成器、动态组件交付和远程 RPC
 
@@ -13,7 +13,7 @@
 
 ## 2. 当前已实现
 
-- App、Session、Component 三种已启用 Service Lifetime；实例按 Lifetime 懒创建并按
+- App、Session 两种已启用 Service Lifetime；实例按 Lifetime 懒创建并按
   `CCServiceCreationPolicy` 选择缓存或每次创建。
 - Route Lifetime 已定义但在精确 RouteEntry 所有权协议完成前拒绝注册。
 - `CCServiceToken<T>` 支持跨 Package 稳定契约身份。
@@ -40,18 +40,18 @@
 第一阶段已完成：除上述注册校验外，缺失 Provider、Token 类型不匹配、循环构造和未激活
 Session Scope 均返回稳定的 Service 错误子类型；缺失命名实现会保留稳定 Key 诊断字段。
 
-Component Scope 已通过独立的异步组件停用协议落地；Route Scope 仍需绑定 RouteEntry
+1.x 不提供 Component Scope 或组件运行时激活/停用；Route Scope 仍需绑定 RouteEntry
 最终移除。页面级对象不等同于 PageShow/PageHide；Factory 也不等同于调用结束销毁。
 
 ## 4. 后续实施顺序
 
-### 4.1 Component Scope（已完成）
+### 4.1 组件边界（1.x 已冻结）
 
-- Provider 保存 Runtime 注入的 owner component ID，组件代码不能伪造所有权。
-- `deactivateComponent` 先停用路由和 Shell，再取消并异步关闭 Component Scope；新解析立即拒绝。
-- Scope 按逆创建顺序释放 `CCDisposable`，重复停用和并发转换保持幂等、串行。
-- `activateComponent` 不重开旧 Scope，而是创建唯一的新 Scope 后恢复路由和 Shell。
-- App Service 不能依赖更窄 Scope；Session Service 不能捕获 Component Service。
+- Provider 保留 Runtime 注入的 owner component ID，用于静态所有权、诊断和 Route Scope 关联。
+- 组件集合由 Composition Root 在初始化时一次确定；可选组件通过是否装配 Manifest 决定。
+- 登录、权限和 Feature Flag 使用 Interceptor，账号资源使用 Session Scope，页面资源使用 Route Scope。
+- 1.x 不提供 Component Scope、`activateComponent` 或 `deactivateComponent`，避免产生只停用部分能力的伪动态组件语义。
+- 动态组件治理进入 2.0 候选；只有依赖级联、Handler/订阅/诊断清理、活跃 Route 协调和原子能力切换形成完整协议后才重新评估。
 
 ### 4.2 Route Scope
 

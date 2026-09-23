@@ -169,7 +169,7 @@ return const CCNavigationFailurePropagate();
 
 - `CCRouter.initialize` 和 Runtime `initialize`；
 - Adapter attach、`initialize`、`dispose`；
-- 组件注册以及 Route/Shell `activateComponent` / `deactivateComponent`；
+- 组件静态注册、Route/Shell 所有权和结构校验；
 - `openSession`；
 - `canPop`、直接 `pop` / `popOutcome`；
 - Registry 校验、Service 解析和只读诊断快照。

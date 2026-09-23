@@ -45,7 +45,8 @@ CCRouter 的目标不是再提供一个单纯的路由库，而是提供一套�
 - 同步或异步请求响应、超时、取消和标准错误。
 - 全局及局部拦截器和可追踪调用链。
 - 初始化任务 DAG、自定义 Gate 和失败策略。
-- App、Session、Component、Route 生命周期作用域；Singleton/Factory 创建策略独立于 Scope。
+- App、Session、Route 生命周期作用域；Singleton/Factory 创建策略独立于 Scope。
+- 组件保留静态装配、所有权和依赖校验，不在 1.x 中成为可关闭的 Service Scope。
 - 组件独立运行、Mock 覆盖和测试 Runtime。
 - 代码生成、冲突检查、依赖检查和契约文档生成。
 
@@ -124,8 +125,8 @@ CCRouter 的目标不是再提供一个单纯的路由库，而是提供一套�
 
 10. **明确生命周期（谁创建，谁拥有，谁销毁）**
     - 每个 Runtime、Component、Service、Session、RouteEntry、Adapter 和测试替身都必须有明确 Owner 和 Scope。
-    - 初始化、激活、停用、关闭和销毁的顺序、幂等性、失败处理及未完成 Future 的行为必须写入契约。
-    - 页面 Pop、组件停用和 Session 关闭不能互相隐式替代；业务代码不能自行销毁框架拥有的对象。
+    - 初始化、打开、关闭和销毁的顺序、幂等性、失败处理及未完成 Future 的行为必须写入契约。
+    - 页面 Pop 和 Session 关闭不能互相隐式替代；业务代码不能自行销毁框架拥有的对象。
 
 11. **可观测、可诊断、可溯源（默认安全且有界）**
     - 每次跨边界调用和导航都应具备稳定的 `navigationId`/`traceId`、来源、目标、Owner、状态和耗时。
@@ -1055,7 +1056,7 @@ CCRouterTestHost(navigationAdapter: testAdapter)
 测试 Runtime 结束时自动：
 
 - 取消未完成调用。
-- 关闭 Route、Session 和 Component Scope。
+- 关闭 Route 和 Session Scope。
 - 销毁 Mock 和订阅。
 - 检查未闭合 Trace。
 - 检查资源泄漏。
@@ -1104,22 +1105,20 @@ ComponentTestHost
 
 运行时配置只能启用/禁用预先声明的能力，不能注册任意实现或执行任意代码。
 
-### 16.4 运行时组件激活与停用
+### 16.4 组件运行时边界
 
-当前已支持对已经编译进 App、且已由 Manifest 预先声明的组件进行运行时激活和停用。
-公开 API 使用 `activateComponent` / `deactivateComponent`，不使用容易被理解为下载或删除代码的
-`install` / `uninstall`。这两个 API 是异步的：停用先拒绝新路由和 Service 解析，再取消并关闭
-Component Scope；激活等待同一组件的前一项转换完成，并创建新的 Scope 后恢复能力。
+1.x 将组件定义为静态装配与能力所有权边界。组件集合通过一次
+`CCRouter.initialize(components: ...)` 确定，Runtime 不提供 `activateComponent`、
+`deactivateComponent`、`install` 或 `uninstall`。可选组件由 Composition Root 决定是否装配
+Manifest；登录、权限和 Feature Flag 使用 Interceptor，而不是伪装成组件生命周期。
 
-该能力不包含动态下载或加载新的 Dart 代码。当前已经具备：
+此前只切换 Route、Shell 和 Component Service 的方案会遗漏 Handler、订阅、App/Session
+Service、诊断状态和活跃 RouteEntry，也没有依赖方的拒绝或级联协议。这种“部分停用”会让
+能力表与实际存活对象不一致，因此不进入 1.x 公开 API。
 
-- Provider 记录所属组件，并禁止脱离组件 Registrar 注册 Component Scope。
-- Component Scope 独立取消调用，按逆创建顺序销毁资源。
-- 停用和激活对同一组件串行化，旧 Scope 不会被重新打开。
-
-仍待后续补齐的治理能力包括：激活时对依赖方做原子校验、存在激活依赖方时的拒绝或级联策略，
-以及清理该组件拥有的 Handler、订阅和诊断状态。组件集合仍只能通过一次
-`CCRouter.initialize(components: ...)` 确定，不通过 `register/unregister` 动态改变代码集合。
+动态组件治理属于 2.0 候选。只有依赖级联、能力原子切换、活跃 Route 协调、未完成调用取消，
+以及 Handler、订阅、Service 和诊断状态的确定性清理形成完整协议后，才重新评估。Flutter AOT
+下仍只能治理已编译能力，不能承诺物理卸载 Dart 代码。
 
 ---
 

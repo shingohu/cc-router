@@ -11,7 +11,7 @@ Service 生命周期回答“谁拥有实例、何时销毁”；实例创建方
 ## 2. 两个独立维度
 
 ```text
-Service Lifetime        App / Session / Component / Route
+Service Lifetime        App / Session / Route
 Service Creation Policy Singleton / Factory
 ```
 
@@ -21,11 +21,11 @@ Service Creation Policy Singleton / Factory
 | --- | --- | --- | --- |
 | App | Runtime | 首次解析创建，Runtime dispose 时销毁 | 网络客户端、配置、日志、埋点 |
 | Session | 登录 Session | Session 打开后首次解析，closeSession 时销毁 | 账号信息、购物车、用户缓存 |
-| Component | 一次组件激活 | 组件激活期间创建，异步停用完成后销毁 | 动态组件内部共享资源 |
 | Route | 一个具体 RouteEntry | RouteEntry 创建期间创建，Entry 最终移除后销毁 | 编辑控制器、页面草稿、WebView 控制器 |
 
-Component 和 Route Lifetime 在所有权、并发关闭和调用取消协议确定前不启用。当前 Runtime
-必须在注册阶段明确拒绝这两种 Scope，而不能静默降级到 App Scope。
+Route Lifetime 在所有权、并发关闭和调用取消协议确定前不启用。当前 Runtime 必须在注册阶段
+明确拒绝该 Scope，而不能静默降级到 App Scope。1.x 不提供 Component Lifetime；组件是
+静态装配与能力所有权边界，不是可独立关闭的运行时资源 Scope。
 
 ### 2.2 Creation Policy
 
@@ -82,9 +82,12 @@ CCRouter 采用相同的维度拆分，但保留组件所有权、RouteEntry 精
 - App、Session、Singleton/Factory 已实现；Factory 使用 `CCServiceCreationPolicy.factory`。
 - `ccrouter_test` 已提供隔离 Test Host 的 Service Override；Override 只能替换已注册
   Provider，沿用原 Scope 和创建策略，缺失或重复目标在 Host 创建阶段失败。
-- Component Lifetime 已启用；Route Lifetime 仍暂不开放注册。
+- Component Lifetime 已从 1.x 移除；Route Lifetime 仍暂不开放注册。
 - Page 生命周期与 Service 生命周期保持独立。
 - Service Proxy、异步 Ready、动态注册/卸载和生成器继续后置。
+
+完整动态组件治理属于 2.0 候选。重新评估前必须同时解决组件依赖级联、能力原子切换、
+活跃 Route 协调，以及 Handler、订阅和诊断状态的确定性清理，不能只关闭一部分 Service。
 
 ## 7. 验收要求
 

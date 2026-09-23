@@ -38,7 +38,7 @@ enum CCNavigationFailureReason {
   /// Multiple route definitions matched with the same specificity.
   routeAmbiguous,
 
-  /// A matched route exists but its component or lifecycle is unavailable.
+  /// A matched route exists but cannot serve the requested operation.
   routeUnavailable,
 
   /// External input was rejected before route matching by Host trust policy.

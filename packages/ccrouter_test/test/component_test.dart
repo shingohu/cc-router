@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 import 'package:ccrouter_core/ccrouter_core.dart';
 import 'package:test/test.dart';
@@ -20,20 +18,6 @@ final class StringCodec implements CCRouteCodec<String> {
   @override
   CCEncodedRouteArguments encode(String arguments) =>
       CCEncodedRouteArguments(path: {'value': arguments});
-}
-
-final class ComponentService implements CCDisposable {
-  ComponentService(this.id, {this.onDispose});
-
-  final String id;
-  final Future<void> Function()? onDispose;
-  bool disposed = false;
-
-  @override
-  Future<void> dispose() async {
-    disposed = true;
-    await onDispose?.call();
-  }
 }
 
 CCComponentManifest component(
@@ -166,7 +150,7 @@ void main() {
   });
 
   test(
-    'Shell contracts validate route placement and follow component state',
+    'Shell contracts validate statically assembled route placement',
     () async {
       final adapter = CCMemoryNavigationAdapter();
       final runtime = CCRouterRuntime.forTesting(
@@ -208,13 +192,6 @@ void main() {
       expect(adapter.shells.single.outlets, ['home', 'settings']);
       expect(runtime.resolveRoute('/settings/42').routeId, 'settings.detail');
 
-      await runtime.deactivateComponent('app-shell');
-      expect(
-        () => runtime.resolveRoute('/settings/42'),
-        throwsA(isA<CCRouteUnavailableError>()),
-      );
-      await runtime.activateComponent('app-shell');
-      expect(runtime.resolveRoute('/settings/42').routeId, 'settings.detail');
       await runtime.dispose();
     },
   );
@@ -393,13 +370,6 @@ void main() {
         throwsA(isA<CCRouteNotFoundError>()),
       );
 
-      await runtime.deactivateComponent('orders');
-      expect(
-        () => runtime.resolveRoute('/orders/42'),
-        throwsA(isA<CCRouteUnavailableError>()),
-      );
-      await runtime.activateComponent('orders');
-      expect(runtime.resolveRoute('/orders/42').routeId, 'orders.detail');
       await runtime.dispose();
     },
   );
@@ -1046,125 +1016,6 @@ void main() {
       ),
       throwsA(isA<CCRegistrationError>()),
     );
-  });
-
-  test(
-    'Component Scope closes on deactivate and is recreated on activate',
-    () async {
-      final created = <ComponentService>[];
-      final runtime = CCRouterRuntime.forTesting(
-        components: [
-          component(
-            'feature',
-            register: (registry) => registry.registerService<ComponentService>(
-              CCServiceProvider(
-                scope: CCServiceScope.component,
-                factory: (_) {
-                  final service = ComponentService('feature');
-                  created.add(service);
-                  return service;
-                },
-              ),
-            ),
-          ),
-        ],
-      );
-      runtime.initialize();
-
-      final first = runtime.service<ComponentService>();
-      expect(runtime.service<ComponentService>(), same(first));
-      final deactivation = runtime.deactivateComponent('feature');
-      expect(
-        () => runtime.service<ComponentService>(),
-        throwsA(isA<CCServiceScopeUnavailableError>()),
-      );
-      await deactivation;
-      expect(first.disposed, isTrue);
-
-      await runtime.activateComponent('feature');
-      final second = runtime.service<ComponentService>();
-      expect(second, isNot(same(first)));
-      expect(created, [first, second]);
-      await runtime.dispose();
-      expect(second.disposed, isTrue);
-    },
-  );
-
-  test('Component Scope cancellation and disposal are awaitable', () async {
-    final disposalStarted = Completer<void>();
-    final releaseDisposal = Completer<void>();
-    late ComponentService service;
-    final runtime = CCRouterRuntime.forTesting(
-      components: [
-        component(
-          'feature',
-          register: (registry) => registry.registerService<ComponentService>(
-            CCServiceProvider(
-              scope: CCServiceScope.component,
-              factory: (_) => service = ComponentService(
-                'feature',
-                onDispose: () async {
-                  disposalStarted.complete();
-                  await releaseDisposal.future;
-                },
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-    runtime.initialize();
-    runtime.service<ComponentService>();
-
-    final deactivation = runtime.deactivateComponent('feature');
-    await disposalStarted.future;
-    expect(
-      () => runtime.service<ComponentService>(),
-      throwsA(isA<CCServiceScopeUnavailableError>()),
-    );
-    expect(service.disposed, isTrue);
-    releaseDisposal.complete();
-    await deactivation;
-    await runtime.dispose();
-  });
-
-  test('Component transitions preserve the final requested state', () async {
-    final disposalStarted = Completer<void>();
-    final releaseDisposal = Completer<void>();
-    final runtime = CCRouterRuntime.forTesting(
-      components: [
-        component(
-          'feature',
-          register: (registry) => registry.registerService<ComponentService>(
-            CCServiceProvider(
-              scope: CCServiceScope.component,
-              factory: (_) => ComponentService(
-                'feature',
-                onDispose: () async {
-                  disposalStarted.complete();
-                  await releaseDisposal.future;
-                },
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-    runtime.initialize();
-    runtime.service<ComponentService>();
-
-    final firstDeactivation = runtime.deactivateComponent('feature');
-    await disposalStarted.future;
-    final activation = runtime.activateComponent('feature');
-    final finalDeactivation = runtime.deactivateComponent('feature');
-    releaseDisposal.complete();
-    await Future.wait([firstDeactivation, activation, finalDeactivation]);
-
-    expect(
-      () => runtime.service<ComponentService>(),
-      throwsA(isA<CCServiceScopeUnavailableError>()),
-    );
-    await runtime.dispose();
   });
 
   test(

@@ -67,11 +67,6 @@ enum CCServiceScope {
   /// Use for account-specific state that must reset on logout or account switch.
   session,
 
-  /// Lives while its declaring component remains enabled.
-  ///
-  /// Use for resources shared only by one dynamically managed component.
-  component,
-
   /// Lives for one concrete route entry.
   ///
   /// Use for controllers and resources owned by one page instance.

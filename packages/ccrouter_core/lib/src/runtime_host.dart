@@ -344,15 +344,6 @@ final class CCRouterRuntime {
   /// Scope that owns services for the active authenticated Session.
   CCScope? _sessionScope;
 
-  /// Component-owned Service Scopes keyed by stable component ID.
-  final Map<String, CCScope> _componentScopes = {};
-
-  /// Whether each compiled-in component currently accepts new resolutions.
-  final Map<String, bool> _componentActive = {};
-
-  /// Serialized Component activation/deactivation operations.
-  final Map<String, Future<void>> _componentTransitions = {};
-
   /// Immutable information for the active authenticated Session.
   CCSession? _session;
 
@@ -367,9 +358,6 @@ final class CCRouterRuntime {
 
   /// Monotonic sequence used in Session identifiers.
   int _sessionSequence = 0;
-
-  /// Monotonic sequence used in Component Scope identities.
-  int _componentScopeSequence = 0;
 
   /// Monotonic sequence used in navigation identifiers.
   int _navigationSequence = 0;
@@ -592,12 +580,6 @@ final class CCRouterRuntime {
     _ensureConfigurable();
     if (provider.scope == CCServiceScope.route) {
       throw const CCRegistrationError('Route scopes are not implemented yet.');
-    }
-    if (provider.scope == CCServiceScope.component &&
-        ownerComponentId.isEmpty) {
-      throw const CCRegistrationError(
-        'Component-scoped Services must be registered by a component.',
-      );
     }
     final providers = _providers[T] ?? <_Provider>[];
     final contractId = provider.contract?.id;
@@ -875,93 +857,6 @@ final class CCRouterRuntime {
     return _routeRegistry.decode(location, extra: extra);
   }
 
-  /// Activates a component and creates a fresh Component Service Scope.
-  ///
-  /// Activation waits for any previous transition of the same component. A
-  /// closed Scope is never reopened, so old Service instances cannot leak into
-  /// a later activation. Routes and Shells become available only after the new
-  /// Scope exists. Unknown component IDs fail with [CCRegistrationError].
-  Future<void> activateComponent(String componentId) {
-    _ensureInitialized();
-    _requireComponent(componentId);
-    return _enqueueComponentTransition(componentId, () async {
-      final current = _componentScopes[componentId];
-      if (current != null && current.state == CCScopeState.active) return;
-      _componentScopes[componentId] = _newComponentScope(componentId);
-      _componentActive[componentId] = true;
-      _shellRegistry.activateComponent(componentId);
-      _routeRegistry.activateComponent(componentId);
-    });
-  }
-
-  /// Deactivates a component and asynchronously closes its Service Scope.
-  ///
-  /// Routes and Shells are made unavailable before the returned Future waits
-  /// for disposable Services. New resolutions fail immediately, active Scope
-  /// work receives cancellation, and disposal proceeds in reverse construction
-  /// order. This is not an authorization or logout API.
-  Future<void> deactivateComponent(String componentId) {
-    _ensureInitialized();
-    _requireComponent(componentId);
-    _componentActive[componentId] = false;
-    _routeRegistry.deactivateComponent(componentId);
-    _shellRegistry.deactivateComponent(componentId);
-    return _enqueueComponentTransition(componentId, () async {
-      // A queued activation may have run after this request closed the public
-      // entry points. Re-apply the requested terminal state when this
-      // transition owns the queue so call order remains authoritative.
-      _componentActive[componentId] = false;
-      _routeRegistry.deactivateComponent(componentId);
-      _shellRegistry.deactivateComponent(componentId);
-      final scope = _componentScopes[componentId];
-      if (scope == null || scope.state == CCScopeState.closed) return;
-      await scope.close();
-    });
-  }
-
-  /// Serializes transitions for one component without blocking other
-  /// components. A failed transition does not prevent the next explicit
-  /// lifecycle request from being attempted.
-  Future<void> _enqueueComponentTransition(
-    String componentId,
-    Future<void> Function() operation,
-  ) {
-    final previous = _componentTransitions[componentId];
-    final transition = () async {
-      if (previous != null) {
-        try {
-          await previous;
-        } catch (_) {
-          // The new request is an explicit lifecycle decision and may retry.
-        }
-      }
-      await operation();
-    }();
-    _componentTransitions[componentId] = transition;
-    void clearTransition() {
-      if (identical(_componentTransitions[componentId], transition)) {
-        _componentTransitions.remove(componentId);
-      }
-    }
-
-    transition.then<void>(
-      (_) => clearTransition(),
-      onError: (Object _, StackTrace __) => clearTransition(),
-    );
-    return transition;
-  }
-
-  /// Validates that [componentId] belongs to this Runtime.
-  void _requireComponent(String componentId) {
-    if (!_componentActive.containsKey(componentId)) {
-      throw CCRegistrationError('Unknown component "$componentId".');
-    }
-  }
-
-  /// Creates a unique Scope for one Component activation.
-  CCScope _newComponentScope(String componentId) =>
-      CCScope('component-$componentId-${++_componentScopeSequence}');
-
   /// Resolves the default or keyed service implementation for [T].
   ///
   /// [contract] selects the stable identity used after cross-package promotion;
@@ -1133,17 +1028,11 @@ final class CCRouterRuntime {
       _navigationAdapter?.dispose();
     } finally {
       _disposeNavigationObservations();
-      _componentActive.updateAll((componentId, _) => false);
-      await Future.wait(_componentTransitions.values);
-      await Future.wait(_componentScopes.values.map((scope) => scope.close()));
       await _sessionScope?.close();
       await appScope.close();
       _navigationAdapter = null;
       _sessionScope = null;
       _session = null;
-      _componentScopes.clear();
-      _componentActive.clear();
-      _componentTransitions.clear();
       _navigationListeners.clear();
       _navigationEvents.clear();
       _navigationFailureListeners.clear();
@@ -1185,19 +1074,9 @@ final class CCRouterRuntime {
         'An App service cannot depend on a narrower Service scope.',
       );
     }
-    if (ownerScope == CCServiceScope.session &&
-        provider.scope == CCServiceScope.component) {
-      throw const CCResolutionError(
-        'A Session service cannot depend on a Component service.',
-      );
-    }
     final parentScope = switch (ownerScope) {
       CCServiceScope.app => appScope,
       CCServiceScope.session => _sessionScope,
-      CCServiceScope.component =>
-        _componentActive[provider.ownerComponentId] == true
-            ? _componentScopes[provider.ownerComponentId]
-            : null,
       CCServiceScope.route || null => null,
     };
     final CCScope? scope;
@@ -1209,10 +1088,6 @@ final class CCRouterRuntime {
       scope = switch (provider.scope) {
         CCServiceScope.app => appScope,
         CCServiceScope.session => _sessionScope,
-        CCServiceScope.component =>
-          _componentActive[provider.ownerComponentId] == true
-              ? _componentScopes[provider.ownerComponentId]
-              : null,
         CCServiceScope.route => null,
       };
     }
@@ -1574,10 +1449,6 @@ final class CCRouterRuntime {
     final ids = byId.keys.toList()..sort();
     for (final id in ids) {
       visit(id);
-    }
-    for (final component in _components) {
-      _componentScopes[component.id] = _newComponentScope(component.id);
-      _componentActive[component.id] = true;
     }
     // Validate the entire dependency graph before executing any registrar.
     for (final component in _components) {

@@ -68,7 +68,11 @@ final class CCRouteAmbiguityError extends CCRouterError {
       );
 }
 
-/// Indicates that a route was found but its owning component is unavailable.
+/// Indicates that a registered route cannot serve the requested operation.
+///
+/// This covers operation-specific availability such as a typed external-origin
+/// request targeting a route that disables Deep Links, or a deferred request
+/// whose re-resolved target no longer matches its retained route identity.
 final class CCRouteUnavailableError extends CCRouterError {
   /// Creates an unavailable-route error for [routeId].
   const CCRouteUnavailableError(this.routeId)
@@ -286,11 +290,10 @@ final class CCCircularServiceDependencyError extends CCServiceError {
 
 /// Indicates that a Service requires a lifecycle Scope that is not active.
 ///
-/// The usual cases are resolving a Session-scoped Service before a Session is
-/// opened, or resolving a Component-scoped Service while its component is
-/// inactive or being deactivated. Callers should open or activate the required
-/// owner, or treat the capability as unavailable; retrying the same lookup
-/// without that lifecycle transition cannot make it succeed.
+/// The usual case is resolving a Session-scoped Service before a Session is
+/// opened or after its close has started. Callers should open the required
+/// Session or treat the capability as unavailable; retrying the same lookup
+/// without a lifecycle transition cannot make it succeed.
 final class CCServiceScopeUnavailableError extends CCServiceError {
   /// Creates a failure for the unavailable [scope].
   const CCServiceScopeUnavailableError(this.scope)

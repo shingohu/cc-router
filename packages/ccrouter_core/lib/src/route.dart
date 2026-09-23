@@ -2,10 +2,10 @@ part of 'runtime.dart';
 
 /// Stores a route definition together with its trusted component owner.
 ///
-/// The internal registry uses this record to apply component availability and
-/// ownership rules without accepting an owner supplied by component code.
+/// The internal registry uses this record to apply ownership rules without
+/// accepting an owner supplied by component code.
 final class _RegisteredRoute {
-  /// Creates an active route owned by [ownerComponentId].
+  /// Creates a route owned by [ownerComponentId].
   _RegisteredRoute({required this.ownerComponentId, required this.definition});
 
   /// Component ID captured from the component-bound Registry.
@@ -13,9 +13,6 @@ final class _RegisteredRoute {
 
   /// Type-erased definition retained by the Runtime route table.
   final CCRouteDefinition<dynamic, dynamic> definition;
-
-  /// Whether navigation may currently resolve this route.
-  bool active = true;
 }
 
 /// Captures parameters and specificity from one successful pattern match.
@@ -198,7 +195,7 @@ final class _RouteRegistry {
 
   /// Decodes a matched [location] through its generated route codec.
   Object decode(CCRouteLocation location, {Object? extra}) {
-    final route = _requireActiveRoute(location.routeId);
+    final route = _requireRoute(location.routeId);
     try {
       return route.definition.codec.decode(
             CCEncodedRouteArguments(
@@ -234,7 +231,7 @@ final class _RouteRegistry {
     CCNavigationOrigin origin = CCNavigationOrigin.internal,
     CCRoutePlacement? placementOverride,
   }) {
-    final route = _requireActiveRoute(intent.routeId);
+    final route = _requireRoute(intent.routeId);
     if (origin.isExternal &&
         route.definition.deepLink == CCDeepLinkPolicy.disabled) {
       throw CCRouteUnavailableError(intent.routeId);
@@ -282,7 +279,7 @@ final class _RouteRegistry {
     final uri = _parseLocation(location.toString());
     if (origin.isExternal) _validateDeepLinkIngress(uri);
     final resolved = _resolveUri(uri, external: origin.isExternal);
-    final route = _requireActiveRoute(resolved.routeId);
+    final route = _requireRoute(resolved.routeId);
     final arguments = decode(resolved);
     return _PreparedRoute(
       routeId: route.definition.routeId,
@@ -381,24 +378,17 @@ final class _RouteRegistry {
     if (external && route.definition.deepLink == CCDeepLinkPolicy.disabled) {
       throw CCDeepLinkRejectedError(selected.location.routeId);
     }
-    if (!route.active) {
-      throw CCRouteUnavailableError(selected.location.routeId);
-    }
-    _shellRegistry.ensureRouteAvailable(
-      selected.location.routeId,
-      route.definition.placement,
-    );
     return selected.location;
   }
 
-  /// Verifies a generated Intent targets an installed active route.
+  /// Verifies a generated Intent targets an installed route.
   void checkIntent(CCRouteIntent<Object?> intent) {
-    _requireActiveRoute(intent.routeId);
+    _requireRoute(intent.routeId);
   }
 
   /// Returns an installed route definition for Runtime interceptor dispatch.
   CCRouteDefinition<dynamic, dynamic> routeDefinition(String routeId) =>
-      _requireActiveRoute(routeId).definition;
+      _requireRoute(routeId).definition;
 
   /// Returns the canonical template used by safe telemetry snapshots.
   String routePattern(String routeId) {
@@ -421,23 +411,20 @@ final class _RouteRegistry {
     return routePattern(routeId);
   }
 
-  /// Returns an installed definition even when new navigation is deactivated.
+  /// Returns an installed definition for retained-entry lifecycle handling.
   ///
-  /// Existing Route Entries still need their Pop policy while a component is
-  /// inactive. This lookup never resolves a new request or bypasses placement
-  /// checks and remains internal to retained-entry lifecycle handling.
+  /// Existing Route Entries use this lookup for their Pop policy without
+  /// resolving a new request or repeating placement checks.
   CCRouteDefinition<dynamic, dynamic> retainedRouteDefinition(String routeId) {
     final route = _routes[routeId];
     if (route == null) throw CCRouteNotFoundError(routeId);
     return route.definition;
   }
 
-  /// Returns the installed active route identified by [routeId].
-  _RegisteredRoute _requireActiveRoute(String routeId) {
+  /// Returns the installed route identified by [routeId].
+  _RegisteredRoute _requireRoute(String routeId) {
     final route = _routes[routeId];
     if (route == null) throw CCRouteNotFoundError(routeId);
-    if (!route.active) throw CCRouteUnavailableError(routeId);
-    _shellRegistry.ensureRouteAvailable(routeId, route.definition.placement);
     return route;
   }
 
@@ -547,26 +534,6 @@ final class _RouteRegistry {
           );
         }
       }
-    }
-  }
-
-  /// Marks all routes owned by [componentId] unavailable.
-  ///
-  /// Component lifecycle orchestration uses this to reject new navigation; it
-  /// does not remove existing RouteEntries or unload compiled Dart code.
-  void deactivateComponent(String componentId) {
-    for (final route in _routes.values) {
-      if (route.ownerComponentId == componentId) route.active = false;
-    }
-  }
-
-  /// Reactivates all routes owned by [componentId].
-  ///
-  /// Component lifecycle orchestration uses this after the component and its
-  /// adapter bindings are ready to accept new navigation.
-  void activateComponent(String componentId) {
-    for (final route in _routes.values) {
-      if (route.ownerComponentId == componentId) route.active = true;
     }
   }
 

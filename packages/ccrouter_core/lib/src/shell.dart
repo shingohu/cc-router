@@ -2,7 +2,7 @@ part of 'runtime.dart';
 
 /// Stores a Shell definition together with its trusted component owner.
 final class _RegisteredShell {
-  /// Creates an active Shell owned by [ownerComponentId].
+  /// Creates a Shell owned by [ownerComponentId].
   _RegisteredShell({required this.ownerComponentId, required this.definition});
 
   /// Component ID captured from the component-bound Registry.
@@ -10,9 +10,6 @@ final class _RegisteredShell {
 
   /// Adapter-neutral Shell definition retained by Runtime.
   final CCShellDefinition definition;
-
-  /// Whether routes targeting this Shell may currently navigate.
-  bool active = true;
 }
 
 /// Registers and validates component-owned Shell contracts.
@@ -74,30 +71,6 @@ final class _ShellRegistry {
         'Route "$routeId" targets unknown Outlet '
         '"${placement.navigatorOutlet}" in Shell "$shellId".',
       );
-    }
-  }
-
-  /// Rejects navigation through an inactive Shell owner.
-  void ensureRouteAvailable(String routeId, CCRoutePlacement placement) {
-    final shellId = placement.shellId;
-    if (shellId == null) return;
-    final shell = _shells[shellId];
-    if (shell == null || !shell.active) {
-      throw CCRouteUnavailableError(routeId);
-    }
-  }
-
-  /// Marks all Shells owned by [componentId] available.
-  void activateComponent(String componentId) {
-    for (final shell in _shells.values) {
-      if (shell.ownerComponentId == componentId) shell.active = true;
-    }
-  }
-
-  /// Marks all Shells owned by [componentId] unavailable.
-  void deactivateComponent(String componentId) {
-    for (final shell in _shells.values) {
-      if (shell.ownerComponentId == componentId) shell.active = false;
     }
   }
 

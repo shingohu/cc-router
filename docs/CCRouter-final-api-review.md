@@ -122,9 +122,9 @@ Lifecycle/Aspect 伪造请求；该阶段由 Failure Event 承担。继续保持
 
 以下非路由能力统一列入架构 2.0 规划，需独立设计和验收，不作为路由 1.x 或 2.0 的必选依赖：
 
-- `CCServiceScope.component` / `route`；
+- `CCServiceScope.route`；
 - Service Token 与独立 contracts Package 的最终收敛；
-- 组件动态 activate/deactivate 对 Service、Handler、Scope 和依赖级联的完整语义；
+- 2.0 动态组件治理及其 Service、Handler、Scope、活跃 Route 和依赖级联语义；
 - CLI 创建组件、契约提升与迁移自动化。
 
 ## 8. 回归门槛

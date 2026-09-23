@@ -38,8 +38,8 @@ GoRoute。独立纯契约文件的拆分方案见[契约文件设计](CCRouter-r
 5. 路由注册、拦截、生命周期、埋点和诊断使用同一条调用链。
 6. 路由契约按组件和声明形态生成，不创建包含全部业务路由的全局 `Routes` 类。
 7. 生成机器可读及开发者可读的路由文档。
-8. 以组件所有权驱动 Route/Shell 的 `activateComponent` / `deactivateComponent`，并为未来
-   完整动态组件管理保留明确生命周期边界。
+8. 以组件所有权驱动 Route/Shell 的静态装配、契约校验和诊断，并把完整动态组件治理明确
+   留到 2.0 独立设计。
 
 ## 2. 非目标
 
@@ -597,18 +597,15 @@ order_component/lib/src/
 
 Dart 没有 package-private 或 friend package。`lib/src`、显式 export、`implementation_imports` lint、组件依赖检查和 CI 共同形成工程边界，但不是安全边界。真正的授权仍由 Runtime 和拦截器完成。
 
-### 9.3 动态组件关系
+### 9.3 组件所有权与 2.0 动态治理
 
-每个 Route Definition 必须记录 `ownerComponentId`。组件停用后：
+每个 Route Definition 必须记录 `ownerComponentId`，用于静态契约校验、诊断、Route Scope
+归属和后端装配。1.x 的组件集合在 Runtime 初始化时一次确定，不提供 Route/Shell 的运行时
+激活或停用，也不把登录、权限和 Feature Flag 建模为组件生命周期。
 
-- 新导航请求返回 `CCRouteUnavailableError`。
-- 已存在 RouteEntry 保持存活，不能因组件停用被静默销毁或猜测 Pop。
-- Runtime 已提供 Route 和 Shell 的 `activateComponent` / `deactivateComponent` 状态切换，
-  并按组件所有权执行一致校验。
-
-当前尚未提供面向应用的完整动态组件管理器，也不物理卸载 Registrar、Service、Handler、
-Adapter binding 或依赖图。完整安装/卸载语义属于后续组件生命周期设计，不能由业务直接
-操作隐藏的 Runtime API。
+完整动态组件治理属于 2.0 候选。它必须同时覆盖依赖级联、能力原子切换、活跃 RouteEntry
+协调、未完成调用取消，以及 Registrar、Service、Handler、订阅和诊断状态清理；不能用只切换
+Route/Shell 的局部状态冒充组件卸载。Flutter AOT 下也不承诺物理卸载 Dart 代码。
 
 ---
 
@@ -667,7 +664,7 @@ Route Interceptors
 Navigation Adapter
 ```
 
-组件激活、Route Registry 状态和参数校验属于 Runtime 前置检查，不形成第三层业务拦截器。
+Route Registry 状态和参数校验属于 Runtime 前置检查，不形成第三层业务拦截器。
 
 拦截结果使用明确语义：
 
@@ -697,7 +694,7 @@ cancel    终止导航，返回标准取消原因
 
 - 全局拦截器和组件路由级拦截器。
 - 异步 `proceed`、`cancel` 和 Typed Intent/URI `redirect`。
-- 登录、权限、Feature Flag、维护模式、首次引导和组件激活状态检查。
+- 登录、权限、Feature Flag、维护模式和首次引导。
 - `push`、`replace`、`go`、`reset` 和 `open` 的统一前置管线。
 - 保留原始 `navigationId`、`origin` 和 `source` 的重定向，以及最大重定向次数保护。
 
@@ -801,7 +798,7 @@ hostId + navigatorOutlet + operation + routeId + normalizedUri
 - 原始操作类型和结果完成通道。
 - 超时、Session 和 Runtime 生命周期状态。
 
-恢复流程必须重新执行路由解析、参数校验、组件激活检查和完整拦截器链，不能直接绕过策略进入页面。登录取消、恢复失败、Session 关闭、超时和 Runtime dispose 都必须清理待恢复导航；外部 Deep Link 的回跳目标还必须经过 Host 和 Deep Link 安全校验。
+恢复流程必须重新执行路由解析、参数校验和完整拦截器链，不能直接绕过策略进入页面。登录取消、恢复失败、Session 关闭、超时和 Runtime dispose 都必须清理待恢复导航；外部 Deep Link 的回跳目标还必须经过 Host 和 Deep Link 安全校验。
 
 该能力用于登录、权限提升、首次引导和其他需要用户完成前置流程的场景。简单应用可以继续手动传递 `returnTo`，但不能将其视为跨组件 Typed Intent 和返回值的完整替代方案。
 
@@ -894,8 +891,8 @@ Adapter 生命周期由 `CCRouterRuntime` 统一拥有。Adapter `initialize`、
 
 `CCRouter.initialize` 同样同步完成全局配置和启动组件注册。`CCRouter.shutdown` 仍为异步，
 因为它需要等待 Route/Session/App Scope、业务 Service dispose 和 Backend 自有资源。Session
-关闭、组件停用和单个 RouteEntry Pop 只影响各自的 Scope 或栈状态，不触发 Adapter
-dispose。GoRouter Adapter 自身不销毁 `GoRouter`，只清理绑定和 RouteEntry 状态；
+Session 关闭和单个 RouteEntry Pop 只影响各自的 Scope 或栈状态，不触发 Adapter dispose。
+GoRouter Adapter 自身不销毁 `GoRouter`，只清理绑定和 RouteEntry 状态；
 `CCGoRouterBackend.managed` 创建的 Router 在 Runtime 完成 Adapter dispose 后由 Backend
 释放，attach 模式下应用创建的 Router 始终由应用释放。
 
@@ -917,8 +914,8 @@ Tab、主从双栏或嵌套 Navigator 必须声明稳定的 `shellId`、`parentR
 `CCShellDefinition` 声明稳定的 `shellId`、Shell 类型、有序 Outlet 列表和默认
 Outlet。`CCShellType.singleNavigator` 对应一个共享历史的嵌套 Navigator；
 `CCShellType.statefulBranches` 对应多个保持独立历史的分支。Stateful Shell 的 Outlet
-顺序属于契约，必须与后端分支顺序一致。Shell 定义按组件保存所有权，组件停用时，
-所有指向该 Shell 的路由都会拒绝新的导航；现有页面不会因此自动 Pop。
+顺序属于契约，必须与后端分支顺序一致。Shell 定义按组件保存静态所有权，用于跨组件
+Placement 校验、诊断和后端装配，不表示 Shell 可以在 1.x 中独立停用。
 
 Runtime 在全部组件注册完成后统一验证 Route Placement，因此跨组件 Shell 引用不依赖
 Registrar 执行顺序。未知 Shell、未知 Outlet、重复 Outlet、无效默认 Outlet，以及把
@@ -1684,11 +1681,11 @@ Host/Outlet 分区的确定性 fallback，不跨 sibling Outlet。Pop 目标从�
   回退 root，且不进入 Core。
 - 各平台示例验证属于集成工作，不改变 Adapter 契约。
 
-### 阶段 E：动态组件生命周期
+### 阶段 E：动态组件治理（2.0 候选）
 
-- Route 和 Shell 已能按组件激活、停用，并拒绝停用组件的新导航。
-- 现有活跃 RouteEntry 不因组件停用被猜测 Pop。
-- Service、Handler、Scope 和依赖级联的完整动态卸载语义不属于本轮路由 API 冻结范围。
+- 1.x 只保留 Route 和 Shell 的静态组件所有权，不提供运行时激活、停用或卸载。
+- 2.0 只有在活跃 RouteEntry 协调、Service/Handler/订阅/诊断清理、依赖级联和原子切换
+  都形成可测试协议后，才重新评估动态组件能力。
 
 ---
 
@@ -1702,7 +1699,7 @@ Host/Outlet 分区的确定性 fallback，不跨 sibling Outlet。Pop 目标从�
 6. Path、Query 和 Extra 正确注入类型化页面参数。
 7. 同一路由打开两次时返回值和 Route Scope 不串联。
 8. Global Interceptor 先于 Route Interceptor，Redirect 保留来源并能检测循环。
-9. 未激活组件的路由不能导航。
+9. 未装配组件的路由不会进入 Runtime 路由表，导航返回稳定的未找到错误。
 10. Shell 非活动分支触发 hidden，但不销毁 Route Scope。
 11. Deep Link 必须同时通过 Host 白名单、路由 Deep Link Policy 和权限拦截器。
 12. 埋点记录来源、重定向链和安全字段，不泄漏 Extra 或完整 URI。

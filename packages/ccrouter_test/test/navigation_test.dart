@@ -3040,82 +3040,68 @@ void main() {
     },
   );
 
-  test(
-    'failure events classify parameters, component state, and adapter errors',
-    () async {
-      final contexts = <CCNavigationFailureContext>[];
-      final policy = TestNavigationFailurePolicy((context) {
-        contexts.add(context);
-        return const CCNavigationFailurePropagate();
-      });
-      final runtime = CCRouterRuntime.forTesting(
-        navigationAdapter: CCMemoryNavigationAdapter(),
-        navigationFailurePolicy: policy,
-        components: [
-          routeComponent(
-            'orders',
-            (registry) => registry.registerRoute(pathRoute()),
-          ),
-        ],
-      );
-      runtime.initialize();
-
-      await expectLater(
-        runtime.goRoute(
-          const TestIntent<void>('orders.detail', RouteArgs('invalid')),
+  test('failure events classify parameter and adapter errors', () async {
+    final contexts = <CCNavigationFailureContext>[];
+    final policy = TestNavigationFailurePolicy((context) {
+      contexts.add(context);
+      return const CCNavigationFailurePropagate();
+    });
+    final runtime = CCRouterRuntime.forTesting(
+      navigationAdapter: CCMemoryNavigationAdapter(),
+      navigationFailurePolicy: policy,
+      components: [
+        routeComponent(
+          'orders',
+          (registry) => registry.registerRoute(pathRoute()),
         ),
-        throwsA(isA<CCRouteParameterError>()),
-      );
-      await runtime.deactivateComponent('orders');
-      await expectLater(
-        runtime.goRoute(
-          const TestIntent<void>('orders.detail', RouteArgs('42')),
-        ),
-        throwsA(isA<CCRouteUnavailableError>()),
-      );
-      await runtime.dispose();
+      ],
+    );
+    runtime.initialize();
 
-      final failingRuntime = CCRouterRuntime.forTesting(
-        navigationAdapter: FailingNavigationAdapter(),
-        navigationFailurePolicy: policy,
-        components: [
-          routeComponent(
-            'orders',
-            (registry) => registry.registerRoute(pathRoute()),
-          ),
-        ],
-      );
-      failingRuntime.initialize();
-      await expectLater(
-        failingRuntime.goRoute(
-          const TestIntent<void>('orders.detail', RouteArgs('42')),
-        ),
-        throwsA(isA<CCNavigationAdapterError>()),
-      );
+    await expectLater(
+      runtime.goRoute(
+        const TestIntent<void>('orders.detail', RouteArgs('invalid')),
+      ),
+      throwsA(isA<CCRouteParameterError>()),
+    );
+    await runtime.dispose();
 
-      expect(contexts.map((context) => context.stage), [
-        CCNavigationFailureStage.parameters,
-        CCNavigationFailureStage.resolution,
-        CCNavigationFailureStage.dispatch,
-      ]);
-      expect(contexts.map((context) => context.routeId), [
-        'orders.detail',
-        'orders.detail',
-        'orders.detail',
-      ]);
-      expect(contexts.map((context) => context.initialRouteId), [
-        'orders.detail',
-        'orders.detail',
-        'orders.detail',
-      ]);
-      expect(contexts.map((context) => context.reason), [
-        CCNavigationFailureReason.invalidParameters,
-        CCNavigationFailureReason.routeUnavailable,
-        CCNavigationFailureReason.adapterFailed,
-      ]);
-      await failingRuntime.dispose();
-    },
-  );
+    final failingRuntime = CCRouterRuntime.forTesting(
+      navigationAdapter: FailingNavigationAdapter(),
+      navigationFailurePolicy: policy,
+      components: [
+        routeComponent(
+          'orders',
+          (registry) => registry.registerRoute(pathRoute()),
+        ),
+      ],
+    );
+    failingRuntime.initialize();
+    await expectLater(
+      failingRuntime.goRoute(
+        const TestIntent<void>('orders.detail', RouteArgs('42')),
+      ),
+      throwsA(isA<CCNavigationAdapterError>()),
+    );
+
+    expect(contexts.map((context) => context.stage), [
+      CCNavigationFailureStage.parameters,
+      CCNavigationFailureStage.dispatch,
+    ]);
+    expect(contexts.map((context) => context.routeId), [
+      'orders.detail',
+      'orders.detail',
+    ]);
+    expect(contexts.map((context) => context.initialRouteId), [
+      'orders.detail',
+      'orders.detail',
+    ]);
+    expect(contexts.map((context) => context.reason), [
+      CCNavigationFailureReason.invalidParameters,
+      CCNavigationFailureReason.adapterFailed,
+    ]);
+    await failingRuntime.dispose();
+  });
 
   test(
     'typed navigation rejects missing and unknown encoded Path parameters',
@@ -4036,7 +4022,7 @@ void main() {
   test(
     'failed deferred resume records a pending-resume failure attempt',
     () async {
-      var authorized = false;
+      var failResume = false;
       final runtime = CCRouterRuntime.forTesting(
         navigationAdapter: CCMemoryNavigationAdapter(),
         components: [
@@ -4044,8 +4030,8 @@ void main() {
             registry.registerRouteInterceptor(
               'orders.auth',
               TestNavigationInterceptor('orders.auth', (_) {
-                if (!authorized) return const CCNavigationDefer();
-                return const CCNavigationProceed();
+                if (!failResume) return const CCNavigationDefer();
+                throw StateError('resume failed');
               }, <String>[]),
             );
             registry.registerRoute(
@@ -4061,16 +4047,15 @@ void main() {
       pushed.then<void>((_) {}, onError: (Object _, StackTrace __) {});
       await Future<void>.delayed(Duration.zero);
       final pending = runtime.pendingNavigations.single;
-      await runtime.deactivateComponent('orders');
-      authorized = true;
+      failResume = true;
 
       await expectLater(
         runtime.resumePendingNavigation(pending.navigationId),
-        throwsA(isA<CCRouteUnavailableError>()),
+        throwsA(isA<CCNavigationInterceptorError>()),
       );
       final failure = runtime.recentNavigationFailures.last.context;
       expect(failure.attempt, CCNavigationFailureAttempt.pendingResume);
-      expect(failure.reason, CCNavigationFailureReason.routeUnavailable);
+      expect(failure.reason, CCNavigationFailureReason.interceptorFailed);
       await runtime.dispose();
     },
   );
@@ -4170,69 +4155,66 @@ void main() {
     },
   );
 
-  test(
-    'deferred resume revalidates active component state and closes timing',
-    () async {
-      var shouldDefer = true;
-      final phases = <CCNavigationAspectPhase>[];
-      final runtime = CCRouterRuntime.forTesting(
-        navigationAdapter: CCMemoryNavigationAdapter(),
-        navigationAspects: [
-          CCNavigationAspect(
-            id: 'resume-diagnostics',
-            onFound: (event) => phases.add(event.phase),
-            onLost: (event) {
-              phases.add(event.phase);
-              expect(event.elapsed, isNotNull);
-            },
-            onAfter: (event) {
-              phases.add(event.phase);
-              expect(event.elapsed, isNotNull);
-            },
-          ),
-        ],
-        components: [
-          routeComponent('orders', (registry) {
-            registry.registerRouteInterceptor(
-              'orders.defer',
-              TestNavigationInterceptor('orders.defer', (_) {
-                if (shouldDefer) {
-                  shouldDefer = false;
-                  return const CCNavigationDefer();
-                }
-                return const CCNavigationProceed();
-              }, []),
-            );
-            registry.registerRoute(pathRoute(interceptorIds: ['orders.defer']));
-          }),
-        ],
-      );
-      runtime.initialize();
-      final pushed = runtime.pushRoute<String>(
-        const TestIntent<String>('orders.detail', RouteArgs('42')),
-      );
-      await Future<void>.delayed(Duration.zero);
-      final pendingId = runtime.pendingNavigations.single.navigationId;
-      final pushedExpectation = expectLater(
-        pushed,
-        throwsA(isA<CCRouteUnavailableError>()),
-      );
-      await runtime.deactivateComponent('orders');
-      await expectLater(
-        runtime.resumePendingNavigation(pendingId),
-        throwsA(isA<CCRouteUnavailableError>()),
-      );
-      await pushedExpectation;
-      await Future<void>.delayed(Duration.zero);
-      expect(phases, [
-        CCNavigationAspectPhase.found,
-        CCNavigationAspectPhase.lost,
-        CCNavigationAspectPhase.after,
-      ]);
-      expect(runtime.pendingNavigations, isEmpty);
-      await runtime.dispose();
-    },
-  );
+  test('deferred resume failure closes navigation aspect timing', () async {
+    var shouldDefer = true;
+    final phases = <CCNavigationAspectPhase>[];
+    final runtime = CCRouterRuntime.forTesting(
+      navigationAdapter: CCMemoryNavigationAdapter(),
+      navigationAspects: [
+        CCNavigationAspect(
+          id: 'resume-diagnostics',
+          onFound: (event) => phases.add(event.phase),
+          onLost: (event) {
+            phases.add(event.phase);
+            expect(event.elapsed, isNotNull);
+          },
+          onAfter: (event) {
+            phases.add(event.phase);
+            expect(event.elapsed, isNotNull);
+          },
+        ),
+      ],
+      components: [
+        routeComponent('orders', (registry) {
+          registry.registerRouteInterceptor(
+            'orders.defer',
+            TestNavigationInterceptor('orders.defer', (_) {
+              if (shouldDefer) {
+                shouldDefer = false;
+                return const CCNavigationDefer();
+              }
+              throw StateError('resume failed');
+            }, []),
+          );
+          registry.registerRoute(pathRoute(interceptorIds: ['orders.defer']));
+        }),
+      ],
+    );
+    runtime.initialize();
+    final pushed = runtime.pushRoute<String>(
+      const TestIntent<String>('orders.detail', RouteArgs('42')),
+    );
+    await Future<void>.delayed(Duration.zero);
+    final pendingId = runtime.pendingNavigations.single.navigationId;
+    final pushedExpectation = expectLater(
+      pushed,
+      throwsA(isA<CCNavigationInterceptorError>()),
+    );
+    await expectLater(
+      runtime.resumePendingNavigation(pendingId),
+      throwsA(isA<CCNavigationInterceptorError>()),
+    );
+    await pushedExpectation;
+    await Future<void>.delayed(Duration.zero);
+    expect(phases, [
+      CCNavigationAspectPhase.found,
+      CCNavigationAspectPhase.found,
+      CCNavigationAspectPhase.lost,
+      CCNavigationAspectPhase.after,
+    ]);
+    expect(runtime.pendingNavigations, isEmpty);
+    await runtime.dispose();
+  });
 
   test(
     'pending navigation timeout and Runtime dispose release continuations',

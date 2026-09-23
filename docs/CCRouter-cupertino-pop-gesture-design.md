@@ -133,7 +133,7 @@ Observer 回调发生在 Route 状态变化之后，无法可靠阻止已经开�
 6. Foreign Popup、Overlay 和 LocalHistoryEntry 覆盖时不影响底层 Managed Route。
 7. Shell、StatefulShell、多 Outlet 和多 Host 使用正确的 Pop 目标。
 8. 系统返回、预测返回、AppBar 返回和右滑的触发来源可区分。
-9. Route 替换、组件停用、Host 注销和 Adapter dispose 后无残留 Pop Gate、Listener 或
+9. Route 替换、Host 注销和 Adapter dispose 后无残留 Pop Gate、Listener 或
    Route 引用。
 10. 动态能力不可用时，行为与当前“有 Guard 禁用侧滑”完全一致。
 
