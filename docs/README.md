@@ -14,6 +14,7 @@
 - [Service 生命周期设计](CCRouter-service-lifecycle-design.md)
 - [Service 实施计划](CCRouter-service-completion-plan.md)
 - [Command 设计与实施计划](CCRouter-command-design.md)
+- [Event 设计与实施计划](CCRouter-event-design.md)
 - [Action Pipeline 候选计划](CCRouter-action-pipeline-plan.md)
 
 生成器输出的应用路由目录不属于手写设计文档。当前 Demo 的聚合路由目录位于

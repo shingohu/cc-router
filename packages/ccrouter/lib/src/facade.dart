@@ -529,11 +529,17 @@ abstract final class CCRouter {
     CCCancellationToken? cancellation,
   }) => _runtime.command(command, timeout: timeout, cancellation: cancellation);
 
-  /// Publishes [event] to isolated subscribers and awaits their completion.
+  /// Publishes [event] concurrently and awaits matching subscribers.
   ///
   /// Use to announce an already completed fact without coupling the publisher
-  /// to subscriber results; subscriber failures are isolated diagnostics.
-  static Future<void> event(CCEvent event) => _runtime.event(event);
+  /// to subscriber results. Individual failures become isolated diagnostics;
+  /// caller cancellation, timeout, and Runtime shutdown still terminate the
+  /// publish operation. Publishing with no subscribers succeeds.
+  static Future<void> event(
+    CCEvent event, {
+    Duration? timeout,
+    CCCancellationToken? cancellation,
+  }) => _runtime.event(event, timeout: timeout, cancellation: cancellation);
 
   /// Opens one authenticated account Session.
   ///

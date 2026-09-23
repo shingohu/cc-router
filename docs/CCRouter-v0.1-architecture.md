@@ -385,7 +385,11 @@ abstract final class CCRouter {
   static bool hasService<T>({CCServiceToken<T>? contract, CCServiceKey<T>? key});
 
   static Future<R> command<R>(CCCommand<R> command);
-  static Future<void> event(CCEvent event);
+  static Future<void> event(
+    CCEvent event, {
+    Duration? timeout,
+    CCCancellationToken? cancellation,
+  });
 
   static void trigger(CCGate gate);
 }
@@ -860,15 +864,21 @@ Action Pipeline 不属于 1.x 基础能力。它只作为动态来源触发本�
 表示已经发生的事实，一对多发布，不能依赖订阅者返回业务结果：
 
 ```dart
-CCRouter.event(OrderCreatedEvent(order.id));
+await CCRouter.event(OrderCreatedEvent(order.id));
 ```
 
 v0.1 默认：
 
 - 不持久化、不重放。
-- 订阅者相互隔离，某个订阅者失败不阻塞其他订阅者。
+- 订阅者按稳定 ID 启动并发执行，发布 Future 等待当前投递完成。
+- 订阅者相互隔离，某个订阅者失败不阻塞其他订阅者，只形成脱敏、有界诊断。
+- 零订阅者成功；整体 timeout、cancellation 和 Runtime shutdown 向订阅者传播。
 - 需要当前状态时使用 Service/State，不使用 Sticky Event 模拟。
-- 订阅生命周期绑定 Scope。
+- 订阅只在组件静态装配时注册，生命周期等于 Runtime，不开放页面级动态订阅。
+- 每个订阅者有独立 Trace Span 和可信组件 Owner。
+
+完整边界、框架对比和使用示例见
+[Event 设计与实施计划](CCRouter-event-design.md)。
 
 ### 11.5 不同语义的边界
 
@@ -1039,7 +1049,7 @@ ContractVersionError
 ### 14.2 取消和 Deadline
 
 - 异步跨组件调用必须支持取消和 Deadline。
-- Cancellation 向下游 Service、Command、Native Bridge 传播。
+- Cancellation 向下游 Service、Command、Event Subscriber 和 Native Bridge 传播。
 - Scope 关闭自动取消该 Scope 的未完成调用。
 - 取消与业务失败必须区分。
 
@@ -1050,7 +1060,7 @@ ContractVersionError
 - 初始化 Single-flight。
 - Command 幂等键和请求去重。
 - 最大调用深度和循环检测。
-- Event 订阅者的并行/串行策略。
+- Event 订阅者采用确定性启动、并发完成策略。
 - 重试次数、退避和不可重试错误声明。
 
 ---
@@ -1255,10 +1265,11 @@ CCRouter.diagnostics.exportReport();
 10. 一个可选组件初始化失败时，关键组件仍可继续启动。
 11. Event 某个订阅者失败，不影响其他订阅者。
 12. Command 超时或取消能向下游传播，并产生完整 Trace。
-13. Mock 覆盖不修改组件业务代码，测试结束后全局状态恢复。
-14. 一次下单操作可以还原 Route、Command、Service、Native 调用链。
-15. 两个 Test Runtime 同时运行时互不污染。
-16. 全部核心 API 在没有 `BuildContext` 的纯 Dart 测试中可调用。
+13. Event timeout、取消和 Runtime shutdown 能传播到 Subscriber 且不产生伪失败诊断。
+14. Mock 覆盖不修改组件业务代码，测试结束后全局状态恢复。
+15. 一次下单操作可以还原 Route、Command、Service、Native 调用链。
+16. 两个 Test Runtime 同时运行时互不污染。
+17. 全部核心 API 在没有 `BuildContext` 的纯 Dart 测试中可调用。
 
 ---
 
@@ -1268,7 +1279,6 @@ CCRouter.diagnostics.exportReport();
 
 - Route Contract 与 Widget Factory 的实现验证，语义以路由子系统设计为准。
 - `navigate` 的 push/replace/reset 参数模型。
-- Event 的默认并行/串行策略。
 - Service Proxy 的方法拦截生成范围；1.x 只保留已验证的 Runtime primitive 和
   Demo 形态样例，自动 metadata/Proxy 等达到量化阈值后再实施。
 - 多 Navigator Outlet 的声明方式。

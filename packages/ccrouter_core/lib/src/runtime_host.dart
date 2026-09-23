@@ -219,7 +219,7 @@ final class CCRouterRuntime {
   final Map<Type, _RegisteredCommandHandler> _commands = {};
 
   /// Event subscribers indexed by event type and stable subscriber identifier.
-  final Map<Type, Map<String, _Handler>> _events = {};
+  final Map<Type, Map<String, _RegisteredEventSubscriber>> _events = {};
 
   /// Component-owned Shell definitions indexed by stable Shell ID.
   final _ShellRegistry _shellRegistry = _ShellRegistry();
@@ -710,10 +710,17 @@ final class CCRouterRuntime {
     String id,
     CCHandler<E, void> handler,
   ) {
-    _registerMultiple(_events, E, id, (message, context) async {
-      await handler(message as E, context);
-      return null;
-    });
+    _registerEventSubscriber(
+      E,
+      _RegisteredEventSubscriber(
+        id: id,
+        ownerComponentId: ownerComponentId,
+        callback: (message, context) async {
+          await handler(message as E, context);
+          return null;
+        },
+      ),
+    );
   }
 
   /// Registers a route directly for low-level Runtime tests.
@@ -1275,26 +1282,51 @@ final class CCRouterRuntime {
     CCCancellationToken? cancellation,
   }) => _dispatch<R>('command', command, _commands, timeout, cancellation);
 
-  /// Publishes [event] concurrently while isolating subscriber failures.
-  Future<void> event(CCEvent event) =>
-      _invoke('event', event.runtimeType.toString(), (context) async {
-        final handlers = _sortedHandlers(_events[event.runtimeType]);
+  /// Publishes [event] concurrently and awaits all matching subscribers.
+  ///
+  /// A subscriber failure is isolated and recorded as a sanitized bounded
+  /// diagnostic. Caller cancellation, an expired deadline, or Runtime shutdown
+  /// still terminates the publish operation and propagates cooperative
+  /// cancellation to subscriber contexts. Publishing with no subscribers is a
+  /// successful no-op that remains visible in Trace.
+  Future<void> event(
+    CCEvent event, {
+    Duration? timeout,
+    CCCancellationToken? cancellation,
+  }) {
+    final publisherComponentId =
+        _parentContext?.targetComponentId ?? _parentContext?.callerComponentId;
+    return _invoke(
+      'event',
+      event.runtimeType.toString(),
+      (context) async {
+        final subscribers = _sortedEventSubscribers(_events[event.runtimeType]);
         await Future.wait(
-          handlers.map((handler) async {
+          subscribers.map((subscriber) async {
             try {
-              await handler(event, context);
+              await _invoke<void>(
+                'eventSubscriber',
+                '${event.runtimeType}.${subscriber.id}',
+                (subscriberContext) async {
+                  await subscriber.callback(event, subscriberContext);
+                },
+                callerComponentId: context.callerComponentId,
+                targetComponentId: subscriber.ownerComponentId.isEmpty
+                    ? null
+                    : subscriber.ownerComponentId,
+              );
             } catch (error) {
-              if (traceCapacity > 0) {
-                if (_subscriberErrors.length == traceCapacity)
-                  _subscriberErrors.removeAt(0);
-                _subscriberErrors.add(
-                  CCInvocationError('Subscriber failed: ${error.runtimeType}'),
-                );
-              }
+              if (_isEventPublishTermination(error, context)) rethrow;
+              _recordSubscriberError(subscriber.id, error);
             }
           }),
         );
-      });
+      },
+      timeout: timeout,
+      cancellation: cancellation,
+      callerComponentId: publisherComponentId,
+    );
+  }
 
   /// Opens an authenticated account Session and creates its owning Scope.
   void openSession({
@@ -1933,11 +1965,13 @@ final class CCRouterRuntime {
     required String methodId,
   }) => key == null ? '$contractId.$methodId' : '$contractId.$key.$methodId';
 
-  /// Returns handlers sorted by their stable identifiers.
-  List<_Handler> _sortedHandlers(Map<String, _Handler>? handlers) {
-    if (handlers == null) return [];
-    final ids = handlers.keys.toList()..sort();
-    return ids.map((id) => handlers[id]!).toList();
+  /// Returns Event subscribers sorted by stable identity before concurrent start.
+  List<_RegisteredEventSubscriber> _sortedEventSubscribers(
+    Map<String, _RegisteredEventSubscriber>? subscribers,
+  ) {
+    if (subscribers == null) return [];
+    final ids = subscribers.keys.toList()..sort();
+    return ids.map((id) => subscribers[id]!).toList();
   }
 
   /// Inserts one type-indexed handler and rejects duplicate types.
@@ -1952,19 +1986,41 @@ final class CCRouterRuntime {
     registry[type] = handler;
   }
 
-  /// Inserts one ID-indexed handler and rejects empty or duplicate IDs.
-  void _registerMultiple(
-    Map<Type, Map<String, _Handler>> registry,
+  /// Inserts one Event subscriber and rejects empty or globally duplicate IDs.
+  void _registerEventSubscriber(
     Type type,
-    String id,
-    _Handler handler,
+    _RegisteredEventSubscriber subscriber,
   ) {
     _ensureConfigurable();
-    if (id.isEmpty ||
-        registry.values.any((handlers) => handlers.containsKey(id))) {
-      throw CCRegistrationError('Empty or duplicate handler ID "$id".');
+    if (subscriber.id.isEmpty ||
+        _events.values.any(
+          (subscribers) => subscribers.containsKey(subscriber.id),
+        )) {
+      throw CCRegistrationError(
+        'Empty or duplicate subscriber ID "${subscriber.id}".',
+      );
     }
-    registry.putIfAbsent(type, () => {})[id] = handler;
+    _events.putIfAbsent(type, () => {})[subscriber.id] = subscriber;
+  }
+
+  /// Whether [error] represents termination of the enclosing Event publish.
+  bool _isEventPublishTermination(Object error, CCInvocationContext context) =>
+      error is CCInvocationCancelledError && context.cancellation.isCancelled ||
+      error is CCInvocationTimeoutError &&
+          context.deadline != null &&
+          !context.deadline!.isAfter(DateTime.now());
+
+  /// Records a sanitized Event subscriber failure in the bounded diagnostics.
+  void _recordSubscriberError(String subscriberId, Object error) {
+    if (traceCapacity == 0) return;
+    if (_subscriberErrors.length == traceCapacity) {
+      _subscriberErrors.removeAt(0);
+    }
+    _subscriberErrors.add(
+      CCInvocationError(
+        'Subscriber "$subscriberId" failed: ${error.runtimeType}.',
+      ),
+    );
   }
 
   /// Validates and deterministically orders host-provided global interceptors.

@@ -7,6 +7,10 @@ import 'package:test/test.dart';
 
 final class ReadOnce implements CCCommand<String> {}
 
+final class NotifyFacade implements CCCommand<void> {}
+
+final class FacadeChanged implements CCEvent {}
+
 final class CommandRegistrar implements CCComponentRegistrar {
   const CommandRegistrar(this.value);
 
@@ -15,6 +19,10 @@ final class CommandRegistrar implements CCComponentRegistrar {
   @override
   void register(CCRegistry registry) {
     registry.registerCommand<ReadOnce, String>((_, _) => value);
+    registry.registerCommand<NotifyFacade, void>(
+      (_, _) => CCRouter.event(FacadeChanged()),
+    );
+    registry.registerEvent<FacadeChanged>('facade.changed', (_, _) {});
   }
 }
 
@@ -110,6 +118,12 @@ void main() {
     expect(CCRouter.isInitialized, isTrue);
     expect(await CCRouter.command(ReadOnce()), 'owned');
     expect(CCRouter.recentTraces.single.context.targetComponentId, 'default');
+    await CCRouter.command(NotifyFacade());
+    final subscriberTrace = CCRouter.recentTraces.singleWhere(
+      (trace) => trace.operation == 'eventSubscriber',
+    );
+    expect(subscriberTrace.context.callerComponentId, 'default');
+    expect(subscriberTrace.context.targetComponentId, 'default');
     expect(CCRouter.registeredComponents.single.id, 'default');
 
     await CCRouter.shutdown();

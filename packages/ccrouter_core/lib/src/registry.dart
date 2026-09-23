@@ -44,6 +44,29 @@ final class _RegisteredCommandHandler {
   final _Handler callback;
 }
 
+/// Stores one Event subscriber with its stable identity and component owner.
+///
+/// Subscriber identity determines deterministic start order and safe Trace
+/// targets. Ownership comes from the component-bound registry, never business
+/// input.
+final class _RegisteredEventSubscriber {
+  /// Creates an internally owned Event subscription.
+  const _RegisteredEventSubscriber({
+    required this.id,
+    required this.ownerComponentId,
+    required this.callback,
+  });
+
+  /// Globally stable subscriber identity.
+  final String id;
+
+  /// Component that registered the subscriber, or empty for low-level tests.
+  final String ownerComponentId;
+
+  /// Type-erased callback invoked for a matching Event.
+  final _Handler callback;
+}
+
 /// Registration-only surface supplied to component registrars.
 ///
 /// It intentionally exposes no resolution, dispatch, Session, or shutdown API.
@@ -62,7 +85,9 @@ abstract interface class CCRegistry {
 
   /// Registers an event subscriber under the globally stable [id].
   ///
-  /// Use for independent listeners reacting to an already completed fact.
+  /// Use for independent listeners reacting to an already completed fact. The
+  /// ID must be unique across the Runtime and should remain stable for Trace and
+  /// diagnostics. Subscribers are installed for the Runtime lifetime.
   void registerEvent<E extends CCEvent>(String id, CCHandler<E, void> handler);
 
   /// Registers a route definition owned by the current component.

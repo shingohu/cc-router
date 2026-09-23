@@ -27,6 +27,8 @@ final class Refresh implements CCCommand<void> {}
 
 final class Changed implements CCEvent {}
 
+final class OtherChanged implements CCEvent {}
+
 final class ReadyA {}
 
 final class ReadyB {}
@@ -803,8 +805,113 @@ void main() {
         runtime.subscriberErrors.single.message,
         isNot(contains('private details')),
       );
+      expect(
+        runtime.recentTraces
+            .where((trace) => trace.operation == 'eventSubscriber')
+            .map((trace) => trace.status),
+        containsAll(<String>['failed', 'succeeded']),
+      );
     },
   );
+
+  test('Event subscribers start concurrently in stable ID order', () async {
+    final starts = <String>[];
+    final firstStarted = Completer<void>();
+    final secondStarted = Completer<void>();
+    final release = Completer<void>();
+    runtime.registerEvent<Changed>('b', (_, _) async {
+      starts.add('b');
+      secondStarted.complete();
+      await release.future;
+    });
+    runtime.registerEvent<Changed>('a', (_, _) async {
+      starts.add('a');
+      firstStarted.complete();
+      await release.future;
+    });
+    runtime.initialize();
+
+    final publish = runtime.event(Changed());
+    await Future.wait([firstStarted.future, secondStarted.future]);
+    expect(starts, ['a', 'b']);
+    release.complete();
+    await publish;
+  });
+
+  test('Event with no subscribers succeeds and remains traceable', () async {
+    runtime.initialize();
+
+    await runtime.event(Changed());
+
+    expect(runtime.recentTraces.single.operation, 'event');
+    expect(runtime.recentTraces.single.status, 'succeeded');
+  });
+
+  test(
+    'Event timeout cancels subscriber contexts without failure noise',
+    () async {
+      late CCInvocationContext subscriberContext;
+      runtime.registerEvent<Changed>('slow', (_, context) async {
+        subscriberContext = context;
+        await context.cancellation.whenCancelled;
+      });
+      runtime.initialize();
+
+      await expectLater(
+        runtime.event(Changed(), timeout: const Duration(milliseconds: 10)),
+        throwsA(isA<CCInvocationTimeoutError>()),
+      );
+
+      expect(subscriberContext.cancellation.isCancelled, isTrue);
+      expect(runtime.subscriberErrors, isEmpty);
+    },
+  );
+
+  test('Event caller cancellation reaches pending subscribers', () async {
+    final started = Completer<void>();
+    late CCInvocationContext subscriberContext;
+    runtime.registerEvent<Changed>('pending', (_, context) async {
+      subscriberContext = context;
+      started.complete();
+      await context.cancellation.whenCancelled;
+    });
+    runtime.initialize();
+    final cancellation = CCCancellationToken();
+    final publish = runtime.event(Changed(), cancellation: cancellation);
+    await started.future;
+
+    cancellation.cancel();
+
+    await expectLater(publish, throwsA(isA<CCInvocationCancelledError>()));
+    expect(subscriberContext.cancellation.isCancelled, isTrue);
+    expect(runtime.subscriberErrors, isEmpty);
+  });
+
+  test('Runtime disposal cancels pending Event delivery', () async {
+    final started = Completer<void>();
+    runtime.registerEvent<Changed>('pending', (_, context) async {
+      started.complete();
+      await context.cancellation.whenCancelled;
+    });
+    runtime.initialize();
+    final publish = runtime.event(Changed());
+    await started.future;
+
+    final disposed = runtime.dispose();
+
+    await expectLater(publish, throwsA(isA<CCInvocationCancelledError>()));
+    await disposed;
+    expect(runtime.subscriberErrors, isEmpty);
+  });
+
+  test('Event subscriber IDs are globally unique', () {
+    runtime.registerEvent<Changed>('shared', (_, _) {});
+
+    expect(
+      () => runtime.registerEvent<OtherChanged>('shared', (_, _) {}),
+      throwsA(isA<CCRegistrationError>()),
+    );
+  });
 
   test('trace buffer is bounded and can be disabled', () async {
     final bounded = CCRouterRuntime.forTesting(traceCapacity: 1);

@@ -2,7 +2,7 @@ import 'dart:async';
 
 /// Propagates cooperative cancellation through an invocation chain.
 ///
-/// Pass a token when a caller needs to cancel pending Command or Query work;
+/// Pass a token when a caller needs to cancel pending Command or Event work;
 /// handlers should observe it instead of assuming cancellation stops Dart code.
 final class CCCancellationToken {
   /// Creates a token in the non-cancelled state.
