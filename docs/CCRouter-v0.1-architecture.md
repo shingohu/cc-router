@@ -1273,7 +1273,8 @@ CCRouter.diagnostics.exportReport();
 - Route Contract 与 Widget Factory 的实现验证，语义以路由子系统设计为准。
 - `navigate` 的 push/replace/reset 参数模型。
 - Event 的默认并行/串行策略。
-- Service Proxy 的方法拦截生成范围。
+- Service Proxy 的方法拦截生成范围；1.x 只保留已验证的 Runtime primitive 和
+  Demo 形态样例，自动 metadata/Proxy 等达到量化阈值后再实施。
 - 多 Navigator Outlet 的声明方式。
 - Trace 采样、上报和与后端 OpenTelemetry 的关联方式。
 - Native Adapter、Isolate Adapter 的 Envelope Schema。

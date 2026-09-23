@@ -110,11 +110,21 @@ Session Scope 均返回稳定的 Service 错误子类型；缺失命名实现会
   取消，因为其实例不与其他等待者共享。
 - 初始化错误只记录 Service identity 与 error type，不保留业务错误消息、参数或返回对象。
 
-### 4.5 生成器与 CLI
+### 4.5 生成器与 CLI（1.x 评估完成）
 
 - Service Registrar 先保持手动维护，避免为低频变化的能力增加生成冲突。
-- 只有在跨 Package Service 契约数量和手动错误达到可量化阈值后，才设计 Service metadata、
-  Proxy 和 Host 聚合生成。
+- 当前样本只有 1 个跨 Package Service Contract、1 个方法和 2 个消费方 Proxy；
+  两个 Proxy 合计 36 行，真实差异只有 caller component identity。这足以验证
+  Runtime 形态，但不足以在 1.x 冻结一套 Service 注解和 metadata 协议。
+- 1.x 跨组件稳定入口仍是独立 contracts Package 中的接口和 Token，消费方可通过
+  `CCRouter.service(contract: ...)` 直接获取强类型实现。Demo 手写 Proxy 只是生成形态
+  验证夹具，不是推荐的长期开发流程。
+- 自动 Service Proxy 在出现以下任一真实信号后重新评估：至少 3 个 promoted
+  Contract 且 5 个消费关系；同一 Contract 被至少 3 个组件消费；或者已出现
+  method ID、caller identity 或方法签名漂移缺陷。
+- 达到阈值后，消费组件必须显式声明自己使用的 Contract，生成器据此输出调用方
+  Proxy。不允许从 Package 依赖猜测所有 Service，也不允许运行时传入可伪造的
+  caller component ID。
 - CLI 2.0 再考虑契约提升、Override、迁移和一键校验。
 
 ## 5. 验收门槛
