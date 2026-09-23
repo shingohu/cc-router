@@ -17,14 +17,32 @@ typedef CCServiceInitializer<T> =
 
 /// Handles a typed message [M] and returns a synchronous or asynchronous [R].
 ///
-/// Use handlers in component registration for Command, Query, Action, and Event
-/// processing; business callers dispatch messages through `CCRouter` instead.
+/// Use handlers in component registration for Command and Event processing;
+/// business callers dispatch messages through `CCRouter` instead.
 typedef CCHandler<M, R> =
     FutureOr<R> Function(M message, CCInvocationContext context);
 
 /// Type-erased handler stored by the internal dispatcher.
 typedef _Handler =
     FutureOr<Object?> Function(Object message, CCInvocationContext context);
+
+/// Stores a type-erased Command handler with its trusted component owner.
+///
+/// The Runtime creates this record only from component-bound registration. An
+/// empty owner identifies low-level test registration and is omitted from Trace.
+final class _RegisteredCommandHandler {
+  /// Creates an internally owned Command registration.
+  const _RegisteredCommandHandler({
+    required this.ownerComponentId,
+    required this.callback,
+  });
+
+  /// Component that registered the handler, or empty for low-level tests.
+  final String ownerComponentId;
+
+  /// Type-erased callback invoked by the Command dispatcher.
+  final _Handler callback;
+}
 
 /// Registration-only surface supplied to component registrars.
 ///
@@ -41,19 +59,6 @@ abstract interface class CCRegistry {
   ///
   /// Use when exactly one component owns a side-effecting operation.
   void registerCommand<C extends CCCommand<R>, R>(CCHandler<C, R> handler);
-
-  /// Registers the single handler for query type [Q].
-  ///
-  /// Use when exactly one component owns a side-effect-free read operation.
-  void registerQuery<Q extends CCQuery<R>, R>(CCHandler<Q, R> handler);
-
-  /// Registers an action handler under the globally stable [id].
-  ///
-  /// Use when multiple components may handle an explicitly requested action.
-  void registerAction<A extends CCAction>(
-    String id,
-    CCHandler<A, void> handler,
-  );
 
   /// Registers an event subscriber under the globally stable [id].
   ///
@@ -117,21 +122,6 @@ final class _CCComponentRegistry implements CCRegistry {
   @override
   void registerCommand<C extends CCCommand<R>, R>(CCHandler<C, R> handler) {
     runtime._registerCommandForComponent(ownerComponentId, handler);
-  }
-
-  /// Registers a query on behalf of the owning component.
-  @override
-  void registerQuery<Q extends CCQuery<R>, R>(CCHandler<Q, R> handler) {
-    runtime._registerQueryForComponent(ownerComponentId, handler);
-  }
-
-  /// Registers an action on behalf of the owning component.
-  @override
-  void registerAction<A extends CCAction>(
-    String id,
-    CCHandler<A, void> handler,
-  ) {
-    runtime._registerActionForComponent(ownerComponentId, id, handler);
   }
 
   /// Registers an event subscriber on behalf of the owning component.

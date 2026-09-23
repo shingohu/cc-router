@@ -520,28 +520,14 @@ abstract final class CCRouter {
 
   /// Dispatches [command] to its single handler.
   ///
-  /// Use for one-to-one operations that intentionally change business state.
+  /// Use for one-to-one operations with one owning handler. `CCCommand<void>`
+  /// reports completion or failure without a business result; repeatable reads
+  /// and long-lived capabilities belong on a Service instead.
   static Future<R> command<R>(
     CCCommand<R> command, {
     Duration? timeout,
     CCCancellationToken? cancellation,
   }) => _runtime.command(command, timeout: timeout, cancellation: cancellation);
-
-  /// Dispatches [query] to its single handler.
-  ///
-  /// Use for one-to-one reads that should not intentionally change state.
-  static Future<R> query<R>(
-    CCQuery<R> query, {
-    Duration? timeout,
-    CCCancellationToken? cancellation,
-  }) => _runtime.query(query, timeout: timeout, cancellation: cancellation);
-
-  /// Dispatches [action] to its handlers in stable identifier order.
-  ///
-  /// Use when multiple components may participate and the caller must await a
-  /// deterministic aggregate completion report.
-  static Future<CCActionReport> action(CCAction action) =>
-      _runtime.action(action);
 
   /// Publishes [event] to isolated subscribers and awaits their completion.
   ///

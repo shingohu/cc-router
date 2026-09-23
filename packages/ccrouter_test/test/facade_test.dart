@@ -5,16 +5,16 @@ import 'package:ccrouter/ccrouter_host.dart';
 import 'package:ccrouter_core/ccrouter_core.dart';
 import 'package:test/test.dart';
 
-final class Read implements CCQuery<String> {}
+final class ReadOnce implements CCCommand<String> {}
 
-final class QueryRegistrar implements CCComponentRegistrar {
-  const QueryRegistrar(this.value);
+final class CommandRegistrar implements CCComponentRegistrar {
+  const CommandRegistrar(this.value);
 
   final String value;
 
   @override
   void register(CCRegistry registry) {
-    registry.registerQuery<Read, String>((_, _) => value);
+    registry.registerCommand<ReadOnce, String>((_, _) => value);
   }
 }
 
@@ -91,7 +91,7 @@ final class FacadeRouteRegistrar implements CCComponentRegistrar {
 CCComponentManifest component(String id, String value) => CCComponentManifest(
   id: id,
   version: '0.1.0',
-  registrar: QueryRegistrar(value),
+  registrar: CommandRegistrar(value),
 );
 
 void main() {
@@ -108,7 +108,8 @@ void main() {
   test('facade creates, owns, and shuts down the default Runtime', () async {
     CCRouter.initialize(components: [component('default', 'owned')]);
     expect(CCRouter.isInitialized, isTrue);
-    expect(await CCRouter.query(Read()), 'owned');
+    expect(await CCRouter.command(ReadOnce()), 'owned');
+    expect(CCRouter.recentTraces.single.context.targetComponentId, 'default');
     expect(CCRouter.registeredComponents.single.id, 'default');
 
     await CCRouter.shutdown();
@@ -116,7 +117,7 @@ void main() {
 
     expect(CCRouter.isInitialized, isFalse);
     expect(
-      () => CCRouter.query(Read()),
+      () => CCRouter.command(ReadOnce()),
       throwsA(isA<CCRouterNotInitializedError>()),
     );
   });
@@ -130,7 +131,7 @@ void main() {
 
     await CCRouter.shutdown();
     CCRouter.initialize(components: [component('b', 'b')]);
-    expect(await CCRouter.query(Read()), 'b');
+    expect(await CCRouter.command(ReadOnce()), 'b');
   });
 
   test('facade resolves a promoted service through its stable token', () async {

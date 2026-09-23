@@ -156,7 +156,7 @@ return const CCNavigationFailurePropagate();
 | `go` / `reset` / `open` | 共享异步 Interceptor、Failure Policy、Adapter 和观察终态管线 |
 | `resumePendingNavigation` | 必须重新执行解析、异步拦截和 Adapter dispatch |
 | Interceptor / Failure Policy | `FutureOr` 同时支持本地同步策略和登录、权限、远端配置等异步策略 |
-| Command / Query / Action / Event | Handler 可异步，并支持 timeout、cancellation、并发 subscriber |
+| Command / Event | Handler 可异步；Command 支持 timeout/cancellation，Event 支持并发 subscriber |
 | `closeSession` / Runtime `dispose` / Scope `close` | 必须等待 `CCDisposable`、Route Scope、Adapter/Backend 的有序释放 |
 | Generator Builder 与 Package 扫描 | Analyzer、BuildStep 和文件 I/O 本身异步 |
 

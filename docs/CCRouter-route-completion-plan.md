@@ -17,7 +17,7 @@ Flutter Facade、GoRouter Adapter、路由 Generator、Demo 路由接入、测�
 以下内容不在本轮范围内：
 
 - CI、发布流水线和远端自动化；
-- Service、Command、Query、Event 等非路由能力扩展；
+- Service、Command、Event 等非路由能力扩展；
 - 接管第三方 Overlay 或未提供观察信号的独立导航系统；
 - 为不具备原子能力的后端伪造一致性保证。
 

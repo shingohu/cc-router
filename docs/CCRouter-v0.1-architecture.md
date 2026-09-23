@@ -41,7 +41,7 @@ CCRouter 的目标不是再提供一个单纯的路由库，而是提供一套�
 - URL/Path 方式的页面寻址和 Deep Link。
 - 页面导航的类型化返回结果。
 - 强类型 Service 注册、发现、多实现和作用域管理。
-- Command、Query、Action、Event 四类通信语义。
+- Command 请求/响应与 Event 事实通知两类通信语义。
 - 同步或异步请求响应、超时、取消和标准错误。
 - 全局及局部拦截器和可追踪调用链。
 - 初始化任务 DAG、自定义 Gate 和失败策略。
@@ -64,7 +64,7 @@ CCRouter 的目标不是再提供一个单纯的路由库，而是提供一套�
 
 ## 3. 核心设计原则
 
-1. **契约优先**：对外暴露的是稳定的 Route、Service、Command、Query、Action 和 Event 契约。
+1. **契约优先**：对外暴露的是稳定的 Route、Service、Command 和 Event 契约。
 2. **语义分离**：页面导航、能力调用、请求响应和事实通知不能被压缩成一个万能接口。
 3. **生成优先**：注册表、代理、参数 Codec 和检查结果尽量在编译/生成阶段确定。
 4. **显式生命周期**：实例属于明确 Scope，Scope 关闭时由 Runtime 统一回收。
@@ -174,8 +174,8 @@ Active Runtime Resolver
 CCRouterRuntime
 ├── Route Registry / Navigation Adapter
 ├── Service Registry / Generated Proxy
-├── Command / Query Dispatcher
-├── Action Dispatcher / Event Bus
+├── Command Dispatcher
+├── Event Publisher
 ├── Scope / Lifecycle Manager
 ├── Initialization DAG / Gate Manager
 └── Tracing / Diagnostics
@@ -246,7 +246,7 @@ dependencies:
 业务工程只允许依赖和导入 `package:ccrouter/ccrouter.dart`。门面包公开以下类型：
 
 - `CCRouter` 静态业务 API。
-- Command、Query、Action、Event、Session、错误和取消等契约类型。
+- Command、Event、Session、错误和取消等契约类型。
 - `CCComponentManifest`、`CCComponentRegistrar`、`CCRegistry` 和 Provider 等组件作者 API。
 - 稳定的只读诊断记录类型。
 
@@ -266,11 +266,11 @@ dependencies:
 
 ### 5.2 Contract
 
-契约是组件之间依赖的稳定 API。契约可以是接口、不可变参数对象、结果对象、Route 描述、Command、Query、Action 或 Event 类型。
+契约是组件之间依赖的稳定 API。契约可以是接口、不可变参数对象、结果对象、Route 描述、Command 或 Event 类型。
 
 ### 5.3 Capability
 
-Capability 是可以被 Runtime 发现和调用的能力，包含 Route、Service Provider、Command Handler、Query Handler、Action Handler、Event Subscriber 和 InitTask。
+Capability 是可以被 Runtime 发现和调用的能力，包含 Route、Service Provider、Command Handler、Event Subscriber 和 InitTask。
 
 ### 5.4 Manifest
 
@@ -344,11 +344,9 @@ final order = await CCRouter.command(
   CreateOrderCommand(cartId: cartId),
 );
 
-final user = await CCRouter.query(CurrentUserQuery());
+final profile = CCRouter.service<ProfileService>().current;
 
-await CCRouter.action(ShowCampaignAction());
-
-CCRouter.event(OrderCreatedEvent(order.id));
+await CCRouter.event(OrderCreatedEvent(order.id));
 ```
 
 建议的正式门面如下：
@@ -387,9 +385,7 @@ abstract final class CCRouter {
   static bool hasService<T>({CCServiceToken<T>? contract, CCServiceKey<T>? key});
 
   static Future<R> command<R>(CCCommand<R> command);
-  static Future<R> query<R>(CCQuery<R> query);
-  static Future<CCActionReport> action(CCAction action);
-  static void event(CCEvent event);
+  static Future<void> event(CCEvent event);
 
   static void trigger(CCGate gate);
 }
@@ -413,7 +409,7 @@ abstract final class CCRouter {
 - 未初始化调用统一抛出 `CCRouterNotInitializedError`。
 - 默认 Runtime 存活期间再次调用 `initialize()` 抛出 `CCRouterAlreadyInitializedError`；必须先等待 `shutdown()` 完成。
 - 谁创建 Runtime，谁负责关闭它；正式 App 中所有权属于 `CCRouter`，隔离测试 Runtime 的所有权属于测试宿主。
-- `BuildContext` 不是 Runtime、Service、Command、Query、Action 或 Event 的必需参数。
+- `BuildContext` 不是 Runtime、Service、Command 或 Event 的必需参数。
 
 ### 6.2 导航适配器绑定
 
@@ -842,34 +838,24 @@ final order = await CCRouter.command(
 );
 ```
 
-Command 应支持幂等键、Deadline、取消、重试策略和标准错误。
+Command 当前支持 Deadline、取消、标准错误和 Trace。`R` 可以是 `void`；幂等键和受控重试
+只有在真实生产场景明确重复请求语义后再评估，详见
+[Command 设计与实施计划](CCRouter-command-design.md)。
 
-### 11.2 Query
+读取型能力通过 Service 的类型化方法提供。框架不保留行为相同的 Query 分发 API，因为
+Runtime 无法保证 Query 没有副作用，单独命名只会增加注册和学习成本。
 
-请求读取数据，不表达业务副作用：
-
-```dart
-final user = await CCRouter.query(CurrentUserQuery());
-```
-
-### 11.3 Action
+### 11.2 Action Pipeline（2.0 候选）
 
 Action Pipeline 不属于 1.x 基础能力。它只作为动态来源触发本地白名单能力、多候选处理器
 优先级与短路场景的 2.0 候选，详见
 [Action Pipeline 候选计划](CCRouter-action-pipeline-plan.md)。当前普通一对一操作使用
 `CCCommand<R>`，事实通知使用 `CCEvent`。
 
-未来候选形态示意：
+未来 Action 只能触发预先声明的白名单能力，远程配置不得提供任意方法名。1.x 已移除缺少
+优先级、短路、来源策略和安全边界的简化原型，不预留占位公开 API。
 
-```dart
-final report = await CCRouter.action(ShowCampaignAction());
-```
-
-Action 只能触发预先声明的白名单能力。远程配置不得提供任意方法名。仓库当前的简化
-`CCAction` 原型不具备完整的优先级、短路、来源策略和安全边界，将在 1.x 通信模型收口时移除，
-不能作为已完成 Action Pipeline 使用。
-
-### 11.4 Event
+### 11.3 Event
 
 表示已经发生的事实，一对多发布，不能依赖订阅者返回业务结果：
 
@@ -881,7 +867,7 @@ v0.1 默认：
 
 - 不持久化、不重放。
 - 订阅者相互隔离，某个订阅者失败不阻塞其他订阅者。
-- 需要当前状态时使用 Service/Query/State，不使用 Sticky Event 模拟。
+- 需要当前状态时使用 Service/State，不使用 Sticky Event 模拟。
 - 订阅生命周期绑定 Scope。
 
 ### 11.5 不同语义的边界
@@ -889,9 +875,8 @@ v0.1 默认：
 ```text
 进入页面             Route
 执行一次操作         Command
-查询数据             Query
-调用长期能力         Service
-触发预埋动作         Action
+读取或调用长期能力   Service
+触发动态预埋操作链   Action Pipeline（未来候选）
 通知已发生事实       Event
 ```
 
@@ -932,7 +917,7 @@ CCInvocationContext
         -> 记录成功、失败、取消或降级
 ```
 
-Route、Command、Query、Action 和 Service Proxy 可以拥有不同的类型化 Middleware 接口，但共享 Trace、超时和错误基础设施。
+Route、Command 和 Service Proxy 可以拥有不同的类型化 Middleware 接口，但共享 Trace、超时和错误基础设施。Action Pipeline 未进入 1.x API。
 
 拦截器允许：
 
@@ -1190,7 +1175,7 @@ Service、诊断状态和活跃 RouteEntry，也没有依赖方的拒绝或级�
 
 ### 17.1 BuildContext
 
-`BuildContext` 只属于 Flutter UI 适配层，不进入 Core Runtime 的核心契约。页面实现可以正常使用 Context 处理主题、MediaQuery 和局部 Widget 关系，但 CCRouter 的 Service、Command、Query、Action、Event、InitTask 和 Trace API 不要求它。
+`BuildContext` 只属于 Flutter UI 适配层，不进入 Core Runtime 的核心契约。页面实现可以正常使用 Context 处理主题、MediaQuery 和局部 Widget 关系，但 CCRouter 的 Service、Command、Event、InitTask 和 Trace API 不要求它。
 
 ### 17.2 Navigator 与多导航栈
 
@@ -1240,8 +1225,8 @@ CCRouter.diagnostics.exportReport();
 3. `CCRouter.navigator` 及 `push<T>()`、`replace()`、`go()`、`reset()`、`open()`、`pop<T>()`、`maybePop()` 和 `maybePopOutcome()`。
 4. App、Session、Route 三种 Scope。
 5. 强类型 Service Registry 和构造函数 Factory。
-6. Command/Query 调度及基础 Middleware。
-7. 基础 Action 和 Event。
+6. Command 调度及基础调用治理。
+7. Event 事实通知。
 8. InitTask DAG、Gate 和失败策略。
 9. 标准错误、Deadline 和 Cancellation。
 10. 自动 Trace、内存诊断记录和脱敏策略。
@@ -1303,7 +1288,7 @@ CCRouter v0.1 采用以下总体路线：
 + 强类型契约
 + URL Navigator 与 Future 返回值
 + Service/Session/Route Scope
-+ Command/Query/Action/Event 语义分层
++ Command/Event 语义分层，Action Pipeline 延后到真实场景
 + InitTask DAG 与自定义 Gate
 + 统一 InvocationContext 和自动 Trace
 + 隔离 Test Runtime 与 Mock Overlay

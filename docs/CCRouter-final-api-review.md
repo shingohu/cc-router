@@ -6,7 +6,7 @@
 处理原则不是按引用次数机械删除，而是同时验证类型安全、混合路由隔离、生命周期、诊断、
 Host 扩展和降级语义。
 
-当前路由 API 可以进入全量回归阶段。Service、Command、Query、Event 及尚未实现的组件动态
+当前路由 API 可以进入全量回归阶段。Service、Command、Event 及尚未实现的组件动态
 卸载完整语义不属于本轮范围，不能据此扩大或冻结对应 API。
 
 ## 2. 已删除的重复或无行为 API
@@ -18,7 +18,7 @@ Host 扩展和降级语义。
 - Runtime `CCRouteDefinition.description` 和 `CCShellDefinition.description`：描述继续保留在
   Annotation、JSON 和 Markdown 文档，不随 Route 常驻 Runtime。
 - `CCRoutePattern.matchOnly`：由 `CCRegexPattern` 类型直接推导。
-- `CCActionReport.results`：Action Handler 只返回 `void`，结果列表没有真实数据来源。
+- 旧 `CCActionReport` 原型：缺少优先级、短路和来源策略，已从 1.x API 删除。
 - `CCRouteLocation.path`：生产链路没有独立消费者。
 - `CCRouteEntryLifecycleEvent.state`：始终等于 `event.entry.lifecycleState`。
 - `CCGoRouterNavigationEvent.result`：Flutter `NavigatorObserver` 不提供 Pop result。

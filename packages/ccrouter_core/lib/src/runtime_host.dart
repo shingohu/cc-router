@@ -216,13 +216,7 @@ final class CCRouterRuntime {
   final Map<String, List<_Provider>> _providersByContractId = {};
 
   /// Single command handler indexed by command type.
-  final Map<Type, _Handler> _commands = {};
-
-  /// Single query handler indexed by query type.
-  final Map<Type, _Handler> _queries = {};
-
-  /// Action handlers indexed by action type and stable handler identifier.
-  final Map<Type, Map<String, _Handler>> _actions = {};
+  final Map<Type, _RegisteredCommandHandler> _commands = {};
 
   /// Event subscribers indexed by event type and stable subscriber identifier.
   final Map<Type, Map<String, _Handler>> _events = {};
@@ -695,51 +689,11 @@ final class CCRouterRuntime {
     _registerSingle(
       _commands,
       C,
-      (message, context) => handler(message as C, context),
+      _RegisteredCommandHandler(
+        ownerComponentId: ownerComponentId,
+        callback: (message, context) => handler(message as C, context),
+      ),
     );
-  }
-
-  /// Registers the single handler for query type [Q].
-  ///
-  /// This low-level entry point exists for Core tests; components use the
-  /// component-bound [CCRegistry].
-  void registerQuery<Q extends CCQuery<R>, R>(CCHandler<Q, R> handler) {
-    _registerQueryForComponent('', handler);
-  }
-
-  /// Registers a query while retaining the component owner internally.
-  void _registerQueryForComponent<Q extends CCQuery<R>, R>(
-    String ownerComponentId,
-    CCHandler<Q, R> handler,
-  ) {
-    _registerSingle(
-      _queries,
-      Q,
-      (message, context) => handler(message as Q, context),
-    );
-  }
-
-  /// Registers an action [handler] under a globally unique [id].
-  ///
-  /// This low-level entry point exists for Core tests; components use the
-  /// component-bound [CCRegistry].
-  void registerAction<A extends CCAction>(
-    String id,
-    CCHandler<A, void> handler,
-  ) {
-    _registerActionForComponent('', id, handler);
-  }
-
-  /// Registers an action while retaining the component owner internally.
-  void _registerActionForComponent<A extends CCAction>(
-    String ownerComponentId,
-    String id,
-    CCHandler<A, void> handler,
-  ) {
-    _registerMultiple(_actions, A, id, (message, context) async {
-      await handler(message as A, context);
-      return null;
-    });
   }
 
   /// Registers an Event [handler] under a globally unique [id].
@@ -1321,23 +1275,6 @@ final class CCRouterRuntime {
     CCCancellationToken? cancellation,
   }) => _dispatch<R>('command', command, _commands, timeout, cancellation);
 
-  /// Dispatches [query] with optional timeout and cancellation constraints.
-  Future<R> query<R>(
-    CCQuery<R> query, {
-    Duration? timeout,
-    CCCancellationToken? cancellation,
-  }) => _dispatch<R>('query', query, _queries, timeout, cancellation);
-
-  /// Runs matching Action handlers serially in stable identifier order.
-  Future<CCActionReport> action(CCAction action) =>
-      _invoke('action', action.runtimeType.toString(), (context) async {
-        final handlers = _sortedHandlers(_actions[action.runtimeType]);
-        for (final handler in handlers) {
-          await handler(action, context);
-        }
-        return CCActionReport(handled: handlers.length);
-      });
-
   /// Publishes [event] concurrently while isolating subscriber failures.
   Future<void> event(CCEvent event) =>
       _invoke('event', event.runtimeType.toString(), (context) async {
@@ -1749,23 +1686,29 @@ final class CCRouterRuntime {
   Future<R> _dispatch<R>(
     String operation,
     Object message,
-    Map<Type, _Handler> registry,
+    Map<Type, _RegisteredCommandHandler> registry,
     Duration? timeout,
     CCCancellationToken? cancellation,
-  ) => _invoke(
-    operation,
-    message.runtimeType.toString(),
-    (context) async {
-      final handler = registry[message.runtimeType];
-      if (handler == null)
-        throw CCResolutionError(
-          'No $operation handler for ${message.runtimeType}.',
-        );
-      return await handler(message, context) as R;
-    },
-    timeout: timeout,
-    cancellation: cancellation,
-  );
+  ) {
+    final registration = registry[message.runtimeType];
+    return _invoke(
+      operation,
+      message.runtimeType.toString(),
+      (context) async {
+        if (registration == null) {
+          throw CCResolutionError(
+            'No $operation handler for ${message.runtimeType}.',
+          );
+        }
+        return await registration.callback(message, context) as R;
+      },
+      timeout: timeout,
+      cancellation: cancellation,
+      targetComponentId: registration?.ownerComponentId.isEmpty ?? true
+          ? null
+          : registration!.ownerComponentId,
+    );
+  }
 
   /// Executes a synchronous [body] with tracing and inherited invocation data.
   ///
@@ -1999,9 +1942,9 @@ final class CCRouterRuntime {
 
   /// Inserts one type-indexed handler and rejects duplicate types.
   void _registerSingle(
-    Map<Type, _Handler> registry,
+    Map<Type, _RegisteredCommandHandler> registry,
     Type type,
-    _Handler handler,
+    _RegisteredCommandHandler handler,
   ) {
     _ensureConfigurable();
     if (registry.containsKey(type))

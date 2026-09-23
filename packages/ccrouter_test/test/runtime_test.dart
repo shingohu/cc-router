@@ -21,9 +21,9 @@ final class Add implements CCCommand<int> {
   final int value;
 }
 
-final class Read implements CCQuery<int> {}
+final class ReadOnce implements CCCommand<int> {}
 
-final class Run implements CCAction {}
+final class Refresh implements CCCommand<void> {}
 
 final class Changed implements CCEvent {}
 
@@ -660,20 +660,17 @@ void main() {
     expect(scope.disposalErrors.single, isA<TimeoutException>());
   });
 
-  test(
-    'commands and queries return typed results and reject duplicates',
-    () async {
-      runtime.registerCommand<Add, int>((message, _) => message.value + 1);
-      runtime.registerQuery<Read, int>((_, _) async => 7);
-      expect(
-        () => runtime.registerCommand<Add, int>((_, _) => 0),
-        throwsA(isA<CCRegistrationError>()),
-      );
-      runtime.initialize();
-      expect(await runtime.command(Add(4)), 5);
-      expect(await runtime.query(Read()), 7);
-    },
-  );
+  test('commands return typed results and reject duplicates', () async {
+    runtime.registerCommand<Add, int>((message, _) => message.value + 1);
+    runtime.registerCommand<ReadOnce, int>((_, _) async => 7);
+    expect(
+      () => runtime.registerCommand<Add, int>((_, _) => 0),
+      throwsA(isA<CCRegistrationError>()),
+    );
+    runtime.initialize();
+    expect(await runtime.command(Add(4)), 5);
+    expect(await runtime.command(ReadOnce()), 7);
+  });
 
   test('missing handler fails with a diagnostic trace', () async {
     runtime.initialize();
@@ -735,13 +732,13 @@ void main() {
     () async {
       late CCInvocationContext outer;
       late CCInvocationContext inner;
-      runtime.registerQuery<Read, int>((_, ctx) {
+      runtime.registerCommand<ReadOnce, int>((_, ctx) {
         inner = ctx;
         return Completer<int>().future;
       });
       runtime.registerCommand<Add, int>((_, ctx) {
         outer = ctx;
-        return runtime.query(Read());
+        return runtime.command(ReadOnce());
       });
       runtime.initialize();
       final token = CCCancellationToken();
@@ -776,17 +773,17 @@ void main() {
     },
   );
 
-  test(
-    'Action handlers execute by ID independent of registration order',
-    () async {
-      final order = <String>[];
-      runtime.registerAction<Run>('z', (_, _) => order.add('z'));
-      runtime.registerAction<Run>('a', (_, _) => order.add('a'));
-      runtime.initialize();
-      expect((await runtime.action(Run())).handled, 2);
-      expect(order, ['a', 'z']);
-    },
-  );
+  test('void command reports completion without a business result', () async {
+    var completed = false;
+    runtime.registerCommand<Refresh, void>((_, _) {
+      completed = true;
+    });
+    runtime.initialize();
+
+    await runtime.command(Refresh());
+
+    expect(completed, isTrue);
+  });
 
   test(
     'Event subscribers are isolated and errors are bounded diagnostics',
@@ -811,16 +808,16 @@ void main() {
 
   test('trace buffer is bounded and can be disabled', () async {
     final bounded = CCRouterRuntime.forTesting(traceCapacity: 1);
-    bounded.registerQuery<Read, int>((_, _) => 1);
+    bounded.registerCommand<ReadOnce, int>((_, _) => 1);
     bounded.initialize();
-    await bounded.query(Read());
-    await bounded.query(Read());
+    await bounded.command(ReadOnce());
+    await bounded.command(ReadOnce());
     expect(bounded.recentTraces, hasLength(1));
     await bounded.dispose();
     final disabled = CCRouterRuntime.forTesting(traceCapacity: 0);
-    disabled.registerQuery<Read, int>((_, _) => 1);
+    disabled.registerCommand<ReadOnce, int>((_, _) => 1);
     disabled.initialize();
-    await disabled.query(Read());
+    await disabled.command(ReadOnce());
     expect(disabled.recentTraces, isEmpty);
     await disabled.dispose();
   });
