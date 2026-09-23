@@ -141,8 +141,8 @@
 
 ### 已完成首批基线：P2-6 性能与稳定性基准
 
-仓库已提供非门禁式 Generator、Runtime scaling 和并发回收 benchmark，覆盖 Workspace 校验、Runtime 初始化、
-动态 URI 解析、并发 Push/Pop 和销毁。动态 URI resolution 仍会遍历所有 Route/Pattern；生成器虽已改为精确闭包、
+仓库已提供非门禁式 Generator、Runtime、Service scaling 和并发回收 benchmark，覆盖 Workspace 校验、Runtime 初始化、
+动态 URI 解析、Service 装配/查询/调用/readiness、并发 Push/Pop 和销毁。动态 URI resolution 仍会遍历所有 Route/Pattern；生成器虽已改为精确闭包、
 单 Package Index、内容缓存和 Pattern 候选索引，但基准只用于同机版本对比，不能把一次本机结果
 视为跨机器性能承诺。
 
@@ -163,6 +163,19 @@
   `finalPendingNavigations=0`、`finalAdapterEntries=1`；
 - Generator 10/100/500/1000/5000 Route 校验：`1.058/5.704/18.989/29.385/99.37ms`。
 
+2026-09-23 新增 Service scaling 基线。每个规模采集 20 次装配与销毁、1000 次热查询、
+1000 次同步带 Trace 调用和 100 次 Factory readiness；所有 `CCDisposable` 在每轮结束后均回到
+0 个存活实例。10/100/1000 Provider 的本机 Dart JIT P50/P95 为：
+
+- 装配并初始化：`38/144us`、`316/940us`、`4426/5554us`；
+- keyed Singleton 热查询：`1/4us`、`0/2us`、`2/2us`；
+- `invokeServiceSync`（包含有界 Trace）：`7/29us`、`3/13us`、`3/10us`；
+- Factory lazy readiness：`23/123us`、`11/70us`、`15/31us`；
+- 已创建实例的 Runtime dispose：`18/45us`、`179/320us`、`211/889us`。
+
+这些数值不作为跨机器或 CI 硬阈值；回归时比较同机趋势，并同时保留实例释放校验，不能通过
+减少生命周期工作换取表面耗时下降。
+
 本次自动复测没有发现状态残留、性能异常或失败回归。并发执行 Generator 测试与 Demo Analyzer
 会短暂读取 Generator 测试创建的临时探针，因此质量门禁必须串行执行；串行复测后 Demo Analyzer
 恢复为无诊断。这是测试编排约束，不是生产代码依赖。
@@ -173,6 +186,7 @@
 fvm dart run packages/ccrouter_test/benchmark/generator_scaling.dart
 fvm dart run packages/ccrouter_test/benchmark/runtime_scaling.dart
 fvm dart run packages/ccrouter_test/benchmark/runtime_concurrency.dart
+fvm dart run packages/ccrouter_test/benchmark/service_scaling.dart
 ```
 
 2026-09-20 本机 Dart JIT 预热后，旧 Validator 在 10/100/500/1000 Route 下分别为

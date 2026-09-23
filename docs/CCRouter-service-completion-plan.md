@@ -42,6 +42,8 @@
 - `CCRouterTestHost.run` 通过 Zone-local Runtime Overlay 让生成 Proxy 和静态 Facade
   在独立 Test Host 上运行；Overlay 不修改生产默认 Runtime，不接管
   `initialize`/`shutdown` 或 Host Backend 绑定。
+- 非门禁 `service_scaling.dart` benchmark 覆盖 Provider 规模、Singleton 热查询、同步
+  Invocation Trace、Factory readiness 和 Scope dispose，并在每轮校验 disposable 实例归零。
 
 ## 3. 第一阶段：注册边界与确定性
 
@@ -133,6 +135,8 @@ Session Scope 均返回稳定的 Service 错误子类型；缺失命名实现会
 - 所有 Provider 标识校验在注册阶段确定失败，不依赖解析顺序。
 - App/Session/Route/Singleton/Factory 的生命周期测试全部保持通过。
 - Session close、Runtime dispose、Factory failure 和 disposal timeout 不产生实例残留。
+- Service 性能回归使用同机 P50/P95 趋势比较，不设置跨机器硬阈值；性能样本必须同时验证
+  Scope 销毁后的存活实例为零。
 - 同一 Token 的类型不匹配、重复默认实现和命名冲突均返回稳定错误。
 - Core Service 契约不依赖 BuildContext、反射、字符串方法调用或万能 Map；Flutter
   `routeService(context)` 只读取精确 Host 绑定，不参与实例所有权或销毁判断。
