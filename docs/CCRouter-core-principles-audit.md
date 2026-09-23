@@ -2,16 +2,16 @@
 
 ## 1. 审查结论
 
-- 审查日期：2026-09-22
+- 审查日期：2026-09-23
 - 审查范围：路由 Runtime、业务 Facade、Host/Adapter SPI、GoRouter Adapter、生成器、
-  Demo、测试与诊断模型。
-- 自动化基线：`dart analyze` 与 Demo Analyzer 通过；Framework 250 项、Demo 25 项、
-  Generator 131 项测试通过；默认缓存和 `--no-cache` 生成检查逐字节等价；macOS debug
-  build 通过。
-- 总体结论：当前实现满足 13 条约定在 v0.1 路由范围内的发布门槛，没有 P0 或 P1 问题。
-  生成物职责、API 隔离、增量/全量等价、生命周期和资源释放已完成本轮收口；Adapter 能力的
-  更多构建期前移、Restoration、真实平台多窗口和长期 RSS/Heap 趋势仍是明确的后续能力，不能
-  因本轮通过而视为已经实现。
+  Service、Command、Event、初始化任务、Demo、测试与诊断模型。
+- 自动化基线：`dart analyze` 通过；Framework 299 项、Demo 29 项、Generator 131 项测试通过；
+  Demo 生成物 `--check` 通过；macOS debug build 通过。
+- 总体结论：当前实现满足 13 条约定在 v0.1 静态组件范围内的发布门槛，没有 P0 或 P1 问题。
+  Route、Service、Command、Event 和 InitTask 已形成边界明确的最小闭环。生成物职责、API 隔离、
+  生命周期、取消与诊断已完成本轮收口；Service/消息/InitTask 注解生成、Action Pipeline、动态
+  组件治理、Restoration、真实平台多窗口和长期 RSS/Heap 趋势仍是明确后续项，不能因已有设计
+  文档而视为已经实现。
 
 本审查只记录事实和后续门槛，不因为某项容易实现就扩展公开 API。
 
@@ -19,19 +19,19 @@
 
 | # | 约定 | 状态 | 当前证据与缺口 |
 | --- | --- | --- | --- |
-| 1 | 智能 | 基本满足 | Route/Codec/Manifest/组件索引/Host Catalog/文档均由单一 `ccrouter generate` 编排生成；Runtime 自动校验并装配，`--check` 提供不依赖 Git 的只读陈旧门禁。生成器已按 Host Pub 运行时闭包精确发现 workspace/path/Git/pub 与传递 Package，并生成发布级 Index/Bundle。 |
-| 2 | 简单易用 | 基本满足 | Demo 宿主只需 `CCRouter.initialize`、`CCGoRouterBackend.managed`、`CCRouterApp.managed` 和 `MaterialApp.router`；生成也已收敛为一条命令。Shell、Multi Host、Aspect 和 CI check 等高级能力保持可选。 |
-| 3 | 功能强大 | 基本满足 | 已覆盖类型安全导航、Deep Link、拦截、生命周期、混合路由、诊断和多种 Presentation，没有万能 Map 导航接口。组合栈事务与精确 Entry 操作已从 v0.1 API 删除并标记 Deferred；设备 Predictive Back 和 Restoration 仍是明确限制。 |
-| 4 | 可扩展性 | 基本满足 | Core 使用中立 Route Definition；Catalog、Assembler、Adapter 与能力 SPI 分层。新后端可复用 Contract/Catalog；Host/Adapter 实现通过独立 `ccrouter_host.dart` 获取 SPI，业务 barrel 不再暴露该能力。 |
-| 5 | 可测试 | 基本满足 | Pure Dart Runtime/Memory Adapter、Flutter Adapter、生成器和 Demo 都有回归；`ccrouter_test` 已提供 Test Host，并具备 5000 Route Generator 与 1000 Route Runtime 非门禁基准。长时间运行与跨版本内存趋势仍需持续积累。 |
-| 6 | 最小公开 API | 基本满足 | Runtime、Scope、Memory Adapter、Host binding 以及 Adapter/Request/Capability/Backend 控制 SPI 已从业务 barrel 隐藏；Registrar 只拿到 `CCRegistry`，Host 组合根按需导入 `ccrouter_host.dart`。API surface 快照测试防止 SPI 意外回流。 |
-| 7 | 编译器校验与类型安全 | 部分满足 | 参数、Codec、Route ID、Pattern、Contract exposure、页面实现、barrel 导出和组件依赖图已有生成期校验。拦截器/PopGuard 引用和 Adapter 能力主要仍在 Runtime 才失败。 |
+| 1 | 智能 | 基本满足 | Route/Codec/Manifest/组件索引/Host Catalog/文档均由单一 `ccrouter generate` 编排生成；Runtime 自动校验组件、Provider、Handler、Subscriber 和 InitTask DAG，`--check` 提供不依赖 Git 的只读陈旧门禁。Service/消息/InitTask 注解生成因缺少真实重复样板暂缓，没有用反射或全仓扫描冒充自动化。 |
+| 2 | 简单易用 | 基本满足 | 宿主使用 `CCRouter.initialize`、按需 `runInitialization`、Managed Backend/App 即可启动；业务统一通过 `CCRouter.navigator/service/command/event`。Route Service 仅在需要精确页面 Scope 时增加 `BuildContext`，高级 Shell、Multi Host、Trace 和 Gate 保持渐进可选。 |
+| 3 | 功能强大 | 基本满足 | 已覆盖类型安全导航、Deep Link、拦截、生命周期、混合路由、诊断、多种 Presentation、App/Session/Route Service、一次性 Command、事实 Event 和启动 DAG，没有万能 Map 或混合消息接口。Action Pipeline、可靠持久消息和动态组件明确不属于 1.x。 |
+| 4 | 可扩展性 | 基本满足 | Core 使用中立 Route Definition 与强类型能力契约；Catalog、Assembler、Adapter、Service Provider、Handler 和 Gate 均通过明确边界扩展。新导航后端复用同一 Catalog，跨组件 Service 通过稳定 Token 渐进提升，不访问 Runtime 私有表。 |
+| 5 | 可测试 | 基本满足 | Pure Dart Runtime 覆盖 Scope、readiness、Command/Event、InitTask DAG、取消/超时/失败；Flutter Adapter、生成器和 Demo 均有回归。`ccrouter_test` 提供 Test Host/Service Override，并具备 Generator、Route Runtime、Service 和并发回收非门禁基准。长期平台内存趋势仍需持续积累。 |
+| 6 | 最小公开 API | 基本满足 | Runtime、Scope、Memory Adapter、Host binding 以及控制 SPI 均从业务 barrel 隐藏；Registrar 只拿到注册面 `CCRegistry`。Query/旧 Action/ActionReport 已删除，通信只保留 Service、Command、Event 与 InitTask；Action Pipeline 等未成熟能力没有提前公开。 |
+| 7 | 编译器校验与类型安全 | 部分满足 | Route 参数、Codec、ID、Pattern、Contract exposure、页面实现、barrel 和组件图已有生成期校验；Service Token/Key、Command/Event 泛型在编译期约束，注册冲突与 InitTask DAG 在同步初始化失败。Service/消息/InitTask metadata 尚未生成，因此跨 Package Handler/Task 静态图仍依赖手写注册与 Runtime 校验。 |
 | 8 | 非侵入式 | 满足 | 不要求页面基类或 Mixin，不保存全局 `BuildContext`；可继续使用应用自己的 `MaterialApp.router`/`GoRouter`；attached Adapter 不销毁应用 Router。 |
-| 9 | 可降级回退 | 基本满足 | 无法可靠降级的组合栈事务与精确 Entry 操作已从公开能力链删除，不再静默模拟。解析前失败始终进入 Failure 记录；实际采用 Runtime visibility 或 partition-local reconciliation 时产生独立 capability fallback 事件。 |
-| 10 | 明确生命周期 | 基本满足 | Runtime、Session、RouteEntry、Scope、Adapter、Backend 的 Owner 和销毁顺序明确，幂等与 pending Future 已有测试。组件 activate/deactivate 当前只覆盖 Route/Shell，完整 Service/Handler/Scope 生命周期仍按设计暂缓。 |
-| 11 | 可观测可诊断可溯源 | 基本满足 | navigationId、来源、Owner、阶段耗时、bounded history、Listener 异常隔离均已具备。Pending、RouteEntry、Backend history/ledger 已使用安全地址摘要，完整 URI/location 只留在即时 operational pipeline；request 创建前的解析/参数失败和实际能力回退也有独立安全事件。 |
-| 12 | 并发安全 | 基本满足 | 初始化/销毁、Session、Adapter 生命周期和导航并发策略已有确定语义，Defer/Timeout/Cancel 有回归。并发短路具有完整 Aspect 终态；Extra 请求明确独立执行；Interceptor、Policy、Guard、Aspect 和普通 Listener 统一使用 Zone 重入保护。 |
-| 13 | 性能和稳定 | 基本满足 | 热路径无反射，路由 ID 与 Workspace Pattern 候选均使用索引，缓存与观察队列有界，纯观察回调不再同步阻塞导航，错误不被吞掉。生成器复用 build_runner 增量图，只扫描 Host 依赖闭包中的 Package metadata，使用内容指纹缓存、write-if-changed、并发锁和全量回退；已建立同机 benchmark 和资源生命周期回归。长期内存趋势仍需版本间持续采样，动态 URI 解析仍为线性工作。 |
+| 9 | 可降级回退 | 基本满足 | 无法可靠降级的组合栈事务与精确 Entry 操作已从公开链删除。Service optional lookup 只吞“未注册”，不吞工厂/生命周期错误；Event Subscriber 失败按契约隔离，Command/critical InitTask 失败明确传播，不存在跨语义静默回退。 |
+| 10 | 明确生命周期 | 基本满足 | Runtime、Session、RouteEntry、Service Scope、Adapter、Backend 和 InitTask Owner/销毁顺序明确；App/Session/Route Service 自动持有与逆序释放，shutdown 取消并等待活动调用和 DAG。1.x 组件集合只在初始化确定，不提供不完整的 activate/deactivate。 |
+| 11 | 可观测可诊断可溯源 | 基本满足 | Navigation、Service、Command、Event Subscriber 和 InitTask 均记录稳定 ID、可信 Owner、Trace 父子关系、状态和耗时；历史与 Subscriber error 有界，错误只保留类型和安全摘要。URI、Extra、消息字段、Service 参数/返回值和异常消息不进入 retained diagnostics。 |
+| 12 | 并发安全 | 基本满足 | 导航策略、Service singleton readiness、InitTask Gate drain 都有 single-flight；Event Subscriber 并发但按稳定 ID 启动；timeout、caller/Scope/shutdown cancellation 和异步依赖环均有测试。共享状态由 Runtime/Scope 单 Owner 修改，回调重入受控。 |
+| 13 | 性能和稳定 | 基本满足 | 热路径无反射；路由和 Workspace 候选使用索引，诊断队列有界。Service 同步 Provider 不增加异步切换，Singleton/readiness 缓存按 Scope 有界，Event/InitTask 仅在显式调用时调度。生成器使用精确依赖闭包、内容指纹、write-if-changed、并发锁和全量回退；已有 Route、Service、并发与资源回收基线。长期内存趋势仍需版本间持续采样。 |
 
 ## 3. P1 问题
 
@@ -208,7 +208,7 @@ fvm dart run packages/ccrouter_test/benchmark/service_scaling.dart
   意外获得 Host SPI；
 - 非 nullable 且具有编译期空 List/Set 默认值的 Query 参数将空集合编码为缺失 key，解码恢复默认值；
   required、nullable 和非空默认集合继续严格拒绝无法无损表达的空集合；
-- 默认缓存与 `--no-cache --check` 均验证 4 个组件、30 条路由和 7 个生成 Package，输出无差异；
+- 默认缓存与 `--no-cache --check` 均验证 4 个组件、31 条路由和 7 个生成 Package，输出无差异；
   测试同时覆盖缓存损坏全量回退、并发生成锁、write-if-changed 和 stale cleanup。
 
 ### 已完成：P2-8 资源生命周期回归
@@ -219,6 +219,27 @@ fvm dart run packages/ccrouter_test/benchmark/service_scaling.dart
 - 自定义页面转场不再在 builder 中创建需要手动 dispose 的 `CurvedAnimation`，改用无独立所有权的
   `CurveTween` 链，并覆盖 Fade、Scale、右侧滑入和底部滑入的重复创建/销毁测试；
 - 本轮基于 `not-disposed` 与 `not-GCed` 证据标准复查后，没有剩余高置信内存泄漏。
+
+### 已完成：P2-9 Service、Command、Event 与初始化任务闭环
+
+- Service 生命周期与创建策略正交：App/Session/Route Scope 分别拥有 Singleton/Factory 实例，
+  `CCDisposable` 由 Scope 逆序释放；Route Service 只通过 Managed Page 的精确绑定解析，不猜当前页；
+- Lazy Service readiness 由显式异步 API 启动，Singleton 在当前 Scope single-flight，Factory 每次
+  初始化；同步解析不会偷跑 I/O，失败、timeout、caller cancellation 和 Scope cancellation 保持
+  不同标准错误；
+- 跨组件 Service Token 与 Type lookup 共享 Provider/实例；Key 支持确定性多实现，optional lookup
+  只把真正缺失转为 null；测试替换留在 `ccrouter_test`；
+- `CCCommand<R>` 是唯一的一对一操作消息，支持 `R` 与 `void`、单 Handler、timeout、取消、嵌套
+  Trace 和 Runtime shutdown；读取能力保持在 Service，不再保留重复的 Query/Action 表面；
+- `CCEvent` 只表达已经发生的事实；静态 Subscriber 并发执行且按 ID 稳定启动，一个 Subscriber
+  失败只进入有界脱敏诊断，零订阅者成功，发布 deadline/cancellation 仍会终止整体操作；
+- InitTask 在同步 `initialize()` 校验 ID、依赖和 DAG，Host 显式打开 Gate；同层并发、重叠触发
+  single-flight、每任务 exactly-once，critical/optional/skip、timeout 和 shutdown 等待已有回归；
+- Demo 通过真实 Runtime 覆盖 Command typed/void/timeout/cancel/error、Event 多订阅/隔离/零订阅/
+  timeout、InitTask Gate/失败依赖，以及 Service 全部 Scope、创建策略、readiness、多实现、optional
+  lookup 和自动销毁；
+- Action Pipeline 等待动态预埋操作链的真实业务样本，Service/消息/InitTask 注解生成等待重复样板、
+  依赖漂移或 DevTools 静态图需求，不为“看起来自动”提前冻结协议。
 
 ## 5. 已确认符合且应保持的边界
 
@@ -238,16 +259,26 @@ fvm dart run packages/ccrouter_test/benchmark/service_scaling.dart
 - Trace、Lifecycle、Failure、Aspect 和 Backend 历史均有容量边界，subscriber error 有界。
 - 页面生命周期不要求业务继承基类；Mixin 和 Listener 均为可选。
 - contracts Package 可以保持 Pure Dart，页面实现和后端依赖不进入跨组件契约。
+- 读取和长期能力使用 Service；唯一执行者的一次性操作使用 Command；已发生事实通知使用 Event；
+  Runtime 一次性启动依赖使用 InitTask，不以万能消息类型互相替代。
+- `CCRouter.initialize()` 保持同步原子装配；异步启动工作必须通过显式
+  `runInitialization(gate: ...)` 等待，Service readiness 不隐藏在全局启动中。
+- 组件集合在初始化时一次确定。1.x 不提供不完整的动态 activate/deactivate，也不允许业务销毁
+  Runtime、Scope、Adapter 或 Service 实例。
+- Service/Command/Event/InitTask 当前手写注册是有意边界；只有生产样板和静态图收益足够时，才与
+  Generator 一起设计注解、metadata、冲突校验和迁移方案。
 
 ## 6. 本轮最终门禁
 
-- `fvm dart test packages/ccrouter_test/generator_test`：131 项通过；
-- `fvm flutter test packages/ccrouter_test/test`：250 项通过；
-- `fvm flutter test demo/test`：25 项通过；
-- `fvm dart analyze`、`fvm flutter analyze demo`：无问题；
-- `ccrouter generate demo --check` 与 `--no-cache --check`：生成物同步且等价；
+- `fvm dart test --concurrency=1 packages/ccrouter_test/generator_test`：131 项通过；
+- `fvm flutter test packages/ccrouter_test/test`：299 项通过；
+- `fvm flutter test demo`：29 项通过；
+- `fvm dart analyze`：无问题；
+- `fvm dart run ccrouter_generator:ccrouter generate demo --check` 与 `--no-cache --check`：31 条路由、
+  7 个生成 Package 均同步；
 - `fvm flutter build macos --debug`：成功生成 `ccrouter_demo.app`；
 - `git diff --check`：通过。
 
-后续增加 Android Predictive Back、Restoration、真实平台多窗口或新 Adapter 时，必须补对应平台
-真机验证和能力回归；它们不属于本轮已经实现的路由能力。
+后续增加 Service/消息/InitTask 注解生成、Action Pipeline、动态组件、Android Predictive Back、
+Restoration、真实平台多窗口或新 Adapter 时，必须补对应构建期、生命周期、并发、性能和平台
+回归；它们不属于本轮已经实现的能力。
