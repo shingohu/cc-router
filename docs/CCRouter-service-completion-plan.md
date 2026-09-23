@@ -115,6 +115,8 @@ Session Scope 均返回稳定的 Service 错误子类型；缺失命名实现会
 
 ### 4.5 生成器与 CLI（1.x 评估完成）
 
+- 决策：1.x 不实施 Service 注解、自动 Registrar 或自动 Proxy 生成；该事项不再作为当前
+  待办推进，只有实际生产工程出现下述规模或缺陷信号后才重新立项。
 - Service Registrar 先保持手动维护，避免为低频变化的能力增加生成冲突。
 - 当前样本只有 1 个跨 Package Service Contract、1 个方法和 2 个消费方 Proxy；
   两个 Proxy 合计 36 行，真实差异只有 caller component identity。这足以验证
@@ -125,6 +127,8 @@ Session Scope 均返回稳定的 Service 错误子类型；缺失命名实现会
 - 自动 Service Proxy 在出现以下任一真实信号后重新评估：至少 3 个 promoted
   Contract 且 5 个消费关系；同一 Contract 被至少 3 个组件消费；或者已出现
   method ID、caller identity 或方法签名漂移缺陷。
+- 上述信号必须来自实际生产组件和维护记录；Demo、测试夹具或为验证方案而人为增加的
+  Contract 不计入阈值。达到阈值只启动设计评审，不代表直接冻结注解和 metadata 协议。
 - 达到阈值后，消费组件必须显式声明自己使用的 Contract，生成器据此输出调用方
   Proxy。不允许从 Package 依赖猜测所有 Service，也不允许运行时传入可伪造的
   caller component ID。
