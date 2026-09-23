@@ -854,13 +854,20 @@ final user = await CCRouter.query(CurrentUserQuery());
 
 ### 11.3 Action
 
-请求执行可被多个处理器响应的动作，允许优先级、短路和处理报告：
+Action Pipeline 不属于 1.x 基础能力。它只作为动态来源触发本地白名单能力、多候选处理器
+优先级与短路场景的 2.0 候选，详见
+[Action Pipeline 候选计划](CCRouter-action-pipeline-plan.md)。当前普通一对一操作使用
+`CCCommand<R>`，事实通知使用 `CCEvent`。
+
+未来候选形态示意：
 
 ```dart
 final report = await CCRouter.action(ShowCampaignAction());
 ```
 
-Action 只能触发预先声明的白名单能力。远程配置不得提供任意方法名。
+Action 只能触发预先声明的白名单能力。远程配置不得提供任意方法名。仓库当前的简化
+`CCAction` 原型不具备完整的优先级、短路、来源策略和安全边界，将在 1.x 通信模型收口时移除，
+不能作为已完成 Action Pipeline 使用。
 
 ### 11.4 Event
 
