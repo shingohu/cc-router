@@ -3,6 +3,8 @@
 
 import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter/ccrouter_host.dart';
+import '../binding/capability_page.route_binding.g.dart'
+    as route_src_ccrouter_generated_binding_capability_page_route_binding_g_dart;
 import '../binding/detail_page.route_binding.g.dart'
     as route_src_ccrouter_generated_binding_detail_page_route_binding_g_dart;
 import '../binding/failure_page.route_binding.g.dart'
@@ -19,6 +21,8 @@ import '../binding/shell_pages.route_binding.g.dart'
     as route_src_ccrouter_generated_binding_shell_pages_route_binding_g_dart;
 import '../binding/stack_page.route_binding.g.dart'
     as route_src_ccrouter_generated_binding_stack_page_route_binding_g_dart;
+import '../route/capability_page.route.g.dart'
+    as route_src_ccrouter_generated_route_capability_page_route_g_dart;
 import '../route/detail_page.route.g.dart'
     as route_src_ccrouter_generated_route_detail_page_route_g_dart;
 import '../route/failure_page.route.g.dart'
@@ -43,6 +47,8 @@ final class DemoNavigationLabComponentGeneratedRoutes {
 
   /// Registers every route owned by `demo_navigation_lab_component` in stable order.
   void register(CCRegistry registry) {
+    route_src_ccrouter_generated_route_capability_page_route_g_dart
+        .ccrouterRegisterDemoCapabilitiesPageRoute(registry);
     route_src_ccrouter_generated_route_detail_page_route_g_dart
         .ccrouterRegisterDemoDetailPageRoute(registry);
     route_src_ccrouter_generated_route_failure_page_route_g_dart
@@ -106,6 +112,13 @@ const demoNavigationLabComponentGeneratedRoutes =
 
 /// Backend-neutral Flutter destinations owned by `demo_navigation_lab_component`.
 final demoNavigationLabComponentRouteCatalog = CCFlutterRouteCatalog([
+  CCFlutterRouteDestination.fromDefinition(
+    definition: route_src_ccrouter_generated_route_capability_page_route_g_dart
+        .ccrouterDescribeDemoCapabilitiesPageRoute(),
+    builder: (arguments) =>
+        route_src_ccrouter_generated_binding_capability_page_route_binding_g_dart
+            .ccrouterBuildDemoCapabilitiesPageRoute(arguments),
+  ),
   CCFlutterRouteDestination.fromDefinition(
     definition: route_src_ccrouter_generated_route_detail_page_route_g_dart
         .ccrouterDescribeDemoDetailPageRoute(),

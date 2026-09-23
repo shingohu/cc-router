@@ -9,7 +9,7 @@ import 'ccrouter_demo.dart';
 import 'demo_router_backend.dart';
 import 'platform_deep_link_bridge.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   CCRouter.initialize(
     components: ccrouterGeneratedComponentManifests,
@@ -24,6 +24,7 @@ void main() {
     navigationAspects: [demoNavigationAspect],
     telemetryContextProvider: const DemoNavigationTelemetryProvider(),
   );
+  await CCRouter.runInitialization();
   runApp(const CCRouterDemoApp());
 }
 

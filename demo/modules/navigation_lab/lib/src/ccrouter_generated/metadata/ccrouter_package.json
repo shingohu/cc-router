@@ -5,7 +5,7 @@
     "name": "demo_navigation_lab",
     "version": "0.1.0"
   },
-  "contentFingerprint": "a6484fe7528fcd554a897b45b8a8109d16a0980cf4c47dec37cf7b9f312896a6",
+  "contentFingerprint": "c173cc002993c8ffed92c8cc83912ff103510ca9154d4a1398e596e7c7cdc728",
   "bundle": {
     "library": "lib/src/ccrouter_generated/host/demo_navigation_lab_ccrouter.g.dart",
     "symbol": "ccrouterGeneratedPackageBundle"
@@ -23,6 +23,103 @@
     }
   ],
   "metadata": [
+    {
+      "schemaVersion": 3,
+      "package": "demo_navigation_lab",
+      "source": "lib/src/capability_page.dart",
+      "componentDeclarations": [],
+      "componentManifests": {},
+      "components": [
+        {
+          "id": "demo_navigation_lab_component",
+          "version": "0.1.0",
+          "dependencies": [
+            "demo_order_component",
+            "demo_web_component"
+          ],
+          "optionalDependencies": []
+        }
+      ],
+      "routes": [
+        {
+          "id": "demo_navigation_lab.capabilities",
+          "componentId": "demo_navigation_lab_component",
+          "componentVersion": "0.1.0",
+          "exposure": "internal",
+          "deepLink": "disabled",
+          "description": "Command、Event、初始化任务与 Service 生命周期交互实验页。",
+          "interceptorIds": [],
+          "popGuardIds": [],
+          "declaration": {
+            "package": "demo_navigation_lab",
+            "library": "lib/src/capability_page.dart",
+            "kind": "page",
+            "symbol": "DemoCapabilitiesPage",
+            "packageUri": "package:demo_navigation_lab/src/capability_page.dart",
+            "line": 16,
+            "column": 13
+          },
+          "navigationSources": [
+            "typedIntent",
+            "internalUri"
+          ],
+          "restoration": {
+            "status": "unsupported"
+          },
+          "placement": {
+            "hostId": "default",
+            "parentRouteId": null,
+            "shellId": null,
+            "navigatorOutlet": "root"
+          },
+          "presentation": {
+            "type": "page",
+            "routeType": "platformDefault",
+            "transition": "platformDefault",
+            "opaque": true,
+            "fullscreenDialog": false
+          },
+          "contracts": {
+            "route": "_DemoCapabilitiesPageRoute",
+            "arguments": "_DemoCapabilitiesPageRouteArguments",
+            "package": "demo_navigation_lab",
+            "library": "lib/src/ccrouter_generated/route/capability_page.route.g.dart",
+            "intentFactory": "CCGeneratedDemoCapabilitiesPageRouteFactory"
+          },
+          "registration": "ccrouterRegisterDemoCapabilitiesPageRoute",
+          "registrationLibrary": "lib/src/ccrouter_generated/route/capability_page.route.g.dart",
+          "destination": {
+            "descriptor": "ccrouterDescribeDemoCapabilitiesPageRoute",
+            "builder": "ccrouterBuildDemoCapabilitiesPageRoute",
+            "library": "lib/src/ccrouter_generated/route/capability_page.route.g.dart",
+            "builderLibrary": "lib/src/ccrouter_generated/binding/capability_page.route_binding.g.dart"
+          },
+          "generatedArtifacts": [
+            {
+              "role": "routeLibrary",
+              "symbol": "_DemoCapabilitiesPageRoute",
+              "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/route/capability_page.route.g.dart"
+            },
+            {
+              "role": "routeBinding",
+              "symbol": "ccrouterBuildDemoCapabilitiesPageRoute",
+              "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/binding/capability_page.route_binding.g.dart"
+            }
+          ],
+          "patterns": [
+            {
+              "type": "CCPathPattern",
+              "value": "/lab/capabilities",
+              "primary": true,
+              "constraints": {}
+            }
+          ],
+          "parameters": [],
+          "resultType": "void"
+        }
+      ],
+      "routeImplementations": []
+    },
     {
       "schemaVersion": 3,
       "package": "demo_navigation_lab",
@@ -2463,6 +2560,36 @@
             "role": "routeBinding",
             "symbol": "ccrouterBuildDemoCancelledPageRoute",
             "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/binding/policy_pages.route_binding.g.dart"
+          }
+        ]
+      },
+      {
+        "kind": "route",
+        "id": "demo_navigation_lab.capabilities",
+        "componentId": "demo_navigation_lab_component",
+        "packageName": "demo_navigation_lab",
+        "contract": {
+          "symbol": "DemoCapabilitiesPage",
+          "packageUri": "package:demo_navigation_lab/src/capability_page.dart",
+          "line": 16,
+          "column": 13
+        },
+        "implementation": {
+          "symbol": "DemoCapabilitiesPage",
+          "packageUri": "package:demo_navigation_lab/src/capability_page.dart",
+          "line": 16,
+          "column": 13
+        },
+        "generatedArtifacts": [
+          {
+            "role": "routeLibrary",
+            "symbol": "_DemoCapabilitiesPageRoute",
+            "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/route/capability_page.route.g.dart"
+          },
+          {
+            "role": "routeBinding",
+            "symbol": "ccrouterBuildDemoCapabilitiesPageRoute",
+            "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/binding/capability_page.route_binding.g.dart"
           }
         ]
       },

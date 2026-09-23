@@ -19,6 +19,15 @@ Source locations use portable Package URIs. Line and column are 1-based when the
   - `routeLibrary`: `package:demo_navigation_lab/src/ccrouter_generated/route/policy_pages.route.g.dart` (`_DemoCancelledPageRoute`)
   - `routeBinding`: `package:demo_navigation_lab/src/ccrouter_generated/binding/policy_pages.route_binding.g.dart` (`ccrouterBuildDemoCancelledPageRoute`)
 
+### Route `demo_navigation_lab.capabilities`
+
+- Declaring package: `demo_navigation_lab`
+- Contract/declaration: `package:demo_navigation_lab/src/capability_page.dart:16:13` (`DemoCapabilitiesPage`)
+- Implementation: `package:demo_navigation_lab/src/capability_page.dart:16:13` (`DemoCapabilitiesPage`)
+- Generated artifacts:
+  - `routeLibrary`: `package:demo_navigation_lab/src/ccrouter_generated/route/capability_page.route.g.dart` (`_DemoCapabilitiesPageRoute`)
+  - `routeBinding`: `package:demo_navigation_lab/src/ccrouter_generated/binding/capability_page.route_binding.g.dart` (`ccrouterBuildDemoCapabilitiesPageRoute`)
+
 ### Route `demo_navigation_lab.defer`
 
 - Declaring package: `demo_navigation_lab`

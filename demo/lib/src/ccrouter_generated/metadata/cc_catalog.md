@@ -97,6 +97,20 @@ Loads one allowlisted public HTTPS URL in the shared Web container.
 - Patterns:
   - `/lab/policy/cancel` (CCPathPattern, primary)
 
+### `demo_navigation_lab.capabilities`
+
+Command、Event、初始化任务与 Service 生命周期交互实验页。
+
+- Exposure: `internal`; deep link: `disabled`; result: `void`
+- Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/route/capability_page.route.g.dart`
+- Declaration: `demo_navigation_lab:lib/src/capability_page.dart` (page)
+- Placement: host `default`, outlet `root`, shell `none`, parent `none`
+- Presentation: `page`
+- Navigation sources: `typedIntent, internalUri`
+- Restoration: `unsupported`
+- Patterns:
+  - `/lab/capabilities` (CCPathPattern, primary)
+
 ### `demo_navigation_lab.defer`
 
 等待外部同意后恢复的 Deferred Navigation 示例。
@@ -513,6 +527,15 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 - Generated artifacts:
   - `routeLibrary`: `package:demo_navigation_lab/src/ccrouter_generated/route/policy_pages.route.g.dart` (`_DemoCancelledPageRoute`)
   - `routeBinding`: `package:demo_navigation_lab/src/ccrouter_generated/binding/policy_pages.route_binding.g.dart` (`ccrouterBuildDemoCancelledPageRoute`)
+
+### Route `demo_navigation_lab.capabilities`
+
+- Declaring package: `demo_navigation_lab`
+- Contract/declaration: `package:demo_navigation_lab/src/capability_page.dart:16:13` (`DemoCapabilitiesPage`)
+- Implementation: `package:demo_navigation_lab/src/capability_page.dart:16:13` (`DemoCapabilitiesPage`)
+- Generated artifacts:
+  - `routeLibrary`: `package:demo_navigation_lab/src/ccrouter_generated/route/capability_page.route.g.dart` (`_DemoCapabilitiesPageRoute`)
+  - `routeBinding`: `package:demo_navigation_lab/src/ccrouter_generated/binding/capability_page.route_binding.g.dart` (`ccrouterBuildDemoCapabilitiesPageRoute`)
 
 ### Route `demo_navigation_lab.defer`
 

@@ -330,6 +330,17 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
           _setStatus('Service 返回 · $summary');
         },
       ),
+      _ActionTile(
+        icon: Icons.memory_outlined,
+        title: '打开组件能力实验室',
+        subtitle: 'Command、Event、InitTask 与完整 Service 生命周期示例。',
+        onTap: () => _run(
+          '组件能力实验室',
+          () => CCRouter.navigator.push<void>(
+            DemoNavigationLabRoutes.capabilities(),
+          ),
+        ),
+      ),
     ]),
   );
 

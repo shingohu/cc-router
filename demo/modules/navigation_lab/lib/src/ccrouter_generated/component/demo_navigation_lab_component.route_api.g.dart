@@ -2,6 +2,8 @@
 // ignore_for_file: type=lint
 
 import 'package:flutter/foundation.dart' show internal;
+import '../route/capability_page.route.g.dart'
+    as route_src_ccrouter_generated_route_capability_page_route_g_dart;
 import '../route/detail_page.route.g.dart'
     as route_src_ccrouter_generated_route_detail_page_route_g_dart;
 import '../route/failure_page.route.g.dart'
@@ -25,6 +27,10 @@ abstract final class DemoNavigationLabRoutes {
   /// Creates an Intent for `demo_navigation_lab.cancel`.
   static const cancel =
       route_src_ccrouter_generated_route_policy_pages_route_g_dart.CCGeneratedDemoCancelledPageRouteFactory();
+
+  /// Creates an Intent for `demo_navigation_lab.capabilities`.
+  static const capabilities =
+      route_src_ccrouter_generated_route_capability_page_route_g_dart.CCGeneratedDemoCapabilitiesPageRouteFactory();
 
   /// Creates an Intent for `demo_navigation_lab.defer`.
   static const defer =

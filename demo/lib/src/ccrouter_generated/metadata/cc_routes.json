@@ -111,6 +111,82 @@
       "resultType": "void"
     },
     {
+      "id": "demo_navigation_lab.capabilities",
+      "componentId": "demo_navigation_lab_component",
+      "componentVersion": "0.1.0",
+      "exposure": "internal",
+      "deepLink": "disabled",
+      "description": "Command、Event、初始化任务与 Service 生命周期交互实验页。",
+      "interceptorIds": [],
+      "popGuardIds": [],
+      "declaration": {
+        "package": "demo_navigation_lab",
+        "library": "lib/src/capability_page.dart",
+        "kind": "page",
+        "symbol": "DemoCapabilitiesPage",
+        "packageUri": "package:demo_navigation_lab/src/capability_page.dart",
+        "line": 16,
+        "column": 13
+      },
+      "navigationSources": [
+        "typedIntent",
+        "internalUri"
+      ],
+      "restoration": {
+        "status": "unsupported"
+      },
+      "placement": {
+        "hostId": "default",
+        "parentRouteId": null,
+        "shellId": null,
+        "navigatorOutlet": "root"
+      },
+      "presentation": {
+        "type": "page",
+        "routeType": "platformDefault",
+        "transition": "platformDefault",
+        "opaque": true,
+        "fullscreenDialog": false
+      },
+      "contracts": {
+        "route": "_DemoCapabilitiesPageRoute",
+        "arguments": "_DemoCapabilitiesPageRouteArguments",
+        "package": "demo_navigation_lab",
+        "library": "lib/src/ccrouter_generated/route/capability_page.route.g.dart",
+        "intentFactory": "CCGeneratedDemoCapabilitiesPageRouteFactory"
+      },
+      "registration": "ccrouterRegisterDemoCapabilitiesPageRoute",
+      "registrationLibrary": "lib/src/ccrouter_generated/route/capability_page.route.g.dart",
+      "destination": {
+        "descriptor": "ccrouterDescribeDemoCapabilitiesPageRoute",
+        "builder": "ccrouterBuildDemoCapabilitiesPageRoute",
+        "library": "lib/src/ccrouter_generated/route/capability_page.route.g.dart",
+        "builderLibrary": "lib/src/ccrouter_generated/binding/capability_page.route_binding.g.dart"
+      },
+      "generatedArtifacts": [
+        {
+          "role": "routeLibrary",
+          "symbol": "_DemoCapabilitiesPageRoute",
+          "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/route/capability_page.route.g.dart"
+        },
+        {
+          "role": "routeBinding",
+          "symbol": "ccrouterBuildDemoCapabilitiesPageRoute",
+          "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/binding/capability_page.route_binding.g.dart"
+        }
+      ],
+      "patterns": [
+        {
+          "type": "CCPathPattern",
+          "value": "/lab/capabilities",
+          "primary": true,
+          "constraints": {}
+        }
+      ],
+      "parameters": [],
+      "resultType": "void"
+    },
+    {
       "id": "demo_navigation_lab.defer",
       "componentId": "demo_navigation_lab_component",
       "componentVersion": "0.1.0",

@@ -17,7 +17,7 @@ Flutter SDK 选择：
 ```
 
 工程入口为 `lib/main.dart`。示例在 `runApp` 前显式调用
-`CCRouter.initialize(components: ...)`，再通过 `CCRouterApp.managed` 和
+`CCRouter.initialize(components: ...)` 和 `CCRouter.runInitialization()`，再通过 `CCRouterApp.managed` 和
 `CCGoRouterBackend.managed` 自动创建 Host、GoRouter、Observer 和 Adapter；业务代码不接触
 导航 Backend。
 
@@ -27,6 +27,17 @@ Managed Modal、Foreign/Overlay 隔离、ShellRoute、StatefulShellRoute、嵌�
 typed Extra。完整的 macOS 验证矩阵、已修复问题和 Adapter 限制见
 [路由验证记录](docs/route_validation.md)，与 Flutter 官方 GoRouter 示例的差异见
 [GoRouter 示例覆盖对照](docs/go_router_example_coverage.md)。
+
+首页的“组件能力实验室”使用真实 Runtime 展示非路由能力：
+
+- Command：typed result、`void`、timeout、caller cancellation 和 Handler error；
+- Event：并发多订阅者、Subscriber 异常隔离、零订阅者和 timeout；
+- InitTask：App Started DAG、critical/optional 状态、失败依赖 skip 和手动 Privacy Gate；
+- Service：App/Session/Route Scope、Singleton/Factory、lazy readiness single-flight、命名多实现、
+  可选查找，以及 Session/Route 关闭时自动 dispose。
+
+这些示例用于观察边界而不是模拟万能 EventBus：读取状态走 Service，需要唯一执行者的操作走
+Command，已经发生的事实才发布 Event，一次性启动依赖使用 InitTask。
 
 `modules/web_contracts` 和 `modules/web` 展示共享 WebView 容器：公开 allowlist URL 使用
 Query Codec，认证 URL 与 Header 使用进程内 Extra；标准 HTTPS 外部链接由 Host mapper

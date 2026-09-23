@@ -20,7 +20,7 @@ final ccrouterGeneratedPackageBundle = CCGeneratedPackageBundle(
   packageName: 'ccrouter_demo',
   packageVersion: '0.1.0+1',
   contentFingerprint:
-      '45e9c0a9d0629deb9964ea2d4168c875ba2d0d9a0eee245728e276e3f581515b',
+      'b4f705c2231dfd037b7aa432b9b5b0f25209c9cd98fade48779f75947062c576',
   componentManifests: [],
   routeCatalog: CCFlutterRouteCatalog.merge([]),
   dependencies: [

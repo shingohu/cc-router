@@ -11,7 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  setUp(() {
+  setUp(() async {
     demoNavigationLabStore
       ..blockDetailGlobally = false
       ..dirtyForm = true
@@ -30,6 +30,7 @@ void main() {
       navigationAspects: [demoNavigationAspect],
       telemetryContextProvider: const DemoNavigationTelemetryProvider(),
     );
+    await CCRouter.runInitialization();
   });
 
   tearDown(CCRouter.shutdown);
@@ -85,6 +86,145 @@ void main() {
     expect(trace.context.callerComponentId, 'demo_navigation_lab_component');
     expect(trace.context.targetComponentId, 'demo_order_component');
     expect(trace.status, 'succeeded');
+
+    await _unmountDemo(tester);
+  });
+
+  testWidgets('capability lab exercises Commands and initialization Gates', (
+    tester,
+  ) async {
+    final startup = {
+      for (final task in CCRouter.initializationTasks) task.id: task,
+    };
+    expect(
+      startup['demo.startup.foundation']!.state,
+      CCInitializationTaskState.succeeded,
+    );
+    expect(
+      startup['demo.startup.optional-sdk']!.state,
+      CCInitializationTaskState.failed,
+    );
+    expect(
+      startup['demo.startup.optional-dependent']!.state,
+      CCInitializationTaskState.skipped,
+    );
+    expect(
+      startup['demo.startup.analytics']!.state,
+      CCInitializationTaskState.pending,
+    );
+
+    await _pumpDemo(tester);
+    await _openCapabilityLab(tester);
+
+    await _tapCapabilityAction(tester, 'Command · typed result');
+    expect(find.textContaining('receipt:88'), findsOneWidget);
+
+    await _tapCapabilityAction(tester, 'Command · void');
+    expect(find.textContaining('Command void · 完成'), findsOneWidget);
+    expect(
+      demoNavigationLabStore.events.any(
+        (event) => event.contains('Command Handler · cache refreshed'),
+      ),
+      isTrue,
+    );
+
+    await _tapCapabilityAction(tester, 'Command · timeout');
+    expect(find.textContaining('CCInvocationTimeoutError'), findsOneWidget);
+
+    await _tapCapabilityAction(tester, 'Command · caller cancellation');
+    expect(find.textContaining('CCInvocationCancelledError'), findsOneWidget);
+
+    await _tapCapabilityAction(tester, 'Command · Handler error');
+    expect(find.textContaining('StateError'), findsOneWidget);
+
+    await _tapCapabilityAction(tester, '打开 Privacy Gate');
+    expect(find.textContaining('succeeded'), findsWidgets);
+    expect(
+      CCRouter.initializationTasks
+          .firstWhere((task) => task.id == 'demo.startup.analytics')
+          .state,
+      CCInitializationTaskState.succeeded,
+    );
+
+    await _unmountDemo(tester);
+  });
+
+  testWidgets('capability lab exercises Event delivery boundaries', (
+    tester,
+  ) async {
+    await _pumpDemo(tester);
+    await _openCapabilityLab(tester);
+
+    await _tapCapabilityAction(tester, 'Event · multiple subscribers');
+    expect(find.textContaining('Event subscribers · 完成'), findsOneWidget);
+    expect(
+      demoNavigationLabStore.events.any(
+        (event) => event.contains('Event analytics subscriber · order=1001'),
+      ),
+      isTrue,
+    );
+    expect(
+      CCRouter.recentTraces
+          .where((trace) => trace.operation == 'eventSubscriber')
+          .map((trace) => trace.status),
+      containsAll(<String>['failed', 'succeeded']),
+    );
+
+    await _tapCapabilityAction(tester, 'Event · zero subscribers');
+    expect(find.textContaining('Event zero subscribers · 完成'), findsOneWidget);
+
+    await _tapCapabilityAction(tester, 'Event · timeout');
+    expect(find.textContaining('CCInvocationTimeoutError'), findsOneWidget);
+
+    await _unmountDemo(tester);
+  });
+
+  testWidgets('capability lab exercises Service scopes and resolution modes', (
+    tester,
+  ) async {
+    await _pumpDemo(tester);
+    await _openCapabilityLab(tester);
+
+    await _tapCapabilityAction(tester, 'Service · App Singleton');
+    expect(find.textContaining('same=true'), findsOneWidget);
+
+    await _tapCapabilityAction(tester, 'Service · Session Singleton');
+    expect(find.textContaining('same=true'), findsOneWidget);
+    await _tapCapabilityAction(tester, 'Service · close Session');
+    expect(
+      demoNavigationLabStore.events.any(
+        (event) =>
+            event.contains('Session Service #') && event.contains('disposed'),
+      ),
+      isTrue,
+    );
+
+    await _tapCapabilityAction(tester, 'Service · Route Singleton');
+    expect(find.textContaining('same=true'), findsOneWidget);
+
+    await _tapCapabilityAction(tester, 'Service · Factory');
+    expect(find.textContaining('same=false'), findsOneWidget);
+
+    await _tapCapabilityAction(tester, 'Service · lazy readiness');
+    expect(find.textContaining('CCServiceNotReadyError'), findsOneWidget);
+    expect(find.textContaining('ready=true'), findsOneWidget);
+
+    await _tapCapabilityAction(tester, 'Service · multiple implementations');
+    expect(find.textContaining('primary/backup'), findsOneWidget);
+
+    await _tapCapabilityAction(tester, 'Service · optional lookup');
+    expect(find.textContaining('missing=true'), findsOneWidget);
+
+    CCRouter.navigator.pop<void>();
+    await tester.pumpAndSettle();
+    expect(find.text('CCRouter Lab'), findsOneWidget);
+    expect(
+      demoNavigationLabStore.events.any(
+        (event) =>
+            event.contains('Route Service #') && event.contains('disposed'),
+      ),
+      isTrue,
+    );
 
     await _unmountDemo(tester);
   });
@@ -790,6 +930,27 @@ Future<void> _pumpDemo(WidgetTester tester) async {
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
   await tester.pumpWidget(const CCRouterDemoApp(listenForPlatformLinks: false));
+  await tester.pumpAndSettle();
+}
+
+Future<void> _openCapabilityLab(WidgetTester tester) async {
+  await tester.scrollUntilVisible(
+    find.text('打开组件能力实验室'),
+    300,
+    scrollable: find.byType(Scrollable).last,
+  );
+  await tester.tap(find.text('打开组件能力实验室'));
+  await tester.pumpAndSettle();
+  expect(find.text('组件能力实验室'), findsOneWidget);
+}
+
+Future<void> _tapCapabilityAction(WidgetTester tester, String title) async {
+  await tester.scrollUntilVisible(
+    find.text(title),
+    350,
+    scrollable: find.byType(Scrollable).last,
+  );
+  await tester.tap(find.text(title));
   await tester.pumpAndSettle();
 }
 
