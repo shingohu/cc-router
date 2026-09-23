@@ -5,7 +5,7 @@
 - 审查日期：2026-09-22
 - 审查范围：路由 Runtime、业务 Facade、Host/Adapter SPI、GoRouter Adapter、生成器、
   Demo、测试与诊断模型。
-- 自动化基线：`dart analyze` 与 Demo Analyzer 通过；Framework 248 项、Demo 25 项、
+- 自动化基线：`dart analyze` 与 Demo Analyzer 通过；Framework 250 项、Demo 25 项、
   Generator 131 项测试通过；默认缓存和 `--no-cache` 生成检查逐字节等价；macOS debug
   build 通过。
 - 总体结论：当前实现满足 13 条约定在 v0.1 路由范围内的发布门槛，没有 P0 或 P1 问题。
@@ -153,6 +153,20 @@
 本次 OHOS SDK 本机 JIT 运行的 10 轮耗时为 `cycleUsP50=6994`、`cycleUsP95=10363`，仅作为同机
 回归参考，不作为跨平台阈值。
 
+2026-09-22 自动化质量维护复测结果如下，作为当前同机回归基线，不作为跨平台性能承诺：
+
+- Runtime 10/100/1000 Route 初始化 P50/P95：`111/203us`、`146/356us`、`550/1298us`；
+- Runtime 10/100/1000 Route 动态 URI 打开 P50/P95：`96/332us`、`186/392us`、`430/1089us`；
+- Runtime 10/100/1000 Route dispose P50/P95：`33/88us`、`64/100us`、`59/295us`；
+- 10 轮、每轮 100 个并发 Push/Pop：`cycleUsP50=7816`、`cycleUsP95=22726`，峰值
+  `activeRouteEntries=101`，每轮结束恢复到 `finalActiveEntries=1`、
+  `finalPendingNavigations=0`、`finalAdapterEntries=1`；
+- Generator 10/100/500/1000/5000 Route 校验：`1.058/5.704/18.989/29.385/99.37ms`。
+
+本次自动复测没有发现状态残留、性能异常或失败回归。并发执行 Generator 测试与 Demo Analyzer
+会短暂读取 Generator 测试创建的临时探针，因此质量门禁必须串行执行；串行复测后 Demo Analyzer
+恢复为无诊断。这是测试编排约束，不是生产代码依赖。
+
 生成器聚合已增加非门禁式基准脚本：
 
 ```sh
@@ -167,7 +181,8 @@ fvm dart run packages/ccrouter_test/benchmark/runtime_concurrency.dart
 `60.74ms`。索引只筛选候选，最终冲突仍由原精确比较器确认；Wildcard 保守回退到同优先级全比较。
 同机 Runtime 20 次生命周期与 100 次动态打开样本中，1000 Route 初始化 p50/p95 为
 `461us/565us`，动态 URI 打开为 `375us/560us`，dispose 为 `37us/42us`。后续仍需补充并发压力
-和跨版本内存趋势基线。后两项属于持续观测工作，不是通过一次本机运行即可关闭的功能项。
+和跨版本内存趋势基线；本次已补充并发压力复测，但长期 RSS/Heap 趋势仍需持续采样。后者属于
+持续观测工作，不是通过一次本机运行即可关闭的功能项。
 
 ### 已完成：P2-7 生成物最终审计
 
@@ -213,7 +228,7 @@ fvm dart run packages/ccrouter_test/benchmark/runtime_concurrency.dart
 ## 6. 本轮最终门禁
 
 - `fvm dart test packages/ccrouter_test/generator_test`：131 项通过；
-- `fvm flutter test packages/ccrouter_test/test`：248 项通过；
+- `fvm flutter test packages/ccrouter_test/test`：250 项通过；
 - `fvm flutter test demo/test`：25 项通过；
 - `fvm dart analyze`、`fvm flutter analyze demo`：无问题；
 - `ccrouter generate demo --check` 与 `--no-cache --check`：生成物同步且等价；

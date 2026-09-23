@@ -381,13 +381,14 @@ Demo 中与本轮无关的用户工作区改动不回退；如果其未完成代
 
 ### 1.x 生成物边界全量回归（第 6 项）
 
-- `fvm dart analyze`：Workspace 无问题；`packages/ccrouter_test/test`：248 项通过；
+- `fvm dart analyze`：Workspace 无问题；`packages/ccrouter_test/test`：250 项通过；
   `packages/ccrouter_test/generator_test`：131 项通过；`demo/test`：25 项通过。
 - `fvm dart run ccrouter_generator:ccrouter generate demo --check`：7 个生成 Package、4 个组件、
   30 条路由均为最新，未产生差异；`clean demo` 的安全清理、用户文件保留和重新生成恢复已由
   Generator 专项测试覆盖。
-- `fvm flutter run -d macos --no-pub` 构建并启动 Demo，实际查看首屏与导航页；
-  点击类型安全 Push 和确认返回后，获得 `detail:42:confirmed`，Managed Route Entry 回到 0。
+- `fvm flutter build macos --debug` 自动构建 Demo 成功，产物为
+  `demo/build/macos/Build/Products/Debug/ccrouter_demo.app`；真实设备上的手势和视觉验收不纳入
+  无人工质量门禁，需在对应平台人工验证时另行记录。
   启动日志报告窗口未自动置前，但窗口及页面实际可见，未观察到运行异常。
 - 新增的跨 Package 生成 API 校验器只在 CLI 校验期间读取源码并解析 AST，不持有
   Listener、Timer、Overlay 或运行时 Route；测试创建的临时目录使用 teardown 清理。
