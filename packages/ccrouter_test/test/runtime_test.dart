@@ -662,6 +662,292 @@ void main() {
     expect(scope.disposalErrors.single, isA<TimeoutException>());
   });
 
+  test(
+    'initialization DAG runs ready layers concurrently exactly once',
+    () async {
+      final starts = <String>[];
+      final firstStarted = Completer<void>();
+      final secondStarted = Completer<void>();
+      final release = Completer<void>();
+      runtime.registerInitializationTask(
+        CCInitializationTask(
+          id: 'startup.b',
+          run: (_) async {
+            starts.add('b');
+            secondStarted.complete();
+            await release.future;
+          },
+        ),
+      );
+      runtime.registerInitializationTask(
+        CCInitializationTask(
+          id: 'startup.a',
+          run: (_) async {
+            starts.add('a');
+            firstStarted.complete();
+            await release.future;
+          },
+        ),
+      );
+      runtime.registerInitializationTask(
+        CCInitializationTask(
+          id: 'startup.final',
+          dependsOn: const ['startup.a', 'startup.b'],
+          run: (_) => starts.add('final'),
+        ),
+      );
+      runtime.initialize();
+
+      final firstRun = runtime.runInitialization();
+      final sharedRun = runtime.runInitialization();
+      expect(sharedRun, same(firstRun));
+      await Future.wait([firstStarted.future, secondStarted.future]);
+      expect(starts, ['a', 'b']);
+      release.complete();
+      await firstRun;
+      await runtime.runInitialization();
+
+      expect(starts, ['a', 'b', 'final']);
+      expect(
+        runtime.initializationTasks.map((task) => task.state),
+        everyElement(CCInitializationTaskState.succeeded),
+      );
+    },
+  );
+
+  test(
+    'initialization Gates retain blocked work until explicitly opened',
+    () async {
+      const privacyGate = CCInitializationGate('privacyGranted');
+      final order = <String>[];
+      runtime.registerInitializationTask(
+        CCInitializationTask(id: 'startup.base', run: (_) => order.add('base')),
+      );
+      runtime.registerInitializationTask(
+        CCInitializationTask(
+          id: 'startup.analytics',
+          dependsOn: const ['startup.base'],
+          gate: privacyGate,
+          run: (_) => order.add('analytics'),
+        ),
+      );
+      runtime.initialize();
+
+      await runtime.runInitialization(gate: privacyGate);
+      expect(order, isEmpty);
+      expect(
+        runtime.initializationTasks.last.state,
+        CCInitializationTaskState.pending,
+      );
+
+      await runtime.runInitialization();
+      expect(order, ['base', 'analytics']);
+    },
+  );
+
+  test(
+    'optional initialization failure skips dependents and continues',
+    () async {
+      var independentRan = false;
+      runtime.registerInitializationTask(
+        CCInitializationTask(
+          id: 'startup.optional',
+          failurePolicy: CCInitializationFailurePolicy.optional,
+          run: (_) => throw StateError('private details'),
+        ),
+      );
+      runtime.registerInitializationTask(
+        CCInitializationTask(
+          id: 'startup.dependent',
+          dependsOn: const ['startup.optional'],
+          run: (_) => fail('blocked task must not run'),
+        ),
+      );
+      runtime.registerInitializationTask(
+        CCInitializationTask(
+          id: 'startup.independent',
+          run: (_) => independentRan = true,
+        ),
+      );
+      runtime.initialize();
+
+      await runtime.runInitialization();
+
+      expect(independentRan, isTrue);
+      final snapshots = {
+        for (final task in runtime.initializationTasks) task.id: task,
+      };
+      expect(
+        snapshots['startup.optional']!.state,
+        CCInitializationTaskState.failed,
+      );
+      expect(snapshots['startup.optional']!.errorType, 'StateError');
+      expect(
+        snapshots['startup.dependent']!.state,
+        CCInitializationTaskState.skipped,
+      );
+      expect(
+        snapshots['startup.dependent']!.blockedByTaskId,
+        'startup.optional',
+      );
+    },
+  );
+
+  test(
+    'critical initialization failure is sanitized and remains terminal',
+    () async {
+      runtime.registerInitializationTask(
+        CCInitializationTask(
+          id: 'startup.critical',
+          run: (_) => throw StateError('private details'),
+        ),
+      );
+      runtime.registerInitializationTask(
+        CCInitializationTask(
+          id: 'startup.blocked',
+          dependsOn: const ['startup.critical'],
+          run: (_) => fail('blocked task must not run'),
+        ),
+      );
+      runtime.initialize();
+
+      final matcher = isA<CCInitializationTaskError>()
+          .having((error) => error.taskId, 'taskId', 'startup.critical')
+          .having((error) => error.causeType, 'causeType', 'StateError')
+          .having(
+            (error) => error.message,
+            'message',
+            isNot(contains('private details')),
+          );
+      await expectLater(runtime.runInitialization(), throwsA(matcher));
+      await expectLater(runtime.runInitialization(), throwsA(matcher));
+      expect(
+        runtime.initializationTasks.first.state,
+        CCInitializationTaskState.skipped,
+      );
+    },
+  );
+
+  test('initialization validates missing dependencies and cycles', () async {
+    runtime.registerInitializationTask(
+      CCInitializationTask(
+        id: 'startup.missing',
+        dependsOn: const ['startup.unknown'],
+        run: (_) {},
+      ),
+    );
+    expect(runtime.initialize, throwsA(isA<CCRegistrationError>()));
+    await runtime.dispose();
+
+    runtime = CCRouterRuntime.forTesting();
+    runtime.registerInitializationTask(
+      CCInitializationTask(
+        id: 'startup.a',
+        dependsOn: const ['startup.b'],
+        run: (_) {},
+      ),
+    );
+    runtime.registerInitializationTask(
+      CCInitializationTask(
+        id: 'startup.b',
+        dependsOn: const ['startup.a'],
+        run: (_) {},
+      ),
+    );
+    expect(runtime.initialize, throwsA(isA<CCRegistrationError>()));
+  });
+
+  test('initialization rejects invalid and duplicate task metadata', () {
+    expect(
+      () => runtime.registerInitializationTask(
+        CCInitializationTask(id: 'Bad Task', run: (_) {}),
+      ),
+      throwsA(isA<CCRegistrationError>()),
+    );
+    expect(
+      () => runtime.registerInitializationTask(
+        CCInitializationTask(
+          id: 'startup.bad-gate',
+          gate: const CCInitializationGate('Bad Gate'),
+          run: (_) {},
+        ),
+      ),
+      throwsA(isA<CCRegistrationError>()),
+    );
+    expect(
+      () => runtime.registerInitializationTask(
+        CCInitializationTask(
+          id: 'startup.timeout',
+          timeout: Duration.zero,
+          run: (_) {},
+        ),
+      ),
+      throwsA(isA<CCRegistrationError>()),
+    );
+    expect(
+      () => runtime.registerInitializationTask(
+        CCInitializationTask(
+          id: 'startup.self',
+          dependsOn: const ['startup.self'],
+          run: (_) {},
+        ),
+      ),
+      throwsA(isA<CCRegistrationError>()),
+    );
+    runtime.registerInitializationTask(
+      CCInitializationTask(id: 'startup.unique', run: (_) {}),
+    );
+    expect(
+      () => runtime.registerInitializationTask(
+        CCInitializationTask(id: 'startup.unique', run: (_) {}),
+      ),
+      throwsA(isA<CCRegistrationError>()),
+    );
+  });
+
+  test(
+    'initialization timeout and Runtime disposal cancel pending work',
+    () async {
+      runtime.registerInitializationTask(
+        CCInitializationTask(
+          id: 'startup.timeout',
+          timeout: const Duration(milliseconds: 10),
+          run: (context) => context.cancellation.whenCancelled,
+        ),
+      );
+      runtime.initialize();
+      await expectLater(
+        runtime.runInitialization(),
+        throwsA(
+          isA<CCInitializationTaskError>().having(
+            (error) => error.causeType,
+            'causeType',
+            'CCInvocationTimeoutError',
+          ),
+        ),
+      );
+      await runtime.dispose();
+
+      final started = Completer<void>();
+      runtime = CCRouterRuntime.forTesting();
+      runtime.registerInitializationTask(
+        CCInitializationTask(
+          id: 'startup.pending',
+          run: (context) async {
+            started.complete();
+            await context.cancellation.whenCancelled;
+          },
+        ),
+      );
+      runtime.initialize();
+      final run = runtime.runInitialization();
+      await started.future;
+      final disposed = runtime.dispose();
+      await expectLater(run, throwsA(isA<CCInvocationCancelledError>()));
+      await disposed;
+    },
+  );
+
   test('commands return typed results and reject duplicates', () async {
     runtime.registerCommand<Add, int>((message, _) => message.value + 1);
     runtime.registerCommand<ReadOnce, int>((_, _) async => 7);

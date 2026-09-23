@@ -215,6 +215,15 @@ final class CCRouterRuntime {
   /// Promoted service providers grouped by stable cross-package identity.
   final Map<String, List<_Provider>> _providersByContractId = {};
 
+  /// Initialization tasks indexed by globally stable task identity.
+  final Map<String, _InitializationTaskRecord> _initializationTasks = {};
+
+  /// Gates explicitly opened by the application host.
+  final Set<String> _openedInitializationGates = {};
+
+  /// Active DAG drain shared by concurrent Gate triggers.
+  Future<void>? _initializationRun;
+
   /// Single command handler indexed by command type.
   final Map<Type, _RegisteredCommandHandler> _commands = {};
 
@@ -423,6 +432,14 @@ final class CCRouterRuntime {
   List<CCInvocationError> get subscriberErrors =>
       List.unmodifiable(_subscriberErrors);
 
+  /// Immutable initialization task snapshots ordered by stable task ID.
+  List<CCInitializationTaskSnapshot> get initializationTasks {
+    final ids = _initializationTasks.keys.toList()..sort();
+    return List.unmodifiable(
+      ids.map((id) => _initializationTasks[id]!.snapshot),
+    );
+  }
+
   /// Starts the Runtime with its validated framework-wide configuration.
   ///
   /// Component manifests supplied to the constructor are installed before this
@@ -433,6 +450,7 @@ final class CCRouterRuntime {
   void initialize() {
     if (_disposed) throw const CCScopeClosedError('runtime');
     if (_initialized) return;
+    _validateInitializationTasks();
     _validateRouteConfiguration();
     _validateNavigationAdapterCapabilities();
     _navigationAdapter?.initialize(
@@ -519,6 +537,42 @@ final class CCRouterRuntime {
               ),
       ),
     );
+  }
+
+  /// Validates initialization dependencies and rejects cycles before startup.
+  void _validateInitializationTasks() {
+    for (final record in _initializationTasks.values) {
+      for (final dependency in record.task.dependsOn) {
+        if (!_initializationTasks.containsKey(dependency)) {
+          throw CCRegistrationError(
+            'Initialization task "${record.task.id}" requires missing '
+            'task "$dependency".',
+          );
+        }
+      }
+    }
+    final visiting = <String>{};
+    final visited = <String>{};
+    void visit(String id) {
+      if (visited.contains(id)) return;
+      if (!visiting.add(id)) {
+        throw CCRegistrationError(
+          'Initialization task dependency cycle at "$id".',
+        );
+      }
+      final dependencies = _initializationTasks[id]!.task.dependsOn.toList()
+        ..sort();
+      for (final dependency in dependencies) {
+        visit(dependency);
+      }
+      visiting.remove(id);
+      visited.add(id);
+    }
+
+    final ids = _initializationTasks.keys.toList()..sort();
+    for (final id in ids) {
+      visit(id);
+    }
   }
 
   /// Validates cross-route placement and policy references after registration.
@@ -671,6 +725,55 @@ final class CCRouterRuntime {
       contractProviders.add(normalized);
       _providersByContractId[contractId!] = contractProviders;
     }
+  }
+
+  /// Registers an initialization task for low-level Runtime tests.
+  ///
+  /// Components use [CCRegistry.registerInitializationTask] so the Runtime can
+  /// attach a trusted owner. The complete DAG is validated by [initialize].
+  void registerInitializationTask(CCInitializationTask task) {
+    _registerInitializationTaskForComponent('', task);
+  }
+
+  /// Registers one component-owned initialization task before Runtime startup.
+  void _registerInitializationTaskForComponent(
+    String ownerComponentId,
+    CCInitializationTask task,
+  ) {
+    _ensureConfigurable();
+    if (!_isStableIdentifier(task.id)) {
+      throw CCRegistrationError('Invalid initialization task ID "${task.id}".');
+    }
+    if (!_isStableIdentifier(task.gate.id)) {
+      throw CCRegistrationError(
+        'Invalid initialization gate ID "${task.gate.id}".',
+      );
+    }
+    if (task.timeout != null && task.timeout! <= Duration.zero) {
+      throw CCRegistrationError(
+        'Initialization task "${task.id}" timeout must be positive.',
+      );
+    }
+    final dependencies = <String>{};
+    for (final dependency in task.dependsOn) {
+      if (!_isStableIdentifier(dependency) ||
+          dependency == task.id ||
+          !dependencies.add(dependency)) {
+        throw CCRegistrationError(
+          'Initialization task "${task.id}" has an invalid, duplicate, or '
+          'self dependency "$dependency".',
+        );
+      }
+    }
+    if (_initializationTasks.containsKey(task.id)) {
+      throw CCRegistrationError(
+        'Duplicate initialization task ID "${task.id}".',
+      );
+    }
+    _initializationTasks[task.id] = _InitializationTaskRecord(
+      ownerComponentId: ownerComponentId,
+      task: task,
+    );
   }
 
   /// Registers the single handler for command type [C].
@@ -1328,6 +1431,151 @@ final class CCRouterRuntime {
     );
   }
 
+  /// Opens [gate] and runs every newly ready initialization task exactly once.
+  ///
+  /// Calls that overlap share one DAG drain. Tasks whose Gates remain closed
+  /// stay pending; successful and failed tasks are never retried implicitly.
+  /// A critical failure throws [CCInitializationTaskError], while optional
+  /// failures remain available through [initializationTasks].
+  Future<void> runInitialization({
+    CCInitializationGate gate = CCInitializationGate.appStarted,
+  }) {
+    _ensureInitialized();
+    if (!_isStableIdentifier(gate.id)) {
+      throw CCRegistrationError('Invalid initialization gate ID "${gate.id}".');
+    }
+    _openedInitializationGates.add(gate.id);
+    final active = _initializationRun;
+    if (active != null) return active;
+    final run = _drainAndReleaseInitializationTasks();
+    _initializationRun = run;
+    return run;
+  }
+
+  /// Runs ready DAG layers and clears the single-flight marker on completion.
+  Future<void> _drainAndReleaseInitializationTasks() async {
+    try {
+      _throwExistingCriticalInitializationFailure();
+      await _drainInitializationTasks();
+    } finally {
+      _initializationRun = null;
+    }
+  }
+
+  /// Executes ready task layers until all opened Gates become quiescent.
+  Future<void> _drainInitializationTasks() async {
+    while (true) {
+      _skipBlockedInitializationTasks();
+      final ready =
+          _initializationTasks.values
+              .where(
+                (record) =>
+                    record.state == CCInitializationTaskState.pending &&
+                    _openedInitializationGates.contains(record.task.gate.id) &&
+                    record.task.dependsOn.every(
+                      (dependency) =>
+                          _initializationTasks[dependency]!.state ==
+                          CCInitializationTaskState.succeeded,
+                    ),
+              )
+              .toList()
+            ..sort((left, right) => left.task.id.compareTo(right.task.id));
+      if (ready.isEmpty) return;
+      final failures = (await Future.wait(
+        ready.map(_runInitializationTask),
+      )).whereType<_InitializationTaskFailure>().toList();
+      if (appScope.cancellation.isCancelled) {
+        final cancellation = failures
+            .map((failure) => failure.error)
+            .whereType<CCInvocationCancelledError>()
+            .firstOrNull;
+        if (cancellation != null) throw cancellation;
+      }
+      final critical = failures
+          .where(
+            (failure) =>
+                failure.record.task.failurePolicy ==
+                CCInitializationFailurePolicy.critical,
+          )
+          .firstOrNull;
+      if (critical != null) {
+        _skipBlockedInitializationTasks();
+        throw CCInitializationTaskError(
+          critical.record.task.id,
+          critical.record.errorType!,
+        );
+      }
+    }
+  }
+
+  /// Executes one task inside the shared invocation and cancellation pipeline.
+  Future<_InitializationTaskFailure?> _runInitializationTask(
+    _InitializationTaskRecord record,
+  ) async {
+    record.state = CCInitializationTaskState.running;
+    final watch = Stopwatch()..start();
+    try {
+      await _invoke<void>(
+        'initializationTask',
+        record.task.id,
+        (context) async {
+          await record.task.run(context);
+          if (context.cancellation.isCancelled) {
+            throw const CCInvocationCancelledError();
+          }
+        },
+        timeout: record.task.timeout,
+        targetComponentId: record.ownerComponentId.isEmpty
+            ? null
+            : record.ownerComponentId,
+      );
+      record.state = CCInitializationTaskState.succeeded;
+      return null;
+    } catch (error) {
+      record.state = CCInitializationTaskState.failed;
+      record.errorType = error.runtimeType.toString();
+      return _InitializationTaskFailure(record, error);
+    } finally {
+      watch.stop();
+      record.duration = watch.elapsed;
+    }
+  }
+
+  /// Marks tasks blocked by failed or skipped dependencies without executing.
+  void _skipBlockedInitializationTasks() {
+    var changed = true;
+    while (changed) {
+      changed = false;
+      for (final record in _initializationTasks.values) {
+        if (record.state != CCInitializationTaskState.pending) continue;
+        for (final dependency in record.task.dependsOn) {
+          final dependencyState = _initializationTasks[dependency]!.state;
+          if (dependencyState == CCInitializationTaskState.failed ||
+              dependencyState == CCInitializationTaskState.skipped) {
+            record.state = CCInitializationTaskState.skipped;
+            record.blockedByTaskId = dependency;
+            changed = true;
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  /// Replays a previously recorded critical failure on later Gate triggers.
+  void _throwExistingCriticalInitializationFailure() {
+    final failed = _initializationTasks.values
+        .where(
+          (record) =>
+              record.state == CCInitializationTaskState.failed &&
+              record.task.failurePolicy ==
+                  CCInitializationFailurePolicy.critical,
+        )
+        .firstOrNull;
+    if (failed == null) return;
+    throw CCInitializationTaskError(failed.task.id, failed.errorType!);
+  }
+
   /// Opens an authenticated account Session and creates its owning Scope.
   void openSession({
     required String accountId,
@@ -1379,6 +1627,14 @@ final class CCRouterRuntime {
   Future<void> _closeScopes() async {
     // Stop invocations before awaiting any service disposal.
     appScope.cancellation.cancel();
+    final initializationRun = _initializationRun;
+    if (initializationRun != null) {
+      try {
+        await initializationRun;
+      } catch (_) {
+        // Shutdown owns cancellation; task failure is already in Trace/snapshot.
+      }
+    }
     _cancelAllPendingNavigations(code: 'runtime_disposed');
     _removeAllRouteEntries(reason: 'runtimeDispose');
     await Future.wait(_routeEntryCloseFutures);

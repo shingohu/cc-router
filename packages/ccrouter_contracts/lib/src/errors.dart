@@ -335,6 +335,22 @@ final class CCServiceInitializationError extends CCServiceError {
   final String causeType;
 }
 
+/// Indicates that a critical Runtime initialization task failed.
+///
+/// The original exception and message are intentionally not retained. Hosts
+/// use [taskId], [causeType], task snapshots, and Trace for safe diagnostics.
+final class CCInitializationTaskError extends CCRouterError {
+  /// Creates a sanitized failure for the critical initialization [taskId].
+  const CCInitializationTaskError(this.taskId, this.causeType)
+    : super('Initialization task "$taskId" failed ($causeType).');
+
+  /// Stable identity of the failed task.
+  final String taskId;
+
+  /// Runtime type of the underlying failure without its message or payload.
+  final String causeType;
+}
+
 /// Indicates that a Flutter `BuildContext` cannot be mapped to a bound Outlet.
 ///
 /// This is returned by the optional call-site Outlet resolver when the Context

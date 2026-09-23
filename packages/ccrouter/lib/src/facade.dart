@@ -541,6 +541,25 @@ abstract final class CCRouter {
     CCCancellationToken? cancellation,
   }) => _runtime.event(event, timeout: timeout, cancellation: cancellation);
 
+  /// Opens an initialization [gate] and awaits every newly ready task.
+  ///
+  /// Call after synchronous [initialize]. Ordinary startup uses
+  /// [CCInitializationGate.appStarted]; product conditions such as privacy
+  /// consent use an explicit stable Gate. Overlapping calls share one DAG run,
+  /// and completed tasks never execute twice. Critical failures throw
+  /// [CCInitializationTaskError]; optional failures remain in
+  /// [initializationTasks].
+  static Future<void> runInitialization({
+    CCInitializationGate gate = CCInitializationGate.appStarted,
+  }) => _runtime.runInitialization(gate: gate);
+
+  /// Immutable initialization task snapshots ordered by stable task ID.
+  ///
+  /// Use for startup diagnostics and tests. Snapshots contain only stable IDs,
+  /// state, duration, and sanitized error types, never task inputs or errors.
+  static List<CCInitializationTaskSnapshot> get initializationTasks =>
+      _runtime.initializationTasks;
+
   /// Opens one authenticated account Session.
   ///
   /// Call after login succeeds or a persisted login is restored. Do not call on

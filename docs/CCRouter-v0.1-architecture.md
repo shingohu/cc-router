@@ -391,7 +391,11 @@ abstract final class CCRouter {
     CCCancellationToken? cancellation,
   });
 
-  static void trigger(CCGate gate);
+  static Future<void> runInitialization({
+    CCInitializationGate gate,
+  });
+
+  static List<CCInitializationTaskSnapshot> get initializationTasks;
 }
 ```
 
@@ -405,6 +409,8 @@ abstract final class CCRouter {
   业务代码直接注入 Adapter，也不允许初始化后追加启动组件。
 - `CCRouter.initialize`、Adapter attach、Adapter 初始化和初始 Backend Snapshot 读取均为
   同步事务；成功返回时必须已经可以导航，异步 Backend 准备必须在 attach 前完成。
+- 异步初始化任务不隐藏在 `initialize()` 内；Host 通过 `runInitialization(gate: ...)` 显式
+  等待已打开 Gate 的 DAG，Runtime shutdown 负责取消并等待活动任务收口。
 - `CCRouter.shutdown()` 停止新调用、销毁默认 Runtime，并在 Adapter 之后释放 Backend
   自有资源；它仍为异步，因为必须等待 Scope 和业务资源释放。
 - 其余静态方法只负责转发到当前 Active Runtime。
@@ -974,16 +980,17 @@ Audit   记录敏感操作的主体、时间和结果
 
 ### 13.1 任务描述
 
-每个 InitTask 至少包含：
+每个 `CCInitializationTask` 包含：
 
 - 全局唯一任务 ID。
-- 所属组件和 Scope。
+- Runtime 注入的所属组件。
 - `dependsOn` 依赖。
-- `trigger/gate` 触发条件。
-- 同步/异步和执行位置。
-- 是否只执行一次、每会话一次或可重复执行。
-- 超时、重试和失败策略。
-- 是否属于启动关键路径。
+- `gate` 触发条件。
+- `critical` 或 `optional` 失败策略。
+- 可选 per-task timeout 和异步 Handler。
+
+1.x 任务只在一个 Runtime 生命周期内执行一次。Session、页面、前后台周期任务分别使用
+Session Service、页面生命周期和平台后台设施，不扩展 InitTask Scope。
 
 ### 13.2 依赖与触发分离
 
@@ -992,35 +999,31 @@ Audit   记录敏感操作的主体、时间和结果
 触发：用户同意隐私协议后 analytics 才可运行
 ```
 
-典型 Gate：
+框架内置 `appStarted`，产品可声明稳定的自定义 Gate，例如：
 
 ```text
-appStarted
-firstFrameRendered
 privacyGranted
-sessionOpened
 remoteConfigReady
-appForeground
 ```
 
 ### 13.3 状态与失败策略
 
 ```text
-blocked -> ready -> running -> succeeded
-                           -> failed
-                           -> skipped
+pending -> running -> succeeded
+                   -> failed
+pending -----------------> skipped
 ```
 
-任务支持：
+失败策略：
 
 ```text
-critical       失败阻止关键阶段完成
-optional       记录失败，其他任务继续
-degradable     切换备用能力
-retryable      满足条件后允许重试
+critical       抛出标准错误并阻止后续初始化推进
+optional       记录失败，独立任务继续，依赖任务 skipped
 ```
 
-生成阶段必须检测未知依赖和循环依赖。运行时必须支持按 Gate 触发依赖任务的调度。
+Runtime 在同步 `initialize()` 阶段检测未知依赖和循环依赖，Gate 打开后按 DAG 层并发执行。
+重叠触发 single-flight，成功、失败和 skipped 任务均不会自动重试。完整语义见
+[初始化任务设计与实施计划](CCRouter-initialization-task-design.md)。
 
 ---
 
@@ -1039,7 +1042,7 @@ PermissionDeniedError
 InvocationTimeoutError
 InvocationCancelledError
 HandlerFailedError
-InitializationFailedError
+CCInitializationTaskError
 ScopeClosedError
 ContractVersionError
 ```

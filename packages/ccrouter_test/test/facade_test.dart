@@ -18,6 +18,9 @@ final class CommandRegistrar implements CCComponentRegistrar {
 
   @override
   void register(CCRegistry registry) {
+    registry.registerInitializationTask(
+      CCInitializationTask(id: 'facade.prepare', run: (_) {}),
+    );
     registry.registerCommand<ReadOnce, String>((_, _) => value);
     registry.registerCommand<NotifyFacade, void>(
       (_, _) => CCRouter.event(FacadeChanged()),
@@ -124,6 +127,19 @@ void main() {
     );
     expect(subscriberTrace.context.callerComponentId, 'default');
     expect(subscriberTrace.context.targetComponentId, 'default');
+    expect(
+      CCRouter.initializationTasks.single.state,
+      CCInitializationTaskState.pending,
+    );
+    await CCRouter.runInitialization();
+    final initializationTrace = CCRouter.recentTraces.singleWhere(
+      (trace) => trace.operation == 'initializationTask',
+    );
+    expect(initializationTrace.context.targetComponentId, 'default');
+    expect(
+      CCRouter.initializationTasks.single.state,
+      CCInitializationTaskState.succeeded,
+    );
     expect(CCRouter.registeredComponents.single.id, 'default');
 
     await CCRouter.shutdown();

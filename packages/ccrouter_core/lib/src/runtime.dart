@@ -7,6 +7,7 @@ import 'package:meta/meta.dart';
 
 part 'component.dart';
 part 'diagnostics.dart';
+part 'initialization.dart';
 part 'memory_navigation_adapter.dart';
 part 'navigation.dart';
 part 'navigation_aspect.dart';
