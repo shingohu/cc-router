@@ -1093,8 +1093,14 @@ CCServiceOverride<T>.factory(create: ...)
 CCRouterTestHost(navigationAdapter: testAdapter)
 ```
 
-静态 `CCRouter` Facade 的 Runtime Overlay 需要额外的生命周期切换契约，当前不作为
-测试 API 暴露；测试代码不得为了替身改写应用全局 Runtime。
+需要验证静态 Facade 或生成 Proxy 时，使用 `CCRouterTestHost.run`。它通过
+Zone-local Runtime Overlay 让当前同步和异步调用链解析到 Test Host，不修改
+进程默认 Runtime，并允许不同 Zone 并行使用不同 Host。嵌套 Overlay 结束后自动
+恢复外层绑定。
+
+Overlay 只负责 Facade 解析，Runtime 仍由 `CCRouterTestHost` 创建、初始化和销毁。
+Overlay 内禁止通过生产 Facade 再次 `initialize`/`shutdown` 或绑定 Host Backend；测试
+Adapter 必须在构造 Test Host 时注入。
 
 具有 Route 或 Session Scope 的替身必须使用 Factory，避免多个 Scope 共享同一个有状态实例。
 

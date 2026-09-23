@@ -77,6 +77,24 @@ void main() {
     ).readAsStringSync();
 
     expect(_contractCombinatorNames(businessBarrel, 'hide'), _adapterSpiNames);
+    expect(
+      RegExp(
+        "export 'src/facade.dart'[\\s\\S]*?hide[\\s\\S]*?"
+        'CCRouterTestBinding[\\s\\S]*?;',
+      ).hasMatch(businessBarrel),
+      isTrue,
+    );
+  });
+
+  test('test Runtime binding has a dedicated entry point', () {
+    final root = _workspaceRoot();
+    final testBarrel = File(
+      '${root.path}/packages/ccrouter/lib/ccrouter_test.dart',
+    ).readAsStringSync();
+
+    expect(testBarrel, contains("show CCRouterTestBinding"));
+    expect(testBarrel, isNot(contains('CCRouterHostBinding')));
+    expect(testBarrel, isNot(contains('CCRouterGeneratedServiceBinding')));
   });
 
   test('Host barrel restores the Adapter SPI snapshot', () {

@@ -9,6 +9,10 @@ import 'app.dart';
 part 'navigation.dart';
 part 'deep_link.dart';
 part 'generated_service_binding.dart';
+part 'test_binding.dart';
+
+/// Zone key used only by the dedicated test-support Runtime overlay.
+final Object _runtimeOverlayZoneKey = Object();
 
 /// Resolves a strict call-site placement for the Flutter navigation facade.
 CCRoutePlacement? _resolveContextPlacement(BuildContext? context) {
@@ -73,16 +77,25 @@ abstract final class CCRouter {
 
   /// Returns the active Runtime or fails when the host is not initialized.
   static CCRouterRuntime get _runtime {
-    final active = _defaultRuntime;
+    final active = _overlayRuntime ?? _defaultRuntime;
     if (active == null) throw const CCRouterNotInitializedError();
     return active;
   }
 
-  /// Whether the default Runtime has completed initialization.
+  /// Runtime isolated to the current test Zone, when one is installed.
+  static CCRouterRuntime? get _overlayRuntime {
+    final candidate = Zone.current[_runtimeOverlayZoneKey];
+    return candidate is CCRouterRuntime ? candidate : null;
+  }
+
+  /// Whether the Runtime active for the current Facade Zone is initialized.
   ///
-  /// Use this only for host status and diagnostics; normal business code should
+  /// Production calls observe the process-default Runtime. A dedicated test
+  /// overlay observes its isolated Runtime without mutating that default. Use
+  /// this only for host status and diagnostics; normal business code should
   /// rely on application startup ordering instead of polling it.
-  static bool get isInitialized => _defaultRuntime?.isInitialized ?? false;
+  static bool get isInitialized =>
+      (_overlayRuntime ?? _defaultRuntime)?.isInitialized ?? false;
 
   /// Snapshot of the active authenticated Session, if one exists.
   ///
@@ -274,7 +287,9 @@ abstract final class CCRouter {
   /// Initialization is synchronous: successful return means the complete
   /// component graph is available, while configuration failures throw before
   /// any Runtime becomes observable. A second call before [shutdown] completes
-  /// throws [CCRouterAlreadyInitializedError].
+  /// throws [CCRouterAlreadyInitializedError]. Initialization from inside a
+  /// test Runtime overlay throws the same error because the Test Host owns that
+  /// Runtime lifecycle.
   /// Global navigation interceptors are ordered by their stable IDs and run
   /// before route-declared interceptors. Navigation aspects are ordered by
   /// stable IDs and observe the same Runtime navigation pipeline.
@@ -296,7 +311,9 @@ abstract final class CCRouter {
     CCDeepLinkIngressPolicy deepLinkIngressPolicy =
         CCDeepLinkIngressPolicy.denyAll,
   }) {
-    if (_defaultRuntime != null || _shuttingDown != null) {
+    if (_overlayRuntime != null ||
+        _defaultRuntime != null ||
+        _shuttingDown != null) {
       throw const CCRouterAlreadyInitializedError();
     }
 
@@ -556,8 +573,16 @@ abstract final class CCRouter {
   /// automatically after this call disposes the Runtime-owned navigation
   /// Adapter.
   ///
-  /// Calling this method when no Runtime exists is a no-op.
+  /// Calling this method when no Runtime exists is a no-op. Calling it from a
+  /// test Runtime overlay throws [StateError]; dispose the owning Test Host
+  /// instead.
   static Future<void> shutdown() async {
+    if (_overlayRuntime != null) {
+      throw StateError(
+        'A CCRouter test Runtime is owned by CCRouterTestHost and cannot be '
+        'shut down through the production facade.',
+      );
+    }
     final existingShutdown = _shuttingDown;
     if (existingShutdown != null) return existingShutdown;
     final active = _defaultRuntime;
@@ -654,10 +679,17 @@ abstract final class CCRouterHostBinding {
   /// caller so Backend-specific resources can be released deterministically.
   /// When supplied, [disposeBackend] is retained until `CCRouter.shutdown` and
   /// runs only after Runtime disposal.
+  /// Test Runtime overlays must inject their Adapter when constructing the Test
+  /// Host and cannot bind one through this production ownership boundary.
   static void attachNavigationAdapter(
     CCNavigationAdapter adapter, {
     Future<void> Function()? disposeBackend,
   }) {
+    if (CCRouter._overlayRuntime != null) {
+      throw const CCNavigationAdapterError(
+        'A test Runtime receives its Adapter from CCRouterTestHost.',
+      );
+    }
     if (CCRouter._backendDisposer != null) {
       throw const CCNavigationAdapterError(
         'A navigation Backend is already bound to CCRouter.',

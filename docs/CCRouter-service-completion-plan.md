@@ -38,8 +38,9 @@
 - Session 关闭会拒绝新的 Session Service 解析，并释放 Session-owned 实例。
 - 服务仍由组件 Registrar 手动注册；Demo 已用消费方强类型 Proxy 验证跨组件
   Invocation 边界，当前仍没有 Service 注解生成器或自动 Proxy 生成。
-- 静态 `CCRouter` Facade 的全局 Runtime Overlay 尚未实现，测试替身不得注入生产
-  `CCRouter.initialize`；需要 Facade 语义的测试仍应使用独立 Test Host 的 Runtime。
+- `CCRouterTestHost.run` 通过 Zone-local Runtime Overlay 让生成 Proxy 和静态 Facade
+  在独立 Test Host 上运行；Overlay 不修改生产默认 Runtime，不接管
+  `initialize`/`shutdown` 或 Host Backend 绑定。
 
 ## 3. 第一阶段：注册边界与确定性
 

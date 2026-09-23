@@ -1,4 +1,4 @@
-import 'package:ccrouter_contracts/ccrouter_contracts.dart';
+import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter_core/ccrouter_core.dart';
 import 'package:ccrouter_test/ccrouter_test.dart';
 import 'package:test/test.dart';
@@ -58,6 +58,58 @@ final class SessionPaymentRegistrar implements CCComponentRegistrar {
 }
 
 void main() {
+  test('test host overlays the static facade only inside its Zone', () async {
+    final first = CCRouterTestHost(
+      components: const [
+        CCComponentManifest(
+          id: 'first',
+          version: '0.1.0',
+          registrar: PaymentRegistrar(),
+        ),
+      ],
+    );
+    final second = CCRouterTestHost(
+      components: const [
+        CCComponentManifest(
+          id: 'second',
+          version: '0.1.0',
+          registrar: PaymentRegistrar(),
+        ),
+      ],
+    );
+    addTearDown(first.dispose);
+    addTearDown(second.dispose);
+    first.initialize();
+    second.initialize();
+
+    expect(CCRouter.isInitialized, isFalse);
+    final results = await Future.wait([
+      first.run(() async {
+        await Future<void>.delayed(Duration.zero);
+        return CCRouter.registeredComponents.single.id;
+      }),
+      second.run(() async {
+        await Future<void>.delayed(Duration.zero);
+        return CCRouter.registeredComponents.single.id;
+      }),
+    ]);
+
+    expect(results, ['first', 'second']);
+    expect(CCRouter.isInitialized, isFalse);
+  });
+
+  test('test host overlay rejects production lifecycle ownership', () async {
+    final host = CCRouterTestHost();
+    addTearDown(host.dispose);
+    host.initialize();
+
+    expect(
+      () => host.run(() => CCRouter.initialize(components: const [])),
+      throwsA(isA<CCRouterAlreadyInitializedError>()),
+    );
+    await expectLater(host.run(CCRouter.shutdown), throwsA(isA<StateError>()));
+  });
+
   test('test host owns an isolated Runtime and disposes its adapter', () async {
     final adapter = CCMemoryNavigationAdapter();
     final host = CCRouterTestHost(navigationAdapter: adapter);

@@ -3,6 +3,7 @@
 
 import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 import 'package:ccrouter_core/ccrouter_core.dart';
+import 'package:ccrouter/ccrouter_test.dart';
 
 import 'service_override.dart';
 
@@ -10,9 +11,10 @@ import 'service_override.dart';
 ///
 /// A test host is useful when a test needs to exercise component registration,
 /// RouteEntry lifecycle, services, or a supplied navigation adapter without
-/// touching the process-wide [CCRouter] facade. The host owns the Runtime and
-/// the optional adapter passed to it; [dispose] releases both through the
-/// Runtime's normal shutdown path.
+/// replacing the process-wide [CCRouter] Runtime. Tests normally access
+/// [runtime] directly and use [run] only for static Facade or generated Proxy
+/// behavior. The host owns the Runtime and the optional adapter passed to it;
+/// [dispose] releases both through the Runtime's normal shutdown path.
 final class CCRouterTestHost {
   /// Creates an isolated test host from immutable component, adapter, and
   /// Service replacement input.
@@ -80,6 +82,20 @@ final class CCRouterTestHost {
       throw StateError('CCRouterTestHost has been disposed.');
     }
     runtime.initialize();
+  }
+
+  /// Runs [body] with static `CCRouter` calls bound to this host's Runtime.
+  ///
+  /// Use this when testing generated proxies or business code that correctly
+  /// depends on the static facade. The overlay is Zone-local, supports async
+  /// descendants, and never replaces the application's process-default
+  /// Runtime. The callback must await all work it starts so no inherited Zone
+  /// outlives the host. Call [initialize] first and keep [dispose] in teardown.
+  R run<R>(R Function() body) {
+    if (_disposed) {
+      throw StateError('CCRouterTestHost has been disposed.');
+    }
+    return CCRouterTestBinding.runWithRuntime(runtime, body);
   }
 
   /// Disposes the Runtime and all resources owned by this test host.
