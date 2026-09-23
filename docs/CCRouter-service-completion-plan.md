@@ -13,9 +13,11 @@
 
 ## 2. 当前已实现
 
-- App、Session 两种已启用 Service Lifetime；实例按 Lifetime 懒创建并按
+- App、Session、Route 三种已启用 Service Lifetime；实例按 Lifetime 懒创建并按
   `CCServiceCreationPolicy` 选择缓存或每次创建。
-- Route Lifetime 已定义但在精确 RouteEntry 所有权协议完成前拒绝注册。
+- Route Lifetime 使用 Managed Navigation ID 精确关联 RouteEntry；普通
+  `CCRouter.service()` 不猜测当前页面，Flutter 页面通过
+  `CCRouter.routeService(context)` 读取 Host 自动注入的不可变绑定。
 - `CCServiceToken<T>` 支持跨 Package 稳定契约身份。
 - `CCServiceKey<T>` 支持同一契约的命名实现。
 - `ccrouter_test` 提供 `CCServiceOverride<T>`，可在隔离 `CCRouterTestHost`
@@ -40,8 +42,8 @@
 第一阶段已完成：除上述注册校验外，缺失 Provider、Token 类型不匹配、循环构造和未激活
 Session Scope 均返回稳定的 Service 错误子类型；缺失命名实现会保留稳定 Key 诊断字段。
 
-1.x 不提供 Component Scope 或组件运行时激活/停用；Route Scope 仍需绑定 RouteEntry
-最终移除。页面级对象不等同于 PageShow/PageHide；Factory 也不等同于调用结束销毁。
+1.x 不提供 Component Scope 或组件运行时激活/停用；Route Scope 已绑定 RouteEntry 的最终
+移除事件。页面级对象不等同于 PageShow/PageHide；Factory 也不等同于调用结束销毁。
 
 ## 4. 后续实施顺序
 
@@ -53,12 +55,16 @@ Session Scope 均返回稳定的 Service 错误子类型；缺失命名实现会
 - 1.x 不提供 Component Scope、`activateComponent` 或 `deactivateComponent`，避免产生只停用部分能力的伪动态组件语义。
 - 动态组件治理进入 2.0 候选；只有依赖级联、Handler/订阅/诊断清理、活跃 Route 协调和原子能力切换形成完整协议后才重新评估。
 
-### 4.2 Route Scope
+### 4.2 Route Scope（已完成）
 
-- 将 Service 解析显式关联到具体 RouteEntry，而不是从 `BuildContext` 或全局栈猜测。
-- Route 永久移除后关闭 Route Scope；Page hide、Popup、LocalHistory 和普通 rebuild 不触发关闭。
-- 先补纯 Dart RouteEntry/Scope 测试，再接入 Flutter Adapter。
-- 在关联和结果语义未确定前，继续拒绝 `CCServiceScope.route`。
+- Core 按 Managed Navigation ID 精确解析具体 RouteEntry，不从全局可见页或栈顶猜测。
+- Flutter Host 只通过私有 Inherited binding 将 ID 交给
+  `CCRouter.routeService(context)`；`BuildContext` 是查找入口，不是 Scope Owner 或销毁信号。
+- Route 永久移除后关闭 Route Scope；Page hide、Popup、LocalHistory、PopGuard 拒绝和普通
+  rebuild 不触发关闭。
+- 同一路由重复 Push 拥有独立 Scope；旧 ID 在 Entry 移除后返回稳定的 Scope unavailable 错误。
+- 自动 GoRouter Assembler 已接入；手写 Host Route 必须配对使用
+  `CCRouterHostBinding.decodeRouteExtra` 与 `bindRouteEntry`。
 
 ### 4.3 Service 调用链
 
@@ -76,7 +82,8 @@ Session Scope 均返回稳定的 Service 错误子类型；缺失命名实现会
 ## 5. 验收门槛
 
 - 所有 Provider 标识校验在注册阶段确定失败，不依赖解析顺序。
-- App/Session/Singleton/Factory 的生命周期测试全部保持通过。
+- App/Session/Route/Singleton/Factory 的生命周期测试全部保持通过。
 - Session close、Runtime dispose、Factory failure 和 disposal timeout 不产生实例残留。
 - 同一 Token 的类型不匹配、重复默认实现和命名冲突均返回稳定错误。
-- 不新增 BuildContext、反射、字符串方法调用或万能 Map 作为 Service 公开契约。
+- Core Service 契约不依赖 BuildContext、反射、字符串方法调用或万能 Map；Flutter
+  `routeService(context)` 只读取精确 Host 绑定，不参与实例所有权或销毁判断。

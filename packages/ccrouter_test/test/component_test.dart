@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 import 'package:ccrouter_core/ccrouter_core.dart';
 import 'package:test/test.dart';
@@ -18,6 +20,37 @@ final class StringCodec implements CCRouteCodec<String> {
   @override
   CCEncodedRouteArguments encode(String arguments) =>
       CCEncodedRouteArguments(path: {'value': arguments});
+}
+
+final class StringIntent<R> implements CCRouteIntent<R> {
+  const StringIntent(this.routeId, this.arguments);
+
+  @override
+  final String routeId;
+
+  @override
+  final String arguments;
+}
+
+final class ComponentService implements CCDisposable {
+  ComponentService(this.id, {this.onDispose});
+
+  final String id;
+  final Future<void> Function()? onDispose;
+  bool disposed = false;
+
+  @override
+  Future<void> dispose() async {
+    disposed = true;
+    await onDispose?.call();
+  }
+}
+
+final class DenyPopGuard implements CCPopGuard {
+  const DenyPopGuard();
+
+  @override
+  CCPopGuardDecision evaluate(CCPopGuardContext context) => const CCPopDeny();
 }
 
 CCComponentManifest component(
@@ -1016,6 +1049,213 @@ void main() {
       ),
       throwsA(isA<CCRegistrationError>()),
     );
+  });
+
+  test('Route Scope is isolated by exact managed navigation', () async {
+    final adapter = CCMemoryNavigationAdapter();
+    final created = <ComponentService>[];
+    final runtime = CCRouterRuntime.forTesting(
+      navigationAdapter: adapter,
+      components: [
+        component(
+          'feature',
+          register: (registry) {
+            registry.registerService<ComponentService>(
+              CCServiceProvider(
+                scope: CCServiceScope.route,
+                factory: (_) {
+                  final service = ComponentService('route-${created.length}');
+                  created.add(service);
+                  return service;
+                },
+              ),
+            );
+            registry.registerRoute<String, void>(
+              CCRouteDefinition(
+                routeId: 'feature.detail',
+                patterns: [CCPathPattern('/feature/:value', primary: true)],
+                codec: const StringCodec(),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+    runtime.initialize();
+
+    expect(
+      () => runtime.service<ComponentService>(),
+      throwsA(isA<CCServiceScopeUnavailableError>()),
+    );
+    final firstPush = runtime.pushRoute<void>(
+      const StringIntent('feature.detail', 'first'),
+    );
+    unawaited(firstPush.then<void>((_) {}, onError: (_, _) {}));
+    await Future<void>.delayed(Duration.zero);
+    final firstNavigationId = runtime.activeRouteEntries.single.navigationId;
+    final first = runtime.serviceForRoute<ComponentService>(
+      navigationId: firstNavigationId,
+    );
+    expect(
+      runtime.serviceForRoute<ComponentService>(
+        navigationId: firstNavigationId,
+      ),
+      same(first),
+    );
+
+    final secondPush = runtime.pushRoute<void>(
+      const StringIntent('feature.detail', 'second'),
+    );
+    await Future<void>.delayed(Duration.zero);
+    final secondNavigationId = runtime.activeRouteEntries.last.navigationId;
+    final second = runtime.serviceForRoute<ComponentService>(
+      navigationId: secondNavigationId,
+    );
+    expect(second, isNot(same(first)));
+    expect(first.disposed, isFalse);
+
+    runtime.popRoute();
+    await secondPush;
+    await Future<void>.delayed(Duration.zero);
+    expect(second.disposed, isTrue);
+    expect(first.disposed, isFalse);
+    expect(
+      () => runtime.serviceForRoute<ComponentService>(
+        navigationId: secondNavigationId,
+      ),
+      throwsA(isA<CCServiceScopeUnavailableError>()),
+    );
+    expect(
+      runtime.serviceForRoute<ComponentService>(
+        navigationId: firstNavigationId,
+      ),
+      same(first),
+    );
+
+    await runtime.dispose();
+    await firstPush;
+    expect(first.disposed, isTrue);
+  });
+
+  test('Route Scope survives a rejected Pop guard', () async {
+    final adapter = CCMemoryNavigationAdapter();
+    late ComponentService service;
+    final runtime = CCRouterRuntime.forTesting(
+      navigationAdapter: adapter,
+      components: [
+        component(
+          'feature',
+          register: (registry) {
+            registry.registerService<ComponentService>(
+              CCServiceProvider(
+                scope: CCServiceScope.route,
+                factory: (_) => service = ComponentService('guarded'),
+              ),
+            );
+            registry.registerRoutePopGuard(
+              'feature.unsaved',
+              const DenyPopGuard(),
+            );
+            registry.registerRoute<String, void>(
+              CCRouteDefinition(
+                routeId: 'feature.guarded',
+                patterns: [
+                  CCPathPattern('/feature/guarded/:value', primary: true),
+                ],
+                codec: const StringCodec(),
+                popGuardIds: const ['feature.unsaved'],
+              ),
+            );
+          },
+        ),
+      ],
+    );
+    runtime.initialize();
+    final pushed = runtime.pushRoute<void>(
+      const StringIntent('feature.guarded', 'draft'),
+    );
+    unawaited(pushed.then<void>((_) {}, onError: (_, _) {}));
+    await Future<void>.delayed(Duration.zero);
+    final navigationId = runtime.activeRouteEntries.single.navigationId;
+    runtime.serviceForRoute<ComponentService>(navigationId: navigationId);
+
+    expect(() => runtime.popRoute(), throwsA(isA<CCPopGuardDeniedError>()));
+    expect(service.disposed, isFalse);
+    expect(runtime.activeRouteEntries, hasLength(1));
+    expect(
+      runtime.serviceForRoute<ComponentService>(navigationId: navigationId),
+      same(service),
+    );
+
+    await runtime.dispose();
+    await pushed;
+    expect(service.disposed, isTrue);
+  });
+
+  test('Route Service cannot capture a Session Service', () async {
+    late CCRouterRuntime runtime;
+    final adapter = CCMemoryNavigationAdapter();
+    runtime = CCRouterRuntime.forTesting(
+      navigationAdapter: adapter,
+      components: [
+        component(
+          'feature',
+          register: (registry) {
+            registry.registerService<int>(
+              CCServiceProvider(
+                scope: CCServiceScope.session,
+                factory: (_) => 42,
+              ),
+            );
+            registry.registerService<String>(
+              CCServiceProvider(
+                scope: CCServiceScope.route,
+                factory: (_) => '${runtime.service<int>()}',
+              ),
+            );
+            registry.registerRoute<String, void>(
+              CCRouteDefinition(
+                routeId: 'feature.session-capture',
+                patterns: [
+                  CCPathPattern('/feature/session/:value', primary: true),
+                ],
+                codec: const StringCodec(),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+    runtime.initialize();
+    runtime.openSession(accountId: 'account');
+    final pushed = runtime.pushRoute<void>(
+      const StringIntent('feature.session-capture', '42'),
+    );
+    await Future<void>.delayed(Duration.zero);
+    final navigationId = runtime.activeRouteEntries.single.navigationId;
+
+    expect(
+      () => runtime.serviceForRoute<String>(navigationId: navigationId),
+      throwsA(isA<CCResolutionError>()),
+    );
+    runtime.popRoute();
+    await pushed;
+    await runtime.dispose();
+  });
+
+  test('Route Service registration requires a component owner', () async {
+    final runtime = CCRouterRuntime.forTesting();
+
+    expect(
+      () => runtime.registerService<ComponentService>(
+        CCServiceProvider(
+          scope: CCServiceScope.route,
+          factory: (_) => ComponentService('invalid'),
+        ),
+      ),
+      throwsA(isA<CCRegistrationError>()),
+    );
+    await runtime.dispose();
   });
 
   test(

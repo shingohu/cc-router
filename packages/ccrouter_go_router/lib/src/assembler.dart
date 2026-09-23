@@ -180,12 +180,18 @@ abstract final class CCGoRouterAssembler {
     CCFlutterRouteDestination destination,
     GoRouterState state,
   ) {
-    final child = destination.build(
+    final payload = state.extra;
+    final extra = CCRouterHostBinding.decodeRouteExtra(payload);
+    final destinationChild = destination.build(
       CCEncodedRouteArguments(
         path: state.pathParameters,
         query: state.uri.queryParametersAll,
-        extra: state.extra,
+        extra: extra,
       ),
+    );
+    final child = CCRouterHostBinding.bindRouteEntry(
+      payload: payload,
+      child: destinationChild,
     );
     final presentation = destination.route.presentation;
     return switch (presentation) {
@@ -194,21 +200,21 @@ abstract final class CCGoRouterAssembler {
         presentation: page,
         key: state.pageKey,
         name: destination.routeId,
-        arguments: state.extra,
+        arguments: extra,
       ),
       final CCModalBottomSheetPresentation sheet => ccGoRouterBottomSheetPage(
         child: child,
         presentation: sheet,
         key: state.pageKey,
         name: destination.routeId,
-        arguments: state.extra,
+        arguments: extra,
       ),
       final CCDialogPresentation dialog => ccGoRouterDialogPage(
         child: child,
         presentation: dialog,
         key: state.pageKey,
         name: destination.routeId,
-        arguments: state.extra,
+        arguments: extra,
       ),
     };
   }

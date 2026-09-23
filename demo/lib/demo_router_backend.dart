@@ -194,13 +194,17 @@ GoRoute _route(
   return GoRoute(
     path: path,
     name: routeId,
-    builder: (_, state) => destination.build(
-      CCEncodedRouteArguments(
-        path: state.pathParameters,
-        query: state.uri.queryParametersAll,
-        extra: state.extra,
-      ),
-    ),
+    builder: (_, state) {
+      final payload = state.extra;
+      final child = destination.build(
+        CCEncodedRouteArguments(
+          path: state.pathParameters,
+          query: state.uri.queryParametersAll,
+          extra: CCRouterHostBinding.decodeRouteExtra(payload),
+        ),
+      );
+      return CCRouterHostBinding.bindRouteEntry(payload: payload, child: child);
+    },
     routes: routes,
   );
 }

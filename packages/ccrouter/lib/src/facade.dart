@@ -17,6 +17,39 @@ CCRoutePlacement? _resolveContextPlacement(BuildContext? context) {
   );
 }
 
+/// Private backend payload correlating one Flutter Page with managed Runtime
+/// navigation while preserving the original business Extra value.
+final class _CCManagedNavigationPayload {
+  /// Creates a payload for one admitted navigation request.
+  const _CCManagedNavigationPayload({
+    required this.navigationId,
+    required this.extra,
+  });
+
+  /// Stable request identity used for exact RouteEntry lookup.
+  final String navigationId;
+
+  /// Original process-local Extra value decoded by the generated page codec.
+  final Object? extra;
+}
+
+/// Private inherited binding for one exact managed RouteEntry.
+final class _CCRouteServiceBinding extends InheritedWidget {
+  /// Wraps [child] with the immutable [navigationId] association.
+  const _CCRouteServiceBinding({
+    required this.navigationId,
+    required super.child,
+  });
+
+  /// Managed navigation whose Route Scope owns descendant Route Services.
+  final String navigationId;
+
+  @override
+  /// The binding identity never changes for the lifetime of one Page.
+  bool updateShouldNotify(_CCRouteServiceBinding oldWidget) =>
+      oldWidget.navigationId != navigationId;
+}
+
 /// Static business-facing entry point for all CCRouter capabilities.
 ///
 /// Applications initialize this facade once per isolate and use it for
@@ -303,6 +336,55 @@ abstract final class CCRouter {
     CCServiceKey<T>? key,
   }) => _runtime.serviceOrNull<T>(contract: contract, key: key);
 
+  /// Resolves a Route-scoped Service owned by the managed Page at [context].
+  ///
+  /// Use this for page-instance resources such as draft controllers that must
+  /// survive PageHide but be disposed after the concrete RouteEntry is removed.
+  /// The Page must have been opened through `CCRouter.navigator` and assembled
+  /// by a Host that applies [CCRouterHostBinding.bindRouteEntry]. Initial or
+  /// foreign backend pages have no managed Route Scope and fail with
+  /// [CCServiceScopeUnavailableError]. This lookup uses an exact inherited
+  /// identity; it never guesses from the visible or top route.
+  static T routeService<T extends Object>(
+    BuildContext context, {
+    CCServiceToken<T>? contract,
+    CCServiceKey<T>? key,
+  }) {
+    final binding = context
+        .getInheritedWidgetOfExactType<_CCRouteServiceBinding>();
+    if (binding == null) {
+      throw const CCServiceScopeUnavailableError(CCServiceScope.route);
+    }
+    return _runtime.serviceForRoute<T>(
+      navigationId: binding.navigationId,
+      contract: contract,
+      key: key,
+    );
+  }
+
+  /// Resolves an optional Route-scoped Service for the managed Page at
+  /// [context].
+  ///
+  /// Null means no matching Provider is registered. A foreign, initial,
+  /// removed, or disposed RouteEntry remains a lifecycle error and is never
+  /// converted to null.
+  static T? routeServiceOrNull<T extends Object>(
+    BuildContext context, {
+    CCServiceToken<T>? contract,
+    CCServiceKey<T>? key,
+  }) {
+    final binding = context
+        .getInheritedWidgetOfExactType<_CCRouteServiceBinding>();
+    if (binding == null) {
+      throw const CCServiceScopeUnavailableError(CCServiceScope.route);
+    }
+    return _runtime.serviceForRouteOrNull<T>(
+      navigationId: binding.navigationId,
+      contract: contract,
+      key: key,
+    );
+  }
+
   /// Resolves every registered implementation of service contract [T].
   ///
   /// Pass [contract] when implementations share a promoted stable identity.
@@ -428,6 +510,42 @@ abstract final class CCRouter {
 /// code must navigate through `CCRouter.navigator` and must never access this
 /// ownership boundary.
 abstract final class CCRouterHostBinding {
+  /// Encodes one managed request for backend navigation without exposing the
+  /// wrapper to generated page codecs.
+  ///
+  /// Adapter implementations pass the returned object through their backend's
+  /// process-local Extra channel. Custom Host route builders must use
+  /// [decodeRouteExtra] and [bindRouteEntry] before rendering the destination.
+  static Object encodeNavigationPayload(CCNavigationRequest request) =>
+      _CCManagedNavigationPayload(
+        navigationId: request.navigationId,
+        extra: request.extra,
+      );
+
+  /// Returns the original business Extra from a managed backend [payload].
+  ///
+  /// Unmanaged values pass through unchanged so the same Host builder can
+  /// render initial, foreign, and CCRouter-managed locations.
+  static Object? decodeRouteExtra(Object? payload) =>
+      payload is _CCManagedNavigationPayload ? payload.extra : payload;
+
+  /// Wraps [child] with an exact managed RouteEntry binding when available.
+  ///
+  /// Generated backend assemblers call this automatically. A custom Host route
+  /// builder must call it with the backend's unmodified [payload]; passing only
+  /// [decodeRouteExtra] intentionally produces an unmanaged page with no Route
+  /// Service Scope.
+  static Widget bindRouteEntry({
+    required Object? payload,
+    required Widget child,
+  }) {
+    if (payload is! _CCManagedNavigationPayload) return child;
+    return _CCRouteServiceBinding(
+      navigationId: payload.navigationId,
+      child: child,
+    );
+  }
+
   /// Synchronously transfers one ready [adapter] into the active Runtime.
   ///
   /// The Runtime configures the Adapter from the registered route table and

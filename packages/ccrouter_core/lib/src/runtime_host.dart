@@ -1,5 +1,36 @@
 part of 'runtime.dart';
 
+/// Immutable ownership context propagated while constructing one Service.
+///
+/// Nested resolution uses the concrete [instanceScope] and optional
+/// [routeEntry] instead of guessing from global Runtime state. This keeps
+/// Factory disposal with its consumer while preserving exact Route ownership.
+final class _ServiceConstructionOwner {
+  /// Creates the construction context for one selected provider instance.
+  const _ServiceConstructionOwner({
+    required this.runtime,
+    required this.serviceScope,
+    required this.instanceScope,
+    required this.ownerComponentId,
+    required this.routeEntry,
+  });
+
+  /// Runtime whose provider graph is currently constructing an instance.
+  final CCRouterRuntime runtime;
+
+  /// Logical lifetime used to validate nested dependencies.
+  final CCServiceScope serviceScope;
+
+  /// Concrete Scope that owns the constructed instance.
+  final CCScope instanceScope;
+
+  /// Component that owns the logical consumer being constructed.
+  final String ownerComponentId;
+
+  /// Exact Route Entry when construction belongs to a Route lifetime.
+  final _RouteEntryRecord? routeEntry;
+}
+
 /// Stateful execution kernel used by the framework host and core tests.
 ///
 /// Production applications access it only through the `ccrouter` facade.
@@ -578,8 +609,10 @@ final class CCRouterRuntime {
     CCServiceProvider<T> provider,
   ) {
     _ensureConfigurable();
-    if (provider.scope == CCServiceScope.route) {
-      throw const CCRegistrationError('Route scopes are not implemented yet.');
+    if (provider.scope == CCServiceScope.route && ownerComponentId.isEmpty) {
+      throw const CCRegistrationError(
+        'Route-scoped Services must be registered by a component.',
+      );
     }
     final providers = _providers[T] ?? <_Provider>[];
     final contractId = provider.contract?.id;
@@ -892,6 +925,62 @@ final class CCRouterRuntime {
     return provider == null ? null : _resolve(provider) as T;
   }
 
+  /// Resolves a Route-scoped Service for one exact managed navigation.
+  ///
+  /// Flutter Host integration obtains [navigationId] from the backend payload
+  /// attached by the Adapter. The ID must identify a currently retained
+  /// RouteEntry; Runtime never falls back to the visible or top Entry. Ordinary
+  /// business code uses the Flutter facade rather than calling this Host bridge.
+  T serviceForRoute<T extends Object>({
+    required String navigationId,
+    CCServiceToken<T>? contract,
+    CCServiceKey<T>? key,
+  }) {
+    _ensureInitialized();
+    final provider = _findProvider<T>(contract: contract, key: key);
+    if (provider == null) {
+      throw CCServiceNotFoundError(
+        contract?.id ?? T.toString(),
+        key: key?.name,
+      );
+    }
+    if (provider.scope != CCServiceScope.route) {
+      throw const CCResolutionError(
+        'Route-bound resolution requires a Route-scoped Service provider.',
+      );
+    }
+    final entry = _routeEntryForNavigation(navigationId);
+    if (entry == null) {
+      throw const CCServiceScopeUnavailableError(CCServiceScope.route);
+    }
+    return _resolve(provider, routeEntry: entry) as T;
+  }
+
+  /// Resolves an optional Route-scoped Service for one exact navigation.
+  ///
+  /// Null is returned only when the Provider is absent. A missing, removed, or
+  /// disposed RouteEntry remains a lifecycle error so callers cannot silently
+  /// retain a Service beyond its owning page.
+  T? serviceForRouteOrNull<T extends Object>({
+    required String navigationId,
+    CCServiceToken<T>? contract,
+    CCServiceKey<T>? key,
+  }) {
+    _ensureInitialized();
+    final provider = _findProvider<T>(contract: contract, key: key);
+    if (provider == null) return null;
+    if (provider.scope != CCServiceScope.route) {
+      throw const CCResolutionError(
+        'Route-bound resolution requires a Route-scoped Service provider.',
+      );
+    }
+    final entry = _routeEntryForNavigation(navigationId);
+    if (entry == null) {
+      throw const CCServiceScopeUnavailableError(CCServiceScope.route);
+    }
+    return _resolve(provider, routeEntry: entry) as T;
+  }
+
   /// Whether a provider for [T] and [key] is registered.
   ///
   /// [contract] performs discovery by stable ID without instantiating a service.
@@ -1062,35 +1151,21 @@ final class CCRouterRuntime {
   }
 
   /// Resolves one normalized [provider] in its effective owner Scope.
-  Object _resolve(_Provider provider) {
-    final owner = Zone.current[_constructionZoneKey];
-    final ownerScope =
-        owner is (CCRouterRuntime, CCServiceScope) && identical(owner.$1, this)
-        ? owner.$2
+  Object _resolve(_Provider provider, {_RouteEntryRecord? routeEntry}) {
+    final zoneOwner = Zone.current[_constructionZoneKey];
+    final owner =
+        zoneOwner is _ServiceConstructionOwner &&
+            identical(zoneOwner.runtime, this)
+        ? zoneOwner
         : null;
-    if (ownerScope == CCServiceScope.app &&
-        provider.scope != CCServiceScope.app) {
-      throw const CCResolutionError(
-        'An App service cannot depend on a narrower Service scope.',
-      );
-    }
-    final parentScope = switch (ownerScope) {
-      CCServiceScope.app => appScope,
-      CCServiceScope.session => _sessionScope,
-      CCServiceScope.route || null => null,
-    };
-    final CCScope? scope;
-    if (provider.creationPolicy == CCServiceCreationPolicy.factory &&
-        provider.scope == CCServiceScope.app &&
-        parentScope != null) {
-      scope = parentScope;
-    } else {
-      scope = switch (provider.scope) {
-        CCServiceScope.app => appScope,
-        CCServiceScope.session => _sessionScope,
-        CCServiceScope.route => null,
-      };
-    }
+    _validateServiceDependency(owner, provider);
+    final effectiveRouteEntry = routeEntry ?? owner?.routeEntry;
+    final providerScope = _scopeForProvider(provider, effectiveRouteEntry);
+    final useParentScope =
+        provider.creationPolicy == CCServiceCreationPolicy.factory &&
+        owner != null &&
+        provider.scope != owner.serviceScope;
+    final scope = useParentScope ? owner.instanceScope : providerScope;
     if (scope == null) {
       throw CCServiceScopeUnavailableError(provider.scope);
     }
@@ -1100,11 +1175,14 @@ final class CCRouterRuntime {
       () => provider.factory(context),
       zoneValues: {
         _invocationZoneKey: (this, context),
-        _constructionZoneKey: (
-          this,
-          provider.creationPolicy == CCServiceCreationPolicy.factory
-              ? ownerScope ?? CCServiceScope.app
-              : provider.scope,
+        _constructionZoneKey: _ServiceConstructionOwner(
+          runtime: this,
+          serviceScope: useParentScope ? owner.serviceScope : provider.scope,
+          instanceScope: scope,
+          ownerComponentId: useParentScope
+              ? owner.ownerComponentId
+              : provider.ownerComponentId,
+          routeEntry: effectiveRouteEntry,
         ),
       },
     );
@@ -1113,6 +1191,41 @@ final class CCRouterRuntime {
       create,
       cache: provider.creationPolicy == CCServiceCreationPolicy.singleton,
     );
+  }
+
+  /// Returns the active concrete Scope selected by [provider].
+  CCScope? _scopeForProvider(
+    _Provider provider,
+    _RouteEntryRecord? routeEntry,
+  ) => switch (provider.scope) {
+    CCServiceScope.app => appScope,
+    CCServiceScope.session => _sessionScope,
+    CCServiceScope.route => routeEntry?.scope,
+  };
+
+  /// Rejects dependencies whose lifetime can end before their consumer.
+  void _validateServiceDependency(
+    _ServiceConstructionOwner? owner,
+    _Provider dependency,
+  ) {
+    final ownerScope = owner?.serviceScope;
+    final dependencyScope = dependency.scope;
+    final allowed = switch (ownerScope) {
+      null => true,
+      CCServiceScope.app => dependencyScope == CCServiceScope.app,
+      CCServiceScope.session =>
+        dependencyScope == CCServiceScope.app ||
+            dependencyScope == CCServiceScope.session,
+      CCServiceScope.route =>
+        dependencyScope == CCServiceScope.app ||
+            dependencyScope == CCServiceScope.route,
+    };
+    if (!allowed) {
+      throw CCResolutionError(
+        'A ${ownerScope!.name} Service cannot depend on the selected '
+        '${dependencyScope.name} Service.',
+      );
+    }
   }
 
   /// Finds a provider by stable promoted contract or legacy Dart type.

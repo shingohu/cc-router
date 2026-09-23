@@ -51,6 +51,17 @@ extension CCRouterRuntimeRouteEntries on CCRouterRuntime {
   List<CCRouteEntryLifecycleEvent> get recentRouteEntryEvents =>
       List.unmodifiable(_routeEntryEvents);
 
+  /// Returns the retained Entry created by [navigationId], if it still exists.
+  ///
+  /// Route Service resolution uses this exact identity and never substitutes a
+  /// visible, top, or same-route Entry when the requested Entry has gone away.
+  _RouteEntryRecord? _routeEntryForNavigation(String navigationId) {
+    for (final entry in _routeEntries) {
+      if (entry.request.navigationId == navigationId) return entry;
+    }
+    return null;
+  }
+
   /// Subscribes to Route Entry lifecycle transitions.
   ///
   /// Transitions are delivered by the bounded FIFO observer queue. Listener

@@ -615,7 +615,14 @@ Runtime 为每次打开生成唯一 `sessionId`，并记录 `accountId`、开启
 
 ### 9.2 Route Service
 
-Route Service 绑定一次具体 `CCRouteEntry`，不是绑定 Widget 或 `BuildContext`。路由永久移出导航栈时，Route Scope 才销毁。
+Route Service 绑定一次具体 `CCRouteEntry`，不是绑定 Widget 或 `BuildContext` 生命周期。
+路由永久移出导航栈时，Route Scope 才销毁。自动 Flutter Host 为 Managed Page 注入不可变
+Navigation ID，页面使用 `CCRouter.routeService<T>(context)` 读取精确绑定；它不会按当前可见页
+或栈顶猜测。初始位置、Foreign Route 和未完成 Host binding 的手写 Route 不具备 Route Scope。
+
+手写 GoRouter builder 必须用 `CCRouterHostBinding.decodeRouteExtra` 恢复业务 Extra，并用
+`CCRouterHostBinding.bindRouteEntry` 包裹页面；自动 Assembler 已完成这两步。Core 解析和
+生命周期测试仍只依赖 Navigation ID，不依赖 Flutter。
 
 ### 9.3 销毁协议
 

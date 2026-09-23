@@ -23,9 +23,9 @@ Service Creation Policy Singleton / Factory
 | Session | 登录 Session | Session 打开后首次解析，closeSession 时销毁 | 账号信息、购物车、用户缓存 |
 | Route | 一个具体 RouteEntry | RouteEntry 创建期间创建，Entry 最终移除后销毁 | 编辑控制器、页面草稿、WebView 控制器 |
 
-Route Lifetime 在所有权、并发关闭和调用取消协议确定前不启用。当前 Runtime 必须在注册阶段
-明确拒绝该 Scope，而不能静默降级到 App Scope。1.x 不提供 Component Lifetime；组件是
-静态装配与能力所有权边界，不是可独立关闭的运行时资源 Scope。
+App、Session 和 Route 三种 Lifetime 均已启用。Route Scope 只由 Runtime 创建、取消和
+关闭；业务代码不能构造 Scope，也不能把不可用的 Lifetime 静默降级到 App Scope。1.x
+不提供 Component Lifetime；组件是静态装配与能力所有权边界，不是可独立关闭的资源 Scope。
 
 ### 2.2 Creation Policy
 
@@ -38,10 +38,22 @@ Factory 不代表“调用结束立即销毁”。同步解析没有可靠的 en
 实例实现 `CCDisposable`，仍由当前父 Scope 持有并在 Scope 关闭时释放。因此需要严格释放的
 资源应使用 Scope-owned Singleton 或显式操作对象，不应把 Factory 当作临时资源容器。
 
+### 2.3 依赖生命周期矩阵
+
+| Consumer | 允许依赖 |
+| --- | --- |
+| App | App |
+| Session | App、Session |
+| Route | App、同一个 RouteEntry 的 Route |
+
+对象不能捕获可能先于自己销毁的依赖。Session 与 Route 是相互独立的生命周期：关闭
+Session 和 Pop 页面不能互相隐式替代。App Factory 作为窄 Scope Consumer 的构造依赖时，
+其 disposable 实例由 Consumer 的具体 Scope 接管，避免资源存活超过使用方。
+
 ## 3. 页面级对象与页面生命周期
 
-页面级对象有真实使用场景，但必须绑定 `RouteEntry`，不能绑定 Widget rebuild 或
-`BuildContext`。以下事件不会销毁 Route Lifetime：
+页面级对象有真实使用场景，但所有权必须绑定 `RouteEntry`，不能绑定 Widget rebuild 或
+`BuildContext` 生命周期。以下事件不会销毁 Route Lifetime：
 
 - PageShow/PageHide；
 - 页面被其他页面覆盖；
@@ -54,7 +66,13 @@ Factory 不代表“调用结束立即销毁”。同步解析没有可靠的 en
 `onResume`、`onPause`、`PageShow` 或 `PageHide`。
 
 Route Service 不能通过全局 `CCRouter.service<T>()` 猜测当前页面，因为同一个页面可以
-同时打开多个 Entry。未来应通过 Route-bound Scope 或生成的页面句柄解析。
+同时打开多个 Entry。自动 Flutter Host 在页面外层注入不可变 Navigation ID，页面通过
+`CCRouter.routeService<T>(context)` 读取该精确绑定；这里的 `BuildContext` 只用于查找 ID，
+不创建、不拥有、也不关闭 Scope。Core 仍可按 ID 在 Pure Dart 测试中完成同一语义。
+
+初始位置、Foreign Route 和未调用 `CCRouterHostBinding.bindRouteEntry` 的手写 Host Route
+没有 Managed RouteEntry，因此不能解析 Route Service。GoRouter 自动 Assembler 已完成绑定；
+手写 Route builder 必须同时解包业务 Extra 并包裹 RouteEntry binding。
 
 ## 4. Session 与 App 语义
 
@@ -79,10 +97,12 @@ CCRouter 采用相同的维度拆分，但保留组件所有权、RouteEntry 精
 
 ## 6. 当前实施状态
 
-- App、Session、Singleton/Factory 已实现；Factory 使用 `CCServiceCreationPolicy.factory`。
+- App、Session、Route 与 Singleton/Factory 已实现；Factory 使用
+  `CCServiceCreationPolicy.factory`。
 - `ccrouter_test` 已提供隔离 Test Host 的 Service Override；Override 只能替换已注册
   Provider，沿用原 Scope 和创建策略，缺失或重复目标在 Host 创建阶段失败。
-- Component Lifetime 已从 1.x 移除；Route Lifetime 仍暂不开放注册。
+- Component Lifetime 已从 1.x 移除。
+- Route Lifetime 已接入 Core、Flutter Facade 和 GoRouter 自动 Assembler。
 - Page 生命周期与 Service 生命周期保持独立。
 - Service Proxy、异步 Ready、动态注册/卸载和生成器继续后置。
 

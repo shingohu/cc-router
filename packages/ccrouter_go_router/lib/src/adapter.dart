@@ -669,7 +669,10 @@ final class CCGoRouterAdapter
     );
     _entries.add(entry);
     _expectBackendEvent(CCGoRouterNavigationEventKind.push);
-    final result = _router.push<Object?>(location, extra: request.extra);
+    final result = _router.push<Object?>(
+      location,
+      extra: CCRouterHostBinding.encodeNavigationPayload(request),
+    );
     result.then<void>(
       (value) {
         entry.completeResult(value);
@@ -711,7 +714,10 @@ final class CCGoRouterAdapter
     }
     _expectBackendEvent(CCGoRouterNavigationEventKind.remove);
     _expectBackendEvent(CCGoRouterNavigationEventKind.push);
-    _router.go(location, extra: request.extra);
+    _router.go(
+      location,
+      extra: CCRouterHostBinding.encodeNavigationPayload(request),
+    );
     return Future<Object?>.value();
   }
 
@@ -724,7 +730,10 @@ final class CCGoRouterAdapter
     _replaceTrackedStack(request);
     _expectBackendEvent(CCGoRouterNavigationEventKind.remove);
     _expectBackendEvent(CCGoRouterNavigationEventKind.push);
-    _router.go(location, extra: request.extra);
+    _router.go(
+      location,
+      extra: CCRouterHostBinding.encodeNavigationPayload(request),
+    );
     return Future<Object?>.value();
   }
 
@@ -775,7 +784,7 @@ final class CCGoRouterAdapter
     _expectBackendEvent(CCGoRouterNavigationEventKind.replace);
     final result = _router.pushReplacement<Object?>(
       location,
-      extra: request.extra,
+      extra: CCRouterHostBinding.encodeNavigationPayload(request),
     );
     result.then<void>(
       (value) {
