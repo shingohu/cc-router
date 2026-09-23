@@ -32,6 +32,12 @@ final class StringIntent<R> implements CCRouteIntent<R> {
   final String arguments;
 }
 
+final class ServiceInvocationCommand implements CCCommand<int> {
+  const ServiceInvocationCommand(this.value);
+
+  final int value;
+}
+
 final class ComponentService implements CCDisposable {
   ComponentService(this.id, {this.onDispose});
 
@@ -1051,6 +1057,255 @@ void main() {
     );
   });
 
+  test(
+    'generated Service invocation records sanitized ownership trace',
+    () async {
+      const contract = CCServiceToken<ComponentService>('feature.counter');
+      late CCInvocationContext invocation;
+      final runtime = CCRouterRuntime.forTesting(
+        components: [
+          component(
+            'feature',
+            register: (registry) {
+              registry.registerService<ComponentService>(
+                CCServiceProvider(
+                  contract: contract,
+                  factory: (_) => ComponentService('secret-service-value'),
+                ),
+              );
+            },
+          ),
+        ],
+      );
+      runtime.initialize();
+
+      final result = await runtime.invokeService<ComponentService, String>(
+        contract: contract,
+        methodId: 'read',
+        callerComponentId: 'consumer',
+        call: (service, context) {
+          invocation = context;
+          return 'secret-result-${service.id}';
+        },
+      );
+
+      expect(result, 'secret-result-secret-service-value');
+      expect(invocation.operation, 'service');
+      expect(invocation.target, 'feature.counter.read');
+      expect(invocation.callerComponentId, 'consumer');
+      expect(invocation.targetComponentId, 'feature');
+      final trace = runtime.recentTraces.single;
+      expect(trace.operation, 'service');
+      expect(trace.target, 'feature.counter.read');
+      expect(trace.target, isNot(contains('secret')));
+      expect(trace.context.operation, 'service');
+      expect(trace.context.target, trace.target);
+      expect(trace.context.callerComponentId, 'consumer');
+      expect(trace.context.targetComponentId, 'feature');
+
+      await runtime.dispose();
+    },
+  );
+
+  test('nested Command and Service invocation share a trace tree', () async {
+    const contract = CCServiceToken<ComponentService>('feature.counter');
+    late CCInvocationContext commandContext;
+    late CCInvocationContext serviceContext;
+    late CCRouterRuntime runtime;
+    runtime = CCRouterRuntime.forTesting(
+      components: [
+        component(
+          'feature',
+          register: (registry) {
+            registry.registerService<ComponentService>(
+              CCServiceProvider(
+                contract: contract,
+                factory: (_) => ComponentService('nested'),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+    runtime.registerCommand<ServiceInvocationCommand, int>((message, context) {
+      commandContext = context;
+      return runtime.invokeService<ComponentService, int>(
+        contract: contract,
+        methodId: 'increment',
+        callerComponentId: 'consumer',
+        call: (service, context) {
+          serviceContext = context;
+          return message.value + 1;
+        },
+      );
+    });
+    runtime.initialize();
+
+    expect(await runtime.command(const ServiceInvocationCommand(3)), 4);
+    expect(serviceContext.traceId, commandContext.traceId);
+    expect(serviceContext.parentSpanId, commandContext.spanId);
+    final serviceTrace = runtime.recentTraces.singleWhere(
+      (trace) => trace.operation == 'service',
+    );
+    expect(serviceTrace.context.parentSpanId, commandContext.spanId);
+
+    await runtime.dispose();
+  });
+
+  test(
+    'Service timeout and caller cancellation reach invocation context',
+    () async {
+      const contract = CCServiceToken<ComponentService>('feature.counter');
+      final pending = <Completer<int>>[];
+      final contexts = <CCInvocationContext>[];
+      final runtime = CCRouterRuntime.forTesting(
+        components: [
+          component(
+            'feature',
+            register: (registry) {
+              registry.registerService<ComponentService>(
+                CCServiceProvider(
+                  contract: contract,
+                  factory: (_) => ComponentService('pending'),
+                ),
+              );
+            },
+          ),
+        ],
+      );
+      runtime.initialize();
+
+      Future<int> invoke({
+        Duration? timeout,
+        CCCancellationToken? cancellation,
+      }) => runtime.invokeService<ComponentService, int>(
+        contract: contract,
+        methodId: 'wait',
+        timeout: timeout,
+        cancellation: cancellation,
+        call: (_, context) {
+          contexts.add(context);
+          final completer = Completer<int>();
+          pending.add(completer);
+          return completer.future;
+        },
+      );
+
+      await expectLater(
+        invoke(timeout: const Duration(milliseconds: 10)),
+        throwsA(isA<CCInvocationTimeoutError>()),
+      );
+      expect(contexts.first.cancellation.isCancelled, isTrue);
+      pending.first.complete(1);
+
+      final token = CCCancellationToken();
+      final cancelled = invoke(cancellation: token);
+      token.cancel();
+      await expectLater(cancelled, throwsA(isA<CCInvocationCancelledError>()));
+      expect(contexts.last.cancellation.isCancelled, isTrue);
+      pending.last.complete(2);
+
+      await runtime.dispose();
+    },
+  );
+
+  test('Session close cancels its in-flight Service invocation', () async {
+    const contract = CCServiceToken<ComponentService>('account.counter');
+    final pending = Completer<int>();
+    final started = Completer<CCInvocationContext>();
+    final runtime = CCRouterRuntime.forTesting(
+      components: [
+        component(
+          'account',
+          register: (registry) {
+            registry.registerService<ComponentService>(
+              CCServiceProvider(
+                contract: contract,
+                scope: CCServiceScope.session,
+                factory: (_) => ComponentService('session'),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+    runtime.initialize();
+    runtime.openSession(accountId: 'account-a');
+    final call = runtime.invokeService<ComponentService, int>(
+      contract: contract,
+      methodId: 'wait',
+      call: (_, context) {
+        started.complete(context);
+        return pending.future;
+      },
+    );
+    final context = await started.future;
+
+    final assertion = expectLater(
+      call,
+      throwsA(isA<CCInvocationCancelledError>()),
+    );
+    await runtime.closeSession();
+    await assertion;
+    expect(context.cancellation.isCancelled, isTrue);
+    pending.complete(1);
+
+    await runtime.dispose();
+  });
+
+  test(
+    'Service invocation rejects invalid and inconsistent identities',
+    () async {
+      const contract = CCServiceToken<ComponentService>('feature.counter');
+      final runtime = CCRouterRuntime.forTesting(
+        components: [
+          component(
+            'feature',
+            register: (registry) {
+              registry.registerService<ComponentService>(
+                CCServiceProvider(
+                  contract: contract,
+                  factory: (_) => ComponentService('identity'),
+                ),
+              );
+            },
+          ),
+        ],
+      );
+      runtime.initialize();
+
+      expect(
+        () => runtime.invokeService<ComponentService, void>(
+          contract: contract,
+          methodId: 'Invalid method',
+          call: (_, _) {},
+        ),
+        throwsA(isA<CCInvocationError>()),
+      );
+      expect(
+        () => runtime.invokeService<ComponentService, void>(
+          contract: contract,
+          methodId: 'read',
+          callerComponentId: 'InvalidCaller',
+          call: (_, _) {},
+        ),
+        throwsA(isA<CCInvocationError>()),
+      );
+      expect(
+        () => runtime.invokeService<ComponentService, void>(
+          contract: contract,
+          methodId: 'read',
+          navigationId: 'stale-route',
+          call: (_, _) {},
+        ),
+        throwsA(isA<CCInvocationError>()),
+      );
+      expect(runtime.recentTraces, isEmpty);
+
+      await runtime.dispose();
+    },
+  );
+
   test('Route Scope is isolated by exact managed navigation', () async {
     final adapter = CCMemoryNavigationAdapter();
     final created = <ComponentService>[];
@@ -1135,6 +1390,129 @@ void main() {
     await runtime.dispose();
     await firstPush;
     expect(first.disposed, isTrue);
+  });
+
+  test('Route Pop cancels only its exact Service invocation', () async {
+    const contract = CCServiceToken<ComponentService>('feature.route-counter');
+    final adapter = CCMemoryNavigationAdapter();
+    final pending = <String, Completer<int>>{};
+    final contexts = <String, CCInvocationContext>{};
+    final runtime = CCRouterRuntime.forTesting(
+      navigationAdapter: adapter,
+      components: [
+        component(
+          'feature',
+          register: (registry) {
+            registry.registerService<ComponentService>(
+              CCServiceProvider(
+                contract: contract,
+                scope: CCServiceScope.route,
+                factory: (_) => ComponentService('route'),
+              ),
+            );
+            registry.registerRoute<String, void>(
+              CCRouteDefinition(
+                routeId: 'feature.invocation',
+                patterns: [
+                  CCPathPattern('/feature/invocation/:value', primary: true),
+                ],
+                codec: const StringCodec(),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+    runtime.initialize();
+
+    final firstPush = runtime.pushRoute<void>(
+      const StringIntent('feature.invocation', 'first'),
+    );
+    unawaited(firstPush.then<void>((_) {}, onError: (_, _) {}));
+    await Future<void>.delayed(Duration.zero);
+    final firstNavigationId = runtime.activeRouteEntries.single.navigationId;
+    final firstCall = runtime.invokeService<ComponentService, int>(
+      contract: contract,
+      methodId: 'wait',
+      navigationId: firstNavigationId,
+      call: (_, context) {
+        contexts['first'] = context;
+        return (pending['first'] = Completer<int>()).future;
+      },
+    );
+
+    final secondPush = runtime.pushRoute<void>(
+      const StringIntent('feature.invocation', 'second'),
+    );
+    await Future<void>.delayed(Duration.zero);
+    final secondNavigationId = runtime.activeRouteEntries.last.navigationId;
+    final secondCall = runtime.invokeService<ComponentService, int>(
+      contract: contract,
+      methodId: 'wait',
+      navigationId: secondNavigationId,
+      call: (_, context) {
+        contexts['second'] = context;
+        return (pending['second'] = Completer<int>()).future;
+      },
+    );
+
+    final secondAssertion = expectLater(
+      secondCall,
+      throwsA(isA<CCInvocationCancelledError>()),
+    );
+    runtime.popRoute();
+    await secondPush;
+    await secondAssertion;
+    expect(contexts['second']!.cancellation.isCancelled, isTrue);
+    expect(contexts['first']!.cancellation.isCancelled, isFalse);
+    pending['second']!.complete(2);
+
+    pending['first']!.complete(1);
+    expect(await firstCall, 1);
+    runtime.popRoute();
+    await firstPush;
+    await runtime.dispose();
+  });
+
+  test('Route Service invocation requires a retained navigation ID', () async {
+    const contract = CCServiceToken<ComponentService>('feature.route-counter');
+    final runtime = CCRouterRuntime.forTesting(
+      components: [
+        component(
+          'feature',
+          register: (registry) {
+            registry.registerService<ComponentService>(
+              CCServiceProvider(
+                contract: contract,
+                scope: CCServiceScope.route,
+                factory: (_) => ComponentService('route'),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+    runtime.initialize();
+
+    expect(
+      () => runtime.invokeService<ComponentService, void>(
+        contract: contract,
+        methodId: 'read',
+        call: (_, _) {},
+      ),
+      throwsA(isA<CCServiceScopeUnavailableError>()),
+    );
+    expect(
+      () => runtime.invokeService<ComponentService, void>(
+        contract: contract,
+        methodId: 'read',
+        navigationId: 'removed',
+        call: (_, _) {},
+      ),
+      throwsA(isA<CCServiceScopeUnavailableError>()),
+    );
+
+    await runtime.dispose();
   });
 
   test('Route Scope survives a rejected Pop guard', () async {

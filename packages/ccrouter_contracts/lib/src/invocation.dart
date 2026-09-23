@@ -54,6 +54,10 @@ final class CCInvocationContext {
     required this.traceId,
     required this.spanId,
     this.parentSpanId,
+    this.operation,
+    this.target,
+    this.callerComponentId,
+    this.targetComponentId,
     this.scopeId,
     this.deadline,
     CCCancellationToken? cancellation,
@@ -70,6 +74,28 @@ final class CCInvocationContext {
 
   /// Parent span identity, or null for a root invocation.
   final String? parentSpanId;
+
+  /// Framework operation category for this invocation, when applicable.
+  ///
+  /// Generated Service proxies use `service`; provider construction contexts
+  /// may use a narrower internal category. Callers must not use this value as
+  /// authorization input.
+  final String? operation;
+
+  /// Sanitized capability identity targeted by this invocation.
+  ///
+  /// The value contains only stable framework identifiers and intentionally
+  /// excludes method arguments, return values, URIs, and arbitrary metadata.
+  final String? target;
+
+  /// Component that initiated the invocation when generated code knows it.
+  ///
+  /// Null means the caller could not be attributed safely; Runtime never
+  /// guesses ownership from the current route or service construction Zone.
+  final String? callerComponentId;
+
+  /// Component that registered the invoked capability, when known.
+  final String? targetComponentId;
 
   /// Lifecycle Scope associated with this invocation.
   final String? scopeId;

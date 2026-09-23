@@ -24,6 +24,12 @@
   中按类型、Token 和 Key 替换已注册 Provider；替身沿用原 Provider 的 Scope、创建策略和销毁边界。
 - 未命名 Provider 自动作为默认实现；多个默认实现和重复 Key 在注册时失败。
 - Provider Factory 接收 `CCInvocationContext`，可以读取当前 Scope 的取消和 Deadline 信息。
+- 跨组件生成代理可通过独立的 `ccrouter_generated.dart` 边界执行方法级 Service
+  Invocation；普通业务 barrel 不导出底层 callback bridge。
+- Service Invocation 会记录 Token、Key、method ID、显式 caller component、Provider owner、
+  Scope、父子 Span、耗时和终态，但不记录参数、返回对象或任意业务文本。
+- Session 关闭、RouteEntry 移除和 Runtime shutdown 会取消各自 Scope 内仍在执行的 Service
+  Invocation；调用方也可以提供更短的 timeout 或 cancellation token。
 - `CCDisposable` 实例由 Scope 按逆创建顺序销毁，单项失败和超时不会阻塞其它实例。
 - Session 关闭会拒绝新的 Session Service 解析，并释放 Session-owned 实例。
 - 服务仍由组件 Registrar 手动注册；当前没有 Service 注解生成器或方法 Proxy。
@@ -66,11 +72,18 @@ Session Scope 均返回稳定的 Service 错误子类型；缺失命名实现会
 - 自动 GoRouter Assembler 已接入；手写 Host Route 必须配对使用
   `CCRouterHostBinding.decodeRouteExtra` 与 `bindRouteEntry`。
 
-### 4.3 Service 调用链
+### 4.3 Service 调用链（基础边界已完成）
 
-- 先定义 Service 方法调用的 Invocation/Trace 边界，再考虑生成 Proxy。
-- Proxy 必须传播 cancellation、deadline、Scope 状态和标准错误；不得记录业务参数和返回对象。
-- 普通本地 Service 可以不生成 Proxy，跨组件 Service 才按契约选择生成。
+- Core 已提供由稳定 Token 和 method ID 驱动的 Invocation primitive，覆盖 Provider 解析、实例
+  获取、方法执行、父子 Trace、deadline、caller cancellation 和 Scope cancellation。
+- `package:ccrouter/ccrouter_generated.dart` 只为生成代码导出
+  `CCRouterGeneratedServiceBinding`；业务继续只导入 `ccrouter.dart` 并使用生成的强类型 Proxy。
+- Route Service Invocation 必须携带精确 Managed Navigation ID；App/Session Service 明确拒绝
+  Navigation ID，不能静默忽略过期页面身份。
+- 普通本地 Service 不生成 Proxy，保持直接 `CCRouter.service<T>()`；跨组件 Service 再按契约
+  选择生成方法代理，避免对每个本地调用增加 Future、Zone 和 Trace 成本。
+- 下一步实现可选的跨组件强类型 Proxy；Proxy 只生成接口中可验证的方法，不采用反射、方法名
+  字符串分派、万能 `Map` 或运行时参数 Codec。
 
 ### 4.4 生成器与 CLI
 

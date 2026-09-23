@@ -12,6 +12,10 @@ final class CCTraceContextSnapshot {
       traceId = context.traceId,
       spanId = context.spanId,
       parentSpanId = context.parentSpanId,
+      operation = context.operation,
+      target = context.target,
+      callerComponentId = context.callerComponentId,
+      targetComponentId = context.targetComponentId,
       scopeId = context.scopeId,
       deadline = context.deadline,
       cancellationRequested = context.cancellation.isCancelled;
@@ -27,6 +31,18 @@ final class CCTraceContextSnapshot {
 
   /// Parent span identity, or null for a root invocation.
   final String? parentSpanId;
+
+  /// Framework operation category captured from the live context.
+  final String? operation;
+
+  /// Sanitized capability identity captured from the live context.
+  final String? target;
+
+  /// Explicitly attributed calling component, when one was supplied.
+  final String? callerComponentId;
+
+  /// Component that registered the invoked capability, when known.
+  final String? targetComponentId;
 
   /// Lifecycle Scope associated with the invocation, when one existed.
   final String? scopeId;

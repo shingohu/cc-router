@@ -298,10 +298,12 @@ Scope 管理一组对象、订阅、任务和未完成调用的共同生命周�
 ```text
 App        Runtime 存活期间
 Session    一次登录会话
-Component  组件启用期间
 Route      一次具体路由实例
-Factory     每次解析创建新实例，由当前父 Scope 负责最终释放
 ```
+
+`Factory` 是 `CCServiceCreationPolicy`，不是 Scope。Factory 每次解析创建实例，但需要释放的
+实例仍由当前 App、Session 或 Route Scope 持有。组件在 1.x 是静态装配和所有权边界，不是
+可关闭 Scope；动态组件治理延后到 2.0 重新评估。
 
 ---
 
@@ -558,7 +560,14 @@ Token ID 全局唯一，命名实现继续使用 `CCServiceKey<T>` 作为 qualif
 caller -> Service Proxy -> Middleware/Trace/Scope Check -> implementation
 ```
 
-Proxy 用于记录方法级调用、检查 Scope、传播取消和标准化错误。普通的纯本地工具服务可以选择不生成方法代理。
+Proxy 用于记录方法级调用、检查 Scope、传播取消和标准化错误。普通的纯本地工具服务不生成
+方法代理。跨组件 Proxy 通过生成代码专用的 `ccrouter_generated.dart` 调用 Runtime
+Invocation primitive；普通 `ccrouter.dart` 不导出该 callback bridge。
+
+方法级 Trace 只包含稳定 Token、Key、method ID、显式 caller component、Provider owner、
+Scope 和终态。参数、返回对象和任意业务文本不进入 Trace。Session 关闭、RouteEntry 移除或
+Runtime shutdown 会通过 Scope cancellation 结束对应调用；Route Service 必须传递精确的
+Managed Navigation ID，不能猜测当前页面。
 
 ### 8.4 服务错误
 
@@ -864,14 +873,18 @@ CCInvocationContext
 ├── traceId
 ├── spanId
 ├── parentSpanId
-├── callerComponent
-├── targetComponent
-├── operationType
+├── callerComponentId?
+├── targetComponentId?
+├── operation?
+├── target?
 ├── scopeId
 ├── deadline
-├── cancellationToken
-└── metadata
+└── cancellation
 ```
+
+`callerComponentId` 只能由已校验的生成代码显式提供；Runtime 不从当前 Route、Zone 或服务
+实例猜测调用方。`targetComponentId` 来自 Provider 的注册所有者。`target` 只使用稳定能力
+标识，不包含参数、返回值、完整 URI 或任意 metadata。
 
 ### 12.2 调用流程
 

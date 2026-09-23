@@ -1004,6 +1004,91 @@ final class CCRouterRuntime {
     );
   }
 
+  /// Invokes one generated method on a promoted Service contract.
+  ///
+  /// Generated cross-component proxies use this boundary to resolve the exact
+  /// Provider, propagate deadlines and cooperative cancellation, and create a
+  /// method-level trace. Ordinary component-local services should keep using
+  /// [service] because wrapping every local method would add cost without a
+  /// package-boundary diagnostic benefit.
+  ///
+  /// [methodId] and [callerComponentId] must be stable identifiers. A Route
+  /// Service requires the exact managed [navigationId]; non-Route Services
+  /// reject one so stale page identity cannot be silently ignored. Arguments
+  /// and return values are never added to the invocation context or trace.
+  Future<R> invokeService<T extends Object, R>({
+    required CCServiceToken<T> contract,
+    CCServiceKey<T>? key,
+    required String methodId,
+    String? callerComponentId,
+    String? navigationId,
+    Duration? timeout,
+    CCCancellationToken? cancellation,
+    required FutureOr<R> Function(T service, CCInvocationContext context) call,
+  }) {
+    _ensureInitialized();
+    if (!_isStableIdentifier(contract.id)) {
+      throw const CCInvocationError(
+        'The Service invocation contract ID is invalid.',
+      );
+    }
+    if (!_isStableIdentifier(methodId)) {
+      throw const CCInvocationError(
+        'The Service invocation method ID is invalid.',
+      );
+    }
+    if (callerComponentId != null &&
+        !_isComponentIdentifier(callerComponentId)) {
+      throw const CCInvocationError(
+        'The Service invocation caller component ID is invalid.',
+      );
+    }
+    final provider = _findProvider<T>(contract: contract, key: key);
+    if (provider == null) {
+      throw CCServiceNotFoundError(contract.id, key: key?.name);
+    }
+    final routeEntry = provider.scope == CCServiceScope.route
+        ? navigationId == null
+              ? null
+              : _routeEntryForNavigation(navigationId)
+        : null;
+    if (provider.scope == CCServiceScope.route && routeEntry == null) {
+      throw const CCServiceScopeUnavailableError(CCServiceScope.route);
+    }
+    if (provider.scope != CCServiceScope.route && navigationId != null) {
+      throw const CCInvocationError(
+        'Only a Route-scoped Service accepts a navigation ID.',
+      );
+    }
+    final scope = _scopeForProvider(provider, routeEntry);
+    if (scope == null) {
+      throw CCServiceScopeUnavailableError(provider.scope);
+    }
+    if (scope.state != CCScopeState.active) {
+      throw CCScopeClosedError(scope.id);
+    }
+    final target = _serviceInvocationTarget(
+      contractId: contract.id,
+      key: key?.name,
+      methodId: methodId,
+    );
+    return _invoke(
+      'service',
+      target,
+      (context) {
+        final resolved = _resolve(provider, routeEntry: routeEntry) as T;
+        return call(resolved, context);
+      },
+      ownerScope: scope,
+      timeout: timeout,
+      cancellation: cancellation,
+      callerComponentId: callerComponentId,
+      targetComponentId: provider.ownerComponentId.isEmpty
+          ? null
+          : provider.ownerComponentId,
+    );
+  }
+
   /// Dispatches [command] with optional timeout and cancellation constraints.
   Future<R> command<R>(
     CCCommand<R> command, {
@@ -1282,8 +1367,11 @@ final class CCRouterRuntime {
     String operation,
     String target,
     FutureOr<R> Function(CCInvocationContext) body, {
+    CCScope? ownerScope,
     Duration? timeout,
     CCCancellationToken? cancellation,
+    String? callerComponentId,
+    String? targetComponentId,
   }) async {
     _ensureInitialized();
     final parent = _parentContext;
@@ -1298,18 +1386,23 @@ final class CCRouterRuntime {
         ? requestedDeadline
         : parentDeadline;
     final context = _context(
-      parent?.scopeId ?? appScope.id,
+      ownerScope?.id ?? parent?.scopeId ?? appScope.id,
+      operation: operation,
+      target: target,
+      callerComponentId: callerComponentId,
+      targetComponentId: targetComponentId,
       deadline: deadline,
     );
     final cancelled = Completer<R>();
     final removers = <void Function()>[];
-    for (final token in [
+    final linkedTokens = <CCCancellationToken>{
       appScope.cancellation,
-      parent?.cancellation,
-      cancellation,
-    ]) {
-      if (token != null)
-        removers.add(token.addListener(context.cancellation.cancel));
+      if (ownerScope != null) ownerScope.cancellation,
+      if (parent != null) parent.cancellation,
+      if (cancellation != null) cancellation,
+    };
+    for (final token in linkedTokens) {
+      removers.add(token.addListener(context.cancellation.cancel));
     }
     removers.add(
       context.cancellation.addListener(() {
@@ -1383,6 +1476,10 @@ final class CCRouterRuntime {
   /// Creates a child-aware invocation context for [scopeId].
   CCInvocationContext _context(
     String scopeId, {
+    String? operation,
+    String? target,
+    String? callerComponentId,
+    String? targetComponentId,
     DateTime? deadline,
     CCCancellationToken? cancellation,
   }) {
@@ -1393,11 +1490,22 @@ final class CCRouterRuntime {
       traceId: parent?.traceId ?? id,
       spanId: id,
       parentSpanId: parent?.spanId,
+      operation: operation,
+      target: target,
+      callerComponentId: callerComponentId,
+      targetComponentId: targetComponentId,
       scopeId: scopeId,
       deadline: deadline,
       cancellation: cancellation,
     );
   }
+
+  /// Builds a sanitized trace target from validated Service identifiers.
+  String _serviceInvocationTarget({
+    required String contractId,
+    required String? key,
+    required String methodId,
+  }) => key == null ? '$contractId.$methodId' : '$contractId.$key.$methodId';
 
   /// Returns handlers sorted by their stable identifiers.
   List<_Handler> _sortedHandlers(Map<String, _Handler>? handlers) {
