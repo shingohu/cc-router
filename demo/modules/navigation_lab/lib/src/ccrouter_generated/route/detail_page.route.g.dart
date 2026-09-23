@@ -71,8 +71,8 @@ abstract final class _DemoDetailPageRoute {
         codec: const _DemoDetailPageRouteCodec(),
         deepLink: CCDeepLinkPolicy.enabled,
         presentation: const CCPagePresentation(
-          routeType: CCPageRouteType.material,
-          transition: CCPageTransitionType.slideFromRight,
+          routeType: CCPageRouteType.platformDefault,
+          transition: CCPageTransitionType.platformDefault,
           opaque: true,
           fullscreenDialog: false,
         ),

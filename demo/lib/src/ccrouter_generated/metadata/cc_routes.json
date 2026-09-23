@@ -222,8 +222,8 @@
       },
       "presentation": {
         "type": "page",
-        "routeType": "material",
-        "transition": "slideFromRight",
+        "routeType": "platformDefault",
+        "transition": "platformDefault",
         "opaque": true,
         "fullscreenDialog": false
       },

@@ -21,10 +21,10 @@ import 'ccrouter_generated/component/demo_navigation_lab_component.route_api.g.d
     CCUriPattern('https://ccrouter.example/lab/detail/:id'),
   ],
   deepLink: CCDeepLinkPolicy.enabled,
-  presentation: CCPagePresentation(
-    routeType: CCPageRouteType.material,
-    transition: CCPageTransitionType.slideFromRight,
-  ),
+  // Keep ordinary typed-result pages on the host's native route policy. This
+  // preserves the iOS edge-back gesture while retaining the typed Future
+  // result contract.
+  presentation: CCPagePresentation(),
   description: '验证类型安全参数、Query 集合、多 Path、完整 URL、Scheme 与返回值。',
 )
 final class DemoDetailPage extends StatefulWidget {

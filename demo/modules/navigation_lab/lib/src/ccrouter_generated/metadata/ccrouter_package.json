@@ -5,7 +5,7 @@
     "name": "demo_navigation_lab",
     "version": "0.1.0"
   },
-  "contentFingerprint": "87e4b596f0b181af5b5f5158aad8945ced11b6d4f94545513b4d8adadce66531",
+  "contentFingerprint": "afd13a879536f0ff2b53a55d4dc20f19dbb6b1e5707b2ca5ee4cde80234e7e46",
   "bundle": {
     "library": "lib/src/ccrouter_generated/host/demo_navigation_lab_ccrouter.g.dart",
     "symbol": "ccrouterGeneratedPackageBundle"
@@ -75,8 +75,8 @@
           },
           "presentation": {
             "type": "page",
-            "routeType": "material",
-            "transition": "slideFromRight",
+            "routeType": "platformDefault",
+            "transition": "platformDefault",
             "opaque": true,
             "fullscreenDialog": false
           },

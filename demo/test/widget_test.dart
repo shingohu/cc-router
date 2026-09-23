@@ -5,6 +5,7 @@ import 'package:ccrouter_demo/ccrouter_demo.dart';
 import 'package:ccrouter_demo/main.dart';
 import 'package:ccrouter_demo/platform_deep_link_bridge.dart';
 import 'package:demo_navigation_lab/demo_navigation_lab.dart';
+import 'package:flutter/foundation.dart';
 import 'package:demo_web_contracts/demo_web_contracts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -66,6 +67,31 @@ void main() {
     expect(find.textContaining('confirmed:100'), findsOneWidget);
 
     await _unmountDemo(tester);
+  });
+
+  testWidgets('typed result page keeps the iOS edge-back gesture', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    try {
+      await _pumpDemo(tester);
+      await tester.tap(find.text('导航'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Push + typed result'));
+      await tester.pumpAndSettle();
+
+      final route = ModalRoute.of(tester.element(find.text('类型安全详情')))!;
+      expect(route, isA<PageRoute<Object?>>());
+      expect((route as PageRoute<Object?>).popGestureEnabled, isTrue);
+      expect(
+        CCRouter.activeRouteEntries.single.routeId,
+        'demo_navigation_lab.detail',
+      );
+
+      await _unmountDemo(tester);
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
   });
 
   testWidgets('OverlayEntry releases resources on close and page teardown', (

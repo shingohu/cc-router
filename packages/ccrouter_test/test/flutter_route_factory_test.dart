@@ -62,6 +62,35 @@ void main() {
     expect(route.settings.name, '/cupertino');
   });
 
+  testWidgets('platform-default page routes retain the iOS back gesture', (
+    tester,
+  ) async {
+    final navigatorKey = GlobalKey<NavigatorState>();
+    await tester.pumpWidget(
+      MaterialApp(
+        navigatorKey: navigatorKey,
+        theme: ThemeData(platform: TargetPlatform.iOS),
+        home: const SizedBox.shrink(),
+      ),
+    );
+
+    final route = CCFlutterRouteFactory.createRoute<void>(
+      context: navigatorKey.currentContext!,
+      child: const Text('typed result'),
+      presentation: const CCPagePresentation(),
+      settings: const RouteSettings(name: '/typed-result'),
+    );
+
+    expect(route, isA<PageRoute<void>>());
+    final pageRoute = route as PageRoute<void>;
+    navigatorKey.currentState!.push<void>(route);
+    await tester.pumpAndSettle();
+
+    expect(pageRoute.popGestureEnabled, isTrue);
+    navigatorKey.currentState!.pop<void>();
+    await tester.pumpAndSettle();
+  });
+
   testWidgets('creates configured custom page transitions', (tester) async {
     final navigatorKey = GlobalKey<NavigatorState>();
     await tester.pumpWidget(
