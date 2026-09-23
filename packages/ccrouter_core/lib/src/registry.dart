@@ -212,6 +212,7 @@ final class _Provider {
     this.type,
     this.contractId,
     this.name,
+    this.ownerComponentId,
     this.scope,
     this.creationPolicy,
     this.isDefault,
@@ -226,6 +227,9 @@ final class _Provider {
 
   /// Named implementation key, or null for an unkeyed provider.
   final String? name;
+
+  /// Trusted component that registered this provider.
+  final String ownerComponentId;
 
   /// Lifecycle Scope assigned to created instances.
   final CCServiceScope scope;
@@ -245,6 +249,7 @@ final class _Provider {
     type,
     contractId,
     name,
+    ownerComponentId,
     scope,
     creationPolicy,
     isDefault,

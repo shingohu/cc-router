@@ -17,8 +17,8 @@ enum CCScopeState {
 
 /// Owns service instances, cancellation, and disposal for one lifecycle.
 ///
-/// The Runtime creates scopes for App and Session lifetimes now, and will use
-/// the same ownership model for Component and Route lifetimes. Business and
+/// The Runtime creates scopes for App, Session, and Component lifetimes now,
+/// and will use the same ownership model for Route lifetimes. Business and
 /// component code must not create or close scopes directly.
 final class CCScope {
   /// Creates an active Scope with the stable [id].

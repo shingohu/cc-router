@@ -3066,7 +3066,7 @@ void main() {
         ),
         throwsA(isA<CCRouteParameterError>()),
       );
-      runtime.deactivateComponent('orders');
+      await runtime.deactivateComponent('orders');
       await expectLater(
         runtime.goRoute(
           const TestIntent<void>('orders.detail', RouteArgs('42')),
@@ -4061,7 +4061,7 @@ void main() {
       pushed.then<void>((_) {}, onError: (Object _, StackTrace __) {});
       await Future<void>.delayed(Duration.zero);
       final pending = runtime.pendingNavigations.single;
-      runtime.deactivateComponent('orders');
+      await runtime.deactivateComponent('orders');
       authorized = true;
 
       await expectLater(
@@ -4217,7 +4217,7 @@ void main() {
         pushed,
         throwsA(isA<CCRouteUnavailableError>()),
       );
-      runtime.deactivateComponent('orders');
+      await runtime.deactivateComponent('orders');
       await expectLater(
         runtime.resumePendingNavigation(pendingId),
         throwsA(isA<CCRouteUnavailableError>()),

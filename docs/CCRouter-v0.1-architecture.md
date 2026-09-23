@@ -1104,21 +1104,22 @@ ComponentTestHost
 
 运行时配置只能启用/禁用预先声明的能力，不能注册任意实现或执行任意代码。
 
-### 16.4 运行时组件激活与停用（后续）
+### 16.4 运行时组件激活与停用
 
-后续支持对已经编译进 App、且已由 Manifest 预先声明的组件进行运行时激活和停用。公开 API 使用 `activateComponent` / `deactivateComponent`，不使用容易被理解为下载或删除代码的 `install` / `uninstall`。
+当前已支持对已经编译进 App、且已由 Manifest 预先声明的组件进行运行时激活和停用。
+公开 API 使用 `activateComponent` / `deactivateComponent`，不使用容易被理解为下载或删除代码的
+`install` / `uninstall`。这两个 API 是异步的：停用先拒绝新路由和 Service 解析，再取消并关闭
+Component Scope；激活等待同一组件的前一项转换完成，并创建新的 Scope 后恢复能力。
 
-该能力不包含动态下载或加载新的 Dart 代码。实现前必须具备以下基础：
+该能力不包含动态下载或加载新的 Dart 代码。当前已经具备：
 
-- 每项 Provider、Handler 和其他能力都记录所属组件。
-- Component Scope 能够独立取消调用并按逆依赖顺序销毁资源。
-- 激活时检查必需依赖，并按依赖顺序原子地开放能力。
-- 停用时先拒绝新调用，再等待或取消执行中的调用。
-- 存在已激活依赖方时拒绝停用，除非调用方明确选择级联策略。
-- 停用完成后清除该组件拥有的注册、实例、订阅和诊断状态。
+- Provider 记录所属组件，并禁止脱离组件 Registrar 注册 Component Scope。
+- Component Scope 独立取消调用，按逆创建顺序销毁资源。
+- 停用和激活对同一组件串行化，旧 Scope 不会被重新打开。
 
-在上述能力完成前，组件集合只允许通过一次 `CCRouter.initialize(components: ...)` 确定；
-不得通过简单增加 `register/unregister` 绕过生命周期和依赖治理。
+仍待后续补齐的治理能力包括：激活时对依赖方做原子校验、存在激活依赖方时的拒绝或级联策略，
+以及清理该组件拥有的 Handler、订阅和诊断状态。组件集合仍只能通过一次
+`CCRouter.initialize(components: ...)` 确定，不通过 `register/unregister` 动态改变代码集合。
 
 ---
 

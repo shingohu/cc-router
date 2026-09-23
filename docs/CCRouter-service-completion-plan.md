@@ -4,7 +4,7 @@
 
 ## 1. 文档状态
 
-- 状态：Service 子系统实施清单，生命周期模型已重新收敛，第一阶段已落地
+- 状态：Service 子系统实施清单，生命周期模型已重新收敛，Component Scope 已落地
 - 范围：Service Provider、Token/Key、Scope、生命周期和跨组件契约
 - 不包含：CLI 2.0、Service 代码生成器、动态组件交付和远程 RPC
 
@@ -13,9 +13,9 @@
 
 ## 2. 当前已实现
 
-- App、Session 两种已启用 Service Lifetime；实例按 Lifetime 懒创建并按
+- App、Session、Component 三种已启用 Service Lifetime；实例按 Lifetime 懒创建并按
   `CCServiceCreationPolicy` 选择缓存或每次创建。
-- Component、Route Lifetime 已定义但在异步关闭和精确所有权协议完成前拒绝注册。
+- Route Lifetime 已定义但在精确 RouteEntry 所有权协议完成前拒绝注册。
 - `CCServiceToken<T>` 支持跨 Package 稳定契约身份。
 - `CCServiceKey<T>` 支持同一契约的命名实现。
 - `ccrouter_test` 提供 `CCServiceOverride<T>`，可在隔离 `CCRouterTestHost`
@@ -40,18 +40,18 @@
 第一阶段已完成：除上述注册校验外，缺失 Provider、Token 类型不匹配、循环构造和未激活
 Session Scope 均返回稳定的 Service 错误子类型；缺失命名实现会保留稳定 Key 诊断字段。
 
-这一阶段不实现 Component/Route Lifetime，因为它们需要分别绑定组件停用和 RouteEntry 最终
-移除，不能在同步的 `activateComponent` / `deactivateComponent` 或普通 Service 调用中偷偷
-异步关闭。页面级对象不等同于 PageShow/PageHide；Factory 也不等同于调用结束销毁。
+Component Scope 已通过独立的异步组件停用协议落地；Route Scope 仍需绑定 RouteEntry
+最终移除。页面级对象不等同于 PageShow/PageHide；Factory 也不等同于调用结束销毁。
 
 ## 4. 后续实施顺序
 
-### 4.1 Component Scope
+### 4.1 Component Scope（已完成）
 
-- 在 Provider 记录可信的 owner component ID。
-- 设计异步 Component deactivate/close 协议，保证新解析拒绝、旧调用取消、实例按逆依赖销毁。
-- 组件重新激活时创建新的 Scope，旧 Service 引用永久失效。
-- 在协议确定前，继续拒绝 `CCServiceScope.component`。
+- Provider 保存 Runtime 注入的 owner component ID，组件代码不能伪造所有权。
+- `deactivateComponent` 先停用路由和 Shell，再取消并异步关闭 Component Scope；新解析立即拒绝。
+- Scope 按逆创建顺序释放 `CCDisposable`，重复停用和并发转换保持幂等、串行。
+- `activateComponent` 不重开旧 Scope，而是创建唯一的新 Scope 后恢复路由和 Shell。
+- App Service 不能依赖更窄 Scope；Session Service 不能捕获 Component Service。
 
 ### 4.2 Route Scope
 

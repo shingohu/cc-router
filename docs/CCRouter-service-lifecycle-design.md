@@ -82,7 +82,7 @@ CCRouter 采用相同的维度拆分，但保留组件所有权、RouteEntry 精
 - App、Session、Singleton/Factory 已实现；Factory 使用 `CCServiceCreationPolicy.factory`。
 - `ccrouter_test` 已提供隔离 Test Host 的 Service Override；Override 只能替换已注册
   Provider，沿用原 Scope 和创建策略，缺失或重复目标在 Host 创建阶段失败。
-- Component、Route Lifetime 已定义但暂不开放注册。
+- Component Lifetime 已启用；Route Lifetime 仍暂不开放注册。
 - Page 生命周期与 Service 生命周期保持独立。
 - Service Proxy、异步 Ready、动态注册/卸载和生成器继续后置。
 
