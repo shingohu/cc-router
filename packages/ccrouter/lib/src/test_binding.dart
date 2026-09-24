@@ -19,6 +19,6 @@ abstract final class CCRouterTestBinding {
         'The CCRouter test Runtime must be initialized before use.',
       );
     }
-    return runZoned(body, zoneValues: {_runtimeOverlayZoneKey: runtime});
+    return _runtimeResolver.runWithRuntime(runtime, body);
   }
 }

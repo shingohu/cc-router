@@ -9,10 +9,8 @@ import 'app.dart';
 part 'navigation.dart';
 part 'deep_link.dart';
 part 'generated_service_binding.dart';
+part 'runtime_resolver.dart';
 part 'test_binding.dart';
-
-/// Zone key used only by the dedicated test-support Runtime overlay.
-final Object _runtimeOverlayZoneKey = Object();
 
 /// Resolves a strict call-site placement for the Flutter navigation facade.
 CCRoutePlacement? _resolveContextPlacement(BuildContext? context) {
@@ -66,9 +64,6 @@ abstract final class CCRouter {
   /// Process-local navigation facade backed by the active Runtime.
   static final CCNavigator _navigator = _CCNavigator();
 
-  /// Runtime owned by the current isolate's application host.
-  static CCRouterRuntime? _defaultRuntime;
-
   /// Shutdown operation currently in progress.
   static Future<void>? _shuttingDown;
 
@@ -76,17 +71,7 @@ abstract final class CCRouter {
   static Future<void> Function()? _backendDisposer;
 
   /// Returns the active Runtime or fails when the host is not initialized.
-  static CCRouterRuntime get _runtime {
-    final active = _overlayRuntime ?? _defaultRuntime;
-    if (active == null) throw const CCRouterNotInitializedError();
-    return active;
-  }
-
-  /// Runtime isolated to the current test Zone, when one is installed.
-  static CCRouterRuntime? get _overlayRuntime {
-    final candidate = Zone.current[_runtimeOverlayZoneKey];
-    return candidate is CCRouterRuntime ? candidate : null;
-  }
+  static CCRouterRuntime get _runtime => _runtimeResolver.active;
 
   /// Whether the Runtime active for the current Facade Zone is initialized.
   ///
@@ -95,7 +80,7 @@ abstract final class CCRouter {
   /// this only for host status and diagnostics; normal business code should
   /// rely on application startup ordering instead of polling it.
   static bool get isInitialized =>
-      (_overlayRuntime ?? _defaultRuntime)?.isInitialized ?? false;
+      _runtimeResolver.activeOrNull?.isInitialized ?? false;
 
   /// Snapshot of the active authenticated Session, if one exists.
   ///
@@ -311,8 +296,8 @@ abstract final class CCRouter {
     CCDeepLinkIngressPolicy deepLinkIngressPolicy =
         CCDeepLinkIngressPolicy.denyAll,
   }) {
-    if (_overlayRuntime != null ||
-        _defaultRuntime != null ||
+    if (_runtimeResolver.hasOverlayRuntime ||
+        _runtimeResolver.defaultRuntime != null ||
         _shuttingDown != null) {
       throw const CCRouterAlreadyInitializedError();
     }
@@ -331,7 +316,7 @@ abstract final class CCRouter {
       deepLinkIngressPolicy: deepLinkIngressPolicy,
     );
     runtime.initialize();
-    _defaultRuntime = runtime;
+    _runtimeResolver.installDefault(runtime);
   }
 
   /// Resolves the default or keyed implementation of service contract [T].
@@ -588,7 +573,7 @@ abstract final class CCRouter {
   /// test Runtime overlay throws [StateError]; dispose the owning Test Host
   /// instead.
   static Future<void> shutdown() async {
-    if (_overlayRuntime != null) {
+    if (_runtimeResolver.hasOverlayRuntime) {
       throw StateError(
         'A CCRouter test Runtime is owned by CCRouterTestHost and cannot be '
         'shut down through the production facade.',
@@ -596,13 +581,12 @@ abstract final class CCRouter {
     }
     final existingShutdown = _shuttingDown;
     if (existingShutdown != null) return existingShutdown;
-    final active = _defaultRuntime;
+    final active = _runtimeResolver.takeDefault();
     final disposeBackend = _backendDisposer;
     if (active == null && disposeBackend == null) {
       return;
     }
 
-    _defaultRuntime = null;
     _backendDisposer = null;
     final shuttingDown = _disposeRuntimeAndBackend(active, disposeBackend);
     _shuttingDown = shuttingDown;
@@ -696,7 +680,7 @@ abstract final class CCRouterHostBinding {
     CCNavigationAdapter adapter, {
     Future<void> Function()? disposeBackend,
   }) {
-    if (CCRouter._overlayRuntime != null) {
+    if (_runtimeResolver.hasOverlayRuntime) {
       throw const CCNavigationAdapterError(
         'A test Runtime receives its Adapter from CCRouterTestHost.',
       );

@@ -49,7 +49,7 @@
         "kind": "page",
         "symbol": "DemoCancelledPage",
         "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-        "line": 144,
+        "line": 141,
         "column": 13
       },
       "navigationSources": [
@@ -203,7 +203,7 @@
         "kind": "page",
         "symbol": "DemoDeferredPage",
         "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-        "line": 188,
+        "line": 185,
         "column": 13
       },
       "navigationSources": [
@@ -621,7 +621,7 @@
         "kind": "page",
         "symbol": "DemoGuardedPage",
         "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-        "line": 222,
+        "line": 219,
         "column": 13
       },
       "navigationSources": [
@@ -697,7 +697,7 @@
         "kind": "page",
         "symbol": "DemoNavigationHomePage",
         "packageUri": "package:demo_navigation_lab/src/home_page.dart",
-        "line": 21,
+        "line": 22,
         "column": 13
       },
       "navigationSources": [
@@ -1383,7 +1383,7 @@
         "kind": "page",
         "symbol": "DemoProceedPage",
         "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-        "line": 127,
+        "line": 124,
         "column": 13
       },
       "navigationSources": [
@@ -1461,7 +1461,7 @@
         "kind": "page",
         "symbol": "DemoRedirectSourcePage",
         "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-        "line": 159,
+        "line": 156,
         "column": 13
       },
       "navigationSources": [
@@ -1537,7 +1537,7 @@
         "kind": "page",
         "symbol": "DemoRedirectTargetPage",
         "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-        "line": 173,
+        "line": 170,
         "column": 13
       },
       "navigationSources": [
@@ -1949,7 +1949,7 @@
         "kind": "page",
         "symbol": "DemoTimeoutPage",
         "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-        "line": 205,
+        "line": 202,
         "column": 13
       },
       "navigationSources": [

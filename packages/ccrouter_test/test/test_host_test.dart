@@ -114,6 +114,40 @@ void main() {
     expect(CCRouter.isInitialized, isFalse);
   });
 
+  test('nested test host overlays restore the outer Runtime', () async {
+    final outer = CCRouterTestHost(
+      components: const [
+        CCComponentManifest(
+          id: 'outer',
+          version: '0.1.0',
+          registrar: PaymentRegistrar(),
+        ),
+      ],
+    );
+    final inner = CCRouterTestHost(
+      components: const [
+        CCComponentManifest(
+          id: 'inner',
+          version: '0.1.0',
+          registrar: PaymentRegistrar(),
+        ),
+      ],
+    );
+    addTearDown(outer.dispose);
+    addTearDown(inner.dispose);
+    outer.initialize();
+    inner.initialize();
+
+    await outer.run(() async {
+      expect(CCRouter.registeredComponents.single.id, 'outer');
+      await inner.run(() async {
+        expect(CCRouter.registeredComponents.single.id, 'inner');
+      });
+      expect(CCRouter.registeredComponents.single.id, 'outer');
+    });
+    expect(CCRouter.isInitialized, isFalse);
+  });
+
   test('test host overlay rejects production lifecycle ownership', () async {
     final host = CCRouterTestHost();
     addTearDown(host.dispose);

@@ -2,11 +2,11 @@
 
 ## 1. 审查结论
 
-- 审查日期：2026-09-23
+- 审查日期：2026-09-24
 - 审查范围：路由 Runtime、业务 Facade、Host/Adapter SPI、GoRouter Adapter、生成器、
   Service、Command、Event、初始化任务、Demo、测试与诊断模型。
-- 自动化基线：`dart analyze` 通过；Framework 299 项、Demo 29 项、Generator 131 项测试通过；
-  Demo 生成物 `--check` 通过；macOS debug build 通过。
+- 自动化基线：`dart analyze` 通过；`ccrouter_test` 302 项、Demo 30 项、Generator 131 项测试通过；
+  Demo 生成物缓存与 `--no-cache` 两种 `--check` 均通过；macOS debug build 通过。
 - 总体结论：当前实现满足 13 条约定在 v0.1 静态组件范围内的发布门槛，没有 P0 或 P1 问题。
   Route、Service、Command、Event 和 InitTask 已形成边界明确的最小闭环。生成物职责、API 隔离、
   生命周期、取消与诊断已完成本轮收口；Service/消息/InitTask 注解生成、Action Pipeline、动态
@@ -189,14 +189,15 @@ fvm dart run packages/ccrouter_test/benchmark/runtime_concurrency.dart
 fvm dart run packages/ccrouter_test/benchmark/service_scaling.dart
 ```
 
-2026-09-20 本机 Dart JIT 预热后，旧 Validator 在 10/100/500/1000 Route 下分别为
-`0.88ms`、`6.36ms`、`108.84ms`、`447.00ms`。加入 Type、URI Authority、Specificity 和固定段
-倒排候选索引后，同一输入分别为 `0.88ms`、`2.78ms`、`6.02ms`、`19.31ms`，5000 Route 为
-`60.74ms`。索引只筛选候选，最终冲突仍由原精确比较器确认；Wildcard 保守回退到同优先级全比较。
-同机 Runtime 20 次生命周期与 100 次动态打开样本中，1000 Route 初始化 p50/p95 为
-`461us/565us`，动态 URI 打开为 `375us/560us`，dispose 为 `37us/42us`。后续仍需补充并发压力
-和跨版本内存趋势基线；本次已补充并发压力复测，但长期 RSS/Heap 趋势仍需持续采样。后者属于
-持续观测工作，不是通过一次本机运行即可关闭的功能项。
+2026-09-24 本机 Dart JIT 预热后，固定路径 Validator 在 10/100/500/1000/5000 Route 下分别为
+`0.516ms`、`2.321ms`、`6.632ms`、`17.302ms`、`65.181ms`。索引只筛选候选，最终冲突仍由
+原精确比较器确认；Wildcard 继续保守回退到同优先级全比较。
+同机 Runtime 20 次生命周期与 100 次动态打开样本中，10/100/1000 Route 初始化 p50/p95 为
+`39/127us`、`82/149us`、`572/685us`；动态 URI 打开为 `70/146us`、`76/163us`、
+`449/534us`；dispose 为 `12/51us`、`18/33us`、`48/65us`。10 轮、每轮 100 个并发
+Push/Pop 的 cycle p50/p95 为 `4035/9470us`，峰值 `activeRouteEntries=101`，每轮结束
+恢复到 `finalActiveEntries=1`、`finalPendingNavigations=0`、`finalAdapterEntries=1`。
+这些数值只用于同机版本趋势，不作为跨平台阈值；长期 RSS/Heap 趋势仍需在目标平台持续采样。
 
 ### 已完成：P2-7 生成物最终审计
 
@@ -219,6 +220,10 @@ fvm dart run packages/ccrouter_test/benchmark/service_scaling.dart
 - 自定义页面转场不再在 builder 中创建需要手动 dispose 的 `CurvedAnimation`，改用无独立所有权的
   `CurveTween` 链，并覆盖 Fade、Scale、右侧滑入和底部滑入的重复创建/销毁测试；
 - 本轮基于 `not-disposed` 与 `not-GCed` 证据标准复查后，没有剩余高置信内存泄漏。
+
+本轮新增的私有 Runtime Resolver 只保存默认 Runtime 引用和 Zone-local overlay，不创建 Timer、
+Listener、Stream、Overlay 或 Controller；Resolver 不拥有 Runtime，也不负责销毁，因此没有新增
+可疑释放路径。嵌套 Test Host overlay 恢复测试和全量资源回归均通过。
 
 ### 已完成：P2-9 Service、Command、Event 与初始化任务闭环
 

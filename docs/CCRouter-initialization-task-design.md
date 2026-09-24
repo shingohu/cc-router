@@ -122,8 +122,23 @@ await CCRouter.runInitialization(gate: privacyGranted);
 - [x] 有界 Trace 与不可变脱敏快照。
 - [x] Pure Dart 测试覆盖并发、Gate、失败、校验、timeout、取消和幂等。
 
-## 8. 生成器决策
+## 8. 生成器校验评估结论
 
-当前任务通常数量少且配置稳定，先手写注册更容易验证真实依赖。1.x 不增加 InitTask 注解和
-metadata。只有生产组件出现重复注册、任务 ID/依赖漂移或静态启动图可视化需求时，再与
-Service/Command/Event 生成统一评估；届时生成阶段应把缺失依赖和循环前移为构建错误。
+本轮已完成 InitTask/Contract 生成器边界评估，结论是当前不实现 InitTask 注解、metadata
+或自动 Registrar，原因如下：
+
+1. InitTask 目前只存在于组件 Registrar 的手写 Dart 回调中，生成器没有可靠的声明输入，
+   通过源码启发式扫描会漏掉动态注册、误判闭包和破坏可解释性。
+2. Runtime 已在同步装配阶段校验重复 ID、缺失依赖、自依赖、重复依赖、Gate、timeout
+   和 DAG cycle；生成器不能用不完整的静态发现替代这层最终校验。
+3. Contract exposure 的可证明范围属于 Route metadata、公共 Barrel、Package 依赖闭包和
+   `src/ccrouter_generated` AST 门禁；InitTask 尚无跨包声明模型，不能虚构跨包可见性。
+
+因此当前采取分层策略：
+
+- 生成器继续校验已存在的 Route Contract、组件依赖、公共导出和跨包内部 API 边界；
+- Runtime 继续校验实际注册的 InitTask 和所有动态关系；
+- 只有出现重复注册、任务 ID/依赖漂移或静态启动图需求时，才先设计显式 InitTask 声明
+  模型，再把重复 ID、缺失依赖、循环依赖和 Contract exposure 前移为生成错误。
+
+这项评估已完成，但不代表 InitTask 自动生成能力已经实现。

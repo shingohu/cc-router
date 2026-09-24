@@ -56,11 +56,16 @@ Component ID 沿用更严格的 Package 风格，只允许小写字母、数字�
 | Parent 存在、自引用、环、依赖可见性 | `builder rejects self parent` | `rejects missing, self-referencing, and cyclic route parents`、`requires cross-component parents to be visible dependencies` | R `runtime rejects missing, cyclic, and mismatched route parents` |
 | Contract exposure、实现与公共导出 | `contract builder emits a standalone Pure Dart contract`、`page builder rejects a Contract-first constructor mismatch` | `rejects missing, duplicate, and unknown public implementations`、`requires public contracts to export the generated library` | Runtime 验证注册后的 Route ID/Owner；静态 Barrel/export 由 Workspace 负责 |
 | Description 大小和安全序列化 | `builder rejects oversized description`、`metadata builder emits documented ownership and parameters` | 只消费已序列化的元数据 | 不影响运行时路由语义，无手写 Definition 字段 |
+| InitTask/Gate ID 与依赖 | 当前无可靠声明输入，不做源码启发式发现 | 当前无 InitTask metadata 或跨包声明可校验 | Runtime 校验实际注册的 ID、Gate、缺失/重复依赖、环和 timeout |
 
-动态策略注册、Host 绑定、Adapter 能力不能由 Generator 从注解推断；Runtime 初始化/绑定时拒绝
-缺失或不一致的关系。路径表达式的复杂重叠也不能可靠静态判定，Workspace 只拦截可证明冲突，
-Runtime 保留注册及解析边界校验。后续增加字段时，必须同步指定失败阶段、正/负例和对应测试入口，
-不能只在生成器中新增校验。
+动态策略注册、Host 绑定、Adapter 能力和当前手写 InitTask 注册不能由 Generator 从注解或
+metadata 可靠推断；Runtime 初始化/绑定时拒绝缺失或不一致的关系。路径表达式的复杂重叠也
+不能可靠静态判定，Workspace 只拦截可证明冲突，Runtime 保留注册及解析边界校验。后续增加
+字段时，必须同步指定失败阶段、正/负例和对应测试入口，不能只在生成器中新增校验。
+
+InitTask 只有在未来引入显式声明模型后，才适合增加 Generator 校验。该模型必须提供稳定的
+ID、Gate、依赖和来源位置，生成器才能可靠报告重复 ID、缺失依赖、循环依赖和跨包 Contract
+exposure；在此之前不扫描 Registrar 闭包，也不声称生成器覆盖了手写任务。
 
 ## 内部生成 API 边界
 

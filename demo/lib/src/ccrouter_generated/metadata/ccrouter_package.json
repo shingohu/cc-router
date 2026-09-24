@@ -5,7 +5,7 @@
     "name": "ccrouter_demo",
     "version": "0.1.0+1"
   },
-  "contentFingerprint": "b4f705c2231dfd037b7aa432b9b5b0f25209c9cd98fade48779f75947062c576",
+  "contentFingerprint": "5adb8b906d528fc4cbac4da7443298f924fcfdbb773e1e2ba7b61c8eff22b3d5",
   "bundle": {
     "library": "lib/src/ccrouter_generated/host/ccrouter_demo_ccrouter.g.dart",
     "symbol": "ccrouterGeneratedPackageBundle"
@@ -14,7 +14,7 @@
     {
       "name": "demo_navigation_lab",
       "version": "0.1.0",
-      "contentFingerprint": "c173cc002993c8ffed92c8cc83912ff103510ca9154d4a1398e596e7c7cdc728"
+      "contentFingerprint": "84340be3cd34fbd8c8d07cb70b285ec013bb798354e96ed1fef198d61d8f2a3a"
     },
     {
       "name": "demo_order",

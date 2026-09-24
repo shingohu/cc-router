@@ -10,6 +10,7 @@
 - [组件化框架能力对比与缺口记录](CCRouter-component-framework-comparison.md)
 - [最终 API 收口复审清单](CCRouter-final-api-review.md)
 - [核心价值与开发约定回归](CCRouter-core-principles-audit.md)
+- [后续任务与实施计划](CCRouter-future-work-plan.md)
 - [路由专项问题分析](CCRouter-route-follow-up-analysis.md)
 - [SDK 兼容性验证](CCRouter-sdk-compatibility.md)
 - [Service 生命周期设计](CCRouter-service-lifecycle-design.md)
