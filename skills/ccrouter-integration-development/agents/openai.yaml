@@ -1,0 +1,4 @@
+interface:
+  display_name: "CCRouter Integration Development"
+  short_description: "Build Flutter components within CCRouter boundaries"
+  default_prompt: "Use $ccrouter-integration-development to implement this Flutter feature within CCRouter contracts, lifecycle, and API-isolation rules."

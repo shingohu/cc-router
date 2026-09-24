@@ -48,3 +48,21 @@ directories in the demo host; ordinary component packages are Flutter libraries.
 
 When reviewing Flutter or Dart changes for memory leaks and lifecycle cleanup
 bugs, load and follow `skills/memory-leak/SKILL.md`.
+
+When a task adds, changes, migrates, or reviews application or component code
+that integrates with CCRouter, load and follow
+`skills/ccrouter-integration-development/SKILL.md`. This integration skill does
+not replace `ccrouter-framework-development` for framework production code.
+
+When a developer-observable public API, usage scenario, lifecycle, error
+semantic, generated command/path, supported capability, Host/business API
+boundary, or recommended Demo pattern changes, review and update all affected
+developer guidance in the same change:
+
+- the root `README.md`;
+- `skills/ccrouter-integration-development/SKILL.md`;
+- the relevant file under
+  `skills/ccrouter-integration-development/references/`.
+
+Internal refactors that do not change integration behavior do not require
+documentation churn.

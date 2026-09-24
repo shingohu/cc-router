@@ -57,9 +57,10 @@ final class CCComponent {
 /// Declares a destination whose typed contract is generated at build time.
 ///
 /// Component authors annotate a concrete page with an unnamed constructor,
-/// then include its `.route.g.dart` file using `part`. The generator keeps the
-/// complete contract library-private in that Part, making this declaration the
-/// component-internal route form. Use [CCRouteContract] plus
+/// then run the CCRouter generator. It emits the Package-private contract and
+/// registration bridge as an independent library under
+/// `lib/src/ccrouter_generated/`; the page library does not declare a generated
+/// `part`. This is the component-internal route form. Use [CCRouteContract] plus
 /// [CCRouteImplementation] when a route must become a public contract. This
 /// annotation neither navigates nor selects a backend. [R] is the page's return
 /// type; use `void` when no business result exists.

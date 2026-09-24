@@ -73,6 +73,13 @@ Preserve these architecture boundaries:
 
 ## Verify Changes
 
+When a change alters a developer-observable public API, usage scenario,
+lifecycle, error semantic, generated command/path, supported capability,
+Host/business API boundary, or recommended Demo pattern, update the root
+`README.md` and the affected guidance in
+`skills/ccrouter-integration-development/` in the same change. Do not update
+them for internal refactors with no observable integration effect.
+
 Run checks proportional to the affected code:
 
 ```sh
