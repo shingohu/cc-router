@@ -14,11 +14,18 @@ Use CCRouter as the application component boundary. Prefer its generated contrac
    - **Component implementation**: pages, private capabilities, Registrar.
    - **Contracts package**: Pure Dart cross-component Route or Service contracts.
 2. Classify the requested behavior with [capability-decisions.md](references/capability-decisions.md).
-3. Inspect existing generated APIs, Registrar patterns, component descriptor, and Host topology. Do not invent APIs from design documents.
-4. Implement through the narrowest public CCRouter API. Keep Host SPI out of feature code.
-5. Run generation after annotation or component assembly changes. Never edit generated files.
-6. Add focused tests for success, failure, lifecycle cleanup, and relevant concurrency.
-7. Run analyze, focused tests, and `generate --check` before completion.
+3. When a production scenario appears unsupported, incomplete, or defective, follow [CCRouter-production-adoption-workflow.md](../../docs/CCRouter-production-adoption-workflow.md) before inventing a workaround or requesting a framework API.
+4. Inspect existing generated APIs, Registrar patterns, component descriptor, and Host topology. Do not invent APIs from design documents.
+5. Implement through the narrowest public CCRouter API. Keep Host SPI out of feature code.
+6. Run generation after annotation or component assembly changes. Never edit generated files.
+7. Add focused tests for success, failure, lifecycle cleanup, and relevant concurrency.
+8. Run analyze, focused tests, and `generate --check` before completion.
+
+If the scenario cannot be expressed safely, report whether it is a framework
+defect, application responsibility, developer-experience gap, general reusable
+capability, or conditionally deferred work. Do not import internal APIs or
+weaken lifecycle, type, failure, or diagnostic semantics to make the feature
+appear supported.
 
 Read [implementation-patterns.md](references/implementation-patterns.md) when adding or changing code. Read [review-checklist.md](references/review-checklist.md) when reviewing, migrating, or validating a feature.
 

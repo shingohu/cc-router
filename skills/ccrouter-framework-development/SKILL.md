@@ -9,6 +9,29 @@ Apply these rules to production framework Dart code under `packages/*/lib`.
 Do not apply the documentation requirement to `demo/`, `example/`, `test/`, or
 generated Android, iOS, macOS, Web, and OHOS platform code.
 
+## Evolve From Production Scenarios
+
+When a production application asks whether CCRouter supports a behavior, or a
+real feature exposes a framework limitation, read
+[CCRouter-production-adoption-workflow.md](../../docs/CCRouter-production-adoption-workflow.md)
+before changing framework code.
+
+- Reproduce and classify the scenario as supported, framework defect,
+  developer-experience/documentation gap, application responsibility, general
+  framework capability, or conditionally deferred work.
+- Map the behavior to existing Route, Service, Command, Event, InitTask,
+  Scope, Host/Outlet, diagnostics, analytics, Adapter, and Generator contracts
+  before proposing a new abstraction.
+- Do not promote one application's business special case into a public API.
+- For non-trivial changes, compare application-only, optional Adapter/tooling,
+  Core-contract, and defer-with-diagnostics solutions with explicit trade-offs.
+- Record owner, lifecycle, failure, cancellation, concurrency, fallback,
+  observability, privacy, performance, rollout, and rollback semantics.
+- Add a failing or boundary test before fixing a defect. Keep production data
+  and private application code out of framework fixtures and history.
+- Update design status, integration guidance, Demo, and API documentation only
+  when the implementation and verification actually support the claim.
+
 ## Document Framework Code
 
 - Add meaningful DartDoc to every framework class, constructor, method,

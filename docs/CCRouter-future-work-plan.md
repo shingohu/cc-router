@@ -10,6 +10,10 @@
 本文是各专项设计文档的索引，不替代具体契约。实施时必须先更新对应设计文档、补测试，
 再修改代码；每个完成项单独回归并提交。
 
+生产项目中发现的新场景、缺陷和能力候选，先按
+[生产项目场景驱动演进流程](CCRouter-production-adoption-workflow.md) 分类和验证，再决定进入
+当前版本修复、正式发布前计划或架构 2.0 候选。
+
 ## 2. 当前已完成
 
 - [x] GoRouter Host 最小接入 `CCGoRouterApp`，保留 `attach` 和 `CCRouterApp.managed`。
