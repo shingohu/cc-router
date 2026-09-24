@@ -1,7 +1,0 @@
-interface:
-  display_name: "Flutter Leak Review"
-  short_description: "Catch real Flutter memory leaks"
-  default_prompt: "Use $memory-leak to review this Flutter diff for high-confidence memory leaks and lifecycle cleanup bugs only."
-
-policy:
-  allow_implicit_invocation: true

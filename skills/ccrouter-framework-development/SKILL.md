@@ -94,6 +94,20 @@ Preserve these architecture boundaries:
   create or select the appropriate domain file instead of extending a generic
   catch-all file.
 
+## Review Memory And Lifecycle Ownership
+
+Read [memory-lifecycle-review.md](references/memory-lifecycle-review.md) when a
+framework change creates, retains, observes, or disposes lifecycle-bound
+resources, or when the task requests a memory-leak or cleanup review. Typical
+triggers include controllers, Timer, StreamSubscription, listeners, observers,
+overlays, animations, image streams, pending Futures, dispatch queues, Runtime,
+Host, Adapter, Scope, RouteEntry, and Service lifecycle code.
+
+Do not treat the reference as a generic optimization checklist. Trace concrete
+ownership and retaining paths, report only high-confidence `not-disposed` or
+`not-GCed` problems, and add lifecycle or `leak_tracker_flutter_testing`
+coverage when static ownership is ambiguous.
+
 ## Verify Changes
 
 When a change alters a developer-observable public API, usage scenario,

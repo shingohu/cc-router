@@ -46,8 +46,10 @@ They do not apply to demo code, examples, tests, or generated platform code.
 New demo component packages belong under `demo/modules/`. Keep platform
 directories in the demo host; ordinary component packages are Flutter libraries.
 
-When reviewing Flutter or Dart changes for memory leaks and lifecycle cleanup
-bugs, load and follow `skills/memory-leak/SKILL.md`.
+Framework memory-leak and lifecycle cleanup checks are part of
+`skills/ccrouter-framework-development/SKILL.md`. Follow its on-demand memory
+and lifecycle reference when the change owns disposable resources or when a
+memory review is requested.
 
 When a task adds, changes, migrates, or reviews application or component code
 that integrates with CCRouter, load and follow
