@@ -22,7 +22,7 @@ void main() {
       deepLinkIngressPolicy: demoDeepLinkIngressPolicy,
       globalInterceptors: const [
         CCGlobalNavigationInterceptor(
-          id: 'demo.global.policy',
+          id: DemoHostIds.globalNavigationInterceptor,
           interceptor: DemoGlobalNavigationInterceptor(),
         ),
       ],
@@ -97,19 +97,19 @@ void main() {
       for (final task in CCRouter.initializationTasks) task.id: task,
     };
     expect(
-      startup['demo.startup.foundation']!.state,
+      startup[DemoInitializationTaskIds.foundation]!.state,
       CCInitializationTaskState.succeeded,
     );
     expect(
-      startup['demo.startup.optional-sdk']!.state,
+      startup[DemoInitializationTaskIds.optionalSdk]!.state,
       CCInitializationTaskState.failed,
     );
     expect(
-      startup['demo.startup.optional-dependent']!.state,
+      startup[DemoInitializationTaskIds.optionalDependent]!.state,
       CCInitializationTaskState.skipped,
     );
     expect(
-      startup['demo.startup.analytics']!.state,
+      startup[DemoInitializationTaskIds.analytics]!.state,
       CCInitializationTaskState.pending,
     );
 
@@ -141,7 +141,7 @@ void main() {
     expect(find.textContaining('succeeded'), findsWidgets);
     expect(
       CCRouter.initializationTasks
-          .firstWhere((task) => task.id == 'demo.startup.analytics')
+          .firstWhere((task) => task.id == DemoInitializationTaskIds.analytics)
           .state,
       CCInitializationTaskState.succeeded,
     );
@@ -339,7 +339,9 @@ void main() {
     );
     expect(
       demoNavigationLabStore.events.any(
-        (event) => event.contains('source=demo.simulated_external'),
+        (event) => event.contains(
+          'source=${DemoNavigationSourceIds.simulatedExternal}',
+        ),
       ),
       isTrue,
     );
@@ -364,7 +366,9 @@ void main() {
     );
     expect(
       demoNavigationLabStore.events.any(
-        (event) => event.contains('source=demo.simulated_external_go'),
+        (event) => event.contains(
+          'source=${DemoNavigationSourceIds.simulatedExternalGo}',
+        ),
       ),
       isTrue,
     );

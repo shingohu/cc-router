@@ -16,7 +16,7 @@ Future<void> main() async {
     deepLinkIngressPolicy: demoDeepLinkIngressPolicy,
     globalInterceptors: const [
       CCGlobalNavigationInterceptor(
-        id: 'demo.global.policy',
+        id: DemoHostIds.globalNavigationInterceptor,
         interceptor: DemoGlobalNavigationInterceptor(),
       ),
     ],

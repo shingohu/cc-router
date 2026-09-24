@@ -40,26 +40,26 @@ void _registerComponentCapabilities(CCRegistry registry) {
     throw StateError('simulated private Command failure');
   });
 
+  registry.registerEvent<DemoOrderCompletedEvent>(DemoEventIds.orderCompleted, (
+    event,
+    _,
+  ) {
+    demoNavigationLabStore.record(
+      'Event analytics subscriber · order=${event.orderId}',
+    );
+  });
   registry.registerEvent<DemoOrderCompletedEvent>(
-    'demo.analytics.order-completed',
-    (event, _) {
-      demoNavigationLabStore.record(
-        'Event analytics subscriber · order=${event.orderId}',
-      );
-    },
-  );
-  registry.registerEvent<DemoOrderCompletedEvent>(
-    'demo.broken.order-completed',
+    DemoEventIds.brokenOrderCompleted,
     (_, _) => throw StateError('simulated private Subscriber failure'),
   );
   registry.registerEvent<DemoSlowEvent>(
-    'demo.slow-event',
+    DemoEventIds.slow,
     (_, context) => context.cancellation.whenCancelled,
   );
 
   registry.registerInitializationTask(
     CCInitializationTask(
-      id: 'demo.startup.foundation',
+      id: DemoInitializationTaskIds.foundation,
       run: (_) async {
         await Future<void>.delayed(const Duration(milliseconds: 20));
         demoNavigationLabStore.record('InitTask · foundation ready');
@@ -68,15 +68,15 @@ void _registerComponentCapabilities(CCRegistry registry) {
   );
   registry.registerInitializationTask(
     CCInitializationTask(
-      id: 'demo.startup.optional-sdk',
+      id: DemoInitializationTaskIds.optionalSdk,
       failurePolicy: CCInitializationFailurePolicy.optional,
       run: (_) => throw StateError('simulated optional SDK failure'),
     ),
   );
   registry.registerInitializationTask(
     CCInitializationTask(
-      id: 'demo.startup.optional-dependent',
-      dependsOn: const ['demo.startup.optional-sdk'],
+      id: DemoInitializationTaskIds.optionalDependent,
+      dependsOn: const [DemoInitializationTaskIds.optionalSdk],
       run: (_) => demoNavigationLabStore.record(
         'InitTask · optional dependent should not run',
       ),
@@ -84,8 +84,8 @@ void _registerComponentCapabilities(CCRegistry registry) {
   );
   registry.registerInitializationTask(
     CCInitializationTask(
-      id: 'demo.startup.analytics',
-      dependsOn: const ['demo.startup.foundation'],
+      id: DemoInitializationTaskIds.analytics,
+      dependsOn: const [DemoInitializationTaskIds.foundation],
       gate: demoPrivacyGrantedGate,
       run: (_) => demoNavigationLabStore.record(
         'InitTask · privacy-gated analytics ready',

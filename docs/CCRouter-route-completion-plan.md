@@ -82,6 +82,8 @@ Observer 只覆盖部分 Managed Outlet，Adapter 会关闭延迟 Arrival，避�
 
 ### P1-1 Host 与自适应布局
 
+- [x] 增加 GoRouter Host 最小接入组件 `CCGoRouterApp`，自动装配 managed Backend、Adapter、Root Observer 和 `MaterialApp.router`；保留显式初始化与 attach/managed 兼容入口。
+
 - [x] 增加 Runtime 多 Host Registry 和动态 Host Resolver；
 - [x] 隔离 Host、Shell 和 Outlet 的栈、返回与诊断状态；
 - [x] 将 Adaptive Layout 契约接入 Host/Outlet 调度；

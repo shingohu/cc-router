@@ -2,6 +2,7 @@
 library;
 
 export 'src/adapter.dart';
+export 'src/app.dart';
 export 'src/assembler.dart';
 export 'src/backend.dart';
 export 'src/modal_pages.dart';

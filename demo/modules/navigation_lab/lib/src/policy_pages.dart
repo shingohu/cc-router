@@ -4,39 +4,36 @@ import 'package:ccrouter/ccrouter.dart';
 import 'package:flutter/material.dart';
 
 import 'lab_configuration.dart';
+import 'component_capabilities.dart';
 import 'navigation_lab_component.dart';
 import 'ccrouter_generated/component/demo_navigation_lab_component.route_api.g.dart';
 
-const _proceedInterceptorId = 'demo_navigation_lab.proceed';
-const _cancelInterceptorId = 'demo_navigation_lab.cancel';
-const _redirectInterceptorId = 'demo_navigation_lab.redirect';
-const _deferInterceptorId = 'demo_navigation_lab.defer';
-const _timeoutInterceptorId = 'demo_navigation_lab.timeout';
-const _dirtyPopGuardId = 'demo_navigation_lab.dirty';
-
 void registerDemoNavigationLabPolicies(CCRegistry registry) {
   registry.registerRouteInterceptor(
-    _proceedInterceptorId,
+    DemoRoutePolicyIds.proceed,
     const _DemoProceedInterceptor(),
   );
   registry.registerRouteInterceptor(
-    _cancelInterceptorId,
+    DemoRoutePolicyIds.cancel,
     const _DemoCancelInterceptor(),
   );
   registry.registerRouteInterceptor(
-    _redirectInterceptorId,
+    DemoRoutePolicyIds.redirect,
     const _DemoRedirectInterceptor(),
   );
   registry.registerRouteInterceptor(
-    _deferInterceptorId,
+    DemoRoutePolicyIds.defer,
     const _DemoDeferInterceptor(),
   );
   registry.registerRouteInterceptor(
-    _timeoutInterceptorId,
+    DemoRoutePolicyIds.timeout,
     const _DemoTimeoutInterceptor(),
     timeout: const Duration(milliseconds: 180),
   );
-  registry.registerRoutePopGuard(_dirtyPopGuardId, const _DemoDirtyPopGuard());
+  registry.registerRoutePopGuard(
+    DemoRoutePolicyIds.dirty,
+    const _DemoDirtyPopGuard(),
+  );
 }
 
 final class _DemoProceedInterceptor implements CCNavigationInterceptor {
@@ -121,7 +118,7 @@ final class _DemoDirtyPopGuard implements CCPopGuard {
   component: demoNavigationLabComponent,
   id: 'demo_navigation_lab.proceed',
   pattern: CCPathPattern('/lab/policy/proceed'),
-  interceptors: [_proceedInterceptorId],
+  interceptors: [DemoRoutePolicyIds.proceed],
   description: '路由级拦截器放行示例。',
 )
 final class DemoProceedPage extends StatelessWidget {
@@ -138,7 +135,7 @@ final class DemoProceedPage extends StatelessWidget {
   component: demoNavigationLabComponent,
   id: 'demo_navigation_lab.cancel',
   pattern: CCPathPattern('/lab/policy/cancel'),
-  interceptors: [_cancelInterceptorId],
+  interceptors: [DemoRoutePolicyIds.cancel],
   description: '路由级拦截器取消示例；页面正常情况下不会创建。',
 )
 final class DemoCancelledPage extends StatelessWidget {
@@ -153,7 +150,7 @@ final class DemoCancelledPage extends StatelessWidget {
   component: demoNavigationLabComponent,
   id: 'demo_navigation_lab.redirect.source',
   pattern: CCPathPattern('/lab/policy/redirect-source'),
-  interceptors: [_redirectInterceptorId],
+  interceptors: [DemoRoutePolicyIds.redirect],
   description: '路由级拦截器重定向源页面；页面正常情况下不会创建。',
 )
 final class DemoRedirectSourcePage extends StatelessWidget {
@@ -182,7 +179,7 @@ final class DemoRedirectTargetPage extends StatelessWidget {
   component: demoNavigationLabComponent,
   id: 'demo_navigation_lab.defer',
   pattern: CCPathPattern('/lab/policy/defer'),
-  interceptors: [_deferInterceptorId],
+  interceptors: [DemoRoutePolicyIds.defer],
   description: '等待外部同意后恢复的 Deferred Navigation 示例。',
 )
 final class DemoDeferredPage extends StatelessWidget {
@@ -199,7 +196,7 @@ final class DemoDeferredPage extends StatelessWidget {
   component: demoNavigationLabComponent,
   id: 'demo_navigation_lab.timeout',
   pattern: CCPathPattern('/lab/policy/timeout'),
-  interceptors: [_timeoutInterceptorId],
+  interceptors: [DemoRoutePolicyIds.timeout],
   description: '触发标准 Interceptor Timeout Error 的示例。',
 )
 final class DemoTimeoutPage extends StatelessWidget {
@@ -216,7 +213,7 @@ final class DemoTimeoutPage extends StatelessWidget {
   component: demoNavigationLabComponent,
   id: 'demo_navigation_lab.guarded',
   pattern: CCPathPattern('/lab/policy/guarded'),
-  popGuards: [_dirtyPopGuardId],
+  popGuards: [DemoRoutePolicyIds.dirty],
   description: '未保存状态下拒绝 CCRouter Pop 的路由。',
 )
 final class DemoGuardedPage extends StatefulWidget {

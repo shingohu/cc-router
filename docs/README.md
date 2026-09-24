@@ -7,6 +7,7 @@
 - [路由契约文件设计](CCRouter-route-contract-design.md)
 - [混合路由改造设计](CCRouter-hybrid-routing-design.md)
 - [注解路由生成器对比与借鉴记录](CCRouter-annotation-generator-comparison.md)
+- [组件化框架能力对比与缺口记录](CCRouter-component-framework-comparison.md)
 - [最终 API 收口复审清单](CCRouter-final-api-review.md)
 - [核心价值与开发约定回归](CCRouter-core-principles-audit.md)
 - [路由专项问题分析](CCRouter-route-follow-up-analysis.md)

@@ -309,25 +309,18 @@ Route      一次具体路由实例
 
 ## 6. 静态 API 设计
 
-应用组合根显式建立 Runtime 和组件集合，再通过 managed App 绑定 Backend；初始化成功后的
-业务代码统一从 `CCRouter` 进入：
+应用组合根显式建立 Runtime 和组件集合，再通过 Host 绑定 Backend；新 GoRouter 工程可用
+`CCGoRouterApp` 收口装配，已有 Router 或自定义 Backend 继续使用 managed/attach 入口。
+初始化成功后的业务代码统一从 `CCRouter` 进入：
 
 ```dart
 CCRouter.initialize(
   components: ccrouterGeneratedComponentManifests,
 );
 
-final backend = CCGoRouterBackend.managed(
-  catalog: ccrouterGeneratedRouteCatalog,
-  hostRoutes: [
-    GoRoute(path: '/', builder: (_, _) => const HomePage()),
-  ],
-);
-
 runApp(
-  CCRouterApp.managed(
-    backend: backend,
-    child: MaterialApp.router(routerConfig: backend.router),
+  CCGoRouterApp(
+    catalog: ccrouterGeneratedRouteCatalog,
   ),
 );
 
@@ -423,25 +416,18 @@ abstract final class CCRouter {
 
 ### 6.2 导航适配器绑定
 
-Flutter 应用启动时选择一个 Backend。新应用使用 managed GoRouter Backend；已有 Router 使用
-attach Backend 并继续由应用持有 Router：
+Flutter 应用启动时选择一个 Backend。新 GoRouter 应用使用 `CCGoRouterApp`；已有 Router 使用
+attach Backend 并继续由应用持有 Router。需要全局拦截器或其它初始化选项时，应在挂载组件前
+显式调用 `CCRouter.initialize`，然后省略 `components`：
 
 ```dart
 CCRouter.initialize(
   components: ccrouterGeneratedComponentManifests,
 );
 
-final backend = CCGoRouterBackend.managed(
-  catalog: ccrouterGeneratedRouteCatalog,
-  hostRoutes: [
-    GoRoute(path: '/', builder: (_, _) => const HomePage()),
-  ],
-);
-
 runApp(
-  CCRouterApp.managed(
-    backend: backend,
-    child: MaterialApp.router(routerConfig: backend.router),
+  CCGoRouterApp(
+    catalog: ccrouterGeneratedRouteCatalog,
   ),
 );
 ```

@@ -169,7 +169,10 @@ final class _DemoCapabilitiesPageState extends State<DemoCapabilitiesPage> {
                     gate: demoPrivacyGrantedGate,
                   );
                   return CCRouter.initializationTasks
-                      .firstWhere((task) => task.id == 'demo.startup.analytics')
+                      .firstWhere(
+                        (task) =>
+                            task.id == DemoInitializationTaskIds.analytics,
+                      )
                       .state
                       .name;
                 }),

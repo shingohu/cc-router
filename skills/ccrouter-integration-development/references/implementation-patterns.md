@@ -4,7 +4,18 @@
 
 ### Host
 
-The Host may import `ccrouter_go_router` and `ccrouter_host.dart`. It owns `CCRouter.initialize` configuration, generated Host assembly, `CCRouterApp`, navigation Backend, Shell/Outlet topology, platform Deep Link ingress, global policies and final `CCRouter.shutdown`.
+The Host may import `ccrouter_go_router` and `ccrouter_host.dart`. A new GoRouter
+application should prefer `CCGoRouterApp(catalog: ..., components: ...)` for the
+minimal assembly path. When global policies or telemetry are needed, call
+`CCRouter.initialize` explicitly and omit `components` from the widget. The Host
+still owns generated Host assembly, navigation Backend, Shell/Outlet topology,
+platform Deep Link ingress, global policies and final `CCRouter.shutdown`.
+
+Use `CCRouterApp.managed` with a manually created `CCRouterAppBackend` when the
+application needs a custom Backend or custom application tree. Use
+`CCGoRouterBackend.attach` for an existing application-owned GoRouter; the
+minimal widget is not an attach replacement and never disposes an external
+Router.
 
 Feature packages must not perform these duties.
 
@@ -131,6 +142,13 @@ await CCRouter.event(const OrderSubmitted('42'));
 ```
 
 ## Initialization
+
+Keep initialization identifiers in one component-owned constants class. Do not
+repeat task or Gate strings across Registrar, Host, pages, and tests. If a Host
+or another component must open or depend on an identifier, publish that
+identifier from a contracts library instead of importing the implementation
+Registrar or a `src` path. Stable IDs should use a component or capability
+prefix and remain unchanged after ordinary refactors.
 
 Register tasks in the component Registrar and open their Gate from the Host:
 

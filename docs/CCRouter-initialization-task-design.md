@@ -93,6 +93,23 @@ await CCRouter.runInitialization(gate: privacyGranted);
 - 失败任务不会自动重试，避免重复初始化 SDK、数据库或有副作用资源。
 - 需要网络重试的组件应把重试限制在任务实现内部，并保持 deadline/cancellation 可观察。
 - `optional` 只表示不阻止独立任务，不表示依赖它的任务可以忽略失败。
+
+## 7. 稳定 ID 与硬编码治理
+
+任务 ID 和 Gate ID 是诊断、依赖 DAG、生成文档和跨组件协作的稳定机器标识，不能改成
+随机值、对象身份或运行时类名推导。当前实现仍使用字符串，但必须遵守以下边界：
+
+1. 组件内部任务 ID 集中放在组件自己的不可变常量类中，例如
+   `DemoInitializationTaskIds`，Registrar、页面和测试不得重复书写同一个字符串。
+2. 需要由 Host 或其他组件打开、依赖或观察的 Gate/任务 ID，放到独立的公共 Contract
+   Library；实现包不能要求调用方导入 `src` 或 Registrar。
+3. ID 使用组件或能力前缀，例如 `analytics.foundation`、`app.privacy.granted`，避免
+   仅使用 `startup`、`ready` 等全局模糊名称。
+4. `enum` 不能替代对外稳定 ID，因为枚举成员重命名可能意外改变诊断和依赖语义。
+5. 生成器后续可以从声明生成 ID 常量，并在生成阶段校验重复 ID、缺失依赖、循环依赖和
+   跨 Package Contract exposure；运行时仍保留最终校验。
+
+这种约定只收敛标识符来源，不把插件实现参数、隐私策略或业务配置提升到公共 Contract。
 - 降级应在任务内部切换到明确的备用实现；框架不猜测替代任务。
 
 ## 7. 已完成实施项

@@ -32,6 +32,7 @@ CCRouter 是一个面向 Flutter 大型应用的组件化运行时与类型安�
 
 ```dart
 import 'package:ccrouter/ccrouter.dart';
+import 'package:ccrouter_go_router/ccrouter_go_router.dart';
 ```
 
 只有应用 Composition Root 可以导入 `ccrouter_go_router` 和 `package:ccrouter/ccrouter_host.dart`。业务代码不得导入 `ccrouter_core/src/*`、Adapter 或 Host SPI。
@@ -177,27 +178,29 @@ Host 使用生成的 Manifest 与 Catalog。新项目默认使用 managed GoRout
 ```dart
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  CCRouter.initialize(
-    components: ccrouterGeneratedComponentManifests,
-  );
-  await CCRouter.runInitialization();
-
-  final backend = CCGoRouterBackend.managed(
-    catalog: ccrouterGeneratedRouteCatalog,
-    initialLocation: '/',
-  );
-
   runApp(
-    CCRouterApp.managed(
-      backend: backend,
-      child: MaterialApp.router(routerConfig: backend.router),
+    CCGoRouterApp(
+      catalog: ccrouterGeneratedRouteCatalog,
+      components: ccrouterGeneratedComponentManifests,
     ),
   );
 }
 ```
 
-`CCRouter.initialize` 同步完成全局配置和启动组件注册；它不隐式创建登录 Session，也不在 `CCRouterApp` 内自动调用。应用最终退出或测试 Host 销毁时执行：
+上面的 `CCGoRouterApp` 会自动装配 managed GoRouter、Root Observer、Adapter、Host
+和 `MaterialApp.router`。传入 `components` 是只包含基础组件注册的启动简写；如果需要全局拦截器、Deep Link 白名单、Aspect、Telemetry 或其它配置，仍应显式调用
+`CCRouter.initialize`，然后省略 `components`：
+
+```dart
+CCRouter.initialize(
+  components: ccrouterGeneratedComponentManifests,
+  globalInterceptors: const [...],
+);
+await CCRouter.runInitialization();
+runApp(CCGoRouterApp(catalog: ccrouterGeneratedRouteCatalog));
+```
+
+`CCRouter.initialize` 同步完成全局配置和启动组件注册；`CCGoRouterApp` 不会在卸载时隐式 shutdown Runtime。应用最终退出或测试 Host 销毁时执行：
 
 ```dart
 await CCRouter.shutdown();
@@ -205,7 +208,7 @@ await CCRouter.shutdown();
 
 不要在页面 Pop、组件页面销毁、App 后台或 Session 关闭时 shutdown。Runtime 会先销毁它拥有的 Adapter，再释放 managed Backend 创建的 GoRouter；attach 模式不会销毁应用自己创建的 GoRouter。
 
-已有 GoRouter 工程使用 `CCGoRouterBackend.attach`，把生成 bindings、Host 和已经安装到 Router 的 Observer 显式交给 CCRouter。完整 Shell/Outlet 示例见 [`demo/lib/demo_router_backend.dart`](demo/lib/demo_router_backend.dart)。
+已有 GoRouter 工程使用 `CCGoRouterBackend.attach`，把生成 bindings、Host 和已经安装到 Router 的 Observer 显式交给 CCRouter。需要自定义 Backend 或完整 Widget 树时，仍可使用 `CCRouterApp.managed`。完整 Shell/Outlet 示例见 [`demo/lib/demo_router_backend.dart`](demo/lib/demo_router_backend.dart)。
 
 ## 类型安全导航
 
@@ -639,6 +642,7 @@ Skill 采用短主文件和按需 reference 结构，既适合日常编码，也
 - [`demo/README.md`](demo/README.md)：可交互能力清单和真机验证方式
 - [`docs/CCRouter-v0.1-architecture.md`](docs/CCRouter-v0.1-architecture.md)：总体架构
 - [`docs/CCRouter-route-design.md`](docs/CCRouter-route-design.md)：路由设计
+- [`docs/CCRouter-component-framework-comparison.md`](docs/CCRouter-component-framework-comparison.md)：与其他组件化框架的能力对比和后续缺口
 - [`docs/CCRouter-service-lifecycle-design.md`](docs/CCRouter-service-lifecycle-design.md)：Service 生命周期设计
 - [`docs/CCRouter-command-design.md`](docs/CCRouter-command-design.md)：Command 设计
 - [`docs/CCRouter-event-design.md`](docs/CCRouter-event-design.md)：Event 设计

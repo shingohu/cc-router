@@ -4,6 +4,7 @@ import 'package:ccrouter/ccrouter.dart';
 import 'package:flutter/foundation.dart';
 
 import 'ccrouter_generated/component/demo_navigation_lab_component.route_api.g.dart';
+import 'component_capabilities.dart';
 
 final demoNavigationLabStore = DemoNavigationLabStore();
 
@@ -102,7 +103,7 @@ final class DemoNavigationFailurePolicy implements CCNavigationFailurePolicy {
 }
 
 final demoNavigationAspect = CCNavigationAspect(
-  id: 'demo.navigation.timeline',
+  id: DemoAspectIds.navigationTimeline,
   onFound: _recordAspect,
   onArrival: _recordAspect,
   onShow: _recordAspect,

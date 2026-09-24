@@ -6,6 +6,7 @@ import 'package:demo_web_contracts/demo_web_contracts.dart';
 import 'package:flutter/material.dart';
 
 import 'lab_configuration.dart';
+import 'component_capabilities.dart';
 import 'navigation_lab_component.dart';
 import 'order_summary_service_proxy.dart';
 import 'shell_contract.dart';
@@ -397,7 +398,9 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
             'ccrouter://lab/detail/46?title=Simulated%20External%20Deep%20Link'
             '&tags=external&tags=platform',
           ),
-          source: const CCNavigationSource.deepLink('demo.simulated_external'),
+          source: const CCNavigationSource.deepLink(
+            DemoNavigationSourceIds.simulatedExternal,
+          ),
         ),
       ),
     ),
@@ -414,7 +417,7 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
           ),
           mode: CCDeepLinkOpenMode.go,
           source: const CCNavigationSource.deepLink(
-            'demo.simulated_external_go',
+            DemoNavigationSourceIds.simulatedExternalGo,
           ),
         ),
       ),
