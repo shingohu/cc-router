@@ -8,6 +8,8 @@ export 'src/lab_configuration.dart'
         DemoGlobalNavigationInterceptor,
         DemoNavigationLabStore,
         DemoNavigationTelemetryProvider,
+        demoAnalyticsTracker,
+        demoNavigationAnalytics,
         demoApplicationLogger,
         demoNavigationAspect,
         demoDiagnosticsSink,

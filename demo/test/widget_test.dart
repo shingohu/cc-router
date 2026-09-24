@@ -28,7 +28,10 @@ void main() {
         ),
       ],
       navigationFailurePolicy: const DemoNavigationFailurePolicy(),
-      navigationAspects: [demoNavigationAspect],
+      navigationAspects: [
+        demoNavigationAspect,
+        demoNavigationAnalytics.createAspect(),
+      ],
       telemetryContextProvider: const DemoNavigationTelemetryProvider(),
       diagnostics: CCDiagnosticsConfig(
         sink: demoDiagnosticsSink,
@@ -71,6 +74,14 @@ void main() {
         (entry) =>
             entry.category == CCDiagnosticCategory.navigation &&
             entry.routeId == 'demo_navigation_lab.detail',
+      ),
+      isTrue,
+    );
+    expect(
+      demoApplicationLogger.entries.any(
+        (entry) => entry.message.contains(
+          'Analytics · click · demo.navigation.typed_result',
+        ),
       ),
       isTrue,
     );
@@ -225,8 +236,7 @@ void main() {
     );
     final eventTrace = demoApplicationLogger.entries.firstWhere(
       (entry) =>
-          entry.category == CCDiagnosticCategory.event &&
-          entry.traceId != null,
+          entry.category == CCDiagnosticCategory.event && entry.traceId != null,
     );
     expect(
       demoApplicationLogger.entriesForTrace(eventTrace.traceId!),

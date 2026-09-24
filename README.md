@@ -20,6 +20,7 @@ CCRouter 是一个面向 Flutter 大型应用的组件化运行时与类型安�
 | Package | 用途 | 业务是否直接依赖 |
 | --- | --- | --- |
 | `ccrouter_contracts` | Pure Dart Route、Service、Command、Event、错误与导航契约 | 仅独立 contracts Package |
+| `ccrouter_analytics` | Provider-neutral 分析事件、脱敏属性、有界 Sink 与 Route PV/Leave 桥接 | 按需接入 |
 | `ccrouter_core` | Runtime、Registry、Scope、调度和诊断实现 | 否 |
 | `ccrouter` | Flutter 业务门面、`CCRouterApp`、页面生命周期 | 是 |
 | `ccrouter_go_router` | 默认 GoRouter Backend、Assembler、Observer 与 Shell 接入 | 仅 Host |
@@ -52,6 +53,8 @@ import 'package:ccrouter_go_router/ccrouter_go_router.dart';
 | Interceptor / Redirect / Defer | 已支持 | 全局与路由级策略、超时、取消、Pending 恢复 |
 | PopGuard | 已支持 | 业务 Pop、系统返回、Cupertino 手势和预测返回进入统一判断 |
 | Aspect / Trace / Telemetry | 已支持 | 有界、脱敏、观察异常隔离 |
+| Provider-neutral Analytics | 已支持 | Route PV/Leave、稳定事件契约、属性校验和有界异步 Sink；不绑定第三方 SDK |
+| Widget 点击/滑动自动采集 | 部分支持 | `CCAnalyticsTarget` 可包装现有回调；全局 Widget 自动采集和滑动聚合仍是后续可选能力 |
 | 页面生命周期 | 已支持 | `PageShow/PageHide` 与前后台，Mixin 和 Listener 两种形式 |
 | Service | 已支持 | App/Session/Route Scope，singleton/factory，key/token，lazy async readiness |
 | Command | 已支持 | 单 Handler、强类型结果、`void`、取消、超时与 Trace |
@@ -209,6 +212,43 @@ await CCRouter.shutdown();
 不要在页面 Pop、组件页面销毁、App 后台或 Session 关闭时 shutdown。Runtime 会先销毁它拥有的 Adapter，再释放 managed Backend 创建的 GoRouter；attach 模式不会销毁应用自己创建的 GoRouter。
 
 已有 GoRouter 工程使用 `CCGoRouterBackend.attach`，把生成 bindings、Host 和已经安装到 Router 的 Observer 显式交给 CCRouter。需要自定义 Backend 或完整 Widget 树时，仍可使用 `CCRouterApp.managed`。完整 Shell/Outlet 示例见 [`demo/lib/demo_router_backend.dart`](demo/lib/demo_router_backend.dart)。
+
+### 分析事件与页面埋点
+
+`ccrouter_analytics` 只提供不绑定供应商的事件契约和页面生命周期桥接。它会把 CCRouter 管理的 Route
+`arrival/show/hide` 转换成 `page.view.*` 和 `page.leave.*`，并通过有界异步 Dispatcher 交给应用自己的
+Firebase、ThinkingData、Sentry 或日志 Adapter。Sink 异常不会改变导航结果，队列满时会丢弃最旧的非关键分析事件。
+
+```dart
+final analytics = CCAnalyticsEventDispatcher(
+  sinks: [applicationAnalyticsSink],
+);
+final navigationAnalytics = CCRouterNavigationAnalytics(
+  dispatcher: analytics,
+);
+
+CCRouter.initialize(
+  components: ccrouterGeneratedComponentManifests,
+  navigationAspects: [navigationAnalytics.createAspect()],
+);
+```
+
+分析属性必须使用 `CCAnalyticsProperty` 声明，禁止放入 Token、完整 URI、Widget、异常对象或任意业务对象。
+任意 Button、列表项点击和滚动不由 Core 猜测；使用 `CCAnalyticsTarget` 包装现有回调，自动 UI 采集只能作为默认关闭的独立插件接入。
+
+```dart
+final confirmTarget = CCAnalyticsTarget(
+  tracker: tracker,
+  eventId: 'order.detail.confirm',
+);
+
+FilledButton(
+  onPressed: () => confirmTarget.run(submitOrder),
+  child: const Text('确认订单'),
+);
+```
+
+完整边界和分阶段计划见 [`docs/CCRouter-analytics-and-auto-track-design.md`](docs/CCRouter-analytics-and-auto-track-design.md)。
 
 ## 类型安全导航
 

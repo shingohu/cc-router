@@ -21,7 +21,10 @@ Future<void> main() async {
       ),
     ],
     navigationFailurePolicy: const DemoNavigationFailurePolicy(),
-    navigationAspects: [demoNavigationAspect],
+    navigationAspects: [
+      demoNavigationAspect,
+      demoNavigationAnalytics.createAspect(),
+    ],
     telemetryContextProvider: const DemoNavigationTelemetryProvider(),
     diagnostics: CCDiagnosticsConfig(
       sink: demoDiagnosticsSink,

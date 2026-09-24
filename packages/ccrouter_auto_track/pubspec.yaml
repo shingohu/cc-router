@@ -1,0 +1,17 @@
+name: ccrouter_auto_track
+description: Optional explicit Flutter UI analytics helpers for CCRouter.
+version: 0.1.0
+resolution: workspace
+publish_to: none
+
+environment:
+  sdk: ^3.10.0
+
+dependencies:
+  ccrouter_analytics: ^0.1.0
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter

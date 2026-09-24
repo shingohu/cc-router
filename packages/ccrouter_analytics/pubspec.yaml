@@ -1,0 +1,14 @@
+name: ccrouter_analytics
+description: Provider-neutral analytics contracts and navigation event bridge for CCRouter.
+version: 0.1.0
+resolution: workspace
+publish_to: none
+
+environment:
+  sdk: ^3.10.0
+
+dependencies:
+  ccrouter_contracts: ^0.1.0
+
+dev_dependencies:
+  test: ^1.26.0

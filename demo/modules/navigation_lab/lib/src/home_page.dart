@@ -352,16 +352,19 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
       icon: Icons.arrow_forward,
       title: 'Push + typed result',
       subtitle: 'int/List<String> 参数由生成 Codec 编解码。',
-      onTap: () => _run(
-        'Push typed detail',
-        () => CCRouter.navigator.push<String>(
-          DemoNavigationLabRoutes.detail(
-            id: 42,
-            tags: const ['typed', 'query', 'result'],
+      onTap: () {
+        demoAnalyticsTracker.click(eventId: 'demo.navigation.typed_result');
+        return _run(
+          'Push typed detail',
+          () => CCRouter.navigator.push<String>(
+            DemoNavigationLabRoutes.detail(
+              id: 42,
+              tags: const ['typed', 'query', 'result'],
+            ),
+            source: const CCNavigationSource.feature('navigation.typed'),
           ),
-          source: const CCNavigationSource.feature('navigation.typed'),
-        ),
-      ),
+        );
+      },
     ),
     _ActionTile(
       icon: Icons.link,

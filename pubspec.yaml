@@ -9,6 +9,8 @@ dev_dependencies:
 
 workspace:
   - packages/ccrouter_contracts
+  - packages/ccrouter_analytics
+  - packages/ccrouter_auto_track
   - packages/ccrouter_core
   - packages/ccrouter
   - packages/ccrouter_go_router

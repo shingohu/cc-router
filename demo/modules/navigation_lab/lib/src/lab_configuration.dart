@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:ccrouter_analytics/ccrouter_analytics.dart';
 import 'package:ccrouter/ccrouter.dart';
 import 'package:flutter/foundation.dart';
 
@@ -9,6 +10,21 @@ import 'component_capabilities.dart';
 final demoApplicationLogger = DemoApplicationLogger();
 final demoNavigationLabStore = DemoNavigationLabStore();
 final demoDiagnosticsSink = DemoDiagnosticsSink();
+final demoAnalyticsSink = DemoAnalyticsSink();
+final demoAnalyticsDispatcher = CCAnalyticsEventDispatcher(
+  sinks: [demoAnalyticsSink],
+);
+final demoNavigationAnalytics = CCRouterNavigationAnalytics(
+  dispatcher: demoAnalyticsDispatcher,
+);
+final demoAnalyticsTracker = CCAnalyticsTracker(
+  dispatcher: demoAnalyticsDispatcher,
+  context: const CCAnalyticsContext(
+    componentId: 'demo_navigation_lab',
+    hostId: 'default',
+    outlet: 'root',
+  ),
+);
 
 /// Application-level structured log retained by the Demo Host.
 ///
@@ -263,6 +279,18 @@ final class DemoDiagnosticsSink implements CCDiagnosticSink {
     demoNavigationLabStore.record(
       'Sink · history cleared',
       mirrorToApplicationLogger: false,
+    );
+  }
+}
+
+/// Demo application sink that makes product events visible beside framework logs.
+final class DemoAnalyticsSink implements CCAnalyticsSink {
+  @override
+  void write(CCAnalyticsEvent event) {
+    demoApplicationLogger.recordApplication(
+      'Analytics · ${event.type.name} · ${event.eventId}'
+      ' · route=${event.routeId ?? '-'}'
+      ' · nav=${event.navigationId ?? '-'}',
     );
   }
 }
