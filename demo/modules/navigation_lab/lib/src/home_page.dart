@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:ccrouter/ccrouter.dart';
+import 'package:ccrouter_auto_track/ccrouter_auto_track.dart';
 import 'package:demo_order_contracts/demo_order_contracts.dart';
 import 'package:demo_web_contracts/demo_web_contracts.dart';
 import 'package:flutter/material.dart';
@@ -252,18 +253,23 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
   };
 
   Widget _page(String title, String subtitle, List<Widget> children) =>
-      ListView(
-        padding: const EdgeInsets.fromLTRB(24, 20, 24, 40),
-        children: [
-          Text(
-            title,
-            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 4),
-          Text(subtitle),
-          const SizedBox(height: 20),
-          ...children,
-        ],
+      CCAnalyticsScrollable(
+        tracker: demoAnalyticsTracker,
+        eventId: 'demo.ui.scroll.end',
+        startEventId: 'demo.ui.scroll.start',
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(24, 20, 24, 40),
+          children: [
+            Text(
+              title,
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 4),
+            Text(subtitle),
+            const SizedBox(height: 20),
+            ...children,
+          ],
+        ),
       );
 
   Widget _overview(BuildContext context) => AnimatedBuilder(
@@ -273,10 +279,15 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
         spacing: 12,
         runSpacing: 12,
         children: [
-          _Metric(
-            label: 'Components',
-            value: '${CCRouter.registeredComponents.length}',
-            icon: Icons.extension_outlined,
+          CCAnalyticsExposureTarget(
+            tracker: demoAnalyticsTracker,
+            eventId: 'demo.overview.components.exposure',
+            minimumVisibleDuration: const Duration(milliseconds: 300),
+            child: _Metric(
+              label: 'Components',
+              value: '${CCRouter.registeredComponents.length}',
+              icon: Icons.extension_outlined,
+            ),
           ),
           _Metric(
             label: 'Session',

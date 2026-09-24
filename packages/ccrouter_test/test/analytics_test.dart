@@ -63,12 +63,63 @@ void main() {
   });
 
   group('analytics dispatcher', () {
+    test('filters events before queueing when consent or sampling rejects', () {
+      final sink = _RecordingSink();
+      final dispatcher = CCAnalyticsEventDispatcher(
+        sinks: [sink],
+        policy: CCAnalyticsPolicy(consentGranted: false),
+      );
+
+      expect(dispatcher.dispatch(_event('custom.blocked')), isFalse);
+      expect(dispatcher.filteredEventCount, 1);
+      dispatcher.updatePolicy(CCAnalyticsPolicy(sampleRate: 0));
+      expect(dispatcher.dispatch(_event('custom.sampled')), isFalse);
+      expect(dispatcher.filteredEventCount, 2);
+    });
+
+    test(
+      'sampling uses the injected decision source deterministically',
+      () async {
+        final sink = _RecordingSink();
+        final decisions = <double>[0.1, 0.9];
+        final dispatcher = CCAnalyticsEventDispatcher(
+          sinks: [sink],
+          policy: CCAnalyticsPolicy(consentGranted: true, sampleRate: 0.5),
+          randomSource: () => decisions.removeAt(0),
+        );
+
+        dispatcher.dispatch(_event('custom.accepted'));
+        dispatcher.dispatch(_event('custom.filtered'));
+        await dispatcher.close();
+
+        expect(sink.events.map((event) => event.eventId), ['custom.accepted']);
+        expect(dispatcher.filteredEventCount, 1);
+      },
+    );
+
+    test('policy update clears events waiting for a sink', () async {
+      final sink = _BlockingSink();
+      final dispatcher = CCAnalyticsEventDispatcher(
+        sinks: [sink],
+        policy: CCAnalyticsPolicy(consentGranted: true),
+      );
+
+      dispatcher.dispatch(_event('custom.in_flight'));
+      dispatcher.dispatch(_event('custom.pending'));
+      dispatcher.updatePolicy(CCAnalyticsPolicy(consentGranted: false));
+      sink.ready.complete();
+      await dispatcher.close();
+
+      expect(sink.events.map((event) => event.eventId), ['custom.in_flight']);
+    });
+
     test('delivers FIFO events and isolates sink failures', () async {
       final good = _RecordingSink();
       final failed = _RecordingSink(fail: true);
       final failures = <Object>[];
       final dispatcher = CCAnalyticsEventDispatcher(
         sinks: [good, failed],
+        policy: CCAnalyticsPolicy(consentGranted: true),
         onSinkError: (error, _, __) => failures.add(error),
       );
 
@@ -87,7 +138,11 @@ void main() {
 
     test('drops oldest queued event when capacity is reached', () async {
       final sink = _BlockingSink();
-      final dispatcher = CCAnalyticsEventDispatcher(sinks: [sink], capacity: 1);
+      final dispatcher = CCAnalyticsEventDispatcher(
+        sinks: [sink],
+        capacity: 1,
+        policy: CCAnalyticsPolicy(consentGranted: true),
+      );
 
       dispatcher.dispatch(_event('custom.one'));
       dispatcher.dispatch(_event('custom.two'));
@@ -105,7 +160,10 @@ void main() {
 
   test('navigation bridge emits page view and page leave events', () async {
     final sink = _RecordingSink();
-    final dispatcher = CCAnalyticsEventDispatcher(sinks: [sink]);
+    final dispatcher = CCAnalyticsEventDispatcher(
+      sinks: [sink],
+      policy: CCAnalyticsPolicy(consentGranted: true),
+    );
     final bridge = CCRouterNavigationAnalytics(dispatcher: dispatcher);
     final aspect = bridge.createAspect();
     final request = CCNavigationAspectRequest(
@@ -153,7 +211,10 @@ void main() {
     'explicit target records before running the business callback',
     () async {
       final sink = _RecordingSink();
-      final dispatcher = CCAnalyticsEventDispatcher(sinks: [sink]);
+      final dispatcher = CCAnalyticsEventDispatcher(
+        sinks: [sink],
+        policy: CCAnalyticsPolicy(consentGranted: true),
+      );
       final tracker = CCAnalyticsTracker(
         dispatcher: dispatcher,
         context: const CCAnalyticsContext(routeId: 'order.detail'),

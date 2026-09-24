@@ -80,7 +80,9 @@ FilledButton(
 - 禁止 Token、Cookie、完整 URI、Widget、Exception、业务对象和未脱敏账号信息；
 - 分析事件使用有界异步队列；队列满时允许丢弃非关键旧事件；
 - Sink 异常不能影响导航、Service、Command、Event 或页面构建；
-- 同意前后必须可以切换事件策略；
+- 同意前后必须可以切换事件策略；`CCAnalyticsEventDispatcher` 在入队前执行
+  Consent、启用和采样判断，撤销同意时清理待发送队列；已经进入外部 Sink 的事件无法撤回，
+  因此敏感供应商应在同意后再启用；
 - 监听器、ScrollController、Timer 和 StreamSubscription 必须在 Host/页面销毁时释放；
 - 分析事件和框架错误诊断都必须支持分类开关和采样。
 
@@ -111,23 +113,24 @@ Core 不依赖 Firebase、ThinkingData、Sentry 或 Crashlytics。
 
 - [x] 增加不改变 Flutter 手势语义的 Click Target 和基础 Tracker API；
 - [x] 增加基础显式 Scroll、Exposure 和 Custom 事件入口；
-- [ ] 增加 Scroll Target 和聚合策略；
-- [ ] 增加曝光 API、阈值和去重；
-- [ ] 增加 Widget、生命周期和内存释放测试；
+- [x] 增加 Scroll Target 和聚合策略；
+- [x] 增加曝光 API、可见比例、最小停留时间和去重；
+- [x] 增加 Widget、生命周期和内存释放测试；
 
 ### P3：可选 Auto Track
 
-- [ ] 独立 `ccrouter_auto_track` Flutter 包；
-- [ ] 默认关闭，只识别显式 Target 或稳定 Key；
-- [ ] 黑名单、采样、节流和平台兼容矩阵；
-- [ ] 不改变手势竞技和第三方 Overlay 行为；
+- [x] 独立 `ccrouter_auto_track` Flutter 包；
+- [x] 默认关闭，只识别显式 Target；不基于 Widget 文本、随机 Key 或全局手势猜测；
+- [ ] 黑名单、通用节流和完整平台兼容矩阵；采样已由 `CCAnalyticsPolicy` 提供；
+- [x] 不改变手势竞技和第三方 Overlay 行为；
 
 ### P4：供应商 Adapter
 
 - [ ] Firebase Adapter；
 - [ ] ThinkingData Adapter；
 - [ ] OpenTelemetry/应用日志 Adapter；
-- [ ] 用户身份、Consent、批量上传、离线缓存和重试；
+- [x] 增加 provider-neutral Consent 开关和有界采样策略；
+- [ ] 用户身份、批量上传、离线缓存和重试；
 
 ### P5：HTTP、Crash 和全链路回归
 
@@ -139,4 +142,5 @@ Core 不依赖 Firebase、ThinkingData、Sentry 或 Crashlytics。
 
 ## 9. 当前状态
 
-P0 和 P1 已在 `ccrouter_analytics` 实现。Firebase、ThinkingData、任意 Widget 自动点击/滑动和 HTTP/Crash Adapter 尚未实现。
+P0、P1、P2 显式 UI 能力、P3 的独立包基础和 Consent/采样基础已实现。Firebase、ThinkingData、
+通用 Widget 自动猜测、黑名单/通用节流、HTTP/Crash Adapter 尚未实现。

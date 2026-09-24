@@ -54,7 +54,7 @@ import 'package:ccrouter_go_router/ccrouter_go_router.dart';
 | PopGuard | 已支持 | 业务 Pop、系统返回、Cupertino 手势和预测返回进入统一判断 |
 | Aspect / Trace / Telemetry | 已支持 | 有界、脱敏、观察异常隔离 |
 | Provider-neutral Analytics | 已支持 | Route PV/Leave、稳定事件契约、属性校验和有界异步 Sink；不绑定第三方 SDK |
-| Widget 点击/滑动自动采集 | 部分支持 | `CCAnalyticsTarget` 可包装现有回调；全局 Widget 自动采集和滑动聚合仍是后续可选能力 |
+| Widget 点击/滑动/曝光采集 | 部分支持 | `CCAnalyticsTarget`、`ccrouter_auto_track` 提供显式点击、滚动聚合和曝光；全局 Widget 猜测仍不支持 |
 | 页面生命周期 | 已支持 | `PageShow/PageHide` 与前后台，Mixin 和 Listener 两种形式 |
 | Service | 已支持 | App/Session/Route Scope，singleton/factory，key/token，lazy async readiness |
 | Command | 已支持 | 单 Handler、强类型结果、`void`、取消、超时与 Trace |
@@ -231,10 +231,18 @@ CCRouter.initialize(
   components: ccrouterGeneratedComponentManifests,
   navigationAspects: [navigationAnalytics.createAspect()],
 );
+
+// 隐私授权完成后再开启分析；撤销授权会清理尚未发送的队列事件。
+analytics.updatePolicy(
+  CCAnalyticsPolicy(consentGranted: true, sampleRate: .25),
+);
 ```
 
 分析属性必须使用 `CCAnalyticsProperty` 声明，禁止放入 Token、完整 URI、Widget、异常对象或任意业务对象。
 任意 Button、列表项点击和滚动不由 Core 猜测；使用 `CCAnalyticsTarget` 包装现有回调，自动 UI 采集只能作为默认关闭的独立插件接入。
+需要滚动会话或曝光时，按需依赖 `ccrouter_auto_track`，显式包裹
+`CCAnalyticsScrollable` 或 `CCAnalyticsExposureTarget`；曝光默认按可见比例、最小停留
+时间和目标生命周期去重，不读取 Widget 文本，也不注册全局手势监听。
 
 ```dart
 final confirmTarget = CCAnalyticsTarget(

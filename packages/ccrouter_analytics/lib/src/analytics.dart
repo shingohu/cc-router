@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:collection';
+import 'dart:math' as math;
 
 /// Product analytics event categories supported by the provider-neutral layer.
 ///
@@ -315,6 +316,58 @@ final class CCAnalyticsTarget {
   }
 }
 
+/// Controls whether product analytics may enter the delivery queue.
+///
+/// Applications should construct this with `consentGranted: false` until the
+/// applicable privacy decision is available. The default is enabled but not
+/// granted, so an application must explicitly opt in after its privacy flow.
+final class CCAnalyticsPolicy {
+  /// Creates a validated immutable analytics delivery policy.
+  CCAnalyticsPolicy({
+    this.enabled = true,
+    this.consentGranted = false,
+    this.sampleRate = 1,
+  }) {
+    if (sampleRate < 0 || sampleRate > 1) {
+      throw ArgumentError.value(
+        sampleRate,
+        'sampleRate',
+        'Must be between 0 and 1.',
+      );
+    }
+  }
+
+  /// Whether analytics delivery is enabled for this application state.
+  final bool enabled;
+
+  /// Whether the required application privacy consent has been granted.
+  final bool consentGranted;
+
+  /// Fraction of eligible events to accept, from 0 to 1.
+  final double sampleRate;
+
+  /// Creates a policy with selected fields replaced.
+  CCAnalyticsPolicy copyWith({
+    bool? enabled,
+    bool? consentGranted,
+    double? sampleRate,
+  }) {
+    final nextSampleRate = sampleRate ?? this.sampleRate;
+    if (nextSampleRate < 0 || nextSampleRate > 1) {
+      throw ArgumentError.value(
+        nextSampleRate,
+        'sampleRate',
+        'Must be between 0 and 1.',
+      );
+    }
+    return CCAnalyticsPolicy(
+      enabled: enabled ?? this.enabled,
+      consentGranted: consentGranted ?? this.consentGranted,
+      sampleRate: nextSampleRate,
+    );
+  }
+}
+
 /// Receives immutable analytics events at the application boundary.
 ///
 /// Implementations should enqueue or batch quickly. A sink must not change
@@ -340,10 +393,14 @@ final class CCAnalyticsEventDispatcher {
     required Iterable<CCAnalyticsSink> sinks,
     this.capacity = 256,
     this.onSinkError,
-  }) : sinks = List.unmodifiable(sinks) {
+    CCAnalyticsPolicy? policy,
+    double Function()? randomSource,
+  }) : sinks = List.unmodifiable(sinks),
+       _policy = policy ?? CCAnalyticsPolicy() {
     if (capacity <= 0) {
       throw ArgumentError.value(capacity, 'capacity', 'Must be positive.');
     }
+    _randomSource = randomSource ?? _defaultAnalyticsRandomSource;
   }
 
   /// Maximum number of events retained while sinks are busy.
@@ -355,8 +412,14 @@ final class CCAnalyticsEventDispatcher {
   /// Optional isolated sink failure callback.
   final CCAnalyticsSinkErrorHandler? onSinkError;
 
+  /// Current immutable consent, enablement, and sampling policy.
+  CCAnalyticsPolicy get policy => _policy;
+
   /// Number of events discarded because the bounded queue was full.
   int get droppedEventCount => _droppedEventCount;
+
+  /// Number of events rejected by [policy] before queueing.
+  int get filteredEventCount => _filteredEventCount;
 
   /// Whether [close] has stopped accepting new events.
   bool get isClosed => _closed;
@@ -367,7 +430,7 @@ final class CCAnalyticsEventDispatcher {
   /// implementation drops the oldest queued event under pressure so a recent
   /// page or interaction signal remains available to the provider.
   bool dispatch(CCAnalyticsEvent event) {
-    if (_closed || sinks.isEmpty) return false;
+    if (_closed || sinks.isEmpty || !_accepts(event)) return false;
     if (_queue.length >= capacity) {
       _queue.removeFirst();
       _droppedEventCount++;
@@ -375,6 +438,18 @@ final class CCAnalyticsEventDispatcher {
     _queue.addLast(event);
     _scheduleDrain();
     return true;
+  }
+
+  /// Replaces [nextPolicy] and clears pending events when delivery is disabled.
+  ///
+  /// Events already executing in a sink cannot be retracted. Applications that
+  /// handle sensitive consent transitions should update the policy before
+  /// constructing or enabling the corresponding provider sink.
+  void updatePolicy(CCAnalyticsPolicy nextPolicy) {
+    _policy = nextPolicy;
+    if (!nextPolicy.enabled || !nextPolicy.consentGranted) {
+      _queue.clear();
+    }
   }
 
   /// Stops accepting events and waits for already queued events to finish.
@@ -396,6 +471,15 @@ final class CCAnalyticsEventDispatcher {
 
   /// Number of events evicted by queue pressure.
   int _droppedEventCount = 0;
+
+  /// Number of events filtered by consent, enablement, or sampling.
+  int _filteredEventCount = 0;
+
+  /// Current mutable policy slot updated only through [updatePolicy].
+  CCAnalyticsPolicy _policy;
+
+  /// Random source isolated for deterministic sampling tests.
+  late final double Function() _randomSource;
 
   /// Schedules exactly one asynchronous queue drain.
   void _scheduleDrain() {
@@ -420,7 +504,26 @@ final class CCAnalyticsEventDispatcher {
       }
     }
   }
+
+  /// Applies the policy before an event is allowed to consume queue capacity.
+  bool _accepts(CCAnalyticsEvent event) {
+    if (!policy.enabled || !policy.consentGranted) {
+      _filteredEventCount++;
+      return false;
+    }
+    if (policy.sampleRate <= 0 ||
+        (policy.sampleRate < 1 && _randomSource() >= policy.sampleRate)) {
+      _filteredEventCount++;
+      return false;
+    }
+    return true;
+  }
 }
+
+final math.Random _analyticsRandom = math.Random();
+
+/// Default non-deterministic source used by production sampling.
+double _defaultAnalyticsRandomSource() => _analyticsRandom.nextDouble();
 
 /// Validates one stable event identity before it reaches a sink.
 void _validateAnalyticsEventId(String value) {

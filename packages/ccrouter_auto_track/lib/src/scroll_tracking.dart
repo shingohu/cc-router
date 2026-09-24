@@ -1,4 +1,5 @@
 import 'package:ccrouter_analytics/ccrouter_analytics.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
 /// Wraps one explicit Scrollable target and emits aggregate scroll events.
@@ -39,8 +40,7 @@ final class CCAnalyticsScrollable extends StatefulWidget {
   final CCAnalyticsProperties baseProperties;
 
   @override
-  State<CCAnalyticsScrollable> createState() =>
-      _CCAnalyticsScrollableState();
+  State<CCAnalyticsScrollable> createState() => _CCAnalyticsScrollableState();
 }
 
 /// State that owns one in-progress scroll measurement and no external resource.
@@ -50,10 +50,11 @@ final class _CCAnalyticsScrollableState extends State<CCAnalyticsScrollable> {
   String _direction = 'idle';
 
   @override
-  Widget build(BuildContext context) => NotificationListener<ScrollNotification>(
-    onNotification: _onScrollNotification,
-    child: widget.child,
-  );
+  Widget build(BuildContext context) =>
+      NotificationListener<ScrollNotification>(
+        onNotification: _onScrollNotification,
+        child: widget.child,
+      );
 
   bool _onScrollNotification(ScrollNotification notification) {
     if (notification is ScrollStartNotification) {

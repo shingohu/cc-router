@@ -7,6 +7,7 @@ environment:
   sdk: ^3.11.5
 dependencies:
   ccrouter_analytics: ^0.1.0
+  ccrouter_auto_track: ^0.1.0
   ccrouter: ^0.1.0
   demo_order_contracts: ^0.1.0
   demo_web_contracts: ^0.1.0

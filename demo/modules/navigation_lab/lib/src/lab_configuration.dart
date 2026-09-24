@@ -13,6 +13,7 @@ final demoDiagnosticsSink = DemoDiagnosticsSink();
 final demoAnalyticsSink = DemoAnalyticsSink();
 final demoAnalyticsDispatcher = CCAnalyticsEventDispatcher(
   sinks: [demoAnalyticsSink],
+  policy: CCAnalyticsPolicy(consentGranted: true),
 );
 final demoNavigationAnalytics = CCRouterNavigationAnalytics(
   dispatcher: demoAnalyticsDispatcher,
