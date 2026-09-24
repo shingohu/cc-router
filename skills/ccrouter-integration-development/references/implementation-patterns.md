@@ -133,13 +133,35 @@ final class OrderSubmitted implements CCEvent {
   final String id;
 }
 
-registry.registerEvent<OrderSubmitted>(
+final orderSubmittedAnalytics = const CCEventSubscriberId<OrderSubmitted>(
   'analytics.order-submitted',
-  (event, _) => analytics.track(event.id),
+);
+
+registry.registerEventSubscriber<OrderSubmitted>(
+  CCEventSubscriber<OrderSubmitted>(
+    id: orderSubmittedAnalytics,
+    handler: (event, _) => analytics.track(event.id),
+  ),
 );
 
 await CCRouter.event(const OrderSubmitted('42'));
 ```
+
+The typed ID is the identity of this subscriber, not the Event type. Assign a
+different stable ID to every independent subscriber of the same Event and keep
+the values in a generated or component-owned Contract constants library. The
+legacy string overload remains only for existing 1.x registrars and low-level
+tests.
+
+To bridge framework observations to application logging, configure a Host-owned
+`CCDiagnosticSink` through `CCDiagnosticsConfig`. The sink is asynchronous,
+bounded, and observational; sink errors never alter Command, Event, Service,
+navigation, or InitTask results. Category policies can disable, raise the
+minimum level, or sample external delivery without disabling internal bounded
+traces. Forward only the sanitized fields in `CCDiagnosticEvent`; do not add
+raw URI, arguments, Extra, tokens, widgets, backend objects, exception text, or
+business result data. `CCRouter.traceBundle(traceId)` is a bounded troubleshooting
+view, not an audit log or replay source.
 
 ## Initialization
 

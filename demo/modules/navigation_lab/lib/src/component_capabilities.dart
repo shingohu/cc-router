@@ -29,6 +29,22 @@ abstract final class DemoEventIds {
   static const slow = 'demo.slow-event';
 }
 
+/// Typed Event subscriber identities used by the diagnostics lab.
+abstract final class DemoEventSubscribers {
+  /// Analytics subscriber for a completed order.
+  static const orderAnalytics = CCEventSubscriberId<DemoOrderCompletedEvent>(
+    DemoEventIds.orderCompleted,
+  );
+
+  /// Deliberately failing subscriber used by the diagnostics lab.
+  static const orderFailure = CCEventSubscriberId<DemoOrderCompletedEvent>(
+    DemoEventIds.brokenOrderCompleted,
+  );
+
+  /// Subscriber that remains pending until its invocation is cancelled.
+  static const slow = CCEventSubscriberId<DemoSlowEvent>(DemoEventIds.slow);
+}
+
 /// Stable route policy IDs registered by the Demo component.
 abstract final class DemoRoutePolicyIds {
   /// Interceptor that allows navigation to continue.

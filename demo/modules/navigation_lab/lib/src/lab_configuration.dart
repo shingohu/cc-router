@@ -6,7 +6,196 @@ import 'package:flutter/foundation.dart';
 import 'ccrouter_generated/component/demo_navigation_lab_component.route_api.g.dart';
 import 'component_capabilities.dart';
 
+final demoApplicationLogger = DemoApplicationLogger();
 final demoNavigationLabStore = DemoNavigationLabStore();
+final demoDiagnosticsSink = DemoDiagnosticsSink();
+
+/// Application-level structured log retained by the Demo Host.
+///
+/// This is intentionally a small in-memory stand-in for an application Logger,
+/// Sentry bridge, or OpenTelemetry exporter. It stores only framework-safe
+/// identifiers and lets the Demo correlate framework and application records
+/// by trace and navigation IDs without retaining route arguments or payloads.
+final class DemoApplicationLogEntry {
+  /// Creates one immutable application log record.
+  const DemoApplicationLogEntry({
+    required this.occurredAt,
+    required this.source,
+    required this.level,
+    required this.operation,
+    required this.status,
+    required this.message,
+    this.category,
+    this.duration = Duration.zero,
+    this.runtimeId,
+    this.traceId,
+    this.spanId,
+    this.parentSpanId,
+    this.invocationId,
+    this.target,
+    this.callerComponentId,
+    this.targetComponentId,
+    this.scopeId,
+    this.navigationId,
+    this.routeId,
+    this.eventId,
+    this.subscriberId,
+    this.hostId,
+    this.outlet,
+    this.failureStage,
+    this.errorType,
+    this.fallbackKind,
+  });
+
+  /// Timestamp assigned by the application logger.
+  final DateTime occurredAt;
+
+  /// `application` for Host/application records or `framework` for Sink data.
+  final String source;
+
+  /// Sanitized severity name.
+  final String level;
+
+  /// Functional category, when this is a framework diagnostic.
+  final CCDiagnosticCategory? category;
+
+  /// Stable operation name.
+  final String operation;
+
+  /// Terminal or intermediate status.
+  final String status;
+
+  /// Short application message without arbitrary payload data.
+  final String message;
+
+  /// Elapsed duration reported by the framework.
+  final Duration duration;
+
+  /// Runtime identity.
+  final String? runtimeId;
+
+  /// Trace identity shared by nested calls.
+  final String? traceId;
+
+  /// Current span identity.
+  final String? spanId;
+
+  /// Parent span identity.
+  final String? parentSpanId;
+
+  /// Invocation identity.
+  final String? invocationId;
+
+  /// Sanitized target identity.
+  final String? target;
+
+  /// Calling component identity.
+  final String? callerComponentId;
+
+  /// Owning component identity.
+  final String? targetComponentId;
+
+  /// Scope identity.
+  final String? scopeId;
+
+  /// Navigation identity.
+  final String? navigationId;
+
+  /// Route identity.
+  final String? routeId;
+
+  /// Event type identity.
+  final String? eventId;
+
+  /// Event subscriber identity.
+  final String? subscriberId;
+
+  /// Host identity.
+  final String? hostId;
+
+  /// Outlet identity.
+  final String? outlet;
+
+  /// Navigation failure stage.
+  final String? failureStage;
+
+  /// Sanitized error type.
+  final String? errorType;
+
+  /// Adapter fallback identity.
+  final String? fallbackKind;
+}
+
+/// Host-owned application logger used by the Demo observability lab.
+final class DemoApplicationLogger {
+  static const int _capacity = 300;
+  final List<DemoApplicationLogEntry> _entries = <DemoApplicationLogEntry>[];
+
+  /// Recent records in newest-first order.
+  List<DemoApplicationLogEntry> get entries => List.unmodifiable(_entries);
+
+  /// Returns records sharing [traceId], newest first.
+  List<DemoApplicationLogEntry> entriesForTrace(String traceId) =>
+      List.unmodifiable(_entries.where((entry) => entry.traceId == traceId));
+
+  /// Records a sanitized framework diagnostic from [event].
+  void recordDiagnostic(CCDiagnosticEvent event) {
+    _add(
+      DemoApplicationLogEntry(
+        occurredAt: event.occurredAt,
+        source: 'framework',
+        level: event.level.name,
+        category: event.category,
+        operation: event.operation,
+        status: event.status,
+        message: '${event.category.name}/${event.operation} · ${event.status}',
+        duration: event.duration,
+        runtimeId: event.runtimeId,
+        traceId: event.traceId,
+        spanId: event.spanId,
+        parentSpanId: event.parentSpanId,
+        invocationId: event.invocationId,
+        target: event.target,
+        callerComponentId: event.callerComponentId,
+        targetComponentId: event.targetComponentId,
+        scopeId: event.scopeId,
+        navigationId: event.navigationId,
+        routeId: event.routeId,
+        eventId: event.eventId,
+        subscriberId: event.subscriberId,
+        hostId: event.hostId,
+        outlet: event.outlet,
+        failureStage: event.failureStage,
+        errorType: event.errorType,
+        fallbackKind: event.fallbackKind,
+      ),
+    );
+  }
+
+  /// Records a short application-owned message without business payloads.
+  void recordApplication(String message) {
+    _add(
+      DemoApplicationLogEntry(
+        occurredAt: DateTime.now(),
+        source: 'application',
+        level: 'info',
+        operation: 'application',
+        status: 'observed',
+        message: message,
+      ),
+    );
+  }
+
+  /// Clears the application log retained by the Demo.
+  void clear() => _entries.clear();
+
+  void _add(DemoApplicationLogEntry entry) {
+    _entries.insert(0, entry);
+    if (_entries.length > _capacity) {
+      _entries.removeRange(_capacity, _entries.length);
+    }
+  }
+}
 
 final class DemoNavigationLabStore extends ChangeNotifier {
   final List<String> _events = <String>[];
@@ -18,10 +207,13 @@ final class DemoNavigationLabStore extends ChangeNotifier {
 
   List<String> get events => List.unmodifiable(_events);
 
-  void record(String message) {
+  void record(String message, {bool mirrorToApplicationLogger = true}) {
     final timestamp = DateTime.now().toIso8601String().substring(11, 19);
     _events.insert(0, '$timestamp  $message');
     if (_events.length > 80) _events.removeRange(80, _events.length);
+    if (mirrorToApplicationLogger) {
+      demoApplicationLogger.recordApplication(message);
+    }
     if (_notifyScheduled) return;
     _notifyScheduled = true;
     scheduleMicrotask(() {
@@ -43,6 +235,35 @@ final class DemoNavigationLabStore extends ChangeNotifier {
   void setDirtyForm(bool value) {
     dirtyForm = value;
     record('PopGuard 表单状态：${value ? '未保存' : '已保存'}');
+  }
+}
+
+/// Host-owned diagnostics bridge used by the Demo observability lab.
+final class DemoDiagnosticsSink implements CCDiagnosticSink {
+  final List<CCDiagnosticEvent> _events = <CCDiagnosticEvent>[];
+
+  /// Recent sanitized events received from the Runtime Sink.
+  List<CCDiagnosticEvent> get events => List.unmodifiable(_events);
+
+  @override
+  void record(CCDiagnosticEvent event) {
+    _events.insert(0, event);
+    if (_events.length > 80) _events.removeRange(80, _events.length);
+    demoApplicationLogger.recordDiagnostic(event);
+    demoNavigationLabStore.record(
+      'Sink · ${event.category.name}/${event.operation} · ${event.status}',
+      mirrorToApplicationLogger: false,
+    );
+  }
+
+  /// Clears only the Demo's displayed Sink history.
+  void clear() {
+    _events.clear();
+    demoApplicationLogger.clear();
+    demoNavigationLabStore.record(
+      'Sink · history cleared',
+      mirrorToApplicationLogger: false,
+    );
   }
 }
 

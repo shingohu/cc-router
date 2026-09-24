@@ -369,6 +369,18 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
       failureLabel: 'Navigation failure listener',
       critical: true,
     );
+    _emitDiagnostic(
+      category: CCDiagnosticCategory.navigation,
+      level: recovered ? CCDiagnosticLevel.warning : CCDiagnosticLevel.error,
+      occurredAt: event.timestamp,
+      operation: event.context.operation.name,
+      status: recovered ? 'recovered' : 'failed',
+      duration: Duration.zero,
+      navigationId: event.context.navigationId,
+      routeId: event.context.routeId,
+      failureStage: event.context.stage.name,
+      errorType: event.context.errorType,
+    );
   }
 
   /// Retains a bounded sanitized framework callback failure.

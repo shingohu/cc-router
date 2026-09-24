@@ -288,6 +288,18 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
         _ => false,
       },
     );
+    _emitDiagnostic(
+      category: CCDiagnosticCategory.backend,
+      level: CCDiagnosticLevel.debug,
+      occurredAt: diagnosticEvent.timestamp,
+      operation: diagnosticEvent.kind.name,
+      status: 'observed',
+      duration: Duration.zero,
+      navigationId: diagnosticEvent.navigationId,
+      routeId: diagnosticEvent.routeId,
+      hostId: diagnosticEvent.hostId,
+      outlet: diagnosticEvent.navigatorOutlet,
+    );
   }
 
   /// Tears down one detached Host without guessing cross-window migration.

@@ -411,5 +411,20 @@ extension CCRouterRuntimeRouteEntries on CCRouterRuntime {
           state == CCRouteEntryLifecycleState.removed ||
           state == CCRouteEntryLifecycleState.disposed,
     );
+    _emitDiagnostic(
+      category: CCDiagnosticCategory.lifecycle,
+      level: state == CCRouteEntryLifecycleState.disposed
+          ? CCDiagnosticLevel.info
+          : CCDiagnosticLevel.debug,
+      occurredAt: event.timestamp,
+      operation: 'routeEntry',
+      status: state.name,
+      duration: Duration.zero,
+      navigationId: event.entry.navigationId,
+      routeId: event.entry.routeId,
+      targetComponentId: event.entry.ownerComponentId,
+      hostId: event.entry.hostId,
+      outlet: event.entry.placement.navigatorOutlet,
+    );
   }
 }

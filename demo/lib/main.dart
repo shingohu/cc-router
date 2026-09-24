@@ -23,6 +23,20 @@ Future<void> main() async {
     navigationFailurePolicy: const DemoNavigationFailurePolicy(),
     navigationAspects: [demoNavigationAspect],
     telemetryContextProvider: const DemoNavigationTelemetryProvider(),
+    diagnostics: CCDiagnosticsConfig(
+      sink: demoDiagnosticsSink,
+      defaultMinimumLevel: CCDiagnosticLevel.debug,
+      policies: const [
+        CCDiagnosticCategoryPolicy(
+          category: CCDiagnosticCategory.navigation,
+          minimumLevel: CCDiagnosticLevel.debug,
+        ),
+        CCDiagnosticCategoryPolicy(
+          category: CCDiagnosticCategory.event,
+          minimumLevel: CCDiagnosticLevel.info,
+        ),
+      ],
+    ),
   );
   await CCRouter.runInitialization();
   runApp(const CCRouterDemoApp());

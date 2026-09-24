@@ -46,6 +46,7 @@ final class CCRouterRuntime {
   factory CCRouterRuntime.forHost({
     int traceCapacity = 1000,
     int navigationDiagnosticCapacity = 1000,
+    CCDiagnosticsConfig diagnostics = const CCDiagnosticsConfig(),
     Iterable<CCComponentManifest> components = const [],
     CCNavigationAdapter? navigationAdapter,
     Iterable<CCGlobalNavigationInterceptor> globalInterceptors = const [],
@@ -61,6 +62,7 @@ final class CCRouterRuntime {
   }) => CCRouterRuntime._(
     traceCapacity: traceCapacity,
     navigationDiagnosticCapacity: navigationDiagnosticCapacity,
+    diagnostics: diagnostics,
     components: components,
     navigationAdapter: navigationAdapter,
     globalInterceptors: globalInterceptors,
@@ -82,6 +84,7 @@ final class CCRouterRuntime {
   factory CCRouterRuntime.forTesting({
     int traceCapacity = 1000,
     int navigationDiagnosticCapacity = 1000,
+    CCDiagnosticsConfig diagnostics = const CCDiagnosticsConfig(),
     Iterable<CCComponentManifest> components = const [],
     CCNavigationAdapter? navigationAdapter,
     Iterable<CCGlobalNavigationInterceptor> globalInterceptors = const [],
@@ -98,6 +101,7 @@ final class CCRouterRuntime {
   }) => CCRouterRuntime._(
     traceCapacity: traceCapacity,
     navigationDiagnosticCapacity: navigationDiagnosticCapacity,
+    diagnostics: diagnostics,
     components: components,
     navigationAdapter: navigationAdapter,
     globalInterceptors: globalInterceptors,
@@ -117,6 +121,7 @@ final class CCRouterRuntime {
   CCRouterRuntime._({
     this.traceCapacity = 1000,
     this.navigationDiagnosticCapacity = 1000,
+    this.diagnostics = const CCDiagnosticsConfig(),
     Iterable<CCComponentManifest> components = const [],
     CCNavigationAdapter? navigationAdapter,
     Iterable<CCGlobalNavigationInterceptor> globalInterceptors = const [],
@@ -143,6 +148,7 @@ final class CCRouterRuntime {
         'navigationDiagnosticCapacity',
       );
     }
+    _diagnosticPolicies = _validateDiagnosticPolicies(diagnostics);
     _installComponents(components);
     _applyServiceOverrides(serviceOverrides);
   }
@@ -170,6 +176,12 @@ final class CCRouterRuntime {
   /// retained histories while live listeners and navigation behavior remain
   /// active.
   final int navigationDiagnosticCapacity;
+
+  /// Host-owned structured diagnostic delivery configuration.
+  ///
+  /// The Sink receives only sanitized immutable events. Runtime behavior and
+  /// internal bounded histories remain active when external delivery is off.
+  final CCDiagnosticsConfig diagnostics;
 
   /// Policy for overlapping requests with the same structured navigation key.
   ///
@@ -280,6 +292,25 @@ final class CCRouterRuntime {
 
   /// Bounded completed invocation trace buffer.
   final Queue<CCTraceRecord> _traces = Queue();
+
+  /// Validated per-category external diagnostic policies.
+  late final Map<CCDiagnosticCategory, CCDiagnosticCategoryPolicy>
+  _diagnosticPolicies;
+
+  /// FIFO of sanitized events waiting for the Host Sink.
+  final Queue<CCDiagnosticEvent> _diagnosticQueue = Queue();
+
+  /// Event-loop task draining the external diagnostic queue.
+  Timer? _diagnosticTimer;
+
+  /// Whether the diagnostic queue is currently being drained.
+  bool _drainingDiagnostics = false;
+
+  /// Whether new events may be queued for the external Sink.
+  bool _acceptingDiagnostics = true;
+
+  /// Pseudo-random source used only for non-critical diagnostic sampling.
+  final Random _diagnosticRandom = Random();
 
   /// Bounded Runtime navigation lifecycle event buffer.
   final Queue<CCNavigationLifecycleEvent> _navigationEvents = Queue();
@@ -427,6 +458,17 @@ final class CCRouterRuntime {
 
   /// Immutable snapshot of the bounded trace buffer.
   List<CCTraceRecord> get recentTraces => List.unmodifiable(_traces);
+
+  /// Returns the retained invocation records for one trace identity.
+  ///
+  /// The result is empty when the trace has already rotated out of the bounded
+  /// history. This method never reconstructs payloads or live Runtime state.
+  CCTraceBundle traceBundle(String traceId) => CCTraceBundle(
+    traceId: traceId,
+    records: List.unmodifiable(
+      _traces.where((record) => record.context.traceId == traceId),
+    ),
+  );
 
   /// Immutable snapshot of sanitized Event subscriber failures.
   List<CCInvocationError> get subscriberErrors =>
@@ -807,6 +849,16 @@ final class CCRouterRuntime {
     _registerEventForComponent('', id, handler);
   }
 
+  /// Registers a typed Event subscriber for low-level Runtime tests.
+  ///
+  /// Components should use [CCRegistry.registerEventSubscriber] so Runtime
+  /// retains the trusted component owner.
+  void registerEventSubscriber<E extends CCEvent>(
+    CCEventSubscriber<E> subscriber,
+  ) {
+    _registerTypedEventForComponent('', subscriber);
+  }
+
   /// Registers an event subscriber while retaining the component owner.
   void _registerEventForComponent<E extends CCEvent>(
     String ownerComponentId,
@@ -823,6 +875,18 @@ final class CCRouterRuntime {
           return null;
         },
       ),
+    );
+  }
+
+  /// Registers a typed Event subscriber while retaining its component owner.
+  void _registerTypedEventForComponent<E extends CCEvent>(
+    String ownerComponentId,
+    CCEventSubscriber<E> subscriber,
+  ) {
+    _registerEventForComponent<E>(
+      ownerComponentId,
+      subscriber.id.value,
+      (event, context) => subscriber.handler(event, context),
     );
   }
 
@@ -1417,6 +1481,8 @@ final class CCRouterRuntime {
                 targetComponentId: subscriber.ownerComponentId.isEmpty
                     ? null
                     : subscriber.ownerComponentId,
+                eventId: event.runtimeType.toString(),
+                subscriberId: subscriber.id,
               );
             } catch (error) {
               if (_isEventPublishTermination(error, context)) rethrow;
@@ -1428,6 +1494,7 @@ final class CCRouterRuntime {
       timeout: timeout,
       cancellation: cancellation,
       callerComponentId: publisherComponentId,
+      eventId: event.runtimeType.toString(),
     );
   }
 
@@ -1652,6 +1719,7 @@ final class CCRouterRuntime {
       _navigationAdapter?.dispose();
     } finally {
       _disposeNavigationObservations();
+      _disposeDiagnostics();
       await _sessionScope?.close();
       await appScope.close();
       _navigationAdapter = null;
@@ -2059,20 +2127,15 @@ final class CCRouterRuntime {
         remove();
       }
       watch.stop();
-      if (traceCapacity > 0) {
-        if (_traces.length == traceCapacity) _traces.removeFirst();
-        _traces.add(
-          CCTraceRecord(
-            context: CCTraceContextSnapshot.from(context),
-            operation: operation,
-            target: target,
-            startedAt: now,
-            duration: watch.elapsed,
-            status: status,
-            errorType: errorType,
-          ),
-        );
-      }
+      _recordTrace(
+        context: context,
+        operation: operation,
+        target: target,
+        startedAt: now,
+        duration: watch.elapsed,
+        status: status,
+        errorType: errorType,
+      );
     }
   }
 
@@ -2086,6 +2149,8 @@ final class CCRouterRuntime {
     CCCancellationToken? cancellation,
     String? callerComponentId,
     String? targetComponentId,
+    String? eventId,
+    String? subscriberId,
   }) async {
     _ensureInitialized();
     final parent = _parentContext;
@@ -2161,20 +2226,17 @@ final class CCRouterRuntime {
         remove();
       }
       watch.stop();
-      if (traceCapacity > 0) {
-        if (_traces.length == traceCapacity) _traces.removeFirst();
-        _traces.add(
-          CCTraceRecord(
-            context: CCTraceContextSnapshot.from(context),
-            operation: operation,
-            target: target,
-            startedAt: now,
-            duration: watch.elapsed,
-            status: status,
-            errorType: errorType,
-          ),
-        );
-      }
+      _recordTrace(
+        context: context,
+        operation: operation,
+        target: target,
+        startedAt: now,
+        duration: watch.elapsed,
+        status: status,
+        errorType: errorType,
+        eventId: eventId,
+        subscriberId: subscriberId,
+      );
     }
   }
 
@@ -2248,12 +2310,12 @@ final class CCRouterRuntime {
     _RegisteredEventSubscriber subscriber,
   ) {
     _ensureConfigurable();
-    if (subscriber.id.isEmpty ||
+    if (!_isStableIdentifier(subscriber.id) ||
         _events.values.any(
           (subscribers) => subscribers.containsKey(subscriber.id),
         )) {
       throw CCRegistrationError(
-        'Empty or duplicate subscriber ID "${subscriber.id}".',
+        'Invalid or duplicate subscriber ID "${subscriber.id}".',
       );
     }
     _events.putIfAbsent(type, () => {})[subscriber.id] = subscriber;
@@ -2337,6 +2399,221 @@ final class CCRouterRuntime {
     }
     final ids = byId.keys.toList()..sort();
     return List.unmodifiable(ids.map((id) => byId[id]!));
+  }
+
+  /// Validates category policies before the Runtime becomes observable.
+  Map<CCDiagnosticCategory, CCDiagnosticCategoryPolicy>
+  _validateDiagnosticPolicies(CCDiagnosticsConfig config) {
+    _validateSampleRate(config.defaultSampleRate, 'defaultSampleRate');
+    final policies = <CCDiagnosticCategory, CCDiagnosticCategoryPolicy>{};
+    for (final policy in config.policies) {
+      if (policies.containsKey(policy.category)) {
+        throw CCRegistrationError(
+          'Duplicate diagnostic policy for ${policy.category.name}.',
+        );
+      }
+      _validateSampleRate(policy.sampleRate, policy.category.name);
+      policies[policy.category] = policy;
+    }
+    return Map.unmodifiable(policies);
+  }
+
+  /// Validates one diagnostic sampling fraction.
+  void _validateSampleRate(double value, String name) {
+    if (value.isNaN || value < 0 || value > 1) {
+      throw CCRegistrationError('Diagnostic $name must be between 0 and 1.');
+    }
+  }
+
+  /// Maps a Runtime invocation operation to its observability category.
+  CCDiagnosticCategory _diagnosticCategory(String operation) =>
+      switch (operation) {
+        'command' => CCDiagnosticCategory.command,
+        'event' || 'eventSubscriber' => CCDiagnosticCategory.event,
+        'service' || 'serviceReady' => CCDiagnosticCategory.service,
+        'initializationTask' => CCDiagnosticCategory.initialization,
+        _ => CCDiagnosticCategory.performance,
+      };
+
+  /// Selects a conservative severity from an invocation terminal status.
+  CCDiagnosticLevel _diagnosticLevel(String status) => switch (status) {
+    'succeeded' => CCDiagnosticLevel.info,
+    'cancelled' || 'timedOut' => CCDiagnosticLevel.warning,
+    _ => CCDiagnosticLevel.error,
+  };
+
+  /// Returns whether an event should be forwarded to the external Sink.
+  bool _shouldDeliverDiagnostic(
+    CCDiagnosticCategory category,
+    CCDiagnosticLevel level,
+  ) {
+    final policy = _diagnosticPolicies[category];
+    final enabled = policy?.enabled ?? diagnostics.defaultEnabled;
+    if (!enabled) return false;
+    final minimum = policy?.minimumLevel ?? diagnostics.defaultMinimumLevel;
+    if (level.index < minimum.index) return false;
+    final sampleRate = policy?.sampleRate ?? diagnostics.defaultSampleRate;
+    if (level == CCDiagnosticLevel.error || sampleRate >= 1) return true;
+    return sampleRate > 0 && _diagnosticRandom.nextDouble() < sampleRate;
+  }
+
+  /// Adds one completed invocation to the bounded trace and Sink queue.
+  void _recordTrace({
+    required CCInvocationContext context,
+    required String operation,
+    required String target,
+    required DateTime startedAt,
+    required Duration duration,
+    required String status,
+    String? errorType,
+    String? eventId,
+    String? subscriberId,
+  }) {
+    final record = CCTraceRecord(
+      context: CCTraceContextSnapshot.from(context),
+      operation: operation,
+      target: target,
+      startedAt: startedAt,
+      duration: duration,
+      status: status,
+      errorType: errorType,
+    );
+    if (traceCapacity > 0) {
+      if (_traces.length == traceCapacity) _traces.removeFirst();
+      _traces.add(record);
+    }
+    final category = _diagnosticCategory(operation);
+    final level = _diagnosticLevel(status);
+    _emitDiagnostic(
+      category: category,
+      level: level,
+      occurredAt: startedAt,
+      operation: operation,
+      status: status,
+      duration: duration,
+      traceId: context.traceId,
+      spanId: context.spanId,
+      parentSpanId: context.parentSpanId,
+      invocationId: context.invocationId,
+      target: target,
+      callerComponentId: context.callerComponentId,
+      targetComponentId: context.targetComponentId,
+      scopeId: context.scopeId,
+      eventId: eventId,
+      subscriberId: subscriberId,
+      errorType: errorType,
+    );
+  }
+
+  /// Emits one sanitized non-invocation observation to the configured Sink.
+  void _emitDiagnostic({
+    required CCDiagnosticCategory category,
+    required CCDiagnosticLevel level,
+    required DateTime occurredAt,
+    required String operation,
+    required String status,
+    required Duration duration,
+    String? traceId,
+    String? spanId,
+    String? parentSpanId,
+    String? invocationId,
+    String? target,
+    String? callerComponentId,
+    String? targetComponentId,
+    String? scopeId,
+    String? navigationId,
+    String? routeId,
+    String? eventId,
+    String? subscriberId,
+    String? hostId,
+    String? outlet,
+    String? failureStage,
+    String? errorType,
+    String? fallbackKind,
+  }) {
+    if (!_shouldDeliverDiagnostic(category, level)) return;
+    _enqueueDiagnostic(
+      CCDiagnosticEvent(
+        category: category,
+        level: level,
+        occurredAt: occurredAt,
+        operation: operation,
+        status: status,
+        duration: duration,
+        runtimeId: _runtimeId,
+        traceId: traceId,
+        spanId: spanId,
+        parentSpanId: parentSpanId,
+        invocationId: invocationId,
+        target: target,
+        callerComponentId: callerComponentId,
+        targetComponentId: targetComponentId,
+        scopeId: scopeId,
+        navigationId: navigationId,
+        routeId: routeId,
+        eventId: eventId,
+        subscriberId: subscriberId,
+        hostId: hostId,
+        outlet: outlet,
+        failureStage: failureStage,
+        errorType: errorType,
+        fallbackKind: fallbackKind,
+      ),
+    );
+  }
+
+  /// Queues one Sink event without blocking the framework operation.
+  void _enqueueDiagnostic(CCDiagnosticEvent event) {
+    if (!_acceptingDiagnostics || diagnostics.sink == null) return;
+    final capacity = max(64, navigationDiagnosticCapacity);
+    if (_diagnosticQueue.length >= capacity) _diagnosticQueue.removeFirst();
+    _diagnosticQueue.addLast(event);
+    if (_diagnosticTimer != null || _drainingDiagnostics) return;
+    _diagnosticTimer = Timer(Duration.zero, () {
+      _diagnosticTimer = null;
+      _drainDiagnostics();
+    });
+  }
+
+  /// Delivers queued Sink events while isolating Sink failures.
+  void _drainDiagnostics() {
+    if (_drainingDiagnostics) return;
+    _drainingDiagnostics = true;
+    final pending = <CCDiagnosticEvent>[];
+    while (_diagnosticQueue.isNotEmpty) {
+      pending.add(_diagnosticQueue.removeFirst());
+    }
+    try {
+      final sink = diagnostics.sink;
+      if (sink == null) return;
+      for (final event in pending) {
+        try {
+          final result = sink.record(event);
+          if (result is Future<void>) {
+            unawaited(result.catchError((_) {}));
+          }
+        } catch (_) {
+          // A diagnostic Sink is observational and must never affect Runtime.
+        }
+      }
+    } finally {
+      _drainingDiagnostics = false;
+      if (_diagnosticQueue.isNotEmpty && _acceptingDiagnostics) {
+        _diagnosticTimer ??= Timer(Duration.zero, () {
+          _diagnosticTimer = null;
+          _drainDiagnostics();
+        });
+      }
+    }
+  }
+
+  /// Stops Sink delivery and releases queued event closures during shutdown.
+  void _disposeDiagnostics() {
+    _acceptingDiagnostics = false;
+    _diagnosticTimer?.cancel();
+    _diagnosticTimer = null;
+    _drainDiagnostics();
+    _diagnosticQueue.clear();
   }
 
   /// Ensures capability registration has not been frozen or disposed.

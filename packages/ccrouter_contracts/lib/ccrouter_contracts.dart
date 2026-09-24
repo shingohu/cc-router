@@ -6,6 +6,7 @@ library;
 
 export 'src/adaptive_layout.dart';
 export 'src/deep_link.dart';
+export 'src/diagnostics.dart';
 export 'src/errors.dart';
 export 'src/invocation.dart';
 export 'src/lifecycle.dart';

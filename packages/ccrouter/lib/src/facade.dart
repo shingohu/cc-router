@@ -101,6 +101,14 @@ abstract final class CCRouter {
   /// business events or sensitive request payloads.
   static List<CCTraceRecord> get recentTraces => _runtime.recentTraces;
 
+  /// Returns the retained invocation records associated with [traceId].
+  ///
+  /// Use this after a failure event to assemble a local troubleshooting view.
+  /// The bundle can be incomplete when the bounded trace history has rotated;
+  /// it never contains arguments, return values, or raw exception messages.
+  static CCTraceBundle traceBundle(String traceId) =>
+      _runtime.traceBundle(traceId);
+
   /// Bounded snapshot of recent Runtime navigation lifecycle events.
   ///
   /// Use this for local diagnostics and sanitized telemetry export. Events do
@@ -285,6 +293,7 @@ abstract final class CCRouter {
     required Iterable<CCComponentManifest> components,
     int traceCapacity = 1000,
     int navigationDiagnosticCapacity = 1000,
+    CCDiagnosticsConfig diagnostics = const CCDiagnosticsConfig(),
     Iterable<CCGlobalNavigationInterceptor> globalInterceptors = const [],
     Iterable<CCGlobalPopGuard> globalPopGuards = const [],
     CCNavigationFailurePolicy? navigationFailurePolicy,
@@ -306,6 +315,7 @@ abstract final class CCRouter {
       components: components,
       traceCapacity: traceCapacity,
       navigationDiagnosticCapacity: navigationDiagnosticCapacity,
+      diagnostics: diagnostics,
       globalInterceptors: globalInterceptors,
       globalPopGuards: globalPopGuards,
       navigationFailurePolicy: navigationFailurePolicy,

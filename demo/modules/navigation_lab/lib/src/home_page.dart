@@ -813,6 +813,12 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
     builder: (context, _) {
       final routeEntries = CCRouter.activeRouteEntries.reversed.toList();
       final backendEntries = CCRouter.activeBackendEntries.reversed.toList();
+      final latestTrace = CCRouter.recentTraces.isEmpty
+          ? null
+          : CCRouter.recentTraces.last;
+      final traceBundle = latestTrace == null
+          ? null
+          : CCRouter.traceBundle(latestTrace.context.traceId);
       return _page('实时诊断', '所有数据均来自公开的只读快照；不会展示 arguments、extra 或账号敏感信息。', [
         Text(
           'Managed Route Entries',
@@ -851,6 +857,105 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
             ),
           ),
         ),
+        const Divider(height: 32),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Structured Diagnostic Sink',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+            ),
+            TextButton.icon(
+              onPressed: demoDiagnosticsSink.clear,
+              icon: const Icon(Icons.clear_all),
+              label: const Text('清空'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        if (demoDiagnosticsSink.events.isEmpty) const Text('暂无 Sink 事件'),
+        ...demoDiagnosticsSink.events
+            .take(20)
+            .map(
+              (event) => ListTile(
+                dense: true,
+                leading: Icon(
+                  event.level == CCDiagnosticLevel.error
+                      ? Icons.error_outline
+                      : event.level == CCDiagnosticLevel.warning
+                      ? Icons.warning_amber_outlined
+                      : Icons.info_outline,
+                ),
+                title: Text(
+                  '${event.category.name} · ${event.operation} · ${event.status}',
+                ),
+                subtitle: Text(
+                  'trace=${event.traceId ?? '-'} · '
+                  'target=${event.target ?? event.routeId ?? event.eventId ?? '-'}',
+                ),
+              ),
+            ),
+        const Divider(height: 32),
+        Text('Trace Bundle', style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 8),
+        Text(
+          traceBundle == null
+              ? '暂无 Trace'
+              : 'trace=${traceBundle.traceId} · '
+                    '${traceBundle.records.length} 条记录（有界摘要）',
+        ),
+        const Divider(height: 32),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Application Log · 全链路',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+            ),
+            TextButton.icon(
+              onPressed: () {
+                demoApplicationLogger.clear();
+                demoNavigationLabStore.record(
+                  'Application Log · history cleared',
+                  mirrorToApplicationLogger: false,
+                );
+              },
+              icon: const Icon(Icons.delete_sweep_outlined),
+              label: const Text('清空'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        if (demoApplicationLogger.entries.isEmpty) const Text('暂无应用日志'),
+        ...demoApplicationLogger.entries
+            .take(30)
+            .map(
+              (entry) => ListTile(
+                dense: true,
+                leading: Icon(
+                  entry.level == 'error'
+                      ? Icons.error_outline
+                      : entry.level == 'warning'
+                      ? Icons.warning_amber_outlined
+                      : entry.source == 'framework'
+                      ? Icons.hub_outlined
+                      : Icons.app_registration_outlined,
+                ),
+                title: Text(
+                  '${entry.source} · ${entry.level} · '
+                  '${entry.operation} · ${entry.status}',
+                ),
+                subtitle: Text(
+                  '${entry.message} · '
+                  'trace=${entry.traceId ?? '-'} · '
+                  'nav=${entry.navigationId ?? '-'} · '
+                  'route=${entry.routeId ?? '-'} · '
+                  'subscriber=${entry.subscriberId ?? '-'}',
+                ),
+              ),
+            ),
         const Divider(height: 32),
         Row(
           children: [

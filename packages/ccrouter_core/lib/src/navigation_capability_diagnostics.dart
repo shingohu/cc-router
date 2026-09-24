@@ -52,5 +52,18 @@ extension CCRouterRuntimeNavigationCapabilityDiagnostics on CCRouterRuntime {
       isActive: _navigationCapabilityFallbackListeners.contains,
       failureLabel: 'Navigation capability fallback listener',
     );
+    _emitDiagnostic(
+      category: CCDiagnosticCategory.backend,
+      level: CCDiagnosticLevel.warning,
+      occurredAt: event.timestamp,
+      operation: event.operation.name,
+      status: 'fallback',
+      duration: Duration.zero,
+      navigationId: event.navigationId,
+      routeId: event.routeId,
+      hostId: event.hostId,
+      outlet: event.navigatorOutlet,
+      fallbackKind: event.behavior.name,
+    );
   }
 }

@@ -40,21 +40,28 @@ void _registerComponentCapabilities(CCRegistry registry) {
     throw StateError('simulated private Command failure');
   });
 
-  registry.registerEvent<DemoOrderCompletedEvent>(DemoEventIds.orderCompleted, (
-    event,
-    _,
-  ) {
-    demoNavigationLabStore.record(
-      'Event analytics subscriber · order=${event.orderId}',
-    );
-  });
-  registry.registerEvent<DemoOrderCompletedEvent>(
-    DemoEventIds.brokenOrderCompleted,
-    (_, _) => throw StateError('simulated private Subscriber failure'),
+  registry.registerEventSubscriber<DemoOrderCompletedEvent>(
+    CCEventSubscriber<DemoOrderCompletedEvent>(
+      id: DemoEventSubscribers.orderAnalytics,
+      handler: (event, _) {
+        demoNavigationLabStore.record(
+          'Event analytics subscriber · order=${event.orderId}',
+        );
+      },
+    ),
   );
-  registry.registerEvent<DemoSlowEvent>(
-    DemoEventIds.slow,
-    (_, context) => context.cancellation.whenCancelled,
+  registry.registerEventSubscriber<DemoOrderCompletedEvent>(
+    CCEventSubscriber<DemoOrderCompletedEvent>(
+      id: DemoEventSubscribers.orderFailure,
+      handler: (_, _) =>
+          throw StateError('simulated private Subscriber failure'),
+    ),
+  );
+  registry.registerEventSubscriber<DemoSlowEvent>(
+    CCEventSubscriber<DemoSlowEvent>(
+      id: DemoEventSubscribers.slow,
+      handler: (_, context) => context.cancellation.whenCancelled,
+    ),
   );
 
   registry.registerInitializationTask(

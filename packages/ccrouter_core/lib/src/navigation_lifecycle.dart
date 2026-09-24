@@ -58,5 +58,22 @@ extension CCRouterRuntimeNavigationLifecycle on CCRouterRuntime {
       failureLabel: 'Navigation listener',
       critical: phase != CCNavigationLifecyclePhase.requested,
     );
+    _emitDiagnostic(
+      category: CCDiagnosticCategory.navigation,
+      level: phase == CCNavigationLifecyclePhase.failed
+          ? CCDiagnosticLevel.error
+          : phase == CCNavigationLifecyclePhase.completed
+          ? CCDiagnosticLevel.info
+          : CCDiagnosticLevel.debug,
+      occurredAt: event.timestamp,
+      operation: event.operation.name,
+      status: phase.name,
+      duration: Duration.zero,
+      navigationId: event.navigationId,
+      routeId: event.routeId,
+      hostId: event.placement.hostId,
+      outlet: event.placement.navigatorOutlet,
+      errorType: event.errorType,
+    );
   }
 }

@@ -17,6 +17,7 @@ void main() {
       ..dirtyForm = true
       ..allowDeferredOnce = false
       ..clear();
+    demoDiagnosticsSink.clear();
     CCRouter.initialize(
       components: ccrouterGeneratedComponentManifests,
       deepLinkIngressPolicy: demoDeepLinkIngressPolicy,
@@ -29,6 +30,20 @@ void main() {
       navigationFailurePolicy: const DemoNavigationFailurePolicy(),
       navigationAspects: [demoNavigationAspect],
       telemetryContextProvider: const DemoNavigationTelemetryProvider(),
+      diagnostics: CCDiagnosticsConfig(
+        sink: demoDiagnosticsSink,
+        defaultMinimumLevel: CCDiagnosticLevel.debug,
+        policies: const [
+          CCDiagnosticCategoryPolicy(
+            category: CCDiagnosticCategory.navigation,
+            minimumLevel: CCDiagnosticLevel.debug,
+          ),
+          CCDiagnosticCategoryPolicy(
+            category: CCDiagnosticCategory.event,
+            minimumLevel: CCDiagnosticLevel.info,
+          ),
+        ],
+      ),
     );
     await CCRouter.runInitialization();
   });
@@ -50,6 +65,15 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('类型安全详情'), findsOneWidget);
+    await _flushApplicationLogs(tester);
+    expect(
+      demoApplicationLogger.entries.any(
+        (entry) =>
+            entry.category == CCDiagnosticCategory.navigation &&
+            entry.routeId == 'demo_navigation_lab.detail',
+      ),
+      isTrue,
+    );
     expect(find.text('ID 42'), findsOneWidget);
     expect(find.text('typed'), findsOneWidget);
     await tester.tap(find.text('确认并返回类型安全结果'));
@@ -77,8 +101,15 @@ void main() {
 
     await tester.tap(find.text('解析订单组件 Service Contract'));
     await tester.pump();
+    await _flushApplicationLogs(tester);
 
     expect(find.textContaining('Service 返回 · 订单 #2048'), findsOneWidget);
+    expect(
+      demoApplicationLogger.entries.any(
+        (entry) => entry.category == CCDiagnosticCategory.service,
+      ),
+      isTrue,
+    );
     final trace = CCRouter.recentTraces.lastWhere(
       (record) => record.operation == 'service',
     );
@@ -145,6 +176,12 @@ void main() {
           .state,
       CCInitializationTaskState.succeeded,
     );
+    expect(
+      demoApplicationLogger.entries.any(
+        (entry) => entry.category == CCDiagnosticCategory.initialization,
+      ),
+      isTrue,
+    );
 
     await _unmountDemo(tester);
   });
@@ -169,12 +206,56 @@ void main() {
           .map((trace) => trace.status),
       containsAll(<String>['failed', 'succeeded']),
     );
+    await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+    expect(
+      demoDiagnosticsSink.events.any(
+        (event) =>
+            event.category == CCDiagnosticCategory.event &&
+            event.subscriberId == DemoEventSubscribers.orderAnalytics.value,
+      ),
+      isTrue,
+    );
+    expect(
+      demoApplicationLogger.entries.any(
+        (entry) =>
+            entry.category == CCDiagnosticCategory.event &&
+            entry.subscriberId == DemoEventSubscribers.orderAnalytics.value,
+      ),
+      isTrue,
+    );
+    final eventTrace = demoApplicationLogger.entries.firstWhere(
+      (entry) =>
+          entry.category == CCDiagnosticCategory.event &&
+          entry.traceId != null,
+    );
+    expect(
+      demoApplicationLogger.entriesForTrace(eventTrace.traceId!),
+      isNotEmpty,
+    );
 
     await _tapCapabilityAction(tester, 'Event · zero subscribers');
     expect(find.textContaining('Event zero subscribers · 完成'), findsOneWidget);
 
     await _tapCapabilityAction(tester, 'Event · timeout');
     expect(find.textContaining('CCInvocationTimeoutError'), findsOneWidget);
+
+    await _unmountDemo(tester);
+  });
+
+  testWidgets('diagnostics page shows the bounded Trace Bundle summary', (
+    tester,
+  ) async {
+    await _pumpDemo(tester);
+    await _tapCapabilityAction(tester, '打开组件能力实验室');
+    await _tapCapabilityAction(tester, 'Event · multiple subscribers');
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('诊断'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Trace Bundle'), findsOneWidget);
+    expect(find.textContaining('条记录（有界摘要）'), findsOneWidget);
 
     await _unmountDemo(tester);
   });
@@ -782,6 +863,7 @@ void main() {
     await tester.pump();
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
     await tester.pump();
+    await _flushApplicationLogs(tester);
     expect(
       demoNavigationLabStore.events.any(
         (event) => event.contains('Lifecycle mixin · onBackground'),
@@ -791,6 +873,12 @@ void main() {
     expect(
       demoNavigationLabStore.events.any(
         (event) => event.contains('Lifecycle mixin · onForeground'),
+      ),
+      isTrue,
+    );
+    expect(
+      demoApplicationLogger.entries.any(
+        (entry) => entry.category == CCDiagnosticCategory.lifecycle,
       ),
       isTrue,
     );
@@ -935,6 +1023,10 @@ Future<void> _pumpDemo(WidgetTester tester) async {
   addTearDown(tester.view.resetDevicePixelRatio);
   await tester.pumpWidget(const CCRouterDemoApp(listenForPlatformLinks: false));
   await tester.pumpAndSettle();
+}
+
+Future<void> _flushApplicationLogs(WidgetTester tester) async {
+  await tester.runAsync(() => Future<void>.delayed(Duration.zero));
 }
 
 Future<void> _openCapabilityLab(WidgetTester tester) async {

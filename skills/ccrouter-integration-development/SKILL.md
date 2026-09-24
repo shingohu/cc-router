@@ -37,6 +37,9 @@ Read [implementation-patterns.md](references/implementation-patterns.md) when ad
 - Keep an internal route on `@CCRoute`. Promote it to `@CCRouteContract` only when a real external component consumer appears.
 - Put stable cross-component contracts in a Pure Dart contracts package. Consumers depend on the contracts package, not the implementation package.
 - Do not simulate unsupported Action Pipeline, dynamic component activation/deactivation, complete state restoration, Navigator 1.0 Backend, or Service/Command/Event annotations.
+- Use `CCEventSubscriberId<E>` and `CCEventSubscriber<E>` for new Event registrations. The ID identifies one subscriber, not the Event type; keep it stable and unique across the Runtime. The legacy string overload is only for existing 1.x registrars and low-level tests.
+- Connect application logging through `CCDiagnosticsConfig(sink: ...)`. A `CCDiagnosticSink` is asynchronous, bounded, observational, and failure-isolated. Category policies control external delivery and sampling only; they do not disable Runtime traces or lifecycle state. Forward only the sanitized fields supplied by `CCDiagnosticEvent` and never append raw URI, arguments, Extra, tokens, widgets, backend objects, exception messages, or business results.
+- Use `CCRouter.traceBundle(traceId)` for bounded local troubleshooting across nested calls. It is not an audit log, replay source, or business Event store; records may be incomplete after capacity rotation.
 
 ## Decision Rules
 

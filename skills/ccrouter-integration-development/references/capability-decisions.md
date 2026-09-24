@@ -58,7 +58,7 @@ Do not use Command for repeated state queries that belong on a Service. Do not r
 
 Choose `CCEvent` only after a fact is complete. Examples: order paid, account switched, cache invalidated. Publishers must not depend on subscriber count, order, return values, or success.
 
-Subscribers have stable IDs and Runtime lifetime. A subscriber failure is isolated. If the publisher needs one owner to succeed, use Command.
+Subscribers have stable typed IDs (`CCEventSubscriberId<E>`) and Runtime lifetime. The ID identifies the subscriber, not the Event type, so multiple subscribers of one Event use different IDs. A subscriber failure is isolated. If the publisher needs one owner to succeed, use Command. Bridge framework observations to application logs with `CCDiagnosticsConfig` and a Host-owned `CCDiagnosticSink`; keep raw payloads out of the sink and use `traceBundle` only for bounded troubleshooting.
 
 ## InitTask
 

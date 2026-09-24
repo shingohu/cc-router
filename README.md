@@ -385,6 +385,49 @@ PopGuard 用于页面离开前可同步判断的规则，例如内存中的未�
 
 `CCNavigationAspect` 只观察导航阶段，不做决策。它适合 PV/UV 与来源归因、route found/arrival/completion/failure 观察、耗时、跨 Host/Outlet 链路追踪和脱敏日志。Aspect 回调异常会被隔离；回调中不得同步重入导航。请求参数、完整 URI、Extra、Token 和业务返回对象不会进入默认诊断记录。
 
+Runtime 还可以把 Command、Event、Service、InitTask、导航失败和后端降级统一投递到 Host 注入的 `CCDiagnosticSink`：
+
+```dart
+final class AppDiagnosticSink implements CCDiagnosticSink {
+  const AppDiagnosticSink(this.logger);
+
+  final AppLogger logger;
+
+  @override
+  void record(CCDiagnosticEvent event) {
+    logger.write(
+      category: event.category.name,
+      level: event.level.name,
+      operation: event.operation,
+      status: event.status,
+      traceId: event.traceId,
+      target: event.target,
+    );
+  }
+}
+
+CCRouter.initialize(
+  components: ccrouterGeneratedComponentManifests,
+  diagnostics: CCDiagnosticsConfig(
+    sink: AppDiagnosticSink(appLogger),
+    policies: const [
+      CCDiagnosticCategoryPolicy(
+        category: CCDiagnosticCategory.navigation,
+        minimumLevel: CCDiagnosticLevel.info,
+      ),
+      CCDiagnosticCategoryPolicy(
+        category: CCDiagnosticCategory.event,
+        sampleRate: .25,
+      ),
+    ],
+  ),
+);
+```
+
+Sink 是异步、有界、观察型边界：Sink 抛错、缓慢或关闭都不会改变业务结果；高负载下允许丢弃非关键诊断，但 Runtime 的有限 Trace 历史仍独立保留。类别策略只控制外部 Sink，不会关闭 Runtime 的错误与生命周期状态。应用可以把 `CCDiagnosticEvent` 映射到现有 Logger、Sentry、Crashlytics 或 OpenTelemetry，但必须继续遵守脱敏边界：不要自行追加完整 URI、参数、Extra、Token、Widget、Navigator、异常原文或业务返回对象。
+
+需要排查一次跨组件调用时，可用 `CCRouter.traceBundle(traceId)` 按稳定 `traceId` 聚合有限的 `CCTraceRecord`。它可能因有界容量而不完整，不能作为业务审计、事件总线或请求回放数据源。
+
 页面需要当前 Route 与 App 前后台回调时，可以选择 Mixin：
 
 ```dart
@@ -511,15 +554,23 @@ final class OrderPaid implements CCEvent {
   final String orderId;
 }
 
-registry.registerEvent<OrderPaid>(
+final orderPaidAnalytics = const CCEventSubscriberId<OrderPaid>(
   'analytics.order-paid',
-  (event, _) => analytics.track(event.orderId),
+);
+
+registry.registerEventSubscriber<OrderPaid>(
+  CCEventSubscriber<OrderPaid>(
+    id: orderPaidAnalytics,
+    handler: (event, _) => analytics.track(event.orderId),
+  ),
 );
 
 await CCRouter.event(const OrderPaid('42'));
 ```
 
-同一 Event 可以没有订阅者或有多个订阅者。订阅按稳定 ID 确定启动顺序，单个订阅者失败不会阻止其他订阅者；调用 Future 在本次分发完成后结束。需要唯一处理者、返回值或业务成功语义时使用 Command，不要使用 Event。
+同一 Event 可以没有订阅者或有多个订阅者。订阅按稳定 ID 确定启动顺序，单个订阅者失败不会阻止其他订阅者；调用 Future 在本次分发完成后结束。`CCEventSubscriberId<E>` 的值是**订阅者 ID**，不是 Event 类型 ID：同一 Event 的多个订阅者必须有不同稳定 ID，生成的 Contract 包应提供这些常量，避免在 Registrar 中散落自由字符串。Event 类型本身由 Dart 类型绑定，不能用运行时字符串替代类型校验。需要唯一处理者、返回值或业务成功语义时使用 Command，不要使用 Event。
+
+旧的 `registerEvent(String id, handler)` 仍为 1.x Registrar 和底层测试保留；新组件优先使用 typed subscriber 形式。订阅者在 Runtime 生命周期内注册并由 Runtime 调度，业务不得在页面创建/销毁时反复注册或自行取消；需要按页面生命周期订阅时，应让 Route Service 或页面生命周期回调管理业务资源，而不是改变 Event 注册表。
 
 ## InitTask
 

@@ -94,6 +94,14 @@ extension CCRouterRuntimeRestorationDiagnostics on CCRouterRuntime {
       isActive: _restorationOpportunityListeners.contains,
       failureLabel: 'Route restoration listener',
     );
+    _emitDiagnostic(
+      category: CCDiagnosticCategory.restoration,
+      level: CCDiagnosticLevel.info,
+      occurredAt: event.recordedAt,
+      operation: 'restoration',
+      status: event.outcome.name,
+      duration: Duration.zero,
+    );
   }
 
   /// Returns one bounded label or drops invalid Host-provided text.

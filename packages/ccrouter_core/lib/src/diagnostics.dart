@@ -92,3 +92,20 @@ final class CCTraceRecord {
   /// Concrete error type without the potentially sensitive error message.
   final String? errorType;
 }
+
+/// Bounded trace records associated with one stable [traceId].
+///
+/// A bundle is a local troubleshooting view, not a replayable request log.
+/// Records may be incomplete when the Runtime history capacity was exceeded;
+/// callers should use the bundle to correlate failure context before exporting
+/// a sanitized report to an application observability system.
+final class CCTraceBundle {
+  /// Creates one immutable trace bundle.
+  const CCTraceBundle({required this.traceId, required this.records});
+
+  /// Trace identity shared by the records in this bundle.
+  final String traceId;
+
+  /// Records in completion order, copied from the bounded Runtime history.
+  final List<CCTraceRecord> records;
+}

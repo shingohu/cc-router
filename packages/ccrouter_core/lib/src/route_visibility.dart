@@ -47,5 +47,18 @@ extension CCRouterRuntimeRouteVisibility on CCRouterRuntime {
       isActive: _routeVisibilityListeners.contains,
       failureLabel: 'Route visibility listener',
     );
+    _emitDiagnostic(
+      category: CCDiagnosticCategory.lifecycle,
+      level: CCDiagnosticLevel.debug,
+      occurredAt: event.timestamp,
+      operation: 'routeVisibility',
+      status: phase.name,
+      duration: Duration.zero,
+      navigationId: event.entry.navigationId,
+      routeId: event.entry.routeId,
+      targetComponentId: event.entry.ownerComponentId,
+      hostId: event.entry.hostId,
+      outlet: event.entry.placement.navigatorOutlet,
+    );
   }
 }

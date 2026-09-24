@@ -35,6 +35,8 @@ typed Extra。完整的 macOS 验证矩阵、已修复问题和 Adapter 限制�
 - InitTask：App Started DAG、critical/optional 状态、失败依赖 skip 和手动 Privacy Gate；
 - Service：App/Session/Route Scope、Singleton/Factory、lazy readiness single-flight、命名多实现、
   可选查找，以及 Session/Route 关闭时自动 dispose。
+- 诊断：typed Subscriber ID、分类 Sink、失败隔离、采样策略和有界 Trace Bundle；首页“实时诊断”
+  会展示脱敏 Sink 事件、Managed/Backend Entries 与最近一次 Trace 聚合。
 
 这些示例用于观察边界而不是模拟万能 EventBus：读取状态走 Service，需要唯一执行者的操作走
 Command，已经发生的事实才发布 Event，一次性启动依赖使用 InitTask。

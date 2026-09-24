@@ -96,6 +96,15 @@ abstract interface class CCRegistry {
   /// diagnostics. Subscribers are installed for the Runtime lifetime.
   void registerEvent<E extends CCEvent>(String id, CCHandler<E, void> handler);
 
+  /// Registers one typed Event subscriber descriptor.
+  ///
+  /// Prefer this form when a Contract package provides a generated
+  /// [CCEventSubscriberId]. The descriptor binds the subscriber identity to
+  /// the Event type while preserving multiple subscribers for one Event.
+  void registerEventSubscriber<E extends CCEvent>(
+    CCEventSubscriber<E> subscriber,
+  );
+
   /// Registers a route definition owned by the current component.
   ///
   /// Generated route registrars use this during component assembly; ownership
@@ -165,6 +174,14 @@ final class _CCComponentRegistry implements CCRegistry {
   @override
   void registerEvent<E extends CCEvent>(String id, CCHandler<E, void> handler) {
     runtime._registerEventForComponent(ownerComponentId, id, handler);
+  }
+
+  /// Registers a typed Event subscriber on behalf of the owning component.
+  @override
+  void registerEventSubscriber<E extends CCEvent>(
+    CCEventSubscriber<E> subscriber,
+  ) {
+    runtime._registerTypedEventForComponent(ownerComponentId, subscriber);
   }
 
   /// Registers a route definition on behalf of the owning component.
