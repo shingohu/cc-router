@@ -474,6 +474,13 @@ CCRouter.initialize(
 
 Sink 是异步、有界、观察型边界：Sink 抛错、缓慢或关闭都不会改变业务结果；高负载下允许丢弃非关键诊断，但 Runtime 的有限 Trace 历史仍独立保留。类别策略只控制外部 Sink，不会关闭 Runtime 的错误与生命周期状态。应用可以把 `CCDiagnosticEvent` 映射到现有 Logger、Sentry、Crashlytics 或 OpenTelemetry，但必须继续遵守脱敏边界：不要自行追加完整 URI、参数、Extra、Token、Widget、Navigator、异常原文或业务返回对象。
 
+组件装配和 Runtime 启动同样通过 `initialization` category 投递：`componentGraph`
+记录清单校验与依赖拓扑结果，`componentRegistration` 按实际依赖顺序记录每个 Registrar，
+`runtimeInitialize` 记录 Runtime 配置校验与 Adapter/Backend 启动。每个 operation 都会产生
+`started` 以及 `succeeded` 或 `failed` 状态；失败只携带稳定 component ID、
+`failureStage` 和 `errorType`，不携带异常原文。需要观察完整开始阶段时，将
+`defaultMinimumLevel` 或对应 category policy 设为 `CCDiagnosticLevel.debug`。
+
 需要排查一次跨组件调用时，可用 `CCRouter.traceBundle(traceId)` 按稳定 `traceId` 聚合有限的 `CCTraceRecord`。它可能因有界容量而不完整，不能作为业务审计、事件总线或请求回放数据源。
 
 页面需要当前 Route 与 App 前后台回调时，可以选择 Mixin：

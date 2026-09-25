@@ -192,6 +192,12 @@ raw URI, arguments, Extra, tokens, widgets, backend objects, exception text, or
 business result data. `CCRouter.traceBundle(traceId)` is a bounded troubleshooting
 view, not an audit log or replay source.
 
+The Runtime emits `componentGraph`, `componentRegistration`, and
+`runtimeInitialize` through the initialization diagnostic category. Their
+`started` events use debug level, while terminal success and failure use info
+and error. A Host that needs the complete startup sequence must enable debug
+delivery instead of reproducing component lifecycle logging in its bootstrap.
+
 ## Initialization
 
 Keep initialization identifiers in one component-owned constants class. Do not

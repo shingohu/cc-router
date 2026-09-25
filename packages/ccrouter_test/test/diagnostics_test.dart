@@ -24,7 +24,161 @@ final class _ThrowingSink implements CCDiagnosticSink {
   void record(CCDiagnosticEvent event) => throw StateError('sink failure');
 }
 
+final class _EmptyRegistrar implements CCComponentRegistrar {
+  const _EmptyRegistrar();
+
+  @override
+  void register(CCRegistry registry) {}
+}
+
+final class _FailingRegistrar implements CCComponentRegistrar {
+  const _FailingRegistrar();
+
+  @override
+  void register(CCRegistry registry) {
+    throw StateError('registration failed');
+  }
+}
+
+final class _InvalidInitializationRegistrar implements CCComponentRegistrar {
+  const _InvalidInitializationRegistrar();
+
+  @override
+  void register(CCRegistry registry) {
+    registry.registerInitializationTask(
+      CCInitializationTask(
+        id: 'feature.prepare',
+        dependsOn: const ['missing.prepare'],
+        run: (_) {},
+      ),
+    );
+  }
+}
+
 void main() {
+  test(
+    'component assembly and Runtime startup emit full diagnostics',
+    () async {
+      final sink = _RecordingSink();
+      final runtime = CCRouterRuntime.forTesting(
+        diagnostics: CCDiagnosticsConfig(
+          sink: sink,
+          defaultMinimumLevel: CCDiagnosticLevel.debug,
+        ),
+        components: const [
+          CCComponentManifest(
+            id: 'foundation',
+            version: '1.0.0',
+            registrar: _EmptyRegistrar(),
+          ),
+          CCComponentManifest(
+            id: 'feature',
+            version: '1.0.0',
+            dependencies: ['foundation'],
+            registrar: _EmptyRegistrar(),
+          ),
+        ],
+      );
+
+      runtime.initialize();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(
+        sink.events
+            .map(
+              (event) => '${event.operation}:${event.status}:${event.target}',
+            )
+            .toList(),
+        [
+          'componentGraph:started:null',
+          'componentRegistration:started:foundation',
+          'componentRegistration:succeeded:foundation',
+          'componentRegistration:started:feature',
+          'componentRegistration:succeeded:feature',
+          'componentGraph:succeeded:null',
+          'runtimeInitialize:started:null',
+          'runtimeInitialize:succeeded:null',
+        ],
+      );
+      expect(
+        sink.events.every(
+          (event) => event.category == CCDiagnosticCategory.initialization,
+        ),
+        isTrue,
+      );
+      await runtime.dispose();
+    },
+  );
+
+  test('component Registrar failure emits sanitized diagnostics', () async {
+    final sink = _RecordingSink();
+
+    expect(
+      () => CCRouterRuntime.forTesting(
+        diagnostics: CCDiagnosticsConfig(
+          sink: sink,
+          defaultMinimumLevel: CCDiagnosticLevel.debug,
+        ),
+        components: const [
+          CCComponentManifest(
+            id: 'broken',
+            version: '1.0.0',
+            registrar: _FailingRegistrar(),
+          ),
+        ],
+      ),
+      throwsStateError,
+    );
+    await Future<void>.delayed(Duration.zero);
+
+    final registrationFailure = sink.events.singleWhere(
+      (event) =>
+          event.operation == 'componentRegistration' &&
+          event.status == 'failed',
+    );
+    expect(registrationFailure.target, 'broken');
+    expect(registrationFailure.targetComponentId, 'broken');
+    expect(registrationFailure.failureStage, 'registrar');
+    expect(registrationFailure.errorType, 'StateError');
+    expect(registrationFailure.level, CCDiagnosticLevel.error);
+    expect(
+      sink.events.any(
+        (event) =>
+            event.operation == 'componentGraph' && event.status == 'failed',
+      ),
+      isTrue,
+    );
+  });
+
+  test('Runtime validation failure identifies its startup stage', () async {
+    final sink = _RecordingSink();
+    final runtime = CCRouterRuntime.forTesting(
+      diagnostics: CCDiagnosticsConfig(
+        sink: sink,
+        defaultMinimumLevel: CCDiagnosticLevel.debug,
+      ),
+      components: const [
+        CCComponentManifest(
+          id: 'feature',
+          version: '1.0.0',
+          registrar: _InvalidInitializationRegistrar(),
+        ),
+      ],
+    );
+
+    expect(runtime.initialize, throwsA(isA<CCRegistrationError>()));
+    await Future<void>.delayed(Duration.zero);
+
+    final failure = sink.events.singleWhere(
+      (event) =>
+          event.operation == 'runtimeInitialize' && event.status == 'failed',
+    );
+    expect(failure.failureStage, 'configurationValidation');
+    expect(failure.errorType, 'CCRegistrationError');
+    expect(failure.level, CCDiagnosticLevel.error);
+    await runtime.dispose();
+  });
+
   test(
     'typed Event subscriber keeps Event type and subscriber identity',
     () async {

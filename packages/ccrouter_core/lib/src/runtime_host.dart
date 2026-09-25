@@ -492,23 +492,55 @@ final class CCRouterRuntime {
   void initialize() {
     if (_disposed) throw const CCScopeClosedError('runtime');
     if (_initialized) return;
-    _validateInitializationTasks();
-    _validateRouteConfiguration();
-    _validateNavigationAdapterCapabilities();
-    _navigationAdapter?.initialize(
-      _navigationRoutesForAdapter(),
-      shells: _shellRegistry.navigationShells,
+    final startedAt = DateTime.now();
+    var failureStage = 'configurationValidation';
+    _emitInitializationDiagnostic(
+      occurredAt: startedAt,
+      operation: 'runtimeInitialize',
+      status: 'started',
+      level: CCDiagnosticLevel.debug,
     );
-    final adapter = _navigationAdapter;
-    if (adapter is CCNavigationPopGuardBinding) {
-      (adapter as CCNavigationPopGuardBinding).bindPopGuardEvaluator(
-        _evaluatePopGuardsForActiveEntry,
+    try {
+      _validateInitializationTasks();
+      _validateRouteConfiguration();
+      _validateNavigationAdapterCapabilities();
+      failureStage = 'adapterInitialization';
+      _navigationAdapter?.initialize(
+        _navigationRoutesForAdapter(),
+        shells: _shellRegistry.navigationShells,
       );
+      final adapter = _navigationAdapter;
+      if (adapter is CCNavigationPopGuardBinding) {
+        failureStage = 'popGuardBinding';
+        (adapter as CCNavigationPopGuardBinding).bindPopGuardEvaluator(
+          _evaluatePopGuardsForActiveEntry,
+        );
+      }
+      failureStage = 'backendAttachment';
+      _attachBackendNavigationSource();
+      _readInitialBackendSnapshot();
+      _initialized = true;
+      failureStage = 'restorationAttachment';
+      _attachRestorationOpportunitySource();
+    } on Object catch (error) {
+      _emitInitializationDiagnostic(
+        occurredAt: startedAt,
+        operation: 'runtimeInitialize',
+        status: 'failed',
+        level: CCDiagnosticLevel.error,
+        duration: DateTime.now().difference(startedAt),
+        failureStage: failureStage,
+        errorType: error.runtimeType.toString(),
+      );
+      rethrow;
     }
-    _attachBackendNavigationSource();
-    _readInitialBackendSnapshot();
-    _initialized = true;
-    _attachRestorationOpportunitySource();
+    _emitInitializationDiagnostic(
+      occurredAt: startedAt,
+      operation: 'runtimeInitialize',
+      status: 'succeeded',
+      level: CCDiagnosticLevel.info,
+      duration: DateTime.now().difference(startedAt),
+    );
   }
 
   /// Attaches and initializes the single navigation Adapter for this Runtime.
@@ -2562,6 +2594,35 @@ final class CCRouterRuntime {
     );
   }
 
+  /// Emits one sanitized component-assembly or Runtime-startup observation.
+  ///
+  /// These events use the existing asynchronous diagnostic boundary so Host
+  /// logging never participates in registration or initialization outcomes.
+  void _emitInitializationDiagnostic({
+    required DateTime occurredAt,
+    required String operation,
+    required String status,
+    required CCDiagnosticLevel level,
+    Duration duration = Duration.zero,
+    String? target,
+    String? targetComponentId,
+    String? failureStage,
+    String? errorType,
+  }) {
+    _emitDiagnostic(
+      category: CCDiagnosticCategory.initialization,
+      level: level,
+      occurredAt: occurredAt,
+      operation: operation,
+      status: status,
+      duration: duration,
+      target: target,
+      targetComponentId: targetComponentId,
+      failureStage: failureStage,
+      errorType: errorType,
+    );
+  }
+
   /// Queues one Sink event without blocking the framework operation.
   void _enqueueDiagnostic(CCDiagnosticEvent event) {
     if (!_acceptingDiagnostics || diagnostics.sink == null) return;
@@ -2629,69 +2690,133 @@ final class CCRouterRuntime {
 
   /// Validates, topologically orders, and executes component registrars.
   void _installComponents(Iterable<CCComponentManifest> components) {
-    final byId = <String, CCComponentManifest>{};
-    for (final component in components) {
-      if (!_isComponentIdentifier(component.id) ||
-          byId.containsKey(component.id)) {
-        throw CCRegistrationError(
-          'Invalid or duplicate component ID "${component.id}".',
-        );
-      }
-      if (!_semanticVersionPattern.hasMatch(component.version)) {
-        throw CCRegistrationError(
-          'Component "${component.id}" must use a SemVer 2.0 version.',
-        );
-      }
-      final declaredDependencies = <String>{};
-      for (final dependency in [
-        ...component.dependencies,
-        ...component.optionalDependencies,
-      ]) {
-        if (!_isComponentIdentifier(dependency) ||
-            dependency == component.id ||
-            !declaredDependencies.add(dependency)) {
+    final graphStartedAt = DateTime.now();
+    var failureStage = 'manifestValidation';
+    _emitInitializationDiagnostic(
+      occurredAt: graphStartedAt,
+      operation: 'componentGraph',
+      status: 'started',
+      level: CCDiagnosticLevel.debug,
+    );
+    try {
+      final byId = <String, CCComponentManifest>{};
+      for (final component in components) {
+        if (!_isComponentIdentifier(component.id) ||
+            byId.containsKey(component.id)) {
           throw CCRegistrationError(
-            'Component "${component.id}" has an invalid, duplicate, or '
-            'self dependency "$dependency".',
+            'Invalid or duplicate component ID "${component.id}".',
           );
         }
-      }
-      byId[component.id] = component;
-    }
-    final visiting = <String>{};
-    final visited = <String>{};
-    void visit(String id) {
-      if (visited.contains(id)) return;
-      if (!visiting.add(id))
-        throw CCRegistrationError('Component dependency cycle at "$id".');
-      final component = byId[id]!;
-      final dependencies = <String>{
-        ...component.dependencies,
-        ...component.optionalDependencies.where(byId.containsKey),
-      }.toList()..sort();
-      for (final dependency in dependencies) {
-        if (!byId.containsKey(dependency)) {
+        if (!_semanticVersionPattern.hasMatch(component.version)) {
           throw CCRegistrationError(
-            'Component "$id" requires missing "$dependency".',
+            'Component "${component.id}" must use a SemVer 2.0 version.',
           );
         }
-        visit(dependency);
+        final declaredDependencies = <String>{};
+        for (final dependency in [
+          ...component.dependencies,
+          ...component.optionalDependencies,
+        ]) {
+          if (!_isComponentIdentifier(dependency) ||
+              dependency == component.id ||
+              !declaredDependencies.add(dependency)) {
+            throw CCRegistrationError(
+              'Component "${component.id}" has an invalid, duplicate, or '
+              'self dependency "$dependency".',
+            );
+          }
+        }
+        byId[component.id] = component;
       }
-      visiting.remove(id);
-      visited.add(id);
-      _components.add(component);
-    }
+      failureStage = 'dependencyResolution';
+      final visiting = <String>{};
+      final visited = <String>{};
+      void visit(String id) {
+        if (visited.contains(id)) return;
+        if (!visiting.add(id)) {
+          throw CCRegistrationError('Component dependency cycle at "$id".');
+        }
+        final component = byId[id]!;
+        final dependencies = <String>{
+          ...component.dependencies,
+          ...component.optionalDependencies.where(byId.containsKey),
+        }.toList()..sort();
+        for (final dependency in dependencies) {
+          if (!byId.containsKey(dependency)) {
+            throw CCRegistrationError(
+              'Component "$id" requires missing "$dependency".',
+            );
+          }
+          visit(dependency);
+        }
+        visiting.remove(id);
+        visited.add(id);
+        _components.add(component);
+      }
 
-    final ids = byId.keys.toList()..sort();
-    for (final id in ids) {
-      visit(id);
-    }
-    // Validate the entire dependency graph before executing any registrar.
-    for (final component in _components) {
-      component.registrar.register(
-        _CCComponentRegistry(runtime: this, ownerComponentId: component.id),
+      final ids = byId.keys.toList()..sort();
+      for (final id in ids) {
+        visit(id);
+      }
+      // Validate the entire dependency graph before executing any registrar.
+      failureStage = 'registrar';
+      for (final component in _components) {
+        final registrationStartedAt = DateTime.now();
+        _emitInitializationDiagnostic(
+          occurredAt: registrationStartedAt,
+          operation: 'componentRegistration',
+          status: 'started',
+          level: CCDiagnosticLevel.debug,
+          target: component.id,
+          targetComponentId: component.id,
+        );
+        try {
+          component.registrar.register(
+            _CCComponentRegistry(runtime: this, ownerComponentId: component.id),
+          );
+        } on Object catch (error) {
+          _emitInitializationDiagnostic(
+            occurredAt: registrationStartedAt,
+            operation: 'componentRegistration',
+            status: 'failed',
+            level: CCDiagnosticLevel.error,
+            duration: DateTime.now().difference(registrationStartedAt),
+            target: component.id,
+            targetComponentId: component.id,
+            failureStage: 'registrar',
+            errorType: error.runtimeType.toString(),
+          );
+          rethrow;
+        }
+        _emitInitializationDiagnostic(
+          occurredAt: registrationStartedAt,
+          operation: 'componentRegistration',
+          status: 'succeeded',
+          level: CCDiagnosticLevel.info,
+          duration: DateTime.now().difference(registrationStartedAt),
+          target: component.id,
+          targetComponentId: component.id,
+        );
+      }
+    } on Object catch (error) {
+      _emitInitializationDiagnostic(
+        occurredAt: graphStartedAt,
+        operation: 'componentGraph',
+        status: 'failed',
+        level: CCDiagnosticLevel.error,
+        duration: DateTime.now().difference(graphStartedAt),
+        failureStage: failureStage,
+        errorType: error.runtimeType.toString(),
       );
+      rethrow;
     }
+    _emitInitializationDiagnostic(
+      occurredAt: graphStartedAt,
+      operation: 'componentGraph',
+      status: 'succeeded',
+      level: CCDiagnosticLevel.info,
+      duration: DateTime.now().difference(graphStartedAt),
+    );
   }
 
   /// Replaces already registered Providers for an isolated test Runtime.

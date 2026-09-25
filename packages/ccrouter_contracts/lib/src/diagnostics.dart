@@ -14,7 +14,8 @@ enum CCDiagnosticCategory {
   /// Event publication and individual subscriber execution.
   event,
 
-  /// Initialization task and Gate execution.
+  /// Component assembly, Runtime startup, initialization task, and Gate
+  /// execution.
   initialization,
 
   /// Route, Session, Scope, or page lifecycle observations.
