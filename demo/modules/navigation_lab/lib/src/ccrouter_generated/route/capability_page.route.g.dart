@@ -105,7 +105,11 @@ final class CCGeneratedDemoCapabilitiesPageRouteFactory {
 void ccrouterRegisterDemoCapabilitiesPageRoute(CCRegistry registry) =>
     registry.registerRoute(_DemoCapabilitiesPageRoute.definition);
 
-/// Package-internal route definition bridge used by Host generation.
-CCRouteDefinition<dynamic, dynamic>
+/// Typed route definition bridge shared by Host generation and page binding.
+///
+/// Retaining the generated argument type lets the isolated Flutter binding
+/// access decoded fields without dynamic calls. Host aggregation may erase the
+/// type only after page construction has been bound.
+CCRouteDefinition<_DemoCapabilitiesPageRouteArguments, void>
 ccrouterDescribeDemoCapabilitiesPageRoute() =>
     _DemoCapabilitiesPageRoute.definition;

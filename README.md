@@ -326,9 +326,9 @@ await CCRouter.navigator.open(
 - 多 Pattern 指向同一页面
 - Path 参数自动转换
 - `@CCQueryParam` 标量、enum、`List<T>`、`Set<T>` 与自定义 Codec
-- `@CCExtraParam` 进程内对象，不写入 URI、文档或诊断
+- `@CCExtraParam` 强类型进程内对象；生成的 binding 保留参数静态类型，并在 decode 边界校验对象类型
 
-外部可分享数据应进入 Path/Query；Token、Controller、大对象和不可序列化状态不得放入 URL。`Extra` 只适合进程内短生命周期数据，不能依赖它做 Deep Link、状态恢复或跨进程传递。
+外部可分享数据应进入 Path/Query；Token、Controller、大对象和不可序列化状态不得放入 URL。`Extra` 只适合进程内短生命周期数据，不写入 URI、生成文档或诊断；错误类型会抛出不包含原始值的 `CCRouteParameterError`。不能依赖 `Extra` 做 Deep Link、状态恢复或跨进程传递。
 
 ## 跨组件 Route Contract
 

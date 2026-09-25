@@ -122,7 +122,8 @@ Run checks proportional to the affected code:
 ```sh
 dart format packages/*/lib
 dart analyze
-dart test packages/ccrouter_core/test packages/ccrouter/test
+fvm flutter test packages/ccrouter_test/test
+fvm dart test --concurrency=1 packages/ccrouter_test/generator_test
 ```
 
 For Flutter-facing changes, also analyze and test `demo`. For OHOS-impacting

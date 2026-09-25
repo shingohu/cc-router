@@ -103,9 +103,13 @@ final class CCGeneratedDemoProceedPageRouteFactory {
 void ccrouterRegisterDemoProceedPageRoute(CCRegistry registry) =>
     registry.registerRoute(_DemoProceedPageRoute.definition);
 
-/// Package-internal route definition bridge used by Host generation.
-CCRouteDefinition<dynamic, dynamic> ccrouterDescribeDemoProceedPageRoute() =>
-    _DemoProceedPageRoute.definition;
+/// Typed route definition bridge shared by Host generation and page binding.
+///
+/// Retaining the generated argument type lets the isolated Flutter binding
+/// access decoded fields without dynamic calls. Host aggregation may erase the
+/// type only after page construction has been bound.
+CCRouteDefinition<_DemoProceedPageRouteArguments, void>
+ccrouterDescribeDemoProceedPageRoute() => _DemoProceedPageRoute.definition;
 
 /// Immutable arguments for route demo_navigation_lab.cancel; URI values remain typed.
 final class _DemoCancelledPageRouteArguments {
@@ -201,9 +205,13 @@ final class CCGeneratedDemoCancelledPageRouteFactory {
 void ccrouterRegisterDemoCancelledPageRoute(CCRegistry registry) =>
     registry.registerRoute(_DemoCancelledPageRoute.definition);
 
-/// Package-internal route definition bridge used by Host generation.
-CCRouteDefinition<dynamic, dynamic> ccrouterDescribeDemoCancelledPageRoute() =>
-    _DemoCancelledPageRoute.definition;
+/// Typed route definition bridge shared by Host generation and page binding.
+///
+/// Retaining the generated argument type lets the isolated Flutter binding
+/// access decoded fields without dynamic calls. Host aggregation may erase the
+/// type only after page construction has been bound.
+CCRouteDefinition<_DemoCancelledPageRouteArguments, void>
+ccrouterDescribeDemoCancelledPageRoute() => _DemoCancelledPageRoute.definition;
 
 /// Immutable arguments for route demo_navigation_lab.redirect.source; URI values remain typed.
 final class _DemoRedirectSourcePageRouteArguments {
@@ -302,8 +310,12 @@ final class CCGeneratedDemoRedirectSourcePageRouteFactory {
 void ccrouterRegisterDemoRedirectSourcePageRoute(CCRegistry registry) =>
     registry.registerRoute(_DemoRedirectSourcePageRoute.definition);
 
-/// Package-internal route definition bridge used by Host generation.
-CCRouteDefinition<dynamic, dynamic>
+/// Typed route definition bridge shared by Host generation and page binding.
+///
+/// Retaining the generated argument type lets the isolated Flutter binding
+/// access decoded fields without dynamic calls. Host aggregation may erase the
+/// type only after page construction has been bound.
+CCRouteDefinition<_DemoRedirectSourcePageRouteArguments, void>
 ccrouterDescribeDemoRedirectSourcePageRoute() =>
     _DemoRedirectSourcePageRoute.definition;
 
@@ -404,8 +416,12 @@ final class CCGeneratedDemoRedirectTargetPageRouteFactory {
 void ccrouterRegisterDemoRedirectTargetPageRoute(CCRegistry registry) =>
     registry.registerRoute(_DemoRedirectTargetPageRoute.definition);
 
-/// Package-internal route definition bridge used by Host generation.
-CCRouteDefinition<dynamic, dynamic>
+/// Typed route definition bridge shared by Host generation and page binding.
+///
+/// Retaining the generated argument type lets the isolated Flutter binding
+/// access decoded fields without dynamic calls. Host aggregation may erase the
+/// type only after page construction has been bound.
+CCRouteDefinition<_DemoRedirectTargetPageRouteArguments, void>
 ccrouterDescribeDemoRedirectTargetPageRoute() =>
     _DemoRedirectTargetPageRoute.definition;
 
@@ -503,9 +519,13 @@ final class CCGeneratedDemoDeferredPageRouteFactory {
 void ccrouterRegisterDemoDeferredPageRoute(CCRegistry registry) =>
     registry.registerRoute(_DemoDeferredPageRoute.definition);
 
-/// Package-internal route definition bridge used by Host generation.
-CCRouteDefinition<dynamic, dynamic> ccrouterDescribeDemoDeferredPageRoute() =>
-    _DemoDeferredPageRoute.definition;
+/// Typed route definition bridge shared by Host generation and page binding.
+///
+/// Retaining the generated argument type lets the isolated Flutter binding
+/// access decoded fields without dynamic calls. Host aggregation may erase the
+/// type only after page construction has been bound.
+CCRouteDefinition<_DemoDeferredPageRouteArguments, void>
+ccrouterDescribeDemoDeferredPageRoute() => _DemoDeferredPageRoute.definition;
 
 /// Immutable arguments for route demo_navigation_lab.timeout; URI values remain typed.
 final class _DemoTimeoutPageRouteArguments {
@@ -601,9 +621,13 @@ final class CCGeneratedDemoTimeoutPageRouteFactory {
 void ccrouterRegisterDemoTimeoutPageRoute(CCRegistry registry) =>
     registry.registerRoute(_DemoTimeoutPageRoute.definition);
 
-/// Package-internal route definition bridge used by Host generation.
-CCRouteDefinition<dynamic, dynamic> ccrouterDescribeDemoTimeoutPageRoute() =>
-    _DemoTimeoutPageRoute.definition;
+/// Typed route definition bridge shared by Host generation and page binding.
+///
+/// Retaining the generated argument type lets the isolated Flutter binding
+/// access decoded fields without dynamic calls. Host aggregation may erase the
+/// type only after page construction has been bound.
+CCRouteDefinition<_DemoTimeoutPageRouteArguments, void>
+ccrouterDescribeDemoTimeoutPageRoute() => _DemoTimeoutPageRoute.definition;
 
 /// Immutable arguments for route demo_navigation_lab.guarded; URI values remain typed.
 final class _DemoGuardedPageRouteArguments {
@@ -699,6 +723,10 @@ final class CCGeneratedDemoGuardedPageRouteFactory {
 void ccrouterRegisterDemoGuardedPageRoute(CCRegistry registry) =>
     registry.registerRoute(_DemoGuardedPageRoute.definition);
 
-/// Package-internal route definition bridge used by Host generation.
-CCRouteDefinition<dynamic, dynamic> ccrouterDescribeDemoGuardedPageRoute() =>
-    _DemoGuardedPageRoute.definition;
+/// Typed route definition bridge shared by Host generation and page binding.
+///
+/// Retaining the generated argument type lets the isolated Flutter binding
+/// access decoded fields without dynamic calls. Host aggregation may erase the
+/// type only after page construction has been bound.
+CCRouteDefinition<_DemoGuardedPageRouteArguments, void>
+ccrouterDescribeDemoGuardedPageRoute() => _DemoGuardedPageRoute.definition;

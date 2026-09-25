@@ -15,8 +15,10 @@ String _emitStandaloneRoute(
   required _ParameterTypeEmitter parameterType,
   required _DartTypeEmitter typeSource,
   required _ParameterDefaultEmitter parameterDefault,
-}) =>
-    '${_emitTypedRouteContract(route, parameterType: parameterType, typeSource: typeSource, resultType: typeSource(route.resultType, route.page), parameterDefault: parameterDefault, includeOwnerMethods: false)}\n${_emitIntentFactory(route, parameterType: parameterType, resultType: typeSource(route.resultType, route.page), parameterDefault: parameterDefault)}\n${_emitRouteOwnerGlue(route)}';
+}) {
+  final resultType = typeSource(route.resultType, route.page);
+  return '${_emitTypedRouteContract(route, parameterType: parameterType, typeSource: typeSource, resultType: resultType, parameterDefault: parameterDefault, includeOwnerMethods: false)}\n${_emitIntentFactory(route, parameterType: parameterType, resultType: resultType, parameterDefault: parameterDefault)}\n${_emitRouteOwnerGlue(route, resultType: resultType)}';
+}
 
 /// Emits a Pure Dart contract without page construction or registration APIs.
 String _emitPublicRouteContract(
@@ -148,7 +150,7 @@ final class ${route.intent} implements CCRouteIntent<$resultType> {
 }
 
 /// Emits owner-only registration and metadata bridges without importing UI.
-String _emitRouteOwnerGlue(_RouteModel route) =>
+String _emitRouteOwnerGlue(_RouteModel route, {required String resultType}) =>
     '''
 /// Package-internal bridge used by the generated component route index.
 ///
@@ -157,8 +159,12 @@ String _emitRouteOwnerGlue(_RouteModel route) =>
 void ${route.registrationFunction}(CCRegistry registry) =>
     registry.registerRoute(${route.api}.definition);
 
-/// Package-internal route definition bridge used by Host generation.
-CCRouteDefinition<dynamic, dynamic> ${route.descriptorFunction}() =>
+/// Typed route definition bridge shared by Host generation and page binding.
+///
+/// Retaining the generated argument type lets the isolated Flutter binding
+/// access decoded fields without dynamic calls. Host aggregation may erase the
+/// type only after page construction has been bound.
+CCRouteDefinition<${route.arguments}, $resultType> ${route.descriptorFunction}() =>
     ${route.api}.definition;
 ''';
 

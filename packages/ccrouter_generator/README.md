@@ -262,7 +262,9 @@ descriptor 细节；生成的 `<package>_ccrouter.g.dart` 是唯一 Host 装配�
   匹配；Codec 异常和空编码结果统一转换为脱敏的 `CCRouteParameterError`。
 - 标量 Query 重复、缺失必需值、非法类型会抛出 `CCRouteParameterError`；
   消息包含路由和参数名称，不包含原始参数内容。
-- 最多一个显式 Extra，保持对象身份；启用 Deep Link 时不能要求必需 Extra。
+- 最多一个显式 Extra，保持对象身份；生成的页面 binding 保留声明类型，并在 decode 边界
+  校验运行时对象类型，类型不匹配时抛出脱敏的 `CCRouteParameterError`。启用 Deep Link 时
+  不能要求必需 Extra。
 - 可选且未注解的 Flutter `key` 不进入契约；其他未映射参数构建失败。
 - 单地址路由使用 `pattern`，生成器自动补齐 primary；多地址路由使用 `patterns`。
   两者不能同时设置。多值只有一个可逆 Pattern 时自动补齐 primary，存在多个可逆

@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 2,
+  "generatorVersion": "0.1.0",
+  "package": {
+    "name": "ccrouter_analytics",
+    "version": "0.1.0"
+  },
+  "contentFingerprint": "b2fd00d11e63cdc83a70f345b412fe8e7bee98ecaec3a0673a4a00d2d6b6235e",
+  "bundle": null,
+  "dependencies": [],
+  "metadata": [],
+  "capabilityCatalog": {
+    "schemaVersion": 1,
+    "records": []
+  }
+}

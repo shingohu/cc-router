@@ -577,13 +577,57 @@ final class Probe { const Probe({required this.id}); final int id; }
       expect(
         code,
         contains(
-          'CCRouteDefinition<dynamic, dynamic> ccrouterDescribeProbeRoute()',
+          'CCRouteDefinition<_ProbeRouteArguments, void> '
+          'ccrouterDescribeProbeRoute()',
         ),
       );
       expect(code, isNot(contains('CCNavigationRoute(')));
       expect(code, contains('popGuardIds: const ["probe.dirty"]'));
       expect(code, isNot(contains('GoRoute(')));
       expect(code, isNot(contains('CCRouter.navigator.push')));
+    },
+  );
+
+  test(
+    'standalone Extra binding retains typed decode and validation',
+    () async {
+      const declarations = r'''
+final class ProbePayload {
+  const ProbePayload(this.value);
+  final String value;
+}
+@CCRoute<void>(
+  component: probeComponent,
+  id: 'probe.extra',
+  pattern: CCPathPattern('/probe/extra'),
+)
+final class Probe {
+  const Probe({@CCExtraParam() required this.payload});
+  final ProbePayload payload;
+}
+''';
+      final code = await generate(declarations);
+      final binding = await generateBinding(declarations);
+
+      expect(
+        code,
+        contains(
+          'CCRouteDefinition<_ProbeRouteArguments, void> '
+          'ccrouterDescribeProbeRoute()',
+        ),
+      );
+      expect(
+        code,
+        contains('if (_value_payload is! route_source.ProbePayload)'),
+      );
+      expect(
+        binding,
+        contains(
+          'final decoded = route_contract.ccrouterDescribeProbeRoute()'
+          '.codec.decode(',
+        ),
+      );
+      expect(binding, contains('payload: decoded.payload'));
     },
   );
 

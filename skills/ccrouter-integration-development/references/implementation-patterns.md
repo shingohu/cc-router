@@ -69,6 +69,35 @@ final class ProductPage extends StatelessWidget {
 
 Do not add a generated `part`. Import the component route API barrel after generation when callers need the generated Intent.
 
+Use `@CCExtraParam` for a typed process-local object that must retain identity:
+
+```dart
+final class ProductDraft {
+  const ProductDraft(this.id);
+  final String id;
+}
+
+@CCRoute<void>(
+  component: catalogComponent,
+  id: 'catalog.product_editor',
+  pattern: CCPathPattern('/products/editor'),
+)
+final class ProductEditorPage extends StatelessWidget {
+  const ProductEditorPage({
+    @CCExtraParam() required this.draft,
+    super.key,
+  });
+
+  final ProductDraft draft;
+}
+```
+
+The generated page binding retains `ProductDraft` as a static type and validates
+the runtime Extra before page construction. A mismatch throws a sanitized
+`CCRouteParameterError`. Keep shareable or externally supplied values in
+Path/Query; Extra is not available to Deep Links, restoration, persistence, or
+cross-process navigation.
+
 ## Cross-Component Route
 
 Declare `@CCRouteContract<R>` in a contracts package and `@CCRouteImplementation` in the page package. The consumer depends only on the contracts package. Keep all URI-shared types Pure Dart and public; do not place Flutter, `dart:ui`, `package:*/src/`, or page-private types in a public contract.

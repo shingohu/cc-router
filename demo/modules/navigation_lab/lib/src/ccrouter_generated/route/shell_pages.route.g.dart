@@ -104,9 +104,13 @@ final class CCGeneratedDemoShellFeedPageRouteFactory {
 void ccrouterRegisterDemoShellFeedPageRoute(CCRegistry registry) =>
     registry.registerRoute(_DemoShellFeedPageRoute.definition);
 
-/// Package-internal route definition bridge used by Host generation.
-CCRouteDefinition<dynamic, dynamic> ccrouterDescribeDemoShellFeedPageRoute() =>
-    _DemoShellFeedPageRoute.definition;
+/// Typed route definition bridge shared by Host generation and page binding.
+///
+/// Retaining the generated argument type lets the isolated Flutter binding
+/// access decoded fields without dynamic calls. Host aggregation may erase the
+/// type only after page construction has been bound.
+CCRouteDefinition<_DemoShellFeedPageRouteArguments, void>
+ccrouterDescribeDemoShellFeedPageRoute() => _DemoShellFeedPageRoute.definition;
 
 /// Immutable arguments for route demo_navigation_lab.shell.detail; URI values remain typed.
 final class _DemoShellDetailPageRouteArguments {
@@ -221,8 +225,12 @@ final class CCGeneratedDemoShellDetailPageRouteFactory {
 void ccrouterRegisterDemoShellDetailPageRoute(CCRegistry registry) =>
     registry.registerRoute(_DemoShellDetailPageRoute.definition);
 
-/// Package-internal route definition bridge used by Host generation.
-CCRouteDefinition<dynamic, dynamic>
+/// Typed route definition bridge shared by Host generation and page binding.
+///
+/// Retaining the generated argument type lets the isolated Flutter binding
+/// access decoded fields without dynamic calls. Host aggregation may erase the
+/// type only after page construction has been bound.
+CCRouteDefinition<_DemoShellDetailPageRouteArguments, void>
 ccrouterDescribeDemoShellDetailPageRoute() =>
     _DemoShellDetailPageRoute.definition;
 
@@ -322,8 +330,12 @@ final class CCGeneratedDemoShellSettingsPageRouteFactory {
 void ccrouterRegisterDemoShellSettingsPageRoute(CCRegistry registry) =>
     registry.registerRoute(_DemoShellSettingsPageRoute.definition);
 
-/// Package-internal route definition bridge used by Host generation.
-CCRouteDefinition<dynamic, dynamic>
+/// Typed route definition bridge shared by Host generation and page binding.
+///
+/// Retaining the generated argument type lets the isolated Flutter binding
+/// access decoded fields without dynamic calls. Host aggregation may erase the
+/// type only after page construction has been bound.
+CCRouteDefinition<_DemoShellSettingsPageRouteArguments, void>
 ccrouterDescribeDemoShellSettingsPageRoute() =>
     _DemoShellSettingsPageRoute.definition;
 
@@ -423,8 +435,12 @@ final class CCGeneratedDemoWorkspaceHomePageRouteFactory {
 void ccrouterRegisterDemoWorkspaceHomePageRoute(CCRegistry registry) =>
     registry.registerRoute(_DemoWorkspaceHomePageRoute.definition);
 
-/// Package-internal route definition bridge used by Host generation.
-CCRouteDefinition<dynamic, dynamic>
+/// Typed route definition bridge shared by Host generation and page binding.
+///
+/// Retaining the generated argument type lets the isolated Flutter binding
+/// access decoded fields without dynamic calls. Host aggregation may erase the
+/// type only after page construction has been bound.
+CCRouteDefinition<_DemoWorkspaceHomePageRouteArguments, void>
 ccrouterDescribeDemoWorkspaceHomePageRoute() =>
     _DemoWorkspaceHomePageRoute.definition;
 
@@ -543,8 +559,12 @@ final class CCGeneratedDemoWorkspaceDetailPageRouteFactory {
 void ccrouterRegisterDemoWorkspaceDetailPageRoute(CCRegistry registry) =>
     registry.registerRoute(_DemoWorkspaceDetailPageRoute.definition);
 
-/// Package-internal route definition bridge used by Host generation.
-CCRouteDefinition<dynamic, dynamic>
+/// Typed route definition bridge shared by Host generation and page binding.
+///
+/// Retaining the generated argument type lets the isolated Flutter binding
+/// access decoded fields without dynamic calls. Host aggregation may erase the
+/// type only after page construction has been bound.
+CCRouteDefinition<_DemoWorkspaceDetailPageRouteArguments, void>
 ccrouterDescribeDemoWorkspaceDetailPageRoute() =>
     _DemoWorkspaceDetailPageRoute.definition;
 
@@ -648,8 +668,12 @@ final class CCGeneratedDemoWorkspaceActivityPageRouteFactory {
 void ccrouterRegisterDemoWorkspaceActivityPageRoute(CCRegistry registry) =>
     registry.registerRoute(_DemoWorkspaceActivityPageRoute.definition);
 
-/// Package-internal route definition bridge used by Host generation.
-CCRouteDefinition<dynamic, dynamic>
+/// Typed route definition bridge shared by Host generation and page binding.
+///
+/// Retaining the generated argument type lets the isolated Flutter binding
+/// access decoded fields without dynamic calls. Host aggregation may erase the
+/// type only after page construction has been bound.
+CCRouteDefinition<_DemoWorkspaceActivityPageRouteArguments, void>
 ccrouterDescribeDemoWorkspaceActivityPageRoute() =>
     _DemoWorkspaceActivityPageRoute.definition;
 
@@ -753,8 +777,12 @@ final class CCGeneratedDemoWorkspaceProfilePageRouteFactory {
 void ccrouterRegisterDemoWorkspaceProfilePageRoute(CCRegistry registry) =>
     registry.registerRoute(_DemoWorkspaceProfilePageRoute.definition);
 
-/// Package-internal route definition bridge used by Host generation.
-CCRouteDefinition<dynamic, dynamic>
+/// Typed route definition bridge shared by Host generation and page binding.
+///
+/// Retaining the generated argument type lets the isolated Flutter binding
+/// access decoded fields without dynamic calls. Host aggregation may erase the
+/// type only after page construction has been bound.
+CCRouteDefinition<_DemoWorkspaceProfilePageRouteArguments, void>
 ccrouterDescribeDemoWorkspaceProfilePageRoute() =>
     _DemoWorkspaceProfilePageRoute.definition;
 
@@ -871,6 +899,10 @@ final class CCGeneratedDemoExtraPageRouteFactory {
 void ccrouterRegisterDemoExtraPageRoute(CCRegistry registry) =>
     registry.registerRoute(_DemoExtraPageRoute.definition);
 
-/// Package-internal route definition bridge used by Host generation.
-CCRouteDefinition<dynamic, dynamic> ccrouterDescribeDemoExtraPageRoute() =>
-    _DemoExtraPageRoute.definition;
+/// Typed route definition bridge shared by Host generation and page binding.
+///
+/// Retaining the generated argument type lets the isolated Flutter binding
+/// access decoded fields without dynamic calls. Host aggregation may erase the
+/// type only after page construction has been bound.
+CCRouteDefinition<_DemoExtraPageRouteArguments, void>
+ccrouterDescribeDemoExtraPageRoute() => _DemoExtraPageRoute.definition;

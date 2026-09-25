@@ -42,6 +42,7 @@ Read [implementation-patterns.md](references/implementation-patterns.md) when ad
 - Do not edit anything under `lib/src/ccrouter_generated/`.
 - Do not add a generated route `part` to a page. Only the Registrar keeps its generated `.component.g.dart` part.
 - Keep an internal route on `@CCRoute`. Promote it to `@CCRouteContract` only when a real external component consumer appears.
+- Use `@CCExtraParam` only for typed, process-local, short-lived objects. Generated page bindings preserve the declared static type and reject a mismatched runtime object with `CCRouteParameterError`; Extra is not a Deep Link, restoration, persistence, or cross-process channel.
 - Put stable cross-component contracts in a Pure Dart contracts package. Consumers depend on the contracts package, not the implementation package.
 - Do not simulate unsupported Action Pipeline, dynamic component activation/deactivation, complete state restoration, Navigator 1.0 Backend, or Service/Command/Event annotations.
 - Use `CCEventSubscriberId<E>` and `CCEventSubscriber<E>` for new Event registrations. The ID identifies one subscriber, not the Event type; keep it stable and unique across the Runtime. The legacy string overload is only for existing 1.x registrars and low-level tests.
