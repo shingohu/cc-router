@@ -10,9 +10,11 @@ typedef CCInitializationTaskHandler =
 
 /// Identifies an explicit condition that allows initialization tasks to run.
 ///
-/// Use [appStarted] for ordinary startup work. Product conditions such as
-/// privacy consent or remote configuration use a `const CCInitializationGate`
-/// with a stable ID and are opened explicitly by the application host.
+/// Use [appStarted] for ordinary startup work and [privacyGranted] for work
+/// that must wait until the user has granted privacy consent. Other product
+/// conditions, such as remote configuration, use a `const
+/// CCInitializationGate` with a stable ID and are opened explicitly by the
+/// application host.
 final class CCInitializationGate {
   /// Creates a gate identified by the stable [id].
   const CCInitializationGate(this.id);
@@ -20,6 +22,16 @@ final class CCInitializationGate {
   /// Gate used for ordinary post-`CCRouter.initialize` startup work.
   static const CCInitializationGate appStarted = CCInitializationGate(
     'appStarted',
+  );
+
+  /// Gate opened explicitly by the host after privacy consent is granted.
+  ///
+  /// This constant only describes the initialization condition. CCRouter does
+  /// not read, persist, or infer the user's privacy decision; the host owns
+  /// that state and must open this gate at the appropriate time. Tasks waiting
+  /// on this gate remain pending until it is opened.
+  static const CCInitializationGate privacyGranted = CCInitializationGate(
+    'privacyGranted',
   );
 
   /// Stable identity used by task registration, diagnostics, and execution.

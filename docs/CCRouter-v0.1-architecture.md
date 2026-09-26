@@ -985,10 +985,11 @@ Session Service、页面生命周期和平台后台设施，不扩展 InitTask S
 触发：用户同意隐私协议后 analytics 才可运行
 ```
 
-框架内置 `appStarted`，产品可声明稳定的自定义 Gate，例如：
+框架内置 `appStarted` 和 `privacyGranted`。`privacyGranted` 只表示“用户已经明确同意隐私协议”这一
+初始化条件，由 Host 在确认同意后显式打开；框架不会读取或持久化隐私状态。产品仍可声明稳定的自定义
+Gate，例如：
 
 ```text
-privacyGranted
 remoteConfigReady
 ```
 

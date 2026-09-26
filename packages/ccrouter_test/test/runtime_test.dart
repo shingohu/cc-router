@@ -718,7 +718,8 @@ void main() {
   test(
     'initialization Gates retain blocked work until explicitly opened',
     () async {
-      const privacyGate = CCInitializationGate('privacyGranted');
+      const privacyGate = CCInitializationGate.privacyGranted;
+      expect(privacyGate.id, 'privacyGranted');
       final order = <String>[];
       runtime.registerInitializationTask(
         CCInitializationTask(id: 'startup.base', run: (_) => order.add('base')),

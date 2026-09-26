@@ -46,13 +46,14 @@ Isolate/Service 能力完成，而不是给任务增加一个无法兑现的 `ba
 1. 组件在 Registrar 中注册 `CCInitializationTask`，Owner 由 Runtime 注入。
 2. `CCRouter.initialize()` 同步校验任务 ID、Gate、依赖、timeout、缺失节点和循环，不执行任务。
 3. Host 在适当时机调用 `await CCRouter.runInitialization()` 打开 `appStarted` Gate。
-4. 自定义条件使用稳定 Gate，例如 `const CCInitializationGate('privacyGranted')`。
-5. Gate 打开后，依赖全部成功的同层任务按 ID 确定启动顺序，并发执行。
-6. 同一 Runtime 中每个任务最多运行一次；重叠调用共享一个 single-flight DAG drain。
-7. `critical` 失败抛 `CCInitializationTaskError`，后续触发继续返回同一安全失败。
-8. `optional` 失败不阻止独立任务；依赖失败节点的任务标记为 `skipped`。
-9. 每个任务有独立 timeout、cooperative cancellation、Trace Span、Owner 和耗时快照。
-10. Runtime shutdown 取消并等待当前 DAG drain 收口；不允许任务在销毁后被标记成功。
+4. 隐私同意后调用 `await CCRouter.runInitialization(gate: CCInitializationGate.privacyGranted)`。
+5. 其它自定义条件使用带稳定 ID 的 `const CCInitializationGate`，例如远程配置完成。
+6. Gate 打开后，依赖全部成功的同层任务按 ID 确定启动顺序，并发执行。
+7. 同一 Runtime 中每个任务最多运行一次；重叠调用共享一个 single-flight DAG drain。
+8. `critical` 失败抛 `CCInitializationTaskError`，后续触发继续返回同一安全失败。
+9. `optional` 失败不阻止独立任务；依赖失败节点的任务标记为 `skipped`。
+10. 每个任务有独立 timeout、cooperative cancellation、Trace Span、Owner 和耗时快照。
+11. Runtime shutdown 取消并等待当前 DAG drain 收口；不允许任务在销毁后被标记成功。
 
 Gate 只控制“何时允许执行”，不替代依赖。先打开 `privacyGranted` 而 `appStarted` 依赖尚未
 运行时，任务继续 pending；后续打开 `appStarted` 后 Runtime 自动执行完整可达层。
@@ -60,8 +61,6 @@ Gate 只控制“何时允许执行”，不替代依赖。先打开 `privacyGra
 ## 5. API 示例
 
 ```dart
-const privacyGranted = CCInitializationGate('privacyGranted');
-
 registry.registerInitializationTask(
   CCInitializationTask(
     id: 'foundation.logging',
@@ -73,7 +72,7 @@ registry.registerInitializationTask(
   CCInitializationTask(
     id: 'analytics.sdk',
     dependsOn: const ['foundation.logging'],
-    gate: privacyGranted,
+    gate: CCInitializationGate.privacyGranted,
     failurePolicy: CCInitializationFailurePolicy.optional,
     timeout: const Duration(seconds: 3),
     run: (context) => analytics.initialize(context.cancellation),
@@ -84,7 +83,7 @@ CCRouter.initialize(components: ccrouterGeneratedComponents);
 await CCRouter.runInitialization();
 
 // 用户明确同意隐私协议后：
-await CCRouter.runInitialization(gate: privacyGranted);
+await CCRouter.runInitialization(gate: CCInitializationGate.privacyGranted);
 ```
 
 ## 6. 失败、重试与降级

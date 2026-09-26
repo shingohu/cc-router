@@ -30,7 +30,8 @@
 - [x] 完成 InitTask/Contract 生成边界评估：当前没有可靠的 InitTask 声明输入，不做源码启发式发现，
   继续由 Runtime 校验实际注册关系；评估结论见初始化任务设计文档。
 - [ ] 只有出现真实跨组件初始化依赖时，建立最小公共 Initialization Contract Package。
-- [ ] 跨组件 Gate/Task ID 出现后，明确其公共 Contract 归属并增加 exposure 测试，禁止实现包或 `src` 导入。
+- [x] 框架提供通用的 `appStarted` 与 `privacyGranted` Gate；业务组件直接使用框架常量，避免重复定义。
+- [ ] 业务组件出现跨组件 Task ID 后，明确其公共 Contract 归属并增加 exposure 测试，禁止实现包或 `src` 导入。
 
 ### 3.2 生成器校验收敛
 

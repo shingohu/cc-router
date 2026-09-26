@@ -93,7 +93,7 @@ void _registerComponentCapabilities(CCRegistry registry) {
     CCInitializationTask(
       id: DemoInitializationTaskIds.analytics,
       dependsOn: const [DemoInitializationTaskIds.foundation],
-      gate: demoPrivacyGrantedGate,
+      gate: CCInitializationGate.privacyGranted,
       run: (_) => demoNavigationLabStore.record(
         'InitTask · privacy-gated analytics ready',
       ),

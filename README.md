@@ -636,7 +636,7 @@ registry.registerInitializationTask(
   CCInitializationTask(
     id: 'analytics.initialize',
     dependsOn: const ['privacy.load'],
-    gate: const CCInitializationGate('privacy.granted'),
+    gate: CCInitializationGate.privacyGranted,
     failurePolicy: CCInitializationFailurePolicy.optional,
     run: (_) async => analytics.initialize(),
   ),

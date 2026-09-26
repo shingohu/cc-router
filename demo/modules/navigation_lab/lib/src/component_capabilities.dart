@@ -1,7 +1,5 @@
 import 'package:ccrouter/ccrouter.dart';
 
-const demoPrivacyGrantedGate = CCInitializationGate('demo.privacy-granted');
-
 /// Stable IDs for the Demo component's initialization DAG.
 abstract final class DemoInitializationTaskIds {
   /// Foundation work that is available before privacy consent.
@@ -13,7 +11,7 @@ abstract final class DemoInitializationTaskIds {
   /// Task blocked when [optionalSdk] fails.
   static const optionalDependent = 'demo.startup.optional-dependent';
 
-  /// Analytics setup opened by [demoPrivacyGrantedGate].
+  /// Analytics setup opened by [CCInitializationGate.privacyGranted].
   static const analytics = 'demo.startup.analytics';
 }
 

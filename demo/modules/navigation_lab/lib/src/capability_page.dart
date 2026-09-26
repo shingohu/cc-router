@@ -166,7 +166,7 @@ final class _DemoCapabilitiesPageState extends State<DemoCapabilitiesPage> {
                 '显式运行依赖基础任务、等待隐私同意的初始化节点。',
                 () => _run('Initialization privacy gate', () async {
                   await CCRouter.runInitialization(
-                    gate: demoPrivacyGrantedGate,
+                    gate: CCInitializationGate.privacyGranted,
                   );
                   return CCRouter.initializationTasks
                       .firstWhere(

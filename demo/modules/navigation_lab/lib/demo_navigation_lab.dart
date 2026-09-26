@@ -21,6 +21,5 @@ export 'src/component_capabilities.dart'
         DemoEventSubscribers,
         DemoInitializationTaskIds,
         DemoNavigationSourceIds,
-        DemoRoutePolicyIds,
-        demoPrivacyGrantedGate;
+        DemoRoutePolicyIds;
 export 'src/shell_contract.dart' show DemoExtraPayload;

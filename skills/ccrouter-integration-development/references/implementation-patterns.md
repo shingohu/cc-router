@@ -209,11 +209,16 @@ prefix and remain unchanged after ordinary refactors.
 
 Register tasks in the component Registrar and open their Gate from the Host:
 
+Use the framework-provided `CCInitializationGate.privacyGranted` for work that
+must wait for explicit privacy consent. The Host owns consent state and opens
+the gate; CCRouter does not inspect or persist that state. Define a custom
+`CCInitializationGate` only for a different product condition.
+
 ```dart
 registry.registerInitializationTask(
   CCInitializationTask(
     id: 'analytics.initialize',
-    gate: const CCInitializationGate('privacy.granted'),
+    gate: CCInitializationGate.privacyGranted,
     dependsOn: const ['config.load'],
     failurePolicy: CCInitializationFailurePolicy.optional,
     run: (_) => analytics.initialize(),
@@ -221,7 +226,7 @@ registry.registerInitializationTask(
 );
 
 await CCRouter.runInitialization(
-  gate: const CCInitializationGate('privacy.granted'),
+  gate: CCInitializationGate.privacyGranted,
 );
 ```
 
