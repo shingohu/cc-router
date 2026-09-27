@@ -539,6 +539,7 @@ final class _ComponentModel {
     required this.dependencies,
     required this.optionalDependencies,
     required this.serviceDependencies,
+    required this.commandDependencies,
   });
 
   /// Stable component ID.
@@ -555,6 +556,9 @@ final class _ComponentModel {
 
   /// Exact cross-component Service contracts consumed by this component.
   final List<_ComponentServiceDependencyModel> serviceDependencies;
+
+  /// Exact cross-component Command contracts consumed by this component.
+  final List<_ComponentCommandDependencyModel> commandDependencies;
 
   /// Validates one top-level build-time component definition.
   static _ComponentModel read(
@@ -575,6 +579,12 @@ final class _ComponentModel {
         .toList(growable: false);
     final serviceDependencies = _readComponentServiceDependencies(
       component.read('serviceDependencies').listValue,
+      element,
+      componentId: id,
+      requiredOwners: dependencies.toSet(),
+    );
+    final commandDependencies = _readComponentCommandDependencies(
+      component.read('commandDependencies').listValue,
       element,
       componentId: id,
       requiredOwners: dependencies.toSet(),
@@ -602,8 +612,188 @@ final class _ComponentModel {
       dependencies: dependencies,
       optionalDependencies: optionalDependencies,
       serviceDependencies: serviceDependencies,
+      commandDependencies: commandDependencies,
     );
   }
+}
+
+/// Serializable component-to-Command dependency for workspace validation.
+final class _ComponentCommandDependencyModel {
+  /// Stores the stable Contract and generated Client method.
+  const _ComponentCommandDependencyModel({
+    required this.id,
+    required this.componentId,
+    required this.command,
+    required this.resultType,
+    required this.library,
+    required this.member,
+  });
+
+  /// Stable Command contract ID.
+  final String id;
+
+  /// Component owning the single Handler.
+  final String componentId;
+
+  /// Public Dart Command class name.
+  final String command;
+
+  /// Static result type declared by `CCCommand<R>`.
+  final String resultType;
+
+  /// Public Package import exposing the cross-component Command.
+  final String library;
+
+  /// Method generated on the consuming component Client.
+  final String member;
+}
+
+/// Reads explicit cross-component Command dependencies.
+List<_ComponentCommandDependencyModel> _readComponentCommandDependencies(
+  List<DartObject> values,
+  TopLevelVariableElement owner, {
+  required String componentId,
+  required Set<String> requiredOwners,
+}) {
+  final dependencies = <_ComponentCommandDependencyModel>[];
+  final ids = <String>{};
+  final members = <String>{};
+  for (final value in values) {
+    final type = value.type;
+    if (type is! InterfaceType ||
+        !_componentCommandDependencyChecker.isExactlyType(type) ||
+        type.typeArguments.length != 1) {
+      _fail(
+        'CCComponent.commandDependencies accepts const CCCommandDependency<T> values only.',
+        owner,
+      );
+    }
+    final commandType = type.typeArguments.single;
+    if (commandType is! InterfaceType || commandType.element is! ClassElement) {
+      _fail('CCCommandDependency<T> requires a public Command class.', owner);
+    }
+    final commandElement = commandType.element as ClassElement;
+    final annotation = _componentCommandContractChecker.firstAnnotationOfExact(
+      commandElement,
+    );
+    if (annotation == null) {
+      _fail(
+        'CCCommandDependency<${commandType.getDisplayString()}> requires T to be annotated with CCCommandContract.',
+        owner,
+      );
+    }
+    final contractOwner = annotation
+        .getField('componentId')
+        ?.getField('value')
+        ?.toStringValue();
+    final id = annotation.getField('id')?.toStringValue();
+    if (contractOwner == null || id == null) {
+      _fail(
+        'Cross-component Command dependencies require an explicit componentId and id.',
+        owner,
+      );
+    }
+    _validateComponentId(contractOwner, owner);
+    _validateStableId(id, 'Command ID', owner);
+    if (contractOwner == componentId) {
+      _fail(
+        'Component "$componentId" must not declare its own Command "$id" as a dependency.',
+        owner,
+      );
+    }
+    if (!requiredOwners.contains(contractOwner)) {
+      _fail(
+        'Component "$componentId" consumes Command "$id" owned by "$contractOwner". Add that owner to CCComponent.dependencies.',
+        owner,
+      );
+    }
+    final commandInterfaces = commandElement.allSupertypes
+        .where((candidate) => _componentCommandChecker.isExactlyType(candidate))
+        .toList(growable: false);
+    if (commandInterfaces.length != 1) {
+      _fail('Command "$id" must implement exactly one CCCommand<R>.', owner);
+    }
+    final aliasObject = value.getField('alias');
+    final alias = aliasObject == null || aliasObject.isNull
+        ? null
+        : aliasObject.toStringValue();
+    final defaultMember = _commandDependencyMember(commandElement.displayName);
+    final member = alias ?? defaultMember;
+    if (!RegExp(r'^[a-z][A-Za-z0-9]*$').hasMatch(member)) {
+      _fail(
+        'Command dependency alias "$member" must be a public lower-camel Dart identifier.',
+        owner,
+      );
+    }
+    if (!ids.add(id)) {
+      _fail(
+        'Component "$componentId" consumes Command "$id" more than once.',
+        owner,
+      );
+    }
+    if (!members.add(member)) {
+      _fail(
+        'Component "$componentId" generates duplicate Command Client member "$member".',
+        owner,
+      );
+    }
+    dependencies.add(
+      _ComponentCommandDependencyModel(
+        id: id,
+        componentId: contractOwner,
+        command: commandElement.displayName,
+        resultType: commandInterfaces.single.typeArguments.single
+            .getDisplayString(),
+        library: _publicCommandDependencyLibrary(commandElement, owner),
+        member: member,
+      ),
+    );
+  }
+  dependencies.sort((left, right) => left.member.compareTo(right.member));
+  return List.unmodifiable(dependencies);
+}
+
+/// Resolves the public barrel used by the component source for one Command.
+String _publicCommandDependencyLibrary(
+  ClassElement command,
+  TopLevelVariableElement owner,
+) {
+  final candidates = <String>{};
+  for (final fragment in owner.library.fragments) {
+    for (final directive in fragment.libraryImports) {
+      final imported = directive.importedLibrary;
+      if (imported == null) continue;
+      final prefix = directive.prefix?.element.displayName;
+      final visible =
+          directive.namespace.get2(command.displayName) == command ||
+          (prefix != null &&
+              directive.namespace.getPrefixed2(prefix, command.displayName) ==
+                  command);
+      final uri = imported.uri.toString();
+      if (visible && uri.startsWith('package:') && !uri.contains('/src/')) {
+        candidates.add(uri);
+      }
+    }
+  }
+  if (candidates.isEmpty) {
+    _fail(
+      'Cross-component Command ${command.displayName} must be imported through '
+      'a public Package barrel from the CCComponent source library.',
+      owner,
+    );
+  }
+  final sorted = candidates.toList()..sort();
+  return sorted.first;
+}
+
+/// Derives a concise lower-camel method from a Command class name.
+String _commandDependencyMember(String name) {
+  final stem = name.endsWith('Command')
+      ? name.substring(0, name.length - 'Command'.length)
+      : name;
+  return stem.isEmpty
+      ? 'command'
+      : '${stem[0].toLowerCase()}${stem.substring(1)}';
 }
 
 /// Serializable component-to-Service dependency used by workspace validation.

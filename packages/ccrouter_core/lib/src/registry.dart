@@ -34,11 +34,15 @@ final class _RegisteredCommandHandler {
   /// Creates an internally owned Command registration.
   const _RegisteredCommandHandler({
     required this.ownerComponentId,
+    required this.commandId,
     required this.callback,
   });
 
   /// Component that registered the handler, or empty for low-level tests.
   final String ownerComponentId;
+
+  /// Stable generated identity, or null for a legacy handwritten handler.
+  final String? commandId;
 
   /// Type-erased callback invoked by the Command dispatcher.
   final _Handler callback;
@@ -87,7 +91,10 @@ abstract interface class CCRegistry {
   /// Registers the single handler for command type [C].
   ///
   /// Use when exactly one component owns a side-effecting operation.
-  void registerCommand<C extends CCCommand<R>, R>(CCHandler<C, R> handler);
+  void registerCommand<C extends CCCommand<R>, R>(
+    CCHandler<C, R> handler, {
+    String? commandId,
+  });
 
   /// Registers an event subscriber under the globally stable [id].
   ///
@@ -166,8 +173,15 @@ final class _CCComponentRegistry implements CCRegistry {
 
   /// Registers a command on behalf of the owning component.
   @override
-  void registerCommand<C extends CCCommand<R>, R>(CCHandler<C, R> handler) {
-    runtime._registerCommandForComponent(ownerComponentId, handler);
+  void registerCommand<C extends CCCommand<R>, R>(
+    CCHandler<C, R> handler, {
+    String? commandId,
+  }) {
+    runtime._registerCommandForComponent(
+      ownerComponentId,
+      handler,
+      commandId: commandId,
+    );
   }
 
   /// Registers an event subscriber on behalf of the owning component.

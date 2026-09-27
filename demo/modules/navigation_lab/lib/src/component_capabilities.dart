@@ -81,20 +81,36 @@ abstract final class DemoAspectIds {
 
 const demoBackupChannelKey = CCServiceKey<DemoChannelService>('backup');
 
+@CCCommandContract(
+  id: 'demo_navigation_lab.create_receipt',
+  description: '创建演示收据并返回稳定的收据编号。',
+)
 final class DemoCreateReceiptCommand implements CCCommand<String> {
   const DemoCreateReceiptCommand(this.amount);
 
   final int amount;
 }
 
+@CCCommandContract(
+  id: 'demo_navigation_lab.refresh_cache',
+  description: '刷新组件缓存并仅报告完成或失败。',
+)
 final class DemoRefreshCacheCommand implements CCCommand<void> {
   const DemoRefreshCacheCommand();
 }
 
+@CCCommandContract(
+  id: 'demo_navigation_lab.wait',
+  description: '保持等待直到超时或调用方取消，用于验证协作取消。',
+)
 final class DemoWaitCommand implements CCCommand<void> {
   const DemoWaitCommand();
 }
 
+@CCCommandContract(
+  id: 'demo_navigation_lab.fail',
+  description: '抛出业务异常以验证安全 Trace 和错误传播。',
+)
 final class DemoFailCommand implements CCCommand<void> {
   const DemoFailCommand();
 }

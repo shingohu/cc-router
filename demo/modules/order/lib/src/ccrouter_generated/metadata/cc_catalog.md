@@ -10,6 +10,14 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 
 ## `demo_order_component`
 
+### Command `demo_order.reserve`
+
+- Declaring package: `demo_order`
+- Contract/declaration: `package:demo_order_contracts/src/order_commands.dart:11:13` (`ReserveOrderCommand`)
+- Implementation: `package:demo_order/src/order_commands.dart:6:16` (`handleReserveOrder`)
+- Generated artifacts:
+  - `commandRegistration`: `package:demo_order/src/ccrouter_generated/command/order_commands.command.g.dart` (`ccrouterRegisterHandleReserveOrderCommand`)
+
 ### Route `order.detail`
 
 - Declaring package: `demo_order_contracts`

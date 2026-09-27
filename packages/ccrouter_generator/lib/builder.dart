@@ -8,6 +8,7 @@ import 'package:build/build.dart';
 import 'package:source_gen/source_gen.dart';
 
 import 'src/route_generator.dart';
+import 'src/command_generator.dart';
 import 'src/service_generator.dart';
 
 /// Creates one standalone generated route library without backend coupling.
@@ -107,6 +108,24 @@ Builder ccServiceProxyBuilder(BuilderOptions options) {
   );
 }
 
+/// Creates package-internal Command Handler registration bridges.
+Builder ccCommandBuilder(BuilderOptions options) {
+  final config = Map<String, dynamic>.from(options.config);
+  config.putIfAbsent('build_extensions', () => _commandBuildExtensions);
+  return LibraryBuilder(
+    ccCommandGenerator(),
+    generatedExtension: '.command.g.dart',
+    options: BuilderOptions(config, isRoot: options.isRoot),
+    header:
+        '// GENERATED CODE - DO NOT MODIFY BY HAND\n'
+        '// ignore_for_file: type=lint, unused_element',
+  );
+}
+
+/// Emits disposable Command metadata into the build cache.
+Builder ccCommandMetadataBuilder(BuilderOptions options) =>
+    ccCommandMetadataBuilderInternal();
+
 /// Emits disposable machine-readable component metadata into the build cache.
 Builder ccComponentMetadataBuilder(BuilderOptions options) =>
     ccComponentMetadataBuilderInternal();
@@ -159,5 +178,12 @@ const _serviceBuildExtensions = <String, List<String>>{
 const _serviceProxyBuildExtensions = <String, List<String>>{
   r'^lib/src/{{}}.dart': [
     'lib/src/ccrouter_generated/component/{{}}.service_api.g.dart',
+  ],
+};
+
+/// Maps Handler sources to package-internal registration libraries.
+const _commandBuildExtensions = <String, List<String>>{
+  r'^lib/src/{{}}.dart': [
+    'lib/src/ccrouter_generated/command/{{}}.command.g.dart',
   ],
 };

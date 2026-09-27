@@ -5,7 +5,7 @@
     "name": "demo_order",
     "version": "0.1.0"
   },
-  "contentFingerprint": "ddf424a58483f2674b8c6825bed179354a3c4dfd429bebb8904d221b63cf3963",
+  "contentFingerprint": "20f14a79be3635b8b7fc2ba8857bd2385beef4aa7151447d94e41f27444e5aaa",
   "bundle": {
     "library": "lib/src/ccrouter_generated/host/demo_order_ccrouter.g.dart",
     "symbol": "ccrouterGeneratedPackageBundle"
@@ -14,7 +14,7 @@
     {
       "name": "demo_order_contracts",
       "version": "0.1.0",
-      "contentFingerprint": "33c5067e5a7dd7c3eafc6a86a76d4d9bd9641959e8e923d73d4555ce291156b4"
+      "contentFingerprint": "70e42cc0d007ebd3b506e9b4931995d3a7cb5b7cee6bfefc927c121889bc1aee"
     }
   ],
   "metadata": [
@@ -37,12 +37,59 @@
           "version": "0.1.0",
           "dependencies": [],
           "optionalDependencies": [],
-          "serviceDependencies": []
+          "serviceDependencies": [],
+          "commandDependencies": []
         }
       ],
       "routes": [],
       "routeImplementations": [],
       "contributions": []
+    },
+    {
+      "schemaVersion": 3,
+      "package": "demo_order",
+      "source": "lib/src/order_commands.dart",
+      "componentDeclarations": [],
+      "componentManifests": {},
+      "componentSymbols": {},
+      "components": [],
+      "routes": [],
+      "routeImplementations": [],
+      "contributions": [],
+      "serviceContracts": [],
+      "serviceImplementations": [],
+      "commandContracts": [],
+      "commandHandlers": [
+        {
+          "id": "demo_order.reserve",
+          "componentId": "demo_order_component",
+          "package": "demo_order",
+          "source": "lib/src/order_commands.dart",
+          "commandType": "ReserveOrderCommand",
+          "resultType": "String",
+          "contract": {
+            "symbol": "ReserveOrderCommand",
+            "packageUri": "package:demo_order_contracts/src/order_commands.dart",
+            "line": 11,
+            "column": 13
+          },
+          "implementation": {
+            "symbol": "handleReserveOrder",
+            "packageUri": "package:demo_order/src/order_commands.dart",
+            "line": 6,
+            "column": 16
+          },
+          "registration": "ccrouterRegisterHandleReserveOrderCommand",
+          "registrationLibrary": "lib/src/ccrouter_generated/command/order_commands.command.g.dart",
+          "generatedArtifacts": [
+            {
+              "role": "commandRegistration",
+              "symbol": "ccrouterRegisterHandleReserveOrderCommand",
+              "packageUri": "package:demo_order/src/ccrouter_generated/command/order_commands.command.g.dart"
+            }
+          ]
+        }
+      ]
     },
     {
       "schemaVersion": 3,
@@ -141,6 +188,31 @@
   "capabilityCatalog": {
     "schemaVersion": 1,
     "records": [
+      {
+        "kind": "command",
+        "id": "demo_order.reserve",
+        "componentId": "demo_order_component",
+        "packageName": "demo_order",
+        "contract": {
+          "symbol": "ReserveOrderCommand",
+          "packageUri": "package:demo_order_contracts/src/order_commands.dart",
+          "line": 11,
+          "column": 13
+        },
+        "implementation": {
+          "symbol": "handleReserveOrder",
+          "packageUri": "package:demo_order/src/order_commands.dart",
+          "line": 6,
+          "column": 16
+        },
+        "generatedArtifacts": [
+          {
+            "role": "commandRegistration",
+            "symbol": "ccrouterRegisterHandleReserveOrderCommand",
+            "packageUri": "package:demo_order/src/ccrouter_generated/command/order_commands.command.g.dart"
+          }
+        ]
+      },
       {
         "kind": "route",
         "id": "order.detail",

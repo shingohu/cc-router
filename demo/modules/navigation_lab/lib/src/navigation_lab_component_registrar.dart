@@ -15,21 +15,6 @@ void registerDemoNavigationLabCapabilities(CCRegistry registry) {
 }
 
 void _registerComponentCapabilities(CCRegistry registry) {
-  registry.registerCommand<DemoCreateReceiptCommand, String>((command, _) {
-    return 'receipt:${command.amount}';
-  });
-  registry.registerCommand<DemoRefreshCacheCommand, void>((_, _) async {
-    await Future<void>.delayed(const Duration(milliseconds: 20));
-    demoNavigationLabStore.record('Command Handler · cache refreshed');
-  });
-  registry.registerCommand<DemoWaitCommand, void>((_, context) async {
-    await context.cancellation.whenCancelled;
-    throw const CCInvocationCancelledError();
-  });
-  registry.registerCommand<DemoFailCommand, void>((_, _) {
-    throw StateError('simulated private Command failure');
-  });
-
   registry.registerEventSubscriber<DemoOrderCompletedEvent>(
     CCEventSubscriber<DemoOrderCompletedEvent>(
       id: DemoEventSubscribers.orderAnalytics,
@@ -144,4 +129,32 @@ void _registerComponentCapabilities(CCRegistry registry) {
       factory: (_) => const DemoBackupChannelService(),
     ),
   );
+}
+
+/// Creates one deterministic receipt for the typed-result Command example.
+@CCCommandHandler()
+String handleDemoCreateReceipt(DemoCreateReceiptCommand command) =>
+    'receipt:${command.amount}';
+
+/// Refreshes the Demo cache and records observable completion.
+@CCCommandHandler()
+Future<void> handleDemoRefreshCache(DemoRefreshCacheCommand command) async {
+  await Future<void>.delayed(const Duration(milliseconds: 20));
+  demoNavigationLabStore.record('Command Handler · cache refreshed');
+}
+
+/// Waits for cooperative cancellation from timeout, caller, or Runtime.
+@CCCommandHandler()
+Future<void> handleDemoWait(
+  DemoWaitCommand command,
+  CCInvocationContext context,
+) async {
+  await context.cancellation.whenCancelled;
+  throw const CCInvocationCancelledError();
+}
+
+/// Throws a deliberate business error for diagnostic propagation testing.
+@CCCommandHandler()
+void handleDemoFail(DemoFailCommand command) {
+  throw StateError('simulated private Command failure');
 }

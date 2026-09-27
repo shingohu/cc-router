@@ -585,7 +585,8 @@ bool _isCurrentPackageMetadataFile(File file, Directory generatedDirectory) {
       .replaceAll(path.separator, '/');
   return relative.endsWith('.route.json') ||
       relative.endsWith('.component.json') ||
-      relative.endsWith('.service.json');
+      relative.endsWith('.service.json') ||
+      relative.endsWith('.command.json');
 }
 
 /// Computes the canonical SHA-256 digest stored in a Package index and Bundle.

@@ -5,10 +5,42 @@
     "name": "demo_order_contracts",
     "version": "0.1.0"
   },
-  "contentFingerprint": "33c5067e5a7dd7c3eafc6a86a76d4d9bd9641959e8e923d73d4555ce291156b4",
+  "contentFingerprint": "70e42cc0d007ebd3b506e9b4931995d3a7cb5b7cee6bfefc927c121889bc1aee",
   "bundle": null,
   "dependencies": [],
   "metadata": [
+    {
+      "schemaVersion": 3,
+      "package": "demo_order_contracts",
+      "source": "lib/src/order_commands.dart",
+      "componentDeclarations": [],
+      "componentManifests": {},
+      "componentSymbols": {},
+      "components": [],
+      "routes": [],
+      "routeImplementations": [],
+      "contributions": [],
+      "serviceContracts": [],
+      "serviceImplementations": [],
+      "commandContracts": [
+        {
+          "id": "demo_order.reserve",
+          "componentId": "demo_order_component",
+          "description": "Reserves one order for a cross-component checkout flow.",
+          "package": "demo_order_contracts",
+          "source": "lib/src/order_commands.dart",
+          "type": "ReserveOrderCommand",
+          "resultType": "String",
+          "declaration": {
+            "symbol": "ReserveOrderCommand",
+            "packageUri": "package:demo_order_contracts/src/order_commands.dart",
+            "line": 11,
+            "column": 13
+          }
+        }
+      ],
+      "commandHandlers": []
+    },
     {
       "schemaVersion": 3,
       "package": "demo_order_contracts",
@@ -287,6 +319,20 @@
   "capabilityCatalog": {
     "schemaVersion": 1,
     "records": [
+      {
+        "kind": "command",
+        "id": "demo_order.reserve",
+        "componentId": "demo_order_component",
+        "packageName": "demo_order_contracts",
+        "contract": {
+          "symbol": "ReserveOrderCommand",
+          "packageUri": "package:demo_order_contracts/src/order_commands.dart",
+          "line": 11,
+          "column": 13
+        },
+        "implementation": null,
+        "generatedArtifacts": []
+      },
       {
         "kind": "route",
         "id": "order.detail",

@@ -166,7 +166,8 @@ Future<bool> _aggregate(Directory root, _Arguments parsed) async {
     if (entity is! File ||
         (!entity.path.endsWith('.route.json') &&
             !entity.path.endsWith('.component.json') &&
-            !entity.path.endsWith('.service.json'))) {
+            !entity.path.endsWith('.service.json') &&
+            !entity.path.endsWith('.command.json'))) {
       continue;
     }
     if (entity.path.contains(
@@ -804,7 +805,8 @@ Future<List<_MetadataFile>> _readWritableMetadataFiles(
       if (entity is File &&
           (entity.path.endsWith('.route.json') ||
               entity.path.endsWith('.component.json') ||
-              entity.path.endsWith('.service.json'))) {
+              entity.path.endsWith('.service.json') ||
+              entity.path.endsWith('.command.json'))) {
         files.add(entity);
       }
     }
@@ -1447,6 +1449,7 @@ bool _isManagedGeneratedArtifact(List<String> segments, String name) {
       name == 'cc_sources.md' ||
       name.endsWith('.route.json') ||
       name.endsWith('.service.json') ||
+      name.endsWith('.command.json') ||
       name.endsWith('.route.md') ||
       name.endsWith('.component.json') ||
       name.endsWith('.component.md');
@@ -1569,6 +1572,27 @@ List<Map<String, Object?>> _resolvePackageComponentOwners(
       }
       implementation['componentId'] = owner;
     }
+    for (final contract in _objects(document['commandContracts'])) {
+      final declaredOwner = '${contract['componentId'] ?? ''}'.trim();
+      if (declaredOwner.isNotEmpty) continue;
+      if (owner == null) {
+        throw CCPackageWorkspaceException(
+          'Command contract "${contract['id']}" omits componentId but '
+          'Package "$package" has no top-level const CCComponent.',
+        );
+      }
+      contract['componentId'] = owner;
+    }
+    for (final handler in _objects(document['commandHandlers'])) {
+      final declaredOwner = '${handler['componentId'] ?? ''}'.trim();
+      if (declaredOwner.isNotEmpty) continue;
+      if (owner == null) {
+        throw CCPackageWorkspaceException(
+          'Command Handler "${handler['id']}" has no resolvable component owner.',
+        );
+      }
+      handler['componentId'] = owner;
+    }
   }
   return resolved;
 }
@@ -1619,6 +1643,13 @@ Future<List<_GeneratedComponentCatalog>> _generateComponentRouteIndexes(
   final componentSources = <String, _ComponentSource>{};
   final routes = <String, List<_RouteRegistration>>{};
   final contributions = <String, List<_ContributionRegistration>>{};
+  final commandContracts = <String, Map<String, Object?>>{};
+  for (final metadata in metadataFiles) {
+    for (final contract in _objects(metadata.document['commandContracts'])) {
+      commandContracts['${contract['id'] ?? ''}'] = contract;
+    }
+  }
+  final commandClients = <String, List<_CommandClientEntry>>{};
   for (final metadata in metadataFiles) {
     final document = metadata.document;
     final package = '${document['package'] ?? ''}';
@@ -1648,6 +1679,20 @@ Future<List<_GeneratedComponentCatalog>> _generateComponentRouteIndexes(
           manifest: '${manifestMap[id] ?? '${_camelIdentifier(id)}Manifest'}',
           packageRoot: metadata.packageRoot,
         );
+      }
+      for (final dependency in _objects(component['commandDependencies'])) {
+        final commandId = '${dependency['id'] ?? ''}';
+        final contract = commandContracts[commandId];
+        if (contract == null) continue;
+        commandClients
+            .putIfAbsent(id, () => [])
+            .add(
+              _CommandClientEntry.fromMetadata(
+                contract,
+                member: '${dependency['member'] ?? ''}',
+                library: '${dependency['library'] ?? ''}',
+              ),
+            );
       }
     }
     for (final route in _objects(document['routes'])) {
@@ -1744,6 +1789,27 @@ Future<List<_GeneratedComponentCatalog>> _generateComponentRouteIndexes(
             ),
           );
     }
+    for (final handler in _objects(document['commandHandlers'])) {
+      final componentId = '${handler['componentId'] ?? ''}';
+      contributions
+          .putIfAbsent(componentId, () => [])
+          .add(
+            _ContributionRegistration(
+              package: package,
+              source: '${handler['registrationLibrary'] ?? source}',
+              id: 'command:${handler['id'] ?? ''}',
+              symbol: '${handler['registration'] ?? ''}',
+            ),
+          );
+    }
+  }
+
+  for (final contract in commandContracts.values) {
+    final componentId = '${contract['componentId'] ?? ''}';
+    if (componentId.isEmpty) continue;
+    commandClients
+        .putIfAbsent(componentId, () => [])
+        .add(_CommandClientEntry.fromMetadata(contract));
   }
 
   final generatedCatalogs = <_GeneratedComponentCatalog>[];
@@ -1756,6 +1822,11 @@ Future<List<_GeneratedComponentCatalog>> _generateComponentRouteIndexes(
     final componentContributions =
         contributions[componentId] ?? <_ContributionRegistration>[];
     componentContributions.sort(_compareContributions);
+    final componentCommandClients =
+        commandClients[componentId] ?? <_CommandClientEntry>[];
+    componentCommandClients.sort(
+      (left, right) => left.member.compareTo(right.member),
+    );
     final packageRoot = component.packageRoot;
     final outputDirectory = Directory(
       '${packageRoot.path}${Platform.pathSeparator}lib${Platform.pathSeparator}src${Platform.pathSeparator}ccrouter_generated${Platform.pathSeparator}component',
@@ -1788,6 +1859,18 @@ Future<List<_GeneratedComponentCatalog>> _generateComponentRouteIndexes(
         ),
       );
     }
+    final hasCommandApi = componentCommandClients.isNotEmpty;
+    if (hasCommandApi) {
+      final commandApiOutput = File(
+        '${outputDirectory.path}${Platform.pathSeparator}${_fileStem(componentId)}.command_api.g.dart',
+      );
+      await _writeIfChanged(
+        commandApiOutput,
+        _dartFormatter.format(
+          _emitComponentCommandApi(componentId, componentCommandClients),
+        ),
+      );
+    }
     generatedCatalogs.add(
       _GeneratedComponentCatalog(
         componentId: componentId,
@@ -1797,6 +1880,7 @@ Future<List<_GeneratedComponentCatalog>> _generateComponentRouteIndexes(
             'lib/src/ccrouter_generated/component/${_fileStem(componentId)}.component.g.dart',
         manifest: component.manifest,
         hasRouteApi: hasRouteApi,
+        hasCommandApi: hasCommandApi,
       ),
     );
   }
@@ -1964,6 +2048,94 @@ String _emitComponentRouteApi(
     ..writeln('}')
     ..writeln();
   return out.toString();
+}
+
+/// Generates one typed Command Client for an owning or consuming component.
+String _emitComponentCommandApi(
+  String componentId,
+  List<_CommandClientEntry> entries,
+) {
+  final className =
+      '${_pascalIdentifier(_componentApiOwner(componentId))}Commands';
+  final unique = <String, _CommandClientEntry>{};
+  for (final entry in entries) {
+    final previous = unique[entry.member];
+    if (previous != null && previous.id != entry.id) {
+      throw CCPackageWorkspaceException(
+        'Commands "${previous.id}" and "${entry.id}" both generate member '
+        '"${entry.member}" for component "$componentId".',
+      );
+    }
+    unique[entry.member] = entry;
+  }
+  final libraries = unique.values.map((entry) => entry.library).toSet().toList()
+    ..sort();
+  final aliases = <String, String>{
+    for (var index = 0; index < libraries.length; index++)
+      libraries[index]: 'command_type_$index',
+  };
+  final out = StringBuffer()
+    ..writeln('// GENERATED CODE - DO NOT MODIFY BY HAND')
+    ..writeln('// ignore_for_file: type=lint')
+    ..writeln()
+    ..writeln("import 'package:ccrouter/ccrouter_generated.dart';");
+  for (final library in libraries) {
+    out.writeln("import '$library' as ${aliases[library]};");
+  }
+  out
+    ..writeln()
+    ..writeln('/// Typed Command entry points for component `$componentId`.')
+    ..writeln('abstract final class $className {');
+  for (final entry
+      in unique.values.toList()
+        ..sort((left, right) => left.member.compareTo(right.member))) {
+    final alias = aliases[entry.library]!;
+    final result = _commandApiType(entry.resultType, alias);
+    out
+      ..writeln('  /// Dispatches `${entry.id}` through its single owner.')
+      ..writeln('  static Future<$result> ${entry.member}(')
+      ..writeln('    $alias.${entry.type} command, {')
+      ..writeln('    Duration? timeout,')
+      ..writeln('    CCCancellationToken? cancellation,')
+      ..writeln('  }) => CCRouterGeneratedCommandBinding.invoke(')
+      ..writeln('    command,')
+      ..writeln('    commandId: ${jsonEncode(entry.id)},')
+      ..writeln('    callerComponentId: ${jsonEncode(componentId)},')
+      ..writeln('    timeout: timeout,')
+      ..writeln('    cancellation: cancellation,')
+      ..writeln('  );')
+      ..writeln();
+  }
+  out
+    ..writeln('}')
+    ..writeln();
+  return out.toString();
+}
+
+/// Qualifies simple non-core result types through the Contract library alias.
+String _commandApiType(String type, String alias) {
+  const core = <String>{
+    'void',
+    'Never',
+    'Object',
+    'String',
+    'bool',
+    'int',
+    'double',
+    'num',
+    'List',
+    'Set',
+    'Map',
+    'Iterable',
+    'Future',
+    'Duration',
+    'DateTime',
+    'Uri',
+  };
+  return type.replaceAllMapped(RegExp(r'\b[A-Za-z_]\w*\b'), (match) {
+    final value = match.group(0)!;
+    return core.contains(value) || value == 'dynamic' ? value : '$alias.$value';
+  });
 }
 
 /// Derives one short lower-camel member from a component-owned Route ID.
@@ -2292,6 +2464,7 @@ bool _isLegacyMetadataArtifact(File file) {
       name == 'cc_sources.md' ||
       name.endsWith('.route.json') ||
       name.endsWith('.service.json') ||
+      name.endsWith('.command.json') ||
       name.endsWith('.route.md') ||
       name.endsWith('.component.json') ||
       name.endsWith('.component.md');
@@ -2340,6 +2513,18 @@ Future<void> _deleteObsoleteResolvedOutputs({
             '${_fileStem(catalog.componentId)}.route_api.g.dart',
           ),
         ),
+    for (final catalog in catalogs)
+      if (catalog.hasCommandApi)
+        path.normalize(
+          path.join(
+            catalog.packageRoot.path,
+            'lib',
+            'src',
+            'ccrouter_generated',
+            'component',
+            '${_fileStem(catalog.componentId)}.command_api.g.dart',
+          ),
+        ),
   };
   for (final package in workspace.packages.values.where(
     (package) => package.writable,
@@ -2356,7 +2541,8 @@ Future<void> _deleteObsoleteResolvedOutputs({
         if (entity is File &&
             (entity.path.endsWith('.component.g.dart') ||
                 entity.path.endsWith('.routes.g.dart') ||
-                entity.path.endsWith('.route_api.g.dart'))) {
+                entity.path.endsWith('.route_api.g.dart') ||
+                entity.path.endsWith('.command_api.g.dart'))) {
           candidates.add(entity);
         }
       }
@@ -2550,6 +2736,11 @@ Future<void> _deleteObsoleteAggregateOutputs(
         '${catalog.packageRoot.absolute.path}${Platform.pathSeparator}lib${Platform.pathSeparator}src${Platform.pathSeparator}ccrouter_generated${Platform.pathSeparator}component${Platform.pathSeparator}${_fileStem(catalog.componentId)}.route_api.g.dart',
       );
     }
+    if (catalog.hasCommandApi) {
+      expected.add(
+        '${catalog.packageRoot.absolute.path}${Platform.pathSeparator}lib${Platform.pathSeparator}src${Platform.pathSeparator}ccrouter_generated${Platform.pathSeparator}component${Platform.pathSeparator}${_fileStem(catalog.componentId)}.command_api.g.dart',
+      );
+    }
     expected.add(
       '${catalog.packageRoot.absolute.path}${Platform.pathSeparator}lib${Platform.pathSeparator}src${Platform.pathSeparator}ccrouter_generated${Platform.pathSeparator}host${Platform.pathSeparator}${catalog.package}_ccrouter.g.dart',
     );
@@ -2563,6 +2754,7 @@ Future<void> _deleteObsoleteAggregateOutputs(
     if (!name.endsWith('.component.g.dart') &&
         !name.endsWith('.routes.g.dart') &&
         !name.endsWith('.route_api.g.dart') &&
+        !name.endsWith('.command_api.g.dart') &&
         !name.endsWith('_ccrouter.g.dart')) {
       continue;
     }
@@ -2590,6 +2782,9 @@ bool _isCCRouterAggregateOutput(String name, String contents) {
     return contents.contains(
       'Typed navigation entry points for routes internal',
     );
+  }
+  if (name.endsWith('.command_api.g.dart')) {
+    return contents.contains('Typed Command entry points for component');
   }
   if (name.endsWith('.component.g.dart')) {
     return contents.contains('Generated capability Registrar for component');
@@ -2781,6 +2976,67 @@ final class _ContributionRegistration {
   final String symbol;
 }
 
+/// One generated Command Client method derived from static metadata.
+final class _CommandClientEntry {
+  /// Creates a normalized Client entry.
+  const _CommandClientEntry({
+    required this.id,
+    required this.library,
+    required this.type,
+    required this.resultType,
+    required this.member,
+  });
+
+  /// Reads one Contract record and derives its default method name.
+  factory _CommandClientEntry.fromMetadata(
+    Map<String, Object?> metadata, {
+    String? member,
+    String? library,
+  }) {
+    final type = '${metadata['type'] ?? ''}';
+    final declaration = metadata['declaration'];
+    final declarationMap = declaration is Map
+        ? declaration.cast<Object?, Object?>()
+        : const <Object?, Object?>{};
+    return _CommandClientEntry(
+      id: '${metadata['id'] ?? ''}',
+      library: library == null || library.isEmpty
+          ? '${declarationMap['packageUri'] ?? ''}'
+          : library,
+      type: type,
+      resultType: '${metadata['resultType'] ?? 'Object?'}',
+      member: member == null || member.isEmpty
+          ? _commandClientMember(type)
+          : member,
+    );
+  }
+
+  /// Stable Contract identity.
+  final String id;
+
+  /// Public source library containing the Command class.
+  final String library;
+
+  /// Command class name.
+  final String type;
+
+  /// Static Command result type.
+  final String resultType;
+
+  /// Generated lower-camel method.
+  final String member;
+}
+
+/// Derives a concise generated Command method name.
+String _commandClientMember(String type) {
+  final stem = type.endsWith('Command')
+      ? type.substring(0, type.length - 'Command'.length)
+      : type;
+  return stem.isEmpty
+      ? 'command'
+      : '${stem[0].toLowerCase()}${stem.substring(1)}';
+}
+
 /// Describes one generated component catalog and its public Host entrypoint.
 final class _GeneratedComponentCatalog {
   /// Creates a generated catalog record used for package and Host aggregation.
@@ -2791,6 +3047,7 @@ final class _GeneratedComponentCatalog {
     required this.registrarSource,
     required this.manifest,
     required this.hasRouteApi,
+    required this.hasCommandApi,
   });
 
   /// Stable component identity used in generated symbol names.
@@ -2810,4 +3067,7 @@ final class _GeneratedComponentCatalog {
 
   /// Whether the component owns internal routes needing a typed package API.
   final bool hasRouteApi;
+
+  /// Whether the component owns or consumes generated Command contracts.
+  final bool hasCommandApi;
 }

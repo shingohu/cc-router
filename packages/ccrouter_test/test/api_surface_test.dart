@@ -103,6 +103,7 @@ void main() {
     expect(testBarrel, contains("show CCRouterTestBinding"));
     expect(testBarrel, isNot(contains('CCRouterHostBinding')));
     expect(testBarrel, isNot(contains('CCRouterGeneratedServiceBinding')));
+    expect(testBarrel, isNot(contains('CCRouterGeneratedCommandBinding')));
   });
 
   test('Host barrel restores the Adapter SPI snapshot', () {

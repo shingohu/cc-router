@@ -86,7 +86,7 @@
   Client、稳定 caller/method identity 和方法 metadata；不扫描依赖生成未使用能力。
 - [ ] 根据生产需求扩展当前明确拒绝的泛型 Contract、Stream、callback、继承或 Route Scope 方法代理；
   每一项必须先冻结所有权、取消和兼容语义。
-- [ ] 按 `CCRouter-command-design.md` 已批准方案实现 Command Contract、Handler registration、
+- [x] 按 `CCRouter-command-design.md` 已批准方案实现 Command Contract、Handler registration、
   显式消费依赖、组件专属 Client、metadata、Catalog 和 Workspace 校验；不扫描并生成未使用 Command。
 - [ ] 按 `CCRouter-event-design.md` 已批准方案实现 Event Contract、静态 Subscription、Owner
   自动 Publication Client、metadata、Catalog 和 Workspace 校验；不引入重复 publication 声明

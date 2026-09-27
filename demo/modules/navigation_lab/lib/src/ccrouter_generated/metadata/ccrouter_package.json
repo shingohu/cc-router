@@ -5,7 +5,7 @@
     "name": "demo_navigation_lab",
     "version": "0.1.0"
   },
-  "contentFingerprint": "5044e93d5e6c27878e980b4a11bcdf95abcad0168b966d16773c1eae3ca7a5c7",
+  "contentFingerprint": "3ceeb2a3bd8f73f89dc9596dd63a2dd8764a015f9caad5299dd287c04dc4f0e6",
   "bundle": {
     "library": "lib/src/ccrouter_generated/host/demo_navigation_lab_ccrouter.g.dart",
     "symbol": "ccrouterGeneratedPackageBundle"
@@ -19,7 +19,7 @@
     {
       "name": "demo_order_contracts",
       "version": "0.1.0",
-      "contentFingerprint": "33c5067e5a7dd7c3eafc6a86a76d4d9bd9641959e8e923d73d4555ce291156b4"
+      "contentFingerprint": "70e42cc0d007ebd3b506e9b4931995d3a7cb5b7cee6bfefc927c121889bc1aee"
     },
     {
       "name": "demo_web_contracts",
@@ -51,7 +51,7 @@
             "kind": "page",
             "symbol": "DemoCapabilitiesPage",
             "packageUri": "package:demo_navigation_lab/src/capability_page.dart",
-            "line": 14,
+            "line": 16,
             "column": 13
           },
           "navigationSources": [
@@ -115,6 +115,83 @@
       ],
       "routeImplementations": [],
       "contributions": []
+    },
+    {
+      "schemaVersion": 3,
+      "package": "demo_navigation_lab",
+      "source": "lib/src/component_capabilities.dart",
+      "componentDeclarations": [],
+      "componentManifests": {},
+      "componentSymbols": {},
+      "components": [],
+      "routes": [],
+      "routeImplementations": [],
+      "contributions": [],
+      "serviceContracts": [],
+      "serviceImplementations": [],
+      "commandContracts": [
+        {
+          "id": "demo_navigation_lab.create_receipt",
+          "componentId": "demo_navigation_lab_component",
+          "description": "创建演示收据并返回稳定的收据编号。",
+          "package": "demo_navigation_lab",
+          "source": "lib/src/component_capabilities.dart",
+          "type": "DemoCreateReceiptCommand",
+          "resultType": "String",
+          "declaration": {
+            "symbol": "DemoCreateReceiptCommand",
+            "packageUri": "package:demo_navigation_lab/src/component_capabilities.dart",
+            "line": 88,
+            "column": 13
+          }
+        },
+        {
+          "id": "demo_navigation_lab.fail",
+          "componentId": "demo_navigation_lab_component",
+          "description": "抛出业务异常以验证安全 Trace 和错误传播。",
+          "package": "demo_navigation_lab",
+          "source": "lib/src/component_capabilities.dart",
+          "type": "DemoFailCommand",
+          "resultType": "void",
+          "declaration": {
+            "symbol": "DemoFailCommand",
+            "packageUri": "package:demo_navigation_lab/src/component_capabilities.dart",
+            "line": 114,
+            "column": 13
+          }
+        },
+        {
+          "id": "demo_navigation_lab.refresh_cache",
+          "componentId": "demo_navigation_lab_component",
+          "description": "刷新组件缓存并仅报告完成或失败。",
+          "package": "demo_navigation_lab",
+          "source": "lib/src/component_capabilities.dart",
+          "type": "DemoRefreshCacheCommand",
+          "resultType": "void",
+          "declaration": {
+            "symbol": "DemoRefreshCacheCommand",
+            "packageUri": "package:demo_navigation_lab/src/component_capabilities.dart",
+            "line": 98,
+            "column": 13
+          }
+        },
+        {
+          "id": "demo_navigation_lab.wait",
+          "componentId": "demo_navigation_lab_component",
+          "description": "保持等待直到超时或调用方取消，用于验证协作取消。",
+          "package": "demo_navigation_lab",
+          "source": "lib/src/component_capabilities.dart",
+          "type": "DemoWaitCommand",
+          "resultType": "void",
+          "declaration": {
+            "symbol": "DemoWaitCommand",
+            "packageUri": "package:demo_navigation_lab/src/component_capabilities.dart",
+            "line": 106,
+            "column": 13
+          }
+        }
+      ],
+      "commandHandlers": []
     },
     {
       "schemaVersion": 3,
@@ -605,12 +682,155 @@
                 "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/component/navigation_lab_component.service_api.g.dart"
               }
             }
+          ],
+          "commandDependencies": [
+            {
+              "id": "demo_order.reserve",
+              "componentId": "demo_order_component",
+              "command": "ReserveOrderCommand",
+              "resultType": "String",
+              "library": "package:demo_order_contracts/demo_order_contracts.dart",
+              "member": "reserveOrder"
+            }
           ]
         }
       ],
       "routes": [],
       "routeImplementations": [],
       "contributions": []
+    },
+    {
+      "schemaVersion": 3,
+      "package": "demo_navigation_lab",
+      "source": "lib/src/navigation_lab_component_registrar.dart",
+      "componentDeclarations": [],
+      "componentManifests": {},
+      "componentSymbols": {},
+      "components": [],
+      "routes": [],
+      "routeImplementations": [],
+      "contributions": [],
+      "serviceContracts": [],
+      "serviceImplementations": [],
+      "commandContracts": [],
+      "commandHandlers": [
+        {
+          "id": "demo_navigation_lab.create_receipt",
+          "componentId": "demo_navigation_lab_component",
+          "package": "demo_navigation_lab",
+          "source": "lib/src/navigation_lab_component_registrar.dart",
+          "commandType": "DemoCreateReceiptCommand",
+          "resultType": "String",
+          "contract": {
+            "symbol": "DemoCreateReceiptCommand",
+            "packageUri": "package:demo_navigation_lab/src/component_capabilities.dart",
+            "line": 88,
+            "column": 13
+          },
+          "implementation": {
+            "symbol": "handleDemoCreateReceipt",
+            "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
+            "line": 136,
+            "column": 8
+          },
+          "registration": "ccrouterRegisterHandleDemoCreateReceiptCommand",
+          "registrationLibrary": "lib/src/ccrouter_generated/command/navigation_lab_component_registrar.command.g.dart",
+          "generatedArtifacts": [
+            {
+              "role": "commandRegistration",
+              "symbol": "ccrouterRegisterHandleDemoCreateReceiptCommand",
+              "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/command/navigation_lab_component_registrar.command.g.dart"
+            }
+          ]
+        },
+        {
+          "id": "demo_navigation_lab.fail",
+          "componentId": "demo_navigation_lab_component",
+          "package": "demo_navigation_lab",
+          "source": "lib/src/navigation_lab_component_registrar.dart",
+          "commandType": "DemoFailCommand",
+          "resultType": "void",
+          "contract": {
+            "symbol": "DemoFailCommand",
+            "packageUri": "package:demo_navigation_lab/src/component_capabilities.dart",
+            "line": 114,
+            "column": 13
+          },
+          "implementation": {
+            "symbol": "handleDemoFail",
+            "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
+            "line": 158,
+            "column": 6
+          },
+          "registration": "ccrouterRegisterHandleDemoFailCommand",
+          "registrationLibrary": "lib/src/ccrouter_generated/command/navigation_lab_component_registrar.command.g.dart",
+          "generatedArtifacts": [
+            {
+              "role": "commandRegistration",
+              "symbol": "ccrouterRegisterHandleDemoFailCommand",
+              "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/command/navigation_lab_component_registrar.command.g.dart"
+            }
+          ]
+        },
+        {
+          "id": "demo_navigation_lab.refresh_cache",
+          "componentId": "demo_navigation_lab_component",
+          "package": "demo_navigation_lab",
+          "source": "lib/src/navigation_lab_component_registrar.dart",
+          "commandType": "DemoRefreshCacheCommand",
+          "resultType": "void",
+          "contract": {
+            "symbol": "DemoRefreshCacheCommand",
+            "packageUri": "package:demo_navigation_lab/src/component_capabilities.dart",
+            "line": 98,
+            "column": 13
+          },
+          "implementation": {
+            "symbol": "handleDemoRefreshCache",
+            "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
+            "line": 141,
+            "column": 14
+          },
+          "registration": "ccrouterRegisterHandleDemoRefreshCacheCommand",
+          "registrationLibrary": "lib/src/ccrouter_generated/command/navigation_lab_component_registrar.command.g.dart",
+          "generatedArtifacts": [
+            {
+              "role": "commandRegistration",
+              "symbol": "ccrouterRegisterHandleDemoRefreshCacheCommand",
+              "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/command/navigation_lab_component_registrar.command.g.dart"
+            }
+          ]
+        },
+        {
+          "id": "demo_navigation_lab.wait",
+          "componentId": "demo_navigation_lab_component",
+          "package": "demo_navigation_lab",
+          "source": "lib/src/navigation_lab_component_registrar.dart",
+          "commandType": "DemoWaitCommand",
+          "resultType": "void",
+          "contract": {
+            "symbol": "DemoWaitCommand",
+            "packageUri": "package:demo_navigation_lab/src/component_capabilities.dart",
+            "line": 106,
+            "column": 13
+          },
+          "implementation": {
+            "symbol": "handleDemoWait",
+            "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
+            "line": 148,
+            "column": 14
+          },
+          "registration": "ccrouterRegisterHandleDemoWaitCommand",
+          "registrationLibrary": "lib/src/ccrouter_generated/command/navigation_lab_component_registrar.command.g.dart",
+          "generatedArtifacts": [
+            {
+              "role": "commandRegistration",
+              "symbol": "ccrouterRegisterHandleDemoWaitCommand",
+              "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/command/navigation_lab_component_registrar.command.g.dart"
+            }
+          ]
+        }
+      ]
     },
     {
       "schemaVersion": 3,
@@ -2483,6 +2703,106 @@
     "schemaVersion": 1,
     "records": [
       {
+        "kind": "command",
+        "id": "demo_navigation_lab.create_receipt",
+        "componentId": "demo_navigation_lab_component",
+        "packageName": "demo_navigation_lab",
+        "contract": {
+          "symbol": "DemoCreateReceiptCommand",
+          "packageUri": "package:demo_navigation_lab/src/component_capabilities.dart",
+          "line": 88,
+          "column": 13
+        },
+        "implementation": {
+          "symbol": "handleDemoCreateReceipt",
+          "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
+          "line": 136,
+          "column": 8
+        },
+        "generatedArtifacts": [
+          {
+            "role": "commandRegistration",
+            "symbol": "ccrouterRegisterHandleDemoCreateReceiptCommand",
+            "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/command/navigation_lab_component_registrar.command.g.dart"
+          }
+        ]
+      },
+      {
+        "kind": "command",
+        "id": "demo_navigation_lab.fail",
+        "componentId": "demo_navigation_lab_component",
+        "packageName": "demo_navigation_lab",
+        "contract": {
+          "symbol": "DemoFailCommand",
+          "packageUri": "package:demo_navigation_lab/src/component_capabilities.dart",
+          "line": 114,
+          "column": 13
+        },
+        "implementation": {
+          "symbol": "handleDemoFail",
+          "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
+          "line": 158,
+          "column": 6
+        },
+        "generatedArtifacts": [
+          {
+            "role": "commandRegistration",
+            "symbol": "ccrouterRegisterHandleDemoFailCommand",
+            "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/command/navigation_lab_component_registrar.command.g.dart"
+          }
+        ]
+      },
+      {
+        "kind": "command",
+        "id": "demo_navigation_lab.refresh_cache",
+        "componentId": "demo_navigation_lab_component",
+        "packageName": "demo_navigation_lab",
+        "contract": {
+          "symbol": "DemoRefreshCacheCommand",
+          "packageUri": "package:demo_navigation_lab/src/component_capabilities.dart",
+          "line": 98,
+          "column": 13
+        },
+        "implementation": {
+          "symbol": "handleDemoRefreshCache",
+          "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
+          "line": 141,
+          "column": 14
+        },
+        "generatedArtifacts": [
+          {
+            "role": "commandRegistration",
+            "symbol": "ccrouterRegisterHandleDemoRefreshCacheCommand",
+            "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/command/navigation_lab_component_registrar.command.g.dart"
+          }
+        ]
+      },
+      {
+        "kind": "command",
+        "id": "demo_navigation_lab.wait",
+        "componentId": "demo_navigation_lab_component",
+        "packageName": "demo_navigation_lab",
+        "contract": {
+          "symbol": "DemoWaitCommand",
+          "packageUri": "package:demo_navigation_lab/src/component_capabilities.dart",
+          "line": 106,
+          "column": 13
+        },
+        "implementation": {
+          "symbol": "handleDemoWait",
+          "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
+          "line": 148,
+          "column": 14
+        },
+        "generatedArtifacts": [
+          {
+            "role": "commandRegistration",
+            "symbol": "ccrouterRegisterHandleDemoWaitCommand",
+            "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/command/navigation_lab_component_registrar.command.g.dart"
+          }
+        ]
+      },
+      {
         "kind": "route",
         "id": "demo_navigation_lab.cancel",
         "componentId": "demo_navigation_lab_component",
@@ -2520,13 +2840,13 @@
         "contract": {
           "symbol": "DemoCapabilitiesPage",
           "packageUri": "package:demo_navigation_lab/src/capability_page.dart",
-          "line": 14,
+          "line": 16,
           "column": 13
         },
         "implementation": {
           "symbol": "DemoCapabilitiesPage",
           "packageUri": "package:demo_navigation_lab/src/capability_page.dart",
-          "line": 14,
+          "line": 16,
           "column": 13
         },
         "generatedArtifacts": [

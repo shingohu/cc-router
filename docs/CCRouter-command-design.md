@@ -2,9 +2,9 @@
 
 ## 1. 状态与结论
 
-- 状态：Runtime 能力已完成；生成器方案已批准、尚未实现
+- 状态：Runtime 与首版静态生成闭环已完成
 - 稳定契约：`CCCommand<R>`、`CCRegistry.registerCommand`、`CCRouter.command`
-- 待实现：Command Contract、Handler registration、消费依赖、组件专属 Client 和 metadata 生成
+- 已实现：Command Contract、Handler registration、消费依赖、Owner/Consumer Client、metadata 与 Catalog
 - 当前不做：重试、幂等去重、持久化队列、远程 Command、Middleware 和 Action Pipeline
 
 `CCCommand<R>` 表示调用方请求一个明确组件完成一次操作，并等待完成、失败或类型化结果。
@@ -238,6 +238,11 @@ lib/src/ccrouter_generated/
 - [x] Command Handler 保留可信组件 Owner，并写入 Trace。
 - [x] 覆盖重复注册、缺失 Handler、timeout、取消、嵌套调用和 Runtime dispose。
 - [x] 保持诊断缓存有界，不记录参数与返回对象。
+- [x] 生成 `CCCommandContract`、顶层 `CCCommandHandler` 注册桥与稳定 Command ID。
+- [x] 为 Owner 和显式 `CCCommandDependency<T>` Consumer 生成强类型组件 Client。
+- [x] 校验 Payload 不可变性、Handler 签名/结果、Owner、唯一 Handler 和组件依赖。
+- [x] 接入 Package/Host metadata、Capability Catalog、源码定位和私有 Registrar。
+- [x] Demo 覆盖组件内 typed/void/timeout/cancel/error 与跨组件 Contract 调用。
 
 ## 13. 明确不纳入本轮
 

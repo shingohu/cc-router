@@ -854,20 +854,28 @@ final class CCRouterRuntime {
   ///
   /// This low-level entry point exists for Core tests; components use the
   /// component-bound [CCRegistry].
-  void registerCommand<C extends CCCommand<R>, R>(CCHandler<C, R> handler) {
-    _registerCommandForComponent('', handler);
+  void registerCommand<C extends CCCommand<R>, R>(
+    CCHandler<C, R> handler, {
+    String? commandId,
+  }) {
+    _registerCommandForComponent('', handler, commandId: commandId);
   }
 
   /// Registers a command while retaining the component owner internally.
   void _registerCommandForComponent<C extends CCCommand<R>, R>(
     String ownerComponentId,
-    CCHandler<C, R> handler,
-  ) {
+    CCHandler<C, R> handler, {
+    String? commandId,
+  }) {
+    if (commandId != null && !_isStableIdentifier(commandId)) {
+      throw CCRegistrationError('Invalid Command ID "$commandId".');
+    }
     _registerSingle(
       _commands,
       C,
       _RegisteredCommandHandler(
         ownerComponentId: ownerComponentId,
+        commandId: commandId,
         callback: (message, context) => handler(message as C, context),
       ),
     );
@@ -1485,6 +1493,36 @@ final class CCRouterRuntime {
     CCCancellationToken? cancellation,
   }) => _dispatch<R>('command', command, _commands, timeout, cancellation);
 
+  /// Dispatches one generated Command with validated stable identities.
+  ///
+  /// Generated framework bindings supply [commandId] and [callerComponentId].
+  /// Business code uses its generated component Client rather than this SPI.
+  Future<R> invokeGeneratedCommand<R>(
+    CCCommand<R> command, {
+    required String commandId,
+    required String callerComponentId,
+    Duration? timeout,
+    CCCancellationToken? cancellation,
+  }) {
+    if (!_isStableIdentifier(commandId)) {
+      throw const CCInvocationError('The generated Command ID is invalid.');
+    }
+    if (!_isComponentIdentifier(callerComponentId)) {
+      throw const CCInvocationError(
+        'The generated Command caller component ID is invalid.',
+      );
+    }
+    return _dispatch<R>(
+      'command',
+      command,
+      _commands,
+      timeout,
+      cancellation,
+      commandId: commandId,
+      callerComponentId: callerComponentId,
+    );
+  }
+
   /// Publishes [event] concurrently and awaits all matching subscribers.
   ///
   /// A subscriber failure is isolated and recorded as a sanitized bounded
@@ -2084,12 +2122,22 @@ final class CCRouterRuntime {
     Object message,
     Map<Type, _RegisteredCommandHandler> registry,
     Duration? timeout,
-    CCCancellationToken? cancellation,
-  ) {
+    CCCancellationToken? cancellation, {
+    String? commandId,
+    String? callerComponentId,
+  }) {
     final registration = registry[message.runtimeType];
+    final registeredCommandId = registration?.commandId;
+    if (commandId != null && registeredCommandId != commandId) {
+      throw CCResolutionError(
+        registeredCommandId == null
+            ? 'Command ${message.runtimeType} is not registered as generated contract "$commandId".'
+            : 'Command contract "$commandId" does not match registered contract "$registeredCommandId".',
+      );
+    }
     return _invoke(
       operation,
-      message.runtimeType.toString(),
+      commandId ?? registeredCommandId ?? message.runtimeType.toString(),
       (context) async {
         if (registration == null) {
           throw CCResolutionError(
@@ -2100,6 +2148,7 @@ final class CCRouterRuntime {
       },
       timeout: timeout,
       cancellation: cancellation,
+      callerComponentId: callerComponentId,
       targetComponentId: registration?.ownerComponentId.isEmpty ?? true
           ? null
           : registration!.ownerComponentId,
@@ -2341,6 +2390,11 @@ final class CCRouterRuntime {
     _ensureConfigurable();
     if (registry.containsKey(type))
       throw CCRegistrationError('Duplicate handler for $type.');
+    final commandId = handler.commandId;
+    if (commandId != null &&
+        registry.values.any((existing) => existing.commandId == commandId)) {
+      throw CCRegistrationError('Duplicate Command ID "$commandId".');
+    }
     registry[type] = handler;
   }
 

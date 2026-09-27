@@ -184,6 +184,20 @@ void main() {
       isTrue,
     );
 
+    await _tapCapabilityAction(tester, 'Command · cross component');
+    expect(find.textContaining('order-receipt:1001'), findsOneWidget);
+    final crossComponentTrace = CCRouter.recentTraces.lastWhere(
+      (trace) => trace.target == 'demo_order.reserve',
+    );
+    expect(
+      crossComponentTrace.context.callerComponentId,
+      'demo_navigation_lab_component',
+    );
+    expect(
+      crossComponentTrace.context.targetComponentId,
+      'demo_order_component',
+    );
+
     await _tapCapabilityAction(tester, 'Command · timeout');
     expect(find.textContaining('CCInvocationTimeoutError'), findsOneWidget);
 

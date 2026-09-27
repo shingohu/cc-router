@@ -6,14 +6,16 @@
       "version": "0.1.0",
       "dependencies": [],
       "optionalDependencies": [],
-      "serviceDependencies": []
+      "serviceDependencies": [],
+      "commandDependencies": []
     },
     {
       "id": "demo_web_component",
       "version": "0.1.0",
       "dependencies": [],
       "optionalDependencies": [],
-      "serviceDependencies": []
+      "serviceDependencies": [],
+      "commandDependencies": []
     },
     {
       "id": "demo_navigation_lab_component",
@@ -35,6 +37,16 @@
             "symbol": "DemoNavigationLabServices.orderSummary",
             "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/component/navigation_lab_component.service_api.g.dart"
           }
+        }
+      ],
+      "commandDependencies": [
+        {
+          "id": "demo_order.reserve",
+          "componentId": "demo_order_component",
+          "command": "ReserveOrderCommand",
+          "resultType": "String",
+          "library": "package:demo_order_contracts/demo_order_contracts.dart",
+          "member": "reserveOrder"
         }
       ]
     },
@@ -58,7 +70,8 @@
             "packageUri": "package:demo_payment/src/ccrouter_generated/component/demo_payment_component.service_api.g.dart"
           }
         }
-      ]
+      ],
+      "commandDependencies": []
     }
   ],
   "routes": [
@@ -153,7 +166,7 @@
         "kind": "page",
         "symbol": "DemoCapabilitiesPage",
         "packageUri": "package:demo_navigation_lab/src/capability_page.dart",
-        "line": 14,
+        "line": 16,
         "column": 13
       },
       "navigationSources": [

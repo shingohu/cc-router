@@ -10,6 +10,38 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 
 ## `demo_navigation_lab_component`
 
+### Command `demo_navigation_lab.create_receipt`
+
+- Declaring package: `demo_navigation_lab`
+- Contract/declaration: `package:demo_navigation_lab/src/component_capabilities.dart:88:13` (`DemoCreateReceiptCommand`)
+- Implementation: `package:demo_navigation_lab/src/navigation_lab_component_registrar.dart:136:8` (`handleDemoCreateReceipt`)
+- Generated artifacts:
+  - `commandRegistration`: `package:demo_navigation_lab/src/ccrouter_generated/command/navigation_lab_component_registrar.command.g.dart` (`ccrouterRegisterHandleDemoCreateReceiptCommand`)
+
+### Command `demo_navigation_lab.fail`
+
+- Declaring package: `demo_navigation_lab`
+- Contract/declaration: `package:demo_navigation_lab/src/component_capabilities.dart:114:13` (`DemoFailCommand`)
+- Implementation: `package:demo_navigation_lab/src/navigation_lab_component_registrar.dart:158:6` (`handleDemoFail`)
+- Generated artifacts:
+  - `commandRegistration`: `package:demo_navigation_lab/src/ccrouter_generated/command/navigation_lab_component_registrar.command.g.dart` (`ccrouterRegisterHandleDemoFailCommand`)
+
+### Command `demo_navigation_lab.refresh_cache`
+
+- Declaring package: `demo_navigation_lab`
+- Contract/declaration: `package:demo_navigation_lab/src/component_capabilities.dart:98:13` (`DemoRefreshCacheCommand`)
+- Implementation: `package:demo_navigation_lab/src/navigation_lab_component_registrar.dart:141:14` (`handleDemoRefreshCache`)
+- Generated artifacts:
+  - `commandRegistration`: `package:demo_navigation_lab/src/ccrouter_generated/command/navigation_lab_component_registrar.command.g.dart` (`ccrouterRegisterHandleDemoRefreshCacheCommand`)
+
+### Command `demo_navigation_lab.wait`
+
+- Declaring package: `demo_navigation_lab`
+- Contract/declaration: `package:demo_navigation_lab/src/component_capabilities.dart:106:13` (`DemoWaitCommand`)
+- Implementation: `package:demo_navigation_lab/src/navigation_lab_component_registrar.dart:148:14` (`handleDemoWait`)
+- Generated artifacts:
+  - `commandRegistration`: `package:demo_navigation_lab/src/ccrouter_generated/command/navigation_lab_component_registrar.command.g.dart` (`ccrouterRegisterHandleDemoWaitCommand`)
+
 ### Route `demo_navigation_lab.cancel`
 
 - Declaring package: `demo_navigation_lab`
@@ -22,8 +54,8 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 ### Route `demo_navigation_lab.capabilities`
 
 - Declaring package: `demo_navigation_lab`
-- Contract/declaration: `package:demo_navigation_lab/src/capability_page.dart:14:13` (`DemoCapabilitiesPage`)
-- Implementation: `package:demo_navigation_lab/src/capability_page.dart:14:13` (`DemoCapabilitiesPage`)
+- Contract/declaration: `package:demo_navigation_lab/src/capability_page.dart:16:13` (`DemoCapabilitiesPage`)
+- Implementation: `package:demo_navigation_lab/src/capability_page.dart:16:13` (`DemoCapabilitiesPage`)
 - Generated artifacts:
   - `routeLibrary`: `package:demo_navigation_lab/src/ccrouter_generated/route/capability_page.route.g.dart` (`_DemoCapabilitiesPageRoute`)
   - `routeBinding`: `package:demo_navigation_lab/src/ccrouter_generated/binding/capability_page.route_binding.g.dart` (`ccrouterBuildDemoCapabilitiesPageRoute`)

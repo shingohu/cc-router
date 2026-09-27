@@ -54,6 +54,26 @@ const TypeChecker _componentServiceContractChecker =
       inPackage: 'ccrouter_contracts',
     );
 
+/// Matches typed cross-component Command dependencies on a component.
+const TypeChecker _componentCommandDependencyChecker =
+    TypeChecker.typeNamedLiterally(
+      'CCCommandDependency',
+      inPackage: 'ccrouter_contracts',
+    );
+
+/// Matches stable Command contracts referenced by component dependencies.
+const TypeChecker _componentCommandContractChecker =
+    TypeChecker.typeNamedLiterally(
+      'CCCommandContract',
+      inPackage: 'ccrouter_contracts',
+    );
+
+/// Matches the typed Command result marker.
+const TypeChecker _componentCommandChecker = TypeChecker.typeNamedLiterally(
+  'CCCommand',
+  inPackage: 'ccrouter_contracts',
+);
+
 /// Full SemVer 2.0 syntax used by component contract versions.
 final RegExp _semanticVersionPattern = RegExp(
   r'^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)'

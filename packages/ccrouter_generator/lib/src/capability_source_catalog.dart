@@ -176,6 +176,53 @@ final class CCCapabilitySourceCatalog {
           ),
         );
       }
+      for (final contract in _catalogObjectList(document['commandContracts'])) {
+        final id = '${contract['id'] ?? ''}';
+        final componentId = '${contract['componentId'] ?? ''}';
+        if (id.isEmpty || componentId.isEmpty) continue;
+        final declaration = CCSourceReference.fromJson(
+          _catalogObject(contract['declaration']),
+          fallbackPackage: '${contract['package'] ?? fallbackPackage}',
+          fallbackLibrary: '${contract['source'] ?? fallbackSource}',
+        );
+        records.add(
+          CCCapabilitySourceRecord(
+            kind: 'command',
+            id: id,
+            componentId: componentId,
+            packageName: declaration.packageName,
+            contract: declaration,
+            implementation: null,
+            generatedArtifacts: const [],
+          ),
+        );
+      }
+      for (final handler in _catalogObjectList(document['commandHandlers'])) {
+        final id = '${handler['id'] ?? ''}';
+        final componentId = '${handler['componentId'] ?? ''}';
+        if (id.isEmpty || componentId.isEmpty) continue;
+        final contractObject = _catalogObject(handler['contract']);
+        final implementation = CCSourceReference.fromJson(
+          _catalogObject(handler['implementation']),
+          fallbackPackage: '${handler['package'] ?? fallbackPackage}',
+          fallbackLibrary: '${handler['source'] ?? fallbackSource}',
+        );
+        records.add(
+          CCCapabilitySourceRecord(
+            kind: 'command',
+            id: id,
+            componentId: componentId,
+            packageName: implementation.packageName,
+            contract: contractObject.isEmpty
+                ? null
+                : CCSourceReference.fromJson(contractObject),
+            implementation: implementation,
+            generatedArtifacts: _catalogObjectList(
+              handler['generatedArtifacts'],
+            ).map(CCGeneratedArtifact.fromJson),
+          ),
+        );
+      }
     }
     return CCCapabilitySourceCatalog(records);
   }

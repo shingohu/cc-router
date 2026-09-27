@@ -23,6 +23,8 @@ import '../binding/shell_pages.route_binding.g.dart'
     as route_src_ccrouter_generated_binding_shell_pages_route_binding_g_dart;
 import '../binding/stack_page.route_binding.g.dart'
     as route_src_ccrouter_generated_binding_stack_page_route_binding_g_dart;
+import '../command/navigation_lab_component_registrar.command.g.dart'
+    as route_src_ccrouter_generated_command_navigation_lab_component_registrar_command_g_dart;
 import '../route/capability_page.route.g.dart'
     as route_src_ccrouter_generated_route_capability_page_route_g_dart;
 import '../route/detail_page.route.g.dart'
@@ -109,6 +111,14 @@ final class _DemoNavigationLabComponentGeneratedRegistrar
         .ccrouterRegisterDemoWorkspaceProfilePageRoute(registry);
     route_src_ccrouter_generated_route_stack_page_route_g_dart
         .ccrouterRegisterDemoStackPageRoute(registry);
+    route_src_ccrouter_generated_command_navigation_lab_component_registrar_command_g_dart
+        .ccrouterRegisterHandleDemoCreateReceiptCommand(registry);
+    route_src_ccrouter_generated_command_navigation_lab_component_registrar_command_g_dart
+        .ccrouterRegisterHandleDemoFailCommand(registry);
+    route_src_ccrouter_generated_command_navigation_lab_component_registrar_command_g_dart
+        .ccrouterRegisterHandleDemoRefreshCacheCommand(registry);
+    route_src_ccrouter_generated_command_navigation_lab_component_registrar_command_g_dart
+        .ccrouterRegisterHandleDemoWaitCommand(registry);
     route_src_navigation_lab_component_registrar_dart
         .registerDemoNavigationLabCapabilities(registry);
   }

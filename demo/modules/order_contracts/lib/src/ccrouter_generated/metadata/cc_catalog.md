@@ -10,6 +10,11 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 
 ## `demo_order_component`
 
+### Command `demo_order.reserve`
+
+- Declaring package: `demo_order_contracts`
+- Contract/declaration: `package:demo_order_contracts/src/order_commands.dart:11:13` (`ReserveOrderCommand`)
+
 ### Route `order.detail`
 
 - Declaring package: `demo_order_contracts`

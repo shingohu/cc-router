@@ -1,9 +1,11 @@
 import 'dart:async';
 
 import 'package:ccrouter/ccrouter.dart';
+import 'package:demo_order_contracts/demo_order_contracts.dart';
 import 'package:flutter/material.dart';
 
 import 'component_capabilities.dart';
+import 'ccrouter_generated/component/demo_navigation_lab_component.command_api.g.dart';
 import 'lab_configuration.dart';
 
 @CCRoute<void>(
@@ -66,7 +68,7 @@ final class _DemoCapabilitiesPageState extends State<DemoCapabilitiesPage> {
                 '单一 Handler 执行一次性操作并返回 String。',
                 () => _run(
                   'Command typed result',
-                  () => CCRouter.command<String>(
+                  () => DemoNavigationLabCommands.demoCreateReceipt(
                     const DemoCreateReceiptCommand(88),
                   ),
                 ),
@@ -77,7 +79,20 @@ final class _DemoCapabilitiesPageState extends State<DemoCapabilitiesPage> {
                 '只等待完成或失败，不制造无意义结果类型。',
                 () => _run(
                   'Command void',
-                  () => CCRouter.command<void>(const DemoRefreshCacheCommand()),
+                  () => DemoNavigationLabCommands.demoRefreshCache(
+                    const DemoRefreshCacheCommand(),
+                  ),
+                ),
+              ),
+              _action(
+                Icons.call_made_outlined,
+                'Command · cross component',
+                '通过公开 Contract 调用 Order Owner，并保留可信调用方。',
+                () => _run(
+                  'Command cross component',
+                  () => DemoNavigationLabCommands.reserveOrder(
+                    const ReserveOrderCommand(1001),
+                  ),
                 ),
               ),
               _action(
@@ -86,7 +101,7 @@ final class _DemoCapabilitiesPageState extends State<DemoCapabilitiesPage> {
                 'Deadline 到期后向 Handler 传播协作取消。',
                 () => _run(
                   'Command timeout',
-                  () => CCRouter.command<void>(
+                  () => DemoNavigationLabCommands.demoWait(
                     const DemoWaitCommand(),
                     timeout: const Duration(milliseconds: 80),
                   ),
@@ -98,7 +113,7 @@ final class _DemoCapabilitiesPageState extends State<DemoCapabilitiesPage> {
                 '调用方主动取消正在等待的 Command。',
                 () => _run('Command cancellation', () async {
                   final token = CCCancellationToken();
-                  final pending = CCRouter.command<void>(
+                  final pending = DemoNavigationLabCommands.demoWait(
                     const DemoWaitCommand(),
                     cancellation: token,
                   );
@@ -114,7 +129,9 @@ final class _DemoCapabilitiesPageState extends State<DemoCapabilitiesPage> {
                 '原始业务异常不进入安全 Trace 字段。',
                 () => _run(
                   'Command error',
-                  () => CCRouter.command<void>(const DemoFailCommand()),
+                  () => DemoNavigationLabCommands.demoFail(
+                    const DemoFailCommand(),
+                  ),
                 ),
               ),
               _sectionTitle(context, 'Event'),

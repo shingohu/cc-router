@@ -1,4 +1,24 @@
 builders:
+  commands:
+    import: "package:ccrouter_generator/builder.dart"
+    builder_factories: ["ccCommandBuilder"]
+    build_extensions:
+      "^lib/src/{{}}.dart": ["lib/src/ccrouter_generated/command/{{}}.command.g.dart"]
+    auto_apply: dependents
+    build_to: source
+    defaults:
+      generate_for:
+        exclude: ["lib/**/ccrouter_generated/**"]
+  command_metadata:
+    import: "package:ccrouter_generator/builder.dart"
+    builder_factories: ["ccCommandMetadataBuilder"]
+    build_extensions:
+      "^lib/{{}}.dart": ["lib/src/ccrouter_generated/metadata/{{}}.command.json"]
+    auto_apply: dependents
+    build_to: cache
+    defaults:
+      generate_for:
+        exclude: ["lib/**/ccrouter_generated/**"]
   service_contracts:
     import: "package:ccrouter_generator/builder.dart"
     builder_factories: ["ccServiceContractBuilder"]

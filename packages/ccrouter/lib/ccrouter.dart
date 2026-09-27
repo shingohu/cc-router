@@ -43,6 +43,7 @@ export 'package:ccrouter_core/ccrouter_core.dart'
 export 'src/app.dart' hide CCRouterAppBackend, CCPageLifecycleHostBridge;
 export 'src/facade.dart'
     hide
+        CCRouterGeneratedCommandBinding,
         CCRouterGeneratedServiceBinding,
         CCRouterHostBinding,
         CCRouterTestBinding;

@@ -8,4 +8,5 @@ library;
 
 export 'ccrouter.dart';
 export 'package:ccrouter_contracts/ccrouter_contracts.dart' show CCServiceToken;
-export 'src/facade.dart' show CCRouterGeneratedServiceBinding;
+export 'src/facade.dart'
+    show CCRouterGeneratedCommandBinding, CCRouterGeneratedServiceBinding;

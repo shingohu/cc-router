@@ -1,3 +1,4 @@
+import 'messaging.dart';
 import 'service.dart';
 
 /// Stable, typed identity shared by a component and its public contracts.
@@ -43,6 +44,7 @@ final class CCComponent {
     this.dependencies = const [],
     this.optionalDependencies = const [],
     this.serviceDependencies = const [],
+    this.commandDependencies = const [],
   });
 
   /// Globally unique component identifier used by generated ownership metadata.
@@ -71,6 +73,13 @@ final class CCComponent {
   /// optional component cannot satisfy a required method call. Keep local
   /// Services out of this list and resolve them directly inside their owner.
   final List<CCServiceDependency<Object>> serviceDependencies;
+
+  /// Public Command contracts consumed across component boundaries.
+  ///
+  /// Every owner must also appear in [dependencies]. The generator emits typed
+  /// methods carrying a trusted caller identity and stable Command ID. Commands
+  /// owned by this component are included automatically and must not be listed.
+  final List<CCCommandDependency<CCCommand<Object?>>> commandDependencies;
 }
 
 /// Marks one package-internal capability registration contribution.

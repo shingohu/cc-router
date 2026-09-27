@@ -249,20 +249,35 @@ Initial/foreign pages do not have a managed Route Scope. Never guess from the to
 ## Command and Event
 
 ```dart
-final class SubmitOrder implements CCCommand<String> {
-  const SubmitOrder(this.id);
+@CCCommandContract(id: 'orders.submit', description: 'Submit one order.')
+final class SubmitOrderCommand implements CCCommand<String> {
+  const SubmitOrderCommand(this.id);
   final String id;
 }
 
-registry.registerCommand<SubmitOrder, String>((command, context) async {
+@CCCommandHandler()
+Future<String> handleSubmitOrder(
+  SubmitOrderCommand command,
+  CCInvocationContext context,
+) async {
   if (context.cancellation.isCancelled) {
     throw const CCInvocationCancelledError();
   }
   return submit(command.id);
-});
+}
 
-final receipt = await CCRouter.command(const SubmitOrder('42'));
+final receipt = await OrdersCommands.submitOrder(
+  const SubmitOrderCommand('42'),
+);
 ```
+
+An implementation-Package Command may omit `componentId`; generation infers
+the sole `CCComponent`, installs the Handler, and emits the Owner Client. A
+cross-component Contract declares `componentId` in a contracts Package, while
+each consumer lists `CCCommandDependency<SubmitOrderCommand>()` and the Owner
+in required `dependencies`. Do not pass stable IDs or caller identities by
+hand. Keep raw `CCRouter.command` for unannotated migration capabilities, Host
+composition, and tests only.
 
 ```dart
 final class OrderSubmitted implements CCEvent {

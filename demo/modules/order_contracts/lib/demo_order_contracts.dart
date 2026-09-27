@@ -5,4 +5,5 @@ export 'src/ccrouter_generated/contract/order_detail_route_contract.route.contra
     show OrderDetailRoute, OrderDetailRouteArguments;
 export 'src/order_summary_service.dart'
     show OrderSummaryService, OrderSummaryValue;
+export 'src/order_commands.dart' show ReserveOrderCommand;
 export 'src/order_detail_route_contract.dart' show demoOrderComponentId;

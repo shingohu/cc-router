@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'component.dart';
 import 'invocation.dart';
 
 /// Marker interface for a command that performs work and returns [R].
@@ -11,6 +12,55 @@ import 'invocation.dart';
 /// command still participates in timeout, cancellation, and tracing when its
 /// result type is `void`.
 abstract interface class CCCommand<R> {}
+
+/// Declares one stable typed Command contract for generated registration.
+///
+/// Use this annotation on a public, concrete, immutable `CCCommand<R>` class.
+/// A component-internal Command may omit [componentId], allowing the generator
+/// to infer the Package's sole [CCComponent]. A Command moved into a shared
+/// contracts Package must declare its owning component explicitly.
+final class CCCommandContract {
+  /// Creates one generated Command contract declaration.
+  const CCCommandContract({
+    this.componentId,
+    required this.id,
+    this.description = '',
+  });
+
+  /// Component that owns the single Command handler.
+  final CCComponentId? componentId;
+
+  /// Globally stable identity used by generated clients and diagnostics.
+  final String id;
+
+  /// Human-readable usage scenario exported to generated documentation.
+  final String description;
+}
+
+/// Marks one public top-level function as a generated Command handler.
+///
+/// The function accepts the annotated Command and optionally an
+/// [CCInvocationContext]. Its synchronous or asynchronous result must match the
+/// Command's `R`. The generator assigns the handler to the Contract owner and
+/// installs it through the component Registrar.
+final class CCCommandHandler {
+  /// Creates a stateless generated Command handler marker.
+  const CCCommandHandler();
+}
+
+/// Declares that one component consumes a cross-component Command contract.
+///
+/// Add this value to `CCComponent.commandDependencies`. The generator validates
+/// the owning component dependency and emits a typed component-specific client.
+/// Owner components receive clients for their own Commands automatically and
+/// do not declare a self dependency.
+final class CCCommandDependency<C extends CCCommand<Object?>> {
+  /// Creates one typed Command dependency.
+  const CCCommandDependency({this.alias});
+
+  /// Overrides the generated lower-camel client method name.
+  final String? alias;
+}
 
 /// Marker interface for a fact published to independent subscribers.
 ///

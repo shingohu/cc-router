@@ -11,4 +11,5 @@ const demoNavigationLabComponent = CCComponent(
   version: '0.1.0',
   dependencies: [demoOrderComponentId, demoWebComponentId],
   serviceDependencies: [CCServiceDependency<OrderSummaryService>()],
+  commandDependencies: [CCCommandDependency<ReserveOrderCommand>()],
 );

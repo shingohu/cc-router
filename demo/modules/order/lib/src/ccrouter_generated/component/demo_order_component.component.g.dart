@@ -6,6 +6,8 @@ import 'package:ccrouter/ccrouter_host.dart';
 import 'package:demo_order/src/demo_order_component.dart' as component_source;
 import '../binding/order_detail_page.route_binding.g.dart'
     as route_src_ccrouter_generated_binding_order_detail_page_route_binding_g_dart;
+import '../command/order_commands.command.g.dart'
+    as route_src_ccrouter_generated_command_order_commands_command_g_dart;
 import '../service/order_summary_service.service.g.dart'
     as route_src_ccrouter_generated_service_order_summary_service_service_g_dart;
 
@@ -20,6 +22,8 @@ final class _DemoOrderComponentGeneratedRegistrar
   void register(CCRegistry registry) {
     route_src_ccrouter_generated_binding_order_detail_page_route_binding_g_dart
         .ccrouterRegisterOrderDetailPageRoute(registry);
+    route_src_ccrouter_generated_command_order_commands_command_g_dart
+        .ccrouterRegisterHandleReserveOrderCommand(registry);
     route_src_ccrouter_generated_service_order_summary_service_service_g_dart
         .ccrouterRegisterDemoOrderSummaryServiceService(registry);
   }

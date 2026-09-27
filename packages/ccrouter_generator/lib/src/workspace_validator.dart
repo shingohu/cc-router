@@ -179,6 +179,8 @@ abstract final class CCRouteWorkspaceValidator {
     final contributions = <String, Map<String, Object?>>{};
     final serviceContracts = <String, Map<String, Object?>>{};
     final serviceImplementations = <String, Map<String, Object?>>{};
+    final commandContracts = <String, Map<String, Object?>>{};
+    final commandHandlers = <String, Map<String, Object?>>{};
     final defaultServices = <String, String>{};
     for (final document in documents) {
       if (document['schemaVersion'] != 2 && document['schemaVersion'] != 3) {
@@ -272,6 +274,22 @@ abstract final class CCRouteWorkspaceValidator {
                 ? '<unkeyed>'
                 : keyName;
           }
+        }
+      }
+      for (final contract in _objects(document['commandContracts'])) {
+        final id = '${contract['id'] ?? ''}';
+        if (commandContracts.containsKey(id)) {
+          errors.add('Command contract "$id" is declared more than once.');
+        } else {
+          commandContracts[id] = contract;
+        }
+      }
+      for (final handler in _objects(document['commandHandlers'])) {
+        final id = '${handler['id'] ?? ''}';
+        if (commandHandlers.containsKey(id)) {
+          errors.add('Command "$id" has more than one Handler.');
+        } else {
+          commandHandlers[id] = handler;
         }
       }
     }
@@ -427,6 +445,76 @@ abstract final class CCRouteWorkspaceValidator {
           'Service implementation "$id" belongs to component "$ownerId" '
           'but contract "$contractId" belongs to "$contractOwner".',
         );
+      }
+    }
+    for (final contract in commandContracts.values) {
+      final id = '${contract['id'] ?? ''}';
+      final ownerId = '${contract['componentId'] ?? ''}';
+      if (!_validIdentifier(id)) {
+        errors.add('Command contract ID "$id" is invalid.');
+      }
+      if (!components.containsKey(ownerId)) {
+        errors.add(
+          'Command contract "$id" references unknown owner component "$ownerId".',
+        );
+      }
+      final handler = commandHandlers[id];
+      if (handler == null) {
+        errors.add('Command contract "$id" has no Handler.');
+      } else if ('${handler['componentId'] ?? ''}' != ownerId) {
+        errors.add(
+          'Command Handler "$id" belongs to component '
+          '"${handler['componentId']}" instead of "$ownerId".',
+        );
+      }
+    }
+    for (final handler in commandHandlers.values) {
+      final id = '${handler['id'] ?? ''}';
+      if (!commandContracts.containsKey(id)) {
+        errors.add('Command Handler "$id" has no Contract declaration.');
+      }
+    }
+    for (final component in components.values) {
+      final componentId = '${component['id'] ?? ''}';
+      final requiredOwners = _strings(component['dependencies']).toSet();
+      final members = <String>{};
+      final identities = <String>{};
+      for (final dependency in _objects(component['commandDependencies'])) {
+        final id = '${dependency['id'] ?? ''}';
+        final ownerId = '${dependency['componentId'] ?? ''}';
+        final member = '${dependency['member'] ?? ''}';
+        final contract = commandContracts[id];
+        if (contract == null) {
+          errors.add(
+            'Component "$componentId" consumes unknown Command "$id".',
+          );
+          continue;
+        }
+        final actualOwner = '${contract['componentId'] ?? ''}';
+        if (actualOwner != ownerId) {
+          errors.add(
+            'Component "$componentId" records Command "$id" owner '
+            '"$ownerId" instead of "$actualOwner".',
+          );
+        }
+        if (!requiredOwners.contains(actualOwner)) {
+          errors.add(
+            'Component "$componentId" consumes Command "$id" but does not '
+            'require owner component "$actualOwner".',
+          );
+        }
+        if (!identities.add(id)) {
+          errors.add(
+            'Component "$componentId" consumes Command "$id" more than once.',
+          );
+        }
+        if (!RegExp(r'^[a-z][A-Za-z0-9]*$').hasMatch(member) ||
+            !members.add(member)) {
+          errors.add(
+            'Component "$componentId" has invalid or duplicate Command '
+            'Client member "$member".',
+          );
+        }
       }
     }
     final componentList = _validateAndOrderComponents(components, errors);

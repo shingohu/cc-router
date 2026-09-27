@@ -68,7 +68,7 @@ import 'package:ccrouter_go_router/ccrouter_go_router.dart';
 | Action Pipeline | 暂不支持 | 等真实优先级、短路、白名单场景成熟后再设计 |
 | 完整状态恢复 | 暂不支持 | 当前只记录脱敏的 restoration opportunity |
 | Service 注解生成 | 已支持 | `@CCService` 自动绑定唯一直接 Contract，并生成简单 Provider registration |
-| Command 注解生成 | 暂不支持 | Contract/Handler/消费依赖/Client 方案已记录；当前仍通过 `@CCComponentContribution` 注册 |
+| Command 注解生成 | 已支持 | Contract、Handler、Owner/Consumer Client、稳定 ID、metadata 与 Catalog 自动生成 |
 | Event 注解生成 | 暂不支持 | Contract/Subscription/Owner 自动 Publication 方案已记录；当前仍显式注册 |
 | InitTask 注解生成 | 暂不支持 | Task Contract/Handler/DAG/Catalog 方案已记录；当前仍通过 `@CCComponentContribution` 注册 |
 
@@ -116,7 +116,7 @@ const orderComponent = CCComponent(
 );
 ```
 
-不需要手写 Registrar。没有专用声明模型的 Command、Event、InitTask、Shell 或复杂 Service
+不需要手写 Registrar。没有专用声明模型的 Event、InitTask、Shell 或复杂 Service
 可放进带 `@CCComponentContribution` 的顶层注册函数；生成器会把它并入同一个私有 Registrar。
 组件定义、Contribution 和生成装配入口不要从业务 barrel 导出。组件间使用公开 contracts
 Package 或明确的 public contract library。
@@ -648,26 +648,36 @@ App 后台、页面切换和普通 Pop 都不会关闭 Session。退出登录、
 
 ## Command
 
-Command 表达“由唯一 Owner 执行的一次性动作”，可返回强类型结果，也可使用 `void`：
+Command 表达“由唯一 Owner 执行的一次性动作”，可返回强类型结果，也可使用 `void`。组件内 Contract 可省略 Owner，由 Package 的唯一 `CCComponent` 推导：
 
 ```dart
-final class SubmitOrder implements CCCommand<String> {
-  const SubmitOrder(this.orderId);
+@CCCommandContract(
+  id: 'order.submit',
+  description: '提交订单并返回支付单号。',
+)
+final class SubmitOrderCommand implements CCCommand<String> {
+  const SubmitOrderCommand(this.orderId);
   final int orderId;
 }
 
-registry.registerCommand<SubmitOrder, String>((command, context) async {
+@CCCommandHandler()
+Future<String> handleSubmitOrder(
+  SubmitOrderCommand command,
+  CCInvocationContext context,
+) async {
   if (context.cancellation.isCancelled) {
     throw const CCInvocationCancelledError();
   }
   return 'receipt:${command.orderId}';
-});
+}
 
-final receipt = await CCRouter.command(
-  const SubmitOrder(42),
+final receipt = await OrderCommands.submitOrder(
+  const SubmitOrderCommand(42),
   timeout: const Duration(seconds: 10),
 );
 ```
+
+跨组件 Command 在 contracts Package 中显式填写 `componentId`，消费组件把 Owner 放入 `dependencies`，并在 `commandDependencies` 中只声明实际调用的 Contract。生成器会产生消费组件专属 Client，业务不传 `commandId` 或 caller identity。复杂、迁移期或未注解的内部 Command 仍可通过 `CCComponentContribution` 手写注册并使用 `CCRouter.command`；已注解 Command 应统一走生成 Client。
 
 适合创建订单、提交支付、刷新远端数据等一对一操作。状态读取或多次方法调用使用 Service；“已经发生”的广播使用 Event。取消是协作式的，框架可以结束等待并发出 cancellation，但不能强制停止同步 Dart 代码或回滚已发生的副作用。
 
@@ -804,7 +814,7 @@ fvm dart run ccrouter_generator:ccrouter generate demo --check
 - 页面导航统一走 `CCRouter.navigator`。
 - 正确区分 Interceptor、PopGuard、Aspect 和页面生命周期。
 - 遵守 Host SPI、组件实现与 contracts Package 的依赖边界。
-- 不虚构当前尚未实现的 Action Pipeline、动态组件或 Command/Event/InitTask 注解；Service Proxy 只使用当前支持的显式消费声明和方法矩阵。
+- 不虚构当前尚未实现的 Action Pipeline、动态组件或 Event/InitTask 注解；Command Client 与 Service Proxy 只使用当前支持的显式消费声明和方法矩阵。
 - 生成后执行 analyze、针对性测试与 `generate --check`。
 
 将完整的 `skills/ccrouter-integration-development/` 目录复制或同步到集成工程的 `skills/` 下，不要只复制 `SKILL.md`，因为能力决策、实现模式和审查清单位于 `references/`。然后在集成工程的 Agent 规则中加入：

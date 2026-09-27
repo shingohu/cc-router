@@ -208,6 +208,17 @@ Map<String, Object?> _componentJson(
         },
       },
   ],
+  'commandDependencies': [
+    for (final dependency in component.commandDependencies)
+      <String, Object?>{
+        'id': dependency.id,
+        'componentId': dependency.componentId,
+        'command': dependency.command,
+        'resultType': dependency.resultType,
+        'library': dependency.library,
+        'member': dependency.member,
+      },
+  ],
 };
 
 /// Derives the builder-owned Service Client output for a component source.
