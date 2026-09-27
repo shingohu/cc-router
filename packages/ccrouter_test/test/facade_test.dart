@@ -2,6 +2,7 @@
 
 import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter/ccrouter_host.dart';
+import 'package:ccrouter_contracts/ccrouter_contracts.dart' show CCServiceToken;
 import 'package:ccrouter_core/ccrouter_core.dart';
 import 'package:test/test.dart';
 
@@ -38,7 +39,7 @@ final class ServiceRegistrar implements CCComponentRegistrar {
   void register(CCRegistry registry) {
     registry.registerService<String>(
       CCServiceProvider(
-        contract: facadeMessageService,
+        contractToken: facadeMessageService,
         factory: (_) => 'promoted',
       ),
     );
@@ -164,7 +165,7 @@ void main() {
     expect(await CCRouter.command(ReadOnce()), 'b');
   });
 
-  test('facade resolves a promoted service through its stable token', () async {
+  test('facade resolves a promoted service by contract type', () async {
     CCRouter.initialize(
       components: const [
         CCComponentManifest(
@@ -175,9 +176,9 @@ void main() {
       ],
     );
 
-    expect(CCRouter.service(contract: facadeMessageService), 'promoted');
-    expect(CCRouter.hasService(contract: facadeMessageService), isTrue);
-    expect(CCRouter.services(contract: facadeMessageService), ['promoted']);
+    expect(CCRouter.service<String>(), 'promoted');
+    expect(CCRouter.hasService<String>(), isTrue);
+    expect(CCRouter.services<String>(), ['promoted']);
   });
 
   test('Session records account identity and is cleared on close', () async {

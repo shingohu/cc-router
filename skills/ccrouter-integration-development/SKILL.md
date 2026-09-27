@@ -82,7 +82,7 @@ Read [implementation-patterns.md](references/implementation-patterns.md) when ad
 - Select the narrowest Service Scope: app, session, or route.
 - Prefer singleton; use `newInstance` only for stateless or immutable helpers whose ownership remains safe.
 - Use async Service readiness only when callers cannot safely use the instance immediately after synchronous construction.
-- Use `@CCService` only for a public concrete non-generic class with an unnamed zero-argument generative constructor. Use `@CCComponentContribution` for custom factories, constructor injection, async initializers, Command, Event, InitTask, Shell, and policy registration.
+- Use `@CCService` only for a public concrete non-generic class with an unnamed zero-argument generative constructor. A promoted implementation must directly implement exactly one `@CCServiceContract`; do not pass or export a Service Token from business code. Use `@CCComponentContribution` for custom factories, constructor injection, async initializers, Command, Event, InitTask, Shell, and policy registration.
 
 ## Generated Code and Validation
 

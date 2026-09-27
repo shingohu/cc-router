@@ -5,11 +5,11 @@
 - 审查日期：2026-09-27
 - 审查范围：路由 Runtime、业务 Facade、Host/Adapter SPI、GoRouter Adapter、生成器、
   Service、Command、Event、初始化任务、Demo、测试与诊断模型。
-- 自动化基线：`dart analyze` 通过；`ccrouter_test` 324 项、Demo 30 项、Generator 158 项测试通过；
+- 自动化基线：`dart analyze` 通过；`ccrouter_test` 324 项、Demo 30 项、Generator 161 项测试通过；
   Demo 生成物缓存与 `--no-cache` 两种 `--check` 均通过；macOS debug build 通过。
 - 总体结论：当前实现满足 13 条约定在 v0.1 静态组件范围内的发布门槛，没有 P0 或 P1 问题。
   Route、Service、Command、Event 和 InitTask 已形成边界明确的最小闭环。生成物职责、API 隔离、
-  生命周期、取消与诊断已完成本轮收口；Service Token/Provider 最小注解生成已实现，方法级
+  生命周期、取消与诊断已完成本轮收口；Service Contract 自动绑定与 Provider 最小注解生成已实现，方法级
   Service Proxy、Command/Event/InitTask 注解、Action Pipeline、动态
   组件治理、Restoration、真实平台多窗口和长期 RSS/Heap 趋势仍是明确后续项，不能因已有设计
   文档而视为已经实现。
@@ -23,10 +23,10 @@
 | 1 | 智能 | 基本满足 | 顶层 Component、Route/Codec、简单 Service Provider、私有 Registrar/Manifest、Host Catalog/文档均由单一 `ccrouter generate` 编排生成；Runtime 自动校验组件、Provider、Handler、Subscriber 和 InitTask DAG，`--check` 提供不依赖 Git 的只读陈旧门禁。复杂 Service 与低频消息能力使用显式 Contribution，没有用反射或函数体扫描冒充自动化。 |
 | 2 | 简单易用 | 基本满足 | 宿主使用 `CCRouter.initialize`、按需 `runInitialization`、Managed Backend/App 即可启动；业务统一通过 `CCRouter.navigator/service/command/event`。Route Service 仅在需要精确页面 Scope 时增加 `BuildContext`，高级 Shell、Multi Host、Trace 和 Gate 保持渐进可选。 |
 | 3 | 功能强大 | 基本满足 | 已覆盖类型安全导航、Deep Link、拦截、生命周期、混合路由、诊断、多种 Presentation、App/Session/Route Service、一次性 Command、事实 Event 和启动 DAG，没有万能 Map 或混合消息接口。Action Pipeline、可靠持久消息和动态组件明确不属于 1.x。 |
-| 4 | 可扩展性 | 基本满足 | Core 使用中立 Route Definition 与强类型能力契约；Catalog、Assembler、Adapter、Service Provider、Handler 和 Gate 均通过明确边界扩展。新导航后端复用同一 Catalog，跨组件 Service 通过稳定 Token 渐进提升，不访问 Runtime 私有表。 |
+| 4 | 可扩展性 | 基本满足 | Core 使用中立 Route Definition 与强类型能力契约；Catalog、Assembler、Adapter、Service Provider、Handler 和 Gate 均通过明确边界扩展。新导航后端复用同一 Catalog，跨组件 Service 通过注解稳定 ID 和自动绑定渐进提升，不访问 Runtime 私有表。 |
 | 5 | 可测试 | 基本满足 | Pure Dart Runtime 覆盖 Scope、readiness、Command/Event、InitTask DAG、取消/超时/失败；Flutter Adapter、生成器和 Demo 均有回归。`ccrouter_test` 提供 Test Host/Service Override，并具备 Generator、Route Runtime、Service 和并发回收非门禁基准。长期平台内存趋势仍需持续积累。 |
 | 6 | 最小公开 API | 基本满足 | Runtime、Scope、Memory Adapter、Host binding 以及控制 SPI 均从业务 barrel 隐藏；Registrar 只拿到注册面 `CCRegistry`。Query/旧 Action/ActionReport 已删除，通信只保留 Service、Command、Event 与 InitTask；Action Pipeline 等未成熟能力没有提前公开。 |
-| 7 | 编译器校验与类型安全 | 部分满足 | Route 参数、Codec、ID、Pattern、Contract exposure、页面实现、barrel、组件图和 Service Contract/Provider 所有权与冲突已有生成期校验；Service Token/Key、Command/Event 泛型在编译期约束，注册冲突与 InitTask DAG 在同步初始化失败。Command/Event/InitTask metadata 尚未生成，因此跨 Package Handler/Task 静态图仍依赖显式 Contribution 与 Runtime 校验。 |
+| 7 | 编译器校验与类型安全 | 部分满足 | Route 参数、Codec、ID、Pattern、Contract exposure、页面实现、barrel、组件图和 Service Contract/Provider 所有权与冲突已有生成期校验；Service 的唯一直接 Contract、Key、Command/Event 泛型在编译期约束，注册冲突与 InitTask DAG 在同步初始化失败。Command/Event/InitTask metadata 尚未生成，因此跨 Package Handler/Task 静态图仍依赖显式 Contribution 与 Runtime 校验。 |
 | 8 | 非侵入式 | 满足 | 不要求页面基类或 Mixin，不保存全局 `BuildContext`；可继续使用应用自己的 `MaterialApp.router`/`GoRouter`；attached Adapter 不销毁应用 Router。 |
 | 9 | 可降级回退 | 基本满足 | 无法可靠降级的组合栈事务与精确 Entry 操作已从公开链删除。Service optional lookup 只吞“未注册”，不吞工厂/生命周期错误；Event Subscriber 失败按契约隔离，Command/critical InitTask 失败明确传播，不存在跨语义静默回退。 |
 | 10 | 明确生命周期 | 基本满足 | Runtime、Session、RouteEntry、Service Scope、Adapter、Backend 和 InitTask Owner/销毁顺序明确；App/Session/Route Service 自动持有与逆序释放，shutdown 取消并等待活动调用和 DAG。1.x 组件集合只在初始化确定，不提供不完整的 activate/deactivate。 |
@@ -235,11 +235,11 @@ Listener、Stream、Overlay 或 Controller；Resolver 不拥有 Runtime，也不
 - Lazy Service readiness 由显式异步 API 启动，Singleton 在当前 Scope single-flight，`newInstance` 每次
   初始化；同步解析不会偷跑 I/O，失败、timeout、caller cancellation 和 Scope cancellation 保持
   不同标准错误；
-- 跨组件 Service Token 与 Type lookup 共享 Provider/实例；Key 支持确定性多实现，optional lookup
-  只把真正缺失转为 null；测试替换留在 `ccrouter_test`；
-- `@CCServiceContract` 生成公开强类型 Token，`@CCService` 生成简单 Provider registration，
-  Package 唯一 `CCComponent` 自动生成私有 Registrar/Manifest；复杂构造与 readiness 继续使用
-  `@CCComponentContribution`，不在 Annotation 中注入任意执行代码；
+- 跨组件 Service 的稳定 Contract ID 与 Type lookup 共享 Provider/实例；Key 支持确定性多实现，
+  optional lookup 只把真正缺失转为 null；测试替换留在 `ccrouter_test`；
+- `@CCServiceContract` 生成内部 Token/metadata，`@CCService` 从唯一直接 Contract 自动生成简单
+  Provider registration，Package 唯一 `CCComponent` 自动生成私有 Registrar/Manifest；复杂构造
+  与 readiness 继续使用 `@CCComponentContribution`，不在 Annotation 中注入任意执行代码；
 - `CCCommand<R>` 是唯一的一对一操作消息，支持 `R` 与 `void`、单 Handler、timeout、取消、嵌套
   Trace 和 Runtime shutdown；读取能力保持在 Service，不再保留重复的 Query/Action 表面；
 - `CCEvent` 只表达已经发生的事实；静态 Subscriber 并发执行且按 ID 稳定启动，一个 Subscriber

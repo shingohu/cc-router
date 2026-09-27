@@ -23,6 +23,7 @@ export 'package:ccrouter_contracts/ccrouter_contracts.dart'
         CCNavigationPopTargetSource,
         CCNavigationPredictiveBackSource,
         CCNavigationPredictiveBackSourceProvider,
+        CCServiceToken,
         CCNavigationRoute,
         CCNavigationRequest,
         CCNavigationShell,

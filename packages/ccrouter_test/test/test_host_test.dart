@@ -1,4 +1,5 @@
 import 'package:ccrouter/ccrouter.dart';
+import 'package:ccrouter_contracts/ccrouter_contracts.dart' show CCServiceToken;
 import 'package:ccrouter_core/ccrouter_core.dart';
 import 'package:ccrouter_test/ccrouter_test.dart';
 import 'package:test/test.dart';
@@ -35,7 +36,7 @@ final class ContractPaymentRegistrar implements CCComponentRegistrar {
   void register(CCRegistry registry) {
     registry.registerService<TestPaymentService>(
       CCServiceProvider(
-        contract: paymentToken,
+        contractToken: paymentToken,
         key: const CCServiceKey<TestPaymentService>('primary'),
         factory: (_) => TestPaymentService('production'),
       ),
@@ -217,7 +218,7 @@ void main() {
       ],
       overrides: [
         CCServiceOverride<TestPaymentService>.factory(
-          contract: paymentToken,
+          contractToken: paymentToken,
           key: const CCServiceKey<TestPaymentService>('primary'),
           create: (_) => TestPaymentService('fake'),
         ),
@@ -229,7 +230,7 @@ void main() {
     expect(
       host.runtime
           .service<TestPaymentService>(
-            contract: paymentToken,
+            contractToken: paymentToken,
             key: const CCServiceKey<TestPaymentService>('primary'),
           )
           .value,

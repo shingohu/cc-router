@@ -2,10 +2,11 @@ import 'component.dart';
 
 /// Stable identity of a service contract across package-boundary promotion.
 ///
-/// Declare a const token in the domain contracts package when a service becomes
-/// cross-component. Callers pass it to `CCRouter.service`, while the owning
-/// component attaches it to its provider. The string [id], rather than the Dart
-/// library identity of [T], remains stable if the interface moves packages.
+/// Generated registration and low-level Component SPI use this token when a
+/// Service becomes cross-component. Ordinary callers resolve the interface as
+/// `CCRouter.service<T>()` and must not construct or pass a token. The string
+/// [id], rather than the Dart library identity of [T], remains stable if the
+/// interface moves packages.
 final class CCServiceToken<T extends Object> {
   /// Creates a typed token with a globally stable, non-empty [id].
   const CCServiceToken(this.id) : assert(id != '');
@@ -31,9 +32,10 @@ final class CCServiceToken<T extends Object> {
 ///
 /// Apply this annotation to a public, abstract, non-generic interface in a
 /// Pure Dart contracts Package. The generator emits a typed
-/// `CCServiceToken<T>` and metadata owned by [componentId]. Implementations use
-/// that generated token from [CCService.contract], while consumers resolve the
-/// interface through `CCRouter.service(contract: ...)`.
+/// `CCServiceToken<T>` for generated/advanced registration plus metadata owned
+/// by [componentId]. A simple implementation binds automatically by directly
+/// implementing this interface; consumers resolve it through
+/// `CCRouter.service<T>()`.
 final class CCServiceContract {
   /// Creates a generated Service contract declaration.
   const CCServiceContract({
@@ -57,8 +59,9 @@ final class CCServiceContract {
 /// Apply this annotation to a public, concrete, non-generic class with an
 /// unnamed zero-argument generative constructor. The generator creates a lazy
 /// [CCServiceProvider] registration and assigns it to the Package's sole
-/// `CCComponent`. Use [contract] for a promoted cross-component interface; omit
-/// it for an internal Service whose lookup type is the annotated class.
+/// `CCComponent`. A class that directly implements exactly one
+/// [CCServiceContract] interface is bound to that contract automatically. An
+/// internal Service that implements no public contract must declare [id].
 ///
 /// This annotation deliberately excludes asynchronous initializers, custom
 /// factories, and constructor injection. Register those advanced Providers in
@@ -67,21 +70,19 @@ final class CCService {
   /// Creates one generated Service Provider declaration.
   const CCService({
     this.id,
-    this.contract,
     this.key,
     this.scope = CCServiceScope.app,
     this.creationPolicy = CCServiceCreationPolicy.singleton,
     this.isDefault = false,
   });
 
-  /// Stable identity required for a component-internal Service.
+  /// Stable identity required only for a component-internal Service.
   ///
-  /// Omit this when [contract] is supplied because the generated Token is the
-  /// single source of identity. Supplying both is a generation error.
+  /// Omit this when the implementation directly implements one
+  /// [CCServiceContract]; the generator then uses that contract's stable ID.
+  /// Declaring an ID as well as a public contract is a generation error because
+  /// one Provider must not expose two competing identities.
   final String? id;
-
-  /// Generated promoted contract Token, or null for type-local lookup.
-  final CCServiceToken<Object>? contract;
 
   /// Optional stable name for one implementation of the lookup type.
   final String? key;

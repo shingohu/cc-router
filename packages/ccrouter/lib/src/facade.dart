@@ -331,25 +331,18 @@ abstract final class CCRouter {
 
   /// Resolves the default or keyed implementation of service contract [T].
   ///
-  /// Use [contract] after an internal service is promoted across packages; omit
-  /// it for legacy or component-internal type lookup. Absence is a configuration
-  /// error in either mode and is reported as [CCServiceNotFoundError]. Token
-  /// type mismatches and inactive Session Scopes use their corresponding
-  /// Service-specific errors.
-  static T service<T extends Object>({
-    CCServiceToken<T>? contract,
-    CCServiceKey<T>? key,
-  }) => _runtime.service<T>(contract: contract, key: key);
+  /// Generated registration binds promoted contracts to their stable identity;
+  /// callers select only the Dart contract type and optional [key]. Absence is
+  /// a configuration error reported as [CCServiceNotFoundError].
+  static T service<T extends Object>({CCServiceKey<T>? key}) =>
+      _runtime.service<T>(key: key);
 
   /// Resolves service contract [T], returning null only when it is unregistered.
   ///
-  /// Pass [contract] for a promoted cross-package capability. Use this only for
-  /// genuinely optional integrations; factory and lifecycle failures still
-  /// propagate and are not converted to null.
-  static T? serviceOrNull<T extends Object>({
-    CCServiceToken<T>? contract,
-    CCServiceKey<T>? key,
-  }) => _runtime.serviceOrNull<T>(contract: contract, key: key);
+  /// Use this only for genuinely optional integrations; factory and lifecycle
+  /// failures still propagate and are not converted to null.
+  static T? serviceOrNull<T extends Object>({CCServiceKey<T>? key}) =>
+      _runtime.serviceOrNull<T>(key: key);
 
   /// Resolves a Service and awaits its optional lazy readiness initializer.
   ///
@@ -358,12 +351,10 @@ abstract final class CCRouter {
   /// readiness boundary. Initialization is single-flight per singleton and
   /// Scope; timeout and cancellation never change ownership of the instance.
   static Future<T> serviceAsync<T extends Object>({
-    CCServiceToken<T>? contract,
     CCServiceKey<T>? key,
     Duration? timeout,
     CCCancellationToken? cancellation,
   }) => _runtime.serviceAsync<T>(
-    contract: contract,
     key: key,
     timeout: timeout,
     cancellation: cancellation,
@@ -373,12 +364,10 @@ abstract final class CCRouter {
   ///
   /// Readiness, timeout, cancellation, and Scope failures remain explicit.
   static Future<T?> serviceOrNullAsync<T extends Object>({
-    CCServiceToken<T>? contract,
     CCServiceKey<T>? key,
     Duration? timeout,
     CCCancellationToken? cancellation,
   }) => _runtime.serviceOrNullAsync<T>(
-    contract: contract,
     key: key,
     timeout: timeout,
     cancellation: cancellation,
@@ -395,7 +384,6 @@ abstract final class CCRouter {
   /// identity; it never guesses from the visible or top route.
   static T routeService<T extends Object>(
     BuildContext context, {
-    CCServiceToken<T>? contract,
     CCServiceKey<T>? key,
   }) {
     final binding = context
@@ -405,7 +393,6 @@ abstract final class CCRouter {
     }
     return _runtime.serviceForRoute<T>(
       navigationId: binding.navigationId,
-      contract: contract,
       key: key,
     );
   }
@@ -418,7 +405,6 @@ abstract final class CCRouter {
   /// converted to null.
   static T? routeServiceOrNull<T extends Object>(
     BuildContext context, {
-    CCServiceToken<T>? contract,
     CCServiceKey<T>? key,
   }) {
     final binding = context
@@ -428,7 +414,6 @@ abstract final class CCRouter {
     }
     return _runtime.serviceForRouteOrNull<T>(
       navigationId: binding.navigationId,
-      contract: contract,
       key: key,
     );
   }
@@ -439,7 +424,6 @@ abstract final class CCRouter {
   /// used only to read the immutable Navigation ID and never owns the Service.
   static Future<T> routeServiceAsync<T extends Object>(
     BuildContext context, {
-    CCServiceToken<T>? contract,
     CCServiceKey<T>? key,
     Duration? timeout,
     CCCancellationToken? cancellation,
@@ -451,7 +435,6 @@ abstract final class CCRouter {
     }
     return _runtime.serviceForRouteAsync<T>(
       navigationId: binding.navigationId,
-      contract: contract,
       key: key,
       timeout: timeout,
       cancellation: cancellation,
@@ -464,7 +447,6 @@ abstract final class CCRouter {
   /// readiness remain lifecycle or initialization errors.
   static Future<T?> routeServiceOrNullAsync<T extends Object>(
     BuildContext context, {
-    CCServiceToken<T>? contract,
     CCServiceKey<T>? key,
     Duration? timeout,
     CCCancellationToken? cancellation,
@@ -476,7 +458,6 @@ abstract final class CCRouter {
     }
     return _runtime.serviceForRouteOrNullAsync<T>(
       navigationId: binding.navigationId,
-      contract: contract,
       key: key,
       timeout: timeout,
       cancellation: cancellation,
@@ -485,33 +466,21 @@ abstract final class CCRouter {
 
   /// Resolves every registered implementation of service contract [T].
   ///
-  /// Pass [contract] when implementations share a promoted stable identity.
   /// Use when a caller intentionally composes all installed implementations.
-  static List<T> services<T extends Object>({CCServiceToken<T>? contract}) =>
-      _runtime.services<T>(contract: contract);
+  static List<T> services<T extends Object>() => _runtime.services<T>();
 
   /// Resolves all implementations and awaits each optional readiness hook.
   ///
   /// The result preserves deterministic key order. Use the synchronous
   /// [services] only when every matching Provider is synchronously ready.
   static Future<List<T>> servicesAsync<T extends Object>({
-    CCServiceToken<T>? contract,
     Duration? timeout,
     CCCancellationToken? cancellation,
-  }) => _runtime.servicesAsync<T>(
-    contract: contract,
-    timeout: timeout,
-    cancellation: cancellation,
-  );
+  }) => _runtime.servicesAsync<T>(timeout: timeout, cancellation: cancellation);
 
   /// Whether service contract [T] has a matching registration.
-  ///
-  /// Pass [contract] for promoted cross-package capability discovery without
-  /// constructing the service instance.
-  static bool hasService<T extends Object>({
-    CCServiceToken<T>? contract,
-    CCServiceKey<T>? key,
-  }) => _runtime.hasService<T>(contract: contract, key: key);
+  static bool hasService<T extends Object>({CCServiceKey<T>? key}) =>
+      _runtime.hasService<T>(key: key);
 
   /// Dispatches [command] to its single handler.
   ///

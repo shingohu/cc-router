@@ -14,14 +14,12 @@ abstract final class CCRouterGeneratedServiceBinding {
   /// but it does not start lazy asynchronous initialization. Calling it before
   /// a Provider is ready throws [CCServiceNotReadyError].
   static R invokeSync<T extends Object, R>({
-    required CCServiceToken<T> contract,
     CCServiceKey<T>? key,
     required String methodId,
     String? callerComponentId,
     String? navigationId,
     required R Function(T service, CCInvocationContext context) call,
   }) => CCRouter._runtime.invokeServiceSync<T, R>(
-    contract: contract,
     key: key,
     methodId: methodId,
     callerComponentId: callerComponentId,
@@ -31,11 +29,11 @@ abstract final class CCRouterGeneratedServiceBinding {
 
   /// Resolves a promoted Service and invokes one generated method body.
   ///
-  /// [contract], [methodId], [callerComponentId], and [navigationId] are emitted
-  /// from validated metadata. The Runtime enforces Scope ownership, propagates
-  /// timeout and cancellation, and records only sanitized stable identifiers.
+  /// [methodId], [callerComponentId], and [navigationId] are emitted from
+  /// validated metadata. Runtime resolves [T], reads the Provider's generated
+  /// stable contract identity, enforces Scope ownership, and records only
+  /// sanitized identifiers.
   static Future<R> invoke<T extends Object, R>({
-    required CCServiceToken<T> contract,
     CCServiceKey<T>? key,
     required String methodId,
     String? callerComponentId,
@@ -44,7 +42,6 @@ abstract final class CCRouterGeneratedServiceBinding {
     CCCancellationToken? cancellation,
     required FutureOr<R> Function(T service, CCInvocationContext context) call,
   }) => CCRouter._runtime.invokeService<T, R>(
-    contract: contract,
     key: key,
     methodId: methodId,
     callerComponentId: callerComponentId,

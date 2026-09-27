@@ -29,7 +29,7 @@ const TypeChecker _serviceChecker = TypeChecker.typeNamedLiterally(
   inPackage: 'ccrouter_contracts',
 );
 
-/// Creates generated typed Tokens for public Service contracts.
+/// Creates typed Tokens reserved for generated and owner-only Service SPI.
 Generator ccServiceContractGenerator() => _ServiceContractGenerator();
 
 /// Creates generated Provider registration bridges for simple Services.
@@ -56,7 +56,9 @@ final class _ServiceContractGenerator extends Generator {
       ..writeln();
     for (final contract in contracts) {
       out
-        ..writeln('/// Typed token for Service `${contract.id}`.')
+        ..writeln(
+          '/// Owner-only generated token for Service `${contract.id}`.',
+        )
         ..writeln(
           'const ${contract.tokenSymbol} = '
           'CCServiceToken<service_contract.${contract.element.displayName}>('
@@ -91,7 +93,7 @@ final class _ServiceGenerator extends Generator {
       }
     }
     final out = StringBuffer()
-      ..writeln("import 'package:ccrouter/ccrouter.dart';")
+      ..writeln("import 'package:ccrouter/ccrouter_generated.dart';")
       ..writeln("import '$sourceUri' as service_source;");
     for (final entry in importedTypes.entries) {
       out.writeln("import '${entry.key}' as ${entry.value};");
@@ -116,7 +118,7 @@ final class _ServiceGenerator extends Generator {
         );
       if (service.contractId case final contractId?) {
         out.writeln(
-          '      contract: const CCServiceToken<$lookupType>('
+          '      contractToken: const CCServiceToken<$lookupType>('
           '${jsonEncode(contractId)}),',
         );
       }
@@ -265,7 +267,7 @@ final class _ServiceContractModel {
   /// Authored usage scenario retained in generated catalogs.
   final String description;
 
-  /// Predictable public Token symbol exported by the contracts Package.
+  /// Predictable Token symbol optionally exported by an owner-only SPI barrel.
   String get tokenSymbol => '${_serviceLowerCamel(element.displayName)}Token';
 }
 
@@ -407,11 +409,60 @@ List<_ServiceModel> _readServices(LibraryReader library) {
     }
     final annotation = annotated.annotation;
     final declaredId = annotation.read('id');
-    final contract = annotation.read('contract');
-    final hasContract = !contract.isNull;
-    if (hasContract == !declaredId.isNull) {
+    final directContracts = <_ServiceContractModel>[
+      for (final interface in element.interfaces)
+        if (_serviceContractAnnotation(interface.element) case final contract?)
+          contract,
+    ];
+    final directContractElements = directContracts
+        .map((contract) => contract.element)
+        .toSet();
+    final inheritedContracts =
+        element.allSupertypes
+            .where(
+              (type) =>
+                  !directContractElements.contains(type.element) &&
+                  _serviceContractAnnotation(type.element) != null,
+            )
+            .map((type) => type.element.displayName)
+            .toSet()
+            .toList()
+          ..sort();
+    if (directContracts.length > 1) {
+      final names =
+          directContracts
+              .map((contract) => contract.element.displayName)
+              .toList()
+            ..sort();
       _failService(
-        'CCService must set exactly one of id or contract.',
+        'CCService ${element.displayName} directly implements multiple '
+        'CCServiceContract interfaces (${names.join(', ')}). Split the '
+        'implementations so each generated Provider has one stable contract.',
+        element,
+      );
+    }
+    final inferredContract = directContracts.singleOrNull;
+    if (inheritedContracts.isNotEmpty) {
+      _failService(
+        'CCService ${element.displayName} inherits Service contract '
+        '${inheritedContracts.join(', ')} indirectly. Implement exactly one '
+        'CCServiceContract directly and remove other inherited contracts so '
+        'automatic binding is unambiguous.',
+        element,
+      );
+    }
+    if (inferredContract != null && !declaredId.isNull) {
+      _failService(
+        'CCService ${element.displayName} implements '
+        '${inferredContract.element.displayName}; omit id because the public '
+        'contract already owns the stable Service identity.',
+        element,
+      );
+    }
+    if (inferredContract == null && declaredId.isNull) {
+      _failService(
+        'CCService ${element.displayName} must declare id when it does not '
+        'directly implement a CCServiceContract.',
         element,
       );
     }
@@ -419,43 +470,11 @@ List<_ServiceModel> _readServices(LibraryReader library) {
     ClassElement? contractElement;
     String? contractId;
     late final String id;
-    if (hasContract) {
-      final token = contract.objectValue;
-      final tokenType = token.type;
-      if (tokenType is! InterfaceType || tokenType.typeArguments.length != 1) {
-        _failService(
-          'CCService contract must be a typed CCServiceToken.',
-          element,
-        );
-      }
-      final type = tokenType.typeArguments.single;
-      if (type is! InterfaceType || type.element is! ClassElement) {
-        _failService(
-          'CCService contract Token must reference a public interface type.',
-          element,
-        );
-      }
-      lookupType = type;
-      contractElement = type.element as ClassElement;
-      if (contractElement.displayName.startsWith('_')) {
-        _failService('CCService contract type must be public.', element);
-      }
-      contractId = token.getField('id')?.toStringValue();
-      if (contractId == null) {
-        _failService(
-          'CCService contract must carry a stable Token ID.',
-          element,
-        );
-      }
-      _validateServiceId(contractId, 'Service contract ID', element);
-      id = contractId;
-      if (!element.library.typeSystem.isAssignableTo(element.thisType, type)) {
-        _failService(
-          'CCService implementation ${element.displayName} must implement '
-          '${contractElement.displayName}.',
-          element,
-        );
-      }
+    if (inferredContract != null) {
+      lookupType = inferredContract.element.thisType;
+      contractElement = inferredContract.element;
+      contractId = inferredContract.id;
+      id = inferredContract.id;
     } else {
       id = declaredId.stringValue;
       _validateServiceId(id, 'Service ID', element);
@@ -489,6 +508,30 @@ List<_ServiceModel> _readServices(LibraryReader library) {
   }
   services.sort((left, right) => left.id.compareTo(right.id));
   return services;
+}
+
+/// Reads one directly implemented Service contract without scanning source text.
+_ServiceContractModel? _serviceContractAnnotation(InterfaceElement element) {
+  final annotation = _serviceContractChecker.firstAnnotationOfExact(element);
+  if (annotation == null || element is! ClassElement) return null;
+  final component = annotation.getField('componentId');
+  final componentId = component?.getField('value')?.toStringValue();
+  final id = annotation.getField('id')?.toStringValue();
+  final description = annotation.getField('description')?.toStringValue() ?? '';
+  if (componentId == null || id == null) {
+    _failService(
+      'CCServiceContract must provide const componentId and id values.',
+      element,
+    );
+  }
+  _validateServiceId(componentId, 'Component ID', element);
+  _validateServiceId(id, 'Service contract ID', element);
+  return _ServiceContractModel(
+    element: element,
+    componentId: componentId,
+    id: id,
+    description: description,
+  );
 }
 
 /// Validates one stable generated Service identifier.

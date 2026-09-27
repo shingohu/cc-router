@@ -56,7 +56,7 @@ import 'package:ccrouter_go_router/ccrouter_go_router.dart';
 | Provider-neutral Analytics | 已支持 | Route PV/Leave、稳定事件契约、属性校验和有界异步 Sink；不绑定第三方 SDK |
 | Widget 点击/滑动/曝光采集 | 部分支持 | `CCAnalyticsTarget`、`ccrouter_auto_track` 提供显式点击、滚动聚合和曝光；全局 Widget 猜测仍不支持 |
 | 页面生命周期 | 已支持 | `PageShow/PageHide` 与前后台，Mixin 和 Listener 两种形式 |
-| Service | 已支持 | App/Session/Route Scope，singleton/newInstance，key/token，lazy async readiness |
+| Service | 已支持 | App/Session/Route Scope，singleton/newInstance，Key、稳定 Contract ID、lazy async readiness |
 | Command | 已支持 | 单 Handler、强类型结果、`void`、取消、超时与 Trace |
 | Event | 已支持 | 零到多个订阅者、稳定顺序、失败隔离 |
 | InitTask | 已支持 | 一次性 DAG、Gate、必需/可选失败策略 |
@@ -67,7 +67,7 @@ import 'package:ccrouter_go_router/ccrouter_go_router.dart';
 | 动态组件安装/卸载 | 暂不支持 | 当前组件集合在 `initialize` 时固定 |
 | Action Pipeline | 暂不支持 | 等真实优先级、短路、白名单场景成熟后再设计 |
 | 完整状态恢复 | 暂不支持 | 当前只记录脱敏的 restoration opportunity |
-| Service 注解生成 | 已支持 | `@CCServiceContract` 生成 Token，`@CCService` 生成简单 Provider registration |
+| Service 注解生成 | 已支持 | `@CCService` 自动绑定唯一直接 Contract，并生成简单 Provider registration |
 | Command/Event/InitTask 注解生成 | 暂不支持 | 当前样板量不足，通过 `@CCComponentContribution` 显式注册 |
 
 GoRouter 当前无法可靠提供原子 `pushAndRemoveUntil`、精确 `removeRoute/removeRouteBelow` 和 `replaceRouteBelow`。CCRouter 不公开语义不完整的替代方法，也不会把它们静默拆成多个普通操作。
@@ -560,10 +560,10 @@ abstract interface class OrderSummaryService {
 }
 ```
 
-生成后，contracts barrel 显式导出接口和生成 Token；实现 Package 绑定该 Token：
+contracts barrel 只导出接口。实现类直接实现唯一 Contract，生成器会自动绑定稳定 ID：
 
 ```dart
-@CCService(contract: orderSummaryServiceToken)
+@CCService()
 final class OrderSummaryServiceImpl implements OrderSummaryService {
   const OrderSummaryServiceImpl();
 
@@ -588,6 +588,10 @@ void registerOrderServices(CCRegistry registry) {
 }
 ```
 
+复杂的跨组件 Provider 仍需稳定 Contract ID。此时只在实现组件专用的 owner barrel 中
+导出生成 Token，并在 `CCServiceProvider(contractToken: ...)` 中使用；业务 contracts barrel 和
+消费方不得导出、传递或构造 Token。简单 `@CCService` 不需要这一步。
+
 解析：
 
 ```dart
@@ -600,7 +604,7 @@ final controller = CCRouter.routeService<OrderDraftController>(context);
 - 默认 `singleton` 是每个 Scope 一个懒实例。
 - `newInstance` 每次解析创建新实例，但需要销毁的实例仍由 Scope 统一拥有；不要用它模拟手工 dispose 的临时对象。
 - `initializer` 只用于实例无法在同步构造后立即工作的异步 readiness；调用方必须使用 `serviceAsync`。
-- 多实现使用 `CCServiceKey<T>`；跨 Package 稳定契约使用 `CCServiceToken<T>`。
+- 多实现使用 `CCServiceKey<T>`；跨 Package 稳定 ID 由 `@CCServiceContract` 和生成注册维护，业务仍使用 `CCRouter.service<T>()`。
 - 实现 `CCDisposable` 的实例由 Scope 按逆构造顺序自动销毁，业务不得自行 dispose。
 - `serviceOrNull` 只把“未注册”转换为 null，不吞掉创建策略、Scope 或初始化错误。
 

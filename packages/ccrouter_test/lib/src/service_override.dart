@@ -9,7 +9,7 @@ import 'package:ccrouter_core/ccrouter_core.dart';
 /// Use [CCServiceOverride.value] for a fixed fake or
 /// [CCServiceOverride.factory] when each resolution should create a fresh fake
 /// according to the original Provider's Scope and creation policy. The target
-/// is selected by [contract] when supplied, otherwise by the Dart type [T];
+/// is selected by [contractToken] when supplied, otherwise by the Dart type [T];
 /// [key] selects a named implementation and no key selects the registered
 /// default. Overrides are accepted only by [CCRouterTestHost] and never by
 /// production initialization.
@@ -18,7 +18,7 @@ final class CCServiceOverride<T extends Object> {
   const CCServiceOverride._({
     required this.create,
     this.initializer,
-    this.contract,
+    this.contractToken,
     this.key,
   });
 
@@ -32,12 +32,12 @@ final class CCServiceOverride<T extends Object> {
   factory CCServiceOverride.value(
     T instance, {
     CCServiceInitializer<T>? initializer,
-    CCServiceToken<T>? contract,
+    CCServiceToken<T>? contractToken,
     CCServiceKey<T>? key,
   }) => CCServiceOverride._(
     create: (_) => instance,
     initializer: initializer,
-    contract: contract,
+    contractToken: contractToken,
     key: key,
   );
 
@@ -50,12 +50,12 @@ final class CCServiceOverride<T extends Object> {
   factory CCServiceOverride.factory({
     required CCServiceFactory<T> create,
     CCServiceInitializer<T>? initializer,
-    CCServiceToken<T>? contract,
+    CCServiceToken<T>? contractToken,
     CCServiceKey<T>? key,
   }) => CCServiceOverride._(
     create: create,
     initializer: initializer,
-    contract: contract,
+    contractToken: contractToken,
     key: key,
   );
 
@@ -69,7 +69,7 @@ final class CCServiceOverride<T extends Object> {
   final CCServiceInitializer<T>? initializer;
 
   /// Stable cross-package Service identity to replace, when promoted.
-  final CCServiceToken<T>? contract;
+  final CCServiceToken<T>? contractToken;
 
   /// Named implementation to replace, or null for the default implementation.
   final CCServiceKey<T>? key;
@@ -80,7 +80,7 @@ final class CCServiceOverride<T extends Object> {
     initializer: initializer == null
         ? null
         : (service, context) => initializer!(service as T, context),
-    contract: contract,
+    contractToken: contractToken,
     key: key,
   );
 }

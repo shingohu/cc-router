@@ -65,7 +65,7 @@ Builder ccRouteContractBuilder(BuilderOptions options) {
   );
 }
 
-/// Creates standalone typed Tokens for public Service contracts.
+/// Creates standalone typed Tokens for generated and owner-only Service SPI.
 Builder ccServiceContractBuilder(BuilderOptions options) {
   final config = Map<String, dynamic>.from(options.config);
   config.putIfAbsent('build_extensions', () => _serviceContractBuildExtensions);

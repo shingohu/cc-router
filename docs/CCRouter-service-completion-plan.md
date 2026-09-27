@@ -5,7 +5,7 @@
 ## 1. 文档状态
 
 - 状态：Service 子系统实施清单，1.x 生命周期模型已收敛为 App、Session、Route
-- 范围：Service Provider、Token/Key、Scope、生命周期、跨组件契约和最小注解生成
+- 范围：Service Provider、稳定 Contract ID/Key、Scope、生命周期、跨组件契约和最小注解生成
 - 不包含：CLI 2.0、方法级 Service Proxy 自动生成、动态组件交付和远程 RPC
 
 本文只记录 Service 的实施边界和验收顺序。实际状态以本文件和测试为准，不能把架构设计中
@@ -18,7 +18,8 @@
 - Route Lifetime 使用 Managed Navigation ID 精确关联 RouteEntry；普通
   `CCRouter.service()` 不猜测当前页面，Flutter 页面通过
   `CCRouter.routeService(context)` 读取 Host 自动注入的不可变绑定。
-- `CCServiceToken<T>` 支持跨 Package 稳定契约身份。
+- Runtime 使用稳定 Contract ID 支持跨 Package 契约身份；普通业务只按接口类型解析，
+  `CCServiceToken<T>` 仅保留在生成支持、低层 Component SPI 和测试边界。
 - `CCServiceKey<T>` 支持同一契约的命名实现。
 - `ccrouter_test` 提供 `CCServiceOverride<T>`，可在隔离 `CCRouterTestHost`
   中按类型、Token 和 Key 替换已注册 Provider；替身沿用原 Provider 的 Scope、
@@ -37,8 +38,9 @@
   Invocation；调用方也可以提供更短的 timeout 或 cancellation token。
 - `CCDisposable` 实例由 Scope 按逆创建顺序销毁，单项失败和超时不会阻塞其它实例。
 - Session 关闭会拒绝新的 Session Service 解析，并释放 Session-owned 实例。
-- `@CCServiceContract` 已生成公开强类型 Token；`@CCService` 已为简单同步构造实现生成
-  Provider registration，并由 Package 唯一 Component 的自动 Registrar 装配。
+- `@CCServiceContract` 已生成内部强类型 Token/metadata；`@CCService` 会为简单同步构造实现
+  推导唯一直接 Contract 或内部 ID，生成 Provider registration，并由 Package 唯一 Component
+  的自动 Registrar 装配。
 - 带参构造、依赖注入、自定义 Factory 和 async initializer 保持显式
   `@CCComponentContribution`；方法级 Service Proxy 仍未自动生成。
 - `CCRouterTestHost.run` 通过 Zone-local Runtime Overlay 让生成 Proxy 和静态 Facade
@@ -120,15 +122,16 @@ Session Scope 均返回稳定的 Service 错误子类型；缺失命名实现会
 - 实现 Package 只声明一个顶层 `const CCComponent`；内部 Route、简单 Service 和
   Contribution 自动绑定该 Owner，生成私有 Registrar、Manifest、Catalog 和 Package Index。
 - contracts Package 可服务多个 Component。每个 `@CCServiceContract` 显式声明
-  `CCComponentId`，生成 `CCServiceToken<T>`，并要求公共 barrel 使用 `show` 导出 Token。
+  `CCComponentId` 和稳定 ID；业务 barrel 使用 `show` 导出接口，不导出生成 Token。
 - `@CCService` 只覆盖 public concrete non-generic class 的 unnamed zero-argument generative
-  constructor，支持 Scope、`singleton/newInstance`、Key、default 和跨组件 Token。
+  constructor，支持 Scope、`singleton/newInstance`、Key、default，并自动绑定唯一直接
+  Contract。多个直接 Contract、Contract 与 `id` 并存、间接继承猜测都会生成失败。
 - 复杂创建与 readiness 继续使用 `@CCComponentContribution`，避免在注解中增加任意 Factory
   或异步代码入口。Command、Event 与 InitTask 注册也保持 Contribution，不扫描函数体猜 metadata。
 - Service contract/implementation 已进入 workspace ownership/conflict 校验、Package Index、
   Capability Catalog、Host 聚合和 metadata 内容缓存；无生成物时不创建生成目录。
-- 1.x 跨组件稳定入口仍是独立 contracts Package 中的接口和生成 Token，消费方可通过
-  `CCRouter.service(contract: ...)` 直接获取强类型实现。
+- 1.x 跨组件稳定入口是独立 contracts Package 中的接口与注解稳定 ID，消费方通过
+  `CCRouter.service<T>()` 获取强类型实现；Token 不进入普通业务 Facade。
 - 自动 Service Proxy 在出现以下任一真实信号后重新评估：至少 3 个 promoted
   Contract 且 5 个消费关系；同一 Contract 被至少 3 个组件消费；或者已出现
   method ID、caller identity 或方法签名漂移缺陷。
@@ -147,8 +150,8 @@ Session Scope 均返回稳定的 Service 错误子类型；缺失命名实现会
 - Service 性能回归使用同机 P50/P95 趋势比较，不设置跨机器硬阈值；性能样本必须同时验证
   Scope 销毁后的存活实例为零。
 - 同一 Token 的类型不匹配、重复默认实现和命名冲突均返回稳定错误。
-- 冷生成必须一次完成 Token、Provider、Component assembly、Package Index 与 Host Catalog；
-  不能依赖先生成 Token、第二次再识别 Provider。
+- 冷生成必须直接从 Contract annotation 一次完成 Token、Provider、Component assembly、
+  Package Index 与 Host Catalog；不能依赖先生成 Token、第二次再识别 Provider。
 - Service metadata 的新增、内容变化、重命名和删除必须使缓存失效；缓存与 `--no-cache`
   输出逐字节一致。
 - Core Service 契约不依赖 BuildContext、反射、字符串方法调用或万能 Map；Flutter

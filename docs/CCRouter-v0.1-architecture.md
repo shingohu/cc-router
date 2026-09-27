@@ -361,21 +361,19 @@ abstract final class CCRouter {
 
   static CCNavigator get navigator;
 
-  static T service<T>({CCServiceToken<T>? contract, CCServiceKey<T>? key});
-  static T? serviceOrNull<T>({CCServiceToken<T>? contract, CCServiceKey<T>? key});
+  static T service<T>({CCServiceKey<T>? key});
+  static T? serviceOrNull<T>({CCServiceKey<T>? key});
   static Future<T> serviceAsync<T>({
-    CCServiceToken<T>? contract,
     CCServiceKey<T>? key,
     Duration? timeout,
     CCCancellationToken? cancellation,
   });
-  static List<T> services<T>({CCServiceToken<T>? contract});
+  static List<T> services<T>();
   static Future<List<T>> servicesAsync<T>({
-    CCServiceToken<T>? contract,
     Duration? timeout,
     CCCancellationToken? cancellation,
   });
-  static bool hasService<T>({CCServiceToken<T>? contract, CCServiceKey<T>? key});
+  static bool hasService<T>({CCServiceKey<T>? key});
 
   static Future<R> command<R>(CCCommand<R> command);
   static Future<void> event(
@@ -501,7 +499,6 @@ abstract interface class PaymentService {
 
 ```dart
 @CCService(
-  contract: paymentServiceToken,
   scope: CCServiceScope.session,
   creationPolicy: CCServiceCreationPolicy.singleton,
 )
@@ -549,15 +546,20 @@ final all = CCRouter.services<PaymentService>();
 ### 8.3 内部 Service 升级为跨组件契约
 
 组件内部 Service 默认按 Dart `Type` 解析，不要求提前创建 contracts Package。出现真实
-跨组件消费者时，将接口和 DTO 移入领域 contracts Package，并声明稳定 Token：
+跨组件消费者时，将接口和 DTO 移入领域 contracts Package，并声明稳定 Contract：
 
 ```dart
-const paymentService = CCServiceToken<PaymentService>('payment.service');
+@CCServiceContract(
+  componentId: paymentComponentId,
+  id: 'payment.service',
+)
+abstract interface class PaymentService {}
 ```
 
-Provider 通过 `contract` 附加 Token；旧的 Type 调用与新的 Token 调用解析到同一个
-Provider 和 Scope 实例。稳定 ID 在接口移动 Package 时不变，泛型仍负责静态类型检查。
-Token ID 全局唯一，命名实现继续使用 `CCServiceKey<T>` 作为 qualifier。
+简单 Provider 通过直接实现唯一 Contract 自动绑定；业务始终按 Type 解析同一个 Provider 和
+Scope 实例。稳定 ID 在接口移动 Package 时不变，泛型仍负责静态类型检查。Contract ID 全局
+唯一，命名实现继续使用 `CCServiceKey<T>` 作为 qualifier。生成 Token 只保留在生成支持、
+低层 Component SPI 和测试中。
 
 ### 8.4 服务代理
 

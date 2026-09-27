@@ -10,7 +10,6 @@ final class OrderSummaryServiceProxy implements OrderSummaryService {
   @override
   String summaryFor(int orderId) =>
       CCRouterGeneratedServiceBinding.invokeSync<OrderSummaryService, String>(
-        contract: orderSummaryServiceToken,
         methodId: 'summaryFor',
         callerComponentId: 'demo_navigation_lab_component',
         call: (service, _) => service.summaryFor(orderId),

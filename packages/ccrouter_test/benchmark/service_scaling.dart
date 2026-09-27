@@ -58,7 +58,7 @@ final class _BenchmarkRegistrar implements CCComponentRegistrar {
     for (var index = 0; index < providerCount; index++) {
       registry.registerService<_BenchmarkService>(
         CCServiceProvider(
-          contract: _serviceContract,
+          contractToken: _serviceContract,
           key: _serviceKey(index),
           factory: (_) => _BenchmarkService(index),
         ),
@@ -66,7 +66,7 @@ final class _BenchmarkRegistrar implements CCComponentRegistrar {
     }
     registry.registerService<_ReadyBenchmarkService>(
       CCServiceProvider(
-        contract: _readyServiceContract,
+        contractToken: _readyServiceContract,
         key: _readyServiceKey,
         creationPolicy: CCServiceCreationPolicy.newInstance,
         factory: (_) => _ReadyBenchmarkService(),
@@ -92,7 +92,7 @@ Future<void> main() async {
 
       _resolveAllSingletons(runtime, providerCount);
       await runtime.serviceAsync<_ReadyBenchmarkService>(
-        contract: _readyServiceContract,
+        contractToken: _readyServiceContract,
         key: _readyServiceKey,
       );
       final disposeWatch = Stopwatch()..start();
@@ -110,7 +110,7 @@ Future<void> main() async {
     for (var sample = 0; sample < _lookupSamples; sample++) {
       final watch = Stopwatch()..start();
       final service = runtime.service<_BenchmarkService>(
-        contract: _serviceContract,
+        contractToken: _serviceContract,
         key: targetKey,
       );
       watch.stop();
@@ -124,7 +124,7 @@ Future<void> main() async {
     for (var sample = 0; sample < _invocationSamples; sample++) {
       final watch = Stopwatch()..start();
       final result = runtime.invokeServiceSync<_BenchmarkService, int>(
-        contract: _serviceContract,
+        contractToken: _serviceContract,
         key: targetKey,
         methodId: 'read',
         callerComponentId: 'benchmark-consumer',
@@ -141,7 +141,7 @@ Future<void> main() async {
     for (var sample = 0; sample < _readinessSamples; sample++) {
       final watch = Stopwatch()..start();
       final service = await runtime.serviceAsync<_ReadyBenchmarkService>(
-        contract: _readyServiceContract,
+        contractToken: _readyServiceContract,
         key: _readyServiceKey,
       );
       watch.stop();
@@ -180,14 +180,14 @@ Future<void> _warmUp(int providerCount) async {
   final runtime = _runtime(providerCount)..initialize();
   _resolveAllSingletons(runtime, providerCount);
   runtime.invokeServiceSync<_BenchmarkService, int>(
-    contract: _serviceContract,
+    contractToken: _serviceContract,
     key: _serviceKey(providerCount - 1),
     methodId: 'read',
     callerComponentId: 'benchmark-consumer',
     call: (service, _) => service.index,
   );
   await runtime.serviceAsync<_ReadyBenchmarkService>(
-    contract: _readyServiceContract,
+    contractToken: _readyServiceContract,
     key: _readyServiceKey,
   );
   await runtime.dispose();
@@ -208,7 +208,7 @@ CCRouterRuntime _runtime(int providerCount) => CCRouterRuntime.forTesting(
 void _resolveAllSingletons(CCRouterRuntime runtime, int providerCount) {
   for (var index = 0; index < providerCount; index++) {
     runtime.service<_BenchmarkService>(
-      contract: _serviceContract,
+      contractToken: _serviceContract,
       key: _serviceKey(index),
     );
   }

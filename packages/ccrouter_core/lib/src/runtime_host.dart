@@ -740,7 +740,7 @@ final class CCRouterRuntime {
       );
     }
     final providers = _providers[T] ?? <_Provider>[];
-    final contractId = provider.contract?.id;
+    final contractId = provider.contractToken?.id;
     if (contractId != null && !_isStableIdentifier(contractId)) {
       throw CCRegistrationError(
         'Service contract ID "$contractId" is invalid.',
@@ -1058,21 +1058,21 @@ final class CCRouterRuntime {
 
   /// Resolves the default or keyed service implementation for [T].
   ///
-  /// [contract] selects the stable identity used after cross-package promotion;
-  /// omitting it preserves the legacy type-based lookup path.
+  /// [contractToken] is a low-level generated/test selector for a stable promoted
+  /// identity. Business Facades omit it and resolve through the contract type.
   /// Throws [CCServiceNotFoundError] when no matching Provider exists,
   /// [CCServiceTypeMismatchError] when a Token is used with the wrong type, or
   /// [CCServiceScopeUnavailableError] when the Provider's required Scope is
   /// inactive.
   T service<T extends Object>({
-    CCServiceToken<T>? contract,
+    CCServiceToken<T>? contractToken,
     CCServiceKey<T>? key,
   }) {
     _ensureInitialized();
-    final provider = _findProvider<T>(contract: contract, key: key);
+    final provider = _findProvider<T>(contractToken: contractToken, key: key);
     if (provider == null)
       throw CCServiceNotFoundError(
-        contract?.id ?? T.toString(),
+        contractToken?.id ?? T.toString(),
         key: key?.name,
       );
     return _resolve(provider) as T;
@@ -1080,14 +1080,14 @@ final class CCRouterRuntime {
 
   /// Resolves [T], returning null only when no matching provider exists.
   ///
-  /// Use [contract] for optional promoted capabilities and omit it for internal
+  /// Use [contractToken] for optional promoted capabilities and omit it for internal
   /// services that intentionally remain coupled to their Dart type.
   T? serviceOrNull<T extends Object>({
-    CCServiceToken<T>? contract,
+    CCServiceToken<T>? contractToken,
     CCServiceKey<T>? key,
   }) {
     _ensureInitialized();
-    final provider = _findProvider<T>(contract: contract, key: key);
+    final provider = _findProvider<T>(contractToken: contractToken, key: key);
     return provider == null ? null : _resolve(provider) as T;
   }
 
@@ -1097,22 +1097,22 @@ final class CCRouterRuntime {
   /// step. Providers with an initializer use one single-flight operation per
   /// singleton and Scope; new-instance Providers initialize every new instance.
   Future<T> serviceAsync<T extends Object>({
-    CCServiceToken<T>? contract,
+    CCServiceToken<T>? contractToken,
     CCServiceKey<T>? key,
     Duration? timeout,
     CCCancellationToken? cancellation,
   }) {
     _ensureInitialized();
-    final provider = _findProvider<T>(contract: contract, key: key);
+    final provider = _findProvider<T>(contractToken: contractToken, key: key);
     if (provider == null) {
       throw CCServiceNotFoundError(
-        contract?.id ?? T.toString(),
+        contractToken?.id ?? T.toString(),
         key: key?.name,
       );
     }
     return _readyService<T>(
       provider,
-      contract: contract,
+      contractToken: contractToken,
       timeout: timeout,
       cancellation: cancellation,
     );
@@ -1123,17 +1123,17 @@ final class CCRouterRuntime {
   /// Initialization, lifecycle, timeout, and cancellation failures propagate
   /// unchanged and are never converted to null.
   Future<T?> serviceOrNullAsync<T extends Object>({
-    CCServiceToken<T>? contract,
+    CCServiceToken<T>? contractToken,
     CCServiceKey<T>? key,
     Duration? timeout,
     CCCancellationToken? cancellation,
   }) {
     _ensureInitialized();
-    final provider = _findProvider<T>(contract: contract, key: key);
+    final provider = _findProvider<T>(contractToken: contractToken, key: key);
     if (provider == null) return Future<T?>.value();
     return _readyService<T>(
       provider,
-      contract: contract,
+      contractToken: contractToken,
       timeout: timeout,
       cancellation: cancellation,
     );
@@ -1147,14 +1147,14 @@ final class CCRouterRuntime {
   /// business code uses the Flutter facade rather than calling this Host bridge.
   T serviceForRoute<T extends Object>({
     required String navigationId,
-    CCServiceToken<T>? contract,
+    CCServiceToken<T>? contractToken,
     CCServiceKey<T>? key,
   }) {
     _ensureInitialized();
-    final provider = _findProvider<T>(contract: contract, key: key);
+    final provider = _findProvider<T>(contractToken: contractToken, key: key);
     if (provider == null) {
       throw CCServiceNotFoundError(
-        contract?.id ?? T.toString(),
+        contractToken?.id ?? T.toString(),
         key: key?.name,
       );
     }
@@ -1177,11 +1177,11 @@ final class CCRouterRuntime {
   /// retain a Service beyond its owning page.
   T? serviceForRouteOrNull<T extends Object>({
     required String navigationId,
-    CCServiceToken<T>? contract,
+    CCServiceToken<T>? contractToken,
     CCServiceKey<T>? key,
   }) {
     _ensureInitialized();
-    final provider = _findProvider<T>(contract: contract, key: key);
+    final provider = _findProvider<T>(contractToken: contractToken, key: key);
     if (provider == null) return null;
     if (provider.scope != CCServiceScope.route) {
       throw const CCResolutionError(
@@ -1202,16 +1202,16 @@ final class CCRouterRuntime {
   /// Route Scope and prevents the instance from becoming ready afterward.
   Future<T> serviceForRouteAsync<T extends Object>({
     required String navigationId,
-    CCServiceToken<T>? contract,
+    CCServiceToken<T>? contractToken,
     CCServiceKey<T>? key,
     Duration? timeout,
     CCCancellationToken? cancellation,
   }) {
     _ensureInitialized();
-    final provider = _findProvider<T>(contract: contract, key: key);
+    final provider = _findProvider<T>(contractToken: contractToken, key: key);
     if (provider == null) {
       throw CCServiceNotFoundError(
-        contract?.id ?? T.toString(),
+        contractToken?.id ?? T.toString(),
         key: key?.name,
       );
     }
@@ -1226,7 +1226,7 @@ final class CCRouterRuntime {
     }
     return _readyService<T>(
       provider,
-      contract: contract,
+      contractToken: contractToken,
       routeEntry: entry,
       timeout: timeout,
       cancellation: cancellation,
@@ -1239,13 +1239,13 @@ final class CCRouterRuntime {
   /// readiness failures remain explicit errors.
   Future<T?> serviceForRouteOrNullAsync<T extends Object>({
     required String navigationId,
-    CCServiceToken<T>? contract,
+    CCServiceToken<T>? contractToken,
     CCServiceKey<T>? key,
     Duration? timeout,
     CCCancellationToken? cancellation,
   }) {
     _ensureInitialized();
-    final provider = _findProvider<T>(contract: contract, key: key);
+    final provider = _findProvider<T>(contractToken: contractToken, key: key);
     if (provider == null) return Future<T?>.value();
     if (provider.scope != CCServiceScope.route) {
       throw const CCResolutionError(
@@ -1258,7 +1258,7 @@ final class CCRouterRuntime {
     }
     return _readyService<T>(
       provider,
-      contract: contract,
+      contractToken: contractToken,
       routeEntry: entry,
       timeout: timeout,
       cancellation: cancellation,
@@ -1267,21 +1267,21 @@ final class CCRouterRuntime {
 
   /// Whether a provider for [T] and [key] is registered.
   ///
-  /// [contract] performs discovery by stable ID without instantiating a service.
+  /// [contractToken] performs discovery by stable ID without instantiating a service.
   bool hasService<T extends Object>({
-    CCServiceToken<T>? contract,
+    CCServiceToken<T>? contractToken,
     CCServiceKey<T>? key,
   }) {
     _ensureInitialized();
-    return _findProvider<T>(contract: contract, key: key) != null;
+    return _findProvider<T>(contractToken: contractToken, key: key) != null;
   }
 
   /// Resolves all implementations of [T] in deterministic key order.
   ///
-  /// [contract] selects all providers attached to one promoted service API.
-  List<T> services<T extends Object>({CCServiceToken<T>? contract}) {
+  /// [contractToken] selects all providers attached to one promoted service API.
+  List<T> services<T extends Object>({CCServiceToken<T>? contractToken}) {
     _ensureInitialized();
-    final providers = List<_Provider>.of(_providersFor<T>(contract))
+    final providers = List<_Provider>.of(_providersFor<T>(contractToken))
       ..sort((a, b) => (a.name ?? '').compareTo(b.name ?? ''));
     return List.unmodifiable(
       providers.map((provider) => _resolve(provider) as T),
@@ -1294,18 +1294,18 @@ final class CCRouterRuntime {
   /// may proceed concurrently because each Provider has independent Scope and
   /// single-flight state; one failure completes the aggregate with that error.
   Future<List<T>> servicesAsync<T extends Object>({
-    CCServiceToken<T>? contract,
+    CCServiceToken<T>? contractToken,
     Duration? timeout,
     CCCancellationToken? cancellation,
   }) async {
     _ensureInitialized();
-    final providers = List<_Provider>.of(_providersFor<T>(contract))
+    final providers = List<_Provider>.of(_providersFor<T>(contractToken))
       ..sort((a, b) => (a.name ?? '').compareTo(b.name ?? ''));
     final services = await Future.wait(
       providers.map(
         (provider) => _readyService<T>(
           provider,
-          contract: contract,
+          contractToken: contractToken,
           timeout: timeout,
           cancellation: cancellation,
         ),
@@ -1327,7 +1327,7 @@ final class CCRouterRuntime {
   /// reject one so stale page identity cannot be silently ignored. Arguments
   /// and return values are never added to the invocation context or trace.
   Future<R> invokeService<T extends Object, R>({
-    required CCServiceToken<T> contract,
+    CCServiceToken<T>? contractToken,
     CCServiceKey<T>? key,
     required String methodId,
     String? callerComponentId,
@@ -1337,7 +1337,7 @@ final class CCRouterRuntime {
     required FutureOr<R> Function(T service, CCInvocationContext context) call,
   }) {
     final invocation = _prepareServiceInvocation(
-      contract: contract,
+      contractToken: contractToken,
       key: key,
       methodId: methodId,
       callerComponentId: callerComponentId,
@@ -1376,7 +1376,7 @@ final class CCRouterRuntime {
   /// preempted, so this API intentionally exposes no timeout or caller
   /// cancellation parameter.
   R invokeServiceSync<T extends Object, R>({
-    required CCServiceToken<T> contract,
+    CCServiceToken<T>? contractToken,
     CCServiceKey<T>? key,
     required String methodId,
     String? callerComponentId,
@@ -1384,7 +1384,7 @@ final class CCRouterRuntime {
     required R Function(T service, CCInvocationContext context) call,
   }) {
     final invocation = _prepareServiceInvocation(
-      contract: contract,
+      contractToken: contractToken,
       key: key,
       methodId: methodId,
       callerComponentId: callerComponentId,
@@ -1415,18 +1415,13 @@ final class CCRouterRuntime {
     String target,
   })
   _prepareServiceInvocation<T extends Object>({
-    required CCServiceToken<T> contract,
+    CCServiceToken<T>? contractToken,
     CCServiceKey<T>? key,
     required String methodId,
     String? callerComponentId,
     String? navigationId,
   }) {
     _ensureInitialized();
-    if (!_isStableIdentifier(contract.id)) {
-      throw const CCInvocationError(
-        'The Service invocation contract ID is invalid.',
-      );
-    }
     if (!_isStableIdentifier(methodId)) {
       throw const CCInvocationError(
         'The Service invocation method ID is invalid.',
@@ -1438,9 +1433,18 @@ final class CCRouterRuntime {
         'The Service invocation caller component ID is invalid.',
       );
     }
-    final provider = _findProvider<T>(contract: contract, key: key);
+    final provider = _findProvider<T>(contractToken: contractToken, key: key);
+    final contractId = contractToken?.id ?? provider?.contractId;
     if (provider == null) {
-      throw CCServiceNotFoundError(contract.id, key: key?.name);
+      throw CCServiceNotFoundError(
+        contractToken?.id ?? T.toString(),
+        key: key?.name,
+      );
+    }
+    if (contractId == null || !_isStableIdentifier(contractId)) {
+      throw const CCInvocationError(
+        'Generated Service invocation requires a promoted stable contract.',
+      );
     }
     final routeEntry = provider.scope == CCServiceScope.route
         ? navigationId == null
@@ -1467,7 +1471,7 @@ final class CCRouterRuntime {
       routeEntry: routeEntry,
       scope: scope,
       target: _serviceInvocationTarget(
-        contractId: contract.id,
+        contractId: contractId,
         key: key?.name,
         methodId: methodId,
       ),
@@ -1788,7 +1792,7 @@ final class CCRouterRuntime {
   /// Awaits one Provider's readiness inside a traced Scope-owned invocation.
   Future<T> _readyService<T extends Object>(
     _Provider provider, {
-    required CCServiceToken<T>? contract,
+    required CCServiceToken<T>? contractToken,
     _RouteEntryRecord? routeEntry,
     Duration? timeout,
     CCCancellationToken? cancellation,
@@ -1815,7 +1819,7 @@ final class CCRouterRuntime {
     }
     final target = _serviceInvocationTarget(
       contractId:
-          contract?.id ?? provider.contractId ?? provider.type.toString(),
+          contractToken?.id ?? provider.contractId ?? provider.type.toString(),
       key: provider.name,
       methodId: 'ready',
     );
@@ -2045,10 +2049,10 @@ final class CCRouterRuntime {
 
   /// Finds a provider by stable promoted contract or legacy Dart type.
   _Provider? _findProvider<T extends Object>({
-    required CCServiceToken<T>? contract,
+    required CCServiceToken<T>? contractToken,
     required CCServiceKey<T>? key,
   }) {
-    final providers = _providersFor<T>(contract);
+    final providers = _providersFor<T>(contractToken);
     for (final provider in providers) {
       if (key == null ? provider.isDefault : provider.name == key.name)
         return provider;
@@ -2057,13 +2061,17 @@ final class CCRouterRuntime {
   }
 
   /// Selects a service provider group and rejects forged token type mismatches.
-  List<_Provider> _providersFor<T extends Object>(CCServiceToken<T>? contract) {
-    final providers = contract == null
+  List<_Provider> _providersFor<T extends Object>(
+    CCServiceToken<T>? contractToken,
+  ) {
+    final providers = contractToken == null
         ? _providers[T] ?? <_Provider>[]
-        : _providersByContractId[contract.id] ?? <_Provider>[];
-    if (contract != null && providers.isNotEmpty && providers.first.type != T) {
+        : _providersByContractId[contractToken.id] ?? <_Provider>[];
+    if (contractToken != null &&
+        providers.isNotEmpty &&
+        providers.first.type != T) {
       throw CCServiceTypeMismatchError(
-        contract.id,
+        contractToken.id,
         providers.first.type.toString(),
       );
     }
@@ -2833,15 +2841,15 @@ final class CCRouterRuntime {
   ) {
     final replaced = <_Provider>{};
     for (final override in overrides) {
-      final candidates = override.contract == null
+      final candidates = override.contractToken == null
           ? (_providers[override.type] ?? const <_Provider>[])
-          : (_providersByContractId[override.contract!.id] ??
+          : (_providersByContractId[override.contractToken!.id] ??
                 const <_Provider>[]);
-      if (override.contract != null &&
+      if (override.contractToken != null &&
           candidates.isNotEmpty &&
           candidates.any((provider) => provider.type != override.type)) {
         throw CCRegistrationError(
-          'Service override contract "${override.contract!.id}" has a type '
+          'Service override contract "${override.contractToken!.id}" has a type '
           'mismatch.',
         );
       }
@@ -2850,7 +2858,7 @@ final class CCRouterRuntime {
         return provider.name == override.key!.name;
       }).toList();
       if (target.length != 1) {
-        final identity = override.contract?.id ?? override.type.toString();
+        final identity = override.contractToken?.id ?? override.type.toString();
         final keySuffix = override.key == null
             ? ''
             : ' with key "${override.key!.name}"';
@@ -2861,7 +2869,7 @@ final class CCRouterRuntime {
       }
       final original = target.single;
       if (!replaced.add(original)) {
-        final identity = override.contract?.id ?? override.type.toString();
+        final identity = override.contractToken?.id ?? override.type.toString();
         throw CCRegistrationError(
           'Service Provider "$identity" was overridden more than once.',
         );

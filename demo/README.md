@@ -95,9 +95,9 @@ Root Observer。`CCRouterApp.managed` 只绑定 Host 和 Backend，不初始化�
 `ccrouterGeneratedComponentManifests`；组件业务 barrel 不导出 Registrar 或 Manifest。
 订单详情路由由 `@CCRouteContract` 声明，页面通过 `@CCRouteImplementation` 绑定；跨组件
 只导入 `demo_order_contracts`，页面 Widget、注册入口和构造 glue 留在 `demo_order`。
-同一契约包还声明 `OrderSummaryService` 并生成稳定 `CCServiceToken`；订单组件通过
-`@CCService` 自动注册实现，支付
-组件通过 Token 解析，Type 路径和 Token 路径共享同一个 Scope 实例。
+同一契约包还通过 `@CCServiceContract` 声明 `OrderSummaryService` 的稳定 ID；订单实现
+直接 `implements` 该唯一 Contract，`@CCService()` 自动完成绑定与注册。支付组件只导入
+业务接口并按 Type 调用，生成 Token 不进入消费方 API。
 
 demo 和组件包已加入根 Dart workspace，使用本仓库内框架源码与统一锁文件，
 不再需要 `pubspec_overrides.yaml` 路径覆盖。新增组件时也应加入根 `workspace` 列表，

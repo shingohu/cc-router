@@ -164,11 +164,13 @@ Host 依赖闭包内、明确可写且声明 `ccrouter_generator` 的 Package，
   不重复生成业务契约。
 - 公开 `DetailRoute.intent(...)` 只构造 `CCRouteIntent<String>`，仍通过
   `CCRouter.navigator.push<String>(...)` 导航。
-- `@CCServiceContract` 的 `<schema>.service.contract.g.dart`：生成公开的强类型
-  `CCServiceToken<T>`；contracts barrel 必须通过 `show` 显式导出该 Token。
+- `@CCServiceContract` 的 `<schema>.service.contract.g.dart`：生成供 Generator、低层
+  Component SPI 和测试使用的强类型 `CCServiceToken<T>`；业务 contracts barrel 只需通过
+  `show` 导出 authored Service 接口，不导出裸 Token。
 - `@CCService` 的 `<implementation>.service.g.dart`：生成 Package-private
-  `CCServiceProvider<T>` registration bridge。首版只接受 public concrete non-generic class
-  的 unnamed zero-argument generative constructor。
+  `CCServiceProvider<T>` registration bridge。直接实现唯一 `@CCServiceContract` 时自动绑定；
+  未实现 Contract 的内部 Service 必须声明 `id`。首版只接受 public concrete non-generic
+  class 的 unnamed zero-argument generative constructor。
 - `<component-id>.component.g.dart`：自动生成私有 Registrar、Runtime Manifest 和后端中立的
   `CCFlutterRouteCatalog`，稳定装配 Route、Service 与 Contribution。
 - `lib/src/ccrouter_generated/metadata/ccrouter_package.json`：发布级 Package Index，包含 Schema、Package
@@ -276,10 +278,11 @@ Registrar；生成的 `<package>_ccrouter.g.dart` 是唯一 Host 装配入口。
 - 一个实现 Package 必须且只能声明一个 public top-level `const CCComponent`；contracts
   Package 可以声明多个 `CCComponentId`，但不声明 `CCComponent`。
 - `@CCServiceContract` 只用于 public abstract non-generic interface，并显式声明
-  `componentId` 和稳定 ID。`@CCService` 只用于简单同步构造；带参构造、依赖注入、自定义
-  Factory 和 async initializer 继续使用 `@CCComponentContribution`。
-- Service 注解生成 Token、Provider registration 和 Catalog metadata，不生成方法级 Proxy。
-  跨组件调用可以直接按 Token 解析；需要 invocation method trace 的 Proxy 仍按明确契约维护。
+  `componentId` 和稳定 ID。`@CCService` 只自动绑定一个直接实现的 Contract；多个直接
+  Contract、Contract 与 `id` 并存、或只通过间接继承获得 Contract 都会生成失败。带参构造、
+  依赖注入、自定义 Factory 和 async initializer 继续使用 `@CCComponentContribution`。
+- Service 注解生成内部 Token、Provider registration 和 Catalog metadata，不生成方法级 Proxy。
+  跨组件业务调用按接口类型解析；需要 invocation method trace 的 Proxy 仍按明确契约维护。
 
 具名/Factory 页面构造器留到后续阶段；未命名构造器的继承参数、required positional、
 optional positional、named 参数、默认值和跨 Package import 已覆盖。聚合校验同时

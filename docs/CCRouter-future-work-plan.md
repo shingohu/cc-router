@@ -23,7 +23,7 @@
 - [x] Interceptor、Redirect、Defer、PopGuard、Aspect、Trace、Telemetry 和失败回退基础闭环。
 - [x] 生成器增量缓存、Workspace/Package 聚合、Catalog、源码查找和生成物门禁基础闭环。
 - [x] 顶层 `const CCComponent`、自动 Registrar/Manifest、Route 与简单 Service 自动装配，
-  以及 Service Token/Provider metadata 最小生成闭环。
+  以及 Service Contract 自动绑定、稳定 ID/Provider metadata 最小生成闭环。
 
 ## 3. P0：恢复开发后的第一批任务
 

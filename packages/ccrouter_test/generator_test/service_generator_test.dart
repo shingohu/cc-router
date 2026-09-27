@@ -59,7 +59,7 @@ void main() {
     additionalAssets: additionalAssets,
   );
 
-  test('contract builder emits a typed public Token', () async {
+  test('contract builder emits a typed owner-only Token', () async {
     final output = await generateContract(r'''
 const owner = CCComponentId('orders');
 @CCServiceContract(
@@ -80,11 +80,10 @@ abstract interface class OrderSummaryService {
     expect(output, contains('"orders.summary"'));
   });
 
-  test('service builder emits a typed promoted Provider', () async {
+  test('service builder infers one directly implemented contract', () async {
     final output = await generateService(
       r'''
 @CCService(
-  contract: orderSummaryServiceToken,
   key: 'primary',
   scope: CCServiceScope.session,
   creationPolicy: CCServiceCreationPolicy.newInstance,
@@ -100,11 +99,11 @@ final class OrderSummaryServiceImpl implements OrderSummaryService {
       additionalAssets: {
         'ccrouter_test|lib/order_contract.dart': r'''
 import 'package:ccrouter/ccrouter.dart';
+const orderComponentId = CCComponentId('orders');
+@CCServiceContract(componentId: orderComponentId, id: 'orders.summary')
 abstract interface class OrderSummaryService {
   String summaryFor(int orderId);
 }
-const orderSummaryServiceToken =
-    CCServiceToken<OrderSummaryService>('orders.summary');
 ''',
       },
     );
@@ -118,6 +117,7 @@ const orderSummaryServiceToken =
       output,
       contains('CCServiceToken<service_type_0.OrderSummaryService>'),
     );
+    expect(output, contains('contractToken: const CCServiceToken'));
     expect(
       output,
       contains('CCServiceKey<service_type_0.OrderSummaryService>'),
@@ -143,7 +143,7 @@ final class OrderCache {
       contains('registry.registerService<service_source.OrderCache>'),
     );
     expect(output, contains('factory: (_) => service_source.OrderCache()'));
-    expect(output, isNot(contains('contract:')));
+    expect(output, isNot(contains('contractToken:')));
   });
 
   test(
@@ -203,7 +203,7 @@ final class OrderCache { const OrderCache(); }
   final invalidServices = <String, (String, String)>{
     'missing identity': (
       '@CCService() final class Probe { const Probe(); }',
-      'exactly one of id or contract',
+      'must declare id',
     ),
     'parameterized constructor': (
       "@CCService(id: 'probe.service') final class Probe { const Probe(this.value); final int value; }",
@@ -225,25 +225,106 @@ final class OrderCache { const OrderCache(); }
     });
   }
 
-  test('service builder rejects a contract implementation mismatch', () async {
+  test(
+    'service builder rejects multiple directly implemented contracts',
+    () async {
+      final logs = await generateService(
+        r'''
+@CCService()
+final class Probe implements FirstService, SecondService {
+  const Probe();
+}
+''',
+        imports: "import 'package:ccrouter_test/order_contract.dart';",
+        additionalAssets: {
+          'ccrouter_test|lib/order_contract.dart': r'''
+import 'package:ccrouter/ccrouter.dart';
+const orderComponentId = CCComponentId('orders');
+@CCServiceContract(componentId: orderComponentId, id: 'orders.first')
+abstract interface class FirstService {}
+@CCServiceContract(componentId: orderComponentId, id: 'orders.second')
+abstract interface class SecondService {}
+''',
+        },
+        fails: true,
+      );
+      expect(logs, contains('directly implements multiple'));
+    },
+  );
+
+  test('service builder rejects an id beside an inferred contract', () async {
     final logs = await generateService(
       r'''
-@CCService(contract: orderSummaryServiceToken)
-final class Probe { const Probe(); }
+@CCService(id: 'orders.other')
+final class Probe implements OrderSummaryService { const Probe(); }
 ''',
       imports: "import 'package:ccrouter_test/order_contract.dart';",
       additionalAssets: {
         'ccrouter_test|lib/order_contract.dart': r'''
 import 'package:ccrouter/ccrouter.dart';
+const orderComponentId = CCComponentId('orders');
+@CCServiceContract(componentId: orderComponentId, id: 'orders.summary')
 abstract interface class OrderSummaryService {}
-const orderSummaryServiceToken =
-    CCServiceToken<OrderSummaryService>('orders.summary');
 ''',
       },
       fails: true,
     );
-    expect(logs, contains('must implement OrderSummaryService'));
+    expect(logs, contains('omit id'));
   });
+
+  test(
+    'service builder does not infer an indirectly inherited contract',
+    () async {
+      final logs = await generateService(
+        r'''
+abstract base class BaseSummary implements OrderSummaryService {}
+@CCService()
+final class Probe extends BaseSummary { Probe(); }
+''',
+        imports: "import 'package:ccrouter_test/order_contract.dart';",
+        additionalAssets: {
+          'ccrouter_test|lib/order_contract.dart': r'''
+import 'package:ccrouter/ccrouter.dart';
+const orderComponentId = CCComponentId('orders');
+@CCServiceContract(componentId: orderComponentId, id: 'orders.summary')
+abstract interface class OrderSummaryService {}
+''',
+        },
+        fails: true,
+      );
+      expect(logs, contains('inherits Service contract'));
+      expect(logs, contains('directly'));
+    },
+  );
+
+  test(
+    'service builder rejects direct and indirect contracts together',
+    () async {
+      final logs = await generateService(
+        r'''
+abstract base class BaseSummary implements LegacySummaryService {}
+@CCService()
+final class Probe extends BaseSummary implements OrderSummaryService {
+  Probe();
+}
+''',
+        imports: "import 'package:ccrouter_test/order_contract.dart';",
+        additionalAssets: {
+          'ccrouter_test|lib/order_contract.dart': r'''
+import 'package:ccrouter/ccrouter.dart';
+const orderComponentId = CCComponentId('orders');
+@CCServiceContract(componentId: orderComponentId, id: 'orders.summary')
+abstract interface class OrderSummaryService {}
+@CCServiceContract(componentId: orderComponentId, id: 'orders.legacy')
+abstract interface class LegacySummaryService {}
+''',
+        },
+        fails: true,
+      );
+      expect(logs, contains('inherits Service contract LegacySummaryService'));
+      expect(logs, contains('automatic binding is unambiguous'));
+    },
+  );
 }
 
 Future<String> _generate({

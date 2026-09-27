@@ -182,7 +182,7 @@ contracts Package 的公开 Pure Dart model library，并由 schema 通过公开
 本节只记录架构 2.0 的 Service 契约升级候选，尚未实现，也不属于路由完成计划。进入
 Service 开发阶段时应迁移到独立 Service 设计文档，不能据此视为已公开 API。
 
-Service 默认仍可按 Dart `Type` 注册和解析。需要跨组件时，在 contracts Package 声明
-接口及 `CCServiceToken<T>`，Provider 同时附加该 Token。Runtime 同时保留旧 Type 索引和
-稳定字符串 ID 索引，两条路径解析到同一个 Provider，并共享 Scope 缓存和销毁生命周期。
-这样内部调用方可以渐进迁移，而不是复制第二个 Service 实例。
+Service 默认按 Dart `Type` 注册和解析。需要跨组件时，在 contracts Package 使用
+`@CCServiceContract` 声明接口、Owner 和稳定 ID；简单实现通过唯一直接 `implements`
+自动绑定。Runtime 同时保留 Type 索引和稳定字符串 ID 索引，并共享 Scope 缓存和销毁
+生命周期；生成 Token 只属于 Generator、低层 Component SPI 和测试，不进入业务 Facade。

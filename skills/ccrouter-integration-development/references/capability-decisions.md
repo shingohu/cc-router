@@ -42,7 +42,7 @@ Scope selection:
 - `session`: account-bound state that must be recreated after logout/account switch.
 - `route`: tied to one concrete managed RouteEntry, not merely a route ID or visible page.
 
-Use `CCServiceToken<T>` when a contract moves to a stable cross-package boundary. Use `CCServiceKey<T>` for multiple implementations. Use `serviceOrNull` only for a genuinely optional capability.
+When a capability moves across Packages, declare `@CCServiceContract` in a Pure Dart contracts Package and let the implementation bind it automatically. Business callers still use `CCRouter.service<T>()`; stable Token plumbing belongs to generated code and low-level Component SPI. Use `CCServiceKey<T>` for multiple implementations. Use `serviceOrNull` only for a genuinely optional capability.
 
 Do not use a Service as an event bus, a route registry, or a container for arbitrary global mutable state.
 

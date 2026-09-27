@@ -129,8 +129,21 @@ abstract interface class CartSummaryService {
 }
 ```
 
-Export the interface and generated Token from the contracts barrel, then bind
-the implementation with `@CCService(contract: cartSummaryServiceToken)`.
+Export only the interface from the business contracts barrel. Bind a simple
+implementation by directly implementing exactly one contract:
+
+```dart
+@CCService()
+final class CartSummaryServiceImpl implements CartSummaryService {
+  const CartSummaryServiceImpl();
+
+  @override
+  String summary() => '...';
+}
+```
+
+Do not export or pass the generated Token in business code. Generator and
+Runtime retain its stable ID for ownership, diagnostics, and package moves.
 
 Use `@CCComponentContribution` and a handwritten Provider for custom
 construction, constructor injection, or lazy async readiness:
@@ -148,6 +161,23 @@ void registerCartServices(CCRegistry registry) {
 
 final repository = CCRouter.service<CartRepository>();
 ```
+
+If a promoted Service needs constructor injection or an async initializer, the
+implementation Package may expose the generated Token only from a separate
+owner-only SPI barrel and attach it to the handwritten Provider:
+
+```dart
+registry.registerService<CartSummaryService>(
+  CCServiceProvider(
+    contractToken: cartSummaryServiceToken,
+    factory: (_) => CartSummaryServiceImpl(database),
+    initializer: (service, context) => service.open(context.cancellation),
+  ),
+);
+```
+
+This is Component-author SPI, not a business lookup pattern. Consumers still
+call `CCRouter.service<CartSummaryService>()` and never import the owner barrel.
 
 For lazy async readiness:
 

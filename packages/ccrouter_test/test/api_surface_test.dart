@@ -37,6 +37,11 @@ const _hostContractNames = <String>{
   'CCRouteRestorationOpportunityReason',
 };
 
+const _businessHiddenContractNames = <String>{
+  ..._adapterSpiNames,
+  'CCServiceToken',
+};
+
 const _hostSpiTypes = <Type>[
   host.CCNavigationAdapter,
   host.CCNavigationAdapterCapabilities,
@@ -76,7 +81,10 @@ void main() {
       '${root.path}/packages/ccrouter/lib/ccrouter.dart',
     ).readAsStringSync();
 
-    expect(_contractCombinatorNames(businessBarrel, 'hide'), _adapterSpiNames);
+    expect(
+      _contractCombinatorNames(businessBarrel, 'hide'),
+      _businessHiddenContractNames,
+    );
     expect(
       RegExp(
         "export 'src/facade.dart'[\\s\\S]*?hide[\\s\\S]*?"

@@ -925,7 +925,7 @@ void main() {
     }
   });
 
-  test('requires public Service contracts to export the generated Token', () {
+  test('requires public Service contracts to export the authored interface', () {
     final root = Directory.systemTemp.createTempSync(
       'ccrouter-service-barrel-test-',
     );
@@ -941,12 +941,6 @@ void main() {
       File(
         '${package.path}/lib/src/order_summary_service.dart',
       ).writeAsStringSync('abstract interface class OrderSummaryService {}\n');
-      const generatedLibrary =
-          'lib/src/ccrouter_generated/contract/'
-          'order_summary_service.service.contract.g.dart';
-      File(
-        '${package.path}/$generatedLibrary',
-      ).writeAsStringSync('const orderSummaryServiceToken = Object();\n');
       final metadata = document(
         source: 'lib/src/order_summary_service.dart',
         components: const [],
@@ -955,28 +949,28 @@ void main() {
           {
             'id': 'orders.summary',
             'componentId': 'orders',
-            'token': {
-              'symbol': 'orderSummaryServiceToken',
-              'library': generatedLibrary,
+            'declaration': {
+              'symbol': 'OrderSummaryService',
+              'packageUri':
+                  'package:demo_order_contracts/src/order_summary_service.dart',
             },
           },
         ],
       )..['package'] = 'demo_order_contracts';
       final barrel = File('${package.path}/lib/demo_order_contracts.dart');
       barrel.writeAsStringSync(
-        "export 'src/ccrouter_generated/contract/"
-        "order_summary_service.service.contract.g.dart' "
-        'show orderSummaryServiceToken;\n',
+        "export 'src/order_summary_service.dart' "
+        'show OrderSummaryService;\n',
       );
       expect(CCRouteBarrelExportValidator.validate(root, [metadata]), isEmpty);
 
       barrel.writeAsStringSync(
         "export 'src/order_summary_service.dart' "
-        'show OrderSummaryService;\n',
+        'show AnotherService;\n',
       );
       expect(
         CCRouteBarrelExportValidator.validate(root, [metadata]),
-        contains(contains('orderSummaryServiceToken')),
+        contains(contains('OrderSummaryService')),
       );
     } finally {
       root.deleteSync(recursive: true);

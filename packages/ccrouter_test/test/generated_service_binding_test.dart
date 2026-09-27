@@ -20,7 +20,7 @@ final class _Registrar implements CCComponentRegistrar {
   void register(CCRegistry registry) {
     registry.registerService<_GreetingService>(
       CCServiceProvider(
-        contract: _contract,
+        contractToken: _contract,
         factory: (_) => _GreetingServiceImpl(),
         initializer: (_, _) async {
           _initializations++;
@@ -49,7 +49,7 @@ void main() {
 
     await host.run(() async {
       expect(
-        () => CCRouter.service<_GreetingService>(contract: _contract),
+        () => CCRouter.service<_GreetingService>(),
         throwsA(isA<CCServiceNotReadyError>()),
       );
       expect(
@@ -58,7 +58,6 @@ void main() {
               _GreetingService,
               String
             >(
-              contract: _contract,
               methodId: 'greet',
               callerComponentId: 'consumer',
               call: (service, _) => service.greet(),
@@ -71,7 +70,6 @@ void main() {
             _GreetingService,
             String
           >(
-            contract: _contract,
             methodId: 'greet',
             callerComponentId: 'consumer',
             call: (service, _) => service.greet(),
@@ -81,7 +79,6 @@ void main() {
       expect(_initializations, 1);
       expect(
         CCRouterGeneratedServiceBinding.invokeSync<_GreetingService, String>(
-          contract: _contract,
           methodId: 'greet',
           callerComponentId: 'consumer',
           call: (service, _) => service.greet(),

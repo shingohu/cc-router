@@ -152,21 +152,23 @@ void main() {
       const contract = CCServiceToken<Counter>('counter.service');
       runtime.registerService(
         CCServiceProvider<Counter>(
-          contract: contract,
+          contractToken: contract,
           factory: (_) => Counter('promoted'),
         ),
       );
       runtime.initialize();
 
       final legacy = runtime.service<Counter>();
-      final promoted = runtime.service<Counter>(contract: contract);
+      final promoted = runtime.service<Counter>(contractToken: contract);
 
       expect(promoted, same(legacy));
-      expect(runtime.hasService<Counter>(contract: contract), isTrue);
-      expect(runtime.services<Counter>(contract: contract), [same(legacy)]);
+      expect(runtime.hasService<Counter>(contractToken: contract), isTrue);
+      expect(runtime.services<Counter>(contractToken: contract), [
+        same(legacy),
+      ]);
       expect(
         () => runtime.service<String>(
-          contract: const CCServiceToken('counter.service'),
+          contractToken: const CCServiceToken('counter.service'),
         ),
         throwsA(isA<CCServiceTypeMismatchError>()),
       );
@@ -177,14 +179,14 @@ void main() {
     final overlongId = 'a' * 129;
     runtime.registerService(
       CCServiceProvider<Counter>(
-        contract: const CCServiceToken('shared.service'),
+        contractToken: const CCServiceToken('shared.service'),
         factory: (_) => Counter('counter'),
       ),
     );
     expect(
       () => runtime.registerService(
         CCServiceProvider<String>(
-          contract: const CCServiceToken('shared.service'),
+          contractToken: const CCServiceToken('shared.service'),
           key: const CCServiceKey('different-key'),
           factory: (_) => 'duplicate',
         ),
@@ -194,7 +196,7 @@ void main() {
     expect(
       () => runtime.registerService(
         CCServiceProvider<int>(
-          contract: const CCServiceToken('Invalid service'),
+          contractToken: const CCServiceToken('Invalid service'),
           factory: (_) => 1,
         ),
       ),
@@ -203,7 +205,7 @@ void main() {
     expect(
       () => runtime.registerService(
         CCServiceProvider<bool>(
-          contract: CCServiceToken<bool>(overlongId),
+          contractToken: CCServiceToken<bool>(overlongId),
           factory: (_) => true,
         ),
       ),

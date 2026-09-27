@@ -1066,7 +1066,7 @@ void main() {
             register: (registry) {
               registry.registerService<ComponentService>(
                 CCServiceProvider(
-                  contract: contract,
+                  contractToken: contract,
                   factory: (_) => ComponentService('secret-service-value'),
                 ),
               );
@@ -1077,7 +1077,7 @@ void main() {
       runtime.initialize();
 
       final result = await runtime.invokeService<ComponentService, String>(
-        contract: contract,
+        contractToken: contract,
         methodId: 'read',
         callerComponentId: 'consumer',
         call: (service, context) {
@@ -1116,7 +1116,7 @@ void main() {
             register: (registry) {
               registry.registerService<ComponentService>(
                 CCServiceProvider(
-                  contract: contract,
+                  contractToken: contract,
                   factory: (_) => ComponentService('sync'),
                 ),
               );
@@ -1127,7 +1127,7 @@ void main() {
       runtime.initialize();
 
       final result = runtime.invokeServiceSync<ComponentService, String>(
-        contract: contract,
+        contractToken: contract,
         methodId: 'read',
         callerComponentId: 'consumer',
         call: (service, context) {
@@ -1160,7 +1160,7 @@ void main() {
           register: (registry) {
             registry.registerService<ComponentService>(
               CCServiceProvider(
-                contract: contract,
+                contractToken: contract,
                 factory: (_) => ComponentService('ready'),
                 initializer: (_, context) async {
                   expect(context.operation, 'serviceInitialize');
@@ -1175,17 +1175,20 @@ void main() {
     runtime.initialize();
 
     expect(
-      () => runtime.service<ComponentService>(contract: contract),
+      () => runtime.service<ComponentService>(contractToken: contract),
       throwsA(isA<CCServiceNotReadyError>()),
     );
     final result = await runtime.invokeService<ComponentService, String>(
-      contract: contract,
+      contractToken: contract,
       methodId: 'read',
       call: (service, _) => service.id,
     );
     expect(result, 'ready');
     expect(initializations, 1);
-    expect(runtime.service<ComponentService>(contract: contract).id, 'ready');
+    expect(
+      runtime.service<ComponentService>(contractToken: contract).id,
+      'ready',
+    );
 
     await runtime.dispose();
   });
@@ -1202,7 +1205,7 @@ void main() {
           register: (registry) {
             registry.registerService<ComponentService>(
               CCServiceProvider(
-                contract: contract,
+                contractToken: contract,
                 factory: (_) => ComponentService('nested'),
               ),
             );
@@ -1213,7 +1216,7 @@ void main() {
     runtime.registerCommand<ServiceInvocationCommand, int>((message, context) {
       commandContext = context;
       return runtime.invokeService<ComponentService, int>(
-        contract: contract,
+        contractToken: contract,
         methodId: 'increment',
         callerComponentId: 'consumer',
         call: (service, context) {
@@ -1248,7 +1251,7 @@ void main() {
             register: (registry) {
               registry.registerService<ComponentService>(
                 CCServiceProvider(
-                  contract: contract,
+                  contractToken: contract,
                   factory: (_) => ComponentService('pending'),
                 ),
               );
@@ -1262,7 +1265,7 @@ void main() {
         Duration? timeout,
         CCCancellationToken? cancellation,
       }) => runtime.invokeService<ComponentService, int>(
-        contract: contract,
+        contractToken: contract,
         methodId: 'wait',
         timeout: timeout,
         cancellation: cancellation,
@@ -1303,7 +1306,7 @@ void main() {
           register: (registry) {
             registry.registerService<ComponentService>(
               CCServiceProvider(
-                contract: contract,
+                contractToken: contract,
                 scope: CCServiceScope.session,
                 factory: (_) => ComponentService('session'),
               ),
@@ -1315,7 +1318,7 @@ void main() {
     runtime.initialize();
     runtime.openSession(accountId: 'account-a');
     final call = runtime.invokeService<ComponentService, int>(
-      contract: contract,
+      contractToken: contract,
       methodId: 'wait',
       call: (_, context) {
         started.complete(context);
@@ -1347,7 +1350,7 @@ void main() {
             register: (registry) {
               registry.registerService<ComponentService>(
                 CCServiceProvider(
-                  contract: contract,
+                  contractToken: contract,
                   factory: (_) => ComponentService('identity'),
                 ),
               );
@@ -1359,7 +1362,7 @@ void main() {
 
       expect(
         () => runtime.invokeService<ComponentService, void>(
-          contract: contract,
+          contractToken: contract,
           methodId: 'Invalid method',
           call: (_, _) {},
         ),
@@ -1367,7 +1370,7 @@ void main() {
       );
       expect(
         () => runtime.invokeService<ComponentService, void>(
-          contract: contract,
+          contractToken: contract,
           methodId: 'read',
           callerComponentId: 'InvalidCaller',
           call: (_, _) {},
@@ -1376,7 +1379,7 @@ void main() {
       );
       expect(
         () => runtime.invokeService<ComponentService, void>(
-          contract: contract,
+          contractToken: contract,
           methodId: 'read',
           navigationId: 'stale-route',
           call: (_, _) {},
@@ -1488,7 +1491,7 @@ void main() {
           register: (registry) {
             registry.registerService<ComponentService>(
               CCServiceProvider(
-                contract: contract,
+                contractToken: contract,
                 scope: CCServiceScope.route,
                 factory: (_) => ComponentService('route'),
               ),
@@ -1515,7 +1518,7 @@ void main() {
     await Future<void>.delayed(Duration.zero);
     final firstNavigationId = runtime.activeRouteEntries.single.navigationId;
     final firstCall = runtime.invokeService<ComponentService, int>(
-      contract: contract,
+      contractToken: contract,
       methodId: 'wait',
       navigationId: firstNavigationId,
       call: (_, context) {
@@ -1530,7 +1533,7 @@ void main() {
     await Future<void>.delayed(Duration.zero);
     final secondNavigationId = runtime.activeRouteEntries.last.navigationId;
     final secondCall = runtime.invokeService<ComponentService, int>(
-      contract: contract,
+      contractToken: contract,
       methodId: 'wait',
       navigationId: secondNavigationId,
       call: (_, context) {
@@ -1566,7 +1569,7 @@ void main() {
           register: (registry) {
             registry.registerService<ComponentService>(
               CCServiceProvider(
-                contract: contract,
+                contractToken: contract,
                 scope: CCServiceScope.route,
                 factory: (_) => ComponentService('route'),
               ),
@@ -1579,7 +1582,7 @@ void main() {
 
     expect(
       () => runtime.invokeService<ComponentService, void>(
-        contract: contract,
+        contractToken: contract,
         methodId: 'read',
         call: (_, _) {},
       ),
@@ -1587,7 +1590,7 @@ void main() {
     );
     expect(
       () => runtime.invokeService<ComponentService, void>(
-        contract: contract,
+        contractToken: contract,
         methodId: 'read',
         navigationId: 'removed',
         call: (_, _) {},
@@ -1612,7 +1615,7 @@ void main() {
           register: (registry) {
             registry.registerService<ComponentService>(
               CCServiceProvider(
-                contract: contract,
+                contractToken: contract,
                 scope: CCServiceScope.route,
                 factory: (_) => service = ComponentService('route-ready'),
                 initializer: (_, context) {
@@ -1642,7 +1645,7 @@ void main() {
     final navigationId = runtime.activeRouteEntries.single.navigationId;
     final resolving = runtime.serviceForRouteAsync<ComponentService>(
       navigationId: navigationId,
-      contract: contract,
+      contractToken: contract,
     );
     final context = await started.future;
 

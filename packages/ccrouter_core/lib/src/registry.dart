@@ -220,7 +220,7 @@ final class _CCComponentRegistry implements CCRegistry {
 
 /// Describes how a service implementation is created and owned.
 ///
-/// Component registrars use providers to select the factory, contract, key,
+/// Component registrars use providers to select the factory, contract Token, key,
 /// default choice, ownership Scope, and creation policy for one implementation
 /// of a service contract. Scope controls disposal ownership; creation policy
 /// controls whether the instance is cached within that Scope.
@@ -229,7 +229,7 @@ final class CCServiceProvider<T extends Object> {
   const CCServiceProvider({
     required this.factory,
     this.initializer,
-    this.contract,
+    this.contractToken,
     this.key,
     this.scope = CCServiceScope.app,
     this.creationPolicy = CCServiceCreationPolicy.singleton,
@@ -248,10 +248,11 @@ final class CCServiceProvider<T extends Object> {
 
   /// Stable cross-package contract token, when this service is promoted.
   ///
-  /// Omit for component-internal services. Supplying a token keeps legacy
-  /// type-based lookup available while enabling callers to migrate to a stable
-  /// identity without creating a second provider or service instance.
-  final CCServiceToken<T>? contract;
+  /// Generated registration supplies this for promoted Services. Handwritten
+  /// advanced Component SPI may use an owner-only generated Token when custom
+  /// construction prevents `@CCService` registration. Ordinary business code
+  /// resolves by type and never receives this Token.
+  final CCServiceToken<T>? contractToken;
 
   /// Optional typed key identifying a named implementation.
   final CCServiceKey<T>? key;
@@ -336,12 +337,12 @@ final class _Provider {
 /// authoritative for the replacement.
 @visibleForTesting
 final class CCServiceOverrideEntry<T extends Object> {
-  /// Creates a replacement for the Provider identified by [contract] or [T]
+  /// Creates a replacement for the Provider identified by [contractToken] or [T]
   /// and optionally narrowed by [key].
   const CCServiceOverrideEntry({
     required this.factory,
     this.initializer,
-    this.contract,
+    this.contractToken,
     this.key,
   });
 
@@ -355,7 +356,7 @@ final class CCServiceOverrideEntry<T extends Object> {
   final CCServiceInitializer<Object>? initializer;
 
   /// Promoted contract identity to replace, when this service uses one.
-  final CCServiceToken<T>? contract;
+  final CCServiceToken<T>? contractToken;
 
   /// Named implementation to replace, or null for the default Provider.
   final CCServiceKey<T>? key;
