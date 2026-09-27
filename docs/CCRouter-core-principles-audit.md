@@ -5,9 +5,12 @@
 - 审查日期：2026-09-27
 - 审查范围：路由 Runtime、业务 Facade、Host/Adapter SPI、GoRouter Adapter、生成器、
   Service、Command、Event、初始化任务、Demo、测试与诊断模型。
-- 自动化基线：`dart analyze` 通过；`ccrouter_test` 329 项、Demo 31 项、Generator 216 项测试通过；
+- 自动化基线：`dart analyze` 通过；`ccrouter_test` 339 项、Demo 31 项、Generator 216 项测试通过；
   Demo 生成物缓存与 `--no-cache` 两种 `--check` 均通过；macOS debug build 通过。
-- 总体结论：当前实现满足 13 条约定在 v0.1 静态组件范围内的发布门槛，没有 P0 或 P1 问题。
+- 总体结论：当前实现满足 13 条约定在当前静态组件范围内的发布门槛，没有未解决的 P0 或
+  P1 问题。本轮实际发现并修复了 InitTask 重叠 Gate 丢失新就绪任务、Generated SPI 只信任
+  生成期身份、Adapter attach 失败状态残留，以及 Runtime/Multi-Host 清理被单点异常中断的问题；
+  这些修复均已有回归测试，不能只归类为文档调整。
   Route、Service、Command、Event 和 InitTask 已形成边界明确的最小闭环。生成物职责、API 隔离、
   生命周期、取消与诊断已完成本轮收口；Service Contract 自动绑定、Provider 最小注解与消费组件
   方法级 Proxy 与 Command/Event/InitTask 注解生成已实现；Action Pipeline、动态
@@ -26,12 +29,12 @@
 | 4 | 可扩展性 | 基本满足 | Core 使用中立 Route Definition 与强类型能力契约；Catalog、Assembler、Adapter、Service Provider、Handler 和 Gate 均通过明确边界扩展。新导航后端复用同一 Catalog，跨组件 Service 通过注解稳定 ID 和自动绑定渐进提升，不访问 Runtime 私有表。 |
 | 5 | 可测试 | 基本满足 | Pure Dart Runtime 覆盖 Scope、readiness、Command/Event、InitTask DAG、取消/超时/失败；Flutter Adapter、生成器和 Demo 均有回归。`ccrouter_test` 提供 Test Host/Service Override，并具备 Generator、Route Runtime、Service 和并发回收非门禁基准。长期平台内存趋势仍需持续积累。 |
 | 6 | 最小公开 API | 基本满足 | Runtime、Scope、Memory Adapter、Host binding 以及控制 SPI 均从业务 barrel 隐藏；Registrar 只拿到注册面 `CCRegistry`。Query/旧 Action/ActionReport 已删除，通信只保留 Service、Command、Event 与 InitTask；Action Pipeline 等未成熟能力没有提前公开。 |
-| 7 | 编译器校验与类型安全 | 基本满足 | Route 参数、Codec、ID、Pattern、Contract exposure、页面实现、barrel、组件图、Service、Command、Event 与 InitTask 所有权和冲突已有生成期校验；InitTask metadata 会形成完整跨 Package DAG，Runtime 只保留手写与陈旧生成物的最终边界校验。 |
+| 7 | 编译器校验与类型安全 | 基本满足 | Route 参数、Codec、ID、Pattern、Contract exposure、页面实现、barrel、组件图、Service、Command、Event 与 InitTask 所有权和冲突已有生成期校验；InitTask metadata 会形成完整跨 Package DAG。Runtime 会根据实际安装的 Manifest 再次校验 Generated Service/Command/Event 的组件身份和依赖边，陈旧生成物或手工调用 generated bridge 不能伪造调用归属。 |
 | 8 | 非侵入式 | 满足 | 不要求页面基类或 Mixin，不保存全局 `BuildContext`；可继续使用应用自己的 `MaterialApp.router`/`GoRouter`；attached Adapter 不销毁应用 Router。 |
 | 9 | 可降级回退 | 基本满足 | 无法可靠降级的组合栈事务与精确 Entry 操作已从公开链删除。Service optional lookup 只吞“未注册”，不吞工厂/生命周期错误；Event Subscriber 失败按契约隔离，Command/critical InitTask 失败明确传播，不存在跨语义静默回退。 |
-| 10 | 明确生命周期 | 基本满足 | Runtime、Session、RouteEntry、Service Scope、Adapter、Backend 和 InitTask Owner/销毁顺序明确；App/Session/Route Service 自动持有与逆序释放，shutdown 取消并等待活动调用和 DAG。1.x 组件集合只在初始化确定，不提供不完整的 activate/deactivate。 |
+| 10 | 明确生命周期 | 基本满足 | Runtime、Session、RouteEntry、Service Scope、Adapter、Backend 和 InitTask Owner/销毁顺序明确；App/Session/Route Service 自动持有与逆序释放，shutdown 取消并等待活动调用和 DAG。Runtime 与 Multi-Host 在 remover、PopGuard、Adapter 或 Scope 清理失败时仍继续释放其余资源并返回首个错误，Adapter attach/Host 注册失败会回滚部分绑定。1.x 组件集合只在初始化确定，不提供不完整的 activate/deactivate。 |
 | 11 | 可观测可诊断可溯源 | 基本满足 | Navigation、Service、Command、Event Subscriber 和 InitTask 均记录稳定 ID、可信 Owner、Trace 父子关系、状态和耗时；历史与 Subscriber error 有界，错误只保留类型和安全摘要。URI、Extra、消息字段、Service 参数/返回值和异常消息不进入 retained diagnostics。 |
-| 12 | 并发安全 | 基本满足 | 导航策略、Service singleton readiness、InitTask Gate drain 都有 single-flight；Event Subscriber 并发但按稳定 ID 启动；timeout、caller/Scope/shutdown cancellation 和异步依赖环均有测试。共享状态由 Runtime/Scope 单 Owner 修改，回调重入受控。 |
+| 12 | 并发安全 | 基本满足 | 导航策略、Service singleton readiness、InitTask Gate drain 都有 single-flight；重叠 Gate 在活动 drain 期间会触发下一轮 DAG readiness 检查，直到没有新就绪任务，避免任务永久停留在 `pending`。Event Subscriber 并发但按稳定 ID 启动；timeout、caller/Scope/shutdown cancellation 和异步依赖环均有测试。共享状态由 Runtime/Scope 单 Owner 修改，回调重入受控。 |
 | 13 | 性能和稳定 | 基本满足 | 热路径无反射；路由和 Workspace 候选使用索引，诊断队列有界。Service 同步 Provider 不增加异步切换，Singleton/readiness 缓存按 Scope 有界，Event/InitTask 仅在显式调用时调度。生成器使用精确依赖闭包、内容指纹、write-if-changed、并发锁和全量回退；缓存/无缓存逐字节一致，`ccrouter find` 只读取 Host 依赖闭包 Index。已有 Route、Service、并发与资源回收基线，长期内存趋势仍需版本间持续采样。 |
 
 ## 3. P1 问题
@@ -144,44 +147,10 @@
 
 ### 已完成首批基线：P2-6 性能与稳定性基准
 
-仓库已提供非门禁式 Generator、Runtime、Service scaling 和并发回收 benchmark，覆盖 Workspace 校验、Runtime 初始化、
-动态 URI 解析、Service 装配/查询/调用/readiness、并发 Push/Pop 和销毁。动态 URI resolution 仍会遍历所有 Route/Pattern；生成器虽已改为精确闭包、
-单 Package Index、内容缓存和 Pattern 候选索引，但基准只用于同机版本对比，不能把一次本机结果
-视为跨机器性能承诺。
-
-10/100/1000 Route 初始化、动态解析和 Runtime dispose p50/p95 已形成首批基线；持续 Push/Pop
-后的台账有界性由回归测试覆盖。新增 10 轮、每轮 100 个并发 Push/Pop 的回收基准，峰值
-`activeRouteEntries=101`，每轮结束均回到 1 个根 Entry，`pendingNavigations=0`，Adapter 栈也回到 1。
-这验证了可观测的 Runtime 保留状态边界，但不替代真实 RSS/Heap 趋势；后者仍需在目标平台和应用中持续采样。
-本次 OHOS SDK 本机 JIT 运行的 10 轮耗时为 `cycleUsP50=6994`、`cycleUsP95=10363`，仅作为同机
-回归参考，不作为跨平台阈值。
-
-2026-09-22 自动化质量维护复测结果如下，作为当前同机回归基线，不作为跨平台性能承诺：
-
-- Runtime 10/100/1000 Route 初始化 P50/P95：`111/203us`、`146/356us`、`550/1298us`；
-- Runtime 10/100/1000 Route 动态 URI 打开 P50/P95：`96/332us`、`186/392us`、`430/1089us`；
-- Runtime 10/100/1000 Route dispose P50/P95：`33/88us`、`64/100us`、`59/295us`；
-- 10 轮、每轮 100 个并发 Push/Pop：`cycleUsP50=7816`、`cycleUsP95=22726`，峰值
-  `activeRouteEntries=101`，每轮结束恢复到 `finalActiveEntries=1`、
-  `finalPendingNavigations=0`、`finalAdapterEntries=1`；
-- Generator 10/100/500/1000/5000 Route 校验：`1.058/5.704/18.989/29.385/99.37ms`。
-
-2026-09-23 新增 Service scaling 基线。每个规模采集 20 次装配与销毁、1000 次热查询、
-1000 次同步带 Trace 调用和 100 次 `newInstance` readiness；所有 `CCDisposable` 在每轮结束后均回到
-0 个存活实例。10/100/1000 Provider 的本机 Dart JIT P50/P95 为：
-
-- 装配并初始化：`38/144us`、`316/940us`、`4426/5554us`；
-- keyed Singleton 热查询：`1/4us`、`0/2us`、`2/2us`；
-- `invokeServiceSync`（包含有界 Trace）：`7/29us`、`3/13us`、`3/10us`；
-- Factory lazy readiness：`23/123us`、`11/70us`、`15/31us`；
-- 已创建实例的 Runtime dispose：`18/45us`、`179/320us`、`211/889us`。
-
-这些数值不作为跨机器或 CI 硬阈值；回归时比较同机趋势，并同时保留实例释放校验，不能通过
-减少生命周期工作换取表面耗时下降。
-
-本次自动复测没有发现状态残留、性能异常或失败回归。并发执行 Generator 测试与 Demo Analyzer
-会短暂读取 Generator 测试创建的临时探针，因此质量门禁必须串行执行；串行复测后 Demo Analyzer
-恢复为无诊断。这是测试编排约束，不是生产代码依赖。
+仓库已提供非门禁式 Generator、Runtime、Service scaling 和并发回收 benchmark，覆盖 Workspace
+校验、Runtime 初始化、动态 URI 解析、Service 装配/查询/调用/readiness、并发 Push/Pop 和销毁。
+动态 URI resolution 仍会遍历候选 Route/Pattern；生成器使用精确闭包、单 Package Index、内容缓存
+和 Pattern 候选索引。基准只用于同机版本对比，不能把一次本机结果视为跨机器性能承诺。
 
 生成器聚合已增加非门禁式基准脚本：
 
@@ -192,15 +161,21 @@ fvm dart run packages/ccrouter_test/benchmark/runtime_concurrency.dart
 fvm dart run packages/ccrouter_test/benchmark/service_scaling.dart
 ```
 
-2026-09-24 本机 Dart JIT 预热后，固定路径 Validator 在 10/100/500/1000/5000 Route 下分别为
-`0.516ms`、`2.321ms`、`6.632ms`、`17.302ms`、`65.181ms`。索引只筛选候选，最终冲突仍由
-原精确比较器确认；Wildcard 继续保守回退到同优先级全比较。
-同机 Runtime 20 次生命周期与 100 次动态打开样本中，10/100/1000 Route 初始化 p50/p95 为
-`39/127us`、`82/149us`、`572/685us`；动态 URI 打开为 `70/146us`、`76/163us`、
-`449/534us`；dispose 为 `12/51us`、`18/33us`、`48/65us`。10 轮、每轮 100 个并发
-Push/Pop 的 cycle p50/p95 为 `4035/9470us`，峰值 `activeRouteEntries=101`，每轮结束
-恢复到 `finalActiveEntries=1`、`finalPendingNavigations=0`、`finalAdapterEntries=1`。
-这些数值只用于同机版本趋势，不作为跨平台阈值；长期 RSS/Heap 趋势仍需在目标平台持续采样。
+2026-09-27 在修复 benchmark 入口和 caller fixture 后重新执行当前本机 Dart JIT 基线：
+
+- Generator 5000 Route 固定路径校验：`54.419ms`；
+- Runtime 1000 Route 初始化 P50/P95：`455/527us`，动态 URI 打开：`424/3773us`，
+  dispose：`39/55us`；
+- 10 轮、每轮 100 个并发 Push/Pop：`cycleUsP50=3574`、`cycleUsP95=9208`，结束时
+  `finalActiveEntries=1`、`finalPendingNavigations=0`、`finalAdapterEntries=1`；
+- Service 1000 Provider 初始化 P50/P95：`3304/3627us`，`invokeServiceSync`：`4/13us`，
+  dispose：`147/442us`，每轮实例计数均归零。
+
+这些结果没有形成跨机器硬阈值。Runtime 动态打开 P95 相比 P50 波动明显，后续版本应在同机、同
+SDK 和相同预热条件下比较趋势；不能仅凭单次样本认定回归，也不能通过减少生命周期或诊断工作
+换取更低数字。持续 Push/Pop 后的台账恢复和 Service 实例归零只证明可观测状态有界，不替代真实
+RSS/Heap 趋势；后者仍需在目标平台和生产应用中持续采样。Generator 测试与 Demo Analyzer 必须
+串行执行，避免 Analyzer 短暂读取 Generator 测试创建的临时探针而产生假诊断。
 
 ### 已完成：P2-7 生成物最终审计
 
@@ -222,7 +197,12 @@ Push/Pop 的 cycle p50/p95 为 `4035/9470us`，峰值 `activeRouteEntries=101`�
 - Host、Navigator Observer 和页面生命周期对象通过 leak tracker 回归；
 - 自定义页面转场不再在 builder 中创建需要手动 dispose 的 `CurvedAnimation`，改用无独立所有权的
   `CurveTween` 链，并覆盖 Fade、Scale、右侧滑入和底部滑入的重复创建/销毁测试；
-- 本轮基于 `not-disposed` 与 `not-GCed` 证据标准复查后，没有剩余高置信内存泄漏。
+- 本轮发现并修复 Adapter attach、动态 Host 注册、初始多 Host 装配、Host 注销和 Runtime shutdown
+  的失败路径：一个 listener remover、PopGuard 解绑或 Adapter 抛错不再跳过其余 owned resource；
+  原始失败或首个 cleanup failure 仍返回调用方；
+- 本轮基于 `not-disposed` 与 `not-GCed` 证据标准复查后，没有剩余高置信的框架自有资源泄漏。
+  第三方 Adapter 的 remover 若抛错且其实现仍强引用 callback，框架无法替它解除引用；这是 Adapter
+  SPI 的实现责任，框架会清除自身引用并继续释放其它资源。
 
 本轮新增的私有 Runtime Resolver 只保存默认 Runtime 引用和 Zone-local overlay，不创建 Timer、
 Listener、Stream、Overlay 或 Controller；Resolver 不拥有 Runtime，也不负责销毁，因此没有新增
@@ -245,7 +225,8 @@ Listener、Stream、Overlay 或 Controller；Resolver 不拥有 Runtime，也不
 - `CCEvent` 只表达已经发生的事实；静态 Subscriber 并发执行且按 ID 稳定启动，一个 Subscriber
   失败只进入有界脱敏诊断，零订阅者成功，发布 deadline/cancellation 仍会终止整体操作；
 - InitTask 在同步 `initialize()` 校验 ID、依赖和 DAG，Host 显式打开 Gate；同层并发、重叠触发
-  single-flight、每任务 exactly-once，critical/optional/skip、timeout 和 shutdown 等待已有回归；
+  single-flight；活动 drain 中打开的新 Gate 会继续 drain 到稳定状态。每任务 exactly-once，
+  critical/optional/skip、timeout 和 shutdown 等待已有回归；
 - Demo 通过真实 Runtime 覆盖 Command typed/void/timeout/cancel/error、Event 多订阅/隔离/零订阅/
   timeout、InitTask Gate/失败依赖，以及 Service 全部 Scope、创建策略、readiness、多实现、optional
   lookup 和自动销毁；
@@ -254,6 +235,13 @@ Listener、Stream、Overlay 或 Controller；Resolver 不拥有 Runtime，也不
   消费依赖、组件专属 Client 和 metadata 已实现；Event Contract、静态 Subscription、Owner
   自动 Publication Client、metadata 和 Catalog 已实现；InitTask 的 Task Contract、顶层 Handler、
   类型化依赖、自动注册、DAG/Catalog 和 Workspace 校验也已实现。
+
+Generated Service/Command/Event 的 Package exposure、Owner 和消费依赖先由 Generator/Workspace
+Validator 校验，Runtime 再对实际安装组件图做二次校验。Event 的零 Subscriber 语义仍是成功
+no-op；由于此时 Runtime 没有 Subscriber 可反推出 Contract Owner，它只能证明 Publisher 身份已
+安装，无法独立证明手工 generated SPI 提供的 Publisher 就是 Contract Owner。正常业务 API 和
+生成代码路径已阻止该调用方式；若未来要把 generated SPI 提升为独立防伪边界，需要新增 Event
+Contract Runtime Registry，而不是改变零订阅者语义。
 
 ## 5. 已确认符合且应保持的边界
 
@@ -284,10 +272,32 @@ Listener、Stream、Overlay 或 Controller；Resolver 不拥有 Runtime，也不
   不支持的方法形态只有在真实
   所有权与取消语义明确后才扩展。
 
-## 6. 本轮最终门禁
+## 6. 本轮修复与残余风险
+
+本轮核心价值回归不是“全部满足”的形式化勾选，实际收敛了四类问题：
+
+1. **并发确定性**：重叠 InitTask Gate 过去可能复用一个即将完成的 Future，却不再检查新 Gate
+   解锁的任务；现在共享 drain 会运行到 DAG quiescent。
+2. **纵深类型安全**：Generated Service/Command/Event 过去主要依赖生成期身份；现在 Runtime 会
+   拒绝未安装组件、Contract/Handler 不一致和缺失依赖边，再进入业务执行与 Trace。
+3. **失败原子性**：Adapter attach 或 Host 注册中途失败过去可能留下 listener、ledger 或已插入
+   Host；现在会回滚框架侧状态，并保持 Adapter 所有权契约。
+4. **生命周期稳定性**：单个 cleanup 回调过去可能中断后续 Adapter、Scope 或 Host 释放；现在采用
+   best-effort 全量清理并保留首个异常。
+
+仍需明确保留以下边界，不能在 1.x 审计中误报为已完成：
+
+- 长期 RSS/Heap 趋势、真实平台多窗口和不同 SDK/Adapter 版本性能仍需生产接入持续采样；当前
+  benchmark 只证明有界状态和同机基线。
+- 零 Subscriber Event 的 Contract Owner 独立 Runtime 证明需要额外 Registry；当前由生成期校验、
+  Package 边界和实际安装 Publisher 校验共同保证正常集成路径。
+- Action Pipeline、动态组件、Restoration、Navigator 1/2 新 Backend 和真实平台多窗口仍属于后续
+  设计或 2.0 工作，不应为满足“功能强大”而提前扩张公开 API。
+
+## 7. 本轮最终门禁
 
 - `fvm dart test --concurrency=1 packages/ccrouter_test/generator_test`：216 项通过；
-- `fvm flutter test packages/ccrouter_test/test`：329 项通过；
+- `fvm flutter test packages/ccrouter_test/test`：339 项通过；
 - `fvm flutter test demo`：31 项通过；
 - `fvm dart analyze`：无问题；
 - `fvm dart run ccrouter_generator:ccrouter generate demo --check` 与 `--no-cache --check`：31 条路由、
