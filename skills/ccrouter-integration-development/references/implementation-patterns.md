@@ -406,6 +406,17 @@ fvm dart run ccrouter_generator:ccrouter generate demo
 
 The command owns files under `lib/src/ccrouter_generated/`. Do not edit, relocate, or add imports to implementation-only binding/package/host outputs. Use a handwritten public barrel to export only intended public contracts.
 
+An unchanged command may report a generation fast-path hit. This is valid only
+after exact authored-input, tool, resolved-Package, external-index, and managed-
+output fingerprints match a previous successful run. Use `--no-cache --check`
+when validating the reference path after generator, SDK, or build configuration
+changes; do not make application code depend on cache or manifest files.
+
+After `ccrouter clean`, generation may temporarily bootstrap missing component
+Route, Command, and Event APIs from valid Builder metadata before build_runner.
+This only repairs the import graph for the same build pass: current metadata is
+still rebuilt and every final artifact is regenerated and validated.
+
 Packages with no generated capability have no `ccrouter_generated` directory.
 Removing the final declaration removes empty managed directories while
 preserving unknown or handwritten files.

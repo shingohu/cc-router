@@ -60,7 +60,7 @@ import 'package:ccrouter_go_router/ccrouter_go_router.dart';
 | Command | 已支持 | 单 Handler、强类型结果、`void`、取消、超时与 Trace |
 | Event | 已支持 | 零到多个订阅者、稳定顺序、失败隔离 |
 | InitTask | 已支持 | 一次性 DAG、Gate、必需/可选失败策略 |
-| 生成器增量缓存与门禁 | 已支持 | `--check`、`--no-cache`、`--profile`、并发锁、原子写入 |
+| 生成器增量缓存与门禁 | 已支持 | 内容校验 fast path、`--check`、`--no-cache`、`--profile`、并发锁、原子写入 |
 | 生成索引和源码定位 | 已支持 | Package/Host Catalog、`ccrouter find` |
 | Navigator 1.0 Backend | 暂不支持 | 2.0 阶段候选 |
 | 通用 Navigator 2.0 Backend | 暂不支持 | 2.0 阶段候选 |
@@ -781,6 +781,16 @@ fvm dart run ccrouter_generator:ccrouter find demo.startup.foundation demo
 fvm dart run ccrouter_generator:ccrouter clean demo
 ```
 
+普通 `generate` 会在持有生成锁后校验版本化 manifest。只有 authored Dart 源码、Pub graph、
+生成器与 Dart SDK identity、外部 Package Index 及全部 CCRouter 受管输出的内容摘要完全一致时，
+才跳过 build_runner 和聚合；任一缺失、损坏或变化都会自动回退完整生成。该路径不依赖 mtime
+或文件大小。`--no-cache` 始终绕过 fast path，是生成正确性的权威参考路径；`--profile` 会明确
+报告 `fast-path=hit/miss`。
+
+执行 `ccrouter clean` 后，如果 build cache 仍有效，下一次 `generate` 会在 build_runner 前
+临时恢复源码已导入的 Route/Command/Event component API，避免 import graph 需要第二轮才能
+收敛；当前轮仍会重新构建并完整校验最终生成物，bootstrap 失败不会保留半成品。
+
 `find` 会返回 Contract、实现与生成桥接的 Package URI 和源码坐标，只读取当前 Host 依赖闭包中
 已有的 Package Index，不运行 Builder，也不扫描源码。
 
@@ -789,9 +799,12 @@ fvm dart run ccrouter_generator:ccrouter clean demo
 ```text
 lib/src/ccrouter_generated/
 ├── binding/     # Flutter 页面构造 bridge
+├── command/     # Command Handler registration bridge
 ├── component/   # 自动 Registrar、Manifest、组件 Route/Service API
 ├── contract/    # 独立 Pure Dart Route/Service Contract
+├── event/       # Event Subscription registration bridge
 ├── host/        # Host 聚合入口
+├── init_task/   # InitTask registration bridge
 ├── metadata/    # Package Index、Host routes、可读 Catalog
 ├── route/       # 组件内部 Route contract/registration bridge
 └── service/     # 简单 Service Provider registration bridge
@@ -805,6 +818,8 @@ Registrar 或添加 generated `part`。没有任何生成能力的 Package 不�
 任何未知或手写文件。
 
 详细生成规则见 [`packages/ccrouter_generator/README.md`](packages/ccrouter_generator/README.md)。
+生成性能、混合能力压力模型和优化前后数据见
+[`docs/CCRouter-generator-performance-report.md`](docs/CCRouter-generator-performance-report.md)。
 
 ## 测试
 

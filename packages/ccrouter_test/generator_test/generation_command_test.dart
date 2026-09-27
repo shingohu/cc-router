@@ -616,6 +616,21 @@ void probe() {
       }
       expect(generatedRouteApi.existsSync(), isTrue);
       expect(generatedInitTask.existsSync(), isTrue);
+      final converged = await Process.run(Platform.resolvedExecutable, [
+        'run',
+        'ccrouter_generator:ccrouter',
+        'generate',
+        'demo',
+        '--no-cache',
+        '--check',
+        '--profile',
+      ], workingDirectory: Directory.current.path);
+      expect(converged.exitCode, 0, reason: '${converged.stderr}');
+      expect('${converged.stdout}', contains('wrote 0 outputs'));
+      expect(
+        '${converged.stdout}',
+        contains('generated artifacts are up to date'),
+      );
     },
     timeout: const Timeout(Duration(minutes: 4)),
   );
@@ -636,6 +651,78 @@ void probe() {
       expect(await _readDemoGeneratedArtifacts(), before);
     },
     timeout: const Timeout(Duration(minutes: 2)),
+  );
+
+  test(
+    'fast path requires exact authored inputs and managed outputs',
+    () async {
+      Future<ProcessResult> generate({bool check = false}) =>
+          Process.run(Platform.resolvedExecutable, [
+            'run',
+            'ccrouter_generator:ccrouter',
+            'generate',
+            'demo',
+            if (check) '--check',
+            '--profile',
+          ], workingDirectory: Directory.current.path);
+
+      final seeded = await generate();
+      expect(seeded.exitCode, 0, reason: '${seeded.stderr}');
+      final unchanged = await generate(check: true);
+      expect(unchanged.exitCode, 0, reason: '${unchanged.stderr}');
+      expect('${unchanged.stdout}', contains('fast-path=hit'));
+
+      final sourceProbe = File(
+        path.join(
+          Directory.current.path,
+          'demo',
+          'lib',
+          '_ccrouter_fast_path_probe.dart',
+        ),
+      );
+      final generatedProbe = File(
+        path.join(
+          Directory.current.path,
+          'demo',
+          'lib',
+          'src',
+          'ccrouter_generated',
+          'metadata',
+          'cc_routes.json',
+        ),
+      );
+      final originalGenerated = generatedProbe.readAsBytesSync();
+      addTearDown(() {
+        if (sourceProbe.existsSync()) sourceProbe.deleteSync();
+        generatedProbe.writeAsBytesSync(originalGenerated, flush: true);
+      });
+
+      sourceProbe.writeAsStringSync('const fastPathProbe = true;\n');
+      final changedSource = await generate(check: true);
+      expect(changedSource.exitCode, 0, reason: '${changedSource.stderr}');
+      expect('${changedSource.stdout}', contains('fast-path=miss'));
+      expect('${changedSource.stdout}', contains('CCRouter profile build='));
+
+      sourceProbe.deleteSync();
+      final reseeded = await generate();
+      expect(reseeded.exitCode, 0, reason: '${reseeded.stderr}');
+      expect('${reseeded.stdout}', contains('fast-path=miss'));
+
+      generatedProbe.writeAsStringSync(
+        '${generatedProbe.readAsStringSync()}\n',
+        flush: true,
+      );
+      final tamperedGenerated = generatedProbe.readAsBytesSync();
+      final changedOutput = await generate(check: true);
+      expect(changedOutput.exitCode, 1);
+      expect('${changedOutput.stdout}', contains('fast-path=miss'));
+      expect(
+        '${changedOutput.stderr}',
+        contains('generated artifacts are stale'),
+      );
+      expect(generatedProbe.readAsBytesSync(), tamperedGenerated);
+    },
+    timeout: const Timeout(Duration(minutes: 4)),
   );
 
   test(
@@ -678,6 +765,57 @@ void probe() {
         contains('cache was invalid and has been ignored'),
       );
       expect('${result.stdout}', contains('cache=0/'));
+    },
+    timeout: const Timeout(Duration(minutes: 2)),
+  );
+
+  test(
+    'corrupted generation manifest fails closed to full generation',
+    () async {
+      final seeded = await Process.run(Platform.resolvedExecutable, [
+        'run',
+        'ccrouter_generator:ccrouter',
+        'generate',
+        'demo',
+      ], workingDirectory: Directory.current.path);
+      expect(seeded.exitCode, 0, reason: '${seeded.stderr}');
+
+      final manifestDirectory = Directory(
+        path.join(
+          Directory.current.path,
+          '.dart_tool',
+          'ccrouter',
+          'v1',
+          'manifests',
+        ),
+      );
+      final manifest = manifestDirectory
+          .listSync()
+          .whereType<File>()
+          .firstWhere((file) {
+            final decoded = jsonDecode(file.readAsStringSync());
+            return decoded is Map &&
+                decoded['hostPackage'] == 'ccrouter_demo';
+          });
+      manifest.writeAsStringSync('{invalid manifest', flush: true);
+
+      final result = await Process.run(Platform.resolvedExecutable, [
+        'run',
+        'ccrouter_generator:ccrouter',
+        'generate',
+        'demo',
+        '--check',
+        '--profile',
+      ], workingDirectory: Directory.current.path);
+
+      expect(result.exitCode, 0, reason: '${result.stderr}');
+      expect('${result.stdout}', contains('fast-path=miss'));
+      expect('${result.stdout}', contains('CCRouter profile build='));
+      expect(
+        '${result.stdout}',
+        contains('generated artifacts are up to date'),
+      );
+      expect(jsonDecode(manifest.readAsStringSync()), isA<Map>());
     },
     timeout: const Timeout(Duration(minutes: 2)),
   );

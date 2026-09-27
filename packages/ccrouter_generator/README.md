@@ -63,11 +63,10 @@ contracts Package 只依赖 `ccrouter_contracts`，生成 `OrderDetailRoute.inte
 组件依赖 contracts Package 并生成 owner glue。Workspace 聚合器要求公开契约恰好
 存在一个实现。普通内部页面继续使用 `@CCRoute`，无需提前拆包。
 
-不再需要手写 Registrar 或 generated `part`。Command、Event、InitTask、Shell、策略和复杂
-Service 等当前没有专用声明模型的能力，使用顶层同步 Contribution。Command 的
-Contract/Handler/显式消费依赖/组件专属 Client 方案，以及 Event 的 Contract/静态
-Subscription/Owner 自动 Publication 方案、InitTask 的 Task Contract/Handler/类型化依赖/DAG
-方案已经记录，但实现完成前不能使用：
+不再需要手写 Registrar 或 generated `part`。Command、Event 和 InitTask 已分别使用
+Contract/Handler、Contract/Subscription 和 Task Contract/Handler 注解生成。Shell、策略、
+自定义构造或异步初始化的复杂 Service 等没有窄声明模型的能力，继续使用顶层同步
+Contribution：
 
 ```dart
 @CCComponentContribution(id: 'order.capabilities')
@@ -141,7 +140,9 @@ fvm dart run ccrouter_generator:ccrouter clean demo
 `clean` 只删除框架标记且位于可写 Package 的 `lib/src/ccrouter_generated/` 下的受管源码输出；
 会保留业务源码、手写同名文件、只读依赖、`.dart_tool/build` 缓存和平台构建产物。清理后可
 再次执行 `generate` 完整恢复。它不是通用的 `clean` 或 `flutter clean`，不会删除 Package
-之外的文件。
+之外的文件。保留的 build cache 有效时，`generate` 会先从 Builder metadata 临时恢复 authored
+源码已导入但被清理的 Route/Command/Event component API，使 build_runner 在同一轮看到完整
+import graph；该 bootstrap 不替代当前轮构建与最终校验，失败时会恢复生成前现场。
 
 查找已生成路由的组件、契约和页面源码位置时使用只读命令：
 
@@ -170,6 +171,13 @@ fvm dart run ccrouter_generator:ccrouter generate demo --no-cache
 文件提交。workspace 模式仍复用 build_runner 的增量图，但通过 `asset:` build filter 只构建
 Host 依赖闭包内、明确可写且声明 `ccrouter_generator` 的 Package，并排除
 `lib/**/ccrouter_generated/**` 二次输入。
+
+普通生成还维护 Host 专属的版本化 generation manifest。只有 authored Dart 源码、Package
+配置与解析图、生成器源码、Dart SDK identity、外部 Package Index 和所有受管输出的精确内容
+摘要全部一致时，CLI 才在获取锁后跳过 build_runner 与聚合。manifest 缺失、损坏或任一摘要
+变化都会 fail closed 到完整流程；校验不依赖 mtime 或文件大小。`--no-cache` 永远不读取该
+fast path，`--profile` 会输出 `fast-path=hit/miss`。性能回归与混合能力基准见
+[`../../docs/CCRouter-generator-performance-report.md`](../../docs/CCRouter-generator-performance-report.md)。
 
 生成结果：
 
@@ -213,10 +221,9 @@ Host 依赖闭包内、明确可写且声明 `ccrouter_generator` 的 Package，
 
 `ccrouter_package.json` 是 Capability Source Catalog 的机器事实来源，`cc_catalog.md` 只由
 它和同轮 metadata 派生，不维护第二套手工索引。当前 Route 与注解 Service 具备静态声明链路；
-Command 生成方案将使用显式 Contract、Handler 和消费依赖，Event 生成方案将使用显式 Contract、
-静态 Subscription 和 Owner 自动 Publication，InitTask 生成方案将使用显式 Task Contract、Handler
-和类型化依赖，三者均尚未实现；Action 和 InitTask 都不通过扫描 Contribution 源码猜测注册
-关系。只读
+Command 使用显式 Contract、Handler 和消费依赖，Event 使用显式 Contract、静态 Subscription
+和 Owner 自动 Publication，InitTask 使用显式 Task Contract、Handler 和类型化依赖；三者都
+不通过扫描 Contribution 源码猜测注册关系。Action Pipeline 仍未实现。只读
 `ccrouter find` 和未来 DevTools 应消费版本化 Catalog 与
 Runtime 快照，而不是解析 Markdown 或直接绑定 Builder 的原始 JSON。
 

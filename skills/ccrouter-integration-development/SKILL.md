@@ -105,7 +105,7 @@ fvm flutter test <focused-test-target>
 fvm dart run ccrouter_generator:ccrouter generate <host-root> --check
 ```
 
-Use `ccrouter find <capability-id-or-route-pattern> <host-root>` to locate a generated Route, Service, Command, Event, or InitTask instead of scanning or guessing. Route declarations additionally support Pattern lookup. Use `--no-cache` only as a reference-path check and `--profile` only for generation performance diagnosis.
+Use `ccrouter find <capability-id-or-route-pattern> <host-root>` to locate a generated Route, Service, Command, Event, or InitTask instead of scanning or guessing. Route declarations additionally support Pattern lookup. Normal generation may use an exact-content fast path only when authored inputs, tool identity, Package graph, external indexes, and every managed output match the last successful manifest. Use `--no-cache` as the authoritative reference-path check and `--profile` only for generation performance diagnosis; never delete caches or touch files merely to force an ordinary generation run.
 
 ## Completion Standard
 

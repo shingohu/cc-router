@@ -1247,6 +1247,187 @@ void main() {
     }
   });
 
+  test('handles many internal-only documents without public barrel work', () {
+    final root = Directory.systemTemp.createTempSync(
+      'ccrouter-internal-barrel-scale-test-',
+    );
+    try {
+      final package = Directory('${root.path}/demo_scale')..createSync();
+      final sourceDirectory = Directory('${package.path}/lib/src')
+        ..createSync(recursive: true);
+      File(
+        '${package.path}/pubspec.yaml',
+      ).writeAsStringSync('name: demo_scale\n');
+      final metadata = <Map<String, Object?>>[];
+      for (var index = 0; index < 300; index += 1) {
+        final source = 'lib/src/page_$index.dart';
+        File(
+          '${sourceDirectory.path}/page_$index.dart',
+        ).writeAsStringSync('final class Page$index {}\n');
+        metadata.add(
+          document(
+            package: 'demo_scale',
+            source: source,
+            components: [component('scale')],
+            routes: [route('scale.page_$index', 'scale')],
+          ),
+        );
+      }
+
+      expect(
+        CCRouteBarrelExportValidator.validate(
+          root,
+          metadata,
+          packageRoots: {'demo_scale': package},
+        ),
+        isEmpty,
+      );
+    } finally {
+      root.deleteSync(recursive: true);
+    }
+  });
+
+  test('validates mixed public contracts through one package export index', () {
+    final root = Directory.systemTemp.createTempSync(
+      'ccrouter-mixed-barrel-test-',
+    );
+    try {
+      final package = Directory('${root.path}/demo_contracts')..createSync();
+      final sourceDirectory = Directory('${package.path}/lib/src')
+        ..createSync(recursive: true);
+      final generatedDirectory = Directory(
+        '${sourceDirectory.path}/ccrouter_generated/contract',
+      )..createSync(recursive: true);
+      File(
+        '${package.path}/pubspec.yaml',
+      ).writeAsStringSync('name: demo_contracts\n');
+      File(
+        '${sourceDirectory.path}/route.dart',
+      ).writeAsStringSync('abstract interface class DetailSchema {}\n');
+      File(
+        '${generatedDirectory.path}/route.route.contract.g.dart',
+      ).writeAsStringSync(
+        'final class DetailRoute {}\n'
+        'final class DetailRouteArguments {}\n',
+      );
+      File(
+        '${sourceDirectory.path}/service.dart',
+      ).writeAsStringSync('abstract interface class SummaryService {}\n');
+      File(
+        '${sourceDirectory.path}/command.dart',
+      ).writeAsStringSync('final class SubmitCommand {}\n');
+      File(
+        '${sourceDirectory.path}/event.dart',
+      ).writeAsStringSync('final class SubmittedEvent {}\n');
+      File(
+        '${sourceDirectory.path}/init_task.dart',
+      ).writeAsStringSync('const warmupTask = Object();\n');
+      final documents = <Map<String, Object?>>[
+        document(
+          package: 'demo_contracts',
+          source: 'lib/src/route.dart',
+          components: const [],
+          routes: [
+            route('orders.detail', 'orders', publicContract: true)
+              ..['contracts'] = {
+                'route': 'DetailRoute',
+                'arguments': 'DetailRouteArguments',
+                'package': 'demo_contracts',
+                'library':
+                    'lib/src/ccrouter_generated/contract/'
+                    'route.route.contract.g.dart',
+              },
+          ],
+        ),
+        document(
+          package: 'demo_contracts',
+          source: 'lib/src/service.dart',
+          components: const [],
+          routes: const [],
+          serviceContracts: const [
+            {
+              'id': 'orders.summary',
+              'declaration': {'symbol': 'SummaryService'},
+            },
+          ],
+        ),
+        document(
+            package: 'demo_contracts',
+            source: 'lib/src/command.dart',
+            components: const [],
+            routes: const [],
+          )
+          ..['commandContracts'] = const [
+            {
+              'id': 'orders.submit',
+              'declaration': {'symbol': 'SubmitCommand'},
+            },
+          ],
+        document(
+          package: 'demo_contracts',
+          source: 'lib/src/event.dart',
+          components: const [],
+          routes: const [],
+          eventContracts: const [
+            {
+              'id': 'orders.submitted',
+              'declaration': {'symbol': 'SubmittedEvent'},
+            },
+          ],
+        ),
+        document(
+          package: 'demo_contracts',
+          source: 'lib/src/init_task.dart',
+          components: const [],
+          routes: const [],
+          initTaskContracts: const [
+            {
+              'id': 'orders.warmup',
+              'declaration': {'symbol': 'warmupTask'},
+            },
+          ],
+        ),
+      ];
+      final barrel = File('${package.path}/lib/demo_contracts.dart')
+        ..writeAsStringSync(
+          "export 'src/ccrouter_generated/contract/"
+          "route.route.contract.g.dart' "
+          'show DetailRoute, DetailRouteArguments;\n'
+          "export 'src/service.dart' show SummaryService;\n"
+          "export 'src/command.dart' show SubmitCommand;\n"
+          "export 'src/event.dart' show SubmittedEvent;\n"
+          "export 'src/init_task.dart' show warmupTask;\n",
+        );
+
+      expect(
+        CCRouteBarrelExportValidator.validate(
+          root,
+          documents,
+          packageRoots: {'demo_contracts': package},
+        ),
+        isEmpty,
+      );
+
+      barrel.writeAsStringSync('library;\n');
+      final errors = CCRouteBarrelExportValidator.validate(
+        root,
+        documents,
+        packageRoots: {'demo_contracts': package},
+      );
+      expect(errors, hasLength(5));
+      expect(errors, orderedEquals([...errors]..sort()));
+      expect(errors.map((error) => error.split(' ').take(2).join(' ')), [
+        'Public Command',
+        'Public Event',
+        'Public InitTask',
+        'Public Service',
+        'Public route',
+      ]);
+    } finally {
+      root.deleteSync(recursive: true);
+    }
+  });
+
   test('requires public contracts to export the generated library', () {
     final root = Directory.systemTemp.createTempSync(
       'ccrouter-separate-barrel-test-',

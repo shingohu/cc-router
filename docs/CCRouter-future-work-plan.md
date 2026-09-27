@@ -61,6 +61,12 @@
   `ccrouter_test` 329 项、Generator 216 项、Demo 31 项、缓存/无缓存 `generate --check`、
   InitTask clean/rebuild 和能力级 `ccrouter find` 均通过。
 - [ ] 持续执行 `dart analyze`、框架测试、生成器测试、Demo 测试和 `generate --check`。
+- [x] 2026-09-28 修复 public barrel 校验的重复 Package 扫描，引入精确内容 fast path 和
+  Route/Service/Command/Event/InitTask 混合压力基准；30× 的 1650 项能力 Validator 为 38ms，
+  无变化 wall 为 0.81-0.85s。完整数据见
+  [生成器性能报告](CCRouter-generator-performance-report.md)。
+- [ ] per-Package dirty set 仅在真实项目 Host 聚合超过总耗时 20% 时重新评估；实施前必须
+  设计 per-Package output fingerprint，不能因跳过未变 Package 而漏掉受管输出篡改。
 - [ ] 维护冷启动、初始化、路由解析、导航延迟、并发导航、Runtime dispose 的同机趋势。
 - [ ] 继续做 macOS、iOS 真机/模拟器和 OHOS 运行回归；平台 SDK 变更只做兼容性修复。
 - [ ] 继续检查 Adapter、Observer、Route Scope、Overlay、Timer 和 Stream 的释放路径。

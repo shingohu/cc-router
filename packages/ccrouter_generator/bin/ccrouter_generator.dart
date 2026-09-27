@@ -1,9 +1,15 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
+import 'dart:typed_data';
 
+import 'package:analyzer/dart/analysis/features.dart';
+import 'package:analyzer/dart/analysis/utilities.dart';
+import 'package:analyzer/dart/ast/ast.dart';
 import 'package:ccrouter_generator/ccrouter_generator.dart';
 import 'package:ccrouter_generator/src/internal_api_boundary_validator.dart';
 import 'package:ccrouter_generator/src/package_workspace.dart';
+import 'package:crypto/crypto.dart';
 import 'package:dart_style/dart_style.dart';
 import 'package:path/path.dart' as path;
 
@@ -97,13 +103,63 @@ Future<void> main(List<String> arguments) async {
   }
   _GenerationLock? generationLock;
   _GeneratedArtifactsSnapshot? snapshot;
+  CCPackageWorkspace? fastPathWorkspace;
+  String? verifiedInputFingerprint;
   try {
     if (buildContext != null) {
       generationLock = await _GenerationLock.acquire(buildContext.root);
     }
-    snapshot = parsed.check
+    if (buildContext != null &&
+        parsed.command == _GeneratorCommand.generate &&
+        parsed.outputDirectoryPath == null) {
+      fastPathWorkspace = await CCPackageWorkspace.load(
+        buildRoot: buildContext.root,
+        hostRoot: root,
+        workspace: buildContext.workspace,
+      );
+      if (parsed.noCache) {
+        verifiedInputFingerprint =
+            await _GenerationStateFingerprint.captureInput(fastPathWorkspace);
+      } else {
+        final fastPath = await _GenerationFastPath.inspect(
+          workspace: fastPathWorkspace,
+        );
+        verifiedInputFingerprint = fastPath.inputFingerprint;
+        if (fastPath.matches) {
+          stdout.writeln(
+            'CCRouter generation fast path hit; inputs and outputs are unchanged.',
+          );
+          if (parsed.check) {
+            stdout.writeln('CCRouter generated artifacts are up to date.');
+          }
+          if (parsed.profile) {
+            stdout.writeln('CCRouter profile fast-path=hit');
+          }
+          return;
+        }
+        if (parsed.profile) stdout.writeln('CCRouter profile fast-path=miss');
+      }
+      verifiedInputFingerprint ??=
+          await _GenerationStateFingerprint.captureInput(fastPathWorkspace);
+    }
+    final needsBootstrap =
+        parsed.command == _GeneratorCommand.generate &&
+        fastPathWorkspace != null &&
+        await _hasMissingGeneratedComponentImport(fastPathWorkspace);
+    snapshot = parsed.check || needsBootstrap
         ? await _GeneratedArtifactsSnapshot.capture(buildContext!.root)
         : null;
+    if (needsBootstrap) {
+      try {
+        if (await _bootstrapGeneratedComponentApis(fastPathWorkspace)) {
+          stdout.writeln(
+            'Bootstrapped generated component APIs from validated build metadata.',
+          );
+        }
+      } on Object {
+        await snapshot!.restore();
+      }
+    }
     final buildWatch = Stopwatch()..start();
     if (buildContext != null && !await _runBuildRunner(buildContext, root)) {
       if (snapshot != null) await snapshot.restore();
@@ -124,7 +180,7 @@ Future<void> main(List<String> arguments) async {
       exitCode = 1;
       return;
     }
-    if (snapshot != null) {
+    if (parsed.check && snapshot != null) {
       final changes = await snapshot.changes();
       await snapshot.restore();
       if (changes.isNotEmpty) {
@@ -136,6 +192,19 @@ Future<void> main(List<String> arguments) async {
         return;
       }
       stdout.writeln('CCRouter generated artifacts are up to date.');
+    }
+    if (buildContext != null &&
+        parsed.command == _GeneratorCommand.generate &&
+        parsed.outputDirectoryPath == null) {
+      fastPathWorkspace ??= await CCPackageWorkspace.load(
+        buildRoot: buildContext.root,
+        hostRoot: root,
+        workspace: buildContext.workspace,
+      );
+      await _GenerationFastPath.write(
+        workspace: fastPathWorkspace,
+        expectedInputFingerprint: verifiedInputFingerprint!,
+      );
     }
   } on CCPackageWorkspaceException catch (error) {
     if (snapshot != null) await snapshot.restore();
@@ -866,6 +935,91 @@ Future<List<_MetadataFile>> _readWritableMetadataFiles(
   return result;
 }
 
+/// Detects authored imports whose CLI-owned component API is currently absent.
+///
+/// Builder-owned Service APIs are excluded because build_runner already knows
+/// their declared outputs. Route, Command, and Event component APIs are CLI
+/// aggregates; restoring them before build_runner prevents a clean rebuild
+/// from first resolving authored libraries against temporarily missing imports.
+Future<bool> _hasMissingGeneratedComponentImport(
+  CCPackageWorkspace workspace,
+) async {
+  const cliApiSuffixes = <String>[
+    '.route_api.g.dart',
+    '.command_api.g.dart',
+    '.event_api.g.dart',
+  ];
+  for (final package in workspace.packages.values.where(
+    (package) => package.writable && package.declaresGenerationIntent,
+  )) {
+    final lib = Directory(path.join(package.root.path, 'lib'));
+    if (!lib.existsSync()) continue;
+    await for (final entity in lib.list(recursive: true, followLinks: false)) {
+      if (entity is! File || !entity.path.endsWith('.dart')) continue;
+      final relative = _relativePath(package.root, entity);
+      if (relative.split('/').contains('ccrouter_generated')) continue;
+      final contents = await entity.readAsString();
+      if (!contents.contains('ccrouter_generated/component/')) continue;
+      final unit = parseString(
+        content: contents,
+        path: entity.path,
+        featureSet: FeatureSet.latestLanguageVersion(),
+      ).unit;
+      for (final directive in unit.directives.whereType<UriBasedDirective>()) {
+        final uriText = directive.uri.stringValue;
+        if (uriText == null ||
+            !uriText.contains('ccrouter_generated/component/') ||
+            !cliApiSuffixes.any(uriText.endsWith)) {
+          continue;
+        }
+        final target = _resolveImportedFile(
+          workspace: workspace,
+          source: entity,
+          uriText: uriText,
+        );
+        if (target != null && !target.existsSync()) return true;
+      }
+    }
+  }
+  return false;
+}
+
+/// Resolves one relative or Package import without consulting Analyzer state.
+File? _resolveImportedFile({
+  required CCPackageWorkspace workspace,
+  required File source,
+  required String uriText,
+}) {
+  final uri = Uri.tryParse(uriText);
+  if (uri == null) return null;
+  if (uri.scheme.isEmpty) return File.fromUri(source.uri.resolveUri(uri));
+  if (uri.scheme != 'package' || uri.pathSegments.length < 2) return null;
+  final package = workspace.packages[uri.pathSegments.first];
+  if (package == null) return null;
+  return File(
+    path.joinAll([package.root.path, 'lib', ...uri.pathSegments.skip(1)]),
+  );
+}
+
+/// Restores only CLI-owned component aggregates from cached Builder metadata.
+///
+/// This bootstrap never replaces final generation. It exists solely so
+/// build_runner resolves authored imports after `ccrouter clean`; the normal
+/// post-build pipeline regenerates, validates, and removes outputs using the
+/// current metadata before the command succeeds.
+Future<bool> _bootstrapGeneratedComponentApis(
+  CCPackageWorkspace workspace,
+) async {
+  final files = await _readWritableMetadataFiles(workspace);
+  if (files.isEmpty) return false;
+  final resolved = _resolveMetadataFiles(files);
+  await _generateComponentRouteIndexes(
+    resolved,
+    generateLegacyEntrypoints: false,
+  );
+  return true;
+}
+
 /// Top-level operation selected by the CLI.
 enum _GeneratorCommand {
   /// Reads existing metadata without invoking build_runner.
@@ -1260,6 +1414,281 @@ final class _GenerationCache {
   static File _cacheFile(Directory buildRoot) => File(
     path.join(buildRoot.path, '.dart_tool', 'ccrouter', 'v1', 'cache.json'),
   );
+}
+
+/// Content-verified shortcut for a completely unchanged generated workspace.
+///
+/// The manifest is disposable acceleration state. A missing, malformed, or
+/// mismatched field always falls back to build_runner and full validation.
+/// The reference `--no-cache` path never consults this manifest.
+abstract final class _GenerationFastPath {
+  /// Manifest schema invalidated whenever the covered input set changes.
+  static const int _schemaVersion = 1;
+
+  /// Inspects exact inputs first and avoids output work after an input change.
+  static Future<_GenerationFastPathInspection> inspect({
+    required CCPackageWorkspace workspace,
+  }) async {
+    final file = _manifestFile(workspace);
+    if (!file.existsSync()) {
+      return _GenerationFastPathInspection.miss(
+        inputFingerprint: await _GenerationStateFingerprint.captureInput(
+          workspace,
+        ),
+      );
+    }
+    try {
+      final decoded = jsonDecode(await file.readAsString());
+      if (decoded is! Map) return const _GenerationFastPathInspection.miss();
+      final document = decoded.cast<String, Object?>();
+      if (document['schemaVersion'] != _schemaVersion ||
+          document['generatorVersion'] !=
+              ccrouterPackageIndexGeneratorVersion ||
+          document['hostPackage'] != workspace.host.name ||
+          document['inputFingerprint'] is! String ||
+          document['outputFingerprint'] is! String ||
+          document['contentFingerprint'] is! String) {
+        return const _GenerationFastPathInspection.miss();
+      }
+      final payload = <String, Object?>{
+        'schemaVersion': document['schemaVersion'],
+        'generatorVersion': document['generatorVersion'],
+        'hostPackage': document['hostPackage'],
+        'inputFingerprint': document['inputFingerprint'],
+        'outputFingerprint': document['outputFingerprint'],
+      };
+      if (computeCCCanonicalJsonFingerprint(payload) !=
+          document['contentFingerprint']) {
+        return const _GenerationFastPathInspection.miss();
+      }
+      final cache = await _GenerationCache.load(workspace.buildRoot);
+      if (cache.corrupted) {
+        return const _GenerationFastPathInspection.miss();
+      }
+      final input = await _GenerationStateFingerprint.captureInput(workspace);
+      if (input != document['inputFingerprint']) {
+        return _GenerationFastPathInspection.miss(inputFingerprint: input);
+      }
+      final output = await _GenerationStateFingerprint.captureOutput(workspace);
+      return _GenerationFastPathInspection(
+        matches: output == document['outputFingerprint'],
+        inputFingerprint: input,
+      );
+    } on Object {
+      return const _GenerationFastPathInspection.miss();
+    }
+  }
+
+  /// Atomically records one successful full generation as the next baseline.
+  static Future<void> write({
+    required CCPackageWorkspace workspace,
+    required String expectedInputFingerprint,
+  }) async {
+    final input = await _GenerationStateFingerprint.captureInput(workspace);
+    if (input != expectedInputFingerprint) return;
+    final output = await _GenerationStateFingerprint.captureOutput(workspace);
+    final payload = <String, Object?>{
+      'schemaVersion': _schemaVersion,
+      'generatorVersion': ccrouterPackageIndexGeneratorVersion,
+      'hostPackage': workspace.host.name,
+      'inputFingerprint': input,
+      'outputFingerprint': output,
+    };
+    final contents =
+        '${const JsonEncoder.withIndent('  ').convert({...payload, 'contentFingerprint': computeCCCanonicalJsonFingerprint(payload)})}\n';
+    await _writeIfChanged(_manifestFile(workspace), contents);
+  }
+
+  /// Uses a Host-specific filename so one workspace may generate several apps.
+  static File _manifestFile(CCPackageWorkspace workspace) {
+    final identity = computeCCCanonicalJsonFingerprint(<String, Object?>{
+      'host': workspace.host.name,
+      'root': path.relative(
+        workspace.host.root.path,
+        from: workspace.buildRoot.path,
+      ),
+    });
+    return File(
+      path.join(
+        workspace.buildRoot.path,
+        '.dart_tool',
+        'ccrouter',
+        'v1',
+        'manifests',
+        '$identity.json',
+      ),
+    );
+  }
+}
+
+/// Result of one fail-closed generation-manifest inspection.
+final class _GenerationFastPathInspection {
+  /// Creates an inspection with an optional verified current input digest.
+  const _GenerationFastPathInspection({
+    required this.matches,
+    required this.inputFingerprint,
+  });
+
+  /// Creates a miss when the manifest cannot be trusted or inputs differ.
+  const _GenerationFastPathInspection.miss({this.inputFingerprint})
+    : matches = false;
+
+  /// Whether both authoritative inputs and managed outputs are unchanged.
+  final bool matches;
+
+  /// Current input digest reusable after a full run, when it was computed.
+  final String? inputFingerprint;
+}
+
+/// Exact content digests for generation inputs and source-tree outputs.
+abstract final class _GenerationStateFingerprint {
+  /// Captures authored sources, resolution state, and generator implementation.
+  static Future<String> captureInput(CCPackageWorkspace workspace) async {
+    final inputs = <String, List<int>>{};
+    for (final package in workspace.packages.values) {
+      if (package.writable) {
+        await _addAuthoredPackageInputs(inputs, package);
+      } else {
+        await _addFile(
+          inputs,
+          'external/${package.name}/ccrouter_package.json',
+          package.indexFile,
+        );
+        await _addFile(
+          inputs,
+          'external/${package.name}/${package.bundleFile.uri.pathSegments.last}',
+          package.bundleFile,
+        );
+      }
+    }
+    await _addBuildStateInputs(inputs, workspace.buildRoot);
+    await _addGeneratorInputs(inputs);
+    inputs['tool/dart-version'] = utf8.encode(Platform.version);
+    inputs['tool/dart-executable'] = utf8.encode(
+      path.normalize(Platform.resolvedExecutable),
+    );
+    return _digestEntries(inputs);
+  }
+
+  /// Captures every CCRouter-owned generated source-tree artifact.
+  static Future<String> captureOutput(CCPackageWorkspace workspace) async {
+    final outputs = <String, List<int>>{};
+    for (final package in workspace.packages.values.where(
+      (package) => package.writable,
+    )) {
+      final generated = await _readManagedGeneratedFiles(package.root);
+      for (final entry in generated.entries) {
+        outputs['${package.name}/${entry.key}'] = entry.value;
+      }
+    }
+    return _digestEntries(outputs);
+  }
+
+  /// Adds generation-relevant authored files for one writable Package.
+  static Future<void> _addAuthoredPackageInputs(
+    Map<String, List<int>> inputs,
+    CCResolvedPackage package,
+  ) async {
+    final lib = Directory(path.join(package.root.path, 'lib'));
+    if (lib.existsSync()) {
+      final files = <File>[];
+      await for (final entity in lib.list(
+        recursive: true,
+        followLinks: false,
+      )) {
+        if (entity is! File || !entity.path.endsWith('.dart')) continue;
+        final relative = _relativePath(package.root, entity);
+        if (relative.split('/').contains('ccrouter_generated')) continue;
+        files.add(entity);
+      }
+      files.sort((left, right) => left.path.compareTo(right.path));
+      for (final file in files) {
+        inputs['package/${package.name}/${_relativePath(package.root, file)}'] =
+            await file.readAsBytes();
+      }
+    }
+    for (final name in const ['pubspec.yaml', 'build.yaml', 'ccrouter.yaml']) {
+      await _addFile(
+        inputs,
+        'package/${package.name}/$name',
+        File(path.join(package.root.path, name)),
+      );
+    }
+  }
+
+  /// Adds Pub graph state that governs Package discovery and dependencies.
+  static Future<void> _addBuildStateInputs(
+    Map<String, List<int>> inputs,
+    Directory buildRoot,
+  ) async {
+    for (final relative in const [
+      'pubspec.yaml',
+      'pubspec.lock',
+      '.dart_tool/package_config.json',
+      '.dart_tool/package_graph.json',
+    ]) {
+      await _addFile(
+        inputs,
+        'build/$relative',
+        File(path.joinAll([buildRoot.path, ...relative.split('/')])),
+      );
+    }
+  }
+
+  /// Adds local generator code so same-version path edits cannot false-hit.
+  static Future<void> _addGeneratorInputs(Map<String, List<int>> inputs) async {
+    final library = await Isolate.resolvePackageUri(
+      Uri.parse('package:ccrouter_generator/ccrouter_generator.dart'),
+    );
+    if (library == null || library.scheme != 'file') return;
+    final root = File.fromUri(library).parent.parent;
+    for (final directoryName in const ['lib', 'bin']) {
+      final directory = Directory(path.join(root.path, directoryName));
+      if (!directory.existsSync()) continue;
+      final files = <File>[];
+      await for (final entity in directory.list(
+        recursive: true,
+        followLinks: false,
+      )) {
+        if (entity is File && entity.path.endsWith('.dart')) files.add(entity);
+      }
+      files.sort((left, right) => left.path.compareTo(right.path));
+      for (final file in files) {
+        inputs['generator/${_relativePath(root, file)}'] = await file
+            .readAsBytes();
+      }
+    }
+    for (final name in const ['pubspec.yaml', 'build.yaml']) {
+      await _addFile(
+        inputs,
+        'generator/$name',
+        File(path.join(root.path, name)),
+      );
+    }
+  }
+
+  /// Adds [file] only when it exists; absence remains part of the file set.
+  static Future<void> _addFile(
+    Map<String, List<int>> files,
+    String identity,
+    File file,
+  ) async {
+    if (file.existsSync()) files[identity] = await file.readAsBytes();
+  }
+
+  /// Hashes logical names and exact bytes without trusting timestamps or sizes.
+  static String _digestEntries(Map<String, List<int>> entries) {
+    final names = entries.keys.toList()..sort();
+    final bytes = BytesBuilder(copy: false);
+    for (final name in names) {
+      bytes
+        ..add(utf8.encode(name))
+        ..addByte(0)
+        ..add(entries[name]!)
+        ..addByte(0);
+    }
+    return sha256.convert(bytes.takeBytes()).toString();
+  }
 }
 
 /// Finds the build root while honoring a Package's workspace opt-in.
