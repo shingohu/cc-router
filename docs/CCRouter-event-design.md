@@ -2,9 +2,9 @@
 
 ## 1. 状态与结论
 
-- 状态：Runtime 能力已完成；生成器方案已批准、尚未实现
+- 状态：Runtime 与生成器能力已完成
 - 稳定契约：`CCEvent`、`CCRegistry.registerEvent`、`CCRouter.event`
-- 待实现：Event Contract、静态 Subscription、Owner 自动 Publication Client、metadata 和 Workspace 校验
+- 已实现：Event Contract、静态 Subscription、Owner 自动 Publication Client、metadata、Catalog 和 Workspace 校验
 - 当前不做：Sticky、历史重放、持久化队列、跨进程广播、优先级、动态订阅
 
 Event 表示一个事实已经发生。发布者不读取订阅者结果，也不能用订阅者是否存在决定业务
@@ -219,17 +219,16 @@ lib/src/ccrouter_generated/
 - 现有并发启动顺序、失败隔离、零订阅者、timeout、取消和 shutdown 语义保持不变；
 - 动态 subscribe/unsubscribe、页面生命周期订阅和反射扫描仍不进入 Runtime。
 
-## 14. 实施与回归顺序
+## 14. 已完成实施项
 
-1. 新增 `CCEventContract` 和 `CCEventSubscription` 声明模型，不增加重复的 Publication 声明。
-2. 实现 Contract、Payload、Subscription 签名和公共 Pure Dart 边界校验。
-3. 生成 Subscriber registration bridge，并接入组件 Registrar。
-4. 从 Contract Owner 自动生成 Publication Client 和可信 Event Binding。
-5. 扩展 Runtime 稳定 Event ID、metadata schema、Workspace Validator、Catalog 和 `ccrouter find`。
-6. Demo 把现有多 Subscriber、零 Subscriber、失败隔离和 timeout 迁移到 Owner Client，并覆盖
-   默认/显式 Subscriber ID、取消、optional Owner、可信 publisher 和裸调用门禁。
-7. 回归 Generator 增量/清理/无输出、Runtime 并发与 shutdown、Analyzer、生成物一致性和资源释放。
-8. 实现完成后再同步 Integration Skill 的使用方式；完成前继续标记为不支持。
+1. [x] 新增 `CCEventContract` 和 `CCEventSubscription` 声明模型，不增加重复 Publication 声明。
+2. [x] 实现 Contract、Payload、Subscription 签名和公共 Pure Dart 边界校验。
+3. [x] 生成 Subscriber registration bridge，并接入组件 Registrar。
+4. [x] 从 Contract Owner 自动生成 Publication Client 和可信 Event Binding。
+5. [x] 扩展 Runtime 稳定 Event ID、metadata schema、Workspace Validator、Catalog 和 `ccrouter find`。
+6. [x] Demo 迁移多 Subscriber、零 Subscriber、失败隔离和 timeout，并覆盖默认/显式 ID。
+7. [x] 增加 Generator、Workspace、Runtime Binding 和 Demo 回归。
+8. [x] 同步 README 与 Integration Skill 使用方式。
 
 ## 15. 明确不纳入本轮
 

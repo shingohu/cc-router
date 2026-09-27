@@ -57,12 +57,16 @@ final class _RegisteredEventSubscriber {
   /// Creates an internally owned Event subscription.
   const _RegisteredEventSubscriber({
     required this.id,
+    required this.eventId,
     required this.ownerComponentId,
     required this.callback,
   });
 
   /// Globally stable subscriber identity.
   final String id;
+
+  /// Stable generated Event identity, or null for a handwritten subscriber.
+  final String? eventId;
 
   /// Component that registered the subscriber, or empty for low-level tests.
   final String ownerComponentId;

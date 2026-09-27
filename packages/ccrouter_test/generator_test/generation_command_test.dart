@@ -299,12 +299,71 @@ void probe() {
       expect(routeApi, contains('static const detail ='));
       expect(routeApi, contains('static const presentationBottomPage ='));
       expect(routeApi, isNot(contains('route_binding.g.dart')));
+      final eventApi = File(
+        path.join(
+          navigationPackage,
+          'lib',
+          'src',
+          'ccrouter_generated',
+          'component',
+          'demo_navigation_lab_component.event_api.g.dart',
+        ),
+      ).readAsStringSync();
+      expect(
+        eventApi,
+        contains('abstract final class DemoNavigationLabEvents'),
+      );
+      expect(eventApi, contains('publishDemoOrderCompleted'));
+      expect(
+        eventApi,
+        contains('eventId: "demo_navigation_lab.order_completed"'),
+      );
+      final componentAssembly = File(
+        path.join(
+          navigationPackage,
+          'lib',
+          'src',
+          'ccrouter_generated',
+          'component',
+          'demo_navigation_lab_component.component.g.dart',
+        ),
+      ).readAsStringSync();
+      expect(
+        componentAssembly,
+        matches(
+          RegExp(
+            r'subscriberId:\s*"demo_navigation_lab_component\.demo_navigation_lab\.slow"',
+          ),
+        ),
+      );
+      final navigationCatalog = File(
+        path.join(
+          navigationPackage,
+          'lib',
+          'src',
+          'ccrouter_generated',
+          'metadata',
+          'cc_catalog.md',
+        ),
+      ).readAsStringSync();
+      expect(
+        navigationCatalog,
+        contains('### Event `demo_navigation_lab.order_completed`'),
+      );
+      expect(
+        navigationCatalog,
+        contains('### Event `demo.analytics.order-completed`'),
+      );
       final navigationBarrel = File(
         path.join(navigationPackage, 'lib', 'demo_navigation_lab.dart'),
       ).readAsStringSync();
       expect(
         navigationBarrel,
         isNot(contains('demo_navigation_lab_component.route_api.g.dart')),
+      );
+      expect(
+        navigationBarrel,
+        isNot(contains('demo_navigation_lab_component.event_api.g.dart')),
       );
       for (final package in ['order', 'payment', 'web']) {
         final component = package == 'order'

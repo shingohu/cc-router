@@ -9,6 +9,7 @@ import 'package:source_gen/source_gen.dart';
 
 import 'src/route_generator.dart';
 import 'src/command_generator.dart';
+import 'src/event_generator.dart';
 import 'src/service_generator.dart';
 
 /// Creates one standalone generated route library without backend coupling.
@@ -126,6 +127,24 @@ Builder ccCommandBuilder(BuilderOptions options) {
 Builder ccCommandMetadataBuilder(BuilderOptions options) =>
     ccCommandMetadataBuilderInternal();
 
+/// Creates package-internal Event Subscriber registration bridges.
+Builder ccEventBuilder(BuilderOptions options) {
+  final config = Map<String, dynamic>.from(options.config);
+  config.putIfAbsent('build_extensions', () => _eventBuildExtensions);
+  return LibraryBuilder(
+    ccEventGenerator(),
+    generatedExtension: '.event.g.dart',
+    options: BuilderOptions(config, isRoot: options.isRoot),
+    header:
+        '// GENERATED CODE - DO NOT MODIFY BY HAND\n'
+        '// ignore_for_file: type=lint, unused_element',
+  );
+}
+
+/// Emits disposable Event metadata into the build cache.
+Builder ccEventMetadataBuilder(BuilderOptions options) =>
+    ccEventMetadataBuilderInternal();
+
 /// Emits disposable machine-readable component metadata into the build cache.
 Builder ccComponentMetadataBuilder(BuilderOptions options) =>
     ccComponentMetadataBuilderInternal();
@@ -186,4 +205,9 @@ const _commandBuildExtensions = <String, List<String>>{
   r'^lib/src/{{}}.dart': [
     'lib/src/ccrouter_generated/command/{{}}.command.g.dart',
   ],
+};
+
+/// Maps Subscriber sources to package-internal registration libraries.
+const _eventBuildExtensions = <String, List<String>>{
+  r'^lib/src/{{}}.dart': ['lib/src/ccrouter_generated/event/{{}}.event.g.dart'],
 };

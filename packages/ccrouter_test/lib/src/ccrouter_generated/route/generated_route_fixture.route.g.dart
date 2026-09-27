@@ -261,8 +261,12 @@ final class CCGeneratedGeneratedDetailPageRouteFactory {
 void ccrouterRegisterGeneratedDetailPageRoute(CCRegistry registry) =>
     registry.registerRoute(_GeneratedDetailPageRoute.definition);
 
-/// Package-internal route definition bridge used by Host generation.
-CCRouteDefinition<dynamic, dynamic>
+/// Typed route definition bridge shared by Host generation and page binding.
+///
+/// Retaining the generated argument type lets the isolated Flutter binding
+/// access decoded fields without dynamic calls. Host aggregation may erase the
+/// type only after page construction has been bound.
+CCRouteDefinition<_GeneratedDetailPageRouteArguments, String>
 ccrouterDescribeGeneratedDetailPageRoute() =>
     _GeneratedDetailPageRoute.definition;
 
@@ -362,8 +366,12 @@ final class CCGeneratedGeneratedInternalPageRouteFactory {
 void ccrouterRegisterGeneratedInternalPageRoute(CCRegistry registry) =>
     registry.registerRoute(_GeneratedInternalPageRoute.definition);
 
-/// Package-internal route definition bridge used by Host generation.
-CCRouteDefinition<dynamic, dynamic>
+/// Typed route definition bridge shared by Host generation and page binding.
+///
+/// Retaining the generated argument type lets the isolated Flutter binding
+/// access decoded fields without dynamic calls. Host aggregation may erase the
+/// type only after page construction has been bound.
+CCRouteDefinition<_GeneratedInternalPageRouteArguments, void>
 ccrouterDescribeGeneratedInternalPageRoute() =>
     _GeneratedInternalPageRoute.definition;
 
@@ -499,8 +507,12 @@ final class CCGeneratedGeneratedPositionalPageRouteFactory {
 void ccrouterRegisterGeneratedPositionalPageRoute(CCRegistry registry) =>
     registry.registerRoute(_GeneratedPositionalPageRoute.definition);
 
-/// Package-internal route definition bridge used by Host generation.
-CCRouteDefinition<dynamic, dynamic>
+/// Typed route definition bridge shared by Host generation and page binding.
+///
+/// Retaining the generated argument type lets the isolated Flutter binding
+/// access decoded fields without dynamic calls. Host aggregation may erase the
+/// type only after page construction has been bound.
+CCRouteDefinition<_GeneratedPositionalPageRouteArguments, int>
 ccrouterDescribeGeneratedPositionalPageRoute() =>
     _GeneratedPositionalPageRoute.definition;
 
@@ -619,8 +631,13 @@ final class CCGeneratedGeneratedExtraPageRouteFactory {
 void ccrouterRegisterGeneratedExtraPageRoute(CCRegistry registry) =>
     registry.registerRoute(_GeneratedExtraPageRoute.definition);
 
-/// Package-internal route definition bridge used by Host generation.
-CCRouteDefinition<dynamic, dynamic> ccrouterDescribeGeneratedExtraPageRoute() =>
+/// Typed route definition bridge shared by Host generation and page binding.
+///
+/// Retaining the generated argument type lets the isolated Flutter binding
+/// access decoded fields without dynamic calls. Host aggregation may erase the
+/// type only after page construction has been bound.
+CCRouteDefinition<_GeneratedExtraPageRouteArguments, bool>
+ccrouterDescribeGeneratedExtraPageRoute() =>
     _GeneratedExtraPageRoute.definition;
 
 /// Immutable arguments for route generated_route_fixture.prefixed; URI values remain typed.
@@ -770,7 +787,14 @@ final class CCGeneratedGeneratedPrefixedPageRouteFactory {
 void ccrouterRegisterGeneratedPrefixedPageRoute(CCRegistry registry) =>
     registry.registerRoute(_GeneratedPrefixedPageRoute.definition);
 
-/// Package-internal route definition bridge used by Host generation.
-CCRouteDefinition<dynamic, dynamic>
+/// Typed route definition bridge shared by Host generation and page binding.
+///
+/// Retaining the generated argument type lets the isolated Flutter binding
+/// access decoded fields without dynamic calls. Host aggregation may erase the
+/// type only after page construction has been bound.
+CCRouteDefinition<
+  _GeneratedPrefixedPageRouteArguments,
+  route_type_0.GeneratedRouteResult
+>
 ccrouterDescribeGeneratedPrefixedPageRoute() =>
     _GeneratedPrefixedPageRoute.definition;

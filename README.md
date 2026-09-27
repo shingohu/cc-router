@@ -69,7 +69,7 @@ import 'package:ccrouter_go_router/ccrouter_go_router.dart';
 | 完整状态恢复 | 暂不支持 | 当前只记录脱敏的 restoration opportunity |
 | Service 注解生成 | 已支持 | `@CCService` 自动绑定唯一直接 Contract，并生成简单 Provider registration |
 | Command 注解生成 | 已支持 | Contract、Handler、Owner/Consumer Client、稳定 ID、metadata 与 Catalog 自动生成 |
-| Event 注解生成 | 暂不支持 | Contract/Subscription/Owner 自动 Publication 方案已记录；当前仍显式注册 |
+| Event 注解生成 | 已支持 | Contract、静态 Subscription、Owner Publication Client、稳定 ID、metadata 与 Catalog 自动生成 |
 | InitTask 注解生成 | 暂不支持 | Task Contract/Handler/DAG/Catalog 方案已记录；当前仍通过 `@CCComponentContribution` 注册 |
 
 GoRouter 当前无法可靠提供原子 `pushAndRemoveUntil`、精确 `removeRoute/removeRouteBelow` 和 `replaceRouteBelow`。CCRouter 不公开语义不完整的替代方法，也不会把它们静默拆成多个普通操作。
@@ -116,7 +116,7 @@ const orderComponent = CCComponent(
 );
 ```
 
-不需要手写 Registrar。没有专用声明模型的 Event、InitTask、Shell 或复杂 Service
+不需要手写 Registrar。没有专用声明模型的 InitTask、Shell 或复杂 Service
 可放进带 `@CCComponentContribution` 的顶层注册函数；生成器会把它并入同一个私有 Registrar。
 组件定义、Contribution 和生成装配入口不要从业务 barrel 导出。组件间使用公开 contracts
 Package 或明确的 public contract library。
@@ -683,34 +683,34 @@ final receipt = await OrderCommands.submitOrder(
 
 ## Event
 
-Event 表达已经发生的事实，Publisher 不依赖订阅者结果：
+Event 表达已经发生的事实，Publisher 不依赖订阅者结果。组件内 Event 可以省略
+`componentId`，由 Package 的唯一 `CCComponent` 推导 Owner：
 
 ```dart
-final class OrderPaid implements CCEvent {
-  const OrderPaid(this.orderId);
+@CCEventContract(
+  id: 'order.paid',
+  description: '订单支付已经完成。',
+)
+final class OrderPaidEvent implements CCEvent {
+  const OrderPaidEvent(this.orderId);
   final String orderId;
 }
 
-final orderPaidAnalytics = const CCEventSubscriberId<OrderPaid>(
-  'analytics.order-paid',
-);
+@CCEventSubscription(id: 'analytics.order-paid')
+Future<void> trackOrderPaid(
+  OrderPaidEvent event,
+  CCInvocationContext context,
+) => analytics.track(event.orderId);
 
-registry.registerEventSubscriber<OrderPaid>(
-  CCEventSubscriber<OrderPaid>(
-    id: orderPaidAnalytics,
-    handler: (event, _) => analytics.track(event.orderId),
-  ),
+await OrderEvents.publishOrderPaid(
+  const OrderPaidEvent('42'),
+  timeout: const Duration(seconds: 3),
 );
-
-await CCRouter.event(const OrderPaid('42'));
 ```
 
-同一 Event 可以没有订阅者或有多个订阅者。订阅按稳定 ID 确定启动顺序，单个订阅者失败不会阻止其他订阅者；调用 Future 在本次分发完成后结束。`CCEventSubscriberId<E>` 的值是**订阅者 ID**，不是 Event 类型 ID：同一 Event 的多个订阅者必须有不同稳定 ID，生成的 Contract 包应提供这些常量，避免在 Contribution 中散落自由字符串。Event 类型本身由 Dart 类型绑定，不能用运行时字符串替代类型校验。需要唯一处理者、返回值或业务成功语义时使用 Command，不要使用 Event。
+同一 Event 可以没有 Subscriber 或有多个 Subscriber。订阅按稳定 ID 确定启动顺序，单个 Subscriber 失败不会阻止其他 Subscriber；调用 Future 在本次分发完成后结束。同一组件只有一个对应 Subscriber 时可省略 `CCEventSubscription.id`，生成器使用 `<subscriberComponentId>.<eventId>`；存在多个时必须全部显式设置。跨组件 Contract 显式填写 `componentId`，订阅组件把 Owner 放入 required 或 optional dependencies。生成器只为 Owner 生成 Publication Client，不增加 `eventDependencies` 或任意发布权。
 
-旧的 `registerEvent(String id, handler)` 仍为 1.x 底层注册和测试保留；新组件优先在
-`@CCComponentContribution` 中使用 typed subscriber 形式。订阅者在 Runtime 生命周期内注册并由
-Runtime 调度，业务不得在页面创建/销毁时反复注册或自行取消；需要按页面生命周期订阅时，应让
-Route Service 或页面生命周期回调管理业务资源，而不是改变 Event 注册表。
+`CCEventSubscriberId<E>`、`CCEventSubscriber<E>` 和旧的 `registerEvent` 仅用于未注解迁移能力、底层注册和测试。已注解 Event 必须使用生成 Owner Client，不能调用裸 `CCRouter.event` 绕过稳定 Event ID 与 publisher identity。Subscriber 在 Runtime 生命周期内静态注册，不提供页面级动态 subscribe/unsubscribe、Sticky、历史重放或持久化；页面内状态同步继续使用状态管理或 Route Service。
 
 ## InitTask
 
@@ -814,7 +814,7 @@ fvm dart run ccrouter_generator:ccrouter generate demo --check
 - 页面导航统一走 `CCRouter.navigator`。
 - 正确区分 Interceptor、PopGuard、Aspect 和页面生命周期。
 - 遵守 Host SPI、组件实现与 contracts Package 的依赖边界。
-- 不虚构当前尚未实现的 Action Pipeline、动态组件或 Event/InitTask 注解；Command Client 与 Service Proxy 只使用当前支持的显式消费声明和方法矩阵。
+- 不虚构当前尚未实现的 Action Pipeline、动态组件或 InitTask 注解；Command/Event 生成 Client 与 Service Proxy 只使用当前支持的显式声明和方法矩阵。
 - 生成后执行 analyze、针对性测试与 `generate --check`。
 
 将完整的 `skills/ccrouter-integration-development/` 目录复制或同步到集成工程的 `skills/` 下，不要只复制 `SKILL.md`，因为能力决策、实现模式和审查清单位于 `references/`。然后在集成工程的 Agent 规则中加入：

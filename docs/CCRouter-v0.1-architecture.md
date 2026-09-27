@@ -474,11 +474,10 @@ all registrars
 - 对重复 ID、模糊路由、所有权、契约 exposure、Service Contract/Provider 冲突和依赖图报错；
   动态注册关系、InitTask 缺失依赖与循环仍由 Runtime 校验。
 
-Command/Event/InitTask 声明生成尚未实现，不通过扫描手写 Registrar 或 Contribution 猜测静态
-关系。Command 已形成显式 Contract/Handler/消费依赖方案，Event 已形成显式 Contract/静态
-Subscription/Owner 自动 Publication 方案，InitTask 已形成显式 Task Contract/Handler/类型化依赖和
-DAG/Catalog 方案；三者均尚未实现。Service Proxy 也只使用显式消费声明，不扫描全部 Package
-依赖猜测能力。
+Command 与 Event 声明生成已实现，分别采用显式 Contract/Handler/消费依赖和显式
+Contract/静态 Subscription/Owner Publication Client，不扫描手写 Registrar、Contribution 或全部
+Package 依赖猜测能力。InitTask 已形成显式 Task Contract/Handler/类型化依赖和 DAG/Catalog
+方案但尚未实现，当前仍通过 Contribution 注册。
 
 ### 7.3 注册确定性
 

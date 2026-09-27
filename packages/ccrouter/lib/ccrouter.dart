@@ -44,6 +44,7 @@ export 'src/app.dart' hide CCRouterAppBackend, CCPageLifecycleHostBridge;
 export 'src/facade.dart'
     hide
         CCRouterGeneratedCommandBinding,
+        CCRouterGeneratedEventBinding,
         CCRouterGeneratedServiceBinding,
         CCRouterHostBinding,
         CCRouterTestBinding;

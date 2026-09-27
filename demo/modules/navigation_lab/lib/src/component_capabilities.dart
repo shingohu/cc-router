@@ -17,30 +17,23 @@ abstract final class DemoInitializationTaskIds {
 
 /// Stable Event IDs registered by the Demo component.
 abstract final class DemoEventIds {
-  /// Analytics subscriber for a completed order.
-  static const orderCompleted = 'demo.analytics.order-completed';
+  /// Completed-order fact published by the Demo component.
+  static const orderCompleted = 'demo_navigation_lab.order_completed';
 
-  /// Deliberately failing subscriber used by the diagnostics lab.
-  static const brokenOrderCompleted = 'demo.broken.order-completed';
+  /// Fact with no installed subscribers, used to demonstrate no-op delivery.
+  static const unobserved = 'demo_navigation_lab.unobserved';
 
-  /// Subscriber that remains pending until its invocation is cancelled.
-  static const slow = 'demo.slow-event';
+  /// Fact whose subscriber waits until its invocation is cancelled.
+  static const slow = 'demo_navigation_lab.slow';
 }
 
-/// Typed Event subscriber identities used by the diagnostics lab.
-abstract final class DemoEventSubscribers {
+/// Stable Event Subscriber IDs used by the diagnostics lab.
+abstract final class DemoEventSubscriberIds {
   /// Analytics subscriber for a completed order.
-  static const orderAnalytics = CCEventSubscriberId<DemoOrderCompletedEvent>(
-    DemoEventIds.orderCompleted,
-  );
+  static const orderAnalytics = 'demo.analytics.order-completed';
 
   /// Deliberately failing subscriber used by the diagnostics lab.
-  static const orderFailure = CCEventSubscriberId<DemoOrderCompletedEvent>(
-    DemoEventIds.brokenOrderCompleted,
-  );
-
-  /// Subscriber that remains pending until its invocation is cancelled.
-  static const slow = CCEventSubscriberId<DemoSlowEvent>(DemoEventIds.slow);
+  static const orderFailure = 'demo.broken.order-completed';
 }
 
 /// Stable route policy IDs registered by the Demo component.
@@ -115,16 +108,28 @@ final class DemoFailCommand implements CCCommand<void> {
   const DemoFailCommand();
 }
 
+@CCEventContract(
+  id: DemoEventIds.orderCompleted,
+  description: '订单完成后通知互不依赖的 Demo Subscriber。',
+)
 final class DemoOrderCompletedEvent implements CCEvent {
   const DemoOrderCompletedEvent(this.orderId);
 
   final int orderId;
 }
 
+@CCEventContract(
+  id: DemoEventIds.unobserved,
+  description: '验证零 Subscriber 发布仍是可追踪的成功 no-op。',
+)
 final class DemoUnobservedEvent implements CCEvent {
   const DemoUnobservedEvent();
 }
 
+@CCEventContract(
+  id: DemoEventIds.slow,
+  description: '验证 Event timeout 和 cooperative cancellation。',
+)
 final class DemoSlowEvent implements CCEvent {
   const DemoSlowEvent();
 }

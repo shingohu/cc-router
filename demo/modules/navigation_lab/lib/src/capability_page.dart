@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import 'component_capabilities.dart';
 import 'ccrouter_generated/component/demo_navigation_lab_component.command_api.g.dart';
+import 'ccrouter_generated/component/demo_navigation_lab_component.event_api.g.dart';
 import 'lab_configuration.dart';
 
 @CCRoute<void>(
@@ -141,7 +142,9 @@ final class _DemoCapabilitiesPageState extends State<DemoCapabilitiesPage> {
                 '并发通知两个订阅者，其中一个失败但不影响发布成功。',
                 () => _run(
                   'Event subscribers',
-                  () => CCRouter.event(const DemoOrderCompletedEvent(1001)),
+                  () => DemoNavigationLabEvents.publishDemoOrderCompleted(
+                    const DemoOrderCompletedEvent(1001),
+                  ),
                 ),
               ),
               _action(
@@ -150,7 +153,9 @@ final class _DemoCapabilitiesPageState extends State<DemoCapabilitiesPage> {
                 '没有订阅者是可追踪的成功 no-op。',
                 () => _run(
                   'Event zero subscribers',
-                  () => CCRouter.event(const DemoUnobservedEvent()),
+                  () => DemoNavigationLabEvents.publishDemoUnobserved(
+                    const DemoUnobservedEvent(),
+                  ),
                 ),
               ),
               _action(
@@ -159,7 +164,7 @@ final class _DemoCapabilitiesPageState extends State<DemoCapabilitiesPage> {
                 '发布 deadline 会取消仍在等待的 Subscriber。',
                 () => _run(
                   'Event timeout',
-                  () => CCRouter.event(
+                  () => DemoNavigationLabEvents.publishDemoSlow(
                     const DemoSlowEvent(),
                     timeout: const Duration(milliseconds: 80),
                   ),

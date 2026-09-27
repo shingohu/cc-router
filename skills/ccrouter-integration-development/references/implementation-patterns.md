@@ -280,30 +280,31 @@ hand. Keep raw `CCRouter.command` for unannotated migration capabilities, Host
 composition, and tests only.
 
 ```dart
-final class OrderSubmitted implements CCEvent {
-  const OrderSubmitted(this.id);
+@CCEventContract(id: 'orders.submitted', description: 'Order was submitted.')
+final class OrderSubmittedEvent implements CCEvent {
+  const OrderSubmittedEvent(this.id);
   final String id;
 }
 
-final orderSubmittedAnalytics = const CCEventSubscriberId<OrderSubmitted>(
-  'analytics.order-submitted',
-);
+@CCEventSubscription(id: 'analytics.order-submitted')
+Future<void> trackOrderSubmitted(
+  OrderSubmittedEvent event,
+  CCInvocationContext context,
+) => analytics.track(event.id);
 
-registry.registerEventSubscriber<OrderSubmitted>(
-  CCEventSubscriber<OrderSubmitted>(
-    id: orderSubmittedAnalytics,
-    handler: (event, _) => analytics.track(event.id),
-  ),
+await OrdersEvents.publishOrderSubmitted(
+  const OrderSubmittedEvent('42'),
 );
-
-await CCRouter.event(const OrderSubmitted('42'));
 ```
 
-The typed ID is the identity of this subscriber, not the Event type. Assign a
-different stable ID to every independent subscriber of the same Event and keep
-the values in a generated or component-owned Contract constants library. The
-legacy string overload remains only for existing 1.x registrars and low-level
-tests.
+Generation infers an implementation-Package Event owner, installs static
+Subscribers, and emits the Owner publication Client. A shared contracts Package
+declares `componentId` explicitly. A Subscriber component must declare the Owner
+as a required or optional component dependency. Omit the Subscriber ID only for
+the sole Subscriber to one Event in that component; multiple Subscribers must
+all have distinct explicit IDs. Keep raw `CCRouter.event` and handwritten typed
+Subscriber registration for unannotated migration capabilities, Host
+composition, and low-level tests only.
 
 To bridge framework observations to application logging, configure a Host-owned
 `CCDiagnosticSink` through `CCDiagnosticsConfig`. The sink is asynchronous,

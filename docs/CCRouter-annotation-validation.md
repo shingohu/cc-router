@@ -56,6 +56,7 @@ Component ID 沿用更严格的 Package 风格，只允许小写字母、数字�
 | Parent 存在、自引用、环、依赖可见性 | `builder rejects self parent` | `rejects missing, self-referencing, and cyclic route parents`、`requires cross-component parents to be visible dependencies` | R `runtime rejects missing, cyclic, and mismatched route parents` |
 | Contract exposure、实现与公共导出 | `contract builder emits a standalone Pure Dart contract`、`page builder rejects a Contract-first constructor mismatch` | `rejects missing, duplicate, and unknown public implementations`、`requires public contracts to export the generated library` | Runtime 验证注册后的 Route ID/Owner；静态 Barrel/export 由 Workspace 负责 |
 | Description 大小和安全序列化 | `builder rejects oversized description`、`metadata builder emits documented ownership and parameters` | 只消费已序列化的元数据 | 不影响运行时路由语义，无手写 Definition 字段 |
+| Event Contract、Subscriber 与 Owner | `event_generator_test` 覆盖 Payload、签名、ID 和裸调用门禁 | `workspace_validator_test` 覆盖 Contract/Subscriber 唯一性、Owner/type 与 required/optional dependency | Runtime 继续校验 Event ID/type 绑定、Subscriber ID 唯一性、并发、timeout、取消和失败隔离 |
 | InitTask/Gate ID 与依赖 | `CCInitTaskContract`/`@CCInitTask` 方案已批准但尚未实现；不扫描手写注册 | 实现后校验 Owner、exposure、缺失/重复依赖和完整 DAG | Runtime 继续校验实际注册的 ID、Gate、依赖、环和 timeout |
 
 动态策略注册、Host 绑定、Adapter 能力和当前手写 InitTask 注册不能由 Generator 从注解或

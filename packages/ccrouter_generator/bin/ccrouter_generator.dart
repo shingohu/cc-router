@@ -167,7 +167,8 @@ Future<bool> _aggregate(Directory root, _Arguments parsed) async {
         (!entity.path.endsWith('.route.json') &&
             !entity.path.endsWith('.component.json') &&
             !entity.path.endsWith('.service.json') &&
-            !entity.path.endsWith('.command.json'))) {
+            !entity.path.endsWith('.command.json') &&
+            !entity.path.endsWith('.event.json'))) {
       continue;
     }
     if (entity.path.contains(
@@ -806,7 +807,8 @@ Future<List<_MetadataFile>> _readWritableMetadataFiles(
           (entity.path.endsWith('.route.json') ||
               entity.path.endsWith('.component.json') ||
               entity.path.endsWith('.service.json') ||
-              entity.path.endsWith('.command.json'))) {
+              entity.path.endsWith('.command.json') ||
+              entity.path.endsWith('.event.json'))) {
         files.add(entity);
       }
     }
@@ -1450,6 +1452,7 @@ bool _isManagedGeneratedArtifact(List<String> segments, String name) {
       name.endsWith('.route.json') ||
       name.endsWith('.service.json') ||
       name.endsWith('.command.json') ||
+      name.endsWith('.event.json') ||
       name.endsWith('.route.md') ||
       name.endsWith('.component.json') ||
       name.endsWith('.component.md');
@@ -1593,6 +1596,69 @@ List<Map<String, Object?>> _resolvePackageComponentOwners(
       }
       handler['componentId'] = owner;
     }
+    for (final contract in _objects(document['eventContracts'])) {
+      final declaredOwner = '${contract['componentId'] ?? ''}'.trim();
+      if (declaredOwner.isNotEmpty) continue;
+      if (owner == null) {
+        throw CCPackageWorkspaceException(
+          'Event contract "${contract['id']}" omits componentId but Package '
+          '"$package" has no top-level const CCComponent.',
+        );
+      }
+      contract['componentId'] = owner;
+    }
+    for (final subscription in _objects(document['eventSubscriptions'])) {
+      final declaredOwner = '${subscription['componentId'] ?? ''}'.trim();
+      if (declaredOwner.isEmpty) {
+        if (owner == null) {
+          throw CCPackageWorkspaceException(
+            'Event Subscription "${subscription['implementation']}" has no '
+            'resolvable component owner.',
+          );
+        }
+        subscription['componentId'] = owner;
+      }
+      if ('${subscription['eventComponentId'] ?? ''}'.trim().isEmpty) {
+        subscription['eventComponentId'] = owner;
+      }
+    }
+  }
+  final subscriptions = <Map<String, Object?>>[
+    for (final document in resolved)
+      ..._objects(document['eventSubscriptions']),
+  ];
+  final groups = <String, List<Map<String, Object?>>>{};
+  for (final subscription in subscriptions) {
+    final key =
+        '${subscription['componentId']}\u0000${subscription['eventId']}';
+    groups.putIfAbsent(key, () => []).add(subscription);
+  }
+  final subscriberIds = <String>{};
+  for (final group in groups.values) {
+    final missing = group
+        .where(
+          (subscription) => '${subscription['subscriberId'] ?? ''}'.isEmpty,
+        )
+        .toList();
+    if (group.length > 1 && missing.isNotEmpty) {
+      throw CCPackageWorkspaceException(
+        'Component "${group.first['componentId']}" declares multiple '
+        'subscribers for Event "${group.first['eventId']}"; every '
+        'CCEventSubscription must provide an explicit id.',
+      );
+    }
+    if (missing.length == 1) {
+      missing.single['subscriberId'] =
+          '${missing.single['componentId']}.${missing.single['eventId']}';
+    }
+    for (final subscription in group) {
+      final id = '${subscription['subscriberId'] ?? ''}';
+      if (!subscriberIds.add(id)) {
+        throw CCPackageWorkspaceException(
+          'Event Subscriber ID "$id" is declared more than once.',
+        );
+      }
+    }
   }
   return resolved;
 }
@@ -1644,12 +1710,17 @@ Future<List<_GeneratedComponentCatalog>> _generateComponentRouteIndexes(
   final routes = <String, List<_RouteRegistration>>{};
   final contributions = <String, List<_ContributionRegistration>>{};
   final commandContracts = <String, Map<String, Object?>>{};
+  final eventContracts = <String, Map<String, Object?>>{};
   for (final metadata in metadataFiles) {
     for (final contract in _objects(metadata.document['commandContracts'])) {
       commandContracts['${contract['id'] ?? ''}'] = contract;
     }
+    for (final contract in _objects(metadata.document['eventContracts'])) {
+      eventContracts['${contract['id'] ?? ''}'] = contract;
+    }
   }
   final commandClients = <String, List<_CommandClientEntry>>{};
+  final eventClients = <String, List<_EventClientEntry>>{};
   for (final metadata in metadataFiles) {
     final document = metadata.document;
     final package = '${document['package'] ?? ''}';
@@ -1802,6 +1873,20 @@ Future<List<_GeneratedComponentCatalog>> _generateComponentRouteIndexes(
             ),
           );
     }
+    for (final subscription in _objects(document['eventSubscriptions'])) {
+      final componentId = '${subscription['componentId'] ?? ''}';
+      contributions
+          .putIfAbsent(componentId, () => [])
+          .add(
+            _ContributionRegistration(
+              package: package,
+              source: '${subscription['registrationLibrary'] ?? source}',
+              id: 'event:${subscription['subscriberId'] ?? ''}',
+              symbol: '${subscription['registration'] ?? ''}',
+              subscriberId: '${subscription['subscriberId'] ?? ''}',
+            ),
+          );
+    }
   }
 
   for (final contract in commandContracts.values) {
@@ -1810,6 +1895,13 @@ Future<List<_GeneratedComponentCatalog>> _generateComponentRouteIndexes(
     commandClients
         .putIfAbsent(componentId, () => [])
         .add(_CommandClientEntry.fromMetadata(contract));
+  }
+  for (final contract in eventContracts.values) {
+    final componentId = '${contract['componentId'] ?? ''}';
+    if (componentId.isEmpty) continue;
+    eventClients
+        .putIfAbsent(componentId, () => [])
+        .add(_EventClientEntry.fromMetadata(contract));
   }
 
   final generatedCatalogs = <_GeneratedComponentCatalog>[];
@@ -1825,6 +1917,11 @@ Future<List<_GeneratedComponentCatalog>> _generateComponentRouteIndexes(
     final componentCommandClients =
         commandClients[componentId] ?? <_CommandClientEntry>[];
     componentCommandClients.sort(
+      (left, right) => left.member.compareTo(right.member),
+    );
+    final componentEventClients =
+        eventClients[componentId] ?? <_EventClientEntry>[];
+    componentEventClients.sort(
       (left, right) => left.member.compareTo(right.member),
     );
     final packageRoot = component.packageRoot;
@@ -1871,6 +1968,18 @@ Future<List<_GeneratedComponentCatalog>> _generateComponentRouteIndexes(
         ),
       );
     }
+    final hasEventApi = componentEventClients.isNotEmpty;
+    if (hasEventApi) {
+      final eventApiOutput = File(
+        '${outputDirectory.path}${Platform.pathSeparator}${_fileStem(componentId)}.event_api.g.dart',
+      );
+      await _writeIfChanged(
+        eventApiOutput,
+        _dartFormatter.format(
+          _emitComponentEventApi(componentId, componentEventClients),
+        ),
+      );
+    }
     generatedCatalogs.add(
       _GeneratedComponentCatalog(
         componentId: componentId,
@@ -1881,6 +1990,7 @@ Future<List<_GeneratedComponentCatalog>> _generateComponentRouteIndexes(
         manifest: component.manifest,
         hasRouteApi: hasRouteApi,
         hasCommandApi: hasCommandApi,
+        hasEventApi: hasEventApi,
       ),
     );
   }
@@ -1953,7 +2063,16 @@ String _emitComponentAssembly(
   }
   for (final contribution in contributions) {
     final alias = imports[contribution.source]!;
-    out.writeln('    $alias.${contribution.symbol}(registry);');
+    final subscriberId = contribution.subscriberId;
+    if (subscriberId == null) {
+      out.writeln('    $alias.${contribution.symbol}(registry);');
+    } else {
+      out
+        ..writeln('    $alias.${contribution.symbol}(')
+        ..writeln('      registry,')
+        ..writeln('      subscriberId: ${jsonEncode(subscriberId)},')
+        ..writeln('    );');
+    }
   }
   out
     ..writeln('  }')
@@ -2101,6 +2220,69 @@ String _emitComponentCommandApi(
       ..writeln('    command,')
       ..writeln('    commandId: ${jsonEncode(entry.id)},')
       ..writeln('    callerComponentId: ${jsonEncode(componentId)},')
+      ..writeln('    timeout: timeout,')
+      ..writeln('    cancellation: cancellation,')
+      ..writeln('  );')
+      ..writeln();
+  }
+  out
+    ..writeln('}')
+    ..writeln();
+  return out.toString();
+}
+
+/// Generates one typed Event publication Client for its owning component.
+String _emitComponentEventApi(
+  String componentId,
+  List<_EventClientEntry> entries,
+) {
+  final className =
+      '${_pascalIdentifier(_componentApiOwner(componentId))}Events';
+  final unique = <String, _EventClientEntry>{};
+  for (final entry in entries) {
+    final previous = unique[entry.member];
+    if (previous != null && previous.id != entry.id) {
+      throw CCPackageWorkspaceException(
+        'Events "${previous.id}" and "${entry.id}" both generate member '
+        '"${entry.member}" for component "$componentId".',
+      );
+    }
+    unique[entry.member] = entry;
+  }
+  final libraries = unique.values.map((entry) => entry.library).toSet().toList()
+    ..sort();
+  final aliases = <String, String>{
+    for (var index = 0; index < libraries.length; index++)
+      libraries[index]: 'event_type_$index',
+  };
+  final out = StringBuffer()
+    ..writeln('// GENERATED CODE - DO NOT MODIFY BY HAND')
+    ..writeln('// ignore_for_file: type=lint')
+    ..writeln()
+    ..writeln("import 'package:ccrouter/ccrouter_generated.dart';");
+  for (final library in libraries) {
+    out.writeln("import '$library' as ${aliases[library]};");
+  }
+  out
+    ..writeln()
+    ..writeln(
+      '/// Typed Event publication entry points for component `$componentId`.',
+    )
+    ..writeln('abstract final class $className {');
+  for (final entry
+      in unique.values.toList()
+        ..sort((left, right) => left.member.compareTo(right.member))) {
+    final alias = aliases[entry.library]!;
+    out
+      ..writeln('  /// Publishes `${entry.id}` to its static subscribers.')
+      ..writeln('  static Future<void> ${entry.member}(')
+      ..writeln('    $alias.${entry.type} event, {')
+      ..writeln('    Duration? timeout,')
+      ..writeln('    CCCancellationToken? cancellation,')
+      ..writeln('  }) => CCRouterGeneratedEventBinding.publish(')
+      ..writeln('    event,')
+      ..writeln('    eventId: ${jsonEncode(entry.id)},')
+      ..writeln('    publisherComponentId: ${jsonEncode(componentId)},')
       ..writeln('    timeout: timeout,')
       ..writeln('    cancellation: cancellation,')
       ..writeln('  );')
@@ -2465,6 +2647,7 @@ bool _isLegacyMetadataArtifact(File file) {
       name.endsWith('.route.json') ||
       name.endsWith('.service.json') ||
       name.endsWith('.command.json') ||
+      name.endsWith('.event.json') ||
       name.endsWith('.route.md') ||
       name.endsWith('.component.json') ||
       name.endsWith('.component.md');
@@ -2525,6 +2708,18 @@ Future<void> _deleteObsoleteResolvedOutputs({
             '${_fileStem(catalog.componentId)}.command_api.g.dart',
           ),
         ),
+    for (final catalog in catalogs)
+      if (catalog.hasEventApi)
+        path.normalize(
+          path.join(
+            catalog.packageRoot.path,
+            'lib',
+            'src',
+            'ccrouter_generated',
+            'component',
+            '${_fileStem(catalog.componentId)}.event_api.g.dart',
+          ),
+        ),
   };
   for (final package in workspace.packages.values.where(
     (package) => package.writable,
@@ -2542,7 +2737,8 @@ Future<void> _deleteObsoleteResolvedOutputs({
             (entity.path.endsWith('.component.g.dart') ||
                 entity.path.endsWith('.routes.g.dart') ||
                 entity.path.endsWith('.route_api.g.dart') ||
-                entity.path.endsWith('.command_api.g.dart'))) {
+                entity.path.endsWith('.command_api.g.dart') ||
+                entity.path.endsWith('.event_api.g.dart'))) {
           candidates.add(entity);
         }
       }
@@ -2741,6 +2937,11 @@ Future<void> _deleteObsoleteAggregateOutputs(
         '${catalog.packageRoot.absolute.path}${Platform.pathSeparator}lib${Platform.pathSeparator}src${Platform.pathSeparator}ccrouter_generated${Platform.pathSeparator}component${Platform.pathSeparator}${_fileStem(catalog.componentId)}.command_api.g.dart',
       );
     }
+    if (catalog.hasEventApi) {
+      expected.add(
+        '${catalog.packageRoot.absolute.path}${Platform.pathSeparator}lib${Platform.pathSeparator}src${Platform.pathSeparator}ccrouter_generated${Platform.pathSeparator}component${Platform.pathSeparator}${_fileStem(catalog.componentId)}.event_api.g.dart',
+      );
+    }
     expected.add(
       '${catalog.packageRoot.absolute.path}${Platform.pathSeparator}lib${Platform.pathSeparator}src${Platform.pathSeparator}ccrouter_generated${Platform.pathSeparator}host${Platform.pathSeparator}${catalog.package}_ccrouter.g.dart',
     );
@@ -2755,6 +2956,7 @@ Future<void> _deleteObsoleteAggregateOutputs(
         !name.endsWith('.routes.g.dart') &&
         !name.endsWith('.route_api.g.dart') &&
         !name.endsWith('.command_api.g.dart') &&
+        !name.endsWith('.event_api.g.dart') &&
         !name.endsWith('_ccrouter.g.dart')) {
       continue;
     }
@@ -2785,6 +2987,11 @@ bool _isCCRouterAggregateOutput(String name, String contents) {
   }
   if (name.endsWith('.command_api.g.dart')) {
     return contents.contains('Typed Command entry points for component');
+  }
+  if (name.endsWith('.event_api.g.dart')) {
+    return contents.contains(
+      'Typed Event publication entry points for component',
+    );
   }
   if (name.endsWith('.component.g.dart')) {
     return contents.contains('Generated capability Registrar for component');
@@ -2961,6 +3168,7 @@ final class _ContributionRegistration {
     required this.source,
     required this.id,
     required this.symbol,
+    this.subscriberId,
   });
 
   /// Package containing the contribution function.
@@ -2974,6 +3182,9 @@ final class _ContributionRegistration {
 
   /// Public top-level function invoked with the restricted Registry.
   final String symbol;
+
+  /// Stable generated Subscriber ID passed to an Event registration bridge.
+  final String? subscriberId;
 }
 
 /// One generated Command Client method derived from static metadata.
@@ -3037,6 +3248,55 @@ String _commandClientMember(String type) {
       : '${stem[0].toLowerCase()}${stem.substring(1)}';
 }
 
+/// One generated Event publication method derived from static metadata.
+final class _EventClientEntry {
+  /// Creates one normalized Event publication entry.
+  const _EventClientEntry({
+    required this.id,
+    required this.library,
+    required this.type,
+    required this.member,
+  });
+
+  /// Reads one Event Contract and derives its publication method name.
+  factory _EventClientEntry.fromMetadata(Map<String, Object?> metadata) {
+    final type = '${metadata['type'] ?? ''}';
+    final declaration = metadata['declaration'];
+    final declarationMap = declaration is Map
+        ? declaration.cast<Object?, Object?>()
+        : const <Object?, Object?>{};
+    return _EventClientEntry(
+      id: '${metadata['id'] ?? ''}',
+      library: '${declarationMap['packageUri'] ?? ''}',
+      type: type,
+      member: _eventClientMember(type),
+    );
+  }
+
+  /// Stable Event identity.
+  final String id;
+
+  /// Public source library containing the Event class.
+  final String library;
+
+  /// Event class name.
+  final String type;
+
+  /// Generated lower-camel publication method.
+  final String member;
+}
+
+/// Derives a concise generated Event publication method name.
+String _eventClientMember(String type) {
+  final stem = type.endsWith('Event')
+      ? type.substring(0, type.length - 'Event'.length)
+      : type;
+  final name = stem.isEmpty
+      ? 'event'
+      : '${stem[0].toUpperCase()}${stem.substring(1)}';
+  return 'publish$name';
+}
+
 /// Describes one generated component catalog and its public Host entrypoint.
 final class _GeneratedComponentCatalog {
   /// Creates a generated catalog record used for package and Host aggregation.
@@ -3048,6 +3308,7 @@ final class _GeneratedComponentCatalog {
     required this.manifest,
     required this.hasRouteApi,
     required this.hasCommandApi,
+    required this.hasEventApi,
   });
 
   /// Stable component identity used in generated symbol names.
@@ -3070,4 +3331,7 @@ final class _GeneratedComponentCatalog {
 
   /// Whether the component owns or consumes generated Command contracts.
   final bool hasCommandApi;
+
+  /// Whether the component owns generated Event publication contracts.
+  final bool hasEventApi;
 }

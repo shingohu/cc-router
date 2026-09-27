@@ -69,6 +69,43 @@ final class CCCommandDependency<C extends CCCommand<Object?>> {
 /// work and report completion or a typed result.
 abstract interface class CCEvent {}
 
+/// Declares one stable typed Event contract for generated publication.
+///
+/// Apply this annotation to a public, concrete, immutable [CCEvent] class. A
+/// component-internal Event may omit [componentId], while a shared contracts
+/// Package declares its owning publisher component explicitly.
+final class CCEventContract {
+  /// Creates one generated Event contract declaration.
+  const CCEventContract({
+    this.componentId,
+    required this.id,
+    this.description = '',
+  });
+
+  /// Component that owns the generated publication API.
+  final CCComponentId? componentId;
+
+  /// Globally stable Event identity used by Trace and metadata.
+  final String id;
+
+  /// Human-readable fact and usage scenario exported to documentation.
+  final String description;
+}
+
+/// Marks one public top-level function as a static Event subscription.
+///
+/// The function accepts the annotated Event and optionally an
+/// [CCInvocationContext], returning `void` or `Future<void>`. Omit [id] only
+/// when this component has exactly one subscriber for the Event; generation
+/// then derives `<componentId>.<eventId>` deterministically.
+final class CCEventSubscription {
+  /// Creates one generated static subscription declaration.
+  const CCEventSubscription({this.id});
+
+  /// Globally stable Subscriber identity, or null for the single default.
+  final String? id;
+}
+
 /// Handles one typed Event without depending on the Core registration package.
 typedef CCEventHandler<E extends CCEvent> =
     FutureOr<void> Function(E event, CCInvocationContext context);
@@ -95,11 +132,21 @@ final class CCEventSubscriberId<E extends CCEvent> {
 /// available for handwritten 1.x registrars and low-level tests.
 final class CCEventSubscriber<E extends CCEvent> {
   /// Creates a typed Event subscriber descriptor.
-  const CCEventSubscriber({required this.id, required this.handler});
+  const CCEventSubscriber({
+    required this.id,
+    required this.handler,
+    this.eventId,
+  });
 
   /// Typed stable identity used for ordering and diagnostics.
   final CCEventSubscriberId<E> id;
 
   /// Handler invoked after the Event has been published.
   final CCEventHandler<E> handler;
+
+  /// Stable generated Event identity associated with [E].
+  ///
+  /// Generated subscriptions always provide this value. Handwritten 1.x
+  /// registrations may omit it and retain Dart-type-only dispatch semantics.
+  final String? eventId;
 }

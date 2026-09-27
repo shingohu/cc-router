@@ -11,6 +11,8 @@ Map<String, Object?> document({
   List<Map<String, Object?>> contributions = const [],
   List<Map<String, Object?>> serviceContracts = const [],
   List<Map<String, Object?>> serviceImplementations = const [],
+  List<Map<String, Object?>> eventContracts = const [],
+  List<Map<String, Object?>> eventSubscriptions = const [],
   String source = 'routes.dart',
   String package = 'orders',
 }) => {
@@ -26,6 +28,8 @@ Map<String, Object?> document({
   'contributions': contributions,
   'serviceContracts': serviceContracts,
   'serviceImplementations': serviceImplementations,
+  'eventContracts': eventContracts,
+  'eventSubscriptions': eventSubscriptions,
 };
 
 Map<String, Object?> component(
@@ -129,6 +133,120 @@ Map<String, Object?> implementation(
 };
 
 void main() {
+  test('accepts Event subscribers through required or optional owners', () {
+    final result = CCRouteWorkspaceValidator.validate([
+      document(
+        package: 'orders',
+        components: [component('orders')],
+        routes: const [],
+        eventContracts: const [
+          {
+            'id': 'orders.created',
+            'componentId': 'orders',
+            'type': 'OrderCreatedEvent',
+          },
+          {
+            'id': 'orders.unobserved',
+            'componentId': 'orders',
+            'type': 'OrderUnobservedEvent',
+          },
+        ],
+      ),
+      document(
+        package: 'analytics',
+        components: [
+          component('analytics', optionalDependencies: ['orders']),
+        ],
+        routes: const [],
+        eventSubscriptions: const [
+          {
+            'eventId': 'orders.created',
+            'eventComponentId': 'orders',
+            'componentId': 'analytics',
+            'subscriberId': 'analytics.orders-created',
+            'eventType': 'OrderCreatedEvent',
+          },
+        ],
+      ),
+    ]);
+
+    expect(result.errors, isEmpty);
+  });
+
+  test('rejects invalid Event relationships and duplicate Subscriber IDs', () {
+    final result = CCRouteWorkspaceValidator.validate([
+      document(
+        package: 'orders',
+        components: [component('orders')],
+        routes: const [],
+        eventContracts: const [
+          {
+            'id': 'orders.created',
+            'componentId': 'orders',
+            'type': 'OrderCreatedEvent',
+          },
+          {
+            'id': 'orders.created',
+            'componentId': 'orders',
+            'type': 'OrderCreatedEvent',
+          },
+          {
+            'id': 'missing.changed',
+            'componentId': 'missing',
+            'type': 'MissingChangedEvent',
+          },
+        ],
+      ),
+      document(
+        package: 'analytics',
+        components: [component('analytics')],
+        routes: const [],
+        eventSubscriptions: const [
+          {
+            'eventId': 'orders.created',
+            'eventComponentId': 'other',
+            'componentId': 'analytics',
+            'subscriberId': 'analytics.shared',
+            'eventType': 'WrongEvent',
+          },
+          {
+            'eventId': 'orders.unknown',
+            'eventComponentId': 'orders',
+            'componentId': 'analytics',
+            'subscriberId': 'analytics.shared',
+            'eventType': 'UnknownEvent',
+          },
+        ],
+      ),
+    ]);
+
+    expect(
+      result.errors,
+      contains('Event contract "orders.created" is declared more than once.'),
+    );
+    expect(
+      result.errors,
+      contains(
+        'Event contract "missing.changed" references unknown owner component "missing".',
+      ),
+    );
+    expect(
+      result.errors,
+      contains(
+        'Event Subscriber ID "analytics.shared" is declared more than once.',
+      ),
+    );
+    expect(
+      result.errors,
+      contains(contains('records Event "orders.created" owner')),
+    );
+    expect(result.errors, contains(contains('records type "WrongEvent"')));
+    expect(
+      result.errors,
+      contains(contains('does not declare owner component "orders"')),
+    );
+  });
+
   test('accepts an exact Service dependency owned by a required component', () {
     final result = CCRouteWorkspaceValidator.validate([
       document(
@@ -1094,4 +1212,156 @@ void main() {
       root.deleteSync(recursive: true);
     }
   });
+
+  test(
+    'requires contracts Package Command declarations in a public barrel',
+    () {
+      final root = Directory.systemTemp.createTempSync(
+        'ccrouter-command-barrel-test-',
+      );
+      try {
+        final package = Directory('${root.path}/demo_order_contracts')
+          ..createSync();
+        Directory('${package.path}/lib/src').createSync(recursive: true);
+        File(
+          '${package.path}/pubspec.yaml',
+        ).writeAsStringSync('name: demo_order_contracts\n');
+        final source = File('${package.path}/lib/src/submit_order.dart')
+          ..writeAsStringSync('final class SubmitOrderCommand {}\n');
+        final metadata =
+            document(
+                source: 'lib/src/submit_order.dart',
+                components: const [],
+                routes: const [],
+              )
+              ..['package'] = 'demo_order_contracts'
+              ..['commandContracts'] = [
+                {
+                  'id': 'orders.submit',
+                  'componentId': 'orders',
+                  'declaration': {
+                    'symbol': 'SubmitOrderCommand',
+                    'packageUri':
+                        'package:demo_order_contracts/src/submit_order.dart',
+                  },
+                },
+              ];
+        final barrel = File('${package.path}/lib/demo_order_contracts.dart')
+          ..writeAsStringSync(
+            "export 'src/submit_order.dart' show SubmitOrderCommand;\n",
+          );
+        expect(
+          CCRouteBarrelExportValidator.validate(root, [metadata]),
+          isEmpty,
+        );
+
+        barrel.writeAsStringSync(
+          "export 'src/submit_order.dart' show AnotherCommand;\n",
+        );
+        expect(
+          CCRouteBarrelExportValidator.validate(root, [metadata]),
+          contains(contains('SubmitOrderCommand')),
+        );
+        expect(source.existsSync(), isTrue);
+      } finally {
+        root.deleteSync(recursive: true);
+      }
+    },
+  );
+
+  test('requires contracts Package Event declarations in a public barrel', () {
+    final root = Directory.systemTemp.createTempSync(
+      'ccrouter-event-barrel-test-',
+    );
+    try {
+      final package = Directory('${root.path}/demo_order_contracts')
+        ..createSync();
+      Directory('${package.path}/lib/src').createSync(recursive: true);
+      File(
+        '${package.path}/pubspec.yaml',
+      ).writeAsStringSync('name: demo_order_contracts\n');
+      File(
+        '${package.path}/lib/src/order_submitted.dart',
+      ).writeAsStringSync('final class OrderSubmittedEvent {}\n');
+      final metadata =
+          document(
+              source: 'lib/src/order_submitted.dart',
+              components: const [],
+              routes: const [],
+            )
+            ..['package'] = 'demo_order_contracts'
+            ..['eventContracts'] = [
+              {
+                'id': 'orders.submitted',
+                'componentId': 'orders',
+                'declaration': {
+                  'symbol': 'OrderSubmittedEvent',
+                  'packageUri':
+                      'package:demo_order_contracts/src/order_submitted.dart',
+                },
+              },
+            ];
+      final barrel = File('${package.path}/lib/demo_order_contracts.dart')
+        ..writeAsStringSync(
+          "export 'src/order_submitted.dart' show OrderSubmittedEvent;\n",
+        );
+      expect(CCRouteBarrelExportValidator.validate(root, [metadata]), isEmpty);
+
+      barrel.writeAsStringSync(
+        "export 'src/order_submitted.dart' show AnotherEvent;\n",
+      );
+      expect(
+        CCRouteBarrelExportValidator.validate(root, [metadata]),
+        contains(contains('OrderSubmittedEvent')),
+      );
+    } finally {
+      root.deleteSync(recursive: true);
+    }
+  });
+
+  test(
+    'does not require component-internal messaging contracts in a barrel',
+    () {
+      final root = Directory.systemTemp.createTempSync(
+        'ccrouter-internal-message-barrel-test-',
+      );
+      try {
+        final package = Directory('${root.path}/demo_order')..createSync();
+        Directory('${package.path}/lib/src').createSync(recursive: true);
+        File(
+          '${package.path}/pubspec.yaml',
+        ).writeAsStringSync('name: demo_order\n');
+        File('${package.path}/lib/src/messages.dart').writeAsStringSync(
+          'final class InternalCommand {}\nfinal class InternalEvent {}\n',
+        );
+        final metadata =
+            document(
+                source: 'lib/src/messages.dart',
+                components: [component('orders')],
+                routes: const [],
+              )
+              ..['package'] = 'demo_order'
+              ..['commandContracts'] = [
+                {
+                  'id': 'orders.internal_command',
+                  'componentId': 'orders',
+                  'declaration': {'symbol': 'InternalCommand'},
+                },
+              ]
+              ..['eventContracts'] = [
+                {
+                  'id': 'orders.internal_event',
+                  'componentId': 'orders',
+                  'declaration': {'symbol': 'InternalEvent'},
+                },
+              ];
+        expect(
+          CCRouteBarrelExportValidator.validate(root, [metadata]),
+          isEmpty,
+        );
+      } finally {
+        root.deleteSync(recursive: true);
+      }
+    },
+  );
 }

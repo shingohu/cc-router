@@ -5,12 +5,13 @@ import 'package:analyzer/dart/analysis/results.dart';
 import 'package:analyzer/dart/analysis/utilities.dart';
 import 'package:analyzer/dart/ast/ast.dart';
 
-/// Checks that public Route and Service contracts are re-exported.
+/// Checks that public cross-Package contracts are re-exported.
 ///
 /// Run this check from the workspace route-catalog command. Component authors
 /// keep generated libraries isolated from authored declarations, while a
 /// public barrel must explicitly show the generated Route types or authored
-/// Service interface. Component-internal capabilities remain excluded.
+/// Service, Command, and Event declarations. Component-internal capabilities
+/// remain excluded.
 final class CCRouteBarrelExportValidator {
   /// Finds missing or incomplete public barrel exports below [workspaceRoot].
   ///
@@ -25,9 +26,15 @@ final class CCRouteBarrelExportValidator {
     Iterable<Map<String, Object?>> documents, {
     Map<String, Directory>? packageRoots,
   }) {
+    final metadata = documents.toList(growable: false);
     final packages = packageRoots ?? _packageRoots(workspaceRoot);
     final errors = <String>[];
-    for (final document in documents) {
+    final componentPackages = <String>{
+      for (final document in metadata)
+        if (_objects(document['components']).isNotEmpty)
+          '${document['package'] ?? ''}',
+    };
+    for (final document in metadata) {
       final packageName = '${document['package'] ?? ''}';
       final packageRoot = packages[packageName];
       if (packageRoot == null) continue;
@@ -68,9 +75,51 @@ final class CCRouteBarrelExportValidator {
           'barrel using `show`.',
         );
       }
+      if (componentPackages.contains(packageName)) continue;
+      for (final contract in _objects(document['commandContracts'])) {
+        _validateAuthoredContractExport(
+          errors: errors,
+          contract: contract,
+          capability: 'Command',
+          source: source,
+          sourceFile: sourceFile,
+          barrels: barrels,
+        );
+      }
+      for (final contract in _objects(document['eventContracts'])) {
+        _validateAuthoredContractExport(
+          errors: errors,
+          contract: contract,
+          capability: 'Event',
+          source: source,
+          sourceFile: sourceFile,
+          barrels: barrels,
+        );
+      }
     }
     errors.sort();
     return errors;
+  }
+
+  /// Requires one authored contracts-Package declaration in a public barrel.
+  static void _validateAuthoredContractExport({
+    required List<String> errors,
+    required Map<String, Object?> contract,
+    required String capability,
+    required String source,
+    required File sourceFile,
+    required List<File> barrels,
+  }) {
+    final declaration = contract['declaration'];
+    if (declaration is! Map) return;
+    final contractSymbol = '${declaration['symbol'] ?? ''}';
+    if (contractSymbol.isEmpty) return;
+    if (_isShownByBarrel(sourceFile, {contractSymbol}, barrels)) return;
+    errors.add(
+      'Public $capability contract "${contract['id']}" in $source must '
+      're-export declaration "$contractSymbol" from $source in a public '
+      'barrel using `show`.',
+    );
   }
 
   /// Locates workspace packages by their `pubspec.yaml` name declarations.

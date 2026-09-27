@@ -181,6 +181,8 @@ abstract final class CCRouteWorkspaceValidator {
     final serviceImplementations = <String, Map<String, Object?>>{};
     final commandContracts = <String, Map<String, Object?>>{};
     final commandHandlers = <String, Map<String, Object?>>{};
+    final eventContracts = <String, Map<String, Object?>>{};
+    final eventSubscriptions = <String, Map<String, Object?>>{};
     final defaultServices = <String, String>{};
     for (final document in documents) {
       if (document['schemaVersion'] != 2 && document['schemaVersion'] != 3) {
@@ -290,6 +292,24 @@ abstract final class CCRouteWorkspaceValidator {
           errors.add('Command "$id" has more than one Handler.');
         } else {
           commandHandlers[id] = handler;
+        }
+      }
+      for (final contract in _objects(document['eventContracts'])) {
+        final id = '${contract['id'] ?? ''}';
+        if (eventContracts.containsKey(id)) {
+          errors.add('Event contract "$id" is declared more than once.');
+        } else {
+          eventContracts[id] = contract;
+        }
+      }
+      for (final subscription in _objects(document['eventSubscriptions'])) {
+        final subscriberId = '${subscription['subscriberId'] ?? ''}';
+        if (eventSubscriptions.containsKey(subscriberId)) {
+          errors.add(
+            'Event Subscriber ID "$subscriberId" is declared more than once.',
+          );
+        } else {
+          eventSubscriptions[subscriberId] = subscription;
         }
       }
     }
@@ -410,6 +430,69 @@ abstract final class CCRouteWorkspaceValidator {
             'Component "$componentId" cannot generate Service Client member '
             '"$member" for Route-scoped contract "$contractId". Resolve the '
             'Service from an exact managed page Context instead.',
+          );
+        }
+      }
+    }
+    for (final contract in eventContracts.values) {
+      final id = '${contract['id'] ?? ''}';
+      final ownerId = '${contract['componentId'] ?? ''}';
+      if (!_validIdentifier(id)) {
+        errors.add('Event contract ID "$id" is invalid.');
+      }
+      if (!components.containsKey(ownerId)) {
+        errors.add(
+          'Event contract "$id" references unknown owner component "$ownerId".',
+        );
+      }
+    }
+    for (final subscription in eventSubscriptions.values) {
+      final eventId = '${subscription['eventId'] ?? ''}';
+      final subscriberId = '${subscription['subscriberId'] ?? ''}';
+      final subscriberComponentId = '${subscription['componentId'] ?? ''}';
+      final declaredEventOwner = '${subscription['eventComponentId'] ?? ''}';
+      if (!_validIdentifier(subscriberId)) {
+        errors.add('Event Subscriber ID "$subscriberId" is invalid.');
+      }
+      if (!components.containsKey(subscriberComponentId)) {
+        errors.add(
+          'Event Subscriber "$subscriberId" references unknown component '
+          '"$subscriberComponentId".',
+        );
+      }
+      final contract = eventContracts[eventId];
+      if (contract == null) {
+        errors.add(
+          'Event Subscriber "$subscriberId" consumes unknown Event "$eventId".',
+        );
+        continue;
+      }
+      final actualEventOwner = '${contract['componentId'] ?? ''}';
+      if (declaredEventOwner != actualEventOwner) {
+        errors.add(
+          'Event Subscriber "$subscriberId" records Event "$eventId" owner '
+          '"$declaredEventOwner" instead of "$actualEventOwner".',
+        );
+      }
+      final eventType = '${subscription['eventType'] ?? ''}';
+      final contractType = '${contract['type'] ?? ''}';
+      if (eventType != contractType) {
+        errors.add(
+          'Event Subscriber "$subscriberId" records type "$eventType" for '
+          'Event "$eventId" instead of "$contractType".',
+        );
+      }
+      if (subscriberComponentId != actualEventOwner) {
+        final subscriber = components[subscriberComponentId];
+        final dependencies = <String>{
+          ..._strings(subscriber?['dependencies']),
+          ..._strings(subscriber?['optionalDependencies']),
+        };
+        if (!dependencies.contains(actualEventOwner)) {
+          errors.add(
+            'Component "$subscriberComponentId" subscribes to Event '
+            '"$eventId" but does not declare owner component '
+            '"$actualEventOwner" as a required or optional dependency.',
           );
         }
       }

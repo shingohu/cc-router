@@ -909,6 +909,7 @@ final class CCRouterRuntime {
       E,
       _RegisteredEventSubscriber(
         id: id,
+        eventId: null,
         ownerComponentId: ownerComponentId,
         callback: (message, context) async {
           await handler(message as E, context);
@@ -923,10 +924,21 @@ final class CCRouterRuntime {
     String ownerComponentId,
     CCEventSubscriber<E> subscriber,
   ) {
-    _registerEventForComponent<E>(
-      ownerComponentId,
-      subscriber.id.value,
-      (event, context) => subscriber.handler(event, context),
+    final eventId = subscriber.eventId;
+    if (eventId != null && !_isStableIdentifier(eventId)) {
+      throw CCRegistrationError('Invalid Event ID "$eventId".');
+    }
+    _registerEventSubscriber(
+      E,
+      _RegisteredEventSubscriber(
+        id: subscriber.id.value,
+        eventId: eventId,
+        ownerComponentId: ownerComponentId,
+        callback: (message, context) async {
+          await subscriber.handler(message as E, context);
+          return null;
+        },
+      ),
     );
   }
 
@@ -1537,9 +1549,63 @@ final class CCRouterRuntime {
   }) {
     final publisherComponentId =
         _parentContext?.targetComponentId ?? _parentContext?.callerComponentId;
+    return _publishEvent(
+      event,
+      eventId: event.runtimeType.toString(),
+      publisherComponentId: publisherComponentId,
+      timeout: timeout,
+      cancellation: cancellation,
+    );
+  }
+
+  /// Publishes one generated Event with stable publisher identity.
+  ///
+  /// Generated component clients provide [eventId] and [publisherComponentId].
+  /// Runtime validates any installed generated subscriptions before dispatch.
+  Future<void> invokeGeneratedEvent(
+    CCEvent event, {
+    required String eventId,
+    required String publisherComponentId,
+    Duration? timeout,
+    CCCancellationToken? cancellation,
+  }) {
+    if (!_isStableIdentifier(eventId)) {
+      throw const CCInvocationError('The generated Event ID is invalid.');
+    }
+    if (!_isComponentIdentifier(publisherComponentId)) {
+      throw const CCInvocationError(
+        'The generated Event publisher component ID is invalid.',
+      );
+    }
+    final subscribers = _events[event.runtimeType]?.values ?? const [];
+    if (subscribers.any(
+      (subscriber) =>
+          subscriber.eventId != null && subscriber.eventId != eventId,
+    )) {
+      throw CCResolutionError(
+        'Event contract "$eventId" does not match registered subscriptions for ${event.runtimeType}.',
+      );
+    }
+    return _publishEvent(
+      event,
+      eventId: eventId,
+      publisherComponentId: publisherComponentId,
+      timeout: timeout,
+      cancellation: cancellation,
+    );
+  }
+
+  /// Executes one Event fan-out through the shared traced Runtime path.
+  Future<void> _publishEvent(
+    CCEvent event, {
+    required String eventId,
+    required String? publisherComponentId,
+    Duration? timeout,
+    CCCancellationToken? cancellation,
+  }) {
     return _invoke(
       'event',
-      event.runtimeType.toString(),
+      eventId,
       (context) async {
         final subscribers = _sortedEventSubscribers(_events[event.runtimeType]);
         await Future.wait(
@@ -1547,7 +1613,7 @@ final class CCRouterRuntime {
             try {
               await _invoke<void>(
                 'eventSubscriber',
-                '${event.runtimeType}.${subscriber.id}',
+                '$eventId.${subscriber.id}',
                 (subscriberContext) async {
                   await subscriber.callback(event, subscriberContext);
                 },
@@ -1555,7 +1621,7 @@ final class CCRouterRuntime {
                 targetComponentId: subscriber.ownerComponentId.isEmpty
                     ? null
                     : subscriber.ownerComponentId,
-                eventId: event.runtimeType.toString(),
+                eventId: eventId,
                 subscriberId: subscriber.id,
               );
             } catch (error) {
@@ -1568,7 +1634,7 @@ final class CCRouterRuntime {
       timeout: timeout,
       cancellation: cancellation,
       callerComponentId: publisherComponentId,
-      eventId: event.runtimeType.toString(),
+      eventId: eventId,
     );
   }
 
@@ -2411,6 +2477,25 @@ final class CCRouterRuntime {
       throw CCRegistrationError(
         'Invalid or duplicate subscriber ID "${subscriber.id}".',
       );
+    }
+    final eventId = subscriber.eventId;
+    if (eventId != null) {
+      for (final entry in _events.entries) {
+        for (final existing in entry.value.values) {
+          if (entry.key != type && existing.eventId == eventId) {
+            throw CCRegistrationError(
+              'Event ID "$eventId" is already bound to ${entry.key}.',
+            );
+          }
+          if (entry.key == type &&
+              existing.eventId != null &&
+              existing.eventId != eventId) {
+            throw CCRegistrationError(
+              'Event type $type is already bound to "${existing.eventId}".',
+            );
+          }
+        }
+      }
     }
     _events.putIfAbsent(type, () => {})[subscriber.id] = subscriber;
   }

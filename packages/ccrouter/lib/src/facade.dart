@@ -9,6 +9,7 @@ import 'app.dart';
 part 'navigation.dart';
 part 'deep_link.dart';
 part 'generated_command_binding.dart';
+part 'generated_event_binding.dart';
 part 'generated_service_binding.dart';
 part 'runtime_resolver.dart';
 part 'test_binding.dart';

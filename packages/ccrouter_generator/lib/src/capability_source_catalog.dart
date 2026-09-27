@@ -223,6 +223,55 @@ final class CCCapabilitySourceCatalog {
           ),
         );
       }
+      for (final contract in _catalogObjectList(document['eventContracts'])) {
+        final id = '${contract['id'] ?? ''}';
+        final componentId = '${contract['componentId'] ?? ''}';
+        if (id.isEmpty || componentId.isEmpty) continue;
+        final declaration = CCSourceReference.fromJson(
+          _catalogObject(contract['declaration']),
+          fallbackPackage: '${contract['package'] ?? fallbackPackage}',
+          fallbackLibrary: '${contract['source'] ?? fallbackSource}',
+        );
+        records.add(
+          CCCapabilitySourceRecord(
+            kind: 'event',
+            id: id,
+            componentId: componentId,
+            packageName: declaration.packageName,
+            contract: declaration,
+            implementation: null,
+            generatedArtifacts: const [],
+          ),
+        );
+      }
+      for (final subscription in _catalogObjectList(
+        document['eventSubscriptions'],
+      )) {
+        final subscriberId = '${subscription['subscriberId'] ?? ''}';
+        final componentId = '${subscription['componentId'] ?? ''}';
+        if (subscriberId.isEmpty || componentId.isEmpty) continue;
+        final contractObject = _catalogObject(subscription['contract']);
+        final implementation = CCSourceReference.fromJson(
+          _catalogObject(subscription['implementation']),
+          fallbackPackage: '${subscription['package'] ?? fallbackPackage}',
+          fallbackLibrary: '${subscription['source'] ?? fallbackSource}',
+        );
+        records.add(
+          CCCapabilitySourceRecord(
+            kind: 'event',
+            id: subscriberId,
+            componentId: componentId,
+            packageName: implementation.packageName,
+            contract: contractObject.isEmpty
+                ? null
+                : CCSourceReference.fromJson(contractObject),
+            implementation: implementation,
+            generatedArtifacts: _catalogObjectList(
+              subscription['generatedArtifacts'],
+            ).map(CCGeneratedArtifact.fromJson),
+          ),
+        );
+      }
     }
     return CCCapabilitySourceCatalog(records);
   }

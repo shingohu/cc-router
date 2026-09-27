@@ -24,6 +24,8 @@
 - [x] 生成器增量缓存、Workspace/Package 聚合、Catalog、源码查找和生成物门禁基础闭环。
 - [x] 顶层 `const CCComponent`、自动 Registrar/Manifest、Route 与简单 Service 自动装配，
   以及 Service Contract 自动绑定、稳定 ID/Provider metadata 最小生成闭环。
+- [x] Command/Event Contract、Handler/Subscription、Owner Client、稳定 ID、metadata、Catalog
+  与 Workspace 校验生成闭环。
 
 ## 3. P0：恢复开发后的第一批任务
 
@@ -88,7 +90,7 @@
   每一项必须先冻结所有权、取消和兼容语义。
 - [x] 按 `CCRouter-command-design.md` 已批准方案实现 Command Contract、Handler registration、
   显式消费依赖、组件专属 Client、metadata、Catalog 和 Workspace 校验；不扫描并生成未使用 Command。
-- [ ] 按 `CCRouter-event-design.md` 已批准方案实现 Event Contract、静态 Subscription、Owner
+- [x] 按 `CCRouter-event-design.md` 已批准方案实现 Event Contract、静态 Subscription、Owner
   自动 Publication Client、metadata、Catalog 和 Workspace 校验；不引入重复 publication 声明
   或动态 EventBus 语义。
 - [x] Contract 通过公共业务 barrel 暴露；Proxy 留在消费组件内部生成目录，跨 Package 不导出

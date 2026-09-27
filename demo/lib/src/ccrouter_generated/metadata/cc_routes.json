@@ -166,7 +166,7 @@
         "kind": "page",
         "symbol": "DemoCapabilitiesPage",
         "packageUri": "package:demo_navigation_lab/src/capability_page.dart",
-        "line": 16,
+        "line": 17,
         "column": 13
       },
       "navigationSources": [

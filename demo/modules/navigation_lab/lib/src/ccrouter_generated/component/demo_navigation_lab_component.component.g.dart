@@ -25,6 +25,8 @@ import '../binding/stack_page.route_binding.g.dart'
     as route_src_ccrouter_generated_binding_stack_page_route_binding_g_dart;
 import '../command/navigation_lab_component_registrar.command.g.dart'
     as route_src_ccrouter_generated_command_navigation_lab_component_registrar_command_g_dart;
+import '../event/navigation_lab_component_registrar.event.g.dart'
+    as route_src_ccrouter_generated_event_navigation_lab_component_registrar_event_g_dart;
 import '../route/capability_page.route.g.dart'
     as route_src_ccrouter_generated_route_capability_page_route_g_dart;
 import '../route/detail_page.route.g.dart'
@@ -121,6 +123,22 @@ final class _DemoNavigationLabComponentGeneratedRegistrar
         .ccrouterRegisterHandleDemoWaitCommand(registry);
     route_src_navigation_lab_component_registrar_dart
         .registerDemoNavigationLabCapabilities(registry);
+    route_src_ccrouter_generated_event_navigation_lab_component_registrar_event_g_dart
+        .ccrouterRegisterTrackDemoOrderCompletedEventSubscription(
+          registry,
+          subscriberId: "demo.analytics.order-completed",
+        );
+    route_src_ccrouter_generated_event_navigation_lab_component_registrar_event_g_dart
+        .ccrouterRegisterFailDemoOrderCompletedEventSubscription(
+          registry,
+          subscriberId: "demo.broken.order-completed",
+        );
+    route_src_ccrouter_generated_event_navigation_lab_component_registrar_event_g_dart
+        .ccrouterRegisterWaitForDemoSlowEventEventSubscription(
+          registry,
+          subscriberId:
+              "demo_navigation_lab_component.demo_navigation_lab.slow",
+        );
   }
 }
 

@@ -250,7 +250,7 @@ void main() {
       demoDiagnosticsSink.events.any(
         (event) =>
             event.category == CCDiagnosticCategory.event &&
-            event.subscriberId == DemoEventSubscribers.orderAnalytics.value,
+            event.subscriberId == DemoEventSubscriberIds.orderAnalytics,
       ),
       isTrue,
     );
@@ -258,7 +258,7 @@ void main() {
       demoApplicationLogger.entries.any(
         (entry) =>
             entry.category == CCDiagnosticCategory.event &&
-            entry.subscriberId == DemoEventSubscribers.orderAnalytics.value,
+            entry.subscriberId == DemoEventSubscriberIds.orderAnalytics,
       ),
       isTrue,
     );

@@ -15,30 +15,6 @@ void registerDemoNavigationLabCapabilities(CCRegistry registry) {
 }
 
 void _registerComponentCapabilities(CCRegistry registry) {
-  registry.registerEventSubscriber<DemoOrderCompletedEvent>(
-    CCEventSubscriber<DemoOrderCompletedEvent>(
-      id: DemoEventSubscribers.orderAnalytics,
-      handler: (event, _) {
-        demoNavigationLabStore.record(
-          'Event analytics subscriber · order=${event.orderId}',
-        );
-      },
-    ),
-  );
-  registry.registerEventSubscriber<DemoOrderCompletedEvent>(
-    CCEventSubscriber<DemoOrderCompletedEvent>(
-      id: DemoEventSubscribers.orderFailure,
-      handler: (_, _) =>
-          throw StateError('simulated private Subscriber failure'),
-    ),
-  );
-  registry.registerEventSubscriber<DemoSlowEvent>(
-    CCEventSubscriber<DemoSlowEvent>(
-      id: DemoEventSubscribers.slow,
-      handler: (_, context) => context.cancellation.whenCancelled,
-    ),
-  );
-
   registry.registerInitializationTask(
     CCInitializationTask(
       id: DemoInitializationTaskIds.foundation,
@@ -130,6 +106,27 @@ void _registerComponentCapabilities(CCRegistry registry) {
     ),
   );
 }
+
+/// Records the completed order through an independent analytics Subscriber.
+@CCEventSubscription(id: DemoEventSubscriberIds.orderAnalytics)
+void trackDemoOrderCompleted(DemoOrderCompletedEvent event) {
+  demoNavigationLabStore.record(
+    'Event analytics subscriber · order=${event.orderId}',
+  );
+}
+
+/// Throws a deliberate Subscriber failure to demonstrate failure isolation.
+@CCEventSubscription(id: DemoEventSubscriberIds.orderFailure)
+void failDemoOrderCompleted(DemoOrderCompletedEvent event) {
+  throw StateError('simulated private Subscriber failure');
+}
+
+/// Waits for timeout, caller cancellation, or Runtime shutdown.
+@CCEventSubscription()
+Future<void> waitForDemoSlowEvent(
+  DemoSlowEvent event,
+  CCInvocationContext context,
+) => context.cancellation.whenCancelled;
 
 /// Creates one deterministic receipt for the typed-result Command example.
 @CCCommandHandler()
