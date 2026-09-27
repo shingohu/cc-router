@@ -70,7 +70,7 @@ import 'package:ccrouter_go_router/ccrouter_go_router.dart';
 | Service 注解生成 | 已支持 | `@CCService` 自动绑定唯一直接 Contract，并生成简单 Provider registration |
 | Command 注解生成 | 已支持 | Contract、Handler、Owner/Consumer Client、稳定 ID、metadata 与 Catalog 自动生成 |
 | Event 注解生成 | 已支持 | Contract、静态 Subscription、Owner Publication Client、稳定 ID、metadata 与 Catalog 自动生成 |
-| InitTask 注解生成 | 暂不支持 | Task Contract/Handler/DAG/Catalog 方案已记录；当前仍通过 `@CCComponentContribution` 注册 |
+| InitTask 注解生成 | 已支持 | Task Contract、Handler、类型化依赖、自动注册、DAG/Catalog 与 Workspace 校验 |
 
 GoRouter 当前无法可靠提供原子 `pushAndRemoveUntil`、精确 `removeRoute/removeRouteBelow` 和 `replaceRouteBelow`。CCRouter 不公开语义不完整的替代方法，也不会把它们静默拆成多个普通操作。
 
@@ -116,7 +116,7 @@ const orderComponent = CCComponent(
 );
 ```
 
-不需要手写 Registrar。没有专用声明模型的 InitTask、Shell 或复杂 Service
+不需要手写 Registrar。Shell、复杂 Service 或其它没有专用声明模型的扩展
 可放进带 `@CCComponentContribution` 的顶层注册函数；生成器会把它并入同一个私有 Registrar。
 组件定义、Contribution 和生成装配入口不要从业务 barrel 导出。组件间使用公开 contracts
 Package 或明确的 public contract library。
@@ -717,18 +717,31 @@ await OrderEvents.publishOrderPaid(
 InitTask 是 Runtime 生命周期内只执行一次的启动任务 DAG，适合 SDK 初始化、基础配置加载和具有明确依赖关系的启动工作：
 
 ```dart
-registry.registerInitializationTask(
-  CCInitializationTask(
-    id: 'analytics.initialize',
-    dependsOn: const ['privacy.load'],
-    gate: CCInitializationGate.privacyGranted,
-    failurePolicy: CCInitializationFailurePolicy.optional,
-    run: (_) async => analytics.initialize(),
-  ),
+const foundationInitTask = CCInitTaskContract(
+  id: 'foundation.initialize',
+  description: '准备 Analytics 依赖的基础设施。',
 );
+
+@CCInitTask(contract: foundationInitTask)
+Future<void> initializeFoundation() async {}
+
+@CCInitTask(
+  id: 'analytics.initialize',
+  dependsOn: [foundationInitTask],
+  gate: CCInitializationGate.privacyGranted,
+  failurePolicy: CCInitializationFailurePolicy.optional,
+  timeout: Duration(seconds: 3),
+)
+Future<void> initializeAnalytics(CCInvocationContext context) =>
+    analytics.initialize(context.cancellation);
 ```
 
-Host 在 `CCRouter.initialize` 后调用 `CCRouter.runInitialization()`。Runtime 会校验重复 ID、缺失依赖与循环依赖。必需任务失败会阻止初始化完成；可选任务失败可诊断但不阻断无依赖分支。单个 Service 的异步准备应放在 `CCServiceProvider.initializer`，不要创建 InitTask 预热所有 Service。
+生成器自动把 Handler 注册到所属组件，并在 Workspace 阶段校验 Owner、Contract exposure、
+缺失/重复依赖和完整 DAG。被其它任务依赖的任务必须声明 `CCInitTaskContract`；跨组件 Contract
+放在公共 contracts Package，消费组件必须 required-depend on Owner。独立内部任务可以只填写
+`id`，`contract` 与 `id` 不能同时设置。
+
+Host 在 `CCRouter.initialize` 后调用 `CCRouter.runInitialization()`。Runtime 仍保留重复 ID、缺失依赖与循环依赖的最终校验。必需任务失败会阻止初始化完成；可选任务失败可诊断但不阻断无依赖分支。单个 Service 的异步准备应放在 `CCServiceProvider.initializer`，不要创建 InitTask 预热所有 Service。
 
 ## 生成器
 
@@ -747,13 +760,17 @@ fvm dart run ccrouter_generator:ccrouter generate demo --no-cache
 # 输出阶段耗时和缓存命中率
 fvm dart run ccrouter_generator:ccrouter generate demo --profile
 
-# 查找 route ID 或声明 Pattern 的组件、契约、页面源码
+# 按能力 ID 查找 Route/Service/Command/Event/InitTask，Route 也支持 Pattern
 fvm dart run ccrouter_generator:ccrouter find order.detail demo
 fvm dart run ccrouter_generator:ccrouter find '/orders/:orderId' demo
+fvm dart run ccrouter_generator:ccrouter find demo.startup.foundation demo
 
 # 只清理 CCRouter 标记的生成源码
 fvm dart run ccrouter_generator:ccrouter clean demo
 ```
+
+`find` 会返回 Contract、实现与生成桥接的 Package URI 和源码坐标，只读取当前 Host 依赖闭包中
+已有的 Package Index，不运行 Builder，也不扫描源码。
 
 生成目录统一为：
 
@@ -814,7 +831,7 @@ fvm dart run ccrouter_generator:ccrouter generate demo --check
 - 页面导航统一走 `CCRouter.navigator`。
 - 正确区分 Interceptor、PopGuard、Aspect 和页面生命周期。
 - 遵守 Host SPI、组件实现与 contracts Package 的依赖边界。
-- 不虚构当前尚未实现的 Action Pipeline、动态组件或 InitTask 注解；Command/Event 生成 Client 与 Service Proxy 只使用当前支持的显式声明和方法矩阵。
+- 不虚构当前尚未实现的 Action Pipeline 或动态组件；Command/Event/InitTask 生成能力与 Service Proxy 只使用当前支持的显式声明和方法矩阵。
 - 生成后执行 analyze、针对性测试与 `generate --check`。
 
 将完整的 `skills/ccrouter-integration-development/` 目录复制或同步到集成工程的 `skills/` 下，不要只复制 `SKILL.md`，因为能力决策、实现模式和审查清单位于 `references/`。然后在集成工程的 Agent 规则中加入：

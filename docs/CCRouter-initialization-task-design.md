@@ -2,9 +2,9 @@
 
 ## 1. 状态与结论
 
-- 状态：Runtime 最小闭环已实现；生成器方案已批准、尚未实现
+- 状态：Runtime 与注解生成器闭环已实现
 - 稳定入口：`CCRegistry.registerInitializationTask`、`CCRouter.runInitialization`
-- 待实现：Task Contract、Handler 注解、注册桥接、metadata、DAG 文档和 Workspace 校验
+- 已实现：Task Contract、Handler 注解、注册桥接、metadata、DAG 文档和 Workspace 校验
 - 当前不做：自动重试、主线程标记、Session/前台周期任务、跨 Isolate 调度
 
 初始化任务用于 Runtime 完成同步组件装配后，执行一次性的异步启动工作，并在多个组件之间
@@ -108,7 +108,7 @@ await CCRouter.runInitialization(gate: CCInitializationGate.privacyGranted);
 3. ID 使用组件或能力前缀，例如 `analytics.foundation`、`app.privacy.granted`，避免
    仅使用 `startup`、`ready` 等全局模糊名称。
 4. `enum` 不能替代对外稳定 ID，因为枚举成员重命名可能意外改变诊断和依赖语义。
-5. 生成器方案实施后由显式 `CCInitTaskContract` 或 `@CCInitTask(id: ...)` 提供稳定 ID，并在
+5. 生成器由显式 `CCInitTaskContract` 或 `@CCInitTask(id: ...)` 提供稳定 ID，并在
    生成阶段校验重复 ID、缺失依赖、循环依赖和跨 Package Contract exposure；运行时仍保留
    最终校验。
 
@@ -127,7 +127,7 @@ await CCRouter.runInitialization(gate: CCInitializationGate.privacyGranted);
 
 ## 9. 生成器问题与决策
 
-Runtime 已能正确执行 InitTask，但手写注册仍存在以下生成期缺口：
+Runtime 能正确执行 InitTask，但手写注册存在以下生成期缺口：
 
 - 任务 ID、依赖 ID 和 Registrar 代码需要重复维护，重命名或跨组件移动后容易漂移；
 - Workspace 无法在构建期验证 Contract Owner、跨 Package exposure 和完整 DAG；
@@ -192,7 +192,8 @@ Package 私有，只有真实跨组件依赖才通过公共 contracts Package ba
 
 `CCInitializationGate` 已经是带稳定 ID 的类型化值，因此不再增加语义重复的 Gate Contract。
 框架内置 `appStarted` 与 `privacyGranted`；自定义 Gate 使用公共 `const CCInitializationGate`，
-由 Host 在条件成立时显式打开。跨 Package 使用的 Gate 必须从公共 contracts Package 导出。
+由 Host 在条件成立时显式打开。跨 Package 使用的 Gate 必须从公共 contracts Package 导出；
+它是普通 Dart 常量，由 Analyzer 的 Package API 边界校验，不额外建立第二套 Gate 注册表。
 
 为了让 `CCInitTaskContract`、`@CCInitTask`、Gate 和 failure policy 都能被 Pure Dart contracts
 Package 使用，实施时应把纯值类型 `CCInitializationGate` 与
@@ -244,8 +245,9 @@ lib/src/ccrouter_generated/
 3. Handler 所在组件必须等于 Contract Owner，且签名满足第 11 节约束。
 4. `dependsOn` 只接受 `CCInitTaskContract` 常量，禁止字符串依赖和实现函数引用。
 5. 依赖必须存在，禁止自依赖、重复依赖和 DAG cycle。
-6. 跨 Package Contract/Gate 必须经公共 barrel 导出，调用侧 Package 必须具有合法依赖关系，
-   不能导入其它 Package 的 `src` 或生成实现文件。
+6. 跨 Package Contract 必须经 Generator 检查的 public barrel 导出；跨 Package Gate 作为普通
+   Dart 常量由 Analyzer 检查 Package API 边界。调用侧必须具有合法依赖，不能导入其它
+   Package 的 `src` 或生成实现文件。
 7. 跨组件硬依赖的 Task Owner 必须出现在当前组件的 required `dependencies`；optional
    component 不能满足一个必须成功的 DAG 依赖。
 8. Gate ID 必须合法；同一 ID 的 Gate 声明必须一致。
@@ -267,19 +269,19 @@ Generator 校验不替代 Runtime。手写 Contribution、自定义 Registrar、
 - Trace、Snapshot 和应用诊断继续只保留稳定 ID、Owner、状态、耗时及脱敏错误类型；
 - 生成器不生成或执行任意启动业务逻辑，Handler 始终由开发者手写。
 
-## 15. 实施与回归顺序
+## 15. 已完成实施与回归
 
-1. 将 Gate/failure policy 纯值契约下沉到 `ccrouter_contracts`，新增 `CCInitTaskContract` 和
+1. [x] 将 Gate/failure policy 纯值契约下沉到 `ccrouter_contracts`，新增 `CCInitTaskContract` 和
    `@CCInitTask` 声明模型，并保持现有公共 barrel 导入兼容。
-2. 实现单 Package Contract/Handler 发现、签名校验和 registration bridge。
-3. 直接接入现有私有组件 Registrar，并覆盖无声明时不生成文件或目录。
-4. 扩展现有 Package metadata/Host Catalog、Workspace 聚合、跨 Package exposure 和完整 DAG 校验。
-5. 扩展 `ccrouter find` 和现有 Markdown Catalog 的 DAG 视图，不增加业务调用 Client。
-6. Demo 覆盖 `appStarted`、隐私授权、自定义 Gate、依赖并发、optional 失败、skip、timeout
+2. [x] 实现单 Package Contract/Handler 发现、签名校验和 registration bridge。
+3. [x] 直接接入现有私有组件 Registrar，并覆盖无声明时不生成文件或目录。
+4. [x] 扩展现有 Package metadata/Host Catalog、Workspace 聚合、跨 Package Contract exposure 和完整 DAG 校验。
+5. [x] 扩展 `ccrouter find` 和现有 Markdown Catalog 的 DAG 视图，不增加业务调用 Client。
+6. [x] Demo 覆盖 `appStarted`、隐私授权、自定义 Gate、依赖并发、optional 失败、skip、timeout
    和 Runtime shutdown。
-7. 回归 Generator golden/增量/清理/`--check`、Runtime 手写兜底、Analyzer、Demo、并发、
+7. [x] 回归 Generator golden/增量/清理/`--check`、Runtime 手写兜底、Analyzer、Demo、并发、
    诊断脱敏和资源释放。
-8. 实现完成后再更新 README 与 Integration Skill 的使用示例；完成前继续标记为暂不支持。
+8. [x] 更新 README 与 Integration Skill 的使用示例和能力状态。
 
 ## 16. 明确不纳入本轮
 

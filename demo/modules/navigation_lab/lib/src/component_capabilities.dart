@@ -13,7 +13,34 @@ abstract final class DemoInitializationTaskIds {
 
   /// Analytics setup opened by [CCInitializationGate.privacyGranted].
   static const analytics = 'demo.startup.analytics';
+
+  /// First task in the generated parallel dependency layer.
+  static const parallelPrimary = 'demo.startup.parallel-primary';
+
+  /// Second task in the generated parallel dependency layer.
+  static const parallelSecondary = 'demo.startup.parallel-secondary';
+
+  /// Optional task used to demonstrate a custom Gate and timeout.
+  static const timeout = 'demo.startup.timeout';
 }
+
+/// Stable custom Gates opened explicitly by the Demo Host UI.
+abstract final class DemoInitializationGates {
+  /// Opens the optional timeout task without changing privacy state.
+  static const timeoutLab = CCInitializationGate('demo.timeoutLab');
+}
+
+/// Typed dependency target for the Demo foundation task.
+const demoFoundationInitTask = CCInitTaskContract(
+  id: DemoInitializationTaskIds.foundation,
+  description: '准备所有 Demo 初始化任务共享的基础状态。',
+);
+
+/// Typed dependency target for the deliberately failing optional SDK task.
+const demoOptionalSdkInitTask = CCInitTaskContract(
+  id: DemoInitializationTaskIds.optionalSdk,
+  description: '模拟可选 SDK 初始化失败及依赖节点跳过。',
+);
 
 /// Stable Event IDs registered by the Demo component.
 abstract final class DemoEventIds {

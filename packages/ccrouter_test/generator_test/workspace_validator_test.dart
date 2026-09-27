@@ -13,6 +13,8 @@ Map<String, Object?> document({
   List<Map<String, Object?>> serviceImplementations = const [],
   List<Map<String, Object?>> eventContracts = const [],
   List<Map<String, Object?>> eventSubscriptions = const [],
+  List<Map<String, Object?>> initTaskContracts = const [],
+  List<Map<String, Object?>> initTasks = const [],
   String source = 'routes.dart',
   String package = 'orders',
 }) => {
@@ -30,6 +32,8 @@ Map<String, Object?> document({
   'serviceImplementations': serviceImplementations,
   'eventContracts': eventContracts,
   'eventSubscriptions': eventSubscriptions,
+  'initTaskContracts': initTaskContracts,
+  'initTasks': initTasks,
 };
 
 Map<String, Object?> component(
@@ -133,6 +137,137 @@ Map<String, Object?> implementation(
 };
 
 void main() {
+  test('accepts typed InitTask dependencies across required components', () {
+    final result = CCRouteWorkspaceValidator.validate([
+      document(
+        package: 'foundation',
+        components: [component('foundation')],
+        routes: const [],
+        initTaskContracts: const [
+          {'id': 'foundation.logging', 'componentId': 'foundation'},
+        ],
+        initTasks: const [
+          {
+            'id': 'foundation.logging',
+            'componentId': 'foundation',
+            'contractId': 'foundation.logging',
+            'dependsOn': <String>[],
+            'gateId': 'appStarted',
+            'failurePolicy': 'critical',
+          },
+        ],
+      ),
+      document(
+        package: 'analytics',
+        components: [
+          component('analytics', dependencies: ['foundation']),
+        ],
+        routes: const [],
+        initTaskContracts: const [
+          {'id': 'analytics.sdk', 'componentId': 'analytics'},
+        ],
+        initTasks: const [
+          {
+            'id': 'analytics.sdk',
+            'componentId': 'analytics',
+            'contractId': 'analytics.sdk',
+            'dependsOn': ['foundation.logging'],
+            'gateId': 'privacyGranted',
+            'failurePolicy': 'optional',
+            'timeoutMicroseconds': 3000000,
+          },
+          {
+            'id': 'analytics.internal_cache',
+            'componentId': 'analytics',
+            'dependsOn': <String>[],
+            'gateId': 'appStarted',
+            'failurePolicy': 'critical',
+          },
+        ],
+      ),
+    ]);
+
+    expect(result.errors, isEmpty);
+  });
+
+  test('rejects missing, optional-owner, and cyclic InitTask dependencies', () {
+    final result = CCRouteWorkspaceValidator.validate([
+      document(
+        package: 'foundation',
+        components: [component('foundation')],
+        routes: const [],
+        initTaskContracts: const [
+          {'id': 'foundation.logging', 'componentId': 'foundation'},
+        ],
+        initTasks: const [
+          {
+            'id': 'foundation.logging',
+            'componentId': 'foundation',
+            'contractId': 'foundation.logging',
+            'dependsOn': ['analytics.sdk'],
+            'gateId': 'appStarted',
+            'failurePolicy': 'critical',
+          },
+        ],
+      ),
+      document(
+        package: 'analytics',
+        components: [
+          component('analytics', optionalDependencies: ['foundation']),
+        ],
+        routes: const [],
+        initTaskContracts: const [
+          {'id': 'analytics.sdk', 'componentId': 'analytics'},
+        ],
+        initTasks: const [
+          {
+            'id': 'analytics.sdk',
+            'componentId': 'analytics',
+            'contractId': 'analytics.sdk',
+            'dependsOn': ['foundation.logging', 'missing.task'],
+            'gateId': 'privacyGranted',
+            'failurePolicy': 'optional',
+          },
+        ],
+      ),
+    ]);
+
+    expect(result.errors, contains(contains('requires missing task')));
+    expect(result.errors, contains(contains('does not require it')));
+    expect(result.errors, contains(contains('dependency cycle')));
+  });
+
+  test('rejects malformed persisted InitTask ownership and policy', () {
+    final result = CCRouteWorkspaceValidator.validate([
+      document(
+        components: [component('orders')],
+        routes: const [],
+        initTaskContracts: const [
+          {'id': 'orders.foundation', 'componentId': 'orders'},
+          {'id': 'orders.unimplemented', 'componentId': 'orders'},
+        ],
+        initTasks: const [
+          {
+            'id': 'orders.foundation',
+            'componentId': 'unknown',
+            'contractId': 'orders.foundation',
+            'dependsOn': <String>[],
+            'gateId': 'Invalid gate',
+            'failurePolicy': 'ignored',
+            'timeoutMicroseconds': 0,
+          },
+        ],
+      ),
+    ]);
+
+    expect(result.errors, contains(contains('unknown owner component')));
+    expect(result.errors, contains(contains('instead of "orders"')));
+    expect(result.errors, contains(contains('has no Handler')));
+    expect(result.errors, contains(contains('invalid Gate ID')));
+    expect(result.errors, contains(contains('unsupported failure policy')));
+    expect(result.errors, contains(contains('timeout must be positive')));
+  });
+
   test('accepts Event subscribers through required or optional owners', () {
     final result = CCRouteWorkspaceValidator.validate([
       document(
@@ -1364,4 +1499,45 @@ void main() {
       }
     },
   );
+
+  test('requires contracts Package InitTask constants in a public barrel', () {
+    final root = Directory.systemTemp.createTempSync(
+      'ccrouter-init-task-barrel-test-',
+    );
+    try {
+      final package = Directory('${root.path}/foundation_contracts')
+        ..createSync();
+      Directory('${package.path}/lib/src').createSync(recursive: true);
+      File(
+        '${package.path}/pubspec.yaml',
+      ).writeAsStringSync('name: foundation_contracts\n');
+      File(
+        '${package.path}/lib/src/startup.dart',
+      ).writeAsStringSync('const foundationTask = Object();\n');
+      final metadata = document(
+        package: 'foundation_contracts',
+        source: 'lib/src/startup.dart',
+        components: const [],
+        routes: const [],
+        initTaskContracts: const [
+          {
+            'id': 'foundation.logging',
+            'componentId': 'foundation',
+            'declaration': {'symbol': 'foundationTask'},
+          },
+        ],
+      );
+      final barrel = File('${package.path}/lib/foundation_contracts.dart')
+        ..writeAsStringSync("export 'src/startup.dart' show foundationTask;\n");
+      expect(CCRouteBarrelExportValidator.validate(root, [metadata]), isEmpty);
+
+      barrel.writeAsStringSync("export 'src/startup.dart' show anotherTask;\n");
+      expect(
+        CCRouteBarrelExportValidator.validate(root, [metadata]),
+        contains(contains('foundationTask')),
+      );
+    } finally {
+      root.deleteSync(recursive: true);
+    }
+  });
 }

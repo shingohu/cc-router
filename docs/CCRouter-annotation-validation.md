@@ -57,16 +57,16 @@ Component ID 沿用更严格的 Package 风格，只允许小写字母、数字�
 | Contract exposure、实现与公共导出 | `contract builder emits a standalone Pure Dart contract`、`page builder rejects a Contract-first constructor mismatch` | `rejects missing, duplicate, and unknown public implementations`、`requires public contracts to export the generated library` | Runtime 验证注册后的 Route ID/Owner；静态 Barrel/export 由 Workspace 负责 |
 | Description 大小和安全序列化 | `builder rejects oversized description`、`metadata builder emits documented ownership and parameters` | 只消费已序列化的元数据 | 不影响运行时路由语义，无手写 Definition 字段 |
 | Event Contract、Subscriber 与 Owner | `event_generator_test` 覆盖 Payload、签名、ID 和裸调用门禁 | `workspace_validator_test` 覆盖 Contract/Subscriber 唯一性、Owner/type 与 required/optional dependency | Runtime 继续校验 Event ID/type 绑定、Subscriber ID 唯一性、并发、timeout、取消和失败隔离 |
-| InitTask/Gate ID 与依赖 | `CCInitTaskContract`/`@CCInitTask` 方案已批准但尚未实现；不扫描手写注册 | 实现后校验 Owner、exposure、缺失/重复依赖和完整 DAG | Runtime 继续校验实际注册的 ID、Gate、依赖、环和 timeout |
+| InitTask/Gate ID 与依赖 | `init_task_generator_test` 覆盖 Contract/id 互斥、Handler 签名、类型化依赖、Gate、failure policy 与 timeout | `workspace_validator_test` 覆盖 Owner、Contract exposure、缺失/重复依赖、required 组件依赖和完整 DAG | Runtime 继续校验实际注册的 ID、Gate、依赖、环和 timeout |
 
-动态策略注册、Host 绑定、Adapter 能力和当前手写 InitTask 注册不能由 Generator 从注解或
+动态策略注册、Host 绑定、Adapter 能力和手写 InitTask 注册不能由 Generator 从注解或
 metadata 可靠推断；Runtime 初始化/绑定时拒绝缺失或不一致的关系。路径表达式的复杂重叠也
 不能可靠静态判定，Workspace 只拦截可证明冲突，Runtime 保留注册及解析边界校验。后续增加
 字段时，必须同步指定失败阶段、正/负例和对应测试入口，不能只在生成器中新增校验。
 
-InitTask 已批准显式 `CCInitTaskContract`、`@CCInitTask` 和类型化依赖方案。实现后生成器才能
-可靠报告重复 ID、缺失依赖、循环依赖和跨包 Contract exposure；实现前不扫描 Registrar 闭包，
-也不声称生成器覆盖了手写任务。Runtime 最终校验不会因生成器落地而删除。
+InitTask 已实现显式 `CCInitTaskContract`、`@CCInitTask` 和类型化依赖方案。生成器会报告重复
+ID、缺失依赖、循环依赖和跨包 Contract exposure；它不会扫描 Registrar 闭包，也不声称覆盖
+手写任务。Runtime 最终校验不会因生成器落地而删除。
 
 ## 内部生成 API 边界
 

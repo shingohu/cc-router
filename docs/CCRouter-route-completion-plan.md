@@ -519,12 +519,13 @@ Generator 全套 131 项、Demo 25 项通过；受管生成物无残留或 Git �
 当前 Demo 改一页约 5–8 秒、稳定空改动约 2 秒，尚不足以证明常驻监听的维护与资源成本
 值得承担。1.x 不启动后台服务，也不扩展公开 API；大型项目的实际 P95 是 2.0 决策的依据。
 
-### 6.4 路由源码定位命令（已落地）
+### 6.4 能力源码定位命令（已落地）
 
-`ccrouter find <route-id-or-declared-pattern> [host-root]` 只读取当前 Host 的 Pub 运行时
+`ccrouter find <capability-id-or-route-pattern> [host-root]` 只读取当前 Host 的 Pub 运行时
 依赖闭包与已发布的 Package Index，使用同一 Capability Source Catalog 合并跨 Package
-契约和实现位置，按精确 Route ID 或声明的 Pattern 文本返回组件、Package、源码坐标和别名。
+契约和实现位置。Route、Service、Command、Event 与 InitTask 可按稳定 ID 返回组件、Package、
+源码坐标和生成桥接；Route 额外支持按声明的 Pattern 文本查询。
 不启动 Builder、不写入生成物、不扫描源码或猜测实际 URL 的动态参数；缺失或损坏的 Index
 以及依赖指纹不一致的混合版本 Index 必须报错，不能静默回退到旧文档。生成前新增的
-Route 不可发现；源码修改后的新鲜度仍由 `generate --check` 负责。CLI 专项测试覆盖
-跨包合并、Path/URI 别名、Host 闭包、无结果、参数错误和 Index 失败。
+Capability 不可发现；源码修改后的新鲜度仍由 `generate --check` 负责。CLI 专项测试覆盖
+跨包合并、InitTask、Path/URI 别名、Host 闭包、无结果、参数错误和 Index 失败。

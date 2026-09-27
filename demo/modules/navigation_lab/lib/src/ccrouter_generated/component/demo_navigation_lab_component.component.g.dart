@@ -27,6 +27,8 @@ import '../command/navigation_lab_component_registrar.command.g.dart'
     as route_src_ccrouter_generated_command_navigation_lab_component_registrar_command_g_dart;
 import '../event/navigation_lab_component_registrar.event.g.dart'
     as route_src_ccrouter_generated_event_navigation_lab_component_registrar_event_g_dart;
+import '../init_task/navigation_lab_component_registrar.init_task.g.dart'
+    as route_src_ccrouter_generated_init_task_navigation_lab_component_registrar_init_task_g_dart;
 import '../route/capability_page.route.g.dart'
     as route_src_ccrouter_generated_route_capability_page_route_g_dart;
 import '../route/detail_page.route.g.dart'
@@ -139,6 +141,20 @@ final class _DemoNavigationLabComponentGeneratedRegistrar
           subscriberId:
               "demo_navigation_lab_component.demo_navigation_lab.slow",
         );
+    route_src_ccrouter_generated_init_task_navigation_lab_component_registrar_init_task_g_dart
+        .ccrouterRegisterInitializeDemoAnalyticsInitTask(registry);
+    route_src_ccrouter_generated_init_task_navigation_lab_component_registrar_init_task_g_dart
+        .ccrouterRegisterInitializeDemoFoundationInitTask(registry);
+    route_src_ccrouter_generated_init_task_navigation_lab_component_registrar_init_task_g_dart
+        .ccrouterRegisterInitializeDemoOptionalDependentInitTask(registry);
+    route_src_ccrouter_generated_init_task_navigation_lab_component_registrar_init_task_g_dart
+        .ccrouterRegisterInitializeDemoOptionalSdkInitTask(registry);
+    route_src_ccrouter_generated_init_task_navigation_lab_component_registrar_init_task_g_dart
+        .ccrouterRegisterInitializeDemoParallelPrimaryInitTask(registry);
+    route_src_ccrouter_generated_init_task_navigation_lab_component_registrar_init_task_g_dart
+        .ccrouterRegisterInitializeDemoParallelSecondaryInitTask(registry);
+    route_src_ccrouter_generated_init_task_navigation_lab_component_registrar_init_task_g_dart
+        .ccrouterRegisterInitializeDemoTimeoutInitTask(registry);
   }
 }
 

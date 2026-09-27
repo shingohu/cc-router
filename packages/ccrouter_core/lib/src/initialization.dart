@@ -8,54 +8,6 @@ part of 'runtime.dart';
 typedef CCInitializationTaskHandler =
     FutureOr<void> Function(CCInvocationContext context);
 
-/// Identifies an explicit condition that allows initialization tasks to run.
-///
-/// Use [appStarted] for ordinary startup work and [privacyGranted] for work
-/// that must wait until the user has granted privacy consent. Other product
-/// conditions, such as remote configuration, use a `const
-/// CCInitializationGate` with a stable ID and are opened explicitly by the
-/// application host.
-final class CCInitializationGate {
-  /// Creates a gate identified by the stable [id].
-  const CCInitializationGate(this.id);
-
-  /// Gate used for ordinary post-`CCRouter.initialize` startup work.
-  static const CCInitializationGate appStarted = CCInitializationGate(
-    'appStarted',
-  );
-
-  /// Gate opened explicitly by the host after privacy consent is granted.
-  ///
-  /// This constant only describes the initialization condition. CCRouter does
-  /// not read, persist, or infer the user's privacy decision; the host owns
-  /// that state and must open this gate at the appropriate time. Tasks waiting
-  /// on this gate remain pending until it is opened.
-  static const CCInitializationGate privacyGranted = CCInitializationGate(
-    'privacyGranted',
-  );
-
-  /// Stable identity used by task registration, diagnostics, and execution.
-  final String id;
-
-  /// Compares gates by stable identity rather than object identity.
-  @override
-  bool operator ==(Object other) =>
-      other is CCInitializationGate && other.id == id;
-
-  /// Hashes the stable gate identity.
-  @override
-  int get hashCode => id.hashCode;
-}
-
-/// Defines whether one initialization failure aborts its execution phase.
-enum CCInitializationFailurePolicy {
-  /// Reports a sanitized error and prevents later initialization progress.
-  critical,
-
-  /// Records failure while allowing independent tasks to continue.
-  optional,
-}
-
 /// Immutable definition of one Runtime-wide initialization task.
 ///
 /// Component registrars create tasks during static assembly. Use this for

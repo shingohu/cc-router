@@ -15,6 +15,11 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 - Declaring package: `demo_order_contracts`
 - Contract/declaration: `package:demo_order_contracts/src/order_commands.dart:11:13` (`ReserveOrderCommand`)
 
+### InitTask `demo_order.startup.foundation`
+
+- Declaring package: `demo_order_contracts`
+- Contract/declaration: `package:demo_order_contracts/src/order_init_tasks.dart:6:7` (`demoOrderFoundationInitTask`)
+
 ### Route `order.detail`
 
 - Declaring package: `demo_order_contracts`

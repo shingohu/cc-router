@@ -47,10 +47,29 @@ void main() {
     expect('${uri.stdout}', contains('Route demo_navigation_lab.detail'));
   });
 
+  test('find locates a generated InitTask by stable capability ID', () async {
+    final result = await _find(['demo.startup.foundation', 'demo']);
+    expect(result.exitCode, 0, reason: '${result.stderr}');
+    expect(
+      '${result.stdout}',
+      contains(
+        'InitTask demo.startup.foundation '
+        '(component: demo_navigation_lab_component)',
+      ),
+    );
+    expect(
+      '${result.stdout}',
+      contains(
+        'package:demo_navigation_lab/src/navigation_lab_component_registrar.dart:',
+      ),
+    );
+    expect('${result.stdout}', contains('Generated initTaskRegistration:'));
+  });
+
   test('find is scoped to the selected Host dependency closure', () async {
     final missing = await _find(['web.public', 'demo/modules/order']);
     expect(missing.exitCode, 1);
-    expect('${missing.stderr}', contains('No route matched'));
+    expect('${missing.stderr}', contains('No capability matched'));
 
     final exact = await _find(['order.detail', 'demo/modules/order']);
     expect(exact.exitCode, 0, reason: '${exact.stderr}');
@@ -59,7 +78,7 @@ void main() {
   test('find rejects missing queries and generation flags', () async {
     final missing = await _find([]);
     expect(missing.exitCode, 2);
-    expect('${missing.stderr}', contains('requires a Route ID'));
+    expect('${missing.stderr}', contains('requires a capability ID'));
 
     final invalid = await _find(['order.detail', 'demo', '--check']);
     expect(invalid.exitCode, 2);

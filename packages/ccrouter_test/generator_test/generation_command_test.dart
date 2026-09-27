@@ -336,6 +336,25 @@ void probe() {
           ),
         ),
       );
+      expect(
+        componentAssembly,
+        contains('ccrouterRegisterInitializeDemoFoundationInitTask(registry)'),
+      );
+      final initTaskBridge = File(
+        path.join(
+          navigationPackage,
+          'lib',
+          'src',
+          'ccrouter_generated',
+          'init_task',
+          'navigation_lab_component_registrar.init_task.g.dart',
+        ),
+      ).readAsStringSync();
+      expect(initTaskBridge, contains('id: "demo.startup.foundation"'));
+      expect(
+        initTaskBridge,
+        contains('dependsOn: const ["demo_order.startup.foundation"]'),
+      );
       final navigationCatalog = File(
         path.join(
           navigationPackage,
@@ -354,6 +373,10 @@ void probe() {
         navigationCatalog,
         contains('### Event `demo.analytics.order-completed`'),
       );
+      expect(navigationCatalog, contains('## Initialization DAG'));
+      expect(navigationCatalog, contains('`demo_order.startup.foundation`'));
+      expect(hostCatalogDocument, contains('## Initialization DAG'));
+      expect(hostCatalogDocument, contains('`demo_order.startup.foundation`'));
       final navigationBarrel = File(
         path.join(navigationPackage, 'lib', 'demo_navigation_lab.dart'),
       ).readAsStringSync();
@@ -540,6 +563,18 @@ void probe() {
           'demo_navigation_lab_component.route_api.g.dart',
         ),
       );
+      final generatedInitTask = File(
+        path.join(
+          demoRoot.path,
+          'modules',
+          'navigation_lab',
+          'lib',
+          'src',
+          'ccrouter_generated',
+          'init_task',
+          'navigation_lab_component_registrar.init_task.g.dart',
+        ),
+      );
       final paymentGeneratedRoot = Directory(
         path.join(
           demoRoot.path,
@@ -551,6 +586,7 @@ void probe() {
         ),
       );
       expect(generatedRouteApi.existsSync(), isTrue);
+      expect(generatedInitTask.existsSync(), isTrue);
       try {
         final cleaned = await Process.run(Platform.resolvedExecutable, [
           'run',
@@ -561,6 +597,7 @@ void probe() {
         expect(cleaned.exitCode, 0, reason: '${cleaned.stderr}');
         expect('${cleaned.stdout}', contains('Removed '));
         expect(generatedRouteApi.existsSync(), isFalse);
+        expect(generatedInitTask.existsSync(), isFalse);
         expect(sentinel.readAsStringSync(), 'user-owned');
         expect(
           paymentGeneratedRoot.existsSync(),
@@ -578,6 +615,7 @@ void probe() {
         if (sentinel.existsSync()) sentinel.deleteSync();
       }
       expect(generatedRouteApi.existsSync(), isTrue);
+      expect(generatedInitTask.existsSync(), isTrue);
     },
     timeout: const Timeout(Duration(minutes: 4)),
   );

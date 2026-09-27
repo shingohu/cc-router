@@ -331,7 +331,8 @@ identifier from a contracts library instead of importing the implementation
 Registrar or a `src` path. Stable IDs should use a component or capability
 prefix and remain unchanged after ordinary refactors.
 
-Register tasks in the component Registrar and open their Gate from the Host:
+Declare task dependency targets as top-level constants and let generation install
+the Handler into the component Registrar:
 
 Use the framework-provided `CCInitializationGate.privacyGranted` for work that
 must wait for explicit privacy consent. The Host owns consent state and opens
@@ -339,20 +340,37 @@ the gate; CCRouter does not inspect or persist that state. Define a custom
 `CCInitializationGate` only for a different product condition.
 
 ```dart
-registry.registerInitializationTask(
-  CCInitializationTask(
-    id: 'analytics.initialize',
-    gate: CCInitializationGate.privacyGranted,
-    dependsOn: const ['config.load'],
-    failurePolicy: CCInitializationFailurePolicy.optional,
-    run: (_) => analytics.initialize(),
-  ),
+const configLoadInitTask = CCInitTaskContract(
+  id: 'config.load',
+  description: 'Loads the configuration required by startup SDKs.',
 );
+
+@CCInitTask(contract: configLoadInitTask)
+Future<void> loadConfiguration() async {}
+
+@CCInitTask(
+  id: 'analytics.initialize',
+  gate: CCInitializationGate.privacyGranted,
+  dependsOn: [configLoadInitTask],
+  failurePolicy: CCInitializationFailurePolicy.optional,
+  timeout: Duration(seconds: 3),
+)
+Future<void> initializeAnalytics(CCInvocationContext context) =>
+    analytics.initialize(context.cancellation);
 
 await CCRouter.runInitialization(
   gate: CCInitializationGate.privacyGranted,
 );
 ```
+
+Use `contract` for every task that another task references and `id` only for an
+independent internal task. A cross-component Contract belongs in a public Pure
+Dart contracts Package and names its `componentId`; the dependent component
+must require the Owner. The generator installs registration bridges, validates
+the complete DAG, emits source locations and an `Initialization DAG` catalog,
+and generates no business task Client. Keep handwritten
+`registerInitializationTask` calls for unannotated migration or low-level Host
+extensions only.
 
 ## Generation
 

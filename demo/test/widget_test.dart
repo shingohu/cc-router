@@ -168,6 +168,18 @@ void main() {
       startup[DemoInitializationTaskIds.analytics]!.state,
       CCInitializationTaskState.pending,
     );
+    expect(
+      startup[DemoInitializationTaskIds.parallelPrimary]!.state,
+      CCInitializationTaskState.succeeded,
+    );
+    expect(
+      startup[DemoInitializationTaskIds.parallelSecondary]!.state,
+      CCInitializationTaskState.succeeded,
+    );
+    expect(
+      startup[DemoInitializationTaskIds.timeout]!.state,
+      CCInitializationTaskState.pending,
+    );
 
     await _pumpDemo(tester);
     await _openCapabilityLab(tester);
@@ -220,6 +232,15 @@ void main() {
         (entry) => entry.category == CCDiagnosticCategory.initialization,
       ),
       isTrue,
+    );
+
+    await _tapCapabilityAction(tester, '打开 InitTask Timeout Gate');
+    expect(find.textContaining('failed'), findsWidgets);
+    expect(
+      CCRouter.initializationTasks
+          .firstWhere((task) => task.id == DemoInitializationTaskIds.timeout)
+          .state,
+      CCInitializationTaskState.failed,
     );
 
     await _unmountDemo(tester);

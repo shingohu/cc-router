@@ -14,7 +14,7 @@ final ccrouterGeneratedPackageBundle = CCGeneratedPackageBundle(
   packageName: 'demo_payment',
   packageVersion: '0.1.0',
   contentFingerprint:
-      '02e72016a3a1fb02c0ae365dd0bbed057fe96dcd1601a8e84b508d29130b5b7b',
+      '5ce2157a8ad9326fdefe175b51d1b9a34906a7b96877c9bcc689d645a2b74bc7',
   componentManifests: [component_0.demoPaymentComponentManifest],
   routeCatalog: CCFlutterRouteCatalog.merge([
     component_0.demoPaymentComponentRouteCatalog,

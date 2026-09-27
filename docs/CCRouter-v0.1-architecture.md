@@ -471,13 +471,13 @@ all registrars
   Contract Owner、required dependency、Key、alias 和方法签名。
 - 将 `@CCComponentContribution` 稳定合入组件 Registrar。
 - 生成 Package Index、Host 路由目录、Catalog 和调试 metadata。
-- 对重复 ID、模糊路由、所有权、契约 exposure、Service Contract/Provider 冲突和依赖图报错；
-  动态注册关系、InitTask 缺失依赖与循环仍由 Runtime 校验。
+- 对重复 ID、模糊路由、所有权、契约 exposure、Service Contract/Provider 冲突、InitTask
+  Owner/依赖/DAG 和组件依赖图报错；Runtime 继续校验动态注册与手写任务边界。
 
 Command 与 Event 声明生成已实现，分别采用显式 Contract/Handler/消费依赖和显式
 Contract/静态 Subscription/Owner Publication Client，不扫描手写 Registrar、Contribution 或全部
-Package 依赖猜测能力。InitTask 已形成显式 Task Contract/Handler/类型化依赖和 DAG/Catalog
-方案但尚未实现，当前仍通过 Contribution 注册。
+Package 依赖猜测能力。InitTask 已实现显式 Task Contract/Handler、类型化依赖、自动注册、
+DAG/Catalog 和 Workspace 校验；手写 Contribution 只作为未注解迁移与低层扩展入口。
 
 ### 7.3 注册确定性
 

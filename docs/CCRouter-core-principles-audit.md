@@ -5,12 +5,12 @@
 - 审查日期：2026-09-27
 - 审查范围：路由 Runtime、业务 Facade、Host/Adapter SPI、GoRouter Adapter、生成器、
   Service、Command、Event、初始化任务、Demo、测试与诊断模型。
-- 自动化基线：`dart analyze` 通过；`ccrouter_test` 324 项、Demo 31 项、Generator 177 项测试通过；
+- 自动化基线：`dart analyze` 通过；`ccrouter_test` 329 项、Demo 31 项、Generator 216 项测试通过；
   Demo 生成物缓存与 `--no-cache` 两种 `--check` 均通过；macOS debug build 通过。
 - 总体结论：当前实现满足 13 条约定在 v0.1 静态组件范围内的发布门槛，没有 P0 或 P1 问题。
   Route、Service、Command、Event 和 InitTask 已形成边界明确的最小闭环。生成物职责、API 隔离、
   生命周期、取消与诊断已完成本轮收口；Service Contract 自动绑定、Provider 最小注解与消费组件
-  方法级 Proxy 与 Command/Event 注解生成已实现；InitTask 注解、Action Pipeline、动态
+  方法级 Proxy 与 Command/Event/InitTask 注解生成已实现；Action Pipeline、动态
   组件治理、Restoration、真实平台多窗口和长期 RSS/Heap 趋势仍是明确后续项，不能因已有设计
   文档而视为已经实现。
 
@@ -20,19 +20,19 @@
 
 | # | 约定 | 状态 | 当前证据与缺口 |
 | --- | --- | --- | --- |
-| 1 | 智能 | 基本满足 | 顶层 Component、Route/Codec、简单 Service Provider、私有 Registrar/Manifest、Host Catalog/文档均由单一 `ccrouter generate` 编排生成；Runtime 自动校验组件、Provider、Handler、Subscriber 和 InitTask DAG，`--check` 提供不依赖 Git 的只读陈旧门禁。复杂 Service 与低频消息能力使用显式 Contribution，没有用反射或函数体扫描冒充自动化。 |
+| 1 | 智能 | 基本满足 | 顶层 Component、Route/Codec、简单 Service Provider、Command/Event/InitTask Handler、私有 Registrar/Manifest、Host Catalog/文档均由单一 `ccrouter generate` 编排生成；Runtime 自动校验组件与最终注册边界，`--check` 提供不依赖 Git 的只读陈旧门禁。复杂 Service 与未注解迁移能力使用显式 Contribution，没有用反射或函数体扫描冒充自动化。 |
 | 2 | 简单易用 | 基本满足 | 宿主使用 `CCRouter.initialize`、按需 `runInitialization`、Managed Backend/App 即可启动；业务统一通过 `CCRouter.navigator/service/command/event`。Route Service 仅在需要精确页面 Scope 时增加 `BuildContext`，高级 Shell、Multi Host、Trace 和 Gate 保持渐进可选。 |
 | 3 | 功能强大 | 基本满足 | 已覆盖类型安全导航、Deep Link、拦截、生命周期、混合路由、诊断、多种 Presentation、App/Session/Route Service、一次性 Command、事实 Event 和启动 DAG，没有万能 Map 或混合消息接口。Action Pipeline、可靠持久消息和动态组件明确不属于 1.x。 |
 | 4 | 可扩展性 | 基本满足 | Core 使用中立 Route Definition 与强类型能力契约；Catalog、Assembler、Adapter、Service Provider、Handler 和 Gate 均通过明确边界扩展。新导航后端复用同一 Catalog，跨组件 Service 通过注解稳定 ID 和自动绑定渐进提升，不访问 Runtime 私有表。 |
 | 5 | 可测试 | 基本满足 | Pure Dart Runtime 覆盖 Scope、readiness、Command/Event、InitTask DAG、取消/超时/失败；Flutter Adapter、生成器和 Demo 均有回归。`ccrouter_test` 提供 Test Host/Service Override，并具备 Generator、Route Runtime、Service 和并发回收非门禁基准。长期平台内存趋势仍需持续积累。 |
 | 6 | 最小公开 API | 基本满足 | Runtime、Scope、Memory Adapter、Host binding 以及控制 SPI 均从业务 barrel 隐藏；Registrar 只拿到注册面 `CCRegistry`。Query/旧 Action/ActionReport 已删除，通信只保留 Service、Command、Event 与 InitTask；Action Pipeline 等未成熟能力没有提前公开。 |
-| 7 | 编译器校验与类型安全 | 部分满足 | Route 参数、Codec、ID、Pattern、Contract exposure、页面实现、barrel、组件图、Service、Command 与 Event 所有权和冲突已有生成期校验；InitTask DAG 仍在同步初始化失败，其 metadata 尚未生成，因此跨 Package Task 静态图仍依赖显式 Contribution 与 Runtime 校验。 |
+| 7 | 编译器校验与类型安全 | 基本满足 | Route 参数、Codec、ID、Pattern、Contract exposure、页面实现、barrel、组件图、Service、Command、Event 与 InitTask 所有权和冲突已有生成期校验；InitTask metadata 会形成完整跨 Package DAG，Runtime 只保留手写与陈旧生成物的最终边界校验。 |
 | 8 | 非侵入式 | 满足 | 不要求页面基类或 Mixin，不保存全局 `BuildContext`；可继续使用应用自己的 `MaterialApp.router`/`GoRouter`；attached Adapter 不销毁应用 Router。 |
 | 9 | 可降级回退 | 基本满足 | 无法可靠降级的组合栈事务与精确 Entry 操作已从公开链删除。Service optional lookup 只吞“未注册”，不吞工厂/生命周期错误；Event Subscriber 失败按契约隔离，Command/critical InitTask 失败明确传播，不存在跨语义静默回退。 |
 | 10 | 明确生命周期 | 基本满足 | Runtime、Session、RouteEntry、Service Scope、Adapter、Backend 和 InitTask Owner/销毁顺序明确；App/Session/Route Service 自动持有与逆序释放，shutdown 取消并等待活动调用和 DAG。1.x 组件集合只在初始化确定，不提供不完整的 activate/deactivate。 |
 | 11 | 可观测可诊断可溯源 | 基本满足 | Navigation、Service、Command、Event Subscriber 和 InitTask 均记录稳定 ID、可信 Owner、Trace 父子关系、状态和耗时；历史与 Subscriber error 有界，错误只保留类型和安全摘要。URI、Extra、消息字段、Service 参数/返回值和异常消息不进入 retained diagnostics。 |
 | 12 | 并发安全 | 基本满足 | 导航策略、Service singleton readiness、InitTask Gate drain 都有 single-flight；Event Subscriber 并发但按稳定 ID 启动；timeout、caller/Scope/shutdown cancellation 和异步依赖环均有测试。共享状态由 Runtime/Scope 单 Owner 修改，回调重入受控。 |
-| 13 | 性能和稳定 | 基本满足 | 热路径无反射；路由和 Workspace 候选使用索引，诊断队列有界。Service 同步 Provider 不增加异步切换，Singleton/readiness 缓存按 Scope 有界，Event/InitTask 仅在显式调用时调度。生成器使用精确依赖闭包、内容指纹、write-if-changed、并发锁和全量回退；已有 Route、Service、并发与资源回收基线。长期内存趋势仍需版本间持续采样。 |
+| 13 | 性能和稳定 | 基本满足 | 热路径无反射；路由和 Workspace 候选使用索引，诊断队列有界。Service 同步 Provider 不增加异步切换，Singleton/readiness 缓存按 Scope 有界，Event/InitTask 仅在显式调用时调度。生成器使用精确依赖闭包、内容指纹、write-if-changed、并发锁和全量回退；缓存/无缓存逐字节一致，`ccrouter find` 只读取 Host 依赖闭包 Index。已有 Route、Service、并发与资源回收基线，长期内存趋势仍需版本间持续采样。 |
 
 ## 3. P1 问题
 
@@ -252,8 +252,8 @@ Listener、Stream、Overlay 或 Controller；Resolver 不拥有 Runtime，也不
 - Action Pipeline 等待动态预埋操作链的真实业务样本；Service 方法 Proxy 已采用显式消费依赖，
   只为真实跨组件 Contract 生成组件专属 Client；Command 已形成 Contract、唯一 Handler、显式
   消费依赖、组件专属 Client 和 metadata 已实现；Event Contract、静态 Subscription、Owner
-  自动 Publication Client、metadata 和 Catalog 已实现；InitTask 已形成
-  Task Contract、顶层 Handler、类型化依赖、DAG/Catalog 和 Workspace 校验计划但尚未实现。
+  自动 Publication Client、metadata 和 Catalog 已实现；InitTask 的 Task Contract、顶层 Handler、
+  类型化依赖、自动注册、DAG/Catalog 和 Workspace 校验也已实现。
 
 ## 5. 已确认符合且应保持的边界
 
@@ -279,21 +279,23 @@ Listener、Stream、Overlay 或 Controller；Resolver 不拥有 Runtime，也不
   `runInitialization(gate: ...)` 等待，Service readiness 不隐藏在全局启动中。
 - 组件集合在初始化时一次确定。1.x 不提供不完整的动态 activate/deactivate，也不允许业务销毁
   Runtime、Scope、Adapter 或 Service 实例。
-- 简单 Service 使用生成注册，跨组件 Service 使用显式消费声明生成方法 Proxy；复杂 Service、
-  未注解迁移消息与 InitTask 使用显式 Contribution。当前 Proxy 不支持的方法形态只有在真实
+- 简单 Service 使用生成注册，跨组件 Service 使用显式消费声明生成方法 Proxy；复杂 Service 和
+  未注解迁移能力使用显式 Contribution，InitTask 使用专用 Contract/Handler 生成。当前 Proxy
+  不支持的方法形态只有在真实
   所有权与取消语义明确后才扩展。
 
 ## 6. 本轮最终门禁
 
-- `fvm dart test --concurrency=1 packages/ccrouter_test/generator_test`：177 项通过；
-- `fvm flutter test packages/ccrouter_test/test`：324 项通过；
+- `fvm dart test --concurrency=1 packages/ccrouter_test/generator_test`：216 项通过；
+- `fvm flutter test packages/ccrouter_test/test`：329 项通过；
 - `fvm flutter test demo`：31 项通过；
 - `fvm dart analyze`：无问题；
 - `fvm dart run ccrouter_generator:ccrouter generate demo --check` 与 `--no-cache --check`：31 条路由、
   8 个生成 Package 均同步；
+- `ccrouter find` 已验证 Route ID/Pattern 与 InitTask 稳定 ID，查询只读且受 Host 依赖闭包约束；
 - `fvm flutter build macos --debug`：成功生成 `ccrouter_demo.app`；
 - `git diff --check`：通过。
 
-后续扩展 Service Proxy 方法矩阵、增加 InitTask 注解、Action Pipeline、动态组件、Android Predictive Back、
+后续扩展 Service Proxy 方法矩阵、Action Pipeline、动态组件、Android Predictive Back、
 Restoration、真实平台多窗口或新 Adapter 时，必须补对应构建期、生命周期、并发、性能和平台
 回归；它们不属于本轮已经实现的能力。

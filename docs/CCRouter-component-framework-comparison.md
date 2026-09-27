@@ -242,7 +242,7 @@ CCRouter 已有足够的只读数据基础：
 ### 近期
 
 1. Component/Contract 版本兼容校验设计；
-2. 扩展 `ccrouter find` 和 Catalog 到 Service、Command、Event 与 InitTask；
+2. 持续验证 `ccrouter find` 和 Catalog 对 Route、Service、Command、Event 与 InitTask 的源码定位；
 3. 持续性能、RSS/Heap 和长时间运行回归；
 4. 保持 README、Integration Skill 与生成器文档同步。
 
@@ -256,16 +256,16 @@ CCRouter 已有足够的只读数据基础：
 6. 分层 Scope；
 7. 动态组件治理；
 8. Action Pipeline；
-9. Command/Event/InitTask 声明生成与 Service Proxy 高级方法形态；
+9. Service Proxy 高级方法形态；
 10. CLI 模板和迁移工具。
 
 ## 最终判断
 
 CCRouter 当前最明显的缺口不是基础路由 Runtime，而是：
 
-1. `ccrouter find`、IDE 和 DevTools 生态还不成熟；
+1. `ccrouter find` 已形成多能力只读定位闭环，但 IDE 和 DevTools 生态还不成熟；
 2. Contract 版本兼容和环境实现选择尚未系统化；
-3. 复杂 Service 与低频消息能力仍依赖显式 Contribution，自动生成等待生产阈值；
+3. 复杂 Service 与未注解迁移能力仍依赖显式 Contribution，高级自动生成等待生产阈值；
 4. 原生多窗口、状态恢复和动态组件属于明确的 2.0 范围。
 
 后续应优先处理版本治理和可发现性，而不是继续增加重复的导航快捷 API，或复制其他框架的

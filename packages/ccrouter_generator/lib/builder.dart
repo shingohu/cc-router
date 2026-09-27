@@ -10,6 +10,7 @@ import 'package:source_gen/source_gen.dart';
 import 'src/route_generator.dart';
 import 'src/command_generator.dart';
 import 'src/event_generator.dart';
+import 'src/init_task_generator.dart';
 import 'src/service_generator.dart';
 
 /// Creates one standalone generated route library without backend coupling.
@@ -145,6 +146,24 @@ Builder ccEventBuilder(BuilderOptions options) {
 Builder ccEventMetadataBuilder(BuilderOptions options) =>
     ccEventMetadataBuilderInternal();
 
+/// Creates package-internal initialization task registration bridges.
+Builder ccInitTaskBuilder(BuilderOptions options) {
+  final config = Map<String, dynamic>.from(options.config);
+  config.putIfAbsent('build_extensions', () => _initTaskBuildExtensions);
+  return LibraryBuilder(
+    ccInitTaskGenerator(),
+    generatedExtension: '.init_task.g.dart',
+    options: BuilderOptions(config, isRoot: options.isRoot),
+    header:
+        '// GENERATED CODE - DO NOT MODIFY BY HAND\n'
+        '// ignore_for_file: type=lint, unused_element',
+  );
+}
+
+/// Emits disposable initialization task metadata into the build cache.
+Builder ccInitTaskMetadataBuilder(BuilderOptions options) =>
+    ccInitTaskMetadataBuilderInternal();
+
 /// Emits disposable machine-readable component metadata into the build cache.
 Builder ccComponentMetadataBuilder(BuilderOptions options) =>
     ccComponentMetadataBuilderInternal();
@@ -210,4 +229,11 @@ const _commandBuildExtensions = <String, List<String>>{
 /// Maps Subscriber sources to package-internal registration libraries.
 const _eventBuildExtensions = <String, List<String>>{
   r'^lib/src/{{}}.dart': ['lib/src/ccrouter_generated/event/{{}}.event.g.dart'],
+};
+
+/// Maps initialization Handler sources to internal registration libraries.
+const _initTaskBuildExtensions = <String, List<String>>{
+  r'^lib/src/{{}}.dart': [
+    'lib/src/ccrouter_generated/init_task/{{}}.init_task.g.dart',
+  ],
 };

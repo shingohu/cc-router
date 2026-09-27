@@ -8,6 +8,8 @@ import '../binding/order_detail_page.route_binding.g.dart'
     as route_src_ccrouter_generated_binding_order_detail_page_route_binding_g_dart;
 import '../command/order_commands.command.g.dart'
     as route_src_ccrouter_generated_command_order_commands_command_g_dart;
+import '../init_task/order_init_tasks.init_task.g.dart'
+    as route_src_ccrouter_generated_init_task_order_init_tasks_init_task_g_dart;
 import '../service/order_summary_service.service.g.dart'
     as route_src_ccrouter_generated_service_order_summary_service_service_g_dart;
 
@@ -24,6 +26,8 @@ final class _DemoOrderComponentGeneratedRegistrar
         .ccrouterRegisterOrderDetailPageRoute(registry);
     route_src_ccrouter_generated_command_order_commands_command_g_dart
         .ccrouterRegisterHandleReserveOrderCommand(registry);
+    route_src_ccrouter_generated_init_task_order_init_tasks_init_task_g_dart
+        .ccrouterRegisterInitializeDemoOrderFoundationInitTask(registry);
     route_src_ccrouter_generated_service_order_summary_service_service_g_dart
         .ccrouterRegisterDemoOrderSummaryServiceService(registry);
   }

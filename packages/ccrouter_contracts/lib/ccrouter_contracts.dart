@@ -10,6 +10,7 @@ export 'src/deep_link.dart';
 export 'src/diagnostics.dart';
 export 'src/errors.dart';
 export 'src/invocation.dart';
+export 'src/initialization.dart';
 export 'src/lifecycle.dart';
 export 'src/messaging.dart';
 export 'src/navigation.dart';

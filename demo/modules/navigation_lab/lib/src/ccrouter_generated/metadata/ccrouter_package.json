@@ -5,7 +5,7 @@
     "name": "demo_navigation_lab",
     "version": "0.1.0"
   },
-  "contentFingerprint": "3db7ecd2b578b16f75e2ced6f7ff3cf71a04b346c10069dcfeb6f641702df601",
+  "contentFingerprint": "b2edf093362db37eb02dec908bc90add881ea5c894d65959d994d49d9007073a",
   "bundle": {
     "library": "lib/src/ccrouter_generated/host/demo_navigation_lab_ccrouter.g.dart",
     "symbol": "ccrouterGeneratedPackageBundle"
@@ -19,7 +19,7 @@
     {
       "name": "demo_order_contracts",
       "version": "0.1.0",
-      "contentFingerprint": "70e42cc0d007ebd3b506e9b4931995d3a7cb5b7cee6bfefc927c121889bc1aee"
+      "contentFingerprint": "06063b8ff3e0fbfef67d2df15591e81535f9a27e75354e3a40dc2bc9edb09372"
     },
     {
       "name": "demo_web_contracts",
@@ -141,7 +141,7 @@
           "declaration": {
             "symbol": "DemoCreateReceiptCommand",
             "packageUri": "package:demo_navigation_lab/src/component_capabilities.dart",
-            "line": 81,
+            "line": 108,
             "column": 13
           }
         },
@@ -156,7 +156,7 @@
           "declaration": {
             "symbol": "DemoFailCommand",
             "packageUri": "package:demo_navigation_lab/src/component_capabilities.dart",
-            "line": 107,
+            "line": 134,
             "column": 13
           }
         },
@@ -171,7 +171,7 @@
           "declaration": {
             "symbol": "DemoRefreshCacheCommand",
             "packageUri": "package:demo_navigation_lab/src/component_capabilities.dart",
-            "line": 91,
+            "line": 118,
             "column": 13
           }
         },
@@ -186,7 +186,7 @@
           "declaration": {
             "symbol": "DemoWaitCommand",
             "packageUri": "package:demo_navigation_lab/src/component_capabilities.dart",
-            "line": 99,
+            "line": 126,
             "column": 13
           }
         }
@@ -219,7 +219,7 @@
           "declaration": {
             "symbol": "DemoOrderCompletedEvent",
             "packageUri": "package:demo_navigation_lab/src/component_capabilities.dart",
-            "line": 115,
+            "line": 142,
             "column": 13
           }
         },
@@ -233,7 +233,7 @@
           "declaration": {
             "symbol": "DemoSlowEvent",
             "packageUri": "package:demo_navigation_lab/src/component_capabilities.dart",
-            "line": 133,
+            "line": 160,
             "column": 13
           }
         },
@@ -247,12 +247,59 @@
           "declaration": {
             "symbol": "DemoUnobservedEvent",
             "packageUri": "package:demo_navigation_lab/src/component_capabilities.dart",
-            "line": 125,
+            "line": 152,
             "column": 13
           }
         }
       ],
       "eventSubscriptions": []
+    },
+    {
+      "schemaVersion": 3,
+      "package": "demo_navigation_lab",
+      "source": "lib/src/component_capabilities.dart",
+      "componentDeclarations": [],
+      "componentManifests": {},
+      "componentSymbols": {},
+      "components": [],
+      "routes": [],
+      "routeImplementations": [],
+      "contributions": [],
+      "serviceContracts": [],
+      "serviceImplementations": [],
+      "commandContracts": [],
+      "commandHandlers": [],
+      "eventContracts": [],
+      "eventSubscriptions": [],
+      "initTaskContracts": [
+        {
+          "id": "demo.startup.foundation",
+          "componentId": "demo_navigation_lab_component",
+          "description": "准备所有 Demo 初始化任务共享的基础状态。",
+          "package": "demo_navigation_lab",
+          "source": "lib/src/component_capabilities.dart",
+          "declaration": {
+            "symbol": "demoFoundationInitTask",
+            "packageUri": "package:demo_navigation_lab/src/component_capabilities.dart",
+            "line": 34,
+            "column": 7
+          }
+        },
+        {
+          "id": "demo.startup.optional-sdk",
+          "componentId": "demo_navigation_lab_component",
+          "description": "模拟可选 SDK 初始化失败及依赖节点跳过。",
+          "package": "demo_navigation_lab",
+          "source": "lib/src/component_capabilities.dart",
+          "declaration": {
+            "symbol": "demoOptionalSdkInitTask",
+            "packageUri": "package:demo_navigation_lab/src/component_capabilities.dart",
+            "line": 40,
+            "column": 7
+          }
+        }
+      ],
+      "initTasks": []
     },
     {
       "schemaVersion": 3,
@@ -785,13 +832,13 @@
           "contract": {
             "symbol": "DemoCreateReceiptCommand",
             "packageUri": "package:demo_navigation_lab/src/component_capabilities.dart",
-            "line": 81,
+            "line": 108,
             "column": 13
           },
           "implementation": {
             "symbol": "handleDemoCreateReceipt",
             "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
-            "line": 133,
+            "line": 168,
             "column": 8
           },
           "registration": "ccrouterRegisterHandleDemoCreateReceiptCommand",
@@ -814,13 +861,13 @@
           "contract": {
             "symbol": "DemoFailCommand",
             "packageUri": "package:demo_navigation_lab/src/component_capabilities.dart",
-            "line": 107,
+            "line": 134,
             "column": 13
           },
           "implementation": {
             "symbol": "handleDemoFail",
             "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
-            "line": 155,
+            "line": 190,
             "column": 6
           },
           "registration": "ccrouterRegisterHandleDemoFailCommand",
@@ -843,13 +890,13 @@
           "contract": {
             "symbol": "DemoRefreshCacheCommand",
             "packageUri": "package:demo_navigation_lab/src/component_capabilities.dart",
-            "line": 91,
+            "line": 118,
             "column": 13
           },
           "implementation": {
             "symbol": "handleDemoRefreshCache",
             "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
-            "line": 138,
+            "line": 173,
             "column": 14
           },
           "registration": "ccrouterRegisterHandleDemoRefreshCacheCommand",
@@ -872,13 +919,13 @@
           "contract": {
             "symbol": "DemoWaitCommand",
             "packageUri": "package:demo_navigation_lab/src/component_capabilities.dart",
-            "line": 99,
+            "line": 126,
             "column": 13
           },
           "implementation": {
             "symbol": "handleDemoWait",
             "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
-            "line": 145,
+            "line": 180,
             "column": 14
           },
           "registration": "ccrouterRegisterHandleDemoWaitCommand",
@@ -921,13 +968,13 @@
           "contract": {
             "symbol": "DemoOrderCompletedEvent",
             "packageUri": "package:demo_navigation_lab/src/component_capabilities.dart",
-            "line": 115,
+            "line": 142,
             "column": 13
           },
           "implementation": {
             "symbol": "failDemoOrderCompleted",
             "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
-            "line": 120,
+            "line": 155,
             "column": 6
           },
           "registration": "ccrouterRegisterFailDemoOrderCompletedEventSubscription",
@@ -951,13 +998,13 @@
           "contract": {
             "symbol": "DemoOrderCompletedEvent",
             "packageUri": "package:demo_navigation_lab/src/component_capabilities.dart",
-            "line": 115,
+            "line": 142,
             "column": 13
           },
           "implementation": {
             "symbol": "trackDemoOrderCompleted",
             "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
-            "line": 112,
+            "line": 147,
             "column": 6
           },
           "registration": "ccrouterRegisterTrackDemoOrderCompletedEventSubscription",
@@ -981,13 +1028,13 @@
           "contract": {
             "symbol": "DemoSlowEvent",
             "packageUri": "package:demo_navigation_lab/src/component_capabilities.dart",
-            "line": 133,
+            "line": 160,
             "column": 13
           },
           "implementation": {
             "symbol": "waitForDemoSlowEvent",
             "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
-            "line": 126,
+            "line": 161,
             "column": 14
           },
           "registration": "ccrouterRegisterWaitForDemoSlowEventEventSubscription",
@@ -997,6 +1044,236 @@
               "role": "eventSubscriptionRegistration",
               "symbol": "ccrouterRegisterWaitForDemoSlowEventEventSubscription",
               "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/event/navigation_lab_component_registrar.event.g.dart"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "schemaVersion": 3,
+      "package": "demo_navigation_lab",
+      "source": "lib/src/navigation_lab_component_registrar.dart",
+      "componentDeclarations": [],
+      "componentManifests": {},
+      "componentSymbols": {},
+      "components": [],
+      "routes": [],
+      "routeImplementations": [],
+      "contributions": [],
+      "serviceContracts": [],
+      "serviceImplementations": [],
+      "commandContracts": [],
+      "commandHandlers": [],
+      "eventContracts": [],
+      "eventSubscriptions": [],
+      "initTaskContracts": [],
+      "initTasks": [
+        {
+          "id": "demo.startup.analytics",
+          "componentId": "demo_navigation_lab_component",
+          "contractId": null,
+          "dependsOn": [
+            "demo.startup.foundation"
+          ],
+          "dependencyOwners": [
+            null
+          ],
+          "gateId": "privacyGranted",
+          "failurePolicy": "critical",
+          "timeoutMicroseconds": null,
+          "package": "demo_navigation_lab",
+          "source": "lib/src/navigation_lab_component_registrar.dart",
+          "implementation": {
+            "symbol": "initializeDemoAnalytics",
+            "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
+            "line": 109,
+            "column": 6
+          },
+          "registration": "ccrouterRegisterInitializeDemoAnalyticsInitTask",
+          "registrationLibrary": "lib/src/ccrouter_generated/init_task/navigation_lab_component_registrar.init_task.g.dart",
+          "generatedArtifacts": [
+            {
+              "role": "initTaskRegistration",
+              "symbol": "ccrouterRegisterInitializeDemoAnalyticsInitTask",
+              "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/init_task/navigation_lab_component_registrar.init_task.g.dart"
+            }
+          ]
+        },
+        {
+          "id": "demo.startup.foundation",
+          "componentId": "demo_navigation_lab_component",
+          "contractId": "demo.startup.foundation",
+          "dependsOn": [
+            "demo_order.startup.foundation"
+          ],
+          "dependencyOwners": [
+            "demo_order_component"
+          ],
+          "gateId": "appStarted",
+          "failurePolicy": "critical",
+          "timeoutMicroseconds": null,
+          "package": "demo_navigation_lab",
+          "source": "lib/src/navigation_lab_component_registrar.dart",
+          "implementation": {
+            "symbol": "initializeDemoFoundation",
+            "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
+            "line": 80,
+            "column": 14
+          },
+          "registration": "ccrouterRegisterInitializeDemoFoundationInitTask",
+          "registrationLibrary": "lib/src/ccrouter_generated/init_task/navigation_lab_component_registrar.init_task.g.dart",
+          "generatedArtifacts": [
+            {
+              "role": "initTaskRegistration",
+              "symbol": "ccrouterRegisterInitializeDemoFoundationInitTask",
+              "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/init_task/navigation_lab_component_registrar.init_task.g.dart"
+            }
+          ]
+        },
+        {
+          "id": "demo.startup.optional-dependent",
+          "componentId": "demo_navigation_lab_component",
+          "contractId": null,
+          "dependsOn": [
+            "demo.startup.optional-sdk"
+          ],
+          "dependencyOwners": [
+            null
+          ],
+          "gateId": "appStarted",
+          "failurePolicy": "critical",
+          "timeoutMicroseconds": null,
+          "package": "demo_navigation_lab",
+          "source": "lib/src/navigation_lab_component_registrar.dart",
+          "implementation": {
+            "symbol": "initializeDemoOptionalDependent",
+            "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
+            "line": 99,
+            "column": 6
+          },
+          "registration": "ccrouterRegisterInitializeDemoOptionalDependentInitTask",
+          "registrationLibrary": "lib/src/ccrouter_generated/init_task/navigation_lab_component_registrar.init_task.g.dart",
+          "generatedArtifacts": [
+            {
+              "role": "initTaskRegistration",
+              "symbol": "ccrouterRegisterInitializeDemoOptionalDependentInitTask",
+              "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/init_task/navigation_lab_component_registrar.init_task.g.dart"
+            }
+          ]
+        },
+        {
+          "id": "demo.startup.optional-sdk",
+          "componentId": "demo_navigation_lab_component",
+          "contractId": "demo.startup.optional-sdk",
+          "dependsOn": [],
+          "dependencyOwners": [],
+          "gateId": "appStarted",
+          "failurePolicy": "optional",
+          "timeoutMicroseconds": null,
+          "package": "demo_navigation_lab",
+          "source": "lib/src/navigation_lab_component_registrar.dart",
+          "implementation": {
+            "symbol": "initializeDemoOptionalSdk",
+            "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
+            "line": 90,
+            "column": 6
+          },
+          "registration": "ccrouterRegisterInitializeDemoOptionalSdkInitTask",
+          "registrationLibrary": "lib/src/ccrouter_generated/init_task/navigation_lab_component_registrar.init_task.g.dart",
+          "generatedArtifacts": [
+            {
+              "role": "initTaskRegistration",
+              "symbol": "ccrouterRegisterInitializeDemoOptionalSdkInitTask",
+              "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/init_task/navigation_lab_component_registrar.init_task.g.dart"
+            }
+          ]
+        },
+        {
+          "id": "demo.startup.parallel-primary",
+          "componentId": "demo_navigation_lab_component",
+          "contractId": null,
+          "dependsOn": [
+            "demo.startup.foundation"
+          ],
+          "dependencyOwners": [
+            null
+          ],
+          "gateId": "appStarted",
+          "failurePolicy": "critical",
+          "timeoutMicroseconds": null,
+          "package": "demo_navigation_lab",
+          "source": "lib/src/navigation_lab_component_registrar.dart",
+          "implementation": {
+            "symbol": "initializeDemoParallelPrimary",
+            "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
+            "line": 118,
+            "column": 14
+          },
+          "registration": "ccrouterRegisterInitializeDemoParallelPrimaryInitTask",
+          "registrationLibrary": "lib/src/ccrouter_generated/init_task/navigation_lab_component_registrar.init_task.g.dart",
+          "generatedArtifacts": [
+            {
+              "role": "initTaskRegistration",
+              "symbol": "ccrouterRegisterInitializeDemoParallelPrimaryInitTask",
+              "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/init_task/navigation_lab_component_registrar.init_task.g.dart"
+            }
+          ]
+        },
+        {
+          "id": "demo.startup.parallel-secondary",
+          "componentId": "demo_navigation_lab_component",
+          "contractId": null,
+          "dependsOn": [
+            "demo.startup.foundation"
+          ],
+          "dependencyOwners": [
+            null
+          ],
+          "gateId": "appStarted",
+          "failurePolicy": "critical",
+          "timeoutMicroseconds": null,
+          "package": "demo_navigation_lab",
+          "source": "lib/src/navigation_lab_component_registrar.dart",
+          "implementation": {
+            "symbol": "initializeDemoParallelSecondary",
+            "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
+            "line": 128,
+            "column": 14
+          },
+          "registration": "ccrouterRegisterInitializeDemoParallelSecondaryInitTask",
+          "registrationLibrary": "lib/src/ccrouter_generated/init_task/navigation_lab_component_registrar.init_task.g.dart",
+          "generatedArtifacts": [
+            {
+              "role": "initTaskRegistration",
+              "symbol": "ccrouterRegisterInitializeDemoParallelSecondaryInitTask",
+              "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/init_task/navigation_lab_component_registrar.init_task.g.dart"
+            }
+          ]
+        },
+        {
+          "id": "demo.startup.timeout",
+          "componentId": "demo_navigation_lab_component",
+          "contractId": null,
+          "dependsOn": [],
+          "dependencyOwners": [],
+          "gateId": "demo.timeoutLab",
+          "failurePolicy": "optional",
+          "timeoutMicroseconds": 60000,
+          "package": "demo_navigation_lab",
+          "source": "lib/src/navigation_lab_component_registrar.dart",
+          "implementation": {
+            "symbol": "initializeDemoTimeout",
+            "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
+            "line": 140,
+            "column": 14
+          },
+          "registration": "ccrouterRegisterInitializeDemoTimeoutInitTask",
+          "registrationLibrary": "lib/src/ccrouter_generated/init_task/navigation_lab_component_registrar.init_task.g.dart",
+          "generatedArtifacts": [
+            {
+              "role": "initTaskRegistration",
+              "symbol": "ccrouterRegisterInitializeDemoTimeoutInitTask",
+              "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/init_task/navigation_lab_component_registrar.init_task.g.dart"
             }
           ]
         }
@@ -1022,7 +1299,7 @@
           "declaration": {
             "symbol": "registerDemoNavigationLabCapabilities",
             "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
-            "line": 10,
+            "line": 11,
             "column": 6
           }
         }
@@ -2880,13 +3157,13 @@
         "contract": {
           "symbol": "DemoCreateReceiptCommand",
           "packageUri": "package:demo_navigation_lab/src/component_capabilities.dart",
-          "line": 81,
+          "line": 108,
           "column": 13
         },
         "implementation": {
           "symbol": "handleDemoCreateReceipt",
           "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
-          "line": 133,
+          "line": 168,
           "column": 8
         },
         "generatedArtifacts": [
@@ -2905,13 +3182,13 @@
         "contract": {
           "symbol": "DemoFailCommand",
           "packageUri": "package:demo_navigation_lab/src/component_capabilities.dart",
-          "line": 107,
+          "line": 134,
           "column": 13
         },
         "implementation": {
           "symbol": "handleDemoFail",
           "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
-          "line": 155,
+          "line": 190,
           "column": 6
         },
         "generatedArtifacts": [
@@ -2930,13 +3207,13 @@
         "contract": {
           "symbol": "DemoRefreshCacheCommand",
           "packageUri": "package:demo_navigation_lab/src/component_capabilities.dart",
-          "line": 91,
+          "line": 118,
           "column": 13
         },
         "implementation": {
           "symbol": "handleDemoRefreshCache",
           "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
-          "line": 138,
+          "line": 173,
           "column": 14
         },
         "generatedArtifacts": [
@@ -2955,13 +3232,13 @@
         "contract": {
           "symbol": "DemoWaitCommand",
           "packageUri": "package:demo_navigation_lab/src/component_capabilities.dart",
-          "line": 99,
+          "line": 126,
           "column": 13
         },
         "implementation": {
           "symbol": "handleDemoWait",
           "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
-          "line": 145,
+          "line": 180,
           "column": 14
         },
         "generatedArtifacts": [
@@ -2980,13 +3257,13 @@
         "contract": {
           "symbol": "DemoOrderCompletedEvent",
           "packageUri": "package:demo_navigation_lab/src/component_capabilities.dart",
-          "line": 115,
+          "line": 142,
           "column": 13
         },
         "implementation": {
           "symbol": "trackDemoOrderCompleted",
           "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
-          "line": 112,
+          "line": 147,
           "column": 6
         },
         "generatedArtifacts": [
@@ -3005,13 +3282,13 @@
         "contract": {
           "symbol": "DemoOrderCompletedEvent",
           "packageUri": "package:demo_navigation_lab/src/component_capabilities.dart",
-          "line": 115,
+          "line": 142,
           "column": 13
         },
         "implementation": {
           "symbol": "failDemoOrderCompleted",
           "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
-          "line": 120,
+          "line": 155,
           "column": 6
         },
         "generatedArtifacts": [
@@ -3030,7 +3307,7 @@
         "contract": {
           "symbol": "DemoOrderCompletedEvent",
           "packageUri": "package:demo_navigation_lab/src/component_capabilities.dart",
-          "line": 115,
+          "line": 142,
           "column": 13
         },
         "implementation": null,
@@ -3044,7 +3321,7 @@
         "contract": {
           "symbol": "DemoSlowEvent",
           "packageUri": "package:demo_navigation_lab/src/component_capabilities.dart",
-          "line": 133,
+          "line": 160,
           "column": 13
         },
         "implementation": null,
@@ -3058,7 +3335,7 @@
         "contract": {
           "symbol": "DemoUnobservedEvent",
           "packageUri": "package:demo_navigation_lab/src/component_capabilities.dart",
-          "line": 125,
+          "line": 152,
           "column": 13
         },
         "implementation": null,
@@ -3072,13 +3349,13 @@
         "contract": {
           "symbol": "DemoSlowEvent",
           "packageUri": "package:demo_navigation_lab/src/component_capabilities.dart",
-          "line": 133,
+          "line": 160,
           "column": 13
         },
         "implementation": {
           "symbol": "waitForDemoSlowEvent",
           "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
-          "line": 126,
+          "line": 161,
           "column": 14
         },
         "generatedArtifacts": [
@@ -3086,6 +3363,156 @@
             "role": "eventSubscriptionRegistration",
             "symbol": "ccrouterRegisterWaitForDemoSlowEventEventSubscription",
             "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/event/navigation_lab_component_registrar.event.g.dart"
+          }
+        ]
+      },
+      {
+        "kind": "initTask",
+        "id": "demo.startup.analytics",
+        "componentId": "demo_navigation_lab_component",
+        "packageName": "demo_navigation_lab",
+        "contract": null,
+        "implementation": {
+          "symbol": "initializeDemoAnalytics",
+          "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
+          "line": 109,
+          "column": 6
+        },
+        "generatedArtifacts": [
+          {
+            "role": "initTaskRegistration",
+            "symbol": "ccrouterRegisterInitializeDemoAnalyticsInitTask",
+            "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/init_task/navigation_lab_component_registrar.init_task.g.dart"
+          }
+        ]
+      },
+      {
+        "kind": "initTask",
+        "id": "demo.startup.foundation",
+        "componentId": "demo_navigation_lab_component",
+        "packageName": "demo_navigation_lab",
+        "contract": {
+          "symbol": "demoFoundationInitTask",
+          "packageUri": "package:demo_navigation_lab/src/component_capabilities.dart",
+          "line": 34,
+          "column": 7
+        },
+        "implementation": {
+          "symbol": "initializeDemoFoundation",
+          "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
+          "line": 80,
+          "column": 14
+        },
+        "generatedArtifacts": [
+          {
+            "role": "initTaskRegistration",
+            "symbol": "ccrouterRegisterInitializeDemoFoundationInitTask",
+            "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/init_task/navigation_lab_component_registrar.init_task.g.dart"
+          }
+        ]
+      },
+      {
+        "kind": "initTask",
+        "id": "demo.startup.optional-dependent",
+        "componentId": "demo_navigation_lab_component",
+        "packageName": "demo_navigation_lab",
+        "contract": null,
+        "implementation": {
+          "symbol": "initializeDemoOptionalDependent",
+          "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
+          "line": 99,
+          "column": 6
+        },
+        "generatedArtifacts": [
+          {
+            "role": "initTaskRegistration",
+            "symbol": "ccrouterRegisterInitializeDemoOptionalDependentInitTask",
+            "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/init_task/navigation_lab_component_registrar.init_task.g.dart"
+          }
+        ]
+      },
+      {
+        "kind": "initTask",
+        "id": "demo.startup.optional-sdk",
+        "componentId": "demo_navigation_lab_component",
+        "packageName": "demo_navigation_lab",
+        "contract": {
+          "symbol": "demoOptionalSdkInitTask",
+          "packageUri": "package:demo_navigation_lab/src/component_capabilities.dart",
+          "line": 40,
+          "column": 7
+        },
+        "implementation": {
+          "symbol": "initializeDemoOptionalSdk",
+          "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
+          "line": 90,
+          "column": 6
+        },
+        "generatedArtifacts": [
+          {
+            "role": "initTaskRegistration",
+            "symbol": "ccrouterRegisterInitializeDemoOptionalSdkInitTask",
+            "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/init_task/navigation_lab_component_registrar.init_task.g.dart"
+          }
+        ]
+      },
+      {
+        "kind": "initTask",
+        "id": "demo.startup.parallel-primary",
+        "componentId": "demo_navigation_lab_component",
+        "packageName": "demo_navigation_lab",
+        "contract": null,
+        "implementation": {
+          "symbol": "initializeDemoParallelPrimary",
+          "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
+          "line": 118,
+          "column": 14
+        },
+        "generatedArtifacts": [
+          {
+            "role": "initTaskRegistration",
+            "symbol": "ccrouterRegisterInitializeDemoParallelPrimaryInitTask",
+            "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/init_task/navigation_lab_component_registrar.init_task.g.dart"
+          }
+        ]
+      },
+      {
+        "kind": "initTask",
+        "id": "demo.startup.parallel-secondary",
+        "componentId": "demo_navigation_lab_component",
+        "packageName": "demo_navigation_lab",
+        "contract": null,
+        "implementation": {
+          "symbol": "initializeDemoParallelSecondary",
+          "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
+          "line": 128,
+          "column": 14
+        },
+        "generatedArtifacts": [
+          {
+            "role": "initTaskRegistration",
+            "symbol": "ccrouterRegisterInitializeDemoParallelSecondaryInitTask",
+            "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/init_task/navigation_lab_component_registrar.init_task.g.dart"
+          }
+        ]
+      },
+      {
+        "kind": "initTask",
+        "id": "demo.startup.timeout",
+        "componentId": "demo_navigation_lab_component",
+        "packageName": "demo_navigation_lab",
+        "contract": null,
+        "implementation": {
+          "symbol": "initializeDemoTimeout",
+          "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
+          "line": 140,
+          "column": 14
+        },
+        "generatedArtifacts": [
+          {
+            "role": "initTaskRegistration",
+            "symbol": "ccrouterRegisterInitializeDemoTimeoutInitTask",
+            "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/init_task/navigation_lab_component_registrar.init_task.g.dart"
           }
         ]
       },

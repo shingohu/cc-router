@@ -183,6 +183,8 @@ abstract final class CCRouteWorkspaceValidator {
     final commandHandlers = <String, Map<String, Object?>>{};
     final eventContracts = <String, Map<String, Object?>>{};
     final eventSubscriptions = <String, Map<String, Object?>>{};
+    final initTaskContracts = <String, Map<String, Object?>>{};
+    final initTasks = <String, Map<String, Object?>>{};
     final defaultServices = <String, String>{};
     for (final document in documents) {
       if (document['schemaVersion'] != 2 && document['schemaVersion'] != 3) {
@@ -310,6 +312,22 @@ abstract final class CCRouteWorkspaceValidator {
           );
         } else {
           eventSubscriptions[subscriberId] = subscription;
+        }
+      }
+      for (final contract in _objects(document['initTaskContracts'])) {
+        final id = '${contract['id'] ?? ''}';
+        if (initTaskContracts.containsKey(id)) {
+          errors.add('InitTask Contract "$id" is declared more than once.');
+        } else {
+          initTaskContracts[id] = contract;
+        }
+      }
+      for (final task in _objects(document['initTasks'])) {
+        final id = '${task['id'] ?? ''}';
+        if (initTasks.containsKey(id)) {
+          errors.add('InitTask "$id" is implemented more than once.');
+        } else {
+          initTasks[id] = task;
         }
       }
     }
@@ -599,6 +617,116 @@ abstract final class CCRouteWorkspaceValidator {
           );
         }
       }
+    }
+    for (final contract in initTaskContracts.values) {
+      final id = '${contract['id'] ?? ''}';
+      final ownerId = '${contract['componentId'] ?? ''}';
+      if (!_validIdentifier(id)) {
+        errors.add('InitTask Contract ID "$id" is invalid.');
+      }
+      if (!components.containsKey(ownerId)) {
+        errors.add(
+          'InitTask Contract "$id" references unknown owner component '
+          '"$ownerId".',
+        );
+      }
+      final task = initTasks[id];
+      if (task == null) {
+        errors.add('InitTask Contract "$id" has no Handler.');
+      } else if ('${task['componentId'] ?? ''}' != ownerId) {
+        errors.add(
+          'InitTask Handler "$id" belongs to component '
+          '"${task['componentId']}" instead of "$ownerId".',
+        );
+      }
+    }
+    for (final task in initTasks.values) {
+      final id = '${task['id'] ?? ''}';
+      final ownerId = '${task['componentId'] ?? ''}';
+      if (!_validIdentifier(id)) {
+        errors.add('InitTask ID "$id" is invalid.');
+      }
+      if (!components.containsKey(ownerId)) {
+        errors.add(
+          'InitTask "$id" references unknown owner component "$ownerId".',
+        );
+      }
+      final contractId = '${task['contractId'] ?? ''}';
+      if (contractId.isNotEmpty && !initTaskContracts.containsKey(contractId)) {
+        errors.add(
+          'InitTask Handler "$id" references missing Contract "$contractId".',
+        );
+      }
+      final gateId = '${task['gateId'] ?? ''}';
+      if (!_validIdentifier(gateId)) {
+        errors.add('InitTask "$id" has invalid Gate ID "$gateId".');
+      }
+      final failurePolicy = '${task['failurePolicy'] ?? ''}';
+      if (failurePolicy != 'critical' && failurePolicy != 'optional') {
+        errors.add(
+          'InitTask "$id" has unsupported failure policy "$failurePolicy".',
+        );
+      }
+      final timeout = task['timeoutMicroseconds'];
+      if (timeout != null && (timeout is! int || timeout <= 0)) {
+        errors.add('InitTask "$id" timeout must be positive.');
+      }
+      final dependencies = _strings(task['dependsOn']);
+      final seen = <String>{};
+      for (final dependencyId in dependencies) {
+        if (!_validIdentifier(dependencyId) ||
+            dependencyId == id ||
+            !seen.add(dependencyId)) {
+          errors.add(
+            'InitTask "$id" has invalid, duplicate, or self dependency '
+            '"$dependencyId".',
+          );
+          continue;
+        }
+        final dependency = initTasks[dependencyId];
+        if (dependency == null) {
+          errors.add('InitTask "$id" requires missing task "$dependencyId".');
+          continue;
+        }
+        if (!initTaskContracts.containsKey(dependencyId)) {
+          errors.add(
+            'InitTask "$id" dependency "$dependencyId" must use a '
+            'CCInitTaskContract.',
+          );
+        }
+        final dependencyOwner = '${dependency['componentId'] ?? ''}';
+        if (dependencyOwner != ownerId) {
+          final requiredOwners = _strings(
+            components[ownerId]?['dependencies'],
+          ).toSet();
+          if (!requiredOwners.contains(dependencyOwner)) {
+            errors.add(
+              'InitTask "$id" depends on "$dependencyId" from component '
+              '"$dependencyOwner" but owner "$ownerId" does not require it.',
+            );
+          }
+        }
+      }
+    }
+    final visitingTasks = <String>{};
+    final visitedTasks = <String>{};
+    void visitTask(String id) {
+      if (visitedTasks.contains(id) || !initTasks.containsKey(id)) return;
+      if (!visitingTasks.add(id)) {
+        errors.add('InitTask dependency cycle at "$id".');
+        return;
+      }
+      final dependencies = _strings(initTasks[id]?['dependsOn'])..sort();
+      for (final dependency in dependencies) {
+        visitTask(dependency);
+      }
+      visitingTasks.remove(id);
+      visitedTasks.add(id);
+    }
+
+    final initTaskIds = initTasks.keys.toList()..sort();
+    for (final id in initTaskIds) {
+      visitTask(id);
     }
     final componentList = _validateAndOrderComponents(components, errors);
     for (final route in routes.values) {

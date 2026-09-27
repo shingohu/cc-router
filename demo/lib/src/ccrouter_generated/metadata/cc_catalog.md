@@ -511,6 +511,19 @@ StatefulShellRoute 个人分支。
 - Version: `0.1.0`
 - Dependencies: `demo_order_component`
 
+## Initialization DAG
+
+| Task | Owner | Gate | Policy | Timeout | Depends on |
+| --- | --- | --- | --- | --- | --- |
+| `demo.startup.analytics` | `demo_navigation_lab_component` | `privacyGranted` | `critical` | - | `demo.startup.foundation` |
+| `demo.startup.foundation` | `demo_navigation_lab_component` | `appStarted` | `critical` | - | `demo_order.startup.foundation` |
+| `demo.startup.optional-dependent` | `demo_navigation_lab_component` | `appStarted` | `critical` | - | `demo.startup.optional-sdk` |
+| `demo.startup.optional-sdk` | `demo_navigation_lab_component` | `appStarted` | `optional` | - | - |
+| `demo.startup.parallel-primary` | `demo_navigation_lab_component` | `appStarted` | `critical` | - | `demo.startup.foundation` |
+| `demo.startup.parallel-secondary` | `demo_navigation_lab_component` | `appStarted` | `critical` | - | `demo.startup.foundation` |
+| `demo.startup.timeout` | `demo_navigation_lab_component` | `demo.timeoutLab` | `optional` | 60000us | - |
+| `demo_order.startup.foundation` | `demo_order_component` | `appStarted` | `critical` | - | - |
+
 ## Capability Sources
 
 Scope: `host:ccrouter_demo`. Generated file; do not edit by hand.
@@ -522,73 +535,124 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 ### Command `demo_navigation_lab.create_receipt`
 
 - Declaring package: `demo_navigation_lab`
-- Contract/declaration: `package:demo_navigation_lab/src/component_capabilities.dart:81:13` (`DemoCreateReceiptCommand`)
-- Implementation: `package:demo_navigation_lab/src/navigation_lab_component_registrar.dart:133:8` (`handleDemoCreateReceipt`)
+- Contract/declaration: `package:demo_navigation_lab/src/component_capabilities.dart:108:13` (`DemoCreateReceiptCommand`)
+- Implementation: `package:demo_navigation_lab/src/navigation_lab_component_registrar.dart:168:8` (`handleDemoCreateReceipt`)
 - Generated artifacts:
   - `commandRegistration`: `package:demo_navigation_lab/src/ccrouter_generated/command/navigation_lab_component_registrar.command.g.dart` (`ccrouterRegisterHandleDemoCreateReceiptCommand`)
 
 ### Command `demo_navigation_lab.fail`
 
 - Declaring package: `demo_navigation_lab`
-- Contract/declaration: `package:demo_navigation_lab/src/component_capabilities.dart:107:13` (`DemoFailCommand`)
-- Implementation: `package:demo_navigation_lab/src/navigation_lab_component_registrar.dart:155:6` (`handleDemoFail`)
+- Contract/declaration: `package:demo_navigation_lab/src/component_capabilities.dart:134:13` (`DemoFailCommand`)
+- Implementation: `package:demo_navigation_lab/src/navigation_lab_component_registrar.dart:190:6` (`handleDemoFail`)
 - Generated artifacts:
   - `commandRegistration`: `package:demo_navigation_lab/src/ccrouter_generated/command/navigation_lab_component_registrar.command.g.dart` (`ccrouterRegisterHandleDemoFailCommand`)
 
 ### Command `demo_navigation_lab.refresh_cache`
 
 - Declaring package: `demo_navigation_lab`
-- Contract/declaration: `package:demo_navigation_lab/src/component_capabilities.dart:91:13` (`DemoRefreshCacheCommand`)
-- Implementation: `package:demo_navigation_lab/src/navigation_lab_component_registrar.dart:138:14` (`handleDemoRefreshCache`)
+- Contract/declaration: `package:demo_navigation_lab/src/component_capabilities.dart:118:13` (`DemoRefreshCacheCommand`)
+- Implementation: `package:demo_navigation_lab/src/navigation_lab_component_registrar.dart:173:14` (`handleDemoRefreshCache`)
 - Generated artifacts:
   - `commandRegistration`: `package:demo_navigation_lab/src/ccrouter_generated/command/navigation_lab_component_registrar.command.g.dart` (`ccrouterRegisterHandleDemoRefreshCacheCommand`)
 
 ### Command `demo_navigation_lab.wait`
 
 - Declaring package: `demo_navigation_lab`
-- Contract/declaration: `package:demo_navigation_lab/src/component_capabilities.dart:99:13` (`DemoWaitCommand`)
-- Implementation: `package:demo_navigation_lab/src/navigation_lab_component_registrar.dart:145:14` (`handleDemoWait`)
+- Contract/declaration: `package:demo_navigation_lab/src/component_capabilities.dart:126:13` (`DemoWaitCommand`)
+- Implementation: `package:demo_navigation_lab/src/navigation_lab_component_registrar.dart:180:14` (`handleDemoWait`)
 - Generated artifacts:
   - `commandRegistration`: `package:demo_navigation_lab/src/ccrouter_generated/command/navigation_lab_component_registrar.command.g.dart` (`ccrouterRegisterHandleDemoWaitCommand`)
 
 ### Event `demo.analytics.order-completed`
 
 - Declaring package: `demo_navigation_lab`
-- Contract/declaration: `package:demo_navigation_lab/src/component_capabilities.dart:115:13` (`DemoOrderCompletedEvent`)
-- Implementation: `package:demo_navigation_lab/src/navigation_lab_component_registrar.dart:112:6` (`trackDemoOrderCompleted`)
+- Contract/declaration: `package:demo_navigation_lab/src/component_capabilities.dart:142:13` (`DemoOrderCompletedEvent`)
+- Implementation: `package:demo_navigation_lab/src/navigation_lab_component_registrar.dart:147:6` (`trackDemoOrderCompleted`)
 - Generated artifacts:
   - `eventSubscriptionRegistration`: `package:demo_navigation_lab/src/ccrouter_generated/event/navigation_lab_component_registrar.event.g.dart` (`ccrouterRegisterTrackDemoOrderCompletedEventSubscription`)
 
 ### Event `demo.broken.order-completed`
 
 - Declaring package: `demo_navigation_lab`
-- Contract/declaration: `package:demo_navigation_lab/src/component_capabilities.dart:115:13` (`DemoOrderCompletedEvent`)
-- Implementation: `package:demo_navigation_lab/src/navigation_lab_component_registrar.dart:120:6` (`failDemoOrderCompleted`)
+- Contract/declaration: `package:demo_navigation_lab/src/component_capabilities.dart:142:13` (`DemoOrderCompletedEvent`)
+- Implementation: `package:demo_navigation_lab/src/navigation_lab_component_registrar.dart:155:6` (`failDemoOrderCompleted`)
 - Generated artifacts:
   - `eventSubscriptionRegistration`: `package:demo_navigation_lab/src/ccrouter_generated/event/navigation_lab_component_registrar.event.g.dart` (`ccrouterRegisterFailDemoOrderCompletedEventSubscription`)
 
 ### Event `demo_navigation_lab.order_completed`
 
 - Declaring package: `demo_navigation_lab`
-- Contract/declaration: `package:demo_navigation_lab/src/component_capabilities.dart:115:13` (`DemoOrderCompletedEvent`)
+- Contract/declaration: `package:demo_navigation_lab/src/component_capabilities.dart:142:13` (`DemoOrderCompletedEvent`)
 
 ### Event `demo_navigation_lab.slow`
 
 - Declaring package: `demo_navigation_lab`
-- Contract/declaration: `package:demo_navigation_lab/src/component_capabilities.dart:133:13` (`DemoSlowEvent`)
+- Contract/declaration: `package:demo_navigation_lab/src/component_capabilities.dart:160:13` (`DemoSlowEvent`)
 
 ### Event `demo_navigation_lab.unobserved`
 
 - Declaring package: `demo_navigation_lab`
-- Contract/declaration: `package:demo_navigation_lab/src/component_capabilities.dart:125:13` (`DemoUnobservedEvent`)
+- Contract/declaration: `package:demo_navigation_lab/src/component_capabilities.dart:152:13` (`DemoUnobservedEvent`)
 
 ### Event `demo_navigation_lab_component.demo_navigation_lab.slow`
 
 - Declaring package: `demo_navigation_lab`
-- Contract/declaration: `package:demo_navigation_lab/src/component_capabilities.dart:133:13` (`DemoSlowEvent`)
-- Implementation: `package:demo_navigation_lab/src/navigation_lab_component_registrar.dart:126:14` (`waitForDemoSlowEvent`)
+- Contract/declaration: `package:demo_navigation_lab/src/component_capabilities.dart:160:13` (`DemoSlowEvent`)
+- Implementation: `package:demo_navigation_lab/src/navigation_lab_component_registrar.dart:161:14` (`waitForDemoSlowEvent`)
 - Generated artifacts:
   - `eventSubscriptionRegistration`: `package:demo_navigation_lab/src/ccrouter_generated/event/navigation_lab_component_registrar.event.g.dart` (`ccrouterRegisterWaitForDemoSlowEventEventSubscription`)
+
+### InitTask `demo.startup.analytics`
+
+- Declaring package: `demo_navigation_lab`
+- Implementation: `package:demo_navigation_lab/src/navigation_lab_component_registrar.dart:109:6` (`initializeDemoAnalytics`)
+- Generated artifacts:
+  - `initTaskRegistration`: `package:demo_navigation_lab/src/ccrouter_generated/init_task/navigation_lab_component_registrar.init_task.g.dart` (`ccrouterRegisterInitializeDemoAnalyticsInitTask`)
+
+### InitTask `demo.startup.foundation`
+
+- Declaring package: `demo_navigation_lab`
+- Contract/declaration: `package:demo_navigation_lab/src/component_capabilities.dart:34:7` (`demoFoundationInitTask`)
+- Implementation: `package:demo_navigation_lab/src/navigation_lab_component_registrar.dart:80:14` (`initializeDemoFoundation`)
+- Generated artifacts:
+  - `initTaskRegistration`: `package:demo_navigation_lab/src/ccrouter_generated/init_task/navigation_lab_component_registrar.init_task.g.dart` (`ccrouterRegisterInitializeDemoFoundationInitTask`)
+
+### InitTask `demo.startup.optional-dependent`
+
+- Declaring package: `demo_navigation_lab`
+- Implementation: `package:demo_navigation_lab/src/navigation_lab_component_registrar.dart:99:6` (`initializeDemoOptionalDependent`)
+- Generated artifacts:
+  - `initTaskRegistration`: `package:demo_navigation_lab/src/ccrouter_generated/init_task/navigation_lab_component_registrar.init_task.g.dart` (`ccrouterRegisterInitializeDemoOptionalDependentInitTask`)
+
+### InitTask `demo.startup.optional-sdk`
+
+- Declaring package: `demo_navigation_lab`
+- Contract/declaration: `package:demo_navigation_lab/src/component_capabilities.dart:40:7` (`demoOptionalSdkInitTask`)
+- Implementation: `package:demo_navigation_lab/src/navigation_lab_component_registrar.dart:90:6` (`initializeDemoOptionalSdk`)
+- Generated artifacts:
+  - `initTaskRegistration`: `package:demo_navigation_lab/src/ccrouter_generated/init_task/navigation_lab_component_registrar.init_task.g.dart` (`ccrouterRegisterInitializeDemoOptionalSdkInitTask`)
+
+### InitTask `demo.startup.parallel-primary`
+
+- Declaring package: `demo_navigation_lab`
+- Implementation: `package:demo_navigation_lab/src/navigation_lab_component_registrar.dart:118:14` (`initializeDemoParallelPrimary`)
+- Generated artifacts:
+  - `initTaskRegistration`: `package:demo_navigation_lab/src/ccrouter_generated/init_task/navigation_lab_component_registrar.init_task.g.dart` (`ccrouterRegisterInitializeDemoParallelPrimaryInitTask`)
+
+### InitTask `demo.startup.parallel-secondary`
+
+- Declaring package: `demo_navigation_lab`
+- Implementation: `package:demo_navigation_lab/src/navigation_lab_component_registrar.dart:128:14` (`initializeDemoParallelSecondary`)
+- Generated artifacts:
+  - `initTaskRegistration`: `package:demo_navigation_lab/src/ccrouter_generated/init_task/navigation_lab_component_registrar.init_task.g.dart` (`ccrouterRegisterInitializeDemoParallelSecondaryInitTask`)
+
+### InitTask `demo.startup.timeout`
+
+- Declaring package: `demo_navigation_lab`
+- Implementation: `package:demo_navigation_lab/src/navigation_lab_component_registrar.dart:140:14` (`initializeDemoTimeout`)
+- Generated artifacts:
+  - `initTaskRegistration`: `package:demo_navigation_lab/src/ccrouter_generated/init_task/navigation_lab_component_registrar.init_task.g.dart` (`ccrouterRegisterInitializeDemoTimeoutInitTask`)
 
 ### Route `demo_navigation_lab.cancel`
 
@@ -851,6 +915,14 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 - Implementation: `package:demo_order/src/order_commands.dart:6:16` (`handleReserveOrder`)
 - Generated artifacts:
   - `commandRegistration`: `package:demo_order/src/ccrouter_generated/command/order_commands.command.g.dart` (`ccrouterRegisterHandleReserveOrderCommand`)
+
+### InitTask `demo_order.startup.foundation`
+
+- Declaring package: `demo_order_contracts`
+- Contract/declaration: `package:demo_order_contracts/src/order_init_tasks.dart:6:7` (`demoOrderFoundationInitTask`)
+- Implementation: `package:demo_order/src/order_init_tasks.dart:6:14` (`initializeDemoOrderFoundation`)
+- Generated artifacts:
+  - `initTaskRegistration`: `package:demo_order/src/ccrouter_generated/init_task/order_init_tasks.init_task.g.dart` (`ccrouterRegisterInitializeDemoOrderFoundationInitTask`)
 
 ### Route `order.detail`
 

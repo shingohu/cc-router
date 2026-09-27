@@ -26,25 +26,26 @@
   以及 Service Contract 自动绑定、稳定 ID/Provider metadata 最小生成闭环。
 - [x] Command/Event Contract、Handler/Subscription、Owner Client、稳定 ID、metadata、Catalog
   与 Workspace 校验生成闭环。
+- [x] InitTask Contract、Handler、类型化依赖、自动 Registrar bridge、DAG/Catalog、源码定位
+  与 Workspace 校验生成闭环。
 
 ## 3. P0：恢复开发后的第一批任务
 
 ### 3.1 稳定 ID 与 Contract 边界
 
-- [x] 完成 InitTask/Contract 生成边界评估：不扫描 Registrar/Contribution 猜测关系，采用显式
-  Task Contract、Handler 注解和类型化依赖引用；方案已批准、尚未实现。
-- [ ] 实现真实跨组件初始化依赖时，将共享 Task Contract 放入调用双方可依赖的公共 contracts Package。
+- [x] 完成 InitTask/Contract 生成边界：不扫描 Registrar/Contribution 猜测关系，采用显式
+  Task Contract、Handler 注解和类型化依赖引用。
+- [x] Demo 已用公共 contracts Package 验证真实跨组件 Task Contract 和 required Owner dependency。
 - [x] 框架提供通用的 `appStarted` 与 `privacyGranted` Gate；业务组件直接使用框架常量，避免重复定义。
-- [ ] 业务组件出现跨组件 Task ID 后，明确其公共 Contract 归属并增加 exposure 测试，禁止实现包或 `src` 导入。
+- [x] 跨组件 Task Contract 必须归属公共 contracts Package，并由 public barrel exposure 测试门禁。
 
 ### 3.2 生成器校验收敛
 
 - [x] 评估生成器是否能可靠发现手写 InitTask 的 ID、Gate 和依赖；结论是不能可靠发现，
   因此已批准显式声明方案，不增加启发式扫描，也不静默声称已覆盖。
-- [x] 确认 Route Contract、组件依赖、公共 Barrel 和跨包内部 API 的生成期校验边界；InitTask
-  的重复 ID、缺失依赖和循环依赖继续由 Runtime 校验。
-- [ ] 实现 `CCInitTaskContract`/`@CCInitTask` 后，生成错误必须包含 Package、组件、任务 ID、
-  依赖和来源位置。
+- [x] 确认 Route/InitTask Contract、组件依赖、公共 Barrel 和跨包内部 API 的生成期校验边界；
+  Runtime 继续保留对手写与陈旧生成物的最终校验。
+- [x] InitTask 生成错误与 metadata 提供 Package、组件、任务 ID、依赖和可移植来源位置。
 - [x] 2026-09-27 已在本轮 Component/Service 生成改动后执行全量生成物回归；后续每次
   Generator 改动仍必须重复该门禁，不能只验证 Demo 编译。
 
@@ -56,6 +57,9 @@
 - [x] 2026-09-27 完成 Component/Service 生成架构回归：`dart analyze`、
   `ccrouter_test` 324 项、Generator 177 项、Demo 31 项以及缓存/无缓存
   `generate --check` 均通过；4 个组件、31 条路由和 8 个生成 Package 输出一致。
+- [x] 2026-09-27 完成 Command/Event/InitTask 生成闭环回归：`dart analyze`、
+  `ccrouter_test` 329 项、Generator 216 项、Demo 31 项、缓存/无缓存 `generate --check`、
+  InitTask clean/rebuild 和能力级 `ccrouter find` 均通过。
 - [ ] 持续执行 `dart analyze`、框架测试、生成器测试、Demo 测试和 `generate --check`。
 - [ ] 维护冷启动、初始化、路由解析、导航延迟、并发导航、Runtime dispose 的同机趋势。
 - [ ] 继续做 macOS、iOS 真机/模拟器和 OHOS 运行回归；平台 SDK 变更只做兼容性修复。
@@ -73,12 +77,12 @@
 - [ ] 生成阶段报告升级、废弃、缺失和不兼容原因；Runtime 只做边界保护。
 - [ ] 评估环境实现选择模型；短期继续使用 Composition Root、Service Key 和 Test Override。
 
-### 4.2 初始化任务生成
+### 4.2 初始化任务生成（已完成）
 
 - [x] 设计显式 `CCInitTaskContract`、`@CCInitTask`、类型化依赖和现有
   `CCInitializationGate` 复用模型；不生成业务调用 Client。
-- [ ] 生成 Handler registration bridge、依赖索引、Package/Host metadata 和可读 DAG 文档。
-- [ ] 实现 Task/Owner/Gate/Handler/exposure/依赖图校验，并保留 Runtime 最终校验。
+- [x] 生成 Handler registration bridge、依赖索引、Package/Host metadata 和可读 DAG 文档。
+- [x] 实现 Task/Owner/Gate/Handler/Contract exposure/依赖图校验，并保留 Runtime 最终校验。
 
 ### 4.3 Service Proxy 与 Command/Event 生成
 
@@ -98,7 +102,7 @@
 
 ### 4.4 开发体验与诊断
 
-- [ ] 扩展 `ccrouter find` 和 Catalog 源码定位，覆盖 Route、Service、Command、Event、InitTask。
+- [x] 扩展 `ccrouter find` 和 Catalog 源码定位，覆盖 Route、Service、Command、Event、InitTask。
 - [ ] 设计 DevTools 只读视图：Component Graph、Route Graph、Active Entry、Scope、Trace、
   Failure/Fallback 和 InitTask DAG。
 - [ ] 评估 IDE 插件或 Analysis Server 集成；不能用运行时反射替代编译期校验。

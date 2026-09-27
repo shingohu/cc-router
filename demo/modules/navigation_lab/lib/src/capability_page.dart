@@ -197,6 +197,22 @@ final class _DemoCapabilitiesPageState extends State<DemoCapabilitiesPage> {
                       .name;
                 }),
               ),
+              _action(
+                Icons.timer_off_outlined,
+                '打开 InitTask Timeout Gate',
+                '自定义 Gate 只启动对应可选任务，超时后记录失败但不阻断其它节点。',
+                () => _run('Initialization timeout gate', () async {
+                  await CCRouter.runInitialization(
+                    gate: DemoInitializationGates.timeoutLab,
+                  );
+                  return CCRouter.initializationTasks
+                      .firstWhere(
+                        (task) => task.id == DemoInitializationTaskIds.timeout,
+                      )
+                      .state
+                      .name;
+                }),
+              ),
               _sectionTitle(context, 'Service'),
               _action(
                 Icons.apps_outlined,

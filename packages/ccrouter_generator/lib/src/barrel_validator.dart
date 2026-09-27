@@ -96,6 +96,16 @@ final class CCRouteBarrelExportValidator {
           barrels: barrels,
         );
       }
+      for (final contract in _objects(document['initTaskContracts'])) {
+        _validateAuthoredContractExport(
+          errors: errors,
+          contract: contract,
+          capability: 'InitTask',
+          source: source,
+          sourceFile: sourceFile,
+          barrels: barrels,
+        );
+      }
     }
     errors.sort();
     return errors;

@@ -132,7 +132,7 @@ Session Scope 均返回稳定的 Service 错误子类型；缺失命名实现会
   Contract。多个直接 Contract、Contract 与 `id` 并存、间接继承猜测都会生成失败。
 - 复杂创建与 readiness 继续使用 `@CCComponentContribution`，避免在注解中增加任意 Factory
   或异步代码入口。Command 与 Event 使用各自的显式 Contract/Handler/Subscription 声明生成；
-  未注解迁移能力和 InitTask 注册仍保持 Contribution，不扫描函数体猜 metadata。
+  未注解迁移能力仍保持 Contribution；InitTask 使用专用 Contract/Handler 生成，不扫描函数体猜 metadata。
 - Service contract/implementation 已进入 workspace ownership/conflict 校验、Package Index、
   Capability Catalog、Host 聚合和 metadata 内容缓存；无生成物时不创建生成目录。
 - 1.x 跨组件稳定入口是独立 contracts Package 中的接口、稳定 ID 与消费组件生成 Client；

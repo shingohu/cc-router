@@ -2,12 +2,12 @@ import 'dart:io';
 
 import 'package:ccrouter_generator/src/package_workspace.dart';
 
-/// Prints routes matching an exact ID or declared Pattern in one Host closure.
+/// Prints capabilities matching an exact ID or Route Pattern in one Host closure.
 ///
 /// This lookup consumes validated published Package indexes without running
 /// builders or scanning source files. It does not resolve a concrete URL with
 /// dynamic Path parameters; that remains a Runtime navigation operation.
-Future<bool> findRoute({
+Future<bool> findCapability({
   required Directory buildRoot,
   required Directory hostRoot,
   required bool workspace,
@@ -92,15 +92,22 @@ Future<bool> findRoute({
   final catalog = CCCapabilitySourceCatalog(records);
   final matches = catalog.records
       .where(
-        (record) => record.kind == 'route' && matchingIds.contains(record.id),
+        (record) =>
+            record.id == query ||
+            (record.kind == 'route' && matchingIds.contains(record.id)),
       )
       .toList(growable: false);
   if (matches.isEmpty) {
-    stderr.writeln('No route matched the exact ID or declared Pattern.');
+    stderr.writeln(
+      'No capability matched the exact ID or Route declared Pattern.',
+    );
     return false;
   }
   for (final record in matches) {
-    stdout.writeln('Route ${record.id} (component: ${record.componentId})');
+    stdout.writeln(
+      '${_capabilityKindLabel(record.kind)} ${record.id} '
+      '(component: ${record.componentId})',
+    );
     stdout.writeln('  Declaring package: ${record.packageName}');
     if (record.contract case final contract?) {
       stdout.writeln('  Contract/declaration: ${_sourceLocation(contract)}');
@@ -108,7 +115,9 @@ Future<bool> findRoute({
     if (record.implementation case final implementation?) {
       stdout.writeln('  Implementation: ${_sourceLocation(implementation)}');
     }
-    final declared = patterns[record.id]?.toList() ?? <_DeclaredPattern>[];
+    final declared = record.kind == 'route'
+        ? (patterns[record.id]?.toList() ?? <_DeclaredPattern>[])
+        : <_DeclaredPattern>[];
     declared.sort((left, right) {
       if (left.primary != right.primary) return left.primary ? -1 : 1;
       return left.value.compareTo(right.value);
@@ -118,9 +127,26 @@ Future<bool> findRoute({
         '  Pattern: ${pattern.value}${pattern.primary ? ' (primary)' : ''}',
       );
     }
+    for (final artifact in record.generatedArtifacts) {
+      stdout.writeln(
+        '  Generated ${artifact.role}: ${artifact.packageUri} '
+        '(${artifact.symbol})',
+      );
+    }
   }
   return true;
 }
+
+/// Presents one closed catalog kind without exposing schema casing.
+String _capabilityKindLabel(String kind) => switch (kind) {
+  'route' => 'Route',
+  'service' => 'Service',
+  'command' => 'Command',
+  'action' => 'Action',
+  'event' => 'Event',
+  'initTask' => 'InitTask',
+  _ => kind,
+};
 
 /// Renders a portable declaration position without Markdown formatting.
 String _sourceLocation(CCSourceReference source) {

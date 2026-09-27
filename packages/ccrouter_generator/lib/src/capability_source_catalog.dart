@@ -14,6 +14,7 @@ const Set<String> _ccCapabilitySourceKinds = {
   'command',
   'action',
   'event',
+  'initTask',
 };
 
 /// A versioned, immutable inventory of framework capabilities and their code.
@@ -268,6 +269,52 @@ final class CCCapabilitySourceCatalog {
             implementation: implementation,
             generatedArtifacts: _catalogObjectList(
               subscription['generatedArtifacts'],
+            ).map(CCGeneratedArtifact.fromJson),
+          ),
+        );
+      }
+      for (final contract in _catalogObjectList(
+        document['initTaskContracts'],
+      )) {
+        final id = '${contract['id'] ?? ''}';
+        final componentId = '${contract['componentId'] ?? ''}';
+        if (id.isEmpty || componentId.isEmpty) continue;
+        final declaration = CCSourceReference.fromJson(
+          _catalogObject(contract['declaration']),
+          fallbackPackage: '${contract['package'] ?? fallbackPackage}',
+          fallbackLibrary: '${contract['source'] ?? fallbackSource}',
+        );
+        records.add(
+          CCCapabilitySourceRecord(
+            kind: 'initTask',
+            id: id,
+            componentId: componentId,
+            packageName: declaration.packageName,
+            contract: declaration,
+            implementation: null,
+            generatedArtifacts: const [],
+          ),
+        );
+      }
+      for (final task in _catalogObjectList(document['initTasks'])) {
+        final id = '${task['id'] ?? ''}';
+        final componentId = '${task['componentId'] ?? ''}';
+        if (id.isEmpty || componentId.isEmpty) continue;
+        final implementation = CCSourceReference.fromJson(
+          _catalogObject(task['implementation']),
+          fallbackPackage: '${task['package'] ?? fallbackPackage}',
+          fallbackLibrary: '${task['source'] ?? fallbackSource}',
+        );
+        records.add(
+          CCCapabilitySourceRecord(
+            kind: 'initTask',
+            id: id,
+            componentId: componentId,
+            packageName: implementation.packageName,
+            contract: null,
+            implementation: implementation,
+            generatedArtifacts: _catalogObjectList(
+              task['generatedArtifacts'],
             ).map(CCGeneratedArtifact.fromJson),
           ),
         );
@@ -635,5 +682,6 @@ String _catalogKindLabel(String kind) => switch (kind) {
   'command' => 'Command',
   'action' => 'Action',
   'event' => 'Event',
+  'initTask' => 'InitTask',
   _ => kind,
 };

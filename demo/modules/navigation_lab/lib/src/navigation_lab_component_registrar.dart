@@ -1,4 +1,5 @@
 import 'package:ccrouter/ccrouter.dart';
+import 'package:demo_order_contracts/demo_order_contracts.dart';
 
 import 'component_capabilities.dart';
 import 'lab_configuration.dart';
@@ -15,42 +16,6 @@ void registerDemoNavigationLabCapabilities(CCRegistry registry) {
 }
 
 void _registerComponentCapabilities(CCRegistry registry) {
-  registry.registerInitializationTask(
-    CCInitializationTask(
-      id: DemoInitializationTaskIds.foundation,
-      run: (_) async {
-        await Future<void>.delayed(const Duration(milliseconds: 20));
-        demoNavigationLabStore.record('InitTask · foundation ready');
-      },
-    ),
-  );
-  registry.registerInitializationTask(
-    CCInitializationTask(
-      id: DemoInitializationTaskIds.optionalSdk,
-      failurePolicy: CCInitializationFailurePolicy.optional,
-      run: (_) => throw StateError('simulated optional SDK failure'),
-    ),
-  );
-  registry.registerInitializationTask(
-    CCInitializationTask(
-      id: DemoInitializationTaskIds.optionalDependent,
-      dependsOn: const [DemoInitializationTaskIds.optionalSdk],
-      run: (_) => demoNavigationLabStore.record(
-        'InitTask · optional dependent should not run',
-      ),
-    ),
-  );
-  registry.registerInitializationTask(
-    CCInitializationTask(
-      id: DemoInitializationTaskIds.analytics,
-      dependsOn: const [DemoInitializationTaskIds.foundation],
-      gate: CCInitializationGate.privacyGranted,
-      run: (_) => demoNavigationLabStore.record(
-        'InitTask · privacy-gated analytics ready',
-      ),
-    ),
-  );
-
   registry.registerService<DemoAppService>(
     CCServiceProvider(
       factory: (_) => DemoAppService(
@@ -105,6 +70,76 @@ void _registerComponentCapabilities(CCRegistry registry) {
       factory: (_) => const DemoBackupChannelService(),
     ),
   );
+}
+
+/// Prepares foundation state before dependent generated InitTasks execute.
+@CCInitTask(
+  contract: demoFoundationInitTask,
+  dependsOn: [demoOrderFoundationInitTask],
+)
+Future<void> initializeDemoFoundation() async {
+  await Future<void>.delayed(const Duration(milliseconds: 20));
+  demoNavigationLabStore.record('InitTask · foundation ready');
+}
+
+/// Simulates an optional SDK failure without blocking independent tasks.
+@CCInitTask(
+  contract: demoOptionalSdkInitTask,
+  failurePolicy: CCInitializationFailurePolicy.optional,
+)
+void initializeDemoOptionalSdk() {
+  throw StateError('simulated optional SDK failure');
+}
+
+/// Demonstrates that a dependent task is skipped after optional failure.
+@CCInitTask(
+  id: DemoInitializationTaskIds.optionalDependent,
+  dependsOn: [demoOptionalSdkInitTask],
+)
+void initializeDemoOptionalDependent() {
+  demoNavigationLabStore.record('InitTask · optional dependent should not run');
+}
+
+/// Initializes Demo analytics only after foundation and privacy consent.
+@CCInitTask(
+  id: DemoInitializationTaskIds.analytics,
+  dependsOn: [demoFoundationInitTask],
+  gate: CCInitializationGate.privacyGranted,
+)
+void initializeDemoAnalytics() {
+  demoNavigationLabStore.record('InitTask · privacy-gated analytics ready');
+}
+
+/// Runs as one member of a parallel dependency layer after foundation.
+@CCInitTask(
+  id: DemoInitializationTaskIds.parallelPrimary,
+  dependsOn: [demoFoundationInitTask],
+)
+Future<void> initializeDemoParallelPrimary() async {
+  await Future<void>.delayed(const Duration(milliseconds: 12));
+  demoNavigationLabStore.record('InitTask · parallel primary ready');
+}
+
+/// Runs independently beside the primary task after foundation.
+@CCInitTask(
+  id: DemoInitializationTaskIds.parallelSecondary,
+  dependsOn: [demoFoundationInitTask],
+)
+Future<void> initializeDemoParallelSecondary() async {
+  await Future<void>.delayed(const Duration(milliseconds: 12));
+  demoNavigationLabStore.record('InitTask · parallel secondary ready');
+}
+
+/// Waits for cooperative cancellation to demonstrate task timeout semantics.
+@CCInitTask(
+  id: DemoInitializationTaskIds.timeout,
+  gate: DemoInitializationGates.timeoutLab,
+  failurePolicy: CCInitializationFailurePolicy.optional,
+  timeout: Duration(milliseconds: 60),
+)
+Future<void> initializeDemoTimeout(CCInvocationContext context) async {
+  await context.cancellation.whenCancelled;
+  throw const CCInvocationCancelledError();
 }
 
 /// Records the completed order through an independent analytics Subscriber.

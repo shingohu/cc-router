@@ -20,6 +20,7 @@ export 'src/component_capabilities.dart'
         DemoEventIds,
         DemoEventSubscriberIds,
         DemoInitializationTaskIds,
+        DemoInitializationGates,
         DemoNavigationSourceIds,
         DemoRoutePolicyIds;
 export 'src/shell_contract.dart' show DemoExtraPayload;
