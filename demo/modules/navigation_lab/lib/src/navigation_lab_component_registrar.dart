@@ -126,10 +126,10 @@ void _registerComponentCapabilities(CCRegistry registry) {
       ),
     ),
   );
-  registry.registerService<DemoFactoryService>(
+  registry.registerService<DemoNewInstanceService>(
     CCServiceProvider(
-      creationPolicy: CCServiceCreationPolicy.factory,
-      factory: (_) => DemoFactoryService(DemoCapabilityInstanceIds.next()),
+      creationPolicy: CCServiceCreationPolicy.newInstance,
+      factory: (_) => DemoNewInstanceService(DemoCapabilityInstanceIds.next()),
     ),
   );
   registry.registerService<DemoLazyService>(

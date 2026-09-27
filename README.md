@@ -56,7 +56,7 @@ import 'package:ccrouter_go_router/ccrouter_go_router.dart';
 | Provider-neutral Analytics | 已支持 | Route PV/Leave、稳定事件契约、属性校验和有界异步 Sink；不绑定第三方 SDK |
 | Widget 点击/滑动/曝光采集 | 部分支持 | `CCAnalyticsTarget`、`ccrouter_auto_track` 提供显式点击、滚动聚合和曝光；全局 Widget 猜测仍不支持 |
 | 页面生命周期 | 已支持 | `PageShow/PageHide` 与前后台，Mixin 和 Listener 两种形式 |
-| Service | 已支持 | App/Session/Route Scope，singleton/factory，key/token，lazy async readiness |
+| Service | 已支持 | App/Session/Route Scope，singleton/newInstance，key/token，lazy async readiness |
 | Command | 已支持 | 单 Handler、强类型结果、`void`、取消、超时与 Trace |
 | Event | 已支持 | 零到多个订阅者、稳定顺序、失败隔离 |
 | InitTask | 已支持 | 一次性 DAG、Gate、必需/可选失败策略 |
@@ -559,11 +559,11 @@ final controller = CCRouter.routeService<OrderDraftController>(context);
 ```
 
 - 默认 `singleton` 是每个 Scope 一个懒实例。
-- `factory` 每次解析创建新实例，但需要销毁的实例仍由 Scope 统一拥有；不要用它模拟手工 dispose 的临时对象。
+- `newInstance` 每次解析创建新实例，但需要销毁的实例仍由 Scope 统一拥有；不要用它模拟手工 dispose 的临时对象。
 - `initializer` 只用于实例无法在同步构造后立即工作的异步 readiness；调用方必须使用 `serviceAsync`。
 - 多实现使用 `CCServiceKey<T>`；跨 Package 稳定契约使用 `CCServiceToken<T>`。
 - 实现 `CCDisposable` 的实例由 Scope 按逆构造顺序自动销毁，业务不得自行 dispose。
-- `serviceOrNull` 只把“未注册”转换为 null，不吞掉 Factory、Scope 或初始化错误。
+- `serviceOrNull` 只把“未注册”转换为 null，不吞掉创建策略、Scope 或初始化错误。
 
 Session 由认证流程显式管理：
 

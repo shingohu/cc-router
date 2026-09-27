@@ -4,7 +4,7 @@ part of 'runtime.dart';
 ///
 /// Nested resolution uses the concrete [instanceScope] and optional
 /// [routeEntry] instead of guessing from global Runtime state. This keeps
-/// Factory disposal with its consumer while preserving exact Route ownership.
+/// New-instance disposal with its consumer while preserving exact Route ownership.
 final class _ServiceConstructionOwner {
   /// Creates the construction context for one selected provider instance.
   const _ServiceConstructionOwner({
@@ -1095,7 +1095,7 @@ final class CCRouterRuntime {
   ///
   /// Existing synchronous Providers complete without an asynchronous setup
   /// step. Providers with an initializer use one single-flight operation per
-  /// singleton and Scope; Factory Providers initialize every new instance.
+  /// singleton and Scope; new-instance Providers initialize every new instance.
   Future<T> serviceAsync<T extends Object>({
     CCServiceToken<T>? contract,
     CCServiceKey<T>? key,
@@ -1803,7 +1803,7 @@ final class CCRouterRuntime {
     final effectiveRouteEntry = routeEntry ?? owner?.routeEntry;
     final providerScope = _scopeForProvider(provider, effectiveRouteEntry);
     final useParentScope =
-        provider.creationPolicy == CCServiceCreationPolicy.factory &&
+        provider.creationPolicy == CCServiceCreationPolicy.newInstance &&
         owner != null &&
         provider.scope != owner.serviceScope;
     final scope = useParentScope ? owner.instanceScope : providerScope;
@@ -1854,7 +1854,7 @@ final class CCRouterRuntime {
     final effectiveRouteEntry = routeEntry ?? owner?.routeEntry;
     final providerScope = _scopeForProvider(provider, effectiveRouteEntry);
     final useParentScope =
-        provider.creationPolicy == CCServiceCreationPolicy.factory &&
+        provider.creationPolicy == CCServiceCreationPolicy.newInstance &&
         owner != null &&
         provider.scope != owner.serviceScope;
     final scope = useParentScope ? owner.instanceScope : providerScope;
@@ -1865,7 +1865,7 @@ final class CCRouterRuntime {
     final providerKey = _providerKey(provider);
     if (!allowUnready &&
         provider.initializer != null &&
-        (provider.creationPolicy == CCServiceCreationPolicy.factory ||
+        (provider.creationPolicy == CCServiceCreationPolicy.newInstance ||
             !scope.isServiceReady(providerKey))) {
       throw CCServiceNotReadyError(_providerIdentity(provider));
     }
@@ -1908,7 +1908,7 @@ final class CCRouterRuntime {
     final effectiveRouteEntry = routeEntry ?? owner?.routeEntry;
     final providerScope = _scopeForProvider(provider, effectiveRouteEntry);
     final useParentScope =
-        provider.creationPolicy == CCServiceCreationPolicy.factory &&
+        provider.creationPolicy == CCServiceCreationPolicy.newInstance &&
         owner != null &&
         provider.scope != owner.serviceScope;
     final scope = useParentScope ? owner.instanceScope : providerScope;

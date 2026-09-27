@@ -164,7 +164,7 @@
 - Generator 10/100/500/1000/5000 Route 校验：`1.058/5.704/18.989/29.385/99.37ms`。
 
 2026-09-23 新增 Service scaling 基线。每个规模采集 20 次装配与销毁、1000 次热查询、
-1000 次同步带 Trace 调用和 100 次 Factory readiness；所有 `CCDisposable` 在每轮结束后均回到
+1000 次同步带 Trace 调用和 100 次 `newInstance` readiness；所有 `CCDisposable` 在每轮结束后均回到
 0 个存活实例。10/100/1000 Provider 的本机 Dart JIT P50/P95 为：
 
 - 装配并初始化：`38/144us`、`316/940us`、`4426/5554us`；
@@ -227,9 +227,9 @@ Listener、Stream、Overlay 或 Controller；Resolver 不拥有 Runtime，也不
 
 ### 已完成：P2-9 Service、Command、Event 与初始化任务闭环
 
-- Service 生命周期与创建策略正交：App/Session/Route Scope 分别拥有 Singleton/Factory 实例，
+- Service 生命周期与创建策略正交：App/Session/Route Scope 分别拥有 `singleton`/`newInstance` 实例，
   `CCDisposable` 由 Scope 逆序释放；Route Service 只通过 Managed Page 的精确绑定解析，不猜当前页；
-- Lazy Service readiness 由显式异步 API 启动，Singleton 在当前 Scope single-flight，Factory 每次
+- Lazy Service readiness 由显式异步 API 启动，Singleton 在当前 Scope single-flight，`newInstance` 每次
   初始化；同步解析不会偷跑 I/O，失败、timeout、caller cancellation 和 Scope cancellation 保持
   不同标准错误；
 - 跨组件 Service Token 与 Type lookup 共享 Provider/实例；Key 支持确定性多实现，optional lookup

@@ -143,8 +143,8 @@ final class DemoRouteService implements CCDisposable {
   void dispose() => onDispose('Route Service #$instanceId disposed');
 }
 
-final class DemoFactoryService {
-  const DemoFactoryService(this.instanceId);
+final class DemoNewInstanceService {
+  const DemoNewInstanceService(this.instanceId);
 
   final int instanceId;
 }

@@ -12,7 +12,7 @@ Service 生命周期回答“谁拥有实例、何时销毁”；实例创建方
 
 ```text
 Service Lifetime        App / Session / Route
-Service Creation Policy Singleton / Factory
+Service Creation Policy singleton / newInstance
 Service Readiness       Synchronous / Lazy async initializer
 ```
 
@@ -32,12 +32,12 @@ App、Session 和 Route 三种 Lifetime 均已启用。Route Scope 只由 Runtim
 
 | Policy | 语义 | 适用对象 |
 | --- | --- | --- |
-| Singleton | 在所属 Lifetime 内懒创建并缓存一个实例 | 有状态 Repository、客户端、缓存、控制器 |
-| Factory | 每次解析创建新实例 | 无状态、不可变、轻量辅助对象 |
+| `singleton` | 在所属 Lifetime 内懒创建并缓存一个实例 | 有状态 Repository、客户端、缓存、控制器 |
+| `newInstance` | 每次解析创建新实例 | 无状态、不可变、轻量辅助对象 |
 
-Factory 不代表“调用结束立即销毁”。同步解析没有可靠的 end-of-use 信号；如果 Factory
-实例实现 `CCDisposable`，仍由当前父 Scope 持有并在 Scope 关闭时释放。因此需要严格释放的
-资源应使用 Scope-owned Singleton 或显式操作对象，不应把 Factory 当作临时资源容器。
+`newInstance` 不代表“调用结束立即销毁”。同步解析没有可靠的 end-of-use 信号；如果实例
+实现 `CCDisposable`，仍由当前父 Scope 持有并在 Scope 关闭时释放。因此需要严格释放的
+资源应使用 Scope-owned singleton 或显式操作对象，不应把 `newInstance` 当作临时资源容器。
 
 ### 2.3 Readiness
 
@@ -48,19 +48,19 @@ Provider Factory 始终同步创建实例，使 Runtime 可以先把实例纳入
 - 同步 Proxy 方法保留契约原本的返回类型，不会隐式等待或启动 initializer；它在
   Provider 未 Ready 时抛出 `CCServiceNotReadyError`。
 - Singleton 在每个 Scope 内 single-flight 初始化一次；并发调用等待同一个 Future。
-- Factory 每次异步解析创建并初始化一个新实例，仍由当前 Scope 负责最终释放。
+- `newInstance` 每次异步解析创建并初始化一个新实例，仍由当前 Scope 负责最终释放。
 - `service<T>()` 不会隐式启动异步工作；初始化完成前返回 `CCServiceNotReadyError`。
 - 初始化失败在当前 Singleton/Scope 内保持稳定，不自动重试有副作用的操作；业务重试策略应写在
   initializer 内。新的 Session 或 Route Scope 会获得新的实例和 readiness 状态。
 - Session close、RouteEntry 移除和 Runtime shutdown 会取消 Owner Scope 的 readiness context；
   initializer 必须配合 cancellation，Dart Future 本身不能被强制终止。
 - Singleton 初始化由 Scope 共享：单个等待者的 cancellation/timeout 只停止该等待者，不能让
-  一个短生命周期调用者永久破坏整个 Scope 的共享 Service。Factory readiness 不共享实例，
+  一个短生命周期调用者永久破坏整个 Scope 的共享 Service。`newInstance` readiness 不共享实例，
   因此同时服从 caller 和 Owner Scope cancellation。
 - 参数、实例和错误消息不进入 Trace；失败只保留稳定 Service identity 与 error type。
 
-异步 Factory 返回 `Future<T>` 不纳入 1.x：实例完成前没有可交付的 Scope 所有权，关闭与晚到
-结果的销毁容易产生竞态。同步 Factory + 可选 initializer 将所有权和 readiness 两个维度分开。
+异步实例构造函数返回 `Future<T>` 不纳入 1.x：实例完成前没有可交付的 Scope 所有权，关闭与晚到
+结果的销毁容易产生竞态。同步实例构造函数 + 可选 initializer 将所有权和 readiness 两个维度分开。
 
 ### 2.4 依赖生命周期矩阵
 
@@ -71,7 +71,7 @@ Provider Factory 始终同步创建实例，使 Runtime 可以先把实例纳入
 | Route | App、同一个 RouteEntry 的 Route |
 
 对象不能捕获可能先于自己销毁的依赖。Session 与 Route 是相互独立的生命周期：关闭
-Session 和 Pop 页面不能互相隐式替代。App Factory 作为窄 Scope Consumer 的构造依赖时，
+Session 和 Pop 页面不能互相隐式替代。App `newInstance` 作为窄 Scope Consumer 的构造依赖时，
 其 disposable 实例由 Consumer 的具体 Scope 接管，避免资源存活超过使用方。
 
 ## 3. 页面级对象与页面生命周期
@@ -115,14 +115,14 @@ Session；不能让旧 Service 引用自动指向新账号。
 - ARouter/TheRouter 的 Singleton/NewInstance 主要是缓存和创建策略，不是页面生命周期。
 - TheRouter 的 Service 用于跨模块能力；初始化任务和一次性 Action 是独立能力。
 - flutter_modular 将 Module DI 与 Page State 分开，页面状态在 Route 离开时销毁。
-- get_it 将 Scope 与 Singleton/LazySingleton/Factory 分开，并支持 Scope dispose。
+- get_it 将 Scope 与 Singleton/LazySingleton/Factory 分开，并支持 Scope dispose；CCRouter 对应语义命名为 `newInstance`。
 
 CCRouter 采用相同的维度拆分，但保留组件所有权、RouteEntry 精确关联和类型安全契约。
 
 ## 6. 当前实施状态
 
-- App、Session、Route 与 Singleton/Factory 已实现；Factory 使用
-  `CCServiceCreationPolicy.factory`。
+- App、Session、Route 与 `singleton`/`newInstance` 已实现；每次解析创建使用
+  `CCServiceCreationPolicy.newInstance`。
 - `ccrouter_test` 已提供隔离 Test Host 的 Service Override；Override 只能替换已注册
   Provider，沿用原 Scope 和创建策略，默认清除生产 initializer 并可选替换为测试
   readiness；缺失或重复目标在 Host 创建阶段失败。
@@ -143,8 +143,8 @@ CCRouter 采用相同的维度拆分，但保留组件所有权、RouteEntry 精
 
 - Scope 只决定所有权和销毁，不决定是否缓存。
 - Creation Policy 只决定创建和缓存，不改变实例 Owner。
-- Factory 的 `CCDisposable` 不得在单次解析结束时被错误销毁。
+- `newInstance` 创建的 `CCDisposable` 不得在单次解析结束时被错误销毁。
 - Route Scope 只能由精确 RouteEntry 关闭，不能由 PageHide、Popup 或未知外部 Pop 触发。
 - 所有生命周期关闭必须可取消、可等待、幂等，并通过纯 Dart 测试验证。
 - Readiness 不改变实例 Owner；失败不隐式重试，等待者取消不污染 Singleton readiness，
-  Factory readiness 不被 Scope 无界缓存。
+  `newInstance` readiness 不被 Scope 无界缓存。

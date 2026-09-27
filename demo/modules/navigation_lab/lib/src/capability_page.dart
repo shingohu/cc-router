@@ -226,11 +226,11 @@ final class _DemoCapabilitiesPageState extends State<DemoCapabilitiesPage> {
               ),
               _action(
                 Icons.copy_all_outlined,
-                'Service · Factory',
+                'Service · New Instance',
                 '每次解析创建新实例，仍由 App Scope 持有生命周期。',
-                () => _run('Factory Service', () {
-                  final first = CCRouter.service<DemoFactoryService>();
-                  final second = CCRouter.service<DemoFactoryService>();
+                () => _run('New Instance Service', () {
+                  final first = CCRouter.service<DemoNewInstanceService>();
+                  final second = CCRouter.service<DemoNewInstanceService>();
                   return '#${first.instanceId}/#${second.instanceId} · '
                       'same=${identical(first, second)}';
                 }),

@@ -1785,7 +1785,7 @@ void main() {
   });
 
   test(
-    'App service cannot capture Session service through a Factory',
+    'App service cannot capture Session service through a new instance',
     () async {
       final runtime = CCRouterRuntime.forTesting();
       runtime.registerService(
@@ -1796,7 +1796,7 @@ void main() {
       );
       runtime.registerService(
         CCServiceProvider<String>(
-          creationPolicy: CCServiceCreationPolicy.factory,
+          creationPolicy: CCServiceCreationPolicy.newInstance,
           factory: (_) => '${runtime.service<int>()}',
         ),
       );

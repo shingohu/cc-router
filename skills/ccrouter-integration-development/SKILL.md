@@ -80,7 +80,7 @@ Read [implementation-patterns.md](references/implementation-patterns.md) when ad
 - Do not close a Session on page Pop, backgrounding, or tab changes.
 - Call `CCRouter.shutdown` only when the owning application/test Runtime ends.
 - Select the narrowest Service Scope: app, session, or route.
-- Prefer singleton; use factory only for stateless/immutable helpers whose ownership remains safe.
+- Prefer singleton; use `newInstance` only for stateless or immutable helpers whose ownership remains safe.
 - Use async Service readiness only when callers cannot safely use the instance immediately after synchronous construction.
 
 ## Generated Code and Validation

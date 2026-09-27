@@ -14,7 +14,9 @@ const _serviceContract = CCServiceToken<_BenchmarkService>('benchmark.service');
 const _readyServiceContract = CCServiceToken<_ReadyBenchmarkService>(
   'benchmark.ready-service',
 );
-const _readyServiceKey = CCServiceKey<_ReadyBenchmarkService>('factory-ready');
+const _readyServiceKey = CCServiceKey<_ReadyBenchmarkService>(
+  'new-instance-ready',
+);
 
 final class _BenchmarkService implements CCDisposable {
   _BenchmarkService(this.index) {
@@ -66,7 +68,7 @@ final class _BenchmarkRegistrar implements CCComponentRegistrar {
       CCServiceProvider(
         contract: _readyServiceContract,
         key: _readyServiceKey,
-        creationPolicy: CCServiceCreationPolicy.factory,
+        creationPolicy: CCServiceCreationPolicy.newInstance,
         factory: (_) => _ReadyBenchmarkService(),
         initializer: (service, _) async {
           service.ready = true;
@@ -144,7 +146,7 @@ Future<void> main() async {
       );
       watch.stop();
       if (!service.ready) {
-        throw StateError('Factory Service completed before readiness.');
+        throw StateError('New-instance Service completed before readiness.');
       }
       readinessMicros.add(watch.elapsedMicroseconds);
     }
@@ -165,8 +167,8 @@ Future<void> main() async {
         'singletonLookupUsP95': _percentile(lookupMicros, 0.95),
         'invokeSyncUsP50': _percentile(invocationMicros, 0.50),
         'invokeSyncUsP95': _percentile(invocationMicros, 0.95),
-        'factoryReadinessUsP50': _percentile(readinessMicros, 0.50),
-        'factoryReadinessUsP95': _percentile(readinessMicros, 0.95),
+        'newInstanceReadinessUsP50': _percentile(readinessMicros, 0.50),
+        'newInstanceReadinessUsP95': _percentile(readinessMicros, 0.95),
         'disposeUsP50': _percentile(disposeMicros, 0.50),
         'disposeUsP95': _percentile(disposeMicros, 0.95),
       }),
@@ -220,7 +222,7 @@ void _verifyNoLiveInstances() {
       _ReadyBenchmarkService.liveInstances != 0) {
     throw StateError(
       'Service instances leaked: singleton=${_BenchmarkService.liveInstances}, '
-      'factory=${_ReadyBenchmarkService.liveInstances}.',
+      'newInstance=${_ReadyBenchmarkService.liveInstances}.',
     );
   }
 }

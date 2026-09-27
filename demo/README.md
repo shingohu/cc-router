@@ -33,7 +33,7 @@ typed Extra。完整的 macOS 验证矩阵、已修复问题和 Adapter 限制�
 - Command：typed result、`void`、timeout、caller cancellation 和 Handler error；
 - Event：并发多订阅者、Subscriber 异常隔离、零订阅者和 timeout；
 - InitTask：App Started DAG、critical/optional 状态、失败依赖 skip 和手动 Privacy Gate；
-- Service：App/Session/Route Scope、Singleton/Factory、lazy readiness single-flight、命名多实现、
+- Service：App/Session/Route Scope、singleton/newInstance、lazy readiness single-flight、命名多实现、
   可选查找，以及 Session/Route 关闭时自动 dispose。
 - 诊断：typed Subscriber ID、分类 Sink、失败隔离、采样策略和有界 Trace Bundle；首页“实时诊断”
   会展示脱敏 Sink 事件、Managed/Backend Entries 与最近一次 Trace 聚合。

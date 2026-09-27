@@ -45,7 +45,7 @@ CCRouter 的目标不是再提供一个单纯的路由库，而是提供一套�
 - 同步或异步请求响应、超时、取消和标准错误。
 - 全局及局部拦截器和可追踪调用链。
 - 初始化任务 DAG、自定义 Gate 和失败策略。
-- App、Session、Route 生命周期作用域；Singleton/Factory 创建策略独立于 Scope。
+- App、Session、Route 生命周期作用域；`singleton`/`newInstance` 创建策略独立于 Scope。
 - 组件保留静态装配、所有权和依赖校验，不在 1.x 中成为可关闭的 Service Scope。
 - 组件独立运行、Mock 覆盖和测试 Runtime。
 - 代码生成、冲突检查、依赖检查和契约文档生成。
@@ -301,7 +301,7 @@ Session    一次登录会话
 Route      一次具体路由实例
 ```
 
-`Factory` 是 `CCServiceCreationPolicy`，不是 Scope。Factory 每次解析创建实例，但需要释放的
+`newInstance` 是 `CCServiceCreationPolicy`，不是 Scope。它在每次解析时创建实例，但需要释放的
 实例仍由当前 App、Session 或 Route Scope 持有。组件在 1.x 是静态装配和所有权边界，不是
 可关闭 Scope；动态组件治理延后到 2.0 重新评估。
 
@@ -518,7 +518,7 @@ final result = await payment.pay(request);
 ```
 
 服务需要提前注册 Provider 描述，但不需要提前实例化，也不要求业务手动字段注入。默认使用构造函数注入和懒创建。
-`scope` 只表示实例所有权，`creationPolicy` 单独表示 Scope 内是 Singleton 还是 Factory。
+`scope` 只表示实例所有权，`creationPolicy` 单独表示 Scope 内是 `singleton` 还是 `newInstance`。
 
 ### 8.2 多实现
 
@@ -600,7 +600,7 @@ Provider 可选 `initializer` 表达 lazy async readiness：`serviceAsync` 与�
 
 Singleton readiness 在每个 Scope 内 single-flight，成功或失败均保持稳定；框架不自动重试可能
 带副作用的初始化。单个等待者的 cancellation/timeout 不取消共享初始化，避免短生命周期调用者
-污染整个 Scope。Factory 每次解析初始化新实例，随 caller 和 Owner Scope 取消，且不把
+污染整个 Scope。`newInstance` 每次解析初始化新实例，随 caller 和 Owner Scope 取消，且不把
 readiness record 无界保留到 Scope 结束。Runtime 不宣称能够强制取消任意 Dart Future。
 
 ---

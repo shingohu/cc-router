@@ -26,7 +26,7 @@
 - 未命名 Provider 自动作为默认实现；多个默认实现和重复 Key 在注册时失败。
 - Provider Factory 接收 `CCInvocationContext`，可以读取当前 Scope 的取消和 Deadline 信息。
 - Provider 可声明 lazy async `initializer`；`serviceAsync` 与生成代理会等待 Ready，Singleton
-  在每个 Scope 内 single-flight，Factory 每次初始化，原同步 API 不会偷偷启动异步工作。
+  在每个 Scope 内 single-flight，`newInstance` 每次初始化，原同步 API 不会偷偷启动异步工作。
 - Readiness 失败被脱敏并在当前 Singleton/Scope 内保持稳定；初始化依赖循环会确定失败，新的
   Session/Route Scope 拥有新的 readiness 状态。
 - 跨组件生成代理可通过独立的 `ccrouter_generated.dart` 边界执行方法级 Service
@@ -43,7 +43,7 @@
   在独立 Test Host 上运行；Overlay 不修改生产默认 Runtime，不接管
   `initialize`/`shutdown` 或 Host Backend 绑定。
 - 非门禁 `service_scaling.dart` benchmark 覆盖 Provider 规模、Singleton 热查询、同步
-  Invocation Trace、Factory readiness 和 Scope dispose，并在每轮校验 disposable 实例归零。
+  Invocation Trace、`newInstance` readiness 和 Scope dispose，并在每轮校验 disposable 实例归零。
 
 ## 3. 第一阶段：注册边界与确定性
 
@@ -58,7 +58,7 @@
 Session Scope 均返回稳定的 Service 错误子类型；缺失命名实现会保留稳定 Key 诊断字段。
 
 1.x 不提供 Component Scope 或组件运行时激活/停用；Route Scope 已绑定 RouteEntry 的最终
-移除事件。页面级对象不等同于 PageShow/PageHide；Factory 也不等同于调用结束销毁。
+移除事件。页面级对象不等同于 PageShow/PageHide；`newInstance` 也不等同于调用结束销毁。
 
 ## 4. 后续实施顺序
 
@@ -94,7 +94,7 @@ Session Scope 均返回稳定的 Service 错误子类型；缺失命名实现会
 - Runtime 与 Demo 已验证可选的跨组件强类型 Proxy；同步契约经 `invokeSync`
   保持同步返回类型，异步契约经 `invoke` 承载 readiness、timeout 和 cancellation。
 - 同步 Proxy 不会暗中启动 initializer；Provider 未 Ready 时抛出
-  `CCServiceNotReadyError`。Factory + initializer 每次都需要异步准备，因此不能供
+  `CCServiceNotReadyError`。`newInstance` + initializer 每次都需要异步准备，因此不能供
   同步 Proxy 方法直接调用。
 - Demo 中 `demo_payment` 和 `demo_navigation_lab` 各自持有消费方 Proxy，并固定精确
   caller component identity。这是生成形态验证，不是要求业务长期手写。
@@ -103,13 +103,13 @@ Session Scope 均返回稳定的 Service 错误子类型；缺失命名实现会
 
 ### 4.4 Async Service Readiness（已完成）
 
-- Factory 保持同步并先把实例交给 Scope；可选 initializer 只表达 readiness，不改变 Owner。
+- Provider 的实例构造函数保持同步并先把实例交给 Scope；可选 initializer 只表达 readiness，不改变 Owner。
 - `serviceAsync`、`serviceOrNullAsync` 和对应 Route API 提供显式等待；同步 API 对尚未 Ready 的
   Provider 返回 `CCServiceNotReadyError`。
 - Singleton 初始化成功或失败都在当前 Scope 内保持稳定，防止并发重复副作用；Runtime 不猜测
-  retry。Factory 每次独立初始化且不在 Scope 内累计 readiness record。
+  retry。`newInstance` 每次独立初始化且不在 Scope 内累计 readiness record。
 - Session/Route/App Owner Scope cancellation 会终止对应 initializer；单个等待者的 caller
-  cancellation/deadline 只停止等待，不污染共享 Singleton readiness。Factory readiness 随调用
+  cancellation/deadline 只停止等待，不污染共享 Singleton readiness。`newInstance` readiness 随调用
   取消，因为其实例不与其他等待者共享。
 - 初始化错误只记录 Service identity 与 error type，不保留业务错误消息、参数或返回对象。
 
@@ -137,8 +137,8 @@ Session Scope 均返回稳定的 Service 错误子类型；缺失命名实现会
 ## 5. 验收门槛
 
 - 所有 Provider 标识校验在注册阶段确定失败，不依赖解析顺序。
-- App/Session/Route/Singleton/Factory 的生命周期测试全部保持通过。
-- Session close、Runtime dispose、Factory failure 和 disposal timeout 不产生实例残留。
+- App/Session/Route/`singleton`/`newInstance` 的生命周期测试全部保持通过。
+- Session close、Runtime dispose、实例构造失败和 disposal timeout 不产生实例残留。
 - Service 性能回归使用同机 P50/P95 趋势比较，不设置跨机器硬阈值；性能样本必须同时验证
   Scope 销毁后的存活实例为零。
 - 同一 Token 的类型不匹配、重复默认实现和命名冲突均返回稳定错误。

@@ -39,11 +39,11 @@ void main() {
   tearDown(() => runtime.dispose());
 
   test(
-    'Factory construction detects cycles without caching instances',
+    'New-instance construction detects cycles without caching instances',
     () async {
       runtime.registerService(
         CCServiceProvider<Counter>(
-          creationPolicy: CCServiceCreationPolicy.factory,
+          creationPolicy: CCServiceCreationPolicy.newInstance,
           factory: (_) => runtime.service<Counter>(),
         ),
       );
@@ -56,12 +56,12 @@ void main() {
   );
 
   test(
-    'Factory constructed for a Session is disposed with that Session',
+    'New instance constructed for a Session is disposed with that Session',
     () async {
       Counter? dependency;
       runtime.registerService(
         CCServiceProvider<Counter>(
-          creationPolicy: CCServiceCreationPolicy.factory,
+          creationPolicy: CCServiceCreationPolicy.newInstance,
           factory: (_) => dependency = Counter('factory'),
         ),
       );
@@ -313,12 +313,12 @@ void main() {
     );
   });
 
-  test('Factory Service readiness runs for every async resolution', () async {
+  test('New-instance Service readiness runs for every resolution', () async {
     var creations = 0;
     var initializations = 0;
     runtime.registerService(
       CCServiceProvider<Counter>(
-        creationPolicy: CCServiceCreationPolicy.factory,
+        creationPolicy: CCServiceCreationPolicy.newInstance,
         factory: (_) => Counter('factory-${++creations}'),
         initializer: (_, _) => initializations++,
       ),
@@ -617,7 +617,7 @@ void main() {
   test('factory instances are fresh and owned by App', () async {
     runtime.registerService(
       CCServiceProvider<Counter>(
-        creationPolicy: CCServiceCreationPolicy.factory,
+        creationPolicy: CCServiceCreationPolicy.newInstance,
         factory: (_) => Counter('factory'),
       ),
     );

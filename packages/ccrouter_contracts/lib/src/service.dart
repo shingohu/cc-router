@@ -75,10 +75,11 @@ enum CCServiceScope {
 
 /// Defines how a Provider creates instances inside its owning Scope.
 ///
-/// Creation policy is intentionally separate from [CCServiceScope]. A factory
-/// service is recreated on every lookup, but any disposable instance is still
-/// owned by the active parent Scope because a synchronous lookup has no safe
-/// end-of-use signal. Prefer factories for stateless or immutable helpers.
+/// Creation policy is intentionally separate from [CCServiceScope]. A
+/// [newInstance] service is recreated on every lookup, but any disposable
+/// instance is still owned by the active parent Scope because a synchronous
+/// lookup has no safe end-of-use signal. Prefer [newInstance] for stateless or
+/// immutable helpers.
 enum CCServiceCreationPolicy {
   /// Creates one lazily initialized instance per owning Scope.
   singleton,
@@ -87,5 +88,5 @@ enum CCServiceCreationPolicy {
   ///
   /// Do not use this for resources that require immediate per-call disposal;
   /// use a Scope-owned singleton or an explicit operation object instead.
-  factory,
+  newInstance,
 }

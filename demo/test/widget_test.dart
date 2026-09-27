@@ -293,7 +293,7 @@ void main() {
     await _tapCapabilityAction(tester, 'Service · Route Singleton');
     expect(find.textContaining('same=true'), findsOneWidget);
 
-    await _tapCapabilityAction(tester, 'Service · Factory');
+    await _tapCapabilityAction(tester, 'Service · New Instance');
     expect(find.textContaining('same=false'), findsOneWidget);
 
     await _tapCapabilityAction(tester, 'Service · lazy readiness');
