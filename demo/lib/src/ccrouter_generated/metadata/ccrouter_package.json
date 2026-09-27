@@ -5,7 +5,7 @@
     "name": "ccrouter_demo",
     "version": "0.1.0+1"
   },
-  "contentFingerprint": "df08d15ec90ac6135d1540013f24ad843bf55d4b8118d7eff5f4da54641a3143",
+  "contentFingerprint": "fe3b0925c2e43fc8a2b2831823af81e5d9f7688c5ec048c4f0b2ab89ede1cd55",
   "bundle": {
     "library": "lib/src/ccrouter_generated/host/ccrouter_demo_ccrouter.g.dart",
     "symbol": "ccrouterGeneratedPackageBundle"
@@ -14,32 +14,32 @@
     {
       "name": "demo_navigation_lab",
       "version": "0.1.0",
-      "contentFingerprint": "883b730d3d3dd311777c7ffd09a0531c93dfd13f9ce7461858f3a5b8066abe9b"
+      "contentFingerprint": "a6846e74c026c35712a90f2a9e7f399fba6c210a47ab2344b9cee30bbecdc8fe"
     },
     {
       "name": "demo_order",
       "version": "0.1.0",
-      "contentFingerprint": "ea66bc5d0244afbfb1dd92fc9f37ac36cd9724a385a4d27c4e49284fbf3a3fe0"
+      "contentFingerprint": "9a7f2687c8cec14be7e220bd0f6b34667807847f441abc727568ceaf1b2510d8"
     },
     {
       "name": "demo_order_contracts",
       "version": "0.1.0",
-      "contentFingerprint": "7f90a4fb91d78a1bc7ff05e6df9171d7d83a295f8ead2b044815a9c4109ed5fe"
+      "contentFingerprint": "24874468f4dc2ed4494d337961fe35f36cc9113e5a4d5818bee80c5b17ca4c8e"
     },
     {
       "name": "demo_payment",
       "version": "0.1.0",
-      "contentFingerprint": "11f5095aeb56a3cabebfd27195bc87f0efcf0fb84857d10045c358e2ef378a60"
+      "contentFingerprint": "f494b708ca975d21d52f7328ef0666ca32939a42191afb02afe2225df8edfa3a"
     },
     {
       "name": "demo_web",
       "version": "0.1.0",
-      "contentFingerprint": "831b7602dd1498d1a60ef1966f9f0add4b03bdf3bb6e4aa1b4f3c4feb20575a1"
+      "contentFingerprint": "48ef15d7f50397e3b26b3b318e4d2200d3a6cea97bc3e35a8ea9dd84807ea76c"
     },
     {
       "name": "demo_web_contracts",
       "version": "0.1.0",
-      "contentFingerprint": "0ff5a3562ace5f1f44feabeed73406a412c56cb180728ea9a4d9f16f36949a53"
+      "contentFingerprint": "2edb0ff7e0994667f7b0b5fba43b85ccb4e9e6e9a5df93243379ddbc894fbb8c"
     }
   ],
   "metadata": [],

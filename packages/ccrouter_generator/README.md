@@ -1,29 +1,25 @@
 # CCRouter 路由生成器
 
-组件的开发工具，不属于运行时依赖。页面库使用业务门面（非前缀导入）：
+组件的开发工具，不属于运行时依赖。每个实现 Package 声明一个顶层
+`const CCComponent`，内部 Route 和简单 Service 自动归属该 Owner：
+
+```dart
+// lib/src/order_component.dart
+import 'package:ccrouter/ccrouter.dart';
+
+const orderComponentId = CCComponentId('order');
+
+const orderComponent = CCComponent(
+  id: orderComponentId,
+  version: '1.0.0',
+);
+```
 
 ```dart
 // lib/src/detail_page.dart
 import 'package:ccrouter/ccrouter.dart';
-import 'ccrouter_generated/component/order_component.route_api.g.dart';
-
-const orderComponent = CCComponentDescriptor(
-  id: 'order',
-  version: '1.0.0',
-);
-
-@CCComponent(orderComponent)
-final class OrderComponentRegistrar implements CCComponentRegistrar {
-  const OrderComponentRegistrar();
-
-  @override
-  void register(CCRegistry registry) {
-    orderGeneratedRoutes.register(registry);
-  }
-}
 
 @CCRoute<String>(
-  component: orderComponent,
   id: 'order.detail',
   pattern: CCPathPattern('/orders/:orderId'),
 )
@@ -41,7 +37,7 @@ final class DetailPage {
 
 ```dart
 @CCRouteContract<String>(
-  component: orderComponent,
+  componentId: orderComponentId,
   id: 'order.detail',
   pattern: CCPathPattern('/orders/:orderId'),
 )
@@ -67,10 +63,14 @@ contracts Package 只依赖 `ccrouter_contracts`，生成 `OrderDetailRoute.inte
 组件依赖 contracts Package 并生成 owner glue。Workspace 聚合器要求公开契约恰好
 存在一个实现。普通内部页面继续使用 `@CCRoute`，无需提前拆包。
 
-Registrar 文件还需要声明生成的 Manifest Part：
+不再需要手写 Registrar 或 generated `part`。Command、Event、InitTask、Shell、策略和复杂
+Service 等没有专用声明模型的能力，使用顶层同步 Contribution：
 
 ```dart
-part 'ccrouter_generated/component/order_component_registrar.component.g.dart';
+@CCComponentContribution(id: 'order.capabilities')
+void registerOrderCapabilities(CCRegistry registry) {
+  // Only registrations. Do not run I/O or retain registry.
+}
 ```
 
 声明 `@CCRouteContract` 的 Package 需要直接依赖 `ccrouter_contracts`，公共 barrel 只导出
@@ -164,10 +164,13 @@ Host 依赖闭包内、明确可写且声明 `ccrouter_generator` 的 Package，
   不重复生成业务契约。
 - 公开 `DetailRoute.intent(...)` 只构造 `CCRouteIntent<String>`，仍通过
   `CCRouter.navigator.push<String>(...)` 导航。
-- `<registrar>.component.g.dart`：在 Registrar 同一 library 中生成
-  `CCComponentManifest`，可以实例化 private Registrar，业务代码无需导出实现类。
-- `<component-id>.routes.g.dart`：组件路由注册索引和后端中立的
-  `CCFlutterRouteCatalog`。
+- `@CCServiceContract` 的 `<schema>.service.contract.g.dart`：生成公开的强类型
+  `CCServiceToken<T>`；contracts barrel 必须通过 `show` 显式导出该 Token。
+- `@CCService` 的 `<implementation>.service.g.dart`：生成 Package-private
+  `CCServiceProvider<T>` registration bridge。首版只接受 public concrete non-generic class
+  的 unnamed zero-argument generative constructor。
+- `<component-id>.component.g.dart`：自动生成私有 Registrar、Runtime Manifest 和后端中立的
+  `CCFlutterRouteCatalog`，稳定装配 Route、Service 与 Contribution。
 - `lib/src/ccrouter_generated/metadata/ccrouter_package.json`：发布级 Package Index，包含 Schema、Package
   身份、内容指纹、直接生成依赖、规范化 metadata 和版本化 Capability Source Catalog；
   Git/path/pub 依赖均从此单文件读取。
@@ -178,15 +181,15 @@ Host 依赖闭包内、明确可写且声明 `ccrouter_generator` 的 Package，
   Package 图，Diamond 依赖去重后生成 Manifest 与 Catalog。新增无路由的 Service 组件也会
   进入 Manifest 列表；普通路由或组件增删不再要求宿主逐项维护初始化列表。
 - `lib/src/ccrouter_generated/metadata/cc_catalog.md`：仅在 Package 存在 Capability 时生成，按 Component 和 Capability ID 展示
-  Route 的契约声明、页面实现及相关生成物。源码位置统一记录为可移植的
+  Route/Service 的契约声明、实现及相关生成物。源码位置统一记录为可移植的
   `package:name/path.dart:line:column`，不把开发机绝对路径写入生成物。组件 Package
   生成局部视图，Host 生成完整依赖闭包的全局视图；Contract-first Route 会同时显示
   contracts Package 的 schema 与实现 Package 的 Page。
 
 `ccrouter_package.json` 是 Capability Source Catalog 的机器事实来源，`cc_catalog.md` 只由
-它和同轮 metadata 派生，不维护第二套手工索引。当前只生成已具备静态声明链路的 Route；
-Service、Command、Action 和 Event 将在各自生成器落地后接入同一 Catalog Schema，现阶段不会
-通过扫描 Registrar 源码猜测注册关系。只读 `ccrouter find` 和未来 DevTools 应消费版本化 Catalog 与
+它和同轮 metadata 派生，不维护第二套手工索引。当前 Route 与注解 Service 具备静态声明链路；
+Command、Action、Event 和 InitTask 不通过扫描 Contribution 源码猜测注册关系。只读
+`ccrouter find` 和未来 DevTools 应消费版本化 Catalog 与
 Runtime 快照，而不是解析 Markdown 或直接绑定 Builder 的原始 JSON。
 
 导航失败诊断中的 `CCNavigationFailureAttempt` 用于区分同一恢复链中的失败来源：原始请求
@@ -201,13 +204,12 @@ Managed Route Scope。当前 Flutter/Cupertino 的保守语义是：只要 Manag
 交互式侧滑会被禁用，以防手势绕过 Guard；Guard 允许时恢复侧滑仍是后续 Flutter Route API
 能力候选，不应由业务页面自行补一套拦截逻辑。
 
-组件路由注册索引由统一 `generate` 命令自动生成到
-`lib/src/ccrouter_generated/component/<component-id>.routes.g.dart`。组件 Registrar 只需调用
-一次生成的 `...GeneratedRoutes.register(registry)`；新增页面不会再修改 Registrar。
-索引按源文件和 route ID 稳定排序，并通过页面生成文件中的 package-internal
-registration bridge 完成注册，因此组件内部路由仍不会成为公共契约。索引文件禁止手工编辑，
-生成器会删除带 CCRouter 生成标记、但已无对应组件的孤立聚合索引；手写同名文件不会被删除。
-CI 应使用 `generate --check` 阻止陈旧生成物合入。
+组件 Registrar 由统一 `generate` 命令自动生成到
+`lib/src/ccrouter_generated/component/<component-id>.component.g.dart`。它按稳定 ID 和源文件顺序
+装配 Route、Service 与 Contribution；新增页面或简单 Service 不再修改手写 Registrar。
+组件内部 bridge 仍不是公共契约。生成器会删除已无来源的受管聚合文件；手写或未知文件不会
+被删除。Package 没有任何生成能力时不创建 `ccrouter_generated`，最后一个受管产物移除后只
+清理真正为空的目录。CI 应使用 `generate --check` 阻止陈旧生成物合入。
 
 Catalog 只包含 Flutter 页面工厂和 `CCNavigationRoute`，不包含 `GoRoute`。GoRouter
 宿主使用 `CCGoRouterAssembler` 同源生成 `routes` 与 `bindings`；以后接入 Navigator
@@ -216,9 +218,9 @@ Assembler/Adapter。Shell、嵌套路由、完整 Regex 兼容入口等后端特
 提供显式 Override，不能被自动扁平化。
 
 路由契约/注册 bridge 使用 `.route.g.dart`，Flutter 页面构造 bridge 使用
-`.route_binding.g.dart`，独立契约使用 `.route.contract.g.dart`，均写入
-`lib/src/ccrouter_generated/`；后续 Service 生成器预留 `.service.g.dart` 后缀，本版本尚不
-生成 Service 代码。组件与路由的逐源码 JSON 仅存在于
+`.route_binding.g.dart`，独立路由契约使用 `.route.contract.g.dart`，Service Token 使用
+`.service.contract.g.dart`，Provider registration 使用 `.service.g.dart`，均写入
+`lib/src/ccrouter_generated/`。组件、路由与 Service 的逐源码 JSON 仅存在于
 `.dart_tool/build/generated/<package>/lib/src/ccrouter_generated/metadata/`，是可丢弃的 Builder 到 CLI
 中间数据，不属于源码或发布物；不再生成逐源码 Markdown。开发者只阅读 Package/Host 的
 `cc_catalog.md`，外部工具消费 `ccrouter_package.json` 或 Host `cc_routes.json`。
@@ -238,15 +240,15 @@ Assembler/Adapter。Shell、嵌套路由、完整 Regex 兼容入口等后端特
 `@CCRouteContract` schema，再将页面注解替换为 `@CCRouteImplementation`。实现 Package
 可以临时 re-export 新契约兼容旧 import；新消费者必须直接依赖 contracts Package。
 
-组件身份和注册实现建议放在 `lib/src/` 的独立文件中：
+组件身份建议放在 `lib/src/` 的独立文件中；只有存在手写能力时才增加 Contribution 文件：
 
 ```text
 src/order_component.dart
-src/order_component_registrar.dart
+src/order_component_contribution.dart # optional
 ```
 
-组件业务 barrel 只导出明确公开的路由契约，不导出 Manifest、Registrar 实现或
-descriptor 细节；生成的 `<package>_ccrouter.g.dart` 是唯一 Host 装配入口。
+组件业务 barrel 只导出明确公开的业务契约，不导出 Component、Contribution、Manifest 或
+Registrar；生成的 `<package>_ccrouter.g.dart` 是唯一 Host 装配入口。
 
 ## 首版约束
 
@@ -271,6 +273,13 @@ descriptor 细节；生成的 `<package>_ccrouter.g.dart` 是唯一 Host 装配�
   Pattern 时必须显式指定一个 primary。别名必须捕获相同的 Path 参数；支持 Path、
   URI、Regex Pattern 以及 Presentation、Placement、拦截器 ID 元数据。
 - 组件生成物不生成 GoRoute、不选择路由后端；宿主生成物只聚合中立 Catalog。
+- 一个实现 Package 必须且只能声明一个 public top-level `const CCComponent`；contracts
+  Package 可以声明多个 `CCComponentId`，但不声明 `CCComponent`。
+- `@CCServiceContract` 只用于 public abstract non-generic interface，并显式声明
+  `componentId` 和稳定 ID。`@CCService` 只用于简单同步构造；带参构造、依赖注入、自定义
+  Factory 和 async initializer 继续使用 `@CCComponentContribution`。
+- Service 注解生成 Token、Provider registration 和 Catalog metadata，不生成方法级 Proxy。
+  跨组件调用可以直接按 Token 解析；需要 invocation method trace 的 Proxy 仍按明确契约维护。
 
 具名/Factory 页面构造器留到后续阶段；未命名构造器的继承参数、required positional、
 optional positional、named 参数、默认值和跨 Package import 已覆盖。聚合校验同时
@@ -296,8 +305,8 @@ fvm flutter analyze packages demo
 闭包，再由 `.dart_tool/package_config.json` 精确定位 workspace/path/Git/pub Package。它不会
 扫描无关 workspace Package，也不会纳入 `devDependencies`；缺少解析图时明确要求先执行 Pub
 get，不回退为全仓扫描。本地可写 Package 只读取当前 workspace 对应的
-`.dart_tool/build/generated/<package>/lib/src/ccrouter_generated/metadata/**/*.component.json` 和
-`*.route.json`，不会回退扫描源码树；外部只读 Package 只读取发布的单一 Package Index，
+`.dart_tool/build/generated/<package>/lib/src/ccrouter_generated/metadata/**/*.component.json`、
+`*.route.json` 和 `*.service.json`，不会回退扫描源码树；外部只读 Package 只读取发布的单一 Package Index，
 Host 不会写入 path/Git/pub 依赖或 Pub cache。
 
 嵌套依赖通过分层 Bundle 连接：Host 只 import 直接依赖，直接依赖再 import 自己的直接依赖。
@@ -307,7 +316,7 @@ Runtime Package 的中间 Package 未直接依赖 `ccrouter` 或未发布 forwar
 `ccrouter_contracts` 的 Package 都必须发布 Index；没有注解时生成空 Index。该规则不依赖外部
 Package 的 `devDependencies` 是否被 Pub 保留，因此不会把“漏生成”误判成“未参与”。
 
-聚合校验组件/路由 ID、路由所有者、
+聚合校验组件/路由/Service ID、Route 与 Service 所有者、Service Contract/Provider 冲突、
 required dependency 缺失、自依赖、依赖环、契约 exposure 与声明形态是否一致、external
 实现所有权、静态 Pattern 冲突，以及
 所有非 internal 路由是否由公共 barrel 使用 `show` 同时导出 Route 和 Arguments 契约；

@@ -6,6 +6,7 @@
 - Does every cross-component dependency point to a contract instead of a page implementation?
 - Is a new public contract justified by an actual external consumer?
 - Are unsupported framework capabilities avoided rather than locally reimplemented?
+- Does each implementation Package declare exactly one top-level `const CCComponent`, while contracts Packages declare only explicit `CCComponentId` owners?
 
 ## Navigation
 
@@ -29,6 +30,8 @@
 ## Lifecycle
 
 - Does Service use the narrowest valid Scope?
+- Is `@CCService` limited to the supported zero-argument construction model, with complex registration kept in `@CCComponentContribution`?
+- Does a promoted Service contract explicitly declare `componentId` and export its generated Token from the public contracts barrel?
 - Are disposable resources released by the owning Scope?
 - Is Session opened/closed only by authentication lifecycle?
 - Does Route Service resolve from an exact managed page Context?

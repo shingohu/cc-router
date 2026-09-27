@@ -8,6 +8,7 @@ import 'package:build/build.dart';
 import 'package:source_gen/source_gen.dart';
 
 import 'src/route_generator.dart';
+import 'src/service_generator.dart';
 
 /// Creates one standalone generated route library without backend coupling.
 ///
@@ -64,17 +65,27 @@ Builder ccRouteContractBuilder(BuilderOptions options) {
   );
 }
 
-/// Creates a same-library Part containing generated component Manifests.
-///
-/// Annotated Registrar libraries declare a `.component.g.dart` Part so the
-/// generated Manifest can instantiate a private const Registrar while keeping
-/// that implementation outside package and business APIs.
-Builder ccComponentBuilder(BuilderOptions options) {
+/// Creates standalone typed Tokens for public Service contracts.
+Builder ccServiceContractBuilder(BuilderOptions options) {
   final config = Map<String, dynamic>.from(options.config);
-  config.putIfAbsent('build_extensions', () => _componentBuildExtensions);
-  return PartBuilder(
-    [ccComponentGenerator()],
-    '.component.g.dart',
+  config.putIfAbsent('build_extensions', () => _serviceContractBuildExtensions);
+  return LibraryBuilder(
+    ccServiceContractGenerator(),
+    generatedExtension: '.service.contract.g.dart',
+    options: BuilderOptions(config, isRoot: options.isRoot),
+    header:
+        '// GENERATED CODE - DO NOT MODIFY BY HAND\n'
+        '// ignore_for_file: type=lint, unused_element',
+  );
+}
+
+/// Creates package-internal Provider registration for simple Services.
+Builder ccServiceBuilder(BuilderOptions options) {
+  final config = Map<String, dynamic>.from(options.config);
+  config.putIfAbsent('build_extensions', () => _serviceBuildExtensions);
+  return LibraryBuilder(
+    ccServiceGenerator(),
+    generatedExtension: '.service.g.dart',
     options: BuilderOptions(config, isRoot: options.isRoot),
     header:
         '// GENERATED CODE - DO NOT MODIFY BY HAND\n'
@@ -92,6 +103,10 @@ Builder ccComponentMetadataBuilder(BuilderOptions options) =>
 /// validation, then publishes one Package Index and optional readable catalog.
 Builder ccRouteMetadataBuilder(BuilderOptions options) =>
     ccRouteMetadataBuilderInternal();
+
+/// Emits disposable Service metadata into the build cache.
+Builder ccServiceMetadataBuilder(BuilderOptions options) =>
+    ccServiceMetadataBuilderInternal();
 
 /// Maps route source libraries under `lib/` to package-level metadata files.
 const _routeBuildExtensions = <String, List<String>>{
@@ -112,9 +127,16 @@ const _routeContractBuildExtensions = <String, List<String>>{
   ],
 };
 
-/// Maps component Registrar libraries to same-library Manifest Parts.
-const _componentBuildExtensions = <String, List<String>>{
+/// Maps Service contract sources to standalone typed Token libraries.
+const _serviceContractBuildExtensions = <String, List<String>>{
   r'^lib/src/{{}}.dart': [
-    'lib/src/ccrouter_generated/component/{{}}.component.g.dart',
+    'lib/src/ccrouter_generated/contract/{{}}.service.contract.g.dart',
+  ],
+};
+
+/// Maps Service implementations to package-internal registration libraries.
+const _serviceBuildExtensions = <String, List<String>>{
+  r'^lib/src/{{}}.dart': [
+    'lib/src/ccrouter_generated/service/{{}}.service.g.dart',
   ],
 };

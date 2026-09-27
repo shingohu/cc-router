@@ -3,11 +3,9 @@ import 'dart:async';
 import 'package:ccrouter/ccrouter.dart';
 import 'package:flutter/material.dart';
 
-import 'navigation_lab_component.dart';
 import 'ccrouter_generated/component/demo_navigation_lab_component.route_api.g.dart';
 
 @CCRoute<void>(
-  component: demoNavigationLabComponent,
   id: 'demo_navigation_lab.failure',
   pattern: CCPathPattern('/lab/failure'),
   presentation: CCPagePresentation(transition: CCPageTransitionType.fade),

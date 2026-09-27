@@ -2,10 +2,7 @@ import 'package:ccrouter/ccrouter.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-import 'navigation_lab_component.dart';
-
 @CCRoute<void>(
-  component: demoNavigationLabComponent,
   id: 'demo_navigation_lab.presentation.fade',
   pattern: CCPathPattern('/lab/presentation/fade'),
   presentation: CCPagePresentation(transition: CCPageTransitionType.fade),
@@ -22,7 +19,6 @@ final class DemoFadePage extends StatelessWidget {
 }
 
 @CCRoute<void>(
-  component: demoNavigationLabComponent,
   id: 'demo_navigation_lab.presentation.scale',
   pattern: CCPathPattern('/lab/presentation/scale'),
   presentation: CCPagePresentation(transition: CCPageTransitionType.scale),
@@ -39,7 +35,6 @@ final class DemoScalePage extends StatelessWidget {
 }
 
 @CCRoute<void>(
-  component: demoNavigationLabComponent,
   id: 'demo_navigation_lab.presentation.cupertino',
   pattern: CCPathPattern('/lab/presentation/cupertino'),
   presentation: CCPagePresentation(routeType: CCPageRouteType.cupertino),
@@ -55,7 +50,6 @@ final class DemoCupertinoPage extends StatelessWidget {
 }
 
 @CCRoute<void>(
-  component: demoNavigationLabComponent,
   id: 'demo_navigation_lab.presentation.bottom_page',
   pattern: CCPathPattern('/lab/presentation/bottom-page'),
   presentation: CCPagePresentation(
@@ -76,7 +70,6 @@ final class DemoBottomPage extends StatelessWidget {
 }
 
 @CCRoute<void>(
-  component: demoNavigationLabComponent,
   id: 'demo_navigation_lab.presentation.transparent',
   pattern: CCPathPattern('/lab/presentation/transparent'),
   presentation: CCPagePresentation(
@@ -136,7 +129,6 @@ final class DemoTransparentPage extends StatelessWidget {
 }
 
 @CCRoute<String>(
-  component: demoNavigationLabComponent,
   id: 'demo_navigation_lab.presentation.dialog',
   pattern: CCPathPattern('/lab/presentation/dialog'),
   presentation: CCDialogPresentation(
@@ -165,7 +157,6 @@ final class DemoDialogPage extends StatelessWidget {
 }
 
 @CCRoute<String>(
-  component: demoNavigationLabComponent,
   id: 'demo_navigation_lab.presentation.sheet',
   pattern: CCPathPattern('/lab/presentation/sheet'),
   presentation: CCModalBottomSheetPresentation(

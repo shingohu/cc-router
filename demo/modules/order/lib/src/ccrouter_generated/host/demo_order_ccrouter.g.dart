@@ -6,20 +6,18 @@ library;
 
 import 'package:ccrouter/ccrouter_host.dart'
     show CCFlutterRouteCatalog, CCGeneratedPackageBundle;
-import 'package:demo_order/src/demo_order_component_registrar.dart'
+import 'package:demo_order/src/ccrouter_generated/component/demo_order_component.component.g.dart'
     as component_0;
-import 'package:demo_order/src/ccrouter_generated/component/demo_order_component.routes.g.dart'
-    as component_routes_0;
 
 /// Generated runtime contribution and direct dependency graph for `demo_order`.
 final ccrouterGeneratedPackageBundle = CCGeneratedPackageBundle(
   packageName: 'demo_order',
   packageVersion: '0.1.0',
   contentFingerprint:
-      'ea66bc5d0244afbfb1dd92fc9f37ac36cd9724a385a4d27c4e49284fbf3a3fe0',
+      '9a7f2687c8cec14be7e220bd0f6b34667807847f441abc727568ceaf1b2510d8',
   componentManifests: [component_0.demoOrderComponentManifest],
   routeCatalog: CCFlutterRouteCatalog.merge([
-    component_routes_0.demoOrderComponentRouteCatalog,
+    component_0.demoOrderComponentRouteCatalog,
   ]),
   dependencies: [],
 );

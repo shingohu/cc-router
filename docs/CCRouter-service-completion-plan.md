@@ -5,8 +5,8 @@
 ## 1. 文档状态
 
 - 状态：Service 子系统实施清单，1.x 生命周期模型已收敛为 App、Session、Route
-- 范围：Service Provider、Token/Key、Scope、生命周期和跨组件契约
-- 不包含：CLI 2.0、Service 代码生成器、动态组件交付和远程 RPC
+- 范围：Service Provider、Token/Key、Scope、生命周期、跨组件契约和最小注解生成
+- 不包含：CLI 2.0、方法级 Service Proxy 自动生成、动态组件交付和远程 RPC
 
 本文只记录 Service 的实施边界和验收顺序。实际状态以本文件和测试为准，不能把架构设计中
 尚未实现的能力当成公开 API。
@@ -37,8 +37,10 @@
   Invocation；调用方也可以提供更短的 timeout 或 cancellation token。
 - `CCDisposable` 实例由 Scope 按逆创建顺序销毁，单项失败和超时不会阻塞其它实例。
 - Session 关闭会拒绝新的 Session Service 解析，并释放 Session-owned 实例。
-- 服务仍由组件 Registrar 手动注册；Demo 已用消费方强类型 Proxy 验证跨组件
-  Invocation 边界，当前仍没有 Service 注解生成器或自动 Proxy 生成。
+- `@CCServiceContract` 已生成公开强类型 Token；`@CCService` 已为简单同步构造实现生成
+  Provider registration，并由 Package 唯一 Component 的自动 Registrar 装配。
+- 带参构造、依赖注入、自定义 Factory 和 async initializer 保持显式
+  `@CCComponentContribution`；方法级 Service Proxy 仍未自动生成。
 - `CCRouterTestHost.run` 通过 Zone-local Runtime Overlay 让生成 Proxy 和静态 Facade
   在独立 Test Host 上运行；Overlay 不修改生产默认 Runtime，不接管
   `initialize`/`shutdown` 或 Host Backend 绑定。
@@ -113,23 +115,26 @@ Session Scope 均返回稳定的 Service 错误子类型；缺失命名实现会
   取消，因为其实例不与其他等待者共享。
 - 初始化错误只记录 Service identity 与 error type，不保留业务错误消息、参数或返回对象。
 
-### 4.5 生成器与 CLI（1.x 评估完成）
+### 4.5 生成器与 CLI（最小闭环已完成）
 
-- 决策：1.x 不实施 Service 注解、自动 Registrar 或自动 Proxy 生成；该事项不再作为当前
-  待办推进，只有实际生产工程出现下述规模或缺陷信号后才重新立项。
-- Service Registrar 先保持手动维护，避免为低频变化的能力增加生成冲突。
-- 当前样本只有 1 个跨 Package Service Contract、1 个方法和 2 个消费方 Proxy；
-  两个 Proxy 合计 36 行，真实差异只有 caller component identity。这足以验证
-  Runtime 形态，但不足以在 1.x 冻结一套 Service 注解和 metadata 协议。
-- 1.x 跨组件稳定入口仍是独立 contracts Package 中的接口和 Token，消费方可通过
-  `CCRouter.service(contract: ...)` 直接获取强类型实现。Demo 手写 Proxy 只是生成形态
-  验证夹具，不是推荐的长期开发流程。
+- 实现 Package 只声明一个顶层 `const CCComponent`；内部 Route、简单 Service 和
+  Contribution 自动绑定该 Owner，生成私有 Registrar、Manifest、Catalog 和 Package Index。
+- contracts Package 可服务多个 Component。每个 `@CCServiceContract` 显式声明
+  `CCComponentId`，生成 `CCServiceToken<T>`，并要求公共 barrel 使用 `show` 导出 Token。
+- `@CCService` 只覆盖 public concrete non-generic class 的 unnamed zero-argument generative
+  constructor，支持 Scope、`singleton/newInstance`、Key、default 和跨组件 Token。
+- 复杂创建与 readiness 继续使用 `@CCComponentContribution`，避免在注解中增加任意 Factory
+  或异步代码入口。Command、Event 与 InitTask 注册也保持 Contribution，不扫描函数体猜 metadata。
+- Service contract/implementation 已进入 workspace ownership/conflict 校验、Package Index、
+  Capability Catalog、Host 聚合和 metadata 内容缓存；无生成物时不创建生成目录。
+- 1.x 跨组件稳定入口仍是独立 contracts Package 中的接口和生成 Token，消费方可通过
+  `CCRouter.service(contract: ...)` 直接获取强类型实现。
 - 自动 Service Proxy 在出现以下任一真实信号后重新评估：至少 3 个 promoted
   Contract 且 5 个消费关系；同一 Contract 被至少 3 个组件消费；或者已出现
   method ID、caller identity 或方法签名漂移缺陷。
 - 上述信号必须来自实际生产组件和维护记录；Demo、测试夹具或为验证方案而人为增加的
   Contract 不计入阈值。达到阈值只启动设计评审，不代表直接冻结注解和 metadata 协议。
-- 达到阈值后，消费组件必须显式声明自己使用的 Contract，生成器据此输出调用方
+- 达到阈值后，消费组件必须显式声明自己使用的 Contract，生成器才能输出调用方
   Proxy。不允许从 Package 依赖猜测所有 Service，也不允许运行时传入可伪造的
   caller component ID。
 - CLI 2.0 再考虑契约提升、Override、迁移和一键校验。
@@ -142,5 +147,9 @@ Session Scope 均返回稳定的 Service 错误子类型；缺失命名实现会
 - Service 性能回归使用同机 P50/P95 趋势比较，不设置跨机器硬阈值；性能样本必须同时验证
   Scope 销毁后的存活实例为零。
 - 同一 Token 的类型不匹配、重复默认实现和命名冲突均返回稳定错误。
+- 冷生成必须一次完成 Token、Provider、Component assembly、Package Index 与 Host Catalog；
+  不能依赖先生成 Token、第二次再识别 Provider。
+- Service metadata 的新增、内容变化、重命名和删除必须使缓存失效；缓存与 `--no-cache`
+  输出逐字节一致。
 - Core Service 契约不依赖 BuildContext、反射、字符串方法调用或万能 Map；Flutter
   `routeService(context)` 只读取精确 Host 绑定，不参与实例所有权或销毁判断。

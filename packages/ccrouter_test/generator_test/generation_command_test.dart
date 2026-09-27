@@ -192,7 +192,14 @@ void probe() {
                   as Map<String, Object?>)['records']
               as List;
       expect(contractCapabilities, isNotEmpty);
-      expect((contractCapabilities.single as Map)['id'], 'order.detail');
+      expect(
+        contractCapabilities.where(
+          (record) =>
+              (record as Map)['kind'] == 'route' &&
+              record['id'] == 'order.detail',
+        ),
+        hasLength(1),
+      );
       final hostCatalogDocument = File(
         path.join(
           Directory.current.path,
@@ -391,19 +398,30 @@ void probe() {
   test(
     'generation removes only obsolete source-tree metadata',
     () async {
-      final generatedDirectory = Directory(
+      final legacyGeneratedRoot = Directory(
         path.join(
           Directory.current.path,
           'demo',
           'modules',
           'payment',
           'ccrouter_generated',
-          '.migration_probe_$pid',
         ),
+      );
+      final rootExistedBeforeTest = legacyGeneratedRoot.existsSync();
+      final generatedDirectory = Directory(
+        path.join(legacyGeneratedRoot.path, '.migration_probe_$pid'),
       )..createSync(recursive: true);
       addTearDown(() {
         if (generatedDirectory.existsSync()) {
           generatedDirectory.deleteSync(recursive: true);
+        }
+        if (!rootExistedBeforeTest &&
+            legacyGeneratedRoot.existsSync() &&
+            legacyGeneratedRoot.listSync().isEmpty) {
+          legacyGeneratedRoot.deleteSync();
+        }
+        if (!rootExistedBeforeTest) {
+          expect(legacyGeneratedRoot.existsSync(), isFalse);
         }
       });
       final obsoleteJson = File(
@@ -457,6 +475,16 @@ void probe() {
           'demo_navigation_lab_component.route_api.g.dart',
         ),
       );
+      final paymentGeneratedRoot = Directory(
+        path.join(
+          demoRoot.path,
+          'modules',
+          'payment',
+          'lib',
+          'src',
+          'ccrouter_generated',
+        ),
+      );
       expect(generatedRouteApi.existsSync(), isTrue);
       try {
         final cleaned = await Process.run(Platform.resolvedExecutable, [
@@ -469,6 +497,11 @@ void probe() {
         expect('${cleaned.stdout}', contains('Removed '));
         expect(generatedRouteApi.existsSync(), isFalse);
         expect(sentinel.readAsStringSync(), 'user-owned');
+        expect(
+          paymentGeneratedRoot.existsSync(),
+          isFalse,
+          reason: 'clean must remove an empty generated root.',
+        );
       } finally {
         final regenerated = await Process.run(Platform.resolvedExecutable, [
           'run',

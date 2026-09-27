@@ -13,6 +13,13 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 ### Route `order.detail`
 
 - Declaring package: `demo_order_contracts`
-- Contract/declaration: `package:demo_order_contracts/src/order_detail_route_contract.dart:19:16` (`OrderDetailRouteContract`)
+- Contract/declaration: `package:demo_order_contracts/src/order_detail_route_contract.dart:16:16` (`OrderDetailRouteContract`)
 - Generated artifacts:
   - `routeContract`: `package:demo_order_contracts/src/ccrouter_generated/contract/order_detail_route_contract.route.contract.g.dart` (`OrderDetailRoute`)
+
+### Service `demo_order.summary`
+
+- Declaring package: `demo_order_contracts`
+- Contract/declaration: `package:demo_order_contracts/src/order_summary_service.dart:11:26` (`OrderSummaryService`)
+- Generated artifacts:
+  - `serviceToken`: `package:demo_order_contracts/src/ccrouter_generated/contract/order_summary_service.service.contract.g.dart` (`orderSummaryServiceToken`)

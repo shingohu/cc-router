@@ -2,11 +2,9 @@ import 'package:ccrouter/ccrouter.dart';
 import 'package:flutter/material.dart';
 
 import 'lab_configuration.dart';
-import 'navigation_lab_component.dart';
 import 'ccrouter_generated/component/demo_navigation_lab_component.route_api.g.dart';
 
 @CCRoute<void>(
-  component: demoNavigationLabComponent,
   id: 'demo_navigation_lab.lifecycle',
   pattern: CCPathPattern('/lab/lifecycle'),
   description: '同时验证 CCPageLifecycleMixin 与 Listener 的页面和 App 生命周期。',

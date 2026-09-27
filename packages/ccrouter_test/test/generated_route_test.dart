@@ -1,6 +1,7 @@
 import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter_core/ccrouter_core.dart';
 import 'package:ccrouter_test/ccrouter_test.dart';
+import 'package:ccrouter_test/src/ccrouter_test_component.dart';
 import 'package:ccrouter_test/src/generated_route_fixture_access.dart';
 import 'package:ccrouter_test/src/generated_route_types.dart' as types;
 import 'package:flutter_test/flutter_test.dart';
@@ -158,8 +159,8 @@ void main() {
       final adapter = CCMemoryNavigationAdapter();
       final host = CCRouterTestHost(
         components: const [
-          CCComponentManifest.fromDescriptor(
-            descriptor: generatedRouteFixtureComponent,
+          CCComponentManifest.fromComponent(
+            component: ccrouterTestComponent,
             registrar: GeneratedRouteFixtureRegistrar(),
           ),
         ],

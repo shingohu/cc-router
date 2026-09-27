@@ -10,7 +10,7 @@ final class _ComponentMetadataBuilder implements Builder {
         ],
       };
 
-  /// Matches registrar annotations from the canonical contracts package.
+  /// Matches the canonical top-level component definition type.
   static const _component = TypeChecker.typeNamedLiterally(
     'CCComponent',
     inPackage: 'ccrouter_contracts',
@@ -20,7 +20,7 @@ final class _ComponentMetadataBuilder implements Builder {
   @override
   final Map<String, List<String>> buildExtensions;
 
-  /// Emits no files for libraries without a component registrar annotation.
+  /// Emits no files for libraries without a top-level component definition.
   @override
   Future<void> build(BuildStep buildStep) async {
     if (buildStep.inputId.path.contains('/ccrouter_generated/')) return;
@@ -29,18 +29,29 @@ final class _ComponentMetadataBuilder implements Builder {
       await buildStep.resolver.libraryFor(buildStep.inputId),
     );
     final components = <_ComponentModel>[];
-    for (final annotated in library.annotatedWith(_component)) {
-      final element = annotated.element;
-      if (element is! ClassElement ||
-          !_ComponentGenerator._implementsComponentRegistrar(element)) {
+    final symbols = <String, String>{};
+    for (final element
+        in library.allElements.whereType<TopLevelVariableElement>()) {
+      if (!_component.isExactlyType(element.type)) continue;
+      if (!element.isConst || element.computeConstantValue() == null) {
         _fail(
-          'CCComponent must annotate a CCComponentRegistrar implementation.',
+          'CCComponent declarations must be top-level const values.',
           element,
         );
       }
-      components.add(
-        _ComponentModel.read(annotated.annotation.read('descriptor'), element),
+      if (element.displayName.startsWith('_')) {
+        _fail(
+          'CCComponent declarations must be public because generated assembly '
+          'is emitted in a separate library.',
+          element,
+        );
+      }
+      final component = _ComponentModel.read(
+        ConstantReader(element.computeConstantValue()),
+        element,
       );
+      components.add(component);
+      symbols[component.id] = element.displayName;
     }
     if (components.isEmpty) return;
     final payload = _metadataPayload(
@@ -52,6 +63,7 @@ final class _ComponentMetadataBuilder implements Builder {
         for (final component in components)
           component.id: _componentManifestName(component.id),
       },
+      componentSymbols: symbols,
     );
     final jsonOutput = buildStep.allowedOutputs.singleWhere(
       (output) => output.path.endsWith('.component.json'),

@@ -33,7 +33,7 @@ void main() {
       {
         ...additionalAssets,
         'ccrouter_test|$sourcePath':
-            "import 'package:ccrouter/ccrouter.dart';\n$imports\nconst probeComponent = CCComponentDescriptor(id: 'probe', version: '1.0.0');\n$declarations",
+            "import 'package:ccrouter/ccrouter.dart';\n$imports\n$declarations",
       },
       rootPackage: 'ccrouter_test',
       generateFor: {'ccrouter_test|$sourcePath'},
@@ -65,7 +65,7 @@ void main() {
       {
         ...additionalAssets,
         'ccrouter_test|$sourcePath':
-            "import 'package:ccrouter/ccrouter.dart';\n$imports\nconst probeComponent = CCComponentDescriptor(id: 'probe', version: '1.0.0');\n$declarations",
+            "import 'package:ccrouter/ccrouter.dart';\n$imports\nconst probeComponentId = CCComponentId('probe');\n$declarations",
       },
       rootPackage: 'ccrouter_test',
       generateFor: {'ccrouter_test|$sourcePath'},
@@ -97,7 +97,65 @@ void main() {
       {
         ...additionalAssets,
         'ccrouter_test|$sourcePath':
-            "import 'package:ccrouter/ccrouter.dart';\n$imports\nconst probeComponent = CCComponentDescriptor(id: 'probe', version: '1.0.0');\n$declarations",
+            "import 'package:ccrouter/ccrouter.dart';\n$imports\n$declarations",
+      },
+      rootPackage: 'ccrouter_test',
+      generateFor: {'ccrouter_test|$sourcePath'},
+      isInput: (id) => id == 'ccrouter_test|$sourcePath',
+      readerWriter: reader,
+      flattenOutput: true,
+      onLog: (log) => logs.add(log.message),
+    );
+    final output = AssetId('ccrouter_test', outputPath);
+    if (fails) {
+      expect(await reader.canRead(output), isFalse);
+      return logs.join('\n');
+    }
+    return reader.readAsString(output);
+  }
+
+  Future<String> generateComponent(
+    String declarations, {
+    bool fails = false,
+  }) async {
+    final logs = <String>[];
+    const sourcePath = 'lib/src/probe_component.dart';
+    const outputPath =
+        'lib/src/ccrouter_generated/metadata/src/probe_component.component.json';
+    await testBuilder(
+      ccComponentMetadataBuilder(BuilderOptions.empty),
+      {
+        'ccrouter_test|$sourcePath':
+            "import 'package:ccrouter/ccrouter.dart';\n$declarations",
+      },
+      rootPackage: 'ccrouter_test',
+      generateFor: {'ccrouter_test|$sourcePath'},
+      isInput: (id) => id == 'ccrouter_test|$sourcePath',
+      readerWriter: reader,
+      flattenOutput: true,
+      onLog: (log) => logs.add(log.message),
+    );
+    final output = AssetId('ccrouter_test', outputPath);
+    if (fails) {
+      expect(await reader.canRead(output), isFalse);
+      return logs.join('\n');
+    }
+    return reader.readAsString(output);
+  }
+
+  Future<String> generateRouteMetadata(
+    String declarations, {
+    bool fails = false,
+  }) async {
+    final logs = <String>[];
+    const sourcePath = 'lib/src/probe.dart';
+    const outputPath =
+        'lib/src/ccrouter_generated/metadata/src/probe.route.json';
+    await testBuilder(
+      ccRouteMetadataBuilder(BuilderOptions.empty),
+      {
+        'ccrouter_test|$sourcePath':
+            "import 'package:ccrouter/ccrouter.dart';\n$declarations",
       },
       rootPackage: 'ccrouter_test',
       generateFor: {'ccrouter_test|$sourcePath'},
@@ -120,14 +178,7 @@ void main() {
       {
         'ccrouter_test|lib/src/orders/probe.dart': '''
 import 'package:ccrouter/ccrouter.dart';
-const probeComponent = CCComponentDescriptor(id: 'probe', version: '1.2.3');
-@CCComponent(probeComponent)
-final class ProbeRegistrar implements CCComponentRegistrar {
-  const ProbeRegistrar();
-  @override
-  void register(CCRegistry registry) {}
-}
-@CCRoute<void>(component: probeComponent, id: 'probe.detail', pattern: CCPathPattern('/probe/:id', constraints: {'id': r'\\d+'}), deepLink: CCDeepLinkPolicy.enabled, presentation: CCPagePresentation(transition: CCPageTransitionType.slideFromBottom, opaque: false), placement: CCRoutePlacement(hostId: 'secondary', parentRouteId: 'probe.root', shellId: 'probe.shell', navigatorOutlet: 'detail'), interceptors: ['probe.auth'], popGuards: ['probe.dirty'], description: 'Probe details.')
+@CCRoute<void>(id: 'probe.detail', pattern: CCPathPattern('/probe/:id', constraints: {'id': r'\\d+'}), deepLink: CCDeepLinkPolicy.enabled, presentation: CCPagePresentation(transition: CCPageTransitionType.slideFromBottom, opaque: false), placement: CCRoutePlacement(hostId: 'secondary', parentRouteId: 'probe.root', shellId: 'probe.shell', navigatorOutlet: 'detail'), interceptors: ['probe.auth'], popGuards: ['probe.dirty'], description: 'Probe details.')
 final class Probe {
   const Probe({required this.id});
   /// Documented identity.
@@ -154,9 +205,8 @@ final class Probe {
     final route = (json['routes'] as List).single as Map;
     expect((json['componentDeclarations'] as List), isEmpty);
     expect(json['componentManifests'], isEmpty);
-    expect((json['components'] as List).single['version'], '1.2.3');
-    expect(route['componentId'], 'probe');
-    expect(route['componentVersion'], '1.2.3');
+    expect(json['components'], isEmpty);
+    expect(route['componentId'], isNull);
     expect(route['exposure'], 'internal');
     expect(route['description'], 'Probe details.');
     expect(route['interceptorIds'], ['probe.auth']);
@@ -249,10 +299,9 @@ final class Probe {
       {
         'ccrouter_test|lib/src/modal_probe.dart': r'''
 import 'package:ccrouter/ccrouter.dart';
-const probeComponent = CCComponentDescriptor(id: 'probe', version: '1.0.0');
-@CCRoute<void>(component: probeComponent, id: 'probe.sheet', pattern: CCPathPattern('/sheet'), presentation: CCModalBottomSheetPresentation(isDismissible: false, enableDrag: false, isScrollControlled: true, showDragHandle: true, useSafeArea: true))
+@CCRoute<void>(id: 'probe.sheet', pattern: CCPathPattern('/sheet'), presentation: CCModalBottomSheetPresentation(isDismissible: false, enableDrag: false, isScrollControlled: true, showDragHandle: true, useSafeArea: true))
 final class SheetProbe { const SheetProbe(); }
-@CCRoute<void>(component: probeComponent, id: 'probe.dialog', pattern: CCPathPattern('/dialog'), presentation: CCDialogPresentation(routeType: CCDialogRouteType.cupertino, barrierDismissible: false, useSafeArea: false))
+@CCRoute<void>(id: 'probe.dialog', pattern: CCPathPattern('/dialog'), presentation: CCDialogPresentation(routeType: CCDialogRouteType.cupertino, barrierDismissible: false, useSafeArea: false))
 final class DialogProbe { const DialogProbe(); }
 ''',
       },
@@ -297,8 +346,8 @@ final class DialogProbe { const DialogProbe(); }
       {
         'ccrouter_test|lib/src/orders/probe_contract.dart': '''
 import 'package:ccrouter/ccrouter.dart';
-const probeComponent = CCComponentDescriptor(id: 'probe', version: '1.0.0');
-@CCRouteContract<void>(component: probeComponent, id: 'probe.public', pattern: CCPathPattern('/probe'))
+const probeComponentId = CCComponentId('probe');
+@CCRouteContract<void>(componentId: probeComponentId, id: 'probe.public', pattern: CCPathPattern('/probe'))
 abstract class ProbeRouteContract { const ProbeRouteContract(); }
 ''',
       },
@@ -342,8 +391,8 @@ abstract class ProbeRouteContract { const ProbeRouteContract(); }
       {
         'ccrouter_test|lib/probe_route_contract.dart': r'''
 import 'package:ccrouter/ccrouter.dart';
-const probeOwner = CCComponentDescriptor(id: 'probe', version: '1.0.0');
-@CCRouteContract<void>(component: probeOwner, id: 'probe.detail', pattern: CCPathPattern('/probe/:id'))
+const probeOwner = CCComponentId('probe');
+@CCRouteContract<void>(componentId: probeOwner, id: 'probe.detail', pattern: CCPathPattern('/probe/:id'))
 abstract class ProbeDetailRouteContract {
   const ProbeDetailRouteContract({required this.id});
   final int id;
@@ -378,7 +427,7 @@ final class ProbePage {
     expect(json['routes'], isEmpty);
     final implementation = (json['routeImplementations'] as List).single as Map;
     expect(implementation['routeId'], 'probe.detail');
-    expect(implementation['componentId'], 'probe');
+    expect(implementation['componentId'], isNull);
     expect(implementation['package'], 'ccrouter_test');
     expect(implementation['source'], 'lib/src/probe_page.dart');
     expect(implementation['registration'], 'ccrouterRegisterProbePageRoute');
@@ -412,18 +461,12 @@ final class ProbePage {
       {
         'ccrouter_test|lib/src/orders/probe_component.dart': '''
 import 'package:ccrouter/ccrouter.dart';
-const probeComponent = CCComponentDescriptor(
-  id: 'probe',
+const probeComponent = CCComponent(
+  id: CCComponentId('probe'),
   version: '1.2.3',
-  dependencies: ['accounts'],
-  optionalDependencies: ['analytics'],
+  dependencies: [CCComponentId('accounts')],
+  optionalDependencies: [CCComponentId('analytics')],
 );
-@CCComponent(probeComponent)
-final class ProbeRegistrar implements CCComponentRegistrar {
-  const ProbeRegistrar();
-  @override
-  void register(CCRegistry registry) {}
-}
 ''',
       },
       rootPackage: 'ccrouter_test',
@@ -445,6 +488,7 @@ final class ProbeRegistrar implements CCComponentRegistrar {
             as Map;
     expect(json['componentDeclarations'], ['probe']);
     expect(json['componentManifests'], {'probe': 'probeManifest'});
+    expect(json['componentSymbols'], {'probe': 'probeComponent'});
     expect((json['routes'] as List), isEmpty);
     expect((json['components'] as List).single, {
       'id': 'probe',
@@ -463,98 +507,191 @@ final class ProbeRegistrar implements CCComponentRegistrar {
     );
   });
 
-  test(
-    'component builder generates a Manifest for a private Registrar',
-    () async {
-      await testBuilder(
-        ccComponentBuilder(BuilderOptions.empty),
-        {
-          'ccrouter_test|lib/src/probe_component_registrar.dart': '''
+  test('component metadata rejects a non-const component declaration', () async {
+    final logs = <String>[];
+    await testBuilder(
+      ccComponentMetadataBuilder(BuilderOptions.empty),
+      {
+        'ccrouter_test|lib/src/invalid_component.dart': '''
 import 'package:ccrouter/ccrouter.dart';
-part 'ccrouter_generated/component/probe_component_registrar.component.g.dart';
-const probeComponent = CCComponentDescriptor(
-  id: 'probe_component',
-  version: '1.2.3',
-  dependencies: ['account'],
-  optionalDependencies: ['analytics'],
-);
-@CCComponent(probeComponent)
-final class _ProbeComponentRegistrar implements CCComponentRegistrar {
-  const _ProbeComponentRegistrar();
-  @override
-  void register(CCRegistry registry) {}
-}
-''',
-        },
-        rootPackage: 'ccrouter_test',
-        generateFor: {'ccrouter_test|lib/src/probe_component_registrar.dart'},
-        isInput: (id) =>
-            id == 'ccrouter_test|lib/src/probe_component_registrar.dart',
-        readerWriter: reader,
-        flattenOutput: true,
-      );
-      final code = await reader.readAsString(
-        AssetId(
-          'ccrouter_test',
-          'lib/src/ccrouter_generated/component/probe_component_registrar.component.g.dart',
-        ),
-      );
-      expect(code, contains('const probeComponentManifest'));
-      expect(code, contains('id: "probe_component"'));
-      expect(code, contains('dependencies: const ["account"]'));
-      expect(code, contains('optionalDependencies: const ["analytics"]'));
-      expect(code, contains('registrar: _ProbeComponentRegistrar()'));
-    },
-  );
-
-  test(
-    'component builder rejects a Registrar without a const constructor',
-    () async {
-      final logs = <String>[];
-      await testBuilder(
-        ccComponentBuilder(BuilderOptions.empty),
-        {
-          'ccrouter_test|lib/src/invalid_component_registrar.dart': '''
-import 'package:ccrouter/ccrouter.dart';
-part 'ccrouter_generated/component/invalid_component_registrar.component.g.dart';
-const invalidComponent = CCComponentDescriptor(
-  id: 'invalid_component',
+final invalidComponent = CCComponent(
+  id: const CCComponentId('invalid_component'),
   version: '1.0.0',
 );
-@CCComponent(invalidComponent)
-final class _InvalidComponentRegistrar implements CCComponentRegistrar {
-  _InvalidComponentRegistrar();
-  @override
-  void register(CCRegistry registry) {}
-}
 ''',
-        },
-        rootPackage: 'ccrouter_test',
-        generateFor: {'ccrouter_test|lib/src/invalid_component_registrar.dart'},
-        isInput: (id) =>
-            id == 'ccrouter_test|lib/src/invalid_component_registrar.dart',
-        readerWriter: reader,
-        flattenOutput: true,
-        onLog: (log) => logs.add(log.message),
-      );
-      expect(
-        await reader.canRead(
-          AssetId(
-            'ccrouter_test',
-            'lib/src/ccrouter_generated/component/invalid_component_registrar.component.g.dart',
-          ),
+      },
+      rootPackage: 'ccrouter_test',
+      generateFor: {'ccrouter_test|lib/src/invalid_component.dart'},
+      isInput: (id) => id == 'ccrouter_test|lib/src/invalid_component.dart',
+      readerWriter: reader,
+      flattenOutput: true,
+      onLog: (log) => logs.add(log.message),
+    );
+    expect(
+      await reader.canRead(
+        AssetId(
+          'ccrouter_test',
+          'lib/src/ccrouter_generated/metadata/src/invalid_component.component.json',
         ),
-        isFalse,
-      );
-      expect(logs.join('\n'), contains('const unnamed Registrar constructor'));
-    },
-  );
+      ),
+      isFalse,
+    );
+    expect(logs.join('\n'), contains('top-level const values'));
+  });
+
+  test('component metadata accepts complete SemVer 2.0 versions', () async {
+    final json =
+        jsonDecode(
+              await generateComponent(r'''
+const versionedComponent = CCComponent(
+  id: CCComponentId('versioned'),
+  version: '1.2.3-alpha.1+build.5',
+);
+'''),
+            )
+            as Map;
+    expect(
+      (json['components'] as List).single['version'],
+      '1.2.3-alpha.1+build.5',
+    );
+  });
+
+  final invalidComponents = <String, (String, String)>{
+    'invalid component ID': (
+      "const bad = CCComponent(id: CCComponentId('Bad ID'), version: '1.0.0');",
+      'Component ID',
+    ),
+    'invalid component version': (
+      "const bad = CCComponent(id: CCComponentId('bad'), version: 'latest');",
+      'SemVer 2.0',
+    ),
+    'invalid numeric prerelease version': (
+      "const bad = CCComponent(id: CCComponentId('bad'), version: '1.0.0-01');",
+      'SemVer 2.0',
+    ),
+    'invalid component dependencies': (
+      "const bad = CCComponent(id: CCComponentId('bad'), version: '1.0.0', dependencies: [CCComponentId('bad')]);",
+      'self dependencies',
+    ),
+    'private component declaration': (
+      "const _bad = CCComponent(id: CCComponentId('bad'), version: '1.0.0');",
+      'must be public',
+    ),
+  };
+  for (final entry in invalidComponents.entries) {
+    test('component metadata rejects ${entry.key}', () async {
+      final logs = await generateComponent(entry.value.$1, fails: true);
+      expect(logs, contains(entry.value.$2));
+    });
+  }
+
+  test('route metadata emits a component registration contribution', () async {
+    final json =
+        jsonDecode(
+              await generateRouteMetadata(r'''
+@CCComponentContribution(id: 'probe.services')
+void registerProbeServices(CCRegistry registry) {}
+'''),
+            )
+            as Map;
+    expect(json['routes'], isEmpty);
+    expect(json['routeImplementations'], isEmpty);
+    expect(
+      (json['contributions'] as List).single,
+      containsPair('id', 'probe.services'),
+    );
+    expect(
+      (json['contributions'] as List).single,
+      containsPair('componentId', null),
+    );
+    expect(
+      (json['contributions'] as List).single,
+      containsPair('symbol', 'registerProbeServices'),
+    );
+  });
+
+  final invalidContributions = <String, (String, String)>{
+    'non-function target': (
+      "@CCComponentContribution(id: 'probe.services') final class Probe {}",
+      'public top-level function',
+    ),
+    'private function': (
+      "@CCComponentContribution(id: 'probe.services') void _registerProbe(CCRegistry registry) {}",
+      'public top-level function',
+    ),
+    'async function': (
+      "@CCComponentContribution(id: 'probe.services') Future<void> registerProbe(CCRegistry registry) async {}",
+      'synchronously return void',
+    ),
+    'missing Registry parameter': (
+      "@CCComponentContribution(id: 'probe.services') void registerProbe() {}",
+      'exactly one CCRegistry parameter',
+    ),
+    'wrong Registry parameter': (
+      "@CCComponentContribution(id: 'probe.services') void registerProbe(Object registry) {}",
+      'exactly one CCRegistry parameter',
+    ),
+    'invalid ID': (
+      "@CCComponentContribution(id: 'Probe Services') void registerProbe(CCRegistry registry) {}",
+      'Component contribution ID',
+    ),
+    'duplicate ID': (
+      "@CCComponentContribution(id: 'probe.services') void registerProbeA(CCRegistry registry) {} @CCComponentContribution(id: 'probe.services') void registerProbeB(CCRegistry registry) {}",
+      'Duplicate component contribution ID',
+    ),
+  };
+  for (final entry in invalidContributions.entries) {
+    test('route metadata rejects contribution with ${entry.key}', () async {
+      final logs = await generateRouteMetadata(entry.value.$1, fails: true);
+      expect(logs, contains(entry.value.$2));
+    });
+  }
+
+  test('metadata builders emit nothing for an ordinary library', () async {
+    const sourcePath = 'lib/src/ordinary.dart';
+    await testBuilder(
+      ccRouteMetadataBuilder(BuilderOptions.empty),
+      {'ccrouter_test|$sourcePath': 'final class Ordinary {}'},
+      rootPackage: 'ccrouter_test',
+      generateFor: {'ccrouter_test|$sourcePath'},
+      isInput: (id) => id == 'ccrouter_test|$sourcePath',
+      readerWriter: reader,
+      flattenOutput: true,
+    );
+    await testBuilder(
+      ccComponentMetadataBuilder(BuilderOptions.empty),
+      {'ccrouter_test|$sourcePath': 'final class Ordinary {}'},
+      rootPackage: 'ccrouter_test',
+      generateFor: {'ccrouter_test|$sourcePath'},
+      isInput: (id) => id == 'ccrouter_test|$sourcePath',
+      readerWriter: reader,
+      flattenOutput: true,
+    );
+    expect(
+      await reader.canRead(
+        AssetId(
+          'ccrouter_test',
+          'lib/src/ccrouter_generated/metadata/src/ordinary.route.json',
+        ),
+      ),
+      isFalse,
+    );
+    expect(
+      await reader.canRead(
+        AssetId(
+          'ccrouter_test',
+          'lib/src/ccrouter_generated/metadata/src/ordinary.component.json',
+        ),
+      ),
+      isFalse,
+    );
+  });
 
   test(
     'builder emits a private component contract and backend-neutral registration',
     () async {
       const declarations = '''
-@CCRoute<void>(component: probeComponent, id: 'probe', patterns: [CCPathPattern('/probe/:id', primary: true)], popGuards: ['probe.dirty'])
+@CCRoute<void>(id: 'probe', patterns: [CCPathPattern('/probe/:id', primary: true)], popGuards: ['probe.dirty'])
 final class Probe { const Probe({required this.id}); final int id; }
 ''';
       final code = await generate(declarations);
@@ -597,7 +734,6 @@ final class ProbePayload {
   final String value;
 }
 @CCRoute<void>(
-  component: probeComponent,
   id: 'probe.extra',
   pattern: CCPathPattern('/probe/extra'),
 )
@@ -633,7 +769,7 @@ final class Probe {
 
   test('infers the sole reversible primary in a Pattern list', () async {
     final code = await generate(r'''
-@CCRoute<void>(component: probeComponent, id: 'probe', patterns: [CCRegexPattern(r'/legacy'), CCPathPattern('/probe')])
+@CCRoute<void>(id: 'probe', patterns: [CCRegexPattern(r'/legacy'), CCPathPattern('/probe')])
 final class Probe { const Probe(); }
 ''');
     expect(code, contains('primary: true'));
@@ -642,7 +778,7 @@ final class Probe { const Probe(); }
 
   test('preserves nested source directories in generated route paths', () async {
     const declarations =
-        "@CCRoute<void>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe')) final class Probe { const Probe(); }";
+        "@CCRoute<void>(id: 'probe', pattern: CCPathPattern('/probe')) final class Probe { const Probe(); }";
     final code = await generate(
       declarations,
       sourcePath: 'lib/src/orders/probe.dart',
@@ -671,7 +807,7 @@ final class Probe { const Probe(); }
     'builder keeps embedded contracts private and documents metadata',
     () async {
       final code = await generate(r'''
-@CCRoute<String>(component: probeComponent, id: 'probe', patterns: [CCPathPattern('/probe', primary: true)], description: r'$secret')
+@CCRoute<String>(id: 'probe', patterns: [CCPathPattern('/probe', primary: true)], description: r'$secret')
 final class Probe { const Probe(); }
 ''');
       expect(code, contains('abstract final class _ProbeRoute'));
@@ -682,7 +818,7 @@ final class Probe { const Probe(); }
 
   test('contract builder emits a standalone Pure Dart contract', () async {
     final code = await generateContract(r'''
-@CCRouteContract<String>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe/:id'))
+@CCRouteContract<String>(componentId: probeComponentId, id: 'probe', pattern: CCPathPattern('/probe/:id'))
 abstract class ProbeRouteContract { const ProbeRouteContract({required this.id, @CCQueryParam() this.tab = 'summary'}); final int id; final String tab; }
 ''');
     expect(
@@ -701,7 +837,7 @@ abstract class ProbeRouteContract { const ProbeRouteContract({required this.id, 
 
   test('contract builder emits nothing for the embedded default', () async {
     final logs = await generateContract(r'''
-@CCRoute<void>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe'))
+@CCRoute<void>(id: 'probe', pattern: CCPathPattern('/probe'))
 final class Probe { const Probe(); }
 ''', fails: true);
     expect(logs, isNot(contains('InvalidGenerationSourceError')));
@@ -710,7 +846,7 @@ final class Probe { const Probe(); }
   test('contract builder emits a Contract-first Pure Dart API', () async {
     final code = await generateContract(r'''
 @CCRouteContract<String>(
-  component: probeComponent,
+  componentId: probeComponentId,
   id: 'probe.detail',
   pattern: CCPathPattern('/probe/:id'),
 )
@@ -745,8 +881,8 @@ final class ProbePage {
         additionalAssets: {
           'ccrouter_test|lib/src/probe_route_contract.dart': r'''
 import 'package:ccrouter/ccrouter.dart';
-const probeOwner = CCComponentDescriptor(id: 'probe', version: '1.0.0');
-@CCRouteContract<String>(component: probeOwner, id: 'probe.detail', pattern: CCPathPattern('/probe/:id'))
+const probeOwner = CCComponentId('probe');
+@CCRouteContract<String>(componentId: probeOwner, id: 'probe.detail', pattern: CCPathPattern('/probe/:id'))
 abstract class ProbeDetailRouteContract {
   const ProbeDetailRouteContract({required this.id, @CCQueryParam() this.tab = 'summary'});
   final int id;
@@ -810,8 +946,8 @@ final class ProbePage {
       additionalAssets: {
         'ccrouter_test|lib/probe_route_contract.dart': r'''
 import 'package:ccrouter/ccrouter.dart';
-const probeOwner = CCComponentDescriptor(id: 'probe', version: '1.0.0');
-@CCRouteContract<void>(component: probeOwner, id: 'probe.detail', pattern: CCPathPattern('/probe/:id'))
+const probeOwner = CCComponentId('probe');
+@CCRouteContract<void>(componentId: probeOwner, id: 'probe.detail', pattern: CCPathPattern('/probe/:id'))
 abstract class ProbeDetailRouteContract {
   const ProbeDetailRouteContract({required this.id});
   final int id;
@@ -826,7 +962,7 @@ abstract class ProbeDetailRouteContract {
   test('contract builder rejects page-library contract types', () async {
     final logs = await generateContract(r'''
 enum ProbeResult { accepted }
-@CCRouteContract<ProbeResult>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe'))
+@CCRouteContract<ProbeResult>(componentId: probeComponentId, id: 'probe', pattern: CCPathPattern('/probe'))
 abstract class ProbeRouteContract { const ProbeRouteContract(); }
 ''', fails: true);
     expect(logs, contains('cannot be declared beside the route source'));
@@ -835,7 +971,7 @@ abstract class ProbeRouteContract { const ProbeRouteContract(); }
   test('contract builder rejects Flutter contract types', () async {
     final logs = await generateContract(
       r'''
-@CCRouteContract<void>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe'))
+@CCRouteContract<void>(componentId: probeComponentId, id: 'probe', pattern: CCPathPattern('/probe'))
 abstract class ProbeRouteContract { const ProbeRouteContract({@CCExtraParam() this.color}); final Color? color; }
 ''',
       imports: "import 'package:flutter/material.dart';",
@@ -847,7 +983,7 @@ abstract class ProbeRouteContract { const ProbeRouteContract({@CCExtraParam() th
   test('contract builder preserves public imported contract types', () async {
     final code = await generateContract(
       r'''
-@CCRouteContract<ProbeResult>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe'))
+@CCRouteContract<ProbeResult>(componentId: probeComponentId, id: 'probe', pattern: CCPathPattern('/probe'))
 abstract class ProbeRouteContract { const ProbeRouteContract({@CCExtraParam() this.payload, @CCQueryParam() this.status = ProbeStatus.pending}); final ProbePayload? payload; final ProbeStatus status; }
 ''',
       imports: "import 'package:ccrouter_test/probe_contract.dart';",
@@ -873,7 +1009,7 @@ final class ProbePayload { const ProbePayload(); }
   test('builder emits repeated Query codecs for List and Set values', () async {
     final code = await generate(r'''
 enum ProbeState { pending, completed }
-@CCRoute<void>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe'))
+@CCRoute<void>(id: 'probe', pattern: CCPathPattern('/probe'))
 final class Probe {
   const Probe({
     @CCQueryParam() required this.tags,
@@ -904,7 +1040,7 @@ final class Probe {
 
   test('builder omits an empty collection that equals its default', () async {
     final code = await generate(r'''
-@CCRoute<void>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe'))
+@CCRoute<void>(id: 'probe', pattern: CCPathPattern('/probe'))
 final class Probe {
   const Probe({
     @CCQueryParam() this.tags = const [],
@@ -935,7 +1071,7 @@ final class ProbeFilterCodec implements CCRouteQueryCodec<ProbeFilter> {
   @override
   List<String> encode(ProbeFilter value) => [value.value];
 }
-@CCRoute<void>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe'))
+@CCRoute<void>(id: 'probe', pattern: CCPathPattern('/probe'))
 final class Probe {
   const Probe({@CCQueryParam(codec: ProbeFilterCodec) required this.filter});
   final ProbeFilter filter;
@@ -961,7 +1097,7 @@ final class Probe {
     () async {
       final code = await generateContract(
         r'''
-@CCRouteContract<void>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe'))
+@CCRouteContract<void>(componentId: probeComponentId, id: 'probe', pattern: CCPathPattern('/probe'))
 abstract class ProbeRouteContract {
   const ProbeRouteContract({@CCQueryParam(codec: ProbeFilterCodec) required this.filter});
   final ProbeFilter filter;
@@ -999,7 +1135,6 @@ final class ProbeFilterCodec implements CCRouteQueryCodec<ProbeFilter> {
       {
         'ccrouter_test|lib/src/query_probe.dart': r'''
 import 'package:ccrouter/ccrouter.dart';
-const probeComponent = CCComponentDescriptor(id: 'probe', version: '1.0.0');
 final class ProbeFilter { const ProbeFilter(); }
 final class ProbeFilterCodec implements CCRouteQueryCodec<ProbeFilter> {
   const ProbeFilterCodec();
@@ -1008,7 +1143,7 @@ final class ProbeFilterCodec implements CCRouteQueryCodec<ProbeFilter> {
   @override
   List<String> encode(ProbeFilter value) => const ['filter'];
 }
-@CCRoute<void>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe'))
+@CCRoute<void>(id: 'probe', pattern: CCPathPattern('/probe'))
 final class Probe {
   const Probe({@CCQueryParam() required this.tags, @CCQueryParam(codec: ProbeFilterCodec) required this.filter});
   final List<String> tags;
@@ -1057,7 +1192,7 @@ abstract class ProbeBase {
   const ProbeBase(this.id);
   final int id;
 }
-@CCRoute<void>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe/:id'))
+@CCRoute<void>(id: 'probe', pattern: CCPathPattern('/probe/:id'))
 final class Probe extends ProbeBase {
   const Probe(super.id, {@CCQueryParam() this.tab = 'summary', @CCQueryParam() this.page = 1});
   final String tab;
@@ -1082,7 +1217,7 @@ final class Probe extends ProbeBase {
     'contract builder reuses the unprefixed framework contract import',
     () async {
       final code = await generateContract(r'''
-@CCRouteContract<CCNavigationSource>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe'))
+@CCRouteContract<CCNavigationSource>(componentId: probeComponentId, id: 'probe', pattern: CCPathPattern('/probe'))
 abstract class ProbeRouteContract { const ProbeRouteContract(); }
 ''', imports: "import 'package:ccrouter_contracts/ccrouter_contracts.dart';");
       expect(code, contains('CCRouteIntent<CCNavigationSource>'));
@@ -1100,28 +1235,12 @@ abstract class ProbeRouteContract { const ProbeRouteContract(); }
     () async {
       final code = await generate(r'''
 void ccrouterRegisterProbeRoute(CCRegistry registry) {}
-@CCRoute<void>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe'))
+@CCRoute<void>(id: 'probe', pattern: CCPathPattern('/probe'))
 final class Probe { const Probe(); }
 ''');
       expect(code, contains('void ccrouterRegisterProbeRoute'));
     },
   );
-
-  test('builder accepts complete SemVer 2.0 component versions', () async {
-    final code = await generate(r'''
-const versionedComponent = CCComponentDescriptor(
-  id: 'versioned',
-  version: '1.2.3-alpha.1+build.5',
-);
-@CCRoute<void>(
-  component: versionedComponent,
-  id: 'versioned.detail',
-  pattern: CCPathPattern('/versioned'),
-)
-final class VersionedPage { const VersionedPage(); }
-''');
-    expect(code, contains('versioned.detail'));
-  });
 
   final longRegex = List<String>.filled(2049, 'a').join();
   final manyCaptures = List<String>.generate(
@@ -1131,188 +1250,172 @@ final class VersionedPage { const VersionedPage(); }
   final longConstraint = List<String>.filled(257, 'a').join();
   final longDescription = List<String>.filled(4097, 'x').join();
   final invalid = <String, (String, String)>{
-    'invalid component ID': (
-      "const bad = CCComponentDescriptor(id: 'Bad ID', version: '1.0.0'); @CCRoute<void>(component: bad, id: 'probe', patterns: [CCPathPattern('/probe', primary: true)]) final class Probe { const Probe(); }",
-      'Component ID',
-    ),
-    'invalid component version': (
-      "const bad = CCComponentDescriptor(id: 'bad', version: 'latest'); @CCRoute<void>(component: bad, id: 'probe', patterns: [CCPathPattern('/probe', primary: true)]) final class Probe { const Probe(); }",
-      'SemVer 2.0',
-    ),
-    'invalid numeric prerelease version': (
-      "const bad = CCComponentDescriptor(id: 'bad', version: '1.0.0-01'); @CCRoute<void>(component: bad, id: 'probe', pattern: CCPathPattern('/probe')) final class Probe { const Probe(); }",
-      'SemVer 2.0',
-    ),
-    'invalid component dependencies': (
-      "const bad = CCComponentDescriptor(id: 'bad', version: '1.0.0', dependencies: ['bad']); @CCRoute<void>(component: bad, id: 'probe', patterns: [CCPathPattern('/probe', primary: true)]) final class Probe { const Probe(); }",
-      'self dependencies',
-    ),
     'ambiguous inferred primary': (
-      "@CCRoute<void>(component: probeComponent, id: 'probe', patterns: [CCPathPattern('/probe'), CCPathPattern('/legacy')]) final class Probe { const Probe(); }",
+      "@CCRoute<void>(id: 'probe', patterns: [CCPathPattern('/probe'), CCPathPattern('/legacy')]) final class Probe { const Probe(); }",
       'multiple reversible patterns',
     ),
     'invalid route ID': (
-      "@CCRoute<void>(component: probeComponent, id: 'Probe.detail', pattern: CCPathPattern('/probe')) final class Probe { const Probe(); }",
+      "@CCRoute<void>(id: 'Probe.detail', pattern: CCPathPattern('/probe')) final class Probe { const Probe(); }",
       'Route ID',
     ),
     'invalid repeated route separator': (
-      "@CCRoute<void>(component: probeComponent, id: 'probe..detail', pattern: CCPathPattern('/probe')) final class Probe { const Probe(); }",
+      "@CCRoute<void>(id: 'probe..detail', pattern: CCPathPattern('/probe')) final class Probe { const Probe(); }",
       'Route ID',
     ),
     'invalid interceptor ID': (
-      "@CCRoute<void>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe'), interceptors: ['probe auth']) final class Probe { const Probe(); }",
+      "@CCRoute<void>(id: 'probe', pattern: CCPathPattern('/probe'), interceptors: ['probe auth']) final class Probe { const Probe(); }",
       'Route interceptor ID',
     ),
     'duplicate interceptor ID': (
-      "@CCRoute<void>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe'), interceptors: ['probe.auth', 'probe.auth']) final class Probe { const Probe(); }",
+      "@CCRoute<void>(id: 'probe', pattern: CCPathPattern('/probe'), interceptors: ['probe.auth', 'probe.auth']) final class Probe { const Probe(); }",
       'Duplicate Route interceptor ID',
     ),
     'duplicate Pop guard ID': (
-      "@CCRoute<void>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe'), popGuards: ['probe.dirty', 'probe.dirty']) final class Probe { const Probe(); }",
+      "@CCRoute<void>(id: 'probe', pattern: CCPathPattern('/probe'), popGuards: ['probe.dirty', 'probe.dirty']) final class Probe { const Probe(); }",
       'Duplicate Route Pop guard ID',
     ),
     'invalid placement ID': (
-      "@CCRoute<void>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe'), placement: CCRoutePlacement(hostId: 'Host.Main')) final class Probe { const Probe(); }",
+      "@CCRoute<void>(id: 'probe', pattern: CCPathPattern('/probe'), placement: CCRoutePlacement(hostId: 'Host.Main')) final class Probe { const Probe(); }",
       'Host ID',
     ),
     'self parent': (
-      "@CCRoute<void>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe'), placement: CCRoutePlacement(parentRouteId: 'probe')) final class Probe { const Probe(); }",
+      "@CCRoute<void>(id: 'probe', pattern: CCPathPattern('/probe'), placement: CCRoutePlacement(parentRouteId: 'probe')) final class Probe { const Probe(); }",
       'cannot be its own parent',
     ),
     'duplicate primaries': (
-      "@CCRoute<void>(component: probeComponent, id: 'probe', patterns: [CCPathPattern('/a', primary: true), CCPathPattern('/b', primary: true)]) final class Probe { const Probe(); }",
+      "@CCRoute<void>(id: 'probe', patterns: [CCPathPattern('/a', primary: true), CCPathPattern('/b', primary: true)]) final class Probe { const Probe(); }",
       'exactly one reversible primary',
     ),
     'single and plural patterns': (
-      "@CCRoute<void>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe'), patterns: [CCPathPattern('/legacy')]) final class Probe { const Probe(); }",
+      "@CCRoute<void>(id: 'probe', pattern: CCPathPattern('/probe'), patterns: [CCPathPattern('/legacy')]) final class Probe { const Probe(); }",
       'cannot set both pattern and patterns',
     ),
     'missing patterns': (
-      "@CCRoute<void>(component: probeComponent, id: 'probe') final class Probe { const Probe(); }",
+      "@CCRoute<void>(id: 'probe') final class Probe { const Probe(); }",
       'must set pattern or patterns',
     ),
     'single regex pattern': (
-      "@CCRoute<void>(component: probeComponent, id: 'probe', pattern: CCRegexPattern('/probe')) final class Probe { const Probe(); }",
+      "@CCRoute<void>(id: 'probe', pattern: CCRegexPattern('/probe')) final class Probe { const Probe(); }",
       'Regex patterns are match-only',
     ),
     'regex-only pattern list': (
-      "@CCRoute<void>(component: probeComponent, id: 'probe', patterns: [CCRegexPattern('/probe')]) final class Probe { const Probe(); }",
+      "@CCRoute<void>(id: 'probe', patterns: [CCRegexPattern('/probe')]) final class Probe { const Probe(); }",
       'Regex patterns are match-only',
     ),
     'unmapped parameter': (
-      "@CCRoute<void>(component: probeComponent, id: 'probe', patterns: [CCPathPattern('/probe', primary: true)]) final class Probe { const Probe(this.value); final int value; }",
+      "@CCRoute<void>(id: 'probe', patterns: [CCPathPattern('/probe', primary: true)]) final class Probe { const Probe(this.value); final int value; }",
       'must be a path capture',
     ),
     'missing constructor capture': (
-      "@CCRoute<void>(component: probeComponent, id: 'probe', patterns: [CCPathPattern('/probe/:id', primary: true)]) final class Probe { const Probe(); }",
+      "@CCRoute<void>(id: 'probe', patterns: [CCPathPattern('/probe/:id', primary: true)]) final class Probe { const Probe(); }",
       'Every path capture',
     ),
     'source conflict': (
-      "@CCRoute<void>(component: probeComponent, id: 'probe', patterns: [CCPathPattern('/probe/:id', primary: true)]) final class Probe { const Probe({@CCQueryParam() required this.id}); final int id; }",
+      "@CCRoute<void>(id: 'probe', patterns: [CCPathPattern('/probe/:id', primary: true)]) final class Probe { const Probe({@CCQueryParam() required this.id}); final int id; }",
       'conflicting route sources',
     ),
     'unsupported query object': (
-      "@CCRoute<void>(component: probeComponent, id: 'probe', patterns: [CCPathPattern('/probe', primary: true)]) final class Probe { const Probe({@CCQueryParam() this.value}); final Object? value; }",
+      "@CCRoute<void>(id: 'probe', patterns: [CCPathPattern('/probe', primary: true)]) final class Probe { const Probe({@CCQueryParam() this.value}); final Object? value; }",
       'URI parameters support',
     ),
     'nested query collection': (
-      "@CCRoute<void>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe')) final class Probe { const Probe({@CCQueryParam() required this.values}); final List<List<String>> values; }",
+      "@CCRoute<void>(id: 'probe', pattern: CCPathPattern('/probe')) final class Probe { const Probe({@CCQueryParam() required this.values}); final List<List<String>> values; }",
       'URI parameters support',
     ),
     'nullable query collection element': (
-      "@CCRoute<void>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe')) final class Probe { const Probe({@CCQueryParam() required this.values}); final List<String?> values; }",
+      "@CCRoute<void>(id: 'probe', pattern: CCPathPattern('/probe')) final class Probe { const Probe({@CCQueryParam() required this.values}); final List<String?> values; }",
       'URI parameters support',
     ),
     'unsupported query collection element': (
-      "@CCRoute<void>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe')) final class Probe { const Probe({@CCQueryParam() required this.values}); final Set<Object> values; }",
+      "@CCRoute<void>(id: 'probe', pattern: CCPathPattern('/probe')) final class Probe { const Probe({@CCQueryParam() required this.values}); final Set<Object> values; }",
       'URI parameters support',
     ),
     'query codec without interface': (
-      "final class BadCodec { const BadCodec(); } final class Value { const Value(); } @CCRoute<void>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe')) final class Probe { const Probe({@CCQueryParam(codec: BadCodec) required this.value}); final Value value; }",
+      "final class BadCodec { const BadCodec(); } final class Value { const Value(); } @CCRoute<void>(id: 'probe', pattern: CCPathPattern('/probe')) final class Probe { const Probe({@CCQueryParam(codec: BadCodec) required this.value}); final Value value; }",
       'must implement CCRouteQueryCodec',
     ),
     'query codec value mismatch': (
-      "final class BadCodec implements CCRouteQueryCodec<String> { const BadCodec(); String decode(List<String> values) => ''; List<String> encode(String value) => [value]; } final class Value { const Value(); } @CCRoute<void>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe')) final class Probe { const Probe({@CCQueryParam(codec: BadCodec) required this.value}); final Value value; }",
+      "final class BadCodec implements CCRouteQueryCodec<String> { const BadCodec(); String decode(List<String> values) => ''; List<String> encode(String value) => [value]; } final class Value { const Value(); } @CCRoute<void>(id: 'probe', pattern: CCPathPattern('/probe')) final class Probe { const Probe({@CCQueryParam(codec: BadCodec) required this.value}); final Value value; }",
       'must exactly match',
     ),
     'query codec without const no-argument constructor': (
-      "final class BadCodec implements CCRouteQueryCodec<Value> { BadCodec(this.seed); final String seed; Value decode(List<String> values) => const Value(); List<String> encode(Value value) => ['value']; } final class Value { const Value(); } @CCRoute<void>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe')) final class Probe { const Probe({@CCQueryParam(codec: BadCodec) required this.value}); final Value value; }",
+      "final class BadCodec implements CCRouteQueryCodec<Value> { BadCodec(this.seed); final String seed; Value decode(List<String> values) => const Value(); List<String> encode(Value value) => ['value']; } final class Value { const Value(); } @CCRoute<void>(id: 'probe', pattern: CCPathPattern('/probe')) final class Probe { const Probe({@CCQueryParam(codec: BadCodec) required this.value}); final Value value; }",
       'const unnamed constructor without parameters',
     ),
     'scalar query with custom codec': (
-      "final class BadCodec implements CCRouteQueryCodec<String> { const BadCodec(); String decode(List<String> values) => values.single; List<String> encode(String value) => [value]; } @CCRoute<void>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe')) final class Probe { const Probe({@CCQueryParam(codec: BadCodec) required this.value}); final String value; }",
+      "final class BadCodec implements CCRouteQueryCodec<String> { const BadCodec(); String decode(List<String> values) => values.single; List<String> encode(String value) => [value]; } @CCRoute<void>(id: 'probe', pattern: CCPathPattern('/probe')) final class Probe { const Probe({@CCQueryParam(codec: BadCodec) required this.value}); final String value; }",
       'only valid for a non-scalar',
     ),
     'collection query with custom codec': (
-      "final class BadCodec implements CCRouteQueryCodec<List<String>> { const BadCodec(); List<String> decode(List<String> values) => values; List<String> encode(List<String> value) => value; } @CCRoute<void>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe')) final class Probe { const Probe({@CCQueryParam(codec: BadCodec) required this.value}); final List<String> value; }",
+      "final class BadCodec implements CCRouteQueryCodec<List<String>> { const BadCodec(); List<String> decode(List<String> values) => values; List<String> encode(List<String> value) => value; } @CCRoute<void>(id: 'probe', pattern: CCPathPattern('/probe')) final class Probe { const Probe({@CCQueryParam(codec: BadCodec) required this.value}); final List<String> value; }",
       'only valid for a non-scalar',
     ),
     'duplicate query keys': (
-      "@CCRoute<void>(component: probeComponent, id: 'probe', patterns: [CCPathPattern('/probe', primary: true)]) final class Probe { const Probe({@CCQueryParam(name: 'q') this.a, @CCQueryParam(name: 'q') this.b}); final String? a; final String? b; }",
+      "@CCRoute<void>(id: 'probe', patterns: [CCPathPattern('/probe', primary: true)]) final class Probe { const Probe({@CCQueryParam(name: 'q') this.a, @CCQueryParam(name: 'q') this.b}); final String? a; final String? b; }",
       'duplicate query key',
     ),
     'required external Extra': (
-      "@CCRoute<void>(component: probeComponent, id: 'probe', patterns: [CCPathPattern('/probe', primary: true)], deepLink: CCDeepLinkPolicy.enabled) final class Probe { const Probe({@CCExtraParam() required this.value}); final Object value; }",
+      "@CCRoute<void>(id: 'probe', patterns: [CCPathPattern('/probe', primary: true)], deepLink: CCDeepLinkPolicy.enabled) final class Probe { const Probe({@CCExtraParam() required this.value}); final Object value; }",
       'cannot require in-memory Extra',
     ),
     'multiple Extras': (
-      "@CCRoute<void>(component: probeComponent, id: 'probe', patterns: [CCPathPattern('/probe', primary: true)]) final class Probe { const Probe({@CCExtraParam() this.a, @CCExtraParam() this.b}); final Object? a; final Object? b; }",
+      "@CCRoute<void>(id: 'probe', patterns: [CCPathPattern('/probe', primary: true)]) final class Probe { const Probe({@CCExtraParam() this.a, @CCExtraParam() this.b}); final Object? a; final Object? b; }",
       'only one Extra',
     ),
     'nullable path': (
-      "@CCRoute<void>(component: probeComponent, id: 'probe', patterns: [CCPathPattern('/probe/:id', primary: true)]) final class Probe { const Probe({required this.id}); final int? id; }",
+      "@CCRoute<void>(id: 'probe', patterns: [CCPathPattern('/probe/:id', primary: true)]) final class Probe { const Probe({required this.id}); final int? id; }",
       'Path parameters must be non-nullable',
     ),
     'mismatched aliases': (
-      "@CCRoute<void>(component: probeComponent, id: 'probe', patterns: [CCPathPattern('/probe/:id', primary: true), CCPathPattern('/alias/:other')]) final class Probe { const Probe({required this.id}); final int id; }",
+      "@CCRoute<void>(id: 'probe', patterns: [CCPathPattern('/probe/:id', primary: true), CCPathPattern('/alias/:other')]) final class Probe { const Probe({required this.id}); final int id; }",
       'aliases must capture the same',
     ),
     'bad regex': (
-      "@CCRoute<void>(component: probeComponent, id: 'probe', patterns: [CCPathPattern('/probe', primary: true), CCRegexPattern('[')]) final class Probe { const Probe(); }",
+      "@CCRoute<void>(id: 'probe', patterns: [CCPathPattern('/probe', primary: true), CCRegexPattern('[')]) final class Probe { const Probe(); }",
       'invalid regular expression',
     ),
     'oversized regex': (
-      "@CCRoute<void>(component: probeComponent, id: 'probe', patterns: [CCPathPattern('/probe', primary: true), CCRegexPattern('$longRegex')]) final class Probe { const Probe(); }",
+      "@CCRoute<void>(id: 'probe', patterns: [CCPathPattern('/probe', primary: true), CCRegexPattern('$longRegex')]) final class Probe { const Probe(); }",
       'regular expression exceeds 2048',
     ),
     'too many regex captures': (
-      "@CCRoute<void>(component: probeComponent, id: 'probe', patterns: [CCPathPattern('/probe', primary: true), CCRegexPattern('$manyCaptures')]) final class Probe { const Probe(); }",
+      "@CCRoute<void>(id: 'probe', patterns: [CCPathPattern('/probe', primary: true), CCRegexPattern('$manyCaptures')]) final class Probe { const Probe(); }",
       'exceeds 32 named captures',
     ),
     'bad constraint': (
-      "@CCRoute<void>(component: probeComponent, id: 'probe', patterns: [CCPathPattern('/probe/:id', primary: true, constraints: {'id': '['})]) final class Probe { const Probe({required this.id}); final int id; }",
+      "@CCRoute<void>(id: 'probe', patterns: [CCPathPattern('/probe/:id', primary: true, constraints: {'id': '['})]) final class Probe { const Probe({required this.id}); final int id; }",
       'invalid parameter constraint',
     ),
     'oversized constraint': (
-      "@CCRoute<void>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe/:id', constraints: {'id': '$longConstraint'})) final class Probe { const Probe({required this.id}); final String id; }",
+      "@CCRoute<void>(id: 'probe', pattern: CCPathPattern('/probe/:id', constraints: {'id': '$longConstraint'})) final class Probe { const Probe({required this.id}); final String id; }",
       'parameter constraint exceeds 256',
     ),
     'oversized description': (
-      "@CCRoute<void>(component: probeComponent, id: 'probe', pattern: CCPathPattern('/probe'), description: '$longDescription') final class Probe { const Probe(); }",
+      "@CCRoute<void>(id: 'probe', pattern: CCPathPattern('/probe'), description: '$longDescription') final class Probe { const Probe(); }",
       'description exceeds 4096',
     ),
     'duplicate ID': (
-      "@CCRoute<void>(component: probeComponent, id: 'probe', patterns: [CCPathPattern('/a', primary: true)]) final class A { const A(); } @CCRoute<void>(component: probeComponent, id: 'probe', patterns: [CCPathPattern('/b', primary: true)]) final class B { const B(); }",
+      "@CCRoute<void>(id: 'probe', patterns: [CCPathPattern('/a', primary: true)]) final class A { const A(); } @CCRoute<void>(id: 'probe', patterns: [CCPathPattern('/b', primary: true)]) final class B { const B(); }",
       'Duplicate route ID',
     ),
     'private page': (
-      "@CCRoute<void>(component: probeComponent, id: 'probe', patterns: [CCPathPattern('/a', primary: true)]) final class _A { const _A(); }",
+      "@CCRoute<void>(id: 'probe', patterns: [CCPathPattern('/a', primary: true)]) final class _A { const _A(); }",
       'page classes must be public',
     ),
     'private parameter type': (
-      "final class _Payload { const _Payload(); } @CCRoute<void>(component: probeComponent, id: 'probe', patterns: [CCPathPattern('/a', primary: true)]) final class A { const A({@CCExtraParam() required this.payload}); final _Payload payload; }",
+      "final class _Payload { const _Payload(); } @CCRoute<void>(id: 'probe', patterns: [CCPathPattern('/a', primary: true)]) final class A { const A({@CCExtraParam() required this.payload}); final _Payload payload; }",
       'must be public',
     ),
     'implicit result type': (
-      "@CCRoute(component: probeComponent, id: 'probe', patterns: [CCPathPattern('/a', primary: true)]) final class A { const A(); }",
+      "@CCRoute(id: 'probe', patterns: [CCPathPattern('/a', primary: true)]) final class A { const A(); }",
       'explicitly specify its result type',
     ),
     'generic page': (
-      "@CCRoute<void>(component: probeComponent, id: 'probe', patterns: [CCPathPattern('/a', primary: true)]) final class A<T> { const A(); }",
+      "@CCRoute<void>(id: 'probe', patterns: [CCPathPattern('/a', primary: true)]) final class A<T> { const A(); }",
       'non-generic page',
     ),
     'no unnamed constructor': (
-      "@CCRoute<void>(component: probeComponent, id: 'probe', patterns: [CCPathPattern('/a', primary: true)]) final class A { const A.named(); }",
+      "@CCRoute<void>(id: 'probe', patterns: [CCPathPattern('/a', primary: true)]) final class A { const A.named(); }",
       'unnamed generative constructor',
     ),
   };

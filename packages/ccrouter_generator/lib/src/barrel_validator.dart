@@ -5,12 +5,12 @@ import 'package:analyzer/dart/analysis/results.dart';
 import 'package:analyzer/dart/analysis/utilities.dart';
 import 'package:analyzer/dart/ast/ast.dart';
 
-/// Checks that public generated contracts are deliberately re-exported.
+/// Checks that public generated Route and Service contracts are re-exported.
 ///
 /// Run this check from the workspace route-catalog command. Component authors
-/// keep generated parts beside their page declarations, while a public barrel
-/// must explicitly show both the route and its argument contract. Component
-/// routes remain library-private and are therefore excluded from this check.
+/// keep generated libraries isolated from authored declarations, while a
+/// public barrel must explicitly show the generated Route types or Service
+/// Token. Component-internal capabilities remain excluded from this check.
 final class CCRouteBarrelExportValidator {
   /// Finds missing or incomplete public barrel exports below [workspaceRoot].
   ///
@@ -54,6 +54,20 @@ final class CCRouteBarrelExportValidator {
           'Public route "${route['id']}" in $source must be re-exported '
           'from $contractLibrary '
           'with both generated contracts in a public barrel using `show`.',
+        );
+      }
+      for (final contract in _objects(document['serviceContracts'])) {
+        final token = contract['token'];
+        if (token is! Map) continue;
+        final tokenSymbol = '${token['symbol'] ?? ''}';
+        final tokenLibrary = '${token['library'] ?? ''}';
+        if (tokenSymbol.isEmpty || tokenLibrary.isEmpty) continue;
+        final contractFile = File(_join(packageRoot.path, tokenLibrary));
+        if (_isShownByBarrel(contractFile, {tokenSymbol}, barrels)) continue;
+        errors.add(
+          'Public Service contract "${contract['id']}" in $source must '
+          're-export generated Token "$tokenSymbol" from $tokenLibrary in a '
+          'public barrel using `show`.',
         );
       }
     }

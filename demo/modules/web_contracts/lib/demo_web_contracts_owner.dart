@@ -11,6 +11,6 @@ export 'web_request.dart'
     show DemoPrivateWebRequest, DemoPublicWebTarget, DemoPublicWebTargetCodec;
 export 'src/web_route_contracts.dart'
     show
-        demoWebComponent,
+        demoWebComponentId,
         DemoPrivateWebRouteContract,
         DemoPublicWebRouteContract;

@@ -1,14 +1,11 @@
 import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 
-/// Stable component identity shared by the order contract and implementation.
-const demoOrderComponent = CCComponentDescriptor(
-  id: 'demo_order_component',
-  version: '0.1.0',
-);
+/// Stable component identity shared by order contracts and implementation.
+const demoOrderComponentId = CCComponentId('demo_order_component');
 
 /// Cross-component contract for opening one order detail destination.
 @CCRouteContract<String>(
-  component: demoOrderComponent,
+  componentId: demoOrderComponentId,
   id: 'order.detail',
   patterns: [
     CCPathPattern('/orders/:orderId', primary: true),

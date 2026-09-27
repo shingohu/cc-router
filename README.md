@@ -67,7 +67,8 @@ import 'package:ccrouter_go_router/ccrouter_go_router.dart';
 | 动态组件安装/卸载 | 暂不支持 | 当前组件集合在 `initialize` 时固定 |
 | Action Pipeline | 暂不支持 | 等真实优先级、短路、白名单场景成熟后再设计 |
 | 完整状态恢复 | 暂不支持 | 当前只记录脱敏的 restoration opportunity |
-| Service/Command/Event 注解生成 | 暂不支持 | 当前样板量不足，仍在 Registrar 中显式注册 |
+| Service 注解生成 | 已支持 | `@CCServiceContract` 生成 Token，`@CCService` 生成简单 Provider registration |
+| Command/Event/InitTask 注解生成 | 暂不支持 | 当前样板量不足，通过 `@CCComponentContribution` 显式注册 |
 
 GoRouter 当前无法可靠提供原子 `pushAndRemoveUntil`、精确 `removeRoute/removeRouteBelow` 和 `replaceRouteBelow`。CCRouter 不公开语义不完整的替代方法，也不会把它们静默拆成多个普通操作。
 
@@ -98,32 +99,25 @@ fvm flutter run -d macos
 
 ### 1. 声明组件
 
-每个组件定义一个稳定 descriptor，并用一个 Registrar 注册能力：
+每个实现 Package 只定义一个顶层 `const CCComponent`。生成器会自动发现它，并生成
+Registrar、Manifest、路由目录和简单 Service 注册：
 
 ```dart
 import 'package:ccrouter/ccrouter.dart';
 
-const orderComponent = CCComponentDescriptor(
-  id: 'order_component',
+const orderComponentId = CCComponentId('order_component');
+
+const orderComponent = CCComponent(
+  id: orderComponentId,
   version: '1.0.0',
-  dependencies: ['account_component'],
+  dependencies: [accountComponentId],
 );
-
-part 'ccrouter_generated/component/order_component_registrar.component.g.dart';
-
-@CCComponent(orderComponent)
-final class _OrderComponentRegistrar implements CCComponentRegistrar {
-  const _OrderComponentRegistrar();
-
-  @override
-  void register(CCRegistry registry) {
-    orderComponentGeneratedRoutes.register(registry);
-    // Service、Command、Event、InitTask 和策略在这里显式注册。
-  }
-}
 ```
 
-组件实现类、Registrar 和生成装配入口不要从业务 barrel 导出。组件间使用公开 contracts Package 或明确的 public contract library。
+不需要手写 Registrar。没有专用声明模型的 Command、Event、InitTask、Shell 或复杂 Service
+可放进带 `@CCComponentContribution` 的顶层注册函数；生成器会把它并入同一个私有 Registrar。
+组件定义、Contribution 和生成装配入口不要从业务 barrel 导出。组件间使用公开 contracts
+Package 或明确的 public contract library。
 
 ### 2. 声明组件内路由
 
@@ -134,7 +128,6 @@ import 'package:flutter/material.dart';
 import 'ccrouter_generated/component/order_component.route_api.g.dart';
 
 @CCRoute<String>(
-  component: orderComponent,
   id: 'order.detail',
   pattern: CCPathPattern('/orders/:orderId'),
   description: '订单详情，确认后返回订单编号。',
@@ -337,7 +330,7 @@ await CCRouter.navigator.open(
 ```dart
 // order_contracts
 @CCRouteContract<String>(
-  component: orderComponent,
+  componentId: orderComponentId,
   id: 'order.detail',
   pattern: CCPathPattern('/orders/:orderId'),
 )
@@ -417,7 +410,9 @@ Interceptor 是**导航前决策**，适合：
 - redirect 到登录/说明页
 - defer 原请求，外部条件满足后恢复
 
-全局 Interceptor 在 `CCRouter.initialize` 注入；路由级 Interceptor 在组件 Registrar 注册，并由注解中的稳定 ID 引用。它们可以返回 proceed、cancel、redirect 或 defer。
+全局 Interceptor 在 `CCRouter.initialize` 注入；路由级 Interceptor 通过组件
+`@CCComponentContribution` 注册，并由注解中的稳定 ID 引用。它们可以返回
+proceed、cancel、redirect 或 defer。
 
 不要在 Interceptor 中调用 `CCRouter.navigator` 或 Adapter，也不要用它做 PV/UV、页面到达回调或业务数据加载。异步 Interceptor 必须有明确超时和取消语义。
 
@@ -538,15 +533,59 @@ Service 表达可重复调用、可能持有状态或资源的长期能力。选
 | `session` | 登录 Session 内首次解析到 logout/account switch | 用户资料、账号缓存、鉴权能力 |
 | `route` | 某个 Managed RouteEntry 内首次解析到 Entry 永久移除 | 页面 Controller、草稿、页面订阅 |
 
-Registrar 注册：
+零参数同步构造的简单 Service 使用注解，由生成器自动注册：
 
 ```dart
-registry.registerService<OrderRepository>(
-  CCServiceProvider(
-    scope: CCServiceScope.session,
-    factory: (_) => OrderRepositoryImpl(),
-  ),
-);
+@CCService(
+  id: 'order.repository',
+  scope: CCServiceScope.session,
+)
+final class OrderRepository {
+  OrderRepository();
+}
+```
+
+跨组件 Service 在 Pure Dart contracts Package 声明接口和 Owner：
+
+```dart
+const orderComponentId = CCComponentId('order_component');
+
+@CCServiceContract(
+  componentId: orderComponentId,
+  id: 'order.summary',
+  description: 'Formats one order identity for cross-component display.',
+)
+abstract interface class OrderSummaryService {
+  String summaryFor(int orderId);
+}
+```
+
+生成后，contracts barrel 显式导出接口和生成 Token；实现 Package 绑定该 Token：
+
+```dart
+@CCService(contract: orderSummaryServiceToken)
+final class OrderSummaryServiceImpl implements OrderSummaryService {
+  const OrderSummaryServiceImpl();
+
+  @override
+  String summaryFor(int orderId) => 'Order #$orderId';
+}
+```
+
+需要构造参数、依赖注入、自定义 Factory 或 async initializer 时，使用
+`@CCComponentContribution` 显式注册，不把复杂生命周期隐藏在注解里：
+
+```dart
+@CCComponentContribution(id: 'order.services')
+void registerOrderServices(CCRegistry registry) {
+  registry.registerService<OrderRepository>(
+    CCServiceProvider(
+      scope: CCServiceScope.session,
+      factory: (_) => OrderRepositoryImpl(database),
+      initializer: (service, context) => service.open(context.cancellation),
+    ),
+  );
+}
 ```
 
 解析：
@@ -623,9 +662,12 @@ registry.registerEventSubscriber<OrderPaid>(
 await CCRouter.event(const OrderPaid('42'));
 ```
 
-同一 Event 可以没有订阅者或有多个订阅者。订阅按稳定 ID 确定启动顺序，单个订阅者失败不会阻止其他订阅者；调用 Future 在本次分发完成后结束。`CCEventSubscriberId<E>` 的值是**订阅者 ID**，不是 Event 类型 ID：同一 Event 的多个订阅者必须有不同稳定 ID，生成的 Contract 包应提供这些常量，避免在 Registrar 中散落自由字符串。Event 类型本身由 Dart 类型绑定，不能用运行时字符串替代类型校验。需要唯一处理者、返回值或业务成功语义时使用 Command，不要使用 Event。
+同一 Event 可以没有订阅者或有多个订阅者。订阅按稳定 ID 确定启动顺序，单个订阅者失败不会阻止其他订阅者；调用 Future 在本次分发完成后结束。`CCEventSubscriberId<E>` 的值是**订阅者 ID**，不是 Event 类型 ID：同一 Event 的多个订阅者必须有不同稳定 ID，生成的 Contract 包应提供这些常量，避免在 Contribution 中散落自由字符串。Event 类型本身由 Dart 类型绑定，不能用运行时字符串替代类型校验。需要唯一处理者、返回值或业务成功语义时使用 Command，不要使用 Event。
 
-旧的 `registerEvent(String id, handler)` 仍为 1.x Registrar 和底层测试保留；新组件优先使用 typed subscriber 形式。订阅者在 Runtime 生命周期内注册并由 Runtime 调度，业务不得在页面创建/销毁时反复注册或自行取消；需要按页面生命周期订阅时，应让 Route Service 或页面生命周期回调管理业务资源，而不是改变 Event 注册表。
+旧的 `registerEvent(String id, handler)` 仍为 1.x 底层注册和测试保留；新组件优先在
+`@CCComponentContribution` 中使用 typed subscriber 形式。订阅者在 Runtime 生命周期内注册并由
+Runtime 调度，业务不得在页面创建/销毁时反复注册或自行取消；需要按页面生命周期订阅时，应让
+Route Service 或页面生命周期回调管理业务资源，而不是改变 Event 注册表。
 
 ## InitTask
 
@@ -675,16 +717,20 @@ fvm dart run ccrouter_generator:ccrouter clean demo
 ```text
 lib/src/ccrouter_generated/
 ├── binding/     # Flutter 页面构造 bridge
-├── component/   # Manifest、组件 Route API、组件路由索引
-├── contract/    # 独立 Pure Dart Route Contract
+├── component/   # 自动 Registrar、Manifest、组件 Route API
+├── contract/    # 独立 Pure Dart Route/Service Contract
 ├── host/        # Host 聚合入口
 ├── metadata/    # Package Index、Host routes、可读 Catalog
-└── route/       # 组件内部 Route contract/registration bridge
+├── route/       # 组件内部 Route contract/registration bridge
+└── service/     # 简单 Service Provider registration bridge
 ```
 
 并非每个 Package 都会生成全部子目录；Package Bundle 与 Host 聚合代码按 Package 角色写入 `host/`。
 
-页面新增后只需添加注解并重新执行 `generate`；不要手写生成文件、逐页修改 Registrar 或给页面添加 generated `part`。Registrar 的 `.component.g.dart` 是唯一必须保留的 `part`，用于同 library 的私有 Registrar Manifest。
+页面或简单 Service 新增后只需添加注解并重新执行 `generate`；不要手写生成文件、逐项修改
+Registrar 或添加 generated `part`。没有任何生成能力的 Package 不创建
+`lib/src/ccrouter_generated/`；清理最后一项能力后，CLI 会移除仅含受管文件的空目录，但保留
+任何未知或手写文件。
 
 详细生成规则见 [`packages/ccrouter_generator/README.md`](packages/ccrouter_generator/README.md)。
 
@@ -725,7 +771,7 @@ fvm dart run ccrouter_generator:ccrouter generate demo --check
 - 页面导航统一走 `CCRouter.navigator`。
 - 正确区分 Interceptor、PopGuard、Aspect 和页面生命周期。
 - 遵守 Host SPI、组件实现与 contracts Package 的依赖边界。
-- 不虚构当前尚未实现的 Action Pipeline、动态组件或 Service 注解。
+- 不虚构当前尚未实现的 Action Pipeline、动态组件、Service 自动 Proxy 或 Command/Event/InitTask 注解。
 - 生成后执行 analyze、针对性测试与 `generate --check`。
 
 将完整的 `skills/ccrouter-integration-development/` 目录复制或同步到集成工程的 `skills/` 下，不要只复制 `SKILL.md`，因为能力决策、实现模式和审查清单位于 `references/`。然后在集成工程的 Agent 规则中加入：

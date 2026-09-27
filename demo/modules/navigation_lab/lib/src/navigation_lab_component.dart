@@ -1,7 +1,13 @@
 import 'package:ccrouter/ccrouter.dart';
+import 'package:demo_order_contracts/demo_order_contracts.dart';
+import 'package:demo_web_contracts/demo_web_contracts.dart';
 
-const demoNavigationLabComponent = CCComponentDescriptor(
-  id: 'demo_navigation_lab_component',
+const demoNavigationLabComponentId = CCComponentId(
+  'demo_navigation_lab_component',
+);
+
+const demoNavigationLabComponent = CCComponent(
+  id: demoNavigationLabComponentId,
   version: '0.1.0',
-  dependencies: ['demo_order_component', 'demo_web_component'],
+  dependencies: [demoOrderComponentId, demoWebComponentId],
 );

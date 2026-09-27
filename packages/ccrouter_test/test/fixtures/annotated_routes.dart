@@ -1,23 +1,14 @@
 import 'package:ccrouter/ccrouter.dart';
 import 'route_types.dart' as types;
 
-part 'annotated_routes.route.g.dart';
+const fixtureComponent = CCComponent(
+  id: CCComponentId('fixture'),
+  version: '1.0.0',
+);
 
-const fixtureComponent = CCComponentDescriptor(id: 'fixture', version: '1.0.0');
-
-@CCComponent(fixtureComponent)
-final class FixtureComponentRegistrar implements CCComponentRegistrar {
-  const FixtureComponentRegistrar();
-
-  @override
-  void register(CCRegistry registry) {
-    _DetailPageRoute.register(registry);
-    _PositionalPageRoute.register(registry);
-    _ExtraPageRoute.register(registry);
-    _PrefixedPageRoute.register(registry);
-    _InternalPageRoute.register(registry);
-    registry.registerRouteInterceptor('fixture.auth', const FixtureProceed());
-  }
+@CCComponentContribution(id: 'fixture.policies')
+void registerFixturePolicies(CCRegistry registry) {
+  registry.registerRouteInterceptor('fixture.auth', const FixtureProceed());
 }
 
 final class FixtureProceed implements CCNavigationInterceptor {
@@ -36,7 +27,6 @@ final class Snapshot {
 }
 
 @CCRoute<String>(
-  component: fixtureComponent,
   id: 'fixture.detail',
   patterns: [
     CCPathPattern('/detail/:id', primary: true, constraints: {'id': r'\d+'}),
@@ -74,21 +64,12 @@ final class DetailPage {
   final Snapshot? snapshot;
 }
 
-@CCRoute<void>(
-  component: fixtureComponent,
-  id: 'fixture.internal',
-  pattern: CCPathPattern('/internal'),
-)
-final class _InternalPage {
-  const _InternalPage();
+@CCRoute<void>(id: 'fixture.internal', pattern: CCPathPattern('/internal'))
+final class InternalPage {
+  const InternalPage();
 }
 
-CCRouteIntent<void> internalIntent() => _InternalPageRoute.intent();
-void registerInternal(CCRegistry registry) =>
-    _InternalPageRoute.register(registry);
-
 @CCRoute<int>(
-  component: fixtureComponent,
   id: 'fixture.positional',
   patterns: [CCPathPattern('/position/:value', primary: true)],
 )
@@ -99,7 +80,6 @@ final class PositionalPage {
 }
 
 @CCRoute<bool>(
-  component: fixtureComponent,
   id: 'fixture.extra',
   patterns: [CCPathPattern('/extra', primary: true)],
 )
@@ -109,7 +89,6 @@ final class ExtraPage {
 }
 
 @CCRoute<types.Result>(
-  component: fixtureComponent,
   id: 'fixture.prefixed',
   patterns: [CCPathPattern('/prefixed', primary: true)],
 )
@@ -122,45 +101,3 @@ final class PrefixedPage {
   final types.Mode mode;
   final types.Payload? payload;
 }
-
-CCRouteDefinition<dynamic, String> get detailDefinition =>
-    _DetailPageRoute.definition;
-CCRouteCodec<dynamic> get detailCodec => _DetailPageRoute.definition.codec;
-DetailPage buildDetailPage(dynamic arguments) =>
-    _DetailPageRoute.build(arguments as _DetailPageRouteArguments);
-CCRouteIntent<String> detailIntent({
-  required int id,
-  String? search,
-  DetailTab tab = DetailTab.summary,
-  bool enabled = false,
-  double ratio = 1.0,
-  Snapshot? snapshot,
-}) => _DetailPageRoute.intent(
-  id: id,
-  search: search,
-  tab: tab,
-  enabled: enabled,
-  ratio: ratio,
-  snapshot: snapshot,
-);
-dynamic detailArguments({required int id, double ratio = 1.0}) =>
-    _DetailPageRouteArguments(id: id, ratio: ratio);
-int detailArgumentId(Object? arguments) =>
-    (arguments as _DetailPageRouteArguments).id;
-
-CCRouteCodec<dynamic> get positionalCodec =>
-    _PositionalPageRoute.definition.codec;
-PositionalPage buildPositionalPage(dynamic arguments) =>
-    _PositionalPageRoute.build(arguments as _PositionalPageRouteArguments);
-
-CCRouteCodec<dynamic> get extraCodec => _ExtraPageRoute.definition.codec;
-ExtraPage buildExtraPage(dynamic arguments) =>
-    _ExtraPageRoute.build(arguments as _ExtraPageRouteArguments);
-
-CCRouteCodec<dynamic> get prefixedCodec => _PrefixedPageRoute.definition.codec;
-PrefixedPage buildPrefixedPage(dynamic arguments) =>
-    _PrefixedPageRoute.build(arguments as _PrefixedPageRouteArguments);
-CCRouteIntent<types.Result> prefixedIntent({
-  types.Mode mode = types.Mode.normal,
-  types.Payload? payload,
-}) => _PrefixedPageRoute.intent(mode: mode, payload: payload);

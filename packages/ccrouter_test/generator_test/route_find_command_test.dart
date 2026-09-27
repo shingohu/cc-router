@@ -19,7 +19,7 @@ void main() {
     expect(
       '${result.stdout}',
       contains(
-        'package:demo_order_contracts/src/order_detail_route_contract.dart:19:16',
+        'package:demo_order_contracts/src/order_detail_route_contract.dart:16:16',
       ),
     );
     expect(

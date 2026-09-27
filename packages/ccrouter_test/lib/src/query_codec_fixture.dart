@@ -4,15 +4,8 @@ export 'query_codec_types.dart';
 
 import 'query_codec_types.dart';
 
-/// Component identity used only by generated Query codec regression tests.
-const queryCodecFixtureComponent = CCComponentDescriptor(
-  id: 'query_codec_fixture',
-  version: '1.0.0',
-);
-
 /// Destination schema used to compile and execute generated Query conversion.
 @CCRoute<void>(
-  component: queryCodecFixtureComponent,
   id: 'query_codec_fixture.detail',
   pattern: CCPathPattern('/query-codec-fixture'),
 )

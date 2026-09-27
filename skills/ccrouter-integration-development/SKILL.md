@@ -15,7 +15,7 @@ Use CCRouter as the application component boundary. Prefer its generated contrac
    - **Contracts package**: Pure Dart cross-component Route or Service contracts.
 2. Classify the requested behavior with [capability-decisions.md](references/capability-decisions.md).
 3. When a production scenario appears unsupported, incomplete, or defective, follow [CCRouter-production-adoption-workflow.md](../../docs/CCRouter-production-adoption-workflow.md) before inventing a workaround or requesting a framework API.
-4. Inspect existing generated APIs, Registrar patterns, component descriptor, and Host topology. Do not invent APIs from design documents.
+4. Inspect existing generated APIs, the Package's single component definition, contribution registrations, and Host topology. Do not invent APIs from design documents.
 5. Implement through the narrowest public CCRouter API. Keep Host SPI out of feature code.
 6. Run generation after annotation or component assembly changes. Never edit generated files.
 7. Add focused tests for success, failure, lifecycle cleanup, and relevant concurrency.
@@ -40,11 +40,11 @@ Read [implementation-patterns.md](references/implementation-patterns.md) when ad
 - Do not access `CCRouterRuntime`, `CCScope`, mutable Route Entries, Registry internals, or framework disposal entry points.
 - Do not manually dispose framework-owned Service instances, Route Scopes, Adapters, or Sessions.
 - Do not edit anything under `lib/src/ccrouter_generated/`.
-- Do not add a generated route `part` to a page. Only the Registrar keeps its generated `.component.g.dart` part.
+- Do not add a generated `part` to a page, Service, component definition, or contribution. Generated libraries are standalone files assembled by the generator.
 - Keep an internal route on `@CCRoute`. Promote it to `@CCRouteContract` only when a real external component consumer appears.
 - Use `@CCExtraParam` only for typed, process-local, short-lived objects. Generated page bindings preserve the declared static type and reject a mismatched runtime object with `CCRouteParameterError`; Extra is not a Deep Link, restoration, persistence, or cross-process channel.
 - Put stable cross-component contracts in a Pure Dart contracts package. Consumers depend on the contracts package, not the implementation package.
-- Do not simulate unsupported Action Pipeline, dynamic component activation/deactivation, complete state restoration, Navigator 1.0 Backend, or Service/Command/Event annotations.
+- Do not simulate unsupported Action Pipeline, dynamic component activation/deactivation, complete state restoration, Navigator 1.0 Backend, Service automatic Proxy, or Command/Event/InitTask annotations.
 - Use `CCEventSubscriberId<E>` and `CCEventSubscriber<E>` for new Event registrations. The ID identifies one subscriber, not the Event type; keep it stable and unique across the Runtime. The legacy string overload is only for existing 1.x registrars and low-level tests.
 - Connect application logging through `CCDiagnosticsConfig(sink: ...)`. A `CCDiagnosticSink` is asynchronous, bounded, observational, and failure-isolated. Category policies control external delivery and sampling only; they do not disable Runtime traces or lifecycle state. Forward only the sanitized fields supplied by `CCDiagnosticEvent` and never append raw URI, arguments, Extra, tokens, widgets, backend objects, exception messages, or business results.
 - Treat `componentGraph`, `componentRegistration`, and `runtimeInitialize` as the framework-owned component/startup diagnostic flow. Configure the Host Sink at `CCRouter.initialize` with `CCDiagnosticLevel.debug` when start events are needed; do not duplicate these lifecycle logs in application bootstrap code.
@@ -82,10 +82,11 @@ Read [implementation-patterns.md](references/implementation-patterns.md) when ad
 - Select the narrowest Service Scope: app, session, or route.
 - Prefer singleton; use `newInstance` only for stateless or immutable helpers whose ownership remains safe.
 - Use async Service readiness only when callers cannot safely use the instance immediately after synchronous construction.
+- Use `@CCService` only for a public concrete non-generic class with an unnamed zero-argument generative constructor. Use `@CCComponentContribution` for custom factories, constructor injection, async initializers, Command, Event, InitTask, Shell, and policy registration.
 
 ## Generated Code and Validation
 
-After route annotation, descriptor, Registrar, or dependency changes, run from the workspace root:
+After Route/Service annotation, component definition, contribution, or dependency changes, run from the workspace root:
 
 ```bash
 fvm dart run ccrouter_generator:ccrouter generate <host-root>

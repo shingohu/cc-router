@@ -5,7 +5,7 @@
     "name": "demo_payment",
     "version": "0.1.0"
   },
-  "contentFingerprint": "11f5095aeb56a3cabebfd27195bc87f0efcf0fb84857d10045c358e2ef378a60",
+  "contentFingerprint": "f494b708ca975d21d52f7328ef0666ca32939a42191afb02afe2225df8edfa3a",
   "bundle": {
     "library": "lib/src/ccrouter_generated/host/demo_payment_ccrouter.g.dart",
     "symbol": "ccrouterGeneratedPackageBundle"
@@ -14,19 +14,22 @@
     {
       "name": "demo_order_contracts",
       "version": "0.1.0",
-      "contentFingerprint": "7f90a4fb91d78a1bc7ff05e6df9171d7d83a295f8ead2b044815a9c4109ed5fe"
+      "contentFingerprint": "24874468f4dc2ed4494d337961fe35f36cc9113e5a4d5818bee80c5b17ca4c8e"
     }
   ],
   "metadata": [
     {
       "schemaVersion": 3,
       "package": "demo_payment",
-      "source": "lib/src/demo_payment_component_registrar.dart",
+      "source": "lib/src/demo_payment_component.dart",
       "componentDeclarations": [
         "demo_payment_component"
       ],
       "componentManifests": {
         "demo_payment_component": "demoPaymentComponentManifest"
+      },
+      "componentSymbols": {
+        "demo_payment_component": "demoPaymentComponent"
       },
       "components": [
         {
@@ -39,7 +42,8 @@
         }
       ],
       "routes": [],
-      "routeImplementations": []
+      "routeImplementations": [],
+      "contributions": []
     }
   ],
   "capabilityCatalog": {

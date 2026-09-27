@@ -2,6 +2,12 @@ part of 'route_generator.dart';
 
 /// Emits structured route metadata for documentation and CI.
 final class _RouteMetadataBuilder implements Builder {
+  /// Matches package-owned manual registration contributions.
+  static const _contribution = TypeChecker.typeNamedLiterally(
+    'CCComponentContribution',
+    inPackage: 'ccrouter_contracts',
+  );
+
   /// Creates the route metadata builder with package-level output paths.
   _RouteMetadataBuilder()
     : buildExtensions = const {
@@ -38,18 +44,17 @@ final class _RouteMetadataBuilder implements Builder {
       );
     }
     final implementations = _readRouteImplementationModels(library);
-    if (routes.isEmpty && implementations.isEmpty) return;
+    final contributions = _readComponentContributions(library);
+    if (routes.isEmpty && implementations.isEmpty && contributions.isEmpty) {
+      return;
+    }
     final payload = _metadataPayload(
       package: buildStep.inputId.package,
       source: buildStep.inputId.path,
-      components: [
-        ...routes.map((route) => route.component),
-        ...implementations.map(
-          (implementation) => implementation.contract.component,
-        ),
-      ],
+      components: const [],
       routes: routes,
       routeImplementations: implementations,
+      contributions: contributions,
       componentDeclarations: const [],
     );
     final jsonOutput = buildStep.allowedOutputs.singleWhere(
@@ -69,8 +74,10 @@ Map<String, Object?> _metadataPayload({
   required List<_ComponentModel> components,
   required List<_RouteModel> routes,
   List<_RouteImplementationModel> routeImplementations = const [],
+  List<_ComponentContributionModel> contributions = const [],
   List<String>? componentDeclarations,
   Map<String, String> componentManifests = const {},
+  Map<String, String> componentSymbols = const {},
 }) => {
   'schemaVersion': 3,
   'package': package,
@@ -79,12 +86,9 @@ Map<String, Object?> _metadataPayload({
       componentDeclarations ??
       components.map((component) => component.id).toList(),
   'componentManifests': componentManifests,
+  'componentSymbols': componentSymbols,
   'components': {
-    for (final component in [
-      ...components,
-      ...routes.map((route) => route.component),
-    ])
-      component.id: _componentJson(component),
+    for (final component in components) component.id: _componentJson(component),
   }.values.toList(),
   'routes': routes
       .map((route) => _routeJson(route, package: package, source: source))
@@ -98,7 +102,81 @@ Map<String, Object?> _metadataPayload({
         ),
       )
       .toList(),
+  'contributions': contributions
+      .map(
+        (contribution) => <String, Object?>{
+          'id': contribution.id,
+          'componentId': null,
+          'package': package,
+          'source': source,
+          'symbol': contribution.function.displayName,
+          'declaration': _sourceReference(contribution.function),
+        },
+      )
+      .toList(),
 };
+
+/// Validated package-owned manual registration function.
+final class _ComponentContributionModel {
+  /// Stores the stable [id] and callable source [function].
+  const _ComponentContributionModel({required this.id, required this.function});
+
+  /// Stable component-local identity used for generated ordering.
+  final String id;
+
+  /// Public top-level synchronous function invoked by generated assembly.
+  final TopLevelFunctionElement function;
+}
+
+/// Reads contribution annotations and validates their restricted signature.
+List<_ComponentContributionModel> _readComponentContributions(
+  LibraryReader library,
+) {
+  final contributions = <_ComponentContributionModel>[];
+  final ids = <String>{};
+  for (final annotated in library.annotatedWith(
+    _RouteMetadataBuilder._contribution,
+  )) {
+    final element = annotated.element;
+    if (element is! TopLevelFunctionElement ||
+        element.displayName.startsWith('_')) {
+      _fail(
+        'CCComponentContribution requires a public top-level function.',
+        element,
+      );
+    }
+    if (element.returnType is! VoidType ||
+        element.formalParameters.length != 1) {
+      _fail(
+        'CCComponentContribution functions must synchronously return void and '
+        'accept exactly one CCRegistry parameter.',
+        element,
+      );
+    }
+    final parameterType = element.formalParameters.single.type;
+    if (parameterType is! InterfaceType ||
+        parameterType.element.displayName != 'CCRegistry' ||
+        !parameterType.element.library.uri.toString().startsWith(
+          'package:ccrouter_core/',
+        )) {
+      _fail(
+        'CCComponentContribution functions must accept exactly one CCRegistry '
+        'parameter.',
+        element,
+      );
+    }
+    final id = annotated.annotation.read('id').stringValue;
+    _validateStableId(id, 'Component contribution ID', element);
+    if (!ids.add(id)) {
+      _fail(
+        'Duplicate component contribution ID "$id" in this library.',
+        element,
+      );
+    }
+    contributions.add(_ComponentContributionModel(id: id, function: element));
+  }
+  return contributions;
+}
 
 /// Serializes one component descriptor deterministically.
 Map<String, Object?> _componentJson(_ComponentModel component) => {
@@ -115,8 +193,7 @@ Map<String, Object?> _routeJson(
   required String source,
 }) => {
   'id': route.id,
-  'componentId': route.component.id,
-  'componentVersion': route.component.version,
+  'componentId': route.componentId,
   'exposure': route.exposure,
   'deepLink': _enumValue(
     route.annotation.read('deepLink').objectValue,
@@ -290,7 +367,7 @@ Map<String, Object?> _routeImplementationJson(
   required String source,
 }) => {
   'routeId': implementation.contract.id,
-  'componentId': implementation.contract.component.id,
+  'componentId': null,
   'package': package,
   'source': source,
   'contract': _sourceReference(implementation.contract.page),

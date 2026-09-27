@@ -6,12 +6,6 @@ import 'generated_route_types.dart';
 import 'ccrouter_generated/route/generated_route_fixture.route.g.dart'
     as route_contract;
 
-/// Component identity for standalone generated route regression tests.
-const generatedRouteFixtureComponent = CCComponentDescriptor(
-  id: 'generated_route_fixture',
-  version: '1.0.0',
-);
-
 /// Registers generated route fixtures in isolated Runtime tests.
 final class GeneratedRouteFixtureRegistrar implements CCComponentRegistrar {
   /// Creates the stateless fixture Registrar.
@@ -45,7 +39,6 @@ final class GeneratedRouteProceed implements CCNavigationInterceptor {
 
 /// Destination covering aliases, scalar codecs, defaults, and Extra values.
 @CCRoute<String>(
-  component: generatedRouteFixtureComponent,
   id: 'generated_route_fixture.detail',
   patterns: [
     CCPathPattern(
@@ -98,7 +91,6 @@ final class GeneratedDetailPage {
 
 /// Parameterless route used to verify callable factory generation.
 @CCRoute<void>(
-  component: generatedRouteFixtureComponent,
   id: 'generated_route_fixture.internal',
   pattern: CCPathPattern('/generated/internal'),
 )
@@ -109,7 +101,6 @@ final class GeneratedInternalPage {
 
 /// Positional-constructor route used by generated page bindings.
 @CCRoute<int>(
-  component: generatedRouteFixtureComponent,
   id: 'generated_route_fixture.positional',
   pattern: CCPathPattern('/generated/position/:value'),
 )
@@ -129,7 +120,6 @@ final class GeneratedPositionalPage {
 
 /// Route requiring a typed Extra value.
 @CCRoute<bool>(
-  component: generatedRouteFixtureComponent,
   id: 'generated_route_fixture.extra',
   pattern: CCPathPattern('/generated/extra'),
 )
@@ -143,7 +133,6 @@ final class GeneratedExtraPage {
 
 /// Route using imported enum, Extra, and result types.
 @CCRoute<GeneratedRouteResult>(
-  component: generatedRouteFixtureComponent,
   id: 'generated_route_fixture.prefixed',
   pattern: CCPathPattern('/generated/prefixed'),
 )

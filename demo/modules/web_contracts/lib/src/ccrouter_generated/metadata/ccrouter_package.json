@@ -5,7 +5,7 @@
     "name": "demo_web_contracts",
     "version": "0.1.0"
   },
-  "contentFingerprint": "0ff5a3562ace5f1f44feabeed73406a412c56cb180728ea9a4d9f16f36949a53",
+  "contentFingerprint": "2edb0ff7e0994667f7b0b5fba43b85ccb4e9e6e9a5df93243379ddbc894fbb8c",
   "bundle": null,
   "dependencies": [],
   "metadata": [
@@ -15,19 +15,12 @@
       "source": "lib/src/web_route_contracts.dart",
       "componentDeclarations": [],
       "componentManifests": {},
-      "components": [
-        {
-          "id": "demo_web_component",
-          "version": "0.1.0",
-          "dependencies": [],
-          "optionalDependencies": []
-        }
-      ],
+      "componentSymbols": {},
+      "components": [],
       "routes": [
         {
           "id": "demo_web.public",
           "componentId": "demo_web_component",
-          "componentVersion": "0.1.0",
           "exposure": "public",
           "deepLink": "enabled",
           "description": "Loads one allowlisted public HTTPS URL in the shared Web container.",
@@ -39,7 +32,7 @@
             "kind": "contract",
             "symbol": "DemoPublicWebRouteContract",
             "packageUri": "package:demo_web_contracts/src/web_route_contracts.dart",
-            "line": 20,
+            "line": 17,
             "column": 16
           },
           "navigationSources": [
@@ -102,7 +95,6 @@
         {
           "id": "demo_web.private",
           "componentId": "demo_web_component",
-          "componentVersion": "0.1.0",
           "exposure": "public",
           "deepLink": "disabled",
           "description": "Loads a sensitive process-local request without URI serialization.",
@@ -114,7 +106,7 @@
             "kind": "contract",
             "symbol": "DemoPrivateWebRouteContract",
             "packageUri": "package:demo_web_contracts/src/web_route_contracts.dart",
-            "line": 39,
+            "line": 36,
             "column": 16
           },
           "navigationSources": [
@@ -172,7 +164,8 @@
           "resultType": "void"
         }
       ],
-      "routeImplementations": []
+      "routeImplementations": [],
+      "contributions": []
     }
   ],
   "capabilityCatalog": {
@@ -186,7 +179,7 @@
         "contract": {
           "symbol": "DemoPrivateWebRouteContract",
           "packageUri": "package:demo_web_contracts/src/web_route_contracts.dart",
-          "line": 39,
+          "line": 36,
           "column": 16
         },
         "implementation": null,
@@ -206,7 +199,7 @@
         "contract": {
           "symbol": "DemoPublicWebRouteContract",
           "packageUri": "package:demo_web_contracts/src/web_route_contracts.dart",
-          "line": 20,
+          "line": 17,
           "column": 16
         },
         "implementation": null,

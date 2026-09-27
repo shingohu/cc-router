@@ -55,7 +55,7 @@ Flutter Widget 或页面所在 library。同一个 Contract-first 形态既支�
 
 ### 同包 Contract-first 契约
 
-组件源文件仍保留页面专用 part：
+页面与 schema 都不声明 generated `part`：
 
 ```text
 lib/
@@ -111,7 +111,7 @@ contracts Package 以抽象 schema 作为公共契约的唯一来源：
 
 ```dart
 @CCRouteContract<String>(
-  component: demoOrderComponent,
+  componentId: demoOrderComponentId,
   id: 'order.detail',
   pattern: CCPathPattern('/orders/:orderId'),
 )

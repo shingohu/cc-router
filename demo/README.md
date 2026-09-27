@@ -83,18 +83,20 @@ devecocli build
 当前 `modules/order_contracts` 和 `modules/web_contracts` 是不依赖 Flutter 的
 Contract-first Package；
 `modules/order` 只提供订单页面实现，`modules/payment` 只依赖订单契约而不依赖订单页面。
-订单组件身份与 Registrar 分别通过 owner contract 和
-`lib/src/demo_order_component_registrar.dart` 管理。
+订单组件 ID 位于 owner contract，实现 Package 在
+`lib/src/demo_order_component.dart` 声明唯一的顶层 `const CCComponent`；Route 与简单
+Service 由生成器自动装配，没有专用声明模型的能力放入 `@CCComponentContribution`。
 组件生成后端中立的页面 Catalog，宿主分别聚合
 `ccrouterGeneratedComponentManifests` 和 `ccrouterGeneratedRouteCatalog`；
 `CCGoRouterBackend.managed` 从 Catalog 自动创建 GoRouter routes、Adapter bindings 和
 Root Observer。`CCRouterApp.managed` 只绑定 Host 和 Backend，不初始化或关闭 Runtime；最终由
 应用显式调用 `CCRouter.shutdown`。业务跳转仍统一通过 `CCRouter.navigator`。
-组件 Manifest 也由 Registrar 同库的 `.component.g.dart` Part 生成，并自动聚合到
+组件 Registrar、Manifest 与 Route Catalog 由独立 `.component.g.dart` 自动生成，并聚合到
 `ccrouterGeneratedComponentManifests`；组件业务 barrel 不导出 Registrar 或 Manifest。
 订单详情路由由 `@CCRouteContract` 声明，页面通过 `@CCRouteImplementation` 绑定；跨组件
 只导入 `demo_order_contracts`，页面 Widget、注册入口和构造 glue 留在 `demo_order`。
-同一契约包还声明 `OrderSummaryService` 与稳定 `CCServiceToken`；订单组件注册实现，支付
+同一契约包还声明 `OrderSummaryService` 并生成稳定 `CCServiceToken`；订单组件通过
+`@CCService` 自动注册实现，支付
 组件通过 Token 解析，Type 路径和 Token 路径共享同一个 Scope 实例。
 
 demo 和组件包已加入根 Dart workspace，使用本仓库内框架源码与统一锁文件，

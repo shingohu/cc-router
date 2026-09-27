@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 
 import 'lab_configuration.dart';
 import 'component_capabilities.dart';
-import 'navigation_lab_component.dart';
 import 'ccrouter_generated/component/demo_navigation_lab_component.route_api.g.dart';
 
 void registerDemoNavigationLabPolicies(CCRegistry registry) {
@@ -115,7 +114,6 @@ final class _DemoDirtyPopGuard implements CCPopGuard {
 }
 
 @CCRoute<void>(
-  component: demoNavigationLabComponent,
   id: 'demo_navigation_lab.proceed',
   pattern: CCPathPattern('/lab/policy/proceed'),
   interceptors: [DemoRoutePolicyIds.proceed],
@@ -132,7 +130,6 @@ final class DemoProceedPage extends StatelessWidget {
 }
 
 @CCRoute<void>(
-  component: demoNavigationLabComponent,
   id: 'demo_navigation_lab.cancel',
   pattern: CCPathPattern('/lab/policy/cancel'),
   interceptors: [DemoRoutePolicyIds.cancel],
@@ -147,7 +144,6 @@ final class DemoCancelledPage extends StatelessWidget {
 }
 
 @CCRoute<void>(
-  component: demoNavigationLabComponent,
   id: 'demo_navigation_lab.redirect.source',
   pattern: CCPathPattern('/lab/policy/redirect-source'),
   interceptors: [DemoRoutePolicyIds.redirect],
@@ -162,7 +158,6 @@ final class DemoRedirectSourcePage extends StatelessWidget {
 }
 
 @CCRoute<void>(
-  component: demoNavigationLabComponent,
   id: 'demo_navigation_lab.redirect.target',
   pattern: CCPathPattern('/lab/policy/redirect-target'),
   description: '拦截器重定向后的目标页面。',
@@ -176,7 +171,6 @@ final class DemoRedirectTargetPage extends StatelessWidget {
 }
 
 @CCRoute<void>(
-  component: demoNavigationLabComponent,
   id: 'demo_navigation_lab.defer',
   pattern: CCPathPattern('/lab/policy/defer'),
   interceptors: [DemoRoutePolicyIds.defer],
@@ -193,7 +187,6 @@ final class DemoDeferredPage extends StatelessWidget {
 }
 
 @CCRoute<void>(
-  component: demoNavigationLabComponent,
   id: 'demo_navigation_lab.timeout',
   pattern: CCPathPattern('/lab/policy/timeout'),
   interceptors: [DemoRoutePolicyIds.timeout],
@@ -210,7 +203,6 @@ final class DemoTimeoutPage extends StatelessWidget {
 }
 
 @CCRoute<void>(
-  component: demoNavigationLabComponent,
   id: 'demo_navigation_lab.guarded',
   pattern: CCPathPattern('/lab/policy/guarded'),
   popGuards: [DemoRoutePolicyIds.dirty],

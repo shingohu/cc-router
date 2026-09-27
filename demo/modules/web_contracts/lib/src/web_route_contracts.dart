@@ -3,14 +3,11 @@ import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 import 'package:demo_web_contracts/web_request.dart';
 
 /// Stable component identity shared by Web contracts and implementation.
-const demoWebComponent = CCComponentDescriptor(
-  id: 'demo_web_component',
-  version: '0.1.0',
-);
+const demoWebComponentId = CCComponentId('demo_web_component');
 
 /// Cross-component route for public, shareable Web destinations.
 @CCRouteContract<void>(
-  component: demoWebComponent,
+  componentId: demoWebComponentId,
   id: 'demo_web.public',
   pattern: CCPathPattern('/web'),
   deepLink: CCDeepLinkPolicy.enabled,
@@ -30,7 +27,7 @@ abstract class DemoPublicWebRouteContract {
 
 /// Cross-component route for process-local authenticated Web requests.
 @CCRouteContract<void>(
-  component: demoWebComponent,
+  componentId: demoWebComponentId,
   id: 'demo_web.private',
   pattern: CCPathPattern('/web/private'),
   description:

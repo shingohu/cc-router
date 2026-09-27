@@ -42,10 +42,38 @@ environment:
         'source': 'lib/src/fixture_service_component_registrar.dart',
         'componentDeclarations': ['fixture_service_component'],
         'componentManifests': {'fixture_service_component': 'fixtureServiceComponentManifest'},
+        'componentSymbols': {'fixture_service_component': 'fixtureServiceComponent'},
         'components': [
           {'id': 'fixture_service_component', 'version': '1.0.0', 'dependencies': <String>[], 'optionalDependencies': <String>[]},
         ],
         'routes': <Object>[],
+      })}\n',
+    );
+    final contributionMetadata = File(
+      path.join(
+        component.path,
+        'ccrouter_generated',
+        'src',
+        'fixture_service_registration.route.json',
+      ),
+    )..createSync(recursive: true);
+    contributionMetadata.writeAsStringSync(
+      '${const JsonEncoder.withIndent('  ').convert({
+        'schemaVersion': 3,
+        'package': 'fixture_service',
+        'source': 'lib/src/fixture_service_registration.dart',
+        'componentDeclarations': <String>[],
+        'componentManifests': <String, String>{},
+        'componentSymbols': <String, String>{},
+        'components': <Object>[],
+        'routes': <Object>[],
+        'routeImplementations': <Object>[],
+        'contributions': [
+          {'id': 'fixture_service.services', 'componentId': null, 'package': 'fixture_service', 'source': 'lib/src/fixture_service_registration.dart', 'symbol': 'registerFixtureService'},
+        ],
+        'serviceImplementations': [
+          {'id': 'fixture_service.summary', 'componentId': null, 'package': 'fixture_service', 'source': 'lib/src/fixture_summary_service.dart', 'registration': 'ccrouterRegisterFixtureSummaryService', 'registrationLibrary': 'lib/src/ccrouter_generated/service/fixture_summary_service.service.g.dart'},
+        ],
       })}\n',
     );
     final obsoleteIndex = File(
@@ -95,10 +123,20 @@ environment:
         'src',
         'ccrouter_generated',
         'component',
-        'fixture_service_component.routes.g.dart',
+        'fixture_service_component.component.g.dart',
       ),
     ).readAsStringSync();
     expect(componentIndex, contains('CCFlutterRouteCatalog([])'));
+    expect(componentIndex, contains('.registerFixtureService('));
+    expect(componentIndex, contains('      registry,'));
+    expect(
+      componentIndex,
+      contains('.ccrouterRegisterFixtureSummaryService(registry);'),
+    );
+    expect(
+      componentIndex,
+      contains("import '../service/fixture_summary_service.service.g.dart'"),
+    );
 
     final integration = File(
       path.join(
@@ -233,6 +271,7 @@ environment:
         'source': 'lib/src/order_registrar.dart',
         'componentDeclarations': ['order'],
         'componentManifests': {'order': 'orderManifest'},
+        'componentSymbols': {'order': 'orderComponent'},
         'components': [
           {'id': 'order', 'version': '1.0.0', 'dependencies': <String>[], 'optionalDependencies': <String>[]},
         ],
@@ -286,7 +325,7 @@ environment:
         'src',
         'ccrouter_generated',
         'component',
-        'order.routes.g.dart',
+        'order.component.g.dart',
       ),
     ).readAsStringSync();
     expect(
@@ -367,6 +406,7 @@ environment:
         'source': 'lib/src/feature.dart',
         'componentDeclarations': ['feature_component'],
         'componentManifests': {'feature_component': 'featureManifest'},
+        'componentSymbols': {'feature_component': 'featureComponent'},
         'components': [
           {'id': 'feature_component', 'version': '1.0.0', 'dependencies': <String>[], 'optionalDependencies': <String>[]},
         ],
@@ -385,5 +425,60 @@ environment:
     expect(result.exitCode, isNot(0));
     expect('${result.stderr}', contains('both generate'));
     expect('${result.stderr}', contains('fooBar'));
+  });
+
+  test('component contribution requires a Package component owner', () async {
+    final temporary = await Directory.systemTemp.createTemp(
+      'ccrouter_orphan_contribution_',
+    );
+    addTearDown(() => temporary.delete(recursive: true));
+    final host = Directory(path.join(temporary.path, 'host'))
+      ..createSync(recursive: true);
+    File(path.join(host.path, 'pubspec.yaml')).writeAsStringSync('''
+name: fixture_host
+environment:
+  sdk: ^3.9.0
+''');
+    final component = Directory(path.join(host.path, 'modules', 'feature'))
+      ..createSync(recursive: true);
+    File(path.join(component.path, 'pubspec.yaml')).writeAsStringSync('''
+name: fixture_feature
+environment:
+  sdk: ^3.9.0
+''');
+    final metadata = File(
+      path.join(
+        component.path,
+        'ccrouter_generated',
+        'src',
+        'feature.route.json',
+      ),
+    )..createSync(recursive: true);
+    metadata.writeAsStringSync(
+      '${const JsonEncoder.withIndent('  ').convert({
+        'schemaVersion': 3,
+        'package': 'fixture_feature',
+        'source': 'lib/src/feature.dart',
+        'componentDeclarations': <String>[],
+        'componentManifests': <String, String>{},
+        'componentSymbols': <String, String>{},
+        'components': <Object>[],
+        'routes': <Object>[],
+        'routeImplementations': <Object>[],
+        'contributions': [
+          {'id': 'fixture_feature.services', 'componentId': null, 'symbol': 'registerFixtureServices'},
+        ],
+      })}\n',
+    );
+
+    final result = await Process.run(Platform.resolvedExecutable, [
+      'run',
+      'ccrouter_generator:ccrouter_generator',
+      host.path,
+      '--generate-component-registrars',
+    ], workingDirectory: Directory.current.path);
+
+    expect(result.exitCode, isNot(0));
+    expect('${result.stderr}', contains('has no top-level const CCComponent'));
   });
 }

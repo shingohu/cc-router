@@ -264,6 +264,11 @@ void main() {
     await tester.tap(find.text('诊断'));
     await tester.pumpAndSettle();
 
+    await tester.scrollUntilVisible(
+      find.text('Trace Bundle'),
+      350,
+      scrollable: find.byType(Scrollable).last,
+    );
     expect(find.text('Trace Bundle'), findsOneWidget);
     expect(find.textContaining('条记录（有界摘要）'), findsOneWidget);
 

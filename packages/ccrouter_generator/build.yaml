@@ -1,4 +1,35 @@
 builders:
+  service_contracts:
+    import: "package:ccrouter_generator/builder.dart"
+    builder_factories: ["ccServiceContractBuilder"]
+    build_extensions:
+      "^lib/src/{{}}.dart": ["lib/src/ccrouter_generated/contract/{{}}.service.contract.g.dart"]
+    auto_apply: dependents
+    build_to: source
+    runs_before: ["ccrouter_generator:services", "ccrouter_generator:service_metadata"]
+    defaults:
+      generate_for:
+        exclude: ["lib/**/ccrouter_generated/**"]
+  services:
+    import: "package:ccrouter_generator/builder.dart"
+    builder_factories: ["ccServiceBuilder"]
+    build_extensions:
+      "^lib/src/{{}}.dart": ["lib/src/ccrouter_generated/service/{{}}.service.g.dart"]
+    auto_apply: dependents
+    build_to: source
+    defaults:
+      generate_for:
+        exclude: ["lib/**/ccrouter_generated/**"]
+  service_metadata:
+    import: "package:ccrouter_generator/builder.dart"
+    builder_factories: ["ccServiceMetadataBuilder"]
+    build_extensions:
+      "^lib/{{}}.dart": ["lib/src/ccrouter_generated/metadata/{{}}.service.json"]
+    auto_apply: dependents
+    build_to: cache
+    defaults:
+      generate_for:
+        exclude: ["lib/**/ccrouter_generated/**"]
   route_contracts:
     import: "package:ccrouter_generator/builder.dart"
     builder_factories: ["ccRouteContractBuilder"]
@@ -25,16 +56,6 @@ builders:
     builder_factories: ["ccRouteBindingBuilder"]
     build_extensions:
       "^lib/src/{{}}.dart": ["lib/src/ccrouter_generated/binding/{{}}.route_binding.g.dart"]
-    auto_apply: dependents
-    build_to: source
-    defaults:
-      generate_for:
-        exclude: ["lib/**/ccrouter_generated/**"]
-  components:
-    import: "package:ccrouter_generator/builder.dart"
-    builder_factories: ["ccComponentBuilder"]
-    build_extensions:
-      "^lib/src/{{}}.dart": ["lib/src/ccrouter_generated/component/{{}}.component.g.dart"]
     auto_apply: dependents
     build_to: source
     defaults:

@@ -1,3 +1,5 @@
+import 'component.dart';
+
 /// Stable identity of a service contract across package-boundary promotion.
 ///
 /// Declare a const token in the domain contracts package when a service becomes
@@ -23,6 +25,75 @@ final class CCServiceToken<T extends Object> {
   /// Returns a diagnostic representation without exposing an implementation.
   @override
   String toString() => 'CCServiceToken<$T>($id)';
+}
+
+/// Declares one stable cross-component Service contract.
+///
+/// Apply this annotation to a public, abstract, non-generic interface in a
+/// Pure Dart contracts Package. The generator emits a typed
+/// `CCServiceToken<T>` and metadata owned by [componentId]. Implementations use
+/// that generated token from [CCService.contract], while consumers resolve the
+/// interface through `CCRouter.service(contract: ...)`.
+final class CCServiceContract {
+  /// Creates a generated Service contract declaration.
+  const CCServiceContract({
+    required this.componentId,
+    required this.id,
+    this.description = '',
+  });
+
+  /// Component that owns implementations of this contract.
+  final CCComponentId componentId;
+
+  /// Globally stable Service identity used by Runtime and diagnostics.
+  final String id;
+
+  /// Human-readable usage scenario exported to generated documentation.
+  final String description;
+}
+
+/// Declares a simple component-owned Service implementation.
+///
+/// Apply this annotation to a public, concrete, non-generic class with an
+/// unnamed zero-argument generative constructor. The generator creates a lazy
+/// [CCServiceProvider] registration and assigns it to the Package's sole
+/// `CCComponent`. Use [contract] for a promoted cross-component interface; omit
+/// it for an internal Service whose lookup type is the annotated class.
+///
+/// This annotation deliberately excludes asynchronous initializers, custom
+/// factories, and constructor injection. Register those advanced Providers in
+/// a `CCComponentContribution` so construction and readiness remain explicit.
+final class CCService {
+  /// Creates one generated Service Provider declaration.
+  const CCService({
+    this.id,
+    this.contract,
+    this.key,
+    this.scope = CCServiceScope.app,
+    this.creationPolicy = CCServiceCreationPolicy.singleton,
+    this.isDefault = false,
+  });
+
+  /// Stable identity required for a component-internal Service.
+  ///
+  /// Omit this when [contract] is supplied because the generated Token is the
+  /// single source of identity. Supplying both is a generation error.
+  final String? id;
+
+  /// Generated promoted contract Token, or null for type-local lookup.
+  final CCServiceToken<Object>? contract;
+
+  /// Optional stable name for one implementation of the lookup type.
+  final String? key;
+
+  /// Lifecycle Scope that owns generated instances.
+  final CCServiceScope scope;
+
+  /// Whether the owning Scope caches or recreates the implementation.
+  final CCServiceCreationPolicy creationPolicy;
+
+  /// Whether this keyed implementation is selected when callers omit a Key.
+  final bool isDefault;
 }
 
 /// Identifies one named implementation of service contract [T].

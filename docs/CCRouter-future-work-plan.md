@@ -22,6 +22,8 @@
 - [x] Runtime、Session、RouteEntry、Service、Command、Event、InitTask 生命周期基础闭环。
 - [x] Interceptor、Redirect、Defer、PopGuard、Aspect、Trace、Telemetry 和失败回退基础闭环。
 - [x] 生成器增量缓存、Workspace/Package 聚合、Catalog、源码查找和生成物门禁基础闭环。
+- [x] 顶层 `const CCComponent`、自动 Registrar/Manifest、Route 与简单 Service 自动装配，
+  以及 Service Token/Provider metadata 最小生成闭环。
 
 ## 3. P0：恢复开发后的第一批任务
 
@@ -47,6 +49,9 @@
 - [x] 2026-09-24 完成本轮全量回归：`dart analyze`、`ccrouter_test` 302 项、Generator 131 项、
   Demo 30 项、缓存/无缓存 `generate --check`、Runtime/Generator/Service 基准、macOS Debug
   构建和资源释放审查均通过；长期平台 RSS/Heap 趋势仍属于持续观测。
+- [x] 2026-09-27 完成 Component/Service 生成架构回归：`dart analyze`、
+  `ccrouter_test` 324 项、Generator 158 项、Demo 30 项以及缓存/无缓存
+  `generate --check` 均通过；4 个组件、31 条路由和 8 个生成 Package 输出一致。
 - [ ] 持续执行 `dart analyze`、框架测试、生成器测试、Demo 测试和 `generate --check`。
 - [ ] 维护冷启动、初始化、路由解析、导航延迟、并发导航、Runtime dispose 的同机趋势。
 - [ ] 继续做 macOS、iOS 真机/模拟器和 OHOS 运行回归；平台 SDK 变更只做兼容性修复。
@@ -69,9 +74,11 @@
 - [ ] 生成稳定 ID 常量、Gate 常量、依赖索引和可读 DAG 文档。
 - [ ] 只有真实生产规模证明手写 Registrar 已产生冲突或漂移后，才冻结注解/metadata 协议。
 
-### 4.3 Service/Command/Event 生成
+### 4.3 Service Proxy 与 Command/Event 生成
 
-- [ ] Service 自动 Proxy 仅在达到既定生产阈值后重新评审：至少 3 个 promoted Contract、
+- [x] Service Contract Token、简单 Provider registration、自动 Registrar 和 Catalog metadata
+  已实现；复杂构造/readiness 继续通过 Contribution 显式注册。
+- [ ] Service 方法级自动 Proxy 仅在达到既定生产阈值后重新评审：至少 3 个 promoted Contract、
   5 个消费关系，或已经出现签名/Method ID/Caller identity 漂移。
 - [ ] Command、Event 自动生成与 Service 同步评估，不为低频注册能力提前增加生成层。
 - [ ] 生成代码继续通过独立 Contract/Proxy Barrel 暴露，禁止业务依赖实现文件。

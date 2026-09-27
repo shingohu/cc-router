@@ -5,7 +5,7 @@
     "name": "demo_order_contracts",
     "version": "0.1.0"
   },
-  "contentFingerprint": "7f90a4fb91d78a1bc7ff05e6df9171d7d83a295f8ead2b044815a9c4109ed5fe",
+  "contentFingerprint": "24874468f4dc2ed4494d337961fe35f36cc9113e5a4d5818bee80c5b17ca4c8e",
   "bundle": null,
   "dependencies": [],
   "metadata": [
@@ -15,19 +15,12 @@
       "source": "lib/src/order_detail_route_contract.dart",
       "componentDeclarations": [],
       "componentManifests": {},
-      "components": [
-        {
-          "id": "demo_order_component",
-          "version": "0.1.0",
-          "dependencies": [],
-          "optionalDependencies": []
-        }
-      ],
+      "componentSymbols": {},
+      "components": [],
       "routes": [
         {
           "id": "order.detail",
           "componentId": "demo_order_component",
-          "componentVersion": "0.1.0",
           "exposure": "public",
           "deepLink": "disabled",
           "description": "订单详情，确认后返回订单编号。",
@@ -39,7 +32,7 @@
             "kind": "contract",
             "symbol": "OrderDetailRouteContract",
             "packageUri": "package:demo_order_contracts/src/order_detail_route_contract.dart",
-            "line": 19,
+            "line": 16,
             "column": 16
           },
           "navigationSources": [
@@ -113,7 +106,41 @@
           "resultType": "String"
         }
       ],
-      "routeImplementations": []
+      "routeImplementations": [],
+      "contributions": []
+    },
+    {
+      "schemaVersion": 3,
+      "package": "demo_order_contracts",
+      "source": "lib/src/order_summary_service.dart",
+      "componentDeclarations": [],
+      "componentManifests": {},
+      "componentSymbols": {},
+      "components": [],
+      "routes": [],
+      "routeImplementations": [],
+      "contributions": [],
+      "serviceContracts": [
+        {
+          "id": "demo_order.summary",
+          "componentId": "demo_order_component",
+          "description": "Formats one order identity for cross-component display.",
+          "package": "demo_order_contracts",
+          "source": "lib/src/order_summary_service.dart",
+          "declaration": {
+            "symbol": "OrderSummaryService",
+            "packageUri": "package:demo_order_contracts/src/order_summary_service.dart",
+            "line": 11,
+            "column": 26
+          },
+          "token": {
+            "symbol": "orderSummaryServiceToken",
+            "library": "lib/src/ccrouter_generated/contract/order_summary_service.service.contract.g.dart",
+            "packageUri": "package:demo_order_contracts/src/ccrouter_generated/contract/order_summary_service.service.contract.g.dart"
+          }
+        }
+      ],
+      "serviceImplementations": []
     }
   ],
   "capabilityCatalog": {
@@ -127,7 +154,7 @@
         "contract": {
           "symbol": "OrderDetailRouteContract",
           "packageUri": "package:demo_order_contracts/src/order_detail_route_contract.dart",
-          "line": 19,
+          "line": 16,
           "column": 16
         },
         "implementation": null,
@@ -136,6 +163,26 @@
             "role": "routeContract",
             "symbol": "OrderDetailRoute",
             "packageUri": "package:demo_order_contracts/src/ccrouter_generated/contract/order_detail_route_contract.route.contract.g.dart"
+          }
+        ]
+      },
+      {
+        "kind": "service",
+        "id": "demo_order.summary",
+        "componentId": "demo_order_component",
+        "packageName": "demo_order_contracts",
+        "contract": {
+          "symbol": "OrderSummaryService",
+          "packageUri": "package:demo_order_contracts/src/order_summary_service.dart",
+          "line": 11,
+          "column": 26
+        },
+        "implementation": null,
+        "generatedArtifacts": [
+          {
+            "role": "serviceToken",
+            "symbol": "orderSummaryServiceToken",
+            "packageUri": "package:demo_order_contracts/src/ccrouter_generated/contract/order_summary_service.service.contract.g.dart"
           }
         ]
       }

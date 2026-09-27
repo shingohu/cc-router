@@ -8,6 +8,9 @@ Map<String, Object?> document({
   required List<Map<String, Object?>> components,
   required List<Map<String, Object?>> routes,
   List<Map<String, Object?>> routeImplementations = const [],
+  List<Map<String, Object?>> contributions = const [],
+  List<Map<String, Object?>> serviceContracts = const [],
+  List<Map<String, Object?>> serviceImplementations = const [],
   String source = 'routes.dart',
   String package = 'orders',
 }) => {
@@ -20,6 +23,9 @@ Map<String, Object?> document({
   'components': components,
   'routes': routes,
   'routeImplementations': routeImplementations,
+  'contributions': contributions,
+  'serviceContracts': serviceContracts,
+  'serviceImplementations': serviceImplementations,
 };
 
 Map<String, Object?> component(
@@ -129,6 +135,7 @@ void main() {
       ),
       document(
         source: 'checkout.dart',
+        package: 'checkout',
         components: [
           component('checkout', dependencies: ['orders']),
         ],
@@ -224,17 +231,36 @@ void main() {
     () {
       final result = CCRouteWorkspaceValidator.validate([
         document(
+          package: 'checkout',
           components: [
             component(
               'checkout',
               dependencies: ['orders'],
               optionalDependencies: ['analytics'],
             ),
-            component('orders', dependencies: ['account']),
-            component('unrelated'),
-            component('analytics'),
-            component('account'),
           ],
+          routes: const [],
+        ),
+        document(
+          package: 'orders',
+          components: [
+            component('orders', dependencies: ['account']),
+          ],
+          routes: const [],
+        ),
+        document(
+          package: 'unrelated',
+          components: [component('unrelated')],
+          routes: const [],
+        ),
+        document(
+          package: 'analytics',
+          components: [component('analytics')],
+          routes: const [],
+        ),
+        document(
+          package: 'account',
+          components: [component('account')],
           routes: const [],
         ),
       ]);
@@ -257,6 +283,138 @@ void main() {
       ),
     ]);
     expect(result.errors, contains(contains('unknown owner component')));
+  });
+
+  test('rejects duplicate and unknown component contributions', () {
+    Map<String, Object?> contribution(String id, String owner) => {
+      'id': id,
+      'componentId': owner,
+      'symbol': 'registerProbe',
+    };
+    final result = CCRouteWorkspaceValidator.validate([
+      document(
+        components: [component('orders')],
+        routes: const [],
+        contributions: [contribution('orders.services', 'orders')],
+      ),
+      document(
+        package: 'orders_extensions',
+        components: const [],
+        routes: const [],
+        contributions: [
+          contribution('orders.services', 'orders'),
+          contribution('missing.services', 'missing'),
+        ],
+      ),
+    ]);
+
+    expect(
+      result.errors,
+      contains(
+        'Component "orders" declares contribution "orders.services" more than once.',
+      ),
+    );
+    expect(
+      result.errors,
+      contains(
+        'Component contribution "missing.services" references unknown owner component "missing".',
+      ),
+    );
+  });
+
+  test('accepts a generated Service contract and implementation', () {
+    final result = CCRouteWorkspaceValidator.validate([
+      document(
+        components: [component('orders')],
+        routes: const [],
+        serviceContracts: [
+          {'id': 'orders.summary', 'componentId': 'orders'},
+        ],
+        serviceImplementations: [
+          {
+            'id': 'orders.summary',
+            'componentId': 'orders',
+            'contractId': 'orders.summary',
+            'key': 'primary',
+            'isDefault': true,
+          },
+        ],
+      ),
+    ]);
+
+    expect(result.errors, isEmpty);
+  });
+
+  test('rejects invalid Service ownership and Provider conflicts', () {
+    final result = CCRouteWorkspaceValidator.validate([
+      document(
+        components: [component('orders'), component('payments')],
+        routes: const [],
+        serviceContracts: [
+          {'id': 'orders.summary', 'componentId': 'orders'},
+          {'id': 'orders.summary', 'componentId': 'orders'},
+          {'id': 'missing.service', 'componentId': 'missing'},
+        ],
+        serviceImplementations: [
+          {
+            'id': 'orders.summary',
+            'componentId': 'payments',
+            'contractId': 'orders.summary',
+            'key': 'primary',
+            'isDefault': true,
+          },
+          {
+            'id': 'orders.summary',
+            'componentId': 'payments',
+            'contractId': 'orders.summary',
+            'key': 'primary',
+            'isDefault': true,
+          },
+          {
+            'id': 'unknown.service',
+            'componentId': 'orders',
+            'contractId': 'unknown.service',
+            'key': null,
+            'isDefault': false,
+          },
+        ],
+      ),
+    ]);
+
+    expect(
+      result.errors,
+      contains('Service contract "orders.summary" is declared more than once.'),
+    );
+    expect(
+      result.errors,
+      contains(
+        'Service contract "missing.service" references unknown owner component "missing".',
+      ),
+    );
+    expect(
+      result.errors,
+      contains(
+        'Component "payments" declares Service "orders.summary" with Key "primary" more than once.',
+      ),
+    );
+    expect(
+      result.errors,
+      contains(
+        'Component "payments" declares more than one default implementation of Service "orders.summary": "primary" and "primary".',
+      ),
+    );
+    expect(
+      result.errors,
+      contains(
+        'Service implementation "orders.summary" belongs to component "payments" but contract "orders.summary" belongs to "orders".',
+      ),
+    );
+    expect(
+      result.errors,
+      contains(
+        'Service implementation "unknown.service" references unknown contract "unknown.service".',
+      ),
+    );
   });
 
   test('rejects unknown source exposure', () {
@@ -511,10 +669,8 @@ void main() {
 
     final visible = CCRouteWorkspaceValidator.validate([
       document(
-        components: [
-          component('orders'),
-          component('checkout', dependencies: ['orders']),
-        ],
+        package: 'orders',
+        components: [component('orders')],
         routes: [
           route(
             'orders.root',
@@ -522,6 +678,15 @@ void main() {
             pattern: '/root/:id',
             publicContract: true,
           ),
+        ],
+        routeImplementations: [implementation('orders.root', 'orders')],
+      ),
+      document(
+        package: 'checkout',
+        components: [
+          component('checkout', dependencies: ['orders']),
+        ],
+        routes: [
           route(
             'checkout.detail',
             'checkout',
@@ -529,7 +694,6 @@ void main() {
             parentRouteId: 'orders.root',
           ),
         ],
-        routeImplementations: [implementation('orders.root', 'orders')],
       ),
     ]);
     expect(visible.errors, isEmpty);
@@ -755,6 +919,64 @@ void main() {
       expect(
         CCRouteBarrelExportValidator.validate(root, [metadata]),
         contains(contains('detail.route.contract.g.dart')),
+      );
+    } finally {
+      root.deleteSync(recursive: true);
+    }
+  });
+
+  test('requires public Service contracts to export the generated Token', () {
+    final root = Directory.systemTemp.createTempSync(
+      'ccrouter-service-barrel-test-',
+    );
+    try {
+      final package = Directory('${root.path}/demo_order_contracts')
+        ..createSync();
+      Directory(
+        '${package.path}/lib/src/ccrouter_generated/contract',
+      ).createSync(recursive: true);
+      File(
+        '${package.path}/pubspec.yaml',
+      ).writeAsStringSync('name: demo_order_contracts\n');
+      File(
+        '${package.path}/lib/src/order_summary_service.dart',
+      ).writeAsStringSync('abstract interface class OrderSummaryService {}\n');
+      const generatedLibrary =
+          'lib/src/ccrouter_generated/contract/'
+          'order_summary_service.service.contract.g.dart';
+      File(
+        '${package.path}/$generatedLibrary',
+      ).writeAsStringSync('const orderSummaryServiceToken = Object();\n');
+      final metadata = document(
+        source: 'lib/src/order_summary_service.dart',
+        components: const [],
+        routes: const [],
+        serviceContracts: [
+          {
+            'id': 'orders.summary',
+            'componentId': 'orders',
+            'token': {
+              'symbol': 'orderSummaryServiceToken',
+              'library': generatedLibrary,
+            },
+          },
+        ],
+      )..['package'] = 'demo_order_contracts';
+      final barrel = File('${package.path}/lib/demo_order_contracts.dart');
+      barrel.writeAsStringSync(
+        "export 'src/ccrouter_generated/contract/"
+        "order_summary_service.service.contract.g.dart' "
+        'show orderSummaryServiceToken;\n',
+      );
+      expect(CCRouteBarrelExportValidator.validate(root, [metadata]), isEmpty);
+
+      barrel.writeAsStringSync(
+        "export 'src/order_summary_service.dart' "
+        'show OrderSummaryService;\n',
+      );
+      expect(
+        CCRouteBarrelExportValidator.validate(root, [metadata]),
+        contains(contains('orderSummaryServiceToken')),
       );
     } finally {
       root.deleteSync(recursive: true);

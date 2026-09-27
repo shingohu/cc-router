@@ -394,6 +394,78 @@ void main() {
       expect(deleted.fingerprint, isNot(renamed.fingerprint));
     },
   );
+
+  test(
+    'metadata cache tracks Service metadata add change rename and delete',
+    () async {
+      final root = await Directory.systemTemp.createTemp(
+        'ccrouter_service_metadata_cache_',
+      );
+      addTearDown(() => root.delete(recursive: true));
+      final generatedDirectory = Directory(
+        path.join(
+          root.path,
+          '.dart_tool',
+          'build',
+          'generated',
+          'feature',
+          'lib',
+          'src',
+          'ccrouter_generated',
+          'metadata',
+        ),
+      )..createSync(recursive: true);
+
+      final empty = await readCCPackageMetadata(generatedDirectory);
+      final serviceFile =
+          File(path.join(generatedDirectory.path, 'summary.service.json'))
+            ..writeAsStringSync(
+              jsonEncode({
+                'package': 'feature',
+                'source': 'lib/src/summary_service.dart',
+                'serviceContracts': [
+                  {'id': 'feature.summary'},
+                ],
+              }),
+            );
+      final added = await readCCPackageMetadata(
+        generatedDirectory,
+        cachedFingerprint: empty.fingerprint,
+        cachedDocuments: empty.documents,
+      );
+      expect(added.cacheHit, isFalse);
+      expect(added.documents, hasLength(1));
+
+      serviceFile.writeAsStringSync(
+        jsonEncode({
+          'package': 'feature',
+          'source': 'lib/src/summary_service.dart',
+          'serviceContracts': [
+            {'id': 'feature.summary.v2'},
+          ],
+        }),
+      );
+      final changed = await readCCPackageMetadata(
+        generatedDirectory,
+        cachedFingerprint: added.fingerprint,
+        cachedDocuments: added.documents,
+      );
+      expect(changed.cacheHit, isFalse);
+      expect(changed.fingerprint, isNot(added.fingerprint));
+
+      final renamedFile = File(
+        path.join(generatedDirectory.path, 'renamed.service.json'),
+      );
+      serviceFile.renameSync(renamedFile.path);
+      final renamed = await readCCPackageMetadata(generatedDirectory);
+      expect(renamed.fingerprint, isNot(changed.fingerprint));
+
+      renamedFile.deleteSync();
+      final deleted = await readCCPackageMetadata(generatedDirectory);
+      expect(deleted.fingerprint, isNot(renamed.fingerprint));
+      expect(deleted.documents, isEmpty);
+    },
+  );
 }
 
 final class PackageResolutionFixture {

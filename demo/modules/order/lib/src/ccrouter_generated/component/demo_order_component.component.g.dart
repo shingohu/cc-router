@@ -3,23 +3,33 @@
 
 import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter/ccrouter_host.dart';
+import 'package:demo_order/src/demo_order_component.dart' as component_source;
 import '../binding/order_detail_page.route_binding.g.dart'
     as route_src_ccrouter_generated_binding_order_detail_page_route_binding_g_dart;
+import '../service/order_summary_service.service.g.dart'
+    as route_src_ccrouter_generated_service_order_summary_service_service_g_dart;
 
-/// Generated registration index for component `demo_order_component`.
-final class DemoOrderComponentGeneratedRoutes {
-  /// Creates the immutable component route index.
-  const DemoOrderComponentGeneratedRoutes();
+/// Generated capability Registrar for component `demo_order_component`.
+final class _DemoOrderComponentGeneratedRegistrar
+    implements CCComponentRegistrar {
+  /// Creates the stateless generated Registrar.
+  const _DemoOrderComponentGeneratedRegistrar();
 
-  /// Registers every route owned by `demo_order_component` in stable order.
+  /// Registers every generated capability in stable order.
+  @override
   void register(CCRegistry registry) {
     route_src_ccrouter_generated_binding_order_detail_page_route_binding_g_dart
         .ccrouterRegisterOrderDetailPageRoute(registry);
+    route_src_ccrouter_generated_service_order_summary_service_service_g_dart
+        .ccrouterRegisterDemoOrderSummaryServiceService(registry);
   }
 }
 
-/// Shared generated index used by the component Registrar.
-const demoOrderComponentGeneratedRoutes = DemoOrderComponentGeneratedRoutes();
+/// Generated Runtime Manifest for component `demo_order_component`.
+const demoOrderComponentManifest = CCComponentManifest.fromComponent(
+  component: component_source.demoOrderComponent,
+  registrar: _DemoOrderComponentGeneratedRegistrar(),
+);
 
 /// Backend-neutral Flutter destinations owned by `demo_order_component`.
 final demoOrderComponentRouteCatalog = CCFlutterRouteCatalog([

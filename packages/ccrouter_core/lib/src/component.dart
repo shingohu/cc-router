@@ -22,28 +22,28 @@ final class CCComponentManifest {
     required this.registrar,
     List<String> dependencies = const [],
     List<String> optionalDependencies = const [],
-  }) : _descriptor = null,
+  }) : _component = null,
        _id = id,
        _version = version,
        _dependencies = dependencies,
        _optionalDependencies = optionalDependencies;
 
-  /// Creates Runtime metadata from the descriptor used by route tooling.
+  /// Creates Runtime metadata from the build-time component definition.
   ///
   /// Generated-route components use this constructor so ownership and
   /// dependency information has one source while [registrar] remains a
-  /// Runtime capability rather than part of the pure-Dart descriptor.
-  const CCComponentManifest.fromDescriptor({
-    required CCComponentDescriptor descriptor,
+  /// Runtime capability rather than part of the Pure Dart definition.
+  const CCComponentManifest.fromComponent({
+    required CCComponent component,
     required this.registrar,
-  }) : _descriptor = descriptor,
+  }) : _component = component,
        _id = null,
        _version = null,
        _dependencies = null,
        _optionalDependencies = null;
 
-  /// Descriptor retained by generated-route components, when supplied.
-  final CCComponentDescriptor? _descriptor;
+  /// Build-time definition retained by generated components, when supplied.
+  final CCComponent? _component;
 
   /// Legacy direct ID storage used by handwritten manifests.
   final String? _id;
@@ -59,20 +59,25 @@ final class CCComponentManifest {
 
   /// Globally unique stable component identifier.
   ///
-  /// Handwritten manifests follow the generated descriptor's bounded lowercase
+  /// Handwritten manifests follow the generated component's bounded lowercase
   /// segment syntax and are rejected before any Registrar executes otherwise.
-  String get id => _descriptor?.id ?? _id!;
+  String get id => _component?.id.value ?? _id!;
 
   /// SemVer 2.0 version of the component contract.
-  String get version => _descriptor?.version ?? _version!;
+  String get version => _component?.version ?? _version!;
 
   /// Generated or handwritten capability registrar.
   final CCComponentRegistrar registrar;
 
   /// Component identifiers that must be installed.
-  List<String> get dependencies => _descriptor?.dependencies ?? _dependencies!;
+  List<String> get dependencies =>
+      _component?.dependencies.map((dependency) => dependency.value).toList() ??
+      _dependencies!;
 
   /// Component identifiers ordered first only when present.
   List<String> get optionalDependencies =>
-      _descriptor?.optionalDependencies ?? _optionalDependencies!;
+      _component?.optionalDependencies
+          .map((dependency) => dependency.value)
+          .toList() ??
+      _optionalDependencies!;
 }

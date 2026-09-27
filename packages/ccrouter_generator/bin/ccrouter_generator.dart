@@ -165,7 +165,8 @@ Future<bool> _aggregate(Directory root, _Arguments parsed) async {
   await for (final entity in root.list(recursive: true, followLinks: false)) {
     if (entity is! File ||
         (!entity.path.endsWith('.route.json') &&
-            !entity.path.endsWith('.component.json'))) {
+            !entity.path.endsWith('.component.json') &&
+            !entity.path.endsWith('.service.json'))) {
       continue;
     }
     if (entity.path.contains(
@@ -197,7 +198,17 @@ Future<bool> _aggregate(Directory root, _Arguments parsed) async {
       );
     }
   }
-  final documents = metadataFiles.map((entry) => entry.document).toList();
+  final documents = _resolvePackageComponentOwners(
+    metadataFiles.map((entry) => entry.document),
+  );
+  final resolvedMetadataFiles = <_MetadataFile>[
+    for (var index = 0; index < metadataFiles.length; index++)
+      _MetadataFile(
+        metadataFiles[index].file,
+        documents[index],
+        packageRoot: metadataFiles[index].packageRoot,
+      ),
+  ];
   final result = CCRouteWorkspaceValidator.validate(documents);
   final errors = [
     ...result.errors,
@@ -210,7 +221,9 @@ Future<bool> _aggregate(Directory root, _Arguments parsed) async {
     return false;
   }
   if (parsed.generateComponentRegistrars) {
-    final catalogs = await _generateComponentRouteIndexes(metadataFiles);
+    final catalogs = await _generateComponentRouteIndexes(
+      resolvedMetadataFiles,
+    );
     await _generateHostRouteCatalog(root, catalogs);
     await _deleteObsoleteAggregateOutputs(root, catalogs);
   }
@@ -237,6 +250,7 @@ Future<bool> _aggregate(Directory root, _Arguments parsed) async {
     Directory(path.join(root.path, 'ccrouter_generated')),
     Directory(path.join(root.path, 'lib', 'ccrouter_generated')),
   ]);
+  await _removeEmptyGeneratedSourceDirectories(root);
   stdout.writeln(
     'Validated ${result.machineDocument['components'] is List ? (result.machineDocument['components']! as List).length : 0} components and ${result.machineDocument['routes'] is List ? (result.machineDocument['routes']! as List).length : 0} routes.',
   );
@@ -276,6 +290,7 @@ Future<bool> _cleanResolvedWorkspace(
     final beforeLegacy = await _countExistingFiles(legacyDirectories);
     await _removeLegacyMetadataArtifacts(legacyDirectories);
     removed += beforeLegacy;
+    await _removeEmptyGeneratedSourceDirectories(package.root);
   }
   stdout.writeln('Removed $removed CCRouter generated source artifact(s).');
   return true;
@@ -372,7 +387,9 @@ Future<bool> _generateResolvedWorkspace(
         cachedDocuments: cached?.documents,
       );
       metadataSnapshots[package.name] = snapshot;
-      localMetadata[package.name] = snapshot.documents;
+      localMetadata[package.name] = _resolvePackageComponentOwners(
+        snapshot.documents,
+      );
       if (snapshot.documents.isNotEmpty ||
           package.declaresGenerationIntent ||
           package.requiresPackageIndex ||
@@ -545,7 +562,9 @@ Future<bool> _generateResolvedWorkspace(
   validationWatch.stop();
 
   final aggregateWatch = Stopwatch()..start();
-  final localFiles = await _readWritableMetadataFiles(workspace);
+  final localFiles = _resolveMetadataFiles(
+    await _readWritableMetadataFiles(workspace),
+  );
   final catalogs = await _generateComponentRouteIndexes(
     localFiles,
     generateLegacyEntrypoints: false,
@@ -610,6 +629,11 @@ Future<bool> _generateResolvedWorkspace(
           ],
         ),
   );
+  for (final package in workspace.packages.values.where(
+    (package) => package.writable,
+  )) {
+    await _removeEmptyGeneratedSourceDirectories(package.root);
+  }
   stdout.writeln(
     'Validated ${validation.machineDocument['components'] is List ? (validation.machineDocument['components']! as List).length : 0} components and ${validation.machineDocument['routes'] is List ? (validation.machineDocument['routes']! as List).length : 0} routes across ${indexes.length} generated Packages.',
   );
@@ -779,7 +803,8 @@ Future<List<_MetadataFile>> _readWritableMetadataFiles(
     )) {
       if (entity is File &&
           (entity.path.endsWith('.route.json') ||
-              entity.path.endsWith('.component.json'))) {
+              entity.path.endsWith('.component.json') ||
+              entity.path.endsWith('.service.json'))) {
         files.add(entity);
       }
     }
@@ -1421,6 +1446,7 @@ bool _isManagedGeneratedArtifact(List<String> segments, String name) {
       name == 'cc_routes.md' ||
       name == 'cc_sources.md' ||
       name.endsWith('.route.json') ||
+      name.endsWith('.service.json') ||
       name.endsWith('.route.md') ||
       name.endsWith('.component.json') ||
       name.endsWith('.component.md');
@@ -1445,6 +1471,122 @@ String _relativePath(Directory root, File file) {
 /// Resolves a normalized relative generated path below [root].
 String _absolutePath(Directory root, String relative) =>
     path.joinAll([root.absolute.path, ...relative.split('/')]);
+
+/// Resolves package-owned capabilities against one top-level component.
+///
+/// Builder metadata deliberately leaves internal Route and implementation
+/// ownership unset so individual libraries never repeat or scan for a
+/// Package-level declaration. Aggregation fills the owner before validation,
+/// fingerprinting, documentation, or publication. Public contracts retain
+/// their explicit owner and are never inferred from their contracts Package.
+List<Map<String, Object?>> _resolvePackageComponentOwners(
+  Iterable<Map<String, Object?>> documents,
+) {
+  final resolved = documents
+      .map(
+        (document) =>
+            (jsonDecode(jsonEncode(document)) as Map).cast<String, Object?>(),
+      )
+      .toList(growable: false);
+  final ownersByPackage = <String, Set<String>>{};
+  for (final document in resolved) {
+    final package = '${document['package'] ?? ''}';
+    final owners = ownersByPackage.putIfAbsent(package, () => <String>{});
+    owners.addAll(_strings(document['componentDeclarations']));
+  }
+  for (final entry in ownersByPackage.entries) {
+    if (entry.value.length > 1) {
+      final owners = entry.value.toList()..sort();
+      throw CCPackageWorkspaceException(
+        'Package "${entry.key}" declares more than one CCComponent: '
+        '${owners.join(', ')}. A component implementation Package must own '
+        'exactly one top-level const CCComponent.',
+      );
+    }
+  }
+  for (final document in resolved) {
+    final package = '${document['package'] ?? ''}';
+    final packageOwners = ownersByPackage[package] ?? const <String>{};
+    final owner = packageOwners.length == 1 ? packageOwners.first : null;
+    for (final route in _objects(document['routes'])) {
+      final exposure = '${route['exposure'] ?? ''}';
+      final declaredOwner = '${route['componentId'] ?? ''}'.trim();
+      if (exposure == 'internal' && declaredOwner.isEmpty) {
+        if (owner == null) {
+          throw CCPackageWorkspaceException(
+            'Package "$package" declares internal route "${route['id']}" '
+            'but has no top-level const CCComponent.',
+          );
+        }
+        route['componentId'] = owner;
+      } else if (exposure == 'public' && declaredOwner.isEmpty) {
+        throw CCPackageWorkspaceException(
+          'Public route contract "${route['id']}" must declare componentId.',
+        );
+      }
+    }
+    for (final implementation in _objects(document['routeImplementations'])) {
+      final declaredOwner = '${implementation['componentId'] ?? ''}'.trim();
+      if (declaredOwner.isNotEmpty) continue;
+      if (owner == null) {
+        throw CCPackageWorkspaceException(
+          'Package "$package" implements route '
+          '"${implementation['routeId']}" but has no top-level const '
+          'CCComponent.',
+        );
+      }
+      implementation['componentId'] = owner;
+    }
+    for (final contribution in _objects(document['contributions'])) {
+      final declaredOwner = '${contribution['componentId'] ?? ''}'.trim();
+      if (declaredOwner.isNotEmpty) continue;
+      if (owner == null) {
+        throw CCPackageWorkspaceException(
+          'Package "$package" declares contribution '
+          '"${contribution['id']}" but has no top-level const CCComponent.',
+        );
+      }
+      contribution['componentId'] = owner;
+    }
+    for (final contract in _objects(document['serviceContracts'])) {
+      final declaredOwner = '${contract['componentId'] ?? ''}'.trim();
+      if (declaredOwner.isEmpty) {
+        throw CCPackageWorkspaceException(
+          'Public Service contract "${contract['id']}" must declare '
+          'componentId.',
+        );
+      }
+    }
+    for (final implementation in _objects(document['serviceImplementations'])) {
+      final declaredOwner = '${implementation['componentId'] ?? ''}'.trim();
+      if (declaredOwner.isNotEmpty) continue;
+      if (owner == null) {
+        throw CCPackageWorkspaceException(
+          'Package "$package" implements Service '
+          '"${implementation['id']}" but has no top-level const '
+          'CCComponent.',
+        );
+      }
+      implementation['componentId'] = owner;
+    }
+  }
+  return resolved;
+}
+
+/// Retains metadata file locations while replacing documents with resolved owners.
+List<_MetadataFile> _resolveMetadataFiles(List<_MetadataFile> files) {
+  final documents = _resolvePackageComponentOwners(
+    files.map((file) => file.document),
+  );
+  return <_MetadataFile>[
+    for (var index = 0; index < files.length; index++)
+      _MetadataFile(
+        files[index].file,
+        documents[index],
+        packageRoot: files[index].packageRoot,
+      ),
+  ];
+}
 
 /// Whether [candidate] is within [root], including the root itself.
 bool _isWithin(Directory root, Directory candidate) {
@@ -1476,6 +1618,7 @@ Future<List<_GeneratedComponentCatalog>> _generateComponentRouteIndexes(
 }) async {
   final componentSources = <String, _ComponentSource>{};
   final routes = <String, List<_RouteRegistration>>{};
+  final contributions = <String, List<_ContributionRegistration>>{};
   for (final metadata in metadataFiles) {
     final document = metadata.document;
     final package = '${document['package'] ?? ''}';
@@ -1484,12 +1627,24 @@ Future<List<_GeneratedComponentCatalog>> _generateComponentRouteIndexes(
     final manifestMap = componentManifests is Map
         ? componentManifests.cast<Object?, Object?>()
         : const <Object?, Object?>{};
+    final componentSymbols = document['componentSymbols'];
+    final symbolMap = componentSymbols is Map
+        ? componentSymbols.cast<Object?, Object?>()
+        : const <Object?, Object?>{};
     for (final component in _objects(document['components'])) {
       final id = '${component['id']}';
       if (_strings(document['componentDeclarations']).contains(id)) {
+        final symbol = '${symbolMap[id] ?? ''}';
+        if (symbol.isEmpty) {
+          throw CCPackageWorkspaceException(
+            'Component "$id" metadata does not identify its top-level const '
+            'CCComponent symbol. Regenerate the Package.',
+          );
+        }
         componentSources[id] = _ComponentSource(
           package: package,
           source: source,
+          symbol: symbol,
           manifest: '${manifestMap[id] ?? '${_camelIdentifier(id)}Manifest'}',
           packageRoot: metadata.packageRoot,
         );
@@ -1561,6 +1716,34 @@ Future<List<_GeneratedComponentCatalog>> _generateComponentRouteIndexes(
             ),
           );
     }
+    for (final contribution in _objects(document['contributions'])) {
+      final componentId = '${contribution['componentId'] ?? ''}';
+      contributions
+          .putIfAbsent(componentId, () => [])
+          .add(
+            _ContributionRegistration(
+              package: package,
+              source: source,
+              id: '${contribution['id'] ?? ''}',
+              symbol: '${contribution['symbol'] ?? ''}',
+            ),
+          );
+    }
+    for (final service in _objects(document['serviceImplementations'])) {
+      final componentId = '${service['componentId'] ?? ''}';
+      final id = '${service['id'] ?? ''}';
+      final key = '${service['key'] ?? ''}';
+      contributions
+          .putIfAbsent(componentId, () => [])
+          .add(
+            _ContributionRegistration(
+              package: package,
+              source: '${service['registrationLibrary'] ?? source}',
+              id: 'service:$id:$key',
+              symbol: '${service['registration'] ?? ''}',
+            ),
+          );
+    }
   }
 
   final generatedCatalogs = <_GeneratedComponentCatalog>[];
@@ -1570,17 +1753,25 @@ Future<List<_GeneratedComponentCatalog>> _generateComponentRouteIndexes(
     if (component == null) continue;
     final componentRoutes = routes[componentId] ?? <_RouteRegistration>[];
     componentRoutes.sort(_compareRoutes);
+    final componentContributions =
+        contributions[componentId] ?? <_ContributionRegistration>[];
+    componentContributions.sort(_compareContributions);
     final packageRoot = component.packageRoot;
     final outputDirectory = Directory(
       '${packageRoot.path}${Platform.pathSeparator}lib${Platform.pathSeparator}src${Platform.pathSeparator}ccrouter_generated${Platform.pathSeparator}component',
     )..createSync(recursive: true);
     final output = File(
-      '${outputDirectory.path}${Platform.pathSeparator}${_fileStem(componentId)}.routes.g.dart',
+      '${outputDirectory.path}${Platform.pathSeparator}${_fileStem(componentId)}.component.g.dart',
     );
     await _writeIfChanged(
       output,
       _dartFormatter.format(
-        _emitComponentRouteIndex(componentId, componentRoutes),
+        _emitComponentAssembly(
+          componentId,
+          component,
+          componentRoutes,
+          componentContributions,
+        ),
       ),
     );
     final hasRouteApi = componentRoutes.any(
@@ -1602,7 +1793,8 @@ Future<List<_GeneratedComponentCatalog>> _generateComponentRouteIndexes(
         componentId: componentId,
         package: component.package,
         packageRoot: packageRoot,
-        registrarSource: component.source,
+        registrarSource:
+            'lib/src/ccrouter_generated/component/${_fileStem(componentId)}.component.g.dart',
         manifest: component.manifest,
         hasRouteApi: hasRouteApi,
       ),
@@ -1614,13 +1806,14 @@ Future<List<_GeneratedComponentCatalog>> _generateComponentRouteIndexes(
   return generatedCatalogs;
 }
 
-/// Generates a component registrar source with stable imports and ordering.
-String _emitComponentRouteIndex(
+/// Generates one component Registrar, Manifest, and route catalog.
+String _emitComponentAssembly(
   String componentId,
+  _ComponentSource component,
   List<_RouteRegistration> routes,
+  List<_ContributionRegistration> contributions,
 ) {
-  final className = _pascalIdentifier(componentId) + 'GeneratedRoutes';
-  final constantName = '${className[0].toLowerCase()}${className.substring(1)}';
+  final className = '_${_pascalIdentifier(componentId)}GeneratedRegistrar';
   final imports = <String, String>{};
   for (final route in routes) {
     imports.putIfAbsent(route.source, () => _sourceAlias(route.source));
@@ -1629,30 +1822,43 @@ String _emitComponentRouteIndex(
       () => _sourceAlias(route.builderSource),
     );
   }
+  for (final contribution in contributions) {
+    imports.putIfAbsent(
+      contribution.source,
+      () => _sourceAlias(contribution.source),
+    );
+  }
   final out = StringBuffer()
     ..writeln('// GENERATED CODE - DO NOT MODIFY BY HAND')
     ..writeln('// ignore_for_file: type=lint, unused_element')
     ..writeln()
     ..writeln("import 'package:ccrouter/ccrouter.dart';")
-    ..writeln("import 'package:ccrouter/ccrouter_host.dart';");
+    ..writeln("import 'package:ccrouter/ccrouter_host.dart';")
+    ..writeln(
+      "import 'package:${component.package}/${component.source.substring('lib/'.length)}' as component_source;",
+    );
   for (final entry
       in imports.entries.toList()
         ..sort((left, right) => left.key.compareTo(right.key))) {
     final source = entry.key;
+    final generated = source.startsWith('lib/src/ccrouter_generated/');
     out.writeln(
-      "import '${_componentGeneratedImport(source)}' as ${entry.value};",
+      generated
+          ? "import '${_componentGeneratedImport(source)}' as ${entry.value};"
+          : "import 'package:${component.package}/${source.substring('lib/'.length)}' as ${entry.value};",
     );
   }
   out
     ..writeln()
-    ..writeln('/// Generated registration index for component `$componentId`.')
-    ..writeln('final class $className {')
-    ..writeln('  /// Creates the immutable component route index.')
+    ..writeln(
+      '/// Generated capability Registrar for component `$componentId`.',
+    )
+    ..writeln('final class $className implements CCComponentRegistrar {')
+    ..writeln('  /// Creates the stateless generated Registrar.')
     ..writeln('  const $className();')
     ..writeln()
-    ..writeln(
-      '  /// Registers every route owned by `$componentId` in stable order.',
-    )
+    ..writeln('  /// Registers every generated capability in stable order.')
+    ..writeln('  @override')
     ..writeln('  void register(CCRegistry registry) {');
   for (final route in routes) {
     final alias = imports[route.source]!;
@@ -1661,12 +1867,21 @@ String _emitComponentRouteIndex(
       ..writeln('      registry,')
       ..writeln('    );');
   }
+  for (final contribution in contributions) {
+    final alias = imports[contribution.source]!;
+    out.writeln('    $alias.${contribution.symbol}(registry);');
+  }
   out
     ..writeln('  }')
     ..writeln('}')
     ..writeln()
-    ..writeln('/// Shared generated index used by the component Registrar.')
-    ..writeln('const $constantName = $className();')
+    ..writeln('/// Generated Runtime Manifest for component `$componentId`.')
+    ..writeln(
+      'const ${component.manifest} = CCComponentManifest.fromComponent(',
+    )
+    ..writeln('  component: component_source.${component.symbol},')
+    ..writeln('  registrar: $className(),')
+    ..writeln(');')
     ..writeln()
     ..writeln(
       '/// Backend-neutral Flutter destinations owned by `$componentId`.',
@@ -1833,15 +2048,10 @@ Future<void> _generateResolvedPackageBundles({
       );
     for (var index = 0; index < packageCatalogs.length; index++) {
       final catalog = packageCatalogs[index];
-      out
-        ..writeln(
-          "import 'package:${catalog.package}/${catalog.registrarSource.substring('lib/'.length)}' "
-          'as component_$index;',
-        )
-        ..writeln(
-          "import 'package:${catalog.package}/src/ccrouter_generated/component/${_fileStem(catalog.componentId)}.routes.g.dart' "
-          'as component_routes_$index;',
-        );
+      out.writeln(
+        "import 'package:${catalog.package}/${catalog.registrarSource.substring('lib/'.length)}' "
+        'as component_$index;',
+      );
     }
     for (final dependencyName in dependencyNames) {
       final dependencyIndex = indexes[dependencyName]!;
@@ -1878,7 +2088,7 @@ Future<void> _generateResolvedPackageBundles({
       ..writeln('  routeCatalog: CCFlutterRouteCatalog.merge([');
     for (var index = 0; index < packageCatalogs.length; index++) {
       out.writeln(
-        '    component_routes_$index.${_camelIdentifier(packageCatalogs[index].componentId)}RouteCatalog,',
+        '    component_$index.${_camelIdentifier(packageCatalogs[index].componentId)}RouteCatalog,',
       );
     }
     out
@@ -2031,6 +2241,36 @@ Future<void> _removeLegacyMetadataArtifacts(
   }
 }
 
+/// Removes empty managed source directories without touching unknown files.
+///
+/// The walk is bounded to `lib/src/ccrouter_generated` in one Package and
+/// proceeds from leaves to the root. A directory containing a user-owned file
+/// or subdirectory remains intact, so cleanup cannot broaden ownership beyond
+/// files already recognized by the generator.
+Future<void> _removeEmptyGeneratedSourceDirectories(
+  Directory packageRoot,
+) async {
+  final generatedRoot = Directory(
+    path.join(packageRoot.path, 'lib', 'src', 'ccrouter_generated'),
+  );
+  if (!generatedRoot.existsSync()) return;
+  final directories = <Directory>[generatedRoot];
+  await for (final entity in generatedRoot.list(
+    recursive: true,
+    followLinks: false,
+  )) {
+    if (entity is Directory) directories.add(entity);
+  }
+  directories.sort(
+    (left, right) => right.path.length.compareTo(left.path.length),
+  );
+  for (final directory in directories) {
+    if (directory.existsSync() && await directory.list().isEmpty) {
+      await directory.delete();
+    }
+  }
+}
+
 /// Whether [file] is nested below the former `metadata/` directory.
 bool _isWithinLegacyMetadataDirectory(Directory generatedDirectory, File file) {
   final legacyDirectory = Directory(
@@ -2051,6 +2291,7 @@ bool _isLegacyMetadataArtifact(File file) {
       name == 'cc_routes.md' ||
       name == 'cc_sources.md' ||
       name.endsWith('.route.json') ||
+      name.endsWith('.service.json') ||
       name.endsWith('.route.md') ||
       name.endsWith('.component.json') ||
       name.endsWith('.component.md');
@@ -2084,7 +2325,7 @@ Future<void> _deleteObsoleteResolvedOutputs({
           'src',
           'ccrouter_generated',
           'component',
-          '${_fileStem(catalog.componentId)}.routes.g.dart',
+          '${_fileStem(catalog.componentId)}.component.g.dart',
         ),
       ),
     for (final catalog in catalogs)
@@ -2113,7 +2354,8 @@ Future<void> _deleteObsoleteResolvedOutputs({
         followLinks: false,
       )) {
         if (entity is File &&
-            (entity.path.endsWith('.routes.g.dart') ||
+            (entity.path.endsWith('.component.g.dart') ||
+                entity.path.endsWith('.routes.g.dart') ||
                 entity.path.endsWith('.route_api.g.dart'))) {
           candidates.add(entity);
         }
@@ -2213,12 +2455,8 @@ Future<void> _generatePackageHostEntrypoints(
         ..writeln(
           "export 'package:${entry.key}/${catalog.registrarSource.substring('lib/'.length)}'",
         )
-        ..writeln('    show ${catalog.manifest};')
         ..writeln(
-          "export 'package:${entry.key}/src/ccrouter_generated/component/${_fileStem(catalog.componentId)}.routes.g.dart'",
-        )
-        ..writeln(
-          '    show ${_camelIdentifier(catalog.componentId)}RouteCatalog;',
+          '    show ${catalog.manifest}, ${_camelIdentifier(catalog.componentId)}RouteCatalog;',
         );
     }
     await output.parent.create(recursive: true);
@@ -2305,7 +2543,7 @@ Future<void> _deleteObsoleteAggregateOutputs(
   };
   for (final catalog in catalogs) {
     expected.add(
-      '${catalog.packageRoot.absolute.path}${Platform.pathSeparator}lib${Platform.pathSeparator}src${Platform.pathSeparator}ccrouter_generated${Platform.pathSeparator}component${Platform.pathSeparator}${_fileStem(catalog.componentId)}.routes.g.dart',
+      '${catalog.packageRoot.absolute.path}${Platform.pathSeparator}lib${Platform.pathSeparator}src${Platform.pathSeparator}ccrouter_generated${Platform.pathSeparator}component${Platform.pathSeparator}${_fileStem(catalog.componentId)}.component.g.dart',
     );
     if (catalog.hasRouteApi) {
       expected.add(
@@ -2322,7 +2560,8 @@ Future<void> _deleteObsoleteAggregateOutputs(
     final segments = _relativePath(root, entity).split('/');
     if (segments.contains('.dart_tool') || segments.contains('build')) continue;
     final name = entity.uri.pathSegments.last;
-    if (!name.endsWith('.routes.g.dart') &&
+    if (!name.endsWith('.component.g.dart') &&
+        !name.endsWith('.routes.g.dart') &&
         !name.endsWith('.route_api.g.dart') &&
         !name.endsWith('_ccrouter.g.dart')) {
       continue;
@@ -2351,6 +2590,9 @@ bool _isCCRouterAggregateOutput(String name, String contents) {
     return contents.contains(
       'Typed navigation entry points for routes internal',
     );
+  }
+  if (name.endsWith('.component.g.dart')) {
+    return contents.contains('Generated capability Registrar for component');
   }
   return name.endsWith('.routes.g.dart') &&
       contents.contains('Generated registration index for component');
@@ -2426,6 +2668,17 @@ int _compareRoutes(_RouteRegistration left, _RouteRegistration right) {
   return source == 0 ? left.routeId.compareTo(right.routeId) : source;
 }
 
+/// Sorts manual contributions by stable identity and source location.
+int _compareContributions(
+  _ContributionRegistration left,
+  _ContributionRegistration right,
+) {
+  final id = left.id.compareTo(right.id);
+  if (id != 0) return id;
+  final source = left.source.compareTo(right.source);
+  return source == 0 ? left.symbol.compareTo(right.symbol) : source;
+}
+
 /// Reads object arrays from loosely typed metadata safely.
 Iterable<Map<String, Object?>> _objects(Object? value) sync* {
   if (value is! List) return;
@@ -2445,6 +2698,7 @@ final class _ComponentSource {
   const _ComponentSource({
     required this.package,
     required this.source,
+    required this.symbol,
     required this.manifest,
     required this.packageRoot,
   });
@@ -2454,6 +2708,9 @@ final class _ComponentSource {
 
   /// Component registrar source path relative to `lib/`.
   final String source;
+
+  /// Public top-level const CCComponent read by generated assembly code.
+  final String symbol;
 
   /// Generated Manifest symbol exported through the package Host library.
   final String manifest;
@@ -2499,6 +2756,29 @@ final class _RouteRegistration {
 
   /// Callable factory exported through the component Route API when internal.
   final String intentFactory;
+}
+
+/// Describes one restricted manual registration contribution.
+final class _ContributionRegistration {
+  /// Creates a generated contribution call record.
+  const _ContributionRegistration({
+    required this.package,
+    required this.source,
+    required this.id,
+    required this.symbol,
+  });
+
+  /// Package containing the contribution function.
+  final String package;
+
+  /// Source library imported by generated component assembly.
+  final String source;
+
+  /// Stable identity controlling deterministic invocation order.
+  final String id;
+
+  /// Public top-level function invoked with the restricted Registry.
+  final String symbol;
 }
 
 /// Describes one generated component catalog and its public Host entrypoint.

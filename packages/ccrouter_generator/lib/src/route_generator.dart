@@ -12,7 +12,6 @@ part 'route_emitter.dart';
 part 'route_standalone_generator.dart';
 part 'route_binding_generator.dart';
 part 'route_contract_generator.dart';
-part 'component_generator.dart';
 part 'component_metadata_builder.dart';
 part 'route_metadata_builder.dart';
 
@@ -86,12 +85,6 @@ Generator ccRouteBindingGenerator() => _RouteBindingGenerator();
 /// Only explicit `CCRouteContract` schemas emit output; page-level `CCRoute`
 /// declarations remain library-private and never create a public contract.
 Generator ccRouteContractGenerator() => _RouteContractGenerator();
-
-/// Creates the internal component Manifest generator for build-runner.
-///
-/// Keeping the implementation in this library lets route and component
-/// generation share descriptor validation without exposing analyzer objects.
-Generator ccComponentGenerator() => _ComponentGenerator();
 
 /// Creates the metadata Builder while keeping its implementation private.
 Builder ccRouteMetadataBuilderInternal() => _RouteMetadataBuilder();

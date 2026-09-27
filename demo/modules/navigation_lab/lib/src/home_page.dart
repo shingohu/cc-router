@@ -8,13 +8,11 @@ import 'package:flutter/material.dart';
 
 import 'lab_configuration.dart';
 import 'component_capabilities.dart';
-import 'navigation_lab_component.dart';
 import 'order_summary_service_proxy.dart';
 import 'shell_contract.dart';
 import 'ccrouter_generated/component/demo_navigation_lab_component.route_api.g.dart';
 
 @CCRoute<void>(
-  component: demoNavigationLabComponent,
   id: 'demo_navigation_lab.home',
   pattern: CCPathPattern('/'),
   presentation: CCPagePresentation(transition: CCPageTransitionType.none),

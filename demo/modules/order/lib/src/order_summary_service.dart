@@ -1,6 +1,8 @@
+import 'package:ccrouter/ccrouter.dart';
 import 'package:demo_order_contracts/demo_order_contracts.dart';
 
 /// Order-owned implementation kept outside the public contracts package.
+@CCService(contract: orderSummaryServiceToken)
 final class DemoOrderSummaryService implements OrderSummaryService {
   /// Creates the stateless summary implementation.
   const DemoOrderSummaryService();

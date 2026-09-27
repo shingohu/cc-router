@@ -5,10 +5,8 @@ import 'package:flutter/material.dart';
 
 import 'component_capabilities.dart';
 import 'lab_configuration.dart';
-import 'navigation_lab_component.dart';
 
 @CCRoute<void>(
-  component: demoNavigationLabComponent,
   id: 'demo_navigation_lab.capabilities',
   pattern: CCPathPattern('/lab/capabilities'),
   description: 'Command、Event、初始化任务与 Service 生命周期交互实验页。',

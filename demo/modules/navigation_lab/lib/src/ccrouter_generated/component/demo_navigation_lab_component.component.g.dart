@@ -3,6 +3,8 @@
 
 import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter/ccrouter_host.dart';
+import 'package:demo_navigation_lab/src/navigation_lab_component.dart'
+    as component_source;
 import '../binding/capability_page.route_binding.g.dart'
     as route_src_ccrouter_generated_binding_capability_page_route_binding_g_dart;
 import '../binding/detail_page.route_binding.g.dart'
@@ -39,13 +41,17 @@ import '../route/shell_pages.route.g.dart'
     as route_src_ccrouter_generated_route_shell_pages_route_g_dart;
 import '../route/stack_page.route.g.dart'
     as route_src_ccrouter_generated_route_stack_page_route_g_dart;
+import 'package:demo_navigation_lab/src/navigation_lab_component_registrar.dart'
+    as route_src_navigation_lab_component_registrar_dart;
 
-/// Generated registration index for component `demo_navigation_lab_component`.
-final class DemoNavigationLabComponentGeneratedRoutes {
-  /// Creates the immutable component route index.
-  const DemoNavigationLabComponentGeneratedRoutes();
+/// Generated capability Registrar for component `demo_navigation_lab_component`.
+final class _DemoNavigationLabComponentGeneratedRegistrar
+    implements CCComponentRegistrar {
+  /// Creates the stateless generated Registrar.
+  const _DemoNavigationLabComponentGeneratedRegistrar();
 
-  /// Registers every route owned by `demo_navigation_lab_component` in stable order.
+  /// Registers every generated capability in stable order.
+  @override
   void register(CCRegistry registry) {
     route_src_ccrouter_generated_route_capability_page_route_g_dart
         .ccrouterRegisterDemoCapabilitiesPageRoute(registry);
@@ -103,12 +109,16 @@ final class DemoNavigationLabComponentGeneratedRoutes {
         .ccrouterRegisterDemoWorkspaceProfilePageRoute(registry);
     route_src_ccrouter_generated_route_stack_page_route_g_dart
         .ccrouterRegisterDemoStackPageRoute(registry);
+    route_src_navigation_lab_component_registrar_dart
+        .registerDemoNavigationLabCapabilities(registry);
   }
 }
 
-/// Shared generated index used by the component Registrar.
-const demoNavigationLabComponentGeneratedRoutes =
-    DemoNavigationLabComponentGeneratedRoutes();
+/// Generated Runtime Manifest for component `demo_navigation_lab_component`.
+const demoNavigationLabComponentManifest = CCComponentManifest.fromComponent(
+  component: component_source.demoNavigationLabComponent,
+  registrar: _DemoNavigationLabComponentGeneratedRegistrar(),
+);
 
 /// Backend-neutral Flutter destinations owned by `demo_navigation_lab_component`.
 final demoNavigationLabComponentRouteCatalog = CCFlutterRouteCatalog([

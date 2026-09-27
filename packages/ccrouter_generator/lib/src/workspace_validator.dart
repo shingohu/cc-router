@@ -173,8 +173,13 @@ abstract final class CCRouteWorkspaceValidator {
     final components = <String, Map<String, Object?>>{};
     final componentDeclarationCounts = <String, int>{};
     final componentDeclarationPackages = <String, String>{};
+    final componentDeclarationsByPackage = <String, Set<String>>{};
     final routes = <String, Map<String, Object?>>{};
     final routeImplementations = <String, Map<String, Object?>>{};
+    final contributions = <String, Map<String, Object?>>{};
+    final serviceContracts = <String, Map<String, Object?>>{};
+    final serviceImplementations = <String, Map<String, Object?>>{};
+    final defaultServices = <String, String>{};
     for (final document in documents) {
       if (document['schemaVersion'] != 2 && document['schemaVersion'] != 3) {
         errors.add(
@@ -186,7 +191,12 @@ abstract final class CCRouteWorkspaceValidator {
         componentDeclarationCounts[id] =
             (componentDeclarationCounts[id] ?? 0) + 1;
         final package = '${document['package'] ?? ''}';
-        if (package.isNotEmpty) componentDeclarationPackages[id] = package;
+        if (package.isNotEmpty) {
+          componentDeclarationPackages[id] = package;
+          componentDeclarationsByPackage
+              .putIfAbsent(package, () => <String>{})
+              .add(id);
+        }
       }
       for (final component in _objects(document['components'])) {
         final id = '${component['id']}';
@@ -213,6 +223,65 @@ abstract final class CCRouteWorkspaceValidator {
           routeImplementations[routeId] = implementation;
         }
       }
+      for (final contribution in _objects(document['contributions'])) {
+        final ownerId = '${contribution['componentId'] ?? ''}';
+        final id = '${contribution['id'] ?? ''}';
+        final key = '$ownerId\u0000$id';
+        if (contributions.containsKey(key)) {
+          errors.add(
+            'Component "$ownerId" declares contribution "$id" more than once.',
+          );
+        } else {
+          contributions[key] = contribution;
+        }
+      }
+      for (final contract in _objects(document['serviceContracts'])) {
+        final id = '${contract['id'] ?? ''}';
+        if (serviceContracts.containsKey(id)) {
+          errors.add('Service contract "$id" is declared more than once.');
+        } else {
+          serviceContracts[id] = contract;
+        }
+      }
+      for (final implementation in _objects(
+        document['serviceImplementations'],
+      )) {
+        final ownerId = '${implementation['componentId'] ?? ''}';
+        final id = '${implementation['id'] ?? ''}';
+        final keyName = '${implementation['key'] ?? ''}';
+        final key = '$ownerId\u0000$id\u0000$keyName';
+        if (serviceImplementations.containsKey(key)) {
+          errors.add(
+            'Component "$ownerId" declares Service "$id" with Key '
+            '"${keyName.isEmpty ? '<default>' : keyName}" more than once.',
+          );
+        } else {
+          serviceImplementations[key] = implementation;
+        }
+        if (implementation['isDefault'] == true) {
+          final defaultKey = '$ownerId\u0000$id';
+          final previous = defaultServices[defaultKey];
+          if (previous != null) {
+            errors.add(
+              'Component "$ownerId" declares more than one default '
+              'implementation of Service "$id": "$previous" and '
+              '"${keyName.isEmpty ? '<unkeyed>' : keyName}".',
+            );
+          } else {
+            defaultServices[defaultKey] = keyName.isEmpty
+                ? '<unkeyed>'
+                : keyName;
+          }
+        }
+      }
+    }
+    for (final entry in componentDeclarationsByPackage.entries) {
+      if (entry.value.length <= 1) continue;
+      final ids = entry.value.toList()..sort();
+      errors.add(
+        'Package "${entry.key}" declares more than one CCComponent: '
+        '${ids.join(', ')}.',
+      );
     }
     for (final id in components.keys) {
       final count = componentDeclarationCounts[id] ?? 0;
@@ -225,6 +294,65 @@ abstract final class CCRouteWorkspaceValidator {
       }
     }
     _validateMetadataFields(components, routes, errors);
+    for (final contribution in contributions.values) {
+      final id = '${contribution['id'] ?? ''}';
+      final ownerId = '${contribution['componentId'] ?? ''}';
+      if (!_validIdentifier(id)) {
+        errors.add('Component contribution ID "$id" is invalid.');
+      }
+      if (!components.containsKey(ownerId)) {
+        errors.add(
+          'Component contribution "$id" references unknown owner '
+          'component "$ownerId".',
+        );
+      }
+    }
+    for (final contract in serviceContracts.values) {
+      final id = '${contract['id'] ?? ''}';
+      final ownerId = '${contract['componentId'] ?? ''}';
+      if (!_validIdentifier(id)) {
+        errors.add('Service contract ID "$id" is invalid.');
+      }
+      if (!components.containsKey(ownerId)) {
+        errors.add(
+          'Service contract "$id" references unknown owner component '
+          '"$ownerId".',
+        );
+      }
+    }
+    for (final implementation in serviceImplementations.values) {
+      final id = '${implementation['id'] ?? ''}';
+      final ownerId = '${implementation['componentId'] ?? ''}';
+      final contractId = '${implementation['contractId'] ?? ''}';
+      final keyName = '${implementation['key'] ?? ''}';
+      if (!_validIdentifier(id)) {
+        errors.add('Service ID "$id" is invalid.');
+      }
+      if (keyName.isNotEmpty && !_validIdentifier(keyName)) {
+        errors.add('Service Key "$keyName" is invalid.');
+      }
+      if (!components.containsKey(ownerId)) {
+        errors.add(
+          'Service "$id" references unknown owner component "$ownerId".',
+        );
+      }
+      if (contractId.isEmpty) continue;
+      final contract = serviceContracts[contractId];
+      if (contract == null) {
+        errors.add(
+          'Service implementation "$id" references unknown contract '
+          '"$contractId".',
+        );
+        continue;
+      }
+      final contractOwner = '${contract['componentId'] ?? ''}';
+      if (contractOwner != ownerId) {
+        errors.add(
+          'Service implementation "$id" belongs to component "$ownerId" '
+          'but contract "$contractId" belongs to "$contractOwner".',
+        );
+      }
+    }
     final componentList = _validateAndOrderComponents(components, errors);
     for (final route in routes.values) {
       final routeId = '${route['id']}';

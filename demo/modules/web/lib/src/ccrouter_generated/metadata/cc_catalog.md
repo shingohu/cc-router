@@ -13,7 +13,7 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 ### Route `demo_web.private`
 
 - Declaring package: `demo_web_contracts`
-- Contract/declaration: `package:demo_web_contracts/src/web_route_contracts.dart:39:16` (`DemoPrivateWebRouteContract`)
+- Contract/declaration: `package:demo_web_contracts/src/web_route_contracts.dart:36:16` (`DemoPrivateWebRouteContract`)
 - Implementation: `package:demo_web/src/web_pages.dart:30:13` (`DemoPrivateWebPage`)
 - Generated artifacts:
   - `routeBinding`: `package:demo_web/src/ccrouter_generated/binding/web_pages.route_binding.g.dart` (`ccrouterRegisterDemoPrivateWebPageRoute`)
@@ -21,7 +21,7 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 ### Route `demo_web.public`
 
 - Declaring package: `demo_web_contracts`
-- Contract/declaration: `package:demo_web_contracts/src/web_route_contracts.dart:20:16` (`DemoPublicWebRouteContract`)
+- Contract/declaration: `package:demo_web_contracts/src/web_route_contracts.dart:17:16` (`DemoPublicWebRouteContract`)
 - Implementation: `package:demo_web/src/web_pages.dart:9:13` (`DemoPublicWebPage`)
 - Generated artifacts:
   - `routeBinding`: `package:demo_web/src/ccrouter_generated/binding/web_pages.route_binding.g.dart` (`ccrouterRegisterDemoPublicWebPageRoute`)

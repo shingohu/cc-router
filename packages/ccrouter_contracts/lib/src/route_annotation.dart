@@ -1,58 +1,8 @@
+import 'component.dart';
 import 'route.dart';
 import 'route_pattern.dart';
 import 'route_placement.dart';
 import 'route_presentation.dart';
-
-/// Compile-time identity and dependency contract shared by routes and Runtime.
-///
-/// Define one const value in each component and reuse it from every [CCRoute]
-/// plus the Registrar's [CCComponent] annotation. The generator derives the
-/// Runtime Manifest from that annotation so build-time ownership and Runtime
-/// dependency ordering cannot drift.
-final class CCComponentDescriptor {
-  /// Creates one stable component contract declaration.
-  const CCComponentDescriptor({
-    required this.id,
-    required this.version,
-    this.dependencies = const [],
-    this.optionalDependencies = const [],
-  });
-
-  /// Globally unique component identifier used by route ownership metadata.
-  ///
-  /// Use lowercase alphanumeric segments separated by `.`, `_`, or `-`, with
-  /// at most 128 characters. The generator and Runtime reject other forms so
-  /// Package indexes and diagnostics use one portable identity syntax.
-  final String id;
-
-  /// SemVer 2.0 contract version displayed in generated route documentation.
-  ///
-  /// Use this to communicate component-contract compatibility; build metadata
-  /// is allowed, while numeric pre-release identifiers cannot contain leading
-  /// zeroes.
-  final String version;
-
-  /// Component IDs that must be installed before this component.
-  final List<String> dependencies;
-
-  /// Component IDs ordered first only when present in the application.
-  final List<String> optionalDependencies;
-}
-
-/// Marks the registrar that publishes one [descriptor] to generated metadata.
-///
-/// Use exactly once per component package. This also describes components that
-/// own no routes, so workspace ownership checks and Host assembly can resolve
-/// every consumer. Registrar libraries include the generated `.component.g.dart`
-/// Part; application code consumes the generated Manifest rather than the
-/// private Registrar.
-final class CCComponent {
-  /// Associates a registrar declaration with its shared component descriptor.
-  const CCComponent(this.descriptor);
-
-  /// Single source of component identity, version and dependency information.
-  final CCComponentDescriptor descriptor;
-}
 
 /// Declares a destination whose typed contract is generated at build time.
 ///
@@ -70,7 +20,6 @@ final class CCRoute<R> {
   /// The generator rejects missing or simultaneous declarations and resolves
   /// the one effective primary before emitting the Runtime definition.
   const CCRoute({
-    required this.component,
     required this.id,
     this.pattern,
     this.patterns = const [],
@@ -81,9 +30,6 @@ final class CCRoute<R> {
     this.popGuards = const [],
     this.description,
   });
-
-  /// Component that owns registration and generated documentation.
-  final CCComponentDescriptor component;
 
   /// Stable route identity shared by tracing, registration and typed Intents.
   ///
@@ -157,7 +103,7 @@ final class CCRouteContract<R> {
   /// library. Consumers must explicitly depend on and import the Package that
   /// owns the contract.
   const CCRouteContract({
-    required this.component,
+    required this.componentId,
     required this.id,
     this.pattern,
     this.patterns = const [],
@@ -170,7 +116,12 @@ final class CCRouteContract<R> {
   });
 
   /// Component that owns the contract and its eventual page implementation.
-  final CCComponentDescriptor component;
+  ///
+  /// Contracts declare this explicitly because one Pure Dart contracts package
+  /// may publish capabilities for several implementation components. The Host
+  /// generator verifies that the eventual implementation package declares the
+  /// same owner before assembling the application.
+  final CCComponentId componentId;
 
   /// Stable identity retained when an internal route is promoted.
   ///

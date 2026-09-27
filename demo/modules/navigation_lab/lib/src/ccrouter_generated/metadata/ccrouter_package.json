@@ -5,7 +5,7 @@
     "name": "demo_navigation_lab",
     "version": "0.1.0"
   },
-  "contentFingerprint": "883b730d3d3dd311777c7ffd09a0531c93dfd13f9ce7461858f3a5b8066abe9b",
+  "contentFingerprint": "a6846e74c026c35712a90f2a9e7f399fba6c210a47ab2344b9cee30bbecdc8fe",
   "bundle": {
     "library": "lib/src/ccrouter_generated/host/demo_navigation_lab_ccrouter.g.dart",
     "symbol": "ccrouterGeneratedPackageBundle"
@@ -19,12 +19,12 @@
     {
       "name": "demo_order_contracts",
       "version": "0.1.0",
-      "contentFingerprint": "7f90a4fb91d78a1bc7ff05e6df9171d7d83a295f8ead2b044815a9c4109ed5fe"
+      "contentFingerprint": "24874468f4dc2ed4494d337961fe35f36cc9113e5a4d5818bee80c5b17ca4c8e"
     },
     {
       "name": "demo_web_contracts",
       "version": "0.1.0",
-      "contentFingerprint": "0ff5a3562ace5f1f44feabeed73406a412c56cb180728ea9a4d9f16f36949a53"
+      "contentFingerprint": "2edb0ff7e0994667f7b0b5fba43b85ccb4e9e6e9a5df93243379ddbc894fbb8c"
     }
   ],
   "metadata": [
@@ -34,22 +34,12 @@
       "source": "lib/src/capability_page.dart",
       "componentDeclarations": [],
       "componentManifests": {},
-      "components": [
-        {
-          "id": "demo_navigation_lab_component",
-          "version": "0.1.0",
-          "dependencies": [
-            "demo_order_component",
-            "demo_web_component"
-          ],
-          "optionalDependencies": []
-        }
-      ],
+      "componentSymbols": {},
+      "components": [],
       "routes": [
         {
           "id": "demo_navigation_lab.capabilities",
           "componentId": "demo_navigation_lab_component",
-          "componentVersion": "0.1.0",
           "exposure": "internal",
           "deepLink": "disabled",
           "description": "Command、Event、初始化任务与 Service 生命周期交互实验页。",
@@ -61,7 +51,7 @@
             "kind": "page",
             "symbol": "DemoCapabilitiesPage",
             "packageUri": "package:demo_navigation_lab/src/capability_page.dart",
-            "line": 16,
+            "line": 14,
             "column": 13
           },
           "navigationSources": [
@@ -123,7 +113,8 @@
           "resultType": "void"
         }
       ],
-      "routeImplementations": []
+      "routeImplementations": [],
+      "contributions": []
     },
     {
       "schemaVersion": 3,
@@ -131,22 +122,12 @@
       "source": "lib/src/detail_page.dart",
       "componentDeclarations": [],
       "componentManifests": {},
-      "components": [
-        {
-          "id": "demo_navigation_lab_component",
-          "version": "0.1.0",
-          "dependencies": [
-            "demo_order_component",
-            "demo_web_component"
-          ],
-          "optionalDependencies": []
-        }
-      ],
+      "componentSymbols": {},
+      "components": [],
       "routes": [
         {
           "id": "demo_navigation_lab.detail",
           "componentId": "demo_navigation_lab_component",
-          "componentVersion": "0.1.0",
           "exposure": "internal",
           "deepLink": "enabled",
           "description": "验证类型安全参数、Query 集合、多 Path、完整 URL、Scheme 与返回值。",
@@ -158,7 +139,7 @@
             "kind": "page",
             "symbol": "DemoDetailPage",
             "packageUri": "package:demo_navigation_lab/src/detail_page.dart",
-            "line": 30,
+            "line": 28,
             "column": 13
           },
           "navigationSources": [
@@ -271,7 +252,8 @@
           "resultType": "String"
         }
       ],
-      "routeImplementations": []
+      "routeImplementations": [],
+      "contributions": []
     },
     {
       "schemaVersion": 3,
@@ -279,22 +261,12 @@
       "source": "lib/src/failure_page.dart",
       "componentDeclarations": [],
       "componentManifests": {},
-      "components": [
-        {
-          "id": "demo_navigation_lab_component",
-          "version": "0.1.0",
-          "dependencies": [
-            "demo_order_component",
-            "demo_web_component"
-          ],
-          "optionalDependencies": []
-        }
-      ],
+      "componentSymbols": {},
+      "components": [],
       "routes": [
         {
           "id": "demo_navigation_lab.failure",
           "componentId": "demo_navigation_lab_component",
-          "componentVersion": "0.1.0",
           "exposure": "internal",
           "deepLink": "disabled",
           "description": "展示标准导航失败经 Host Failure Policy 恢复后的安全页面。",
@@ -306,7 +278,7 @@
             "kind": "page",
             "symbol": "DemoFailurePage",
             "packageUri": "package:demo_navigation_lab/src/failure_page.dart",
-            "line": 16,
+            "line": 14,
             "column": 13
           },
           "navigationSources": [
@@ -419,7 +391,8 @@
           "resultType": "void"
         }
       ],
-      "routeImplementations": []
+      "routeImplementations": [],
+      "contributions": []
     },
     {
       "schemaVersion": 3,
@@ -427,22 +400,12 @@
       "source": "lib/src/home_page.dart",
       "componentDeclarations": [],
       "componentManifests": {},
-      "components": [
-        {
-          "id": "demo_navigation_lab_component",
-          "version": "0.1.0",
-          "dependencies": [
-            "demo_order_component",
-            "demo_web_component"
-          ],
-          "optionalDependencies": []
-        }
-      ],
+      "componentSymbols": {},
+      "components": [],
       "routes": [
         {
           "id": "demo_navigation_lab.home",
           "componentId": "demo_navigation_lab_component",
-          "componentVersion": "0.1.0",
           "exposure": "internal",
           "deepLink": "disabled",
           "description": "CCRouter 全功能交互验证首页。",
@@ -454,7 +417,7 @@
             "kind": "page",
             "symbol": "DemoNavigationHomePage",
             "packageUri": "package:demo_navigation_lab/src/home_page.dart",
-            "line": 23,
+            "line": 21,
             "column": 13
           },
           "navigationSources": [
@@ -516,7 +479,8 @@
           "resultType": "void"
         }
       ],
-      "routeImplementations": []
+      "routeImplementations": [],
+      "contributions": []
     },
     {
       "schemaVersion": 3,
@@ -524,22 +488,12 @@
       "source": "lib/src/lifecycle_page.dart",
       "componentDeclarations": [],
       "componentManifests": {},
-      "components": [
-        {
-          "id": "demo_navigation_lab_component",
-          "version": "0.1.0",
-          "dependencies": [
-            "demo_order_component",
-            "demo_web_component"
-          ],
-          "optionalDependencies": []
-        }
-      ],
+      "componentSymbols": {},
+      "components": [],
       "routes": [
         {
           "id": "demo_navigation_lab.lifecycle",
           "componentId": "demo_navigation_lab_component",
-          "componentVersion": "0.1.0",
           "exposure": "internal",
           "deepLink": "disabled",
           "description": "同时验证 CCPageLifecycleMixin 与 Listener 的页面和 App 生命周期。",
@@ -551,7 +505,7 @@
             "kind": "page",
             "symbol": "DemoLifecyclePage",
             "packageUri": "package:demo_navigation_lab/src/lifecycle_page.dart",
-            "line": 14,
+            "line": 12,
             "column": 13
           },
           "navigationSources": [
@@ -613,17 +567,21 @@
           "resultType": "void"
         }
       ],
-      "routeImplementations": []
+      "routeImplementations": [],
+      "contributions": []
     },
     {
       "schemaVersion": 3,
       "package": "demo_navigation_lab",
-      "source": "lib/src/navigation_lab_component_registrar.dart",
+      "source": "lib/src/navigation_lab_component.dart",
       "componentDeclarations": [
         "demo_navigation_lab_component"
       ],
       "componentManifests": {
         "demo_navigation_lab_component": "demoNavigationLabComponentManifest"
+      },
+      "componentSymbols": {
+        "demo_navigation_lab_component": "demoNavigationLabComponent"
       },
       "components": [
         {
@@ -637,7 +595,34 @@
         }
       ],
       "routes": [],
-      "routeImplementations": []
+      "routeImplementations": [],
+      "contributions": []
+    },
+    {
+      "schemaVersion": 3,
+      "package": "demo_navigation_lab",
+      "source": "lib/src/navigation_lab_component_registrar.dart",
+      "componentDeclarations": [],
+      "componentManifests": {},
+      "componentSymbols": {},
+      "components": [],
+      "routes": [],
+      "routeImplementations": [],
+      "contributions": [
+        {
+          "id": "demo_navigation_lab.capabilities",
+          "componentId": "demo_navigation_lab_component",
+          "package": "demo_navigation_lab",
+          "source": "lib/src/navigation_lab_component_registrar.dart",
+          "symbol": "registerDemoNavigationLabCapabilities",
+          "declaration": {
+            "symbol": "registerDemoNavigationLabCapabilities",
+            "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
+            "line": 10,
+            "column": 6
+          }
+        }
+      ]
     },
     {
       "schemaVersion": 3,
@@ -645,22 +630,12 @@
       "source": "lib/src/policy_pages.dart",
       "componentDeclarations": [],
       "componentManifests": {},
-      "components": [
-        {
-          "id": "demo_navigation_lab_component",
-          "version": "0.1.0",
-          "dependencies": [
-            "demo_order_component",
-            "demo_web_component"
-          ],
-          "optionalDependencies": []
-        }
-      ],
+      "componentSymbols": {},
+      "components": [],
       "routes": [
         {
           "id": "demo_navigation_lab.proceed",
           "componentId": "demo_navigation_lab_component",
-          "componentVersion": "0.1.0",
           "exposure": "internal",
           "deepLink": "disabled",
           "description": "路由级拦截器放行示例。",
@@ -674,7 +649,7 @@
             "kind": "page",
             "symbol": "DemoProceedPage",
             "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-            "line": 124,
+            "line": 122,
             "column": 13
           },
           "navigationSources": [
@@ -738,7 +713,6 @@
         {
           "id": "demo_navigation_lab.cancel",
           "componentId": "demo_navigation_lab_component",
-          "componentVersion": "0.1.0",
           "exposure": "internal",
           "deepLink": "disabled",
           "description": "路由级拦截器取消示例；页面正常情况下不会创建。",
@@ -752,7 +726,7 @@
             "kind": "page",
             "symbol": "DemoCancelledPage",
             "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-            "line": 141,
+            "line": 138,
             "column": 13
           },
           "navigationSources": [
@@ -816,7 +790,6 @@
         {
           "id": "demo_navigation_lab.redirect.source",
           "componentId": "demo_navigation_lab_component",
-          "componentVersion": "0.1.0",
           "exposure": "internal",
           "deepLink": "disabled",
           "description": "路由级拦截器重定向源页面；页面正常情况下不会创建。",
@@ -830,7 +803,7 @@
             "kind": "page",
             "symbol": "DemoRedirectSourcePage",
             "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-            "line": 156,
+            "line": 152,
             "column": 13
           },
           "navigationSources": [
@@ -894,7 +867,6 @@
         {
           "id": "demo_navigation_lab.redirect.target",
           "componentId": "demo_navigation_lab_component",
-          "componentVersion": "0.1.0",
           "exposure": "internal",
           "deepLink": "disabled",
           "description": "拦截器重定向后的目标页面。",
@@ -906,7 +878,7 @@
             "kind": "page",
             "symbol": "DemoRedirectTargetPage",
             "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-            "line": 170,
+            "line": 165,
             "column": 13
           },
           "navigationSources": [
@@ -970,7 +942,6 @@
         {
           "id": "demo_navigation_lab.defer",
           "componentId": "demo_navigation_lab_component",
-          "componentVersion": "0.1.0",
           "exposure": "internal",
           "deepLink": "disabled",
           "description": "等待外部同意后恢复的 Deferred Navigation 示例。",
@@ -984,7 +955,7 @@
             "kind": "page",
             "symbol": "DemoDeferredPage",
             "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-            "line": 185,
+            "line": 179,
             "column": 13
           },
           "navigationSources": [
@@ -1048,7 +1019,6 @@
         {
           "id": "demo_navigation_lab.timeout",
           "componentId": "demo_navigation_lab_component",
-          "componentVersion": "0.1.0",
           "exposure": "internal",
           "deepLink": "disabled",
           "description": "触发标准 Interceptor Timeout Error 的示例。",
@@ -1062,7 +1032,7 @@
             "kind": "page",
             "symbol": "DemoTimeoutPage",
             "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-            "line": 202,
+            "line": 195,
             "column": 13
           },
           "navigationSources": [
@@ -1126,7 +1096,6 @@
         {
           "id": "demo_navigation_lab.guarded",
           "componentId": "demo_navigation_lab_component",
-          "componentVersion": "0.1.0",
           "exposure": "internal",
           "deepLink": "disabled",
           "description": "未保存状态下拒绝 CCRouter Pop 的路由。",
@@ -1140,7 +1109,7 @@
             "kind": "page",
             "symbol": "DemoGuardedPage",
             "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-            "line": 219,
+            "line": 211,
             "column": 13
           },
           "navigationSources": [
@@ -1202,7 +1171,8 @@
           "resultType": "void"
         }
       ],
-      "routeImplementations": []
+      "routeImplementations": [],
+      "contributions": []
     },
     {
       "schemaVersion": 3,
@@ -1210,22 +1180,12 @@
       "source": "lib/src/presentation_pages.dart",
       "componentDeclarations": [],
       "componentManifests": {},
-      "components": [
-        {
-          "id": "demo_navigation_lab_component",
-          "version": "0.1.0",
-          "dependencies": [
-            "demo_order_component",
-            "demo_web_component"
-          ],
-          "optionalDependencies": []
-        }
-      ],
+      "componentSymbols": {},
+      "components": [],
       "routes": [
         {
           "id": "demo_navigation_lab.presentation.fade",
           "componentId": "demo_navigation_lab_component",
-          "componentVersion": "0.1.0",
           "exposure": "internal",
           "deepLink": "disabled",
           "description": null,
@@ -1237,7 +1197,7 @@
             "kind": "page",
             "symbol": "DemoFadePage",
             "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
-            "line": 13,
+            "line": 10,
             "column": 13
           },
           "navigationSources": [
@@ -1301,7 +1261,6 @@
         {
           "id": "demo_navigation_lab.presentation.scale",
           "componentId": "demo_navigation_lab_component",
-          "componentVersion": "0.1.0",
           "exposure": "internal",
           "deepLink": "disabled",
           "description": null,
@@ -1313,7 +1272,7 @@
             "kind": "page",
             "symbol": "DemoScalePage",
             "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
-            "line": 30,
+            "line": 26,
             "column": 13
           },
           "navigationSources": [
@@ -1377,7 +1336,6 @@
         {
           "id": "demo_navigation_lab.presentation.cupertino",
           "componentId": "demo_navigation_lab_component",
-          "componentVersion": "0.1.0",
           "exposure": "internal",
           "deepLink": "disabled",
           "description": null,
@@ -1389,7 +1347,7 @@
             "kind": "page",
             "symbol": "DemoCupertinoPage",
             "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
-            "line": 47,
+            "line": 42,
             "column": 13
           },
           "navigationSources": [
@@ -1453,7 +1411,6 @@
         {
           "id": "demo_navigation_lab.presentation.bottom_page",
           "componentId": "demo_navigation_lab_component",
-          "componentVersion": "0.1.0",
           "exposure": "internal",
           "deepLink": "disabled",
           "description": "普通全屏 Page 从底部滑入，不是 BottomSheet。",
@@ -1465,7 +1422,7 @@
             "kind": "page",
             "symbol": "DemoBottomPage",
             "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
-            "line": 67,
+            "line": 61,
             "column": 13
           },
           "navigationSources": [
@@ -1529,7 +1486,6 @@
         {
           "id": "demo_navigation_lab.presentation.transparent",
           "componentId": "demo_navigation_lab_component",
-          "componentVersion": "0.1.0",
           "exposure": "internal",
           "deepLink": "disabled",
           "description": "用于海报分享预览的透明全屏 Page。",
@@ -1541,7 +1497,7 @@
             "kind": "page",
             "symbol": "DemoTransparentPage",
             "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
-            "line": 89,
+            "line": 82,
             "column": 13
           },
           "navigationSources": [
@@ -1605,7 +1561,6 @@
         {
           "id": "demo_navigation_lab.presentation.dialog",
           "componentId": "demo_navigation_lab_component",
-          "componentVersion": "0.1.0",
           "exposure": "internal",
           "deepLink": "disabled",
           "description": null,
@@ -1617,7 +1572,7 @@
             "kind": "page",
             "symbol": "DemoDialogPage",
             "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
-            "line": 147,
+            "line": 139,
             "column": 13
           },
           "navigationSources": [
@@ -1680,7 +1635,6 @@
         {
           "id": "demo_navigation_lab.presentation.sheet",
           "componentId": "demo_navigation_lab_component",
-          "componentVersion": "0.1.0",
           "exposure": "internal",
           "deepLink": "disabled",
           "description": null,
@@ -1692,7 +1646,7 @@
             "kind": "page",
             "symbol": "DemoBottomSheetPage",
             "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
-            "line": 177,
+            "line": 168,
             "column": 13
           },
           "navigationSources": [
@@ -1755,7 +1709,8 @@
           "resultType": "String"
         }
       ],
-      "routeImplementations": []
+      "routeImplementations": [],
+      "contributions": []
     },
     {
       "schemaVersion": 3,
@@ -1763,22 +1718,12 @@
       "source": "lib/src/shell_pages.dart",
       "componentDeclarations": [],
       "componentManifests": {},
-      "components": [
-        {
-          "id": "demo_navigation_lab_component",
-          "version": "0.1.0",
-          "dependencies": [
-            "demo_order_component",
-            "demo_web_component"
-          ],
-          "optionalDependencies": []
-        }
-      ],
+      "componentSymbols": {},
+      "components": [],
       "routes": [
         {
           "id": "demo_navigation_lab.shell.feed",
           "componentId": "demo_navigation_lab_component",
-          "componentVersion": "0.1.0",
           "exposure": "internal",
           "deepLink": "disabled",
           "description": "ShellRoute 共享框架中的内容首页。",
@@ -1790,7 +1735,7 @@
             "kind": "page",
             "symbol": "DemoShellFeedPage",
             "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
-            "line": 20,
+            "line": 18,
             "column": 13
           },
           "navigationSources": [
@@ -1854,7 +1799,6 @@
         {
           "id": "demo_navigation_lab.shell.detail",
           "componentId": "demo_navigation_lab_component",
-          "componentVersion": "0.1.0",
           "exposure": "internal",
           "deepLink": "disabled",
           "description": "ShellRoute 嵌套子路由。",
@@ -1866,7 +1810,7 @@
             "kind": "page",
             "symbol": "DemoShellDetailPage",
             "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
-            "line": 62,
+            "line": 59,
             "column": 13
           },
           "navigationSources": [
@@ -1940,7 +1884,6 @@
         {
           "id": "demo_navigation_lab.shell.settings",
           "componentId": "demo_navigation_lab_component",
-          "componentVersion": "0.1.0",
           "exposure": "internal",
           "deepLink": "disabled",
           "description": "ShellRoute 共享框架中的设置页。",
@@ -1952,7 +1895,7 @@
             "kind": "page",
             "symbol": "DemoShellSettingsPage",
             "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
-            "line": 92,
+            "line": 88,
             "column": 13
           },
           "navigationSources": [
@@ -2016,7 +1959,6 @@
         {
           "id": "demo_navigation_lab.workspace.home",
           "componentId": "demo_navigation_lab_component",
-          "componentVersion": "0.1.0",
           "exposure": "internal",
           "deepLink": "disabled",
           "description": "StatefulShellRoute 首页分支。",
@@ -2028,7 +1970,7 @@
             "kind": "page",
             "symbol": "DemoWorkspaceHomePage",
             "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
-            "line": 113,
+            "line": 108,
             "column": 13
           },
           "navigationSources": [
@@ -2092,7 +2034,6 @@
         {
           "id": "demo_navigation_lab.workspace.detail",
           "componentId": "demo_navigation_lab_component",
-          "componentVersion": "0.1.0",
           "exposure": "internal",
           "deepLink": "enabled",
           "description": "StatefulShellRoute 首页分支的可 Deep Link 子路由。",
@@ -2104,7 +2045,7 @@
             "kind": "page",
             "symbol": "DemoWorkspaceDetailPage",
             "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
-            "line": 147,
+            "line": 141,
             "column": 13
           },
           "navigationSources": [
@@ -2179,7 +2120,6 @@
         {
           "id": "demo_navigation_lab.workspace.activity",
           "componentId": "demo_navigation_lab_component",
-          "componentVersion": "0.1.0",
           "exposure": "internal",
           "deepLink": "disabled",
           "description": "StatefulShellRoute 活动分支。",
@@ -2191,7 +2131,7 @@
             "kind": "page",
             "symbol": "DemoWorkspaceActivityPage",
             "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
-            "line": 177,
+            "line": 170,
             "column": 13
           },
           "navigationSources": [
@@ -2255,7 +2195,6 @@
         {
           "id": "demo_navigation_lab.workspace.profile",
           "componentId": "demo_navigation_lab_component",
-          "componentVersion": "0.1.0",
           "exposure": "internal",
           "deepLink": "disabled",
           "description": "StatefulShellRoute 个人分支。",
@@ -2267,7 +2206,7 @@
             "kind": "page",
             "symbol": "DemoWorkspaceProfilePage",
             "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
-            "line": 214,
+            "line": 206,
             "column": 13
           },
           "navigationSources": [
@@ -2331,7 +2270,6 @@
         {
           "id": "demo_navigation_lab.extra",
           "componentId": "demo_navigation_lab_component",
-          "componentVersion": "0.1.0",
           "exposure": "internal",
           "deepLink": "disabled",
           "description": "展示仅在进程内传递的类型安全 Extra 对象。",
@@ -2343,7 +2281,7 @@
             "kind": "page",
             "symbol": "DemoExtraPage",
             "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
-            "line": 231,
+            "line": 222,
             "column": 13
           },
           "navigationSources": [
@@ -2415,7 +2353,8 @@
           "resultType": "void"
         }
       ],
-      "routeImplementations": []
+      "routeImplementations": [],
+      "contributions": []
     },
     {
       "schemaVersion": 3,
@@ -2423,22 +2362,12 @@
       "source": "lib/src/stack_page.dart",
       "componentDeclarations": [],
       "componentManifests": {},
-      "components": [
-        {
-          "id": "demo_navigation_lab_component",
-          "version": "0.1.0",
-          "dependencies": [
-            "demo_order_component",
-            "demo_web_component"
-          ],
-          "optionalDependencies": []
-        }
-      ],
+      "componentSymbols": {},
+      "components": [],
       "routes": [
         {
           "id": "demo_navigation_lab.stack",
           "componentId": "demo_navigation_lab_component",
-          "componentVersion": "0.1.0",
           "exposure": "internal",
           "deepLink": "disabled",
           "description": "交互验证 Push、Replace、Pop、Go 与 Reset。",
@@ -2450,7 +2379,7 @@
             "kind": "page",
             "symbol": "DemoStackPage",
             "packageUri": "package:demo_navigation_lab/src/stack_page.dart",
-            "line": 16,
+            "line": 14,
             "column": 13
           },
           "navigationSources": [
@@ -2532,7 +2461,8 @@
           "resultType": "String"
         }
       ],
-      "routeImplementations": []
+      "routeImplementations": [],
+      "contributions": []
     }
   ],
   "capabilityCatalog": {
@@ -2546,13 +2476,13 @@
         "contract": {
           "symbol": "DemoCancelledPage",
           "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-          "line": 141,
+          "line": 138,
           "column": 13
         },
         "implementation": {
           "symbol": "DemoCancelledPage",
           "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-          "line": 141,
+          "line": 138,
           "column": 13
         },
         "generatedArtifacts": [
@@ -2576,13 +2506,13 @@
         "contract": {
           "symbol": "DemoCapabilitiesPage",
           "packageUri": "package:demo_navigation_lab/src/capability_page.dart",
-          "line": 16,
+          "line": 14,
           "column": 13
         },
         "implementation": {
           "symbol": "DemoCapabilitiesPage",
           "packageUri": "package:demo_navigation_lab/src/capability_page.dart",
-          "line": 16,
+          "line": 14,
           "column": 13
         },
         "generatedArtifacts": [
@@ -2606,13 +2536,13 @@
         "contract": {
           "symbol": "DemoDeferredPage",
           "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-          "line": 185,
+          "line": 179,
           "column": 13
         },
         "implementation": {
           "symbol": "DemoDeferredPage",
           "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-          "line": 185,
+          "line": 179,
           "column": 13
         },
         "generatedArtifacts": [
@@ -2636,13 +2566,13 @@
         "contract": {
           "symbol": "DemoDetailPage",
           "packageUri": "package:demo_navigation_lab/src/detail_page.dart",
-          "line": 30,
+          "line": 28,
           "column": 13
         },
         "implementation": {
           "symbol": "DemoDetailPage",
           "packageUri": "package:demo_navigation_lab/src/detail_page.dart",
-          "line": 30,
+          "line": 28,
           "column": 13
         },
         "generatedArtifacts": [
@@ -2666,13 +2596,13 @@
         "contract": {
           "symbol": "DemoExtraPage",
           "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
-          "line": 231,
+          "line": 222,
           "column": 13
         },
         "implementation": {
           "symbol": "DemoExtraPage",
           "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
-          "line": 231,
+          "line": 222,
           "column": 13
         },
         "generatedArtifacts": [
@@ -2696,13 +2626,13 @@
         "contract": {
           "symbol": "DemoFailurePage",
           "packageUri": "package:demo_navigation_lab/src/failure_page.dart",
-          "line": 16,
+          "line": 14,
           "column": 13
         },
         "implementation": {
           "symbol": "DemoFailurePage",
           "packageUri": "package:demo_navigation_lab/src/failure_page.dart",
-          "line": 16,
+          "line": 14,
           "column": 13
         },
         "generatedArtifacts": [
@@ -2726,13 +2656,13 @@
         "contract": {
           "symbol": "DemoGuardedPage",
           "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-          "line": 219,
+          "line": 211,
           "column": 13
         },
         "implementation": {
           "symbol": "DemoGuardedPage",
           "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-          "line": 219,
+          "line": 211,
           "column": 13
         },
         "generatedArtifacts": [
@@ -2756,13 +2686,13 @@
         "contract": {
           "symbol": "DemoNavigationHomePage",
           "packageUri": "package:demo_navigation_lab/src/home_page.dart",
-          "line": 23,
+          "line": 21,
           "column": 13
         },
         "implementation": {
           "symbol": "DemoNavigationHomePage",
           "packageUri": "package:demo_navigation_lab/src/home_page.dart",
-          "line": 23,
+          "line": 21,
           "column": 13
         },
         "generatedArtifacts": [
@@ -2786,13 +2716,13 @@
         "contract": {
           "symbol": "DemoLifecyclePage",
           "packageUri": "package:demo_navigation_lab/src/lifecycle_page.dart",
-          "line": 14,
+          "line": 12,
           "column": 13
         },
         "implementation": {
           "symbol": "DemoLifecyclePage",
           "packageUri": "package:demo_navigation_lab/src/lifecycle_page.dart",
-          "line": 14,
+          "line": 12,
           "column": 13
         },
         "generatedArtifacts": [
@@ -2816,13 +2746,13 @@
         "contract": {
           "symbol": "DemoBottomPage",
           "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
-          "line": 67,
+          "line": 61,
           "column": 13
         },
         "implementation": {
           "symbol": "DemoBottomPage",
           "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
-          "line": 67,
+          "line": 61,
           "column": 13
         },
         "generatedArtifacts": [
@@ -2846,13 +2776,13 @@
         "contract": {
           "symbol": "DemoCupertinoPage",
           "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
-          "line": 47,
+          "line": 42,
           "column": 13
         },
         "implementation": {
           "symbol": "DemoCupertinoPage",
           "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
-          "line": 47,
+          "line": 42,
           "column": 13
         },
         "generatedArtifacts": [
@@ -2876,13 +2806,13 @@
         "contract": {
           "symbol": "DemoDialogPage",
           "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
-          "line": 147,
+          "line": 139,
           "column": 13
         },
         "implementation": {
           "symbol": "DemoDialogPage",
           "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
-          "line": 147,
+          "line": 139,
           "column": 13
         },
         "generatedArtifacts": [
@@ -2906,13 +2836,13 @@
         "contract": {
           "symbol": "DemoFadePage",
           "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
-          "line": 13,
+          "line": 10,
           "column": 13
         },
         "implementation": {
           "symbol": "DemoFadePage",
           "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
-          "line": 13,
+          "line": 10,
           "column": 13
         },
         "generatedArtifacts": [
@@ -2936,13 +2866,13 @@
         "contract": {
           "symbol": "DemoScalePage",
           "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
-          "line": 30,
+          "line": 26,
           "column": 13
         },
         "implementation": {
           "symbol": "DemoScalePage",
           "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
-          "line": 30,
+          "line": 26,
           "column": 13
         },
         "generatedArtifacts": [
@@ -2966,13 +2896,13 @@
         "contract": {
           "symbol": "DemoBottomSheetPage",
           "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
-          "line": 177,
+          "line": 168,
           "column": 13
         },
         "implementation": {
           "symbol": "DemoBottomSheetPage",
           "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
-          "line": 177,
+          "line": 168,
           "column": 13
         },
         "generatedArtifacts": [
@@ -2996,13 +2926,13 @@
         "contract": {
           "symbol": "DemoTransparentPage",
           "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
-          "line": 89,
+          "line": 82,
           "column": 13
         },
         "implementation": {
           "symbol": "DemoTransparentPage",
           "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
-          "line": 89,
+          "line": 82,
           "column": 13
         },
         "generatedArtifacts": [
@@ -3026,13 +2956,13 @@
         "contract": {
           "symbol": "DemoProceedPage",
           "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-          "line": 124,
+          "line": 122,
           "column": 13
         },
         "implementation": {
           "symbol": "DemoProceedPage",
           "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-          "line": 124,
+          "line": 122,
           "column": 13
         },
         "generatedArtifacts": [
@@ -3056,13 +2986,13 @@
         "contract": {
           "symbol": "DemoRedirectSourcePage",
           "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-          "line": 156,
+          "line": 152,
           "column": 13
         },
         "implementation": {
           "symbol": "DemoRedirectSourcePage",
           "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-          "line": 156,
+          "line": 152,
           "column": 13
         },
         "generatedArtifacts": [
@@ -3086,13 +3016,13 @@
         "contract": {
           "symbol": "DemoRedirectTargetPage",
           "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-          "line": 170,
+          "line": 165,
           "column": 13
         },
         "implementation": {
           "symbol": "DemoRedirectTargetPage",
           "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-          "line": 170,
+          "line": 165,
           "column": 13
         },
         "generatedArtifacts": [
@@ -3116,13 +3046,13 @@
         "contract": {
           "symbol": "DemoShellDetailPage",
           "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
-          "line": 62,
+          "line": 59,
           "column": 13
         },
         "implementation": {
           "symbol": "DemoShellDetailPage",
           "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
-          "line": 62,
+          "line": 59,
           "column": 13
         },
         "generatedArtifacts": [
@@ -3146,13 +3076,13 @@
         "contract": {
           "symbol": "DemoShellFeedPage",
           "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
-          "line": 20,
+          "line": 18,
           "column": 13
         },
         "implementation": {
           "symbol": "DemoShellFeedPage",
           "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
-          "line": 20,
+          "line": 18,
           "column": 13
         },
         "generatedArtifacts": [
@@ -3176,13 +3106,13 @@
         "contract": {
           "symbol": "DemoShellSettingsPage",
           "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
-          "line": 92,
+          "line": 88,
           "column": 13
         },
         "implementation": {
           "symbol": "DemoShellSettingsPage",
           "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
-          "line": 92,
+          "line": 88,
           "column": 13
         },
         "generatedArtifacts": [
@@ -3206,13 +3136,13 @@
         "contract": {
           "symbol": "DemoStackPage",
           "packageUri": "package:demo_navigation_lab/src/stack_page.dart",
-          "line": 16,
+          "line": 14,
           "column": 13
         },
         "implementation": {
           "symbol": "DemoStackPage",
           "packageUri": "package:demo_navigation_lab/src/stack_page.dart",
-          "line": 16,
+          "line": 14,
           "column": 13
         },
         "generatedArtifacts": [
@@ -3236,13 +3166,13 @@
         "contract": {
           "symbol": "DemoTimeoutPage",
           "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-          "line": 202,
+          "line": 195,
           "column": 13
         },
         "implementation": {
           "symbol": "DemoTimeoutPage",
           "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-          "line": 202,
+          "line": 195,
           "column": 13
         },
         "generatedArtifacts": [
@@ -3266,13 +3196,13 @@
         "contract": {
           "symbol": "DemoWorkspaceActivityPage",
           "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
-          "line": 177,
+          "line": 170,
           "column": 13
         },
         "implementation": {
           "symbol": "DemoWorkspaceActivityPage",
           "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
-          "line": 177,
+          "line": 170,
           "column": 13
         },
         "generatedArtifacts": [
@@ -3296,13 +3226,13 @@
         "contract": {
           "symbol": "DemoWorkspaceDetailPage",
           "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
-          "line": 147,
+          "line": 141,
           "column": 13
         },
         "implementation": {
           "symbol": "DemoWorkspaceDetailPage",
           "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
-          "line": 147,
+          "line": 141,
           "column": 13
         },
         "generatedArtifacts": [
@@ -3326,13 +3256,13 @@
         "contract": {
           "symbol": "DemoWorkspaceHomePage",
           "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
-          "line": 113,
+          "line": 108,
           "column": 13
         },
         "implementation": {
           "symbol": "DemoWorkspaceHomePage",
           "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
-          "line": 113,
+          "line": 108,
           "column": 13
         },
         "generatedArtifacts": [
@@ -3356,13 +3286,13 @@
         "contract": {
           "symbol": "DemoWorkspaceProfilePage",
           "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
-          "line": 214,
+          "line": 206,
           "column": 13
         },
         "implementation": {
           "symbol": "DemoWorkspaceProfilePage",
           "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
-          "line": 214,
+          "line": 206,
           "column": 13
         },
         "generatedArtifacts": [

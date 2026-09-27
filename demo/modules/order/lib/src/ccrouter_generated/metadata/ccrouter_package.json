@@ -5,7 +5,7 @@
     "name": "demo_order",
     "version": "0.1.0"
   },
-  "contentFingerprint": "ea66bc5d0244afbfb1dd92fc9f37ac36cd9724a385a4d27c4e49284fbf3a3fe0",
+  "contentFingerprint": "9a7f2687c8cec14be7e220bd0f6b34667807847f441abc727568ceaf1b2510d8",
   "bundle": {
     "library": "lib/src/ccrouter_generated/host/demo_order_ccrouter.g.dart",
     "symbol": "ccrouterGeneratedPackageBundle"
@@ -14,19 +14,22 @@
     {
       "name": "demo_order_contracts",
       "version": "0.1.0",
-      "contentFingerprint": "7f90a4fb91d78a1bc7ff05e6df9171d7d83a295f8ead2b044815a9c4109ed5fe"
+      "contentFingerprint": "24874468f4dc2ed4494d337961fe35f36cc9113e5a4d5818bee80c5b17ca4c8e"
     }
   ],
   "metadata": [
     {
       "schemaVersion": 3,
       "package": "demo_order",
-      "source": "lib/src/demo_order_component_registrar.dart",
+      "source": "lib/src/demo_order_component.dart",
       "componentDeclarations": [
         "demo_order_component"
       ],
       "componentManifests": {
         "demo_order_component": "demoOrderComponentManifest"
+      },
+      "componentSymbols": {
+        "demo_order_component": "demoOrderComponent"
       },
       "components": [
         {
@@ -37,7 +40,8 @@
         }
       ],
       "routes": [],
-      "routeImplementations": []
+      "routeImplementations": [],
+      "contributions": []
     },
     {
       "schemaVersion": 3,
@@ -45,14 +49,8 @@
       "source": "lib/src/order_detail_page.dart",
       "componentDeclarations": [],
       "componentManifests": {},
-      "components": [
-        {
-          "id": "demo_order_component",
-          "version": "0.1.0",
-          "dependencies": [],
-          "optionalDependencies": []
-        }
-      ],
+      "componentSymbols": {},
+      "components": [],
       "routes": [],
       "routeImplementations": [
         {
@@ -63,7 +61,7 @@
           "contract": {
             "symbol": "OrderDetailRouteContract",
             "packageUri": "package:demo_order_contracts/src/order_detail_route_contract.dart",
-            "line": 19,
+            "line": 16,
             "column": 16
           },
           "implementation": {
@@ -88,6 +86,54 @@
             }
           ]
         }
+      ],
+      "contributions": []
+    },
+    {
+      "schemaVersion": 3,
+      "package": "demo_order",
+      "source": "lib/src/order_summary_service.dart",
+      "componentDeclarations": [],
+      "componentManifests": {},
+      "componentSymbols": {},
+      "components": [],
+      "routes": [],
+      "routeImplementations": [],
+      "contributions": [],
+      "serviceContracts": [],
+      "serviceImplementations": [
+        {
+          "id": "demo_order.summary",
+          "componentId": "demo_order_component",
+          "contractId": "demo_order.summary",
+          "key": null,
+          "scope": "app",
+          "creationPolicy": "singleton",
+          "isDefault": false,
+          "package": "demo_order",
+          "source": "lib/src/order_summary_service.dart",
+          "implementation": {
+            "symbol": "DemoOrderSummaryService",
+            "packageUri": "package:demo_order/src/order_summary_service.dart",
+            "line": 6,
+            "column": 13
+          },
+          "contract": {
+            "symbol": "OrderSummaryService",
+            "packageUri": "package:demo_order_contracts/src/order_summary_service.dart",
+            "line": 11,
+            "column": 26
+          },
+          "registration": "ccrouterRegisterDemoOrderSummaryServiceService",
+          "registrationLibrary": "lib/src/ccrouter_generated/service/order_summary_service.service.g.dart",
+          "generatedArtifacts": [
+            {
+              "role": "serviceRegistration",
+              "symbol": "ccrouterRegisterDemoOrderSummaryServiceService",
+              "packageUri": "package:demo_order/src/ccrouter_generated/service/order_summary_service.service.g.dart"
+            }
+          ]
+        }
       ]
     }
   ],
@@ -102,7 +148,7 @@
         "contract": {
           "symbol": "OrderDetailRouteContract",
           "packageUri": "package:demo_order_contracts/src/order_detail_route_contract.dart",
-          "line": 19,
+          "line": 16,
           "column": 16
         },
         "implementation": {
@@ -116,6 +162,31 @@
             "role": "routeBinding",
             "symbol": "ccrouterRegisterOrderDetailPageRoute",
             "packageUri": "package:demo_order/src/ccrouter_generated/binding/order_detail_page.route_binding.g.dart"
+          }
+        ]
+      },
+      {
+        "kind": "service",
+        "id": "demo_order.summary",
+        "componentId": "demo_order_component",
+        "packageName": "demo_order_contracts",
+        "contract": {
+          "symbol": "OrderSummaryService",
+          "packageUri": "package:demo_order_contracts/src/order_summary_service.dart",
+          "line": 11,
+          "column": 26
+        },
+        "implementation": {
+          "symbol": "DemoOrderSummaryService",
+          "packageUri": "package:demo_order/src/order_summary_service.dart",
+          "line": 6,
+          "column": 13
+        },
+        "generatedArtifacts": [
+          {
+            "role": "serviceRegistration",
+            "symbol": "ccrouterRegisterDemoOrderSummaryServiceService",
+            "packageUri": "package:demo_order/src/ccrouter_generated/service/order_summary_service.service.g.dart"
           }
         ]
       }

@@ -139,13 +139,14 @@ ccrouter_go_router  默认 go_router Adapter
 建议的声明形式如下：
 
 ```dart
-const orderComponent = CCComponentDescriptor(
-  id: 'orders',
+const orderComponentId = CCComponentId('orders');
+
+const orderComponent = CCComponent(
+  id: orderComponentId,
   version: '1.0.0',
 );
 
 @CCRoute<OrderResult>(
-  component: orderComponent,
   id: 'orders.detail',
   patterns: [
     CCPathPattern(
@@ -1434,7 +1435,7 @@ CCNavigationAspect(
 
 生成器按 Package 输出机器目录和可读目录，统一放在各 Package 的
 `lib/src/ccrouter_generated/metadata/`；可执行的 Dart 聚合代码放在同一根目录下的
-`route/`、`binding/`、`contract/`、`component/` 和 `host/` 子目录：
+`route/`、`binding/`、`contract/`、`service/`、`component/` 和 `host/` 子目录：
 
 ```text
 cc_routes.json
@@ -1457,10 +1458,10 @@ required/optional dependency 共同形成的环都会让生成失败；不存在
 手写 `docs/`，避免机器产物与架构设计文档混合。
 
 标准入口是单一 `ccrouter generate` 编排命令：它复用 build_runner 生成 Package 内产物，
-随后完成 Workspace 校验、组件索引、Host Catalog 和文档聚合，不实现第二套 Builder 语义。
+随后完成 Workspace 校验、自动 Registrar、Host Catalog 和文档聚合，不实现第二套 Builder 语义。
 `generate --check` 仅快照 CCRouter 管理的输出，发现陈旧产物时恢复原现场并返回非零；该门禁
-不依赖 Git 工作区状态。普通生成会删除带框架生成标记但已失去组件所有者的孤立聚合索引，
-不会删除手写文件或其它工具的输出。
+不依赖 Git 工作区状态。普通生成会删除带框架生成标记但已失去组件所有者的孤立聚合文件，
+并清理真正为空的受管目录；不会删除手写文件、未知文件或其它工具的输出。
 
 每条路由包含：
 

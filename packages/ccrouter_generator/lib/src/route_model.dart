@@ -6,7 +6,7 @@ final class _RouteModel {
   _RouteModel(
     this.page,
     this.annotation,
-    this.component,
+    this.componentId,
     this.id,
     this.patterns,
     this.primaryPatternIndex,
@@ -21,8 +21,11 @@ final class _RouteModel {
   /// Evaluated immutable annotation metadata.
   final ConstantReader annotation;
 
-  /// Validated component owner shared with generated workspace metadata.
-  final _ComponentModel component;
+  /// Explicit public-contract owner, or null for a package-owned declaration.
+  ///
+  /// Internal routes intentionally defer ownership to workspace aggregation so
+  /// their source annotation never repeats the package's component identity.
+  final String? componentId;
 
   /// Stable, non-empty route identity.
   final String id;
@@ -351,14 +354,13 @@ final class _RouteModel {
         element,
       );
     }
-    final component = _ComponentModel.read(
-      annotation.read('component'),
-      element,
-    );
+    final componentId = contractFirst
+        ? _readComponentId(annotation.read('componentId'), element)
+        : null;
     return _RouteModel(
       element,
       annotation,
-      component,
+      componentId,
       id,
       patterns,
       primaryPatternIndex,
@@ -550,19 +552,19 @@ final class _ComponentModel {
   /// Optional dependency IDs.
   final List<String> optionalDependencies;
 
-  /// Validates a descriptor used by either a route or component annotation.
-  static _ComponentModel read(ConstantReader descriptor, Element element) {
-    final id = descriptor.read('id').stringValue;
-    final version = descriptor.read('version').stringValue;
-    final dependencies = descriptor
+  /// Validates one top-level build-time component definition.
+  static _ComponentModel read(ConstantReader component, Element element) {
+    final id = _readComponentId(component.read('id'), element);
+    final version = component.read('version').stringValue;
+    final dependencies = component
         .read('dependencies')
         .listValue
-        .map((value) => value.toStringValue()!)
+        .map((value) => _componentIdValue(value, element))
         .toList(growable: false);
-    final optionalDependencies = descriptor
+    final optionalDependencies = component
         .read('optionalDependencies')
         .listValue
-        .map((value) => value.toStringValue()!)
+        .map((value) => _componentIdValue(value, element))
         .toList(growable: false);
     _validateComponentId(id, element);
     if (!_semanticVersionPattern.hasMatch(version)) {
@@ -588,6 +590,20 @@ final class _ComponentModel {
       optionalDependencies: optionalDependencies,
     );
   }
+}
+
+/// Reads one typed component identity from evaluated constant metadata.
+String _readComponentId(ConstantReader reader, Element element) =>
+    _componentIdValue(reader.objectValue, element);
+
+/// Extracts and validates the portable value of one component ID constant.
+String _componentIdValue(DartObject object, Element element) {
+  final value = _field(object, 'value').toStringValue();
+  if (value == null) {
+    _fail('Component identity must be a const CCComponentId.', element);
+  }
+  _validateComponentId(value, element);
+  return value;
 }
 
 /// One validated constructor argument and its boundary conversion policy.

@@ -184,7 +184,7 @@ Catalog 和 Host Route Catalog 保留各自的消费边界。收敛必须保持�
 - `*.route_binding.g.dart`：独立的 Flutter 页面构建 bridge；
 - `*.route.contract.g.dart`：跨组件 Pure Dart 类型安全契约；
 - `*.component.g.dart`：访问私有 Registrar 并生成 Runtime Manifest；
-- `<component>.routes.g.dart`：独立 import 页面库，供 Registrar 和 Package Bundle 共同消费；
+- `<component>.component.g.dart`：独立 import Route/Service/Contribution bridge，生成私有 Registrar、Manifest 和 Route Catalog；
 - `<package>_ccrouter.g.dart`：发布跨 Package 运行时 Bundle 和直接依赖图；
 - `ccrouter_host.routes.g.dart`：向 Host 提供隔离 Package Bundle SPI 的窄门面。
 
@@ -248,7 +248,6 @@ Outlet/Adapter 能力仍在 `CCRouter.initialize()` 或 Adapter 绑定阶段校�
 
 ```dart
 @CCRoute<void>(
-  component: demoNavigationLabComponent,
   id: 'demo_navigation_lab.detail',
   pattern: CCPathPattern('/lab/detail/:id'),
 )
@@ -266,7 +265,7 @@ final class DemoDetailPage extends StatelessWidget {
 lib/src/ccrouter_generated/
 └── component/
     ├── demo_navigation_lab_component.route_api.g.dart
-    └── demo_navigation_lab_component.routes.g.dart
+    └── demo_navigation_lab_component.component.g.dart
 ```
 
 组件内部调用统一使用组件命名空间：
@@ -291,7 +290,7 @@ CCRouter.navigator.push(
   `lib/src/ccrouter_generated`，不从 Package 公共 barrel 导出；
 - `XxxRoute.intent(...)` 是 `CCRouteContract` 生成的跨组件 Pure Dart 契约，只能由显式依赖的
   Contract Package 公共导出；
-- Runtime 注册和 Flutter Catalog 继续由 `<component>.routes.g.dart` 消费，不要求业务导入
+- Runtime 注册和 Flutter Catalog 继续由 `<component>.component.g.dart` 消费，不要求业务导入
   Host/Adapter SPI。
 
 IDE 可发现性属于方案验收条件：生成完成且 Workspace Analyzer 使用根目录 Package Config 时，

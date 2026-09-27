@@ -483,9 +483,15 @@ all registrars
 
 ### 8.1 服务声明与获取
 
-契约包定义接口：
+契约包定义 Owner 和接口：
 
 ```dart
+const paymentComponentId = CCComponentId('payment');
+
+@CCServiceContract(
+  componentId: paymentComponentId,
+  id: 'payment.service',
+)
 abstract interface class PaymentService {
   Future<PayResult> pay(PayRequest request);
 }
@@ -495,18 +501,15 @@ abstract interface class PaymentService {
 
 ```dart
 @CCService(
-  contract: PaymentService,
+  contract: paymentServiceToken,
   scope: CCServiceScope.session,
   creationPolicy: CCServiceCreationPolicy.singleton,
-  exported: true,
 )
 final class PaymentServiceImpl implements PaymentService {
-  PaymentServiceImpl(this.api);
-
-  final PaymentApi api;
+  PaymentServiceImpl();
 
   @override
-  Future<PayResult> pay(PayRequest request) => api.pay(request);
+  Future<PayResult> pay(PayRequest request) => paymentApi.pay(request);
 }
 ```
 
@@ -517,7 +520,8 @@ final payment = CCRouter.service<PaymentService>();
 final result = await payment.pay(request);
 ```
 
-服务需要提前注册 Provider 描述，但不需要提前实例化，也不要求业务手动字段注入。默认使用构造函数注入和懒创建。
+简单 Service 的 Provider 由生成器自动注册并懒创建。带参构造、依赖注入、自定义 Factory 或
+async initializer 使用 `@CCComponentContribution` 显式注册，避免注解隐藏复杂生命周期。
 `scope` 只表示实例所有权，`creationPolicy` 单独表示 Scope 内是 `singleton` 还是 `newInstance`。
 
 ### 8.2 多实现
@@ -687,13 +691,14 @@ abstract interface class CCDisposable {
 ### 10.2 路由声明
 
 ```dart
-const addressComponent = CCComponentDescriptor(
-  id: 'address',
+const addressComponentId = CCComponentId('address');
+
+const addressComponent = CCComponent(
+  id: addressComponentId,
   version: '1.0.0',
 );
 
 @CCRoute<AddressResult>(
-  component: addressComponent,
   id: 'address.select',
   patterns: [CCPathPattern('/address/select/:cityId', primary: true)],
 )

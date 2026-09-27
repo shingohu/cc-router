@@ -21,7 +21,7 @@ Feature packages must not perform these duties.
 
 ### Component Implementation
 
-The component owns its descriptor, private Registrar, pages, local policies, Services and message handlers. Export only intended business contracts.
+The implementation Package owns exactly one public top-level `const CCComponent`, pages, local policies, Services and message handlers. The generator keeps its Registrar and Manifest private. Export only intended business contracts.
 
 ### Contracts Package
 
@@ -56,7 +56,6 @@ Configure exact Host allowlist entries and explicitly enable external ingress on
 
 ```dart
 @CCRoute<void>(
-  component: catalogComponent,
   id: 'catalog.product',
   pattern: CCPathPattern('/products/:productId'),
   description: 'Product details.',
@@ -78,7 +77,6 @@ final class ProductDraft {
 }
 
 @CCRoute<void>(
-  component: catalogComponent,
   id: 'catalog.product_editor',
   pattern: CCPathPattern('/products/editor'),
 )
@@ -104,13 +102,49 @@ Declare `@CCRouteContract<R>` in a contracts package and `@CCRouteImplementation
 
 ## Service Registration and Lookup
 
+Use `@CCService` for a simple Service with an unnamed zero-argument generative
+constructor. Package ownership is inferred from the sole `CCComponent`:
+
 ```dart
-registry.registerService<CartRepository>(
-  CCServiceProvider(
-    scope: CCServiceScope.session,
-    factory: (_) => CartRepositoryImpl(),
-  ),
-);
+@CCService(
+  id: 'cart.repository',
+  scope: CCServiceScope.session,
+)
+final class CartRepository {
+  CartRepository();
+}
+```
+
+For a promoted contract, declare the interface in a Pure Dart contracts
+Package and explicitly identify the implementation component:
+
+```dart
+@CCServiceContract(
+  componentId: cartComponentId,
+  id: 'cart.summary',
+  description: 'Reads a display-safe cart summary.',
+)
+abstract interface class CartSummaryService {
+  String summary();
+}
+```
+
+Export the interface and generated Token from the contracts barrel, then bind
+the implementation with `@CCService(contract: cartSummaryServiceToken)`.
+
+Use `@CCComponentContribution` and a handwritten Provider for custom
+construction, constructor injection, or lazy async readiness:
+
+```dart
+@CCComponentContribution(id: 'cart.services')
+void registerCartServices(CCRegistry registry) {
+  registry.registerService<CartRepository>(
+    CCServiceProvider(
+      scope: CCServiceScope.session,
+      factory: (_) => CartRepositoryImpl(),
+    ),
+  );
+}
 
 final repository = CCRouter.service<CartRepository>();
 ```
@@ -118,14 +152,17 @@ final repository = CCRouter.service<CartRepository>();
 For lazy async readiness:
 
 ```dart
-registry.registerService<RemoteConfig>(
-  CCServiceProvider(
-    factory: (_) => RemoteConfig(),
-    initializer: (service, context) async {
-      await service.load(context.cancellation);
-    },
-  ),
-);
+@CCComponentContribution(id: 'configuration.services')
+void registerConfigurationServices(CCRegistry registry) {
+  registry.registerService<RemoteConfig>(
+    CCServiceProvider(
+      factory: (_) => RemoteConfig(),
+      initializer: (service, context) async {
+        await service.load(context.cancellation);
+      },
+    ),
+  );
+}
 
 final config = await CCRouter.serviceAsync<RemoteConfig>();
 ```
@@ -239,3 +276,7 @@ fvm dart run ccrouter_generator:ccrouter generate demo
 ```
 
 The command owns files under `lib/src/ccrouter_generated/`. Do not edit, relocate, or add imports to implementation-only binding/package/host outputs. Use a handwritten public barrel to export only intended public contracts.
+
+Packages with no generated capability have no `ccrouter_generated` directory.
+Removing the final declaration removes empty managed directories while
+preserving unknown or handwritten files.

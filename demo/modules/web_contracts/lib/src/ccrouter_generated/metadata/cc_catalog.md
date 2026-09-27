@@ -13,13 +13,13 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 ### Route `demo_web.private`
 
 - Declaring package: `demo_web_contracts`
-- Contract/declaration: `package:demo_web_contracts/src/web_route_contracts.dart:39:16` (`DemoPrivateWebRouteContract`)
+- Contract/declaration: `package:demo_web_contracts/src/web_route_contracts.dart:36:16` (`DemoPrivateWebRouteContract`)
 - Generated artifacts:
   - `routeContract`: `package:demo_web_contracts/src/ccrouter_generated/contract/web_route_contracts.route.contract.g.dart` (`DemoPrivateWebRoute`)
 
 ### Route `demo_web.public`
 
 - Declaring package: `demo_web_contracts`
-- Contract/declaration: `package:demo_web_contracts/src/web_route_contracts.dart:20:16` (`DemoPublicWebRouteContract`)
+- Contract/declaration: `package:demo_web_contracts/src/web_route_contracts.dart:17:16` (`DemoPublicWebRouteContract`)
 - Generated artifacts:
   - `routeContract`: `package:demo_web_contracts/src/ccrouter_generated/contract/web_route_contracts.route.contract.g.dart` (`DemoPublicWebRoute`)

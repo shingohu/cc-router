@@ -157,7 +157,7 @@ App -> Session -> Workspace -> Route
 
 ### 5. Component/Contract 版本兼容检查不完整
 
-`CCComponentDescriptor.version` 当前主要用于身份、Catalog、诊断和生成元数据。Pub 依赖可以解决 Package 版本，但目前还没有完整表达：
+`CCComponent.version` 当前主要用于身份、Catalog、诊断和生成元数据。Pub 依赖可以解决 Package 版本，但目前还没有完整表达：
 
 - Contract 允许的版本范围；
 - Route Contract 兼容性；

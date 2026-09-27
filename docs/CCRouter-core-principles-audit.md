@@ -2,14 +2,15 @@
 
 ## 1. 审查结论
 
-- 审查日期：2026-09-24
+- 审查日期：2026-09-27
 - 审查范围：路由 Runtime、业务 Facade、Host/Adapter SPI、GoRouter Adapter、生成器、
   Service、Command、Event、初始化任务、Demo、测试与诊断模型。
-- 自动化基线：`dart analyze` 通过；`ccrouter_test` 302 项、Demo 30 项、Generator 131 项测试通过；
+- 自动化基线：`dart analyze` 通过；`ccrouter_test` 324 项、Demo 30 项、Generator 158 项测试通过；
   Demo 生成物缓存与 `--no-cache` 两种 `--check` 均通过；macOS debug build 通过。
 - 总体结论：当前实现满足 13 条约定在 v0.1 静态组件范围内的发布门槛，没有 P0 或 P1 问题。
   Route、Service、Command、Event 和 InitTask 已形成边界明确的最小闭环。生成物职责、API 隔离、
-  生命周期、取消与诊断已完成本轮收口；Service/消息/InitTask 注解生成、Action Pipeline、动态
+  生命周期、取消与诊断已完成本轮收口；Service Token/Provider 最小注解生成已实现，方法级
+  Service Proxy、Command/Event/InitTask 注解、Action Pipeline、动态
   组件治理、Restoration、真实平台多窗口和长期 RSS/Heap 趋势仍是明确后续项，不能因已有设计
   文档而视为已经实现。
 
@@ -19,13 +20,13 @@
 
 | # | 约定 | 状态 | 当前证据与缺口 |
 | --- | --- | --- | --- |
-| 1 | 智能 | 基本满足 | Route/Codec/Manifest/组件索引/Host Catalog/文档均由单一 `ccrouter generate` 编排生成；Runtime 自动校验组件、Provider、Handler、Subscriber 和 InitTask DAG，`--check` 提供不依赖 Git 的只读陈旧门禁。Service/消息/InitTask 注解生成因缺少真实重复样板暂缓，没有用反射或全仓扫描冒充自动化。 |
+| 1 | 智能 | 基本满足 | 顶层 Component、Route/Codec、简单 Service Provider、私有 Registrar/Manifest、Host Catalog/文档均由单一 `ccrouter generate` 编排生成；Runtime 自动校验组件、Provider、Handler、Subscriber 和 InitTask DAG，`--check` 提供不依赖 Git 的只读陈旧门禁。复杂 Service 与低频消息能力使用显式 Contribution，没有用反射或函数体扫描冒充自动化。 |
 | 2 | 简单易用 | 基本满足 | 宿主使用 `CCRouter.initialize`、按需 `runInitialization`、Managed Backend/App 即可启动；业务统一通过 `CCRouter.navigator/service/command/event`。Route Service 仅在需要精确页面 Scope 时增加 `BuildContext`，高级 Shell、Multi Host、Trace 和 Gate 保持渐进可选。 |
 | 3 | 功能强大 | 基本满足 | 已覆盖类型安全导航、Deep Link、拦截、生命周期、混合路由、诊断、多种 Presentation、App/Session/Route Service、一次性 Command、事实 Event 和启动 DAG，没有万能 Map 或混合消息接口。Action Pipeline、可靠持久消息和动态组件明确不属于 1.x。 |
 | 4 | 可扩展性 | 基本满足 | Core 使用中立 Route Definition 与强类型能力契约；Catalog、Assembler、Adapter、Service Provider、Handler 和 Gate 均通过明确边界扩展。新导航后端复用同一 Catalog，跨组件 Service 通过稳定 Token 渐进提升，不访问 Runtime 私有表。 |
 | 5 | 可测试 | 基本满足 | Pure Dart Runtime 覆盖 Scope、readiness、Command/Event、InitTask DAG、取消/超时/失败；Flutter Adapter、生成器和 Demo 均有回归。`ccrouter_test` 提供 Test Host/Service Override，并具备 Generator、Route Runtime、Service 和并发回收非门禁基准。长期平台内存趋势仍需持续积累。 |
 | 6 | 最小公开 API | 基本满足 | Runtime、Scope、Memory Adapter、Host binding 以及控制 SPI 均从业务 barrel 隐藏；Registrar 只拿到注册面 `CCRegistry`。Query/旧 Action/ActionReport 已删除，通信只保留 Service、Command、Event 与 InitTask；Action Pipeline 等未成熟能力没有提前公开。 |
-| 7 | 编译器校验与类型安全 | 部分满足 | Route 参数、Codec、ID、Pattern、Contract exposure、页面实现、barrel 和组件图已有生成期校验；Service Token/Key、Command/Event 泛型在编译期约束，注册冲突与 InitTask DAG 在同步初始化失败。Service/消息/InitTask metadata 尚未生成，因此跨 Package Handler/Task 静态图仍依赖手写注册与 Runtime 校验。 |
+| 7 | 编译器校验与类型安全 | 部分满足 | Route 参数、Codec、ID、Pattern、Contract exposure、页面实现、barrel、组件图和 Service Contract/Provider 所有权与冲突已有生成期校验；Service Token/Key、Command/Event 泛型在编译期约束，注册冲突与 InitTask DAG 在同步初始化失败。Command/Event/InitTask metadata 尚未生成，因此跨 Package Handler/Task 静态图仍依赖显式 Contribution 与 Runtime 校验。 |
 | 8 | 非侵入式 | 满足 | 不要求页面基类或 Mixin，不保存全局 `BuildContext`；可继续使用应用自己的 `MaterialApp.router`/`GoRouter`；attached Adapter 不销毁应用 Router。 |
 | 9 | 可降级回退 | 基本满足 | 无法可靠降级的组合栈事务与精确 Entry 操作已从公开链删除。Service optional lookup 只吞“未注册”，不吞工厂/生命周期错误；Event Subscriber 失败按契约隔离，Command/critical InitTask 失败明确传播，不存在跨语义静默回退。 |
 | 10 | 明确生命周期 | 基本满足 | Runtime、Session、RouteEntry、Service Scope、Adapter、Backend 和 InitTask Owner/销毁顺序明确；App/Session/Route Service 自动持有与逆序释放，shutdown 取消并等待活动调用和 DAG。1.x 组件集合只在初始化确定，不提供不完整的 activate/deactivate。 |
@@ -117,8 +118,10 @@
   再执行 metadata 校验、组件索引、Host Catalog 和文档聚合；
 - `generate --check` 只快照 CCRouter 管理的输出，发现 added/removed/modified 后恢复原现场并
   返回非零，不依赖 Git 状态，也不覆盖业务源码；
-- 普通生成清理由框架标记但不再有 owner 的 `.routes.g.dart`/`_ccrouter.g.dart` 聚合物，
+- 普通生成清理由框架标记但不再有 owner 的 `.component.g.dart`/`_ccrouter.g.dart` 聚合物，
   且只清理解析图中明确可写的 Package；同名手写文件和外部 path/Git/pub Package 保持不动；
+- 没有生成能力的 Package 不创建 `ccrouter_generated`；最后一个受管产物删除后只清理真正为空
+  的目录，存在未知文件时完整保留；
 - 旧 metadata-only aggregate 路径仅保留兼容，不再作为标准开发流程；
 - 从 Host `package_graph.json` 只沿正式 dependencies 计算闭包，通过 `package_config.json` 定位
   workspace/path/Git/pub Package，排除无关 workspace roots 和 devDependencies；
@@ -209,7 +212,7 @@ Push/Pop 的 cycle p50/p95 为 `4035/9470us`，峰值 `activeRouteEntries=101`�
   意外获得 Host SPI；
 - 非 nullable 且具有编译期空 List/Set 默认值的 Query 参数将空集合编码为缺失 key，解码恢复默认值；
   required、nullable 和非空默认集合继续严格拒绝无法无损表达的空集合；
-- 默认缓存与 `--no-cache --check` 均验证 4 个组件、31 条路由和 7 个生成 Package，输出无差异；
+- 默认缓存与 `--no-cache --check` 均验证 4 个组件、31 条路由和 8 个生成 Package，输出无差异；
   测试同时覆盖缓存损坏全量回退、并发生成锁、write-if-changed 和 stale cleanup。
 
 ### 已完成：P2-8 资源生命周期回归
@@ -234,6 +237,9 @@ Listener、Stream、Overlay 或 Controller；Resolver 不拥有 Runtime，也不
   不同标准错误；
 - 跨组件 Service Token 与 Type lookup 共享 Provider/实例；Key 支持确定性多实现，optional lookup
   只把真正缺失转为 null；测试替换留在 `ccrouter_test`；
+- `@CCServiceContract` 生成公开强类型 Token，`@CCService` 生成简单 Provider registration，
+  Package 唯一 `CCComponent` 自动生成私有 Registrar/Manifest；复杂构造与 readiness 继续使用
+  `@CCComponentContribution`，不在 Annotation 中注入任意执行代码；
 - `CCCommand<R>` 是唯一的一对一操作消息，支持 `R` 与 `void`、单 Handler、timeout、取消、嵌套
   Trace 和 Runtime shutdown；读取能力保持在 Service，不再保留重复的 Query/Action 表面；
 - `CCEvent` 只表达已经发生的事实；静态 Subscriber 并发执行且按 ID 稳定启动，一个 Subscriber
@@ -243,8 +249,9 @@ Listener、Stream、Overlay 或 Controller；Resolver 不拥有 Runtime，也不
 - Demo 通过真实 Runtime 覆盖 Command typed/void/timeout/cancel/error、Event 多订阅/隔离/零订阅/
   timeout、InitTask Gate/失败依赖，以及 Service 全部 Scope、创建策略、readiness、多实现、optional
   lookup 和自动销毁；
-- Action Pipeline 等待动态预埋操作链的真实业务样本，Service/消息/InitTask 注解生成等待重复样板、
-  依赖漂移或 DevTools 静态图需求，不为“看起来自动”提前冻结协议。
+- Action Pipeline 等待动态预埋操作链的真实业务样本；Service 方法 Proxy 与
+  Command/Event/InitTask 注解等待重复样板、依赖漂移或 DevTools 静态图需求，不为“看起来自动”
+  提前冻结协议。
 
 ## 5. 已确认符合且应保持的边界
 
@@ -270,20 +277,20 @@ Listener、Stream、Overlay 或 Controller；Resolver 不拥有 Runtime，也不
   `runInitialization(gate: ...)` 等待，Service readiness 不隐藏在全局启动中。
 - 组件集合在初始化时一次确定。1.x 不提供不完整的动态 activate/deactivate，也不允许业务销毁
   Runtime、Scope、Adapter 或 Service 实例。
-- Service/Command/Event/InitTask 当前手写注册是有意边界；只有生产样板和静态图收益足够时，才与
-  Generator 一起设计注解、metadata、冲突校验和迁移方案。
+- 简单 Service 使用生成注册，复杂 Service、Command、Event 与 InitTask 使用显式 Contribution；
+  只有生产样板和静态图收益足够时，才扩展方法 Proxy 或新增消息类注解与 metadata。
 
 ## 6. 本轮最终门禁
 
-- `fvm dart test --concurrency=1 packages/ccrouter_test/generator_test`：131 项通过；
-- `fvm flutter test packages/ccrouter_test/test`：299 项通过；
-- `fvm flutter test demo`：29 项通过；
+- `fvm dart test --concurrency=1 packages/ccrouter_test/generator_test`：158 项通过；
+- `fvm flutter test packages/ccrouter_test/test`：324 项通过；
+- `fvm flutter test demo`：30 项通过；
 - `fvm dart analyze`：无问题；
 - `fvm dart run ccrouter_generator:ccrouter generate demo --check` 与 `--no-cache --check`：31 条路由、
-  7 个生成 Package 均同步；
+  8 个生成 Package 均同步；
 - `fvm flutter build macos --debug`：成功生成 `ccrouter_demo.app`；
 - `git diff --check`：通过。
 
-后续增加 Service/消息/InitTask 注解生成、Action Pipeline、动态组件、Android Predictive Back、
+后续增加 Service 方法 Proxy、Command/Event/InitTask 注解、Action Pipeline、动态组件、Android Predictive Back、
 Restoration、真实平台多窗口或新 Adapter 时，必须补对应构建期、生命周期、并发、性能和平台
 回归；它们不属于本轮已经实现的能力。

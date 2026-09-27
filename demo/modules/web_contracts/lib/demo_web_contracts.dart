@@ -13,3 +13,4 @@ export 'web_request.dart'
         DemoPublicWebTarget,
         DemoPublicWebTargetCodec,
         demoMapExternalWebUri;
+export 'src/web_route_contracts.dart' show demoWebComponentId;

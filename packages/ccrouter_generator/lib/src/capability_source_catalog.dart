@@ -96,6 +96,65 @@ final class CCCapabilitySourceCatalog {
           ),
         );
       }
+      for (final contract in _catalogObjectList(document['serviceContracts'])) {
+        final id = '${contract['id'] ?? ''}';
+        final componentId = '${contract['componentId'] ?? ''}';
+        if (id.isEmpty || componentId.isEmpty) continue;
+        final declaration = CCSourceReference.fromJson(
+          _catalogObject(contract['declaration']),
+          fallbackPackage: '${contract['package'] ?? fallbackPackage}',
+          fallbackLibrary: '${contract['source'] ?? fallbackSource}',
+        );
+        final token = _catalogObject(contract['token']);
+        records.add(
+          CCCapabilitySourceRecord(
+            kind: 'service',
+            id: id,
+            componentId: componentId,
+            packageName: declaration.packageName,
+            contract: declaration,
+            implementation: null,
+            generatedArtifacts: token.isEmpty
+                ? const []
+                : [
+                    CCGeneratedArtifact.fromJson({
+                      ...token,
+                      'role': 'serviceToken',
+                    }),
+                  ],
+          ),
+        );
+      }
+      for (final implementation in _catalogObjectList(
+        document['serviceImplementations'],
+      )) {
+        final id = '${implementation['id'] ?? ''}';
+        final componentId = '${implementation['componentId'] ?? ''}';
+        if (id.isEmpty || componentId.isEmpty) continue;
+        final contractObject = _catalogObject(implementation['contract']);
+        final contract = contractObject.isEmpty
+            ? null
+            : CCSourceReference.fromJson(contractObject);
+        final implementationSource = CCSourceReference.fromJson(
+          _catalogObject(implementation['implementation']),
+          fallbackPackage: '${implementation['package'] ?? fallbackPackage}',
+          fallbackLibrary: '${implementation['source'] ?? fallbackSource}',
+        );
+        records.add(
+          CCCapabilitySourceRecord(
+            kind: 'service',
+            id: id,
+            componentId: componentId,
+            packageName:
+                contract?.packageName ?? implementationSource.packageName,
+            contract: contract,
+            implementation: implementationSource,
+            generatedArtifacts: _catalogObjectList(
+              implementation['generatedArtifacts'],
+            ).map(CCGeneratedArtifact.fromJson),
+          ),
+        );
+      }
     }
     return CCCapabilitySourceCatalog(records);
   }

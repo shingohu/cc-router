@@ -3,12 +3,10 @@ import 'dart:async';
 import 'package:ccrouter/ccrouter.dart';
 import 'package:flutter/material.dart';
 
-import 'navigation_lab_component.dart';
 import 'shell_contract.dart';
 import 'ccrouter_generated/component/demo_navigation_lab_component.route_api.g.dart';
 
 @CCRoute<void>(
-  component: demoNavigationLabComponent,
   id: 'demo_navigation_lab.shell.feed',
   pattern: CCPathPattern('/shell/feed'),
   placement: CCRoutePlacement(
@@ -49,7 +47,6 @@ final class DemoShellFeedPage extends StatelessWidget {
 }
 
 @CCRoute<void>(
-  component: demoNavigationLabComponent,
   id: 'demo_navigation_lab.shell.detail',
   pattern: CCPathPattern('/shell/feed/:item'),
   placement: CCRoutePlacement(
@@ -80,7 +77,6 @@ final class DemoShellDetailPage extends StatelessWidget {
 }
 
 @CCRoute<void>(
-  component: demoNavigationLabComponent,
   id: 'demo_navigation_lab.shell.settings',
   pattern: CCPathPattern('/shell/settings'),
   placement: CCRoutePlacement(
@@ -101,7 +97,6 @@ final class DemoShellSettingsPage extends StatelessWidget {
 }
 
 @CCRoute<void>(
-  component: demoNavigationLabComponent,
   id: 'demo_navigation_lab.workspace.home',
   pattern: CCPathPattern('/workspace/home'),
   placement: CCRoutePlacement(
@@ -133,7 +128,6 @@ final class DemoWorkspaceHomePage extends StatelessWidget {
 }
 
 @CCRoute<void>(
-  component: demoNavigationLabComponent,
   id: 'demo_navigation_lab.workspace.detail',
   pattern: CCPathPattern('/workspace/home/:item'),
   deepLink: CCDeepLinkPolicy.enabled,
@@ -165,7 +159,6 @@ final class DemoWorkspaceDetailPage extends StatelessWidget {
 }
 
 @CCRoute<void>(
-  component: demoNavigationLabComponent,
   id: 'demo_navigation_lab.workspace.activity',
   pattern: CCPathPattern('/workspace/activity'),
   placement: CCRoutePlacement(
@@ -202,7 +195,6 @@ final class _DemoWorkspaceActivityPageState
 }
 
 @CCRoute<void>(
-  component: demoNavigationLabComponent,
   id: 'demo_navigation_lab.workspace.profile',
   pattern: CCPathPattern('/workspace/profile'),
   placement: CCRoutePlacement(
@@ -223,7 +215,6 @@ final class DemoWorkspaceProfilePage extends StatelessWidget {
 }
 
 @CCRoute<void>(
-  component: demoNavigationLabComponent,
   id: 'demo_navigation_lab.extra',
   pattern: CCPathPattern('/lab/extra'),
   description: '展示仅在进程内传递的类型安全 Extra 对象。',

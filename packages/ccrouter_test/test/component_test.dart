@@ -73,25 +73,22 @@ CCComponentManifest component(
 );
 
 void main() {
-  test('descriptor-backed manifests share build-time component metadata', () {
-    const descriptor = CCComponentDescriptor(
-      id: 'checkout',
+  test('component-backed manifests share build-time component metadata', () {
+    const component = CCComponent(
+      id: CCComponentId('checkout'),
       version: '2.1.0',
-      dependencies: ['orders'],
-      optionalDependencies: ['campaign'],
+      dependencies: [CCComponentId('orders')],
+      optionalDependencies: [CCComponentId('campaign')],
     );
     final registrar = Registrar((_) {});
-    final manifest = CCComponentManifest.fromDescriptor(
-      descriptor: descriptor,
+    final manifest = CCComponentManifest.fromComponent(
+      component: component,
       registrar: registrar,
     );
-    expect(manifest.id, descriptor.id);
-    expect(manifest.version, descriptor.version);
-    expect(manifest.dependencies, same(descriptor.dependencies));
-    expect(
-      manifest.optionalDependencies,
-      same(descriptor.optionalDependencies),
-    );
+    expect(manifest.id, component.id.value);
+    expect(manifest.version, component.version);
+    expect(manifest.dependencies, ['orders']);
+    expect(manifest.optionalDependencies, ['campaign']);
     expect(manifest.registrar, same(registrar));
   });
 
