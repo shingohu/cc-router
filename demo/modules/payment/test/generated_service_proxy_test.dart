@@ -15,10 +15,18 @@ final class _OrderSummaryServiceFake implements OrderSummaryService {
   Future<String> loadSummary(int orderId) async => summaryFor(orderId);
 
   @override
+  Future<T> loadValue<T extends Object>(OrderSummaryValue<T> value) async {
+    return value.value;
+  }
+
+  @override
   String summaryFor(int orderId) {
     _invocationCount++;
     return 'order:$orderId';
   }
+
+  @override
+  T unwrap<T extends Object>(OrderSummaryValue<T> value) => value.value;
 }
 
 final class _OrderRegistrar implements CCComponentRegistrar {
@@ -78,6 +86,18 @@ void main() {
           await DemoPaymentServices.orderSummary.loadSummary(34),
           'order:34',
         );
+        expect(
+          DemoPaymentServices.orderSummary.unwrap<String>(
+            const OrderSummaryValue<String>('typed'),
+          ),
+          'typed',
+        );
+        expect(
+          await DemoPaymentServices.orderSummary.loadValue<int>(
+            const OrderSummaryValue<int>(42),
+          ),
+          42,
+        );
         expect(DemoPaymentServices.orderSummary.invocationCount, 2);
 
         await CCRouter.closeSession();
@@ -88,7 +108,7 @@ void main() {
         final traces = CCRouter.recentTraces
             .where((trace) => trace.operation == 'service')
             .toList(growable: false);
-        expect(traces, hasLength(5));
+        expect(traces, hasLength(7));
         expect(traces.map((trace) => trace.context.callerComponentId).toSet(), {
           'demo_payment_component',
         });
@@ -100,6 +120,8 @@ void main() {
           containsAll(<String>[
             'demo_order.summary.summaryFor',
             'demo_order.summary.loadSummary',
+            'demo_order.summary.unwrap',
+            'demo_order.summary.loadValue',
             'demo_order.summary.invocationCount',
           ]),
         );

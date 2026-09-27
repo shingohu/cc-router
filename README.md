@@ -594,9 +594,10 @@ final loaded = await DemoPaymentServices.orderSummary.loadSummary(orderId);
 
 生成 Proxy 不持有 Service，每次方法调用都解析当前 Scope。同步方法保持同步且不会启动 async
 initializer；`Future<T>` 方法会等待 readiness。生成器支持普通实例方法、getter、同步/Future
-返回值和常用参数形态；泛型方法、setter/operator、Stream、FutureOr、callback、Flutter 类型、
-Contract 继承和未从公共 barrel 暴露的 `src` 类型会在生成期失败。组件内部 Service 仍直接使用
-`CCRouter.service<T>()`，不需要声明或生成 Proxy。
+返回值、方法级泛型和常用参数形态。泛型方法的类型参数、公共 Pure Dart bound、nullable
+结果和显式类型实参会完整保留；Contract 类本身仍必须非泛型。setter/operator、Stream、
+FutureOr、callback、Flutter 类型、Contract 继承和未从公共 barrel 暴露的 `src` 类型会在生成期
+失败。组件内部 Service 仍直接使用 `CCRouter.service<T>()`，不需要声明或生成 Proxy。
 
 需要构造参数、依赖注入、自定义 Factory 或 async initializer 时，使用
 `@CCComponentContribution` 显式注册，不把复杂生命周期隐藏在注解里：

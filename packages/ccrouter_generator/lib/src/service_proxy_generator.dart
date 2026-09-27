@@ -262,6 +262,13 @@ void _emitServiceProxyMember(
 }) {
   final returnType = imports.typeSource(member.returnType, member.element);
   final resultType = imports.typeSource(member.resultType, member.element);
+  final typeParameters = _serviceTypeParameterSignature(
+    member.typeParameters,
+    imports,
+  );
+  final forwardedTypeArguments = _serviceForwardedTypeArguments(
+    member.typeParameters,
+  );
   final parameters = _serviceParameterSignature(member.parameters, imports);
   final invocation = member.isAsync ? 'invoke' : 'invokeSync';
   final key = dependency.key == null
@@ -269,14 +276,16 @@ void _emitServiceProxyMember(
       : '      key: const CCServiceKey<$contractType>(${jsonEncode(dependency.key)}),\n';
   final call = member.kind == 'getter'
       ? 'service.${member.element.displayName}'
-      : 'service.${member.element.displayName}(${_serviceForwardedArguments(member.parameters)})';
+      : 'service.${member.element.displayName}$forwardedTypeArguments(${_serviceForwardedArguments(member.parameters)})';
   out
     ..writeln('  /// Invokes `${dependency.contract.id}.${member.methodId}`.')
     ..writeln('  @override');
   if (member.kind == 'getter') {
     out.writeln('  $returnType get ${member.element.displayName} =>');
   } else {
-    out.writeln('  $returnType ${member.element.displayName}($parameters) =>');
+    out.writeln(
+      '  $returnType ${member.element.displayName}$typeParameters($parameters) =>',
+    );
   }
   out
     ..writeln(
@@ -298,6 +307,7 @@ final class _ServiceProxyImportPlan {
     _ServiceConsumerComponentModel component,
   ) {
     final uris = <Uri>{};
+    final reservedPrefixes = <String>{};
     for (final dependency in component.dependencies) {
       _collectType(
         dependency.contract.element.thisType,
@@ -305,6 +315,11 @@ final class _ServiceProxyImportPlan {
         uris,
       );
       for (final member in dependency.contract.members) {
+        for (final typeParameter in member.typeParameters) {
+          reservedPrefixes.add(typeParameter.displayName);
+          final bound = typeParameter.bound;
+          if (bound != null) _collectType(bound, typeParameter, uris);
+        }
         _collectType(member.returnType, member.element, uris);
         for (final parameter in member.parameters) {
           _collectType(parameter.type, parameter, uris);
@@ -313,10 +328,16 @@ final class _ServiceProxyImportPlan {
     }
     final sorted = uris.toList()
       ..sort((left, right) => left.toString().compareTo(right.toString()));
-    _aliases = {
-      for (final entry in sorted.indexed)
-        entry.$2.toString(): 'service_type_${entry.$1}',
-    };
+    var prefixIndex = 0;
+    _aliases = {};
+    for (final uri in sorted) {
+      var prefix = 'service_type_$prefixIndex';
+      while (reservedPrefixes.contains(prefix)) {
+        prefix = 'service_type_${++prefixIndex}';
+      }
+      _aliases[uri.toString()] = prefix;
+      prefixIndex++;
+    }
   }
 
   /// Component library containing the top-level dependency declaration.
@@ -333,6 +354,9 @@ final class _ServiceProxyImportPlan {
 
   /// Renders one validated method type in the generated namespace.
   String typeSource(DartType type, Element owner) {
+    if (type is TypeParameterType) {
+      return '${type.element.displayName}${_serviceNullability(type)}';
+    }
     final alias = type.alias;
     if (alias != null) {
       final element = alias.element;
@@ -377,6 +401,7 @@ final class _ServiceProxyImportPlan {
 
   /// Adds all public declarations needed to render [type].
   void _collectType(DartType type, Element owner, Set<Uri> imports) {
+    if (type is TypeParameterType) return;
     final alias = type.alias;
     if (alias != null) {
       final definitionUri = alias.element.library.uri;
@@ -451,6 +476,30 @@ final class _ServiceProxyImportPlan {
     return '${_aliases[importUri.toString()]!}.';
   }
 }
+
+/// Renders method-owned generic parameters and their public Pure Dart bounds.
+String _serviceTypeParameterSignature(
+  List<TypeParameterElement> parameters,
+  _ServiceProxyImportPlan imports,
+) {
+  if (parameters.isEmpty) return '';
+  final declarations = <String>[];
+  for (final parameter in parameters) {
+    final bound = parameter.bound;
+    declarations.add(
+      bound == null
+          ? parameter.displayName
+          : '${parameter.displayName} extends ${imports.typeSource(bound, parameter)}',
+    );
+  }
+  return '<${declarations.join(', ')}>';
+}
+
+/// Renders explicit generic arguments so zero-argument methods retain types.
+String _serviceForwardedTypeArguments(List<TypeParameterElement> parameters) =>
+    parameters.isEmpty
+    ? ''
+    : '<${parameters.map((parameter) => parameter.displayName).join(', ')}>';
 
 /// Renders a complete overriding method parameter list.
 String _serviceParameterSignature(

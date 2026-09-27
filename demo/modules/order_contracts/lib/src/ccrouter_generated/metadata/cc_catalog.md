@@ -20,6 +20,6 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 ### Service `demo_order.summary`
 
 - Declaring package: `demo_order_contracts`
-- Contract/declaration: `package:demo_order_contracts/src/order_summary_service.dart:11:26` (`OrderSummaryService`)
+- Contract/declaration: `package:demo_order_contracts/src/order_summary_service.dart:23:26` (`OrderSummaryService`)
 - Generated artifacts:
   - `serviceToken`: `package:demo_order_contracts/src/ccrouter_generated/contract/order_summary_service.service.contract.g.dart` (`orderSummaryServiceToken`)

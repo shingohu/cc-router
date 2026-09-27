@@ -24,6 +24,17 @@ final class DemoOrderSummaryService implements OrderSummaryService {
     return summaryFor(orderId);
   }
 
+  /// Preserves the generic value type across the synchronous generated Proxy.
+  @override
+  T unwrap<T extends Object>(OrderSummaryValue<T> value) => value.value;
+
+  /// Preserves the generic value type across the asynchronous generated Proxy.
+  @override
+  Future<T> loadValue<T extends Object>(OrderSummaryValue<T> value) async {
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+    return value.value;
+  }
+
   /// Reports calls retained by the app-scoped singleton.
   @override
   int get invocationCount => _invocationCount;

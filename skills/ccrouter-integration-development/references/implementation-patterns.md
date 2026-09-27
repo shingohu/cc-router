@@ -119,6 +119,12 @@ For a promoted contract, declare the interface in a Pure Dart contracts
 Package and explicitly identify the implementation component:
 
 ```dart
+final class CartSummaryValue<T extends Object> {
+  const CartSummaryValue(this.value);
+
+  final T value;
+}
+
 @CCServiceContract(
   componentId: cartComponentId,
   id: 'cart.summary',
@@ -126,8 +132,18 @@ Package and explicitly identify the implementation component:
 )
 abstract interface class CartSummaryService {
   String summary();
+
+  T unwrap<T extends Object>(CartSummaryValue<T> value);
 }
 ```
+
+The Contract interface itself remains non-generic. A method may declare its own
+generic parameters when one operation must preserve a caller's static Pure Dart
+type. The generated Proxy reproduces every bound and explicitly forwards type
+arguments, including for zero-argument methods. This is a local typed component
+boundary, not a serialization mechanism; generic arguments must not be used to
+smuggle Flutter objects, callbacks, Streams, or private implementation types
+through a public Contract.
 
 Export only the interface from the business contracts barrel. Bind a simple
 implementation by directly implementing exactly one contract:

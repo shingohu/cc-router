@@ -82,7 +82,7 @@
   已实现；复杂构造/readiness 继续通过 Contribution 显式注册。
 - [x] Service 方法级自动 Proxy 使用消费组件显式 `CCServiceDependency<T>`，生成组件专属
   Client、稳定 caller/method identity 和方法 metadata；不扫描依赖生成未使用能力。
-- [ ] 根据生产需求扩展当前明确拒绝的 Stream、callback、泛型、继承或 Route Scope 方法代理；
+- [ ] 根据生产需求扩展当前明确拒绝的泛型 Contract、Stream、callback、继承或 Route Scope 方法代理；
   每一项必须先冻结所有权、取消和兼容语义。
 - [ ] Command、Event 自动生成与 Service 同步评估，不为低频注册能力提前增加生成层。
 - [x] Contract 通过公共业务 barrel 暴露；Proxy 留在消费组件内部生成目录，跨 Package 不导出

@@ -1287,8 +1287,9 @@ CCRouter.diagnostics.exportReport();
 
 - Route Contract 与 Widget Factory 的实现验证，语义以路由子系统设计为准。
 - `navigate` 的 push/replace/reset 参数模型。
-- Service Proxy 首版方法矩阵已经冻结为普通实例方法/getter、同步/Future 返回和公共 Pure Dart
-  类型；Stream、callback、泛型、继承与 Route Scope 的扩展继续以真实生命周期场景为门槛。
+- Service Proxy 1.x 方法矩阵支持普通实例方法/getter、同步/Future 返回、方法级泛型和公共
+  Pure Dart 类型；泛型 Contract、Stream、callback、继承与 Route Scope 的扩展继续以真实
+  生命周期场景为门槛。
 - 多 Navigator Outlet 的声明方式。
 - Trace 采样、上报和与后端 OpenTelemetry 的关联方式。
 - Native Adapter、Isolate Adapter 的 Envelope Schema。

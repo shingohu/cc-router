@@ -84,6 +84,7 @@ Read [implementation-patterns.md](references/implementation-patterns.md) when ad
 - Use async Service readiness only when callers cannot safely use the instance immediately after synchronous construction.
 - Use `@CCService` only for a public concrete non-generic class with an unnamed zero-argument generative constructor. A promoted implementation must directly implement exactly one `@CCServiceContract`; do not pass or export a Service Token from business code. Use `@CCComponentContribution` for custom factories, constructor injection, async initializers, Command, Event, InitTask, Shell, and policy registration.
 - Declare every cross-component Service consumer in the consuming component's `serviceDependencies`, keep the owner in required `dependencies`, and call the generated `<Component>Services` member. Do not scan Package dependencies, handwrite a Proxy, pass caller IDs, or use a generated Client for a component-local Service.
+- Keep a `@CCServiceContract` interface itself non-generic. Its methods may use method-owned generic parameters with public Pure Dart bounds; generated Proxies preserve bounds, nullability, and explicit type arguments. Do not use method generics to pass Flutter objects, callbacks, Streams, or private implementation types across a component boundary.
 
 ## Generated Code and Validation
 

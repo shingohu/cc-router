@@ -30,8 +30,10 @@ final class CCServiceToken<T extends Object> {
 
 /// Declares one stable cross-component Service contract.
 ///
-/// Apply this annotation to a public, abstract, non-generic interface in a
-/// Pure Dart contracts Package. The generator emits a typed
+/// Apply this annotation to a public, abstract interface in a Pure Dart
+/// contracts Package. The interface itself must be non-generic, while its
+/// methods may declare method-owned generic parameters with public Pure Dart
+/// bounds. The generator emits a typed
 /// `CCServiceToken<T>` for generated/advanced registration plus metadata owned
 /// by [componentId]. A simple implementation binds automatically by directly
 /// implementing this interface; consumers resolve it through

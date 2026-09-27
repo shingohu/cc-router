@@ -226,7 +226,10 @@ final class _ServiceMetadataBuilder implements Builder {
                   'returnKind': member.isAsync ? 'future' : 'sync',
                   'returnType': member.returnType.getDisplayString(),
                   'resultType': member.resultType.getDisplayString(),
-                  'typeParameters': <String>[],
+                  'typeParameters': [
+                    for (final parameter in member.typeParameters)
+                      _serviceTypeParameterMetadata(parameter),
+                  ],
                   'parameters': [
                     for (final parameter in member.parameters)
                       <String, Object?>{
@@ -336,6 +339,7 @@ final class _ServiceMemberModel {
     required this.returnType,
     required this.resultType,
     required this.isAsync,
+    required this.typeParameters,
     required this.parameters,
   });
 
@@ -353,6 +357,9 @@ final class _ServiceMemberModel {
 
   /// Whether Runtime must use its asynchronous invocation boundary.
   final bool isAsync;
+
+  /// Method-owned generic parameters reproduced by the generated Proxy.
+  final List<TypeParameterElement> typeParameters;
 
   /// Parameters forwarded without serialization or dynamic maps.
   final List<FormalParameterElement> parameters;
@@ -666,17 +673,11 @@ List<_ServiceMemberModel> _readServiceMembers(ClassElement contract) {
         method,
       );
     }
-    if (method.typeParameters.isNotEmpty) {
-      _failService(
-        'Service contract method "${method.displayName}" must not declare '
-        'type parameters in the first Proxy generation version.',
-        method,
-      );
-    }
     members.add(
       _readServiceMember(
         method,
         kind: 'method',
+        typeParameters: method.typeParameters,
         parameters: method.formalParameters,
       ),
     );
@@ -690,7 +691,12 @@ List<_ServiceMemberModel> _readServiceMembers(ClassElement contract) {
       );
     }
     members.add(
-      _readServiceMember(getter, kind: 'getter', parameters: const []),
+      _readServiceMember(
+        getter,
+        kind: 'getter',
+        typeParameters: const [],
+        parameters: const [],
+      ),
     );
   }
   members.sort((left, right) {
@@ -704,8 +710,21 @@ List<_ServiceMemberModel> _readServiceMembers(ClassElement contract) {
 _ServiceMemberModel _readServiceMember(
   ExecutableElement member, {
   required String kind,
+  required List<TypeParameterElement> typeParameters,
   required List<FormalParameterElement> parameters,
 }) {
+  final allowedTypeParameters = typeParameters.toSet();
+  for (final typeParameter in typeParameters) {
+    final bound = typeParameter.bound;
+    if (bound != null) {
+      _validateServiceProxyType(
+        bound,
+        typeParameter,
+        allowVoid: false,
+        allowedTypeParameters: allowedTypeParameters,
+      );
+    }
+  }
   for (final parameter in parameters) {
     if (parameter.formalParameters.isNotEmpty ||
         parameter.typeParameters.isNotEmpty ||
@@ -717,7 +736,12 @@ _ServiceMemberModel _readServiceMember(
         parameter,
       );
     }
-    _validateServiceProxyType(parameter.type, parameter, allowVoid: false);
+    _validateServiceProxyType(
+      parameter.type,
+      parameter,
+      allowVoid: false,
+      allowedTypeParameters: allowedTypeParameters,
+    );
   }
   final returnType = member.returnType;
   if (returnType.isDartAsyncFutureOr) {
@@ -745,13 +769,19 @@ _ServiceMemberModel _readServiceMember(
   final resultType = isAsync
       ? (returnType as InterfaceType).typeArguments.single
       : returnType;
-  _validateServiceProxyType(resultType, member, allowVoid: true);
+  _validateServiceProxyType(
+    resultType,
+    member,
+    allowVoid: true,
+    allowedTypeParameters: allowedTypeParameters,
+  );
   return _ServiceMemberModel(
     element: member,
     kind: kind,
     returnType: returnType,
     resultType: resultType,
     isAsync: isAsync,
+    typeParameters: List.unmodifiable(typeParameters),
     parameters: List.unmodifiable(parameters),
   );
 }
@@ -761,16 +791,27 @@ void _validateServiceProxyType(
   DartType type,
   Element owner, {
   required bool allowVoid,
+  required Set<TypeParameterElement> allowedTypeParameters,
 }) {
   if (type is VoidType) {
     if (allowVoid) return;
     _failService('Service parameters cannot use void.', owner);
   }
   if (type is NeverType) return;
-  if (type is DynamicType || type is InvalidType || type is TypeParameterType) {
+  if (type is TypeParameterType) {
+    if (!allowedTypeParameters.contains(type.element)) {
+      _failService(
+        'Generated Service Proxy type parameter "${type.element.displayName}" '
+        'must be declared by the current method.',
+        owner,
+      );
+    }
+    return;
+  }
+  if (type is DynamicType || type is InvalidType) {
     _failService(
-      'Generated Service Proxy types must be statically known; dynamic, '
-      'invalid, and type-parameter values are unsupported.',
+      'Generated Service Proxy types must be statically known; dynamic and '
+      'invalid values are unsupported.',
       owner,
     );
   }
@@ -782,7 +823,12 @@ void _validateServiceProxyType(
   }
   if (type is RecordType) {
     for (final field in [...type.positionalFields, ...type.namedFields]) {
-      _validateServiceProxyType(field.type, owner, allowVoid: false);
+      _validateServiceProxyType(
+        field.type,
+        owner,
+        allowVoid: false,
+        allowedTypeParameters: allowedTypeParameters,
+      );
     }
     return;
   }
@@ -818,8 +864,21 @@ void _validateServiceProxyType(
     );
   }
   for (final argument in alias?.typeArguments ?? type.typeArguments) {
-    _validateServiceProxyType(argument, owner, allowVoid: false);
+    _validateServiceProxyType(
+      argument,
+      owner,
+      allowVoid: false,
+      allowedTypeParameters: allowedTypeParameters,
+    );
   }
+}
+
+/// Serializes one method type parameter for generated Service metadata.
+String _serviceTypeParameterMetadata(TypeParameterElement parameter) {
+  final bound = parameter.bound;
+  return bound == null
+      ? parameter.displayName
+      : '${parameter.displayName} extends ${bound.getDisplayString()}';
 }
 
 /// Validates one stable generated Service identifier.

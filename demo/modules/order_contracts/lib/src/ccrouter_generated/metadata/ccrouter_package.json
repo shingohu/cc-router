@@ -5,7 +5,7 @@
     "name": "demo_order_contracts",
     "version": "0.1.0"
   },
-  "contentFingerprint": "3da10584233ade2da54b7a3f0dd3f0c4fabbbf2c380fd915ead07efebc22da20",
+  "contentFingerprint": "33c5067e5a7dd7c3eafc6a86a76d4d9bd9641959e8e923d73d4555ce291156b4",
   "bundle": null,
   "dependencies": [],
   "metadata": [
@@ -130,7 +130,7 @@
           "declaration": {
             "symbol": "OrderSummaryService",
             "packageUri": "package:demo_order_contracts/src/order_summary_service.dart",
-            "line": 11,
+            "line": 23,
             "column": 26
           },
           "methods": [
@@ -151,7 +151,7 @@
               "declaration": {
                 "symbol": "invocationCount",
                 "packageUri": "package:demo_order_contracts/src/order_summary_service.dart",
-                "line": 19,
+                "line": 37,
                 "column": 11
               }
             },
@@ -180,8 +180,39 @@
               "declaration": {
                 "symbol": "loadSummary",
                 "packageUri": "package:demo_order_contracts/src/order_summary_service.dart",
-                "line": 16,
+                "line": 28,
                 "column": 18
+              }
+            },
+            {
+              "memberKind": "method",
+              "methodId": "loadValue",
+              "returnKind": "future",
+              "returnType": "Future<T>",
+              "resultType": "T",
+              "typeParameters": [
+                "T extends Object"
+              ],
+              "parameters": [
+                {
+                  "name": "value",
+                  "type": "OrderSummaryValue<T>",
+                  "kind": "requiredPositional",
+                  "default": null
+                }
+              ],
+              "capabilities": [
+                "typedArguments",
+                "callerIdentity",
+                "methodTrace",
+                "scopeCancellation"
+              ],
+              "unsupportedReason": null,
+              "declaration": {
+                "symbol": "loadValue",
+                "packageUri": "package:demo_order_contracts/src/order_summary_service.dart",
+                "line": 34,
+                "column": 13
               }
             },
             {
@@ -208,8 +239,38 @@
               "declaration": {
                 "symbol": "summaryFor",
                 "packageUri": "package:demo_order_contracts/src/order_summary_service.dart",
-                "line": 13,
+                "line": 25,
                 "column": 10
+              }
+            },
+            {
+              "memberKind": "method",
+              "methodId": "unwrap",
+              "returnKind": "sync",
+              "returnType": "T",
+              "resultType": "T",
+              "typeParameters": [
+                "T extends Object"
+              ],
+              "parameters": [
+                {
+                  "name": "value",
+                  "type": "OrderSummaryValue<T>",
+                  "kind": "requiredPositional",
+                  "default": null
+                }
+              ],
+              "capabilities": [
+                "typedArguments",
+                "callerIdentity",
+                "methodTrace"
+              ],
+              "unsupportedReason": null,
+              "declaration": {
+                "symbol": "unwrap",
+                "packageUri": "package:demo_order_contracts/src/order_summary_service.dart",
+                "line": 31,
+                "column": 5
               }
             }
           ],
@@ -254,7 +315,7 @@
         "contract": {
           "symbol": "OrderSummaryService",
           "packageUri": "package:demo_order_contracts/src/order_summary_service.dart",
-          "line": 11,
+          "line": 23,
           "column": 26
         },
         "implementation": null,

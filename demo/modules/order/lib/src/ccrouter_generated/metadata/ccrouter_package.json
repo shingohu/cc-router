@@ -5,7 +5,7 @@
     "name": "demo_order",
     "version": "0.1.0"
   },
-  "contentFingerprint": "42c9b426f423a8af51643141d1b7214013ecd2fd9d1c2077976f277f43628a8e",
+  "contentFingerprint": "ddf424a58483f2674b8c6825bed179354a3c4dfd429bebb8904d221b63cf3963",
   "bundle": {
     "library": "lib/src/ccrouter_generated/host/demo_order_ccrouter.g.dart",
     "symbol": "ccrouterGeneratedPackageBundle"
@@ -14,7 +14,7 @@
     {
       "name": "demo_order_contracts",
       "version": "0.1.0",
-      "contentFingerprint": "3da10584233ade2da54b7a3f0dd3f0c4fabbbf2c380fd915ead07efebc22da20"
+      "contentFingerprint": "33c5067e5a7dd7c3eafc6a86a76d4d9bd9641959e8e923d73d4555ce291156b4"
     }
   ],
   "metadata": [
@@ -122,7 +122,7 @@
           "contract": {
             "symbol": "OrderSummaryService",
             "packageUri": "package:demo_order_contracts/src/order_summary_service.dart",
-            "line": 11,
+            "line": 23,
             "column": 26
           },
           "registration": "ccrouterRegisterDemoOrderSummaryServiceService",
@@ -174,7 +174,7 @@
         "contract": {
           "symbol": "OrderSummaryService",
           "packageUri": "package:demo_order_contracts/src/order_summary_service.dart",
-          "line": 11,
+          "line": 23,
           "column": 26
         },
         "implementation": {

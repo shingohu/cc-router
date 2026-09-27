@@ -49,6 +49,20 @@ final class _OrderSummaryServiceProxy
         call: (service, _) => service.loadSummary(orderId),
       );
 
+  /// Invokes `demo_order.summary.loadValue`.
+  @override
+  service_type_0.Future<T> loadValue<T extends Object>(
+    service_type_1.OrderSummaryValue<T> value,
+  ) =>
+      CCRouterGeneratedServiceBinding.invoke<
+        service_type_1.OrderSummaryService,
+        T
+      >(
+        methodId: "loadValue",
+        callerComponentId: "demo_navigation_lab_component",
+        call: (service, _) => service.loadValue<T>(value),
+      );
+
   /// Invokes `demo_order.summary.summaryFor`.
   @override
   String summaryFor(int orderId) =>
@@ -59,5 +73,17 @@ final class _OrderSummaryServiceProxy
         methodId: "summaryFor",
         callerComponentId: "demo_navigation_lab_component",
         call: (service, _) => service.summaryFor(orderId),
+      );
+
+  /// Invokes `demo_order.summary.unwrap`.
+  @override
+  T unwrap<T extends Object>(service_type_1.OrderSummaryValue<T> value) =>
+      CCRouterGeneratedServiceBinding.invokeSync<
+        service_type_1.OrderSummaryService,
+        T
+      >(
+        methodId: "unwrap",
+        callerComponentId: "demo_navigation_lab_component",
+        call: (service, _) => service.unwrap<T>(value),
       );
 }

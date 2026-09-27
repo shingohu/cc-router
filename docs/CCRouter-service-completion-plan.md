@@ -6,7 +6,7 @@
 
 - 状态：Service 子系统实施清单，1.x 生命周期模型已收敛为 App、Session、Route
 - 范围：Service Provider、稳定 Contract ID/Key、Scope、生命周期、跨组件契约、显式消费依赖和方法级 Proxy 生成
-- 不包含：CLI 2.0、动态组件交付、远程 RPC、Stream/callback/泛型方法代理
+- 不包含：CLI 2.0、动态组件交付、远程 RPC、Stream/callback 代理
 
 本文只记录 Service 的实施边界和验收顺序。实际状态以本文件和测试为准，不能把架构设计中
 尚未实现的能力当成公开 API。
@@ -104,8 +104,9 @@ Session Scope 均返回稳定的 Service 错误子类型；缺失命名实现会
   同步 Proxy 方法直接调用。
 - Demo 中 `demo_payment` 和 `demo_navigation_lab` 各声明一个精确消费依赖，生成组件专属
   Proxy 并固定 caller component identity；手写 Proxy 已删除。
-- 自动 Proxy 只生成普通实例方法和 getter，支持同步/Future 返回与常用参数；泛型方法、
-  Contract 继承、setter/operator、Stream/FutureOr、callback、Flutter 与私有 `src` 类型生成失败。
+- 自动 Proxy 只生成普通实例方法和 getter，支持同步/Future 返回、方法级泛型与常用参数；
+  泛型 Contract、Contract 继承、setter/operator、Stream/FutureOr、callback、Flutter 与私有
+  `src` 类型生成失败。
   不采用反射、万能 `Map` 或运行时参数 Codec。
 
 ### 4.4 Async Service Readiness（已完成）

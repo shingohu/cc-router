@@ -221,6 +221,123 @@ abstract interface class OrderSummaryService {
     },
   );
 
+  test(
+    'proxy builder preserves bounded generic methods and explicit forwarding',
+    () async {
+      final output = await generateProxy(
+        r'''
+const paymentId = CCComponentId('payment');
+const orderId = CCComponentId('orders');
+const payment = CCComponent(
+  id: paymentId,
+  version: '1.0.0',
+  dependencies: [orderId],
+  serviceDependencies: [CCServiceDependency<GenericOrderService>()],
+);
+''',
+        imports: "import 'package:ccrouter_test/order_contracts.dart';",
+        additionalAssets: {
+          'ccrouter_test|lib/order_contracts.dart': r'''
+import 'package:ccrouter/ccrouter.dart';
+const orderId = CCComponentId('orders');
+sealed class OrderValue { const OrderValue(); }
+@CCServiceContract(componentId: orderId, id: 'orders.generic')
+abstract interface class GenericOrderService {
+  T identity<T extends OrderValue>(T value);
+  T create<T extends OrderValue>();
+  Future<R?> load<T extends OrderValue, R extends Iterable<T>>(T seed);
+}
+''',
+        },
+      );
+
+      expect(
+        output,
+        matches(
+          RegExp(
+            r'T identity<T extends service_type_\d+\.OrderValue>\(T value\)',
+          ),
+        ),
+      );
+      expect(
+        output,
+        matches(
+          RegExp(r'T create<T extends service_type_\d+\.OrderValue>\(\)'),
+        ),
+      );
+      expect(
+        output,
+        matches(
+          RegExp(
+            r'load<T extends service_type_\d+\.OrderValue, R extends Iterable<T>>\(T seed\)',
+          ),
+        ),
+      );
+      expect(output, contains('Future<R?>'));
+      expect(output, contains('service.identity<T>(value)'));
+      expect(output, contains('service.create<T>()'));
+      expect(output, contains('service.load<T, R>(seed)'));
+      expect(
+        output,
+        matches(
+          RegExp(
+            r'CCRouterGeneratedServiceBinding\.invokeSync<\s*service_type_\d+\.GenericOrderService,\s*T\s*>',
+          ),
+        ),
+      );
+      expect(
+        output,
+        matches(
+          RegExp(
+            r'CCRouterGeneratedServiceBinding\.invoke<\s*service_type_\d+\.GenericOrderService,\s*R\?\s*>',
+          ),
+        ),
+      );
+    },
+  );
+
+  test('proxy import prefixes avoid generic parameter names', () async {
+    final output = await generateProxy(
+      r'''
+const paymentId = CCComponentId('payment');
+const orderId = CCComponentId('orders');
+const payment = CCComponent(
+  id: paymentId,
+  version: '1.0.0',
+  dependencies: [orderId],
+  serviceDependencies: [CCServiceDependency<GenericOrderService>()],
+);
+''',
+      imports: "import 'package:ccrouter_test/order_contracts.dart';",
+      additionalAssets: {
+        'ccrouter_test|lib/order_contracts.dart': r'''
+import 'package:ccrouter/ccrouter.dart';
+const orderId = CCComponentId('orders');
+final class OrderValue { const OrderValue(); }
+@CCServiceContract(componentId: orderId, id: 'orders.generic')
+abstract interface class GenericOrderService {
+  service_type_0 preserve<service_type_0 extends OrderValue>(
+    service_type_0 value,
+  );
+}
+''',
+      },
+    );
+
+    expect(
+      output,
+      contains(
+        "import 'package:ccrouter_test/order_contracts.dart' as service_type_1;",
+      ),
+    );
+    expect(
+      output,
+      contains(
+        'service_type_0 preserve<service_type_0 extends service_type_1.OrderValue>',
+      ),
+    );
+  });
+
   test('proxy builder embeds typed Key and explicit alias', () async {
     final output = await generateProxy(
       r'''
@@ -363,6 +480,27 @@ abstract interface class OrderSummaryService {}
       expect((contract['token'] as Map)['symbol'], 'orderSummaryServiceToken');
       expect(contract['methods'], isEmpty);
 
+      final genericContractJson =
+          jsonDecode(
+                await generateMetadata(r'''
+const owner = CCComponentId('orders');
+@CCServiceContract(componentId: owner, id: 'orders.generic')
+abstract interface class GenericOrderService {
+  Future<R?> load<T extends Object, R extends Iterable<T>>(T value);
+}
+'''),
+              )
+              as Map;
+      final genericContract =
+          (genericContractJson['serviceContracts'] as List).single as Map;
+      final genericMethod = (genericContract['methods'] as List).single as Map;
+      expect(genericMethod['typeParameters'], <String>[
+        'T extends Object',
+        'R extends Iterable<T>',
+      ]);
+      expect(genericMethod['returnType'], 'Future<R?>');
+      expect(genericMethod['resultType'], 'R?');
+
       final implementationJson =
           jsonDecode(
                 await generateMetadata(r'''
@@ -392,9 +530,9 @@ final class OrderCache { const OrderCache(); }
       "const owner = CCComponentId('orders'); @CCServiceContract(componentId: owner, id: 'Orders Summary') abstract interface class Probe {}",
       'Service contract ID',
     ),
-    'generic method': (
-      "const owner = CCComponentId('orders'); @CCServiceContract(componentId: owner, id: 'orders.summary') abstract interface class Probe { T read<T>(); }",
-      'must not declare type parameters',
+    'generic contract': (
+      "const owner = CCComponentId('orders'); @CCServiceContract(componentId: owner, id: 'orders.summary') abstract interface class Probe<T> { T read(); }",
+      'public, abstract, non-generic interface',
     ),
     'stream result': (
       "const owner = CCComponentId('orders'); @CCServiceContract(componentId: owner, id: 'orders.summary') abstract interface class Probe { Stream<int> watch(); }",

@@ -81,6 +81,8 @@ CCServiceDependency<PaymentService>(
 
 - public 普通实例方法与 getter；
 - 同步 `R`、同步 `void`、`Future<R>`、`Future<void>`；
+- 非泛型 Contract 上的方法级泛型，包括公共 Pure Dart bound、nullable 结果、多个相互引用的
+  类型参数和显式类型实参转发；
 - required/optional positional 与 named 参数；
 - primitive、enum、集合、record 和公开 Pure Dart DTO；
 - primitive、enum、List、Set、Map 的 const 默认值；
@@ -88,13 +90,17 @@ CCServiceDependency<PaymentService>(
 
 首版生成失败：
 
-- 泛型方法、Contract 继承或 mixin；
+- 泛型 Contract、Contract 继承或 mixin；
 - setter、operator；
 - `Stream<T>`、`FutureOr<T>`、callback/function 参数；
 - private、Flutter、`dart:ui`、GoRouter 或未从公共 barrel 暴露的 `package:*/src/` 类型；
 - Route-scoped 跨组件 Proxy。
 
 不支持项必须定位到声明并中止生成，不能退化为 dynamic、反射或运行时字符串分派。
+
+泛型方法只保留同一 Dart isolate 内的静态类型关系。Proxy 必须同时复刻方法类型参数声明并在
+实现调用点显式传递全部类型实参，避免 `T create<T>()` 这类零参数方法丢失推断上下文。类型参数
+和 bound 不进入 Trace，且该能力不表示支持远程 RPC、跨 isolate 序列化或任意运行时类型。
 
 ## 5. 运行时语义
 
