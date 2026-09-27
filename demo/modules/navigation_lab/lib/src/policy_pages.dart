@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' show max;
 
 import 'package:ccrouter/ccrouter.dart';
 import 'package:flutter/material.dart';
@@ -248,44 +249,53 @@ final class _DemoGuardedPageState extends State<DemoGuardedPage> {
         ),
         title: const Text('PopGuard'),
       ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 520),
-          child: Padding(
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) => SingleChildScrollView(
             padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  demoNavigationLabStore.dirtyForm
-                      ? Icons.edit_note
-                      : Icons.task_alt,
-                  size: 56,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: max(0, constraints.maxHeight - 48),
+              ),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 520),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        demoNavigationLabStore.dirtyForm
+                            ? Icons.edit_note
+                            : Icons.task_alt,
+                        size: 56,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        demoNavigationLabStore.dirtyForm ? '表单尚未保存' : '表单已保存',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 16),
+                      SwitchListTile(
+                        value: demoNavigationLabStore.dirtyForm,
+                        onChanged: demoNavigationLabStore.setDirtyForm,
+                        title: const Text('存在未保存修改'),
+                      ),
+                      const SizedBox(height: 12),
+                      FilledButton.icon(
+                        onPressed: _tryPop,
+                        icon: const Icon(Icons.arrow_back),
+                        label: const Text('尝试返回'),
+                      ),
+                      const SizedBox(height: 12),
+                      OutlinedButton.icon(
+                        onPressed: _trySystemBack,
+                        icon: const Icon(Icons.system_update_alt),
+                        label: const Text('模拟系统返回'),
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 16),
-                Text(
-                  demoNavigationLabStore.dirtyForm ? '表单尚未保存' : '表单已保存',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const SizedBox(height: 16),
-                SwitchListTile(
-                  value: demoNavigationLabStore.dirtyForm,
-                  onChanged: demoNavigationLabStore.setDirtyForm,
-                  title: const Text('存在未保存修改'),
-                ),
-                const SizedBox(height: 12),
-                FilledButton.icon(
-                  onPressed: _tryPop,
-                  icon: const Icon(Icons.arrow_back),
-                  label: const Text('尝试返回'),
-                ),
-                const SizedBox(height: 12),
-                OutlinedButton.icon(
-                  onPressed: _trySystemBack,
-                  icon: const Icon(Icons.system_update_alt),
-                  label: const Text('模拟系统返回'),
-                ),
-              ],
+              ),
             ),
           ),
         ),

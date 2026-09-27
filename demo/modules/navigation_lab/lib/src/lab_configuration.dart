@@ -27,6 +27,17 @@ final demoAnalyticsTracker = CCAnalyticsTracker(
   ),
 );
 
+void observeDemoOperation<T>(String label, Future<T> operation) {
+  unawaited(
+    operation.then<void>(
+      (_) {},
+      onError: (Object error, StackTrace stackTrace) {
+        demoNavigationLabStore.record('$label · ${error.runtimeType}');
+      },
+    ),
+  );
+}
+
 /// Application-level structured log retained by the Demo Host.
 ///
 /// This is intentionally a small in-memory stand-in for an application Logger,

@@ -52,6 +52,7 @@ Demo 的交互实现位于 `modules/navigation_lab`，宿主只负责初始化 C
 | Session / Component Contract | 账号 Session、订单 Route/Service Contract | 通过 |
 | Runtime diagnostics | RouteEntry、Backend Entry、Aspect Timeline | 通过 |
 | Result / shutdown cleanup | Go、Reset、Runtime dispose 结束 pending result | 通过，无悬挂 Future |
+| Semantic / Accessibility Monkey | 360 步 Widget 随机回归 + 120 步真实 macOS 操作 | 通过，发现并修复 2 个 Demo 小窗口溢出 |
 
 ## 已发现并修复
 
@@ -62,6 +63,12 @@ Demo 的交互实现位于 `modules/navigation_lab`，宿主只负责初始化 C
 5. GoRouter Adapter 在 Go、Reset 或 Runtime shutdown 时曾直接清空本地 Entry，导致已返回给业务的 typed result Future 永久等待，并残留 navigation/backend identity 映射。现在 Go/Reset 以 `null` 结束被移除页面的结果，shutdown 以 `CCNavigationAdapterError` 结束未完成结果，同时清理身份映射；动态 open 不创建对业务暴露的错误结果通道。
 6. GoRouter 17 默认把 Shell 分支的 Navigator 事件转发给 root observers，曾导致同一个分支 Route 同时被标记为 root 和真实 Outlet。`CCGoRouterNavigationObserver` 现在忽略不属于其 Navigator 的转发事件，由对应 Outlet observer 保留唯一、准确的生命周期身份。
 7. 双 Host Demo 曾在默认 macOS 窗口高度下使用上下布局，导致两个嵌入 App 的底部各溢出 16px；直接在断点切换不同布局子树又会让 secondary Host 在旧 Owner 释放前被新 Owner 挂载。示例现始终保持同一 `SingleChildScrollView -> SizedBox -> Row` 子树，窄窗口只增加横向滚动；回归测试使用接近真实默认窗口的尺寸并跨越宽度断点检查溢出和重复挂载异常。
+8. macOS Monkey 将窗口缩小到约 490x350 logical pixels 后，PopGuard 页面底部溢出 33px。页面现使用安全区和可滚动约束，并增加 DPR 2 小窗口定向测试。
+9. 同一轮 Monkey 打开 Failure fallback 时底部溢出 45px。兜底页已采用相同的自适应布局，并验证所有诊断字段和返回按钮仍可访问。
+10. Demo 部分 fire-and-forget 导航未消费 Push Future，Runtime shutdown 正确终止 pending result 时会暴露未处理的 `CCNavigationAdapterError`。示例现通过统一观察 helper 消费结果并记录失败类型，框架仍保留明确的 shutdown 错误语义。
+
+完整的随机动作、状态不变量、问题归因和未覆盖边界见
+[macOS Monkey 验证记录](macos_monkey_validation.md)。
 
 ## 已确认限制
 
@@ -84,6 +91,7 @@ Demo 的交互实现位于 `modules/navigation_lab`，宿主只负责初始化 C
 fvm dart analyze
 fvm flutter test packages/ccrouter_test/test
 fvm flutter test demo/test
+fvm flutter test demo/test/monkey_test.dart
 fvm dart test packages/ccrouter_test/generator_test
 fvm flutter build macos --debug
 ```

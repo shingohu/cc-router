@@ -1,8 +1,7 @@
-import 'dart:async';
-
 import 'package:ccrouter/ccrouter.dart';
 import 'package:flutter/material.dart';
 
+import 'lab_configuration.dart';
 import 'shell_contract.dart';
 import 'ccrouter_generated/component/demo_navigation_lab_component.route_api.g.dart';
 
@@ -25,7 +24,8 @@ final class DemoShellFeedPage extends StatelessWidget {
     body: '该页面位于单一嵌套 Navigator，切换设置页时共享同一个 Shell。',
     actions: [
       FilledButton.icon(
-        onPressed: () => unawaited(
+        onPressed: () => observeDemoOperation(
+          'Shell Detail',
           CCRouter.navigator.push<void>(
             DemoNavigationLabRoutes.shellDetail(item: 7),
           ),
@@ -34,7 +34,8 @@ final class DemoShellFeedPage extends StatelessWidget {
         label: const Text('在 Shell Outlet 内打开详情'),
       ),
       OutlinedButton.icon(
-        onPressed: () => unawaited(
+        onPressed: () => observeDemoOperation(
+          'Shell Root 透明页',
           CCRouter.navigator.push<void>(
             DemoNavigationLabRoutes.presentationTransparent(),
           ),
@@ -115,7 +116,8 @@ final class DemoWorkspaceHomePage extends StatelessWidget {
     body: '打开详情后切换到其他分支，再切回来可验证独立 Navigator 历史。',
     actions: [
       FilledButton.icon(
-        onPressed: () => unawaited(
+        onPressed: () => observeDemoOperation(
+          'Workspace Detail',
           CCRouter.navigator.push<void>(
             DemoNavigationLabRoutes.workspaceDetail(item: 42),
           ),

@@ -670,40 +670,55 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
         icon: Icons.blur_on,
         title: 'Fade Page',
         subtitle: 'CCPageTransitionType.fade',
-        onTap: () => CCRouter.navigator.push<void>(
-          DemoNavigationLabRoutes.presentationFade(),
+        onTap: () => observeDemoOperation(
+          'Fade Page',
+          CCRouter.navigator.push<void>(
+            DemoNavigationLabRoutes.presentationFade(),
+          ),
         ),
       ),
       _ActionTile(
         icon: Icons.zoom_out_map,
         title: 'Scale Page',
         subtitle: 'CCPageTransitionType.scale',
-        onTap: () => CCRouter.navigator.push<void>(
-          DemoNavigationLabRoutes.presentationScale(),
+        onTap: () => observeDemoOperation(
+          'Scale Page',
+          CCRouter.navigator.push<void>(
+            DemoNavigationLabRoutes.presentationScale(),
+          ),
         ),
       ),
       _ActionTile(
         icon: Icons.phone_iphone,
         title: 'Cupertino PageRoute',
         subtitle: '显式 Cupertino route family。',
-        onTap: () => CCRouter.navigator.push<void>(
-          DemoNavigationLabRoutes.presentationCupertino(),
+        onTap: () => observeDemoOperation(
+          'Cupertino PageRoute',
+          CCRouter.navigator.push<void>(
+            DemoNavigationLabRoutes.presentationCupertino(),
+          ),
         ),
       ),
       _ActionTile(
         icon: Icons.vertical_align_top,
         title: '全屏页面从底部滑入',
         subtitle: '普通 Page，不是 BottomSheet。',
-        onTap: () => CCRouter.navigator.push<void>(
-          DemoNavigationLabRoutes.presentationBottomPage(),
+        onTap: () => observeDemoOperation(
+          '全屏页面从底部滑入',
+          CCRouter.navigator.push<void>(
+            DemoNavigationLabRoutes.presentationBottomPage(),
+          ),
         ),
       ),
       _ActionTile(
         icon: Icons.image_outlined,
         title: '透明全屏海报页',
         subtitle: 'opaque=false + slideFromBottom。',
-        onTap: () => CCRouter.navigator.push<void>(
-          DemoNavigationLabRoutes.presentationTransparent(),
+        onTap: () => observeDemoOperation(
+          '透明全屏海报页',
+          CCRouter.navigator.push<void>(
+            DemoNavigationLabRoutes.presentationTransparent(),
+          ),
         ),
       ),
       _ActionTile(
@@ -733,25 +748,31 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
         icon: Icons.open_in_new,
         title: 'Foreign Navigator.push',
         subtitle: '系统 MaterialPageRoute，不应创建或误删 CCRouter RouteEntry。',
-        onTap: () => Navigator.of(context).push<void>(
-          MaterialPageRoute<void>(builder: (_) => const _ForeignPage()),
+        onTap: () => observeDemoOperation(
+          'Foreign Navigator.push',
+          Navigator.of(context).push<void>(
+            MaterialPageRoute<void>(builder: (_) => const _ForeignPage()),
+          ),
         ),
       ),
       _ActionTile(
         icon: Icons.message_outlined,
         title: 'Foreign showDialog',
         subtitle: 'PopupRoute 的 Pop 不应移除底层 Managed Entry。',
-        onTap: () => showDialog<void>(
-          context: context,
-          builder: (dialogContext) => AlertDialog(
-            title: const Text('系统 Dialog'),
-            content: const Text('这是 Foreign PopupRoute。'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(dialogContext).pop(),
-                child: const Text('关闭'),
-              ),
-            ],
+        onTap: () => observeDemoOperation(
+          'Foreign showDialog',
+          showDialog<void>(
+            context: context,
+            builder: (dialogContext) => AlertDialog(
+              title: const Text('系统 Dialog'),
+              content: const Text('这是 Foreign PopupRoute。'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: const Text('关闭'),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -759,14 +780,17 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
         icon: Icons.expand_less,
         title: 'Foreign showModalBottomSheet',
         subtitle: '由 Flutter API 创建，不经过 CCRouter。',
-        onTap: () => showModalBottomSheet<void>(
-          context: context,
-          showDragHandle: true,
-          builder: (sheetContext) => Padding(
-            padding: const EdgeInsets.all(24),
-            child: FilledButton(
-              onPressed: () => Navigator.of(sheetContext).pop(),
-              child: const Text('关闭 Foreign BottomSheet'),
+        onTap: () => observeDemoOperation(
+          'Foreign showModalBottomSheet',
+          showModalBottomSheet<void>(
+            context: context,
+            showDragHandle: true,
+            builder: (sheetContext) => Padding(
+              padding: const EdgeInsets.all(24),
+              child: FilledButton(
+                onPressed: () => Navigator.of(sheetContext).pop(),
+                child: const Text('关闭 Foreign BottomSheet'),
+              ),
             ),
           ),
         ),
@@ -811,8 +835,9 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
           icon: Icons.sync_alt,
           title: '打开生命周期实验页',
           subtitle: '同时使用 CCPageLifecycleMixin 与 CCPageLifecycleListener。',
-          onTap: () => CCRouter.navigator.push<void>(
-            DemoNavigationLabRoutes.lifecycle(),
+          onTap: () => observeDemoOperation(
+            '页面生命周期',
+            CCRouter.navigator.push<void>(DemoNavigationLabRoutes.lifecycle()),
           ),
         ),
         const SizedBox(height: 12),

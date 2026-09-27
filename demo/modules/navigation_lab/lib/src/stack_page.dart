@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:ccrouter/ccrouter.dart';
 import 'package:flutter/material.dart';
 
@@ -52,7 +50,10 @@ final class _DemoStackPageState extends State<DemoStackPage> {
       CCRouter.navigator.pop(result: 'stack:${widget.level}:done');
       return;
     }
-    unawaited(CCRouter.navigator.go(DemoNavigationLabRoutes.home()));
+    observeDemoOperation(
+      'Stack 返回首页',
+      CCRouter.navigator.go(DemoNavigationLabRoutes.home()),
+    );
   }
 
   void _completeWithWrongType() {

@@ -70,11 +70,14 @@ final class _DemoLifecyclePageState extends State<DemoLifecyclePage>
           ),
           const SizedBox(height: 20),
           FilledButton.icon(
-            onPressed: () => CCRouter.navigator.push<String>(
-              DemoNavigationLabRoutes.detail(
-                id: 88,
-                title: '生命周期覆盖页',
-                tags: const ['hide', 'show'],
+            onPressed: () => observeDemoOperation(
+              '生命周期覆盖页',
+              CCRouter.navigator.push<String>(
+                DemoNavigationLabRoutes.detail(
+                  id: 88,
+                  title: '生命周期覆盖页',
+                  tags: const ['hide', 'show'],
+                ),
               ),
             ),
             icon: const Icon(Icons.flip_to_front),
@@ -82,19 +85,22 @@ final class _DemoLifecyclePageState extends State<DemoLifecyclePage>
           ),
           const SizedBox(height: 12),
           OutlinedButton.icon(
-            onPressed: () => showDialog<void>(
-              context: context,
-              builder: (dialogContext) => AlertDialog(
-                title: const Text('Foreign PopupRoute'),
-                content: const Text(
-                  '它会影响 PageShow/PageHide，但不应销毁 Managed Entry。',
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(dialogContext).pop(),
-                    child: const Text('关闭'),
+            onPressed: () => observeDemoOperation(
+              '生命周期 Foreign Dialog',
+              showDialog<void>(
+                context: context,
+                builder: (dialogContext) => AlertDialog(
+                  title: const Text('Foreign PopupRoute'),
+                  content: const Text(
+                    '它会影响 PageShow/PageHide，但不应销毁 Managed Entry。',
                   ),
-                ],
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(),
+                      child: const Text('关闭'),
+                    ),
+                  ],
+                ),
               ),
             ),
             icon: const Icon(Icons.open_in_new),

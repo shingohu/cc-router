@@ -26,7 +26,9 @@ Flutter SDK 选择：
 Managed Modal、Foreign/Overlay 隔离、ShellRoute、StatefulShellRoute、嵌套子路由和
 typed Extra。完整的 macOS 验证矩阵、已修复问题和 Adapter 限制见
 [路由验证记录](docs/route_validation.md)，与 Flutter 官方 GoRouter 示例的差异见
-[GoRouter 示例覆盖对照](docs/go_router_example_coverage.md)。
+[GoRouter 示例覆盖对照](docs/go_router_example_coverage.md)。固定 seed 的 Semantic Monkey、
+真实窗口 Accessibility Monkey 和小窗口回归方法见
+[macOS Monkey 验证记录](docs/macos_monkey_validation.md)。
 
 首页的“组件能力实验室”使用真实 Runtime 展示非路由能力：
 

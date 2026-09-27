@@ -1,8 +1,9 @@
-import 'dart:async';
+import 'dart:math' show max;
 
 import 'package:ccrouter/ccrouter.dart';
 import 'package:flutter/material.dart';
 
+import 'lab_configuration.dart';
 import 'ccrouter_generated/component/demo_navigation_lab_component.route_api.g.dart';
 
 @CCRoute<void>(
@@ -30,36 +31,51 @@ final class DemoFailurePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: const Text('导航兜底')),
-    body: Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 520),
-        child: Padding(
+    body: SafeArea(
+      child: LayoutBuilder(
+        builder: (context, constraints) => SingleChildScrollView(
           padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.route_outlined, size: 56),
-              const SizedBox(height: 16),
-              Text('原目标不可用', style: Theme.of(context).textTheme.titleLarge),
-              const SizedBox(height: 12),
-              Text('stage: $stage'),
-              Text('reason: $reason'),
-              Text('error: $errorType'),
-              Text('initial route: ${initialRouteId ?? '-'}'),
-              Text('failed route: ${routeId ?? '-'}'),
-              const SizedBox(height: 20),
-              FilledButton.icon(
-                onPressed: () {
-                  if (CCRouter.navigator.canPop()) {
-                    CCRouter.navigator.pop();
-                  } else {
-                    unawaited(CCRouter.navigator.open(Uri.parse('/')));
-                  }
-                },
-                icon: const Icon(Icons.arrow_back),
-                label: const Text('返回'),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: max(0, constraints.maxHeight - 48),
+            ),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 520),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.route_outlined, size: 56),
+                    const SizedBox(height: 16),
+                    Text(
+                      '原目标不可用',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 12),
+                    Text('stage: $stage'),
+                    Text('reason: $reason'),
+                    Text('error: $errorType'),
+                    Text('initial route: ${initialRouteId ?? '-'}'),
+                    Text('failed route: ${routeId ?? '-'}'),
+                    const SizedBox(height: 20),
+                    FilledButton.icon(
+                      onPressed: () {
+                        if (CCRouter.navigator.canPop()) {
+                          CCRouter.navigator.pop();
+                        } else {
+                          observeDemoOperation(
+                            'Failure fallback 返回首页',
+                            CCRouter.navigator.open(Uri.parse('/')),
+                          );
+                        }
+                      },
+                      icon: const Icon(Icons.arrow_back),
+                      label: const Text('返回'),
+                    ),
+                  ],
+                ),
               ),
-            ],
+            ),
           ),
         ),
       ),

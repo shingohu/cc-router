@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:ccrouter/ccrouter.dart';
 import 'package:flutter/material.dart';
 
@@ -72,7 +70,10 @@ final class _DemoDetailPageState extends State<DemoDetailPage>
       CCRouter.navigator.pop(result: 'detail:${widget.id}:confirmed');
       return;
     }
-    unawaited(CCRouter.navigator.go(DemoNavigationLabRoutes.home()));
+    observeDemoOperation(
+      'Detail 返回首页',
+      CCRouter.navigator.go(DemoNavigationLabRoutes.home()),
+    );
   }
 
   @override
