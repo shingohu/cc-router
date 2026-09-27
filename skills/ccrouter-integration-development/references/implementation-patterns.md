@@ -11,6 +11,12 @@ minimal assembly path. When global policies or telemetry are needed, call
 still owns generated Host assembly, navigation Backend, Shell/Outlet topology,
 platform Deep Link ingress, global policies and final `CCRouter.shutdown`.
 
+Runtime and multi-Host teardown use best-effort structural cleanup. Listener or
+PopGuard removal failures do not skip remaining child Adapters or Scopes, while
+the first cleanup error is still returned to the Host. A rejected Adapter attach
+remains Host-owned; Runtime rolls back its partial listener and ledger state so
+the Host can dispose that Adapter or safely attach another one.
+
 Use `CCRouterApp.managed` with a manually created `CCRouterAppBackend` when the
 application needs a custom Backend or custom application tree. Use
 `CCGoRouterBackend.attach` for an existing application-owned GoRouter; the
@@ -183,6 +189,12 @@ stateless and resolves the current Scope on every method call. Keep local
 Services on `CCRouter.service<T>()`; only stable cross-component contracts need
 `CCServiceDependency<T>`.
 
+Generation validates the declared consumer graph, and Runtime repeats the
+identity/dependency check against the installed Manifests before invoking the
+Provider. A stale generated Client, missing component, or handwritten bridge
+call without the required dependency fails with `CCResolutionError` before
+Service work or attributed Trace recording begins.
+
 Do not export or pass the generated Token in business code. Generator and
 Runtime retain its stable ID for ownership, diagnostics, and package moves.
 
@@ -306,6 +318,13 @@ all have distinct explicit IDs. Keep raw `CCRouter.event` and handwritten typed
 Subscriber registration for unannotated migration capabilities, Host
 composition, and low-level tests only.
 
+Generated Command callers and Event publishers are not trusted as raw strings.
+Runtime verifies that they are installed and that Command consumers or Event
+subscribers have the required dependency edge to the capability Owner. Required
+dependencies apply to Command and Service consumption; Event subscriptions may
+use a required or optional dependency. A mismatch fails before Handler or
+Subscriber execution.
+
 To bridge framework observations to application logging, configure a Host-owned
 `CCDiagnosticSink` through `CCDiagnosticsConfig`. The sink is asynchronous,
 bounded, and observational; sink errors never alter Command, Event, Service,
@@ -362,6 +381,11 @@ await CCRouter.runInitialization(
   gate: CCInitializationGate.privacyGranted,
 );
 ```
+
+Overlapping Gate calls share one single-flight DAG drain. If a second Gate opens
+while a layer is running, Runtime performs another readiness pass before the
+shared Future completes, so newly ready tasks cannot remain pending until an
+unrelated later call.
 
 Use `contract` for every task that another task references and `id` only for an
 independent internal task. A cross-component Contract belongs in a public Pure

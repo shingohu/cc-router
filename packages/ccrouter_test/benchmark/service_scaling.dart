@@ -78,6 +78,13 @@ final class _BenchmarkRegistrar implements CCComponentRegistrar {
   }
 }
 
+final class _EmptyBenchmarkRegistrar implements CCComponentRegistrar {
+  const _EmptyBenchmarkRegistrar();
+
+  @override
+  void register(CCRegistry registry) {}
+}
+
 Future<void> main() async {
   for (final providerCount in const [10, 100, 1000]) {
     await _warmUp(providerCount);
@@ -201,6 +208,12 @@ CCRouterRuntime _runtime(int providerCount) => CCRouterRuntime.forTesting(
       id: 'benchmark',
       version: '1.0.0',
       registrar: _BenchmarkRegistrar(providerCount),
+    ),
+    const CCComponentManifest(
+      id: 'benchmark-consumer',
+      version: '1.0.0',
+      dependencies: ['benchmark'],
+      registrar: _EmptyBenchmarkRegistrar(),
     ),
   ],
 );

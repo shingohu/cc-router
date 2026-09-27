@@ -2,7 +2,9 @@ import 'dart:convert';
 
 import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 import 'package:ccrouter_core/ccrouter_core.dart';
-import 'package:ccrouter_test/ccrouter_test.dart';
+
+// Benchmark support intentionally consumes Core's visible-for-testing boundary.
+// ignore_for_file: invalid_use_of_visible_for_testing_member
 
 const _lifecycleSamples = 20;
 const _navigationSamples = 100;
@@ -45,20 +47,19 @@ Future<void> main() async {
     final initializeMicros = <int>[];
     final disposeMicros = <int>[];
     for (var sample = 0; sample < _lifecycleSamples; sample++) {
-      final host = _host(routes);
+      final runtime = _runtime(routes);
       final initializeWatch = Stopwatch()..start();
-      host.initialize();
+      runtime.initialize();
       initializeWatch.stop();
       initializeMicros.add(initializeWatch.elapsedMicroseconds);
 
       final disposeWatch = Stopwatch()..start();
-      await host.dispose();
+      await runtime.dispose();
       disposeWatch.stop();
       disposeMicros.add(disposeWatch.elapsedMicroseconds);
     }
 
-    final host = _host(routes)..initialize();
-    final runtime = host.runtime;
+    final runtime = _runtime(routes)..initialize();
     final target = Uri.parse('/benchmark/${routeCount - 1}/42');
     await runtime.openRoute(target, mode: CCDeepLinkOpenMode.go);
     final navigationMicros = <int>[];
@@ -68,7 +69,7 @@ Future<void> main() async {
       watch.stop();
       navigationMicros.add(watch.elapsedMicroseconds);
     }
-    await host.dispose();
+    await runtime.dispose();
 
     print(
       jsonEncode({
@@ -90,17 +91,17 @@ Future<void> main() async {
 Future<void> _warmUp(
   List<CCRouteDefinition<_BenchmarkArguments, void>> routes,
 ) async {
-  final host = _host(routes)..initialize();
-  await host.runtime.openRoute(
+  final runtime = _runtime(routes)..initialize();
+  await runtime.openRoute(
     Uri.parse('/benchmark/${routes.length - 1}/0'),
     mode: CCDeepLinkOpenMode.go,
   );
-  await host.dispose();
+  await runtime.dispose();
 }
 
-CCRouterTestHost _host(
+CCRouterRuntime _runtime(
   List<CCRouteDefinition<_BenchmarkArguments, void>> routes,
-) => CCRouterTestHost(
+) => CCRouterRuntime.forTesting(
   navigationAdapter: CCMemoryNavigationAdapter(),
   components: [
     CCComponentManifest(

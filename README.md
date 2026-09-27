@@ -204,7 +204,7 @@ runApp(CCGoRouterApp(catalog: ccrouterGeneratedRouteCatalog));
 await CCRouter.shutdown();
 ```
 
-不要在页面 Pop、组件页面销毁、App 后台或 Session 关闭时 shutdown。Runtime 会先销毁它拥有的 Adapter，再释放 managed Backend 创建的 GoRouter；attach 模式不会销毁应用自己创建的 GoRouter。
+不要在页面 Pop、组件页面销毁、App 后台或 Session 关闭时 shutdown。Runtime 会先销毁它拥有的 Adapter，再释放 managed Backend 创建的 GoRouter；attach 模式不会销毁应用自己创建的 GoRouter。销毁、动态 Host 注销或 Host 初始化失败时采用 best-effort 结构化清理：某个 listener remover、PopGuard 解绑或子 Adapter 抛错不会跳过其它资源，调用方最终收到首个失败。
 
 已有 GoRouter 工程使用 `CCGoRouterBackend.attach`，把生成 bindings、Host 和已经安装到 Router 的 Observer 显式交给 CCRouter。需要自定义 Backend 或完整 Widget 树时，仍可使用 `CCRouterApp.managed`。完整 Shell/Outlet 示例见 [`demo/lib/demo_router_backend.dart`](demo/lib/demo_router_backend.dart)。
 
@@ -601,6 +601,10 @@ initializer；`Future<T>` 方法会等待 readiness。生成器支持普通实�
 FutureOr、callback、Flutter 类型、Contract 继承和未从公共 barrel 暴露的 `src` 类型会在生成期
 失败。组件内部 Service 仍直接使用 `CCRouter.service<T>()`，不需要声明或生成 Proxy。
 
+生成器会先校验 Service Owner、Consumer 和 Package exposure；Runtime 还会根据本次实际安装的
+Manifest 依赖图再次验证生成 Proxy 携带的 caller identity。旧生成物、手工调用 generated bridge、
+缺失组件或未声明 required dependency 会抛出 `CCResolutionError`，不会以伪造归属进入 Trace。
+
 需要构造参数、依赖注入、自定义 Factory 或 async initializer 时，使用
 `@CCComponentContribution` 显式注册，不把复杂生命周期隐藏在注解里：
 
@@ -679,6 +683,10 @@ final receipt = await OrderCommands.submitOrder(
 
 跨组件 Command 在 contracts Package 中显式填写 `componentId`，消费组件把 Owner 放入 `dependencies`，并在 `commandDependencies` 中只声明实际调用的 Contract。生成器会产生消费组件专属 Client，业务不传 `commandId` 或 caller identity。复杂、迁移期或未注解的内部 Command 仍可通过 `CCComponentContribution` 手写注册并使用 `CCRouter.command`；已注解 Command 应统一走生成 Client。
 
+Runtime 会再次确认生成 Client 的 caller 已安装、Command ID 与已注册 Handler 一致，并且 caller
+对 Handler Owner 声明了 required dependency；校验失败会在 Handler 执行前抛出
+`CCResolutionError`，且不会记录伪造的组件调用归属。
+
 适合创建订单、提交支付、刷新远端数据等一对一操作。状态读取或多次方法调用使用 Service；“已经发生”的广播使用 Event。取消是协作式的，框架可以结束等待并发出 cancellation，但不能强制停止同步 Dart 代码或回滚已发生的副作用。
 
 ## Event
@@ -709,6 +717,10 @@ await OrderEvents.publishOrderPaid(
 ```
 
 同一 Event 可以没有 Subscriber 或有多个 Subscriber。订阅按稳定 ID 确定启动顺序，单个 Subscriber 失败不会阻止其他 Subscriber；调用 Future 在本次分发完成后结束。同一组件只有一个对应 Subscriber 时可省略 `CCEventSubscription.id`，生成器使用 `<subscriberComponentId>.<eventId>`；存在多个时必须全部显式设置。跨组件 Contract 显式填写 `componentId`，订阅组件把 Owner 放入 required 或 optional dependencies。生成器只为 Owner 生成 Publication Client，不增加 `eventDependencies` 或任意发布权。
+
+Runtime 会确认生成 Publication Client 声明的 Publisher 已安装，并逐一复核 Subscriber 对
+Publisher Owner 的 required/optional dependency。缺失 Publisher、Event ID 不一致或 Subscriber
+依赖缺失会在分发前以 `CCResolutionError` 失败；无 Subscriber 的合法 Event 仍是成功 no-op。
 
 `CCEventSubscriberId<E>`、`CCEventSubscriber<E>` 和旧的 `registerEvent` 仅用于未注解迁移能力、底层注册和测试。已注解 Event 必须使用生成 Owner Client，不能调用裸 `CCRouter.event` 绕过稳定 Event ID 与 publisher identity。Subscriber 在 Runtime 生命周期内静态注册，不提供页面级动态 subscribe/unsubscribe、Sticky、历史重放或持久化；页面内状态同步继续使用状态管理或 Route Service。
 
@@ -741,7 +753,7 @@ Future<void> initializeAnalytics(CCInvocationContext context) =>
 放在公共 contracts Package，消费组件必须 required-depend on Owner。独立内部任务可以只填写
 `id`，`contract` 与 `id` 不能同时设置。
 
-Host 在 `CCRouter.initialize` 后调用 `CCRouter.runInitialization()`。Runtime 仍保留重复 ID、缺失依赖与循环依赖的最终校验。必需任务失败会阻止初始化完成；可选任务失败可诊断但不阻断无依赖分支。单个 Service 的异步准备应放在 `CCServiceProvider.initializer`，不要创建 InitTask 预热所有 Service。
+Host 在 `CCRouter.initialize` 后调用 `CCRouter.runInitialization()`。Runtime 仍保留重复 ID、缺失依赖与循环依赖的最终校验。并发打开 Gate 共享 single-flight drain；执行期间新打开 Gate 时，Runtime 会继续运行新就绪的 DAG 层直至稳定，不会遗留永久 `pending` 的任务。必需任务失败会阻止初始化完成；可选任务失败可诊断但不阻断无依赖分支。单个 Service 的异步准备应放在 `CCServiceProvider.initializer`，不要创建 InitTask 预热所有 Service。
 
 ## 生成器
 

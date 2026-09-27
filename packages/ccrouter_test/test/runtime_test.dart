@@ -748,6 +748,29 @@ void main() {
     },
   );
 
+  test('overlapping Gate opens cannot lose a newly ready task', () async {
+    const privacyGate = CCInitializationGate.privacyGranted;
+    var runs = 0;
+    runtime.registerInitializationTask(
+      CCInitializationTask(
+        id: 'startup.privacy',
+        gate: privacyGate,
+        run: (_) => runs++,
+      ),
+    );
+    runtime.initialize();
+
+    final idleDrain = runtime.runInitialization();
+    final privacyDrain = runtime.runInitialization(gate: privacyGate);
+    await Future.wait([idleDrain, privacyDrain]);
+
+    expect(runs, 1);
+    expect(
+      runtime.initializationTasks.single.state,
+      CCInitializationTaskState.succeeded,
+    );
+  });
+
   test(
     'optional initialization failure skips dependents and continues',
     () async {

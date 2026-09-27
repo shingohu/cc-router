@@ -169,6 +169,48 @@ final class _ThrowingDisposeHostAdapter extends _HostAdapter {
   }
 }
 
+final class _FailingBindHostAdapter extends _HostAdapter
+    implements
+        CCNavigationBackendEventSource,
+        CCNavigationPredictiveBackSource {
+  _FailingBindHostAdapter(super.hostId);
+
+  final Set<CCNavigationBackendEventListener> backendListeners = {};
+  int disposeCalls = 0;
+
+  @override
+  void Function() addBackendEventListener(
+    CCNavigationBackendEventListener listener,
+  ) {
+    backendListeners.add(listener);
+    return () => backendListeners.remove(listener);
+  }
+
+  @override
+  void Function() addPredictiveBackListener(
+    CCPredictiveBackEventListener listener,
+  ) {
+    throw const CCNavigationAdapterError('Synthetic listener bind failure.');
+  }
+
+  @override
+  void dispose() {
+    disposeCalls++;
+    super.dispose();
+  }
+}
+
+final class _ThrowingRemoverHostAdapter extends _HostAdapter
+    implements CCNavigationBackendEventSource {
+  _ThrowingRemoverHostAdapter(super.hostId);
+
+  @override
+  void Function() addBackendEventListener(
+    CCNavigationBackendEventListener listener,
+  ) =>
+      () => throw StateError('Synthetic listener removal failure.');
+}
+
 void main() {
   test(
     'routes and pops remain isolated across dynamically selected Hosts',
@@ -323,6 +365,77 @@ void main() {
       expect(registry.registeredHostIds, isEmpty);
     },
   );
+
+  test('failed dynamic Host listener binding removes partial registration', () {
+    final primary = _HostAdapter('window.primary');
+    final registry = CCNavigationHostRegistry(
+      defaultHostId: primary.hostId,
+      adapters: {primary.hostId: primary},
+    );
+    registry.initialize(const []);
+    final failing = _FailingBindHostAdapter('window.failing-bind');
+
+    expect(
+      () => registry.registerHost(failing.hostId, failing),
+      throwsA(isA<CCNavigationAdapterError>()),
+    );
+    expect(registry.registeredHostIds, isNot(contains(failing.hostId)));
+    expect(failing.backendListeners, isEmpty);
+    expect(failing.disposeCalls, 1);
+
+    registry.dispose();
+  });
+
+  test('failed initial Host setup disposes the complete owned registry', () {
+    final healthy = _HostAdapter('window.healthy');
+    final failing = _FailingInitializeHostAdapter('window.failing');
+    final registry = CCNavigationHostRegistry(
+      defaultHostId: healthy.hostId,
+      adapters: {healthy.hostId: healthy, failing.hostId: failing},
+    );
+
+    expect(
+      () => registry.initialize(const []),
+      throwsA(isA<CCNavigationAdapterError>()),
+    );
+    expect(healthy.disposed, isTrue);
+    expect(failing.disposeCalls, 1);
+    expect(registry.registeredHostIds, isEmpty);
+  });
+
+  test('listener removal failure cannot skip owned Adapter cleanup', () {
+    final failing = _ThrowingRemoverHostAdapter('window.remover');
+    final healthy = _HostAdapter('window.healthy');
+    final registry = CCNavigationHostRegistry(
+      defaultHostId: failing.hostId,
+      adapters: {failing.hostId: failing, healthy.hostId: healthy},
+    );
+    registry.initialize(const []);
+
+    expect(() => registry.dispose(), throwsA(isA<StateError>()));
+    expect(failing.disposed, isTrue);
+    expect(healthy.disposed, isTrue);
+    expect(registry.registeredHostIds, isEmpty);
+  });
+
+  test('Host removal failure still completes structural cleanup', () {
+    final healthy = _HostAdapter('window.healthy');
+    final failing = _ThrowingRemoverHostAdapter('window.remover');
+    final registry = CCNavigationHostRegistry(
+      defaultHostId: healthy.hostId,
+      adapters: {healthy.hostId: healthy, failing.hostId: failing},
+    );
+    registry.initialize(const []);
+
+    expect(
+      () => registry.unregisterHost(failing.hostId),
+      throwsA(isA<StateError>()),
+    );
+    expect(failing.disposed, isTrue);
+    expect(registry.registeredHostIds, {healthy.hostId});
+
+    registry.dispose();
+  });
 
   test('registry releases every Host when one synchronous dispose fails', () {
     final failing = _ThrowingDisposeHostAdapter('window.failing');

@@ -2,7 +2,9 @@ import 'dart:convert';
 
 import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 import 'package:ccrouter_core/ccrouter_core.dart';
-import 'package:ccrouter_test/ccrouter_test.dart';
+
+// Benchmark support intentionally consumes Core's visible-for-testing boundary.
+// ignore_for_file: invalid_use_of_visible_for_testing_member
 
 const _cycles = 10;
 const _concurrentPushes = 100;
@@ -46,7 +48,7 @@ final class _StressRegistrar implements CCComponentRegistrar {
 
 Future<void> main() async {
   final adapter = CCMemoryNavigationAdapter();
-  final host = CCRouterTestHost(
+  final runtime = CCRouterRuntime.forTesting(
     navigationAdapter: adapter,
     components: [
       CCComponentManifest(
@@ -56,19 +58,19 @@ Future<void> main() async {
       ),
     ],
   );
-  host.initialize();
-  await host.runtime.goRoute(
+  runtime.initialize();
+  await runtime.goRoute(
     const _StressIntent<void>('benchmark.detail', _StressArguments('root')),
   );
 
   final samples = <int>[];
-  var peakEntries = host.runtime.activeRouteEntries.length;
-  var peakPending = host.runtime.pendingNavigations.length;
+  var peakEntries = runtime.activeRouteEntries.length;
+  var peakPending = runtime.pendingNavigations.length;
   for (var cycle = 0; cycle < _cycles; cycle++) {
     final watch = Stopwatch()..start();
     final futures = [
       for (var index = 0; index < _concurrentPushes; index++)
-        host.runtime.pushRoute<String>(
+        runtime.pushRoute<String>(
           _StressIntent<String>(
             'benchmark.detail',
             _StressArguments('$cycle-$index'),
@@ -76,16 +78,16 @@ Future<void> main() async {
         ),
     ];
     await Future<void>.delayed(Duration.zero);
-    peakEntries = _max(peakEntries, host.runtime.activeRouteEntries.length);
-    peakPending = _max(peakPending, host.runtime.pendingNavigations.length);
+    peakEntries = _max(peakEntries, runtime.activeRouteEntries.length);
+    peakPending = _max(peakPending, runtime.pendingNavigations.length);
     for (var index = 0; index < futures.length; index++) {
-      host.runtime.popRoute(result: 'ok:$cycle-$index');
+      runtime.popRoute(result: 'ok:$cycle-$index');
     }
     await Future.wait(futures);
     watch.stop();
     samples.add(watch.elapsedMicroseconds);
-    if (host.runtime.activeRouteEntries.length != 1 ||
-        host.runtime.pendingNavigations.isNotEmpty ||
+    if (runtime.activeRouteEntries.length != 1 ||
+        runtime.pendingNavigations.isNotEmpty ||
         adapter.stack.length != 1) {
       throw StateError('Runtime retained state after stress cycle $cycle.');
     }
@@ -99,11 +101,11 @@ Future<void> main() async {
     'cycleUsP95': _percentile(samples, 0.95),
     'peakActiveEntries': peakEntries,
     'peakPendingNavigations': peakPending,
-    'finalActiveEntries': host.runtime.activeRouteEntries.length,
-    'finalPendingNavigations': host.runtime.pendingNavigations.length,
+    'finalActiveEntries': runtime.activeRouteEntries.length,
+    'finalPendingNavigations': runtime.pendingNavigations.length,
     'finalAdapterEntries': adapter.stack.length,
   };
-  await host.dispose();
+  await runtime.dispose();
   print(jsonEncode(result));
 }
 

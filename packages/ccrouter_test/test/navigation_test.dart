@@ -252,6 +252,105 @@ final class BackendEventNavigationAdapter
   void pop({Object? result}) => delegate.pop(result: result);
 }
 
+final class ThrowingCleanupNavigationAdapter
+    implements
+        CCNavigationAdapter,
+        CCNavigationBackendEventSource,
+        CCNavigationPopGuardBinding {
+  bool disposed = false;
+
+  @override
+  void Function() addBackendEventListener(
+    CCNavigationBackendEventListener listener,
+  ) =>
+      () => throw StateError('backend remover failed');
+
+  @override
+  void bindPopGuardEvaluator(CCPopGuardEvaluator? evaluator) {
+    if (evaluator == null) throw StateError('PopGuard unbind failed');
+  }
+
+  @override
+  bool canPop() => false;
+
+  @override
+  void dispose() {
+    disposed = true;
+  }
+
+  @override
+  void initialize(
+    List<CCNavigationRoute> routes, {
+    List<CCNavigationShell> shells = const [],
+  }) {}
+
+  @override
+  Future<bool> maybePop({Object? result}) async => false;
+
+  @override
+  Future<Object?> navigate(CCNavigationRequest request) async => null;
+
+  @override
+  void pop({Object? result}) {}
+}
+
+final class CleanupResource implements CCDisposable {
+  bool disposed = false;
+
+  @override
+  void dispose() {
+    disposed = true;
+  }
+}
+
+final class FailingAttachmentNavigationAdapter
+    implements
+        CCNavigationAdapter,
+        CCNavigationBackendEventSource,
+        CCNavigationBackendSnapshotSource,
+        CCNavigationPopGuardBinding {
+  bool disposed = false;
+
+  @override
+  void Function() addBackendEventListener(
+    CCNavigationBackendEventListener listener,
+  ) =>
+      () => throw StateError('backend remover failed');
+
+  @override
+  void bindPopGuardEvaluator(CCPopGuardEvaluator? evaluator) {
+    if (evaluator == null) throw StateError('PopGuard unbind failed');
+  }
+
+  @override
+  bool canPop() => false;
+
+  @override
+  void dispose() {
+    disposed = true;
+  }
+
+  @override
+  void initialize(
+    List<CCNavigationRoute> routes, {
+    List<CCNavigationShell> shells = const [],
+  }) {}
+
+  @override
+  Future<bool> maybePop({Object? result}) async => false;
+
+  @override
+  Future<Object?> navigate(CCNavigationRequest request) async => null;
+
+  @override
+  void pop({Object? result}) {}
+
+  @override
+  List<CCNavigationBackendEntrySnapshot> readInitialBackendSnapshot() {
+    throw StateError('initial snapshot failed');
+  }
+}
+
 final class UnidentifiedManagedPopAdapter
     implements
         CCNavigationAdapter,
@@ -464,6 +563,31 @@ void main() {
       expect(sanitized.hasFragment, isTrue);
       expect(runtime.recentBackendNavigationEvents, isEmpty);
       await runtime.dispose();
+    },
+  );
+
+  test(
+    'failed Adapter attachment rolls back Runtime state and preserves cause',
+    () async {
+      final runtime = CCRouterRuntime.forTesting();
+      runtime.initialize();
+      final failing = FailingAttachmentNavigationAdapter();
+
+      expect(
+        () => runtime.attachNavigationAdapter(failing),
+        throwsA(
+          isA<StateError>().having(
+            (error) => error.message,
+            'message',
+            'initial snapshot failed',
+          ),
+        ),
+      );
+      expect(failing.disposed, isFalse);
+
+      runtime.attachNavigationAdapter(CCMemoryNavigationAdapter());
+      await runtime.dispose();
+      failing.dispose();
     },
   );
 
@@ -986,6 +1110,36 @@ void main() {
       expect(observed, hasLength(1));
       await Future<void>.delayed(Duration.zero);
       expect(observed, hasLength(1));
+    },
+  );
+
+  test(
+    'Runtime cleanup failure still disposes its navigation Adapter',
+    () async {
+      final adapter = ThrowingCleanupNavigationAdapter();
+      final resource = CleanupResource();
+      final runtime = CCRouterRuntime.forTesting(
+        navigationAdapter: adapter,
+        components: [
+          CCComponentManifest(
+            id: 'cleanup',
+            version: '1.0.0',
+            registrar: TestRegistrar(
+              (registry) => registry.registerService<CleanupResource>(
+                CCServiceProvider(factory: (_) => resource),
+              ),
+            ),
+          ),
+        ],
+      );
+      runtime.initialize();
+      expect(runtime.service<CleanupResource>(), same(resource));
+
+      await expectLater(runtime.dispose(), throwsA(isA<StateError>()));
+
+      expect(adapter.disposed, isTrue);
+      expect(resource.disposed, isTrue);
+      await expectLater(runtime.dispose(), throwsA(isA<StateError>()));
     },
   );
 

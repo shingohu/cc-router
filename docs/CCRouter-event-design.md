@@ -214,10 +214,18 @@ lib/src/ccrouter_generated/
 - Runtime 增加稳定 Event ID，同时继续按 Dart Type 做类型安全分派；
 - 增加仅生成代码可见的 `CCRouterGeneratedEventBinding`，负责 Descriptor、Subscription 注册和
   携带可信 publisher identity；
+- Runtime 会确认 Publisher 已安装，并复核每个 Subscriber 对 Publisher 的 required/optional
+  依赖；缺失 Publisher、Event ID 不一致或订阅依赖缺失会在分发前失败；
 - 发布 Span 使用稳定 Event ID，Subscriber 子 Span 记录 Subscriber ID 和可信组件 Owner；
 - Event Payload、异常消息和业务对象不得进入 retained Trace 或应用诊断 Sink；
 - 现有并发启动顺序、失败隔离、零订阅者、timeout、取消和 shutdown 语义保持不变；
 - 动态 subscribe/unsubscribe、页面生命周期订阅和反射扫描仍不进入 Runtime。
+
+当前 Owner 真实性的权威校验仍在 Generator/Workspace Validator。零 Subscriber Event 不会向
+Runtime 注册独立 Contract Descriptor，因此手工调用 generated SPI 并伪造为另一个“已安装”
+组件时，Runtime 只能验证组件存在，不能再次证明它就是 Contract Owner。业务与组件源码已由
+生成 API 和边界 Validator 禁止这样调用，这不是正常集成漏洞；如果未来要把 generated SPI 也
+提升为防伪边界，应生成 Event Contract Runtime Registry，不能从 Subscriber 反推 Owner。
 
 ## 14. 已完成实施项
 

@@ -226,9 +226,19 @@ final class CCNavigationHostRegistry
       _ensureNotDisposed();
       _hosts[hostId] = record;
       _bindRecord(hostId, record);
-    } catch (_) {
-      record.dispose();
-      rethrow;
+    } catch (error, stackTrace) {
+      _hosts.remove(hostId);
+      try {
+        _unbindRecord(record);
+      } catch (_) {
+        // Preserve the registration failure after best-effort listener cleanup.
+      }
+      try {
+        record.dispose();
+      } catch (_) {
+        // Preserve the registration failure after best-effort Adapter cleanup.
+      }
+      Error.throwWithStackTrace(error, stackTrace);
     }
   }
 
@@ -278,7 +288,14 @@ final class CCNavigationHostRegistry
     if (_activeHostId == hostId) {
       _activeHostId = replacementActiveHostId!;
     }
-    _unbindRecord(record);
+    Object? cleanupError;
+    StackTrace? cleanupStackTrace;
+    try {
+      _unbindRecord(record);
+    } catch (error, stackTrace) {
+      cleanupError = error;
+      cleanupStackTrace = stackTrace;
+    }
     _hostByNavigationId.removeWhere((_, value) => value == hostId);
     _adaptiveLayouts.remove(hostId);
     final sequence = _nextHostSequence(hostId);
@@ -293,7 +310,15 @@ final class CCNavigationHostRegistry
       ),
     );
     _sequencesByHost.remove(hostId);
-    record.dispose();
+    try {
+      record.dispose();
+    } catch (error, stackTrace) {
+      cleanupError ??= error;
+      cleanupStackTrace ??= stackTrace;
+    }
+    if (cleanupError != null) {
+      Error.throwWithStackTrace(cleanupError, cleanupStackTrace!);
+    }
   }
 
   /// Initializes every registered Host with only its applicable routes.
@@ -314,15 +339,24 @@ final class CCNavigationHostRegistry
         'The navigation Host registry is already initialized.',
       );
     }
-    _routes = List.unmodifiable(routes);
-    _shells = List.unmodifiable(shells);
-    for (final entry in _hosts.entries) {
-      _initializeRecord(entry.key, entry.value);
+    try {
+      _routes = List.unmodifiable(routes);
+      _shells = List.unmodifiable(shells);
+      for (final entry in _hosts.entries) {
+        _initializeRecord(entry.key, entry.value);
+        _ensureNotDisposed();
+        _bindRecord(entry.key, entry.value);
+      }
       _ensureNotDisposed();
-      _bindRecord(entry.key, entry.value);
+      _initialized = true;
+    } catch (error, stackTrace) {
+      try {
+        _dispose();
+      } catch (_) {
+        // Preserve the initialization failure after best-effort ownership cleanup.
+      }
+      Error.throwWithStackTrace(error, stackTrace);
     }
-    _ensureNotDisposed();
-    _initialized = true;
   }
 
   /// Executes one request on its resolved Host Adapter.
@@ -455,11 +489,23 @@ final class CCNavigationHostRegistry
   void _dispose() {
     _disposed = true;
     _initialized = false;
+    Object? firstError;
+    StackTrace? firstStackTrace;
     for (final record in _hosts.values) {
-      _unbindRecord(record);
+      try {
+        _unbindRecord(record);
+      } catch (error, stackTrace) {
+        firstError ??= error;
+        firstStackTrace ??= stackTrace;
+      }
       final adapter = record.adapter;
       if (adapter is CCNavigationPopGuardBinding) {
-        (adapter as CCNavigationPopGuardBinding).bindPopGuardEvaluator(null);
+        try {
+          (adapter as CCNavigationPopGuardBinding).bindPopGuardEvaluator(null);
+        } catch (error, stackTrace) {
+          firstError ??= error;
+          firstStackTrace ??= stackTrace;
+        }
       }
     }
     final records = _hosts.values.toList();
@@ -473,8 +519,6 @@ final class CCNavigationHostRegistry
     _popGuardEvaluator = null;
     _routes = const [];
     _shells = const [];
-    Object? firstError;
-    StackTrace? firstStackTrace;
     for (final record in records) {
       try {
         record.dispose();
@@ -613,10 +657,27 @@ final class CCNavigationHostRegistry
 
   /// Disconnects listener bridges without disposing the child Adapter.
   void _unbindRecord(_CCNavigationHostAdapterRecord record) {
-    record.backendRemover?.call();
+    Object? firstError;
+    StackTrace? firstStackTrace;
+    final backendRemover = record.backendRemover;
     record.backendRemover = null;
-    record.predictiveRemover?.call();
+    try {
+      backendRemover?.call();
+    } catch (error, stackTrace) {
+      firstError = error;
+      firstStackTrace = stackTrace;
+    }
+    final predictiveRemover = record.predictiveRemover;
     record.predictiveRemover = null;
+    try {
+      predictiveRemover?.call();
+    } catch (error, stackTrace) {
+      firstError ??= error;
+      firstStackTrace ??= stackTrace;
+    }
+    if (firstError != null) {
+      Error.throwWithStackTrace(firstError, firstStackTrace!);
+    }
   }
 
   /// Supplies a missing Host identity on one child backend event.

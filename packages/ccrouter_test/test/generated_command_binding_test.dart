@@ -33,6 +33,12 @@ void main() {
             version: '1.0.0',
             registrar: _GeneratedCommandRegistrar(),
           ),
+          CCComponentManifest(
+            id: 'consumer',
+            version: '1.0.0',
+            dependencies: ['owner'],
+            registrar: _EmptyCommandRegistrar(),
+          ),
         ],
       );
 
@@ -74,4 +80,45 @@ void main() {
       throwsA(isA<CCResolutionError>()),
     );
   });
+
+  test('generated binding rejects forged component attribution', () async {
+    CCRouter.initialize(
+      components: const [
+        CCComponentManifest(
+          id: 'owner',
+          version: '1.0.0',
+          registrar: _GeneratedCommandRegistrar(),
+        ),
+        CCComponentManifest(
+          id: 'unrelated',
+          version: '1.0.0',
+          registrar: _EmptyCommandRegistrar(),
+        ),
+      ],
+    );
+
+    expect(
+      () => CCRouterGeneratedCommandBinding.invoke<_GeneratedGreeting, String>(
+        const _GeneratedGreeting('Ada'),
+        commandId: 'owner.greeting',
+        callerComponentId: 'missing',
+      ),
+      throwsA(isA<CCResolutionError>()),
+    );
+    expect(
+      () => CCRouterGeneratedCommandBinding.invoke<_GeneratedGreeting, String>(
+        const _GeneratedGreeting('Ada'),
+        commandId: 'owner.greeting',
+        callerComponentId: 'unrelated',
+      ),
+      throwsA(isA<CCResolutionError>()),
+    );
+  });
+}
+
+final class _EmptyCommandRegistrar implements CCComponentRegistrar {
+  const _EmptyCommandRegistrar();
+
+  @override
+  void register(CCRegistry registry) {}
 }

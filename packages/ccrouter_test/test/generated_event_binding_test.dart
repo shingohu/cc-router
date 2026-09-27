@@ -119,4 +119,38 @@ void main() {
       );
     },
   );
+
+  test('generated binding rejects missing or unauthorized publisher', () async {
+    CCRouter.initialize(
+      components: const [
+        CCComponentManifest(
+          id: 'owner',
+          version: '1.0.0',
+          registrar: _EmptyRegistrar(),
+        ),
+        CCComponentManifest(
+          id: 'consumer',
+          version: '1.0.0',
+          registrar: _GeneratedEventRegistrar(),
+        ),
+      ],
+    );
+
+    expect(
+      () => CCRouterGeneratedEventBinding.publish(
+        const _GeneratedChanged(),
+        eventId: 'owner.changed',
+        publisherComponentId: 'missing',
+      ),
+      throwsA(isA<CCResolutionError>()),
+    );
+    expect(
+      () => CCRouterGeneratedEventBinding.publish(
+        const _GeneratedChanged(),
+        eventId: 'owner.changed',
+        publisherComponentId: 'owner',
+      ),
+      throwsA(isA<CCResolutionError>()),
+    );
+  });
 }

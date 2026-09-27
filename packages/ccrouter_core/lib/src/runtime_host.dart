@@ -236,6 +236,9 @@ final class CCRouterRuntime {
   /// Active DAG drain shared by concurrent Gate triggers.
   Future<void>? _initializationRun;
 
+  /// Whether an overlapping Gate open requires another DAG quiescence pass.
+  bool _initializationDrainRequested = false;
+
   /// Single command handler indexed by command type.
   final Map<Type, _RegisteredCommandHandler> _commands = {};
 
@@ -571,20 +574,34 @@ final class CCRouterRuntime {
       }
       _attachBackendNavigationSource();
       _readInitialBackendSnapshot();
-    } catch (_) {
+    } catch (error, stackTrace) {
       if (adapter is CCNavigationPopGuardBinding) {
-        (adapter as CCNavigationPopGuardBinding).bindPopGuardEvaluator(null);
+        try {
+          (adapter as CCNavigationPopGuardBinding).bindPopGuardEvaluator(null);
+        } catch (_) {
+          // Preserve the attachment failure after best-effort policy cleanup.
+        }
       }
-      _backendNavigationRemover?.call();
+      final backendNavigationRemover = _backendNavigationRemover;
       _backendNavigationRemover = null;
-      _predictiveBackRemover?.call();
+      try {
+        backendNavigationRemover?.call();
+      } catch (_) {
+        // Preserve the attachment failure after best-effort listener cleanup.
+      }
+      final predictiveBackRemover = _predictiveBackRemover;
       _predictiveBackRemover = null;
+      try {
+        predictiveBackRemover?.call();
+      } catch (_) {
+        // Preserve the attachment failure after best-effort listener cleanup.
+      }
       _backendEntries.clear();
       _processedBackendOperations.clear();
       _backendSequencesByHost.clear();
       _desynchronizedBackendHosts.clear();
       _navigationAdapter = null;
-      rethrow;
+      Error.throwWithStackTrace(error, stackTrace);
     }
   }
 
@@ -1461,6 +1478,13 @@ final class CCRouterRuntime {
         key: key?.name,
       );
     }
+    if (callerComponentId != null && provider.ownerComponentId.isNotEmpty) {
+      _validateGeneratedComponentAccess(
+        callerComponentId: callerComponentId,
+        targetComponentId: provider.ownerComponentId,
+        capability: 'Service',
+      );
+    }
     if (contractId == null || !_isStableIdentifier(contractId)) {
       throw const CCInvocationError(
         'Generated Service invocation requires a promoted stable contract.',
@@ -1516,6 +1540,7 @@ final class CCRouterRuntime {
     Duration? timeout,
     CCCancellationToken? cancellation,
   }) {
+    _ensureInitialized();
     if (!_isStableIdentifier(commandId)) {
       throw const CCInvocationError('The generated Command ID is invalid.');
     }
@@ -1523,6 +1548,16 @@ final class CCRouterRuntime {
       throw const CCInvocationError(
         'The generated Command caller component ID is invalid.',
       );
+    }
+    final registration = _commands[command.runtimeType];
+    if (registration != null && registration.ownerComponentId.isNotEmpty) {
+      _validateGeneratedComponentAccess(
+        callerComponentId: callerComponentId,
+        targetComponentId: registration.ownerComponentId,
+        capability: 'Command',
+      );
+    } else {
+      _requireInstalledGeneratedComponent(callerComponentId, role: 'caller');
     }
     return _dispatch<R>(
       'command',
@@ -1569,6 +1604,7 @@ final class CCRouterRuntime {
     Duration? timeout,
     CCCancellationToken? cancellation,
   }) {
+    _ensureInitialized();
     if (!_isStableIdentifier(eventId)) {
       throw const CCInvocationError('The generated Event ID is invalid.');
     }
@@ -1577,6 +1613,10 @@ final class CCRouterRuntime {
         'The generated Event publisher component ID is invalid.',
       );
     }
+    _requireInstalledGeneratedComponent(
+      publisherComponentId,
+      role: 'publisher',
+    );
     final subscribers = _events[event.runtimeType]?.values ?? const [];
     if (subscribers.any(
       (subscriber) =>
@@ -1584,6 +1624,16 @@ final class CCRouterRuntime {
     )) {
       throw CCResolutionError(
         'Event contract "$eventId" does not match registered subscriptions for ${event.runtimeType}.',
+      );
+    }
+    for (final subscriber in subscribers) {
+      final subscriberComponentId = subscriber.ownerComponentId;
+      if (subscriberComponentId.isEmpty) continue;
+      _validateGeneratedComponentAccess(
+        callerComponentId: subscriberComponentId,
+        targetComponentId: publisherComponentId,
+        capability: 'Event subscription',
+        allowOptionalDependency: true,
       );
     }
     return _publishEvent(
@@ -1653,7 +1703,10 @@ final class CCRouterRuntime {
     }
     _openedInitializationGates.add(gate.id);
     final active = _initializationRun;
-    if (active != null) return active;
+    if (active != null) {
+      _initializationDrainRequested = true;
+      return active;
+    }
     final run = _drainAndReleaseInitializationTasks();
     _initializationRun = run;
     return run;
@@ -1662,9 +1715,13 @@ final class CCRouterRuntime {
   /// Runs ready DAG layers and clears the single-flight marker on completion.
   Future<void> _drainAndReleaseInitializationTasks() async {
     try {
-      _throwExistingCriticalInitializationFailure();
-      await _drainInitializationTasks();
+      do {
+        _initializationDrainRequested = false;
+        _throwExistingCriticalInitializationFailure();
+        await _drainInitializationTasks();
+      } while (_initializationDrainRequested);
     } finally {
+      _initializationDrainRequested = false;
       _initializationRun = null;
     }
   }
@@ -1832,6 +1889,14 @@ final class CCRouterRuntime {
 
   /// Cancels Runtime work before disposing Session and App Scopes.
   Future<void> _closeScopes() async {
+    Object? firstError;
+    StackTrace? firstStackTrace;
+
+    void capture(Object error, StackTrace stackTrace) {
+      firstError ??= error;
+      firstStackTrace ??= stackTrace;
+    }
+
     // Stop invocations before awaiting any service disposal.
     appScope.cancellation.cancel();
     final initializationRun = _initializationRun;
@@ -1843,53 +1908,101 @@ final class CCRouterRuntime {
       }
     }
     _cancelAllPendingNavigations(code: 'runtime_disposed');
-    _removeAllRouteEntries(reason: 'runtimeDispose');
-    await Future.wait(_routeEntryCloseFutures);
     try {
-      final adapter = _navigationAdapter;
-      if (adapter is CCNavigationPopGuardBinding) {
+      _removeAllRouteEntries(reason: 'runtimeDispose');
+    } catch (error, stackTrace) {
+      capture(error, stackTrace);
+    }
+    try {
+      await Future.wait(_routeEntryCloseFutures);
+    } catch (error, stackTrace) {
+      capture(error, stackTrace);
+    }
+
+    final adapter = _navigationAdapter;
+    if (adapter is CCNavigationPopGuardBinding) {
+      try {
         (adapter as CCNavigationPopGuardBinding).bindPopGuardEvaluator(null);
+      } catch (error, stackTrace) {
+        capture(error, stackTrace);
       }
-      _backendNavigationRemover?.call();
-      _backendNavigationRemover = null;
-      _predictiveBackRemover?.call();
-      _predictiveBackRemover = null;
-      _restorationOpportunityRemover?.call();
-      _restorationOpportunityRemover = null;
-      _navigationAdapter?.dispose();
-    } finally {
+    }
+    final backendNavigationRemover = _backendNavigationRemover;
+    _backendNavigationRemover = null;
+    try {
+      backendNavigationRemover?.call();
+    } catch (error, stackTrace) {
+      capture(error, stackTrace);
+    }
+    final predictiveBackRemover = _predictiveBackRemover;
+    _predictiveBackRemover = null;
+    try {
+      predictiveBackRemover?.call();
+    } catch (error, stackTrace) {
+      capture(error, stackTrace);
+    }
+    final restorationOpportunityRemover = _restorationOpportunityRemover;
+    _restorationOpportunityRemover = null;
+    try {
+      restorationOpportunityRemover?.call();
+    } catch (error, stackTrace) {
+      capture(error, stackTrace);
+    }
+    try {
+      adapter?.dispose();
+    } catch (error, stackTrace) {
+      capture(error, stackTrace);
+    }
+    try {
       _disposeNavigationObservations();
+    } catch (error, stackTrace) {
+      capture(error, stackTrace);
+    }
+    try {
       _disposeDiagnostics();
+    } catch (error, stackTrace) {
+      capture(error, stackTrace);
+    }
+    try {
       await _sessionScope?.close();
+    } catch (error, stackTrace) {
+      capture(error, stackTrace);
+    }
+    try {
       await appScope.close();
-      _navigationAdapter = null;
-      _sessionScope = null;
-      _session = null;
-      _navigationListeners.clear();
-      _navigationEvents.clear();
-      _navigationFailureListeners.clear();
-      _navigationFailures.clear();
-      _pendingResumeFailures.clear();
-      _navigationCapabilityFallbackListeners.clear();
-      _navigationCapabilityFallbacks.clear();
-      _restorationOpportunityListeners.clear();
-      _restorationOpportunityEvents.clear();
-      _routeEntryListeners.clear();
-      _routeEntryEvents.clear();
-      _routeVisibilityListeners.clear();
-      _routeVisibilityEvents.clear();
-      _routeEntryCloseFutures.clear();
-      _backendNavigationListeners.clear();
-      _backendNavigationEvents.clear();
-      _backendEntries.clear();
-      _processedBackendOperations.clear();
-      _backendSequencesByHost.clear();
-      _desynchronizedBackendHosts.clear();
-      _inFlightNavigation.clear();
-      for (final record in _navigationAspectRecords.values) {
-        record.clock.stop();
-      }
-      _navigationAspectRecords.clear();
+    } catch (error, stackTrace) {
+      capture(error, stackTrace);
+    }
+    _navigationAdapter = null;
+    _sessionScope = null;
+    _session = null;
+    _navigationListeners.clear();
+    _navigationEvents.clear();
+    _navigationFailureListeners.clear();
+    _navigationFailures.clear();
+    _pendingResumeFailures.clear();
+    _navigationCapabilityFallbackListeners.clear();
+    _navigationCapabilityFallbacks.clear();
+    _restorationOpportunityListeners.clear();
+    _restorationOpportunityEvents.clear();
+    _routeEntryListeners.clear();
+    _routeEntryEvents.clear();
+    _routeVisibilityListeners.clear();
+    _routeVisibilityEvents.clear();
+    _routeEntryCloseFutures.clear();
+    _backendNavigationListeners.clear();
+    _backendNavigationEvents.clear();
+    _backendEntries.clear();
+    _processedBackendOperations.clear();
+    _backendSequencesByHost.clear();
+    _desynchronizedBackendHosts.clear();
+    _inFlightNavigation.clear();
+    for (final record in _navigationAspectRecords.values) {
+      record.clock.stop();
+    }
+    _navigationAspectRecords.clear();
+    if (firstError != null) {
+      Error.throwWithStackTrace(firstError!, firstStackTrace!);
     }
   }
 
@@ -2219,6 +2332,48 @@ final class CCRouterRuntime {
           ? null
           : registration!.ownerComponentId,
     );
+  }
+
+  /// Returns the installed manifest for one generated component identity.
+  CCComponentManifest _requireInstalledGeneratedComponent(
+    String componentId, {
+    required String role,
+  }) {
+    for (final component in _components) {
+      if (component.id == componentId) return component;
+    }
+    throw CCResolutionError(
+      'Generated $role component "$componentId" is not installed.',
+    );
+  }
+
+  /// Validates one generated cross-component capability relationship.
+  ///
+  /// Generated code supplies both identities, while Runtime rechecks the
+  /// installed graph so stale or manually invoked bridges cannot forge Trace
+  /// attribution or bypass declared Package contracts.
+  void _validateGeneratedComponentAccess({
+    required String callerComponentId,
+    required String targetComponentId,
+    required String capability,
+    bool allowOptionalDependency = false,
+  }) {
+    final caller = _requireInstalledGeneratedComponent(
+      callerComponentId,
+      role: 'caller',
+    );
+    _requireInstalledGeneratedComponent(targetComponentId, role: 'target');
+    if (callerComponentId == targetComponentId) return;
+    final declared =
+        caller.dependencies.contains(targetComponentId) ||
+        allowOptionalDependency &&
+            caller.optionalDependencies.contains(targetComponentId);
+    if (!declared) {
+      throw CCResolutionError(
+        'Component "$callerComponentId" cannot use $capability owned by '
+        '"$targetComponentId" without a declared component dependency.',
+      );
+    }
   }
 
   /// Executes a synchronous [body] with tracing and inherited invocation data.

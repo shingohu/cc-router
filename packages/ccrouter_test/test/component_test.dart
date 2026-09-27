@@ -1072,6 +1072,7 @@ void main() {
               );
             },
           ),
+          component('consumer', dependencies: ['feature']),
         ],
       );
       runtime.initialize();
@@ -1122,6 +1123,7 @@ void main() {
               );
             },
           ),
+          component('consumer', dependencies: ['feature']),
         ],
       );
       runtime.initialize();
@@ -1218,7 +1220,7 @@ void main() {
       return runtime.invokeService<ComponentService, int>(
         contractToken: contract,
         methodId: 'increment',
-        callerComponentId: 'consumer',
+        callerComponentId: 'feature',
         call: (service, context) {
           serviceContext = context;
           return message.value + 1;

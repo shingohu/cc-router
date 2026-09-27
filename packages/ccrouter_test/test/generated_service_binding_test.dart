@@ -30,6 +30,13 @@ final class _Registrar implements CCComponentRegistrar {
   }
 }
 
+final class _EmptyRegistrar implements CCComponentRegistrar {
+  const _EmptyRegistrar();
+
+  @override
+  void register(CCRegistry registry) {}
+}
+
 const _contract = CCServiceToken<_GreetingService>('fixture.greeting');
 
 void main() {
@@ -41,6 +48,12 @@ void main() {
           id: 'fixture',
           version: '0.1.0',
           registrar: _Registrar(),
+        ),
+        CCComponentManifest(
+          id: 'consumer',
+          version: '0.1.0',
+          dependencies: ['fixture'],
+          registrar: _EmptyRegistrar(),
         ),
       ],
     );
@@ -96,5 +109,43 @@ void main() {
     });
 
     expect(CCRouter.isInitialized, isFalse);
+  });
+
+  test('generated binding rejects forged component attribution', () async {
+    final host = CCRouterTestHost(
+      components: const [
+        CCComponentManifest(
+          id: 'fixture',
+          version: '0.1.0',
+          registrar: _Registrar(),
+        ),
+        CCComponentManifest(
+          id: 'unrelated',
+          version: '0.1.0',
+          registrar: _EmptyRegistrar(),
+        ),
+      ],
+    );
+    addTearDown(host.dispose);
+    host.initialize();
+
+    await host.run(() async {
+      expect(
+        () => CCRouterGeneratedServiceBinding.invoke<_GreetingService, String>(
+          methodId: 'greet',
+          callerComponentId: 'missing',
+          call: (service, _) => service.greet(),
+        ),
+        throwsA(isA<CCResolutionError>()),
+      );
+      expect(
+        () => CCRouterGeneratedServiceBinding.invoke<_GreetingService, String>(
+          methodId: 'greet',
+          callerComponentId: 'unrelated',
+          call: (service, _) => service.greet(),
+        ),
+        throwsA(isA<CCResolutionError>()),
+      );
+    });
   });
 }
