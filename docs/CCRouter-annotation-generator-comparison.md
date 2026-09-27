@@ -94,7 +94,11 @@ Codec 通过参数注解显式声明，必须可测试、可生成，且其类�
 
 ### 2.4 Monorepo 生成工具体验
 
-其生成器支持多 Package 扫描、排除包、分组和排序。CCRouter 已经有组件级 `ccrouter_generated/**/*.component.json`、路由级 `ccrouter_generated/**/*.route.json`、workspace 聚合校验和应用级 `cc_routes.json` / `cc_routes.md`，并且额外校验组件所有权、契约 exposure 和实现边界。
+其生成器支持多 Package 扫描、排除包、分组和排序。CCRouter 已按 Host 的正式运行时依赖闭包
+精确发现 Workspace、Path、Git 和 Pub Package，并排除 `devDependencies` 与无关 Package。
+组件、路由和 Service 的逐源码 JSON 只存在于 `.dart_tool/build` 缓存；每个参与 Package 发布
+单一 `ccrouter_package.json`，Host 发布 `cc_routes.json`，Package 与 Host 都按存在的能力生成
+`cc_catalog.md`。聚合阶段还会校验组件所有权、契约 exposure 和实现边界。
 
 已参考其“生成统一 Route Settings 列表、宿主批量转换”的思路，但没有照搬动态参数
 Map 或组件直接依赖 GoRouter。CCRouter 生成 `CCFlutterRouteCatalog`，由宿主生成器跨组件
@@ -102,17 +106,11 @@ Map 或组件直接依赖 GoRouter。CCRouter 生成 `CCFlutterRouteCatalog`，�
 Binding；Navigator 1.0 或其他 Navigator 2.0 后端可以复用 Catalog。Shell、嵌套 Outlet
 和完整 Regex 入口使用显式 Override，避免根据 path 前缀猜测结构。
 
-后续可以改进 CLI：
-
-- 指定扫描目录；
-- 排除 Package；
-- 按组件或业务域分组；
-- 稳定排序；
-- 可选输出目录；
-- 增量或缓存扫描。
-- 提供可选的 Route Scaffold 子命令，创建页面模板并写入正确的生成 `part` 路径，随后
-  调用标准 `build_runner` 和组件路由索引生成流程。它不作为另一套生成语义，也不自动
-  修改公共 barrel 或 GoRouter 路由树，以免把开发便利性变成隐式 API 暴露或宿主侵入。
+当前统一命令已经提供精确 Package 发现、排除、稳定排序、可选输出目录和文件/Package 图缓存。
+后续 CLI 候选收敛为 Route/Component/Contract Scaffold 与 Contract promotion/migration。
+Scaffold 只创建手写声明和必要 barrel，不生成或要求页面 `part`；随后调用标准
+`build_runner` 与聚合流程。它不作为另一套生成语义，也不自动修改 GoRouter 路由树，
+避免把开发便利性变成隐式 API 暴露或宿主侵入。
 
 ### 2.5 路由元数据扩展
 
@@ -183,18 +181,17 @@ CCRouter 应继续要求业务统一通过 `CCRouter.navigator`，让拦截、As
 | 复杂 Query | 动态转换器 | 标量、集合和显式 `CCRouteQueryCodec<T>` |
 | 全局 Routes 表 | 支持 | 不采用 |
 | 任意代码注入 | 支持 | 不采用 |
-| 应用路由文档 | 支持 | `cc_routes.json` / `cc_routes.md` |
+| 应用路由文档 | 支持 | Host `cc_routes.json` / `cc_catalog.md`；Package `ccrouter_package.json` / `cc_catalog.md` |
 
 ## 5. 剩余可借鉴项
 
 以下是工程体验增强，不代表当前路由闭环缺失：
 
-1. 为 CLI 增加扫描目录、排除 Package、稳定分组、缓存和 Route Scaffold 支持。
-2. 为应用路由文档增加按组件或业务域组织的可选视图。
-3. 增加更多 GoRouter、Navigator 2.0、多 Host 和 Stateful Shell 集成示例；原生多
-   Window 示例等待 Flutter 平台能力稳定后补充。
-4. 优化生成器和 Workspace 聚合性能，但保持唯一生成语义。
-5. 提供 IDE 或 CI 友好的只读路由目录查询接口。
+1. 为 CLI 增加 Route/Component/Contract Scaffold 与 Contract promotion/migration。
+2. 为 Catalog 增加按业务域组织的可选视图。
+3. 将 `ccrouter find` 扩展到 Service、Command、Event 和 InitTask，并评估 IDE/DevTools 视图。
+4. 新 Backend 达到实施条件后补对应示例；原生多 Window 示例等待 Flutter 平台能力稳定。
+5. 持续优化生成器和 Workspace 聚合性能，但保持唯一生成语义与全量回归门禁。
 6. 如确有产品需求，再设计独立于稳定 `routeId` 的结构化产品埋点名称；该能力目前只是
    Proposal，不属于已公开 API。
 

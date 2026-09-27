@@ -42,7 +42,8 @@
 - [x] 确认 Route Contract、组件依赖、公共 Barrel 和跨包内部 API 的生成期校验边界；InitTask
   的重复 ID、缺失依赖和循环依赖继续由 Runtime 校验。
 - [ ] 将来出现显式 InitTask 声明模型后，再补充生成错误中的 Package、组件、任务 ID、依赖和来源位置。
-- [ ] 所有生成器改动完成后执行全量生成物回归，不允许只验证 Demo 编译。
+- [x] 2026-09-27 已在本轮 Component/Service 生成改动后执行全量生成物回归；后续每次
+  Generator 改动仍必须重复该门禁，不能只验证 Demo 编译。
 
 ### 3.3 质量回归
 
@@ -50,13 +51,14 @@
   Demo 30 项、缓存/无缓存 `generate --check`、Runtime/Generator/Service 基准、macOS Debug
   构建和资源释放审查均通过；长期平台 RSS/Heap 趋势仍属于持续观测。
 - [x] 2026-09-27 完成 Component/Service 生成架构回归：`dart analyze`、
-  `ccrouter_test` 324 项、Generator 158 项、Demo 30 项以及缓存/无缓存
+  `ccrouter_test` 324 项、Generator 161 项、Demo 30 项以及缓存/无缓存
   `generate --check` 均通过；4 个组件、31 条路由和 8 个生成 Package 输出一致。
 - [ ] 持续执行 `dart analyze`、框架测试、生成器测试、Demo 测试和 `generate --check`。
 - [ ] 维护冷启动、初始化、路由解析、导航延迟、并发导航、Runtime dispose 的同机趋势。
 - [ ] 继续做 macOS、iOS 真机/模拟器和 OHOS 运行回归；平台 SDK 变更只做兼容性修复。
 - [ ] 继续检查 Adapter、Observer、Route Scope、Overlay、Timer 和 Stream 的释放路径。
-- [ ] 核对架构文档与实现状态，避免已实现能力仍被文档标记为“后续”。
+- [x] 2026-09-27 核对架构、路由、契约、生成器、分析事件与后续计划文档，纠正已实现能力、
+  旧生成路径、旧 API 名称和当前测试数量；历史回归基准保留其原始口径。
 - [x] 保留 `CCRouterRuntime.forTesting` 与 Zone-local Test Runtime Overlay，并提取私有 Runtime
   Resolver 统一选择 default/overlay Runtime；Resolver 不拥有、不销毁 Runtime，未改变公开 API。
 

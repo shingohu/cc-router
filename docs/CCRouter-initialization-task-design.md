@@ -79,7 +79,9 @@ registry.registerInitializationTask(
   ),
 );
 
-CCRouter.initialize(components: ccrouterGeneratedComponents);
+CCRouter.initialize(
+  components: ccrouterGeneratedComponentManifests,
+);
 await CCRouter.runInitialization();
 
 // 用户明确同意隐私协议后：

@@ -282,7 +282,7 @@ Listener、Stream、Overlay 或 Controller；Resolver 不拥有 Runtime，也不
 
 ## 6. 本轮最终门禁
 
-- `fvm dart test --concurrency=1 packages/ccrouter_test/generator_test`：158 项通过；
+- `fvm dart test --concurrency=1 packages/ccrouter_test/generator_test`：161 项通过；
 - `fvm flutter test packages/ccrouter_test/test`：324 项通过；
 - `fvm flutter test demo`：30 项通过；
 - `fvm dart analyze`：无问题；

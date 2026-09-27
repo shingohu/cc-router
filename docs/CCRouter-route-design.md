@@ -14,9 +14,10 @@ Proposal 或“暂缓”的 API 名称应与当前仓库保持一致；实施完
 [路由完成计划](CCRouter-route-completion-plan.md)为准。
 
 注解生成器已实现页面注解、单库校验、类型安全 Arguments/Intent、标量 Path、标量及
-repeated Query、显式 Query Codec、类型安全 Extra 校验、Definition、注册入口和中立页面工厂。使用 `part` 生成
-`.route.g.dart`，页面契约固定为 library-private；Contract-first 公开契约需显式导出。
-生成器同时输出组件级和路由级 JSON/Markdown，并按 Host 的已解析运行时 Package 依赖闭包
+repeated Query、显式 Query Codec、类型安全 Extra 校验、Definition、注册入口和中立页面工厂。
+页面不声明 generated `part`；独立生成 library 提供 Package 内 Route API 与页面 Binding，
+Contract-first 公开契约需从公共 barrel 显式导出。
+Builder 将组件、路由和 Service 的逐源码 JSON 写入可丢弃 build cache，并按 Host 的已解析运行时 Package 依赖闭包
 聚合检查组件与 Route ID、路由所有者、契约 exposure 和实现 Package，输出发布级 Package
 Index、分层 Host Bundle 与应用级路由目录。当前仍不生成
 GoRoute。独立纯契约文件的拆分方案见[契约文件设计](CCRouter-route-contract-design.md)，
@@ -307,10 +308,10 @@ GoRoute(
 
 ### 5.3 构造器选择
 
-- 默认分析未命名构造器。
-- 页面存在多个可用构造器时必须显式标记目标构造器。
-- 生成阶段拒绝私有但无法通过同 library 访问的构造器。
-- 生成代码需要访问私有实现时使用 `part` / `part of`，不能为了生成器提升内部 API 可见性。
+- 当前只分析 public Page 的未命名 generative constructor。
+- named constructor 与 factory constructor 暂不支持，生成阶段明确拒绝。
+- Page 类和构造器必须能被独立生成 library 访问；不通过页面 `part` 提升私有可见性。
+- 私有 Widget、State 和其它页面实现细节仍留在手写 library 内，不因生成器成为公开 API。
 
 ---
 
@@ -564,7 +565,7 @@ root。显式 Route Placement 始终优先，Context 不会被保存或传入 Co
 
 | 契约形态 | Exposure | 导入边界 |
 | --- | --- | --- |
-| 页面上的 `@CCRoute` | internal | 页面 library 内部 |
+| 页面上的 `@CCRoute` | internal | 组件生成的 Package-internal Route API |
 | 同 Package 的 `@CCRouteContract` + `@CCRouteImplementation` | package | 实现 Package 的公共 barrel |
 | 独立 contracts Package 的 `@CCRouteContract` + 实现 Package 的 `@CCRouteImplementation` | external | contracts Package 的公共 barrel |
 
@@ -587,7 +588,7 @@ order_contracts/lib/
 
 order_component/lib/src/
 ├── order_detail_page.dart
-└── ccrouter_generated/route/order_detail_page.route.g.dart
+└── ccrouter_generated/binding/order_detail_page.route_binding.g.dart
 ```
 
 - `order_contracts.dart` 只导出明确选定的 external 路由及其参数、结果契约。
@@ -1433,16 +1434,28 @@ CCNavigationAspect(
 
 ## 16. 路由文档生成
 
-生成器按 Package 输出机器目录和可读目录，统一放在各 Package 的
-`lib/src/ccrouter_generated/metadata/`；可执行的 Dart 聚合代码放在同一根目录下的
-`route/`、`binding/`、`contract/`、`service/`、`component/` 和 `host/` 子目录：
+统一生成命令在各 Package 的 `lib/src/ccrouter_generated/metadata/` 发布机器目录和可读目录；
+可执行 Dart 代码放在同一生成根目录下的 `route/`、`binding/`、`contract/`、`service/`、
+`component/` 和 `host/` 子目录：
 
 ```text
-cc_routes.json
-cc_routes.md
+Package:
+  ccrouter_package.json
+  cc_catalog.md      # 仅存在 Capability 时生成
+
+Host:
+  ccrouter_package.json
+  cc_routes.json
+  cc_catalog.md
 ```
 
-`cc_routes.json` 用于 CI、跨端工具和文档平台；描述信息作为结构化字段保存，不使用 JSON 注释。`cc_routes.md` 用于开发者阅读。
+`ccrouter_package.json` 是 Package 发布和传递聚合的机器事实来源；Host `cc_routes.json` 用于
+CI、跨端工具和自动校验。`cc_catalog.md` 是从结构化 metadata 派生的开发者视图，不作为
+工具输入。描述信息作为结构化字段保存，不使用 JSON 注释。
+
+组件、路由和 Service 的逐源码 `*.component.json`、`*.route.json`、`*.service.json` 只存在于
+`.dart_tool/build/generated/<package>/lib/src/ccrouter_generated/metadata/`，是 Builder 到 CLI 的
+可丢弃中间数据，不属于源码、发布物或开发者文档。
 
 当前 Builder 元数据使用 schema v3：除由契约形态自动推导的 `exposure` 外，还记录
 可移植的源码声明位置。聚合器兼容 schema v2 的文件级定位，并拒绝其它未知 schema。
@@ -1602,19 +1615,19 @@ Arrival、Stay 和 Total 分阶段耗时已经通过 Aspect 提供。
 - 已实现 Intent、Codec、Definition、注册入口和组件契约生成。
 - 已实现组件所有者、Route ID、契约 exposure、公开契约实现所有权、静态 Pattern 重叠以及公开 barrel
   `show` 导出的聚合校验。
-- 已实现页面级及应用聚合级 JSON/Markdown 文档导出。
+- 已实现 Builder 缓存级逐源码 JSON、Package Index、Host 路由 JSON 与 Package/Host Catalog 导出。
 - 已实现组件 `CCFlutterRouteCatalog`、窄 Host integration library 和宿主 Catalog 聚合；
   普通路由变化不再要求宿主逐条维护页面 import、`GoRoute` 与 Binding。
 - 已实现 Registrar 同库的组件 Manifest 生成和宿主 Manifest 聚合；无路由的 Service
   组件同样参与安装，private Registrar 不需要成为组件公共 API。
-- 已实现 Contract-first 路由的独立 Pure Dart 契约文件；页面 `@CCRoute` 固定保持内部，
-  `@CCRouteImplementation` 的页面 Part 只保留 owner 注册和构造 glue，workspace 校验要求
-  公共 barrel 指向生成契约。
+- 已实现 Contract-first 路由的独立 Pure Dart 契约文件；页面 `@CCRoute` 固定保持 Package 内部，
+  `@CCRouteImplementation` 由独立 Binding library 保留 owner 注册和构造 glue，workspace
+  校验要求公共 barrel 指向生成契约。页面和 schema 均不声明 generated `part`。
 - 已实现 `List<T>`/`Set<T>` repeated Query、自定义 `CCRouteQueryCodec<T>`、继承参数、混合
   构造器和跨 Package Codec import 校验；生成文档已包含组件版本、声明来源、Host、Shell、
   Outlet、presentation、导航来源及当前 `restoration: unsupported` 能力视图。
-- 待提供可选的 Route Scaffold CLI，用于创建页面模板、计算并写入正确的
-  `.route.g.dart` `part` 路径、补齐 `@CCRoute` 声明，并触发首次标准生成。该工具只改善
+- 待提供可选的 Route Scaffold CLI，用于创建页面模板、补齐 `@CCRoute` 声明，并触发首次
+  标准生成；页面不需要生成 `part`。该工具只改善
   开发体验，不替代 `build_runner`、Analyzer 校验或 workspace 聚合校验，也不直接修改
   已有业务页面、公共 barrel 或 GoRouter 路由树；需要公开契约和后端绑定时只生成明确的
   待办提示，避免无意扩大 API 或改写应用导航结构。

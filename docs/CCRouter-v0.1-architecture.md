@@ -187,14 +187,16 @@ CCRouterRuntime
 ccrouter                 Flutter 业务门面、CCNavigator、CCRouterApp 和默认 Runtime 宿主
 ccrouter_contracts       纯 Dart 契约、错误、Codec 接口和基础类型
 ccrouter_core            Runtime、Registry、Scope、Dispatcher、Trace
-ccrouter_annotations     Route、Service、Handler、InitTask 等注解
 ccrouter_generator       Dart build_runner 代码生成器
 ccrouter_go_router       默认 go_router 导航适配器
 ccrouter_test             测试 Runtime、Override、TestHost 和断言工具
-ccrouter_devtools         后续的可视化诊断工具
+ccrouter_analytics        供应商中立的分析事件与有界分发
+ccrouter_auto_track       可选的显式 UI 采集目标
 ```
 
-`ccrouter_core` 保持 Pure Dart；Flutter 相关类型只出现在 `ccrouter_flutter` 和业务组件的页面实现中。
+注解声明位于 `ccrouter_contracts`；`ccrouter_core` 保持 Pure Dart，Flutter 相关类型只出现在
+`ccrouter`、`ccrouter_go_router`、`ccrouter_auto_track` 和业务组件页面中。DevTools 仍是后续候选，
+当前不存在可依赖的 `ccrouter_devtools` Package。
 
 这些是源码和依赖治理边界，不要求每个边界都成为业务方手工配置的依赖。v0.1 中，出现在公开传递依赖图里的 Package 必须可以独立发布；仅供开发或测试使用的 Package 可以标记为开发工具包。
 
@@ -211,7 +213,7 @@ resolution: workspace
 
 dependencies:
   ccrouter_core: ^0.1.0
-  ccrouter_flutter: ^0.1.0
+  ccrouter_contracts: ^0.1.0
 ```
 
 在 CCRouter Monorepo 内，Pub 会将满足约束的同名 Workspace 成员解析为本地 Package；Package 离开 Workspace 后，同一声明会解析到 Hosted 仓库。这保证本地开发和远程消费使用同一份依赖声明。
@@ -461,12 +463,17 @@ all registrars
 ### 7.2 生成器职责
 
 - 收集注解元素并解析契约。
-- 生成 Route Descriptor、参数 Codec 和 URL Builder。
-- 生成 Service Factory 和方法代理。
-- 生成 Handler、Interceptor、Subscriber 和 InitTask 注册表。
-- 生成组件 Manifest Registrar。
-- 生成契约文档和调试元数据。
-- 对重复 ID、模糊路由、多默认实现、未知依赖和初始化循环报错。
+- 生成 Route Definition、参数 Codec、Intent、页面 Binding 和 URL Builder。
+- 生成顶层 `CCComponent` 对应的 Registrar、Manifest、Route Catalog 和 Host Bundle。
+- 为零参数同步构造的简单 `@CCService` 生成 Provider registration，并自动绑定唯一直接
+  `@CCServiceContract`；复杂 Service 通过显式 Contribution 注册。
+- 将 `@CCComponentContribution` 稳定合入组件 Registrar。
+- 生成 Package Index、Host 路由目录、Catalog 和调试 metadata。
+- 对重复 ID、模糊路由、所有权、契约 exposure、Service Contract/Provider 冲突和依赖图报错；
+  动态注册关系、InitTask 缺失依赖与循环仍由 Runtime 校验。
+
+Service 方法 Proxy 与 Command/Event/InitTask 声明生成尚未实现，只有达到生产阈值后才分别评估，
+不通过扫描手写 Registrar 或 Contribution 猜测静态关系。
 
 ### 7.3 注册确定性
 
@@ -563,18 +570,17 @@ Scope 实例。稳定 ID 在接口移动 Package 时不变，泛型仍负责静�
 
 ### 8.4 服务代理
 
-跨组件核心 Service 由生成器生成 Proxy：
+Runtime 已提供方法级 Invocation、Trace、Scope、取消和错误边界；Demo 以手写强类型 Proxy
+验证以下目标形态：
 
 ```text
 caller -> Service Proxy -> Middleware/Trace/Scope Check -> implementation
 ```
 
-Proxy 用于记录方法级调用、检查 Scope、传播取消和标准化错误。普通的纯本地工具服务不生成
-方法代理。跨组件 Proxy 通过生成代码专用的 `ccrouter_generated.dart` 调用 Runtime
-Invocation primitive；普通 `ccrouter.dart` 不导出该 callback bridge。
-生成器保留契约方法原始的同步/异步返回类型：同步方法经 `invokeSync` 执行，只读取
-已 Ready 实例；异步方法经 `invoke` 等待 readiness，并支持 timeout 与 cancellation。
-框架不会为了代理机制将纯同步业务契约改写为 `Future`。
+Proxy 用于记录方法级调用、检查 Scope、传播取消和标准化错误。当前生成器只自动生成
+Service Contract Token 与简单 Provider registration，不生成方法级 Proxy。自动 Proxy 只有在
+出现足够多 promoted Contract 和消费关系、能够冻结 Method ID 与调用方身份规则后才实施；届时
+应通过生成代码专用 bridge 调用 Runtime Invocation primitive，并保持契约原始同步/异步返回类型。
 
 方法级 Trace 只包含稳定 Token、Key、method ID、显式 caller component、Provider owner、
 Scope 和终态。参数、返回对象和任意业务文本不进入 Trace。Session 关闭、RouteEntry 移除或
@@ -728,7 +734,7 @@ URL -> RouteCodec -> Typed Route Args -> Route Factory -> Widget
 
 完整 URL 不天然等于外部 Deep Link，普通 Path 也不天然等于内部导航。类型安全 Intent 和应用内 `open` 使用内部 Origin；Universal Link、App Link、自定义 Scheme、通知 URI 和扫码输入通过受控 Ingress 使用外部 Origin 并执行 `CCDeepLinkPolicy`。业务可填写的导航 Source 只用于埋点，不能改变该信任属性。
 
-当前基础实现已经提供 Adapter-neutral 的 `CCNavigator`、主 Pattern 地址生成、Runtime 导航请求、Adapter 生命周期、Pure Dart 内存 Adapter、可选 `CCRouterApp`、固定来源的 `CCDeepLinkIngress` 和独立的 `ccrouter_go_router` 适配器。组件 Registrar 同库生成 Manifest，宿主自动聚合所有组件（包括无路由组件）；private Registrar 不进入业务 API。组件同时生成后端中立的 `CCFlutterRouteCatalog`，宿主聚合后由 `CCGoRouterAssembler` 从同一来源产生普通 `GoRoute` 与 Adapter Binding；更换后端时组件 Catalog、类型安全 Contract 和业务调用保持不变。GoRouter 适配器覆盖 Page 路由、BottomSheet/Dialog 模态 Page、已有 `ShellRoute` 的 Outlet Navigator 及基础栈操作；Shell 自身生成、`StatefulShellRoute` 分支编排和平台事件监听仍在后续 Flutter 集成阶段接入，Core 不保存或解释 Flutter 对象。自动装配根据 Presentation 选择对应 Page；手写 Override 必须返回匹配的 `CCGoRouterBottomSheetPage`、`CCGoRouterDialogPage` 或普通 `CCGoRouterPage`，适配器不会静默改变页面语义。
+当前基础实现已经提供 Adapter-neutral 的 `CCNavigator`、主 Pattern 地址生成、Runtime 导航请求、Adapter 生命周期、Pure Dart 内存 Adapter、可选 `CCRouterApp`、固定来源的 `CCDeepLinkIngress` 和独立的 `ccrouter_go_router` 适配器。组件 Registrar 同库生成 Manifest，宿主自动聚合所有组件（包括无路由组件）；private Registrar 不进入业务 API。组件同时生成后端中立的 `CCFlutterRouteCatalog`，宿主聚合后由 `CCGoRouterAssembler` 从同一来源产生普通 `GoRoute` 与 Adapter Binding；更换后端时组件 Catalog、类型安全 Contract 和业务调用保持不变。GoRouter 适配器覆盖 Page 路由、BottomSheet/Dialog 模态 Page、已有 `ShellRoute`、`StatefulShellRoute` 分支观察、多 Outlet 和基础栈操作；Core 不保存或解释 Flutter 对象。自动装配根据 Presentation 选择对应 Page；手写 Override 必须返回匹配的 `CCGoRouterBottomSheetPage`、`CCGoRouterDialogPage` 或普通 `CCGoRouterPage`，适配器不会静默改变页面语义。Shell/StatefulShell 的结构仍由 Host 显式提供，Adapter 只绑定应用拥有的 Navigator 与分支，不根据 Path 猜测 Shell，也不承诺自动生成任意 Shell 树。原生 Window 生命周期桥接仍是后续平台能力。
 GoRouter Adapter 优先通过 `CCNavigationHost` 接收应用拥有的 Root/Outlet Navigator，
 并保留 `navigatorKeys` 兼容入口，可将带有
 `shellId`/`navigatorOutlet` placement 的子路由绑定到已有 `ShellRoute` Navigator；

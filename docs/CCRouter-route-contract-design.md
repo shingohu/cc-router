@@ -11,10 +11,11 @@
 
 ## 背景
 
-生成器把内部路由的 `Arguments`、`Intent`、`Definition`、Codec 和页面 `build` 工厂
-放在同一个 `.route.g.dart` library part 中。这样可以访问私有页面构造器，
-并确保组件外无法导入这些类型。路由需要公开时改用 Contract-first schema，避免通过
-公共 barrel 裁剪页面 library 形成不完整的契约边界。
+生成器把内部路由的 `Arguments`、`Intent`、`Definition` 和 Codec 放在独立的
+Package-internal `.route.g.dart` library，把页面构造放在独立 `.route_binding.g.dart`。
+页面不声明 generated `part`，Page 类及其未命名构造器必须可由 Binding library 访问；
+组件外没有公共 barrel 就不能获得内部 Route API。路由需要公开时改用 Contract-first schema，
+避免通过导出页面 library 形成不完整的契约边界。
 
 纯契约文件的目标是让跨组件调用只依赖稳定的路由契约，不依赖目标页面实现、
 Flutter Widget 或页面所在 library。同一个 Contract-first 形态既支持组件 Package 内的
@@ -30,7 +31,7 @@ Flutter Widget 或页面所在 library。同一个 Contract-first 形态既支�
 - 契约依赖 `ccrouter_contracts`，并可依赖页面显式导入的公开 Pure Dart 业务契约；
   不依赖 Flutter、`dart:ui`、页面类或 GoRouter。
 - 组件 Registrar 继续由 owner 组件控制，业务代码不能通过契约直接注册路由。
-- 组件内部路由仍只生成 library-private part，不生成可导出的纯契约。
+- 组件内部路由只生成 Package-internal Route API/Definition 和页面 Binding，不生成可导出的纯契约。
 - 保持现有 `CCRouter.navigator` 和 `Future<R?>` 结果类型不变。
 - 支持内部路由在出现真实跨组件消费者后保持 Route ID 和调用语义完成 Promotion。
 
@@ -63,12 +64,12 @@ lib/
 ├── src/order_detail_route_contract.dart
 ├── src/order_detail_page.dart
 ├── src/ccrouter_generated/contract/order_detail_route_contract.route.contract.g.dart
-└── src/ccrouter_generated/route/order_detail_page.route.g.dart
+└── src/ccrouter_generated/binding/order_detail_page.route_binding.g.dart
 ```
 
 `order_route_contracts.dart` 是组件作者维护的公共 barrel，只导出
 schema 对应 `*.route.contract.g.dart` 中的公开契约，并使用 `show` 明确列出
-Route 和 Arguments 类型。页面专用 `.g.dart` 只保留页面构造和 owner 注册 glue，
+Route 和 Arguments 类型。页面专用 `.route_binding.g.dart` 只保留页面构造和 owner 注册 glue，
 不从公共 barrel 导出。
 
 ### 独立 contracts Package
@@ -82,7 +83,7 @@ demo_order_contracts/
 
 demo_order/
 ├── lib/src/order_detail_page.dart
-└── lib/src/ccrouter_generated/route/order_detail_page.route.g.dart
+└── lib/src/ccrouter_generated/binding/order_detail_page.route_binding.g.dart
 ```
 
 业务调用方只导入 `demo_order_contracts.dart`。实现组件导入 owner integration library，
@@ -137,7 +138,7 @@ final class OrderDetailPage extends StatelessWidget {
 
 ## 生成与兼容策略
 
-1. 页面上的 `@CCRoute` 固定生成 library-private 契约，不提供公开开关。
+1. 页面上的 `@CCRoute` 固定生成 Package-internal Route API/Definition，不提供公开开关。
 2. 公开契约统一使用 `@CCRouteContract`；同 Package 放置用于渐进迁移，独立 contracts
    Package 用于稳定跨组件边界。
 3. 契约生成发生在 schema 所在 Package 内；

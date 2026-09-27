@@ -4,7 +4,7 @@
 
 - 版本：v0.1
 - 状态：调研记录，不代表新增 API 或实施承诺
-- 评估日期：2026-09-24
+- 最近对齐：2026-09-27
 - 对比对象：ARouter、TheRouter、Flutter Modular、GetIt、AutoRoute
 
 本文用于回答“CCRouter 相比其他组件化框架还缺少什么能力”，并区分：
@@ -38,7 +38,8 @@ CCRouter 的核心 Runtime 能力并不落后。相较常见方案，CCRouter �
 - Command、Event、InitTask 的语义分层；
 - 并发、取消、超时和销毁边界。
 
-当前主要欠缺的是 Host 接入体验、代码生成生态、可视化工具和长期发布治理，而不是继续堆叠更多基础路由操作。
+当前主要欠缺的是跨能力源码定位、IDE/可视化工具和长期发布治理，而不是 Host
+最小接入或继续堆叠更多基础路由操作。
 
 ## 能力对比
 
@@ -64,48 +65,53 @@ CCRouter 的核心 Runtime 能力并不落后。相较常见方案，CCRouter �
 
 ## 当前真实缺口
 
-### 1. Host 启动和路由装配仍有样板代码
+### 1. Host 最小接入已完成
 
-Flutter Modular 将 Module、DI 和 Route 放在一个模块定义中；AutoRoute 通过 Router Config 聚合；而 CCRouter 当前 Host 仍需要显式创建：
-
-- `CCNavigationHost`；
-- Navigator keys；
-- Observer；
-- Shell binding；
-- Route override；
-- `CCGoRouterBackend.managed`；
-- `MaterialApp.router`。
-
-这不影响 Runtime 正确性，但会降低新项目接入效率，属于当前最重要的开发体验缺口。
-
-后续可以提供默认 Host 装配入口，例如：
+新项目可以直接使用 `CCGoRouterApp`，由它装配 managed GoRouter、Root Observer、
+Adapter、Host 和 `MaterialApp.router`：
 
 ```dart
-final backend = CCRouterGoRouterApp.create(
-  catalog: ccrouterGeneratedRouteCatalog,
-  components: ccrouterGeneratedComponentManifests,
+runApp(
+  CCGoRouterApp(
+    catalog: ccrouterGeneratedRouteCatalog,
+    components: ccrouterGeneratedComponentManifests,
+  ),
 );
 ```
 
-前提是 Shell、StatefulShell、多个 Outlet 和自定义 Override 仍然显式可控，不能依赖路径前缀或隐式启发式猜测。
+需要全局拦截器、Deep Link Policy、Aspect、Telemetry 或诊断配置时，应用先显式调用
+`CCRouter.initialize`，再让 `CCGoRouterApp` 只负责 Host。已有 GoRouter 工程继续使用
+`CCGoRouterBackend.attach`；复杂 Shell、多 Outlet、自定义 Override 或完整 Widget 树可使用
+`CCRouterApp.managed`。这些显式路径是渐进式集成边界，不是新项目必须复制的样板代码。
 
-**优先级：高，建议 1.x 后续优先处理。**
+因此 Host 最小接入已经闭环。后续新增 Backend 应复用同一个 `CCRouterAppBackend` 边界，
+不再为每种后端复制业务初始化模型。
 
-### 2. Service、Command、Event、InitTask 仍需手动 Registrar 注册
+**状态：已完成。**
 
-当前路由已经自动生成，但以下能力仍需手动注册：
+### 2. 简单 Service 已自动生成，低频能力保持显式 Contribution
+
+零参数同步构造的简单 Service 使用 `@CCService`，生成器会推导内部 ID 或唯一直接
+`@CCServiceContract`，并生成 Provider registration、私有 Registrar、Manifest 和 Catalog
+metadata。复杂构造、依赖注入和 async initializer 仍使用显式 Provider：
 
 ```dart
-registry.registerService(...);
-registry.registerCommand(...);
-registry.registerEvent(...);
-registry.registerInitializationTask(...);
-registry.registerRouteInterceptor(...);
+@CCComponentContribution(id: 'orders.capabilities')
+void registerOrderCapabilities(CCRegistry registry) {
+  registry.registerService(...);
+  registry.registerCommand(...);
+  registry.registerEventSubscriber(...);
+  registry.registerInitializationTask(...);
+}
 ```
 
-与 ARouter 的 Service/Interceptor 自动注册、Flutter Modular 的 Module DI 相比，样板代码更多，也无法自动生成完整的消息 Catalog。
+Contribution 会自动并入组件的生成 Registrar，因此新增 Route 或简单 Service 不再手工修改
+Registrar。Command、Event、InitTask、Shell、策略和复杂 Service 仍是低频且语义各异的能力，
+当前没有足够生产样本冻结统一注解和 metadata 协议。
 
-但当前生产样本不足以冻结新的注解和 metadata 协议。继续手动注册是有意选择，不是实现遗漏。达到既定生产阈值后，再统一设计 Service、Command、Event 和 InitTask 生成器。
+继续显式声明这些能力是有意选择，不是 Route/Service 自动装配遗漏。达到既定生产阈值后，
+再分别评估 Service 方法 Proxy 与 Command/Event/InitTask 声明生成，不能把不同语义重新合并成
+一个万能注册注解。
 
 **优先级：中，暂不立即实现。**
 
@@ -206,7 +212,7 @@ CCRouter 已有足够的只读数据基础：
 5. 原子组合栈操作和精确 Entry 操作；
 6. 动态组件激活、停用和卸载；
 7. Action Pipeline；
-8. Service、Command、Event、InitTask 自动注解生成；
+8. Service 方法 Proxy、Command、Event、InitTask 自动声明生成；
 9. CLI 组件模板、契约提升和迁移工具；
 10. Generator Watch 和 DevTools。
 
@@ -234,8 +240,8 @@ CCRouter 已有足够的只读数据基础：
 
 ### 近期
 
-1. Host 最小接入优化，减少新项目的 Backend/Shell/Observer 样板；
-2. Component/Contract 版本兼容校验设计；
+1. Component/Contract 版本兼容校验设计；
+2. 扩展 `ccrouter find` 和 Catalog 到 Service、Command、Event 与 InitTask；
 3. 持续性能、RSS/Heap 和长时间运行回归；
 4. 保持 README、Integration Skill 与生成器文档同步。
 
@@ -249,17 +255,17 @@ CCRouter 已有足够的只读数据基础：
 6. 分层 Scope；
 7. 动态组件治理；
 8. Action Pipeline；
-9. Service/Message 自动生成；
+9. Service 方法 Proxy与 Command/Event/InitTask 声明生成；
 10. CLI 模板和迁移工具。
 
 ## 最终判断
 
 CCRouter 当前最明显的缺口不是基础路由 Runtime，而是：
 
-1. Host 接入仍有样板代码；
-2. Service/消息注册尚未自动生成；
-3. Generator、IDE 和 DevTools 生态还不成熟；
-4. Contract 版本兼容和环境实现选择尚未系统化；
-5. 原生多窗口、状态恢复和动态组件属于明确的 2.0 范围。
+1. `ccrouter find`、IDE 和 DevTools 生态还不成熟；
+2. Contract 版本兼容和环境实现选择尚未系统化；
+3. 复杂 Service 与低频消息能力仍依赖显式 Contribution，自动生成等待生产阈值；
+4. 原生多窗口、状态恢复和动态组件属于明确的 2.0 范围。
 
-后续应优先处理 Host 最小接入体验，而不是继续增加重复的导航快捷 API或复制其他框架的全局注册模型。
+后续应优先处理版本治理和可发现性，而不是继续增加重复的导航快捷 API，或复制其他框架的
+全局注册模型。

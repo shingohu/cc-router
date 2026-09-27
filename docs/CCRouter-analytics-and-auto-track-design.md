@@ -138,9 +138,12 @@ Core 不依赖 Firebase、ThinkingData、Sentry 或 Crashlytics。
 - [ ] Flutter、PlatformDispatcher 和原生 Crash 桥接；
 - [ ] current Route、Host、Outlet、Trace 关联；
 - [ ] 冷启动、导航延迟、队列压力、内存增长和销毁耗时基准；
-- [ ] Demo 覆盖页面、点击、滑动、曝光、失败、Consent 和第三方 Popup。
+- [x] Demo 接入 Route Analytics、显式点击、滑动、曝光、失败与 Foreign Popup 场景；
+- [ ] Demo 增加 Analytics Consent deny/grant/revoke 和 Foreign Popup 不误归因断言。
 
 ## 9. 当前状态
 
-P0、P1、P2 显式 UI 能力、P3 的独立包基础和 Consent/采样基础已实现。Firebase、ThinkingData、
-通用 Widget 自动猜测、黑名单/通用节流、HTTP/Crash Adapter 尚未实现。
+P0、P1、P2 显式 UI 能力、P3 的独立包基础和 Consent/采样基础已实现，Demo 已接入页面、
+点击、滑动、曝光、失败与 Foreign Popup 场景。Analytics Consent 的 deny/grant/revoke 演示和
+Foreign Popup 不误归因断言尚未闭环；Firebase、ThinkingData、通用 Widget 自动猜测、
+黑名单/通用节流、HTTP/Crash Adapter 尚未实现。
