@@ -2,9 +2,12 @@ import 'dart:convert';
 
 import 'package:analyzer/dart/constant/value.dart';
 import 'package:analyzer/dart/element/element.dart';
+import 'package:analyzer/dart/element/nullability_suffix.dart';
 import 'package:analyzer/dart/element/type.dart';
 import 'package:build/build.dart';
 import 'package:source_gen/source_gen.dart';
+
+part 'service_proxy_generator.dart';
 
 /// Maximum length accepted for generated Service identities and Keys.
 const int _serviceMaxStableIdLength = 128;
@@ -29,11 +32,26 @@ const TypeChecker _serviceChecker = TypeChecker.typeNamedLiterally(
   inPackage: 'ccrouter_contracts',
 );
 
+/// Matches typed cross-component Service dependency declarations.
+const TypeChecker _serviceDependencyChecker = TypeChecker.typeNamedLiterally(
+  'CCServiceDependency',
+  inPackage: 'ccrouter_contracts',
+);
+
+/// Matches one implementation Package's canonical component definition.
+const TypeChecker _serviceComponentChecker = TypeChecker.typeNamedLiterally(
+  'CCComponent',
+  inPackage: 'ccrouter_contracts',
+);
+
 /// Creates typed Tokens reserved for generated and owner-only Service SPI.
 Generator ccServiceContractGenerator() => _ServiceContractGenerator();
 
 /// Creates generated Provider registration bridges for simple Services.
 Generator ccServiceGenerator() => _ServiceGenerator();
+
+/// Creates component-specific typed Clients for declared Service dependencies.
+Generator ccServiceProxyGenerator() => _ServiceProxyGenerator();
 
 /// Creates cache-only Service metadata for workspace aggregation.
 Builder ccServiceMetadataBuilderInternal() => _ServiceMetadataBuilder();
@@ -200,6 +218,40 @@ final class _ServiceMetadataBuilder implements Builder {
             'package': package,
             'source': source,
             'declaration': _serviceSourceReference(contract.element),
+            'methods': [
+              for (final member in contract.members)
+                <String, Object?>{
+                  'memberKind': member.kind,
+                  'methodId': member.methodId,
+                  'returnKind': member.isAsync ? 'future' : 'sync',
+                  'returnType': member.returnType.getDisplayString(),
+                  'resultType': member.resultType.getDisplayString(),
+                  'typeParameters': <String>[],
+                  'parameters': [
+                    for (final parameter in member.parameters)
+                      <String, Object?>{
+                        'name': parameter.displayName,
+                        'type': parameter.type.getDisplayString(),
+                        'kind': parameter.isRequiredPositional
+                            ? 'requiredPositional'
+                            : parameter.isOptionalPositional
+                            ? 'optionalPositional'
+                            : parameter.isRequiredNamed
+                            ? 'requiredNamed'
+                            : 'optionalNamed',
+                        'default': parameter.defaultValueCode,
+                      },
+                  ],
+                  'capabilities': <String>[
+                    'typedArguments',
+                    'callerIdentity',
+                    'methodTrace',
+                    if (member.isAsync) 'scopeCancellation',
+                  ],
+                  'unsupportedReason': null,
+                  'declaration': _serviceSourceReference(member.element),
+                },
+            ],
             'token': <String, Object?>{
               'symbol': contract.tokenSymbol,
               'library': contractLibrary,
@@ -253,6 +305,7 @@ final class _ServiceContractModel {
     required this.componentId,
     required this.id,
     required this.description,
+    required this.members,
   });
 
   /// Public abstract interface carrying the business method signatures.
@@ -267,8 +320,45 @@ final class _ServiceContractModel {
   /// Authored usage scenario retained in generated catalogs.
   final String description;
 
+  /// Validated instance methods and getters implemented by generated Proxies.
+  final List<_ServiceMemberModel> members;
+
   /// Predictable Token symbol optionally exported by an owner-only SPI barrel.
   String get tokenSymbol => '${_serviceLowerCamel(element.displayName)}Token';
+}
+
+/// One supported method or getter in a generated Service contract.
+final class _ServiceMemberModel {
+  /// Stores the executable signature after generation-boundary validation.
+  const _ServiceMemberModel({
+    required this.element,
+    required this.kind,
+    required this.returnType,
+    required this.resultType,
+    required this.isAsync,
+    required this.parameters,
+  });
+
+  /// Authored method or getter declaration.
+  final ExecutableElement element;
+
+  /// Stable metadata kind: `method` or `getter`.
+  final String kind;
+
+  /// Exact return type retained in the overriding Proxy member.
+  final DartType returnType;
+
+  /// Synchronous result type, or the value inside `Future<T>`.
+  final DartType resultType;
+
+  /// Whether Runtime must use its asynchronous invocation boundary.
+  final bool isAsync;
+
+  /// Parameters forwarded without serialization or dynamic maps.
+  final List<FormalParameterElement> parameters;
+
+  /// Stable method-level diagnostic identity.
+  String get methodId => element.displayName;
 }
 
 /// Validated declaration of one generated simple Service Provider.
@@ -338,6 +428,7 @@ List<_ServiceContractModel> _readServiceContracts(LibraryReader library) {
         element,
       );
     }
+    _validateServiceContractInheritance(element);
     final component = annotated.annotation.read('componentId').objectValue;
     final componentId = component.getField('value')?.toStringValue();
     if (componentId == null) {
@@ -362,6 +453,7 @@ List<_ServiceContractModel> _readServiceContracts(LibraryReader library) {
       componentId: componentId,
       id: id,
       description: description,
+      members: _readServiceMembers(element),
     );
     if (!ids.add(id)) {
       _failService(
@@ -526,12 +618,208 @@ _ServiceContractModel? _serviceContractAnnotation(InterfaceElement element) {
   }
   _validateServiceId(componentId, 'Component ID', element);
   _validateServiceId(id, 'Service contract ID', element);
+  _validateServiceContractInheritance(element);
   return _ServiceContractModel(
     element: element,
     componentId: componentId,
     id: id,
     description: description,
+    members: _readServiceMembers(element),
   );
+}
+
+/// Rejects inherited member graphs until substitution is generated precisely.
+void _validateServiceContractInheritance(ClassElement contract) {
+  if (contract.interfaces.isEmpty && contract.mixins.isEmpty) return;
+  _failService(
+    'Service contract ${contract.displayName} must declare its Proxy members '
+    'directly. Contract inheritance and mixins are not supported by the first '
+    'Proxy generation version.',
+    contract,
+  );
+}
+
+/// Reads every directly declared Proxy member and rejects ambiguous shapes.
+List<_ServiceMemberModel> _readServiceMembers(ClassElement contract) {
+  final members = <_ServiceMemberModel>[];
+  for (final setter in contract.setters.where((member) => !member.isStatic)) {
+    _failService(
+      'Service contract ${contract.displayName} contains setter '
+      '"${setter.displayName}". Generated Service Proxies do not support '
+      'setters; expose an explicit method instead.',
+      setter,
+    );
+  }
+  for (final method in contract.methods.where((member) => !member.isStatic)) {
+    if (method.displayName.startsWith('_')) {
+      _failService(
+        'Service contract methods must be public because the Proxy is emitted '
+        'in the consuming Package.',
+        method,
+      );
+    }
+    if (method.isOperator) {
+      _failService(
+        'Service contract ${contract.displayName} contains operator '
+        '"${method.displayName}". Generated Service Proxies support named '
+        'methods only.',
+        method,
+      );
+    }
+    if (method.typeParameters.isNotEmpty) {
+      _failService(
+        'Service contract method "${method.displayName}" must not declare '
+        'type parameters in the first Proxy generation version.',
+        method,
+      );
+    }
+    members.add(
+      _readServiceMember(
+        method,
+        kind: 'method',
+        parameters: method.formalParameters,
+      ),
+    );
+  }
+  for (final getter in contract.getters.where((member) => !member.isStatic)) {
+    if (getter.displayName.startsWith('_')) {
+      _failService(
+        'Service contract getters must be public because the Proxy is emitted '
+        'in the consuming Package.',
+        getter,
+      );
+    }
+    members.add(
+      _readServiceMember(getter, kind: 'getter', parameters: const []),
+    );
+  }
+  members.sort((left, right) {
+    final id = left.methodId.compareTo(right.methodId);
+    return id != 0 ? id : left.kind.compareTo(right.kind);
+  });
+  return List.unmodifiable(members);
+}
+
+/// Validates one method/getter result and all forwarded parameters.
+_ServiceMemberModel _readServiceMember(
+  ExecutableElement member, {
+  required String kind,
+  required List<FormalParameterElement> parameters,
+}) {
+  for (final parameter in parameters) {
+    if (parameter.formalParameters.isNotEmpty ||
+        parameter.typeParameters.isNotEmpty ||
+        parameter.type is FunctionType) {
+      _failService(
+        'Service contract member "${member.displayName}" contains callback '
+        'parameter "${parameter.displayName}". Callback lifecycle cannot be '
+        'represented by the first generated Proxy version.',
+        parameter,
+      );
+    }
+    _validateServiceProxyType(parameter.type, parameter, allowVoid: false);
+  }
+  final returnType = member.returnType;
+  if (returnType.isDartAsyncFutureOr) {
+    _failService(
+      'Service contract member "${member.displayName}" returns FutureOr. '
+      'Choose an explicitly synchronous value or Future<T>.',
+      member,
+    );
+  }
+  if (returnType.isDartAsyncStream) {
+    _failService(
+      'Service contract member "${member.displayName}" returns Stream. '
+      'Subscription ownership is not supported by generated Service Proxies.',
+      member,
+    );
+  }
+  final isAsync = returnType.isDartAsyncFuture;
+  if (isAsync && returnType.nullabilitySuffix == NullabilitySuffix.question) {
+    _failService(
+      'Service contract member "${member.displayName}" must not return a '
+      'nullable Future; return Future<T?> when the result is nullable.',
+      member,
+    );
+  }
+  final resultType = isAsync
+      ? (returnType as InterfaceType).typeArguments.single
+      : returnType;
+  _validateServiceProxyType(resultType, member, allowVoid: true);
+  return _ServiceMemberModel(
+    element: member,
+    kind: kind,
+    returnType: returnType,
+    resultType: resultType,
+    isAsync: isAsync,
+    parameters: List.unmodifiable(parameters),
+  );
+}
+
+/// Validates a type that must survive in a standalone generated Proxy library.
+void _validateServiceProxyType(
+  DartType type,
+  Element owner, {
+  required bool allowVoid,
+}) {
+  if (type is VoidType) {
+    if (allowVoid) return;
+    _failService('Service parameters cannot use void.', owner);
+  }
+  if (type is NeverType) return;
+  if (type is DynamicType || type is InvalidType || type is TypeParameterType) {
+    _failService(
+      'Generated Service Proxy types must be statically known; dynamic, '
+      'invalid, and type-parameter values are unsupported.',
+      owner,
+    );
+  }
+  if (type is FunctionType) {
+    _failService(
+      'Generated Service Proxies do not support callback or function types.',
+      owner,
+    );
+  }
+  if (type is RecordType) {
+    for (final field in [...type.positionalFields, ...type.namedFields]) {
+      _validateServiceProxyType(field.type, owner, allowVoid: false);
+    }
+    return;
+  }
+  if (type is! InterfaceType) {
+    _failService(
+      'Generated Service Proxies support interface, record, void, and Never '
+      'types only.',
+      owner,
+    );
+  }
+  if (type.isDartAsyncFutureOr || type.isDartAsyncStream) {
+    _failService(
+      'Generated Service Proxies do not support FutureOr or Stream types.',
+      owner,
+    );
+  }
+  final alias = type.alias;
+  final element = alias?.element ?? type.element;
+  if (element.displayName.startsWith('_')) {
+    _failService(
+      'Service contract type "${element.displayName}" must be public.',
+      owner,
+    );
+  }
+  final uri = element.library.uri.toString();
+  if (uri == 'dart:ui' ||
+      uri.startsWith('package:flutter/') ||
+      uri.startsWith('package:go_router/')) {
+    _failService(
+      'Service contracts must remain backend-neutral Pure Dart and cannot '
+      'expose Flutter, dart:ui, or GoRouter types.',
+      owner,
+    );
+  }
+  for (final argument in alias?.typeArguments ?? type.typeArguments) {
+    _validateServiceProxyType(argument, owner, allowVoid: false);
+  }
 }
 
 /// Validates one stable generated Service identifier.

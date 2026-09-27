@@ -10,4 +10,5 @@ const demoNavigationLabComponent = CCComponent(
   id: demoNavigationLabComponentId,
   version: '0.1.0',
   dependencies: [demoOrderComponentId, demoWebComponentId],
+  serviceDependencies: [CCServiceDependency<OrderSummaryService>()],
 );

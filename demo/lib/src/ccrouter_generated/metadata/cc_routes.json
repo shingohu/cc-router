@@ -5,13 +5,15 @@
       "id": "demo_order_component",
       "version": "0.1.0",
       "dependencies": [],
-      "optionalDependencies": []
+      "optionalDependencies": [],
+      "serviceDependencies": []
     },
     {
       "id": "demo_web_component",
       "version": "0.1.0",
       "dependencies": [],
-      "optionalDependencies": []
+      "optionalDependencies": [],
+      "serviceDependencies": []
     },
     {
       "id": "demo_navigation_lab_component",
@@ -20,7 +22,21 @@
         "demo_order_component",
         "demo_web_component"
       ],
-      "optionalDependencies": []
+      "optionalDependencies": [],
+      "serviceDependencies": [
+        {
+          "id": "demo_order.summary",
+          "componentId": "demo_order_component",
+          "contract": "OrderSummaryService",
+          "key": null,
+          "member": "orderSummary",
+          "generatedArtifact": {
+            "role": "serviceClient",
+            "symbol": "DemoNavigationLabServices.orderSummary",
+            "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/component/navigation_lab_component.service_api.g.dart"
+          }
+        }
+      ]
     },
     {
       "id": "demo_payment_component",
@@ -28,7 +44,21 @@
       "dependencies": [
         "demo_order_component"
       ],
-      "optionalDependencies": []
+      "optionalDependencies": [],
+      "serviceDependencies": [
+        {
+          "id": "demo_order.summary",
+          "componentId": "demo_order_component",
+          "contract": "OrderSummaryService",
+          "key": null,
+          "member": "orderSummary",
+          "generatedArtifact": {
+            "role": "serviceClient",
+            "symbol": "DemoPaymentServices.orderSummary",
+            "packageUri": "package:demo_payment/src/ccrouter_generated/component/demo_payment_component.service_api.g.dart"
+          }
+        }
+      ]
     }
   ],
   "routes": [

@@ -5,7 +5,7 @@
     "name": "demo_order_contracts",
     "version": "0.1.0"
   },
-  "contentFingerprint": "24874468f4dc2ed4494d337961fe35f36cc9113e5a4d5818bee80c5b17ca4c8e",
+  "contentFingerprint": "3da10584233ade2da54b7a3f0dd3f0c4fabbbf2c380fd915ead07efebc22da20",
   "bundle": null,
   "dependencies": [],
   "metadata": [
@@ -133,6 +133,86 @@
             "line": 11,
             "column": 26
           },
+          "methods": [
+            {
+              "memberKind": "getter",
+              "methodId": "invocationCount",
+              "returnKind": "sync",
+              "returnType": "int",
+              "resultType": "int",
+              "typeParameters": [],
+              "parameters": [],
+              "capabilities": [
+                "typedArguments",
+                "callerIdentity",
+                "methodTrace"
+              ],
+              "unsupportedReason": null,
+              "declaration": {
+                "symbol": "invocationCount",
+                "packageUri": "package:demo_order_contracts/src/order_summary_service.dart",
+                "line": 19,
+                "column": 11
+              }
+            },
+            {
+              "memberKind": "method",
+              "methodId": "loadSummary",
+              "returnKind": "future",
+              "returnType": "Future<String>",
+              "resultType": "String",
+              "typeParameters": [],
+              "parameters": [
+                {
+                  "name": "orderId",
+                  "type": "int",
+                  "kind": "requiredPositional",
+                  "default": null
+                }
+              ],
+              "capabilities": [
+                "typedArguments",
+                "callerIdentity",
+                "methodTrace",
+                "scopeCancellation"
+              ],
+              "unsupportedReason": null,
+              "declaration": {
+                "symbol": "loadSummary",
+                "packageUri": "package:demo_order_contracts/src/order_summary_service.dart",
+                "line": 16,
+                "column": 18
+              }
+            },
+            {
+              "memberKind": "method",
+              "methodId": "summaryFor",
+              "returnKind": "sync",
+              "returnType": "String",
+              "resultType": "String",
+              "typeParameters": [],
+              "parameters": [
+                {
+                  "name": "orderId",
+                  "type": "int",
+                  "kind": "requiredPositional",
+                  "default": null
+                }
+              ],
+              "capabilities": [
+                "typedArguments",
+                "callerIdentity",
+                "methodTrace"
+              ],
+              "unsupportedReason": null,
+              "declaration": {
+                "symbol": "summaryFor",
+                "packageUri": "package:demo_order_contracts/src/order_summary_service.dart",
+                "line": 13,
+                "column": 10
+              }
+            }
+          ],
           "token": {
             "symbol": "orderSummaryServiceToken",
             "library": "lib/src/ccrouter_generated/contract/order_summary_service.service.contract.g.dart",

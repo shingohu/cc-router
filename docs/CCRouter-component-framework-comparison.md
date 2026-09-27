@@ -109,9 +109,9 @@ Contribution 会自动并入组件的生成 Registrar，因此新增 Route 或�
 Registrar。Command、Event、InitTask、Shell、策略和复杂 Service 仍是低频且语义各异的能力，
 当前没有足够生产样本冻结统一注解和 metadata 协议。
 
-继续显式声明这些能力是有意选择，不是 Route/Service 自动装配遗漏。达到既定生产阈值后，
-再分别评估 Service 方法 Proxy 与 Command/Event/InitTask 声明生成，不能把不同语义重新合并成
-一个万能注册注解。
+继续显式声明这些能力是有意选择，不是 Route/Service 自动装配遗漏。Service 方法 Proxy 已通过
+消费组件的结构化依赖声明独立实现；Command/Event/InitTask 只有达到既定生产阈值后再分别
+评估声明生成，不能把不同语义重新合并成一个万能注册注解。
 
 **优先级：中，暂不立即实现。**
 
@@ -212,7 +212,7 @@ CCRouter 已有足够的只读数据基础：
 5. 原子组合栈操作和精确 Entry 操作；
 6. 动态组件激活、停用和卸载；
 7. Action Pipeline；
-8. Service 方法 Proxy、Command、Event、InitTask 自动声明生成；
+8. Command、Event、InitTask 自动声明生成，以及 Service Proxy 当前不支持的方法形态；
 9. CLI 组件模板、契约提升和迁移工具；
 10. Generator Watch 和 DevTools。
 
@@ -255,7 +255,7 @@ CCRouter 已有足够的只读数据基础：
 6. 分层 Scope；
 7. 动态组件治理；
 8. Action Pipeline；
-9. Service 方法 Proxy与 Command/Event/InitTask 声明生成；
+9. Command/Event/InitTask 声明生成与 Service Proxy 高级方法形态；
 10. CLI 模板和迁移工具。
 
 ## 最终判断

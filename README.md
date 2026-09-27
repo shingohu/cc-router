@@ -572,6 +572,32 @@ final class OrderSummaryServiceImpl implements OrderSummaryService {
 }
 ```
 
+消费组件显式声明它实际调用的跨组件 Contract：
+
+```dart
+const paymentComponent = CCComponent(
+  id: paymentComponentId,
+  version: '1.0.0',
+  dependencies: [orderComponentId],
+  serviceDependencies: [
+    CCServiceDependency<OrderSummaryService>(),
+  ],
+);
+```
+
+重新生成后，通过组件专属 Client 调用；不要手写 Token、method ID、caller ID 或 Proxy：
+
+```dart
+final summary = DemoPaymentServices.orderSummary.summaryFor(orderId);
+final loaded = await DemoPaymentServices.orderSummary.loadSummary(orderId);
+```
+
+生成 Proxy 不持有 Service，每次方法调用都解析当前 Scope。同步方法保持同步且不会启动 async
+initializer；`Future<T>` 方法会等待 readiness。生成器支持普通实例方法、getter、同步/Future
+返回值和常用参数形态；泛型方法、setter/operator、Stream、FutureOr、callback、Flutter 类型、
+Contract 继承和未从公共 barrel 暴露的 `src` 类型会在生成期失败。组件内部 Service 仍直接使用
+`CCRouter.service<T>()`，不需要声明或生成 Proxy。
+
 需要构造参数、依赖注入、自定义 Factory 或 async initializer 时，使用
 `@CCComponentContribution` 显式注册，不把复杂生命周期隐藏在注解里：
 
@@ -604,7 +630,7 @@ final controller = CCRouter.routeService<OrderDraftController>(context);
 - 默认 `singleton` 是每个 Scope 一个懒实例。
 - `newInstance` 每次解析创建新实例，但需要销毁的实例仍由 Scope 统一拥有；不要用它模拟手工 dispose 的临时对象。
 - `initializer` 只用于实例无法在同步构造后立即工作的异步 readiness；调用方必须使用 `serviceAsync`。
-- 多实现使用 `CCServiceKey<T>`；跨 Package 稳定 ID 由 `@CCServiceContract` 和生成注册维护，业务仍使用 `CCRouter.service<T>()`。
+- 多实现使用 `CCServiceKey<T>`；跨组件调用在 `CCServiceDependency<T>` 中指定 Key/alias，并使用生成 Client；组件内部解析仍使用 `CCRouter.service<T>()`。
 - 实现 `CCDisposable` 的实例由 Scope 按逆构造顺序自动销毁，业务不得自行 dispose。
 - `serviceOrNull` 只把“未注册”转换为 null，不吞掉创建策略、Scope 或初始化错误。
 
@@ -721,7 +747,7 @@ fvm dart run ccrouter_generator:ccrouter clean demo
 ```text
 lib/src/ccrouter_generated/
 ├── binding/     # Flutter 页面构造 bridge
-├── component/   # 自动 Registrar、Manifest、组件 Route API
+├── component/   # 自动 Registrar、Manifest、组件 Route/Service API
 ├── contract/    # 独立 Pure Dart Route/Service Contract
 ├── host/        # Host 聚合入口
 ├── metadata/    # Package Index、Host routes、可读 Catalog
@@ -775,7 +801,7 @@ fvm dart run ccrouter_generator:ccrouter generate demo --check
 - 页面导航统一走 `CCRouter.navigator`。
 - 正确区分 Interceptor、PopGuard、Aspect 和页面生命周期。
 - 遵守 Host SPI、组件实现与 contracts Package 的依赖边界。
-- 不虚构当前尚未实现的 Action Pipeline、动态组件、Service 自动 Proxy 或 Command/Event/InitTask 注解。
+- 不虚构当前尚未实现的 Action Pipeline、动态组件或 Command/Event/InitTask 注解；Service Proxy 只使用当前支持的显式消费声明和方法矩阵。
 - 生成后执行 analyze、针对性测试与 `generate --check`。
 
 将完整的 `skills/ccrouter-integration-development/` 目录复制或同步到集成工程的 `skills/` 下，不要只复制 `SKILL.md`，因为能力决策、实现模式和审查清单位于 `references/`。然后在集成工程的 Agent 规则中加入：
@@ -800,6 +826,7 @@ Skill 采用短主文件和按需 reference 结构，既适合日常编码，也
 - [`docs/CCRouter-route-design.md`](docs/CCRouter-route-design.md)：路由设计
 - [`docs/CCRouter-component-framework-comparison.md`](docs/CCRouter-component-framework-comparison.md)：与其他组件化框架的能力对比和后续缺口
 - [`docs/CCRouter-service-lifecycle-design.md`](docs/CCRouter-service-lifecycle-design.md)：Service 生命周期设计
+- [`docs/CCRouter-service-proxy-generation-design.md`](docs/CCRouter-service-proxy-generation-design.md)：跨组件 Service Proxy 生成设计
 - [`docs/CCRouter-command-design.md`](docs/CCRouter-command-design.md)：Command 设计
 - [`docs/CCRouter-event-design.md`](docs/CCRouter-event-design.md)：Event 设计
 - [`docs/CCRouter-initialization-task-design.md`](docs/CCRouter-initialization-task-design.md)：InitTask 设计

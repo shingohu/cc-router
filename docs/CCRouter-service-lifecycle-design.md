@@ -131,10 +131,10 @@ CCRouter 采用相同的维度拆分，但保留组件所有权、RouteEntry 精
 - 可选 lazy async initializer、single-flight readiness、稳定失败、循环检测以及 Scope/caller
   cancellation 已实现；普通同步 Provider 不增加初始化成本。
 - Page 生命周期与 Service 生命周期保持独立。
-- Service Proxy 的 Runtime 与手写形态已验证；`@CCServiceContract` Token、`@CCService`
-  Provider registration、自动 Registrar 和 metadata/Catalog 已实现。方法级 Proxy 自动生成
-  仍需实际生产契约数量达到实施阈值，或出现 method ID、caller identity、签名漂移缺陷后
-  重新立项；Demo 和测试夹具不计入阈值。动态注册/卸载保持 2.0 候选。
+- Service Proxy Runtime、`@CCServiceContract` Token、`@CCService` Provider registration、
+  自动 Registrar 和 metadata/Catalog 已实现。消费组件通过显式
+  `CCServiceDependency<T>` 生成方法级 Proxy；Proxy 每次调用解析当前 Scope，不拥有实例，
+  Session 切换后不会保留旧 Provider。动态注册/卸载保持 2.0 候选。
 
 完整动态组件治理属于 2.0 候选。重新评估前必须同时解决组件依赖级联、能力原子切换、
 活跃 Route 协调，以及 Handler、订阅和诊断状态的确定性清理，不能只关闭一部分 Service。

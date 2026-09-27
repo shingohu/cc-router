@@ -54,6 +54,36 @@ final class CCServiceContract {
   final String description;
 }
 
+/// Declares that one component consumes a public Service contract.
+///
+/// Add this declaration to `CCComponent.serviceDependencies` only for a
+/// cross-component Service that the component actually calls. The generator
+/// validates the contract owner against the component dependency graph and
+/// emits a component-specific, method-level Proxy. Component-internal Services
+/// continue to use direct lookup and do not need this declaration.
+///
+/// The declaration owns no Service instance and has no Runtime lifecycle. Its
+/// purpose is build-time dependency validation, generated caller identity, and
+/// deterministic Client API generation.
+final class CCServiceDependency<T extends Object> {
+  /// Creates one typed cross-component Service dependency.
+  const CCServiceDependency({this.key, this.alias});
+
+  /// Selects one named implementation of [T], when the contract has several.
+  ///
+  /// Omit the Key for the unkeyed or generated default implementation. The
+  /// generator embeds the stable Key in the Proxy so business code never
+  /// performs a string-based lookup.
+  final CCServiceKey<T>? key;
+
+  /// Overrides the generated lower-camel member name in the component Client.
+  ///
+  /// Use this only to distinguish multiple Keys for the same contract or to
+  /// avoid a generated-name collision. Values must be public lower-camel Dart
+  /// identifiers and are validated during generation.
+  final String? alias;
+}
+
 /// Declares a simple component-owned Service implementation.
 ///
 /// Apply this annotation to a public, concrete, non-generic class with an

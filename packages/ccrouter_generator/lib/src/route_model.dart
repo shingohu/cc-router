@@ -538,6 +538,7 @@ final class _ComponentModel {
     required this.version,
     required this.dependencies,
     required this.optionalDependencies,
+    required this.serviceDependencies,
   });
 
   /// Stable component ID.
@@ -552,8 +553,14 @@ final class _ComponentModel {
   /// Optional dependency IDs.
   final List<String> optionalDependencies;
 
+  /// Exact cross-component Service contracts consumed by this component.
+  final List<_ComponentServiceDependencyModel> serviceDependencies;
+
   /// Validates one top-level build-time component definition.
-  static _ComponentModel read(ConstantReader component, Element element) {
+  static _ComponentModel read(
+    ConstantReader component,
+    TopLevelVariableElement element,
+  ) {
     final id = _readComponentId(component.read('id'), element);
     final version = component.read('version').stringValue;
     final dependencies = component
@@ -566,6 +573,12 @@ final class _ComponentModel {
         .listValue
         .map((value) => _componentIdValue(value, element))
         .toList(growable: false);
+    final serviceDependencies = _readComponentServiceDependencies(
+      component.read('serviceDependencies').listValue,
+      element,
+      componentId: id,
+      requiredOwners: dependencies.toSet(),
+    );
     _validateComponentId(id, element);
     if (!_semanticVersionPattern.hasMatch(version)) {
       _fail('Component "$id" must use a SemVer 2.0 version.', element);
@@ -588,9 +601,158 @@ final class _ComponentModel {
       version: version,
       dependencies: dependencies,
       optionalDependencies: optionalDependencies,
+      serviceDependencies: serviceDependencies,
     );
   }
 }
+
+/// Serializable component-to-Service dependency used by workspace validation.
+final class _ComponentServiceDependencyModel {
+  /// Stores the stable contract identity and generated Client member.
+  const _ComponentServiceDependencyModel({
+    required this.id,
+    required this.componentId,
+    required this.contract,
+    required this.key,
+    required this.member,
+  });
+
+  /// Stable Service contract ID.
+  final String id;
+
+  /// Component that owns the Service contract and Provider lifecycle.
+  final String componentId;
+
+  /// Public Dart interface name used by the typed Proxy.
+  final String contract;
+
+  /// Optional named Provider implementation.
+  final String? key;
+
+  /// Static member generated on the consuming component's Service Client.
+  final String member;
+}
+
+/// Reads and locally validates component-level Service dependencies.
+List<_ComponentServiceDependencyModel> _readComponentServiceDependencies(
+  List<DartObject> values,
+  TopLevelVariableElement owner, {
+  required String componentId,
+  required Set<String> requiredOwners,
+}) {
+  final dependencies = <_ComponentServiceDependencyModel>[];
+  final identities = <String>{};
+  final members = <String>{};
+  for (final value in values) {
+    final type = value.type;
+    if (type is! InterfaceType ||
+        !_componentServiceDependencyChecker.isExactlyType(type) ||
+        type.typeArguments.length != 1) {
+      _fail(
+        'CCComponent.serviceDependencies accepts const '
+        'CCServiceDependency<T> values only.',
+        owner,
+      );
+    }
+    final contractType = type.typeArguments.single;
+    if (contractType is! InterfaceType ||
+        contractType.element is! ClassElement) {
+      _fail(
+        'CCServiceDependency<T> requires a public Service contract interface.',
+        owner,
+      );
+    }
+    final contractElement = contractType.element as ClassElement;
+    final annotation = _componentServiceContractChecker.firstAnnotationOfExact(
+      contractElement,
+    );
+    if (annotation == null) {
+      _fail(
+        'CCServiceDependency<${contractType.getDisplayString()}> requires T '
+        'to be annotated with CCServiceContract.',
+        owner,
+      );
+    }
+    final contractOwner = annotation
+        .getField('componentId')
+        ?.getField('value')
+        ?.toStringValue();
+    final contractId = annotation.getField('id')?.toStringValue();
+    if (contractOwner == null || contractId == null) {
+      _fail(
+        'CCServiceContract dependencies require const componentId and id.',
+        owner,
+      );
+    }
+    _validateComponentId(contractOwner, owner);
+    _validateStableId(contractId, 'Service contract ID', owner);
+    if (contractOwner == componentId) {
+      _fail(
+        'Component "$componentId" must not declare its own Service contract '
+        '"$contractId" as a cross-component dependency.',
+        owner,
+      );
+    }
+    if (!requiredOwners.contains(contractOwner)) {
+      _fail(
+        'Component "$componentId" consumes Service "$contractId" owned by '
+        '"$contractOwner". Add that owner to CCComponent.dependencies.',
+        owner,
+      );
+    }
+    final keyValue = _field(value, 'key');
+    final key = keyValue.isNull
+        ? null
+        : _field(keyValue, 'name').toStringValue();
+    if (key != null) _validateStableId(key, 'Service Key', owner);
+    final aliasValue = _field(value, 'alias');
+    final alias = aliasValue.isNull ? null : aliasValue.toStringValue();
+    final stem = contractElement.displayName.endsWith('Service')
+        ? contractElement.displayName.substring(
+            0,
+            contractElement.displayName.length - 'Service'.length,
+          )
+        : contractElement.displayName;
+    final member = alias ?? _componentLowerCamel(stem);
+    if (!RegExp(r'^[a-z][A-Za-z0-9]*$').hasMatch(member)) {
+      _fail(
+        'Service dependency alias "$member" must be a public lower-camel Dart '
+        'identifier.',
+        owner,
+      );
+    }
+    if (!members.add(member)) {
+      _fail(
+        'Component "$componentId" generates duplicate Service Client member '
+        '"$member". Set a distinct CCServiceDependency alias.',
+        owner,
+      );
+    }
+    final identity = '$contractId\u0000${key ?? ''}';
+    if (!identities.add(identity)) {
+      _fail(
+        'Component "$componentId" declares Service "$contractId" with Key '
+        '"${key ?? '<default>'}" more than once.',
+        owner,
+      );
+    }
+    dependencies.add(
+      _ComponentServiceDependencyModel(
+        id: contractId,
+        componentId: contractOwner,
+        contract: contractElement.displayName,
+        key: key,
+        member: member,
+      ),
+    );
+  }
+  dependencies.sort((left, right) => left.member.compareTo(right.member));
+  return List.unmodifiable(dependencies);
+}
+
+/// Converts one public Service type stem into a generated member name.
+String _componentLowerCamel(String value) =>
+    value.isEmpty ? value : '${value[0].toLowerCase()}${value.substring(1)}';
 
 /// Reads one typed component identity from evaluated constant metadata.
 String _readComponentId(ConstantReader reader, Element element) =>

@@ -34,7 +34,8 @@ typed Extra。完整的 macOS 验证矩阵、已修复问题和 Adapter 限制�
 - Event：并发多订阅者、Subscriber 异常隔离、零订阅者和 timeout；
 - InitTask：App Started DAG、critical/optional 状态、失败依赖 skip 和手动 Privacy Gate；
 - Service：App/Session/Route Scope、singleton/newInstance、lazy readiness single-flight、命名多实现、
-  可选查找，以及 Session/Route 关闭时自动 dispose。
+  可选查找，以及 Session/Route 关闭时自动 dispose；首页还通过生成的组件专属 Proxy 验证
+  跨组件同步方法、Future、getter、caller attribution 和方法级 Trace。
 - 诊断：typed Subscriber ID、分类 Sink、失败隔离、采样策略和有界 Trace Bundle；首页“实时诊断”
   会展示脱敏 Sink 事件、Managed/Backend Entries 与最近一次 Trace 聚合。
 
@@ -96,8 +97,9 @@ Root Observer。`CCRouterApp.managed` 只绑定 Host 和 Backend，不初始化�
 订单详情路由由 `@CCRouteContract` 声明，页面通过 `@CCRouteImplementation` 绑定；跨组件
 只导入 `demo_order_contracts`，页面 Widget、注册入口和构造 glue 留在 `demo_order`。
 同一契约包还通过 `@CCServiceContract` 声明 `OrderSummaryService` 的稳定 ID；订单实现
-直接 `implements` 该唯一 Contract，`@CCService()` 自动完成绑定与注册。支付组件只导入
-业务接口并按 Type 调用，生成 Token 不进入消费方 API。
+直接 `implements` 该唯一 Contract，`@CCService()` 自动完成绑定与注册。支付与导航实验组件
+分别声明 `CCServiceDependency<OrderSummaryService>`，使用各自生成的 `<Component>Services`
+Client；生成 Token、method ID 和 caller ID 不进入手写消费方 API。
 
 demo 和组件包已加入根 Dart workspace，使用本仓库内框架源码与统一锁文件，
 不再需要 `pubspec_overrides.yaml` 路径覆盖。新增组件时也应加入根 `workspace` 列表，

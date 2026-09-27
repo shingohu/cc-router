@@ -44,6 +44,21 @@ void main() {
     additionalAssets: additionalAssets,
   );
 
+  Future<String> generateProxy(
+    String declarations, {
+    bool fails = false,
+    String imports = '',
+    Map<String, String> additionalAssets = const {},
+  }) => _generate(
+    reader: reader,
+    builder: ccServiceProxyBuilder(BuilderOptions.empty),
+    declarations: declarations,
+    outputPath: 'lib/src/ccrouter_generated/component/probe.service_api.g.dart',
+    fails: fails,
+    imports: imports,
+    additionalAssets: additionalAssets,
+  );
+
   Future<String> generateMetadata(
     String declarations, {
     bool fails = false,
@@ -147,6 +162,190 @@ final class OrderCache {
   });
 
   test(
+    'proxy builder emits a component caller for sync and async members',
+    () async {
+      final output = await generateProxy(
+        r'''
+const paymentId = CCComponentId('payment');
+const orderId = CCComponentId('orders');
+const payment = CCComponent(
+  id: paymentId,
+  version: '1.0.0',
+  dependencies: [orderId],
+  serviceDependencies: [
+    CCServiceDependency<OrderSummaryService>(),
+  ],
+);
+''',
+        imports: "import 'package:ccrouter_test/order_contracts.dart';",
+        additionalAssets: {
+          'ccrouter_test|lib/order_contracts.dart': r'''
+import 'package:ccrouter/ccrouter.dart';
+const orderId = CCComponentId('orders');
+enum SummaryStyle { compact, detailed }
+final class OrderQuote { const OrderQuote(this.value); final int value; }
+@CCServiceContract(componentId: orderId, id: 'orders.summary')
+abstract interface class OrderSummaryService {
+  String summaryFor(int orderId, [SummaryStyle style = SummaryStyle.compact]);
+  Future<OrderQuote> quote({required int orderId, String currency = 'CNY'});
+  int get cachedCount;
+}
+''',
+        },
+      );
+
+      expect(output, contains('abstract final class PaymentServices'));
+      expect(
+        output,
+        matches(
+          RegExp(
+            r'static const service_type_\d+\.OrderSummaryService orderSummary',
+          ),
+        ),
+      );
+      expect(output, contains('callerComponentId: "payment"'));
+      expect(output, contains('methodId: "summaryFor"'));
+      expect(output, contains('CCRouterGeneratedServiceBinding.invokeSync'));
+      expect(output, contains('CCRouterGeneratedServiceBinding.invoke<'));
+      expect(
+        output,
+        matches(
+          RegExp(
+            r'service_type_\d+\.Future<service_type_\d+\.OrderQuote> quote',
+          ),
+        ),
+      );
+      expect(output, contains('required int orderId'));
+      expect(output, contains('String currency = "CNY"'));
+      expect(output, contains('int get cachedCount'));
+    },
+  );
+
+  test('proxy builder embeds typed Key and explicit alias', () async {
+    final output = await generateProxy(
+      r'''
+const paymentId = CCComponentId('payment');
+const orderId = CCComponentId('orders');
+const payment = CCComponent(
+  id: paymentId,
+  version: '1.0.0',
+  dependencies: [orderId],
+  serviceDependencies: [
+    CCServiceDependency<OrderSummaryService>(
+      key: CCServiceKey<OrderSummaryService>('archived'),
+      alias: 'archivedOrders',
+    ),
+  ],
+);
+''',
+      imports: "import 'package:ccrouter_test/order_contracts.dart';",
+      additionalAssets: {
+        'ccrouter_test|lib/order_contracts.dart': r'''
+import 'package:ccrouter/ccrouter.dart';
+const orderId = CCComponentId('orders');
+@CCServiceContract(componentId: orderId, id: 'orders.summary')
+abstract interface class OrderSummaryService { String summaryFor(int id); }
+''',
+      },
+    );
+
+    expect(output, contains('archivedOrders'));
+    expect(
+      output,
+      matches(
+        RegExp(
+          r'key: const CCServiceKey<service_type_\d+\.OrderSummaryService>\("archived"\)',
+        ),
+      ),
+    );
+  });
+
+  test('proxy builder emits nothing without a Service dependency', () async {
+    await testBuilder(
+      ccServiceProxyBuilder(BuilderOptions.empty),
+      {
+        'ccrouter_test|lib/src/probe.dart': r'''
+import 'package:ccrouter/ccrouter.dart';
+const probe = CCComponent(
+  id: CCComponentId('probe'),
+  version: '1.0.0',
+);
+''',
+      },
+      rootPackage: 'ccrouter_test',
+      generateFor: {'ccrouter_test|lib/src/probe.dart'},
+      isInput: (id) => id == 'ccrouter_test|lib/src/probe.dart',
+      readerWriter: reader,
+      flattenOutput: true,
+    );
+
+    expect(
+      await reader.canRead(
+        AssetId(
+          'ccrouter_test',
+          'lib/src/ccrouter_generated/component/probe.service_api.g.dart',
+        ),
+      ),
+      isFalse,
+    );
+  });
+
+  test(
+    'proxy builder rejects an owner missing from required dependencies',
+    () async {
+      final logs = await generateProxy(
+        r'''
+const paymentId = CCComponentId('payment');
+const payment = CCComponent(
+  id: paymentId,
+  version: '1.0.0',
+  serviceDependencies: [CCServiceDependency<OrderSummaryService>()],
+);
+''',
+        imports: "import 'package:ccrouter_test/order_contracts.dart';",
+        additionalAssets: {
+          'ccrouter_test|lib/order_contracts.dart': r'''
+import 'package:ccrouter/ccrouter.dart';
+const orderId = CCComponentId('orders');
+@CCServiceContract(componentId: orderId, id: 'orders.summary')
+abstract interface class OrderSummaryService { String summaryFor(int id); }
+''',
+        },
+        fails: true,
+      );
+
+      expect(logs, contains('Add that owner to CCComponent.dependencies'));
+    },
+  );
+
+  test('proxy builder rejects a contract imported through src', () async {
+    final logs = await generateProxy(
+      r'''
+const paymentId = CCComponentId('payment');
+const orderId = CCComponentId('orders');
+const payment = CCComponent(
+  id: paymentId,
+  version: '1.0.0',
+  dependencies: [orderId],
+  serviceDependencies: [CCServiceDependency<OrderSummaryService>()],
+);
+''',
+      imports: "import 'package:ccrouter_test/src/order_contract.dart';",
+      additionalAssets: {
+        'ccrouter_test|lib/src/order_contract.dart': r'''
+import 'package:ccrouter/ccrouter.dart';
+const orderId = CCComponentId('orders');
+@CCServiceContract(componentId: orderId, id: 'orders.summary')
+abstract interface class OrderSummaryService { String summaryFor(int id); }
+''',
+      },
+      fails: true,
+    );
+
+    expect(logs, contains('explicit public package import'));
+  });
+
+  test(
     'service metadata records contracts and ownerless implementations',
     () async {
       final contractJson =
@@ -162,6 +361,7 @@ abstract interface class OrderSummaryService {}
       expect(contract['id'], 'orders.summary');
       expect(contract['componentId'], 'orders');
       expect((contract['token'] as Map)['symbol'], 'orderSummaryServiceToken');
+      expect(contract['methods'], isEmpty);
 
       final implementationJson =
           jsonDecode(
@@ -192,10 +392,50 @@ final class OrderCache { const OrderCache(); }
       "const owner = CCComponentId('orders'); @CCServiceContract(componentId: owner, id: 'Orders Summary') abstract interface class Probe {}",
       'Service contract ID',
     ),
+    'generic method': (
+      "const owner = CCComponentId('orders'); @CCServiceContract(componentId: owner, id: 'orders.summary') abstract interface class Probe { T read<T>(); }",
+      'must not declare type parameters',
+    ),
+    'stream result': (
+      "const owner = CCComponentId('orders'); @CCServiceContract(componentId: owner, id: 'orders.summary') abstract interface class Probe { Stream<int> watch(); }",
+      'returns Stream',
+    ),
+    'future-or result': (
+      "const owner = CCComponentId('orders'); @CCServiceContract(componentId: owner, id: 'orders.summary') abstract interface class Probe { FutureOr<int> read(); }",
+      'returns FutureOr',
+    ),
+    'callback parameter': (
+      "const owner = CCComponentId('orders'); @CCServiceContract(componentId: owner, id: 'orders.summary') abstract interface class Probe { void listen(void Function() callback); }",
+      'callback parameter',
+    ),
+    'setter': (
+      "const owner = CCComponentId('orders'); @CCServiceContract(componentId: owner, id: 'orders.summary') abstract interface class Probe { set value(int value); }",
+      'do not support setters',
+    ),
+    'operator': (
+      "const owner = CCComponentId('orders'); @CCServiceContract(componentId: owner, id: 'orders.summary') abstract interface class Probe { Probe operator +(Probe other); }",
+      'support named methods only',
+    ),
+    'contract inheritance': (
+      "const owner = CCComponentId('orders'); abstract interface class Base { String read(); } @CCServiceContract(componentId: owner, id: 'orders.summary') abstract interface class Probe implements Base {}",
+      'Contract inheritance and mixins are not supported',
+    ),
   };
   for (final entry in invalidContracts.entries) {
     test('contract builder rejects ${entry.key}', () async {
-      final logs = await generateContract(entry.value.$1, fails: true);
+      final imports = switch (entry.key) {
+        'stream result' || 'future-or result' => "import 'dart:async';",
+        _ => '',
+      };
+      final logs = await _generate(
+        reader: reader,
+        builder: ccServiceContractBuilder(BuilderOptions.empty),
+        declarations: entry.value.$1,
+        outputPath:
+            'lib/src/ccrouter_generated/contract/probe.service.contract.g.dart',
+        fails: true,
+        imports: imports,
+      );
       expect(logs, contains(entry.value.$2));
     });
   }

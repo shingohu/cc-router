@@ -320,6 +320,82 @@ abstract final class CCRouteWorkspaceValidator {
         );
       }
     }
+    for (final component in components.values) {
+      final componentId = '${component['id'] ?? ''}';
+      final requiredOwners = _strings(component['dependencies']).toSet();
+      final identities = <String>{};
+      final members = <String>{};
+      for (final dependency in _objects(component['serviceDependencies'])) {
+        final contractId = '${dependency['id'] ?? ''}';
+        final declaredOwner = '${dependency['componentId'] ?? ''}';
+        final keyName = '${dependency['key'] ?? ''}';
+        final member = '${dependency['member'] ?? ''}';
+        final contract = serviceContracts[contractId];
+        if (contract == null) {
+          errors.add(
+            'Component "$componentId" consumes unknown Service contract '
+            '"$contractId".',
+          );
+          continue;
+        }
+        final actualOwner = '${contract['componentId'] ?? ''}';
+        if (declaredOwner != actualOwner) {
+          errors.add(
+            'Component "$componentId" records Service "$contractId" owner '
+            '"$declaredOwner" instead of "$actualOwner".',
+          );
+        }
+        if (!requiredOwners.contains(actualOwner)) {
+          errors.add(
+            'Component "$componentId" consumes Service "$contractId" but '
+            'does not require owner component "$actualOwner".',
+          );
+        }
+        if (keyName.isNotEmpty && !_validIdentifier(keyName)) {
+          errors.add(
+            'Component "$componentId" uses invalid Service Key "$keyName" '
+            'for "$contractId".',
+          );
+        }
+        if (!RegExp(r'^[a-z][A-Za-z0-9]*$').hasMatch(member)) {
+          errors.add(
+            'Component "$componentId" uses invalid Service Client member '
+            '"$member".',
+          );
+        } else if (!members.add(member)) {
+          errors.add(
+            'Component "$componentId" generates duplicate Service Client '
+            'member "$member".',
+          );
+        }
+        if (!identities.add('$contractId\u0000$keyName')) {
+          errors.add(
+            'Component "$componentId" consumes Service "$contractId" with '
+            'Key "${keyName.isEmpty ? '<default>' : keyName}" more than once.',
+          );
+        }
+        final selectedImplementations = serviceImplementations.values.where((
+          implementation,
+        ) {
+          if ('${implementation['contractId'] ?? ''}' != contractId) {
+            return false;
+          }
+          final providerKey = '${implementation['key'] ?? ''}';
+          return keyName.isNotEmpty
+              ? providerKey == keyName
+              : providerKey.isEmpty || implementation['isDefault'] == true;
+        });
+        if (selectedImplementations.any(
+          (implementation) => implementation['scope'] == 'route',
+        )) {
+          errors.add(
+            'Component "$componentId" cannot generate Service Client member '
+            '"$member" for Route-scoped contract "$contractId". Resolve the '
+            'Service from an exact managed page Context instead.',
+          );
+        }
+      }
+    }
     for (final implementation in serviceImplementations.values) {
       final id = '${implementation['id'] ?? ''}';
       final ownerId = '${implementation['componentId'] ?? ''}';

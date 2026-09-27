@@ -88,7 +88,8 @@ Map<String, Object?> _metadataPayload({
   'componentManifests': componentManifests,
   'componentSymbols': componentSymbols,
   'components': {
-    for (final component in components) component.id: _componentJson(component),
+    for (final component in components)
+      component.id: _componentJson(component, package: package, source: source),
   }.values.toList(),
   'routes': routes
       .map((route) => _routeJson(route, package: package, source: source))
@@ -179,12 +180,52 @@ List<_ComponentContributionModel> _readComponentContributions(
 }
 
 /// Serializes one component descriptor deterministically.
-Map<String, Object?> _componentJson(_ComponentModel component) => {
+Map<String, Object?> _componentJson(
+  _ComponentModel component, {
+  required String package,
+  required String source,
+}) => {
   'id': component.id,
   'version': component.version,
   'dependencies': component.dependencies,
   'optionalDependencies': component.optionalDependencies,
+  'serviceDependencies': [
+    for (final dependency in component.serviceDependencies)
+      <String, Object?>{
+        'id': dependency.id,
+        'componentId': dependency.componentId,
+        'contract': dependency.contract,
+        'key': dependency.key,
+        'member': dependency.member,
+        'generatedArtifact': <String, Object?>{
+          'role': 'serviceClient',
+          'symbol':
+              '${_componentServiceClientName(component.id)}.${dependency.member}',
+          'packageUri': _packageUri(
+            package,
+            _componentServiceApiOutputPath(source),
+          ),
+        },
+      },
+  ],
 };
+
+/// Derives the builder-owned Service Client output for a component source.
+String _componentServiceApiOutputPath(String source) {
+  if (!source.startsWith('lib/src/') || !source.endsWith('.dart')) {
+    throw StateError('Component source must be below lib/src/: $source');
+  }
+  final relative = source.substring('lib/src/'.length, source.length - 5);
+  return 'lib/src/ccrouter_generated/component/$relative.service_api.g.dart';
+}
+
+/// Derives the public generated Client class from a component identity.
+String _componentServiceClientName(String componentId) {
+  final owner = componentId.endsWith('_component')
+      ? componentId.substring(0, componentId.length - '_component'.length)
+      : componentId;
+  return '${owner.split(RegExp(r'[^A-Za-z0-9]+')).where((part) => part.isNotEmpty).map((part) => '${part[0].toUpperCase()}${part.substring(1)}').join()}Services';
+}
 
 /// Serializes ownership, derived exposure, addresses and documented parameters.
 Map<String, Object?> _routeJson(

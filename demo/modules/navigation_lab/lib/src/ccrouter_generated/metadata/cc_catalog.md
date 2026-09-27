@@ -261,3 +261,11 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 - Generated artifacts:
   - `routeLibrary`: `package:demo_navigation_lab/src/ccrouter_generated/route/shell_pages.route.g.dart` (`_DemoWorkspaceProfilePageRoute`)
   - `routeBinding`: `package:demo_navigation_lab/src/ccrouter_generated/binding/shell_pages.route_binding.g.dart` (`ccrouterBuildDemoWorkspaceProfilePageRoute`)
+
+## `demo_order_component`
+
+### Service `demo_order.summary`
+
+- Declaring package: `demo_navigation_lab`
+- Generated artifacts:
+  - `serviceClient`: `package:demo_navigation_lab/src/ccrouter_generated/component/navigation_lab_component.service_api.g.dart` (`DemoNavigationLabServices.orderSummary`)

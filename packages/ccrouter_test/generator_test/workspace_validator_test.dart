@@ -32,11 +32,13 @@ Map<String, Object?> component(
   String id, {
   List<String> dependencies = const [],
   List<String> optionalDependencies = const [],
+  List<Map<String, Object?>> serviceDependencies = const [],
 }) => {
   'id': id,
   'version': '1.0.0',
   'dependencies': dependencies,
   'optionalDependencies': optionalDependencies,
+  'serviceDependencies': serviceDependencies,
 };
 
 Map<String, Object?> route(
@@ -127,6 +129,122 @@ Map<String, Object?> implementation(
 };
 
 void main() {
+  test('accepts an exact Service dependency owned by a required component', () {
+    final result = CCRouteWorkspaceValidator.validate([
+      document(
+        package: 'orders',
+        components: [component('orders')],
+        routes: const [],
+        serviceContracts: [
+          {'id': 'orders.summary', 'componentId': 'orders'},
+        ],
+      ),
+      document(
+        package: 'payment',
+        components: [
+          component(
+            'payment',
+            dependencies: ['orders'],
+            serviceDependencies: const [
+              {
+                'id': 'orders.summary',
+                'componentId': 'orders',
+                'contract': 'OrderSummaryService',
+                'key': null,
+                'member': 'orderSummary',
+              },
+            ],
+          ),
+        ],
+        routes: const [],
+      ),
+    ]);
+
+    expect(result.errors, isEmpty);
+  });
+
+  test('rejects missing owner and duplicate Service Client members', () {
+    final result = CCRouteWorkspaceValidator.validate([
+      document(
+        components: [component('orders')],
+        routes: const [],
+        serviceContracts: [
+          {'id': 'orders.summary', 'componentId': 'orders'},
+          {'id': 'orders.quote', 'componentId': 'orders'},
+        ],
+      ),
+      document(
+        package: 'payment',
+        components: [
+          component(
+            'payment',
+            serviceDependencies: const [
+              {
+                'id': 'orders.summary',
+                'componentId': 'orders',
+                'member': 'orders',
+              },
+              {
+                'id': 'orders.quote',
+                'componentId': 'orders',
+                'member': 'orders',
+              },
+            ],
+          ),
+        ],
+        routes: const [],
+      ),
+    ]);
+
+    expect(result.errors, contains(contains('does not require owner')));
+    expect(
+      result.errors,
+      contains(contains('duplicate Service Client member')),
+    );
+  });
+
+  test('rejects a generated consumer for a Route-scoped Service', () {
+    final result = CCRouteWorkspaceValidator.validate([
+      document(
+        package: 'orders',
+        components: [component('orders')],
+        routes: const [],
+        serviceContracts: [
+          {'id': 'orders.draft', 'componentId': 'orders'},
+        ],
+        serviceImplementations: [
+          {
+            'id': 'orders.draft',
+            'contractId': 'orders.draft',
+            'componentId': 'orders',
+            'key': null,
+            'scope': 'route',
+            'isDefault': false,
+          },
+        ],
+      ),
+      document(
+        package: 'payment',
+        components: [
+          component(
+            'payment',
+            dependencies: ['orders'],
+            serviceDependencies: const [
+              {
+                'id': 'orders.draft',
+                'componentId': 'orders',
+                'member': 'orderDraft',
+              },
+            ],
+          ),
+        ],
+        routes: const [],
+      ),
+    ]);
+
+    expect(result.errors, contains(contains('Route-scoped contract')));
+  });
+
   test('accepts components and emits derived route exposure', () {
     final result = CCRouteWorkspaceValidator.validate([
       document(

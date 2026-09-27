@@ -51,7 +51,7 @@
   Demo 30 项、缓存/无缓存 `generate --check`、Runtime/Generator/Service 基准、macOS Debug
   构建和资源释放审查均通过；长期平台 RSS/Heap 趋势仍属于持续观测。
 - [x] 2026-09-27 完成 Component/Service 生成架构回归：`dart analyze`、
-  `ccrouter_test` 324 项、Generator 161 项、Demo 30 项以及缓存/无缓存
+  `ccrouter_test` 324 项、Generator 177 项、Demo 31 项以及缓存/无缓存
   `generate --check` 均通过；4 个组件、31 条路由和 8 个生成 Package 输出一致。
 - [ ] 持续执行 `dart analyze`、框架测试、生成器测试、Demo 测试和 `generate --check`。
 - [ ] 维护冷启动、初始化、路由解析、导航延迟、并发导航、Runtime dispose 的同机趋势。
@@ -80,10 +80,13 @@
 
 - [x] Service Contract Token、简单 Provider registration、自动 Registrar 和 Catalog metadata
   已实现；复杂构造/readiness 继续通过 Contribution 显式注册。
-- [ ] Service 方法级自动 Proxy 仅在达到既定生产阈值后重新评审：至少 3 个 promoted Contract、
-  5 个消费关系，或已经出现签名/Method ID/Caller identity 漂移。
+- [x] Service 方法级自动 Proxy 使用消费组件显式 `CCServiceDependency<T>`，生成组件专属
+  Client、稳定 caller/method identity 和方法 metadata；不扫描依赖生成未使用能力。
+- [ ] 根据生产需求扩展当前明确拒绝的 Stream、callback、泛型、继承或 Route Scope 方法代理；
+  每一项必须先冻结所有权、取消和兼容语义。
 - [ ] Command、Event 自动生成与 Service 同步评估，不为低频注册能力提前增加生成层。
-- [ ] 生成代码继续通过独立 Contract/Proxy Barrel 暴露，禁止业务依赖实现文件。
+- [x] Contract 通过公共业务 barrel 暴露；Proxy 留在消费组件内部生成目录，跨 Package 不导出
+  生成实现文件。
 
 ### 4.4 开发体验与诊断
 

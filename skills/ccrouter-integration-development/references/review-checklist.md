@@ -32,6 +32,7 @@
 - Does Service use the narrowest valid Scope?
 - Is `@CCService` limited to the supported zero-argument construction model, with complex registration kept in `@CCComponentContribution`?
 - Does a promoted Service contract explicitly declare `componentId`, export only its interface from the business barrel, and is each simple `@CCService` implementation bound through exactly one direct Contract?
+- Does every cross-component Service consumer declare `CCServiceDependency<T>`, require the owner component, and use its generated component Client instead of a handwritten Proxy or direct lookup?
 - If a complex promoted Provider needs a Token, is it confined to an owner-only SPI barrel and absent from every consumer dependency?
 - Are disposable resources released by the owning Scope?
 - Is Session opened/closed only by authentication lifecycle?

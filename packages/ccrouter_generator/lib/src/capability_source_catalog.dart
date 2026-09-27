@@ -125,6 +125,27 @@ final class CCCapabilitySourceCatalog {
           ),
         );
       }
+      for (final component in _catalogObjectList(document['components'])) {
+        for (final dependency in _catalogObjectList(
+          component['serviceDependencies'],
+        )) {
+          final id = '${dependency['id'] ?? ''}';
+          final componentId = '${dependency['componentId'] ?? ''}';
+          final artifact = _catalogObject(dependency['generatedArtifact']);
+          if (id.isEmpty || componentId.isEmpty || artifact.isEmpty) continue;
+          records.add(
+            CCCapabilitySourceRecord(
+              kind: 'service',
+              id: id,
+              componentId: componentId,
+              packageName: fallbackPackage,
+              contract: null,
+              implementation: null,
+              generatedArtifacts: [CCGeneratedArtifact.fromJson(artifact)],
+            ),
+          );
+        }
+      }
       for (final implementation in _catalogObjectList(
         document['serviceImplementations'],
       )) {

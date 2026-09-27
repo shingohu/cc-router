@@ -5,8 +5,8 @@
 ## 1. 文档状态
 
 - 状态：Service 子系统实施清单，1.x 生命周期模型已收敛为 App、Session、Route
-- 范围：Service Provider、稳定 Contract ID/Key、Scope、生命周期、跨组件契约和最小注解生成
-- 不包含：CLI 2.0、方法级 Service Proxy 自动生成、动态组件交付和远程 RPC
+- 范围：Service Provider、稳定 Contract ID/Key、Scope、生命周期、跨组件契约、显式消费依赖和方法级 Proxy 生成
+- 不包含：CLI 2.0、动态组件交付、远程 RPC、Stream/callback/泛型方法代理
 
 本文只记录 Service 的实施边界和验收顺序。实际状态以本文件和测试为准，不能把架构设计中
 尚未实现的能力当成公开 API。
@@ -42,7 +42,9 @@
   推导唯一直接 Contract 或内部 ID，生成 Provider registration，并由 Package 唯一 Component
   的自动 Registrar 装配。
 - 带参构造、依赖注入、自定义 Factory 和 async initializer 保持显式
-  `@CCComponentContribution`；方法级 Service Proxy 仍未自动生成。
+  `@CCComponentContribution`。
+- 消费组件通过 `CCServiceDependency<T>` 显式声明跨组件 Contract；生成器输出组件专属 Client，
+  自动固定 Token、Key、method ID、caller identity 和参数转发，不从全部 Package 依赖猜测能力。
 - `CCRouterTestHost.run` 通过 Zone-local Runtime Overlay 让生成 Proxy 和静态 Facade
   在独立 Test Host 上运行；Overlay 不修改生产默认 Runtime，不接管
   `initialize`/`shutdown` 或 Host Backend 绑定。
@@ -85,7 +87,7 @@ Session Scope 均返回稳定的 Service 错误子类型；缺失命名实现会
 - 自动 GoRouter Assembler 已接入；手写 Host Route 必须配对使用
   `CCRouterHostBinding.decodeRouteExtra` 与 `bindRouteEntry`。
 
-### 4.3 Service 调用链（基础边界已完成）
+### 4.3 Service 调用链（已完成）
 
 - Core 已提供由稳定 Token 和 method ID 驱动的 Invocation primitive，覆盖 Provider 解析、实例
   获取、方法执行、父子 Trace、deadline、caller cancellation 和 Scope cancellation。
@@ -100,10 +102,11 @@ Session Scope 均返回稳定的 Service 错误子类型；缺失命名实现会
 - 同步 Proxy 不会暗中启动 initializer；Provider 未 Ready 时抛出
   `CCServiceNotReadyError`。`newInstance` + initializer 每次都需要异步准备，因此不能供
   同步 Proxy 方法直接调用。
-- Demo 中 `demo_payment` 和 `demo_navigation_lab` 各自持有消费方 Proxy，并固定精确
-  caller component identity。这是生成形态验证，不是要求业务长期手写。
-- 后续自动 Proxy 只生成接口中可验证的方法，不采用反射、方法名字符串分派、
-  万能 `Map` 或运行时参数 Codec。
+- Demo 中 `demo_payment` 和 `demo_navigation_lab` 各声明一个精确消费依赖，生成组件专属
+  Proxy 并固定 caller component identity；手写 Proxy 已删除。
+- 自动 Proxy 只生成普通实例方法和 getter，支持同步/Future 返回与常用参数；泛型方法、
+  Contract 继承、setter/operator、Stream/FutureOr、callback、Flutter 与私有 `src` 类型生成失败。
+  不采用反射、万能 `Map` 或运行时参数 Codec。
 
 ### 4.4 Async Service Readiness（已完成）
 
@@ -130,16 +133,12 @@ Session Scope 均返回稳定的 Service 错误子类型；缺失命名实现会
   或异步代码入口。Command、Event 与 InitTask 注册也保持 Contribution，不扫描函数体猜 metadata。
 - Service contract/implementation 已进入 workspace ownership/conflict 校验、Package Index、
   Capability Catalog、Host 聚合和 metadata 内容缓存；无生成物时不创建生成目录。
-- 1.x 跨组件稳定入口是独立 contracts Package 中的接口与注解稳定 ID，消费方通过
-  `CCRouter.service<T>()` 获取强类型实现；Token 不进入普通业务 Facade。
-- 自动 Service Proxy 在出现以下任一真实信号后重新评估：至少 3 个 promoted
-  Contract 且 5 个消费关系；同一 Contract 被至少 3 个组件消费；或者已出现
-  method ID、caller identity 或方法签名漂移缺陷。
-- 上述信号必须来自实际生产组件和维护记录；Demo、测试夹具或为验证方案而人为增加的
-  Contract 不计入阈值。达到阈值只启动设计评审，不代表直接冻结注解和 metadata 协议。
-- 达到阈值后，消费组件必须显式声明自己使用的 Contract，生成器才能输出调用方
-  Proxy。不允许从 Package 依赖猜测所有 Service，也不允许运行时传入可伪造的
-  caller component ID。
+- 1.x 跨组件稳定入口是独立 contracts Package 中的接口、稳定 ID 与消费组件生成 Client；
+  `CCServiceToken<T>` 不进入普通业务 Facade。
+- 消费组件必须显式声明 Contract 后才生成 Proxy；Package 依赖扫描只负责发现元数据，不能
+  自动授予或生成全部 Service。Workspace 再次校验 Contract Owner 和 required dependency。
+- 完整方法矩阵、生命周期、错误和回退见
+  [Service Proxy 自动生成设计](CCRouter-service-proxy-generation-design.md)。
 - CLI 2.0 再考虑契约提升、Override、迁移和一键校验。
 
 ## 5. 验收门槛
@@ -154,5 +153,6 @@ Session Scope 均返回稳定的 Service 错误子类型；缺失命名实现会
   Package Index 与 Host Catalog；不能依赖先生成 Token、第二次再识别 Provider。
 - Service metadata 的新增、内容变化、重命名和删除必须使缓存失效；缓存与 `--no-cache`
   输出逐字节一致。
+- 没有 `serviceDependencies` 的组件不得生成空 Service API；删除最后一个声明后清理陈旧受管文件。
 - Core Service 契约不依赖 BuildContext、反射、字符串方法调用或万能 Map；Flutter
   `routeService(context)` 只读取精确 Host 绑定，不参与实例所有权或销毁判断。

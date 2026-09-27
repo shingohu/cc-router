@@ -111,23 +111,37 @@ void main() {
     await _pumpDemo(tester);
 
     await tester.tap(find.text('解析订单组件 Service Contract'));
-    await tester.pump();
+    await tester.pumpAndSettle();
     await _flushApplicationLogs(tester);
 
-    expect(find.textContaining('Service 返回 · 订单 #2048'), findsOneWidget);
+    expect(
+      find.textContaining('跨组件 Service Proxy · 完成 · 订单 #2048'),
+      findsOneWidget,
+    );
     expect(
       demoApplicationLogger.entries.any(
         (entry) => entry.category == CCDiagnosticCategory.service,
       ),
       isTrue,
     );
-    final trace = CCRouter.recentTraces.lastWhere(
-      (record) => record.operation == 'service',
+    final traces = CCRouter.recentTraces
+        .where((record) => record.operation == 'service')
+        .toList(growable: false);
+    expect(
+      traces.map((trace) => trace.target),
+      containsAll(<String>[
+        'demo_order.summary.summaryFor',
+        'demo_order.summary.loadSummary',
+        'demo_order.summary.invocationCount',
+      ]),
     );
-    expect(trace.target, 'demo_order.summary.summaryFor');
-    expect(trace.context.callerComponentId, 'demo_navigation_lab_component');
-    expect(trace.context.targetComponentId, 'demo_order_component');
-    expect(trace.status, 'succeeded');
+    expect(traces.map((trace) => trace.context.callerComponentId).toSet(), {
+      'demo_navigation_lab_component',
+    });
+    expect(traces.map((trace) => trace.context.targetComponentId).toSet(), {
+      'demo_order_component',
+    });
+    expect(traces.every((trace) => trace.status == 'succeeded'), isTrue);
 
     await _unmountDemo(tester);
   });

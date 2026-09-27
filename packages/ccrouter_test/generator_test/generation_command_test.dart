@@ -233,21 +233,27 @@ void probe() {
       ).readAsStringSync();
       expect(packageCatalogDocument, contains('Scope: `package:demo_order`'));
       expect(packageCatalogDocument, contains('### Route `order.detail`'));
+      final paymentCatalogDocument = File(
+        path.join(
+          Directory.current.path,
+          'demo',
+          'modules',
+          'payment',
+          'lib',
+          'src',
+          'ccrouter_generated',
+          'metadata',
+          'cc_catalog.md',
+        ),
+      ).readAsStringSync();
+      expect(paymentCatalogDocument, contains('Scope: `package:demo_payment`'));
       expect(
-        File(
-          path.join(
-            Directory.current.path,
-            'demo',
-            'modules',
-            'payment',
-            'lib',
-            'src',
-            'ccrouter_generated',
-            'metadata',
-            'cc_catalog.md',
-          ),
-        ).existsSync(),
-        isFalse,
+        paymentCatalogDocument,
+        contains('### Service `demo_order.summary`'),
+      );
+      expect(
+        paymentCatalogDocument,
+        contains('`DemoPaymentServices.orderSummary`'),
       );
       for (final legacyName in ['cc_routes.md', 'cc_sources.md']) {
         expect(

@@ -40,6 +40,20 @@ final RegExp _componentIdPattern = RegExp(
   r'^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$',
 );
 
+/// Matches typed Service dependencies recorded on a component definition.
+const TypeChecker _componentServiceDependencyChecker =
+    TypeChecker.typeNamedLiterally(
+      'CCServiceDependency',
+      inPackage: 'ccrouter_contracts',
+    );
+
+/// Matches public Service contracts referenced by component dependencies.
+const TypeChecker _componentServiceContractChecker =
+    TypeChecker.typeNamedLiterally(
+      'CCServiceContract',
+      inPackage: 'ccrouter_contracts',
+    );
+
 /// Full SemVer 2.0 syntax used by component contract versions.
 final RegExp _semanticVersionPattern = RegExp(
   r'^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)'

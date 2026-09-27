@@ -1,3 +1,5 @@
+import 'service.dart';
+
 /// Stable, typed identity shared by a component and its public contracts.
 ///
 /// Declare the canonical constant in a Pure Dart contracts package once a
@@ -40,6 +42,7 @@ final class CCComponent {
     required this.version,
     this.dependencies = const [],
     this.optionalDependencies = const [],
+    this.serviceDependencies = const [],
   });
 
   /// Globally unique component identifier used by generated ownership metadata.
@@ -60,6 +63,14 @@ final class CCComponent {
 
   /// Component IDs ordered first only when present in the application.
   final List<CCComponentId> optionalDependencies;
+
+  /// Public Service contracts consumed across component boundaries.
+  ///
+  /// Each entry causes generation of one component-specific typed Proxy. The
+  /// owning component of every Service must also appear in [dependencies]; an
+  /// optional component cannot satisfy a required method call. Keep local
+  /// Services out of this list and resolve them directly inside their owner.
+  final List<CCServiceDependency<Object>> serviceDependencies;
 }
 
 /// Marks one package-internal capability registration contribution.

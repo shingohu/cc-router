@@ -142,6 +142,31 @@ final class CartSummaryServiceImpl implements CartSummaryService {
 }
 ```
 
+The consuming component declares the exact cross-component capability and
+keeps its owner in required component dependencies:
+
+```dart
+const checkoutComponent = CCComponent(
+  id: checkoutComponentId,
+  version: '1.0.0',
+  dependencies: [cartComponentId],
+  serviceDependencies: [
+    CCServiceDependency<CartSummaryService>(),
+  ],
+);
+```
+
+After generation, call the component-specific Client:
+
+```dart
+final summary = CheckoutServices.cartSummary.summary();
+```
+
+Do not handwrite a Proxy or pass caller component IDs. The generated Proxy is
+stateless and resolves the current Scope on every method call. Keep local
+Services on `CCRouter.service<T>()`; only stable cross-component contracts need
+`CCServiceDependency<T>`.
+
 Do not export or pass the generated Token in business code. Generator and
 Runtime retain its stable ID for ownership, diagnostics, and package moves.
 

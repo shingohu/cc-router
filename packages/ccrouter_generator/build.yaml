@@ -20,6 +20,17 @@ builders:
     defaults:
       generate_for:
         exclude: ["lib/**/ccrouter_generated/**"]
+  service_proxies:
+    import: "package:ccrouter_generator/builder.dart"
+    builder_factories: ["ccServiceProxyBuilder"]
+    build_extensions:
+      "^lib/src/{{}}.dart": ["lib/src/ccrouter_generated/component/{{}}.service_api.g.dart"]
+    auto_apply: dependents
+    build_to: source
+    runs_before: ["ccrouter_generator:component_metadata"]
+    defaults:
+      generate_for:
+        exclude: ["lib/**/ccrouter_generated/**"]
   service_metadata:
     import: "package:ccrouter_generator/builder.dart"
     builder_factories: ["ccServiceMetadataBuilder"]

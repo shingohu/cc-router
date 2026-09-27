@@ -8,9 +8,9 @@ import 'package:flutter/material.dart';
 
 import 'lab_configuration.dart';
 import 'component_capabilities.dart';
-import 'order_summary_service_proxy.dart';
 import 'shell_contract.dart';
 import 'ccrouter_generated/component/demo_navigation_lab_component.route_api.g.dart';
+import 'ccrouter_generated/component/navigation_lab_component.service_api.g.dart';
 
 @CCRoute<void>(
   id: 'demo_navigation_lab.home',
@@ -27,9 +27,6 @@ final class DemoNavigationHomePage extends StatefulWidget {
 
 final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
     with CCPageLifecycleMixin<DemoNavigationHomePage> {
-  static const OrderSummaryService _orderSummaryService =
-      OrderSummaryServiceProxy();
-
   int _section = 0;
   String _status = 'Ready · 选择一个场景开始验证';
   OverlayEntry? _overlayEntry;
@@ -334,11 +331,16 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
       _ActionTile(
         icon: Icons.data_object,
         title: '解析订单组件 Service Contract',
-        subtitle: '强类型 Proxy 验证跨组件调用、来源归属和 Trace。',
-        onTap: () {
-          final summary = _orderSummaryService.summaryFor(2048);
-          _setStatus('Service 返回 · $summary');
-        },
+        subtitle: '生成 Proxy 验证同步/异步调用、来源归属、计数和 Trace。',
+        onTap: () => _run('跨组件 Service Proxy', () async {
+          final syncSummary = DemoNavigationLabServices.orderSummary.summaryFor(
+            2048,
+          );
+          final asyncSummary = await DemoNavigationLabServices.orderSummary
+              .loadSummary(4096);
+          final count = DemoNavigationLabServices.orderSummary.invocationCount;
+          return '$syncSummary · $asyncSummary · 调用 $count 次';
+        }),
       ),
       _ActionTile(
         icon: Icons.memory_outlined,

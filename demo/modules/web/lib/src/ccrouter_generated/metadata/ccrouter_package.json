@@ -5,7 +5,7 @@
     "name": "demo_web",
     "version": "0.1.0"
   },
-  "contentFingerprint": "48ef15d7f50397e3b26b3b318e4d2200d3a6cea97bc3e35a8ea9dd84807ea76c",
+  "contentFingerprint": "7849eab96951b4eb558553ca742cd48bc00281c5d9ddbd6794b84a8278ad8f93",
   "bundle": {
     "library": "lib/src/ccrouter_generated/host/demo_web_ccrouter.g.dart",
     "symbol": "ccrouterGeneratedPackageBundle"
@@ -36,7 +36,8 @@
           "id": "demo_web_component",
           "version": "0.1.0",
           "dependencies": [],
-          "optionalDependencies": []
+          "optionalDependencies": [],
+          "serviceDependencies": []
         }
       ],
       "routes": [],

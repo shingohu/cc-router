@@ -9,4 +9,5 @@ const demoPaymentComponent = CCComponent(
   id: demoPaymentComponentId,
   version: '0.1.0',
   dependencies: [demoOrderComponentId],
+  serviceDependencies: [CCServiceDependency<OrderSummaryService>()],
 );

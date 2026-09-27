@@ -467,13 +467,16 @@ all registrars
 - 生成顶层 `CCComponent` 对应的 Registrar、Manifest、Route Catalog 和 Host Bundle。
 - 为零参数同步构造的简单 `@CCService` 生成 Provider registration，并自动绑定唯一直接
   `@CCServiceContract`；复杂 Service 通过显式 Contribution 注册。
+- 根据消费组件显式 `CCServiceDependency<T>` 生成组件专属方法 Proxy，并校验公开类型、
+  Contract Owner、required dependency、Key、alias 和方法签名。
 - 将 `@CCComponentContribution` 稳定合入组件 Registrar。
 - 生成 Package Index、Host 路由目录、Catalog 和调试 metadata。
 - 对重复 ID、模糊路由、所有权、契约 exposure、Service Contract/Provider 冲突和依赖图报错；
   动态注册关系、InitTask 缺失依赖与循环仍由 Runtime 校验。
 
-Service 方法 Proxy 与 Command/Event/InitTask 声明生成尚未实现，只有达到生产阈值后才分别评估，
-不通过扫描手写 Registrar 或 Contribution 猜测静态关系。
+Command/Event/InitTask 声明生成尚未实现，只有达到生产阈值后才分别评估，不通过扫描手写
+Registrar 或 Contribution 猜测静态关系。Service Proxy 也只使用显式消费声明，不扫描全部
+Package 依赖猜测能力。
 
 ### 7.3 注册确定性
 
@@ -570,17 +573,17 @@ Scope 实例。稳定 ID 在接口移动 Package 时不变，泛型仍负责静�
 
 ### 8.4 服务代理
 
-Runtime 已提供方法级 Invocation、Trace、Scope、取消和错误边界；Demo 以手写强类型 Proxy
-验证以下目标形态：
+Runtime 与生成器已提供方法级 Invocation、Trace、Scope、取消和错误边界：
 
 ```text
 caller -> Service Proxy -> Middleware/Trace/Scope Check -> implementation
 ```
 
-Proxy 用于记录方法级调用、检查 Scope、传播取消和标准化错误。当前生成器只自动生成
-Service Contract Token 与简单 Provider registration，不生成方法级 Proxy。自动 Proxy 只有在
-出现足够多 promoted Contract 和消费关系、能够冻结 Method ID 与调用方身份规则后才实施；届时
-应通过生成代码专用 bridge 调用 Runtime Invocation primitive，并保持契约原始同步/异步返回类型。
+Proxy 用于记录方法级调用、检查 Scope、传播取消和标准化错误。消费组件通过
+`CCServiceDependency<T>` 显式选择 Contract，生成组件专属 Client；生成器不会扫描 Package
+依赖并生成全部可见能力。Client 通过生成代码专用 bridge 调用 Runtime Invocation primitive，
+并保持契约原始同步/异步返回类型。完整支持矩阵见
+[Service Proxy 自动生成设计](CCRouter-service-proxy-generation-design.md)。
 
 方法级 Trace 只包含稳定 Token、Key、method ID、显式 caller component、Provider owner、
 Scope 和终态。参数、返回对象和任意业务文本不进入 Trace。Session 关闭、RouteEntry 移除或
@@ -651,7 +654,9 @@ closed -> opening -> ready -> closing -> closed
 
 Runtime 为每次打开生成唯一 `sessionId`，并记录 `accountId`、开启时间和非敏感元数据。用户主动退出、Token 失效且刷新失败、账号切换、强制下线或 Runtime 关闭时必须关闭 Session。App 进入后台、页面切换或临时无操作不关闭 Session。
 
-重新登录创建全新的 `SessionScope`，按原 Provider Factory 重新实例化。账号切换必须先完整关闭旧 Session，再打开新 Session。旧 Service Proxy 永久失效，不能自动指向新会话。
+重新登录创建全新的 `SessionScope`，按原 Provider Factory 重新实例化。账号切换必须先完整关闭旧
+Session，再打开新 Session。已解析的旧 Service 实例永久失效；生成的无状态 Service Proxy 不缓存
+实例，每次调用会解析当前 Session，因此可以在新 Session 中继续使用。
 
 ### 9.2 Route Service
 
@@ -1282,8 +1287,8 @@ CCRouter.diagnostics.exportReport();
 
 - Route Contract 与 Widget Factory 的实现验证，语义以路由子系统设计为准。
 - `navigate` 的 push/replace/reset 参数模型。
-- Service Proxy 的方法拦截生成范围；1.x 只保留已验证的 Runtime primitive 和
-  Demo 形态样例，自动 metadata/Proxy 等达到量化阈值后再实施。
+- Service Proxy 首版方法矩阵已经冻结为普通实例方法/getter、同步/Future 返回和公共 Pure Dart
+  类型；Stream、callback、泛型、继承与 Route Scope 的扩展继续以真实生命周期场景为门槛。
 - 多 Navigator Outlet 的声明方式。
 - Trace 采样、上报和与后端 OpenTelemetry 的关联方式。
 - Native Adapter、Isolate Adapter 的 Envelope Schema。

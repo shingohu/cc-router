@@ -5,7 +5,7 @@
     "name": "demo_navigation_lab",
     "version": "0.1.0"
   },
-  "contentFingerprint": "a6846e74c026c35712a90f2a9e7f399fba6c210a47ab2344b9cee30bbecdc8fe",
+  "contentFingerprint": "d2ab66c857a2f315cd331e21be72b4116dee6e4d810d94f3793dd656ef480d5b",
   "bundle": {
     "library": "lib/src/ccrouter_generated/host/demo_navigation_lab_ccrouter.g.dart",
     "symbol": "ccrouterGeneratedPackageBundle"
@@ -19,7 +19,7 @@
     {
       "name": "demo_order_contracts",
       "version": "0.1.0",
-      "contentFingerprint": "24874468f4dc2ed4494d337961fe35f36cc9113e5a4d5818bee80c5b17ca4c8e"
+      "contentFingerprint": "3da10584233ade2da54b7a3f0dd3f0c4fabbbf2c380fd915ead07efebc22da20"
     },
     {
       "name": "demo_web_contracts",
@@ -591,7 +591,21 @@
             "demo_order_component",
             "demo_web_component"
           ],
-          "optionalDependencies": []
+          "optionalDependencies": [],
+          "serviceDependencies": [
+            {
+              "id": "demo_order.summary",
+              "componentId": "demo_order_component",
+              "contract": "OrderSummaryService",
+              "key": null,
+              "member": "orderSummary",
+              "generatedArtifact": {
+                "role": "serviceClient",
+                "symbol": "DemoNavigationLabServices.orderSummary",
+                "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/component/navigation_lab_component.service_api.g.dart"
+              }
+            }
+          ]
         }
       ],
       "routes": [],
@@ -3305,6 +3319,21 @@
             "role": "routeBinding",
             "symbol": "ccrouterBuildDemoWorkspaceProfilePageRoute",
             "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/binding/shell_pages.route_binding.g.dart"
+          }
+        ]
+      },
+      {
+        "kind": "service",
+        "id": "demo_order.summary",
+        "componentId": "demo_order_component",
+        "packageName": "demo_navigation_lab",
+        "contract": null,
+        "implementation": null,
+        "generatedArtifacts": [
+          {
+            "role": "serviceClient",
+            "symbol": "DemoNavigationLabServices.orderSummary",
+            "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/component/navigation_lab_component.service_api.g.dart"
           }
         ]
       }

@@ -5,12 +5,12 @@
 - 审查日期：2026-09-27
 - 审查范围：路由 Runtime、业务 Facade、Host/Adapter SPI、GoRouter Adapter、生成器、
   Service、Command、Event、初始化任务、Demo、测试与诊断模型。
-- 自动化基线：`dart analyze` 通过；`ccrouter_test` 324 项、Demo 30 项、Generator 161 项测试通过；
+- 自动化基线：`dart analyze` 通过；`ccrouter_test` 324 项、Demo 31 项、Generator 177 项测试通过；
   Demo 生成物缓存与 `--no-cache` 两种 `--check` 均通过；macOS debug build 通过。
 - 总体结论：当前实现满足 13 条约定在 v0.1 静态组件范围内的发布门槛，没有 P0 或 P1 问题。
   Route、Service、Command、Event 和 InitTask 已形成边界明确的最小闭环。生成物职责、API 隔离、
-  生命周期、取消与诊断已完成本轮收口；Service Contract 自动绑定与 Provider 最小注解生成已实现，方法级
-  Service Proxy、Command/Event/InitTask 注解、Action Pipeline、动态
+  生命周期、取消与诊断已完成本轮收口；Service Contract 自动绑定、Provider 最小注解与消费组件
+  方法级 Proxy 生成已实现；Command/Event/InitTask 注解、Action Pipeline、动态
   组件治理、Restoration、真实平台多窗口和长期 RSS/Heap 趋势仍是明确后续项，不能因已有设计
   文档而视为已经实现。
 
@@ -249,9 +249,9 @@ Listener、Stream、Overlay 或 Controller；Resolver 不拥有 Runtime，也不
 - Demo 通过真实 Runtime 覆盖 Command typed/void/timeout/cancel/error、Event 多订阅/隔离/零订阅/
   timeout、InitTask Gate/失败依赖，以及 Service 全部 Scope、创建策略、readiness、多实现、optional
   lookup 和自动销毁；
-- Action Pipeline 等待动态预埋操作链的真实业务样本；Service 方法 Proxy 与
-  Command/Event/InitTask 注解等待重复样板、依赖漂移或 DevTools 静态图需求，不为“看起来自动”
-  提前冻结协议。
+- Action Pipeline 等待动态预埋操作链的真实业务样本；Service 方法 Proxy 已采用显式消费依赖，
+  只为真实跨组件 Contract 生成组件专属 Client；Command/Event/InitTask 注解继续等待重复样板、
+  依赖漂移或 DevTools 静态图需求，不为“看起来自动”提前冻结协议。
 
 ## 5. 已确认符合且应保持的边界
 
@@ -277,20 +277,21 @@ Listener、Stream、Overlay 或 Controller；Resolver 不拥有 Runtime，也不
   `runInitialization(gate: ...)` 等待，Service readiness 不隐藏在全局启动中。
 - 组件集合在初始化时一次确定。1.x 不提供不完整的动态 activate/deactivate，也不允许业务销毁
   Runtime、Scope、Adapter 或 Service 实例。
-- 简单 Service 使用生成注册，复杂 Service、Command、Event 与 InitTask 使用显式 Contribution；
-  只有生产样板和静态图收益足够时，才扩展方法 Proxy 或新增消息类注解与 metadata。
+- 简单 Service 使用生成注册，跨组件 Service 使用显式消费声明生成方法 Proxy；复杂 Service、
+  Command、Event 与 InitTask 使用显式 Contribution。当前 Proxy 不支持的方法形态只有在真实
+  所有权与取消语义明确后才扩展。
 
 ## 6. 本轮最终门禁
 
-- `fvm dart test --concurrency=1 packages/ccrouter_test/generator_test`：161 项通过；
+- `fvm dart test --concurrency=1 packages/ccrouter_test/generator_test`：177 项通过；
 - `fvm flutter test packages/ccrouter_test/test`：324 项通过；
-- `fvm flutter test demo`：30 项通过；
+- `fvm flutter test demo`：31 项通过；
 - `fvm dart analyze`：无问题；
 - `fvm dart run ccrouter_generator:ccrouter generate demo --check` 与 `--no-cache --check`：31 条路由、
   8 个生成 Package 均同步；
 - `fvm flutter build macos --debug`：成功生成 `ccrouter_demo.app`；
 - `git diff --check`：通过。
 
-后续增加 Service 方法 Proxy、Command/Event/InitTask 注解、Action Pipeline、动态组件、Android Predictive Back、
+后续扩展 Service Proxy 方法矩阵、增加 Command/Event/InitTask 注解、Action Pipeline、动态组件、Android Predictive Back、
 Restoration、真实平台多窗口或新 Adapter 时，必须补对应构建期、生命周期、并发、性能和平台
 回归；它们不属于本轮已经实现的能力。

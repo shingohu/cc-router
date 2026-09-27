@@ -495,6 +495,7 @@ const probeComponent = CCComponent(
       'version': '1.2.3',
       'dependencies': ['accounts'],
       'optionalDependencies': ['analytics'],
+      'serviceDependencies': <Object>[],
     });
     expect(
       await reader.canRead(
@@ -504,6 +505,59 @@ const probeComponent = CCComponent(
         ),
       ),
       isFalse,
+    );
+  });
+
+  test('component metadata records exact generated Service Client input', () async {
+    await testBuilder(
+      ccComponentMetadataBuilder(BuilderOptions.empty),
+      {
+        'ccrouter_test|lib/order_contracts.dart': r'''
+import 'package:ccrouter/ccrouter.dart';
+const orderId = CCComponentId('orders');
+@CCServiceContract(componentId: orderId, id: 'orders.summary')
+abstract interface class OrderSummaryService { String summary(); }
+''',
+        'ccrouter_test|lib/src/payment_component.dart': r'''
+import 'package:ccrouter/ccrouter.dart';
+import 'package:ccrouter_test/order_contracts.dart';
+const payment = CCComponent(
+  id: CCComponentId('payment'),
+  version: '1.0.0',
+  dependencies: [orderId],
+  serviceDependencies: [
+    CCServiceDependency<OrderSummaryService>(alias: 'orders'),
+  ],
+);
+''',
+      },
+      rootPackage: 'ccrouter_test',
+      generateFor: {'ccrouter_test|lib/src/payment_component.dart'},
+      isInput: (id) =>
+          id == 'ccrouter_test|lib/src/payment_component.dart' ||
+          id == 'ccrouter_test|lib/order_contracts.dart',
+      readerWriter: reader,
+      flattenOutput: true,
+    );
+    final json =
+        jsonDecode(
+              await reader.readAsString(
+                AssetId(
+                  'ccrouter_test',
+                  'lib/src/ccrouter_generated/metadata/src/payment_component.component.json',
+                ),
+              ),
+            )
+            as Map;
+    final component = (json['components'] as List).single as Map;
+    final dependency = (component['serviceDependencies'] as List).single as Map;
+    expect(dependency['id'], 'orders.summary');
+    expect(dependency['componentId'], 'orders');
+    expect(dependency['contract'], 'OrderSummaryService');
+    expect(dependency['member'], 'orders');
+    expect(
+      (dependency['generatedArtifact'] as Map)['packageUri'],
+      'package:ccrouter_test/src/ccrouter_generated/component/payment_component.service_api.g.dart',
     );
   });
 

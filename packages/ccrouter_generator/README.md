@@ -73,6 +73,23 @@ void registerOrderCapabilities(CCRegistry registry) {
 }
 ```
 
+跨组件 Service 由消费组件精确声明，不扫描全部 Package 依赖：
+
+```dart
+const paymentComponent = CCComponent(
+  id: paymentComponentId,
+  version: '1.0.0',
+  dependencies: [orderComponentId],
+  serviceDependencies: [
+    CCServiceDependency<OrderSummaryService>(),
+  ],
+);
+```
+
+生成的 `<component-source>.service_api.g.dart` 提供 `<Component>Services` 静态 Client，自动固定
+Contract、Key、method ID 和 caller component ID。无消费声明时不生成该文件。首版只接受普通
+实例方法/getter、同步或 Future 返回及可公开导入的 Pure Dart 类型；不支持项在生成期失败。
+
 声明 `@CCRouteContract` 的 Package 需要直接依赖 `ccrouter_contracts`，公共 barrel 只导出
 生成的契约 library。同 Package Contract-first 可用于渐进迁移；独立 contracts Package
 用于稳定的跨组件边界：
@@ -171,6 +188,9 @@ Host 依赖闭包内、明确可写且声明 `ccrouter_generator` 的 Package，
   `CCServiceProvider<T>` registration bridge。直接实现唯一 `@CCServiceContract` 时自动绑定；
   未实现 Contract 的内部 Service 必须声明 `id`。首版只接受 public concrete non-generic
   class 的 unnamed zero-argument generative constructor。
+- `<component-source>.service_api.g.dart`：仅为 `serviceDependencies` 中显式声明的跨组件
+  Contract 生成组件专属 typed Client/Proxy；同步方法保留同步签名，Future 方法进入异步
+  readiness 与 Scope cancellation 边界。
 - `<component-id>.component.g.dart`：自动生成私有 Registrar、Runtime Manifest 和后端中立的
   `CCFlutterRouteCatalog`，稳定装配 Route、Service 与 Contribution。
 - `lib/src/ccrouter_generated/metadata/ccrouter_package.json`：发布级 Package Index，包含 Schema、Package
@@ -281,8 +301,9 @@ Registrar；生成的 `<package>_ccrouter.g.dart` 是唯一 Host 装配入口。
   `componentId` 和稳定 ID。`@CCService` 只自动绑定一个直接实现的 Contract；多个直接
   Contract、Contract 与 `id` 并存、或只通过间接继承获得 Contract 都会生成失败。带参构造、
   依赖注入、自定义 Factory 和 async initializer 继续使用 `@CCComponentContribution`。
-- Service 注解生成内部 Token、Provider registration 和 Catalog metadata，不生成方法级 Proxy。
-  跨组件业务调用按接口类型解析；需要 invocation method trace 的 Proxy 仍按明确契约维护。
+- Service 注解生成内部 Token、Provider registration 和 Catalog metadata；消费组件的
+  `serviceDependencies` 生成方法级 typed Proxy。普通本地 Service 仍按接口类型直接解析，
+  只有显式跨组件消费进入 invocation method Trace。
 
 具名/Factory 页面构造器留到后续阶段；未命名构造器的继承参数、required positional、
 optional positional、named 参数、默认值和跨 Package import 已覆盖。聚合校验同时

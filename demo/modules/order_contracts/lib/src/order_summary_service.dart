@@ -11,4 +11,10 @@ import 'order_detail_route_contract.dart';
 abstract interface class OrderSummaryService {
   /// Returns a display-safe summary for the stable [orderId].
   String summaryFor(int orderId);
+
+  /// Loads one summary through an asynchronous component boundary.
+  Future<String> loadSummary(int orderId);
+
+  /// Number of calls handled by the current app-scoped Service instance.
+  int get invocationCount;
 }

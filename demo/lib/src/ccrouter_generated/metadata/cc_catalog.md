@@ -788,6 +788,8 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 - Contract/declaration: `package:demo_order_contracts/src/order_summary_service.dart:11:26` (`OrderSummaryService`)
 - Implementation: `package:demo_order/src/order_summary_service.dart:6:13` (`DemoOrderSummaryService`)
 - Generated artifacts:
+  - `serviceClient`: `package:demo_navigation_lab/src/ccrouter_generated/component/navigation_lab_component.service_api.g.dart` (`DemoNavigationLabServices.orderSummary`)
+  - `serviceClient`: `package:demo_payment/src/ccrouter_generated/component/demo_payment_component.service_api.g.dart` (`DemoPaymentServices.orderSummary`)
   - `serviceRegistration`: `package:demo_order/src/ccrouter_generated/service/order_summary_service.service.g.dart` (`ccrouterRegisterDemoOrderSummaryServiceService`)
   - `serviceToken`: `package:demo_order_contracts/src/ccrouter_generated/contract/order_summary_service.service.contract.g.dart` (`orderSummaryServiceToken`)
 

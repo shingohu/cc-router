@@ -93,6 +93,20 @@ Builder ccServiceBuilder(BuilderOptions options) {
   );
 }
 
+/// Creates component-specific typed Service Clients from explicit dependencies.
+Builder ccServiceProxyBuilder(BuilderOptions options) {
+  final config = Map<String, dynamic>.from(options.config);
+  config.putIfAbsent('build_extensions', () => _serviceProxyBuildExtensions);
+  return LibraryBuilder(
+    ccServiceProxyGenerator(),
+    generatedExtension: '.service_api.g.dart',
+    options: BuilderOptions(config, isRoot: options.isRoot),
+    header:
+        '// GENERATED CODE - DO NOT MODIFY BY HAND\n'
+        '// ignore_for_file: type=lint, unused_element',
+  );
+}
+
 /// Emits disposable machine-readable component metadata into the build cache.
 Builder ccComponentMetadataBuilder(BuilderOptions options) =>
     ccComponentMetadataBuilderInternal();
@@ -138,5 +152,12 @@ const _serviceContractBuildExtensions = <String, List<String>>{
 const _serviceBuildExtensions = <String, List<String>>{
   r'^lib/src/{{}}.dart': [
     'lib/src/ccrouter_generated/service/{{}}.service.g.dart',
+  ],
+};
+
+/// Maps component declarations to package-internal typed Service Client APIs.
+const _serviceProxyBuildExtensions = <String, List<String>>{
+  r'^lib/src/{{}}.dart': [
+    'lib/src/ccrouter_generated/component/{{}}.service_api.g.dart',
   ],
 };

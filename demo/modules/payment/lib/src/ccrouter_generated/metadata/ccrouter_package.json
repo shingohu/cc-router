@@ -5,7 +5,7 @@
     "name": "demo_payment",
     "version": "0.1.0"
   },
-  "contentFingerprint": "f494b708ca975d21d52f7328ef0666ca32939a42191afb02afe2225df8edfa3a",
+  "contentFingerprint": "46b9266904975e0a61a83dc80ca990a8902cfac20df06cee13ba62f87540d766",
   "bundle": {
     "library": "lib/src/ccrouter_generated/host/demo_payment_ccrouter.g.dart",
     "symbol": "ccrouterGeneratedPackageBundle"
@@ -14,7 +14,7 @@
     {
       "name": "demo_order_contracts",
       "version": "0.1.0",
-      "contentFingerprint": "24874468f4dc2ed4494d337961fe35f36cc9113e5a4d5818bee80c5b17ca4c8e"
+      "contentFingerprint": "3da10584233ade2da54b7a3f0dd3f0c4fabbbf2c380fd915ead07efebc22da20"
     }
   ],
   "metadata": [
@@ -38,7 +38,21 @@
           "dependencies": [
             "demo_order_component"
           ],
-          "optionalDependencies": []
+          "optionalDependencies": [],
+          "serviceDependencies": [
+            {
+              "id": "demo_order.summary",
+              "componentId": "demo_order_component",
+              "contract": "OrderSummaryService",
+              "key": null,
+              "member": "orderSummary",
+              "generatedArtifact": {
+                "role": "serviceClient",
+                "symbol": "DemoPaymentServices.orderSummary",
+                "packageUri": "package:demo_payment/src/ccrouter_generated/component/demo_payment_component.service_api.g.dart"
+              }
+            }
+          ]
         }
       ],
       "routes": [],
@@ -48,6 +62,22 @@
   ],
   "capabilityCatalog": {
     "schemaVersion": 1,
-    "records": []
+    "records": [
+      {
+        "kind": "service",
+        "id": "demo_order.summary",
+        "componentId": "demo_order_component",
+        "packageName": "demo_payment",
+        "contract": null,
+        "implementation": null,
+        "generatedArtifacts": [
+          {
+            "role": "serviceClient",
+            "symbol": "DemoPaymentServices.orderSummary",
+            "packageUri": "package:demo_payment/src/ccrouter_generated/component/demo_payment_component.service_api.g.dart"
+          }
+        ]
+      }
+    ]
   }
 }
