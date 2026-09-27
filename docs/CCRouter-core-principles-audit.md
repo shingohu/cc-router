@@ -250,8 +250,10 @@ Listener、Stream、Overlay 或 Controller；Resolver 不拥有 Runtime，也不
   timeout、InitTask Gate/失败依赖，以及 Service 全部 Scope、创建策略、readiness、多实现、optional
   lookup 和自动销毁；
 - Action Pipeline 等待动态预埋操作链的真实业务样本；Service 方法 Proxy 已采用显式消费依赖，
-  只为真实跨组件 Contract 生成组件专属 Client；Command/Event/InitTask 注解继续等待重复样板、
-  依赖漂移或 DevTools 静态图需求，不为“看起来自动”提前冻结协议。
+  只为真实跨组件 Contract 生成组件专属 Client；Command 已形成 Contract、唯一 Handler、显式
+  消费依赖、组件专属 Client 和 metadata 的生成计划但尚未实现；Event 已形成 Contract、静态
+  Subscription、Owner 自动 Publication Client 和 metadata 的独立计划但尚未实现；InitTask 已形成
+  Task Contract、顶层 Handler、类型化依赖、DAG/Catalog 和 Workspace 校验计划但尚未实现。
 
 ## 5. 已确认符合且应保持的边界
 

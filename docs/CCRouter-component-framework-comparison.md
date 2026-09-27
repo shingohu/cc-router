@@ -106,14 +106,15 @@ void registerOrderCapabilities(CCRegistry registry) {
 ```
 
 Contribution 会自动并入组件的生成 Registrar，因此新增 Route 或简单 Service 不再手工修改
-Registrar。Command、Event、InitTask、Shell、策略和复杂 Service 仍是低频且语义各异的能力，
-当前没有足够生产样本冻结统一注解和 metadata 协议。
+Registrar。Shell、策略和复杂 Service 仍是低频且语义各异的能力。Command、Event 和 InitTask
+已分别确认稳定 ID、可信 Owner 与静态关系图缺口，各自独立生成方案已记录，但尚未实现。
 
 继续显式声明这些能力是有意选择，不是 Route/Service 自动装配遗漏。Service 方法 Proxy 已通过
-消费组件的结构化依赖声明独立实现；Command/Event/InitTask 只有达到既定生产阈值后再分别
-评估声明生成，不能把不同语义重新合并成一个万能注册注解。
+消费组件的结构化依赖声明独立实现；Command 将采用显式 Contract、Handler 与消费依赖；Event
+将采用显式 Contract、静态 Subscription 和 Owner 自动 Publication；InitTask 将采用显式 Task
+Contract、顶层 Handler 和类型化依赖。不同语义不能重新合并成一个万能注册注解。
 
-**优先级：中，暂不立即实现。**
+**优先级：Command、Event、InitTask 均已有独立方案，按未来计划顺序实施。**
 
 ### 3. Generator 和 IDE 工具链不如成熟路由框架
 

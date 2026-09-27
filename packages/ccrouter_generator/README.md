@@ -64,7 +64,10 @@ contracts Package 只依赖 `ccrouter_contracts`，生成 `OrderDetailRoute.inte
 存在一个实现。普通内部页面继续使用 `@CCRoute`，无需提前拆包。
 
 不再需要手写 Registrar 或 generated `part`。Command、Event、InitTask、Shell、策略和复杂
-Service 等没有专用声明模型的能力，使用顶层同步 Contribution：
+Service 等当前没有专用声明模型的能力，使用顶层同步 Contribution。Command 的
+Contract/Handler/显式消费依赖/组件专属 Client 方案，以及 Event 的 Contract/静态
+Subscription/Owner 自动 Publication 方案、InitTask 的 Task Contract/Handler/类型化依赖/DAG
+方案已经记录，但实现完成前不能使用：
 
 ```dart
 @CCComponentContribution(id: 'order.capabilities')
@@ -210,7 +213,10 @@ Host 依赖闭包内、明确可写且声明 `ccrouter_generator` 的 Package，
 
 `ccrouter_package.json` 是 Capability Source Catalog 的机器事实来源，`cc_catalog.md` 只由
 它和同轮 metadata 派生，不维护第二套手工索引。当前 Route 与注解 Service 具备静态声明链路；
-Command、Action、Event 和 InitTask 不通过扫描 Contribution 源码猜测注册关系。只读
+Command 生成方案将使用显式 Contract、Handler 和消费依赖，Event 生成方案将使用显式 Contract、
+静态 Subscription 和 Owner 自动 Publication，InitTask 生成方案将使用显式 Task Contract、Handler
+和类型化依赖，三者均尚未实现；Action 和 InitTask 都不通过扫描 Contribution 源码猜测注册
+关系。只读
 `ccrouter find` 和未来 DevTools 应消费版本化 Catalog 与
 Runtime 快照，而不是解析 Markdown 或直接绑定 Builder 的原始 JSON。
 

@@ -68,7 +68,9 @@ import 'package:ccrouter_go_router/ccrouter_go_router.dart';
 | Action Pipeline | 暂不支持 | 等真实优先级、短路、白名单场景成熟后再设计 |
 | 完整状态恢复 | 暂不支持 | 当前只记录脱敏的 restoration opportunity |
 | Service 注解生成 | 已支持 | `@CCService` 自动绑定唯一直接 Contract，并生成简单 Provider registration |
-| Command/Event/InitTask 注解生成 | 暂不支持 | 当前样板量不足，通过 `@CCComponentContribution` 显式注册 |
+| Command 注解生成 | 暂不支持 | Contract/Handler/消费依赖/Client 方案已记录；当前仍通过 `@CCComponentContribution` 注册 |
+| Event 注解生成 | 暂不支持 | Contract/Subscription/Owner 自动 Publication 方案已记录；当前仍显式注册 |
+| InitTask 注解生成 | 暂不支持 | Task Contract/Handler/DAG/Catalog 方案已记录；当前仍通过 `@CCComponentContribution` 注册 |
 
 GoRouter 当前无法可靠提供原子 `pushAndRemoveUntil`、精确 `removeRoute/removeRouteBelow` 和 `replaceRouteBelow`。CCRouter 不公开语义不完整的替代方法，也不会把它们静默拆成多个普通操作。
 

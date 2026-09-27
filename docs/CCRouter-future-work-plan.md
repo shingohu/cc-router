@@ -29,19 +29,20 @@
 
 ### 3.1 稳定 ID 与 Contract 边界
 
-- [x] 完成 InitTask/Contract 生成边界评估：当前没有可靠的 InitTask 声明输入，不做源码启发式发现，
-  继续由 Runtime 校验实际注册关系；评估结论见初始化任务设计文档。
-- [ ] 只有出现真实跨组件初始化依赖时，建立最小公共 Initialization Contract Package。
+- [x] 完成 InitTask/Contract 生成边界评估：不扫描 Registrar/Contribution 猜测关系，采用显式
+  Task Contract、Handler 注解和类型化依赖引用；方案已批准、尚未实现。
+- [ ] 实现真实跨组件初始化依赖时，将共享 Task Contract 放入调用双方可依赖的公共 contracts Package。
 - [x] 框架提供通用的 `appStarted` 与 `privacyGranted` Gate；业务组件直接使用框架常量，避免重复定义。
 - [ ] 业务组件出现跨组件 Task ID 后，明确其公共 Contract 归属并增加 exposure 测试，禁止实现包或 `src` 导入。
 
 ### 3.2 生成器校验收敛
 
-- [x] 评估生成器是否能可靠发现手写 InitTask 的 ID、Gate 和依赖；结论是当前不能可靠发现，
-  不增加启发式扫描，也不静默声称已覆盖。
+- [x] 评估生成器是否能可靠发现手写 InitTask 的 ID、Gate 和依赖；结论是不能可靠发现，
+  因此已批准显式声明方案，不增加启发式扫描，也不静默声称已覆盖。
 - [x] 确认 Route Contract、组件依赖、公共 Barrel 和跨包内部 API 的生成期校验边界；InitTask
   的重复 ID、缺失依赖和循环依赖继续由 Runtime 校验。
-- [ ] 将来出现显式 InitTask 声明模型后，再补充生成错误中的 Package、组件、任务 ID、依赖和来源位置。
+- [ ] 实现 `CCInitTaskContract`/`@CCInitTask` 后，生成错误必须包含 Package、组件、任务 ID、
+  依赖和来源位置。
 - [x] 2026-09-27 已在本轮 Component/Service 生成改动后执行全量生成物回归；后续每次
   Generator 改动仍必须重复该门禁，不能只验证 Demo 编译。
 
@@ -72,9 +73,10 @@
 
 ### 4.2 初始化任务生成
 
-- [ ] 当 InitTask 数量和跨 Package 依赖明显增加时，设计 InitTask 注解或声明模型。
-- [ ] 生成稳定 ID 常量、Gate 常量、依赖索引和可读 DAG 文档。
-- [ ] 只有真实生产规模证明手写 Registrar 已产生冲突或漂移后，才冻结注解/metadata 协议。
+- [x] 设计显式 `CCInitTaskContract`、`@CCInitTask`、类型化依赖和现有
+  `CCInitializationGate` 复用模型；不生成业务调用 Client。
+- [ ] 生成 Handler registration bridge、依赖索引、Package/Host metadata 和可读 DAG 文档。
+- [ ] 实现 Task/Owner/Gate/Handler/exposure/依赖图校验，并保留 Runtime 最终校验。
 
 ### 4.3 Service Proxy 与 Command/Event 生成
 
@@ -84,7 +86,11 @@
   Client、稳定 caller/method identity 和方法 metadata；不扫描依赖生成未使用能力。
 - [ ] 根据生产需求扩展当前明确拒绝的泛型 Contract、Stream、callback、继承或 Route Scope 方法代理；
   每一项必须先冻结所有权、取消和兼容语义。
-- [ ] Command、Event 自动生成与 Service 同步评估，不为低频注册能力提前增加生成层。
+- [ ] 按 `CCRouter-command-design.md` 已批准方案实现 Command Contract、Handler registration、
+  显式消费依赖、组件专属 Client、metadata、Catalog 和 Workspace 校验；不扫描并生成未使用 Command。
+- [ ] 按 `CCRouter-event-design.md` 已批准方案实现 Event Contract、静态 Subscription、Owner
+  自动 Publication Client、metadata、Catalog 和 Workspace 校验；不引入重复 publication 声明
+  或动态 EventBus 语义。
 - [x] Contract 通过公共业务 barrel 暴露；Proxy 留在消费组件内部生成目录，跨 Package 不导出
   生成实现文件。
 

@@ -2,8 +2,9 @@
 
 ## 1. 状态与结论
 
-- 状态：1.x 已采用的基础事实通知能力
+- 状态：Runtime 能力已完成；生成器方案已批准、尚未实现
 - 稳定契约：`CCEvent`、`CCRegistry.registerEvent`、`CCRouter.event`
+- 待实现：Event Contract、静态 Subscription、Owner 自动 Publication Client、metadata 和 Workspace 校验
 - 当前不做：Sticky、历史重放、持久化队列、跨进程广播、优先级、动态订阅
 
 Event 表示一个事实已经发生。发布者不读取订阅者结果，也不能用订阅者是否存在决定业务
@@ -97,8 +98,141 @@ Event 是 best-effort 进程内通知。发布成功只表示本次已安装订�
 - [x] 每个 Subscriber 的独立 Trace、可信 Owner 与嵌套 caller 关联。
 - [x] Pure Dart 测试覆盖并发、失败、空订阅、重复 ID、超时和诊断。
 
-## 8. 生成器决策
+## 8. 生成器问题与决策
 
-Event 类型与 Registrar 注册当前都很少变化，注解生成的收益不足以抵消公开 Annotation、metadata
-和增量构建复杂度。1.x 保持手写注册；只有真实组件出现重复订阅样板、跨包契约漂移或 DevTools
-静态索引需求时，再与 Service/Command 生成统一评估。
+Runtime 已具备正确的多 Subscriber 语义，但现有手写方式仍存在以下生成期缺口：
+
+- Event 类型没有跨重命名稳定的 Event ID，发布 Trace 主要依赖 `runtimeType`；
+- Subscriber ID、类型和 Registrar 代码重复手写；
+- Workspace 无法生成 Event、Publisher、Subscriber 的静态关系图；
+- 构建期不能发现重复 Subscriber ID、非法函数签名和组件依赖错误；
+- 根业务调用 `CCRouter.event` 时通常没有可信 publisher component；
+- Catalog、`ccrouter find` 和未来 DevTools 无法定位发布方与订阅方。
+
+不采用全量扫描 Package 依赖、为所有 `CCEvent` 生成 API 的方案。该方式无法证明谁有权发布，
+也会生成未使用能力。采用显式 Event Contract、显式静态 Subscription、Owner 显式 Publication，
+由生成器完成注册、发布入口、metadata 和静态校验。
+
+Event 数据类和 Subscriber 业务逻辑继续手写。生成器不从字段、函数体或命名猜测业务事件。
+
+## 9. 推荐声明模型
+
+跨组件 Contracts Package 声明由一个领域组件拥有的事实：
+
+```dart
+@CCEventContract(
+  componentId: orderComponentId,
+  id: 'order.created',
+  description: '订单已经创建。',
+)
+final class OrderCreatedEvent implements CCEvent {
+  const OrderCreatedEvent(this.orderId);
+
+  final String orderId;
+}
+```
+
+仅在实现 Package 内传播的 Event 可以省略 `componentId`，由生成器从唯一 `CCComponent` 推导
+Owner；需要跨组件后再保持稳定 Event ID 迁移到 contracts Package。
+
+Subscriber 实现 Package 声明静态订阅函数：
+
+```dart
+@CCEventSubscription(id: 'analytics.order-created')
+Future<void> trackOrderCreated(
+  OrderCreatedEvent event,
+  CCInvocationContext context,
+) async {
+  await analytics.track(event.orderId);
+}
+```
+
+同一组件对某个 Event 只有一个 Subscriber 时可以省略 ID，生成器使用
+`<subscriberComponentId>.<eventId>` 作为稳定默认值；同一组件存在多个 Subscriber 时必须为
+所有相关 Subscription 显式设置 ID，避免发现顺序改变默认身份。
+
+Event Contract 已经声明唯一 Owner，因此不再在 `CCComponent` 中重复维护 publication 列表。
+生成器自动为当前组件拥有的全部 Event Contract 生成发布入口：
+
+```dart
+await DemoOrderEvents.publishOrderCreated(
+  const OrderCreatedEvent('42'),
+  timeout: const Duration(seconds: 3),
+);
+```
+
+不增加 `eventDependencies` 或 `eventPublications`。Subscription 本身已经是订阅组件的结构化
+消费声明，Contract Owner 足以证明发布权，避免新增 Event 时修改中心 Component 文件。
+
+## 10. 所有权与依赖规则
+
+1. 默认只有 `CCEventContract.componentId` 对应的 Owner 获得生成 Publication Client。
+2. Subscriber 可以为零或多个，不拥有 Event，也不能影响发布者业务成功。
+3. Subscriber 组件应把 Owner 放入 required 或 optional dependencies；机会型监听可以使用
+   optional dependency，Owner 不存在时只是不产生 Event。
+4. 如果未来出现多个合法 Publisher，必须基于真实场景设计显式授权；本轮不开放任意组件发布。
+5. Workspace Validator 拒绝组件源码对已注解 Event 直接调用 `CCRouter.event`；裸入口只用于
+   未注解内部 Event、Host Composition Root、兼容迁移和测试。这是架构门禁而不是安全沙箱。
+
+## 11. 生成物与 API 隔离
+
+```text
+lib/src/ccrouter_generated/
+├── event/...event.g.dart
+├── component/...event_api.g.dart
+└── metadata/...event.json
+```
+
+- `event.g.dart` 只包含静态 Subscriber registration bridge；
+- `event_api.g.dart` 包含当前组件拥有的类型安全 Publication API；
+- `event.json` 记录 Contract、Owner、Publisher、Subscriber、ID 和源码位置；
+- Event 数据类由开发者编写，不生成 `.event.contract.g.dart`；
+- 没有 Event 能力时不创建对应文件或空目录；
+- 注册与发布 Binding 只从 `ccrouter_generated.dart` 暴露，不进入业务 barrel。
+
+## 12. 生成期校验
+
+1. Event 必须是公开、具体、非泛型类，并且实现 `CCEvent`。
+2. 实现 Package 可以省略 `componentId` 并从唯一 `CCComponent` 推导；contracts Package 必须
+   显式声明 Owner。
+3. Event ID 全局唯一、Owner 明确、description 有界。
+4. Payload 实例字段必须为 `final` 且不能有 setter；生成器只能保证浅层不可变，嵌套值仍由
+   开发者保证不会被并发 Subscriber 修改。
+5. Payload 禁止 Flutter、private、callback、Stream 等不适合作为公共事实契约的类型。
+6. Subscription 必须是公开、顶层、非泛型函数。
+7. Subscription 参数只允许 `(Event)` 或 `(Event, CCInvocationContext)`。
+8. 返回只允许 `void`、`Future<void>` 或兼容的 `FutureOr<void>`，不能产生业务结果。
+9. Subscriber ID 在一个 Runtime 范围全局唯一；同组件同 Event 多 Subscriber 时全部必须显式
+   设置 ID，重复 ID 在生成期失败。
+10. Publication Client 只能生成在 Contract Owner 组件，同一 Event 不重复声明 publication。
+11. Subscriber 可以为零，零订阅者不是生成错误。
+12. 跨 Package Contract 必须通过公共 barrel 暴露，不能导入其他 Package 的 `src`。
+13. 组件源码不得对已注解 Event 使用裸 `CCRouter.event`；Host 与未注解内部 Event 除外。
+
+## 13. Runtime 与诊断调整
+
+- Runtime 增加稳定 Event ID，同时继续按 Dart Type 做类型安全分派；
+- 增加仅生成代码可见的 `CCRouterGeneratedEventBinding`，负责 Descriptor、Subscription 注册和
+  携带可信 publisher identity；
+- 发布 Span 使用稳定 Event ID，Subscriber 子 Span 记录 Subscriber ID 和可信组件 Owner；
+- Event Payload、异常消息和业务对象不得进入 retained Trace 或应用诊断 Sink；
+- 现有并发启动顺序、失败隔离、零订阅者、timeout、取消和 shutdown 语义保持不变；
+- 动态 subscribe/unsubscribe、页面生命周期订阅和反射扫描仍不进入 Runtime。
+
+## 14. 实施与回归顺序
+
+1. 新增 `CCEventContract` 和 `CCEventSubscription` 声明模型，不增加重复的 Publication 声明。
+2. 实现 Contract、Payload、Subscription 签名和公共 Pure Dart 边界校验。
+3. 生成 Subscriber registration bridge，并接入组件 Registrar。
+4. 从 Contract Owner 自动生成 Publication Client 和可信 Event Binding。
+5. 扩展 Runtime 稳定 Event ID、metadata schema、Workspace Validator、Catalog 和 `ccrouter find`。
+6. Demo 把现有多 Subscriber、零 Subscriber、失败隔离和 timeout 迁移到 Owner Client，并覆盖
+   默认/显式 Subscriber ID、取消、optional Owner、可信 publisher 和裸调用门禁。
+7. 回归 Generator 增量/清理/无输出、Runtime 并发与 shutdown、Analyzer、生成物一致性和资源释放。
+8. 实现完成后再同步 Integration Skill 的使用方式；完成前继续标记为不支持。
+
+## 15. 明确不纳入本轮
+
+Sticky、历史重放、持久化、跨进程广播、动态订阅、Subscriber 优先级和线程调度不属于静态
+组件 Event。需要可靠送达或事务一致性时必须使用专门的持久化消息基础设施，不能把基础 Event
+生成器扩展成全局 EventBus。
