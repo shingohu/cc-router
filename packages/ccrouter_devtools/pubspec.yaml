@@ -9,6 +9,7 @@ environment:
 
 dependencies:
   ccrouter: ^0.1.0
+  ccrouter_devtools_protocol: ^0.1.0
   flutter:
     sdk: flutter
 

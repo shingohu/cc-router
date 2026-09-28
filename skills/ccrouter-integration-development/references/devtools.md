@@ -17,3 +17,9 @@ const panel = CCRouterDevToolsPanel();
 面板显示的数据均为 CCRouter 已经脱敏和限容量的快照，不包含完整 URI、参数、Extra、Token、
 Widget、Navigator 或业务返回对象。需要采集应用日志时使用 `CCDiagnosticsConfig`，不要从
 面板文本反向解析业务数据。
+
+需要把诊断发送到官方 DevTools Extension、CLI 或测试进程时，使用纯 Dart
+`ccrouter_devtools_protocol` 中的 `CCDevToolsSnapshotEnvelope`。静态 Catalog 和 Runtime
+通过稳定 ID 关联；协议允许源码位置、Owner、Host/Outlet、生命周期、Trace ID 和耗时，禁止
+序列化 Runtime、Navigator、Widget、完整 URI、参数、Token 或业务对象。协议没有控制命令，
+工具断连或静态 Catalog 缺失不能改变应用运行结果。

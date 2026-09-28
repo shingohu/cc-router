@@ -417,7 +417,8 @@ CLI 继续保持非覆盖式，增加可选模板：
 
 - [x] Contract 版本/fingerprint/范围的 Pure Dart 设计冻结；版本与 fingerprint 已进入新
   metadata schema，消费者范围和 Runtime descriptor 仍按后续阶段实现；
-- [ ] Catalog/Runtime Snapshot/Trace Edge 协议冻结；
+- [x] Catalog/Runtime Snapshot/Trace Edge 协议冻结；独立纯 Dart Package 提供版本化 Envelope、
+  静态源码位置、Runtime Entry 和单次调用链 Edge，现有面板可转换受限 Runtime 数据。
 - [x] 性能、队列、RSS/Heap 和长时间运行基线脚本；已覆盖混合能力生成、Runtime 并发与
   资源回收，并提供独立进程的 `runtime_long_run.dart` RSS 趋势入口。绝对 RSS 不设跨平台
   阈值，Heap 细分仍需目标平台 VM Service 采样。
@@ -443,10 +444,10 @@ CLI 继续保持非覆盖式，增加可选模板：
 
 ### Phase 3：DevTools 数据基础（P1）
 
-- [ ] 静态 Catalog 与 Runtime 快照联动；
-- [ ] Trace Edge 和单次调用链；
-- [ ] 源码位置、组件图筛选和缺失数据降级；
-- [ ] 只读权限与脱敏回归。
+- [x] 静态 Catalog 与 Runtime 快照联动协议；
+- [x] Trace Edge 和单次调用链协议；
+- [x] 源码位置协议与缺失 Catalog 可选降级；组件图高级筛选在 Extension 阶段实现；
+- [x] 只读权限、不可变集合、未知协议版本和脱敏字段回归。
 
 ### Phase 4：官方 DevTools Extension（P1）
 

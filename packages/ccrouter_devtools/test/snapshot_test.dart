@@ -43,7 +43,51 @@ void main() {
     remove();
     expect(called, isFalse);
   });
+
+  test('runtime snapshot conversion keeps stable IDs and omits payloads', () {
+    final snapshot = CCDevToolsSnapshot(
+      capturedAt: DateTime.utc(2026, 1, 1),
+      runtimeState: CCDevToolsRuntimeState.initialized,
+      components: [
+        CCComponentManifest(
+          id: 'orders',
+          version: '1.0.0',
+          registrar: _Registrar(),
+        ),
+      ],
+      traces: [
+        CCTraceRecord(
+          context: _traceContext(),
+          operation: 'service',
+          target: 'orders.summary',
+          startedAt: DateTime.utc(2026, 1, 1),
+          duration: const Duration(microseconds: 12),
+          status: 'succeeded',
+        ),
+      ],
+    );
+
+    final protocol = snapshot.toProtocolRuntimeSnapshot();
+    expect(protocol.protocolVersion, ccRouterDevToolsProtocolVersion);
+    expect(protocol.installedComponentIds, ['orders']);
+    expect(protocol.traceEdges.single.targetId, 'orders.summary');
+    expect(protocol.traceEdges.single.durationMicros, 12);
+    expect(protocol.toJson().toString(), isNot(contains('secret')));
+  });
 }
+
+CCTraceContextSnapshot _traceContext() => CCTraceContextSnapshot.from(
+  CCInvocationContext(
+    invocationId: 'invocation-1',
+    traceId: 'trace-1',
+    spanId: 'span-1',
+    operation: 'service',
+    target: 'orders.summary',
+    callerComponentId: 'checkout',
+    targetComponentId: 'orders',
+    scopeId: 'app',
+  ),
+);
 
 final class _Registrar implements CCComponentRegistrar {
   @override

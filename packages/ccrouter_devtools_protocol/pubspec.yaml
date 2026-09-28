@@ -1,0 +1,11 @@
+name: ccrouter_devtools_protocol
+description: Pure-Dart read-only snapshot protocol for CCRouter tooling.
+version: 0.1.0
+resolution: workspace
+publish_to: none
+
+environment:
+  sdk: ^3.10.0
+
+dev_dependencies:
+  test: ^1.26.0

@@ -104,7 +104,7 @@ const diagnosticsPage = CCRouterDevToolsPanel();
 | InitTask | 已支持 | 一次性 DAG、Gate、必需/可选失败策略 |
 | 生成器增量缓存与门禁 | 已支持 | 内容校验 fast path、`--check`、`--no-cache`、`--profile`、并发锁、原子写入 |
 | 生成索引和源码定位 | 已支持 | Package/Host Catalog、`ccrouter find` |
-| DevTools 只读可视化 | 已支持 | `ccrouter_devtools` 可嵌入面板；官方 DevTools Extension 仍需按正式发布前计划独立交付 |
+| DevTools 只读可视化 | 已支持 | `ccrouter_devtools` 可嵌入面板；纯 Dart Snapshot/Trace Edge 协议已提供，官方 DevTools Extension 仍需独立交付 |
 | Navigator 1.0 Backend | 暂不支持 | 2.0 阶段候选 |
 | 通用 Navigator 2.0 Backend | 暂不支持 | 2.0 阶段候选 |
 | 动态组件安装/卸载 | 暂不支持 | 当前组件集合在 `initialize` 时固定 |

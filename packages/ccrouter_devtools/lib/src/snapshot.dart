@@ -1,4 +1,5 @@
 import 'package:ccrouter/ccrouter.dart';
+import 'package:ccrouter_devtools_protocol/ccrouter_devtools_protocol.dart';
 
 /// Describes whether the snapshot was captured from an initialized Runtime.
 enum CCDevToolsRuntimeState {
@@ -94,4 +95,56 @@ final class CCDevToolsSnapshot {
 
   /// Bounded evidence of unsupported restoration demand.
   final List<CCRouteRestorationOpportunityEvent> restorationOpportunities;
+
+  /// Converts this widget-facing view into the versioned tooling protocol.
+  ///
+  /// The conversion copies only stable identities, lifecycle states, Host and
+  /// Outlet placement, and bounded trace timing. It intentionally omits route
+  /// addresses, arguments, results, Widget instances, and backend objects.
+  CCDevToolsRuntimeSnapshot toProtocolRuntimeSnapshot({
+    String hostId = 'default',
+  }) => CCDevToolsRuntimeSnapshot(
+    capturedAt: capturedAt,
+    runtimeState: runtimeState.name,
+    installedComponentIds: components.map((component) => component.id),
+    entries: [
+      for (final entry in routeEntries)
+        CCDevToolsRuntimeEntry(
+          kind: 'route',
+          id: entry.routeEntryId,
+          state: entry.lifecycleState.name,
+          ownerComponentId: entry.ownerComponentId,
+          hostId: entry.hostId,
+          outlet: entry.placement.navigatorOutlet,
+          routeId: entry.routeId,
+          traceId: entry.navigationId,
+        ),
+      for (final entry in backendEntries)
+        CCDevToolsRuntimeEntry(
+          kind: 'backend',
+          id: entry.backendEntryId,
+          state: entry.lifecycleState.name,
+          ownerComponentId: entry.owner.name,
+          hostId: entry.hostId ?? hostId,
+          outlet: entry.navigatorOutlet,
+          routeId: entry.routeId,
+          traceId: entry.navigationId,
+        ),
+    ],
+    traceEdges: [
+      for (final trace in traces)
+        CCDevToolsTraceEdge(
+          traceId: trace.context.traceId,
+          spanId: trace.context.spanId,
+          parentSpanId: trace.context.parentSpanId,
+          sourceId: trace.context.parentSpanId ?? trace.context.traceId,
+          targetId: trace.target,
+          kind: trace.operation,
+          status: trace.status,
+          startedAt: trace.startedAt,
+          durationMicros: trace.duration.inMicroseconds,
+          ownerComponentId: trace.context.targetComponentId,
+        ),
+    ],
+  );
 }

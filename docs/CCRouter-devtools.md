@@ -1,7 +1,7 @@
 # CCRouter DevTools 只读可视化
 
-> 状态：1.x 已完成可嵌入只读面板；官方 DevTools Extension 和静态 Catalog 联动列入正式发布前的
-> P1 工具计划，必须先完成只读快照协议。
+> 状态：1.x 已完成可嵌入只读面板；纯 Dart Snapshot/Trace Edge 协议已完成最小闭环，官方
+> DevTools Extension 和高级图形交互仍列入正式发布前的 P1 工具计划。
 
 ## 定位
 
@@ -11,8 +11,8 @@
 
 这样做的原因是 CCRouter 已经把诊断边界定义为“不可变、脱敏、有界”。将这些快照直接
 暴露给一个可选 UI，可以满足开发期排障，又不会为了可视化而扩大业务 API 或破坏生命周期
-所有权。后续如果需要官方 DevTools Extension，可以复用同一套 Snapshot Provider，不需要
-复制一套 Runtime 数据模型。
+所有权。跨进程和跨 SDK 工具使用独立的 `ccrouter_devtools_protocol` 纯 Dart Package；
+嵌入式面板通过适配器把 Runtime 快照转换为协议对象，避免官方 Extension 复制 Runtime 数据模型。
 
 ## 接入
 
@@ -53,6 +53,19 @@ const diagnosticsPage = CCRouterDevToolsPanel();
   但面板不会尝试修复或重排任务。
 
 所有列表都来自 CCRouter 已有的容量限制。刷新和事件订阅只重新读取快照，不改变 Runtime。
+
+## Snapshot 协议
+
+`ccrouter_devtools_protocol` 提供版本化的 `CCDevToolsSnapshotEnvelope`，包含可选的静态
+`CCDevToolsStaticCatalogSnapshot`、当前 `CCDevToolsRuntimeSnapshot` 和有界
+`CCDevToolsTraceEdge`。静态记录与运行时条目通过稳定 Route/Service/Command/Event/InitTask
+或 Entry ID 关联；静态存在但运行时未安装、或运行时条目没有静态声明时，工具应显示“未解析”，
+不能删除一侧或推断完整历史调用链。
+
+协议只允许源码位置、Owner、Host/Outlet、生命周期、稳定 Trace ID 和耗时等白名单字段，
+不包含 URI 参数、Extra、Token、Widget、Navigator、业务返回值或任意业务 Map。Envelope
+带有协议版本和捕获时间，解码方必须拒绝缺失字段和不支持的结构；协议升级通过新版本迁移，
+不能静默把未知字段解释为可执行控制指令。
 
 ## 数据和隐私边界
 

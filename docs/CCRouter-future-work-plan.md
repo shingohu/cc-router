@@ -130,20 +130,19 @@
   [IDE / Analysis Server 集成](CCRouter-ide-analysis-server.md)。
 - [x] Demo Analyzer bootstrap 已切换为固定 Git commit，保留独立 Analyzer 依赖图；增加
   loader `analyze/compile` smoke、兼容性边界测试和发布后的 Hosted fallback manifest。
-- [ ] 建立 Catalog 与 Runtime 快照联动协议、Trace Edge 和源码跳转基础，作为官方 DevTools
-  Extension 的只读数据基础。
+- [x] 建立纯 Dart、版本化的 Catalog/Runtime Snapshot 与 Trace Edge 协议；静态记录携带
+  可移植源码位置，Runtime 适配器只复制稳定 ID、Owner、Host/Outlet、状态和耗时。官方
+  Extension 后续直接消费该协议，不读取 Runtime 内部对象。
 - [ ] 实现独立官方 Flutter/Dart DevTools Extension；保持现有 `ccrouter_devtools` Widget 面板
   只读，不把 Extension 做成 Runtime 控制台。
 - [ ] 增加组件依赖图高级筛选、Route-to-source 图形化跳转和单次 Service/Command/Event/InitTask
   调用链视图。
-- [ ] Pub Hook `run/build` 前置生成：先修复全局参数解析，再按显式命令范围接入 `build`，
-  最后评估可选 `run`；复用生成器 fingerprint fast-path，覆盖 POSIX/Windows、FVM 切换、
-  隐式 `pub get` 边界和 macOS/iOS/Android Release 回归。已记录但待确认，不在当前 1.x
-  Hook 行为中实施，详见 [Pub Hook 设计](CCRouter-cli-pub-hook.md)。
-- [ ] KV Storage Demo Scoped Facade：将显式 namespace Client 演进为上下文解析、Session/
-  Environment/Device 绑定和 Backend Placement Policy；先保留当前内存 Backend，真实出现跨组件
-  Contract 消费后再评估独立 `storage_contracts`，不扩张万能 `base_contracts`。详见
-  [KV Storage Demo 改造方案](CCRouter-kv-storage-demo-migration.md)。
+- [x] Pub Hook 已支持成功的显式 `flutter pub` 后置生成，以及 `flutter run/build` fail-closed
+  前置生成；复用 fingerprint fast-path，覆盖 POSIX/Windows wrapper 和全局参数前缀。Flutter
+  Tool 内部隐式 `pub get` 与直接 `dart pub` 仍明确不在 Hook 边界。
+- [x] KV Storage Demo 已提供 Scoped Facade，通过 Host-owned Context Provider 动态解析用户、
+  API 环境和设备命名空间，并保留内存 Backend 和可替换 Backend 边界。真实持久化、Secure
+  Storage 和生产 Session/Environment/Device 绑定仍由应用 Composition Root 落地。
 
 ## 5. P2：架构 2.0 候选
 
