@@ -687,6 +687,13 @@ Future<bool> _generateResolvedWorkspace(
     }
   }
 
+  final dirtySet = await _GenerationDirtySet.compute(
+    workspace: workspace,
+    cache: cache,
+    snapshots: metadataSnapshots,
+    indexes: indexes,
+  );
+
   final documents = <Map<String, Object?>>[
     for (final name in order) ...?indexes[name]?.metadata,
   ];
@@ -718,12 +725,14 @@ Future<bool> _generateResolvedWorkspace(
   final catalogs = await _generateComponentRouteIndexes(
     localFiles,
     generateLegacyEntrypoints: false,
+    dirtyPackages: dirtySet.dirtyPackages,
   );
   await _generateResolvedPackageBundles(
     workspace: workspace,
     indexes: indexes,
     runtimeBundles: runtimeBundles,
     catalogs: catalogs,
+    dirtyPackages: dirtySet.dirtyPackages,
   );
   await _generateResolvedHostCatalog(workspace, indexes);
   for (final name in order) {
@@ -732,7 +741,11 @@ Future<bool> _generateResolvedWorkspace(
     if (!package.writable || index == null) continue;
     await _writeIfChanged(package.indexFile, index.toJson());
   }
-  await _writePackageCapabilityCatalogs(workspace: workspace, indexes: indexes);
+  await _writePackageCapabilityCatalogs(
+    workspace: workspace,
+    indexes: indexes,
+    dirtyPackages: dirtySet.dirtyPackages,
+  );
   await _deleteObsoleteResolvedOutputs(
     workspace: workspace,
     runtimeBundles: runtimeBundles,
@@ -789,7 +802,20 @@ Future<bool> _generateResolvedWorkspace(
     'Validated ${validation.machineDocument['components'] is List ? (validation.machineDocument['components']! as List).length : 0} components and ${validation.machineDocument['routes'] is List ? (validation.machineDocument['routes']! as List).length : 0} routes across ${indexes.length} generated Packages.',
   );
   if (!parsed.noCache && !parsed.check) {
-    await cache.write(metadataSnapshots);
+    final persistedOutputFingerprints = <String, String>{};
+    for (final package in workspace.packages.values.where(
+      (package) => package.writable,
+    )) {
+      persistedOutputFingerprints[package.name] =
+          _GenerationStateFingerprint.digestEntries(
+            await _GenerationStateFingerprint.capturePackageOutput(package),
+          );
+    }
+    await cache.write(
+      metadataSnapshots,
+      outputFingerprints: persistedOutputFingerprints,
+      dependencyFingerprints: dirtySet.dependencyFingerprints,
+    );
   }
   aggregateWatch.stop();
   if (parsed.profile) {
@@ -802,7 +828,8 @@ Future<bool> _generateResolvedWorkspace(
       'parse=${parseWatch.elapsedMilliseconds}ms '
       'validate=${validationWatch.elapsedMilliseconds}ms '
       'aggregate/format/write=${aggregateWatch.elapsedMilliseconds}ms '
-      'cache=$hits/${metadataSnapshots.length}',
+      'cache=$hits/${metadataSnapshots.length} '
+      'dirty=${dirtySet.dirtyPackages.length}/${workspace.packages.values.where((package) => package.writable).length}',
     );
   }
   return true;
@@ -816,11 +843,13 @@ Future<bool> _generateResolvedWorkspace(
 Future<void> _writePackageCapabilityCatalogs({
   required CCPackageWorkspace workspace,
   required Map<String, CCPackageIndex> indexes,
+  required Set<String> dirtyPackages,
 }) async {
   for (final package in workspace.packages.values) {
     if (!package.writable || package.name == workspace.host.name) continue;
     final index = indexes[package.name];
     if (index == null) continue;
+    if (!dirtyPackages.contains(package.name)) continue;
     final catalog = index.capabilityCatalog;
     final output = File(
       path.join(
@@ -1555,6 +1584,8 @@ final class _GenerationCacheEntry {
   const _GenerationCacheEntry({
     required this.fingerprint,
     required this.documents,
+    this.outputFingerprint,
+    this.dependencyFingerprints = const <String, String>{},
   });
 
   /// Exact metadata byte digest.
@@ -1562,6 +1593,15 @@ final class _GenerationCacheEntry {
 
   /// Previously parsed documents reused only after digest equality.
   final List<Map<String, Object?>> documents;
+
+  /// Exact digest of CCRouter-owned source outputs from the last run.
+  ///
+  /// Older cache entries do not have this value and therefore conservatively
+  /// classify the Package as dirty once before being reseeded.
+  final String? outputFingerprint;
+
+  /// Content fingerprints of direct generated dependencies from the last run.
+  final Map<String, String> dependencyFingerprints;
 }
 
 /// Versioned, disposable acceleration cache for metadata JSON parsing.
@@ -1599,7 +1639,7 @@ final class _GenerationCache {
     try {
       final decoded = jsonDecode(await file.readAsString());
       if (decoded is! Map ||
-          decoded['schemaVersion'] != 1 ||
+          decoded['schemaVersion'] != 2 ||
           decoded['generatorVersion'] != ccrouterPackageIndexGeneratorVersion ||
           decoded['contentFingerprint'] is! String ||
           decoded['entries'] is! Map) {
@@ -1625,6 +1665,24 @@ final class _GenerationCache {
         if (fingerprint is! String || documents is! List) {
           throw const FormatException('Invalid cached metadata.');
         }
+        final outputFingerprint = value['outputFingerprint'];
+        if (outputFingerprint != null && outputFingerprint is! String) {
+          throw const FormatException('Invalid cached output fingerprint.');
+        }
+        final dependencyFingerprints = <String, String>{};
+        final rawDependencies = value['dependencyFingerprints'];
+        if (rawDependencies != null) {
+          if (rawDependencies is! Map) {
+            throw const FormatException('Invalid cached dependencies.');
+          }
+          for (final dependency in rawDependencies.entries) {
+            if (dependency.key is! String || dependency.value is! String) {
+              throw const FormatException('Invalid cached dependency.');
+            }
+            dependencyFingerprints[dependency.key as String] =
+                dependency.value as String;
+          }
+        }
         if (documents.any((document) => document is! Map)) {
           throw const FormatException('Invalid cached metadata document.');
         }
@@ -1634,6 +1692,8 @@ final class _GenerationCache {
               .whereType<Map>()
               .map((document) => document.cast<String, Object?>())
               .toList(),
+          outputFingerprint: outputFingerprint as String?,
+          dependencyFingerprints: Map.unmodifiable(dependencyFingerprints),
         );
       }
       return _GenerationCache._(
@@ -1651,16 +1711,23 @@ final class _GenerationCache {
   }
 
   /// Atomically replaces cached entries with this successful generation run.
-  Future<void> write(Map<String, CCPackageMetadataSnapshot> snapshots) async {
+  Future<void> write(
+    Map<String, CCPackageMetadataSnapshot> snapshots, {
+    required Map<String, String> outputFingerprints,
+    required Map<String, Map<String, String>> dependencyFingerprints,
+  }) async {
     final names = snapshots.keys.toList()..sort();
     final payload = <String, Object?>{
-      'schemaVersion': 1,
+      'schemaVersion': 2,
       'generatorVersion': ccrouterPackageIndexGeneratorVersion,
       'entries': <String, Object?>{
         for (final name in names)
           name: <String, Object?>{
             'fingerprint': snapshots[name]!.fingerprint,
             'documents': snapshots[name]!.documents,
+            'outputFingerprint': outputFingerprints[name],
+            'dependencyFingerprints':
+                dependencyFingerprints[name] ?? const <String, String>{},
           },
       },
     };
@@ -1835,13 +1902,22 @@ abstract final class _GenerationStateFingerprint {
     for (final package in workspace.packages.values.where(
       (package) => package.writable,
     )) {
-      final generated = await _readManagedGeneratedFiles(package.root);
+      final generated = await capturePackageOutput(package);
       for (final entry in generated.entries) {
         outputs['${package.name}/${entry.key}'] = entry.value;
       }
     }
     return _digestEntries(outputs);
   }
+
+  /// Captures exact managed output bytes for one writable Package.
+  static Future<Map<String, List<int>>> capturePackageOutput(
+    CCResolvedPackage package,
+  ) => _readManagedGeneratedFiles(package.root);
+
+  /// Computes a deterministic digest for one logical byte map.
+  static String digestEntries(Map<String, List<int>> entries) =>
+      _digestEntries(entries);
 
   /// Adds generation-relevant authored files for one writable Package.
   static Future<void> _addAuthoredPackageInputs(
@@ -1948,6 +2024,100 @@ abstract final class _GenerationStateFingerprint {
     }
     return sha256.convert(bytes.takeBytes()).toString();
   }
+}
+
+/// Classifies writable Packages whose aggregate output can be reused safely.
+///
+/// The set is deliberately conservative. A Package is dirty when its Builder
+/// metadata, managed source outputs, or direct dependency Index fingerprint
+/// changed. Dirty state then propagates through the workspace dependency graph
+/// so a consumer is regenerated when an upstream generated contract changes.
+final class _GenerationDirtySet {
+  /// Computes dirty Packages and current state used to seed the next cache.
+  static Future<_GenerationDirtySet> compute({
+    required CCPackageWorkspace workspace,
+    required _GenerationCache cache,
+    required Map<String, CCPackageMetadataSnapshot> snapshots,
+    required Map<String, CCPackageIndex> indexes,
+  }) async {
+    final dirty = <String>{workspace.host.name};
+    final outputFingerprints = <String, String>{};
+    final dependencyFingerprints = <String, Map<String, String>>{};
+    for (final package in workspace.packages.values.where(
+      (package) => package.writable,
+    )) {
+      final output = await _GenerationStateFingerprint.capturePackageOutput(
+        package,
+      );
+      outputFingerprints[package.name] =
+          _GenerationStateFingerprint.digestEntries(output);
+      final dependencies = <String, String>{};
+      for (final dependencyName in package.dependencies) {
+        final dependency = indexes[dependencyName];
+        if (dependency != null) {
+          dependencies[dependencyName] = dependency.contentFingerprint;
+        }
+      }
+      dependencyFingerprints[package.name] = Map.unmodifiable(dependencies);
+      final previous = cache.entries[package.name];
+      final snapshot = snapshots[package.name];
+      if (previous == null ||
+          snapshot == null ||
+          previous.fingerprint != snapshot.fingerprint ||
+          previous.outputFingerprint != outputFingerprints[package.name] ||
+          !_sameStringMap(previous.dependencyFingerprints, dependencies)) {
+        dirty.add(package.name);
+      }
+    }
+
+    // Any changed dependency can alter a generated Bundle or public API. The
+    // reverse closure is safer than trying to infer which declaration changed.
+    var changed = true;
+    while (changed) {
+      changed = false;
+      for (final package in workspace.packages.values.where(
+        (package) => package.writable,
+      )) {
+        if (dirty.contains(package.name)) continue;
+        if (package.dependencies.any(dirty.contains)) {
+          dirty.add(package.name);
+          changed = true;
+        }
+      }
+    }
+    final immutableDependencyFingerprints = <String, Map<String, String>>{
+      for (final entry in dependencyFingerprints.entries)
+        entry.key: Map.unmodifiable(entry.value),
+    };
+    return _GenerationDirtySet._(
+      dirtyPackages: Set.unmodifiable(dirty),
+      outputFingerprints: Map.unmodifiable(outputFingerprints),
+      dependencyFingerprints: Map.unmodifiable(immutableDependencyFingerprints),
+    );
+  }
+
+  const _GenerationDirtySet._({
+    required this.dirtyPackages,
+    required this.outputFingerprints,
+    required this.dependencyFingerprints,
+  });
+
+  /// Writable Packages that must regenerate source aggregates.
+  final Set<String> dirtyPackages;
+
+  /// Current managed output fingerprints for cache persistence.
+  final Map<String, String> outputFingerprints;
+
+  /// Current direct dependency fingerprints for cache persistence.
+  final Map<String, Map<String, String>> dependencyFingerprints;
+}
+
+bool _sameStringMap(Map<String, String> left, Map<String, String> right) {
+  if (left.length != right.length) return false;
+  for (final entry in left.entries) {
+    if (right[entry.key] != entry.value) return false;
+  }
+  return true;
 }
 
 /// Finds the build root while honoring a Package's workspace opt-in.
@@ -2452,6 +2622,7 @@ final class _MetadataFile {
 Future<List<_GeneratedComponentCatalog>> _generateComponentRouteIndexes(
   Iterable<_MetadataFile> metadataFiles, {
   bool generateLegacyEntrypoints = true,
+  Set<String>? dirtyPackages,
 }) async {
   final componentSources = <String, _ComponentSource>{};
   final routes = <String, List<_RouteRegistration>>{};
@@ -2685,23 +2856,27 @@ Future<List<_GeneratedComponentCatalog>> _generateComponentRouteIndexes(
       (left, right) => left.member.compareTo(right.member),
     );
     final packageRoot = component.packageRoot;
+    final packageDirty =
+        dirtyPackages == null || dirtyPackages.contains(component.package);
     final outputDirectory = Directory(
       '${packageRoot.path}${Platform.pathSeparator}lib${Platform.pathSeparator}src${Platform.pathSeparator}ccrouter_generated${Platform.pathSeparator}component',
     )..createSync(recursive: true);
     final output = File(
       '${outputDirectory.path}${Platform.pathSeparator}${_fileStem(componentId)}.component.g.dart',
     );
-    await _writeIfChanged(
-      output,
-      _dartFormatter.format(
-        _emitComponentAssembly(
-          componentId,
-          component,
-          componentRoutes,
-          componentContributions,
+    if (packageDirty) {
+      await _writeIfChanged(
+        output,
+        _dartFormatter.format(
+          _emitComponentAssembly(
+            componentId,
+            component,
+            componentRoutes,
+            componentContributions,
+          ),
         ),
-      ),
-    );
+      );
+    }
     final hasRouteApi = componentRoutes.any(
       (route) => route.intentFactory.isNotEmpty,
     );
@@ -2709,36 +2884,42 @@ Future<List<_GeneratedComponentCatalog>> _generateComponentRouteIndexes(
       final routeApiOutput = File(
         '${outputDirectory.path}${Platform.pathSeparator}${_fileStem(componentId)}.route_api.g.dart',
       );
-      await _writeIfChanged(
-        routeApiOutput,
-        _dartFormatter.format(
-          _emitComponentRouteApi(componentId, componentRoutes),
-        ),
-      );
+      if (packageDirty) {
+        await _writeIfChanged(
+          routeApiOutput,
+          _dartFormatter.format(
+            _emitComponentRouteApi(componentId, componentRoutes),
+          ),
+        );
+      }
     }
     final hasCommandApi = componentCommandClients.isNotEmpty;
     if (hasCommandApi) {
       final commandApiOutput = File(
         '${outputDirectory.path}${Platform.pathSeparator}${_fileStem(componentId)}.command_api.g.dart',
       );
-      await _writeIfChanged(
-        commandApiOutput,
-        _dartFormatter.format(
-          _emitComponentCommandApi(componentId, componentCommandClients),
-        ),
-      );
+      if (packageDirty) {
+        await _writeIfChanged(
+          commandApiOutput,
+          _dartFormatter.format(
+            _emitComponentCommandApi(componentId, componentCommandClients),
+          ),
+        );
+      }
     }
     final hasEventApi = componentEventClients.isNotEmpty;
     if (hasEventApi) {
       final eventApiOutput = File(
         '${outputDirectory.path}${Platform.pathSeparator}${_fileStem(componentId)}.event_api.g.dart',
       );
-      await _writeIfChanged(
-        eventApiOutput,
-        _dartFormatter.format(
-          _emitComponentEventApi(componentId, componentEventClients),
-        ),
-      );
+      if (packageDirty) {
+        await _writeIfChanged(
+          eventApiOutput,
+          _dartFormatter.format(
+            _emitComponentEventApi(componentId, componentEventClients),
+          ),
+        );
+      }
     }
     generatedCatalogs.add(
       _GeneratedComponentCatalog(
@@ -3134,6 +3315,7 @@ Future<void> _generateResolvedPackageBundles({
   required Map<String, CCPackageIndex> indexes,
   required Set<String> runtimeBundles,
   required Iterable<_GeneratedComponentCatalog> catalogs,
+  required Set<String> dirtyPackages,
 }) async {
   final catalogsByPackage = <String, List<_GeneratedComponentCatalog>>{};
   for (final catalog in catalogs) {
@@ -3143,6 +3325,7 @@ Future<void> _generateResolvedPackageBundles({
     final package = workspace.packages[packageName];
     final index = indexes[packageName];
     if (package == null || index == null || !package.writable) continue;
+    if (!dirtyPackages.contains(packageName)) continue;
     final packageCatalogs = catalogsByPackage[packageName] ?? [];
     packageCatalogs.sort(
       (left, right) => left.componentId.compareTo(right.componentId),

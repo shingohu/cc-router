@@ -337,7 +337,7 @@ void initializeBenchmarkTask$index() {}
 Map<String, int> _parsePhaseProfile(String output) {
   final match = RegExp(
     r'CCRouter profile build=(\d+)ms discovery=(\d+)ms parse=(\d+)ms '
-    r'validate=(\d+)ms aggregate/format/write=(\d+)ms',
+    r'validate=(\d+)ms aggregate/format/write=(\d+)ms .*dirty=(\d+)/(\d+)',
   ).firstMatch(output);
   if (match == null) {
     throw FormatException('Missing CCRouter phase profile in:\n$output');
@@ -348,6 +348,8 @@ Map<String, int> _parsePhaseProfile(String output) {
     'parseMs': int.parse(match.group(3)!),
     'validateMs': int.parse(match.group(4)!),
     'aggregateMs': int.parse(match.group(5)!),
+    'dirtyPackages': int.parse(match.group(6)!),
+    'dirtyPackageTotal': int.parse(match.group(7)!),
   };
 }
 

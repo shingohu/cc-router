@@ -66,8 +66,11 @@
   Route/Service/Command/Event/InitTask 混合压力基准；30× 的 1650 项能力 Validator 为 38ms，
   无变化 wall 为 0.81-0.85s。完整数据见
   [生成器性能报告](CCRouter-generator-performance-report.md)。
-- [ ] per-Package dirty set 仅在真实项目 Host 聚合超过总耗时 20% 时重新评估；实施前必须
-  设计 per-Package output fingerprint，不能因跳过未变 Package 而漏掉受管输出篡改。
+- [x] 2026-09-28 增加保守 per-Package dirty set：metadata、受管输出和直接依赖 Index 均用
+  精确 fingerprint，dirty 沿反向依赖闭包传播；干净 Package 跳过聚合写入但仍执行 Validator、
+  Host 组装和删除检查。缓存 schema 升级为 2，旧缓存自动 fail-closed。
+- [ ] 仅在真实项目 Host 聚合超过总耗时 20% 时继续优化 dirty set 的输入摘要速度；不得用
+  mtime/size 替代内容摘要。
 - [x] 建立冷启动、初始化、路由解析、导航延迟、并发导航、Runtime dispose 和长期 RSS 的
   同机趋势入口；长期趋势仍需按发布版本持续采样。
 - [ ] 继续做 macOS、iOS 真机/模拟器和 OHOS 运行回归；平台 SDK 变更只做兼容性修复。

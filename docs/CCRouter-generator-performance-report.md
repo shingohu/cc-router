@@ -108,12 +108,24 @@ fast path。测试覆盖无变化命中、源码变化、输出篡改、cache �
 0.8-1.5 秒，30× 从约 21.65 秒上升到 23.14 秒。原因是六套能力扫描在一个 BuildStep 内串行
 执行，失去了 build_runner 原有调度优势。该实验已完整回退。
 
-### 6.2 自定义 Package dirty set
+### 6.2 已落地的 per-Package dirty set
 
-当前 build_runner 已负责源码级增量，metadata cache 已按 Package 指纹复用。CLI 剩余聚合在
-30× 约 0.8 秒。若跳过未变 Package 的输出校验，会漏掉“另一个 Package 源码变化，同时本
-Package 生成物被篡改”的情况；正确实现需要 per-Package input/output manifest 和 reverse
-dependency closure。现阶段收益不足以覆盖复杂度和错误风险，暂不实施。
+本轮没有使用不可靠的 mtime/size 快捷判断，而是在 build_runner 完成后按精确内容状态计算
+Package dirty set。每个可写 Package 的状态包含 metadata fingerprint、当前
+`lib/src/ccrouter_generated` 受管输出 fingerprint，以及直接依赖 Package Index 的
+content fingerprint。
+
+任一字段变化、缓存缺失或输出被篡改都会把 Package 标为 dirty；dirty 状态沿依赖图向消费方
+传播。只有状态完全一致的 Package 才跳过组件 API、Bundle 和 Package capability catalog
+的聚合写入，Host Catalog、Workspace Validator 和输出删除检查仍然运行。这样不会因为“未变
+Package”而漏掉依赖级联、删除或篡改。
+
+缓存 schema 已升级为 `2`，旧缓存会 fail-closed 并在下一次成功生成时重建。`--no-cache` 仍
+绕过缓存和 dirty reuse，作为逐字节参考路径。
+
+1× 混合能力基准的增量修改结果会输出 `dirtyPackages/dirtyPackageTotal`；单 Package fixture
+中修改一个 Service 时为 `1/1`，并重新写出 2 个 Builder 输出。多 Package dirty closure
+需要用真实依赖图继续采样，不能把单 Package 数值外推为所有项目的承诺。
 
 ## 7. 后续触发条件
 
@@ -124,8 +136,9 @@ dependency closure。现阶段收益不足以覆盖复杂度和错误风险，�
 - build_runner 冷阶段稳定超过 30 秒且 AOT 编译不是主要波动来源；
 - 内存/RSS 显示当前逐字节摘要造成不可接受峰值。
 
-届时优先设计 per-Package manifest 与 reverse dependency closure；不得跳过 Validator、依赖
-watch/daemon 保证正确，或用 mtime/size 替代内容摘要。
+per-Package manifest 与 reverse dependency closure 已作为保守 dirty set 落地；后续只在真实
+收益足够时优化其输入摘要速度。不得跳过 Validator、依赖 watch/daemon 保证正确，或用 mtime/size
+替代内容摘要。
 
 ## 8. Runtime 长时间与 RSS 观测
 

@@ -421,6 +421,8 @@ CLI 继续保持非覆盖式，增加可选模板：
 - [x] 性能、队列、RSS/Heap 和长时间运行基线脚本；已覆盖混合能力生成、Runtime 并发与
   资源回收，并提供独立进程的 `runtime_long_run.dart` RSS 趋势入口。绝对 RSS 不设跨平台
   阈值，Heap 细分仍需目标平台 VM Service 采样。
+- [x] 生成器已增加 fail-closed per-Package dirty set；metadata、受管输出和直接依赖 Index
+  使用精确 fingerprint，dirty 沿反向依赖传播，并以混合能力增量基准验证。
 - [x] Demo Analyzer bootstrap 已接入固定 Git commit；插件 Package 兼容性测试、loader
   `analyze/compile` smoke 和 Hosted fallback manifest 均已补齐。发布后切换 Hosted 时需重新
   执行同一组 smoke，插件不可用仍安全降级到 Dart Analyzer/CLI 门禁。
