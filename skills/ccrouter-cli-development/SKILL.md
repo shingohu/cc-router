@@ -86,15 +86,19 @@ is internal by default; a cross-component Contract is a later design decision.
 entrypoints, keeps reversible backups, and must never be run against an SDK
 without first resolving its path. The wrapper runs the original `flutter pub`
 first; only a successful `get`, `upgrade`, `downgrade`, `add`, or `remove` may
-trigger generation. It skips projects whose resolved Package config does not
-contain both `ccrouter` and `ccrouter_generator`.
+trigger post-pub generation. `flutter run` and `flutter build` run the same
+generator as a fail-closed preflight before the original Flutter entrypoint.
+It skips projects whose resolved Package config does not contain both
+`ccrouter` and `ccrouter_generator`.
 
 Use `status` after an FVM version switch; it prints the resolved SDK path and
 verifies the marker, POSIX/Windows wrapper, and backups. It returns non-zero
 when the hook is missing or inconsistent. Use `uninstall` before removing a
 managed SDK. Set `CCROUTER_PUB_HOOK_DISABLE=1` for a one-shot bypass. Do not
 patch Flutter's `shared.sh`, snapshots, or tool sources manually. The hook does
-not cover direct `dart pub` commands or provide `watch`.
+not cover direct `dart pub` commands or Flutter Tool's internal implicit
+`pub get`, and does not provide `watch`. `run/build` preflight failures stop the
+Flutter command; projects without a resolved CCRouter graph are skipped.
 
 ## Generated Output Rules
 

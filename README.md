@@ -903,9 +903,11 @@ Route API 和 Package/Host metadata。跨组件 Route 不能直接由脚手架�
 `pub-hook` 是显式、按 Flutter SDK 版本安装的可回滚 wrapper；`status` 会打印实际 SDK
 路径并校验 wrapper、备份和 marker，只有 `installed and verified` 才返回成功。SDK 解析优先使用
 `FLUTTER_ROOT` 和当前目录向上的 `.fvm/flutter_sdk`。它只在原始
-`flutter pub get/upgrade/downgrade/add/remove` 成功后运行；当前项目没有同时解析
-`ccrouter` 和 `ccrouter_generator` 时直接跳过。它不覆盖 `dart pub`，也不实现常驻
-`watch`、`run` 或 `build`。`run/build` 前置生成方案已经记录，但尚未实施。
+`flutter pub get/upgrade/downgrade/add/remove` 成功后运行；`flutter run` 和
+`flutter build` 会在调用原始 Flutter 入口前执行同一生成器作为 fail-closed preflight。当前
+项目没有同时解析 `ccrouter` 和 `ccrouter_generator` 时直接跳过。它不覆盖 `dart pub`，不监听
+Flutter Tool 内部隐式 `pub get`，也不实现常驻 `watch`。SDK 切换后 `status` 应显示
+`run/build preflight: enabled`。
 SDK 切换或升级后需要重新检查 `pub-hook status`。详细语义见
 [`docs/CCRouter-cli-pub-hook.md`](docs/CCRouter-cli-pub-hook.md)。
 

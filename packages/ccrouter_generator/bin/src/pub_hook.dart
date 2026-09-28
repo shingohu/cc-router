@@ -14,7 +14,7 @@ enum CCPubHookAction {
   /// Reports whether the selected Flutter SDK is currently wrapped.
   status,
 
-  /// Runs generation for a project after a successful `flutter pub` command.
+  /// Runs generation for a project after `flutter pub` or before `flutter run/build`.
   run,
 }
 
@@ -113,9 +113,10 @@ final class CCPubHookManager {
       }
       await marker.writeAsString(
         const JsonEncoder.withIndent('  ').convert(<String, Object>{
-          'schema': 1,
+          'schema': 2,
           'entrypoint': 'flutter',
           'generator': 'ccrouter_generator',
+          'features': const <String>['pub', 'run', 'build'],
         }),
       );
     } catch (_) {
@@ -132,7 +133,7 @@ final class CCPubHookManager {
       'Installed CCRouter pub hook in Flutter SDK: ${sdkRoot.path}',
     );
     stdout.writeln(
-      'The hook runs after `flutter pub get/upgrade/downgrade/add/remove`.',
+      'The hook runs after successful Flutter pub commands and before `flutter run/build`.',
     );
     if (!status()) {
       throw const FileSystemException(
@@ -198,8 +199,15 @@ final class CCPubHookManager {
         (windows.existsSync() &&
             windowsOriginal.existsSync() &&
             _isWindowsWrapper(windows));
+    final preflightEnabled =
+        _supportsPreflight(posix) &&
+        (!windowsExpected || _supportsPreflight(windows));
     final installed =
-        markerValid && posixBackupPresent && posixValid && windowsValid;
+        markerValid &&
+        posixBackupPresent &&
+        posixValid &&
+        windowsValid &&
+        preflightEnabled;
     stdout.writeln('CCRouter pub hook SDK: ${sdkRoot.path}');
     stdout.writeln(
       '  marker: ${marker.path} (${markerValid ? 'valid' : 'missing or invalid'})',
@@ -219,6 +227,10 @@ final class CCPubHookManager {
       );
     }
     stdout.writeln(
+      '  run/build preflight: ${preflightEnabled ? 'enabled' : 'missing'}, '
+      'pub post-hook: ${posixValid ? 'enabled' : 'missing'}',
+    );
+    stdout.writeln(
       'CCRouter pub hook result: ${installed ? 'installed and verified' : 'not installed or inconsistent'}',
     );
     return installed;
@@ -229,7 +241,7 @@ final class CCPubHookManager {
     try {
       final value = jsonDecode(file.readAsStringSync());
       return value is Map &&
-          value['schema'] == 1 &&
+          (value['schema'] == 1 || value['schema'] == 2) &&
           value['generator'] == 'ccrouter_generator';
     } on Object {
       return false;
@@ -249,6 +261,15 @@ final class CCPubHookManager {
     if (!file.existsSync()) return false;
     try {
       return file.readAsStringSync().contains('CCRouter pub hook wrapper');
+    } on Object {
+      return false;
+    }
+  }
+
+  bool _supportsPreflight(File file) {
+    if (!file.existsSync()) return false;
+    try {
+      return file.readAsStringSync().contains('CCRouter preflight hook');
     } on Object {
       return false;
     }
@@ -334,7 +355,7 @@ Future<bool> runCCPubHook({
   }
   final stopwatch = Stopwatch()..start();
   stdout.writeln(
-    'CCRouter pub hook started after `flutter pub ${pubCommand ?? 'command'}`.',
+    'CCRouter pub hook started for `flutter ${pubCommand ?? 'pub command'}`.',
   );
   final process = await Process.start(Platform.resolvedExecutable, [
     'run',
@@ -371,6 +392,7 @@ File? _findPackageConfig(Directory start) {
 /// POSIX wrapper installed as `bin/flutter`.
 const _posixWrapper = r'''#!/usr/bin/env bash
 # CCRouter pub hook wrapper. The original Flutter entrypoint is kept beside this file.
+# CCRouter preflight hook: run/build generation is deliberately fail-closed.
 set -u
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
@@ -381,7 +403,75 @@ if [ "${CCROUTER_PUB_HOOK_DISABLE:-0}" = "1" ]; then
   exec "$ORIGINAL" "$@"
 fi
 
-if [ "${1:-}" != "pub" ]; then
+find_flutter_command() {
+  FLUTTER_COMMAND=""
+  for ARG in "$@"; do
+    case "$ARG" in
+      pub|run|build)
+        FLUTTER_COMMAND="$ARG"
+        return 0
+        ;;
+    esac
+  done
+}
+
+resolve_project_root() {
+  HOOK_DIR="$PWD"
+  EXPECTING_DIRECTORY=0
+  for ARG in "$@"; do
+    if [ "$EXPECTING_DIRECTORY" -eq 1 ]; then
+      HOOK_DIR="$ARG"
+      EXPECTING_DIRECTORY=0
+    elif [ "$ARG" = "--directory" ] || [ "$ARG" = "-C" ]; then
+      EXPECTING_DIRECTORY=1
+    elif [[ "$ARG" == --directory=* ]]; then
+      HOOK_DIR="${ARG#--directory=}"
+    fi
+  done
+  if [[ "$HOOK_DIR" != /* ]]; then
+    HOOK_DIR="$PWD/$HOOK_DIR"
+  fi
+  while [ ! -f "$HOOK_DIR/pubspec.yaml" ] && [ "$HOOK_DIR" != "/" ]; do
+    HOOK_DIR="$(dirname -- "$HOOK_DIR")"
+  done
+  if [ ! -f "$HOOK_DIR/pubspec.yaml" ]; then
+    return 1
+  fi
+  PROJECT_ROOT="$HOOK_DIR"
+  PACKAGE_CONFIG="$HOOK_DIR/.dart_tool/package_config.json"
+  while [ ! -f "$PACKAGE_CONFIG" ] && [ "$HOOK_DIR" != "/" ]; do
+    HOOK_DIR="$(dirname -- "$HOOK_DIR")"
+    PACKAGE_CONFIG="$HOOK_DIR/.dart_tool/package_config.json"
+  done
+  if [ ! -f "$PACKAGE_CONFIG" ] || \
+     ! grep -Eq '"name"[[:space:]]*:[[:space:]]*"ccrouter_generator"' "$PACKAGE_CONFIG"; then
+    return 1
+  fi
+  return 0
+}
+
+run_generator_hook() {
+  HOOK_COMMAND="$1"
+  shift
+  if ! resolve_project_root "$@"; then
+    return 0
+  fi
+  "$DART" run ccrouter_generator:ccrouter pub-hook run \
+    --project-root "$PROJECT_ROOT" --pub-command "$HOOK_COMMAND"
+}
+
+find_flutter_command "$@"
+if [ "$FLUTTER_COMMAND" = "run" ] || [ "$FLUTTER_COMMAND" = "build" ]; then
+  run_generator_hook "$FLUTTER_COMMAND" "$@"
+  HOOK_EXIT=$?
+  if [ "$HOOK_EXIT" -ne 0 ]; then
+    echo "CCRouter preflight hook failed before flutter $FLUTTER_COMMAND (exit $HOOK_EXIT)." >&2
+    exit "$HOOK_EXIT"
+  fi
+  exec "$ORIGINAL" "$@"
+fi
+
+if [ "$FLUTTER_COMMAND" != "pub" ]; then
   exec "$ORIGINAL" "$@"
 fi
 
@@ -391,47 +481,19 @@ if [ "$PUB_EXIT" -ne 0 ]; then
   exit "$PUB_EXIT"
 fi
 
-case "${2:-}" in
-  get|upgrade|downgrade|add|remove) ;;
-  *) exit 0 ;;
-esac
-
-HOOK_DIR="$PWD"
-EXPECTING_DIRECTORY=0
+PUB_COMMAND=""
 for ARG in "$@"; do
-  if [ "$EXPECTING_DIRECTORY" -eq 1 ]; then
-    HOOK_DIR="$ARG"
-    EXPECTING_DIRECTORY=0
-  elif [ "$ARG" = "--directory" ] || [ "$ARG" = "-C" ]; then
-    EXPECTING_DIRECTORY=1
-  elif [[ "$ARG" == --directory=* ]]; then
-    HOOK_DIR="${ARG#--directory=}"
-  fi
+  case "$ARG" in
+    get|upgrade|downgrade|add|remove)
+      PUB_COMMAND="$ARG"
+      break
+      ;;
+  esac
 done
-
-if [[ "$HOOK_DIR" != /* ]]; then
-  HOOK_DIR="$PWD/$HOOK_DIR"
-fi
-while [ ! -f "$HOOK_DIR/pubspec.yaml" ] && [ "$HOOK_DIR" != "/" ]; do
-  HOOK_DIR="$(dirname -- "$HOOK_DIR")"
-done
-if [ ! -f "$HOOK_DIR/pubspec.yaml" ]; then
+if [ -z "$PUB_COMMAND" ]; then
   exit 0
 fi
-
-PACKAGE_CONFIG="$HOOK_DIR/.dart_tool/package_config.json"
-PROJECT_ROOT="$HOOK_DIR"
-while [ ! -f "$PACKAGE_CONFIG" ] && [ "$HOOK_DIR" != "/" ]; do
-  HOOK_DIR="$(dirname -- "$HOOK_DIR")"
-  PACKAGE_CONFIG="$HOOK_DIR/.dart_tool/package_config.json"
-done
-if [ ! -f "$PACKAGE_CONFIG" ] || \
-   ! grep -Eq '"name"[[:space:]]*:[[:space:]]*"ccrouter_generator"' "$PACKAGE_CONFIG"; then
-  exit 0
-fi
-
-"$DART" run ccrouter_generator:ccrouter pub-hook run \
-  --project-root "$PROJECT_ROOT" --pub-command "${2:-command}"
+run_generator_hook "$PUB_COMMAND" "$@"
 HOOK_EXIT=$?
 if [ "$HOOK_EXIT" -ne 0 ]; then
   echo "CCRouter pub hook failed after successful flutter pub (exit $HOOK_EXIT)." >&2
@@ -442,31 +504,58 @@ exit "$HOOK_EXIT"
 /// Windows wrapper installed as `bin/flutter.bat`.
 const _windowsWrapper = r'''@echo off
 rem CCRouter pub hook wrapper. The original Flutter entrypoint is kept beside this file.
+rem CCRouter preflight hook: run/build generation is deliberately fail-closed.
 set "SCRIPT_DIR=%~dp0"
 set "ORIGINAL=%SCRIPT_DIR%flutter.ccrouter-original.bat"
-if "%CCROUTER_PUB_HOOK_DISABLE%"=="1" (
-  call "%ORIGINAL%" %*
-  exit /b %ERRORLEVEL%
+if "%CCROUTER_PUB_HOOK_DISABLE%"=="1" goto invoke_original
+
+set "FLUTTER_COMMAND="
+for %%A in (%*) do (
+  if /I "%%~A"=="pub" if not defined FLUTTER_COMMAND set "FLUTTER_COMMAND=pub"
+  if /I "%%~A"=="run" if not defined FLUTTER_COMMAND set "FLUTTER_COMMAND=run"
+  if /I "%%~A"=="build" if not defined FLUTTER_COMMAND set "FLUTTER_COMMAND=build"
 )
-if /I not "%~1"=="pub" (
-  call "%ORIGINAL%" %*
-  exit /b %ERRORLEVEL%
-)
+if /I "%FLUTTER_COMMAND%"=="run" goto preflight
+if /I "%FLUTTER_COMMAND%"=="build" goto preflight
+if /I not "%FLUTTER_COMMAND%"=="pub" goto invoke_original
+
 call "%ORIGINAL%" %*
 if not "%ERRORLEVEL%"=="0" exit /b %ERRORLEVEL%
-if /I not "%~2"=="get" if /I not "%~2"=="upgrade" if /I not "%~2"=="downgrade" if /I not "%~2"=="add" if /I not "%~2"=="remove" exit /b 0
+set "PUB_COMMAND="
+for %%A in (%*) do (
+  if /I "%%~A"=="get" if not defined PUB_COMMAND set "PUB_COMMAND=get"
+  if /I "%%~A"=="upgrade" if not defined PUB_COMMAND set "PUB_COMMAND=upgrade"
+  if /I "%%~A"=="downgrade" if not defined PUB_COMMAND set "PUB_COMMAND=downgrade"
+  if /I "%%~A"=="add" if not defined PUB_COMMAND set "PUB_COMMAND=add"
+  if /I "%%~A"=="remove" if not defined PUB_COMMAND set "PUB_COMMAND=remove"
+)
+if not defined PUB_COMMAND exit /b 0
+set "HOOK_COMMAND=%PUB_COMMAND%"
+goto run_hook
+
+:preflight
+set "HOOK_COMMAND=%FLUTTER_COMMAND%"
+goto run_hook
+
+:run_hook
 set "HOOK_DIR=%CD%"
-if not exist "%HOOK_DIR%\pubspec.yaml" exit /b 0
-set "PROJECT_ROOT=%HOOK_DIR%"
+if not exist "%HOOK_DIR%\pubspec.yaml" goto invoke_original
+set "PROJECT_ROOT=%CD%"
 :find_package_config
 if exist "%HOOK_DIR%\.dart_tool\package_config.json" goto package_config_found
 for %%i in ("%HOOK_DIR%\..") do set "PARENT_DIR=%%~fi"
-if /I "%PARENT_DIR%"=="%HOOK_DIR%" exit /b 0
+if /I "%PARENT_DIR%"=="%HOOK_DIR%" goto invoke_original
 set "HOOK_DIR=%PARENT_DIR%"
 goto find_package_config
 :package_config_found
 findstr /R /C:"\"name\"[ ]*:[ ]*\"ccrouter_generator\"" "%HOOK_DIR%\.dart_tool\package_config.json" >nul
-if not "%ERRORLEVEL%"=="0" exit /b 0
-call "%SCRIPT_DIR%dart.bat" run ccrouter_generator:ccrouter pub-hook run --project-root "%PROJECT_ROOT%" --pub-command "%~2"
+if not "%ERRORLEVEL%"=="0" goto invoke_original
+call "%SCRIPT_DIR%dart.bat" run ccrouter_generator:ccrouter pub-hook run --project-root "%PROJECT_ROOT%" --pub-command "%HOOK_COMMAND%"
+if "%ERRORLEVEL%"=="0" goto invoke_original
+echo CCRouter hook failed for flutter %HOOK_COMMAND%. 1>&2
+exit /b %ERRORLEVEL%
+
+:invoke_original
+call "%ORIGINAL%" %*
 exit /b %ERRORLEVEL%
 ''';

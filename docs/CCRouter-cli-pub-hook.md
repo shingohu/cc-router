@@ -81,6 +81,25 @@ fvm dart run ccrouter_generator:ccrouter pub-hook uninstall
 5. 生成器失败时打印生成日志和最终耗时，并返回非零，使 CI 能发现生成物过期或
    元数据错误。
 
+## `run` / `build` 前置生成
+
+当前 wrapper 还覆盖 `flutter run` 和 `flutter build`。它会在调用原始 Flutter
+入口前执行一次生成：
+
+1. POSIX/Windows wrapper 会在全局 Flutter 参数之后定位 `pub`、`run` 或 `build` 命令；
+   因此 `flutter --no-color run` 不会绕过 Hook。
+2. `run`/`build` 使用当前目录（以及兼容的 `--directory`/`-C`）向上定位项目，只有
+   同时解析 `ccrouter` 和 `ccrouter_generator` 的 resolved Package config 才运行生成。
+3. 生成器使用自身的内容 fingerprint fast path；没有变化时只做有界校验，不重复运行完整
+   Builder。并发调用仍由生成锁串行化。
+4. 预生成失败会阻止原始 `flutter run/build`，避免启动或 Release 构建消费陈旧生成物。
+5. 没有 Package config、普通 Flutter 项目或还未完成首次 `pub get` 时安全跳过；后续
+   `flutter pub get` 成功后会执行一次正常的 post-pub 生成。
+
+这不是对 Flutter Tool 内部隐式 `pub get` 的监听：wrapper 无法可靠观察内部 Dart 调用，
+也不会修改 `shared.sh`、Dart snapshot 或 Flutter Tool 源码。`run/build` 的前置生成只保证
+调用 Flutter 前当前已有依赖解析和生成物是最新的。
+
 可以临时禁用 hook，但仍保留原始 `flutter` 行为：
 
 ```bash
@@ -89,7 +108,8 @@ CCROUTER_PUB_HOOK_DISABLE=1 flutter pub get
 
 ## 边界
 
-- 只覆盖 `flutter pub`，不覆盖直接执行的 `dart pub`。
+- 覆盖 `flutter pub`、`flutter run` 和 `flutter build`，但不覆盖直接执行的 `dart pub`，
+  也不监听 Flutter Tool 内部隐式 `pub get`。
 - 当前不提供常驻 `watch` 进程；每次成功的依赖操作最多触发一次生成。
 - Flutter SDK 升级或 FVM 版本切换可能替换 `bin/flutter`，切换后应重新执行
   `status`，必要时对新 SDK 执行 `install`。
@@ -114,5 +134,10 @@ flutter pub get
 ```bash
 fvm dart run ccrouter_generator:ccrouter generate <host-root> --check
 ```
+
+执行 `flutter run` 或 `flutter build macos` 时，若项目已经完成依赖解析，控制台会先输出
+同一套生成日志；生成失败时 Flutter 命令不会继续执行。`ccrouter pub-hook status` 会额外
+显示 `run/build preflight: enabled`。升级 SDK 或使用新的 FVM 版本后，如果状态显示
+`missing`，先卸载旧 wrapper 再重新安装，避免旧入口继续绕过前置生成。
 
 确认 hook 产生的结果已经通过只读一致性检查。

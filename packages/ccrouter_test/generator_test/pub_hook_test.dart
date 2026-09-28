@@ -116,6 +116,72 @@ void main() {
       expect('${result.stdout}', contains('does not use CCRouter'));
     },
   );
+
+  test('run and build execute a generation preflight before Flutter', () async {
+    final sdk = await Directory.systemTemp.createTemp(
+      'ccrouter_pub_hook_preflight_ sdk',
+    );
+    addTearDown(() => sdk.delete(recursive: true));
+    final bin = Directory(path.join(sdk.path, 'bin'))..createSync();
+    final trace = path.join(sdk.path, 'trace.txt');
+    final flutter = File(path.join(bin.path, 'flutter'))
+      ..writeAsStringSync('''#!/usr/bin/env bash
+printf "flutter:%s\\n" "\$*" >> "\$CCROUTER_TRACE"
+exit 0
+''');
+    final dart = File(path.join(bin.path, 'dart'))
+      ..writeAsStringSync('''#!/usr/bin/env bash
+printf "dart:%s\\n" "\$*" >> "\$CCROUTER_TRACE"
+exit "\${CCROUTER_DART_EXIT:-0}"
+''');
+    await Process.run('chmod', ['+x', flutter.path, dart.path]);
+    await _run(['pub-hook', 'install', '--sdk', sdk.path]);
+
+    final project = Directory(path.join(sdk.path, 'project'))
+      ..createSync(recursive: true);
+    File(
+      path.join(project.path, 'pubspec.yaml'),
+    ).writeAsStringSync('name: preflight_project\n');
+    Directory(path.join(project.path, '.dart_tool')).createSync();
+    File(
+      path.join(project.path, '.dart_tool', 'package_config.json'),
+    ).writeAsStringSync('''{"packages":[
+  {"name":"ccrouter"},
+  {"name":"ccrouter_generator"}
+]}''');
+    final environment = <String, String>{
+      ...Platform.environment,
+      'CCROUTER_TRACE': trace,
+    };
+
+    final run = await Process.run(
+      flutter.path,
+      ['--no-color', 'run', '-d', 'macos'],
+      workingDirectory: project.path,
+      environment: environment,
+    );
+    expect(run.exitCode, 0, reason: '${run.stderr}');
+    final runTrace = File(trace).readAsLinesSync();
+    expect(runTrace.first, startsWith('dart:run ccrouter_generator:ccrouter'));
+    expect(runTrace.last, 'flutter:--no-color run -d macos');
+
+    File(trace).writeAsStringSync('');
+    final failedDart = File(path.join(bin.path, 'dart'))
+      ..writeAsStringSync('''#!/usr/bin/env bash
+printf "dart:%s\\n" "\$*" >> "\$CCROUTER_TRACE"
+exit 7
+''');
+    await Process.run('chmod', ['+x', failedDart.path]);
+    final build = await Process.run(
+      flutter.path,
+      ['build', 'macos'],
+      workingDirectory: project.path,
+      environment: {...environment, 'CCROUTER_DART_EXIT': '7'},
+    );
+    expect(build.exitCode, 7);
+    expect(File(trace).readAsLinesSync(), hasLength(1));
+    expect(File(trace).readAsStringSync(), startsWith('dart:'));
+  });
 }
 
 Future<ProcessResult> _run(List<String> arguments) => Process.run(
