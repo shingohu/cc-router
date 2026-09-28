@@ -14,6 +14,7 @@ import 'package:dart_style/dart_style.dart';
 import 'package:path/path.dart' as path;
 
 import 'src/route_find.dart' as route_find;
+import 'src/scaffold.dart';
 
 final _dartFormatter = DartFormatter(
   languageVersion: DartFormatter.latestLanguageVersion,
@@ -40,6 +41,23 @@ Future<void> main(List<String> arguments) async {
   if (!root.existsSync()) {
     stderr.writeln('error: Scan root does not exist: ${root.path}');
     exitCode = 2;
+    return;
+  }
+  if (parsed.command == _GeneratorCommand.create) {
+    try {
+      final created = await createScaffold(
+        kind: parsed.scaffoldKind!,
+        name: parsed.scaffoldName!,
+        root: root,
+      );
+      stdout.writeln(
+        'Created ${parsed.scaffoldKind!.name} scaffold:\n'
+        '${created.map((file) => '  ${file.path}').join('\n')}',
+      );
+    } on CCScaffoldException catch (error) {
+      stderr.writeln('error: ${error.message}');
+      exitCode = 1;
+    }
     return;
   }
   final buildContext = parsed.command != _GeneratorCommand.aggregate
@@ -398,7 +416,11 @@ CCRouter-managed artifact. `--no-cache` forces the reference full-parse path.
 indexes without generating and matches exact capability IDs or Route Pattern values.
 `clean` removes only CCRouter-owned source outputs in writable Packages; it
 preserves build caches, read-only dependencies, and unknown user files.
-`aggregate` preserves the metadata-only legacy path.''';
+`aggregate` preserves the metadata-only legacy path.
+`create component <package-name> [parent-directory]` creates a new component
+Package without overwriting existing files. `create page <PageName>
+[component-directory]` creates an internal typed Route page in an existing
+component Package.''';
 
 /// Runs dependency-accurate Package generation for one resolved Host.
 Future<bool> _generateResolvedWorkspace(
@@ -1033,6 +1055,9 @@ enum _GeneratorCommand {
 
   /// Removes CCRouter-owned source artifacts from writable Packages.
   clean,
+
+  /// Creates a new component or page source template.
+  create,
 }
 
 /// Parsed inputs shared by generation, aggregation, and read-only lookup.
@@ -1048,6 +1073,8 @@ final class _Arguments {
     this.profile = false,
     this.help = false,
     this.error,
+    this.scaffoldKind,
+    this.scaffoldName,
   });
 
   /// Requested orchestration mode.
@@ -1079,6 +1106,12 @@ final class _Arguments {
 
   /// Argument validation failure, when parsing could not continue.
   final String? error;
+
+  /// Template kind selected by the `create` command.
+  final CCScaffoldKind? scaffoldKind;
+
+  /// Package or page name passed to the scaffold command.
+  final String? scaffoldName;
 }
 
 /// Parses the unified command while retaining the previous aggregate syntax.
@@ -1096,6 +1129,8 @@ _Arguments _parseArguments(List<String> arguments) {
   } else if (arguments.isNotEmpty && arguments.first == 'clean') {
     command = _GeneratorCommand.clean;
     argumentStart = 1;
+  } else if (arguments.isNotEmpty && arguments.first == 'create') {
+    return _parseCreateArguments(arguments);
   }
   var rootPath = Directory.current.path;
   String? outputDirectoryPath;
@@ -1243,6 +1278,47 @@ _Arguments _parseArguments(List<String> arguments) {
     check: check,
     noCache: noCache,
     profile: profile,
+  );
+}
+
+/// Parses the intentionally small, non-overwriting scaffold command surface.
+_Arguments _parseCreateArguments(List<String> arguments) {
+  if (arguments.contains('--help') || arguments.contains('-h')) {
+    return const _Arguments(
+      command: _GeneratorCommand.create,
+      rootPath: '',
+      outputDirectoryPath: null,
+      help: true,
+    );
+  }
+  if (arguments.length < 3 ||
+      (arguments[1] != 'component' && arguments[1] != 'page')) {
+    return const _Arguments(
+      command: _GeneratorCommand.create,
+      rootPath: '',
+      outputDirectoryPath: null,
+      error: 'create requires `component` or `page`.',
+    );
+  }
+  if (arguments.length > 4) {
+    return const _Arguments(
+      command: _GeneratorCommand.create,
+      rootPath: '',
+      outputDirectoryPath: null,
+      error: 'create accepts a template, a name, and one optional directory.',
+    );
+  }
+  final kind = arguments[1] == 'component'
+      ? CCScaffoldKind.component
+      : CCScaffoldKind.page;
+  final name = arguments[2];
+  final root = arguments.length == 4 ? arguments[3] : Directory.current.path;
+  return _Arguments(
+    command: _GeneratorCommand.create,
+    rootPath: root,
+    outputDirectoryPath: null,
+    scaffoldKind: kind,
+    scaffoldName: name,
   );
 }
 

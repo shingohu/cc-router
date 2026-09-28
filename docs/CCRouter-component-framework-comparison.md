@@ -126,11 +126,13 @@ Contract、顶层 Handler 和类型化依赖。不同语义不能重新合并成
 - `--profile`；
 - `find`；
 - `clean`；
+- `create component` / `create page` 非覆盖式脚手架；
 - Package/Host Catalog。
 
 仍缺少：
 
 - `ccrouter watch`；
+- Contract Promotion 和迁移自动化；
 - IDE 内的路由到源码跳转插件；
 - IDE 内的组件依赖和 Contract 图；
 - 生成失败后的 IDE 状态提示；
@@ -214,7 +216,7 @@ CCRouter 已有足够的只读数据基础：
 6. 动态组件激活、停用和卸载；
 7. Action Pipeline；
 8. Command、Event、InitTask 自动声明生成，以及 Service Proxy 当前不支持的方法形态；
-9. CLI 组件模板、契约提升和迁移工具；
+9. CLI 契约提升和迁移工具（Component/内部 Page 最小非覆盖式模板已落地）；
 10. Generator Watch 和 DevTools。
 
 这些能力不是“缺少基础实现”，而是当前版本为了保持 API 表面积、生命周期和降级语义可控而主动不公开。
@@ -257,7 +259,7 @@ CCRouter 已有足够的只读数据基础：
 7. 动态组件治理；
 8. Action Pipeline；
 9. Service Proxy 高级方法形态；
-10. CLI 模板和迁移工具。
+10. CLI Contract Promotion 和迁移工具；基础 Component/Page 脚手架已落地。
 
 ## 最终判断
 

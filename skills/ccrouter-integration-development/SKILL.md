@@ -91,6 +91,18 @@ Read [implementation-patterns.md](references/implementation-patterns.md) when ad
 
 ## Generated Code and Validation
 
+For a new component or internal page, the generator CLI provides non-overwriting
+templates:
+
+```bash
+fvm dart run ccrouter_generator:ccrouter create component <package-name> <parent-directory>
+fvm dart run ccrouter_generator:ccrouter create page <PageName> <component-directory>
+```
+
+The scaffold only creates authored source and refuses to replace existing files.
+Run `pub get` and `generate` afterwards. It creates an internal `@CCRoute` page;
+promoting that page to a cross-component Contract remains an explicit design step.
+
 After Route, Service, Command, Event, or InitTask annotation, component definition, contribution, or dependency changes, run from the workspace root:
 
 ```bash

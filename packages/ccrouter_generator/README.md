@@ -111,9 +111,22 @@ export 'src/ccrouter_generated/contract/detail_page.route.contract.g.dart'
 `build_runner`。本仓库在根目录执行：
 
 ```sh
+# 创建一个新的组件 Package；不会覆盖已有文件
+fvm dart run ccrouter_generator:ccrouter create component demo_inventory demo/modules
+
+# 在组件中创建一个内部 Route 页面；不会自动创建跨组件 Contract
+fvm dart run ccrouter_generator:ccrouter create page InventoryPage demo/modules/demo_inventory
+
 fvm flutter pub get
 fvm dart run ccrouter_generator:ccrouter generate demo
 ```
+
+`create component <package-name> [parent-directory]` 会生成 `pubspec.yaml`、Package barrel
+和 `lib/src/<package>_component.dart`；Descriptor 不会从根 barrel 导出。`create page <PageName> [component-directory]` 会生成
+`lib/src/<page>_page.dart`、内部 `@CCRoute<void>`、稳定默认 Route ID 和 `/page` Path。
+两个脚手架命令都是非覆盖式的：任何目标文件已存在、目标组件目录已存在或名称不符合 Dart
+命名约束时都会失败并返回非零。它们不修改 Host 依赖、不创建 generated 文件，也不替代后续
+的 `pub get` 和 `generate`。
 
 该命令自动寻找包或 Dart workspace 根目录，先调用现有 build_runner，再执行 metadata 校验、
 组件索引、Host Catalog 和文档聚合。非 workspace 包也使用同一命令，不需要自行拼接两步流程。

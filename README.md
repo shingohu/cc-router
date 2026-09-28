@@ -760,6 +760,12 @@ Host 在 `CCRouter.initialize` 后调用 `CCRouter.runInitialization()`。Runtim
 常用命令：
 
 ```bash
+# 创建组件 Package（第二个参数是父目录，默认当前目录）
+fvm dart run ccrouter_generator:ccrouter create component demo_inventory demo/modules
+
+# 在已有组件中创建内部页面（第二个参数是组件根目录，默认当前目录）
+fvm dart run ccrouter_generator:ccrouter create page InventoryPage demo/modules/demo_inventory
+
 # 生成/增量更新
 fvm dart run ccrouter_generator:ccrouter generate demo
 
@@ -780,6 +786,13 @@ fvm dart run ccrouter_generator:ccrouter find demo.startup.foundation demo
 # 只清理 CCRouter 标记的生成源码
 fvm dart run ccrouter_generator:ccrouter clean demo
 ```
+
+`create component` 只创建新的 Package、`lib/src` 下的顶层 `CCComponent` Descriptor 和 Package barrel；
+`create page` 只创建带 `@CCRoute` 的最小 Flutter Page。两个命令都会先检查全部目标文件，
+目标已存在或名称非法时返回非零并拒绝覆盖，不修改 Host 的 `pubspec.yaml`，也不写入生成目录。
+脚手架完成后仍需执行一次 `flutter pub get` 和 `ccrouter generate`，让 build_runner 生成 Registrar、
+Route API 和 Package/Host metadata。跨组件 Route 不能直接由脚手架猜测，真实消费者出现后再
+手动建立 contracts Package 和 Contract-first 声明。
 
 普通 `generate` 会在持有生成锁后校验版本化 manifest。只有 authored Dart 源码、Pub graph、
 生成器与 Dart SDK identity、外部 Package Index 及全部 CCRouter 受管输出的内容摘要完全一致时，

@@ -22,6 +22,7 @@
 - [x] Runtime、Session、RouteEntry、Service、Command、Event、InitTask 生命周期基础闭环。
 - [x] Interceptor、Redirect、Defer、PopGuard、Aspect、Trace、Telemetry 和失败回退基础闭环。
 - [x] 生成器增量缓存、Workspace/Package 聚合、Catalog、源码查找和生成物门禁基础闭环。
+- [x] CLI Component/内部 Page 非覆盖式脚手架；脚手架不修改 Host 依赖或生成物。
 - [x] 顶层 `const CCComponent`、自动 Registrar/Manifest、Route 与简单 Service 自动装配，
   以及 Service Contract 自动绑定、稳定 ID/Provider metadata 最小生成闭环。
 - [x] Command/Event Contract、Handler/Subscription、Owner Client、稳定 ID、metadata、Catalog
@@ -109,6 +110,7 @@
 ### 4.4 开发体验与诊断
 
 - [x] 扩展 `ccrouter find` 和 Catalog 源码定位，覆盖 Route、Service、Command、Event、InitTask。
+- [x] 增加 `ccrouter create component` 和 `ccrouter create page` 模板命令；跨组件 Contract 提升仍需显式设计。
 - [ ] 设计 DevTools 只读视图：Component Graph、Route Graph、Active Entry、Scope、Trace、
   Failure/Fallback 和 InitTask DAG。
 - [ ] 评估 IDE 插件或 Analysis Server 集成；不能用运行时反射替代编译期校验。

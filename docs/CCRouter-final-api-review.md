@@ -124,7 +124,8 @@ Lifecycle/Aspect 伪造请求；该阶段由 Failure Event 承担。继续保持
 
 - Service 稳定 Contract ID、内部 Token 与独立 contracts Package 的版本兼容和最终收敛；
 - 2.0 动态组件治理及其 Service、Handler、Scope、活跃 Route 和依赖级联语义；
-- CLI 创建组件、契约提升与迁移自动化。
+- CLI 契约提升与迁移自动化；1.x 已提供非覆盖式 Component/内部 Page 最小脚手架，
+  不自动修改 Host 依赖或生成跨组件 Contract。
 
 `CCServiceScope.route` 不属于暂缓能力：Route Scope 已通过精确 Managed
 Navigation ID、Host binding、RouteEntry 移除和生命周期回归完成闭环。这里的后续项只

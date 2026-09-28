@@ -25,6 +25,22 @@ Router.
 
 Feature packages must not perform these duties.
 
+### CLI Scaffolding
+
+Use the generator CLI to create a new component Package or an internal Route
+page when starting a feature:
+
+```bash
+fvm dart run ccrouter_generator:ccrouter create component catalog demo/modules
+fvm dart run ccrouter_generator:ccrouter create page ProductPage demo/modules/catalog
+```
+
+The command creates only missing authored files and fails before writing when a
+target already exists. Run Pub resolution and `ccrouter generate` afterwards;
+the scaffold never edits Host dependencies or generated output. Treat the page
+as component-internal by default and create a Pure Dart Route Contract only
+after a real cross-component consumer appears.
+
 ### Component Implementation
 
 The implementation Package owns exactly one public top-level `const CCComponent`, pages, local policies, Services and message handlers. The generator keeps its Registrar and Manifest private. Export only intended business contracts.
