@@ -325,6 +325,11 @@ analytics.updatePolicy(
 `CCAnalyticsScrollable` 或 `CCAnalyticsExposureTarget`；曝光默认按可见比例、最小停留
 时间和目标生命周期去重，不读取 Widget 文本，也不注册全局手势监听。
 
+分析 Dispatcher 还提供不含事件内容的压力指标：`acceptedEventCount`、`pendingEventCount`、
+`peakQueueDepth` 和 `droppedEventCount`。它们只用于性能/健康诊断，不是审计日志或事件回放接口；可用
+`packages/ccrouter_test/benchmark/analytics_dispatcher.dart` 在同一 SDK 和平台下输出入队延迟、队列压力
+与 RSS 趋势。
+
 ```dart
 final confirmTarget = CCAnalyticsTarget(
   tracker: tracker,

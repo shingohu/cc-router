@@ -192,9 +192,13 @@ void main() {
       dispatcher.dispatch(_event('custom.two'));
       dispatcher.dispatch(_event('custom.three'));
       expect(dispatcher.droppedEventCount, 1);
+      expect(dispatcher.acceptedEventCount, 3);
+      expect(dispatcher.peakQueueDepth, 1);
+      expect(dispatcher.pendingEventCount, 1);
 
       sink.ready.complete();
       await dispatcher.close();
+      expect(dispatcher.pendingEventCount, 0);
       expect(sink.events.map((event) => event.eventId), [
         'custom.one',
         'custom.three',

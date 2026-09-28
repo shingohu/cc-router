@@ -138,7 +138,7 @@ Core 不依赖 Firebase、ThinkingData、Sentry 或 Crashlytics。
 - [ ] 应用网络层 Adapter；
 - [ ] Flutter、PlatformDispatcher 和原生 Crash 桥接；
 - [ ] current Route、Host、Outlet、Trace 关联；
-- [ ] 冷启动、导航延迟、队列压力、内存增长和销毁耗时基准；
+- [x] 增加独立分析分发基准：入队 P50/P95、接受/丢弃数、峰值队列深度、关闭后残留队列和 RSS 趋势；
 - [x] Demo 接入 Route Analytics、显式点击、滑动、曝光、失败与 Foreign Popup 场景；
 - [x] Demo 增加 Analytics Consent deny/grant/revoke 和 Foreign Popup 不误归因断言。
 
@@ -163,3 +163,7 @@ Foreign Popup 不误归因断言已闭环；Firebase 映射、黑名单和通用
 | macOS/Windows | 支持 | Flutter Widget 测试覆盖 | 多窗口归因依赖 Host/Outlet 上下文 |
 | Web | 支持 | 需应用确认浏览器隐私策略 | 不默认采集 URL 全文或浏览器指纹 |
 | OHOS | Pure Dart 层支持 | 需 OHOS 真机回归 | 当前 FVM OHOS SDK 不能替代桌面 Flutter 测试矩阵 |
+
+平台矩阵中的 `required` 表示协议和显式 Target 在该平台必须保持一致；`verify` 表示需要目标设备
+执行 smoke，不能据此推导“全局 Widget 自动识别”已支持。分析 Dispatcher 的 Pure Dart 指标和
+Consent/黑名单策略可在所有 Dart 平台复用，RSS 结果只允许同 SDK、同平台进程内比较。

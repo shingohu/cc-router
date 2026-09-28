@@ -450,6 +450,22 @@ final class CCAnalyticsEventDispatcher {
   /// Number of events discarded because the bounded queue was full.
   int get droppedEventCount => _droppedEventCount;
 
+  /// Number of events currently waiting for a sink.
+  ///
+  /// The event currently being written by a sink is not included. This is a
+  /// bounded diagnostic value for queue-pressure benchmarks and health
+  /// dashboards, not for replay or event inspection.
+  int get pendingEventCount => _queue.length;
+
+  /// Highest number of events retained in the queue since construction.
+  ///
+  /// This value contains no event payloads and is intended for comparing
+  /// bounded queue pressure between equivalent runs.
+  int get peakQueueDepth => _peakQueueDepth;
+
+  /// Number of events accepted by policy and placed in the queue.
+  int get acceptedEventCount => _acceptedEventCount;
+
   /// Number of events rejected by [policy] before queueing.
   int get filteredEventCount => _filteredEventCount;
 
@@ -474,6 +490,10 @@ final class CCAnalyticsEventDispatcher {
       _droppedEventCount++;
     }
     _queue.addLast(event);
+    _acceptedEventCount++;
+    if (_queue.length > _peakQueueDepth) {
+      _peakQueueDepth = _queue.length;
+    }
     _scheduleDrain();
     return true;
   }
@@ -510,6 +530,12 @@ final class CCAnalyticsEventDispatcher {
 
   /// Number of events evicted by queue pressure.
   int _droppedEventCount = 0;
+
+  /// Highest observed number of queued events.
+  int _peakQueueDepth = 0;
+
+  /// Number of events accepted before asynchronous delivery.
+  int _acceptedEventCount = 0;
 
   /// Number of events filtered by consent, enablement, or sampling.
   int _filteredEventCount = 0;

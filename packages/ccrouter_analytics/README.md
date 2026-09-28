@@ -19,3 +19,10 @@ Use `CCAnalyticsPolicy` at the application privacy boundary. Set
 before queueing; filtered events never reach a sink. Events already executing
 inside a sink cannot be retracted, so sensitive providers should be enabled
 only after consent.
+
+The dispatcher exposes bounded, payload-free pressure counters for diagnostics
+and benchmarks: `acceptedEventCount`, `pendingEventCount`, `peakQueueDepth`,
+and `droppedEventCount`. These counters do not expose queued events and must
+not be treated as an audit log or replay source. A standalone reference run is
+available at
+`packages/ccrouter_test/benchmark/analytics_dispatcher.dart`.
