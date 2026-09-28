@@ -318,6 +318,39 @@ void probe() {
         eventApi,
         contains('eventId: "demo_navigation_lab.order_completed"'),
       );
+      final componentApi = File(
+        path.join(
+          navigationPackage,
+          'lib',
+          'src',
+          'ccrouter_generated',
+          'demo_navigation_lab_component.api.g.dart',
+        ),
+      ).readAsStringSync();
+      expect(
+        componentApi,
+        contains('Stable typed API entry point for component'),
+      );
+      expect(
+        componentApi,
+        contains(
+          "export 'component/demo_navigation_lab_component.route_api.g.dart'",
+        ),
+      );
+      expect(
+        componentApi,
+        contains(
+          "export 'component/navigation_lab_component.service_api.g.dart'",
+        ),
+      );
+      expect(
+        componentApi,
+        contains(
+          "export 'component/demo_navigation_lab_component.event_api.g.dart'",
+        ),
+      );
+      expect(componentApi, isNot(contains('.component.g.dart')));
+      expect(componentApi, isNot(contains('ccrouterGeneratedComponent')));
       final componentAssembly = File(
         path.join(
           navigationPackage,

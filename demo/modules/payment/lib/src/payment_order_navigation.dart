@@ -1,7 +1,7 @@
 import 'package:ccrouter/ccrouter.dart';
 import 'package:demo_order_contracts/demo_order_contracts.dart';
 
-import 'ccrouter_generated/component/demo_payment_component.service_api.g.dart';
+import 'ccrouter_generated/demo_payment_component.api.g.dart';
 
 /// Internal payment workflow that opens an order without importing order UI.
 abstract final class PaymentOrderNavigation {

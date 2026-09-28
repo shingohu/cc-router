@@ -2,7 +2,7 @@ import 'package:ccrouter/ccrouter.dart';
 import 'package:demo_network/demo_network.dart';
 import 'package:flutter/material.dart';
 
-import 'ccrouter_generated/component/navigation_lab_component.service_api.g.dart';
+import 'ccrouter_generated/demo_navigation_lab_component.api.g.dart';
 
 /// Demonstrates a backend-neutral network Service backed by Dio.
 @CCRoute<void>(

@@ -1044,9 +1044,10 @@ Future<List<_MetadataFile>> _readWritableMetadataFiles(
 /// Detects authored imports whose CLI-owned component API is currently absent.
 ///
 /// Builder-owned Service APIs are excluded because build_runner already knows
-/// their declared outputs. Route, Command, and Event component APIs are CLI
-/// aggregates; restoring them before build_runner prevents a clean rebuild
-/// from first resolving authored libraries against temporarily missing imports.
+/// their declared outputs. Route, Command, Event, and stable component API
+/// barrels are CLI aggregates; restoring them before build_runner prevents a
+/// clean rebuild from first resolving authored libraries against temporarily
+/// missing imports.
 Future<bool> _hasMissingGeneratedComponentImport(
   CCPackageWorkspace workspace,
 ) async {
@@ -1054,6 +1055,7 @@ Future<bool> _hasMissingGeneratedComponentImport(
     '.route_api.g.dart',
     '.command_api.g.dart',
     '.event_api.g.dart',
+    '.api.g.dart',
   ];
   for (final package in workspace.packages.values.where(
     (package) => package.writable && package.declaresGenerationIntent,
@@ -1065,7 +1067,7 @@ Future<bool> _hasMissingGeneratedComponentImport(
       final relative = _relativePath(package.root, entity);
       if (relative.split('/').contains('ccrouter_generated')) continue;
       final contents = await entity.readAsString();
-      if (!contents.contains('ccrouter_generated/component/')) continue;
+      if (!contents.contains('ccrouter_generated/')) continue;
       final unit = parseString(
         content: contents,
         path: entity.path,
@@ -1074,7 +1076,7 @@ Future<bool> _hasMissingGeneratedComponentImport(
       for (final directive in unit.directives.whereType<UriBasedDirective>()) {
         final uriText = directive.uri.stringValue;
         if (uriText == null ||
-            !uriText.contains('ccrouter_generated/component/') ||
+            !uriText.contains('ccrouter_generated/') ||
             !cliApiSuffixes.any(uriText.endsWith)) {
           continue;
         }
@@ -2639,6 +2641,7 @@ Future<List<_GeneratedComponentCatalog>> _generateComponentRouteIndexes(
   }
   final commandClients = <String, List<_CommandClientEntry>>{};
   final eventClients = <String, List<_EventClientEntry>>{};
+  final serviceApiLibraries = <String, Set<String>>{};
   for (final metadata in metadataFiles) {
     final document = metadata.document;
     final package = '${document['package'] ?? ''}';
@@ -2682,6 +2685,27 @@ Future<List<_GeneratedComponentCatalog>> _generateComponentRouteIndexes(
                 library: '${dependency['library'] ?? ''}',
               ),
             );
+      }
+      final serviceDependencies = _objects(component['serviceDependencies']);
+      if (serviceDependencies.isNotEmpty) {
+        final libraries = serviceApiLibraries.putIfAbsent(id, () => <String>{});
+        for (final dependency in serviceDependencies) {
+          final generated = dependency['generatedArtifact'];
+          final packageUri = generated is Map
+              ? '${generated['packageUri'] ?? ''}'
+              : '';
+          final packagePrefix = 'package:$package/';
+          if (packageUri.startsWith(packagePrefix)) {
+            final library = packageUri.substring(packagePrefix.length);
+            if (library.startsWith('src/ccrouter_generated/')) {
+              libraries.add(
+                library.substring('src/ccrouter_generated/'.length),
+              );
+              continue;
+            }
+          }
+          libraries.add(_generatedServiceApiLibraryPath(source));
+        }
       }
     }
     for (final route in _objects(document['routes'])) {
@@ -2864,6 +2888,10 @@ Future<List<_GeneratedComponentCatalog>> _generateComponentRouteIndexes(
     final output = File(
       '${outputDirectory.path}${Platform.pathSeparator}${_fileStem(componentId)}.component.g.dart',
     );
+    final componentServiceApiLibraries =
+        serviceApiLibraries[componentId]?.toList(growable: false) ??
+        const <String>[];
+    final hasServiceApi = componentServiceApiLibraries.isNotEmpty;
     if (packageDirty) {
       await _writeIfChanged(
         output,
@@ -2921,6 +2949,29 @@ Future<List<_GeneratedComponentCatalog>> _generateComponentRouteIndexes(
         );
       }
     }
+    final hasStableApi =
+        hasRouteApi || hasServiceApi || hasCommandApi || hasEventApi;
+    if (hasStableApi && packageDirty) {
+      final apiOutput = File(
+        path.join(
+          packageRoot.path,
+          'lib',
+          'src',
+          'ccrouter_generated',
+          '${_fileStem(componentId)}.api.g.dart',
+        ),
+      );
+      await _writeIfChanged(
+        apiOutput,
+        _emitComponentApi(
+          componentId: componentId,
+          hasRouteApi: hasRouteApi,
+          serviceApiLibraries: componentServiceApiLibraries,
+          hasCommandApi: hasCommandApi,
+          hasEventApi: hasEventApi,
+        ),
+      );
+    }
     generatedCatalogs.add(
       _GeneratedComponentCatalog(
         componentId: componentId,
@@ -2930,6 +2981,7 @@ Future<List<_GeneratedComponentCatalog>> _generateComponentRouteIndexes(
             'lib/src/ccrouter_generated/component/${_fileStem(componentId)}.component.g.dart',
         manifest: component.manifest,
         hasRouteApi: hasRouteApi,
+        hasServiceApi: hasServiceApi,
         hasCommandApi: hasCommandApi,
         hasEventApi: hasEventApi,
       ),
@@ -2939,6 +2991,46 @@ Future<List<_GeneratedComponentCatalog>> _generateComponentRouteIndexes(
     await _generatePackageHostEntrypoints(generatedCatalogs);
   }
   return generatedCatalogs;
+}
+
+/// Emits one stable component API barrel over the allowed typed entry points.
+String _emitComponentApi({
+  required String componentId,
+  required bool hasRouteApi,
+  required List<String> serviceApiLibraries,
+  required bool hasCommandApi,
+  required bool hasEventApi,
+}) {
+  final stem = _fileStem(componentId);
+  final owner = _pascalIdentifier(_componentApiOwner(componentId));
+  final out = StringBuffer()
+    ..writeln('// GENERATED CODE - DO NOT MODIFY BY HAND')
+    ..writeln('// ignore_for_file: type=lint')
+    ..writeln()
+    ..writeln('/// Stable typed API entry point for component `$componentId`.')
+    ..writeln('///')
+    ..writeln(
+      '/// This barrel intentionally excludes Registrar, Binding, Host, and metadata glue.',
+    );
+  if (hasRouteApi) {
+    out..writeln(
+      "export 'component/$stem.route_api.g.dart' show ${owner}Routes;",
+    );
+  }
+  for (final library in serviceApiLibraries.toList()..sort()) {
+    out.writeln("export '$library' show ${owner}Services;");
+  }
+  if (hasCommandApi) {
+    out.writeln(
+      "export 'component/$stem.command_api.g.dart' show ${owner}Commands;",
+    );
+  }
+  if (hasEventApi) {
+    out.writeln(
+      "export 'component/$stem.event_api.g.dart' show ${owner}Events;",
+    );
+  }
+  return '${out.toString().trimRight()}\n';
 }
 
 /// Generates one component Registrar, Manifest, and route catalog.
@@ -3303,6 +3395,15 @@ String _generatedRouteBindingPath(String source) {
   return 'lib/src/ccrouter_generated/binding/$relative.route_binding.g.dart';
 }
 
+/// Derives a component-relative Service Proxy library from an authored source.
+String _generatedServiceApiLibraryPath(String source) {
+  const prefix = 'lib/';
+  if (!source.startsWith(prefix) || !source.endsWith('.dart')) return source;
+  var relative = source.substring(prefix.length, source.length - 5);
+  if (relative.startsWith('src/')) relative = relative.substring(4);
+  return 'component/$relative.service_api.g.dart';
+}
+
 /// Derives the callable factory emitted for one legacy internal route record.
 String _intentFactoryFromContract(String contract) {
   final stem = contract.startsWith('_') ? contract.substring(1) : contract;
@@ -3664,6 +3765,20 @@ Future<void> _deleteObsoleteResolvedOutputs({
             '${_fileStem(catalog.componentId)}.event_api.g.dart',
           ),
         ),
+    for (final catalog in catalogs)
+      if (catalog.hasRouteApi ||
+          catalog.hasServiceApi ||
+          catalog.hasCommandApi ||
+          catalog.hasEventApi)
+        path.normalize(
+          path.join(
+            catalog.packageRoot.path,
+            'lib',
+            'src',
+            'ccrouter_generated',
+            '${_fileStem(catalog.componentId)}.api.g.dart',
+          ),
+        ),
   };
   for (final package in workspace.packages.values.where(
     (package) => package.writable,
@@ -3682,7 +3797,8 @@ Future<void> _deleteObsoleteResolvedOutputs({
                 entity.path.endsWith('.routes.g.dart') ||
                 entity.path.endsWith('.route_api.g.dart') ||
                 entity.path.endsWith('.command_api.g.dart') ||
-                entity.path.endsWith('.event_api.g.dart'))) {
+                entity.path.endsWith('.event_api.g.dart') ||
+                entity.path.endsWith('.api.g.dart'))) {
           candidates.add(entity);
         }
       }
@@ -3886,6 +4002,14 @@ Future<void> _deleteObsoleteAggregateOutputs(
         '${catalog.packageRoot.absolute.path}${Platform.pathSeparator}lib${Platform.pathSeparator}src${Platform.pathSeparator}ccrouter_generated${Platform.pathSeparator}component${Platform.pathSeparator}${_fileStem(catalog.componentId)}.event_api.g.dart',
       );
     }
+    if (catalog.hasRouteApi ||
+        catalog.hasServiceApi ||
+        catalog.hasCommandApi ||
+        catalog.hasEventApi) {
+      expected.add(
+        '${catalog.packageRoot.absolute.path}${Platform.pathSeparator}lib${Platform.pathSeparator}src${Platform.pathSeparator}ccrouter_generated${Platform.pathSeparator}${_fileStem(catalog.componentId)}.api.g.dart',
+      );
+    }
     expected.add(
       '${catalog.packageRoot.absolute.path}${Platform.pathSeparator}lib${Platform.pathSeparator}src${Platform.pathSeparator}ccrouter_generated${Platform.pathSeparator}host${Platform.pathSeparator}${catalog.package}_ccrouter.g.dart',
     );
@@ -3901,6 +4025,7 @@ Future<void> _deleteObsoleteAggregateOutputs(
         !name.endsWith('.route_api.g.dart') &&
         !name.endsWith('.command_api.g.dart') &&
         !name.endsWith('.event_api.g.dart') &&
+        !name.endsWith('.api.g.dart') &&
         !name.endsWith('_ccrouter.g.dart')) {
       continue;
     }
@@ -3936,6 +4061,9 @@ bool _isCCRouterAggregateOutput(String name, String contents) {
     return contents.contains(
       'Typed Event publication entry points for component',
     );
+  }
+  if (name.endsWith('.api.g.dart')) {
+    return contents.contains('Stable typed API entry point for component');
   }
   if (name.endsWith('.component.g.dart')) {
     return contents.contains('Generated capability Registrar for component');
@@ -4251,6 +4379,7 @@ final class _GeneratedComponentCatalog {
     required this.registrarSource,
     required this.manifest,
     required this.hasRouteApi,
+    required this.hasServiceApi,
     required this.hasCommandApi,
     required this.hasEventApi,
   });
@@ -4272,6 +4401,9 @@ final class _GeneratedComponentCatalog {
 
   /// Whether the component owns internal routes needing a typed package API.
   final bool hasRouteApi;
+
+  /// Whether the component consumes generated Service Proxies.
+  final bool hasServiceApi;
 
   /// Whether the component owns or consumes generated Command contracts.
   final bool hasCommandApi;

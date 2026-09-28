@@ -170,7 +170,7 @@ Package 或明确的 public contract library。
 import 'package:ccrouter/ccrouter.dart';
 import 'package:flutter/material.dart';
 
-import 'ccrouter_generated/component/order_component.route_api.g.dart';
+import 'ccrouter_generated/order_component.api.g.dart';
 
 @CCRoute<String>(
   id: 'order.detail',
@@ -198,12 +198,19 @@ final class OrderDetailPage extends StatelessWidget {
 }
 ```
 
-页面源码**不需要**添加 `.route.g.dart` 的 `part`。执行生成后，IDE 可从组件唯一的 `*.route_api.g.dart` 自动补全路由 API。
+页面源码**不需要**添加 `.route.g.dart` 的 `part`。执行生成后，IDE 可从组件唯一的
+`<componentId>.api.g.dart` 自动补全路由、Service Proxy、Command 和 Event API。
 
-当前版本业务源码仍直接导入对应组件的 Route API 文件。已记录后续生成器能力：按稳定
-`componentId` 生成 `lib/src/ccrouter_generated/<componentId>.api.g.dart`，统一通过受控
-`export/show` 聚合 Route、Service Proxy、Command 和 Event API。该聚合入口尚未作为当前版本
-可用 API 发布；在它落地前不要手写同名生成文件或修改底层生成物路径。
+业务源码应优先导入稳定的组件 API 入口：
+
+```dart
+import 'ccrouter_generated/order_component.api.g.dart';
+```
+
+该文件由生成器按 `componentId` 维护，只通过受控 `export/show` 暴露允许业务使用的类型安全
+API，不导出 Registrar、Binding、Host、Manifest、Metadata 或 Route Registration Bridge。底层
+`component/*_api.g.dart` 仍是生成器和 Host 胶水的实现文件，业务源码不应直接依赖；没有可导出
+能力的组件不会生成空的 `.api.g.dart`。
 
 单一地址使用 `pattern`；兼容旧 Path 或多入口时使用 `patterns`。两者不能同时设置。多值中只有一个可逆 Pattern 时会自动成为 primary；多个可逆 Pattern 必须显式指定唯一 primary；只有 Regex 且无法反向构造 URI 时生成失败。
 

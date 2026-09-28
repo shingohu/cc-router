@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 
 import 'lab_configuration.dart';
 import 'component_capabilities.dart';
-import 'ccrouter_generated/component/demo_navigation_lab_component.route_api.g.dart';
+import 'ccrouter_generated/demo_navigation_lab_component.api.g.dart';
 
 void registerDemoNavigationLabPolicies(CCRegistry registry) {
   registry.registerRouteInterceptor(

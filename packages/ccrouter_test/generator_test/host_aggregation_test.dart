@@ -89,6 +89,18 @@ environment:
       '// GENERATED CODE - DO NOT MODIFY BY HAND\n'
       '/// Generated registration index for component `removed`.\n',
     );
+    final obsoleteStableApi = File(
+      path.join(
+        component.path,
+        'lib',
+        'src',
+        'ccrouter_generated',
+        'fixture_service_component.api.g.dart',
+      ),
+    )..writeAsStringSync(
+        '// GENERATED CODE - DO NOT MODIFY BY HAND\n'
+        '/// Stable typed API entry point for component `fixture_service_component`.\n',
+      );
     final handwrittenIndex = File(
       path.join(
         component.path,
@@ -168,6 +180,7 @@ environment:
     expect(aggregate, contains('manifest.id: manifest.version'));
     expect(aggregate, isNot(contains('CCRouterGeneratedHost')));
     expect(obsoleteIndex.existsSync(), isFalse);
+    expect(obsoleteStableApi.existsSync(), isFalse);
     expect(handwrittenIndex.existsSync(), isTrue);
     expect(foreignGeneratedIndex.existsSync(), isTrue);
   });

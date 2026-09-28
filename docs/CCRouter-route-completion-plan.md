@@ -196,13 +196,13 @@ Catalog 和 Host Route Catalog 保留各自的消费边界。收敛必须保持�
 Git 工作区无新差异。没有物理删除生成目录；Builder 中间缓存仍由 build_runner 增量管理，
 不把“无缓存聚合”误称为全新 Builder 冷构建。
 
-#### P2-1a Component API 稳定聚合入口（已记录，待实施）
+#### P2-1a Component API 稳定聚合入口（已完成）
 
-当前组件源码需要分别导入 `*.route_api.g.dart`、`*.service_api.g.dart`、`*.command_api.g.dart`
-或 `*.event_api.g.dart`。这些生成物的职责应继续保持独立，但它们的文件名可能分别来自稳定
-`componentId` 或声明源文件名，容易造成导入记忆和重命名成本。
+底层仍分别生成 `*.route_api.g.dart`、`*.service_api.g.dart`、`*.command_api.g.dart` 或
+`*.event_api.g.dart`，以保持职责和增量边界独立；业务源码不再需要记忆这些文件名，统一通过
+稳定的组件入口访问允许导出的 API。
 
-后续生成器增加一个按 `componentId` 命名的组件 API 聚合文件：
+生成器按 `componentId` 命名组件 API 聚合文件：
 
 ```text
 lib/src/ccrouter_generated/<componentId>.api.g.dart
@@ -226,7 +226,8 @@ lib/src/ccrouter_generated/<componentId>.api.g.dart
 - 没有可导出 API 的组件不生成空聚合文件；
 - 能力删除后必须清理陈旧 export 和空受管目录；
 - `componentId` 改变视为组件身份迁移，稳定入口路径随之改变，不隐式兼容；
-- 增加生成器、空能力、增量改名、陈旧 export、`--check` 和 API surface 回归测试。
+- 生成器测试覆盖空能力、增量改名、陈旧 export、`--check` 和 API surface；无缓存生成与缓存
+  增量生成也必须保持该入口逐字节稳定。
 
 该方案只聚合导入入口，不合并底层生成逻辑，避免破坏增量生成、职责隔离和 API 最小权限。
 Service/Command Contract 的统一 `alias` 和可选命名空间 facade 与本项关联评估，但不属于

@@ -2,7 +2,7 @@ import 'package:ccrouter/ccrouter.dart';
 import 'package:flutter/material.dart';
 
 import 'lab_configuration.dart';
-import 'ccrouter_generated/component/demo_navigation_lab_component.route_api.g.dart';
+import 'ccrouter_generated/demo_navigation_lab_component.api.g.dart';
 
 @CCRoute<String>(
   id: 'demo_navigation_lab.detail',

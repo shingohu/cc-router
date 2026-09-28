@@ -2,7 +2,7 @@ import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter/ccrouter_generated.dart' show CCServiceToken;
 import 'package:ccrouter_test/ccrouter_test.dart';
 import 'package:demo_order_contracts/demo_order_contracts.dart';
-import 'package:demo_payment/src/ccrouter_generated/component/demo_payment_component.service_api.g.dart';
+import 'package:demo_payment/src/ccrouter_generated/demo_payment_component.api.g.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 final class _OrderSummaryServiceFake implements OrderSummaryService {

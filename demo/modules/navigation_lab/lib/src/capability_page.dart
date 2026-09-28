@@ -5,8 +5,7 @@ import 'package:demo_order_contracts/demo_order_contracts.dart';
 import 'package:flutter/material.dart';
 
 import 'component_capabilities.dart';
-import 'ccrouter_generated/component/demo_navigation_lab_component.command_api.g.dart';
-import 'ccrouter_generated/component/demo_navigation_lab_component.event_api.g.dart';
+import 'ccrouter_generated/demo_navigation_lab_component.api.g.dart';
 import 'lab_configuration.dart';
 
 @CCRoute<void>(

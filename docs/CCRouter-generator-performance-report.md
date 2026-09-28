@@ -20,7 +20,7 @@ O(metadata × files)。930 条 Route 的旧压力样本仅 Validator 就耗时 2
 3. 增加永久混合能力 benchmark，真实运行 build_runner 和完整 CLI，并覆盖 Route、Service、
    Command、Event、InitTask，而不是只构造内存 metadata。
 4. 修复 `clean -> generate` 的二次收敛：当 build cache 仍存在且 authored source 导入的
-   Route/Command/Event component API 已被 `clean` 删除时，先从缓存 metadata 临时恢复这些
+   Route/Command/Event 或稳定 Component API 已被 `clean` 删除时，先从缓存 metadata 临时恢复这些
    CLI aggregate，再运行 build_runner；当前轮仍会重新生成并完整校验所有最终产物。
 
 生成格式、公开契约和 Runtime 行为均未改变。
@@ -59,11 +59,13 @@ fvm dart run packages/ccrouter_test/benchmark/generator_full_scaling.dart \
 
 ## 4. 优化后结果
 
-以下为包含五类能力的最终冷生成和连续两次无变化生成结果：
+以下为包含五类能力的最终冷生成和连续两次无变化生成结果。生成文件数包含按
+`componentId` 稳定命名的 `.api.g.dart` 入口；该入口只增加一个受管聚合文件，不改变
+底层 Builder 的能力拆分。
 
 | 规模 | Route | Service | Command | Event | InitTask | 源文件 | 生成文件 | Validator | 冷 Wall | 无变化 Wall |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| 1× | 31 | 8 | 5 | 3 | 8 | 57 | 151 | 10ms | 17.023s | 0.372-0.407s |
+| 1× | 31 | 8 | 5 | 3 | 8 | 57 | 152 | 10ms | 17.023s | 0.372-0.407s |
 | 10× | 310 | 80 | 50 | 30 | 80 | 552 | 1420 | 17ms | 18.313s | 0.549-0.558s |
 | 20× | 620 | 160 | 100 | 60 | 160 | 1102 | 2830 | 32ms | 20.786s | 0.706-0.722s |
 | 30× | 930 | 240 | 150 | 90 | 240 | 1652 | 4240 | 38ms | 23.451s | 0.810-0.852s |
@@ -94,7 +96,7 @@ manifest 采用版本、内容摘要和自校验 fingerprint。缺失、损坏�
 fast path。测试覆盖无变化命中、源码变化、输出篡改、cache 损坏、并发锁、clean/rebuild 和
 `--check` 现场恢复。
 
-`clean` 后的 component API bootstrap 只在对应 authored import 存在且目标文件缺失时启用，
+`clean` 后的 component API bootstrap（包括稳定 `.api.g.dart`）只在对应 authored import 存在且目标文件缺失时启用，
 只消费仍由 build_runner 管理的缓存 metadata。它不跳过 build_runner，也不信任旧 metadata
 作为最终结果；当前轮构建、解析、Validator 与聚合仍完整执行。bootstrap 或后续生成失败时会
 恢复生成前现场。回归用例要求 `clean -> generate -> --no-cache --check` 的第二轮明确报告

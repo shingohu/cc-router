@@ -52,6 +52,9 @@ Read [implementation-patterns.md](references/implementation-patterns.md) when ad
 - Do not call `Navigator.push/pop`, `GoRouter.push/go`, or an Adapter for a CCRouter-managed page.
 - Local Flutter Dialog, BottomSheet, Menu, and Overlay may use Flutter APIs when they do not need a cross-component contract, typed result, Interceptor, Trace, or Route Scope.
 - Do not import `ccrouter_core/src/*`, `ccrouter_host.dart`, Adapter types, generated binding/package/host files, or another component's page implementation from feature code.
+- Import a component's generated `<componentId>.api.g.dart` stable barrel for its typed Route,
+  Service Proxy, Command, and Event APIs. Do not import the underlying
+  `ccrouter_generated/component/*_api.g.dart` files; they are generator/Host SPI.
 - Do not access `CCRouterRuntime`, `CCScope`, mutable Route Entries, Registry internals, or framework disposal entry points.
 - Do not manually dispose framework-owned Service instances, Route Scopes, Adapters, or Sessions.
 - Do not edit anything under `lib/src/ccrouter_generated/`.

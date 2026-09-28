@@ -100,12 +100,13 @@ final class ProductPage extends StatelessWidget {
 }
 ```
 
-Do not add a generated `part`. In the current generator, import the component's
-`*.route_api.g.dart` Route API after generation when callers need a generated
-Intent. A stable `<componentId>.api.g.dart` Component API barrel that also
-aggregates allowed Service/Command/Event APIs is planned, but is not yet
-available; do not create or hand-edit that generated file before the generator
-support lands.
+Do not add a generated `part`. Import the component's stable
+`<componentId>.api.g.dart` barrel after generation when callers need a generated
+Intent or Service/Command/Event client. The barrel is generated under
+`lib/src/ccrouter_generated/` and is the supported business-facing entry point.
+Do not import or hand-edit its underlying `component/*_api.g.dart` files; those
+remain generator and Host implementation details. Components without an
+exportable API do not receive an empty barrel.
 
 Use `@CCExtraParam` for a typed process-local object that must retain identity:
 
