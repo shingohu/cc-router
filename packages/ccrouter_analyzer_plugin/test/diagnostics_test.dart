@@ -77,6 +77,38 @@ class HomePage {}
     );
   });
 
+  test('maps generated route output changes back to the authored source', () {
+    final generated = path.join(
+      packageRoot,
+      'lib',
+      'src',
+      'ccrouter_generated',
+      'route',
+      'pages',
+      'network_page.route.g.dart',
+    );
+    expect(
+      CCRouterAnalyzerDiagnostics.authoredRoutePathForGenerated(generated),
+      path.join(packageRoot, 'lib', 'src', 'pages', 'network_page.dart'),
+    );
+  });
+
+  test('ignores unrelated generated files for source refresh', () {
+    expect(
+      CCRouterAnalyzerDiagnostics.authoredRoutePathForGenerated(
+        path.join(
+          packageRoot,
+          'lib',
+          'src',
+          'ccrouter_generated',
+          'component',
+          'component.g.dart',
+        ),
+      ),
+      isNull,
+    );
+  });
+
   test('ignores an incomplete editor buffer without throwing', () {
     expect(
       () => CCRouterAnalyzerDiagnostics.analyze(

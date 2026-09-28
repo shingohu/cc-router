@@ -8,6 +8,8 @@ import 'package:ccrouter/ccrouter_host.dart'
     show CCFlutterRouteCatalog, CCGeneratedPackageBundle;
 import 'package:demo_navigation_lab/src/ccrouter_generated/host/demo_navigation_lab_ccrouter.g.dart'
     as dependency_demo_navigation_lab;
+import 'package:demo_network/src/ccrouter_generated/host/demo_network_ccrouter.g.dart'
+    as dependency_demo_network;
 import 'package:demo_order/src/ccrouter_generated/host/demo_order_ccrouter.g.dart'
     as dependency_demo_order;
 import 'package:demo_payment/src/ccrouter_generated/host/demo_payment_ccrouter.g.dart'
@@ -20,11 +22,12 @@ final ccrouterGeneratedPackageBundle = CCGeneratedPackageBundle(
   packageName: 'ccrouter_demo',
   packageVersion: '0.1.0+1',
   contentFingerprint:
-      '8cb7fe388e4350c91fe1ea0c708901198d0737d36202a50a84fc95b0f5f320e0',
+      '1f76fa84e79ddc5789c61a20e24f6da8b109ad360f3612c57c134ceb75eb7004',
   componentManifests: [],
   routeCatalog: CCFlutterRouteCatalog.merge([]),
   dependencies: [
     dependency_demo_navigation_lab.ccrouterGeneratedPackageBundle,
+    dependency_demo_network.ccrouterGeneratedPackageBundle,
     dependency_demo_order.ccrouterGeneratedPackageBundle,
     dependency_demo_payment.ccrouterGeneratedPackageBundle,
     dependency_demo_web.ccrouterGeneratedPackageBundle,

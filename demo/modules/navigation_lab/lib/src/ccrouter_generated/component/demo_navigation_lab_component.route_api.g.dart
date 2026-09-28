@@ -12,6 +12,8 @@ import '../route/home_page.route.g.dart'
     as route_src_ccrouter_generated_route_home_page_route_g_dart;
 import '../route/lifecycle_page.route.g.dart'
     as route_src_ccrouter_generated_route_lifecycle_page_route_g_dart;
+import '../route/network_page.route.g.dart'
+    as route_src_ccrouter_generated_route_network_page_route_g_dart;
 import '../route/policy_pages.route.g.dart'
     as route_src_ccrouter_generated_route_policy_pages_route_g_dart;
 import '../route/presentation_pages.route.g.dart'
@@ -59,6 +61,10 @@ abstract final class DemoNavigationLabRoutes {
   /// Creates an Intent for `demo_navigation_lab.lifecycle`.
   static const lifecycle =
       route_src_ccrouter_generated_route_lifecycle_page_route_g_dart.CCGeneratedDemoLifecyclePageRouteFactory();
+
+  /// Creates an Intent for `demo_navigation_lab.network`.
+  static const network =
+      route_src_ccrouter_generated_route_network_page_route_g_dart.CCGeneratedDemoNetworkPageRouteFactory();
 
   /// Creates an Intent for `demo_navigation_lab.presentation.bottom_page`.
   static const presentationBottomPage =

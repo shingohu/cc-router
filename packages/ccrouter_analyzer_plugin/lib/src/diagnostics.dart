@@ -131,6 +131,29 @@ abstract final class CCRouterAnalyzerDiagnostics {
     return diagnostics;
   }
 
+  /// Returns the authored Route source corresponding to a generated Route
+  /// library path, or `null` for unrelated files.
+  ///
+  /// The Analysis Server can report a generated file change without marking
+  /// the annotated source as affected because the source does not import its
+  /// registration library directly. The plugin uses this deterministic
+  /// mapping to refresh the source diagnostic after generation or cleanup.
+  static String? authoredRoutePathForGenerated(String filePath) {
+    final normalized = path.normalize(filePath);
+    final marker =
+        '${path.separator}lib${path.separator}src${path.separator}'
+        'ccrouter_generated${path.separator}route${path.separator}';
+    final markerIndex = normalized.lastIndexOf(marker);
+    const suffix = '.route.g.dart';
+    if (markerIndex < 0 || !normalized.endsWith(suffix)) return null;
+    final relativeStart = markerIndex + marker.length;
+    final relativeEnd = normalized.length - suffix.length;
+    if (relativeStart >= relativeEnd) return null;
+    final packageRoot = normalized.substring(0, markerIndex);
+    final relative = normalized.substring(relativeStart, relativeEnd);
+    return path.join(packageRoot, 'lib', 'src', '$relative.dart');
+  }
+
   /// Whether [declaration] is a page carrying the CCRouter route annotation.
   static bool _hasRouteAnnotation(ClassDeclaration declaration) => declaration
       .metadata

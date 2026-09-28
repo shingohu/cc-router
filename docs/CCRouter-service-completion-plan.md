@@ -139,6 +139,18 @@ Session Scope 均返回稳定的 Service 错误子类型；缺失命名实现会
   `CCServiceToken<T>` 不进入普通业务 Facade。
 - 消费组件必须显式声明 Contract 后才生成 Proxy；Package 依赖扫描只负责发现元数据，不能
   自动授予或生成全部 Service。Workspace 再次校验 Contract Owner 和 required dependency。
+- 已记录待确认的开发体验优化：保持 `dependencies`、`serviceDependencies` 和
+  `commandDependencies` 的显式语义不变，由 Generator 按组件批量报告缺失 Owner，并输出可复制
+  的修复片段；后续由 `ccrouter_analyzer_plugin` 提供安全 Quick Fix，在 const 列表、Owner 可静态
+  解析且不存在重复项时插入对应 `CCComponentId`。`ccrouter find <contract-id>` 计划补充 Owner、
+  Contract Package、消费组件和所需依赖信息。该方案暂不静默扫描 Package 依赖、不自动改写源码，
+  等确认后与 Component API 稳定聚合入口一并实施。
+- 已记录联合评估项：`CCServiceContract.alias`、`CCCommandContract.alias` 提供跨消费组件
+  统一的默认 Client 成员名，`CCServiceDependency.alias`、`CCCommandDependency.alias` 可做
+  消费组件级覆盖；命名优先级为 Dependency alias、Contract alias、类型名推导。当前不支持
+  `Network.client` 形式的点号命名空间。待 Component API 稳定聚合入口完成后，再评估是否生成
+  组件内命名空间 facade；评估必须保留每个消费组件独立的 Proxy、caller identity、Owner 校验
+  和 Trace 归属，不能通过一个全局 Service Proxy 隐藏调用方。
 - 完整方法矩阵、生命周期、错误和回退见
   [Service Proxy 自动生成设计](CCRouter-service-proxy-generation-design.md)。
 - CLI 2.0 再考虑契约提升、Override、迁移和一键校验。

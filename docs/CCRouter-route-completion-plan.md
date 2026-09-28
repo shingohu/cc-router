@@ -196,6 +196,43 @@ Catalog 和 Host Route Catalog 保留各自的消费边界。收敛必须保持�
 Git 工作区无新差异。没有物理删除生成目录；Builder 中间缓存仍由 build_runner 增量管理，
 不把“无缓存聚合”误称为全新 Builder 冷构建。
 
+#### P2-1a Component API 稳定聚合入口（已记录，待实施）
+
+当前组件源码需要分别导入 `*.route_api.g.dart`、`*.service_api.g.dart`、`*.command_api.g.dart`
+或 `*.event_api.g.dart`。这些生成物的职责应继续保持独立，但它们的文件名可能分别来自稳定
+`componentId` 或声明源文件名，容易造成导入记忆和重命名成本。
+
+后续生成器增加一个按 `componentId` 命名的组件 API 聚合文件：
+
+```text
+lib/src/ccrouter_generated/<componentId>.api.g.dart
+```
+
+聚合文件只使用受控 `export`/`show` 导出组件业务侧允许使用的类型安全 API：
+
+- Route API；
+- 跨组件 Service Proxy API；
+- 组件拥有的 Command Client API；
+- 组件拥有的 Event Client API。
+
+不导出 Binding、Host、Registrar、Manifest、Metadata、Route Registration Bridge 或其它内部
+实现文件。业务源码统一导入该稳定入口后，底层生成文件拆分、移动或改名不会要求业务源码
+同步修改。Host、Binding 和 Registrar 等生成胶水仍可直接导入子生成文件；跨组件消费者仍然
+只能依赖公开 Contracts Package，不能导入 `src` 下的聚合入口。
+
+实现约束：
+
+- 聚合文件由生成器维护，禁止手工编辑；
+- 没有可导出 API 的组件不生成空聚合文件；
+- 能力删除后必须清理陈旧 export 和空受管目录；
+- `componentId` 改变视为组件身份迁移，稳定入口路径随之改变，不隐式兼容；
+- 增加生成器、空能力、增量改名、陈旧 export、`--check` 和 API surface 回归测试。
+
+该方案只聚合导入入口，不合并底层生成逻辑，避免破坏增量生成、职责隔离和 API 最小权限。
+Service/Command Contract 的统一 `alias` 和可选命名空间 facade 与本项关联评估，但不属于
+Route API 聚合的默认导出；待该聚合入口落地后，必须单独验证调用方身份、Owner 校验和生成
+API surface。
+
 #### P2-2 注解字段合法性校验（已落地，动态注册关系保留运行时校验）
 
 生成器必须校验所有可在构建期确定的字段语义，但不能对 Description、URL、Query Key 等不同领域

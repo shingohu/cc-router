@@ -352,6 +352,17 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
           () => CCRouter.navigator.push<void>(
             DemoNavigationLabRoutes.capabilities(),
           ),
+          ),
+        ),
+      _ActionTile(
+        icon: Icons.http_outlined,
+        title: '打开 Network + Dio 实验页',
+        subtitle: '抽象请求、授权/日志拦截、动态 Header 和 API 环境切换。',
+        onTap: () => _run(
+          'Network + Dio',
+          () => CCRouter.navigator.push<void>(
+            DemoNavigationLabRoutes.network(),
+          ),
         ),
       ),
     ]),

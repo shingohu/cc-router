@@ -74,6 +74,57 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
     );
   }
 
+  /// Re-analyzes authored Route sources affected by generated file changes.
+  ///
+  /// A generated Route library is intentionally not imported by its authored
+  /// page, so the analyzer's normal dependency graph does not always include
+  /// the page in [paths]. The deterministic source mapping keeps a stale
+  /// `ccrouter_generated_output_missing` warning from surviving a successful
+  /// generation.
+  @override
+  Future<void> handleAffectedFiles({
+    required AnalysisContext analysisContext,
+    required List<String> paths,
+  }) async {
+    final analyzedPaths = <String>{};
+    for (final changedPath in paths) {
+      if (analysisContext.contextRoot.isAnalyzed(changedPath)) {
+        analyzedPaths.add(changedPath);
+      }
+      final authored =
+          CCRouterAnalyzerDiagnostics.authoredRoutePathForGenerated(
+            changedPath,
+          );
+      if (authored != null &&
+          analysisContext.contextRoot.isAnalyzed(authored)) {
+        analyzedPaths.add(authored);
+      }
+    }
+    await analyzeFiles(
+      analysisContext: analysisContext,
+      paths: analyzedPaths.toList(growable: false),
+    );
+  }
+
+  /// Refreshes diagnostics for generated Route files added, changed, or
+  /// removed by `ccrouter generate` and `ccrouter clean`.
+  @override
+  Future<AnalysisHandleWatchEventsResult> handleAnalysisHandleWatchEvents(
+    AnalysisHandleWatchEventsParams parameters,
+  ) async {
+    final changed = parameters.events
+        .where(
+          (event) =>
+              event.type == WatchEventType.ADD ||
+              event.type == WatchEventType.MODIFY ||
+              event.type == WatchEventType.REMOVE,
+        )
+        .map((event) => event.path)
+        .toList(growable: false);
+    if (changed.isNotEmpty) await contentChanged(changed);
+    return AnalysisHandleWatchEventsResult();
+  }
+
   /// Converts a source-oriented diagnostic to an Analysis Server location.
   static Location _location(
     String filePath,

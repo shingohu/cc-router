@@ -92,6 +92,18 @@ const paymentComponent = CCComponent(
 Contract、Key、method ID 和 caller component ID。无消费声明时不生成该文件。首版只接受普通
 实例方法/getter、同步或 Future 返回及可公开导入的 Pure Dart 类型；不支持项在生成期失败。
 
+`dependencies`、`serviceDependencies` 和 `commandDependencies` 目前必须显式维护。生成器会从
+Contract 元数据解析 Owner 并校验三者一致，不会因为发现某个 Contracts Package 或 Pub 依赖而
+静默修改组件源文件。已记录后续开发体验优化：按组件批量输出缺失 Owner 和可复制修复片段，
+Analyzer Plugin 在安全的 const 列表场景提供 Quick Fix，`ccrouter find` 增加 Contract Owner
+和所需组件依赖查询；这些能力待确认后与稳定 Component API 聚合入口一起实施。
+
+不同消费组件如需统一 Service/Command Client 成员名，可在 Contract 上设置 lower-camel
+`alias`，消费组件仍可在 `CCServiceDependency<T>` 或 `CCCommandDependency<T>` 上覆盖。命名优先级
+为 Dependency alias、Contract alias、类型名推导。点号命名空间（如 `Network.client`）当前不支持；
+是否生成组件内命名空间 facade，待稳定 Component API 聚合入口完成后联合评估，不通过全局 Proxy
+绕过消费组件 caller identity。
+
 声明 `@CCRouteContract` 的 Package 需要直接依赖 `ccrouter_contracts`，公共 barrel 只导出
 生成的契约 library。同 Package Contract-first 可用于渐进迁移；独立 contracts Package
 用于稳定的跨组件边界：

@@ -17,6 +17,7 @@ dependencies:
   demo_order_contracts: ^0.1.0
   demo_payment: ^0.1.0
   demo_navigation_lab: ^0.1.0
+  demo_network: ^0.1.0
   demo_web: ^0.1.0
   demo_web_contracts: ^0.1.0
 

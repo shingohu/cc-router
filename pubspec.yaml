@@ -18,6 +18,7 @@ workspace:
   - packages/ccrouter_devtools
   - packages/ccrouter_test
   - demo
+  - demo/modules/network
   - demo/modules/order
   - demo/modules/order_contracts
   - demo/modules/payment

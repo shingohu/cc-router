@@ -1,0 +1,356 @@
+{
+  "schemaVersion": 2,
+  "generatorVersion": "0.1.0",
+  "package": {
+    "name": "demo_network",
+    "version": "0.1.0"
+  },
+  "contentFingerprint": "7e65ddd0b521ed7a5b3e652a199c002366c70ee39e50c255096909b7575514f4",
+  "bundle": {
+    "library": "lib/src/ccrouter_generated/host/demo_network_ccrouter.g.dart",
+    "symbol": "ccrouterGeneratedPackageBundle"
+  },
+  "dependencies": [],
+  "metadata": [
+    {
+      "schemaVersion": 3,
+      "package": "demo_network",
+      "source": "lib/src/demo_network_component.dart",
+      "componentDeclarations": [
+        "demo_network_component"
+      ],
+      "componentManifests": {
+        "demo_network_component": "demoNetworkComponentManifest"
+      },
+      "componentSymbols": {
+        "demo_network_component": "demoNetworkComponent"
+      },
+      "components": [
+        {
+          "id": "demo_network_component",
+          "version": "0.1.0",
+          "dependencies": [],
+          "optionalDependencies": [],
+          "serviceDependencies": [],
+          "commandDependencies": []
+        }
+      ],
+      "routes": [],
+      "routeImplementations": [],
+      "contributions": []
+    },
+    {
+      "schemaVersion": 3,
+      "package": "demo_network",
+      "source": "lib/src/network_service.dart",
+      "componentDeclarations": [],
+      "componentManifests": {},
+      "componentSymbols": {},
+      "components": [],
+      "routes": [],
+      "routeImplementations": [],
+      "contributions": [],
+      "serviceContracts": [
+        {
+          "id": "demo.network.client",
+          "componentId": "demo_network_component",
+          "description": "Provides environment-aware HTTP requests with safe interceptors.",
+          "package": "demo_network",
+          "source": "lib/src/network_service.dart",
+          "declaration": {
+            "symbol": "DemoNetworkService",
+            "packageUri": "package:demo_network/src/network_service.dart",
+            "line": 13,
+            "column": 26
+          },
+          "methods": [
+            {
+              "memberKind": "getter",
+              "methodId": "environmentId",
+              "returnKind": "sync",
+              "returnType": "String",
+              "resultType": "String",
+              "typeParameters": [],
+              "parameters": [],
+              "capabilities": [
+                "typedArguments",
+                "callerIdentity",
+                "methodTrace"
+              ],
+              "unsupportedReason": null,
+              "declaration": {
+                "symbol": "environmentId",
+                "packageUri": "package:demo_network/src/network_service.dart",
+                "line": 15,
+                "column": 14
+              }
+            },
+            {
+              "memberKind": "getter",
+              "methodId": "isAuthenticated",
+              "returnKind": "sync",
+              "returnType": "bool",
+              "resultType": "bool",
+              "typeParameters": [],
+              "parameters": [],
+              "capabilities": [
+                "typedArguments",
+                "callerIdentity",
+                "methodTrace"
+              ],
+              "unsupportedReason": null,
+              "declaration": {
+                "symbol": "isAuthenticated",
+                "packageUri": "package:demo_network/src/network_service.dart",
+                "line": 18,
+                "column": 12
+              }
+            },
+            {
+              "memberKind": "getter",
+              "methodId": "logs",
+              "returnKind": "sync",
+              "returnType": "List<CCNetworkLogRecord>",
+              "resultType": "List<CCNetworkLogRecord>",
+              "typeParameters": [],
+              "parameters": [],
+              "capabilities": [
+                "typedArguments",
+                "callerIdentity",
+                "methodTrace"
+              ],
+              "unsupportedReason": null,
+              "declaration": {
+                "symbol": "logs",
+                "packageUri": "package:demo_network/src/network_service.dart",
+                "line": 21,
+                "column": 32
+              }
+            },
+            {
+              "memberKind": "method",
+              "methodId": "removeDefaultHeader",
+              "returnKind": "sync",
+              "returnType": "void",
+              "resultType": "void",
+              "typeParameters": [],
+              "parameters": [
+                {
+                  "name": "name",
+                  "type": "String",
+                  "kind": "requiredPositional",
+                  "default": null
+                }
+              ],
+              "capabilities": [
+                "typedArguments",
+                "callerIdentity",
+                "methodTrace"
+              ],
+              "unsupportedReason": null,
+              "declaration": {
+                "symbol": "removeDefaultHeader",
+                "packageUri": "package:demo_network/src/network_service.dart",
+                "line": 36,
+                "column": 8
+              }
+            },
+            {
+              "memberKind": "method",
+              "methodId": "request",
+              "returnKind": "future",
+              "returnType": "Future<CCNetworkResponse<Object?>>",
+              "resultType": "CCNetworkResponse<Object?>",
+              "typeParameters": [],
+              "parameters": [
+                {
+                  "name": "request",
+                  "type": "CCNetworkRequest",
+                  "kind": "requiredPositional",
+                  "default": null
+                }
+              ],
+              "capabilities": [
+                "typedArguments",
+                "callerIdentity",
+                "methodTrace",
+                "scopeCancellation"
+              ],
+              "unsupportedReason": null,
+              "declaration": {
+                "symbol": "request",
+                "packageUri": "package:demo_network/src/network_service.dart",
+                "line": 24,
+                "column": 38
+              }
+            },
+            {
+              "memberKind": "method",
+              "methodId": "setAccessToken",
+              "returnKind": "sync",
+              "returnType": "void",
+              "resultType": "void",
+              "typeParameters": [],
+              "parameters": [
+                {
+                  "name": "token",
+                  "type": "String?",
+                  "kind": "requiredPositional",
+                  "default": null
+                }
+              ],
+              "capabilities": [
+                "typedArguments",
+                "callerIdentity",
+                "methodTrace"
+              ],
+              "unsupportedReason": null,
+              "declaration": {
+                "symbol": "setAccessToken",
+                "packageUri": "package:demo_network/src/network_service.dart",
+                "line": 30,
+                "column": 8
+              }
+            },
+            {
+              "memberKind": "method",
+              "methodId": "setDefaultHeader",
+              "returnKind": "sync",
+              "returnType": "void",
+              "resultType": "void",
+              "typeParameters": [],
+              "parameters": [
+                {
+                  "name": "name",
+                  "type": "String",
+                  "kind": "requiredPositional",
+                  "default": null
+                },
+                {
+                  "name": "value",
+                  "type": "String",
+                  "kind": "requiredPositional",
+                  "default": null
+                }
+              ],
+              "capabilities": [
+                "typedArguments",
+                "callerIdentity",
+                "methodTrace"
+              ],
+              "unsupportedReason": null,
+              "declaration": {
+                "symbol": "setDefaultHeader",
+                "packageUri": "package:demo_network/src/network_service.dart",
+                "line": 33,
+                "column": 8
+              }
+            },
+            {
+              "memberKind": "method",
+              "methodId": "switchEnvironment",
+              "returnKind": "sync",
+              "returnType": "void",
+              "resultType": "void",
+              "typeParameters": [],
+              "parameters": [
+                {
+                  "name": "environment",
+                  "type": "CCNetworkEnvironment",
+                  "kind": "requiredPositional",
+                  "default": null
+                }
+              ],
+              "capabilities": [
+                "typedArguments",
+                "callerIdentity",
+                "methodTrace"
+              ],
+              "unsupportedReason": null,
+              "declaration": {
+                "symbol": "switchEnvironment",
+                "packageUri": "package:demo_network/src/network_service.dart",
+                "line": 27,
+                "column": 8
+              }
+            }
+          ],
+          "token": {
+            "symbol": "demoNetworkServiceToken",
+            "library": "lib/src/ccrouter_generated/contract/network_service.service.contract.g.dart",
+            "packageUri": "package:demo_network/src/ccrouter_generated/contract/network_service.service.contract.g.dart"
+          }
+        }
+      ],
+      "serviceImplementations": [
+        {
+          "id": "demo.network.client",
+          "componentId": "demo_network_component",
+          "contractId": "demo.network.client",
+          "key": null,
+          "scope": "app",
+          "creationPolicy": "singleton",
+          "isDefault": false,
+          "package": "demo_network",
+          "source": "lib/src/network_service.dart",
+          "implementation": {
+            "symbol": "DemoNetworkServiceImpl",
+            "packageUri": "package:demo_network/src/network_service.dart",
+            "line": 41,
+            "column": 13
+          },
+          "contract": {
+            "symbol": "DemoNetworkService",
+            "packageUri": "package:demo_network/src/network_service.dart",
+            "line": 13,
+            "column": 26
+          },
+          "registration": "ccrouterRegisterDemoNetworkServiceImplService",
+          "registrationLibrary": "lib/src/ccrouter_generated/service/network_service.service.g.dart",
+          "generatedArtifacts": [
+            {
+              "role": "serviceRegistration",
+              "symbol": "ccrouterRegisterDemoNetworkServiceImplService",
+              "packageUri": "package:demo_network/src/ccrouter_generated/service/network_service.service.g.dart"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "capabilityCatalog": {
+    "schemaVersion": 1,
+    "records": [
+      {
+        "kind": "service",
+        "id": "demo.network.client",
+        "componentId": "demo_network_component",
+        "packageName": "demo_network",
+        "contract": {
+          "symbol": "DemoNetworkService",
+          "packageUri": "package:demo_network/src/network_service.dart",
+          "line": 13,
+          "column": 26
+        },
+        "implementation": {
+          "symbol": "DemoNetworkServiceImpl",
+          "packageUri": "package:demo_network/src/network_service.dart",
+          "line": 41,
+          "column": 13
+        },
+        "generatedArtifacts": [
+          {
+            "role": "serviceRegistration",
+            "symbol": "ccrouterRegisterDemoNetworkServiceImplService",
+            "packageUri": "package:demo_network/src/ccrouter_generated/service/network_service.service.g.dart"
+          },
+          {
+            "role": "serviceToken",
+            "symbol": "demoNetworkServiceToken",
+            "packageUri": "package:demo_network/src/ccrouter_generated/contract/network_service.service.contract.g.dart"
+          }
+        ]
+      }
+    ]
+  }
+}

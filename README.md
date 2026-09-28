@@ -53,6 +53,8 @@ analyzer:
 ```
 
 插件只提供轻量诊断，不执行生成、不修改源代码，也不替代 `ccrouter generate --check`。
+当 `ccrouter generate` 或 `ccrouter clean` 新增、修改或删除 Route 生成物时，插件会重新检查
+对应的 `@CCRoute` 源文件，避免生成成功后仍保留旧的“生成物缺失”提示。
 当前仓库 Demo 已在 `demo/analysis_options.yaml` 启用它，并通过
 `demo/tools/ccrouter_analyzer_plugin_host` 提供官方要求的 `tools/analyzer_plugin` bootstrap。
 bootstrap 使用 Git 依赖隔离 Analyzer 版本；正式项目应改为已发布的
@@ -195,6 +197,11 @@ final class OrderDetailPage extends StatelessWidget {
 ```
 
 页面源码**不需要**添加 `.route.g.dart` 的 `part`。执行生成后，IDE 可从组件唯一的 `*.route_api.g.dart` 自动补全路由 API。
+
+当前版本业务源码仍直接导入对应组件的 Route API 文件。已记录后续生成器能力：按稳定
+`componentId` 生成 `lib/src/ccrouter_generated/<componentId>.api.g.dart`，统一通过受控
+`export/show` 聚合 Route、Service Proxy、Command 和 Event API。该聚合入口尚未作为当前版本
+可用 API 发布；在它落地前不要手写同名生成文件或修改底层生成物路径。
 
 单一地址使用 `pattern`；兼容旧 Path 或多入口时使用 `patterns`。两者不能同时设置。多值中只有一个可逆 Pattern 时会自动成为 primary；多个可逆 Pattern 必须显式指定唯一 primary；只有 Regex 且无法反向构造 URI 时生成失败。
 

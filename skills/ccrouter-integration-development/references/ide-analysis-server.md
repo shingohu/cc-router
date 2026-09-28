@@ -7,6 +7,11 @@ Use the optional `ccrouter_analyzer_plugin` only for developer feedback:
 - `ccrouter_generated_output_missing` warns when an annotated `@CCRoute` page
   has not produced its expected Route library.
 
+The plugin also maps generated Route library add/modify/remove events back to
+the authored Route source. This clears a stale missing-output warning after a
+successful `ccrouter generate` and restores it after `ccrouter clean`; restarting
+the Analysis Server should not be required for this normal workflow.
+
 The plugin is not a generator, dependency resolver, Runtime validator, or
 authorization boundary. It must not call `build_runner`, inspect Widgets, or
 infer Contract ownership from a partial editor buffer. Cross-file rules and

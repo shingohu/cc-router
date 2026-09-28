@@ -1,0 +1,15 @@
+name: demo_network
+description: Demo-shared backend-neutral network service with a Dio adapter.
+version: 0.1.0
+publish_to: none
+resolution: workspace
+
+environment:
+  sdk: ^3.11.5
+
+dependencies:
+  ccrouter: ^0.1.0
+  dio: ^5.9.0
+
+dev_dependencies:
+  ccrouter_generator: ^0.1.0

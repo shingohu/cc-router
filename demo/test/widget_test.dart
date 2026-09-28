@@ -60,7 +60,10 @@ void main() {
 
     expect(find.text('CCRouter Lab'), findsOneWidget);
     expect(find.text('运行总览'), findsOneWidget);
-    expect(find.text('4'), findsWidgets);
+    expect(
+      find.text('${ccrouterGeneratedComponentManifests.length}'),
+      findsWidgets,
+    );
 
     await tester.tap(find.text('导航'));
     await tester.pumpAndSettle();

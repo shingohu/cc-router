@@ -2,6 +2,14 @@
   "schemaVersion": 2,
   "components": [
     {
+      "id": "demo_network_component",
+      "version": "0.1.0",
+      "dependencies": [],
+      "optionalDependencies": [],
+      "serviceDependencies": [],
+      "commandDependencies": []
+    },
+    {
       "id": "demo_order_component",
       "version": "0.1.0",
       "dependencies": [],
@@ -22,10 +30,23 @@
       "version": "0.1.0",
       "dependencies": [
         "demo_order_component",
+        "demo_network_component",
         "demo_web_component"
       ],
       "optionalDependencies": [],
       "serviceDependencies": [
+        {
+          "id": "demo.network.client",
+          "componentId": "demo_network_component",
+          "contract": "DemoNetworkService",
+          "key": null,
+          "member": "demoNetwork",
+          "generatedArtifact": {
+            "role": "serviceClient",
+            "symbol": "DemoNavigationLabServices.demoNetwork",
+            "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/component/navigation_lab_component.service_api.g.dart"
+          }
+        },
         {
           "id": "demo_order.summary",
           "componentId": "demo_order_component",
@@ -861,6 +882,81 @@
         {
           "type": "CCPathPattern",
           "value": "/lab/lifecycle",
+          "primary": true,
+          "constraints": {}
+        }
+      ],
+      "parameters": [],
+      "resultType": "void"
+    },
+    {
+      "id": "demo_navigation_lab.network",
+      "componentId": "demo_navigation_lab_component",
+      "exposure": "internal",
+      "deepLink": "disabled",
+      "description": "动态 API 环境、Header、授权和网络拦截器示例。",
+      "interceptorIds": [],
+      "popGuardIds": [],
+      "declaration": {
+        "package": "demo_navigation_lab",
+        "library": "lib/src/network_page.dart",
+        "kind": "page",
+        "symbol": "DemoNetworkPage",
+        "packageUri": "package:demo_navigation_lab/src/network_page.dart",
+        "line": 14,
+        "column": 13
+      },
+      "navigationSources": [
+        "typedIntent",
+        "internalUri"
+      ],
+      "restoration": {
+        "status": "unsupported"
+      },
+      "placement": {
+        "hostId": "default",
+        "parentRouteId": null,
+        "shellId": null,
+        "navigatorOutlet": "root"
+      },
+      "presentation": {
+        "type": "page",
+        "routeType": "platformDefault",
+        "transition": "platformDefault",
+        "opaque": true,
+        "fullscreenDialog": false
+      },
+      "contracts": {
+        "route": "_DemoNetworkPageRoute",
+        "arguments": "_DemoNetworkPageRouteArguments",
+        "package": "demo_navigation_lab",
+        "library": "lib/src/ccrouter_generated/route/network_page.route.g.dart",
+        "intentFactory": "CCGeneratedDemoNetworkPageRouteFactory"
+      },
+      "registration": "ccrouterRegisterDemoNetworkPageRoute",
+      "registrationLibrary": "lib/src/ccrouter_generated/route/network_page.route.g.dart",
+      "destination": {
+        "descriptor": "ccrouterDescribeDemoNetworkPageRoute",
+        "builder": "ccrouterBuildDemoNetworkPageRoute",
+        "library": "lib/src/ccrouter_generated/route/network_page.route.g.dart",
+        "builderLibrary": "lib/src/ccrouter_generated/binding/network_page.route_binding.g.dart"
+      },
+      "generatedArtifacts": [
+        {
+          "role": "routeLibrary",
+          "symbol": "_DemoNetworkPageRoute",
+          "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/route/network_page.route.g.dart"
+        },
+        {
+          "role": "routeBinding",
+          "symbol": "ccrouterBuildDemoNetworkPageRoute",
+          "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/binding/network_page.route_binding.g.dart"
+        }
+      ],
+      "patterns": [
+        {
+          "type": "CCPathPattern",
+          "value": "/lab/network",
           "primary": true,
           "constraints": {}
         }
