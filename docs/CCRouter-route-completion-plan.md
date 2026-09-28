@@ -430,7 +430,8 @@ Metrics/Display Features，不自动产生原生窗口。未来每个 Flutter Vi
    激活、关闭和失效释放，不把同一窗口的旋转、折叠或多个 Outlet 当成新 Window。
 3. 完整 Route Restoration 在 2.0 只有恢复机会 Telemetry 证明收益后才实施；此前保持
    `unsupported` 诊断，不提供伪恢复语义。
-4. `ccrouter watch`、CLI 快速单次生成与官方 DevTools Extension 属于 2.0 开发体验候选；
+4. `ccrouter watch` 仍不纳入 1.x；官方 DevTools Extension 已转入正式发布前 P1 工具计划，
+   以只读 Snapshot/Trace 协议为前置，不提前扩大 Runtime 控制 API；
    当前以显式生成、`--check` 和 Package/Host Catalog 为确定性基础。临时页面的源码
    重命名/移动与 IDE 导包已验收，但不外推至 IDE 重启或大型外部依赖工程。
 5. 原子组合栈事务和精确 Route Entry 操作在 2.0 重新评估；分别以稳定身份、原子回滚和

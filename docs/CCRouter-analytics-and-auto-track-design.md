@@ -147,3 +147,8 @@ P0、P1、P2 显式 UI 能力、P3 的独立包基础和 Consent/采样基础已
 点击、滑动、曝光、失败与 Foreign Popup 场景。Analytics Consent 的 deny/grant/revoke 演示和
 Foreign Popup 不误归因断言尚未闭环；Firebase、ThinkingData、通用 Widget 自动猜测、
 黑名单/通用节流、HTTP/Crash Adapter 尚未实现。
+
+正式发布前的实施顺序、平台能力矩阵、全局 Widget 识别的实验边界、Firebase Adapter、性能/RSS/Heap
+基线，以及 Demo 的 Consent deny/grant/revoke 和 Foreign Popup 不误归因断言，统一见
+[`CCRouter-pre-release-capability-plan.md`](CCRouter-pre-release-capability-plan.md)。本专项文档
+仍是 Analytics API 和隐私边界的详细契约；总计划不把“全局自动识别”提升为默认承诺。

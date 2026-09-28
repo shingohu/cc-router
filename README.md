@@ -100,7 +100,7 @@ const diagnosticsPage = CCRouterDevToolsPanel();
 | InitTask | 已支持 | 一次性 DAG、Gate、必需/可选失败策略 |
 | 生成器增量缓存与门禁 | 已支持 | 内容校验 fast path、`--check`、`--no-cache`、`--profile`、并发锁、原子写入 |
 | 生成索引和源码定位 | 已支持 | Package/Host Catalog、`ccrouter find` |
-| DevTools 只读可视化 | 已支持 | `ccrouter_devtools` 可嵌入面板；官方 DevTools Extension 仍属于后续 2.0 工具规划 |
+| DevTools 只读可视化 | 已支持 | `ccrouter_devtools` 可嵌入面板；官方 DevTools Extension 仍需按正式发布前计划独立交付 |
 | Navigator 1.0 Backend | 暂不支持 | 2.0 阶段候选 |
 | 通用 Navigator 2.0 Backend | 暂不支持 | 2.0 阶段候选 |
 | 动态组件安装/卸载 | 暂不支持 | 当前组件集合在 `initialize` 时固定 |
@@ -969,5 +969,6 @@ Skill 采用短主文件和按需 reference 结构，既适合日常编码，也
 - [`docs/CCRouter-event-design.md`](docs/CCRouter-event-design.md)：Event 设计
 - [`docs/CCRouter-initialization-task-design.md`](docs/CCRouter-initialization-task-design.md)：InitTask 设计
 - [`docs/CCRouter-core-principles-audit.md`](docs/CCRouter-core-principles-audit.md)：核心价值回归
+- [`docs/CCRouter-pre-release-capability-plan.md`](docs/CCRouter-pre-release-capability-plan.md)：正式发布前 Contract、DevTools、Analytics、脚手架与质量回归计划
 
 设计文档用于解释约束与演进方向；实际可用 API 以当前 public barrel、生成器校验和 Demo 回归为准。

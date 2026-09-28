@@ -80,7 +80,10 @@
 
 ### 4.1 Contract 与版本兼容
 
-- [ ] 设计 Contract 版本范围、Route Contract 兼容性和 Service Contract 兼容性。
+- [x] 完成正式发布前 Contract 版本兼容设计：独立 Contract SemVer、规范化 shape fingerprint、
+  Owner/消费者范围、生成/聚合/Runtime 三层校验、迁移和废弃门禁。详见
+  [正式发布前能力设计与实施计划](CCRouter-pre-release-capability-plan.md)；代码实现仍待按阶段执行。
+- [ ] 为五类 Contract 增加版本、fingerprint、消费者范围 metadata，并实现生成期/聚合期不兼容门禁。
 - [ ] 生成阶段报告升级、废弃、缺失和不兼容原因；Runtime 只做边界保护。
 - [ ] 评估环境实现选择模型；短期继续使用 Composition Root、Service Key 和 Test Override。
 
@@ -112,13 +115,21 @@
 - [x] 扩展 `ccrouter find` 和 Catalog 源码定位，覆盖 Route、Service、Command、Event、InitTask。
 - [x] 增加 `ccrouter create component` 和 `ccrouter create page` 模板命令；跨组件 Contract 提升仍需显式设计。
 - [x] 完成可嵌入 DevTools 只读视图：Component Graph、Route/Backend Entry、Trace、
-  Failure/Fallback 和 InitTask DAG；官方 DevTools Extension 仍作为后续可选工具评估，见
-  `docs/CCRouter-devtools.md`。
+  Failure/Fallback 和 InitTask DAG；官方 DevTools Extension 已列入正式发布前 P1，必须先完成
+  Catalog/Runtime Snapshot 与 Trace Edge 协议，见 `docs/CCRouter-devtools.md`。
 - [x] 2026-09-28 完成最小 IDE / Analysis Server 集成：独立
   `ccrouter_analyzer_plugin` 提供跨 Package 生成物导入和缺失 Route 生成物诊断；生成的 Dart
   API、`ccrouter find`、Catalog 与 `generate --check` 仍分别承担补全、源码定位和最终门禁。
   插件不执行生成、不替代 Workspace Validator。详见
   [IDE / Analysis Server 集成](CCRouter-ide-analysis-server.md)。
+- [x] Demo Analyzer bootstrap 已切换为 Git `main` 依赖，保留独立 Analyzer 依赖图；仍需补充
+  commit/ref、启动 smoke 和 Hosted fallback 回归。
+- [ ] 建立 Catalog 与 Runtime 快照联动协议、Trace Edge 和源码跳转基础，作为官方 DevTools
+  Extension 的只读数据基础。
+- [ ] 实现独立官方 Flutter/Dart DevTools Extension；保持现有 `ccrouter_devtools` Widget 面板
+  只读，不把 Extension 做成 Runtime 控制台。
+- [ ] 增加组件依赖图高级筛选、Route-to-source 图形化跳转和单次 Service/Command/Event/InitTask
+  调用链视图。
 
 ## 5. P2：架构 2.0 候选
 
@@ -157,6 +168,9 @@
 - [ ] 不在 1.x 增加完整状态恢复 API，只保留脱敏 restoration opportunity 诊断。
 - [ ] 不为了对齐其他框架增加全局万能 Route 表、反射分派或任意 Map Contract。
 - [ ] 不在核心 `ccrouter` 中直接依赖 GoRouter；GoRouter 最小入口保持在独立 Adapter Package。
+- [ ] 不做默认全局 Widget 文本/Key 猜测和随机业务 ID；自动埋点只在显式 Target 或实验构建中
+  运行。通用节流、黑名单、Consent 回归、Firebase Adapter 和平台矩阵按
+  [正式发布前能力设计与实施计划](CCRouter-pre-release-capability-plan.md) 分阶段完成。
 
 ## 7. 执行规则
 

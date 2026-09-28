@@ -111,6 +111,8 @@ fvm dart run ccrouter_generator:ccrouter generate demo --check
 
 ## 后续评估
 
-当前不承诺 IDE 内专用 Route-to-source 导航、Component Graph 面板或官方 DevTools Extension。
-可嵌入的只读诊断面板已由 `ccrouter_devtools` 提供；IDE 深度跳转和官方 Extension 可复用
-Package Catalog 的 source location metadata，在真实项目验证导航误报率和索引规模后再单独立项。
+当前尚未交付 IDE 内专用 Route-to-source 导航、Component Graph 面板或官方 DevTools Extension。
+可嵌入的只读诊断面板已由 `ccrouter_devtools` 提供；正式发布前计划将复用 Package Catalog
+的 source location metadata 和版本化 Runtime Snapshot，在真实项目验证导航误报率和索引规模后
+交付独立的只读 DevTools Extension。该计划不改变 Analyzer Plugin 的“只诊断、不生成、不改写”
+边界，详见 [`CCRouter-pre-release-capability-plan.md`](CCRouter-pre-release-capability-plan.md)。

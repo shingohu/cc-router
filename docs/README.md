@@ -13,6 +13,7 @@
 - [后续任务与实施计划](CCRouter-future-work-plan.md)
 - [路由专项问题分析](CCRouter-route-follow-up-analysis.md)
 - [SDK 兼容性验证](CCRouter-sdk-compatibility.md)
+- [正式发布前能力设计与实施计划](CCRouter-pre-release-capability-plan.md)
 - [Service 生命周期设计](CCRouter-service-lifecycle-design.md)
 - [Service 实施计划](CCRouter-service-completion-plan.md)
 - [Command 设计与实施计划](CCRouter-command-design.md)

@@ -1,6 +1,7 @@
 # CCRouter DevTools 只读可视化
 
-> 状态：1.x 已完成可嵌入只读面板；官方 DevTools Extension 和静态 Catalog 联动属于后续 2.0 工具规划。
+> 状态：1.x 已完成可嵌入只读面板；官方 DevTools Extension 和静态 Catalog 联动列入正式发布前的
+> P1 工具计划，必须先完成只读快照协议。
 
 ## 定位
 
@@ -67,5 +68,7 @@ Query 值或业务结果。`CCDevToolsSnapshot` 会再次复制列表边界，�
 ## 后续官方 DevTools Extension
 
 当前仓库先交付可嵌入只读面板，避免引入在不同 Flutter SDK/DevTools 版本上不稳定的
-`devtools_extensions` 依赖。若后续要提供官方扩展，建议增加独立 `devtools/` Package，
-通过 `CCDevToolsSnapshotProvider` 的同一快照协议接入，并保持“只读、脱敏、有界”的边界。
+`devtools_extensions` 依赖。正式发布前若要提供官方扩展，必须增加独立 `devtools/` Package，
+通过版本化的只读 `CCDevToolsSnapshotProvider` 协议接入，并保持“只读、脱敏、有界”的边界；
+具体视图、调用链和 Demo 验收以
+[`CCRouter-pre-release-capability-plan.md`](CCRouter-pre-release-capability-plan.md) 为准。
