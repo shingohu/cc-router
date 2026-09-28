@@ -121,6 +121,19 @@ fvm flutter pub get
 fvm dart run ccrouter_generator:ccrouter generate demo
 ```
 
+如果希望在当前 Flutter SDK 的 `flutter pub get/upgrade/downgrade/add/remove` 成功后
+自动生成，可以显式安装可回滚的 hook：
+
+```sh
+fvm dart run ccrouter_generator:ccrouter pub-hook install
+fvm dart run ccrouter_generator:ccrouter pub-hook status
+fvm dart run ccrouter_generator:ccrouter pub-hook uninstall
+```
+
+Hook 按 SDK 版本独立安装，不修改 Flutter snapshot；非 CCRouter 项目会跳过。完整的
+退出码语义、FVM 版本切换和禁用方式见
+[`docs/CCRouter-cli-pub-hook.md`](../../docs/CCRouter-cli-pub-hook.md)。
+
 `create component <package-name> [parent-directory]` 会生成 `pubspec.yaml`、Package barrel
 和 `lib/src/<package>_component.dart`；Descriptor 不会从根 barrel 导出。`create page <PageName> [component-directory]` 会生成
 `lib/src/<page>_page.dart`、内部 `@CCRoute<void>`、稳定默认 Route ID 和 `/page` Path。

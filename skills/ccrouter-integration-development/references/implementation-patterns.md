@@ -27,6 +27,18 @@ Feature packages must not perform these duties.
 
 ### CLI Scaffolding
 
+For the complete implemented command matrix and AI-assisted fallback workflows
+for deferred CLI 2.0 capabilities, read
+[`ccrouter-cli-development`](../../ccrouter-cli-development/SKILL.md). Use the
+fallback only when no existing command covers the operation; it must produce a
+dry-run summary before changing Contracts, dependencies, or public exposure.
+
+If automatic generation after dependency resolution is desired, install the
+explicit per-SDK `pub-hook` documented in
+[`CCRouter-cli-pub-hook.md`](../../../docs/CCRouter-cli-pub-hook.md). Do not
+modify Flutter internals manually, and remember that direct `dart pub` is not
+covered.
+
 Use the generator CLI to create a new component Package or an internal Route
 page when starting a feature:
 

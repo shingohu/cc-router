@@ -785,6 +785,11 @@ fvm dart run ccrouter_generator:ccrouter find demo.startup.foundation demo
 
 # 只清理 CCRouter 标记的生成源码
 fvm dart run ccrouter_generator:ccrouter clean demo
+
+# 可选：给当前 Flutter SDK 安装可回滚的 pub 成功后生成 hook
+fvm dart run ccrouter_generator:ccrouter pub-hook install
+fvm dart run ccrouter_generator:ccrouter pub-hook status
+fvm dart run ccrouter_generator:ccrouter pub-hook uninstall
 ```
 
 `create component` 只创建新的 Package、`lib/src` 下的顶层 `CCComponent` Descriptor 和 Package barrel；
@@ -806,6 +811,14 @@ Route API 和 Package/Host metadata。跨组件 Route 不能直接由脚手架�
 
 `find` 会返回 Contract、实现与生成桥接的 Package URI 和源码坐标，只读取当前 Host 依赖闭包中
 已有的 Package Index，不运行 Builder，也不扫描源码。
+
+`pub-hook` 是显式、按 Flutter SDK 版本安装的可回滚 wrapper；`status` 会打印实际 SDK
+路径并校验 wrapper、备份和 marker，只有 `installed and verified` 才返回成功。SDK 解析优先使用
+`FLUTTER_ROOT` 和当前目录向上的 `.fvm/flutter_sdk`。它只在原始
+`flutter pub get/upgrade/downgrade/add/remove` 成功后运行；当前项目没有同时解析
+`ccrouter` 和 `ccrouter_generator` 时直接跳过。它不覆盖 `dart pub`，也不实现常驻
+`watch`。SDK 切换或升级后需要重新检查 `pub-hook status`。详细语义见
+[`docs/CCRouter-cli-pub-hook.md`](docs/CCRouter-cli-pub-hook.md)。
 
 生成目录统一为：
 
@@ -865,7 +878,12 @@ fvm dart run ccrouter_generator:ccrouter generate demo --check
 
 ## AI 集成开发 Skill
 
-仓库提供 [`skills/ccrouter-integration-development/SKILL.md`](skills/ccrouter-integration-development/SKILL.md)，供 Codex 或其他支持 Markdown Skill 的 AI Agent 在业务集成开发时使用。它会强制 Agent：
+仓库提供两套互补的 Skill：
+
+- [`skills/ccrouter-integration-development/SKILL.md`](skills/ccrouter-integration-development/SKILL.md)：业务组件与 Host 集成。
+- [`skills/ccrouter-cli-development/SKILL.md`](skills/ccrouter-cli-development/SKILL.md)：生成、查找、清理、脚手架、校验，以及尚未实现 CLI 命令时的受控 AI 辅助流程。
+
+集成 Skill 会强制 Agent：
 
 - 先判断应使用 Route、Service、Command、Event 还是 InitTask。
 - 页面导航统一走 `CCRouter.navigator`。
@@ -874,17 +892,28 @@ fvm dart run ccrouter_generator:ccrouter generate demo --check
 - 不虚构当前尚未实现的 Action Pipeline 或动态组件；Command/Event/InitTask 生成能力与 Service Proxy 只使用当前支持的显式声明和方法矩阵。
 - 生成后执行 analyze、针对性测试与 `generate --check`。
 
+CLI Skill 覆盖已经实现的 `generate`、`find`、`clean`、`create component` 和
+`create page`。Contract Scaffold/Promotion/Migration、版本兼容检查和生成失败诊断
+目前仍是 AI 辅助工作流，不是可直接调用的 CLI 命令；它们必须先输出 dry-run，涉及
+公共 Contract、Package 依赖或已有声明的变更必须得到明确确认。`watch` 当前明确不支持，
+不能因为设计文档提到它就自行添加命令或参数。
+
 将完整的 `skills/ccrouter-integration-development/` 目录复制或同步到集成工程的 `skills/` 下，不要只复制 `SKILL.md`，因为能力决策、实现模式和审查清单位于 `references/`。然后在集成工程的 Agent 规则中加入：
 
 ```text
 When implementing or reviewing Flutter features that use CCRouter, read and
 follow skills/ccrouter-integration-development/SKILL.md.
+
+When generating, validating, locating, cleaning, scaffolding, or planning a
+Contract migration, also read and follow
+skills/ccrouter-cli-development/SKILL.md.
 ```
 
 支持显式 Skill 调用的客户端也可以直接使用：
 
 ```text
 $ccrouter-integration-development 为订单组件新增详情页，并返回类型安全的确认结果。
+$ccrouter-cli-development 检查并安全规划订单详情页的生成与跨组件 Contract 提升。
 ```
 
 Skill 采用短主文件和按需 reference 结构，既适合日常编码，也可用于代码审查。框架公开 API、生命周期、错误语义、生成命令、支持状态或推荐 Demo 用法发生变化时，维护者必须同步审查本 README、Integration Skill 及其 references。

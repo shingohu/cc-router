@@ -1,0 +1,4 @@
+interface:
+  display_name: "CCRouter CLI Development"
+  short_description: "Generate, validate, and migrate CCRouter artifacts"
+  default_prompt: "Use $ccrouter-cli-development to run or safely plan this CCRouter generator workflow."

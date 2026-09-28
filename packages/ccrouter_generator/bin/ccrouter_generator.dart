@@ -14,6 +14,7 @@ import 'package:dart_style/dart_style.dart';
 import 'package:path/path.dart' as path;
 
 import 'src/route_find.dart' as route_find;
+import 'src/pub_hook.dart';
 import 'src/scaffold.dart';
 
 final _dartFormatter = DartFormatter(
@@ -34,6 +35,11 @@ Future<void> main(List<String> arguments) async {
     stderr.writeln('error: ${parsed.error}');
     stderr.writeln(_usage);
     exitCode = 2;
+    return;
+  }
+
+  if (parsed.command == _GeneratorCommand.pubHook) {
+    await _runPubHookCommand(parsed.pubHookRequest!);
     return;
   }
 
@@ -242,6 +248,46 @@ Future<void> main(List<String> arguments) async {
   }
 }
 
+/// Executes an install, uninstall, status, or post-pub generation operation.
+Future<void> _runPubHookCommand(CCPubHookRequest request) async {
+  try {
+    if (request.action == CCPubHookAction.run) {
+      final projectRoot = Directory(
+        request.projectRoot ?? Directory.current.path,
+      ).absolute;
+      if (!projectRoot.existsSync()) {
+        stderr.writeln(
+          'error: Pub hook project root does not exist: ${projectRoot.path}',
+        );
+        exitCode = 2;
+        return;
+      }
+      if (!await runCCPubHook(
+        projectRoot: projectRoot,
+        pubCommand: request.pubCommand,
+      )) {
+        exitCode = 1;
+      }
+      return;
+    }
+    final sdk = CCPubHookManager.resolveSdk(request.sdkPath);
+    final manager = CCPubHookManager(sdk);
+    switch (request.action) {
+      case CCPubHookAction.install:
+        await manager.install();
+      case CCPubHookAction.uninstall:
+        await manager.uninstall();
+      case CCPubHookAction.status:
+        if (!manager.status()) exitCode = 1;
+      case CCPubHookAction.run:
+        throw StateError('The run action is handled above.');
+    }
+  } on Object catch (error) {
+    stderr.writeln('error: $error');
+    exitCode = 1;
+  }
+}
+
 /// Aggregates current metadata into validated documentation and Host sources.
 Future<bool> _aggregate(Directory root, _Arguments parsed) async {
   final outputDirectory = Directory(
@@ -407,6 +453,10 @@ const _usage = '''Usage:
   ccrouter find <capability-id-or-route-pattern> [host-root]
   ccrouter clean [host-root]
   ccrouter aggregate [scan-root] [--output-dir <directory>] [--generate-component-registrars]
+  ccrouter pub-hook install [--sdk <flutter-sdk-root>]
+  ccrouter pub-hook uninstall [--sdk <flutter-sdk-root>]
+  ccrouter pub-hook status [--sdk <flutter-sdk-root>]
+  ccrouter pub-hook run --project-root <host-root> [--pub-command <command>]
 
 `generate` runs build_runner for the enclosing Dart workspace or package, then
 validates metadata and writes component indexes, Host assembly, and route docs.
@@ -417,6 +467,9 @@ indexes without generating and matches exact capability IDs or Route Pattern val
 `clean` removes only CCRouter-owned source outputs in writable Packages; it
 preserves build caches, read-only dependencies, and unknown user files.
 `aggregate` preserves the metadata-only legacy path.
+`pub-hook install` wraps the selected SDK entrypoints with a reversible post-pub
+generator hook. Non-CCRouter projects are skipped. The hook is not installed
+automatically and is not part of Flutter's internal tool snapshot.
 `create component <package-name> [parent-directory]` creates a new component
 Package without overwriting existing files. `create page <PageName>
 [component-directory]` creates an internal typed Route page in an existing
@@ -1058,6 +1111,9 @@ enum _GeneratorCommand {
 
   /// Creates a new component or page source template.
   create,
+
+  /// Installs or runs the post-pub generation hook.
+  pubHook,
 }
 
 /// Parsed inputs shared by generation, aggregation, and read-only lookup.
@@ -1075,6 +1131,7 @@ final class _Arguments {
     this.error,
     this.scaffoldKind,
     this.scaffoldName,
+    this.pubHookRequest,
   });
 
   /// Requested orchestration mode.
@@ -1112,6 +1169,9 @@ final class _Arguments {
 
   /// Package or page name passed to the scaffold command.
   final String? scaffoldName;
+
+  /// Parsed request for the pub hook command.
+  final CCPubHookRequest? pubHookRequest;
 }
 
 /// Parses the unified command while retaining the previous aggregate syntax.
@@ -1131,6 +1191,8 @@ _Arguments _parseArguments(List<String> arguments) {
     argumentStart = 1;
   } else if (arguments.isNotEmpty && arguments.first == 'create') {
     return _parseCreateArguments(arguments);
+  } else if (arguments.isNotEmpty && arguments.first == 'pub-hook') {
+    return _parsePubHookArguments(arguments);
   }
   var rootPath = Directory.current.path;
   String? outputDirectoryPath;
@@ -1278,6 +1340,125 @@ _Arguments _parseArguments(List<String> arguments) {
     check: check,
     noCache: noCache,
     profile: profile,
+  );
+}
+
+/// Parses the explicit SDK hook management command.
+_Arguments _parsePubHookArguments(List<String> arguments) {
+  if (arguments.length < 2 ||
+      arguments[1] == '--help' ||
+      arguments[1] == '-h') {
+    return const _Arguments(
+      command: _GeneratorCommand.pubHook,
+      rootPath: '',
+      outputDirectoryPath: null,
+      help: true,
+    );
+  }
+  final action = switch (arguments[1]) {
+    'install' => CCPubHookAction.install,
+    'uninstall' => CCPubHookAction.uninstall,
+    'status' => CCPubHookAction.status,
+    'run' => CCPubHookAction.run,
+    _ => null,
+  };
+  if (action == null) {
+    return const _Arguments(
+      command: _GeneratorCommand.pubHook,
+      rootPath: '',
+      outputDirectoryPath: null,
+      error: 'pub-hook requires `install`, `uninstall`, `status`, or `run`.',
+    );
+  }
+  String? sdkPath;
+  String? projectRoot;
+  String? pubCommand;
+  for (var index = 2; index < arguments.length; index++) {
+    final argument = arguments[index];
+    if (argument == '--help' || argument == '-h') {
+      return const _Arguments(
+        command: _GeneratorCommand.pubHook,
+        rootPath: '',
+        outputDirectoryPath: null,
+        help: true,
+      );
+    }
+    String? value;
+    String? option;
+    if (argument == '--sdk' ||
+        argument == '--project-root' ||
+        argument == '--pub-command') {
+      if (index + 1 >= arguments.length ||
+          arguments[index + 1].startsWith('-')) {
+        return const _Arguments(
+          command: _GeneratorCommand.pubHook,
+          rootPath: '',
+          outputDirectoryPath: null,
+          error: 'Missing value for pub-hook option.',
+        );
+      }
+      option = argument;
+      value = arguments[++index];
+    } else if (argument.startsWith('--sdk=')) {
+      option = '--sdk';
+      value = argument.substring('--sdk='.length);
+    } else if (argument.startsWith('--project-root=')) {
+      option = '--project-root';
+      value = argument.substring('--project-root='.length);
+    } else if (argument.startsWith('--pub-command=')) {
+      option = '--pub-command';
+      value = argument.substring('--pub-command='.length);
+    } else {
+      return _Arguments(
+        command: _GeneratorCommand.pubHook,
+        rootPath: '',
+        outputDirectoryPath: null,
+        error: 'Unknown pub-hook option: $argument',
+      );
+    }
+    if (value.isEmpty) {
+      return const _Arguments(
+        command: _GeneratorCommand.pubHook,
+        rootPath: '',
+        outputDirectoryPath: null,
+        error: 'Pub-hook option values cannot be empty.',
+      );
+    }
+    switch (option) {
+      case '--sdk':
+        sdkPath = value;
+      case '--project-root':
+        projectRoot = value;
+      case '--pub-command':
+        pubCommand = value;
+    }
+  }
+  if (action == CCPubHookAction.run && projectRoot == null) {
+    return const _Arguments(
+      command: _GeneratorCommand.pubHook,
+      rootPath: '',
+      outputDirectoryPath: null,
+      error: 'pub-hook run requires --project-root.',
+    );
+  }
+  if (action != CCPubHookAction.run && projectRoot != null) {
+    return const _Arguments(
+      command: _GeneratorCommand.pubHook,
+      rootPath: '',
+      outputDirectoryPath: null,
+      error: '--project-root is only available with pub-hook run.',
+    );
+  }
+  return _Arguments(
+    command: _GeneratorCommand.pubHook,
+    rootPath: '',
+    outputDirectoryPath: null,
+    pubHookRequest: CCPubHookRequest(
+      action: action,
+      sdkPath: sdkPath,
+      projectRoot: projectRoot,
+      pubCommand: pubCommand,
+    ),
   );
 }
 

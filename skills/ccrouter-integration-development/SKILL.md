@@ -21,6 +21,12 @@ Use CCRouter as the application component boundary. Prefer its generated contrac
 7. Add focused tests for success, failure, lifecycle cleanup, and relevant concurrency.
 8. Run analyze, focused tests, and `generate --check` before completion.
 
+For generator, scaffolding, cleanup, source lookup, or deferred Contract
+migration work, also read
+[`skills/ccrouter-cli-development/SKILL.md`](../ccrouter-cli-development/SKILL.md).
+That Skill is authoritative for the command matrix and for the dry-run boundary
+when a requested CLI 2.0 command has not been implemented.
+
 If the scenario cannot be expressed safely, report whether it is a framework
 defect, application responsibility, developer-experience gap, general reusable
 capability, or conditionally deferred work. Do not import internal APIs or
