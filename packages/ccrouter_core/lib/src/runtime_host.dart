@@ -48,6 +48,7 @@ final class CCRouterRuntime {
     int navigationDiagnosticCapacity = 1000,
     CCDiagnosticsConfig diagnostics = const CCDiagnosticsConfig(),
     Iterable<CCComponentManifest> components = const [],
+    CCContractBundleDescriptor? contractBundle,
     CCNavigationAdapter? navigationAdapter,
     Iterable<CCGlobalNavigationInterceptor> globalInterceptors = const [],
     Iterable<CCGlobalPopGuard> globalPopGuards = const [],
@@ -64,6 +65,7 @@ final class CCRouterRuntime {
     navigationDiagnosticCapacity: navigationDiagnosticCapacity,
     diagnostics: diagnostics,
     components: components,
+    contractBundle: contractBundle,
     navigationAdapter: navigationAdapter,
     globalInterceptors: globalInterceptors,
     globalPopGuards: globalPopGuards,
@@ -86,6 +88,7 @@ final class CCRouterRuntime {
     int navigationDiagnosticCapacity = 1000,
     CCDiagnosticsConfig diagnostics = const CCDiagnosticsConfig(),
     Iterable<CCComponentManifest> components = const [],
+    CCContractBundleDescriptor? contractBundle,
     CCNavigationAdapter? navigationAdapter,
     Iterable<CCGlobalNavigationInterceptor> globalInterceptors = const [],
     Iterable<CCGlobalPopGuard> globalPopGuards = const [],
@@ -103,6 +106,7 @@ final class CCRouterRuntime {
     navigationDiagnosticCapacity: navigationDiagnosticCapacity,
     diagnostics: diagnostics,
     components: components,
+    contractBundle: contractBundle,
     navigationAdapter: navigationAdapter,
     globalInterceptors: globalInterceptors,
     globalPopGuards: globalPopGuards,
@@ -123,6 +127,7 @@ final class CCRouterRuntime {
     this.navigationDiagnosticCapacity = 1000,
     this.diagnostics = const CCDiagnosticsConfig(),
     Iterable<CCComponentManifest> components = const [],
+    CCContractBundleDescriptor? contractBundle,
     CCNavigationAdapter? navigationAdapter,
     Iterable<CCGlobalNavigationInterceptor> globalInterceptors = const [],
     Iterable<CCGlobalPopGuard> globalPopGuards = const [],
@@ -136,6 +141,12 @@ final class CCRouterRuntime {
   }) {
     _deepLinkIngressPolicy = deepLinkIngressPolicy;
     _navigationAdapter = navigationAdapter;
+    if (contractBundle != null) {
+      final issues = CCContractBundleDescriptor.validate([contractBundle]);
+      if (issues.isNotEmpty) {
+        throw CCContractCompatibilityError(issues);
+      }
+    }
     _globalInterceptors = _validateGlobalInterceptors(globalInterceptors);
     _globalPopGuards = _validateGlobalPopGuards(globalPopGuards);
     _navigationAspects = _validateNavigationAspects(navigationAspects);

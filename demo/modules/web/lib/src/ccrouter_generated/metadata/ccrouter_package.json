@@ -1,11 +1,11 @@
 {
   "schemaVersion": 2,
-  "generatorVersion": "0.1.0",
+  "generatorVersion": "0.1.3",
   "package": {
     "name": "demo_web",
     "version": "0.1.0"
   },
-  "contentFingerprint": "79e4023b7e5b223bd5c4dd00372e3e23839950b804442a59cb729615697e5509",
+  "contentFingerprint": "f21bfa77c9c068ef178a186b0af838db8ba18cbaba21b422fd6c124be6891c41",
   "bundle": {
     "library": "lib/src/ccrouter_generated/host/demo_web_ccrouter.g.dart",
     "symbol": "ccrouterGeneratedPackageBundle"
@@ -14,12 +14,12 @@
     {
       "name": "demo_web_contracts",
       "version": "0.1.0",
-      "contentFingerprint": "2edb0ff7e0994667f7b0b5fba43b85ccb4e9e6e9a5df93243379ddbc894fbb8c"
+      "contentFingerprint": "7fd9027bc46b2ab8354695aac5bf7f3271a9c752e4c38d8a47313bf650e2470e"
     }
   ],
   "metadata": [
     {
-      "schemaVersion": 3,
+      "schemaVersion": 4,
       "package": "demo_web",
       "source": "lib/src/demo_web_component.dart",
       "componentDeclarations": [
@@ -46,7 +46,7 @@
       "contributions": []
     },
     {
-      "schemaVersion": 3,
+      "schemaVersion": 4,
       "package": "demo_web",
       "source": "lib/src/web_pages.dart",
       "componentDeclarations": [],

@@ -5,7 +5,12 @@
 library;
 
 import 'package:ccrouter/ccrouter_host.dart'
-    show CCFlutterRouteCatalog, CCGeneratedPackageBundle;
+    show
+        CCContractBundleDescriptor,
+        CCContractDescriptor,
+        CCContractKind,
+        CCFlutterRouteCatalog,
+        CCGeneratedPackageBundle;
 import 'package:demo_network/src/ccrouter_generated/component/demo_network_component.component.g.dart'
     as component_0;
 
@@ -14,7 +19,22 @@ final ccrouterGeneratedPackageBundle = CCGeneratedPackageBundle(
   packageName: 'demo_network',
   packageVersion: '0.1.0',
   contentFingerprint:
-      '7e65ddd0b521ed7a5b3e652a199c002366c70ee39e50c255096909b7575514f4',
+      'd14a2959994efcafdf0848e856e6502607db5eaffca5cc19f99ed370114cbc6a',
+  contractBundle: CCContractBundleDescriptor(
+    packageName: 'demo_network',
+    packageVersion: '0.1.0',
+    contracts: [
+      CCContractDescriptor(
+        kind: CCContractKind.service,
+        id: "demo.network.client",
+        ownerComponentId: "demo_network_component",
+        version: "0.1.0",
+        shapeFingerprint:
+            "cc271813e81d60863b08f881874c711d6c367e9b131f4635ea0ec274e7bdb1d0",
+      ),
+    ],
+    requirements: [],
+  ),
   componentManifests: [component_0.demoNetworkComponentManifest],
   routeCatalog: CCFlutterRouteCatalog.merge([
     component_0.demoNetworkComponentRouteCatalog,

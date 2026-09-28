@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
+
 /// Maximum supported length of an identifier carried by generated metadata.
 const int _workspaceIdentifierLength = 128;
 
@@ -358,11 +360,14 @@ abstract final class CCRouteWorkspaceValidator {
     _validateMetadataFields(components, routes, errors);
     if (hasContractCompatibilityMetadata) {
       _validateContractCompatibilityMetadata(
+        components: components,
         routes: routes,
         serviceContracts: serviceContracts,
         commandContracts: commandContracts,
         eventContracts: eventContracts,
+        eventSubscriptions: eventSubscriptions,
         initTaskContracts: initTaskContracts,
+        initTasks: initTasks,
         errors: errors,
       );
     }
@@ -906,11 +911,14 @@ abstract final class CCRouteWorkspaceValidator {
   /// and fingerprint. This check deliberately validates presence and syntax;
   /// source-level shape calculation belongs to the builders.
   static void _validateContractCompatibilityMetadata({
+    required Map<String, Map<String, Object?>> components,
     required Map<String, Map<String, Object?>> routes,
     required Map<String, Map<String, Object?>> serviceContracts,
     required Map<String, Map<String, Object?>> commandContracts,
     required Map<String, Map<String, Object?>> eventContracts,
+    required Map<String, Map<String, Object?>> eventSubscriptions,
     required Map<String, Map<String, Object?>> initTaskContracts,
+    required Map<String, Map<String, Object?>> initTasks,
     required List<String> errors,
   }) {
     final groups = <String, Map<String, Map<String, Object?>>>{
@@ -944,6 +952,83 @@ abstract final class CCRouteWorkspaceValidator {
           );
         }
       }
+    }
+    for (final component in components.values) {
+      for (final dependency in _objects(component['serviceDependencies'])) {
+        _validateConsumerCompatibility(
+          kind: CCContractKind.service,
+          dependency: dependency,
+          contract: serviceContracts['${dependency['id'] ?? ''}'],
+          errors: errors,
+        );
+      }
+      for (final dependency in _objects(component['commandDependencies'])) {
+        _validateConsumerCompatibility(
+          kind: CCContractKind.command,
+          dependency: dependency,
+          contract: commandContracts['${dependency['id'] ?? ''}'],
+          errors: errors,
+        );
+      }
+    }
+    for (final subscription in eventSubscriptions.values) {
+      _validateConsumerCompatibility(
+        kind: CCContractKind.event,
+        dependency: subscription,
+        contract: eventContracts['${subscription['eventId'] ?? ''}'],
+        errors: errors,
+      );
+    }
+    for (final task in initTasks.values) {
+      for (final dependency in _objects(task['contractDependencies'])) {
+        _validateConsumerCompatibility(
+          kind: CCContractKind.initTask,
+          dependency: dependency,
+          contract: initTaskContracts['${dependency['id'] ?? ''}'],
+          errors: errors,
+        );
+      }
+    }
+  }
+
+  /// Checks generated consumer metadata without changing legacy schema output.
+  static void _validateConsumerCompatibility({
+    required CCContractKind kind,
+    required Map<String, Object?> dependency,
+    required Map<String, Object?>? contract,
+    required List<String> errors,
+  }) {
+    final id = '${dependency['id'] ?? dependency['eventId'] ?? ''}';
+    if (contract == null) return;
+    final range = dependency['requiredVersionRange'];
+    final fingerprint = dependency['requiredShapeFingerprint'];
+    if (range is! String || fingerprint is! String) {
+      errors.add(
+        '[contract:${CCContractCompatibilityCode.staleGeneratedOutput.name}] '
+        '${kind.name} contract "$id" is missing generated consumer metadata.',
+      );
+      return;
+    }
+    try {
+      if (!CCContractVersionRange.parse(
+        range,
+      ).allowsText('${contract['version']}')) {
+        errors.add(
+          '[contract:${CCContractCompatibilityCode.versionOutOfRange.name}] '
+          '${kind.name} contract "$id" is outside its consumer version range.',
+        );
+      }
+    } on FormatException {
+      errors.add(
+        '[contract:${CCContractCompatibilityCode.staleGeneratedOutput.name}] '
+        '${kind.name} contract "$id" has an invalid consumer version range.',
+      );
+    }
+    if (fingerprint != contract['shapeFingerprint']) {
+      errors.add(
+        '[contract:${CCContractCompatibilityCode.fingerprintChanged.name}] '
+        '${kind.name} contract "$id" has a changed shape fingerprint.',
+      );
     }
   }
 

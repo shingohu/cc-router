@@ -38,6 +38,9 @@ For local confirmation, menus, transient BottomSheet, `OverlayEntry`, `MenuAncho
 跨 Package 的 Route、Service、Command、Event、InitTask Contract 都要维护独立的 SemVer。
 生成 metadata 会携带确定性的 `shapeFingerprint`；公共形状改变时应升级 Contract 版本，破坏性
 变更优先使用新 Contract ID，不要用组件版本或运行时字符串猜测兼容性。
+生成的 Host Assembly 同时携带 Contract descriptor 和消费者的精确版本/指纹要求；Host 启动时
+将 `contractBundle` 传给 `CCRouter.initialize`，由 Generator、Host 和 Runtime 分层拒绝缺失、
+Owner 不匹配、版本范围不满足、指纹漂移、重复实现和陈旧生成物。业务不手写这些字符串。
 
 Choose Service for a durable capability such as a repository, account state facade, analytics client, feature configuration, or page controller.
 

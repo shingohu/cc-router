@@ -570,6 +570,11 @@ Future<bool> _generateResolvedWorkspace(
   }
   parseWatch.stop();
 
+  _annotateConsumerContractMetadata(
+    localMetadata,
+    externalIndexes.values.expand((index) => index.metadata),
+  );
+
   final runtimeBundles = <String>{
     for (final entry in localMetadata.entries)
       if (_hasRuntimeContribution(entry.value)) entry.key,
@@ -834,6 +839,95 @@ Future<bool> _generateResolvedWorkspace(
     );
   }
   return true;
+}
+
+/// Adds exact generated Contract requirements to local consumer metadata.
+///
+/// The source annotations intentionally stay small: consumers declare a typed
+/// dependency and the generator copies the resolved owner's version and shape
+/// fingerprint into metadata. This keeps handwritten code free of duplicated
+/// compatibility strings while making stale generated output detectable.
+void _annotateConsumerContractMetadata(
+  Map<String, List<Map<String, Object?>>> localMetadata,
+  Iterable<Map<String, Object?>> externalMetadata,
+) {
+  final allDocuments = <Map<String, Object?>>[
+    for (final documents in localMetadata.values) ...documents,
+    ...externalMetadata,
+  ];
+  final contracts = _collectContractRecordsFromMetadata(allDocuments);
+  for (final documents in localMetadata.values) {
+    for (final document in documents) {
+      for (final component in _objects(document['components'])) {
+        for (final dependency in _objects(component['serviceDependencies'])) {
+          _copyConsumerContractFields(
+            dependency,
+            contracts['service:${dependency['id']}'],
+          );
+        }
+        for (final dependency in _objects(component['commandDependencies'])) {
+          _copyConsumerContractFields(
+            dependency,
+            contracts['command:${dependency['id']}'],
+          );
+        }
+      }
+      for (final subscription in _objects(document['eventSubscriptions'])) {
+        _copyConsumerContractFields(
+          subscription,
+          contracts['event:${subscription['eventId']}'],
+        );
+      }
+      for (final task in _objects(document['initTasks'])) {
+        final dependencies = <Map<String, Object?>>[];
+        for (final dependencyId in _strings(task['dependsOn'])) {
+          final contract = contracts['initTask:$dependencyId'];
+          if (contract == null) continue;
+          dependencies.add(<String, Object?>{
+            'id': dependencyId,
+            'componentId': contract['componentId'],
+            'requiredVersionRange': contract['version'],
+            'requiredShapeFingerprint': contract['shapeFingerprint'],
+          });
+        }
+        if (dependencies.isNotEmpty) {
+          task['contractDependencies'] = dependencies;
+        }
+      }
+    }
+  }
+}
+
+Map<String, Map<String, Object?>> _collectContractRecordsFromMetadata(
+  Iterable<Map<String, Object?>> documents,
+) {
+  final records = <String, Map<String, Object?>>{};
+  const groups = <String, String>{
+    'serviceContracts': 'service',
+    'commandContracts': 'command',
+    'eventContracts': 'event',
+    'initTaskContracts': 'initTask',
+  };
+  for (final document in documents) {
+    for (final entry in groups.entries) {
+      for (final contract in _objects(document[entry.key])) {
+        final id = '${contract['id'] ?? ''}';
+        if (id.isNotEmpty) {
+          records.putIfAbsent('${entry.value}:$id', () => contract);
+        }
+      }
+    }
+  }
+  return records;
+}
+
+void _copyConsumerContractFields(
+  Map<String, Object?> consumer,
+  Map<String, Object?>? contract,
+) {
+  if (contract == null) return;
+  consumer['requiredVersionRange'] ??= contract['version'];
+  consumer['requiredShapeFingerprint'] ??= contract['shapeFingerprint'];
 }
 
 /// Writes non-empty Package-local capability discovery views.
@@ -3419,6 +3513,7 @@ Future<void> _generateResolvedPackageBundles({
   required Iterable<_GeneratedComponentCatalog> catalogs,
   required Set<String> dirtyPackages,
 }) async {
+  final contractRecords = _collectContractRecords(indexes.values);
   final catalogsByPackage = <String, List<_GeneratedComponentCatalog>>{};
   for (final catalog in catalogs) {
     catalogsByPackage.putIfAbsent(catalog.package, () => []).add(catalog);
@@ -3434,6 +3529,25 @@ Future<void> _generateResolvedPackageBundles({
     );
     final dependencyNames =
         package.dependencies.where(runtimeBundles.contains).toList()..sort();
+    final contractDescriptorSource = _emitPackageContractDescriptors(
+      index.metadata,
+      packageName,
+    );
+    final contractRequirementSource = _emitPackageContractRequirements(
+      index.metadata,
+      packageName,
+      contractRecords,
+    );
+    final contractImports = <String>[
+      'CCContractBundleDescriptor',
+      if (contractDescriptorSource.trim().isNotEmpty) 'CCContractDescriptor',
+      if (contractDescriptorSource.trim().isNotEmpty ||
+          contractRequirementSource.trim().isNotEmpty)
+        'CCContractKind',
+      if (contractRequirementSource.trim().isNotEmpty) 'CCContractRequirement',
+      'CCFlutterRouteCatalog',
+      'CCGeneratedPackageBundle',
+    ];
     final out = StringBuffer()
       ..writeln('// GENERATED CODE - DO NOT MODIFY BY HAND')
       ..writeln('// ignore_for_file: type=lint')
@@ -3443,7 +3557,7 @@ Future<void> _generateResolvedPackageBundles({
       ..writeln()
       ..writeln(
         "import 'package:ccrouter/ccrouter_host.dart' "
-        'show CCFlutterRouteCatalog, CCGeneratedPackageBundle;',
+        'show ${contractImports.join(', ')};',
       );
     for (var index = 0; index < packageCatalogs.length; index++) {
       final catalog = packageCatalogs[index];
@@ -3478,6 +3592,18 @@ Future<void> _generateResolvedPackageBundles({
       ..writeln("  packageName: '$packageName',")
       ..writeln("  packageVersion: '${package.version}',")
       ..writeln("  contentFingerprint: '${index.contentFingerprint}',")
+      ..writeln('  contractBundle: CCContractBundleDescriptor(')
+      ..writeln("    packageName: '$packageName',")
+      ..writeln("    packageVersion: '${package.version}',")
+      ..writeln('    contracts: [');
+    out.write(contractDescriptorSource);
+    out
+      ..writeln('    ],')
+      ..writeln('    requirements: [');
+    out.write(contractRequirementSource);
+    out
+      ..writeln('    ],')
+      ..writeln('  ),')
       ..writeln('  componentManifests: [');
     for (var index = 0; index < packageCatalogs.length; index++) {
       out.writeln('    component_$index.${packageCatalogs[index].manifest},');
@@ -3509,6 +3635,161 @@ Future<void> _generateResolvedPackageBundles({
       _dartFormatter.format(out.toString()),
     );
   }
+}
+
+/// One normalized Contract record used while emitting Package Bundles.
+Map<String, Map<String, Object?>> _collectContractRecords(
+  Iterable<CCPackageIndex> indexes,
+) {
+  final records = <String, Map<String, Object?>>{};
+  for (final index in indexes) {
+    for (final document in index.metadata) {
+      for (final entry in <String, String>{
+        'routes': 'route',
+        'serviceContracts': 'service',
+        'commandContracts': 'command',
+        'eventContracts': 'event',
+        'initTaskContracts': 'initTask',
+      }.entries) {
+        for (final contract in _objects(document[entry.key])) {
+          final id = '${contract['id'] ?? ''}';
+          if (id.isEmpty) continue;
+          records.putIfAbsent(
+            id,
+            () => <String, Object?>{...contract, '_kind': entry.value},
+          );
+        }
+      }
+    }
+  }
+  return records;
+}
+
+String _emitPackageContractDescriptors(
+  Iterable<Map<String, Object?>> metadata,
+  String packageName,
+) {
+  final records = <String, Map<String, Object?>>{};
+  for (final document in metadata) {
+    for (final entry in <String, String>{
+      'routes': 'route',
+      'serviceContracts': 'service',
+      'commandContracts': 'command',
+      'eventContracts': 'event',
+      'initTaskContracts': 'initTask',
+    }.entries) {
+      for (final contract in _objects(document[entry.key])) {
+        final id = '${contract['id'] ?? ''}';
+        if (id.isEmpty) continue;
+        records.putIfAbsent(
+          id,
+          () => <String, Object?>{
+            ...contract,
+            '_kind': entry.value,
+            '_package': packageName,
+          },
+        );
+      }
+    }
+  }
+  final out = StringBuffer();
+  for (final id in records.keys.toList()..sort()) {
+    final record = records[id]!;
+    out
+      ..writeln('      CCContractDescriptor(')
+      ..writeln('        kind: CCContractKind.${record['_kind']},')
+      ..writeln('        id: ${jsonEncode(id)},')
+      ..writeln(
+        '        ownerComponentId: ${jsonEncode('${record['componentId'] ?? ''}')},',
+      )
+      ..writeln('        version: ${jsonEncode('${record['version'] ?? ''}')},')
+      ..writeln(
+        '        shapeFingerprint: ${jsonEncode('${record['shapeFingerprint'] ?? ''}')},',
+      )
+      ..writeln('      ),');
+  }
+  return out.toString();
+}
+
+String _emitPackageContractRequirements(
+  Iterable<Map<String, Object?>> metadata,
+  String packageName,
+  Map<String, Map<String, Object?>> records,
+) {
+  final requirements = <String, Map<String, Object?>>{};
+  void add({required String kind, required String id, required String owner}) {
+    final record = records[id];
+    if (record == null || id.isEmpty) return;
+    final key = '$kind\u0000$id\u0000$owner';
+    requirements.putIfAbsent(
+      key,
+      () => <String, Object?>{
+        'kind': kind,
+        'id': id,
+        'owner': owner,
+        'version': '${record['version'] ?? ''}',
+        'fingerprint': '${record['shapeFingerprint'] ?? ''}',
+      },
+    );
+  }
+
+  for (final document in metadata) {
+    for (final component in _objects(document['components'])) {
+      final componentOwner = '${component['id'] ?? ''}';
+      for (final dependency in _objects(component['serviceDependencies'])) {
+        add(
+          kind: 'service',
+          id: '${dependency['id'] ?? ''}',
+          owner: '${dependency['componentId'] ?? ''}',
+        );
+      }
+      for (final dependency in _objects(component['commandDependencies'])) {
+        add(
+          kind: 'command',
+          id: '${dependency['id'] ?? ''}',
+          owner: '${dependency['componentId'] ?? ''}',
+        );
+      }
+      if (componentOwner.isEmpty) continue;
+    }
+    for (final subscription in _objects(document['eventSubscriptions'])) {
+      add(
+        kind: 'event',
+        id: '${subscription['eventId'] ?? ''}',
+        owner: '${subscription['eventComponentId'] ?? ''}',
+      );
+    }
+    for (final task in _objects(document['initTasks'])) {
+      for (final dependencyId in _strings(task['dependsOn'])) {
+        final record = records[dependencyId];
+        add(
+          kind: 'initTask',
+          id: dependencyId,
+          owner: '${record?['componentId'] ?? ''}',
+        );
+      }
+    }
+  }
+  final out = StringBuffer();
+  for (final key in requirements.keys.toList()..sort()) {
+    final requirement = requirements[key]!;
+    out
+      ..writeln('      CCContractRequirement(')
+      ..writeln('        kind: CCContractKind.${requirement['kind']},')
+      ..writeln('        contractId: ${jsonEncode(requirement['id'])},')
+      ..writeln('        consumerPackage: ${jsonEncode(packageName)},')
+      ..writeln(
+        '        ownerComponentId: ${jsonEncode(requirement['owner'])},',
+      )
+      ..writeln(
+        '        requiredVersionRange: ${jsonEncode(requirement['version'])},',
+      )
+      ..writeln(
+        '        requiredShapeFingerprint: ${jsonEncode(requirement['fingerprint'])},',
+      )
+      ..writeln('      ),');
+  }
+  return out.toString();
 }
 
 /// Writes the Host facade from only its own generated Package Bundle.

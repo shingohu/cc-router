@@ -263,6 +263,7 @@ Future<void> main() async {
     CCGoRouterApp(
       catalog: ccrouterGeneratedRouteCatalog,
       components: ccrouterGeneratedComponentManifests,
+      contractBundle: ccrouterGeneratedHostAssembly.contractBundle,
     ),
   );
 }
@@ -686,10 +687,21 @@ FutureOr、callback、Flutter 类型、Contract 继承和未从公共 barrel 暴
 失败。组件内部 Service 仍直接使用 `CCRouter.service<T>()`，不需要声明或生成 Proxy。
 
 Route、Service、Command、Event、InitTask Contract 都有独立的 Contract SemVer。生成器会同时
-写入不包含源码路径和实现类名的 `shapeFingerprint`，Workspace 聚合会拒绝缺失或格式错误的
-版本/指纹 metadata。当前 `0.x` 阶段不承诺跨版本自动兼容；修改公共形状时应显式升级版本，
-破坏性变更使用新的 Contract ID。消费者范围校验和 Runtime Bundle descriptor 仍属于后续
-正式发布收口，不会在运行时静默协商旧 Contract。
+写入不包含源码路径和实现类名的 `shapeFingerprint`，消费者 metadata 和 Host Bundle 会携带
+精确的版本范围与指纹。Workspace、Host 组装和 Runtime 会使用稳定的兼容错误码拒绝缺失
+Contract、Owner 不匹配、版本范围不满足、指纹漂移、重复实现和陈旧生成物；不会在运行时
+下载、协商或静默降级旧 Contract。当前 `0.x` 阶段仍不承诺跨版本自动兼容；修改公共形状时
+应显式升级版本，破坏性变更使用新的 Contract ID。
+
+生成的 Host Assembly 暴露只读 `contractBundle`。标准启动代码将它和组件 Manifest 一起交给
+`CCRouter.initialize`，因此业务不需要手写版本字符串：
+
+```dart
+CCRouter.initialize(
+  components: ccrouterGeneratedHostAssembly.componentManifests,
+  contractBundle: ccrouterGeneratedHostAssembly.contractBundle,
+);
+```
 
 生成器会先校验 Service Owner、Consumer 和 Package exposure；Runtime 还会根据本次实际安装的
 Manifest 依赖图再次验证生成 Proxy 携带的 caller identity。旧生成物、手工调用 generated bridge、

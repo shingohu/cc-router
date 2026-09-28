@@ -291,8 +291,12 @@ abstract final class CCRouter {
   /// [deepLinkIngressPolicy] is Host-owned and defaults to rejecting every
   /// external authority and relative Path; configure exact rules only for URI
   /// namespaces the application intentionally owns.
+  /// Pass the generated [contractBundle] together with [components] when Host
+  /// assembly publishes one. It provides final stale and compatibility checks;
+  /// omitting it remains supported for handwritten or legacy test manifests.
   static void initialize({
     required Iterable<CCComponentManifest> components,
+    CCContractBundleDescriptor? contractBundle,
     int traceCapacity = 1000,
     int navigationDiagnosticCapacity = 1000,
     CCDiagnosticsConfig diagnostics = const CCDiagnosticsConfig(),
@@ -315,6 +319,7 @@ abstract final class CCRouter {
 
     final runtime = CCRouterRuntime.forHost(
       components: components,
+      contractBundle: contractBundle,
       traceCapacity: traceCapacity,
       navigationDiagnosticCapacity: navigationDiagnosticCapacity,
       diagnostics: diagnostics,

@@ -89,8 +89,10 @@
   [正式发布前能力设计与实施计划](CCRouter-pre-release-capability-plan.md)；代码实现仍待按阶段执行。
 - [x] 为五类 Contract 增加独立 SemVer、shape fingerprint metadata，并实现生成期/聚合期
   的版本、指纹和 Owner 结构门禁；旧 schema 仍可供迁移工具读取。
-- [ ] 生成阶段报告升级、废弃、缺失和不兼容原因；Runtime 只做边界保护（消费者范围和
-  Runtime Bundle descriptor 仍待后续收口）。
+- [x] 生成阶段写入消费者的精确版本范围与 shape fingerprint，Host Bundle 携带五类
+  Contract descriptor；Host 组装和 Runtime 共享稳定的 `missing`、`ownerMismatch`、
+  `versionOutOfRange`、`fingerprintChanged`、`duplicateImplementation`、
+  `staleGeneratedOutput` 错误码。Runtime 只做最终边界保护，不协商或静默降级。
 - [ ] 评估环境实现选择模型；短期继续使用 Composition Root、Service Key 和 Test Override。
 
 ### 4.2 初始化任务生成（已完成）

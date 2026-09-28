@@ -5,7 +5,12 @@
 library;
 
 import 'package:ccrouter/ccrouter_host.dart'
-    show CCFlutterRouteCatalog, CCGeneratedPackageBundle;
+    show
+        CCContractBundleDescriptor,
+        CCContractKind,
+        CCContractRequirement,
+        CCFlutterRouteCatalog,
+        CCGeneratedPackageBundle;
 import 'package:demo_payment/src/ccrouter_generated/component/demo_payment_component.component.g.dart'
     as component_0;
 
@@ -14,7 +19,23 @@ final ccrouterGeneratedPackageBundle = CCGeneratedPackageBundle(
   packageName: 'demo_payment',
   packageVersion: '0.1.0',
   contentFingerprint:
-      '5ce2157a8ad9326fdefe175b51d1b9a34906a7b96877c9bcc689d645a2b74bc7',
+      '4eecc7d5654039416486c391d560f545ad81f36708da76bab82e63a1778a618d',
+  contractBundle: CCContractBundleDescriptor(
+    packageName: 'demo_payment',
+    packageVersion: '0.1.0',
+    contracts: [],
+    requirements: [
+      CCContractRequirement(
+        kind: CCContractKind.service,
+        contractId: "demo_order.summary",
+        consumerPackage: "demo_payment",
+        ownerComponentId: "demo_order_component",
+        requiredVersionRange: "0.1.0",
+        requiredShapeFingerprint:
+            "5ae284d3c0990ac5c7edb8608e3bd3238bdd52c7241bb275f182c150913f891b",
+      ),
+    ],
+  ),
   componentManifests: [component_0.demoPaymentComponentManifest],
   routeCatalog: CCFlutterRouteCatalog.merge([
     component_0.demoPaymentComponentRouteCatalog,

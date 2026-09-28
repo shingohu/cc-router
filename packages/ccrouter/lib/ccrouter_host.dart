@@ -8,6 +8,13 @@ library;
 
 export 'package:ccrouter_contracts/ccrouter_contracts.dart'
     show
+        CCContractBundleDescriptor,
+        CCContractCompatibilityCode,
+        CCContractCompatibilityError,
+        CCContractCompatibilityIssue,
+        CCContractDescriptor,
+        CCContractKind,
+        CCContractRequirement,
         CCNavigationAdapter,
         CCNavigationAdapterCapabilities,
         CCNavigationAdapterCapabilitySource,

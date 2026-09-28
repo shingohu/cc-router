@@ -5,7 +5,12 @@
 library;
 
 import 'package:ccrouter/ccrouter_host.dart'
-    show CCFlutterRouteCatalog, CCGeneratedPackageBundle;
+    show
+        CCContractBundleDescriptor,
+        CCContractDescriptor,
+        CCContractKind,
+        CCFlutterRouteCatalog,
+        CCGeneratedPackageBundle;
 import 'package:demo_kv_storage/src/ccrouter_generated/component/demo_kv_storage_component.component.g.dart'
     as component_0;
 
@@ -15,6 +20,21 @@ final ccrouterGeneratedPackageBundle = CCGeneratedPackageBundle(
   packageVersion: '0.1.0',
   contentFingerprint:
       '34dfb7eab7879cec25fceeb469c1bc513f2d255415a9332bdf455997e13740fc',
+  contractBundle: CCContractBundleDescriptor(
+    packageName: 'demo_kv_storage',
+    packageVersion: '0.1.0',
+    contracts: [
+      CCContractDescriptor(
+        kind: CCContractKind.service,
+        id: "demo.kv_storage",
+        ownerComponentId: "demo_kv_storage_component",
+        version: "0.1.0",
+        shapeFingerprint:
+            "74f1d13513448f76b3db9f996cbb349687376d851b6cb1420ee2a0825fcca1f2",
+      ),
+    ],
+    requirements: [],
+  ),
   componentManifests: [component_0.demoKvStorageComponentManifest],
   routeCatalog: CCFlutterRouteCatalog.merge([
     component_0.demoKvStorageComponentRouteCatalog,

@@ -13,6 +13,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   CCRouter.initialize(
     components: ccrouterGeneratedComponentManifests,
+    contractBundle: ccrouterGeneratedHostAssembly.contractBundle,
     deepLinkIngressPolicy: demoDeepLinkIngressPolicy,
     globalInterceptors: const [
       CCGlobalNavigationInterceptor(

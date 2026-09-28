@@ -14,6 +14,7 @@ void main() {
   WidgetsFlutterBinding.ensureInitialized();
   CCRouter.initialize(
     components: ccrouterGeneratedComponentManifests,
+    contractBundle: ccrouterGeneratedHostAssembly.contractBundle,
     deepLinkIngressPolicy: demoDeepLinkIngressPolicy,
   );
   runApp(createMultiHostDemoApp());

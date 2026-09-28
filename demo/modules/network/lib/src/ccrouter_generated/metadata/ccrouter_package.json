@@ -1,11 +1,11 @@
 {
   "schemaVersion": 2,
-  "generatorVersion": "0.1.0",
+  "generatorVersion": "0.1.3",
   "package": {
     "name": "demo_network",
     "version": "0.1.0"
   },
-  "contentFingerprint": "7e65ddd0b521ed7a5b3e652a199c002366c70ee39e50c255096909b7575514f4",
+  "contentFingerprint": "d14a2959994efcafdf0848e856e6502607db5eaffca5cc19f99ed370114cbc6a",
   "bundle": {
     "library": "lib/src/ccrouter_generated/host/demo_network_ccrouter.g.dart",
     "symbol": "ccrouterGeneratedPackageBundle"
@@ -13,7 +13,7 @@
   "dependencies": [],
   "metadata": [
     {
-      "schemaVersion": 3,
+      "schemaVersion": 4,
       "package": "demo_network",
       "source": "lib/src/demo_network_component.dart",
       "componentDeclarations": [
@@ -40,7 +40,7 @@
       "contributions": []
     },
     {
-      "schemaVersion": 3,
+      "schemaVersion": 4,
       "package": "demo_network",
       "source": "lib/src/network_service.dart",
       "componentDeclarations": [],
@@ -54,6 +54,7 @@
         {
           "id": "demo.network.client",
           "componentId": "demo_network_component",
+          "version": "0.1.0",
           "description": "Provides environment-aware HTTP requests with safe interceptors.",
           "package": "demo_network",
           "source": "lib/src/network_service.dart",
@@ -275,6 +276,7 @@
               }
             }
           ],
+          "shapeFingerprint": "cc271813e81d60863b08f881874c711d6c367e9b131f4635ea0ec274e7bdb1d0",
           "token": {
             "symbol": "demoNetworkServiceToken",
             "library": "lib/src/ccrouter_generated/contract/network_service.service.contract.g.dart",

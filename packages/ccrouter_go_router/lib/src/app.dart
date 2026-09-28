@@ -32,6 +32,7 @@ final class CCGoRouterApp extends StatefulWidget {
   const CCGoRouterApp({
     required this.catalog,
     this.components,
+    this.contractBundle,
     this.host,
     this.hostRoutes = const [],
     this.overrides = const {},
@@ -59,6 +60,12 @@ final class CCGoRouterApp extends StatefulWidget {
   /// Leave this null when the application already called
   /// [CCRouter.initialize] with its complete global configuration.
   final Iterable<CCComponentManifest>? components;
+
+  /// Optional generated Contract descriptor used with the startup shorthand.
+  ///
+  /// When supplied together with [components], the Runtime rejects stale or
+  /// incompatible generated Contract artifacts before the Host is mounted.
+  final CCContractBundleDescriptor? contractBundle;
 
   /// Optional Host identity and Navigator Outlet keys.
   final CCNavigationHost? host;
@@ -148,7 +155,10 @@ final class _CCGoRouterAppState extends State<CCGoRouterApp> {
         'startup shorthand.',
       );
     }
-    CCRouter.initialize(components: components);
+    CCRouter.initialize(
+      components: components,
+      contractBundle: widget.contractBundle,
+    );
   }
 
   @override

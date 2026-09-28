@@ -1,16 +1,16 @@
 {
   "schemaVersion": 2,
-  "generatorVersion": "0.1.0",
+  "generatorVersion": "0.1.3",
   "package": {
     "name": "demo_web_contracts",
     "version": "0.1.0"
   },
-  "contentFingerprint": "2edb0ff7e0994667f7b0b5fba43b85ccb4e9e6e9a5df93243379ddbc894fbb8c",
+  "contentFingerprint": "7fd9027bc46b2ab8354695aac5bf7f3271a9c752e4c38d8a47313bf650e2470e",
   "bundle": null,
   "dependencies": [],
   "metadata": [
     {
-      "schemaVersion": 3,
+      "schemaVersion": 4,
       "package": "demo_web_contracts",
       "source": "lib/src/web_route_contracts.dart",
       "componentDeclarations": [],
@@ -20,6 +20,8 @@
       "routes": [
         {
           "id": "demo_web.public",
+          "version": "0.1.0",
+          "shapeFingerprint": "229de44459e082130a811e1d753bdae08888a4b4e0b612af2fb64713c997c88b",
           "componentId": "demo_web_component",
           "exposure": "public",
           "deepLink": "enabled",
@@ -94,6 +96,8 @@
         },
         {
           "id": "demo_web.private",
+          "version": "0.1.0",
+          "shapeFingerprint": "7660918c60234f57c95afbd5fc710dc5249786b8a9613d51bb455a607425324a",
           "componentId": "demo_web_component",
           "exposure": "public",
           "deepLink": "disabled",

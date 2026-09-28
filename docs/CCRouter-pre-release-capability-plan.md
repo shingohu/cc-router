@@ -415,8 +415,8 @@ CLI 继续保持非覆盖式，增加可选模板：
 
 ### Phase 0：协议和基线（P0）
 
-- [x] Contract 版本/fingerprint/范围的 Pure Dart 设计冻结；版本与 fingerprint 已进入新
-  metadata schema，消费者范围和 Runtime descriptor 仍按后续阶段实现；
+- [x] Contract 版本/fingerprint/范围的 Pure Dart 设计冻结；版本、fingerprint、消费者范围
+  和 Runtime descriptor 已进入生成 metadata 与 Host Bundle；
 - [x] Catalog/Runtime Snapshot/Trace Edge 协议冻结；独立纯 Dart Package 提供版本化 Envelope、
   静态源码位置、Runtime Entry 和单次调用链 Edge，现有面板可转换受限 Runtime 数据。
 - [x] 性能、队列、RSS/Heap 和长时间运行基线脚本；已覆盖混合能力生成、Runtime 并发与
@@ -437,10 +437,11 @@ CLI 继续保持非覆盖式，增加可选模板：
 
 ### Phase 2：Contract 兼容门禁（P0/P1）
 
-- [ ] 五类 Contract 版本和指纹 metadata；
-- [ ] Generator/Workspace Validator/Runtime 稳定错误码；
-- [ ] 旧 Index、缺失 Owner、范围不满足、指纹漂移和迁移测试；
-- [ ] Demo 与干净 Package Workspace 发布模拟。
+- [x] 五类 Contract 版本和指纹 metadata；消费者 metadata 会记录精确版本范围和指纹；
+- [x] Generator/Workspace Validator/Host Bundle/Runtime 稳定错误码；
+- [x] 缺失 Contract、Owner 不匹配、范围不满足、指纹漂移、重复实现和陈旧输出测试；
+- [x] Demo 生成并消费 Runtime Bundle descriptor；干净 Package Workspace 的 Pure Dart
+  Bundle/Runtime 边界测试已覆盖，正式发布前仍需保留旧 Index 迁移样本。
 
 ### Phase 3：DevTools 数据基础（P1）
 

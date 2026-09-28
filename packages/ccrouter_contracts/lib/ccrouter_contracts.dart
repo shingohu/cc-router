@@ -6,6 +6,7 @@ library;
 
 export 'src/adaptive_layout.dart';
 export 'src/component.dart';
+export 'src/contract_compatibility.dart';
 export 'src/deep_link.dart';
 export 'src/diagnostics.dart';
 export 'src/errors.dart';

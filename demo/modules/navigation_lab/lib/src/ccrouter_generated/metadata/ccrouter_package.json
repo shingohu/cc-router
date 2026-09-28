@@ -1,11 +1,11 @@
 {
   "schemaVersion": 2,
-  "generatorVersion": "0.1.0",
+  "generatorVersion": "0.1.3",
   "package": {
     "name": "demo_navigation_lab",
     "version": "0.1.0"
   },
-  "contentFingerprint": "76df1af0d52e43d7bbbb9ec2148c150c69658e21bf93fb4d288f75eda99868a5",
+  "contentFingerprint": "6048baf5040cd9072123eb479c1947b76bffc51125d29baab4faf3dcd2701f88",
   "bundle": {
     "library": "lib/src/ccrouter_generated/host/demo_navigation_lab_ccrouter.g.dart",
     "symbol": "ccrouterGeneratedPackageBundle"
@@ -850,7 +850,9 @@
                 "role": "serviceClient",
                 "symbol": "DemoNavigationLabServices.demoKeyValueStorage",
                 "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/component/navigation_lab_component.service_api.g.dart"
-              }
+              },
+              "requiredVersionRange": "0.1.0",
+              "requiredShapeFingerprint": "74f1d13513448f76b3db9f996cbb349687376d851b6cb1420ee2a0825fcca1f2"
             },
             {
               "id": "demo.network.client",
@@ -862,7 +864,9 @@
                 "role": "serviceClient",
                 "symbol": "DemoNavigationLabServices.demoNetwork",
                 "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/component/navigation_lab_component.service_api.g.dart"
-              }
+              },
+              "requiredVersionRange": "0.1.0",
+              "requiredShapeFingerprint": "cc271813e81d60863b08f881874c711d6c367e9b131f4635ea0ec274e7bdb1d0"
             },
             {
               "id": "demo_order.summary",
@@ -874,7 +878,9 @@
                 "role": "serviceClient",
                 "symbol": "DemoNavigationLabServices.orderSummary",
                 "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/component/navigation_lab_component.service_api.g.dart"
-              }
+              },
+              "requiredVersionRange": "0.1.0",
+              "requiredShapeFingerprint": "5ae284d3c0990ac5c7edb8608e3bd3238bdd52c7241bb275f182c150913f891b"
             }
           ],
           "commandDependencies": [
@@ -884,7 +890,9 @@
               "command": "ReserveOrderCommand",
               "resultType": "String",
               "library": "package:demo_order_contracts/demo_order_contracts.dart",
-              "member": "reserveOrder"
+              "member": "reserveOrder",
+              "requiredVersionRange": "0.1.0",
+              "requiredShapeFingerprint": "733a9cbb3afe25c35855e48a5f37d70433427971629d0a6e53ff2613a3161316"
             }
           ]
         }
@@ -1071,7 +1079,9 @@
               "symbol": "ccrouterRegisterFailDemoOrderCompletedEventSubscription",
               "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/event/navigation_lab_component_registrar.event.g.dart"
             }
-          ]
+          ],
+          "requiredVersionRange": "0.1.0",
+          "requiredShapeFingerprint": "bff2d0710d6acbfdf9e08d2fc6cc0afdcbcd4dcd739d3d5a1db9db63d203b545"
         },
         {
           "eventId": "demo_navigation_lab.order_completed",
@@ -1101,7 +1111,9 @@
               "symbol": "ccrouterRegisterTrackDemoOrderCompletedEventSubscription",
               "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/event/navigation_lab_component_registrar.event.g.dart"
             }
-          ]
+          ],
+          "requiredVersionRange": "0.1.0",
+          "requiredShapeFingerprint": "bff2d0710d6acbfdf9e08d2fc6cc0afdcbcd4dcd739d3d5a1db9db63d203b545"
         },
         {
           "eventId": "demo_navigation_lab.slow",
@@ -1131,7 +1143,9 @@
               "symbol": "ccrouterRegisterWaitForDemoSlowEventEventSubscription",
               "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/event/navigation_lab_component_registrar.event.g.dart"
             }
-          ]
+          ],
+          "requiredVersionRange": "0.1.0",
+          "requiredShapeFingerprint": "391cd8b777de2aab3883930e1429affe70609d159c0f1b2bfceee68c1a81152b"
         }
       ]
     },
@@ -1183,6 +1197,14 @@
               "symbol": "ccrouterRegisterInitializeDemoAnalyticsInitTask",
               "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/init_task/navigation_lab_component_registrar.init_task.g.dart"
             }
+          ],
+          "contractDependencies": [
+            {
+              "id": "demo.startup.foundation",
+              "componentId": "demo_navigation_lab_component",
+              "requiredVersionRange": "0.1.0",
+              "requiredShapeFingerprint": "ef963961ee2df34404352b04e5c03229c5f25238acc42f222a6ce30fd4df21cd"
+            }
           ]
         },
         {
@@ -1214,6 +1236,14 @@
               "symbol": "ccrouterRegisterInitializeDemoFoundationInitTask",
               "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/init_task/navigation_lab_component_registrar.init_task.g.dart"
             }
+          ],
+          "contractDependencies": [
+            {
+              "id": "demo_order.startup.foundation",
+              "componentId": "demo_order_component",
+              "requiredVersionRange": "0.1.0",
+              "requiredShapeFingerprint": "f9fbdb847ffe8a503fb446cfe6925bf84023a152226fc0d25cc846f9cf778146"
+            }
           ]
         },
         {
@@ -1244,6 +1274,14 @@
               "role": "initTaskRegistration",
               "symbol": "ccrouterRegisterInitializeDemoOptionalDependentInitTask",
               "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/init_task/navigation_lab_component_registrar.init_task.g.dart"
+            }
+          ],
+          "contractDependencies": [
+            {
+              "id": "demo.startup.optional-sdk",
+              "componentId": "demo_navigation_lab_component",
+              "requiredVersionRange": "0.1.0",
+              "requiredShapeFingerprint": "a1000ff9ae3a0ead579ed47281ee8efe911f49b9cda61ec8eb7c4174cb689fe5"
             }
           ]
         },
@@ -1303,6 +1341,14 @@
               "symbol": "ccrouterRegisterInitializeDemoParallelPrimaryInitTask",
               "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/init_task/navigation_lab_component_registrar.init_task.g.dart"
             }
+          ],
+          "contractDependencies": [
+            {
+              "id": "demo.startup.foundation",
+              "componentId": "demo_navigation_lab_component",
+              "requiredVersionRange": "0.1.0",
+              "requiredShapeFingerprint": "ef963961ee2df34404352b04e5c03229c5f25238acc42f222a6ce30fd4df21cd"
+            }
           ]
         },
         {
@@ -1333,6 +1379,14 @@
               "role": "initTaskRegistration",
               "symbol": "ccrouterRegisterInitializeDemoParallelSecondaryInitTask",
               "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/init_task/navigation_lab_component_registrar.init_task.g.dart"
+            }
+          ],
+          "contractDependencies": [
+            {
+              "id": "demo.startup.foundation",
+              "componentId": "demo_navigation_lab_component",
+              "requiredVersionRange": "0.1.0",
+              "requiredShapeFingerprint": "ef963961ee2df34404352b04e5c03229c5f25238acc42f222a6ce30fd4df21cd"
             }
           ]
         },

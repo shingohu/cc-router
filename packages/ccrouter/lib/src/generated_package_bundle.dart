@@ -1,3 +1,4 @@
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 import 'package:ccrouter_core/ccrouter_core.dart' show CCComponentManifest;
 
 import 'route_catalog.dart';
@@ -21,6 +22,9 @@ enum CCGeneratedPackageBundleErrorType {
 
   /// Resolved component dependencies contain a cycle.
   componentDependencyCycle,
+
+  /// Contract descriptors or consumer requirements are incompatible.
+  contractCompatibility,
 }
 
 /// Describes an invalid generated Package graph at the Host boundary.
@@ -33,6 +37,7 @@ final class CCGeneratedPackageBundleError implements Exception {
   const CCGeneratedPackageBundleError({
     required this.type,
     required this.message,
+    this.contractIssue,
   });
 
   /// Stable category suitable for diagnostics and tests.
@@ -40,6 +45,9 @@ final class CCGeneratedPackageBundleError implements Exception {
 
   /// Explanation containing the conflicting Package or component identities.
   final String message;
+
+  /// Structured Contract failure when [type] is [contractCompatibility].
+  final CCContractCompatibilityIssue? contractIssue;
 
   @override
   String toString() => 'CCGeneratedPackageBundleError(${type.name}): $message';
@@ -65,6 +73,7 @@ final class CCGeneratedPackageBundle {
     Iterable<CCComponentManifest> componentManifests = const [],
     CCFlutterRouteCatalog routeCatalog = const CCFlutterRouteCatalog.empty(),
     Iterable<CCGeneratedPackageBundle> dependencies = const [],
+    this.contractBundle,
   }) : componentManifests = List.unmodifiable(componentManifests),
        routeCatalog = routeCatalog,
        dependencies = List.unmodifiable(dependencies) {
@@ -108,6 +117,9 @@ final class CCGeneratedPackageBundle {
 
   /// Generated bundles imported only from direct Pub dependencies.
   final List<CCGeneratedPackageBundle> dependencies;
+
+  /// Contract descriptors and consumer requirements generated for this Package.
+  final CCContractBundleDescriptor? contractBundle;
 
   /// Resolves root Package bundles into one deterministic Host assembly.
   ///
@@ -161,6 +173,19 @@ final class CCGeneratedPackageBundle {
       visit(root);
     }
 
+    final contractBundles = [
+      for (final package in orderedPackages)
+        if (package.contractBundle != null) package.contractBundle!,
+    ];
+    final contractIssues = CCContractBundleDescriptor.validate(contractBundles);
+    if (contractIssues.isNotEmpty) {
+      throw CCGeneratedPackageBundleError(
+        type: CCGeneratedPackageBundleErrorType.contractCompatibility,
+        contractIssue: contractIssues.first,
+        message: contractIssues.map((issue) => issue.toString()).join(' '),
+      );
+    }
+
     final manifests = _orderComponentManifests(orderedPackages);
     final versions = <String, String>{
       for (final manifest in manifests) manifest.id: manifest.version,
@@ -172,6 +197,7 @@ final class CCGeneratedPackageBundle {
         orderedPackages.map((bundle) => bundle.routeCatalog),
         componentVersions: versions,
       ),
+      contractBundle: _mergeContractBundles(contractBundles),
     );
   }
 }
@@ -187,6 +213,7 @@ final class CCGeneratedHostAssembly {
     required this.packages,
     required this.componentManifests,
     required this.routeCatalog,
+    required this.contractBundle,
   });
 
   /// Resolved Packages in dependency-before-dependant deterministic order.
@@ -197,6 +224,35 @@ final class CCGeneratedHostAssembly {
 
   /// Merged backend-neutral Flutter destinations for this Host.
   final CCFlutterRouteCatalog routeCatalog;
+
+  /// Resolved Contract descriptors and consumer requirements, when generated.
+  final CCContractBundleDescriptor? contractBundle;
+}
+
+CCContractBundleDescriptor? _mergeContractBundles(
+  Iterable<CCContractBundleDescriptor> bundles,
+) {
+  final values = bundles.toList(growable: false);
+  if (values.isEmpty) return null;
+  final contracts = <String, CCContractDescriptor>{};
+  final requirements = <String, CCContractRequirement>{};
+  for (final bundle in values) {
+    for (final contract in bundle.contracts) {
+      contracts.putIfAbsent(contract.id, () => contract);
+    }
+    for (final requirement in bundle.requirements) {
+      final key =
+          '${requirement.consumerPackage}\u0000${requirement.kind.name}\u0000'
+          '${requirement.contractId}\u0000${requirement.ownerComponentId}';
+      requirements.putIfAbsent(key, () => requirement);
+    }
+  }
+  return CCContractBundleDescriptor(
+    packageName: 'resolved-host',
+    packageVersion: '0.0.0',
+    contracts: contracts.values,
+    requirements: requirements.values,
+  );
 }
 
 /// Orders component manifests and validates their cross-Package dependency graph.

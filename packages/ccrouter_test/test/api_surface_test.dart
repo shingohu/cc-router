@@ -35,6 +35,13 @@ const _adapterSpiNames = <String>{
 const _hostContractNames = <String>{
   ..._adapterSpiNames,
   'CCRouteRestorationOpportunityReason',
+  'CCContractBundleDescriptor',
+  'CCContractCompatibilityCode',
+  'CCContractCompatibilityError',
+  'CCContractCompatibilityIssue',
+  'CCContractDescriptor',
+  'CCContractKind',
+  'CCContractRequirement',
 };
 
 const _businessHiddenContractNames = <String>{
