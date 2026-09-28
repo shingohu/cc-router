@@ -67,7 +67,7 @@ Read [implementation-patterns.md](references/implementation-patterns.md) when ad
 - Keep the analytics dispatcher behind an explicit `CCAnalyticsPolicy`: its default is consent-denied, and the app must call `updatePolicy` after privacy consent. Sampling and consent filtering happen before queueing; revocation clears pending events, while already-running sink writes cannot be retracted.
 - Use `ccrouter_auto_track` only when the app opts in to explicit `CCAnalyticsScrollable` or `CCAnalyticsExposureTarget` wrappers. Configure exposure thresholds deliberately; do not treat the approximation as ad verification or a security signal.
 - Use `ccrouter_devtools` only for an application-owned debug route, drawer, or local overlay. The `CCRouterDevToolsPanel` is read-only and must not be used as a navigation, retry, scope disposal, component activation, or Adapter control surface.
-- Enable `ccrouter_analyzer_plugin` only through the host Package's Analysis Server bootstrap. Keep its Analyzer dependency isolated from the application Workspace; do not add a path dependency to the rule Package when the Analysis Server will copy the bootstrap to a temporary directory.
+- Enable `ccrouter_analyzer_plugin` only through the host Package's Analysis Server bootstrap. Keep its Analyzer dependency isolated from the application Workspace; do not add a path dependency to the rule Package when the Analysis Server will copy the bootstrap to a temporary directory. Pin unreleased Git bootstraps to a reviewed commit and use the isolated loader `analyze/compile` smoke; switch to the provided Hosted manifest only after publication. If the plugin is unavailable or incompatible, disable the bootstrap and keep Dart Analyzer plus `ccrouter generate --check` as the authoritative gates.
 - Keep analytics separate from diagnostics: `CCDiagnosticEvent` explains framework execution and failure, while `CCAnalyticsEvent` represents a product behavior. Analytics properties must use validated primitive values and must not contain credentials, full URI values, Widgets, exceptions, or business objects. Analytics Sink failures and queue pressure must never alter navigation or component results.
 - Use `CCRouter.traceBundle(traceId)` for bounded local troubleshooting across nested calls. It is not an audit log, replay source, or business Event store; records may be incomplete after capacity rotation.
 
@@ -95,6 +95,15 @@ Read [implementation-patterns.md](references/implementation-patterns.md) when ad
 - Use **Event** for an already completed fact delivered to zero or more independent subscribers.
 - Use **InitTask** for one Runtime-lifetime startup task with dependencies or an explicit Gate.
 - Do not create a new public framework abstraction when these capabilities already express the behavior.
+
+For namespace-aware key-value storage, use a Service with an explicit namespace value
+object and typed primitive/JSON methods. Keep global, guest, user, API-environment,
+and hardware namespaces distinct; the same key in two namespaces must not alias.
+Treat a namespace as an isolation and lifecycle selector, not as encryption or an
+authorization boundary. Keep the persistence/secure-storage implementation behind a
+Backend SPI and inject it from the Host or component Composition Root. A memory Fake
+is appropriate for Pure Dart and Widget tests; do not expose a vendor storage type in
+the Service Contract.
 
 ## Navigation Policy Rules
 

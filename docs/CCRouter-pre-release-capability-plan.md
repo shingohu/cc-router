@@ -18,7 +18,7 @@
 | 路由到源码图形化跳转 | 中高，缩短定位时间 | 高，已有 source location 和 `ccrouter find` | P1 | 低风险，优先实现 |
 | 组件依赖图高级交互 | 中高，帮助发现依赖方向和缺失 Owner | 高 | P1 | 只读筛选、聚焦、反向依赖即可 |
 | Service/Command/Event/InitTask 调用链图 | 高，解决跨组件回溯问题 | 中，需要统一 Trace 边模型 | P1 | 先做单次 Trace 链，不承诺全局历史调用图 |
-| Analyzer Demo bootstrap 使用 Git `main` | 中，验证未发布插件修复可被 Demo 使用 | 高，当前已具备 | P0 收口 | 保留 Git `main`，增加可验证状态和发布切换说明 |
+| Analyzer Demo bootstrap 使用 Git `main` | 中，验证未发布插件修复可被 Demo 使用 | 高，当前已具备 | P0 收口 | 保留固定 Git commit，增加可验证状态和 Hosted 切换说明 |
 | 全局 Widget 自动识别 | 中，接入成本低但误报/隐私/性能风险高 | 中低，Flutter Widget 树无法可靠表达业务语义 | 观察项 | 不作为默认能力，不做基于文本/随机 Key 的全局猜测 |
 | 黑名单 | 中高，能控制自动采集边界 | 高，但必须建立稳定 Target/Scope 语义 | P1 | 只做显式规则，不允许绕过 Consent |
 | 通用节流 | 高，控制高频滚动/曝光压力 | 高 | P0 | 统一放到 Dispatcher/Target 层，不能由供应商各自实现 |
@@ -33,7 +33,7 @@
 推荐落地顺序：
 
 1. 先冻结 Contract 兼容协议、快照协议和性能指标；
-2. 完成 Analyzer Git `main` 验证和 Analytics Consent/Foreign Popup 回归；
+2. 完成 Analyzer 固定 Git ref/Hosted fallback 验证和 Analytics Consent/Foreign Popup 回归；
 3. 建立自动埋点的节流、黑名单、平台矩阵和基准；
 4. 扩展 Catalog/Runtime 快照协议，随后开发官方 DevTools Extension；
 5. 增加高级脚手架；
@@ -259,19 +259,22 @@ ccrouter_analyzer_plugin:
   git:
     url: https://github.com/shingohu/cc-router.git
     path: packages/ccrouter_analyzer_plugin
-    ref: main
+    ref: 97c72daae65d0dd01e1ecd5263c647d6b213f814
 ```
 
 这个配置有正向收益：可以在 Hosted 发布前让 Demo 验证最新插件修复，同时不把 Analyzer 版本
 约束混入生成器 Workspace。它不是正式发布依赖，不能复制到生产组件模板。
 
+同目录的 `pubspec.hosted.yaml` 提供发布后的 Hosted fallback。两个 manifest 不能同时作为
+同一个 bootstrap Package 的活动依赖。
+
 实施收口：
 
-1. 保留 Demo Git `main` bootstrap，增加 `pub get`、Analysis Server 启动和诊断 smoke test；
+1. 保留 Demo 固定 Git commit bootstrap，增加 `pub get`、loader analyze/compile 和诊断 smoke；
 2. 对每次插件提交记录 commit/ref 和 Analyzer/`analyzer_plugin` 版本；
 3. 插件不可用时业务分析和 `generate --check` 仍必须通过；
 4. Hosted 发布后新增 Hosted bootstrap 回归，Demo 再切换到版本约束；
-5. 不把 Git `main` 写入稳定组件脚手架或公开集成文档作为生产推荐。
+5. 不把 Git `main` 或 Git commit 写入稳定组件脚手架或公开集成文档作为生产推荐。
 
 ## 7. 自动埋点设计与实施
 
@@ -418,7 +421,9 @@ CLI 继续保持非覆盖式，增加可选模板：
 - [x] 性能、队列、RSS/Heap 和长时间运行基线脚本；已覆盖混合能力生成、Runtime 并发与
   资源回收，并提供独立进程的 `runtime_long_run.dart` RSS 趋势入口。绝对 RSS 不设跨平台
   阈值，Heap 细分仍需目标平台 VM Service 采样。
-- [x] Demo Analyzer Git `main` bootstrap 已接入；补 smoke/status 回归。
+- [x] Demo Analyzer bootstrap 已接入固定 Git commit；插件 Package 兼容性测试、loader
+  `analyze/compile` smoke 和 Hosted fallback manifest 均已补齐。发布后切换 Hosted 时需重新
+  执行同一组 smoke，插件不可用仍安全降级到 Dart Analyzer/CLI 门禁。
 
 ### Phase 1：稳定性与隐私（P0）
 
@@ -471,7 +476,7 @@ CLI 继续保持非覆盖式，增加可选模板：
 本计划只有在以下条件同时满足时才可标记正式发布前收口：
 
 1. Contract 兼容检查能在生成/聚合阶段阻止不兼容组合，并有稳定错误码；
-2. Analyzer Git `main`、Hosted fallback 和插件失效降级均有验证；
+2. Analyzer 固定 Git ref、Hosted fallback 和插件失效降级均有验证；
 3. Consent 和 Foreign Popup 归因测试自动通过；
 4. DevTools Extension 只读快照、源码跳转和调用链在 Demo 中可用；
 5. 生成脚手架通过非覆盖、生成和分析回归；

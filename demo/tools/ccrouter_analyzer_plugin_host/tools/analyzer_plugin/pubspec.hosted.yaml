@@ -1,0 +1,11 @@
+name: ccrouter_demo_analyzer_plugin_bootstrap
+description: Hosted fallback manifest for the CCRouter demo Analyzer bootstrap.
+publish_to: none
+
+environment:
+  sdk: ^3.10.0
+
+dependencies:
+  analyzer: 8.4.0
+  analyzer_plugin: 0.13.10
+  ccrouter_analyzer_plugin: ^0.1.0

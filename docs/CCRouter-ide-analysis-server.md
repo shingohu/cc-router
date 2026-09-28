@@ -75,12 +75,21 @@ demo/tools/ccrouter_analyzer_plugin_host/
 
 Demo 的 `pubspec.yaml` 只依赖这个不带 Analyzer 约束的 Host Package；真正的规则 Package
 在 bootstrap 的独立依赖环境中解析。这样不会把 Analyzer 8.4.0 与 Workspace 生成器的
-Analyzer 10 混在一个依赖图里。bootstrap 使用仓库 Git 依赖，提交规则 Package 后可由
-Analysis Server 复制到临时目录并正常启动；发布后应将该 Git 依赖替换成 Hosted 版本。
+Analyzer 10 混在一个依赖图里。bootstrap 当前使用远端 `main` 上固定的 commit
+`97c72daae65d0dd01e1ecd5263c647d6b213f814`，提交规则 Package 后可由 Analysis Server
+复制到临时目录并正常启动。bootstrap 目录同时保留 `pubspec.hosted.yaml` 作为发布后的
+Hosted fallback；发布到 Hosted 后只能二选一替换活动 manifest，不能在同一个 bootstrap
+Package 同时声明 Git 和 Hosted 两个来源。
 
-修改 `packages/ccrouter_analyzer_plugin` 后，在尚未提交到 Git 的本地工作区，不能直接用
-Analysis Server 验证 Git bootstrap 的新代码。可在 bootstrap 的临时本地验证环境中使用
-绝对 path override 验证，验证完成后恢复 Git 依赖；绝对 path 不得提交。
+Loader smoke 使用 `dart analyze` 和 `dart compile exe bin/plugin.dart`，只验证依赖解析和
+Analysis Server entrypoint 可加载，不会启动常驻 Analysis Server。插件启动失败或版本不兼容
+时，应关闭该 bootstrap，继续使用 Dart Analyzer 和 `ccrouter generate --check`；这不会改变
+应用构建或生成器门禁。
+
+修改 `packages/ccrouter_analyzer_plugin` 后，在尚未推送并固定到远端的本地工作区，不能直接
+用 Git bootstrap 验证新代码。可在 bootstrap 的临时本地验证环境中使用绝对 path override
+验证，验证完成后恢复固定 Git ref；绝对 path 不得提交。Git ref 更新前必须先运行插件
+Package 的 analyze/test 和 loader smoke。
 
 Demo 运行时还接入了 `ccrouter_devtools`：进入 Navigation Lab 的“诊断”分区，点击
 “打开 CCRouter DevTools”，即可查看只读 Overview、Components、Entries、Timeline、

@@ -125,8 +125,8 @@
   API、`ccrouter find`、Catalog 与 `generate --check` 仍分别承担补全、源码定位和最终门禁。
   插件不执行生成、不替代 Workspace Validator。详见
   [IDE / Analysis Server 集成](CCRouter-ide-analysis-server.md)。
-- [x] Demo Analyzer bootstrap 已切换为 Git `main` 依赖，保留独立 Analyzer 依赖图；仍需补充
-  commit/ref、启动 smoke 和 Hosted fallback 回归。
+- [x] Demo Analyzer bootstrap 已切换为固定 Git commit，保留独立 Analyzer 依赖图；增加
+  loader `analyze/compile` smoke、兼容性边界测试和发布后的 Hosted fallback manifest。
 - [ ] 建立 Catalog 与 Runtime 快照联动协议、Trace Edge 和源码跳转基础，作为官方 DevTools
   Extension 的只读数据基础。
 - [ ] 实现独立官方 Flutter/Dart DevTools Extension；保持现有 `ccrouter_devtools` Widget 面板

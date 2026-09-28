@@ -23,6 +23,8 @@ fvm dart run ccrouter_generator:ccrouter generate <host-root> --check
 
 If the plugin is unavailable or incompatible with the current Analysis Server,
 disable it and continue using Dart Analyzer plus the CLI gate. Do not weaken
-public API boundaries to accommodate plugin installation. See
+public API boundaries to accommodate plugin installation. Unreleased Git
+bootstraps must pin a reviewed commit; after publication, use the bootstrap's
+Hosted manifest and rerun the same loader `analyze/compile` smoke. See
 [`docs/CCRouter-ide-analysis-server.md`](../../../docs/CCRouter-ide-analysis-server.md)
 for dependency setup and the current Analyzer version isolation rationale.

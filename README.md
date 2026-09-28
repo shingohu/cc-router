@@ -57,9 +57,10 @@ analyzer:
 对应的 `@CCRoute` 源文件，避免生成成功后仍保留旧的“生成物缺失”提示。
 当前仓库 Demo 已在 `demo/analysis_options.yaml` 启用它，并通过
 `demo/tools/ccrouter_analyzer_plugin_host` 提供官方要求的 `tools/analyzer_plugin` bootstrap。
-bootstrap 使用 Git 依赖隔离 Analyzer 版本；正式项目应改为已发布的
-`ccrouter_analyzer_plugin` 版本，不能把本地 Workspace path 直接放进 bootstrap，因为
-Analysis Server 会把 bootstrap 复制到临时目录。完整接入和 Analyzer 版本边界见
+bootstrap 使用远端固定 Git commit 隔离 Analyzer 版本；发布后可切换到同目录的
+`pubspec.hosted.yaml` Hosted manifest。不能把本地 Workspace path 直接放进 bootstrap，因为
+Analysis Server 会把 bootstrap 复制到临时目录。完整接入、固定 ref、Hosted fallback 和
+Analyzer 版本边界见
 [`docs/CCRouter-ide-analysis-server.md`](docs/CCRouter-ide-analysis-server.md)。
 
 ### DevTools 只读面板
