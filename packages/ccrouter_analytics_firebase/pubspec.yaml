@@ -1,0 +1,11 @@
+name: ccrouter_analytics_firebase
+description: Optional Firebase Analytics mapping for CCRouter events.
+version: 0.1.0
+resolution: workspace
+publish_to: none
+
+environment:
+  sdk: ^3.10.0
+
+dependencies:
+  ccrouter_analytics: ^0.1.0

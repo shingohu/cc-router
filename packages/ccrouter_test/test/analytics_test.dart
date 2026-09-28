@@ -77,6 +77,50 @@ void main() {
       expect(dispatcher.filteredEventCount, 2);
     });
 
+    test('applies blacklist and deterministic per-event throttling', () {
+      var now = DateTime(2026);
+      final sink = _RecordingSink();
+      final dispatcher = CCAnalyticsEventDispatcher(
+        sinks: [sink],
+        policy: CCAnalyticsPolicy(
+          consentGranted: true,
+          blockedEventIds: ['custom.blocked'],
+          throttleWindow: const Duration(seconds: 1),
+        ),
+        clock: () => now,
+      );
+
+      expect(dispatcher.dispatch(_event('custom.blocked')), isFalse);
+      expect(dispatcher.dispatch(_event('custom.throttled')), isTrue);
+      expect(dispatcher.dispatch(_event('custom.throttled')), isFalse);
+      now = now.add(const Duration(seconds: 1));
+      expect(dispatcher.dispatch(_event('custom.throttled')), isTrue);
+      expect(dispatcher.blacklistedEventCount, 1);
+      expect(dispatcher.throttledEventCount, 1);
+    });
+
+    test('revoking consent resets throttle state and pending events', () {
+      var now = DateTime(2026);
+      final dispatcher = CCAnalyticsEventDispatcher(
+        sinks: [_RecordingSink()],
+        policy: CCAnalyticsPolicy(
+          consentGranted: true,
+          throttleWindow: const Duration(minutes: 1),
+        ),
+        clock: () => now,
+      );
+      expect(dispatcher.dispatch(_event('custom.event')), isTrue);
+      dispatcher.updatePolicy(CCAnalyticsPolicy(consentGranted: false));
+      now = now.add(const Duration(seconds: 1));
+      dispatcher.updatePolicy(
+        CCAnalyticsPolicy(
+          consentGranted: true,
+          throttleWindow: const Duration(minutes: 1),
+        ),
+      );
+      expect(dispatcher.dispatch(_event('custom.event')), isTrue);
+    });
+
     test(
       'sampling uses the injected decision source deterministically',
       () async {

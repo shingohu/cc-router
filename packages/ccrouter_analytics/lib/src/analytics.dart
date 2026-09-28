@@ -327,12 +327,25 @@ final class CCAnalyticsPolicy {
     this.enabled = true,
     this.consentGranted = false,
     this.sampleRate = 1,
-  }) {
+    Iterable<String> blockedEventIds = const [],
+    this.throttleWindow,
+  }) : blockedEventIds = Set.unmodifiable(blockedEventIds) {
     if (sampleRate < 0 || sampleRate > 1) {
       throw ArgumentError.value(
         sampleRate,
         'sampleRate',
         'Must be between 0 and 1.',
+      );
+    }
+    for (final eventId in this.blockedEventIds) {
+      _validateAnalyticsEventId(eventId);
+    }
+    final window = throttleWindow;
+    if (window != null && window <= Duration.zero) {
+      throw ArgumentError.value(
+        throttleWindow,
+        'throttleWindow',
+        'Must be positive when provided.',
       );
     }
   }
@@ -346,11 +359,26 @@ final class CCAnalyticsPolicy {
   /// Fraction of eligible events to accept, from 0 to 1.
   final double sampleRate;
 
+  /// Stable Event IDs that must never enter the analytics queue.
+  ///
+  /// Use this for privacy or product-level exclusions. The rule is applied
+  /// before sampling and queue accounting, so blocked events cannot consume
+  /// memory or reach any provider Adapter.
+  final Set<String> blockedEventIds;
+
+  /// Optional minimum interval between accepted events with the same ID.
+  ///
+  /// This is a provider-neutral safety valve for high-frequency click,
+  /// scroll, or exposure sources. A null value disables common throttling.
+  final Duration? throttleWindow;
+
   /// Creates a policy with selected fields replaced.
   CCAnalyticsPolicy copyWith({
     bool? enabled,
     bool? consentGranted,
     double? sampleRate,
+    Iterable<String>? blockedEventIds,
+    Duration? throttleWindow,
   }) {
     final nextSampleRate = sampleRate ?? this.sampleRate;
     if (nextSampleRate < 0 || nextSampleRate > 1) {
@@ -364,6 +392,8 @@ final class CCAnalyticsPolicy {
       enabled: enabled ?? this.enabled,
       consentGranted: consentGranted ?? this.consentGranted,
       sampleRate: nextSampleRate,
+      blockedEventIds: blockedEventIds ?? this.blockedEventIds,
+      throttleWindow: throttleWindow ?? this.throttleWindow,
     );
   }
 }
@@ -395,12 +425,14 @@ final class CCAnalyticsEventDispatcher {
     this.onSinkError,
     CCAnalyticsPolicy? policy,
     double Function()? randomSource,
+    DateTime Function()? clock,
   }) : sinks = List.unmodifiable(sinks),
        _policy = policy ?? CCAnalyticsPolicy() {
     if (capacity <= 0) {
       throw ArgumentError.value(capacity, 'capacity', 'Must be positive.');
     }
     _randomSource = randomSource ?? _defaultAnalyticsRandomSource;
+    _clock = clock ?? DateTime.now;
   }
 
   /// Maximum number of events retained while sinks are busy.
@@ -420,6 +452,12 @@ final class CCAnalyticsEventDispatcher {
 
   /// Number of events rejected by [policy] before queueing.
   int get filteredEventCount => _filteredEventCount;
+
+  /// Number of events rejected specifically by the policy blacklist.
+  int get blacklistedEventCount => _blacklistedEventCount;
+
+  /// Number of events rejected by the common per-ID throttle window.
+  int get throttledEventCount => _throttledEventCount;
 
   /// Whether [close] has stopped accepting new events.
   bool get isClosed => _closed;
@@ -447,6 +485,7 @@ final class CCAnalyticsEventDispatcher {
   /// constructing or enabling the corresponding provider sink.
   void updatePolicy(CCAnalyticsPolicy nextPolicy) {
     _policy = nextPolicy;
+    _lastAcceptedAt.clear();
     if (!nextPolicy.enabled || !nextPolicy.consentGranted) {
       _queue.clear();
     }
@@ -475,11 +514,23 @@ final class CCAnalyticsEventDispatcher {
   /// Number of events filtered by consent, enablement, or sampling.
   int _filteredEventCount = 0;
 
+  /// Number of events excluded by [CCAnalyticsPolicy.blockedEventIds].
+  int _blacklistedEventCount = 0;
+
+  /// Number of events excluded by [CCAnalyticsPolicy.throttleWindow].
+  int _throttledEventCount = 0;
+
   /// Current mutable policy slot updated only through [updatePolicy].
   CCAnalyticsPolicy _policy;
 
   /// Random source isolated for deterministic sampling tests.
   late final double Function() _randomSource;
+
+  /// Injected clock used for deterministic throttling tests.
+  late final DateTime Function() _clock;
+
+  /// Last accepted timestamp per stable event ID.
+  final Map<String, DateTime> _lastAcceptedAt = {};
 
   /// Schedules exactly one asynchronous queue drain.
   void _scheduleDrain() {
@@ -515,6 +566,23 @@ final class CCAnalyticsEventDispatcher {
         (policy.sampleRate < 1 && _randomSource() >= policy.sampleRate)) {
       _filteredEventCount++;
       return false;
+    }
+    if (policy.blockedEventIds.contains(event.eventId)) {
+      _filteredEventCount++;
+      _blacklistedEventCount++;
+      return false;
+    }
+    final throttleWindow = policy.throttleWindow;
+    if (throttleWindow != null) {
+      final now = _clock();
+      final lastAccepted = _lastAcceptedAt[event.eventId];
+      if (lastAccepted != null &&
+          now.difference(lastAccepted) < throttleWindow) {
+        _filteredEventCount++;
+        _throttledEventCount++;
+        return false;
+      }
+      _lastAcceptedAt[event.eventId] = now;
     }
     return true;
   }

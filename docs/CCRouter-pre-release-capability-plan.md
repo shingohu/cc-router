@@ -420,9 +420,9 @@ CLI 继续保持非覆盖式，增加可选模板：
 
 ### Phase 1：稳定性与隐私（P0）
 
-- [ ] Analytics 通用节流、黑名单和平台能力声明；
-- [ ] Consent deny/grant/revoke 与 Foreign Popup 自动断言；
-- [ ] Firebase mock/真实可选 Adapter 最小闭环；
+- [x] Analytics 通用节流、黑名单和平台能力声明（平台矩阵仍需持续扩展）；
+- [x] Consent deny/grant/revoke 与 Foreign Popup 自动断言；
+- [x] Firebase mock/真实可选 Adapter 最小闭环；
 - [ ] 多平台和长时间 Runtime 回归第一轮。
 
 ### Phase 2：Contract 兼容门禁（P0/P1）

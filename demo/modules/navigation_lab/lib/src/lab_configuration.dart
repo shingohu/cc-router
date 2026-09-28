@@ -13,7 +13,7 @@ final demoDiagnosticsSink = DemoDiagnosticsSink();
 final demoAnalyticsSink = DemoAnalyticsSink();
 final demoAnalyticsDispatcher = CCAnalyticsEventDispatcher(
   sinks: [demoAnalyticsSink],
-  policy: CCAnalyticsPolicy(consentGranted: true),
+  policy: CCAnalyticsPolicy(consentGranted: false),
 );
 final demoNavigationAnalytics = CCRouterNavigationAnalytics(
   dispatcher: demoAnalyticsDispatcher,
@@ -26,6 +26,16 @@ final demoAnalyticsTracker = CCAnalyticsTracker(
     outlet: 'root',
   ),
 );
+
+/// Updates the Demo's product analytics consent without changing navigation.
+void setDemoAnalyticsConsent(bool granted) {
+  demoAnalyticsDispatcher.updatePolicy(
+    demoAnalyticsDispatcher.policy.copyWith(consentGranted: granted),
+  );
+  demoNavigationLabStore.record(
+    'Analytics Consent · ${granted ? 'grant' : 'deny/revoke'}',
+  );
+}
 
 void observeDemoOperation<T>(String label, Future<T> operation) {
   unawaited(
@@ -297,14 +307,24 @@ final class DemoDiagnosticsSink implements CCDiagnosticSink {
 
 /// Demo application sink that makes product events visible beside framework logs.
 final class DemoAnalyticsSink implements CCAnalyticsSink {
+  final List<CCAnalyticsEvent> _events = <CCAnalyticsEvent>[];
+
+  /// Events accepted by the provider-neutral dispatcher in this Demo session.
+  List<CCAnalyticsEvent> get events => List.unmodifiable(_events);
+
   @override
   void write(CCAnalyticsEvent event) {
+    _events.add(event);
+    if (_events.length > 100) _events.removeAt(0);
     demoApplicationLogger.recordApplication(
       'Analytics · ${event.type.name} · ${event.eventId}'
       ' · route=${event.routeId ?? '-'}'
       ' · nav=${event.navigationId ?? '-'}',
     );
   }
+
+  /// Clears only the in-memory Demo sink history.
+  void clear() => _events.clear();
 }
 
 final class DemoGlobalNavigationInterceptor implements CCNavigationInterceptor {

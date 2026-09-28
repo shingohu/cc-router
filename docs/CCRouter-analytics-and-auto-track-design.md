@@ -121,12 +121,13 @@ Core 不依赖 Firebase、ThinkingData、Sentry 或 Crashlytics。
 
 - [x] 独立 `ccrouter_auto_track` Flutter 包；
 - [x] 默认关闭，只识别显式 Target；不基于 Widget 文本、随机 Key 或全局手势猜测；
-- [ ] 黑名单、通用节流和完整平台兼容矩阵；采样已由 `CCAnalyticsPolicy` 提供；
+- [x] 黑名单和通用节流；平台能力矩阵仍需随真实设备回归持续补齐；采样已由
+  `CCAnalyticsPolicy` 提供；
 - [x] 不改变手势竞技和第三方 Overlay 行为；
 
 ### P4：供应商 Adapter
 
-- [ ] Firebase Adapter；
+- [x] Firebase Adapter（通过注入 `logEvent` callback，不让 Core 依赖供应商 SDK）；
 - [ ] ThinkingData Adapter；
 - [ ] OpenTelemetry/应用日志 Adapter；
 - [x] 增加 provider-neutral Consent 开关和有界采样策略；
@@ -139,16 +140,26 @@ Core 不依赖 Firebase、ThinkingData、Sentry 或 Crashlytics。
 - [ ] current Route、Host、Outlet、Trace 关联；
 - [ ] 冷启动、导航延迟、队列压力、内存增长和销毁耗时基准；
 - [x] Demo 接入 Route Analytics、显式点击、滑动、曝光、失败与 Foreign Popup 场景；
-- [ ] Demo 增加 Analytics Consent deny/grant/revoke 和 Foreign Popup 不误归因断言。
+- [x] Demo 增加 Analytics Consent deny/grant/revoke 和 Foreign Popup 不误归因断言。
 
 ## 9. 当前状态
 
 P0、P1、P2 显式 UI 能力、P3 的独立包基础和 Consent/采样基础已实现，Demo 已接入页面、
 点击、滑动、曝光、失败与 Foreign Popup 场景。Analytics Consent 的 deny/grant/revoke 演示和
-Foreign Popup 不误归因断言尚未闭环；Firebase、ThinkingData、通用 Widget 自动猜测、
-黑名单/通用节流、HTTP/Crash Adapter 尚未实现。
+Foreign Popup 不误归因断言已闭环；Firebase 映射、黑名单和通用节流已提供，ThinkingData、
+通用 Widget 自动猜测、HTTP/Crash Adapter 尚未实现。
 
 正式发布前的实施顺序、平台能力矩阵、全局 Widget 识别的实验边界、Firebase Adapter、性能/RSS/Heap
 基线，以及 Demo 的 Consent deny/grant/revoke 和 Foreign Popup 不误归因断言，统一见
 [`CCRouter-pre-release-capability-plan.md`](CCRouter-pre-release-capability-plan.md)。本专项文档
 仍是 Analytics API 和隐私边界的详细契约；总计划不把“全局自动识别”提升为默认承诺。
+
+### 9.1 当前平台边界
+
+| 平台 | Dispatcher/Consent/Firebase 映射 | Exposure/Scroll AutoTrack | 说明 |
+| --- | --- | --- | --- |
+| Android | 支持 | Flutter Widget 测试覆盖 | 原生生命周期和 Crash 仍由应用 Adapter 接入 |
+| iOS/iPadOS | 支持 | Flutter Widget 测试覆盖 | 不读取原生控件文本或无授权设备标识 |
+| macOS/Windows | 支持 | Flutter Widget 测试覆盖 | 多窗口归因依赖 Host/Outlet 上下文 |
+| Web | 支持 | 需应用确认浏览器隐私策略 | 不默认采集 URL 全文或浏览器指纹 |
+| OHOS | Pure Dart 层支持 | 需 OHOS 真机回归 | 当前 FVM OHOS SDK 不能替代桌面 Flutter 测试矩阵 |

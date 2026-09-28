@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:ccrouter/ccrouter.dart';
+import 'package:ccrouter_analytics/ccrouter_analytics.dart';
 import 'package:ccrouter_auto_track/ccrouter_auto_track.dart';
 import 'package:ccrouter_devtools/ccrouter_devtools.dart';
 import 'package:demo_order_contracts/demo_order_contracts.dart';
@@ -352,17 +353,26 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
           () => CCRouter.navigator.push<void>(
             DemoNavigationLabRoutes.capabilities(),
           ),
-          ),
         ),
+      ),
       _ActionTile(
         icon: Icons.http_outlined,
         title: '打开 Network + Dio 实验页',
         subtitle: '抽象请求、授权/日志拦截、动态 Header 和 API 环境切换。',
         onTap: () => _run(
           'Network + Dio',
-          () => CCRouter.navigator.push<void>(
-            DemoNavigationLabRoutes.network(),
-          ),
+          () =>
+              CCRouter.navigator.push<void>(DemoNavigationLabRoutes.network()),
+        ),
+      ),
+      _ActionTile(
+        icon: Icons.storage_outlined,
+        title: '打开 KV Storage 实验页',
+        subtitle: '基本类型、JSON Map 与全局/游客/用户/环境/硬件命名空间。',
+        onTap: () => _run(
+          'KV Storage',
+          () =>
+              CCRouter.navigator.push<void>(DemoNavigationLabRoutes.storage()),
         ),
       ),
     ]),
@@ -586,6 +596,50 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
       '策略与失败',
       'Global / Route Interceptor、Redirect、Defer、Timeout、PopGuard 与兜底。',
       [
+        SwitchListTile(
+          value: demoAnalyticsDispatcher.policy.consentGranted,
+          onChanged: setDemoAnalyticsConsent,
+          title: const Text('Analytics Consent'),
+          subtitle: const Text('deny/grant/revoke 会清理待发送队列；未同意时事件不会进入 Sink。'),
+        ),
+        _ActionTile(
+          icon: Icons.restart_alt,
+          title: '撤回 Analytics Consent',
+          subtitle: '模拟用户撤回同意，后续事件继续被拒绝。',
+          onTap: () {
+            setDemoAnalyticsConsent(false);
+            demoAnalyticsSink.clear();
+          },
+        ),
+        _ActionTile(
+          icon: Icons.analytics_outlined,
+          title: 'Foreign Popup 归因检查',
+          subtitle: '打开系统 Dialog，验证不会新增 CCRouter page view。',
+          onTap: () async {
+            final before = demoAnalyticsSink.events
+                .where((event) => event.type == CCAnalyticsEventType.pageView)
+                .length;
+            await showDialog<void>(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('Foreign Popup'),
+                content: const Text('这个 Dialog 不属于 CCRouter Route。'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('关闭'),
+                  ),
+                ],
+              ),
+            );
+            final after = demoAnalyticsSink.events
+                .where((event) => event.type == CCAnalyticsEventType.pageView)
+                .length;
+            demoNavigationLabStore.record(
+              'Foreign Popup attribution · ${before == after ? 'isolated' : 'unexpected'}',
+            );
+          },
+        ),
         SwitchListTile(
           value: demoNavigationLabStore.blockDetailGlobally,
           onChanged: demoNavigationLabStore.setBlockDetailGlobally,
