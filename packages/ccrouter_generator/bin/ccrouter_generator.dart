@@ -470,8 +470,9 @@ indexes without generating and matches exact capability IDs or Route Pattern val
 preserves build caches, read-only dependencies, and unknown user files.
 `aggregate` preserves the metadata-only legacy path.
 `pub-hook install` wraps the selected SDK entrypoints with a reversible post-pub
-generator hook. Non-CCRouter projects are skipped. The hook is not installed
-automatically and is not part of Flutter's internal tool snapshot.
+and run/build preflight generator hook. Non-CCRouter projects are skipped. The
+hook is not installed automatically and is not part of Flutter's internal tool
+snapshot.
 `create component <package-name> [parent-directory]` creates a new component
 Package without overwriting existing files. `create page <PageName>
 [component-directory]` creates an internal typed Route page in an existing
