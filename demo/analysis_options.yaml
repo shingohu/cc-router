@@ -1,5 +1,7 @@
 include: package:flutter_lints/flutter.yaml
 
 analyzer:
+  plugins:
+    - ccrouter_demo_analyzer_plugin
   errors:
     invalid_use_of_internal_member: error

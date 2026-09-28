@@ -18,10 +18,14 @@
 仅在开发或内部诊断构建中加入依赖：
 
 ```yaml
-dev_dependencies:
+dependencies:
   ccrouter_devtools:
     path: ../cc-router/packages/ccrouter_devtools
 ```
+
+因为面板是 Flutter Widget，任何实际导入它的应用或组件都必须放在
+`dependencies`；只有把面板封装在单独的 debug Package 并确保 Release 不编译该 Package
+时，才适合使用 `dev_dependencies`。
 
 在调试页面、Debug Drawer 或受控路由中嵌入：
 

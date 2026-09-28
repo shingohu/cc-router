@@ -324,6 +324,33 @@ void main() {
     await _unmountDemo(tester);
   });
 
+  testWidgets('diagnostics page opens the read-only CCRouter DevTools panel', (
+    tester,
+  ) async {
+    await _pumpDemo(tester);
+    await tester.tap(find.text('诊断'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('打开 CCRouter DevTools'), findsOneWidget);
+    await tester.tap(find.text('打开 CCRouter DevTools'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('CCRouter DevTools'), findsOneWidget);
+    expect(find.text('Overview'), findsOneWidget);
+    expect(find.text('Components'), findsWidgets);
+    expect(find.text('Entries'), findsOneWidget);
+    expect(find.text('Timeline'), findsOneWidget);
+    expect(find.text('Failures'), findsWidgets);
+    expect(find.text('InitTask DAG'), findsOneWidget);
+    expect(find.byTooltip('Refresh diagnostics'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Refresh diagnostics'));
+    await tester.pump();
+    expect(find.text('CCRouter DevTools'), findsOneWidget);
+
+    await _unmountDemo(tester);
+  });
+
   testWidgets('capability lab exercises Service scopes and resolution modes', (
     tester,
   ) async {

@@ -76,4 +76,34 @@ class HomePage {}
       isNot(contains('ccrouter_generated_output_missing')),
     );
   });
+
+  test('ignores an incomplete editor buffer without throwing', () {
+    expect(
+      () => CCRouterAnalyzerDiagnostics.analyze(
+        source: 'class HomePage {',
+        filePath: path.join(packageRoot, 'lib', 'src', 'home_page.dart'),
+        packageRoot: packageRoot,
+        packageName: 'sample_component',
+      ),
+      returnsNormally,
+    );
+  });
+
+  test('does not flag generated implementation imports', () {
+    final diagnostics = CCRouterAnalyzerDiagnostics.analyze(
+      source:
+          "import 'package:other_component/src/ccrouter_generated/route/x.dart';",
+      filePath: path.join(
+        packageRoot,
+        'lib',
+        'src',
+        'ccrouter_generated',
+        'host',
+        'host.g.dart',
+      ),
+      packageRoot: packageRoot,
+      packageName: 'sample_component',
+    );
+    expect(diagnostics, isEmpty);
+  });
 }

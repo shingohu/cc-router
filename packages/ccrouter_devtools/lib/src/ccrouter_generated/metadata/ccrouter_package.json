@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 2,
+  "generatorVersion": "0.1.0",
+  "package": {
+    "name": "ccrouter_devtools",
+    "version": "0.1.0"
+  },
+  "contentFingerprint": "b3e8ef8bb39a9663a894c089cd8560ce5e88f19782569c9bb3f3f3f218a5f4ea",
+  "bundle": null,
+  "dependencies": [],
+  "metadata": [],
+  "capabilityCatalog": {
+    "schemaVersion": 1,
+    "records": []
+  }
+}

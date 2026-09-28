@@ -83,3 +83,16 @@ Use for found/arrival/completion/failure observation, latency and sanitized attr
 ### Page Lifecycle
 
 Use `PageShow/PageHide` to observe whether a PageRoute is current in an active Outlet. It is not pixel visibility and not Widget creation/destruction. Use foreground/background only for app lifecycle observation. Do not own/dispose resources from these callbacks.
+
+### Development Diagnostics
+
+Use `CCRouterDevToolsPanel` from `ccrouter_devtools` only in an application-owned
+debug page, drawer, or local overlay. It consumes immutable, bounded snapshots and
+must remain observational: do not add buttons that navigate, retry, activate a
+component, dispose a Scope, or control an Adapter through the panel.
+
+Use `ccrouter_analyzer_plugin` for editor-time boundary and generated-output
+diagnostics. Its Analysis Server bootstrap is resolved in an isolated dependency
+environment; keep Analyzer versions separate from the Workspace generator and
+use `generate --check` as the authoritative build gate. The plugin never writes
+generated files or replaces a Contract/Generator validation.

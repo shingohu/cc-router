@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter_auto_track/ccrouter_auto_track.dart';
+import 'package:ccrouter_devtools/ccrouter_devtools.dart';
 import 'package:demo_order_contracts/demo_order_contracts.dart';
 import 'package:demo_web_contracts/demo_web_contracts.dart';
 import 'package:flutter/material.dart';
@@ -859,6 +860,13 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
           ? null
           : CCRouter.traceBundle(latestTrace.context.traceId);
       return _page('实时诊断', '所有数据均来自公开的只读快照；不会展示 arguments、extra 或账号敏感信息。', [
+        _ActionTile(
+          icon: Icons.developer_mode_outlined,
+          title: '打开 CCRouter DevTools',
+          subtitle: '嵌入只读面板，查看组件、Route/Backend Entry、Trace、失败和 InitTask。',
+          onTap: () => _showDevTools(context),
+        ),
+        const SizedBox(height: 8),
         Text(
           'Managed Route Entries',
           style: Theme.of(context).textTheme.titleMedium,
@@ -1025,6 +1033,16 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
       ]);
     },
   );
+
+  void _showDevTools(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (_) =>
+          const SizedBox(height: 680, child: CCRouterDevToolsPanel()),
+    );
+  }
 }
 
 final class _LabDestination {

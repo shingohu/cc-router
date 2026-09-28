@@ -29,8 +29,7 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
   /// Accepts protocol versions supported by the plugin framework.
   @override
   bool isCompatibleWith(Version serverVersion) =>
-      serverVersion >= Version(1, 0, 0) &&
-      super.isCompatibleWith(serverVersion);
+      serverVersion <= Version(1, 0, 0);
 
   /// Publishes diagnostics for one changed source file.
   @override
@@ -40,12 +39,24 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
   }) async {
     final file = resourceProvider.getFile(path);
     if (!file.exists) return;
-    final source = file.readAsStringSync();
+    // Analysis Server can forward files matching a broad context glob,
+    // including binary assets in a Flutter Host. Such files are outside the
+    // plugin's Dart-only contract and must not terminate the plugin isolate.
+    late final String source;
+    try {
+      source = file.readAsStringSync();
+    } on Object {
+      return;
+    }
     final diagnostics = CCRouterAnalyzerDiagnostics.analyze(
       source: source,
       filePath: path,
     );
-    final lineInfo = parseString(content: source, path: path).lineInfo;
+    final lineInfo = parseString(
+      content: source,
+      path: path,
+      throwIfDiagnostics: false,
+    ).lineInfo;
     final errors = diagnostics
         .map(
           (diagnostic) => AnalysisError(

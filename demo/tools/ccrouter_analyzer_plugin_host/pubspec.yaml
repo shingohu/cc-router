@@ -1,0 +1,7 @@
+name: ccrouter_demo_analyzer_plugin
+description: Host package that enables CCRouter Analysis Server diagnostics in the demo.
+version: 0.0.1
+publish_to: none
+
+environment:
+  sdk: ^3.10.0

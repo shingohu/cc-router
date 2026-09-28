@@ -26,7 +26,7 @@ CCRouter 是一个面向 Flutter 大型应用的组件化运行时与类型安�
 | `ccrouter_go_router` | 默认 GoRouter Backend、Assembler、Observer 与 Shell 接入 | 仅 Host |
 | `ccrouter_generator` | 注解处理、Host 聚合、校验、查找与清理 CLI | 仅 dev dependency |
 | `ccrouter_analyzer_plugin` | Analysis Server 实时边界与生成物诊断 | 仅 dev dependency，需显式启用 |
-| `ccrouter_devtools` | 可嵌入的只读 Component/Route/Trace/Failure/InitTask 诊断面板 | 仅 debug/dev dependency，按需接入 |
+| `ccrouter_devtools` | 可嵌入的只读 Component/Route/Trace/Failure/InitTask 诊断面板 | 按需作为 Flutter dependency 接入 |
 | `ccrouter_test` | 面向集成者的测试 Host、Fake 与测试辅助能力 | 仅 test/dev dependency |
 | `demo` | Android、iOS、macOS、Web、OHOS 平台 Host 和完整能力示例 | 示例 |
 | `demo/modules/*` | 示例组件与独立 contracts Package | 示例 |
@@ -53,7 +53,11 @@ analyzer:
 ```
 
 插件只提供轻量诊断，不执行生成、不修改源代码，也不替代 `ccrouter generate --check`。
-完整接入和 Analyzer 版本边界见
+当前仓库 Demo 已在 `demo/analysis_options.yaml` 启用它，并通过
+`demo/tools/ccrouter_analyzer_plugin_host` 提供官方要求的 `tools/analyzer_plugin` bootstrap。
+bootstrap 使用 Git 依赖隔离 Analyzer 版本；正式项目应改为已发布的
+`ccrouter_analyzer_plugin` 版本，不能把本地 Workspace path 直接放进 bootstrap，因为
+Analysis Server 会把 bootstrap 复制到临时目录。完整接入和 Analyzer 版本边界见
 [`docs/CCRouter-ide-analysis-server.md`](docs/CCRouter-ide-analysis-server.md)。
 
 ### DevTools 只读面板
@@ -68,7 +72,8 @@ const diagnosticsPage = CCRouterDevToolsPanel();
 
 面板只读展示 Component Graph、Managed/Backend Entries、Trace Timeline、Failure/Fallback
 和 InitTask DAG。它不会初始化 Runtime、导航、Pop、重试任务、销毁 Scope 或控制 Adapter；
-未初始化时显示空状态。完整数据边界和后续官方 DevTools Extension 规划见
+未初始化时显示空状态。当前 Demo 的“实时诊断”分区可以直接打开这个面板验证其只读行为。
+完整数据边界和后续官方 DevTools Extension 规划见
 [`docs/CCRouter-devtools.md`](docs/CCRouter-devtools.md)。
 
 ## 当前能力

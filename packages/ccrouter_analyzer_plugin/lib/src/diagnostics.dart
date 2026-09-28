@@ -61,12 +61,24 @@ abstract final class CCRouterAnalyzerDiagnostics {
     String? packageRoot,
     String? packageName,
   }) {
+    // Generated libraries are implementation artifacts. Their imports are
+    // intentionally allowed to cross component boundaries and are validated
+    // by the generator, not by the author-facing import rule.
+    if (_isGeneratedFile(filePath)) {
+      return const <CCRouterAnalyzerDiagnostic>[];
+    }
     final root = packageRoot ?? _findPackageRoot(filePath);
     if (root == null) return const <CCRouterAnalyzerDiagnostic>[];
     final owner = packageName ?? _readPackageName(root);
     if (owner == null) return const <CCRouterAnalyzerDiagnostic>[];
 
-    final parsed = parseString(content: source, path: filePath);
+    // Editors frequently send incomplete buffers. A parse error must not
+    // terminate the Analysis Server plugin or replace Dart's own diagnostics.
+    final parsed = parseString(
+      content: source,
+      path: filePath,
+      throwIfDiagnostics: false,
+    );
     final diagnostics = <CCRouterAnalyzerDiagnostic>[];
     for (final directive
         in parsed.unit.directives.whereType<NamespaceDirective>()) {
@@ -88,7 +100,6 @@ abstract final class CCRouterAnalyzerDiagnostics {
       );
     }
 
-    if (_isGeneratedFile(filePath)) return diagnostics;
     final sourceRelative = _relativeSourcePath(filePath, root);
     if (sourceRelative != null && sourceRelative.startsWith('lib/src/')) {
       final hasRouteAnnotation = parsed.unit.declarations
