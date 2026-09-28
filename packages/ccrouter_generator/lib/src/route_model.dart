@@ -8,6 +8,7 @@ final class _RouteModel {
     this.annotation,
     this.componentId,
     this.id,
+    this.version,
     this.patterns,
     this.primaryPatternIndex,
     this.parameters,
@@ -29,6 +30,9 @@ final class _RouteModel {
 
   /// Stable, non-empty route identity.
   final String id;
+
+  /// Independent Contract SemVer retained for metadata compatibility checks.
+  final String version;
 
   /// Normalized one-to-many patterns supplied by either annotation field.
   final List<DartObject> patterns;
@@ -125,7 +129,11 @@ final class _RouteModel {
       );
     }
     final id = annotation.read('id').stringValue;
+    final version = annotation.read('version').stringValue;
     _validateStableId(id, 'Route ID', element);
+    if (!_semanticVersionPattern.hasMatch(version)) {
+      _fail('Route "$id" must use a SemVer 2.0 Contract version.', element);
+    }
     final interceptorIds = annotation
         .read('interceptors')
         .listValue
@@ -362,6 +370,7 @@ final class _RouteModel {
       annotation,
       componentId,
       id,
+      version,
       patterns,
       primaryPatternIndex,
       parameters,

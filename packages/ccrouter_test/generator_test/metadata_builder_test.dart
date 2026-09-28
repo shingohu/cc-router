@@ -103,6 +103,14 @@ void initializeMixed() {}
       final document =
           jsonDecode(await reader.readAsString(output)) as Map<String, Object?>;
       expect(document[entry.value], isNotEmpty, reason: entry.key);
+      if (entry.key == 'route') {
+        final route = (document['routes'] as List).single as Map;
+        expect(route['version'], '0.1.0');
+        expect(
+          route['shapeFingerprint'],
+          matches(RegExp(r'^[0-9a-f]{64}$')),
+        );
+      }
     }
   });
 }

@@ -21,6 +21,7 @@ final class CCRoute<R> {
   /// the one effective primary before emitting the Runtime definition.
   const CCRoute({
     required this.id,
+    this.version = '0.1.0',
     this.pattern,
     this.patterns = const [],
     this.deepLink = CCDeepLinkPolicy.disabled,
@@ -37,6 +38,12 @@ final class CCRoute<R> {
   /// separated by `.`, `_`, or `-`. They should normally start with the owning
   /// component ID, though the generator does not force that convention.
   final String id;
+
+  /// Independent Contract SemVer used to evaluate cross-package compatibility.
+  ///
+  /// Keep this separate from the owning component version. During the 0.x
+  /// development phase consumers require an exact version and fingerprint.
+  final String version;
 
   /// Single canonical pattern for the common one-address route declaration.
   ///
@@ -105,6 +112,7 @@ final class CCRouteContract<R> {
   const CCRouteContract({
     required this.componentId,
     required this.id,
+    this.version = '0.1.0',
     this.pattern,
     this.patterns = const [],
     this.deepLink = CCDeepLinkPolicy.disabled,
@@ -127,6 +135,12 @@ final class CCRouteContract<R> {
   ///
   /// It uses the same bounded stable segment syntax as [CCRoute.id].
   final String id;
+
+  /// Independent public Route Contract SemVer.
+  ///
+  /// A shape change must not be hidden behind the component version; the
+  /// generator records this value beside the canonical route fingerprint.
+  final String version;
 
   /// Single canonical address used by the common one-pattern declaration.
   final CCRoutePattern? pattern;

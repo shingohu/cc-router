@@ -97,6 +97,7 @@ const diagnosticsPage = CCRouterDevToolsPanel();
 | Widget 点击/滑动/曝光采集 | 部分支持 | `CCAnalyticsTarget`、`ccrouter_auto_track` 提供显式点击、滚动聚合和曝光；全局 Widget 猜测仍不支持 |
 | 页面生命周期 | 已支持 | `PageShow/PageHide` 与前后台，Mixin 和 Listener 两种形式 |
 | Service | 已支持 | App/Session/Route Scope，singleton/newInstance，Key、稳定 Contract ID、lazy async readiness |
+| Namespace-aware KV Storage Demo | 已支持（Demo） | 基本类型、JSON Map、全局/游客/用户/API 环境/硬件命名空间和可替换 Backend 抽象 |
 | Command | 已支持 | 单 Handler、强类型结果、`void`、取消、超时与 Trace |
 | Event | 已支持 | 零到多个订阅者、稳定顺序、失败隔离 |
 | InitTask | 已支持 | 一次性 DAG、Gate、必需/可选失败策略 |
@@ -215,7 +216,33 @@ fvm dart run ccrouter_generator:ccrouter generate demo
 
 统一命令会运行所需的 build_runner、生成 Package 内路由代码、组件索引、Host Bundle、Catalog 和文档。生成文件位于各 Package 的 `lib/src/ccrouter_generated/`，禁止手工编辑。
 
-### 4. 初始化 Host
+### 4. 命名空间 KV Storage（Demo）
+
+`demo/modules/kv_storage` 展示一个后端无关的 KV Storage Service。调用方通过
+`DemoStorageNamespace` 明确选择数据边界：
+
+```dart
+const global = DemoStorageNamespace.global();
+final user = DemoStorageNamespace.user(accountId);
+final environment = DemoStorageNamespace.apiEnvironment('production');
+final hardware = DemoStorageNamespace.hardware(deviceId);
+
+await storage.setBool(global, 'privacy.accepted', true);
+await storage.setJson(user, 'profile.preferences', {
+  'theme': 'dark',
+  'notifications': {'enabled': true},
+});
+```
+
+支持 `String`、`int`、`double`、`bool` 和 JSON Object 的类型化读写。不同命名空间的
+相同 Key 互不覆盖；JSON 在写入和读取时都会复制，避免调用方修改内部状态。
+`CCStorageBackend` 是实现替换边界，Demo 默认使用内存 Backend，因此重启应用后数据会丢失。
+生产环境应由应用 Composition Root 接入文件、数据库或 Secure Storage Backend，并根据数据
+敏感度选择加密和清理策略；命名空间本身不是安全边界，也不会自动提供加密。
+Scoped Facade、Session/Environment/Device 上下文绑定和 Backend Placement Policy 的后续方案见
+[`docs/CCRouter-kv-storage-demo-migration.md`](docs/CCRouter-kv-storage-demo-migration.md)。
+
+### 5. 初始化 Host
 
 Host 使用生成的 Manifest 与 Catalog。新项目默认使用 managed GoRouter Backend：
 
@@ -601,6 +628,7 @@ const orderComponentId = CCComponentId('order_component');
 @CCServiceContract(
   componentId: orderComponentId,
   id: 'order.summary',
+  version: '0.1.0',
   description: 'Formats one order identity for cross-component display.',
 )
 abstract interface class OrderSummaryService {
@@ -646,6 +674,12 @@ initializer；`Future<T>` 方法会等待 readiness。生成器支持普通实�
 结果和显式类型实参会完整保留；Contract 类本身仍必须非泛型。setter/operator、Stream、
 FutureOr、callback、Flutter 类型、Contract 继承和未从公共 barrel 暴露的 `src` 类型会在生成期
 失败。组件内部 Service 仍直接使用 `CCRouter.service<T>()`，不需要声明或生成 Proxy。
+
+Route、Service、Command、Event、InitTask Contract 都有独立的 Contract SemVer。生成器会同时
+写入不包含源码路径和实现类名的 `shapeFingerprint`，Workspace 聚合会拒绝缺失或格式错误的
+版本/指纹 metadata。当前 `0.x` 阶段不承诺跨版本自动兼容；修改公共形状时应显式升级版本，
+破坏性变更使用新的 Contract ID。消费者范围校验和 Runtime Bundle descriptor 仍属于后续
+正式发布收口，不会在运行时静默协商旧 Contract。
 
 生成器会先校验 Service Owner、Consumer 和 Package exposure；Runtime 还会根据本次实际安装的
 Manifest 依赖图再次验证生成 Proxy 携带的 caller identity。旧生成物、手工调用 generated bridge、
@@ -863,7 +897,8 @@ Route API 和 Package/Host metadata。跨组件 Route 不能直接由脚手架�
 `FLUTTER_ROOT` 和当前目录向上的 `.fvm/flutter_sdk`。它只在原始
 `flutter pub get/upgrade/downgrade/add/remove` 成功后运行；当前项目没有同时解析
 `ccrouter` 和 `ccrouter_generator` 时直接跳过。它不覆盖 `dart pub`，也不实现常驻
-`watch`。SDK 切换或升级后需要重新检查 `pub-hook status`。详细语义见
+`watch`、`run` 或 `build`。`run/build` 前置生成方案已经记录，但尚未实施。
+SDK 切换或升级后需要重新检查 `pub-hook status`。详细语义见
 [`docs/CCRouter-cli-pub-hook.md`](docs/CCRouter-cli-pub-hook.md)。
 
 生成目录统一为：

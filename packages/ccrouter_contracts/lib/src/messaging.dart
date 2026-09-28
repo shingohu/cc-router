@@ -24,6 +24,7 @@ final class CCCommandContract {
   const CCCommandContract({
     this.componentId,
     required this.id,
+    this.version = '0.1.0',
     this.description = '',
   });
 
@@ -32,6 +33,9 @@ final class CCCommandContract {
 
   /// Globally stable identity used by generated clients and diagnostics.
   final String id;
+
+  /// Independent Command Contract SemVer used by generated clients.
+  final String version;
 
   /// Human-readable usage scenario exported to generated documentation.
   final String description;
@@ -79,6 +83,7 @@ final class CCEventContract {
   const CCEventContract({
     this.componentId,
     required this.id,
+    this.version = '0.1.0',
     this.description = '',
   });
 
@@ -87,6 +92,9 @@ final class CCEventContract {
 
   /// Globally stable Event identity used by Trace and metadata.
   final String id;
+
+  /// Independent Event Contract SemVer used by generated publication APIs.
+  final String version;
 
   /// Human-readable fact and usage scenario exported to documentation.
   final String description;

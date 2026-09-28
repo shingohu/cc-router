@@ -412,7 +412,8 @@ CLI 继续保持非覆盖式，增加可选模板：
 
 ### Phase 0：协议和基线（P0）
 
-- [ ] Contract 版本/fingerprint/范围的 Pure Dart 设计冻结；
+- [x] Contract 版本/fingerprint/范围的 Pure Dart 设计冻结；版本与 fingerprint 已进入新
+  metadata schema，消费者范围和 Runtime descriptor 仍按后续阶段实现；
 - [ ] Catalog/Runtime Snapshot/Trace Edge 协议冻结；
 - [ ] 性能、队列、RSS/Heap 和长时间运行基线脚本；
 - [x] Demo Analyzer Git `main` bootstrap 已接入；补 smoke/status 回归。

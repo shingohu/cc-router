@@ -7,6 +7,8 @@ import 'package:analyzer/dart/element/type.dart';
 import 'package:build/build.dart';
 import 'package:source_gen/source_gen.dart';
 
+import 'contract_fingerprint.dart';
+
 /// Maximum stable Event or Subscriber identifier length.
 const int _eventMaxStableIdLength = 128;
 
@@ -16,6 +18,14 @@ const int _eventMaxDescriptionLength = 4096;
 /// Portable syntax shared by Event and Subscriber identities.
 final RegExp _eventStableIdPattern = RegExp(
   r'^[a-z][A-Za-z0-9]*(?:[._-][A-Za-z0-9]+)*$',
+);
+
+/// SemVer 2.0 syntax used by independent Event Contracts.
+final RegExp _eventSemanticVersionPattern = RegExp(
+  r'^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)'
+  r'(?:-(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)'
+  r'(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*)?'
+  r'(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$',
 );
 
 /// Matches generated Event contracts.
@@ -127,7 +137,7 @@ final class _EventMetadataBuilder implements Builder {
     final source = buildStep.inputId.path;
     final registrationLibrary = _eventGeneratedLibraryPath(source);
     final payload = <String, Object?>{
-      'schemaVersion': 3,
+      'schemaVersion': 4,
       'package': package,
       'source': source,
       'componentDeclarations': <String>[],
@@ -146,11 +156,35 @@ final class _EventMetadataBuilder implements Builder {
           <String, Object?>{
             'id': contract.id,
             'componentId': contract.componentId,
+            'version': contract.version,
             'description': contract.description,
             'package': package,
             'source': source,
             'type': contract.element.displayName,
             'declaration': _eventSourceReference(contract.element),
+            'payloadFields': [
+              for (final field in contract.element.fields.where(
+                (field) => !field.isStatic,
+              ))
+                <String, Object?>{
+                  'name': field.displayName,
+                  'type': field.type.getDisplayString(),
+                },
+            ],
+            'shapeFingerprint': contractShapeFingerprint(<String, Object?>{
+              'kind': 'event',
+              'id': contract.id,
+              'owner': contract.componentId,
+              'payloadFields': [
+                for (final field in contract.element.fields.where(
+                  (field) => !field.isStatic,
+                ))
+                  <String, Object?>{
+                    'name': field.displayName,
+                    'type': field.type.getDisplayString(),
+                  },
+              ],
+            }),
           },
       ],
       'eventSubscriptions': [
@@ -194,6 +228,7 @@ final class _EventContractModel {
     required this.element,
     required this.componentId,
     required this.id,
+    required this.version,
     required this.description,
   });
 
@@ -205,6 +240,9 @@ final class _EventContractModel {
 
   /// Stable Event identity.
   final String id;
+
+  /// Independent Event Contract SemVer.
+  final String version;
 
   /// Documented fact and usage scenario.
   final String description;
@@ -269,7 +307,11 @@ List<_EventContractModel> _readEventContracts(LibraryReader library) {
       _validateEventId(componentId, 'Component ID', element);
     }
     final id = annotated.annotation.read('id').stringValue;
+    final version = annotated.annotation.read('version').stringValue;
     _validateEventId(id, 'Event ID', element);
+    if (!_eventSemanticVersionPattern.hasMatch(version)) {
+      _failEvent('Event "$id" must use SemVer 2.0.', element);
+    }
     if (!ids.add(id)) {
       _failEvent('Duplicate Event ID "$id" in this library.', element);
     }
@@ -285,6 +327,7 @@ List<_EventContractModel> _readEventContracts(LibraryReader library) {
         element: element,
         componentId: componentId,
         id: id,
+        version: version,
         description: description,
       ),
     );
@@ -382,7 +425,11 @@ _EventContractModel _readEventContract(ClassElement element) {
     _failEvent('${element.displayName} must implement CCEvent.', element);
   }
   final id = annotation.getField('id')?.toStringValue();
+  final version = annotation.getField('version')?.toStringValue() ?? '0.1.0';
   if (id == null) _failEvent('CCEventContract requires a const id.', element);
+  if (!_eventSemanticVersionPattern.hasMatch(version)) {
+    _failEvent('Event "$id" must use SemVer 2.0.', element);
+  }
   return _EventContractModel(
     element: element,
     componentId: annotation
@@ -390,6 +437,7 @@ _EventContractModel _readEventContract(ClassElement element) {
         ?.getField('value')
         ?.toStringValue(),
     id: id,
+    version: version,
     description: annotation.getField('description')?.toStringValue() ?? '',
   );
 }

@@ -8,6 +8,7 @@ Use this guide before selecting an API. Start from the business semantics, not f
 | --- | --- | --- |
 | Show a page/modal and optionally return a result | Route | Service or Event as navigation |
 | Repeated methods, state reads, owned resource | Service | Command per getter or global singleton |
+| Typed local data with explicit account/environment/device isolation | Service + namespace value object | Unscoped global Map or EventBus |
 | Ask one owner to perform work | Command | Event when success matters |
 | Announce a fact after it happened | Event | Command fan-out |
 | Run startup work once with dependencies | InitTask | Page lifecycle callback |
@@ -33,6 +34,10 @@ Use a CCRouter Dialog or BottomSheet Route only when it needs one or more of:
 For local confirmation, menus, transient BottomSheet, `OverlayEntry`, `MenuAnchor`, or a third-party popup, use the native Flutter/package API. Treat it as foreign UI and do not register a fake route.
 
 ## Service
+
+跨 Package 的 Route、Service、Command、Event、InitTask Contract 都要维护独立的 SemVer。
+生成 metadata 会携带确定性的 `shapeFingerprint`；公共形状改变时应升级 Contract 版本，破坏性
+变更优先使用新 Contract ID，不要用组件版本或运行时字符串猜测兼容性。
 
 Choose Service for a durable capability such as a repository, account state facade, analytics client, feature configuration, or page controller.
 

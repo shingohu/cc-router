@@ -83,8 +83,10 @@
 - [x] 完成正式发布前 Contract 版本兼容设计：独立 Contract SemVer、规范化 shape fingerprint、
   Owner/消费者范围、生成/聚合/Runtime 三层校验、迁移和废弃门禁。详见
   [正式发布前能力设计与实施计划](CCRouter-pre-release-capability-plan.md)；代码实现仍待按阶段执行。
-- [ ] 为五类 Contract 增加版本、fingerprint、消费者范围 metadata，并实现生成期/聚合期不兼容门禁。
-- [ ] 生成阶段报告升级、废弃、缺失和不兼容原因；Runtime 只做边界保护。
+- [x] 为五类 Contract 增加独立 SemVer、shape fingerprint metadata，并实现生成期/聚合期
+  的版本、指纹和 Owner 结构门禁；旧 schema 仍可供迁移工具读取。
+- [ ] 生成阶段报告升级、废弃、缺失和不兼容原因；Runtime 只做边界保护（消费者范围和
+  Runtime Bundle descriptor 仍待后续收口）。
 - [ ] 评估环境实现选择模型；短期继续使用 Composition Root、Service Key 和 Test Override。
 
 ### 4.2 初始化任务生成（已完成）
@@ -130,6 +132,14 @@
   只读，不把 Extension 做成 Runtime 控制台。
 - [ ] 增加组件依赖图高级筛选、Route-to-source 图形化跳转和单次 Service/Command/Event/InitTask
   调用链视图。
+- [ ] Pub Hook `run/build` 前置生成：先修复全局参数解析，再按显式命令范围接入 `build`，
+  最后评估可选 `run`；复用生成器 fingerprint fast-path，覆盖 POSIX/Windows、FVM 切换、
+  隐式 `pub get` 边界和 macOS/iOS/Android Release 回归。已记录但待确认，不在当前 1.x
+  Hook 行为中实施，详见 [Pub Hook 设计](CCRouter-cli-pub-hook.md)。
+- [ ] KV Storage Demo Scoped Facade：将显式 namespace Client 演进为上下文解析、Session/
+  Environment/Device 绑定和 Backend Placement Policy；先保留当前内存 Backend，真实出现跨组件
+  Contract 消费后再评估独立 `storage_contracts`，不扩张万能 `base_contracts`。详见
+  [KV Storage Demo 改造方案](CCRouter-kv-storage-demo-migration.md)。
 
 ## 5. P2：架构 2.0 候选
 

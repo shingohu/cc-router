@@ -79,7 +79,7 @@ Map<String, Object?> _metadataPayload({
   Map<String, String> componentManifests = const {},
   Map<String, String> componentSymbols = const {},
 }) => {
-  'schemaVersion': 3,
+  'schemaVersion': 4,
   'package': package,
   'source': source,
   'componentDeclarations':
@@ -245,6 +245,43 @@ Map<String, Object?> _routeJson(
   required String source,
 }) => {
   'id': route.id,
+  'version': route.version,
+  'shapeFingerprint': contractShapeFingerprint(<String, Object?>{
+    'kind': 'route',
+    'id': route.id,
+    'owner': route.componentId,
+    'patterns': route.patterns.indexed.map((entry) {
+      final index = entry.$1;
+      final pattern = entry.$2;
+      final type = (pattern.type as InterfaceType).element.displayName;
+      return <String, Object?>{
+        'type': type,
+        'value': _field(
+          pattern,
+          type == 'CCRegexPattern' ? 'expression' : 'template',
+        ).toStringValue(),
+        'primary': index == route.primaryPatternIndex,
+      };
+    }).toList(),
+    'parameters': route.parameters
+        .map(
+          (parameter) => <String, Object?>{
+            'name': parameter.name,
+            'wireName': parameter.wireName,
+            'source': parameter.source,
+            'type': parameter.type,
+            'required': parameter.required,
+            'default': parameter.defaultCode,
+          },
+        )
+        .toList(),
+    'resultType': route.result,
+    'deepLink': _enumValue(route.annotation.read('deepLink').objectValue),
+    'presentation': _presentationJson(
+      route.annotation.read('presentation').objectValue,
+    ),
+    'placement': _placementJson(route.annotation.read('placement').objectValue),
+  }),
   'componentId': route.componentId,
   'exposure': route.exposure,
   'deepLink': _enumValue(

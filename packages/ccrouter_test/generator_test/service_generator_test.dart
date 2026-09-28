@@ -477,6 +477,8 @@ abstract interface class OrderSummaryService {}
       final contract = (contractJson['serviceContracts'] as List).single as Map;
       expect(contract['id'], 'orders.summary');
       expect(contract['componentId'], 'orders');
+      expect(contract['version'], '0.1.0');
+      expect(contract['shapeFingerprint'], matches(RegExp(r'^[0-9a-f]{64}$')));
       expect((contract['token'] as Map)['symbol'], 'orderSummaryServiceToken');
       expect(contract['methods'], isEmpty);
 

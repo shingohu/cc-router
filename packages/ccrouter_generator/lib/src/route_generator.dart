@@ -7,6 +7,8 @@ import 'package:analyzer/dart/element/type.dart';
 import 'package:build/build.dart';
 import 'package:source_gen/source_gen.dart';
 
+import 'contract_fingerprint.dart';
+
 part 'route_model.dart';
 part 'route_emitter.dart';
 part 'route_standalone_generator.dart';

@@ -186,12 +186,18 @@ abstract final class CCRouteWorkspaceValidator {
     final initTaskContracts = <String, Map<String, Object?>>{};
     final initTasks = <String, Map<String, Object?>>{};
     final defaultServices = <String, String>{};
+    var hasContractCompatibilityMetadata = false;
     for (final document in documents) {
-      if (document['schemaVersion'] != 2 && document['schemaVersion'] != 3) {
+      if (document['schemaVersion'] != 2 &&
+          document['schemaVersion'] != 3 &&
+          document['schemaVersion'] != 4) {
         errors.add(
           'Unsupported metadata schema in ${document['source'] ?? 'unknown source'}.',
         );
         continue;
+      }
+      if (document['schemaVersion'] == 4) {
+        hasContractCompatibilityMetadata = true;
       }
       for (final id in _strings(document['componentDeclarations'])) {
         componentDeclarationCounts[id] =
@@ -350,6 +356,16 @@ abstract final class CCRouteWorkspaceValidator {
       }
     }
     _validateMetadataFields(components, routes, errors);
+    if (hasContractCompatibilityMetadata) {
+      _validateContractCompatibilityMetadata(
+        routes: routes,
+        serviceContracts: serviceContracts,
+        commandContracts: commandContracts,
+        eventContracts: eventContracts,
+        initTaskContracts: initTaskContracts,
+        errors: errors,
+      );
+    }
     for (final contribution in contributions.values) {
       final id = '${contribution['id'] ?? ''}';
       final ownerId = '${contribution['componentId'] ?? ''}';
@@ -878,6 +894,54 @@ abstract final class CCRouteWorkspaceValidator {
               'Route "$routeId" has invalid or duplicate $field entry "$id".',
             );
           }
+        }
+      }
+    }
+  }
+
+  /// Validates the version and shape metadata emitted for schema version 4.
+  ///
+  /// Older schema documents remain readable for migration tooling, but a new
+  /// generation must never publish a Contract without an independent version
+  /// and fingerprint. This check deliberately validates presence and syntax;
+  /// source-level shape calculation belongs to the builders.
+  static void _validateContractCompatibilityMetadata({
+    required Map<String, Map<String, Object?>> routes,
+    required Map<String, Map<String, Object?>> serviceContracts,
+    required Map<String, Map<String, Object?>> commandContracts,
+    required Map<String, Map<String, Object?>> eventContracts,
+    required Map<String, Map<String, Object?>> initTaskContracts,
+    required List<String> errors,
+  }) {
+    final groups = <String, Map<String, Map<String, Object?>>>{
+      'Route': routes,
+      'Service': serviceContracts,
+      'Command': commandContracts,
+      'Event': eventContracts,
+      'InitTask': initTaskContracts,
+    };
+    for (final group in groups.entries) {
+      for (final contract in group.value.values) {
+        final id = '${contract['id'] ?? ''}';
+        final version = contract['version'];
+        final fingerprint = contract['shapeFingerprint'];
+        if (version is! String ||
+            !_workspaceSemanticVersionPattern.hasMatch(version)) {
+          errors.add(
+            '${group.key} contract "$id" must declare a valid Contract SemVer.',
+          );
+        }
+        if (fingerprint is! String ||
+            !RegExp(r'^[0-9a-f]{64}$').hasMatch(fingerprint)) {
+          errors.add(
+            '${group.key} contract "$id" must declare a SHA-256 shapeFingerprint.',
+          );
+        }
+        final owner = contract['componentId'];
+        if (owner != null && (owner is! String || !_validComponentId(owner))) {
+          errors.add(
+            '${group.key} contract "$id" has an invalid owner component.',
+          );
         }
       }
     }

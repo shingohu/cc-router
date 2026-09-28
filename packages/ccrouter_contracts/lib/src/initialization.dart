@@ -54,11 +54,15 @@ final class CCInitTaskContract {
   const CCInitTaskContract({
     required this.id,
     this.componentId,
+    this.version = '0.1.0',
     this.description = '',
   });
 
   /// Globally stable task identity used by the DAG and diagnostics.
   final String id;
+
+  /// Independent InitTask Contract SemVer used by dependent tasks.
+  final String version;
 
   /// Component that owns the task, or null for local owner inference.
   final CCComponentId? componentId;

@@ -43,6 +43,7 @@ final class CCServiceContract {
   const CCServiceContract({
     required this.componentId,
     required this.id,
+    this.version = '0.1.0',
     this.description = '',
   });
 
@@ -51,6 +52,9 @@ final class CCServiceContract {
 
   /// Globally stable Service identity used by Runtime and diagnostics.
   final String id;
+
+  /// Independent Service Contract SemVer used by cross-package consumers.
+  final String version;
 
   /// Human-readable usage scenario exported to generated documentation.
   final String description;

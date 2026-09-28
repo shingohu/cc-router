@@ -85,6 +85,11 @@ String handleSubmit(SubmitOrderCommand command) => 'ok';
     final metadata = jsonDecode(output) as Map<String, dynamic>;
     expect(metadata['commandContracts'], hasLength(1));
     expect(metadata['commandHandlers'], hasLength(1));
+    expect(metadata['commandContracts'][0]['version'], '0.1.0');
+    expect(
+      metadata['commandContracts'][0]['shapeFingerprint'],
+      matches(RegExp(r'^[0-9a-f]{64}$')),
+    );
     expect(
       metadata['commandContracts'][0]['declaration']['packageUri'],
       'package:ccrouter_test/src/probe.dart',

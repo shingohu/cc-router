@@ -7,6 +7,8 @@ import 'package:analyzer/dart/ast/visitor.dart';
 import 'package:build/build.dart';
 import 'package:source_gen/source_gen.dart';
 
+import 'contract_fingerprint.dart';
+
 /// Maximum stable Command identifier length.
 const int _commandMaxStableIdLength = 128;
 
@@ -16,6 +18,14 @@ const int _commandMaxDescriptionLength = 4096;
 /// Portable syntax shared by generated Command identities.
 final RegExp _commandStableIdPattern = RegExp(
   r'^[a-z][A-Za-z0-9]*(?:[._-][A-Za-z0-9]+)*$',
+);
+
+/// SemVer 2.0 syntax used by independent Command Contracts.
+final RegExp _commandSemanticVersionPattern = RegExp(
+  r'^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)'
+  r'(?:-(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)'
+  r'(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*)?'
+  r'(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$',
 );
 
 /// Matches generated Command contracts from the canonical contracts package.
@@ -122,7 +132,7 @@ final class _CommandMetadataBuilder implements Builder {
     final source = buildStep.inputId.path;
     final registrationLibrary = _commandGeneratedLibraryPath(source);
     final payload = <String, Object?>{
-      'schemaVersion': 3,
+      'schemaVersion': 4,
       'package': package,
       'source': source,
       'componentDeclarations': <String>[],
@@ -139,11 +149,36 @@ final class _CommandMetadataBuilder implements Builder {
           <String, Object?>{
             'id': contract.id,
             'componentId': contract.componentId,
+            'version': contract.version,
             'description': contract.description,
             'package': package,
             'source': source,
             'type': contract.element.displayName,
             'resultType': contract.resultType.getDisplayString(),
+            'payloadFields': [
+              for (final field in contract.element.fields.where(
+                (field) => !field.isStatic,
+              ))
+                <String, Object?>{
+                  'name': field.displayName,
+                  'type': field.type.getDisplayString(),
+                },
+            ],
+            'shapeFingerprint': contractShapeFingerprint(<String, Object?>{
+              'kind': 'command',
+              'id': contract.id,
+              'owner': contract.componentId,
+              'resultType': contract.resultType.getDisplayString(),
+              'payloadFields': [
+                for (final field in contract.element.fields.where(
+                  (field) => !field.isStatic,
+                ))
+                  <String, Object?>{
+                    'name': field.displayName,
+                    'type': field.type.getDisplayString(),
+                  },
+              ],
+            }),
             'declaration': _commandSourceReference(contract.element),
           },
       ],
@@ -228,6 +263,7 @@ final class _CommandContractModel {
     required this.element,
     required this.componentId,
     required this.id,
+    required this.version,
     required this.description,
     required this.resultType,
   });
@@ -240,6 +276,9 @@ final class _CommandContractModel {
 
   /// Stable Command identity.
   final String id;
+
+  /// Independent Command Contract SemVer.
+  final String version;
 
   /// Documented usage scenario.
   final String description;
@@ -308,7 +347,11 @@ List<_CommandContractModel> _readCommandContracts(LibraryReader library) {
       _validateCommandId(componentId, 'Component ID', element);
     }
     final id = annotated.annotation.read('id').stringValue;
+    final version = annotated.annotation.read('version').stringValue;
     _validateCommandId(id, 'Command ID', element);
+    if (!_commandSemanticVersionPattern.hasMatch(version)) {
+      _failCommand('Command "$id" must use SemVer 2.0.', element);
+    }
     if (!ids.add(id)) {
       _failCommand('Duplicate Command ID "$id" in this library.', element);
     }
@@ -324,6 +367,7 @@ List<_CommandContractModel> _readCommandContracts(LibraryReader library) {
         element: element,
         componentId: componentId,
         id: id,
+        version: version,
         description: description,
         resultType: resultType,
       ),
@@ -424,14 +468,19 @@ _CommandContractModel _readCommandContract(ClassElement element) {
       ?.getField('value')
       ?.toStringValue();
   final id = annotation.getField('id')?.toStringValue();
+  final version = annotation.getField('version')?.toStringValue() ?? '0.1.0';
   if (id == null) {
     _failCommand('CCCommandContract requires a const id.', element);
   }
   _validateCommandId(id, 'Command ID', element);
+  if (!_commandSemanticVersionPattern.hasMatch(version)) {
+    _failCommand('Command "$id" must use SemVer 2.0.', element);
+  }
   return _CommandContractModel(
     element: element,
     componentId: componentId,
     id: id,
+    version: version,
     description: annotation.getField('description')?.toStringValue() ?? '',
     resultType: interfaces.single.typeArguments.single,
   );

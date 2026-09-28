@@ -8,6 +8,8 @@ import 'package:analyzer/dart/element/type.dart';
 import 'package:build/build.dart';
 import 'package:source_gen/source_gen.dart';
 
+import 'contract_fingerprint.dart';
+
 /// Maximum stable initialization identity length.
 const int _initTaskMaxStableIdLength = 128;
 
@@ -17,6 +19,14 @@ const int _initTaskMaxDescriptionLength = 4096;
 /// Portable syntax shared by generated Task and Gate identities.
 final RegExp _initTaskStableIdPattern = RegExp(
   r'^[a-z][A-Za-z0-9]*(?:[._-][A-Za-z0-9]+)*$',
+);
+
+/// SemVer 2.0 syntax used by independent InitTask Contracts.
+final RegExp _initTaskSemanticVersionPattern = RegExp(
+  r'^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)'
+  r'(?:-(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)'
+  r'(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*)?'
+  r'(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$',
 );
 
 /// Matches typed initialization task contracts.
@@ -119,7 +129,7 @@ final class _InitTaskMetadataBuilder implements Builder {
     final source = buildStep.inputId.path;
     final registrationLibrary = _initTaskGeneratedLibraryPath(source);
     final payload = <String, Object?>{
-      'schemaVersion': 3,
+      'schemaVersion': 4,
       'package': package,
       'source': source,
       'componentDeclarations': <String>[],
@@ -140,10 +150,16 @@ final class _InitTaskMetadataBuilder implements Builder {
           <String, Object?>{
             'id': contract.id,
             'componentId': contract.componentId,
+            'version': contract.version,
             'description': contract.description,
             'package': package,
             'source': source,
             'declaration': _initTaskSourceReference(contract.element),
+            'shapeFingerprint': contractShapeFingerprint(<String, Object?>{
+              'kind': 'init_task',
+              'id': contract.id,
+              'owner': contract.componentId,
+            }),
           },
       ],
       'initTasks': [
@@ -189,6 +205,7 @@ final class _InitTaskContractModel {
     required this.element,
     required this.id,
     required this.componentId,
+    required this.version,
     required this.description,
   });
 
@@ -200,6 +217,9 @@ final class _InitTaskContractModel {
 
   /// Explicit owner, or null for a component-local contract.
   final String? componentId;
+
+  /// Independent InitTask Contract SemVer.
+  final String version;
 
   /// Documented purpose and usage scenario.
   final String description;
@@ -465,6 +485,10 @@ _InitTaskContractModel _contractFromObject(
       .getField('componentId')
       ?.getField('value')
       ?.toStringValue();
+  final version = value.getField('version')?.toStringValue() ?? '0.1.0';
+  if (!_initTaskSemanticVersionPattern.hasMatch(version)) {
+    _failInitTask('InitTask "$id" must use SemVer 2.0.', element);
+  }
   if (componentId != null) {
     _validateInitTaskId(componentId, 'Component ID', element);
   }
@@ -480,6 +504,7 @@ _InitTaskContractModel _contractFromObject(
     element: element,
     id: id,
     componentId: componentId,
+    version: version,
     description: description,
   );
 }

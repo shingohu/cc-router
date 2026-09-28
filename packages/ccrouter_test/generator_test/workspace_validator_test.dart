@@ -927,7 +927,7 @@ void main() {
 
   test('rejects unsupported metadata schemas', () {
     final result = CCRouteWorkspaceValidator.validate([
-      {'schemaVersion': 4, 'source': 'future.json'},
+      {'schemaVersion': 5, 'source': 'future.json'},
     ]);
     expect(result.errors.single, contains('Unsupported metadata schema'));
   });

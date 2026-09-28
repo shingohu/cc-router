@@ -7,6 +7,8 @@ import 'package:analyzer/dart/element/type.dart';
 import 'package:build/build.dart';
 import 'package:source_gen/source_gen.dart';
 
+import 'contract_fingerprint.dart';
+
 part 'service_proxy_generator.dart';
 
 /// Maximum length accepted for generated Service identities and Keys.
@@ -18,6 +20,14 @@ const int _serviceMaxDescriptionLength = 4096;
 /// Stable identifier syntax shared by generated Service contracts and Keys.
 final RegExp _serviceStableIdPattern = RegExp(
   r'^[a-z][A-Za-z0-9]*(?:[._-][A-Za-z0-9]+)*$',
+);
+
+/// SemVer 2.0 syntax used by independent Service Contracts.
+final RegExp _serviceSemanticVersionPattern = RegExp(
+  r'^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)'
+  r'(?:-(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)'
+  r'(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*)?'
+  r'(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$',
 );
 
 /// Matches Service contract declarations from the canonical contracts package.
@@ -199,7 +209,7 @@ final class _ServiceMetadataBuilder implements Builder {
       suffix: '.service.g.dart',
     );
     final payload = <String, Object?>{
-      'schemaVersion': 3,
+      'schemaVersion': 4,
       'package': package,
       'source': source,
       'componentDeclarations': <String>[],
@@ -214,6 +224,7 @@ final class _ServiceMetadataBuilder implements Builder {
           <String, Object?>{
             'id': contract.id,
             'componentId': contract.componentId,
+            'version': contract.version,
             'description': contract.description,
             'package': package,
             'source': source,
@@ -255,6 +266,39 @@ final class _ServiceMetadataBuilder implements Builder {
                   'declaration': _serviceSourceReference(member.element),
                 },
             ],
+            'shapeFingerprint': contractShapeFingerprint(<String, Object?>{
+              'kind': 'service',
+              'id': contract.id,
+              'owner': contract.componentId,
+              'methods': [
+                for (final member in contract.members)
+                  <String, Object?>{
+                    'memberKind': member.kind,
+                    'methodId': member.methodId,
+                    'returnType': member.returnType.getDisplayString(),
+                    'resultType': member.resultType.getDisplayString(),
+                    'typeParameters': [
+                      for (final parameter in member.typeParameters)
+                        _serviceTypeParameterMetadata(parameter),
+                    ],
+                    'parameters': [
+                      for (final parameter in member.parameters)
+                        <String, Object?>{
+                          'name': parameter.displayName,
+                          'type': parameter.type.getDisplayString(),
+                          'kind': parameter.isRequiredPositional
+                              ? 'requiredPositional'
+                              : parameter.isOptionalPositional
+                              ? 'optionalPositional'
+                              : parameter.isRequiredNamed
+                              ? 'requiredNamed'
+                              : 'optionalNamed',
+                          'default': parameter.defaultValueCode,
+                        },
+                    ],
+                  },
+              ],
+            }),
             'token': <String, Object?>{
               'symbol': contract.tokenSymbol,
               'library': contractLibrary,
@@ -307,6 +351,7 @@ final class _ServiceContractModel {
     required this.element,
     required this.componentId,
     required this.id,
+    required this.version,
     required this.description,
     required this.members,
   });
@@ -319,6 +364,9 @@ final class _ServiceContractModel {
 
   /// Stable Runtime identity serialized into the generated Token.
   final String id;
+
+  /// Independent Service Contract SemVer.
+  final String version;
 
   /// Authored usage scenario retained in generated catalogs.
   final String description;
@@ -446,7 +494,11 @@ List<_ServiceContractModel> _readServiceContracts(LibraryReader library) {
     }
     _validateServiceId(componentId, 'Component ID', element);
     final id = annotated.annotation.read('id').stringValue;
+    final version = annotated.annotation.read('version').stringValue;
     _validateServiceId(id, 'Service contract ID', element);
+    if (!_serviceSemanticVersionPattern.hasMatch(version)) {
+      _failService('Service contract "$id" must use SemVer 2.0.', element);
+    }
     final description = annotated.annotation.read('description').stringValue;
     if (description.length > _serviceMaxDescriptionLength) {
       _failService(
@@ -459,6 +511,7 @@ List<_ServiceContractModel> _readServiceContracts(LibraryReader library) {
       element: element,
       componentId: componentId,
       id: id,
+      version: version,
       description: description,
       members: _readServiceMembers(element),
     );
@@ -616,6 +669,7 @@ _ServiceContractModel? _serviceContractAnnotation(InterfaceElement element) {
   final component = annotation.getField('componentId');
   final componentId = component?.getField('value')?.toStringValue();
   final id = annotation.getField('id')?.toStringValue();
+  final version = annotation.getField('version')?.toStringValue() ?? '0.1.0';
   final description = annotation.getField('description')?.toStringValue() ?? '';
   if (componentId == null || id == null) {
     _failService(
@@ -625,11 +679,15 @@ _ServiceContractModel? _serviceContractAnnotation(InterfaceElement element) {
   }
   _validateServiceId(componentId, 'Component ID', element);
   _validateServiceId(id, 'Service contract ID', element);
+  if (!_serviceSemanticVersionPattern.hasMatch(version)) {
+    _failService('Service contract "$id" must use SemVer 2.0.', element);
+  }
   _validateServiceContractInheritance(element);
   return _ServiceContractModel(
     element: element,
     componentId: componentId,
     id: id,
+    version: version,
     description: description,
     members: _readServiceMembers(element),
   );

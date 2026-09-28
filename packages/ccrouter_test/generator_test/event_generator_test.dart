@@ -85,6 +85,11 @@ void trackOrder(OrderCreatedEvent event) {}
       final metadata = jsonDecode(output) as Map<String, dynamic>;
       expect(metadata['eventContracts'], hasLength(1));
       expect(metadata['eventSubscriptions'], hasLength(1));
+      expect(metadata['eventContracts'][0]['version'], '0.1.0');
+      expect(
+        metadata['eventContracts'][0]['shapeFingerprint'],
+        matches(RegExp(r'^[0-9a-f]{64}$')),
+      );
       expect(
         metadata['eventContracts'][0]['declaration']['packageUri'],
         'package:ccrouter_test/src/probe.dart',

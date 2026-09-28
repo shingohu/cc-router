@@ -95,6 +95,11 @@ Future<void> initializeFoundation() async {}
     final metadata = jsonDecode(output) as Map<String, dynamic>;
     expect(metadata['initTaskContracts'], hasLength(1));
     expect(metadata['initTasks'], hasLength(1));
+    expect(metadata['initTaskContracts'][0]['version'], '0.1.0');
+    expect(
+      metadata['initTaskContracts'][0]['shapeFingerprint'],
+      matches(RegExp(r'^[0-9a-f]{64}$')),
+    );
     expect(
       metadata['initTaskContracts'][0]['declaration']['symbol'],
       'foundationTask',
