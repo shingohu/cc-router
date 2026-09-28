@@ -433,7 +433,8 @@ CLI 继续保持非覆盖式，增加可选模板：
 - [x] Analytics 通用节流、黑名单和平台能力声明（平台矩阵仍需持续扩展）；
 - [x] Consent deny/grant/revoke 与 Foreign Popup 自动断言；
 - [x] Firebase mock/真实可选 Adapter 最小闭环；
-- [ ] 多平台和长时间 Runtime 回归第一轮。
+- [x] 完成多平台编译 smoke、Pure Dart 长时间 Runtime、Analytics 队列压力和资源回收第一轮；
+  真机手势、原生多窗口和长期生产 RSS 仍按兼容性文档持续采样。
 
 ### Phase 2：Contract 兼容门禁（P0/P1）
 
@@ -450,12 +451,12 @@ CLI 继续保持非覆盖式，增加可选模板：
 - [x] 源码位置协议与缺失 Catalog 可选降级；组件图高级筛选在 Extension 阶段实现；
 - [x] 只读权限、不可变集合、未知协议版本和脱敏字段回归。
 
-### Phase 4：官方 DevTools Extension（P1）
+### Phase 4：官方 DevTools Extension（P1，已完成）
 
-- [ ] 独立 Extension Package、协议版本和 SDK 矩阵；
-- [ ] Route/Component/Call Chain 视图；
-- [ ] Extension 断连/启动失败不影响应用；
-- [ ] Demo Extension smoke 和源码跳转验收。
+- [x] 独立 Extension Package、协议版本和当前稳定 SDK Web 构建/validate smoke；
+- [x] Route/Component/Call Chain 视图，以及 Catalog/Runtime 联动和源码跳转回调；
+- [x] Extension 断连/启动失败不影响应用；
+- [x] Demo Extension smoke 和源码 URI 跳转验收。
 
 ### Phase 5：脚手架与发布回归（P1）
 

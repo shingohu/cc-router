@@ -89,7 +89,8 @@
 
 - [x] 完成正式发布前 Contract 版本兼容设计：独立 Contract SemVer、规范化 shape fingerprint、
   Owner/消费者范围、生成/聚合/Runtime 三层校验、迁移和废弃门禁。详见
-  [正式发布前能力设计与实施计划](CCRouter-pre-release-capability-plan.md)；代码实现仍待按阶段执行。
+  [正式发布前能力设计与实施计划](CCRouter-pre-release-capability-plan.md)；核心 Runtime/生成器
+  实现已完成，后续只保留发布候选兼容样本维护。
 - [x] 为五类 Contract 增加独立 SemVer、shape fingerprint metadata，并实现生成期/聚合期
   的版本、指纹和 Owner 结构门禁；旧 schema 仍可供迁移工具读取。
 - [x] 生成阶段写入消费者的精确版本范围与 shape fingerprint，Host Bundle 携带五类
@@ -127,8 +128,8 @@
 - [x] 增加 `ccrouter create component`、`create page`、`create service`、`create command`、
   `create event` 和 `create init-task` 模板命令；跨组件 Contract 提升仍需显式设计。
 - [x] 完成可嵌入 DevTools 只读视图：Component Graph、Route/Backend Entry、Trace、
-  Failure/Fallback 和 InitTask DAG；官方 DevTools Extension 已列入正式发布前 P1，必须先完成
-  Catalog/Runtime Snapshot 与 Trace Edge 协议，见 `docs/CCRouter-devtools.md`。
+  Failure/Fallback 和 InitTask DAG；官方 DevTools Extension 及 Catalog/Runtime 联动、源码定位、
+  组件依赖筛选和调用链视图均已完成，见 `docs/CCRouter-devtools.md`。
 - [x] 2026-09-28 完成最小 IDE / Analysis Server 集成：独立
   `ccrouter_analyzer_plugin` 提供跨 Package 生成物导入和缺失 Route 生成物诊断；生成的 Dart
   API、`ccrouter find`、Catalog 与 `generate --check` 仍分别承担补全、源码定位和最终门禁。
@@ -138,11 +139,10 @@
   loader `analyze/compile` smoke、兼容性边界测试和发布后的 Hosted fallback manifest。
 - [x] 建立纯 Dart、版本化的 Catalog/Runtime Snapshot 与 Trace Edge 协议；静态记录携带
   可移植源码位置，Runtime 适配器只复制稳定 ID、Owner、Host/Outlet、状态和耗时。官方
-  Extension 后续直接消费该协议，不读取 Runtime 内部对象。
+  Extension 已直接消费该协议，不读取 Runtime 内部对象。
 - [x] 实现独立官方 Flutter/Dart DevTools Extension 最小只读闭环；保持现有
   `ccrouter_devtools` Widget 面板只读，通过 `ext.ccrouter.snapshot` 消费版本化 Envelope。
-  高级组件筛选、源码跳转和图形调用链仍是该 Extension 的后续视图任务。
-- [ ] 增加组件依赖图高级筛选、Route-to-source 图形化跳转和单次 Service/Command/Event/InitTask
+  已补齐高级组件筛选、Route-to-source 图形化跳转和单次 Service/Command/Event/InitTask
   调用链视图。
 - [x] Pub Hook 已支持成功的显式 `flutter pub` 后置生成，以及 `flutter run/build` fail-closed
   前置生成；复用 fingerprint fast-path，覆盖 POSIX/Windows wrapper 和全局参数前缀。Flutter
