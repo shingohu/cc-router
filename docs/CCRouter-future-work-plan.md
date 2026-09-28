@@ -61,7 +61,9 @@
 - [x] 2026-09-27 完成 Command/Event/InitTask 生成闭环回归：`dart analyze`、
   `ccrouter_test` 329 项、Generator 216 项、Demo 31 项、缓存/无缓存 `generate --check`、
   InitTask clean/rebuild 和能力级 `ccrouter find` 均通过。
-- [ ] 持续执行 `dart analyze`、框架测试、生成器测试、Demo 测试和 `generate --check`。
+- [x] 提供统一 `packages/ccrouter_test/benchmark/performance_regression.dart`，编排 Runtime、
+  Service、并发、长运行、Analytics 压力和可选全能力 Generator 基准；持续执行的版本趋势仍需
+  由发布流程保存 JSON 结果。
 - [x] 2026-09-28 修复 public barrel 校验的重复 Package 扫描，引入精确内容 fast path 和
   Route/Service/Command/Event/InitTask 混合压力基准；30× 的 1650 项能力 Validator 为 38ms，
   无变化 wall 为 0.81-0.85s。完整数据见
@@ -73,7 +75,8 @@
   mtime/size 替代内容摘要。
 - [x] 建立冷启动、初始化、路由解析、导航延迟、并发导航、Runtime dispose 和长期 RSS 的
   同机趋势入口；长期趋势仍需按发布版本持续采样。
-- [ ] 继续做 macOS、iOS 真机/模拟器和 OHOS 运行回归；平台 SDK 变更只做兼容性修复。
+- [ ] 继续做 macOS、iOS 真机/模拟器和 OHOS 运行 smoke；平台 SDK 变更只做兼容性修复，不能
+  用 Pure Dart benchmark 代替真实平台结论。
 - [ ] 继续检查 Adapter、Observer、Route Scope、Overlay、Timer 和 Stream 的释放路径。
 - [x] 2026-09-27 核对架构、路由、契约、生成器、分析事件与后续计划文档，纠正已实现能力、
   旧生成路径、旧 API 名称和当前测试数量；历史回归基准保留其原始口径。

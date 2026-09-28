@@ -144,6 +144,35 @@ per-Package manifest 与 reverse dependency closure 已作为保守 dirty set �
 
 ## 8. Runtime 长时间与 RSS 观测
 
+### 8.1 统一性能回归入口
+
+常规回归可通过一个独立进程编排入口执行：
+
+```bash
+fvm dart run packages/ccrouter_test/benchmark/performance_regression.dart
+```
+
+它依次运行 Runtime scaling、并发导航、Service 生命周期、1000 轮 Runtime 重建、Analytics
+队列压力，并为每个子进程输出结构化 JSON。发布候选或生成器变更时追加完整混合能力生成：
+
+```bash
+fvm dart run packages/ccrouter_test/benchmark/performance_regression.dart --full
+```
+
+`--full` 会增加 1x/10x/20x/30x 的 Route、Service、Command、Event、InitTask 真实注解生成和
+连续 warm-run。该入口不设置跨平台绝对耗时或 RSS 阈值；CI/本地应保存同 SDK、同平台的 JSON
+并比较 P50/P95、丢弃数、峰值队列、生成物 fingerprint 和资源清理状态。Flutter Widget、真实
+设备和 OHOS smoke 仍由各平台命令单独执行，不能用 Pure Dart benchmark 冒充平台兼容性。
+
+2026-09-29 在 macOS arm64、Dart 3.11.5 的一次完整运行结果：Runtime 10/100/1000 路由
+初始化 P95 为 40/120/502us，动态打开 P95 为 77/115/436us；Service 1000 Provider 初始化
+P95 为 3.4ms、销毁 P95 为 423us；并发导航 10 轮、每轮 100 次 push/pop 后最终保留 1 个
+基准首页 Entry，pending 和 Adapter 额外 Entry 均为 0。Runtime 长运行 1000 轮、每 100 轮
+重建一次，所有确定性清理条件通过；该次进程 RSS 增长约 24.2MiB，只作为同机趋势，不作为
+泄漏结论。Analytics 5000 事件、容量 64 的入队 P50/P95 为 0/1us，峰值队列 64，丢弃 4935，
+关闭后残留 0。1x/10x/20x/30x 全能力生成的冷 wall 分别为 1.08/1.94/2.80/3.76s，连续
+warm-run 分别约 0.34/0.52/0.68/0.82s，所有生成物和 dirty-set 校验通过。
+
 长期 Runtime 基准位于：
 
 ```text

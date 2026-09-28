@@ -893,6 +893,10 @@ fvm dart run ccrouter_generator:ccrouter generate demo --no-cache
 # 输出阶段耗时和缓存命中率
 fvm dart run ccrouter_generator:ccrouter generate demo --profile
 
+# Runtime/Service/Analytics/生成器性能与资源回收基准
+fvm dart run packages/ccrouter_test/benchmark/performance_regression.dart
+fvm dart run packages/ccrouter_test/benchmark/performance_regression.dart --full
+
 # 按能力 ID 查找 Route/Service/Command/Event/InitTask，Route 也支持 Pattern
 fvm dart run ccrouter_generator:ccrouter find order.detail demo
 fvm dart run ccrouter_generator:ccrouter find '/orders/:orderId' demo

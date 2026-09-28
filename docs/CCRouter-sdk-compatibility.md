@@ -98,6 +98,19 @@ fvm spawn 3.41.9 test packages/ccrouter_test/test --no-pub
 shader 资源加载，不是 CCRouter 断言失败；隔离每个 SDK 的 `.dart_tool` 和 `build` 后，
 3.44.9 与 3.47.2 均通过完整 244 项测试。兼容性回归必须遵守独立构建缓存和串行执行规则。
 
+2026-09-29 在当前 FVM OHOS SDK 的 macOS 主机上追加平台构建 smoke：
+
+| Target | 命令 | 结果 |
+| --- | --- | --- |
+| macOS | `fvm flutter build macos --debug` | 通过，生成 Debug `.app` |
+| iOS Simulator | `fvm flutter build ios --simulator --no-codesign` | 通过，生成 Simulator `.app` |
+| Android | `fvm flutter build apk --debug` | 通过，生成 debug APK |
+| Web | `fvm flutter build web` | 通过，Wasm dry-run 和 Web 构建通过 |
+| OHOS | `fvm flutter build hap --debug` | 通过，生成 signed `.hap` |
+
+这些是当前 SDK/主机的编译 smoke，不等同于真机手势、Deep Link、原生窗口或长期 RSS 结论；
+真机和多窗口仍需按目标设备单独运行 Demo 手工/自动用例。
+
 ## 不应过度宣称的范围
 
 - OHOS Flutter Fork 与标准 Flutter 的平台实现不同；标准 Flutter 通过不代表 OHOS 平台窗口、
