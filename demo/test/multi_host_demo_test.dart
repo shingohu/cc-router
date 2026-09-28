@@ -9,6 +9,7 @@ void main() {
   setUp(() {
     CCRouter.initialize(
       components: ccrouterGeneratedComponentManifests,
+      contractBundle: ccrouterGeneratedHostAssembly.contractBundle,
       deepLinkIngressPolicy: demoDeepLinkIngressPolicy,
     );
   });

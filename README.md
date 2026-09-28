@@ -73,10 +73,12 @@ import 'package:ccrouter_devtools/ccrouter_devtools.dart';
 const diagnosticsPage = CCRouterDevToolsPanel();
 ```
 
-面板只读展示 Component Graph、Managed/Backend Entries、Trace Timeline、Failure/Fallback
-和 InitTask DAG。它不会初始化 Runtime、导航、Pop、重试任务、销毁 Scope 或控制 Adapter；
-未初始化时显示空状态。当前 Demo 的“实时诊断”分区可以直接打开这个面板验证其只读行为。
-完整数据边界和后续官方 DevTools Extension 规划见
+面板只读展示静态 Catalog 与 Runtime 的联动、源码位置、可搜索/聚焦的 Component Graph、
+Managed/Backend Entries、Trace Timeline、Failure/Fallback、InitTask DAG 和能力调用链。
+源码位置默认以可复制的 `package:` URI 展示；Host 可以通过 `onOpenSource` 映射到自己的 IDE
+或源码浏览器。它不会初始化 Runtime、导航、Pop、重试任务、销毁 Scope 或控制 Adapter；
+未初始化时显示空状态。当前 Demo 的“实时诊断”分区会注册示例 Catalog，并同时验证嵌入式面板
+和官方 Extension 的静态/运行时关联行为。完整数据边界和接入方式见
 [`docs/CCRouter-devtools.md`](docs/CCRouter-devtools.md)。
 
 ## 当前能力
@@ -104,7 +106,7 @@ const diagnosticsPage = CCRouterDevToolsPanel();
 | InitTask | 已支持 | 一次性 DAG、Gate、必需/可选失败策略 |
 | 生成器增量缓存与门禁 | 已支持 | 内容校验 fast path、`--check`、`--no-cache`、`--profile`、并发锁、原子写入 |
 | 生成索引和源码定位 | 已支持 | Package/Host Catalog、`ccrouter find` |
-| DevTools 只读可视化 | 已支持 | `ccrouter_devtools` 可嵌入面板；纯 Dart Snapshot/Trace Edge 协议和独立官方 Extension 最小闭环已提供，高级视图仍按计划扩展 |
+| DevTools 只读可视化 | 已支持 | Catalog/Runtime 联动、源码定位、组件依赖聚焦、能力调用链、纯 Dart 协议和官方 Extension |
 | Navigator 1.0 Backend | 暂不支持 | 2.0 阶段候选 |
 | 通用 Navigator 2.0 Backend | 暂不支持 | 2.0 阶段候选 |
 | 动态组件安装/卸载 | 暂不支持 | 当前组件集合在 `initialize` 时固定 |

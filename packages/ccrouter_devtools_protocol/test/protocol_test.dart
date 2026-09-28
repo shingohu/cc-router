@@ -9,6 +9,20 @@ void main() {
       catalog: CCDevToolsStaticCatalogSnapshot(
         capturedAt: capturedAt,
         catalogFingerprint: 'catalog-v1',
+        components: [
+          CCDevToolsCatalogComponent(
+            id: 'orders',
+            version: '1.0.0',
+            dependencies: ['account'],
+          ),
+        ],
+        relations: [
+          const CCDevToolsCatalogRelation(
+            sourceId: 'checkout.submit',
+            targetId: 'orders.summary',
+            kind: 'calls',
+          ),
+        ],
         records: [
           CCDevToolsCatalogRecord(
             kind: 'route',
@@ -46,6 +60,8 @@ void main() {
     final decoded = CCDevToolsSnapshotEnvelope.decode(envelope.encode());
     expect(decoded.protocolVersion, 1);
     expect(decoded.catalog!.records.single.id, 'orders.detail');
+    expect(decoded.catalog!.components.single.dependencies, ['account']);
+    expect(decoded.catalog!.relations.single.kind, 'calls');
     expect(decoded.runtime.traceEdges.single.durationMicros, 42);
   });
 

@@ -17,9 +17,11 @@ void main() {
       ..dirtyForm = true
       ..allowDeferredOnce = false
       ..clear();
+    setDemoAnalyticsConsent(true);
     demoDiagnosticsSink.clear();
     CCRouter.initialize(
       components: ccrouterGeneratedComponentManifests,
+      contractBundle: ccrouterGeneratedHostAssembly.contractBundle,
       deepLinkIngressPolicy: demoDeepLinkIngressPolicy,
       globalInterceptors: const [
         CCGlobalNavigationInterceptor(
@@ -811,6 +813,11 @@ void main() {
     await _pumpDemo(tester);
     await tester.tap(find.text('策略'));
     await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.text('PopGuard 未保存表单'),
+      300,
+      scrollable: find.byType(Scrollable).last,
+    );
     await tester.tap(find.text('PopGuard 未保存表单'));
     await tester.pumpAndSettle();
 
@@ -847,8 +854,12 @@ void main() {
     await _pumpDemo(tester);
     await tester.tap(find.text('策略'));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('打开不存在的路由'));
-    await tester.tap(find.text('打开不存在的路由'));
+    await tester.scrollUntilVisible(
+      find.text('打开不存在的路由'),
+      300,
+      scrollable: find.byType(Scrollable).last,
+    );
+    await tester.tap(find.text('打开不存在的路由', skipOffstage: false));
     await tester.pumpAndSettle();
 
     expect(find.text('导航兜底'), findsOneWidget);

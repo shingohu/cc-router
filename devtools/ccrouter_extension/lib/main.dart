@@ -59,8 +59,9 @@ final class _ConnectionViewState extends State<_ConnectionView> {
         'ext.ccrouter.snapshot',
       );
       final json = response.json;
-      if (json == null)
+      if (json == null) {
         throw StateError('CCRouter snapshot response is empty.');
+      }
       final payload = json['json'];
       if (payload is! String) {
         throw StateError('CCRouter snapshot is malformed.');
@@ -126,68 +127,244 @@ final class _SnapshotView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final runtime = envelope.runtime;
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('CCRouter'),
-        actions: [
-          IconButton(
-            tooltip: 'Refresh snapshot',
-            onPressed: onRefresh,
-            icon: const Icon(Icons.refresh),
-          ),
-        ],
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          _MetricRow(label: 'Runtime', value: runtime.runtimeState),
-          _MetricRow(
-            label: 'Installed components',
-            value: '${runtime.installedComponentIds.length}',
-          ),
-          _MetricRow(
-            label: 'Runtime entries',
-            value: '${runtime.entries.length}',
-          ),
-          _MetricRow(
-            label: 'Trace edges',
-            value: '${runtime.traceEdges.length}',
-          ),
-          _MetricRow(
-            label: 'Static catalog',
-            value: envelope.catalog == null
-                ? 'not provided'
-                : '${envelope.catalog!.records.length} records',
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'Runtime entries',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          for (final entry in runtime.entries)
-            ListTile(
-              dense: true,
-              title: Text(entry.routeId ?? entry.id),
-              subtitle: Text('${entry.kind} · ${entry.hostId}/${entry.outlet}'),
-              trailing: Text(entry.state),
+    return DefaultTabController(
+      length: 4,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('CCRouter'),
+          actions: [
+            IconButton(
+              tooltip: 'Refresh snapshot',
+              onPressed: onRefresh,
+              icon: const Icon(Icons.refresh),
             ),
-          const SizedBox(height: 16),
-          const Text(
-            'Trace edges',
-            style: TextStyle(fontWeight: FontWeight.bold),
+          ],
+          bottom: const TabBar(
+            isScrollable: true,
+            tabs: [
+              Tab(text: 'Overview'),
+              Tab(text: 'Catalog'),
+              Tab(text: 'Components'),
+              Tab(text: 'Call Graph'),
+            ],
           ),
-          for (final edge in runtime.traceEdges)
-            ListTile(
-              dense: true,
-              title: Text('${edge.kind}: ${edge.targetId}'),
-              subtitle: Text('${edge.sourceId} -> ${edge.status}'),
-              trailing: Text('${edge.durationMicros} us'),
-            ),
-        ],
+        ),
+        body: TabBarView(
+          children: [
+            _OverviewTab(envelope: envelope),
+            _CatalogTab(envelope: envelope),
+            _ComponentsTab(envelope: envelope),
+            _CallGraphTab(envelope: envelope),
+          ],
+        ),
       ),
     );
   }
+}
+
+final class _OverviewTab extends StatelessWidget {
+  const _OverviewTab({required this.envelope});
+
+  final CCDevToolsSnapshotEnvelope envelope;
+
+  @override
+  Widget build(BuildContext context) {
+    final runtime = envelope.runtime;
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        _MetricRow(label: 'Runtime', value: runtime.runtimeState),
+        _MetricRow(
+          label: 'Installed components',
+          value: '${runtime.installedComponentIds.length}',
+        ),
+        _MetricRow(
+          label: 'Runtime entries',
+          value: '${runtime.entries.length}',
+        ),
+        _MetricRow(label: 'Trace edges', value: '${runtime.traceEdges.length}'),
+        _MetricRow(
+          label: 'Static catalog',
+          value: envelope.catalog == null
+              ? 'not provided'
+              : '${envelope.catalog!.records.length} records',
+        ),
+        const SizedBox(height: 16),
+        const Text(
+          'Runtime entries',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        for (final entry in runtime.entries)
+          ListTile(
+            dense: true,
+            title: Text(entry.routeId ?? entry.id),
+            subtitle: Text('${entry.kind} · ${entry.hostId}/${entry.outlet}'),
+            trailing: Text(entry.state),
+          ),
+      ],
+    );
+  }
+}
+
+final class _CatalogTab extends StatelessWidget {
+  const _CatalogTab({required this.envelope});
+
+  final CCDevToolsSnapshotEnvelope envelope;
+
+  @override
+  Widget build(BuildContext context) {
+    final catalog = envelope.catalog;
+    if (catalog == null) {
+      return const Center(child: Text('Static Catalog not provided by Host.'));
+    }
+    final liveIds = {
+      for (final entry in envelope.runtime.entries) entry.routeId,
+      for (final edge in envelope.runtime.traceEdges) edge.targetId,
+    };
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        Text(
+          'Catalog ${catalog.catalogFingerprint ?? ''}',
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        for (final record in catalog.records)
+          ExpansionTile(
+            leading: Icon(
+              liveIds.contains(record.id)
+                  ? Icons.radio_button_checked
+                  : Icons.circle,
+              size: 16,
+              color: liveIds.contains(record.id) ? Colors.green : null,
+            ),
+            title: Text('${record.kind} · ${record.id}'),
+            subtitle: Text(
+              '${record.ownerComponentId} · ${record.packageName}',
+            ),
+            children: [
+              if (record.description case final description?)
+                ListTile(title: Text(description)),
+              if (record.source case final source?)
+                ListTile(
+                  leading: const Icon(Icons.code),
+                  title: SelectableText(
+                    '${source.packageUri}:${source.line}:${source.column}',
+                  ),
+                  subtitle: const Text(
+                    'Source location; open in IDE from the Host mapping.',
+                  ),
+                ),
+            ],
+          ),
+      ],
+    );
+  }
+}
+
+final class _ComponentsTab extends StatelessWidget {
+  const _ComponentsTab({required this.envelope});
+
+  final CCDevToolsSnapshotEnvelope envelope;
+
+  @override
+  Widget build(BuildContext context) {
+    final catalog = envelope.catalog;
+    final components =
+        catalog?.components ?? const <CCDevToolsCatalogComponent>[];
+    if (components.isEmpty) {
+      return ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          const Text('No static component graph.'),
+          for (final id in envelope.runtime.installedComponentIds)
+            ListTile(
+              title: Text(id),
+              subtitle: const Text('Runtime installed'),
+            ),
+        ],
+      );
+    }
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: components.length,
+      itemBuilder: (context, index) {
+        final component = components[index];
+        final reverse = [
+          for (final candidate in components)
+            if (candidate.dependencies.contains(component.id) ||
+                candidate.optionalDependencies.contains(component.id))
+              candidate.id,
+        ];
+        return ExpansionTile(
+          leading: const Icon(Icons.hub_outlined),
+          title: Text(component.id),
+          subtitle: Text('v${component.version}'),
+          children: [
+            ListTile(
+              title: Text('Depends on: ${_join(component.dependencies)}'),
+            ),
+            ListTile(
+              title: Text('Optional: ${_join(component.optionalDependencies)}'),
+            ),
+            ListTile(title: Text('Used by: ${_join(reverse)}')),
+          ],
+        );
+      },
+    );
+  }
+}
+
+final class _CallGraphTab extends StatelessWidget {
+  const _CallGraphTab({required this.envelope});
+
+  final CCDevToolsSnapshotEnvelope envelope;
+
+  @override
+  Widget build(BuildContext context) {
+    final catalogEdges =
+        envelope.catalog?.relations
+            .where((relation) => relation.kind != 'dependsOn')
+            .toList(growable: false) ??
+        const <CCDevToolsCatalogRelation>[];
+    final runtimeEdges = envelope.runtime.traceEdges;
+    if (catalogEdges.isEmpty && runtimeEdges.isEmpty) {
+      return const Center(child: Text('No capability call-chain data.'));
+    }
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        const Text(
+          'Static relations',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        for (final edge in catalogEdges)
+          ListTile(
+            dense: true,
+            leading: const Icon(Icons.account_tree_outlined),
+            title: Text('${edge.sourceId} → ${edge.targetId}'),
+            subtitle: Text(edge.kind),
+          ),
+        const Text(
+          'Runtime call chain',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        for (final edge in runtimeEdges)
+          ListTile(
+            dense: true,
+            leading: const Icon(Icons.timeline),
+            title: Text('${edge.sourceId} → ${edge.targetId}'),
+            subtitle: Text('${edge.kind} · ${edge.status} · ${edge.traceId}'),
+            trailing: Text('${edge.durationMicros} us'),
+          ),
+      ],
+    );
+  }
+}
+
+String _join(Iterable<String> values) {
+  final list = values.toList(growable: false);
+  return list.isEmpty ? 'none' : list.join(', ');
 }
 
 final class _MetricRow extends StatelessWidget {

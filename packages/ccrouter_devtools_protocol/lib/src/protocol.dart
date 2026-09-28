@@ -105,6 +105,85 @@ final class CCDevToolsCatalogRecord {
       );
 }
 
+/// One statically generated component node used by the dependency graph.
+final class CCDevToolsCatalogComponent {
+  /// Creates a component node with deterministic dependency lists.
+  CCDevToolsCatalogComponent({
+    required this.id,
+    required this.version,
+    Iterable<String> dependencies = const [],
+    Iterable<String> optionalDependencies = const [],
+  }) : dependencies = List.unmodifiable(dependencies),
+       optionalDependencies = List.unmodifiable(optionalDependencies),
+       assert(id != ''),
+       assert(version != '');
+
+  /// Stable Component ID.
+  final String id;
+
+  /// Published Component version.
+  final String version;
+
+  /// Required Component dependencies.
+  final List<String> dependencies;
+
+  /// Optional dependencies present in the generated Host closure.
+  final List<String> optionalDependencies;
+
+  /// Encodes this component node as JSON.
+  Map<String, Object> toJson() => <String, Object>{
+    'id': id,
+    'version': version,
+    'dependencies': dependencies,
+    'optionalDependencies': optionalDependencies,
+  };
+
+  /// Decodes a component node from a validated JSON object.
+  factory CCDevToolsCatalogComponent.fromJson(Map<String, Object?> json) =>
+      CCDevToolsCatalogComponent(
+        id: _requiredString(json, 'id'),
+        version: _requiredString(json, 'version'),
+        dependencies: _stringList(json, 'dependencies'),
+        optionalDependencies: _stringList(json, 'optionalDependencies'),
+      );
+}
+
+/// One static relationship between a Component or capability and another node.
+final class CCDevToolsCatalogRelation {
+  /// Creates an immutable relation for graph and call-chain views.
+  const CCDevToolsCatalogRelation({
+    required this.sourceId,
+    required this.targetId,
+    required this.kind,
+  }) : assert(sourceId != ''),
+       assert(targetId != ''),
+       assert(kind != '');
+
+  /// Stable source Component or capability ID.
+  final String sourceId;
+
+  /// Stable target Component or capability ID.
+  final String targetId;
+
+  /// Relationship kind such as `dependsOn`, `calls`, or `subscribes`.
+  final String kind;
+
+  /// Encodes this relation as JSON.
+  Map<String, Object> toJson() => <String, Object>{
+    'sourceId': sourceId,
+    'targetId': targetId,
+    'kind': kind,
+  };
+
+  /// Decodes a relation from a validated JSON object.
+  factory CCDevToolsCatalogRelation.fromJson(Map<String, Object?> json) =>
+      CCDevToolsCatalogRelation(
+        sourceId: _requiredString(json, 'sourceId'),
+        targetId: _requiredString(json, 'targetId'),
+        kind: _requiredString(json, 'kind'),
+      );
+}
+
 /// Immutable generated Catalog snapshot used by tooling.
 final class CCDevToolsStaticCatalogSnapshot {
   /// Creates a bounded static Catalog snapshot.
@@ -112,8 +191,12 @@ final class CCDevToolsStaticCatalogSnapshot {
     required this.capturedAt,
     this.protocolVersion = ccRouterDevToolsProtocolVersion,
     Iterable<CCDevToolsCatalogRecord> records = const [],
+    Iterable<CCDevToolsCatalogComponent> components = const [],
+    Iterable<CCDevToolsCatalogRelation> relations = const [],
     this.catalogFingerprint,
-  }) : records = List.unmodifiable(records);
+  }) : records = List.unmodifiable(records),
+       components = List.unmodifiable(components),
+       relations = List.unmodifiable(relations);
 
   /// Capture timestamp in UTC.
   final DateTime capturedAt;
@@ -124,6 +207,12 @@ final class CCDevToolsStaticCatalogSnapshot {
   /// Deterministically ordered generated records.
   final List<CCDevToolsCatalogRecord> records;
 
+  /// Components participating in the static dependency graph.
+  final List<CCDevToolsCatalogComponent> components;
+
+  /// Static capability and dependency relationships.
+  final List<CCDevToolsCatalogRelation> relations;
+
   /// Optional generator fingerprint for stale-catalog diagnostics.
   final String? catalogFingerprint;
 
@@ -133,6 +222,12 @@ final class CCDevToolsStaticCatalogSnapshot {
     'capturedAt': capturedAt.toUtc().toIso8601String(),
     if (catalogFingerprint != null) 'catalogFingerprint': catalogFingerprint,
     'records': records.map((record) => record.toJson()).toList(growable: false),
+    'components': components
+        .map((component) => component.toJson())
+        .toList(growable: false),
+    'relations': relations
+        .map((relation) => relation.toJson())
+        .toList(growable: false),
   };
 
   /// Decodes a Catalog snapshot from JSON.
@@ -143,6 +238,12 @@ final class CCDevToolsStaticCatalogSnapshot {
         catalogFingerprint: _optionalString(json, 'catalogFingerprint'),
         records: _requiredList(json, 'records')
             .map((value) => CCDevToolsCatalogRecord.fromJson(_object(value)))
+            .toList(growable: false),
+        components: _optionalList(json, 'components')
+            .map((value) => CCDevToolsCatalogComponent.fromJson(_object(value)))
+            .toList(growable: false),
+        relations: _optionalList(json, 'relations')
+            .map((value) => CCDevToolsCatalogRelation.fromJson(_object(value)))
             .toList(growable: false),
       );
 }
@@ -466,6 +567,19 @@ List<Object?> _requiredList(Map<String, Object?> json, String key) {
   if (value is List<Object?>) return value;
   throw FormatException('Expected a JSON array for "$key".');
 }
+
+List<Object?> _optionalList(Map<String, Object?> json, String key) {
+  final value = json[key];
+  if (value == null) return const [];
+  if (value is List<Object?>) return value;
+  throw FormatException('Expected a JSON array for "$key".');
+}
+
+List<String> _stringList(Map<String, Object?> json, String key) =>
+    _requiredList(
+      json,
+      key,
+    ).map((value) => _stringValue(value, key)).toList(growable: false);
 
 Map<String, Object?> _requiredObject(Map<String, Object?> json, String key) {
   return _object(json[key], key: key);

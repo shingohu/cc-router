@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatorVersion": "0.1.3",
+  "generatorVersion": "0.1.4",
   "package": {
     "name": "demo_kv_storage",
     "version": "0.1.0"

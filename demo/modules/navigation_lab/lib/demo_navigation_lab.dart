@@ -13,7 +13,8 @@ export 'src/lab_configuration.dart'
         demoApplicationLogger,
         demoNavigationAspect,
         demoDiagnosticsSink,
-        demoNavigationLabStore;
+        demoNavigationLabStore,
+        setDemoAnalyticsConsent;
 export 'src/component_capabilities.dart'
     show
         DemoAspectIds,
@@ -23,4 +24,6 @@ export 'src/component_capabilities.dart'
         DemoInitializationGates,
         DemoNavigationSourceIds,
         DemoRoutePolicyIds;
+export 'src/devtools_catalog.dart'
+    show demoDevToolsCatalog, registerDemoDevToolsExtension;
 export 'src/shell_contract.dart' show DemoExtraPayload;

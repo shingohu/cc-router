@@ -9,6 +9,7 @@ import 'package:demo_web_contracts/demo_web_contracts.dart';
 import 'package:flutter/material.dart';
 
 import 'lab_configuration.dart';
+import 'devtools_catalog.dart';
 import 'component_capabilities.dart';
 import 'shell_contract.dart';
 import 'ccrouter_generated/demo_navigation_lab_component.api.g.dart';
@@ -1103,8 +1104,14 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      builder: (_) =>
-          const SizedBox(height: 680, child: CCRouterDevToolsPanel()),
+      builder: (_) => SizedBox(
+        height: 680,
+        child: CCRouterDevToolsPanel(
+          provider: CCRouterDevToolsSnapshotProvider(
+            catalog: demoDevToolsCatalog,
+          ),
+        ),
+      ),
     );
   }
 }

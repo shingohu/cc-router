@@ -3529,9 +3529,21 @@ Future<void> _generateResolvedPackageBundles({
     );
     final dependencyNames =
         package.dependencies.where(runtimeBundles.contains).toList()..sort();
+    // Contract-only Packages intentionally remain Pure Dart and do not need
+    // to publish a Flutter/Host Bundle. The generated implementation Bundle
+    // carries descriptors for contracts owned by its local Components so the
+    // Host can still validate the boundary without importing a transitive
+    // contract Package directly.
+    final localComponentIds = {
+      for (final catalog in packageCatalogs) catalog.componentId,
+    };
+    final contractMetadata = <Map<String, Object?>>[
+      for (final candidate in indexes.values) ...candidate.metadata,
+    ];
     final contractDescriptorSource = _emitPackageContractDescriptors(
-      index.metadata,
+      contractMetadata,
       packageName,
+      ownerComponentIds: localComponentIds,
     );
     final contractRequirementSource = _emitPackageContractRequirements(
       index.metadata,
@@ -3667,8 +3679,9 @@ Map<String, Map<String, Object?>> _collectContractRecords(
 
 String _emitPackageContractDescriptors(
   Iterable<Map<String, Object?>> metadata,
-  String packageName,
-) {
+  String packageName, {
+  Set<String> ownerComponentIds = const <String>{},
+}) {
   final records = <String, Map<String, Object?>>{};
   for (final document in metadata) {
     for (final entry in <String, String>{
@@ -3681,6 +3694,11 @@ String _emitPackageContractDescriptors(
       for (final contract in _objects(document[entry.key])) {
         final id = '${contract['id'] ?? ''}';
         if (id.isEmpty) continue;
+        final owner = '${contract['componentId'] ?? ''}';
+        if (ownerComponentIds.isNotEmpty &&
+            !ownerComponentIds.contains(owner)) {
+          continue;
+        }
         records.putIfAbsent(
           id,
           () => <String, Object?>{

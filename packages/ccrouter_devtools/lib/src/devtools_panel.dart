@@ -1,4 +1,5 @@
 import 'package:ccrouter/ccrouter.dart';
+import 'package:ccrouter_devtools_protocol/ccrouter_devtools_protocol.dart';
 import 'package:flutter/material.dart';
 
 import 'snapshot.dart';
@@ -17,6 +18,7 @@ final class CCRouterDevToolsPanel extends StatefulWidget {
     super.key,
     this.provider,
     this.title = 'CCRouter DevTools',
+    this.onOpenSource,
   });
 
   /// Optional immutable diagnostics source, primarily useful for tests.
@@ -24,6 +26,12 @@ final class CCRouterDevToolsPanel extends StatefulWidget {
 
   /// Heading shown above the read-only tabs.
   final String title;
+
+  /// Optional Host callback for opening a source location in an IDE.
+  ///
+  /// DevTools itself cannot assume an editor or filesystem mapping. When this
+  /// callback is omitted, the panel still renders a copyable `package:` URI.
+  final ValueChanged<CCDevToolsSourceLocation>? onOpenSource;
 
   @override
   State<CCRouterDevToolsPanel> createState() => _CCRouterDevToolsPanelState();
@@ -68,7 +76,7 @@ final class _CCRouterDevToolsPanelState extends State<CCRouterDevToolsPanel> {
   @override
   Widget build(BuildContext context) => Material(
     child: DefaultTabController(
-      length: 6,
+      length: 8,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -90,22 +98,29 @@ final class _CCRouterDevToolsPanelState extends State<CCRouterDevToolsPanel> {
             isScrollable: true,
             tabs: [
               Tab(text: 'Overview'),
+              Tab(text: 'Catalog'),
               Tab(text: 'Components'),
               Tab(text: 'Entries'),
               Tab(text: 'Timeline'),
               Tab(text: 'Failures'),
               Tab(text: 'InitTask DAG'),
+              Tab(text: 'Call Graph'),
             ],
           ),
           Expanded(
             child: TabBarView(
               children: [
                 _OverviewView(snapshot: _snapshot),
+                _CatalogView(
+                  snapshot: _snapshot,
+                  onOpenSource: widget.onOpenSource,
+                ),
                 _ComponentGraphView(snapshot: _snapshot),
                 _EntriesView(snapshot: _snapshot),
                 _TimelineView(snapshot: _snapshot),
                 _FailuresView(snapshot: _snapshot),
                 _InitTaskView(snapshot: _snapshot),
+                _CallGraphView(snapshot: _snapshot),
               ],
             ),
           ),
@@ -228,8 +243,165 @@ final class _OverviewView extends StatelessWidget {
   }
 }
 
-/// Displays component ownership and dependency edges as a compact graph.
-final class _ComponentGraphView extends StatelessWidget {
+/// Displays a searchable static Catalog and its live Runtime linkage.
+final class _CatalogView extends StatefulWidget {
+  /// Creates a Catalog view for [snapshot].
+  const _CatalogView({required this.snapshot, this.onOpenSource});
+
+  /// Immutable diagnostics data.
+  final CCDevToolsSnapshot snapshot;
+
+  /// Optional source-opening callback owned by the Host.
+  final ValueChanged<CCDevToolsSourceLocation>? onOpenSource;
+
+  @override
+  State<_CatalogView> createState() => _CatalogViewState();
+}
+
+final class _CatalogViewState extends State<_CatalogView> {
+  final _query = TextEditingController();
+  String? _selectedId;
+
+  @override
+  void dispose() {
+    _query.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final catalog = widget.snapshot.catalog;
+    if (catalog == null) {
+      return const _EmptyState('没有静态 Catalog。请在 Host 注册生成的源码索引后刷新。');
+    }
+    final query = _query.text.trim().toLowerCase();
+    final records = catalog.records
+        .where((record) {
+          if (query.isEmpty) return true;
+          return '${record.kind} ${record.id} ${record.ownerComponentId} '
+                  '${record.packageName}'
+              .toLowerCase()
+              .contains(query);
+        })
+        .toList(growable: false);
+    final liveIds = {
+      for (final entry in widget.snapshot.routeEntries) entry.routeId,
+      for (final entry in widget.snapshot.traces) entry.target,
+    };
+    final selected = records.where((record) => record.id == _selectedId);
+    final record = selected.isEmpty ? null : selected.first;
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+          child: TextField(
+            controller: _query,
+            decoration: const InputDecoration(
+              labelText: 'Filter capability, component, or package',
+              prefixIcon: Icon(Icons.search),
+              border: OutlineInputBorder(),
+            ),
+            onChanged: (_) => setState(() {}),
+          ),
+        ),
+        _SectionTitle('Static Catalog', records.length),
+        if (record != null)
+          _CatalogRecordDetail(
+            record: record,
+            live: liveIds.contains(record.id),
+            onOpenSource: widget.onOpenSource,
+          ),
+        Expanded(
+          child: records.isEmpty
+              ? const _EmptyState('没有匹配的静态能力。')
+              : ListView.builder(
+                  itemCount: records.length,
+                  itemBuilder: (context, index) {
+                    final item = records[index];
+                    final live = liveIds.contains(item.id);
+                    return ListTile(
+                      dense: true,
+                      selected: item.id == _selectedId,
+                      leading: Icon(
+                        live ? Icons.radio_button_checked : Icons.circle,
+                        size: 16,
+                        color: live ? Colors.green : null,
+                      ),
+                      title: Text('${item.kind} · ${item.id}'),
+                      subtitle: Text(
+                        '${item.ownerComponentId} · ${item.packageName}',
+                      ),
+                      trailing: item.source == null
+                          ? null
+                          : const Icon(Icons.code, size: 18),
+                      onTap: () => setState(() => _selectedId = item.id),
+                    );
+                  },
+                ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Shows a selected Catalog record and its source navigation target.
+final class _CatalogRecordDetail extends StatelessWidget {
+  /// Creates a detail row for [record].
+  const _CatalogRecordDetail({
+    required this.record,
+    required this.live,
+    this.onOpenSource,
+  });
+
+  /// Selected static record.
+  final CCDevToolsCatalogRecord record;
+
+  /// Whether the capability currently appears in the Runtime snapshot.
+  final bool live;
+
+  /// Optional Host-owned source opener.
+  final ValueChanged<CCDevToolsSourceLocation>? onOpenSource;
+
+  @override
+  Widget build(BuildContext context) {
+    final source = record.source;
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      padding: const EdgeInsets.all(12),
+      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '${record.kind} · ${record.id}',
+            style: Theme.of(context).textTheme.titleSmall,
+          ),
+          Text(live ? 'Runtime: active' : 'Runtime: not observed'),
+          if (record.description case final description?) Text(description),
+          if (source != null)
+            Row(
+              children: [
+                Expanded(
+                  child: SelectableText(
+                    '${source.packageUri}:${source.line}:${source.column}',
+                  ),
+                ),
+                if (onOpenSource != null)
+                  IconButton(
+                    tooltip: 'Open source',
+                    onPressed: () => onOpenSource!(source),
+                    icon: const Icon(Icons.open_in_new),
+                  ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Displays component dependencies with search, focus, and reverse edges.
+final class _ComponentGraphView extends StatefulWidget {
   /// Creates the component graph for [snapshot].
   const _ComponentGraphView({required this.snapshot});
 
@@ -237,32 +409,113 @@ final class _ComponentGraphView extends StatelessWidget {
   final CCDevToolsSnapshot snapshot;
 
   @override
-  Widget build(BuildContext context) => snapshot.components.isEmpty
-      ? const _EmptyState('没有已注册组件。')
-      : ListView(
-          children: [
-            _SectionTitle('Component Graph', snapshot.components.length),
-            for (final component in snapshot.components)
-              Card(
-                margin: const EdgeInsets.fromLTRB(16, 4, 16, 4),
-                child: ListTile(
-                  title: Text(component.id),
-                  subtitle: Text(
-                    component.dependencies.isEmpty
-                        ? 'version ${component.version} · no required dependencies'
-                        : 'version ${component.version} · depends on '
-                              '${component.dependencies.join(', ')}',
-                  ),
-                  trailing: component.optionalDependencies.isEmpty
-                      ? null
-                      : Tooltip(
-                          message: component.optionalDependencies.join(', '),
-                          child: const Icon(Icons.link, size: 18),
-                        ),
+  State<_ComponentGraphView> createState() => _ComponentGraphViewState();
+}
+
+final class _ComponentGraphViewState extends State<_ComponentGraphView> {
+  final _query = TextEditingController();
+  String? _focusedId;
+
+  @override
+  void dispose() {
+    _query.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final components = widget.snapshot.catalog?.components ?? const [];
+    final fallback = widget.snapshot.components
+        .map(
+          (component) => CCDevToolsCatalogComponent(
+            id: component.id,
+            version: component.version,
+            dependencies: component.dependencies,
+            optionalDependencies: component.optionalDependencies,
+          ),
+        )
+        .toList(growable: false);
+    final nodes = components.isEmpty ? fallback : components;
+    if (nodes.isEmpty) return const _EmptyState('没有已注册组件。');
+    final query = _query.text.trim().toLowerCase();
+    final visible = nodes
+        .where((node) {
+          if (query.isEmpty) return true;
+          return node.id.toLowerCase().contains(query) ||
+              node.version.toLowerCase().contains(query);
+        })
+        .toList(growable: false);
+    final focused = nodes.where((node) => node.id == _focusedId);
+    final focusedNode = focused.isEmpty ? null : focused.first;
+    final reverse = focusedNode == null
+        ? const <String>[]
+        : [
+            for (final node in nodes)
+              if (node.dependencies.contains(focusedNode.id) ||
+                  node.optionalDependencies.contains(focusedNode.id))
+                node.id,
+          ];
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+          child: TextField(
+            controller: _query,
+            decoration: const InputDecoration(
+              labelText: 'Filter components',
+              prefixIcon: Icon(Icons.search),
+              border: OutlineInputBorder(),
+            ),
+            onChanged: (_) => setState(() {}),
+          ),
+        ),
+        if (focusedNode != null)
+          ListTile(
+            dense: true,
+            leading: const Icon(Icons.center_focus_strong),
+            title: Text('Focused: ${focusedNode.id}'),
+            subtitle: Text(
+              'depends on ${_joinOrNone(focusedNode.dependencies)} · '
+              'reverse dependants ${_joinOrNone(reverse)}',
+            ),
+            trailing: IconButton(
+              tooltip: 'Clear focus',
+              onPressed: () => setState(() => _focusedId = null),
+              icon: const Icon(Icons.clear),
+            ),
+          ),
+        _SectionTitle('Component Graph', visible.length),
+        Expanded(
+          child: ListView.builder(
+            itemCount: visible.length,
+            itemBuilder: (context, index) {
+              final component = visible[index];
+              final isFocused = component.id == _focusedId;
+              return ListTile(
+                dense: true,
+                selected: isFocused,
+                leading: Icon(
+                  isFocused ? Icons.center_focus_strong : Icons.hub_outlined,
                 ),
-              ),
-          ],
-        );
+                title: Text(component.id),
+                subtitle: Text(
+                  'v${component.version} · required: '
+                  '${_joinOrNone(component.dependencies)}',
+                ),
+                trailing: component.optionalDependencies.isEmpty
+                    ? null
+                    : Tooltip(
+                        message: component.optionalDependencies.join(', '),
+                        child: const Icon(Icons.link, size: 18),
+                      ),
+                onTap: () => setState(() => _focusedId = component.id),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 /// Displays managed Route Entries beside the hybrid backend ledger.
@@ -475,11 +728,72 @@ final class _InitTaskView extends StatelessWidget {
   }
 }
 
+/// Displays static capability relations beside bounded runtime trace edges.
+final class _CallGraphView extends StatelessWidget {
+  /// Creates a call graph for [snapshot].
+  const _CallGraphView({required this.snapshot});
+
+  /// Immutable diagnostics data.
+  final CCDevToolsSnapshot snapshot;
+
+  @override
+  Widget build(BuildContext context) {
+    final staticEdges =
+        snapshot.catalog?.relations
+            .where((relation) => relation.kind != 'dependsOn')
+            .toList(growable: false) ??
+        const <CCDevToolsCatalogRelation>[];
+    final runtimeEdges = snapshot.toProtocolRuntimeSnapshot().traceEdges.toList(
+      growable: false,
+    );
+    if (staticEdges.isEmpty && runtimeEdges.isEmpty) {
+      return const _EmptyState('没有静态关系或运行时调用链。');
+    }
+    return ListView(
+      padding: const EdgeInsets.only(bottom: 24),
+      children: [
+        _SectionTitle('Static capability relations', staticEdges.length),
+        for (final edge in staticEdges)
+          ListTile(
+            dense: true,
+            leading: const Icon(Icons.account_tree_outlined),
+            title: Text('${edge.sourceId} → ${edge.targetId}'),
+            subtitle: Text(edge.kind),
+          ),
+        _SectionTitle('Runtime call chain', runtimeEdges.length),
+        for (final edge in runtimeEdges)
+          ListTile(
+            dense: true,
+            leading: Icon(_traceStatusIcon(edge.status)),
+            title: Text('${edge.sourceId} → ${edge.targetId}'),
+            subtitle: Text(
+              '${edge.kind} · ${edge.status} · trace ${edge.traceId}',
+            ),
+            trailing: Text('${edge.durationMicros} μs'),
+          ),
+      ],
+    );
+  }
+}
+
 /// Formats a bounded duration without exposing arbitrary payloads.
 String _duration(Duration duration) => '${duration.inMilliseconds} ms';
 
 /// Formats a diagnostic timestamp for a compact list row.
 String _time(DateTime timestamp) => timestamp.toLocal().toIso8601String();
+
+/// Joins a bounded list for compact graph labels.
+String _joinOrNone(Iterable<String> values) {
+  final items = values.toList(growable: false);
+  return items.isEmpty ? 'none' : items.join(', ');
+}
+
+/// Selects an icon for one trace outcome.
+IconData _traceStatusIcon(String status) => switch (status) {
+  'succeeded' || 'completed' => Icons.check_circle_outline,
+  'failed' || 'cancelled' => Icons.error_outline,
+  _ => Icons.timeline,
+};
 
 /// Selects a neutral icon for one managed Route Entry state.
 IconData _routeStateIcon(CCRouteEntryLifecycleState state) => switch (state) {

@@ -20,6 +20,7 @@ final class CCDevToolsSnapshot {
   CCDevToolsSnapshot({
     required this.capturedAt,
     required this.runtimeState,
+    this.catalog,
     List<CCComponentManifest> components = const [],
     List<CCRouteEntrySnapshot> routeEntries = const [],
     List<CCBackendEntrySnapshot> backendEntries = const [],
@@ -59,6 +60,9 @@ final class CCDevToolsSnapshot {
 
   /// Runtime availability at capture time.
   final CCDevToolsRuntimeState runtimeState;
+
+  /// Optional generated static source index linked by stable capability IDs.
+  final CCDevToolsStaticCatalogSnapshot? catalog;
 
   /// Installed component manifests in dependency order.
   final List<CCComponentManifest> components;

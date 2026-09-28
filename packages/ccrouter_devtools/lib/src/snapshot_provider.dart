@@ -1,4 +1,5 @@
 import 'package:ccrouter/ccrouter.dart';
+import 'package:ccrouter_devtools_protocol/ccrouter_devtools_protocol.dart';
 import 'package:flutter/foundation.dart';
 
 import 'snapshot.dart';
@@ -25,7 +26,10 @@ abstract interface class CCDevToolsSnapshotProvider {
 final class CCRouterDevToolsSnapshotProvider
     implements CCDevToolsSnapshotProvider {
   /// Creates a provider backed by the process-default CCRouter facade.
-  const CCRouterDevToolsSnapshotProvider();
+  const CCRouterDevToolsSnapshotProvider({this.catalog});
+
+  /// Optional generated source index supplied by the Host composition root.
+  final CCDevToolsStaticCatalogSnapshot? catalog;
 
   @override
   /// Captures bounded snapshots, or an empty uninitialized view.
@@ -35,6 +39,7 @@ final class CCRouterDevToolsSnapshotProvider
       return CCDevToolsSnapshot(
         capturedAt: DateTime.now(),
         runtimeState: CCDevToolsRuntimeState.initialized,
+        catalog: catalog,
         components: CCRouter.registeredComponents,
         routeEntries: CCRouter.activeRouteEntries,
         backendEntries: CCRouter.backendEntries,

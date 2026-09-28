@@ -78,6 +78,14 @@ Read [implementation-patterns.md](references/implementation-patterns.md) when ad
   `devtools/ccrouter_extension` with a stable Flutter Web SDK; the OHOS SDK is
   not a valid Web Extension test target. The Extension is read-only and must
   tolerate a missing Runtime endpoint without changing application behavior.
+- When a generated or application-owned static Catalog is available, pass it to
+  `CCRouterDevToolsSnapshotProvider(catalog: ...)` and
+  `CCDevToolsServiceExtension.register(catalog: ...)`. The Catalog is joined to
+  Runtime entries and trace edges by stable IDs; missing Catalog records are
+  shown as unresolved rather than inferred. Source locations are copyable
+  `package:` references. An IDE opener may be supplied through the panel's
+  `onOpenSource` callback, but the framework never assumes an editor or local
+  filesystem mapping.
 - Enable `ccrouter_analyzer_plugin` only through the host Package's Analysis Server bootstrap. Keep its Analyzer dependency isolated from the application Workspace; do not add a path dependency to the rule Package when the Analysis Server will copy the bootstrap to a temporary directory. Pin unreleased Git bootstraps to a reviewed commit and use the isolated loader `analyze/compile` smoke; switch to the provided Hosted manifest only after publication. If the plugin is unavailable or incompatible, disable the bootstrap and keep Dart Analyzer plus `ccrouter generate --check` as the authoritative gates.
 - Keep analytics separate from diagnostics: `CCDiagnosticEvent` explains framework execution and failure, while `CCAnalyticsEvent` represents a product behavior. Analytics properties must use validated primitive values and must not contain credentials, full URI values, Widgets, exceptions, or business objects. Analytics Sink failures and queue pressure must never alter navigation or component results.
 - Use `CCRouter.traceBundle(traceId)` for bounded local troubleshooting across nested calls. It is not an audit log, replay source, or business Event store; records may be incomplete after capacity rotation.

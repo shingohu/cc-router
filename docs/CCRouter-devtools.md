@@ -1,7 +1,8 @@
 # CCRouter DevTools 只读可视化
 
-> 状态：1.x 已完成可嵌入只读面板；纯 Dart Snapshot/Trace Edge 协议已完成最小闭环，官方
-> DevTools Extension 和高级图形交互仍列入正式发布前的 P1 工具计划。
+> 状态：1.x 已完成可嵌入只读面板、纯 Dart Snapshot/Trace Edge 协议和官方 DevTools
+> Extension。Catalog/Runtime 联动、源码定位、组件依赖聚焦和能力调用链均已落地；后续只做
+> 诊断字段扩展和性能维护，不增加 Runtime 控制操作。
 
 ## 定位
 
@@ -43,7 +44,10 @@ const diagnosticsPage = CCRouterDevToolsPanel();
 
 - **Overview**：Runtime 状态、组件数、Managed Route Entry、Backend Entry、Pending
   导航、Failure 和 InitTask 数量，以及状态恢复需求信号。
-- **Components**：组件版本、必选/可选依赖组成的只读 Component Graph。
+- **Catalog**：搜索 Route、Service、Command、Event、InitTask，显示它是否出现在当前
+  Runtime，并展示可复制的源码位置。Host 可以提供 `onOpenSource` 做 IDE/源码浏览器映射。
+- **Components**：组件版本、必选/可选依赖组成的只读 Component Graph，支持搜索、聚焦和反向
+  依赖查看。
 - **Entries**：Managed Route Entry 的生命周期、Host/Outlet/Owner，以及 managed、foreign、
   opaque Backend Entry ledger。foreign/opaque 只表示观察结果，不代表可以由面板操作。
 - **Timeline**：有界 Trace、导航生命周期事件和 Backend transition，显示稳定 ID、状态、
@@ -51,6 +55,8 @@ const diagnosticsPage = CCRouterDevToolsPanel();
 - **Failures**：导航失败阶段、原因、错误类型、恢复结果、能力降级和等待策略决策的请求。
 - **InitTask DAG**：任务状态、Gate、Owner 和 `dependsOn` 边；缺失的依赖会明确标记，
   但面板不会尝试修复或重排任务。
+- **Call Graph**：静态 Catalog 关系和当前有界 Trace Edge 的只读调用链。静态关系用于解释
+  预期协作，Runtime 边用于确认本次实际发生的调用；两者不互相猜测或补全。
 
 所有列表都来自 CCRouter 已有的容量限制。刷新和事件订阅只重新读取快照，不改变 Runtime。
 
@@ -78,7 +84,7 @@ Query 值或业务结果。`CCDevToolsSnapshot` 会再次复制列表边界，�
 审计日志、Replay 数据源或生产监控传输器。需要外部日志时，应使用 `CCDiagnosticsConfig`
 与应用自己的日志 Sink。
 
-## 后续官方 DevTools Extension
+## 官方 DevTools Extension
 
 仓库现在提供独立的 `devtools/ccrouter_extension` Package。Host 的 Debug Composition Root
 可以注册一次只读 VM Service 入口：
@@ -89,8 +95,9 @@ CCDevToolsServiceExtension.register(
 );
 ```
 
-Extension 通过 `ext.ccrouter.snapshot` 读取版本化 Envelope；它只展示 Runtime 状态、Entry
-和 Trace 摘要，不能导航、重试、销毁 Scope、激活组件或修改 Adapter。发布前使用支持 Web
+Extension 通过 `ext.ccrouter.snapshot` 读取版本化 Envelope；它提供 Overview、Catalog、
+Components 和 Call Graph 四个只读页，并将静态 Catalog 与 Runtime Entry/Trace 按稳定 ID
+关联。它不能导航、重试、销毁 Scope、激活组件或修改 Adapter。发布前使用支持 Web
 的稳定 Flutter SDK 执行：
 
 ```bash
@@ -102,6 +109,6 @@ dart run devtools_extensions build_and_copy \
 ```
 
 当前仓库的 OHOS Flutter SDK 不能运行 `dart:js_interop` Web widget test，因此 Extension
-门禁是稳定 SDK 的 Web 构建加官方 validate；框架和 Demo 仍使用项目默认 FVM 验证。高级
-组件筛选、Route-to-source IDE 打开和单次调用链图形交互仍按
-[`CCRouter-pre-release-capability-plan.md`](CCRouter-pre-release-capability-plan.md) 后续阶段推进。
+门禁是稳定 SDK 的 Web 构建加官方 validate；框架和 Demo 仍使用项目默认 FVM 验证。Extension
+显示源码 URI，但不绑定本机 IDE；需要跳转时由 Host/开发工具自行建立 Package URI 到工作区
+文件的映射。
