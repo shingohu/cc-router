@@ -2,11 +2,12 @@
 
 ## 1. 审查结论
 
-- 审查日期：2026-09-27
+- 审查日期：2026-09-29
 - 审查范围：路由 Runtime、业务 Facade、Host/Adapter SPI、GoRouter Adapter、生成器、
   Service、Command、Event、初始化任务、Demo、测试与诊断模型。
-- 自动化基线：`dart analyze` 通过；`ccrouter_test` 339 项、Demo 31 项、Generator 216 项测试通过；
-  Demo 生成物缓存与 `--no-cache` 两种 `--check` 均通过；macOS debug build 通过。
+- 自动化基线：`dart analyze` 通过；`ccrouter_test` 346 项、Demo 37 项、Generator 229 项测试通过；
+  Demo 生成物缓存与 `--no-cache` 两种 `--check` 均通过；macOS、iOS Simulator、Android、Web 和
+  OHOS 构建 smoke 通过。
 - 总体结论：当前实现满足 13 条约定在当前静态组件范围内的发布门槛，没有未解决的 P0 或
   P1 问题。本轮实际发现并修复了 InitTask 重叠 Gate 丢失新就绪任务、Generated SPI 只信任
   生成期身份、Adapter attach 失败状态残留，以及 Runtime/Multi-Host 清理被单点异常中断的问题；
@@ -296,14 +297,21 @@ Contract Runtime Registry，而不是改变零订阅者语义。
 
 ## 7. 本轮最终门禁
 
-- `fvm dart test --concurrency=1 packages/ccrouter_test/generator_test`：216 项通过；
-- `fvm flutter test packages/ccrouter_test/test`：339 项通过；
-- `fvm flutter test demo`：31 项通过；
+- `fvm dart test --concurrency=1 packages/ccrouter_test/generator_test`：229 项通过；
+- `fvm flutter test --concurrency=1 packages/ccrouter_test/test`：346 项通过；
+- `fvm flutter test --concurrency=1 demo/test`：37 项通过；
+- `fvm dart test --concurrency=1 packages/ccrouter_devtools_protocol/test`：5 项通过；
+- `fvm flutter test --concurrency=1 packages/ccrouter_devtools/test`：8 项通过；
+- `fvm flutter analyze devtools/ccrouter_extension`：无问题；
 - `fvm dart analyze`：无问题；
-- `fvm dart run ccrouter_generator:ccrouter generate demo --check` 与 `--no-cache --check`：31 条路由、
-  8 个生成 Package 均同步；
+- `fvm dart run ccrouter_generator:ccrouter generate demo --check --profile` 与
+  `--no-cache --check --profile`：生成物一致，缓存和无缓存路径均通过；
 - `ccrouter find` 已验证 Route ID/Pattern 与 InitTask 稳定 ID，查询只读且受 Host 依赖闭包约束；
-- `fvm flutter build macos --debug`：成功生成 `ccrouter_demo.app`；
+- `fvm flutter build macos --debug`、`ios --simulator --no-codesign`、`apk --debug`、`web` 和
+  `hap --debug`：均成功；这些是当前 SDK/主机的构建 smoke，不等价于真实设备手势、原生多窗口
+  或长期 RSS/Heap 无泄漏证明；
+- Runtime/Service/Command/Event/InitTask 混合性能回归、Analytics 队列压力和资源释放回归通过；
+  1x/10x/20x/30x 生成基准已覆盖冷/热路径，长期 RSS 仅作为同机趋势保存；
 - `git diff --check`：通过。
 
 后续扩展 Service Proxy 方法矩阵、Action Pipeline、动态组件、Android Predictive Back、

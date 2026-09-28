@@ -462,8 +462,10 @@ CLI 继续保持非覆盖式，增加可选模板：
 
 - [x] 高级 Service/Command/Event/InitTask 模板；
 - [x] 模板非覆盖测试、生成器校验和分析门禁；错误示例继续由各能力生成器测试覆盖；
-- [ ] 全量生成物回归、性能/RSS/Heap/长时间 Runtime 和多平台报告；当前 P0-3 已完成可重复
-  基线和确定性资源断言，真实 macOS/iOS/OHOS 设备矩阵与全量回归在所有专项完成后执行。
+- [x] 2026-09-29 完成全量生成物回归、混合能力性能基准、Analytics 队列压力、Runtime 长运行
+  和资源释放回归；生成器覆盖 Route/Service/Command/Event/InitTask 的 1x/10x/20x/30x 冷/热
+  路径，缓存与 `--no-cache` 输出一致。macOS、iOS Simulator、Android、Web、OHOS 构建 smoke
+  通过；真实 iOS/macOS/OHOS 设备矩阵、长期生产 RSS/Heap 趋势仍需持续采样。
 - [ ] 正式发布候选版本和迁移文档。
 
 ## 11. 明确不纳入本轮

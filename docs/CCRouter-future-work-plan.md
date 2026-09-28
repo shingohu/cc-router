@@ -75,9 +75,11 @@
   mtime/size 替代内容摘要。
 - [x] 建立冷启动、初始化、路由解析、导航延迟、并发导航、Runtime dispose 和长期 RSS 的
   同机趋势入口；长期趋势仍需按发布版本持续采样。
-- [ ] 继续做 macOS、iOS 真机/模拟器和 OHOS 运行 smoke；平台 SDK 变更只做兼容性修复，不能
-  用 Pure Dart benchmark 代替真实平台结论。
-- [ ] 继续检查 Adapter、Observer、Route Scope、Overlay、Timer 和 Stream 的释放路径。
+- [x] 2026-09-29 完成 macOS、iOS Simulator、Android、Web 和 OHOS 构建 smoke；真实 iOS/macOS
+  真机手势、原生多窗口和平台长期运行仍按兼容性维护持续采样，不能用 Pure Dart benchmark
+  代替真实平台结论。
+- [x] 2026-09-29 完成 Adapter、Observer、Route Scope、Overlay、Timer 和 Stream 的释放路径
+  回归；长期 RSS/Heap 趋势仍需按发布版本持续采样。
 - [x] 2026-09-27 核对架构、路由、契约、生成器、分析事件与后续计划文档，纠正已实现能力、
   旧生成路径、旧 API 名称和当前测试数量；历史回归基准保留其原始口径。
 - [x] 保留 `CCRouterRuntime.forTesting` 与 Zone-local Test Runtime Overlay，并提取私有 Runtime
