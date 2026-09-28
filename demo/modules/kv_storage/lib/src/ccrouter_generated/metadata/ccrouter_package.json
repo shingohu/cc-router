@@ -1,0 +1,621 @@
+{
+  "schemaVersion": 2,
+  "generatorVersion": "0.1.0",
+  "package": {
+    "name": "demo_kv_storage",
+    "version": "0.1.0"
+  },
+  "contentFingerprint": "34dfb7eab7879cec25fceeb469c1bc513f2d255415a9332bdf455997e13740fc",
+  "bundle": {
+    "library": "lib/src/ccrouter_generated/host/demo_kv_storage_ccrouter.g.dart",
+    "symbol": "ccrouterGeneratedPackageBundle"
+  },
+  "dependencies": [],
+  "metadata": [
+    {
+      "schemaVersion": 4,
+      "package": "demo_kv_storage",
+      "source": "lib/src/demo_kv_storage_component.dart",
+      "componentDeclarations": [
+        "demo_kv_storage_component"
+      ],
+      "componentManifests": {
+        "demo_kv_storage_component": "demoKvStorageComponentManifest"
+      },
+      "componentSymbols": {
+        "demo_kv_storage_component": "demoKvStorageComponent"
+      },
+      "components": [
+        {
+          "id": "demo_kv_storage_component",
+          "version": "0.1.0",
+          "dependencies": [],
+          "optionalDependencies": [],
+          "serviceDependencies": [],
+          "commandDependencies": []
+        }
+      ],
+      "routes": [],
+      "routeImplementations": [],
+      "contributions": []
+    },
+    {
+      "schemaVersion": 4,
+      "package": "demo_kv_storage",
+      "source": "lib/src/storage_service.dart",
+      "componentDeclarations": [],
+      "componentManifests": {},
+      "componentSymbols": {},
+      "components": [],
+      "routes": [],
+      "routeImplementations": [],
+      "contributions": [],
+      "serviceContracts": [
+        {
+          "id": "demo.kv_storage",
+          "componentId": "demo_kv_storage_component",
+          "version": "0.1.0",
+          "description": "Stores typed values in isolated application namespaces.",
+          "package": "demo_kv_storage",
+          "source": "lib/src/storage_service.dart",
+          "declaration": {
+            "symbol": "DemoKeyValueStorageService",
+            "packageUri": "package:demo_kv_storage/src/storage_service.dart",
+            "line": 12,
+            "column": 26
+          },
+          "methods": [
+            {
+              "memberKind": "method",
+              "methodId": "clear",
+              "returnKind": "future",
+              "returnType": "Future<void>",
+              "resultType": "void",
+              "typeParameters": [],
+              "parameters": [
+                {
+                  "name": "namespace",
+                  "type": "DemoStorageNamespace",
+                  "kind": "requiredPositional",
+                  "default": null
+                }
+              ],
+              "capabilities": [
+                "typedArguments",
+                "callerIdentity",
+                "methodTrace",
+                "scopeCancellation"
+              ],
+              "unsupportedReason": null,
+              "declaration": {
+                "symbol": "clear",
+                "packageUri": "package:demo_kv_storage/src/storage_service.dart",
+                "line": 62,
+                "column": 16
+              }
+            },
+            {
+              "memberKind": "method",
+              "methodId": "getBool",
+              "returnKind": "future",
+              "returnType": "Future<bool?>",
+              "resultType": "bool?",
+              "typeParameters": [],
+              "parameters": [
+                {
+                  "name": "namespace",
+                  "type": "DemoStorageNamespace",
+                  "kind": "requiredPositional",
+                  "default": null
+                },
+                {
+                  "name": "key",
+                  "type": "String",
+                  "kind": "requiredPositional",
+                  "default": null
+                }
+              ],
+              "capabilities": [
+                "typedArguments",
+                "callerIdentity",
+                "methodTrace",
+                "scopeCancellation"
+              ],
+              "unsupportedReason": null,
+              "declaration": {
+                "symbol": "getBool",
+                "packageUri": "package:demo_kv_storage/src/storage_service.dart",
+                "line": 50,
+                "column": 17
+              }
+            },
+            {
+              "memberKind": "method",
+              "methodId": "getDouble",
+              "returnKind": "future",
+              "returnType": "Future<double?>",
+              "resultType": "double?",
+              "typeParameters": [],
+              "parameters": [
+                {
+                  "name": "namespace",
+                  "type": "DemoStorageNamespace",
+                  "kind": "requiredPositional",
+                  "default": null
+                },
+                {
+                  "name": "key",
+                  "type": "String",
+                  "kind": "requiredPositional",
+                  "default": null
+                }
+              ],
+              "capabilities": [
+                "typedArguments",
+                "callerIdentity",
+                "methodTrace",
+                "scopeCancellation"
+              ],
+              "unsupportedReason": null,
+              "declaration": {
+                "symbol": "getDouble",
+                "packageUri": "package:demo_kv_storage/src/storage_service.dart",
+                "line": 47,
+                "column": 19
+              }
+            },
+            {
+              "memberKind": "method",
+              "methodId": "getInt",
+              "returnKind": "future",
+              "returnType": "Future<int?>",
+              "resultType": "int?",
+              "typeParameters": [],
+              "parameters": [
+                {
+                  "name": "namespace",
+                  "type": "DemoStorageNamespace",
+                  "kind": "requiredPositional",
+                  "default": null
+                },
+                {
+                  "name": "key",
+                  "type": "String",
+                  "kind": "requiredPositional",
+                  "default": null
+                }
+              ],
+              "capabilities": [
+                "typedArguments",
+                "callerIdentity",
+                "methodTrace",
+                "scopeCancellation"
+              ],
+              "unsupportedReason": null,
+              "declaration": {
+                "symbol": "getInt",
+                "packageUri": "package:demo_kv_storage/src/storage_service.dart",
+                "line": 44,
+                "column": 16
+              }
+            },
+            {
+              "memberKind": "method",
+              "methodId": "getJson",
+              "returnKind": "future",
+              "returnType": "Future<Map<String, Object?>?>",
+              "resultType": "Map<String, Object?>?",
+              "typeParameters": [],
+              "parameters": [
+                {
+                  "name": "namespace",
+                  "type": "DemoStorageNamespace",
+                  "kind": "requiredPositional",
+                  "default": null
+                },
+                {
+                  "name": "key",
+                  "type": "String",
+                  "kind": "requiredPositional",
+                  "default": null
+                }
+              ],
+              "capabilities": [
+                "typedArguments",
+                "callerIdentity",
+                "methodTrace",
+                "scopeCancellation"
+              ],
+              "unsupportedReason": null,
+              "declaration": {
+                "symbol": "getJson",
+                "packageUri": "package:demo_kv_storage/src/storage_service.dart",
+                "line": 53,
+                "column": 33
+              }
+            },
+            {
+              "memberKind": "method",
+              "methodId": "getString",
+              "returnKind": "future",
+              "returnType": "Future<String?>",
+              "resultType": "String?",
+              "typeParameters": [],
+              "parameters": [
+                {
+                  "name": "namespace",
+                  "type": "DemoStorageNamespace",
+                  "kind": "requiredPositional",
+                  "default": null
+                },
+                {
+                  "name": "key",
+                  "type": "String",
+                  "kind": "requiredPositional",
+                  "default": null
+                }
+              ],
+              "capabilities": [
+                "typedArguments",
+                "callerIdentity",
+                "methodTrace",
+                "scopeCancellation"
+              ],
+              "unsupportedReason": null,
+              "declaration": {
+                "symbol": "getString",
+                "packageUri": "package:demo_kv_storage/src/storage_service.dart",
+                "line": 41,
+                "column": 19
+              }
+            },
+            {
+              "memberKind": "method",
+              "methodId": "keys",
+              "returnKind": "future",
+              "returnType": "Future<List<String>>",
+              "resultType": "List<String>",
+              "typeParameters": [],
+              "parameters": [
+                {
+                  "name": "namespace",
+                  "type": "DemoStorageNamespace",
+                  "kind": "requiredPositional",
+                  "default": null
+                }
+              ],
+              "capabilities": [
+                "typedArguments",
+                "callerIdentity",
+                "methodTrace",
+                "scopeCancellation"
+              ],
+              "unsupportedReason": null,
+              "declaration": {
+                "symbol": "keys",
+                "packageUri": "package:demo_kv_storage/src/storage_service.dart",
+                "line": 65,
+                "column": 24
+              }
+            },
+            {
+              "memberKind": "method",
+              "methodId": "remove",
+              "returnKind": "future",
+              "returnType": "Future<void>",
+              "resultType": "void",
+              "typeParameters": [],
+              "parameters": [
+                {
+                  "name": "namespace",
+                  "type": "DemoStorageNamespace",
+                  "kind": "requiredPositional",
+                  "default": null
+                },
+                {
+                  "name": "key",
+                  "type": "String",
+                  "kind": "requiredPositional",
+                  "default": null
+                }
+              ],
+              "capabilities": [
+                "typedArguments",
+                "callerIdentity",
+                "methodTrace",
+                "scopeCancellation"
+              ],
+              "unsupportedReason": null,
+              "declaration": {
+                "symbol": "remove",
+                "packageUri": "package:demo_kv_storage/src/storage_service.dart",
+                "line": 59,
+                "column": 16
+              }
+            },
+            {
+              "memberKind": "method",
+              "methodId": "setBool",
+              "returnKind": "future",
+              "returnType": "Future<void>",
+              "resultType": "void",
+              "typeParameters": [],
+              "parameters": [
+                {
+                  "name": "namespace",
+                  "type": "DemoStorageNamespace",
+                  "kind": "requiredPositional",
+                  "default": null
+                },
+                {
+                  "name": "key",
+                  "type": "String",
+                  "kind": "requiredPositional",
+                  "default": null
+                },
+                {
+                  "name": "value",
+                  "type": "bool",
+                  "kind": "requiredPositional",
+                  "default": null
+                }
+              ],
+              "capabilities": [
+                "typedArguments",
+                "callerIdentity",
+                "methodTrace",
+                "scopeCancellation"
+              ],
+              "unsupportedReason": null,
+              "declaration": {
+                "symbol": "setBool",
+                "packageUri": "package:demo_kv_storage/src/storage_service.dart",
+                "line": 31,
+                "column": 16
+              }
+            },
+            {
+              "memberKind": "method",
+              "methodId": "setDouble",
+              "returnKind": "future",
+              "returnType": "Future<void>",
+              "resultType": "void",
+              "typeParameters": [],
+              "parameters": [
+                {
+                  "name": "namespace",
+                  "type": "DemoStorageNamespace",
+                  "kind": "requiredPositional",
+                  "default": null
+                },
+                {
+                  "name": "key",
+                  "type": "String",
+                  "kind": "requiredPositional",
+                  "default": null
+                },
+                {
+                  "name": "value",
+                  "type": "double",
+                  "kind": "requiredPositional",
+                  "default": null
+                }
+              ],
+              "capabilities": [
+                "typedArguments",
+                "callerIdentity",
+                "methodTrace",
+                "scopeCancellation"
+              ],
+              "unsupportedReason": null,
+              "declaration": {
+                "symbol": "setDouble",
+                "packageUri": "package:demo_kv_storage/src/storage_service.dart",
+                "line": 24,
+                "column": 16
+              }
+            },
+            {
+              "memberKind": "method",
+              "methodId": "setInt",
+              "returnKind": "future",
+              "returnType": "Future<void>",
+              "resultType": "void",
+              "typeParameters": [],
+              "parameters": [
+                {
+                  "name": "namespace",
+                  "type": "DemoStorageNamespace",
+                  "kind": "requiredPositional",
+                  "default": null
+                },
+                {
+                  "name": "key",
+                  "type": "String",
+                  "kind": "requiredPositional",
+                  "default": null
+                },
+                {
+                  "name": "value",
+                  "type": "int",
+                  "kind": "requiredPositional",
+                  "default": null
+                }
+              ],
+              "capabilities": [
+                "typedArguments",
+                "callerIdentity",
+                "methodTrace",
+                "scopeCancellation"
+              ],
+              "unsupportedReason": null,
+              "declaration": {
+                "symbol": "setInt",
+                "packageUri": "package:demo_kv_storage/src/storage_service.dart",
+                "line": 21,
+                "column": 16
+              }
+            },
+            {
+              "memberKind": "method",
+              "methodId": "setJson",
+              "returnKind": "future",
+              "returnType": "Future<void>",
+              "resultType": "void",
+              "typeParameters": [],
+              "parameters": [
+                {
+                  "name": "namespace",
+                  "type": "DemoStorageNamespace",
+                  "kind": "requiredPositional",
+                  "default": null
+                },
+                {
+                  "name": "key",
+                  "type": "String",
+                  "kind": "requiredPositional",
+                  "default": null
+                },
+                {
+                  "name": "value",
+                  "type": "Map<String, Object?>",
+                  "kind": "requiredPositional",
+                  "default": null
+                }
+              ],
+              "capabilities": [
+                "typedArguments",
+                "callerIdentity",
+                "methodTrace",
+                "scopeCancellation"
+              ],
+              "unsupportedReason": null,
+              "declaration": {
+                "symbol": "setJson",
+                "packageUri": "package:demo_kv_storage/src/storage_service.dart",
+                "line": 34,
+                "column": 16
+              }
+            },
+            {
+              "memberKind": "method",
+              "methodId": "setString",
+              "returnKind": "future",
+              "returnType": "Future<void>",
+              "resultType": "void",
+              "typeParameters": [],
+              "parameters": [
+                {
+                  "name": "namespace",
+                  "type": "DemoStorageNamespace",
+                  "kind": "requiredPositional",
+                  "default": null
+                },
+                {
+                  "name": "key",
+                  "type": "String",
+                  "kind": "requiredPositional",
+                  "default": null
+                },
+                {
+                  "name": "value",
+                  "type": "String",
+                  "kind": "requiredPositional",
+                  "default": null
+                }
+              ],
+              "capabilities": [
+                "typedArguments",
+                "callerIdentity",
+                "methodTrace",
+                "scopeCancellation"
+              ],
+              "unsupportedReason": null,
+              "declaration": {
+                "symbol": "setString",
+                "packageUri": "package:demo_kv_storage/src/storage_service.dart",
+                "line": 14,
+                "column": 16
+              }
+            }
+          ],
+          "shapeFingerprint": "74f1d13513448f76b3db9f996cbb349687376d851b6cb1420ee2a0825fcca1f2",
+          "token": {
+            "symbol": "demoKeyValueStorageServiceToken",
+            "library": "lib/src/ccrouter_generated/contract/storage_service.service.contract.g.dart",
+            "packageUri": "package:demo_kv_storage/src/ccrouter_generated/contract/storage_service.service.contract.g.dart"
+          }
+        }
+      ],
+      "serviceImplementations": [
+        {
+          "id": "demo.kv_storage",
+          "componentId": "demo_kv_storage_component",
+          "contractId": "demo.kv_storage",
+          "key": null,
+          "scope": "app",
+          "creationPolicy": "singleton",
+          "isDefault": false,
+          "package": "demo_kv_storage",
+          "source": "lib/src/storage_service.dart",
+          "implementation": {
+            "symbol": "DemoKeyValueStorageServiceImpl",
+            "packageUri": "package:demo_kv_storage/src/storage_service.dart",
+            "line": 70,
+            "column": 13
+          },
+          "contract": {
+            "symbol": "DemoKeyValueStorageService",
+            "packageUri": "package:demo_kv_storage/src/storage_service.dart",
+            "line": 12,
+            "column": 26
+          },
+          "registration": "ccrouterRegisterDemoKeyValueStorageServiceImplService",
+          "registrationLibrary": "lib/src/ccrouter_generated/service/storage_service.service.g.dart",
+          "generatedArtifacts": [
+            {
+              "role": "serviceRegistration",
+              "symbol": "ccrouterRegisterDemoKeyValueStorageServiceImplService",
+              "packageUri": "package:demo_kv_storage/src/ccrouter_generated/service/storage_service.service.g.dart"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "capabilityCatalog": {
+    "schemaVersion": 1,
+    "records": [
+      {
+        "kind": "service",
+        "id": "demo.kv_storage",
+        "componentId": "demo_kv_storage_component",
+        "packageName": "demo_kv_storage",
+        "contract": {
+          "symbol": "DemoKeyValueStorageService",
+          "packageUri": "package:demo_kv_storage/src/storage_service.dart",
+          "line": 12,
+          "column": 26
+        },
+        "implementation": {
+          "symbol": "DemoKeyValueStorageServiceImpl",
+          "packageUri": "package:demo_kv_storage/src/storage_service.dart",
+          "line": 70,
+          "column": 13
+        },
+        "generatedArtifacts": [
+          {
+            "role": "serviceRegistration",
+            "symbol": "ccrouterRegisterDemoKeyValueStorageServiceImplService",
+            "packageUri": "package:demo_kv_storage/src/ccrouter_generated/service/storage_service.service.g.dart"
+          },
+          {
+            "role": "serviceToken",
+            "symbol": "demoKeyValueStorageServiceToken",
+            "packageUri": "package:demo_kv_storage/src/ccrouter_generated/contract/storage_service.service.contract.g.dart"
+          }
+        ]
+      }
+    ]
+  }
+}

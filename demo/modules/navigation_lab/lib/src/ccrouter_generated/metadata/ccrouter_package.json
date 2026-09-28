@@ -5,7 +5,7 @@
     "name": "demo_navigation_lab",
     "version": "0.1.0"
   },
-  "contentFingerprint": "61ac16812eea9debe3fa5e106fd7eddd2c4260422e32dd9007190c5b89d36539",
+  "contentFingerprint": "76df1af0d52e43d7bbbb9ec2148c150c69658e21bf93fb4d288f75eda99868a5",
   "bundle": {
     "library": "lib/src/ccrouter_generated/host/demo_navigation_lab_ccrouter.g.dart",
     "symbol": "ccrouterGeneratedPackageBundle"
@@ -22,24 +22,29 @@
       "contentFingerprint": "b3e8ef8bb39a9663a894c089cd8560ce5e88f19782569c9bb3f3f3f218a5f4ea"
     },
     {
+      "name": "demo_kv_storage",
+      "version": "0.1.0",
+      "contentFingerprint": "34dfb7eab7879cec25fceeb469c1bc513f2d255415a9332bdf455997e13740fc"
+    },
+    {
       "name": "demo_network",
       "version": "0.1.0",
-      "contentFingerprint": "7e65ddd0b521ed7a5b3e652a199c002366c70ee39e50c255096909b7575514f4"
+      "contentFingerprint": "d14a2959994efcafdf0848e856e6502607db5eaffca5cc19f99ed370114cbc6a"
     },
     {
       "name": "demo_order_contracts",
       "version": "0.1.0",
-      "contentFingerprint": "06063b8ff3e0fbfef67d2df15591e81535f9a27e75354e3a40dc2bc9edb09372"
+      "contentFingerprint": "7c1873cca629d58b9d5c9b0787b2bda793437720cbf8b3c95f0c378ba61b0723"
     },
     {
       "name": "demo_web_contracts",
       "version": "0.1.0",
-      "contentFingerprint": "2edb0ff7e0994667f7b0b5fba43b85ccb4e9e6e9a5df93243379ddbc894fbb8c"
+      "contentFingerprint": "7fd9027bc46b2ab8354695aac5bf7f3271a9c752e4c38d8a47313bf650e2470e"
     }
   ],
   "metadata": [
     {
-      "schemaVersion": 3,
+      "schemaVersion": 4,
       "package": "demo_navigation_lab",
       "source": "lib/src/capability_page.dart",
       "componentDeclarations": [],
@@ -49,6 +54,8 @@
       "routes": [
         {
           "id": "demo_navigation_lab.capabilities",
+          "version": "0.1.0",
+          "shapeFingerprint": "46b78332b923aa679c0f936d966125ef2a76235246e9a23f0895f682740ad71f",
           "componentId": "demo_navigation_lab_component",
           "exposure": "internal",
           "deepLink": "disabled",
@@ -61,7 +68,7 @@
             "kind": "page",
             "symbol": "DemoCapabilitiesPage",
             "packageUri": "package:demo_navigation_lab/src/capability_page.dart",
-            "line": 17,
+            "line": 16,
             "column": 13
           },
           "navigationSources": [
@@ -127,7 +134,7 @@
       "contributions": []
     },
     {
-      "schemaVersion": 3,
+      "schemaVersion": 4,
       "package": "demo_navigation_lab",
       "source": "lib/src/component_capabilities.dart",
       "componentDeclarations": [],
@@ -143,11 +150,19 @@
         {
           "id": "demo_navigation_lab.create_receipt",
           "componentId": "demo_navigation_lab_component",
+          "version": "0.1.0",
           "description": "创建演示收据并返回稳定的收据编号。",
           "package": "demo_navigation_lab",
           "source": "lib/src/component_capabilities.dart",
           "type": "DemoCreateReceiptCommand",
           "resultType": "String",
+          "payloadFields": [
+            {
+              "name": "amount",
+              "type": "int"
+            }
+          ],
+          "shapeFingerprint": "09931f73ce124e81a90b5e6e23fa4f8b1b4ab33d886ddaea4af81cce35bf606f",
           "declaration": {
             "symbol": "DemoCreateReceiptCommand",
             "packageUri": "package:demo_navigation_lab/src/component_capabilities.dart",
@@ -158,11 +173,14 @@
         {
           "id": "demo_navigation_lab.fail",
           "componentId": "demo_navigation_lab_component",
+          "version": "0.1.0",
           "description": "抛出业务异常以验证安全 Trace 和错误传播。",
           "package": "demo_navigation_lab",
           "source": "lib/src/component_capabilities.dart",
           "type": "DemoFailCommand",
           "resultType": "void",
+          "payloadFields": [],
+          "shapeFingerprint": "08a3329921842e2c924e9d08d7887649d5cf7c280737c2fd96eb534ec518211e",
           "declaration": {
             "symbol": "DemoFailCommand",
             "packageUri": "package:demo_navigation_lab/src/component_capabilities.dart",
@@ -173,11 +191,14 @@
         {
           "id": "demo_navigation_lab.refresh_cache",
           "componentId": "demo_navigation_lab_component",
+          "version": "0.1.0",
           "description": "刷新组件缓存并仅报告完成或失败。",
           "package": "demo_navigation_lab",
           "source": "lib/src/component_capabilities.dart",
           "type": "DemoRefreshCacheCommand",
           "resultType": "void",
+          "payloadFields": [],
+          "shapeFingerprint": "d31eec781301e6d10b3f44a7f28db3381e16c9e25167afb9b5395a6f0d5100e9",
           "declaration": {
             "symbol": "DemoRefreshCacheCommand",
             "packageUri": "package:demo_navigation_lab/src/component_capabilities.dart",
@@ -188,11 +209,14 @@
         {
           "id": "demo_navigation_lab.wait",
           "componentId": "demo_navigation_lab_component",
+          "version": "0.1.0",
           "description": "保持等待直到超时或调用方取消，用于验证协作取消。",
           "package": "demo_navigation_lab",
           "source": "lib/src/component_capabilities.dart",
           "type": "DemoWaitCommand",
           "resultType": "void",
+          "payloadFields": [],
+          "shapeFingerprint": "c51c009f1e86883d91ffaf0f1d8d34143e659f04b4e6dcf929f4daa32d5166b5",
           "declaration": {
             "symbol": "DemoWaitCommand",
             "packageUri": "package:demo_navigation_lab/src/component_capabilities.dart",
@@ -204,7 +228,7 @@
       "commandHandlers": []
     },
     {
-      "schemaVersion": 3,
+      "schemaVersion": 4,
       "package": "demo_navigation_lab",
       "source": "lib/src/component_capabilities.dart",
       "componentDeclarations": [],
@@ -222,6 +246,7 @@
         {
           "id": "demo_navigation_lab.order_completed",
           "componentId": "demo_navigation_lab_component",
+          "version": "0.1.0",
           "description": "订单完成后通知互不依赖的 Demo Subscriber。",
           "package": "demo_navigation_lab",
           "source": "lib/src/component_capabilities.dart",
@@ -231,11 +256,19 @@
             "packageUri": "package:demo_navigation_lab/src/component_capabilities.dart",
             "line": 142,
             "column": 13
-          }
+          },
+          "payloadFields": [
+            {
+              "name": "orderId",
+              "type": "int"
+            }
+          ],
+          "shapeFingerprint": "bff2d0710d6acbfdf9e08d2fc6cc0afdcbcd4dcd739d3d5a1db9db63d203b545"
         },
         {
           "id": "demo_navigation_lab.slow",
           "componentId": "demo_navigation_lab_component",
+          "version": "0.1.0",
           "description": "验证 Event timeout 和 cooperative cancellation。",
           "package": "demo_navigation_lab",
           "source": "lib/src/component_capabilities.dart",
@@ -245,11 +278,14 @@
             "packageUri": "package:demo_navigation_lab/src/component_capabilities.dart",
             "line": 160,
             "column": 13
-          }
+          },
+          "payloadFields": [],
+          "shapeFingerprint": "391cd8b777de2aab3883930e1429affe70609d159c0f1b2bfceee68c1a81152b"
         },
         {
           "id": "demo_navigation_lab.unobserved",
           "componentId": "demo_navigation_lab_component",
+          "version": "0.1.0",
           "description": "验证零 Subscriber 发布仍是可追踪的成功 no-op。",
           "package": "demo_navigation_lab",
           "source": "lib/src/component_capabilities.dart",
@@ -259,13 +295,15 @@
             "packageUri": "package:demo_navigation_lab/src/component_capabilities.dart",
             "line": 152,
             "column": 13
-          }
+          },
+          "payloadFields": [],
+          "shapeFingerprint": "5b6fabc6ed4d6f80485e9259289d9c682548788a5eb18ede05c5221e749d9030"
         }
       ],
       "eventSubscriptions": []
     },
     {
-      "schemaVersion": 3,
+      "schemaVersion": 4,
       "package": "demo_navigation_lab",
       "source": "lib/src/component_capabilities.dart",
       "componentDeclarations": [],
@@ -285,6 +323,7 @@
         {
           "id": "demo.startup.foundation",
           "componentId": "demo_navigation_lab_component",
+          "version": "0.1.0",
           "description": "准备所有 Demo 初始化任务共享的基础状态。",
           "package": "demo_navigation_lab",
           "source": "lib/src/component_capabilities.dart",
@@ -293,11 +332,13 @@
             "packageUri": "package:demo_navigation_lab/src/component_capabilities.dart",
             "line": 34,
             "column": 7
-          }
+          },
+          "shapeFingerprint": "ef963961ee2df34404352b04e5c03229c5f25238acc42f222a6ce30fd4df21cd"
         },
         {
           "id": "demo.startup.optional-sdk",
           "componentId": "demo_navigation_lab_component",
+          "version": "0.1.0",
           "description": "模拟可选 SDK 初始化失败及依赖节点跳过。",
           "package": "demo_navigation_lab",
           "source": "lib/src/component_capabilities.dart",
@@ -306,13 +347,14 @@
             "packageUri": "package:demo_navigation_lab/src/component_capabilities.dart",
             "line": 40,
             "column": 7
-          }
+          },
+          "shapeFingerprint": "a1000ff9ae3a0ead579ed47281ee8efe911f49b9cda61ec8eb7c4174cb689fe5"
         }
       ],
       "initTasks": []
     },
     {
-      "schemaVersion": 3,
+      "schemaVersion": 4,
       "package": "demo_navigation_lab",
       "source": "lib/src/detail_page.dart",
       "componentDeclarations": [],
@@ -322,6 +364,8 @@
       "routes": [
         {
           "id": "demo_navigation_lab.detail",
+          "version": "0.1.0",
+          "shapeFingerprint": "ef1b3a3e2d7b26cdeb4a052c2b88ec9512f08ca2734ac774dfc46f69fd66d803",
           "componentId": "demo_navigation_lab_component",
           "exposure": "internal",
           "deepLink": "enabled",
@@ -451,7 +495,7 @@
       "contributions": []
     },
     {
-      "schemaVersion": 3,
+      "schemaVersion": 4,
       "package": "demo_navigation_lab",
       "source": "lib/src/failure_page.dart",
       "componentDeclarations": [],
@@ -461,6 +505,8 @@
       "routes": [
         {
           "id": "demo_navigation_lab.failure",
+          "version": "0.1.0",
+          "shapeFingerprint": "02fecf40ea786cdc1341710d48ad0b24627eb4dc051b0440674729bdc59969d5",
           "componentId": "demo_navigation_lab_component",
           "exposure": "internal",
           "deepLink": "disabled",
@@ -590,7 +636,7 @@
       "contributions": []
     },
     {
-      "schemaVersion": 3,
+      "schemaVersion": 4,
       "package": "demo_navigation_lab",
       "source": "lib/src/home_page.dart",
       "componentDeclarations": [],
@@ -600,6 +646,8 @@
       "routes": [
         {
           "id": "demo_navigation_lab.home",
+          "version": "0.1.0",
+          "shapeFingerprint": "6839985b384f36da449c10f681971534fb22559f47988f1e462568cf5a5ca28b",
           "componentId": "demo_navigation_lab_component",
           "exposure": "internal",
           "deepLink": "disabled",
@@ -678,7 +726,7 @@
       "contributions": []
     },
     {
-      "schemaVersion": 3,
+      "schemaVersion": 4,
       "package": "demo_navigation_lab",
       "source": "lib/src/lifecycle_page.dart",
       "componentDeclarations": [],
@@ -688,6 +736,8 @@
       "routes": [
         {
           "id": "demo_navigation_lab.lifecycle",
+          "version": "0.1.0",
+          "shapeFingerprint": "6acc1542689b9374315c66daca1a5c9bfcefc976f0d3b9946874667da7fca5be",
           "componentId": "demo_navigation_lab_component",
           "exposure": "internal",
           "deepLink": "disabled",
@@ -766,7 +816,7 @@
       "contributions": []
     },
     {
-      "schemaVersion": 3,
+      "schemaVersion": 4,
       "package": "demo_navigation_lab",
       "source": "lib/src/navigation_lab_component.dart",
       "componentDeclarations": [
@@ -785,10 +835,23 @@
           "dependencies": [
             "demo_order_component",
             "demo_network_component",
+            "demo_kv_storage_component",
             "demo_web_component"
           ],
           "optionalDependencies": [],
           "serviceDependencies": [
+            {
+              "id": "demo.kv_storage",
+              "componentId": "demo_kv_storage_component",
+              "contract": "DemoKeyValueStorageService",
+              "key": null,
+              "member": "demoKeyValueStorage",
+              "generatedArtifact": {
+                "role": "serviceClient",
+                "symbol": "DemoNavigationLabServices.demoKeyValueStorage",
+                "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/component/navigation_lab_component.service_api.g.dart"
+              }
+            },
             {
               "id": "demo.network.client",
               "componentId": "demo_network_component",
@@ -831,7 +894,7 @@
       "contributions": []
     },
     {
-      "schemaVersion": 3,
+      "schemaVersion": 4,
       "package": "demo_navigation_lab",
       "source": "lib/src/navigation_lab_component_registrar.dart",
       "componentDeclarations": [],
@@ -964,7 +1027,7 @@
       ]
     },
     {
-      "schemaVersion": 3,
+      "schemaVersion": 4,
       "package": "demo_navigation_lab",
       "source": "lib/src/navigation_lab_component_registrar.dart",
       "componentDeclarations": [],
@@ -1073,7 +1136,7 @@
       ]
     },
     {
-      "schemaVersion": 3,
+      "schemaVersion": 4,
       "package": "demo_navigation_lab",
       "source": "lib/src/navigation_lab_component_registrar.dart",
       "componentDeclarations": [],
@@ -1303,7 +1366,7 @@
       ]
     },
     {
-      "schemaVersion": 3,
+      "schemaVersion": 4,
       "package": "demo_navigation_lab",
       "source": "lib/src/navigation_lab_component_registrar.dart",
       "componentDeclarations": [],
@@ -1329,7 +1392,7 @@
       ]
     },
     {
-      "schemaVersion": 3,
+      "schemaVersion": 4,
       "package": "demo_navigation_lab",
       "source": "lib/src/network_page.dart",
       "componentDeclarations": [],
@@ -1339,6 +1402,8 @@
       "routes": [
         {
           "id": "demo_navigation_lab.network",
+          "version": "0.1.0",
+          "shapeFingerprint": "c86b6e101cb906b2fe7d56e78c32ee749e3cbbf7bc906f6b922c26b880a6fe5d",
           "componentId": "demo_navigation_lab_component",
           "exposure": "internal",
           "deepLink": "disabled",
@@ -1351,7 +1416,7 @@
             "kind": "page",
             "symbol": "DemoNetworkPage",
             "packageUri": "package:demo_navigation_lab/src/network_page.dart",
-            "line": 14,
+            "line": 13,
             "column": 13
           },
           "navigationSources": [
@@ -1417,7 +1482,7 @@
       "contributions": []
     },
     {
-      "schemaVersion": 3,
+      "schemaVersion": 4,
       "package": "demo_navigation_lab",
       "source": "lib/src/policy_pages.dart",
       "componentDeclarations": [],
@@ -1427,6 +1492,8 @@
       "routes": [
         {
           "id": "demo_navigation_lab.proceed",
+          "version": "0.1.0",
+          "shapeFingerprint": "6276e2d3dbfd06ea478d3fba8c5095c96a52179ccb0651fd364b9702c207f6d0",
           "componentId": "demo_navigation_lab_component",
           "exposure": "internal",
           "deepLink": "disabled",
@@ -1504,6 +1571,8 @@
         },
         {
           "id": "demo_navigation_lab.cancel",
+          "version": "0.1.0",
+          "shapeFingerprint": "3ad59bb76a0029a12bf63a3071a50c296658faa876d80ef06d0c3d1dbfc8c297",
           "componentId": "demo_navigation_lab_component",
           "exposure": "internal",
           "deepLink": "disabled",
@@ -1581,6 +1650,8 @@
         },
         {
           "id": "demo_navigation_lab.redirect.source",
+          "version": "0.1.0",
+          "shapeFingerprint": "82084cb0cd13488bf57b1867fc3f862b092b6d7aa5256b13450f7a00e3026a75",
           "componentId": "demo_navigation_lab_component",
           "exposure": "internal",
           "deepLink": "disabled",
@@ -1658,6 +1729,8 @@
         },
         {
           "id": "demo_navigation_lab.redirect.target",
+          "version": "0.1.0",
+          "shapeFingerprint": "fedba2238f347450290947dc9607870875b0f2ef9d42827d5002badafef439e6",
           "componentId": "demo_navigation_lab_component",
           "exposure": "internal",
           "deepLink": "disabled",
@@ -1733,6 +1806,8 @@
         },
         {
           "id": "demo_navigation_lab.defer",
+          "version": "0.1.0",
+          "shapeFingerprint": "e783fd008648a6f566b4d53840dcebd04eef3c805d6c687a8a4b451ce70c1110",
           "componentId": "demo_navigation_lab_component",
           "exposure": "internal",
           "deepLink": "disabled",
@@ -1810,6 +1885,8 @@
         },
         {
           "id": "demo_navigation_lab.timeout",
+          "version": "0.1.0",
+          "shapeFingerprint": "ab3712cc71d3d06d2ca15ada548efadf53cefc7e166a212cb40446e92a60c18b",
           "componentId": "demo_navigation_lab_component",
           "exposure": "internal",
           "deepLink": "disabled",
@@ -1887,6 +1964,8 @@
         },
         {
           "id": "demo_navigation_lab.guarded",
+          "version": "0.1.0",
+          "shapeFingerprint": "e5812753477899a9005c20e563b11a4cd8c7a3436b3123d32b3f58220d9e409b",
           "componentId": "demo_navigation_lab_component",
           "exposure": "internal",
           "deepLink": "disabled",
@@ -1967,7 +2046,7 @@
       "contributions": []
     },
     {
-      "schemaVersion": 3,
+      "schemaVersion": 4,
       "package": "demo_navigation_lab",
       "source": "lib/src/presentation_pages.dart",
       "componentDeclarations": [],
@@ -1977,6 +2056,8 @@
       "routes": [
         {
           "id": "demo_navigation_lab.presentation.fade",
+          "version": "0.1.0",
+          "shapeFingerprint": "7e3aa0be5cf0e7f2d1c572d5672651a37c9a9f573c74418aab097c0d4f91545b",
           "componentId": "demo_navigation_lab_component",
           "exposure": "internal",
           "deepLink": "disabled",
@@ -2052,6 +2133,8 @@
         },
         {
           "id": "demo_navigation_lab.presentation.scale",
+          "version": "0.1.0",
+          "shapeFingerprint": "1757365a9908a6eea6f50095b07f633faf47021386ce35c5f03847862ab232c1",
           "componentId": "demo_navigation_lab_component",
           "exposure": "internal",
           "deepLink": "disabled",
@@ -2127,6 +2210,8 @@
         },
         {
           "id": "demo_navigation_lab.presentation.cupertino",
+          "version": "0.1.0",
+          "shapeFingerprint": "496c76ad7c7c3d36ce3cac601caaae4a901f4bf7fe9fb38b673245504f2e293c",
           "componentId": "demo_navigation_lab_component",
           "exposure": "internal",
           "deepLink": "disabled",
@@ -2202,6 +2287,8 @@
         },
         {
           "id": "demo_navigation_lab.presentation.bottom_page",
+          "version": "0.1.0",
+          "shapeFingerprint": "350efbde8cb1b9c215c8cbbba6f00b20812db2ca7f5240ce156e85688801c1d1",
           "componentId": "demo_navigation_lab_component",
           "exposure": "internal",
           "deepLink": "disabled",
@@ -2277,6 +2364,8 @@
         },
         {
           "id": "demo_navigation_lab.presentation.transparent",
+          "version": "0.1.0",
+          "shapeFingerprint": "3327e98114939cdcba6915b84413f6622e579a8fa952b8e0e25946a9327cb5bd",
           "componentId": "demo_navigation_lab_component",
           "exposure": "internal",
           "deepLink": "disabled",
@@ -2352,6 +2441,8 @@
         },
         {
           "id": "demo_navigation_lab.presentation.dialog",
+          "version": "0.1.0",
+          "shapeFingerprint": "0c54dc9c16c7e73c1890e4fb14fa3439d2e630c242e883009dbcbeb71c64bc10",
           "componentId": "demo_navigation_lab_component",
           "exposure": "internal",
           "deepLink": "disabled",
@@ -2426,6 +2517,8 @@
         },
         {
           "id": "demo_navigation_lab.presentation.sheet",
+          "version": "0.1.0",
+          "shapeFingerprint": "9a996567fe68f558647e90a97fe90375bba315724d5a1fdf51289f112cbbfd77",
           "componentId": "demo_navigation_lab_component",
           "exposure": "internal",
           "deepLink": "disabled",
@@ -2505,7 +2598,7 @@
       "contributions": []
     },
     {
-      "schemaVersion": 3,
+      "schemaVersion": 4,
       "package": "demo_navigation_lab",
       "source": "lib/src/shell_pages.dart",
       "componentDeclarations": [],
@@ -2515,6 +2608,8 @@
       "routes": [
         {
           "id": "demo_navigation_lab.shell.feed",
+          "version": "0.1.0",
+          "shapeFingerprint": "4775302e6e81170d11f13a2dbb1410439223e0a062d5ff638ca59dd6c21a4c7c",
           "componentId": "demo_navigation_lab_component",
           "exposure": "internal",
           "deepLink": "disabled",
@@ -2590,6 +2685,8 @@
         },
         {
           "id": "demo_navigation_lab.shell.detail",
+          "version": "0.1.0",
+          "shapeFingerprint": "dc689560b9d62ad6fbd7de26a4a88e017cae5278e28055302e32ec1c750a5325",
           "componentId": "demo_navigation_lab_component",
           "exposure": "internal",
           "deepLink": "disabled",
@@ -2675,6 +2772,8 @@
         },
         {
           "id": "demo_navigation_lab.shell.settings",
+          "version": "0.1.0",
+          "shapeFingerprint": "c0cdea2873de94aaa3fdf274a2e1520ec22b40037fc8bf4c36d68c5b7d6d1711",
           "componentId": "demo_navigation_lab_component",
           "exposure": "internal",
           "deepLink": "disabled",
@@ -2750,6 +2849,8 @@
         },
         {
           "id": "demo_navigation_lab.workspace.home",
+          "version": "0.1.0",
+          "shapeFingerprint": "f8df3b268ef2eaa8139344f8e8110574f766a5904140cf3af1a10ab9395b0f9c",
           "componentId": "demo_navigation_lab_component",
           "exposure": "internal",
           "deepLink": "disabled",
@@ -2825,6 +2926,8 @@
         },
         {
           "id": "demo_navigation_lab.workspace.detail",
+          "version": "0.1.0",
+          "shapeFingerprint": "36e1e78da1ff909fd37ca765ee31e5802e14db196b2efd4968bb806dc27c0004",
           "componentId": "demo_navigation_lab_component",
           "exposure": "internal",
           "deepLink": "enabled",
@@ -2911,6 +3014,8 @@
         },
         {
           "id": "demo_navigation_lab.workspace.activity",
+          "version": "0.1.0",
+          "shapeFingerprint": "0c1c1365fdafa7db333d2613b15d34e07c77e8c23e08cf2e7fec6a2b31b198c9",
           "componentId": "demo_navigation_lab_component",
           "exposure": "internal",
           "deepLink": "disabled",
@@ -2986,6 +3091,8 @@
         },
         {
           "id": "demo_navigation_lab.workspace.profile",
+          "version": "0.1.0",
+          "shapeFingerprint": "d1e1e86f5ce8fe67c33022fb04e736f81b5b5e43904bbaab6c15a46f836e5b41",
           "componentId": "demo_navigation_lab_component",
           "exposure": "internal",
           "deepLink": "disabled",
@@ -3061,6 +3168,8 @@
         },
         {
           "id": "demo_navigation_lab.extra",
+          "version": "0.1.0",
+          "shapeFingerprint": "9a4da8c6d49c60b06ca36ba3d1288310ab9a899693557beb5f98269b2a796621",
           "componentId": "demo_navigation_lab_component",
           "exposure": "internal",
           "deepLink": "disabled",
@@ -3149,7 +3258,7 @@
       "contributions": []
     },
     {
-      "schemaVersion": 3,
+      "schemaVersion": 4,
       "package": "demo_navigation_lab",
       "source": "lib/src/stack_page.dart",
       "componentDeclarations": [],
@@ -3159,6 +3268,8 @@
       "routes": [
         {
           "id": "demo_navigation_lab.stack",
+          "version": "0.1.0",
+          "shapeFingerprint": "ba64794c0165031686adcc744bd38ded1aa6669b62d345b36daf263ccfbf2caa",
           "componentId": "demo_navigation_lab_component",
           "exposure": "internal",
           "deepLink": "disabled",
@@ -3255,11 +3366,116 @@
       ],
       "routeImplementations": [],
       "contributions": []
+    },
+    {
+      "schemaVersion": 4,
+      "package": "demo_navigation_lab",
+      "source": "lib/src/storage_page.dart",
+      "componentDeclarations": [],
+      "componentManifests": {},
+      "componentSymbols": {},
+      "components": [],
+      "routes": [
+        {
+          "id": "demo_navigation_lab.storage",
+          "version": "0.1.0",
+          "shapeFingerprint": "cd802378bf89719e92e8f82c3d65d5232d6af396d4e914a09587286ac3aee20f",
+          "componentId": "demo_navigation_lab_component",
+          "exposure": "internal",
+          "deepLink": "disabled",
+          "description": "基本类型、JSON Map 和受控存储命名空间示例。",
+          "interceptorIds": [],
+          "popGuardIds": [],
+          "declaration": {
+            "package": "demo_navigation_lab",
+            "library": "lib/src/storage_page.dart",
+            "kind": "page",
+            "symbol": "DemoStoragePage",
+            "packageUri": "package:demo_navigation_lab/src/storage_page.dart",
+            "line": 15,
+            "column": 13
+          },
+          "navigationSources": [
+            "typedIntent",
+            "internalUri"
+          ],
+          "restoration": {
+            "status": "unsupported"
+          },
+          "placement": {
+            "hostId": "default",
+            "parentRouteId": null,
+            "shellId": null,
+            "navigatorOutlet": "root"
+          },
+          "presentation": {
+            "type": "page",
+            "routeType": "platformDefault",
+            "transition": "platformDefault",
+            "opaque": true,
+            "fullscreenDialog": false
+          },
+          "contracts": {
+            "route": "_DemoStoragePageRoute",
+            "arguments": "_DemoStoragePageRouteArguments",
+            "package": "demo_navigation_lab",
+            "library": "lib/src/ccrouter_generated/route/storage_page.route.g.dart",
+            "intentFactory": "CCGeneratedDemoStoragePageRouteFactory"
+          },
+          "registration": "ccrouterRegisterDemoStoragePageRoute",
+          "registrationLibrary": "lib/src/ccrouter_generated/route/storage_page.route.g.dart",
+          "destination": {
+            "descriptor": "ccrouterDescribeDemoStoragePageRoute",
+            "builder": "ccrouterBuildDemoStoragePageRoute",
+            "library": "lib/src/ccrouter_generated/route/storage_page.route.g.dart",
+            "builderLibrary": "lib/src/ccrouter_generated/binding/storage_page.route_binding.g.dart"
+          },
+          "generatedArtifacts": [
+            {
+              "role": "routeLibrary",
+              "symbol": "_DemoStoragePageRoute",
+              "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/route/storage_page.route.g.dart"
+            },
+            {
+              "role": "routeBinding",
+              "symbol": "ccrouterBuildDemoStoragePageRoute",
+              "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/binding/storage_page.route_binding.g.dart"
+            }
+          ],
+          "patterns": [
+            {
+              "type": "CCPathPattern",
+              "value": "/lab/storage",
+              "primary": true,
+              "constraints": {}
+            }
+          ],
+          "parameters": [],
+          "resultType": "void"
+        }
+      ],
+      "routeImplementations": [],
+      "contributions": []
     }
   ],
   "capabilityCatalog": {
     "schemaVersion": 1,
     "records": [
+      {
+        "kind": "service",
+        "id": "demo.kv_storage",
+        "componentId": "demo_kv_storage_component",
+        "packageName": "demo_navigation_lab",
+        "contract": null,
+        "implementation": null,
+        "generatedArtifacts": [
+          {
+            "role": "serviceClient",
+            "symbol": "DemoNavigationLabServices.demoKeyValueStorage",
+            "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/component/navigation_lab_component.service_api.g.dart"
+          }
+        ]
+      },
       {
         "kind": "command",
         "id": "demo_navigation_lab.create_receipt",
@@ -3665,13 +3881,13 @@
         "contract": {
           "symbol": "DemoCapabilitiesPage",
           "packageUri": "package:demo_navigation_lab/src/capability_page.dart",
-          "line": 17,
+          "line": 16,
           "column": 13
         },
         "implementation": {
           "symbol": "DemoCapabilitiesPage",
           "packageUri": "package:demo_navigation_lab/src/capability_page.dart",
-          "line": 17,
+          "line": 16,
           "column": 13
         },
         "generatedArtifacts": [
@@ -3905,13 +4121,13 @@
         "contract": {
           "symbol": "DemoNetworkPage",
           "packageUri": "package:demo_navigation_lab/src/network_page.dart",
-          "line": 14,
+          "line": 13,
           "column": 13
         },
         "implementation": {
           "symbol": "DemoNetworkPage",
           "packageUri": "package:demo_navigation_lab/src/network_page.dart",
-          "line": 14,
+          "line": 13,
           "column": 13
         },
         "generatedArtifacts": [
@@ -4344,6 +4560,36 @@
             "role": "routeBinding",
             "symbol": "ccrouterBuildDemoStackPageRoute",
             "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/binding/stack_page.route_binding.g.dart"
+          }
+        ]
+      },
+      {
+        "kind": "route",
+        "id": "demo_navigation_lab.storage",
+        "componentId": "demo_navigation_lab_component",
+        "packageName": "demo_navigation_lab",
+        "contract": {
+          "symbol": "DemoStoragePage",
+          "packageUri": "package:demo_navigation_lab/src/storage_page.dart",
+          "line": 15,
+          "column": 13
+        },
+        "implementation": {
+          "symbol": "DemoStoragePage",
+          "packageUri": "package:demo_navigation_lab/src/storage_page.dart",
+          "line": 15,
+          "column": 13
+        },
+        "generatedArtifacts": [
+          {
+            "role": "routeLibrary",
+            "symbol": "_DemoStoragePageRoute",
+            "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/route/storage_page.route.g.dart"
+          },
+          {
+            "role": "routeBinding",
+            "symbol": "ccrouterBuildDemoStoragePageRoute",
+            "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/binding/storage_page.route_binding.g.dart"
           }
         ]
       },

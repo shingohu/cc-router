@@ -1,6 +1,7 @@
 import 'package:ccrouter/ccrouter.dart';
 import 'package:demo_order_contracts/demo_order_contracts.dart';
 import 'package:demo_network/demo_network.dart';
+import 'package:demo_kv_storage/demo_kv_storage.dart';
 import 'package:demo_web_contracts/demo_web_contracts.dart';
 
 const demoNavigationLabComponentId = CCComponentId(
@@ -13,11 +14,13 @@ const demoNavigationLabComponent = CCComponent(
   dependencies: [
     demoOrderComponentId,
     demoNetworkComponentId,
+    demoKvStorageComponentId,
     demoWebComponentId,
   ],
   serviceDependencies: [
     CCServiceDependency<OrderSummaryService>(),
     CCServiceDependency<DemoNetworkService>(),
+    CCServiceDependency<DemoKeyValueStorageService>(),
   ],
   commandDependencies: [CCCommandDependency<ReserveOrderCommand>()],
 );

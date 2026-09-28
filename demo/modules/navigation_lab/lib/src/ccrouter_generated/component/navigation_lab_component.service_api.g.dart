@@ -9,24 +9,234 @@
 
 import 'package:ccrouter/ccrouter_generated.dart';
 import 'dart:async' as service_type_0;
-import 'package:demo_network/demo_network.dart' as service_type_1;
+import 'package:demo_kv_storage/demo_kv_storage.dart' as service_type_1;
+import 'package:demo_network/demo_network.dart' as service_type_2;
 import 'package:demo_order_contracts/demo_order_contracts.dart'
-    as service_type_2;
+    as service_type_3;
 
 /// Generated typed Service entry points for component `demo_navigation_lab_component`.
 abstract final class DemoNavigationLabServices {
+  /// Calls `demo.kv_storage` as `demo_navigation_lab_component`.
+  static const service_type_1.DemoKeyValueStorageService demoKeyValueStorage =
+      _DemoKeyValueStorageServiceProxy();
+
   /// Calls `demo.network.client` as `demo_navigation_lab_component`.
-  static const service_type_1.DemoNetworkService demoNetwork =
+  static const service_type_2.DemoNetworkService demoNetwork =
       _DemoNetworkServiceProxy();
 
   /// Calls `demo_order.summary` as `demo_navigation_lab_component`.
-  static const service_type_2.OrderSummaryService orderSummary =
+  static const service_type_3.OrderSummaryService orderSummary =
       _OrderSummaryServiceProxy();
+}
+
+/// Stateless generated Proxy for `demo.kv_storage`.
+final class _DemoKeyValueStorageServiceProxy
+    implements service_type_1.DemoKeyValueStorageService {
+  /// Creates the generated caller without resolving a Service.
+  const _DemoKeyValueStorageServiceProxy();
+
+  /// Invokes `demo.kv_storage.clear`.
+  @override
+  service_type_0.Future<void> clear(
+    service_type_1.DemoStorageNamespace namespace,
+  ) =>
+      CCRouterGeneratedServiceBinding.invoke<
+        service_type_1.DemoKeyValueStorageService,
+        void
+      >(
+        methodId: "clear",
+        callerComponentId: "demo_navigation_lab_component",
+        call: (service, _) => service.clear(namespace),
+      );
+
+  /// Invokes `demo.kv_storage.getBool`.
+  @override
+  service_type_0.Future<bool?> getBool(
+    service_type_1.DemoStorageNamespace namespace,
+    String key,
+  ) =>
+      CCRouterGeneratedServiceBinding.invoke<
+        service_type_1.DemoKeyValueStorageService,
+        bool?
+      >(
+        methodId: "getBool",
+        callerComponentId: "demo_navigation_lab_component",
+        call: (service, _) => service.getBool(namespace, key),
+      );
+
+  /// Invokes `demo.kv_storage.getDouble`.
+  @override
+  service_type_0.Future<double?> getDouble(
+    service_type_1.DemoStorageNamespace namespace,
+    String key,
+  ) =>
+      CCRouterGeneratedServiceBinding.invoke<
+        service_type_1.DemoKeyValueStorageService,
+        double?
+      >(
+        methodId: "getDouble",
+        callerComponentId: "demo_navigation_lab_component",
+        call: (service, _) => service.getDouble(namespace, key),
+      );
+
+  /// Invokes `demo.kv_storage.getInt`.
+  @override
+  service_type_0.Future<int?> getInt(
+    service_type_1.DemoStorageNamespace namespace,
+    String key,
+  ) =>
+      CCRouterGeneratedServiceBinding.invoke<
+        service_type_1.DemoKeyValueStorageService,
+        int?
+      >(
+        methodId: "getInt",
+        callerComponentId: "demo_navigation_lab_component",
+        call: (service, _) => service.getInt(namespace, key),
+      );
+
+  /// Invokes `demo.kv_storage.getJson`.
+  @override
+  service_type_0.Future<Map<String, Object?>?> getJson(
+    service_type_1.DemoStorageNamespace namespace,
+    String key,
+  ) =>
+      CCRouterGeneratedServiceBinding.invoke<
+        service_type_1.DemoKeyValueStorageService,
+        Map<String, Object?>?
+      >(
+        methodId: "getJson",
+        callerComponentId: "demo_navigation_lab_component",
+        call: (service, _) => service.getJson(namespace, key),
+      );
+
+  /// Invokes `demo.kv_storage.getString`.
+  @override
+  service_type_0.Future<String?> getString(
+    service_type_1.DemoStorageNamespace namespace,
+    String key,
+  ) =>
+      CCRouterGeneratedServiceBinding.invoke<
+        service_type_1.DemoKeyValueStorageService,
+        String?
+      >(
+        methodId: "getString",
+        callerComponentId: "demo_navigation_lab_component",
+        call: (service, _) => service.getString(namespace, key),
+      );
+
+  /// Invokes `demo.kv_storage.keys`.
+  @override
+  service_type_0.Future<List<String>> keys(
+    service_type_1.DemoStorageNamespace namespace,
+  ) =>
+      CCRouterGeneratedServiceBinding.invoke<
+        service_type_1.DemoKeyValueStorageService,
+        List<String>
+      >(
+        methodId: "keys",
+        callerComponentId: "demo_navigation_lab_component",
+        call: (service, _) => service.keys(namespace),
+      );
+
+  /// Invokes `demo.kv_storage.remove`.
+  @override
+  service_type_0.Future<void> remove(
+    service_type_1.DemoStorageNamespace namespace,
+    String key,
+  ) =>
+      CCRouterGeneratedServiceBinding.invoke<
+        service_type_1.DemoKeyValueStorageService,
+        void
+      >(
+        methodId: "remove",
+        callerComponentId: "demo_navigation_lab_component",
+        call: (service, _) => service.remove(namespace, key),
+      );
+
+  /// Invokes `demo.kv_storage.setBool`.
+  @override
+  service_type_0.Future<void> setBool(
+    service_type_1.DemoStorageNamespace namespace,
+    String key,
+    bool value,
+  ) =>
+      CCRouterGeneratedServiceBinding.invoke<
+        service_type_1.DemoKeyValueStorageService,
+        void
+      >(
+        methodId: "setBool",
+        callerComponentId: "demo_navigation_lab_component",
+        call: (service, _) => service.setBool(namespace, key, value),
+      );
+
+  /// Invokes `demo.kv_storage.setDouble`.
+  @override
+  service_type_0.Future<void> setDouble(
+    service_type_1.DemoStorageNamespace namespace,
+    String key,
+    double value,
+  ) =>
+      CCRouterGeneratedServiceBinding.invoke<
+        service_type_1.DemoKeyValueStorageService,
+        void
+      >(
+        methodId: "setDouble",
+        callerComponentId: "demo_navigation_lab_component",
+        call: (service, _) => service.setDouble(namespace, key, value),
+      );
+
+  /// Invokes `demo.kv_storage.setInt`.
+  @override
+  service_type_0.Future<void> setInt(
+    service_type_1.DemoStorageNamespace namespace,
+    String key,
+    int value,
+  ) =>
+      CCRouterGeneratedServiceBinding.invoke<
+        service_type_1.DemoKeyValueStorageService,
+        void
+      >(
+        methodId: "setInt",
+        callerComponentId: "demo_navigation_lab_component",
+        call: (service, _) => service.setInt(namespace, key, value),
+      );
+
+  /// Invokes `demo.kv_storage.setJson`.
+  @override
+  service_type_0.Future<void> setJson(
+    service_type_1.DemoStorageNamespace namespace,
+    String key,
+    Map<String, Object?> value,
+  ) =>
+      CCRouterGeneratedServiceBinding.invoke<
+        service_type_1.DemoKeyValueStorageService,
+        void
+      >(
+        methodId: "setJson",
+        callerComponentId: "demo_navigation_lab_component",
+        call: (service, _) => service.setJson(namespace, key, value),
+      );
+
+  /// Invokes `demo.kv_storage.setString`.
+  @override
+  service_type_0.Future<void> setString(
+    service_type_1.DemoStorageNamespace namespace,
+    String key,
+    String value,
+  ) =>
+      CCRouterGeneratedServiceBinding.invoke<
+        service_type_1.DemoKeyValueStorageService,
+        void
+      >(
+        methodId: "setString",
+        callerComponentId: "demo_navigation_lab_component",
+        call: (service, _) => service.setString(namespace, key, value),
+      );
 }
 
 /// Stateless generated Proxy for `demo.network.client`.
 final class _DemoNetworkServiceProxy
-    implements service_type_1.DemoNetworkService {
+    implements service_type_2.DemoNetworkService {
   /// Creates the generated caller without resolving a Service.
   const _DemoNetworkServiceProxy();
 
@@ -34,7 +244,7 @@ final class _DemoNetworkServiceProxy
   @override
   String get environmentId =>
       CCRouterGeneratedServiceBinding.invokeSync<
-        service_type_1.DemoNetworkService,
+        service_type_2.DemoNetworkService,
         String
       >(
         methodId: "environmentId",
@@ -46,7 +256,7 @@ final class _DemoNetworkServiceProxy
   @override
   bool get isAuthenticated =>
       CCRouterGeneratedServiceBinding.invokeSync<
-        service_type_1.DemoNetworkService,
+        service_type_2.DemoNetworkService,
         bool
       >(
         methodId: "isAuthenticated",
@@ -56,10 +266,10 @@ final class _DemoNetworkServiceProxy
 
   /// Invokes `demo.network.client.logs`.
   @override
-  List<service_type_1.CCNetworkLogRecord> get logs =>
+  List<service_type_2.CCNetworkLogRecord> get logs =>
       CCRouterGeneratedServiceBinding.invokeSync<
-        service_type_1.DemoNetworkService,
-        List<service_type_1.CCNetworkLogRecord>
+        service_type_2.DemoNetworkService,
+        List<service_type_2.CCNetworkLogRecord>
       >(
         methodId: "logs",
         callerComponentId: "demo_navigation_lab_component",
@@ -70,7 +280,7 @@ final class _DemoNetworkServiceProxy
   @override
   void removeDefaultHeader(String name) =>
       CCRouterGeneratedServiceBinding.invokeSync<
-        service_type_1.DemoNetworkService,
+        service_type_2.DemoNetworkService,
         void
       >(
         methodId: "removeDefaultHeader",
@@ -80,12 +290,12 @@ final class _DemoNetworkServiceProxy
 
   /// Invokes `demo.network.client.request`.
   @override
-  service_type_0.Future<service_type_1.CCNetworkResponse<Object?>> request(
-    service_type_1.CCNetworkRequest request,
+  service_type_0.Future<service_type_2.CCNetworkResponse<Object?>> request(
+    service_type_2.CCNetworkRequest request,
   ) =>
       CCRouterGeneratedServiceBinding.invoke<
-        service_type_1.DemoNetworkService,
-        service_type_1.CCNetworkResponse<Object?>
+        service_type_2.DemoNetworkService,
+        service_type_2.CCNetworkResponse<Object?>
       >(
         methodId: "request",
         callerComponentId: "demo_navigation_lab_component",
@@ -96,7 +306,7 @@ final class _DemoNetworkServiceProxy
   @override
   void setAccessToken(String? token) =>
       CCRouterGeneratedServiceBinding.invokeSync<
-        service_type_1.DemoNetworkService,
+        service_type_2.DemoNetworkService,
         void
       >(
         methodId: "setAccessToken",
@@ -108,7 +318,7 @@ final class _DemoNetworkServiceProxy
   @override
   void setDefaultHeader(String name, String value) =>
       CCRouterGeneratedServiceBinding.invokeSync<
-        service_type_1.DemoNetworkService,
+        service_type_2.DemoNetworkService,
         void
       >(
         methodId: "setDefaultHeader",
@@ -118,9 +328,9 @@ final class _DemoNetworkServiceProxy
 
   /// Invokes `demo.network.client.switchEnvironment`.
   @override
-  void switchEnvironment(service_type_1.CCNetworkEnvironment environment) =>
+  void switchEnvironment(service_type_2.CCNetworkEnvironment environment) =>
       CCRouterGeneratedServiceBinding.invokeSync<
-        service_type_1.DemoNetworkService,
+        service_type_2.DemoNetworkService,
         void
       >(
         methodId: "switchEnvironment",
@@ -131,7 +341,7 @@ final class _DemoNetworkServiceProxy
 
 /// Stateless generated Proxy for `demo_order.summary`.
 final class _OrderSummaryServiceProxy
-    implements service_type_2.OrderSummaryService {
+    implements service_type_3.OrderSummaryService {
   /// Creates the generated caller without resolving a Service.
   const _OrderSummaryServiceProxy();
 
@@ -139,7 +349,7 @@ final class _OrderSummaryServiceProxy
   @override
   int get invocationCount =>
       CCRouterGeneratedServiceBinding.invokeSync<
-        service_type_2.OrderSummaryService,
+        service_type_3.OrderSummaryService,
         int
       >(
         methodId: "invocationCount",
@@ -151,7 +361,7 @@ final class _OrderSummaryServiceProxy
   @override
   service_type_0.Future<String> loadSummary(int orderId) =>
       CCRouterGeneratedServiceBinding.invoke<
-        service_type_2.OrderSummaryService,
+        service_type_3.OrderSummaryService,
         String
       >(
         methodId: "loadSummary",
@@ -162,10 +372,10 @@ final class _OrderSummaryServiceProxy
   /// Invokes `demo_order.summary.loadValue`.
   @override
   service_type_0.Future<T> loadValue<T extends Object>(
-    service_type_2.OrderSummaryValue<T> value,
+    service_type_3.OrderSummaryValue<T> value,
   ) =>
       CCRouterGeneratedServiceBinding.invoke<
-        service_type_2.OrderSummaryService,
+        service_type_3.OrderSummaryService,
         T
       >(
         methodId: "loadValue",
@@ -177,7 +387,7 @@ final class _OrderSummaryServiceProxy
   @override
   String summaryFor(int orderId) =>
       CCRouterGeneratedServiceBinding.invokeSync<
-        service_type_2.OrderSummaryService,
+        service_type_3.OrderSummaryService,
         String
       >(
         methodId: "summaryFor",
@@ -187,9 +397,9 @@ final class _OrderSummaryServiceProxy
 
   /// Invokes `demo_order.summary.unwrap`.
   @override
-  T unwrap<T extends Object>(service_type_2.OrderSummaryValue<T> value) =>
+  T unwrap<T extends Object>(service_type_3.OrderSummaryValue<T> value) =>
       CCRouterGeneratedServiceBinding.invokeSync<
-        service_type_2.OrderSummaryService,
+        service_type_3.OrderSummaryService,
         T
       >(
         methodId: "unwrap",

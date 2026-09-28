@@ -36,8 +36,10 @@ dry-run summary before changing Contracts, dependencies, or public exposure.
 If automatic generation after dependency resolution is desired, install the
 explicit per-SDK `pub-hook` documented in
 [`CCRouter-cli-pub-hook.md`](../../../docs/CCRouter-cli-pub-hook.md). Do not
-modify Flutter internals manually, and remember that direct `dart pub` is not
-covered.
+modify Flutter internals manually. The hook covers successful `flutter pub`
+commands and runs a fail-closed preflight before `flutter run/build`; direct
+`dart pub` and Flutter Tool's internal implicit `pub get` remain outside its
+boundary.
 
 Use the generator CLI to create a new component Package or an internal Route
 page when starting a feature:
@@ -141,6 +143,22 @@ cross-process navigation.
 Declare `@CCRouteContract<R>` in a contracts package and `@CCRouteImplementation` in the page package. The consumer depends only on the contracts package. Keep all URI-shared types Pure Dart and public; do not place Flutter, `dart:ui`, `package:*/src/`, or page-private types in a public contract.
 
 ## Service Registration and Lookup
+
+### Namespace-aware Storage
+
+Keep storage calls behind a Service Contract with typed methods such as
+`setString`, `setInt`, `setBool`, and `setJson`. Low-level Backend and migration
+code may pass a controlled namespace value (`global`, `guest`, `user(accountId)`,
+`apiEnvironment(environmentId)`, or `hardware(deviceId)`); ordinary business code
+should use a Scoped Facade that resolves these values from a Host-owned context
+provider. The same key in different namespaces must remain isolated.
+
+The Service should depend on a backend-neutral `CCStorageBackend`; a memory Fake is
+the default for deterministic tests. Persistent or secure implementations belong to
+the Host/Composition Root and must define serialization, encryption, migration,
+logout cleanup, and environment-switch behavior explicitly. Namespace selection is
+not an access-control or encryption mechanism, and raw storage values must not be
+written to framework diagnostics.
 
 Use `@CCService` for a simple Service with an unnamed zero-argument generative
 constructor. Package ownership is inferred from the sole `CCComponent`:

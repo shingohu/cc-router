@@ -20,6 +20,14 @@ Scope: `package:demo_navigation_lab`. Generated file; do not edit by hand.
 
 Source locations use portable Package URIs. Line and column are 1-based when the producing generator could resolve them.
 
+## `demo_kv_storage_component`
+
+### Service `demo.kv_storage`
+
+- Declaring package: `demo_navigation_lab`
+- Generated artifacts:
+  - `serviceClient`: `package:demo_navigation_lab/src/ccrouter_generated/component/navigation_lab_component.service_api.g.dart` (`DemoNavigationLabServices.demoKeyValueStorage`)
+
 ## `demo_navigation_lab_component`
 
 ### Command `demo_navigation_lab.create_receipt`
@@ -156,8 +164,8 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 ### Route `demo_navigation_lab.capabilities`
 
 - Declaring package: `demo_navigation_lab`
-- Contract/declaration: `package:demo_navigation_lab/src/capability_page.dart:17:13` (`DemoCapabilitiesPage`)
-- Implementation: `package:demo_navigation_lab/src/capability_page.dart:17:13` (`DemoCapabilitiesPage`)
+- Contract/declaration: `package:demo_navigation_lab/src/capability_page.dart:16:13` (`DemoCapabilitiesPage`)
+- Implementation: `package:demo_navigation_lab/src/capability_page.dart:16:13` (`DemoCapabilitiesPage`)
 - Generated artifacts:
   - `routeLibrary`: `package:demo_navigation_lab/src/ccrouter_generated/route/capability_page.route.g.dart` (`_DemoCapabilitiesPageRoute`)
   - `routeBinding`: `package:demo_navigation_lab/src/ccrouter_generated/binding/capability_page.route_binding.g.dart` (`ccrouterBuildDemoCapabilitiesPageRoute`)
@@ -228,8 +236,8 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 ### Route `demo_navigation_lab.network`
 
 - Declaring package: `demo_navigation_lab`
-- Contract/declaration: `package:demo_navigation_lab/src/network_page.dart:14:13` (`DemoNetworkPage`)
-- Implementation: `package:demo_navigation_lab/src/network_page.dart:14:13` (`DemoNetworkPage`)
+- Contract/declaration: `package:demo_navigation_lab/src/network_page.dart:13:13` (`DemoNetworkPage`)
+- Implementation: `package:demo_navigation_lab/src/network_page.dart:13:13` (`DemoNetworkPage`)
 - Generated artifacts:
   - `routeLibrary`: `package:demo_navigation_lab/src/ccrouter_generated/route/network_page.route.g.dart` (`_DemoNetworkPageRoute`)
   - `routeBinding`: `package:demo_navigation_lab/src/ccrouter_generated/binding/network_page.route_binding.g.dart` (`ccrouterBuildDemoNetworkPageRoute`)
@@ -359,6 +367,15 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 - Generated artifacts:
   - `routeLibrary`: `package:demo_navigation_lab/src/ccrouter_generated/route/stack_page.route.g.dart` (`_DemoStackPageRoute`)
   - `routeBinding`: `package:demo_navigation_lab/src/ccrouter_generated/binding/stack_page.route_binding.g.dart` (`ccrouterBuildDemoStackPageRoute`)
+
+### Route `demo_navigation_lab.storage`
+
+- Declaring package: `demo_navigation_lab`
+- Contract/declaration: `package:demo_navigation_lab/src/storage_page.dart:15:13` (`DemoStoragePage`)
+- Implementation: `package:demo_navigation_lab/src/storage_page.dart:15:13` (`DemoStoragePage`)
+- Generated artifacts:
+  - `routeLibrary`: `package:demo_navigation_lab/src/ccrouter_generated/route/storage_page.route.g.dart` (`_DemoStoragePageRoute`)
+  - `routeBinding`: `package:demo_navigation_lab/src/ccrouter_generated/binding/storage_page.route_binding.g.dart` (`ccrouterBuildDemoStoragePageRoute`)
 
 ### Route `demo_navigation_lab.timeout`
 

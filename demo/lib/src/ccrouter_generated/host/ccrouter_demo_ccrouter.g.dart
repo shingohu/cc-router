@@ -6,6 +6,8 @@ library;
 
 import 'package:ccrouter/ccrouter_host.dart'
     show CCFlutterRouteCatalog, CCGeneratedPackageBundle;
+import 'package:demo_kv_storage/src/ccrouter_generated/host/demo_kv_storage_ccrouter.g.dart'
+    as dependency_demo_kv_storage;
 import 'package:demo_navigation_lab/src/ccrouter_generated/host/demo_navigation_lab_ccrouter.g.dart'
     as dependency_demo_navigation_lab;
 import 'package:demo_network/src/ccrouter_generated/host/demo_network_ccrouter.g.dart'
@@ -22,10 +24,11 @@ final ccrouterGeneratedPackageBundle = CCGeneratedPackageBundle(
   packageName: 'ccrouter_demo',
   packageVersion: '0.1.0+1',
   contentFingerprint:
-      '1f76fa84e79ddc5789c61a20e24f6da8b109ad360f3612c57c134ceb75eb7004',
+      '96f17412b0dc5d4e65bddf90134f5713d49f7aa84aa62b8f40bc4202b3c39998',
   componentManifests: [],
   routeCatalog: CCFlutterRouteCatalog.merge([]),
   dependencies: [
+    dependency_demo_kv_storage.ccrouterGeneratedPackageBundle,
     dependency_demo_navigation_lab.ccrouterGeneratedPackageBundle,
     dependency_demo_network.ccrouterGeneratedPackageBundle,
     dependency_demo_order.ccrouterGeneratedPackageBundle,

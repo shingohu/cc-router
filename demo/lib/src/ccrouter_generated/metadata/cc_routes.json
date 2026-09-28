@@ -2,6 +2,14 @@
   "schemaVersion": 2,
   "components": [
     {
+      "id": "demo_kv_storage_component",
+      "version": "0.1.0",
+      "dependencies": [],
+      "optionalDependencies": [],
+      "serviceDependencies": [],
+      "commandDependencies": []
+    },
+    {
       "id": "demo_network_component",
       "version": "0.1.0",
       "dependencies": [],
@@ -31,10 +39,23 @@
       "dependencies": [
         "demo_order_component",
         "demo_network_component",
+        "demo_kv_storage_component",
         "demo_web_component"
       ],
       "optionalDependencies": [],
       "serviceDependencies": [
+        {
+          "id": "demo.kv_storage",
+          "componentId": "demo_kv_storage_component",
+          "contract": "DemoKeyValueStorageService",
+          "key": null,
+          "member": "demoKeyValueStorage",
+          "generatedArtifact": {
+            "role": "serviceClient",
+            "symbol": "DemoNavigationLabServices.demoKeyValueStorage",
+            "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/component/navigation_lab_component.service_api.g.dart"
+          }
+        },
         {
           "id": "demo.network.client",
           "componentId": "demo_network_component",
@@ -98,6 +119,8 @@
   "routes": [
     {
       "id": "demo_navigation_lab.cancel",
+      "version": "0.1.0",
+      "shapeFingerprint": "3ad59bb76a0029a12bf63a3071a50c296658faa876d80ef06d0c3d1dbfc8c297",
       "componentId": "demo_navigation_lab_component",
       "exposure": "internal",
       "deepLink": "disabled",
@@ -175,6 +198,8 @@
     },
     {
       "id": "demo_navigation_lab.capabilities",
+      "version": "0.1.0",
+      "shapeFingerprint": "46b78332b923aa679c0f936d966125ef2a76235246e9a23f0895f682740ad71f",
       "componentId": "demo_navigation_lab_component",
       "exposure": "internal",
       "deepLink": "disabled",
@@ -187,7 +212,7 @@
         "kind": "page",
         "symbol": "DemoCapabilitiesPage",
         "packageUri": "package:demo_navigation_lab/src/capability_page.dart",
-        "line": 17,
+        "line": 16,
         "column": 13
       },
       "navigationSources": [
@@ -250,6 +275,8 @@
     },
     {
       "id": "demo_navigation_lab.defer",
+      "version": "0.1.0",
+      "shapeFingerprint": "e783fd008648a6f566b4d53840dcebd04eef3c805d6c687a8a4b451ce70c1110",
       "componentId": "demo_navigation_lab_component",
       "exposure": "internal",
       "deepLink": "disabled",
@@ -327,6 +354,8 @@
     },
     {
       "id": "demo_navigation_lab.detail",
+      "version": "0.1.0",
+      "shapeFingerprint": "ef1b3a3e2d7b26cdeb4a052c2b88ec9512f08ca2734ac774dfc46f69fd66d803",
       "componentId": "demo_navigation_lab_component",
       "exposure": "internal",
       "deepLink": "enabled",
@@ -453,6 +482,8 @@
     },
     {
       "id": "demo_navigation_lab.extra",
+      "version": "0.1.0",
+      "shapeFingerprint": "9a4da8c6d49c60b06ca36ba3d1288310ab9a899693557beb5f98269b2a796621",
       "componentId": "demo_navigation_lab_component",
       "exposure": "internal",
       "deepLink": "disabled",
@@ -538,6 +569,8 @@
     },
     {
       "id": "demo_navigation_lab.failure",
+      "version": "0.1.0",
+      "shapeFingerprint": "02fecf40ea786cdc1341710d48ad0b24627eb4dc051b0440674729bdc59969d5",
       "componentId": "demo_navigation_lab_component",
       "exposure": "internal",
       "deepLink": "disabled",
@@ -664,6 +697,8 @@
     },
     {
       "id": "demo_navigation_lab.guarded",
+      "version": "0.1.0",
+      "shapeFingerprint": "e5812753477899a9005c20e563b11a4cd8c7a3436b3123d32b3f58220d9e409b",
       "componentId": "demo_navigation_lab_component",
       "exposure": "internal",
       "deepLink": "disabled",
@@ -741,6 +776,8 @@
     },
     {
       "id": "demo_navigation_lab.home",
+      "version": "0.1.0",
+      "shapeFingerprint": "6839985b384f36da449c10f681971534fb22559f47988f1e462568cf5a5ca28b",
       "componentId": "demo_navigation_lab_component",
       "exposure": "internal",
       "deepLink": "disabled",
@@ -816,6 +853,8 @@
     },
     {
       "id": "demo_navigation_lab.lifecycle",
+      "version": "0.1.0",
+      "shapeFingerprint": "6acc1542689b9374315c66daca1a5c9bfcefc976f0d3b9946874667da7fca5be",
       "componentId": "demo_navigation_lab_component",
       "exposure": "internal",
       "deepLink": "disabled",
@@ -891,6 +930,8 @@
     },
     {
       "id": "demo_navigation_lab.network",
+      "version": "0.1.0",
+      "shapeFingerprint": "c86b6e101cb906b2fe7d56e78c32ee749e3cbbf7bc906f6b922c26b880a6fe5d",
       "componentId": "demo_navigation_lab_component",
       "exposure": "internal",
       "deepLink": "disabled",
@@ -903,7 +944,7 @@
         "kind": "page",
         "symbol": "DemoNetworkPage",
         "packageUri": "package:demo_navigation_lab/src/network_page.dart",
-        "line": 14,
+        "line": 13,
         "column": 13
       },
       "navigationSources": [
@@ -966,6 +1007,8 @@
     },
     {
       "id": "demo_navigation_lab.presentation.bottom_page",
+      "version": "0.1.0",
+      "shapeFingerprint": "350efbde8cb1b9c215c8cbbba6f00b20812db2ca7f5240ce156e85688801c1d1",
       "componentId": "demo_navigation_lab_component",
       "exposure": "internal",
       "deepLink": "disabled",
@@ -1041,6 +1084,8 @@
     },
     {
       "id": "demo_navigation_lab.presentation.cupertino",
+      "version": "0.1.0",
+      "shapeFingerprint": "496c76ad7c7c3d36ce3cac601caaae4a901f4bf7fe9fb38b673245504f2e293c",
       "componentId": "demo_navigation_lab_component",
       "exposure": "internal",
       "deepLink": "disabled",
@@ -1116,6 +1161,8 @@
     },
     {
       "id": "demo_navigation_lab.presentation.dialog",
+      "version": "0.1.0",
+      "shapeFingerprint": "0c54dc9c16c7e73c1890e4fb14fa3439d2e630c242e883009dbcbeb71c64bc10",
       "componentId": "demo_navigation_lab_component",
       "exposure": "internal",
       "deepLink": "disabled",
@@ -1190,6 +1237,8 @@
     },
     {
       "id": "demo_navigation_lab.presentation.fade",
+      "version": "0.1.0",
+      "shapeFingerprint": "7e3aa0be5cf0e7f2d1c572d5672651a37c9a9f573c74418aab097c0d4f91545b",
       "componentId": "demo_navigation_lab_component",
       "exposure": "internal",
       "deepLink": "disabled",
@@ -1265,6 +1314,8 @@
     },
     {
       "id": "demo_navigation_lab.presentation.scale",
+      "version": "0.1.0",
+      "shapeFingerprint": "1757365a9908a6eea6f50095b07f633faf47021386ce35c5f03847862ab232c1",
       "componentId": "demo_navigation_lab_component",
       "exposure": "internal",
       "deepLink": "disabled",
@@ -1340,6 +1391,8 @@
     },
     {
       "id": "demo_navigation_lab.presentation.sheet",
+      "version": "0.1.0",
+      "shapeFingerprint": "9a996567fe68f558647e90a97fe90375bba315724d5a1fdf51289f112cbbfd77",
       "componentId": "demo_navigation_lab_component",
       "exposure": "internal",
       "deepLink": "disabled",
@@ -1416,6 +1469,8 @@
     },
     {
       "id": "demo_navigation_lab.presentation.transparent",
+      "version": "0.1.0",
+      "shapeFingerprint": "3327e98114939cdcba6915b84413f6622e579a8fa952b8e0e25946a9327cb5bd",
       "componentId": "demo_navigation_lab_component",
       "exposure": "internal",
       "deepLink": "disabled",
@@ -1491,6 +1546,8 @@
     },
     {
       "id": "demo_navigation_lab.proceed",
+      "version": "0.1.0",
+      "shapeFingerprint": "6276e2d3dbfd06ea478d3fba8c5095c96a52179ccb0651fd364b9702c207f6d0",
       "componentId": "demo_navigation_lab_component",
       "exposure": "internal",
       "deepLink": "disabled",
@@ -1568,6 +1625,8 @@
     },
     {
       "id": "demo_navigation_lab.redirect.source",
+      "version": "0.1.0",
+      "shapeFingerprint": "82084cb0cd13488bf57b1867fc3f862b092b6d7aa5256b13450f7a00e3026a75",
       "componentId": "demo_navigation_lab_component",
       "exposure": "internal",
       "deepLink": "disabled",
@@ -1645,6 +1704,8 @@
     },
     {
       "id": "demo_navigation_lab.redirect.target",
+      "version": "0.1.0",
+      "shapeFingerprint": "fedba2238f347450290947dc9607870875b0f2ef9d42827d5002badafef439e6",
       "componentId": "demo_navigation_lab_component",
       "exposure": "internal",
       "deepLink": "disabled",
@@ -1720,6 +1781,8 @@
     },
     {
       "id": "demo_navigation_lab.shell.detail",
+      "version": "0.1.0",
+      "shapeFingerprint": "dc689560b9d62ad6fbd7de26a4a88e017cae5278e28055302e32ec1c750a5325",
       "componentId": "demo_navigation_lab_component",
       "exposure": "internal",
       "deepLink": "disabled",
@@ -1805,6 +1868,8 @@
     },
     {
       "id": "demo_navigation_lab.shell.feed",
+      "version": "0.1.0",
+      "shapeFingerprint": "4775302e6e81170d11f13a2dbb1410439223e0a062d5ff638ca59dd6c21a4c7c",
       "componentId": "demo_navigation_lab_component",
       "exposure": "internal",
       "deepLink": "disabled",
@@ -1880,6 +1945,8 @@
     },
     {
       "id": "demo_navigation_lab.shell.settings",
+      "version": "0.1.0",
+      "shapeFingerprint": "c0cdea2873de94aaa3fdf274a2e1520ec22b40037fc8bf4c36d68c5b7d6d1711",
       "componentId": "demo_navigation_lab_component",
       "exposure": "internal",
       "deepLink": "disabled",
@@ -1955,6 +2022,8 @@
     },
     {
       "id": "demo_navigation_lab.stack",
+      "version": "0.1.0",
+      "shapeFingerprint": "ba64794c0165031686adcc744bd38ded1aa6669b62d345b36daf263ccfbf2caa",
       "componentId": "demo_navigation_lab_component",
       "exposure": "internal",
       "deepLink": "disabled",
@@ -2049,7 +2118,86 @@
       "resultType": "String"
     },
     {
+      "id": "demo_navigation_lab.storage",
+      "version": "0.1.0",
+      "shapeFingerprint": "cd802378bf89719e92e8f82c3d65d5232d6af396d4e914a09587286ac3aee20f",
+      "componentId": "demo_navigation_lab_component",
+      "exposure": "internal",
+      "deepLink": "disabled",
+      "description": "基本类型、JSON Map 和受控存储命名空间示例。",
+      "interceptorIds": [],
+      "popGuardIds": [],
+      "declaration": {
+        "package": "demo_navigation_lab",
+        "library": "lib/src/storage_page.dart",
+        "kind": "page",
+        "symbol": "DemoStoragePage",
+        "packageUri": "package:demo_navigation_lab/src/storage_page.dart",
+        "line": 15,
+        "column": 13
+      },
+      "navigationSources": [
+        "typedIntent",
+        "internalUri"
+      ],
+      "restoration": {
+        "status": "unsupported"
+      },
+      "placement": {
+        "hostId": "default",
+        "parentRouteId": null,
+        "shellId": null,
+        "navigatorOutlet": "root"
+      },
+      "presentation": {
+        "type": "page",
+        "routeType": "platformDefault",
+        "transition": "platformDefault",
+        "opaque": true,
+        "fullscreenDialog": false
+      },
+      "contracts": {
+        "route": "_DemoStoragePageRoute",
+        "arguments": "_DemoStoragePageRouteArguments",
+        "package": "demo_navigation_lab",
+        "library": "lib/src/ccrouter_generated/route/storage_page.route.g.dart",
+        "intentFactory": "CCGeneratedDemoStoragePageRouteFactory"
+      },
+      "registration": "ccrouterRegisterDemoStoragePageRoute",
+      "registrationLibrary": "lib/src/ccrouter_generated/route/storage_page.route.g.dart",
+      "destination": {
+        "descriptor": "ccrouterDescribeDemoStoragePageRoute",
+        "builder": "ccrouterBuildDemoStoragePageRoute",
+        "library": "lib/src/ccrouter_generated/route/storage_page.route.g.dart",
+        "builderLibrary": "lib/src/ccrouter_generated/binding/storage_page.route_binding.g.dart"
+      },
+      "generatedArtifacts": [
+        {
+          "role": "routeLibrary",
+          "symbol": "_DemoStoragePageRoute",
+          "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/route/storage_page.route.g.dart"
+        },
+        {
+          "role": "routeBinding",
+          "symbol": "ccrouterBuildDemoStoragePageRoute",
+          "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/binding/storage_page.route_binding.g.dart"
+        }
+      ],
+      "patterns": [
+        {
+          "type": "CCPathPattern",
+          "value": "/lab/storage",
+          "primary": true,
+          "constraints": {}
+        }
+      ],
+      "parameters": [],
+      "resultType": "void"
+    },
+    {
       "id": "demo_navigation_lab.timeout",
+      "version": "0.1.0",
+      "shapeFingerprint": "ab3712cc71d3d06d2ca15ada548efadf53cefc7e166a212cb40446e92a60c18b",
       "componentId": "demo_navigation_lab_component",
       "exposure": "internal",
       "deepLink": "disabled",
@@ -2127,6 +2275,8 @@
     },
     {
       "id": "demo_navigation_lab.workspace.activity",
+      "version": "0.1.0",
+      "shapeFingerprint": "0c1c1365fdafa7db333d2613b15d34e07c77e8c23e08cf2e7fec6a2b31b198c9",
       "componentId": "demo_navigation_lab_component",
       "exposure": "internal",
       "deepLink": "disabled",
@@ -2202,6 +2352,8 @@
     },
     {
       "id": "demo_navigation_lab.workspace.detail",
+      "version": "0.1.0",
+      "shapeFingerprint": "36e1e78da1ff909fd37ca765ee31e5802e14db196b2efd4968bb806dc27c0004",
       "componentId": "demo_navigation_lab_component",
       "exposure": "internal",
       "deepLink": "enabled",
@@ -2288,6 +2440,8 @@
     },
     {
       "id": "demo_navigation_lab.workspace.home",
+      "version": "0.1.0",
+      "shapeFingerprint": "f8df3b268ef2eaa8139344f8e8110574f766a5904140cf3af1a10ab9395b0f9c",
       "componentId": "demo_navigation_lab_component",
       "exposure": "internal",
       "deepLink": "disabled",
@@ -2363,6 +2517,8 @@
     },
     {
       "id": "demo_navigation_lab.workspace.profile",
+      "version": "0.1.0",
+      "shapeFingerprint": "d1e1e86f5ce8fe67c33022fb04e736f81b5b5e43904bbaab6c15a46f836e5b41",
       "componentId": "demo_navigation_lab_component",
       "exposure": "internal",
       "deepLink": "disabled",
@@ -2438,6 +2594,8 @@
     },
     {
       "id": "order.detail",
+      "version": "0.1.0",
+      "shapeFingerprint": "6ee7d5adc723f67d460fe0dc28b24514793e3bb1f89e8a2836952223f8dfeb73",
       "componentId": "demo_order_component",
       "exposure": "external",
       "deepLink": "disabled",
@@ -2558,6 +2716,8 @@
     },
     {
       "id": "demo_web.private",
+      "version": "0.1.0",
+      "shapeFingerprint": "7660918c60234f57c95afbd5fc710dc5249786b8a9613d51bb455a607425324a",
       "componentId": "demo_web_component",
       "exposure": "external",
       "deepLink": "disabled",
@@ -2662,6 +2822,8 @@
     },
     {
       "id": "demo_web.public",
+      "version": "0.1.0",
+      "shapeFingerprint": "229de44459e082130a811e1d753bdae08888a4b4e0b612af2fb64713c997c88b",
       "componentId": "demo_web_component",
       "exposure": "external",
       "deepLink": "enabled",

@@ -226,28 +226,30 @@ fvm dart run ccrouter_generator:ccrouter generate demo
 
 ### 4. 命名空间 KV Storage（Demo）
 
-`demo/modules/kv_storage` 展示一个后端无关的 KV Storage Service。调用方通过
-`DemoStorageNamespace` 明确选择数据边界：
+`demo/modules/kv_storage` 展示一个后端无关的 KV Storage Service。常规业务调用通过
+`DemoScopedStorage` 从 Host 提供的上下文解析数据边界，不在每次读写时传入账号或环境 ID：
 
 ```dart
-const global = DemoStorageNamespace.global();
-final user = DemoStorageNamespace.user(accountId);
-final environment = DemoStorageNamespace.apiEnvironment('production');
-final hardware = DemoStorageNamespace.hardware(deviceId);
+final storage = DemoScopedStorage(
+  service: DemoNavigationLabServices.demoKeyValueStorage,
+  contextProvider: contextProvider,
+);
 
-await storage.setBool(global, 'privacy.accepted', true);
-await storage.setJson(user, 'profile.preferences', {
+await storage.global.setBool('privacy.accepted', true);
+await storage.currentUser.setJson('profile.preferences', {
   'theme': 'dark',
   'notifications': {'enabled': true},
 });
 ```
 
+底层 `DemoStorageNamespace` 和 `CCStorageClient` 仍保留给 Backend、迁移和测试使用。
 支持 `String`、`int`、`double`、`bool` 和 JSON Object 的类型化读写。不同命名空间的
 相同 Key 互不覆盖；JSON 在写入和读取时都会复制，避免调用方修改内部状态。
 `CCStorageBackend` 是实现替换边界，Demo 默认使用内存 Backend，因此重启应用后数据会丢失。
 生产环境应由应用 Composition Root 接入文件、数据库或 Secure Storage Backend，并根据数据
 敏感度选择加密和清理策略；命名空间本身不是安全边界，也不会自动提供加密。
-Scoped Facade、Session/Environment/Device 上下文绑定和 Backend Placement Policy 的后续方案见
+Scoped Facade、Session/Environment/Device 上下文绑定和 Backend Placement Policy 的设计与
+边界见
 [`docs/CCRouter-kv-storage-demo-migration.md`](docs/CCRouter-kv-storage-demo-migration.md)。
 
 ### 5. 初始化 Host

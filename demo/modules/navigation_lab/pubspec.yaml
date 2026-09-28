@@ -12,8 +12,12 @@ dependencies:
   ccrouter_devtools: ^0.1.0
   demo_order_contracts: ^0.1.0
   demo_network: ^0.1.0
+  demo_kv_storage: ^0.1.0
   demo_web_contracts: ^0.1.0
   flutter:
     sdk: flutter
 dev_dependencies:
   ccrouter_generator: ^0.1.0
+  ccrouter_test: ^0.1.0
+  flutter_test:
+    sdk: flutter
