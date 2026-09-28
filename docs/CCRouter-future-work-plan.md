@@ -68,7 +68,8 @@
   [生成器性能报告](CCRouter-generator-performance-report.md)。
 - [ ] per-Package dirty set 仅在真实项目 Host 聚合超过总耗时 20% 时重新评估；实施前必须
   设计 per-Package output fingerprint，不能因跳过未变 Package 而漏掉受管输出篡改。
-- [ ] 维护冷启动、初始化、路由解析、导航延迟、并发导航、Runtime dispose 的同机趋势。
+- [x] 建立冷启动、初始化、路由解析、导航延迟、并发导航、Runtime dispose 和长期 RSS 的
+  同机趋势入口；长期趋势仍需按发布版本持续采样。
 - [ ] 继续做 macOS、iOS 真机/模拟器和 OHOS 运行回归；平台 SDK 变更只做兼容性修复。
 - [ ] 继续检查 Adapter、Observer、Route Scope、Overlay、Timer 和 Stream 的释放路径。
 - [x] 2026-09-27 核对架构、路由、契约、生成器、分析事件与后续计划文档，纠正已实现能力、

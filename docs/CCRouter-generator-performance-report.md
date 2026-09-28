@@ -126,3 +126,37 @@ dependency closure。现阶段收益不足以覆盖复杂度和错误风险，�
 
 届时优先设计 per-Package manifest 与 reverse dependency closure；不得跳过 Validator、依赖
 watch/daemon 保证正确，或用 mtime/size 替代内容摘要。
+
+## 8. Runtime 长时间与 RSS 观测
+
+长期 Runtime 基准位于：
+
+```text
+packages/ccrouter_test/benchmark/runtime_long_run.dart
+```
+
+它在一个独立 Dart 进程中反复执行 typed `push/pop`，每隔固定周期销毁并重建 Runtime，
+并在每轮验证以下确定性条件：
+
+- 活动 `RouteEntry`、Backend Entry 和 pending navigation 在 Pop 后归零；
+- Runtime `dispose` 后上述状态仍然归零；
+- 诊断缓存保持在配置容量内；
+- 所有 push Future 都完成，且没有未处理的导航错误。
+
+示例：
+
+```bash
+fvm dart run packages/ccrouter_test/benchmark/runtime_long_run.dart \
+  --cycles=10000 --recreate-every=100
+```
+
+输出包含同机的 P50/P95 导航耗时、初始/最终 RSS、RSS 采样序列和确定性峰值计数。RSS
+只用于相同 SDK、平台和进程条件下的版本趋势比较，不作为跨平台的固定阈值；Dart 应用没有
+稳定的纯 Dart Heap 快照接口，Heap 细分需要目标平台的 VM Service/DevTools 采样。发现
+RSS 单调增长时，先用 `resource_lifecycle_regression_test.dart` 和 VM Service heap
+snapshot 区分 Dart 对象保留、原生 Flutter 资源、测试 runner 或平台分配器，再决定是否
+进入框架修复。
+
+P0-3 状态：已建立生成器混合能力冷/热基线、Runtime 并发/回收基线、Service 生命周期基线
+和独立长期 RSS 观测入口。真实 macOS、iOS 和 OHOS 的设备结果仍需在对应 SDK/设备上持续
+采样，不能用当前 OHOS FVM SDK 的桌面测试失败替代平台结论。

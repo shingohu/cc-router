@@ -415,7 +415,9 @@ CLI 继续保持非覆盖式，增加可选模板：
 - [x] Contract 版本/fingerprint/范围的 Pure Dart 设计冻结；版本与 fingerprint 已进入新
   metadata schema，消费者范围和 Runtime descriptor 仍按后续阶段实现；
 - [ ] Catalog/Runtime Snapshot/Trace Edge 协议冻结；
-- [ ] 性能、队列、RSS/Heap 和长时间运行基线脚本；
+- [x] 性能、队列、RSS/Heap 和长时间运行基线脚本；已覆盖混合能力生成、Runtime 并发与
+  资源回收，并提供独立进程的 `runtime_long_run.dart` RSS 趋势入口。绝对 RSS 不设跨平台
+  阈值，Heap 细分仍需目标平台 VM Service 采样。
 - [x] Demo Analyzer Git `main` bootstrap 已接入；补 smoke/status 回归。
 
 ### Phase 1：稳定性与隐私（P0）
@@ -450,7 +452,8 @@ CLI 继续保持非覆盖式，增加可选模板：
 
 - [ ] 高级 Service/Command/Event/InitTask 模板；
 - [ ] 模板非覆盖、生成、分析和错误示例；
-- [ ] 全量生成物回归、性能/RSS/Heap/长时间 Runtime 和多平台报告；
+- [ ] 全量生成物回归、性能/RSS/Heap/长时间 Runtime 和多平台报告；当前 P0-3 已完成可重复
+  基线和确定性资源断言，真实 macOS/iOS/OHOS 设备矩阵与全量回归在所有专项完成后执行。
 - [ ] 正式发布候选版本和迁移文档。
 
 ## 11. 明确不纳入本轮
