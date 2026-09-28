@@ -80,8 +80,28 @@ Query 值或业务结果。`CCDevToolsSnapshot` 会再次复制列表边界，�
 
 ## 后续官方 DevTools Extension
 
-当前仓库先交付可嵌入只读面板，避免引入在不同 Flutter SDK/DevTools 版本上不稳定的
-`devtools_extensions` 依赖。正式发布前若要提供官方扩展，必须增加独立 `devtools/` Package，
-通过版本化的只读 `CCDevToolsSnapshotProvider` 协议接入，并保持“只读、脱敏、有界”的边界；
-具体视图、调用链和 Demo 验收以
-[`CCRouter-pre-release-capability-plan.md`](CCRouter-pre-release-capability-plan.md) 为准。
+仓库现在提供独立的 `devtools/ccrouter_extension` Package。Host 的 Debug Composition Root
+可以注册一次只读 VM Service 入口：
+
+```dart
+CCDevToolsServiceExtension.register(
+  provider: const CCRouterDevToolsSnapshotProvider(),
+);
+```
+
+Extension 通过 `ext.ccrouter.snapshot` 读取版本化 Envelope；它只展示 Runtime 状态、Entry
+和 Trace 摘要，不能导航、重试、销毁 Scope、激活组件或修改 Adapter。发布前使用支持 Web
+的稳定 Flutter SDK 执行：
+
+```bash
+flutter build web --release
+dart run devtools_extensions validate --package=devtools/ccrouter_extension
+dart run devtools_extensions build_and_copy \
+  --source=devtools/ccrouter_extension \
+  --dest=devtools/ccrouter_extension/extension/devtools
+```
+
+当前仓库的 OHOS Flutter SDK 不能运行 `dart:js_interop` Web widget test，因此 Extension
+门禁是稳定 SDK 的 Web 构建加官方 validate；框架和 Demo 仍使用项目默认 FVM 验证。高级
+组件筛选、Route-to-source IDE 打开和单次调用链图形交互仍按
+[`CCRouter-pre-release-capability-plan.md`](CCRouter-pre-release-capability-plan.md) 后续阶段推进。

@@ -133,8 +133,9 @@
 - [x] 建立纯 Dart、版本化的 Catalog/Runtime Snapshot 与 Trace Edge 协议；静态记录携带
   可移植源码位置，Runtime 适配器只复制稳定 ID、Owner、Host/Outlet、状态和耗时。官方
   Extension 后续直接消费该协议，不读取 Runtime 内部对象。
-- [ ] 实现独立官方 Flutter/Dart DevTools Extension；保持现有 `ccrouter_devtools` Widget 面板
-  只读，不把 Extension 做成 Runtime 控制台。
+- [x] 实现独立官方 Flutter/Dart DevTools Extension 最小只读闭环；保持现有
+  `ccrouter_devtools` Widget 面板只读，通过 `ext.ccrouter.snapshot` 消费版本化 Envelope。
+  高级组件筛选、源码跳转和图形调用链仍是该 Extension 的后续视图任务。
 - [ ] 增加组件依赖图高级筛选、Route-to-source 图形化跳转和单次 Service/Command/Event/InitTask
   调用链视图。
 - [x] Pub Hook 已支持成功的显式 `flutter pub` 后置生成，以及 `flutter run/build` fail-closed

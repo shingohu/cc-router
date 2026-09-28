@@ -1,0 +1,24 @@
+name: ccrouter_extension
+description: Read-only official DevTools extension for CCRouter.
+publish_to: none
+version: 0.1.0
+resolution: workspace
+
+environment:
+  sdk: ^3.10.0
+
+dependencies:
+  ccrouter_devtools_protocol:
+    path: ../../packages/ccrouter_devtools_protocol
+  devtools_app_shared: ^0.4.0
+  devtools_extensions: ^0.4.0
+  flutter:
+    sdk: flutter
+  vm_service: ^15.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true

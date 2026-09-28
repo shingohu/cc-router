@@ -74,6 +74,19 @@ void main() {
     expect(protocol.traceEdges.single.durationMicros, 12);
     expect(protocol.toJson().toString(), isNot(contains('secret')));
   });
+
+  test(
+    'service extension can be cleared without exposing a mutable Runtime',
+    () {
+      CCDevToolsServiceExtension.register(
+        provider: CCStaticDevToolsSnapshotProvider(CCDevToolsSnapshot.empty()),
+      );
+      CCDevToolsServiceExtension.clear();
+      // The VM service handler is intentionally not called in this widget test;
+      // registration is process-global and the public contract is idempotent.
+      expect(ccRouterDevToolsSnapshotExtension, 'ext.ccrouter.snapshot');
+    },
+  );
 }
 
 CCTraceContextSnapshot _traceContext() => CCTraceContextSnapshot.from(

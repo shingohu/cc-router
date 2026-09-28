@@ -1,0 +1,5 @@
+name: ccrouter_extension
+issueTracker: https://github.com/shingohu/cc-router/issues
+version: 0.1.0
+materialIconCodePoint: '0xe87c'
+requiresConnection: true
