@@ -9,6 +9,18 @@ enum CCScaffoldKind {
 
   /// Creates one internal typed Route page in an existing component Package.
   page,
+
+  /// Creates an internal Service Contract and lazy implementation template.
+  service,
+
+  /// Creates an internal typed Command and Handler template.
+  command,
+
+  /// Creates an internal typed Event and Subscriber template.
+  event,
+
+  /// Creates an internal InitTask Contract and Handler template.
+  initTask,
 }
 
 /// A failure raised when a scaffold cannot be created without overwriting code.
@@ -32,6 +44,10 @@ Future<List<File>> createScaffold({
   final files = switch (kind) {
     CCScaffoldKind.component => _componentFiles(name, root),
     CCScaffoldKind.page => _pageFiles(name, root),
+    CCScaffoldKind.service => _serviceFiles(name, root),
+    CCScaffoldKind.command => _commandFiles(name, root),
+    CCScaffoldKind.event => _eventFiles(name, root),
+    CCScaffoldKind.initTask => _initTaskFiles(name, root),
   };
   final existing = files.keys.where((file) => file.existsSync()).toList();
   if (existing.isNotEmpty) {
@@ -158,6 +174,164 @@ final class $pageClass extends StatelessWidget {
   return <File, String>{
     File(path.join(packageRoot.path, 'lib', 'src', '$pageStem.dart')): source,
   };
+}
+
+Map<File, String> _serviceFiles(String rawName, Directory packageRoot) {
+  final serviceClass = _capabilityClassName(rawName, 'Service');
+  final stem = _snakeCase(serviceClass);
+  final packageName = _readPackageNameOrFail(packageRoot);
+  final id = '$packageName.${_idStem(serviceClass, 'Service')}';
+  final ownerSymbol = '_${_lowerCamel(packageName)}ComponentId';
+  final source =
+      '''import 'package:ccrouter/ccrouter.dart';
+
+const $ownerSymbol = CCComponentId('$packageName');
+
+/// Contract generated as an internal starting point for `$id`.
+@CCServiceContract(
+  componentId: $ownerSymbol,
+  id: '$id',
+  description: 'Replace with the Service usage scenario.',
+)
+abstract interface class $serviceClass {
+  /// Returns the current value owned by this component.
+  String read();
+}
+
+/// Lazy app-scoped implementation of [$serviceClass].
+@CCService()
+final class ${serviceClass}Impl implements $serviceClass {
+  /// Creates the default implementation.
+  const ${serviceClass}Impl();
+
+  @override
+  String read() => 'replace-me';
+}
+''';
+  return <File, String>{
+    File(path.join(packageRoot.path, 'lib', 'src', '$stem.dart')): source,
+  };
+}
+
+Map<File, String> _commandFiles(String rawName, Directory packageRoot) {
+  final commandClass = _capabilityClassName(rawName, 'Command');
+  final stem = _snakeCase(commandClass);
+  final packageName = _readPackageNameOrFail(packageRoot);
+  final id = '$packageName.${_idStem(commandClass, 'Command')}';
+  final source =
+      '''import 'package:ccrouter/ccrouter.dart';
+
+/// One requested operation owned by `$packageName`.
+@CCCommandContract(
+  id: '$id',
+  description: 'Replace with the Command usage scenario.',
+)
+final class $commandClass implements CCCommand<void> {
+  /// Creates the request. Add only immutable, serializable fields.
+  const $commandClass();
+}
+
+/// Handles [$commandClass] inside its owning component.
+@CCCommandHandler()
+Future<void> handle${commandClass}(
+  $commandClass command,
+  CCInvocationContext context,
+) async {
+  // TODO: implement the requested operation.
+}
+''';
+  return <File, String>{
+    File(path.join(packageRoot.path, 'lib', 'src', '$stem.dart')): source,
+  };
+}
+
+Map<File, String> _eventFiles(String rawName, Directory packageRoot) {
+  final eventClass = _capabilityClassName(rawName, 'Event');
+  final stem = _snakeCase(eventClass);
+  final packageName = _readPackageNameOrFail(packageRoot);
+  final id = '$packageName.${_idStem(eventClass, 'Event')}';
+  final source =
+      '''import 'package:ccrouter/ccrouter.dart';
+
+/// A completed fact published by `$packageName`.
+@CCEventContract(
+  id: '$id',
+  description: 'Replace with the Event usage scenario.',
+)
+final class $eventClass implements CCEvent {
+  /// Creates the immutable payload. Add only final fields.
+  const $eventClass();
+}
+
+/// Handles [$eventClass] without returning a business result.
+@CCEventSubscription()
+void observe${eventClass}($eventClass event) {
+  // TODO: react to the completed fact.
+}
+''';
+  return <File, String>{
+    File(path.join(packageRoot.path, 'lib', 'src', '$stem.dart')): source,
+  };
+}
+
+Map<File, String> _initTaskFiles(String rawName, Directory packageRoot) {
+  final taskName = _capabilityClassName(rawName, 'InitTask');
+  final stem = _snakeCase(taskName);
+  final packageName = _readPackageNameOrFail(packageRoot);
+  final id = '$packageName.${_idStem(taskName, 'InitTask')}';
+  final contract = '${_lowerCamel(taskName)}Contract';
+  final handler = 'initialize$taskName';
+  final source =
+      '''import 'package:ccrouter/ccrouter.dart';
+
+/// Stable startup dependency for `$packageName`.
+const $contract = CCInitTaskContract(
+  id: '$id',
+  description: 'Replace with the initialization usage scenario.',
+);
+
+/// Initializes the component after the Host opens the selected Gate.
+@CCInitTask(contract: $contract)
+Future<void> $handler(CCInvocationContext context) async {
+  // TODO: perform bounded startup work or delegate to a Service.
+}
+''';
+  return <File, String>{
+    File(path.join(packageRoot.path, 'lib', 'src', '$stem.dart')): source,
+  };
+}
+
+String _readPackageNameOrFail(Directory packageRoot) {
+  final pubspec = File(path.join(packageRoot.path, 'pubspec.yaml'));
+  if (!pubspec.existsSync()) {
+    throw CCScaffoldException(
+      'Capability target is not a Dart Package: ${packageRoot.path}',
+    );
+  }
+  return _readPackageName(pubspec);
+}
+
+String _capabilityClassName(String value, String suffix) {
+  final words = value
+      .trim()
+      .replaceAll(RegExp(r'[^A-Za-z0-9_]+'), '_')
+      .split(RegExp(r'[_\s]+'))
+      .where((word) => word.isNotEmpty)
+      .map((word) => word[0].toUpperCase() + word.substring(1))
+      .join();
+  if (words.isEmpty || !RegExp(r'^[A-Z][A-Za-z0-9]*$').hasMatch(words)) {
+    throw CCScaffoldException(
+      'Capability name must produce a Dart class identifier, for example OrderSummary.',
+    );
+  }
+  return words.endsWith(suffix) ? words : '$words$suffix';
+}
+
+String _idStem(String value, String suffix) {
+  final stem = value.endsWith(suffix)
+      ? value.substring(0, value.length - suffix.length)
+      : value;
+  return _snakeCase(stem).replaceAll('_', '-');
 }
 
 String _packageName(String value) {

@@ -121,7 +121,8 @@
 ### 4.4 开发体验与诊断
 
 - [x] 扩展 `ccrouter find` 和 Catalog 源码定位，覆盖 Route、Service、Command、Event、InitTask。
-- [x] 增加 `ccrouter create component` 和 `ccrouter create page` 模板命令；跨组件 Contract 提升仍需显式设计。
+- [x] 增加 `ccrouter create component`、`create page`、`create service`、`create command`、
+  `create event` 和 `create init-task` 模板命令；跨组件 Contract 提升仍需显式设计。
 - [x] 完成可嵌入 DevTools 只读视图：Component Graph、Route/Backend Entry、Trace、
   Failure/Fallback 和 InitTask DAG；官方 DevTools Extension 已列入正式发布前 P1，必须先完成
   Catalog/Runtime Snapshot 与 Trace Edge 协议，见 `docs/CCRouter-devtools.md`。

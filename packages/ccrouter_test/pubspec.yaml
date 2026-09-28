@@ -9,6 +9,7 @@ environment:
 
 dependencies:
   ccrouter_analytics: ^0.1.0
+  ccrouter_analytics_firebase: ^0.1.0
   ccrouter_auto_track: ^0.1.0
   ccrouter: ^0.1.0
   ccrouter_contracts: ^0.1.0

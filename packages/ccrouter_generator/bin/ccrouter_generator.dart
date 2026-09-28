@@ -455,6 +455,10 @@ const _usage = '''Usage:
   ccrouter aggregate [scan-root] [--output-dir <directory>] [--generate-component-registrars]
   ccrouter create component <package-name> [parent-directory]
   ccrouter create page <PageName> [component-directory]
+  ccrouter create service <ServiceName> [component-directory]
+  ccrouter create command <CommandName> [component-directory]
+  ccrouter create event <EventName> [component-directory]
+  ccrouter create init-task <TaskName> [component-directory]
   ccrouter pub-hook install [--sdk <flutter-sdk-root>]
   ccrouter pub-hook uninstall [--sdk <flutter-sdk-root>]
   ccrouter pub-hook status [--sdk <flutter-sdk-root>]
@@ -475,8 +479,11 @@ hook is not installed automatically and is not part of Flutter's internal tool
 snapshot.
 `create component <package-name> [parent-directory]` creates a new component
 Package without overwriting existing files. `create page <PageName>
-[component-directory]` creates an internal typed Route page in an existing
-component Package.''';
+[component-directory]` creates an internal typed Route page. `create service`,
+`create command`, `create event`, and `create init-task` create one internal
+capability template in an existing component Package. All scaffold commands
+refuse to overwrite files and never modify Host dependencies or generated
+output.''';
 
 /// Runs dependency-accurate Package generation for one resolved Host.
 Future<bool> _generateResolvedWorkspace(
@@ -1600,13 +1607,21 @@ _Arguments _parseCreateArguments(List<String> arguments) {
       help: true,
     );
   }
-  if (arguments.length < 3 ||
-      (arguments[1] != 'component' && arguments[1] != 'page')) {
+  const kinds = <String>{
+    'component',
+    'page',
+    'service',
+    'command',
+    'event',
+    'init-task',
+  };
+  if (arguments.length < 3 || !kinds.contains(arguments[1])) {
     return const _Arguments(
       command: _GeneratorCommand.create,
       rootPath: '',
       outputDirectoryPath: null,
-      error: 'create requires `component` or `page`.',
+      error:
+          'create requires `component`, `page`, `service`, `command`, `event`, or `init-task`.',
     );
   }
   if (arguments.length > 4) {
@@ -1617,9 +1632,15 @@ _Arguments _parseCreateArguments(List<String> arguments) {
       error: 'create accepts a template, a name, and one optional directory.',
     );
   }
-  final kind = arguments[1] == 'component'
-      ? CCScaffoldKind.component
-      : CCScaffoldKind.page;
+  final kind = switch (arguments[1]) {
+    'component' => CCScaffoldKind.component,
+    'page' => CCScaffoldKind.page,
+    'service' => CCScaffoldKind.service,
+    'command' => CCScaffoldKind.command,
+    'event' => CCScaffoldKind.event,
+    'init-task' => CCScaffoldKind.initTask,
+    _ => throw StateError('Unsupported scaffold kind.'),
+  };
   final name = arguments[2];
   final root = arguments.length == 4 ? arguments[3] : Directory.current.path;
   return _Arguments(

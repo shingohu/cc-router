@@ -36,6 +36,10 @@ Run commands from the workspace root with the project's FVM toolchain:
 ```bash
 fvm dart run ccrouter_generator:ccrouter create component <package-name> <parent-directory>
 fvm dart run ccrouter_generator:ccrouter create page <PageName> <component-directory>
+fvm dart run ccrouter_generator:ccrouter create service <ServiceName> <component-directory>
+fvm dart run ccrouter_generator:ccrouter create command <CommandName> <component-directory>
+fvm dart run ccrouter_generator:ccrouter create event <EventName> <component-directory>
+fvm dart run ccrouter_generator:ccrouter create init-task <TaskName> <component-directory>
 fvm dart run ccrouter_generator:ccrouter generate <host-root>
 fvm dart run ccrouter_generator:ccrouter generate <host-root> --check
 fvm dart run ccrouter_generator:ccrouter generate <host-root> --no-cache
@@ -75,10 +79,12 @@ read-only dependencies, and unrelated build output. After cleaning, run a full
 
 ### Scaffold
 
-`create component` and `create page` are non-overwriting templates. They must
-fail before writing if a target exists or a name is invalid. The scaffold does
-not edit Host dependencies, generated output, or Contract exposure. A new page
-is internal by default; a cross-component Contract is a later design decision.
+`create component`, `create page`, `create service`, `create command`, `create
+event`, and `create init-task` are non-overwriting templates. They must fail
+before writing if a target exists or a name is invalid. Capability templates
+use the real annotation and Handler signatures, but remain component-internal
+by default. The scaffold does not edit Host dependencies, generated output, or
+Contract exposure. A cross-component Contract is a later design decision.
 
 ### Pub Hook
 

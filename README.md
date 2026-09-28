@@ -875,6 +875,12 @@ fvm dart run ccrouter_generator:ccrouter create component demo_inventory demo/mo
 # 在已有组件中创建内部页面（第二个参数是组件根目录，默认当前目录）
 fvm dart run ccrouter_generator:ccrouter create page InventoryPage demo/modules/demo_inventory
 
+# 在已有组件中创建能力模板（默认是组件内部能力）
+fvm dart run ccrouter_generator:ccrouter create service OrderSummary demo/modules/demo_order
+fvm dart run ccrouter_generator:ccrouter create command ReserveOrder demo/modules/demo_order
+fvm dart run ccrouter_generator:ccrouter create event OrderPaid demo/modules/demo_order
+fvm dart run ccrouter_generator:ccrouter create init-task WarmCache demo/modules/demo_order
+
 # 生成/增量更新
 fvm dart run ccrouter_generator:ccrouter generate demo
 
@@ -902,7 +908,10 @@ fvm dart run ccrouter_generator:ccrouter pub-hook uninstall
 ```
 
 `create component` 只创建新的 Package、`lib/src` 下的顶层 `CCComponent` Descriptor 和 Package barrel；
-`create page` 只创建带 `@CCRoute` 的最小 Flutter Page。两个命令都会先检查全部目标文件，
+`create page` 只创建带 `@CCRoute` 的最小 Flutter Page；`create service`、`create command`、
+`create event` 和 `create init-task` 分别创建真实注解的 Service/Command/Event/InitTask 起始模板。
+这些能力模板默认属于当前组件，不会自动提升为跨组件 Contract，也不会修改 Host 依赖。
+所有命令都会先检查全部目标文件，
 目标已存在或名称非法时返回非零并拒绝覆盖，不修改 Host 的 `pubspec.yaml`，也不写入生成目录。
 脚手架完成后仍需执行一次 `flutter pub get` 和 `ccrouter generate`，让 build_runner 生成 Registrar、
 Route API 和 Package/Host metadata。跨组件 Route 不能直接由脚手架猜测，真实消费者出现后再
@@ -1004,8 +1013,8 @@ fvm dart run ccrouter_generator:ccrouter generate demo --check
 - 不虚构当前尚未实现的 Action Pipeline 或动态组件；Command/Event/InitTask 生成能力与 Service Proxy 只使用当前支持的显式声明和方法矩阵。
 - 生成后执行 analyze、针对性测试与 `generate --check`。
 
-CLI Skill 覆盖已经实现的 `generate`、`find`、`clean`、`create component` 和
-`create page`。Contract Scaffold/Promotion/Migration、版本兼容检查和生成失败诊断
+CLI Skill 覆盖已经实现的 `generate`、`find`、`clean`、`create component`、`create page`、
+`create service`、`create command`、`create event` 和 `create init-task`。Contract Scaffold/Promotion/Migration、版本兼容检查和生成失败诊断
 目前仍是 AI 辅助工作流，不是可直接调用的 CLI 命令；它们必须先输出 dry-run，涉及
 公共 Contract、Package 依赖或已有声明的变更必须得到明确确认。`watch` 当前明确不支持，
 不能因为设计文档提到它就自行添加命令或参数。
