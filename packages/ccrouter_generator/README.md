@@ -250,8 +250,8 @@ fast path，`--profile` 会输出 `fast-path=hit/miss`。性能回归与混合�
 Command 使用显式 Contract、Handler 和消费依赖，Event 使用显式 Contract、静态 Subscription
 和 Owner 自动 Publication，InitTask 使用显式 Task Contract、Handler 和类型化依赖；三者都
 不通过扫描 Contribution 源码猜测注册关系。Action Pipeline 仍未实现。只读
-`ccrouter find` 和未来 DevTools 应消费版本化 Catalog 与
-Runtime 快照，而不是解析 Markdown 或直接绑定 Builder 的原始 JSON。
+`ccrouter find` 消费版本化 Catalog；`ccrouter_devtools` 消费 Runtime 快照。未来如需联动，
+应通过稳定 ID 关联二者，而不是让面板解析 Markdown 或 Builder 私有数据。
 
 导航失败诊断中的 `CCNavigationFailureAttempt` 用于区分同一恢复链中的失败来源：原始请求
 (`request`)、拦截器重定向 (`interceptorRedirect`)、Failure Policy 恢复

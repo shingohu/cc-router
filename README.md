@@ -25,6 +25,8 @@ CCRouter 是一个面向 Flutter 大型应用的组件化运行时与类型安�
 | `ccrouter` | Flutter 业务门面、`CCRouterApp`、页面生命周期 | 是 |
 | `ccrouter_go_router` | 默认 GoRouter Backend、Assembler、Observer 与 Shell 接入 | 仅 Host |
 | `ccrouter_generator` | 注解处理、Host 聚合、校验、查找与清理 CLI | 仅 dev dependency |
+| `ccrouter_analyzer_plugin` | Analysis Server 实时边界与生成物诊断 | 仅 dev dependency，需显式启用 |
+| `ccrouter_devtools` | 可嵌入的只读 Component/Route/Trace/Failure/InitTask 诊断面板 | 仅 debug/dev dependency，按需接入 |
 | `ccrouter_test` | 面向集成者的测试 Host、Fake 与测试辅助能力 | 仅 test/dev dependency |
 | `demo` | Android、iOS、macOS、Web、OHOS 平台 Host 和完整能力示例 | 示例 |
 | `demo/modules/*` | 示例组件与独立 contracts Package | 示例 |
@@ -37,6 +39,37 @@ import 'package:ccrouter_go_router/ccrouter_go_router.dart';
 ```
 
 只有应用 Composition Root 可以导入 `ccrouter_go_router` 和 `package:ccrouter/ccrouter_host.dart`。业务代码不得导入 `ccrouter_core/src/*`、Adapter 或 Host SPI。
+
+### IDE / Analysis Server 诊断
+
+生成的 Route API 已经提供类型补全和自动导包。需要编辑时实时检查跨组件内部生成物引用和
+Route 生成物是否缺失时，可显式加入 `ccrouter_analyzer_plugin` 并在 `analysis_options.yaml`
+中启用：
+
+```yaml
+analyzer:
+  plugins:
+    - ccrouter_analyzer_plugin
+```
+
+插件只提供轻量诊断，不执行生成、不修改源代码，也不替代 `ccrouter generate --check`。
+完整接入和 Analyzer 版本边界见
+[`docs/CCRouter-ide-analysis-server.md`](docs/CCRouter-ide-analysis-server.md)。
+
+### DevTools 只读面板
+
+调试构建可以按需加入 `ccrouter_devtools`，在 Debug Drawer 或内部诊断页面嵌入：
+
+```dart
+import 'package:ccrouter_devtools/ccrouter_devtools.dart';
+
+const diagnosticsPage = CCRouterDevToolsPanel();
+```
+
+面板只读展示 Component Graph、Managed/Backend Entries、Trace Timeline、Failure/Fallback
+和 InitTask DAG。它不会初始化 Runtime、导航、Pop、重试任务、销毁 Scope 或控制 Adapter；
+未初始化时显示空状态。完整数据边界和后续官方 DevTools Extension 规划见
+[`docs/CCRouter-devtools.md`](docs/CCRouter-devtools.md)。
 
 ## 当前能力
 
@@ -62,6 +95,7 @@ import 'package:ccrouter_go_router/ccrouter_go_router.dart';
 | InitTask | 已支持 | 一次性 DAG、Gate、必需/可选失败策略 |
 | 生成器增量缓存与门禁 | 已支持 | 内容校验 fast path、`--check`、`--no-cache`、`--profile`、并发锁、原子写入 |
 | 生成索引和源码定位 | 已支持 | Package/Host Catalog、`ccrouter find` |
+| DevTools 只读可视化 | 已支持 | `ccrouter_devtools` 可嵌入面板；官方 DevTools Extension 仍属于后续 2.0 工具规划 |
 | Navigator 1.0 Backend | 暂不支持 | 2.0 阶段候选 |
 | 通用 Navigator 2.0 Backend | 暂不支持 | 2.0 阶段候选 |
 | 动态组件安装/卸载 | 暂不支持 | 当前组件集合在 `initialize` 时固定 |

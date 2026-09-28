@@ -19,6 +19,8 @@
 - [Event 设计与实施计划](CCRouter-event-design.md)
 - [初始化任务设计与实施计划](CCRouter-initialization-task-design.md)
 - [Action Pipeline 候选计划](CCRouter-action-pipeline-plan.md)
+- [DevTools 只读可视化](CCRouter-devtools.md)
+- [IDE / Analysis Server 集成](CCRouter-ide-analysis-server.md)
 
 生成器输出的应用路由目录不属于手写设计文档。当前 Demo 的聚合路由目录位于
 `demo/lib/src/ccrouter_generated/metadata/cc_routes.json` 和

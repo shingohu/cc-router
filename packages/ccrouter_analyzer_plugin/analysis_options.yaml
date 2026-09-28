@@ -1,0 +1,9 @@
+analyzer:
+  errors:
+    unused_import: error
+    unused_local_variable: error
+
+linter:
+  rules:
+    depend_on_referenced_packages: true
+    public_member_api_docs: true

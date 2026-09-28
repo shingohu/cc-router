@@ -15,6 +15,7 @@ workspace:
   - packages/ccrouter
   - packages/ccrouter_go_router
   - packages/ccrouter_generator
+  - packages/ccrouter_devtools
   - packages/ccrouter_test
   - demo
   - demo/modules/order

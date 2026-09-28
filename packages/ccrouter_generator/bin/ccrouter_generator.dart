@@ -453,6 +453,8 @@ const _usage = '''Usage:
   ccrouter find <capability-id-or-route-pattern> [host-root]
   ccrouter clean [host-root]
   ccrouter aggregate [scan-root] [--output-dir <directory>] [--generate-component-registrars]
+  ccrouter create component <package-name> [parent-directory]
+  ccrouter create page <PageName> [component-directory]
   ccrouter pub-hook install [--sdk <flutter-sdk-root>]
   ccrouter pub-hook uninstall [--sdk <flutter-sdk-root>]
   ccrouter pub-hook status [--sdk <flutter-sdk-root>]

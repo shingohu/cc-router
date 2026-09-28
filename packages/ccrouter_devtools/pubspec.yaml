@@ -1,0 +1,17 @@
+name: ccrouter_devtools
+description: Read-only Flutter diagnostics panel for CCRouter hosts.
+version: 0.1.0
+resolution: workspace
+publish_to: none
+
+environment:
+  sdk: ^3.10.0
+
+dependencies:
+  ccrouter: ^0.1.0
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter

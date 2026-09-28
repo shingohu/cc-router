@@ -107,7 +107,8 @@ Runtime 已具备正确的多 Subscriber 语义，但现有手写方式仍存在
 - Workspace 无法生成 Event、Publisher、Subscriber 的静态关系图；
 - 构建期不能发现重复 Subscriber ID、非法函数签名和组件依赖错误；
 - 根业务调用 `CCRouter.event` 时通常没有可信 publisher component；
-- Catalog、`ccrouter find` 和未来 DevTools 无法定位发布方与订阅方。
+- Catalog 与 `ccrouter find` 负责定位发布方与订阅方；只读 `ccrouter_devtools` 面板负责展示
+  相关 Runtime Trace、失败和生命周期诊断。
 
 不采用全量扫描 Package 依赖、为所有 `CCEvent` 生成 API 的方案。该方式无法证明谁有权发布，
 也会生成未使用能力。采用显式 Event Contract、显式静态 Subscription、Owner 显式 Publication，

@@ -131,7 +131,8 @@ Runtime 能正确执行 InitTask，但手写注册存在以下生成期缺口：
 
 - 任务 ID、依赖 ID 和 Registrar 代码需要重复维护，重命名或跨组件移动后容易漂移；
 - Workspace 无法在构建期验证 Contract Owner、跨 Package exposure 和完整 DAG；
-- Catalog、`ccrouter find` 和未来 DevTools 无法定位任务、Gate、依赖边和源码位置；
+- Catalog 与 `ccrouter find` 负责定位任务、Gate 和源码位置；`ccrouter_devtools` 负责展示运行时
+  任务状态、Gate 和依赖边；
 - 重复 ID、缺失依赖和循环依赖只能在应用初始化时发现，反馈过晚。
 
 不扫描 Registrar、Contribution 闭包或函数体猜测任务关系。这类启发式发现会遗漏动态注册，
@@ -230,7 +231,8 @@ lib/src/ccrouter_generated/
 - 现有 `component.g.dart` 直接聚合任务桥接，不再增加一层 capability bridge；
 - 现有 Package/Host Catalog 聚合任务、Gate、Owner 和依赖边，不新增独立 InitTask Catalog 文件；
 - 现有 metadata 记录稳定 ID、Owner、Gate、失败策略、timeout、依赖及可移植源码位置；
-- `cc_catalog.md` 从同轮 metadata 派生可读 DAG，并支持 `ccrouter find` 和未来 DevTools；
+- `cc_catalog.md` 从同轮 metadata 派生可读 DAG，并支持 `ccrouter find`；运行时任务状态和
+  依赖边由只读 `ccrouter_devtools` 面板展示；
 - 没有 InitTask 声明时不创建相关文件或空目录；
 - 业务 barrel 只导出真实跨组件使用的 Contract/Gate，不公开生成注册控制器。
 

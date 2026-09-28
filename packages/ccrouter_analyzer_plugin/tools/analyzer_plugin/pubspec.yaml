@@ -1,0 +1,12 @@
+name: ccrouter_analyzer_plugin_loader
+description: Loads the CCRouter Analysis Server plugin.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.10.0
+
+dependencies:
+  analyzer: 8.4.0
+  analyzer_plugin: 0.13.10
+  ccrouter_analyzer_plugin: ^0.1.0

@@ -162,7 +162,8 @@ Catalog 和 Host Route Catalog 保留各自的消费边界。收敛必须保持�
   正确创建、删除陈旧文件；
 - [x] 将 Host 的 `cc_routes.md` 与 `cc_sources.md` 合并为统一的人类可读
   `cc_catalog.md`，同时包含契约、源码位置和生成物位置；Package 也使用局部
-  `cc_catalog.md`，为后续 Route、Service、Action 和 DevTools 共用同一视图；
+  `cc_catalog.md`，供 Route、Service、Action 统一浏览；`ccrouter_devtools` 当前通过 Runtime
+  快照展示运行状态，未来再按稳定 ID 与 Catalog 联动；
 - [x] 保留 Host `cc_routes.json` 作为 CI、跨端工具和自动校验使用的机器路由目录，不以 Markdown
   替代结构化契约；
 - [x] 覆盖生成、`--check`、空 Catalog、陈旧文件清理和回归测试。
@@ -429,7 +430,7 @@ Metrics/Display Features，不自动产生原生窗口。未来每个 Flutter Vi
    激活、关闭和失效释放，不把同一窗口的旋转、折叠或多个 Outlet 当成新 Window。
 3. 完整 Route Restoration 在 2.0 只有恢复机会 Telemetry 证明收益后才实施；此前保持
    `unsupported` 诊断，不提供伪恢复语义。
-4. `ccrouter watch`、CLI 快速单次生成与 DevTools 可视化属于 2.0 开发体验候选；
+4. `ccrouter watch`、CLI 快速单次生成与官方 DevTools Extension 属于 2.0 开发体验候选；
    当前以显式生成、`--check` 和 Package/Host Catalog 为确定性基础。临时页面的源码
    重命名/移动与 IDE 导包已验收，但不外推至 IDE 重启或大型外部依赖工程。
 5. 原子组合栈事务和精确 Route Entry 操作在 2.0 重新评估；分别以稳定身份、原子回滚和
@@ -520,6 +521,14 @@ Generator 全套 131 项、Demo 25 项通过；受管生成物无残留或 Git �
 
 当前 Demo 改一页约 5–8 秒、稳定空改动约 2 秒，尚不足以证明常驻监听的维护与资源成本
 值得承担。1.x 不启动后台服务，也不扩展公开 API；大型项目的实际 P95 是 2.0 决策的依据。
+
+### 6.5 Analysis Server 实时诊断（1.x 最小闭环已落地）
+
+可选 `ccrouter_analyzer_plugin` 仅报告单文件可确定的跨 Package 生成物引用和缺失 Route
+生成物；它不执行 Builder、不修改源文件，也不替代本计划中的 `generate --check`。由于
+官方 `analyzer_plugin` 与当前生成器 Analyzer 版本约束不同，插件保持独立开发工具 Package，
+避免改变主 Workspace 的 Analyzer 解析。接入、版本隔离和失败回退见
+[CCRouter-ide-analysis-server.md](CCRouter-ide-analysis-server.md)。
 
 ### 6.4 能力源码定位命令（已落地）
 

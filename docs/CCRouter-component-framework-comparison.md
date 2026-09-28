@@ -38,8 +38,8 @@ CCRouter 的核心 Runtime 能力并不落后。相较常见方案，CCRouter �
 - Command、Event、InitTask 的语义分层；
 - 并发、取消、超时和销毁边界。
 
-当前主要欠缺的是跨能力源码定位、IDE/可视化工具和长期发布治理，而不是 Host
-最小接入或继续堆叠更多基础路由操作。
+当前主要欠缺的是官方 DevTools Extension、跨能力源码定位的深度交互和长期发布治理，
+而不是 Host 最小接入或继续堆叠更多基础路由操作。
 
 ## 能力对比
 
@@ -57,9 +57,9 @@ CCRouter 的核心 Runtime 能力并不落后。相较常见方案，CCRouter �
 | 事件广播 | 事件/Action | 外接 | 外接 | 外接 | 类型化 Event |
 | 启动任务 DAG | 通常较弱 | Module 初始化 | 异步依赖 | 外接 | InitTask + Gate + failure policy |
 | 动态模块治理 | 部分方案支持 | Module 生命周期 | Scope/unregister | 无统一语义 | 1.x 不支持，2.0 候选 |
-| IDE 路由定位 | ARouter 有插件 | 一般 | 无 | 生成 API | 有 `ccrouter find`，无 IDE 插件 |
+| IDE 路由定位 | ARouter 有插件 | 一般 | 无 | 生成 API | 生成 API + `ccrouter find`，另有可选 Analysis Server 边界诊断 |
 | Watch 增量生成 | 生态支持 | 部分支持 | 不适用 | 支持 | 1.x 不提供 `watch` |
-| DevTools | 部分 | 部分 | 注册查看 | 部分 | 有诊断数据，无可视化面板 |
+| DevTools | 部分 | 部分 | 注册查看 | 部分 | 已有可选只读面板；官方 Extension 与高级图形交互后续评估 |
 | 原生多窗口 | 平台相关 | 平台相关 | 无 | 后端相关 | Host 隔离已具备，原生桥接暂缓 |
 | 状态恢复 | 平台/后端相关 | 后端相关 | 无 | 部分 | 只记录恢复机会，完整恢复暂缓 |
 
@@ -136,7 +136,7 @@ Contract、顶层 Handler 和类型化依赖。不同语义不能重新合并成
 - IDE 内的路由到源码跳转插件；
 - IDE 内的组件依赖和 Contract 图；
 - 生成失败后的 IDE 状态提示；
-- Catalog 的可视化浏览。
+- 静态 Catalog 与 Runtime 快照联动的高级可视化（当前面板只展示 Runtime 状态）。
 
 建议先继续强化 `find` 和 Catalog，再根据真实项目的生成 P95 决定是否实现 `watch`。当前 Demo 的稳定空改动约为数秒，尚不足以证明常驻 Watch 进程值得承担锁、资源和失败恢复成本。
 
@@ -186,7 +186,7 @@ Injectable 等 DI 工具通常支持 dev、test、staging、production 环境实
 
 **优先级：中低。**
 
-### 7. 缺少 DevTools 可视化
+### 7. DevTools 可视化边界
 
 CCRouter 已有足够的只读数据基础：
 
@@ -200,9 +200,12 @@ CCRouter 已有足够的只读数据基础：
 - Service Invocation；
 - InitTask Snapshot。
 
-但尚未提供统一 DevTools 面板。未来可以展示 Component Graph、Route Graph、Active Entries、Service Scope、Navigation Timeline、Failure/Fallback 和 InitTask DAG。
+`ccrouter_devtools` 已提供可嵌入的统一只读面板，展示 Component Graph、Route/Backend
+Entries、Navigation Timeline、Failure/Fallback 和 InitTask DAG。它不提供任何导航、重试、
+销毁或组件激活控制；官方 Dart/Flutter DevTools Extension 以及更复杂的图形交互仍需在
+后续工具阶段评估。
 
-**优先级：中，2.0 开发体验任务。**
+**优先级：中；嵌入式只读面板已完成，官方 Extension 仍属于 2.0 开发体验任务。**
 
 ## 有意延期，不应视为当前遗漏
 
@@ -217,7 +220,7 @@ CCRouter 已有足够的只读数据基础：
 7. Action Pipeline；
 8. Command、Event、InitTask 自动声明生成，以及 Service Proxy 当前不支持的方法形态；
 9. CLI 契约提升和迁移工具（Component/内部 Page 最小非覆盖式模板已落地）；
-10. Generator Watch 和 DevTools。
+10. Generator Watch 和官方 DevTools Extension。
 
 这些能力不是“缺少基础实现”，而是当前版本为了保持 API 表面积、生命周期和降级语义可控而主动不公开。
 
@@ -253,8 +256,8 @@ CCRouter 已有足够的只读数据基础：
 1. Navigator 1.0 Backend；
 2. Native 多窗口桥接；
 3. Route Restoration；
-4. DevTools；
-5. Generator Watch 和 IDE 插件；
+4. 官方 DevTools Extension；
+5. Generator Watch、IDE Route-to-source 导航和可视化插件；基础 Analysis Server 边界诊断已落地；
 6. 分层 Scope；
 7. 动态组件治理；
 8. Action Pipeline；
@@ -265,7 +268,8 @@ CCRouter 已有足够的只读数据基础：
 
 CCRouter 当前最明显的缺口不是基础路由 Runtime，而是：
 
-1. `ccrouter find` 已形成多能力只读定位闭环，但 IDE 和 DevTools 生态还不成熟；
+1. `ccrouter find` 和嵌入式只读面板已形成基础定位/诊断闭环，官方 DevTools Extension
+   与深度 IDE 跳转仍待完善；
 2. Contract 版本兼容和环境实现选择尚未系统化；
 3. 复杂 Service 与未注解迁移能力仍依赖显式 Contribution，高级自动生成等待生产阈值；
 4. 原生多窗口、状态恢复和动态组件属于明确的 2.0 范围。

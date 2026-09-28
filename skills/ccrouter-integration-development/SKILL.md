@@ -33,6 +33,15 @@ capability, or conditionally deferred work. Do not import internal APIs or
 weaken lifecycle, type, failure, or diagnostic semantics to make the feature
 appear supported.
 
+For live IDE boundary feedback, use the optional `ccrouter_analyzer_plugin`.
+It reports only deterministic single-file diagnostics and never runs generation,
+rewrites imports, or replaces `ccrouter generate --check`. Treat generated Dart
+APIs as the source of completion and auto-import behavior, `ccrouter find` and
+Catalog metadata as the source of location lookup, and the CLI/Workspace
+Validator as the final authority. Follow
+[`references/ide-analysis-server.md`](references/ide-analysis-server.md) for
+setup, version isolation, and fallback behavior.
+
 Read [implementation-patterns.md](references/implementation-patterns.md) when adding or changing code. Read [review-checklist.md](references/review-checklist.md) when reviewing, migrating, or validating a feature.
 
 ## Non-Negotiable Boundaries
@@ -59,6 +68,22 @@ Read [implementation-patterns.md](references/implementation-patterns.md) when ad
 - Use `ccrouter_auto_track` only when the app opts in to explicit `CCAnalyticsScrollable` or `CCAnalyticsExposureTarget` wrappers. Configure exposure thresholds deliberately; do not treat the approximation as ad verification or a security signal.
 - Keep analytics separate from diagnostics: `CCDiagnosticEvent` explains framework execution and failure, while `CCAnalyticsEvent` represents a product behavior. Analytics properties must use validated primitive values and must not contain credentials, full URI values, Widgets, exceptions, or business objects. Analytics Sink failures and queue pressure must never alter navigation or component results.
 - Use `CCRouter.traceBundle(traceId)` for bounded local troubleshooting across nested calls. It is not an audit log, replay source, or business Event store; records may be incomplete after capacity rotation.
+
+### Read-only DevTools
+
+- Use the optional `ccrouter_devtools` package only for a Host-owned debug or
+  internal diagnostics surface. `CCRouterDevToolsPanel` consumes immutable,
+  bounded snapshots and existing observation listeners.
+- Do not add navigation, Pop, retry, Scope disposal, component activation, or
+  Adapter controls to the panel. Those operations would violate the Runtime
+  ownership boundary and make a visualizer part of the business API.
+- Keep the panel behind an application debug/build gate. It is not an audit
+  log, replay source, or production telemetry transport; use
+  `CCDiagnosticsConfig` for application logging.
+- Preserve the sanitized data boundary: no full URI, Path/Query values, Extra,
+  Token, Widget, Navigator, backend Route object, exception message, or business
+  result may be added to the view. See
+  `references/devtools.md` for the integration pattern.
 
 ## Decision Rules
 

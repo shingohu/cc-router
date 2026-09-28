@@ -192,11 +192,13 @@ ccrouter_go_router       默认 go_router 导航适配器
 ccrouter_test             测试 Runtime、Override、TestHost 和断言工具
 ccrouter_analytics        供应商中立的分析事件与有界分发
 ccrouter_auto_track       可选的显式 UI 采集目标
+ccrouter_devtools         可选的嵌入式只读诊断面板
 ```
 
 注解声明位于 `ccrouter_contracts`；`ccrouter_core` 保持 Pure Dart，Flutter 相关类型只出现在
-`ccrouter`、`ccrouter_go_router`、`ccrouter_auto_track` 和业务组件页面中。DevTools 仍是后续候选，
-当前不存在可依赖的 `ccrouter_devtools` Package。
+`ccrouter`、`ccrouter_go_router`、`ccrouter_auto_track` 和业务组件页面中。只读 DevTools 面板由
+可选的 `ccrouter_devtools` 提供，官方 DevTools Extension 仍是后续候选，
+该 Package 只作为开发/内部诊断依赖，不进入业务组件的默认依赖图。
 
 这些是源码和依赖治理边界，不要求每个边界都成为业务方手工配置的依赖。v0.1 中，出现在公开传递依赖图里的 Package 必须可以独立发布；仅供开发或测试使用的 Package 可以标记为开发工具包。
 
@@ -1208,7 +1210,7 @@ Android/iOS SDK、权限和 MethodChannel/Pigeon 应通过显式 Service 或 Com
 
 ## 18. 可观测性与诊断 API
 
-v0.1 先提供机器可读诊断接口，图形化 DevTools 后续实现：
+v0.1 提供机器可读诊断接口和可选的嵌入式只读 DevTools 面板，官方 DevTools Extension 后续实现：
 
 `navigationDiagnosticCapacity` 分别限制每一种 Runtime 导航诊断历史，包括
 Lifecycle、Failure、Visibility、Route Entry、Backend Event、Restoration Opportunity
@@ -1254,7 +1256,8 @@ CCRouter.diagnostics.exportReport();
 
 `*Named` 方法不纳入 API。`popAndPush`、`popUntil`、`pushAndRemoveUntil`、`replaceRouteBelow`、`removeRoute`、`removeRouteBelow` 和对应 Handle/Predicate/SPI 已从 v0.1 整条能力链删除。它们仅在后端具备稳定 Entry identity、原子目标栈提交、混合栈隔离、Pop 拒绝、失败回滚和结果/Scope 生命周期保证后，通过可选版本化栈事务 SPI 重新评估。`popUntilWithResult` 同样保持 Deferred。
 
-暂缓图形化 DevTools、Native/Isolate RPC、多 Engine 共享、事件持久化和动态交付。
+暂缓官方 DevTools Extension、高级图形交互、Native/Isolate RPC、多 Engine 共享、事件持久化和动态交付；
+当前可嵌入的只读面板由 `ccrouter_devtools` 提供。
 
 ---
 

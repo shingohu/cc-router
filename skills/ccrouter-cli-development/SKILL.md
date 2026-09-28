@@ -159,7 +159,8 @@ the same command before using `--no-cache` for comparison.
 
 Use generated metadata and `ccrouter find` as the machine-readable source of
 truth. Catalog Markdown is a human view; it must not be edited to repair an
-index. A future DevTools view may consume the same index but is not a reason to
+index. The optional `ccrouter_devtools` view consumes Runtime snapshots; future Catalog
+integration may use stable IDs but is not a reason to
 add a new public runtime API.
 
 ## Required Validation

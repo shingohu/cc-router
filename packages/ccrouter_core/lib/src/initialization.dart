@@ -64,16 +64,17 @@ enum CCInitializationTaskState {
 /// Immutable, sanitized diagnostic view of an initialization task.
 final class CCInitializationTaskSnapshot {
   /// Creates one read-only task snapshot.
-  const CCInitializationTaskSnapshot({
+  CCInitializationTaskSnapshot({
     required this.id,
     required this.ownerComponentId,
     required this.gateId,
     required this.state,
     required this.failurePolicy,
+    List<String> dependsOn = const [],
     this.duration,
     this.errorType,
     this.blockedByTaskId,
-  });
+  }) : dependsOn = List.unmodifiable(dependsOn);
 
   /// Stable task identity.
   final String id;
@@ -89,6 +90,12 @@ final class CCInitializationTaskSnapshot {
 
   /// Failure behavior declared by the task.
   final CCInitializationFailurePolicy failurePolicy;
+
+  /// Stable task IDs that must succeed before this task may run.
+  ///
+  /// The list is exposed for read-only diagnostics such as an InitTask DAG;
+  /// it does not grant callers permission to reorder, retry, or mutate tasks.
+  final List<String> dependsOn;
 
   /// Execution duration after the task has started, when available.
   final Duration? duration;
@@ -133,6 +140,7 @@ final class _InitializationTaskRecord {
     gateId: task.gate.id,
     state: state,
     failurePolicy: task.failurePolicy,
+    dependsOn: task.dependsOn,
     duration: duration,
     errorType: errorType,
     blockedByTaskId: blockedByTaskId,

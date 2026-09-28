@@ -86,7 +86,8 @@ Runtime 已能正确执行 Command，但现有手写方式仍存在以下生成�
 - Runtime Trace 主要依赖 `runtimeType`，缺少跨重命名稳定的 Command ID；
 - Workspace 无法验证 Contract Owner、唯一 Handler 和消费组件依赖；
 - 顶层页面或 UI 直接调用 `CCRouter.command` 时通常没有可信的 caller component；
-- Catalog、`ccrouter find` 和未来 DevTools 无法定位 Contract、Handler 与生成入口。
+- Catalog 与 `ccrouter find` 负责定位 Contract、Handler 与生成入口；只读
+  `ccrouter_devtools` 面板负责展示相关 Runtime Trace、失败和耗时诊断。
 
 不采用“扫描依赖中的所有 `CCCommand` 并全部生成”方案。该方案无法证明真实消费关系，会生成
 未使用 API，并使增量构建和组件依赖图失真。采用显式 Contract、显式 Handler、显式消费依赖，

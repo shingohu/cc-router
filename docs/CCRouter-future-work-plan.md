@@ -111,9 +111,14 @@
 
 - [x] 扩展 `ccrouter find` 和 Catalog 源码定位，覆盖 Route、Service、Command、Event、InitTask。
 - [x] 增加 `ccrouter create component` 和 `ccrouter create page` 模板命令；跨组件 Contract 提升仍需显式设计。
-- [ ] 设计 DevTools 只读视图：Component Graph、Route Graph、Active Entry、Scope、Trace、
-  Failure/Fallback 和 InitTask DAG。
-- [ ] 评估 IDE 插件或 Analysis Server 集成；不能用运行时反射替代编译期校验。
+- [x] 完成可嵌入 DevTools 只读视图：Component Graph、Route/Backend Entry、Trace、
+  Failure/Fallback 和 InitTask DAG；官方 DevTools Extension 仍作为后续可选工具评估，见
+  `docs/CCRouter-devtools.md`。
+- [x] 2026-09-28 完成最小 IDE / Analysis Server 集成：独立
+  `ccrouter_analyzer_plugin` 提供跨 Package 生成物导入和缺失 Route 生成物诊断；生成的 Dart
+  API、`ccrouter find`、Catalog 与 `generate --check` 仍分别承担补全、源码定位和最终门禁。
+  插件不执行生成、不替代 Workspace Validator。详见
+  [IDE / Analysis Server 集成](CCRouter-ide-analysis-server.md)。
 
 ## 5. P2：架构 2.0 候选
 

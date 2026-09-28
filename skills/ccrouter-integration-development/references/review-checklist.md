@@ -56,6 +56,8 @@
 - Does analyze pass without internal API warnings?
 - Do tests cover failure, cancellation, typed result, and lifecycle cleanup as applicable?
 - Does the change avoid retaining Context, Route, Scope, listener, subscription, or Service past its owner?
+- If IDE diagnostics are enabled, are they advisory and deterministic, with `generate --check` still
+  used as the final generated-output and dependency gate?
 
 ## Documentation Synchronization
 

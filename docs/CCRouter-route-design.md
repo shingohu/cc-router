@@ -1799,11 +1799,12 @@ TheRouter 的完整 URL、自定义 Scheme、多 Path 和正则能力用于校�
 - Source Reference 使用 Package URI 与 1-based line/column，不记录本机绝对路径。
 - Contract-first Route 同时关联契约声明和页面实现；普通 `@CCRoute` 的声明与实现指向同一
   页面源码。
-- Package Index 是机器事实来源，Markdown、只读 `ccrouter find` 和未来 DevTools 视图均由其
-  派生，不能各自维护扫描规则。
+- Package Index 是静态能力的机器事实来源，Markdown 和只读 `ccrouter find` 视图均由其派生，
+  不能各自维护扫描规则。`ccrouter_devtools` 当前消费独立的 Runtime 快照，不直接解析
+  Package Index；未来联动必须通过稳定 ID 完成。
 - 当前只发布 Route 记录。Service、Command、Action、Event 需要等静态生成链路存在后再接入，
   不从手写 Registrar 启发式推断，避免目录看似完整但实际错误。
 
-2.0 DevTools 候选将静态 Catalog 与 Runtime 的 Host、RouteEntry、Trace 和诊断快照按稳定 ID、
+后续官方 DevTools Extension 候选将静态 Catalog 与 Runtime 的 Host、RouteEntry、Trace 和诊断快照按稳定 ID、
 Package 版本及内容指纹关联。静态目录回答“代码和契约在哪里”，Runtime 快照回答“当前发生了
 什么”；1.x 不引入 VM Service Extension 或 Inspector 依赖。
