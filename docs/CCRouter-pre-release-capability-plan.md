@@ -312,7 +312,6 @@ ccrouter_analyzer_plugin:
 final confirmTarget = CCAnalyticsTarget(
   tracker: tracker,
   eventId: 'order.detail.confirm',
-  properties: const {'surface': 'detail'},
 );
 
 FilledButton(

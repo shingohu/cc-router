@@ -126,15 +126,15 @@ Core 不依赖 Firebase、ThinkingData、Sentry 或 Crashlytics。
   `CCAnalyticsPolicy` 提供；
 - [x] 不改变手势竞技和第三方 Overlay 行为；
 
-### P4：供应商 Adapter
+### P4：应用层供应商 Adapter 示例
 
 - [x] 应用层 Firebase Adapter 示例（通过注入 `logEvent` callback，不让框架依赖供应商 SDK）；
-- [ ] ThinkingData Adapter；
-- [ ] OpenTelemetry/应用日志 Adapter；
+- [ ] 应用层 ThinkingData Adapter 示例；
+- [ ] 应用层 OpenTelemetry/日志 Adapter 示例；
 - [x] 增加 provider-neutral Consent 开关和有界采样策略；
-- [ ] 用户身份、批量上传、离线缓存和重试；
+- [ ] 应用层用户身份、批量上传、离线缓存和重试参考实现；
 
-### P5：HTTP、Crash 和全链路回归
+### P5：应用层 HTTP、Crash 接入与全链路回归
 
 - [ ] 应用网络层 Adapter；
 - [ ] Flutter、PlatformDispatcher 和原生 Crash 桥接；
@@ -168,3 +168,160 @@ Foreign Popup 不误归因断言已闭环；应用层 Firebase 映射示例、�
 平台矩阵中的 `required` 表示协议和显式 Target 在该平台必须保持一致；`verify` 表示需要目标设备
 执行 smoke，不能据此推导“全局 Widget 自动识别”已支持。分析 Dispatcher 的 Pure Dart 指标和
 Consent/黑名单策略可在所有 Dart 平台复用，RSS 结果只允许同 SDK、同平台进程内比较。
+
+## 10. 低配置智能采集方案（提案，尚未实现）
+
+### 10.1 问题分析
+
+当前事件契约、Route 生命周期桥接、Consent、采样、有界队列、Scroll 和 Exposure 已经具备，
+但 UI 使用仍有三类重复配置：
+
+- 页面或 Feature 需要手工创建并传递 `CCAnalyticsTracker`；
+- Click 需要先创建 `CCAnalyticsTarget`，Scroll/Exposure 还要分别包 Widget；
+- 本地记录和上传虽然可以实现 `CCAnalyticsSink`，但缺少应用层参考组合。
+
+“在应用或页面外只包一个 Widget，就准确采集所有操作”不能作为生产承诺。Flutter 的原始
+Pointer 只能说明发生了按下、抬起或移动，不能证明某个业务 callback 最终执行；Gesture Arena、
+禁用按钮、拖动、长按、键盘/遥控器操作、Semantics action 和第三方 Overlay 都可能让原始 Pointer
+与业务动作不一致。通过遍历 Element 树读取 Text、Key 或 Widget 类型生成事件 ID，还会造成隐私
+泄漏、重构后数据漂移和大页面扫描抖动。
+
+### 10.2 参考实现结论
+
+- [`auto_track_plugin`](https://github.com/epoll-j/auto_track_plugin) 通过统一配置、
+  `NavigatorObserver`、全局 `PointerRouter`、Element 树扫描和 Key/Text 推断降低接入成本，并内置
+  HTTP、上传和 Crash；其 README 明确主要在 Android/iOS 验证。可借鉴统一开关、过滤、采样和
+  callback Sink，但不能复制随机 Key、文本采集、全树扫描、`HttpOverrides.global` 或供应商上传。
+- [Firebase Analytics Observer](https://github.com/firebase/flutterfire/blob/main/packages/firebase_analytics/firebase_analytics/lib/observer.dart)
+  只根据 `NavigatorObserver`、Route filter 和 name extractor 自动记录 screen view，不尝试推断
+  任意 Widget 点击。这说明页面自动化与业务行为自动化应分开设计。
+- [ThinkingData Flutter SDK](https://github.com/ThinkingDataAnalytics/flutter-sdk/tree/master/lib/autotrack)
+  同样使用全局 Pointer、Element/RenderObject 遍历和可选 Element Key。稳定 Key 的思路可参考，
+  但读取控件文本、依赖 Widget 树形状和每次点击扫描页面不适合作为 CCRouter 默认实现。
+
+### 10.3 候选方案
+
+| 方案 | 优点 | 缺点 | 结论 |
+| --- | --- | --- | --- |
+| 全局 Pointer + Element 树猜测 | 接入代码最少，可快速看到大量事件 | 误报、隐私和性能风险高，无法证明业务动作执行，跨平台不稳定 | 仅可用于 Debug 实验，不进 Release 默认 |
+| 保持所有 Target 显式传 Tracker | 语义准确、可测试、没有全局扫描 | 页面和组件样板代码较多 | 保留为精确兜底，不作为唯一入口 |
+| Scope + 稳定 Target 元数据 + Debug Recorder | 自动补齐上下文，业务只声明稳定 ID；可把模糊轨迹与产品埋点隔离 | 仍不能零标注推断业务语义，需要新增少量 Flutter Scope | 推荐 |
+
+### 10.4 推荐的三档模式
+
+1. `frameworkOnly`：生产默认。自动记录 CCRouter managed Route 的 PV/Leave、来源、Host/Outlet
+   和耗时，不采集任意 Widget 内容。
+2. `annotated`：生产推荐。页面只安装一个 Scope；带稳定 Target 元数据的点击、滚动和曝光才生成
+   产品事件。未标注控件不上传，不从 Text、Key、runtimeType 或坐标生成业务 ID。
+3. `debugRecorder`：Debug/Profile 或受控灰度。页面 Scope 记录有界的 pointer/scroll/route 操作
+   轨迹，用于复现问题；默认只写本地环形缓冲，不作为 PV/UV 或业务转化数据，也不默认上传。
+
+三档可以逐级增加信息，但不能把 `debugRecorder` 事件伪装成 `annotated` 产品事件。
+
+### 10.5 建议结构
+
+```text
+CCAnalyticsController（提案）
+  ├── CCAnalyticsEventDispatcher（现有）
+  ├── Consent / Sampling / Rules（现有基础）
+  ├── CCRouterNavigationAnalytics（现有）
+  └── Host/Outlet -> 当前 managed Route 上下文快照
+
+CCAnalyticsScope（提案，应用根或页面一层 Widget）
+  ├── Inherited Tracker/Context
+  ├── NotificationListener<ScrollNotification>
+  ├── annotated Target 元数据解析
+  └── 可选 Debug Interaction Recorder
+
+应用拥有的 Sink
+  ├── Firebase / ThinkingData Adapter
+  ├── 有界本地 JSONL/数据库环形缓冲
+  └── HTTP Batch Uploader
+```
+
+`CCAnalyticsScope` 只持有 Controller 和不可变上下文，不持有页面业务对象。managed 页面上下文应从
+RouteEntry 的只读快照获得；不能从完整 URL、Widget 文本或 `ModalRoute.settings.arguments` 猜测。
+如果 Host 不能提供精确 RouteEntry，上下文降级为 unknown，不能错误归因到栈顶页面。
+
+### 10.6 API 草案
+
+下面只用于确认开发体验，不代表公开 API 已确定：
+
+```dart
+final analytics = CCAnalyticsController(
+  dispatcher: CCAnalyticsEventDispatcher(
+    sinks: [appLocalSink, appUploadSink],
+  ),
+);
+
+CCRouter.initialize(
+  components: ccrouterGeneratedComponentManifests,
+  navigationAspects: [analytics.navigationAspect],
+);
+
+runApp(
+  CCAnalyticsScope(
+    controller: analytics,
+    mode: CCAnalyticsCollectionMode.annotated,
+    child: CCGoRouterApp(catalog: ccrouterGeneratedRouteCatalog),
+  ),
+);
+```
+
+业务 Target 不再传递 Tracker，只声明稳定事件 ID：
+
+```dart
+CCAnalyticsInteraction(
+  eventId: 'order.detail.confirm',
+  child: FilledButton(
+    onPressed: submitOrder,
+    child: const Text('确认订单'),
+  ),
+)
+```
+
+该包装表示“用户对已标注目标完成一次可识别的 activation”。如果必须证明业务动作实际执行、成功
+或失败，仍使用 callback 入口记录 `attempt/success/failure`，不能依赖 Pointer 自动判断。对于多个
+嵌套 Scrollable，页面级自动聚合只记录总体验；需要区分列表时仍声明稳定 scroll target ID。
+
+### 10.7 自动采集边界
+
+| 场景 | 自动化级别 | 说明 |
+| --- | --- | --- |
+| managed Route PV/Leave | 全自动 | 复用 Aspect/RouteEntry，不读取页面内容 |
+| Foreign Route/Popup | 不自动归因 | 未桥接时不得归到当前 managed Route |
+| 标注 Target 点击 | 自动补上下文 | eventId 必须稳定且显式 |
+| 未标注 Widget 点击 | Debug 可记录 | 只记录安全结构摘要，不作为产品事件 |
+| 页面主 Scroll | Scope 可聚合 | start/end、方向、距离和时长分桶，不记录逐帧轨迹 |
+| 多列表/嵌套 Scroll | 需要 Target ID | 避免把多个滚动源混在一起 |
+| Exposure | 显式 Target | 需要阈值、停留时间和去重语义，不能扫描全树 |
+| 文本输入、剪贴板、密码、Token | 永不自动采集 | 黑名单也不能替代数据最小化 |
+| 键盘、遥控器、Semantics action | 精确入口或后续适配 | 不能只依赖 Pointer |
+
+### 10.8 本地记录与上传
+
+框架继续只定义 provider-neutral `CCAnalyticsSink` 和有界调度，不提供业务存储或上传后端。
+Demo/应用层可以提供两类参考 Sink：
+
+- 本地 Sink：有界容量、TTL、版本化 schema、原子追加、脱敏后落盘；Consent deny/revoke 时立即
+  停止写入并按应用政策清理，默认只在 Debug/Profile 保存操作轨迹；
+- 上传 Sink：批量、指数退避和 jitter、网络约束、幂等 event ID、Session 隔离；Base URL、Header、
+  登录态和 API 环境由应用 Network/Session Service 提供，不能复制到框架全局状态。
+
+Firebase、ThinkingData、本地数据库和 HTTP 实现都放在应用或 `demo/modules/*`。只有多个真实应用
+证明存在稳定、供应商中立的公共契约后，才按 Framework Package 准入门禁重新评估。
+
+### 10.9 实施顺序与验收
+
+1. 先增加 Scope/Controller 的可行性原型，不替换现有 `CCAnalyticsTarget`；用 Feature toggle
+   与现有显式路径 A/B 对照。
+2. 打通只读 RouteEntry 上下文，验证多 Host、Shell/Outlet、Dialog 和 Foreign Popup 不误归因。
+3. 增加只识别稳定元数据的 Target，验证 disabled、Gesture Arena、拖动、长按、键盘和 Semantics。
+4. 增加页面级 Scroll 聚合；Exposure 继续使用现有显式 Target，不做全树轮询。
+5. 在 Demo 增加应用层本地环形 Sink 和 Fake Upload Sink，验证 Consent、断网、重试、队列压力和
+   App 重启；不把实现迁入 `packages/*`。
+6. 最后才增加 `debugRecorder`，并以 Release 默认关闭、本地有界、不可上传为默认安全值。
+
+进入实现前必须建立基线：每次 pointer 处理耗时、每帧额外 build/layout 次数、长列表滚动 P95、
+事件误报/漏报率、队列峰值、RSS/Heap 增长和 Scope dispose 后残留对象。任何自动化路径如果不能
+证明不会改变手势结果、页面生命周期或业务 callback，都必须降级到显式 Target。
