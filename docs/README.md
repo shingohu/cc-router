@@ -106,12 +106,14 @@
 - [生成器性能报告](CCRouter-generator-performance-report.md)
 - [CLI Pub Hook](CCRouter-cli-pub-hook.md)
 
-### 工具、诊断与 Demo
+### 工具与诊断
 
 - [DevTools 只读可视化](CCRouter-devtools.md)
 - [IDE / Analysis Server 集成](CCRouter-ide-analysis-server.md)
 - [Analytics 与自动采集](CCRouter-analytics-and-auto-track-design.md)
-- [KV Storage Demo 改造](CCRouter-kv-storage-demo-migration.md)
+
+应用层示例的设计与验证文档放在 `demo/docs/`，不作为框架公开契约；例如
+[KV Storage Demo 改造](../demo/docs/kv-storage-demo-migration.md)。
 
 生成器输出的应用 Catalog 不属于手写设计文档。当前 Demo 聚合结果位于
 `demo/lib/src/ccrouter_generated/metadata/cc_routes.json` 和

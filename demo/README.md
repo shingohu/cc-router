@@ -44,7 +44,7 @@ typed Extra。完整的 macOS 验证矩阵、已修复问题和 Adapter 限制�
   命名空间隔离。Demo 已通过 Scoped Facade 和 Host-owned Context Provider 避免业务每次手传
   user/environment/device ID，并使用内存 Backend 保证可重复测试。生产实现可替换为文件、数据库
   或 Secure Storage；命名空间不等于加密边界。真实 Session/Environment/Device Contract、游客
-  迁移和持久化接入见 [KV Storage Demo 改造方案](../docs/CCRouter-kv-storage-demo-migration.md)。
+  迁移和持久化接入见 [KV Storage Demo 改造方案](docs/kv-storage-demo-migration.md)。
 
 这些示例用于观察边界而不是模拟万能 EventBus：读取状态走 Service，需要唯一执行者的操作走
 Command，已经发生的事实才发布 Event，一次性启动依赖使用 InitTask。

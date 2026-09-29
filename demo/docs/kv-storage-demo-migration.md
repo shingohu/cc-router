@@ -1,5 +1,8 @@
 # KV Storage Demo 用例改造方案
 
+> 文档归属：Demo / 应用层。本文描述 `demo/modules/kv_storage` 的示例架构，不定义 CCRouter
+> 框架公开能力，也不表示框架负责持久化、账号、API 环境或设备身份。
+
 ## 状态
 
 - 状态：Scoped Facade 已在 Demo 落地；Session/Environment/Device 的真实 Host 绑定和持久化

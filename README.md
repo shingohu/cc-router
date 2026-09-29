@@ -259,7 +259,8 @@ await storage.currentUser.setJson('profile.preferences', {
 敏感度选择加密和清理策略；命名空间本身不是安全边界，也不会自动提供加密。
 Scoped Facade、Session/Environment/Device 上下文绑定和 Backend Placement Policy 的设计与
 边界见
-[`docs/CCRouter-kv-storage-demo-migration.md`](docs/CCRouter-kv-storage-demo-migration.md)。
+[`demo/docs/kv-storage-demo-migration.md`](demo/docs/kv-storage-demo-migration.md)。该方案属于
+Demo / 应用层，不是 CCRouter 框架的存储契约。
 
 ### 5. 初始化 Host
 
