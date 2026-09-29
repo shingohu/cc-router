@@ -221,7 +221,7 @@ API，不导出 Registrar、Binding、Host、Manifest、Metadata 或 Route Regis
 从 Workspace 根目录执行：
 
 ```bash
-fvm dart run ccrouter_generator:ccrouter generate demo
+fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo
 ```
 
 统一命令会运行所需的 build_runner、生成 Package 内路由代码、组件索引、Host Bundle、Catalog 和文档。生成文件位于各 Package 的 `lib/src/ccrouter_generated/`，禁止手工编辑。
@@ -870,46 +870,49 @@ Host 在 `CCRouter.initialize` 后调用 `CCRouter.runInitialization()`。Runtim
 
 ```bash
 # 创建组件 Package（第二个参数是父目录，默认当前目录）
-fvm dart run ccrouter_generator:ccrouter create component demo_inventory demo/modules
+fvm dart run --verbosity=error ccrouter_generator:ccrouter create component demo_inventory demo/modules
 
 # 在已有组件中创建内部页面（第二个参数是组件根目录，默认当前目录）
-fvm dart run ccrouter_generator:ccrouter create page InventoryPage demo/modules/demo_inventory
+fvm dart run --verbosity=error ccrouter_generator:ccrouter create page InventoryPage demo/modules/demo_inventory
 
 # 在已有组件中创建能力模板（默认是组件内部能力）
-fvm dart run ccrouter_generator:ccrouter create service OrderSummary demo/modules/demo_order
-fvm dart run ccrouter_generator:ccrouter create command ReserveOrder demo/modules/demo_order
-fvm dart run ccrouter_generator:ccrouter create event OrderPaid demo/modules/demo_order
-fvm dart run ccrouter_generator:ccrouter create init-task WarmCache demo/modules/demo_order
+fvm dart run --verbosity=error ccrouter_generator:ccrouter create service OrderSummary demo/modules/demo_order
+fvm dart run --verbosity=error ccrouter_generator:ccrouter create command ReserveOrder demo/modules/demo_order
+fvm dart run --verbosity=error ccrouter_generator:ccrouter create event OrderPaid demo/modules/demo_order
+fvm dart run --verbosity=error ccrouter_generator:ccrouter create init-task WarmCache demo/modules/demo_order
 
 # 生成/增量更新
-fvm dart run ccrouter_generator:ccrouter generate demo
+fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo
 
 # CI 只读一致性门禁；发现变化后恢复现场并返回非零
-fvm dart run ccrouter_generator:ccrouter generate demo --check
+fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo --check
 
 # 禁用 metadata 缓存，验证参考全量路径
-fvm dart run ccrouter_generator:ccrouter generate demo --no-cache
+fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo --no-cache
 
 # 输出阶段耗时和缓存命中率
-fvm dart run ccrouter_generator:ccrouter generate demo --profile
+fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo --profile
 
 # Runtime/Service/Analytics/生成器性能与资源回收基准
 fvm dart run packages/ccrouter_test/benchmark/performance_regression.dart
 fvm dart run packages/ccrouter_test/benchmark/performance_regression.dart --full
 
 # 按能力 ID 查找 Route/Service/Command/Event/InitTask，Route 也支持 Pattern
-fvm dart run ccrouter_generator:ccrouter find order.detail demo
-fvm dart run ccrouter_generator:ccrouter find '/orders/:orderId' demo
-fvm dart run ccrouter_generator:ccrouter find demo.startup.foundation demo
+fvm dart run --verbosity=error ccrouter_generator:ccrouter find order.detail demo
+fvm dart run --verbosity=error ccrouter_generator:ccrouter find '/orders/:orderId' demo
+fvm dart run --verbosity=error ccrouter_generator:ccrouter find demo.startup.foundation demo
 
 # 只清理 CCRouter 标记的生成源码
-fvm dart run ccrouter_generator:ccrouter clean demo
+fvm dart run --verbosity=error ccrouter_generator:ccrouter clean demo
 
 # 可选：给当前 Flutter SDK 安装可回滚的 pub 成功后生成 hook
-fvm dart run ccrouter_generator:ccrouter pub-hook install
-fvm dart run ccrouter_generator:ccrouter pub-hook status
-fvm dart run ccrouter_generator:ccrouter pub-hook uninstall
+fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook install
+fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook status
+fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook uninstall
 ```
+
+这里的 `--verbosity=error` 是 `dart run` 的启动参数，只隐藏 Dart/Pub 冷启动时重复的依赖解析与
+executable 构建信息；CCRouter 自己的阶段、耗时、跳过原因和错误仍会输出。
 
 `create component` 只创建新的 Package、`lib/src` 下的顶层 `CCComponent` Descriptor 和 Package barrel；
 `create page` 只创建带 `@CCRoute` 的最小 Flutter Page；`create service`、`create command`、
@@ -983,7 +986,7 @@ fvm dart analyze
 fvm flutter test packages/ccrouter_test/test
 fvm dart test --concurrency=1 packages/ccrouter_test/generator_test
 fvm flutter test demo
-fvm dart run ccrouter_generator:ccrouter generate demo --check
+fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo --check
 ```
 
 ## API 边界

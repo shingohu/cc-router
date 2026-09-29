@@ -8,7 +8,7 @@
 和 `ccrouter_generator` 时，才运行一次：
 
 ```bash
-dart run ccrouter_generator:ccrouter generate <project-root> --profile
+dart run --verbosity=error ccrouter_generator:ccrouter generate <project-root> --profile
 ```
 
 因此普通 Flutter 项目不会触发生成，也不会因为没有 CCRouter 依赖而报错。
@@ -18,14 +18,14 @@ dart run ccrouter_generator:ccrouter generate <project-root> --profile
 从项目或 Workspace 根目录执行：
 
 ```bash
-fvm dart run ccrouter_generator:ccrouter pub-hook install
+fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook install
 ```
 
 默认按 `FLUTTER_ROOT`、当前目录向上的 `.fvm/flutter_sdk`、PATH 中的 `flutter`
 顺序解析。也可以明确指定一个 SDK：
 
 ```bash
-fvm dart run ccrouter_generator:ccrouter pub-hook install \
+fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook install \
   --sdk /Users/shingo/fvm/versions/3.41.9
 ```
 
@@ -43,7 +43,7 @@ bin/.ccrouter_pub_hook.json
 ## 状态与卸载
 
 ```bash
-fvm dart run ccrouter_generator:ccrouter pub-hook status
+fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook status
 ```
 
 `status` 会打印实际解析到的 SDK 绝对路径、marker、POSIX/Windows wrapper 与备份
@@ -64,7 +64,7 @@ CCRouter pub hook result: installed and verified
 卸载命令：
 
 ```bash
-fvm dart run ccrouter_generator:ccrouter pub-hook uninstall
+fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook uninstall
 ```
 
 卸载会恢复原始入口。若发现 marker、wrapper 或备份文件不完整，命令会拒绝删除
@@ -80,6 +80,11 @@ fvm dart run ccrouter_generator:ccrouter pub-hook uninstall
    `ccrouter_generator` 时，打印跳过原因并返回成功。
 5. 生成器失败时打印生成日志和最终耗时，并返回非零，使 CI 能发现生成物过期或
    元数据错误。
+
+所有推荐命令都给 `dart run` 传入 `--verbosity=error`。它只压低 Dart/Pub 在 CLI
+启动前输出的重复依赖解析和 executable 构建信息，不会隐藏 CCRouter 的阶段、耗时、
+跳过原因、标准错误或非零退出码。直接省略该参数仍可运行，但冷启动或依赖变化后可能
+看到多次 `Resolving dependencies`。
 
 ## `run` / `build` 前置生成
 
@@ -132,7 +137,7 @@ flutter pub get
 `CCRouter pub hook finished: ... elapsed=...ms`。随后可以用：
 
 ```bash
-fvm dart run ccrouter_generator:ccrouter generate <host-root> --check
+fvm dart run --verbosity=error ccrouter_generator:ccrouter generate <host-root> --check
 ```
 
 执行 `flutter run` 或 `flutter build macos` 时，若项目已经完成依赖解析，控制台会先输出

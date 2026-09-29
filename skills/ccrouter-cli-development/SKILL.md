@@ -34,26 +34,29 @@ operation. Prefer the command, then inspect its result.
 Run commands from the workspace root with the project's FVM toolchain:
 
 ```bash
-fvm dart run ccrouter_generator:ccrouter create component <package-name> <parent-directory>
-fvm dart run ccrouter_generator:ccrouter create page <PageName> <component-directory>
-fvm dart run ccrouter_generator:ccrouter create service <ServiceName> <component-directory>
-fvm dart run ccrouter_generator:ccrouter create command <CommandName> <component-directory>
-fvm dart run ccrouter_generator:ccrouter create event <EventName> <component-directory>
-fvm dart run ccrouter_generator:ccrouter create init-task <TaskName> <component-directory>
-fvm dart run ccrouter_generator:ccrouter generate <host-root>
-fvm dart run ccrouter_generator:ccrouter generate <host-root> --check
-fvm dart run ccrouter_generator:ccrouter generate <host-root> --no-cache
-fvm dart run ccrouter_generator:ccrouter generate <host-root> --profile
-fvm dart run ccrouter_generator:ccrouter find <capability-id-or-route-pattern> <host-root>
-fvm dart run ccrouter_generator:ccrouter clean <host-root>
-fvm dart run ccrouter_generator:ccrouter pub-hook install [--sdk <flutter-sdk-root>]
-fvm dart run ccrouter_generator:ccrouter pub-hook status [--sdk <flutter-sdk-root>]
-fvm dart run ccrouter_generator:ccrouter pub-hook uninstall [--sdk <flutter-sdk-root>]
-fvm dart run ccrouter_generator:ccrouter pub-hook run --project-root <host-root> [--pub-command <command>]
+fvm dart run --verbosity=error ccrouter_generator:ccrouter create component <package-name> <parent-directory>
+fvm dart run --verbosity=error ccrouter_generator:ccrouter create page <PageName> <component-directory>
+fvm dart run --verbosity=error ccrouter_generator:ccrouter create service <ServiceName> <component-directory>
+fvm dart run --verbosity=error ccrouter_generator:ccrouter create command <CommandName> <component-directory>
+fvm dart run --verbosity=error ccrouter_generator:ccrouter create event <EventName> <component-directory>
+fvm dart run --verbosity=error ccrouter_generator:ccrouter create init-task <TaskName> <component-directory>
+fvm dart run --verbosity=error ccrouter_generator:ccrouter generate <host-root>
+fvm dart run --verbosity=error ccrouter_generator:ccrouter generate <host-root> --check
+fvm dart run --verbosity=error ccrouter_generator:ccrouter generate <host-root> --no-cache
+fvm dart run --verbosity=error ccrouter_generator:ccrouter generate <host-root> --profile
+fvm dart run --verbosity=error ccrouter_generator:ccrouter find <capability-id-or-route-pattern> <host-root>
+fvm dart run --verbosity=error ccrouter_generator:ccrouter clean <host-root>
+fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook install [--sdk <flutter-sdk-root>]
+fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook status [--sdk <flutter-sdk-root>]
+fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook uninstall [--sdk <flutter-sdk-root>]
+fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook run --project-root <host-root> [--pub-command <command>]
 ```
 
 The exact command help is authoritative. Do not add `watch`, `promote`,
 `migrate`, or other flags because they appear in a design document.
+`--verbosity=error` belongs to `dart run`, not to CCRouter. Keep it before the
+Package executable so Dart/Pub cold-start resolution noise is suppressed while
+CCRouter progress, diagnostics, and failures remain visible.
 
 ### Generate
 
@@ -181,7 +184,7 @@ then the workspace gate:
 ```bash
 fvm dart analyze
 fvm flutter test <focused-test-target>
-fvm dart run ccrouter_generator:ccrouter generate <host-root> --check
+fvm dart run --verbosity=error ccrouter_generator:ccrouter generate <host-root> --check
 ```
 
 For generator changes also run the generator unit tests and compare cached and

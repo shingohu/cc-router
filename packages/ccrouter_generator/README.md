@@ -124,33 +124,35 @@ export 'src/ccrouter_generated/contract/detail_page.route.contract.g.dart'
 
 ```sh
 # 创建一个新的组件 Package；不会覆盖已有文件
-fvm dart run ccrouter_generator:ccrouter create component demo_inventory demo/modules
+fvm dart run --verbosity=error ccrouter_generator:ccrouter create component demo_inventory demo/modules
 
 # 在组件中创建一个内部 Route 页面；不会自动创建跨组件 Contract
-fvm dart run ccrouter_generator:ccrouter create page InventoryPage demo/modules/demo_inventory
+fvm dart run --verbosity=error ccrouter_generator:ccrouter create page InventoryPage demo/modules/demo_inventory
 
 # 创建组件内部能力模板；不会修改 Host 或生成目录
-fvm dart run ccrouter_generator:ccrouter create service OrderSummary demo/modules/demo_inventory
-fvm dart run ccrouter_generator:ccrouter create command ReserveOrder demo/modules/demo_inventory
-fvm dart run ccrouter_generator:ccrouter create event OrderPaid demo/modules/demo_inventory
-fvm dart run ccrouter_generator:ccrouter create init-task WarmCache demo/modules/demo_inventory
+fvm dart run --verbosity=error ccrouter_generator:ccrouter create service OrderSummary demo/modules/demo_inventory
+fvm dart run --verbosity=error ccrouter_generator:ccrouter create command ReserveOrder demo/modules/demo_inventory
+fvm dart run --verbosity=error ccrouter_generator:ccrouter create event OrderPaid demo/modules/demo_inventory
+fvm dart run --verbosity=error ccrouter_generator:ccrouter create init-task WarmCache demo/modules/demo_inventory
 
 fvm flutter pub get
-fvm dart run ccrouter_generator:ccrouter generate demo
+fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo
 ```
 
 如果希望在当前 Flutter SDK 的 `flutter pub get/upgrade/downgrade/add/remove` 成功后
 自动生成，可以显式安装可回滚的 hook：
 
 ```sh
-fvm dart run ccrouter_generator:ccrouter pub-hook install
-fvm dart run ccrouter_generator:ccrouter pub-hook status
-fvm dart run ccrouter_generator:ccrouter pub-hook uninstall
+fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook install
+fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook status
+fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook uninstall
 ```
 
 Hook 按 SDK 版本独立安装，不修改 Flutter snapshot；非 CCRouter 项目会跳过。完整的
 退出码语义、FVM 版本切换和禁用方式见
 [`docs/CCRouter-cli-pub-hook.md`](../../docs/CCRouter-cli-pub-hook.md)。
+`--verbosity=error` 只压低 Dart/Pub 在 CLI 启动前的依赖解析和 executable 构建噪声，
+不会隐藏 CCRouter 自己的进度、诊断或失败。
 
 `create component <package-name> [parent-directory]` 会生成 `pubspec.yaml`、Package barrel
 和 `lib/src/<package>_component.dart`；Descriptor 不会从根 barrel 导出。`create page <PageName> [component-directory]` 会生成
@@ -172,7 +174,7 @@ Hook 按 SDK 版本独立安装，不修改 Flutter snapshot；非 CCRouter 项�
 CI 使用只读门禁：
 
 ```sh
-fvm dart run ccrouter_generator:ccrouter generate demo --check
+fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo --check
 ```
 
 `--check` 在生成前后只比较 CCRouter 管理的产物；发现新增、删除或内容变化时恢复原文件并返回
@@ -182,7 +184,7 @@ fvm dart run ccrouter_generator:ccrouter generate demo --check
 如果需要在重新生成前清理当前 Host 运行时依赖闭包中的 CCRouter 生成物，使用：
 
 ```sh
-fvm dart run ccrouter_generator:ccrouter clean demo
+fvm dart run --verbosity=error ccrouter_generator:ccrouter clean demo
 ```
 
 `clean` 只删除框架标记且位于可写 Package 的 `lib/src/ccrouter_generated/` 下的受管源码输出；
@@ -195,8 +197,8 @@ import graph；该 bootstrap 不替代当前轮构建与最终校验，失败时
 查找已生成路由的组件、契约和页面源码位置时使用只读命令：
 
 ```sh
-fvm dart run ccrouter_generator:ccrouter find order.detail demo
-fvm dart run ccrouter_generator:ccrouter find '/order/:orderId' demo
+fvm dart run --verbosity=error ccrouter_generator:ccrouter find order.detail demo
+fvm dart run --verbosity=error ccrouter_generator:ccrouter find '/order/:orderId' demo
 ```
 
 `find` 读取指定 Host 的 Pub 运行时依赖闭包内已发布的 Package Index，不启动
@@ -209,8 +211,8 @@ build_runner，也不修改生成物。查询是大小写敏感的精确 Route I
 大型工程可以观察分阶段耗时和缓存命中率，或强制走无缓存参考路径：
 
 ```sh
-fvm dart run ccrouter_generator:ccrouter generate demo --profile
-fvm dart run ccrouter_generator:ccrouter generate demo --no-cache
+fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo --profile
+fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo --no-cache
 ```
 
 默认缓存只复用内容 SHA-256 完全一致的 metadata 解析结果；损坏、Schema/版本不兼容时自动

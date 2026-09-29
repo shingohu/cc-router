@@ -456,7 +456,7 @@ run_generator_hook() {
   if ! resolve_project_root "$@"; then
     return 0
   fi
-  "$DART" run ccrouter_generator:ccrouter pub-hook run \
+  "$DART" run --verbosity=error ccrouter_generator:ccrouter pub-hook run \
     --project-root "$PROJECT_ROOT" --pub-command "$HOOK_COMMAND"
 }
 
@@ -550,7 +550,7 @@ goto find_package_config
 :package_config_found
 findstr /R /C:"\"name\"[ ]*:[ ]*\"ccrouter_generator\"" "%HOOK_DIR%\.dart_tool\package_config.json" >nul
 if not "%ERRORLEVEL%"=="0" goto invoke_original
-call "%SCRIPT_DIR%dart.bat" run ccrouter_generator:ccrouter pub-hook run --project-root "%PROJECT_ROOT%" --pub-command "%HOOK_COMMAND%"
+call "%SCRIPT_DIR%dart.bat" run --verbosity=error ccrouter_generator:ccrouter pub-hook run --project-root "%PROJECT_ROOT%" --pub-command "%HOOK_COMMAND%"
 if "%ERRORLEVEL%"=="0" goto invoke_original
 echo CCRouter hook failed for flutter %HOOK_COMMAND%. 1>&2
 exit /b %ERRORLEVEL%

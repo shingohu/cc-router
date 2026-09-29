@@ -162,7 +162,10 @@ exit "\${CCROUTER_DART_EXIT:-0}"
     );
     expect(run.exitCode, 0, reason: '${run.stderr}');
     final runTrace = File(trace).readAsLinesSync();
-    expect(runTrace.first, startsWith('dart:run ccrouter_generator:ccrouter'));
+    expect(
+      runTrace.first,
+      startsWith('dart:run --verbosity=error ccrouter_generator:ccrouter'),
+    );
     expect(runTrace.last, 'flutter:--no-color run -d macos');
 
     File(trace).writeAsStringSync('');
