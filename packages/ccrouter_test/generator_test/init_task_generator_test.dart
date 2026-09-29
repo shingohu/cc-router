@@ -30,8 +30,8 @@ const analyticsTask = CCInitTaskContract(id: 'startup.analytics');
 @CCInitTask(
   contract: analyticsTask,
   dependsOn: [foundationTask],
-  gate: CCInitializationGate.privacyGranted,
-  failurePolicy: CCInitializationFailurePolicy.optional,
+  gate: CCInitTaskGate.privacyGranted,
+  failurePolicy: CCInitTaskFailurePolicy.optional,
   timeout: Duration(seconds: 3),
 )
 Future<void> initializeAnalytics(CCInvocationContext context) async {}
@@ -41,8 +41,8 @@ Future<void> initializeAnalytics(CCInvocationContext context) async {}
 
     expect(output, contains('id: "startup.analytics"'));
     expect(output, contains('"startup.foundation"'));
-    expect(output, contains('CCInitializationGate("privacyGranted")'));
-    expect(output, contains('CCInitializationFailurePolicy.optional'));
+    expect(output, contains('CCInitTaskGate("privacyGranted")'));
+    expect(output, contains('CCInitTaskFailurePolicy.optional'));
     expect(output, contains('Duration(microseconds: 3000000)'));
     expect(output, contains('init_source.initializeAnalytics'));
   });
@@ -171,7 +171,7 @@ void initializeWithWrongParameter(String value) {}
       r'''
 @CCInitTask(
   id: 'startup.invalid_gate',
-  gate: CCInitializationGate('Invalid gate'),
+  gate: CCInitTaskGate('Invalid gate'),
 )
 void initializeInvalidGate() {}
 ''',

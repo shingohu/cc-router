@@ -145,7 +145,10 @@ the Service Contract.
 - `CCRouter.initialize` receives the complete startup component set once.
 - Open a Session after login or persisted authentication restoration. Close it on logout, token invalidation, account switch, or forced sign-out.
 - Do not close a Session on page Pop, backgrounding, or tab changes.
-- Call `CCRouter.shutdown` only when the owning application/test Runtime ends.
+- Call and await `CCRouter.shutdown` only when the owning application
+  Composition Root ends the default Runtime. Page, component, Session,
+  application-background, and individual navigation Host lifecycles must not
+  call it. Reinitialize only after the shutdown Future completes.
 - Select the narrowest Service Scope: app, session, or route.
 - Prefer singleton; use `newInstance` only for stateless or immutable helpers whose ownership remains safe.
 - Use async Service readiness only when callers cannot safely use the instance immediately after synchronous construction.

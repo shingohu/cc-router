@@ -20,7 +20,7 @@ export 'src/component_capabilities.dart'
         DemoAspectIds,
         DemoEventIds,
         DemoEventSubscriberIds,
-        DemoInitializationTaskIds,
+        DemoInitTaskIds,
         DemoInitializationGates,
         DemoNavigationSourceIds,
         DemoRoutePolicyIds;

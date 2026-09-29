@@ -393,11 +393,11 @@ abstract final class CCRouter {
     CCCancellationToken? cancellation,
   });
 
-  static Future<void> runInitialization({
-    CCInitializationGate gate,
+  static Future<void> runInitTasks({
+    CCInitTaskGate gate,
   });
 
-  static List<CCInitializationTaskSnapshot> get initializationTasks;
+  static List<CCInitTaskSnapshot> get initTasks;
 }
 ```
 
@@ -411,15 +411,18 @@ abstract final class CCRouter {
   业务代码直接注入 Adapter，也不允许初始化后追加启动组件。
 - `CCRouter.initialize`、Adapter attach、Adapter 初始化和初始 Backend Snapshot 读取均为
   同步事务；成功返回时必须已经可以导航，异步 Backend 准备必须在 attach 前完成。
-- 异步初始化任务不隐藏在 `initialize()` 内；Host 通过 `runInitialization(gate: ...)` 显式
+- 异步初始化任务不隐藏在 `initialize()` 内；Host 通过 `runInitTasks(gate: ...)` 显式
   等待已打开 Gate 的 DAG，Runtime shutdown 负责取消并等待活动任务收口。
 - `CCRouter.shutdown()` 停止新调用、销毁默认 Runtime，并在 Adapter 之后释放 Backend
-  自有资源；它仍为异步，因为必须等待 Scope 和业务资源释放。
+  自有资源；它仍为异步，因为必须等待 Scope 和业务资源释放。只有拥有默认 Runtime 的应用
+  Composition Root 可以调用并且必须等待完成；页面、组件、Session、App 后台和单个 Navigation
+  Host 都不能触发它。只有 `shutdown()` 完成后才能重新调用 `initialize()`。
 - 其余静态方法只负责转发到当前 Active Runtime。
 - 不允许各子系统维护彼此独立的全局静态 Map。
 - 测试和底层多 Engine/Isolate 宿主可以通过明确标记的测试 API 创建隔离 Runtime，并使用 Runtime Overlay，不修改默认 Runtime。
 - 未初始化调用统一抛出 `CCRouterNotInitializedError`。
-- 默认 Runtime 存活期间再次调用 `initialize()` 抛出 `CCRouterAlreadyInitializedError`；必须先等待 `shutdown()` 完成。
+- 默认 Runtime 存活或正在 shutdown 时再次调用 `initialize()` 抛出
+  `CCRouterAlreadyInitializedError`。
 - 谁创建 Runtime，谁负责关闭它；正式 App 中所有权属于 `CCRouter`，隔离测试 Runtime 的所有权属于测试宿主。
 - `BuildContext` 不是 Runtime、Service、Command 或 Event 的必需参数。
 
@@ -994,7 +997,7 @@ Audit   记录敏感操作的主体、时间和结果
 
 ### 13.1 任务描述
 
-每个 `CCInitializationTask` 包含：
+每个 `CCInitTaskDefinition` 包含：
 
 - 全局唯一任务 ID。
 - Runtime 注入的所属组件。
@@ -1057,7 +1060,7 @@ PermissionDeniedError
 InvocationTimeoutError
 InvocationCancelledError
 HandlerFailedError
-CCInitializationTaskError
+CCInitTaskError
 ScopeClosedError
 ContractVersionError
 ```

@@ -1,25 +1,25 @@
 part of 'runtime.dart';
 
-/// Runs one statically registered initialization task.
+/// Runs one statically registered InitTask.
 ///
 /// A task observes Runtime deadline and cancellation through [context]. It must
 /// not retain the context after completion or assume Dart can preempt work that
 /// ignores cooperative cancellation.
-typedef CCInitializationTaskHandler =
+typedef CCInitTaskHandler =
     FutureOr<void> Function(CCInvocationContext context);
 
-/// Immutable definition of one Runtime-wide initialization task.
+/// Immutable definition of one Runtime-wide InitTask.
 ///
 /// Component registrars create tasks during static assembly. Use this for
 /// one-time startup work with cross-component ordering; Service instance setup
 /// belongs in `CCServiceInitializer`, and repeatable operations use Command.
-final class CCInitializationTask {
+final class CCInitTaskDefinition {
   /// Creates a task with immutable dependency and execution metadata.
-  CCInitializationTask({
+  CCInitTaskDefinition({
     required this.id,
     Iterable<String> dependsOn = const [],
-    this.gate = CCInitializationGate.appStarted,
-    this.failurePolicy = CCInitializationFailurePolicy.critical,
+    this.gate = CCInitTaskGate.appStarted,
+    this.failurePolicy = CCInitTaskFailurePolicy.critical,
     this.timeout,
     required this.run,
   }) : dependsOn = List.unmodifiable(dependsOn);
@@ -31,20 +31,20 @@ final class CCInitializationTask {
   final List<String> dependsOn;
 
   /// Explicit condition that must be opened before the task may run.
-  final CCInitializationGate gate;
+  final CCInitTaskGate gate;
 
   /// Behavior applied when task execution fails.
-  final CCInitializationFailurePolicy failurePolicy;
+  final CCInitTaskFailurePolicy failurePolicy;
 
   /// Optional per-task deadline measured from actual task start.
   final Duration? timeout;
 
   /// Work executed exactly once during the Runtime lifetime.
-  final CCInitializationTaskHandler run;
+  final CCInitTaskHandler run;
 }
 
-/// Runtime state of a registered initialization task.
-enum CCInitializationTaskState {
+/// Runtime state of a registered InitTask.
+enum CCInitTaskState {
   /// Waiting for its gate or dependencies.
   pending,
 
@@ -61,10 +61,10 @@ enum CCInitializationTaskState {
   skipped,
 }
 
-/// Immutable, sanitized diagnostic view of an initialization task.
-final class CCInitializationTaskSnapshot {
+/// Immutable, sanitized diagnostic view of an InitTask.
+final class CCInitTaskSnapshot {
   /// Creates one read-only task snapshot.
-  CCInitializationTaskSnapshot({
+  CCInitTaskSnapshot({
     required this.id,
     required this.ownerComponentId,
     required this.gateId,
@@ -86,10 +86,10 @@ final class CCInitializationTaskSnapshot {
   final String gateId;
 
   /// Current execution state.
-  final CCInitializationTaskState state;
+  final CCInitTaskState state;
 
   /// Failure behavior declared by the task.
-  final CCInitializationFailurePolicy failurePolicy;
+  final CCInitTaskFailurePolicy failurePolicy;
 
   /// Stable task IDs that must succeed before this task may run.
   ///
@@ -108,21 +108,18 @@ final class CCInitializationTaskSnapshot {
 }
 
 /// Mutable Runtime-owned state for one statically registered task.
-final class _InitializationTaskRecord {
+final class _InitTaskRecord {
   /// Creates a pending record for [task] and its trusted component owner.
-  _InitializationTaskRecord({
-    required this.ownerComponentId,
-    required this.task,
-  });
+  _InitTaskRecord({required this.ownerComponentId, required this.task});
 
   /// Component that registered the task, or empty for low-level tests.
   final String ownerComponentId;
 
   /// Immutable task definition.
-  final CCInitializationTask task;
+  final CCInitTaskDefinition task;
 
   /// Current one-way task state.
-  CCInitializationTaskState state = CCInitializationTaskState.pending;
+  CCInitTaskState state = CCInitTaskState.pending;
 
   /// Measured execution duration, populated after a task starts.
   Duration? duration;
@@ -134,7 +131,7 @@ final class _InitializationTaskRecord {
   String? blockedByTaskId;
 
   /// Creates an immutable diagnostic snapshot of the current record.
-  CCInitializationTaskSnapshot get snapshot => CCInitializationTaskSnapshot(
+  CCInitTaskSnapshot get snapshot => CCInitTaskSnapshot(
     id: task.id,
     ownerComponentId: ownerComponentId,
     gateId: task.gate.id,
@@ -148,12 +145,12 @@ final class _InitializationTaskRecord {
 }
 
 /// Captures one failed task without retaining its original exception message.
-final class _InitializationTaskFailure {
+final class _InitTaskFailure {
   /// Creates a scheduler result for [record] and the original [error].
-  const _InitializationTaskFailure(this.record, this.error);
+  const _InitTaskFailure(this.record, this.error);
 
   /// Task record updated by the failed execution.
-  final _InitializationTaskRecord record;
+  final _InitTaskRecord record;
 
   /// Original error used only for cancellation classification before returning.
   final Object error;

@@ -270,7 +270,7 @@ abstract final class CCRouter {
     String code = 'pending_cancelled',
   }) => _runtime.cancelPendingNavigation(navigationId, code: code);
 
-  /// Initializes the default Runtime with configuration and startup components.
+  /// Creates and initializes the process-default Runtime.
   ///
   /// Call this once during application startup with the complete [components]
   /// assembly. Component manifests are validated and registered before the
@@ -294,6 +294,14 @@ abstract final class CCRouter {
   /// Pass the generated [contractBundle] together with [components] when Host
   /// assembly publishes one. It provides final stale and compatibility checks;
   /// omitting it remains supported for handwritten or legacy test manifests.
+  ///
+  /// The name describes framework Runtime initialization, not construction of
+  /// a disposable object and not asynchronous InitTask execution. Page,
+  /// component, Session, and navigation Host lifecycles must not call this
+  /// method. [runInitTasks] separately opens one InitTask Gate, while
+  /// [shutdown] is the matching application-owner operation that stops this
+  /// default Runtime. Concrete Runtime, Adapter, Scope, and Service instances
+  /// continue to use their owner-level `dispose` contracts internally.
   static void initialize({
     required Iterable<CCComponentManifest> components,
     CCContractBundleDescriptor? contractBundle,
@@ -512,24 +520,24 @@ abstract final class CCRouter {
     CCCancellationToken? cancellation,
   }) => _runtime.event(event, timeout: timeout, cancellation: cancellation);
 
-  /// Opens an initialization [gate] and awaits every newly ready task.
+  /// Opens an InitTask [gate] and awaits every newly ready task.
   ///
-  /// Call after synchronous [initialize]. Ordinary startup uses
-  /// [CCInitializationGate.appStarted]; product conditions such as privacy
-  /// consent use an explicit stable Gate. Overlapping calls share one DAG run,
-  /// and completed tasks never execute twice. Critical failures throw
-  /// [CCInitializationTaskError]; optional failures remain in
-  /// [initializationTasks].
-  static Future<void> runInitialization({
-    CCInitializationGate gate = CCInitializationGate.appStarted,
-  }) => _runtime.runInitialization(gate: gate);
+  /// This does not initialize or replace the framework Runtime. The Gate stays
+  /// open for the Runtime lifetime, and one call may run zero, one, or multiple
+  /// newly ready tasks. Call it after synchronous [initialize]. Ordinary
+  /// startup uses [CCInitTaskGate.appStarted]; product conditions such as
+  /// privacy consent use an explicit stable Gate. Overlapping calls share one
+  /// DAG run, and completed tasks never execute twice. Critical failures throw
+  /// [CCInitTaskError]; optional failures remain in [initTasks].
+  static Future<void> runInitTasks({
+    CCInitTaskGate gate = CCInitTaskGate.appStarted,
+  }) => _runtime.runInitTasks(gate: gate);
 
   /// Immutable initialization task snapshots ordered by stable task ID.
   ///
   /// Use for startup diagnostics and tests. Snapshots contain only stable IDs,
   /// state, duration, and sanitized error types, never task inputs or errors.
-  static List<CCInitializationTaskSnapshot> get initializationTasks =>
-      _runtime.initializationTasks;
+  static List<CCInitTaskSnapshot> get initTasks => _runtime.initTasks;
 
   /// Opens one authenticated account Session.
   ///
@@ -548,16 +556,23 @@ abstract final class CCRouter {
   /// normal navigation and App backgrounding must not close the Session.
   static Future<void> closeSession() => _runtime.closeSession();
 
-  /// Stops the default Runtime and releases all lifecycle-owned resources.
+  /// Shuts down the process-default Runtime and its owned resources.
   ///
-  /// Application hosts use this when permanently tearing down the framework.
-  /// A Host Backend registered through [CCRouterHostBinding] is released
-  /// automatically after this call disposes the Runtime-owned navigation
-  /// Adapter.
+  /// The application Composition Root uses this when ending the current default
+  /// Runtime. A Host Backend registered through [CCRouterHostBinding] is
+  /// released automatically after this call disposes the Runtime-owned
+  /// navigation Adapter. A new [initialize] call is allowed only after this
+  /// Future completes.
   ///
   /// Calling this method when no Runtime exists is a no-op. Calling it from a
   /// test Runtime overlay throws [StateError]; dispose the owning Test Host
   /// instead.
+  ///
+  /// This is intentionally named `shutdown`, rather than `dispose`, because
+  /// [CCRouter] is a static application facade and not a disposable instance.
+  /// Do not call it from Flutter `State.dispose`, Page Pop, component teardown,
+  /// Session close, application backgrounding, or one navigation Host's
+  /// disposal. Await it only when the Composition Root ends the default Runtime.
   static Future<void> shutdown() async {
     if (_runtimeResolver.hasOverlayRuntime) {
       throw StateError(

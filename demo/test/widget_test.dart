@@ -50,7 +50,7 @@ void main() {
         ],
       ),
     );
-    await CCRouter.runInitialization();
+    await CCRouter.runInitTasks();
   });
 
   tearDown(CCRouter.shutdown);
@@ -154,37 +154,26 @@ void main() {
   testWidgets('capability lab exercises Commands and initialization Gates', (
     tester,
   ) async {
-    final startup = {
-      for (final task in CCRouter.initializationTasks) task.id: task,
-    };
+    final startup = {for (final task in CCRouter.initTasks) task.id: task};
     expect(
-      startup[DemoInitializationTaskIds.foundation]!.state,
-      CCInitializationTaskState.succeeded,
+      startup[DemoInitTaskIds.foundation]!.state,
+      CCInitTaskState.succeeded,
+    );
+    expect(startup[DemoInitTaskIds.optionalSdk]!.state, CCInitTaskState.failed);
+    expect(
+      startup[DemoInitTaskIds.optionalDependent]!.state,
+      CCInitTaskState.skipped,
+    );
+    expect(startup[DemoInitTaskIds.analytics]!.state, CCInitTaskState.pending);
+    expect(
+      startup[DemoInitTaskIds.parallelPrimary]!.state,
+      CCInitTaskState.succeeded,
     );
     expect(
-      startup[DemoInitializationTaskIds.optionalSdk]!.state,
-      CCInitializationTaskState.failed,
+      startup[DemoInitTaskIds.parallelSecondary]!.state,
+      CCInitTaskState.succeeded,
     );
-    expect(
-      startup[DemoInitializationTaskIds.optionalDependent]!.state,
-      CCInitializationTaskState.skipped,
-    );
-    expect(
-      startup[DemoInitializationTaskIds.analytics]!.state,
-      CCInitializationTaskState.pending,
-    );
-    expect(
-      startup[DemoInitializationTaskIds.parallelPrimary]!.state,
-      CCInitializationTaskState.succeeded,
-    );
-    expect(
-      startup[DemoInitializationTaskIds.parallelSecondary]!.state,
-      CCInitializationTaskState.succeeded,
-    );
-    expect(
-      startup[DemoInitializationTaskIds.timeout]!.state,
-      CCInitializationTaskState.pending,
-    );
+    expect(startup[DemoInitTaskIds.timeout]!.state, CCInitTaskState.pending);
 
     await _pumpDemo(tester);
     await _openCapabilityLab(tester);
@@ -227,10 +216,10 @@ void main() {
     await _tapCapabilityAction(tester, '打开 Privacy Gate');
     expect(find.textContaining('succeeded'), findsWidgets);
     expect(
-      CCRouter.initializationTasks
-          .firstWhere((task) => task.id == DemoInitializationTaskIds.analytics)
+      CCRouter.initTasks
+          .firstWhere((task) => task.id == DemoInitTaskIds.analytics)
           .state,
-      CCInitializationTaskState.succeeded,
+      CCInitTaskState.succeeded,
     );
     expect(
       demoApplicationLogger.entries.any(
@@ -242,10 +231,10 @@ void main() {
     await _tapCapabilityAction(tester, '打开 InitTask Timeout Gate');
     expect(find.textContaining('failed'), findsWidgets);
     expect(
-      CCRouter.initializationTasks
-          .firstWhere((task) => task.id == DemoInitializationTaskIds.timeout)
+      CCRouter.initTasks
+          .firstWhere((task) => task.id == DemoInitTaskIds.timeout)
           .state,
-      CCInitializationTaskState.failed,
+      CCInitTaskState.failed,
     );
 
     await _unmountDemo(tester);

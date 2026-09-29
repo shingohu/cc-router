@@ -3,7 +3,7 @@
 ## 1. 状态与结论
 
 - 状态：Runtime 与注解生成器闭环已实现
-- 稳定入口：`CCRegistry.registerInitializationTask`、`CCRouter.runInitialization`
+- 稳定入口：`CCRegistry.registerInitTask`、`CCRouter.runInitTasks`
 - 已实现：Task Contract、Handler 注解、注册桥接、metadata、DAG 文档和 Workspace 校验
 - 当前不做：自动重试、主线程标记、Session/前台周期任务、跨 Isolate 调度
 
@@ -44,14 +44,19 @@ Isolate/Service 能力完成，而不是给任务增加一个无法兑现的 `ba
 
 ## 4. 执行模型
 
-1. 组件在 Registrar 中注册 `CCInitializationTask`，Owner 由 Runtime 注入。
+命名边界：`CCRouter.initialize()` 建立并同步校验默认 Runtime；`CCRouter.shutdown()` 由应用
+Owner 关闭它。`runInitTasks()` 是 InitTask Gate 执行入口，不是第二次初始化 Runtime；一次
+调用可能执行零个、一个或多个新就绪任务。`CCInitTaskGate` 一旦打开就在当前 Runtime 生命周期
+内保持打开，已经完成或失败的任务不会通过再次调用自动重试。
+
+1. 组件在 Registrar 中注册 `CCInitTaskDefinition`，Owner 由 Runtime 注入。
 2. `CCRouter.initialize()` 同步校验任务 ID、Gate、依赖、timeout、缺失节点和循环，不执行任务。
-3. Host 在适当时机调用 `await CCRouter.runInitialization()` 打开 `appStarted` Gate。
-4. 隐私同意后调用 `await CCRouter.runInitialization(gate: CCInitializationGate.privacyGranted)`。
-5. 其它自定义条件使用带稳定 ID 的 `const CCInitializationGate`，例如远程配置完成。
+3. Host 在适当时机调用 `await CCRouter.runInitTasks()` 打开 `appStarted` Gate。
+4. 隐私同意后调用 `await CCRouter.runInitTasks(gate: CCInitTaskGate.privacyGranted)`。
+5. 其它自定义条件使用带稳定 ID 的 `const CCInitTaskGate`，例如远程配置完成。
 6. Gate 打开后，依赖全部成功的同层任务按 ID 确定启动顺序，并发执行。
 7. 同一 Runtime 中每个任务最多运行一次；重叠调用共享一个 single-flight DAG drain。
-8. `critical` 失败抛 `CCInitializationTaskError`，后续触发继续返回同一安全失败。
+8. `critical` 失败抛 `CCInitTaskError`，后续触发继续返回同一安全失败。
 9. `optional` 失败不阻止独立任务；依赖失败节点的任务标记为 `skipped`。
 10. 每个任务有独立 timeout、cooperative cancellation、Trace Span、Owner 和耗时快照。
 11. Runtime shutdown 取消并等待当前 DAG drain 收口；不允许任务在销毁后被标记成功。
@@ -62,19 +67,19 @@ Gate 只控制“何时允许执行”，不替代依赖。先打开 `privacyGra
 ## 5. API 示例
 
 ```dart
-registry.registerInitializationTask(
-  CCInitializationTask(
+registry.registerInitTask(
+  CCInitTaskDefinition(
     id: 'foundation.logging',
     run: (context) => logging.initialize(),
   ),
 );
 
-registry.registerInitializationTask(
-  CCInitializationTask(
+registry.registerInitTask(
+  CCInitTaskDefinition(
     id: 'analytics.sdk',
     dependsOn: const ['foundation.logging'],
-    gate: CCInitializationGate.privacyGranted,
-    failurePolicy: CCInitializationFailurePolicy.optional,
+    gate: CCInitTaskGate.privacyGranted,
+    failurePolicy: CCInitTaskFailurePolicy.optional,
     timeout: const Duration(seconds: 3),
     run: (context) => analytics.initialize(context.cancellation),
   ),
@@ -83,10 +88,10 @@ registry.registerInitializationTask(
 CCRouter.initialize(
   components: ccrouterGeneratedComponentManifests,
 );
-await CCRouter.runInitialization();
+await CCRouter.runInitTasks();
 
 // 用户明确同意隐私协议后：
-await CCRouter.runInitialization(gate: CCInitializationGate.privacyGranted);
+await CCRouter.runInitTasks(gate: CCInitTaskGate.privacyGranted);
 ```
 
 ## 6. 失败、重试与降级
@@ -102,7 +107,7 @@ await CCRouter.runInitialization(gate: CCInitializationGate.privacyGranted);
 随机值、对象身份或运行时类名推导。当前实现仍使用字符串，但必须遵守以下边界：
 
 1. 组件内部任务 ID 集中放在组件自己的不可变常量类中，例如
-   `DemoInitializationTaskIds`，Registrar、页面和测试不得重复书写同一个字符串。
+   `DemoInitTaskIds`，Registrar、页面和测试不得重复书写同一个字符串。
 2. 需要由 Host 或其他组件打开、依赖或观察的 Gate/任务 ID，放到独立的公共 Contract
    Library；实现包不能要求调用方导入 `src` 或 Registrar。
 3. ID 使用组件或能力前缀，例如 `analytics.foundation`、`app.privacy.granted`，避免
@@ -166,8 +171,8 @@ Owner 实现 Package 使用顶层 Handler 注解声明执行配置：
 @CCInitTask(
   contract: analyticsSdkInitTask,
   dependsOn: [foundationLoggingInitTask],
-  gate: CCInitializationGate.privacyGranted,
-  failurePolicy: CCInitializationFailurePolicy.optional,
+  gate: CCInitTaskGate.privacyGranted,
+  failurePolicy: CCInitTaskFailurePolicy.optional,
   timeout: Duration(seconds: 3),
 )
 Future<void> initializeAnalytics(
@@ -182,7 +187,7 @@ Future<void> initializeAnalytics(
 ```dart
 @CCInitTask(
   id: 'analytics.cache_warmup',
-  gate: CCInitializationGate.appStarted,
+  gate: CCInitTaskGate.appStarted,
 )
 Future<void> warmupAnalyticsCache() async {}
 ```
@@ -191,14 +196,14 @@ Future<void> warmupAnalyticsCache() async {}
 任务一旦需要被其它任务引用，就提升为显式 `CCInitTaskContract`。组件内 Contract 可以保持
 Package 私有，只有真实跨组件依赖才通过公共 contracts Package barrel 导出。
 
-`CCInitializationGate` 已经是带稳定 ID 的类型化值，因此不再增加语义重复的 Gate Contract。
-框架内置 `appStarted` 与 `privacyGranted`；自定义 Gate 使用公共 `const CCInitializationGate`，
+`CCInitTaskGate` 已经是带稳定 ID 的类型化值，因此不再增加语义重复的 Gate Contract。
+框架内置 `appStarted` 与 `privacyGranted`；自定义 Gate 使用公共 `const CCInitTaskGate`，
 由 Host 在条件成立时显式打开。跨 Package 使用的 Gate 必须从公共 contracts Package 导出；
 它是普通 Dart 常量，由 Analyzer 的 Package API 边界校验，不额外建立第二套 Gate 注册表。
 
 为了让 `CCInitTaskContract`、`@CCInitTask`、Gate 和 failure policy 都能被 Pure Dart contracts
-Package 使用，实施时应把纯值类型 `CCInitializationGate` 与
-`CCInitializationFailurePolicy` 下沉到 `ccrouter_contracts`。`ccrouter` 与 `ccrouter_core`
+Package 使用，实施时应把纯值类型 `CCInitTaskGate` 与
+`CCInitTaskFailurePolicy` 下沉到 `ccrouter_contracts`。`ccrouter` 与 `ccrouter_core`
 继续通过现有公共 barrel 转出这些类型，业务侧导入方式和 Runtime 语义不变。
 
 ## 11. Handler 约束
@@ -236,7 +241,7 @@ lib/src/ccrouter_generated/
 - 没有 InitTask 声明时不创建相关文件或空目录；
 - 业务 barrel 只导出真实跨组件使用的 Contract/Gate，不公开生成注册控制器。
 
-生成代码等价于当前手写 `CCInitializationTask` 注册，但生成 SPI 保持内部可见；业务代码不能
+生成代码等价于当前手写 `CCInitTaskDefinition` 注册，但生成 SPI 保持内部可见；业务代码不能
 直接执行 Handler，也不能伪造 Owner 或绕过 Gate。
 
 ## 13. 生成期校验
@@ -264,7 +269,7 @@ Generator 校验不替代 Runtime。手写 Contribution、自定义 Registrar、
 ## 14. Runtime 与生命周期保持项
 
 - `CCRouter.initialize()` 继续同步完成配置和组件装配，不隐式执行异步任务；
-- Host 继续通过 `CCRouter.runInitialization(gate: ...)` 明确打开 Gate；
+- Host 继续通过 `CCRouter.runInitTasks(gate: ...)` 明确打开 Gate；
 - 同一 Runtime 中任务保持 single-flight、exactly-once 和同层稳定启动/并发执行；
 - `critical`、`optional`、依赖失败 skip、per-task timeout 和 cooperative cancellation 语义不变；
 - Runtime shutdown 负责取消并等待当前 DAG drain，组件停用、Session 关闭和页面 Pop 不触发任务销毁；

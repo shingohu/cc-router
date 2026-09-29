@@ -80,6 +80,9 @@ library 不需要依赖 Host SPI。API surface 快照测试锁定两侧导出集
 `CCRouterAppBackend` 提供 Adapter，`CCRouterApp.managed` 通过框架私有协调器完成所有权转移。
 Host/Adapter 的生命周期约束如下：
 
+- `CCRouter.shutdown()` 只由拥有默认 Runtime 的应用 Composition Root 调用并等待完成；页面、
+  组件、Session、App 后台和单个 Navigation Host 不拥有该生命周期，完成后才允许重新
+  `initialize()`；
 - Adapter 由 Backend 交给 `CCRouterApp.managed`，再由 Runtime 初始化、销毁；
 - Adapter 初始化、初始 Backend Snapshot 和 dispose 都是同步事务，返回时状态已经稳定；
 - 异步平台资源必须在 Backend 构造前准备，或在 `CCRouter.shutdown()` 阶段释放；

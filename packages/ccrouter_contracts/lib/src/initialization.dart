@@ -1,42 +1,37 @@
 import 'component.dart';
 
-/// Identifies an explicit condition that allows initialization tasks to run.
+/// Identifies an explicit condition that allows InitTasks to run.
 ///
 /// Use [appStarted] for ordinary startup work and [privacyGranted] for work
 /// that must wait until the user has granted privacy consent. A Host may define
 /// another constant gate for a stable product condition and opens it explicitly.
-final class CCInitializationGate {
+final class CCInitTaskGate {
   /// Creates a gate identified by the stable [id].
-  const CCInitializationGate(this.id);
+  const CCInitTaskGate(this.id);
 
   /// Gate used for ordinary post-`CCRouter.initialize` startup work.
-  static const CCInitializationGate appStarted = CCInitializationGate(
-    'appStarted',
-  );
+  static const CCInitTaskGate appStarted = CCInitTaskGate('appStarted');
 
   /// Gate opened explicitly by the Host after privacy consent is granted.
   ///
   /// CCRouter does not read, persist, or infer consent. Tasks remain pending
   /// until the application opens this gate.
-  static const CCInitializationGate privacyGranted = CCInitializationGate(
-    'privacyGranted',
-  );
+  static const CCInitTaskGate privacyGranted = CCInitTaskGate('privacyGranted');
 
   /// Stable identity used by generation, diagnostics, and execution.
   final String id;
 
   /// Compares gates by stable identity rather than object identity.
   @override
-  bool operator ==(Object other) =>
-      other is CCInitializationGate && other.id == id;
+  bool operator ==(Object other) => other is CCInitTaskGate && other.id == id;
 
   /// Hashes the stable gate identity.
   @override
   int get hashCode => id.hashCode;
 }
 
-/// Defines whether one initialization failure aborts its execution phase.
-enum CCInitializationFailurePolicy {
+/// Defines whether one InitTask failure aborts its execution phase.
+enum CCInitTaskFailurePolicy {
   /// Reports a sanitized error and prevents later initialization progress.
   critical,
 
@@ -44,7 +39,7 @@ enum CCInitializationFailurePolicy {
   optional,
 }
 
-/// Declares a stable initialization task identity that other tasks may depend on.
+/// Declares a stable InitTask identity that other tasks may depend on.
 ///
 /// Keep a component-local constant private unless another Package genuinely
 /// depends on it. A contracts Package must provide [componentId] and export the
@@ -71,7 +66,7 @@ final class CCInitTaskContract {
   final String description;
 }
 
-/// Marks one public top-level function as a generated initialization task.
+/// Marks one public top-level function as a generated InitTask.
 ///
 /// Set exactly one of [contract] and [id]. Use [contract] when another task or
 /// Package needs a typed dependency; use [id] for an independent internal task.
@@ -83,8 +78,8 @@ final class CCInitTask {
     this.contract,
     this.id,
     this.dependsOn = const [],
-    this.gate = CCInitializationGate.appStarted,
-    this.failurePolicy = CCInitializationFailurePolicy.critical,
+    this.gate = CCInitTaskGate.appStarted,
+    this.failurePolicy = CCInitTaskFailurePolicy.critical,
     this.timeout,
   });
 
@@ -98,10 +93,10 @@ final class CCInitTask {
   final List<CCInitTaskContract> dependsOn;
 
   /// Explicit condition that must be opened before execution.
-  final CCInitializationGate gate;
+  final CCInitTaskGate gate;
 
   /// Behavior applied when this task fails.
-  final CCInitializationFailurePolicy failurePolicy;
+  final CCInitTaskFailurePolicy failurePolicy;
 
   /// Optional positive deadline measured from actual task start.
   final Duration? timeout;

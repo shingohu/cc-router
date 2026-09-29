@@ -187,7 +187,7 @@ final class _OverviewView extends StatelessWidget {
       (label: 'Backend Entries', value: snapshot.backendEntries.length),
       (label: 'Pending', value: snapshot.pendingNavigations.length),
       (label: 'Failures', value: snapshot.navigationFailures.length),
-      (label: 'InitTasks', value: snapshot.initializationTasks.length),
+      (label: 'InitTasks', value: snapshot.initTasks.length),
     ];
     return ListView(
       padding: const EdgeInsets.only(bottom: 24),
@@ -690,17 +690,15 @@ final class _InitTaskView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (snapshot.initializationTasks.isEmpty) {
+    if (snapshot.initTasks.isEmpty) {
       return const _EmptyState('没有注册 InitTask。');
     }
-    final tasks = {
-      for (final task in snapshot.initializationTasks) task.id: task,
-    };
+    final tasks = {for (final task in snapshot.initTasks) task.id: task};
     return ListView(
       padding: const EdgeInsets.only(bottom: 24),
       children: [
-        _SectionTitle('InitTask DAG', snapshot.initializationTasks.length),
-        for (final task in snapshot.initializationTasks)
+        _SectionTitle('InitTask DAG', snapshot.initTasks.length),
+        for (final task in snapshot.initTasks)
           Card(
             margin: const EdgeInsets.fromLTRB(16, 4, 16, 4),
             child: ListTile(
@@ -813,10 +811,10 @@ IconData _backendOwnerIcon(CCBackendEntryOwner owner) => switch (owner) {
 };
 
 /// Selects a neutral icon for one InitTask state.
-IconData _taskStateIcon(CCInitializationTaskState state) => switch (state) {
-  CCInitializationTaskState.succeeded => Icons.check_circle_outline,
-  CCInitializationTaskState.failed => Icons.error_outline,
-  CCInitializationTaskState.skipped => Icons.skip_next,
-  CCInitializationTaskState.running => Icons.timelapse,
-  CCInitializationTaskState.pending => Icons.schedule,
+IconData _taskStateIcon(CCInitTaskState state) => switch (state) {
+  CCInitTaskState.succeeded => Icons.check_circle_outline,
+  CCInitTaskState.failed => Icons.error_outline,
+  CCInitTaskState.skipped => Icons.skip_next,
+  CCInitTaskState.running => Icons.timelapse,
+  CCInitTaskState.pending => Icons.schedule,
 };

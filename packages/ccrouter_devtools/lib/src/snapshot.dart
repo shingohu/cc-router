@@ -30,7 +30,7 @@ final class CCDevToolsSnapshot {
     List<CCNavigationCapabilityFallbackEvent> capabilityFallbacks = const [],
     List<CCRouteVisibilityEvent> visibilityEvents = const [],
     List<CCNavigationBackendDiagnosticEvent> backendEvents = const [],
-    List<CCInitializationTaskSnapshot> initializationTasks = const [],
+    List<CCInitTaskSnapshot> initTasks = const [],
     List<CCPendingNavigation> pendingNavigations = const [],
     List<CCRouteRestorationOpportunityEvent> restorationOpportunities =
         const [],
@@ -43,7 +43,7 @@ final class CCDevToolsSnapshot {
        capabilityFallbacks = List.unmodifiable(capabilityFallbacks),
        visibilityEvents = List.unmodifiable(visibilityEvents),
        backendEvents = List.unmodifiable(backendEvents),
-       initializationTasks = List.unmodifiable(initializationTasks),
+       initTasks = List.unmodifiable(initTasks),
        pendingNavigations = List.unmodifiable(pendingNavigations),
        restorationOpportunities = List.unmodifiable(restorationOpportunities);
 
@@ -92,7 +92,7 @@ final class CCDevToolsSnapshot {
   final List<CCNavigationBackendDiagnosticEvent> backendEvents;
 
   /// Current initialization task states and dependency edges.
-  final List<CCInitializationTaskSnapshot> initializationTasks;
+  final List<CCInitTaskSnapshot> initTasks;
 
   /// Navigation requests waiting for an external policy decision.
   final List<CCPendingNavigation> pendingNavigations;

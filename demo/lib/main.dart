@@ -42,7 +42,7 @@ Future<void> main() async {
       ],
     ),
   );
-  await CCRouter.runInitialization();
+  await CCRouter.runInitTasks();
   registerDemoDevToolsExtension();
   runApp(const CCRouterDemoApp());
 }

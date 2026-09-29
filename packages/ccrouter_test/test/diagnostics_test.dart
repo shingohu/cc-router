@@ -45,8 +45,8 @@ final class _InvalidInitializationRegistrar implements CCComponentRegistrar {
 
   @override
   void register(CCRegistry registry) {
-    registry.registerInitializationTask(
-      CCInitializationTask(
+    registry.registerInitTask(
+      CCInitTaskDefinition(
         id: 'feature.prepare',
         dependsOn: const ['missing.prepare'],
         run: (_) {},

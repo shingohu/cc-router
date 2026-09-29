@@ -13,12 +13,12 @@ import 'package:demo_navigation_lab/src/navigation_lab_component_registrar.dart'
 
 /// Registers generated InitTask `demo.startup.analytics`.
 void ccrouterRegisterInitializeDemoAnalyticsInitTask(CCRegistry registry) {
-  registry.registerInitializationTask(
-    CCInitializationTask(
+  registry.registerInitTask(
+    CCInitTaskDefinition(
       id: "demo.startup.analytics",
       dependsOn: const ["demo.startup.foundation"],
-      gate: CCInitializationGate("privacyGranted"),
-      failurePolicy: CCInitializationFailurePolicy.critical,
+      gate: CCInitTaskGate("privacyGranted"),
+      failurePolicy: CCInitTaskFailurePolicy.critical,
       run: (_) => init_source.initializeDemoAnalytics(),
     ),
   );
@@ -26,12 +26,12 @@ void ccrouterRegisterInitializeDemoAnalyticsInitTask(CCRegistry registry) {
 
 /// Registers generated InitTask `demo.startup.foundation`.
 void ccrouterRegisterInitializeDemoFoundationInitTask(CCRegistry registry) {
-  registry.registerInitializationTask(
-    CCInitializationTask(
+  registry.registerInitTask(
+    CCInitTaskDefinition(
       id: "demo.startup.foundation",
       dependsOn: const ["demo_order.startup.foundation"],
-      gate: CCInitializationGate("appStarted"),
-      failurePolicy: CCInitializationFailurePolicy.critical,
+      gate: CCInitTaskGate("appStarted"),
+      failurePolicy: CCInitTaskFailurePolicy.critical,
       run: (_) => init_source.initializeDemoFoundation(),
     ),
   );
@@ -41,12 +41,12 @@ void ccrouterRegisterInitializeDemoFoundationInitTask(CCRegistry registry) {
 void ccrouterRegisterInitializeDemoOptionalDependentInitTask(
   CCRegistry registry,
 ) {
-  registry.registerInitializationTask(
-    CCInitializationTask(
+  registry.registerInitTask(
+    CCInitTaskDefinition(
       id: "demo.startup.optional-dependent",
       dependsOn: const ["demo.startup.optional-sdk"],
-      gate: CCInitializationGate("appStarted"),
-      failurePolicy: CCInitializationFailurePolicy.critical,
+      gate: CCInitTaskGate("appStarted"),
+      failurePolicy: CCInitTaskFailurePolicy.critical,
       run: (_) => init_source.initializeDemoOptionalDependent(),
     ),
   );
@@ -54,12 +54,12 @@ void ccrouterRegisterInitializeDemoOptionalDependentInitTask(
 
 /// Registers generated InitTask `demo.startup.optional-sdk`.
 void ccrouterRegisterInitializeDemoOptionalSdkInitTask(CCRegistry registry) {
-  registry.registerInitializationTask(
-    CCInitializationTask(
+  registry.registerInitTask(
+    CCInitTaskDefinition(
       id: "demo.startup.optional-sdk",
       dependsOn: const [],
-      gate: CCInitializationGate("appStarted"),
-      failurePolicy: CCInitializationFailurePolicy.optional,
+      gate: CCInitTaskGate("appStarted"),
+      failurePolicy: CCInitTaskFailurePolicy.optional,
       run: (_) => init_source.initializeDemoOptionalSdk(),
     ),
   );
@@ -69,12 +69,12 @@ void ccrouterRegisterInitializeDemoOptionalSdkInitTask(CCRegistry registry) {
 void ccrouterRegisterInitializeDemoParallelPrimaryInitTask(
   CCRegistry registry,
 ) {
-  registry.registerInitializationTask(
-    CCInitializationTask(
+  registry.registerInitTask(
+    CCInitTaskDefinition(
       id: "demo.startup.parallel-primary",
       dependsOn: const ["demo.startup.foundation"],
-      gate: CCInitializationGate("appStarted"),
-      failurePolicy: CCInitializationFailurePolicy.critical,
+      gate: CCInitTaskGate("appStarted"),
+      failurePolicy: CCInitTaskFailurePolicy.critical,
       run: (_) => init_source.initializeDemoParallelPrimary(),
     ),
   );
@@ -84,12 +84,12 @@ void ccrouterRegisterInitializeDemoParallelPrimaryInitTask(
 void ccrouterRegisterInitializeDemoParallelSecondaryInitTask(
   CCRegistry registry,
 ) {
-  registry.registerInitializationTask(
-    CCInitializationTask(
+  registry.registerInitTask(
+    CCInitTaskDefinition(
       id: "demo.startup.parallel-secondary",
       dependsOn: const ["demo.startup.foundation"],
-      gate: CCInitializationGate("appStarted"),
-      failurePolicy: CCInitializationFailurePolicy.critical,
+      gate: CCInitTaskGate("appStarted"),
+      failurePolicy: CCInitTaskFailurePolicy.critical,
       run: (_) => init_source.initializeDemoParallelSecondary(),
     ),
   );
@@ -97,12 +97,12 @@ void ccrouterRegisterInitializeDemoParallelSecondaryInitTask(
 
 /// Registers generated InitTask `demo.startup.timeout`.
 void ccrouterRegisterInitializeDemoTimeoutInitTask(CCRegistry registry) {
-  registry.registerInitializationTask(
-    CCInitializationTask(
+  registry.registerInitTask(
+    CCInitTaskDefinition(
       id: "demo.startup.timeout",
       dependsOn: const [],
-      gate: CCInitializationGate("demo.timeoutLab"),
-      failurePolicy: CCInitializationFailurePolicy.optional,
+      gate: CCInitTaskGate("demo.timeoutLab"),
+      failurePolicy: CCInitTaskFailurePolicy.optional,
       timeout: Duration(microseconds: 60000),
       run: init_source.initializeDemoTimeout,
     ),

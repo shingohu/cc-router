@@ -41,7 +41,7 @@ void main() {
         defaultMinimumLevel: CCDiagnosticLevel.debug,
       ),
     );
-    await CCRouter.runInitialization();
+    await CCRouter.runInitTasks();
   });
 
   tearDown(CCRouter.shutdown);

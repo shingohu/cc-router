@@ -28,3 +28,10 @@ bootstraps must pin a reviewed commit; after publication, use the bootstrap's
 Hosted manifest and rerun the same loader `analyze/compile` smoke. See
 [`docs/CCRouter-ide-analysis-server.md`](../../../docs/CCRouter-ide-analysis-server.md)
 for dependency setup and the current Analyzer version isolation rationale.
+
+The planned `ccrouter analyzer install/status/doctor/upgrade/uninstall` command
+group is documented in
+[`docs/CCRouter-analyzer-cli-plan.md`](../../../docs/CCRouter-analyzer-cli-plan.md)
+but is not implemented. Until it appears in actual CLI help, keep using the
+manual Host bootstrap, do not attach setup to generation or Pub Hook, and do not
+change a pinned ref merely to follow repository HEAD.

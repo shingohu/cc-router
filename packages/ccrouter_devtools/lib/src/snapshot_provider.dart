@@ -49,7 +49,7 @@ final class CCRouterDevToolsSnapshotProvider
         capabilityFallbacks: CCRouter.recentNavigationCapabilityFallbacks,
         visibilityEvents: CCRouter.recentRouteVisibilityEvents,
         backendEvents: CCRouter.recentBackendNavigationEvents,
-        initializationTasks: CCRouter.initializationTasks,
+        initTasks: CCRouter.initTasks,
         pendingNavigations: CCRouter.pendingNavigations,
         restorationOpportunities: CCRouter.recentRouteRestorationOpportunities,
       );

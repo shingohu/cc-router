@@ -14,12 +14,12 @@ import 'package:demo_order/src/order_init_tasks.dart' as init_source;
 void ccrouterRegisterInitializeDemoOrderFoundationInitTask(
   CCRegistry registry,
 ) {
-  registry.registerInitializationTask(
-    CCInitializationTask(
+  registry.registerInitTask(
+    CCInitTaskDefinition(
       id: "demo_order.startup.foundation",
       dependsOn: const [],
-      gate: CCInitializationGate("appStarted"),
-      failurePolicy: CCInitializationFailurePolicy.critical,
+      gate: CCInitTaskGate("appStarted"),
+      failurePolicy: CCInitTaskFailurePolicy.critical,
       run: (_) => init_source.initializeDemoOrderFoundation(),
     ),
   );

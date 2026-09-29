@@ -75,7 +75,7 @@ Subscribers have stable typed IDs (`CCEventSubscriberId<E>`) and Runtime lifetim
 
 ## InitTask
 
-Choose `CCInitializationTask` for one-time Runtime startup work that needs DAG ordering, a Gate, timeout, or critical/optional failure semantics. Examples: privacy-gated analytics startup, loading foundational config, preparing a native SDK.
+Choose `CCInitTaskDefinition` for one-time Runtime startup work that needs DAG ordering, a Gate, timeout, or critical/optional failure semantics. Examples: privacy-gated analytics startup, loading foundational config, preparing a native SDK.
 
 Do not use InitTask for every Service's normal construction, repeatable refresh work, page entry work, or work that must rerun for each Session. Use Service initializer for lazy instance readiness and Command for repeatable operations.
 

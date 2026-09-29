@@ -109,7 +109,9 @@
 ### 工具与诊断
 
 - [DevTools 只读可视化](CCRouter-devtools.md)
+- [DevTools Host 自动装配计划](CCRouter-devtools-host-integration-plan.md)
 - [IDE / Analysis Server 集成](CCRouter-ide-analysis-server.md)
+- [Analyzer Plugin CLI 自动装配计划](CCRouter-analyzer-cli-plan.md)
 - [Analytics 与自动采集](CCRouter-analytics-and-auto-track-design.md)
 
 应用层示例的设计与验证文档放在 `demo/docs/`，不作为框架公开契约；例如

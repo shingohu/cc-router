@@ -25,6 +25,12 @@ CLI 门禁工作；缺少实时提示不会改变构建语义。
 
 ## 接入步骤
 
+当前接入仍为手工 bootstrap。计划中的 `ccrouter analyzer install/status/doctor/upgrade/uninstall`
+会把该流程收敛为显式、幂等和可回滚的 Host 工具，但这些命令尚未实现，不能写入当前接入脚本
+或 CI。完整边界见
+[`CCRouter-analyzer-cli-plan.md`](CCRouter-analyzer-cli-plan.md)。Analyzer 装配不会挂入
+`generate`、Pub Hook 或组件脚手架隐式执行。
+
 插件规则 Package 位于 `packages/ccrouter_analyzer_plugin`，当前因为官方
 `analyzer_plugin` 版本与生成器的 Analyzer 版本约束不同，未加入主 Dart Workspace；这避免
 为了 IDE 工具降级生成器和全仓 Analyzer。正式接入前应发布到 Hosted（推荐），再在宿主
@@ -90,6 +96,10 @@ Analysis Server entrypoint 可加载，不会启动常驻 Analysis Server。插�
 用 Git bootstrap 验证新代码。可在 bootstrap 的临时本地验证环境中使用绝对 path override
 验证，验证完成后恢复固定 Git ref；绝对 path 不得提交。Git ref 更新前必须先运行插件
 Package 的 analyze/test 和 loader smoke。
+
+当前固定 ref `97c72daae65d0dd01e1ecd5263c647d6b213f814` 无需仅为追随本地 HEAD 而
+更新。只有 Plugin 生产代码真实变化、隔离测试通过并推送远端后，才更新为对应的完整 commit
+SHA；禁止使用 `main` 或尚未推送的本地 SHA。
 
 Demo 运行时还接入了 `ccrouter_devtools`：进入 Navigation Lab 的“诊断”分区，点击
 “打开 CCRouter DevTools”，即可查看只读 Overview、Components、Entries、Timeline、

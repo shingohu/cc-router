@@ -86,11 +86,11 @@ abstract interface class CCRegistry {
   /// Use for capabilities resolved later through `CCRouter.service<T>()`.
   void registerService<T extends Object>(CCServiceProvider<T> provider);
 
-  /// Registers one Runtime-wide initialization task for the current component.
+  /// Registers one Runtime-wide InitTask for the current component.
   ///
   /// Use for one-time startup work that needs an explicit dependency DAG or
   /// Gate. Service instance readiness belongs in [CCServiceInitializer].
-  void registerInitializationTask(CCInitializationTask task);
+  void registerInitTask(CCInitTaskDefinition task);
 
   /// Registers the single handler for command type [C].
   ///
@@ -169,10 +169,10 @@ final class _CCComponentRegistry implements CCRegistry {
     runtime._registerServiceForComponent(ownerComponentId, provider);
   }
 
-  /// Registers an initialization task on behalf of the owning component.
+  /// Registers an InitTask on behalf of the owning component.
   @override
-  void registerInitializationTask(CCInitializationTask task) {
-    runtime._registerInitializationTaskForComponent(ownerComponentId, task);
+  void registerInitTask(CCInitTaskDefinition task) {
+    runtime._registerInitTaskForComponent(ownerComponentId, task);
   }
 
   /// Registers a command on behalf of the owning component.

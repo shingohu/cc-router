@@ -70,19 +70,17 @@ final class _InitTaskGenerator extends Generator {
       out
         ..writeln('/// Registers generated InitTask `${task.id}`.')
         ..writeln('void ${task.registrationFunction}(CCRegistry registry) {')
-        ..writeln('  registry.registerInitializationTask(')
-        ..writeln('    CCInitializationTask(')
+        ..writeln('  registry.registerInitTask(')
+        ..writeln('    CCInitTaskDefinition(')
         ..writeln('      id: ${jsonEncode(task.id)},')
         ..writeln('      dependsOn: const [')
         ..writeAll(
           task.dependencies.map((id) => '        ${jsonEncode(id)},\n'),
         )
         ..writeln('      ],')
+        ..writeln('      gate: CCInitTaskGate(${jsonEncode(task.gateId)}),')
         ..writeln(
-          '      gate: CCInitializationGate(${jsonEncode(task.gateId)}),',
-        )
-        ..writeln(
-          '      failurePolicy: CCInitializationFailurePolicy.${task.failurePolicy},',
+          '      failurePolicy: CCInitTaskFailurePolicy.${task.failurePolicy},',
         );
       if (task.timeoutMicroseconds != null) {
         out.writeln(

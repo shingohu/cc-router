@@ -170,7 +170,7 @@ final class _DemoCapabilitiesPageState extends State<DemoCapabilitiesPage> {
                 ),
               ),
               _sectionTitle(context, 'Initialization DAG'),
-              ...CCRouter.initializationTasks.map(
+              ...CCRouter.initTasks.map(
                 (task) => ListTile(
                   dense: true,
                   leading: const Icon(Icons.account_tree_outlined),
@@ -184,13 +184,12 @@ final class _DemoCapabilitiesPageState extends State<DemoCapabilitiesPage> {
                 '打开 Privacy Gate',
                 '显式运行依赖基础任务、等待隐私同意的初始化节点。',
                 () => _run('Initialization privacy gate', () async {
-                  await CCRouter.runInitialization(
-                    gate: CCInitializationGate.privacyGranted,
+                  await CCRouter.runInitTasks(
+                    gate: CCInitTaskGate.privacyGranted,
                   );
-                  return CCRouter.initializationTasks
+                  return CCRouter.initTasks
                       .firstWhere(
-                        (task) =>
-                            task.id == DemoInitializationTaskIds.analytics,
+                        (task) => task.id == DemoInitTaskIds.analytics,
                       )
                       .state
                       .name;
@@ -201,13 +200,11 @@ final class _DemoCapabilitiesPageState extends State<DemoCapabilitiesPage> {
                 '打开 InitTask Timeout Gate',
                 '自定义 Gate 只启动对应可选任务，超时后记录失败但不阻断其它节点。',
                 () => _run('Initialization timeout gate', () async {
-                  await CCRouter.runInitialization(
+                  await CCRouter.runInitTasks(
                     gate: DemoInitializationGates.timeoutLab,
                   );
-                  return CCRouter.initializationTasks
-                      .firstWhere(
-                        (task) => task.id == DemoInitializationTaskIds.timeout,
-                      )
+                  return CCRouter.initTasks
+                      .firstWhere((task) => task.id == DemoInitTaskIds.timeout)
                       .state
                       .name;
                 }),

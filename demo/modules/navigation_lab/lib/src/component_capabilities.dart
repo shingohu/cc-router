@@ -1,7 +1,7 @@
 import 'package:ccrouter/ccrouter.dart';
 
 /// Stable IDs for the Demo component's initialization DAG.
-abstract final class DemoInitializationTaskIds {
+abstract final class DemoInitTaskIds {
   /// Foundation work that is available before privacy consent.
   static const foundation = 'demo.startup.foundation';
 
@@ -11,7 +11,7 @@ abstract final class DemoInitializationTaskIds {
   /// Task blocked when [optionalSdk] fails.
   static const optionalDependent = 'demo.startup.optional-dependent';
 
-  /// Analytics setup opened by [CCInitializationGate.privacyGranted].
+  /// Analytics setup opened by [CCInitTaskGate.privacyGranted].
   static const analytics = 'demo.startup.analytics';
 
   /// First task in the generated parallel dependency layer.
@@ -27,18 +27,18 @@ abstract final class DemoInitializationTaskIds {
 /// Stable custom Gates opened explicitly by the Demo Host UI.
 abstract final class DemoInitializationGates {
   /// Opens the optional timeout task without changing privacy state.
-  static const timeoutLab = CCInitializationGate('demo.timeoutLab');
+  static const timeoutLab = CCInitTaskGate('demo.timeoutLab');
 }
 
 /// Typed dependency target for the Demo foundation task.
 const demoFoundationInitTask = CCInitTaskContract(
-  id: DemoInitializationTaskIds.foundation,
+  id: DemoInitTaskIds.foundation,
   description: '准备所有 Demo 初始化任务共享的基础状态。',
 );
 
 /// Typed dependency target for the deliberately failing optional SDK task.
 const demoOptionalSdkInitTask = CCInitTaskContract(
-  id: DemoInitializationTaskIds.optionalSdk,
+  id: DemoInitTaskIds.optionalSdk,
   description: '模拟可选 SDK 初始化失败及依赖节点跳过。',
 );
 

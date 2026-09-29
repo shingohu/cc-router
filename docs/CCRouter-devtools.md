@@ -1,8 +1,8 @@
 # CCRouter DevTools 只读可视化
 
 > 状态：1.x 已完成可嵌入只读面板、纯 Dart Snapshot/Trace Edge 协议和官方 DevTools
-> Extension。Catalog/Runtime 联动、源码定位、组件依赖聚焦和能力调用链均已落地；后续只做
-> 诊断字段扩展和性能维护，不增加 Runtime 控制操作。
+> Extension。Catalog/Runtime 联动、源码定位、组件依赖聚焦和能力调用链均已落地；生成式
+> Host 自动装配尚未实现。后续可收敛接入样板、诊断字段和性能，但不增加 Runtime 控制操作。
 
 ## 定位
 
@@ -16,6 +16,11 @@
 嵌入式面板通过适配器把 Runtime 快照转换为协议对象，避免官方 Extension 复制 Runtime 数据模型。
 
 ## 接入
+
+当前仍需要 Host 显式注册 VM Service Extension，并在默认 Runtime 结束时清理。生成式 Host
+自动装配已经完成设计但尚未实现；不能把计划中的 `hostAssembly` Integration 当作现有 API。
+完整计划见
+[`CCRouter-devtools-host-integration-plan.md`](CCRouter-devtools-host-integration-plan.md)。
 
 仅在开发或内部诊断构建中加入依赖：
 

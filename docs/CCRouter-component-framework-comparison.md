@@ -101,7 +101,7 @@ void registerOrderCapabilities(CCRegistry registry) {
   registry.registerService(...);
   registry.registerCommand(...);
   registry.registerEventSubscriber(...);
-  registry.registerInitializationTask(...);
+  registry.registerInitTask(...);
 }
 ```
 

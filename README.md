@@ -288,7 +288,7 @@ CCRouter.initialize(
   components: ccrouterGeneratedComponentManifests,
   globalInterceptors: const [...],
 );
-await CCRouter.runInitialization();
+await CCRouter.runInitTasks();
 runApp(CCGoRouterApp(catalog: ccrouterGeneratedRouteCatalog));
 ```
 
@@ -299,6 +299,13 @@ await CCRouter.shutdown();
 ```
 
 不要在页面 Pop、组件页面销毁、App 后台或 Session 关闭时 shutdown。Runtime 会先销毁它拥有的 Adapter，再释放 managed Backend 创建的 GoRouter；attach 模式不会销毁应用自己创建的 GoRouter。销毁、动态 Host 注销或 Host 初始化失败时采用 best-effort 结构化清理：某个 listener remover、PopGuard 解绑或子 Adapter 抛错不会跳过其它资源，调用方最终收到首个失败。
+
+这里的命名按所有权层级区分：`CCRouter.initialize()` 创建并原子初始化进程默认 Runtime，
+`CCRouter.shutdown()` 由应用 Composition Root 停止该 Runtime；它们不是某个 Widget 或对象实例
+的 `init/dispose`。Runtime、Adapter、Scope、Service 等具体实例仍由各自 Owner 调用内部
+`dispose`。`CCRouter.runInitTasks(gate: ...)` 打开一个 `CCInitTaskGate` 并等待零到多个新就绪
+任务，它不会再次初始化或替换 Runtime，也不会重试已完成或失败的任务。所有 `shutdown()`
+调用都必须被 `await`，完成后才允许重新调用 `initialize()`。
 
 已有 GoRouter 工程使用 `CCGoRouterBackend.attach`，把生成 bindings、Host 和已经安装到 Router 的 Observer 显式交给 CCRouter。需要自定义 Backend 或完整 Widget 树时，仍可使用 `CCRouterApp.managed`。完整 Shell/Outlet 示例见 [`demo/lib/demo_router_backend.dart`](demo/lib/demo_router_backend.dart)。
 
@@ -860,8 +867,8 @@ Future<void> initializeFoundation() async {}
 @CCInitTask(
   id: 'analytics.initialize',
   dependsOn: [foundationInitTask],
-  gate: CCInitializationGate.privacyGranted,
-  failurePolicy: CCInitializationFailurePolicy.optional,
+  gate: CCInitTaskGate.privacyGranted,
+  failurePolicy: CCInitTaskFailurePolicy.optional,
   timeout: Duration(seconds: 3),
 )
 Future<void> initializeAnalytics(CCInvocationContext context) =>
@@ -873,7 +880,7 @@ Future<void> initializeAnalytics(CCInvocationContext context) =>
 放在公共 contracts Package，消费组件必须 required-depend on Owner。独立内部任务可以只填写
 `id`，`contract` 与 `id` 不能同时设置。
 
-Host 在 `CCRouter.initialize` 后调用 `CCRouter.runInitialization()`。Runtime 仍保留重复 ID、缺失依赖与循环依赖的最终校验。并发打开 Gate 共享 single-flight drain；执行期间新打开 Gate 时，Runtime 会继续运行新就绪的 DAG 层直至稳定，不会遗留永久 `pending` 的任务。必需任务失败会阻止初始化完成；可选任务失败可诊断但不阻断无依赖分支。单个 Service 的异步准备应放在 `CCServiceProvider.initializer`，不要创建 InitTask 预热所有 Service。
+Host 在 `CCRouter.initialize` 后调用 `CCRouter.runInitTasks()`。Runtime 仍保留重复 ID、缺失依赖与循环依赖的最终校验。并发打开 Gate 共享 single-flight drain；执行期间新打开 Gate 时，Runtime 会继续运行新就绪的 DAG 层直至稳定，不会遗留永久 `pending` 的任务。必需任务失败会阻止初始化完成；可选任务失败可诊断但不阻断无依赖分支。单个 Service 的异步准备应放在 `CCServiceProvider.initializer`，不要创建 InitTask 预热所有 Service。
 
 ## 生成器
 

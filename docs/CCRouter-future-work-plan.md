@@ -104,7 +104,7 @@
 ### 4.2 初始化任务生成（已完成）
 
 - [x] 设计显式 `CCInitTaskContract`、`@CCInitTask`、类型化依赖和现有
-  `CCInitializationGate` 复用模型；不生成业务调用 Client。
+  `CCInitTaskGate` 复用模型；不生成业务调用 Client。
 - [x] 生成 Handler registration bridge、依赖索引、Package/Host metadata 和可读 DAG 文档。
 - [x] 实现 Task/Owner/Gate/Handler/Contract exposure/依赖图校验，并保留 Runtime 最终校验。
 
@@ -142,6 +142,10 @@
   [IDE / Analysis Server 集成](CCRouter-ide-analysis-server.md)。
 - [x] Demo Analyzer bootstrap 已切换为固定 Git commit，保留独立 Analyzer 依赖图；增加
   loader `analyze/compile` smoke、兼容性边界测试和发布后的 Hosted fallback manifest。
+- [ ] 为 Analyzer Plugin 提供显式 `install/status/doctor/upgrade/uninstall` CLI 自动装配；保持
+  Host-only、幂等、可回滚和 Hosted 优先，不挂入 `generate`、Pub Hook 或组件脚手架。当前固定
+  Git ref 无生产代码更新理由，不追随本地 HEAD。详见
+  [Analyzer Plugin CLI 自动装配计划](CCRouter-analyzer-cli-plan.md)。
 - [x] 建立纯 Dart、版本化的 Catalog/Runtime Snapshot 与 Trace Edge 协议；静态记录携带
   可移植源码位置，Runtime 适配器只复制稳定 ID、Owner、Host/Outlet、状态和耗时。官方
   Extension 已直接消费该协议，不读取 Runtime 内部对象。
@@ -149,6 +153,11 @@
   `ccrouter_devtools` Widget 面板只读，通过 `ext.ccrouter.snapshot` 消费版本化 Envelope。
   已补齐高级组件筛选、Route source URI 展示/复制和单次 Service/Command/Event/InitTask
   调用链视图；嵌入式面板可由 Host 提供 `onOpenSource`，官方 Extension 不直接绑定本地 IDE。
+- [ ] 完成 DevTools Host 自动装配：从 Host Catalog 生成静态快照，由 Host Assembly 携带可选
+  Tool Integration，Runtime 初始化后注册、shutdown 时清理；Debug 默认开启、Profile 可显式
+  开启、Release 强制关闭。不得让 `ccrouter` 反向依赖 `ccrouter_devtools`，也不得由业务组件或
+  任意 Navigation Host dispose 管理 isolate endpoint。详见
+  [DevTools Host 自动装配计划](CCRouter-devtools-host-integration-plan.md)。
 - [x] Pub Hook 已支持成功的显式 `flutter pub` 后置生成，以及 `flutter run/build` fail-closed
   前置生成；复用 fingerprint fast-path，覆盖 POSIX/Windows wrapper 和全局参数前缀。Flutter
   Tool 内部隐式 `pub get` 与直接 `dart pub` 仍明确不在 Hook 边界。

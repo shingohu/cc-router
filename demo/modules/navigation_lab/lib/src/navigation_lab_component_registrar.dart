@@ -85,7 +85,7 @@ Future<void> initializeDemoFoundation() async {
 /// Simulates an optional SDK failure without blocking independent tasks.
 @CCInitTask(
   contract: demoOptionalSdkInitTask,
-  failurePolicy: CCInitializationFailurePolicy.optional,
+  failurePolicy: CCInitTaskFailurePolicy.optional,
 )
 void initializeDemoOptionalSdk() {
   throw StateError('simulated optional SDK failure');
@@ -93,7 +93,7 @@ void initializeDemoOptionalSdk() {
 
 /// Demonstrates that a dependent task is skipped after optional failure.
 @CCInitTask(
-  id: DemoInitializationTaskIds.optionalDependent,
+  id: DemoInitTaskIds.optionalDependent,
   dependsOn: [demoOptionalSdkInitTask],
 )
 void initializeDemoOptionalDependent() {
@@ -102,9 +102,9 @@ void initializeDemoOptionalDependent() {
 
 /// Initializes Demo analytics only after foundation and privacy consent.
 @CCInitTask(
-  id: DemoInitializationTaskIds.analytics,
+  id: DemoInitTaskIds.analytics,
   dependsOn: [demoFoundationInitTask],
-  gate: CCInitializationGate.privacyGranted,
+  gate: CCInitTaskGate.privacyGranted,
 )
 void initializeDemoAnalytics() {
   demoNavigationLabStore.record('InitTask · privacy-gated analytics ready');
@@ -112,7 +112,7 @@ void initializeDemoAnalytics() {
 
 /// Runs as one member of a parallel dependency layer after foundation.
 @CCInitTask(
-  id: DemoInitializationTaskIds.parallelPrimary,
+  id: DemoInitTaskIds.parallelPrimary,
   dependsOn: [demoFoundationInitTask],
 )
 Future<void> initializeDemoParallelPrimary() async {
@@ -122,7 +122,7 @@ Future<void> initializeDemoParallelPrimary() async {
 
 /// Runs independently beside the primary task after foundation.
 @CCInitTask(
-  id: DemoInitializationTaskIds.parallelSecondary,
+  id: DemoInitTaskIds.parallelSecondary,
   dependsOn: [demoFoundationInitTask],
 )
 Future<void> initializeDemoParallelSecondary() async {
@@ -132,9 +132,9 @@ Future<void> initializeDemoParallelSecondary() async {
 
 /// Waits for cooperative cancellation to demonstrate task timeout semantics.
 @CCInitTask(
-  id: DemoInitializationTaskIds.timeout,
+  id: DemoInitTaskIds.timeout,
   gate: DemoInitializationGates.timeoutLab,
-  failurePolicy: CCInitializationFailurePolicy.optional,
+  failurePolicy: CCInitTaskFailurePolicy.optional,
   timeout: Duration(milliseconds: 60),
 )
 Future<void> initializeDemoTimeout(CCInvocationContext context) async {

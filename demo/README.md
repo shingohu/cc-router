@@ -17,7 +17,7 @@ Flutter SDK 选择：
 ```
 
 工程入口为 `lib/main.dart`。示例在 `runApp` 前显式调用
-`CCRouter.initialize(components: ...)` 和 `CCRouter.runInitialization()`，再通过 `CCRouterApp.managed` 和
+`CCRouter.initialize(components: ...)` 和 `CCRouter.runInitTasks()`，再通过 `CCRouterApp.managed` 和
 `CCGoRouterBackend.managed` 自动创建 Host、GoRouter、Observer 和 Adapter；业务代码不接触
 导航 Backend。
 

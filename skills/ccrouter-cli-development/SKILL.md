@@ -53,7 +53,7 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook run --projec
 ```
 
 The exact command help is authoritative. Do not add `watch`, `promote`,
-`migrate`, or other flags because they appear in a design document.
+`migrate`, `analyzer`, or other flags because they appear in a design document.
 `--verbosity=error` belongs to `dart run`, not to CCRouter. Keep it before the
 Package executable so Dart/Pub cold-start resolution noise is suppressed while
 CCRouter progress, diagnostics, and failures remain visible.
@@ -125,6 +125,17 @@ Flutter command; projects without a resolved CCRouter graph are skipped.
 These workflows are AI-assisted procedures, not commands. They must produce a
 plan and a dry-run summary before any write. Ask for explicit confirmation
 before changing Package dependencies, public exposure, or existing declarations.
+
+### Analyzer Plugin Bootstrap
+
+The planned `ccrouter analyzer install/status/doctor/upgrade/uninstall` command
+group is not implemented. Follow
+[`docs/CCRouter-analyzer-cli-plan.md`](../../docs/CCRouter-analyzer-cli-plan.md)
+for its approved boundary, but use the current manual Host bootstrap procedure in
+[`ide-analysis-server.md`](../ccrouter-integration-development/references/ide-analysis-server.md)
+until command help exposes it. Do not attach Analyzer setup to `generate`, Pub
+Hook, or component scaffolding. Do not change a pinned Git ref merely to follow
+local HEAD, use a branch name, or commit a local absolute path.
 
 ### Contract Scaffold or Promotion
 

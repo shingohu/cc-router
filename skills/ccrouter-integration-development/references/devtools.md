@@ -37,3 +37,10 @@ Widget、Navigator 或业务返回对象。需要采集应用日志时使用 `CC
 只读页。它可以显示源码位置和关系边，但不能直接打开 IDE；应用需要在 Host 侧提供编辑器映射。
 Demo 的 `demoDevToolsCatalog` 覆盖 Route、Service、Command、Event、InitTask 和跨组件依赖，
 可通过“诊断”页面或 DevTools Extension 验证静态/动态关联。
+
+Generated Host auto-registration is designed but not implemented. Until
+`CCRouter.initialize` and actual generated Host output expose the integration,
+the Host must keep registering `CCDevToolsServiceExtension` explicitly and clear
+it with the default Runtime lifecycle. Do not invent an `enableDevTools` flag or
+claim that `CCGeneratedHostAssembly` already owns this lifecycle. See
+[`docs/CCRouter-devtools-host-integration-plan.md`](../../../docs/CCRouter-devtools-host-integration-plan.md).

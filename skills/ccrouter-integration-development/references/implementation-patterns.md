@@ -421,10 +421,10 @@ prefix and remain unchanged after ordinary refactors.
 Declare task dependency targets as top-level constants and let generation install
 the Handler into the component Registrar:
 
-Use the framework-provided `CCInitializationGate.privacyGranted` for work that
+Use the framework-provided `CCInitTaskGate.privacyGranted` for work that
 must wait for explicit privacy consent. The Host owns consent state and opens
 the gate; CCRouter does not inspect or persist that state. Define a custom
-`CCInitializationGate` only for a different product condition.
+`CCInitTaskGate` only for a different product condition.
 
 ```dart
 const configLoadInitTask = CCInitTaskContract(
@@ -437,18 +437,25 @@ Future<void> loadConfiguration() async {}
 
 @CCInitTask(
   id: 'analytics.initialize',
-  gate: CCInitializationGate.privacyGranted,
+  gate: CCInitTaskGate.privacyGranted,
   dependsOn: [configLoadInitTask],
-  failurePolicy: CCInitializationFailurePolicy.optional,
+  failurePolicy: CCInitTaskFailurePolicy.optional,
   timeout: Duration(seconds: 3),
 )
 Future<void> initializeAnalytics(CCInvocationContext context) =>
     analytics.initialize(context.cancellation);
 
-await CCRouter.runInitialization(
-  gate: CCInitializationGate.privacyGranted,
+await CCRouter.runInitTasks(
+  gate: CCInitTaskGate.privacyGranted,
 );
 ```
+
+`CCRouter.initialize` creates the process-default Runtime and pairs with the
+Composition Root's awaited `CCRouter.shutdown`. Do not call `shutdown` from a
+Widget, Page, component, Session, or individual navigation Host disposal.
+`runInitTasks` opens a `CCInitTaskGate` and drains zero or more newly ready
+tasks; it does not initialize or replace the Runtime a second time, select one
+specific task, or retry a task that already completed or failed.
 
 Overlapping Gate calls share one single-flight DAG drain. If a second Gate opens
 while a layer is running, Runtime performs another readiness pass before the
@@ -461,7 +468,7 @@ Dart contracts Package and names its `componentId`; the dependent component
 must require the Owner. The generator installs registration bridges, validates
 the complete DAG, emits source locations and an `Initialization DAG` catalog,
 and generates no business task Client. Keep handwritten
-`registerInitializationTask` calls for unannotated migration or low-level Host
+`registerInitTask` calls for unannotated migration or low-level Host
 extensions only.
 
 ## Generation

@@ -26,7 +26,7 @@
 | # | 约定 | 状态 | 当前证据与缺口 |
 | --- | --- | --- | --- |
 | 1 | 智能 | 基本满足 | 顶层 Component、Route/Codec、简单 Service Provider、Command/Event/InitTask Handler、私有 Registrar/Manifest、Host Catalog/文档均由单一 `ccrouter generate` 编排生成；Runtime 自动校验组件与最终注册边界，`--check` 提供不依赖 Git 的只读陈旧门禁。复杂 Service 与未注解迁移能力使用显式 Contribution，没有用反射或函数体扫描冒充自动化。 |
-| 2 | 简单易用 | 基本满足 | 宿主使用 `CCRouter.initialize`、按需 `runInitialization`、Managed Backend/App 即可启动；业务统一通过 `CCRouter.navigator/service/command/event`。Route Service 仅在需要精确页面 Scope 时增加 `BuildContext`，高级 Shell、Multi Host、Trace 和 Gate 保持渐进可选。 |
+| 2 | 简单易用 | 基本满足 | 宿主使用 `CCRouter.initialize`、按需 `runInitTasks`、Managed Backend/App 即可启动；业务统一通过 `CCRouter.navigator/service/command/event`。Route Service 仅在需要精确页面 Scope 时增加 `BuildContext`，高级 Shell、Multi Host、Trace 和 Gate 保持渐进可选。 |
 | 3 | 功能强大 | 基本满足 | 已覆盖类型安全导航、Deep Link、拦截、生命周期、混合路由、诊断、多种 Presentation、App/Session/Route Service、一次性 Command、事实 Event 和启动 DAG，没有万能 Map 或混合消息接口。Action Pipeline、可靠持久消息和动态组件明确不属于 1.x。 |
 | 4 | 可扩展性 | 基本满足 | Core 使用中立 Route Definition 与强类型能力契约；Catalog、Assembler、Adapter、Service Provider、Handler 和 Gate 均通过明确边界扩展。新导航后端复用同一 Catalog，跨组件 Service 通过注解稳定 ID 和自动绑定渐进提升，不访问 Runtime 私有表。 |
 | 5 | 可测试 | 基本满足 | Pure Dart Runtime 覆盖 Scope、readiness、Command/Event、InitTask DAG、取消/超时/失败；Flutter Adapter、生成器和 Demo 均有回归。`ccrouter_test` 提供 Test Host/Service Override，并具备 Generator、Route Runtime、Service 和并发回收非门禁基准。长期平台内存趋势仍需持续积累。 |
@@ -268,7 +268,7 @@ Contract Runtime Registry，而不是改变零订阅者语义。
 - 读取和长期能力使用 Service；唯一执行者的一次性操作使用 Command；已发生事实通知使用 Event；
   Runtime 一次性启动依赖使用 InitTask，不以万能消息类型互相替代。
 - `CCRouter.initialize()` 保持同步原子装配；异步启动工作必须通过显式
-  `runInitialization(gate: ...)` 等待，Service readiness 不隐藏在全局启动中。
+  `runInitTasks(gate: ...)` 等待，Service readiness 不隐藏在全局启动中。
 - 组件集合在初始化时一次确定。1.x 不提供不完整的动态 activate/deactivate，也不允许业务销毁
   Runtime、Scope、Adapter 或 Service 实例。
 - 简单 Service 使用生成注册，跨组件 Service 使用显式消费声明生成方法 Proxy；复杂 Service 和
