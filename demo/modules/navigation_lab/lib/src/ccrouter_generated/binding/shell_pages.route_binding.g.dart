@@ -14,12 +14,12 @@ import 'package:demo_navigation_lab/src/ccrouter_generated/route/shell_pages.rou
 
 /// Package-internal page factory bridge used by generated Flutter catalogs.
 route_page.DemoShellFeedPage ccrouterBuildDemoShellFeedPageRoute(
-  CCEncodedRouteArguments _,
+  CCRouteCodecValues _,
 ) => route_page.DemoShellFeedPage();
 
 /// Package-internal page factory bridge used by generated Flutter catalogs.
 route_page.DemoShellDetailPage ccrouterBuildDemoShellDetailPageRoute(
-  CCEncodedRouteArguments arguments,
+  CCRouteCodecValues arguments,
 ) {
   final decoded = route_contract
       .ccrouterDescribeDemoShellDetailPageRoute()
@@ -30,17 +30,17 @@ route_page.DemoShellDetailPage ccrouterBuildDemoShellDetailPageRoute(
 
 /// Package-internal page factory bridge used by generated Flutter catalogs.
 route_page.DemoShellSettingsPage ccrouterBuildDemoShellSettingsPageRoute(
-  CCEncodedRouteArguments _,
+  CCRouteCodecValues _,
 ) => route_page.DemoShellSettingsPage();
 
 /// Package-internal page factory bridge used by generated Flutter catalogs.
 route_page.DemoWorkspaceHomePage ccrouterBuildDemoWorkspaceHomePageRoute(
-  CCEncodedRouteArguments _,
+  CCRouteCodecValues _,
 ) => route_page.DemoWorkspaceHomePage();
 
 /// Package-internal page factory bridge used by generated Flutter catalogs.
 route_page.DemoWorkspaceDetailPage ccrouterBuildDemoWorkspaceDetailPageRoute(
-  CCEncodedRouteArguments arguments,
+  CCRouteCodecValues arguments,
 ) {
   final decoded = route_contract
       .ccrouterDescribeDemoWorkspaceDetailPageRoute()
@@ -51,17 +51,17 @@ route_page.DemoWorkspaceDetailPage ccrouterBuildDemoWorkspaceDetailPageRoute(
 
 /// Package-internal page factory bridge used by generated Flutter catalogs.
 route_page.DemoWorkspaceActivityPage
-ccrouterBuildDemoWorkspaceActivityPageRoute(CCEncodedRouteArguments _) =>
+ccrouterBuildDemoWorkspaceActivityPageRoute(CCRouteCodecValues _) =>
     route_page.DemoWorkspaceActivityPage();
 
 /// Package-internal page factory bridge used by generated Flutter catalogs.
 route_page.DemoWorkspaceProfilePage ccrouterBuildDemoWorkspaceProfilePageRoute(
-  CCEncodedRouteArguments _,
+  CCRouteCodecValues _,
 ) => route_page.DemoWorkspaceProfilePage();
 
 /// Package-internal page factory bridge used by generated Flutter catalogs.
 route_page.DemoExtraPage ccrouterBuildDemoExtraPageRoute(
-  CCEncodedRouteArguments arguments,
+  CCRouteCodecValues arguments,
 ) {
   final decoded = route_contract
       .ccrouterDescribeDemoExtraPageRoute()

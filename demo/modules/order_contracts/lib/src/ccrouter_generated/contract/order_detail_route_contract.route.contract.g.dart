@@ -94,7 +94,7 @@ final class _OrderDetailRouteCodec
 
   /// Rejects missing, repeated or malformed values before creating arguments.
   @override
-  OrderDetailRouteArguments decode(CCEncodedRouteArguments input) {
+  OrderDetailRouteArguments decode(CCRouteCodecValues input) {
     final _raw_orderId = input.path["orderId"];
     final int _value_orderId = _raw_orderId == null
         ? throw CCRouteParameterError(
@@ -116,8 +116,8 @@ final class _OrderDetailRouteCodec
 
   /// Encodes unescaped scalar values; Runtime owns URI escaping exactly once.
   @override
-  CCEncodedRouteArguments encode(OrderDetailRouteArguments arguments) {
-    return CCEncodedRouteArguments(
+  CCRouteCodecValues encode(OrderDetailRouteArguments arguments) {
+    return CCRouteCodecValues(
       path: {"orderId": arguments.orderId.toString()},
       query: {
         "tab": [arguments.tab],

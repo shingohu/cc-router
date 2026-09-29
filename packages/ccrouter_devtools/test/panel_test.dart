@@ -8,7 +8,7 @@ void main() {
     tester,
   ) async {
     final provider = CCStaticDevToolsSnapshotProvider(
-      CCDevToolsSnapshot.empty(),
+      CCRouterDevToolsSnapshot.empty(),
     );
     await tester.pumpWidget(
       MaterialApp(
@@ -29,7 +29,7 @@ void main() {
     tester,
   ) async {
     final provider = CCStaticDevToolsSnapshotProvider(
-      CCDevToolsSnapshot(
+      CCRouterDevToolsSnapshot(
         capturedAt: DateTime.utc(2026, 1, 1),
         runtimeState: CCDevToolsRuntimeState.initialized,
         catalog: CCDevToolsStaticCatalogSnapshot(
@@ -91,14 +91,14 @@ void main() {
 
   testWidgets('panel refreshes from a static test snapshot', (tester) async {
     final provider = CCStaticDevToolsSnapshotProvider(
-      CCDevToolsSnapshot.empty(),
+      CCRouterDevToolsSnapshot.empty(),
     );
     await tester.pumpWidget(
       MaterialApp(
         home: SizedBox.expand(child: CCRouterDevToolsPanel(provider: provider)),
       ),
     );
-    provider.value = CCDevToolsSnapshot(
+    provider.value = CCRouterDevToolsSnapshot(
       capturedAt: DateTime.utc(2026, 1, 1),
       runtimeState: CCDevToolsRuntimeState.initialized,
     );

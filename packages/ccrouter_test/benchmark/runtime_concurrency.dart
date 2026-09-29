@@ -29,12 +29,12 @@ final class _StressCodec implements CCRouteCodec<_StressArguments> {
   const _StressCodec();
 
   @override
-  _StressArguments decode(CCEncodedRouteArguments input) =>
+  _StressArguments decode(CCRouteCodecValues input) =>
       _StressArguments(input.path['id']!);
 
   @override
-  CCEncodedRouteArguments encode(_StressArguments arguments) =>
-      CCEncodedRouteArguments(path: {'id': arguments.id});
+  CCRouteCodecValues encode(_StressArguments arguments) =>
+      CCRouteCodecValues(path: {'id': arguments.id});
 }
 
 final class _StressRegistrar implements CCComponentRegistrar {

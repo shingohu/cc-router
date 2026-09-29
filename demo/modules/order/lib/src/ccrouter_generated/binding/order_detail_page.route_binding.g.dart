@@ -25,7 +25,7 @@ CCRouteDefinition<dynamic, dynamic> ccrouterDescribeOrderDetailPageRoute() =>
 
 /// Package-internal page factory bound to the public route contract.
 route_page.OrderDetailPage ccrouterBuildOrderDetailPageRoute(
-  CCEncodedRouteArguments arguments,
+  CCRouteCodecValues arguments,
 ) {
   final decoded = route_contract_0.OrderDetailRoute.definition.codec.decode(
     arguments,

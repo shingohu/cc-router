@@ -42,7 +42,7 @@ final class _MultiHostDemoBackend implements CCRouterAppBackend {
     return _MultiHostDemoBackend._(
       primary: primary,
       secondary: secondary,
-      registry: CCNavigationHostRegistry(
+      registry: CCMultiHostNavigationAdapter(
         defaultHostId: primary.host.id,
         adapters: {
           primary.host.id: primary.adapter,
@@ -54,7 +54,7 @@ final class _MultiHostDemoBackend implements CCRouterAppBackend {
 
   final CCGoRouterBackend primary;
   final CCGoRouterBackend secondary;
-  final CCNavigationHostRegistry registry;
+  final CCMultiHostNavigationAdapter registry;
 
   @override
   CCFlutterRouteCatalog get routeCatalog => ccrouterGeneratedRouteCatalog;
@@ -221,7 +221,7 @@ final class _AdaptiveHostView extends StatefulWidget {
   const _AdaptiveHostView({required this.host, required this.registry});
 
   final CCNavigationHost host;
-  final CCNavigationHostRegistry registry;
+  final CCMultiHostNavigationAdapter registry;
 
   @override
   State<_AdaptiveHostView> createState() => _AdaptiveHostViewState();
@@ -238,7 +238,7 @@ final class _AdaptiveHostViewState extends State<_AdaptiveHostView> {
   int _selectedItem = 1;
   String? _lastMetricsSignature;
   CCHostLayoutMetrics? _pendingMetrics;
-  CCAdaptiveHostLayout? _layout;
+  CCAdaptiveHostLayoutSnapshot? _layout;
   bool _layoutUpdateScheduled = false;
 
   void _scheduleLayoutUpdate(CCHostLayoutMetrics metrics) {
@@ -260,7 +260,7 @@ final class _AdaptiveHostViewState extends State<_AdaptiveHostView> {
       if (pending == null) return;
       final layout = widget.registry.updateHostLayout(
         pending,
-        presentationPolicy: CCAdaptivePresentationPolicy(
+        layoutPolicy: CCAdaptiveLayoutPolicy(
           compact: pending.hasSeparatingFeature
               ? CCAdaptiveLayoutKind.splitPane
               : CCAdaptiveLayoutKind.singlePane,
@@ -315,7 +315,7 @@ final class _AdaptiveHostViewState extends State<_AdaptiveHostView> {
       _scheduleLayoutUpdate(metrics);
       final split =
           _layout?.layout == CCAdaptiveLayoutKind.splitPane ||
-          metrics.sizeClass != CCWindowSizeClass.compact ||
+          metrics.sizeClass != CCHostSizeClass.compact ||
           metrics.hasSeparatingFeature;
       final orientation = width >= height ? '横向' : '纵向';
       final activeOutlets = split

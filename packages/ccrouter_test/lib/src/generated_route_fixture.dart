@@ -33,8 +33,9 @@ final class GeneratedRouteProceed implements CCNavigationInterceptor {
 
   /// Allows every fixture request.
   @override
-  CCNavigationInterception intercept(CCNavigationInterceptorContext context) =>
-      const CCNavigationProceed();
+  CCNavigationInterceptorDecision intercept(
+    CCNavigationInterceptorContext context,
+  ) => const CCNavigationProceed();
 }
 
 /// Destination covering aliases, scalar codecs, defaults, and Extra values.

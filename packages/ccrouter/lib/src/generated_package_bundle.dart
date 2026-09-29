@@ -7,7 +7,7 @@ import 'route_catalog.dart';
 ///
 /// Host tooling may use these values for diagnostics. Feature code should not
 /// catch them because generated package assembly is a Host configuration step.
-enum CCGeneratedPackageBundleErrorType {
+enum CCGeneratedPackageBundleErrorCode {
   /// One Package ID resolved to incompatible versions or generated contents.
   packageConflict,
 
@@ -41,7 +41,7 @@ final class CCGeneratedPackageBundleError implements Exception {
   });
 
   /// Stable category suitable for diagnostics and tests.
-  final CCGeneratedPackageBundleErrorType type;
+  final CCGeneratedPackageBundleErrorCode type;
 
   /// Explanation containing the conflicting Package or component identities.
   final String message;
@@ -121,12 +121,12 @@ final class CCGeneratedPackageBundle {
   /// Contract descriptors and consumer requirements generated for this Package.
   final CCContractBundleDescriptor? contractBundle;
 
-  /// Resolves root Package bundles into one deterministic Host assembly.
+  /// Resolves root Package bundles for [CCGeneratedHostAssembly].
   ///
   /// Dependencies precede dependants, Diamond dependencies are deduplicated,
   /// sibling Packages are ordered by Package name, and component manifests are
   /// ordered by their own required and present optional dependency graph.
-  static CCGeneratedHostAssembly resolve(
+  static CCGeneratedHostAssembly _resolve(
     Iterable<CCGeneratedPackageBundle> roots,
   ) {
     final resolvedByName = <String, CCGeneratedPackageBundle>{};
@@ -139,7 +139,7 @@ final class CCGeneratedPackageBundle {
         if (existing.packageVersion != bundle.packageVersion ||
             existing.contentFingerprint != bundle.contentFingerprint) {
           throw CCGeneratedPackageBundleError(
-            type: CCGeneratedPackageBundleErrorType.packageConflict,
+            type: CCGeneratedPackageBundleErrorCode.packageConflict,
             message:
                 'Package "${bundle.packageName}" was resolved with '
                 'incompatible generated identities '
@@ -151,7 +151,7 @@ final class CCGeneratedPackageBundle {
       }
       if (!visiting.add(bundle.packageName)) {
         throw CCGeneratedPackageBundleError(
-          type: CCGeneratedPackageBundleErrorType.packageDependencyCycle,
+          type: CCGeneratedPackageBundleErrorCode.packageDependencyCycle,
           message:
               'Generated Package dependencies contain a cycle at '
               '"${bundle.packageName}".',
@@ -180,7 +180,7 @@ final class CCGeneratedPackageBundle {
     final contractIssues = CCContractBundleDescriptor.validate(contractBundles);
     if (contractIssues.isNotEmpty) {
       throw CCGeneratedPackageBundleError(
-        type: CCGeneratedPackageBundleErrorType.contractCompatibility,
+        type: CCGeneratedPackageBundleErrorCode.contractCompatibility,
         contractIssue: contractIssues.first,
         message: contractIssues.map((issue) => issue.toString()).join(' '),
       );
@@ -208,6 +208,15 @@ final class CCGeneratedPackageBundle {
 /// and [routeCatalog] to its chosen navigation backend. The assembly is a
 /// read-only snapshot and owns none of the referenced runtime objects.
 final class CCGeneratedHostAssembly {
+  /// Resolves Package bundles into one deterministic Host assembly.
+  ///
+  /// Dependencies precede dependants, diamond dependencies are deduplicated,
+  /// sibling Packages are ordered by Package name, and component manifests are
+  /// ordered by their required and present optional dependency graph.
+  factory CCGeneratedHostAssembly.fromPackageBundles(
+    Iterable<CCGeneratedPackageBundle> roots,
+  ) => CCGeneratedPackageBundle._resolve(roots);
+
   /// Creates a validated snapshot after Package and component graph resolution.
   const CCGeneratedHostAssembly._({
     required this.packages,
@@ -265,7 +274,7 @@ List<CCComponentManifest> _orderComponentManifests(
       final existing = manifestsById[manifest.id];
       if (existing != null) {
         throw CCGeneratedPackageBundleError(
-          type: CCGeneratedPackageBundleErrorType.duplicateComponent,
+          type: CCGeneratedPackageBundleErrorCode.duplicateComponent,
           message:
               'Component "${manifest.id}" is declared more than once in the '
               'resolved Package graph.',
@@ -279,7 +288,7 @@ List<CCComponentManifest> _orderComponentManifests(
     for (final dependency in manifest.dependencies) {
       if (!manifestsById.containsKey(dependency)) {
         throw CCGeneratedPackageBundleError(
-          type: CCGeneratedPackageBundleErrorType.missingComponentDependency,
+          type: CCGeneratedPackageBundleErrorCode.missingComponentDependency,
           message:
               'Component "${manifest.id}" requires missing component '
               '"$dependency".',
@@ -296,7 +305,7 @@ List<CCComponentManifest> _orderComponentManifests(
     if (visited.contains(id)) return;
     if (!visiting.add(id)) {
       throw CCGeneratedPackageBundleError(
-        type: CCGeneratedPackageBundleErrorType.componentDependencyCycle,
+        type: CCGeneratedPackageBundleErrorCode.componentDependencyCycle,
         message: 'Component dependencies contain a cycle at "$id".',
       );
     }

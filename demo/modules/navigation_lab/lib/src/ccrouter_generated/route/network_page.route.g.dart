@@ -76,14 +76,14 @@ final class _DemoNetworkPageRouteCodec
 
   /// Rejects missing, repeated or malformed values before creating arguments.
   @override
-  _DemoNetworkPageRouteArguments decode(CCEncodedRouteArguments input) {
+  _DemoNetworkPageRouteArguments decode(CCRouteCodecValues input) {
     return _DemoNetworkPageRouteArguments();
   }
 
   /// Encodes unescaped scalar values; Runtime owns URI escaping exactly once.
   @override
-  CCEncodedRouteArguments encode(_DemoNetworkPageRouteArguments arguments) {
-    return CCEncodedRouteArguments(path: {}, query: {}, extra: null);
+  CCRouteCodecValues encode(_DemoNetworkPageRouteArguments arguments) {
+    return CCRouteCodecValues(path: {}, query: {}, extra: null);
   }
 }
 

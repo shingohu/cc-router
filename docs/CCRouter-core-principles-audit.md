@@ -33,7 +33,7 @@
 | 6 | 最小公开 API | 基本满足 | Runtime、Scope、Memory Adapter、Host binding 以及控制 SPI 均从业务 barrel 隐藏；Registrar 只拿到注册面 `CCRegistry`。Query/旧 Action/ActionReport 已删除，通信只保留 Service、Command、Event 与 InitTask；Action Pipeline 等未成熟能力没有提前公开。 |
 | 7 | 编译器校验与类型安全 | 基本满足 | Route 参数、Codec、ID、Pattern、Contract exposure、页面实现、barrel、组件图、Service、Command、Event 与 InitTask 所有权和冲突已有生成期校验；InitTask metadata 会形成完整跨 Package DAG。Runtime 会根据实际安装的 Manifest 再次校验 Generated Service/Command/Event 的组件身份和依赖边，陈旧生成物或手工调用 generated bridge 不能伪造调用归属。 |
 | 8 | 非侵入式 | 满足 | 不要求页面基类或 Mixin，不保存全局 `BuildContext`；可继续使用应用自己的 `MaterialApp.router`/`GoRouter`；attached Adapter 不销毁应用 Router。 |
-| 9 | 可降级回退 | 基本满足 | 无法可靠降级的组合栈事务与精确 Entry 操作已从公开链删除。Service optional lookup 只吞“未注册”，不吞工厂/生命周期错误；Event Subscriber 失败按契约隔离，Command/critical InitTask 失败明确传播，不存在跨语义静默回退。 |
+| 9 | 可降级回退 | 基本满足 | 无法可靠降级的组合栈事务与精确 Entry 操作已从公开链删除。Service optional lookup 只吞“未注册”，不吞工厂/生命周期错误；Event Subscriber 失败按契约隔离；InitTask required/optional 失败以脱敏结果返回，只有 Host 显式选择严格模式才抛错。 |
 | 10 | 明确生命周期 | 基本满足 | Runtime、Session、RouteEntry、Service Scope、Adapter、Backend 和 InitTask Owner/销毁顺序明确；App/Session/Route Service 自动持有与逆序释放，shutdown 取消并等待活动调用和 DAG。Runtime 与 Multi-Host 在 remover、PopGuard、Adapter 或 Scope 清理失败时仍继续释放其余资源并返回首个错误，Adapter attach/Host 注册失败会回滚部分绑定。1.x 组件集合只在初始化确定，不提供不完整的 activate/deactivate。 |
 | 11 | 可观测可诊断可溯源 | 基本满足 | Navigation、Service、Command、Event Subscriber 和 InitTask 均记录稳定 ID、可信 Owner、Trace 父子关系、状态和耗时；历史与 Subscriber error 有界，错误只保留类型和安全摘要。URI、Extra、消息字段、Service 参数/返回值和异常消息不进入 retained diagnostics。 |
 | 12 | 并发安全 | 基本满足 | 导航策略、Service singleton readiness、InitTask Gate drain 都有 single-flight；重叠 Gate 在活动 drain 期间会触发下一轮 DAG readiness 检查，直到没有新就绪任务，避免任务永久停留在 `pending`。Event Subscriber 并发但按稳定 ID 启动；timeout、caller/Scope/shutdown cancellation 和异步依赖环均有测试。共享状态由 Runtime/Scope 单 Owner 修改，回调重入受控。 |
@@ -230,7 +230,7 @@ Listener、Stream、Overlay 或 Controller；Resolver 不拥有 Runtime，也不
   失败只进入有界脱敏诊断，零订阅者成功，发布 deadline/cancellation 仍会终止整体操作；
 - InitTask 在同步 `initialize()` 校验 ID、依赖和 DAG，Host 显式打开 Gate；同层并发、重叠触发
   single-flight；活动 drain 中打开的新 Gate 会继续 drain 到稳定状态。每任务 exactly-once，
-  critical/optional/skip、timeout 和 shutdown 等待已有回归；
+  required/optional/skip、显式严格模式、timeout 和 shutdown 等待已有回归；
 - Demo 通过真实 Runtime 覆盖 Command typed/void/timeout/cancel/error、Event 多订阅/隔离/零订阅/
   timeout、InitTask Gate/失败依赖，以及 Service 全部 Scope、创建策略、readiness、多实现、optional
   lookup 和自动销毁；

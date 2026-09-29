@@ -14,7 +14,7 @@ import 'package:ccrouter_test/src/ccrouter_generated/route/query_codec_fixture.r
 
 /// Package-internal page factory bridge used by generated Flutter catalogs.
 route_page.QueryCodecFixturePage ccrouterBuildQueryCodecFixturePageRoute(
-  CCEncodedRouteArguments arguments,
+  CCRouteCodecValues arguments,
 ) {
   final decoded = route_contract
       .ccrouterDescribeQueryCodecFixturePageRoute()

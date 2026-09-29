@@ -20,7 +20,12 @@ final class CommandRegistrar implements CCComponentRegistrar {
   @override
   void register(CCRegistry registry) {
     registry.registerInitTask(
-      CCInitTaskDefinition(id: 'facade.prepare', run: (_) {}),
+      CCInitTaskDefinition(
+        id: 'facade.prepare',
+        gate: CCInitTaskGate.appStarted,
+        failurePolicy: CCInitTaskFailurePolicy.required,
+        run: (_) {},
+      ),
     );
     registry.registerCommand<ReadOnce, String>((_, _) => value);
     registry.registerCommand<NotifyFacade, void>(
@@ -65,12 +70,12 @@ final class FacadeRouteCodec implements CCRouteCodec<FacadeRouteArgs> {
   const FacadeRouteCodec();
 
   @override
-  FacadeRouteArgs decode(CCEncodedRouteArguments input) =>
+  FacadeRouteArgs decode(CCRouteCodecValues input) =>
       FacadeRouteArgs(input.path['value']!);
 
   @override
-  CCEncodedRouteArguments encode(FacadeRouteArgs arguments) =>
-      CCEncodedRouteArguments(path: {'value': arguments.value});
+  CCRouteCodecValues encode(FacadeRouteArgs arguments) =>
+      CCRouteCodecValues(path: {'value': arguments.value});
 }
 
 final class FacadeRouteIntent implements CCRouteIntent<String> {
@@ -129,7 +134,7 @@ void main() {
     expect(subscriberTrace.context.callerComponentId, 'default');
     expect(subscriberTrace.context.targetComponentId, 'default');
     expect(CCRouter.initTasks.single.state, CCInitTaskState.pending);
-    await CCRouter.runInitTasks();
+    await CCRouter.runInitTasks(gate: CCInitTaskGate.appStarted);
     final initializationTrace = CCRouter.recentTraces.singleWhere(
       (trace) => trace.operation == 'initTask',
     );

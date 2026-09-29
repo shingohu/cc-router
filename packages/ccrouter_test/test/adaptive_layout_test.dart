@@ -19,15 +19,15 @@ void main() {
       height: 900,
     );
 
-    expect(compact.sizeClass, CCWindowSizeClass.compact);
-    expect(medium.sizeClass, CCWindowSizeClass.medium);
-    expect(expanded.sizeClass, CCWindowSizeClass.expanded);
+    expect(compact.sizeClass, CCHostSizeClass.compact);
+    expect(medium.sizeClass, CCHostSizeClass.medium);
+    expect(expanded.sizeClass, CCHostSizeClass.expanded);
     expect(
-      const CCAdaptivePresentationPolicy().select(compact),
+      const CCAdaptiveLayoutPolicy().select(compact),
       CCAdaptiveLayoutKind.singlePane,
     );
     expect(
-      const CCAdaptivePresentationPolicy().select(expanded),
+      const CCAdaptiveLayoutPolicy().select(expanded),
       CCAdaptiveLayoutKind.splitPane,
     );
   });

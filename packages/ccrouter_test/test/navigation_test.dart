@@ -25,47 +25,42 @@ final class RouteArgsCodec implements CCRouteCodec<RouteArgs> {
   const RouteArgsCodec();
 
   @override
-  RouteArgs decode(CCEncodedRouteArguments input) => RouteArgs(
+  RouteArgs decode(CCRouteCodecValues input) => RouteArgs(
     input.path['value']!,
     tab: input.query['tab']?.single,
     payload: input.extra,
   );
 
   @override
-  CCEncodedRouteArguments encode(RouteArgs arguments) =>
-      CCEncodedRouteArguments(
-        path: {'value': arguments.value},
-        query: {
-          if (arguments.tab != null) 'tab': [arguments.tab!],
-        },
-        extra: arguments.payload,
-      );
+  CCRouteCodecValues encode(RouteArgs arguments) => CCRouteCodecValues(
+    path: {'value': arguments.value},
+    query: {
+      if (arguments.tab != null) 'tab': [arguments.tab!],
+    },
+    extra: arguments.payload,
+  );
 }
 
 final class MissingPathCodec implements CCRouteCodec<RouteArgs> {
   const MissingPathCodec();
 
   @override
-  RouteArgs decode(CCEncodedRouteArguments input) =>
-      RouteArgs(input.path['value']!);
+  RouteArgs decode(CCRouteCodecValues input) => RouteArgs(input.path['value']!);
 
   @override
-  CCEncodedRouteArguments encode(RouteArgs arguments) =>
-      CCEncodedRouteArguments();
+  CCRouteCodecValues encode(RouteArgs arguments) => CCRouteCodecValues();
 }
 
 final class UnknownPathCodec implements CCRouteCodec<RouteArgs> {
   const UnknownPathCodec();
 
   @override
-  RouteArgs decode(CCEncodedRouteArguments input) =>
-      RouteArgs(input.path['value']!);
+  RouteArgs decode(CCRouteCodecValues input) => RouteArgs(input.path['value']!);
 
   @override
-  CCEncodedRouteArguments encode(RouteArgs arguments) =>
-      CCEncodedRouteArguments(
-        path: {'value': arguments.value, 'unknown': 'unexpected'},
-      );
+  CCRouteCodecValues encode(RouteArgs arguments) => CCRouteCodecValues(
+    path: {'value': arguments.value, 'unknown': 'unexpected'},
+  );
 }
 
 final class TestIntent<R> implements CCRouteIntent<R> {
@@ -144,7 +139,7 @@ final class BackendEventNavigationAdapter
   bool consumeForeignMaybePop = false;
   String activePopHostId = 'default';
   String activePopOutlet = 'root';
-  List<CCNavigationBackendEntrySnapshot> initialSnapshot = const [];
+  List<CCInitialBackendEntrySnapshot> initialSnapshot = const [];
 
   @override
   CCNavigationPopTarget get activePopTarget => CCNavigationPopTarget(
@@ -162,7 +157,7 @@ final class BackendEventNavigationAdapter
       );
 
   @override
-  List<CCNavigationBackendEntrySnapshot> readInitialBackendSnapshot() =>
+  List<CCInitialBackendEntrySnapshot> readInitialBackendEntries() =>
       initialSnapshot;
 
   void emit(
@@ -346,7 +341,7 @@ final class FailingAttachmentNavigationAdapter
   void pop({Object? result}) {}
 
   @override
-  List<CCNavigationBackendEntrySnapshot> readInitialBackendSnapshot() {
+  List<CCInitialBackendEntrySnapshot> readInitialBackendEntries() {
     throw StateError('initial snapshot failed');
   }
 }
@@ -387,7 +382,7 @@ final class UnidentifiedManagedPopAdapter
   Future<CCPopOutcome> maybePopOutcome({Object? result}) async =>
       const CCPopOutcome(
         handled: true,
-        removedOwner: CCPopRemovedOwner.managed,
+        removedEntryOwner: CCPopRemovedEntryOwner.managed,
         hostId: 'window.main',
         navigatorOutlet: 'root',
       );
@@ -402,7 +397,7 @@ final class UnidentifiedManagedPopAdapter
   @override
   CCPopOutcome popOutcome({Object? result}) => const CCPopOutcome(
     handled: true,
-    removedOwner: CCPopRemovedOwner.managed,
+    removedEntryOwner: CCPopRemovedEntryOwner.managed,
     hostId: 'window.main',
     navigatorOutlet: 'root',
   );
@@ -412,14 +407,14 @@ final class TestNavigationInterceptor implements CCNavigationInterceptor {
   TestNavigationInterceptor(this.id, this.onIntercept, this.calls);
 
   final String id;
-  final FutureOr<CCNavigationInterception> Function(
+  final FutureOr<CCNavigationInterceptorDecision> Function(
     CCNavigationInterceptorContext context,
   )
   onIntercept;
   final List<String> calls;
 
   @override
-  Future<CCNavigationInterception> intercept(
+  Future<CCNavigationInterceptorDecision> intercept(
     CCNavigationInterceptorContext context,
   ) async {
     calls.add('$id:${context.request.routeId}');
@@ -521,14 +516,14 @@ void main() {
     () async {
       final adapter = BackendEventNavigationAdapter()
         ..initialSnapshot = const [
-          CCNavigationBackendEntrySnapshot(
+          CCInitialBackendEntrySnapshot(
             backendEntryId: 'window-a-root',
             owner: CCBackendEntryOwner.foreign,
             hostId: 'window-a',
             navigatorOutlet: 'root',
             location: '/external/customer-42?token=secret-token#private',
           ),
-          CCNavigationBackendEntrySnapshot(
+          CCInitialBackendEntrySnapshot(
             backendEntryId: 'window-b-detail',
             owner: CCBackendEntryOwner.opaque,
             hostId: 'window-b',
@@ -692,12 +687,12 @@ void main() {
     () async {
       final adapter = BackendEventNavigationAdapter()
         ..initialSnapshot = const [
-          CCNavigationBackendEntrySnapshot(
+          CCInitialBackendEntrySnapshot(
             backendEntryId: 'first',
             owner: CCBackendEntryOwner.foreign,
             navigatorOutlet: 'root',
           ),
-          CCNavigationBackendEntrySnapshot(
+          CCInitialBackendEntrySnapshot(
             backendEntryId: 'second',
             owner: CCBackendEntryOwner.opaque,
             navigatorOutlet: 'detail',
@@ -1530,7 +1525,7 @@ void main() {
     const outcome = CCPopOutcome(
       handled: true,
       removedBackendEntryId: 'managed-predictive',
-      removedOwner: CCPopRemovedOwner.managed,
+      removedEntryOwner: CCPopRemovedEntryOwner.managed,
     );
 
     for (final phase in [
@@ -1582,7 +1577,7 @@ void main() {
         outcome: const CCPopOutcome(
           handled: true,
           removedBackendEntryId: 'foreign-predictive',
-          removedOwner: CCPopRemovedOwner.foreign,
+          removedEntryOwner: CCPopRemovedEntryOwner.foreign,
         ),
       ),
     );
@@ -2408,7 +2403,7 @@ void main() {
               context.cancellation.addListener(() {
                 cancellationObserved = true;
               });
-              return lateResult.future.then<CCNavigationInterception>(
+              return lateResult.future.then<CCNavigationInterceptorDecision>(
                 (_) => const CCNavigationProceed(),
               );
             }, []),
@@ -3472,7 +3467,7 @@ void main() {
       );
       final declined = await runtime.maybePopOutcomeRoute();
       expect(declined.handled, isFalse);
-      expect(declined.removedOwner, CCPopRemovedOwner.none);
+      expect(declined.removedEntryOwner, CCPopRemovedEntryOwner.none);
       expect(declined.trigger, CCPopTrigger.system);
 
       final pushed = runtime.pushRoute<String>(
@@ -3483,8 +3478,8 @@ void main() {
         trigger: CCPopTrigger.gesture,
       );
       expect(handled.handled, isTrue);
-      expect(handled.removedOwner, CCPopRemovedOwner.managed);
-      expect(handled.removedOwner, CCPopRemovedOwner.managed);
+      expect(handled.removedEntryOwner, CCPopRemovedEntryOwner.managed);
+      expect(handled.removedEntryOwner, CCPopRemovedEntryOwner.managed);
       expect(handled.trigger, CCPopTrigger.gesture);
       expect(await pushed, 'back');
       expect(runtime.activeRouteEntries, hasLength(1));
@@ -3530,7 +3525,7 @@ void main() {
       );
 
       expect(outcome.handled, isTrue);
-      expect(outcome.removedOwner, CCPopRemovedOwner.none);
+      expect(outcome.removedEntryOwner, CCPopRemovedEntryOwner.none);
       expect(outcome.guardDeniedCode, 'unsaved_changes');
       expect(calls, [
         'global:orders.detail:gesture',

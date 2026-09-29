@@ -114,7 +114,7 @@ final class _QueryCodecFixturePageRouteCodec
 
   /// Rejects missing, repeated or malformed values before creating arguments.
   @override
-  _QueryCodecFixturePageRouteArguments decode(CCEncodedRouteArguments input) {
+  _QueryCodecFixturePageRouteArguments decode(CCRouteCodecValues input) {
     final _values_tags = input.query["tags"];
     if (_values_tags != null && _values_tags.isEmpty)
       throw CCRouteParameterError(
@@ -202,9 +202,7 @@ final class _QueryCodecFixturePageRouteCodec
 
   /// Encodes unescaped scalar values; Runtime owns URI escaping exactly once.
   @override
-  CCEncodedRouteArguments encode(
-    _QueryCodecFixturePageRouteArguments arguments,
-  ) {
+  CCRouteCodecValues encode(_QueryCodecFixturePageRouteArguments arguments) {
     if (arguments.tags.isEmpty)
       throw CCRouteParameterError(
         "Route \"query_codec_fixture.detail\" parameter \"tags\" cannot encode an empty collection.",
@@ -217,7 +215,7 @@ final class _QueryCodecFixturePageRouteCodec
       throw CCRouteParameterError(
         "Route \"query_codec_fixture.detail\" parameter \"states\" cannot encode an empty collection.",
       );
-    return CCEncodedRouteArguments(
+    return CCRouteCodecValues(
       path: {},
       query: {
         "tags": [for (final value in arguments.tags) value],

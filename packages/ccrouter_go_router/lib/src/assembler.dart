@@ -183,7 +183,7 @@ abstract final class CCGoRouterAssembler {
     final payload = state.extra;
     final extra = CCRouterHostBinding.decodeRouteExtra(payload);
     final destinationChild = destination.build(
-      CCEncodedRouteArguments(
+      CCRouteCodecValues(
         path: state.pathParameters,
         query: state.uri.queryParametersAll,
         extra: extra,

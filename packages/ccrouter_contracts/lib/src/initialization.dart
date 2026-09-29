@@ -30,10 +30,14 @@ final class CCInitTaskGate {
   int get hashCode => id.hashCode;
 }
 
-/// Defines whether one InitTask failure aborts its execution phase.
+/// Defines how one InitTask failure is classified for startup decisions.
 enum CCInitTaskFailurePolicy {
-  /// Reports a sanitized error and prevents later initialization progress.
-  critical,
+  /// Marks a capability as required for the Host's intended startup mode.
+  ///
+  /// Runtime records the failure and skips only dependent tasks. It does not
+  /// throw the business failure from `runInitTasks`; a Host that intentionally
+  /// uses fail-fast startup calls `CCInitTaskRunResult.throwIfRequiredFailed`.
+  required,
 
   /// Records failure while allowing independent tasks to continue.
   optional,
@@ -70,6 +74,10 @@ final class CCInitTaskContract {
 ///
 /// Set exactly one of [contract] and [id]. Use [contract] when another task or
 /// Package needs a typed dependency; use [id] for an independent internal task.
+/// [gate] and [failurePolicy] are always explicit so execution timing and
+/// startup degradation cannot change when framework defaults evolve. A
+/// required task must use [contract], and an asynchronous required Handler must
+/// declare a positive [timeout].
 /// The function may accept no arguments or one invocation context and must
 /// return `void`, `Future<void>`, or `FutureOr<void>`.
 final class CCInitTask {
@@ -78,8 +86,8 @@ final class CCInitTask {
     this.contract,
     this.id,
     this.dependsOn = const [],
-    this.gate = CCInitTaskGate.appStarted,
-    this.failurePolicy = CCInitTaskFailurePolicy.critical,
+    required this.gate,
+    required this.failurePolicy,
     this.timeout,
   });
 
@@ -93,9 +101,12 @@ final class CCInitTask {
   final List<CCInitTaskContract> dependsOn;
 
   /// Explicit condition that must be opened before execution.
+  ///
+  /// Use [CCInitTaskGate.appStarted] for ordinary startup work. The annotation
+  /// intentionally has no default so every declaration exposes its timing.
   final CCInitTaskGate gate;
 
-  /// Behavior applied when this task fails.
+  /// Required or optional classification applied when this task fails.
   final CCInitTaskFailurePolicy failurePolicy;
 
   /// Optional positive deadline measured from actual task start.

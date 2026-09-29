@@ -126,7 +126,12 @@ void main() {
       expect(source, contains('@CCCommandHandler()'));
       expect(source, contains('@CCEventContract('));
       expect(source, contains('@CCEventSubscription()'));
-      expect(source, contains('@CCInitTask(contract:'));
+      expect(source, contains('@CCInitTask('));
+      expect(source, contains('gate: CCInitTaskGate.appStarted'));
+      expect(
+        source,
+        contains('failurePolicy: CCInitTaskFailurePolicy.optional'),
+      );
 
       final duplicate = await _run([
         'create',

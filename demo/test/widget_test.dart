@@ -50,7 +50,7 @@ void main() {
         ],
       ),
     );
-    await CCRouter.runInitTasks();
+    await CCRouter.runInitTasks(gate: CCInitTaskGate.appStarted);
   });
 
   tearDown(CCRouter.shutdown);

@@ -28,12 +28,12 @@ final class _RouteCodec implements CCRouteCodec<_RouteArguments> {
   const _RouteCodec();
 
   @override
-  _RouteArguments decode(CCEncodedRouteArguments input) =>
+  _RouteArguments decode(CCRouteCodecValues input) =>
       _RouteArguments(input.path['id']!);
 
   @override
-  CCEncodedRouteArguments encode(_RouteArguments arguments) =>
-      CCEncodedRouteArguments(path: {'id': arguments.id});
+  CCRouteCodecValues encode(_RouteArguments arguments) =>
+      CCRouteCodecValues(path: {'id': arguments.id});
 }
 
 final class _RouteIntent implements CCRouteIntent<void> {

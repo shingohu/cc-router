@@ -35,19 +35,19 @@ final class CCNavigationInterceptorContext {
 }
 
 /// Result returned by a navigation interceptor.
-sealed class CCNavigationInterception {
+sealed class CCNavigationInterceptorDecision {
   /// Creates an interception result.
-  const CCNavigationInterception();
+  const CCNavigationInterceptorDecision();
 }
 
 /// Allows the current request to continue to the next interceptor or Adapter.
-final class CCNavigationProceed extends CCNavigationInterception {
+final class CCNavigationProceed extends CCNavigationInterceptorDecision {
   /// Creates a continue result.
   const CCNavigationProceed();
 }
 
 /// Stops navigation with a stable cancellation reason.
-final class CCNavigationCancel extends CCNavigationInterception {
+final class CCNavigationCancel extends CCNavigationInterceptorDecision {
   /// Creates a cancellation result with a non-sensitive [code].
   const CCNavigationCancel({this.code = 'cancelled'});
 
@@ -56,7 +56,7 @@ final class CCNavigationCancel extends CCNavigationInterception {
 }
 
 /// Redirects the current request to another typed route intent.
-final class CCNavigationRedirect extends CCNavigationInterception {
+final class CCNavigationRedirect extends CCNavigationInterceptorDecision {
   /// Redirects to a generated [intent] while preserving navigation context.
   const CCNavigationRedirect.toIntent(CCRouteIntent<Object?> intent)
     : intent = intent,
@@ -78,7 +78,7 @@ final class CCNavigationRedirect extends CCNavigationInterception {
 /// this result when they need to show UI outside the interceptor. Runtime
 /// stores the validated request and exposes a [CCPendingNavigation] snapshot;
 /// it does not know which business screen will satisfy the policy.
-final class CCNavigationDefer extends CCNavigationInterception {
+final class CCNavigationDefer extends CCNavigationInterceptorDecision {
   /// Creates a deferred decision with an optional stable reason and timeout.
   const CCNavigationDefer({this.code = 'deferred', this.timeout});
 
@@ -97,7 +97,7 @@ final class CCNavigationDefer extends CCNavigationInterception {
 /// supported because it would create re-entrant navigation.
 abstract interface class CCNavigationInterceptor {
   /// Evaluates [context] and returns the next navigation decision.
-  FutureOr<CCNavigationInterception> intercept(
+  FutureOr<CCNavigationInterceptorDecision> intercept(
     CCNavigationInterceptorContext context,
   );
 }

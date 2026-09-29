@@ -8,9 +8,9 @@ import 'analytics.dart';
 /// is one page leave because it represents the route no longer being current;
 /// final removal does not create a duplicate leave event. Foreign routes and
 /// overlays are never converted into CCRouter page views by this bridge.
-final class CCRouterNavigationAnalytics {
+final class CCNavigationAnalyticsBridge {
   /// Creates a navigation bridge that writes events to [dispatcher].
-  const CCRouterNavigationAnalytics({
+  const CCNavigationAnalyticsBridge({
     required this.dispatcher,
     this.pageViewEventPrefix = 'page.view',
     this.pageLeaveEventPrefix = 'page.leave',

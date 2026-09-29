@@ -197,7 +197,7 @@ GoRoute _route(
     builder: (_, state) {
       final payload = state.extra;
       final child = destination.build(
-        CCEncodedRouteArguments(
+        CCRouteCodecValues(
           path: state.pathParameters,
           query: state.uri.queryParametersAll,
           extra: CCRouterHostBinding.decodeRouteExtra(payload),

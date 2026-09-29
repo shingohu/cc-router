@@ -198,7 +198,7 @@ final class _RouteRegistry {
     final route = _requireRoute(location.routeId);
     try {
       return route.definition.codec.decode(
-            CCEncodedRouteArguments(
+            CCRouteCodecValues(
               path: location.pathParameters,
               query: location.queryParameters,
               extra: extra,
@@ -236,7 +236,7 @@ final class _RouteRegistry {
         route.definition.deepLink == CCDeepLinkPolicy.disabled) {
       throw CCRouteUnavailableError(intent.routeId);
     }
-    late final CCEncodedRouteArguments encoded;
+    late final CCRouteCodecValues encoded;
     try {
       encoded = route.definition.codec.encode(intent.arguments);
     } on CCRouteParameterError {
@@ -781,7 +781,7 @@ final class _RouteRegistry {
   Uri _generateUri(
     String routeId,
     CCRoutePattern pattern,
-    CCEncodedRouteArguments encoded,
+    CCRouteCodecValues encoded,
   ) {
     final template = switch (pattern) {
       CCPathPattern() => pattern.template,

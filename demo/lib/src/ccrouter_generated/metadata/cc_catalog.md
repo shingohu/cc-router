@@ -553,14 +553,14 @@ StatefulShellRoute 个人分支。
 
 | Task | Owner | Gate | Policy | Timeout | Depends on |
 | --- | --- | --- | --- | --- | --- |
-| `demo.startup.analytics` | `demo_navigation_lab_component` | `privacyGranted` | `critical` | - | `demo.startup.foundation` |
-| `demo.startup.foundation` | `demo_navigation_lab_component` | `appStarted` | `critical` | - | `demo_order.startup.foundation` |
-| `demo.startup.optional-dependent` | `demo_navigation_lab_component` | `appStarted` | `critical` | - | `demo.startup.optional-sdk` |
+| `demo.startup.analytics` | `demo_navigation_lab_component` | `privacyGranted` | `optional` | - | `demo.startup.foundation` |
+| `demo.startup.foundation` | `demo_navigation_lab_component` | `appStarted` | `optional` | - | `demo_order.startup.foundation` |
+| `demo.startup.optional-dependent` | `demo_navigation_lab_component` | `appStarted` | `optional` | - | `demo.startup.optional-sdk` |
 | `demo.startup.optional-sdk` | `demo_navigation_lab_component` | `appStarted` | `optional` | - | - |
-| `demo.startup.parallel-primary` | `demo_navigation_lab_component` | `appStarted` | `critical` | - | `demo.startup.foundation` |
-| `demo.startup.parallel-secondary` | `demo_navigation_lab_component` | `appStarted` | `critical` | - | `demo.startup.foundation` |
+| `demo.startup.parallel-primary` | `demo_navigation_lab_component` | `appStarted` | `optional` | - | `demo.startup.foundation` |
+| `demo.startup.parallel-secondary` | `demo_navigation_lab_component` | `appStarted` | `optional` | - | `demo.startup.foundation` |
 | `demo.startup.timeout` | `demo_navigation_lab_component` | `demo.timeoutLab` | `optional` | 60000us | - |
-| `demo_order.startup.foundation` | `demo_order_component` | `appStarted` | `critical` | - | - |
+| `demo_order.startup.foundation` | `demo_order_component` | `appStarted` | `optional` | - | - |
 
 ## Capability Sources
 
@@ -586,7 +586,7 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 
 - Declaring package: `demo_navigation_lab`
 - Contract/declaration: `package:demo_navigation_lab/src/component_capabilities.dart:108:13` (`DemoCreateReceiptCommand`)
-- Implementation: `package:demo_navigation_lab/src/navigation_lab_component_registrar.dart:168:8` (`handleDemoCreateReceipt`)
+- Implementation: `package:demo_navigation_lab/src/navigation_lab_component_registrar.dart:178:8` (`handleDemoCreateReceipt`)
 - Generated artifacts:
   - `commandRegistration`: `package:demo_navigation_lab/src/ccrouter_generated/command/navigation_lab_component_registrar.command.g.dart` (`ccrouterRegisterHandleDemoCreateReceiptCommand`)
 
@@ -594,7 +594,7 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 
 - Declaring package: `demo_navigation_lab`
 - Contract/declaration: `package:demo_navigation_lab/src/component_capabilities.dart:134:13` (`DemoFailCommand`)
-- Implementation: `package:demo_navigation_lab/src/navigation_lab_component_registrar.dart:190:6` (`handleDemoFail`)
+- Implementation: `package:demo_navigation_lab/src/navigation_lab_component_registrar.dart:200:6` (`handleDemoFail`)
 - Generated artifacts:
   - `commandRegistration`: `package:demo_navigation_lab/src/ccrouter_generated/command/navigation_lab_component_registrar.command.g.dart` (`ccrouterRegisterHandleDemoFailCommand`)
 
@@ -602,7 +602,7 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 
 - Declaring package: `demo_navigation_lab`
 - Contract/declaration: `package:demo_navigation_lab/src/component_capabilities.dart:118:13` (`DemoRefreshCacheCommand`)
-- Implementation: `package:demo_navigation_lab/src/navigation_lab_component_registrar.dart:173:14` (`handleDemoRefreshCache`)
+- Implementation: `package:demo_navigation_lab/src/navigation_lab_component_registrar.dart:183:14` (`handleDemoRefreshCache`)
 - Generated artifacts:
   - `commandRegistration`: `package:demo_navigation_lab/src/ccrouter_generated/command/navigation_lab_component_registrar.command.g.dart` (`ccrouterRegisterHandleDemoRefreshCacheCommand`)
 
@@ -610,7 +610,7 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 
 - Declaring package: `demo_navigation_lab`
 - Contract/declaration: `package:demo_navigation_lab/src/component_capabilities.dart:126:13` (`DemoWaitCommand`)
-- Implementation: `package:demo_navigation_lab/src/navigation_lab_component_registrar.dart:180:14` (`handleDemoWait`)
+- Implementation: `package:demo_navigation_lab/src/navigation_lab_component_registrar.dart:190:14` (`handleDemoWait`)
 - Generated artifacts:
   - `commandRegistration`: `package:demo_navigation_lab/src/ccrouter_generated/command/navigation_lab_component_registrar.command.g.dart` (`ccrouterRegisterHandleDemoWaitCommand`)
 
@@ -618,7 +618,7 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 
 - Declaring package: `demo_navigation_lab`
 - Contract/declaration: `package:demo_navigation_lab/src/component_capabilities.dart:142:13` (`DemoOrderCompletedEvent`)
-- Implementation: `package:demo_navigation_lab/src/navigation_lab_component_registrar.dart:147:6` (`trackDemoOrderCompleted`)
+- Implementation: `package:demo_navigation_lab/src/navigation_lab_component_registrar.dart:157:6` (`trackDemoOrderCompleted`)
 - Generated artifacts:
   - `eventSubscriptionRegistration`: `package:demo_navigation_lab/src/ccrouter_generated/event/navigation_lab_component_registrar.event.g.dart` (`ccrouterRegisterTrackDemoOrderCompletedEventSubscription`)
 
@@ -626,7 +626,7 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 
 - Declaring package: `demo_navigation_lab`
 - Contract/declaration: `package:demo_navigation_lab/src/component_capabilities.dart:142:13` (`DemoOrderCompletedEvent`)
-- Implementation: `package:demo_navigation_lab/src/navigation_lab_component_registrar.dart:155:6` (`failDemoOrderCompleted`)
+- Implementation: `package:demo_navigation_lab/src/navigation_lab_component_registrar.dart:165:6` (`failDemoOrderCompleted`)
 - Generated artifacts:
   - `eventSubscriptionRegistration`: `package:demo_navigation_lab/src/ccrouter_generated/event/navigation_lab_component_registrar.event.g.dart` (`ccrouterRegisterFailDemoOrderCompletedEventSubscription`)
 
@@ -649,14 +649,14 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 
 - Declaring package: `demo_navigation_lab`
 - Contract/declaration: `package:demo_navigation_lab/src/component_capabilities.dart:160:13` (`DemoSlowEvent`)
-- Implementation: `package:demo_navigation_lab/src/navigation_lab_component_registrar.dart:161:14` (`waitForDemoSlowEvent`)
+- Implementation: `package:demo_navigation_lab/src/navigation_lab_component_registrar.dart:171:14` (`waitForDemoSlowEvent`)
 - Generated artifacts:
   - `eventSubscriptionRegistration`: `package:demo_navigation_lab/src/ccrouter_generated/event/navigation_lab_component_registrar.event.g.dart` (`ccrouterRegisterWaitForDemoSlowEventEventSubscription`)
 
 ### InitTask `demo.startup.analytics`
 
 - Declaring package: `demo_navigation_lab`
-- Implementation: `package:demo_navigation_lab/src/navigation_lab_component_registrar.dart:109:6` (`initializeDemoAnalytics`)
+- Implementation: `package:demo_navigation_lab/src/navigation_lab_component_registrar.dart:115:6` (`initializeDemoAnalytics`)
 - Generated artifacts:
   - `initTaskRegistration`: `package:demo_navigation_lab/src/ccrouter_generated/init_task/navigation_lab_component_registrar.init_task.g.dart` (`ccrouterRegisterInitializeDemoAnalyticsInitTask`)
 
@@ -664,14 +664,14 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 
 - Declaring package: `demo_navigation_lab`
 - Contract/declaration: `package:demo_navigation_lab/src/component_capabilities.dart:34:7` (`demoFoundationInitTask`)
-- Implementation: `package:demo_navigation_lab/src/navigation_lab_component_registrar.dart:80:14` (`initializeDemoFoundation`)
+- Implementation: `package:demo_navigation_lab/src/navigation_lab_component_registrar.dart:82:14` (`initializeDemoFoundation`)
 - Generated artifacts:
   - `initTaskRegistration`: `package:demo_navigation_lab/src/ccrouter_generated/init_task/navigation_lab_component_registrar.init_task.g.dart` (`ccrouterRegisterInitializeDemoFoundationInitTask`)
 
 ### InitTask `demo.startup.optional-dependent`
 
 - Declaring package: `demo_navigation_lab`
-- Implementation: `package:demo_navigation_lab/src/navigation_lab_component_registrar.dart:99:6` (`initializeDemoOptionalDependent`)
+- Implementation: `package:demo_navigation_lab/src/navigation_lab_component_registrar.dart:104:6` (`initializeDemoOptionalDependent`)
 - Generated artifacts:
   - `initTaskRegistration`: `package:demo_navigation_lab/src/ccrouter_generated/init_task/navigation_lab_component_registrar.init_task.g.dart` (`ccrouterRegisterInitializeDemoOptionalDependentInitTask`)
 
@@ -679,36 +679,36 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 
 - Declaring package: `demo_navigation_lab`
 - Contract/declaration: `package:demo_navigation_lab/src/component_capabilities.dart:40:7` (`demoOptionalSdkInitTask`)
-- Implementation: `package:demo_navigation_lab/src/navigation_lab_component_registrar.dart:90:6` (`initializeDemoOptionalSdk`)
+- Implementation: `package:demo_navigation_lab/src/navigation_lab_component_registrar.dart:93:6` (`initializeDemoOptionalSdk`)
 - Generated artifacts:
   - `initTaskRegistration`: `package:demo_navigation_lab/src/ccrouter_generated/init_task/navigation_lab_component_registrar.init_task.g.dart` (`ccrouterRegisterInitializeDemoOptionalSdkInitTask`)
 
 ### InitTask `demo.startup.parallel-primary`
 
 - Declaring package: `demo_navigation_lab`
-- Implementation: `package:demo_navigation_lab/src/navigation_lab_component_registrar.dart:118:14` (`initializeDemoParallelPrimary`)
+- Implementation: `package:demo_navigation_lab/src/navigation_lab_component_registrar.dart:126:14` (`initializeDemoParallelPrimary`)
 - Generated artifacts:
   - `initTaskRegistration`: `package:demo_navigation_lab/src/ccrouter_generated/init_task/navigation_lab_component_registrar.init_task.g.dart` (`ccrouterRegisterInitializeDemoParallelPrimaryInitTask`)
 
 ### InitTask `demo.startup.parallel-secondary`
 
 - Declaring package: `demo_navigation_lab`
-- Implementation: `package:demo_navigation_lab/src/navigation_lab_component_registrar.dart:128:14` (`initializeDemoParallelSecondary`)
+- Implementation: `package:demo_navigation_lab/src/navigation_lab_component_registrar.dart:138:14` (`initializeDemoParallelSecondary`)
 - Generated artifacts:
   - `initTaskRegistration`: `package:demo_navigation_lab/src/ccrouter_generated/init_task/navigation_lab_component_registrar.init_task.g.dart` (`ccrouterRegisterInitializeDemoParallelSecondaryInitTask`)
 
 ### InitTask `demo.startup.timeout`
 
 - Declaring package: `demo_navigation_lab`
-- Implementation: `package:demo_navigation_lab/src/navigation_lab_component_registrar.dart:140:14` (`initializeDemoTimeout`)
+- Implementation: `package:demo_navigation_lab/src/navigation_lab_component_registrar.dart:150:14` (`initializeDemoTimeout`)
 - Generated artifacts:
   - `initTaskRegistration`: `package:demo_navigation_lab/src/ccrouter_generated/init_task/navigation_lab_component_registrar.init_task.g.dart` (`ccrouterRegisterInitializeDemoTimeoutInitTask`)
 
 ### Route `demo_navigation_lab.cancel`
 
 - Declaring package: `demo_navigation_lab`
-- Contract/declaration: `package:demo_navigation_lab/src/policy_pages.dart:139:13` (`DemoCancelledPage`)
-- Implementation: `package:demo_navigation_lab/src/policy_pages.dart:139:13` (`DemoCancelledPage`)
+- Contract/declaration: `package:demo_navigation_lab/src/policy_pages.dart:147:13` (`DemoCancelledPage`)
+- Implementation: `package:demo_navigation_lab/src/policy_pages.dart:147:13` (`DemoCancelledPage`)
 - Generated artifacts:
   - `routeLibrary`: `package:demo_navigation_lab/src/ccrouter_generated/route/policy_pages.route.g.dart` (`_DemoCancelledPageRoute`)
   - `routeBinding`: `package:demo_navigation_lab/src/ccrouter_generated/binding/policy_pages.route_binding.g.dart` (`ccrouterBuildDemoCancelledPageRoute`)
@@ -725,8 +725,8 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 ### Route `demo_navigation_lab.defer`
 
 - Declaring package: `demo_navigation_lab`
-- Contract/declaration: `package:demo_navigation_lab/src/policy_pages.dart:180:13` (`DemoDeferredPage`)
-- Implementation: `package:demo_navigation_lab/src/policy_pages.dart:180:13` (`DemoDeferredPage`)
+- Contract/declaration: `package:demo_navigation_lab/src/policy_pages.dart:188:13` (`DemoDeferredPage`)
+- Implementation: `package:demo_navigation_lab/src/policy_pages.dart:188:13` (`DemoDeferredPage`)
 - Generated artifacts:
   - `routeLibrary`: `package:demo_navigation_lab/src/ccrouter_generated/route/policy_pages.route.g.dart` (`_DemoDeferredPageRoute`)
   - `routeBinding`: `package:demo_navigation_lab/src/ccrouter_generated/binding/policy_pages.route_binding.g.dart` (`ccrouterBuildDemoDeferredPageRoute`)
@@ -761,8 +761,8 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 ### Route `demo_navigation_lab.guarded`
 
 - Declaring package: `demo_navigation_lab`
-- Contract/declaration: `package:demo_navigation_lab/src/policy_pages.dart:212:13` (`DemoGuardedPage`)
-- Implementation: `package:demo_navigation_lab/src/policy_pages.dart:212:13` (`DemoGuardedPage`)
+- Contract/declaration: `package:demo_navigation_lab/src/policy_pages.dart:220:13` (`DemoGuardedPage`)
+- Implementation: `package:demo_navigation_lab/src/policy_pages.dart:220:13` (`DemoGuardedPage`)
 - Generated artifacts:
   - `routeLibrary`: `package:demo_navigation_lab/src/ccrouter_generated/route/policy_pages.route.g.dart` (`_DemoGuardedPageRoute`)
   - `routeBinding`: `package:demo_navigation_lab/src/ccrouter_generated/binding/policy_pages.route_binding.g.dart` (`ccrouterBuildDemoGuardedPageRoute`)
@@ -860,8 +860,8 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 ### Route `demo_navigation_lab.proceed`
 
 - Declaring package: `demo_navigation_lab`
-- Contract/declaration: `package:demo_navigation_lab/src/policy_pages.dart:123:13` (`DemoProceedPage`)
-- Implementation: `package:demo_navigation_lab/src/policy_pages.dart:123:13` (`DemoProceedPage`)
+- Contract/declaration: `package:demo_navigation_lab/src/policy_pages.dart:131:13` (`DemoProceedPage`)
+- Implementation: `package:demo_navigation_lab/src/policy_pages.dart:131:13` (`DemoProceedPage`)
 - Generated artifacts:
   - `routeLibrary`: `package:demo_navigation_lab/src/ccrouter_generated/route/policy_pages.route.g.dart` (`_DemoProceedPageRoute`)
   - `routeBinding`: `package:demo_navigation_lab/src/ccrouter_generated/binding/policy_pages.route_binding.g.dart` (`ccrouterBuildDemoProceedPageRoute`)
@@ -869,8 +869,8 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 ### Route `demo_navigation_lab.redirect.source`
 
 - Declaring package: `demo_navigation_lab`
-- Contract/declaration: `package:demo_navigation_lab/src/policy_pages.dart:153:13` (`DemoRedirectSourcePage`)
-- Implementation: `package:demo_navigation_lab/src/policy_pages.dart:153:13` (`DemoRedirectSourcePage`)
+- Contract/declaration: `package:demo_navigation_lab/src/policy_pages.dart:161:13` (`DemoRedirectSourcePage`)
+- Implementation: `package:demo_navigation_lab/src/policy_pages.dart:161:13` (`DemoRedirectSourcePage`)
 - Generated artifacts:
   - `routeLibrary`: `package:demo_navigation_lab/src/ccrouter_generated/route/policy_pages.route.g.dart` (`_DemoRedirectSourcePageRoute`)
   - `routeBinding`: `package:demo_navigation_lab/src/ccrouter_generated/binding/policy_pages.route_binding.g.dart` (`ccrouterBuildDemoRedirectSourcePageRoute`)
@@ -878,8 +878,8 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 ### Route `demo_navigation_lab.redirect.target`
 
 - Declaring package: `demo_navigation_lab`
-- Contract/declaration: `package:demo_navigation_lab/src/policy_pages.dart:166:13` (`DemoRedirectTargetPage`)
-- Implementation: `package:demo_navigation_lab/src/policy_pages.dart:166:13` (`DemoRedirectTargetPage`)
+- Contract/declaration: `package:demo_navigation_lab/src/policy_pages.dart:174:13` (`DemoRedirectTargetPage`)
+- Implementation: `package:demo_navigation_lab/src/policy_pages.dart:174:13` (`DemoRedirectTargetPage`)
 - Generated artifacts:
   - `routeLibrary`: `package:demo_navigation_lab/src/ccrouter_generated/route/policy_pages.route.g.dart` (`_DemoRedirectTargetPageRoute`)
   - `routeBinding`: `package:demo_navigation_lab/src/ccrouter_generated/binding/policy_pages.route_binding.g.dart` (`ccrouterBuildDemoRedirectTargetPageRoute`)
@@ -932,8 +932,8 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 ### Route `demo_navigation_lab.timeout`
 
 - Declaring package: `demo_navigation_lab`
-- Contract/declaration: `package:demo_navigation_lab/src/policy_pages.dart:196:13` (`DemoTimeoutPage`)
-- Implementation: `package:demo_navigation_lab/src/policy_pages.dart:196:13` (`DemoTimeoutPage`)
+- Contract/declaration: `package:demo_navigation_lab/src/policy_pages.dart:204:13` (`DemoTimeoutPage`)
+- Implementation: `package:demo_navigation_lab/src/policy_pages.dart:204:13` (`DemoTimeoutPage`)
 - Generated artifacts:
   - `routeLibrary`: `package:demo_navigation_lab/src/ccrouter_generated/route/policy_pages.route.g.dart` (`_DemoTimeoutPageRoute`)
   - `routeBinding`: `package:demo_navigation_lab/src/ccrouter_generated/binding/policy_pages.route_binding.g.dart` (`ccrouterBuildDemoTimeoutPageRoute`)
@@ -1000,7 +1000,7 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 
 - Declaring package: `demo_order_contracts`
 - Contract/declaration: `package:demo_order_contracts/src/order_init_tasks.dart:6:7` (`demoOrderFoundationInitTask`)
-- Implementation: `package:demo_order/src/order_init_tasks.dart:6:14` (`initializeDemoOrderFoundation`)
+- Implementation: `package:demo_order/src/order_init_tasks.dart:10:14` (`initializeDemoOrderFoundation`)
 - Generated artifacts:
   - `initTaskRegistration`: `package:demo_order/src/ccrouter_generated/init_task/order_init_tasks.init_task.g.dart` (`ccrouterRegisterInitializeDemoOrderFoundationInitTask`)
 

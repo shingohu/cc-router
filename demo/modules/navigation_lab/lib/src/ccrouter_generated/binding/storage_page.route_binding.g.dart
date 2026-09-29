@@ -12,5 +12,5 @@ import 'package:demo_navigation_lab/src/storage_page.dart' as route_page;
 
 /// Package-internal page factory bridge used by generated Flutter catalogs.
 route_page.DemoStoragePage ccrouterBuildDemoStoragePageRoute(
-  CCEncodedRouteArguments _,
+  CCRouteCodecValues _,
 ) => route_page.DemoStoragePage();

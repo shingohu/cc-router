@@ -76,6 +76,8 @@ void _registerComponentCapabilities(CCRegistry registry) {
 @CCInitTask(
   contract: demoFoundationInitTask,
   dependsOn: [demoOrderFoundationInitTask],
+  gate: CCInitTaskGate.appStarted,
+  failurePolicy: CCInitTaskFailurePolicy.optional,
 )
 Future<void> initializeDemoFoundation() async {
   await Future<void>.delayed(const Duration(milliseconds: 20));
@@ -85,6 +87,7 @@ Future<void> initializeDemoFoundation() async {
 /// Simulates an optional SDK failure without blocking independent tasks.
 @CCInitTask(
   contract: demoOptionalSdkInitTask,
+  gate: CCInitTaskGate.appStarted,
   failurePolicy: CCInitTaskFailurePolicy.optional,
 )
 void initializeDemoOptionalSdk() {
@@ -95,6 +98,8 @@ void initializeDemoOptionalSdk() {
 @CCInitTask(
   id: DemoInitTaskIds.optionalDependent,
   dependsOn: [demoOptionalSdkInitTask],
+  gate: CCInitTaskGate.appStarted,
+  failurePolicy: CCInitTaskFailurePolicy.optional,
 )
 void initializeDemoOptionalDependent() {
   demoNavigationLabStore.record('InitTask · optional dependent should not run');
@@ -105,6 +110,7 @@ void initializeDemoOptionalDependent() {
   id: DemoInitTaskIds.analytics,
   dependsOn: [demoFoundationInitTask],
   gate: CCInitTaskGate.privacyGranted,
+  failurePolicy: CCInitTaskFailurePolicy.optional,
 )
 void initializeDemoAnalytics() {
   demoNavigationLabStore.record('InitTask · privacy-gated analytics ready');
@@ -114,6 +120,8 @@ void initializeDemoAnalytics() {
 @CCInitTask(
   id: DemoInitTaskIds.parallelPrimary,
   dependsOn: [demoFoundationInitTask],
+  gate: CCInitTaskGate.appStarted,
+  failurePolicy: CCInitTaskFailurePolicy.optional,
 )
 Future<void> initializeDemoParallelPrimary() async {
   await Future<void>.delayed(const Duration(milliseconds: 12));
@@ -124,6 +132,8 @@ Future<void> initializeDemoParallelPrimary() async {
 @CCInitTask(
   id: DemoInitTaskIds.parallelSecondary,
   dependsOn: [demoFoundationInitTask],
+  gate: CCInitTaskGate.appStarted,
+  failurePolicy: CCInitTaskFailurePolicy.optional,
 )
 Future<void> initializeDemoParallelSecondary() async {
   await Future<void>.delayed(const Duration(milliseconds: 12));

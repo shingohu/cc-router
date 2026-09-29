@@ -62,7 +62,11 @@ const mixedInitTask = CCInitTaskContract(
   description: 'Mixed InitTask.',
 );
 
-@CCInitTask(contract: mixedInitTask)
+@CCInitTask(
+  contract: mixedInitTask,
+  gate: CCInitTaskGate.appStarted,
+  failurePolicy: CCInitTaskFailurePolicy.optional,
+)
 void initializeMixed() {}
 ''',
     };
@@ -106,10 +110,7 @@ void initializeMixed() {}
       if (entry.key == 'route') {
         final route = (document['routes'] as List).single as Map;
         expect(route['version'], '0.1.0');
-        expect(
-          route['shapeFingerprint'],
-          matches(RegExp(r'^[0-9a-f]{64}$')),
-        );
+        expect(route['shapeFingerprint'], matches(RegExp(r'^[0-9a-f]{64}$')));
       }
     }
   });

@@ -13,12 +13,12 @@ final class _VisibilityCodec implements CCRouteCodec<_VisibilityArguments> {
   const _VisibilityCodec();
 
   @override
-  _VisibilityArguments decode(CCEncodedRouteArguments input) =>
+  _VisibilityArguments decode(CCRouteCodecValues input) =>
       _VisibilityArguments(input.path['value']!);
 
   @override
-  CCEncodedRouteArguments encode(_VisibilityArguments arguments) =>
-      CCEncodedRouteArguments(path: {'value': arguments.value});
+  CCRouteCodecValues encode(_VisibilityArguments arguments) =>
+      CCRouteCodecValues(path: {'value': arguments.value});
 }
 
 final class _VisibilityIntent<R> implements CCRouteIntent<R> {

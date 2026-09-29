@@ -19,7 +19,7 @@ void ccrouterRegisterInitializeDemoOrderFoundationInitTask(
       id: "demo_order.startup.foundation",
       dependsOn: const [],
       gate: CCInitTaskGate("appStarted"),
-      failurePolicy: CCInitTaskFailurePolicy.critical,
+      failurePolicy: CCInitTaskFailurePolicy.optional,
       run: (_) => init_source.initializeDemoOrderFoundation(),
     ),
   );

@@ -145,7 +145,7 @@
         "kind": "page",
         "symbol": "DemoCancelledPage",
         "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-        "line": 139,
+        "line": 147,
         "column": 13
       },
       "navigationSources": [
@@ -301,7 +301,7 @@
         "kind": "page",
         "symbol": "DemoDeferredPage",
         "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-        "line": 180,
+        "line": 188,
         "column": 13
       },
       "navigationSources": [
@@ -723,7 +723,7 @@
         "kind": "page",
         "symbol": "DemoGuardedPage",
         "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-        "line": 212,
+        "line": 220,
         "column": 13
       },
       "navigationSources": [
@@ -1572,7 +1572,7 @@
         "kind": "page",
         "symbol": "DemoProceedPage",
         "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-        "line": 123,
+        "line": 131,
         "column": 13
       },
       "navigationSources": [
@@ -1651,7 +1651,7 @@
         "kind": "page",
         "symbol": "DemoRedirectSourcePage",
         "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-        "line": 153,
+        "line": 161,
         "column": 13
       },
       "navigationSources": [
@@ -1728,7 +1728,7 @@
         "kind": "page",
         "symbol": "DemoRedirectTargetPage",
         "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-        "line": 166,
+        "line": 174,
         "column": 13
       },
       "navigationSources": [
@@ -2222,7 +2222,7 @@
         "kind": "page",
         "symbol": "DemoTimeoutPage",
         "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-        "line": 196,
+        "line": 204,
         "column": 13
       },
       "navigationSources": [

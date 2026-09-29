@@ -15,8 +15,9 @@ final class FixtureProceed implements CCNavigationInterceptor {
   const FixtureProceed();
 
   @override
-  CCNavigationInterception intercept(CCNavigationInterceptorContext context) =>
-      const CCNavigationProceed();
+  CCNavigationInterceptorDecision intercept(
+    CCNavigationInterceptorContext context,
+  ) => const CCNavigationProceed();
 }
 
 enum DetailTab { summary, items }

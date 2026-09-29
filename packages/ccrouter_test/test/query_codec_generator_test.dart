@@ -57,7 +57,7 @@ void main() {
 
       final deduplicated = buildQueryCodecFixturePage(
         codec.decode(
-          CCEncodedRouteArguments(
+          CCRouteCodecValues(
             query: const {
               'tags': ['tag'],
               'ids': ['3', '3', '20'],
@@ -74,27 +74,27 @@ void main() {
     () {
       final codec = queryCodecFixtureCodec;
       final invalid = [
-        CCEncodedRouteArguments(),
-        CCEncodedRouteArguments(
+        CCRouteCodecValues(),
+        CCRouteCodecValues(
           query: const {
             'tags': [],
             'ids': ['1'],
           },
         ),
-        CCEncodedRouteArguments(
+        CCRouteCodecValues(
           query: const {
             'tags': ['tag'],
             'ids': ['not-an-int'],
           },
         ),
-        CCEncodedRouteArguments(
+        CCRouteCodecValues(
           query: const {
             'tags': ['tag'],
             'ids': ['1'],
             'states': ['unknown-secret'],
           },
         ),
-        CCEncodedRouteArguments(
+        CCRouteCodecValues(
           query: const {
             'tags': ['tag'],
             'ids': ['1'],

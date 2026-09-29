@@ -335,12 +335,12 @@ final class CCServiceInitializationError extends CCServiceError {
   final String causeType;
 }
 
-/// Indicates that a critical Runtime InitTask failed.
+/// Indicates that an explicitly required Runtime InitTask failed.
 ///
 /// The original exception and message are intentionally not retained. Hosts
 /// use [taskId], [causeType], task snapshots, and Trace for safe diagnostics.
 final class CCInitTaskError extends CCRouterError {
-  /// Creates a sanitized failure for the critical initialization [taskId].
+  /// Creates a sanitized failure for the required initialization [taskId].
   const CCInitTaskError(this.taskId, this.causeType)
     : super('InitTask "$taskId" failed ($causeType).');
 

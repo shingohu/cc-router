@@ -178,7 +178,7 @@ String _emitRouteBinding(
     ..writeln('''
 /// Package-internal page factory bridge used by generated Flutter catalogs.
 $pageType ${route.builderFunction}(
-  CCEncodedRouteArguments ${route.parameters.isEmpty ? '_' : 'arguments'},
+  CCRouteCodecValues ${route.parameters.isEmpty ? '_' : 'arguments'},
 )''');
   if (route.parameters.isEmpty) {
     out.writeln('    => $pageType();');
@@ -245,7 +245,7 @@ CCRouteDefinition<dynamic, dynamic> ${implementation.descriptorFunction}() =>
 
 /// Package-internal page factory bound to the public route contract.
 $pageType ${implementation.builderFunction}(
-  CCEncodedRouteArguments ${route.parameters.isEmpty ? '_' : 'arguments'},
+  CCRouteCodecValues ${route.parameters.isEmpty ? '_' : 'arguments'},
 ) {
   ${route.parameters.isEmpty ? 'return $pageType();' : 'final decoded = $contractApi.definition.codec.decode(arguments);\n  return $pageType(\n    ${_pageArgumentsFromDecoded(route.parameters, 'decoded')}\n  );'}
 }
@@ -269,7 +269,7 @@ final class ${route.codec} implements CCRouteCodec<${route.arguments}> {
 
   /// Rejects missing, repeated or malformed values before creating arguments.
   @override
-  ${route.arguments} decode(CCEncodedRouteArguments input) {
+  ${route.arguments} decode(CCRouteCodecValues input) {
 ''');
   for (final parameter in params.where(
     (parameter) =>
@@ -354,7 +354,7 @@ final class ${route.codec} implements CCRouteCodec<${route.arguments}> {
   out.writeln('''
   /// Encodes unescaped scalar values; Runtime owns URI escaping exactly once.
   @override
-  CCEncodedRouteArguments encode(${route.arguments} arguments) {
+  CCRouteCodecValues encode(${route.arguments} arguments) {
 ''');
   for (final parameter in params.where(
     (parameter) =>
@@ -379,7 +379,7 @@ final class ${route.codec} implements CCRouteCodec<${route.arguments}> {
       'if (${parameter.nullable ? 'arguments.${parameter.name} != null && ' : ''}$value.isEmpty) throw CCRouteParameterError(${_quote('Route "${route.id}" parameter "${parameter.wireName}" cannot encode an empty collection.')});',
     );
   }
-  out.writeln('return CCEncodedRouteArguments(path: {');
+  out.writeln('return CCRouteCodecValues(path: {');
   for (final parameter in params.where(
     (parameter) => parameter.source == 'path',
   )) {

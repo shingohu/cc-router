@@ -142,11 +142,11 @@ final class _StressCodec implements CCRouteCodec<String> {
   const _StressCodec();
 
   @override
-  String decode(CCEncodedRouteArguments input) => input.path['id']!;
+  String decode(CCRouteCodecValues input) => input.path['id']!;
 
   @override
-  CCEncodedRouteArguments encode(String arguments) =>
-      CCEncodedRouteArguments(path: {'id': arguments});
+  CCRouteCodecValues encode(String arguments) =>
+      CCRouteCodecValues(path: {'id': arguments});
 }
 
 void _verifyDisposed(CCRouterRuntime runtime) {

@@ -40,7 +40,7 @@ final class CCRouterDevToolsPanel extends StatefulWidget {
 /// Stateful shell that owns listener removers for the diagnostics panel.
 final class _CCRouterDevToolsPanelState extends State<CCRouterDevToolsPanel> {
   late CCDevToolsSnapshotProvider _provider;
-  late CCDevToolsSnapshot _snapshot;
+  late CCRouterDevToolsSnapshot _snapshot;
   VoidCallback? _removeListener;
 
   @override
@@ -177,7 +177,7 @@ final class _OverviewView extends StatelessWidget {
   const _OverviewView({required this.snapshot});
 
   /// Immutable diagnostics data.
-  final CCDevToolsSnapshot snapshot;
+  final CCRouterDevToolsSnapshot snapshot;
 
   @override
   Widget build(BuildContext context) {
@@ -249,7 +249,7 @@ final class _CatalogView extends StatefulWidget {
   const _CatalogView({required this.snapshot, this.onOpenSource});
 
   /// Immutable diagnostics data.
-  final CCDevToolsSnapshot snapshot;
+  final CCRouterDevToolsSnapshot snapshot;
 
   /// Optional source-opening callback owned by the Host.
   final ValueChanged<CCDevToolsSourceLocation>? onOpenSource;
@@ -406,7 +406,7 @@ final class _ComponentGraphView extends StatefulWidget {
   const _ComponentGraphView({required this.snapshot});
 
   /// Immutable diagnostics data.
-  final CCDevToolsSnapshot snapshot;
+  final CCRouterDevToolsSnapshot snapshot;
 
   @override
   State<_ComponentGraphView> createState() => _ComponentGraphViewState();
@@ -524,7 +524,7 @@ final class _EntriesView extends StatelessWidget {
   const _EntriesView({required this.snapshot});
 
   /// Immutable diagnostics data.
-  final CCDevToolsSnapshot snapshot;
+  final CCRouterDevToolsSnapshot snapshot;
 
   @override
   Widget build(BuildContext context) => ListView(
@@ -572,7 +572,7 @@ final class _TimelineView extends StatelessWidget {
   const _TimelineView({required this.snapshot});
 
   /// Immutable diagnostics data.
-  final CCDevToolsSnapshot snapshot;
+  final CCRouterDevToolsSnapshot snapshot;
 
   @override
   Widget build(BuildContext context) => ListView(
@@ -624,7 +624,7 @@ final class _FailuresView extends StatelessWidget {
   const _FailuresView({required this.snapshot});
 
   /// Immutable diagnostics data.
-  final CCDevToolsSnapshot snapshot;
+  final CCRouterDevToolsSnapshot snapshot;
 
   @override
   Widget build(BuildContext context) => ListView(
@@ -686,7 +686,7 @@ final class _InitTaskView extends StatelessWidget {
   const _InitTaskView({required this.snapshot});
 
   /// Immutable diagnostics data.
-  final CCDevToolsSnapshot snapshot;
+  final CCRouterDevToolsSnapshot snapshot;
 
   @override
   Widget build(BuildContext context) {
@@ -732,7 +732,7 @@ final class _CallGraphView extends StatelessWidget {
   const _CallGraphView({required this.snapshot});
 
   /// Immutable diagnostics data.
-  final CCDevToolsSnapshot snapshot;
+  final CCRouterDevToolsSnapshot snapshot;
 
   @override
   Widget build(BuildContext context) {

@@ -206,7 +206,7 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
       trigger: CCPopTrigger.predictiveBack,
     );
     if (outcome == null ||
-        outcome.removedOwner != CCPopRemovedOwner.managed ||
+        outcome.removedEntryOwner != CCPopRemovedEntryOwner.managed ||
         outcome.removedBackendEntryId == null) {
       return;
     }
@@ -225,13 +225,13 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
   /// predate Runtime observation and therefore cannot represent a new Push.
   /// Invalid identities fail initialization rather than entering a ledger
   /// that could later be mistaken for a correlated managed transition.
-  void _readInitialBackendSnapshot() {
+  void _readInitialBackendEntries() {
     final adapter = _navigationAdapter;
     final source = adapter is CCNavigationBackendSnapshotSource
         ? adapter as CCNavigationBackendSnapshotSource
         : null;
     if (source == null) return;
-    final snapshots = source.readInitialBackendSnapshot();
+    final snapshots = source.readInitialBackendEntries();
     for (final snapshot in snapshots) {
       if (snapshot.backendEntryId.isEmpty || snapshot.navigatorOutlet.isEmpty) {
         throw const CCNavigationAdapterError(

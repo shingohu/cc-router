@@ -14,7 +14,7 @@ enum CCDeepLinkPolicy {
   ///
   /// This is the default and is appropriate for internal workflow pages,
   /// payment confirmation, debug tools, and pages that require in-memory
-  /// [CCEncodedRouteArguments.extra] data.
+  /// [CCRouteCodecValues.extra] data.
   disabled,
 
   /// Allows external entry after application-level validation.
@@ -25,14 +25,15 @@ enum CCDeepLinkPolicy {
   enabled,
 }
 
-/// Encoded route values exchanged at the controlled codec boundary.
+/// Unescaped route values exchanged at the controlled codec boundary.
 ///
-/// Generated codecs and navigation adapters use this boundary to exchange URI
-/// values and optional in-memory Extra data. Business code should use generated
-/// argument types instead of constructing this object directly.
-final class CCEncodedRouteArguments {
+/// Generated codecs and navigation adapters use this boundary before URI
+/// serialization. Path and Query strings are encoded exactly once by the
+/// Runtime; codecs must not percent-encode them. Business code should use
+/// generated argument types instead of constructing this object directly.
+final class CCRouteCodecValues {
   /// Creates immutable Path, Query, and in-memory Extra arguments.
-  CCEncodedRouteArguments({
+  CCRouteCodecValues({
     Map<String, String> path = const {},
     Map<String, List<String>> query = const {},
     this.extra,
@@ -43,10 +44,10 @@ final class CCEncodedRouteArguments {
          ),
        );
 
-  /// String values encoded into named Path parameters.
+  /// Unescaped string values assigned to named Path parameters.
   final Map<String, String> path;
 
-  /// String values encoded into Query parameters.
+  /// Unescaped string values assigned to Query parameters.
   final Map<String, List<String>> query;
 
   /// In-memory value that is never serialized into a URI.
@@ -60,10 +61,10 @@ final class CCEncodedRouteArguments {
 /// supported value types that the standard generator cannot encode.
 abstract interface class CCRouteCodec<A> {
   /// Decodes validated Path, Query, and Extra values into [A].
-  A decode(CCEncodedRouteArguments input);
+  A decode(CCRouteCodecValues input);
 
   /// Encodes [arguments] into validated Path, Query, and Extra values.
-  CCEncodedRouteArguments encode(A arguments);
+  CCRouteCodecValues encode(A arguments);
 }
 
 /// Converts one explicitly annotated complex Query value to repeated strings.

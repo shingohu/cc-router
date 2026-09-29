@@ -1,5 +1,5 @@
 import 'package:ccrouter_analytics/ccrouter_analytics.dart';
-import 'package:ccrouter_auto_track/ccrouter_auto_track.dart';
+import 'package:ccrouter_analytics_flutter/ccrouter_analytics_flutter.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';

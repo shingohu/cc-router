@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter_analytics/ccrouter_analytics.dart';
-import 'package:ccrouter_auto_track/ccrouter_auto_track.dart';
+import 'package:ccrouter_analytics_flutter/ccrouter_analytics_flutter.dart';
 import 'package:ccrouter_devtools/ccrouter_devtools.dart';
 import 'package:demo_order_contracts/demo_order_contracts.dart';
 import 'package:demo_web_contracts/demo_web_contracts.dart';

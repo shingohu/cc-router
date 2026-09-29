@@ -17,7 +17,8 @@ Flutter SDK 选择：
 ```
 
 工程入口为 `lib/main.dart`。示例在 `runApp` 前显式调用
-`CCRouter.initialize(components: ...)` 和 `CCRouter.runInitTasks()`，再通过 `CCRouterApp.managed` 和
+`CCRouter.initialize(components: ...)` 和
+`CCRouter.runInitTasks(gate: CCInitTaskGate.appStarted)`，再通过 `CCRouterApp.managed` 和
 `CCGoRouterBackend.managed` 自动创建 Host、GoRouter、Observer 和 Adapter；业务代码不接触
 导航 Backend。
 
@@ -34,7 +35,7 @@ typed Extra。完整的 macOS 验证矩阵、已修复问题和 Adapter 限制�
 
 - Command：typed result、`void`、timeout、caller cancellation 和 Handler error；
 - Event：并发多订阅者、Subscriber 异常隔离、零订阅者和 timeout；
-- InitTask：App Started DAG、critical/optional 状态、失败依赖 skip 和手动 Privacy Gate；
+- InitTask：App Started DAG、required/optional 状态、失败依赖 skip 和手动 Privacy Gate；
 - Service：App/Session/Route Scope、singleton/newInstance、lazy readiness single-flight、命名多实现、
   可选查找，以及 Session/Route 关闭时自动 dispose；首页还通过生成的组件专属 Proxy 验证
   跨组件同步方法、Future、getter、caller attribution 和方法级 Trace。

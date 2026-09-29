@@ -13,12 +13,12 @@ final class _ArgumentsCodec implements CCRouteCodec<_Arguments> {
   const _ArgumentsCodec();
 
   @override
-  _Arguments decode(CCEncodedRouteArguments input) =>
+  _Arguments decode(CCRouteCodecValues input) =>
       _Arguments(input.path['value']!);
 
   @override
-  CCEncodedRouteArguments encode(_Arguments arguments) =>
-      CCEncodedRouteArguments(path: {'value': arguments.value});
+  CCRouteCodecValues encode(_Arguments arguments) =>
+      CCRouteCodecValues(path: {'value': arguments.value});
 }
 
 final class _Intent<R> implements CCRouteIntent<R> {
@@ -217,7 +217,7 @@ void main() {
     () async {
       final primary = _HostAdapter('window.primary');
       final secondary = _HostAdapter('window.secondary');
-      final registry = CCNavigationHostRegistry(
+      final registry = CCMultiHostNavigationAdapter(
         defaultHostId: primary.hostId,
         adapters: {primary.hostId: primary, secondary.hostId: secondary},
       );
@@ -296,7 +296,7 @@ void main() {
 
   test('registers and unregisters a Host after initialization', () async {
     final primary = _HostAdapter('window.primary');
-    final registry = CCNavigationHostRegistry(
+    final registry = CCMultiHostNavigationAdapter(
       defaultHostId: primary.hostId,
       adapters: {primary.hostId: primary},
     );
@@ -338,7 +338,7 @@ void main() {
     'failed synchronous Host registration is atomic and releases ownership',
     () {
       final primary = _HostAdapter('window.primary');
-      final registry = CCNavigationHostRegistry(
+      final registry = CCMultiHostNavigationAdapter(
         defaultHostId: primary.hostId,
         adapters: {primary.hostId: primary},
       );
@@ -368,7 +368,7 @@ void main() {
 
   test('failed dynamic Host listener binding removes partial registration', () {
     final primary = _HostAdapter('window.primary');
-    final registry = CCNavigationHostRegistry(
+    final registry = CCMultiHostNavigationAdapter(
       defaultHostId: primary.hostId,
       adapters: {primary.hostId: primary},
     );
@@ -389,7 +389,7 @@ void main() {
   test('failed initial Host setup disposes the complete owned registry', () {
     final healthy = _HostAdapter('window.healthy');
     final failing = _FailingInitializeHostAdapter('window.failing');
-    final registry = CCNavigationHostRegistry(
+    final registry = CCMultiHostNavigationAdapter(
       defaultHostId: healthy.hostId,
       adapters: {healthy.hostId: healthy, failing.hostId: failing},
     );
@@ -406,7 +406,7 @@ void main() {
   test('listener removal failure cannot skip owned Adapter cleanup', () {
     final failing = _ThrowingRemoverHostAdapter('window.remover');
     final healthy = _HostAdapter('window.healthy');
-    final registry = CCNavigationHostRegistry(
+    final registry = CCMultiHostNavigationAdapter(
       defaultHostId: failing.hostId,
       adapters: {failing.hostId: failing, healthy.hostId: healthy},
     );
@@ -421,7 +421,7 @@ void main() {
   test('Host removal failure still completes structural cleanup', () {
     final healthy = _HostAdapter('window.healthy');
     final failing = _ThrowingRemoverHostAdapter('window.remover');
-    final registry = CCNavigationHostRegistry(
+    final registry = CCMultiHostNavigationAdapter(
       defaultHostId: healthy.hostId,
       adapters: {healthy.hostId: healthy, failing.hostId: failing},
     );
@@ -440,7 +440,7 @@ void main() {
   test('registry releases every Host when one synchronous dispose fails', () {
     final failing = _ThrowingDisposeHostAdapter('window.failing');
     final healthy = _HostAdapter('window.healthy');
-    final registry = CCNavigationHostRegistry(
+    final registry = CCMultiHostNavigationAdapter(
       defaultHostId: failing.hostId,
       adapters: {failing.hostId: failing, healthy.hostId: healthy},
     );
@@ -457,7 +457,7 @@ void main() {
     () async {
       final primary = _HostAdapter('window.primary');
       final secondary = _HostAdapter('window.secondary');
-      final registry = CCNavigationHostRegistry(
+      final registry = CCMultiHostNavigationAdapter(
         defaultHostId: primary.hostId,
         adapters: {primary.hostId: primary, secondary.hostId: secondary},
       );
@@ -521,7 +521,7 @@ void main() {
 
   test('adaptive layout hides and restores retained Outlet stacks', () async {
     final primary = _HostAdapter('window.primary');
-    final registry = CCNavigationHostRegistry(
+    final registry = CCMultiHostNavigationAdapter(
       defaultHostId: primary.hostId,
       adapters: {primary.hostId: primary},
     );

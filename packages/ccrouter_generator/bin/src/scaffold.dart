@@ -291,7 +291,11 @@ const $contract = CCInitTaskContract(
 );
 
 /// Initializes the component after the Host opens the selected Gate.
-@CCInitTask(contract: $contract)
+@CCInitTask(
+  contract: $contract,
+  gate: CCInitTaskGate.appStarted,
+  failurePolicy: CCInitTaskFailurePolicy.optional,
+)
 Future<void> $handler(CCInvocationContext context) async {
   // TODO: perform bounded startup work or delegate to a Service.
 }

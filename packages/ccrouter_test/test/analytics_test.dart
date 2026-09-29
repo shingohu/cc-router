@@ -212,7 +212,7 @@ void main() {
       sinks: [sink],
       policy: CCAnalyticsPolicy(consentGranted: true),
     );
-    final bridge = CCRouterNavigationAnalytics(dispatcher: dispatcher);
+    final bridge = CCNavigationAnalyticsBridge(dispatcher: dispatcher);
     final aspect = bridge.createAspect();
     final request = CCNavigationAspectRequest(
       navigationId: 'runtime-navigation-1',

@@ -14,7 +14,7 @@ import 'package:ccrouter_test/src/ccrouter_generated/route/generated_route_fixtu
 
 /// Package-internal page factory bridge used by generated Flutter catalogs.
 route_page.GeneratedDetailPage ccrouterBuildGeneratedDetailPageRoute(
-  CCEncodedRouteArguments arguments,
+  CCRouteCodecValues arguments,
 ) {
   final decoded = route_contract
       .ccrouterDescribeGeneratedDetailPageRoute()
@@ -32,12 +32,12 @@ route_page.GeneratedDetailPage ccrouterBuildGeneratedDetailPageRoute(
 
 /// Package-internal page factory bridge used by generated Flutter catalogs.
 route_page.GeneratedInternalPage ccrouterBuildGeneratedInternalPageRoute(
-  CCEncodedRouteArguments _,
+  CCRouteCodecValues _,
 ) => route_page.GeneratedInternalPage();
 
 /// Package-internal page factory bridge used by generated Flutter catalogs.
 route_page.GeneratedPositionalPage ccrouterBuildGeneratedPositionalPageRoute(
-  CCEncodedRouteArguments arguments,
+  CCRouteCodecValues arguments,
 ) {
   final decoded = route_contract
       .ccrouterDescribeGeneratedPositionalPageRoute()
@@ -48,7 +48,7 @@ route_page.GeneratedPositionalPage ccrouterBuildGeneratedPositionalPageRoute(
 
 /// Package-internal page factory bridge used by generated Flutter catalogs.
 route_page.GeneratedExtraPage ccrouterBuildGeneratedExtraPageRoute(
-  CCEncodedRouteArguments arguments,
+  CCRouteCodecValues arguments,
 ) {
   final decoded = route_contract
       .ccrouterDescribeGeneratedExtraPageRoute()
@@ -59,7 +59,7 @@ route_page.GeneratedExtraPage ccrouterBuildGeneratedExtraPageRoute(
 
 /// Package-internal page factory bridge used by generated Flutter catalogs.
 route_page.GeneratedPrefixedPage ccrouterBuildGeneratedPrefixedPageRoute(
-  CCEncodedRouteArguments arguments,
+  CCRouteCodecValues arguments,
 ) {
   final decoded = route_contract
       .ccrouterDescribeGeneratedPrefixedPageRoute()

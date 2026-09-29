@@ -25,7 +25,7 @@ CCRouteDefinition<dynamic, dynamic> ccrouterDescribeDemoPublicWebPageRoute() =>
 
 /// Package-internal page factory bound to the public route contract.
 route_page.DemoPublicWebPage ccrouterBuildDemoPublicWebPageRoute(
-  CCEncodedRouteArguments arguments,
+  CCRouteCodecValues arguments,
 ) {
   final decoded = route_contract_0.DemoPublicWebRoute.definition.codec.decode(
     arguments,
@@ -46,7 +46,7 @@ CCRouteDefinition<dynamic, dynamic> ccrouterDescribeDemoPrivateWebPageRoute() =>
 
 /// Package-internal page factory bound to the public route contract.
 route_page.DemoPrivateWebPage ccrouterBuildDemoPrivateWebPageRoute(
-  CCEncodedRouteArguments arguments,
+  CCRouteCodecValues arguments,
 ) {
   final decoded = route_contract_0.DemoPrivateWebRoute.definition.codec.decode(
     arguments,

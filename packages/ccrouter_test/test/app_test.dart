@@ -16,12 +16,12 @@ final class _ContextRouteCodec implements CCRouteCodec<_ContextRouteArgs> {
   const _ContextRouteCodec();
 
   @override
-  _ContextRouteArgs decode(CCEncodedRouteArguments input) =>
+  _ContextRouteArgs decode(CCRouteCodecValues input) =>
       _ContextRouteArgs(input.path['value']!);
 
   @override
-  CCEncodedRouteArguments encode(_ContextRouteArgs arguments) =>
-      CCEncodedRouteArguments(path: {'value': arguments.value});
+  CCRouteCodecValues encode(_ContextRouteArgs arguments) =>
+      CCRouteCodecValues(path: {'value': arguments.value});
 }
 
 final class _ContextRouteIntent implements CCRouteIntent<String> {

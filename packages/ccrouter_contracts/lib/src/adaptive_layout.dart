@@ -5,7 +5,7 @@
 /// Window or importing Flutter, display APIs, or Widget types.
 
 /// Broad width class used by adaptive navigation policies.
-enum CCWindowSizeClass {
+enum CCHostSizeClass {
   /// Compact layout, normally one primary pane.
   compact,
 
@@ -18,7 +18,7 @@ enum CCWindowSizeClass {
 
 /// Common layout shape selected for a Host.
 enum CCAdaptiveLayoutKind {
-  /// One active navigation outlet fills the available window.
+  /// One active navigation outlet fills the available Host surface.
   singlePane,
 
   /// Two related outlets are visible at the same time.
@@ -109,10 +109,10 @@ final class CCHostLayoutMetrics {
   final List<CCDisplayFeature> displayFeatures;
 
   /// Width class used by the default adaptive policy.
-  CCWindowSizeClass get sizeClass {
-    if (width < 600) return CCWindowSizeClass.compact;
-    if (width < 840) return CCWindowSizeClass.medium;
-    return CCWindowSizeClass.expanded;
+  CCHostSizeClass get sizeClass {
+    if (width < 600) return CCHostSizeClass.compact;
+    if (width < 840) return CCHostSizeClass.medium;
+    return CCHostSizeClass.expanded;
   }
 
   /// Whether at least one separating display feature is present.
@@ -121,29 +121,29 @@ final class CCHostLayoutMetrics {
 }
 
 /// Maps a Host size class to a navigation layout shape.
-final class CCAdaptivePresentationPolicy {
+final class CCAdaptiveLayoutPolicy {
   /// Creates a policy with conservative single-pane defaults.
-  const CCAdaptivePresentationPolicy({
+  const CCAdaptiveLayoutPolicy({
     this.compact = CCAdaptiveLayoutKind.singlePane,
     this.medium = CCAdaptiveLayoutKind.splitPane,
     this.expanded = CCAdaptiveLayoutKind.splitPane,
   });
 
-  /// Layout selected for compact windows.
+  /// Layout selected for compact Host surfaces.
   final CCAdaptiveLayoutKind compact;
 
-  /// Layout selected for medium windows.
+  /// Layout selected for medium Host surfaces.
   final CCAdaptiveLayoutKind medium;
 
-  /// Layout selected for expanded windows.
+  /// Layout selected for expanded Host surfaces.
   final CCAdaptiveLayoutKind expanded;
 
   /// Selects the layout for [metrics] without mutating navigation state.
   CCAdaptiveLayoutKind select(CCHostLayoutMetrics metrics) =>
       switch (metrics.sizeClass) {
-        CCWindowSizeClass.compact => compact,
-        CCWindowSizeClass.medium => medium,
-        CCWindowSizeClass.expanded => expanded,
+        CCHostSizeClass.compact => compact,
+        CCHostSizeClass.medium => medium,
+        CCHostSizeClass.expanded => expanded,
       };
 }
 
@@ -218,9 +218,9 @@ final class CCAdaptiveOutletPolicy {
 }
 
 /// Immutable adaptive navigation state for one Host layout surface.
-final class CCAdaptiveHostLayout {
+final class CCAdaptiveHostLayoutSnapshot {
   /// Creates one resolved Host layout snapshot.
-  CCAdaptiveHostLayout({
+  CCAdaptiveHostLayoutSnapshot({
     required this.metrics,
     required this.layout,
     required Iterable<String> activeOutlets,
@@ -229,7 +229,7 @@ final class CCAdaptiveHostLayout {
   /// Host geometry and display-feature inputs used for this decision.
   final CCHostLayoutMetrics metrics;
 
-  /// Layout kind selected by the presentation policy.
+  /// Layout kind selected by the adaptive layout policy.
   final CCAdaptiveLayoutKind layout;
 
   /// Navigator Outlets participating in display simultaneously.
@@ -237,5 +237,5 @@ final class CCAdaptiveHostLayout {
 }
 
 /// Receives adaptive Host layout changes for UI composition and diagnostics.
-typedef CCAdaptiveHostLayoutListener =
-    void Function(CCAdaptiveHostLayout event);
+typedef CCAdaptiveHostLayoutSnapshotListener =
+    void Function(CCAdaptiveHostLayoutSnapshot event);

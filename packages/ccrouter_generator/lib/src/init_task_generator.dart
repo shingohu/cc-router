@@ -171,6 +171,7 @@ final class _InitTaskMetadataBuilder implements Builder {
             'gateId': task.gateId,
             'failurePolicy': task.failurePolicy,
             'timeoutMicroseconds': task.timeoutMicroseconds,
+            'isAsync': task.isAsync,
             'package': package,
             'source': source,
             'implementation': _initTaskSourceReference(task.element),
@@ -236,6 +237,7 @@ final class _InitTaskModel {
     required this.gateId,
     required this.failurePolicy,
     required this.timeoutMicroseconds,
+    required this.isAsync,
   });
 
   /// Public top-level Handler function.
@@ -264,6 +266,9 @@ final class _InitTaskModel {
 
   /// Positive timeout in microseconds, or null when unbounded.
   final int? timeoutMicroseconds;
+
+  /// Whether the Handler returns `Future<void>` or `FutureOr<void>`.
+  final bool isAsync;
 
   /// Stable package-internal registration bridge.
   String get registrationFunction =>
@@ -443,6 +448,7 @@ List<_InitTaskModel> _readInitTasks(LibraryReader library) {
     if (failureIndex == null || failureIndex < 0 || failureIndex > 1) {
       _failInitTask('CCInitTask failure policy is unsupported.', element);
     }
+    final failurePolicy = failureIndex == 0 ? 'required' : 'optional';
     final timeoutObject = annotated.annotation.peek('timeout')?.objectValue;
     final timeoutMicroseconds = timeoutObject
         ?.getField('_duration')
@@ -450,6 +456,19 @@ List<_InitTaskModel> _readInitTasks(LibraryReader library) {
     if (timeoutObject != null &&
         (timeoutMicroseconds == null || timeoutMicroseconds <= 0)) {
       _failInitTask('CCInitTask timeout must be positive.', element);
+    }
+    final isAsync = element.returnType is! VoidType;
+    if (failurePolicy == 'required' && contract == null) {
+      _failInitTask(
+        'Required CCInitTask "$id" must use a CCInitTaskContract.',
+        element,
+      );
+    }
+    if (failurePolicy == 'required' && isAsync && timeoutMicroseconds == null) {
+      _failInitTask(
+        'Async required CCInitTask "$id" must declare a positive timeout.',
+        element,
+      );
     }
     tasks.add(
       _InitTaskModel(
@@ -460,8 +479,9 @@ List<_InitTaskModel> _readInitTasks(LibraryReader library) {
         dependencies: List.unmodifiable(dependencies),
         dependencyOwners: List.unmodifiable(dependencyOwners),
         gateId: gateId,
-        failurePolicy: failureIndex == 0 ? 'critical' : 'optional',
+        failurePolicy: failurePolicy,
         timeoutMicroseconds: timeoutMicroseconds,
+        isAsync: isAsync,
       ),
     );
   }

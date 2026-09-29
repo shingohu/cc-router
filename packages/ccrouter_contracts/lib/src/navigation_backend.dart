@@ -41,7 +41,7 @@ enum CCBackendEntryVisibilityState {
 }
 
 /// Identifies which kind of backend entry consumed a Pop request.
-enum CCPopRemovedOwner {
+enum CCPopRemovedEntryOwner {
   /// No backend entry was confirmed as removed.
   none,
 
@@ -81,15 +81,15 @@ enum CCPopTrigger {
 /// Adapter-neutral result of one coordinated Pop request.
 ///
 /// A handled Pop can still represent a `LocalHistoryEntry` or foreign Popup;
-/// callers must only close a CCRouter Route Scope when [removedOwner] is
-/// [CCPopRemovedOwner.managed]. Typed result delivery remains owned by the
+/// callers must only close a CCRouter Route Scope when [removedEntryOwner] is
+/// [CCPopRemovedEntryOwner.managed]. Typed result delivery remains owned by the
 /// original managed navigation Future and is never embedded in this outcome.
 final class CCPopOutcome {
   /// Creates a Pop result with explicit ownership and result-channel state.
   const CCPopOutcome({
     required this.handled,
     this.removedBackendEntryId,
-    this.removedOwner = CCPopRemovedOwner.none,
+    this.removedEntryOwner = CCPopRemovedEntryOwner.none,
     this.trigger = CCPopTrigger.unknown,
     this.guardDeniedCode,
     this.hostId,
@@ -103,15 +103,15 @@ final class CCPopOutcome {
   final String? removedBackendEntryId;
 
   /// Ownership of the backend entry removed by the Pop.
-  final CCPopRemovedOwner removedOwner;
+  final CCPopRemovedEntryOwner removedEntryOwner;
 
   /// Trigger that entered the Pop coordination pipeline.
   final CCPopTrigger trigger;
 
   /// Stable reason supplied when a Runtime Pop guard consumed the request.
   ///
-  /// A non-null value implies [handled] is true while [removedOwner] remains
-  /// [CCPopRemovedOwner.none]. No backend entry or Route Scope was removed.
+  /// A non-null value implies [handled] is true while [removedEntryOwner] remains
+  /// [CCPopRemovedEntryOwner.none]. No backend entry or Route Scope was removed.
   final String? guardDeniedCode;
 
   /// Concrete Host that consumed the Pop, when known.
@@ -139,7 +139,7 @@ final class CCPopOutcome {
   }) => CCPopOutcome(
     handled: handled,
     removedBackendEntryId: removedBackendEntryId,
-    removedOwner: removedOwner,
+    removedEntryOwner: removedEntryOwner,
     trigger: trigger ?? this.trigger,
     guardDeniedCode: guardDeniedCode,
     hostId: hostId ?? this.hostId,
@@ -283,9 +283,9 @@ final class CCBackendEntrySnapshot {
 /// Route Scope without a matching Runtime navigation identity. [location] may
 /// contain sensitive values and must be converted to [CCRouteAddressSummary]
 /// rather than retained or exposed to business diagnostics.
-final class CCNavigationBackendEntrySnapshot {
+final class CCInitialBackendEntrySnapshot {
   /// Creates one active backend snapshot entry.
-  const CCNavigationBackendEntrySnapshot({
+  const CCInitialBackendEntrySnapshot({
     required this.backendEntryId,
     required this.owner,
     required this.navigatorOutlet,
@@ -622,14 +622,14 @@ abstract interface class CCNavigationBackendSnapshotSource {
   ///
   /// The snapshot must already be available in adapter memory so attachment is
   /// atomic and navigation cannot race an asynchronous initial-stack import.
-  List<CCNavigationBackendEntrySnapshot> readInitialBackendSnapshot();
+  List<CCInitialBackendEntrySnapshot> readInitialBackendEntries();
 }
 
 /// Optional Adapter SPI that provides ownership-aware Pop outcomes.
 ///
 /// Older adapters may implement only [CCNavigationAdapter.maybePop]; Runtime
 /// then preserves compatibility by converting its Boolean result into an
-/// outcome whose removed owner is [CCPopRemovedOwner.none].
+/// outcome whose removed owner is [CCPopRemovedEntryOwner.none].
 abstract interface class CCNavigationPopCoordinator {
   /// Coordinates one Pop and returns the removed backend Entry ownership.
   Future<CCPopOutcome> maybePopOutcome({Object? result});

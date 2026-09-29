@@ -19,12 +19,12 @@ final class _BenchmarkCodec implements CCRouteCodec<_BenchmarkArguments> {
   const _BenchmarkCodec();
 
   @override
-  _BenchmarkArguments decode(CCEncodedRouteArguments input) =>
+  _BenchmarkArguments decode(CCRouteCodecValues input) =>
       _BenchmarkArguments(input.path['id']!);
 
   @override
-  CCEncodedRouteArguments encode(_BenchmarkArguments arguments) =>
-      CCEncodedRouteArguments(path: {'id': arguments.id});
+  CCRouteCodecValues encode(_BenchmarkArguments arguments) =>
+      CCRouteCodecValues(path: {'id': arguments.id});
 }
 
 final class _BenchmarkRegistrar implements CCComponentRegistrar {

@@ -2,15 +2,15 @@ import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 
 import 'app.dart';
 
-/// Host-only Adapter registry for independent navigation backends.
+/// Host-only Adapter multiplexer for independent navigation backends.
 ///
 /// Register one independently owned Adapter per navigation Host, then
-/// expose this registry through a `CCRouterAppBackend` initialized by
+/// expose this adapter through a `CCRouterAppBackend` initialized by
 /// `CCRouterApp.managed`.
 /// Requests with an explicit route Host remain pinned to that Host; routes
 /// using the `default` placement resolve through [activeHostId]. Business code
 /// should not retain this object or select a Host for ordinary navigation.
-final class CCNavigationHostRegistry
+final class CCMultiHostNavigationAdapter
     implements
         CCNavigationAdapter,
         CCNavigationAdapterHostBinding,
@@ -24,11 +24,11 @@ final class CCNavigationHostRegistry
         CCNavigationPopGuardBinding,
         CCNavigationPredictiveBackSourceProvider,
         CCNavigationPredictiveBackSource {
-  /// Creates a registry with an initial Host-to-Adapter mapping.
+  /// Creates a multi-Host adapter with an initial Host-to-Adapter mapping.
   ///
-  /// [defaultHostId] must identify one supplied Adapter. The registry assumes
+  /// [defaultHostId] must identify one supplied Adapter. This object assumes
   /// ownership of every supplied Adapter and disposes each exactly once.
-  CCNavigationHostRegistry({
+  CCMultiHostNavigationAdapter({
     required String defaultHostId,
     required Map<String, CCNavigationAdapter> adapters,
   }) : _activeHostId = defaultHostId {
@@ -59,7 +59,7 @@ final class CCNavigationHostRegistry
   Set<String> get registeredHostIds => Set.unmodifiable(_hosts.keys);
 
   /// Immutable adaptive layout snapshots indexed by Host identity.
-  Map<String, CCAdaptiveHostLayout> get adaptiveLayouts =>
+  Map<String, CCAdaptiveHostLayoutSnapshot> get adaptiveLayouts =>
       Map.unmodifiable(_adaptiveLayouts);
 
   /// Default Host identity consumed by Runtime request construction.
@@ -140,10 +140,9 @@ final class CCNavigationHostRegistry
   /// display features, or fold posture changes. The operation never pushes,
   /// removes, or migrates routes; it only changes which retained Outlet tops
   /// are considered shown.
-  CCAdaptiveHostLayout updateHostLayout(
+  CCAdaptiveHostLayoutSnapshot updateHostLayout(
     CCHostLayoutMetrics metrics, {
-    CCAdaptivePresentationPolicy presentationPolicy =
-        const CCAdaptivePresentationPolicy(),
+    CCAdaptiveLayoutPolicy layoutPolicy = const CCAdaptiveLayoutPolicy(),
     required CCAdaptiveOutletPolicy outletPolicy,
     String? shellId,
   }) {
@@ -153,9 +152,9 @@ final class CCNavigationHostRegistry
         'Navigation Host "${metrics.hostId}" is not registered.',
       );
     }
-    final layout = presentationPolicy.select(metrics);
+    final layout = layoutPolicy.select(metrics);
     final activeOutlets = outletPolicy.activeOutletsFor(layout);
-    final snapshot = CCAdaptiveHostLayout(
+    final snapshot = CCAdaptiveHostLayoutSnapshot(
       metrics: metrics,
       layout: layout,
       activeOutlets: activeOutlets,
@@ -170,7 +169,7 @@ final class CCNavigationHostRegistry
       CCNavigationBackendEvent(
         kind: CCNavigationBackendEventKind.outletsChanged,
         timestamp: DateTime.now(),
-        backendOperationId: '$_registryId-${metrics.hostId}-layout-$sequence',
+        backendOperationId: '$_adapterId-${metrics.hostId}-layout-$sequence',
         hostId: metrics.hostId,
         navigatorOutlet: activeOutlets.first,
         sequence: sequence,
@@ -197,16 +196,16 @@ final class CCNavigationHostRegistry
   /// The returned callback removes the listener. Callbacks are observational
   /// and cannot modify the resolved active Outlet set for the current event.
   void Function() addAdaptiveLayoutListener(
-    CCAdaptiveHostLayoutListener listener,
+    CCAdaptiveHostLayoutSnapshotListener listener,
   ) {
     _adaptiveLayoutListeners.add(listener);
     return () => _adaptiveLayoutListeners.remove(listener);
   }
 
-  /// Adds one Host Adapter, including after registry initialization.
+  /// Adds one Host Adapter, including after multi-Host initialization.
   ///
   /// A dynamically added Adapter receives the cached route table before it is
-  /// exposed to navigation. Failure leaves the registry unchanged and disposes
+  /// exposed to navigation. Failure leaves this adapter unchanged and disposes
   /// the rejected Adapter because ownership transferred to this call.
   void registerHost(String hostId, CCNavigationAdapter adapter) =>
       _registerHost(hostId, adapter);
@@ -244,11 +243,12 @@ final class CCNavigationHostRegistry
 
   /// Removes and disposes one Host Adapter without affecting other Hosts.
   ///
-  /// The last Host cannot be removed from an initialized registry. Runtime is
-  /// notified before disposal so entries owned by the removed Host close their
-  /// Route Scopes. Live backend pages are never migrated implicitly. Removing
-  /// the active Host requires [replacementActiveHostId], which must identify a
-  /// different registered Host; no replacement is selected by insertion order.
+  /// The last Host cannot be removed from an initialized multi-Host adapter.
+  /// Runtime is notified before disposal so entries owned by the removed Host
+  /// close their Route Scopes. Live backend pages are never migrated implicitly.
+  /// Removing the active Host requires [replacementActiveHostId], which must
+  /// identify a different registered Host; no replacement is selected by
+  /// insertion order.
   void unregisterHost(String hostId, {String? replacementActiveHostId}) =>
       _unregisterHost(hostId, replacementActiveHostId: replacementActiveHostId);
 
@@ -260,7 +260,8 @@ final class CCNavigationHostRegistry
     _ensureAvailable();
     if (_hosts.length == 1) {
       throw const CCNavigationAdapterError(
-        'An initialized Host registry must retain at least one Host.',
+        'An initialized multi-Host navigation adapter must retain at least '
+        'one Host.',
       );
     }
     final record = _hosts[hostId];
@@ -303,7 +304,7 @@ final class CCNavigationHostRegistry
       CCNavigationBackendEvent(
         kind: CCNavigationBackendEventKind.hostDetached,
         timestamp: DateTime.now(),
-        backendOperationId: '$_registryId-$hostId-detached-$sequence',
+        backendOperationId: '$_adapterId-$hostId-detached-$sequence',
         hostId: hostId,
         sequence: sequence,
         placement: CCRoutePlacement(hostId: hostId),
@@ -336,7 +337,7 @@ final class CCNavigationHostRegistry
     _ensureNotDisposed();
     if (_initialized) {
       throw const CCNavigationAdapterError(
-        'The navigation Host registry is already initialized.',
+        'The multi-Host navigation adapter is already initialized.',
       );
     }
     try {
@@ -421,14 +422,14 @@ final class CCNavigationHostRegistry
 
   /// Reads initial stacks from every snapshot-capable Host.
   @override
-  List<CCNavigationBackendEntrySnapshot> readInitialBackendSnapshot() {
+  List<CCInitialBackendEntrySnapshot> readInitialBackendEntries() {
     _ensureAvailable();
-    final result = <CCNavigationBackendEntrySnapshot>[];
+    final result = <CCInitialBackendEntrySnapshot>[];
     for (final entry in _hosts.entries) {
       final adapter = entry.value.adapter;
       if (adapter is! CCNavigationBackendSnapshotSource) continue;
       final snapshots = (adapter as CCNavigationBackendSnapshotSource)
-          .readInitialBackendSnapshot();
+          .readInitialBackendEntries();
       result.addAll(
         snapshots.map((snapshot) => _snapshotForHost(entry.key, snapshot)),
       );
@@ -545,16 +546,16 @@ final class CCNavigationHostRegistry
   final Set<CCPredictiveBackEventListener> _predictiveBackListeners = {};
 
   /// Latest adaptive layout state retained for each Host.
-  final Map<String, CCAdaptiveHostLayout> _adaptiveLayouts = {};
+  final Map<String, CCAdaptiveHostLayoutSnapshot> _adaptiveLayouts = {};
 
   /// Observers receiving adaptive Host layout snapshots.
-  final Set<CCAdaptiveHostLayoutListener> _adaptiveLayoutListeners = {};
+  final Set<CCAdaptiveHostLayoutSnapshotListener> _adaptiveLayoutListeners = {};
 
   /// Monotonic merged event sequence assigned independently per Host.
   final Map<String, int> _sequencesByHost = {};
 
-  /// Process-local identity prefix for registry-authored backend events.
-  final String _registryId =
+  /// Process-local identity prefix for adapter-authored backend events.
+  final String _adapterId =
       '${DateTime.now().microsecondsSinceEpoch}-${identityHashCode(Object())}';
 
   /// Route table cached for dynamically registered Hosts.
@@ -572,7 +573,7 @@ final class CCNavigationHostRegistry
   /// Whether all initial child Adapters accepted their route tables.
   bool _initialized = false;
 
-  /// Whether registry ownership has permanently ended.
+  /// Whether adapter ownership has permanently ended.
   bool _disposed = false;
 
   /// Active child Adapter used for non-targeted Pop operations.
@@ -727,10 +728,10 @@ final class CCNavigationHostRegistry
       _sequencesByHost.update(hostId, (value) => value + 1, ifAbsent: () => 1);
 
   /// Supplies a missing Host identity on one initial child snapshot.
-  CCNavigationBackendEntrySnapshot _snapshotForHost(
+  CCInitialBackendEntrySnapshot _snapshotForHost(
     String hostId,
-    CCNavigationBackendEntrySnapshot snapshot,
-  ) => CCNavigationBackendEntrySnapshot(
+    CCInitialBackendEntrySnapshot snapshot,
+  ) => CCInitialBackendEntrySnapshot(
     backendEntryId: snapshot.backendEntryId,
     owner: snapshot.owner,
     navigatorOutlet: snapshot.navigatorOutlet,
@@ -771,7 +772,7 @@ final class CCNavigationHostRegistry
     _ensureNotDisposed();
     if (!_initialized) {
       throw const CCNavigationAdapterError(
-        'The navigation Host registry is not initialized.',
+        'The multi-Host navigation adapter is not initialized.',
       );
     }
   }
@@ -780,7 +781,7 @@ final class CCNavigationHostRegistry
   void _ensureNotDisposed() {
     if (_disposed) {
       throw const CCNavigationAdapterError(
-        'The navigation Host registry has been disposed.',
+        'The multi-Host navigation adapter has been disposed.',
       );
     }
   }
@@ -791,7 +792,7 @@ final class _CCNavigationHostAdapterRecord {
   /// Creates a record before listener bridges are attached.
   _CCNavigationHostAdapterRecord(this.adapter);
 
-  /// Adapter exclusively owned by the registry.
+  /// Adapter exclusively owned by the multi-Host parent adapter.
   final CCNavigationAdapter adapter;
 
   /// Removes the child backend-event subscription.

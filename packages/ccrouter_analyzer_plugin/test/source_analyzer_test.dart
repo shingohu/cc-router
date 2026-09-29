@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:ccrouter_analyzer_plugin/src/diagnostics.dart';
+import 'package:ccrouter_analyzer_plugin/src/source_analyzer.dart';
 import 'package:path/path.dart' as path;
 import 'package:test/test.dart';
 
@@ -19,7 +19,7 @@ void main() {
   tearDown(() => root.deleteSync(recursive: true));
 
   test('rejects a foreign generated library import', () {
-    final diagnostics = CCRouterAnalyzerDiagnostics.analyze(
+    final diagnostics = CCRouterSourceAnalyzer.analyze(
       source:
           "import 'package:other_component/src/ccrouter_generated/route/x.dart';",
       filePath: path.join(packageRoot, 'lib', 'src', 'page.dart'),
@@ -41,7 +41,7 @@ class CCRoute<T> {
 @CCRoute<void>()
 class HomePage {}
 ''';
-    final diagnostics = CCRouterAnalyzerDiagnostics.analyze(
+    final diagnostics = CCRouterSourceAnalyzer.analyze(
       source: source,
       filePath: path.join(packageRoot, 'lib', 'src', 'home_page.dart'),
       packageRoot: packageRoot,
@@ -65,7 +65,7 @@ class HomePage {}
       ),
     )..createSync(recursive: true);
     addTearDown(() => output.deleteSync());
-    final diagnostics = CCRouterAnalyzerDiagnostics.analyze(
+    final diagnostics = CCRouterSourceAnalyzer.analyze(
       source: '@CCRoute<void>()\nclass HomePage {}',
       filePath: path.join(packageRoot, 'lib', 'src', 'home_page.dart'),
       packageRoot: packageRoot,
@@ -88,14 +88,14 @@ class HomePage {}
       'network_page.route.g.dart',
     );
     expect(
-      CCRouterAnalyzerDiagnostics.authoredRoutePathForGenerated(generated),
+      CCRouterSourceAnalyzer.authoredRoutePathForGenerated(generated),
       path.join(packageRoot, 'lib', 'src', 'pages', 'network_page.dart'),
     );
   });
 
   test('ignores unrelated generated files for source refresh', () {
     expect(
-      CCRouterAnalyzerDiagnostics.authoredRoutePathForGenerated(
+      CCRouterSourceAnalyzer.authoredRoutePathForGenerated(
         path.join(
           packageRoot,
           'lib',
@@ -111,7 +111,7 @@ class HomePage {}
 
   test('ignores an incomplete editor buffer without throwing', () {
     expect(
-      () => CCRouterAnalyzerDiagnostics.analyze(
+      () => CCRouterSourceAnalyzer.analyze(
         source: 'class HomePage {',
         filePath: path.join(packageRoot, 'lib', 'src', 'home_page.dart'),
         packageRoot: packageRoot,
@@ -122,7 +122,7 @@ class HomePage {}
   });
 
   test('does not flag generated implementation imports', () {
-    final diagnostics = CCRouterAnalyzerDiagnostics.analyze(
+    final diagnostics = CCRouterSourceAnalyzer.analyze(
       source:
           "import 'package:other_component/src/ccrouter_generated/route/x.dart';",
       filePath: path.join(
@@ -137,5 +137,51 @@ class HomePage {}
       packageName: 'sample_component',
     );
     expect(diagnostics, isEmpty);
+  });
+
+  test('reports required InitTask without Contract or timeout', () {
+    final diagnostics = CCRouterSourceAnalyzer.analyze(
+      source: '''
+@CCInitTask(
+  id: 'startup.required',
+  gate: CCInitTaskGate.appStarted,
+  failurePolicy: CCInitTaskFailurePolicy.required,
+)
+Future<void> initializeRequired() async {}
+''',
+      filePath: path.join(packageRoot, 'lib', 'src', 'init_tasks.dart'),
+      packageRoot: packageRoot,
+      packageName: 'sample_component',
+    );
+
+    expect(
+      diagnostics.map((item) => item.code),
+      containsAll([
+        'ccrouter_required_init_task_contract_missing',
+        'ccrouter_required_init_task_timeout_missing',
+      ]),
+    );
+  });
+
+  test('accepts a bounded required InitTask Contract Handler', () {
+    final diagnostics = CCRouterSourceAnalyzer.analyze(
+      source: '''
+@CCInitTask(
+  contract: startupRequired,
+  gate: CCInitTaskGate.appStarted,
+  failurePolicy: CCInitTaskFailurePolicy.required,
+  timeout: Duration(seconds: 3),
+)
+Future<void> initializeRequired() async {}
+''',
+      filePath: path.join(packageRoot, 'lib', 'src', 'init_tasks.dart'),
+      packageRoot: packageRoot,
+      packageName: 'sample_component',
+    );
+
+    expect(
+      diagnostics.map((item) => item.code),
+      isNot(contains(startsWith('ccrouter_required_init_task_'))),
+    );
   });
 }

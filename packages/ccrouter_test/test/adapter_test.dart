@@ -58,7 +58,7 @@ void main() {
     addTearDown(router.dispose);
 
     adapter.initialize(const []);
-    final snapshots = adapter.readInitialBackendSnapshot();
+    final snapshots = adapter.readInitialBackendEntries();
 
     expect(adapter.hostId, 'window.main');
     expect(adapter.navigatorKeys['root'], same(host.navigatorKey));
@@ -176,7 +176,7 @@ void main() {
     bridge.committed(
       const CCPopOutcome(
         handled: true,
-        removedOwner: CCPopRemovedOwner.managed,
+        removedEntryOwner: CCPopRemovedEntryOwner.managed,
         removedBackendEntryId: 'managed-1',
       ),
     );
@@ -213,7 +213,7 @@ void main() {
       addTearDown(router.dispose);
       adapter.initialize(const []);
 
-      final snapshots = adapter.readInitialBackendSnapshot();
+      final snapshots = adapter.readInitialBackendEntries();
       expect(snapshots, isNotEmpty);
       expect(
         snapshots.every(
@@ -420,9 +420,9 @@ void main() {
     final outcome = await adapter.maybePopOutcome(result: 'back');
     await tester.pumpAndSettle();
     expect(outcome.handled, isTrue);
-    expect(outcome.removedOwner, CCPopRemovedOwner.managed);
+    expect(outcome.removedEntryOwner, CCPopRemovedEntryOwner.managed);
     expect(outcome.removedBackendEntryId, isNotNull);
-    expect(outcome.removedOwner, CCPopRemovedOwner.managed);
+    expect(outcome.removedEntryOwner, CCPopRemovedEntryOwner.managed);
     expect(await pushed, 'back');
   });
 

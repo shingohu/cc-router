@@ -15,13 +15,6 @@ typedef CCServiceFactory<T> = T Function(CCInvocationContext context);
 typedef CCServiceInitializer<T> =
     FutureOr<void> Function(T service, CCInvocationContext context);
 
-/// Handles a typed message [M] and returns a synchronous or asynchronous [R].
-///
-/// Use handlers in component registration for Command and Event processing;
-/// business callers dispatch messages through `CCRouter` instead.
-typedef CCHandler<M, R> =
-    FutureOr<R> Function(M message, CCInvocationContext context);
-
 /// Type-erased handler stored by the internal dispatcher.
 typedef _Handler =
     FutureOr<Object?> Function(Object message, CCInvocationContext context);
@@ -96,7 +89,7 @@ abstract interface class CCRegistry {
   ///
   /// Use when exactly one component owns a side-effecting operation.
   void registerCommand<C extends CCCommand<R>, R>(
-    CCHandler<C, R> handler, {
+    FutureOr<R> Function(C command, CCInvocationContext context) handler, {
     String? commandId,
   });
 
@@ -105,7 +98,7 @@ abstract interface class CCRegistry {
   /// Use for independent listeners reacting to an already completed fact. The
   /// ID must be unique across the Runtime and should remain stable for Trace and
   /// diagnostics. Subscribers are installed for the Runtime lifetime.
-  void registerEvent<E extends CCEvent>(String id, CCHandler<E, void> handler);
+  void registerEvent<E extends CCEvent>(String id, CCEventHandler<E> handler);
 
   /// Registers one typed Event subscriber descriptor.
   ///
@@ -178,7 +171,7 @@ final class _CCComponentRegistry implements CCRegistry {
   /// Registers a command on behalf of the owning component.
   @override
   void registerCommand<C extends CCCommand<R>, R>(
-    CCHandler<C, R> handler, {
+    FutureOr<R> Function(C command, CCInvocationContext context) handler, {
     String? commandId,
   }) {
     runtime._registerCommandForComponent(
@@ -190,7 +183,7 @@ final class _CCComponentRegistry implements CCRegistry {
 
   /// Registers an event subscriber on behalf of the owning component.
   @override
-  void registerEvent<E extends CCEvent>(String id, CCHandler<E, void> handler) {
+  void registerEvent<E extends CCEvent>(String id, CCEventHandler<E> handler) {
     runtime._registerEventForComponent(ownerComponentId, id, handler);
   }
 

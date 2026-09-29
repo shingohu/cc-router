@@ -31,11 +31,10 @@ final class _ObjectCodec implements CCRouteCodec<Object?> {
   const _ObjectCodec();
 
   @override
-  Object? decode(CCEncodedRouteArguments input) => null;
+  Object? decode(CCRouteCodecValues input) => null;
 
   @override
-  CCEncodedRouteArguments encode(Object? arguments) =>
-      CCEncodedRouteArguments();
+  CCRouteCodecValues encode(Object? arguments) => CCRouteCodecValues();
 }
 
 void main() {

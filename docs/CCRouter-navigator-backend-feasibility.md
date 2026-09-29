@@ -39,7 +39,7 @@ attach。
 - Runtime 已维护 Managed/Foreign/Opaque Backend Entry 台账，不会按栈位置猜测 Pop；
 - `CCNavigationBackendEvent` 已包含 Entry ID、Operation ID、Host、Outlet、前序 Entry、
   Owner 和可见性事件；
-- `CCNavigationHostRegistry` 已支持多个独立 Host；
+- `CCMultiHostNavigationAdapter` 已支持多个独立 Host；
 - Route Presentation 已覆盖 Material、Cupertino、透明 Page、自定义 Transition、
   Dialog 和 Modal BottomSheet；
 - Runtime 在 Adapter 能力不足时已有显式错误和有界降级诊断边界。
@@ -273,7 +273,7 @@ readiness handshake 与 root Outlet bootstrap 随 Navigator 1 Backend 延后到�
 2. 同 Navigator 的普通 Route、PopupRoute 和直接 `Navigator.pop(result)` 进入 Foreign/Managed
    精确台账；
 3. LocalHistory、Overlay、MenuAnchor 和未绑定 Navigator 不改变 Managed RouteEntry；
-4. 接入 `CCNavigationHostRegistry`，验证两个 Host 和多个 Flutter View 的隔离；
+4. 接入 `CCMultiHostNavigationAdapter`，验证两个 Host 和多个 Flutter View 的隔离；
 5. 增加 Host-owned Shell Coordinator，上报 `outletActivated/outletsChanged`；
 6. Observer 覆盖完整后才开启 Visibility 和 Managed Pop capabilities。
 

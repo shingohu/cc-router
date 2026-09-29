@@ -11,7 +11,7 @@ import 'snapshot.dart';
 /// remover. A static provider is useful for deterministic widget tests.
 abstract interface class CCDevToolsSnapshotProvider {
   /// Captures the current immutable diagnostics view.
-  CCDevToolsSnapshot snapshot();
+  CCRouterDevToolsSnapshot snapshot();
 
   /// Registers a callback for a best-effort refresh notification.
   ///
@@ -33,10 +33,10 @@ final class CCRouterDevToolsSnapshotProvider
 
   @override
   /// Captures bounded snapshots, or an empty uninitialized view.
-  CCDevToolsSnapshot snapshot() {
-    if (!CCRouter.isInitialized) return CCDevToolsSnapshot.empty();
+  CCRouterDevToolsSnapshot snapshot() {
+    if (!CCRouter.isInitialized) return CCRouterDevToolsSnapshot.empty();
     try {
-      return CCDevToolsSnapshot(
+      return CCRouterDevToolsSnapshot(
         capturedAt: DateTime.now(),
         runtimeState: CCDevToolsRuntimeState.initialized,
         catalog: catalog,
@@ -55,7 +55,7 @@ final class CCRouterDevToolsSnapshotProvider
       );
     } on StateError {
       // Runtime can be shut down between the status check and the read.
-      return CCDevToolsSnapshot.empty();
+      return CCRouterDevToolsSnapshot.empty();
     }
   }
 
@@ -99,11 +99,11 @@ final class CCStaticDevToolsSnapshotProvider
   CCStaticDevToolsSnapshotProvider(this.value);
 
   /// Snapshot returned by [snapshot].
-  CCDevToolsSnapshot value;
+  CCRouterDevToolsSnapshot value;
 
   @override
   /// Returns the current test snapshot without copying source objects.
-  CCDevToolsSnapshot snapshot() => value;
+  CCRouterDevToolsSnapshot snapshot() => value;
 
   @override
   /// Returns an idempotent no-op remover because the value is static.

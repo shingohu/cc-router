@@ -10,7 +10,7 @@ void main() {
   final codec = detailCodec;
 
   test('generated arguments inject defaults and typed scalar values', () {
-    final arguments = codec.decode(CCEncodedRouteArguments(path: {'id': '42'}));
+    final arguments = codec.decode(CCRouteCodecValues(path: {'id': '42'}));
     final page = buildDetailPage(arguments);
     expect(page.id, 42);
     expect(page.tab, GeneratedDetailTab.summary);
@@ -52,40 +52,40 @@ void main() {
     'generated codec rejects malformed input without exposing raw values',
     () {
       final invalid = [
-        CCEncodedRouteArguments(),
-        CCEncodedRouteArguments(path: {'id': 'secret-id'}),
-        CCEncodedRouteArguments(
+        CCRouteCodecValues(),
+        CCRouteCodecValues(path: {'id': 'secret-id'}),
+        CCRouteCodecValues(
           path: {'id': '1'},
           query: {
             'tab': ['secret-tab'],
           },
         ),
-        CCEncodedRouteArguments(
+        CCRouteCodecValues(
           path: {'id': '1'},
           query: {
             'enabled': ['yes'],
           },
         ),
-        CCEncodedRouteArguments(
+        CCRouteCodecValues(
           path: {'id': '1'},
           query: {
             'ratio': ['NaN'],
           },
         ),
-        CCEncodedRouteArguments(
+        CCRouteCodecValues(
           path: {'id': '1'},
           query: {
             'ratio': ['Infinity'],
           },
         ),
-        CCEncodedRouteArguments(
+        CCRouteCodecValues(
           path: {'id': '1'},
           query: {
             'text': ['a', 'b'],
           },
         ),
-        CCEncodedRouteArguments(path: {'id': '1'}, query: {'text': []}),
-        CCEncodedRouteArguments(path: {'id': '1'}, extra: 'wrong object'),
+        CCRouteCodecValues(path: {'id': '1'}, query: {'text': []}),
+        CCRouteCodecValues(path: {'id': '1'}, extra: 'wrong object'),
       ];
       for (final input in invalid) {
         expect(
@@ -114,22 +114,22 @@ void main() {
     () {
       final extraRouteCodec = extraCodec;
       expect(
-        () => extraRouteCodec.decode(CCEncodedRouteArguments()),
+        () => extraRouteCodec.decode(CCRouteCodecValues()),
         throwsA(isA<CCRouteParameterError>()),
       );
       expect(
-        () => extraRouteCodec.decode(CCEncodedRouteArguments(extra: 'wrong')),
+        () => extraRouteCodec.decode(CCRouteCodecValues(extra: 'wrong')),
         throwsA(isA<CCRouteParameterError>()),
       );
       const snapshot = GeneratedSnapshot('required');
       expect(
         buildExtraPage(
-          extraRouteCodec.decode(CCEncodedRouteArguments(extra: snapshot)),
+          extraRouteCodec.decode(CCRouteCodecValues(extra: snapshot)),
         ).snapshot,
         same(snapshot),
       );
       final positional = buildPositionalPage(
-        positionalCodec.decode(CCEncodedRouteArguments(path: {'value': '你好'})),
+        positionalCodec.decode(CCRouteCodecValues(path: {'value': '你好'})),
       );
       expect(positional.value, '你好');
       expect(positional.input, 'default');

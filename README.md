@@ -21,7 +21,7 @@ CCRouter 是一个面向 Flutter 大型应用的组件化运行时与类型安�
 | --- | --- | --- |
 | `ccrouter_contracts` | Pure Dart Route、Service、Command、Event、错误与导航契约 | 仅独立 contracts Package |
 | `ccrouter_analytics` | Provider-neutral 分析事件、脱敏属性、有界 Sink 与 Route PV/Leave 桥接 | 按需接入 |
-| `ccrouter_auto_track` | 显式点击、滚动和曝光采集 Target | 按需接入 |
+| `ccrouter_analytics_flutter` | 显式点击、滚动和曝光采集 Target | 按需接入 |
 | `ccrouter_core` | Runtime、Registry、Scope、调度和诊断实现 | 否 |
 | `ccrouter` | Flutter 业务门面、`CCRouterApp`、页面生命周期 | 是 |
 | `ccrouter_go_router` | 默认 GoRouter Backend、Assembler、Observer 与 Shell 接入 | 仅 Host |
@@ -104,7 +104,7 @@ Managed/Backend Entries、Trace Timeline、Failure/Fallback、InitTask DAG 和�
 | PopGuard | 已支持 | 业务 Pop、系统返回、Cupertino 手势和预测返回进入统一判断 |
 | Aspect / Trace / Telemetry | 已支持 | 有界、脱敏、观察异常隔离 |
 | Provider-neutral Analytics | 已支持 | Route PV/Leave、稳定事件契约、属性校验和有界异步 Sink；不绑定第三方 SDK |
-| Widget 点击/滑动/曝光采集 | 部分支持 | `CCAnalyticsTarget`、`ccrouter_auto_track` 提供显式点击、滚动聚合和曝光；全局 Widget 猜测仍不支持 |
+| Widget 点击/滑动/曝光采集 | 部分支持 | `CCAnalyticsTarget`、`ccrouter_analytics_flutter` 提供显式点击、滚动聚合和曝光；全局 Widget 猜测仍不支持 |
 | 页面生命周期 | 已支持 | `PageShow/PageHide` 与前后台，Mixin 和 Listener 两种形式 |
 | Service | 已支持 | App/Session/Route Scope，singleton/newInstance，Key、稳定 Contract ID、lazy async readiness |
 | Namespace-aware KV Storage Demo | 已支持（Demo） | 基本类型、JSON Map、全局/游客/用户/API 环境/硬件命名空间和可替换 Backend 抽象 |
@@ -288,7 +288,11 @@ CCRouter.initialize(
   components: ccrouterGeneratedComponentManifests,
   globalInterceptors: const [...],
 );
-await CCRouter.runInitTasks();
+final initResult = await CCRouter.runInitTasks(
+  gate: CCInitTaskGate.appStarted,
+);
+// 仅无法降级的 Host 才显式选择 fail-fast：
+// initResult.throwIfRequiredFailed();
 runApp(CCGoRouterApp(catalog: ccrouterGeneratedRouteCatalog));
 ```
 
@@ -319,7 +323,7 @@ Firebase、ThinkingData、Sentry 或日志 Adapter。Sink 异常不会改变导�
 final analytics = CCAnalyticsEventDispatcher(
   sinks: [applicationAnalyticsSink],
 );
-final navigationAnalytics = CCRouterNavigationAnalytics(
+final navigationAnalytics = CCNavigationAnalyticsBridge(
   dispatcher: analytics,
 );
 
@@ -336,7 +340,7 @@ analytics.updatePolicy(
 
 分析属性必须使用 `CCAnalyticsProperty` 声明，禁止放入 Token、完整 URI、Widget、异常对象或任意业务对象。
 任意 Button、列表项点击和滚动不由 Core 猜测；使用 `CCAnalyticsTarget` 包装现有回调，自动 UI 采集只能作为默认关闭的独立插件接入。
-需要滚动会话或曝光时，按需依赖 `ccrouter_auto_track`，显式包裹
+需要滚动会话或曝光时，按需依赖 `ccrouter_analytics_flutter`，显式包裹
 `CCAnalyticsScrollable` 或 `CCAnalyticsExposureTarget`；曝光默认按可见比例、最小停留
 时间和目标生命周期去重，不读取 Widget 文本，也不注册全局手势监听。
 
@@ -861,7 +865,12 @@ const foundationInitTask = CCInitTaskContract(
   description: '准备 Analytics 依赖的基础设施。',
 );
 
-@CCInitTask(contract: foundationInitTask)
+@CCInitTask(
+  contract: foundationInitTask,
+  gate: CCInitTaskGate.appStarted,
+  failurePolicy: CCInitTaskFailurePolicy.required,
+  timeout: Duration(seconds: 3),
+)
 Future<void> initializeFoundation() async {}
 
 @CCInitTask(
@@ -880,7 +889,9 @@ Future<void> initializeAnalytics(CCInvocationContext context) =>
 放在公共 contracts Package，消费组件必须 required-depend on Owner。独立内部任务可以只填写
 `id`，`contract` 与 `id` 不能同时设置。
 
-Host 在 `CCRouter.initialize` 后调用 `CCRouter.runInitTasks()`。Runtime 仍保留重复 ID、缺失依赖与循环依赖的最终校验。并发打开 Gate 共享 single-flight drain；执行期间新打开 Gate 时，Runtime 会继续运行新就绪的 DAG 层直至稳定，不会遗留永久 `pending` 的任务。必需任务失败会阻止初始化完成；可选任务失败可诊断但不阻断无依赖分支。单个 Service 的异步准备应放在 `CCServiceProvider.initializer`，不要创建 InitTask 预热所有 Service。
+Host 在 `CCRouter.initialize` 后调用 `CCRouter.runInitTasks(gate: ...)`。调用方必须显式选择 Gate；普通启动使用 `CCInitTaskGate.appStarted`，它不是 API 默认值。Runtime 仍保留重复 ID、缺失依赖、循环依赖以及 required 依赖 optional 的最终校验。并发打开 Gate 共享 single-flight drain；执行期间新打开 Gate 时，Runtime 会继续运行新就绪的 DAG 层直至稳定，不会遗留永久 `pending` 的任务。
+
+`runInitTasks(gate: ...)` 返回 `CCInitTaskRunResult`。required 与 optional 业务失败都进入 Result、Snapshot、Trace 和 Diagnostics，仅依赖失败节点的分支会 `skipped`，无关分支和后续 Gate 仍可继续。默认不把业务失败作为未捕获异常抛给启动流程，因此现有“先 `await` InitTask、再 `runApp`”的顺序仍然支持；确实无法降级的 Host 可显式调用 `result.throwIfRequiredFailed()`。Runtime shutdown、取消和非法状态等框架错误仍直接抛出。`@CCInitTask` 同样要求显式 `gate`；CLI Scaffold 会生成 `gate: CCInitTaskGate.appStarted`，开发者可按真实条件修改。单个 Service 的异步准备应放在 `CCServiceProvider.initializer`，不要创建 InitTask 预热所有 Service。
 
 ## 生成器
 

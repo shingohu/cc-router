@@ -76,14 +76,14 @@ final class _DemoFadePageRouteCodec
 
   /// Rejects missing, repeated or malformed values before creating arguments.
   @override
-  _DemoFadePageRouteArguments decode(CCEncodedRouteArguments input) {
+  _DemoFadePageRouteArguments decode(CCRouteCodecValues input) {
     return _DemoFadePageRouteArguments();
   }
 
   /// Encodes unescaped scalar values; Runtime owns URI escaping exactly once.
   @override
-  CCEncodedRouteArguments encode(_DemoFadePageRouteArguments arguments) {
-    return CCEncodedRouteArguments(path: {}, query: {}, extra: null);
+  CCRouteCodecValues encode(_DemoFadePageRouteArguments arguments) {
+    return CCRouteCodecValues(path: {}, query: {}, extra: null);
   }
 }
 
@@ -178,14 +178,14 @@ final class _DemoScalePageRouteCodec
 
   /// Rejects missing, repeated or malformed values before creating arguments.
   @override
-  _DemoScalePageRouteArguments decode(CCEncodedRouteArguments input) {
+  _DemoScalePageRouteArguments decode(CCRouteCodecValues input) {
     return _DemoScalePageRouteArguments();
   }
 
   /// Encodes unescaped scalar values; Runtime owns URI escaping exactly once.
   @override
-  CCEncodedRouteArguments encode(_DemoScalePageRouteArguments arguments) {
-    return CCEncodedRouteArguments(path: {}, query: {}, extra: null);
+  CCRouteCodecValues encode(_DemoScalePageRouteArguments arguments) {
+    return CCRouteCodecValues(path: {}, query: {}, extra: null);
   }
 }
 
@@ -280,14 +280,14 @@ final class _DemoCupertinoPageRouteCodec
 
   /// Rejects missing, repeated or malformed values before creating arguments.
   @override
-  _DemoCupertinoPageRouteArguments decode(CCEncodedRouteArguments input) {
+  _DemoCupertinoPageRouteArguments decode(CCRouteCodecValues input) {
     return _DemoCupertinoPageRouteArguments();
   }
 
   /// Encodes unescaped scalar values; Runtime owns URI escaping exactly once.
   @override
-  CCEncodedRouteArguments encode(_DemoCupertinoPageRouteArguments arguments) {
-    return CCEncodedRouteArguments(path: {}, query: {}, extra: null);
+  CCRouteCodecValues encode(_DemoCupertinoPageRouteArguments arguments) {
+    return CCRouteCodecValues(path: {}, query: {}, extra: null);
   }
 }
 
@@ -382,14 +382,14 @@ final class _DemoBottomPageRouteCodec
 
   /// Rejects missing, repeated or malformed values before creating arguments.
   @override
-  _DemoBottomPageRouteArguments decode(CCEncodedRouteArguments input) {
+  _DemoBottomPageRouteArguments decode(CCRouteCodecValues input) {
     return _DemoBottomPageRouteArguments();
   }
 
   /// Encodes unescaped scalar values; Runtime owns URI escaping exactly once.
   @override
-  CCEncodedRouteArguments encode(_DemoBottomPageRouteArguments arguments) {
-    return CCEncodedRouteArguments(path: {}, query: {}, extra: null);
+  CCRouteCodecValues encode(_DemoBottomPageRouteArguments arguments) {
+    return CCRouteCodecValues(path: {}, query: {}, extra: null);
   }
 }
 
@@ -484,14 +484,14 @@ final class _DemoTransparentPageRouteCodec
 
   /// Rejects missing, repeated or malformed values before creating arguments.
   @override
-  _DemoTransparentPageRouteArguments decode(CCEncodedRouteArguments input) {
+  _DemoTransparentPageRouteArguments decode(CCRouteCodecValues input) {
     return _DemoTransparentPageRouteArguments();
   }
 
   /// Encodes unescaped scalar values; Runtime owns URI escaping exactly once.
   @override
-  CCEncodedRouteArguments encode(_DemoTransparentPageRouteArguments arguments) {
-    return CCEncodedRouteArguments(path: {}, query: {}, extra: null);
+  CCRouteCodecValues encode(_DemoTransparentPageRouteArguments arguments) {
+    return CCRouteCodecValues(path: {}, query: {}, extra: null);
   }
 }
 
@@ -586,14 +586,14 @@ final class _DemoDialogPageRouteCodec
 
   /// Rejects missing, repeated or malformed values before creating arguments.
   @override
-  _DemoDialogPageRouteArguments decode(CCEncodedRouteArguments input) {
+  _DemoDialogPageRouteArguments decode(CCRouteCodecValues input) {
     return _DemoDialogPageRouteArguments();
   }
 
   /// Encodes unescaped scalar values; Runtime owns URI escaping exactly once.
   @override
-  CCEncodedRouteArguments encode(_DemoDialogPageRouteArguments arguments) {
-    return CCEncodedRouteArguments(path: {}, query: {}, extra: null);
+  CCRouteCodecValues encode(_DemoDialogPageRouteArguments arguments) {
+    return CCRouteCodecValues(path: {}, query: {}, extra: null);
   }
 }
 
@@ -689,14 +689,14 @@ final class _DemoBottomSheetPageRouteCodec
 
   /// Rejects missing, repeated or malformed values before creating arguments.
   @override
-  _DemoBottomSheetPageRouteArguments decode(CCEncodedRouteArguments input) {
+  _DemoBottomSheetPageRouteArguments decode(CCRouteCodecValues input) {
     return _DemoBottomSheetPageRouteArguments();
   }
 
   /// Encodes unescaped scalar values; Runtime owns URI escaping exactly once.
   @override
-  CCEncodedRouteArguments encode(_DemoBottomSheetPageRouteArguments arguments) {
-    return CCEncodedRouteArguments(path: {}, query: {}, extra: null);
+  CCRouteCodecValues encode(_DemoBottomSheetPageRouteArguments arguments) {
+    return CCRouteCodecValues(path: {}, query: {}, extra: null);
   }
 }
 

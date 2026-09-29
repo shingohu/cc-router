@@ -520,17 +520,21 @@ abstract final class CCRouter {
     CCCancellationToken? cancellation,
   }) => _runtime.event(event, timeout: timeout, cancellation: cancellation);
 
-  /// Opens an InitTask [gate] and awaits every newly ready task.
+  /// Opens the explicitly selected InitTask [gate] and awaits every newly ready
+  /// task.
   ///
   /// This does not initialize or replace the framework Runtime. The Gate stays
   /// open for the Runtime lifetime, and one call may run zero, one, or multiple
   /// newly ready tasks. Call it after synchronous [initialize]. Ordinary
   /// startup uses [CCInitTaskGate.appStarted]; product conditions such as
   /// privacy consent use an explicit stable Gate. Overlapping calls share one
-  /// DAG run, and completed tasks never execute twice. Critical failures throw
-  /// [CCInitTaskError]; optional failures remain in [initTasks].
-  static Future<void> runInitTasks({
-    CCInitTaskGate gate = CCInitTaskGate.appStarted,
+  /// DAG run, and completed tasks never execute twice. Task business failures
+  /// are returned in [CCInitTaskRunResult] and skip only dependent branches;
+  /// Runtime shutdown and cancellation still terminate the Future. A Host that
+  /// intentionally requires fail-fast startup may call
+  /// `result.throwIfRequiredFailed()` after awaiting this method.
+  static Future<CCInitTaskRunResult> runInitTasks({
+    required CCInitTaskGate gate,
   }) => _runtime.runInitTasks(gate: gate);
 
   /// Immutable initialization task snapshots ordered by stable task ID.

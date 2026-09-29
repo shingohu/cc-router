@@ -40,7 +40,9 @@ final class _DemoProceedInterceptor implements CCNavigationInterceptor {
   const _DemoProceedInterceptor();
 
   @override
-  CCNavigationInterception intercept(CCNavigationInterceptorContext context) {
+  CCNavigationInterceptorDecision intercept(
+    CCNavigationInterceptorContext context,
+  ) {
     demoNavigationLabStore.record('Route interceptor · proceed');
     return const CCNavigationProceed();
   }
@@ -50,7 +52,9 @@ final class _DemoCancelInterceptor implements CCNavigationInterceptor {
   const _DemoCancelInterceptor();
 
   @override
-  CCNavigationInterception intercept(CCNavigationInterceptorContext context) {
+  CCNavigationInterceptorDecision intercept(
+    CCNavigationInterceptorContext context,
+  ) {
     demoNavigationLabStore.record('Route interceptor · cancel');
     return const CCNavigationCancel(code: 'demo_cancelled');
   }
@@ -60,7 +64,9 @@ final class _DemoRedirectInterceptor implements CCNavigationInterceptor {
   const _DemoRedirectInterceptor();
 
   @override
-  CCNavigationInterception intercept(CCNavigationInterceptorContext context) {
+  CCNavigationInterceptorDecision intercept(
+    CCNavigationInterceptorContext context,
+  ) {
     demoNavigationLabStore.record('Route interceptor · redirect');
     return CCNavigationRedirect.toIntent(
       DemoNavigationLabRoutes.redirectTarget() as CCRouteIntent<Object?>,
@@ -72,7 +78,9 @@ final class _DemoDeferInterceptor implements CCNavigationInterceptor {
   const _DemoDeferInterceptor();
 
   @override
-  CCNavigationInterception intercept(CCNavigationInterceptorContext context) {
+  CCNavigationInterceptorDecision intercept(
+    CCNavigationInterceptorContext context,
+  ) {
     if (demoNavigationLabStore.allowDeferredOnce) {
       demoNavigationLabStore.allowDeferredOnce = false;
       demoNavigationLabStore.record('Route interceptor · resumed');
@@ -90,7 +98,7 @@ final class _DemoTimeoutInterceptor implements CCNavigationInterceptor {
   const _DemoTimeoutInterceptor();
 
   @override
-  Future<CCNavigationInterception> intercept(
+  Future<CCNavigationInterceptorDecision> intercept(
     CCNavigationInterceptorContext context,
   ) async {
     demoNavigationLabStore.record('Route interceptor · timeout started');

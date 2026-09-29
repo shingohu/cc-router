@@ -52,7 +52,11 @@ Future<void> initializeAnalytics(CCInvocationContext context) async {}
       reader,
       ccInitTaskBuilder(BuilderOptions.empty),
       r'''
-@CCInitTask(id: 'startup.cache')
+@CCInitTask(
+  id: 'startup.cache',
+  gate: CCInitTaskGate.appStarted,
+  failurePolicy: CCInitTaskFailurePolicy.optional,
+)
 void warmCache() {}
 ''',
       'lib/src/ccrouter_generated/init_task/probe.init_task.g.dart',
@@ -68,7 +72,11 @@ void warmCache() {}
       r'''
 import 'dart:async';
 
-@CCInitTask(id: 'startup.context')
+@CCInitTask(
+  id: 'startup.context',
+  gate: CCInitTaskGate.appStarted,
+  failurePolicy: CCInitTaskFailurePolicy.optional,
+)
 FutureOr<void> initializeWithContext(CCInvocationContext context) {}
 ''',
       'lib/src/ccrouter_generated/init_task/probe.init_task.g.dart',
@@ -87,7 +95,12 @@ const foundationTask = CCInitTaskContract(
   description: 'Prepare shared startup state.',
 );
 
-@CCInitTask(contract: foundationTask)
+@CCInitTask(
+  contract: foundationTask,
+  gate: CCInitTaskGate.appStarted,
+  failurePolicy: CCInitTaskFailurePolicy.required,
+  timeout: Duration(seconds: 3),
+)
 Future<void> initializeFoundation() async {}
 ''',
       'lib/src/ccrouter_generated/metadata/src/probe.init_task.json',
@@ -105,6 +118,8 @@ Future<void> initializeFoundation() async {}
       'foundationTask',
     );
     expect(metadata['initTasks'][0]['gateId'], 'appStarted');
+    expect(metadata['initTasks'][0]['failurePolicy'], 'required');
+    expect(metadata['initTasks'][0]['isAsync'], isTrue);
   });
 
   test('contract and id cannot be configured together', () async {
@@ -113,7 +128,12 @@ Future<void> initializeFoundation() async {}
       ccInitTaskMetadataBuilder(BuilderOptions.empty),
       r'''
 const foundationTask = CCInitTaskContract(id: 'startup.foundation');
-@CCInitTask(contract: foundationTask, id: 'startup.other')
+@CCInitTask(
+  contract: foundationTask,
+  id: 'startup.other',
+  gate: CCInitTaskGate.appStarted,
+  failurePolicy: CCInitTaskFailurePolicy.optional,
+)
 void initializeFoundation() {}
 ''',
       'lib/src/ccrouter_generated/metadata/src/probe.init_task.json',
@@ -127,7 +147,11 @@ void initializeFoundation() {}
       reader,
       ccInitTaskBuilder(BuilderOptions.empty),
       r'''
-@CCInitTask(id: 'startup.invalid')
+@CCInitTask(
+  id: 'startup.invalid',
+  gate: CCInitTaskGate.appStarted,
+  failurePolicy: CCInitTaskFailurePolicy.optional,
+)
 int initializeInvalid() => 1;
 ''',
       'lib/src/ccrouter_generated/init_task/probe.init_task.g.dart',
@@ -141,7 +165,11 @@ int initializeInvalid() => 1;
       reader,
       ccInitTaskBuilder(BuilderOptions.empty),
       r'''
-@CCInitTask(id: 'startup.private')
+@CCInitTask(
+  id: 'startup.private',
+  gate: CCInitTaskGate.appStarted,
+  failurePolicy: CCInitTaskFailurePolicy.optional,
+)
 void _initializePrivate() {}
 ''',
       'lib/src/ccrouter_generated/init_task/probe.init_task.g.dart',
@@ -155,7 +183,11 @@ void _initializePrivate() {}
       reader,
       ccInitTaskBuilder(BuilderOptions.empty),
       r'''
-@CCInitTask(id: 'startup.parameter')
+@CCInitTask(
+  id: 'startup.parameter',
+  gate: CCInitTaskGate.appStarted,
+  failurePolicy: CCInitTaskFailurePolicy.optional,
+)
 void initializeWithWrongParameter(String value) {}
 ''',
       'lib/src/ccrouter_generated/init_task/probe.init_task.g.dart',
@@ -172,6 +204,7 @@ void initializeWithWrongParameter(String value) {}
 @CCInitTask(
   id: 'startup.invalid_gate',
   gate: CCInitTaskGate('Invalid gate'),
+  failurePolicy: CCInitTaskFailurePolicy.optional,
 )
 void initializeInvalidGate() {}
 ''',
@@ -186,7 +219,12 @@ void initializeInvalidGate() {}
       reader,
       ccInitTaskBuilder(BuilderOptions.empty),
       r'''
-@CCInitTask(id: 'startup.timeout', timeout: Duration.zero)
+@CCInitTask(
+  id: 'startup.timeout',
+  gate: CCInitTaskGate.appStarted,
+  failurePolicy: CCInitTaskFailurePolicy.optional,
+  timeout: Duration.zero,
+)
 void initializeInvalidTimeout() {}
 ''',
       'lib/src/ccrouter_generated/init_task/probe.init_task.g.dart',
@@ -201,7 +239,12 @@ void initializeInvalidTimeout() {}
       ccInitTaskMetadataBuilder(BuilderOptions.empty),
       r'''
 const foundationTask = CCInitTaskContract(id: 'startup.foundation');
-@CCInitTask(contract: foundationTask, dependsOn: [foundationTask])
+@CCInitTask(
+  contract: foundationTask,
+  dependsOn: [foundationTask],
+  gate: CCInitTaskGate.appStarted,
+  failurePolicy: CCInitTaskFailurePolicy.optional,
+)
 void initializeFoundation() {}
 ''',
       'lib/src/ccrouter_generated/metadata/src/probe.init_task.json',
@@ -218,6 +261,8 @@ void initializeFoundation() {}
 @CCInitTask(
   id: 'startup.analytics',
   dependsOn: [CCInitTaskContract(id: 'startup.foundation')],
+  gate: CCInitTaskGate.appStarted,
+  failurePolicy: CCInitTaskFailurePolicy.optional,
 )
 void initializeAnalytics() {}
 ''',
@@ -225,6 +270,43 @@ void initializeAnalytics() {}
       fails: true,
     );
     expect(logs, contains('constant references'));
+  });
+
+  test('required task must use a Contract', () async {
+    final logs = await _generate(
+      reader,
+      ccInitTaskBuilder(BuilderOptions.empty),
+      r'''
+@CCInitTask(
+  id: 'startup.required',
+  gate: CCInitTaskGate.appStarted,
+  failurePolicy: CCInitTaskFailurePolicy.required,
+)
+void initializeRequired() {}
+''',
+      'lib/src/ccrouter_generated/init_task/probe.init_task.g.dart',
+      fails: true,
+    );
+    expect(logs, contains('must use a CCInitTaskContract'));
+  });
+
+  test('async required task must declare a timeout', () async {
+    final logs = await _generate(
+      reader,
+      ccInitTaskBuilder(BuilderOptions.empty),
+      r'''
+const requiredTask = CCInitTaskContract(id: 'startup.required');
+@CCInitTask(
+  contract: requiredTask,
+  gate: CCInitTaskGate.appStarted,
+  failurePolicy: CCInitTaskFailurePolicy.required,
+)
+Future<void> initializeRequired() async {}
+''',
+      'lib/src/ccrouter_generated/init_task/probe.init_task.g.dart',
+      fails: true,
+    );
+    expect(logs, contains('must declare a positive timeout'));
   });
 }
 

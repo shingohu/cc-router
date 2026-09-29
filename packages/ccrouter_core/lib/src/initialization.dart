@@ -18,8 +18,8 @@ final class CCInitTaskDefinition {
   CCInitTaskDefinition({
     required this.id,
     Iterable<String> dependsOn = const [],
-    this.gate = CCInitTaskGate.appStarted,
-    this.failurePolicy = CCInitTaskFailurePolicy.critical,
+    required this.gate,
+    required this.failurePolicy,
     this.timeout,
     required this.run,
   }) : dependsOn = List.unmodifiable(dependsOn);
@@ -31,9 +31,12 @@ final class CCInitTaskDefinition {
   final List<String> dependsOn;
 
   /// Explicit condition that must be opened before the task may run.
+  ///
+  /// Handwritten registrations must choose this deliberately; generated
+  /// registrations copy the explicit value from their source annotation.
   final CCInitTaskGate gate;
 
-  /// Behavior applied when task execution fails.
+  /// Required or optional classification applied when execution fails.
   final CCInitTaskFailurePolicy failurePolicy;
 
   /// Optional per-task deadline measured from actual task start.
@@ -105,6 +108,58 @@ final class CCInitTaskSnapshot {
 
   /// First failed or skipped dependency that prevented execution.
   final String? blockedByTaskId;
+}
+
+/// Immutable outcome of one InitTask DAG drain.
+///
+/// The result contains sanitized snapshots for every task registered in the
+/// Runtime. Tasks behind unopened Gates remain [CCInitTaskState.pending]. A
+/// task business failure is data in this result rather than an implicit startup
+/// exception, so the application can render its own recoverable experience.
+final class CCInitTaskRunResult {
+  /// Creates a result from Runtime-owned task [snapshots].
+  CCInitTaskRunResult._(Iterable<CCInitTaskSnapshot> snapshots)
+    : tasks = List.unmodifiable(snapshots);
+
+  /// All Runtime InitTasks ordered by stable task ID.
+  final List<CCInitTaskSnapshot> tasks;
+
+  /// Required tasks that failed during this or an earlier drain.
+  List<CCInitTaskSnapshot> get requiredFailures => List.unmodifiable(
+    tasks.where(
+      (task) =>
+          task.state == CCInitTaskState.failed &&
+          task.failurePolicy == CCInitTaskFailurePolicy.required,
+    ),
+  );
+
+  /// Optional tasks that failed during this or an earlier drain.
+  List<CCInitTaskSnapshot> get optionalFailures => List.unmodifiable(
+    tasks.where(
+      (task) =>
+          task.state == CCInitTaskState.failed &&
+          task.failurePolicy == CCInitTaskFailurePolicy.optional,
+    ),
+  );
+
+  /// Tasks that could not run because a dependency failed or was skipped.
+  List<CCInitTaskSnapshot> get skippedTasks => List.unmodifiable(
+    tasks.where((task) => task.state == CCInitTaskState.skipped),
+  );
+
+  /// Whether at least one required task failed.
+  bool get hasRequiredFailures => requiredFailures.isNotEmpty;
+
+  /// Throws a sanitized error for the first failed required task.
+  ///
+  /// This is an explicit Host policy for applications that cannot start in a
+  /// degraded mode. Ordinary applications should inspect the result and render
+  /// a product-specific recovery state instead of exposing this error to users.
+  void throwIfRequiredFailed() {
+    final failure = requiredFailures.firstOrNull;
+    if (failure == null) return;
+    throw CCInitTaskError(failure.id, failure.errorType!);
+  }
 }
 
 /// Mutable Runtime-owned state for one statically registered task.

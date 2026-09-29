@@ -129,7 +129,7 @@ final class _GeneratedDetailPageRouteCodec
 
   /// Rejects missing, repeated or malformed values before creating arguments.
   @override
-  _GeneratedDetailPageRouteArguments decode(CCEncodedRouteArguments input) {
+  _GeneratedDetailPageRouteArguments decode(CCRouteCodecValues input) {
     double _parse_ratio(String raw) {
       final value = double.tryParse(raw);
       if (value == null || !value.isFinite) {
@@ -212,12 +212,12 @@ final class _GeneratedDetailPageRouteCodec
 
   /// Encodes unescaped scalar values; Runtime owns URI escaping exactly once.
   @override
-  CCEncodedRouteArguments encode(_GeneratedDetailPageRouteArguments arguments) {
+  CCRouteCodecValues encode(_GeneratedDetailPageRouteArguments arguments) {
     if (!arguments.ratio.isFinite)
       throw CCRouteParameterError(
         "Route \"generated_route_fixture.detail\" parameter \"ratio\" must be finite.",
       );
-    return CCEncodedRouteArguments(
+    return CCRouteCodecValues(
       path: {"id": arguments.id.toString()},
       query: {
         if (arguments.search != null) "text": [arguments.search!],
@@ -337,16 +337,14 @@ final class _GeneratedInternalPageRouteCodec
 
   /// Rejects missing, repeated or malformed values before creating arguments.
   @override
-  _GeneratedInternalPageRouteArguments decode(CCEncodedRouteArguments input) {
+  _GeneratedInternalPageRouteArguments decode(CCRouteCodecValues input) {
     return _GeneratedInternalPageRouteArguments();
   }
 
   /// Encodes unescaped scalar values; Runtime owns URI escaping exactly once.
   @override
-  CCEncodedRouteArguments encode(
-    _GeneratedInternalPageRouteArguments arguments,
-  ) {
-    return CCEncodedRouteArguments(path: {}, query: {}, extra: null);
+  CCRouteCodecValues encode(_GeneratedInternalPageRouteArguments arguments) {
+    return CCRouteCodecValues(path: {}, query: {}, extra: null);
   }
 }
 
@@ -455,7 +453,7 @@ final class _GeneratedPositionalPageRouteCodec
 
   /// Rejects missing, repeated or malformed values before creating arguments.
   @override
-  _GeneratedPositionalPageRouteArguments decode(CCEncodedRouteArguments input) {
+  _GeneratedPositionalPageRouteArguments decode(CCRouteCodecValues input) {
     final _raw_value = input.path["value"];
     final String _value_value = _raw_value == null
         ? throw CCRouteParameterError(
@@ -477,10 +475,8 @@ final class _GeneratedPositionalPageRouteCodec
 
   /// Encodes unescaped scalar values; Runtime owns URI escaping exactly once.
   @override
-  CCEncodedRouteArguments encode(
-    _GeneratedPositionalPageRouteArguments arguments,
-  ) {
-    return CCEncodedRouteArguments(
+  CCRouteCodecValues encode(_GeneratedPositionalPageRouteArguments arguments) {
+    return CCRouteCodecValues(
       path: {"value": arguments.value},
       query: {
         "input": [arguments.input],
@@ -589,7 +585,7 @@ final class _GeneratedExtraPageRouteCodec
 
   /// Rejects missing, repeated or malformed values before creating arguments.
   @override
-  _GeneratedExtraPageRouteArguments decode(CCEncodedRouteArguments input) {
+  _GeneratedExtraPageRouteArguments decode(CCRouteCodecValues input) {
     final _value_snapshot = input.extra == null
         ? throw CCRouteParameterError(
             "Route \"generated_route_fixture.extra\" parameter \"snapshot\" is invalid.",
@@ -604,12 +600,8 @@ final class _GeneratedExtraPageRouteCodec
 
   /// Encodes unescaped scalar values; Runtime owns URI escaping exactly once.
   @override
-  CCEncodedRouteArguments encode(_GeneratedExtraPageRouteArguments arguments) {
-    return CCEncodedRouteArguments(
-      path: {},
-      query: {},
-      extra: arguments.snapshot,
-    );
+  CCRouteCodecValues encode(_GeneratedExtraPageRouteArguments arguments) {
+    return CCRouteCodecValues(path: {}, query: {}, extra: arguments.snapshot);
   }
 }
 
@@ -725,7 +717,7 @@ final class _GeneratedPrefixedPageRouteCodec
 
   /// Rejects missing, repeated or malformed values before creating arguments.
   @override
-  _GeneratedPrefixedPageRouteArguments decode(CCEncodedRouteArguments input) {
+  _GeneratedPrefixedPageRouteArguments decode(CCRouteCodecValues input) {
     final _values_mode = input.query["mode"];
     if (_values_mode != null && _values_mode.length != 1)
       throw CCRouteParameterError(
@@ -754,10 +746,8 @@ final class _GeneratedPrefixedPageRouteCodec
 
   /// Encodes unescaped scalar values; Runtime owns URI escaping exactly once.
   @override
-  CCEncodedRouteArguments encode(
-    _GeneratedPrefixedPageRouteArguments arguments,
-  ) {
-    return CCEncodedRouteArguments(
+  CCRouteCodecValues encode(_GeneratedPrefixedPageRouteArguments arguments) {
+    return CCRouteCodecValues(
       path: {},
       query: {
         "mode": [EnumName(arguments.mode).name],

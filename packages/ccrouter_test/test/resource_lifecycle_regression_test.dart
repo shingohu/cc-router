@@ -15,12 +15,12 @@ final class _LifecycleCodec implements CCRouteCodec<_LifecycleArguments> {
   const _LifecycleCodec();
 
   @override
-  _LifecycleArguments decode(CCEncodedRouteArguments input) =>
+  _LifecycleArguments decode(CCRouteCodecValues input) =>
       _LifecycleArguments(int.parse(input.path['id']!));
 
   @override
-  CCEncodedRouteArguments encode(_LifecycleArguments arguments) =>
-      CCEncodedRouteArguments(path: {'id': '${arguments.id}'});
+  CCRouteCodecValues encode(_LifecycleArguments arguments) =>
+      CCRouteCodecValues(path: {'id': '${arguments.id}'});
 }
 
 final class _LifecycleIntent implements CCRouteIntent<int> {

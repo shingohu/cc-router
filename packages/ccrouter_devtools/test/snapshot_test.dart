@@ -14,7 +14,7 @@ void main() {
           dependencies: ['account'],
         ),
       ];
-      final snapshot = CCDevToolsSnapshot(
+      final snapshot = CCRouterDevToolsSnapshot(
         capturedAt: DateTime.utc(2026, 1, 1),
         runtimeState: CCDevToolsRuntimeState.initialized,
         components: components,
@@ -32,7 +32,7 @@ void main() {
   );
 
   test('static provider is deterministic and has no mutation surface', () {
-    final snapshot = CCDevToolsSnapshot.empty(
+    final snapshot = CCRouterDevToolsSnapshot.empty(
       runtimeState: CCDevToolsRuntimeState.initialized,
     );
     final provider = CCStaticDevToolsSnapshotProvider(snapshot);
@@ -45,7 +45,7 @@ void main() {
   });
 
   test('runtime snapshot conversion keeps stable IDs and omits payloads', () {
-    final snapshot = CCDevToolsSnapshot(
+    final snapshot = CCRouterDevToolsSnapshot(
       capturedAt: DateTime.utc(2026, 1, 1),
       runtimeState: CCDevToolsRuntimeState.initialized,
       components: [
@@ -79,7 +79,9 @@ void main() {
     'service extension can be cleared without exposing a mutable Runtime',
     () {
       CCDevToolsServiceExtension.register(
-        provider: CCStaticDevToolsSnapshotProvider(CCDevToolsSnapshot.empty()),
+        provider: CCStaticDevToolsSnapshotProvider(
+          CCRouterDevToolsSnapshot.empty(),
+        ),
       );
       CCDevToolsServiceExtension.clear();
       // The VM service handler is intentionally not called in this widget test;

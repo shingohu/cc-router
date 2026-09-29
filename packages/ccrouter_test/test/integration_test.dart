@@ -17,12 +17,12 @@ final class _OrderCodec implements CCRouteCodec<_OrderArguments> {
   const _OrderCodec();
 
   @override
-  _OrderArguments decode(CCEncodedRouteArguments input) =>
+  _OrderArguments decode(CCRouteCodecValues input) =>
       _OrderArguments(input.path['id']!);
 
   @override
-  CCEncodedRouteArguments encode(_OrderArguments arguments) =>
-      CCEncodedRouteArguments(path: {'id': arguments.id});
+  CCRouteCodecValues encode(_OrderArguments arguments) =>
+      CCRouteCodecValues(path: {'id': arguments.id});
 }
 
 final class _OrderIntent<R> implements CCRouteIntent<R> {
@@ -300,7 +300,7 @@ void main() {
       expectManagedEntryAlive();
       final localHistoryPop = await runtime.maybePopOutcomeRoute();
       expect(localHistoryPop.handled, isTrue);
-      expect(localHistoryPop.removedOwner, CCPopRemovedOwner.none);
+      expect(localHistoryPop.removedEntryOwner, CCPopRemovedEntryOwner.none);
       await tester.pumpAndSettle();
       await bottomSheet.closed;
       expect(find.byKey(const ValueKey('foreign-local-history')), findsNothing);
@@ -414,7 +414,7 @@ void main() {
       // PopScope consumes the request even though it refuses to remove the
       // route. Ownership and result availability carry the rejection detail.
       expect(declined.handled, isTrue);
-      expect(declined.removedOwner, CCPopRemovedOwner.none);
+      expect(declined.removedEntryOwner, CCPopRemovedEntryOwner.none);
       expect(runtime.activeRouteEntries, hasLength(1));
       expect(runtime.activeRouteEntries.single.routeEntryId, managedEntryId);
       expect(
@@ -430,8 +430,8 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(accepted.handled, isTrue);
-      expect(accepted.removedOwner, CCPopRemovedOwner.managed);
-      expect(accepted.removedOwner, CCPopRemovedOwner.managed);
+      expect(accepted.removedEntryOwner, CCPopRemovedEntryOwner.managed);
+      expect(accepted.removedEntryOwner, CCPopRemovedEntryOwner.managed);
       expect(await managedResult, 'accepted');
       expect(runtime.activeRouteEntries, isEmpty);
     },

@@ -10,7 +10,7 @@ export 'package:ccrouter_contracts/ccrouter_contracts.dart'
         CCNavigationAdapterCapabilities,
         CCNavigationAdapterCapabilitySource,
         CCNavigationAdapterHostBinding,
-        CCNavigationBackendEntrySnapshot,
+        CCInitialBackendEntrySnapshot,
         CCNavigationBackendEvent,
         CCNavigationBackendEventListener,
         CCNavigationBackendEventSource,

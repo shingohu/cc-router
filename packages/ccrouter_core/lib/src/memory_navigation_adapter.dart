@@ -42,11 +42,11 @@ final class CCMemoryNavigationAdapter
 
   /// Returns the current in-memory entries as an initialization snapshot.
   @override
-  List<CCNavigationBackendEntrySnapshot> readInitialBackendSnapshot() {
+  List<CCInitialBackendEntrySnapshot> readInitialBackendEntries() {
     _ensureAvailable();
     return List.unmodifiable(
       _entries.map(
-        (entry) => CCNavigationBackendEntrySnapshot(
+        (entry) => CCInitialBackendEntrySnapshot(
           backendEntryId: entry.backendEntryId,
           owner: CCBackendEntryOwner.managed,
           hostId: entry.request.hostId,
@@ -166,7 +166,7 @@ final class CCMemoryNavigationAdapter
     _removeCurrent(result: result);
     return const CCPopOutcome(
       handled: true,
-      removedOwner: CCPopRemovedOwner.managed,
+      removedEntryOwner: CCPopRemovedEntryOwner.managed,
     );
   }
 
@@ -191,7 +191,7 @@ final class CCMemoryNavigationAdapter
     _removeCurrent(result: result);
     return const CCPopOutcome(
       handled: true,
-      removedOwner: CCPopRemovedOwner.managed,
+      removedEntryOwner: CCPopRemovedEntryOwner.managed,
     );
   }
 

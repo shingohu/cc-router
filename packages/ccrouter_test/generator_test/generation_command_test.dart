@@ -168,6 +168,14 @@ void probe() {
           'package:ccrouter_demo/src/ccrouter_generated/host/ccrouter_demo_ccrouter.g.dart',
         ),
       );
+      expect(
+        hostCatalog,
+        contains('show CCFlutterRouteCatalog, CCGeneratedHostAssembly;'),
+      );
+      expect(
+        hostCatalog,
+        contains('CCGeneratedHostAssembly.fromPackageBundles(['),
+      );
       expect(hostCatalog, isNot(contains('package:demo_order/')));
       final contractIndex =
           jsonDecode(
@@ -827,8 +835,7 @@ void probe() {
           .whereType<File>()
           .firstWhere((file) {
             final decoded = jsonDecode(file.readAsStringSync());
-            return decoded is Map &&
-                decoded['hostPackage'] == 'ccrouter_demo';
+            return decoded is Map && decoded['hostPackage'] == 'ccrouter_demo';
           });
       manifest.writeAsStringSync('{invalid manifest', flush: true);
 

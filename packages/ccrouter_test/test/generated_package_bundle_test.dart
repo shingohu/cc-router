@@ -9,7 +9,7 @@ void main() {
     final left = bundle('left', dependencies: [shared]);
     final right = bundle('right', dependencies: [shared]);
 
-    final assembly = CCGeneratedPackageBundle.resolve([right, left]);
+    final assembly = CCGeneratedHostAssembly.fromPackageBundles([right, left]);
 
     expect(assembly.packages.map((package) => package.packageName), [
       'shared',
@@ -22,7 +22,7 @@ void main() {
   });
 
   test('orders required and present optional component dependencies', () {
-    final assembly = CCGeneratedPackageBundle.resolve([
+    final assembly = CCGeneratedHostAssembly.fromPackageBundles([
       bundle('feature', componentId: 'feature', dependencies: const []),
       bundle(
         'checkout',
@@ -51,12 +51,12 @@ void main() {
     );
 
     expect(
-      () => CCGeneratedPackageBundle.resolve([left, right]),
+      () => CCGeneratedHostAssembly.fromPackageBundles([left, right]),
       throwsA(
         isA<CCGeneratedPackageBundleError>().having(
           (error) => error.type,
           'type',
-          CCGeneratedPackageBundleErrorType.packageConflict,
+          CCGeneratedPackageBundleErrorCode.packageConflict,
         ),
       ),
     );
@@ -64,7 +64,7 @@ void main() {
 
   test('rejects duplicate component identities', () {
     expect(
-      () => CCGeneratedPackageBundle.resolve([
+      () => CCGeneratedHostAssembly.fromPackageBundles([
         bundle('first', componentId: 'duplicate'),
         bundle('second', componentId: 'duplicate'),
       ]),
@@ -72,7 +72,7 @@ void main() {
         isA<CCGeneratedPackageBundleError>().having(
           (error) => error.type,
           'type',
-          CCGeneratedPackageBundleErrorType.duplicateComponent,
+          CCGeneratedPackageBundleErrorCode.duplicateComponent,
         ),
       ),
     );
@@ -80,7 +80,7 @@ void main() {
 
   test('rejects missing required component dependencies', () {
     expect(
-      () => CCGeneratedPackageBundle.resolve([
+      () => CCGeneratedHostAssembly.fromPackageBundles([
         bundle(
           'checkout',
           componentId: 'checkout',
@@ -91,7 +91,7 @@ void main() {
         isA<CCGeneratedPackageBundleError>().having(
           (error) => error.type,
           'type',
-          CCGeneratedPackageBundleErrorType.missingComponentDependency,
+          CCGeneratedPackageBundleErrorCode.missingComponentDependency,
         ),
       ),
     );
@@ -107,7 +107,7 @@ void main() {
       ),
       builder: (_) => const SizedBox.shrink(),
     );
-    final assembly = CCGeneratedPackageBundle.resolve([
+    final assembly = CCGeneratedHostAssembly.fromPackageBundles([
       CCGeneratedPackageBundle(
         packageName: 'orders',
         packageVersion: '1.0.0',

@@ -15,9 +15,9 @@ enum CCDevToolsRuntimeState {
 /// The source values are already bounded and sanitized by CCRouter. This type
 /// only groups them for visualization; it does not retain mutable framework
 /// objects or provide operations that can change navigation or lifecycle.
-final class CCDevToolsSnapshot {
+final class CCRouterDevToolsSnapshot {
   /// Creates a diagnostics snapshot from safe CCRouter values.
-  CCDevToolsSnapshot({
+  CCRouterDevToolsSnapshot({
     required this.capturedAt,
     required this.runtimeState,
     this.catalog,
@@ -48,9 +48,9 @@ final class CCDevToolsSnapshot {
        restorationOpportunities = List.unmodifiable(restorationOpportunities);
 
   /// Creates an empty snapshot used when a Host has no active Runtime.
-  factory CCDevToolsSnapshot.empty({
+  factory CCRouterDevToolsSnapshot.empty({
     CCDevToolsRuntimeState runtimeState = CCDevToolsRuntimeState.uninitialized,
-  }) => CCDevToolsSnapshot(
+  }) => CCRouterDevToolsSnapshot(
     capturedAt: DateTime.now(),
     runtimeState: runtimeState,
   );

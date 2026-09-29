@@ -191,7 +191,7 @@ ccrouter_generator       Dart build_runner 代码生成器
 ccrouter_go_router       默认 go_router 导航适配器
 ccrouter_test             测试 Runtime、Override、TestHost 和断言工具
 ccrouter_analytics        供应商中立的分析事件与有界分发
-ccrouter_auto_track       可选的显式 UI 采集目标
+ccrouter_analytics_flutter       可选的显式 UI 采集目标
 ccrouter_devtools         可选的嵌入式只读诊断面板
 ccrouter_devtools_protocol 纯 Dart、版本化的 Catalog/Runtime Snapshot 协议
 ccrouter_analyzer_plugin  可选的 Analysis Server 边界诊断
@@ -200,7 +200,7 @@ demo/modules/analytics_firebase 应用层 Firebase callback 映射示例
 ```
 
 注解声明位于 `ccrouter_contracts`；`ccrouter_core` 保持 Pure Dart，Flutter 相关类型只出现在
-`ccrouter`、`ccrouter_go_router`、`ccrouter_auto_track` 和业务组件页面中。只读诊断由可选的
+`ccrouter`、`ccrouter_go_router`、`ccrouter_analytics_flutter` 和业务组件页面中。只读诊断由可选的
 `ccrouter_devtools`、`ccrouter_devtools_protocol` 和官方 `devtools/ccrouter_extension` 提供；
 这些工具只作为开发/内部诊断依赖，不进入业务组件的默认依赖图。
 
@@ -393,8 +393,8 @@ abstract final class CCRouter {
     CCCancellationToken? cancellation,
   });
 
-  static Future<void> runInitTasks({
-    CCInitTaskGate gate,
+  static Future<CCInitTaskRunResult> runInitTasks({
+    required CCInitTaskGate gate,
   });
 
   static List<CCInitTaskSnapshot> get initTasks;
@@ -412,7 +412,8 @@ abstract final class CCRouter {
 - `CCRouter.initialize`、Adapter attach、Adapter 初始化和初始 Backend Snapshot 读取均为
   同步事务；成功返回时必须已经可以导航，异步 Backend 准备必须在 attach 前完成。
 - 异步初始化任务不隐藏在 `initialize()` 内；Host 通过 `runInitTasks(gate: ...)` 显式
-  等待已打开 Gate 的 DAG，Runtime shutdown 负责取消并等待活动任务收口。
+  等待已打开 Gate 的 DAG。Facade、Runtime、Annotation 和手写 Definition 均不提供默认
+  Gate；普通启动也要显式选择 `CCInitTaskGate.appStarted`。Runtime shutdown 负责取消并等待活动任务收口。
 - `CCRouter.shutdown()` 停止新调用、销毁默认 Runtime，并在 Adapter 之后释放 Backend
   自有资源；它仍为异步，因为必须等待 Scope 和业务资源释放。只有拥有默认 Runtime 的应用
   Composition Root 可以调用并且必须等待完成；页面、组件、Session、App 后台和单个 Navigation
@@ -1003,7 +1004,7 @@ Audit   记录敏感操作的主体、时间和结果
 - Runtime 注入的所属组件。
 - `dependsOn` 依赖。
 - `gate` 触发条件。
-- `critical` 或 `optional` 失败策略。
+- 显式 `required` 或 `optional` 失败分类。
 - 可选 per-task timeout 和异步 Handler。
 
 1.x 任务只在一个 Runtime 生命周期内执行一次。Session、页面、前后台周期任务分别使用
@@ -1035,12 +1036,11 @@ pending -----------------> skipped
 失败策略：
 
 ```text
-critical       抛出标准错误并阻止后续初始化推进
-optional       记录失败，独立任务继续，依赖任务 skipped
+required       记录必需能力失败，由 Host 决定降级或显式严格失败
+optional       记录可选能力失败，独立任务继续，依赖任务 skipped
 ```
 
-Runtime 在同步 `initialize()` 阶段检测未知依赖和循环依赖，Gate 打开后按 DAG 层并发执行。
-重叠触发 single-flight，成功、失败和 skipped 任务均不会自动重试。完整语义见
+Runtime 在同步 `initialize()` 阶段检测未知依赖、循环依赖和 required 依赖 optional，Gate 打开后按 DAG 层并发执行。`runInitTasks(gate: ...)` 返回不可变结果而不默认抛出任务业务失败；Host 只有在不能降级时才显式调用 `throwIfRequiredFailed()`。重叠触发 single-flight，成功、失败和 skipped 任务均不会自动重试。完整语义见
 [初始化任务设计与实施计划](CCRouter-initialization-task-design.md)。
 
 ---

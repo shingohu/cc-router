@@ -15,11 +15,11 @@ final class StringCodec implements CCRouteCodec<String> {
   const StringCodec();
 
   @override
-  String decode(CCEncodedRouteArguments input) => input.path['value']!;
+  String decode(CCRouteCodecValues input) => input.path['value']!;
 
   @override
-  CCEncodedRouteArguments encode(String arguments) =>
-      CCEncodedRouteArguments(path: {'value': arguments});
+  CCRouteCodecValues encode(String arguments) =>
+      CCRouteCodecValues(path: {'value': arguments});
 }
 
 final class StringIntent<R> implements CCRouteIntent<R> {

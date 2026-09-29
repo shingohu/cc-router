@@ -5,7 +5,7 @@
     "name": "demo_navigation_lab",
     "version": "0.1.0"
   },
-  "contentFingerprint": "f3a955f5fd10e3768f7da59a4d55addcf4573821f13c3f7ae7f7333a6f1e0446",
+  "contentFingerprint": "267b06329225f153a477500c70b5aabce7691a526d8e4c58299e273c024a5d49",
   "bundle": {
     "library": "lib/src/ccrouter_generated/host/demo_navigation_lab_ccrouter.g.dart",
     "symbol": "ccrouterGeneratedPackageBundle"
@@ -932,7 +932,7 @@
           "implementation": {
             "symbol": "handleDemoCreateReceipt",
             "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
-            "line": 168,
+            "line": 178,
             "column": 8
           },
           "registration": "ccrouterRegisterHandleDemoCreateReceiptCommand",
@@ -961,7 +961,7 @@
           "implementation": {
             "symbol": "handleDemoFail",
             "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
-            "line": 190,
+            "line": 200,
             "column": 6
           },
           "registration": "ccrouterRegisterHandleDemoFailCommand",
@@ -990,7 +990,7 @@
           "implementation": {
             "symbol": "handleDemoRefreshCache",
             "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
-            "line": 173,
+            "line": 183,
             "column": 14
           },
           "registration": "ccrouterRegisterHandleDemoRefreshCacheCommand",
@@ -1019,7 +1019,7 @@
           "implementation": {
             "symbol": "handleDemoWait",
             "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
-            "line": 180,
+            "line": 190,
             "column": 14
           },
           "registration": "ccrouterRegisterHandleDemoWaitCommand",
@@ -1068,7 +1068,7 @@
           "implementation": {
             "symbol": "failDemoOrderCompleted",
             "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
-            "line": 155,
+            "line": 165,
             "column": 6
           },
           "registration": "ccrouterRegisterFailDemoOrderCompletedEventSubscription",
@@ -1100,7 +1100,7 @@
           "implementation": {
             "symbol": "trackDemoOrderCompleted",
             "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
-            "line": 147,
+            "line": 157,
             "column": 6
           },
           "registration": "ccrouterRegisterTrackDemoOrderCompletedEventSubscription",
@@ -1132,7 +1132,7 @@
           "implementation": {
             "symbol": "waitForDemoSlowEvent",
             "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
-            "line": 161,
+            "line": 171,
             "column": 14
           },
           "registration": "ccrouterRegisterWaitForDemoSlowEventEventSubscription",
@@ -1179,14 +1179,15 @@
             null
           ],
           "gateId": "privacyGranted",
-          "failurePolicy": "critical",
+          "failurePolicy": "optional",
           "timeoutMicroseconds": null,
+          "isAsync": false,
           "package": "demo_navigation_lab",
           "source": "lib/src/navigation_lab_component_registrar.dart",
           "implementation": {
             "symbol": "initializeDemoAnalytics",
             "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
-            "line": 109,
+            "line": 115,
             "column": 6
           },
           "registration": "ccrouterRegisterInitializeDemoAnalyticsInitTask",
@@ -1218,14 +1219,15 @@
             "demo_order_component"
           ],
           "gateId": "appStarted",
-          "failurePolicy": "critical",
+          "failurePolicy": "optional",
           "timeoutMicroseconds": null,
+          "isAsync": true,
           "package": "demo_navigation_lab",
           "source": "lib/src/navigation_lab_component_registrar.dart",
           "implementation": {
             "symbol": "initializeDemoFoundation",
             "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
-            "line": 80,
+            "line": 82,
             "column": 14
           },
           "registration": "ccrouterRegisterInitializeDemoFoundationInitTask",
@@ -1257,14 +1259,15 @@
             null
           ],
           "gateId": "appStarted",
-          "failurePolicy": "critical",
+          "failurePolicy": "optional",
           "timeoutMicroseconds": null,
+          "isAsync": false,
           "package": "demo_navigation_lab",
           "source": "lib/src/navigation_lab_component_registrar.dart",
           "implementation": {
             "symbol": "initializeDemoOptionalDependent",
             "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
-            "line": 99,
+            "line": 104,
             "column": 6
           },
           "registration": "ccrouterRegisterInitializeDemoOptionalDependentInitTask",
@@ -1294,12 +1297,13 @@
           "gateId": "appStarted",
           "failurePolicy": "optional",
           "timeoutMicroseconds": null,
+          "isAsync": false,
           "package": "demo_navigation_lab",
           "source": "lib/src/navigation_lab_component_registrar.dart",
           "implementation": {
             "symbol": "initializeDemoOptionalSdk",
             "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
-            "line": 90,
+            "line": 93,
             "column": 6
           },
           "registration": "ccrouterRegisterInitializeDemoOptionalSdkInitTask",
@@ -1323,14 +1327,15 @@
             null
           ],
           "gateId": "appStarted",
-          "failurePolicy": "critical",
+          "failurePolicy": "optional",
           "timeoutMicroseconds": null,
+          "isAsync": true,
           "package": "demo_navigation_lab",
           "source": "lib/src/navigation_lab_component_registrar.dart",
           "implementation": {
             "symbol": "initializeDemoParallelPrimary",
             "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
-            "line": 118,
+            "line": 126,
             "column": 14
           },
           "registration": "ccrouterRegisterInitializeDemoParallelPrimaryInitTask",
@@ -1362,14 +1367,15 @@
             null
           ],
           "gateId": "appStarted",
-          "failurePolicy": "critical",
+          "failurePolicy": "optional",
           "timeoutMicroseconds": null,
+          "isAsync": true,
           "package": "demo_navigation_lab",
           "source": "lib/src/navigation_lab_component_registrar.dart",
           "implementation": {
             "symbol": "initializeDemoParallelSecondary",
             "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
-            "line": 128,
+            "line": 138,
             "column": 14
           },
           "registration": "ccrouterRegisterInitializeDemoParallelSecondaryInitTask",
@@ -1399,12 +1405,13 @@
           "gateId": "demo.timeoutLab",
           "failurePolicy": "optional",
           "timeoutMicroseconds": 60000,
+          "isAsync": true,
           "package": "demo_navigation_lab",
           "source": "lib/src/navigation_lab_component_registrar.dart",
           "implementation": {
             "symbol": "initializeDemoTimeout",
             "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
-            "line": 140,
+            "line": 150,
             "column": 14
           },
           "registration": "ccrouterRegisterInitializeDemoTimeoutInitTask",
@@ -1562,7 +1569,7 @@
             "kind": "page",
             "symbol": "DemoProceedPage",
             "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-            "line": 123,
+            "line": 131,
             "column": 13
           },
           "navigationSources": [
@@ -1641,7 +1648,7 @@
             "kind": "page",
             "symbol": "DemoCancelledPage",
             "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-            "line": 139,
+            "line": 147,
             "column": 13
           },
           "navigationSources": [
@@ -1720,7 +1727,7 @@
             "kind": "page",
             "symbol": "DemoRedirectSourcePage",
             "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-            "line": 153,
+            "line": 161,
             "column": 13
           },
           "navigationSources": [
@@ -1797,7 +1804,7 @@
             "kind": "page",
             "symbol": "DemoRedirectTargetPage",
             "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-            "line": 166,
+            "line": 174,
             "column": 13
           },
           "navigationSources": [
@@ -1876,7 +1883,7 @@
             "kind": "page",
             "symbol": "DemoDeferredPage",
             "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-            "line": 180,
+            "line": 188,
             "column": 13
           },
           "navigationSources": [
@@ -1955,7 +1962,7 @@
             "kind": "page",
             "symbol": "DemoTimeoutPage",
             "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-            "line": 196,
+            "line": 204,
             "column": 13
           },
           "navigationSources": [
@@ -2034,7 +2041,7 @@
             "kind": "page",
             "symbol": "DemoGuardedPage",
             "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-            "line": 212,
+            "line": 220,
             "column": 13
           },
           "navigationSources": [
@@ -3544,7 +3551,7 @@
         "implementation": {
           "symbol": "handleDemoCreateReceipt",
           "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
-          "line": 168,
+          "line": 178,
           "column": 8
         },
         "generatedArtifacts": [
@@ -3569,7 +3576,7 @@
         "implementation": {
           "symbol": "handleDemoFail",
           "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
-          "line": 190,
+          "line": 200,
           "column": 6
         },
         "generatedArtifacts": [
@@ -3594,7 +3601,7 @@
         "implementation": {
           "symbol": "handleDemoRefreshCache",
           "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
-          "line": 173,
+          "line": 183,
           "column": 14
         },
         "generatedArtifacts": [
@@ -3619,7 +3626,7 @@
         "implementation": {
           "symbol": "handleDemoWait",
           "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
-          "line": 180,
+          "line": 190,
           "column": 14
         },
         "generatedArtifacts": [
@@ -3644,7 +3651,7 @@
         "implementation": {
           "symbol": "trackDemoOrderCompleted",
           "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
-          "line": 147,
+          "line": 157,
           "column": 6
         },
         "generatedArtifacts": [
@@ -3669,7 +3676,7 @@
         "implementation": {
           "symbol": "failDemoOrderCompleted",
           "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
-          "line": 155,
+          "line": 165,
           "column": 6
         },
         "generatedArtifacts": [
@@ -3736,7 +3743,7 @@
         "implementation": {
           "symbol": "waitForDemoSlowEvent",
           "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
-          "line": 161,
+          "line": 171,
           "column": 14
         },
         "generatedArtifacts": [
@@ -3756,7 +3763,7 @@
         "implementation": {
           "symbol": "initializeDemoAnalytics",
           "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
-          "line": 109,
+          "line": 115,
           "column": 6
         },
         "generatedArtifacts": [
@@ -3781,7 +3788,7 @@
         "implementation": {
           "symbol": "initializeDemoFoundation",
           "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
-          "line": 80,
+          "line": 82,
           "column": 14
         },
         "generatedArtifacts": [
@@ -3801,7 +3808,7 @@
         "implementation": {
           "symbol": "initializeDemoOptionalDependent",
           "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
-          "line": 99,
+          "line": 104,
           "column": 6
         },
         "generatedArtifacts": [
@@ -3826,7 +3833,7 @@
         "implementation": {
           "symbol": "initializeDemoOptionalSdk",
           "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
-          "line": 90,
+          "line": 93,
           "column": 6
         },
         "generatedArtifacts": [
@@ -3846,7 +3853,7 @@
         "implementation": {
           "symbol": "initializeDemoParallelPrimary",
           "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
-          "line": 118,
+          "line": 126,
           "column": 14
         },
         "generatedArtifacts": [
@@ -3866,7 +3873,7 @@
         "implementation": {
           "symbol": "initializeDemoParallelSecondary",
           "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
-          "line": 128,
+          "line": 138,
           "column": 14
         },
         "generatedArtifacts": [
@@ -3886,7 +3893,7 @@
         "implementation": {
           "symbol": "initializeDemoTimeout",
           "packageUri": "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
-          "line": 140,
+          "line": 150,
           "column": 14
         },
         "generatedArtifacts": [
@@ -3905,13 +3912,13 @@
         "contract": {
           "symbol": "DemoCancelledPage",
           "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-          "line": 139,
+          "line": 147,
           "column": 13
         },
         "implementation": {
           "symbol": "DemoCancelledPage",
           "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-          "line": 139,
+          "line": 147,
           "column": 13
         },
         "generatedArtifacts": [
@@ -3965,13 +3972,13 @@
         "contract": {
           "symbol": "DemoDeferredPage",
           "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-          "line": 180,
+          "line": 188,
           "column": 13
         },
         "implementation": {
           "symbol": "DemoDeferredPage",
           "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-          "line": 180,
+          "line": 188,
           "column": 13
         },
         "generatedArtifacts": [
@@ -4085,13 +4092,13 @@
         "contract": {
           "symbol": "DemoGuardedPage",
           "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-          "line": 212,
+          "line": 220,
           "column": 13
         },
         "implementation": {
           "symbol": "DemoGuardedPage",
           "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-          "line": 212,
+          "line": 220,
           "column": 13
         },
         "generatedArtifacts": [
@@ -4415,13 +4422,13 @@
         "contract": {
           "symbol": "DemoProceedPage",
           "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-          "line": 123,
+          "line": 131,
           "column": 13
         },
         "implementation": {
           "symbol": "DemoProceedPage",
           "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-          "line": 123,
+          "line": 131,
           "column": 13
         },
         "generatedArtifacts": [
@@ -4445,13 +4452,13 @@
         "contract": {
           "symbol": "DemoRedirectSourcePage",
           "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-          "line": 153,
+          "line": 161,
           "column": 13
         },
         "implementation": {
           "symbol": "DemoRedirectSourcePage",
           "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-          "line": 153,
+          "line": 161,
           "column": 13
         },
         "generatedArtifacts": [
@@ -4475,13 +4482,13 @@
         "contract": {
           "symbol": "DemoRedirectTargetPage",
           "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-          "line": 166,
+          "line": 174,
           "column": 13
         },
         "implementation": {
           "symbol": "DemoRedirectTargetPage",
           "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-          "line": 166,
+          "line": 174,
           "column": 13
         },
         "generatedArtifacts": [
@@ -4655,13 +4662,13 @@
         "contract": {
           "symbol": "DemoTimeoutPage",
           "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-          "line": 196,
+          "line": 204,
           "column": 13
         },
         "implementation": {
           "symbol": "DemoTimeoutPage",
           "packageUri": "package:demo_navigation_lab/src/policy_pages.dart",
-          "line": 196,
+          "line": 204,
           "column": 13
         },
         "generatedArtifacts": [

@@ -96,7 +96,7 @@ sequence
 CCPopOutcome
 ├── handled
 ├── removedBackendEntryId?
-├── removedOwner: managed | foreign | opaque | none
+├── removedEntryOwner: managed | foreign | opaque | none
 ├── trigger: system | gesture | predictiveBack | business | unknown
 ├── guardDeniedCode?
 ├── hostId?
@@ -111,7 +111,7 @@ CCPopOutcome
   标记 Host desynchronized，不按顶部位置兼容删除；
 - Pop 被 `PopScope`、表单保护或手势状态拒绝时，Managed Route 保持存活；
 - Foreign Popup 消费返回时，只移除 Foreign Entry；
-- 只有 `removedOwner == managed` 时，Runtime 才关闭对应 Route Scope；
+- 只有 `removedEntryOwner == managed` 时，Runtime 才关闭对应 Route Scope；
 - Typed result 继续由原始 Managed Push Future 管理，不放入 `CCPopOutcome`；
 - 第三方 Route 的结果不能转换为 CCRouter 的泛型返回值；
 - `LocalHistoryEntry` 被消费时不能误认为页面 Route 已经移除。
@@ -169,7 +169,7 @@ Foreign/Opaque 变化通过事件身份和 Bridge 隔离，不以一个宽泛 Ca
 ## 9. 多 Host 与自适应布局
 
 当前 `hostId` 已进入 `CCNavigationRequest`、`CCRouteEntrySnapshot`、
-`CCBackendEntrySnapshot`、后端事件和诊断记录。`CCNavigationHostRegistry` 将默认 Placement
+`CCBackendEntrySnapshot`、后端事件和诊断记录。`CCMultiHostNavigationAdapter` 将默认 Placement
 动态解析到活动 Host，同时保持显式 Host 路由固定归属。
 
 不同 Navigation Host 的导航栈相互隔离。一个 Host 可以填满 Flutter View，也可以表示

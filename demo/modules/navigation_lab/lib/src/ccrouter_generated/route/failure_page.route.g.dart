@@ -110,7 +110,7 @@ final class _DemoFailurePageRouteCodec
 
   /// Rejects missing, repeated or malformed values before creating arguments.
   @override
-  _DemoFailurePageRouteArguments decode(CCEncodedRouteArguments input) {
+  _DemoFailurePageRouteArguments decode(CCRouteCodecValues input) {
     final _values_stage = input.query["stage"];
     if (_values_stage != null && _values_stage.length != 1)
       throw CCRouteParameterError(
@@ -171,8 +171,8 @@ final class _DemoFailurePageRouteCodec
 
   /// Encodes unescaped scalar values; Runtime owns URI escaping exactly once.
   @override
-  CCEncodedRouteArguments encode(_DemoFailurePageRouteArguments arguments) {
-    return CCEncodedRouteArguments(
+  CCRouteCodecValues encode(_DemoFailurePageRouteArguments arguments) {
+    return CCRouteCodecValues(
       path: {},
       query: {
         "stage": [arguments.stage],

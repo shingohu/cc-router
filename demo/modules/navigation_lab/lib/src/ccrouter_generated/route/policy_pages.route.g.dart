@@ -76,14 +76,14 @@ final class _DemoProceedPageRouteCodec
 
   /// Rejects missing, repeated or malformed values before creating arguments.
   @override
-  _DemoProceedPageRouteArguments decode(CCEncodedRouteArguments input) {
+  _DemoProceedPageRouteArguments decode(CCRouteCodecValues input) {
     return _DemoProceedPageRouteArguments();
   }
 
   /// Encodes unescaped scalar values; Runtime owns URI escaping exactly once.
   @override
-  CCEncodedRouteArguments encode(_DemoProceedPageRouteArguments arguments) {
-    return CCEncodedRouteArguments(path: {}, query: {}, extra: null);
+  CCRouteCodecValues encode(_DemoProceedPageRouteArguments arguments) {
+    return CCRouteCodecValues(path: {}, query: {}, extra: null);
   }
 }
 
@@ -178,14 +178,14 @@ final class _DemoCancelledPageRouteCodec
 
   /// Rejects missing, repeated or malformed values before creating arguments.
   @override
-  _DemoCancelledPageRouteArguments decode(CCEncodedRouteArguments input) {
+  _DemoCancelledPageRouteArguments decode(CCRouteCodecValues input) {
     return _DemoCancelledPageRouteArguments();
   }
 
   /// Encodes unescaped scalar values; Runtime owns URI escaping exactly once.
   @override
-  CCEncodedRouteArguments encode(_DemoCancelledPageRouteArguments arguments) {
-    return CCEncodedRouteArguments(path: {}, query: {}, extra: null);
+  CCRouteCodecValues encode(_DemoCancelledPageRouteArguments arguments) {
+    return CCRouteCodecValues(path: {}, query: {}, extra: null);
   }
 }
 
@@ -281,16 +281,14 @@ final class _DemoRedirectSourcePageRouteCodec
 
   /// Rejects missing, repeated or malformed values before creating arguments.
   @override
-  _DemoRedirectSourcePageRouteArguments decode(CCEncodedRouteArguments input) {
+  _DemoRedirectSourcePageRouteArguments decode(CCRouteCodecValues input) {
     return _DemoRedirectSourcePageRouteArguments();
   }
 
   /// Encodes unescaped scalar values; Runtime owns URI escaping exactly once.
   @override
-  CCEncodedRouteArguments encode(
-    _DemoRedirectSourcePageRouteArguments arguments,
-  ) {
-    return CCEncodedRouteArguments(path: {}, query: {}, extra: null);
+  CCRouteCodecValues encode(_DemoRedirectSourcePageRouteArguments arguments) {
+    return CCRouteCodecValues(path: {}, query: {}, extra: null);
   }
 }
 
@@ -387,16 +385,14 @@ final class _DemoRedirectTargetPageRouteCodec
 
   /// Rejects missing, repeated or malformed values before creating arguments.
   @override
-  _DemoRedirectTargetPageRouteArguments decode(CCEncodedRouteArguments input) {
+  _DemoRedirectTargetPageRouteArguments decode(CCRouteCodecValues input) {
     return _DemoRedirectTargetPageRouteArguments();
   }
 
   /// Encodes unescaped scalar values; Runtime owns URI escaping exactly once.
   @override
-  CCEncodedRouteArguments encode(
-    _DemoRedirectTargetPageRouteArguments arguments,
-  ) {
-    return CCEncodedRouteArguments(path: {}, query: {}, extra: null);
+  CCRouteCodecValues encode(_DemoRedirectTargetPageRouteArguments arguments) {
+    return CCRouteCodecValues(path: {}, query: {}, extra: null);
   }
 }
 
@@ -492,14 +488,14 @@ final class _DemoDeferredPageRouteCodec
 
   /// Rejects missing, repeated or malformed values before creating arguments.
   @override
-  _DemoDeferredPageRouteArguments decode(CCEncodedRouteArguments input) {
+  _DemoDeferredPageRouteArguments decode(CCRouteCodecValues input) {
     return _DemoDeferredPageRouteArguments();
   }
 
   /// Encodes unescaped scalar values; Runtime owns URI escaping exactly once.
   @override
-  CCEncodedRouteArguments encode(_DemoDeferredPageRouteArguments arguments) {
-    return CCEncodedRouteArguments(path: {}, query: {}, extra: null);
+  CCRouteCodecValues encode(_DemoDeferredPageRouteArguments arguments) {
+    return CCRouteCodecValues(path: {}, query: {}, extra: null);
   }
 }
 
@@ -594,14 +590,14 @@ final class _DemoTimeoutPageRouteCodec
 
   /// Rejects missing, repeated or malformed values before creating arguments.
   @override
-  _DemoTimeoutPageRouteArguments decode(CCEncodedRouteArguments input) {
+  _DemoTimeoutPageRouteArguments decode(CCRouteCodecValues input) {
     return _DemoTimeoutPageRouteArguments();
   }
 
   /// Encodes unescaped scalar values; Runtime owns URI escaping exactly once.
   @override
-  CCEncodedRouteArguments encode(_DemoTimeoutPageRouteArguments arguments) {
-    return CCEncodedRouteArguments(path: {}, query: {}, extra: null);
+  CCRouteCodecValues encode(_DemoTimeoutPageRouteArguments arguments) {
+    return CCRouteCodecValues(path: {}, query: {}, extra: null);
   }
 }
 
@@ -696,14 +692,14 @@ final class _DemoGuardedPageRouteCodec
 
   /// Rejects missing, repeated or malformed values before creating arguments.
   @override
-  _DemoGuardedPageRouteArguments decode(CCEncodedRouteArguments input) {
+  _DemoGuardedPageRouteArguments decode(CCRouteCodecValues input) {
     return _DemoGuardedPageRouteArguments();
   }
 
   /// Encodes unescaped scalar values; Runtime owns URI escaping exactly once.
   @override
-  CCEncodedRouteArguments encode(_DemoGuardedPageRouteArguments arguments) {
-    return CCEncodedRouteArguments(path: {}, query: {}, extra: null);
+  CCRouteCodecValues encode(_DemoGuardedPageRouteArguments arguments) {
+    return CCRouteCodecValues(path: {}, query: {}, extra: null);
   }
 }
 

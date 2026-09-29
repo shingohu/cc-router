@@ -329,7 +329,11 @@ const benchmarkInitTask$index = CCInitTaskContract(
   description: 'Synthetic initialization task $index.',
 );
 
-@CCInitTask(contract: benchmarkInitTask$index)
+@CCInitTask(
+  contract: benchmarkInitTask$index,
+  gate: CCInitTaskGate.appStarted,
+  failurePolicy: CCInitTaskFailurePolicy.optional,
+)
 void initializeBenchmarkTask$index() {}
 ''';
 

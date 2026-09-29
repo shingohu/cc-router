@@ -9,7 +9,7 @@ CCRouter 自动观测框架拥有的导航和生命周期；应用负责业务�
 ```text
 ccrouter_core                 Route、Trace、Failure、Diagnostic
 ccrouter_analytics            统一分析事件、脱敏属性、有界 Sink
-ccrouter_auto_track           可选的显式 UI 目标和有限自动采集
+ccrouter_analytics_flutter           可选的显式 UI 目标和有限自动采集
 应用层 Adapter                Firebase、ThinkingData、本地记录或 HTTP 上传
 应用层                         业务事件、Consent、身份和网络/Crash 接入
 ```
@@ -120,7 +120,7 @@ Core 不依赖 Firebase、ThinkingData、Sentry 或 Crashlytics。
 
 ### P3：可选 Auto Track
 
-- [x] 独立 `ccrouter_auto_track` Flutter 包；
+- [x] 独立 `ccrouter_analytics_flutter` Flutter 包；
 - [x] 默认关闭，只识别显式 Target；不基于 Widget 文本、随机 Key 或全局手势猜测；
 - [x] 黑名单和通用节流；平台能力矩阵仍需随真实设备回归持续补齐；采样已由
   `CCAnalyticsPolicy` 提供；
@@ -224,7 +224,7 @@ Pointer 只能说明发生了按下、抬起或移动，不能证明某个业务
 CCAnalyticsController（提案）
   ├── CCAnalyticsEventDispatcher（现有）
   ├── Consent / Sampling / Rules（现有基础）
-  ├── CCRouterNavigationAnalytics（现有）
+  ├── CCNavigationAnalyticsBridge（现有）
   └── Host/Outlet -> 当前 managed Route 上下文快照
 
 CCAnalyticsScope（提案，应用根或页面一层 Widget）

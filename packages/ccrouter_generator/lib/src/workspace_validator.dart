@@ -694,7 +694,7 @@ abstract final class CCRouteWorkspaceValidator {
         errors.add('InitTask "$id" has invalid Gate ID "$gateId".');
       }
       final failurePolicy = '${task['failurePolicy'] ?? ''}';
-      if (failurePolicy != 'critical' && failurePolicy != 'optional') {
+      if (failurePolicy != 'required' && failurePolicy != 'optional') {
         errors.add(
           'InitTask "$id" has unsupported failure policy "$failurePolicy".',
         );
@@ -702,6 +702,16 @@ abstract final class CCRouteWorkspaceValidator {
       final timeout = task['timeoutMicroseconds'];
       if (timeout != null && (timeout is! int || timeout <= 0)) {
         errors.add('InitTask "$id" timeout must be positive.');
+      }
+      if (failurePolicy == 'required' && contractId.isEmpty) {
+        errors.add('Required InitTask "$id" must use a CCInitTaskContract.');
+      }
+      if (failurePolicy == 'required' &&
+          task['isAsync'] == true &&
+          timeout == null) {
+        errors.add(
+          'Async required InitTask "$id" must declare a positive timeout.',
+        );
       }
       final dependencies = _strings(task['dependsOn']);
       final seen = <String>{};
@@ -759,6 +769,32 @@ abstract final class CCRouteWorkspaceValidator {
     final initTaskIds = initTasks.keys.toList()..sort();
     for (final id in initTaskIds) {
       visitTask(id);
+    }
+    String? findOptionalDependency(String id, Set<String> visiting) {
+      if (!visiting.add(id)) return null;
+      final task = initTasks[id];
+      if (task == null) return null;
+      if (task['failurePolicy'] == 'optional') return id;
+      for (final dependency in _strings(task['dependsOn'])) {
+        final optional = findOptionalDependency(dependency, visiting);
+        if (optional != null) return optional;
+      }
+      return null;
+    }
+
+    for (final task in initTasks.values) {
+      if (task['failurePolicy'] != 'required') continue;
+      final id = '${task['id'] ?? ''}';
+      for (final dependency in _strings(task['dependsOn'])) {
+        final optional = findOptionalDependency(dependency, <String>{});
+        if (optional != null) {
+          errors.add(
+            'Required InitTask "$id" cannot depend directly or indirectly '
+            'on optional InitTask "$optional".',
+          );
+          break;
+        }
+      }
     }
     final componentList = _validateAndOrderComponents(components, errors);
     for (final route in routes.values) {

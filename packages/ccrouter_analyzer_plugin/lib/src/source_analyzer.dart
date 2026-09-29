@@ -48,7 +48,7 @@ final class CCRouterAnalyzerDiagnostic {
 /// workspace Packages, or infer dependency ownership from a partial editor
 /// buffer. The CLI generator remains authoritative for complete metadata and
 /// dependency validation.
-abstract final class CCRouterAnalyzerDiagnostics {
+abstract final class CCRouterSourceAnalyzer {
   /// Analyzes one Dart [source] file and returns deterministic diagnostics.
   ///
   /// [filePath] must be an absolute or normalized path. [packageRoot] is the
@@ -128,6 +128,44 @@ abstract final class CCRouterAnalyzerDiagnostics {
         }
       }
     }
+    for (final declaration
+        in parsed.unit.declarations.whereType<FunctionDeclaration>()) {
+      final annotation = declaration.metadata
+          .where((item) => _annotationName(item) == 'CCInitTask')
+          .firstOrNull;
+      if (annotation == null) continue;
+      final policy = _namedArgument(annotation, 'failurePolicy');
+      if (policy == null || !policy.toSource().endsWith('.required')) continue;
+      if (_namedArgument(annotation, 'contract') == null) {
+        diagnostics.add(
+          CCRouterAnalyzerDiagnostic(
+            offset: annotation.offset,
+            length: annotation.length,
+            code: 'ccrouter_required_init_task_contract_missing',
+            message: 'A required InitTask must use a stable Contract.',
+            correction:
+                'Declare a top-level CCInitTaskContract and pass it with contract:.',
+            severity: AnalysisErrorSeverity.ERROR,
+          ),
+        );
+      }
+      final returnType = declaration.returnType?.toSource() ?? '';
+      final isAsync =
+          returnType.startsWith('Future<') ||
+          returnType.startsWith('FutureOr<');
+      if (isAsync && _namedArgument(annotation, 'timeout') == null) {
+        diagnostics.add(
+          CCRouterAnalyzerDiagnostic(
+            offset: annotation.offset,
+            length: annotation.length,
+            code: 'ccrouter_required_init_task_timeout_missing',
+            message: 'An async required InitTask must have a timeout.',
+            correction: 'Add a positive timeout: Duration(...).',
+            severity: AnalysisErrorSeverity.ERROR,
+          ),
+        );
+      }
+    }
     return diagnostics;
   }
 
@@ -175,6 +213,16 @@ abstract final class CCRouterAnalyzerDiagnostics {
     if (name is SimpleIdentifier) return name.name;
     final source = name.toSource();
     return source.substring(source.lastIndexOf('.') + 1);
+  }
+
+  /// Returns one named annotation argument without resolving workspace state.
+  static Expression? _namedArgument(Annotation annotation, String name) {
+    for (final argument
+        in annotation.arguments?.arguments.whereType<NamedExpression>() ??
+            const <NamedExpression>[]) {
+      if (argument.name.label.name == name) return argument.expression;
+    }
+    return null;
   }
 
   /// Determines whether [uri] reaches another Package's generated internals.

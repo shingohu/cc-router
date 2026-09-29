@@ -1023,9 +1023,9 @@ final class ProbeDetailRouteArguments {
 final class _ProbeCodec implements CCRouteCodec<ProbeDetailRouteArguments> {
   const _ProbeCodec();
   @override
-  ProbeDetailRouteArguments decode(CCEncodedRouteArguments input) => throw UnimplementedError();
+  ProbeDetailRouteArguments decode(CCRouteCodecValues input) => throw UnimplementedError();
   @override
-  CCEncodedRouteArguments encode(ProbeDetailRouteArguments arguments) => throw UnimplementedError();
+  CCRouteCodecValues encode(ProbeDetailRouteArguments arguments) => throw UnimplementedError();
 }
 ''',
         },

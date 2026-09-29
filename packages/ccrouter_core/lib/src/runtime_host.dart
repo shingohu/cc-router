@@ -245,7 +245,7 @@ final class CCRouterRuntime {
   final Set<String> _openedInitTaskGates = {};
 
   /// Active DAG drain shared by concurrent Gate triggers.
-  Future<void>? _initTaskRun;
+  Future<CCInitTaskRunResult>? _initTaskRun;
 
   /// Whether an overlapping Gate open requires another DAG quiescence pass.
   bool _initTaskDrainRequested = false;
@@ -530,7 +530,7 @@ final class CCRouterRuntime {
       }
       failureStage = 'backendAttachment';
       _attachBackendNavigationSource();
-      _readInitialBackendSnapshot();
+      _readInitialBackendEntries();
       _initialized = true;
       failureStage = 'restorationAttachment';
       _attachRestorationOpportunitySource();
@@ -582,7 +582,7 @@ final class CCRouterRuntime {
         );
       }
       _attachBackendNavigationSource();
-      _readInitialBackendSnapshot();
+      _readInitialBackendEntries();
     } catch (error, stackTrace) {
       if (adapter is CCNavigationPopGuardBinding) {
         try {
@@ -669,6 +669,34 @@ final class CCRouterRuntime {
     final ids = _initTasks.keys.toList()..sort();
     for (final id in ids) {
       visit(id);
+    }
+
+    String? findOptional(String id, Set<String> visited) {
+      if (!visited.add(id)) return null;
+      final record = _initTasks[id]!;
+      if (record.task.failurePolicy == CCInitTaskFailurePolicy.optional) {
+        return id;
+      }
+      for (final dependency in record.task.dependsOn) {
+        final optional = findOptional(dependency, visited);
+        if (optional != null) return optional;
+      }
+      return null;
+    }
+
+    for (final record in _initTasks.values) {
+      if (record.task.failurePolicy != CCInitTaskFailurePolicy.required) {
+        continue;
+      }
+      for (final dependency in record.task.dependsOn) {
+        final optional = findOptional(dependency, <String>{});
+        if (optional != null) {
+          throw CCRegistrationError(
+            'Required InitTask "${record.task.id}" cannot depend directly or '
+            'indirectly on optional InitTask "$optional".',
+          );
+        }
+      }
     }
   }
 
@@ -874,7 +902,7 @@ final class CCRouterRuntime {
   /// This low-level entry point exists for Core tests; components use the
   /// component-bound [CCRegistry].
   void registerCommand<C extends CCCommand<R>, R>(
-    CCHandler<C, R> handler, {
+    FutureOr<R> Function(C command, CCInvocationContext context) handler, {
     String? commandId,
   }) {
     _registerCommandForComponent('', handler, commandId: commandId);
@@ -883,7 +911,7 @@ final class CCRouterRuntime {
   /// Registers a command while retaining the component owner internally.
   void _registerCommandForComponent<C extends CCCommand<R>, R>(
     String ownerComponentId,
-    CCHandler<C, R> handler, {
+    FutureOr<R> Function(C command, CCInvocationContext context) handler, {
     String? commandId,
   }) {
     if (commandId != null && !_isStableIdentifier(commandId)) {
@@ -904,7 +932,7 @@ final class CCRouterRuntime {
   ///
   /// This low-level entry point exists for Core tests; components use the
   /// component-bound [CCRegistry].
-  void registerEvent<E extends CCEvent>(String id, CCHandler<E, void> handler) {
+  void registerEvent<E extends CCEvent>(String id, CCEventHandler<E> handler) {
     _registerEventForComponent('', id, handler);
   }
 
@@ -922,7 +950,7 @@ final class CCRouterRuntime {
   void _registerEventForComponent<E extends CCEvent>(
     String ownerComponentId,
     String id,
-    CCHandler<E, void> handler,
+    CCEventHandler<E> handler,
   ) {
     _registerEventSubscriber(
       E,
@@ -1690,13 +1718,14 @@ final class CCRouterRuntime {
     );
   }
 
-  /// Opens [gate] and runs every newly ready InitTask exactly once.
+  /// Opens the explicitly selected [gate] and runs every newly ready InitTask
+  /// exactly once.
   ///
   /// Calls that overlap share one DAG drain. Tasks whose Gates remain closed
   /// stay pending; successful and failed tasks are never retried implicitly.
-  /// A critical failure throws [CCInitTaskError], while optional
-  /// failures remain available through [initTasks].
-  Future<void> runInitTasks({CCInitTaskGate gate = CCInitTaskGate.appStarted}) {
+  /// Task failures are returned as sanitized snapshots and skip only dependent
+  /// branches. Runtime shutdown and cancellation still terminate this Future.
+  Future<CCInitTaskRunResult> runInitTasks({required CCInitTaskGate gate}) {
     _ensureInitialized();
     if (!_isStableIdentifier(gate.id)) {
       throw CCRegistrationError('Invalid InitTask Gate ID "${gate.id}".');
@@ -1713,13 +1742,13 @@ final class CCRouterRuntime {
   }
 
   /// Runs ready DAG layers and clears the single-flight marker on completion.
-  Future<void> _drainAndReleaseInitTasks() async {
+  Future<CCInitTaskRunResult> _drainAndReleaseInitTasks() async {
     try {
       do {
         _initTaskDrainRequested = false;
-        _throwExistingCriticalInitTaskFailure();
         await _drainInitTasks();
       } while (_initTaskDrainRequested);
+      return CCInitTaskRunResult._(initTasks);
     } finally {
       _initTaskDrainRequested = false;
       _initTaskRun = null;
@@ -1754,20 +1783,6 @@ final class CCRouterRuntime {
             .whereType<CCInvocationCancelledError>()
             .firstOrNull;
         if (cancellation != null) throw cancellation;
-      }
-      final critical = failures
-          .where(
-            (failure) =>
-                failure.record.task.failurePolicy ==
-                CCInitTaskFailurePolicy.critical,
-          )
-          .firstOrNull;
-      if (critical != null) {
-        _skipBlockedInitTasks();
-        throw CCInitTaskError(
-          critical.record.task.id,
-          critical.record.errorType!,
-        );
       }
     }
   }
@@ -1822,19 +1837,6 @@ final class CCRouterRuntime {
         }
       }
     }
-  }
-
-  /// Replays a previously recorded critical failure on later Gate triggers.
-  void _throwExistingCriticalInitTaskFailure() {
-    final failed = _initTasks.values
-        .where(
-          (record) =>
-              record.state == CCInitTaskState.failed &&
-              record.task.failurePolicy == CCInitTaskFailurePolicy.critical,
-        )
-        .firstOrNull;
-    if (failed == null) return;
-    throw CCInitTaskError(failed.task.id, failed.errorType!);
   }
 
   /// Opens an authenticated account Session and creates its owning Scope.

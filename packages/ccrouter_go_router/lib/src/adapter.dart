@@ -196,9 +196,9 @@ final class CCGoRouterAdapter
   /// GoRouter stack and its Shell Outlets, but it cannot create a managed
   /// RouteEntry or typed result channel from this snapshot.
   @override
-  List<CCNavigationBackendEntrySnapshot> readInitialBackendSnapshot() {
+  List<CCInitialBackendEntrySnapshot> readInitialBackendEntries() {
     _ensureAvailable();
-    final snapshots = <CCNavigationBackendEntrySnapshot>[];
+    final snapshots = <CCInitialBackendEntrySnapshot>[];
     _collectInitialMatches(
       _router.routerDelegate.currentConfiguration.matches,
       snapshots,
@@ -208,7 +208,7 @@ final class CCGoRouterAdapter
       final initialUri = _router.routeInformationProvider.value.uri;
       if (initialUri.toString().isNotEmpty) {
         snapshots.add(
-          CCNavigationBackendEntrySnapshot(
+          CCInitialBackendEntrySnapshot(
             backendEntryId: _nextBackendEntryId(),
             owner: CCBackendEntryOwner.opaque,
             hostId: _hostId,
@@ -324,7 +324,7 @@ final class CCGoRouterAdapter
   String? _lastPoppedBackendEntryId;
 
   /// Ownership observed for the most recent Pop callback.
-  CCPopRemovedOwner _lastPoppedOwner = CCPopRemovedOwner.none;
+  CCPopRemovedEntryOwner _lastPoppedOwner = CCPopRemovedEntryOwner.none;
 
   /// Managed backend IDs indexed by their Runtime navigation identity.
   final Map<String, String> _backendIdsByNavigationId = {};
@@ -517,7 +517,7 @@ final class CCGoRouterAdapter
       );
     }
     _lastPoppedBackendEntryId = null;
-    _lastPoppedOwner = CCPopRemovedOwner.none;
+    _lastPoppedOwner = CCPopRemovedEntryOwner.none;
     _expectBackendEvent(CCGoRouterNavigationEventKind.pop);
     _runtimeGuardedPopInProgress = true;
     _setManagedPopEntriesCanPop(true);
@@ -541,7 +541,7 @@ final class CCGoRouterAdapter
     return CCPopOutcome(
       handled: true,
       removedBackendEntryId: _lastPoppedBackendEntryId,
-      removedOwner: _lastPoppedOwner,
+      removedEntryOwner: _lastPoppedOwner,
       hostId: _hostId,
       navigatorOutlet: outlet,
     );
@@ -587,18 +587,19 @@ final class CCGoRouterAdapter
       );
     }
     _lastPoppedBackendEntryId = null;
-    _lastPoppedOwner = CCPopRemovedOwner.none;
+    _lastPoppedOwner = CCPopRemovedEntryOwner.none;
     final removedEntry = _lastTrackedEntryInOutlet(outlet);
     _expectBackendEvent(CCGoRouterNavigationEventKind.pop);
     navigator.pop<Object?>(result);
     _discardExpectedBackendEvent(CCGoRouterNavigationEventKind.pop);
-    if (_lastPoppedOwner == CCPopRemovedOwner.managed && removedEntry != null) {
+    if (_lastPoppedOwner == CCPopRemovedEntryOwner.managed &&
+        removedEntry != null) {
       _removeTrackedEntry(removedEntry);
     }
     return CCPopOutcome(
       handled: true,
       removedBackendEntryId: _lastPoppedBackendEntryId,
-      removedOwner: _lastPoppedOwner,
+      removedEntryOwner: _lastPoppedOwner,
       hostId: _hostId,
       navigatorOutlet: outlet,
     );
@@ -1057,8 +1058,8 @@ final class CCGoRouterAdapter
       _lastPoppedBackendEntryId = backendEntryId;
       _lastPoppedOwner =
           _entries.any((entry) => entry.backendEntryId == backendEntryId)
-          ? CCPopRemovedOwner.managed
-          : CCPopRemovedOwner.foreign;
+          ? CCPopRemovedEntryOwner.managed
+          : CCPopRemovedEntryOwner.foreign;
     }
     final observedBackendEntryId = _backendRouteIds[event.route];
     final observedManagedRoute =
@@ -1402,7 +1403,7 @@ final class CCGoRouterAdapter
   /// Flattens one GoRouter match branch while retaining its Navigator Outlet.
   void _collectInitialMatches(
     List<RouteMatchBase> matches,
-    List<CCNavigationBackendEntrySnapshot> snapshots, {
+    List<CCInitialBackendEntrySnapshot> snapshots, {
     required String outlet,
   }) {
     for (final match in matches) {
@@ -1410,7 +1411,7 @@ final class CCGoRouterAdapter
           ? _outletForNavigatorKey(match.navigatorKey)
           : outlet;
       snapshots.add(
-        CCNavigationBackendEntrySnapshot(
+        CCInitialBackendEntrySnapshot(
           backendEntryId: _nextBackendEntryId(),
           owner: CCBackendEntryOwner.opaque,
           hostId: _hostId,

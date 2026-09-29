@@ -18,7 +18,7 @@ void ccrouterRegisterInitializeDemoAnalyticsInitTask(CCRegistry registry) {
       id: "demo.startup.analytics",
       dependsOn: const ["demo.startup.foundation"],
       gate: CCInitTaskGate("privacyGranted"),
-      failurePolicy: CCInitTaskFailurePolicy.critical,
+      failurePolicy: CCInitTaskFailurePolicy.optional,
       run: (_) => init_source.initializeDemoAnalytics(),
     ),
   );
@@ -31,7 +31,7 @@ void ccrouterRegisterInitializeDemoFoundationInitTask(CCRegistry registry) {
       id: "demo.startup.foundation",
       dependsOn: const ["demo_order.startup.foundation"],
       gate: CCInitTaskGate("appStarted"),
-      failurePolicy: CCInitTaskFailurePolicy.critical,
+      failurePolicy: CCInitTaskFailurePolicy.optional,
       run: (_) => init_source.initializeDemoFoundation(),
     ),
   );
@@ -46,7 +46,7 @@ void ccrouterRegisterInitializeDemoOptionalDependentInitTask(
       id: "demo.startup.optional-dependent",
       dependsOn: const ["demo.startup.optional-sdk"],
       gate: CCInitTaskGate("appStarted"),
-      failurePolicy: CCInitTaskFailurePolicy.critical,
+      failurePolicy: CCInitTaskFailurePolicy.optional,
       run: (_) => init_source.initializeDemoOptionalDependent(),
     ),
   );
@@ -74,7 +74,7 @@ void ccrouterRegisterInitializeDemoParallelPrimaryInitTask(
       id: "demo.startup.parallel-primary",
       dependsOn: const ["demo.startup.foundation"],
       gate: CCInitTaskGate("appStarted"),
-      failurePolicy: CCInitTaskFailurePolicy.critical,
+      failurePolicy: CCInitTaskFailurePolicy.optional,
       run: (_) => init_source.initializeDemoParallelPrimary(),
     ),
   );
@@ -89,7 +89,7 @@ void ccrouterRegisterInitializeDemoParallelSecondaryInitTask(
       id: "demo.startup.parallel-secondary",
       dependsOn: const ["demo.startup.foundation"],
       gate: CCInitTaskGate("appStarted"),
-      failurePolicy: CCInitTaskFailurePolicy.critical,
+      failurePolicy: CCInitTaskFailurePolicy.optional,
       run: (_) => init_source.initializeDemoParallelSecondary(),
     ),
   );

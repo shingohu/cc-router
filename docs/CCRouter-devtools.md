@@ -82,7 +82,7 @@ const diagnosticsPage = CCRouterDevToolsPanel();
 
 面板消费 `CCRouter` 门面提供的只读 getter 与观察 listener，永远不持有
 `CCRouterRuntime`、`CCScope`、`Navigator`、Flutter `Route`、Widget、Extra、Token、完整 URI、
-Query 值或业务结果。`CCDevToolsSnapshot` 会再次复制列表边界，测试替身可以使用
+Query 值或业务结果。`CCRouterDevToolsSnapshot` 会再次复制列表边界，测试替身可以使用
 `CCStaticDevToolsSnapshotProvider` 注入静态快照。
 
 面板的 listener 在 `dispose` 时全部移除；监听器异常由 Runtime 自己隔离。面板不应被当作

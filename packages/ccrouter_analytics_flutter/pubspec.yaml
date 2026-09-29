@@ -1,4 +1,4 @@
-name: ccrouter_auto_track
+name: ccrouter_analytics_flutter
 description: Optional explicit Flutter UI analytics helpers for CCRouter.
 version: 0.1.0
 resolution: workspace

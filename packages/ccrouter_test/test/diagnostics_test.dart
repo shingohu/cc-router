@@ -49,6 +49,8 @@ final class _InvalidInitializationRegistrar implements CCComponentRegistrar {
       CCInitTaskDefinition(
         id: 'feature.prepare',
         dependsOn: const ['missing.prepare'],
+        gate: CCInitTaskGate.appStarted,
+        failurePolicy: CCInitTaskFailurePolicy.required,
         run: (_) {},
       ),
     );

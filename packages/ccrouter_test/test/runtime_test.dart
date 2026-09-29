@@ -674,6 +674,8 @@ void main() {
       runtime.registerInitTask(
         CCInitTaskDefinition(
           id: 'startup.b',
+          gate: CCInitTaskGate.appStarted,
+          failurePolicy: CCInitTaskFailurePolicy.required,
           run: (_) async {
             starts.add('b');
             secondStarted.complete();
@@ -684,6 +686,8 @@ void main() {
       runtime.registerInitTask(
         CCInitTaskDefinition(
           id: 'startup.a',
+          gate: CCInitTaskGate.appStarted,
+          failurePolicy: CCInitTaskFailurePolicy.required,
           run: (_) async {
             starts.add('a');
             firstStarted.complete();
@@ -695,19 +699,21 @@ void main() {
         CCInitTaskDefinition(
           id: 'startup.final',
           dependsOn: const ['startup.a', 'startup.b'],
+          gate: CCInitTaskGate.appStarted,
+          failurePolicy: CCInitTaskFailurePolicy.required,
           run: (_) => starts.add('final'),
         ),
       );
       runtime.initialize();
 
-      final firstRun = runtime.runInitTasks();
-      final sharedRun = runtime.runInitTasks();
+      final firstRun = runtime.runInitTasks(gate: CCInitTaskGate.appStarted);
+      final sharedRun = runtime.runInitTasks(gate: CCInitTaskGate.appStarted);
       expect(sharedRun, same(firstRun));
       await Future.wait([firstStarted.future, secondStarted.future]);
       expect(starts, ['a', 'b']);
       release.complete();
       await firstRun;
-      await runtime.runInitTasks();
+      await runtime.runInitTasks(gate: CCInitTaskGate.appStarted);
 
       expect(starts, ['a', 'b', 'final']);
       expect(
@@ -724,13 +730,19 @@ void main() {
       expect(privacyGate.id, 'privacyGranted');
       final order = <String>[];
       runtime.registerInitTask(
-        CCInitTaskDefinition(id: 'startup.base', run: (_) => order.add('base')),
+        CCInitTaskDefinition(
+          id: 'startup.base',
+          gate: CCInitTaskGate.appStarted,
+          failurePolicy: CCInitTaskFailurePolicy.required,
+          run: (_) => order.add('base'),
+        ),
       );
       runtime.registerInitTask(
         CCInitTaskDefinition(
           id: 'startup.analytics',
           dependsOn: const ['startup.base'],
           gate: privacyGate,
+          failurePolicy: CCInitTaskFailurePolicy.required,
           run: (_) => order.add('analytics'),
         ),
       );
@@ -740,7 +752,7 @@ void main() {
       expect(order, isEmpty);
       expect(runtime.initTasks.last.state, CCInitTaskState.pending);
 
-      await runtime.runInitTasks();
+      await runtime.runInitTasks(gate: CCInitTaskGate.appStarted);
       expect(order, ['base', 'analytics']);
     },
   );
@@ -752,12 +764,13 @@ void main() {
       CCInitTaskDefinition(
         id: 'startup.privacy',
         gate: privacyGate,
+        failurePolicy: CCInitTaskFailurePolicy.required,
         run: (_) => runs++,
       ),
     );
     runtime.initialize();
 
-    final idleDrain = runtime.runInitTasks();
+    final idleDrain = runtime.runInitTasks(gate: CCInitTaskGate.appStarted);
     final privacyDrain = runtime.runInitTasks(gate: privacyGate);
     await Future.wait([idleDrain, privacyDrain]);
 
@@ -772,6 +785,7 @@ void main() {
       runtime.registerInitTask(
         CCInitTaskDefinition(
           id: 'startup.optional',
+          gate: CCInitTaskGate.appStarted,
           failurePolicy: CCInitTaskFailurePolicy.optional,
           run: (_) => throw StateError('private details'),
         ),
@@ -780,18 +794,22 @@ void main() {
         CCInitTaskDefinition(
           id: 'startup.dependent',
           dependsOn: const ['startup.optional'],
+          gate: CCInitTaskGate.appStarted,
+          failurePolicy: CCInitTaskFailurePolicy.optional,
           run: (_) => fail('blocked task must not run'),
         ),
       );
       runtime.registerInitTask(
         CCInitTaskDefinition(
           id: 'startup.independent',
+          gate: CCInitTaskGate.appStarted,
+          failurePolicy: CCInitTaskFailurePolicy.required,
           run: (_) => independentRan = true,
         ),
       );
       runtime.initialize();
 
-      await runtime.runInitTasks();
+      await runtime.runInitTasks(gate: CCInitTaskGate.appStarted);
 
       expect(independentRan, isTrue);
       final snapshots = {for (final task in runtime.initTasks) task.id: task};
@@ -806,42 +824,106 @@ void main() {
   );
 
   test(
-    'critical initialization failure is sanitized and remains terminal',
+    'required failure returns a sanitized result and isolates branches',
     () async {
+      var independentRan = false;
+      var privacyRan = false;
       runtime.registerInitTask(
         CCInitTaskDefinition(
-          id: 'startup.critical',
+          id: 'startup.required',
+          gate: CCInitTaskGate.appStarted,
+          failurePolicy: CCInitTaskFailurePolicy.required,
           run: (_) => throw StateError('private details'),
         ),
       );
       runtime.registerInitTask(
         CCInitTaskDefinition(
           id: 'startup.blocked',
-          dependsOn: const ['startup.critical'],
+          dependsOn: const ['startup.required'],
+          gate: CCInitTaskGate.appStarted,
+          failurePolicy: CCInitTaskFailurePolicy.required,
           run: (_) => fail('blocked task must not run'),
+        ),
+      );
+      runtime.registerInitTask(
+        CCInitTaskDefinition(
+          id: 'startup.independent',
+          gate: CCInitTaskGate.appStarted,
+          failurePolicy: CCInitTaskFailurePolicy.required,
+          run: (_) => independentRan = true,
+        ),
+      );
+      runtime.registerInitTask(
+        CCInitTaskDefinition(
+          id: 'startup.privacy',
+          gate: CCInitTaskGate.privacyGranted,
+          failurePolicy: CCInitTaskFailurePolicy.required,
+          run: (_) => privacyRan = true,
         ),
       );
       runtime.initialize();
 
+      final result = await runtime.runInitTasks(
+        gate: CCInitTaskGate.appStarted,
+      );
+      expect(independentRan, isTrue);
+      expect(result.hasRequiredFailures, isTrue);
+      expect(result.requiredFailures.single.id, 'startup.required');
+      expect(result.requiredFailures.single.errorType, 'StateError');
+      expect(result.skippedTasks.single.id, 'startup.blocked');
+      final failureTrace = runtime.recentTraces.singleWhere(
+        (trace) => trace.context.target == 'startup.required',
+      );
+      expect(failureTrace.status, 'failed');
+      expect(failureTrace.errorType, 'StateError');
+
       final matcher = isA<CCInitTaskError>()
-          .having((error) => error.taskId, 'taskId', 'startup.critical')
+          .having((error) => error.taskId, 'taskId', 'startup.required')
           .having((error) => error.causeType, 'causeType', 'StateError')
           .having(
             (error) => error.message,
             'message',
             isNot(contains('private details')),
           );
-      await expectLater(runtime.runInitTasks(), throwsA(matcher));
-      await expectLater(runtime.runInitTasks(), throwsA(matcher));
-      expect(runtime.initTasks.first.state, CCInitTaskState.skipped);
+      expect(result.throwIfRequiredFailed, throwsA(matcher));
+
+      final privacyResult = await runtime.runInitTasks(
+        gate: CCInitTaskGate.privacyGranted,
+      );
+      expect(privacyRan, isTrue);
+      expect(privacyResult.requiredFailures.single.id, 'startup.required');
     },
   );
+
+  test('required InitTask cannot depend on an optional branch', () {
+    runtime.registerInitTask(
+      CCInitTaskDefinition(
+        id: 'startup.optional',
+        gate: CCInitTaskGate.appStarted,
+        failurePolicy: CCInitTaskFailurePolicy.optional,
+        run: (_) {},
+      ),
+    );
+    runtime.registerInitTask(
+      CCInitTaskDefinition(
+        id: 'startup.required',
+        dependsOn: const ['startup.optional'],
+        gate: CCInitTaskGate.appStarted,
+        failurePolicy: CCInitTaskFailurePolicy.required,
+        run: (_) {},
+      ),
+    );
+
+    expect(runtime.initialize, throwsA(isA<CCRegistrationError>()));
+  });
 
   test('initialization validates missing dependencies and cycles', () async {
     runtime.registerInitTask(
       CCInitTaskDefinition(
         id: 'startup.missing',
         dependsOn: const ['startup.unknown'],
+        gate: CCInitTaskGate.appStarted,
+        failurePolicy: CCInitTaskFailurePolicy.required,
         run: (_) {},
       ),
     );
@@ -853,6 +935,8 @@ void main() {
       CCInitTaskDefinition(
         id: 'startup.a',
         dependsOn: const ['startup.b'],
+        gate: CCInitTaskGate.appStarted,
+        failurePolicy: CCInitTaskFailurePolicy.required,
         run: (_) {},
       ),
     );
@@ -860,6 +944,8 @@ void main() {
       CCInitTaskDefinition(
         id: 'startup.b',
         dependsOn: const ['startup.a'],
+        gate: CCInitTaskGate.appStarted,
+        failurePolicy: CCInitTaskFailurePolicy.required,
         run: (_) {},
       ),
     );
@@ -869,7 +955,12 @@ void main() {
   test('initialization rejects invalid and duplicate task metadata', () {
     expect(
       () => runtime.registerInitTask(
-        CCInitTaskDefinition(id: 'Bad Task', run: (_) {}),
+        CCInitTaskDefinition(
+          id: 'Bad Task',
+          gate: CCInitTaskGate.appStarted,
+          failurePolicy: CCInitTaskFailurePolicy.required,
+          run: (_) {},
+        ),
       ),
       throwsA(isA<CCRegistrationError>()),
     );
@@ -878,6 +969,7 @@ void main() {
         CCInitTaskDefinition(
           id: 'startup.bad-gate',
           gate: const CCInitTaskGate('Bad Gate'),
+          failurePolicy: CCInitTaskFailurePolicy.required,
           run: (_) {},
         ),
       ),
@@ -888,6 +980,8 @@ void main() {
         CCInitTaskDefinition(
           id: 'startup.timeout',
           timeout: Duration.zero,
+          gate: CCInitTaskGate.appStarted,
+          failurePolicy: CCInitTaskFailurePolicy.required,
           run: (_) {},
         ),
       ),
@@ -898,17 +992,29 @@ void main() {
         CCInitTaskDefinition(
           id: 'startup.self',
           dependsOn: const ['startup.self'],
+          gate: CCInitTaskGate.appStarted,
+          failurePolicy: CCInitTaskFailurePolicy.required,
           run: (_) {},
         ),
       ),
       throwsA(isA<CCRegistrationError>()),
     );
     runtime.registerInitTask(
-      CCInitTaskDefinition(id: 'startup.unique', run: (_) {}),
+      CCInitTaskDefinition(
+        id: 'startup.unique',
+        gate: CCInitTaskGate.appStarted,
+        failurePolicy: CCInitTaskFailurePolicy.required,
+        run: (_) {},
+      ),
     );
     expect(
       () => runtime.registerInitTask(
-        CCInitTaskDefinition(id: 'startup.unique', run: (_) {}),
+        CCInitTaskDefinition(
+          id: 'startup.unique',
+          gate: CCInitTaskGate.appStarted,
+          failurePolicy: CCInitTaskFailurePolicy.required,
+          run: (_) {},
+        ),
       ),
       throwsA(isA<CCRegistrationError>()),
     );
@@ -921,19 +1027,18 @@ void main() {
         CCInitTaskDefinition(
           id: 'startup.timeout',
           timeout: const Duration(milliseconds: 10),
+          gate: CCInitTaskGate.appStarted,
+          failurePolicy: CCInitTaskFailurePolicy.required,
           run: (context) => context.cancellation.whenCancelled,
         ),
       );
       runtime.initialize();
-      await expectLater(
-        runtime.runInitTasks(),
-        throwsA(
-          isA<CCInitTaskError>().having(
-            (error) => error.causeType,
-            'causeType',
-            'CCInvocationTimeoutError',
-          ),
-        ),
+      final timeoutResult = await runtime.runInitTasks(
+        gate: CCInitTaskGate.appStarted,
+      );
+      expect(
+        timeoutResult.requiredFailures.single.errorType,
+        'CCInvocationTimeoutError',
       );
       await runtime.dispose();
 
@@ -942,6 +1047,8 @@ void main() {
       runtime.registerInitTask(
         CCInitTaskDefinition(
           id: 'startup.pending',
+          gate: CCInitTaskGate.appStarted,
+          failurePolicy: CCInitTaskFailurePolicy.required,
           run: (context) async {
             started.complete();
             await context.cancellation.whenCancelled;
@@ -949,7 +1056,7 @@ void main() {
         ),
       );
       runtime.initialize();
-      final run = runtime.runInitTasks();
+      final run = runtime.runInitTasks(gate: CCInitTaskGate.appStarted);
       await started.future;
       final disposed = runtime.dispose();
       await expectLater(run, throwsA(isA<CCInvocationCancelledError>()));

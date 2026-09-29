@@ -5,7 +5,7 @@ import 'package:analyzer/source/line_info.dart';
 import 'package:analyzer_plugin/plugin/plugin.dart';
 import 'package:analyzer_plugin/protocol/protocol_common.dart';
 import 'package:analyzer_plugin/protocol/protocol_generated.dart';
-import 'package:ccrouter_analyzer_plugin/src/diagnostics.dart';
+import 'package:ccrouter_analyzer_plugin/src/source_analyzer.dart';
 import 'package:pub_semver/pub_semver.dart';
 
 /// Analysis Server plugin that publishes CCRouter-specific diagnostics.
@@ -48,7 +48,7 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
     } on Object {
       return;
     }
-    final diagnostics = CCRouterAnalyzerDiagnostics.analyze(
+    final diagnostics = CCRouterSourceAnalyzer.analyze(
       source: source,
       filePath: path,
     );
@@ -91,10 +91,9 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
       if (analysisContext.contextRoot.isAnalyzed(changedPath)) {
         analyzedPaths.add(changedPath);
       }
-      final authored =
-          CCRouterAnalyzerDiagnostics.authoredRoutePathForGenerated(
-            changedPath,
-          );
+      final authored = CCRouterSourceAnalyzer.authoredRoutePathForGenerated(
+        changedPath,
+      );
       if (authored != null &&
           analysisContext.contextRoot.isAnalyzed(authored)) {
         analyzedPaths.add(authored);

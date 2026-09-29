@@ -81,7 +81,7 @@ final class _DemoPublicWebRouteCodec
 
   /// Rejects missing, repeated or malformed values before creating arguments.
   @override
-  DemoPublicWebRouteArguments decode(CCEncodedRouteArguments input) {
+  DemoPublicWebRouteArguments decode(CCRouteCodecValues input) {
     final _values_target = input.query["url"];
     if (_values_target != null && _values_target.isEmpty)
       throw CCRouteParameterError(
@@ -108,8 +108,8 @@ final class _DemoPublicWebRouteCodec
 
   /// Encodes unescaped scalar values; Runtime owns URI escaping exactly once.
   @override
-  CCEncodedRouteArguments encode(DemoPublicWebRouteArguments arguments) {
-    return CCEncodedRouteArguments(
+  CCRouteCodecValues encode(DemoPublicWebRouteArguments arguments) {
+    return CCRouteCodecValues(
       path: {},
       query: {
         "url": (() {
@@ -203,7 +203,7 @@ final class _DemoPrivateWebRouteCodec
 
   /// Rejects missing, repeated or malformed values before creating arguments.
   @override
-  DemoPrivateWebRouteArguments decode(CCEncodedRouteArguments input) {
+  DemoPrivateWebRouteArguments decode(CCRouteCodecValues input) {
     final _value_request = input.extra == null
         ? throw CCRouteParameterError(
             "Route \"demo_web.private\" parameter \"request\" is invalid.",
@@ -218,11 +218,7 @@ final class _DemoPrivateWebRouteCodec
 
   /// Encodes unescaped scalar values; Runtime owns URI escaping exactly once.
   @override
-  CCEncodedRouteArguments encode(DemoPrivateWebRouteArguments arguments) {
-    return CCEncodedRouteArguments(
-      path: {},
-      query: {},
-      extra: arguments.request,
-    );
+  CCRouteCodecValues encode(DemoPrivateWebRouteArguments arguments) {
+    return CCRouteCodecValues(path: {}, query: {}, extra: arguments.request);
   }
 }

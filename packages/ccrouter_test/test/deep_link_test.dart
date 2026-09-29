@@ -15,12 +15,12 @@ final class _DeepLinkCodec implements CCRouteCodec<_DeepLinkArgs> {
   const _DeepLinkCodec();
 
   @override
-  _DeepLinkArgs decode(CCEncodedRouteArguments input) =>
+  _DeepLinkArgs decode(CCRouteCodecValues input) =>
       _DeepLinkArgs(input.path['id']!);
 
   @override
-  CCEncodedRouteArguments encode(_DeepLinkArgs arguments) =>
-      CCEncodedRouteArguments(path: {'id': arguments.id});
+  CCRouteCodecValues encode(_DeepLinkArgs arguments) =>
+      CCRouteCodecValues(path: {'id': arguments.id});
 }
 
 final class _DeepLinkRegistrar implements CCComponentRegistrar {

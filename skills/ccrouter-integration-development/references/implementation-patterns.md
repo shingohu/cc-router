@@ -432,7 +432,12 @@ const configLoadInitTask = CCInitTaskContract(
   description: 'Loads the configuration required by startup SDKs.',
 );
 
-@CCInitTask(contract: configLoadInitTask)
+@CCInitTask(
+  contract: configLoadInitTask,
+  gate: CCInitTaskGate.appStarted,
+  failurePolicy: CCInitTaskFailurePolicy.required,
+  timeout: Duration(seconds: 3),
+)
 Future<void> loadConfiguration() async {}
 
 @CCInitTask(
@@ -445,9 +450,11 @@ Future<void> loadConfiguration() async {}
 Future<void> initializeAnalytics(CCInvocationContext context) =>
     analytics.initialize(context.cancellation);
 
-await CCRouter.runInitTasks(
+final initResult = await CCRouter.runInitTasks(
   gate: CCInitTaskGate.privacyGranted,
 );
+// Use only when this Host deliberately cannot start in degraded mode.
+// initResult.throwIfRequiredFailed();
 ```
 
 `CCRouter.initialize` creates the process-default Runtime and pairs with the
@@ -455,7 +462,17 @@ Composition Root's awaited `CCRouter.shutdown`. Do not call `shutdown` from a
 Widget, Page, component, Session, or individual navigation Host disposal.
 `runInitTasks` opens a `CCInitTaskGate` and drains zero or more newly ready
 tasks; it does not initialize or replace the Runtime a second time, select one
-specific task, or retry a task that already completed or failed.
+specific task, or retry a task that already completed or failed. The Gate is a
+required argument in the Facade, Runtime, annotation, and handwritten
+definition. CLI scaffolds write `CCInitTaskGate.appStarted` explicitly.
+
+Every declaration must choose `required` or `optional` explicitly. Business
+failures are returned in `CCInitTaskRunResult`, recorded in snapshots and
+diagnostics, and skip only dependent branches. Ignoring the result after
+`await` remains valid for an application that can start in degraded mode. Call
+`throwIfRequiredFailed()` only from a Composition Root that intentionally uses
+fail-fast startup; Runtime shutdown, cancellation, and invalid lifecycle state
+still throw directly.
 
 Overlapping Gate calls share one single-flight DAG drain. If a second Gate opens
 while a layer is running, Runtime performs another readiness pass before the
@@ -466,7 +483,10 @@ Use `contract` for every task that another task references and `id` only for an
 independent internal task. A cross-component Contract belongs in a public Pure
 Dart contracts Package and names its `componentId`; the dependent component
 must require the Owner. The generator installs registration bridges, validates
-the complete DAG, emits source locations and an `Initialization DAG` catalog,
+the complete DAG, rejects required tasks without a Contract, rejects async
+required Handlers without a positive timeout, and prevents required tasks from
+depending directly or indirectly on optional tasks. It emits source locations
+and an `Initialization DAG` catalog,
 and generates no business task Client. Keep handwritten
 `registerInitTask` calls for unannotated migration or low-level Host
 extensions only.

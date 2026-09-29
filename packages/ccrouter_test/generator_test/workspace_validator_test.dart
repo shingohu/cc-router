@@ -153,7 +153,7 @@ void main() {
             'contractId': 'foundation.logging',
             'dependsOn': <String>[],
             'gateId': 'appStarted',
-            'failurePolicy': 'critical',
+            'failurePolicy': 'required',
           },
         ],
       ),
@@ -181,7 +181,7 @@ void main() {
             'componentId': 'analytics',
             'dependsOn': <String>[],
             'gateId': 'appStarted',
-            'failurePolicy': 'critical',
+            'failurePolicy': 'optional',
           },
         ],
       ),
@@ -206,7 +206,7 @@ void main() {
             'contractId': 'foundation.logging',
             'dependsOn': ['analytics.sdk'],
             'gateId': 'appStarted',
-            'failurePolicy': 'critical',
+            'failurePolicy': 'required',
           },
         ],
       ),
@@ -266,6 +266,57 @@ void main() {
     expect(result.errors, contains(contains('invalid Gate ID')));
     expect(result.errors, contains(contains('unsupported failure policy')));
     expect(result.errors, contains(contains('timeout must be positive')));
+  });
+
+  test('rejects unsafe required InitTask startup contracts', () {
+    final result = CCRouteWorkspaceValidator.validate([
+      document(
+        components: [component('orders')],
+        routes: const [],
+        initTaskContracts: const [
+          {'id': 'orders.optional', 'componentId': 'orders'},
+          {'id': 'orders.required', 'componentId': 'orders'},
+        ],
+        initTasks: const [
+          {
+            'id': 'orders.optional',
+            'componentId': 'orders',
+            'contractId': 'orders.optional',
+            'dependsOn': <String>[],
+            'gateId': 'appStarted',
+            'failurePolicy': 'optional',
+            'isAsync': false,
+          },
+          {
+            'id': 'orders.required',
+            'componentId': 'orders',
+            'contractId': 'orders.required',
+            'dependsOn': ['orders.optional'],
+            'gateId': 'appStarted',
+            'failurePolicy': 'required',
+            'isAsync': true,
+          },
+          {
+            'id': 'orders.internal_required',
+            'componentId': 'orders',
+            'dependsOn': <String>[],
+            'gateId': 'appStarted',
+            'failurePolicy': 'required',
+            'isAsync': false,
+          },
+        ],
+      ),
+    ]);
+
+    expect(result.errors, contains(contains('must use a CCInitTaskContract')));
+    expect(
+      result.errors,
+      contains(contains('must declare a positive timeout')),
+    );
+    expect(
+      result.errors,
+      contains(contains('cannot depend directly or indirectly on optional')),
+    );
   });
 
   test('accepts Event subscribers through required or optional owners', () {

@@ -1,4 +1,4 @@
-# ccrouter_auto_track
+# ccrouter_analytics_flutter
 
 Optional Flutter UI analytics helpers for CCRouter.
 

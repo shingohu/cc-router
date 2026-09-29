@@ -14,7 +14,7 @@ import 'package:demo_navigation_lab/src/ccrouter_generated/route/detail_page.rou
 
 /// Package-internal page factory bridge used by generated Flutter catalogs.
 route_page.DemoDetailPage ccrouterBuildDemoDetailPageRoute(
-  CCEncodedRouteArguments arguments,
+  CCRouteCodecValues arguments,
 ) {
   final decoded = route_contract
       .ccrouterDescribeDemoDetailPageRoute()

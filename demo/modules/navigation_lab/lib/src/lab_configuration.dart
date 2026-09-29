@@ -15,7 +15,7 @@ final demoAnalyticsDispatcher = CCAnalyticsEventDispatcher(
   sinks: [demoAnalyticsSink],
   policy: CCAnalyticsPolicy(consentGranted: false),
 );
-final demoNavigationAnalytics = CCRouterNavigationAnalytics(
+final demoNavigationAnalytics = CCNavigationAnalyticsBridge(
   dispatcher: demoAnalyticsDispatcher,
 );
 final demoAnalyticsTracker = CCAnalyticsTracker(
@@ -331,7 +331,9 @@ final class DemoGlobalNavigationInterceptor implements CCNavigationInterceptor {
   const DemoGlobalNavigationInterceptor();
 
   @override
-  CCNavigationInterception intercept(CCNavigationInterceptorContext context) {
+  CCNavigationInterceptorDecision intercept(
+    CCNavigationInterceptorContext context,
+  ) {
     demoNavigationLabStore.record(
       'Global before · ${context.request.operation.name} · '
       '${context.request.routeId}',

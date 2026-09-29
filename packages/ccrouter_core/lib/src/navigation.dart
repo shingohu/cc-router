@@ -57,7 +57,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
   /// Use this when system back, a gesture, or a form guard must distinguish a
   /// Managed Route from a foreign Popup or LocalHistoryEntry. Legacy adapters
   /// that expose only the Boolean Pop API are converted to an outcome with
-  /// [CCPopRemovedOwner.none]. [trigger] is attached by Runtime so all Pop
+  /// [CCPopRemovedEntryOwner.none]. [trigger] is attached by Runtime so all Pop
   /// sources share one ownership and lifecycle pipeline.
   Future<CCPopOutcome> maybePopOutcomeRoute<R>({
     R? result,
@@ -94,7 +94,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
 
   /// Closes a RouteEntry only after the Adapter explicitly confirms ownership.
   void _applyManagedPopOutcome(CCPopOutcome outcome) {
-    if (outcome.removedOwner != CCPopRemovedOwner.managed) return;
+    if (outcome.removedEntryOwner != CCPopRemovedEntryOwner.managed) return;
     final backendEntryId = outcome.removedBackendEntryId;
     if (backendEntryId == null) {
       _recordUncorrelatedManagedPop(outcome);
@@ -499,7 +499,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
       var adapterDispatchStarted = false;
       try {
         final interceptClock = Stopwatch()..start();
-        late final CCNavigationInterception decision;
+        late final CCNavigationInterceptorDecision decision;
         try {
           decision = await _runInterceptors(
             request,
@@ -616,7 +616,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
   }
 
   /// Runs global interceptors followed by the selected route interceptors.
-  Future<CCNavigationInterception> _runInterceptors(
+  Future<CCNavigationInterceptorDecision> _runInterceptors(
     CCNavigationRequest request, {
     required CCCancellationToken cancellation,
     required int redirectDepth,
@@ -649,7 +649,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
   }
 
   /// Executes one interceptor with a fresh deadline and sanitized failures.
-  Future<CCNavigationInterception> _invokeNavigationInterceptor({
+  Future<CCNavigationInterceptorDecision> _invokeNavigationInterceptor({
     required String id,
     required CCNavigationInterceptor interceptor,
     required Duration? timeout,

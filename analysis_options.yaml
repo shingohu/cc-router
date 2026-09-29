@@ -1,4 +1,8 @@
 analyzer:
+  # The Analysis Server plugin intentionally owns an isolated analyzer graph.
+  # It is analyzed and tested from its own Package to avoid version collisions.
+  exclude:
+    - packages/ccrouter_analyzer_plugin/**
   errors:
     unused_import: error
     unused_local_variable: error

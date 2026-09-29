@@ -3860,12 +3860,14 @@ Future<void> _generateResolvedHostCatalog(
 
 import 'package:ccrouter/ccrouter.dart' show CCComponentManifest;
 import 'package:ccrouter/ccrouter_host.dart'
-    show CCFlutterRouteCatalog, CCGeneratedPackageBundle;
+    show
+        CCFlutterRouteCatalog,
+        CCGeneratedHostAssembly;
 import 'package:${host.name}/src/ccrouter_generated/host/${host.name}_ccrouter.g.dart'
     as host_package;
 
 /// Validated generated Package graph installed in this Host.
-final ccrouterGeneratedHostAssembly = CCGeneratedPackageBundle.resolve([
+final ccrouterGeneratedHostAssembly = CCGeneratedHostAssembly.fromPackageBundles([
   host_package.${hostIndex.bundleSymbol},
 ]);
 

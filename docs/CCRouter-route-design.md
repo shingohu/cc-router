@@ -431,9 +431,9 @@ UTF-8 code point，则该 Pattern 视为不匹配，不向业务暴露原值或�
 
 ```dart
 abstract interface class CCRouteCodec<A> {
-  A decode(CCEncodedRouteArguments input);
+  A decode(CCRouteCodecValues input);
 
-  CCEncodedRouteArguments encode(A arguments);
+  CCRouteCodecValues encode(A arguments);
 }
 ```
 
@@ -539,7 +539,7 @@ abstract interface class CCNavigator {
 
 `push<R>` 和 `replace<R>` 返回 `Future<R?>`。系统返回、无值 Pop 或 RouteEntry 被允许取消时完成 `null`；解析、拦截或 Adapter 失败时抛出标准错误。
 
-`maybePopOutcome` 只有在 Adapter 明确返回 `removedOwner == managed` 时才允许
+`maybePopOutcome` 只有在 Adapter 明确返回 `removedEntryOwner == managed` 时才允许
 Runtime 关闭对应 RouteEntry；Foreign、Opaque 或未提供归属的 Pop 只报告结果，不
 按栈顶猜测删除页面。
 
@@ -951,8 +951,8 @@ orders
 - 底部 Tab 等多个长期并行分支才适合 `StatefulShellRoute`；主从布局不能默认建模为 Stateful Shell。
 
 Shell 负责持久化导航容器和 Outlet，主从容器负责根据屏幕尺寸选择栈式或双栏呈现。
-当前已提供适配器中立的 `CCHostLayoutMetrics`、`CCAdaptivePresentationPolicy`、
-`CCAdaptiveOutletPolicy` 和 `CCAdaptiveHostLayout`；Host 根据布局结果切换活动 Outlet，
+当前已提供适配器中立的 `CCHostLayoutMetrics`、`CCAdaptiveLayoutPolicy`、
+`CCAdaptiveOutletPolicy` 和 `CCAdaptiveHostLayoutSnapshot`；Host 根据布局结果切换活动 Outlet，
 具体 Widget 结构和 GoRouter Shell 仍由应用组合根创建。
 
 ### 12.3 大屏、折叠屏与未来原生多窗口
@@ -973,7 +973,7 @@ Shell 负责持久化导航容器和 Outlet，主从容器负责根据屏幕尺�
 - 特殊窗口：画中画、沉浸式全屏和外接屏幕需要独立 Host/Outlet 策略。
 
 已新增适配器中立的 `CCHostLayoutMetrics`、`CCDisplayFeature` 和
-`CCAdaptivePresentationPolicy` 合同。Shell 负责持久化导航容器，Adaptive Layout
+`CCAdaptiveLayoutPolicy` 合同。Shell 负责持久化导航容器，Adaptive Layout
 负责选择单列、双栏或多 Pane，Navigation Host 负责绑定实际导航栈；
 `CCRoutePlacement.hostId` 和导航请求的 `hostId` 用于隔离逻辑 Host。
 

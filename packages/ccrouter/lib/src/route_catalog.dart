@@ -6,8 +6,7 @@ import 'package:flutter/widgets.dart';
 /// Generated component code supplies this function after decoding values with
 /// its typed route codec. Navigation backends invoke it only while rendering a
 /// route; business callers should construct generated Intents instead.
-typedef CCFlutterRouteBuilder =
-    Widget Function(CCEncodedRouteArguments arguments);
+typedef CCFlutterRouteBuilder = Widget Function(CCRouteCodecValues arguments);
 
 /// Describes one component-owned Flutter destination without backend types.
 ///
@@ -49,7 +48,7 @@ final class CCFlutterRouteDestination {
   String get routeId => route.routeId;
 
   /// Builds the destination after a backend separates Path, Query, and Extra.
-  Widget build(CCEncodedRouteArguments arguments) => builder(arguments);
+  Widget build(CCRouteCodecValues arguments) => builder(arguments);
 }
 
 /// Immutable collection of Flutter destinations available to one Host.

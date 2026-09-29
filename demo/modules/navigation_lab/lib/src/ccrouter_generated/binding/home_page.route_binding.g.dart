@@ -12,5 +12,5 @@ import 'package:demo_navigation_lab/src/home_page.dart' as route_page;
 
 /// Package-internal page factory bridge used by generated Flutter catalogs.
 route_page.DemoNavigationHomePage ccrouterBuildDemoNavigationHomePageRoute(
-  CCEncodedRouteArguments _,
+  CCRouteCodecValues _,
 ) => route_page.DemoNavigationHomePage();

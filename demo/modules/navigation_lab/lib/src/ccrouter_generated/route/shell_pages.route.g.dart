@@ -77,14 +77,14 @@ final class _DemoShellFeedPageRouteCodec
 
   /// Rejects missing, repeated or malformed values before creating arguments.
   @override
-  _DemoShellFeedPageRouteArguments decode(CCEncodedRouteArguments input) {
+  _DemoShellFeedPageRouteArguments decode(CCRouteCodecValues input) {
     return _DemoShellFeedPageRouteArguments();
   }
 
   /// Encodes unescaped scalar values; Runtime owns URI escaping exactly once.
   @override
-  CCEncodedRouteArguments encode(_DemoShellFeedPageRouteArguments arguments) {
-    return CCEncodedRouteArguments(path: {}, query: {}, extra: null);
+  CCRouteCodecValues encode(_DemoShellFeedPageRouteArguments arguments) {
+    return CCRouteCodecValues(path: {}, query: {}, extra: null);
   }
 }
 
@@ -184,7 +184,7 @@ final class _DemoShellDetailPageRouteCodec
 
   /// Rejects missing, repeated or malformed values before creating arguments.
   @override
-  _DemoShellDetailPageRouteArguments decode(CCEncodedRouteArguments input) {
+  _DemoShellDetailPageRouteArguments decode(CCRouteCodecValues input) {
     final _raw_item = input.path["item"];
     final int _value_item = _raw_item == null
         ? throw CCRouteParameterError(
@@ -199,8 +199,8 @@ final class _DemoShellDetailPageRouteCodec
 
   /// Encodes unescaped scalar values; Runtime owns URI escaping exactly once.
   @override
-  CCEncodedRouteArguments encode(_DemoShellDetailPageRouteArguments arguments) {
-    return CCEncodedRouteArguments(
+  CCRouteCodecValues encode(_DemoShellDetailPageRouteArguments arguments) {
+    return CCRouteCodecValues(
       path: {"item": arguments.item.toString()},
       query: {},
       extra: null,
@@ -301,16 +301,14 @@ final class _DemoShellSettingsPageRouteCodec
 
   /// Rejects missing, repeated or malformed values before creating arguments.
   @override
-  _DemoShellSettingsPageRouteArguments decode(CCEncodedRouteArguments input) {
+  _DemoShellSettingsPageRouteArguments decode(CCRouteCodecValues input) {
     return _DemoShellSettingsPageRouteArguments();
   }
 
   /// Encodes unescaped scalar values; Runtime owns URI escaping exactly once.
   @override
-  CCEncodedRouteArguments encode(
-    _DemoShellSettingsPageRouteArguments arguments,
-  ) {
-    return CCEncodedRouteArguments(path: {}, query: {}, extra: null);
+  CCRouteCodecValues encode(_DemoShellSettingsPageRouteArguments arguments) {
+    return CCRouteCodecValues(path: {}, query: {}, extra: null);
   }
 }
 
@@ -406,16 +404,14 @@ final class _DemoWorkspaceHomePageRouteCodec
 
   /// Rejects missing, repeated or malformed values before creating arguments.
   @override
-  _DemoWorkspaceHomePageRouteArguments decode(CCEncodedRouteArguments input) {
+  _DemoWorkspaceHomePageRouteArguments decode(CCRouteCodecValues input) {
     return _DemoWorkspaceHomePageRouteArguments();
   }
 
   /// Encodes unescaped scalar values; Runtime owns URI escaping exactly once.
   @override
-  CCEncodedRouteArguments encode(
-    _DemoWorkspaceHomePageRouteArguments arguments,
-  ) {
-    return CCEncodedRouteArguments(path: {}, query: {}, extra: null);
+  CCRouteCodecValues encode(_DemoWorkspaceHomePageRouteArguments arguments) {
+    return CCRouteCodecValues(path: {}, query: {}, extra: null);
   }
 }
 
@@ -516,7 +512,7 @@ final class _DemoWorkspaceDetailPageRouteCodec
 
   /// Rejects missing, repeated or malformed values before creating arguments.
   @override
-  _DemoWorkspaceDetailPageRouteArguments decode(CCEncodedRouteArguments input) {
+  _DemoWorkspaceDetailPageRouteArguments decode(CCRouteCodecValues input) {
     final _raw_item = input.path["item"];
     final int _value_item = _raw_item == null
         ? throw CCRouteParameterError(
@@ -531,10 +527,8 @@ final class _DemoWorkspaceDetailPageRouteCodec
 
   /// Encodes unescaped scalar values; Runtime owns URI escaping exactly once.
   @override
-  CCEncodedRouteArguments encode(
-    _DemoWorkspaceDetailPageRouteArguments arguments,
-  ) {
-    return CCEncodedRouteArguments(
+  CCRouteCodecValues encode(_DemoWorkspaceDetailPageRouteArguments arguments) {
+    return CCRouteCodecValues(
       path: {"item": arguments.item.toString()},
       query: {},
       extra: null,
@@ -637,18 +631,16 @@ final class _DemoWorkspaceActivityPageRouteCodec
 
   /// Rejects missing, repeated or malformed values before creating arguments.
   @override
-  _DemoWorkspaceActivityPageRouteArguments decode(
-    CCEncodedRouteArguments input,
-  ) {
+  _DemoWorkspaceActivityPageRouteArguments decode(CCRouteCodecValues input) {
     return _DemoWorkspaceActivityPageRouteArguments();
   }
 
   /// Encodes unescaped scalar values; Runtime owns URI escaping exactly once.
   @override
-  CCEncodedRouteArguments encode(
+  CCRouteCodecValues encode(
     _DemoWorkspaceActivityPageRouteArguments arguments,
   ) {
-    return CCEncodedRouteArguments(path: {}, query: {}, extra: null);
+    return CCRouteCodecValues(path: {}, query: {}, extra: null);
   }
 }
 
@@ -746,18 +738,14 @@ final class _DemoWorkspaceProfilePageRouteCodec
 
   /// Rejects missing, repeated or malformed values before creating arguments.
   @override
-  _DemoWorkspaceProfilePageRouteArguments decode(
-    CCEncodedRouteArguments input,
-  ) {
+  _DemoWorkspaceProfilePageRouteArguments decode(CCRouteCodecValues input) {
     return _DemoWorkspaceProfilePageRouteArguments();
   }
 
   /// Encodes unescaped scalar values; Runtime owns URI escaping exactly once.
   @override
-  CCEncodedRouteArguments encode(
-    _DemoWorkspaceProfilePageRouteArguments arguments,
-  ) {
-    return CCEncodedRouteArguments(path: {}, query: {}, extra: null);
+  CCRouteCodecValues encode(_DemoWorkspaceProfilePageRouteArguments arguments) {
+    return CCRouteCodecValues(path: {}, query: {}, extra: null);
   }
 }
 
@@ -858,7 +846,7 @@ final class _DemoExtraPageRouteCodec
 
   /// Rejects missing, repeated or malformed values before creating arguments.
   @override
-  _DemoExtraPageRouteArguments decode(CCEncodedRouteArguments input) {
+  _DemoExtraPageRouteArguments decode(CCRouteCodecValues input) {
     final _value_payload = input.extra == null
         ? throw CCRouteParameterError(
             "Route \"demo_navigation_lab.extra\" parameter \"payload\" is invalid.",
@@ -873,12 +861,8 @@ final class _DemoExtraPageRouteCodec
 
   /// Encodes unescaped scalar values; Runtime owns URI escaping exactly once.
   @override
-  CCEncodedRouteArguments encode(_DemoExtraPageRouteArguments arguments) {
-    return CCEncodedRouteArguments(
-      path: {},
-      query: {},
-      extra: arguments.payload,
-    );
+  CCRouteCodecValues encode(_DemoExtraPageRouteArguments arguments) {
+    return CCRouteCodecValues(path: {}, query: {}, extra: arguments.payload);
   }
 }
 
