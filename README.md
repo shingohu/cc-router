@@ -956,6 +956,10 @@ Route API 和 Package/Host metadata。跨组件 Route 不能直接由脚手架�
 项目没有同时解析 `ccrouter` 和 `ccrouter_generator` 时直接跳过。它不覆盖 `dart pub`，不监听
 Flutter Tool 内部隐式 `pub get`，也不实现常驻 `watch`。SDK 切换后 `status` 应显示
 `run/build preflight: enabled`。
+当前存在 Workspace 聚合根误判为 Host 的已知缺陷：安装 Hook 后，应在 `demo/` 或实际 Host
+目录执行 `flutter pub`；仅解析根 Workspace 依赖时使用
+`CCROUTER_PUB_HOOK_DISABLE=1 fvm flutter pub get`，再单独执行 `generate demo --check`。
+原始 Pub 成功后的 Hook 失败不代表依赖解析失败。
 SDK 切换或升级后需要重新检查 `pub-hook status`。详细语义见
 [`docs/CCRouter-cli-pub-hook.md`](docs/CCRouter-cli-pub-hook.md)。
 

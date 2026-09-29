@@ -125,11 +125,34 @@ CCROUTER_PUB_HOOK_DISABLE=1 flutter pub get
   `ccrouter generate` 负责。
 - 安装是显式操作，不应在项目初始化、CI 或普通 `pub get` 中隐式修改 SDK。
 
+### 已知缺陷：Workspace 聚合根误判为 Host
+
+当前在本仓库根目录显式执行 hooked `flutter pub get` 时，resolved Package config 会同时包含
+`ccrouter` 与 `ccrouter_generator`。Hook 因此会继续调用生成器，但仓库根 `ccrouter_workspace`
+只是 Workspace 聚合 Package，并不直接依赖 `ccrouter`，最终会在原始 Pub 已成功后报告：
+
+```text
+Host Package "ccrouter_workspace" must directly depend on `ccrouter`
+```
+
+这个错误来自 post-pub Hook，不表示 Flutter/Pub 依赖解析失败。缺陷修复前：
+
+- 验证 Hook 时必须在 `demo/` 或其它真实 Host Package 目录运行 `flutter pub get`；
+- 只需要解析根 Workspace 依赖时，使用
+  `CCROUTER_PUB_HOOK_DISABLE=1 fvm flutter pub get`，随后单独执行
+  `fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo --check`；
+- 不得把聚合根传给 `ccrouter generate`，也不得把 Hook 的后置失败描述为 Pub 失败。
+
+后续修复应在 Hook 中识别 Workspace aggregator：聚合根没有直接 Host 依赖时应打印明确跳过原因并
+返回成功，不能猜测某个成员 Package 作为 Host。`flutter run/build` 仍必须以实际 Flutter Host
+为根执行 fail-closed preflight。修复必须增加“聚合根跳过、真实 Host 生成、普通项目跳过”三组回归。
+
 ## 验证
 
-安装后在 CCRouter 项目执行：
+安装后在实际 CCRouter Host Package（本仓库为 `demo/`）执行：
 
 ```bash
+cd demo
 flutter pub get
 ```
 

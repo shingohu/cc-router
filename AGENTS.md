@@ -68,3 +68,14 @@ developer guidance in the same change:
 
 Internal refactors that do not change integration behavior do not require
 documentation churn.
+
+## Workspace Pub Hook Verification
+
+The repository root is a Dart workspace aggregator, not a CCRouter Host. While
+the known Pub Hook host-detection defect remains open, do not run a hooked
+`flutter pub get` at the repository root as a CCRouter generation check. Run it
+from `demo/` or another real Host directory. If root workspace dependency
+resolution is required, use `CCROUTER_PUB_HOOK_DISABLE=1 fvm flutter pub get`,
+then run `ccrouter generate demo --check` separately. A successful original Pub
+command followed by a Hook generation failure must not be reported as a Pub
+dependency-resolution failure.
