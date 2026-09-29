@@ -13,6 +13,14 @@ Runtime. The Host owns generated Host assembly, navigation Backend,
 Shell/Outlet topology, platform Deep Link ingress, global policies and final
 `CCRouter.shutdown`.
 
+`CCGoRouterApp` mirrors the non-routing configuration of `MaterialApp.router`,
+including themes, locale and localization delegates, `ScaffoldMessenger`,
+shortcuts/actions, restoration, scrolling, and debug flags. Configure those
+directly on `CCGoRouterApp`; do not wrap it in another `MaterialApp`. Routing
+properties (`routerConfig`, delegates, information provider/parser, and back
+button dispatcher) remain exclusively owned by `CCGoRouterBackend` and are not
+pass-through options.
+
 Runtime and multi-Host teardown use best-effort structural cleanup. Listener or
 PopGuard removal failures do not skip remaining child Adapters or Scopes, while
 the first cleanup error is still returned to the Host. A rejected Adapter attach

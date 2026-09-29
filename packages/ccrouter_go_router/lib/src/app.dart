@@ -111,10 +111,33 @@ final class CCGoRouterApp extends StatefulWidget {
     this.lifecycleEventCapacity = 1000,
     this.enablePredictiveBack = false,
     this.title = '',
+    this.onGenerateTitle,
+    this.onNavigationNotification,
+    this.color,
     this.theme,
     this.darkTheme,
+    this.highContrastTheme,
+    this.highContrastDarkTheme,
     this.themeMode = ThemeMode.system,
+    this.themeAnimationDuration = kThemeAnimationDuration,
+    this.themeAnimationCurve = Curves.linear,
+    this.themeAnimationStyle,
+    this.locale,
+    this.localizationsDelegates,
+    this.localeListResolutionCallback,
+    this.localeResolutionCallback,
+    this.supportedLocales = const <Locale>[Locale('en', 'US')],
     this.builder,
+    this.scaffoldMessengerKey,
+    this.shortcuts,
+    this.actions,
+    this.restorationScopeId,
+    this.scrollBehavior,
+    this.debugShowMaterialGrid = false,
+    this.showPerformanceOverlay = false,
+    this.checkerboardRasterCacheImages = false,
+    this.checkerboardOffscreenLayers = false,
+    this.showSemanticsDebugger = false,
     this.debugShowCheckedModeBanner = true,
     this.onLifecycleChanged,
     super.key,
@@ -160,17 +183,87 @@ final class CCGoRouterApp extends StatefulWidget {
   /// Material application title.
   final String title;
 
+  /// Generates a localized application title from the active context.
+  final GenerateAppTitle? onGenerateTitle;
+
+  /// Observes navigation notifications emitted by the Material application.
+  final NotificationListenerCallback<NavigationNotification>?
+  onNavigationNotification;
+
+  /// Primary application color used by the operating system interface.
+  final Color? color;
+
   /// Light theme used by [MaterialApp.router].
   final ThemeData? theme;
 
   /// Dark theme used by [MaterialApp.router].
   final ThemeData? darkTheme;
 
+  /// High-contrast light theme used by [MaterialApp.router].
+  final ThemeData? highContrastTheme;
+
+  /// High-contrast dark theme used by [MaterialApp.router].
+  final ThemeData? highContrastDarkTheme;
+
   /// Theme selection used by [MaterialApp.router].
   final ThemeMode themeMode;
 
+  /// Duration used when [MaterialApp.router] animates theme changes.
+  final Duration themeAnimationDuration;
+
+  /// Curve used when [MaterialApp.router] animates theme changes.
+  final Curve themeAnimationCurve;
+
+  /// Optional animation style overriding theme duration and curve.
+  final AnimationStyle? themeAnimationStyle;
+
+  /// Locale selected for the Material application.
+  final Locale? locale;
+
+  /// Localization delegates available to the Material application.
+  final Iterable<LocalizationsDelegate<dynamic>>? localizationsDelegates;
+
+  /// Resolves a locale from the complete platform locale preference list.
+  final LocaleListResolutionCallback? localeListResolutionCallback;
+
+  /// Resolves one platform locale against [supportedLocales].
+  final LocaleResolutionCallback? localeResolutionCallback;
+
+  /// Locales supported by the Material application.
+  final Iterable<Locale> supportedLocales;
+
   /// Optional Material application builder.
   final TransitionBuilder? builder;
+
+  /// Key used to access the application-level [ScaffoldMessenger].
+  final GlobalKey<ScaffoldMessengerState>? scaffoldMessengerKey;
+
+  /// Application-level keyboard shortcut mappings.
+  final Map<ShortcutActivator, Intent>? shortcuts;
+
+  /// Application-level intent action mappings.
+  final Map<Type, Action<Intent>>? actions;
+
+  /// Restoration scope identity used by the Material application.
+  final String? restorationScopeId;
+
+  /// Default scrolling behavior used by the Material application.
+  final ScrollBehavior? scrollBehavior;
+
+  /// Whether the Material baseline grid is shown in debug mode.
+  final bool debugShowMaterialGrid;
+
+  /// Whether the Flutter performance overlay is shown.
+  final bool showPerformanceOverlay;
+
+  /// Whether raster cache images are checkerboarded for debugging.
+  final bool checkerboardRasterCacheImages;
+
+  /// Whether offscreen layers are checkerboarded for debugging.
+  final bool checkerboardOffscreenLayers;
+
+  /// Whether the semantics debugger overlay is shown.
+  final bool showSemanticsDebugger;
 
   /// Whether Flutter's debug banner is shown.
   final bool debugShowCheckedModeBanner;
@@ -226,12 +319,35 @@ final class _CCGoRouterAppState extends State<CCGoRouterApp> {
   /// core Host lifecycle widget.
   Widget build(BuildContext context) {
     final materialApp = MaterialApp.router(
+      scaffoldMessengerKey: widget.scaffoldMessengerKey,
       debugShowCheckedModeBanner: widget.debugShowCheckedModeBanner,
       title: widget.title,
+      onGenerateTitle: widget.onGenerateTitle,
+      onNavigationNotification: widget.onNavigationNotification,
+      color: widget.color,
       theme: widget.theme,
       darkTheme: widget.darkTheme,
+      highContrastTheme: widget.highContrastTheme,
+      highContrastDarkTheme: widget.highContrastDarkTheme,
       themeMode: widget.themeMode,
+      themeAnimationDuration: widget.themeAnimationDuration,
+      themeAnimationCurve: widget.themeAnimationCurve,
+      themeAnimationStyle: widget.themeAnimationStyle,
+      locale: widget.locale,
+      localizationsDelegates: widget.localizationsDelegates,
+      localeListResolutionCallback: widget.localeListResolutionCallback,
+      localeResolutionCallback: widget.localeResolutionCallback,
+      supportedLocales: widget.supportedLocales,
       builder: widget.builder,
+      shortcuts: widget.shortcuts,
+      actions: widget.actions,
+      restorationScopeId: widget.restorationScopeId,
+      scrollBehavior: widget.scrollBehavior,
+      debugShowMaterialGrid: widget.debugShowMaterialGrid,
+      showPerformanceOverlay: widget.showPerformanceOverlay,
+      checkerboardRasterCacheImages: widget.checkerboardRasterCacheImages,
+      checkerboardOffscreenLayers: widget.checkerboardOffscreenLayers,
+      showSemanticsDebugger: widget.showSemanticsDebugger,
       routerConfig: _backend.router,
     );
     return CCRouterApp.managed(

@@ -320,6 +320,28 @@ final initResult = await CCRouter.runInitTasks(
 runApp(CCGoRouterApp(catalog: ccrouterGeneratedRouteCatalog));
 ```
 
+`CCGoRouterApp` 直接提供 `MaterialApp.router` 的非路由配置，包括主题、高对比度主题、
+国际化、`ScaffoldMessenger`、快捷键/Action、Restoration、滚动行为和调试开关。普通 Host
+不需要为了设置 `locale` 再手写一层 `MaterialApp.router`：
+
+```dart
+runApp(
+  CCGoRouterApp(
+    catalog: ccrouterGeneratedRouteCatalog,
+    locale: const Locale('zh', 'CN'),
+    supportedLocales: AppLocalizations.supportedLocales,
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    theme: ThemeData.light(),
+    darkTheme: ThemeData.dark(),
+  ),
+);
+```
+
+`routerConfig`、`routerDelegate`、`routeInformationProvider`、
+`routeInformationParser` 和 `backButtonDispatcher` 不对外透传；它们由
+`CCGoRouterBackend` 唯一管理。需要 Shell、redirect、refresh 或自定义 Router 时使用
+`backendFactory`，不要在应用 Widget 和 Backend 两处重复配置路由所有权。
+
 复杂 Shell/Outlet 或自定义 Router 构造仍可复用同一个 Widget，通过一次性 Factory 消除
 `StatefulWidget + late Backend + CCRouterApp.managed + MaterialApp.router` 样板：
 
