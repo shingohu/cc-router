@@ -2,7 +2,7 @@
 
 > 状态：1.x 已完成可嵌入只读面板、纯 Dart Snapshot/Trace Edge 协议和官方 DevTools
 > Extension。Catalog/Runtime 联动、源码定位、组件依赖聚焦和能力调用链均已落地；生成式
-> Host 自动装配尚未实现。后续可收敛接入样板、诊断字段和性能，但不增加 Runtime 控制操作。
+> Host 自动装配已实现。后续只收敛诊断字段和性能，不增加 Runtime 控制操作。
 
 ## 定位
 
@@ -17,9 +17,9 @@
 
 ## 接入
 
-当前仍需要 Host 显式注册 VM Service Extension，并在默认 Runtime 结束时清理。生成式 Host
-自动装配已经完成设计但尚未实现；不能把计划中的 `hostAssembly` Integration 当作现有 API。
-完整计划见
+Host 直接依赖 `ccrouter_devtools` 后，`ccrouter generate` 会生成静态 Catalog，并将
+`CCDevToolsHostIntegration` 写入 `CCGeneratedHostAssembly`。Composition Root 只需把 Assembly
+交给 `CCRouter.initialize`，不再手工注册或清理 VM Service Extension。完整设计与实现边界见
 [`CCRouter-devtools-host-integration-plan.md`](CCRouter-devtools-host-integration-plan.md)。
 
 仅在开发或内部诊断构建中加入依赖：
@@ -29,6 +29,15 @@ dependencies:
   ccrouter_devtools:
     path: ../cc-router/packages/ccrouter_devtools
 ```
+
+```dart
+CCRouter.initialize(hostAssembly: ccrouterGeneratedHostAssembly);
+```
+
+必须是 Host 的直接依赖；组件传递依赖不会启用。Debug 默认注册，Profile 仅在
+`--dart-define=CCROUTER_DEVTOOLS=true` 时注册，Release 强制关闭。`CCRouter.shutdown()` 开始时
+会先清理 Provider 与 Catalog；页面、组件、Session 或单个 Navigation Host dispose 不参与该
+isolate 级生命周期。
 
 因为面板是 Flutter Widget，任何实际导入它的应用或组件都必须放在
 `dependencies`；只有把面板封装在单独的 debug Package 并确保 Release 不编译该 Package
@@ -91,8 +100,8 @@ Query 值或业务结果。`CCRouterDevToolsSnapshot` 会再次复制列表边�
 
 ## 官方 DevTools Extension
 
-仓库现在提供独立的 `devtools/ccrouter_extension` Package。Host 的 Debug Composition Root
-可以注册一次只读 VM Service 入口：
+仓库现在提供独立的 `devtools/ccrouter_extension` Package。生成式 Host 会自动注册只读 VM
+Service 入口。以下手工方式只用于测试或不使用生成 Host Assembly 的特殊 Host：
 
 ```dart
 CCDevToolsServiceExtension.register(

@@ -54,17 +54,8 @@ class HomePage {}
   });
 
   test('does not warn after the route output exists', () {
-    final output = File(
-      path.join(
-        packageRoot,
-        'lib',
-        'src',
-        'ccrouter_generated',
-        'route',
-        'home_page.route.g.dart',
-      ),
-    )..createSync(recursive: true);
-    addTearDown(() => output.deleteSync());
+    _writeGenerated(packageRoot, 'route/home_page.route.g.dart');
+    _writeGenerated(packageRoot, 'binding/home_page.route_binding.g.dart');
     final diagnostics = CCRouterSourceAnalyzer.analyze(
       source: '@CCRoute<void>()\nclass HomePage {}',
       filePath: path.join(packageRoot, 'lib', 'src', 'home_page.dart'),
@@ -88,14 +79,14 @@ class HomePage {}
       'network_page.route.g.dart',
     );
     expect(
-      CCRouterSourceAnalyzer.authoredRoutePathForGenerated(generated),
+      CCRouterSourceAnalyzer.authoredPathForGenerated(generated),
       path.join(packageRoot, 'lib', 'src', 'pages', 'network_page.dart'),
     );
   });
 
   test('ignores unrelated generated files for source refresh', () {
     expect(
-      CCRouterSourceAnalyzer.authoredRoutePathForGenerated(
+      CCRouterSourceAnalyzer.authoredPathForGenerated(
         path.join(
           packageRoot,
           'lib',
@@ -184,4 +175,321 @@ Future<void> initializeRequired() async {}
       isNot(contains(startsWith('ccrouter_required_init_task_'))),
     );
   });
+
+  final generatedCases =
+      <({String annotation, String declaration, String label})>[
+        (
+          annotation: '@CCRouteContract<void>()',
+          declaration: 'class RouteSchema {}',
+          label: 'Route Contract',
+        ),
+        (
+          annotation: '@CCRouteImplementation(routeContract)',
+          declaration: 'class RoutePage {}',
+          label: 'Route implementation',
+        ),
+        (
+          annotation: '@CCService()',
+          declaration: 'class SampleService {}',
+          label: 'Service',
+        ),
+        (
+          annotation: '@CCServiceContract()',
+          declaration: 'class SampleServiceContract {}',
+          label: 'Service Contract',
+        ),
+        (
+          annotation: '@CCCommandHandler()',
+          declaration: 'void handleCommand() {}',
+          label: 'Command Handler',
+        ),
+        (
+          annotation: '@CCEventSubscription()',
+          declaration: 'void handleEvent() {}',
+          label: 'Event Subscription',
+        ),
+        (
+          annotation: '@CCInitTask()',
+          declaration: 'void initializeFeature() {}',
+          label: 'InitTask',
+        ),
+      ];
+  for (final generatedCase in generatedCases) {
+    test('warns for missing ${generatedCase.label} output', () {
+      final diagnostics = CCRouterSourceAnalyzer.analyze(
+        source: '${generatedCase.annotation}\n${generatedCase.declaration}\n',
+        filePath: path.join(packageRoot, 'lib', 'src', 'capability.dart'),
+        packageRoot: packageRoot,
+        packageName: 'sample_component',
+      );
+
+      expect(
+        diagnostics,
+        contains(
+          isA<CCRouterAnalyzerDiagnostic>()
+              .having(
+                (item) => item.code,
+                'code',
+                'ccrouter_generated_output_missing',
+              )
+              .having(
+                (item) => item.message,
+                'message',
+                contains(generatedCase.label),
+              ),
+        ),
+      );
+    });
+  }
+
+  test('accepts complete source-preserving capability outputs', () {
+    for (final output in const [
+      'contract/capability.route.contract.g.dart',
+      'binding/capability.route_binding.g.dart',
+      'contract/capability.service.contract.g.dart',
+      'service/capability.service.g.dart',
+      'command/capability.command.g.dart',
+      'event/capability.event.g.dart',
+      'init_task/capability.init_task.g.dart',
+    ]) {
+      _writeGenerated(packageRoot, output);
+    }
+    final diagnostics = CCRouterSourceAnalyzer.analyze(
+      source: '''
+@CCRouteContract<void>()
+class RouteSchema {}
+@CCRouteImplementation(routeContract)
+class RoutePage {}
+@CCServiceContract()
+class SampleServiceContract {}
+@CCService()
+class SampleService {}
+@CCCommandHandler()
+void handleCommand() {}
+@CCEventSubscription()
+void handleEvent() {}
+@CCInitTask()
+void initializeFeature() {}
+''',
+      filePath: path.join(packageRoot, 'lib', 'src', 'capability.dart'),
+      packageRoot: packageRoot,
+      packageName: 'sample_component',
+    );
+
+    expect(
+      diagnostics.map((item) => item.code),
+      isNot(contains('ccrouter_generated_output_missing')),
+    );
+  });
+
+  test('does not invent direct output for metadata-only Contracts', () {
+    final diagnostics = CCRouterSourceAnalyzer.analyze(
+      source: '''
+@CCCommandContract()
+class SampleCommand {}
+@CCEventContract()
+class SampleEvent {}
+const startupTask = CCInitTaskContract(id: 'startup.task');
+''',
+      filePath: path.join(packageRoot, 'lib', 'src', 'contracts.dart'),
+      packageRoot: packageRoot,
+      packageName: 'sample_component',
+    );
+
+    expect(
+      diagnostics.map((item) => item.code),
+      isNot(contains('ccrouter_generated_output_missing')),
+    );
+  });
+
+  test('maps every source-preserving generated kind back to source', () {
+    for (final generated in const [
+      'route/pages/capability.route.g.dart',
+      'binding/pages/capability.route_binding.g.dart',
+      'contract/pages/capability.route.contract.g.dart',
+      'contract/pages/capability.service.contract.g.dart',
+      'service/pages/capability.service.g.dart',
+      'command/pages/capability.command.g.dart',
+      'event/pages/capability.event.g.dart',
+      'init_task/pages/capability.init_task.g.dart',
+    ]) {
+      expect(
+        CCRouterSourceAnalyzer.authoredPathForGenerated(
+          path.join(packageRoot, 'lib', 'src', 'ccrouter_generated', generated),
+        ),
+        path.join(packageRoot, 'lib', 'src', 'pages', 'capability.dart'),
+        reason: generated,
+      );
+    }
+  });
+
+  test('reports non-public generic and method Handlers', () {
+    final diagnostics = CCRouterSourceAnalyzer.analyze(
+      source: '''
+@CCCommandHandler()
+void _handleCommand<T>(T command) {}
+class Owner {
+  @CCEventSubscription()
+  void handleEvent(Object event) {}
+}
+''',
+      filePath: path.join(packageRoot, 'lib', 'src', 'handlers.dart'),
+      packageRoot: packageRoot,
+      packageName: 'sample_component',
+    );
+
+    expect(
+      diagnostics.where(
+        (item) => item.code == 'ccrouter_handler_declaration_invalid',
+      ),
+      hasLength(2),
+    );
+  });
+
+  test('reports mutually exclusive Route and InitTask arguments', () {
+    final diagnostics = CCRouterSourceAnalyzer.analyze(
+      source: '''
+@CCRoute<void>(
+  id: 'sample.route',
+  pattern: CCPathPattern('/sample'),
+  patterns: [CCPathPattern('/legacy')],
+)
+class SamplePage {}
+@CCInitTask(
+  contract: startupTask,
+  id: 'startup.task',
+  gate: CCInitTaskGate.appStarted,
+  failurePolicy: CCInitTaskFailurePolicy.optional,
+)
+void initializeFeature() {}
+''',
+      filePath: path.join(packageRoot, 'lib', 'src', 'conflicts.dart'),
+      packageRoot: packageRoot,
+      packageName: 'sample_component',
+    );
+
+    expect(
+      diagnostics.where(
+        (item) => item.code == 'ccrouter_annotation_arguments_conflict',
+      ),
+      hasLength(2),
+    );
+  });
+
+  test('reports missing InitTask identity after a complete annotation', () {
+    final diagnostics = CCRouterSourceAnalyzer.analyze(
+      source: '''
+@CCInitTask(
+  gate: CCInitTaskGate.appStarted,
+  failurePolicy: CCInitTaskFailurePolicy.optional,
+)
+void initializeFeature() {}
+''',
+      filePath: path.join(packageRoot, 'lib', 'src', 'init_task.dart'),
+      packageRoot: packageRoot,
+      packageName: 'sample_component',
+    );
+
+    expect(
+      diagnostics.map((item) => item.code),
+      contains('ccrouter_annotation_arguments_conflict'),
+    );
+  });
+
+  test('reports invalid literal IDs aliases Gates and timeouts', () {
+    final diagnostics = CCRouterSourceAnalyzer.analyze(
+      source: '''
+@CCServiceContract(id: 'Bad ID', alias: 'class')
+abstract interface class InvalidService {}
+@CCInitTask(
+  id: 'startup.task',
+  gate: CCInitTaskGate('Privacy Gate'),
+  failurePolicy: CCInitTaskFailurePolicy.optional,
+  timeout: Duration.zero,
+)
+void initializeFeature() {}
+''',
+      filePath: path.join(packageRoot, 'lib', 'src', 'invalid_values.dart'),
+      packageRoot: packageRoot,
+      packageName: 'sample_component',
+    );
+
+    expect(
+      diagnostics.map((item) => item.code),
+      containsAll([
+        'ccrouter_identifier_invalid',
+        'ccrouter_alias_invalid',
+        'ccrouter_timeout_invalid',
+      ]),
+    );
+    expect(
+      diagnostics.where((item) => item.code == 'ccrouter_identifier_invalid'),
+      hasLength(2),
+    );
+  });
+
+  test('reports obvious Handler arity and return violations', () {
+    final diagnostics = CCRouterSourceAnalyzer.analyze(
+      source: '''
+@CCCommandHandler()
+void handleCommand() {}
+@CCEventSubscription()
+int handleEvent(Object event) => 1;
+@CCInitTask(
+  id: 'startup.task',
+  gate: CCInitTaskGate.appStarted,
+  failurePolicy: CCInitTaskFailurePolicy.optional,
+)
+String initializeFeature([Object? context]) => '';
+''',
+      filePath: path.join(packageRoot, 'lib', 'src', 'signatures.dart'),
+      packageRoot: packageRoot,
+      packageName: 'sample_component',
+    );
+
+    expect(
+      diagnostics.where(
+        (item) => item.code == 'ccrouter_handler_signature_invalid',
+      ),
+      hasLength(4),
+    );
+  });
+
+  test('does not guess non-literal identifiers aliases or timeouts', () {
+    final diagnostics = CCRouterSourceAnalyzer.analyze(
+      source: '''
+@CCServiceContract(id: serviceId, alias: serviceAlias)
+abstract interface class DeferredService {}
+@CCInitTask(
+  id: taskId,
+  gate: customGate,
+  failurePolicy: CCInitTaskFailurePolicy.optional,
+  timeout: configuredTimeout,
+)
+void initializeFeature() {}
+''',
+      filePath: path.join(packageRoot, 'lib', 'src', 'deferred_values.dart'),
+      packageRoot: packageRoot,
+      packageName: 'sample_component',
+    );
+
+    expect(
+      diagnostics.map((item) => item.code),
+      isNot(
+        contains(
+          anyOf(
+            'ccrouter_identifier_invalid',
+            'ccrouter_alias_invalid',
+            'ccrouter_timeout_invalid',
+          ),
+        ),
+      ),
+    );
+  });
+}
+
+void _writeGenerated(String packageRoot, String relative) {
+  File(
+    path.join(packageRoot, 'lib', 'src', 'ccrouter_generated', relative),
+  ).createSync(recursive: true);
 }

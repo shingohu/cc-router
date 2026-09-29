@@ -326,7 +326,7 @@ Route      一次具体路由实例
 
 ```dart
 CCRouter.initialize(
-  components: ccrouterGeneratedComponentManifests,
+  hostAssembly: ccrouterGeneratedHostAssembly,
 );
 
 runApp(
@@ -430,12 +430,12 @@ abstract final class CCRouter {
 ### 6.2 导航适配器绑定
 
 Flutter 应用启动时选择一个 Backend。新 GoRouter 应用使用 `CCGoRouterApp`；已有 Router 使用
-attach Backend 并继续由应用持有 Router。需要全局拦截器或其它初始化选项时，应在挂载组件前
-显式调用 `CCRouter.initialize`，然后省略 `components`：
+attach Backend 并继续由应用持有 Router。挂载 Host 前始终由 Composition Root 显式调用
+`CCRouter.initialize`；`CCGoRouterApp` 不提供 Runtime 初始化简写：
 
 ```dart
 CCRouter.initialize(
-  components: ccrouterGeneratedComponentManifests,
+  hostAssembly: ccrouterGeneratedHostAssembly,
 );
 
 runApp(

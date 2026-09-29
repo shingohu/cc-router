@@ -24,6 +24,4 @@ export 'src/component_capabilities.dart'
         DemoInitializationGates,
         DemoNavigationSourceIds,
         DemoRoutePolicyIds;
-export 'src/devtools_catalog.dart'
-    show demoDevToolsCatalog, registerDemoDevToolsExtension;
 export 'src/shell_contract.dart' show DemoExtraPayload;

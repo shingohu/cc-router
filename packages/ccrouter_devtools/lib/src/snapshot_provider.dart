@@ -2,6 +2,7 @@ import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter_devtools_protocol/ccrouter_devtools_protocol.dart';
 import 'package:flutter/foundation.dart';
 
+import 'host_state.dart';
 import 'snapshot.dart';
 
 /// Supplies immutable CCRouter diagnostics to a read-only visualization.
@@ -28,7 +29,11 @@ final class CCRouterDevToolsSnapshotProvider
   /// Creates a provider backed by the process-default CCRouter facade.
   const CCRouterDevToolsSnapshotProvider({this.catalog});
 
-  /// Optional generated source index supplied by the Host composition root.
+  /// Optional source index overriding the active generated Host Catalog.
+  ///
+  /// Ordinary panels omit this value and automatically observe the Catalog
+  /// installed by [CCDevToolsHostIntegration]. Tests and standalone diagnostic
+  /// surfaces may provide an explicit deterministic Catalog.
   final CCDevToolsStaticCatalogSnapshot? catalog;
 
   @override
@@ -39,7 +44,7 @@ final class CCRouterDevToolsSnapshotProvider
       return CCRouterDevToolsSnapshot(
         capturedAt: DateTime.now(),
         runtimeState: CCDevToolsRuntimeState.initialized,
-        catalog: catalog,
+        catalog: catalog ?? CCDevToolsHostState.catalog,
         components: CCRouter.registeredComponents,
         routeEntries: CCRouter.activeRouteEntries,
         backendEntries: CCRouter.backendEntries,

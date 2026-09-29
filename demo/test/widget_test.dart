@@ -20,8 +20,7 @@ void main() {
     setDemoAnalyticsConsent(true);
     demoDiagnosticsSink.clear();
     CCRouter.initialize(
-      components: ccrouterGeneratedComponentManifests,
-      contractBundle: ccrouterGeneratedHostAssembly.contractBundle,
+      hostAssembly: ccrouterGeneratedHostAssembly,
       deepLinkIngressPolicy: demoDeepLinkIngressPolicy,
       globalInterceptors: const [
         CCGlobalNavigationInterceptor(

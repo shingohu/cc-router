@@ -22,7 +22,7 @@
   三层兼容门禁。
 - `ccrouter generate/find/clean`、Pub Hook、Component/Page/Service/Command/Event/InitTask
   非覆盖式脚手架、增量缓存和全量回退。
-- Analysis Server 的跨 Package 生成物导入诊断与缺失 Route 生成物诊断。
+- Analysis Server 的跨 Package 生成物导入、确定性同源能力生成物缺失和 required InitTask 声明诊断。
 - 嵌入式只读 DevTools、版本化 Snapshot/Trace Edge 协议和官方 DevTools Extension；Catalog、
   Runtime、组件依赖和单次能力调用链可以关联展示。
 - Provider-neutral Analytics、显式点击/滚动/曝光采集、Consent、黑名单和节流；Firebase callback
@@ -35,8 +35,11 @@
   Extension 不直接绑定任意本地 IDE。
 - Component Graph：已支持只读搜索、聚焦、依赖和反向依赖；不是可编辑的通用图形建模工具。
 - 自动埋点：只支持显式稳定 Target；不自动猜测任意 Widget 文本、Key 或业务事件 ID。
-- Analyzer Plugin：只提供两类确定性诊断；不生成代码、不自动改写 import，也没有 rename/alias
-  migration Quick Fix。
+- Analyzer Plugin：当前提供跨 Package 生成物导入、Route/Service/Command/Event/InitTask
+  确定性同源生成物缺失、required InitTask Contract/timeout、Handler 形态与明显签名、互斥参数、
+  字面量 ID/alias/Gate ID 和正 timeout 等低误报单文件诊断；不生成代码、不自动改写 import，
+  也没有 rename/alias migration Quick Fix。仅对互斥参数提供安全删除 Quick Fix。CLI 已提供
+  Host-only 的只读 `analyzer status/doctor`；自动安装、升级和卸载仍未实现。
 - 零 Subscriber Event：正常生成 Client、Workspace Validator 和 Runtime publisher identity 已覆盖；
   generated SPI 被手工伪造时没有独立 Event Contract Runtime Registry。该 Registry 仅在 generated
   SPI 需要成为严格防伪边界时再实现。

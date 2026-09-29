@@ -15,4 +15,6 @@ dependencies:
   crypto: ^3.0.6
   dart_style: ^3.1.7
   path: ^1.9.0
+  pub_semver: ^2.2.0
   source_gen: ^4.0.0
+  yaml: ^3.1.0

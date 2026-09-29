@@ -1,10 +1,11 @@
 import 'package:analyzer/dart/analysis/analysis_context.dart';
-import 'package:analyzer/dart/analysis/utilities.dart';
 import 'package:analyzer/file_system/file_system.dart';
 import 'package:analyzer/source/line_info.dart';
 import 'package:analyzer_plugin/plugin/plugin.dart';
 import 'package:analyzer_plugin/protocol/protocol_common.dart';
 import 'package:analyzer_plugin/protocol/protocol_generated.dart';
+import 'package:ccrouter_analyzer_plugin/src/package_context_cache.dart';
+import 'package:ccrouter_analyzer_plugin/src/quick_fixes.dart';
 import 'package:ccrouter_analyzer_plugin/src/source_analyzer.dart';
 import 'package:pub_semver/pub_semver.dart';
 
@@ -13,6 +14,10 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
   /// Creates a plugin backed by the Analysis Server [resourceProvider].
   CCRouterAnalyzerPlugin(ResourceProvider resourceProvider)
     : super(resourceProvider: resourceProvider);
+
+  /// Bounded source-directory identities owned by this plugin isolate.
+  final CCRouterPackageContextCache _packageContexts =
+      CCRouterPackageContextCache();
 
   /// Limits analysis to Dart source files.
   @override
@@ -48,25 +53,28 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
     } on Object {
       return;
     }
-    final diagnostics = CCRouterSourceAnalyzer.analyze(
+    if (CCRouterSourceAnalyzer.isGeneratedPath(path)) {
+      channel.sendNotification(
+        AnalysisErrorsParams(path, const []).toNotification(),
+      );
+      return;
+    }
+    final packageContext = _packageContexts.resolve(path);
+    if (packageContext == null) {
+      channel.sendNotification(
+        AnalysisErrorsParams(path, const []).toNotification(),
+      );
+      return;
+    }
+    final analysis = CCRouterSourceAnalyzer.analyzeWithLineInfo(
       source: source,
       filePath: path,
+      packageRoot: packageContext.root,
+      packageName: packageContext.name,
     );
-    final lineInfo = parseString(
-      content: source,
-      path: path,
-      throwIfDiagnostics: false,
-    ).lineInfo;
-    final errors = diagnostics
+    final errors = analysis.diagnostics
         .map(
-          (diagnostic) => AnalysisError(
-            diagnostic.severity,
-            AnalysisErrorType.LINT,
-            _location(path, lineInfo, diagnostic),
-            diagnostic.message,
-            diagnostic.code,
-            correction: diagnostic.correction,
-          ),
+          (diagnostic) => _protocolError(path, analysis.lineInfo, diagnostic),
         )
         .toList(growable: false);
     channel.sendNotification(
@@ -74,11 +82,11 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
     );
   }
 
-  /// Re-analyzes authored Route sources affected by generated file changes.
+  /// Re-analyzes authored capability sources affected by generated changes.
   ///
-  /// A generated Route library is intentionally not imported by its authored
-  /// page, so the analyzer's normal dependency graph does not always include
-  /// the page in [paths]. The deterministic source mapping keeps a stale
+  /// Generated registration libraries are intentionally not imported by their
+  /// authored declarations, so the analyzer's normal dependency graph does
+  /// not always include the source in [paths]. Deterministic mapping keeps a stale
   /// `ccrouter_generated_output_missing` warning from surviving a successful
   /// generation.
   @override
@@ -88,10 +96,11 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
   }) async {
     final analyzedPaths = <String>{};
     for (final changedPath in paths) {
+      _packageContexts.invalidate(changedPath);
       if (analysisContext.contextRoot.isAnalyzed(changedPath)) {
         analyzedPaths.add(changedPath);
       }
-      final authored = CCRouterSourceAnalyzer.authoredRoutePathForGenerated(
+      final authored = CCRouterSourceAnalyzer.authoredPathForGenerated(
         changedPath,
       );
       if (authored != null &&
@@ -105,7 +114,7 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
     );
   }
 
-  /// Refreshes diagnostics for generated Route files added, changed, or
+  /// Refreshes diagnostics for generated capability files added, changed, or
   /// removed by `ccrouter generate` and `ccrouter clean`.
   @override
   Future<AnalysisHandleWatchEventsResult> handleAnalysisHandleWatchEvents(
@@ -122,6 +131,71 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
         .toList(growable: false);
     if (changed.isNotEmpty) await contentChanged(changed);
     return AnalysisHandleWatchEventsResult();
+  }
+
+  /// Offers only explicit deletion choices for mutually exclusive arguments.
+  @override
+  Future<EditGetFixesResult> handleEditGetFixes(
+    EditGetFixesParams parameters,
+  ) async {
+    final file = resourceProvider.getFile(parameters.file);
+    if (!file.exists) return EditGetFixesResult(const []);
+    late final String source;
+    try {
+      source = file.readAsStringSync();
+    } on Object {
+      return EditGetFixesResult(const []);
+    }
+    final packageContext = _packageContexts.resolve(parameters.file);
+    if (packageContext == null) return EditGetFixesResult(const []);
+    final analysis = CCRouterSourceAnalyzer.analyzeWithLineInfo(
+      source: source,
+      filePath: parameters.file,
+      packageRoot: packageContext.root,
+      packageName: packageContext.name,
+    );
+    final requestLine = analysis.lineInfo
+        .getLocation(parameters.offset)
+        .lineNumber;
+    final errorFixes = <AnalysisErrorFixes>[];
+    for (final diagnostic in analysis.diagnostics) {
+      if (diagnostic.code != 'ccrouter_annotation_arguments_conflict' ||
+          analysis.lineInfo.getLocation(diagnostic.offset).lineNumber !=
+              requestLine) {
+        continue;
+      }
+      final fixes = CCRouterQuickFixes.compute(
+        source: source,
+        filePath: parameters.file,
+        offset: diagnostic.offset,
+      );
+      if (fixes.isEmpty) continue;
+      errorFixes.add(
+        AnalysisErrorFixes(
+          _protocolError(parameters.file, analysis.lineInfo, diagnostic),
+          fixes: [
+            for (final fix in fixes)
+              PrioritizedSourceChange(
+                50,
+                SourceChange(
+                  fix.message,
+                  id: fix.id,
+                  edits: [
+                    SourceFileEdit(
+                      parameters.file,
+                      file.modificationStamp,
+                      edits: [
+                        SourceEdit(fix.offset, fix.length, fix.replacement),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      );
+    }
+    return EditGetFixesResult(errorFixes);
   }
 
   /// Converts a source-oriented diagnostic to an Analysis Server location.
@@ -142,4 +216,18 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
       endColumn: end.columnNumber,
     );
   }
+
+  /// Converts one source diagnostic to the error object shared by fixes.
+  static AnalysisError _protocolError(
+    String filePath,
+    LineInfo lineInfo,
+    CCRouterAnalyzerDiagnostic diagnostic,
+  ) => AnalysisError(
+    diagnostic.severity,
+    AnalysisErrorType.LINT,
+    _location(filePath, lineInfo, diagnostic),
+    diagnostic.message,
+    diagnostic.code,
+    correction: diagnostic.correction,
+  );
 }

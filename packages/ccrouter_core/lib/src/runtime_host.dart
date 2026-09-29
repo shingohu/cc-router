@@ -2924,6 +2924,27 @@ final class CCRouterRuntime {
     );
   }
 
+  /// Records a failure isolated at an optional Host tooling boundary.
+  ///
+  /// Host integrations contain no business payload and identify themselves by
+  /// a stable generated ID. The original exception and message are deliberately
+  /// discarded so application diagnostics receive only its concrete type.
+  void recordHostToolLifecycleFailure({
+    required String integrationId,
+    required String operation,
+    required String errorType,
+  }) {
+    _emitInitializationDiagnostic(
+      occurredAt: DateTime.now(),
+      operation: operation,
+      status: 'failed',
+      level: CCDiagnosticLevel.error,
+      target: integrationId,
+      failureStage: 'hostToolLifecycle',
+      errorType: errorType,
+    );
+  }
+
   /// Queues one Sink event without blocking the framework operation.
   void _enqueueDiagnostic(CCDiagnosticEvent event) {
     if (!_acceptingDiagnostics || diagnostics.sink == null) return;

@@ -7,15 +7,12 @@ DAG。它是可选的 Host 调试 UI，不是业务能力，也不替代 `ccrout
 ```dart
 import 'package:ccrouter_devtools/ccrouter_devtools.dart';
 
-final panel = CCRouterDevToolsPanel(
-  provider: CCRouterDevToolsSnapshotProvider(catalog: staticCatalog),
-  onOpenSource: openInProjectEditor,
-);
+final panel = CCRouterDevToolsPanel(onOpenSource: openInProjectEditor);
 ```
 
-`staticCatalog` 是构建期生成或由 Host 组合根提供的
-`CCDevToolsStaticCatalogSnapshot`。它可以包含 Component 节点、Route/Service/Command/Event/
-InitTask 源码记录和能力关系。`onOpenSource` 由应用决定如何把安全的
+当 Host 直接依赖 `ccrouter_devtools` 并重新生成时，生成的 Host Assembly 会安装静态
+`CCDevToolsStaticCatalogSnapshot`。它包含 Component 节点、Route/Service/Command/Event/
+InitTask 源码记录和可证明的能力关系，面板默认读取该 Catalog。`onOpenSource` 由应用决定如何把安全的
 `package:` URI 映射到 IDE、源码浏览器或复制操作；框架不会假设本机存在某个编辑器。
 
 开发者不应从面板触发导航、Pop、Retry、Scope dispose、组件激活或 Adapter 操作；这些能力
@@ -35,12 +32,10 @@ Widget、Navigator 或业务返回对象。需要采集应用日志时使用 `CC
 
 官方 Extension 使用相同的 Envelope，提供 Overview、Catalog、Components 和 Call Graph 四个
 只读页。它可以显示源码位置和关系边，但不能直接打开 IDE；应用需要在 Host 侧提供编辑器映射。
-Demo 的 `demoDevToolsCatalog` 覆盖 Route、Service、Command、Event、InitTask 和跨组件依赖，
-可通过“诊断”页面或 DevTools Extension 验证静态/动态关联。
-
-Generated Host auto-registration is designed but not implemented. Until
-`CCRouter.initialize` and actual generated Host output expose the integration,
-the Host must keep registering `CCDevToolsServiceExtension` explicitly and clear
-it with the default Runtime lifecycle. Do not invent an `enableDevTools` flag or
-claim that `CCGeneratedHostAssembly` already owns this lifecycle. See
-[`docs/CCRouter-devtools-host-integration-plan.md`](../../../docs/CCRouter-devtools-host-integration-plan.md).
+Demo 的生成 Catalog 覆盖 Route、Service、Command、Event、InitTask 和跨组件依赖，可通过
+“诊断”页面或 DevTools Extension 验证静态/动态关联。生成器只在 Host 直接依赖
+`ccrouter_devtools` 时写入 Tool Integration；传递依赖不会隐式启用。Debug 默认开启，Profile
+需要 `--dart-define=CCROUTER_DEVTOOLS=true`，Release 始终关闭。初始化与清理跟随默认 Runtime，
+任意页面、组件或 Navigation Host dispose 都不能清理 isolate endpoint。手工注册只保留给
+测试或不使用生成 Host Assembly 的特殊 Host。详见
+[`docs/CCRouter-devtools-host-integration-plan.md`](../../../docs/CCRouter-devtools-host-integration-plan.md)。

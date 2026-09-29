@@ -5,11 +5,13 @@
 ### Host
 
 The Host may import `ccrouter_go_router` and `ccrouter_host.dart`. A new GoRouter
-application should prefer `CCGoRouterApp(catalog: ..., components: ...)` for the
-minimal assembly path. When global policies or telemetry are needed, call
-`CCRouter.initialize` explicitly and omit `components` from the widget. The Host
-still owns generated Host assembly, navigation Backend, Shell/Outlet topology,
-platform Deep Link ingress, global policies and final `CCRouter.shutdown`.
+application should first call
+`CCRouter.initialize(hostAssembly: ccrouterGeneratedHostAssembly)` and then use
+`CCGoRouterApp(catalog: ccrouterGeneratedRouteCatalog)` for the minimal Host
+assembly path. `CCGoRouterApp` never initializes or shuts down the process
+Runtime. The Host owns generated Host assembly, navigation Backend,
+Shell/Outlet topology, platform Deep Link ingress, global policies and final
+`CCRouter.shutdown`.
 
 Runtime and multi-Host teardown use best-effort structural cleanup. Listener or
 PopGuard removal failures do not skip remaining child Adapters or Scopes, while
@@ -17,8 +19,11 @@ the first cleanup error is still returned to the Host. A rejected Adapter attach
 remains Host-owned; Runtime rolls back its partial listener and ledger state so
 the Host can dispose that Adapter or safely attach another one.
 
-Use `CCRouterApp.managed` with a manually created `CCRouterAppBackend` when the
-application needs a custom Backend or custom application tree. Use
+Use `CCGoRouterApp.backendFactory` when the application needs custom Shell,
+redirect, refresh, or Router construction but can retain the standard Material
+application wrapper. The factory receives immutable configuration and is called
+once. Use `CCRouterApp.managed` with a manually created `CCRouterAppBackend`
+only for a fully custom application tree. Use
 `CCGoRouterBackend.attach` for an existing application-owned GoRouter; the
 minimal widget is not an attach replacement and never disposes an external
 Router.

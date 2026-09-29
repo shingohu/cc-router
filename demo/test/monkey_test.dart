@@ -21,8 +21,7 @@ void main() {
     demoDiagnosticsSink.clear();
     demoApplicationLogger.clear();
     CCRouter.initialize(
-      components: ccrouterGeneratedComponentManifests,
-      contractBundle: ccrouterGeneratedHostAssembly.contractBundle,
+      hostAssembly: ccrouterGeneratedHostAssembly,
       deepLinkIngressPolicy: demoDeepLinkIngressPolicy,
       globalInterceptors: const [
         CCGlobalNavigationInterceptor(

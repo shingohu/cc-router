@@ -5,6 +5,8 @@ import 'package:ccrouter_core/ccrouter_core.dart';
 import 'package:flutter/widgets.dart';
 
 import 'app.dart';
+import 'generated_package_bundle.dart';
+import 'host_tool_integration.dart';
 
 part 'navigation.dart';
 part 'deep_link.dart';
@@ -71,6 +73,9 @@ abstract final class CCRouter {
 
   /// Releases Backend-owned resources after Runtime-owned Adapter disposal.
   static Future<void> Function()? _backendDisposer;
+
+  /// Host tooling owned by the current process-default Runtime lifecycle.
+  static List<CCHostToolIntegration> _hostToolIntegrations = const [];
 
   /// Returns the active Runtime or fails when the host is not initialized.
   static CCRouterRuntime get _runtime => _runtimeResolver.active;
@@ -272,12 +277,13 @@ abstract final class CCRouter {
 
   /// Creates and initializes the process-default Runtime.
   ///
-  /// Call this once during application startup with the complete [components]
-  /// assembly. Component manifests are validated and registered before the
-  /// Runtime becomes observable, while navigation Backend binding remains the
-  /// responsibility of the Flutter Host. Set [navigationDiagnosticCapacity] to
-  /// bound each in-memory navigation diagnostic history independently; zero
-  /// disables retained histories without disabling live listeners.
+  /// Call this once during application startup with one complete generated
+  /// [hostAssembly] or a handwritten [components] assembly. Component manifests
+  /// are validated and registered before the Runtime becomes observable, while
+  /// navigation Backend binding remains the responsibility of the Flutter Host.
+  /// Set [navigationDiagnosticCapacity] to bound each in-memory navigation
+  /// diagnostic history independently; zero disables retained histories without
+  /// disabling live listeners.
   ///
   /// Initialization is synchronous: successful return means the complete
   /// component graph is available, while configuration failures throw before
@@ -291,9 +297,11 @@ abstract final class CCRouter {
   /// [deepLinkIngressPolicy] is Host-owned and defaults to rejecting every
   /// external authority and relative Path; configure exact rules only for URI
   /// namespaces the application intentionally owns.
-  /// Pass the generated [contractBundle] together with [components] when Host
-  /// assembly publishes one. It provides final stale and compatibility checks;
-  /// omitting it remains supported for handwritten or legacy test manifests.
+  /// Generated Hosts should pass [hostAssembly], which atomically supplies the
+  /// component graph, Contract bundle, and optional Host tool integrations.
+  /// Handwritten Hosts and focused tests may instead pass [components] with an
+  /// optional [contractBundle]. Supplying both modes, or neither mode, is a
+  /// configuration error.
   ///
   /// The name describes framework Runtime initialization, not construction of
   /// a disposable object and not asynchronous InitTask execution. Page,
@@ -303,7 +311,8 @@ abstract final class CCRouter {
   /// default Runtime. Concrete Runtime, Adapter, Scope, and Service instances
   /// continue to use their owner-level `dispose` contracts internally.
   static void initialize({
-    required Iterable<CCComponentManifest> components,
+    CCGeneratedHostAssembly? hostAssembly,
+    Iterable<CCComponentManifest>? components,
     CCContractBundleDescriptor? contractBundle,
     int traceCapacity = 1000,
     int navigationDiagnosticCapacity = 1000,
@@ -325,9 +334,26 @@ abstract final class CCRouter {
       throw const CCRouterAlreadyInitializedError();
     }
 
+    if ((hostAssembly == null) == (components == null)) {
+      throw CCRegistrationError(
+        'CCRouter.initialize requires exactly one of hostAssembly or '
+        'components.',
+      );
+    }
+    if (hostAssembly != null && contractBundle != null) {
+      throw CCRegistrationError(
+        'contractBundle is supplied by hostAssembly and cannot be passed '
+        'separately.',
+      );
+    }
+
+    final effectiveComponents = hostAssembly?.componentManifests ?? components!;
+    final effectiveContractBundle =
+        hostAssembly?.contractBundle ?? contractBundle;
+
     final runtime = CCRouterRuntime.forHost(
-      components: components,
-      contractBundle: contractBundle,
+      components: effectiveComponents,
+      contractBundle: effectiveContractBundle,
       traceCapacity: traceCapacity,
       navigationDiagnosticCapacity: navigationDiagnosticCapacity,
       diagnostics: diagnostics,
@@ -342,6 +368,19 @@ abstract final class CCRouter {
     );
     runtime.initialize();
     _runtimeResolver.installDefault(runtime);
+    final integrations = hostAssembly?.hostToolIntegrations ?? const [];
+    _hostToolIntegrations = integrations;
+    for (final integration in integrations) {
+      try {
+        integration.onRuntimeReady();
+      } catch (error) {
+        runtime.recordHostToolLifecycleFailure(
+          integrationId: integration.id,
+          operation: 'hostToolStart',
+          errorType: error.runtimeType.toString(),
+        );
+      }
+    }
   }
 
   /// Resolves the default or keyed implementation of service contract [T].
@@ -588,11 +627,26 @@ abstract final class CCRouter {
     if (existingShutdown != null) return existingShutdown;
     final active = _runtimeResolver.takeDefault();
     final disposeBackend = _backendDisposer;
-    if (active == null && disposeBackend == null) {
+    final hostToolIntegrations = _hostToolIntegrations;
+    _hostToolIntegrations = const [];
+    if (active == null &&
+        disposeBackend == null &&
+        hostToolIntegrations.isEmpty) {
       return;
     }
 
     _backendDisposer = null;
+    for (final integration in hostToolIntegrations) {
+      try {
+        integration.onRuntimeStopping();
+      } catch (error) {
+        active?.recordHostToolLifecycleFailure(
+          integrationId: integration.id,
+          operation: 'hostToolStop',
+          errorType: error.runtimeType.toString(),
+        );
+      }
+    }
     final shuttingDown = _disposeRuntimeAndBackend(active, disposeBackend);
     _shuttingDown = shuttingDown;
     try {

@@ -2,19 +2,20 @@
 
 ## 1. 状态与目标
 
-- 状态：已完成设计，尚未实现。
+- 状态：已实现，持续多平台 smoke 与性能回归作为发布门禁。
 - 优先级：P1，DevTools 开发体验和 Host 样板收敛。
 - Owner：Host 与生成器；`ccrouter` 只管理中立生命周期，`ccrouter_devtools` 负责具体 VM
   Service Extension。
 - 目标：Host 不再手写 DevTools 注册函数、静态 Catalog 和清理调用，同时保持 DevTools 可选、
   Release 强制关闭、失败不影响应用。
 
-当前有效接入仍是 Host 手工调用 `CCDevToolsServiceExtension.register()`。本文中的自动装配、
-生成 Catalog 和 Runtime 生命周期联动都尚未实现，不能提前写入业务接入代码或对外宣称已支持。
+当前有效接入是 Host 直接依赖 `ccrouter_devtools`，由生成器写入静态 Catalog 和 Tool
+Integration，再通过 `CCRouter.initialize(hostAssembly: ...)` 驱动注册与清理。手工
+`CCDevToolsServiceExtension.register()` 只保留给测试和不使用生成 Assembly 的特殊 Host。
 
 ## 2. 当前问题
 
-Demo 当前把手写 `demoDevToolsCatalog` 和 `registerDemoDevToolsExtension()` 放在
+改造前 Demo 把手写 `demoDevToolsCatalog` 和 `registerDemoDevToolsExtension()` 放在
 `demo_navigation_lab` 业务组件中，再由 `main.dart` 主动调用。它存在以下问题：
 
 1. VM Service Extension 是应用 Host/Isolate 级开发工具，不属于业务组件。
@@ -36,7 +37,7 @@ Demo 当前把手写 `demoDevToolsCatalog` 和 `registerDemoDevToolsExtension()`
 
 ### 3.2 永久保留 Host 手工 bootstrap
 
-可作为自动装配完成前的过渡方案。边界清晰，但无法解决样板、漂移和遗漏清理问题。
+仅保留为测试和非生成 Host Assembly 的兼容入口。边界清晰，但不能作为生成式 Host 的推荐接入。
 
 ### 3.3 生成式 Host Tool Integration
 
@@ -78,17 +79,17 @@ Host。没有直接依赖时：
 `package:ccrouter/ccrouter.dart` 导出。接口只允许同步启动和停止可选工具，不暴露 Runtime、
 Registry、Scope、Navigator 或 Adapter。
 
-目标结构示意：
+已实现结构：
 
 ```dart
 abstract interface class CCHostToolIntegration {
+  String get id;
   void onRuntimeReady();
   void onRuntimeStopping();
 }
 ```
 
-最终命名和错误类型在实现前冻结。生成的 `CCGeneratedHostAssembly` 携带只读 Integration 列表，
-推荐将 Host 初始化收敛为：
+生成的 `CCGeneratedHostAssembly` 携带只读 Integration 列表，Host 初始化已收敛为：
 
 ```dart
 CCRouter.initialize(
@@ -99,8 +100,8 @@ CCRouter.initialize(
 ```
 
 `hostAssembly` 提供组件、Contract Bundle 和 Host Tool Integration；路由 Backend 继续消费同一
-Assembly 的 Route Catalog。是否一次移除旧的 `components/contractBundle` 参数，需要在实施时
-结合手写 Host 和测试入口评审，不能为了 DevTools 自动化引入两套长期并存的初始化方式。
+Assembly 的 Route Catalog。`components/contractBundle` 继续作为手写 Host 和底层测试入口；
+生成式 Host 必须与 `hostAssembly` 二选一，不能混用。
 
 具体依赖方向保持为：
 
@@ -158,9 +159,9 @@ DevTools 是可选观察工具。注册、快照转换和清理异常必须被�
 `CCRouter.initialize`、导航、业务调用或 `shutdown` 失败。Integration 不得同步发起导航、解析
 Service、执行 Command 或修改 Runtime 状态。
 
-## 8. Demo 迁移目标
+## 8. Demo 迁移结果
 
-实施后：
+当前已经：
 
 1. 删除 `demo_navigation_lab` 中的 `demoDevToolsCatalog` 和
    `registerDemoDevToolsExtension()`。
@@ -170,16 +171,15 @@ Service、执行 Command 或修改 Runtime 状态。
 5. 嵌入式 DevTools 面板如果继续作为 Demo 功能展示，应由 Host debug route/注入边界提供，不能
    迫使普通业务组件依赖 Host 调试工具。
 
-## 9. 实施顺序
+## 9. 实施结果
 
-1. 先把现有手工 bootstrap 移到 `demo/lib/devtools_bootstrap.dart`，用编译期条件保护，并补充
-   `clear()`；这是可回滚的所有权修正，不等同于自动装配完成。
-2. 生成 Host DevTools 静态 Catalog，删除手写组件、能力、关系和源码位置。
-3. 增加 Host-only Tool Integration SPI 和确定的生命周期/异常隔离语义。
-4. 扩展 `CCGeneratedHostAssembly`，自动携带 DevTools Integration。
-5. 让 `CCRouter.initialize/shutdown` 驱动 Integration，并收敛 Host 初始化参数。
-6. 移除 Demo 手工 bootstrap 和业务组件的 Extension 所有权。
-7. 更新 README、Integration Skill、DevTools 文档和生成器性能报告。
+1. 已生成 Host DevTools 静态 Catalog，并删除 Demo 手写能力、关系和源码位置副本。
+2. 已增加 Host-only `CCHostToolIntegration`，生命周期同步、短时且异常隔离。
+3. 已扩展 `CCGeneratedHostAssembly`，并校验空或重复 Integration ID。
+4. 已由 `CCRouter.initialize/shutdown` 驱动 Integration，且生成式 Host 使用单一
+   `hostAssembly` 参数。
+5. 已移除 Demo 手工 bootstrap 和业务组件的 Extension 所有权。
+6. 已增加 Runtime、Generator 与 DevTools focused 测试；多平台 smoke 继续作为发布门禁。
 
 ## 10. 验收与回归
 

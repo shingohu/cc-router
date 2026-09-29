@@ -12,8 +12,7 @@ import 'platform_deep_link_bridge.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   CCRouter.initialize(
-    components: ccrouterGeneratedComponentManifests,
-    contractBundle: ccrouterGeneratedHostAssembly.contractBundle,
+    hostAssembly: ccrouterGeneratedHostAssembly,
     deepLinkIngressPolicy: demoDeepLinkIngressPolicy,
     globalInterceptors: const [
       CCGlobalNavigationInterceptor(
@@ -43,11 +42,10 @@ Future<void> main() async {
     ),
   );
   await CCRouter.runInitTasks(gate: CCInitTaskGate.appStarted);
-  registerDemoDevToolsExtension();
   runApp(const CCRouterDemoApp());
 }
 
-final class CCRouterDemoApp extends StatefulWidget {
+final class CCRouterDemoApp extends StatelessWidget {
   const CCRouterDemoApp({
     this.initialLocation = '/',
     this.listenForPlatformLinks = true,
@@ -60,40 +58,26 @@ final class CCRouterDemoApp extends StatefulWidget {
   final Stream<Uri>? platformLinkStream;
 
   @override
-  State<CCRouterDemoApp> createState() => _CCRouterDemoAppState();
-}
-
-final class _CCRouterDemoAppState extends State<CCRouterDemoApp> {
-  late final CCGoRouterBackend _backend;
-
-  @override
-  void initState() {
-    super.initState();
-    _backend = createDemoRouterBackend(
-      catalog: ccrouterGeneratedRouteCatalog,
-      initialLocation: widget.initialLocation,
-    );
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final app = CCRouterApp.managed(
-      backend: _backend,
+    final app = CCGoRouterApp(
+      catalog: ccrouterGeneratedRouteCatalog,
+      initialLocation: initialLocation,
+      backendFactory: (configuration) => createDemoRouterBackend(
+        catalog: configuration.catalog,
+        initialLocation: configuration.initialLocation,
+      ),
       onLifecycleChanged: (state) =>
           demoNavigationLabStore.record('App lifecycle · ${state.name}'),
-      child: MaterialApp.router(
-        debugShowCheckedModeBanner: false,
-        title: 'CCRouter Lab',
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF00796B)),
-          useMaterial3: true,
-        ),
-        routerConfig: _backend.router,
+      debugShowCheckedModeBanner: false,
+      title: 'CCRouter Lab',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF00796B)),
+        useMaterial3: true,
       ),
     );
-    if (!widget.listenForPlatformLinks) return app;
+    if (!listenForPlatformLinks) return app;
     return DemoPlatformDeepLinkBridge(
-      linkStream: widget.platformLinkStream,
+      linkStream: platformLinkStream,
       child: app,
     );
   }

@@ -7,28 +7,21 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   tearDown(CCRouter.shutdown);
 
-  testWidgets('CCGoRouterApp assembles a minimal Host from components', (
+  testWidgets('CCGoRouterApp requires an explicitly initialized Runtime', (
     tester,
   ) async {
     await tester.pumpWidget(
-      CCGoRouterApp(
-        components: const [],
-        catalog: const CCFlutterRouteCatalog.empty(),
-        title: 'Minimal Host',
-        debugShowCheckedModeBanner: false,
-        hostRoutes: [
-          GoRoute(path: '/', builder: (_, _) => const Text('minimal host')),
-        ],
+      const CCGoRouterApp(catalog: CCFlutterRouteCatalog.empty()),
+    );
+
+    expect(
+      tester.takeException(),
+      isA<FlutterError>().having(
+        (error) => error.message,
+        'message',
+        contains('Call CCRouter.initialize'),
       ),
     );
-    await tester.pumpAndSettle();
-
-    expect(CCRouter.isInitialized, isTrue);
-    expect(find.text('minimal host'), findsOneWidget);
-    expect(find.byType(MaterialApp), findsOneWidget);
-
-    await tester.pumpWidget(const SizedBox());
-    expect(CCRouter.isInitialized, isTrue);
   });
 
   testWidgets('CCGoRouterApp uses an explicitly initialized Runtime', (
@@ -50,6 +43,48 @@ void main() {
 
     expect(find.text('details'), findsOneWidget);
     expect(CCRouter.registeredComponents, isEmpty);
+  });
+
+  testWidgets('CCGoRouterApp creates a custom Backend exactly once', (
+    tester,
+  ) async {
+    CCRouter.initialize(components: const []);
+    var factoryCalls = 0;
+
+    await tester.pumpWidget(
+      CCGoRouterApp(
+        catalog: const CCFlutterRouteCatalog.empty(),
+        title: 'Custom Host',
+        backendFactory: (configuration) {
+          factoryCalls += 1;
+          return configuration.createManagedBackend();
+        },
+        hostRoutes: [
+          GoRoute(path: '/', builder: (_, _) => const Text('custom host')),
+        ],
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.pumpWidget(
+      CCGoRouterApp(
+        catalog: const CCFlutterRouteCatalog.empty(),
+        title: 'Updated Host',
+        backendFactory: (configuration) {
+          factoryCalls += 1;
+          return configuration.createManagedBackend();
+        },
+        hostRoutes: [
+          GoRoute(path: '/', builder: (_, _) => const Text('unused rebuild')),
+        ],
+      ),
+    );
+    await tester.pump();
+
+    expect(factoryCalls, 1);
+    expect(find.text('custom host'), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox());
+    expect(CCRouter.isInitialized, isTrue);
   });
 
   test('managed backend assembles Router, Observer, and Adapter', () async {

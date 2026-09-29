@@ -46,6 +46,7 @@ export 'src/app.dart' show CCRouterAppBackend, CCPageLifecycleHostBridge;
 export 'src/facade.dart' show CCRouterHostBinding;
 export 'src/flutter_route_factory.dart';
 export 'src/generated_package_bundle.dart';
+export 'src/host_tool_integration.dart';
 export 'src/multi_host.dart';
 export 'src/restoration_diagnostics.dart';
 export 'src/route_catalog.dart';

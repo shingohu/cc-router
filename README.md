@@ -49,9 +49,9 @@ import 'package:ccrouter_go_router/ccrouter_go_router.dart';
 
 ### IDE / Analysis Server 诊断
 
-生成的 Route API 已经提供类型补全和自动导包。需要编辑时实时检查跨组件内部生成物引用和
-Route 生成物是否缺失时，可显式加入 `ccrouter_analyzer_plugin` 并在 `analysis_options.yaml`
-中启用：
+生成的 Route API 已经提供类型补全和自动导包。需要编辑时实时检查跨组件内部生成物引用、
+同源 Route/Service/Command/Event/InitTask 生成物缺失和 required InitTask 声明时，可显式加入 `ccrouter_analyzer_plugin` 并在
+`analysis_options.yaml` 中启用：
 
 ```yaml
 analyzer:
@@ -60,8 +60,15 @@ analyzer:
 ```
 
 插件只提供轻量诊断，不执行生成、不修改源代码，也不替代 `ccrouter generate --check`。
-当 `ccrouter generate` 或 `ccrouter clean` 新增、修改或删除 Route 生成物时，插件会重新检查
-对应的 `@CCRoute` 源文件，避免生成成功后仍保留旧的“生成物缺失”提示。
+当 `ccrouter generate` 或 `ccrouter clean` 新增、修改或删除同源生成物时，插件会重新检查
+对应的声明源文件，避免生成成功后仍保留旧的“生成物缺失”提示。依赖跨文件 Catalog 的
+Component API 聚合与 metadata-only Contract 继续由 `ccrouter generate --check` 校验，插件不做
+不可靠的单文件猜测。
+
+插件还会在编辑期检查 Handler 的 public/top-level/non-generic 形态、显然不支持的参数数量和
+void 返回形态、Route `pattern/patterns`、InitTask `contract/id`、字面量 ID/alias/Gate ID 与
+可计算 timeout。只有两个互斥参数同时存在时提供显式删除其中一个参数的 Quick Fix；不会自动
+创建 Contract、猜测标识符、改写依赖或运行 Generator。
 当前仓库 Demo 已在 `demo/analysis_options.yaml` 启用它，并通过
 `demo/tools/ccrouter_analyzer_plugin_host` 提供官方要求的 `tools/analyzer_plugin` bootstrap。
 bootstrap 使用远端固定 Git commit 隔离 Analyzer 版本；发布后可切换到同目录的
@@ -70,9 +77,22 @@ Analysis Server 会把 bootstrap 复制到临时目录。完整接入、固定 r
 Analyzer 版本边界见
 [`docs/CCRouter-ide-analysis-server.md`](docs/CCRouter-ide-analysis-server.md)。
 
+手工装配完成后可从 Workspace 根检查指定 Host；命令只读取配置，`doctor` 在临时副本中验证
+锁定依赖、bootstrap 分析和 loader 编译，不运行 Generator，也不改写 Host 配置：
+
+```bash
+fvm dart run --verbosity=error ccrouter_generator:ccrouter analyzer status demo
+fvm dart run --verbosity=error ccrouter_generator:ccrouter analyzer doctor demo
+```
+
+自动 `install/upgrade/uninstall` 尚未实现；当前不得把 Analyzer 装配隐式挂入 `generate` 或
+Pub Hook。
+
 ### DevTools 只读面板
 
-调试构建可以按需加入 `ccrouter_devtools`，在 Debug Drawer 或内部诊断页面嵌入：
+Host 直接依赖 `ccrouter_devtools` 并重新生成后，Host Assembly 会自动携带静态 Catalog 和
+DevTools Tool Integration。Debug 默认启用，Profile 需要显式
+`CCROUTER_DEVTOOLS=true`，Release 强制关闭。页面侧只需在 Debug Drawer 或内部诊断路由嵌入：
 
 ```dart
 import 'package:ccrouter_devtools/ccrouter_devtools.dart';
@@ -84,8 +104,9 @@ const diagnosticsPage = CCRouterDevToolsPanel();
 Managed/Backend Entries、Trace Timeline、Failure/Fallback、InitTask DAG 和能力调用链。
 源码位置默认以可复制的 `package:` URI 展示；Host 可以通过 `onOpenSource` 映射到自己的 IDE
 或源码浏览器。它不会初始化 Runtime、导航、Pop、重试任务、销毁 Scope 或控制 Adapter；
-未初始化时显示空状态。当前 Demo 的“实时诊断”分区会注册示例 Catalog，并同时验证嵌入式面板
-和官方 Extension 的静态/运行时关联行为。完整数据边界和接入方式见
+未初始化时显示空状态。当前 Demo 的“实时诊断”分区会读取生成式 Host Catalog，并同时验证
+嵌入式面板和官方 Extension 的静态/运行时关联行为；业务组件不手工注册或清理 Extension。
+完整数据边界和接入方式见
 [`docs/CCRouter-devtools.md`](docs/CCRouter-devtools.md)。
 
 ## 当前能力
@@ -113,7 +134,7 @@ Managed/Backend Entries、Trace Timeline、Failure/Fallback、InitTask DAG 和�
 | InitTask | 已支持 | 一次性 DAG、Gate、必需/可选失败策略 |
 | 生成器增量缓存与门禁 | 已支持 | 内容校验 fast path、`--check`、`--no-cache`、`--profile`、并发锁、原子写入 |
 | 生成索引和源码定位 | 已支持 | Package/Host Catalog、`ccrouter find` |
-| DevTools 只读可视化 | 已支持 | Catalog/Runtime 联动、源码定位、组件依赖聚焦、能力调用链、纯 Dart 协议和官方 Extension |
+| DevTools 只读可视化 | 已支持 | 生成式 Host 自动装配、Catalog/Runtime 联动、源码定位、组件依赖聚焦、能力调用链、纯 Dart 协议和官方 Extension |
 | Navigator 1.0 Backend | 暂不支持 | 2.0 阶段候选 |
 | 通用 Navigator 2.0 Backend | 暂不支持 | 2.0 阶段候选 |
 | 动态组件安装/卸载 | 暂不支持 | 当前组件集合在 `initialize` 时固定 |
@@ -269,23 +290,26 @@ Host 使用生成的 Manifest 与 Catalog。新项目默认使用 managed GoRout
 ```dart
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  CCRouter.initialize(
+    hostAssembly: ccrouterGeneratedHostAssembly,
+  );
+  await CCRouter.runInitTasks(gate: CCInitTaskGate.appStarted);
   runApp(
     CCGoRouterApp(
       catalog: ccrouterGeneratedRouteCatalog,
-      components: ccrouterGeneratedComponentManifests,
-      contractBundle: ccrouterGeneratedHostAssembly.contractBundle,
     ),
   );
 }
 ```
 
 上面的 `CCGoRouterApp` 会自动装配 managed GoRouter、Root Observer、Adapter、Host
-和 `MaterialApp.router`。传入 `components` 是只包含基础组件注册的启动简写；如果需要全局拦截器、Deep Link 白名单、Aspect、Telemetry 或其它配置，仍应显式调用
-`CCRouter.initialize`，然后省略 `components`：
+和 `MaterialApp.router`，但不会初始化或关闭进程 Runtime。`CCRouter.initialize` 始终由
+Composition Root 显式调用；全局拦截器、Deep Link 白名单、Aspect、Telemetry 等配置也放在
+这里：
 
 ```dart
 CCRouter.initialize(
-  components: ccrouterGeneratedComponentManifests,
+  hostAssembly: ccrouterGeneratedHostAssembly,
   globalInterceptors: const [...],
 );
 final initResult = await CCRouter.runInitTasks(
@@ -294,6 +318,21 @@ final initResult = await CCRouter.runInitTasks(
 // 仅无法降级的 Host 才显式选择 fail-fast：
 // initResult.throwIfRequiredFailed();
 runApp(CCGoRouterApp(catalog: ccrouterGeneratedRouteCatalog));
+```
+
+复杂 Shell/Outlet 或自定义 Router 构造仍可复用同一个 Widget，通过一次性 Factory 消除
+`StatefulWidget + late Backend + CCRouterApp.managed + MaterialApp.router` 样板：
+
+```dart
+runApp(
+  CCGoRouterApp(
+    catalog: ccrouterGeneratedRouteCatalog,
+    backendFactory: (configuration) => createApplicationBackend(
+      catalog: configuration.catalog,
+      initialLocation: configuration.initialLocation,
+    ),
+  ),
+);
 ```
 
 `CCRouter.initialize` 同步完成全局配置和启动组件注册；`CCGoRouterApp` 不会在卸载时隐式 shutdown Runtime。应用最终退出或测试 Host 销毁时执行：
@@ -311,7 +350,7 @@ await CCRouter.shutdown();
 任务，它不会再次初始化或替换 Runtime，也不会重试已完成或失败的任务。所有 `shutdown()`
 调用都必须被 `await`，完成后才允许重新调用 `initialize()`。
 
-已有 GoRouter 工程使用 `CCGoRouterBackend.attach`，把生成 bindings、Host 和已经安装到 Router 的 Observer 显式交给 CCRouter。需要自定义 Backend 或完整 Widget 树时，仍可使用 `CCRouterApp.managed`。完整 Shell/Outlet 示例见 [`demo/lib/demo_router_backend.dart`](demo/lib/demo_router_backend.dart)。
+已有 GoRouter 工程使用 `CCGoRouterBackend.attach`，把生成 bindings、Host 和已经安装到 Router 的 Observer 显式交给 CCRouter。只有需要完全自定义应用 Widget 树时才直接使用 `CCRouterApp.managed`。完整 Shell/Outlet 示例见 [`demo/lib/demo_router_backend.dart`](demo/lib/demo_router_backend.dart)。
 
 ### 分析事件与页面埋点
 
@@ -328,7 +367,7 @@ final navigationAnalytics = CCNavigationAnalyticsBridge(
 );
 
 CCRouter.initialize(
-  components: ccrouterGeneratedComponentManifests,
+  hostAssembly: ccrouterGeneratedHostAssembly,
   navigationAspects: [navigationAnalytics.createAspect()],
 );
 
@@ -562,7 +601,7 @@ final class AppDiagnosticSink implements CCDiagnosticSink {
 }
 
 CCRouter.initialize(
-  components: ccrouterGeneratedComponentManifests,
+  hostAssembly: ccrouterGeneratedHostAssembly,
   diagnostics: CCDiagnosticsConfig(
     sink: AppDiagnosticSink(appLogger),
     policies: const [
@@ -724,8 +763,7 @@ Contract、Owner 不匹配、版本范围不满足、指纹漂移、重复实现
 
 ```dart
 CCRouter.initialize(
-  components: ccrouterGeneratedHostAssembly.componentManifests,
-  contractBundle: ccrouterGeneratedHostAssembly.contractBundle,
+  hostAssembly: ccrouterGeneratedHostAssembly,
 );
 ```
 

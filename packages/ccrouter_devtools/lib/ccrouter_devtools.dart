@@ -7,6 +7,7 @@ library;
 
 export 'package:ccrouter_devtools_protocol/ccrouter_devtools_protocol.dart';
 export 'src/devtools_panel.dart';
+export 'src/host_integration.dart';
 export 'src/snapshot.dart';
 export 'src/snapshot_provider.dart';
 export 'src/service_extension.dart';

@@ -136,15 +136,20 @@
   Failure/Fallback 和 InitTask DAG；官方 DevTools Extension 及 Catalog/Runtime 联动、源码定位、
   组件依赖筛选和调用链视图均已完成，见 `docs/CCRouter-devtools.md`。
 - [x] 2026-09-28 完成最小 IDE / Analysis Server 集成：独立
-  `ccrouter_analyzer_plugin` 提供跨 Package 生成物导入和缺失 Route 生成物诊断；生成的 Dart
+  `ccrouter_analyzer_plugin` 提供跨 Package 生成物导入、Route/Service/Command/Event/InitTask
+  确定性同源输出缺失，以及 required InitTask Contract/timeout 诊断；生成的 Dart
   API、`ccrouter find`、Catalog 与 `generate --check` 仍分别承担补全、源码定位和最终门禁。
   插件不执行生成、不替代 Workspace Validator。详见
   [IDE / Analysis Server 集成](CCRouter-ide-analysis-server.md)。
+- [x] Analyzer 单文件规则覆盖 Handler 形态/明显签名、互斥参数、字面量 ID/alias/Gate 和正 timeout；
+  同源生成物刷新覆盖 Route、Service、Command、Event 与 InitTask。Plugin 单次 parse 复用行信息，
+  Package Context 使用有界 LRU 和 pubspec 失效；Quick Fix 只删除开发者明确选择的冲突参数。
 - [x] Demo Analyzer bootstrap 已切换为固定 Git commit，保留独立 Analyzer 依赖图；增加
   loader `analyze/compile` smoke、兼容性边界测试和发布后的 Hosted fallback manifest。
-- [ ] 为 Analyzer Plugin 提供显式 `install/status/doctor/upgrade/uninstall` CLI 自动装配；保持
-  Host-only、幂等、可回滚和 Hosted 优先，不挂入 `generate`、Pub Hook 或组件脚手架。当前固定
-  Git ref 无生产代码更新理由，不追随本地 HEAD。详见
+- [~] Analyzer Plugin 已提供 Host-only、只读的 `status/doctor`，覆盖固定来源、lockfile 和
+  Analyzer 兼容检查；`install/upgrade/uninstall` 自动装配仍未实现。后续写入型命令必须幂等、
+  可回滚和 Hosted 优先，不挂入 `generate`、Pub Hook 或组件脚手架。当前固定 Git ref 无生产
+  代码更新理由，不追随本地 HEAD。详见
   [Analyzer Plugin CLI 自动装配计划](CCRouter-analyzer-cli-plan.md)。
 - [x] 建立纯 Dart、版本化的 Catalog/Runtime Snapshot 与 Trace Edge 协议；静态记录携带
   可移植源码位置，Runtime 适配器只复制稳定 ID、Owner、Host/Outlet、状态和耗时。官方
@@ -153,7 +158,7 @@
   `ccrouter_devtools` Widget 面板只读，通过 `ext.ccrouter.snapshot` 消费版本化 Envelope。
   已补齐高级组件筛选、Route source URI 展示/复制和单次 Service/Command/Event/InitTask
   调用链视图；嵌入式面板可由 Host 提供 `onOpenSource`，官方 Extension 不直接绑定本地 IDE。
-- [ ] 完成 DevTools Host 自动装配：从 Host Catalog 生成静态快照，由 Host Assembly 携带可选
+- [x] 完成 DevTools Host 自动装配：从 Host Catalog 生成静态快照，由 Host Assembly 携带可选
   Tool Integration，Runtime 初始化后注册、shutdown 时清理；Debug 默认开启、Profile 可显式
   开启、Release 强制关闭。不得让 `ccrouter` 反向依赖 `ccrouter_devtools`，也不得由业务组件或
   任意 Navigation Host dispose 管理 isolate endpoint。详见

@@ -60,6 +60,13 @@ final class FailingRegistrar implements CCComponentRegistrar {
   }
 }
 
+final class _RecordingDiagnosticSink implements CCDiagnosticSink {
+  final events = <CCDiagnosticEvent>[];
+
+  @override
+  void record(CCDiagnosticEvent event) => events.add(event);
+}
+
 final class FacadeRouteArgs {
   const FacadeRouteArgs(this.value);
 
@@ -149,6 +156,87 @@ void main() {
     expect(
       () => CCRouter.command(ReadOnce()),
       throwsA(isA<CCRouterNotInitializedError>()),
+    );
+  });
+
+  test('generated Host assembly owns tool integration lifecycle', () async {
+    final integration = _RecordingHostToolIntegration();
+    final assembly = CCGeneratedHostAssembly.fromPackageBundles(
+      [
+        CCGeneratedPackageBundle(
+          packageName: 'host',
+          packageVersion: '1.0.0',
+          contentFingerprint: 'host-fingerprint',
+          componentManifests: [component('host', 'ready')],
+        ),
+      ],
+      hostToolIntegrations: [integration],
+    );
+
+    CCRouter.initialize(hostAssembly: assembly);
+    expect(integration.events, ['ready']);
+    expect(await CCRouter.command(ReadOnce()), 'ready');
+
+    await CCRouter.shutdown();
+    expect(integration.events, ['ready', 'stopping']);
+  });
+
+  test('Host tool failures do not change Runtime lifecycle', () async {
+    final integration = _ThrowingHostToolIntegration();
+    final sink = _RecordingDiagnosticSink();
+    final assembly = CCGeneratedHostAssembly.fromPackageBundles(
+      [
+        CCGeneratedPackageBundle(
+          packageName: 'host',
+          packageVersion: '1.0.0',
+          contentFingerprint: 'host-fingerprint',
+          componentManifests: [component('host', 'available')],
+        ),
+      ],
+      hostToolIntegrations: [integration],
+    );
+
+    expect(
+      () => CCRouter.initialize(
+        hostAssembly: assembly,
+        diagnostics: CCDiagnosticsConfig(
+          sink: sink,
+          defaultMinimumLevel: CCDiagnosticLevel.debug,
+        ),
+      ),
+      returnsNormally,
+    );
+    await Future<void>.delayed(Duration.zero);
+    expect(await CCRouter.command(ReadOnce()), 'available');
+    await expectLater(CCRouter.shutdown(), completes);
+    expect(integration.readyCalls, 1);
+    expect(integration.stoppingCalls, 1);
+    expect(
+      sink.events
+          .where((event) => event.failureStage == 'hostToolLifecycle')
+          .map(
+            (event) => '${event.operation}:${event.target}:${event.errorType}',
+          ),
+      [
+        'hostToolStart:test.throwing:StateError',
+        'hostToolStop:test.throwing:StateError',
+      ],
+    );
+  });
+
+  test('initialize requires exactly one Host assembly mode', () {
+    final assembly = CCGeneratedHostAssembly.fromPackageBundles([
+      CCGeneratedPackageBundle(
+        packageName: 'host',
+        packageVersion: '1.0.0',
+        contentFingerprint: 'host-fingerprint',
+      ),
+    ]);
+
+    expect(() => CCRouter.initialize(), throwsA(isA<CCRegistrationError>()));
+    expect(
+      () => CCRouter.initialize(hostAssembly: assembly, components: const []),
+      throwsA(isA<CCRegistrationError>()),
     );
   });
 
@@ -255,4 +343,37 @@ void main() {
       throwsA(isA<CCRouterNotInitializedError>()),
     );
   });
+}
+
+final class _RecordingHostToolIntegration implements CCHostToolIntegration {
+  final events = <String>[];
+
+  @override
+  String get id => 'test.recording';
+
+  @override
+  void onRuntimeReady() => events.add('ready');
+
+  @override
+  void onRuntimeStopping() => events.add('stopping');
+}
+
+final class _ThrowingHostToolIntegration implements CCHostToolIntegration {
+  var readyCalls = 0;
+  var stoppingCalls = 0;
+
+  @override
+  String get id => 'test.throwing';
+
+  @override
+  void onRuntimeReady() {
+    readyCalls++;
+    throw StateError('start failure');
+  }
+
+  @override
+  void onRuntimeStopping() {
+    stoppingCalls++;
+    throw StateError('stop failure');
+  }
 }

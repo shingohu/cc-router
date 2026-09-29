@@ -14,6 +14,7 @@ import 'package:crypto/crypto.dart';
 import 'package:dart_style/dart_style.dart';
 import 'package:path/path.dart' as path;
 
+import 'src/analyzer_bootstrap.dart';
 import 'src/route_find.dart' as route_find;
 import 'src/pub_hook.dart';
 import 'src/scaffold.dart';
@@ -41,6 +42,12 @@ Future<void> main(List<String> arguments) async {
 
   if (parsed.command == _GeneratorCommand.pubHook) {
     await _runPubHookCommand(parsed.pubHookRequest!);
+    return;
+  }
+  if (parsed.command == _GeneratorCommand.analyzer) {
+    if (!await runAnalyzerBootstrapCommand(parsed.analyzerRequest!)) {
+      exitCode = 1;
+    }
     return;
   }
 
@@ -460,6 +467,8 @@ const _usage = '''Usage:
   ccrouter create command <CommandName> [component-directory]
   ccrouter create event <EventName> [component-directory]
   ccrouter create init-task <TaskName> [component-directory]
+  ccrouter analyzer status [host-root]
+  ccrouter analyzer doctor [host-root]
   ccrouter pub-hook install [--sdk <flutter-sdk-root>]
   ccrouter pub-hook uninstall [--sdk <flutter-sdk-root>]
   ccrouter pub-hook status [--sdk <flutter-sdk-root>]
@@ -474,6 +483,9 @@ indexes without generating and matches exact capability IDs or Route Pattern val
 `clean` removes only CCRouter-owned source outputs in writable Packages; it
 preserves build caches, read-only dependencies, and unknown user files.
 `aggregate` preserves the metadata-only legacy path.
+`analyzer status` inspects one Host-owned Analysis Server bootstrap without
+modifying it. `analyzer doctor` additionally verifies its locked dependencies,
+analysis, and loader compilation. Analyzer commands never run generation.
 `pub-hook install` wraps the selected SDK entrypoints with a reversible post-pub
 and run/build preflight generator hook. Non-CCRouter projects are skipped. The
 hook is not installed automatically and is not part of Flutter's internal tool
@@ -1250,6 +1262,9 @@ enum _GeneratorCommand {
 
   /// Installs or runs the post-pub generation hook.
   pubHook,
+
+  /// Inspects or verifies one Host-owned Analysis Server bootstrap.
+  analyzer,
 }
 
 /// Parsed inputs shared by generation, aggregation, and read-only lookup.
@@ -1268,6 +1283,7 @@ final class _Arguments {
     this.scaffoldKind,
     this.scaffoldName,
     this.pubHookRequest,
+    this.analyzerRequest,
   });
 
   /// Requested orchestration mode.
@@ -1308,6 +1324,9 @@ final class _Arguments {
 
   /// Parsed request for the pub hook command.
   final CCPubHookRequest? pubHookRequest;
+
+  /// Parsed request for the Analyzer bootstrap command.
+  final CCAnalyzerBootstrapRequest? analyzerRequest;
 }
 
 /// Parses the unified command while retaining the previous aggregate syntax.
@@ -1329,6 +1348,8 @@ _Arguments _parseArguments(List<String> arguments) {
     return _parseCreateArguments(arguments);
   } else if (arguments.isNotEmpty && arguments.first == 'pub-hook') {
     return _parsePubHookArguments(arguments);
+  } else if (arguments.isNotEmpty && arguments.first == 'analyzer') {
+    return _parseAnalyzerArguments(arguments);
   }
   var rootPath = Directory.current.path;
   String? outputDirectoryPath;
@@ -1476,6 +1497,49 @@ _Arguments _parseArguments(List<String> arguments) {
     check: check,
     noCache: noCache,
     profile: profile,
+  );
+}
+
+/// Parses the read-only Analyzer bootstrap command surface.
+_Arguments _parseAnalyzerArguments(List<String> arguments) {
+  if (arguments.length < 2 ||
+      arguments[1] == '--help' ||
+      arguments[1] == '-h') {
+    return const _Arguments(
+      command: _GeneratorCommand.analyzer,
+      rootPath: '',
+      outputDirectoryPath: null,
+      help: true,
+    );
+  }
+  final action = switch (arguments[1]) {
+    'status' => CCAnalyzerBootstrapAction.status,
+    'doctor' => CCAnalyzerBootstrapAction.doctor,
+    _ => null,
+  };
+  if (action == null) {
+    return const _Arguments(
+      command: _GeneratorCommand.analyzer,
+      rootPath: '',
+      outputDirectoryPath: null,
+      error: 'analyzer requires `status` or `doctor`.',
+    );
+  }
+  if (arguments.length > 3 ||
+      (arguments.length == 3 && arguments[2].startsWith('-'))) {
+    return const _Arguments(
+      command: _GeneratorCommand.analyzer,
+      rootPath: '',
+      outputDirectoryPath: null,
+      error: 'analyzer accepts one action and one optional Host root.',
+    );
+  }
+  final root = arguments.length == 3 ? arguments[2] : Directory.current.path;
+  return _Arguments(
+    command: _GeneratorCommand.analyzer,
+    rootPath: root,
+    outputDirectoryPath: null,
+    analyzerRequest: CCAnalyzerBootstrapRequest(action: action, hostRoot: root),
   );
 }
 
@@ -3854,6 +3918,19 @@ Future<void> _generateResolvedHostCatalog(
       'ccrouter_host.routes.g.dart',
     ),
   );
+  final devToolsEnabled = host.dependencies.contains('ccrouter_devtools');
+  final devToolsCatalog = devToolsEnabled
+      ? _emitGeneratedDevToolsCatalog(indexes)
+      : '';
+  final devToolsImport = devToolsEnabled
+      ? "import 'package:ccrouter_devtools/ccrouter_devtools.dart';\n"
+      : '';
+  final hostToolArgument = devToolsEnabled
+      ? '''
+  hostToolIntegrations: [
+    CCDevToolsHostIntegration(catalog: ccrouterGeneratedDevToolsCatalog),
+  ],'''
+      : '';
   final source = _dartFormatter.format('''
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint
@@ -3863,13 +3940,15 @@ import 'package:ccrouter/ccrouter_host.dart'
     show
         CCFlutterRouteCatalog,
         CCGeneratedHostAssembly;
+$devToolsImport
 import 'package:${host.name}/src/ccrouter_generated/host/${host.name}_ccrouter.g.dart'
     as host_package;
 
+$devToolsCatalog
 /// Validated generated Package graph installed in this Host.
 final ccrouterGeneratedHostAssembly = CCGeneratedHostAssembly.fromPackageBundles([
   host_package.${hostIndex.bundleSymbol},
-]);
+],$hostToolArgument);
 
 /// All generated component Manifests installed in this Host.
 final List<CCComponentManifest> ccrouterGeneratedComponentManifests =
@@ -3880,6 +3959,246 @@ final CCFlutterRouteCatalog ccrouterGeneratedRouteCatalog =
     ccrouterGeneratedHostAssembly.routeCatalog;
 ''');
   await _writeIfChanged(output, source);
+}
+
+/// Emits a deterministic DevTools Catalog from validated Package indexes.
+String _emitGeneratedDevToolsCatalog(Map<String, CCPackageIndex> indexes) {
+  final documents = <Map<String, Object?>>[
+    for (final name in indexes.keys.toList()..sort())
+      ...indexes[name]!.metadata,
+  ];
+  final components = <String, _DevToolsComponentData>{};
+  final descriptions = <String, String>{};
+  final relations = <String, _DevToolsRelationData>{};
+  final capabilityKeys = <String>{};
+
+  void addRelation(String sourceId, String targetId, String kind) {
+    if (sourceId.isEmpty || targetId.isEmpty) return;
+    final relation = _DevToolsRelationData(sourceId, targetId, kind);
+    relations.putIfAbsent(relation.key, () => relation);
+  }
+
+  for (final document in documents) {
+    for (final component in _objects(document['components'])) {
+      final id = '${component['id'] ?? ''}';
+      final version = '${component['version'] ?? ''}';
+      if (id.isEmpty || version.isEmpty) continue;
+      final dependencies = _strings(component['dependencies'])..sort();
+      final optionalDependencies = _strings(component['optionalDependencies'])
+        ..sort();
+      final candidate = _DevToolsComponentData(
+        id: id,
+        version: version,
+        dependencies: dependencies,
+        optionalDependencies: optionalDependencies,
+      );
+      final existing = components[id];
+      if (existing == null ||
+          candidate.dependencies.length +
+                  candidate.optionalDependencies.length >
+              existing.dependencies.length +
+                  existing.optionalDependencies.length) {
+        components[id] = candidate;
+      }
+      for (final dependency in dependencies) {
+        addRelation(id, dependency, 'dependsOn');
+      }
+      for (final dependency in optionalDependencies) {
+        addRelation(id, dependency, 'optionallyDependsOn');
+      }
+      for (final dependency in _objects(component['serviceDependencies'])) {
+        addRelation(id, '${dependency['id'] ?? ''}', 'calls');
+      }
+      for (final dependency in _objects(component['commandDependencies'])) {
+        addRelation(id, '${dependency['id'] ?? ''}', 'executes');
+      }
+    }
+    for (final route in _objects(document['routes'])) {
+      _captureDevToolsDescription(descriptions, route);
+      _captureDevToolsCapabilityKey(capabilityKeys, 'route', route, 'id');
+    }
+    for (final implementation in _objects(document['routeImplementations'])) {
+      _captureDevToolsCapabilityKey(
+        capabilityKeys,
+        'route',
+        implementation,
+        'routeId',
+      );
+    }
+    for (final entry in const {
+      'serviceContracts': 'service',
+      'serviceImplementations': 'service',
+      'commandContracts': 'command',
+      'commandHandlers': 'command',
+      'eventContracts': 'event',
+      'initTaskContracts': 'initTask',
+      'initTasks': 'initTask',
+    }.entries) {
+      for (final contract in _objects(document[entry.key])) {
+        _captureDevToolsDescription(descriptions, contract);
+        _captureDevToolsCapabilityKey(
+          capabilityKeys,
+          entry.value,
+          contract,
+          'id',
+        );
+      }
+    }
+    for (final subscription in _objects(document['eventSubscriptions'])) {
+      addRelation(
+        '${subscription['componentId'] ?? ''}',
+        '${subscription['eventId'] ?? ''}',
+        'subscribes',
+      );
+    }
+    for (final task in _objects(document['initTasks'])) {
+      final taskId = '${task['id'] ?? ''}';
+      for (final dependency in _strings(task['dependsOn'])) {
+        addRelation(taskId, dependency, 'dependsOn');
+      }
+    }
+  }
+
+  final records = <String, _DevToolsRecordData>{};
+  for (final name in indexes.keys.toList()..sort()) {
+    for (final record in indexes[name]!.capabilityCatalog.records) {
+      if (!capabilityKeys.contains('${record.kind}\u0000${record.id}')) {
+        continue;
+      }
+      final key = '${record.kind}\u0000${record.id}\u0000${record.componentId}';
+      final source = record.implementation ?? record.contract;
+      final sourcePackage = source?.packageName ?? '';
+      final candidate = _DevToolsRecordData(
+        kind: record.kind,
+        id: record.id,
+        ownerComponentId: record.componentId,
+        packageName: sourcePackage.isEmpty ? record.packageName : sourcePackage,
+        source: source,
+        description: descriptions['${record.kind}\u0000${record.id}'],
+        implementationSource: record.implementation != null,
+      );
+      final existing = records[key];
+      if (existing == null ||
+          (!existing.implementationSource && candidate.implementationSource) ||
+          (existing.source == null && candidate.source != null)) {
+        records[key] = candidate;
+      }
+    }
+  }
+
+  final componentValues = components.values.toList()
+    ..sort((left, right) => left.id.compareTo(right.id));
+  final recordValues = records.values.toList()
+    ..sort((left, right) {
+      final kind = left.kind.compareTo(right.kind);
+      if (kind != 0) return kind;
+      final id = left.id.compareTo(right.id);
+      if (id != 0) return id;
+      return left.ownerComponentId.compareTo(right.ownerComponentId);
+    });
+  final relationValues = relations.values.toList()
+    ..sort((left, right) => left.key.compareTo(right.key));
+  final fingerprint = computeCCCanonicalJsonFingerprint({
+    'components': [for (final component in componentValues) component.toJson()],
+    'records': [for (final record in recordValues) record.toJson()],
+    'relations': [for (final relation in relationValues) relation.toJson()],
+  });
+
+  final out = StringBuffer()
+    ..writeln('/// Generated static source and dependency index for DevTools.')
+    ..writeln(
+      'final ccrouterGeneratedDevToolsCatalog = CCDevToolsStaticCatalogSnapshot(',
+    )
+    ..writeln(
+      '  capturedAt: DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),',
+    )
+    ..writeln('  catalogFingerprint: ${jsonEncode(fingerprint)},')
+    ..writeln('  components: [');
+  for (final component in componentValues) {
+    out
+      ..writeln('    CCDevToolsCatalogComponent(')
+      ..writeln('      id: ${jsonEncode(component.id)},')
+      ..writeln('      version: ${jsonEncode(component.version)},')
+      ..writeln('      dependencies: ${jsonEncode(component.dependencies)},')
+      ..writeln(
+        '      optionalDependencies: ${jsonEncode(component.optionalDependencies)},',
+      )
+      ..writeln('    ),');
+  }
+  out
+    ..writeln('  ],')
+    ..writeln('  records: [');
+  for (final record in recordValues) {
+    final source = record.source;
+    out
+      ..writeln('    CCDevToolsCatalogRecord(')
+      ..writeln('      kind: ${jsonEncode(record.kind)},')
+      ..writeln('      id: ${jsonEncode(record.id)},')
+      ..writeln(
+        '      ownerComponentId: ${jsonEncode(record.ownerComponentId)},',
+      )
+      ..writeln('      packageName: ${jsonEncode(record.packageName)},');
+    if (record.description case final description?) {
+      out.writeln('      description: ${jsonEncode(description)},');
+    }
+    if (source != null && source.line != null && source.column != null) {
+      out
+        ..writeln('      source: CCDevToolsSourceLocation(')
+        ..writeln('        packageName: ${jsonEncode(source.packageName)},')
+        ..writeln('        packageUri: ${jsonEncode(source.packageUri)},')
+        ..writeln('        line: ${source.line},')
+        ..writeln('        column: ${source.column},')
+        ..writeln('      ),');
+    }
+    out.writeln('    ),');
+  }
+  out
+    ..writeln('  ],')
+    ..writeln('  relations: [');
+  for (final relation in relationValues) {
+    out
+      ..writeln('    CCDevToolsCatalogRelation(')
+      ..writeln('      sourceId: ${jsonEncode(relation.sourceId)},')
+      ..writeln('      targetId: ${jsonEncode(relation.targetId)},')
+      ..writeln('      kind: ${jsonEncode(relation.kind)},')
+      ..writeln('    ),');
+  }
+  out
+    ..writeln('  ],')
+    ..writeln(');')
+    ..writeln();
+  return out.toString();
+}
+
+/// Adds one real capability identity while excluding implementation helpers.
+void _captureDevToolsCapabilityKey(
+  Set<String> keys,
+  String kind,
+  Map<String, Object?> metadata,
+  String idField,
+) {
+  final id = '${metadata[idField] ?? ''}';
+  if (id.isNotEmpty) keys.add('$kind\u0000$id');
+}
+
+/// Retains a non-empty capability description by stable kind and ID.
+void _captureDevToolsDescription(
+  Map<String, String> descriptions,
+  Map<String, Object?> metadata,
+) {
+  final id = '${metadata['id'] ?? ''}';
+  final description = '${metadata['description'] ?? ''}'.trim();
+  if (id.isEmpty || description.isEmpty) return;
+  final kind = metadata.containsKey('patterns')
+      ? 'route'
+      : metadata.containsKey('resultType')
+      ? 'command'
+      : metadata.containsKey('eventType')
+      ? 'event'
+      : metadata.containsKey('gate')
+      ? 'initTask'
+      : 'service';
+  descriptions.putIfAbsent('$kind\u0000$id', () => description);
 }
 
 /// Writes UTF-8 text only when its exact contents changed.
@@ -4683,6 +5002,107 @@ String _eventClientMember(String type) {
       ? 'event'
       : '${stem[0].toUpperCase()}${stem.substring(1)}';
   return 'publish$name';
+}
+
+/// Normalized Component node emitted into the generated DevTools Catalog.
+final class _DevToolsComponentData {
+  /// Creates one deterministic Component node.
+  const _DevToolsComponentData({
+    required this.id,
+    required this.version,
+    required this.dependencies,
+    required this.optionalDependencies,
+  });
+
+  /// Stable Component identity.
+  final String id;
+
+  /// Component contract version.
+  final String version;
+
+  /// Required Component dependencies.
+  final List<String> dependencies;
+
+  /// Optional dependencies present in the resolved Host.
+  final List<String> optionalDependencies;
+
+  /// Canonical JSON used only for deterministic fingerprinting.
+  Map<String, Object?> toJson() => {
+    'id': id,
+    'version': version,
+    'dependencies': dependencies,
+    'optionalDependencies': optionalDependencies,
+  };
+}
+
+/// Normalized capability record emitted into the generated DevTools Catalog.
+final class _DevToolsRecordData {
+  /// Creates one record from a validated Package capability index.
+  const _DevToolsRecordData({
+    required this.kind,
+    required this.id,
+    required this.ownerComponentId,
+    required this.packageName,
+    required this.source,
+    required this.description,
+    required this.implementationSource,
+  });
+
+  /// Closed capability category.
+  final String kind;
+
+  /// Stable capability identity.
+  final String id;
+
+  /// Component owning the capability.
+  final String ownerComponentId;
+
+  /// Package declaring the selected source.
+  final String packageName;
+
+  /// Preferred implementation or Contract source location.
+  final CCSourceReference? source;
+
+  /// Optional authored description.
+  final String? description;
+
+  /// Whether [source] points at an implementation instead of only a Contract.
+  final bool implementationSource;
+
+  /// Canonical JSON used only for deterministic fingerprinting.
+  Map<String, Object?> toJson() => {
+    'kind': kind,
+    'id': id,
+    'ownerComponentId': ownerComponentId,
+    'packageName': packageName,
+    'source': source?.toJson(),
+    'description': description,
+  };
+}
+
+/// Normalized static dependency or invocation relation.
+final class _DevToolsRelationData {
+  /// Creates one graph edge.
+  const _DevToolsRelationData(this.sourceId, this.targetId, this.kind);
+
+  /// Stable source node identity.
+  final String sourceId;
+
+  /// Stable target node identity.
+  final String targetId;
+
+  /// Relation category interpreted by read-only tooling.
+  final String kind;
+
+  /// Deterministic deduplication and ordering key.
+  String get key => '$kind\u0000$sourceId\u0000$targetId';
+
+  /// Canonical JSON used only for deterministic fingerprinting.
+  Map<String, Object?> toJson() => {
+    'sourceId': sourceId,
+    'targetId': targetId,
+    'kind': kind,
+  };
 }
 
 /// Describes one generated component catalog and its public Host entrypoint.

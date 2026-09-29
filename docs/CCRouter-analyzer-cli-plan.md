@@ -2,7 +2,7 @@
 
 ## 1. 状态与目标
 
-- 状态：已完成设计，尚未实现。
+- 状态：部分实现；只读 `status/doctor` 已完成，写入型装配命令尚未实现。
 - 优先级：P1，正式发布前的开发体验能力。
 - Owner：`ccrouter_generator` CLI；`ccrouter_analyzer_plugin` 继续只负责确定性诊断。
 - 目标：用显式、幂等、可诊断和可回滚的命令装配 Host Analysis Server bootstrap，减少
@@ -43,15 +43,20 @@ IDE 配置，并把可选工具故障混入 Pub、生成或运行链路，也无
 
 采用。显式命令保持 Host Owner 边界，允许预检、诊断、升级和完整回滚，不改变普通生成流程。
 
-## 4. 计划命令
+## 4. 命令状态
 
-以下命令均尚未实现，当前不能直接执行：
+已实现：
+
+```text
+ccrouter analyzer status [host-root]
+ccrouter analyzer doctor [host-root]
+```
+
+尚未实现，当前不能直接执行：
 
 ```text
 ccrouter analyzer install [host-root] [--source hosted|git] [--version <range>]
                           [--url <git-url> --ref <full-commit-sha>]
-ccrouter analyzer status [host-root]
-ccrouter analyzer doctor [host-root]
 ccrouter analyzer upgrade [host-root] [--version <range> | --ref <full-commit-sha>]
 ccrouter analyzer uninstall [host-root]
 ```
@@ -69,6 +74,7 @@ ccrouter analyzer uninstall [host-root]
 
 ### `status`
 
+- 已实现，只读取指定 Host 与最近的 enclosing Workspace Package config。
 - 输出 Host、bootstrap 路径、Plugin 来源、Hosted 版本或 Git ref、Analyzer 版本、lockfile
   状态以及 `analysis_options.yaml` 是否启用。
 - 区分 `notInstalled`、`healthy`、`stale`、`incompatible`、`modified` 和 `incomplete`，不把
@@ -76,6 +82,8 @@ ccrouter analyzer uninstall [host-root]
 
 ### `doctor`
 
+- 已实现；所有工具检查在 bootstrap 临时副本中执行，不改写活动 bootstrap 的 `.dart_tool`、
+  manifest 或 lockfile。
 - 先执行 `status`，再验证依赖解析、loader `dart analyze` 和
   `dart compile exe bin/plugin.dart`。
 - 不启动常驻 Analysis Server，不运行生成器，不修改配置。
@@ -104,8 +112,8 @@ ccrouter analyzer uninstall [host-root]
 
 ## 6. AI Skill 接入规则
 
-命令实现前，AI 继续使用现有手工 bootstrap 指南，不得声称 `ccrouter analyzer` 已可用。命令
-实现后，Integration/CLI Skill 应改为 CLI 优先、手工接入兜底，并遵守：
+写入型命令实现前，AI 继续使用现有手工 bootstrap 指南，不得声称 CLI 可以自动安装、升级或
+卸载。已经装配的 Host 应优先运行 `status` 和 `doctor`，手工 smoke 作为回退，并遵守：
 
 1. 先运行 `status` 和 `doctor`，再判断是否需要 `install` 或 `upgrade`。
 2. 未经明确请求不升级版本或 ref，不使用 Git `main`。
@@ -116,8 +124,8 @@ ccrouter analyzer uninstall [host-root]
 
 ## 7. 实施顺序与验收
 
-1. 抽取 Host/bootstrap 状态探测，只读实现 `status`。
-2. 实现无写入的 `doctor` 和兼容矩阵诊断。
+1. [x] 抽取 Host/bootstrap 状态探测，只读实现 `status`。
+2. [x] 实现无写入的 `doctor` 和兼容矩阵诊断。
 3. 实现 Hosted `install/uninstall`，覆盖幂等、冲突和回滚测试。
 4. 增加固定 Git commit 安装，并拒绝 branch、短 SHA、本地未推送 SHA 和非法组合。
 5. 实现显式 `upgrade` 与失败恢复。
@@ -127,4 +135,3 @@ ccrouter analyzer uninstall [host-root]
 验收至少覆盖：重复安装、已有 Plugin 配置、多 Host、聚合根误判、Hosted/Git 两种来源、Analyzer
 不兼容、离线依赖失败、loader 编译失败、用户修改受管文件、卸载恢复和 Plugin 不可用时的业务
 构建回退。
-

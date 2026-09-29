@@ -40,6 +40,50 @@ void main() {
     ]);
   });
 
+  test('orders Host tool integrations and rejects duplicate identities', () {
+    final first = _HostToolIntegration('zeta');
+    final second = _HostToolIntegration('alpha');
+    final assembly = CCGeneratedHostAssembly.fromPackageBundles(
+      [bundle('host')],
+      hostToolIntegrations: [first, second],
+    );
+
+    expect(assembly.hostToolIntegrations.map((tool) => tool.id), [
+      'alpha',
+      'zeta',
+    ]);
+    expect(
+      () => assembly.hostToolIntegrations.add(first),
+      throwsUnsupportedError,
+    );
+    expect(
+      () => CCGeneratedHostAssembly.fromPackageBundles(
+        [bundle('host')],
+        hostToolIntegrations: [first, _HostToolIntegration('zeta')],
+      ),
+      throwsA(
+        isA<CCGeneratedPackageBundleError>().having(
+          (error) => error.type,
+          'type',
+          CCGeneratedPackageBundleErrorCode.hostToolIntegration,
+        ),
+      ),
+    );
+    expect(
+      () => CCGeneratedHostAssembly.fromPackageBundles(
+        [bundle('host')],
+        hostToolIntegrations: [_HostToolIntegration('  ')],
+      ),
+      throwsA(
+        isA<CCGeneratedPackageBundleError>().having(
+          (error) => error.type,
+          'type',
+          CCGeneratedPackageBundleErrorCode.hostToolIntegration,
+        ),
+      ),
+    );
+  });
+
   test('rejects incompatible Package identities in a diamond', () {
     final left = bundle(
       'left',
@@ -162,4 +206,17 @@ final class _Registrar implements CCComponentRegistrar {
 
   @override
   void register(CCRegistry registry) {}
+}
+
+final class _HostToolIntegration implements CCHostToolIntegration {
+  _HostToolIntegration(this.id);
+
+  @override
+  final String id;
+
+  @override
+  void onRuntimeReady() {}
+
+  @override
+  void onRuntimeStopping() {}
 }

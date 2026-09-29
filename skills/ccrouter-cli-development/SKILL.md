@@ -40,6 +40,8 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter create service <Servi
 fvm dart run --verbosity=error ccrouter_generator:ccrouter create command <CommandName> <component-directory>
 fvm dart run --verbosity=error ccrouter_generator:ccrouter create event <EventName> <component-directory>
 fvm dart run --verbosity=error ccrouter_generator:ccrouter create init-task <TaskName> <component-directory>
+fvm dart run --verbosity=error ccrouter_generator:ccrouter analyzer status [host-root]
+fvm dart run --verbosity=error ccrouter_generator:ccrouter analyzer doctor [host-root]
 fvm dart run --verbosity=error ccrouter_generator:ccrouter generate <host-root>
 fvm dart run --verbosity=error ccrouter_generator:ccrouter generate <host-root> --check
 fvm dart run --verbosity=error ccrouter_generator:ccrouter generate <host-root> --no-cache
@@ -128,14 +130,20 @@ before changing Package dependencies, public exposure, or existing declarations.
 
 ### Analyzer Plugin Bootstrap
 
-The planned `ccrouter analyzer install/status/doctor/upgrade/uninstall` command
-group is not implemented. Follow
+`ccrouter analyzer status [host-root]` inspects one manually installed Host
+bootstrap and reports its source, pinned identity, lockfile, and Analyzer
+compatibility. `ccrouter analyzer doctor [host-root]` additionally runs locked
+dependency resolution, analysis, and loader compilation in a temporary copy.
+Run `status` before `doctor`; neither command runs generation or rewrites Host
+configuration.
+
+The planned `install/upgrade/uninstall` commands are not implemented. Follow
 [`docs/CCRouter-analyzer-cli-plan.md`](../../docs/CCRouter-analyzer-cli-plan.md)
-for its approved boundary, but use the current manual Host bootstrap procedure in
-[`ide-analysis-server.md`](../ccrouter-integration-development/references/ide-analysis-server.md)
-until command help exposes it. Do not attach Analyzer setup to `generate`, Pub
-Hook, or component scaffolding. Do not change a pinned Git ref merely to follow
-local HEAD, use a branch name, or commit a local absolute path.
+and the manual Host bootstrap procedure in
+[`ide-analysis-server.md`](../ccrouter-integration-development/references/ide-analysis-server.md).
+Do not attach Analyzer setup to `generate`, Pub Hook, or component scaffolding.
+Do not change a pinned Git ref merely to follow local HEAD, use a branch name,
+or commit a local absolute path.
 
 ### Contract Scaffold or Promotion
 

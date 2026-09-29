@@ -73,25 +73,29 @@ Read [implementation-patterns.md](references/implementation-patterns.md) when ad
 - Tooling that crosses the Flutter application boundary must use the versioned
   `ccrouter_devtools_protocol` snapshots. Do not serialize Runtime, Navigator,
   Widget, route arguments, complete URIs, Tokens, or business results.
-- For the official DevTools Extension, register
-  `CCDevToolsServiceExtension` only from a debug Host composition root. Build
+- For the official DevTools Extension, add `ccrouter_devtools` as a direct Host
+  dependency and regenerate the Host Assembly. The generated Tool Integration
+  registers after Runtime initialization and clears before Runtime shutdown;
+  do not duplicate this lifecycle in a feature component. Build
   `devtools/ccrouter_extension` with a stable Flutter Web SDK; the OHOS SDK is
   not a valid Web Extension test target. The Extension is read-only and must
   tolerate a missing Runtime endpoint without changing application behavior.
-- When a generated or application-owned static Catalog is available, pass it to
-  `CCRouterDevToolsSnapshotProvider(catalog: ...)` and
+- Generated Hosts read their static Catalog from the installed Host Tool
+  Integration. Only manual/test integrations pass an application-owned Catalog
+  to `CCRouterDevToolsSnapshotProvider(catalog: ...)` or
   `CCDevToolsServiceExtension.register(catalog: ...)`. The Catalog is joined to
   Runtime entries and trace edges by stable IDs; missing Catalog records are
   shown as unresolved rather than inferred. Source locations are copyable
   `package:` references. An IDE opener may be supplied through the panel's
   `onOpenSource` callback, but the framework never assumes an editor or local
   filesystem mapping.
-- Enable `ccrouter_analyzer_plugin` only through the host Package's Analysis Server bootstrap. Keep its Analyzer dependency isolated from the application Workspace; do not add a path dependency to the rule Package when the Analysis Server will copy the bootstrap to a temporary directory. Pin unreleased Git bootstraps to a reviewed commit and use the isolated loader `analyze/compile` smoke; switch to the provided Hosted manifest only after publication. If the plugin is unavailable or incompatible, disable the bootstrap and keep Dart Analyzer plus `ccrouter generate --check` as the authoritative gates.
+- Enable `ccrouter_analyzer_plugin` only through the host Package's Analysis Server bootstrap. Keep its Analyzer dependency isolated from the application Workspace; do not add a path dependency to the rule Package when the Analysis Server will copy the bootstrap to a temporary directory. Pin unreleased Git bootstraps to a reviewed commit and use `ccrouter analyzer status/doctor <host-root>` for read-only identity, compatibility, analysis, and loader checks; switch to the provided Hosted manifest only after publication. Analyzer diagnostics are single-file hints; use its Quick Fix only to choose which mutually exclusive Route/InitTask argument to delete, never to invent a Contract, identity, alias, timeout, import, or dependency. Analyzer `install/upgrade/uninstall` remain manual workflows. If the plugin is unavailable or incompatible, disable the bootstrap and keep Dart Analyzer plus `ccrouter generate --check` as the authoritative gates.
 - Keep analytics separate from diagnostics: `CCDiagnosticEvent` explains framework execution and failure, while `CCAnalyticsEvent` represents a product behavior. Analytics properties must use validated primitive values and must not contain credentials, full URI values, Widgets, exceptions, or business objects. Analytics Sink failures and queue pressure must never alter navigation or component results.
 - The analytics dispatcher exposes only payload-free pressure counters (`acceptedEventCount`, `pendingEventCount`, `peakQueueDepth`, and `droppedEventCount`) for bounded health/performance checks. They are not an audit log, replay source, or permission to inspect queued events; use the standalone benchmark when comparing SDK/platform behavior.
 - Use `CCRouter.traceBundle(traceId)` for bounded local troubleshooting across nested calls. It is not an audit log, replay source, or business Event store; records may be incomplete after capacity rotation.
-- When using generated Host assembly, pass both `componentManifests` and the
-  read-only `contractBundle` to `CCRouter.initialize`. Never hand-write
+- When using generated Host assembly, pass it directly to
+  `CCRouter.initialize(hostAssembly: ...)`; it supplies component Manifests,
+  the read-only Contract Bundle, and optional Host Tool Integrations. Never hand-write
   Contract versions or fingerprints. Generation and Host/Runtime boundaries
   reject missing, owner-mismatched, out-of-range, fingerprint-drifted,
   duplicate, or stale Contract artifacts with stable compatibility codes.

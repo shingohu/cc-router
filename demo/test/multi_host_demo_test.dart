@@ -8,8 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   setUp(() {
     CCRouter.initialize(
-      components: ccrouterGeneratedComponentManifests,
-      contractBundle: ccrouterGeneratedHostAssembly.contractBundle,
+      hostAssembly: ccrouterGeneratedHostAssembly,
       deepLinkIngressPolicy: demoDeepLinkIngressPolicy,
     );
   });

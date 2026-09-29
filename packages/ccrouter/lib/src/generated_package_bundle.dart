@@ -1,6 +1,7 @@
 import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 import 'package:ccrouter_core/ccrouter_core.dart' show CCComponentManifest;
 
+import 'host_tool_integration.dart';
 import 'route_catalog.dart';
 
 /// Stable failure categories produced while resolving generated Package data.
@@ -25,6 +26,9 @@ enum CCGeneratedPackageBundleErrorCode {
 
   /// Contract descriptors or consumer requirements are incompatible.
   contractCompatibility,
+
+  /// Host tool integrations contain an empty or duplicate stable identity.
+  hostToolIntegration,
 }
 
 /// Describes an invalid generated Package graph at the Host boundary.
@@ -214,8 +218,18 @@ final class CCGeneratedHostAssembly {
   /// sibling Packages are ordered by Package name, and component manifests are
   /// ordered by their required and present optional dependency graph.
   factory CCGeneratedHostAssembly.fromPackageBundles(
-    Iterable<CCGeneratedPackageBundle> roots,
-  ) => CCGeneratedPackageBundle._resolve(roots);
+    Iterable<CCGeneratedPackageBundle> roots, {
+    Iterable<CCHostToolIntegration> hostToolIntegrations = const [],
+  }) {
+    final assembly = CCGeneratedPackageBundle._resolve(roots);
+    return CCGeneratedHostAssembly._(
+      packages: assembly.packages,
+      componentManifests: assembly.componentManifests,
+      routeCatalog: assembly.routeCatalog,
+      contractBundle: assembly.contractBundle,
+      hostToolIntegrations: _validateHostToolIntegrations(hostToolIntegrations),
+    );
+  }
 
   /// Creates a validated snapshot after Package and component graph resolution.
   const CCGeneratedHostAssembly._({
@@ -223,6 +237,7 @@ final class CCGeneratedHostAssembly {
     required this.componentManifests,
     required this.routeCatalog,
     required this.contractBundle,
+    this.hostToolIntegrations = const [],
   });
 
   /// Resolved Packages in dependency-before-dependant deterministic order.
@@ -236,6 +251,32 @@ final class CCGeneratedHostAssembly {
 
   /// Resolved Contract descriptors and consumer requirements, when generated.
   final CCContractBundleDescriptor? contractBundle;
+
+  /// Optional Host tooling started and stopped with the default Runtime.
+  ///
+  /// Generated assemblies populate this list only when the Host directly opts
+  /// into a supported tool Package. Business components must not invoke these
+  /// integrations or treat them as application capabilities.
+  final List<CCHostToolIntegration> hostToolIntegrations;
+}
+
+/// Copies and validates Host tooling before the assembly becomes observable.
+List<CCHostToolIntegration> _validateHostToolIntegrations(
+  Iterable<CCHostToolIntegration> integrations,
+) {
+  final byId = <String, CCHostToolIntegration>{};
+  for (final integration in integrations) {
+    final id = integration.id.trim();
+    if (id.isEmpty || byId.containsKey(id)) {
+      throw CCGeneratedPackageBundleError(
+        type: CCGeneratedPackageBundleErrorCode.hostToolIntegration,
+        message: 'Invalid or duplicate Host tool integration ID "$id".',
+      );
+    }
+    byId[id] = integration;
+  }
+  final ids = byId.keys.toList()..sort();
+  return List.unmodifiable(ids.map((id) => byId[id]!));
 }
 
 CCContractBundleDescriptor? _mergeContractBundles(

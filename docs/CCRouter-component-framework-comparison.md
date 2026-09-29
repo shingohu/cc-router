@@ -74,14 +74,13 @@ Adapter、Host 和 `MaterialApp.router`：
 runApp(
   CCGoRouterApp(
     catalog: ccrouterGeneratedRouteCatalog,
-    components: ccrouterGeneratedComponentManifests,
   ),
 );
 ```
 
-需要全局拦截器、Deep Link Policy、Aspect、Telemetry 或诊断配置时，应用先显式调用
-`CCRouter.initialize`，再让 `CCGoRouterApp` 只负责 Host。已有 GoRouter 工程继续使用
-`CCGoRouterBackend.attach`；复杂 Shell、多 Outlet、自定义 Override 或完整 Widget 树可使用
+应用必须先显式调用 `CCRouter.initialize(hostAssembly: ...)`；`CCGoRouterApp` 始终只负责
+Host。已有 GoRouter 工程继续使用 `CCGoRouterBackend.attach`；复杂 Shell、多 Outlet 或
+自定义 Router 构造可使用一次性 `backendFactory`，只有完全自定义 Widget 树才直接使用
 `CCRouterApp.managed`。这些显式路径是渐进式集成边界，不是新项目必须复制的样板代码。
 
 因此 Host 最小接入已经闭环。后续新增 Backend 应复用同一个 `CCRouterAppBackend` 边界，
@@ -134,7 +133,7 @@ Workspace 校验和自动 Registrar bridge。
 - `ccrouter watch`；
 - Contract Promotion/Migration 和 alias 迁移自动化；
 - IDE 内直接打开本地源码、自动改 import 和 rename/alias migration Quick Fix；
-- 超出当前两类确定性诊断的生成失败 IDE 状态提示。
+- 超出当前确定性单文件规则范围的生成失败 IDE 状态提示。
 
 静态 Catalog 与 Runtime 快照联动、只读组件依赖/反向依赖、源码 URI 和单次能力调用链已由
 嵌入式面板与官方 DevTools Extension 实现。Extension 不绑定任意本地 IDE，不能把 source URI

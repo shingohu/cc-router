@@ -18,16 +18,36 @@ CLI 门禁工作；缺少实时提示不会改变构建语义。
 | Code | 默认级别 | 作用 |
 | --- | --- | --- |
 | `ccrouter_cross_package_generated_import` | error | 阻止业务 Package 直接导入另一个 Package 的 `src/ccrouter_generated` |
-| `ccrouter_generated_output_missing` | warning | 标记 `@CCRoute` 源文件对应的 Route 生成物尚未生成 |
+| `ccrouter_generated_output_missing` | warning | 标记 Route/Binding、Route/Service Contract、Service、Command Handler、Event Subscription 或 InitTask 的确定性同源输出缺失 |
+| `ccrouter_required_init_task_contract_missing` | error | required InitTask 必须使用稳定的 `CCInitTaskContract` |
+| `ccrouter_required_init_task_timeout_missing` | error | 异步 required InitTask 必须声明 timeout |
+| `ccrouter_handler_declaration_invalid` | error | Handler 必须是 public、top-level、non-generic 函数 |
+| `ccrouter_handler_signature_invalid` | error | 标记明显不支持的 Handler 参数数量或 void 返回形态 |
+| `ccrouter_annotation_arguments_conflict` | error | 标记 Route `pattern/patterns` 或 InitTask `contract/id` 冲突 |
+| `ccrouter_identifier_invalid` | error | 校验可确定的字面量 Route/Service/Command/Event/InitTask/Gate ID |
+| `ccrouter_alias_invalid` | error | 校验可确定的 Service/Command Client alias |
+| `ccrouter_timeout_invalid` | error | 拒绝可确定的零值或负值 InitTask timeout |
 
-诊断只处理单文件和当前 Package 的可确定信息。Contract Owner、依赖闭包、Pattern 冲突、
-参数 Codec、生成物指纹等跨文件规则仍由 `ccrouter generate --check` 权威校验。
+这些诊断只处理单文件和当前 Package 的可确定信息。Command/Event/InitTask Contract 本身只进入
+metadata，Component API 聚合依赖 Package Catalog，插件不会为它们虚构同源输出。Contract Owner、
+依赖闭包、Pattern 冲突、参数 Codec、聚合入口和生成物指纹等跨文件规则仍由
+`ccrouter generate --check` 权威校验。
 
 ## 接入步骤
 
-当前接入仍为手工 bootstrap。计划中的 `ccrouter analyzer install/status/doctor/upgrade/uninstall`
-会把该流程收敛为显式、幂等和可回滚的 Host 工具，但这些命令尚未实现，不能写入当前接入脚本
-或 CI。完整边界见
+当前接入仍为手工 bootstrap。CLI 已提供只读的 Host 状态和健康检查：
+
+```bash
+fvm dart run --verbosity=error ccrouter_generator:ccrouter analyzer status demo
+fvm dart run --verbosity=error ccrouter_generator:ccrouter analyzer doctor demo
+```
+
+`status` 区分 `notInstalled`、`incomplete`、`stale`、`incompatible`、`modified` 和
+`healthy`，并输出实际 bootstrap、来源、固定 Git ref/Hosted 版本及 Analyzer 版本。
+`doctor` 只在静态状态健康时，在临时副本中校验 lockfile、执行 bootstrap analyze 和 loader
+compile；不修改 Host、活动 bootstrap manifest 或 lockfile，也不运行 Generator。
+
+计划中的 `install/upgrade/uninstall` 尚未实现，不能写入当前接入脚本或 CI。完整边界见
 [`CCRouter-analyzer-cli-plan.md`](CCRouter-analyzer-cli-plan.md)。Analyzer 装配不会挂入
 `generate`、Pub Hook 或组件脚手架隐式执行。
 
@@ -92,6 +112,9 @@ Analysis Server entrypoint 可加载，不会启动常驻 Analysis Server。插�
 时，应关闭该 bootstrap，继续使用 Dart Analyzer 和 `ccrouter generate --check`；这不会改变
 应用构建或生成器门禁。
 
+通常优先用 `ccrouter analyzer doctor demo` 执行相同 smoke；直接进入 bootstrap 目录的命令
+保留为 CLI 不可用时的排障回退。
+
 修改 `packages/ccrouter_analyzer_plugin` 后，在尚未推送并固定到远端的本地工作区，不能直接
 用 Git bootstrap 验证新代码。可在 bootstrap 的临时本地验证环境中使用绝对 path override
 验证，验证完成后恢复固定 Git ref；绝对 path 不得提交。Git ref 更新前必须先运行插件
@@ -108,7 +131,7 @@ CCRouter 管理页面，也不会增加 Runtime 控制 API。
 
 ## 诊断与生成的协作顺序
 
-编辑带 `@CCRoute` 的页面时，先保存源代码并继续完成业务修改；插件提示是开发反馈，生成物
+编辑带 CCRouter 能力注解的源码时，先保存源代码并继续完成业务修改；插件提示是开发反馈，生成物
 缺失不会由插件自动补写。准备运行、提交或切换 Package 依赖时执行：
 
 ```bash
@@ -126,7 +149,9 @@ fvm dart run ccrouter_generator:ccrouter generate demo --check
 - 插件启动失败、版本不兼容或诊断异常时，Analysis Server 应隔离该插件；业务分析继续由 Dart
   Analyzer 提供，最终正确性由 `generate --check` 保证。
 - 插件不提供自动修复、自动插入 import、自动生成和运行时导航。任何自动写入都必须由未来
-  独立的 IDE/CLI 设计明确授权，不能隐藏在 Analysis Server isolate 中。
+  独立的 IDE/CLI 设计明确授权，不能隐藏在 Analysis Server isolate 中。当前唯一 Quick Fix
+  是让开发者显式选择删除 Route `pattern/patterns` 或 InitTask `contract/id` 中的一个冲突参数；
+  删除范围包含注释时不提供，且不会创建 Contract、猜 alias/ID/timeout、改 pubspec 或运行生成。
 
 ## 已完成与剩余边界
 
@@ -138,7 +163,7 @@ IDE。因此：
 - “找到 Route/Service/Command/Event/InitTask 的源码位置”已完成；
 - “只读查看组件依赖、反向依赖和调用链”已完成；
 - “从官方 Extension 直接调用本地 IDE 打开文件”未完成；
-- 自动生成、自动 import、rename/alias migration Quick Fix 仍未实现。
+- 自动生成、自动 import、rename/alias migration Quick Fix 仍未实现；只提供互斥参数删除修复。
 
 这些剩余项不改变 Analyzer Plugin 的“只诊断、不生成、不改写”边界。DevTools 当前实现与
 协议见 [`CCRouter-devtools.md`](CCRouter-devtools.md)，发布门槛见

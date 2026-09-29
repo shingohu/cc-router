@@ -13,8 +13,7 @@ import 'platform_deep_link_bridge.dart';
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   CCRouter.initialize(
-    components: ccrouterGeneratedComponentManifests,
-    contractBundle: ccrouterGeneratedHostAssembly.contractBundle,
+    hostAssembly: ccrouterGeneratedHostAssembly,
     deepLinkIngressPolicy: demoDeepLinkIngressPolicy,
   );
   runApp(createMultiHostDemoApp());

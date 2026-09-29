@@ -4,13 +4,17 @@ Use the optional `ccrouter_analyzer_plugin` only for developer feedback:
 
 - `ccrouter_cross_package_generated_import` catches a handwritten import of
   another Package's `src/ccrouter_generated` library.
-- `ccrouter_generated_output_missing` warns when an annotated `@CCRoute` page
-  has not produced its expected Route library.
+- `ccrouter_generated_output_missing` warns when a Route/Binding,
+  Route/Service Contract, Service, Command Handler, Event Subscription, or
+  InitTask source has not produced its deterministic source-preserving output.
 
-The plugin also maps generated Route library add/modify/remove events back to
-the authored Route source. This clears a stale missing-output warning after a
-successful `ccrouter generate` and restores it after `ccrouter clean`; restarting
-the Analysis Server should not be required for this normal workflow.
+The plugin maps generated source-preserving library add/modify/remove events
+back to the authored capability source. This clears a stale missing-output
+warning after a successful `ccrouter generate` and restores it after
+`ccrouter clean`; restarting the Analysis Server should not be required for
+this normal workflow. Metadata-only Contracts and component-wide aggregate APIs
+remain CLI checks because a partial editor buffer cannot prove their Package
+Catalog.
 
 The plugin is not a generator, dependency resolver, Runtime validator, or
 authorization boundary. It must not call `build_runner`, inspect Widgets, or
@@ -21,6 +25,13 @@ generated output fingerprints remain the responsibility of:
 fvm dart run ccrouter_generator:ccrouter generate <host-root> --check
 ```
 
+Single-file diagnostics also cover public/top-level/non-generic Handler shape,
+obvious Handler arity/void returns, mutually exclusive Route/InitTask fields,
+literal stable IDs and aliases, Gate IDs, and positive literal Durations. The
+only Quick Fixes delete one of two conflicting `pattern/patterns` or
+`contract/id` arguments after an explicit developer choice. Never expect the
+plugin to invent a Contract, ID, alias, Gate, timeout, import, or dependency.
+
 If the plugin is unavailable or incompatible with the current Analysis Server,
 disable it and continue using Dart Analyzer plus the CLI gate. Do not weaken
 public API boundaries to accommodate plugin installation. Unreleased Git
@@ -29,9 +40,15 @@ Hosted manifest and rerun the same loader `analyze/compile` smoke. See
 [`docs/CCRouter-ide-analysis-server.md`](../../../docs/CCRouter-ide-analysis-server.md)
 for dependency setup and the current Analyzer version isolation rationale.
 
-The planned `ccrouter analyzer install/status/doctor/upgrade/uninstall` command
-group is documented in
+For an already configured Host, prefer the implemented read-only checks:
+
+```bash
+fvm dart run --verbosity=error ccrouter_generator:ccrouter analyzer status <host-root>
+fvm dart run --verbosity=error ccrouter_generator:ccrouter analyzer doctor <host-root>
+```
+
+The planned `install/upgrade/uninstall` commands in
 [`docs/CCRouter-analyzer-cli-plan.md`](../../../docs/CCRouter-analyzer-cli-plan.md)
-but is not implemented. Until it appears in actual CLI help, keep using the
-manual Host bootstrap, do not attach setup to generation or Pub Hook, and do not
-change a pinned ref merely to follow repository HEAD.
+are not implemented. Keep using the manual Host bootstrap, do not attach setup
+to generation or Pub Hook, and do not change a pinned ref merely to follow
+repository HEAD.

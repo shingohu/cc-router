@@ -1,8 +1,14 @@
 import 'package:ccrouter/ccrouter.dart';
+import 'package:ccrouter/ccrouter_host.dart';
 import 'package:ccrouter_devtools/ccrouter_devtools.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  tearDown(() async {
+    CCDevToolsServiceExtension.clear();
+    await CCRouter.shutdown();
+  });
+
   test(
     'snapshot copies collection boundaries and preserves read-only data',
     () {
@@ -89,6 +95,32 @@ void main() {
       expect(ccRouterDevToolsSnapshotExtension, 'ext.ccrouter.snapshot');
     },
   );
+
+  test('generated Host integration installs and clears its Catalog', () async {
+    final catalog = CCDevToolsStaticCatalogSnapshot(
+      capturedAt: DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
+      catalogFingerprint: 'fixture',
+    );
+    final assembly = CCGeneratedHostAssembly.fromPackageBundles(
+      [
+        CCGeneratedPackageBundle(
+          packageName: 'host',
+          packageVersion: '1.0.0',
+          contentFingerprint: 'host-fingerprint',
+        ),
+      ],
+      hostToolIntegrations: [CCDevToolsHostIntegration(catalog: catalog)],
+    );
+
+    CCRouter.initialize(hostAssembly: assembly);
+    expect(
+      const CCRouterDevToolsSnapshotProvider().snapshot().catalog,
+      same(catalog),
+    );
+
+    await CCRouter.shutdown();
+    expect(const CCRouterDevToolsSnapshotProvider().snapshot().catalog, isNull);
+  });
 }
 
 CCTraceContextSnapshot _traceContext() => CCTraceContextSnapshot.from(

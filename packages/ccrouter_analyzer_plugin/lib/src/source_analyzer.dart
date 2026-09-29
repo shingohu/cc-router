@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:analyzer/dart/analysis/utilities.dart';
 import 'package:analyzer/dart/ast/ast.dart';
+import 'package:analyzer/source/line_info.dart';
 import 'package:analyzer_plugin/protocol/protocol_common.dart';
 import 'package:path/path.dart' as path;
 import 'package:yaml/yaml.dart';
@@ -42,6 +43,237 @@ final class CCRouterAnalyzerDiagnostic {
   final AnalysisErrorSeverity severity;
 }
 
+/// One parsed source result shared by diagnostics and protocol conversion.
+final class CCRouterSourceAnalysis {
+  /// Creates an immutable analysis result from one parser pass.
+  const CCRouterSourceAnalysis({
+    required this.diagnostics,
+    required this.lineInfo,
+  });
+
+  /// Deterministic CCRouter diagnostics for the source buffer.
+  final List<CCRouterAnalyzerDiagnostic> diagnostics;
+
+  /// Line mapping produced by the same parser pass as [diagnostics].
+  final LineInfo lineInfo;
+}
+
+/// One source-preserving generated file required by an annotation.
+final class _GeneratedOutputSpec {
+  /// Creates an output mapping under one generated [directory].
+  const _GeneratedOutputSpec({
+    required this.capability,
+    required this.directory,
+    required this.suffix,
+  });
+
+  /// Human-readable capability name used in the diagnostic.
+  final String capability;
+
+  /// Directory below `lib/src/ccrouter_generated`.
+  final String directory;
+
+  /// Generated suffix replacing the authored `.dart` suffix.
+  final String suffix;
+}
+
+/// Missing-output check anchored to one authored annotation.
+final class _GeneratedOutputExpectation {
+  /// Creates an expectation for all [outputPaths] emitted from one source.
+  const _GeneratedOutputExpectation({
+    required this.annotation,
+    required this.capability,
+    required this.outputPaths,
+  });
+
+  /// Annotation highlighted when one or more generated files are missing.
+  final Annotation annotation;
+
+  /// Human-readable capability category.
+  final String capability;
+
+  /// Package-relative files that must exist after successful generation.
+  final List<String> outputPaths;
+}
+
+/// Direct outputs whose path is provable from one authored source file.
+///
+/// Command/Event/InitTask Contract declarations and component-wide API barrels
+/// are deliberately absent: their outputs depend on cross-file Package
+/// metadata and remain the responsibility of `ccrouter generate --check`.
+const _generatedOutputSpecs = <String, List<_GeneratedOutputSpec>>{
+  'CCRoute': [
+    _GeneratedOutputSpec(
+      capability: 'Route',
+      directory: 'route',
+      suffix: '.route.g.dart',
+    ),
+    _GeneratedOutputSpec(
+      capability: 'Route',
+      directory: 'binding',
+      suffix: '.route_binding.g.dart',
+    ),
+  ],
+  'CCRouteImplementation': [
+    _GeneratedOutputSpec(
+      capability: 'Route implementation',
+      directory: 'binding',
+      suffix: '.route_binding.g.dart',
+    ),
+  ],
+  'CCRouteContract': [
+    _GeneratedOutputSpec(
+      capability: 'Route Contract',
+      directory: 'contract',
+      suffix: '.route.contract.g.dart',
+    ),
+  ],
+  'CCService': [
+    _GeneratedOutputSpec(
+      capability: 'Service',
+      directory: 'service',
+      suffix: '.service.g.dart',
+    ),
+  ],
+  'CCServiceContract': [
+    _GeneratedOutputSpec(
+      capability: 'Service Contract',
+      directory: 'contract',
+      suffix: '.service.contract.g.dart',
+    ),
+  ],
+  'CCCommandHandler': [
+    _GeneratedOutputSpec(
+      capability: 'Command Handler',
+      directory: 'command',
+      suffix: '.command.g.dart',
+    ),
+  ],
+  'CCEventSubscription': [
+    _GeneratedOutputSpec(
+      capability: 'Event Subscription',
+      directory: 'event',
+      suffix: '.event.g.dart',
+    ),
+  ],
+  'CCInitTask': [
+    _GeneratedOutputSpec(
+      capability: 'InitTask',
+      directory: 'init_task',
+      suffix: '.init_task.g.dart',
+    ),
+  ],
+};
+
+/// Stable identity syntax shared by annotation-level diagnostics.
+final _stableIdPattern = RegExp(r'^[a-z][A-Za-z0-9]*(?:[._-][A-Za-z0-9]+)*$');
+
+/// Public lower-camel identifier syntax used by generated Client aliases.
+final _aliasPattern = RegExp(r'^[a-z][A-Za-z0-9]*$');
+
+/// Dart keywords that cannot become generated Client members.
+const _dartKeywords = <String>{
+  'abstract',
+  'as',
+  'assert',
+  'async',
+  'await',
+  'base',
+  'break',
+  'case',
+  'catch',
+  'class',
+  'const',
+  'continue',
+  'covariant',
+  'default',
+  'deferred',
+  'do',
+  'dynamic',
+  'else',
+  'enum',
+  'export',
+  'extends',
+  'extension',
+  'external',
+  'factory',
+  'false',
+  'final',
+  'finally',
+  'for',
+  'Function',
+  'get',
+  'hide',
+  'if',
+  'implements',
+  'import',
+  'in',
+  'interface',
+  'is',
+  'late',
+  'library',
+  'mixin',
+  'new',
+  'null',
+  'of',
+  'on',
+  'operator',
+  'part',
+  'required',
+  'rethrow',
+  'return',
+  'sealed',
+  'set',
+  'show',
+  'static',
+  'super',
+  'switch',
+  'sync',
+  'this',
+  'throw',
+  'true',
+  'try',
+  'typedef',
+  'var',
+  'void',
+  'when',
+  'while',
+  'with',
+  'yield',
+};
+
+/// Function annotations that require static top-level Handler declarations.
+const _handlerAnnotations = <String>{
+  'CCCommandHandler',
+  'CCEventSubscription',
+  'CCInitTask',
+};
+
+/// Annotations whose literal `id` follows the stable identity syntax.
+const _idAnnotations = <String>{
+  'CCRoute',
+  'CCRouteContract',
+  'CCService',
+  'CCServiceContract',
+  'CCCommandContract',
+  'CCEventContract',
+  'CCEventSubscription',
+  'CCInitTask',
+};
+
+/// Contract annotations whose alias becomes a generated Dart member.
+const _aliasAnnotations = <String>{'CCServiceContract', 'CCCommandContract'};
+
+/// Named `Duration` units converted to microseconds for positivity checks.
+const _durationFactors = <String, int>{
+  'days': Duration.microsecondsPerDay,
+  'hours': Duration.microsecondsPerHour,
+  'minutes': Duration.microsecondsPerMinute,
+  'seconds': Duration.microsecondsPerSecond,
+  'milliseconds': Duration.microsecondsPerMillisecond,
+  'microseconds': 1,
+};
+
 /// Computes the small set of diagnostics that is safe to run on every edit.
 ///
 /// The analyzer deliberately does not run `build_runner`, read arbitrary
@@ -60,17 +292,43 @@ abstract final class CCRouterSourceAnalyzer {
     required String filePath,
     String? packageRoot,
     String? packageName,
+  }) => analyzeWithLineInfo(
+    source: source,
+    filePath: filePath,
+    packageRoot: packageRoot,
+    packageName: packageName,
+  ).diagnostics;
+
+  /// Analyzes one source and reuses its parser line mapping for IDE locations.
+  static CCRouterSourceAnalysis analyzeWithLineInfo({
+    required String source,
+    required String filePath,
+    String? packageRoot,
+    String? packageName,
   }) {
     // Generated libraries are implementation artifacts. Their imports are
     // intentionally allowed to cross component boundaries and are validated
     // by the generator, not by the author-facing import rule.
     if (_isGeneratedFile(filePath)) {
-      return const <CCRouterAnalyzerDiagnostic>[];
+      return CCRouterSourceAnalysis(
+        diagnostics: const <CCRouterAnalyzerDiagnostic>[],
+        lineInfo: LineInfo.fromContent(source),
+      );
     }
     final root = packageRoot ?? _findPackageRoot(filePath);
-    if (root == null) return const <CCRouterAnalyzerDiagnostic>[];
+    if (root == null) {
+      return CCRouterSourceAnalysis(
+        diagnostics: const <CCRouterAnalyzerDiagnostic>[],
+        lineInfo: LineInfo.fromContent(source),
+      );
+    }
     final owner = packageName ?? _readPackageName(root);
-    if (owner == null) return const <CCRouterAnalyzerDiagnostic>[];
+    if (owner == null) {
+      return CCRouterSourceAnalysis(
+        diagnostics: const <CCRouterAnalyzerDiagnostic>[],
+        lineInfo: LineInfo.fromContent(source),
+      );
+    }
 
     // Editors frequently send incomplete buffers. A parse error must not
     // terminate the Analysis Server plugin or replace Dart's own diagnostics.
@@ -102,32 +360,29 @@ abstract final class CCRouterSourceAnalyzer {
 
     final sourceRelative = _relativeSourcePath(filePath, root);
     if (sourceRelative != null && sourceRelative.startsWith('lib/src/')) {
-      final hasRouteAnnotation = parsed.unit.declarations
-          .whereType<ClassDeclaration>()
-          .any(_hasRouteAnnotation);
-      if (hasRouteAnnotation) {
-        final generated = File(
-          path.join(root, _routeOutputPath(sourceRelative)),
+      for (final expectation in _generatedOutputExpectations(
+        parsed.unit,
+        sourceRelative,
+      )) {
+        final missing = expectation.outputPaths
+            .where((output) => !File(path.join(root, output)).existsSync())
+            .toList(growable: false);
+        if (missing.isEmpty) continue;
+        diagnostics.add(
+          CCRouterAnalyzerDiagnostic(
+            offset: expectation.annotation.offset,
+            length: expectation.annotation.length,
+            code: 'ccrouter_generated_output_missing',
+            message:
+                'This CCRouter ${expectation.capability} has missing generated output.',
+            correction:
+                'Run `ccrouter generate` (or the configured pub hook) to create ${missing.join(', ')}.',
+            severity: AnalysisErrorSeverity.WARNING,
+          ),
         );
-        if (!generated.existsSync()) {
-          final annotation = _firstRouteAnnotation(parsed.unit);
-          final offset = annotation?.offset ?? 0;
-          final length = annotation?.length ?? 1;
-          diagnostics.add(
-            CCRouterAnalyzerDiagnostic(
-              offset: offset,
-              length: length,
-              code: 'ccrouter_generated_output_missing',
-              message:
-                  'This CCRouter route has no generated route library yet.',
-              correction:
-                  'Run `ccrouter generate` (or the configured pub hook) before relying on the generated Route API.',
-              severity: AnalysisErrorSeverity.WARNING,
-            ),
-          );
-        }
       }
     }
+    diagnostics.addAll(_singleFileRuleDiagnostics(parsed.unit));
     for (final declaration
         in parsed.unit.declarations.whereType<FunctionDeclaration>()) {
       final annotation = declaration.metadata
@@ -166,46 +421,386 @@ abstract final class CCRouterSourceAnalyzer {
         );
       }
     }
-    return diagnostics;
+    return CCRouterSourceAnalysis(
+      diagnostics: List.unmodifiable(diagnostics),
+      lineInfo: parsed.lineInfo,
+    );
   }
 
-  /// Returns the authored Route source corresponding to a generated Route
-  /// library path, or `null` for unrelated files.
+  /// Whether a path belongs to CCRouter's generated implementation tree.
+  static bool isGeneratedPath(String filePath) => _isGeneratedFile(filePath);
+
+  /// Returns the authored source corresponding to a source-preserving
+  /// generated library path, or `null` for unrelated aggregate files.
   ///
   /// The Analysis Server can report a generated file change without marking
   /// the annotated source as affected because the source does not import its
   /// registration library directly. The plugin uses this deterministic
   /// mapping to refresh the source diagnostic after generation or cleanup.
-  static String? authoredRoutePathForGenerated(String filePath) {
+  static String? authoredPathForGenerated(String filePath) {
     final normalized = path.normalize(filePath);
-    final marker =
-        '${path.separator}lib${path.separator}src${path.separator}'
-        'ccrouter_generated${path.separator}route${path.separator}';
-    final markerIndex = normalized.lastIndexOf(marker);
-    const suffix = '.route.g.dart';
-    if (markerIndex < 0 || !normalized.endsWith(suffix)) return null;
-    final relativeStart = markerIndex + marker.length;
-    final relativeEnd = normalized.length - suffix.length;
-    if (relativeStart >= relativeEnd) return null;
-    final packageRoot = normalized.substring(0, markerIndex);
-    final relative = normalized.substring(relativeStart, relativeEnd);
-    return path.join(packageRoot, 'lib', 'src', '$relative.dart');
-  }
-
-  /// Whether [declaration] is a page carrying the CCRouter route annotation.
-  static bool _hasRouteAnnotation(ClassDeclaration declaration) => declaration
-      .metadata
-      .any((annotation) => _annotationName(annotation) == 'CCRoute');
-
-  /// Returns the first route annotation for a useful source highlight.
-  static Annotation? _firstRouteAnnotation(CompilationUnit unit) {
-    for (final declaration in unit.declarations.whereType<ClassDeclaration>()) {
-      for (final annotation in declaration.metadata) {
-        if (_annotationName(annotation) == 'CCRoute') return annotation;
-      }
+    for (final spec in _generatedOutputSpecs.values.expand((items) => items)) {
+      final marker =
+          '${path.separator}lib${path.separator}src${path.separator}'
+          'ccrouter_generated${path.separator}${spec.directory}${path.separator}';
+      final markerIndex = normalized.lastIndexOf(marker);
+      if (markerIndex < 0 || !normalized.endsWith(spec.suffix)) continue;
+      final relativeStart = markerIndex + marker.length;
+      final relativeEnd = normalized.length - spec.suffix.length;
+      if (relativeStart >= relativeEnd) return null;
+      final packageRoot = normalized.substring(0, markerIndex);
+      final relative = normalized.substring(relativeStart, relativeEnd);
+      return path.join(packageRoot, 'lib', 'src', '$relative.dart');
     }
     return null;
   }
+
+  /// Collects output requirements that a single parsed source can prove.
+  static List<_GeneratedOutputExpectation> _generatedOutputExpectations(
+    CompilationUnit unit,
+    String sourcePath,
+  ) {
+    final annotations = <Annotation>[
+      for (final declaration in unit.declarations.whereType<ClassDeclaration>())
+        ...declaration.metadata,
+      for (final declaration
+          in unit.declarations.whereType<FunctionDeclaration>())
+        ...declaration.metadata,
+    ];
+    final expectations = <String, _GeneratedOutputExpectation>{};
+    for (final annotation in annotations) {
+      final name = _annotationName(annotation);
+      final specs = name == null ? null : _generatedOutputSpecs[name];
+      if (specs == null) continue;
+      final paths = [for (final spec in specs) _outputPath(sourcePath, spec)];
+      expectations.putIfAbsent(
+        name!,
+        () => _GeneratedOutputExpectation(
+          annotation: annotation,
+          capability: specs.first.capability,
+          outputPaths: paths,
+        ),
+      );
+    }
+    return expectations.values.toList(growable: false);
+  }
+
+  /// Derives one source-preserving generated output path.
+  static String _outputPath(String sourcePath, _GeneratedOutputSpec spec) {
+    final relative = sourcePath.substring('lib/src/'.length);
+    final stem = relative.substring(0, relative.length - '.dart'.length);
+    return 'lib/src/ccrouter_generated/${spec.directory}/$stem${spec.suffix}';
+  }
+
+  /// Applies only rules that do not require resolved types or another file.
+  static List<CCRouterAnalyzerDiagnostic> _singleFileRuleDiagnostics(
+    CompilationUnit unit,
+  ) {
+    final diagnostics = <CCRouterAnalyzerDiagnostic>[];
+    for (final declaration
+        in unit.declarations.whereType<FunctionDeclaration>()) {
+      for (final annotation in declaration.metadata) {
+        final name = _annotationName(annotation);
+        if (!_handlerAnnotations.contains(name)) continue;
+        if (declaration.name.lexeme.startsWith('_') ||
+            declaration.functionExpression.typeParameters != null) {
+          diagnostics.add(
+            _ruleDiagnostic(
+              annotation,
+              code: 'ccrouter_handler_declaration_invalid',
+              message:
+                  '$name requires a public, top-level, non-generic function.',
+              correction:
+                  'Move the Handler to a public top-level function and remove its type parameters.',
+            ),
+          );
+        }
+        diagnostics.addAll(
+          _handlerSignatureDiagnostics(declaration, annotation, name!),
+        );
+      }
+    }
+    for (final declaration in unit.declarations.whereType<ClassDeclaration>()) {
+      for (final member in declaration.members.whereType<MethodDeclaration>()) {
+        for (final annotation in member.metadata) {
+          final name = _annotationName(annotation);
+          if (!_handlerAnnotations.contains(name)) continue;
+          diagnostics.add(
+            _ruleDiagnostic(
+              annotation,
+              code: 'ccrouter_handler_declaration_invalid',
+              message: '$name cannot annotate an instance or static method.',
+              correction:
+                  'Move the Handler to a public, top-level, non-generic function.',
+            ),
+          );
+        }
+      }
+    }
+    for (final annotation in _allAnnotations(unit)) {
+      final name = _annotationName(annotation);
+      if (name == null) continue;
+      diagnostics.addAll(_argumentRuleDiagnostics(annotation, name));
+    }
+    return diagnostics;
+  }
+
+  /// Validates obvious Handler arity and return-shape violations.
+  static List<CCRouterAnalyzerDiagnostic> _handlerSignatureDiagnostics(
+    FunctionDeclaration declaration,
+    Annotation annotation,
+    String annotationName,
+  ) {
+    final parameters = declaration.functionExpression.parameters?.parameters;
+    if (parameters == null) return const [];
+    final count = parameters.length;
+    final arityValid = switch (annotationName) {
+      'CCCommandHandler' || 'CCEventSubscription' => count == 1 || count == 2,
+      'CCInitTask' =>
+        count <= 1 && parameters.every((item) => !item.isOptional),
+      _ => true,
+    };
+    final diagnostics = <CCRouterAnalyzerDiagnostic>[];
+    if (!arityValid) {
+      diagnostics.add(
+        _ruleDiagnostic(
+          annotation,
+          code: 'ccrouter_handler_signature_invalid',
+          message: '$annotationName has an unsupported parameter count.',
+          correction: switch (annotationName) {
+            'CCInitTask' =>
+              'Use no parameter or one required CCInvocationContext parameter.',
+            _ =>
+              'Use one capability parameter and an optional second CCInvocationContext parameter.',
+          },
+        ),
+      );
+    }
+    if (annotationName == 'CCInitTask' ||
+        annotationName == 'CCEventSubscription') {
+      final returnType = declaration.returnType?.toSource();
+      if (returnType != null && !_isVoidLikeReturnType(returnType)) {
+        diagnostics.add(
+          _ruleDiagnostic(
+            annotation,
+            code: 'ccrouter_handler_signature_invalid',
+            message:
+                '$annotationName must return void, Future<void>, or FutureOr<void>.',
+            correction:
+                'Change the Handler return type to a supported void form.',
+          ),
+        );
+      }
+    }
+    return diagnostics;
+  }
+
+  /// Validates mutually exclusive fields and safe literal values.
+  static List<CCRouterAnalyzerDiagnostic> _argumentRuleDiagnostics(
+    Annotation annotation,
+    String annotationName,
+  ) {
+    final diagnostics = <CCRouterAnalyzerDiagnostic>[];
+    if ((annotationName == 'CCRoute' || annotationName == 'CCRouteContract') &&
+        _namedArgument(annotation, 'pattern') != null &&
+        _namedArgument(annotation, 'patterns') != null) {
+      diagnostics.add(
+        _ruleDiagnostic(
+          annotation,
+          code: 'ccrouter_annotation_arguments_conflict',
+          message: '$annotationName cannot set both pattern and patterns.',
+          correction:
+              'Keep pattern for one address, or keep patterns for multiple addresses.',
+        ),
+      );
+    }
+    if (annotationName == 'CCInitTask' && _hasCompleteArguments(annotation)) {
+      final contract = _nonNullNamedArgument(annotation, 'contract');
+      final id = _nonNullNamedArgument(annotation, 'id');
+      if (contract == id) {
+        diagnostics.add(
+          _ruleDiagnostic(
+            annotation,
+            code: 'ccrouter_annotation_arguments_conflict',
+            message: 'CCInitTask must set exactly one of contract and id.',
+            correction:
+                'Keep contract for a shared task, or id for a component-internal task.',
+          ),
+        );
+      }
+    }
+    if (_idAnnotations.contains(annotationName)) {
+      final id = _literalString(_namedArgument(annotation, 'id'));
+      if (id != null && (id.length > 128 || !_stableIdPattern.hasMatch(id))) {
+        diagnostics.add(
+          _ruleDiagnostic(
+            annotation,
+            code: 'ccrouter_identifier_invalid',
+            message: '$annotationName id "$id" is not a stable identifier.',
+            correction:
+                'Use a lowercase-leading ID with alphanumeric segments separated by ., _, or -.',
+          ),
+        );
+      }
+    }
+    if (_aliasAnnotations.contains(annotationName)) {
+      final alias = _literalString(_namedArgument(annotation, 'alias'));
+      if (alias != null &&
+          (!_aliasPattern.hasMatch(alias) || _dartKeywords.contains(alias))) {
+        diagnostics.add(
+          _ruleDiagnostic(
+            annotation,
+            code: 'ccrouter_alias_invalid',
+            message:
+                '$annotationName alias "$alias" is not a public lower-camel Dart identifier.',
+            correction: 'Choose a non-keyword lower-camel Client member name.',
+          ),
+        );
+      }
+    }
+    if (annotationName == 'CCInitTask') {
+      final gate = _namedArgument(annotation, 'gate');
+      final gateId = _constructorString(gate, 'CCInitTaskGate');
+      if (gateId != null &&
+          (gateId.length > 128 || !_stableIdPattern.hasMatch(gateId))) {
+        diagnostics.add(
+          _ruleDiagnostic(
+            annotation,
+            code: 'ccrouter_identifier_invalid',
+            message: 'CCInitTask gate "$gateId" is not a stable identifier.',
+            correction:
+                'Use a lowercase-leading Gate ID with stable alphanumeric segments.',
+          ),
+        );
+      }
+      final timeout = _namedArgument(annotation, 'timeout');
+      final timeoutMicros = _durationMicroseconds(timeout);
+      if (timeoutMicros != null && timeoutMicros <= 0) {
+        diagnostics.add(
+          _ruleDiagnostic(
+            annotation,
+            code: 'ccrouter_timeout_invalid',
+            message: 'CCInitTask timeout must be positive.',
+            correction: 'Use a Duration greater than zero or omit timeout.',
+          ),
+        );
+      }
+    }
+    return diagnostics;
+  }
+
+  /// Returns every annotation from supported top-level and member declarations.
+  static Iterable<Annotation> _allAnnotations(CompilationUnit unit) sync* {
+    for (final declaration in unit.declarations) {
+      if (declaration is ClassDeclaration) {
+        yield* declaration.metadata;
+        for (final member in declaration.members) {
+          yield* member.metadata;
+        }
+      } else if (declaration is FunctionDeclaration) {
+        yield* declaration.metadata;
+      } else if (declaration is TopLevelVariableDeclaration) {
+        yield* declaration.metadata;
+      }
+    }
+  }
+
+  /// Whether an annotation's argument list is complete enough for absence checks.
+  static bool _hasCompleteArguments(Annotation annotation) {
+    final arguments = annotation.arguments;
+    return arguments != null && !arguments.rightParenthesis.isSynthetic;
+  }
+
+  /// Whether one named argument is present and not the literal `null`.
+  static bool _nonNullNamedArgument(Annotation annotation, String name) {
+    final expression = _namedArgument(annotation, name);
+    return expression != null && expression is! NullLiteral;
+  }
+
+  /// Reads a string only when the editor buffer contains a literal value.
+  static String? _literalString(Expression? expression) =>
+      expression is SimpleStringLiteral ? expression.value : null;
+
+  /// Reads the first string argument of a named constructor type.
+  static String? _constructorString(Expression? expression, String typeName) {
+    final arguments = _constructorArguments(expression, typeName);
+    if (arguments == null) return null;
+    return arguments.isEmpty ? null : _literalString(arguments.first);
+  }
+
+  /// Evaluates literal `Duration` expressions without executing user code.
+  static int? _durationMicroseconds(Expression? expression) {
+    if (expression == null) return null;
+    if (expression is PrefixedIdentifier &&
+        expression.prefix.name == 'Duration' &&
+        expression.identifier.name == 'zero') {
+      return 0;
+    }
+    final arguments = _constructorArguments(expression, 'Duration');
+    if (arguments == null) return null;
+    var total = 0;
+    for (final argument in arguments) {
+      if (argument is! NamedExpression) return null;
+      final value = _integerLiteral(argument.expression);
+      final factor = _durationFactors[argument.name.label.name];
+      if (value == null || factor == null) return null;
+      total += value * factor;
+    }
+    return total;
+  }
+
+  /// Reads arguments from an unresolved constructor-shaped invocation.
+  ///
+  /// A partial editor parse may represent `Type(...)` as a method invocation
+  /// until element resolution completes, so both AST shapes are accepted.
+  static List<Expression>? _constructorArguments(
+    Expression? expression,
+    String typeName,
+  ) {
+    if (expression is InstanceCreationExpression &&
+        expression.constructorName.type.name.lexeme == typeName) {
+      return expression.argumentList.arguments.toList(growable: false);
+    }
+    if (expression is MethodInvocation &&
+        expression.target == null &&
+        expression.methodName.name == typeName) {
+      return expression.argumentList.arguments.toList(growable: false);
+    }
+    return null;
+  }
+
+  /// Reads a signed integer literal without evaluating arbitrary expressions.
+  static int? _integerLiteral(Expression expression) {
+    if (expression is IntegerLiteral) return expression.value;
+    if (expression is PrefixExpression &&
+        expression.operator.lexeme == '-' &&
+        expression.operand is IntegerLiteral) {
+      final value = (expression.operand as IntegerLiteral).value;
+      return value == null ? null : -value;
+    }
+    return null;
+  }
+
+  /// Whether a written return type is one of the supported void forms.
+  static bool _isVoidLikeReturnType(String source) =>
+      source == 'void' ||
+      source.replaceAll(' ', '') == 'Future<void>' ||
+      source.replaceAll(' ', '') == 'FutureOr<void>';
+
+  /// Creates a source-anchored error for one deterministic annotation rule.
+  static CCRouterAnalyzerDiagnostic _ruleDiagnostic(
+    Annotation annotation, {
+    required String code,
+    required String message,
+    required String correction,
+  }) => CCRouterAnalyzerDiagnostic(
+    offset: annotation.offset,
+    length: annotation.length,
+    code: code,
+    message: message,
+    correction: correction,
+    severity: AnalysisErrorSeverity.ERROR,
+  );
 
   /// Reads an annotation's unqualified source name.
   static String? _annotationName(Annotation annotation) {
@@ -268,13 +863,6 @@ abstract final class CCRouterSourceAnalyzer {
       from: path.normalize(root),
     );
     return relative.replaceAll(path.separator, '/');
-  }
-
-  /// Derives the generated Route library path for one authored source file.
-  static String _routeOutputPath(String sourcePath) {
-    final relative = sourcePath.substring('lib/src/'.length);
-    final stem = relative.substring(0, relative.length - '.dart'.length);
-    return 'lib/src/ccrouter_generated/route/$stem.route.g.dart';
   }
 
   /// Finds the nearest Package root containing [filePath].

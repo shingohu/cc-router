@@ -174,9 +174,26 @@ void probe() {
       );
       expect(
         hostCatalog,
-        contains('CCGeneratedHostAssembly.fromPackageBundles(['),
+        contains('CCGeneratedHostAssembly.fromPackageBundles('),
       );
-      expect(hostCatalog, isNot(contains('package:demo_order/')));
+      expect(
+        hostCatalog,
+        contains("package:ccrouter_devtools/ccrouter_devtools.dart"),
+      );
+      expect(hostCatalog, contains('ccrouterGeneratedDevToolsCatalog'));
+      expect(hostCatalog, contains('CCDevToolsHostIntegration('));
+      expect(hostCatalog, contains('hostToolIntegrations: ['));
+      expect(hostCatalog, contains('kind: "route"'));
+      expect(hostCatalog, contains('kind: "service"'));
+      expect(hostCatalog, contains('kind: "command"'));
+      expect(hostCatalog, contains('kind: "event"'));
+      expect(hostCatalog, contains('kind: "initTask"'));
+      expect(hostCatalog, contains('id: "demo_navigation_lab.detail"'));
+      expect(hostCatalog, contains('id: "demo.network.client"'));
+      expect(hostCatalog, contains('kind: "subscribes"'));
+      expect(hostCatalog, isNot(contains('demo.analytics.order-completed')));
+      expect(hostCatalog, isNot(contains('DateTime.now')));
+      expect(hostCatalog, isNot(contains("import 'package:demo_order/")));
       final contractIndex =
           jsonDecode(
                 File(
