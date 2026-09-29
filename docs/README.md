@@ -25,8 +25,8 @@
 - Analysis Server 的跨 Package 生成物导入诊断与缺失 Route 生成物诊断。
 - 嵌入式只读 DevTools、版本化 Snapshot/Trace Edge 协议和官方 DevTools Extension；Catalog、
   Runtime、组件依赖和单次能力调用链可以关联展示。
-- Provider-neutral Analytics、显式点击/滚动/曝光采集、Consent、黑名单、节流和 Firebase callback
-  Adapter。
+- Provider-neutral Analytics、显式点击/滚动/曝光采集、Consent、黑名单和节流；Firebase callback
+  Adapter 作为应用层 Demo 提供。
 - Demo KV Storage Scoped Facade、Host-owned Context Provider 和可替换内存 Backend。
 
 ### 部分实现

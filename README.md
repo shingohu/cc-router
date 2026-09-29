@@ -21,7 +21,6 @@ CCRouter 是一个面向 Flutter 大型应用的组件化运行时与类型安�
 | --- | --- | --- |
 | `ccrouter_contracts` | Pure Dart Route、Service、Command、Event、错误与导航契约 | 仅独立 contracts Package |
 | `ccrouter_analytics` | Provider-neutral 分析事件、脱敏属性、有界 Sink 与 Route PV/Leave 桥接 | 按需接入 |
-| `ccrouter_analytics_firebase` | Firebase Analytics callback Adapter，不让 Core 依赖供应商 SDK | 按需接入 |
 | `ccrouter_auto_track` | 显式点击、滚动和曝光采集 Target | 按需接入 |
 | `ccrouter_core` | Runtime、Registry、Scope、调度和诊断实现 | 否 |
 | `ccrouter` | Flutter 业务门面、`CCRouterApp`、页面生命周期 | 是 |
@@ -33,7 +32,11 @@ CCRouter 是一个面向 Flutter 大型应用的组件化运行时与类型安�
 | `devtools/ccrouter_extension` | 官方 Flutter/Dart DevTools 只读 Extension | 仅开发工具 |
 | `ccrouter_test` | 面向集成者的测试 Host、Fake 与测试辅助能力 | 仅 test/dev dependency |
 | `demo` | Android、iOS、macOS、Web、OHOS 平台 Host 和完整能力示例 | 示例 |
-| `demo/modules/*` | 示例组件与独立 contracts Package | 示例 |
+| `demo/modules/*` | 示例组件、独立 contracts Package 和应用层 Adapter 示例 | 示例 |
+
+Firebase 等供应商 SDK 的初始化、Consent、身份和上传策略属于应用层。仓库中的
+`demo/modules/analytics_firebase` 只演示如何把 provider-neutral 事件映射到应用拥有的
+Firebase callback，不属于 CCRouter 框架 Package，也不构成框架对 Firebase 的依赖或兼容承诺。
 
 业务与组件默认只导入：
 

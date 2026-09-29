@@ -1,12 +1,12 @@
 import 'package:ccrouter_analytics/ccrouter_analytics.dart';
-import 'package:ccrouter_analytics_firebase/ccrouter_analytics_firebase.dart';
+import 'package:demo_analytics_firebase/demo_analytics_firebase.dart';
 import 'package:test/test.dart';
 
 void main() {
   test('Firebase sink maps only sanitized event data', () async {
     String? name;
     Map<String, Object>? parameters;
-    final sink = CCFirebaseAnalyticsSink(
+    final sink = DemoFirebaseAnalyticsSink(
       writeEvent: (eventName, eventParameters) {
         name = eventName;
         parameters = eventParameters;

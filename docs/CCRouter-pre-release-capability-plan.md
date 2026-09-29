@@ -27,7 +27,7 @@
 | 黑名单 | 中高，能控制自动采集边界 | 高，但必须建立稳定 Target/Scope 语义 | P1 | 已完成显式规则，不允许绕过 Consent |
 | 通用节流 | 高，控制高频滚动/曝光压力 | 高 | P0 | 已完成 Dispatcher/Target 层实现 |
 | 完整平台兼容矩阵 | 高，减少平台行为误判 | 高，主要是测试和能力声明 | P0 | 首轮矩阵/smoke 已完成，真实设备持续补充 |
-| Firebase Adapter | 中高，满足常见落地 | 高，独立可选包 | P1 | 已完成 callback Adapter，Core 不依赖 Firebase |
+| Firebase Adapter | 中高，满足常见落地 | 高，应用层可替换 Adapter | P1 | Demo 已完成 callback Adapter，框架不依赖 Firebase |
 | 性能、队列压力、RSS/Heap 基准 | 高，支撑稳定性承诺 | 高 | P0 | 首批统一基准已完成，长期趋势持续采样 |
 | Consent deny/grant/revoke 与 Foreign Popup 断言 | 高，验证隐私和归因边界 | 高 | P0 | Demo 与自动断言已完成 |
 | 高级 Service/Command/Event/InitTask 脚手架 | 中，减少模板代码 | 高 | P1 | 已完成非覆盖式声明骨架 |
@@ -65,7 +65,7 @@ Catalog 不能伪造 Runtime 当前状态，Runtime 也不负责扫描源码。E
 - DevTools 只读，不允许导航、Pop、重试、销毁 Scope、激活组件或修改 Adapter。
 - 自动埋点默认关闭；没有稳定业务 Target 时不生成业务点击事件。
 - Consent 过滤在进入队列前执行，撤销时清理待发送事件；已经进入外部 Sink 的事件不能撤回。
-- Firebase、ThinkingData、OpenTelemetry 等均为独立 Adapter，Core 不引入供应商依赖。
+- Firebase、ThinkingData、OpenTelemetry 等均为应用层独立 Adapter，框架不引入供应商依赖。
 - 生成器只生成确定性声明、注册桥和 metadata；不生成业务逻辑、网络请求、匿名随机身份或
   任意 `Map<String, dynamic>` Contract。
 - 长期回归使用快照、摘要和指标，不保留完整 URI、Query、Extra、Widget、Token 或业务返回值。
@@ -337,10 +337,11 @@ Target，但不需要业务页面继承 CCRouter 基类。
 
 ### 7.5 Firebase Adapter
 
-新增独立 `ccrouter_analytics_firebase`，只负责：事件名/属性白名单映射、Consent 状态同步、
-`page_view -> logScreenView`、批量策略和 Sink 异常隔离。Firebase 初始化、用户授权、账号身份和
-Crashlytics 仍由应用 Composition Root 管理。没有 Firebase 依赖时 Core/Analytics/Auto Track 不应
-增加编译成本。
+应用层 Demo 提供 `demo_analytics_firebase` callback 映射，只负责把已脱敏的
+`CCAnalyticsEvent` 转换为 Firebase 风格的事件名和参数。Firebase SDK 初始化、事件命名策略、
+Consent、账号身份、批量/重试、离线缓存和 Crashlytics 均由应用 Composition Root 管理。
+该 Adapter 不属于 CCRouter 框架 Package；没有 Firebase 依赖时 Core/Analytics/Auto Track
+不会增加相关编译成本。
 
 ### 7.6 平台兼容矩阵
 
@@ -438,7 +439,7 @@ CLI 继续保持非覆盖式，增加可选模板：
 
 - [x] Analytics 通用节流、黑名单和平台能力声明（平台矩阵仍需持续扩展）；
 - [x] Consent deny/grant/revoke 与 Foreign Popup 自动断言；
-- [x] Firebase mock/真实可选 Adapter 最小闭环；
+- [x] 应用层 Firebase mock/callback Adapter 示例最小闭环；
 - [x] 完成多平台编译 smoke、Pure Dart 长时间 Runtime、Analytics 队列压力和资源回收第一轮；
   真机手势、原生多窗口和长期生产 RSS 仍按兼容性文档持续采样。
 

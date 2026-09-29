@@ -191,18 +191,21 @@ ccrouter_generator       Dart build_runner 代码生成器
 ccrouter_go_router       默认 go_router 导航适配器
 ccrouter_test             测试 Runtime、Override、TestHost 和断言工具
 ccrouter_analytics        供应商中立的分析事件与有界分发
-ccrouter_analytics_firebase Firebase Analytics callback 适配器
 ccrouter_auto_track       可选的显式 UI 采集目标
 ccrouter_devtools         可选的嵌入式只读诊断面板
 ccrouter_devtools_protocol 纯 Dart、版本化的 Catalog/Runtime Snapshot 协议
 ccrouter_analyzer_plugin  可选的 Analysis Server 边界诊断
 devtools/ccrouter_extension 官方 Flutter/Dart DevTools 只读 Extension
+demo/modules/analytics_firebase 应用层 Firebase callback 映射示例
 ```
 
 注解声明位于 `ccrouter_contracts`；`ccrouter_core` 保持 Pure Dart，Flutter 相关类型只出现在
 `ccrouter`、`ccrouter_go_router`、`ccrouter_auto_track` 和业务组件页面中。只读诊断由可选的
 `ccrouter_devtools`、`ccrouter_devtools_protocol` 和官方 `devtools/ccrouter_extension` 提供；
 这些工具只作为开发/内部诊断依赖，不进入业务组件的默认依赖图。
+
+供应商 SDK Adapter、业务事件命名、账号身份、Consent、上传和持久化策略属于应用层，默认放在
+应用自身或 `demo/modules/*`，不能仅因可复用就进入 `packages/*`。
 
 这些是源码和依赖治理边界，不要求每个边界都成为业务方手工配置的依赖。v0.1 中，出现在公开传递依赖图里的 Package 必须可以独立发布；仅供开发或测试使用的 Package 可以标记为开发工具包。
 

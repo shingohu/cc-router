@@ -10,7 +10,6 @@ dev_dependencies:
 workspace:
   - packages/ccrouter_contracts
   - packages/ccrouter_analytics
-  - packages/ccrouter_analytics_firebase
   - packages/ccrouter_auto_track
   - packages/ccrouter_core
   - packages/ccrouter
@@ -22,6 +21,7 @@ workspace:
   - packages/ccrouter_test
   - demo
   - demo/modules/network
+  - demo/modules/analytics_firebase
   - demo/modules/kv_storage
   - demo/modules/order
   - demo/modules/order_contracts

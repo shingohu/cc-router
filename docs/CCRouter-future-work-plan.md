@@ -194,7 +194,7 @@
 - [ ] 不为了对齐其他框架增加全局万能 Route 表、反射分派或任意 Map Contract。
 - [ ] 不在核心 `ccrouter` 中直接依赖 GoRouter；GoRouter 最小入口保持在独立 Adapter Package。
 - [ ] 不做默认全局 Widget 文本/Key 猜测和随机业务 ID；自动埋点只在显式 Target 或实验构建中
-  运行。通用节流、黑名单、Consent 回归、Firebase Adapter 和平台矩阵按
+  运行。通用节流、黑名单、Consent 回归、应用层 Firebase Adapter 示例和平台矩阵按
   [正式发布前能力设计与实施计划](CCRouter-pre-release-capability-plan.md) 分阶段完成。
 
 ## 7. 执行规则
@@ -204,3 +204,17 @@
 3. 每项完成后必须有 Pure Dart/Flutter/生成器测试中适用的回归覆盖。
 4. 通过 Analyze、相关测试、生成检查和 `git diff --check` 后再单独提交。
 5. 新增公开 API 必须说明场景、所有权、生命周期、错误、诊断边界和更窄替代方案。
+
+### 7.1 Framework Package 准入门禁
+
+新增 `packages/*` 前必须完成边界评审，并同时满足：
+
+1. 能被多个应用复用，且不是某个 Demo、产品或供应商的集成策略；
+2. 契约保持 provider-neutral，不内置业务事件、账号、上传、存储或环境切换规则；
+3. Owner、生命周期、失败、隐私、性能和兼容语义能够形成稳定公开契约；
+4. 不能仅通过应用 Composition Root、`demo/modules/*` 或已有 SPI 完成；
+5. 依赖可选且不会把供应商 SDK 传递给未使用该能力的应用；
+6. 具备独立测试、回归矩阵和长期维护责任。
+
+不满足任一项时，默认放入应用仓库或 `demo/modules/*` 验证；只有形成多个真实应用共同需求后，
+才重新评估是否晋升为框架 Package。

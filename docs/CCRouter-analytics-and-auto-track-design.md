@@ -10,8 +10,7 @@ CCRouter 自动观测框架拥有的导航和生命周期；应用负责业务�
 ccrouter_core                 Route、Trace、Failure、Diagnostic
 ccrouter_analytics            统一分析事件、脱敏属性、有界 Sink
 ccrouter_auto_track           可选的显式 UI 目标和有限自动采集
-ccrouter_analytics_firebase   Firebase 映射
-ccrouter_analytics_thinkingdata ThinkingData 映射（计划，尚无 Package）
+应用层 Adapter                Firebase、ThinkingData、本地记录或 HTTP 上传
 应用层                         业务事件、Consent、身份和网络/Crash 接入
 ```
 
@@ -88,7 +87,9 @@ FilledButton(
 
 ## 7. 第三方 Adapter
 
-Firebase Adapter 映射 `page_view` 到 `logScreenView`，业务行为映射到 `logEvent`，并在 Adapter 边界校验事件名和参数限制。
+Firebase Adapter 属于应用层。当前 `demo/modules/analytics_firebase` 演示将已脱敏事件映射到
+Firebase 风格的 `logEvent` callback；生产应用可按自身命名规则把页面事件映射到
+`logScreenView` 或 `logEvent`。
 
 ThinkingData Adapter 映射到 `track`，用户身份通过 `identify/login` 管理。App Start、App End、Install 和 Crash 等供应商自动事件由 Adapter 或应用错误入口负责，不由 Core 伪造。
 
@@ -127,7 +128,7 @@ Core 不依赖 Firebase、ThinkingData、Sentry 或 Crashlytics。
 
 ### P4：供应商 Adapter
 
-- [x] Firebase Adapter（通过注入 `logEvent` callback，不让 Core 依赖供应商 SDK）；
+- [x] 应用层 Firebase Adapter 示例（通过注入 `logEvent` callback，不让框架依赖供应商 SDK）；
 - [ ] ThinkingData Adapter；
 - [ ] OpenTelemetry/应用日志 Adapter；
 - [x] 增加 provider-neutral Consent 开关和有界采样策略；
@@ -146,7 +147,7 @@ Core 不依赖 Firebase、ThinkingData、Sentry 或 Crashlytics。
 
 P0、P1、P2 显式 UI 能力、P3 的独立包基础和 Consent/采样基础已实现，Demo 已接入页面、
 点击、滑动、曝光、失败与 Foreign Popup 场景。Analytics Consent 的 deny/grant/revoke 演示和
-Foreign Popup 不误归因断言已闭环；Firebase 映射、黑名单和通用节流已提供，ThinkingData、
+Foreign Popup 不误归因断言已闭环；应用层 Firebase 映射示例、黑名单和通用节流已提供，ThinkingData、
 通用 Widget 自动猜测、HTTP/Crash Adapter 尚未实现。
 
 正式发布前的实施顺序、平台能力矩阵、全局 Widget 识别的实验边界、Firebase Adapter、性能/RSS/Heap
@@ -156,7 +157,7 @@ Foreign Popup 不误归因断言已闭环；Firebase 映射、黑名单和通用
 
 ### 9.1 当前平台边界
 
-| 平台 | Dispatcher/Consent/Firebase 映射 | Exposure/Scroll AutoTrack | 说明 |
+| 平台 | Dispatcher/Consent/应用层映射 | Exposure/Scroll AutoTrack | 说明 |
 | --- | --- | --- | --- |
 | Android | 支持 | Flutter Widget 测试覆盖 | 原生生命周期和 Crash 仍由应用 Adapter 接入 |
 | iOS/iPadOS | 支持 | Flutter Widget 测试覆盖 | 不读取原生控件文本或无授权设备标识 |
