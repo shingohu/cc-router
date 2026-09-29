@@ -25,6 +25,11 @@ void main() {
     // ccrouter_demo is a separate Package with a declared dependency on
     // demo_navigation_lab, so its Analyzer uses the real workspace graph.
     probeDirectory.createSync(recursive: true);
+    final rootOptions = File(path.join(root.path, 'analysis_options.yaml'));
+    File(path.join(probeDirectory.path, 'analysis_options.yaml'))
+        .writeAsStringSync(
+          'include: ${path.relative(rootOptions.path, from: probeDirectory.path)}\n',
+        );
     probe.writeAsStringSync('''
 import 'package:demo_navigation_lab/src/ccrouter_generated/component/demo_navigation_lab_component.route_api.g.dart';
 
