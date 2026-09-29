@@ -21,14 +21,9 @@ Use the system FVM stable SDK for this package's Web build.
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+The application must register `CCDevToolsServiceExtension` in its debug
+composition root and provide the static catalog snapshot. The extension shows
+Overview, Catalog, Components, and Call Graph views. Source locations are
+displayed as copyable package URIs; the extension does not assume or launch a
+local IDE. See [`docs/CCRouter-devtools.md`](../../docs/CCRouter-devtools.md)
+for the integration and privacy boundaries.

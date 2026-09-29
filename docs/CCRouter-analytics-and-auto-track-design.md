@@ -11,7 +11,7 @@ ccrouter_core                 Route、Trace、Failure、Diagnostic
 ccrouter_analytics            统一分析事件、脱敏属性、有界 Sink
 ccrouter_auto_track           可选的显式 UI 目标和有限自动采集
 ccrouter_analytics_firebase   Firebase 映射
-ccrouter_analytics_thinkingdata ThinkingData 映射
+ccrouter_analytics_thinkingdata ThinkingData 映射（计划，尚无 Package）
 应用层                         业务事件、Consent、身份和网络/Crash 接入
 ```
 

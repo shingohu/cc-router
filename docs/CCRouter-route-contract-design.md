@@ -178,12 +178,13 @@ final class OrderDetailPage extends StatelessWidget {
 Flutter/GoRouter 类型进入独立契约。Result 或 Extra 使用自定义对象时，应将对象移动到
 contracts Package 的公开 Pure Dart model library，并由 schema 通过公开入口显式导入。
 
-## 非路由附录：Service Promotion Proposal
+## 非路由附录：Service Promotion 已迁移
 
-本节只记录架构 2.0 的 Service 契约升级候选，尚未实现，也不属于路由完成计划。进入
-Service 开发阶段时应迁移到独立 Service 设计文档，不能据此视为已公开 API。
+本节原先记录的 Service Promotion Proposal 已完成，不再作为架构 2.0 候选。当前实现支持
+`@CCServiceContract`、稳定 ID、自动绑定、生成 Token、消费组件专属 Proxy 和 Contract 版本
+兼容门禁；生成 Token 仍只属于 Generator、低层 Component SPI 和测试，不进入业务 Facade。
 
-Service 默认按 Dart `Type` 注册和解析。需要跨组件时，在 contracts Package 使用
-`@CCServiceContract` 声明接口、Owner 和稳定 ID；简单实现通过唯一直接 `implements`
-自动绑定。Runtime 同时保留 Type 索引和稳定字符串 ID 索引，并共享 Scope 缓存和销毁
-生命周期；生成 Token 只属于 Generator、低层 Component SPI 和测试，不进入业务 Facade。
+Service 的当前语义和剩余限制以
+[Service 生命周期设计](CCRouter-service-lifecycle-design.md) 与
+[Service Proxy 生成设计](CCRouter-service-proxy-generation-design.md) 为准。本路由契约文档不再
+重复维护 Service 状态。

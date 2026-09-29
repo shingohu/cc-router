@@ -5,6 +5,10 @@
 本文把正式发布前的七项工作放到同一条可验收路线中，评估它们的真实收益、实现边界、
 前置条件和回归要求。本文是实施计划，不代表七项能力都应立即进入公开 API。
 
+> 当前状态（2026-09-29）：Phase 0-4 和 Phase 5 的高级 scaffold/首轮全量回归已完成；仅正式
+> release candidate、Hosted 发布/迁移文档、旧 Index 兼容样本维护，以及真实设备与长期生产
+> RSS/Heap 趋势仍未收口。第 2-9 节保留原设计依据，实际完成度以第 10 节清单为准。
+
 当前基线为 1.x 维护阶段：已有能力优先做兼容性、性能、稳定性和生成物正确性维护；
 只有能改善开发效率、问题定位或发布可信度的能力才进入本计划。任何新增公开 API 都必须
 先通过本计划的边界评审，不能因为其它框架提供了类似按钮就直接加入。
@@ -13,24 +17,24 @@
 
 | 项目 | 价值 | 可实现性 | 推荐阶段 | 结论 |
 | --- | --- | --- | --- | --- |
-| 官方 Flutter/Dart DevTools Extension | 高，降低排障和依赖图理解成本 | 中高，需要独立 Extension Package 和协议版本隔离 | P1 | 值得做，先只读，再逐步增强 |
-| Catalog 与 Runtime 快照联动 | 高，是 Extension 的数据基础 | 高，可复用现有 Catalog/快照 | P0 | 先做稳定快照协议 |
-| 路由到源码图形化跳转 | 中高，缩短定位时间 | 高，已有 source location 和 `ccrouter find` | P1 | 低风险，优先实现 |
-| 组件依赖图高级交互 | 中高，帮助发现依赖方向和缺失 Owner | 高 | P1 | 只读筛选、聚焦、反向依赖即可 |
-| Service/Command/Event/InitTask 调用链图 | 高，解决跨组件回溯问题 | 中，需要统一 Trace 边模型 | P1 | 先做单次 Trace 链，不承诺全局历史调用图 |
-| Analyzer Demo bootstrap 使用 Git `main` | 中，验证未发布插件修复可被 Demo 使用 | 高，当前已具备 | P0 收口 | 保留固定 Git commit，增加可验证状态和 Hosted 切换说明 |
+| 官方 Flutter/Dart DevTools Extension | 高，降低排障和依赖图理解成本 | 中高，需要独立 Extension Package 和协议版本隔离 | P1 | 已完成只读版本 |
+| Catalog 与 Runtime 快照联动 | 高，是 Extension 的数据基础 | 高，可复用现有 Catalog/快照 | P0 | 已完成版本化协议 |
+| 路由到源码定位 | 中高，缩短定位时间 | 高，已有 source location 和 `ccrouter find` | P1 | source URI/Host callback 已完成；Extension 直接打开本地 IDE 未实现 |
+| 组件依赖图高级交互 | 中高，帮助发现依赖方向和缺失 Owner | 高 | P1 | 已完成只读筛选、聚焦和反向依赖 |
+| Service/Command/Event/InitTask 调用链图 | 高，解决跨组件回溯问题 | 中，需要统一 Trace 边模型 | P1 | 已完成单次 Trace 链，不承诺全局历史调用图 |
+| Analyzer Demo bootstrap 使用固定 Git commit | 中，验证未发布插件修复可被 Demo 使用 | 高，当前已具备 | P0 收口 | 已完成固定 commit、loader smoke 和 Hosted fallback |
 | 全局 Widget 自动识别 | 中，接入成本低但误报/隐私/性能风险高 | 中低，Flutter Widget 树无法可靠表达业务语义 | 观察项 | 不作为默认能力，不做基于文本/随机 Key 的全局猜测 |
-| 黑名单 | 中高，能控制自动采集边界 | 高，但必须建立稳定 Target/Scope 语义 | P1 | 只做显式规则，不允许绕过 Consent |
-| 通用节流 | 高，控制高频滚动/曝光压力 | 高 | P0 | 统一放到 Dispatcher/Target 层，不能由供应商各自实现 |
-| 完整平台兼容矩阵 | 高，减少平台行为误判 | 高，主要是测试和能力声明 | P0 | 建立矩阵和最小回归集 |
-| Firebase Adapter | 中高，满足常见落地 | 高，独立可选包 | P1 | 值得做，Core 不依赖 Firebase |
-| 性能、队列压力、RSS/Heap 基准 | 高，支撑稳定性承诺 | 高 | P0 | 必须先建基线再优化 |
-| Consent deny/grant/revoke 与 Foreign Popup 断言 | 高，验证隐私和归因边界 | 高 | P0 | Demo 必须覆盖并自动断言 |
-| 高级 Service/Command/Event/InitTask 脚手架 | 中，减少模板代码 | 高 | P1 | 先生成声明骨架，不生成业务闭包或万能配置 |
-| Contract 版本兼容 | 高，正式发布的必要门槛 | 中高，需要生成器、Index 和 CI 协同 | P0/P1 | 先设计协议，再实现最小校验闭环 |
-| 长时间 Runtime、多平台回归 | 高，发现释放和平台差异 | 中高，需要设备/CI 资源 | P0 | 作为发布门禁，不扩大公开 API |
+| 黑名单 | 中高，能控制自动采集边界 | 高，但必须建立稳定 Target/Scope 语义 | P1 | 已完成显式规则，不允许绕过 Consent |
+| 通用节流 | 高，控制高频滚动/曝光压力 | 高 | P0 | 已完成 Dispatcher/Target 层实现 |
+| 完整平台兼容矩阵 | 高，减少平台行为误判 | 高，主要是测试和能力声明 | P0 | 首轮矩阵/smoke 已完成，真实设备持续补充 |
+| Firebase Adapter | 中高，满足常见落地 | 高，独立可选包 | P1 | 已完成 callback Adapter，Core 不依赖 Firebase |
+| 性能、队列压力、RSS/Heap 基准 | 高，支撑稳定性承诺 | 高 | P0 | 首批统一基准已完成，长期趋势持续采样 |
+| Consent deny/grant/revoke 与 Foreign Popup 断言 | 高，验证隐私和归因边界 | 高 | P0 | Demo 与自动断言已完成 |
+| 高级 Service/Command/Event/InitTask 脚手架 | 中，减少模板代码 | 高 | P1 | 已完成非覆盖式声明骨架 |
+| Contract 版本兼容 | 高，正式发布的必要门槛 | 中高，需要生成器、Index 和 CI 协同 | P0/P1 | 核心生成/聚合/Runtime 门禁已完成 |
+| 长时间 Runtime、多平台回归 | 高，发现释放和平台差异 | 中高，需要设备/CI 资源 | P0 | 首轮已完成；真实设备和生产趋势持续执行 |
 
-推荐落地顺序：
+原推荐落地顺序（当前已执行到正式发布候选前）：
 
 1. 先冻结 Contract 兼容协议、快照协议和性能指标；
 2. 完成 Analyzer 固定 Git ref/Hosted fallback 验证和 Analytics Consent/Foreign Popup 回归；
@@ -213,13 +217,15 @@ TraceEdge
 详情；Extension 不执行导航、重试、销毁或修改配置。Flutter/Dart/DevTools 版本通过独立矩阵
 验证，Extension 启动失败不能影响应用分析。
 
-### 5.3 路由到源码图形化跳转
+### 5.3 路由到源码定位
 
-已有 Catalog 的 `packageUri`、行列号和生成物角色可直接转换为 DevTools `open` 请求：
+已有 Catalog 的 `packageUri`、行列号和生成物角色已进入只读协议。嵌入式面板可以把它们交给
+Host `onOpenSource` callback；官方 Extension 当前展示/复制 URI，不假设本机 IDE，也不直接发送
+编辑器 `open` 请求：
 
-- Route 节点默认跳到 authored Page/Contract；
-- 需要诊断生成过程时，次级链接跳到 generated registration；
-- 跨 Package 只跳到公开 Contract 或实现源码，不暴露 `src` 生成路径为业务 API；
+- Route 节点优先指向 authored Page/Contract；
+- 需要诊断生成过程时，次级位置指向 generated registration；
+- 跨 Package 只定位公开 Contract 或实现源码，不暴露 `src` 生成路径为业务 API；
 - 找不到源码时保留稳定 ID 和 Package，不伪造文件位置。
 
 ### 5.4 组件依赖图高级交互
@@ -242,7 +248,7 @@ Event 的多个 Subscriber 以分支显示，失败隔离保持独立；Service 
 
 ### 5.6 Demo 验收场景
 
-- 打开静态 Route 并跳转到 authored source；
+- 打开静态 Route 并显示 authored source URI；嵌入式 Host callback 可验证实际打开行为；
 - 从一个 Route Trace 展开 Interceptor、Service Proxy 和 Command；
 - Event 分发到两个 Subscriber，其中一个失败但另一条链完成；
 - InitTask DAG 显示 Gate、依赖和 skipped；
@@ -454,7 +460,8 @@ CLI 继续保持非覆盖式，增加可选模板：
 ### Phase 4：官方 DevTools Extension（P1，已完成）
 
 - [x] 独立 Extension Package、协议版本和当前稳定 SDK Web 构建/validate smoke；
-- [x] Route/Component/Call Chain 视图，以及 Catalog/Runtime 联动和源码跳转回调；
+- [x] Route/Component/Call Chain 视图，以及 Catalog/Runtime 联动、源码 URI 和嵌入式 Host
+  `onOpenSource` callback；官方 Extension 不直接绑定本地 IDE；
 - [x] Extension 断连/启动失败不影响应用；
 - [x] Demo Extension smoke 和源码 URI 跳转验收。
 
@@ -485,7 +492,8 @@ CLI 继续保持非覆盖式，增加可选模板：
 1. Contract 兼容检查能在生成/聚合阶段阻止不兼容组合，并有稳定错误码；
 2. Analyzer 固定 Git ref、Hosted fallback 和插件失效降级均有验证；
 3. Consent 和 Foreign Popup 归因测试自动通过；
-4. DevTools Extension 只读快照、源码跳转和调用链在 Demo 中可用；
+4. DevTools Extension 只读快照、源码 URI 和调用链在 Demo 中可用，嵌入式 Host callback 可映射
+   到受控源码浏览器；
 5. 生成脚手架通过非覆盖、生成和分析回归；
 6. 性能、RSS/Heap、长时间 Runtime 和多平台报告没有未解释的回归；
 7. README、Integration Skill、专项设计文档、CLI 文档和 Release Checklist 同步更新。

@@ -191,14 +191,18 @@ ccrouter_generator       Dart build_runner 代码生成器
 ccrouter_go_router       默认 go_router 导航适配器
 ccrouter_test             测试 Runtime、Override、TestHost 和断言工具
 ccrouter_analytics        供应商中立的分析事件与有界分发
+ccrouter_analytics_firebase Firebase Analytics callback 适配器
 ccrouter_auto_track       可选的显式 UI 采集目标
 ccrouter_devtools         可选的嵌入式只读诊断面板
+ccrouter_devtools_protocol 纯 Dart、版本化的 Catalog/Runtime Snapshot 协议
+ccrouter_analyzer_plugin  可选的 Analysis Server 边界诊断
+devtools/ccrouter_extension 官方 Flutter/Dart DevTools 只读 Extension
 ```
 
 注解声明位于 `ccrouter_contracts`；`ccrouter_core` 保持 Pure Dart，Flutter 相关类型只出现在
-`ccrouter`、`ccrouter_go_router`、`ccrouter_auto_track` 和业务组件页面中。只读 DevTools 面板由
-可选的 `ccrouter_devtools` 提供，官方 DevTools Extension 仍是后续候选，
-该 Package 只作为开发/内部诊断依赖，不进入业务组件的默认依赖图。
+`ccrouter`、`ccrouter_go_router`、`ccrouter_auto_track` 和业务组件页面中。只读诊断由可选的
+`ccrouter_devtools`、`ccrouter_devtools_protocol` 和官方 `devtools/ccrouter_extension` 提供；
+这些工具只作为开发/内部诊断依赖，不进入业务组件的默认依赖图。
 
 这些是源码和依赖治理边界，不要求每个边界都成为业务方手工配置的依赖。v0.1 中，出现在公开传递依赖图里的 Package 必须可以独立发布；仅供开发或测试使用的 Package 可以标记为开发工具包。
 
@@ -1210,7 +1214,7 @@ Android/iOS SDK、权限和 MethodChannel/Pigeon 应通过显式 Service 或 Com
 
 ## 18. 可观测性与诊断 API
 
-v0.1 提供机器可读诊断接口和可选的嵌入式只读 DevTools 面板，官方 DevTools Extension 后续实现：
+v0.1 提供机器可读诊断接口、可选的嵌入式只读 DevTools 面板和官方只读 DevTools Extension：
 
 `navigationDiagnosticCapacity` 分别限制每一种 Runtime 导航诊断历史，包括
 Lifecycle、Failure、Visibility、Route Entry、Backend Event、Restoration Opportunity
@@ -1256,8 +1260,9 @@ CCRouter.diagnostics.exportReport();
 
 `*Named` 方法不纳入 API。`popAndPush`、`popUntil`、`pushAndRemoveUntil`、`replaceRouteBelow`、`removeRoute`、`removeRouteBelow` 和对应 Handle/Predicate/SPI 已从 v0.1 整条能力链删除。它们仅在后端具备稳定 Entry identity、原子目标栈提交、混合栈隔离、Pop 拒绝、失败回滚和结果/Scope 生命周期保证后，通过可选版本化栈事务 SPI 重新评估。`popUntilWithResult` 同样保持 Deferred。
 
-暂缓官方 DevTools Extension、高级图形交互、Native/Isolate RPC、多 Engine 共享、事件持久化和动态交付；
-当前可嵌入的只读面板由 `ccrouter_devtools` 提供。
+当前已完成官方只读 DevTools Extension、Catalog/Runtime 联动、组件依赖聚焦和单次能力调用链；
+仍暂缓 Runtime 控制型工具、Extension 到任意本地 IDE 的直接绑定、Native/Isolate RPC、多 Engine
+共享、事件持久化和动态交付。
 
 ---
 
@@ -1297,7 +1302,8 @@ CCRouter.diagnostics.exportReport();
 - 多 Navigator Outlet 的声明方式。
 - Trace 采样、上报和与后端 OpenTelemetry 的关联方式。
 - Native Adapter、Isolate Adapter 的 Envelope Schema。
-- 契约版本兼容与废弃策略。
+- Contract Promotion/Migration、正式 Hosted 发布和废弃迁移工具；五类 Contract SemVer、shape
+  fingerprint 与生成/聚合/Runtime 核心兼容门禁已经完成。
 
 ---
 

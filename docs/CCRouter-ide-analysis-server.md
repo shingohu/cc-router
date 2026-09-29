@@ -118,10 +118,18 @@ fvm dart run ccrouter_generator:ccrouter generate demo --check
 - 插件不提供自动修复、自动插入 import、自动生成和运行时导航。任何自动写入都必须由未来
   独立的 IDE/CLI 设计明确授权，不能隐藏在 Analysis Server isolate 中。
 
-## 后续评估
+## 已完成与剩余边界
 
-当前尚未交付 IDE 内专用 Route-to-source 导航、Component Graph 面板或官方 DevTools Extension。
-可嵌入的只读诊断面板已由 `ccrouter_devtools` 提供；正式发布前计划将复用 Package Catalog
-的 source location metadata 和版本化 Runtime Snapshot，在真实项目验证导航误报率和索引规模后
-交付独立的只读 DevTools Extension。该计划不改变 Analyzer Plugin 的“只诊断、不生成、不改写”
-边界，详见 [`CCRouter-pre-release-capability-plan.md`](CCRouter-pre-release-capability-plan.md)。
+官方只读 DevTools Extension、Component Graph、Catalog/Runtime 联动和单次能力 Call Graph
+已经交付。静态 Catalog 携带 source location，嵌入式面板支持 Host `onOpenSource` callback；
+官方 Extension 当前展示并复制 source URI，但不直接绑定 VS Code、Android Studio 或任意本地
+IDE。因此：
+
+- “找到 Route/Service/Command/Event/InitTask 的源码位置”已完成；
+- “只读查看组件依赖、反向依赖和调用链”已完成；
+- “从官方 Extension 直接调用本地 IDE 打开文件”未完成；
+- 自动生成、自动 import、rename/alias migration Quick Fix 仍未实现。
+
+这些剩余项不改变 Analyzer Plugin 的“只诊断、不生成、不改写”边界。DevTools 当前实现与
+协议见 [`CCRouter-devtools.md`](CCRouter-devtools.md)，发布门槛见
+[`CCRouter-pre-release-capability-plan.md`](CCRouter-pre-release-capability-plan.md)。

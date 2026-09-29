@@ -169,6 +169,10 @@ templates:
 ```bash
 fvm dart run ccrouter_generator:ccrouter create component <package-name> <parent-directory>
 fvm dart run ccrouter_generator:ccrouter create page <PageName> <component-directory>
+fvm dart run ccrouter_generator:ccrouter create service <ServiceName> <component-directory>
+fvm dart run ccrouter_generator:ccrouter create command <CommandName> <component-directory>
+fvm dart run ccrouter_generator:ccrouter create event <EventName> <component-directory>
+fvm dart run ccrouter_generator:ccrouter create init-task <TaskName> <component-directory>
 ```
 
 The scaffold only creates authored source and refuses to replace existing files.

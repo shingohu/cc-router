@@ -114,6 +114,9 @@
   已实现；复杂构造/readiness 继续通过 Contribution 显式注册。
 - [x] Service 方法级自动 Proxy 使用消费组件显式 `CCServiceDependency<T>`，生成组件专属
   Client、稳定 caller/method identity 和方法 metadata；不扫描依赖生成未使用能力。
+- [x] `CCServiceContract.alias`、`CCCommandContract.alias` 提供跨消费者默认 Client 名称，
+  Dependency alias 可局部覆盖；alias 进入 metadata 和 shape fingerprint。alias migration
+  CLI/Analyzer Quick Fix 尚未实现。
 - [ ] 根据生产需求扩展当前明确拒绝的泛型 Contract、Stream、callback、继承或 Route Scope 方法代理；
   每一项必须先冻结所有权、取消和兼容语义。
 - [x] 按 `CCRouter-command-design.md` 已批准方案实现 Command Contract、Handler registration、
@@ -144,8 +147,8 @@
   Extension 已直接消费该协议，不读取 Runtime 内部对象。
 - [x] 实现独立官方 Flutter/Dart DevTools Extension 最小只读闭环；保持现有
   `ccrouter_devtools` Widget 面板只读，通过 `ext.ccrouter.snapshot` 消费版本化 Envelope。
-  已补齐高级组件筛选、Route-to-source 图形化跳转和单次 Service/Command/Event/InitTask
-  调用链视图。
+  已补齐高级组件筛选、Route source URI 展示/复制和单次 Service/Command/Event/InitTask
+  调用链视图；嵌入式面板可由 Host 提供 `onOpenSource`，官方 Extension 不直接绑定本地 IDE。
 - [x] Pub Hook 已支持成功的显式 `flutter pub` 后置生成，以及 `flutter run/build` fail-closed
   前置生成；复用 fingerprint fast-path，覆盖 POSIX/Windows wrapper 和全局参数前缀。Flutter
   Tool 内部隐式 `pub get` 与直接 `dart pub` 仍明确不在 Hook 边界。

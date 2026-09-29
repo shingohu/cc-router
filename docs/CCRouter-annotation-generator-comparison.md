@@ -187,10 +187,12 @@ CCRouter 应继续要求业务统一通过 `CCRouter.navigator`，让拦截、As
 
 以下是工程体验增强，不代表当前路由闭环缺失：
 
-1. 为 CLI 增加 Route/Component/Contract Scaffold 与 Contract promotion/migration。
+1. Route、Component、Service、Command、Event 和 InitTask scaffold 已完成；继续评估 Contract
+   scaffold/promotion/migration。
 2. 为 Catalog 增加按业务域组织的可选视图。
-3. 保持 `ccrouter find` 对 Route、Service、Command、Event 和 InitTask 的统一定位；
-   `ccrouter_devtools` 已提供只读诊断面板，IDE 内深度跳转和官方 DevTools Extension 仍单独评估。
+3. 保持 `ccrouter find` 对 Route、Service、Command、Event 和 InitTask 的统一定位；嵌入式面板
+   和官方 DevTools Extension 已提供 Catalog/Runtime、依赖与调用链只读视图，IDE 内直接打开
+   本地源码仍单独评估。
 4. 新 Backend 达到实施条件后补对应示例；原生多 Window 示例等待 Flutter 平台能力稳定。
 5. 持续优化生成器和 Workspace 聚合性能，但保持唯一生成语义与全量回归门禁。
 6. 如确有产品需求，再设计独立于稳定 `routeId` 的结构化产品埋点名称；该能力目前只是

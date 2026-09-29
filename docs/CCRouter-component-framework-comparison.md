@@ -4,7 +4,7 @@
 
 - 版本：v0.1
 - 状态：调研记录，不代表新增 API 或实施承诺
-- 最近对齐：2026-09-27
+- 最近对齐：2026-09-29
 - 对比对象：ARouter、TheRouter、Flutter Modular、GetIt、AutoRoute
 
 本文用于回答“CCRouter 相比其他组件化框架还缺少什么能力”，并区分：
@@ -38,8 +38,8 @@ CCRouter 的核心 Runtime 能力并不落后。相较常见方案，CCRouter �
 - Command、Event、InitTask 的语义分层；
 - 并发、取消、超时和销毁边界。
 
-当前主要欠缺的是官方 DevTools Extension、跨能力源码定位的深度交互和长期发布治理，
-而不是 Host 最小接入或继续堆叠更多基础路由操作。
+当前主要欠缺的是正式发布与迁移治理、IDE 自动改写、少数高级 Proxy 形态和长期生产观测，
+而不是 Host 最小接入、官方 DevTools Extension 或继续堆叠更多基础路由操作。
 
 ## 能力对比
 
@@ -59,7 +59,7 @@ CCRouter 的核心 Runtime 能力并不落后。相较常见方案，CCRouter �
 | 动态模块治理 | 部分方案支持 | Module 生命周期 | Scope/unregister | 无统一语义 | 1.x 不支持，2.0 候选 |
 | IDE 路由定位 | ARouter 有插件 | 一般 | 无 | 生成 API | 生成 API + `ccrouter find`，另有可选 Analysis Server 边界诊断 |
 | Watch 增量生成 | 生态支持 | 部分支持 | 不适用 | 支持 | 1.x 不提供 `watch` |
-| DevTools | 部分 | 部分 | 注册查看 | 部分 | 已有可选只读面板；官方 Extension 与高级图形交互后续评估 |
+| DevTools | 部分 | 部分 | 注册查看 | 部分 | 嵌入式面板、官方只读 Extension、Catalog/Runtime 联动、依赖与调用链已支持；不直接控制 Runtime 或绑定本地 IDE |
 | 原生多窗口 | 平台相关 | 平台相关 | 无 | 后端相关 | Host 隔离已具备，原生桥接暂缓 |
 | 状态恢复 | 平台/后端相关 | 后端相关 | 无 | 部分 | 只记录恢复机会，完整恢复暂缓 |
 
@@ -107,14 +107,13 @@ void registerOrderCapabilities(CCRegistry registry) {
 
 Contribution 会自动并入组件的生成 Registrar，因此新增 Route 或简单 Service 不再手工修改
 Registrar。Shell、策略和复杂 Service 仍是低频且语义各异的能力。Command、Event 和 InitTask
-已分别确认稳定 ID、可信 Owner 与静态关系图缺口，各自独立生成方案已记录，但尚未实现。
+已经分别实现显式 Contract、Handler/Subscription、Owner Client、稳定 ID、metadata、Catalog、
+Workspace 校验和自动 Registrar bridge。
 
-继续显式声明这些能力是有意选择，不是 Route/Service 自动装配遗漏。Service 方法 Proxy 已通过
-消费组件的结构化依赖声明独立实现；Command 将采用显式 Contract、Handler 与消费依赖；Event
-将采用显式 Contract、静态 Subscription 和 Owner 自动 Publication；InitTask 将采用显式 Task
-Contract、顶层 Handler 和类型化依赖。不同语义不能重新合并成一个万能注册注解。
+继续显式声明低频复杂能力是有意选择，不是自动装配遗漏。Service 方法 Proxy 通过消费组件的
+结构化依赖声明生成；Command、Event 和 InitTask 也保持各自语义，不合并成万能注册注解。
 
-**优先级：Command、Event、InitTask 均已有独立方案，按未来计划顺序实施。**
+**状态：已完成当前批准的生成闭环；高级方法形态和动态能力仍按生产需求评估。**
 
 ### 3. Generator 和 IDE 工具链不如成熟路由框架
 
@@ -126,19 +125,24 @@ Contract、顶层 Handler 和类型化依赖。不同语义不能重新合并成
 - `--profile`；
 - `find`；
 - `clean`；
-- `create component` / `create page` 非覆盖式脚手架；
+- `create component` / `create page` / `create service` / `create command` /
+  `create event` / `create init-task` 非覆盖式脚手架；
 - Package/Host Catalog。
 
 仍缺少：
 
 - `ccrouter watch`；
-- Contract Promotion 和迁移自动化；
-- IDE 内的路由到源码跳转插件；
-- IDE 内的组件依赖和 Contract 图；
-- 生成失败后的 IDE 状态提示；
-- 静态 Catalog 与 Runtime 快照联动的高级可视化（当前面板只展示 Runtime 状态）。
+- Contract Promotion/Migration 和 alias 迁移自动化；
+- IDE 内直接打开本地源码、自动改 import 和 rename/alias migration Quick Fix；
+- 超出当前两类确定性诊断的生成失败 IDE 状态提示。
 
-建议先继续强化 `find` 和 Catalog，再根据真实项目的生成 P95 决定是否实现 `watch`。当前 Demo 的稳定空改动约为数秒，尚不足以证明常驻 Watch 进程值得承担锁、资源和失败恢复成本。
+静态 Catalog 与 Runtime 快照联动、只读组件依赖/反向依赖、源码 URI 和单次能力调用链已由
+嵌入式面板与官方 DevTools Extension 实现。Extension 不绑定任意本地 IDE，不能把 source URI
+展示误写成跨 IDE 自动跳转。
+
+建议维护 `find`、Catalog 和增量生成基准，再根据真实项目的生成 P95 决定是否实现 `watch`。
+当前优化后 Demo 空改动约 0.8 秒量级，尚不足以证明常驻 Watch 进程值得承担锁、资源和失败恢复成本；
+具体数字以带日期的生成器性能报告为准。
 
 **优先级：中，主要归入 2.0 开发体验。**
 
@@ -164,19 +168,16 @@ App -> Session -> Workspace -> Route
 
 **优先级：低，2.0 候选。**
 
-### 5. Component/Contract 版本兼容检查不完整
+### 5. Component/Contract 版本兼容核心门禁已完成
 
-`CCComponent.version` 当前主要用于身份、Catalog、诊断和生成元数据。Pub 依赖可以解决 Package 版本，但目前还没有完整表达：
+五类 Contract 已具备独立 SemVer、规范化 shape fingerprint、Owner/消费者范围，以及生成、
+Host 聚合和 Runtime 三层校验。错误可以区分缺失、Owner 不匹配、版本范围不满足、指纹变化、
+重复实现和陈旧生成物。
 
-- Contract 允许的版本范围；
-- Route Contract 兼容性；
-- Service Contract 兼容性；
-- 能力废弃和迁移；
-- 跨组件接口升级失败原因。
+仍未完成的是正式 Hosted 发布、release candidate 兼容样本的持续维护，以及 Contract
+Promotion/Migration CLI；它们属于发布工作流，不应再写成 Runtime 兼容检查缺失。
 
-正式发布前应考虑在生成阶段增加 Contract compatibility check，而不是等 Runtime 运行后才发现组件协议不兼容。
-
-**优先级：中，适合正式发布前设计。**
+**状态：核心兼容门禁已完成；发布与迁移工具待完成。**
 
 ### 6. 缺少环境实现选择模型
 
@@ -200,12 +201,12 @@ CCRouter 已有足够的只读数据基础：
 - Service Invocation；
 - InitTask Snapshot。
 
-`ccrouter_devtools` 已提供可嵌入的统一只读面板，展示 Component Graph、Route/Backend
-Entries、Navigation Timeline、Failure/Fallback 和 InitTask DAG。它不提供任何导航、重试、
-销毁或组件激活控制；官方 Dart/Flutter DevTools Extension 以及更复杂的图形交互仍需在
-后续工具阶段评估。
+`ccrouter_devtools` 已提供可嵌入的统一只读面板；`devtools/ccrouter_extension` 已通过版本化
+Snapshot 协议展示 Overview、Catalog、Component Graph 和 Call Graph。两者均不提供导航、
+重试、销毁或组件激活控制。源码 URI 可展示/复制，嵌入式面板可由 Host 提供 `onOpenSource`；
+官方 Extension 到任意本地 IDE 的直接绑定仍未实现。
 
-**优先级：中；嵌入式只读面板已完成，官方 Extension 仍属于 2.0 开发体验任务。**
+**状态：官方只读 Extension 和关系视图已完成；IDE 直接打开源码仍是工具链缺口。**
 
 ## 有意延期，不应视为当前遗漏
 
@@ -218,9 +219,9 @@ Entries、Navigation Timeline、Failure/Fallback 和 InitTask DAG。它不提供
 5. 原子组合栈操作和精确 Entry 操作；
 6. 动态组件激活、停用和卸载；
 7. Action Pipeline；
-8. Command、Event、InitTask 自动声明生成，以及 Service Proxy 当前不支持的方法形态；
-9. CLI 契约提升和迁移工具（Component/内部 Page 最小非覆盖式模板已落地）；
-10. Generator Watch 和官方 DevTools Extension。
+8. Service Proxy 当前明确拒绝的通用 generic Contract、Stream、callback、继承和高级 Route Scope 形态；
+9. CLI Contract Promotion/Migration 和 alias 迁移工具；
+10. Generator Watch。
 
 这些能力不是“缺少基础实现”，而是当前版本为了保持 API 表面积、生命周期和降级语义可控而主动不公开。
 
@@ -246,9 +247,9 @@ Entries、Navigation Timeline、Failure/Fallback 和 InitTask DAG。它不提供
 
 ### 近期
 
-1. Component/Contract 版本兼容校验设计；
-2. 持续验证 `ccrouter find` 和 Catalog 对 Route、Service、Command、Event 与 InitTask 的源码定位；
-3. 持续性能、RSS/Heap 和长时间运行回归；
+1. 完成正式 Hosted 发布、release candidate 兼容样本和迁移说明；
+2. 持续验证 `ccrouter find`、Catalog 和 DevTools 对五类能力的源码定位；
+3. 持续性能、RSS/Heap、真实设备和长时间运行回归；
 4. 保持 README、Integration Skill 与生成器文档同步。
 
 ### 架构 2.0
@@ -256,21 +257,21 @@ Entries、Navigation Timeline、Failure/Fallback 和 InitTask DAG。它不提供
 1. Navigator 1.0 Backend；
 2. Native 多窗口桥接；
 3. Route Restoration；
-4. 官方 DevTools Extension；
-5. Generator Watch、IDE Route-to-source 导航和可视化插件；基础 Analysis Server 边界诊断已落地；
-6. 分层 Scope；
-7. 动态组件治理；
-8. Action Pipeline；
-9. Service Proxy 高级方法形态；
-10. CLI Contract Promotion 和迁移工具；基础 Component/Page 脚手架已落地。
+4. Generator Watch 和 IDE 自动改写/迁移 Quick Fix；基础 Analysis Server 边界诊断与官方
+   只读 DevTools Extension 已落地；
+5. 分层 Scope；
+6. 动态组件治理；
+7. Action Pipeline；
+8. Service Proxy 高级方法形态；
+9. CLI Contract Promotion 和迁移工具；六类基础 scaffold 已落地。
 
 ## 最终判断
 
 CCRouter 当前最明显的缺口不是基础路由 Runtime，而是：
 
-1. `ccrouter find` 和嵌入式只读面板已形成基础定位/诊断闭环，官方 DevTools Extension
-   与深度 IDE 跳转仍待完善；
-2. Contract 版本兼容和环境实现选择尚未系统化；
+1. `ccrouter find`、嵌入式面板和官方 Extension 已形成只读定位/诊断闭环，深度 IDE 跳转和
+   自动迁移仍待完善；
+2. Contract 版本核心门禁已完成，环境实现选择和正式发布迁移流程尚未系统化；
 3. 复杂 Service 与未注解迁移能力仍依赖显式 Contribution，高级自动生成等待生产阈值；
 4. 原生多窗口、状态恢复和动态组件属于明确的 2.0 范围。
 

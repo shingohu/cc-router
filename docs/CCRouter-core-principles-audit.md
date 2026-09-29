@@ -5,11 +5,12 @@
 - 审查日期：2026-09-29
 - 审查范围：路由 Runtime、业务 Facade、Host/Adapter SPI、GoRouter Adapter、生成器、
   Service、Command、Event、初始化任务、Demo、测试与诊断模型。
-- 自动化基线：`dart analyze` 通过；`ccrouter_test` 346 项、Demo 37 项、Generator 229 项测试通过；
+- 自动化基线：`dart analyze` 通过；`ccrouter_test` 346 项、Demo 36 项、Generator 237 项测试通过；
   Demo 生成物缓存与 `--no-cache` 两种 `--check` 均通过；macOS、iOS Simulator、Android、Web 和
   OHOS 构建 smoke 通过。
-- 总体结论：当前实现满足 13 条约定在当前静态组件范围内的发布门槛，没有未解决的 P0 或
-  P1 问题。本轮实际发现并修复了 InitTask 重叠 Gate 丢失新就绪任务、Generated SPI 只信任
+- 总体结论：当前实现满足 13 条约定在当前静态组件范围内的实现门槛，没有本轮审计发现且
+  未解决的 P0/P1 实现缺陷；正式 Hosted 发布、迁移文档和长期生产观测仍未完成。本轮实际发现
+  并修复了 InitTask 重叠 Gate 丢失新就绪任务、Generated SPI 只信任
   生成期身份、Adapter attach 失败状态残留，以及 Runtime/Multi-Host 清理被单点异常中断的问题；
   这些修复均已有回归测试，不能只归类为文档调整。
   Route、Service、Command、Event 和 InitTask 已形成边界明确的最小闭环。生成物职责、API 隔离、
@@ -221,6 +222,8 @@ Listener、Stream、Overlay 或 Controller；Resolver 不拥有 Runtime，也不
 - `@CCServiceContract` 生成内部 Token/metadata，`@CCService` 从唯一直接 Contract 自动生成简单
   Provider registration，Package 唯一 `CCComponent` 自动生成私有 Registrar/Manifest；复杂构造
   与 readiness 继续使用 `@CCComponentContribution`，不在 Annotation 中注入任意执行代码；
+- Service/Command Contract alias 已作为全部消费者的默认 Client 成员名进入 metadata 和 shape
+  fingerprint，Dependency alias 可局部覆盖；alias migration CLI/Analyzer Quick Fix 尚未实现；
 - `CCCommand<R>` 是唯一的一对一操作消息，支持 `R` 与 `void`、单 Handler、timeout、取消、嵌套
   Trace 和 Runtime shutdown；读取能力保持在 Service，不再保留重复的 Query/Action 表面；
 - `CCEvent` 只表达已经发生的事实；静态 Subscriber 并发执行且按 ID 稳定启动，一个 Subscriber
@@ -297,11 +300,12 @@ Contract Runtime Registry，而不是改变零订阅者语义。
 
 ## 7. 本轮最终门禁
 
-- `fvm dart test --concurrency=1 packages/ccrouter_test/generator_test`：229 项通过；
+- `fvm dart test --concurrency=1 packages/ccrouter_test/generator_test`：237 项通过；
 - `fvm flutter test --concurrency=1 packages/ccrouter_test/test`：346 项通过；
-- `fvm flutter test --concurrency=1 demo/test`：37 项通过；
-- `fvm dart test --concurrency=1 packages/ccrouter_devtools_protocol/test`：5 项通过；
-- `fvm flutter test --concurrency=1 packages/ccrouter_devtools/test`：8 项通过；
+- `fvm flutter test --concurrency=1 demo/test`：36 项通过；
+- `fvm dart test --concurrency=1 packages/ccrouter_devtools_protocol/test`：4 项通过；
+- `fvm flutter test --concurrency=1 packages/ccrouter_devtools/test`：7 项通过；
+- `dart analyze && dart test`（`packages/ccrouter_analyzer_plugin`）：无问题，8 项通过；
 - `fvm flutter analyze devtools/ccrouter_extension`：无问题；
 - `fvm dart analyze`：无问题；
 - `fvm dart run ccrouter_generator:ccrouter generate demo --check --profile` 与

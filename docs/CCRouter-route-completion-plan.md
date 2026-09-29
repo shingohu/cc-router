@@ -8,6 +8,8 @@
 
 本文中的勾选项表示当前仓库已实现并具有对应回归覆盖。其他设计文档不再重复维护任务
 完成状态；若描述与本清单冲突，应先核对当前代码和测试，再同步修正文档。
+各阶段中的测试数量保留当时验收快照，不代表当前总数；当前全仓基线统一见
+[核心价值与开发约定回归](CCRouter-core-principles-audit.md)。
 
 ## 1. 范围
 
@@ -162,7 +164,7 @@ Catalog 和 Host Route Catalog 保留各自的消费边界。收敛必须保持�
   正确创建、删除陈旧文件；
 - [x] 将 Host 的 `cc_routes.md` 与 `cc_sources.md` 合并为统一的人类可读
   `cc_catalog.md`，同时包含契约、源码位置和生成物位置；Package 也使用局部
-  `cc_catalog.md`，供 Route、Service、Action 统一浏览；`ccrouter_devtools` 当前通过 Runtime
+  `cc_catalog.md`，供 Route、Service、Command、Event、InitTask 统一浏览；`ccrouter_devtools` 通过 Runtime
   快照展示运行状态，未来再按稳定 ID 与 Catalog 联动；
 - [x] 保留 Host `cc_routes.json` 作为 CI、跨端工具和自动校验使用的机器路由目录，不以 Markdown
   替代结构化契约；
@@ -377,12 +379,10 @@ IDE 可发现性属于方案验收条件：生成完成且 Workspace Analyzer �
   这证明 `src/` 是约定和导出边界，不是 Dart 语言级 package-private；`implementation_imports`
   也不能当作强制封锁（当前 SDK 对该规则不产生预期诊断）。专项回归位于
   `packages/ccrouter_test/generator_test/route_api_boundary_test.dart`。
-- [x] 在 Android Studio 中验证组件内部生成 Route API 的唯一自动导包：在
-  `demo/modules/navigation_lab/lib/src/home_page.dart` 输入 `DemoNavigationLabRoutes` 时，
-  只有一个 Route API 候选，来源为
-  `package:demo_navigation_lab/src/ccrouter_generated/component/demo_navigation_lab_component.route_api.g.dart`。
-  `DemoNavigationLabComponentGeneratedRoutes` 是 Runtime 注册索引，不是重复的业务 Route API。
-  宿主 Package 仍不会得到该内部候选；临时页面增删改移验收见 6.1。
+- [x] 组件业务源码统一导入根生成目录下稳定的 `<componentId>.api.g.dart`；该文件通过受控
+  `export/show` 聚合 Route、Service、Command 和 Event Client，隐藏 `component/` 子目录中的
+  各类实现入口。`DemoNavigationLabComponentGeneratedRoutes` 是 Runtime 注册索引，不是重复的
+  业务 Route API。宿主 Package 仍不会得到组件内部候选；临时页面增删改移验收见 6.1。
   Analysis Server 协议探针对未导入符号返回空候选，不能替代真实 IDE 验收。
 - [x] 内部 API 边界增量回归：Generator 专项 131 项、API Surface 与组件注册 29 项通过；
   `ccrouter_generator/lib`、`bin`、`generator_test` 静态分析及 Demo analyze 均无问题。
@@ -468,17 +468,18 @@ Metrics/Display Features，不自动产生原生窗口。未来每个 Flutter Vi
    激活、关闭和失效释放，不把同一窗口的旋转、折叠或多个 Outlet 当成新 Window。
 3. 完整 Route Restoration 在 2.0 只有恢复机会 Telemetry 证明收益后才实施；此前保持
    `unsupported` 诊断，不提供伪恢复语义。
-4. `ccrouter watch` 仍不纳入 1.x；官方 DevTools Extension 已转入正式发布前 P1 工具计划，
-   以只读 Snapshot/Trace 协议为前置，不提前扩大 Runtime 控制 API；
-   当前以显式生成、`--check` 和 Package/Host Catalog 为确定性基础。临时页面的源码
+4. `ccrouter watch` 仍不纳入 1.x；官方只读 DevTools Extension、Snapshot/Trace 协议和
+   Catalog/Runtime 联动已完成，且没有扩大 Runtime 控制 API。当前以显式生成、`--check` 和
+   Package/Host Catalog 为确定性基础。临时页面的源码
    重命名/移动与 IDE 导包已验收，但不外推至 IDE 重启或大型外部依赖工程。
 5. 原子组合栈事务和精确 Route Entry 操作在 2.0 重新评估；分别以稳定身份、原子回滚和
    混合栈隔离为准，不能在 1.x 通过拼接已有操作模拟。
 
-Service/Handler/Scope 的完整组件动态停用、Service 契约收敛、组件脚手架的高级参数和契约提升
+Service/Handler/Scope 的完整组件动态停用、组件脚手架的高级参数和 Contract promotion/migration
 CLI 也归入架构 2.0 的**非路由工作流**，需要独立设计和验收，不是路由 2.0 的必选依赖。
-当前 1.x 已提供非覆盖式 `create component` 与 `create page` 最小模板；它们不负责修改 Host
-依赖、创建跨组件 Contract 或写入生成物。
+当前 1.x 已提供非覆盖式 Component、Page、Service、Command、Event 和 InitTask 模板；它们
+不负责修改 Host 依赖、创建跨组件 Contract 或写入生成物。Service 与五类 Contract 的当前核心
+收敛已经完成，不再列作路由 2.0 前置条件。
 与新增能力不同，文档状态纠偏、当前改动的测试/提交，以及内存和性能的持续采样仍属于
 1.x 日常质量维护，不能因规划 2.0 而暂停。
 

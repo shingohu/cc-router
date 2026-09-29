@@ -6,8 +6,9 @@
 处理原则不是按引用次数机械删除，而是同时验证类型安全、混合路由隔离、生命周期、诊断、
 Host 扩展和降级语义。
 
-当前路由 API 可以进入全量回归阶段。Service、Command、Event 及尚未实现的组件动态
-卸载完整语义不属于本轮范围，不能据此扩大或冻结对应 API。
+本文是路由专项的历史收口记录，不是全框架当前状态清单。当前路由 API 已完成本轮回归；
+Service、Command、Event 和 InitTask 后续也已形成各自闭环，状态以 `docs/README.md` 与对应
+专项设计为准。组件动态卸载仍未实现，不能据此扩大或冻结对应 API。
 
 ## 2. 已删除的重复或无行为 API
 
@@ -122,10 +123,12 @@ Lifecycle/Aspect 伪造请求；该阶段由 Failure Event 承担。继续保持
 
 以下能力仍列入后续规划，需独立设计和验收，不作为路由 1.x 或 2.0 的必选依赖：
 
-- Service 稳定 Contract ID、内部 Token 与独立 contracts Package 的版本兼容和最终收敛；
 - 2.0 动态组件治理及其 Service、Handler、Scope、活跃 Route 和依赖级联语义；
-- CLI 契约提升与迁移自动化；1.x 已提供非覆盖式 Component/内部 Page 最小脚手架，
-  不自动修改 Host 依赖或生成跨组件 Contract。
+- CLI Contract Promotion/Migration 与 alias 迁移自动化；1.x 已提供非覆盖式 Component、
+  Page、Service、Command、Event 和 InitTask scaffold，不自动修改 Host 依赖或生成跨组件 Contract。
+
+Service 稳定 Contract ID、内部 Token、独立 contracts Package 和五类 Contract 版本兼容核心
+门禁已经完成，不再属于暂缓能力。正式 Hosted 发布和迁移样本维护仍是发布工作流任务。
 
 `CCServiceScope.route` 不属于暂缓能力：Route Scope 已通过精确 Managed
 Navigation ID、Host binding、RouteEntry 移除和生命周期回归完成闭环。这里的后续项只

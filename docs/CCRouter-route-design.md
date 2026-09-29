@@ -1626,8 +1626,8 @@ Arrival、Stay 和 Total 分阶段耗时已经通过 Aspect 提供。
 - 已实现 `List<T>`/`Set<T>` repeated Query、自定义 `CCRouteQueryCodec<T>`、继承参数、混合
   构造器和跨 Package Codec import 校验；生成文档已包含组件版本、声明来源、Host、Shell、
   Outlet、presentation、导航来源及当前 `restoration: unsupported` 能力视图。
-- 待提供可选的 Route Scaffold CLI，用于创建页面模板、补齐 `@CCRoute` 声明，并触发首次
-  标准生成；页面不需要生成 `part`。该工具只改善
+- 已提供可选的 `ccrouter create page` Route Scaffold，用于创建页面模板和补齐 `@CCRoute`
+  声明；页面不需要生成 `part`。首次标准生成仍由开发者或 Pub Hook 显式触发。该工具只改善
   开发体验，不替代 `build_runner`、Analyzer 校验或 workspace 聚合校验，也不直接修改
   已有业务页面、公共 barrel 或 GoRouter 路由树；需要公开契约和后端绑定时只生成明确的
   待办提示，避免无意扩大 API 或改写应用导航结构。
@@ -1799,12 +1799,11 @@ TheRouter 的完整 URL、自定义 Scheme、多 Path 和正则能力用于校�
 - Source Reference 使用 Package URI 与 1-based line/column，不记录本机绝对路径。
 - Contract-first Route 同时关联契约声明和页面实现；普通 `@CCRoute` 的声明与实现指向同一
   页面源码。
-- Package Index 是静态能力的机器事实来源，Markdown 和只读 `ccrouter find` 视图均由其派生，
-  不能各自维护扫描规则。`ccrouter_devtools` 当前消费独立的 Runtime 快照，不直接解析
-  Package Index；未来联动必须通过稳定 ID 完成。
-- 当前只发布 Route 记录。Service、Command、Action、Event 需要等静态生成链路存在后再接入，
-  不从手写 Registrar 启发式推断，避免目录看似完整但实际错误。
+- Package Index 是静态能力的机器事实来源，Markdown、只读 `ccrouter find` 和 DevTools 静态
+  Catalog 均由其派生，不能各自维护扫描规则。Catalog 与 Runtime 快照通过稳定能力 ID 关联。
+- 当前已发布 Route、Service、Command、Event 和 InitTask 记录；Action Pipeline 尚未实现，
+  不能从手写 Registrar 启发式推断。
 
-后续官方 DevTools Extension 候选将静态 Catalog 与 Runtime 的 Host、RouteEntry、Trace 和诊断快照按稳定 ID、
-Package 版本及内容指纹关联。静态目录回答“代码和契约在哪里”，Runtime 快照回答“当前发生了
-什么”；1.x 不引入 VM Service Extension 或 Inspector 依赖。
+官方 DevTools Extension 已通过 `ext.ccrouter.snapshot` 将静态 Catalog 与 Runtime 的 Host、
+RouteEntry、Trace 和诊断快照按稳定 ID 关联。静态目录回答“代码和契约在哪里”，Runtime 快照
+回答“当前发生了什么”。Extension 只读且不绑定本地 IDE，也不获得 Runtime 控制能力。

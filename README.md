@@ -21,12 +21,16 @@ CCRouter 是一个面向 Flutter 大型应用的组件化运行时与类型安�
 | --- | --- | --- |
 | `ccrouter_contracts` | Pure Dart Route、Service、Command、Event、错误与导航契约 | 仅独立 contracts Package |
 | `ccrouter_analytics` | Provider-neutral 分析事件、脱敏属性、有界 Sink 与 Route PV/Leave 桥接 | 按需接入 |
+| `ccrouter_analytics_firebase` | Firebase Analytics callback Adapter，不让 Core 依赖供应商 SDK | 按需接入 |
+| `ccrouter_auto_track` | 显式点击、滚动和曝光采集 Target | 按需接入 |
 | `ccrouter_core` | Runtime、Registry、Scope、调度和诊断实现 | 否 |
 | `ccrouter` | Flutter 业务门面、`CCRouterApp`、页面生命周期 | 是 |
 | `ccrouter_go_router` | 默认 GoRouter Backend、Assembler、Observer 与 Shell 接入 | 仅 Host |
 | `ccrouter_generator` | 注解处理、Host 聚合、校验、查找与清理 CLI | 仅 dev dependency |
 | `ccrouter_analyzer_plugin` | Analysis Server 实时边界与生成物诊断 | 仅 dev dependency，需显式启用 |
 | `ccrouter_devtools` | 可嵌入的只读 Component/Route/Trace/Failure/InitTask 诊断面板 | 按需作为 Flutter dependency 接入 |
+| `ccrouter_devtools_protocol` | Pure Dart、版本化的静态 Catalog/Runtime Snapshot/Trace Edge 协议 | 仅工具与 Host 适配层 |
+| `devtools/ccrouter_extension` | 官方 Flutter/Dart DevTools 只读 Extension | 仅开发工具 |
 | `ccrouter_test` | 面向集成者的测试 Host、Fake 与测试辅助能力 | 仅 test/dev dependency |
 | `demo` | Android、iOS、macOS、Web、OHOS 平台 Host 和完整能力示例 | 示例 |
 | `demo/modules/*` | 示例组件与独立 contracts Package | 示例 |
@@ -1024,8 +1028,10 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo --check
 - 生成后执行 analyze、针对性测试与 `generate --check`。
 
 CLI Skill 覆盖已经实现的 `generate`、`find`、`clean`、`create component`、`create page`、
-`create service`、`create command`、`create event` 和 `create init-task`。Contract Scaffold/Promotion/Migration、版本兼容检查和生成失败诊断
-目前仍是 AI 辅助工作流，不是可直接调用的 CLI 命令；它们必须先输出 dry-run，涉及
+`create service`、`create command`、`create event` 和 `create init-task`。Contract
+Scaffold/Promotion/Migration、alias 迁移和扩展生成失败诊断目前仍是 AI 辅助工作流，不是可直接
+调用的 CLI 命令；五类 Contract 版本兼容核心门禁已经由生成器、Host 聚合和 Runtime 自动执行。
+AI 辅助的迁移操作必须先输出 dry-run，涉及
 公共 Contract、Package 依赖或已有声明的变更必须得到明确确认。`watch` 当前明确不支持，
 不能因为设计文档提到它就自行添加命令或参数。
 

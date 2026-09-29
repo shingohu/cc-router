@@ -1,4 +1,4 @@
-# CCRouter 路由生成器
+# CCRouter 组件能力生成器
 
 组件的开发工具，不属于运行时依赖。每个实现 Package 声明一个顶层
 `const CCComponent`，内部 Route 和简单 Service 自动归属该 Owner：
@@ -89,14 +89,14 @@ const paymentComponent = CCComponent(
 ```
 
 生成的 `<component-source>.service_api.g.dart` 提供 `<Component>Services` 静态 Client，自动固定
-Contract、Key、method ID 和 caller component ID。无消费声明时不生成该文件。首版只接受普通
-实例方法/getter、同步或 Future 返回及可公开导入的 Pure Dart 类型；不支持项在生成期失败。
+Contract、Key、method ID 和 caller component ID。无消费声明时不生成该文件。当前接受普通
+实例方法/getter、同步或 Future 返回、可公开导入的 Pure Dart 类型，以及非泛型 Contract 上的
+受限方法级泛型；泛型 Contract、Stream、callback、继承等不支持项在生成期失败。
 
 `dependencies`、`serviceDependencies` 和 `commandDependencies` 目前必须显式维护。生成器会从
 Contract 元数据解析 Owner 并校验三者一致，不会因为发现某个 Contracts Package 或 Pub 依赖而
-静默修改组件源文件。已记录后续开发体验优化：按组件批量输出缺失 Owner 和可复制修复片段，
-Analyzer Plugin 在安全的 const 列表场景提供 Quick Fix，`ccrouter find` 增加 Contract Owner
-和所需组件依赖查询；这些能力待确认后与稳定 Component API 聚合入口一起实施。
+静默修改组件源文件。稳定 Component API 聚合入口已经实现；按组件批量输出缺失 Owner、可复制
+修复片段、Analyzer const-list Quick Fix，以及 `ccrouter find` 的依赖建议仍未实现。
 
 不同消费组件如需统一 Service/Command Client 成员名，可在 Contract 上设置 lower-camel
 `alias`，消费组件仍可在 `CCServiceDependency<T>` 或 `CCCommandDependency<T>` 上覆盖。命名优先级
@@ -170,7 +170,8 @@ Hook 按 SDK 版本独立安装，不修改 Flutter snapshot；非 CCRouter 项�
 组件索引、Host Catalog 和文档聚合。非 workspace 包也使用同一命令，不需要自行拼接两步流程。
 新增或修改注解页面后再次运行相同命令；源码无需添加 `part` 或手动更新 Registrar。
 首次生成前 IDE 不会提供尚不存在的 Route API 符号；生成完成后可使用 IDE 自动导入
-本组件的 `src/ccrouter_generated/component/<component>.route_api.g.dart`。
+本组件稳定的 `src/ccrouter_generated/<componentId>.api.g.dart`。业务源码不直接导入其
+`component/` 子目录中的 Route/Service/Command/Event 实现入口。
 页面重命名、移动或删除也使用相同命令清理旧生成物，并可用 `--check` 验证产物同步。
 CI 使用只读门禁：
 
@@ -253,6 +254,8 @@ fast path，`--profile` 会输出 `fast-path=hit/miss`。性能回归与混合�
 - `<component-source>.service_api.g.dart`：仅为 `serviceDependencies` 中显式声明的跨组件
   Contract 生成组件专属 typed Client/Proxy；同步方法保留同步签名，Future 方法进入异步
   readiness 与 Scope cancellation 边界。
+- `lib/src/ccrouter_generated/<component-id>.api.g.dart`：组件业务源码使用的稳定聚合入口，
+  通过受控 `export/show` 合并 Route、Service、Command 和 Event Client；没有可导出能力时不生成。
 - `<component-id>.component.g.dart`：自动生成私有 Registrar、Runtime Manifest 和后端中立的
   `CCFlutterRouteCatalog`，稳定装配 Route、Service 与 Contribution。
 - `lib/src/ccrouter_generated/metadata/ccrouter_package.json`：发布级 Package Index，包含 Schema、Package
@@ -265,7 +268,7 @@ fast path，`--profile` 会输出 `fast-path=hit/miss`。性能回归与混合�
   Package 图，Diamond 依赖去重后生成 Manifest 与 Catalog。新增无路由的 Service 组件也会
   进入 Manifest 列表；普通路由或组件增删不再要求宿主逐项维护初始化列表。
 - `lib/src/ccrouter_generated/metadata/cc_catalog.md`：仅在 Package 存在 Capability 时生成，按 Component 和 Capability ID 展示
-  Route/Service 的契约声明、实现及相关生成物。源码位置统一记录为可移植的
+  Route、Service、Command、Event、InitTask 的契约声明、实现及相关生成物。源码位置统一记录为可移植的
   `package:name/path.dart:line:column`，不把开发机绝对路径写入生成物。组件 Package
   生成局部视图，Host 生成完整依赖闭包的全局视图；Contract-first Route 会同时显示
   contracts Package 的 schema 与实现 Package 的 Page。
@@ -275,8 +278,8 @@ fast path，`--profile` 会输出 `fast-path=hit/miss`。性能回归与混合�
 Command 使用显式 Contract、Handler 和消费依赖，Event 使用显式 Contract、静态 Subscription
 和 Owner 自动 Publication，InitTask 使用显式 Task Contract、Handler 和类型化依赖；三者都
 不通过扫描 Contribution 源码猜测注册关系。Action Pipeline 仍未实现。只读
-`ccrouter find` 消费版本化 Catalog；`ccrouter_devtools` 消费 Runtime 快照。未来如需联动，
-应通过稳定 ID 关联二者，而不是让面板解析 Markdown 或 Builder 私有数据。
+`ccrouter find` 消费版本化 Catalog；DevTools 已通过版本化 Snapshot 协议和稳定 ID 关联静态
+Catalog 与 Runtime 快照，不解析 Markdown 或 Builder 私有数据。
 
 导航失败诊断中的 `CCNavigationFailureAttempt` 用于区分同一恢复链中的失败来源：原始请求
 (`request`)、拦截器重定向 (`interceptorRedirect`)、Failure Policy 恢复
