@@ -26,7 +26,7 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook install
 
 ```bash
 fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook install \
-  --sdk /Users/shingo/fvm/versions/3.41.9
+  --sdk /path/to/flutter-sdk
 ```
 
 每一个 FVM 版本都是独立 SDK，必须分别安装。安装只改动该 SDK 的 `bin/flutter`

@@ -87,7 +87,7 @@ demo_web.public (origin=externalPlatform, source=platform.web_link)
 运行 macOS Demo：
 
 ```sh
-cd /Users/shingo/develop/LiberLive/cc-router/demo
+cd <repository-root>/demo
 fvm flutter run -d macos
 ```
 

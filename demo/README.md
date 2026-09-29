@@ -7,13 +7,13 @@ CCRouter 的 Flutter 开发工程，使用 FVM `ohos/oh-3.41.9-release` SDK，�
 直接打开本目录：
 
 ```text
-/Users/shingo/develop/LiberLive/cc-router/demo
+<repository-root>/demo
 ```
 
 Flutter SDK 选择：
 
 ```text
-/Users/shingo/develop/LiberLive/cc-router/demo/.fvm/flutter_sdk
+<repository-root>/demo/.fvm/flutter_sdk
 ```
 
 工程入口为 `lib/main.dart`。示例在 `runApp` 前显式调用
@@ -85,6 +85,10 @@ OHOS 原生模块位于 `ohos/`。在该目录中可使用：
 ```sh
 devecocli build
 ```
+
+仓库不保存 OHOS 签名证书、Profile、KeyStore 路径或密码。真机安装或签名构建前，开发者应
+在本机 DevEco Studio 中配置自己的签名材料，并确保这些本地值不会提交到
+`ohos/build-profile.json5`。
 
 ## 组件模块与生成
 

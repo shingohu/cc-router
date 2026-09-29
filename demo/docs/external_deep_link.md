@@ -43,7 +43,7 @@ Demo 在 `CCRouter.initialize` 中配置 `demoDeepLinkIngressPolicy`：只接受
 先启动 Demo，并保持终端中的 `flutter run` 继续运行：
 
 ```sh
-cd /Users/shingo/develop/LiberLive/cc-router/demo
+cd <repository-root>/demo
 fvm flutter run -d macos
 ```
 
@@ -69,7 +69,7 @@ RouteEntry 的 origin 应为 `externalPlatform`。完整 URI 和 Query 值不会
 先构建并至少运行一次应用，让 Launch Services 注册 `ccrouter` Scheme：
 
 ```sh
-cd /Users/shingo/develop/LiberLive/cc-router/demo
+cd <repository-root>/demo
 fvm flutter build macos --debug
 open build/macos/Build/Products/Debug/ccrouter_demo.app
 ```
@@ -87,7 +87,7 @@ open 'ccrouter://lab/detail/89?title=Cold%20Start%20Deep%20Link&tags=cold-start'
 
 ```sh
 /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister \
-  -f /Users/shingo/develop/LiberLive/cc-router/demo/build/macos/Build/Products/Debug/ccrouter_demo.app
+  -f "$PWD/build/macos/Build/Products/Debug/ccrouter_demo.app"
 ```
 
 然后重新执行 `open 'ccrouter://…'`。

@@ -1,4 +1,4 @@
-package com.liberlive.ccrouter.ccrouter_demo
+package dev.ccrouter.demo
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -44,6 +44,17 @@
 6. 做长时间 Runtime、RSS/Heap 和多平台发布前回归；
 7. 所有门禁通过后，才评估 Hosted 发布和 1.0 标签。
 
+发布候选还必须从仓库根目录执行敏感信息门禁：
+
+```bash
+fvm dart run tool/release_sensitivity_check.dart
+```
+
+该检查只扫描 Git tracked files，报告文件、行号和风险类别，不回显疑似秘密值。它覆盖常见
+本机 Home 绝对路径、私钥标记、常见云平台 Token、签名密码字段和 Apple Team ID。它不能
+替代发布平台的 Secret Scanner，也不能证明 Git 历史没有残留；如果秘密曾经提交，必须先轮换
+凭据，再经过明确授权清理历史。
+
 ## 3. 共同架构边界
 
 ### 3.1 数据来源分层

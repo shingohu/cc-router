@@ -22,7 +22,7 @@
 	<array>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>com.liberlive.ccrouter.demo</string>
+			<string>dev.ccrouter.demo</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>ccrouter</string>
