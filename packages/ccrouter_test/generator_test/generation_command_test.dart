@@ -194,6 +194,22 @@ void probe() {
       expect(hostCatalog, isNot(contains('demo.analytics.order-completed')));
       expect(hostCatalog, isNot(contains('DateTime.now')));
       expect(hostCatalog, isNot(contains("import 'package:demo_order/")));
+      final hostApi = File(
+        path.join(
+          Directory.current.path,
+          'demo',
+          'lib',
+          'src',
+          'ccrouter_generated',
+          'ccrouter_host.api.g.dart',
+        ),
+      ).readAsStringSync();
+      expect(hostApi, contains('Stable Host-facing CCRouter API'));
+      expect(hostApi, contains("export 'host/ccrouter_host.routes.g.dart'"));
+      expect(hostApi, contains('ccrouterGeneratedComponentManifests'));
+      expect(hostApi, contains('ccrouterGeneratedRouteCatalog'));
+      expect(hostApi, contains('ccrouterGeneratedHostAssembly'));
+      expect(hostApi, isNot(contains('ccrouterGeneratedPackageBundle')));
       final contractIndex =
           jsonDecode(
                 File(

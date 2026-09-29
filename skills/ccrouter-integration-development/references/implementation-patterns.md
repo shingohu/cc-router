@@ -512,7 +512,12 @@ Run one orchestration command after annotations or component graph changes:
 fvm dart run ccrouter_generator:ccrouter generate demo
 ```
 
-The command owns files under `lib/src/ccrouter_generated/`. Do not edit, relocate, or add imports to implementation-only binding/package/host outputs. Use a handwritten public barrel to export only intended public contracts.
+The command owns files under `lib/src/ccrouter_generated/`. Do not edit or
+relocate generated outputs. A Host's handwritten public barrel may re-export
+the generated `src/ccrouter_generated/ccrouter_host.api.g.dart`; do not point it
+at implementation-only files under `host/` or repeat the generated `show` list.
+Component and contracts Packages must still export only their intended business
+contracts and stable component API.
 
 An unchanged command may report a generation fast-path hit. This is valid only
 after exact authored-input, tool, resolved-Package, external-index, and managed-

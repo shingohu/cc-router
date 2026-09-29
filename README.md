@@ -287,6 +287,10 @@ Demo / 应用层，不是 CCRouter 框架的存储契约。
 
 Host 使用生成的 Manifest 与 Catalog。新项目默认使用 managed GoRouter Backend：
 
+Host 自己的公共 barrel 只需转发生成的
+`src/ccrouter_generated/ccrouter_host.api.g.dart`；不要直接导出 `host/` 下的内部聚合文件或
+手写 `show` 列表。生成器会保持 Assembly、Catalog 与 Manifest 的稳定 Host API。
+
 ```dart
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -1045,12 +1049,13 @@ SDK 切换或升级后需要重新检查 `pub-hook status`。详细语义见
 
 ```text
 lib/src/ccrouter_generated/
+├── ccrouter_host.api.g.dart # Host 稳定聚合入口，仅 Host Package 生成
 ├── binding/     # Flutter 页面构造 bridge
 ├── command/     # Command Handler registration bridge
 ├── component/   # 自动 Registrar、Manifest、组件 Route/Service API
 ├── contract/    # 独立 Pure Dart Route/Service Contract
 ├── event/       # Event Subscription registration bridge
-├── host/        # Host 聚合入口
+├── host/        # Package Bundle 与 Host 内部装配胶水
 ├── init_task/   # InitTask registration bridge
 ├── metadata/    # Package Index、Host routes、可读 Catalog
 ├── route/       # 组件内部 Route contract/registration bridge

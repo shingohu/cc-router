@@ -3959,6 +3959,34 @@ final CCFlutterRouteCatalog ccrouterGeneratedRouteCatalog =
     ccrouterGeneratedHostAssembly.routeCatalog;
 ''');
   await _writeIfChanged(output, source);
+  await _generateHostApiEntrypoint(host.root);
+}
+
+/// Writes the stable Host-facing barrel without exposing Host glue paths.
+Future<void> _generateHostApiEntrypoint(Directory hostRoot) async {
+  final output = File(
+    path.join(
+      hostRoot.path,
+      'lib',
+      'src',
+      'ccrouter_generated',
+      'ccrouter_host.api.g.dart',
+    ),
+  );
+  final source = _dartFormatter.format('''
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint
+
+/// Stable Host-facing CCRouter API.
+///
+/// This barrel intentionally excludes Package Bundles and generated Host glue.
+export 'host/ccrouter_host.routes.g.dart'
+    show
+        ccrouterGeneratedComponentManifests,
+        ccrouterGeneratedRouteCatalog,
+        ccrouterGeneratedHostAssembly;
+''');
+  await _writeIfChanged(output, source);
 }
 
 /// Emits a deterministic DevTools Catalog from validated Package indexes.
@@ -4354,6 +4382,15 @@ Future<void> _deleteObsoleteResolvedOutputs({
         'lib',
         'src',
         'ccrouter_generated',
+        'ccrouter_host.api.g.dart',
+      ),
+    ),
+    path.normalize(
+      path.join(
+        workspace.host.root.path,
+        'lib',
+        'src',
+        'ccrouter_generated',
         'host',
         'ccrouter_host.routes.g.dart',
       ),
@@ -4611,6 +4648,7 @@ Future<void> _generateHostRouteCatalog(
   await File(
     '${outputDirectory.path}${Platform.pathSeparator}ccrouter_host.routes.g.dart',
   ).writeAsString(_dartFormatter.format(out.toString()));
+  await _generateHostApiEntrypoint(root);
 }
 
 /// Deletes obsolete aggregate indexes that no current component can own.
@@ -4624,6 +4662,7 @@ Future<void> _deleteObsoleteAggregateOutputs(
   Iterable<_GeneratedComponentCatalog> catalogs,
 ) async {
   final expected = <String>{
+    '${root.absolute.path}${Platform.pathSeparator}lib${Platform.pathSeparator}src${Platform.pathSeparator}ccrouter_generated${Platform.pathSeparator}ccrouter_host.api.g.dart',
     '${root.absolute.path}${Platform.pathSeparator}lib${Platform.pathSeparator}src${Platform.pathSeparator}ccrouter_generated${Platform.pathSeparator}host${Platform.pathSeparator}ccrouter_host.routes.g.dart',
   };
   for (final catalog in catalogs) {
@@ -4706,7 +4745,8 @@ bool _isCCRouterAggregateOutput(String name, String contents) {
     );
   }
   if (name.endsWith('.api.g.dart')) {
-    return contents.contains('Stable typed API entry point for component');
+    return contents.contains('Stable typed API entry point for component') ||
+        contents.contains('Stable Host-facing CCRouter API');
   }
   if (name.endsWith('.component.g.dart')) {
     return contents.contains('Generated capability Registrar for component');

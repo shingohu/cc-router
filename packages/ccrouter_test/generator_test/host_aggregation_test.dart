@@ -89,18 +89,19 @@ environment:
       '// GENERATED CODE - DO NOT MODIFY BY HAND\n'
       '/// Generated registration index for component `removed`.\n',
     );
-    final obsoleteStableApi = File(
-      path.join(
-        component.path,
-        'lib',
-        'src',
-        'ccrouter_generated',
-        'fixture_service_component.api.g.dart',
-      ),
-    )..writeAsStringSync(
-        '// GENERATED CODE - DO NOT MODIFY BY HAND\n'
-        '/// Stable typed API entry point for component `fixture_service_component`.\n',
-      );
+    final obsoleteStableApi =
+        File(
+          path.join(
+            component.path,
+            'lib',
+            'src',
+            'ccrouter_generated',
+            'fixture_service_component.api.g.dart',
+          ),
+        )..writeAsStringSync(
+          '// GENERATED CODE - DO NOT MODIFY BY HAND\n'
+          '/// Stable typed API entry point for component `fixture_service_component`.\n',
+        );
     final handwrittenIndex = File(
       path.join(
         component.path,
@@ -179,6 +180,18 @@ environment:
     expect(aggregate, contains('componentVersions: {'));
     expect(aggregate, contains('manifest.id: manifest.version'));
     expect(aggregate, isNot(contains('CCRouterGeneratedHost')));
+    final hostApi = File(
+      path.join(
+        host.path,
+        'lib',
+        'src',
+        'ccrouter_generated',
+        'ccrouter_host.api.g.dart',
+      ),
+    ).readAsStringSync();
+    expect(hostApi, contains('Stable Host-facing CCRouter API'));
+    expect(hostApi, contains("export 'host/ccrouter_host.routes.g.dart'"));
+    expect(hostApi, contains('ccrouterGeneratedHostAssembly'));
     expect(obsoleteIndex.existsSync(), isFalse);
     expect(obsoleteStableApi.existsSync(), isFalse);
     expect(handwrittenIndex.existsSync(), isTrue);
