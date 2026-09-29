@@ -186,6 +186,7 @@ final class CartSummaryValue<T extends Object> {
 @CCServiceContract(
   componentId: cartComponentId,
   id: 'cart.summary',
+  alias: 'cartSummary',
   description: 'Reads a display-safe cart summary.',
 )
 abstract interface class CartSummaryService {
@@ -235,6 +236,12 @@ After generation, call the component-specific Client:
 ```dart
 final summary = CheckoutServices.cartSummary.summary();
 ```
+
+The generated member name uses the consumer's `CCServiceDependency.alias`,
+then `CCServiceContract.alias`, then the contract type name without a trailing
+`Service`. Use the Contract alias for one shared domain name and a Dependency
+alias only for a keyed or consumer-specific override. Alias changes alter the
+generated source shape and require Contract versioning plus regeneration.
 
 Do not handwrite a Proxy or pass caller component IDs. The generated Proxy is
 stateless and resolves the current Scope on every method call. Keep local
@@ -313,7 +320,11 @@ Initial/foreign pages do not have a managed Route Scope. Never guess from the to
 ## Command and Event
 
 ```dart
-@CCCommandContract(id: 'orders.submit', description: 'Submit one order.')
+@CCCommandContract(
+  id: 'orders.submit',
+  alias: 'submit',
+  description: 'Submit one order.',
+)
 final class SubmitOrderCommand implements CCCommand<String> {
   const SubmitOrderCommand(this.id);
   final String id;
@@ -330,7 +341,7 @@ Future<String> handleSubmitOrder(
   return submit(command.id);
 }
 
-final receipt = await OrdersCommands.submitOrder(
+final receipt = await OrdersCommands.submit(
   const SubmitOrderCommand('42'),
 );
 ```
@@ -342,6 +353,11 @@ each consumer lists `CCCommandDependency<SubmitOrderCommand>()` and the Owner
 in required `dependencies`. Do not pass stable IDs or caller identities by
 hand. Keep raw `CCRouter.command` for unannotated migration capabilities, Host
 composition, and tests only.
+
+Command methods use `CCCommandDependency.alias`, then
+`CCCommandContract.alias`, then the Command type name without a trailing
+`Command`. Keep the generated Client component-specific; do not replace it with
+a global namespace Facade that would erase caller attribution.
 
 ```dart
 @CCEventContract(id: 'orders.submitted', description: 'Order was submitted.')

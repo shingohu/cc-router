@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 
+import 'generated_client_naming.dart';
+
 /// Maximum supported length of an identifier carried by generated metadata.
 const int _workspaceIdentifierLength = 128;
 
@@ -396,6 +398,11 @@ abstract final class CCRouteWorkspaceValidator {
           '"$ownerId".',
         );
       }
+      final alias = contract['alias'];
+      if (alias != null &&
+          (alias is! String || !isGeneratedClientMemberName(alias))) {
+        errors.add('Service contract "$id" has an invalid Client alias.');
+      }
     }
     for (final component in components.values) {
       final componentId = '${component['id'] ?? ''}';
@@ -434,7 +441,7 @@ abstract final class CCRouteWorkspaceValidator {
             'for "$contractId".',
           );
         }
-        if (!RegExp(r'^[a-z][A-Za-z0-9]*$').hasMatch(member)) {
+        if (!isGeneratedClientMemberName(member)) {
           errors.add(
             'Component "$componentId" uses invalid Service Client member '
             '"$member".',
@@ -580,6 +587,11 @@ abstract final class CCRouteWorkspaceValidator {
           'Command contract "$id" references unknown owner component "$ownerId".',
         );
       }
+      final alias = contract['alias'];
+      if (alias != null &&
+          (alias is! String || !isGeneratedClientMemberName(alias))) {
+        errors.add('Command contract "$id" has an invalid Client alias.');
+      }
       final handler = commandHandlers[id];
       if (handler == null) {
         errors.add('Command contract "$id" has no Handler.');
@@ -630,8 +642,7 @@ abstract final class CCRouteWorkspaceValidator {
             'Component "$componentId" consumes Command "$id" more than once.',
           );
         }
-        if (!RegExp(r'^[a-z][A-Za-z0-9]*$').hasMatch(member) ||
-            !members.add(member)) {
+        if (!isGeneratedClientMemberName(member) || !members.add(member)) {
           errors.add(
             'Component "$componentId" has invalid or duplicate Command '
             'Client member "$member".',

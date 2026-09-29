@@ -5,7 +5,7 @@
     "name": "demo_order",
     "version": "0.1.0"
   },
-  "contentFingerprint": "45c45aa3f4c7794ec04521940d86fa5455f399ed64dc73f9ab7cbc36bacfc6d5",
+  "contentFingerprint": "ed2aa2a277d7ec8bffdd3814b6405b573255940c761ef1aa6a86a32a361ed539",
   "bundle": {
     "library": "lib/src/ccrouter_generated/host/demo_order_ccrouter.g.dart",
     "symbol": "ccrouterGeneratedPackageBundle"
@@ -14,7 +14,7 @@
     {
       "name": "demo_order_contracts",
       "version": "0.1.0",
-      "contentFingerprint": "7c1873cca629d58b9d5c9b0787b2bda793437720cbf8b3c95f0c378ba61b0723"
+      "contentFingerprint": "568432fa51f3002943cc40f1b3b3f4f8d0ed5ab62168ca9dfbf5faaa4fa79804"
     }
   ],
   "metadata": [
@@ -70,7 +70,7 @@
           "contract": {
             "symbol": "ReserveOrderCommand",
             "packageUri": "package:demo_order_contracts/src/order_commands.dart",
-            "line": 11,
+            "line": 12,
             "column": 13
           },
           "implementation": {
@@ -244,7 +244,7 @@
         "contract": {
           "symbol": "ReserveOrderCommand",
           "packageUri": "package:demo_order_contracts/src/order_commands.dart",
-          "line": 11,
+          "line": 12,
           "column": 13
         },
         "implementation": {

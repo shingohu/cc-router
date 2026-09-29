@@ -146,15 +146,14 @@ _ServiceConsumerComponentModel _readServiceConsumerComponent(
     if (key != null) _validateServiceId(key, 'Service Key', element);
     final aliasValue = _serviceObjectField(dependency, 'alias');
     final alias = aliasValue.isNull ? null : aliasValue.toStringValue();
-    final defaultMember = _serviceDependencyMember(
-      contract.element.displayName,
-    );
-    final member = alias ?? defaultMember;
-    if (!_serviceMemberNamePattern.hasMatch(member) ||
-        _dartReservedWords.contains(member)) {
+    final member =
+        alias ??
+        contract.alias ??
+        defaultServiceClientMember(contract.element.displayName);
+    if (!isGeneratedClientMemberName(member)) {
       _failService(
         'Service dependency alias "$member" must be a public lower-camel Dart '
-        'identifier.',
+        'identifier and must not be a keyword.',
         element,
       );
     }
@@ -604,14 +603,6 @@ DartObject _serviceObjectField(DartObject value, String name) {
   throw StateError('Missing Service metadata field: $name');
 }
 
-/// Default lower-camel Client member derived from a contract type name.
-String _serviceDependencyMember(String contractName) {
-  final stem = contractName.endsWith('Service')
-      ? contractName.substring(0, contractName.length - 'Service'.length)
-      : contractName;
-  return _serviceLowerCamel(stem);
-}
-
 /// Removes the conventional component suffix from generated API class names.
 String _serviceComponentApiOwner(String componentId) =>
     componentId.endsWith('_component')
@@ -647,43 +638,3 @@ bool _servicePublicImport(Uri uri) {
 /// Converts analyzer nullability into generated source syntax.
 String _serviceNullability(DartType type) =>
     type.nullabilitySuffix == NullabilitySuffix.question ? '?' : '';
-
-/// Public lower-camel syntax accepted for generated Client aliases.
-final RegExp _serviceMemberNamePattern = RegExp(r'^[a-z][A-Za-z0-9]*$');
-
-/// Dart words that cannot be emitted as generated static member names.
-const Set<String> _dartReservedWords = {
-  'assert',
-  'break',
-  'case',
-  'catch',
-  'class',
-  'const',
-  'continue',
-  'default',
-  'do',
-  'else',
-  'enum',
-  'extends',
-  'false',
-  'final',
-  'finally',
-  'for',
-  'if',
-  'in',
-  'is',
-  'new',
-  'null',
-  'rethrow',
-  'return',
-  'super',
-  'switch',
-  'this',
-  'throw',
-  'true',
-  'try',
-  'var',
-  'void',
-  'while',
-  'with',
-};

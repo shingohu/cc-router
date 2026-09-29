@@ -90,7 +90,7 @@ final class _DemoCapabilitiesPageState extends State<DemoCapabilitiesPage> {
                 '通过公开 Contract 调用 Order Owner，并保留可信调用方。',
                 () => _run(
                   'Command cross component',
-                  () => DemoNavigationLabCommands.reserveOrder(
+                  () => DemoNavigationLabCommands.reserve(
                     const ReserveOrderCommand(1001),
                   ),
                 ),

@@ -63,7 +63,15 @@ Scope 解析实例，因此静态 Client 可以跨 Session 使用，而旧 Sessi
 
 ## 3. Key 与命名
 
-默认成员名由 Contract 类型去掉 `Service` 后转为 lower camel。多 Key 或名称冲突时显式声明：
+生成成员名按以下确定顺序解析：
+
+1. 消费组件的 `CCServiceDependency.alias`；
+2. `CCServiceContract.alias`；
+3. Contract 类型去掉末尾 `Service` 后，仅将首字母转为小写。
+
+默认推导不做 acronym 猜测：`HTTPService` 会稳定得到 `hTTP`，需要领域名称时在 Contract
+声明 `alias: 'http'`。这避免生成器升级时因分词规则变化而修改业务 API。Contract alias 适合让
+全部消费者获得同一个名称；Dependency alias 只用于多 Key、消费组件词汇差异或名称冲突：
 
 ```dart
 CCServiceDependency<PaymentService>(
@@ -73,7 +81,14 @@ CCServiceDependency<PaymentService>(
 ```
 
 生成器校验 Contract ID、Owner、Key、alias、重复 `(Contract, Key)` 和成员名冲突。业务不传 Token、
-字符串 Key、caller identity 或 method ID。
+字符串 Key、caller identity 或 method ID。alias 必须是非关键字 public lower-camel Dart 标识符，
+并进入 Contract metadata 与 shape fingerprint；修改 Contract alias 是生成 Client 的 source
+compatibility 变更，必须按 Contract SemVer 处理并重新生成消费者。
+
+本轮不生成全局 `Network.client` 命名空间 Facade。它会产生跨 Package 导入冲突，并容易隐藏
+消费组件专属 caller identity。稳定入口继续采用 `<Component>Services.<member>`，例如
+`DemoNavigationLabServices.network`；若生产项目证明两层命名空间有明确收益，再评估组件局部
+`<Component>Api.network.client`，不能退化为全局共享 Proxy。
 
 ## 4. 方法支持矩阵
 

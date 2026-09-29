@@ -19,7 +19,7 @@ final class DemoNetworkPage extends StatefulWidget {
 }
 
 final class _DemoNetworkPageState extends State<DemoNetworkPage> {
-  DemoNetworkService get _service => DemoNavigationLabServices.demoNetwork;
+  DemoNetworkService get _service => DemoNavigationLabServices.network;
   String _status = '尚未发送请求';
   bool _busy = false;
 

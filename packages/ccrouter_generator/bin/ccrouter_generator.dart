@@ -7,6 +7,7 @@ import 'package:analyzer/dart/analysis/features.dart';
 import 'package:analyzer/dart/analysis/utilities.dart';
 import 'package:analyzer/dart/ast/ast.dart';
 import 'package:ccrouter_generator/ccrouter_generator.dart';
+import 'package:ccrouter_generator/src/generated_client_naming.dart';
 import 'package:ccrouter_generator/src/internal_api_boundary_validator.dart';
 import 'package:ccrouter_generator/src/package_workspace.dart';
 import 'package:crypto/crypto.dart';
@@ -4610,7 +4611,9 @@ final class _CommandClientEntry {
       type: type,
       resultType: '${metadata['resultType'] ?? 'Object?'}',
       member: member == null || member.isEmpty
-          ? _commandClientMember(type)
+          ? '${metadata['alias'] ?? ''}'.isNotEmpty
+                ? '${metadata['alias']}'
+                : defaultCommandClientMember(type)
           : member,
     );
   }
@@ -4629,16 +4632,6 @@ final class _CommandClientEntry {
 
   /// Generated lower-camel method.
   final String member;
-}
-
-/// Derives a concise generated Command method name.
-String _commandClientMember(String type) {
-  final stem = type.endsWith('Command')
-      ? type.substring(0, type.length - 'Command'.length)
-      : type;
-  return stem.isEmpty
-      ? 'command'
-      : '${stem[0].toLowerCase()}${stem.substring(1)}';
 }
 
 /// One generated Event publication method derived from static metadata.

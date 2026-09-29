@@ -516,7 +516,11 @@ const probeComponent = CCComponent(
         'ccrouter_test|lib/order_contracts.dart': r'''
 import 'package:ccrouter/ccrouter.dart';
 const orderId = CCComponentId('orders');
-@CCServiceContract(componentId: orderId, id: 'orders.summary')
+@CCServiceContract(
+  componentId: orderId,
+  id: 'orders.summary',
+  alias: 'orderClient',
+)
 abstract interface class OrderSummaryService { String summary(); }
 ''',
         'ccrouter_test|lib/src/payment_component.dart': r'''
@@ -569,7 +573,11 @@ const payment = CCComponent(
         'ccrouter_test|lib/order_commands.dart': r'''
 import 'package:ccrouter/ccrouter.dart';
 const orderId = CCComponentId('orders');
-@CCCommandContract(componentId: orderId, id: 'orders.submit')
+@CCCommandContract(
+  componentId: orderId,
+  id: 'orders.submit',
+  alias: 'reserve',
+)
 final class SubmitOrderCommand implements CCCommand<String> {
   const SubmitOrderCommand();
 }

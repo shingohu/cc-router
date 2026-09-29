@@ -979,10 +979,10 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 ### Service `demo.network.client`
 
 - Declaring package: `demo_network`
-- Contract/declaration: `package:demo_network/src/network_service.dart:13:26` (`DemoNetworkService`)
-- Implementation: `package:demo_network/src/network_service.dart:41:13` (`DemoNetworkServiceImpl`)
+- Contract/declaration: `package:demo_network/src/network_service.dart:15:26` (`DemoNetworkService`)
+- Implementation: `package:demo_network/src/network_service.dart:43:13` (`DemoNetworkServiceImpl`)
 - Generated artifacts:
-  - `serviceClient`: `package:demo_navigation_lab/src/ccrouter_generated/component/navigation_lab_component.service_api.g.dart` (`DemoNavigationLabServices.demoNetwork`)
+  - `serviceClient`: `package:demo_navigation_lab/src/ccrouter_generated/component/navigation_lab_component.service_api.g.dart` (`DemoNavigationLabServices.network`)
   - `serviceRegistration`: `package:demo_network/src/ccrouter_generated/service/network_service.service.g.dart` (`ccrouterRegisterDemoNetworkServiceImplService`)
   - `serviceToken`: `package:demo_network/src/ccrouter_generated/contract/network_service.service.contract.g.dart` (`demoNetworkServiceToken`)
 
@@ -991,7 +991,7 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 ### Command `demo_order.reserve`
 
 - Declaring package: `demo_order_contracts`
-- Contract/declaration: `package:demo_order_contracts/src/order_commands.dart:11:13` (`ReserveOrderCommand`)
+- Contract/declaration: `package:demo_order_contracts/src/order_commands.dart:12:13` (`ReserveOrderCommand`)
 - Implementation: `package:demo_order/src/order_commands.dart:6:16` (`handleReserveOrder`)
 - Generated artifacts:
   - `commandRegistration`: `package:demo_order/src/ccrouter_generated/command/order_commands.command.g.dart` (`ccrouterRegisterHandleReserveOrderCommand`)

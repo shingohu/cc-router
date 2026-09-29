@@ -8,6 +8,7 @@ import 'package:build/build.dart';
 import 'package:source_gen/source_gen.dart';
 
 import 'contract_fingerprint.dart';
+import 'generated_client_naming.dart';
 
 part 'route_model.dart';
 part 'route_emitter.dart';

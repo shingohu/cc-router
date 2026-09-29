@@ -24,7 +24,7 @@ final ccrouterGeneratedPackageBundle = CCGeneratedPackageBundle(
   packageName: 'demo_navigation_lab',
   packageVersion: '0.1.0',
   contentFingerprint:
-      '71b37b4702c374db0d4d734e1cdb019b50b939d4b9eb418c507f058ce0cadbc5',
+      'f3a955f5fd10e3768f7da59a4d55addcf4573821f13c3f7ae7f7333a6f1e0446',
   contractBundle: CCContractBundleDescriptor(
     packageName: 'demo_navigation_lab',
     packageVersion: '0.1.0',
@@ -350,7 +350,7 @@ final ccrouterGeneratedPackageBundle = CCGeneratedPackageBundle(
         ownerComponentId: "demo_order_component",
         requiredVersionRange: "0.1.0",
         requiredShapeFingerprint:
-            "733a9cbb3afe25c35855e48a5f37d70433427971629d0a6e53ff2613a3161316",
+            "51da7bd343fa650642a09a23a9efe8e2da9c3537983d1cd33ea0d50dfd885af6",
       ),
       CCContractRequirement(
         kind: CCContractKind.event,
@@ -413,7 +413,7 @@ final ccrouterGeneratedPackageBundle = CCGeneratedPackageBundle(
         ownerComponentId: "demo_network_component",
         requiredVersionRange: "0.1.0",
         requiredShapeFingerprint:
-            "cc271813e81d60863b08f881874c711d6c367e9b131f4635ea0ec274e7bdb1d0",
+            "c0a7cb128881259780a44aedc62de6cf5efdd5925ab7dad09997add3f0aeeb8b",
       ),
       CCContractRequirement(
         kind: CCContractKind.service,

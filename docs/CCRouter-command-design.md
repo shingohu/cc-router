@@ -147,7 +147,7 @@ const paymentComponent = CCComponent(
   version: '1.0.0',
   dependencies: [orderComponentId],
   commandDependencies: [
-    CCCommandDependency<SubmitOrderCommand>(alias: 'submitOrder'),
+    CCCommandDependency<SubmitOrderCommand>(),
   ],
 );
 ```
@@ -160,6 +160,12 @@ final receipt = await DemoPaymentCommands.submitOrder(
   timeout: const Duration(seconds: 10),
 );
 ```
+
+Command Client 方法名按 `CCCommandDependency.alias`、`CCCommandContract.alias`、类型名去掉
+末尾 `Command` 后仅降低首字母的顺序解析。Contract alias 同时作用于 Owner 和全部未覆盖的
+Consumer；Dependency alias 只影响一个消费组件。默认推导不猜测 acronym，alias 必须是非关键字
+public lower-camel Dart 标识符。Contract alias 会写入 metadata 和 shape fingerprint，修改它属于
+生成 Client 的 source compatibility 变更，必须按 Contract SemVer 处理并重新生成消费者。
 
 Owner 组件也为自己拥有的所有注解 Command 自动生成内部调用入口，不要求自依赖声明：
 
@@ -205,7 +211,8 @@ lib/src/ccrouter_generated/
 9. Host 依赖闭包中每个被消费的 Contract 必须有且只有一个 Handler。
 10. Handler 所在组件必须与 Contract Owner 相同。
 11. Consumer 必须把 Owner 放入 required `dependencies`，optional dependency 不能满足必需调用。
-12. Client alias 必须是无冲突的 public lower-camel Dart 标识符。
+12. Client alias 必须是无冲突、非关键字的 public lower-camel Dart 标识符；Dependency alias
+    优先于 Contract alias，Contract alias 优先于类型名推导。
 13. 跨 Package Contract 必须通过公共 barrel 暴露，不能导入其他 Package 的 `src`。
 14. 组件源码不得对已注解 Command 使用裸 `CCRouter.command`；Host 与未注解内部 Command 除外。
 

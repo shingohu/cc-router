@@ -24,6 +24,7 @@ final class CCCommandContract {
   const CCCommandContract({
     this.componentId,
     required this.id,
+    this.alias,
     this.version = '0.1.0',
     this.description = '',
   });
@@ -33,6 +34,15 @@ final class CCCommandContract {
 
   /// Globally stable identity used by generated clients and diagnostics.
   final String id;
+
+  /// Default generated Client method shared by the owner and consumers.
+  ///
+  /// Use a public lower-camel identifier when the Command type name does not
+  /// express the preferred operation name. `CCCommandDependency.alias` may
+  /// override it for one consuming component. Changing this value changes the
+  /// generated source API but does not change dispatch, ownership, or result
+  /// semantics.
+  final String? alias;
 
   /// Independent Command Contract SemVer used by generated clients.
   final String version;
@@ -62,7 +72,10 @@ final class CCCommandDependency<C extends CCCommand<Object?>> {
   /// Creates one typed Command dependency.
   const CCCommandDependency({this.alias});
 
-  /// Overrides the generated lower-camel client method name.
+  /// Overrides the Contract default method for this consuming component.
+  ///
+  /// When absent, generation uses `CCCommandContract.alias` and then the
+  /// Command type name. The value must be a public lower-camel Dart identifier.
   final String? alias;
 }
 

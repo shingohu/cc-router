@@ -72,7 +72,11 @@ void handleRefresh(RefreshCommand command) {}
       reader,
       ccCommandMetadataBuilder(BuilderOptions.empty),
       r'''
-@CCCommandContract(id: 'orders.submit', description: 'Submit one order.')
+@CCCommandContract(
+  id: 'orders.submit',
+  alias: 'submit',
+  description: 'Submit one order.',
+)
 final class SubmitOrderCommand implements CCCommand<String> {
   const SubmitOrderCommand(this.orderId);
   final int orderId;
@@ -85,6 +89,7 @@ String handleSubmit(SubmitOrderCommand command) => 'ok';
     final metadata = jsonDecode(output) as Map<String, dynamic>;
     expect(metadata['commandContracts'], hasLength(1));
     expect(metadata['commandHandlers'], hasLength(1));
+    expect(metadata['commandContracts'][0]['alias'], 'submit');
     expect(metadata['commandContracts'][0]['version'], '0.1.0');
     expect(
       metadata['commandContracts'][0]['shapeFingerprint'],
@@ -94,6 +99,50 @@ String handleSubmit(SubmitOrderCommand command) => 'ok';
       metadata['commandContracts'][0]['declaration']['packageUri'],
       'package:ccrouter_test/src/probe.dart',
     );
+  });
+
+  test('command alias changes the generated Contract fingerprint', () async {
+    Future<String> fingerprintFor(String alias) async {
+      final isolatedReader = TestReaderWriter(
+        rootPackage: 'ccrouter_test',
+        flattenOutput: true,
+      );
+      await isolatedReader.testing.loadIsolateSources();
+      final output = await _generate(
+        isolatedReader,
+        ccCommandMetadataBuilder(BuilderOptions.empty),
+        '''
+@CCCommandContract(id: 'orders.submit', alias: '$alias')
+final class SubmitOrderCommand implements CCCommand<void> {
+  const SubmitOrderCommand();
+}
+''',
+        'lib/src/ccrouter_generated/metadata/src/probe.command.json',
+      );
+      final metadata = jsonDecode(output) as Map<String, dynamic>;
+      return metadata['commandContracts'][0]['shapeFingerprint'] as String;
+    }
+
+    expect(
+      await fingerprintFor('submit'),
+      isNot(await fingerprintFor('submitOrder')),
+    );
+  });
+
+  test('keyword Command alias fails generation', () async {
+    final logs = await _generate(
+      reader,
+      ccCommandMetadataBuilder(BuilderOptions.empty),
+      r'''
+@CCCommandContract(id: 'orders.submit', alias: 'class')
+final class SubmitOrderCommand implements CCCommand<void> {
+  const SubmitOrderCommand();
+}
+''',
+      'lib/src/ccrouter_generated/metadata/src/probe.command.json',
+      fails: true,
+    );
+    expect(logs, contains('must not be a keyword'));
   });
 
   test('mutable payload fields fail generation', () async {

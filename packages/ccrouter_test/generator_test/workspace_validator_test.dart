@@ -456,6 +456,33 @@ void main() {
     );
   });
 
+  test('rejects invalid persisted Service and Command Client aliases', () {
+    final result = CCRouteWorkspaceValidator.validate([
+      document(
+        components: [component('orders')],
+        routes: const [],
+        serviceContracts: const [
+          {'id': 'orders.summary', 'componentId': 'orders', 'alias': 'class'},
+        ],
+      ),
+      document(source: 'commands.dart', components: const [], routes: const [])
+        ..['commandContracts'] = const [
+          {'id': 'orders.submit', 'componentId': 'orders', 'alias': 'Submit'},
+        ],
+    ]);
+
+    expect(
+      result.errors,
+      contains(
+        'Service contract "orders.summary" has an invalid Client alias.',
+      ),
+    );
+    expect(
+      result.errors,
+      contains('Command contract "orders.submit" has an invalid Client alias.'),
+    );
+  });
+
   test('rejects a generated consumer for a Route-scoped Service', () {
     final result = CCRouteWorkspaceValidator.validate([
       document(

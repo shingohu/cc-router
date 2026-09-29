@@ -8,7 +8,9 @@ import 'network_client.dart';
 @CCServiceContract(
   componentId: demoNetworkComponentId,
   id: 'demo.network.client',
-  description: 'Provides environment-aware HTTP requests with safe interceptors.',
+  alias: 'network',
+  description:
+      'Provides environment-aware HTTP requests with safe interceptors.',
 )
 abstract interface class DemoNetworkService {
   /// Current API environment ID.
@@ -141,7 +143,8 @@ final class _DioNetworkBackend implements CCNetworkBackend {
       );
     } on DioException catch (error) {
       throw CCNetworkException(
-        kind: error.type == DioExceptionType.receiveTimeout ||
+        kind:
+            error.type == DioExceptionType.receiveTimeout ||
                 error.type == DioExceptionType.connectionTimeout
             ? CCNetworkFailureKind.timeout
             : CCNetworkFailureKind.transport,

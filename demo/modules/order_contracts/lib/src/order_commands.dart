@@ -6,6 +6,7 @@ import '../demo_order_contracts_owner.dart';
 @CCCommandContract(
   componentId: demoOrderComponentId,
   id: 'demo_order.reserve',
+  alias: 'reserve',
   description: 'Reserves one order for a cross-component checkout flow.',
 )
 final class ReserveOrderCommand implements CCCommand<String> {

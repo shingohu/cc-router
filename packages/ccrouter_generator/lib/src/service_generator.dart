@@ -8,6 +8,7 @@ import 'package:build/build.dart';
 import 'package:source_gen/source_gen.dart';
 
 import 'contract_fingerprint.dart';
+import 'generated_client_naming.dart';
 
 part 'service_proxy_generator.dart';
 
@@ -224,6 +225,7 @@ final class _ServiceMetadataBuilder implements Builder {
           <String, Object?>{
             'id': contract.id,
             'componentId': contract.componentId,
+            if (contract.alias != null) 'alias': contract.alias,
             'version': contract.version,
             'description': contract.description,
             'package': package,
@@ -270,6 +272,7 @@ final class _ServiceMetadataBuilder implements Builder {
               'kind': 'service',
               'id': contract.id,
               'owner': contract.componentId,
+              if (contract.alias != null) 'alias': contract.alias,
               'methods': [
                 for (final member in contract.members)
                   <String, Object?>{
@@ -351,6 +354,7 @@ final class _ServiceContractModel {
     required this.element,
     required this.componentId,
     required this.id,
+    required this.alias,
     required this.version,
     required this.description,
     required this.members,
@@ -364,6 +368,9 @@ final class _ServiceContractModel {
 
   /// Stable Runtime identity serialized into the generated Token.
   final String id;
+
+  /// Contract-wide default member for generated consuming Clients.
+  final String? alias;
 
   /// Independent Service Contract SemVer.
   final String version;
@@ -494,8 +501,19 @@ List<_ServiceContractModel> _readServiceContracts(LibraryReader library) {
     }
     _validateServiceId(componentId, 'Component ID', element);
     final id = annotated.annotation.read('id').stringValue;
+    final aliasReader = annotated.annotation.peek('alias');
+    final alias = aliasReader == null || aliasReader.isNull
+        ? null
+        : aliasReader.stringValue;
     final version = annotated.annotation.read('version').stringValue;
     _validateServiceId(id, 'Service contract ID', element);
+    if (alias != null && !isGeneratedClientMemberName(alias)) {
+      _failService(
+        'Service contract "$id" alias "$alias" must be a public lower-camel '
+        'Dart identifier and must not be a keyword.',
+        element,
+      );
+    }
     if (!_serviceSemanticVersionPattern.hasMatch(version)) {
       _failService('Service contract "$id" must use SemVer 2.0.', element);
     }
@@ -511,6 +529,7 @@ List<_ServiceContractModel> _readServiceContracts(LibraryReader library) {
       element: element,
       componentId: componentId,
       id: id,
+      alias: alias,
       version: version,
       description: description,
       members: _readServiceMembers(element),
@@ -669,6 +688,7 @@ _ServiceContractModel? _serviceContractAnnotation(InterfaceElement element) {
   final component = annotation.getField('componentId');
   final componentId = component?.getField('value')?.toStringValue();
   final id = annotation.getField('id')?.toStringValue();
+  final alias = annotation.getField('alias')?.toStringValue();
   final version = annotation.getField('version')?.toStringValue() ?? '0.1.0';
   final description = annotation.getField('description')?.toStringValue() ?? '';
   if (componentId == null || id == null) {
@@ -679,6 +699,13 @@ _ServiceContractModel? _serviceContractAnnotation(InterfaceElement element) {
   }
   _validateServiceId(componentId, 'Component ID', element);
   _validateServiceId(id, 'Service contract ID', element);
+  if (alias != null && !isGeneratedClientMemberName(alias)) {
+    _failService(
+      'Service contract "$id" alias "$alias" must be a public lower-camel '
+      'Dart identifier and must not be a keyword.',
+      element,
+    );
+  }
   if (!_serviceSemanticVersionPattern.hasMatch(version)) {
     _failService('Service contract "$id" must use SemVer 2.0.', element);
   }
@@ -687,6 +714,7 @@ _ServiceContractModel? _serviceContractAnnotation(InterfaceElement element) {
     element: element,
     componentId: componentId,
     id: id,
+    alias: alias,
     version: version,
     description: description,
     members: _readServiceMembers(element),

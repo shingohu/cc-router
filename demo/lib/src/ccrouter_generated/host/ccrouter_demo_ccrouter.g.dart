@@ -29,7 +29,7 @@ final ccrouterGeneratedPackageBundle = CCGeneratedPackageBundle(
   packageName: 'ccrouter_demo',
   packageVersion: '0.1.0+1',
   contentFingerprint:
-      '0a65bfd666c28986183012419df0770cba7785c2a75a3a4ed2041a62e57c8e5d',
+      '771b6a621394f093151a1775c49eb20aa577768b923d5c474199331e530627cf',
   contractBundle: CCContractBundleDescriptor(
     packageName: 'ccrouter_demo',
     packageVersion: '0.1.0+1',
@@ -48,7 +48,7 @@ final ccrouterGeneratedPackageBundle = CCGeneratedPackageBundle(
         ownerComponentId: "demo_network_component",
         version: "0.1.0",
         shapeFingerprint:
-            "cc271813e81d60863b08f881874c711d6c367e9b131f4635ea0ec274e7bdb1d0",
+            "c0a7cb128881259780a44aedc62de6cf5efdd5925ab7dad09997add3f0aeeb8b",
       ),
       CCContractDescriptor(
         kind: CCContractKind.initTask,
@@ -368,7 +368,7 @@ final ccrouterGeneratedPackageBundle = CCGeneratedPackageBundle(
         ownerComponentId: "demo_order_component",
         version: "0.1.0",
         shapeFingerprint:
-            "733a9cbb3afe25c35855e48a5f37d70433427971629d0a6e53ff2613a3161316",
+            "51da7bd343fa650642a09a23a9efe8e2da9c3537983d1cd33ea0d50dfd885af6",
       ),
       CCContractDescriptor(
         kind: CCContractKind.initTask,

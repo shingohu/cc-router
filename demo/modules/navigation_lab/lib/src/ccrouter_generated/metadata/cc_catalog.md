@@ -428,7 +428,7 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 
 - Declaring package: `demo_navigation_lab`
 - Generated artifacts:
-  - `serviceClient`: `package:demo_navigation_lab/src/ccrouter_generated/component/navigation_lab_component.service_api.g.dart` (`DemoNavigationLabServices.demoNetwork`)
+  - `serviceClient`: `package:demo_navigation_lab/src/ccrouter_generated/component/navigation_lab_component.service_api.g.dart` (`DemoNavigationLabServices.network`)
 
 ## `demo_order_component`
 

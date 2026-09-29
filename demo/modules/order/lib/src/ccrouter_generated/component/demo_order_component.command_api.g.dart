@@ -7,7 +7,7 @@ import 'package:demo_order_contracts/src/order_commands.dart' as command_type_0;
 /// Typed Command entry points for component `demo_order_component`.
 abstract final class DemoOrderCommands {
   /// Dispatches `demo_order.reserve` through its single owner.
-  static Future<String> reserveOrder(
+  static Future<String> reserve(
     command_type_0.ReserveOrderCommand command, {
     Duration? timeout,
     CCCancellationToken? cancellation,

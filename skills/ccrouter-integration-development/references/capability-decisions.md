@@ -52,6 +52,11 @@ Scope selection:
 
 When a capability moves across Packages, declare `@CCServiceContract` in a Pure Dart contracts Package and let the implementation bind it automatically. Each consuming component adds an exact `CCServiceDependency<T>` and calls its generated `<Component>Services` Client; stable Token, caller identity and method ID plumbing belongs to generated code. Keep `CCRouter.service<T>()` for component-internal lookup. Use `CCServiceKey<T>` for multiple implementations and `serviceOrNull` only for a genuinely optional local capability.
 
+Use a Contract alias when every consumer should see the same generated Client
+member. Use a Dependency alias only for a keyed implementation or local naming
+override. Do not create a global Service namespace that hides which component
+made the call.
+
 Do not use a Service as an event bus, a route registry, or a container for arbitrary global mutable state.
 
 ## Command

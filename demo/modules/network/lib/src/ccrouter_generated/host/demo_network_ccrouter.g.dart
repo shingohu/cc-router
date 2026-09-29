@@ -19,7 +19,7 @@ final ccrouterGeneratedPackageBundle = CCGeneratedPackageBundle(
   packageName: 'demo_network',
   packageVersion: '0.1.0',
   contentFingerprint:
-      'd14a2959994efcafdf0848e856e6502607db5eaffca5cc19f99ed370114cbc6a',
+      'ea8b106c2f61887ab0ac11b89dbb53bb7109f7bbc381b27380f19ddf06706c4a',
   contractBundle: CCContractBundleDescriptor(
     packageName: 'demo_network',
     packageVersion: '0.1.0',
@@ -30,7 +30,7 @@ final ccrouterGeneratedPackageBundle = CCGeneratedPackageBundle(
         ownerComponentId: "demo_network_component",
         version: "0.1.0",
         shapeFingerprint:
-            "cc271813e81d60863b08f881874c711d6c367e9b131f4635ea0ec274e7bdb1d0",
+            "c0a7cb128881259780a44aedc62de6cf5efdd5925ab7dad09997add3f0aeeb8b",
       ),
     ],
     requirements: [],

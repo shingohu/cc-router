@@ -62,7 +62,7 @@ abstract final class DemoNavigationLabCommands {
   );
 
   /// Dispatches `demo_order.reserve` through its single owner.
-  static Future<String> reserveOrder(
+  static Future<String> reserve(
     command_type_1.ReserveOrderCommand command, {
     Duration? timeout,
     CCCancellationToken? cancellation,

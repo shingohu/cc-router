@@ -13,8 +13,8 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 ### Service `demo.network.client`
 
 - Declaring package: `demo_network`
-- Contract/declaration: `package:demo_network/src/network_service.dart:13:26` (`DemoNetworkService`)
-- Implementation: `package:demo_network/src/network_service.dart:41:13` (`DemoNetworkServiceImpl`)
+- Contract/declaration: `package:demo_network/src/network_service.dart:15:26` (`DemoNetworkService`)
+- Implementation: `package:demo_network/src/network_service.dart:43:13` (`DemoNetworkServiceImpl`)
 - Generated artifacts:
   - `serviceRegistration`: `package:demo_network/src/ccrouter_generated/service/network_service.service.g.dart` (`ccrouterRegisterDemoNetworkServiceImplService`)
   - `serviceToken`: `package:demo_network/src/ccrouter_generated/contract/network_service.service.contract.g.dart` (`demoNetworkServiceToken`)

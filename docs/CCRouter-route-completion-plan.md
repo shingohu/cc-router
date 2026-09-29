@@ -230,9 +230,9 @@ lib/src/ccrouter_generated/<componentId>.api.g.dart
   增量生成也必须保持该入口逐字节稳定。
 
 该方案只聚合导入入口，不合并底层生成逻辑，避免破坏增量生成、职责隔离和 API 最小权限。
-Service/Command Contract 的统一 `alias` 和可选命名空间 facade 与本项关联评估，但不属于
-Route API 聚合的默认导出；待该聚合入口落地后，必须单独验证调用方身份、Owner 校验和生成
-API surface。
+Service/Command Contract 的统一 `alias` 已在稳定聚合入口落地后完成：Dependency alias、Contract
+alias、类型名推导形成确定优先级，并保留调用方身份、Owner 校验和生成 API surface。可选命名
+空间 facade 经评估暂不实现；当前组件专属 Client 已能稳定表达领域名称，不增加全局 Proxy。
 
 #### P2-2 注解字段合法性校验（已落地，动态注册关系保留运行时校验）
 

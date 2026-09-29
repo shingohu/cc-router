@@ -21,8 +21,8 @@ abstract final class DemoNavigationLabServices {
       _DemoKeyValueStorageServiceProxy();
 
   /// Calls `demo.network.client` as `demo_navigation_lab_component`.
-  static const service_type_2.DemoNetworkService demoNetwork =
-      _DemoNetworkServiceProxy();
+  static const service_type_2.DemoNetworkService network =
+      _NetworkServiceProxy();
 
   /// Calls `demo_order.summary` as `demo_navigation_lab_component`.
   static const service_type_3.OrderSummaryService orderSummary =
@@ -235,10 +235,9 @@ final class _DemoKeyValueStorageServiceProxy
 }
 
 /// Stateless generated Proxy for `demo.network.client`.
-final class _DemoNetworkServiceProxy
-    implements service_type_2.DemoNetworkService {
+final class _NetworkServiceProxy implements service_type_2.DemoNetworkService {
   /// Creates the generated caller without resolving a Service.
-  const _DemoNetworkServiceProxy();
+  const _NetworkServiceProxy();
 
   /// Invokes `demo.network.client.environmentId`.
   @override

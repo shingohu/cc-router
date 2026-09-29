@@ -43,6 +43,7 @@ final class CCServiceContract {
   const CCServiceContract({
     required this.componentId,
     required this.id,
+    this.alias,
     this.version = '0.1.0',
     this.description = '',
   });
@@ -52,6 +53,16 @@ final class CCServiceContract {
 
   /// Globally stable Service identity used by Runtime and diagnostics.
   final String id;
+
+  /// Default generated Client member shared by consuming components.
+  ///
+  /// Use a public lower-camel identifier when the contract type does not yield
+  /// the intended domain name, for example `network` for
+  /// `DemoNetworkService`. A consumer may override this default with
+  /// `CCServiceDependency.alias`, for example when selecting several keyed
+  /// implementations. The value affects generated source compatibility but
+  /// has no Runtime ownership or Service lifecycle semantics.
+  final String? alias;
 
   /// Independent Service Contract SemVer used by cross-package consumers.
   final String version;
@@ -82,11 +93,12 @@ final class CCServiceDependency<T extends Object> {
   /// performs a string-based lookup.
   final CCServiceKey<T>? key;
 
-  /// Overrides the generated lower-camel member name in the component Client.
+  /// Overrides the Contract default generated member in this component Client.
   ///
-  /// Use this only to distinguish multiple Keys for the same contract or to
-  /// avoid a generated-name collision. Values must be public lower-camel Dart
-  /// identifiers and are validated during generation.
+  /// Use this only to distinguish multiple Keys for the same contract, apply a
+  /// consumer-specific vocabulary, or avoid a generated-name collision. When
+  /// absent, the generator uses `CCServiceContract.alias` and then the contract
+  /// type name. Values must be public lower-camel Dart identifiers.
   final String? alias;
 }
 

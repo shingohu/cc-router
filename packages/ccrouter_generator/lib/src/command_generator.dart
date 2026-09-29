@@ -8,6 +8,7 @@ import 'package:build/build.dart';
 import 'package:source_gen/source_gen.dart';
 
 import 'contract_fingerprint.dart';
+import 'generated_client_naming.dart';
 
 /// Maximum stable Command identifier length.
 const int _commandMaxStableIdLength = 128;
@@ -149,6 +150,7 @@ final class _CommandMetadataBuilder implements Builder {
           <String, Object?>{
             'id': contract.id,
             'componentId': contract.componentId,
+            if (contract.alias != null) 'alias': contract.alias,
             'version': contract.version,
             'description': contract.description,
             'package': package,
@@ -168,6 +170,7 @@ final class _CommandMetadataBuilder implements Builder {
               'kind': 'command',
               'id': contract.id,
               'owner': contract.componentId,
+              if (contract.alias != null) 'alias': contract.alias,
               'resultType': contract.resultType.getDisplayString(),
               'payloadFields': [
                 for (final field in contract.element.fields.where(
@@ -263,6 +266,7 @@ final class _CommandContractModel {
     required this.element,
     required this.componentId,
     required this.id,
+    required this.alias,
     required this.version,
     required this.description,
     required this.resultType,
@@ -276,6 +280,9 @@ final class _CommandContractModel {
 
   /// Stable Command identity.
   final String id;
+
+  /// Contract-wide default method for generated owner and consumer Clients.
+  final String? alias;
 
   /// Independent Command Contract SemVer.
   final String version;
@@ -347,8 +354,19 @@ List<_CommandContractModel> _readCommandContracts(LibraryReader library) {
       _validateCommandId(componentId, 'Component ID', element);
     }
     final id = annotated.annotation.read('id').stringValue;
+    final aliasReader = annotated.annotation.peek('alias');
+    final alias = aliasReader == null || aliasReader.isNull
+        ? null
+        : aliasReader.stringValue;
     final version = annotated.annotation.read('version').stringValue;
     _validateCommandId(id, 'Command ID', element);
+    if (alias != null && !isGeneratedClientMemberName(alias)) {
+      _failCommand(
+        'Command "$id" alias "$alias" must be a public lower-camel Dart '
+        'identifier and must not be a keyword.',
+        element,
+      );
+    }
     if (!_commandSemanticVersionPattern.hasMatch(version)) {
       _failCommand('Command "$id" must use SemVer 2.0.', element);
     }
@@ -367,6 +385,7 @@ List<_CommandContractModel> _readCommandContracts(LibraryReader library) {
         element: element,
         componentId: componentId,
         id: id,
+        alias: alias,
         version: version,
         description: description,
         resultType: resultType,
@@ -468,11 +487,19 @@ _CommandContractModel _readCommandContract(ClassElement element) {
       ?.getField('value')
       ?.toStringValue();
   final id = annotation.getField('id')?.toStringValue();
+  final alias = annotation.getField('alias')?.toStringValue();
   final version = annotation.getField('version')?.toStringValue() ?? '0.1.0';
   if (id == null) {
     _failCommand('CCCommandContract requires a const id.', element);
   }
   _validateCommandId(id, 'Command ID', element);
+  if (alias != null && !isGeneratedClientMemberName(alias)) {
+    _failCommand(
+      'Command "$id" alias "$alias" must be a public lower-camel Dart '
+      'identifier and must not be a keyword.',
+      element,
+    );
+  }
   if (!_commandSemanticVersionPattern.hasMatch(version)) {
     _failCommand('Command "$id" must use SemVer 2.0.', element);
   }
@@ -480,6 +507,7 @@ _CommandContractModel _readCommandContract(ClassElement element) {
     element: element,
     componentId: componentId,
     id: id,
+    alias: alias,
     version: version,
     description: annotation.getField('description')?.toStringValue() ?? '',
     resultType: interfaces.single.typeArguments.single,

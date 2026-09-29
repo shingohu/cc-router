@@ -145,12 +145,14 @@ Session Scope 均返回稳定的 Service 错误子类型；缺失命名实现会
   解析且不存在重复项时插入对应 `CCComponentId`。`ccrouter find <contract-id>` 计划补充 Owner、
   Contract Package、消费组件和所需依赖信息。该方案暂不静默扫描 Package 依赖、不自动改写源码，
   等确认后与 Component API 稳定聚合入口一并实施。
-- 已记录联合评估项：`CCServiceContract.alias`、`CCCommandContract.alias` 提供跨消费组件
-  统一的默认 Client 成员名，`CCServiceDependency.alias`、`CCCommandDependency.alias` 可做
-  消费组件级覆盖；命名优先级为 Dependency alias、Contract alias、类型名推导。当前不支持
-  `Network.client` 形式的点号命名空间。待 Component API 稳定聚合入口完成后，再评估是否生成
-  组件内命名空间 facade；评估必须保留每个消费组件独立的 Proxy、caller identity、Owner 校验
-  和 Trace 归属，不能通过一个全局 Service Proxy 隐藏调用方。
+- [x] `CCServiceContract.alias`、`CCCommandContract.alias` 已提供跨消费组件统一的默认 Client
+  成员名，`CCServiceDependency.alias`、`CCCommandDependency.alias` 可做消费组件级覆盖；命名
+  优先级为 Dependency alias、Contract alias、类型名推导。默认推导保持后缀移除与首字母小写，
+  不增加可能随版本变化的 acronym 启发式。Contract alias 进入 metadata 和 shape fingerprint。
+- [x] 命名空间 Facade 已评估但不纳入当前 API：全局 `Network.client` 会引入导入冲突并隐藏
+  消费组件 caller identity；当前使用 `<Component>Services.network`。只有生产场景证明两层命名
+  的收益后，才评估组件局部 `<Component>Api.network.client`，且仍必须保留独立 Proxy、Owner
+  校验和 Trace 归属。
 - 完整方法矩阵、生命周期、错误和回退见
   [Service Proxy 自动生成设计](CCRouter-service-proxy-generation-design.md)。
 - CLI 2.0 再考虑契约提升、Override、迁移和一键校验。

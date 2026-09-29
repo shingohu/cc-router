@@ -746,7 +746,9 @@ final controller = CCRouter.routeService<OrderDraftController>(context);
 - 默认 `singleton` 是每个 Scope 一个懒实例。
 - `newInstance` 每次解析创建新实例，但需要销毁的实例仍由 Scope 统一拥有；不要用它模拟手工 dispose 的临时对象。
 - `initializer` 只用于实例无法在同步构造后立即工作的异步 readiness；调用方必须使用 `serviceAsync`。
-- 多实现使用 `CCServiceKey<T>`；跨组件调用在 `CCServiceDependency<T>` 中指定 Key/alias，并使用生成 Client；组件内部解析仍使用 `CCRouter.service<T>()`。
+- 多实现使用 `CCServiceKey<T>`；跨组件调用使用生成 Client。统一名称配置在
+  `CCServiceContract.alias`，单个消费者或 Key 的覆盖配置在 `CCServiceDependency.alias`；组件内部
+  解析仍使用 `CCRouter.service<T>()`。
 - 实现 `CCDisposable` 的实例由 Scope 按逆构造顺序自动销毁，业务不得自行 dispose。
 - `serviceOrNull` 只把“未注册”转换为 null，不吞掉创建策略、Scope 或初始化错误。
 
@@ -766,6 +768,7 @@ Command 表达“由唯一 Owner 执行的一次性动作”，可返回强类�
 ```dart
 @CCCommandContract(
   id: 'order.submit',
+  alias: 'submit',
   description: '提交订单并返回支付单号。',
 )
 final class SubmitOrderCommand implements CCCommand<String> {

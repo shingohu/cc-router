@@ -5,7 +5,7 @@
     "name": "demo_network",
     "version": "0.1.0"
   },
-  "contentFingerprint": "d14a2959994efcafdf0848e856e6502607db5eaffca5cc19f99ed370114cbc6a",
+  "contentFingerprint": "ea8b106c2f61887ab0ac11b89dbb53bb7109f7bbc381b27380f19ddf06706c4a",
   "bundle": {
     "library": "lib/src/ccrouter_generated/host/demo_network_ccrouter.g.dart",
     "symbol": "ccrouterGeneratedPackageBundle"
@@ -54,6 +54,7 @@
         {
           "id": "demo.network.client",
           "componentId": "demo_network_component",
+          "alias": "network",
           "version": "0.1.0",
           "description": "Provides environment-aware HTTP requests with safe interceptors.",
           "package": "demo_network",
@@ -61,7 +62,7 @@
           "declaration": {
             "symbol": "DemoNetworkService",
             "packageUri": "package:demo_network/src/network_service.dart",
-            "line": 13,
+            "line": 15,
             "column": 26
           },
           "methods": [
@@ -82,7 +83,7 @@
               "declaration": {
                 "symbol": "environmentId",
                 "packageUri": "package:demo_network/src/network_service.dart",
-                "line": 15,
+                "line": 17,
                 "column": 14
               }
             },
@@ -103,7 +104,7 @@
               "declaration": {
                 "symbol": "isAuthenticated",
                 "packageUri": "package:demo_network/src/network_service.dart",
-                "line": 18,
+                "line": 20,
                 "column": 12
               }
             },
@@ -124,7 +125,7 @@
               "declaration": {
                 "symbol": "logs",
                 "packageUri": "package:demo_network/src/network_service.dart",
-                "line": 21,
+                "line": 23,
                 "column": 32
               }
             },
@@ -152,7 +153,7 @@
               "declaration": {
                 "symbol": "removeDefaultHeader",
                 "packageUri": "package:demo_network/src/network_service.dart",
-                "line": 36,
+                "line": 38,
                 "column": 8
               }
             },
@@ -181,7 +182,7 @@
               "declaration": {
                 "symbol": "request",
                 "packageUri": "package:demo_network/src/network_service.dart",
-                "line": 24,
+                "line": 26,
                 "column": 38
               }
             },
@@ -209,7 +210,7 @@
               "declaration": {
                 "symbol": "setAccessToken",
                 "packageUri": "package:demo_network/src/network_service.dart",
-                "line": 30,
+                "line": 32,
                 "column": 8
               }
             },
@@ -243,7 +244,7 @@
               "declaration": {
                 "symbol": "setDefaultHeader",
                 "packageUri": "package:demo_network/src/network_service.dart",
-                "line": 33,
+                "line": 35,
                 "column": 8
               }
             },
@@ -271,12 +272,12 @@
               "declaration": {
                 "symbol": "switchEnvironment",
                 "packageUri": "package:demo_network/src/network_service.dart",
-                "line": 27,
+                "line": 29,
                 "column": 8
               }
             }
           ],
-          "shapeFingerprint": "cc271813e81d60863b08f881874c711d6c367e9b131f4635ea0ec274e7bdb1d0",
+          "shapeFingerprint": "c0a7cb128881259780a44aedc62de6cf5efdd5925ab7dad09997add3f0aeeb8b",
           "token": {
             "symbol": "demoNetworkServiceToken",
             "library": "lib/src/ccrouter_generated/contract/network_service.service.contract.g.dart",
@@ -298,13 +299,13 @@
           "implementation": {
             "symbol": "DemoNetworkServiceImpl",
             "packageUri": "package:demo_network/src/network_service.dart",
-            "line": 41,
+            "line": 43,
             "column": 13
           },
           "contract": {
             "symbol": "DemoNetworkService",
             "packageUri": "package:demo_network/src/network_service.dart",
-            "line": 13,
+            "line": 15,
             "column": 26
           },
           "registration": "ccrouterRegisterDemoNetworkServiceImplService",
@@ -331,13 +332,13 @@
         "contract": {
           "symbol": "DemoNetworkService",
           "packageUri": "package:demo_network/src/network_service.dart",
-          "line": 13,
+          "line": 15,
           "column": 26
         },
         "implementation": {
           "symbol": "DemoNetworkServiceImpl",
           "packageUri": "package:demo_network/src/network_service.dart",
-          "line": 41,
+          "line": 43,
           "column": 13
         },
         "generatedArtifacts": [

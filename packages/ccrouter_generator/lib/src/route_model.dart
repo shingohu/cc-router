@@ -723,14 +723,18 @@ List<_ComponentCommandDependencyModel> _readComponentCommandDependencies(
       _fail('Command "$id" must implement exactly one CCCommand<R>.', owner);
     }
     final aliasObject = value.getField('alias');
-    final alias = aliasObject == null || aliasObject.isNull
+    final dependencyAlias = aliasObject == null || aliasObject.isNull
         ? null
         : aliasObject.toStringValue();
-    final defaultMember = _commandDependencyMember(commandElement.displayName);
-    final member = alias ?? defaultMember;
-    if (!RegExp(r'^[a-z][A-Za-z0-9]*$').hasMatch(member)) {
+    final contractAlias = annotation.getField('alias')?.toStringValue();
+    final member =
+        dependencyAlias ??
+        contractAlias ??
+        defaultCommandClientMember(commandElement.displayName);
+    if (!isGeneratedClientMemberName(member)) {
       _fail(
-        'Command dependency alias "$member" must be a public lower-camel Dart identifier.',
+        'Command dependency alias "$member" must be a public lower-camel Dart '
+        'identifier and must not be a keyword.',
         owner,
       );
     }
@@ -793,16 +797,6 @@ String _publicCommandDependencyLibrary(
   }
   final sorted = candidates.toList()..sort();
   return sorted.first;
-}
-
-/// Derives a concise lower-camel method from a Command class name.
-String _commandDependencyMember(String name) {
-  final stem = name.endsWith('Command')
-      ? name.substring(0, name.length - 'Command'.length)
-      : name;
-  return stem.isEmpty
-      ? 'command'
-      : '${stem[0].toLowerCase()}${stem.substring(1)}';
 }
 
 /// Serializable component-to-Service dependency used by workspace validation.
@@ -905,18 +899,18 @@ List<_ComponentServiceDependencyModel> _readComponentServiceDependencies(
         : _field(keyValue, 'name').toStringValue();
     if (key != null) _validateStableId(key, 'Service Key', owner);
     final aliasValue = _field(value, 'alias');
-    final alias = aliasValue.isNull ? null : aliasValue.toStringValue();
-    final stem = contractElement.displayName.endsWith('Service')
-        ? contractElement.displayName.substring(
-            0,
-            contractElement.displayName.length - 'Service'.length,
-          )
-        : contractElement.displayName;
-    final member = alias ?? _componentLowerCamel(stem);
-    if (!RegExp(r'^[a-z][A-Za-z0-9]*$').hasMatch(member)) {
+    final dependencyAlias = aliasValue.isNull
+        ? null
+        : aliasValue.toStringValue();
+    final contractAlias = annotation.getField('alias')?.toStringValue();
+    final member =
+        dependencyAlias ??
+        contractAlias ??
+        defaultServiceClientMember(contractElement.displayName);
+    if (!isGeneratedClientMemberName(member)) {
       _fail(
         'Service dependency alias "$member" must be a public lower-camel Dart '
-        'identifier.',
+        'identifier and must not be a keyword.',
         owner,
       );
     }
@@ -948,10 +942,6 @@ List<_ComponentServiceDependencyModel> _readComponentServiceDependencies(
   dependencies.sort((left, right) => left.member.compareTo(right.member));
   return List.unmodifiable(dependencies);
 }
-
-/// Converts one public Service type stem into a generated member name.
-String _componentLowerCamel(String value) =>
-    value.isEmpty ? value : '${value[0].toLowerCase()}${value.substring(1)}';
 
 /// Reads one typed component identity from evaluated constant metadata.
 String _readComponentId(ConstantReader reader, Element element) =>

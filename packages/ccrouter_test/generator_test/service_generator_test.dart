@@ -338,6 +338,40 @@ abstract interface class GenericOrderService {
     );
   });
 
+  test(
+    'contract alias is the default generated Service Client member',
+    () async {
+      final output = await generateProxy(
+        r'''
+const paymentId = CCComponentId('payment');
+const orderId = CCComponentId('orders');
+const payment = CCComponent(
+  id: paymentId,
+  version: '1.0.0',
+  dependencies: [orderId],
+  serviceDependencies: [CCServiceDependency<OrderSummaryService>()],
+);
+''',
+        imports: "import 'package:ccrouter_test/order_contracts.dart';",
+        additionalAssets: {
+          'ccrouter_test|lib/order_contracts.dart': r'''
+import 'package:ccrouter/ccrouter.dart';
+const orderId = CCComponentId('orders');
+@CCServiceContract(
+  componentId: orderId,
+  id: 'orders.summary',
+  alias: 'orders',
+)
+abstract interface class OrderSummaryService { String summaryFor(int id); }
+''',
+        },
+      );
+
+      expect(output, contains('OrderSummaryService orders ='));
+      expect(output, isNot(contains('OrderSummaryService orderSummary =')));
+    },
+  );
+
   test('proxy builder embeds typed Key and explicit alias', () async {
     final output = await generateProxy(
       r'''
@@ -360,7 +394,11 @@ const payment = CCComponent(
         'ccrouter_test|lib/order_contracts.dart': r'''
 import 'package:ccrouter/ccrouter.dart';
 const orderId = CCComponentId('orders');
-@CCServiceContract(componentId: orderId, id: 'orders.summary')
+@CCServiceContract(
+  componentId: orderId,
+  id: 'orders.summary',
+  alias: 'orders',
+)
 abstract interface class OrderSummaryService { String summaryFor(int id); }
 ''',
       },
@@ -477,10 +515,46 @@ abstract interface class OrderSummaryService {}
       final contract = (contractJson['serviceContracts'] as List).single as Map;
       expect(contract['id'], 'orders.summary');
       expect(contract['componentId'], 'orders');
+      expect(contract.containsKey('alias'), isFalse);
       expect(contract['version'], '0.1.0');
       expect(contract['shapeFingerprint'], matches(RegExp(r'^[0-9a-f]{64}$')));
       expect((contract['token'] as Map)['symbol'], 'orderSummaryServiceToken');
       expect(contract['methods'], isEmpty);
+
+      Future<String> fingerprintFor(String alias) async {
+        final isolatedReader = TestReaderWriter(
+          rootPackage: 'ccrouter_test',
+          flattenOutput: true,
+        );
+        await isolatedReader.testing.loadIsolateSources();
+        final output = await _generate(
+          reader: isolatedReader,
+          builder: ccServiceMetadataBuilder(BuilderOptions.empty),
+          declarations:
+              '''
+const owner = CCComponentId('orders');
+@CCServiceContract(
+  componentId: owner,
+  id: 'orders.alias',
+  alias: '$alias',
+)
+abstract interface class AliasService {}
+''',
+          outputPath:
+              'lib/src/ccrouter_generated/metadata/src/probe.service.json',
+          fails: false,
+        );
+        final document = jsonDecode(output) as Map<String, dynamic>;
+        final aliasContract =
+            (document['serviceContracts'] as List).single as Map;
+        expect(aliasContract['alias'], alias);
+        return aliasContract['shapeFingerprint'] as String;
+      }
+
+      expect(
+        await fingerprintFor('orders'),
+        isNot(await fingerprintFor('orderClient')),
+      );
 
       final genericContractJson =
           jsonDecode(
@@ -524,6 +598,10 @@ final class OrderCache { const OrderCache(); }
   );
 
   final invalidContracts = <String, (String, String)>{
+    'keyword alias': (
+      "const owner = CCComponentId('orders'); @CCServiceContract(componentId: owner, id: 'orders.summary', alias: 'class') abstract interface class Probe {}",
+      'must not be a keyword',
+    ),
     'concrete declaration': (
       "const owner = CCComponentId('orders'); @CCServiceContract(componentId: owner, id: 'orders.summary') final class Probe {}",
       'public, abstract, non-generic interface',
