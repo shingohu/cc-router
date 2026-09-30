@@ -62,7 +62,7 @@ void main() {
     expect(find.text('CCRouter Lab'), findsOneWidget);
     expect(find.text('运行总览'), findsOneWidget);
     expect(
-      find.text('${ccrouterGeneratedComponentManifests.length}'),
+      find.text('${ccrouterGeneratedHostAssembly.componentManifests.length}'),
       findsWidgets,
     );
 

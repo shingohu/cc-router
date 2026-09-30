@@ -265,7 +265,8 @@ fast path，`--profile` 会输出 `fast-path=hit/miss`。性能回归与混合�
   Manifest/Catalog 与直接 Pub 依赖的 Bundle，不加入组件业务 barrel，也不跨过 Dart 直接依赖
   边界。纯 contracts Package 只生成 JSON Index，不生成 Flutter Runtime Bundle。
 - 宿主 `lib/src/ccrouter_generated/ccrouter_host.api.g.dart`：Host 公共 barrel 可稳定转发的窄
-  API，只导出 Assembly、Manifest 和 Catalog，不暴露 Package Bundle 或装配胶水。
+  API，只导出原子 Host Assembly；Manifest 和 Catalog 通过 Assembly 属性读取，不暴露
+  Package Bundle 或装配胶水。
 - 宿主内部 `lib/src/ccrouter_generated/host/ccrouter_host.routes.g.dart`：从宿主自己的 Bundle
   解析传递 Package 图，Diamond 依赖去重后生成 Manifest 与 Catalog。新增无路由的 Service
   组件也会进入 Manifest 列表；普通路由或组件增删不再要求宿主逐项维护初始化列表。

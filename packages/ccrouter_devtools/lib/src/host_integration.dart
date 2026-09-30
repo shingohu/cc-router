@@ -8,7 +8,7 @@ import 'snapshot_provider.dart';
 /// Generated Host integration for the read-only CCRouter DevTools endpoint.
 ///
 /// Applications do not construct this object manually. `ccrouter generate`
-/// adds it to [CCGeneratedHostAssembly] only when the Host Package directly
+/// adds it to [CCHostAssembly] only when the Host Package directly
 /// depends on `ccrouter_devtools`. Debug builds enable it by default, Profile
 /// builds require `--dart-define=CCROUTER_DEVTOOLS=true`, and Release builds
 /// always keep it disabled.

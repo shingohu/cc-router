@@ -155,7 +155,11 @@ void main() {
     host.initialize();
 
     expect(
-      () => host.run(() => CCRouter.initialize(components: const [])),
+      () => host.run(
+        () => CCRouter.initialize(
+          hostAssembly: CCHostAssembly.fromComponents(components: const []),
+        ),
+      ),
       throwsA(isA<CCRouterAlreadyInitializedError>()),
     );
     await expectLater(host.run(CCRouter.shutdown), throwsA(isA<StateError>()));

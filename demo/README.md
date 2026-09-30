@@ -99,13 +99,14 @@ Contract-first Package；
 订单组件 ID 位于 owner contract，实现 Package 在
 `lib/src/demo_order_component.dart` 声明唯一的顶层 `const CCComponent`；Route 与简单
 Service 由生成器自动装配，没有专用声明模型的能力放入 `@CCComponentContribution`。
-组件生成后端中立的页面 Catalog，宿主分别聚合
-`ccrouterGeneratedComponentManifests` 和 `ccrouterGeneratedRouteCatalog`；
+组件生成后端中立的页面 Catalog，宿主只导出原子的
+`ccrouterGeneratedHostAssembly`，并通过其 `componentManifests` 和 `routeCatalog` 属性读取
+同一代生成快照；
 `CCGoRouterBackend.managed` 从 Catalog 自动创建 GoRouter routes、Adapter bindings 和
 Root Observer。`CCGoRouterApp` 只绑定 Host 和 Backend，不初始化或关闭 Runtime；最终由应用
 Composition Root 显式调用 `CCRouter.shutdown`。业务跳转仍统一通过 `CCRouter.navigator`。
 组件 Registrar、Manifest 与 Route Catalog 由独立 `.component.g.dart` 自动生成，并聚合到
-`ccrouterGeneratedComponentManifests`；组件业务 barrel 不导出 Registrar 或 Manifest。
+Host Assembly；组件业务 barrel 不导出 Registrar 或 Manifest。
 订单详情路由由 `@CCRouteContract` 声明，页面通过 `@CCRouteImplementation` 绑定；跨组件
 只导入 `demo_order_contracts`，页面 Widget、注册入口和构造 glue 留在 `demo_order`。
 同一契约包还通过 `@CCServiceContract` 声明 `OrderSummaryService` 的稳定 ID；订单实现
@@ -131,7 +132,8 @@ fvm dart run ccrouter_generator:ccrouter generate demo --check
 
 聚合路由目录生成到 `demo/lib/src/ccrouter_generated/metadata/cc_routes.json` 和
 `demo/lib/src/ccrouter_generated/metadata/cc_catalog.md`；宿主通过稳定的
-`demo/lib/src/ccrouter_generated/ccrouter_host.api.g.dart` 使用 Assembly、Manifest 和 Catalog，
+`demo/lib/src/ccrouter_generated/ccrouter_host.api.g.dart` 只导出原子 Host Assembly，
+Manifest 和 Catalog 通过 Assembly 属性读取，
 该入口在内部转发 `host/ccrouter_host.routes.g.dart`。每个参与 Package 同时在
 `lib/src/ccrouter_generated/metadata/ccrouter_package.json` 发布 Index；Runtime 组件通过
 `lib/src/ccrouter_generated/host/<package>_ccrouter.g.dart` 的分层 Bundle 装配，纯 contracts Package 保持 Pure Dart，

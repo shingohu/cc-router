@@ -41,19 +41,21 @@ void main() {
     'generated binding preserves stable Event and component identities',
     () async {
       CCRouter.initialize(
-        components: const [
-          CCComponentManifest(
-            id: 'owner',
-            version: '1.0.0',
-            registrar: _EmptyRegistrar(),
-          ),
-          CCComponentManifest(
-            id: 'consumer',
-            version: '1.0.0',
-            dependencies: ['owner'],
-            registrar: _GeneratedEventRegistrar(),
-          ),
-        ],
+        hostAssembly: CCHostAssembly.fromComponents(
+          components: const [
+            CCComponentManifest(
+              id: 'owner',
+              version: '1.0.0',
+              registrar: _EmptyRegistrar(),
+            ),
+            CCComponentManifest(
+              id: 'consumer',
+              version: '1.0.0',
+              dependencies: ['owner'],
+              registrar: _GeneratedEventRegistrar(),
+            ),
+          ],
+        ),
       );
 
       await CCRouterGeneratedEventBinding.publish(
@@ -78,13 +80,15 @@ void main() {
 
   test('generated Event with zero subscribers is a traced no-op', () async {
     CCRouter.initialize(
-      components: const [
-        CCComponentManifest(
-          id: 'owner',
-          version: '1.0.0',
-          registrar: _EmptyRegistrar(),
-        ),
-      ],
+      hostAssembly: CCHostAssembly.fromComponents(
+        components: const [
+          CCComponentManifest(
+            id: 'owner',
+            version: '1.0.0',
+            registrar: _EmptyRegistrar(),
+          ),
+        ],
+      ),
     );
 
     await CCRouterGeneratedEventBinding.publish(
@@ -100,13 +104,15 @@ void main() {
     'generated binding rejects an Event ID mismatched with subscribers',
     () async {
       CCRouter.initialize(
-        components: const [
-          CCComponentManifest(
-            id: 'consumer',
-            version: '1.0.0',
-            registrar: _GeneratedEventRegistrar(),
-          ),
-        ],
+        hostAssembly: CCHostAssembly.fromComponents(
+          components: const [
+            CCComponentManifest(
+              id: 'consumer',
+              version: '1.0.0',
+              registrar: _GeneratedEventRegistrar(),
+            ),
+          ],
+        ),
       );
 
       expect(
@@ -122,18 +128,20 @@ void main() {
 
   test('generated binding rejects missing or unauthorized publisher', () async {
     CCRouter.initialize(
-      components: const [
-        CCComponentManifest(
-          id: 'owner',
-          version: '1.0.0',
-          registrar: _EmptyRegistrar(),
-        ),
-        CCComponentManifest(
-          id: 'consumer',
-          version: '1.0.0',
-          registrar: _GeneratedEventRegistrar(),
-        ),
-      ],
+      hostAssembly: CCHostAssembly.fromComponents(
+        components: const [
+          CCComponentManifest(
+            id: 'owner',
+            version: '1.0.0',
+            registrar: _EmptyRegistrar(),
+          ),
+          CCComponentManifest(
+            id: 'consumer',
+            version: '1.0.0',
+            registrar: _GeneratedEventRegistrar(),
+          ),
+        ],
+      ),
     );
 
     expect(

@@ -76,7 +76,8 @@ Service、Command、Event 和 InitTask 后续也已形成各自闭环，状态�
 `CCFlutterRouteDestination.fromDefinition` 创建 Adapter-facing `CCNavigationRoute`，因此页面
 library 不需要依赖 Host SPI。API surface 快照测试锁定两侧导出集合。
 
-`CCRouter.initialize(components: ...)` 原子初始化全局配置和启动期组件集合。新应用由
+`CCRouter.initialize(hostAssembly: ...)` 原子初始化完整 Host Assembly。生成、手写和测试
+Host 都通过同一个只读快照提供组件、Contract、Route Catalog 与可选 Tool Integration。新应用由
 `CCRouterAppBackend` 提供 Adapter，`CCRouterApp.managed` 通过框架私有协调器完成所有权转移。
 Host/Adapter 的生命周期约束如下：
 

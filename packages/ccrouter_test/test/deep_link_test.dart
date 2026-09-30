@@ -58,13 +58,15 @@ void main() {
     final adapter = CCMemoryNavigationAdapter();
     CCRouter.initialize(
       deepLinkIngressPolicy: _deepLinkPolicy,
-      components: const [
-        CCComponentManifest(
-          id: 'orders',
-          version: '0.1.0',
-          registrar: _DeepLinkRegistrar(),
-        ),
-      ],
+      hostAssembly: CCHostAssembly.fromComponents(
+        components: const [
+          CCComponentManifest(
+            id: 'orders',
+            version: '0.1.0',
+            registrar: _DeepLinkRegistrar(),
+          ),
+        ],
+      ),
     );
     CCRouterHostBinding.attachNavigationAdapter(adapter);
 
@@ -112,13 +114,15 @@ void main() {
     final adapter = CCMemoryNavigationAdapter();
     CCRouter.initialize(
       deepLinkIngressPolicy: _deepLinkPolicy,
-      components: const [
-        CCComponentManifest(
-          id: 'orders',
-          version: '0.1.0',
-          registrar: _DeepLinkRegistrar(deepLink: CCDeepLinkPolicy.disabled),
-        ),
-      ],
+      hostAssembly: CCHostAssembly.fromComponents(
+        components: const [
+          CCComponentManifest(
+            id: 'orders',
+            version: '0.1.0',
+            registrar: _DeepLinkRegistrar(deepLink: CCDeepLinkPolicy.disabled),
+          ),
+        ],
+      ),
     );
     CCRouterHostBinding.attachNavigationAdapter(adapter);
 
@@ -133,13 +137,15 @@ void main() {
     () async {
       final adapter = CCMemoryNavigationAdapter();
       CCRouter.initialize(
-        components: const [
-          CCComponentManifest(
-            id: 'orders',
-            version: '0.1.0',
-            registrar: _DeepLinkRegistrar(),
-          ),
-        ],
+        hostAssembly: CCHostAssembly.fromComponents(
+          components: const [
+            CCComponentManifest(
+              id: 'orders',
+              version: '0.1.0',
+              registrar: _DeepLinkRegistrar(),
+            ),
+          ],
+        ),
       );
       CCRouterHostBinding.attachNavigationAdapter(adapter);
 
@@ -179,13 +185,15 @@ void main() {
             CCDeepLinkAuthorityRule(scheme: 'HTTPS', host: 'EXAMPLE.COM'),
           ],
         ),
-        components: const [
-          CCComponentManifest(
-            id: 'orders',
-            version: '0.1.0',
-            registrar: _DeepLinkRegistrar(),
-          ),
-        ],
+        hostAssembly: CCHostAssembly.fromComponents(
+          components: const [
+            CCComponentManifest(
+              id: 'orders',
+              version: '0.1.0',
+              registrar: _DeepLinkRegistrar(),
+            ),
+          ],
+        ),
       );
       CCRouterHostBinding.attachNavigationAdapter(adapter);
 

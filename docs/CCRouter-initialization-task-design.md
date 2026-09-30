@@ -92,7 +92,7 @@ registry.registerInitTask(
 );
 
 CCRouter.initialize(
-  components: ccrouterGeneratedComponentManifests,
+  hostAssembly: ccrouterGeneratedHostAssembly,
 );
 final initResult = await CCRouter.runInitTasks(
   gate: CCInitTaskGate.appStarted,

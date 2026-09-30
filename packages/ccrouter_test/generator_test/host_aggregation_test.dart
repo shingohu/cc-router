@@ -174,11 +174,12 @@ environment:
         'ccrouter_host.routes.g.dart',
       ),
     ).readAsStringSync();
-    expect(aggregate, contains('ccrouterGeneratedComponentManifests'));
+    expect(aggregate, contains('ccrouterGeneratedHostAssembly'));
+    expect(aggregate, contains('CCHostAssembly.fromComponents('));
     expect(aggregate, contains('fixtureServiceComponentManifest'));
     expect(aggregate, contains('fixtureServiceComponentRouteCatalog'));
-    expect(aggregate, contains('componentVersions: {'));
-    expect(aggregate, contains('manifest.id: manifest.version'));
+    expect(aggregate, isNot(contains('ccrouterGeneratedComponentManifests')));
+    expect(aggregate, isNot(contains('ccrouterGeneratedRouteCatalog')));
     expect(aggregate, isNot(contains('CCRouterGeneratedHost')));
     final hostApi = File(
       path.join(

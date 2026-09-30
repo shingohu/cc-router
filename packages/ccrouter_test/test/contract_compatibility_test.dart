@@ -102,7 +102,7 @@ void main() {
       ),
     );
 
-    final assembly = CCGeneratedHostAssembly.fromPackageBundles([bundle]);
+    final assembly = CCHostAssembly.fromPackageBundles([bundle]);
 
     expect(assembly.contractBundle?.contracts.single.id, 'orders.create');
   });

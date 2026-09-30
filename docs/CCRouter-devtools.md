@@ -18,7 +18,7 @@
 ## 接入
 
 Host 直接依赖 `ccrouter_devtools` 后，`ccrouter generate` 会生成静态 Catalog，并将
-`CCDevToolsHostIntegration` 写入 `CCGeneratedHostAssembly`。Composition Root 只需把 Assembly
+`CCDevToolsHostIntegration` 写入 `CCHostAssembly`。Composition Root 只需把 Assembly
 交给 `CCRouter.initialize`，不再手工注册或清理 VM Service Extension。完整设计与实现边界见
 [`CCRouter-devtools-host-integration-plan.md`](CCRouter-devtools-host-integration-plan.md)。
 

@@ -89,7 +89,7 @@ abstract interface class CCHostToolIntegration {
 }
 ```
 
-生成的 `CCGeneratedHostAssembly` 携带只读 Integration 列表，Host 初始化已收敛为：
+生成的 `CCHostAssembly` 携带只读 Integration 列表，Host 初始化已收敛为：
 
 ```dart
 CCRouter.initialize(
@@ -175,7 +175,7 @@ Service、执行 Command 或修改 Runtime 状态。
 
 1. 已生成 Host DevTools 静态 Catalog，并删除 Demo 手写能力、关系和源码位置副本。
 2. 已增加 Host-only `CCHostToolIntegration`，生命周期同步、短时且异常隔离。
-3. 已扩展 `CCGeneratedHostAssembly`，并校验空或重复 Integration ID。
+3. 已扩展 `CCHostAssembly`，并校验空或重复 Integration ID。
 4. 已由 `CCRouter.initialize/shutdown` 驱动 Integration，且生成式 Host 使用单一
    `hostAssembly` 参数。
 5. 已移除 Demo 手工 bootstrap 和业务组件的 Extension 所有权。

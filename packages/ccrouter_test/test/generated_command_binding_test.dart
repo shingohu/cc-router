@@ -27,19 +27,21 @@ void main() {
     'generated binding preserves stable ID and component identities',
     () async {
       CCRouter.initialize(
-        components: const [
-          CCComponentManifest(
-            id: 'owner',
-            version: '1.0.0',
-            registrar: _GeneratedCommandRegistrar(),
-          ),
-          CCComponentManifest(
-            id: 'consumer',
-            version: '1.0.0',
-            dependencies: ['owner'],
-            registrar: _EmptyCommandRegistrar(),
-          ),
-        ],
+        hostAssembly: CCHostAssembly.fromComponents(
+          components: const [
+            CCComponentManifest(
+              id: 'owner',
+              version: '1.0.0',
+              registrar: _GeneratedCommandRegistrar(),
+            ),
+            CCComponentManifest(
+              id: 'consumer',
+              version: '1.0.0',
+              dependencies: ['owner'],
+              registrar: _EmptyCommandRegistrar(),
+            ),
+          ],
+        ),
       );
 
       final result =
@@ -62,13 +64,15 @@ void main() {
 
   test('generated binding rejects a mismatched stable ID', () async {
     CCRouter.initialize(
-      components: const [
-        CCComponentManifest(
-          id: 'owner',
-          version: '1.0.0',
-          registrar: _GeneratedCommandRegistrar(),
-        ),
-      ],
+      hostAssembly: CCHostAssembly.fromComponents(
+        components: const [
+          CCComponentManifest(
+            id: 'owner',
+            version: '1.0.0',
+            registrar: _GeneratedCommandRegistrar(),
+          ),
+        ],
+      ),
     );
 
     expect(
@@ -83,18 +87,20 @@ void main() {
 
   test('generated binding rejects forged component attribution', () async {
     CCRouter.initialize(
-      components: const [
-        CCComponentManifest(
-          id: 'owner',
-          version: '1.0.0',
-          registrar: _GeneratedCommandRegistrar(),
-        ),
-        CCComponentManifest(
-          id: 'unrelated',
-          version: '1.0.0',
-          registrar: _EmptyCommandRegistrar(),
-        ),
-      ],
+      hostAssembly: CCHostAssembly.fromComponents(
+        components: const [
+          CCComponentManifest(
+            id: 'owner',
+            version: '1.0.0',
+            registrar: _GeneratedCommandRegistrar(),
+          ),
+          CCComponentManifest(
+            id: 'unrelated',
+            version: '1.0.0',
+            registrar: _EmptyCommandRegistrar(),
+          ),
+        ],
+      ),
     );
 
     expect(

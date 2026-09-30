@@ -28,7 +28,9 @@ void main() {
   testWidgets('CCGoRouterApp uses an explicitly initialized Runtime', (
     tester,
   ) async {
-    CCRouter.initialize(components: const []);
+    CCRouter.initialize(
+      hostAssembly: CCHostAssembly.fromComponents(components: const []),
+    );
 
     await tester.pumpWidget(
       CCGoRouterApp(
@@ -49,7 +51,9 @@ void main() {
   testWidgets('CCGoRouterApp forwards MaterialApp.router configuration', (
     tester,
   ) async {
-    CCRouter.initialize(components: const []);
+    CCRouter.initialize(
+      hostAssembly: CCHostAssembly.fromComponents(components: const []),
+    );
     final scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
     final lightTheme = ThemeData.light();
     final darkTheme = ThemeData.dark();
@@ -150,7 +154,9 @@ void main() {
   testWidgets('CCGoRouterApp creates a custom Backend exactly once', (
     tester,
   ) async {
-    CCRouter.initialize(components: const []);
+    CCRouter.initialize(
+      hostAssembly: CCHostAssembly.fromComponents(components: const []),
+    );
     var factoryCalls = 0;
 
     await tester.pumpWidget(

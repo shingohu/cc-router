@@ -258,7 +258,7 @@ final analytics = CCAnalyticsController(
 );
 
 CCRouter.initialize(
-  components: ccrouterGeneratedComponentManifests,
+  hostAssembly: ccrouterGeneratedHostAssembly,
   navigationAspects: [analytics.navigationAspect],
 );
 
@@ -266,7 +266,7 @@ runApp(
   CCAnalyticsScope(
     controller: analytics,
     mode: CCAnalyticsCollectionMode.annotated,
-    child: CCGoRouterApp(catalog: ccrouterGeneratedRouteCatalog),
+    child: CCGoRouterApp(catalog: ccrouterGeneratedHostAssembly.routeCatalog),
   ),
 );
 ```

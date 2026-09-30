@@ -31,11 +31,11 @@ final class _MultiHostDemoBackend implements CCRouterAppBackend {
 
   factory _MultiHostDemoBackend.create() {
     final primary = createDemoRouterBackend(
-      catalog: ccrouterGeneratedRouteCatalog,
+      catalog: ccrouterGeneratedHostAssembly.routeCatalog,
       hostId: 'host.primary',
     );
     final secondary = createDemoRouterBackend(
-      catalog: ccrouterGeneratedRouteCatalog,
+      catalog: ccrouterGeneratedHostAssembly.routeCatalog,
       hostId: 'host.secondary',
     );
     return _MultiHostDemoBackend._(
@@ -56,7 +56,8 @@ final class _MultiHostDemoBackend implements CCRouterAppBackend {
   final CCMultiHostNavigationAdapter registry;
 
   @override
-  CCFlutterRouteCatalog get routeCatalog => ccrouterGeneratedRouteCatalog;
+  CCFlutterRouteCatalog get routeCatalog =>
+      ccrouterGeneratedHostAssembly.routeCatalog;
 
   @override
   CCNavigationHost get host => primary.host;

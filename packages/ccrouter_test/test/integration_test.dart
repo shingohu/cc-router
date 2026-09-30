@@ -850,13 +850,15 @@ void main() {
             CCDeepLinkAuthorityRule(scheme: 'https', host: 'example.com'),
           ],
         ),
-        components: const [
-          CCComponentManifest(
-            id: 'orders',
-            version: '1.0.0',
-            registrar: _OrdersRegistrar(),
-          ),
-        ],
+        hostAssembly: CCHostAssembly.fromComponents(
+          components: const [
+            CCComponentManifest(
+              id: 'orders',
+              version: '1.0.0',
+              registrar: _OrdersRegistrar(),
+            ),
+          ],
+        ),
       );
       CCRouterHostBinding.attachNavigationAdapter(adapter);
       await tester.pumpWidget(MaterialApp.router(routerConfig: router));
@@ -924,13 +926,15 @@ void main() {
     final registrar = _DisabledRouteRegistrar();
     CCRouter.initialize(
       deepLinkIngressPolicy: CCDeepLinkIngressPolicy(allowRelativePaths: true),
-      components: [
-        CCComponentManifest(
-          id: 'internal',
-          version: '1.0.0',
-          registrar: registrar,
-        ),
-      ],
+      hostAssembly: CCHostAssembly.fromComponents(
+        components: [
+          CCComponentManifest(
+            id: 'internal',
+            version: '1.0.0',
+            registrar: registrar,
+          ),
+        ],
+      ),
     );
     CCRouterHostBinding.attachNavigationAdapter(adapter);
     await tester.pumpWidget(MaterialApp.router(routerConfig: router));

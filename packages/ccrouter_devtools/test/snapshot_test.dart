@@ -101,7 +101,7 @@ void main() {
       capturedAt: DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
       catalogFingerprint: 'fixture',
     );
-    final assembly = CCGeneratedHostAssembly.fromPackageBundles(
+    final assembly = CCHostAssembly.fromPackageBundles(
       [
         CCGeneratedPackageBundle(
           packageName: 'host',

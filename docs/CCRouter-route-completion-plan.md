@@ -189,7 +189,7 @@ Catalog 和 Host Route Catalog 保留各自的消费边界。收敛必须保持�
 - `*.component.g.dart`：访问私有 Registrar 并生成 Runtime Manifest；
 - `<component>.component.g.dart`：独立 import Route/Service/Contribution bridge，生成私有 Registrar、Manifest 和 Route Catalog；
 - `<package>_ccrouter.g.dart`：发布跨 Package 运行时 Bundle 和直接依赖图；
-- `ccrouter_host.api.g.dart`：Host 公共 barrel 稳定转发的窄 API，只暴露 Assembly、Manifest 和 Catalog；
+- `ccrouter_host.api.g.dart`：Host 公共 barrel 稳定转发的窄 API，只暴露原子 Host Assembly；
 - `ccrouter_host.routes.g.dart`：隔离 Package Bundle SPI 的内部 Host 装配文件。
 
 上述目录和数据边界已经迁移。生成器测试覆盖增量缓存、`--check`、空 Catalog、陈旧输出清理、
@@ -392,7 +392,7 @@ IDE 可发现性属于方案验收条件：生成完成且 Workspace Analyzer �
 
 - [x] 分别生成 Runtime Manifest 集合和后端 Route Catalog，并通过 Catalog 的组件版本来源
   校验两者一致性；
-- [x] 应用通过 `CCRouter.initialize(components: ...)` 原子初始化，并显式调用 `shutdown`；
+- [x] 应用通过 `CCRouter.initialize(hostAssembly: ...)` 原子初始化，并显式调用 `shutdown`；
 - [x] `CCRouterApp.managed` 只绑定 Host 与 Backend，并在 Adapter 绑定完成前阻止业务子树
   挂载；
 - [x] Adapter 注入由 `CCRouterApp.managed` 的私有协调器完成，不开放独立 Controller；

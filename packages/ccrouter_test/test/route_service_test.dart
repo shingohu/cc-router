@@ -84,13 +84,15 @@ void main() {
   ) async {
     final created = <_RouteService>[];
     CCRouter.initialize(
-      components: [
-        CCComponentManifest(
-          id: 'route_service',
-          version: '1.0.0',
-          registrar: _RouteServiceRegistrar(created),
-        ),
-      ],
+      hostAssembly: CCHostAssembly.fromComponents(
+        components: [
+          CCComponentManifest(
+            id: 'route_service',
+            version: '1.0.0',
+            registrar: _RouteServiceRegistrar(created),
+          ),
+        ],
+      ),
     );
     final destination = CCFlutterRouteDestination.fromDefinition(
       definition: _routeDefinition(),

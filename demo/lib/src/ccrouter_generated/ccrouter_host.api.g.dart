@@ -4,8 +4,4 @@
 /// Stable Host-facing CCRouter API.
 ///
 /// This barrel intentionally excludes Package Bundles and generated Host glue.
-export 'host/ccrouter_host.routes.g.dart'
-    show
-        ccrouterGeneratedComponentManifests,
-        ccrouterGeneratedRouteCatalog,
-        ccrouterGeneratedHostAssembly;
+export 'host/ccrouter_host.routes.g.dart' show ccrouterGeneratedHostAssembly;

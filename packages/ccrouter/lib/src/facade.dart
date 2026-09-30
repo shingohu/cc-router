@@ -277,10 +277,12 @@ abstract final class CCRouter {
 
   /// Creates and initializes the process-default Runtime.
   ///
-  /// Call this once during application startup with one complete generated
-  /// [hostAssembly] or a handwritten [components] assembly. Component manifests
-  /// are validated and registered before the Runtime becomes observable, while
-  /// navigation Backend binding remains the responsibility of the Flutter Host.
+  /// Call this once during application startup with one complete [hostAssembly].
+  /// Generated, handwritten, and test Hosts all use the same atomic snapshot so
+  /// component, Contract, route, and tooling inputs cannot be mixed. Component
+  /// manifests are validated and registered before the Runtime becomes
+  /// observable, while navigation Backend binding remains the responsibility of
+  /// the Flutter Host.
   /// Set [navigationDiagnosticCapacity] to bound each in-memory navigation
   /// diagnostic history independently; zero disables retained histories without
   /// disabling live listeners.
@@ -297,11 +299,9 @@ abstract final class CCRouter {
   /// [deepLinkIngressPolicy] is Host-owned and defaults to rejecting every
   /// external authority and relative Path; configure exact rules only for URI
   /// namespaces the application intentionally owns.
-  /// Generated Hosts should pass [hostAssembly], which atomically supplies the
-  /// component graph, Contract bundle, and optional Host tool integrations.
-  /// Handwritten Hosts and focused tests may instead pass [components] with an
-  /// optional [contractBundle]. Supplying both modes, or neither mode, is a
-  /// configuration error.
+  /// Generated Hosts pass their generated assembly directly. Handwritten Hosts
+  /// and focused tests create the same value with
+  /// [CCHostAssembly.fromComponents].
   ///
   /// The name describes framework Runtime initialization, not construction of
   /// a disposable object and not asynchronous InitTask execution. Page,
@@ -311,9 +311,7 @@ abstract final class CCRouter {
   /// default Runtime. Concrete Runtime, Adapter, Scope, and Service instances
   /// continue to use their owner-level `dispose` contracts internally.
   static void initialize({
-    CCGeneratedHostAssembly? hostAssembly,
-    Iterable<CCComponentManifest>? components,
-    CCContractBundleDescriptor? contractBundle,
+    required CCHostAssembly hostAssembly,
     int traceCapacity = 1000,
     int navigationDiagnosticCapacity = 1000,
     CCDiagnosticsConfig diagnostics = const CCDiagnosticsConfig(),
@@ -334,26 +332,9 @@ abstract final class CCRouter {
       throw const CCRouterAlreadyInitializedError();
     }
 
-    if ((hostAssembly == null) == (components == null)) {
-      throw CCRegistrationError(
-        'CCRouter.initialize requires exactly one of hostAssembly or '
-        'components.',
-      );
-    }
-    if (hostAssembly != null && contractBundle != null) {
-      throw CCRegistrationError(
-        'contractBundle is supplied by hostAssembly and cannot be passed '
-        'separately.',
-      );
-    }
-
-    final effectiveComponents = hostAssembly?.componentManifests ?? components!;
-    final effectiveContractBundle =
-        hostAssembly?.contractBundle ?? contractBundle;
-
     final runtime = CCRouterRuntime.forHost(
-      components: effectiveComponents,
-      contractBundle: effectiveContractBundle,
+      components: hostAssembly.componentManifests,
+      contractBundle: hostAssembly.contractBundle,
       traceCapacity: traceCapacity,
       navigationDiagnosticCapacity: navigationDiagnosticCapacity,
       diagnostics: diagnostics,
@@ -368,7 +349,7 @@ abstract final class CCRouter {
     );
     runtime.initialize();
     _runtimeResolver.installDefault(runtime);
-    final integrations = hostAssembly?.hostToolIntegrations ?? const [];
+    final integrations = hostAssembly.hostToolIntegrations;
     _hostToolIntegrations = integrations;
     for (final integration in integrations) {
       try {

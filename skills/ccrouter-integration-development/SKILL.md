@@ -99,6 +99,12 @@ Read [implementation-patterns.md](references/implementation-patterns.md) when ad
   Contract versions or fingerprints. Generation and Host/Runtime boundaries
   reject missing, owner-mismatched, out-of-range, fingerprint-drifted,
   duplicate, or stale Contract artifacts with stable compatibility codes.
+- `CCRouter.initialize` accepts exactly one required `CCHostAssembly`; it does
+  not accept loose component or Contract arguments. Generated Hosts use
+  `ccrouterGeneratedHostAssembly`. A handwritten Host or focused Facade test
+  uses `CCHostAssembly.fromComponents`, while ordinary Runtime tests prefer
+  `CCRouterTestHost`. Do not split one generated assembly into separately passed
+  manifests, Catalog, Contract, or tooling values.
 
 ### Read-only DevTools
 
@@ -146,7 +152,7 @@ the Service Contract.
 
 ## Lifecycle Rules
 
-- `CCRouter.initialize` receives the complete startup component set once.
+- `CCRouter.initialize` receives one complete Host Assembly once.
 - Open a Session after login or persisted authentication restoration. Close it on logout, token invalidation, account switch, or forced sign-out.
 - Do not close a Session on page Pop, backgrounding, or tab changes.
 - Call and await `CCRouter.shutdown` only when the owning application

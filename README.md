@@ -297,7 +297,12 @@ Host 使用生成的 Manifest 与 Catalog。新项目默认使用 managed GoRout
 
 Host 自己的公共 barrel 只需转发生成的
 `src/ccrouter_generated/ccrouter_host.api.g.dart`；不要直接导出 `host/` 下的内部聚合文件或
-手写 `show` 列表。生成器会保持 Assembly、Catalog 与 Manifest 的稳定 Host API。
+手写 `show` 列表。稳定入口只导出完整的 Host Assembly；Catalog 与 Manifest 通过该只读
+快照的属性访问，避免混用不同代生成物。
+
+`CCRouter.initialize` 只接受一个必填 `CCHostAssembly`。已有工程需要手写装配时使用
+`CCHostAssembly.fromComponents(components: ...)`，不要把 Component、Contract、Catalog
+和 Tool Integration 拆成多组初始化参数。
 
 ```dart
 Future<void> main() async {
@@ -308,7 +313,7 @@ Future<void> main() async {
   await CCRouter.runInitTasks(gate: CCInitTaskGate.appStarted);
   runApp(
     CCGoRouterApp(
-      catalog: ccrouterGeneratedRouteCatalog,
+      catalog: ccrouterGeneratedHostAssembly.routeCatalog,
     ),
   );
 }
@@ -329,7 +334,7 @@ final initResult = await CCRouter.runInitTasks(
 );
 // 仅无法降级的 Host 才显式选择 fail-fast：
 // initResult.throwIfRequiredFailed();
-runApp(CCGoRouterApp(catalog: ccrouterGeneratedRouteCatalog));
+runApp(CCGoRouterApp(catalog: ccrouterGeneratedHostAssembly.routeCatalog));
 ```
 
 `CCGoRouterApp` 直接提供 `MaterialApp.router` 的非路由配置，包括主题、高对比度主题、
@@ -339,7 +344,7 @@ runApp(CCGoRouterApp(catalog: ccrouterGeneratedRouteCatalog));
 ```dart
 runApp(
   CCGoRouterApp(
-    catalog: ccrouterGeneratedRouteCatalog,
+    catalog: ccrouterGeneratedHostAssembly.routeCatalog,
     locale: const Locale('zh', 'CN'),
     supportedLocales: AppLocalizations.supportedLocales,
     localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -360,7 +365,7 @@ runApp(
 ```dart
 runApp(
   CCGoRouterApp(
-    catalog: ccrouterGeneratedRouteCatalog,
+    catalog: ccrouterGeneratedHostAssembly.routeCatalog,
     backendFactory: (configuration) => createApplicationBackend(
       catalog: configuration.catalog,
       initialLocation: configuration.initialLocation,

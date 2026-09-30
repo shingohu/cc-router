@@ -73,7 +73,7 @@ Adapter、Host 和 `MaterialApp.router`：
 ```dart
 runApp(
   CCGoRouterApp(
-    catalog: ccrouterGeneratedRouteCatalog,
+    catalog: ccrouterGeneratedHostAssembly.routeCatalog,
   ),
 );
 ```

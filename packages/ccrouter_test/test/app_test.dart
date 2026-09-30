@@ -174,13 +174,15 @@ void main() {
     );
     final adapter = CCMemoryNavigationAdapter();
     CCRouter.initialize(
-      components: const [
-        CCComponentManifest(
-          id: 'context-routing',
-          version: '0.1.0',
-          registrar: _ContextRouteRegistrar(),
-        ),
-      ],
+      hostAssembly: CCHostAssembly.fromComponents(
+        components: const [
+          CCComponentManifest(
+            id: 'context-routing',
+            version: '0.1.0',
+            registrar: _ContextRouteRegistrar(),
+          ),
+        ],
+      ),
     );
     CCRouterHostBinding.attachNavigationAdapter(adapter);
     late Future<String?> pending;
@@ -343,7 +345,11 @@ void main() {
   ) async {
     final backend = _TestAppBackend();
     var childBuilds = 0;
-    CCRouter.initialize(components: backend.manifests);
+    CCRouter.initialize(
+      hostAssembly: CCHostAssembly.fromComponents(
+        components: backend.manifests,
+      ),
+    );
 
     await tester.pumpWidget(
       CCRouterApp.managed(
@@ -409,7 +415,9 @@ void main() {
         ),
       ],
     );
-    CCRouter.initialize(components: const []);
+    CCRouter.initialize(
+      hostAssembly: CCHostAssembly.fromComponents(components: const []),
+    );
 
     await tester.pumpWidget(
       CCRouterApp.managed(backend: backend, child: const SizedBox()),
@@ -426,7 +434,9 @@ void main() {
   testWidgets('compatibility App never owns an initialized Runtime', (
     tester,
   ) async {
-    CCRouter.initialize(components: const []);
+    CCRouter.initialize(
+      hostAssembly: CCHostAssembly.fromComponents(components: const []),
+    );
     expect(CCRouter.isInitialized, isTrue);
 
     await tester.pumpWidget(const CCRouterApp(child: SizedBox()));
@@ -441,7 +451,11 @@ void main() {
   ) async {
     final activeBackend = _TestAppBackend(hostId: 'widget.active');
     final rejectedBackend = _TestAppBackend(hostId: 'widget.rejected');
-    CCRouter.initialize(components: activeBackend.manifests);
+    CCRouter.initialize(
+      hostAssembly: CCHostAssembly.fromComponents(
+        components: activeBackend.manifests,
+      ),
+    );
 
     await tester.pumpWidget(
       CCRouterApp.managed(

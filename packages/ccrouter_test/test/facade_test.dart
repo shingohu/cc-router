@@ -130,7 +130,11 @@ void main() {
   });
 
   test('facade creates, owns, and shuts down the default Runtime', () async {
-    CCRouter.initialize(components: [component('default', 'owned')]);
+    CCRouter.initialize(
+      hostAssembly: CCHostAssembly.fromComponents(
+        components: [component('default', 'owned')],
+      ),
+    );
     expect(CCRouter.isInitialized, isTrue);
     expect(await CCRouter.command(ReadOnce()), 'owned');
     expect(CCRouter.recentTraces.single.context.targetComponentId, 'default');
@@ -161,7 +165,7 @@ void main() {
 
   test('generated Host assembly owns tool integration lifecycle', () async {
     final integration = _RecordingHostToolIntegration();
-    final assembly = CCGeneratedHostAssembly.fromPackageBundles(
+    final assembly = CCHostAssembly.fromPackageBundles(
       [
         CCGeneratedPackageBundle(
           packageName: 'host',
@@ -184,7 +188,7 @@ void main() {
   test('Host tool failures do not change Runtime lifecycle', () async {
     final integration = _ThrowingHostToolIntegration();
     final sink = _RecordingDiagnosticSink();
-    final assembly = CCGeneratedHostAssembly.fromPackageBundles(
+    final assembly = CCHostAssembly.fromPackageBundles(
       [
         CCGeneratedPackageBundle(
           packageName: 'host',
@@ -224,43 +228,49 @@ void main() {
     );
   });
 
-  test('initialize requires exactly one Host assembly mode', () {
-    final assembly = CCGeneratedHostAssembly.fromPackageBundles([
-      CCGeneratedPackageBundle(
-        packageName: 'host',
-        packageVersion: '1.0.0',
-        contentFingerprint: 'host-fingerprint',
+  test('initialize accepts a handwritten Host assembly', () {
+    CCRouter.initialize(
+      hostAssembly: CCHostAssembly.fromComponents(
+        components: [component('host', 'ready')],
       ),
-    ]);
-
-    expect(() => CCRouter.initialize(), throwsA(isA<CCRegistrationError>()));
-    expect(
-      () => CCRouter.initialize(hostAssembly: assembly, components: const []),
-      throwsA(isA<CCRegistrationError>()),
     );
+
+    expect(CCRouter.registeredComponents.single.id, 'host');
   });
 
   test('reinitialization is rejected until shutdown completes', () async {
-    CCRouter.initialize(components: [component('a', 'a')]);
+    CCRouter.initialize(
+      hostAssembly: CCHostAssembly.fromComponents(
+        components: [component('a', 'a')],
+      ),
+    );
     expect(
-      () => CCRouter.initialize(components: const []),
+      () => CCRouter.initialize(
+        hostAssembly: CCHostAssembly.fromComponents(components: const []),
+      ),
       throwsA(isA<CCRouterAlreadyInitializedError>()),
     );
 
     await CCRouter.shutdown();
-    CCRouter.initialize(components: [component('b', 'b')]);
+    CCRouter.initialize(
+      hostAssembly: CCHostAssembly.fromComponents(
+        components: [component('b', 'b')],
+      ),
+    );
     expect(await CCRouter.command(ReadOnce()), 'b');
   });
 
   test('facade resolves a promoted service by contract type', () async {
     CCRouter.initialize(
-      components: const [
-        CCComponentManifest(
-          id: 'facade-services',
-          version: '0.1.0',
-          registrar: ServiceRegistrar(),
-        ),
-      ],
+      hostAssembly: CCHostAssembly.fromComponents(
+        components: const [
+          CCComponentManifest(
+            id: 'facade-services',
+            version: '0.1.0',
+            registrar: ServiceRegistrar(),
+          ),
+        ],
+      ),
     );
 
     expect(CCRouter.service<String>(), 'promoted');
@@ -269,7 +279,9 @@ void main() {
   });
 
   test('Session records account identity and is cleared on close', () async {
-    CCRouter.initialize(components: const []);
+    CCRouter.initialize(
+      hostAssembly: CCHostAssembly.fromComponents(components: const []),
+    );
     final metadata = <String, Object?>{'tenant': 'cn'};
     CCRouter.openSession(accountId: 'user-42', metadata: metadata);
     metadata['tenant'] = 'changed';
@@ -291,13 +303,15 @@ void main() {
     () async {
       final adapter = CCMemoryNavigationAdapter();
       CCRouter.initialize(
-        components: const [
-          CCComponentManifest(
-            id: 'facade-routes',
-            version: '0.1.0',
-            registrar: FacadeRouteRegistrar(),
-          ),
-        ],
+        hostAssembly: CCHostAssembly.fromComponents(
+          components: const [
+            CCComponentManifest(
+              id: 'facade-routes',
+              version: '0.1.0',
+              registrar: FacadeRouteRegistrar(),
+            ),
+          ],
+        ),
       );
       CCRouterHostBinding.attachNavigationAdapter(adapter);
 
@@ -326,13 +340,15 @@ void main() {
   test('failed component registration leaves no partial Runtime', () async {
     expect(
       () => CCRouter.initialize(
-        components: const [
-          CCComponentManifest(
-            id: 'failing',
-            version: '0.1.0',
-            registrar: FailingRegistrar(),
-          ),
-        ],
+        hostAssembly: CCHostAssembly.fromComponents(
+          components: const [
+            CCComponentManifest(
+              id: 'failing',
+              version: '0.1.0',
+              registrar: FailingRegistrar(),
+            ),
+          ],
+        ),
       ),
       throwsA(isA<StateError>()),
     );

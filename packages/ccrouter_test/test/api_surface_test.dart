@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:ccrouter/ccrouter.dart' as business;
 import 'package:ccrouter/ccrouter_host.dart' as host;
 import 'package:test/test.dart';
 
@@ -72,17 +73,20 @@ const _hostSpiTypes = <Type>[
   host.CCPredictiveBackEvent,
   host.CCRouteRestorationOpportunityReason,
   host.CCGeneratedPackageBundle,
-  host.CCGeneratedHostAssembly,
-  host.CCGeneratedPackageBundleError,
-  host.CCGeneratedPackageBundleErrorCode,
+  host.CCHostAssembly,
+  host.CCHostAssemblyError,
+  host.CCHostAssemblyErrorCode,
   host.CCFlutterRouteFactory,
   host.CCFlutterPage,
   host.CCFlutterBottomSheetPage,
   host.CCFlutterDialogPage,
 ];
 
+const _businessFacadeTypes = <Type>[business.CCHostAssembly];
+
 void main() {
   test('business barrel hides the complete Adapter SPI snapshot', () {
+    expect(_businessFacadeTypes, contains(business.CCHostAssembly));
     final root = _workspaceRoot();
     final businessBarrel = File(
       '${root.path}/packages/ccrouter/lib/ccrouter.dart',

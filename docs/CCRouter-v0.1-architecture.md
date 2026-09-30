@@ -331,7 +331,7 @@ CCRouter.initialize(
 
 runApp(
   CCGoRouterApp(
-    catalog: ccrouterGeneratedRouteCatalog,
+    catalog: ccrouterGeneratedHostAssembly.routeCatalog,
   ),
 );
 
@@ -407,7 +407,7 @@ abstract final class CCRouter {
   构造或销毁 Runtime。
 - `CCRouterApp.managed` 是 managed Backend 的唯一绑定入口；内部协调器不对 Host 或业务
   开放，避免 Adapter 在没有 Widget Host 生命周期的情况下被单独绑定。
-- `CCRouter.initialize(components: ...)` 原子初始化全局配置和完整启动期组件集合，不允许
+- `CCRouter.initialize(hostAssembly: ...)` 原子初始化全局配置和完整启动期 Host Assembly，不允许
   业务代码直接注入 Adapter，也不允许初始化后追加启动组件。
 - `CCRouter.initialize`、Adapter attach、Adapter 初始化和初始 Backend Snapshot 读取均为
   同步事务；成功返回时必须已经可以导航，异步 Backend 准备必须在 attach 前完成。
@@ -440,7 +440,7 @@ CCRouter.initialize(
 
 runApp(
   CCGoRouterApp(
-    catalog: ccrouterGeneratedRouteCatalog,
+    catalog: ccrouterGeneratedHostAssembly.routeCatalog,
   ),
 );
 ```
@@ -1188,7 +1188,7 @@ ComponentTestHost
 ### 16.4 组件运行时边界
 
 1.x 将组件定义为静态装配与能力所有权边界。组件集合通过一次
-`CCRouter.initialize(components: ...)` 确定，Runtime 不提供 `activateComponent`、
+`CCRouter.initialize(hostAssembly: ...)` 确定，Runtime 不提供 `activateComponent`、
 `deactivateComponent`、`install` 或 `uninstall`。可选组件由 Composition Root 决定是否装配
 Manifest；登录、权限和 Feature Flag 使用 Interceptor，而不是伪装成组件生命周期。
 

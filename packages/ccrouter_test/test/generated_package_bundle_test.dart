@@ -9,20 +9,24 @@ void main() {
     final left = bundle('left', dependencies: [shared]);
     final right = bundle('right', dependencies: [shared]);
 
-    final assembly = CCGeneratedHostAssembly.fromPackageBundles([right, left]);
+    final assembly = CCHostAssembly.fromPackageBundles([right, left]);
 
     expect(assembly.packages.map((package) => package.packageName), [
       'shared',
       'left',
       'right',
     ]);
+    expect(
+      () => assembly.packages.add(bundle('unexpected')),
+      throwsUnsupportedError,
+    );
     expect(assembly.componentManifests.map((manifest) => manifest.id), [
       'shared_component',
     ]);
   });
 
   test('orders required and present optional component dependencies', () {
-    final assembly = CCGeneratedHostAssembly.fromPackageBundles([
+    final assembly = CCHostAssembly.fromPackageBundles([
       bundle('feature', componentId: 'feature', dependencies: const []),
       bundle(
         'checkout',
@@ -40,10 +44,60 @@ void main() {
     ]);
   });
 
+  test('creates the same deterministic graph from handwritten components', () {
+    final assembly = CCHostAssembly.fromComponents(
+      components: const [
+        CCComponentManifest(
+          id: 'checkout',
+          version: '1.0.0',
+          dependencies: ['orders'],
+          registrar: _Registrar(),
+        ),
+        CCComponentManifest(
+          id: 'orders',
+          version: '1.0.0',
+          registrar: _Registrar(),
+        ),
+      ],
+    );
+
+    expect(assembly.packages, isEmpty);
+    expect(assembly.componentManifests.map((manifest) => manifest.id), [
+      'orders',
+      'checkout',
+    ]);
+    expect(assembly.routeCatalog.componentVersions, {
+      'orders': '1.0.0',
+      'checkout': '1.0.0',
+    });
+  });
+
+  test('rejects an incomplete handwritten component graph', () {
+    expect(
+      () => CCHostAssembly.fromComponents(
+        components: const [
+          CCComponentManifest(
+            id: 'checkout',
+            version: '1.0.0',
+            dependencies: ['orders'],
+            registrar: _Registrar(),
+          ),
+        ],
+      ),
+      throwsA(
+        isA<CCHostAssemblyError>().having(
+          (error) => error.type,
+          'type',
+          CCHostAssemblyErrorCode.missingComponentDependency,
+        ),
+      ),
+    );
+  });
+
   test('orders Host tool integrations and rejects duplicate identities', () {
     final first = _HostToolIntegration('zeta');
     final second = _HostToolIntegration('alpha');
-    final assembly = CCGeneratedHostAssembly.fromPackageBundles(
+    final assembly = CCHostAssembly.fromPackageBundles(
       [bundle('host')],
       hostToolIntegrations: [first, second],
     );
@@ -57,28 +111,28 @@ void main() {
       throwsUnsupportedError,
     );
     expect(
-      () => CCGeneratedHostAssembly.fromPackageBundles(
+      () => CCHostAssembly.fromPackageBundles(
         [bundle('host')],
         hostToolIntegrations: [first, _HostToolIntegration('zeta')],
       ),
       throwsA(
-        isA<CCGeneratedPackageBundleError>().having(
+        isA<CCHostAssemblyError>().having(
           (error) => error.type,
           'type',
-          CCGeneratedPackageBundleErrorCode.hostToolIntegration,
+          CCHostAssemblyErrorCode.hostToolIntegration,
         ),
       ),
     );
     expect(
-      () => CCGeneratedHostAssembly.fromPackageBundles(
+      () => CCHostAssembly.fromPackageBundles(
         [bundle('host')],
         hostToolIntegrations: [_HostToolIntegration('  ')],
       ),
       throwsA(
-        isA<CCGeneratedPackageBundleError>().having(
+        isA<CCHostAssemblyError>().having(
           (error) => error.type,
           'type',
-          CCGeneratedPackageBundleErrorCode.hostToolIntegration,
+          CCHostAssemblyErrorCode.hostToolIntegration,
         ),
       ),
     );
@@ -95,12 +149,12 @@ void main() {
     );
 
     expect(
-      () => CCGeneratedHostAssembly.fromPackageBundles([left, right]),
+      () => CCHostAssembly.fromPackageBundles([left, right]),
       throwsA(
-        isA<CCGeneratedPackageBundleError>().having(
+        isA<CCHostAssemblyError>().having(
           (error) => error.type,
           'type',
-          CCGeneratedPackageBundleErrorCode.packageConflict,
+          CCHostAssemblyErrorCode.packageConflict,
         ),
       ),
     );
@@ -108,15 +162,15 @@ void main() {
 
   test('rejects duplicate component identities', () {
     expect(
-      () => CCGeneratedHostAssembly.fromPackageBundles([
+      () => CCHostAssembly.fromPackageBundles([
         bundle('first', componentId: 'duplicate'),
         bundle('second', componentId: 'duplicate'),
       ]),
       throwsA(
-        isA<CCGeneratedPackageBundleError>().having(
+        isA<CCHostAssemblyError>().having(
           (error) => error.type,
           'type',
-          CCGeneratedPackageBundleErrorCode.duplicateComponent,
+          CCHostAssemblyErrorCode.duplicateComponent,
         ),
       ),
     );
@@ -124,7 +178,7 @@ void main() {
 
   test('rejects missing required component dependencies', () {
     expect(
-      () => CCGeneratedHostAssembly.fromPackageBundles([
+      () => CCHostAssembly.fromPackageBundles([
         bundle(
           'checkout',
           componentId: 'checkout',
@@ -132,10 +186,10 @@ void main() {
         ),
       ]),
       throwsA(
-        isA<CCGeneratedPackageBundleError>().having(
+        isA<CCHostAssemblyError>().having(
           (error) => error.type,
           'type',
-          CCGeneratedPackageBundleErrorCode.missingComponentDependency,
+          CCHostAssemblyErrorCode.missingComponentDependency,
         ),
       ),
     );
@@ -151,7 +205,7 @@ void main() {
       ),
       builder: (_) => const SizedBox.shrink(),
     );
-    final assembly = CCGeneratedHostAssembly.fromPackageBundles([
+    final assembly = CCHostAssembly.fromPackageBundles([
       CCGeneratedPackageBundle(
         packageName: 'orders',
         packageVersion: '1.0.0',

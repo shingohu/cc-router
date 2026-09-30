@@ -168,14 +168,8 @@ void probe() {
           'package:ccrouter_demo/src/ccrouter_generated/host/ccrouter_demo_ccrouter.g.dart',
         ),
       );
-      expect(
-        hostCatalog,
-        contains('show CCFlutterRouteCatalog, CCGeneratedHostAssembly;'),
-      );
-      expect(
-        hostCatalog,
-        contains('CCGeneratedHostAssembly.fromPackageBundles('),
-      );
+      expect(hostCatalog, contains('show CCHostAssembly;'));
+      expect(hostCatalog, contains('CCHostAssembly.fromPackageBundles('));
       expect(
         hostCatalog,
         contains("package:ccrouter_devtools/ccrouter_devtools.dart"),
@@ -206,9 +200,9 @@ void probe() {
       ).readAsStringSync();
       expect(hostApi, contains('Stable Host-facing CCRouter API'));
       expect(hostApi, contains("export 'host/ccrouter_host.routes.g.dart'"));
-      expect(hostApi, contains('ccrouterGeneratedComponentManifests'));
-      expect(hostApi, contains('ccrouterGeneratedRouteCatalog'));
       expect(hostApi, contains('ccrouterGeneratedHostAssembly'));
+      expect(hostApi, isNot(contains('ccrouterGeneratedComponentManifests')));
+      expect(hostApi, isNot(contains('ccrouterGeneratedRouteCatalog')));
       expect(hostApi, isNot(contains('ccrouterGeneratedPackageBundle')));
       final contractIndex =
           jsonDecode(

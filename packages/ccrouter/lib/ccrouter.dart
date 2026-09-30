@@ -48,3 +48,4 @@ export 'src/facade.dart'
         CCRouterGeneratedServiceBinding,
         CCRouterHostBinding,
         CCRouterTestBinding;
+export 'src/generated_package_bundle.dart' show CCHostAssembly;

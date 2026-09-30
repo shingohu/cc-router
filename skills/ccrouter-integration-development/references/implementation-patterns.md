@@ -7,11 +7,26 @@
 The Host may import `ccrouter_go_router` and `ccrouter_host.dart`. A new GoRouter
 application should first call
 `CCRouter.initialize(hostAssembly: ccrouterGeneratedHostAssembly)` and then use
-`CCGoRouterApp(catalog: ccrouterGeneratedRouteCatalog)` for the minimal Host
-assembly path. `CCGoRouterApp` never initializes or shuts down the process
+`CCGoRouterApp(catalog: ccrouterGeneratedHostAssembly.routeCatalog)` for the
+minimal Host assembly path. The generated stable Host barrel exports only the
+atomic Assembly; read its Catalog or manifests through immutable properties
+rather than importing internal generated files. `CCGoRouterApp` never initializes or shuts down the process
 Runtime. The Host owns generated Host assembly, navigation Backend,
 Shell/Outlet topology, platform Deep Link ingress, global policies and final
 `CCRouter.shutdown`.
+
+A handwritten Host uses the same lifecycle contract:
+
+```dart
+final hostAssembly = CCHostAssembly.fromComponents(
+  components: [ordersManifest, accountManifest],
+);
+CCRouter.initialize(hostAssembly: hostAssembly);
+```
+
+Do not pass loose component or Contract collections to `CCRouter.initialize`;
+the required Assembly is the compile-time boundary that keeps one startup
+snapshot internally consistent.
 
 `CCGoRouterApp` mirrors the non-routing configuration of `MaterialApp.router`,
 including themes, locale and localization delegates, `ScaffoldMessenger`,

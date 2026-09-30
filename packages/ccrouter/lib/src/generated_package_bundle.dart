@@ -4,11 +4,11 @@ import 'package:ccrouter_core/ccrouter_core.dart' show CCComponentManifest;
 import 'host_tool_integration.dart';
 import 'route_catalog.dart';
 
-/// Stable failure categories produced while resolving generated Package data.
+/// Stable failure categories produced while resolving Host assembly data.
 ///
 /// Host tooling may use these values for diagnostics. Feature code should not
 /// catch them because generated package assembly is a Host configuration step.
-enum CCGeneratedPackageBundleErrorCode {
+enum CCHostAssemblyErrorCode {
   /// One Package ID resolved to incompatible versions or generated contents.
   packageConflict,
 
@@ -31,21 +31,21 @@ enum CCGeneratedPackageBundleErrorCode {
   hostToolIntegration,
 }
 
-/// Describes an invalid generated Package graph at the Host boundary.
+/// Describes an invalid component, Contract, Package, or tooling graph.
 ///
-/// Generation should normally reject these failures before compilation. The
-/// runtime check protects handwritten fixtures and stale or mixed generated
-/// artifacts from silently assembling an inconsistent Host.
-final class CCGeneratedPackageBundleError implements Exception {
+/// Generation should normally reject generated-input failures before
+/// compilation. The same validation protects handwritten Hosts, focused tests,
+/// and stale or mixed artifacts from assembling an inconsistent Runtime.
+final class CCHostAssemblyError implements Exception {
   /// Creates a typed Host assembly failure with a human-readable [message].
-  const CCGeneratedPackageBundleError({
+  const CCHostAssemblyError({
     required this.type,
     required this.message,
     this.contractIssue,
   });
 
   /// Stable category suitable for diagnostics and tests.
-  final CCGeneratedPackageBundleErrorCode type;
+  final CCHostAssemblyErrorCode type;
 
   /// Explanation containing the conflicting Package or component identities.
   final String message;
@@ -54,7 +54,7 @@ final class CCGeneratedPackageBundleError implements Exception {
   final CCContractCompatibilityIssue? contractIssue;
 
   @override
-  String toString() => 'CCGeneratedPackageBundleError(${type.name}): $message';
+  String toString() => 'CCHostAssemblyError(${type.name}): $message';
 }
 
 /// Generated Host-only contribution published by one Dart Package.
@@ -125,14 +125,12 @@ final class CCGeneratedPackageBundle {
   /// Contract descriptors and consumer requirements generated for this Package.
   final CCContractBundleDescriptor? contractBundle;
 
-  /// Resolves root Package bundles for [CCGeneratedHostAssembly].
+  /// Resolves root Package bundles for [CCHostAssembly].
   ///
   /// Dependencies precede dependants, Diamond dependencies are deduplicated,
   /// sibling Packages are ordered by Package name, and component manifests are
   /// ordered by their own required and present optional dependency graph.
-  static CCGeneratedHostAssembly _resolve(
-    Iterable<CCGeneratedPackageBundle> roots,
-  ) {
+  static CCHostAssembly _resolve(Iterable<CCGeneratedPackageBundle> roots) {
     final resolvedByName = <String, CCGeneratedPackageBundle>{};
     final orderedPackages = <CCGeneratedPackageBundle>[];
     final visiting = <String>{};
@@ -142,8 +140,8 @@ final class CCGeneratedPackageBundle {
       if (existing != null) {
         if (existing.packageVersion != bundle.packageVersion ||
             existing.contentFingerprint != bundle.contentFingerprint) {
-          throw CCGeneratedPackageBundleError(
-            type: CCGeneratedPackageBundleErrorCode.packageConflict,
+          throw CCHostAssemblyError(
+            type: CCHostAssemblyErrorCode.packageConflict,
             message:
                 'Package "${bundle.packageName}" was resolved with '
                 'incompatible generated identities '
@@ -154,8 +152,8 @@ final class CCGeneratedPackageBundle {
         return;
       }
       if (!visiting.add(bundle.packageName)) {
-        throw CCGeneratedPackageBundleError(
-          type: CCGeneratedPackageBundleErrorCode.packageDependencyCycle,
+        throw CCHostAssemblyError(
+          type: CCHostAssemblyErrorCode.packageDependencyCycle,
           message:
               'Generated Package dependencies contain a cycle at '
               '"${bundle.packageName}".',
@@ -181,21 +179,14 @@ final class CCGeneratedPackageBundle {
       for (final package in orderedPackages)
         if (package.contractBundle != null) package.contractBundle!,
     ];
-    final contractIssues = CCContractBundleDescriptor.validate(contractBundles);
-    if (contractIssues.isNotEmpty) {
-      throw CCGeneratedPackageBundleError(
-        type: CCGeneratedPackageBundleErrorCode.contractCompatibility,
-        contractIssue: contractIssues.first,
-        message: contractIssues.map((issue) => issue.toString()).join(' '),
-      );
-    }
+    _validateContractBundles(contractBundles);
 
     final manifests = _orderComponentManifests(orderedPackages);
     final versions = <String, String>{
       for (final manifest in manifests) manifest.id: manifest.version,
     };
-    return CCGeneratedHostAssembly._(
-      packages: orderedPackages,
+    return CCHostAssembly._(
+      packages: List.unmodifiable(orderedPackages),
       componentManifests: manifests,
       routeCatalog: CCFlutterRouteCatalog.merge(
         orderedPackages.map((bundle) => bundle.routeCatalog),
@@ -206,23 +197,25 @@ final class CCGeneratedPackageBundle {
   }
 }
 
-/// Fully validated generated inputs consumed by one application Host.
+/// Complete immutable inputs consumed by one application Host.
 ///
-/// Host bootstrap code passes [componentManifests] to `CCRouter.initialize`
-/// and [routeCatalog] to its chosen navigation backend. The assembly is a
-/// read-only snapshot and owns none of the referenced runtime objects.
-final class CCGeneratedHostAssembly {
+/// Generated Hosts create this snapshot from Package bundles. Handwritten
+/// Hosts and focused tests may instead use [CCHostAssembly.fromComponents].
+/// `CCRouter.initialize` accepts the complete assembly atomically so component,
+/// Contract, route, and tooling inputs cannot be mixed across generations. The
+/// assembly owns none of the referenced runtime objects.
+final class CCHostAssembly {
   /// Resolves Package bundles into one deterministic Host assembly.
   ///
   /// Dependencies precede dependants, diamond dependencies are deduplicated,
   /// sibling Packages are ordered by Package name, and component manifests are
   /// ordered by their required and present optional dependency graph.
-  factory CCGeneratedHostAssembly.fromPackageBundles(
+  factory CCHostAssembly.fromPackageBundles(
     Iterable<CCGeneratedPackageBundle> roots, {
     Iterable<CCHostToolIntegration> hostToolIntegrations = const [],
   }) {
     final assembly = CCGeneratedPackageBundle._resolve(roots);
-    return CCGeneratedHostAssembly._(
+    return CCHostAssembly._(
       packages: assembly.packages,
       componentManifests: assembly.componentManifests,
       routeCatalog: assembly.routeCatalog,
@@ -231,8 +224,38 @@ final class CCGeneratedHostAssembly {
     );
   }
 
+  /// Creates a deterministic assembly for a handwritten Host or focused test.
+  ///
+  /// Component dependencies are validated and ordered before the snapshot is
+  /// returned. [contractBundle] is checked with the same compatibility rules
+  /// used for generated Package bundles. [routeCatalog] remains backend-neutral
+  /// and is normalized with the installed component versions.
+  factory CCHostAssembly.fromComponents({
+    required Iterable<CCComponentManifest> components,
+    CCContractBundleDescriptor? contractBundle,
+    CCFlutterRouteCatalog routeCatalog = const CCFlutterRouteCatalog.empty(),
+    Iterable<CCHostToolIntegration> hostToolIntegrations = const [],
+  }) {
+    final componentManifests = _orderComponentManifestValues(components);
+    if (contractBundle != null) {
+      _validateContractBundles([contractBundle]);
+    }
+    final componentVersions = <String, String>{
+      for (final manifest in componentManifests) manifest.id: manifest.version,
+    };
+    return CCHostAssembly._(
+      packages: const [],
+      componentManifests: componentManifests,
+      routeCatalog: CCFlutterRouteCatalog.merge([
+        routeCatalog,
+      ], componentVersions: componentVersions),
+      contractBundle: contractBundle,
+      hostToolIntegrations: _validateHostToolIntegrations(hostToolIntegrations),
+    );
+  }
+
   /// Creates a validated snapshot after Package and component graph resolution.
-  const CCGeneratedHostAssembly._({
+  const CCHostAssembly._({
     required this.packages,
     required this.componentManifests,
     required this.routeCatalog,
@@ -268,8 +291,8 @@ List<CCHostToolIntegration> _validateHostToolIntegrations(
   for (final integration in integrations) {
     final id = integration.id.trim();
     if (id.isEmpty || byId.containsKey(id)) {
-      throw CCGeneratedPackageBundleError(
-        type: CCGeneratedPackageBundleErrorCode.hostToolIntegration,
+      throw CCHostAssemblyError(
+        type: CCHostAssemblyErrorCode.hostToolIntegration,
         message: 'Invalid or duplicate Host tool integration ID "$id".',
       );
     }
@@ -277,6 +300,17 @@ List<CCHostToolIntegration> _validateHostToolIntegrations(
   }
   final ids = byId.keys.toList()..sort();
   return List.unmodifiable(ids.map((id) => byId[id]!));
+}
+
+/// Rejects incompatible Contract descriptors before a Host becomes visible.
+void _validateContractBundles(Iterable<CCContractBundleDescriptor> bundles) {
+  final contractIssues = CCContractBundleDescriptor.validate(bundles);
+  if (contractIssues.isEmpty) return;
+  throw CCHostAssemblyError(
+    type: CCHostAssemblyErrorCode.contractCompatibility,
+    contractIssue: contractIssues.first,
+    message: contractIssues.map((issue) => issue.toString()).join(' '),
+  );
 }
 
 CCContractBundleDescriptor? _mergeContractBundles(
@@ -309,27 +343,34 @@ CCContractBundleDescriptor? _mergeContractBundles(
 List<CCComponentManifest> _orderComponentManifests(
   Iterable<CCGeneratedPackageBundle> packages,
 ) {
+  return _orderComponentManifestValues(
+    packages.expand((package) => package.componentManifests),
+  );
+}
+
+/// Orders and validates one complete Host component graph.
+List<CCComponentManifest> _orderComponentManifestValues(
+  Iterable<CCComponentManifest> manifests,
+) {
   final manifestsById = <String, CCComponentManifest>{};
-  for (final package in packages) {
-    for (final manifest in package.componentManifests) {
-      final existing = manifestsById[manifest.id];
-      if (existing != null) {
-        throw CCGeneratedPackageBundleError(
-          type: CCGeneratedPackageBundleErrorCode.duplicateComponent,
-          message:
-              'Component "${manifest.id}" is declared more than once in the '
-              'resolved Package graph.',
-        );
-      }
-      manifestsById[manifest.id] = manifest;
+  for (final manifest in manifests) {
+    final existing = manifestsById[manifest.id];
+    if (existing != null) {
+      throw CCHostAssemblyError(
+        type: CCHostAssemblyErrorCode.duplicateComponent,
+        message:
+            'Component "${manifest.id}" is declared more than once in the '
+            'Host assembly.',
+      );
     }
+    manifestsById[manifest.id] = manifest;
   }
 
   for (final manifest in manifestsById.values) {
     for (final dependency in manifest.dependencies) {
       if (!manifestsById.containsKey(dependency)) {
-        throw CCGeneratedPackageBundleError(
-          type: CCGeneratedPackageBundleErrorCode.missingComponentDependency,
+        throw CCHostAssemblyError(
+          type: CCHostAssemblyErrorCode.missingComponentDependency,
           message:
               'Component "${manifest.id}" requires missing component '
               '"$dependency".',
@@ -345,8 +386,8 @@ List<CCComponentManifest> _orderComponentManifests(
   void visit(String id) {
     if (visited.contains(id)) return;
     if (!visiting.add(id)) {
-      throw CCGeneratedPackageBundleError(
-        type: CCGeneratedPackageBundleErrorCode.componentDependencyCycle,
+      throw CCHostAssemblyError(
+        type: CCHostAssemblyErrorCode.componentDependencyCycle,
         message: 'Component dependencies contain a cycle at "$id".',
       );
     }

@@ -1036,7 +1036,7 @@ Restoration、桌面窗口重开或异常 Session Marker 等 Host 证据，并�
 ### 12.6 CCRouterApp 与 Backend 所有权
 
 `CCRouterApp` 提供两种互不混用的接入模式。应用组合根始终显式调用
-`CCRouter.initialize(components: ...)/shutdown`。新应用优先使用 managed 模式绑定 Backend；
+`CCRouter.initialize(hostAssembly: ...)/shutdown`。新应用优先使用 managed 模式绑定 Backend；
 已有应用可继续使用默认构造器作为不拥有 Runtime 的 Host Wrapper，或者将已有 Router
 包装为 attach Backend。
 
@@ -1044,11 +1044,11 @@ Restoration、桌面窗口重开或异常 Session Marker 等 Host 证据，并�
 
 ```dart
 CCRouter.initialize(
-  components: ccrouterGeneratedComponentManifests,
+  hostAssembly: ccrouterGeneratedHostAssembly,
 );
 
 final backend = CCGoRouterBackend.managed(
-  catalog: ccrouterGeneratedRouteCatalog,
+  catalog: ccrouterGeneratedHostAssembly.routeCatalog,
   hostRoutes: [
     GoRoute(path: '/', builder: (_, _) => const HomePage()),
   ],
@@ -1306,7 +1306,7 @@ Platform URI
 
 ```dart
 CCRouter.initialize(
-  components: components,
+  hostAssembly: CCHostAssembly.fromComponents(components: components),
   deepLinkIngressPolicy: CCDeepLinkIngressPolicy(
     allowedAuthorities: [
       CCDeepLinkAuthorityRule(scheme: 'https', host: 'm.example.com'),

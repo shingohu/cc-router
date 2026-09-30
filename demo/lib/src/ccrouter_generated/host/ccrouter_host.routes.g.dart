@@ -1,9 +1,7 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint
 
-import 'package:ccrouter/ccrouter.dart' show CCComponentManifest;
-import 'package:ccrouter/ccrouter_host.dart'
-    show CCFlutterRouteCatalog, CCGeneratedHostAssembly;
+import 'package:ccrouter/ccrouter_host.dart' show CCHostAssembly;
 import 'package:ccrouter_devtools/ccrouter_devtools.dart';
 
 import 'package:ccrouter_demo/src/ccrouter_generated/host/ccrouter_demo_ccrouter.g.dart'
@@ -826,18 +824,9 @@ final ccrouterGeneratedDevToolsCatalog = CCDevToolsStaticCatalogSnapshot(
 );
 
 /// Validated generated Package graph installed in this Host.
-final ccrouterGeneratedHostAssembly =
-    CCGeneratedHostAssembly.fromPackageBundles(
-      [host_package.ccrouterGeneratedPackageBundle],
-      hostToolIntegrations: [
-        CCDevToolsHostIntegration(catalog: ccrouterGeneratedDevToolsCatalog),
-      ],
-    );
-
-/// All generated component Manifests installed in this Host.
-final List<CCComponentManifest> ccrouterGeneratedComponentManifests =
-    ccrouterGeneratedHostAssembly.componentManifests;
-
-/// All generated component destinations installed in this Host.
-final CCFlutterRouteCatalog ccrouterGeneratedRouteCatalog =
-    ccrouterGeneratedHostAssembly.routeCatalog;
+final ccrouterGeneratedHostAssembly = CCHostAssembly.fromPackageBundles(
+  [host_package.ccrouterGeneratedPackageBundle],
+  hostToolIntegrations: [
+    CCDevToolsHostIntegration(catalog: ccrouterGeneratedDevToolsCatalog),
+  ],
+);

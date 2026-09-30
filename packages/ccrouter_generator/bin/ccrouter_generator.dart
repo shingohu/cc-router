@@ -3935,28 +3935,17 @@ Future<void> _generateResolvedHostCatalog(
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint
 
-import 'package:ccrouter/ccrouter.dart' show CCComponentManifest;
 import 'package:ccrouter/ccrouter_host.dart'
-    show
-        CCFlutterRouteCatalog,
-        CCGeneratedHostAssembly;
+    show CCHostAssembly;
 $devToolsImport
 import 'package:${host.name}/src/ccrouter_generated/host/${host.name}_ccrouter.g.dart'
     as host_package;
 
 $devToolsCatalog
 /// Validated generated Package graph installed in this Host.
-final ccrouterGeneratedHostAssembly = CCGeneratedHostAssembly.fromPackageBundles([
+final ccrouterGeneratedHostAssembly = CCHostAssembly.fromPackageBundles([
   host_package.${hostIndex.bundleSymbol},
 ],$hostToolArgument);
-
-/// All generated component Manifests installed in this Host.
-final List<CCComponentManifest> ccrouterGeneratedComponentManifests =
-    ccrouterGeneratedHostAssembly.componentManifests;
-
-/// All generated component destinations installed in this Host.
-final CCFlutterRouteCatalog ccrouterGeneratedRouteCatalog =
-    ccrouterGeneratedHostAssembly.routeCatalog;
 ''');
   await _writeIfChanged(output, source);
   await _generateHostApiEntrypoint(host.root);
@@ -3981,10 +3970,7 @@ Future<void> _generateHostApiEntrypoint(Directory hostRoot) async {
 ///
 /// This barrel intentionally excludes Package Bundles and generated Host glue.
 export 'host/ccrouter_host.routes.g.dart'
-    show
-        ccrouterGeneratedComponentManifests,
-        ccrouterGeneratedRouteCatalog,
-        ccrouterGeneratedHostAssembly;
+    show ccrouterGeneratedHostAssembly;
 ''');
   await _writeIfChanged(output, source);
 }
@@ -4605,9 +4591,6 @@ Future<void> _generateHostRouteCatalog(
     ..writeln('// GENERATED CODE - DO NOT MODIFY BY HAND')
     ..writeln('// ignore_for_file: type=lint')
     ..writeln()
-    ..writeln(
-      "import 'package:ccrouter/ccrouter.dart' show CCComponentManifest;",
-    )
     ..writeln("import 'package:ccrouter/ccrouter_host.dart';");
   for (final entry
       in aliases.entries.toList()
@@ -4618,32 +4601,25 @@ Future<void> _generateHostRouteCatalog(
   }
   out
     ..writeln()
-    ..writeln('/// All generated component Manifests installed in this Host.')
+    ..writeln('/// Complete generated assembly installed in this Host.')
     ..writeln(
-      'const ccrouterGeneratedComponentManifests = <CCComponentManifest>[',
-    );
+      'final ccrouterGeneratedHostAssembly = CCHostAssembly.fromComponents(',
+    )
+    ..writeln('  components: [');
   for (final catalog in sorted) {
     out.writeln('  ${aliases[catalog.package]}.${catalog.manifest},');
   }
   out
-    ..writeln('];')
-    ..writeln()
-    ..writeln(
-      '/// All generated component destinations installed in this Host.',
-    )
-    ..writeln(
-      'final ccrouterGeneratedRouteCatalog = CCFlutterRouteCatalog.merge([',
-    );
+    ..writeln('  ],')
+    ..writeln('  routeCatalog: CCFlutterRouteCatalog.merge([');
   for (final catalog in sorted) {
     out.writeln(
       '  ${aliases[catalog.package]}.${_camelIdentifier(catalog.componentId)}RouteCatalog,',
     );
   }
   out
-    ..writeln('], componentVersions: {')
-    ..writeln('  for (final manifest in ccrouterGeneratedComponentManifests)')
-    ..writeln('    manifest.id: manifest.version,')
-    ..writeln('});')
+    ..writeln('  ]),')
+    ..writeln(');')
     ..writeln();
   await File(
     '${outputDirectory.path}${Platform.pathSeparator}ccrouter_host.routes.g.dart',
@@ -4728,8 +4704,9 @@ bool _isCCRouterAggregateOutput(String name, String contents) {
         contents.contains('Host-only generated Package Bundle for');
   }
   if (name == 'ccrouter_host.routes.g.dart') {
-    return contents.contains('ccrouterGeneratedComponentManifests') &&
-        contents.contains('ccrouterGeneratedRouteCatalog');
+    return contents.contains('ccrouterGeneratedHostAssembly') ||
+        (contents.contains('ccrouterGeneratedComponentManifests') &&
+            contents.contains('ccrouterGeneratedRouteCatalog'));
   }
   if (name.endsWith('.route_api.g.dart')) {
     return contents.contains(
