@@ -1,5 +1,8 @@
 # CCRouter IDE / Analysis Server 集成
 
+> 文档状态：当前接入契约与已知限制。Plugin 提供低误报单文件诊断，Generator/Workspace
+> Validator 仍是跨 Package 正确性的最终门禁。
+
 ## 目标与边界
 
 CCRouter 的 IDE 支持分成四层：

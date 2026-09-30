@@ -1,5 +1,8 @@
 # CCRouter Service 生命周期设计
 
+> 文档状态：架构 1.x 当前契约。公开生命周期仅包含 App、Session、Route；组件动态激活与
+> 任意 Feature Scope 不属于当前实现。
+
 ## 1. 目标与边界
 
 Service 是组件提供、通过稳定契约访问、由 Runtime 管理生命周期的长期能力对象。

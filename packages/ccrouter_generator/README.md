@@ -151,7 +151,7 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook uninstall
 
 Hook 按 SDK 版本独立安装，不修改 Flutter snapshot；非 CCRouter 项目会跳过。完整的
 退出码语义、FVM 版本切换和禁用方式见
-[`docs/CCRouter-cli-pub-hook.md`](../../docs/CCRouter-cli-pub-hook.md)。
+[`docs/CCRouter-cli-pub-hook.md`](https://github.com/shingohu/cc-router/blob/main/docs/CCRouter-cli-pub-hook.md)。
 `--verbosity=error` 只压低 Dart/Pub 在 CLI 启动前的依赖解析和 executable 构建噪声，
 不会隐藏 CCRouter 自己的进度、诊断或失败。
 
@@ -229,7 +229,7 @@ Host 依赖闭包内、明确可写且声明 `ccrouter_generator` 的 Package，
 摘要全部一致时，CLI 才在获取锁后跳过 build_runner 与聚合。manifest 缺失、损坏或任一摘要
 变化都会 fail closed 到完整流程；校验不依赖 mtime 或文件大小。`--no-cache` 永远不读取该
 fast path，`--profile` 会输出 `fast-path=hit/miss`。性能回归与混合能力基准见
-[`../../docs/CCRouter-generator-performance-report.md`](../../docs/CCRouter-generator-performance-report.md)。
+[`docs/CCRouter-generator-performance-report.md`](https://github.com/shingohu/cc-router/blob/main/docs/CCRouter-generator-performance-report.md)。
 
 生成结果：
 

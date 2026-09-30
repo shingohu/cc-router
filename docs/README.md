@@ -6,6 +6,10 @@
 - 当前实现事实依次以生产代码、自动化测试、生成物和本文状态矩阵为准。
 - 专项设计文档用于解释语义和历史决策；其中的 Proposal、阶段计划和旧基准不能单独证明能力已实现。
 - 性能数字、测试数量和平台验证结果只代表文档注明日期的快照，不自动代表后续提交。
+- Package 当前仍是开发期 `0.1.0`；文档中的“架构 1.x”表示当前静态组件架构代际，不表示
+  已经发布 `1.0.0`。
+- 正式发布是否具备条件只看[正式发布准备与门禁](CCRouter-release-readiness.md)，不从某份专项
+  设计的完成勾选推断。
 
 ## 当前状态矩阵
 
@@ -40,6 +44,8 @@
   字面量 ID/alias/Gate ID 和正 timeout 等低误报单文件诊断；不生成代码、不自动改写 import，
   也没有 rename/alias migration Quick Fix。仅对互斥参数提供安全删除 Quick Fix。CLI 已提供
   Host-only 的只读 `analyzer status/doctor`；自动安装、升级和卸载仍未实现。
+- 跨组件 Dependency 体验：Generator/Workspace Validator 已能阻止 Service/Command Owner
+  未进入 required `dependencies`；IDE 即时 Owner 解析和 const-list Quick Fix 尚未实现。
 - 零 Subscriber Event：正常生成 Client、Workspace Validator 和 Runtime publisher identity 已覆盖；
   generated SPI 被手工伪造时没有独立 Event Contract Runtime Registry。该 Registry 仅在 generated
   SPI 需要成为严格防伪边界时再实现。
@@ -82,6 +88,7 @@
 - [后续任务与实施计划](CCRouter-future-work-plan.md)
 - [最终 API 收口复审清单](CCRouter-final-api-review.md)
 - [正式发布前能力设计与实施计划](CCRouter-pre-release-capability-plan.md)
+- [正式发布准备与门禁](CCRouter-release-readiness.md)
 - [生产项目场景驱动演进流程](CCRouter-production-adoption-workflow.md)
 - [SDK 兼容性验证](CCRouter-sdk-compatibility.md)
 
@@ -116,6 +123,24 @@
 - [IDE / Analysis Server 集成](CCRouter-ide-analysis-server.md)
 - [Analyzer Plugin CLI 自动装配计划](CCRouter-analyzer-cli-plan.md)
 - [Analytics 与自动采集](CCRouter-analytics-and-auto-track-design.md)
+
+## 文档职责
+
+| 文档类型 | 用途 | 是否代表当前公开能力 |
+| --- | --- | --- |
+| 根 `README.md`、本索引、Integration/CLI Skill | 开发者接入和当前事实 | 是，但仍以代码、测试和生成门禁为最终依据 |
+| Route/Service/Command/Event/InitTask 等专项设计 | 当前稳定语义、边界和取舍 | 仅未标为 Proposal/延期的部分 |
+| `*-completion-plan`、审计和性能报告 | 某次实施或验证快照 | 否，测试数量和环境不会自动延续 |
+| `*-plan`、Backend 可行性、Action Pipeline | 候选方案和触发条件 | 否，不得据此调用不存在的 API |
+| v0.1 架构、框架对比、外部方案比较 | 历史基线和决策依据 | 否，冲突时以本索引及专项当前契约为准 |
+| Release Readiness | 发布阻塞项、执行顺序和完成定义 | 是，且是唯一发布执行清单 |
+
+文档提交应运行：
+
+```bash
+fvm dart run tool/documentation_check.dart
+fvm dart run tool/release_sensitivity_check.dart
+```
 
 应用层示例的设计与验证文档放在 `demo/docs/`，不作为框架公开契约；例如
 [KV Storage Demo 改造](../demo/docs/kv-storage-demo-migration.md)。

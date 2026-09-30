@@ -1,5 +1,8 @@
 # CCRouter Analytics 与 Auto Track 设计
 
+> 文档状态：架构 1.x 当前契约。Provider-neutral 分发、显式 Target、Consent、黑名单与节流已
+> 实现；全局 Widget 猜测和供应商上传 Adapter 不属于当前框架承诺。
+
 ## 1. 结论
 
 CCRouter 自动观测框架拥有的导航和生命周期；应用负责业务事件语义、隐私同意、身份管理和最终供应商配置。任意 Widget 点击、滑动和曝光不能依赖框架猜测。

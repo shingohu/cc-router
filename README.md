@@ -4,6 +4,11 @@ CCRouter 是一个面向 Flutter 大型应用的组件化运行时与类型安�
 
 当前版本为 `0.1.0`，适合在本仓库 Workspace、Demo 和受控业务试点中验证。所有 Package 目前均为 `publish_to: none`，尚未发布到 pub.dev 或私有 Hosted；接入外部工程前需要先完成正式发布，或使用受控 Git 依赖。不要把本仓库的 Workspace 依赖写法直接复制到另一个仓库。
 
+当前仓库**尚未达到正式发布条件**。License、历史凭据治理、Package 发布集合、Package 级
+README/CHANGELOG、Hosted 分发和干净消费者回归等阻塞项见
+[`docs/CCRouter-release-readiness.md`](docs/CCRouter-release-readiness.md)。不要仅根据某份设计
+文档中的“已完成”将当前 commit 当作 `1.0.0` 稳定发布。
+
 ## 为什么使用 CCRouter
 
 - **组件边界明确**：组件只通过 Manifest、Route Contract、Service Contract、Command 和 Event 协作，不依赖其他组件页面实现。
@@ -1148,6 +1153,10 @@ Skill 采用短主文件和按需 reference 结构，既适合日常编码，也
 
 ## 进一步阅读
 
+- [`CHANGELOG.md`](CHANGELOG.md)：当前未发布变更
+- [`SECURITY.md`](SECURITY.md)：安全问题报告边界
+- [`docs/README.md`](docs/README.md)：当前能力状态与全部文档职责索引
+- [`docs/CCRouter-release-readiness.md`](docs/CCRouter-release-readiness.md)：正式发布阻塞项、门禁与发布顺序
 - [`demo/README.md`](demo/README.md)：可交互能力清单和真机验证方式
 - [`docs/CCRouter-v0.1-architecture.md`](docs/CCRouter-v0.1-architecture.md)：总体架构
 - [`docs/CCRouter-route-design.md`](docs/CCRouter-route-design.md)：路由设计

@@ -1,5 +1,8 @@
 # CCRouter Pub Hook
 
+> 文档状态：当前已实现行为。Hook 是显式安装、可回滚的本地开发工具，不是 Flutter 官方
+> 生命周期扩展点，也不是正式发布或 CI 的替代品。
+
 ## 目的
 
 `ccrouter pub-hook` 为当前 Flutter SDK 安装一个可回滚的 `flutter` wrapper。

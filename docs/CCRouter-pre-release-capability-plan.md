@@ -2,14 +2,15 @@
 
 ## 1. 文档定位
 
-本文把正式发布前的七项工作放到同一条可验收路线中，评估它们的真实收益、实现边界、
-前置条件和回归要求。本文是实施计划，不代表七项能力都应立即进入公开 API。
+本文保留正式发布前七项能力建设的设计依据、实施阶段和验收结果。具体发布阻塞项、Package
+顺序和执行命令已经收口到[正式发布准备与门禁](CCRouter-release-readiness.md)，本文不再作为
+发布操作清单。
 
 > 当前状态（2026-09-29）：Phase 0-4 和 Phase 5 的高级 scaffold/首轮全量回归已完成；仅正式
 > release candidate、Hosted 发布/迁移文档、旧 Index 兼容样本维护，以及真实设备与长期生产
 > RSS/Heap 趋势仍未收口。第 2-9 节保留原设计依据，实际完成度以第 10 节清单为准。
 
-当前基线为 1.x 维护阶段：已有能力优先做兼容性、性能、稳定性和生成物正确性维护；
+当前基线为架构 1.x 维护阶段（Package 仍为开发期 `0.1.0`）：已有能力优先做兼容性、性能、稳定性和生成物正确性维护；
 只有能改善开发效率、问题定位或发布可信度的能力才进入本计划。任何新增公开 API 都必须
 先通过本计划的边界评审，不能因为其它框架提供了类似按钮就直接加入。
 
@@ -92,9 +93,9 @@ Catalog 不能伪造 Runtime 当前状态，Runtime 也不负责扫描源码。E
 | Metadata schema | 生成文件 | 工具读写格式演进 | 不能 |
 | Contract SemVer | Route/Service/Command/Event/InitTask | 跨 Package API 兼容承诺 | 不能省略 |
 
-当前 `ccrouter_*` 仍是开发期 `0.1.0`，现有 metadata schema 版本和 Package Index 版本也
-只服务生成器。正式发布前应把 Contract 版本独立记录到生成 metadata 和 Package Index，
-不使用 Component version 猜测兼容性。
+当前 `ccrouter_*` 仍是开发期 `0.1.0`。Contract 版本、shape fingerprint、消费者范围和
+Runtime descriptor 已经独立进入生成 metadata、Package Index 与 Host Bundle，不再使用
+Component version 猜测兼容性；首个 RC 仍需保存可用于后续升级对比的发布基线样本。
 
 ### 4.2 Contract 身份
 
@@ -188,7 +189,7 @@ minor，Route 只有在旧参数和旧 Intent 仍然有效时才允许 minor 兼
 建议替代 ID。删除前必须没有已解析消费者；生成器应给出消费者 Package 和源码位置，而不是
 只报一个 ID。
 
-### 4.8 最小落地顺序
+### 4.8 最小落地顺序（核心门禁已完成）
 
 1. 先实现版本解析、范围判断和 canonical fingerprint 的 Pure Dart 契约；
 2. 为五类 Contract metadata 增加版本、指纹和消费者引用；
@@ -484,7 +485,8 @@ CLI 继续保持非覆盖式，增加可选模板：
   和资源释放回归；生成器覆盖 Route/Service/Command/Event/InitTask 的 1x/10x/20x/30x 冷/热
   路径，缓存与 `--no-cache` 输出一致。macOS、iOS Simulator、Android、Web、OHOS 构建 smoke
   通过；真实 iOS/macOS/OHOS 设备矩阵、长期生产 RSS/Heap 趋势仍需持续采样。
-- [ ] 正式发布候选版本和迁移文档。
+- [ ] 按[正式发布准备与门禁](CCRouter-release-readiness.md)完成候选版本、Package 文档、
+  License、历史凭据治理、迁移说明和 Hosted 发布验证。
 
 ## 11. 明确不纳入本轮
 
@@ -507,4 +509,5 @@ CLI 继续保持非覆盖式，增加可选模板：
    到受控源码浏览器；
 5. 生成脚手架通过非覆盖、生成和分析回归；
 6. 性能、RSS/Heap、长时间 Runtime 和多平台报告没有未解释的回归；
-7. README、Integration Skill、专项设计文档、CLI 文档和 Release Checklist 同步更新。
+7. README、Integration Skill、专项设计文档、CLI 文档和
+   [Release Checklist](CCRouter-release-readiness.md) 同步更新。
