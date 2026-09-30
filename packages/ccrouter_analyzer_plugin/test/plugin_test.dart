@@ -2,6 +2,9 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:analyzer/file_system/physical_file_system.dart';
+import 'package:analyzer_plugin/channel/channel.dart';
+import 'package:analyzer_plugin/protocol/protocol.dart';
+import 'package:analyzer_plugin/protocol/protocol_common.dart';
 import 'package:analyzer_plugin/protocol/protocol_generated.dart';
 import 'package:ccrouter_analyzer_plugin/src/plugin.dart';
 import 'package:path/path.dart' as path;
@@ -49,6 +52,48 @@ class SamplePage {}
       'ccrouter_annotation_arguments_conflict',
     );
     expect(result.fixes.single.fixes, hasLength(2));
+  });
+
+  test('reports diagnostics from the latest unsaved overlay', () async {
+    final root = Directory.systemTemp.createTempSync('ccrouter-overlay-');
+    addTearDown(() => root.deleteSync(recursive: true));
+    File(
+      path.join(root.path, 'pubspec.yaml'),
+    ).writeAsStringSync('name: overlay_test\n');
+    final sourceFile = File(
+      path.join(root.path, 'lib', 'src', 'sample_page.dart'),
+    )..createSync(recursive: true);
+    sourceFile.writeAsStringSync('''
+@CCRoute<void>(
+  id: 'sample.route',
+  pattern: CCPathPattern('/sample'),
+)
+class SamplePage {}
+''');
+    final plugin = CCRouterAnalyzerPlugin(PhysicalResourceProvider.INSTANCE);
+    final channel = _RecordingChannel();
+    plugin.start(channel);
+
+    await plugin.handleAnalysisUpdateContent(
+      AnalysisUpdateContentParams({
+        sourceFile.path: AddContentOverlay('''
+@CCRoute<void>(
+  id: 'sample.route',
+  pattern: CCPathPattern('/sample'),
+  patterns: [CCPathPattern('/legacy')],
+)
+class SamplePage {}
+'''),
+      }),
+    );
+
+    final errors = AnalysisErrorsParams.fromNotification(
+      channel.notifications.single,
+    ).errors;
+    expect(
+      errors.map((error) => error.code),
+      contains('ccrouter_annotation_arguments_conflict'),
+    );
   });
 
   test('returns a protocol Quick Fix for one proven missing owner', () async {
@@ -164,4 +209,29 @@ const consumerComponent = CCComponent(
       contains('dependencies: [ownerComponentId]'),
     );
   });
+}
+
+/// Minimal channel that captures diagnostics emitted by a direct plugin test.
+final class _RecordingChannel implements PluginCommunicationChannel {
+  /// Notifications emitted by the plugin under test.
+  final List<Notification> notifications = <Notification>[];
+
+  @override
+  void close() {}
+
+  @override
+  void listen(
+    void Function(Request request)? onRequest, {
+    void Function()? onDone,
+    Function? onError,
+    Function(Notification)? onNotification,
+  }) {}
+
+  @override
+  void sendNotification(Notification notification) {
+    notifications.add(notification);
+  }
+
+  @override
+  void sendResponse(Response response) {}
 }

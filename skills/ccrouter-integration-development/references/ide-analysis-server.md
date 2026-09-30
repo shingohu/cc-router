@@ -16,6 +16,14 @@ this normal workflow. Metadata-only Contracts and component-wide aggregate APIs
 remain CLI checks because a partial editor buffer cannot prove their Package
 Catalog.
 
+Diagnostics read the Analysis Server overlay after every content update, so an
+unsaved edit such as removing a required component owner must be reported before
+generation. Initial analysis visits only authored Dart sources and skips
+platform/build assets plus CCRouter generated libraries. Do not use `dart
+analyze` to test this behavior: the Dart CLI does not run legacy Analysis Server
+Plugins. Use an IDE or a real Language Server session, then keep the CLI
+generation check as the cross-file authority.
+
 The plugin is not a generator, general dependency resolver, Runtime validator,
 or authorization boundary. It must not call `build_runner`, inspect Widgets,
 or infer Contract ownership from names or a partial editor buffer. It may read

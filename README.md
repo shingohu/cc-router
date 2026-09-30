@@ -65,6 +65,8 @@ analyzer:
 ```
 
 插件只提供轻量诊断，不执行生成、不在后台修改源代码，也不替代 `ccrouter generate --check`。
+它读取 Analysis Server 的当前 overlay，未保存的 `.dart` 编辑也会触发实时诊断；Plugin
+初始化只扫描开发者编写的 Dart 源码，不遍历平台产物或 CCRouter 生成库。
 当 `ccrouter generate` 或 `ccrouter clean` 新增、修改或删除同源生成物时，插件会重新检查
 对应的声明源文件，避免生成成功后仍保留旧的“生成物缺失”提示。依赖跨文件 Catalog 的
 Component API 聚合与 metadata-only Contract 继续由 `ccrouter generate --check` 校验，插件不做
@@ -99,6 +101,10 @@ Server 已经加载插件；只有 `doctor` 通过后才证明当前凭据和隔
 `doctor` 还会拒绝与当前 manifest 不一致的 Analysis Server plugin-manager 缓存，并给出精确
 缓存目录；停止 Analysis Server、只移走该目录并重启后再复验。bootstrap 或固定 ref 变化后
 仍需要重启 Dart Analysis Server。
+
+`dart analyze` 不运行 legacy Analysis Server Plugin，只能验证 Dart 自带规则；不能用它判断
+CCRouter IDE 诊断是否加载。实时规则必须在 Android Studio、IntelliJ、VS Code 或真实
+Language Server 会话中验证，最终跨文件正确性仍以 `ccrouter generate --check` 为准。
 
 自动 `install/upgrade/uninstall` 尚未实现；当前不得把 Analyzer 装配隐式挂入 `generate` 或
 Pub Hook。

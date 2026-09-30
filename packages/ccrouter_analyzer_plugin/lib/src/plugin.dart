@@ -1,4 +1,5 @@
 import 'package:analyzer/dart/analysis/analysis_context.dart';
+import 'package:analyzer/dart/analysis/analysis_context_collection.dart';
 import 'package:analyzer/file_system/file_system.dart';
 import 'package:analyzer/source/line_info.dart';
 import 'package:analyzer_plugin/plugin/plugin.dart';
@@ -41,12 +42,53 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
   bool isCompatibleWith(Version serverVersion) =>
       serverVersion <= Version(1, 0, 0);
 
+  /// Performs initial analysis only for authored Dart sources.
+  ///
+  /// Analyzer's default plugin bootstrap enumerates every file below the
+  /// context root, including platform build products and assets. CCRouter has
+  /// no diagnostics for those files, while visiting them delays processing of
+  /// live editor overlays. Generated Dart files are also skipped because their
+  /// authored declarations and workspace generation remain authoritative.
+  @override
+  Future<void> afterNewContextCollection({
+    required AnalysisContextCollection contextCollection,
+  }) async {
+    for (final analysisContext in contextCollection.contexts) {
+      final paths = analysisContext.contextRoot
+          .analyzedFiles()
+          .where(_isAuthoredDartPath)
+          .toList(growable: false);
+      await analyzeFiles(analysisContext: analysisContext, paths: paths);
+    }
+  }
+
   /// Publishes diagnostics for one changed source file.
   @override
   Future<void> analyzeFile({
     required AnalysisContext analysisContext,
     required String path,
-  }) async {
+  }) => _analyzeCurrentSource(path);
+
+  /// Re-analyzes editor overlays after the base plugin applies their content.
+  ///
+  /// `contentChanged` reports dependency-graph affected files, but it does not
+  /// guarantee that the directly edited path is returned. An explicit pass is
+  /// therefore required so removing a component dependency is diagnosed
+  /// before the buffer is saved or a Generator preflight runs.
+  @override
+  Future<AnalysisUpdateContentResult> handleAnalysisUpdateContent(
+    AnalysisUpdateContentParams parameters,
+  ) async {
+    final result = await super.handleAnalysisUpdateContent(parameters);
+    for (final path in parameters.files.keys.where(_isAuthoredDartPath)) {
+      await _analyzeCurrentSource(path);
+    }
+    return result;
+  }
+
+  /// Reads and analyzes the latest physical or Analysis Server overlay source.
+  Future<void> _analyzeCurrentSource(String path) async {
+    if (!_isAuthoredDartPath(path)) return;
     final file = resourceProvider.getFile(path);
     if (!file.exists) return;
     // Analysis Server can forward files matching a broad context glob,
@@ -87,6 +129,10 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
       AnalysisErrorsParams(path, errors).toNotification(),
     );
   }
+
+  /// Whether [path] can contain developer-authored CCRouter declarations.
+  static bool _isAuthoredDartPath(String path) =>
+      path.endsWith('.dart') && !CCRouterSourceAnalyzer.isGeneratedPath(path);
 
   /// Re-analyzes authored capability sources affected by generated changes.
   ///
