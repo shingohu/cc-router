@@ -71,6 +71,15 @@ Future<void> main(List<String> arguments) async {
         'Created ${parsed.scaffoldKind!.name} scaffold:\n'
         '${created.map((file) => '  ${file.path}').join('\n')}',
       );
+      final steps = scaffoldCompletionSteps(
+        kind: parsed.scaffoldKind!,
+        root: root,
+        createdFiles: created,
+      );
+      stdout.writeln(
+        'Next steps:\n'
+        '${steps.indexed.map((entry) => '  ${entry.$1 + 1}. ${entry.$2}').join('\n')}',
+      );
     } on CCScaffoldException catch (error) {
       stderr.writeln('error: ${error.message}');
       exitCode = 1;

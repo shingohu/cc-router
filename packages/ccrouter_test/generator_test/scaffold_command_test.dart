@@ -22,6 +22,12 @@ void main() {
         parent.path,
       ]);
       expect(component.exitCode, 0, reason: '${component.stderr}');
+      expect('${component.stdout}', contains('Next steps:'));
+      expect(
+        '${component.stdout}',
+        contains('Add the new Package to the intended Host'),
+      );
+      expect('${component.stdout}', contains('flutter pub get'));
 
       final packageRoot = Directory(path.join(parent.path, 'demo_inventory'));
       final page = await _run([
@@ -31,6 +37,11 @@ void main() {
         packageRoot.path,
       ]);
       expect(page.exitCode, 0, reason: '${page.stderr}');
+      expect('${page.stdout}', contains('ccrouter generate <host-root>'));
+      expect(
+        '${page.stdout}',
+        contains('stable generated Component API only after generation'),
+      );
 
       final componentSource = File(
         path.join(
@@ -84,6 +95,37 @@ void main() {
     expect(
       Directory(path.join(parent.path, 'not-a-dart-package')).existsSync(),
       isFalse,
+    );
+  });
+
+  test('create component reports its exact workspace entry', () async {
+    final workspace = await Directory.systemTemp.createTemp(
+      'ccrouter-scaffold-workspace-',
+    );
+    addTearDown(() => workspace.delete(recursive: true));
+    File(path.join(workspace.path, 'pubspec.yaml')).writeAsStringSync('''
+name: scaffold_workspace
+environment:
+  sdk: ^3.10.0
+workspace:
+  - existing
+''');
+    final modules = Directory(path.join(workspace.path, 'modules'))
+      ..createSync();
+
+    final result = await _run([
+      'create',
+      'component',
+      'demo_inventory',
+      modules.path,
+    ]);
+
+    expect(result.exitCode, 0, reason: '${result.stderr}');
+    expect(
+      '${result.stdout}',
+      contains(
+        'Add `modules/demo_inventory` to `${workspace.path}/pubspec.yaml`',
+      ),
     );
   });
 

@@ -170,7 +170,8 @@ Task Contract。它们默认是组件内部能力；真实出现跨组件消费�
 Package、Owner 和依赖声明。
 所有脚手架命令都是非覆盖式的：任何目标文件已存在、目标组件目录已存在或名称不符合 Dart
 命名约束时都会失败并返回非零。它们不修改 Host 依赖、不创建 generated 文件，也不替代后续
-的 `pub get` 和 `generate`。
+的 `pub get` 和 `generate`。创建成功后会输出 `Next steps`：Component 会提示 Workspace 与
+消费者依赖装配，其它模板会提示先完善源码再为实际 Host 生成；提示本身不会修改工程。
 
 该命令自动寻找包或 Dart workspace 根目录，先调用现有 build_runner，再执行 metadata 校验、
 组件索引、Host Catalog 和文档聚合。非 workspace 包也使用同一命令，不需要自行拼接两步流程。

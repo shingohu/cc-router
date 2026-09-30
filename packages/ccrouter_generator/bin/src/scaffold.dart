@@ -85,6 +85,53 @@ Future<List<File>> createScaffold({
   return created;
 }
 
+/// Returns deterministic follow-up guidance for one successful scaffold.
+///
+/// The guidance never mutates Workspace or Host dependencies because the CLI
+/// cannot prove which Host or consumer should own the new source.
+List<String> scaffoldCompletionSteps({
+  required CCScaffoldKind kind,
+  required Directory root,
+  required List<File> createdFiles,
+}) {
+  if (kind != CCScaffoldKind.component) {
+    return const <String>[
+      'Complete the generated TODOs and public API for the real use case.',
+      'Run `ccrouter generate <host-root>` for the Host that consumes this component.',
+      'Use the stable generated Component API only after generation succeeds.',
+    ];
+  }
+
+  final packageRoot = createdFiles
+      .map((file) => file.parent)
+      .firstWhere(
+        (directory) =>
+            File(path.join(directory.path, 'pubspec.yaml')).existsSync(),
+        orElse: () => Directory(
+          path.join(
+            root.path,
+            path.basenameWithoutExtension(createdFiles.first.path),
+          ),
+        ),
+      );
+  final workspaceRoot = _findWorkspaceRoot(root);
+  final steps = <String>[];
+  if (workspaceRoot != null) {
+    final relativePackage = path.relative(
+      packageRoot.path,
+      from: workspaceRoot.path,
+    );
+    steps.add(
+      'Add `$relativePackage` to `${path.join(workspaceRoot.path, 'pubspec.yaml')}` workspace entries.',
+    );
+  }
+  steps.addAll(const <String>[
+    'Add the new Package to the intended Host or consuming component dependencies.',
+    'Run `flutter pub get` from the actual Host, then `ccrouter generate <host-root>`.',
+  ]);
+  return List<String>.unmodifiable(steps);
+}
+
 Map<File, String> _componentFiles(String rawName, Directory parent) {
   final packageName = _packageName(rawName);
   final packageRoot = Directory(path.join(parent.path, packageName));
@@ -410,6 +457,10 @@ String _lowerCamel(String value) {
 }
 
 bool _hasWorkspaceRoot(Directory start) {
+  return _findWorkspaceRoot(start) != null;
+}
+
+Directory? _findWorkspaceRoot(Directory start) {
   var current = start.absolute;
   while (true) {
     final pubspec = File(path.join(current.path, 'pubspec.yaml'));
@@ -418,10 +469,10 @@ bool _hasWorkspaceRoot(Directory start) {
           r'^workspace:\s*$',
           multiLine: true,
         ).hasMatch(pubspec.readAsStringSync())) {
-      return true;
+      return current;
     }
     final parent = current.parent;
-    if (path.equals(parent.path, current.path)) return false;
+    if (path.equals(parent.path, current.path)) return null;
     current = parent;
   }
 }

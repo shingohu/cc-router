@@ -207,6 +207,9 @@ default: Service uses a concrete `@CCService(id: ...)`, Event adds a Subscriber
 only with `--with-subscriber`, and an independent InitTask adds a reusable
 Contract only with `--with-contract`. Promoting a capability to a cross-component
 Contract remains an explicit design step.
+Treat the CLI's printed `Next steps` as non-mutating guidance. Confirm the actual
+Host and dependency owner before applying them; the scaffold does not infer or
+edit that ownership.
 
 After Route, Service, Command, Event, or InitTask annotation, component definition, contribution, or dependency changes, run from the workspace root:
 

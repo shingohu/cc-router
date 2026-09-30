@@ -1080,6 +1080,8 @@ executable 构建信息；CCRouter 自己的阶段、耗时、跳过原因和错
 这些能力模板默认属于当前组件，不会自动提升为跨组件 Contract，也不会修改 Host 依赖。
 所有命令都会先检查全部目标文件，
 目标已存在或名称非法时返回非零并拒绝覆盖，不修改 Host 的 `pubspec.yaml`，也不写入生成目录。
+创建成功后 CLI 会按模板类型输出确定性的 `Next steps`；它只提示需要补齐的源码、Workspace/
+Host 依赖和生成命令，不会猜测 Host 或自动修改依赖。
 脚手架完成后仍需执行一次 `flutter pub get` 和 `ccrouter generate`，让 build_runner 生成 Registrar、
 Route API 和 Package/Host metadata。跨组件 Route 不能直接由脚手架猜测，真实消费者出现后再
 手动建立 contracts Package 和 Contract-first 声明。

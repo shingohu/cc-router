@@ -110,6 +110,9 @@ Capability scaffolds follow the same internal-first rule. A Service starts as
 one concrete `@CCService(id: ...)`, an Event does not assume a local Subscriber,
 and an independent InitTask uses `id` directly. Add `--with-subscriber` or
 `--with-contract` only when that extra relationship is intentional.
+The CLI prints non-mutating `Next steps` after a successful scaffold. Review the
+proposed Workspace/Host ownership instead of treating the hint as an inferred
+dependency decision.
 
 ### Component Implementation
 

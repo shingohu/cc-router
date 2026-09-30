@@ -96,6 +96,9 @@ require `--with-subscriber`; reusable InitTask Contracts require
 `--with-contract`. The scaffold does not edit Host dependencies, generated
 output, or Contract exposure. A cross-component Contract is a later design
 decision.
+After success, follow the printed `Next steps`. They are deterministic guidance,
+not proof of the intended Host, and they never authorize silent Workspace or
+dependency edits.
 
 ### Pub Hook
 
