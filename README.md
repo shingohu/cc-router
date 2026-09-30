@@ -1113,13 +1113,11 @@ Owner 聚合报告缺失的 Service/Command required dependency；变量、sprea
 `FLUTTER_ROOT` 和当前目录向上的 `.fvm/flutter_sdk`。它只在原始
 `flutter pub get/upgrade/downgrade/add/remove` 成功后运行；`flutter run` 和
 `flutter build` 会在调用原始 Flutter 入口前执行同一生成器作为 fail-closed preflight。当前
-项目没有同时解析 `ccrouter` 和 `ccrouter_generator` 时直接跳过。它不覆盖 `dart pub`，不监听
+项目没有直接声明 `ccrouter`，或没有同时解析 `ccrouter` 和 `ccrouter_generator` 时直接跳过。
+因此 Workspace 聚合根不会被误判为 Host；Hook 不会猜测某个成员 Package 代替当前目录生成。
+它不覆盖 `dart pub`，不监听
 Flutter Tool 内部隐式 `pub get`，也不实现常驻 `watch`。SDK 切换后 `status` 应显示
 `run/build preflight: enabled`。
-当前存在 Workspace 聚合根误判为 Host 的已知缺陷：安装 Hook 后，应在 `demo/` 或实际 Host
-目录执行 `flutter pub`；仅解析根 Workspace 依赖时使用
-`CCROUTER_PUB_HOOK_DISABLE=1 fvm flutter pub get`，再单独执行 `generate demo --check`。
-原始 Pub 成功后的 Hook 失败不代表依赖解析失败。
 `run/build` 成功时控制台使用 `CCRouter preflight`，Pub 后生成使用
 `CCRouter post-pub generation`；成功只保留 fast-path、验证摘要与阶段耗时，失败则输出最近
 200 行且最多 64 KiB 的 Generator 日志，避免长构建刷屏或无界缓存，同时保留可操作错误。

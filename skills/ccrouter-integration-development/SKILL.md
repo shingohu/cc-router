@@ -217,12 +217,11 @@ After Route, Service, Command, Event, or InitTask annotation, component definiti
 fvm dart run ccrouter_generator:ccrouter generate <host-root>
 ```
 
-The repository Workspace root is an aggregator rather than a Host. Until the
-documented Pub Hook host-detection defect is fixed, run hooked `flutter pub`
-commands from the actual Host directory (for this repository, `demo/`). For
-root-only dependency resolution, set `CCROUTER_PUB_HOOK_DISABLE=1` and run the
-explicit Host `generate --check` afterwards. Do not describe a successful Pub
-operation followed by a Hook failure as dependency-resolution failure.
+The repository Workspace root is an aggregator rather than a Host. The Pub Hook
+skips any current Package that does not directly declare `ccrouter`, even when
+its resolved Workspace graph contains CCRouter Packages. Run Host generation
+from the actual Host directory (for this repository, `demo/`); the Hook never
+guesses a member Host from an aggregator.
 
 Validate with:
 

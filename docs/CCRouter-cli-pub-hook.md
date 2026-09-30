@@ -7,14 +7,16 @@
 
 `ccrouter pub-hook` 为当前 Flutter SDK 安装一个可回滚的 `flutter` wrapper。
 当 `flutter pub get`、`upgrade`、`downgrade`、`add` 或 `remove` 成功后，wrapper
-会检查当前项目的 `.dart_tool/package_config.json`：只有同时解析到 `ccrouter`
-和 `ccrouter_generator` 时，才运行一次：
+会检查当前项目自己的 `pubspec.yaml` 和 `.dart_tool/package_config.json`：只有当前
+Package 直接声明 `ccrouter`，并且解析图同时包含 `ccrouter` 与
+`ccrouter_generator` 时，才运行一次：
 
 ```bash
 dart run --verbosity=error ccrouter_generator:ccrouter generate <project-root> --profile
 ```
 
-因此普通 Flutter 项目不会触发生成，也不会因为没有 CCRouter 依赖而报错。
+因此普通 Flutter 项目和仅聚合成员的 Workspace 根不会触发生成，也不会因为没有
+CCRouter Host 依赖而报错。
 
 ## 安装
 
@@ -79,8 +81,8 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook uninstall
 2. 原始命令失败时，直接返回原始退出码，不运行生成器。
 3. 原始命令成功后，wrapper 查找 `--directory`/`-C` 指定的项目并向上定位
    `pubspec.yaml`。
-4. 没有 resolved Package config，或没有同时解析 `ccrouter` 与
-   `ccrouter_generator` 时，打印跳过原因并返回成功。
+4. 没有 resolved Package config、当前 Package 没有直接声明 `ccrouter`，或解析图没有
+   同时包含 `ccrouter` 与 `ccrouter_generator` 时，打印跳过原因并返回成功。
 5. 成功时只打印 fast-path、验证摘要、阶段耗时和总耗时；生成器失败时打印最近
    200 行且最多 64 KiB 的有界日志并返回非零，使 CI 能发现生成物过期或元数据错误，
    同时避免长时间 Builder 输出造成控制台刷屏或内存无界增长。
@@ -129,27 +131,20 @@ CCROUTER_PUB_HOOK_DISABLE=1 flutter pub get
   `ccrouter generate` 负责。
 - 安装是显式操作，不应在项目初始化、CI 或普通 `pub get` 中隐式修改 SDK。
 
-### 已知缺陷：Workspace 聚合根误判为 Host
+### Workspace 聚合根
 
-当前在本仓库根目录显式执行 hooked `flutter pub get` 时，resolved Package config 会同时包含
-`ccrouter` 与 `ccrouter_generator`。Hook 因此会继续调用生成器，但仓库根 `ccrouter_workspace`
-只是 Workspace 聚合 Package，并不直接依赖 `ccrouter`，最终会在原始 Pub 已成功后报告：
+在 Workspace 聚合根显式执行 hooked `flutter pub get` 时，resolved Package config 可能同时
+包含 `ccrouter` 与 `ccrouter_generator`。Hook 不能只凭完整解析图判断当前 Package 是 Host；
+它还会验证当前 `pubspec.yaml` 是否直接声明 `ccrouter`。聚合根不满足该条件时会输出：
 
 ```text
-Host Package "ccrouter_workspace" must directly depend on `ccrouter`
+CCRouter pub hook skipped: current Package does not directly depend on ccrouter
+(Workspace aggregators are not Hosts).
 ```
 
-这个错误来自 post-pub Hook，不表示 Flutter/Pub 依赖解析失败。缺陷修复前：
-
-- 验证 Hook 时必须在 `demo/` 或其它真实 Host Package 目录运行 `flutter pub get`；
-- 只需要解析根 Workspace 依赖时，使用
-  `CCROUTER_PUB_HOOK_DISABLE=1 fvm flutter pub get`，随后单独执行
-  `fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo --check`；
-- 不得把聚合根传给 `ccrouter generate`，也不得把 Hook 的后置失败描述为 Pub 失败。
-
-后续修复应在 Hook 中识别 Workspace aggregator：聚合根没有直接 Host 依赖时应打印明确跳过原因并
-返回成功，不能猜测某个成员 Package 作为 Host。`flutter run/build` 仍必须以实际 Flutter Host
-为根执行 fail-closed preflight。修复必须增加“聚合根跳过、真实 Host 生成、普通项目跳过”三组回归。
+跳过会保留原始 Pub 成功结果，也不会猜测某个 Workspace 成员作为 Host。真实 Host 或显式使用
+CCRouter 的组件 Package 仍以自身目录为根触发生成；`flutter run/build` 应始终从实际 Flutter
+Host 执行 fail-closed preflight。
 
 ## 验证
 

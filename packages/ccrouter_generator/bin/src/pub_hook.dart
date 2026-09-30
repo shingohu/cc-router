@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:path/path.dart' as path;
+import 'package:yaml/yaml.dart';
 
 /// The operation requested from the pub hook command.
 enum CCPubHookAction {
@@ -356,6 +357,13 @@ Future<bool> runCCPubHook({
     stdout.writeln('CCRouter pub hook skipped: project does not use CCRouter.');
     return true;
   }
+  if (!_declaresDirectDependency(root, 'ccrouter')) {
+    stdout.writeln(
+      'CCRouter pub hook skipped: current Package does not directly depend '
+      'on ccrouter (Workspace aggregators are not Hosts).',
+    );
+    return true;
+  }
   final stopwatch = Stopwatch()..start();
   final operation = _CCPubHookOperation.fromCommand(pubCommand);
   stdout.writeln(
@@ -396,6 +404,32 @@ Future<bool> runCCPubHook({
     output.writeFailureTail();
   }
   return exitCode == 0;
+}
+
+/// Whether [root]'s own manifest declares [packageName] as a dependency.
+///
+/// Package config contains the complete resolved Workspace graph, so it cannot
+/// distinguish a Host from an aggregator. Requiring a direct declaration keeps
+/// root Workspace commands from accidentally generating against the aggregator
+/// while retaining explicit component and Host Package workflows.
+bool _declaresDirectDependency(Directory root, String packageName) {
+  final pubspec = File(path.join(root.path, 'pubspec.yaml'));
+  if (!pubspec.existsSync()) return false;
+  try {
+    final document = loadYaml(pubspec.readAsStringSync());
+    if (document is! YamlMap) return false;
+    for (final section in const ['dependencies', 'dev_dependencies']) {
+      final dependencies = document[section];
+      if (dependencies is YamlMap && dependencies.containsKey(packageName)) {
+        return true;
+      }
+    }
+  } on YamlException {
+    return false;
+  } on FileSystemException {
+    return false;
+  }
+  return false;
 }
 
 /// User-facing naming for one Hook-triggered generation pass.

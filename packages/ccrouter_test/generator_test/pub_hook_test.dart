@@ -117,6 +117,42 @@ void main() {
     },
   );
 
+  test('pub-hook run skips a Workspace aggregator', () async {
+    final workspace = await Directory.systemTemp.createTemp(
+      'ccrouter_pub_hook_workspace_',
+    );
+    addTearDown(() => workspace.delete(recursive: true));
+    File(path.join(workspace.path, 'pubspec.yaml')).writeAsStringSync('''
+name: workspace_aggregator
+publish_to: none
+environment:
+  sdk: ^3.10.0
+workspace:
+  - packages/host
+''');
+    Directory(path.join(workspace.path, '.dart_tool')).createSync();
+    File(
+      path.join(workspace.path, '.dart_tool', 'package_config.json'),
+    ).writeAsStringSync('''{"configVersion":2,"packages":[
+  {"name":"ccrouter","rootUri":"../ccrouter"},
+  {"name":"ccrouter_generator","rootUri":"../ccrouter_generator"}
+]}''');
+
+    final result = await _run([
+      'pub-hook',
+      'run',
+      '--project-root',
+      workspace.path,
+      '--pub-command',
+      'get',
+    ]);
+    final output = '${result.stdout}\n${result.stderr}';
+
+    expect(result.exitCode, 0, reason: output);
+    expect(output, contains('Workspace aggregators are not Hosts'));
+    expect(output, isNot(contains('post-pub generation started')));
+  });
+
   test(
     'run and pub hooks emit concise phase-specific generation logs',
     () async {
@@ -169,9 +205,15 @@ void main() {
       'ccrouter_pub_hook_failure_',
     );
     addTearDown(() => project.delete(recursive: true));
-    File(
-      path.join(project.path, 'pubspec.yaml'),
-    ).writeAsStringSync('name: invalid_ccrouter_host\n');
+    File(path.join(project.path, 'pubspec.yaml')).writeAsStringSync('''
+name: invalid_ccrouter_host
+environment:
+  sdk: ^3.10.0
+dependencies:
+  ccrouter: any
+dev_dependencies:
+  ccrouter_generator: any
+''');
     Directory(path.join(project.path, '.dart_tool')).createSync();
     File(
       path.join(project.path, '.dart_tool', 'package_config.json'),

@@ -108,8 +108,10 @@ without first resolving its path. The wrapper runs the original `flutter pub`
 first; only a successful `get`, `upgrade`, `downgrade`, `add`, or `remove` may
 trigger post-pub generation. `flutter run` and `flutter build` run the same
 generator as a fail-closed preflight before the original Flutter entrypoint.
-It skips projects whose resolved Package config does not contain both
-`ccrouter` and `ccrouter_generator`.
+It skips projects whose current Package does not directly declare `ccrouter`,
+or whose resolved Package config does not contain both `ccrouter` and
+`ccrouter_generator`. A Workspace aggregator is skipped rather than treated as
+a Host or used to guess one of its members.
 
 Successful run/build output is labeled `preflight`; successful Pub-triggered
 output is labeled `post-pub generation`. Success prints only the generator fast

@@ -90,7 +90,8 @@ explicit per-SDK `pub-hook` documented in
 modify Flutter internals manually. The hook covers successful `flutter pub`
 commands and runs a fail-closed preflight before `flutter run/build`; direct
 `dart pub` and Flutter Tool's internal implicit `pub get` remain outside its
-boundary.
+boundary. The current Package must directly declare `ccrouter`; a Workspace
+aggregator is skipped even when its resolved graph contains CCRouter Packages.
 
 Use the generator CLI to create a new component Package or an internal Route
 page when starting a feature:
