@@ -240,4 +240,136 @@ void main() {
       throwsA(isA<CCNavigationAdapterError>()),
     );
   });
+
+  test('multi-Host backend injects one initialized Catalog snapshot', () async {
+    final hostAssembly = CCHostAssembly.fromComponents(components: const []);
+    CCRouter.initialize(hostAssembly: hostAssembly);
+    final configurations = <CCGoRouterHostBackendConfiguration>[];
+
+    final backend = CCGoRouterMultiHostBackend.managed(
+      defaultHostId: 'host.primary',
+      hostFactories: {
+        'host.primary': (configuration) {
+          configurations.add(configuration);
+          return _createHostBackend(configuration);
+        },
+        'host.secondary': (configuration) {
+          configurations.add(configuration);
+          return _createHostBackend(configuration);
+        },
+      },
+    );
+
+    expect(configurations, hasLength(2));
+    expect(
+      configurations.every(
+        (configuration) =>
+            identical(configuration.catalog, hostAssembly.routeCatalog),
+      ),
+      isTrue,
+    );
+    expect(backend.routeCatalog, same(hostAssembly.routeCatalog));
+    expect(backend.host.id, 'host.primary');
+    expect(backend.defaultHostId, 'host.primary');
+    expect(backend.hostIds, {'host.primary', 'host.secondary'});
+    expect(backend.adapter.registeredHostIds, backend.hostIds);
+    expect(
+      backend.routerFor('host.secondary'),
+      same(backend.backendFor('host.secondary').router),
+    );
+
+    backend.adapter.dispose();
+    await backend.dispose();
+    await backend.dispose();
+    expect(
+      () => backend.backendFor('host.primary'),
+      throwsA(isA<CCNavigationAdapterError>()),
+    );
+  });
+
+  test('multi-Host backend rejects a factory with a mismatched Host', () {
+    final hostAssembly = CCHostAssembly.fromComponents(components: const []);
+    CCRouter.initialize(hostAssembly: hostAssembly);
+    late CCGoRouterBackend rejectedBackend;
+
+    expect(
+      () => CCGoRouterMultiHostBackend.managed(
+        defaultHostId: 'host.primary',
+        hostFactories: {
+          'host.primary': (configuration) {
+            rejectedBackend = CCGoRouterBackend.managed(
+              catalog: configuration.catalog,
+              host: CCNavigationHost(id: 'host.wrong'),
+              hostRoutes: [
+                GoRoute(path: '/', builder: (_, _) => const SizedBox()),
+              ],
+            );
+            return rejectedBackend;
+          },
+        },
+      ),
+      throwsA(
+        isA<CCNavigationAdapterError>().having(
+          (error) => error.message,
+          'message',
+          contains('returned Backend Host "host.wrong"'),
+        ),
+      ),
+    );
+    expect(
+      () => rejectedBackend.adapter.readInitialBackendEntries(),
+      throwsA(isA<CCNavigationAdapterError>()),
+    );
+  });
+
+  testWidgets('multi-Host backend follows Runtime shutdown ownership order', (
+    tester,
+  ) async {
+    CCRouter.initialize(
+      hostAssembly: CCHostAssembly.fromComponents(components: const []),
+    );
+    final backend = CCGoRouterMultiHostBackend.managed(
+      defaultHostId: 'host.primary',
+      hostFactories: {
+        'host.primary': _createHostBackend,
+        'host.secondary': _createHostBackend,
+      },
+    );
+
+    await tester.pumpWidget(
+      CCRouterApp.managed(
+        backend: backend,
+        child: const MaterialApp(home: SizedBox()),
+      ),
+    );
+    await tester.pump();
+
+    expect(tester.takeException(), isNull);
+    expect(backend.adapter.registeredHostIds, {
+      'host.primary',
+      'host.secondary',
+    });
+
+    await CCRouter.shutdown();
+
+    expect(
+      () => backend.adapter.activateHost('host.secondary'),
+      throwsA(isA<CCNavigationAdapterError>()),
+    );
+    expect(
+      () => backend.routerFor('host.primary'),
+      throwsA(isA<CCNavigationAdapterError>()),
+    );
+
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump();
+  });
 }
+
+CCGoRouterBackend _createHostBackend(
+  CCGoRouterHostBackendConfiguration configuration,
+) => CCGoRouterBackend.managed(
+  catalog: configuration.catalog,
+  host: CCNavigationHost(id: configuration.hostId),
+  hostRoutes: [GoRoute(path: '/', builder: (_, _) => const SizedBox())],
+);

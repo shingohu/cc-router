@@ -373,6 +373,30 @@ runApp(
 `CCGoRouterBackend.managed/attach` 的高级 Host 或渐进式接入才显式传递 Catalog；业务代码
 不能通过 `CCRouter` 读取路由表。
 
+同一个 Flutter View 确实需要多个独立 Router Host 时，使用
+`CCGoRouterMultiHostBackend.managed` 聚合 Host Backend。它自动复用初始化时安装的同一份
+Catalog，校验 Host ID，聚合 `CCMultiHostNavigationAdapter`，并在 Runtime shutdown 后统一
+释放各 Router。应用仍然负责 Router surface 的布局和 active Host 选择：
+
+```dart
+final backend = CCGoRouterMultiHostBackend.managed(
+  defaultHostId: 'workspace.primary',
+  hostFactories: {
+    'workspace.primary': (configuration) => createWorkspaceBackend(
+      catalog: configuration.catalog,
+      hostId: configuration.hostId,
+    ),
+    'workspace.secondary': (configuration) => createWorkspaceBackend(
+      catalog: configuration.catalog,
+      hostId: configuration.hostId,
+    ),
+  },
+);
+```
+
+这不是大屏分栏、Bottom Tab 或 Shell 的默认方案；这些场景通常使用一个 Host 下的多个
+Outlet。聚合器也不代表平台 Window，不负责 macOS、Windows 或 iPadOS 原生窗口生命周期。
+
 `CCRouter.initialize` 同步完成全局配置和启动组件注册；`CCGoRouterApp` 不会在卸载时隐式 shutdown Runtime。应用最终退出或测试 Host 销毁时执行：
 
 ```dart
@@ -708,7 +732,9 @@ CCPageLifecycleListener(
 - Bottom Tab、`ShellRoute`、`StatefulShellRoute`：一个 Host，多个 Shell/Outlet。
 - Dialog、BottomSheet、Popup：属于当前 Host 的 Route 或 Overlay，不是新 Window。
 
-真实 macOS/Windows/iPadOS 多窗口可以映射为多个 Host，但当前只提供底层隔离和接入能力，不宣称已经完成所有平台多窗口生命周期集成。
+真实 macOS/Windows/iPadOS 多窗口可以映射为多个 Host，但当前只提供
+`CCGoRouterMultiHostBackend` 聚合、底层隔离和接入能力，不宣称已经完成所有平台多窗口
+生命周期集成。
 
 Shell 与 nested route 是 Host 拓扑，生成器不会猜测。Host 使用 `CCGoRouterRouteOverride`、`CCGoRouterShellBinding` 和 Outlet Observer 显式装配，业务页面仍只使用 `CCRouter.navigator`。
 

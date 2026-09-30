@@ -21,6 +21,15 @@ still receives an explicit Catalog. This supports existing application-owned
 Routers, custom multi-Host composition, and focused Backend tests without
 making routing metadata available to feature code.
 
+When one application tree has multiple genuinely independent Router Hosts, use
+`CCGoRouterMultiHostBackend.managed`. It reads the initialized Catalog once,
+supplies that snapshot and each declared Host ID to the child Backend factories,
+validates their identity, aggregates `CCMultiHostNavigationAdapter`, and releases
+all child Router resources after Runtime Adapter teardown. The application owns
+the visual arrangement and active-Host policy. Do not use it for master-detail,
+tabs, or Shell branches that are Outlets of one Host, and do not treat it as a
+native multi-window lifecycle bridge.
+
 A handwritten Host uses the same lifecycle contract:
 
 ```dart

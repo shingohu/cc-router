@@ -19,63 +19,29 @@ void main() {
   runApp(createMultiHostDemoApp());
 }
 
-Widget createMultiHostDemoApp() =>
-    _MultiHostDemoApp(backend: _MultiHostDemoBackend.create());
-
-final class _MultiHostDemoBackend implements CCRouterAppBackend {
-  _MultiHostDemoBackend._({
-    required this.primary,
-    required this.secondary,
-    required this.registry,
-  });
-
-  factory _MultiHostDemoBackend.create() {
-    final primary = createDemoRouterBackend(
-      catalog: ccrouterGeneratedHostAssembly.routeCatalog,
-      hostId: 'host.primary',
-    );
-    final secondary = createDemoRouterBackend(
-      catalog: ccrouterGeneratedHostAssembly.routeCatalog,
-      hostId: 'host.secondary',
-    );
-    return _MultiHostDemoBackend._(
-      primary: primary,
-      secondary: secondary,
-      registry: CCMultiHostNavigationAdapter(
-        defaultHostId: primary.host.id,
-        adapters: {
-          primary.host.id: primary.adapter,
-          secondary.host.id: secondary.adapter,
-        },
+Widget createMultiHostDemoApp() => _MultiHostDemoApp(
+  backend: CCGoRouterMultiHostBackend.managed(
+    defaultHostId: _primaryHostId,
+    hostFactories: {
+      _primaryHostId: (configuration) => createDemoRouterBackend(
+        catalog: configuration.catalog,
+        hostId: configuration.hostId,
       ),
-    );
-  }
+      _secondaryHostId: (configuration) => createDemoRouterBackend(
+        catalog: configuration.catalog,
+        hostId: configuration.hostId,
+      ),
+    },
+  ),
+);
 
-  final CCGoRouterBackend primary;
-  final CCGoRouterBackend secondary;
-  final CCMultiHostNavigationAdapter registry;
-
-  @override
-  CCFlutterRouteCatalog get routeCatalog =>
-      ccrouterGeneratedHostAssembly.routeCatalog;
-
-  @override
-  CCNavigationHost get host => primary.host;
-
-  @override
-  CCNavigationAdapter get navigationAdapter => registry;
-
-  @override
-  Future<void> dispose() async {
-    await primary.dispose();
-    await secondary.dispose();
-  }
-}
+const _primaryHostId = 'host.primary';
+const _secondaryHostId = 'host.secondary';
 
 final class _MultiHostDemoApp extends StatelessWidget {
   const _MultiHostDemoApp({required this.backend});
 
-  final _MultiHostDemoBackend backend;
+  final CCGoRouterMultiHostBackend backend;
 
   @override
   Widget build(BuildContext context) => CCRouterApp.managed(
@@ -95,7 +61,7 @@ final class _MultiHostDemoApp extends StatelessWidget {
 final class _MultiHostWorkspace extends StatefulWidget {
   const _MultiHostWorkspace({required this.backend});
 
-  final _MultiHostDemoBackend backend;
+  final CCGoRouterMultiHostBackend backend;
 
   @override
   State<_MultiHostWorkspace> createState() => _MultiHostWorkspaceState();
@@ -106,14 +72,14 @@ final class _MultiHostWorkspaceState extends State<_MultiHostWorkspace> {
   String _status = '选择 Host 后执行类型安全导航';
 
   Future<void> _navigate(String hostId, int level) async {
-    widget.backend.registry.activateHost(hostId);
+    widget.backend.adapter.activateHost(hostId);
     setState(() => _status = '$hostId · navigating');
     await CCRouter.navigator.go(demoStackIntent(level: level));
     if (mounted) setState(() => _status = '$hostId · /lab/stack/$level');
   }
 
   Future<void> _home(String hostId) async {
-    widget.backend.registry.activateHost(hostId);
+    widget.backend.adapter.activateHost(hostId);
     await CCRouter.navigator.go(demoHomeIntent());
     if (mounted) setState(() => _status = '$hostId · /');
   }
@@ -121,7 +87,7 @@ final class _MultiHostWorkspaceState extends State<_MultiHostWorkspace> {
   void _selectMode(Set<_HostLabMode> selection) {
     final mode = selection.single;
     if (mode == _HostLabMode.adaptive) {
-      widget.backend.registry.activateHost(widget.backend.primary.host.id);
+      widget.backend.adapter.activateHost(_primaryHostId);
     }
     setState(() => _mode = mode);
   }
@@ -154,8 +120,8 @@ final class _MultiHostWorkspaceState extends State<_MultiHostWorkspace> {
           child: switch (_mode) {
             _HostLabMode.isolation => _buildIsolationView(),
             _HostLabMode.adaptive => _AdaptiveHostView(
-              host: widget.backend.primary.host,
-              registry: widget.backend.registry,
+              host: widget.backend.hostFor(_primaryHostId),
+              registry: widget.backend.adapter,
             ),
           },
         ),
@@ -177,26 +143,21 @@ final class _MultiHostWorkspaceState extends State<_MultiHostWorkspace> {
                 child: _HostPane(
                   key: const ValueKey('host.primary'),
                   title: 'Primary Host',
-                  hostId: widget.backend.primary.host.id,
-                  router: widget.backend.primary.router,
-                  onNavigate: () =>
-                      unawaited(_navigate(widget.backend.primary.host.id, 101)),
-                  onHome: () =>
-                      unawaited(_home(widget.backend.primary.host.id)),
+                  hostId: _primaryHostId,
+                  router: widget.backend.routerFor(_primaryHostId),
+                  onNavigate: () => unawaited(_navigate(_primaryHostId, 101)),
+                  onHome: () => unawaited(_home(_primaryHostId)),
                 ),
               ),
               Expanded(
                 child: _HostPane(
                   key: const ValueKey('host.secondary'),
                   title: 'Secondary Host',
-                  hostId: widget.backend.secondary.host.id,
-                  router: widget.backend.secondary.router,
-                  host: widget.backend.secondary.host,
-                  onNavigate: () => unawaited(
-                    _navigate(widget.backend.secondary.host.id, 202),
-                  ),
-                  onHome: () =>
-                      unawaited(_home(widget.backend.secondary.host.id)),
+                  hostId: _secondaryHostId,
+                  router: widget.backend.routerFor(_secondaryHostId),
+                  host: widget.backend.hostFor(_secondaryHostId),
+                  onNavigate: () => unawaited(_navigate(_secondaryHostId, 202)),
+                  onHome: () => unawaited(_home(_secondaryHostId)),
                 ),
               ),
             ];

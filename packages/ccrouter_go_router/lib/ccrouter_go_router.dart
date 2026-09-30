@@ -6,6 +6,7 @@ export 'src/app.dart';
 export 'src/assembler.dart';
 export 'src/backend.dart';
 export 'src/modal_pages.dart';
+export 'src/multi_host_backend.dart';
 export 'src/navigation_observer.dart';
 export 'src/page.dart';
 export 'src/route_binding.dart';

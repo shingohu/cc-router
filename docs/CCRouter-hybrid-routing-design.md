@@ -172,6 +172,10 @@ Foreign/Opaque 变化通过事件身份和 Bridge 隔离，不以一个宽泛 Ca
 `CCBackendEntrySnapshot`、后端事件和诊断记录。`CCMultiHostNavigationAdapter` 将默认 Placement
 动态解析到活动 Host，同时保持显式 Host 路由固定归属。
 
+GoRouter Host 可通过 `CCGoRouterMultiHostBackend.managed` 复用初始化时安装的同一份
+`CCFlutterRouteCatalog`，由框架统一创建子 Backend 聚合关系并管理 Adapter/Router 清理。
+该类型不负责多个 Router surface 的布局和 active Host 策略，也不替代原生 Window 生命周期桥接。
+
 不同 Navigation Host 的导航栈相互隔离。一个 Host 可以填满 Flutter View，也可以表示
 同一 View 内的嵌入式独立 Router；折叠屏 Pane 继续使用同一 Host 下的 Outlet，而不是
 伪装成平台 Window。Route Contract、Intent 和参数保持一致，呈现方式由 Host、Shell 和

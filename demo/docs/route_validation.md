@@ -31,7 +31,7 @@ Demo 的交互实现位于 `modules/navigation_lab`，宿主只负责初始化 C
 | Initial Deep Link into Shell | `/workspace/home/73` | 通过，直接进入 Home Outlet 的详情页 |
 | Typed Extra | `DemoExtraPayload` | 通过，仅进程内传递，不进入 URL 或诊断 |
 | Shared WebView | public Query Codec + private Extra | 通过，私密 URL/Header 不进入 normalized URI |
-| Multi Host | Primary / Secondary 双 Router | 通过，Host 路由状态相互隔离 |
+| Multi Host | `CCGoRouterMultiHostBackend` 聚合 Primary / Secondary 双 Router | 通过，自动复用 Host Catalog，Host 路由状态相互隔离 |
 | Host resize / orientation | 同一 `host.primary` 更新 `CCHostLayoutMetrics` | 通过，Host ID 与路由所有权不变 |
 | Fold / hinge | 模拟 separating `CCDisplayFeature` | 通过，不创建 Host，只切换活动 Outlet |
 | Adaptive list-detail | compact 单 Outlet / expanded 双 Outlet | 通过，`adaptive.list` 与 `adaptive.detail` 属于同一 Host |

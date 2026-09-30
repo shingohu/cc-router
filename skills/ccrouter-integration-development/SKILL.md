@@ -110,6 +110,11 @@ Read [implementation-patterns.md](references/implementation-patterns.md) when ad
   widget constructor or expose routing metadata through the business Facade.
   Direct `CCGoRouterBackend.managed/attach` calls remain Host SPI and keep an
   explicit Catalog for custom or incremental integration.
+- Use `CCGoRouterMultiHostBackend.managed` only when one application tree truly
+  owns multiple independent Router Hosts. Its factories receive the initialized
+  Catalog and declared Host ID, while the aggregate owns Adapter and Router
+  cleanup. Keep large-screen panes, tabs, and Shell branches as Outlets of one
+  Host. The aggregate does not render a layout or model a native platform Window.
 
 ### Read-only DevTools
 
