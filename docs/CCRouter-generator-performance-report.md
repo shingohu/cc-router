@@ -2,6 +2,9 @@
 
 > 文档状态：2026-09-28 性能快照。实现边界仍有效，数值不自动代表后续提交或其他机器。
 
+Package 增删导致的 Workspace AOT 冷路径及后续正确性优先优化方案，见
+[build_runner 正确性优先优化计划](CCRouter-build-runner-optimization-plan.md)。
+
 - 日期：2026-09-28
 - 环境：macOS arm64、Flutter `3.41.10-ohos-1.0.0`、Dart `3.11.5`
 - 目标：提升生成速度，同时不跳过校验、不漏生成、不接受陈旧生成物

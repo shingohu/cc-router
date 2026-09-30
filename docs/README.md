@@ -114,6 +114,7 @@
 - [注解路由生成器对比与借鉴记录](CCRouter-annotation-generator-comparison.md)
 - [注解与字段校验](CCRouter-annotation-validation.md)
 - [生成器性能报告](CCRouter-generator-performance-report.md)
+- [build_runner 与团队构建正确性优先优化计划](CCRouter-build-runner-optimization-plan.md)
 - [CLI Pub Hook](CCRouter-cli-pub-hook.md)
 
 ### 工具与诊断

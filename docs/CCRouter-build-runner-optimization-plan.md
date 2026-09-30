@@ -1,0 +1,456 @@
+# CCRouter build_runner 与团队构建正确性优先优化计划
+
+> 文档状态：Proposal，尚未实施。
+>
+> 日期：2026-09-30。
+>
+> 核心约束：任何生成器性能优化都不能以漏生成、接受陈旧生成物、降低校验强度或改变错误
+> 语义为代价。无法证明等价时必须回退完整 `build_runner + validate + aggregate`。
+
+## 1. 问题与决策
+
+CCRouter 当前以 `source_gen/build_runner` 生成 Package 内的 Route、Service、Command、Event、
+InitTask、Binding 和 metadata，再由 CLI 完成跨 Package 校验、Bundle、Host Assembly、Catalog
+和旧产物清理。只要现有 fast path miss，CLI 就会启动一次 Workspace build_runner。
+
+这个策略正确但过于保守：Host 增删组件依赖会改变 Pub Package Graph，即使剩余组件的注解源码、
+Builder metadata 和生成物都没有变化，也会触发 build_runner Asset Graph 与 AOT entrypoint 重建。
+
+本轮真实 Demo 测量如下。临时组件包含 Route、Service、Command、Event、InitTask 五类能力：
+
+| 场景 | 命令总耗时 | Generator | build_runner | dirty |
+| --- | ---: | ---: | ---: | ---: |
+| 稳定无变化 `flutter pub get` | 3.06-4.76s | 0.30-0.33s | 跳过 | 0 |
+| 修改已有组件依赖 | 9.34s | 8.30s | 6.99s | 4/17 |
+| 新增一个全新 Workspace 组件 | 34.06s | 30.35s | 29.02s | 2/18 |
+| 删除组件，样本一 | 33.52s | 29.68s | 28.40s | 1/17 |
+| 删除组件，样本二 | 32.78s | 29.81s | 28.52s | 1/17 |
+
+新增和删除 Package 时，build_runner AOT entrypoint 约 17.5MB，命令最大 RSS 接近 1GB；解析、
+Workspace Validator 和聚合合计仍低于 0.5 秒。主要问题不是 CCRouter Validator，而是 Package
+Graph 变化后启动了语义上可能不需要的 Workspace build_runner 冷路径。
+
+新增组件后的 macOS debug build 为 15.92 秒，稳定重跑为 13.13 秒，删除组件后的 build 为
+19.47 秒；三次 CCRouter preflight 均为 1.32-1.39 秒并命中 fast path。因此本计划优化 Pub
+Graph 变化后的生成阶段，不把应用编译和链接时间错误归因给 CCRouter。
+
+最终决策：
+
+1. 保留 build_runner 作为 Package 内代码生成的权威实现，不在 1.x 复制一套 Analyzer 生成器。
+2. 把“Builder 输入失效”和“Host 聚合输入失效”拆开，不再让所有 graph 变化统一触发 Builder。
+3. 优先落地可证明安全的 graph-only aggregation；新建且没有可信生成物的 Package 继续运行
+   build_runner。
+4. 单机热路径与多人协作冷路径共用同一套可移植状态、失效规则和正确性门禁，不建立第二套
+   团队缓存协议。
+5. `--no-cache --check` 永久保留为权威参考路径和回退入口。
+
+## 2. 不可破坏的正确性约束
+
+优化实现必须同时满足以下条件：
+
+- 不依据 mtime、文件大小、目录时间或终端日志判断新旧，只使用规范化身份与精确内容摘要。
+- 不从源码字符串猜测是否存在注解；需要判断 Package 是否可复用时，覆盖全部受管 authored
+  Dart 源码和 Builder 配置。
+- 不跳过 Route/Contract/Owner/依赖、公共 barrel、Pattern 冲突、Codec 和 Host Assembly 校验。
+- 不把上一次 metadata 当作当前事实；只有当前源码、解析环境、工具身份和受管输出都能精确证明
+  一致时才可复用。
+- 新增可写 Workspace Package 缺少状态、状态损坏、版本不兼容或生成物缺失时，一律运行
+  build_runner。
+- Git、Pub 和 Workspace 外 Path Package 属于只读依赖；它们缺少生成物或当前源码与已发布
+  Generation State 不一致时必须明确失败，不能由 Host 修改依赖或继续消费内部自洽但陈旧的
+  Index/Bundle。
+- 删除和重命名必须执行旧产物清理；快速路径不能只增加文件而遗留失效 API。
+- Builder、聚合或校验失败时恢复原受管生成物，不发布半轮结果。
+- 并发生成继续由 Workspace generation lock 串行化，状态文件和生成物继续原子提交。
+- Observer、Profile、缓存或优化分支异常不能把失败伪装成成功。
+- 优化路径与完整路径必须生成逐字节一致的受管文件，并返回等价的稳定错误。
+
+## 3. 输入状态拆分
+
+当前 fast path 使用一个 Workspace 级总摘要。新的内部状态需要区分三层，不增加业务公开 API。
+
+### 3.1 Tool State
+
+影响所有 Builder 的全局状态：
+
+- Generator 版本、源码与 Builder protocol/schema；
+- `build.yaml` 和相关 Builder 配置；
+- Dart SDK 版本与可执行文件 identity；
+- metadata、Package Index、Bundle 和 generation state schema；
+- 影响代码输出格式的 formatter 版本。
+
+任一 Tool State 变化都进入完整 build_runner，不能走 aggregation-only。
+
+### 3.2 Package Generation State
+
+每个可写 Package 记录：
+
+```text
+packageName
+packageRootIdentity
+authoredInputFingerprint
+resolutionFingerprint
+builderConfigFingerprint
+metadataFingerprint
+managedOutputFingerprint
+packageIndexFingerprint
+directDependencyIndexFingerprints
+generatorIdentity
+schemaVersion
+```
+
+其中：
+
+- `authoredInputFingerprint` 覆盖 `lib/**/*.dart`，排除受管生成目录，并覆盖 Package 自己的
+  `pubspec.yaml`、`build.yaml`、`ccrouter.yaml`；
+- `resolutionFingerprint` 是该 Package 实际解析依赖闭包的规范化切片，不直接复用整个 Workspace
+  `package_config.json` 字节；依赖版本、root URI、language version 或可见类型来源变化都必须失效；
+- Hosted 依赖可使用 lockfile 中的版本与内容身份，Git 依赖使用锁定 commit；可变 Path/Workspace
+  依赖不能只记录路径，必须覆盖其生成相关源码和配置，或沿依赖图传播对应 Package 的 authored
+  input 变化；无法建立稳定依赖内容身份时必须运行 Builder；
+- `metadataFingerprint` 和 `managedOutputFingerprint` 对当前真实文件重新计算，不能只读取缓存值；
+- `directDependencyIndexFingerprints` 保持现有反向依赖传播语义；
+- 所有摘要使用稳定排序和完整内容 SHA-256。
+
+状态只能在一次完整成功生成后写入。状态文件缺失、损坏或字段不完整等价于 cache miss。
+
+### 3.3 Host Assembly State
+
+Host 单独记录：
+
+```text
+hostPackage
+resolvedComponentClosure
+requiredAndOptionalEdges
+externalPackageIndexFingerprints
+contractBundleFingerprint
+hostCatalogFingerprint
+hostManagedOutputFingerprint
+```
+
+Host 依赖增删可能只改变这一层。Package 内 Builder 输入没有变化时，应重新执行完整跨 Package
+校验、Bundle/Host Assembly/Catalog 生成和旧输出清理，而不是先启动 build_runner。
+
+## 4. Build Plan
+
+内部规划器输出以下三种确定性计划：
+
+### 4.1 `unchanged`
+
+适用条件：Tool、Package、Host 输入和所有受管输出完全一致。
+
+行为：沿用现有 fast path，获取锁并验证摘要后直接返回。
+
+### 4.2 `aggregateOnly`
+
+仅在以下条件全部成立时使用：
+
+- Tool State 完全一致；
+- 所有保留 Package 的 authored input、解析环境、Builder 配置、metadata 和受管输出完全一致；
+- 被删除 Package 已不在新 Host 闭包，且删除不会改变保留 Package 的解析环境；
+- 新增只读 Pub/Git Package 提供兼容且内容校验通过的 Package Index 和 Runtime Bundle；
+- 所有只读依赖的 authored input、Builder 配置、解析依赖切片、metadata、受管输出和 Package
+  Index 均与其 Portable Generation State 一致；
+- 新增可写 Package 提供由同一 Generator/schema 产生的可信 Package Generation State，并且对当前
+  源码和输出重新计算后完全匹配；
+- 没有 `clean` 后输出缺失、手工篡改、Contract shape 漂移或未知生成目录文件。
+
+行为：跳过 build_runner，但仍完整执行 metadata 读取、Workspace Validator、Contract 校验、
+dirty 传播、Package Bundle、Host Assembly、Catalog、文档、旧产物清理和原子提交。
+
+典型收益场景：
+
+- Host 删除一个组件依赖，剩余 Package 完全未变；
+- Host 增加一个已经独立完成生成且状态可信的组件；
+- Host 闭包只调整已有外部 Package Index。
+
+### 4.3 `runBuilder`
+
+以下任一条件成立即使用：
+
+- 新建本地组件没有可信状态或缺少任何受管生成物；
+- Route、Service、Command、Event、InitTask、Component 或 Contribution 源码变化；
+- Package 自己的依赖解析环境变化并可能改变 Analyzer 类型解析；
+- Tool State、Builder 配置或 SDK identity 变化；
+- metadata、Package Index、Bundle 或源码生成物被删除、损坏或篡改；
+- 状态无法解析、无法唯一归属或无法证明等价。
+
+行为：保存受管输出快照，运行 build_runner，再执行当前完整校验与聚合流程。任何阶段失败均恢复
+快照并返回非零状态。
+
+## 5. 新增和删除组件的具体语义
+
+### 5.1 新建本地组件
+
+刚由 Scaffold 创建、尚未生成的组件必须运行 build_runner。没有生成状态时不能用源码扫描或
+“目录看起来完整”推断结果。首次生成的 29 秒冷成本在当前 build_runner 架构下可接受为低频
+结构操作，不能用陈旧 metadata 换取速度。
+
+### 5.2 增加已有组件
+
+如果组件已在自己的 Package 上完成权威生成，且当前源码、解析环境、Generator identity 和全部
+受管输出与 Package Generation State 一致，可以只做 Host 聚合。任一字段不一致则回退 Builder。
+
+### 5.3 删除组件
+
+删除 Host 依赖时，若所有保留 Package 状态一致，可直接重算闭包并清除 Host 中失效的 Manifest、
+Route、Contract、Bundle、Catalog 和源码位置。被删除 Package 不得继续出现在 Host 生成物中。
+
+如果删除同时改变了某个保留 Package 的源码或解析依赖，则不能使用 aggregation-only。
+
+### 5.4 修改组件内部依赖
+
+修改 `CCComponent.dependencies`、Service/Command dependency 或 Contract 声明属于 authored source
+变化，必须运行 Builder。只修改 Host `pubspec.yaml` 的依赖边不能与组件源码变化混为一类。
+
+## 6. 实施阶段
+
+### P0：诊断基线，已完成
+
+- `--profile` 输出 `build-targets`；
+- 输出逐 Package `dirty-packages` 和 `host/cache/metadata/output/dependency/propagated` 原因；
+- 保留完整生成、无缓存参考路径和真实 Package 增删性能样本。
+
+### P1：只计算计划，不跳过 Builder
+
+实现 Tool/Package/Host 分层状态和 Build Plan，但所有 miss 仍运行 build_runner。Profile 同时输出
+“建议计划”和“实际完整路径”，完成以下验证：
+
+- 计划在相同输入上稳定；
+- 每个被判为 `aggregateOnly` 的样本与完整路径逐字节一致；
+- 计划无法证明时稳定选择 `runBuilder`；
+- 状态读写不改变现有生成结果和错误。
+
+P1 是必须阶段，不能直接进入跳过 Builder 的实现。
+
+### P2：仅开放删除和 Host-only graph 变化
+
+在内部 feature gate 后启用范围最窄的 aggregation-only：
+
+- Host 删除组件；
+- Host 增删已经可信的只读 Package；
+- 所有可写 Package Builder 输入完全未变。
+
+如果可信状态在写入前无法证明，或优化状态本身损坏，则回退同一请求的完整 Builder，而不是要求
+开发者清缓存。正式 Workspace Validator、Contract 或配置错误必须恢复快照并直接报告，不能通过
+重跑 Builder 吞掉或改写错误。`--no-cache` 始终强制完整路径，可作为手动回滚和对照。
+
+### P3：支持可信的本地预生成组件
+
+只有 P2 的真实项目数据稳定后，才允许新增本地 Package 复用 Package Generation State。需要先
+解决 Package 移动、路径依赖、Generator 升级、Git checkout 和源码未提交状态的精确 identity。
+
+P3 同时启用团队协作验证：Clone A 完成权威生成并提交确定性生成物与 Portable Generation
+State，Clone B 不携带 `.dart_tool/build` 或本机缓存，在重新计算当前源码、依赖和输出摘要后，
+只能选择 `unchanged`、`aggregateOnly` 或安全回退 `runBuilder`。不能因为状态来自其他机器而
+降低校验强度。
+
+### P4：评估剩余冷成本
+
+- 在隔离分支比较当前锁定版本与新版 build_runner；
+- 测量 build filter 是否降低 action 数量，但不预设它能消除 Workspace AOT 成本；
+- 只有 P95 数据仍不可接受时，才评估常驻 daemon/watch 或自有 Analyzer runner；
+- 自有 runner 属于架构 2.0 候选，不进入 1.x 快速修补。
+
+## 7. 测试与回归矩阵
+
+每种优化路径必须与 `generate --no-cache --check` 参考路径比较：
+
+| 场景 | 预期计划 | 必须验证 |
+| --- | --- | --- |
+| 完全无变化 | `unchanged` | 零写入、输出摘要一致 |
+| Host 删除组件 | `aggregateOnly` | Host 不残留 Route/Contract/Bundle/Catalog |
+| Host 增加可信外部组件 | `aggregateOnly` | Owner、版本、shape、源码位置正确 |
+| 新建无生成物组件 | `runBuilder` | 五类能力全部生成并注册 |
+| 修改五类任一注解 | `runBuilder` | 对应输出和反向依赖更新 |
+| 页面/声明删除、重命名、移动 | `runBuilder` | 旧输出完全清理 |
+| Package 依赖版本变化 | `runBuilder` | Analyzer 解析与 Contract shape 重算 |
+| Generator/SDK/build.yaml 变化 | `runBuilder` | 全局状态失效 |
+| metadata、Index、Bundle 或源码输出篡改 | `runBuilder` | 不接受陈旧输出 |
+| cache/state 损坏 | `runBuilder` | fail closed 并重新播种 |
+| 外部 Git/Pub 源码更新但保留旧生成物 | 明确失败 | 即使 Dart 可编译也不接受旧 Route/Service 语义 |
+| 外部 Git/Pub 缺少 Index、Bundle 或 Portable State | 明确失败 | Host 不写依赖、不猜测、不静默忽略 |
+| Workspace 外 Path 依赖源码与状态不一致 | 明确失败 | 提示回到组件仓库重新生成 |
+| 并发 generate/check/pub hook | 串行 | 不死锁、不发布半轮结果 |
+| Builder/Validator/写盘失败 | 失败回退 | 原生成物逐字节恢复 |
+| Clone A 生成、Clone B 首次校验 | 按可信状态规划 | 不依赖绝对路径、本机缓存或用户名 |
+| 合并他人新增的已生成组件 | `aggregateOnly` 或安全回退 | 组件闭包、Owner、Contract 和 Host 输出完整 |
+| 合并他人修改的组件源码 | `runBuilder` | 不接受随提交带来的陈旧状态或输出 |
+| 切换到增删组件的分支 | 按精确差异规划 | stale 生成物清理且不误用上一分支状态 |
+
+验收不仅比较最终文件，还要比较：
+
+- 退出码和稳定错误类型；
+- 组件与路由数量；
+- Package Index、Contract Bundle 和 Host Assembly 顺序；
+- stale 文件删除结果；
+- 缓存命中、dirty 传播和 Build Plan 原因；
+- 第二次执行是否收敛到 `unchanged`；
+- macOS/Linux 及项目支持的 Flutter SDK 组合。
+
+## 8. 性能门槛
+
+性能数据只能在正确性门禁全部通过后用于决策。建议目标，不作为跨机器绝对承诺：
+
+- 稳定无变化不回退当前 fast path；
+- Host 删除组件不再触发约 28 秒 Workspace AOT 重建；
+- aggregation-only 的主要耗时保持在 metadata/Validator/聚合与 CLI 启动范围；
+- 新建无生成物组件允许继续运行完整 Builder；
+- 优化不能增加常驻进程、后台 Listener 或无界缓存；
+- 性能退化或状态异常时可通过 `--no-cache` 立即回到权威路径。
+
+## 9. Team Build Acceleration
+
+### 9.1 范围与边界
+
+团队构建加速是本计划的独立工作流，不是另一套生成器方案。它解决以下多人协作场景：
+
+- 新成员或 CI 在全新 clone 中首次执行生成；
+- 拉取或合并其他开发者已经完成生成的组件；
+- 在包含组件增删、依赖图变化的分支之间切换；
+- Host 只调整已有组件依赖，但 Package 内注解源码没有变化；
+- 本地没有 build_runner Asset Graph，仍需要判断已提交生成物是否可信。
+
+团队加速不承诺共享 build_runner 的本机增量缓存，也不改变 Package 内代码生成仍由
+build_runner 权威负责的边界。
+
+### 9.2 可共享与禁止共享的状态
+
+允许随代码提交并跨机器复用：
+
+- 确定性的 CCRouter 受管生成物；
+- Package Index、Runtime/Contract Bundle 和 Host Assembly；
+- 不含本机信息的 Portable Package/Host Generation State；
+- Generator protocol/schema、Builder 配置和解析依赖的稳定内容指纹。
+
+不得作为团队加速协议提交或分发：
+
+- `.dart_tool/build`、build_runner Asset Graph 和 AOT entrypoint；
+- Pub、Flutter、Analyzer 或操作系统的本机缓存；
+- 绝对路径、用户名、时间戳、inode、mtime 或仅在单机成立的路径 identity；
+- 未经过当前源码、解析环境和输出重新校验的历史 metadata。
+
+Portable State 只用于证明“当前输入与受管输出是否等价”，不能直接声明缓存命中。消费方必须
+重新计算当前摘要；任一字段缺失、不匹配或无法解释时，可写 Workspace Package 自动选择
+`runBuilder`，只读外部 Package 返回稳定错误。
+
+### 9.3 External Package Artifact Integrity
+
+Git、Pub 和 Workspace 外部的 Path 组件按只读 Package 消费。组件作者必须发布或提交完整的：
+
+- CCRouter 受管 Dart 生成物；
+- Package Index、Runtime/Contract Bundle 和 Capability Catalog；
+- Portable Package Generation State。
+
+Host 必须重新计算当前 Package 的生成相关源码、`pubspec.yaml`、`build.yaml`、`ccrouter.yaml`、
+解析依赖切片和受管输出摘要，并与 Portable State 对照。只校验 Index 与 Bundle 彼此自洽不够：
+源码新增 Route/Service 后继续携带一套完整的旧 Index/Bundle，可能仍通过 Dart 编译，却会按旧
+契约运行，必须被识别为陈旧生成物并拒绝装配。
+
+只读依赖验证遵循以下规则：
+
+- 缺少 Index、必要 Bundle、Portable State 或受管输出时明确失败；
+- 源码、配置、依赖、Generator identity、Schema 或任一输出指纹不一致时明确失败；
+- 错误包含 Package 名称、依赖来源、锁定版本或 Git commit、失配类别和重新生成建议，不输出
+  开发机敏感路径或源码内容；
+- Host 不在 Pub Cache、Git checkout 或 Workspace 外 Path 中运行 Builder 或写入文件；
+- 不把外部 Package 的失败降级为“跳过该组件”，也不继续使用上一轮 Host Assembly；
+- Git 生产依赖应锁定 commit；分支或 tag 最终仍以 Pub lock 解析出的 commit 和当前内容校验；
+- Pub Package 发布前必须确认受管生成物包含在发布归档内，不能只在作者工作区存在。
+
+本地 Workspace 内的可写组件保持自动修复路径：CLI 可以运行 Builder 生成当前产物，随后由
+`generate --no-cache --check` 和 CI 判断生成物是否已提交。外部消费者只验证，不代替组件作者
+生成。
+
+组件发布和 Git 合入门禁至少包含：
+
+1. 在组件所属 Workspace 执行 `ccrouter generate --no-cache --check`；
+2. 执行 Analyzer 和组件测试；
+3. 对 Pub 包执行发布归档检查，确认 Index、Bundle、Portable State 和必要 Dart 生成物存在；
+4. 在不携带作者 `.dart_tool/build` 的消费工作区完成一次只读验证。
+
+### 9.4 单机热路径与团队冷路径
+
+两类路径共用相同 Build Plan，但独立记录性能和正确性结果：
+
+| 路径 | 典型场景 | 主要目标 |
+| --- | --- | --- |
+| 单机热路径 | 无变化、修改单个 Package、Host-only 调整 | 避免重复启动 Builder，保持低延迟 |
+| 团队冷路径 | 新 clone、切分支、合并他人组件、CI checkout | 无本机缓存时复用可证明可信的结果 |
+
+团队冷路径不能以“文件来自 Git”作为可信依据。Git 只负责传输文件，CCRouter 仍需验证源码、
+依赖解析、Generator identity、Builder 配置、metadata、输出和反向依赖指纹。
+
+### 9.5 Clone A / Clone B 验收协议
+
+每个允许跳过 Builder 的团队场景必须通过以下双工作区测试：
+
+1. Clone A 从干净 checkout 执行 `generate --no-cache`，提交所有确定性受管输出和 Portable
+   Generation State。
+2. Clone B 从同一提交开始，不复制 Clone A 的 `.dart_tool`、Pub Cache 或 Flutter Cache。
+3. Clone B 重新解析依赖并计算 Build Plan，记录选择原因和输入摘要类别。
+4. 若选择 `unchanged` 或 `aggregateOnly`，保存结果后再执行 `generate --no-cache --check`。
+5. 两条路径必须在受管文件、删除集合、退出码、稳定错误和 Catalog/Bundle 顺序上完全一致。
+6. 分别篡改源码、输出、metadata、状态、依赖版本和 Builder 配置，确认 Clone B 全部 fail closed
+   到 `runBuilder`。
+
+对于 Git/Pub/Workspace 外 Path 只读依赖，第 6 步不得回退到 `runBuilder`，而应返回稳定的外部
+生成物陈旧错误；修复动作必须发生在组件所属仓库或发布流程中。
+
+该协议应覆盖 macOS 和 Linux；Windows 在正式声明支持团队快速路径前加入同样的路径规范化和
+逐字节等价测试。
+
+### 9.6 团队协作实施阶段
+
+团队能力沿用 P1-P3，不单独发明新的版本线：
+
+- **P1 / Observe**：生成 Portable State 和计划报告，但所有可写 Package miss 仍运行 Builder；
+  对只读依赖的缺失或失配先输出诊断，收集团队真实分支切换、合并和新 clone 数据。
+- **P2 / Host graph**：只开放 Host 删除组件、增删可信只读组件等最窄的 `aggregateOnly`；通过
+  内部 feature gate 可立即关闭。
+- **P3 / Portable reuse**：Clone A/Clone B 矩阵稳定后，才允许可信本地预生成组件跨机器复用，
+  并启用只读外部 Package 的严格 Artifact Integrity 门禁。
+- **CI / Authority**：不走优化分支，使用 `generate --no-cache --check` 作为最终合并门禁。
+
+开发者不需要手工选择计划或维护缓存。CLI 和 Pub Hook 自动规划并在无法证明时回退；Profile
+输出计划、原因、命中范围和耗时，便于定位某位开发者为什么进入了完整 Builder。
+
+### 9.7 团队性能指标
+
+除单机性能门槛外，持续记录以下团队体验指标：
+
+- 全新 clone 首次校验的 P50/P95；
+- 拉取一个已生成组件后的 P50/P95；
+- Host 增加、删除组件后的 P50/P95；
+- 在增删组件的两个分支之间往返切换的 P50/P95；
+- `unchanged`、`aggregateOnly`、`runBuilder` 的选择比例和回退原因；
+- Portable State 损坏、过期或不兼容时的安全回退成功率；
+- 优化路径与 CI 权威路径的逐字节不一致次数，该值必须始终为零。
+
+性能收益只有在最后一项持续为零时才成立。任何无法解释的不一致都应关闭相应优化 gate，保留
+完整 Builder 路径，而不是扩大启发式判断。
+
+## 10. 明确不采用的做法
+
+- 根据文件时间或大小跳过生成；
+- 只搜索包含 `@CCRoute` 等字符串的源码；
+- Package Graph 变化后无条件信任旧 metadata；
+- 为了速度跳过 Workspace Validator、Contract 校验或旧输出删除；
+- 失败后吞异常并继续使用上一次 Host Assembly；
+- 从 build_runner 私有 API 注入不稳定的 Asset Graph；
+- 在 1.x 同时维护 build_runner 和自有 Generator 两套输出语义；
+- 强制所有开发者运行 watch/daemon 才能保证生成正确。
+
+## 11. 实施完成标准
+
+只有同时满足以下条件，优化才可从 feature gate 转为默认行为：
+
+1. 全部矩阵样本与无缓存参考路径逐字节一致；
+2. 连续增删、失败恢复、并发和缓存损坏测试通过；
+3. Generator、Workspace、Demo、Pub Hook 和平台 build 回归通过；
+4. 实际项目样本证明结构变更耗时明显下降；
+5. `--profile` 能解释每次计划和回退原因；
+6. 文档明确哪些操作仍必须运行 build_runner；
+7. `--no-cache` 回退路径保持可用且行为未弱化。
+
+在完成这些门禁前，当前完整 build_runner 路径继续作为默认实现。

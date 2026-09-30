@@ -1152,7 +1152,9 @@ Registrar 或添加 generated `part`。没有任何生成能力的 Package 不�
 
 详细生成规则见 [`packages/ccrouter_generator/README.md`](packages/ccrouter_generator/README.md)。
 生成性能、混合能力压力模型和优化前后数据见
-[`docs/CCRouter-generator-performance-report.md`](docs/CCRouter-generator-performance-report.md)。
+[`docs/CCRouter-generator-performance-report.md`](docs/CCRouter-generator-performance-report.md)；
+Package Graph 变化后的正确性优先调度和团队构建加速方案见
+[`docs/CCRouter-build-runner-optimization-plan.md`](docs/CCRouter-build-runner-optimization-plan.md)。
 
 ## 测试
 
