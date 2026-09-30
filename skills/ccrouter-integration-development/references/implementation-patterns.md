@@ -244,6 +244,12 @@ const checkoutComponent = CCComponent(
 );
 ```
 
+When the required owner is omitted, the optional Analyzer Plugin reports the
+Metadata-proven mismatch during editing. Apply its dependency Quick Fix only
+when it offers the exact owner constant through an existing public import; for
+computed lists or absent/ambiguous exports, edit the descriptor deliberately
+and rely on `ccrouter generate --check` as the final gate.
+
 After generation, call the component-specific Client:
 
 ```dart

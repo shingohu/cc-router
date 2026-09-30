@@ -2,8 +2,10 @@
 
 Optional Analysis Server diagnostics for CCRouter source boundaries and
 deterministic generated outputs. The plugin provides low-noise editing feedback
-but does not run generation, resolve cross-package ownership, or replace
-`ccrouter generate --check`.
+and Metadata-proven Service/Command owner checks, but does not run generation
+or replace `ccrouter generate --check`. Its dependency Quick Fix is offered
+only for a directly editable list with an exact owner constant already exposed
+by a public import; it never guesses or inserts imports.
 
 The plugin uses an isolated Analysis Server bootstrap because its Analyzer
 version must not constrain the application Workspace. Follow the

@@ -4,6 +4,7 @@ import 'package:analyzer/source/line_info.dart';
 import 'package:analyzer_plugin/plugin/plugin.dart';
 import 'package:analyzer_plugin/protocol/protocol_common.dart';
 import 'package:analyzer_plugin/protocol/protocol_generated.dart';
+import 'package:ccrouter_analyzer_plugin/src/contract_owner_index.dart';
 import 'package:ccrouter_analyzer_plugin/src/package_context_cache.dart';
 import 'package:ccrouter_analyzer_plugin/src/quick_fixes.dart';
 import 'package:ccrouter_analyzer_plugin/src/source_analyzer.dart';
@@ -18,6 +19,10 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
   /// Bounded source-directory identities owned by this plugin isolate.
   final CCRouterPackageContextCache _packageContexts =
       CCRouterPackageContextCache();
+
+  /// Bounded Metadata snapshots shared across edits in one Pub graph.
+  final CCRouterContractOwnerIndexCache _contractOwners =
+      CCRouterContractOwnerIndexCache();
 
   /// Limits analysis to Dart source files.
   @override
@@ -71,6 +76,7 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
       filePath: path,
       packageRoot: packageContext.root,
       packageName: packageContext.name,
+      contractOwners: _contractOwners.resolve(path),
     );
     final errors = analysis.diagnostics
         .map(
@@ -97,6 +103,11 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
     final analyzedPaths = <String>{};
     for (final changedPath in paths) {
       _packageContexts.invalidate(changedPath);
+      for (final componentSource in _contractOwners.invalidate(changedPath)) {
+        if (analysisContext.contextRoot.isAnalyzed(componentSource)) {
+          analyzedPaths.add(componentSource);
+        }
+      }
       if (analysisContext.contextRoot.isAnalyzed(changedPath)) {
         analyzedPaths.add(changedPath);
       }
@@ -133,7 +144,7 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
     return AnalysisHandleWatchEventsResult();
   }
 
-  /// Offers only explicit deletion choices for mutually exclusive arguments.
+  /// Offers bounded edits for conflicts and Metadata-proven owner dependencies.
   @override
   Future<EditGetFixesResult> handleEditGetFixes(
     EditGetFixesParams parameters,
@@ -153,13 +164,16 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
       filePath: parameters.file,
       packageRoot: packageContext.root,
       packageName: packageContext.name,
+      contractOwners: _contractOwners.resolve(parameters.file),
     );
     final requestLine = analysis.lineInfo
         .getLocation(parameters.offset)
         .lineNumber;
     final errorFixes = <AnalysisErrorFixes>[];
     for (final diagnostic in analysis.diagnostics) {
-      if (diagnostic.code != 'ccrouter_annotation_arguments_conflict' ||
+      if ((diagnostic.code != 'ccrouter_annotation_arguments_conflict' &&
+              diagnostic.code !=
+                  'ccrouter_component_owner_dependency_missing') ||
           analysis.lineInfo.getLocation(diagnostic.offset).lineNumber !=
               requestLine) {
         continue;
@@ -168,6 +182,9 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
         source: source,
         filePath: parameters.file,
         offset: diagnostic.offset,
+        diagnosticCode: diagnostic.code,
+        contractOwners: _contractOwners.resolve(parameters.file),
+        sourcePackage: packageContext.name,
       );
       if (fixes.isEmpty) continue;
       errorFixes.add(

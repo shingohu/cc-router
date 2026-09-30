@@ -1,7 +1,7 @@
 # CCRouter IDE / Analysis Server 集成
 
-> 文档状态：当前接入契约与已知限制。Plugin 提供低误报单文件诊断，Generator/Workspace
-> Validator 仍是跨 Package 正确性的最终门禁。
+> 文档状态：当前接入契约与已知限制。Plugin 提供低误报单文件诊断和 Metadata 驱动的
+> Service/Command Owner 检查，Generator/Workspace Validator 仍是跨 Package 正确性的最终门禁。
 
 ## 目标与边界
 
@@ -12,9 +12,10 @@ CCRouter 的 IDE 支持分成四层：
 3. `ccrouter_analyzer_plugin` 负责编辑过程中的轻量实时诊断。
 4. `ccrouter generate --check` 负责最终生成物、依赖闭包和 metadata 门禁。
 
-Analysis Server Plugin 不运行 `build_runner`，不修改业务源文件，不替代 Generator/Workspace
-Validator，也不读取 Runtime 或隐式全局状态。插件不可用时，项目仍可通过普通 Dart Analyzer 和
-CLI 门禁工作；缺少实时提示不会改变构建语义。
+Analysis Server Plugin 不运行 `build_runner`，不在后台修改业务源文件，不替代
+Generator/Workspace Validator，也不读取 Runtime 或隐式全局状态。只有开发者主动选择 Quick
+Fix 时才会提交一个有界源码编辑。插件不可用时，项目仍可通过普通 Dart Analyzer 和 CLI 门禁
+工作；缺少实时提示不会改变构建语义。
 
 ## 当前提供的诊断
 
@@ -30,11 +31,26 @@ CLI 门禁工作；缺少实时提示不会改变构建语义。
 | `ccrouter_identifier_invalid` | error | 校验可确定的字面量 Route/Service/Command/Event/InitTask/Gate ID |
 | `ccrouter_alias_invalid` | error | 校验可确定的 Service/Command Client alias |
 | `ccrouter_timeout_invalid` | error | 拒绝可确定的零值或负值 InitTask timeout |
+| `ccrouter_component_owner_dependency_missing` | error | Service/Command Contract Owner 未进入消费组件 required `dependencies` |
 
-这些诊断只处理单文件和当前 Package 的可确定信息。Command/Event/InitTask Contract 本身只进入
-metadata，Component API 聚合依赖 Package Catalog，插件不会为它们虚构同源输出。Contract Owner、
-依赖闭包、Pattern 冲突、参数 Codec、聚合入口和生成物指纹等跨文件规则仍由
-`ccrouter generate --check` 权威校验。
+除 Owner 规则外，这些诊断只处理单文件和当前 Package 的可确定信息。Owner 规则从最近的
+`.dart_tool/package_config.json` 获取精确 Package 根，只读取各 Package 固定位置的
+`ccrouter_package.json` 及 metadata 指向的 Contract 源文件；不会递归扫描仓库、运行 Generator
+或根据类型名猜 Owner。索引按 Pub 图有界缓存，并在 Package config、metadata 或相关 Contract
+源码变化时失效。Command/Event/InitTask Contract 本身只进入 metadata，Component API 聚合依赖
+Package Catalog，插件不会为它们虚构同源输出。完整依赖闭包、Pattern 冲突、参数 Codec、聚合
+入口和生成物指纹仍由 `ccrouter generate --check` 权威校验。
+
+Owner Quick Fix 只在以下条件同时满足时提供：
+
+1. Contract Owner 在 metadata 中唯一；
+2. `CCComponent.dependencies` 缺失，或为没有 spread/条件元素的直接 List literal；
+3. 当前文件已有公共 import，并且递归 export 校验能证明该 import 暴露的
+   `CCComponentId` 常量值与 Owner 完全一致；
+4. 当前 required 列表尚未包含该 Owner。
+
+复杂变量、spread、条件集合、歧义 Owner、缺失或被 `show/hide` 排除的常量只保留 Generator
+门禁；插件不会自动插 import，也不会把 `optionalDependencies` 当作 required 能力依赖。
 
 ## 接入步骤
 
@@ -151,10 +167,11 @@ fvm dart run ccrouter_generator:ccrouter generate demo --check
   插件 Package 的 analyze/test，再在 Android Studio 和 VS Code 各重启一次 Analysis Server。
 - 插件启动失败、版本不兼容或诊断异常时，Analysis Server 应隔离该插件；业务分析继续由 Dart
   Analyzer 提供，最终正确性由 `generate --check` 保证。
-- 插件不提供自动修复、自动插入 import、自动生成和运行时导航。任何自动写入都必须由未来
-  独立的 IDE/CLI 设计明确授权，不能隐藏在 Analysis Server isolate 中。当前唯一 Quick Fix
-  是让开发者显式选择删除 Route `pattern/patterns` 或 InitTask `contract/id` 中的一个冲突参数；
-  删除范围包含注释时不提供，且不会创建 Contract、猜 alias/ID/timeout、改 pubspec 或运行生成。
+- 插件不提供后台自动修复、自动插入 import、自动生成和运行时导航。当前 Quick Fix 只允许
+  开发者显式选择删除 Route `pattern/patterns`、InitTask `contract/id` 中的一个冲突参数，或把
+  Metadata 唯一证明且已经由公共 import 暴露的 Owner 常量加入直接 required dependency List。
+  注释可能被覆盖、集合包含 spread/条件元素、Owner/import 不唯一时不提供；插件不会创建
+  Contract、猜 alias/ID/timeout、改 pubspec 或运行生成。
 
 ## 已完成与剩余边界
 
@@ -166,8 +183,9 @@ IDE。因此：
 - “找到 Route/Service/Command/Event/InitTask 的源码位置”已完成；
 - “只读查看组件依赖、反向依赖和调用链”已完成；
 - “从官方 Extension 直接调用本地 IDE 打开文件”未完成；
-- 自动生成、自动 import、rename/alias migration Quick Fix 仍未实现；只提供互斥参数删除修复。
+- 自动生成、自动 import、rename/alias migration Quick Fix 仍未实现；已提供互斥参数删除和受限
+  Service/Command required Owner 补齐。
 
-这些剩余项不改变 Analyzer Plugin 的“只诊断、不生成、不改写”边界。DevTools 当前实现与
-协议见 [`CCRouter-devtools.md`](CCRouter-devtools.md)，发布门槛见
+这些剩余项不改变 Analyzer Plugin 的“不生成、无后台改写、显式安全 Quick Fix”边界。
+DevTools 当前实现与协议见 [`CCRouter-devtools.md`](CCRouter-devtools.md)，发布门槛见
 [`CCRouter-pre-release-capability-plan.md`](CCRouter-pre-release-capability-plan.md)。

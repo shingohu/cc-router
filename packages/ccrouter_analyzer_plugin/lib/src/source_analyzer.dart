@@ -4,6 +4,8 @@ import 'package:analyzer/dart/analysis/utilities.dart';
 import 'package:analyzer/dart/ast/ast.dart';
 import 'package:analyzer/source/line_info.dart';
 import 'package:analyzer_plugin/protocol/protocol_common.dart';
+import 'package:ccrouter_analyzer_plugin/src/component_dependency_analyzer.dart';
+import 'package:ccrouter_analyzer_plugin/src/contract_owner_index.dart';
 import 'package:path/path.dart' as path;
 import 'package:yaml/yaml.dart';
 
@@ -286,17 +288,21 @@ abstract final class CCRouterSourceAnalyzer {
   /// [filePath] must be an absolute or normalized path. [packageRoot] is the
   /// owning Package root when known; when omitted it is discovered by looking
   /// for the nearest `pubspec.yaml`. [packageName] can be supplied by the
-  /// plugin after discovery to avoid reparsing the manifest.
+  /// plugin after discovery to avoid reparsing the manifest. [contractOwners]
+  /// enables Metadata-proven cross-component dependency checks; omitting it
+  /// keeps standalone single-file analysis available without Pub state.
   static List<CCRouterAnalyzerDiagnostic> analyze({
     required String source,
     required String filePath,
     String? packageRoot,
     String? packageName,
+    CCRouterContractOwnerIndex? contractOwners,
   }) => analyzeWithLineInfo(
     source: source,
     filePath: filePath,
     packageRoot: packageRoot,
     packageName: packageName,
+    contractOwners: contractOwners,
   ).diagnostics;
 
   /// Analyzes one source and reuses its parser line mapping for IDE locations.
@@ -305,6 +311,7 @@ abstract final class CCRouterSourceAnalyzer {
     required String filePath,
     String? packageRoot,
     String? packageName,
+    CCRouterContractOwnerIndex? contractOwners,
   }) {
     // Generated libraries are implementation artifacts. Their imports are
     // intentionally allowed to cross component boundaries and are validated
@@ -383,6 +390,35 @@ abstract final class CCRouterSourceAnalyzer {
       }
     }
     diagnostics.addAll(_singleFileRuleDiagnostics(parsed.unit));
+    if (contractOwners != null) {
+      for (final missing in CCRouterComponentDependencyAnalyzer.findMissing(
+        unit: parsed.unit,
+        sourcePackage: owner,
+        owners: contractOwners,
+      )) {
+        final kind = missing.contractKind == CCRouterContractKind.service
+            ? 'Service'
+            : 'Command';
+        final symbol = missing.owner.componentIdSymbol;
+        diagnostics.add(
+          CCRouterAnalyzerDiagnostic(
+            offset: missing.offset,
+            length: missing.length,
+            code: 'ccrouter_component_owner_dependency_missing',
+            message:
+                '$kind Contract ${missing.contractSymbol} is owned by '
+                'component "${missing.owner.componentId}", which is missing '
+                'from CCComponent.dependencies.',
+            correction: symbol == null
+                ? 'Add the owner as a required component dependency; '
+                      'optionalDependencies cannot satisfy this capability.'
+                : 'Add $symbol to CCComponent.dependencies; '
+                      'optionalDependencies cannot satisfy this capability.',
+            severity: AnalysisErrorSeverity.ERROR,
+          ),
+        );
+      }
+    }
     for (final declaration
         in parsed.unit.declarations.whereType<FunctionDeclaration>()) {
       final annotation = declaration.metadata

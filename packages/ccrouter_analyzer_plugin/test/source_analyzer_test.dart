@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:ccrouter_analyzer_plugin/src/contract_owner_index.dart';
 import 'package:ccrouter_analyzer_plugin/src/source_analyzer.dart';
 import 'package:path/path.dart' as path;
 import 'package:test/test.dart';
@@ -173,6 +174,142 @@ Future<void> initializeRequired() async {}
     expect(
       diagnostics.map((item) => item.code),
       isNot(contains(startsWith('ccrouter_required_init_task_'))),
+    );
+  });
+
+  test(
+    'reports one missing required owner for Service and Command consumers',
+    () {
+      final diagnostics = CCRouterSourceAnalyzer.analyze(
+        source: '''
+import 'package:owner_contracts/owner_contracts.dart';
+
+const consumerComponent = CCComponent(
+  id: consumerComponentId,
+  version: '1.0.0',
+  serviceDependencies: [CCServiceDependency<SharedService>()],
+  commandDependencies: [CCCommandDependency<RunCommand>()],
+);
+''',
+        filePath: path.join(packageRoot, 'lib', 'src', 'component.dart'),
+        packageRoot: packageRoot,
+        packageName: 'sample_component',
+        contractOwners: _ownerIndex(),
+      );
+
+      expect(
+        diagnostics.where(
+          (item) => item.code == 'ccrouter_component_owner_dependency_missing',
+        ),
+        hasLength(1),
+      );
+      expect(
+        diagnostics
+            .singleWhere(
+              (item) =>
+                  item.code == 'ccrouter_component_owner_dependency_missing',
+            )
+            .message,
+        contains('owner.component'),
+      );
+    },
+  );
+
+  test('accepts the exact required owner dependency', () {
+    final diagnostics = CCRouterSourceAnalyzer.analyze(
+      source: '''
+import 'package:owner_contracts/owner_contracts.dart';
+
+const consumerComponent = CCComponent(
+  id: consumerComponentId,
+  version: '1.0.0',
+  dependencies: [ownerComponentId],
+  serviceDependencies: [CCServiceDependency<SharedService>()],
+);
+''',
+      filePath: path.join(packageRoot, 'lib', 'src', 'component.dart'),
+      packageRoot: packageRoot,
+      packageName: 'sample_component',
+      contractOwners: _ownerIndex(),
+    );
+
+    expect(
+      diagnostics.map((item) => item.code),
+      isNot(contains('ccrouter_component_owner_dependency_missing')),
+    );
+  });
+
+  test('accepts a local const alias of the required owner', () {
+    final diagnostics = CCRouterSourceAnalyzer.analyze(
+      source: '''
+import 'package:owner_contracts/owner_contracts.dart';
+
+const sharedOwner = ownerComponentId;
+const consumerComponent = CCComponent(
+  id: consumerComponentId,
+  version: '1.0.0',
+  dependencies: [sharedOwner],
+  serviceDependencies: [CCServiceDependency<SharedService>()],
+);
+''',
+      filePath: path.join(packageRoot, 'lib', 'src', 'component.dart'),
+      packageRoot: packageRoot,
+      packageName: 'sample_component',
+      contractOwners: _ownerIndex(),
+    );
+
+    expect(
+      diagnostics.map((item) => item.code),
+      isNot(contains('ccrouter_component_owner_dependency_missing')),
+    );
+  });
+
+  test('does not let an optional dependency satisfy a Service consumer', () {
+    final diagnostics = CCRouterSourceAnalyzer.analyze(
+      source: '''
+import 'package:owner_contracts/owner_contracts.dart';
+
+const consumerComponent = CCComponent(
+  id: consumerComponentId,
+  version: '1.0.0',
+  optionalDependencies: [ownerComponentId],
+  serviceDependencies: [CCServiceDependency<SharedService>()],
+);
+''',
+      filePath: path.join(packageRoot, 'lib', 'src', 'component.dart'),
+      packageRoot: packageRoot,
+      packageName: 'sample_component',
+      contractOwners: _ownerIndex(),
+    );
+
+    expect(
+      diagnostics.map((item) => item.code),
+      contains('ccrouter_component_owner_dependency_missing'),
+    );
+  });
+
+  test('declines dependency inference for a spread list', () {
+    final diagnostics = CCRouterSourceAnalyzer.analyze(
+      source: '''
+import 'package:owner_contracts/owner_contracts.dart';
+
+const baseDependencies = <CCComponentId>[];
+const consumerComponent = CCComponent(
+  id: consumerComponentId,
+  version: '1.0.0',
+  dependencies: [...baseDependencies],
+  serviceDependencies: [CCServiceDependency<SharedService>()],
+);
+''',
+      filePath: path.join(packageRoot, 'lib', 'src', 'component.dart'),
+      packageRoot: packageRoot,
+      packageName: 'sample_component',
+      contractOwners: _ownerIndex(),
+    );
+
+    expect(
+      diagnostics.map((item) => item.code),
+      isNot(contains('ccrouter_component_owner_dependency_missing')),
     );
   });
 
@@ -487,6 +624,26 @@ void initializeFeature() {}
     );
   });
 }
+
+CCRouterContractOwnerIndex _ownerIndex() => CCRouterContractOwnerIndex(
+  owners: const [
+    CCRouterContractOwner(
+      kind: CCRouterContractKind.service,
+      contractSymbol: 'SharedService',
+      contractPackage: 'owner_contracts',
+      componentId: 'owner.component',
+      componentIdSymbol: 'ownerComponentId',
+    ),
+    CCRouterContractOwner(
+      kind: CCRouterContractKind.command,
+      contractSymbol: 'RunCommand',
+      contractPackage: 'owner_contracts',
+      componentId: 'owner.component',
+      componentIdSymbol: 'ownerComponentId',
+    ),
+  ],
+  packageRoots: const {},
+);
 
 void _writeGenerated(String packageRoot, String relative) {
   File(

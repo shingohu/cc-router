@@ -147,7 +147,11 @@
   [IDE / Analysis Server 集成](CCRouter-ide-analysis-server.md)。
 - [x] Analyzer 单文件规则覆盖 Handler 形态/明显签名、互斥参数、字面量 ID/alias/Gate 和正 timeout；
   同源生成物刷新覆盖 Route、Service、Command、Event 与 InitTask。Plugin 单次 parse 复用行信息，
-  Package Context 使用有界 LRU 和 pubspec 失效；Quick Fix 只删除开发者明确选择的冲突参数。
+  Package Context 使用有界 LRU 和 pubspec 失效；Quick Fix 支持删除开发者明确选择的冲突参数。
+- [x] Analyzer 使用 Pub Package config 和精确生成 metadata 建立有界 Contract Owner 索引；
+  Service/Command Owner 缺少 required `dependencies` 时实时诊断。Owner 常量已由当前公共 import
+  精确暴露且列表可直接编辑时提供 Quick Fix；不扫描仓库、不插 import、不改复杂集合，Generator
+  和 Workspace Validator 保持最终权威。
 - [x] Demo Analyzer bootstrap 已切换为固定 Git commit，保留独立 Analyzer 依赖图；增加
   loader `analyze/compile` smoke、兼容性边界测试和发布后的 Hosted fallback manifest。
 - [~] Analyzer Plugin 已提供 Host-only、只读的 `status/doctor`，覆盖固定来源、lockfile 和

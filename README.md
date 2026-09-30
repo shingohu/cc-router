@@ -64,7 +64,7 @@ analyzer:
     - ccrouter_analyzer_plugin
 ```
 
-插件只提供轻量诊断，不执行生成、不修改源代码，也不替代 `ccrouter generate --check`。
+插件只提供轻量诊断，不执行生成、不在后台修改源代码，也不替代 `ccrouter generate --check`。
 当 `ccrouter generate` 或 `ccrouter clean` 新增、修改或删除同源生成物时，插件会重新检查
 对应的声明源文件，避免生成成功后仍保留旧的“生成物缺失”提示。依赖跨文件 Catalog 的
 Component API 聚合与 metadata-only Contract 继续由 `ccrouter generate --check` 校验，插件不做
@@ -72,8 +72,11 @@ Component API 聚合与 metadata-only Contract 继续由 `ccrouter generate --ch
 
 插件还会在编辑期检查 Handler 的 public/top-level/non-generic 形态、显然不支持的参数数量和
 void 返回形态、Route `pattern/patterns`、InitTask `contract/id`、字面量 ID/alias/Gate ID 与
-可计算 timeout。只有两个互斥参数同时存在时提供显式删除其中一个参数的 Quick Fix；不会自动
-创建 Contract、猜测标识符、改写依赖或运行 Generator。
+可计算 timeout。它还从 Pub 已解析 Package 的精确 metadata 建立有界 Owner 索引，在
+`serviceDependencies` 或 `commandDependencies` 缺少 required Owner 时实时报错。互斥参数可以
+显式删除其中一个；Owner 唯一、公共 import 已暴露准确 `CCComponentId` 且 `dependencies` 是
+直接 List 时，可以由开发者主动应用 Quick Fix。插件不会创建 Contract、猜测标识符、自动插入
+import、改写复杂集合或运行 Generator。
 当前仓库 Demo 已在 `demo/analysis_options.yaml` 启用它，并通过
 `demo/tools/ccrouter_analyzer_plugin_host` 提供官方要求的 `tools/analyzer_plugin` bootstrap。
 bootstrap 使用远端固定 Git commit 隔离 Analyzer 版本；发布后可切换到同目录的
@@ -767,6 +770,11 @@ const paymentComponent = CCComponent(
   ],
 );
 ```
+
+若遗漏 `orderComponentId`，可选 Analyzer Plugin 会在编辑期依据已生成 Package metadata
+报告 `ccrouter_component_owner_dependency_missing`。只有当前公共 barrel 已导出准确 Owner 常量，
+且 `dependencies` 缺失或是无 spread/条件元素的直接 List 时，IDE 才提供安全 Quick Fix；最终
+正确性仍由 Generator/Workspace Validator 校验。
 
 重新生成后，通过组件专属 Client 调用；不要手写 Token、method ID、caller ID 或 Proxy：
 

@@ -1,4 +1,8 @@
+import 'dart:io';
+
+import 'package:ccrouter_analyzer_plugin/src/contract_owner_index.dart';
 import 'package:ccrouter_analyzer_plugin/src/quick_fixes.dart';
+import 'package:path/path.dart' as path;
 import 'package:test/test.dart';
 
 void main() {
@@ -84,7 +88,156 @@ abstract interface class InvalidService {}
 
     expect(fixes, isEmpty);
   });
+
+  test('adds a proven owner to an existing required dependency list', () {
+    final fixture = _QuickFixFixture.create();
+    addTearDown(fixture.dispose);
+    const source = '''
+import 'package:owner_contracts/owner_contracts.dart';
+
+const consumerComponent = CCComponent(
+  id: consumerComponentId,
+  version: '1.0.0',
+  dependencies: [
+    existingComponentId,
+  ],
+  serviceDependencies: [CCServiceDependency<SharedService>()],
+);
+''';
+    final fixes = CCRouterQuickFixes.compute(
+      source: source,
+      filePath: fixture.consumerSource.path,
+      offset: source.indexOf('CCServiceDependency'),
+      diagnosticCode: 'ccrouter_component_owner_dependency_missing',
+      contractOwners: fixture.index,
+      sourcePackage: 'consumer',
+    );
+
+    expect(fixes, hasLength(1));
+    expect(
+      _apply(source, fixes.single),
+      contains('''
+  dependencies: [
+    existingComponentId,
+    ownerComponentId,
+  ],'''),
+    );
+  });
+
+  test('creates a required dependency list before the consuming field', () {
+    final fixture = _QuickFixFixture.create();
+    addTearDown(fixture.dispose);
+    const source = '''
+import 'package:owner_contracts/owner_contracts.dart' as owner;
+
+const consumerComponent = CCComponent(
+  id: consumerComponentId,
+  version: '1.0.0',
+  commandDependencies: [CCCommandDependency<owner.RunCommand>()],
+);
+''';
+    final fixes = CCRouterQuickFixes.compute(
+      source: source,
+      filePath: fixture.consumerSource.path,
+      offset: source.indexOf('CCCommandDependency'),
+      diagnosticCode: 'ccrouter_component_owner_dependency_missing',
+      contractOwners: fixture.index,
+      sourcePackage: 'consumer',
+    );
+
+    expect(fixes, hasLength(1));
+    expect(
+      _apply(source, fixes.single),
+      contains('''
+  dependencies: [owner.ownerComponentId],
+  commandDependencies:'''),
+    );
+  });
+
+  test('declines owner edit when the public import hides the ID constant', () {
+    final fixture = _QuickFixFixture.create();
+    addTearDown(fixture.dispose);
+    const source = '''
+import 'package:owner_contracts/owner_contracts.dart'
+    hide ownerComponentId;
+
+const consumerComponent = CCComponent(
+  id: consumerComponentId,
+  version: '1.0.0',
+  serviceDependencies: [CCServiceDependency<SharedService>()],
+);
+''';
+    final fixes = CCRouterQuickFixes.compute(
+      source: source,
+      filePath: fixture.consumerSource.path,
+      offset: source.indexOf('CCServiceDependency'),
+      diagnosticCode: 'ccrouter_component_owner_dependency_missing',
+      contractOwners: fixture.index,
+      sourcePackage: 'consumer',
+    );
+
+    expect(fixes, isEmpty);
+  });
 }
 
 String _apply(String source, CCRouterSourceFix fix) =>
     source.replaceRange(fix.offset, fix.offset + fix.length, fix.replacement);
+
+final class _QuickFixFixture {
+  const _QuickFixFixture({
+    required this.root,
+    required this.consumerSource,
+    required this.index,
+  });
+
+  final Directory root;
+  final File consumerSource;
+  final CCRouterContractOwnerIndex index;
+
+  static _QuickFixFixture create() {
+    final root = Directory.systemTemp.createTempSync('ccrouter-owner-fix-');
+    final ownerRoot = Directory(path.join(root.path, 'owner_contracts'))
+      ..createSync(recursive: true);
+    final ownerSource = File(
+      path.join(ownerRoot.path, 'lib', 'src', 'owner.dart'),
+    )..createSync(recursive: true);
+    ownerSource.writeAsStringSync('''
+const ownerComponentId = CCComponentId('owner.component');
+abstract interface class SharedService {}
+final class RunCommand {}
+''');
+    File(path.join(ownerRoot.path, 'lib', 'owner_contracts.dart'))
+      ..createSync(recursive: true)
+      ..writeAsStringSync(
+        "export 'src/owner.dart' show ownerComponentId, SharedService, RunCommand;\n",
+      );
+    final consumerSource = File(
+      path.join(root.path, 'consumer', 'lib', 'src', 'component.dart'),
+    )..createSync(recursive: true);
+    return _QuickFixFixture(
+      root: root,
+      consumerSource: consumerSource,
+      index: CCRouterContractOwnerIndex(
+        owners: const [
+          CCRouterContractOwner(
+            kind: CCRouterContractKind.service,
+            contractSymbol: 'SharedService',
+            contractPackage: 'owner_contracts',
+            componentId: 'owner.component',
+            componentIdSymbol: 'ownerComponentId',
+          ),
+          CCRouterContractOwner(
+            kind: CCRouterContractKind.command,
+            contractSymbol: 'RunCommand',
+            contractPackage: 'owner_contracts',
+            componentId: 'owner.component',
+            componentIdSymbol: 'ownerComponentId',
+          ),
+        ],
+        packageRoots: {'owner_contracts': ownerRoot.path},
+      ),
+    );
+  }
+
+  void dispose() => root.deleteSync(recursive: true);
+}

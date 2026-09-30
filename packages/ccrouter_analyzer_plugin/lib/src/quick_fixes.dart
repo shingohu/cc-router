@@ -1,5 +1,7 @@
 import 'package:analyzer/dart/analysis/utilities.dart';
 import 'package:analyzer/dart/ast/ast.dart';
+import 'package:ccrouter_analyzer_plugin/src/component_dependency_analyzer.dart';
+import 'package:ccrouter_analyzer_plugin/src/contract_owner_index.dart';
 
 /// One conservative source edit offered as an IDE Quick Fix.
 final class CCRouterSourceFix {
@@ -28,23 +30,46 @@ final class CCRouterSourceFix {
   final String replacement;
 }
 
-/// Computes only explicit conflict-removal fixes with provably bounded edits.
+/// Computes only CCRouter source fixes with provably bounded edits.
 ///
-/// This helper never invents IDs, aliases, Contracts, Gate semantics, timeout
-/// values, imports, or Package dependencies. It also declines to delete an
-/// argument when doing so would consume a nearby comment.
+/// Conflict fixes remove one explicit argument. Component dependency fixes use
+/// generated Metadata to identify the exact owner and require an already
+/// visible, value-checked `CCComponentId` constant. This helper never invents
+/// IDs, aliases, Contracts, Gate semantics, timeout values, or imports. It also
+/// declines an edit when doing so would consume a nearby comment.
 abstract final class CCRouterQuickFixes {
-  /// Returns conflict-removal alternatives for the annotation at [offset].
+  /// Returns safe alternatives for [diagnosticCode] at [offset].
+  ///
+  /// [contractOwners] and [sourcePackage] are required only for a missing
+  /// component-owner dependency. Without both, that diagnostic remains
+  /// visible but does not offer a potentially incorrect edit.
   static List<CCRouterSourceFix> compute({
     required String source,
     required String filePath,
     required int offset,
+    String diagnosticCode = 'ccrouter_annotation_arguments_conflict',
+    CCRouterContractOwnerIndex? contractOwners,
+    String? sourcePackage,
   }) {
     final unit = parseString(
       content: source,
       path: filePath,
       throwIfDiagnostics: false,
     ).unit;
+    if (diagnosticCode == 'ccrouter_component_owner_dependency_missing') {
+      if (contractOwners == null || sourcePackage == null) return const [];
+      return _componentDependencyFixes(
+        source: source,
+        filePath: filePath,
+        unit: unit,
+        offset: offset,
+        owners: contractOwners,
+        sourcePackage: sourcePackage,
+      );
+    }
+    if (diagnosticCode != 'ccrouter_annotation_arguments_conflict') {
+      return const [];
+    }
     for (final annotation in _annotations(unit)) {
       if (offset < annotation.offset || offset > annotation.end) continue;
       final name = _annotationName(annotation);
@@ -74,6 +99,96 @@ abstract final class CCRouterQuickFixes {
               replacement: '',
             ),
       ];
+    }
+    return const [];
+  }
+
+  /// Adds one exact owner constant to a directly editable component list.
+  static List<CCRouterSourceFix> _componentDependencyFixes({
+    required String source,
+    required String filePath,
+    required CompilationUnit unit,
+    required int offset,
+    required CCRouterContractOwnerIndex owners,
+    required String sourcePackage,
+  }) {
+    final missing = CCRouterComponentDependencyAnalyzer.findMissing(
+      unit: unit,
+      sourcePackage: sourcePackage,
+      owners: owners,
+    ).where((item) => item.offset == offset).toList(growable: false);
+    if (missing.length != 1) return const [];
+    final item = missing.single;
+    final reference = owners.visibleComponentIdReference(
+      unit: unit,
+      sourcePath: filePath,
+      owner: item.owner,
+    );
+    if (reference == null) return const [];
+    for (final declaration
+        in unit.declarations.whereType<TopLevelVariableDeclaration>()) {
+      for (final variable in declaration.variables.variables) {
+        final initializer = variable.initializer;
+        if (initializer == null ||
+            offset < initializer.offset ||
+            offset > initializer.end) {
+          continue;
+        }
+        final arguments = _constructorArguments(initializer, 'CCComponent');
+        if (arguments == null || arguments.rightParenthesis.isSynthetic) {
+          return const [];
+        }
+        final dependencies = _namedExpression(arguments, 'dependencies');
+        if (dependencies == null) {
+          final anchor = arguments.arguments
+              .whereType<NamedExpression>()
+              .where(
+                (argument) =>
+                    argument.name.label.name == 'serviceDependencies' ||
+                    argument.name.label.name == 'commandDependencies',
+              )
+              .where(
+                (argument) =>
+                    offset >= argument.offset && offset <= argument.end,
+              )
+              .firstOrNull;
+          if (anchor == null) return const [];
+          final multiline = source
+              .substring(
+                arguments.leftParenthesis.end,
+                arguments.rightParenthesis.offset,
+              )
+              .contains('\n');
+          final replacement = multiline
+              ? 'dependencies: [$reference],\n${_lineIndent(source, anchor.offset)}'
+              : 'dependencies: [$reference], ';
+          return [
+            CCRouterSourceFix(
+              id: 'ccrouter.add_required_component_dependency',
+              message: 'Add `$reference` to required component dependencies',
+              offset: anchor.offset,
+              length: 0,
+              replacement: replacement,
+            ),
+          ];
+        }
+        final value = dependencies.expression;
+        if (value is! ListLiteral ||
+            value.elements.any((element) => element is! Expression)) {
+          return const [];
+        }
+        final edit = _appendListElement(source, value, reference);
+        if (edit == null) return const [];
+        return [
+          CCRouterSourceFix(
+            id: 'ccrouter.add_required_component_dependency',
+            message: 'Add `$reference` to required component dependencies',
+            offset: edit.$1,
+            length: edit.$2,
+            replacement: edit.$3,
+          ),
+        ];
+      }
     }
     return const [];
   }
@@ -119,5 +234,73 @@ abstract final class CCRouterQuickFixes {
     final removed = source.substring(start, end);
     if (removed.contains('//') || removed.contains('/*')) return null;
     return (start, end - start);
+  }
+
+  /// Returns the arguments of a direct constructor-shaped invocation.
+  static ArgumentList? _constructorArguments(
+    Expression expression,
+    String typeName,
+  ) => switch (expression) {
+    InstanceCreationExpression value
+        when value.constructorName.type.name.lexeme == typeName =>
+      value.argumentList,
+    MethodInvocation value
+        when value.target == null && value.methodName.name == typeName =>
+      value.argumentList,
+    _ => null,
+  };
+
+  /// Reads one named expression from a constructor argument list.
+  static NamedExpression? _namedExpression(
+    ArgumentList arguments,
+    String name,
+  ) {
+    for (final argument in arguments.arguments.whereType<NamedExpression>()) {
+      if (argument.name.label.name == name) return argument;
+    }
+    return null;
+  }
+
+  /// Computes a comment-preserving append to a direct list literal.
+  static (int, int, String)? _appendListElement(
+    String source,
+    ListLiteral list,
+    String element,
+  ) {
+    final innerStart = list.leftBracket.end;
+    final innerEnd = list.rightBracket.offset;
+    final elements = list.elements;
+    if (elements.isEmpty) {
+      final gap = source.substring(innerStart, innerEnd);
+      if (gap.contains('//') || gap.contains('/*')) return null;
+      if (!gap.contains('\n')) return (innerStart, gap.length, element);
+      final closingIndent = _lineIndent(source, innerEnd);
+      return (
+        innerStart,
+        gap.length,
+        '\n$closingIndent  $element,\n$closingIndent',
+      );
+    }
+    final last = elements.last;
+    final gap = source.substring(last.end, innerEnd);
+    if (gap.contains('//') || gap.contains('/*')) return null;
+    if (!gap.contains('\n')) {
+      final trailingComma = gap.contains(',');
+      return (last.end, gap.length, ', $element${trailingComma ? ',' : ''}');
+    }
+    final closingIndent = _lineIndent(source, innerEnd);
+    final firstIndent = _lineIndent(source, elements.first.offset);
+    final childIndent = firstIndent.length > closingIndent.length
+        ? firstIndent
+        : '$closingIndent  ';
+    return (last.end, gap.length, ',\n$childIndent$element,\n$closingIndent');
+  }
+
+  /// Returns whitespace preceding [offset] on its source line.
+  static String _lineIndent(String source, int offset) {
+    final lineStart = source.lastIndexOf('\n', offset - 1) + 1;
+    final prefix = source.substring(lineStart, offset);
+    final match = RegExp(r'^[ \t]*').firstMatch(prefix);
+    return match?.group(0) ?? '';
   }
 }

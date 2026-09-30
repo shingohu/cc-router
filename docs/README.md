@@ -42,10 +42,10 @@
 - Analyzer Plugin：当前提供跨 Package 生成物导入、Route/Service/Command/Event/InitTask
   确定性同源生成物缺失、required InitTask Contract/timeout、Handler 形态与明显签名、互斥参数、
   字面量 ID/alias/Gate ID 和正 timeout 等低误报单文件诊断；不生成代码、不自动改写 import，
-  也没有 rename/alias migration Quick Fix。仅对互斥参数提供安全删除 Quick Fix。CLI 已提供
-  Host-only 的只读 `analyzer status/doctor`；自动安装、升级和卸载仍未实现。
-- 跨组件 Dependency 体验：Generator/Workspace Validator 已能阻止 Service/Command Owner
-  未进入 required `dependencies`；IDE 即时 Owner 解析和 const-list Quick Fix 尚未实现。
+  也没有 rename/alias migration Quick Fix。已支持互斥参数安全删除，以及由生成 metadata 唯一
+  证明、公共 import 已暴露 Owner 常量时的 Service/Command required dependency 实时诊断和
+  直接 List Quick Fix；复杂集合和 import 插入仍不自动处理。CLI 已提供 Host-only 的只读
+  `analyzer status/doctor`；自动安装、升级和卸载仍未实现。
 - 零 Subscriber Event：正常生成 Client、Workspace Validator 和 Runtime publisher identity 已覆盖；
   generated SPI 被手工伪造时没有独立 Event Contract Runtime Registry。该 Registry 仅在 generated
   SPI 需要成为严格防伪边界时再实现。

@@ -16,10 +16,12 @@ this normal workflow. Metadata-only Contracts and component-wide aggregate APIs
 remain CLI checks because a partial editor buffer cannot prove their Package
 Catalog.
 
-The plugin is not a generator, dependency resolver, Runtime validator, or
-authorization boundary. It must not call `build_runner`, inspect Widgets, or
-infer Contract ownership from a partial editor buffer. Cross-file rules and
-generated output fingerprints remain the responsibility of:
+The plugin is not a generator, general dependency resolver, Runtime validator,
+or authorization boundary. It must not call `build_runner`, inspect Widgets,
+or infer Contract ownership from names or a partial editor buffer. It may read
+only Pub-resolved Packages' exact generated metadata and the Contract sources
+named there to diagnose a missing required Service/Command owner. Complete
+cross-file rules and generated output fingerprints remain the responsibility of:
 
 ```bash
 fvm dart run ccrouter_generator:ccrouter generate <host-root> --check
@@ -27,10 +29,14 @@ fvm dart run ccrouter_generator:ccrouter generate <host-root> --check
 
 Single-file diagnostics also cover public/top-level/non-generic Handler shape,
 obvious Handler arity/void returns, mutually exclusive Route/InitTask fields,
-literal stable IDs and aliases, Gate IDs, and positive literal Durations. The
-only Quick Fixes delete one of two conflicting `pattern/patterns` or
-`contract/id` arguments after an explicit developer choice. Never expect the
-plugin to invent a Contract, ID, alias, Gate, timeout, import, or dependency.
+literal stable IDs and aliases, Gate IDs, positive literal Durations, and
+Metadata-proven missing Service/Command owners. Quick Fixes either delete one
+conflicting `pattern/patterns` or `contract/id` argument, or add one exact owner
+constant to a missing/direct required dependency list. The latter requires an
+existing public import whose export graph proves the constant's stable value;
+variables, spreads, conditionals, ambiguous owners, hidden symbols, and import
+insertion remain manual. Never expect the plugin to invent a Contract, ID,
+alias, Gate, timeout, import, or owner identity.
 
 If the plugin is unavailable or incompatible with the current Analysis Server,
 disable it and continue using Dart Analyzer plus the CLI gate. Do not weaken

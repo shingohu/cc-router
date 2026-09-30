@@ -139,12 +139,11 @@ Session Scope 均返回稳定的 Service 错误子类型；缺失命名实现会
   `CCServiceToken<T>` 不进入普通业务 Facade。
 - 消费组件必须显式声明 Contract 后才生成 Proxy；Package 依赖扫描只负责发现元数据，不能
   自动授予或生成全部 Service。Workspace 再次校验 Contract Owner 和 required dependency。
-- 已记录待确认的开发体验优化：保持 `dependencies`、`serviceDependencies` 和
-  `commandDependencies` 的显式语义不变，由 Generator 按组件批量报告缺失 Owner，并输出可复制
-  的修复片段；后续由 `ccrouter_analyzer_plugin` 提供安全 Quick Fix，在 const 列表、Owner 可静态
-  解析且不存在重复项时插入对应 `CCComponentId`。`ccrouter find <contract-id>` 计划补充 Owner、
-  Contract Package、消费组件和所需依赖信息。该方案暂不静默扫描 Package 依赖、不自动改写源码，
-  等确认后与 Component API 稳定聚合入口一并实施。
+- [x] 保持 `dependencies`、`serviceDependencies` 和 `commandDependencies` 的显式语义不变；
+  Generator/Workspace Validator 批量阻止缺失 Owner。`ccrouter_analyzer_plugin` 已从 Pub 精确依赖图
+  和生成 metadata 建立 Owner 索引并实时诊断；仅当 required 列表可直接编辑、Owner 唯一且现有
+  公共 import 精确暴露对应 `CCComponentId` 时提供 Quick Fix。它不静默扫描 Package 源码、不插入
+  import、不修改变量/spread/条件集合，最终门禁仍由 Generator 承担。
 - [x] `CCServiceContract.alias`、`CCCommandContract.alias` 已提供跨消费组件统一的默认 Client
   成员名，`CCServiceDependency.alias`、`CCCommandDependency.alias` 可做消费组件级覆盖；命名
   优先级为 Dependency alias、Contract alias、类型名推导。默认推导保持后缀移除与首字母小写，
