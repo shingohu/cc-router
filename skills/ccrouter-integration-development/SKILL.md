@@ -197,13 +197,16 @@ fvm dart run ccrouter_generator:ccrouter create component <package-name> <parent
 fvm dart run ccrouter_generator:ccrouter create page <PageName> <component-directory>
 fvm dart run ccrouter_generator:ccrouter create service <ServiceName> <component-directory>
 fvm dart run ccrouter_generator:ccrouter create command <CommandName> <component-directory>
-fvm dart run ccrouter_generator:ccrouter create event <EventName> <component-directory>
-fvm dart run ccrouter_generator:ccrouter create init-task <TaskName> <component-directory>
+fvm dart run ccrouter_generator:ccrouter create event <EventName> <component-directory> [--with-subscriber]
+fvm dart run ccrouter_generator:ccrouter create init-task <TaskName> <component-directory> [--with-contract]
 ```
 
 The scaffold only creates authored source and refuses to replace existing files.
-Run `pub get` and `generate` afterwards. It creates an internal `@CCRoute` page;
-promoting that page to a cross-component Contract remains an explicit design step.
+Run `pub get` and `generate` afterwards. It creates internal capabilities by
+default: Service uses a concrete `@CCService(id: ...)`, Event adds a Subscriber
+only with `--with-subscriber`, and an independent InitTask adds a reusable
+Contract only with `--with-contract`. Promoting a capability to a cross-component
+Contract remains an explicit design step.
 
 After Route, Service, Command, Event, or InitTask annotation, component definition, contribution, or dependency changes, run from the workspace root:
 

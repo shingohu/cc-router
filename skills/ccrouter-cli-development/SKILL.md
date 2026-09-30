@@ -38,8 +38,8 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter create component <pac
 fvm dart run --verbosity=error ccrouter_generator:ccrouter create page <PageName> <component-directory>
 fvm dart run --verbosity=error ccrouter_generator:ccrouter create service <ServiceName> <component-directory>
 fvm dart run --verbosity=error ccrouter_generator:ccrouter create command <CommandName> <component-directory>
-fvm dart run --verbosity=error ccrouter_generator:ccrouter create event <EventName> <component-directory>
-fvm dart run --verbosity=error ccrouter_generator:ccrouter create init-task <TaskName> <component-directory>
+fvm dart run --verbosity=error ccrouter_generator:ccrouter create event <EventName> <component-directory> [--with-subscriber]
+fvm dart run --verbosity=error ccrouter_generator:ccrouter create init-task <TaskName> <component-directory> [--with-contract]
 fvm dart run --verbosity=error ccrouter_generator:ccrouter analyzer status [host-root]
 fvm dart run --verbosity=error ccrouter_generator:ccrouter analyzer doctor [host-root]
 fvm dart run --verbosity=error ccrouter_generator:ccrouter generate <host-root>
@@ -87,9 +87,12 @@ read-only dependencies, and unrelated build output. After cleaning, run a full
 `create component`, `create page`, `create service`, `create command`, `create
 event`, and `create init-task` are non-overwriting templates. They must fail
 before writing if a target exists or a name is invalid. Capability templates
-use the real annotation and Handler signatures, but remain component-internal
-by default. The scaffold does not edit Host dependencies, generated output, or
-Contract exposure. A cross-component Contract is a later design decision.
+use the real annotations, but remain component-internal by default. Internal
+Service scaffolds emit one concrete `@CCService(id: ...)`; Event Subscribers
+require `--with-subscriber`; reusable InitTask Contracts require
+`--with-contract`. The scaffold does not edit Host dependencies, generated
+output, or Contract exposure. A cross-component Contract is a later design
+decision.
 
 ### Pub Hook
 

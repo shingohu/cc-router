@@ -120,13 +120,15 @@ void main() {
           .where((file) => file.path.endsWith('.dart'))
           .map((file) => file.readAsStringSync())
           .join('\n');
-      expect(source, contains('@CCServiceContract('));
-      expect(source, contains('@CCService()'));
+      expect(source, isNot(contains('@CCServiceContract(')));
+      expect(source, contains("@CCService(id: 'demo_inventory.inventory')"));
       expect(source, contains('@CCCommandContract('));
       expect(source, contains('@CCCommandHandler()'));
       expect(source, contains('@CCEventContract('));
-      expect(source, contains('@CCEventSubscription()'));
+      expect(source, isNot(contains('@CCEventSubscription()')));
       expect(source, contains('@CCInitTask('));
+      expect(source, contains("id: 'demo_inventory.inventory',"));
+      expect(source, isNot(contains('CCInitTaskContract(')));
       expect(source, contains('gate: CCInitTaskGate.appStarted'));
       expect(
         source,
@@ -141,6 +143,64 @@ void main() {
       ]);
       expect(duplicate.exitCode, isNot(0));
       expect('${duplicate.stderr}', contains('Refusing to overwrite'));
+    },
+  );
+
+  test(
+    'create capability options add only explicitly requested glue',
+    () async {
+      final parent = await Directory.systemTemp.createTemp(
+        'ccrouter-scaffold-',
+      );
+      addTearDown(() => parent.delete(recursive: true));
+
+      final component = await _run([
+        'create',
+        'component',
+        'demo_inventory',
+        parent.path,
+      ]);
+      expect(component.exitCode, 0, reason: '${component.stderr}');
+      final packageRoot = Directory(path.join(parent.path, 'demo_inventory'));
+
+      final event = await _run([
+        'create',
+        'event',
+        'Inventory',
+        packageRoot.path,
+        '--with-subscriber',
+      ]);
+      expect(event.exitCode, 0, reason: '${event.stderr}');
+      expect(
+        File(
+          path.join(packageRoot.path, 'lib', 'src', 'inventory_event.dart'),
+        ).readAsStringSync(),
+        contains('@CCEventSubscription()'),
+      );
+
+      final task = await _run([
+        'create',
+        'init-task',
+        'WarmCache',
+        '--with-contract',
+        packageRoot.path,
+      ]);
+      expect(task.exitCode, 0, reason: '${task.stderr}');
+      final taskSource = File(
+        path.join(packageRoot.path, 'lib', 'src', 'warm_cache_init_task.dart'),
+      ).readAsStringSync();
+      expect(taskSource, contains('CCInitTaskContract('));
+      expect(taskSource, contains('contract: warmCacheInitTaskContract,'));
+
+      final invalid = await _run([
+        'create',
+        'service',
+        'Invalid',
+        '--with-contract',
+        packageRoot.path,
+      ]);
+      expect(invalid.exitCode, 2);
+      expect('${invalid.stderr}', contains('only once for `create init-task`'));
     },
   );
 

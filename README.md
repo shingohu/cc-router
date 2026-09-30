@@ -1034,7 +1034,9 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter create page Inventory
 fvm dart run --verbosity=error ccrouter_generator:ccrouter create service OrderSummary demo/modules/demo_order
 fvm dart run --verbosity=error ccrouter_generator:ccrouter create command ReserveOrder demo/modules/demo_order
 fvm dart run --verbosity=error ccrouter_generator:ccrouter create event OrderPaid demo/modules/demo_order
+fvm dart run --verbosity=error ccrouter_generator:ccrouter create event OrderPaid demo/modules/demo_order --with-subscriber
 fvm dart run --verbosity=error ccrouter_generator:ccrouter create init-task WarmCache demo/modules/demo_order
+fvm dart run --verbosity=error ccrouter_generator:ccrouter create init-task WarmCache demo/modules/demo_order --with-contract
 
 # 生成/增量更新
 fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo
@@ -1072,6 +1074,9 @@ executable 构建信息；CCRouter 自己的阶段、耗时、跳过原因和错
 `create component` 只创建新的 Package、`lib/src` 下的顶层 `CCComponent` Descriptor 和 Package barrel；
 `create page` 只创建带 `@CCRoute` 的最小 Flutter Page；`create service`、`create command`、
 `create event` 和 `create init-task` 分别创建真实注解的 Service/Command/Event/InitTask 起始模板。
+内部 Service 默认是带稳定 ID 的 concrete `@CCService`，不会提前创建跨组件 Contract。Event
+默认只声明已发生事实，只有 `--with-subscriber` 才增加同组件 Subscriber；独立内部 InitTask
+默认直接使用 `id`，只有 `--with-contract` 才生成可被其它任务引用的 typed Contract。
 这些能力模板默认属于当前组件，不会自动提升为跨组件 Contract，也不会修改 Host 依赖。
 所有命令都会先检查全部目标文件，
 目标已存在或名称非法时返回非零并拒绝覆盖，不修改 Host 的 `pubspec.yaml`，也不写入生成目录。

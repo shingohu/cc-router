@@ -136,7 +136,9 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter create page Inventory
 fvm dart run --verbosity=error ccrouter_generator:ccrouter create service OrderSummary demo/modules/demo_inventory
 fvm dart run --verbosity=error ccrouter_generator:ccrouter create command ReserveOrder demo/modules/demo_inventory
 fvm dart run --verbosity=error ccrouter_generator:ccrouter create event OrderPaid demo/modules/demo_inventory
+fvm dart run --verbosity=error ccrouter_generator:ccrouter create event OrderPaid demo/modules/demo_inventory --with-subscriber
 fvm dart run --verbosity=error ccrouter_generator:ccrouter create init-task WarmCache demo/modules/demo_inventory
+fvm dart run --verbosity=error ccrouter_generator:ccrouter create init-task WarmCache demo/modules/demo_inventory --with-contract
 
 fvm flutter pub get
 fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo
@@ -161,9 +163,11 @@ Hook 按 SDK 版本独立安装，不修改 Flutter snapshot；非 CCRouter 项�
 和 `lib/src/<package>_component.dart`；Descriptor 不会从根 barrel 导出。`create page <PageName> [component-directory]` 会生成
 `lib/src/<page>_page.dart`、内部 `@CCRoute<void>`、稳定默认 Route ID 和 `/page` Path。
 `create service`、`create command`、`create event` 和 `create init-task` 会在现有组件的
-`lib/src` 下分别生成带 `@CCService`/`@CCServiceContract`、`@CCCommandContract`、
-`@CCEventContract`/`@CCEventSubscription` 或 `@CCInitTask` 的最小起始文件。它们默认是组件内部
-能力；真实出现跨组件消费者后，仍需显式建立 Contracts Package、Owner 和依赖声明。
+`lib/src` 下生成最小起始文件。内部 Service 默认只生成带稳定 ID 的 concrete `@CCService`；
+Command 生成 Contract 与 Handler；Event 默认只生成 Contract，`--with-subscriber` 才附带一个
+本地 Subscriber；独立内部 InitTask 默认直接使用 `id`，`--with-contract` 才附带可复用的 typed
+Task Contract。它们默认是组件内部能力；真实出现跨组件消费者后，仍需显式建立 Contracts
+Package、Owner 和依赖声明。
 所有脚手架命令都是非覆盖式的：任何目标文件已存在、目标组件目录已存在或名称不符合 Dart
 命名约束时都会失败并返回非零。它们不修改 Host 依赖、不创建 generated 文件，也不替代后续
 的 `pub get` 和 `generate`。

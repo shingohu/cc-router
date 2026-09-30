@@ -106,6 +106,11 @@ the scaffold never edits Host dependencies or generated output. Treat the page
 as component-internal by default and create a Pure Dart Route Contract only
 after a real cross-component consumer appears.
 
+Capability scaffolds follow the same internal-first rule. A Service starts as
+one concrete `@CCService(id: ...)`, an Event does not assume a local Subscriber,
+and an independent InitTask uses `id` directly. Add `--with-subscriber` or
+`--with-contract` only when that extra relationship is intentional.
+
 ### Component Implementation
 
 The implementation Package owns exactly one public top-level `const CCComponent`, pages, local policies, Services and message handlers. The generator keeps its Registrar and Manifest private. Export only intended business contracts.

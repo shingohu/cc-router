@@ -40,14 +40,24 @@ Future<List<File>> createScaffold({
   required CCScaffoldKind kind,
   required String name,
   required Directory root,
+  bool withSubscriber = false,
+  bool withContract = false,
 }) async {
   final files = switch (kind) {
     CCScaffoldKind.component => _componentFiles(name, root),
     CCScaffoldKind.page => _pageFiles(name, root),
     CCScaffoldKind.service => _serviceFiles(name, root),
     CCScaffoldKind.command => _commandFiles(name, root),
-    CCScaffoldKind.event => _eventFiles(name, root),
-    CCScaffoldKind.initTask => _initTaskFiles(name, root),
+    CCScaffoldKind.event => _eventFiles(
+      name,
+      root,
+      withSubscriber: withSubscriber,
+    ),
+    CCScaffoldKind.initTask => _initTaskFiles(
+      name,
+      root,
+      withContract: withContract,
+    ),
   };
   final existing = files.keys.where((file) => file.existsSync()).toList();
   if (existing.isNotEmpty) {
@@ -181,30 +191,16 @@ Map<File, String> _serviceFiles(String rawName, Directory packageRoot) {
   final stem = _snakeCase(serviceClass);
   final packageName = _readPackageNameOrFail(packageRoot);
   final id = '$packageName.${_idStem(serviceClass, 'Service')}';
-  final ownerSymbol = '_${_lowerCamel(packageName)}ComponentId';
   final source =
       '''import 'package:ccrouter/ccrouter.dart';
 
-const $ownerSymbol = CCComponentId('$packageName');
+/// Internal lazy app-scoped Service generated for `$id`.
+@CCService(id: '$id')
+final class $serviceClass {
+  /// Creates the component-owned Service.
+  const $serviceClass();
 
-/// Contract generated as an internal starting point for `$id`.
-@CCServiceContract(
-  componentId: $ownerSymbol,
-  id: '$id',
-  description: 'Replace with the Service usage scenario.',
-)
-abstract interface class $serviceClass {
   /// Returns the current value owned by this component.
-  String read();
-}
-
-/// Lazy app-scoped implementation of [$serviceClass].
-@CCService()
-final class ${serviceClass}Impl implements $serviceClass {
-  /// Creates the default implementation.
-  const ${serviceClass}Impl();
-
-  @override
   String read() => 'replace-me';
 }
 ''';
@@ -245,11 +241,25 @@ Future<void> handle${commandClass}(
   };
 }
 
-Map<File, String> _eventFiles(String rawName, Directory packageRoot) {
+Map<File, String> _eventFiles(
+  String rawName,
+  Directory packageRoot, {
+  required bool withSubscriber,
+}) {
   final eventClass = _capabilityClassName(rawName, 'Event');
   final stem = _snakeCase(eventClass);
   final packageName = _readPackageNameOrFail(packageRoot);
   final id = '$packageName.${_idStem(eventClass, 'Event')}';
+  final subscriber = withSubscriber
+      ? '''
+
+/// Handles [$eventClass] without returning a business result.
+@CCEventSubscription()
+void observe${eventClass}($eventClass event) {
+  // TODO: react to the completed fact.
+}
+'''
+      : '';
   final source =
       '''import 'package:ccrouter/ccrouter.dart';
 
@@ -262,37 +272,42 @@ final class $eventClass implements CCEvent {
   /// Creates the immutable payload. Add only final fields.
   const $eventClass();
 }
-
-/// Handles [$eventClass] without returning a business result.
-@CCEventSubscription()
-void observe${eventClass}($eventClass event) {
-  // TODO: react to the completed fact.
-}
+$subscriber
 ''';
   return <File, String>{
     File(path.join(packageRoot.path, 'lib', 'src', '$stem.dart')): source,
   };
 }
 
-Map<File, String> _initTaskFiles(String rawName, Directory packageRoot) {
+Map<File, String> _initTaskFiles(
+  String rawName,
+  Directory packageRoot, {
+  required bool withContract,
+}) {
   final taskName = _capabilityClassName(rawName, 'InitTask');
   final stem = _snakeCase(taskName);
   final packageName = _readPackageNameOrFail(packageRoot);
   final id = '$packageName.${_idStem(taskName, 'InitTask')}';
-  final contract = '${_lowerCamel(taskName)}Contract';
+  final contract = '${_lowerCamel(_snakeCase(taskName))}Contract';
   final handler = 'initialize$taskName';
-  final source =
-      '''import 'package:ccrouter/ccrouter.dart';
-
+  final contractDeclaration = withContract
+      ? '''
 /// Stable startup dependency for `$packageName`.
 const $contract = CCInitTaskContract(
   id: '$id',
   description: 'Replace with the initialization usage scenario.',
 );
+'''
+      : '';
+  final taskIdentity = withContract ? 'contract: $contract,' : "id: '$id',";
+  final source =
+      '''import 'package:ccrouter/ccrouter.dart';
+
+$contractDeclaration
 
 /// Initializes the component after the Host opens the selected Gate.
 @CCInitTask(
-  contract: $contract,
+  $taskIdentity
   gate: CCInitTaskGate.appStarted,
   failurePolicy: CCInitTaskFailurePolicy.optional,
 )

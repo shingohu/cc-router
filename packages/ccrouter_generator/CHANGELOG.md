@@ -3,3 +3,6 @@
 ## 0.1.0 - Unreleased
 
 - Preparing the first public release of CCRouter generation and CLI tooling.
+- Simplified internal capability scaffolds: Services no longer create a
+  redundant Contract, while Event Subscribers and reusable InitTask Contracts
+  are explicit opt-ins.

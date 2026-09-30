@@ -64,6 +64,8 @@ Future<void> main(List<String> arguments) async {
         kind: parsed.scaffoldKind!,
         name: parsed.scaffoldName!,
         root: root,
+        withSubscriber: parsed.scaffoldWithSubscriber,
+        withContract: parsed.scaffoldWithContract,
       );
       stdout.writeln(
         'Created ${parsed.scaffoldKind!.name} scaffold:\n'
@@ -483,8 +485,8 @@ const _usage = '''Usage:
   ccrouter create page <PageName> [component-directory]
   ccrouter create service <ServiceName> [component-directory]
   ccrouter create command <CommandName> [component-directory]
-  ccrouter create event <EventName> [component-directory]
-  ccrouter create init-task <TaskName> [component-directory]
+  ccrouter create event <EventName> [component-directory] [--with-subscriber]
+  ccrouter create init-task <TaskName> [component-directory] [--with-contract]
   ccrouter analyzer status [host-root]
   ccrouter analyzer doctor [host-root]
   ccrouter pub-hook install [--sdk <flutter-sdk-root>]
@@ -512,7 +514,9 @@ snapshot.
 Package without overwriting existing files. `create page <PageName>
 [component-directory]` creates an internal typed Route page. `create service`,
 `create command`, `create event`, and `create init-task` create one internal
-capability template in an existing component Package. All scaffold commands
+capability template in an existing component Package. Event Subscribers and
+reusable InitTask Contracts are opt-in because they express additional behavior.
+All scaffold commands
 refuse to overwrite files and never modify Host dependencies or generated
 output.''';
 
@@ -1300,6 +1304,8 @@ final class _Arguments {
     this.error,
     this.scaffoldKind,
     this.scaffoldName,
+    this.scaffoldWithSubscriber = false,
+    this.scaffoldWithContract = false,
     this.pubHookRequest,
     this.analyzerRequest,
   });
@@ -1339,6 +1345,12 @@ final class _Arguments {
 
   /// Package or page name passed to the scaffold command.
   final String? scaffoldName;
+
+  /// Whether an Event scaffold also emits one local Subscriber.
+  final bool scaffoldWithSubscriber;
+
+  /// Whether an InitTask scaffold emits a reusable typed Task Contract.
+  final bool scaffoldWithContract;
 
   /// Parsed request for the pub hook command.
   final CCPubHookRequest? pubHookRequest;
@@ -1707,14 +1719,6 @@ _Arguments _parseCreateArguments(List<String> arguments) {
           'create requires `component`, `page`, `service`, `command`, `event`, or `init-task`.',
     );
   }
-  if (arguments.length > 4) {
-    return const _Arguments(
-      command: _GeneratorCommand.create,
-      rootPath: '',
-      outputDirectoryPath: null,
-      error: 'create accepts a template, a name, and one optional directory.',
-    );
-  }
   final kind = switch (arguments[1]) {
     'component' => CCScaffoldKind.component,
     'page' => CCScaffoldKind.page,
@@ -1725,13 +1729,54 @@ _Arguments _parseCreateArguments(List<String> arguments) {
     _ => throw StateError('Unsupported scaffold kind.'),
   };
   final name = arguments[2];
-  final root = arguments.length == 4 ? arguments[3] : Directory.current.path;
+  var withSubscriber = false;
+  var withContract = false;
+  String? root;
+  for (final argument in arguments.skip(3)) {
+    if (argument == '--with-subscriber') {
+      if (kind != CCScaffoldKind.event || withSubscriber) {
+        return const _Arguments(
+          command: _GeneratorCommand.create,
+          rootPath: '',
+          outputDirectoryPath: null,
+          error: '--with-subscriber is available only once for `create event`.',
+        );
+      }
+      withSubscriber = true;
+      continue;
+    }
+    if (argument == '--with-contract') {
+      if (kind != CCScaffoldKind.initTask || withContract) {
+        return const _Arguments(
+          command: _GeneratorCommand.create,
+          rootPath: '',
+          outputDirectoryPath: null,
+          error:
+              '--with-contract is available only once for `create init-task`.',
+        );
+      }
+      withContract = true;
+      continue;
+    }
+    if (argument.startsWith('-') || root != null) {
+      return const _Arguments(
+        command: _GeneratorCommand.create,
+        rootPath: '',
+        outputDirectoryPath: null,
+        error:
+            'create accepts one optional directory and only the documented template flags.',
+      );
+    }
+    root = argument;
+  }
   return _Arguments(
     command: _GeneratorCommand.create,
-    rootPath: root,
+    rootPath: root ?? Directory.current.path,
     outputDirectoryPath: null,
     scaffoldKind: kind,
     scaffoldName: name,
+    scaffoldWithSubscriber: withSubscriber,
+    scaffoldWithContract: withContract,
   );
 }
 
