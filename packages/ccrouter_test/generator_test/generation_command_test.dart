@@ -770,6 +770,15 @@ void probe() {
       expect(changedSource.exitCode, 0, reason: '${changedSource.stderr}');
       expect('${changedSource.stdout}', contains('fast-path=miss'));
       expect('${changedSource.stdout}', contains('CCRouter profile build='));
+      expect(
+        '${changedSource.stdout}',
+        contains('CCRouter profile build-targets='),
+      );
+      expect(
+        '${changedSource.stdout}',
+        contains('CCRouter profile dirty-packages='),
+      );
+      expect('${changedSource.stdout}', contains('ccrouter_demo[host]'));
 
       sourceProbe.deleteSync();
       final reseeded = await generate();
@@ -833,6 +842,7 @@ void probe() {
         contains('cache was invalid and has been ignored'),
       );
       expect('${result.stdout}', contains('cache=0/'));
+      expect('${result.stdout}', contains('cache-missing'));
     },
     timeout: const Timeout(Duration(minutes: 2)),
   );

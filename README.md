@@ -1047,7 +1047,7 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo --check
 # 禁用 metadata 缓存，验证参考全量路径
 fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo --no-cache
 
-# 输出阶段耗时和缓存命中率
+# 输出阶段耗时、Builder 目标、缓存命中率和 dirty 传播原因
 fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo --profile
 
 # Runtime/Service/Analytics/生成器性能与资源回收基准
@@ -1088,7 +1088,9 @@ Route API 和 Package/Host metadata。跨组件 Route 不能直接由脚手架�
 生成器与 Dart SDK identity、外部 Package Index 及全部 CCRouter 受管输出的内容摘要完全一致时，
 才跳过 build_runner 和聚合；任一缺失、损坏或变化都会自动回退完整生成。该路径不依赖 mtime
 或文件大小。`--no-cache` 始终绕过 fast path，是生成正确性的权威参考路径；`--profile` 会明确
-报告 `fast-path=hit/miss`。
+报告 `fast-path=hit/miss`。miss 时还会输出 `build-targets` 和逐 Package 的
+`dirty-packages` 原因；`dirty` 是 build_runner 完成后的聚合复用判断，不表示 Builder 只分析
+这些 Package。
 
 fast path 未命中后，Generator 会先对 Host 依赖闭包执行保守的 Component Dependency
 Preflight：仅当直接 List、Contract 与 Owner 都能唯一证明时，才在 build_runner 前按组件和

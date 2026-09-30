@@ -65,8 +65,11 @@ CCRouter progress, diagnostics, and failures remain visible.
 Run `generate` after authored annotation, component, contribution, dependency,
 or Host topology changes. Use `--check` for a read-only freshness gate and
 `--no-cache --check` as the reference path when validating cache correctness.
-Use `--profile` only to investigate generation performance. Never remove caches
-just to make an ordinary generation run pass.
+Use `--profile` only to investigate generation performance. On a miss, distinguish
+`build-targets` from the post-build `dirty-packages` reuse set and use the reported
+reason (`cache-missing`, `metadata`, `output`, `dependency-index`, or
+`propagated-from`) before changing cache behavior. Never remove caches just to
+make an ordinary generation run pass.
 
 ### Find
 

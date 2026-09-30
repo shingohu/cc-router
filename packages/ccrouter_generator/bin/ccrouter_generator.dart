@@ -213,7 +213,8 @@ Future<void> main(List<String> arguments) async {
       }
     }
     final buildWatch = Stopwatch()..start();
-    if (buildContext != null && !await _runBuildRunner(buildContext, root)) {
+    if (buildContext != null &&
+        !await _runBuildRunner(buildContext, root, profile: parsed.profile)) {
       if (snapshot != null) await snapshot.restore();
       exitCode = 1;
       return;
@@ -498,8 +499,9 @@ const _usage = '''Usage:
 validates metadata and writes component indexes, Host assembly, and route docs.
 `--check` restores the original files and fails when generation would change a
 CCRouter-managed artifact. `--no-cache` forces the reference full-parse path.
-`--profile` reports phase timings and cache hits. `find` reads existing Package
-indexes without generating and matches exact capability IDs or Route Pattern values.
+`--profile` reports phase timings, build targets, cache hits, and dirty reasons.
+`find` reads existing Package indexes without generating and matches exact
+capability IDs or Route Pattern values.
 `clean` removes only CCRouter-owned source outputs in writable Packages; it
 preserves build caches, read-only dependencies, and unknown user files.
 `aggregate` preserves the metadata-only legacy path.
@@ -878,6 +880,9 @@ Future<bool> _generateResolvedWorkspace(
       'aggregate/format/write=${aggregateWatch.elapsedMilliseconds}ms '
       'cache=$hits/${metadataSnapshots.length} '
       'dirty=${dirtySet.dirtyPackages.length}/${workspace.packages.values.where((package) => package.writable).length}',
+    );
+    stdout.writeln(
+      'CCRouter profile dirty-packages=${dirtySet.profileDescription}',
     );
   }
   return true;
@@ -2286,7 +2291,14 @@ final class _GenerationDirtySet {
     required Map<String, CCPackageMetadataSnapshot> snapshots,
     required Map<String, CCPackageIndex> indexes,
   }) async {
-    final dirty = <String>{workspace.host.name};
+    final dirty = <String>{};
+    final reasons = <String, Set<String>>{};
+    void markDirty(String packageName, String reason) {
+      dirty.add(packageName);
+      (reasons[packageName] ??= <String>{}).add(reason);
+    }
+
+    markDirty(workspace.host.name, 'host');
     final outputFingerprints = <String, String>{};
     final dependencyFingerprints = <String, Map<String, String>>{};
     for (final package in workspace.packages.values.where(
@@ -2307,12 +2319,18 @@ final class _GenerationDirtySet {
       dependencyFingerprints[package.name] = Map.unmodifiable(dependencies);
       final previous = cache.entries[package.name];
       final snapshot = snapshots[package.name];
-      if (previous == null ||
-          snapshot == null ||
-          previous.fingerprint != snapshot.fingerprint ||
-          previous.outputFingerprint != outputFingerprints[package.name] ||
-          !_sameStringMap(previous.dependencyFingerprints, dependencies)) {
-        dirty.add(package.name);
+      if (previous == null) {
+        markDirty(package.name, 'cache-missing');
+      } else {
+        if (snapshot == null || previous.fingerprint != snapshot.fingerprint) {
+          markDirty(package.name, 'metadata');
+        }
+        if (previous.outputFingerprint != outputFingerprints[package.name]) {
+          markDirty(package.name, 'output');
+        }
+        if (!_sameStringMap(previous.dependencyFingerprints, dependencies)) {
+          markDirty(package.name, 'dependency-index');
+        }
       }
     }
 
@@ -2325,8 +2343,13 @@ final class _GenerationDirtySet {
         (package) => package.writable,
       )) {
         if (dirty.contains(package.name)) continue;
-        if (package.dependencies.any(dirty.contains)) {
-          dirty.add(package.name);
+        final dirtyDependencies =
+            package.dependencies.where(dirty.contains).toList()..sort();
+        if (dirtyDependencies.isNotEmpty) {
+          markDirty(
+            package.name,
+            'propagated-from:${dirtyDependencies.join('+')}',
+          );
           changed = true;
         }
       }
@@ -2337,6 +2360,10 @@ final class _GenerationDirtySet {
     };
     return _GenerationDirtySet._(
       dirtyPackages: Set.unmodifiable(dirty),
+      reasons: Map.unmodifiable({
+        for (final entry in reasons.entries)
+          entry.key: Set.unmodifiable(entry.value),
+      }),
       outputFingerprints: Map.unmodifiable(outputFingerprints),
       dependencyFingerprints: Map.unmodifiable(immutableDependencyFingerprints),
     );
@@ -2344,12 +2371,28 @@ final class _GenerationDirtySet {
 
   const _GenerationDirtySet._({
     required this.dirtyPackages,
+    required this.reasons,
     required this.outputFingerprints,
     required this.dependencyFingerprints,
   });
 
   /// Writable Packages that must regenerate source aggregates.
   final Set<String> dirtyPackages;
+
+  /// Exact reasons each Package aggregate could not be reused.
+  final Map<String, Set<String>> reasons;
+
+  /// Stable profile rendering for diagnosing invalidation propagation.
+  String get profileDescription {
+    final packages = dirtyPackages.toList()..sort();
+    return packages
+        .map((packageName) {
+          final packageReasons = reasons[packageName]?.toList() ?? <String>[];
+          packageReasons.sort();
+          return '$packageName[${packageReasons.join('+')}]';
+        })
+        .join(',');
+  }
 
   /// Current managed output fingerprints for cache persistence.
   final Map<String, String> outputFingerprints;
@@ -2407,7 +2450,11 @@ _BuildContext? _findBuildContext(Directory scanRoot) {
 /// Build filters include source code and logical metadata output assets. Cache
 /// builders materialize the latter below `.dart_tool/build/generated`; external
 /// path/Git/pub dependencies remain read-only and consume published indexes.
-Future<bool> _runBuildRunner(_BuildContext context, Directory hostRoot) async {
+Future<bool> _runBuildRunner(
+  _BuildContext context,
+  Directory hostRoot, {
+  required bool profile,
+}) async {
   final workspace = await CCPackageWorkspace.load(
     buildRoot: context.root,
     hostRoot: hostRoot,
@@ -2421,6 +2468,12 @@ Future<bool> _runBuildRunner(_BuildContext context, Directory hostRoot) async {
           .map((package) => package.name)
           .toList()
         ..sort();
+  if (profile) {
+    stdout.writeln(
+      'CCRouter profile build-targets=${targets.length} '
+      'packages=${targets.join(',')}',
+    );
+  }
   if (targets.isEmpty) {
     stdout.writeln(
       'No writable CCRouter Builder Packages were found; skipping build_runner.',

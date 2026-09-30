@@ -237,6 +237,12 @@ Host 依赖闭包内、明确可写且声明 `ccrouter_generator` 的 Package，
 fast path，`--profile` 会输出 `fast-path=hit/miss`。性能回归与混合能力基准见
 [`docs/CCRouter-generator-performance-report.md`](https://github.com/shingohu/cc-router/blob/main/docs/CCRouter-generator-performance-report.md)。
 
+fast path miss 时，Profile 还会输出本轮 `build-targets`，以及逐 Package 的
+`dirty-packages` 原因：`host`、`cache-missing`、`metadata`、`output`、
+`dependency-index` 或 `propagated-from:<package>`。dirty set 在 build_runner 完成后计算，
+用于决定 Package API、Bundle 和 capability catalog 是否可以复用；它不是 build_runner 的
+输入目标列表。依赖图变化后，即使 dirty Package 很少，Workspace Analyzer 仍可能占据主要耗时。
+
 fast path 未命中时会先执行保守的 Component Dependency Preflight，只有直接 List、Contract
 类型和 Owner 都唯一可证明时才提前失败；它不替代 Builder。所有正式 `generate` 都会在
 build_runner 前保存 CCRouter 受管源码快照，Builder、聚合或最终校验失败时恢复原内容，避免

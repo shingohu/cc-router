@@ -131,6 +131,19 @@ Package”而漏掉依赖级联、删除或篡改。
 中修改一个 Service 时为 `1/1`，并重新写出 2 个 Builder 输出。多 Package dirty closure
 需要用真实依赖图继续采样，不能把单 Package 数值外推为所有项目的承诺。
 
+`--profile` 现在同时输出实际 `build-targets` 和逐 Package 的 dirty 原因。原因区分 Host 固定
+聚合、缓存缺失、metadata 变化、受管输出变化、直接依赖 Index 变化和反向依赖传播。该输出只
+增强诊断，不参与生成判断，也不改变产物。
+
+### 6.3 Pub Hook 进程启动
+
+真实 Demo 的无变化 fast path 对照中，`dart run --verbosity=error
+ccrouter_generator:ccrouter` 两次墙钟为 1.34 秒和 1.45 秒，CLI 内部为 0.32 秒左右；直接执行
+`dart packages/ccrouter_generator/bin/ccrouter.dart` 两次墙钟为 4.92 秒和 4.98 秒，反而增加
+约 3.5 秒，因为源码入口需要重新加载和编译工具依赖。Pub Hook 继续使用项目解析图下的
+`dart run`，不切换到直接源码入口。预编译独立可执行文件会引入 Generator 版本与 Package Graph
+同步问题，只有真实高频样本证明约一秒启动成本不可接受时才重新评估。
+
 ## 7. 后续触发条件
 
 只有真实生产样本满足以下任一条件时，再进入下一轮架构优化：

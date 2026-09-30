@@ -584,6 +584,12 @@ computed or ambiguous inputs and does not replace the Builder/Workspace
 Validator. A failed formal generation restores the previous CCRouter-managed
 source outputs instead of leaving a partially updated API graph.
 
+Use `--profile` when diagnosing a miss. `build-targets` is the writable Host
+dependency closure sent to build_runner; `dirty-packages` is computed afterwards
+from metadata, managed output, direct dependency indexes, and reverse dependency
+propagation. A small dirty set therefore does not imply that Workspace Analyzer
+startup should be proportional to that count.
+
 After `ccrouter clean`, generation may temporarily bootstrap missing component
 Route, Command, and Event APIs from valid Builder metadata before build_runner.
 This only repairs the import graph for the same build pass: current metadata is
