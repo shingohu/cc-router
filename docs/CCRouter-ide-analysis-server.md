@@ -121,7 +121,7 @@ demo/tools/ccrouter_analyzer_plugin_host/
 Demo 的 `pubspec.yaml` 只依赖这个不带 Analyzer 约束的 Host Package；真正的规则 Package
 在 bootstrap 的独立依赖环境中解析。这样不会把 Analyzer 8.4.0 与 Workspace 生成器的
 Analyzer 10 混在一个依赖图里。bootstrap 当前使用远端 `main` 上固定的 commit
-`57ddd15e6f871ae227ee2d2ada893114b0c8dd61`，可由 Analysis Server
+`438ddaae0bf91f1d986c4309074d523790c55a0f`，可由 Analysis Server
 复制到临时目录并正常启动。bootstrap 目录同时保留 `pubspec.hosted.yaml` 作为发布后的
 Hosted fallback；发布到 Hosted 后只能二选一替换活动 manifest，不能在同一个 bootstrap
 Package 同时声明 Git 和 Hosted 两个来源。
@@ -139,7 +139,7 @@ Analysis Server entrypoint 可加载，不会启动常驻 Analysis Server。插�
 验证，验证完成后恢复固定 Git ref；绝对 path 不得提交。Git ref 更新前必须先运行插件
 Package 的 analyze/test 和 loader smoke。
 
-当前固定 ref `57ddd15e6f871ae227ee2d2ada893114b0c8dd61` 已包含 2026-09-29 完成的规则、Quick Fix、性能缓存和只读
+当前固定 ref `438ddaae0bf91f1d986c4309074d523790c55a0f` 已包含 2026-09-29 完成的规则、Quick Fix、性能缓存和只读
 CLI 支持，无需仅为追随本地 HEAD 而更新。只有 Plugin 生产代码真实变化、隔离测试通过并
 推送远端后，才更新为对应的完整 commit SHA；禁止使用 `main` 或尚未推送的本地 SHA。
 
