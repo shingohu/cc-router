@@ -95,8 +95,10 @@ Contract、Key、method ID 和 caller component ID。无消费声明时不生成
 
 `dependencies`、`serviceDependencies` 和 `commandDependencies` 目前必须显式维护。生成器会从
 Contract 元数据解析 Owner 并校验三者一致，不会因为发现某个 Contracts Package 或 Pub 依赖而
-静默修改组件源文件。稳定 Component API 聚合入口已经实现；按组件批量输出缺失 Owner、可复制
-修复片段、Analyzer const-list Quick Fix，以及 `ccrouter find` 的依赖建议仍未实现。
+静默修改组件源文件。稳定 Component API 聚合入口已经实现；Generator 会在 build_runner 前
+对直接、唯一可证明的声明按组件批量输出缺失 Owner，Analyzer 也能对直接 const List 提供单个
+或全部可证明 Owner 的显式 Quick Fix。变量、spread、条件集合和歧义输入仍由最终
+Builder/Workspace Validator 校验；`ccrouter find` 的依赖建议尚未实现。
 
 不同消费组件如需统一 Service/Command Client 成员名，可在 Contract 上设置 lower-camel
 `alias`，消费组件仍可在 `CCServiceDependency<T>` 或 `CCCommandDependency<T>` 上覆盖。命名优先级
@@ -230,6 +232,11 @@ Host 依赖闭包内、明确可写且声明 `ccrouter_generator` 的 Package，
 变化都会 fail closed 到完整流程；校验不依赖 mtime 或文件大小。`--no-cache` 永远不读取该
 fast path，`--profile` 会输出 `fast-path=hit/miss`。性能回归与混合能力基准见
 [`docs/CCRouter-generator-performance-report.md`](https://github.com/shingohu/cc-router/blob/main/docs/CCRouter-generator-performance-report.md)。
+
+fast path 未命中时会先执行保守的 Component Dependency Preflight，只有直接 List、Contract
+类型和 Owner 都唯一可证明时才提前失败；它不替代 Builder。所有正式 `generate` 都会在
+build_runner 前保存 CCRouter 受管源码快照，Builder、聚合或最终校验失败时恢复原内容，避免
+失败生成覆盖上一次可用产物。
 
 生成结果：
 

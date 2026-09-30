@@ -75,8 +75,9 @@ void 返回形态、Route `pattern/patterns`、InitTask `contract/id`、字面�
 可计算 timeout。它还从 Pub 已解析 Package 的精确 metadata 建立有界 Owner 索引，在
 `serviceDependencies` 或 `commandDependencies` 缺少 required Owner 时实时报错。互斥参数可以
 显式删除其中一个；Owner 唯一、公共 import 已暴露准确 `CCComponentId` 且 `dependencies` 是
-直接 List 时，可以由开发者主动应用 Quick Fix。插件不会创建 Contract、猜测标识符、自动插入
-import、改写复杂集合或运行 Generator。
+直接 List 时，可以由开发者主动应用单 Owner Quick Fix；同一组件的全部缺失 Owner 都能被
+唯一证明时，还会提供一次补齐全部 Owner 的 Quick Fix。插件不会创建 Contract、猜测标识符、
+自动插入 import、改写复杂集合或运行 Generator。
 当前仓库 Demo 已在 `demo/analysis_options.yaml` 启用它，并通过
 `demo/tools/ccrouter_analyzer_plugin_host` 提供官方要求的 `tools/analyzer_plugin` bootstrap。
 bootstrap 使用远端固定 Git commit 隔离 Analyzer 版本；发布后可切换到同目录的
@@ -92,6 +93,12 @@ Analyzer 版本边界见
 fvm dart run --verbosity=error ccrouter_generator:ccrouter analyzer status demo
 fvm dart run --verbosity=error ccrouter_generator:ccrouter analyzer doctor demo
 ```
+
+`status` 的 `healthy` 只代表 manifest、lockfile、固定来源和版本静态一致，不能证明 Analysis
+Server 已经加载插件；只有 `doctor` 通过后才证明当前凭据和隔离 bootstrap 可解析、分析并编译。
+`doctor` 还会拒绝与当前 manifest 不一致的 Analysis Server plugin-manager 缓存，并给出精确
+缓存目录；停止 Analysis Server、只移走该目录并重启后再复验。bootstrap 或固定 ref 变化后
+仍需要重启 Dart Analysis Server。
 
 自动 `install/upgrade/uninstall` 尚未实现；当前不得把 Analyzer 装配隐式挂入 `generate` 或
 Pub Hook。
@@ -803,8 +810,9 @@ const paymentComponent = CCComponent(
 
 若遗漏 `orderComponentId`，可选 Analyzer Plugin 会在编辑期依据已生成 Package metadata
 报告 `ccrouter_component_owner_dependency_missing`。只有当前公共 barrel 已导出准确 Owner 常量，
-且 `dependencies` 缺失或是无 spread/条件元素的直接 List 时，IDE 才提供安全 Quick Fix；最终
-正确性仍由 Generator/Workspace Validator 校验。
+且 `dependencies` 缺失或是无 spread/条件元素的直接 List 时，IDE 才提供安全 Quick Fix；同一
+组件的全部缺失 Owner 都可唯一证明时可一次补齐，否则只修当前 Owner。最终正确性仍由
+Generator/Workspace Validator 校验。
 
 重新生成后，通过组件专属 Client 调用；不要手写 Token、method ID、caller ID 或 Proxy：
 
@@ -1066,6 +1074,13 @@ Route API 和 Package/Host metadata。跨组件 Route 不能直接由脚手架�
 或文件大小。`--no-cache` 始终绕过 fast path，是生成正确性的权威参考路径；`--profile` 会明确
 报告 `fast-path=hit/miss`。
 
+fast path 未命中后，Generator 会先对 Host 依赖闭包执行保守的 Component Dependency
+Preflight：仅当直接 List、Contract 与 Owner 都能唯一证明时，才在 build_runner 前按组件和
+Owner 聚合报告缺失的 Service/Command required dependency；变量、spread、条件集合、歧义或
+复杂表达式继续交给权威 Builder/Workspace Validator。进入正式生成后会先保存全部 CCRouter
+受管生成源码的内容快照，Builder、聚合或校验失败都会恢复原生成物，避免失败运行留下可编译但
+彼此不一致的半成品。
+
 执行 `ccrouter clean` 后，如果 build cache 仍有效，下一次 `generate` 会在 build_runner 前
 临时恢复源码已导入的 Route/Command/Event component API，避免 import graph 需要第二轮才能
 收敛；当前轮仍会重新构建并完整校验最终生成物，bootstrap 失败不会保留半成品。
@@ -1085,6 +1100,9 @@ Flutter Tool 内部隐式 `pub get`，也不实现常驻 `watch`。SDK 切换后
 目录执行 `flutter pub`；仅解析根 Workspace 依赖时使用
 `CCROUTER_PUB_HOOK_DISABLE=1 fvm flutter pub get`，再单独执行 `generate demo --check`。
 原始 Pub 成功后的 Hook 失败不代表依赖解析失败。
+`run/build` 成功时控制台使用 `CCRouter preflight`，Pub 后生成使用
+`CCRouter post-pub generation`；成功只保留 fast-path、验证摘要与阶段耗时，失败则输出最近
+200 行且最多 64 KiB 的 Generator 日志，避免长构建刷屏或无界缓存，同时保留可操作错误。
 SDK 切换或升级后需要重新检查 `pub-hook status`。详细语义见
 [`docs/CCRouter-cli-pub-hook.md`](docs/CCRouter-cli-pub-hook.md)。
 

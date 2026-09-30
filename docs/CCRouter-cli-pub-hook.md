@@ -81,8 +81,9 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook uninstall
    `pubspec.yaml`。
 4. 没有 resolved Package config，或没有同时解析 `ccrouter` 与
    `ccrouter_generator` 时，打印跳过原因并返回成功。
-5. 生成器失败时打印生成日志和最终耗时，并返回非零，使 CI 能发现生成物过期或
-   元数据错误。
+5. 成功时只打印 fast-path、验证摘要、阶段耗时和总耗时；生成器失败时打印最近
+   200 行且最多 64 KiB 的有界日志并返回非零，使 CI 能发现生成物过期或元数据错误，
+   同时避免长时间 Builder 输出造成控制台刷屏或内存无界增长。
 
 所有推荐命令都给 `dart run` 传入 `--verbosity=error`。它只压低 Dart/Pub 在 CLI
 启动前输出的重复依赖解析和 executable 构建信息，不会隐藏 CCRouter 的阶段、耗时、
@@ -159,15 +160,16 @@ cd demo
 flutter pub get
 ```
 
-控制台应看到 `CCRouter pub hook started`、生成阶段日志以及
-`CCRouter pub hook finished: ... elapsed=...ms`。随后可以用：
+控制台应看到 `CCRouter post-pub generation started`、精简的验证/耗时摘要以及
+`CCRouter post-pub generation finished: elapsed=...ms`。随后可以用：
 
 ```bash
 fvm dart run --verbosity=error ccrouter_generator:ccrouter generate <host-root> --check
 ```
 
-执行 `flutter run` 或 `flutter build macos` 时，若项目已经完成依赖解析，控制台会先输出
-同一套生成日志；生成失败时 Flutter 命令不会继续执行。`ccrouter pub-hook status` 会额外
+执行 `flutter run` 或 `flutter build macos` 时，若项目已经完成依赖解析，控制台会输出
+`CCRouter preflight started/finished`；生成失败时输出有界的最近 Generator 诊断且 Flutter
+命令不会继续执行。`ccrouter pub-hook status` 会额外
 显示 `run/build preflight: enabled`。升级 SDK 或使用新的 FVM 版本后，如果状态显示
 `missing`，先卸载旧 wrapper 再重新安装，避免旧入口继续绕过前置生成。
 

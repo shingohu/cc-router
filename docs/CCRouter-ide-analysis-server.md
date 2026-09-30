@@ -49,6 +49,10 @@ Owner Quick Fix 只在以下条件同时满足时提供：
    `CCComponentId` 常量值与 Owner 完全一致；
 4. 当前 required 列表尚未包含该 Owner。
 
+插件始终保留“只补当前 Owner”的修复；如果同一个 `CCComponent` 的全部缺失 Owner 都满足上述
+条件，还会提供一次补齐全部可证明 Owner 的修复，并按 Component ID 稳定排序。只要其中一个
+Owner 缺少可证明的公共常量，就不提供批量修复，避免形成部分自动、部分手工的隐式结果。
+
 复杂变量、spread、条件集合、歧义 Owner、缺失或被 `show/hide` 排除的常量只保留 Generator
 门禁；插件不会自动插 import，也不会把 `optionalDependencies` 当作 required 能力依赖。
 
@@ -62,9 +66,14 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter analyzer doctor demo
 ```
 
 `status` 区分 `notInstalled`、`incomplete`、`stale`、`incompatible`、`modified` 和
-`healthy`，并输出实际 bootstrap、来源、固定 Git ref/Hosted 版本及 Analyzer 版本。
+`healthy`，并输出实际 bootstrap、来源、固定 Git ref/Hosted 版本及 Analyzer 版本；它只证明
+静态配置一致，不证明 Git 凭据可用或 Analysis Server 已成功加载插件。
 `doctor` 只在静态状态健康时，在临时副本中校验 lockfile、执行 bootstrap analyze 和 loader
-compile；不修改 Host、活动 bootstrap manifest 或 lockfile，也不运行 Generator。
+compile；不修改 Host、活动 bootstrap manifest 或 lockfile，也不运行 Generator。Git 凭据或
+SSH Key 不可用时会明确说明 IDE 诊断尚不可用；`doctor` 通过后，bootstrap/ref 变化仍需重启
+Dart Analysis Server。若 `~/.dartServer/.plugin_manager` 中同名 bootstrap 副本与当前 manifest
+不一致，`doctor` 会只读失败并列出准确目录；停止 Analysis Server、只移走该缓存目录并重启，
+不能清空整个 Pub cache 或其它插件缓存。
 
 计划中的 `install/upgrade/uninstall` 尚未实现，不能写入当前接入脚本或 CI。完整边界见
 [`CCRouter-analyzer-cli-plan.md`](CCRouter-analyzer-cli-plan.md)。Analyzer 装配不会挂入
@@ -169,7 +178,8 @@ fvm dart run ccrouter_generator:ccrouter generate demo --check
   Analyzer 提供，最终正确性由 `generate --check` 保证。
 - 插件不提供后台自动修复、自动插入 import、自动生成和运行时导航。当前 Quick Fix 只允许
   开发者显式选择删除 Route `pattern/patterns`、InitTask `contract/id` 中的一个冲突参数，或把
-  Metadata 唯一证明且已经由公共 import 暴露的 Owner 常量加入直接 required dependency List。
+  Metadata 唯一证明且已经由公共 import 暴露的一个或全部 Owner 常量加入直接 required
+  dependency List。
   注释可能被覆盖、集合包含 spread/条件元素、Owner/import 不唯一时不提供；插件不会创建
   Contract、猜 alias/ID/timeout、改 pubspec 或运行生成。
 

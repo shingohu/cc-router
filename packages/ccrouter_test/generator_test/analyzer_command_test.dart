@@ -43,6 +43,7 @@ void main() {
     expect('${result.stdout}', contains('state: healthy'));
     expect('${result.stdout}', contains('source: git'));
     expect('${result.stdout}', contains('ref: $_gitRef'));
+    expect('${result.stdout}', contains('loadability is unchecked'));
   });
 
   test('status reports incomplete resolved state', () async {
@@ -136,6 +137,41 @@ void main() {
       expect('${result.stdout}', isNot(contains('Analyzer doctor:')));
     },
   );
+
+  test('doctor rejects a stale Analysis Server plugin-manager copy', () async {
+    final fixture = await _createFixture();
+    final home = await Directory.systemTemp.createTemp(
+      'ccrouter-analyzer-home-',
+    );
+    addTearDown(() async {
+      await fixture.root.delete(recursive: true);
+      await home.delete(recursive: true);
+    });
+    final cached = Directory(
+      path.join(
+        home.path,
+        '.dartServer',
+        '.plugin_manager',
+        'stale-cache',
+        'analyzer_plugin',
+      ),
+    )..createSync(recursive: true);
+    File(path.join(cached.path, 'pubspec.yaml')).writeAsStringSync('''
+name: analyzer_test_bootstrap
+dependencies:
+  ccrouter_analyzer_plugin: 0.0.1
+''');
+
+    final result = await _run(
+      ['analyzer', 'doctor', fixture.root.path],
+      environment: {...Platform.environment, 'HOME': home.path},
+    );
+
+    expect(result.exitCode, 1);
+    expect('${result.stderr}', contains('stale Analysis Server plugin cache'));
+    expect('${result.stderr}', contains(cached.path));
+    expect('${result.stdout}', isNot(contains('Analyzer doctor:')));
+  });
 
   test('analyzer rejects unsupported actions and excess arguments', () async {
     final unsupported = await _run(['analyzer', 'install']);
@@ -243,8 +279,12 @@ $pluginDescription
 ''');
 }
 
-Future<ProcessResult> _run(List<String> arguments) => Process.run(
+Future<ProcessResult> _run(
+  List<String> arguments, {
+  Map<String, String>? environment,
+}) => Process.run(
   Platform.resolvedExecutable,
   ['run', 'ccrouter_generator:ccrouter', ...arguments],
   workingDirectory: Directory.current.path,
+  environment: environment,
 );

@@ -32,8 +32,10 @@ obvious Handler arity/void returns, mutually exclusive Route/InitTask fields,
 literal stable IDs and aliases, Gate IDs, positive literal Durations, and
 Metadata-proven missing Service/Command owners. Quick Fixes either delete one
 conflicting `pattern/patterns` or `contract/id` argument, or add one exact owner
-constant to a missing/direct required dependency list. The latter requires an
-existing public import whose export graph proves the constant's stable value;
+constant to a missing/direct required dependency list. If every missing Owner
+of the same Component is provable, a second fix can add all of them in stable
+order. These fixes require an existing public import whose export graph proves
+each constant's stable value;
 variables, spreads, conditionals, ambiguous owners, hidden symbols, and import
 insertion remain manual. Never expect the plugin to invent a Contract, ID,
 alias, Gate, timeout, import, or owner identity.
@@ -52,6 +54,13 @@ For an already configured Host, prefer the implemented read-only checks:
 fvm dart run --verbosity=error ccrouter_generator:ccrouter analyzer status <host-root>
 fvm dart run --verbosity=error ccrouter_generator:ccrouter analyzer doctor <host-root>
 ```
+
+`status: healthy` proves only that the bootstrap manifest, lockfile, source, and
+versions are statically consistent. `doctor` additionally proves dependency
+resolution, bootstrap analysis, loader compilation, and absence of a stale
+plugin-manager copy. If it names a stale cache, stop the Analysis Server and
+move only that directory before restarting; do not clear unrelated IDE or Pub
+caches. Rerun doctor after the bootstrap or pinned ref changed.
 
 The planned `install/upgrade/uninstall` commands in
 [`docs/CCRouter-analyzer-cli-plan.md`](../../../docs/CCRouter-analyzer-cli-plan.md)

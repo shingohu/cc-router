@@ -282,7 +282,9 @@ final class _AnalyzerBootstrapReport {
       analyzerVersion: lockedAnalyzer.toString(),
       analyzerPluginVersion: lockedAnalyzerPlugin.toString(),
       state: _AnalyzerBootstrapState.healthy,
-      message: 'Analyzer bootstrap is statically consistent.',
+      message:
+          'Analyzer bootstrap is statically consistent; loadability is '
+          'unchecked until `ccrouter analyzer doctor` passes.',
     );
   }
 
@@ -339,6 +341,21 @@ final class _AnalyzerBootstrapReport {
 /// Runs bounded, non-mutating checks inside a healthy isolated bootstrap.
 Future<bool> _runDoctor(_AnalyzerBootstrapReport report) async {
   final bootstrapRoot = report.bootstrapRoot!;
+  final staleCaches = _staleAnalyzerPluginManagerCaches(bootstrapRoot);
+  if (staleCaches.isNotEmpty) {
+    stderr.writeln(
+      'error: Analyzer doctor found a stale Analysis Server plugin cache:',
+    );
+    for (final cache in staleCaches) {
+      stderr.writeln('  ${cache.path}');
+    }
+    stderr.writeln(
+      'Stop the Dart Analysis Server, move or remove only the listed cached '
+      'analyzer_plugin directory, restart the server, and rerun doctor. The '
+      'doctor command is read-only and will not delete IDE state.',
+    );
+    return false;
+  }
   final temporary = await Directory.systemTemp.createTemp(
     'ccrouter-analyzer-doctor-',
   );
@@ -373,16 +390,77 @@ Future<bool> _runDoctor(_AnalyzerBootstrapReport report) async {
       );
       if (result.exitCode != 0) {
         stderr.writeln('error: Analyzer doctor failed during ${check.name}.');
-        final output = '${result.stderr}'.trim();
+        final output = '${result.stdout}\n${result.stderr}'.trim();
         if (output.isNotEmpty) stderr.writeln(output);
+        if (report.source == 'git' && _looksLikeGitCredentialFailure(output)) {
+          stderr.writeln(
+            'error: The pinned Git Analyzer dependency could not authenticate. '
+            'Configure credentials for the declared Git URL, or switch the '
+            'bootstrap to the Hosted package after publication. IDE '
+            'diagnostics remain unavailable until doctor passes.',
+          );
+        }
         return false;
       }
     }
-    stdout.writeln('CCRouter Analyzer doctor passed.');
+    stdout.writeln(
+      'CCRouter Analyzer doctor passed. Restart the Dart Analysis Server after '
+      'bootstrap or ref changes.',
+    );
     return true;
   } finally {
     if (temporary.existsSync()) await temporary.delete(recursive: true);
   }
+}
+
+/// Finds active plugin-manager copies whose bootstrap manifest is outdated.
+List<Directory> _staleAnalyzerPluginManagerCaches(Directory bootstrapRoot) {
+  final home =
+      Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'];
+  if (home == null || home.isEmpty) return const [];
+  final manager = Directory(path.join(home, '.dartServer', '.plugin_manager'));
+  final sourceManifest = File(path.join(bootstrapRoot.path, 'pubspec.yaml'));
+  final source = _readYamlMap(sourceManifest);
+  final bootstrapName = source?['name']?.toString();
+  if (!manager.existsSync() ||
+      bootstrapName == null ||
+      !sourceManifest.existsSync()) {
+    return const [];
+  }
+  final sourceBytes = sourceManifest.readAsBytesSync();
+  final stale = <Directory>[];
+  for (final entry in manager.listSync(followLinks: false)) {
+    if (entry is! Directory || path.basename(entry.path).contains('.stale-')) {
+      continue;
+    }
+    final cachedRoot = Directory(path.join(entry.path, 'analyzer_plugin'));
+    final cachedManifest = File(path.join(cachedRoot.path, 'pubspec.yaml'));
+    final cached = _readYamlMap(cachedManifest);
+    if (cached?['name']?.toString() != bootstrapName) continue;
+    if (!_bytesEqual(sourceBytes, cachedManifest.readAsBytesSync())) {
+      stale.add(cachedRoot);
+    }
+  }
+  stale.sort((left, right) => left.path.compareTo(right.path));
+  return List.unmodifiable(stale);
+}
+
+/// Compares two manifest byte sequences without allocating encoded strings.
+bool _bytesEqual(List<int> left, List<int> right) {
+  if (left.length != right.length) return false;
+  for (var index = 0; index < left.length; index += 1) {
+    if (left[index] != right[index]) return false;
+  }
+  return true;
+}
+
+/// Recognizes common non-interactive Git authentication failures.
+bool _looksLikeGitCredentialFailure(String output) {
+  final normalized = output.toLowerCase();
+  return normalized.contains('could not read username') ||
+      normalized.contains('authentication failed') ||
+      normalized.contains('permission denied (publickey)') ||
+      normalized.contains('repository not found');
 }
 
 /// Copies authored bootstrap files while excluding mutable tool state.

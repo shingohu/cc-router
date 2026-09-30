@@ -102,6 +102,12 @@ generator as a fail-closed preflight before the original Flutter entrypoint.
 It skips projects whose resolved Package config does not contain both
 `ccrouter` and `ccrouter_generator`.
 
+Successful run/build output is labeled `preflight`; successful Pub-triggered
+output is labeled `post-pub generation`. Success prints only the generator fast
+path, validation summary, and profile timings. Failure preserves the recent
+bounded generator tail so actionable Builder errors remain visible without
+unbounded buffering or routine console noise.
+
 Use `status` after an FVM version switch; it prints the resolved SDK path and
 verifies the marker, POSIX/Windows wrapper, and backups. It returns non-zero
 when the hook is missing or inconsistent. Use `uninstall` before removing a

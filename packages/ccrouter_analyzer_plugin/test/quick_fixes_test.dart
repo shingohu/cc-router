@@ -154,6 +154,41 @@ const consumerComponent = CCComponent(
     );
   });
 
+  test('offers one edit for all uniquely proven missing owners', () {
+    final fixture = _QuickFixFixture.create();
+    addTearDown(fixture.dispose);
+    const source = '''
+import 'package:owner_contracts/owner_contracts.dart';
+
+const consumerComponent = CCComponent(
+  id: consumerComponentId,
+  version: '1.0.0',
+  dependencies: [],
+  serviceDependencies: [
+    CCServiceDependency<SharedService>(),
+    CCServiceDependency<SecondaryService>(),
+  ],
+);
+''';
+    final fixes = CCRouterQuickFixes.compute(
+      source: source,
+      filePath: fixture.consumerSource.path,
+      offset: source.indexOf('CCServiceDependency'),
+      diagnosticCode: 'ccrouter_component_owner_dependency_missing',
+      contractOwners: fixture.index,
+      sourcePackage: 'consumer',
+    );
+
+    expect(fixes.map((item) => item.id), [
+      'ccrouter.add_required_component_dependency',
+      'ccrouter.add_all_required_component_dependencies',
+    ]);
+    expect(
+      _apply(source, fixes.last),
+      contains('dependencies: [ownerComponentId, secondaryComponentId]'),
+    );
+  });
+
   test('declines owner edit when the public import hides the ID constant', () {
     final fixture = _QuickFixFixture.create();
     addTearDown(fixture.dispose);
@@ -203,13 +238,15 @@ final class _QuickFixFixture {
     )..createSync(recursive: true);
     ownerSource.writeAsStringSync('''
 const ownerComponentId = CCComponentId('owner.component');
+const secondaryComponentId = CCComponentId('secondary.component');
 abstract interface class SharedService {}
+abstract interface class SecondaryService {}
 final class RunCommand {}
 ''');
     File(path.join(ownerRoot.path, 'lib', 'owner_contracts.dart'))
       ..createSync(recursive: true)
       ..writeAsStringSync(
-        "export 'src/owner.dart' show ownerComponentId, SharedService, RunCommand;\n",
+        "export 'src/owner.dart' show ownerComponentId, secondaryComponentId, SharedService, SecondaryService, RunCommand;\n",
       );
     final consumerSource = File(
       path.join(root.path, 'consumer', 'lib', 'src', 'component.dart'),
@@ -225,6 +262,13 @@ final class RunCommand {}
             contractPackage: 'owner_contracts',
             componentId: 'owner.component',
             componentIdSymbol: 'ownerComponentId',
+          ),
+          CCRouterContractOwner(
+            kind: CCRouterContractKind.service,
+            contractSymbol: 'SecondaryService',
+            contractPackage: 'owner_contracts',
+            componentId: 'secondary.component',
+            componentIdSymbol: 'secondaryComponentId',
           ),
           CCRouterContractOwner(
             kind: CCRouterContractKind.command,

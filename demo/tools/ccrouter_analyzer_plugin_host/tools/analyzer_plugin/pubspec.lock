@@ -47,7 +47,7 @@ packages:
       path: "packages/ccrouter_analyzer_plugin"
       ref: "438ddaae0bf91f1d986c4309074d523790c55a0f"
       resolved-ref: "438ddaae0bf91f1d986c4309074d523790c55a0f"
-      url: "https://github.com/shingohu/cc-router.git"
+      url: "git@github.com:shingohu/cc-router.git"
     source: git
     version: "0.1.0"
   collection:

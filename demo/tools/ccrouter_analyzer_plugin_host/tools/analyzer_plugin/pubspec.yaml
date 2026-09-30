@@ -10,7 +10,7 @@ dependencies:
   analyzer_plugin: 0.13.10
   ccrouter_analyzer_plugin:
     git:
-      url: https://github.com/shingohu/cc-router.git
+      url: git@github.com:shingohu/cc-router.git
       path: packages/ccrouter_analyzer_plugin
       # Keep the Demo bootstrap reproducible. Update deliberately after the
       # plugin package has passed its isolated smoke tests.

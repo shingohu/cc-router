@@ -7,6 +7,7 @@ import 'package:analyzer/dart/analysis/features.dart';
 import 'package:analyzer/dart/analysis/utilities.dart';
 import 'package:analyzer/dart/ast/ast.dart';
 import 'package:ccrouter_generator/ccrouter_generator.dart';
+import 'package:ccrouter_generator/src/component_dependency_preflight.dart';
 import 'package:ccrouter_generator/src/generated_client_naming.dart';
 import 'package:ccrouter_generator/src/internal_api_boundary_validator.dart';
 import 'package:ccrouter_generator/src/package_workspace.dart';
@@ -174,11 +175,28 @@ Future<void> main(List<String> arguments) async {
       verifiedInputFingerprint ??=
           await _GenerationStateFingerprint.captureInput(fastPathWorkspace);
     }
+    if (parsed.command == _GeneratorCommand.generate &&
+        fastPathWorkspace != null) {
+      final preflightWatch = Stopwatch()..start();
+      final issues = await _componentDependencyPreflight(fastPathWorkspace);
+      preflightWatch.stop();
+      if (parsed.profile) {
+        stdout.writeln(
+          'CCRouter profile dependency-preflight='
+          '${preflightWatch.elapsedMilliseconds}ms',
+        );
+      }
+      if (issues.isNotEmpty) {
+        _writeComponentDependencyPreflightIssues(issues);
+        exitCode = 1;
+        return;
+      }
+    }
     final needsBootstrap =
         parsed.command == _GeneratorCommand.generate &&
         fastPathWorkspace != null &&
         await _hasMissingGeneratedComponentImport(fastPathWorkspace);
-    snapshot = parsed.check || needsBootstrap
+    snapshot = parsed.command == _GeneratorCommand.generate
         ? await _GeneratedArtifactsSnapshot.capture(buildContext!.root)
         : null;
     if (needsBootstrap) {
@@ -2406,6 +2424,67 @@ Future<bool> _runBuildRunner(_BuildContext context, Directory hostRoot) async {
   if (processExitCode == 0) return true;
   stderr.writeln('error: build_runner failed with exit code $processExitCode.');
   return false;
+}
+
+/// Parses only CCRouter declaration sources for a conservative fast failure.
+Future<List<CCComponentDependencyPreflightIssue>> _componentDependencyPreflight(
+  CCPackageWorkspace workspace,
+) async {
+  final sources = <CCComponentDependencyPreflightSource>[];
+  for (final package in workspace.packages.values.where(
+    (package) =>
+        package.declaresGenerationIntent ||
+        package.requiresPackageIndex ||
+        package.indexFile.existsSync(),
+  )) {
+    final lib = Directory(path.join(package.root.path, 'lib'));
+    if (!lib.existsSync()) continue;
+    await for (final entity in lib.list(recursive: true, followLinks: false)) {
+      if (entity is! File || !entity.path.endsWith('.dart')) continue;
+      final relative = _relativePath(package.root, entity);
+      if (relative.split('/').contains('ccrouter_generated')) continue;
+      final source = await entity.readAsString();
+      if (!source.contains('CCComponent(') &&
+          !source.contains('CCComponentId(') &&
+          !source.contains('@CCServiceContract') &&
+          !source.contains('@CCCommandContract')) {
+        continue;
+      }
+      sources.add(
+        CCComponentDependencyPreflightSource(
+          packageName: package.name,
+          path: 'package:${package.name}/$relative',
+          contents: source,
+          writable: package.writable,
+        ),
+      );
+    }
+  }
+  return CCComponentDependencyPreflight.inspect(sources);
+}
+
+/// Writes one deterministic block instead of duplicate per-Builder errors.
+void _writeComponentDependencyPreflightIssues(
+  List<CCComponentDependencyPreflightIssue> issues,
+) {
+  stderr.writeln(
+    'error: CCRouter component dependency preflight failed before '
+    'build_runner:',
+  );
+  for (final issue in issues) {
+    stderr.writeln(
+      '  ${issue.componentId} is missing required owner '
+      '${issue.ownerComponentId}',
+    );
+    for (final capability in issue.capabilities) {
+      stderr.writeln('    - ${capability.kind} "${capability.id}"');
+    }
+    stderr.writeln('    source: ${issue.sourcePath}');
+  }
+  stderr.writeln(
+    'Add every owner to CCComponent.dependencies; optionalDependencies '
+    'cannot satisfy required capabilities. No generated source was changed.',
+  );
 }
 
 /// Immutable content snapshot for every CCRouter-managed generated file.

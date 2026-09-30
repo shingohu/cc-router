@@ -117,6 +117,86 @@ void main() {
     },
   );
 
+  test(
+    'run and pub hooks emit concise phase-specific generation logs',
+    () async {
+      final demo = Directory(path.join(_workspaceRoot().path, 'demo'));
+      final preflight = await _run([
+        'pub-hook',
+        'run',
+        '--project-root',
+        demo.path,
+        '--pub-command',
+        'run',
+      ]);
+      final preflightOutput = '${preflight.stdout}\n${preflight.stderr}';
+      expect(preflight.exitCode, 0, reason: preflightOutput);
+      expect(
+        preflightOutput,
+        contains('CCRouter preflight started for `flutter run`.'),
+      );
+      expect(preflightOutput, contains('CCRouter profile '));
+      expect(preflightOutput, contains('CCRouter preflight finished:'));
+      expect(preflightOutput, isNot(contains('CCRouter pub hook started')));
+      expect(preflightOutput, isNot(contains('Generating Package artifacts')));
+      expect(
+        preflightOutput,
+        isNot(contains('ccrouter_generator:service_contracts')),
+      );
+
+      final postPub = await _run([
+        'pub-hook',
+        'run',
+        '--project-root',
+        demo.path,
+        '--pub-command',
+        'get',
+      ]);
+      final postPubOutput = '${postPub.stdout}\n${postPub.stderr}';
+      expect(postPub.exitCode, 0, reason: postPubOutput);
+      expect(
+        postPubOutput,
+        contains('CCRouter post-pub generation started for `flutter pub get`.'),
+      );
+      expect(postPubOutput, contains('CCRouter post-pub generation finished:'));
+      expect(postPubOutput, isNot(contains('Generating Package artifacts')));
+    },
+    timeout: const Timeout(Duration(minutes: 2)),
+  );
+
+  test('failed hook preserves actionable generator diagnostics', () async {
+    final project = await Directory.systemTemp.createTemp(
+      'ccrouter_pub_hook_failure_',
+    );
+    addTearDown(() => project.delete(recursive: true));
+    File(
+      path.join(project.path, 'pubspec.yaml'),
+    ).writeAsStringSync('name: invalid_ccrouter_host\n');
+    Directory(path.join(project.path, '.dart_tool')).createSync();
+    File(
+      path.join(project.path, '.dart_tool', 'package_config.json'),
+    ).writeAsStringSync('''{"configVersion":2,"packages":[
+  {"name":"ccrouter","rootUri":"../ccrouter"},
+  {"name":"ccrouter_generator","rootUri":"../ccrouter_generator"}
+]}''');
+
+    final result = await _run([
+      'pub-hook',
+      'run',
+      '--project-root',
+      project.path,
+      '--pub-command',
+      'build',
+    ]);
+    final output = '${result.stdout}\n${result.stderr}';
+
+    expect(result.exitCode, 1, reason: output);
+    expect(output, contains('CCRouter preflight started'));
+    expect(output, contains('CCRouter preflight failed'));
+    expect(output, contains('Generator output:'));
+    expect(output, isNot(contains('CCRouter pub hook finished')));
+  });
+
   test('run and build execute a generation preflight before Flutter', () async {
     final sdk = await Directory.systemTemp.createTemp(
       'ccrouter_pub_hook_preflight_ sdk',
@@ -192,3 +272,15 @@ Future<ProcessResult> _run(List<String> arguments) => Process.run(
   ['run', 'ccrouter_generator:ccrouter', ...arguments],
   workingDirectory: Directory.current.path,
 );
+
+Directory _workspaceRoot() {
+  var current = Directory.current.absolute;
+  while (true) {
+    if (Directory(path.join(current.path, '.git')).existsSync()) return current;
+    final parent = current.parent;
+    if (parent.path == current.path) {
+      throw StateError('CCRouter workspace root was not found.');
+    }
+    current = parent;
+  }
+}

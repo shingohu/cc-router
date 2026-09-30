@@ -327,8 +327,11 @@ final class CCPubHookManager {
   }
 }
 
-/// Runs generation after a successful pub command. Non-CCRouter projects are
-/// intentionally a zero-cost no-op once their resolved Package config is read.
+/// Runs generation after a successful Pub command or before run/build.
+///
+/// Non-CCRouter projects are intentionally a low-cost no-op once their resolved
+/// Package config is read. Successful output is concise; failure output retains
+/// only a bounded recent diagnostic tail.
 Future<bool> runCCPubHook({
   required Directory projectRoot,
   String? pubCommand,
@@ -354,8 +357,9 @@ Future<bool> runCCPubHook({
     return true;
   }
   final stopwatch = Stopwatch()..start();
+  final operation = _CCPubHookOperation.fromCommand(pubCommand);
   stdout.writeln(
-    'CCRouter pub hook started for `flutter ${pubCommand ?? 'pub command'}`.',
+    'CCRouter ${operation.label} started for ${operation.target}.',
   );
   final process = await Process.start(Platform.resolvedExecutable, [
     'run',
@@ -364,16 +368,139 @@ Future<bool> runCCPubHook({
     root.path,
     '--profile',
   ], workingDirectory: root.path);
-  final stdoutDone = process.stdout.listen(stdout.add).asFuture<void>();
-  final stderrDone = process.stderr.listen(stderr.add).asFuture<void>();
+  final output = _CCPubHookOutput();
+  final stdoutDone = process.stdout
+      .transform(utf8.decoder)
+      .transform(const LineSplitter())
+      .listen((line) => output.add(line, isError: false))
+      .asFuture<void>();
+  final stderrDone = process.stderr
+      .transform(utf8.decoder)
+      .transform(const LineSplitter())
+      .listen((line) => output.add(line, isError: true))
+      .asFuture<void>();
   final exitCode = await process.exitCode;
   await Future.wait([stdoutDone, stderrDone]);
   stopwatch.stop();
-  stdout.writeln(
-    'CCRouter pub hook finished: exitCode=$exitCode, '
-    'elapsed=${stopwatch.elapsedMilliseconds}ms.',
-  );
+  if (exitCode == 0) {
+    output.writeSummary();
+    stdout.writeln(
+      'CCRouter ${operation.label} finished: '
+      'elapsed=${stopwatch.elapsedMilliseconds}ms.',
+    );
+  } else {
+    stderr.writeln(
+      'CCRouter ${operation.label} failed for ${operation.target}: '
+      'exitCode=$exitCode, elapsed=${stopwatch.elapsedMilliseconds}ms.',
+    );
+    output.writeFailureTail();
+  }
   return exitCode == 0;
+}
+
+/// User-facing naming for one Hook-triggered generation pass.
+final class _CCPubHookOperation {
+  /// Creates one immutable operation label.
+  const _CCPubHookOperation({required this.label, required this.target});
+
+  /// Selects preflight terminology for `run/build` and post-pub terminology
+  /// for dependency commands.
+  factory _CCPubHookOperation.fromCommand(String? command) {
+    final normalized = command?.trim();
+    final isPreflight = normalized == 'run' || normalized == 'build';
+    final target = normalized == null || normalized.isEmpty
+        ? '`ccrouter generate`'
+        : isPreflight
+        ? '`flutter $normalized`'
+        : '`flutter pub $normalized`';
+    return _CCPubHookOperation(
+      label: isPreflight ? 'preflight' : 'post-pub generation',
+      target: target,
+    );
+  }
+
+  /// Concise phase name written to the console.
+  final String label;
+
+  /// Triggering Flutter command without project or argument details.
+  final String target;
+}
+
+/// Bounded child-process output retained until generation succeeds or fails.
+final class _CCPubHookOutput {
+  /// Maximum recent lines retained for failure diagnostics.
+  static const int _maximumLines = 200;
+
+  /// Maximum recent characters retained for failure diagnostics.
+  static const int _maximumCharacters = 64 * 1024;
+
+  /// Lines that summarize a successful generation without Builder noise.
+  final List<String> _summary = [];
+
+  /// Recent stdout and stderr lines retained in arrival order.
+  final List<_CCPubHookOutputLine> _tail = [];
+
+  /// Total character count currently retained by [_tail].
+  int _tailCharacters = 0;
+
+  /// Whether older output was discarded to respect the fixed bounds.
+  bool _truncated = false;
+
+  /// Records one child line and selects stable success-summary lines.
+  void add(String line, {required bool isError}) {
+    if (!isError && _isSummary(line)) _summary.add(line);
+    final item = _CCPubHookOutputLine(line);
+    _tail.add(item);
+    _tailCharacters += item.characterCount;
+    while (_tail.length > _maximumLines ||
+        _tailCharacters > _maximumCharacters) {
+      _tailCharacters -= _tail.removeAt(0).characterCount;
+      _truncated = true;
+    }
+  }
+
+  /// Writes only stable validation and timing information on success.
+  void writeSummary() {
+    for (final line in _summary) {
+      stdout.writeln(line);
+    }
+  }
+
+  /// Writes bounded recent diagnostics after a failed child process.
+  void writeFailureTail() {
+    if (_tail.isEmpty) {
+      stderr.writeln('No generator diagnostics were produced.');
+      return;
+    }
+    stderr.writeln(
+      _truncated
+          ? 'Recent generator output (older lines omitted):'
+          : 'Generator output:',
+    );
+    for (final item in _tail) {
+      stderr.writeln(item.line);
+    }
+  }
+
+  /// Recognizes concise, version-stable generator completion messages.
+  bool _isSummary(String line) =>
+      line.startsWith('CCRouter profile ') ||
+      line.startsWith('Validated ') ||
+      line == 'CCRouter generated artifacts are up to date.' ||
+      line.startsWith('CCRouter generation fast path hit;') ||
+      line.startsWith('Bootstrapped generated component APIs ');
+}
+
+/// One retained line plus its encoded-size approximation.
+final class _CCPubHookOutputLine {
+  /// Creates one retained child-process line.
+  const _CCPubHookOutputLine(this.line);
+
+  /// Exact decoded line without its newline terminator.
+  final String line;
+
+  /// Bounded-buffer cost including one newline character.
+  int get characterCount => line.length + 1;
 }
 
 File? _findPackageConfig(Directory start) {

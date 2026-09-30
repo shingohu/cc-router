@@ -103,7 +103,7 @@ abstract final class CCRouterQuickFixes {
     return const [];
   }
 
-  /// Adds one exact owner constant to a directly editable component list.
+  /// Adds one or all exact owner constants to an editable component list.
   static List<CCRouterSourceFix> _componentDependencyFixes({
     required String source,
     required String filePath,
@@ -112,19 +112,16 @@ abstract final class CCRouterQuickFixes {
     required CCRouterContractOwnerIndex owners,
     required String sourcePackage,
   }) {
-    final missing = CCRouterComponentDependencyAnalyzer.findMissing(
+    final allMissing = CCRouterComponentDependencyAnalyzer.findMissing(
       unit: unit,
       sourcePackage: sourcePackage,
       owners: owners,
-    ).where((item) => item.offset == offset).toList(growable: false);
-    if (missing.length != 1) return const [];
-    final item = missing.single;
-    final reference = owners.visibleComponentIdReference(
-      unit: unit,
-      sourcePath: filePath,
-      owner: item.owner,
     );
-    if (reference == null) return const [];
+    final selected = allMissing
+        .where((item) => item.offset == offset)
+        .toList(growable: false);
+    if (selected.length != 1) return const [];
+    final selectedItem = selected.single;
     for (final declaration
         in unit.declarations.whereType<TopLevelVariableDeclaration>()) {
       for (final variable in declaration.variables.variables) {
@@ -138,6 +135,26 @@ abstract final class CCRouterQuickFixes {
         if (arguments == null || arguments.rightParenthesis.isSynthetic) {
           return const [];
         }
+        final componentMissing = allMissing
+            .where(
+              (item) =>
+                  item.offset >= initializer.offset &&
+                  item.offset <= initializer.end,
+            )
+            .toList(growable: false);
+        final ownerReferences = <String, String>{};
+        for (final item in componentMissing) {
+          final reference = owners.visibleComponentIdReference(
+            unit: unit,
+            sourcePath: filePath,
+            owner: item.owner,
+          );
+          if (reference == null) continue;
+          ownerReferences[item.owner.componentId] = reference;
+        }
+        final selectedReference =
+            ownerReferences[selectedItem.owner.componentId];
+        if (selectedReference == null) return const [];
         final dependencies = _namedExpression(arguments, 'dependencies');
         if (dependencies == null) {
           final anchor = arguments.arguments
@@ -153,41 +170,78 @@ abstract final class CCRouterQuickFixes {
               )
               .firstOrNull;
           if (anchor == null) return const [];
-          final multiline = source
-              .substring(
-                arguments.leftParenthesis.end,
-                arguments.rightParenthesis.offset,
-              )
-              .contains('\n');
-          final replacement = multiline
-              ? 'dependencies: [$reference],\n${_lineIndent(source, anchor.offset)}'
-              : 'dependencies: [$reference], ';
-          return [
+          final fixes = <CCRouterSourceFix>[
             CCRouterSourceFix(
               id: 'ccrouter.add_required_component_dependency',
-              message: 'Add `$reference` to required component dependencies',
+              message:
+                  'Add `$selectedReference` to required component dependencies',
               offset: anchor.offset,
               length: 0,
-              replacement: replacement,
+              replacement: _newDependencyArgument(source, arguments, anchor, [
+                selectedReference,
+              ]),
             ),
           ];
+          final allReferences = _allOwnerReferences(
+            componentMissing,
+            ownerReferences,
+          );
+          if (allReferences.length > 1) {
+            fixes.add(
+              CCRouterSourceFix(
+                id: 'ccrouter.add_all_required_component_dependencies',
+                message:
+                    'Add all ${allReferences.length} proven component dependencies',
+                offset: anchor.offset,
+                length: 0,
+                replacement: _newDependencyArgument(
+                  source,
+                  arguments,
+                  anchor,
+                  allReferences,
+                ),
+              ),
+            );
+          }
+          return fixes;
         }
         final value = dependencies.expression;
         if (value is! ListLiteral ||
             value.elements.any((element) => element is! Expression)) {
           return const [];
         }
-        final edit = _appendListElement(source, value, reference);
+        final edit = _appendListElements(source, value, [selectedReference]);
         if (edit == null) return const [];
-        return [
+        final fixes = <CCRouterSourceFix>[
           CCRouterSourceFix(
             id: 'ccrouter.add_required_component_dependency',
-            message: 'Add `$reference` to required component dependencies',
+            message:
+                'Add `$selectedReference` to required component dependencies',
             offset: edit.$1,
             length: edit.$2,
             replacement: edit.$3,
           ),
         ];
+        final allReferences = _allOwnerReferences(
+          componentMissing,
+          ownerReferences,
+        );
+        if (allReferences.length > 1) {
+          final allEdit = _appendListElements(source, value, allReferences);
+          if (allEdit != null) {
+            fixes.add(
+              CCRouterSourceFix(
+                id: 'ccrouter.add_all_required_component_dependencies',
+                message:
+                    'Add all ${allReferences.length} proven component dependencies',
+                offset: allEdit.$1,
+                length: allEdit.$2,
+                replacement: allEdit.$3,
+              ),
+            );
+          }
+        }
+        return fixes;
       }
     }
     return const [];
@@ -261,39 +315,83 @@ abstract final class CCRouterQuickFixes {
     return null;
   }
 
+  /// Orders one visible reference per owner when every owner is provable.
+  static List<String> _allOwnerReferences(
+    List<CCRouterMissingComponentDependency> missing,
+    Map<String, String> references,
+  ) {
+    final ownerIds = missing.map((item) => item.owner.componentId).toSet();
+    if (!ownerIds.every(references.containsKey)) return const [];
+    final sorted = ownerIds.toList()..sort();
+    return [for (final owner in sorted) references[owner]!];
+  }
+
+  /// Creates a complete dependency argument before one consuming field.
+  static String _newDependencyArgument(
+    String source,
+    ArgumentList arguments,
+    NamedExpression anchor,
+    List<String> references,
+  ) {
+    final multiline = source
+        .substring(
+          arguments.leftParenthesis.end,
+          arguments.rightParenthesis.offset,
+        )
+        .contains('\n');
+    if (references.length == 1) {
+      return multiline
+          ? 'dependencies: [${references.single}],\n${_lineIndent(source, anchor.offset)}'
+          : 'dependencies: [${references.single}], ';
+    }
+    if (!multiline) return 'dependencies: [${references.join(', ')}], ';
+    final indent = _lineIndent(source, anchor.offset);
+    final entries = references.map((item) => '$indent  $item,').join('\n');
+    return 'dependencies: [\n$entries\n$indent],\n$indent';
+  }
+
   /// Computes a comment-preserving append to a direct list literal.
-  static (int, int, String)? _appendListElement(
+  static (int, int, String)? _appendListElements(
     String source,
     ListLiteral list,
-    String element,
+    List<String> elementsToAdd,
   ) {
+    if (elementsToAdd.isEmpty) return null;
     final innerStart = list.leftBracket.end;
     final innerEnd = list.rightBracket.offset;
     final elements = list.elements;
     if (elements.isEmpty) {
       final gap = source.substring(innerStart, innerEnd);
       if (gap.contains('//') || gap.contains('/*')) return null;
-      if (!gap.contains('\n')) return (innerStart, gap.length, element);
+      if (!gap.contains('\n')) {
+        return (innerStart, gap.length, elementsToAdd.join(', '));
+      }
       final closingIndent = _lineIndent(source, innerEnd);
-      return (
-        innerStart,
-        gap.length,
-        '\n$closingIndent  $element,\n$closingIndent',
-      );
+      final entries = elementsToAdd
+          .map((item) => '$closingIndent  $item,')
+          .join('\n');
+      return (innerStart, gap.length, '\n$entries\n$closingIndent');
     }
     final last = elements.last;
     final gap = source.substring(last.end, innerEnd);
     if (gap.contains('//') || gap.contains('/*')) return null;
     if (!gap.contains('\n')) {
       final trailingComma = gap.contains(',');
-      return (last.end, gap.length, ', $element${trailingComma ? ',' : ''}');
+      return (
+        last.end,
+        gap.length,
+        ', ${elementsToAdd.join(', ')}${trailingComma ? ',' : ''}',
+      );
     }
     final closingIndent = _lineIndent(source, innerEnd);
     final firstIndent = _lineIndent(source, elements.first.offset);
     final childIndent = firstIndent.length > closingIndent.length
         ? firstIndent
         : '$closingIndent  ';
-    return (last.end, gap.length, ',\n$childIndent$element,\n$closingIndent');
+    final entries = elementsToAdd
+        .map((item) => '$childIndent$item,')
+        .join('\n');
+    return (last.end, gap.length, ',\n$entries\n$closingIndent');
   }
 
   /// Returns whitespace preceding [offset] on its source line.

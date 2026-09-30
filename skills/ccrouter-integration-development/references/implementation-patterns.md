@@ -280,8 +280,10 @@ const checkoutComponent = CCComponent(
 When the required owner is omitted, the optional Analyzer Plugin reports the
 Metadata-proven mismatch during editing. Apply its dependency Quick Fix only
 when it offers the exact owner constant through an existing public import; for
-computed lists or absent/ambiguous exports, edit the descriptor deliberately
-and rely on `ccrouter generate --check` as the final gate.
+one component whose every missing Owner is provable, the additional batch fix
+may add all owners in stable order. For computed lists or absent/ambiguous
+exports, edit the descriptor deliberately and rely on
+`ccrouter generate --check` as the final gate.
 
 After generation, call the component-specific Client:
 
@@ -563,6 +565,12 @@ after exact authored-input, tool, resolved-Package, external-index, and managed-
 output fingerprints match a previous successful run. Use `--no-cache --check`
 when validating the reference path after generator, SDK, or build configuration
 changes; do not make application code depend on cache or manifest files.
+
+After a fast-path miss, the CLI may report direct, uniquely provable missing
+Service/Command owners before build_runner. This conservative preflight declines
+computed or ambiguous inputs and does not replace the Builder/Workspace
+Validator. A failed formal generation restores the previous CCRouter-managed
+source outputs instead of leaving a partially updated API graph.
 
 After `ccrouter clean`, generation may temporarily bootstrap missing component
 Route, Command, and Event APIs from valid Builder metadata before build_runner.
