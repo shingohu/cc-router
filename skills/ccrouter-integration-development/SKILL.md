@@ -105,6 +105,11 @@ Read [implementation-patterns.md](references/implementation-patterns.md) when ad
   uses `CCHostAssembly.fromComponents`, while ordinary Runtime tests prefer
   `CCRouterTestHost`. Do not split one generated assembly into separately passed
   manifests, Catalog, Contract, or tooling values.
+- After initialization, the default `CCGoRouterApp()` resolves that Assembly's
+  Catalog through the Host-only binding. Do not repeat the Catalog in the
+  widget constructor or expose routing metadata through the business Facade.
+  Direct `CCGoRouterBackend.managed/attach` calls remain Host SPI and keep an
+  explicit Catalog for custom or incremental integration.
 
 ### Read-only DevTools
 

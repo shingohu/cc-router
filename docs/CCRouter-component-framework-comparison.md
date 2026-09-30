@@ -71,15 +71,12 @@ CCRouter 的核心 Runtime 能力并不落后。相较常见方案，CCRouter �
 Adapter、Host 和 `MaterialApp.router`：
 
 ```dart
-runApp(
-  CCGoRouterApp(
-    catalog: ccrouterGeneratedHostAssembly.routeCatalog,
-  ),
-);
+runApp(const CCGoRouterApp());
 ```
 
 应用必须先显式调用 `CCRouter.initialize(hostAssembly: ...)`；`CCGoRouterApp` 始终只负责
-Host。已有 GoRouter 工程继续使用 `CCGoRouterBackend.attach`；复杂 Shell、多 Outlet 或
+Host，并自动使用初始化时安装的同一份 Catalog。已有 GoRouter 工程继续使用
+`CCGoRouterBackend.attach`；复杂 Shell、多 Outlet 或
 自定义 Router 构造可使用一次性 `backendFactory`，只有完全自定义 Widget 树才直接使用
 `CCRouterApp.managed`。这些显式路径是渐进式集成边界，不是新项目必须复制的样板代码。
 

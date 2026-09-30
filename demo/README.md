@@ -100,8 +100,8 @@ Contract-first Package；
 `lib/src/demo_order_component.dart` 声明唯一的顶层 `const CCComponent`；Route 与简单
 Service 由生成器自动装配，没有专用声明模型的能力放入 `@CCComponentContribution`。
 组件生成后端中立的页面 Catalog，宿主只导出原子的
-`ccrouterGeneratedHostAssembly`，并通过其 `componentManifests` 和 `routeCatalog` 属性读取
-同一代生成快照；
+`ccrouterGeneratedHostAssembly`；`CCRouter.initialize` 安装该快照后，默认 managed Host
+通过 Host-only Binding 自动读取同一份 Catalog；
 `CCGoRouterBackend.managed` 从 Catalog 自动创建 GoRouter routes、Adapter bindings 和
 Root Observer。`CCGoRouterApp` 只绑定 Host 和 Backend，不初始化或关闭 Runtime；最终由应用
 Composition Root 显式调用 `CCRouter.shutdown`。业务跳转仍统一通过 `CCRouter.navigator`。
@@ -133,7 +133,7 @@ fvm dart run ccrouter_generator:ccrouter generate demo --check
 聚合路由目录生成到 `demo/lib/src/ccrouter_generated/metadata/cc_routes.json` 和
 `demo/lib/src/ccrouter_generated/metadata/cc_catalog.md`；宿主通过稳定的
 `demo/lib/src/ccrouter_generated/ccrouter_host.api.g.dart` 只导出原子 Host Assembly，
-Manifest 和 Catalog 通过 Assembly 属性读取，
+Manifest 和 Catalog 保持在同一个 Assembly 快照中，
 该入口在内部转发 `host/ccrouter_host.routes.g.dart`。每个参与 Package 同时在
 `lib/src/ccrouter_generated/metadata/ccrouter_package.json` 发布 Index；Runtime 组件通过
 `lib/src/ccrouter_generated/host/<package>_ccrouter.g.dart` 的分层 Bundle 装配，纯 contracts Package 保持 Pure Dart，

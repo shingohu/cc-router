@@ -11,9 +11,7 @@ void main() {
   testWidgets('CCGoRouterApp requires an explicitly initialized Runtime', (
     tester,
   ) async {
-    await tester.pumpWidget(
-      const CCGoRouterApp(catalog: CCFlutterRouteCatalog.empty()),
-    );
+    await tester.pumpWidget(const CCGoRouterApp());
 
     expect(
       tester.takeException(),
@@ -34,7 +32,6 @@ void main() {
 
     await tester.pumpWidget(
       CCGoRouterApp(
-        catalog: const CCFlutterRouteCatalog.empty(),
         initialLocation: '/details',
         hostRoutes: [
           GoRoute(path: '/', builder: (_, _) => const Text('home')),
@@ -75,7 +72,6 @@ void main() {
 
     await tester.pumpWidget(
       CCGoRouterApp(
-        catalog: const CCFlutterRouteCatalog.empty(),
         hostRoutes: [
           GoRoute(path: '/', builder: (_, _) => const Text('configured host')),
         ],
@@ -154,17 +150,16 @@ void main() {
   testWidgets('CCGoRouterApp creates a custom Backend exactly once', (
     tester,
   ) async {
-    CCRouter.initialize(
-      hostAssembly: CCHostAssembly.fromComponents(components: const []),
-    );
+    final hostAssembly = CCHostAssembly.fromComponents(components: const []);
+    CCRouter.initialize(hostAssembly: hostAssembly);
     var factoryCalls = 0;
 
     await tester.pumpWidget(
       CCGoRouterApp(
-        catalog: const CCFlutterRouteCatalog.empty(),
         title: 'Custom Host',
         backendFactory: (configuration) {
           factoryCalls += 1;
+          expect(configuration.catalog, same(hostAssembly.routeCatalog));
           return configuration.createManagedBackend();
         },
         hostRoutes: [
@@ -175,7 +170,6 @@ void main() {
     await tester.pumpAndSettle();
     await tester.pumpWidget(
       CCGoRouterApp(
-        catalog: const CCFlutterRouteCatalog.empty(),
         title: 'Updated Host',
         backendFactory: (configuration) {
           factoryCalls += 1;

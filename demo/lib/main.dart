@@ -60,7 +60,6 @@ final class CCRouterDemoApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final app = CCGoRouterApp(
-      catalog: ccrouterGeneratedHostAssembly.routeCatalog,
       initialLocation: initialLocation,
       backendFactory: (configuration) => createDemoRouterBackend(
         catalog: configuration.catalog,

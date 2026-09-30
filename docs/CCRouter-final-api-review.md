@@ -78,7 +78,9 @@ library 不需要依赖 Host SPI。API surface 快照测试锁定两侧导出集
 
 `CCRouter.initialize(hostAssembly: ...)` 原子初始化完整 Host Assembly。生成、手写和测试
 Host 都通过同一个只读快照提供组件、Contract、Route Catalog 与可选 Tool Integration。新应用由
-`CCRouterAppBackend` 提供 Adapter，`CCRouterApp.managed` 通过框架私有协调器完成所有权转移。
+`CCGoRouterApp()` 通过 Host-only Binding 自动读取该快照中的 Catalog，不在 Widget 层重复
+传递，也不向业务 `CCRouter` 暴露路由表。`CCRouterAppBackend` 提供 Adapter，
+`CCRouterApp.managed` 通过框架私有协调器完成所有权转移。
 Host/Adapter 的生命周期约束如下：
 
 - `CCRouter.shutdown()` 只由拥有默认 Runtime 的应用 Composition Root 调用并等待完成；页面、

@@ -7,26 +7,35 @@
 The Host may import `ccrouter_go_router` and `ccrouter_host.dart`. A new GoRouter
 application should first call
 `CCRouter.initialize(hostAssembly: ccrouterGeneratedHostAssembly)` and then use
-`CCGoRouterApp(catalog: ccrouterGeneratedHostAssembly.routeCatalog)` for the
-minimal Host assembly path. The generated stable Host barrel exports only the
-atomic Assembly; read its Catalog or manifests through immutable properties
-rather than importing internal generated files. `CCGoRouterApp` never initializes or shuts down the process
-Runtime. The Host owns generated Host assembly, navigation Backend,
+`const CCGoRouterApp()` for the minimal Host assembly path. The widget resolves
+the exact Catalog retained from initialization through a Host-only Binding; do
+not repeat the Catalog argument or expose it through the business Facade. The
+generated stable Host barrel exports only the atomic Assembly.
+`CCGoRouterApp` never initializes or shuts down the process Runtime. The Host
+owns generated Host assembly, navigation Backend,
 Shell/Outlet topology, platform Deep Link ingress, global policies and final
 `CCRouter.shutdown`.
+
+Direct `CCGoRouterBackend.managed/attach` usage remains an advanced Host SPI and
+still receives an explicit Catalog. This supports existing application-owned
+Routers, custom multi-Host composition, and focused Backend tests without
+making routing metadata available to feature code.
 
 A handwritten Host uses the same lifecycle contract:
 
 ```dart
 final hostAssembly = CCHostAssembly.fromComponents(
   components: [ordersManifest, accountManifest],
+  routeCatalog: applicationRouteCatalog,
 );
 CCRouter.initialize(hostAssembly: hostAssembly);
 ```
 
 Do not pass loose component or Contract collections to `CCRouter.initialize`;
 the required Assembly is the compile-time boundary that keeps one startup
-snapshot internally consistent.
+snapshot internally consistent. A handwritten Host that owns routes must place
+its Catalog in the same `fromComponents` call; `CCGoRouterApp` has no separate
+Catalog override.
 
 `CCGoRouterApp` mirrors the non-routing configuration of `MaterialApp.router`,
 including themes, locale and localization delegates, `ScaffoldMessenger`,

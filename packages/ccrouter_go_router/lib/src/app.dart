@@ -97,9 +97,12 @@ final class CCGoRouterBackendConfiguration {
 /// It never stores a global [BuildContext], and removing it does not shut down
 /// the Runtime; the application composition root remains responsible for that.
 final class CCGoRouterApp extends StatefulWidget {
-  /// Creates a managed GoRouter Host from a generated [catalog].
+  /// Creates a managed GoRouter Host from the initialized Host Catalog.
+  ///
+  /// The Composition Root must call `CCRouter.initialize` first. This wrapper
+  /// resolves the exact Catalog retained from that Host Assembly so callers do
+  /// not repeat or accidentally mismatch generated startup inputs.
   const CCGoRouterApp({
-    required this.catalog,
     this.backendFactory,
     this.host,
     this.hostRoutes = const [],
@@ -142,9 +145,6 @@ final class CCGoRouterApp extends StatefulWidget {
     this.onLifecycleChanged,
     super.key,
   });
-
-  /// Generated backend-neutral route catalog assembled for this Host.
-  final CCFlutterRouteCatalog catalog;
 
   /// Optional application-owned Backend factory called once for this Host.
   ///
@@ -285,14 +285,17 @@ final class _CCGoRouterAppState extends State<CCGoRouterApp> {
   /// Validates the process Runtime and creates the Host Backend once.
   void initState() {
     super.initState();
-    if (!CCRouter.isInitialized) {
+    late final CCFlutterRouteCatalog catalog;
+    try {
+      catalog = CCRouterHostBinding.routeCatalog;
+    } on CCRouterNotInitializedError {
       throw FlutterError(
         'CCRouter is not initialized. Call CCRouter.initialize from the '
         'application Composition Root before mounting CCGoRouterApp.',
       );
     }
     final configuration = CCGoRouterBackendConfiguration(
-      catalog: widget.catalog,
+      catalog: catalog,
       host: widget.host,
       hostRoutes: List<RouteBase>.unmodifiable(widget.hostRoutes),
       overrides: Map<String, CCGoRouterRouteOverride>.unmodifiable(
@@ -362,8 +365,7 @@ final class _CCGoRouterAppState extends State<CCGoRouterApp> {
   /// Rejects configuration changes that would require rebuilding the Router.
   void didUpdateWidget(covariant CCGoRouterApp oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (!identical(widget.catalog, oldWidget.catalog) ||
-        !identical(widget.host, oldWidget.host) ||
+    if (!identical(widget.host, oldWidget.host) ||
         widget.initialLocation != oldWidget.initialLocation ||
         widget.lifecycleEventCapacity != oldWidget.lifecycleEventCapacity ||
         widget.enablePredictiveBack != oldWidget.enablePredictiveBack) {

@@ -297,12 +297,13 @@ Host 使用生成的 Manifest 与 Catalog。新项目默认使用 managed GoRout
 
 Host 自己的公共 barrel 只需转发生成的
 `src/ccrouter_generated/ccrouter_host.api.g.dart`；不要直接导出 `host/` 下的内部聚合文件或
-手写 `show` 列表。稳定入口只导出完整的 Host Assembly；Catalog 与 Manifest 通过该只读
-快照的属性访问，避免混用不同代生成物。
+手写 `show` 列表。稳定入口只导出完整的 Host Assembly；初始化后 managed Host 会通过
+Host-only Binding 使用其中的 Catalog，避免重复传参或混用不同代生成物。
 
 `CCRouter.initialize` 只接受一个必填 `CCHostAssembly`。已有工程需要手写装配时使用
 `CCHostAssembly.fromComponents(components: ...)`，不要把 Component、Contract、Catalog
-和 Tool Integration 拆成多组初始化参数。
+和 Tool Integration 拆成多组初始化参数。手写 Host 自己提供页面目录时，也必须通过
+`fromComponents(routeCatalog: ...)` 放入同一个 Assembly；`CCGoRouterApp` 不提供覆盖入口。
 
 ```dart
 Future<void> main() async {
@@ -311,11 +312,7 @@ Future<void> main() async {
     hostAssembly: ccrouterGeneratedHostAssembly,
   );
   await CCRouter.runInitTasks(gate: CCInitTaskGate.appStarted);
-  runApp(
-    CCGoRouterApp(
-      catalog: ccrouterGeneratedHostAssembly.routeCatalog,
-    ),
-  );
+  runApp(const CCGoRouterApp());
 }
 ```
 
@@ -334,7 +331,7 @@ final initResult = await CCRouter.runInitTasks(
 );
 // 仅无法降级的 Host 才显式选择 fail-fast：
 // initResult.throwIfRequiredFailed();
-runApp(CCGoRouterApp(catalog: ccrouterGeneratedHostAssembly.routeCatalog));
+runApp(const CCGoRouterApp());
 ```
 
 `CCGoRouterApp` 直接提供 `MaterialApp.router` 的非路由配置，包括主题、高对比度主题、
@@ -344,7 +341,6 @@ runApp(CCGoRouterApp(catalog: ccrouterGeneratedHostAssembly.routeCatalog));
 ```dart
 runApp(
   CCGoRouterApp(
-    catalog: ccrouterGeneratedHostAssembly.routeCatalog,
     locale: const Locale('zh', 'CN'),
     supportedLocales: AppLocalizations.supportedLocales,
     localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -365,7 +361,6 @@ runApp(
 ```dart
 runApp(
   CCGoRouterApp(
-    catalog: ccrouterGeneratedHostAssembly.routeCatalog,
     backendFactory: (configuration) => createApplicationBackend(
       catalog: configuration.catalog,
       initialLocation: configuration.initialLocation,
@@ -373,6 +368,10 @@ runApp(
   ),
 );
 ```
+
+默认 `CCGoRouterApp` 自动使用 `CCRouter.initialize` 安装的同一份 Catalog。只有直接使用
+`CCGoRouterBackend.managed/attach` 的高级 Host 或渐进式接入才显式传递 Catalog；业务代码
+不能通过 `CCRouter` 读取路由表。
 
 `CCRouter.initialize` 同步完成全局配置和启动组件注册；`CCGoRouterApp` 不会在卸载时隐式 shutdown Runtime。应用最终退出或测试 Host 销毁时执行：
 

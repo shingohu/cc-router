@@ -266,7 +266,7 @@ runApp(
   CCAnalyticsScope(
     controller: analytics,
     mode: CCAnalyticsCollectionMode.annotated,
-    child: CCGoRouterApp(catalog: ccrouterGeneratedHostAssembly.routeCatalog),
+    child: const CCGoRouterApp(),
   ),
 );
 ```

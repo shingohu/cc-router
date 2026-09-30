@@ -7,6 +7,7 @@ import 'package:flutter/widgets.dart';
 import 'app.dart';
 import 'generated_package_bundle.dart';
 import 'host_tool_integration.dart';
+import 'route_catalog.dart';
 
 part 'navigation.dart';
 part 'deep_link.dart';
@@ -76,6 +77,9 @@ abstract final class CCRouter {
 
   /// Host tooling owned by the current process-default Runtime lifecycle.
   static List<CCHostToolIntegration> _hostToolIntegrations = const [];
+
+  /// Backend-neutral routes owned by the current default Runtime lifecycle.
+  static CCFlutterRouteCatalog? _hostRouteCatalog;
 
   /// Returns the active Runtime or fails when the host is not initialized.
   static CCRouterRuntime get _runtime => _runtimeResolver.active;
@@ -349,6 +353,7 @@ abstract final class CCRouter {
     );
     runtime.initialize();
     _runtimeResolver.installDefault(runtime);
+    _hostRouteCatalog = hostAssembly.routeCatalog;
     final integrations = hostAssembly.hostToolIntegrations;
     _hostToolIntegrations = integrations;
     for (final integration in integrations) {
@@ -609,6 +614,7 @@ abstract final class CCRouter {
     final active = _runtimeResolver.takeDefault();
     final disposeBackend = _backendDisposer;
     final hostToolIntegrations = _hostToolIntegrations;
+    _hostRouteCatalog = null;
     _hostToolIntegrations = const [];
     if (active == null &&
         disposeBackend == null &&
@@ -670,6 +676,19 @@ abstract final class CCRouter {
 /// code must navigate through `CCRouter.navigator` and must never access this
 /// ownership boundary.
 abstract final class CCRouterHostBinding {
+  /// Returns the route Catalog installed with the process-default Runtime.
+  ///
+  /// Managed application wrappers use this Host-only snapshot after
+  /// `CCRouter.initialize` so the Composition Root cannot accidentally pass a
+  /// Catalog from another generated assembly. Test Runtime overlays do not
+  /// replace this value. Access before initialization or after shutdown throws
+  /// [CCRouterNotInitializedError].
+  static CCFlutterRouteCatalog get routeCatalog {
+    final catalog = CCRouter._hostRouteCatalog;
+    if (catalog == null) throw const CCRouterNotInitializedError();
+    return catalog;
+  }
+
   /// Encodes one managed request for backend navigation without exposing the
   /// wrapper to generated page codecs.
   ///

@@ -127,6 +127,10 @@ void main() {
       () => CCRouter.service<String>(),
       throwsA(isA<CCRouterNotInitializedError>()),
     );
+    expect(
+      () => CCRouterHostBinding.routeCatalog,
+      throwsA(isA<CCRouterNotInitializedError>()),
+    );
   });
 
   test('facade creates, owns, and shuts down the default Runtime', () async {
@@ -159,6 +163,10 @@ void main() {
     expect(CCRouter.isInitialized, isFalse);
     expect(
       () => CCRouter.command(ReadOnce()),
+      throwsA(isA<CCRouterNotInitializedError>()),
+    );
+    expect(
+      () => CCRouterHostBinding.routeCatalog,
       throwsA(isA<CCRouterNotInitializedError>()),
     );
   });
@@ -229,21 +237,21 @@ void main() {
   });
 
   test('initialize accepts a handwritten Host assembly', () {
-    CCRouter.initialize(
-      hostAssembly: CCHostAssembly.fromComponents(
-        components: [component('host', 'ready')],
-      ),
+    final hostAssembly = CCHostAssembly.fromComponents(
+      components: [component('host', 'ready')],
     );
+    CCRouter.initialize(hostAssembly: hostAssembly);
 
     expect(CCRouter.registeredComponents.single.id, 'host');
+    expect(CCRouterHostBinding.routeCatalog, same(hostAssembly.routeCatalog));
   });
 
   test('reinitialization is rejected until shutdown completes', () async {
-    CCRouter.initialize(
-      hostAssembly: CCHostAssembly.fromComponents(
-        components: [component('a', 'a')],
-      ),
+    final firstAssembly = CCHostAssembly.fromComponents(
+      components: [component('a', 'a')],
     );
+    CCRouter.initialize(hostAssembly: firstAssembly);
+    expect(CCRouterHostBinding.routeCatalog, same(firstAssembly.routeCatalog));
     expect(
       () => CCRouter.initialize(
         hostAssembly: CCHostAssembly.fromComponents(components: const []),
@@ -252,10 +260,14 @@ void main() {
     );
 
     await CCRouter.shutdown();
-    CCRouter.initialize(
-      hostAssembly: CCHostAssembly.fromComponents(
-        components: [component('b', 'b')],
-      ),
+    final secondAssembly = CCHostAssembly.fromComponents(
+      components: [component('b', 'b')],
+    );
+    CCRouter.initialize(hostAssembly: secondAssembly);
+    expect(CCRouterHostBinding.routeCatalog, same(secondAssembly.routeCatalog));
+    expect(
+      CCRouterHostBinding.routeCatalog,
+      isNot(same(firstAssembly.routeCatalog)),
     );
     expect(await CCRouter.command(ReadOnce()), 'b');
   });
@@ -356,6 +368,10 @@ void main() {
     expect(CCRouter.isInitialized, isFalse);
     expect(
       () => CCRouter.registeredComponents,
+      throwsA(isA<CCRouterNotInitializedError>()),
+    );
+    expect(
+      () => CCRouterHostBinding.routeCatalog,
       throwsA(isA<CCRouterNotInitializedError>()),
     );
   });

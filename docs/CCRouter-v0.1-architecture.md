@@ -329,11 +329,7 @@ CCRouter.initialize(
   hostAssembly: ccrouterGeneratedHostAssembly,
 );
 
-runApp(
-  CCGoRouterApp(
-    catalog: ccrouterGeneratedHostAssembly.routeCatalog,
-  ),
-);
+runApp(const CCGoRouterApp());
 
 CCRouter.openSession(accountId: authenticatedUser.id);
 
@@ -438,12 +434,11 @@ CCRouter.initialize(
   hostAssembly: ccrouterGeneratedHostAssembly,
 );
 
-runApp(
-  CCGoRouterApp(
-    catalog: ccrouterGeneratedHostAssembly.routeCatalog,
-  ),
-);
+runApp(const CCGoRouterApp());
 ```
+
+默认 managed App 通过 Host-only Binding 使用初始化时安装的同一份 Catalog。直接构造
+`CCGoRouterBackend.managed/attach` 的高级 Host 仍显式提供 Catalog。
 
 适配器内部可以使用 `NavigatorState`、`RouterDelegate` 或其他 Flutter 机制，但这些细节不暴露给组件调用方。`CCRouterApp.managed` 只提供 Backend 与 Outlet 绑定，不保存全局 `BuildContext`，也不控制 Runtime 生命周期；无 Context 导航由 Adapter 的根 Outlet 执行。
 默认 Route Placement 不绑定某个字面 Window ID；Runtime 会使用 Adapter 的 Host Binding
