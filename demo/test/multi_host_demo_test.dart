@@ -34,22 +34,97 @@ void main() {
     expect(find.textContaining('Secondary Host'), findsOneWidget);
     final navigateButtons = find.byTooltip('打开隔离栈页');
     expect(navigateButtons, findsNWidgets(2));
+    final primaryPane = find.byKey(const ValueKey('host.primary'));
+    final secondaryPane = find.byKey(const ValueKey('host.secondary'));
 
     await tester.ensureVisible(navigateButtons.at(1));
     await tester.tap(navigateButtons.at(1));
     await tester.pumpAndSettle();
-    expect(find.text('栈操作 · Level 202'), findsOneWidget);
+    expect(
+      _inside(secondaryPane, find.text('栈操作 · Level 202')),
+      findsOneWidget,
+    );
+    expect(_inside(primaryPane, find.text('栈操作 · Level 202')), findsNothing);
+    expect(find.byKey(const ValueKey('host.secondary-active')), findsOneWidget);
     expect(CCRouter.activeRouteEntries.single.hostId, 'host.secondary');
 
     await tester.ensureVisible(navigateButtons.at(0));
     await tester.tap(navigateButtons.at(0));
     await tester.pumpAndSettle();
-    expect(find.text('栈操作 · Level 101'), findsOneWidget);
-    expect(find.text('栈操作 · Level 202'), findsOneWidget);
+    expect(_inside(primaryPane, find.text('栈操作 · Level 101')), findsOneWidget);
+    expect(
+      _inside(secondaryPane, find.text('栈操作 · Level 202')),
+      findsOneWidget,
+    );
+    expect(find.byKey(const ValueKey('host.primary-active')), findsOneWidget);
     expect(CCRouter.activeRouteEntries.map((entry) => entry.hostId).toSet(), {
       'host.primary',
       'host.secondary',
     });
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('interaction inside a Host activates local navigation and pop', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1400, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(createMultiHostDemoApp());
+    await tester.pumpAndSettle();
+
+    final primaryPane = find.byKey(const ValueKey('host.primary'));
+    final secondaryPane = find.byKey(const ValueKey('host.secondary'));
+
+    await tester.tap(_inside(secondaryPane, find.text('导航')));
+    await tester.pumpAndSettle();
+    final secondaryPush = _inside(
+      secondaryPane,
+      find.text('Push + typed result'),
+    );
+    await tester.ensureVisible(secondaryPush);
+    await tester.tap(secondaryPush);
+    await tester.pumpAndSettle();
+
+    expect(_inside(secondaryPane, find.text('ID 42')), findsOneWidget);
+    expect(_inside(primaryPane, find.text('ID 42')), findsNothing);
+    expect(CCRouter.activeRouteEntries.single.hostId, 'host.secondary');
+
+    await tester.tap(_inside(primaryPane, find.text('导航')));
+    await tester.pumpAndSettle();
+    final primaryPush = _inside(primaryPane, find.text('Push + typed result'));
+    await tester.ensureVisible(primaryPush);
+    await tester.tap(primaryPush);
+    await tester.pumpAndSettle();
+
+    expect(_inside(primaryPane, find.text('ID 42')), findsOneWidget);
+    expect(_inside(secondaryPane, find.text('ID 42')), findsOneWidget);
+    expect(CCRouter.activeRouteEntries.map((entry) => entry.hostId).toSet(), {
+      'host.primary',
+      'host.secondary',
+    });
+
+    final secondaryComplete = _inside(secondaryPane, find.text('确认并返回类型安全结果'));
+    await tester.ensureVisible(secondaryComplete);
+    await tester.tap(secondaryComplete);
+    await tester.pumpAndSettle();
+
+    expect(_inside(secondaryPane, find.text('ID 42')), findsNothing);
+    expect(_inside(primaryPane, find.text('ID 42')), findsOneWidget);
+    expect(CCRouter.activeRouteEntries.single.hostId, 'host.primary');
+
+    final primaryComplete = _inside(primaryPane, find.text('确认并返回类型安全结果'));
+    await tester.ensureVisible(primaryComplete);
+    await tester.tap(primaryComplete);
+    await tester.pumpAndSettle();
+
+    expect(_inside(primaryPane, find.text('ID 42')), findsNothing);
+    expect(CCRouter.activeRouteEntries, isEmpty);
+    expect(tester.takeException(), isNull);
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pumpAndSettle();
@@ -148,3 +223,6 @@ void main() {
     },
   );
 }
+
+Finder _inside(Finder pane, Finder matching) =>
+    find.descendant(of: pane, matching: matching);

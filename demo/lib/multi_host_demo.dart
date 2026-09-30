@@ -72,15 +72,26 @@ final class _MultiHostWorkspaceState extends State<_MultiHostWorkspace> {
   _HostLabMode _mode = _HostLabMode.isolation;
   String _status = '选择 Host 后执行类型安全导航';
 
-  Future<void> _navigate(String hostId, int level) async {
+  bool _activateHost(String hostId) {
+    if (widget.backend.adapter.activeHostId == hostId) return false;
     widget.backend.adapter.activateHost(hostId);
+    return true;
+  }
+
+  void _activateHostFromInteraction(String hostId) {
+    if (!_activateHost(hostId)) return;
+    setState(() => _status = '$hostId · active');
+  }
+
+  Future<void> _navigate(String hostId, int level) async {
+    _activateHost(hostId);
     setState(() => _status = '$hostId · navigating');
     await CCRouter.navigator.go(demoStackIntent(level: level));
     if (mounted) setState(() => _status = '$hostId · /lab/stack/$level');
   }
 
   Future<void> _home(String hostId) async {
-    widget.backend.adapter.activateHost(hostId);
+    _activateHost(hostId);
     await CCRouter.navigator.go(demoHomeIntent());
     if (mounted) setState(() => _status = '$hostId · /');
   }
@@ -88,7 +99,7 @@ final class _MultiHostWorkspaceState extends State<_MultiHostWorkspace> {
   void _selectMode(Set<_HostLabMode> selection) {
     final mode = selection.single;
     if (mode == _HostLabMode.adaptive) {
-      widget.backend.adapter.activateHost(_primaryHostId);
+      _activateHost(_primaryHostId);
     }
     setState(() => _mode = mode);
   }
@@ -146,6 +157,10 @@ final class _MultiHostWorkspaceState extends State<_MultiHostWorkspace> {
                   title: 'Primary Host',
                   hostId: _primaryHostId,
                   router: widget.backend.routerFor(_primaryHostId),
+                  isActive:
+                      widget.backend.adapter.activeHostId == _primaryHostId,
+                  onActivate: () =>
+                      _activateHostFromInteraction(_primaryHostId),
                   onNavigate: () => unawaited(_navigate(_primaryHostId, 101)),
                   onHome: () => unawaited(_home(_primaryHostId)),
                 ),
@@ -157,6 +172,10 @@ final class _MultiHostWorkspaceState extends State<_MultiHostWorkspace> {
                   hostId: _secondaryHostId,
                   router: widget.backend.routerFor(_secondaryHostId),
                   host: widget.backend.hostFor(_secondaryHostId),
+                  isActive:
+                      widget.backend.adapter.activeHostId == _secondaryHostId,
+                  onActivate: () =>
+                      _activateHostFromInteraction(_secondaryHostId),
                   onNavigate: () => unawaited(_navigate(_secondaryHostId, 202)),
                   onHome: () => unawaited(_home(_secondaryHostId)),
                 ),
@@ -536,6 +555,8 @@ final class _HostPane extends StatelessWidget {
     required this.title,
     required this.hostId,
     required this.router,
+    required this.isActive,
+    required this.onActivate,
     required this.onNavigate,
     required this.onHome,
     this.host,
@@ -545,50 +566,79 @@ final class _HostPane extends StatelessWidget {
   final String hostId;
   final GoRouter router;
   final CCNavigationHost? host;
+  final bool isActive;
+  final VoidCallback onActivate;
   final VoidCallback onNavigate;
   final VoidCallback onHome;
 
   @override
   Widget build(BuildContext context) {
     final routerView = Router.withConfig(config: router);
-    return Padding(
-      padding: const EdgeInsets.all(8),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          border: Border.all(color: Theme.of(context).colorScheme.outline),
-          borderRadius: BorderRadius.circular(6),
-        ),
-        child: Column(
-          children: [
-            Material(
-              color: Theme.of(context).colorScheme.surfaceContainerHighest,
-              child: Padding(
-                padding: const EdgeInsets.all(8),
-                child: Row(
-                  children: [
-                    Expanded(child: Text('$title · $hostId')),
-                    IconButton(
-                      tooltip: '打开隔离栈页',
-                      onPressed: onNavigate,
-                      icon: const Icon(Icons.open_in_new),
+    final colorScheme = Theme.of(context).colorScheme;
+    return Focus(
+      onFocusChange: (hasFocus) {
+        if (hasFocus) onActivate();
+      },
+      child: Listener(
+        behavior: HitTestBehavior.translucent,
+        onPointerDown: (_) => onActivate(),
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: isActive ? colorScheme.primary : colorScheme.outline,
+                width: isActive ? 2 : 1,
+              ),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Column(
+              children: [
+                Material(
+                  color: colorScheme.surfaceContainerHighest,
+                  child: Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: Row(
+                      children: [
+                        Expanded(child: Text('$title · $hostId')),
+                        SizedBox.square(
+                          dimension: 24,
+                          child: isActive
+                              ? Tooltip(
+                                  message: '当前活动 Host',
+                                  child: Icon(
+                                    Icons.radio_button_checked,
+                                    key: ValueKey('$hostId-active'),
+                                    size: 18,
+                                    color: colorScheme.primary,
+                                  ),
+                                )
+                              : null,
+                        ),
+                        IconButton(
+                          tooltip: '打开隔离栈页',
+                          onPressed: onNavigate,
+                          icon: const Icon(Icons.open_in_new),
+                        ),
+                        IconButton(
+                          tooltip: '回到首页',
+                          onPressed: onHome,
+                          icon: const Icon(Icons.home_outlined),
+                        ),
+                      ],
                     ),
-                    IconButton(
-                      tooltip: '回到首页',
-                      onPressed: onHome,
-                      icon: const Icon(Icons.home_outlined),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
+                Expanded(
+                  child: ClipRect(
+                    child: host == null
+                        ? routerView
+                        : CCRouterApp(host: host, child: routerView),
+                  ),
+                ),
+              ],
             ),
-            Expanded(
-              child: ClipRect(
-                child: host == null
-                    ? routerView
-                    : CCRouterApp(host: host, child: routerView),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );

@@ -113,8 +113,11 @@ Read [implementation-patterns.md](references/implementation-patterns.md) when ad
 - Use `CCGoRouterMultiHostBackend.managed` only when one application tree truly
   owns multiple independent Router Hosts. Its factories receive the initialized
   Catalog and declared Host ID, while the aggregate owns Adapter and Router
-  cleanup. Keep large-screen panes, tabs, and Shell branches as Outlets of one
-  Host. The aggregate does not render a layout or model a native platform Window.
+  cleanup. When multiple Host surfaces are simultaneously interactive, the
+  Composition Root must activate the Host on pointer/focus entry; feature pages
+  must not call `activateHost`. Keep large-screen panes, tabs, and Shell branches
+  as Outlets of one Host. The aggregate does not render a layout or model a native
+  platform Window.
 
 ### Read-only DevTools
 

@@ -71,6 +71,7 @@ Demo 的交互实现位于 `modules/navigation_lab`，宿主只负责初始化 C
 10. Demo 部分 fire-and-forget 导航未消费 Push Future，Runtime shutdown 正确终止 pending result 时会暴露未处理的 `CCNavigationAdapterError`。示例现通过统一观察 helper 消费结果并记录失败类型，框架仍保留明确的 shutdown 错误语义。
 11. 双 Host 的嵌入式首页在宽而低的窗口中会压缩 `NavigationRail`，自适应示例在极窄窗口强制模拟 hinge 时也会把 List/Detail Pane 压到不可用宽度。Rail 现可纵向滚动；双 Pane 保留 `600` logical points 的最小内容宽度并允许横向滚动，列表和详情自身也支持紧凑布局与纵向滚动。对应低高度和 DPR 2 窄 Host 用例已加入回归。
 12. macOS Runner 不再把固定 frame 高度作为窗口下限。它使用 `contentMinSize` 表达 `480 × 640` 的 Flutter 内容需求，以 `800 × 800` 作为首选启动 content，并按当前显示器 `visibleFrame` 限制尺寸和位置；显示器切换时会重新计算有效约束并释放 Notification observer。
+13. 双 Host 页面内部导航曾继续使用默认 active Host，导致在 Secondary 页面点击路由却更新 Primary。Host 组装层现于 Pointer/Focus 进入每个 Router surface 时先激活对应 Host；回归测试按 Pane 子树验证双向 Push、并存 RouteEntry、typed result Pop 和精确清理，不再仅凭全局文本判断隔离成功。
 
 完整的随机动作、状态不变量、问题归因和未覆盖边界见
 [macOS Monkey 验证记录](macos_monkey_validation.md)。

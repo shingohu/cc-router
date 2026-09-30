@@ -54,6 +54,8 @@
 
 `lib/examples/multi_host_demo.dart` 不是 GoRouter 官方示例的复制。它在单个 Flutter View
 内同时挂载两个 Host 和两个 GoRouter，用于验证 Host 选择、RouteEntry、Observer 与路由
-状态隔离；同一入口还验证一个 Host 在横竖屏、桌面窗口缩放和模拟 hinge 下更新
+状态隔离；每个 Router surface 在 Pointer/Focus 进入时由 Host 组装层激活，因此页面内部
+默认导航和 Pop 不会串到另一个可见 Host。同一入口还验证一个 Host 在横竖屏、桌面窗口缩放和
+模拟 hinge 下更新
 `CCHostLayoutMetrics`，并切换 list/detail Outlet。它不代表原生多 Window 已完成；平台
 Window/Engine 生命周期仍属于后续工作。

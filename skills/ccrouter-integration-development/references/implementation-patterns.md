@@ -26,9 +26,14 @@ When one application tree has multiple genuinely independent Router Hosts, use
 supplies that snapshot and each declared Host ID to the child Backend factories,
 validates their identity, aggregates `CCMultiHostNavigationAdapter`, and releases
 all child Router resources after Runtime Adapter teardown. The application owns
-the visual arrangement and active-Host policy. Do not use it for master-detail,
-tabs, or Shell branches that are Outlets of one Host, and do not treat it as a
-native multi-window lifecycle bridge.
+the visual arrangement and active-Host policy. When two surfaces remain
+interactive at once, activate the owning Host on pointer-down and focus entry at
+the Composition Root before a descendant callback runs. This keeps default
+placement and Pop operations local without exposing Host selection to feature
+pages. Pass a call-site Context when a forward navigation also needs exact
+Host/Outlet placement. Do not use it for master-detail, tabs, or Shell branches
+that are Outlets of one Host, and do not treat it as a native multi-window
+lifecycle bridge.
 
 A handwritten Host uses the same lifecycle contract:
 
@@ -120,7 +125,9 @@ final result = await CCRouter.navigator.push<String>(
 
 Use `replace` only when the current entry should no longer remain. Use `go` for declarative location changes and `reset` only for an explicit new root. Do not emulate unsupported remove-until operations with a sequence of pops and pushes.
 
-Use `context:` only for call-site Outlet placement. Without Context, the route's declared Host/Outlet semantics remain unchanged.
+Use `context:` only when call-site Host/Outlet placement is required. Without
+Context, default placement resolves through the active Host while an explicit
+route Host/Outlet remains authoritative.
 
 ## Dynamic and External URI
 

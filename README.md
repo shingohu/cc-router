@@ -407,6 +407,11 @@ final backend = CCGoRouterMultiHostBackend.managed(
 );
 ```
 
+当多个 Host 同时可交互时，Composition Root 必须在 Pointer 或 Focus 进入某个 Router surface
+时调用 `backend.adapter.activateHost(hostId)`，让无显式 Context 的 Pop、系统返回和默认 placement
+导航始终落到当前交互 Host。不要让业务页面自行选择 Host；需要精确定位 Host/Outlet 的
+`push`、`replace`、`go`、`reset` 或 `open` 仍应传入调用点 `BuildContext`。
+
 这不是大屏分栏、Bottom Tab 或 Shell 的默认方案；这些场景通常使用一个 Host 下的多个
 Outlet。聚合器也不代表平台 Window，不负责 macOS、Windows 或 iPadOS 原生窗口生命周期。
 
