@@ -1082,6 +1082,10 @@ executable 构建信息；CCRouter 自己的阶段、耗时、跳过原因和错
 目标已存在或名称非法时返回非零并拒绝覆盖，不修改 Host 的 `pubspec.yaml`，也不写入生成目录。
 创建成功后 CLI 会按模板类型输出确定性的 `Next steps`；它只提示需要补齐的源码、Workspace/
 Host 依赖和生成命令，不会猜测 Host 或自动修改依赖。
+Component 模板会优先继承目标目录最近 Package/Workspace 中明确声明的 `ccrouter`、
+`ccrouter_generator` 依赖来源和 Dart SDK 约束，支持 Hosted、Git 和重算后的 Path 依赖；缺少
+显式声明时才从 resolved Package identity 生成版本约束。无法证明任一框架依赖来源时，命令会
+在写文件前失败，不回退到硬编码版本。
 脚手架完成后仍需执行一次 `flutter pub get` 和 `ccrouter generate`，让 build_runner 生成 Registrar、
 Route API 和 Package/Host metadata。跨组件 Route 不能直接由脚手架猜测，真实消费者出现后再
 手动建立 contracts Package 和 Contract-first 声明。

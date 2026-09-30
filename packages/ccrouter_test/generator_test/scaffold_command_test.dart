@@ -129,6 +129,52 @@ workspace:
     );
   });
 
+  test('create component inherits resolved dependency sources', () async {
+    final workspace = await Directory.systemTemp.createTemp(
+      'ccrouter-scaffold-sources-',
+    );
+    addTearDown(() => workspace.delete(recursive: true));
+    final modules = Directory(path.join(workspace.path, 'modules'))
+      ..createSync();
+    Directory(
+      path.join(workspace.path, 'framework', 'ccrouter'),
+    ).createSync(recursive: true);
+    File(path.join(workspace.path, 'pubspec.yaml')).writeAsStringSync('''
+name: scaffold_workspace
+environment:
+  sdk: ">=3.12.0 <4.0.0"
+dependencies:
+  ccrouter:
+    path: framework/ccrouter
+dev_dependencies:
+  ccrouter_generator:
+    git:
+      url: https://example.com/cc-router.git
+      ref: abcdef1234567890
+      path: packages/ccrouter_generator
+workspace:
+  - existing
+''');
+
+    final result = await _run([
+      'create',
+      'component',
+      'demo_inventory',
+      modules.path,
+    ]);
+    final output = '${result.stdout}\n${result.stderr}';
+    expect(result.exitCode, 0, reason: output);
+    final manifest = File(
+      path.join(modules.path, 'demo_inventory', 'pubspec.yaml'),
+    ).readAsStringSync();
+
+    expect(manifest, contains('sdk: >=3.12.0 <4.0.0'));
+    expect(manifest, contains('path: ../../framework/ccrouter'));
+    expect(manifest, contains('url: "https://example.com/cc-router.git"'));
+    expect(manifest, contains('ref: abcdef1234567890'));
+    expect(manifest, contains('path: packages/ccrouter_generator'));
+  });
+
   test(
     'create capability templates emit valid annotation starting points',
     () async {

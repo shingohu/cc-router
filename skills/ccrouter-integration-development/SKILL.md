@@ -207,6 +207,10 @@ default: Service uses a concrete `@CCService(id: ...)`, Event adds a Subscriber
 only with `--with-subscriber`, and an independent InitTask adds a reusable
 Contract only with `--with-contract`. Promoting a capability to a cross-component
 Contract remains an explicit design step.
+For a new Component, the CLI inherits the nearest proven Dart SDK and CCRouter
+dependency sources, rebasing direct Path dependencies for the new Package. It
+does not assume a hosted framework version when the current Workspace cannot
+prove one.
 Treat the CLI's printed `Next steps` as non-mutating guidance. Confirm the actual
 Host and dependency owner before applying them; the scaffold does not infer or
 edit that ownership.

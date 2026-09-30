@@ -96,6 +96,11 @@ require `--with-subscriber`; reusable InitTask Contracts require
 `--with-contract`. The scaffold does not edit Host dependencies, generated
 output, or Contract exposure. A cross-component Contract is a later design
 decision.
+Component manifests inherit the nearest explicit Dart SDK constraint and
+`ccrouter`/`ccrouter_generator` Hosted, Git, or rebased Path declarations. A
+resolved Package version is used only when no explicit declaration exists; if
+either source cannot be proven, creation fails before writing instead of using
+a hard-coded framework version.
 After success, follow the printed `Next steps`. They are deterministic guidance,
 not proof of the intended Host, and they never authorize silent Workspace or
 dependency edits.

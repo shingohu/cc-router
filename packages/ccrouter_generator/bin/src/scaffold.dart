@@ -1,6 +1,9 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:path/path.dart' as path;
+import 'package:pub_semver/pub_semver.dart';
+import 'package:yaml/yaml.dart';
 
 /// The kind of source template requested from the CLI.
 enum CCScaffoldKind {
@@ -144,6 +147,7 @@ Map<File, String> _componentFiles(String rawName, Directory parent) {
   final componentSymbol = '${symbol}Component';
   final idSymbol = '${symbol}ComponentId';
   final workspaceResolution = _hasWorkspaceRoot(parent);
+  final manifest = _resolveComponentManifest(parent, packageRoot);
   final pubspec = StringBuffer()
     ..writeln('name: $packageName')
     ..writeln('description: CCRouter component Package.')
@@ -152,13 +156,14 @@ Map<File, String> _componentFiles(String rawName, Directory parent) {
   if (workspaceResolution) pubspec.writeln('resolution: workspace');
   pubspec
     ..writeln('environment:')
-    ..writeln('  sdk: ^3.10.0')
-    ..writeln('dependencies:')
-    ..writeln('  ccrouter: ^0.1.0')
+    ..writeln('  sdk: ${_yamlScalar(manifest.sdkConstraint)}')
+    ..writeln('dependencies:');
+  _writeDependency(pubspec, 'ccrouter', manifest.ccrouter);
+  pubspec
     ..writeln('  flutter:')
     ..writeln('    sdk: flutter')
-    ..writeln('dev_dependencies:')
-    ..writeln('  ccrouter_generator: ^0.1.0');
+    ..writeln('dev_dependencies:');
+  _writeDependency(pubspec, 'ccrouter_generator', manifest.ccrouterGenerator);
 
   final componentSource =
       '''import 'package:ccrouter/ccrouter.dart';
@@ -475,4 +480,279 @@ Directory? _findWorkspaceRoot(Directory start) {
     if (path.equals(parent.path, current.path)) return null;
     current = parent;
   }
+}
+
+/// Resolved manifest values inherited by a newly scaffolded component.
+final class _ComponentManifest {
+  /// Creates one dependency-source snapshot.
+  const _ComponentManifest({
+    required this.sdkConstraint,
+    required this.ccrouter,
+    required this.ccrouterGenerator,
+  });
+
+  /// Dart SDK constraint inherited from the nearest Package or Workspace.
+  final String sdkConstraint;
+
+  /// Exact hosted, Git, or path declaration for the Runtime Package.
+  final Object ccrouter;
+
+  /// Exact hosted, Git, or path declaration for the Generator Package.
+  final Object ccrouterGenerator;
+}
+
+/// Resolves scaffold dependencies without guessing from unrelated Packages.
+_ComponentManifest _resolveComponentManifest(
+  Directory parent,
+  Directory packageRoot,
+) {
+  final manifests = _ancestorPubspecs(parent);
+  final fallbackManifests = _ancestorPubspecs(Directory.current);
+  final allManifests = <File>[
+    ...manifests,
+    for (final manifest in fallbackManifests)
+      if (!manifests.any(
+        (candidate) => path.equals(candidate.path, manifest.path),
+      ))
+        manifest,
+  ];
+  final sdk = _firstSdkConstraint(allManifests) ?? '^3.10.0';
+  final ccrouter =
+      _firstDependency(allManifests, 'ccrouter', packageRoot) ??
+      _resolvedVersionConstraint(parent, 'ccrouter') ??
+      _resolvedVersionConstraint(Directory.current, 'ccrouter');
+  final generator =
+      _firstDependency(allManifests, 'ccrouter_generator', packageRoot) ??
+      _resolvedVersionConstraint(parent, 'ccrouter_generator') ??
+      _resolvedVersionConstraint(Directory.current, 'ccrouter_generator');
+  if (ccrouter == null || generator == null) {
+    final missing = <String>[
+      if (ccrouter == null) 'ccrouter',
+      if (generator == null) 'ccrouter_generator',
+    ].join(', ');
+    throw CCScaffoldException(
+      'Cannot prove dependency source for $missing. Run the scaffold from a '
+      'resolved CCRouter Host/Workspace or declare the dependency there first. '
+      'No component files were written under ${packageRoot.path}.',
+    );
+  }
+  return _ComponentManifest(
+    sdkConstraint: sdk,
+    ccrouter: ccrouter,
+    ccrouterGenerator: generator,
+  );
+}
+
+/// Returns pubspec files from the nearest Package through its ancestors.
+List<File> _ancestorPubspecs(Directory start) {
+  final result = <File>[];
+  var current = start.absolute;
+  while (true) {
+    final pubspec = File(path.join(current.path, 'pubspec.yaml'));
+    if (pubspec.existsSync()) result.add(pubspec);
+    final parent = current.parent;
+    if (path.equals(parent.path, current.path)) return result;
+    current = parent;
+  }
+}
+
+/// Reads the first explicit direct dependency from ordered manifests.
+Object? _firstDependency(
+  List<File> manifests,
+  String packageName,
+  Directory packageRoot,
+) {
+  for (final manifest in manifests) {
+    final document = _readYamlMap(manifest);
+    if (document == null) continue;
+    for (final section in const ['dependencies', 'dev_dependencies']) {
+      final dependencies = document[section];
+      if (dependencies is! YamlMap || !dependencies.containsKey(packageName)) {
+        continue;
+      }
+      final value = _normalizeYaml(dependencies[packageName]);
+      return _rebasePathDependency(value, manifest.parent, packageRoot);
+    }
+  }
+  return null;
+}
+
+/// Rebases a direct path dependency for the new nested Package location.
+Object _rebasePathDependency(
+  Object value,
+  Directory origin,
+  Directory packageRoot,
+) {
+  if (value is! Map<String, Object> || value['path'] is! String) return value;
+  final declared = value['path']! as String;
+  final absolute = path.isAbsolute(declared)
+      ? path.normalize(declared)
+      : path.normalize(path.join(origin.path, declared));
+  return <String, Object>{
+    ...value,
+    'path': path
+        .relative(absolute, from: packageRoot.path)
+        .replaceAll('\\', '/'),
+  };
+}
+
+/// Reads the nearest declared Dart SDK constraint.
+String? _firstSdkConstraint(List<File> manifests) {
+  for (final manifest in manifests) {
+    final environment = _readYamlMap(manifest)?['environment'];
+    if (environment is YamlMap && environment['sdk'] is String) {
+      return environment['sdk'] as String;
+    }
+  }
+  return null;
+}
+
+/// Uses an exact resolved version only for proven Workspace or hosted sources.
+String? _resolvedVersionConstraint(Directory start, String packageName) {
+  final config = _nearestPackageConfig(start);
+  if (config == null) return null;
+  try {
+    final decoded = jsonDecode(config.readAsStringSync());
+    if (decoded is! Map || decoded['packages'] is! List) return null;
+    for (final rawPackage in decoded['packages'] as List) {
+      if (rawPackage is! Map || rawPackage['name'] != packageName) continue;
+      final rootUri = rawPackage['rootUri'];
+      if (rootUri is! String) return null;
+      final packageRoot = Directory.fromUri(config.uri.resolve(rootUri));
+      final resolutionRoot = config.parent.parent;
+      if (!_isWorkspaceMember(resolutionRoot, packageRoot) &&
+          !_isHostedLockDependency(resolutionRoot, packageName)) {
+        return null;
+      }
+      final manifest = _readYamlMap(
+        File(path.join(packageRoot.path, 'pubspec.yaml')),
+      );
+      final rawVersion = manifest?['version'];
+      if (rawVersion is! String) return null;
+      final version = Version.parse(rawVersion);
+      return '^$version';
+    }
+  } on FormatException {
+    return null;
+  } on FileSystemException {
+    return null;
+  }
+  return null;
+}
+
+/// Whether [packageRoot] is explicitly listed by the enclosing Workspace.
+bool _isWorkspaceMember(Directory root, Directory packageRoot) {
+  final workspace = _readYamlMap(
+    File(path.join(root.path, 'pubspec.yaml')),
+  )?['workspace'];
+  if (workspace is! YamlList) return false;
+  final normalizedPackage = path.normalize(packageRoot.absolute.path);
+  for (final member in workspace.whereType<String>()) {
+    if (path.equals(path.join(root.path, member), normalizedPackage)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/// Whether Pub's lockfile proves that [packageName] came from Hosted Pub.
+bool _isHostedLockDependency(Directory root, String packageName) {
+  final packages = _readYamlMap(
+    File(path.join(root.path, 'pubspec.lock')),
+  )?['packages'];
+  if (packages is! YamlMap) return false;
+  final dependency = packages[packageName];
+  return dependency is YamlMap && dependency['source'] == 'hosted';
+}
+
+/// Finds resolved Package state without crossing above the filesystem root.
+File? _nearestPackageConfig(Directory start) {
+  var current = start.absolute;
+  while (true) {
+    final config = File(
+      path.join(current.path, '.dart_tool', 'package_config.json'),
+    );
+    if (config.existsSync()) return config;
+    final parent = current.parent;
+    if (path.equals(parent.path, current.path)) return null;
+    current = parent;
+  }
+}
+
+/// Loads a YAML mapping or returns null for an unreadable manifest.
+YamlMap? _readYamlMap(File file) {
+  if (!file.existsSync()) return null;
+  try {
+    final document = loadYaml(file.readAsStringSync());
+    return document is YamlMap ? document : null;
+  } on FileSystemException {
+    return null;
+  } on YamlException {
+    return null;
+  }
+}
+
+/// Converts YAML collection nodes into immutable plain Dart values.
+Object _normalizeYaml(Object? value) {
+  if (value is YamlMap) {
+    return <String, Object>{
+      for (final entry in value.entries)
+        if (entry.key is String)
+          entry.key as String: _normalizeYaml(entry.value),
+    };
+  }
+  if (value is YamlList) {
+    return <Object>[for (final item in value) _normalizeYaml(item)];
+  }
+  if (value is String || value is num || value is bool) return value!;
+  if (value == null) return 'any';
+  return '$value';
+}
+
+/// Writes one dependency using a deterministic YAML subset.
+void _writeDependency(StringBuffer output, String name, Object value) {
+  if (value is Map || value is List) {
+    output.writeln('  $name:');
+    _writeYamlValue(output, value, 4);
+    return;
+  }
+  output.writeln('  $name: ${_yamlScalar(value)}');
+}
+
+/// Writes nested Maps and Lists supported by Pub dependency declarations.
+void _writeYamlValue(StringBuffer output, Object value, int indent) {
+  final prefix = ' ' * indent;
+  if (value is Map<String, Object>) {
+    for (final entry in value.entries) {
+      if (entry.value is Map || entry.value is List) {
+        output.writeln('$prefix${entry.key}:');
+        _writeYamlValue(output, entry.value, indent + 2);
+      } else {
+        output.writeln('$prefix${entry.key}: ${_yamlScalar(entry.value)}');
+      }
+    }
+    return;
+  }
+  if (value is List<Object>) {
+    for (final item in value) {
+      if (item is Map || item is List) {
+        output.writeln('$prefix-');
+        _writeYamlValue(output, item, indent + 2);
+      } else {
+        output.writeln('$prefix- ${_yamlScalar(item)}');
+      }
+    }
+  }
+}
+
+/// Encodes one YAML scalar without changing version-constraint readability.
+String _yamlScalar(Object value) {
+  if (value is! String) return '$value';
+  if (RegExp(r'^[A-Za-z0-9_./^<>=+*~ -]+$').hasMatch(value) &&
+      value != 'true' &&
+      value != 'false' &&
+      value != 'null') {
+    return value;
+  }
+  return jsonEncode(value);
 }

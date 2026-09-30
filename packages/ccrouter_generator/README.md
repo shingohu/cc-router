@@ -163,6 +163,9 @@ Hook 按 SDK 版本独立安装，不修改 Flutter snapshot；非 CCRouter 项�
 `create component <package-name> [parent-directory]` 会生成 `pubspec.yaml`、Package barrel
 和 `lib/src/<package>_component.dart`；Descriptor 不会从根 barrel 导出。`create page <PageName> [component-directory]` 会生成
 `lib/src/<page>_page.dart`、内部 `@CCRoute<void>`、稳定默认 Route ID 和 `/page` Path。
+新 Component 的 manifest 优先继承目标目录最近 Package/Workspace 的 Dart SDK 约束及
+`ccrouter`/`ccrouter_generator` Hosted、Git 或 Path 声明；Path 会相对新 Package 重新计算。
+只有没有显式声明时才读取 resolved Package 版本，仍无法证明来源则在写入前失败。
 `create service`、`create command`、`create event` 和 `create init-task` 会在现有组件的
 `lib/src` 下生成最小起始文件。内部 Service 默认只生成带稳定 ID 的 concrete `@CCService`；
 Command 生成 Contract 与 Handler；Event 默认只生成 Contract，`--with-subscriber` 才附带一个
