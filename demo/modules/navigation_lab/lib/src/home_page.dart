@@ -202,19 +202,30 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
       body: wide
           ? Row(
               children: [
-                NavigationRail(
-                  selectedIndex: _section,
-                  labelType: NavigationRailLabelType.all,
-                  onDestinationSelected: (value) =>
-                      setState(() => _section = value),
-                  destinations: _destinations
-                      .map(
-                        (item) => NavigationRailDestination(
-                          icon: Icon(item.icon),
-                          label: Text(item.label),
+                LayoutBuilder(
+                  builder: (context, constraints) => SingleChildScrollView(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: constraints.maxHeight,
+                      ),
+                      child: IntrinsicHeight(
+                        child: NavigationRail(
+                          selectedIndex: _section,
+                          labelType: NavigationRailLabelType.all,
+                          onDestinationSelected: (value) =>
+                              setState(() => _section = value),
+                          destinations: _destinations
+                              .map(
+                                (item) => NavigationRailDestination(
+                                  icon: Icon(item.icon),
+                                  label: Text(item.label),
+                                ),
+                              )
+                              .toList(),
                         ),
-                      )
-                      .toList(),
+                      ),
+                    ),
+                  ),
                 ),
                 const VerticalDivider(width: 1),
                 Expanded(child: body),

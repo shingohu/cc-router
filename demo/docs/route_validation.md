@@ -6,6 +6,9 @@
 - 平台：macOS 真实 Flutter 应用
 - Backend：`CCGoRouterBackend.managed`，`go_router 17.5.0`
 - SDK：FVM `ohos/oh-3.41.9-release`（Flutter 3.41.10 OHOS / Dart 3.11.5）
+- macOS Host：首选启动 content 为 `800 × 800`、最小 content 为
+  `480 × 640` logical points；实际尺寸和位置受当前显示器 `visibleFrame`
+  限制，切换显示器后会重新计算有效约束
 - 组件：4
 - 生成路由：30
 
@@ -52,7 +55,7 @@ Demo 的交互实现位于 `modules/navigation_lab`，宿主只负责初始化 C
 | Session / Component Contract | 账号 Session、订单 Route/Service Contract | 通过 |
 | Runtime diagnostics | RouteEntry、Backend Entry、Aspect Timeline | 通过 |
 | Result / shutdown cleanup | Go、Reset、Runtime dispose 结束 pending result | 通过，无悬挂 Future |
-| Semantic / Accessibility Monkey | 360 步 Widget 随机回归 + 120 步真实 macOS 操作 | 通过，发现并修复 2 个 Demo 小窗口溢出 |
+| Semantic / Accessibility Monkey | 360 步 Widget 随机回归 + 120 步真实 macOS 操作 | 通过，累计修复 4 类 Demo 小窗口布局问题 |
 
 ## 已发现并修复
 
@@ -66,6 +69,8 @@ Demo 的交互实现位于 `modules/navigation_lab`，宿主只负责初始化 C
 8. macOS Monkey 将窗口缩小到约 490x350 logical pixels 后，PopGuard 页面底部溢出 33px。页面现使用安全区和可滚动约束，并增加 DPR 2 小窗口定向测试。
 9. 同一轮 Monkey 打开 Failure fallback 时底部溢出 45px。兜底页已采用相同的自适应布局，并验证所有诊断字段和返回按钮仍可访问。
 10. Demo 部分 fire-and-forget 导航未消费 Push Future，Runtime shutdown 正确终止 pending result 时会暴露未处理的 `CCNavigationAdapterError`。示例现通过统一观察 helper 消费结果并记录失败类型，框架仍保留明确的 shutdown 错误语义。
+11. 双 Host 的嵌入式首页在宽而低的窗口中会压缩 `NavigationRail`，自适应示例在极窄窗口强制模拟 hinge 时也会把 List/Detail Pane 压到不可用宽度。Rail 现可纵向滚动；双 Pane 保留 `600` logical points 的最小内容宽度并允许横向滚动，列表和详情自身也支持紧凑布局与纵向滚动。对应低高度和 DPR 2 窄 Host 用例已加入回归。
+12. macOS Runner 不再把固定 frame 高度作为窗口下限。它使用 `contentMinSize` 表达 `480 × 640` 的 Flutter 内容需求，以 `800 × 800` 作为首选启动 content，并按当前显示器 `visibleFrame` 限制尺寸和位置；显示器切换时会重新计算有效约束并释放 Notification observer。
 
 完整的随机动作、状态不变量、问题归因和未覆盖边界见
 [macOS Monkey 验证记录](macos_monkey_validation.md)。
@@ -78,6 +83,7 @@ Demo 的交互实现位于 `modules/navigation_lab`，宿主只负责初始化 C
 4. 完整 Route Restoration 按设计暂缓；当前只保留 restoration opportunity 诊断，不宣称可恢复业务栈。
 5. 标准 HTTPS Universal Link 的系统唤醒依赖应用 entitlement、Associated Domains 与服务端 AASA；Demo 只实测 Host mapper 和 WebView，不能用不受控制的公共域名伪造系统关联。
 6. 私密 Web 示例的自定义 Header 只用于初始请求；生产认证仍需设计 Cookie/会话桥接、登出清理和多账号隔离，不能假设 Header 自动跨重定向持续注入。
+7. macOS 输入日志中偶发的 `HardwareKeyboard` 重复 `KeyDownEvent` assertion 属于 Flutter SDK 与平台键盘状态同步问题，不是 CCRouter 导航或窗口布局错误。Demo 不捕获或吞掉该断言；升级 Flutter 后需要重新验证。
 
 ## 官方 GoRouter 示例对照
 

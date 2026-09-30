@@ -55,6 +55,48 @@ void main() {
     await tester.pumpAndSettle();
   });
 
+  testWidgets('wide low window keeps nested NavigationRail usable', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(2000, 500);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(createMultiHostDemoApp());
+    await tester.pumpAndSettle();
+
+    expect(find.byType(NavigationRail), findsNWidgets(2));
+    expect(tester.takeException(), isNull);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('narrow embedded Host keeps simulated split panes usable', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(640, 960);
+    tester.view.devicePixelRatio = 2;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(createMultiHostDemoApp());
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('自适应布局'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('simulate-hinge')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('adaptive-list-pane')), findsOneWidget);
+    expect(find.byKey(const ValueKey('adaptive-detail-pane')), findsOneWidget);
+    expect(find.byKey(const ValueKey('adaptive-hinge')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
+  });
+
   testWidgets(
     'one Host adapts orientation, list-detail Outlets, and display features',
     (tester) async {

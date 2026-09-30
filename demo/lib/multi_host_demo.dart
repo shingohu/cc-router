@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter/ccrouter_host.dart';
@@ -324,41 +325,59 @@ final class _AdaptiveHostViewState extends State<_AdaptiveHostView> {
           const Divider(height: 1),
           Expanded(
             child: split
-                ? Row(
-                    children: [
-                      Expanded(
-                        child: _AdaptiveOutletNavigator(
-                          navigatorKey: widget.host.navigatorKeyFor(
-                            demoAdaptiveListOutlet,
-                          ),
-                          pageKey: 'adaptive-list',
-                          child: _AdaptiveListPane(
-                            selectedItem: _selectedItem,
-                            onSelected: (item) =>
-                                _selectItem(item, compact: false),
+                ? LayoutBuilder(
+                    builder: (context, constraints) {
+                      const minimumSplitWidth = 600.0;
+                      final splitWidth =
+                          constraints.maxWidth < minimumSplitWidth
+                          ? minimumSplitWidth
+                          : constraints.maxWidth;
+                      return SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: SizedBox(
+                          width: splitWidth,
+                          height: constraints.maxHeight,
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: _AdaptiveOutletNavigator(
+                                  navigatorKey: widget.host.navigatorKeyFor(
+                                    demoAdaptiveListOutlet,
+                                  ),
+                                  pageKey: 'adaptive-list',
+                                  child: _AdaptiveListPane(
+                                    selectedItem: _selectedItem,
+                                    onSelected: (item) =>
+                                        _selectItem(item, compact: false),
+                                  ),
+                                ),
+                              ),
+                              if (_simulateHinge)
+                                Container(
+                                  key: const ValueKey('adaptive-hinge'),
+                                  width: 12,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.surfaceContainerHighest,
+                                )
+                              else
+                                const VerticalDivider(width: 1),
+                              Expanded(
+                                child: _AdaptiveOutletNavigator(
+                                  navigatorKey: widget.host.navigatorKeyFor(
+                                    demoAdaptiveDetailOutlet,
+                                  ),
+                                  pageKey: 'adaptive-detail',
+                                  child: _AdaptiveDetailPane(
+                                    item: _selectedItem,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                      ),
-                      if (_simulateHinge)
-                        Container(
-                          key: const ValueKey('adaptive-hinge'),
-                          width: 12,
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.surfaceContainerHighest,
-                        )
-                      else
-                        const VerticalDivider(width: 1),
-                      Expanded(
-                        child: _AdaptiveOutletNavigator(
-                          navigatorKey: widget.host.navigatorKeyFor(
-                            demoAdaptiveDetailOutlet,
-                          ),
-                          pageKey: 'adaptive-detail',
-                          child: _AdaptiveDetailPane(item: _selectedItem),
-                        ),
-                      ),
-                    ],
+                      );
+                    },
                   )
                 : _AdaptiveOutletNavigator(
                     navigatorKey: widget.host.navigatorKeyFor(
@@ -417,23 +436,37 @@ final class _AdaptiveListPane extends StatelessWidget {
   Widget build(BuildContext context) => Material(
     key: const ValueKey('adaptive-list-pane'),
     color: Theme.of(context).colorScheme.surface,
-    child: ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        Text(
-          'List Outlet · $demoAdaptiveListOutlet',
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
-        const SizedBox(height: 8),
-        for (var item = 1; item <= 5; item++)
-          ListTile(
-            selected: selectedItem == item,
-            leading: const Icon(Icons.article_outlined),
-            title: Text('Item $item'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => onSelected(item),
-          ),
-      ],
+    child: LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 240;
+        return ListView(
+          padding: EdgeInsets.all(compact ? 8 : 16),
+          children: [
+            Text(
+              'List Outlet · $demoAdaptiveListOutlet',
+              maxLines: compact ? 2 : 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            for (var item = 1; item <= 5; item++)
+              ListTile(
+                selected: selectedItem == item,
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: compact ? 4 : 16,
+                ),
+                leading: compact ? null : const Icon(Icons.article_outlined),
+                title: Text(
+                  'Item $item',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                trailing: compact ? null : const Icon(Icons.chevron_right),
+                onTap: () => onSelected(item),
+              ),
+          ],
+        );
+      },
     ),
   );
 }
@@ -453,35 +486,46 @@ final class _AdaptiveDetailPane extends StatelessWidget {
   Widget build(BuildContext context) => Material(
     key: const ValueKey('adaptive-detail-pane'),
     color: Theme.of(context).colorScheme.surfaceContainerLow,
-    child: Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (onBack != null)
-              Align(
-                alignment: Alignment.centerLeft,
-                child: IconButton(
-                  tooltip: '返回列表',
-                  onPressed: onBack,
-                  icon: const Icon(Icons.arrow_back),
-                ),
+    child: LayoutBuilder(
+      builder: (context, constraints) {
+        final padding = constraints.maxWidth < 320 ? 12.0 : 24.0;
+        return SingleChildScrollView(
+          padding: EdgeInsets.all(padding),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: math.max(0, constraints.maxHeight - padding * 2),
+            ),
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (onBack != null)
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: IconButton(
+                        tooltip: '返回列表',
+                        onPressed: onBack,
+                        icon: const Icon(Icons.arrow_back),
+                      ),
+                    ),
+                  const Icon(Icons.description_outlined, size: 56),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Detail View · $outletName',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Item $item',
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                ],
               ),
-            const Icon(Icons.description_outlined, size: 56),
-            const SizedBox(height: 12),
-            Text(
-              'Detail View · $outletName',
-              style: Theme.of(context).textTheme.titleMedium,
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Item $item',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     ),
   );
 }
