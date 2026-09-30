@@ -98,7 +98,13 @@ analyzer:
 ```
 
 Android Studio、IntelliJ 和 VS Code 使用同一个 Dart Analysis Server 配置；启用后重启
-Analysis Server 或 IDE。插件会在编辑 `.dart` 文件时发送标准 `analysis.errors` 诊断。
+Analysis Server 或 IDE。插件会在编辑 `.dart` 文件时发送标准 `analysis.errors` 诊断，并读取
+当前未保存的 overlay；删除 required Owner 等问题不需要等到保存或运行 Generator 后才出现。
+Plugin 初始化只分析开发者编写的 Dart 源码，跳过平台/build 产物和 CCRouter 生成库。
+
+`dart analyze` 不运行 legacy Analysis Server Plugin，因此它只适合验证 Dart 自带规则，不能用来
+证明 CCRouter IDE 诊断已经加载。实时闭环应使用 Android Studio、IntelliJ、VS Code 或真实
+Language Server 协议测试；跨文件与生成物最终正确性继续由 `ccrouter generate --check` 保证。
 
 当前仓库尚未发布 Package 时，可先在插件 Package 本身验证：
 
@@ -130,7 +136,7 @@ demo/tools/ccrouter_analyzer_plugin_host/
 Demo 的 `pubspec.yaml` 只依赖这个不带 Analyzer 约束的 Host Package；真正的规则 Package
 在 bootstrap 的独立依赖环境中解析。这样不会把 Analyzer 8.4.0 与 Workspace 生成器的
 Analyzer 10 混在一个依赖图里。bootstrap 当前使用远端 `main` 上固定的 commit
-`438ddaae0bf91f1d986c4309074d523790c55a0f`，可由 Analysis Server
+`c9495775b5da61ba8c63c7597939e3350bb08c0f`，可由 Analysis Server
 复制到临时目录并正常启动。bootstrap 目录同时保留 `pubspec.hosted.yaml` 作为发布后的
 Hosted fallback；发布到 Hosted 后只能二选一替换活动 manifest，不能在同一个 bootstrap
 Package 同时声明 Git 和 Hosted 两个来源。
@@ -148,8 +154,9 @@ Analysis Server entrypoint 可加载，不会启动常驻 Analysis Server。插�
 验证，验证完成后恢复固定 Git ref；绝对 path 不得提交。Git ref 更新前必须先运行插件
 Package 的 analyze/test 和 loader smoke。
 
-当前固定 ref `438ddaae0bf91f1d986c4309074d523790c55a0f` 已包含 2026-09-29 完成的规则、Quick Fix、性能缓存和只读
-CLI 支持，无需仅为追随本地 HEAD 而更新。只有 Plugin 生产代码真实变化、隔离测试通过并
+当前固定 ref `c9495775b5da61ba8c63c7597939e3350bb08c0f` 已包含 2026-09-30 完成的规则、单个/批量
+Owner Quick Fix、未保存 overlay 诊断、性能缓存和只读 CLI 健康检查，无需仅为追随本地 HEAD 而更新。只有 Plugin
+生产代码真实变化、隔离测试通过并
 推送远端后，才更新为对应的完整 commit SHA；禁止使用 `main` 或尚未推送的本地 SHA。
 
 Demo 运行时还接入了 `ccrouter_devtools`：进入 Navigation Lab 的“诊断”分区，点击
