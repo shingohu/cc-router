@@ -2645,7 +2645,11 @@
         "route": "OrderDetailRoute",
         "arguments": "OrderDetailRouteArguments",
         "package": "demo_order_contracts",
-        "library": "lib/src/ccrouter_generated/contract/order_detail_route_contract.route.contract.g.dart"
+        "library": "lib/src/ccrouter_generated/contract/order_detail_route_contract.route.contract.g.dart",
+        "publicLibraries": [
+          "package:demo_order_contracts/demo_order_contracts.dart",
+          "package:demo_order_contracts/demo_order_contracts_owner.dart"
+        ]
       },
       "generatedArtifacts": [
         {
@@ -2767,7 +2771,11 @@
         "route": "DemoPrivateWebRoute",
         "arguments": "DemoPrivateWebRouteArguments",
         "package": "demo_web_contracts",
-        "library": "lib/src/ccrouter_generated/contract/web_route_contracts.route.contract.g.dart"
+        "library": "lib/src/ccrouter_generated/contract/web_route_contracts.route.contract.g.dart",
+        "publicLibraries": [
+          "package:demo_web_contracts/demo_web_contracts.dart",
+          "package:demo_web_contracts/demo_web_contracts_owner.dart"
+        ]
       },
       "generatedArtifacts": [
         {
@@ -2874,7 +2882,11 @@
         "route": "DemoPublicWebRoute",
         "arguments": "DemoPublicWebRouteArguments",
         "package": "demo_web_contracts",
-        "library": "lib/src/ccrouter_generated/contract/web_route_contracts.route.contract.g.dart"
+        "library": "lib/src/ccrouter_generated/contract/web_route_contracts.route.contract.g.dart",
+        "publicLibraries": [
+          "package:demo_web_contracts/demo_web_contracts.dart",
+          "package:demo_web_contracts/demo_web_contracts_owner.dart"
+        ]
       },
       "generatedArtifacts": [
         {

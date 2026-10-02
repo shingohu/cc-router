@@ -104,6 +104,7 @@ Future<void> main(List<String> arguments) async {
         hostRoot: root,
         workspace: buildContext.workspace,
         query: parsed.query!,
+        usageComponentId: parsed.usageComponentId,
       )) {
         exitCode = 1;
       }
@@ -386,6 +387,13 @@ Future<bool> _aggregate(Directory root, _Arguments parsed) async {
   final contractApiOutputs = await _generateContractApiEntrypoints(
     resolvedMetadataFiles,
   );
+  CCRouteBarrelExportValidator.annotatePublicLibraries(
+    documents,
+    packageRoots: {
+      for (final metadata in resolvedMetadataFiles)
+        '${metadata.document['package'] ?? ''}': metadata.packageRoot,
+    },
+  );
   final result = CCRouteWorkspaceValidator.validate(documents);
   final errors = [
     ...result.errors,
@@ -495,7 +503,7 @@ Future<int> _countExistingFiles(Iterable<Directory> directories) async {
 
 const _usage = '''Usage:
   ccrouter generate [scan-root] [--output-dir <directory>] [--check] [--no-cache] [--profile]
-  ccrouter find <capability-id-or-route-pattern> [host-root]
+  ccrouter find <capability-id-or-route-pattern> [host-root] [--usage <component-id>]
   ccrouter clean [host-root]
   ccrouter aggregate [scan-root] [--output-dir <directory>] [--generate-component-registrars]
   ccrouter create component <package-name> [parent-directory]
@@ -517,7 +525,8 @@ validates metadata and writes component indexes, Host assembly, and route docs.
 CCRouter-managed artifact. `--no-cache` forces the reference full-parse path.
 `--profile` reports phase timings, build targets, cache hits, and dirty reasons.
 `find` reads existing Package indexes without generating and matches exact
-capability IDs or Route Pattern values.
+capability IDs or Route Pattern values. `--usage` adds a read-only integration
+recipe for one existing consumer component; it never edits dependencies.
 `clean` removes only CCRouter-owned source outputs in writable Packages; it
 preserves build caches, read-only dependencies, and unknown user files.
 `aggregate` preserves the metadata-only legacy path.
@@ -629,6 +638,26 @@ Future<bool> _generateResolvedWorkspace(
     }
   }
   parseWatch.stop();
+
+  final localMetadataFiles = <_MetadataFile>[
+    for (final entry in localMetadata.entries)
+      for (final document in entry.value)
+        _MetadataFile(
+          workspace.packages[entry.key]!.indexFile,
+          document,
+          packageRoot: workspace.packages[entry.key]!.root,
+        ),
+  ];
+  final contractApiOutputs = await _generateContractApiEntrypoints(
+    localMetadataFiles,
+  );
+  CCRouteBarrelExportValidator.annotatePublicLibraries(
+    localMetadata.values.expand((documents) => documents),
+    packageRoots: {
+      for (final package in workspace.packages.values)
+        if (package.writable) package.name: package.root,
+    },
+  );
 
   _annotateConsumerContractMetadata(
     localMetadata,
@@ -763,7 +792,6 @@ Future<bool> _generateResolvedWorkspace(
   final localFiles = _resolveMetadataFiles(
     await _readWritableMetadataFiles(workspace),
   );
-  final contractApiOutputs = await _generateContractApiEntrypoints(localFiles);
 
   final documents = <Map<String, Object?>>[
     for (final name in order) ...?indexes[name]?.metadata,
@@ -1382,6 +1410,7 @@ final class _Arguments {
     required this.rootPath,
     required this.outputDirectoryPath,
     this.query,
+    this.usageComponentId,
     this.generateComponentRegistrars = false,
     this.check = false,
     this.noCache = false,
@@ -1407,6 +1436,9 @@ final class _Arguments {
 
   /// Exact capability ID or Route Pattern used only by `find`.
   final String? query;
+
+  /// Existing consumer component used for a read-only integration recipe.
+  final String? usageComponentId;
 
   /// Whether component indexes and Host assembly are emitted.
   final bool generateComponentRegistrars;
@@ -1471,6 +1503,7 @@ _Arguments _parseArguments(List<String> arguments) {
   String? outputDirectoryPath;
   var rootProvided = false;
   String? query;
+  String? usageComponentId;
   var generateComponentRegistrars = command == _GeneratorCommand.generate;
   var check = false;
   var noCache = false;
@@ -1497,6 +1530,31 @@ _Arguments _parseArguments(List<String> arguments) {
         );
       }
       outputDirectoryPath = arguments[++index];
+      continue;
+    }
+    if (argument == '--usage') {
+      if (index + 1 >= arguments.length ||
+          arguments[index + 1].startsWith('-')) {
+        return _Arguments(
+          command: command,
+          rootPath: '',
+          outputDirectoryPath: null,
+          error: 'Missing value for --usage.',
+        );
+      }
+      usageComponentId = arguments[++index];
+      continue;
+    }
+    if (argument.startsWith('--usage=')) {
+      usageComponentId = argument.substring('--usage='.length);
+      if (usageComponentId.isEmpty) {
+        return _Arguments(
+          command: command,
+          rootPath: '',
+          outputDirectoryPath: null,
+          error: 'Missing value for --usage.',
+        );
+      }
       continue;
     }
     if (argument == '--check') {
@@ -1572,6 +1630,14 @@ _Arguments _parseArguments(List<String> arguments) {
       error: 'find accepts only a query and optional Host root.',
     );
   }
+  if (usageComponentId != null && command != _GeneratorCommand.find) {
+    return _Arguments(
+      command: command,
+      rootPath: '',
+      outputDirectoryPath: null,
+      error: '--usage is only available with the find command.',
+    );
+  }
 
   if (command == _GeneratorCommand.clean &&
       (outputDirectoryPath != null ||
@@ -1609,6 +1675,7 @@ _Arguments _parseArguments(List<String> arguments) {
     rootPath: rootPath,
     outputDirectoryPath: outputDirectoryPath,
     query: query,
+    usageComponentId: usageComponentId,
     generateComponentRegistrars: generateComponentRegistrars,
     check: check,
     noCache: noCache,

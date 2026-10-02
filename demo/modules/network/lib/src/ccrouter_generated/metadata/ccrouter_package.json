@@ -1,11 +1,11 @@
 {
   "schemaVersion": 2,
-  "generatorVersion": "0.1.4",
+  "generatorVersion": "0.1.5",
   "package": {
     "name": "demo_network",
     "version": "0.1.0"
   },
-  "contentFingerprint": "ea8b106c2f61887ab0ac11b89dbb53bb7109f7bbc381b27380f19ddf06706c4a",
+  "contentFingerprint": "904dff7f2382053ec8b8ebf99247fec5c2c84b93a009049de9109b9aff69b3ee",
   "bundle": {
     "library": "lib/src/ccrouter_generated/host/demo_network_ccrouter.g.dart",
     "symbol": "ccrouterGeneratedPackageBundle"
@@ -282,7 +282,10 @@
             "symbol": "demoNetworkServiceToken",
             "library": "lib/src/ccrouter_generated/contract/network_service.service.contract.g.dart",
             "packageUri": "package:demo_network/src/ccrouter_generated/contract/network_service.service.contract.g.dart"
-          }
+          },
+          "publicLibraries": [
+            "package:demo_network/demo_network.dart"
+          ]
         }
       ],
       "serviceImplementations": [

@@ -47,6 +47,7 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter generate <host-root> 
 fvm dart run --verbosity=error ccrouter_generator:ccrouter generate <host-root> --no-cache
 fvm dart run --verbosity=error ccrouter_generator:ccrouter generate <host-root> --profile
 fvm dart run --verbosity=error ccrouter_generator:ccrouter find <capability-id-or-route-pattern> <host-root>
+fvm dart run --verbosity=error ccrouter_generator:ccrouter find <capability-id-or-route-pattern> <host-root> --usage <consumer-component-id>
 fvm dart run --verbosity=error ccrouter_generator:ccrouter clean <host-root>
 fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook install [--sdk <flutter-sdk-root>]
 fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook status [--sdk <flutter-sdk-root>]
@@ -77,6 +78,14 @@ Use `find` instead of repository-wide text search for a known capability or
 Route Pattern. It reads the current Host dependency-closure index and does not
 run builders or scan arbitrary source files. If the index is stale, report that
 and run `generate`; do not guess a generated API.
+Use `--usage` only for an existing consumer component in that Host closure. It
+prints a non-mutating recipe from generated facts: verified public imports,
+direct Pub and owner edges, kind-specific dependencies, the stable component
+API, and a typed call when one exists. It never edits Pubspec, component source,
+imports, or generated output. Do not guess a public barrel when the Index lacks
+one: require Contract promotion/export and regeneration. Keep Route, Service,
+Command, Event, and InitTask models distinct; in particular, do not invent
+`eventDependencies` or an InitTask business Client.
 
 ### Clean
 

@@ -594,3 +594,10 @@ Generator 全套 131 项、Demo 25 项通过；受管生成物无残留或 Git �
 以及依赖指纹不一致的混合版本 Index 必须报错，不能静默回退到旧文档。生成前新增的
 Capability 不可发现；源码修改后的新鲜度仍由 `generate --check` 负责。CLI 专项测试覆盖
 跨包合并、InitTask、Path/URI 别名、Host 闭包、无结果、参数错误和 Index 失败。
+
+`ccrouter find ... --usage <consumer-component-id>` 已补齐只读接入建议。Generator 在写
+Package Index 前解析显式 export chain，并记录实际可导入的顶层 public libraries；CLI 因此不扫描
+源码、不猜 barrel。它按 Route、Service、Command、Event、InitTask 的真实消费模型分别报告 Pub、
+Owner、dependency/Subscription/dependsOn 与稳定 Client/typed call。命令不修改依赖、源码、import
+或生成物；未公开 Contract、旧 Index、多匹配或未知 consumer 会明确降级或失败，最终正确性仍由
+Analyzer、Generator 与 Workspace Validator 保证。

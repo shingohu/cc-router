@@ -1,11 +1,11 @@
 {
   "schemaVersion": 2,
-  "generatorVersion": "0.1.4",
+  "generatorVersion": "0.1.5",
   "package": {
     "name": "ccrouter_demo",
     "version": "0.1.0+1"
   },
-  "contentFingerprint": "8bdee2dd81aec92e8525afdddb0a49f9c76184f20d0aeb9b97be670f9cae1dcd",
+  "contentFingerprint": "193815c2316e8bd3ed4246f9785bff946271c118014b0c8b892df9144faf2064",
   "bundle": {
     "library": "lib/src/ccrouter_generated/host/ccrouter_demo_ccrouter.g.dart",
     "symbol": "ccrouterGeneratedPackageBundle"
@@ -19,42 +19,42 @@
     {
       "name": "demo_kv_storage",
       "version": "0.1.0",
-      "contentFingerprint": "34dfb7eab7879cec25fceeb469c1bc513f2d255415a9332bdf455997e13740fc"
+      "contentFingerprint": "993054d8e1d8c4273474f3c688afbaa47145db67a15be334f9eb27be450ee958"
     },
     {
       "name": "demo_navigation_lab",
       "version": "0.1.0",
-      "contentFingerprint": "ff8cf41bf4f6e3f96161f73f456a5f37e172b7917f645a03bb376dae25992c66"
+      "contentFingerprint": "b7023b4a5c7dcf48187f0494800e97bacc572f5e430ac89a9fa92125942e61b2"
     },
     {
       "name": "demo_network",
       "version": "0.1.0",
-      "contentFingerprint": "ea8b106c2f61887ab0ac11b89dbb53bb7109f7bbc381b27380f19ddf06706c4a"
+      "contentFingerprint": "904dff7f2382053ec8b8ebf99247fec5c2c84b93a009049de9109b9aff69b3ee"
     },
     {
       "name": "demo_order",
       "version": "0.1.0",
-      "contentFingerprint": "d9da9ef2978b07744c079a5c4a4c41b627c65c4d588633c5c746f839abd84d9d"
+      "contentFingerprint": "0ac7b7448c816d71017775f0d768112b814abe9d5b397551f9d77895fb26c296"
     },
     {
       "name": "demo_order_contracts",
       "version": "0.1.0",
-      "contentFingerprint": "568432fa51f3002943cc40f1b3b3f4f8d0ed5ab62168ca9dfbf5faaa4fa79804"
+      "contentFingerprint": "e50e6629fd382469d4d59d797682ed95ed3a1ec8a40246e0bb3148ac5fc50920"
     },
     {
       "name": "demo_payment",
       "version": "0.1.0",
-      "contentFingerprint": "93acdb2ade8bd3270bce6912268548bb1dd109cb2b06f23ccacc4c3fbbe3f31b"
+      "contentFingerprint": "7d6a6c2427f690a2c8793113be49a03ee2a09e93a87ae62f1d4a9fb7894eb990"
     },
     {
       "name": "demo_web",
       "version": "0.1.0",
-      "contentFingerprint": "f21bfa77c9c068ef178a186b0af838db8ba18cbaba21b422fd6c124be6891c41"
+      "contentFingerprint": "05cfa5e78c0164915098d49653f9dc21a32b21127bcf8e54c67fa3595433b111"
     },
     {
       "name": "demo_web_contracts",
       "version": "0.1.0",
-      "contentFingerprint": "7fd9027bc46b2ab8354695aac5bf7f3271a9c752e4c38d8a47313bf650e2470e"
+      "contentFingerprint": "51310ef682fd411f1b639c0e78fe21e7898dcd63ebf771efc51a6978fa9dfacd"
     }
   ],
   "metadata": [],

@@ -66,6 +66,141 @@ void main() {
     expect('${result.stdout}', contains('Generated initTaskRegistration:'));
   });
 
+  test('find usage reports satisfied and missing typed dependencies', () async {
+    final service = await _find([
+      'demo_order.summary',
+      'demo',
+      '--usage',
+      'demo_payment_component',
+    ]);
+    expect(service.exitCode, 0, reason: '${service.stderr}');
+    expect(
+      '${service.stdout}',
+      contains('Usage recipe for component demo_payment_component'),
+    );
+    expect(
+      '${service.stdout}',
+      contains(
+        'Public import: package:demo_order_contracts/demo_order_contracts.dart',
+      ),
+    );
+    expect('${service.stdout}', contains('Pub dependency: satisfied'));
+    expect('${service.stdout}', contains('Owner dependency: satisfied'));
+    expect('${service.stdout}', contains('Service dependency: satisfied'));
+    expect(
+      '${service.stdout}',
+      contains('Generated Client: DemoPaymentServices.orderSummary'),
+    );
+
+    final command = await _find([
+      'demo_order.reserve',
+      'demo',
+      '--usage=demo_payment_component',
+    ]);
+    expect(command.exitCode, 0, reason: '${command.stderr}');
+    expect('${command.stdout}', contains('Command dependency: missing'));
+    expect(
+      '${command.stdout}',
+      contains(
+        'Add to commandDependencies: '
+        'CCCommandDependency<ReserveOrderCommand>()',
+      ),
+    );
+    expect(
+      '${command.stdout}',
+      contains('Generated Client: DemoPaymentCommands.reserve'),
+    );
+  });
+
+  test(
+    'find usage does not invent a dependency for the capability owner',
+    () async {
+      final result = await _find([
+        'demo_order.summary',
+        'demo',
+        '--usage',
+        'demo_order_component',
+      ]);
+      expect(result.exitCode, 0, reason: '${result.stderr}');
+      expect(
+        '${result.stdout}',
+        contains(
+          'Owner dependency: not applicable '
+          '(consumer owns the capability)',
+        ),
+      );
+      expect(
+        '${result.stdout}',
+        contains('Use local lookup: CCRouter.service<OrderSummaryService>()'),
+      );
+      expect('${result.stdout}', isNot(contains('Add to serviceDependencies')));
+    },
+  );
+
+  test('find usage respects Route and internal Contract boundaries', () async {
+    final route = await _find([
+      'order.detail',
+      'demo',
+      '--usage',
+      'demo_payment_component',
+    ]);
+    expect(route.exitCode, 0, reason: '${route.stderr}');
+    expect(
+      '${route.stdout}',
+      contains(
+        'Public import: package:demo_order_contracts/demo_order_contracts.dart',
+      ),
+    );
+    expect('${route.stdout}', isNot(contains('demo_order_contracts_owner')));
+    expect(
+      '${route.stdout}',
+      contains('Owner dependency: not required for a Route Contract'),
+    );
+    expect(
+      '${route.stdout}',
+      contains(
+        'Typed call: CCRouter.navigator.push<String>('
+        'OrderDetailRoute.intent(...))',
+      ),
+    );
+
+    final event = await _find([
+      'demo_navigation_lab.order_completed',
+      'demo',
+      '--usage',
+      'demo_payment_component',
+    ]);
+    expect(event.exitCode, 0, reason: '${event.stderr}');
+    expect('${event.stdout}', contains('Public import: unavailable'));
+    expect('${event.stdout}', contains('Cross-component usage: unavailable'));
+    expect('${event.stdout}', isNot(contains('Owner dependency: missing')));
+  });
+
+  test(
+    'find usage rejects an unknown consumer without writing indexes',
+    () async {
+      final indexes = <File, List<int>>{};
+      await for (final entity in Directory(
+        'demo',
+      ).list(recursive: true, followLinks: false)) {
+        if (entity is File && entity.path.endsWith('ccrouter_package.json')) {
+          indexes[entity] = entity.readAsBytesSync();
+        }
+      }
+      final result = await _find([
+        'demo_order.summary',
+        'demo',
+        '--usage',
+        'missing_component',
+      ]);
+      expect(result.exitCode, 1);
+      expect('${result.stderr}', contains('was not found'));
+      for (final entry in indexes.entries) {
+        expect(entry.key.readAsBytesSync(), entry.value);
+      }
+    },
+  );
+
   test('find is scoped to the selected Host dependency closure', () async {
     final missing = await _find(['web.public', 'demo/modules/order']);
     expect(missing.exitCode, 1);
@@ -83,6 +218,22 @@ void main() {
     final invalid = await _find(['order.detail', 'demo', '--check']);
     expect(invalid.exitCode, 2);
     expect('${invalid.stderr}', contains('find accepts only'));
+
+    final missingUsage = await _find(['order.detail', '--usage']);
+    expect(missingUsage.exitCode, 2);
+    expect('${missingUsage.stderr}', contains('Missing value for --usage'));
+
+    final wrongCommand = await _run([
+      'clean',
+      'demo',
+      '--usage',
+      'demo_payment_component',
+    ]);
+    expect(wrongCommand.exitCode, 2);
+    expect(
+      '${wrongCommand.stderr}',
+      contains('--usage is only available with the find command'),
+    );
   });
 
   test('find rejects missing and corrupted Package indexes', () async {
@@ -281,9 +432,12 @@ CCPackageIndex _writeIndex(
   return index;
 }
 
-Future<ProcessResult> _find(List<String> arguments) => Process.run(
+Future<ProcessResult> _find(List<String> arguments) =>
+    _run(['find', ...arguments]);
+
+Future<ProcessResult> _run(List<String> arguments) => Process.run(
   Platform.resolvedExecutable,
-  ['run', 'ccrouter_generator:ccrouter', 'find', ...arguments],
+  ['run', 'ccrouter_generator:ccrouter', ...arguments],
   workingDirectory: _repositoryRoot().path,
 );
 

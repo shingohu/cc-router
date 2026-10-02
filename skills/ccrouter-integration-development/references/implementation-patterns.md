@@ -120,6 +120,14 @@ The CLI prints non-mutating `Next steps` after a successful scaffold. Review the
 proposed Workspace/Host ownership instead of treating the hint as an inferred
 dependency decision.
 
+For an existing capability and consumer, use
+`ccrouter find <capability> <host-root> --usage <component-id>` before editing
+dependencies. The recipe reports only facts proven by the generated Host
+closure and public export chain. Apply its kind-specific guidance manually,
+then regenerate and let Analyzer/Workspace Validator remain authoritative. Do
+not infer an implementation-Package dependency when the command reports that a
+Contract has no verified public exposure.
+
 ### Component Implementation
 
 The implementation Package owns exactly one public top-level `const CCComponent`, pages, local policies, Services and message handlers. The generator keeps its Registrar and Manifest private. Export only intended business contracts.

@@ -98,7 +98,8 @@ Contract 元数据解析 Owner 并校验三者一致，不会因为发现某个 
 静默修改组件源文件。稳定 Component API 聚合入口已经实现；Generator 会在 build_runner 前
 对直接、唯一可证明的声明按组件批量输出缺失 Owner，Analyzer 也能对直接 const List 提供单个
 或全部可证明 Owner 的显式 Quick Fix。变量、spread、条件集合和歧义输入仍由最终
-Builder/Workspace Validator 校验；`ccrouter find` 的依赖建议尚未实现。
+Builder/Workspace Validator 校验；`ccrouter find --usage` 可基于当前已生成 Index 为一个现有
+消费组件输出只读接入建议，但不会编辑依赖或替代最终校验。
 
 不同消费组件如需统一 Service/Command Client 成员名，可在 Contract 上设置 lower-camel
 `alias`，消费组件仍可在 `CCServiceDependency<T>` 或 `CCCommandDependency<T>` 上覆盖。命名优先级
@@ -218,6 +219,7 @@ import graph；该 bootstrap 不替代当前轮构建与最终校验，失败时
 ```sh
 fvm dart run --verbosity=error ccrouter_generator:ccrouter find order.detail demo
 fvm dart run --verbosity=error ccrouter_generator:ccrouter find '/order/:orderId' demo
+fvm dart run --verbosity=error ccrouter_generator:ccrouter find demo_order.summary demo --usage demo_payment_component
 ```
 
 `find` 读取指定 Host 的 Pub 运行时依赖闭包内已发布的 Package Index，不启动
@@ -226,6 +228,14 @@ build_runner，也不修改生成物。查询是大小写敏感的精确 Route I
 从 Host Package 目录执行时可省略最后的 `demo` 参数。契约与页面分处不同 Package 时会合并
 显示源码位置；无匹配、Index 缺失或损坏、依赖 Index 版本混用时返回非零状态。改动源码后先运行 `generate`，
 必要时使用 `generate --check` 验证 Index 未过期；`find` 不扫描源文件来猜测未生成的声明。
+
+`--usage <consumer-component-id>` 要求消费组件已经存在于所选 Host 闭包。它从 Generator 已验证
+并写入 Package Index 的 export chain 得到 public import，报告直接 Pub 依赖、Owner 组件依赖和
+能力声明是否齐全，并给出稳定 Component API/typed call。它始终只读，不修改 `pubspec.yaml`、
+组件源码、import 或生成物；旧 Index 或未公开 Contract 缺少可证明的 public library 时明确停止
+跨组件建议，不猜测 conventional barrel。Route 不要求 Owner component edge；Service/Command
+分别建议 `serviceDependencies`/`commandDependencies`；Event 建议 top-level Subscription 而不是
+虚构 `eventDependencies`；InitTask 建议任务 `dependsOn`，不生成业务调用 Client。
 
 大型工程可以观察分阶段耗时和缓存命中率，或强制走无缓存参考路径：
 

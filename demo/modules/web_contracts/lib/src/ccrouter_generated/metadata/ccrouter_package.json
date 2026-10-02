@@ -1,11 +1,11 @@
 {
   "schemaVersion": 2,
-  "generatorVersion": "0.1.4",
+  "generatorVersion": "0.1.5",
   "package": {
     "name": "demo_web_contracts",
     "version": "0.1.0"
   },
-  "contentFingerprint": "7fd9027bc46b2ab8354695aac5bf7f3271a9c752e4c38d8a47313bf650e2470e",
+  "contentFingerprint": "51310ef682fd411f1b639c0e78fe21e7898dcd63ebf771efc51a6978fa9dfacd",
   "bundle": null,
   "dependencies": [],
   "metadata": [
@@ -62,7 +62,11 @@
             "route": "DemoPublicWebRoute",
             "arguments": "DemoPublicWebRouteArguments",
             "package": "demo_web_contracts",
-            "library": "lib/src/ccrouter_generated/contract/web_route_contracts.route.contract.g.dart"
+            "library": "lib/src/ccrouter_generated/contract/web_route_contracts.route.contract.g.dart",
+            "publicLibraries": [
+              "package:demo_web_contracts/demo_web_contracts.dart",
+              "package:demo_web_contracts/demo_web_contracts_owner.dart"
+            ]
           },
           "generatedArtifacts": [
             {
@@ -137,7 +141,11 @@
             "route": "DemoPrivateWebRoute",
             "arguments": "DemoPrivateWebRouteArguments",
             "package": "demo_web_contracts",
-            "library": "lib/src/ccrouter_generated/contract/web_route_contracts.route.contract.g.dart"
+            "library": "lib/src/ccrouter_generated/contract/web_route_contracts.route.contract.g.dart",
+            "publicLibraries": [
+              "package:demo_web_contracts/demo_web_contracts.dart",
+              "package:demo_web_contracts/demo_web_contracts_owner.dart"
+            ]
           },
           "generatedArtifacts": [
             {

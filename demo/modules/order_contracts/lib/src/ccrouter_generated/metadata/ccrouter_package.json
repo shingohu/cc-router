@@ -1,11 +1,11 @@
 {
   "schemaVersion": 2,
-  "generatorVersion": "0.1.4",
+  "generatorVersion": "0.1.5",
   "package": {
     "name": "demo_order_contracts",
     "version": "0.1.0"
   },
-  "contentFingerprint": "568432fa51f3002943cc40f1b3b3f4f8d0ed5ab62168ca9dfbf5faaa4fa79804",
+  "contentFingerprint": "e50e6629fd382469d4d59d797682ed95ed3a1ec8a40246e0bb3148ac5fc50920",
   "bundle": null,
   "dependencies": [],
   "metadata": [
@@ -45,7 +45,10 @@
             "packageUri": "package:demo_order_contracts/src/order_commands.dart",
             "line": 12,
             "column": 13
-          }
+          },
+          "publicLibraries": [
+            "package:demo_order_contracts/demo_order_contracts.dart"
+          ]
         }
       ],
       "commandHandlers": []
@@ -102,7 +105,11 @@
             "route": "OrderDetailRoute",
             "arguments": "OrderDetailRouteArguments",
             "package": "demo_order_contracts",
-            "library": "lib/src/ccrouter_generated/contract/order_detail_route_contract.route.contract.g.dart"
+            "library": "lib/src/ccrouter_generated/contract/order_detail_route_contract.route.contract.g.dart",
+            "publicLibraries": [
+              "package:demo_order_contracts/demo_order_contracts.dart",
+              "package:demo_order_contracts/demo_order_contracts_owner.dart"
+            ]
           },
           "generatedArtifacts": [
             {
@@ -183,7 +190,10 @@
             "line": 6,
             "column": 7
           },
-          "shapeFingerprint": "f9fbdb847ffe8a503fb446cfe6925bf84023a152226fc0d25cc846f9cf778146"
+          "shapeFingerprint": "f9fbdb847ffe8a503fb446cfe6925bf84023a152226fc0d25cc846f9cf778146",
+          "publicLibraries": [
+            "package:demo_order_contracts/demo_order_contracts.dart"
+          ]
         }
       ],
       "initTasks": []
@@ -359,7 +369,10 @@
             "symbol": "orderSummaryServiceToken",
             "library": "lib/src/ccrouter_generated/contract/order_summary_service.service.contract.g.dart",
             "packageUri": "package:demo_order_contracts/src/ccrouter_generated/contract/order_summary_service.service.contract.g.dart"
-          }
+          },
+          "publicLibraries": [
+            "package:demo_order_contracts/demo_order_contracts.dart"
+          ]
         }
       ],
       "serviceImplementations": []

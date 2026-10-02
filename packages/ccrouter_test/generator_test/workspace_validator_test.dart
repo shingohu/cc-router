@@ -1603,6 +1603,14 @@ void main() {
           'show DetailRoute, DetailRouteArguments;\n',
         );
 
+      CCRouteBarrelExportValidator.annotatePublicLibraries(
+        [metadata],
+        packageRoots: {'demo_order_contracts': package},
+      );
+      expect(
+        (metadata['routes']! as List).single['contracts']['publicLibraries'],
+        ['package:demo_order_contracts/demo_order_contracts.dart'],
+      );
       expect(CCRouteBarrelExportValidator.validate(root, [metadata]), isEmpty);
       stableBarrel.writeAsStringSync(
         "export 'contract/detail.route.contract.g.dart' show DetailRoute;\n",
@@ -1865,6 +1873,100 @@ void main() {
         CCRouteBarrelExportValidator.validate(root, [metadata]),
         contains(contains('foundationTask')),
       );
+    } finally {
+      root.deleteSync(recursive: true);
+    }
+  });
+
+  test('annotates and clears public libraries for messaging contracts', () {
+    final root = Directory.systemTemp.createTempSync(
+      'ccrouter-contract-library-annotation-test-',
+    );
+    try {
+      final package = Directory('${root.path}/shared_contracts')..createSync();
+      Directory('${package.path}/lib/src').createSync(recursive: true);
+      File(
+        '${package.path}/pubspec.yaml',
+      ).writeAsStringSync('name: shared_contracts\n');
+      File('${package.path}/lib/src/contracts.dart').writeAsStringSync('''
+abstract interface class SharedService {}
+final class SharedCommand {}
+final class SharedEvent {}
+const sharedTask = Object();
+''');
+      final metadata =
+          document(
+              package: 'shared_contracts',
+              source: 'lib/src/contracts.dart',
+              components: const [],
+              routes: const [],
+              serviceContracts: [
+                {
+                  'id': 'shared.service',
+                  'componentId': 'shared',
+                  'publicLibraries': ['package:stale/stale.dart'],
+                  'declaration': {'symbol': 'SharedService'},
+                },
+              ],
+              eventContracts: [
+                {
+                  'id': 'shared.event',
+                  'componentId': 'shared',
+                  'declaration': {'symbol': 'SharedEvent'},
+                },
+              ],
+              initTaskContracts: [
+                {
+                  'id': 'shared.task',
+                  'componentId': 'shared',
+                  'declaration': {'symbol': 'sharedTask'},
+                },
+              ],
+            )
+            ..['commandContracts'] = [
+              {
+                'id': 'shared.command',
+                'componentId': 'shared',
+                'declaration': {'symbol': 'SharedCommand'},
+              },
+            ];
+      final barrel = File('${package.path}/lib/shared_contracts.dart')
+        ..writeAsStringSync(
+          "export 'src/contracts.dart' "
+          'show SharedService, SharedCommand, SharedEvent, sharedTask;\n',
+        );
+
+      CCRouteBarrelExportValidator.annotatePublicLibraries(
+        [metadata],
+        packageRoots: {'shared_contracts': package},
+      );
+      for (final group in const [
+        'serviceContracts',
+        'commandContracts',
+        'eventContracts',
+        'initTaskContracts',
+      ]) {
+        expect(((metadata[group]! as List).single as Map)['publicLibraries'], [
+          'package:shared_contracts/shared_contracts.dart',
+        ]);
+      }
+
+      barrel.writeAsStringSync('library;\n');
+      CCRouteBarrelExportValidator.annotatePublicLibraries(
+        [metadata],
+        packageRoots: {'shared_contracts': package},
+      );
+      for (final group in const [
+        'serviceContracts',
+        'commandContracts',
+        'eventContracts',
+        'initTaskContracts',
+      ]) {
+        expect(
+          ((metadata[group]! as List).single as Map),
+          isNot(contains('publicLibraries')),
+        );
+      }
     } finally {
       root.deleteSync(recursive: true);
     }

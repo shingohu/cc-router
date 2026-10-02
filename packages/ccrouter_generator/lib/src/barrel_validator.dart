@@ -13,6 +13,111 @@ import 'package:analyzer/dart/ast/ast.dart';
 /// Service, Command, and Event declarations. Component-internal capabilities
 /// remain excluded.
 final class CCRouteBarrelExportValidator {
+  /// Attaches public Package import URIs proven by explicit export chains.
+  ///
+  /// The generated Package index retains these URIs so read-only tooling does
+  /// not need to scan authored source or guess a conventional barrel name.
+  /// Missing exports remain absent and are reported by [validate].
+  static void annotatePublicLibraries(
+    Iterable<Map<String, Object?>> documents, {
+    required Map<String, Directory> packageRoots,
+  }) {
+    final metadata = documents.toList(growable: false);
+    final indexes = <String, _PackageBarrelExportIndex>{};
+    _PackageBarrelExportIndex? indexFor(String packageName) {
+      final root = packageRoots[packageName];
+      if (root == null) return null;
+      return indexes.putIfAbsent(
+        packageName,
+        () => _PackageBarrelExportIndex.build(root),
+      );
+    }
+
+    for (final document in metadata) {
+      final packageName = '${document['package'] ?? ''}';
+      final packageRoot = packageRoots[packageName];
+      final index = indexFor(packageName);
+      if (packageRoot == null || index == null) continue;
+      final source = '${document['source'] ?? ''}';
+      if (!source.startsWith('lib/')) continue;
+      final sourceFile = File(_join(packageRoot.path, source));
+
+      for (final route in _mutableObjects(document, 'routes')) {
+        if (route['exposure'] == 'internal') continue;
+        final contracts = route['contracts'];
+        if (contracts is! Map) continue;
+        final mutable = Map<String, Object?>.from(contracts);
+        route['contracts'] = mutable;
+        final library = '${mutable['library'] ?? source}';
+        _attachPublicLibraries(
+          mutable,
+          index.publicLibraries(File(_join(packageRoot.path, library)), {
+            '${mutable['route']}',
+            '${mutable['arguments']}',
+          }, packageName: packageName),
+        );
+      }
+      for (final group in const [
+        'serviceContracts',
+        'commandContracts',
+        'eventContracts',
+        'initTaskContracts',
+      ]) {
+        for (final contract in _mutableObjects(document, group)) {
+          final declaration = contract['declaration'];
+          if (declaration is! Map) continue;
+          final symbol = '${declaration['symbol'] ?? ''}';
+          if (symbol.isEmpty) continue;
+          _attachPublicLibraries(
+            contract,
+            index.publicLibraries(sourceFile, {
+              symbol,
+            }, packageName: packageName),
+          );
+        }
+      }
+    }
+  }
+
+  /// Replaces a stale annotation with one deterministic non-empty URI list.
+  static void _attachPublicLibraries(
+    Map<String, Object?> target,
+    List<String> libraries,
+  ) {
+    if (libraries.isEmpty) {
+      target.remove('publicLibraries');
+    } else {
+      target['publicLibraries'] = libraries;
+    }
+  }
+
+  /// Normalizes one decoded metadata array before attaching derived facts.
+  ///
+  /// Analyzer fixtures and programmatic callers may construct a nested
+  /// `Map<String, String>`. A cast view would still reject the derived
+  /// `List<String>` at runtime, so annotation owns a mutable object-typed copy
+  /// and writes it back to the document just like JSON decoding would provide.
+  static List<Map<String, Object?>> _mutableObjects(
+    Map<String, Object?> document,
+    String key,
+  ) {
+    final value = document[key];
+    if (value is! List) return const [];
+    final normalized = <Object?>[];
+    final objects = <Map<String, Object?>>[];
+    for (final entry in value) {
+      if (entry is Map) {
+        final object = Map<String, Object?>.from(entry);
+        normalized.add(object);
+        objects.add(object);
+      } else {
+        normalized.add(entry);
+      }
+    }
+    document[key] = normalized;
+    return objects;
+  }
+
   /// Finds missing or incomplete public barrel exports below [workspaceRoot].
   ///
   /// [documents] must be the decoded component and route metadata files
@@ -284,9 +389,19 @@ final class _PackageBarrelExportIndex {
   /// below `lib/src` therefore hide physical files without becoming public API
   /// by themselves.
   bool shows(File target, Set<String> requiredSymbols) {
+    return publicLibraries(target, requiredSymbols, packageName: '').isNotEmpty;
+  }
+
+  /// Returns every top-level public library reached through explicit exports.
+  List<String> publicLibraries(
+    File target,
+    Set<String> requiredSymbols, {
+    required String packageName,
+  }) {
     final targetPath = target.absolute.path;
     final pending = <String>[targetPath];
     final visited = <String>{targetPath};
+    final publicLibraries = <String>{};
     while (pending.isNotEmpty) {
       final current = pending.removeLast();
       for (final export in _exportsByTarget[current] ?? const []) {
@@ -294,11 +409,21 @@ final class _PackageBarrelExportIndex {
             !visited.add(export.barrelPath)) {
           continue;
         }
-        if (_isPublicLibrary(export.barrelPath)) return true;
-        pending.add(export.barrelPath);
+        if (_isPublicLibrary(export.barrelPath)) {
+          final relative = export.barrelPath.substring(
+            '$_packageRoot${Platform.pathSeparator}lib'.length + 1,
+          );
+          publicLibraries.add(
+            packageName.isEmpty
+                ? relative
+                : 'package:$packageName/${relative.replaceAll(Platform.pathSeparator, '/')}',
+          );
+        } else {
+          pending.add(export.barrelPath);
+        }
       }
     }
-    return false;
+    return publicLibraries.toList()..sort();
   }
 
   /// Whether [filePath] is a top-level library below `lib/`, not `lib/src/`.

@@ -19,7 +19,7 @@ final ccrouterGeneratedPackageBundle = CCGeneratedPackageBundle(
   packageName: 'demo_kv_storage',
   packageVersion: '0.1.0',
   contentFingerprint:
-      '34dfb7eab7879cec25fceeb469c1bc513f2d255415a9332bdf455997e13740fc',
+      '993054d8e1d8c4273474f3c688afbaa47145db67a15be334f9eb27be450ee958',
   contractBundle: CCContractBundleDescriptor(
     packageName: 'demo_kv_storage',
     packageVersion: '0.1.0',

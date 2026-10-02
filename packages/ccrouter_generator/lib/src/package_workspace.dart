@@ -11,7 +11,7 @@ part 'capability_source_catalog.dart';
 const int ccrouterPackageIndexSchemaVersion = 2;
 
 /// Generator identity recorded in Package indexes for diagnostics.
-const String ccrouterPackageIndexGeneratorVersion = '0.1.4';
+const String ccrouterPackageIndexGeneratorVersion = '0.1.5';
 
 /// Failure raised when resolved Pub state cannot form a safe generation graph.
 final class CCPackageWorkspaceException implements Exception {

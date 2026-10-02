@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatorVersion": "0.1.4",
+  "generatorVersion": "0.1.5",
   "package": {
     "name": "ccrouter_devtools",
     "version": "0.1.0"

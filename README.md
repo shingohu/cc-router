@@ -1072,6 +1072,9 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter find order.detail dem
 fvm dart run --verbosity=error ccrouter_generator:ccrouter find '/orders/:orderId' demo
 fvm dart run --verbosity=error ccrouter_generator:ccrouter find demo.startup.foundation demo
 
+# 为已有消费组件输出只读接入建议
+fvm dart run --verbosity=error ccrouter_generator:ccrouter find demo_order.summary demo --usage demo_payment_component
+
 # 只清理 CCRouter 标记的生成源码
 fvm dart run --verbosity=error ccrouter_generator:ccrouter clean demo
 
@@ -1123,7 +1126,12 @@ Owner 聚合报告缺失的 Service/Command required dependency；变量、sprea
 收敛；当前轮仍会重新构建并完整校验最终生成物，bootstrap 失败不会保留半成品。
 
 `find` 会返回 Contract、实现与生成桥接的 Package URI 和源码坐标，只读取当前 Host 依赖闭包中
-已有的 Package Index，不运行 Builder，也不扫描源码。
+已有的 Package Index，不运行 Builder，也不扫描源码。增加
+`--usage <consumer-component-id>` 时，会为一个已存在的消费组件报告已验证 public import、Pub/
+Owner/能力依赖状态、稳定 Component API 和 typed 调用方式。该模式不会修改 `pubspec.yaml`、
+`CCComponent`、import 或生成物；缺少 public exposure 时不会猜 barrel，也不会建议依赖实现 Package。
+Service/Command 分别使用各自 dependency list，Event 使用 Subscription，InitTask 使用 `dependsOn`
+DAG；不存在统一的万能依赖列表或 InitTask 业务 Client。源码或依赖声明变更后应先运行 `generate`。
 
 `pub-hook` 是显式、按 Flutter SDK 版本安装的可回滚 wrapper；`status` 会打印实际 SDK
 路径并校验 wrapper、备份和 marker，只有 `installed and verified` 才返回成功。SDK 解析优先使用
