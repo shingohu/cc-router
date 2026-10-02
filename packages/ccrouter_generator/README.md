@@ -108,7 +108,7 @@ Builder/Workspace Validator 校验；`ccrouter find` 的依赖建议尚未实现
 Client，避免全局 Proxy 绕过消费组件 caller identity。
 
 声明 `@CCRouteContract` 的 Package 需要直接依赖 `ccrouter_contracts`，公共 barrel 只导出
-生成的契约 library。同 Package Contract-first 可用于渐进迁移；独立 contracts Package
+生成的稳定 Contract 入口。同 Package Contract-first 可用于渐进迁移；独立 contracts Package
 用于稳定的跨组件边界：
 
 ```yaml
@@ -118,9 +118,15 @@ dependencies:
 ```
 
 ```dart
-export 'src/ccrouter_generated/contract/detail_page.route.contract.g.dart'
+export 'src/ccrouter_generated/order_contracts.contracts.api.g.dart'
     show DetailPageRoute, DetailPageRouteArguments;
 ```
+
+`<package>.contracts.api.g.dart` 只聚合公开 Route Contract 的生成类型，隐藏逐源码
+`.route.contract.g.dart` 路径。authored Service、Command、Event 和 InitTask 契约仍由公共 barrel
+显式导出；生成器不会替 Package 决定这些 API。每层转发都必须保留完整 `show`，最终到达
+`lib/` 顶层 public library。`clean` 后的下一轮 `generate` 会为显式引用的缺失稳定入口创建受管
+placeholder，Builder 完成后立即替换为正式 exports。
 
 组件的 `dev_dependencies` 添加 `ccrouter_generator`，workspace 根目录添加
 `build_runner`。本仓库在根目录执行：
@@ -278,6 +284,9 @@ build_runner 前保存 CCRouter 受管源码快照，Builder、聚合或最终�
   readiness 与 Scope cancellation 边界。
 - `lib/src/ccrouter_generated/<component-id>.api.g.dart`：组件业务源码使用的稳定聚合入口，
   通过受控 `export/show` 合并 Route、Service、Command 和 Event Client；没有可导出能力时不生成。
+- `lib/src/ccrouter_generated/<package>.contracts.api.g.dart`：Contracts Package authored barrel
+  使用的稳定 Route Contract 入口，只转发公开 Route/Arguments 类型，不替代 authored Contract
+  的显式 public export。
 - `<component-id>.component.g.dart`：自动生成私有 Registrar、Runtime Manifest 和后端中立的
   `CCFlutterRouteCatalog`，稳定装配 Route、Service 与 Contribution。
 - `lib/src/ccrouter_generated/metadata/ccrouter_package.json`：发布级 Package Index，包含 Schema、Package
@@ -343,7 +352,8 @@ Assembler/Adapter。Shell、嵌套路由、完整 Regex 兼容入口等后端特
 页面 library 不需要声明生成 `part`；组件唯一 Route API 提供 IDE 可发现的调用入口。
 `@CCRouteContract` 始终生成公开的独立纯契约；schema 与实现位于同一 Package 时聚合为
 `package` exposure，位于独立 contracts Package 时聚合为 `external` exposure。契约 Package
-必须通过 barrel 的 `show` 显式导出生成 library，消费者必须声明直接 Pub 依赖。框架不再
+必须通过 public barrel 的 `show` 显式导出稳定 `<package>.contracts.api.g.dart`，消费者必须声明
+直接 Pub 依赖。框架不再
 维护额外的契约模式、可见性枚举或调用方 allowlist。
 
 独立契约只允许 Dart Core 类型和页面通过显式 public package import 引入的 Pure Dart

@@ -63,13 +63,15 @@ lib/
 ├── order_route_contracts.dart
 ├── src/order_detail_route_contract.dart
 ├── src/order_detail_page.dart
+├── src/ccrouter_generated/order_package.contracts.api.g.dart
 ├── src/ccrouter_generated/contract/order_detail_route_contract.route.contract.g.dart
 └── src/ccrouter_generated/binding/order_detail_page.route_binding.g.dart
 ```
 
 `order_route_contracts.dart` 是组件作者维护的公共 barrel，只导出
-schema 对应 `*.route.contract.g.dart` 中的公开契约，并使用 `show` 明确列出
-Route 和 Arguments 类型。页面专用 `.route_binding.g.dart` 只保留页面构造和 owner 注册 glue，
+稳定 `<package>.contracts.api.g.dart` 中的公开契约，并使用 `show` 明确列出 Route 和 Arguments
+类型。稳定入口由生成器聚合逐源码 `*.route.contract.g.dart`，后者不再成为 authored barrel 的
+固定路径。页面专用 `.route_binding.g.dart` 只保留页面构造和 owner 注册 glue，
 不从公共 barrel 导出。
 
 ### 独立 contracts Package
@@ -79,6 +81,7 @@ demo_order_contracts/
 ├── lib/demo_order_contracts.dart
 ├── lib/demo_order_contracts_owner.dart
 ├── lib/src/order_detail_route_contract.dart
+├── lib/src/ccrouter_generated/demo_order_contracts.contracts.api.g.dart
 └── lib/src/ccrouter_generated/contract/order_detail_route_contract.route.contract.g.dart
 
 demo_order/
@@ -89,6 +92,13 @@ demo_order/
 业务调用方只导入 `demo_order_contracts.dart`。实现组件导入 owner integration library，
 用 `@CCRouteImplementation(OrderDetailRouteContract)` 绑定页面。contracts Package 只依赖
 `ccrouter_contracts`，不能依赖 Flutter、实现组件或具体导航后端。
+
+业务与 owner barrel 都应转发同一个稳定 `<package>.contracts.api.g.dart`，但分别用 `show`
+控制实际公开符号。该 generated barrel 只包含 Route/Arguments 生成类型；authored Service、
+Command、Event 与 InitTask Contract 继续从其源文件显式导出。生成器校验转发链最终到达
+`lib/` 顶层 public library，`lib/src` 中间 barrel 本身不构成公开 API。`clean` 或首次生成时，
+CLI 会在 Builder 前为 authored barrel 的显式引用创建受管 placeholder，并在聚合阶段覆盖，
+避免 public barrel 与待生成文件形成首次构建循环。
 
 ## API 归属
 
@@ -171,7 +181,8 @@ final class OrderDetailPage extends StatelessWidget {
 - 导入纯契约的消费者不能解析页面 Widget 或 `BuildContext`。
 - Intent 的 `routeId`、结果泛型、Codec 编解码和主 Pattern 与页面 glue 完全一致。
 - 内部路由不生成纯契约；跨组件访问由公共 barrel、Pub 直接依赖和 Analyzer 共同约束。
-- barrel 缺少 `show`、导出 glue 或契约与页面 Route ID 不一致时，构建失败。
+- barrel 缺少 `show`、任一转发层丢失必需符号、导出 glue 或契约与页面 Route ID 不一致时，
+  构建失败。
 - 生成文件布局迁移期间必须保持现有生成测试和 Runtime 回归通过。
 
 当前生成器还会拒绝源文件本地类型、private 类型、`package:*/src/` 导入和

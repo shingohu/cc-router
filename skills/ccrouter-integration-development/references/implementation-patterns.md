@@ -126,7 +126,13 @@ The implementation Package owns exactly one public top-level `const CCComponent`
 
 ### Contracts Package
 
-Keep it Pure Dart where possible. Depend on `ccrouter_contracts`, never on Flutter page implementations. Export only generated public contract types and explicit Service interfaces/tokens.
+Keep it Pure Dart where possible. Depend on `ccrouter_contracts`, never on
+Flutter page implementations. Re-export generated Route types through the
+stable `src/ccrouter_generated/<package>.contracts.api.g.dart` entry and keep an
+explicit `show` list. Export authored Service, Command, Event, and InitTask
+contracts from their own source libraries; the generated Route entry does not
+choose those APIs. Never bind an authored public barrel to an individual
+`contract/*.route.contract.g.dart` path.
 
 ## Typed Navigation
 
@@ -578,8 +584,11 @@ The command owns files under `lib/src/ccrouter_generated/`. Do not edit or
 relocate generated outputs. A Host's handwritten public barrel may re-export
 the generated `src/ccrouter_generated/ccrouter_host.api.g.dart`; do not point it
 at implementation-only files under `host/` or repeat the generated `show` list.
-Component and contracts Packages must still export only their intended business
-contracts and stable component API.
+Component Packages export only their intended stable component API. Contracts
+Packages re-export the stable `<package>.contracts.api.g.dart` Route entry with
+an explicit `show` list and separately export intended authored contracts. The
+CLI bootstraps a missing stable Route entry after `clean`, so authored code must
+not create or edit a placeholder by hand.
 
 An unchanged command may report a generation fast-path hit. This is valid only
 after exact authored-input, tool, resolved-Package, external-index, and managed-

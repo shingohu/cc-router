@@ -102,6 +102,20 @@ environment:
           '// GENERATED CODE - DO NOT MODIFY BY HAND\n'
           '/// Stable typed API entry point for component `fixture_service_component`.\n',
         );
+    final obsoleteContractsApi =
+        File(
+          path.join(
+            component.path,
+            'lib',
+            'src',
+            'ccrouter_generated',
+            'fixture_service.contracts.api.g.dart',
+          ),
+        )..writeAsStringSync(
+          '// GENERATED CODE - DO NOT MODIFY BY HAND\n'
+          '/// Stable generated Contract API entry point for Package '
+          '`fixture_service`.\n',
+        );
     final handwrittenIndex = File(
       path.join(
         component.path,
@@ -195,6 +209,7 @@ environment:
     expect(hostApi, contains('ccrouterGeneratedHostAssembly'));
     expect(obsoleteIndex.existsSync(), isFalse);
     expect(obsoleteStableApi.existsSync(), isFalse);
+    expect(obsoleteContractsApi.existsSync(), isFalse);
     expect(handwrittenIndex.existsSync(), isTrue);
     expect(foreignGeneratedIndex.existsSync(), isTrue);
   });
@@ -368,6 +383,23 @@ environment:
     expect(
       componentIndex,
       isNot(contains('package:fixture_order_contracts/src/detail.dart')),
+    );
+    final stableContracts = File(
+      path.join(
+        contracts.path,
+        'lib',
+        'src',
+        'ccrouter_generated',
+        'fixture_order_contracts.contracts.api.g.dart',
+      ),
+    );
+    expect(stableContracts.existsSync(), isTrue);
+    expect(
+      stableContracts.readAsStringSync(),
+      allOf(
+        contains("export 'contract/detail.route.contract.g.dart'"),
+        contains('show DetailRoute, DetailRouteArguments'),
+      ),
     );
   });
 

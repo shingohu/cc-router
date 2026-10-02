@@ -1555,6 +1555,76 @@ void main() {
     }
   });
 
+  test('accepts a stable generated Contract barrel only through public API', () {
+    final root = Directory.systemTemp.createTempSync(
+      'ccrouter-stable-contract-barrel-test-',
+    );
+    try {
+      final package = Directory('${root.path}/demo_order_contracts')
+        ..createSync();
+      final generated = Directory(
+        '${package.path}/lib/src/ccrouter_generated/contract',
+      )..createSync(recursive: true);
+      File(
+        '${package.path}/pubspec.yaml',
+      ).writeAsStringSync('name: demo_order_contracts\n');
+      File(
+        '${package.path}/lib/src/detail.dart',
+      ).writeAsStringSync('library;\n');
+      File(
+        '${generated.path}/detail.route.contract.g.dart',
+      ).writeAsStringSync('library;\n');
+      final stableBarrel =
+          File(
+            '${package.path}/lib/src/ccrouter_generated/'
+            'demo_order_contracts.contracts.api.g.dart',
+          )..writeAsStringSync(
+            "export 'contract/detail.route.contract.g.dart' "
+            'show DetailRoute, DetailRouteArguments;\n',
+          );
+      final metadata = document(
+        source: 'lib/src/detail.dart',
+        components: const [],
+        routes: [
+          route('orders.detail', 'orders', publicContract: true)
+            ..['contracts'] = {
+              'route': 'DetailRoute',
+              'arguments': 'DetailRouteArguments',
+              'package': 'demo_order_contracts',
+              'library':
+                  'lib/src/ccrouter_generated/contract/detail.route.contract.g.dart',
+            },
+        ],
+      )..['package'] = 'demo_order_contracts';
+      final barrel = File('${package.path}/lib/demo_order_contracts.dart')
+        ..writeAsStringSync(
+          "export 'src/ccrouter_generated/"
+          "demo_order_contracts.contracts.api.g.dart' "
+          'show DetailRoute, DetailRouteArguments;\n',
+        );
+
+      expect(CCRouteBarrelExportValidator.validate(root, [metadata]), isEmpty);
+      stableBarrel.writeAsStringSync(
+        "export 'contract/detail.route.contract.g.dart' show DetailRoute;\n",
+      );
+      expect(
+        CCRouteBarrelExportValidator.validate(root, [metadata]),
+        contains(contains('Public route "orders.detail"')),
+      );
+      stableBarrel.writeAsStringSync(
+        "export 'contract/detail.route.contract.g.dart' "
+        'show DetailRoute, DetailRouteArguments;\n',
+      );
+      barrel.writeAsStringSync('library;\n');
+      expect(
+        CCRouteBarrelExportValidator.validate(root, [metadata]),
+        contains(contains('Public route "orders.detail"')),
+      );
+    } finally {
+      root.deleteSync(recursive: true);
+    }
+  });
+
   test('requires public Service contracts to export the authored interface', () {
     final root = Directory.systemTemp.createTempSync(
       'ccrouter-service-barrel-test-',

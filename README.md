@@ -588,6 +588,19 @@ final class OrderDetailPage extends StatelessWidget {
 
 消费者依赖 `order_contracts`，不依赖 `order` 页面 Package。保持原 route ID、wire name 和结果类型，可以把既有 `@CCRoute` 平滑提升为 `@CCRouteContract`。契约可见性由 Package 依赖和 barrel export 决定，不再额外维护 `visibility`、`visibleTo` 或 `contractMode`。
 
+Contracts Package 的 authored public barrel 一次性转发生成器维护的稳定入口，不直接绑定
+`contract/*.route.contract.g.dart` 的物理文件名：
+
+```dart
+export 'src/ccrouter_generated/order_contracts.contracts.api.g.dart'
+    show OrderDetailRoute, OrderDetailRouteArguments;
+```
+
+该稳定入口只聚合公开 Route Contract 的生成类型；authored Service、Command、Event 和 InitTask
+契约仍由 public barrel 使用独立 `export/show` 明确暴露。`show` 是 Package 的公开 API 边界，
+生成器会验证每一层转发都保留完整符号。执行 `clean` 后，下一次 `generate` 会在 Builder 前临时
+补齐缺失入口并在同一轮替换为正式内容，开发者不需要创建空文件。
+
 ## 页面展示与动画
 
 `CCRoute.presentation` 是后端中立描述。当前支持：
@@ -1133,6 +1146,7 @@ SDK 切换或升级后需要重新检查 `pub-hook status`。详细语义见
 ```text
 lib/src/ccrouter_generated/
 ├── ccrouter_host.api.g.dart # Host 稳定聚合入口，仅 Host Package 生成
+├── <package>.contracts.api.g.dart # Contracts Package 的稳定 Route Contract 入口
 ├── binding/     # Flutter 页面构造 bridge
 ├── command/     # Command Handler registration bridge
 ├── component/   # 自动 Registrar、Manifest、组件 Route/Service API

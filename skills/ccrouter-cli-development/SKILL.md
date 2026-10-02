@@ -141,6 +141,10 @@ Flutter command; projects without a resolved CCRouter graph are skipped.
   InitTask in a Registrar.
 - Keep the source of truth in annotations, Component definitions, contributions,
   Contracts, and dependency declarations.
+- Contracts Package authored barrels re-export the generated
+  `lib/src/ccrouter_generated/<package>.contracts.api.g.dart` with explicit
+  `show`; they do not import individual `contract/*.route.contract.g.dart`
+  outputs. The CLI owns first-build placeholders and final replacement.
 - If no generated capability exists, the generator should not leave an empty
   `ccrouter_generated` tree.
 

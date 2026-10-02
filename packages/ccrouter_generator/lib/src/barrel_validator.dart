@@ -235,7 +235,7 @@ final class _BarrelExportRequirement {
 /// of the number of metadata documents or public contracts in the Package.
 final class _PackageBarrelExportIndex {
   /// Creates an index from normalized target paths to their export directives.
-  const _PackageBarrelExportIndex(this._exportsByTarget);
+  const _PackageBarrelExportIndex(this._packageRoot, this._exportsByTarget);
 
   /// Builds one export index for every Dart library below [packageRoot].
   factory _PackageBarrelExportIndex.build(Directory packageRoot) {
@@ -272,18 +272,53 @@ final class _PackageBarrelExportIndex {
             );
       }
     }
-    return _PackageBarrelExportIndex(exportsByTarget);
+    return _PackageBarrelExportIndex(
+      packageRoot.absolute.path,
+      exportsByTarget,
+    );
   }
 
-  /// Returns whether one non-self barrel shows every [requiredSymbol].
+  /// Returns whether a transitive explicit export reaches a public library.
+  ///
+  /// Every hop must retain the complete `show` set. Generated stable barrels
+  /// below `lib/src` therefore hide physical files without becoming public API
+  /// by themselves.
   bool shows(File target, Set<String> requiredSymbols) {
     final targetPath = target.absolute.path;
-    for (final export in _exportsByTarget[targetPath] ?? const []) {
-      if (export.barrelPath == targetPath) continue;
-      if (export.shownSymbols.containsAll(requiredSymbols)) return true;
+    final pending = <String>[targetPath];
+    final visited = <String>{targetPath};
+    while (pending.isNotEmpty) {
+      final current = pending.removeLast();
+      for (final export in _exportsByTarget[current] ?? const []) {
+        if (!export.shownSymbols.containsAll(requiredSymbols) ||
+            !visited.add(export.barrelPath)) {
+          continue;
+        }
+        if (_isPublicLibrary(export.barrelPath)) return true;
+        pending.add(export.barrelPath);
+      }
     }
     return false;
   }
+
+  /// Whether [filePath] is a top-level library below `lib/`, not `lib/src/`.
+  bool _isPublicLibrary(String filePath) {
+    final libRoot = '$_packageRoot${Platform.pathSeparator}lib';
+    if (!pathIsWithin(libRoot, filePath)) return false;
+    final relative = filePath.substring(libRoot.length + 1);
+    return !relative.contains(Platform.pathSeparator);
+  }
+
+  /// Whether [candidate] is strictly nested under [root].
+  static bool pathIsWithin(String root, String candidate) {
+    final prefix = root.endsWith(Platform.pathSeparator)
+        ? root
+        : '$root${Platform.pathSeparator}';
+    return candidate.startsWith(prefix);
+  }
+
+  /// Absolute Package root used to recognize public entry libraries.
+  final String _packageRoot;
 
   /// Export directives grouped by their resolved target library path.
   final Map<String, List<_BarrelExport>> _exportsByTarget;

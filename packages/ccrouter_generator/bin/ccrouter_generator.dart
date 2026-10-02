@@ -383,6 +383,9 @@ Future<bool> _aggregate(Directory root, _Arguments parsed) async {
         packageRoot: metadataFiles[index].packageRoot,
       ),
   ];
+  final contractApiOutputs = await _generateContractApiEntrypoints(
+    resolvedMetadataFiles,
+  );
   final result = CCRouteWorkspaceValidator.validate(documents);
   final errors = [
     ...result.errors,
@@ -399,7 +402,11 @@ Future<bool> _aggregate(Directory root, _Arguments parsed) async {
       resolvedMetadataFiles,
     );
     await _generateHostRouteCatalog(root, catalogs);
-    await _deleteObsoleteAggregateOutputs(root, catalogs);
+    await _deleteObsoleteAggregateOutputs(
+      root,
+      catalogs,
+      contractApiOutputs: contractApiOutputs,
+    );
   }
   await outputDirectory.create(recursive: true);
   await _writeIfChanged(
@@ -753,6 +760,11 @@ Future<bool> _generateResolvedWorkspace(
     indexes: indexes,
   );
 
+  final localFiles = _resolveMetadataFiles(
+    await _readWritableMetadataFiles(workspace),
+  );
+  final contractApiOutputs = await _generateContractApiEntrypoints(localFiles);
+
   final documents = <Map<String, Object?>>[
     for (final name in order) ...?indexes[name]?.metadata,
   ];
@@ -778,9 +790,6 @@ Future<bool> _generateResolvedWorkspace(
   validationWatch.stop();
 
   final aggregateWatch = Stopwatch()..start();
-  final localFiles = _resolveMetadataFiles(
-    await _readWritableMetadataFiles(workspace),
-  );
   final catalogs = await _generateComponentRouteIndexes(
     localFiles,
     generateLegacyEntrypoints: false,
@@ -809,6 +818,7 @@ Future<bool> _generateResolvedWorkspace(
     workspace: workspace,
     runtimeBundles: runtimeBundles,
     catalogs: catalogs,
+    contractApiOutputs: contractApiOutputs,
   );
 
   final outputDirectory = Directory(
@@ -1269,14 +1279,76 @@ File? _resolveImportedFile({
 Future<bool> _bootstrapGeneratedComponentApis(
   CCPackageWorkspace workspace,
 ) async {
+  var changed = await _bootstrapMissingContractApiPlaceholders(workspace);
   final files = await _readWritableMetadataFiles(workspace);
-  if (files.isEmpty) return false;
-  final resolved = _resolveMetadataFiles(files);
-  await _generateComponentRouteIndexes(
-    resolved,
-    generateLegacyEntrypoints: false,
-  );
-  return true;
+  if (files.isNotEmpty) {
+    final resolved = _resolveMetadataFiles(files);
+    await _generateContractApiEntrypoints(resolved);
+    await _generateComponentRouteIndexes(
+      resolved,
+      generateLegacyEntrypoints: false,
+    );
+    changed = true;
+  }
+  return changed;
+}
+
+/// Creates empty managed Contract barrels only for explicit missing references.
+///
+/// This breaks the first-build cycle where an authored public barrel exports a
+/// CLI aggregate that cannot be populated until build_runner emits metadata.
+/// Final aggregation always replaces the placeholder before validation.
+Future<bool> _bootstrapMissingContractApiPlaceholders(
+  CCPackageWorkspace workspace,
+) async {
+  var changed = false;
+  for (final package in workspace.packages.values.where(
+    (package) => package.writable && package.declaresGenerationIntent,
+  )) {
+    final lib = Directory(path.join(package.root.path, 'lib'));
+    if (!lib.existsSync()) continue;
+    await for (final entity in lib.list(recursive: true, followLinks: false)) {
+      if (entity is! File || !entity.path.endsWith('.dart')) continue;
+      final relative = _relativePath(package.root, entity);
+      if (relative.split('/').contains('ccrouter_generated')) continue;
+      final contents = await entity.readAsString();
+      if (!contents.contains('.contracts.api.g.dart')) continue;
+      final unit = parseString(
+        content: contents,
+        path: entity.path,
+        featureSet: FeatureSet.latestLanguageVersion(),
+      ).unit;
+      for (final directive in unit.directives.whereType<UriBasedDirective>()) {
+        final uriText = directive.uri.stringValue;
+        if (uriText == null || !uriText.endsWith('.contracts.api.g.dart')) {
+          continue;
+        }
+        final target = _resolveImportedFile(
+          workspace: workspace,
+          source: entity,
+          uriText: uriText,
+        );
+        if (target == null || target.existsSync()) continue;
+        final generatedRoot = path.normalize(
+          path.join(package.root.path, 'lib', 'src', 'ccrouter_generated'),
+        );
+        if (!path.isWithin(
+          generatedRoot,
+          path.normalize(target.absolute.path),
+        )) {
+          continue;
+        }
+        await _writeIfChanged(
+          target,
+          '// GENERATED CODE - DO NOT MODIFY BY HAND\n'
+          '// ignore_for_file: type=lint\n\n'
+          '/// Stable generated Contract API entry point placeholder.\n',
+        );
+        changed = true;
+      }
+    }
+  }
+  return changed;
 }
 
 /// Top-level operation selected by the CLI.
@@ -2987,6 +3059,73 @@ final class _MetadataFile {
   final Directory packageRoot;
 }
 
+/// Writes one stable generated Route Contract entry point per Package.
+///
+/// Authored public barrels remain the exposure boundary. This generated layer
+/// only hides per-source Route Contract output paths and deliberately excludes
+/// authored Service, Command, Event, and InitTask declarations.
+Future<Set<String>> _generateContractApiEntrypoints(
+  Iterable<_MetadataFile> metadataFiles,
+) async {
+  final exportsByPackage = <String, Map<String, Set<String>>>{};
+  final rootsByPackage = <String, Directory>{};
+  for (final metadata in metadataFiles) {
+    final packageName = '${metadata.document['package'] ?? ''}';
+    if (packageName.isEmpty) continue;
+    rootsByPackage[packageName] = metadata.packageRoot;
+    for (final route in _objects(metadata.document['routes'])) {
+      if (route['exposure'] == 'internal') continue;
+      final contracts = route['contracts'];
+      if (contracts is! Map || contracts['package'] != packageName) continue;
+      final library = '${contracts['library'] ?? ''}';
+      const prefix = 'lib/src/ccrouter_generated/';
+      if (!library.startsWith(prefix) || !library.endsWith('.g.dart')) {
+        continue;
+      }
+      final symbols = exportsByPackage
+          .putIfAbsent(packageName, () => <String, Set<String>>{})
+          .putIfAbsent(library.substring(prefix.length), () => <String>{});
+      for (final key in const ['route', 'arguments']) {
+        final symbol = '${contracts[key] ?? ''}';
+        if (symbol.isNotEmpty) symbols.add(symbol);
+      }
+    }
+  }
+
+  final outputs = <String>{};
+  for (final packageName in exportsByPackage.keys.toList()..sort()) {
+    final root = rootsByPackage[packageName]!;
+    final output = File(
+      path.join(
+        root.path,
+        'lib',
+        'src',
+        'ccrouter_generated',
+        '${_fileStem(packageName)}.contracts.api.g.dart',
+      ),
+    );
+    final exports = exportsByPackage[packageName]!;
+    final source = StringBuffer()
+      ..writeln('// GENERATED CODE - DO NOT MODIFY BY HAND')
+      ..writeln('// ignore_for_file: type=lint')
+      ..writeln()
+      ..writeln(
+        '/// Stable generated Contract API entry point for Package `$packageName`.',
+      )
+      ..writeln('///')
+      ..writeln(
+        '/// Authored public barrels decide whether this generated API is exposed.',
+      );
+    for (final library in exports.keys.toList()..sort()) {
+      final symbols = exports[library]!.toList()..sort();
+      source.writeln("export '$library' show ${symbols.join(', ')};");
+    }
+    await _writeIfChanged(output, _dartFormatter.format(source.toString()));
+    outputs.add(path.normalize(output.absolute.path));
+  }
+  return outputs;
+}
+
 /// Writes deterministic registration, Manifest, and route assembly per component.
 Future<List<_GeneratedComponentCatalog>> _generateComponentRouteIndexes(
   Iterable<_MetadataFile> metadataFiles, {
@@ -4546,8 +4685,10 @@ Future<void> _deleteObsoleteResolvedOutputs({
   required CCPackageWorkspace workspace,
   required Set<String> runtimeBundles,
   required Iterable<_GeneratedComponentCatalog> catalogs,
+  required Set<String> contractApiOutputs,
 }) async {
   final expected = <String>{
+    ...contractApiOutputs,
     path.normalize(
       path.join(
         workspace.host.root.path,
@@ -4821,9 +4962,11 @@ Future<void> _generateHostRouteCatalog(
 /// standard header.
 Future<void> _deleteObsoleteAggregateOutputs(
   Directory root,
-  Iterable<_GeneratedComponentCatalog> catalogs,
-) async {
+  Iterable<_GeneratedComponentCatalog> catalogs, {
+  required Set<String> contractApiOutputs,
+}) async {
   final expected = <String>{
+    ...contractApiOutputs,
     '${root.absolute.path}${Platform.pathSeparator}lib${Platform.pathSeparator}src${Platform.pathSeparator}ccrouter_generated${Platform.pathSeparator}ccrouter_host.api.g.dart',
     '${root.absolute.path}${Platform.pathSeparator}lib${Platform.pathSeparator}src${Platform.pathSeparator}ccrouter_generated${Platform.pathSeparator}host${Platform.pathSeparator}ccrouter_host.routes.g.dart',
   };
@@ -4909,7 +5052,8 @@ bool _isCCRouterAggregateOutput(String name, String contents) {
   }
   if (name.endsWith('.api.g.dart')) {
     return contents.contains('Stable typed API entry point for component') ||
-        contents.contains('Stable Host-facing CCRouter API');
+        contents.contains('Stable Host-facing CCRouter API') ||
+        contents.contains('Stable generated Contract API entry point');
   }
   if (name.endsWith('.component.g.dart')) {
     return contents.contains('Generated capability Registrar for component');

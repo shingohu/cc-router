@@ -643,6 +643,17 @@ void probe() {
           'navigation_lab_component_registrar.init_task.g.dart',
         ),
       );
+      final generatedOrderContractsApi = File(
+        path.join(
+          demoRoot.path,
+          'modules',
+          'order_contracts',
+          'lib',
+          'src',
+          'ccrouter_generated',
+          'demo_order_contracts.contracts.api.g.dart',
+        ),
+      );
       final paymentGeneratedRoot = Directory(
         path.join(
           demoRoot.path,
@@ -655,6 +666,7 @@ void probe() {
       );
       expect(generatedRouteApi.existsSync(), isTrue);
       expect(generatedInitTask.existsSync(), isTrue);
+      expect(generatedOrderContractsApi.existsSync(), isTrue);
       try {
         final cleaned = await Process.run(Platform.resolvedExecutable, [
           'run',
@@ -666,6 +678,7 @@ void probe() {
         expect('${cleaned.stdout}', contains('Removed '));
         expect(generatedRouteApi.existsSync(), isFalse);
         expect(generatedInitTask.existsSync(), isFalse);
+        expect(generatedOrderContractsApi.existsSync(), isFalse);
         expect(sentinel.readAsStringSync(), 'user-owned');
         expect(
           paymentGeneratedRoot.existsSync(),
@@ -684,6 +697,17 @@ void probe() {
       }
       expect(generatedRouteApi.existsSync(), isTrue);
       expect(generatedInitTask.existsSync(), isTrue);
+      expect(generatedOrderContractsApi.existsSync(), isTrue);
+      expect(
+        generatedOrderContractsApi.readAsStringSync(),
+        allOf(
+          contains(
+            "export 'contract/order_detail_route_contract.route.contract.g.dart'",
+          ),
+          contains('show OrderDetailRoute, OrderDetailRouteArguments'),
+          isNot(contains('placeholder')),
+        ),
+      );
       final converged = await Process.run(Platform.resolvedExecutable, [
         'run',
         'ccrouter_generator:ccrouter',

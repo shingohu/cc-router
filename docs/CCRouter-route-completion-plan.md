@@ -237,6 +237,19 @@ Service/Command Contract 的统一 `alias` 已在稳定聚合入口落地后完�
 alias、类型名推导形成确定优先级，并保留调用方身份、Owner 校验和生成 API surface。可选命名
 空间 facade 经评估暂不实现；当前组件专属 Client 已能稳定表达领域名称，不增加全局 Proxy。
 
+#### P2-1b Contracts Package 稳定聚合入口（已完成）
+
+公开 Route Contract 的逐源码生成文件继续保留增量职责，但 authored business/owner barrel 统一
+转发 `lib/src/ccrouter_generated/<package>.contracts.api.g.dart`，不再绑定
+`contract/*.route.contract.g.dart` 的路径。稳定入口只聚合 Route/Arguments 生成类型；authored
+Service、Command、Event 和 InitTask Contract 仍由 Package public barrel 显式导出。
+
+Workspace Validator 使用 Analyzer AST 验证完整转发链：每一层必须以 `show` 保留全部必需符号，
+并最终到达 `lib/` 顶层 public library；`lib/src` 下的生成 barrel 不能单独满足公开性要求。
+CLI 在 Builder 前只为 authored source 中显式引用且缺失的稳定入口创建受管 placeholder，最终
+聚合覆盖 placeholder。`clean -> generate -> --no-cache --check` 回归锁定首次生成、正式内容替换、
+陈旧入口清理和缓存/无缓存一致性。
+
 #### P2-2 注解字段合法性校验（已落地，动态注册关系保留运行时校验）
 
 生成器必须校验所有可在构建期确定的字段语义，但不能对 Description、URL、Query Key 等不同领域
