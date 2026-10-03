@@ -27,9 +27,17 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
   final CCRouterContractOwnerIndexCache _contractOwners =
       CCRouterContractOwnerIndexCache();
 
-  /// Limits analysis to Dart source files.
+  /// Borrowed active contexts, released before the Server disposes them.
+  /// Used only to route explicit non-import dependency refreshes.
+  AnalysisContextCollection? _activeContexts;
+
+  /// Watches Dart sources and the exact generated Contract ownership index.
+  /// JSON is an invalidation input only; no JSON diagnostics are published.
   @override
-  List<String> get fileGlobsToAnalyze => const <String>['**/*.dart'];
+  List<String> get fileGlobsToAnalyze => const <String>[
+    '**/*.dart',
+    '**/ccrouter_generated/metadata/ccrouter_package.json',
+  ];
 
   /// Human-readable plugin name shown by Analysis Server diagnostics.
   @override
@@ -55,12 +63,53 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
   Future<void> afterNewContextCollection({
     required AnalysisContextCollection contextCollection,
   }) async {
+    _activeContexts = contextCollection;
     for (final analysisContext in contextCollection.contexts) {
       final paths = analysisContext.contextRoot
           .analyzedFiles()
           .where(_isAuthoredDartPath)
           .toList(growable: false);
       await analyzeFiles(analysisContext: analysisContext, paths: paths);
+    }
+  }
+
+  /// Releases borrowed contexts and package indexes when roots are replaced.
+  @override
+  Future<void> beforeContextCollectionDispose({
+    required AnalysisContextCollection contextCollection,
+  }) async {
+    _activeContexts = null;
+    _packageContexts.clear();
+    _contractOwners.clear();
+    await super.beforeContextCollectionDispose(
+      contextCollection: contextCollection,
+    );
+  }
+
+  /// Preserves original changed paths before Analyzer narrows them to Dart
+  /// import dependencies. Metadata and generated registration outputs are not
+  /// imported by their authored declarations, but still change diagnostics.
+  @override
+  Future<void> contentChanged(List<String> paths) async {
+    final refresh = <String>{};
+    for (final changedPath in paths) {
+      _packageContexts.invalidate(changedPath);
+      refresh.addAll(_contractOwners.invalidate(changedPath));
+      final authored = CCRouterSourceAnalyzer.authoredPathForGenerated(
+        changedPath,
+      );
+      if (authored != null) refresh.add(authored);
+    }
+    await super.contentChanged(paths);
+    final contexts = _activeContexts;
+    if (contexts == null) return;
+    for (final context in contexts.contexts) {
+      await analyzeFiles(
+        analysisContext: context,
+        paths: refresh
+            .where(context.contextRoot.isAnalyzed)
+            .toList(growable: false),
+      );
     }
   }
 

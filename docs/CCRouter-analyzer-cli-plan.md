@@ -136,6 +136,11 @@ ccrouter analyzer uninstall [host-root]
 6. 更新 CLI help、根 README、IDE 文档和 Integration/CLI Skill。
 7. 在 Demo、临时 Host、VS Code 和 Android Studio 完成 Analysis Server smoke。
 
+第 7 项已有独立进程自动化基础：Legacy/LSP 协议、overlay、修复应用、五类生成物磁盘
+变化和 Workspace Owner metadata/Contract 刷新已覆盖。它使用本地源码和临时缓存，不
+替代安装命令的真实 bootstrap/Pub/AOT/固定 ref 验收，也不表示两个 IDE 的完整矩阵通过。
+SDK 独立多根冷启动边界见 [IDE 文档](CCRouter-ide-analysis-server.md)。
+
 验收至少覆盖：重复安装、已有 Plugin 配置、多 Host、聚合根误判、Hosted/Git 两种来源、Analyzer
 不兼容、离线依赖失败、loader 编译失败、用户修改受管文件、卸载恢复和 Plugin 不可用时的业务
 构建回退。

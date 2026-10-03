@@ -112,6 +112,10 @@ Read [implementation-patterns.md](references/implementation-patterns.md) when ad
   For cache recovery, move the entire listed hash entry outside `.plugin_manager`
   as a backup, not just its `analyzer_plugin` child; Dart 3.11 otherwise reuses
   the incomplete parent. See the IDE reference for the SDK-specific boundary.
+  Generated-file and Workspace Owner metadata disk changes must refresh the
+  authored-source diagnostics without restarting. Framework Server-process
+  tests validate this path against local sources; they do not upgrade an
+  application's pinned plugin or certify its live IDE bootstrap.
 - Keep analytics separate from diagnostics: `CCDiagnosticEvent` explains framework execution and failure, while `CCAnalyticsEvent` represents a product behavior. Analytics properties must use validated primitive values and must not contain credentials, full URI values, Widgets, exceptions, or business objects. Analytics Sink failures and queue pressure must never alter navigation or component results.
 - The analytics dispatcher exposes only payload-free pressure counters (`acceptedEventCount`, `pendingEventCount`, `peakQueueDepth`, and `droppedEventCount`) for bounded health/performance checks. They are not an audit log, replay source, or permission to inspect queued events; use the standalone benchmark when comparing SDK/platform behavior.
 - Use `CCRouter.traceBundle(traceId)` for bounded local troubleshooting across nested calls. It is not an audit log, replay source, or business Event store; records may be incomplete after capacity rotation.

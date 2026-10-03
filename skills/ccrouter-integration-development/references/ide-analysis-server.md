@@ -16,6 +16,21 @@ this normal workflow. Metadata-only Contracts and component-wide aggregate APIs
 remain CLI checks because a partial editor buffer cannot prove their Package
 Catalog.
 
+The watcher must preserve original changed paths before the Analyzer reduces
+them to Dart import dependencies. The exact `ccrouter_package.json` metadata
+path is also an invalidation input: changing an Owner in a watched Workspace
+Package refreshes its consumers, even when they do not import generated code.
+This does not promise automatic watching of arbitrary dependencies outside the
+Server's active roots. Do not silence a stale diagnostic by importing internal
+generated files; verify the installed plugin version and keep `generate --check`.
+
+Framework maintainers can run `test/analysis_server_integration_test.dart`
+from the isolated plugin Package. It starts actual SDK Server processes for
+Legacy/LSP diagnostics, overlays, fixes, and disk events. It uses local plugin
+sources and a temporary cache, so passing it does not prove that a consuming
+IDE has loaded the same revision. No application setup step is added by this
+test harness.
+
 Diagnostics read the Analysis Server overlay after every content update, so an
 unsaved edit such as removing a required component owner must be reported before
 generation. Initial analysis visits only authored Dart sources and skips

@@ -155,6 +155,33 @@ dart analyze
 
 工具包的 `pubspec_overrides.yaml` 只用于本地加载器编译验证，不应复制到发布物中。
 
+### 真实 Server 自动回归
+
+在插件 Package 执行 `fvm dart test test/analysis_server_integration_test.dart`。
+它启动当前 SDK 的官方 JIT `analysis_server.dart.snapshot`，使用独立临时 Host、缓存和
+本地源码 loader，通过 Legacy/LSP 协议验收，不直接调用 Plugin 充当端到端测试。
+
+- 未保存 overlay、移除 overlay 恢复磁盘内容、连续编辑最终结果。
+- `edit.getFixes` 和 LSP `codeAction` 的真实修复内容、应用后重新分析。
+- Route/Service/Command/Event/InitTask 生成文件新增、修改、重命名、删除与重建。
+  LSP 会去重相同诊断，因此内容修改无告警变化时不要求收到重复通知。
+- Dart Workspace 内跨 Package 的 Owner metadata 增删/修改与 Contract 源码变更。
+- Server/Plugin 错误或退出视为失败；超时与退出均清理进程、订阅和临时目录。
+
+本轮修复原始磁盘路径被 Analyzer import 依赖图过滤的问题，并将精确
+`ccrouter_package.json` 加入插件关注路径。重新装配分析根时释放 Context 引用和旧索引。
+磁盘 fixture 验证监听效果，不等于在这些 fixture 上执行过 `clean/generate`。
+生成物正确性仍由独立的真实 CLI 回归保证。
+
+当前验证基于 Dart 3.11.5，不宣称覆盖所有 IDE/SDK。无 manifest 的临时 loader 绕过 Pub 与
+用户插件缓存；AOT loader 编译、发布 bootstrap 复制、固定 Git ref 和 IDE UI 另行验证。
+独立多根 Package 同时冷启动时，当前 SDK 的 legacy PluginManager 可能并发启动同一路径
+插件的多个 isolate，分别只持有部分 Context，造成跨根通知遗漏；本测试覆盖共享 Dart
+Workspace，不把这一 SDK 边界标记为已解决。分析根外的依赖文件也没有自动监听承诺。
+
+本次本地监听修复尚未进入 Demo 固定的远端 `a275d1d`。必须在提交经审核并推送后更新
+bootstrap ref、运行 doctor 并重启 IDE，不能仅凭本地测试声称 Demo 插件已升级。
+
 ## Demo 接入
 
 `demo/analysis_options.yaml` 已启用 `ccrouter_demo_analyzer_plugin`。这是一个只属于 Demo

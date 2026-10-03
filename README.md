@@ -112,6 +112,10 @@ Server 已经加载插件；只有 `doctor` 通过后才证明当前凭据和隔
 `dart analyze` 不运行 legacy Analysis Server Plugin，只能验证 Dart 自带规则；不能用它判断
 CCRouter IDE 诊断是否加载。实时规则必须在 Android Studio、IntelliJ、VS Code 或真实
 Language Server 会话中验证，最终跨文件正确性仍以 `ccrouter generate --check` 为准。
+仓库提供独立 Server 进程回归：在 `packages/ccrouter_analyzer_plugin/` 执行
+`fvm dart test test/analysis_server_integration_test.dart`。测试覆盖 Legacy/LSP 修复往返、
+未保存编辑、五类生成物磁盘变化及 Workspace Owner 元数据刷新；不替代当前 IDE 的
+bootstrap/ref 加载验证。具体 SDK 和多根工程边界见 IDE 文档。
 
 自动 `install/upgrade/uninstall` 尚未实现；当前不得把 Analyzer 装配隐式挂入 `generate` 或
 Pub Hook。

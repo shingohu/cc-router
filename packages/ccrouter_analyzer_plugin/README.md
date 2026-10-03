@@ -16,3 +16,13 @@ adding an arbitrary local path dependency.
 The package is currently pre-release. Hosted installation and upgrade flows are
 tracked in the
 [release checklist](https://github.com/shingohu/cc-router/blob/main/docs/CCRouter-release-readiness.md).
+
+From this package directory, run `fvm dart test` for the complete suite or
+`fvm dart test test/analysis_server_integration_test.dart` for real Server
+process tests. They use the installed SDK's JIT Analysis Server snapshot with
+Legacy and LSP protocols, an isolated cache, and the local plugin sources.
+They cover editor overlays, Quick Fix/codeAction application, disk changes to
+all five generated capability kinds, and cross-package Workspace ownership
+metadata. Fixture disk changes test invalidation, not actual generation.
+No Pub or network access is needed after resolving this package's dependencies.
+Bootstrap copying, AOT packaging, Git pins, and IDE UI require separate checks.

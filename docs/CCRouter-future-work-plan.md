@@ -24,7 +24,9 @@ F14/F15 Analyzer 已修复，并补上 Service 生命周期 warning 与保守 Qu
 F16/F17 AI Skill 安装与接入指导已修复，两个完整 Skill 组成独立安装包，并增加孤立目录
 引用、真实 CLI 命令和关键 Dart 示例校验。本轮 18 项已确认缺陷均已关闭；当前 Demo 的
 本机旧插件缓存与 Android Studio Service Quick Fix 后续已验收；Demo Shell/Outlet/Owner
-barrel 私有减负已完成。真实 LSP/平台矩阵与长期质量观测边界见该报告第 15–16 节。
+barrel 私有减负已完成。后续补齐 Legacy/LSP Server 自动化与 Workspace 文件监听，独立
+Analyzer 83 项通过；新增监听修复、独立多根 SDK 边界和远端 pin 状态见该报告第 17 节。
+真实 IDE/平台矩阵与长期质量观测仍保持独立验收。
 最终收尾 844 项测试通过（框架/Demo 等 478、Generator 280、Analyzer 78、Skill 8），
 Workspace/插件 analyze 及缓存/无缓存生成物检查通过。
 下文已完成项表示基础能力和当时测试已落地，
@@ -189,6 +191,11 @@ Workspace/插件 analyze 及缓存/无缓存生成物检查通过。
   和 Workspace Validator 保持最终权威。
 - [x] Demo Analyzer bootstrap 已切换为固定 Git commit，保留独立 Analyzer 依赖图；增加
   loader `analyze/compile` smoke、兼容性边界测试和发布后的 Hosted fallback manifest。
+- [x] 独立真实 Analysis Server Legacy/LSP 回归覆盖 overlay、Quick Fix/codeAction、五类
+  生成物磁盘变化及 Workspace 跨包 Owner metadata/Contract 变化。已修复原始事件被
+  import 依赖图过滤以及 JSON 未被关注的缺口；固定远端 pin 尚未包含本次本地修复。
+- [ ] 独立多根工程同时冷启动的 SDK legacy PluginManager 重复实例边界与完整 IDE/SDK
+  矩阵；当前共享 Dart Workspace 验证不替代这一项，也不承诺监听分析根外的依赖。
 - [~] Analyzer Plugin 已提供 Host-only、只读的 `status/doctor`，覆盖固定来源、lockfile 和
   Analyzer 兼容检查；`install/upgrade/uninstall` 自动装配仍未实现。后续写入型命令必须幂等、
   可回滚和 Hosted 优先，不挂入 `generate`、Pub Hook 或组件脚手架。固定 Git ref 仅在插件

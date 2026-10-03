@@ -695,3 +695,38 @@ Monkey；Analyzer CLI **13**；Workspace Validator **51**）。Workspace analyze
 P6 评估已纳入 build_runner 优化计划第 12.5 节。既有完整字节 SHA-256、失效传播和参考
 路径保持不变，当前仍未实现 P6-1/2/3。完整跨 IDE 文件监听/codeAction 矩阵、平台手势和
 长期 Heap/RSS 观测仍未在本轮完成。
+
+## 17. 真实 Analysis Server 协议回归与监听修复（2026-10-03）
+
+新增真实 Server 回归先复现：创建 Route 生成库后，源码仍保留 missing-output 告警。
+根因是插件把原始磁盘事件交给 Analyzer 后，只使用其 Dart import 依赖图返回的 affected
+paths；生成注册库没有被声明源码 import，因此确定性映射没有执行。另一个缺口是插件只
+声明关注 Dart，Owner JSON metadata 变化没有进入失效链。
+
+修复在插件内部保留原始输入，先收集确定的声明/消费源码，再按当前 Context 分发刷新；
+关注路径只增加准确的 Package metadata 文件，不扫描任意 JSON。分析根替换前清理借用的
+Context 和有界索引，不新增后台 watcher、Timer、业务 API 或 Runtime 行为。
+
+新增 **5 项**端到端回归，使用 SDK 自带 JIT Analysis Server 的真实子进程，覆盖：
+
+1. Legacy 未保存 overlay、移除恢复、Service Quick Fix 应用和快速连续编辑。
+2. LSP diagnostics/codeAction/didChange/didClose 往返与修复后无 Dart ERROR。
+3. Legacy 下五类能力生成文件新增、修改、重命名、删除和重建。
+4. LSP 下相同磁盘矩阵；相同诊断被协议去重时，不强求重复通知。
+5. 共享 Dart Workspace 的跨包 Owner metadata 增删/修改，以及 Contract 常量修改。
+
+完整独立插件测试 **83/83 通过**，独立 Package analyze 无问题。Demo 缓存和无缓存
+`generate --check` 均通过，受管生成物无变化；92 份 Markdown 与独立 Skill bundle/CLI
+指导检查通过。没有重跑上一轮 844 项或真机矩阵，不把文件 fixture 写入等同于执行
+`clean/generate`。本轮日志中的生成耗时包含并行检查影响，不作为性能提升证据。
+
+剩余边界：
+
+- 测试加载本地插件源码，不经过 Pub/远端 bootstrap；Demo 仍固定 `a275d1d`，本次修复需
+  后续推送、更新完整 ref、doctor 验证和 IDE 重启才能进入该集成。
+- Dart 3.11.5 独立多根工程同时冷启动可创建同插件的多个 isolate，分别持有部分根，导致
+  跨根事件不能刷新另一实例。已记录为 SDK/集成边界；共享 Workspace 测试通过不代表
+  独立多根冷启动已通过，不能通过读取未受管根或增加全仓库轮询掩盖它。
+- JIT 测试 loader 不验证 AOT 包装和用户缓存复制；这些仍由 doctor/loader smoke 和真实
+  IDE 验收负责。无 manifest 的测试 loader 不能作为应用装配模板。
+- Analyzer 写入型 CLI 和 P6 失效归因仍未在本项实施，继续按独立任务推进。
