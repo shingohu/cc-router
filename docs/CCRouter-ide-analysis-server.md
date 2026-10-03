@@ -164,7 +164,7 @@ demo/tools/ccrouter_analyzer_plugin_host/
 Demo 的 `pubspec.yaml` 只依赖这个不带 Analyzer 约束的 Host Package；真正的规则 Package
 在 bootstrap 的独立依赖环境中解析。这样不会把 Analyzer 8.4.0 与 Workspace 生成器的
 Analyzer 10 混在一个依赖图里。bootstrap 当前使用远端 `main` 上固定的 commit
-`c9495775b5da61ba8c63c7597939e3350bb08c0f`，可由 Analysis Server
+`a275d1d46ddfdded6678ecbf1d2d23818cdbdfdc`，可由 Analysis Server
 复制到临时目录并正常启动。bootstrap 目录同时保留 `pubspec.hosted.yaml` 作为发布后的
 Hosted fallback；发布到 Hosted 后只能二选一替换活动 manifest，不能在同一个 bootstrap
 Package 同时声明 Git 和 Hosted 两个来源。
@@ -182,14 +182,15 @@ Analysis Server entrypoint 可加载，不会启动常驻 Analysis Server。插�
 验证，验证完成后恢复固定 Git ref；绝对 path 不得提交。Git ref 更新前必须先运行插件
 Package 的 analyze/test 和 loader smoke。
 
-当前固定 ref `c9495775b5da61ba8c63c7597939e3350bb08c0f` 已包含 2026-09-30 完成的规则、单个/批量
-Owner Quick Fix、未保存 overlay 诊断、性能缓存和只读 CLI 健康检查，无需仅为追随本地 HEAD 而更新。只有 Plugin
+当前固定 ref `a275d1d46ddfdded6678ecbf1d2d23818cdbdfdc` 已包含 2026-10-03 完成的
+F14/F15 类型与 Owner 修复、Service 生命周期诊断，以及既有的单个/批量 Owner Quick Fix、
+未保存 overlay 诊断、性能缓存和只读 CLI 健康检查。无需仅为追随本地 HEAD 而更新。只有 Plugin
 生产代码真实变化、隔离测试通过并
 推送远端后，才更新为对应的完整 commit SHA；禁止使用 `main` 或尚未推送的本地 SHA。
 
-2026-10-03 的 F14/F15 resolved 类型/Owner 修复与 Service 生命周期诊断已完成本地插件测试、
-真实 Plugin 会话验证和 loader 编译，尚未包含在上述固定 ref 中。Demo 当前 IDE 仍运行该
-远端版本；本地验证完成不等于已经分发，需推送并按上述流程更新 ref 后才能使用新增规则。
+上述修复已完成本地插件测试、真实 Plugin 会话验证和 loader 编译，并已推送远端。
+Demo bootstrap 已固定该版本；更新依赖不等于正在运行的 IDE 已重新加载，需重启
+Dart Analysis Server 后使用新增规则。
 
 Demo 运行时还接入了 `ccrouter_devtools`：进入 Navigation Lab 的“诊断”分区，点击
 “打开 CCRouter DevTools”，即可查看只读 Overview、Components、Entries、Timeline、

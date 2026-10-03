@@ -582,7 +582,12 @@ F01–F11 已完成实现和回归；后续从第 5 项继续。每个独立缺�
   分析、overlay 更新丢弃旧结果、继承 dispose/CCDisposable 和资源所有权误报边界。
 - Generator Event 对照矩阵 **13/13 通过**；同批 InitTask/Service **45 项通过**。
   框架/Flutter/Demo/模块/DevTools 全量 **478/478 通过**。本地 bootstrap analyze 与 loader
-  可执行文件编译通过；未修改 Demo 固定 Git ref，当前 Demo IDE 尚未分发本批规则。
+  可执行文件编译通过。后续按用户授权提交并推送 `a275d1d`，Demo 固定 Git ref 已更新到该
+  完整 SHA；IDE 需要重启 Analysis Server，新旧运行会话不能仅凭 manifest 推断。
+  远端 bootstrap 临时副本的 `pub get --enforce-lockfile`、analyze 与 loader 编译均通过，
+  确认解析到 Git 缓存中的该 SHA。Demo `analyzer status` 为 healthy；本机 `doctor` 检测到
+  旧 Analysis Server plugin-manager 缓存而停止，未计为 doctor 通过。保留活动 IDE 状态，
+  待停止 Analysis Server、移走对应旧缓存并重启后重跑 doctor。
 - 编辑基准包含 100/1000/3000 被动类与 20 次语义编辑，每次必须命中正确的 Service 诊断。
   CCRouter 语义规则 P95 分别为 **338/995/3724us**；复用的 Analysis Server 解析 P95 分别为
   **5176/23538/35987us**。首次冷解析约 **875ms**，与规则成本分开记录。这只是当前 SDK/JIT

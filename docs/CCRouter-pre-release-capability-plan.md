@@ -275,9 +275,9 @@ Event 的多个 Subscriber 以分支显示，失败隔离保持独立；Service 
 ```yaml
 ccrouter_analyzer_plugin:
   git:
-    url: https://github.com/shingohu/cc-router.git
+    url: git@github.com:shingohu/cc-router.git
     path: packages/ccrouter_analyzer_plugin
-    ref: c9495775b5da61ba8c63c7597939e3350bb08c0f
+    ref: a275d1d46ddfdded6678ecbf1d2d23818cdbdfdc
 ```
 
 这个配置有正向收益：可以在 Hosted 发布前让 Demo 验证最新插件修复，同时不把 Analyzer 版本

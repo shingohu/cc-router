@@ -20,7 +20,7 @@ F03/F04/F09 已修复并补上真实分发及常量解析回归；Analytics F05/
 444 项框架/Flutter/Demo 回归。Runtime F06/F07/F08 已修复并完成 462 项回归。
 曝光采集 F12/F13 与 Demo Network 生命周期 F18 已修复，完成 478 项框架/Flutter/Demo 回归。
 F14/F15 Analyzer 已修复，并补上 Service 生命周期 warning 与保守 Quick Fix，独立插件
-78 项测试通过；当前为本地实现，尚未更新 Demo 固定远端插件版本。
+78 项测试通过；Demo 已更新到远端固定提交 `a275d1d`，IDE 需重启 Analysis Server 加载。
 剩余 0 项已确认 P1、2 项 P2 待修复；后续按该报告第 7 节处理
 F16/F17 AI Skill 安装与接入指导缺陷。
 下文已完成项表示基础能力和当时测试已落地，
