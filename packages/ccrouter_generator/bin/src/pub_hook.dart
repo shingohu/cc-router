@@ -522,6 +522,7 @@ final class _CCPubHookOutput {
       line.startsWith('Validated ') ||
       line == 'CCRouter generated artifacts are up to date.' ||
       line.startsWith('CCRouter generation fast path hit;') ||
+      line.startsWith('CCRouter generation aggregate-only path;') ||
       line.startsWith('Bootstrapped generated component APIs ');
 }
 

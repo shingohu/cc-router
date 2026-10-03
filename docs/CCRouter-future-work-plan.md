@@ -76,9 +76,10 @@
   精确 fingerprint，dirty 沿反向依赖闭包传播；干净 Package 跳过聚合写入但仍执行 Validator、
   Host 组装和删除检查。缓存 schema 升级为 2，旧缓存自动 fail-closed。
 - [~] [build_runner 与团队构建正确性优先优化计划](CCRouter-build-runner-optimization-plan.md)
-  的 P1 已完成：分层 Build Plan、`.dart_tool` 本地诊断状态和 `suggested/actual/reasons` Profile
-  已落地，所有 fast path miss 仍执行完整 build_runner。P2 Host-only aggregation 与 P3
-  Clone A/Clone B Portable State 尚未实施；任何无法证明的情况继续回退完整 Builder。
+  的 P1 已完成，P2 已完成 Host 依赖闭包纯删除场景：分层 Build Plan、`.dart_tool` 本地诊断状态、
+  `suggested/actual/reasons` Profile 和默认启用的精确删除 aggregation-only 已落地；新增本地或外部
+  组件仍执行完整 build_runner。P2 其余范围与 P3 Clone A/Clone B Portable State 尚未实施；
+  任何无法证明的情况继续回退完整 Builder，CI 保持 `--no-cache --check`。
 - [ ] 仅在真实项目 Host 聚合超过总耗时 20% 时继续优化 dirty set 的输入摘要速度；不得用
   mtime/size 替代内容摘要。
 - [x] 建立冷启动、初始化、路由解析、导航延迟、并发导航、Runtime dispose 和长期 RSS 的

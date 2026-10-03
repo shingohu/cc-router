@@ -861,7 +861,7 @@ void probe() {
           '${result.stdout}',
           contains(
             'build-plan suggested=aggregateOnly actual=runBuilder '
-            'reasons=non-builder-input-only',
+            'reasons=non-builder-input-only,p2-scope-excluded',
           ),
         );
         expect('${result.stdout}', contains('CCRouter profile build-targets='));
@@ -973,8 +973,9 @@ void probe() {
   );
 
   test(
-    'P1 build plan identifies a Host dependency-closure change',
+    'P2 aggregate-only matches the full path for a Host component removal',
     () async {
+      final before = await _readDemoGeneratedArtifacts();
       final seeded = await _generateDemo(['--no-cache']);
       expect(seeded.exitCode, 0, reason: '${seeded.stderr}');
       final graph = File(
@@ -990,30 +991,60 @@ void probe() {
         (host['dependencies'] as List).remove('demo_payment');
         graph.writeAsStringSync(jsonEncode(document), flush: true);
 
-        final result = await _generateDemo(['--check', '--profile']);
-        expect(result.exitCode, 1);
+        final disabled = await _generateDemo(
+          ['--check', '--profile'],
+          environment: const {'CCROUTER_DISABLE_AGGREGATE_ONLY': '1'},
+        );
+        expect(disabled.exitCode, 1);
         expect(
-          '${result.stdout}',
+          '${disabled.stdout}',
           contains(
             'build-plan suggested=aggregateOnly actual=runBuilder '
+            'reasons=host-graph-changed,aggregate-only-disabled',
+          ),
+        );
+        expect(
+          '${disabled.stdout}',
+          contains('CCRouter profile build-targets=7'),
+        );
+
+        final aggregateOnly = await _generateDemo(['--profile']);
+        expect(aggregateOnly.exitCode, 0, reason: '${aggregateOnly.stderr}');
+        expect(
+          '${aggregateOnly.stdout}',
+          contains(
+            'build-plan suggested=aggregateOnly actual=aggregateOnly '
             'reasons=host-graph-changed',
           ),
         );
         expect(
-          '${result.stdout}',
-          isNot(contains('build-targets=8 packages=')),
+          '${aggregateOnly.stdout}',
+          contains('CCRouter generation aggregate-only path;'),
         );
+        expect('${aggregateOnly.stdout}', isNot(contains('build-targets=')));
         expect(
-          '${result.stderr}',
-          contains('CCRouter generated artifacts are stale'),
+          '${aggregateOnly.stdout}',
+          contains('CCRouter profile build=0ms'),
         );
+        final aggregateArtifacts = await _readDemoGeneratedArtifacts();
+        expect(aggregateArtifacts, isNot(before));
+
+        final reference = await _generateDemo([
+          '--check',
+          '--no-cache',
+          '--profile',
+        ]);
+        expect(reference.exitCode, 0, reason: '${reference.stderr}');
+        expect('${reference.stdout}', contains('reasons=no-cache-reference'));
+        expect(await _readDemoGeneratedArtifacts(), aggregateArtifacts);
       } finally {
         graph.writeAsBytesSync(originalGraph, flush: true);
         final restored = await _generateDemo(const []);
         expect(restored.exitCode, 0, reason: '${restored.stderr}');
+        expect(await _readDemoGeneratedArtifacts(), before);
       }
     },
-    timeout: const Timeout(Duration(minutes: 4)),
+    timeout: const Timeout(Duration(minutes: 6)),
   );
 
   test(
@@ -1132,10 +1163,14 @@ Future<Map<String, String>> _readDemoGeneratedArtifacts() async {
   return Map.unmodifiable(artifacts);
 }
 
-Future<ProcessResult> _generateDemo(List<String> arguments) => Process.run(
+Future<ProcessResult> _generateDemo(
+  List<String> arguments, {
+  Map<String, String>? environment,
+}) => Process.run(
   Platform.resolvedExecutable,
   ['run', 'ccrouter_generator:ccrouter', 'generate', 'demo', ...arguments],
   workingDirectory: Directory.current.path,
+  environment: environment,
 );
 
 File _demoBuildPlanState() {

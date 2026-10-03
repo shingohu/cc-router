@@ -616,6 +616,15 @@ from metadata, managed output, direct dependency indexes, and reverse dependency
 propagation. A small dirty set therefore does not imply that Workspace Analyzer
 startup should be proportional to that count.
 
+The Build Plan separately reports `suggested` and `actual`. Only
+`actual=aggregateOnly` means build_runner was skipped, and that optimization is
+currently limited to a Host dependency closure that only removes Packages while
+every remaining Builder input, resolution identity, metadata file, and managed
+output remains identical. Package additions and unproven changes still execute
+the full Builder path. Use `CCROUTER_DISABLE_AGGREGATE_ONLY=1` for an immediate
+local fallback and retain `--no-cache --check` as the authoritative CI gate; the
+state under `.dart_tool/ccrouter/v1/build_plans/` is not portable team state.
+
 After `ccrouter clean`, generation may temporarily bootstrap missing component
 Route, Command, and Event APIs from valid Builder metadata before build_runner.
 This only repairs the import graph for the same build pass: current metadata is

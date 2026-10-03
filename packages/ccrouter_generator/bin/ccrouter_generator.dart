@@ -240,20 +240,29 @@ Future<void> main(List<String> arguments) async {
         await snapshot!.restore();
       }
     }
-    final buildWatch = Stopwatch()..start();
-    if (buildContext != null &&
-        !await _runBuildRunner(buildContext, root, profile: parsed.profile)) {
-      if (snapshot != null) await snapshot.restore();
-      exitCode = 1;
-      return;
+    var buildDuration = Duration.zero;
+    if (buildPlan?.runsBuilder ?? true) {
+      final buildWatch = Stopwatch()..start();
+      if (buildContext != null &&
+          !await _runBuildRunner(buildContext, root, profile: parsed.profile)) {
+        if (snapshot != null) await snapshot.restore();
+        exitCode = 1;
+        return;
+      }
+      buildWatch.stop();
+      buildDuration = buildWatch.elapsed;
+    } else {
+      stdout.writeln(
+        'CCRouter generation aggregate-only path; verified Builder inputs '
+        'are unchanged.',
+      );
     }
-    buildWatch.stop();
     final succeeded = parsed.command == _GeneratorCommand.generate
         ? await _generateResolvedWorkspace(
             root,
             parsed,
             buildContext!,
-            buildDuration: buildWatch.elapsed,
+            buildDuration: buildDuration,
           )
         : await _aggregate(root, parsed);
     if (!succeeded) {

@@ -1114,14 +1114,19 @@ Route API 和 Package/Host metadata。跨组件 Route 不能直接由脚手架�
 `dirty-packages` 原因；`dirty` 是 build_runner 完成后的聚合复用判断，不表示 Builder 只分析
 这些 Package。
 
-当前已完成 Build Plan 的 P1 诊断阶段。fast path miss 时，`--profile` 还会输出
+当前已完成 Build Plan 的 P1 诊断阶段，以及 P2 中范围最窄的“Host 依赖闭包删除组件”优化。
+fast path miss 时，`--profile` 还会输出
 `build-plan suggested=<unchanged|aggregateOnly|runBuilder> actual=<...> reasons=<...>`：
-`suggested` 是根据 Tool、Package 和 Host 分层内容摘要得到的后续优化建议，`actual` 才是本轮
-真实执行路径。除已验证的 fast path hit 外，P1 的 `actual` 始终为 `runBuilder`；即使显示
-`suggested=aggregateOnly`，当前也没有跳过 Builder。诊断基线保存在
+`suggested` 是根据 Tool、Package 和 Host 分层内容摘要得到的候选计划，`actual` 才是本轮
+真实执行路径。只有 Package 集合发生纯删除、没有新增 Package，并且所有保留 Builder Package
+的源码、解析身份、metadata 和受管输出都与上次成功状态完全一致时，`actual=aggregateOnly`
+才会跳过 build_runner，并继续执行完整 Validator、Host 聚合、旧产物清理和原子恢复。普通源码
+变化、Package 新增、外部只读依赖新增或任何无法证明的状态仍为 `actual=runBuilder`。诊断基线保存在
 `.dart_tool/ccrouter/v1/build_plans/`，可以随时删除；缺失、损坏或无法证明解析身份时会保守回退。
-`--no-cache --profile` 会报告 `reasons=no-cache-reference` 并执行完整参考路径。真正启用
-Host-only aggregation 和跨 Clone Portable State 仍分别属于后续 P2、P3，当前没有实现。
+设置 `CCROUTER_DISABLE_AGGREGATE_ONLY=1` 可临时关闭该优化并恢复完整 Builder；
+`--no-cache --profile` 会报告 `reasons=no-cache-reference` 并始终执行完整参考路径，
+`--no-cache --check` 仍是 CI 权威门禁。新增本地/外部组件的 Host-only aggregation 和跨 Clone
+Portable State 尚未实现，仍属于后续 P3；本机 `.dart_tool` 状态不能提交或跨机器复用。
 
 fast path 未命中后，Generator 会先对 Host 依赖闭包执行保守的 Component Dependency
 Preflight：仅当直接 List、Contract 与 Owner 都能唯一证明时，才在 build_runner 前按组件和

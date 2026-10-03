@@ -1,11 +1,11 @@
 part of '../ccrouter_generator.dart';
 
-/// Computes a fail-closed P1 Build Plan without changing the executed path.
+/// Computes a fail-closed Build Plan for Builder and aggregation execution.
 ///
-/// The current phase is diagnostic only: every fast-path miss still executes
-/// build_runner. The persisted state contains no absolute paths and is written
-/// only after a complete successful generation, which lets later phases prove
-/// graph-only cases before enabling any skip behavior.
+/// P2 permits only a proven Host dependency-closure deletion to skip
+/// build_runner. Every other fast-path miss remains on the full Builder path.
+/// The persisted state contains no absolute paths and is written only after a
+/// complete successful generation.
 abstract final class _GenerationBuildPlanner {
   /// Current disposable planning-state schema.
   static const int _schemaVersion = 1;
@@ -112,12 +112,22 @@ abstract final class _GenerationBuildPlanner {
       reasons.sort();
       return _GenerationBuildPlanInspection.runBuilder(reasons: reasons);
     }
+    final hostGraphChanged =
+        baseline.hostGraphFingerprint != current.hostGraphFingerprint;
+    final removedPackages = baseline.packages.keys
+        .where((name) => !current.packages.containsKey(name))
+        .toList(growable: false);
+    final addedPackages = current.packages.keys
+        .where((name) => !baseline.packages.containsKey(name))
+        .toList(growable: false);
     return _GenerationBuildPlanInspection.aggregateOnly(
       reasons: [
-        baseline.hostGraphFingerprint == current.hostGraphFingerprint
-            ? 'non-builder-input-only'
-            : 'host-graph-changed',
+        !hostGraphChanged ? 'non-builder-input-only' : 'host-graph-changed',
       ],
+      p2Eligible:
+          hostGraphChanged &&
+          removedPackages.isNotEmpty &&
+          addedPackages.isEmpty,
     );
   }
 
@@ -188,8 +198,8 @@ abstract final class _GenerationBuildPlanner {
   }
 }
 
-/// Suggested diagnostic execution mode for one fast-path miss.
-enum _GenerationSuggestedBuildPlan {
+/// Planned execution mode for one fast-path miss.
+enum _GenerationBuildPlan {
   /// Only Host/Catalog aggregation appears necessary from proven inputs.
   aggregateOnly,
 
@@ -197,31 +207,59 @@ enum _GenerationSuggestedBuildPlan {
   runBuilder,
 }
 
-/// One P1 planning decision; its actual path remains build_runner.
+/// One planning decision with a separately gated actual execution path.
 final class _GenerationBuildPlanInspection {
   /// Creates an aggregation-only suggestion for diagnostic comparison.
-  const _GenerationBuildPlanInspection.aggregateOnly({required this.reasons})
-    : suggested = _GenerationSuggestedBuildPlan.aggregateOnly;
+  const _GenerationBuildPlanInspection.aggregateOnly({
+    required this.reasons,
+    required this.p2Eligible,
+  }) : suggested = _GenerationBuildPlan.aggregateOnly;
 
   /// Creates a conservative full-Builder decision.
   const _GenerationBuildPlanInspection.runBuilder({required this.reasons})
-    : suggested = _GenerationSuggestedBuildPlan.runBuilder;
+    : suggested = _GenerationBuildPlan.runBuilder,
+      p2Eligible = false;
 
   /// Suggested path derived from verified layered state.
-  final _GenerationSuggestedBuildPlan suggested;
+  final _GenerationBuildPlan suggested;
 
   /// Stable, sanitized causes used for profile diagnostics.
   final List<String> reasons;
 
-  /// Bounded profile line that makes the P1 no-skip behavior explicit.
+  /// Whether this change is inside the deliberately narrow P2 deletion scope.
+  final bool p2Eligible;
+
+  /// Actual path after applying the P2 scope and emergency kill switch.
+  _GenerationBuildPlan get actual {
+    if (suggested != _GenerationBuildPlan.aggregateOnly || !p2Eligible) {
+      return _GenerationBuildPlan.runBuilder;
+    }
+    return Platform.environment['CCROUTER_DISABLE_AGGREGATE_ONLY'] == '1'
+        ? _GenerationBuildPlan.runBuilder
+        : _GenerationBuildPlan.aggregateOnly;
+  }
+
+  /// Whether this invocation must execute build_runner.
+  bool get runsBuilder => actual == _GenerationBuildPlan.runBuilder;
+
+  /// Bounded profile line that distinguishes suggestion from actual execution.
   String get profileDescription {
     const limit = 12;
-    final visible = reasons.take(limit).toList();
-    if (reasons.length > limit) {
-      visible.add('and-${reasons.length - limit}-more');
+    final actualReasons = <String>[
+      ...reasons,
+      if (suggested == _GenerationBuildPlan.aggregateOnly && !p2Eligible)
+        'p2-scope-excluded',
+      if (suggested == _GenerationBuildPlan.aggregateOnly &&
+          p2Eligible &&
+          actual == _GenerationBuildPlan.runBuilder)
+        'aggregate-only-disabled',
+    ];
+    final visible = actualReasons.take(limit).toList();
+    if (actualReasons.length > limit) {
+      visible.add('and-${actualReasons.length - limit}-more');
     }
     return 'CCRouter profile build-plan '
-        'suggested=${suggested.name} actual=runBuilder '
+        'suggested=${suggested.name} actual=${actual.name} '
         'reasons=${visible.join(',')}';
   }
 }
