@@ -72,9 +72,104 @@ If the plugin is unavailable or incompatible with the current Analysis Server,
 disable it and continue using Dart Analyzer plus the CLI gate. Do not weaken
 public API boundaries to accommodate plugin installation. Unreleased Git
 bootstraps must pin a reviewed commit; after publication, use the bootstrap's
-Hosted manifest and rerun the same loader `analyze/compile` smoke. See
-[`docs/CCRouter-ide-analysis-server.md`](../../../docs/CCRouter-ide-analysis-server.md)
-for dependency setup and the current Analyzer version isolation rationale.
+Hosted dependency and rerun the same loader `analyze/compile` smoke. Follow the
+bundled bootstrap procedure below; it does not require framework repository files.
+
+## Manual Host bootstrap
+
+Keep the rule Package's Analyzer dependencies out of the application workspace.
+For the current development version, create a Host-owned wrapper Package:
+
+```text
+<host>/tools/ccrouter_analyzer_host/
+  pubspec.yaml
+  tools/analyzer_plugin/
+    pubspec.yaml
+    pubspec.lock
+    bin/plugin.dart
+```
+
+The outer `pubspec.yaml` contains no Analyzer dependency and no workspace
+resolution setting:
+
+```yaml
+name: app_ccrouter_analyzer
+publish_to: none
+environment:
+  sdk: ^3.10.0
+```
+
+Add it to the application's actual dependency-owning pubspec, rebasing the path
+if that owner is above the Host. Merge the plugin entry into the Host's existing
+`analysis_options.yaml`; preserve other rules and plugins:
+
+```yaml
+# Host pubspec.yaml
+dev_dependencies:
+  app_ccrouter_analyzer:
+    path: tools/ccrouter_analyzer_host
+```
+
+```yaml
+# Host analysis_options.yaml
+analyzer:
+  plugins:
+    - app_ccrouter_analyzer
+```
+
+The inner `tools/analyzer_plugin/pubspec.yaml` owns an isolated dependency graph.
+This pinned example matches the reviewed 2026-10-03 plugin; compare it with the
+application's SDK and installed CCRouter version before adoption. Use a Git URL
+the consuming environment can authenticate to. Never use a relative path to the
+rule Package: Analysis Server copies the bootstrap into its own directory.
+
+```yaml
+name: app_ccrouter_analyzer_loader
+publish_to: none
+environment:
+  sdk: ^3.10.0
+dependencies:
+  analyzer: 8.4.0
+  analyzer_plugin: 0.13.10
+  ccrouter_analyzer_plugin:
+    git:
+      url: git@github.com:shingohu/cc-router.git
+      path: packages/ccrouter_analyzer_plugin
+      ref: a275d1d46ddfdded6678ecbf1d2d23818cdbdfdc
+```
+
+Use this inner `bin/plugin.dart`. The implementation import is intentional only
+in this isolated tool entrypoint, never in feature/application code:
+
+```dart
+import 'dart:isolate';
+import 'package:analyzer/file_system/physical_file_system.dart';
+import 'package:analyzer_plugin/starter.dart';
+import 'package:ccrouter_analyzer_plugin/src/plugin.dart';
+
+void main(List<String> args, SendPort sendPort) {
+  ServerPluginStarter(
+    CCRouterAnalyzerPlugin(PhysicalResourceProvider.INSTANCE),
+  ).start(sendPort);
+}
+```
+
+Resolve the Host dependencies, then run `fvm dart pub get` from the inner loader
+directory and commit its lockfile. Resolve an aggregator with
+`CCROUTER_PUB_HOOK_DISABLE=1` when its installed Hook cannot classify workspace
+roots correctly; run generation against the actual Host separately. Run the
+read-only checks below and restart Analysis Server after a bootstrap/ref change.
+Do not claim live IDE diagnostics work from loader compilation alone.
+
+After an actual Hosted release, replace only the inner rule dependency with its
+reviewed Hosted version and revalidate the isolated graph. Do not infer that
+`0.1.0` is published from its source manifest. If the current SDK is incompatible,
+disable the plugin entry without weakening Dart analysis or generation gates.
+
+Expanded rationale is optional background:
+[IDE integration design](https://github.com/shingohu/cc-router/blob/main/docs/CCRouter-ide-analysis-server.md).
+
+## Status and verification
 
 For an already configured Host, prefer the implemented read-only checks:
 
@@ -90,8 +185,7 @@ plugin-manager copy. If it names a stale cache, stop the Analysis Server and
 move only that directory before restarting; do not clear unrelated IDE or Pub
 caches. Rerun doctor after the bootstrap or pinned ref changed.
 
-The planned `install/upgrade/uninstall` commands in
-[`docs/CCRouter-analyzer-cli-plan.md`](../../../docs/CCRouter-analyzer-cli-plan.md)
-are not implemented. Keep using the manual Host bootstrap, do not attach setup
+The planned `analyzer install/upgrade/uninstall` commands are not implemented.
+Keep using the manual Host bootstrap, do not attach setup
 to generation or Pub Hook, and do not change a pinned ref merely to follow
 repository HEAD.

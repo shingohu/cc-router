@@ -1,5 +1,11 @@
 # Implementation Patterns
 
+Examples show separate integration patterns, not one file to concatenate.
+Application symbols such as `analytics`, `database`, and manifests must come
+from the consuming project. Generated Client names come from its real component
+and Contract declarations. Do not invent these APIs or register both an
+annotated Provider and its alternative handwritten Provider.
+
 ## Package Roles
 
 ### Host
@@ -37,6 +43,7 @@ lifecycle bridge.
 
 A handwritten Host uses the same lifecycle contract:
 
+<!-- verified-example: host-assembly -->
 ```dart
 final hostAssembly = CCHostAssembly.fromComponents(
   components: [ordersManifest, accountManifest],
@@ -94,7 +101,7 @@ dry-run summary before changing Contracts, dependencies, or public exposure.
 
 If automatic generation after dependency resolution is desired, install the
 explicit per-SDK `pub-hook` documented in
-[`CCRouter-cli-pub-hook.md`](../../../docs/CCRouter-cli-pub-hook.md). Do not
+the bundled [CLI Skill](../../ccrouter-cli-development/SKILL.md#pub-hook). Do not
 modify Flutter internals manually. The hook covers successful `flutter pub`
 commands and runs a fail-closed preflight before `flutter run/build`; direct
 `dart pub` and Flutter Tool's internal implicit `pub get` remain outside its
@@ -152,9 +159,12 @@ choose those APIs. Never bind an authored public barrel to an individual
 
 ## Typed Navigation
 
+Use the actual generated type imported from the public contracts barrel (this
+example uses the Demo's `OrderDetailRoute`); do not invent a Route facade name.
+
 ```dart
 final result = await CCRouter.navigator.push<String>(
-  OrderRoutes.detail(orderId: 42),
+  OrderDetailRoute.intent(orderId: 42),
   source: const CCNavigationSource.feature('checkout'),
 );
 ```
@@ -199,6 +209,7 @@ Configure exact Host allowlist entries and explicitly enable external ingress on
 
 ## Component-Internal Route
 
+<!-- verified-example: route-page -->
 ```dart
 @CCRoute<void>(
   id: 'catalog.product',
@@ -208,6 +219,9 @@ Configure exact Host allowlist entries and explicitly enable external ingress on
 final class ProductPage extends StatelessWidget {
   const ProductPage({required this.productId, super.key});
   final String productId;
+
+  @override
+  Widget build(BuildContext context) => Text(productId);
 }
 ```
 
@@ -221,6 +235,7 @@ exportable API do not receive an empty barrel.
 
 Use `@CCExtraParam` for a typed process-local object that must retain identity:
 
+<!-- verified-example: extra-page -->
 ```dart
 final class ProductDraft {
   const ProductDraft(this.id);
@@ -238,6 +253,9 @@ final class ProductEditorPage extends StatelessWidget {
   });
 
   final ProductDraft draft;
+
+  @override
+  Widget build(BuildContext context) => Text(draft.id);
 }
 ```
 
@@ -262,8 +280,9 @@ code may pass a controlled namespace value (`global`, `guest`, `user(accountId)`
 should use a Scoped Facade that resolves these values from a Host-owned context
 provider. The same key in different namespaces must remain isolated.
 
-The Service should depend on a backend-neutral `CCStorageBackend`; a memory Fake is
-the default for deterministic tests. Persistent or secure implementations belong to
+The Service should depend on an application-defined backend interface (for
+example `StorageBackend`, not a built-in CCRouter API); a memory Fake is useful
+for deterministic tests. Persistent or secure implementations belong to
 the Host/Composition Root and must define serialization, encryption, migration,
 logout cleanup, and environment-switch behavior explicitly. Namespace selection is
 not an access-control or encryption mechanism, and raw storage values must not be
@@ -285,6 +304,7 @@ final class CartRepository {
 For a promoted contract, declare the interface in a Pure Dart contracts
 Package and explicitly identify the implementation component:
 
+<!-- verified-example: service-contract -->
 ```dart
 final class CartSummaryValue<T extends Object> {
   const CartSummaryValue(this.value);
@@ -313,9 +333,10 @@ boundary, not a serialization mechanism; generic arguments must not be used to
 smuggle Flutter objects, callbacks, Streams, or private implementation types
 through a public Contract.
 
-Export only the interface from the business contracts barrel. Bind a simple
+Export the interface and its public value types from the business contracts barrel. Bind a simple
 implementation by directly implementing exactly one contract:
 
+<!-- verified-example: service-implementation -->
 ```dart
 @CCService()
 final class CartSummaryServiceImpl implements CartSummaryService {
@@ -323,6 +344,9 @@ final class CartSummaryServiceImpl implements CartSummaryService {
 
   @override
   String summary() => '...';
+
+  @override
+  T unwrap<T extends Object>(CartSummaryValue<T> value) => value.value;
 }
 ```
 
@@ -405,8 +429,12 @@ registry.registerService<CartSummaryService>(
 );
 ```
 
-This is Component-author SPI, not a business lookup pattern. Consumers still
-call `CCRouter.service<CartSummaryService>()` and never import the owner barrel.
+This is Component-author SPI, not a business lookup pattern. Component-internal
+code may use `CCRouter.service<CartSummaryService>()`; cross-component consumers
+still call their generated `CheckoutServices.cartSummary` and never import the
+owner-only SPI barrel. The injected implementation in this alternative must
+define the shown constructor and `open` method; it replaces simple annotated
+registration rather than adding a second Provider for the same capability.
 
 For lazy async readiness:
 

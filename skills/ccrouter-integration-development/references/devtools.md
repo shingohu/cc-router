@@ -37,5 +37,5 @@ Demo 的生成 Catalog 覆盖 Route、Service、Command、Event、InitTask 和�
 `ccrouter_devtools` 时写入 Tool Integration；传递依赖不会隐式启用。Debug 默认开启，Profile
 需要 `--dart-define=CCROUTER_DEVTOOLS=true`，Release 始终关闭。初始化与清理跟随默认 Runtime，
 任意页面、组件或 Navigation Host dispose 都不能清理 isolate endpoint。手工注册只保留给
-测试或不使用生成 Host Assembly 的特殊 Host。详见
-[`docs/CCRouter-devtools-host-integration-plan.md`](../../../docs/CCRouter-devtools-host-integration-plan.md)。
+测试或不使用生成 Host Assembly 的特殊 Host。以上接入流程不依赖框架仓库文件；可选设计背景见
+[DevTools Host 自动装配设计](https://github.com/shingohu/cc-router/blob/main/docs/CCRouter-devtools-host-integration-plan.md)。

@@ -11,6 +11,11 @@ yet exposed as CLI commands. It does not authorize changing generated files,
 performing an unreviewed Contract migration, or inventing a command that does
 not exist.
 
+Install this complete directory alongside `ccrouter-integration-development`.
+Together they form the consumer Skill bundle; required references do not depend
+on a framework checkout. Use the consuming project's installed CLI help, and
+report version differences instead of silently upgrading its dependencies.
+
 ## First Decide the Operation
 
 Inspect the workspace root, `pubspec.yaml` files, Dart workspace configuration,
@@ -22,7 +27,7 @@ Classify the request as one of these operations:
 | Generate | Build or refresh Package and Host generated output. |
 | Find | Locate a Route, Service, Command, Event, or InitTask from the current Host index. |
 | Clean | Remove only CCRouter-owned generated source in explicitly writable Packages. |
-| Scaffold | Create a non-overwriting Component or internal Route page template. |
+| Scaffold | Create non-overwriting Component, Route, Service, Command, Event, or InitTask source. |
 | Check | Detect stale output, invalid metadata, dependency violations, or unsupported declarations. |
 | Deferred workflow | Assist with Contract promotion, migration, version review, or generation diagnosis when no command exists. |
 
@@ -55,8 +60,9 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook uninstall [-
 fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook run --project-root <host-root> [--pub-command <command>]
 ```
 
-The exact command help is authoritative. Do not add `watch`, `promote`,
-`migrate`, `analyzer`, or other flags because they appear in a design document.
+The exact command help is authoritative. `analyzer status/doctor` are supported;
+`analyzer install/upgrade/uninstall`, `watch`, `promote`, and `migrate` are not.
+Do not invent commands or flags because they appear in a design document.
 `--verbosity=error` belongs to `dart run`, not to CCRouter. Keep it before the
 Package executable so Dart/Pub cold-start resolution noise is suppressed while
 CCRouter progress, diagnostics, and failures remain visible.
@@ -174,9 +180,11 @@ Flutter command; projects without a resolved CCRouter graph are skipped.
 
 ## Deferred CLI 2.0 Workflows
 
-These workflows are AI-assisted procedures, not commands. They must produce a
-plan and a dry-run summary before any write. Ask for explicit confirmation
-before changing Package dependencies, public exposure, or existing declarations.
+These workflows are AI-assisted procedures, not commands. Summarize affected
+declarations, dependencies, public exposure, and call sites before a migration.
+Proceed when the user has authorized those changes; a request for assessment
+alone does not authorize implementation. Ask only when a material choice or
+expansion beyond that scope remains, rather than reconfirming approved work.
 
 ### Analyzer Plugin Bootstrap
 
@@ -187,9 +195,8 @@ dependency resolution, analysis, and loader compilation in a temporary copy.
 Run `status` before `doctor`; neither command runs generation or rewrites Host
 configuration.
 
-The planned `install/upgrade/uninstall` commands are not implemented. Follow
-[`docs/CCRouter-analyzer-cli-plan.md`](../../docs/CCRouter-analyzer-cli-plan.md)
-and the manual Host bootstrap procedure in
+The planned `install/upgrade/uninstall` commands are not implemented. Use the
+self-contained manual Host bootstrap procedure in
 [`ide-analysis-server.md`](../ccrouter-integration-development/references/ide-analysis-server.md).
 Do not attach Analyzer setup to `generate`, Pub Hook, or component scaffolding.
 Do not change a pinned Git ref merely to follow local HEAD, use a branch name,
@@ -207,7 +214,7 @@ Service must become a public Contract.
    and affected call sites.
 4. Keep the implementation Route/Page in the Owner Package; do not copy it into
    the Contracts Package.
-5. Apply only after confirmation, then run generation, analysis, focused tests,
+5. Apply within the user's authorized scope, then run generation, analysis, focused tests,
    and `generate --check`.
 
 Do not promote all internal capabilities by default. Promotion is a public API
@@ -241,9 +248,13 @@ the same command before using `--no-cache` for comparison.
 
 Use generated metadata and `ccrouter find` as the machine-readable source of
 truth. Catalog Markdown is a human view; it must not be edited to repair an
-index. The optional `ccrouter_devtools` view consumes Runtime snapshots; future Catalog
-integration may use stable IDs but is not a reason to
-add a new public runtime API.
+index. The optional `ccrouter_devtools` panel and official Extension already join
+static Catalog records with Runtime snapshots by stable IDs. Source locations
+are portable `package:` references; an embedded panel can use a Host-provided
+`onOpenSource` callback, while the Extension does not directly open an IDE.
+Keep this observational and use the bundled
+[DevTools guide](../ccrouter-integration-development/references/devtools.md);
+do not add public Runtime control APIs for tooling.
 
 ## Required Validation
 
@@ -272,6 +283,7 @@ Every CLI or deferred workflow report must state:
 - unsupported CLI capabilities that remain deferred;
 - any required manual confirmation or follow-up.
 
-When the workflow changes a developer-visible command, path, lifecycle, error,
-or API boundary, update the root README and the relevant integration Skill
-reference in the same change.
+When changing a framework command, path, lifecycle, error, or API boundary,
+update the framework README and affected Skill guidance with the implementation.
+For ordinary consumer work, update the application's integration notes instead
+of requiring files from a framework checkout or editing its cached packages.

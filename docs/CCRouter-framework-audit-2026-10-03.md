@@ -6,11 +6,11 @@
 - 基线：`769587b`。审查开始时的 Path 指纹修复、拓扑基准与文档改动，结束时已包含在该提交中。
 - 范围：Core/Contracts、Flutter Facade、GoRouter、五类能力生成器与 CLI、Analyzer、Analytics、
   DevTools、Demo 接入模式以及面向集成者的 Integration/CLI Skill。
-- 状态：审查完成；后续已按授权修复 F01–F15 和 F18，验证记录见第 8–13 节。
-  其余条目未实施。
+- 状态：审查及 F01–F18 修复完成，验证记录见第 8–15 节。
+  工具安装、真实 IDE/平台与长期观测的剩余边界见第 15 节。
 - 审查结论：现有测试基线通过，但不能认定框架没有严重缺陷或生成器绝对准确。原确认
-  5 项 P1、13 项 P2，其中 1 项 P2 属于 Demo；上述修复后剩余 0 项已确认 P1、2 项 P2。
-  优先修复已有能力的组合边界，再扩展开发体验能力。
+  5 项 P1、13 项 P2，其中 1 项 P2 属于 Demo；上述修复后本轮剩余 0 项已确认 P1/P2。
+  这不表示正式发布门禁、所有候选优化或真实平台矩阵已完成。
 
 P1 表示优先处理的业务结果、清理、授权或生成准确性风险；P2 表示特定合法输入或
 组合场景下可复现的功能、工具或接入问题。没有发现并确认 P0，并不等于已证明不存在。
@@ -274,6 +274,8 @@ Generator 使用 resolved DartType，可以接受这些合法类型。
 
 ### F16（P2）：外部工程按 README 安装 Skill 后，必需引用断链
 
+状态：已修复，验证见第 14 节。下述为修复前证据。
+
 [README](../README.md) 第 1259 行只要求复制 integration Skill，但该 Skill 第 17、26 行
 要求访问仓库 `docs` 和 sibling CLI Skill。即使复制两个 Skill，仍有 references 依赖框架
 仓库外部的 `docs`；普通业务仓库未拥有这些文件。
@@ -282,6 +284,8 @@ Generator 使用 resolved DartType，可以接受这些合法类型。
 必要目录。用“复制到空白消费仓库后验证必需引用”验收，现有仓库内链接检查不能替代它。
 
 ### F17（P2）：Skill 仍有与当前能力冲突的指令
+
+状态：已修复，验证见第 14 节。下述为修复前证据。
 
 - [capability-decisions.md](../skills/ccrouter-integration-development/references/capability-decisions.md)
   第 42 行仍要求把 `contractBundle` 单独传给 initialize；当前只接收完整 Host Assembly。
@@ -321,22 +325,25 @@ dependencies 分别表达组件关系和实际消费，可用可靠 Quick Fix �
 
 ## 5. Analyzer 与 Skill 的改进顺序
 
-1. 先修 F14/F15/F17，消除错误诊断、错误修复和错误接入指导。
+以下保留改进顺序，已修复缺陷与可选后续增强分开记录：
+
+1. F14/F15/F17 已修复，消除本轮复现的错误诊断、错误修复和错误接入指导。
 2. 增加真正 Language Server 往返验证：unsaved overlay、生成文件 add/modify/remove、
    clean 后恢复、应用 codeAction 再分析。现有直调 Plugin 测试不能完整覆盖文件监听链路。
-3. 对公开 Contract re-export 做确定性解析，改善通过 base_contracts 聚合时的保守漏检。
+3. F15 已增加 resolved 声明 Library 与 namespace 证明，支持 re-export/alias；未知输入
+   仍保守暂缓，后续只根据真实漏检扩展，不把缺少类型信息当成合法或非法证明。
 4. 执行已有 Analyzer `install/upgrade/uninstall` 显式装配计划，维护固定来源、隔离版本、
    回滚和 doctor；保持可选，不让生成流程隐式改写 IDE 配置。
-5. 对外 Skill 自包含并按任务路由：Host、Route、Service、Messaging/InitTask、Tooling。
-   当前主文件约 253 行，通用 implementation-patterns 约 637 行；按需读取相关 reference，
-   避免新增普通页面时必须阅读整套高级能力。用空白消费者接入演练验证效果。
+5. F16 已将对外 Skill 整理为两个相邻目录组成的完整安装包，按需读取参考资料。
+   空白目录引用与关键示例验证已完成；进一步拆分长篇 implementation-patterns、真实 AI
+   编码效果评估仍属于体验增强，不能以静态链接检查声称已验证 AI 行为。
 
 暂不建议新增全局万能 Client、自动猜 Contract exposure、动态 Scope 或任意方法 Proxy，
 这些不能直接解决本轮实际问题。
 
 ## 6. 核心价值逐项回归
 
-下表保留原始审查时的判断；后续修复及验证范围见第 8–11 节，不据此把已修项再次列为待办。
+下表保留原始审查时的判断；后续修复及验证范围见第 8–15 节，不据此把已修项再次列为待办。
 
 | # | 核心价值 | 本轮判断 | 证据与待完成项 |
 | --- | --- | --- | --- |
@@ -359,8 +366,8 @@ dependencies 分别表达组件关系和实际消费，可用可靠 Quick Fix �
 
 ## 7. 推荐实施顺序与完成定义
 
-F01–F11 已完成实现和回归；后续从第 5 项继续。每个独立缺陷先增加失败用例，再修复、回归，
-按用户授权提交。
+以下为原实施顺序；F01–F18 均已修复。第 7 项仍是按实际消费者收益决定的可选优化，第 8 项
+已执行范围与未覆盖平台见第 15 节。后续独立任务继续先增加失败用例，再修复、回归，按授权提交。
 
 1. **生命周期与返回保护：F01、F02。** 验证异常隔离和多层 Pop 决策，避免资源遗漏与数据丢失。
 2. **外部分发和生成准确性：F04、F03、F09。** 建立真实 producer/consumer 样本，再统一
@@ -599,3 +606,58 @@ F01–F11 已完成实现和回归；后续从第 5 项继续。每个独立缺�
   保留在插件内部。剩余 **2 项 P2：F16/F17 Skill 安装完整性与指导一致性**。
 - 本轮未执行真机矩阵或长时间 Heap 分析。Skill Python 快检因缺少 PyYAML 无法运行，
   使用 YAML 元数据解析与仓库文档检查验证，不将替代检查描述为 Python 快检通过。
+
+## 14. F16/F17 Skill 分发与指导修复验证（2026-10-03）
+
+- 根因：仓库内 Markdown 链接可达不代表消费工程安装后可达；示例和文字指导没有随 API
+  同步。独立复制测试先复现 **6 处越界引用**，不会从原框架仓库补找文件掩盖问题。
+- 方案取舍：整份复制框架 docs 会放大安装包并混入计划能力；只把必需步骤换成远端链接
+  又不能离线工作。保留 Integration/CLI 两个互补 Skill，明确同版本、完整、相邻安装，
+  将生产场景评估和 Analyzer bootstrap 必需流程收进包内；远端设计文档仅作可选背景。
+- 修正 Host 初始化只传原子 Assembly、已支持的 `analyzer status/doctor` 与未实现写入型
+  命令的区分，以及已经完成的 DevTools Catalog/Runtime 联动；保留用户已有授权，不因
+  Skill 重复要求批准同一项工作。消费工程只更新自己的说明，不被要求编辑框架缓存/文档。
+- 修正 Service 示例遗漏泛型实现、跨组件调用误用直接 lookup、公开 DTO export，以及
+  Route 页面示例遗漏 Widget build 和凭空假设导航 Facade 名称的问题。
+- 新增 `tool/skill_bundle_check.dart`：只复制两个分发目录到临时消费目录，检查必需引用
+  不越界，并调用真实 CLI `--help` 核对命令和命令级参数；不执行任何示例中的写入命令。
+  `tool/test/skill_bundle_check_test.dart` **8/8 通过**，包括单独安装遗漏、外部存在但越界、
+  缺失参考、可选远端链接、跨 Skill 链接、虚构命令/参数与真实 CLI 矩阵。
+- 从 Markdown 提取 Host、普通 Route/Extra 页面和泛型 Service 示例，使用实际 Demo
+  依赖执行 Dart analyze。故意恢复旧初始化参数、删除泛型实现时均被拒绝，证明校验没有
+  静默跳过文件。它验证选定示例的编译语义，不宣称验证所有片段或 AI 的实际编码行为。
+- 两个 Skill 的 YAML 元数据经 Ruby 解析通过；Python quick_validate 仍因 PyYAML 缺失未执行，
+  没有擅自安装系统依赖。README 已同步完整安装结构、验证方式和版本边界。
+
+## 15. 修复后核心价值与收尾边界（2026-10-03）
+
+最终自动化收尾 **844 项通过**：框架/Flutter/Demo/模块/DevTools **478**、Generator
+**280**、独立 Analyzer **78**、Skill 分发与示例 **8**。Workspace 和独立 Analyzer
+Package analyze 均无问题；Demo 缓存与 `--no-cache --check` 均通过，6 个组件、33 条路由、
+11 个生成 Package 的受管产物无变化。两种生成检查与其他测试并行运行，耗时不作为新的
+性能基准。91 份已跟踪 Markdown 链接检查及包含新增参考文件的独立 Skill bundle 检查通过。
+
+| # | 约定 | 修复后的证据与边界 |
+| --- | --- | --- |
+| 1 | 智能、可预测 | 生成分发与默认值证明统一；未知符号不猜测，显式报错或保守暂缓 |
+| 2 | 简单易用 | 合法类型不误报、Owner/销毁 Quick Fix 可用，Skill 必需指导可独立分发；高级 Shell 配置仍由 Host 决定 |
+| 3 | 真实场景能力 | 修复 PopScope、Defer/Host/Extra 和曝光组合行为，未新增万能接口或占位能力 |
+| 4 | 可扩展性 | 保留 Backend/Provider/Sink 分层，修复 Git/Path 分发校验，不要求业务依赖内部实现 |
+| 5 | 可测试 | 补失败复现、组合生命周期、真实 Plugin 会话、独立安装和可编译示例；真实 LSP 文件监听端到端仍需扩展 |
+| 6 | 最小 API | Analyzer helper 保留内部；本批 Skill 检查位于维护工具，不增加业务 API |
+| 7 | 编译期与类型安全 | Generator/Analyzer 对合法类型与 Owner 的证明对齐，Runtime 继续保留最终契约校验 |
+| 8 | 非侵入式 | 页面本地 PopScope 决策有效，Skill/插件可选，插件不可用不改变应用导航或生成门禁 |
+| 9 | 明确回退 | 完整和缓存生成路径共同校验内容；无法证明的 IDE 修复不提供自动编辑 |
+| 10 | 生命周期 | 异常隔离、取消清理、Network 嵌套资源与曝光监听有回归；静态诊断不承诺发现全部泄漏 |
+| 11 | 安全可观测 | Consent 代次、payload 不可变、接受/投递分离和有界队列已修复；应用仍拥有业务日志与同意策略 |
+| 12 | 并发安全 | readiness 等待环、shutdown、异步回调及旧 overlay 结果均有确定性保护与回归 |
+| 13 | 性能稳定 | 保留精确内容证明、现有压力与规模基准；本批没有改热路径或宣称新的速度提升，长期趋势仍须持续采样 |
+
+本轮确认的 18 项缺陷已关闭，不等于框架绝对无缺陷。仍需分别处理：
+
+- 本机 Demo Analysis Server 的旧 plugin-manager 缓存：停服、移走指定目录、重启并重跑
+  doctor；远端依赖及 loader 已验证，不把它写成当前 IDE 会话已加载新版。
+- 完整真实 LSP 文件监听/codeAction 往返、macOS/iOS 返回手势和真实平台矩阵、长期 Heap/RSS
+  趋势；现有自动化不能替代这些结论。
+- 模板减负候选、生成器 P6、Analyzer 写入型安装命令与正式发布门禁：仍按独立计划和授权
+  推进，不作为 F01–F18 的未修复缺陷，也不自动开始架构 2.0。

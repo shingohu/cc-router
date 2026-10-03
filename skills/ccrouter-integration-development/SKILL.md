@@ -7,6 +7,12 @@ description: Implement, migrate, or review Flutter application and component fea
 
 Use CCRouter as the application component boundary. Prefer its generated contracts and lifecycle ownership over direct navigation, global service locators, or ad hoc cross-package imports.
 
+This Skill and the sibling `ccrouter-cli-development` directory form one
+installation bundle. Keep both complete directories together, including their
+references. Required guidance is bundled; framework design links are optional
+background and do not require a checkout of the framework repository. Use the
+application's installed package APIs and CLI help if its version differs.
+
 ## Workflow
 
 1. Identify the current package role before editing:
@@ -14,7 +20,7 @@ Use CCRouter as the application component boundary. Prefer its generated contrac
    - **Component implementation**: pages, private capabilities, Registrar.
    - **Contracts package**: Pure Dart cross-component Route or Service contracts.
 2. Classify the requested behavior with [capability-decisions.md](references/capability-decisions.md).
-3. When a production scenario appears unsupported, incomplete, or defective, follow [CCRouter-production-adoption-workflow.md](../../docs/CCRouter-production-adoption-workflow.md) before inventing a workaround or requesting a framework API.
+3. When a production scenario appears unsupported, incomplete, or defective, use the bundled [production scenario assessment](references/production-scenarios.md) before inventing a workaround or requesting a framework API.
 4. Inspect existing generated APIs, the Package's single component definition, contribution registrations, and Host topology. Do not invent APIs from design documents.
 5. Implement through the narrowest public CCRouter API. Keep Host SPI out of feature code.
 6. Run generation after annotation or component assembly changes. Never edit generated files.

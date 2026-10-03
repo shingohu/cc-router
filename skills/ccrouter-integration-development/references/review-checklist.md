@@ -61,10 +61,14 @@
 
 ## Documentation Synchronization
 
-If the change alters a developer-observable public API, lifecycle, error, generated path/command, supported capability, API isolation boundary, or recommended Demo pattern, review and update:
+For framework changes that alter a developer-observable public API, lifecycle,
+error, generated path/command, supported capability, API isolation boundary, or
+recommended Demo pattern, framework maintainers review and update:
 
 - root `README.md`;
 - `skills/ccrouter-integration-development/SKILL.md`;
 - the relevant file in `skills/ccrouter-integration-development/references/`.
 
 Do not churn these files for internal refactors with no observable integration change.
+In a consumer repository, update its own integration notes and tests instead;
+the bundle does not require a framework checkout or permission to edit upstream.

@@ -21,8 +21,11 @@ F03/F04/F09 已修复并补上真实分发及常量解析回归；Analytics F05/
 曝光采集 F12/F13 与 Demo Network 生命周期 F18 已修复，完成 478 项框架/Flutter/Demo 回归。
 F14/F15 Analyzer 已修复，并补上 Service 生命周期 warning 与保守 Quick Fix，独立插件
 78 项测试通过；Demo 已更新到远端固定提交 `a275d1d`，IDE 需重启 Analysis Server 加载。
-剩余 0 项已确认 P1、2 项 P2 待修复；后续按该报告第 7 节处理
-F16/F17 AI Skill 安装与接入指导缺陷。
+F16/F17 AI Skill 安装与接入指导已修复，两个完整 Skill 组成独立安装包，并增加孤立目录
+引用、真实 CLI 命令和关键 Dart 示例校验。本轮 18 项已确认缺陷均已关闭；当前 Demo 的
+本机旧插件缓存、真实 LSP/平台矩阵与长期质量观测边界见该报告第 15 节。
+最终收尾 844 项测试通过（框架/Demo 等 478、Generator 280、Analyzer 78、Skill 8），
+Workspace/插件 analyze 及缓存/无缓存生成物检查通过。
 下文已完成项表示基础能力和当时测试已落地，
 不表示本次发现的组合边界已修复；报告中的缺陷严重度与本文的规划优先级分别管理。
 
@@ -186,8 +189,8 @@ F16/F17 AI Skill 安装与接入指导缺陷。
   loader `analyze/compile` smoke、兼容性边界测试和发布后的 Hosted fallback manifest。
 - [~] Analyzer Plugin 已提供 Host-only、只读的 `status/doctor`，覆盖固定来源、lockfile 和
   Analyzer 兼容检查；`install/upgrade/uninstall` 自动装配仍未实现。后续写入型命令必须幂等、
-  可回滚和 Hosted 优先，不挂入 `generate`、Pub Hook 或组件脚手架。当前固定 Git ref 无生产
-  代码更新理由，不追随本地 HEAD。详见
+  可回滚和 Hosted 优先，不挂入 `generate`、Pub Hook 或组件脚手架。固定 Git ref 仅在插件
+  实际变化、独立验证并推送远端后更新，不追随本地 HEAD。详见
   [Analyzer Plugin CLI 自动装配计划](CCRouter-analyzer-cli-plan.md)。
 - [x] 建立纯 Dart、版本化的 Catalog/Runtime Snapshot 与 Trace Edge 协议；静态记录携带
   可移植源码位置，Runtime 适配器只复制稳定 ID、Owner、Host/Outlet、状态和耗时。官方

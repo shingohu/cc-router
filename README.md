@@ -1289,15 +1289,33 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo --check
 - 不虚构当前尚未实现的 Action Pipeline 或动态组件；Command/Event/InitTask 生成能力与 Service Proxy 只使用当前支持的显式声明和方法矩阵。
 - 生成后执行 analyze、针对性测试与 `generate --check`。
 
-CLI Skill 覆盖已经实现的 `generate`、`find`、`clean`、`create component`、`create page`、
-`create service`、`create command`、`create event` 和 `create init-task`。Contract
+CLI Skill 覆盖已经实现的 `generate`、`find`、`clean`、六类 `create` 脚手架、
+`analyzer status/doctor` 和显式 `pub-hook` 管理。Contract
 Scaffold/Promotion/Migration、alias 迁移和扩展生成失败诊断目前仍是 AI 辅助工作流，不是可直接
 调用的 CLI 命令；五类 Contract 版本兼容核心门禁已经由生成器、Host 聚合和 Runtime 自动执行。
-AI 辅助的迁移操作必须先输出 dry-run，涉及
-公共 Contract、Package 依赖或已有声明的变更必须得到明确确认。`watch` 当前明确不支持，
+AI 辅助的迁移操作先说明影响和 dry-run；已有明确授权时继续实施，只有超出授权范围或仍有
+关键选择时才询问，不反复确认已批准的修改。`watch` 当前明确不支持，
 不能因为设计文档提到它就自行添加命令或参数。
 
-将完整的 `skills/ccrouter-integration-development/` 目录复制或同步到集成工程的 `skills/` 下，不要只复制 `SKILL.md`，因为能力决策、实现模式和审查清单位于 `references/`。然后在集成工程的 Agent 规则中加入：
+将下面**两个完整目录作为一套安装包**，从同一框架版本复制或同步到集成工程的 `skills/` 下，
+保留它们的相邻关系、`references/` 和 `agents/`，不要只复制单个 `SKILL.md`：
+
+```text
+skills/
+├── ccrouter-integration-development/
+│   ├── SKILL.md
+│   ├── agents/
+│   └── references/
+└── ccrouter-cli-development/
+    ├── SKILL.md
+    └── agents/
+```
+
+必需的场景评估、能力选型、Analyzer 手工接入和 CLI 流程都在这套目录内；无需复制框架的
+`docs/`、Demo 或生产源码。远端设计链接只是可选背景，离线不影响必需流程。SDK、API 或 CLI
+版本不同时，以消费工程实际依赖和命令帮助为准，不因 Skill 示例自动升级依赖。
+若客户端采用其他 Skill 搜索目录，将两个目录一起放入其同一个父目录。
+然后在集成工程的 Agent 规则中加入：
 
 ```text
 When implementing or reviewing Flutter features that use CCRouter, read and
@@ -1315,7 +1333,13 @@ $ccrouter-integration-development 为订单组件新增详情页，并返回类�
 $ccrouter-cli-development 检查并安全规划订单详情页的生成与跨组件 Contract 提升。
 ```
 
-Skill 采用短主文件和按需 reference 结构，既适合日常编码，也可用于代码审查。框架公开 API、生命周期、错误语义、生成命令、支持状态或推荐 Demo 用法发生变化时，维护者必须同步审查本 README、Integration Skill 及其 references。
+Skill 使用主文件和按需 reference，既适合日常编码，也可用于代码审查。框架公开 API、生命周期、错误语义、生成命令、支持状态或推荐 Demo 用法发生变化时，维护者必须同步审查本 README、Integration/CLI Skill 及其 references。
+
+维护者在框架仓库执行 `fvm dart run tool/skill_bundle_check.dart`：它只复制这两个目录到临时
+消费目录，检查必需引用不越界，并对照真实 CLI 帮助校验命令和参数。该检查不会执行文档中的
+清理、Hook 安装或迁移命令，也不能替代关键示例的编译验证和 AI 实际使用评估。
+关键示例与安装故障边界通过 `fvm dart test tool/test/skill_bundle_check_test.dart` 回归：
+测试直接提取文档代码，使用实际依赖分析，并确认旧初始化参数和缺失方法实现会被拒绝。
 
 ## 进一步阅读
 
