@@ -4014,7 +4014,7 @@ String _emitComponentAssembly(
       out
         ..writeln('    $alias.${contribution.symbol}(')
         ..writeln('      registry,')
-        ..writeln('      subscriberId: ${jsonEncode(subscriberId)},')
+        ..writeln('      subscriberId: ${_dartLiteral(subscriberId)},')
         ..writeln('    );');
     }
   }
@@ -4162,8 +4162,8 @@ String _emitComponentCommandApi(
       ..writeln('    CCCancellationToken? cancellation,')
       ..writeln('  }) => CCRouterGeneratedCommandBinding.invoke(')
       ..writeln('    command,')
-      ..writeln('    commandId: ${jsonEncode(entry.id)},')
-      ..writeln('    callerComponentId: ${jsonEncode(componentId)},')
+      ..writeln('    commandId: ${_dartLiteral(entry.id)},')
+      ..writeln('    callerComponentId: ${_dartLiteral(componentId)},')
       ..writeln('    timeout: timeout,')
       ..writeln('    cancellation: cancellation,')
       ..writeln('  );')
@@ -4225,8 +4225,8 @@ String _emitComponentEventApi(
       ..writeln('    CCCancellationToken? cancellation,')
       ..writeln('  }) => CCRouterGeneratedEventBinding.publish(')
       ..writeln('    event,')
-      ..writeln('    eventId: ${jsonEncode(entry.id)},')
-      ..writeln('    publisherComponentId: ${jsonEncode(componentId)},')
+      ..writeln('    eventId: ${_dartLiteral(entry.id)},')
+      ..writeln('    publisherComponentId: ${_dartLiteral(componentId)},')
       ..writeln('    timeout: timeout,')
       ..writeln('    cancellation: cancellation,')
       ..writeln('  );')
@@ -4532,13 +4532,15 @@ String _emitPackageContractDescriptors(
     out
       ..writeln('      CCContractDescriptor(')
       ..writeln('        kind: CCContractKind.${record['_kind']},')
-      ..writeln('        id: ${jsonEncode(id)},')
+      ..writeln('        id: ${_dartLiteral(id)},')
       ..writeln(
-        '        ownerComponentId: ${jsonEncode('${record['componentId'] ?? ''}')},',
+        '        ownerComponentId: ${_dartLiteral('${record['componentId'] ?? ''}')},',
       )
-      ..writeln('        version: ${jsonEncode('${record['version'] ?? ''}')},')
       ..writeln(
-        '        shapeFingerprint: ${jsonEncode('${record['shapeFingerprint'] ?? ''}')},',
+        '        version: ${_dartLiteral('${record['version'] ?? ''}')},',
+      )
+      ..writeln(
+        '        shapeFingerprint: ${_dartLiteral('${record['shapeFingerprint'] ?? ''}')},',
       )
       ..writeln('      ),');
   }
@@ -4610,16 +4612,16 @@ String _emitPackageContractRequirements(
     out
       ..writeln('      CCContractRequirement(')
       ..writeln('        kind: CCContractKind.${requirement['kind']},')
-      ..writeln('        contractId: ${jsonEncode(requirement['id'])},')
-      ..writeln('        consumerPackage: ${jsonEncode(packageName)},')
+      ..writeln('        contractId: ${_dartLiteral(requirement['id'])},')
+      ..writeln('        consumerPackage: ${_dartLiteral(packageName)},')
       ..writeln(
-        '        ownerComponentId: ${jsonEncode(requirement['owner'])},',
+        '        ownerComponentId: ${_dartLiteral(requirement['owner'])},',
       )
       ..writeln(
-        '        requiredVersionRange: ${jsonEncode(requirement['version'])},',
+        '        requiredVersionRange: ${_dartLiteral(requirement['version'])},',
       )
       ..writeln(
-        '        requiredShapeFingerprint: ${jsonEncode(requirement['fingerprint'])},',
+        '        requiredShapeFingerprint: ${_dartLiteral(requirement['fingerprint'])},',
       )
       ..writeln('      ),');
   }
@@ -4856,16 +4858,16 @@ String _emitGeneratedDevToolsCatalog(Map<String, CCPackageIndex> indexes) {
     ..writeln(
       '  capturedAt: DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),',
     )
-    ..writeln('  catalogFingerprint: ${jsonEncode(fingerprint)},')
+    ..writeln('  catalogFingerprint: ${_dartLiteral(fingerprint)},')
     ..writeln('  components: [');
   for (final component in componentValues) {
     out
       ..writeln('    CCDevToolsCatalogComponent(')
-      ..writeln('      id: ${jsonEncode(component.id)},')
-      ..writeln('      version: ${jsonEncode(component.version)},')
-      ..writeln('      dependencies: ${jsonEncode(component.dependencies)},')
+      ..writeln('      id: ${_dartLiteral(component.id)},')
+      ..writeln('      version: ${_dartLiteral(component.version)},')
+      ..writeln('      dependencies: ${_dartLiteral(component.dependencies)},')
       ..writeln(
-        '      optionalDependencies: ${jsonEncode(component.optionalDependencies)},',
+        '      optionalDependencies: ${_dartLiteral(component.optionalDependencies)},',
       )
       ..writeln('    ),');
   }
@@ -4876,20 +4878,20 @@ String _emitGeneratedDevToolsCatalog(Map<String, CCPackageIndex> indexes) {
     final source = record.source;
     out
       ..writeln('    CCDevToolsCatalogRecord(')
-      ..writeln('      kind: ${jsonEncode(record.kind)},')
-      ..writeln('      id: ${jsonEncode(record.id)},')
+      ..writeln('      kind: ${_dartLiteral(record.kind)},')
+      ..writeln('      id: ${_dartLiteral(record.id)},')
       ..writeln(
-        '      ownerComponentId: ${jsonEncode(record.ownerComponentId)},',
+        '      ownerComponentId: ${_dartLiteral(record.ownerComponentId)},',
       )
-      ..writeln('      packageName: ${jsonEncode(record.packageName)},');
+      ..writeln('      packageName: ${_dartLiteral(record.packageName)},');
     if (record.description case final description?) {
-      out.writeln('      description: ${jsonEncode(description)},');
+      out.writeln('      description: ${_dartLiteral(description)},');
     }
     if (source != null && source.line != null && source.column != null) {
       out
         ..writeln('      source: CCDevToolsSourceLocation(')
-        ..writeln('        packageName: ${jsonEncode(source.packageName)},')
-        ..writeln('        packageUri: ${jsonEncode(source.packageUri)},')
+        ..writeln('        packageName: ${_dartLiteral(source.packageName)},')
+        ..writeln('        packageUri: ${_dartLiteral(source.packageUri)},')
         ..writeln('        line: ${source.line},')
         ..writeln('        column: ${source.column},')
         ..writeln('      ),');
@@ -4902,9 +4904,9 @@ String _emitGeneratedDevToolsCatalog(Map<String, CCPackageIndex> indexes) {
   for (final relation in relationValues) {
     out
       ..writeln('    CCDevToolsCatalogRelation(')
-      ..writeln('      sourceId: ${jsonEncode(relation.sourceId)},')
-      ..writeln('      targetId: ${jsonEncode(relation.targetId)},')
-      ..writeln('      kind: ${jsonEncode(relation.kind)},')
+      ..writeln('      sourceId: ${_dartLiteral(relation.sourceId)},')
+      ..writeln('      targetId: ${_dartLiteral(relation.targetId)},')
+      ..writeln('      kind: ${_dartLiteral(relation.kind)},')
       ..writeln('    ),');
   }
   out
@@ -4913,6 +4915,10 @@ String _emitGeneratedDevToolsCatalog(Map<String, CCPackageIndex> indexes) {
     ..writeln();
   return out.toString();
 }
+
+/// Encodes JSON-compatible metadata as Dart literals without interpolation.
+/// JSON output must keep using jsonEncode; escaping dollars is Dart-specific.
+String _dartLiteral(Object? value) => jsonEncode(value).replaceAll(r'$', r'\$');
 
 /// Adds one real capability identity while excluding implementation helpers.
 void _captureDevToolsCapabilityKey(

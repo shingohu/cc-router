@@ -35,6 +35,8 @@ Custom catalog directories retain the same `--check` file-restoration guarantee;
 they do not transfer ownership of neighboring application files to the CLI.
 Route and Service Proxy defaults preserve collection types; expose any enum or
 type used only inside a default through the same public Contract barrel.
+Descriptions are literal text, including dollar signs and newlines; do not
+pre-escape business descriptions for generated Host DevTools Dart output.
 
 For generator, scaffolding, cleanup, source lookup, or deferred Contract
 migration work, also read

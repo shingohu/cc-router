@@ -179,4 +179,7 @@ Demo Analyzer pin、推送提交或改变缓存策略。
   List、Map、嵌套 nullable 枚举集合与 dynamic 空列表均覆盖；不可公开导入的私有默认类型
   在生成期明确拒绝。Route/Service 原套件及新边界共 122 项通过，Workspace analyze、
   缓存/无缓存检查通过。
-- G03/G04/A01：待修复。
+- G03：已修复 Host 聚合器的 Dart literal 编码，所有 JSON-compatible metadata 写入 Dart
+  时统一转义插值符号，JSON 元数据仍保留原始文本。新增真实生成后编译执行 Catalog 的回归，
+  覆盖 `$currency`、`${literal}`、引号、反斜杠、换行和中文；修复前编译失败。
+- G04/A01：待修复。
