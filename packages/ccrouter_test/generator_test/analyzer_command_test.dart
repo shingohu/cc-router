@@ -4,6 +4,7 @@ library;
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:crypto/crypto.dart';
 import 'package:path/path.dart' as path;
 import 'package:test/test.dart';
 
@@ -152,7 +153,13 @@ void main() {
         home.path,
         '.dartServer',
         '.plugin_manager',
-        'stale-cache',
+        md5
+            .convert(
+              path
+                  .join(fixture.plugin.path, 'tools', 'analyzer_plugin')
+                  .codeUnits,
+            )
+            .toString(),
         'analyzer_plugin',
       ),
     )..createSync(recursive: true);
@@ -169,9 +176,75 @@ dependencies:
 
     expect(result.exitCode, 1);
     expect('${result.stderr}', contains('stale Analysis Server plugin cache'));
-    expect('${result.stderr}', contains(cached.path));
+    expect('${result.stderr}', contains(cached.parent.path));
+    expect('${result.stderr}', contains('not just its analyzer_plugin child'));
     expect('${result.stdout}', isNot(contains('Analyzer doctor:')));
   });
+
+  for (final damage in [
+    'missing child',
+    'missing entrypoint',
+    'changed entrypoint',
+  ]) {
+    test(
+      'doctor rejects $damage without changing or blaming other caches',
+      () async {
+        final fixture = await _createFixture();
+        final home = await Directory.systemTemp.createTemp(
+          'ccrouter-analyzer-home-',
+        );
+        addTearDown(() async {
+          await fixture.root.delete(recursive: true);
+          await home.delete(recursive: true);
+        });
+        final bootstrap = Directory(
+          path.join(fixture.plugin.path, 'tools', 'analyzer_plugin'),
+        );
+        final manager = Directory(
+          path.join(home.path, '.dartServer', '.plugin_manager'),
+        );
+        final entry = Directory(
+          path.join(
+            manager.path,
+            md5.convert(bootstrap.path.codeUnits).toString(),
+          ),
+        )..createSync(recursive: true);
+        if (damage != 'missing child') {
+          final cached = Directory(path.join(entry.path, 'analyzer_plugin'))
+            ..createSync();
+          File(
+            path.join(bootstrap.path, 'pubspec.yaml'),
+          ).copySync(path.join(cached.path, 'pubspec.yaml'));
+          if (damage == 'changed entrypoint') {
+            Directory(path.join(cached.path, 'bin')).createSync();
+            File(
+              path.join(cached.path, 'bin', 'plugin.dart'),
+            ).writeAsStringSync('void outdated() {}');
+          }
+        }
+        final unrelated = Directory(
+          path.join(manager.path, 'another-host', 'analyzer_plugin'),
+        )..createSync(recursive: true);
+        final unrelatedManifest = File(
+          path.join(unrelated.path, 'pubspec.yaml'),
+        )..writeAsStringSync('name: analyzer_test_bootstrap\n');
+
+        final result = await _run(
+          ['analyzer', 'doctor', fixture.root.path],
+          environment: {...Platform.environment, 'HOME': home.path},
+        );
+        expect(result.exitCode, 1);
+        expect('${result.stderr}', contains(entry.path));
+        expect('${result.stderr}', isNot(contains(unrelated.parent.path)));
+        expect('${result.stdout}', isNot(contains('Analyzer doctor:')));
+        expect(entry.existsSync(), isTrue);
+        expect(
+          unrelatedManifest.readAsStringSync(),
+          'name: analyzer_test_bootstrap\n',
+        );
+      },
+    );
+  }
 
   test('analyzer rejects unsupported actions and excess arguments', () async {
     final unsupported = await _run(['analyzer', 'install']);

@@ -5,7 +5,7 @@
     "name": "demo_web_contracts",
     "version": "0.1.0"
   },
-  "contentFingerprint": "51310ef682fd411f1b639c0e78fe21e7898dcd63ebf771efc51a6978fa9dfacd",
+  "contentFingerprint": "525eea42012a1f13451b1b4c9c1b32be0e7ff0cffc8988df8cde051d329708d9",
   "bundle": null,
   "dependencies": [],
   "metadata": [
@@ -64,8 +64,7 @@
             "package": "demo_web_contracts",
             "library": "lib/src/ccrouter_generated/contract/web_route_contracts.route.contract.g.dart",
             "publicLibraries": [
-              "package:demo_web_contracts/demo_web_contracts.dart",
-              "package:demo_web_contracts/demo_web_contracts_owner.dart"
+              "package:demo_web_contracts/demo_web_contracts.dart"
             ]
           },
           "generatedArtifacts": [
@@ -143,8 +142,7 @@
             "package": "demo_web_contracts",
             "library": "lib/src/ccrouter_generated/contract/web_route_contracts.route.contract.g.dart",
             "publicLibraries": [
-              "package:demo_web_contracts/demo_web_contracts.dart",
-              "package:demo_web_contracts/demo_web_contracts_owner.dart"
+              "package:demo_web_contracts/demo_web_contracts.dart"
             ]
           },
           "generatedArtifacts": [

@@ -314,9 +314,9 @@ client.dispose。Client 与 Backend 虽有 close 实现，Service 没有连通�
 
 | 候选改进 | 当前重复/风险 | 推荐边界与成本 |
 | --- | --- | --- |
-| Catalog Route 挂载辅助 | Demo `_route` 重写参数 decode、bindRouteEntry，并另外维护 binding/override；没有复用 Assembler 完整 Presentation 工厂 | 在现有 Assembler 下评估窄的 Host-only helper，返回同源 route/binding；中低成本 |
-| Outlet Key/Observer 配对 | 同一 Outlet 分散写 Key、Host map、Shell map、Observer list | 先 Demo 私有对象复用，再按实际第二个消费者决定是否进框架；中低成本 |
-| Owner barrel 复用 | order/web 的 owner barrel 与 business barrel 重复 Route/Arguments 清单 | 在允许 Owner API 是业务 API 超集时复用公共 barrel，仅补 Owner 标记；低成本 |
+| Catalog Route 挂载辅助 | 原 Demo `_route` 自行构建 Widget，另维护 binding/override，遗漏完整 Presentation | 已在 Demo 私有挂载对象中同源创建 route/binding，复用中立 Page Factory；不公开新 API |
+| Outlet Key/Observer 配对 | 同一 Outlet 分散写 Key、Host map、Shell map、Observer list | 已用 Demo 私有对象配对复用；进入框架仍需真实第二个消费者证据 |
+| Owner barrel 复用 | order/web 的 owner barrel 与 business barrel 重复 Route/Arguments 清单 | 已复用公共 barrel，仅补 Owner 标记；业务公开边界仍有显式 show |
 
 Shell 树、分支顺序、导航策略、Provider 构造注入、Key、Scope、async initializer、InitTask
 Gate/failurePolicy/timeout 都承载业务语义，应保留显式配置。组件 dependencies 与 capability
@@ -366,8 +366,9 @@ dependencies 分别表达组件关系和实际消费，可用可靠 Quick Fix �
 
 ## 7. 推荐实施顺序与完成定义
 
-以下为原实施顺序；F01–F18 均已修复。第 7 项仍是按实际消费者收益决定的可选优化，第 8 项
-已执行范围与未覆盖平台见第 15 节。后续独立任务继续先增加失败用例，再修复、回归，按授权提交。
+以下为原实施顺序；F01–F18 均已修复。第 7 项的 Demo 私有减负已完成，新增框架 helper 仍按
+实际消费者收益决定；第 8 项执行范围与未覆盖平台见第 15–16 节。后续独立任务继续补失败
+用例、修复和回归，按授权提交。
 
 1. **生命周期与返回保护：F01、F02。** 验证异常隔离和多层 Pop 决策，避免资源遗漏与数据丢失。
 2. **外部分发和生成准确性：F04、F03、F09。** 建立真实 producer/consumer 样本，再统一
@@ -655,9 +656,42 @@ Package analyze 均无问题；Demo 缓存与 `--no-cache --check` 均通过，6
 
 本轮确认的 18 项缺陷已关闭，不等于框架绝对无缺陷。仍需分别处理：
 
-- 本机 Demo Analysis Server 的旧 plugin-manager 缓存：停服、移走指定目录、重启并重跑
-  doctor；远端依赖及 loader 已验证，不把它写成当前 IDE 会话已加载新版。
+- 本机 Demo Analysis Server 的旧 plugin-manager 缓存与 Service Quick Fix 已在后续本机验收
+  中闭环，见第 16 节；不据此扩大为全部 IDE 或规则验收。
 - 完整真实 LSP 文件监听/codeAction 往返、macOS/iOS 返回手势和真实平台矩阵、长期 Heap/RSS
   趋势；现有自动化不能替代这些结论。
-- 模板减负候选、生成器 P6、Analyzer 写入型安装命令与正式发布门禁：仍按独立计划和授权
-  推进，不作为 F01–F18 的未修复缺陷，也不自动开始架构 2.0。
+- Demo 模板减负已完成，生成器 P6 本轮仅做收益/边界评估；Analyzer 写入型安装命令、正式
+  发布门禁和框架级 Host helper 仍按独立计划和授权推进，不自动开始架构 2.0。
+
+## 16. 本机 IDE 验收与 Demo 模板减负（2026-10-03）
+
+本机 Android Studio 已实际显示 `ccrouter_service_disposable_missing`，应用 IDE Quick Fix 后
+补入 `implements CCDisposable`，告警消失。远端规则仍固定 `a275d1d`，未为跟随 HEAD 更新。
+临时验收文件已移出工作区；旧缓存移到 `/tmp/ccrouter-analyzer-cache-2830316-20261003`
+备份，没有清空其它 IDE/插件/Pub 缓存。
+
+验收暴露并修正 CLI 排障缺口：Dart 3.11 复用整个路径哈希条目，只移动其 `analyzer_plugin`
+子目录会导致入口缺失，旧 doctor 又漏检此状态。doctor 现在只定位当前 bootstrap 的准确
+缓存条目，比较 manifest/入口并拒绝残缺，提示备份整个条目，不按同名插件误判其它 Host。
+规则 Package 没有改动，无需更新 Demo 的 Analyzer Git pin。
+
+Demo 私有装配把每条 Shell Route 与 binding/override 同源创建，Presentation 交给现有
+`CCFlutterRouteFactory`；Key/Observer 由同一对象配对，Shell 树、相对路径、分支策略和
+自适应面板仍由 Host 显式拥有。order/web Owner barrel 复用业务 barrel，生成后的
+`publicLibraries` 保留明确 `show` 的业务入口；没有把 Owner 标记暴露给业务。
+
+本轮保留准确性与生命周期边界：不更改 Runtime、Adapter 所有权或业务 API，不伪造 root
+placement 绕过 Assembler 校验，不给未挂载的 Adaptive Navigator 添加 GoRouter Observer。
+新增 Shell 测试覆盖 Cupertino、透明页、Dialog、BottomSheet、Path/多值 Query/Extra、
+Outlet 和返回结果；既有测试继续验证 managed Entry、分支保持、Foreign Popup 和多 Host。
+
+验证结果：本轮 **110 项**专项/回归通过（Demo **46**，含 4 项新增 Presentation 与固定 seed
+Monkey；Analyzer CLI **13**；Workspace Validator **51**）。Workspace analyze、修正后的
+本机 doctor、缓存 `generate --check` 和 `--no-cache --check` 均通过；两种生成检查未产生
+产物差异。92 份 Markdown 链接、独立 Skill bundle/实际命令和 Skill YAML 检查通过。
+系统及内置 Python 均缺 PyYAML，`skill-creator` 通用验证脚本未能运行，已使用仓库分发检查
+与 Ruby YAML 解析补充验证，未修改系统 Python 环境。没有把上一轮 844 项测试计入本轮数量。
+
+P6 评估已纳入 build_runner 优化计划第 12.5 节。既有完整字节 SHA-256、失效传播和参考
+路径保持不变，当前仍未实现 P6-1/2/3。完整跨 IDE 文件监听/codeAction 矩阵、平台手势和
+长期 Heap/RSS 观测仍未在本轮完成。

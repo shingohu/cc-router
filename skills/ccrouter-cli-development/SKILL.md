@@ -195,6 +195,11 @@ dependency resolution, analysis, and loader compilation in a temporary copy.
 Run `status` before `doctor`; neither command runs generation or rewrites Host
 configuration.
 
+If doctor reports a stale or incomplete plugin-manager entry, stop the Analysis
+Server and back up the entire listed hash directory outside `.plugin_manager`,
+not just its `analyzer_plugin` child. Then restart and verify a real IDE
+diagnostic; doctor alone does not prove the live session loaded the plugin.
+
 The planned `install/upgrade/uninstall` commands are not implemented. Use the
 self-contained manual Host bootstrap procedure in
 [`ide-analysis-server.md`](../ccrouter-integration-development/references/ide-analysis-server.md).

@@ -5,7 +5,7 @@
     "name": "ccrouter_demo",
     "version": "0.1.0+1"
   },
-  "contentFingerprint": "dc070ea31f8687a0a1ed69fb7faa6ce63065be8628de62592538cadf1aae15d2",
+  "contentFingerprint": "8b5f03e9010f8dd350396a1ffd63fe38a5129efb3c7fb17024f682dbaa9389e5",
   "bundle": {
     "library": "lib/src/ccrouter_generated/host/ccrouter_demo_ccrouter.g.dart",
     "symbol": "ccrouterGeneratedPackageBundle"
@@ -24,7 +24,7 @@
     {
       "name": "demo_navigation_lab",
       "version": "0.1.0",
-      "contentFingerprint": "85b23e960faf27469e2121910da406103ab650d82edad090383a11c58d11f838"
+      "contentFingerprint": "95f0abe17655774657899e32f82588e36bdc0e1e527bd2f411b15d15bef5fa5b"
     },
     {
       "name": "demo_network",
@@ -34,27 +34,27 @@
     {
       "name": "demo_order",
       "version": "0.1.0",
-      "contentFingerprint": "0ac7b7448c816d71017775f0d768112b814abe9d5b397551f9d77895fb26c296"
+      "contentFingerprint": "160b35ffb8b8836ee166ecce4adeaf4ca57cbb06d6d285d829f2a6c8c2000134"
     },
     {
       "name": "demo_order_contracts",
       "version": "0.1.0",
-      "contentFingerprint": "e50e6629fd382469d4d59d797682ed95ed3a1ec8a40246e0bb3148ac5fc50920"
+      "contentFingerprint": "b3208f4a939dfa9cc5a5ae487b5dab6793f1e73c715ebde2c29de7efa68d5167"
     },
     {
       "name": "demo_payment",
       "version": "0.1.0",
-      "contentFingerprint": "7d6a6c2427f690a2c8793113be49a03ee2a09e93a87ae62f1d4a9fb7894eb990"
+      "contentFingerprint": "fe0eee95db8b5d2b5c37f8b2e56c83d1ac2d9cce9038ac412b9c1340f7325277"
     },
     {
       "name": "demo_web",
       "version": "0.1.0",
-      "contentFingerprint": "05cfa5e78c0164915098d49653f9dc21a32b21127bcf8e54c67fa3595433b111"
+      "contentFingerprint": "6f5121e10c6b25a6814dd7419dd3b08b1464108209dbf0093df65ee8790f9902"
     },
     {
       "name": "demo_web_contracts",
       "version": "0.1.0",
-      "contentFingerprint": "51310ef682fd411f1b639c0e78fe21e7898dcd63ebf771efc51a6978fa9dfacd"
+      "contentFingerprint": "525eea42012a1f13451b1b4c9c1b32be0e7ff0cffc8988df8cde051d329708d9"
     }
   ],
   "metadata": [],

@@ -99,9 +99,15 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter analyzer doctor demo
 `doctor` 只在静态状态健康时，在临时副本中校验 lockfile、执行 bootstrap analyze 和 loader
 compile；不修改 Host、活动 bootstrap manifest 或 lockfile，也不运行 Generator。Git 凭据或
 SSH Key 不可用时会明确说明 IDE 诊断尚不可用；`doctor` 通过后，bootstrap/ref 变化仍需重启
-Dart Analysis Server。若 `~/.dartServer/.plugin_manager` 中同名 bootstrap 副本与当前 manifest
-不一致，`doctor` 会只读失败并列出准确目录；停止 Analysis Server、只移走该缓存目录并重启，
-不能清空整个 Pub cache 或其它插件缓存。
+Dart Analysis Server。对当前 bootstrap 路径及其真实路径对应的 legacy plugin-manager 条目，
+`doctor` 会比较 manifest 和 `bin/plugin.dart`，拒绝过期或残缺缓存，不按同名 Package 猜测
+其它 Host 的缓存所有权。该检查适配 Dart 3.11 的路径 MD5 缓存键；它不是生成物内容证明，
+SDK 改变缓存布局后仍需真实加载验收。
+
+发现问题时，先停止 Analysis Server，将 doctor 列出的**整个哈希条目目录**移到
+`~/.dartServer/.plugin_manager` 外备份，再重启并运行 doctor。不能只移走条目中的
+`analyzer_plugin` 子目录：Dart 3.11 会复用仍存在的父目录，随后因 `bin/plugin.dart` 缺失
+而启动失败。不能清空整个 Pub cache 或其它插件缓存。
 
 计划中的 `install/upgrade/uninstall` 尚未实现，不能写入当前接入脚本或 CI。完整边界见
 [`CCRouter-analyzer-cli-plan.md`](CCRouter-analyzer-cli-plan.md)。Analyzer 装配不会挂入
@@ -191,6 +197,12 @@ F14/F15 类型与 Owner 修复、Service 生命周期诊断，以及既有的单
 上述修复已完成本地插件测试、真实 Plugin 会话验证和 loader 编译，并已推送远端。
 Demo bootstrap 已固定该版本；更新依赖不等于正在运行的 IDE 已重新加载，需重启
 Dart Analysis Server 后使用新增规则。
+
+2026-10-03 已完成本机 Android Studio 的实际验收：关闭工程停止 Analysis Server，备份
+指定旧缓存条目后重开；临时 `@CCService` 的既有 `dispose()` 触发
+`ccrouter_service_disposable_missing`，IDE Quick Fix 补入 `implements CCDisposable` 后
+该警告消失，普通 Dart 的 `@override` 提示继续正常工作。临时文件已移出工程。
+这证明本机当前 SDK/IDE 的此条链路，不代表 VS Code、全部诊断或完整文件监听矩阵均已验收。
 
 Demo 运行时还接入了 `ccrouter_devtools`：进入 Navigation Lab 的“诊断”分区，点击
 “打开 CCRouter DevTools”，即可查看只读 Overview、Components、Entries、Timeline、

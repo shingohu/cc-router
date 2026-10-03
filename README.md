@@ -103,8 +103,10 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter analyzer doctor demo
 
 `status` 的 `healthy` 只代表 manifest、lockfile、固定来源和版本静态一致，不能证明 Analysis
 Server 已经加载插件；只有 `doctor` 通过后才证明当前凭据和隔离 bootstrap 可解析、分析并编译。
-`doctor` 还会拒绝与当前 manifest 不一致的 Analysis Server plugin-manager 缓存，并给出精确
-缓存目录；停止 Analysis Server、只移走该目录并重启后再复验。bootstrap 或固定 ref 变化后
+`doctor` 还会检查当前 bootstrap 对应的 Analysis Server 缓存是否过期、残缺或入口变化，并给出
+完整缓存条目目录；停止 Analysis Server，将该条目移到 `.plugin_manager` 外备份，再重启复验。
+不能只移动其中的 `analyzer_plugin` 子目录，否则 Analysis Server 会复用残缺的父目录。
+不同 Host 的同名插件缓存不据此判断为过期。bootstrap 或固定 ref 变化后
 仍需要重启 Dart Analysis Server。
 
 `dart analyze` 不运行 legacy Analysis Server Plugin，只能验证 Dart 自带规则；不能用它判断

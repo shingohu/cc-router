@@ -22,6 +22,12 @@ Flutter SDK 选择：
 `backendFactory` 复用 Demo Shell/Outlet Backend，并自动创建 `MaterialApp.router` 与 managed
 Host；业务代码不接触导航 Backend。
 
+高级 Shell 装配集中在 `lib/demo_router_backend.dart`：Demo 私有挂载对象从 Catalog 解码参数、
+绑定精确 RouteEntry，并复用 `CCFlutterRouteFactory` 创建 Page；同一次挂载同步产生 Adapter
+binding/override，避免再次手写 Route ID 清单。Outlet 的 Key 与 Observer 成对创建和复用。
+Shell 树、相对路径、分支顺序和切换策略仍显式配置；自适应面板的独立 Navigator 不冒充
+GoRouter Shell。这些是 Demo 内部复用，不是新增框架公开 API。
+
 `modules/navigation_lab` 是可交互的路由功能实验室，覆盖 typed navigation、动态 URI、
 栈操作、拦截和重定向、Failure Policy、Aspect、页面/应用生命周期、展示动画、
 Managed Modal、Foreign/Overlay 隔离、ShellRoute、StatefulShellRoute、嵌套子路由和
@@ -114,6 +120,9 @@ Composition Root 显式调用 `CCRouter.shutdown`。业务跳转仍统一通过 
 Host Assembly；组件业务 barrel 不导出 Registrar 或 Manifest。
 订单详情路由由 `@CCRouteContract` 声明，页面通过 `@CCRouteImplementation` 绑定；跨组件
 只导入 `demo_order_contracts`，页面 Widget、注册入口和构造 glue 留在 `demo_order`。
+order/web 的 Owner barrel 复用业务 barrel，仅额外导出 Implementation 绑定所需的 Contract
+标记。业务 barrel 仍使用明确 `show` 列表维护公开边界；Catalog 的公开入口索引保留这层
+明确声明的业务入口，Owner barrel 不作为推荐业务导入路径。
 同一契约包还通过 `@CCServiceContract` 声明 `OrderSummaryService` 的稳定 ID；订单实现
 直接 `implements` 该唯一 Contract，`@CCService()` 自动完成绑定与注册。支付与导航实验组件
 分别声明 `CCServiceDependency<OrderSummaryService>`，使用各自生成的 `<Component>Services`

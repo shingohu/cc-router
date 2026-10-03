@@ -89,6 +89,8 @@ ccrouter analyzer uninstall [host-root]
 - 先执行 `status`，再验证依赖解析、loader `dart analyze` 和
   `dart compile exe bin/plugin.dart`。
 - 不启动常驻 Analysis Server，不运行生成器，不修改配置。
+- 检查当前 bootstrap 对应的 legacy 缓存 manifest 和入口，拒绝过期或残缺条目；提示停服后
+  备份整个指定哈希目录，不只移动子目录，不按 Package 同名误报其他 Host 的缓存。
 - 输出重启 Analysis Server 的建议和普通 Dart Analyzer + `generate --check` 回退路径。
 
 ### `upgrade`

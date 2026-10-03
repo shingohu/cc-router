@@ -180,10 +180,15 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter analyzer doctor <host
 
 `status: healthy` proves only that the bootstrap manifest, lockfile, source, and
 versions are statically consistent. `doctor` additionally proves dependency
-resolution, bootstrap analysis, loader compilation, and absence of a stale
-plugin-manager copy. If it names a stale cache, stop the Analysis Server and
-move only that directory before restarting; do not clear unrelated IDE or Pub
-caches. Rerun doctor after the bootstrap or pinned ref changed.
+resolution, bootstrap analysis, loader compilation, and checks for stale or
+incomplete legacy cache entries belonging to the current bootstrap path.
+If it names a cache, stop the Analysis Server and move the entire listed hash
+directory outside `.plugin_manager` as a backup before restarting. Moving only
+its `analyzer_plugin` child leaves an existing parent that Dart 3.11 reuses and
+fails to load. Do not clear unrelated IDE or Pub caches or infer ownership from
+a shared plugin name. This SDK-specific cache check does not prove live IDE
+loading; verify a diagnostic and Quick Fix in the running IDE. Rerun doctor
+after the bootstrap or pinned ref changed.
 
 The planned `analyzer install/upgrade/uninstall` commands are not implemented.
 Keep using the manual Host bootstrap, do not attach setup

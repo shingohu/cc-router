@@ -23,7 +23,8 @@ F14/F15 Analyzer 已修复，并补上 Service 生命周期 warning 与保守 Qu
 78 项测试通过；Demo 已更新到远端固定提交 `a275d1d`，IDE 需重启 Analysis Server 加载。
 F16/F17 AI Skill 安装与接入指导已修复，两个完整 Skill 组成独立安装包，并增加孤立目录
 引用、真实 CLI 命令和关键 Dart 示例校验。本轮 18 项已确认缺陷均已关闭；当前 Demo 的
-本机旧插件缓存、真实 LSP/平台矩阵与长期质量观测边界见该报告第 15 节。
+本机旧插件缓存与 Android Studio Service Quick Fix 后续已验收；Demo Shell/Outlet/Owner
+barrel 私有减负已完成。真实 LSP/平台矩阵与长期质量观测边界见该报告第 15–16 节。
 最终收尾 844 项测试通过（框架/Demo 等 478、Generator 280、Analyzer 78、Skill 8），
 Workspace/插件 analyze 及缓存/无缓存生成物检查通过。
 下文已完成项表示基础能力和当时测试已落地，
@@ -106,7 +107,8 @@ Workspace/插件 analyze 及缓存/无缓存生成物检查通过。
   比较一致，并修复 Workspace 外 Path 依赖在 Build Plan 与 Portable State 间的指纹覆盖差异。
 - [ ] 仅在真实项目 Host 聚合超过总耗时 20% 时继续优化 dirty set 的输入摘要速度；不得用
   mtime/size 替代内容摘要。
-- [ ] build_runner 优化下一阶段 P6：F04/F03 正确性前置已修复；后续收窄公共依赖失效传播，评估普通
+- [ ] build_runner 优化下一阶段 P6：F04/F03 正确性前置已修复，收益/边界评估见计划第 12.5 节，
+  P6-1/2/3 尚未实施；后续收窄公共依赖失效传播，评估普通
   注释、生成文档与源码定位的分层摘要；减少状态变更与缩短生成耗时分别验收。详见
   [优化计划第 12 节](CCRouter-build-runner-optimization-plan.md#12-p6生成状态摘要与依赖失效粒度优化待实施)。
   当前仅记录、未实施；五类能力的准确性对照通过后再评估默认开启。

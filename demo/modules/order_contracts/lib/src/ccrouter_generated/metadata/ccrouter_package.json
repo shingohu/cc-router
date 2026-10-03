@@ -5,7 +5,7 @@
     "name": "demo_order_contracts",
     "version": "0.1.0"
   },
-  "contentFingerprint": "e50e6629fd382469d4d59d797682ed95ed3a1ec8a40246e0bb3148ac5fc50920",
+  "contentFingerprint": "b3208f4a939dfa9cc5a5ae487b5dab6793f1e73c715ebde2c29de7efa68d5167",
   "bundle": null,
   "dependencies": [],
   "metadata": [
@@ -107,8 +107,7 @@
             "package": "demo_order_contracts",
             "library": "lib/src/ccrouter_generated/contract/order_detail_route_contract.route.contract.g.dart",
             "publicLibraries": [
-              "package:demo_order_contracts/demo_order_contracts.dart",
-              "package:demo_order_contracts/demo_order_contracts_owner.dart"
+              "package:demo_order_contracts/demo_order_contracts.dart"
             ]
           },
           "generatedArtifacts": [

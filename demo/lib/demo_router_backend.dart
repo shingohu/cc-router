@@ -14,72 +14,37 @@ CCGoRouterBackend createDemoRouterBackend({
   String hostId = 'default',
   String initialLocation = '/',
 }) {
-  final singleOutletKey = GlobalKey<NavigatorState>(
-    debugLabel: '$hostId.$demoSingleShellOutlet',
-  );
-  final workspaceHomeKey = GlobalKey<NavigatorState>(
-    debugLabel: '$hostId.$demoWorkspaceHomeOutlet',
-  );
-  final workspaceActivityKey = GlobalKey<NavigatorState>(
-    debugLabel: '$hostId.$demoWorkspaceActivityOutlet',
-  );
-  final workspaceProfileKey = GlobalKey<NavigatorState>(
-    debugLabel: '$hostId.$demoWorkspaceProfileOutlet',
-  );
-  final adaptiveListKey = GlobalKey<NavigatorState>(
-    debugLabel: '$hostId.$demoAdaptiveListOutlet',
-  );
-  final adaptiveDetailKey = GlobalKey<NavigatorState>(
-    debugLabel: '$hostId.$demoAdaptiveDetailOutlet',
-  );
+  final single = _DemoShellOutlet(hostId, demoSingleShellOutlet);
+  final home = _DemoShellOutlet(hostId, demoWorkspaceHomeOutlet);
+  final activity = _DemoShellOutlet(hostId, demoWorkspaceActivityOutlet);
+  final profile = _DemoShellOutlet(hostId, demoWorkspaceProfileOutlet);
+  final shellOutlets = [single, home, activity, profile];
   final host = CCNavigationHost(
     id: hostId,
     navigatorKeys: {
-      demoSingleShellOutlet: singleOutletKey,
-      demoWorkspaceHomeOutlet: workspaceHomeKey,
-      demoWorkspaceActivityOutlet: workspaceActivityKey,
-      demoWorkspaceProfileOutlet: workspaceProfileKey,
-      demoAdaptiveListOutlet: adaptiveListKey,
-      demoAdaptiveDetailOutlet: adaptiveDetailKey,
+      for (final outlet in shellOutlets) outlet.id: outlet.key,
+      // Adaptive panels mount their own Navigator outside the GoRouter tree.
+      for (final id in [demoAdaptiveListOutlet, demoAdaptiveDetailOutlet])
+        id: GlobalKey<NavigatorState>(debugLabel: '$hostId.$id'),
     },
   );
-
-  final singleObserver = CCGoRouterNavigationObserver(
-    hostId: hostId,
-    outlet: demoSingleShellOutlet,
-  );
-  final workspaceHomeObserver = CCGoRouterNavigationObserver(
-    hostId: hostId,
-    outlet: demoWorkspaceHomeOutlet,
-  );
-  final workspaceActivityObserver = CCGoRouterNavigationObserver(
-    hostId: hostId,
-    outlet: demoWorkspaceActivityOutlet,
-  );
-  final workspaceProfileObserver = CCGoRouterNavigationObserver(
-    hostId: hostId,
-    outlet: demoWorkspaceProfileOutlet,
-  );
-
-  final singleDetail = _route(
-    catalog,
+  final mounts = _DemoRouteMounts(catalog);
+  final singleDetail = mounts.route(
     routeId: 'demo_navigation_lab.shell.detail',
     path: ':item',
   );
-  final singleFeed = _route(
-    catalog,
+  final singleFeed = mounts.route(
     routeId: 'demo_navigation_lab.shell.feed',
     path: '/shell/feed',
     routes: [singleDetail],
   );
-  final singleSettings = _route(
-    catalog,
+  final singleSettings = mounts.route(
     routeId: 'demo_navigation_lab.shell.settings',
     path: '/shell/settings',
   );
   final singleShell = ShellRoute(
-    navigatorKey: singleOutletKey,
-    observers: [singleObserver],
+    navigatorKey: single.key,
+    observers: [single.observer],
     builder: (context, state, child) => _SingleShellFrame(
       selectedIndex: state.uri.path.startsWith('/shell/settings') ? 1 : 0,
       child: child,
@@ -87,24 +52,20 @@ CCGoRouterBackend createDemoRouterBackend({
     routes: [singleFeed, singleSettings],
   );
 
-  final workspaceDetail = _route(
-    catalog,
+  final workspaceDetail = mounts.route(
     routeId: 'demo_navigation_lab.workspace.detail',
     path: ':item',
   );
-  final workspaceHome = _route(
-    catalog,
+  final workspaceHome = mounts.route(
     routeId: 'demo_navigation_lab.workspace.home',
     path: '/workspace/home',
     routes: [workspaceDetail],
   );
-  final workspaceActivity = _route(
-    catalog,
+  final workspaceActivity = mounts.route(
     routeId: 'demo_navigation_lab.workspace.activity',
     path: '/workspace/activity',
   );
-  final workspaceProfile = _route(
-    catalog,
+  final workspaceProfile = mounts.route(
     routeId: 'demo_navigation_lab.workspace.profile',
     path: '/workspace/profile',
   );
@@ -113,100 +74,121 @@ CCGoRouterBackend createDemoRouterBackend({
         _WorkspaceShellFrame(navigationShell: navigationShell),
     branches: [
       StatefulShellBranch(
-        navigatorKey: workspaceHomeKey,
-        observers: [workspaceHomeObserver],
+        navigatorKey: home.key,
+        observers: [home.observer],
         routes: [workspaceHome],
       ),
       StatefulShellBranch(
-        navigatorKey: workspaceActivityKey,
-        observers: [workspaceActivityObserver],
+        navigatorKey: activity.key,
+        observers: [activity.observer],
         routes: [workspaceActivity],
       ),
       StatefulShellBranch(
-        navigatorKey: workspaceProfileKey,
-        observers: [workspaceProfileObserver],
+        navigatorKey: profile.key,
+        observers: [profile.observer],
         routes: [workspaceProfile],
       ),
     ],
   );
 
-  final overrides = <String, CCGoRouterRouteOverride>{
-    for (final entry in <String, GoRoute>{
-      'demo_navigation_lab.shell.feed': singleFeed,
-      'demo_navigation_lab.shell.detail': singleDetail,
-      'demo_navigation_lab.shell.settings': singleSettings,
-      'demo_navigation_lab.workspace.home': workspaceHome,
-      'demo_navigation_lab.workspace.detail': workspaceDetail,
-      'demo_navigation_lab.workspace.activity': workspaceActivity,
-      'demo_navigation_lab.workspace.profile': workspaceProfile,
-    }.entries)
-      entry.key: CCGoRouterRouteOverride(
-        binding: CCGoRouterRouteBinding(
-          routeId: entry.key,
-          goRoute: entry.value,
-        ),
-        includeInRootRoutes: false,
-      ),
-  };
-
   return CCGoRouterBackend.managed(
     catalog: catalog,
     host: host,
-    overrides: overrides,
+    overrides: mounts.overrides,
     shells: [
       CCGoRouterShellBinding(
         shellId: demoSingleShellId,
         route: singleShell,
         initialOutlet: demoSingleShellOutlet,
-        outlets: {demoSingleShellOutlet: singleOutletKey},
+        outlets: {single.id: single.key},
       ),
       CCGoRouterShellBinding(
         shellId: demoWorkspaceShellId,
         route: workspaceShell,
         initialOutlet: demoWorkspaceHomeOutlet,
         outlets: {
-          demoWorkspaceHomeOutlet: workspaceHomeKey,
-          demoWorkspaceActivityOutlet: workspaceActivityKey,
-          demoWorkspaceProfileOutlet: workspaceProfileKey,
+          for (final outlet in [home, activity, profile]) outlet.id: outlet.key,
         },
       ),
     ],
-    outletObservers: [
-      singleObserver,
-      workspaceHomeObserver,
-      workspaceActivityObserver,
-      workspaceProfileObserver,
-    ],
+    outletObservers: [for (final outlet in shellOutlets) outlet.observer],
     initialLocation: initialLocation,
   );
 }
 
-GoRoute _route(
-  CCFlutterRouteCatalog catalog, {
-  required String routeId,
-  required String path,
-  List<RouteBase> routes = const [],
-}) {
-  final destination = catalog.destinationFor(routeId);
-  if (destination == null) {
-    throw StateError('Missing generated destination "$routeId".');
+/// Host-owned pairing reused by the Navigator, Shell binding and Adapter.
+final class _DemoShellOutlet {
+  _DemoShellOutlet(String hostId, this.id)
+    : key = GlobalKey<NavigatorState>(debugLabel: '$hostId.$id'),
+      observer = CCGoRouterNavigationObserver(hostId: hostId, outlet: id);
+
+  final String id;
+  final GlobalKey<NavigatorState> key;
+  final CCGoRouterNavigationObserver observer;
+}
+
+/// Keeps manually placed Shell routes and their Adapter bindings in one place.
+/// The Host still explicitly chooses the Shell tree and relative child paths.
+final class _DemoRouteMounts {
+  _DemoRouteMounts(this.catalog);
+
+  final CCFlutterRouteCatalog catalog;
+  final overrides = <String, CCGoRouterRouteOverride>{};
+
+  GoRoute route({
+    required String routeId,
+    required String path,
+    List<RouteBase> routes = const [],
+  }) {
+    final destination = catalog.destinationFor(routeId);
+    if (destination == null) {
+      throw StateError('Missing generated destination "$routeId".');
+    }
+    if (overrides.containsKey(routeId)) {
+      throw StateError('Destination "$routeId" was mounted twice.');
+    }
+    final presentation = destination.route.presentation;
+    final route = GoRoute(
+      path: path,
+      name: routeId,
+      pageBuilder: (_, state) {
+        final payload = state.extra;
+        final extra = CCRouterHostBinding.decodeRouteExtra(payload);
+        final child = destination.build(
+          CCRouteCodecValues(
+            path: state.pathParameters,
+            query: state.uri.queryParametersAll,
+            extra: extra,
+          ),
+        );
+        return CCFlutterRouteFactory.createPage<Object?>(
+          child: CCRouterHostBinding.bindRouteEntry(
+            payload: payload,
+            child: child,
+          ),
+          presentation: presentation,
+          key: state.pageKey,
+          name: routeId,
+          arguments: extra,
+        );
+      },
+      routes: routes,
+    );
+    overrides[routeId] = CCGoRouterRouteOverride(
+      binding: CCGoRouterRouteBinding(
+        routeId: routeId,
+        goRoute: route,
+        presentationType: switch (presentation) {
+          CCPagePresentation() => CCGoRouterPresentationType.page,
+          CCModalBottomSheetPresentation() =>
+            CCGoRouterPresentationType.bottomSheet,
+          CCDialogPresentation() => CCGoRouterPresentationType.dialog,
+        },
+      ),
+      includeInRootRoutes: false,
+    );
+    return route;
   }
-  return GoRoute(
-    path: path,
-    name: routeId,
-    builder: (_, state) {
-      final payload = state.extra;
-      final child = destination.build(
-        CCRouteCodecValues(
-          path: state.pathParameters,
-          query: state.uri.queryParametersAll,
-          extra: CCRouterHostBinding.decodeRouteExtra(payload),
-        ),
-      );
-      return CCRouterHostBinding.bindRouteEntry(payload: payload, child: child);
-    },
-    routes: routes,
-  );
 }
 
 final class _SingleShellFrame extends StatelessWidget {

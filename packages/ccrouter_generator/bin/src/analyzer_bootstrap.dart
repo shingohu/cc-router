@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:crypto/crypto.dart';
 import 'package:path/path.dart' as path;
 import 'package:pub_semver/pub_semver.dart';
 import 'package:yaml/yaml.dart';
@@ -344,15 +345,18 @@ Future<bool> _runDoctor(_AnalyzerBootstrapReport report) async {
   final staleCaches = _staleAnalyzerPluginManagerCaches(bootstrapRoot);
   if (staleCaches.isNotEmpty) {
     stderr.writeln(
-      'error: Analyzer doctor found a stale Analysis Server plugin cache:',
+      'error: Analyzer doctor found a stale Analysis Server plugin cache '
+      '(outdated or incomplete):',
     );
     for (final cache in staleCaches) {
       stderr.writeln('  ${cache.path}');
     }
     stderr.writeln(
-      'Stop the Dart Analysis Server, move or remove only the listed cached '
-      'analyzer_plugin directory, restart the server, and rerun doctor. The '
-      'doctor command is read-only and will not delete IDE state.',
+      'Stop the Dart Analysis Server, move only the listed cache entry '
+      'directory to a backup outside .plugin_manager, restart the server, and '
+      'rerun doctor. Move the whole listed entry, not just its analyzer_plugin '
+      'child: an existing parent prevents the server from copying the plugin '
+      'again. The doctor command is read-only and will not delete IDE state.',
     );
     return false;
   }
@@ -413,32 +417,48 @@ Future<bool> _runDoctor(_AnalyzerBootstrapReport report) async {
   }
 }
 
-/// Finds active plugin-manager copies whose bootstrap manifest is outdated.
+/// Finds outdated or incomplete cache entries for this exact bootstrap path.
+///
+/// Dart 3.11's legacy PluginManager keys each entry by MD5 of the source path's
+/// code units and reuses an existing parent even when its child is missing.
+/// This is a read-only SDK compatibility check, not a content integrity hash.
+/// Never infer ownership from a shared package name in another Host's cache.
 List<Directory> _staleAnalyzerPluginManagerCaches(Directory bootstrapRoot) {
   final home =
       Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'];
   if (home == null || home.isEmpty) return const [];
   final manager = Directory(path.join(home, '.dartServer', '.plugin_manager'));
   final sourceManifest = File(path.join(bootstrapRoot.path, 'pubspec.yaml'));
-  final source = _readYamlMap(sourceManifest);
-  final bootstrapName = source?['name']?.toString();
-  if (!manager.existsSync() ||
-      bootstrapName == null ||
-      !sourceManifest.existsSync()) {
+  if (!manager.existsSync() || !sourceManifest.existsSync()) {
     return const [];
   }
-  final sourceBytes = sourceManifest.readAsBytesSync();
+  final sourcePaths = {
+    path.normalize(bootstrapRoot.absolute.path),
+    bootstrapRoot.resolveSymbolicLinksSync(),
+  };
+  final cacheIds = {
+    for (final sourcePath in sourcePaths)
+      md5.convert(sourcePath.codeUnits).toString(),
+  };
   final stale = <Directory>[];
-  for (final entry in manager.listSync(followLinks: false)) {
-    if (entry is! Directory || path.basename(entry.path).contains('.stale-')) {
+  for (final id in cacheIds) {
+    final entry = Directory(path.join(manager.path, id));
+    if (FileSystemEntity.typeSync(entry.path, followLinks: false) !=
+        FileSystemEntityType.directory) {
       continue;
     }
     final cachedRoot = Directory(path.join(entry.path, 'analyzer_plugin'));
-    final cachedManifest = File(path.join(cachedRoot.path, 'pubspec.yaml'));
-    final cached = _readYamlMap(cachedManifest);
-    if (cached?['name']?.toString() != bootstrapName) continue;
-    if (!_bytesEqual(sourceBytes, cachedManifest.readAsBytesSync())) {
-      stale.add(cachedRoot);
+    for (final relative in ['pubspec.yaml', path.join('bin', 'plugin.dart')]) {
+      final sourceFile = File(path.join(bootstrapRoot.path, relative));
+      final cachedFile = File(path.join(cachedRoot.path, relative));
+      if (!cachedFile.existsSync() ||
+          !_bytesEqual(
+            sourceFile.readAsBytesSync(),
+            cachedFile.readAsBytesSync(),
+          )) {
+        stale.add(entry);
+        break;
+      }
     }
   }
   stale.sort((left, right) => left.path.compareTo(right.path));
