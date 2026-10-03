@@ -287,6 +287,29 @@ void main() {
     },
   );
 
+  test(
+    'a timed out sink is quarantined and cannot block close forever',
+    () async {
+      final slow = _NeverCompletingSink();
+      final received = <String>[];
+      final dispatcher = CCAnalyticsEventDispatcher(
+        policy: CCAnalyticsPolicy(consentGranted: true),
+        sinkWriteTimeout: const Duration(milliseconds: 10),
+        sinks: [slow, _Sink((event) => received.add(event.eventId))],
+      );
+
+      dispatcher.dispatch(_event('slow.event'));
+      await slow.started.future;
+      dispatcher.dispatch(_event('after.timeout'));
+      await dispatcher.close().timeout(const Duration(seconds: 1));
+
+      expect(dispatcher.timedOutSinkWriteCount, 1);
+      expect(dispatcher.quarantinedSinkCount, 1);
+      expect(slow.events, ['slow.event']);
+      expect(received, ['slow.event', 'after.timeout']);
+    },
+  );
+
   test('event admitted as the last sink completes is not stranded', () async {
     final started = Completer<void>();
     final release = Completer<void>();
@@ -322,6 +345,18 @@ final class _Sink implements CCAnalyticsSink {
 
   @override
   FutureOr<void> write(CCAnalyticsEvent event) => onWrite(event);
+}
+
+final class _NeverCompletingSink implements CCAnalyticsSink {
+  final started = Completer<void>();
+  final events = <String>[];
+
+  @override
+  Future<void> write(CCAnalyticsEvent event) {
+    events.add(event.eventId);
+    if (!started.isCompleted) started.complete();
+    return Completer<void>().future;
+  }
 }
 
 CCAnalyticsEvent _event(

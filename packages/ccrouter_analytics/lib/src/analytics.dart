@@ -2,6 +2,34 @@ import 'dart:async';
 import 'dart:collection';
 import 'dart:math' as math;
 
+/// Bounded payload and state limits enforced by the provider-neutral layer.
+///
+/// These limits protect navigation and widget callbacks from accidentally
+/// retaining or queueing an unbounded analytics payload. Applications that
+/// need larger business data should aggregate or persist it in their own
+/// analytics adapter instead of widening this framework boundary.
+final class CCAnalyticsLimits {
+  /// Maximum number of properties attached to one event.
+  static const int maxPropertyCount = 64;
+
+  /// Maximum number of UTF-16 code units in one String value.
+  static const int maxStringLength = 256;
+
+  /// Maximum number of items in one primitive list value.
+  static const int maxListLength = 32;
+
+  /// Maximum conservative size of all property values in one event.
+  static const int maxPropertyValueUnits = 4096;
+
+  /// Maximum number of event IDs retained by the common throttle state.
+  static const int maxThrottleEntries = 1024;
+
+  /// Maximum number of blacklisted IDs in one policy.
+  static const int maxBlockedEventIds = 256;
+
+  const CCAnalyticsLimits._();
+}
+
 /// Product analytics event categories supported by the provider-neutral layer.
 ///
 /// Framework-generated events use [pageView] and [pageLeave]. Applications
@@ -64,7 +92,16 @@ final class CCAnalyticsProperties {
   /// Builds an immutable property set from validated [entries].
   factory CCAnalyticsProperties.from(Iterable<CCAnalyticsProperty> entries) {
     final values = <String, Object>{};
+    var valueUnits = 0;
     for (final entry in entries) {
+      if (values.length >= CCAnalyticsLimits.maxPropertyCount) {
+        throw ArgumentError.value(
+          entries,
+          'entries',
+          'Analytics events may contain at most '
+              '${CCAnalyticsLimits.maxPropertyCount} properties.',
+        );
+      }
       if (values.containsKey(entry.name)) {
         throw ArgumentError.value(
           entry.name,
@@ -73,6 +110,14 @@ final class CCAnalyticsProperties {
         );
       }
       values[entry.name] = entry.value;
+      valueUnits += _analyticsValueUnits(entry.value);
+      if (valueUnits > CCAnalyticsLimits.maxPropertyValueUnits) {
+        throw ArgumentError.value(
+          entries,
+          'entries',
+          'Analytics property values exceed the bounded event limit.',
+        );
+      }
     }
     return CCAnalyticsProperties._(Map.unmodifiable(values));
   }
@@ -333,11 +378,19 @@ final class CCAnalyticsPolicy {
     Iterable<String> blockedEventIds = const [],
     this.throttleWindow,
   }) : blockedEventIds = Set.unmodifiable(blockedEventIds) {
-    if (sampleRate < 0 || sampleRate > 1) {
+    if (!sampleRate.isFinite || sampleRate < 0 || sampleRate > 1) {
       throw ArgumentError.value(
         sampleRate,
         'sampleRate',
         'Must be between 0 and 1.',
+      );
+    }
+    if (this.blockedEventIds.length > CCAnalyticsLimits.maxBlockedEventIds) {
+      throw ArgumentError.value(
+        this.blockedEventIds,
+        'blockedEventIds',
+        'A policy may contain at most '
+            '${CCAnalyticsLimits.maxBlockedEventIds} blocked IDs.',
       );
     }
     for (final eventId in this.blockedEventIds) {
@@ -382,9 +435,10 @@ final class CCAnalyticsPolicy {
     double? sampleRate,
     Iterable<String>? blockedEventIds,
     Duration? throttleWindow,
+    bool clearThrottleWindow = false,
   }) {
     final nextSampleRate = sampleRate ?? this.sampleRate;
-    if (nextSampleRate < 0 || nextSampleRate > 1) {
+    if (!nextSampleRate.isFinite || nextSampleRate < 0 || nextSampleRate > 1) {
       throw ArgumentError.value(
         nextSampleRate,
         'sampleRate',
@@ -396,7 +450,9 @@ final class CCAnalyticsPolicy {
       consentGranted: consentGranted ?? this.consentGranted,
       sampleRate: nextSampleRate,
       blockedEventIds: blockedEventIds ?? this.blockedEventIds,
-      throttleWindow: throttleWindow ?? this.throttleWindow,
+      throttleWindow: clearThrottleWindow
+          ? null
+          : (throttleWindow ?? this.throttleWindow),
     );
   }
 }
@@ -426,13 +482,32 @@ final class CCAnalyticsEventDispatcher {
     required Iterable<CCAnalyticsSink> sinks,
     this.capacity = 256,
     this.onSinkError,
+    this.sinkWriteTimeout,
+    int throttleCapacity = CCAnalyticsLimits.maxThrottleEntries,
     CCAnalyticsPolicy? policy,
     double Function()? randomSource,
     DateTime Function()? clock,
   }) : sinks = List.unmodifiable(sinks),
-       _policy = policy ?? CCAnalyticsPolicy() {
+       _policy = policy ?? CCAnalyticsPolicy(),
+       _throttleCapacity = throttleCapacity {
     if (capacity <= 0) {
       throw ArgumentError.value(capacity, 'capacity', 'Must be positive.');
+    }
+    if (throttleCapacity <= 0 ||
+        throttleCapacity > CCAnalyticsLimits.maxThrottleEntries) {
+      throw ArgumentError.value(
+        throttleCapacity,
+        'throttleCapacity',
+        'Must be between 1 and ${CCAnalyticsLimits.maxThrottleEntries}.',
+      );
+    }
+    final timeout = sinkWriteTimeout;
+    if (timeout != null && timeout <= Duration.zero) {
+      throw ArgumentError.value(
+        timeout,
+        'sinkWriteTimeout',
+        'Must be positive when provided.',
+      );
     }
     _randomSource = randomSource ?? _defaultAnalyticsRandomSource;
     _clock = clock ?? DateTime.now;
@@ -446,6 +521,15 @@ final class CCAnalyticsEventDispatcher {
 
   /// Optional isolated sink failure callback.
   final CCAnalyticsSinkErrorHandler? onSinkError;
+
+  /// Maximum time awaited for one sink write before that sink is quarantined.
+  ///
+  /// The default is null and preserves the normal Sink contract: [close]
+  /// waits for a write to finish. A configured timeout bounds dispatcher
+  /// shutdown and prevents a permanently slow sink from blocking other sinks.
+  /// Dart Futures cannot be cancelled, so the underlying write may still
+  /// finish later; the quarantined sink receives no further events.
+  final Duration? sinkWriteTimeout;
 
   /// Current immutable consent, enablement, and sampling policy.
   CCAnalyticsPolicy get policy => _policy;
@@ -493,6 +577,16 @@ final class CCAnalyticsEventDispatcher {
 
   /// Number of events rejected by the common per-ID throttle window.
   int get throttledEventCount => _throttledEventCount;
+
+  /// Number of sinks quarantined after exceeding [sinkWriteTimeout].
+  ///
+  /// This is a payload-free health signal. A quarantined sink remains skipped
+  /// until this dispatcher is closed; create a new dispatcher after repairing
+  /// the application-owned sink.
+  int get quarantinedSinkCount => _quarantinedSinks.length;
+
+  /// Number of sink writes that exceeded [sinkWriteTimeout].
+  int get timedOutSinkWriteCount => _timedOutSinkWriteCount;
 
   /// Whether [close] has stopped accepting new events.
   bool get isClosed => _closed;
@@ -579,6 +673,9 @@ final class CCAnalyticsEventDispatcher {
   /// Number of events excluded by [CCAnalyticsPolicy.throttleWindow].
   int _throttledEventCount = 0;
 
+  /// Number of event IDs retained by the throttle map.
+  final int _throttleCapacity;
+
   /// Current mutable policy slot updated only through [updatePolicy].
   CCAnalyticsPolicy _policy;
 
@@ -622,6 +719,12 @@ final class CCAnalyticsEventDispatcher {
   /// Last accepted timestamp per stable event ID.
   final Map<String, DateTime> _lastAcceptedAt = {};
 
+  /// Sinks whose writes exceeded the configured deadline.
+  final Set<CCAnalyticsSink> _quarantinedSinks = Set.identity();
+
+  /// Number of writes that exceeded [sinkWriteTimeout].
+  int _timedOutSinkWriteCount = 0;
+
   /// Schedules exactly one asynchronous queue drain.
   void _scheduleDrain() {
     if (_drainFuture != null) return;
@@ -647,13 +750,26 @@ final class CCAnalyticsEventDispatcher {
       final event = _queue.removeFirst();
       final epoch = _deliveryEpoch;
       for (final sink in sinks) {
+        if (_quarantinedSinks.contains(sink)) continue;
         if (epoch != _deliveryEpoch ||
             !_policy.enabled ||
             !_policy.consentGranted) {
           break;
         }
         try {
-          await sink.write(event);
+          final write = Future<void>.sync(() => sink.write(event));
+          final timeout = sinkWriteTimeout;
+          if (timeout == null) {
+            await write;
+          } else {
+            try {
+              await write.timeout(timeout);
+            } on TimeoutException {
+              _timedOutSinkWriteCount++;
+              _quarantinedSinks.add(sink);
+              rethrow;
+            }
+          }
         } catch (error, stackTrace) {
           try {
             onSinkError?.call(error, stackTrace, event);
@@ -684,6 +800,7 @@ final class CCAnalyticsEventDispatcher {
     final throttleWindow = policy.throttleWindow;
     if (throttleWindow != null) {
       final now = _clock();
+      _pruneThrottleState(now, throttleWindow);
       final lastAccepted = _lastAcceptedAt[event.eventId];
       if (lastAccepted != null &&
           now.difference(lastAccepted) < throttleWindow) {
@@ -691,9 +808,26 @@ final class CCAnalyticsEventDispatcher {
         _throttledEventCount++;
         return false;
       }
+      if (!_lastAcceptedAt.containsKey(event.eventId) &&
+          _lastAcceptedAt.length >= _throttleCapacity) {
+        _lastAcceptedAt.remove(_lastAcceptedAt.keys.first);
+      }
+      // Removing and re-adding gives the bounded map a deterministic oldest
+      // entry for the next eviction.
+      _lastAcceptedAt.remove(event.eventId);
       _lastAcceptedAt[event.eventId] = now;
+    } else if (_lastAcceptedAt.isNotEmpty) {
+      _lastAcceptedAt.clear();
     }
     return true;
+  }
+
+  /// Removes throttle entries that can no longer reject an event.
+  void _pruneThrottleState(DateTime now, Duration window) {
+    _lastAcceptedAt.removeWhere(
+      (_, timestamp) =>
+          !now.isBefore(timestamp) && now.difference(timestamp) >= window,
+    );
   }
 }
 
@@ -739,10 +873,44 @@ void _validateAnalyticsPropertyName(String value) {
 /// Validate the copied list so no caller-owned mutable collection survives the
 /// boundary. Nested collections and arbitrary objects remain unsupported.
 Object _snapshotAnalyticsPropertyValue(Object value) {
-  if (value is String || value is num || value is bool) return value;
+  if (value is String) {
+    if (value.length > CCAnalyticsLimits.maxStringLength) {
+      throw ArgumentError.value(
+        value,
+        'value',
+        'Analytics strings may contain at most '
+            '${CCAnalyticsLimits.maxStringLength} characters.',
+      );
+    }
+    return value;
+  }
+  if (value is num) {
+    if (!value.isFinite) {
+      throw ArgumentError.value(
+        value,
+        'value',
+        'Analytics numbers must be finite.',
+      );
+    }
+    return value;
+  }
+  if (value is bool) return value;
   if (value is List<Object?>) {
+    if (value.length > CCAnalyticsLimits.maxListLength) {
+      throw ArgumentError.value(
+        value,
+        'value',
+        'Analytics lists may contain at most '
+            '${CCAnalyticsLimits.maxListLength} items.',
+      );
+    }
     final snapshot = List<Object?>.unmodifiable(value);
-    if (snapshot.every((item) => item is String || item is num)) {
+    if (snapshot.every(
+      (item) =>
+          (item is String &&
+              item.length <= CCAnalyticsLimits.maxStringLength) ||
+          (item is num && item.isFinite),
+    )) {
       return snapshot;
     }
   }
@@ -751,6 +919,18 @@ Object _snapshotAnalyticsPropertyValue(Object value) {
     'value',
     'Only String, num, bool, or String/num lists are supported.',
   );
+}
+
+/// Computes a conservative bounded size for one validated property value.
+int _analyticsValueUnits(Object value) {
+  if (value is String || value is num || value is bool) {
+    return value.toString().length;
+  }
+  if (value is List<Object?>) {
+    return value.fold<int>(0, (total, item) => total + item.toString().length);
+  }
+  // [CCAnalyticsProperty] validates before a value reaches this helper.
+  return CCAnalyticsLimits.maxPropertyValueUnits + 1;
 }
 
 /// Stable identifier syntax shared by event and correlation fields.

@@ -581,6 +581,11 @@ validated primitive properties; supported String/num lists are copied into
 immutable snapshots when each `CCAnalyticsProperty` is constructed. Neither the
 caller nor a sink may mutate queued values.
 
+Property values are bounded (256 characters per String, 32 list items, 64
+properties and 4096 conservative value units per event), numbers must be finite,
+and blacklist/throttle state is bounded. Construction rejects violations before
+an event can affect a business callback.
+
 `dispatch` accepts into a bounded queue; even the first sink starts on a later
 event-loop turn. Sampling, blacklist, and throttle apply at admission. Revoking
 consent or disabling delivery clears pending events and invalidates remaining
@@ -589,9 +594,12 @@ resume old delivery. Already-running writes require application-level cancellati
 if the vendor supports it.
 
 The owning Composition Root must await `close()` to stop admission and finish
-scheduled/in-flight delivery. Do not await that close from a sink's own `write`,
-because it waits for the same write. Async dispatch is not isolate offloading:
-keep synchronous sink work short. Widget tests must advance the event loop
+scheduled/in-flight delivery. By default this waits for application Sink writes.
+An optional `sinkWriteTimeout` quarantines a Sink after a deadline and bounds
+dispatcher close; the underlying Dart Future cannot be cancelled, so the Sink
+must provide its own cancellation and will receive no further events. Do not
+await close from a sink's own `write`, because it waits for the same write.
+Async dispatch is not isolate offloading: keep synchronous sink work short. Widget tests must advance the event loop
 (for example, `tester.pump(Duration.zero)`) before asserting sink delivery;
 flushing microtasks alone does not run scheduled timers.
 

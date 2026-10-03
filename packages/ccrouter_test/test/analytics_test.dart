@@ -62,6 +62,45 @@ void main() {
         throwsArgumentError,
       );
     });
+
+    test('bounds property values and event payload size', () {
+      expect(
+        () => CCAnalyticsProperty(
+          'longValue',
+          'x' * (CCAnalyticsLimits.maxStringLength + 1),
+        ),
+        throwsArgumentError,
+      );
+      expect(
+        () => CCAnalyticsProperty(
+          'items',
+          List<Object?>.filled(CCAnalyticsLimits.maxListLength + 1, 'x'),
+        ),
+        throwsArgumentError,
+      );
+      expect(() => CCAnalyticsProperty('nan', double.nan), throwsArgumentError);
+      expect(
+        () => CCAnalyticsProperties.from(
+          List.generate(
+            CCAnalyticsLimits.maxPropertyCount + 1,
+            (index) => CCAnalyticsProperty('p$index', index),
+          ),
+        ),
+        throwsArgumentError,
+      );
+      expect(
+        () => CCAnalyticsProperties.from(
+          List.generate(
+            17,
+            (index) => CCAnalyticsProperty(
+              'p$index',
+              'x' * CCAnalyticsLimits.maxStringLength,
+            ),
+          ),
+        ),
+        throwsArgumentError,
+      );
+    });
   });
 
   group('analytics dispatcher', () {
@@ -99,6 +138,30 @@ void main() {
       expect(dispatcher.dispatch(_event('custom.throttled')), isTrue);
       expect(dispatcher.blacklistedEventCount, 1);
       expect(dispatcher.throttledEventCount, 1);
+    });
+
+    test('keeps throttle state bounded and allows clearing its policy', () {
+      var now = DateTime(2026);
+      final dispatcher = CCAnalyticsEventDispatcher(
+        sinks: [_RecordingSink()],
+        throttleCapacity: 2,
+        policy: CCAnalyticsPolicy(
+          consentGranted: true,
+          throttleWindow: const Duration(minutes: 1),
+        ),
+        clock: () => now,
+      );
+
+      expect(dispatcher.dispatch(_event('first.event')), isTrue);
+      expect(dispatcher.dispatch(_event('second.event')), isTrue);
+      expect(dispatcher.dispatch(_event('third.event')), isTrue);
+      // The oldest throttle entry was evicted to keep state bounded.
+      expect(dispatcher.dispatch(_event('first.event')), isTrue);
+      final cleared = dispatcher.policy.copyWith(clearThrottleWindow: true);
+      expect(cleared.throttleWindow, isNull);
+      now = now.add(const Duration(seconds: 1));
+      dispatcher.updatePolicy(cleared);
+      expect(dispatcher.dispatch(_event('first.event')), isTrue);
     });
 
     test('revoking consent resets throttle state and pending events', () {

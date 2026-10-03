@@ -488,12 +488,16 @@ analytics.updatePolicy(
 
 分析属性必须使用 `CCAnalyticsProperty` 声明，禁止放入 Token、完整 URI、Widget、异常对象或任意业务对象。
 支持的 String/num 列表在属性创建时复制为不可变快照，调用方或某个 Sink 的修改不能污染其他 Sink。
+每个字符串最多 256 个字符、列表最多 32 项、单个事件最多 64 个属性，属性值保守总大小最多 4096
+字符，数值必须有限；黑名单和节流状态也有固定上限。超限会在构造阶段抛出 `ArgumentError`，便于尽早发现错误。
 撤销 Consent 或禁用分析会清空队列，并阻止当前事件继续投递到尚未开始的 Sink；立即重新授权也不会恢复旧事件。
 已经开始的 Sink 写入无法撤回，网络取消和供应商缓存清理由应用 Adapter 负责。
 
 `dispatch` 只负责入队，首个 Sink 也在后续事件循环启动。Composition Root 结束时应等待
 `analytics.close()`，它会停止接收并等待已接受的投递；不要在 Sink 自己的 `write` 中等待 `close()`，
-否则形成自身等待。异步分发不等于后台线程，Sink 仍应避免在 UI isolate 执行耗时同步计算。
+否则形成自身等待。对不可靠的应用 Sink 可以配置 `sinkWriteTimeout`；超时后该 Sink 会被隔离，
+`close()` 的等待有界，但 Dart Future 不可撤销，Sink 自身仍应支持取消。默认不配置超时，保持等待
+写入完成的语义。异步分发不等于后台线程，Sink 仍应避免在 UI isolate 执行耗时同步计算。
 任意 Button、列表项点击和滚动不由 Core 猜测；使用 `CCAnalyticsTarget` 包装现有回调，自动 UI 采集只能作为默认关闭的独立插件接入。
 需要滚动会话或曝光时，按需依赖 `ccrouter_analytics_flutter`，显式包裹
 `CCAnalyticsScrollable` 或 `CCAnalyticsExposureTarget`；曝光默认按可见比例、最小停留
@@ -504,7 +508,8 @@ Overlay 遮挡或像素透明度。Consent 拒绝、后台或暂时移出树会�
 采样、黑名单或节流拒绝不会消耗一次额度，也不会逐帧重试。
 
 分析 Dispatcher 还提供不含事件内容的压力指标：`acceptedEventCount`、`pendingEventCount`、
-`peakQueueDepth` 和 `droppedEventCount`。它们只用于性能/健康诊断，不是审计日志或事件回放接口；可用
+`peakQueueDepth`、`droppedEventCount`，以及慢 Sink 的 `timedOutSinkWriteCount`、
+`quarantinedSinkCount`。它们只用于性能/健康诊断，不是审计日志或事件回放接口；可用
 `packages/ccrouter_test/benchmark/analytics_dispatcher.dart` 在同一 SDK 和平台下输出入队延迟、队列压力
 与 RSS 趋势。
 

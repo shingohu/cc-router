@@ -1,7 +1,7 @@
 # CCRouter Analytics 与 Auto Track 设计
 
-> 文档状态：架构 1.x 当前契约。Provider-neutral 分发、显式 Target、Consent、黑名单与节流已
-> 实现；全局 Widget 猜测和供应商上传 Adapter 不属于当前框架承诺。
+> 文档状态：架构 1.x 当前契约。Provider-neutral 分发、显式 Target、Consent、黑名单与节流、
+> 有界属性和可选 Sink 超时已实现；全局 Widget 猜测和供应商上传 Adapter 不属于当前框架承诺。
 
 ## 1. 结论
 
@@ -95,6 +95,10 @@ Consent 拒绝、后台和 detach 不积累 dwell；grant/resume 后重新计满
 
 - 属性必须是 String、num、bool 或有限的 String/num 列表；列表在属性创建时复制为不可变
   快照，拒绝嵌套集合和任意对象，调用方和 Sink 均不能修改已验证值；
+- 每个 String 最多 256 个字符，每个列表最多 32 项，每个事件最多 64 个属性，属性值的
+  保守总大小最多 4096 个字符；数值必须是有限值。超限在创建属性或属性集合时同步抛出，
+  不进入业务回调之后的异步路径；黑名单最多 256 个 ID，节流状态最多保留 1024 个 ID，
+  超出时按最旧状态淘汰；
 - 禁止 Token、Cookie、完整 URI、Widget、Exception、业务对象和未脱敏账号信息；
 - 分析事件使用有界异步队列；队列满时允许丢弃非关键旧事件；首个 Sink 也在后续事件循环
   启动，分发前先建立单次调度状态，Sink 重入入队不会启动并行 drain；
@@ -107,6 +111,9 @@ Consent 拒绝、后台和 detach 不积累 dwell；grant/resume 后重新计满
   等待期间仍允许撤销授权以取消尚未开始的投递。Sink 不得在自己的 `write` 中等待
   同一 Dispatcher 的 `close()`，以免形成自身等待。异步调度不是 Isolate 隔离，应用 Sink
   仍须避免耗时同步工作；
+- 默认不设置 Sink 超时，因此 `close()` 继续等待应用 Sink 完成。配置
+  `sinkWriteTimeout` 后，单次写入超过期限的 Sink 会被隔离并跳过后续事件，关闭等待有界；
+  Dart Future 本身不可撤销，底层写入可能在超时后继续运行，因此应用仍需在 Sink 内实现取消。
 - 监听器、ScrollController、Timer 和 StreamSubscription 必须在 Host/页面销毁时释放；
 - 分析事件和框架错误诊断都必须支持分类开关和采样。
 
@@ -128,6 +135,7 @@ Core 不依赖 Firebase、ThinkingData、Sentry 或 Crashlytics。
 - [x] 增加事件类型、稳定 ID 和安全属性校验；
 - [x] 增加有界异步 Sink Dispatcher；
 - [x] 隔离 Sink 异常和队列压力；
+- [x] 增加属性/黑名单/节流状态上限、有限数值校验和可选 Sink 超时隔离；
 
 ### P1：Route 自动分析
 
@@ -174,6 +182,11 @@ P0、P1、P2 显式 UI 能力、P3 的独立包基础和 Consent/采样基础已
 点击、滑动、曝光、失败与 Foreign Popup 场景。Analytics Consent 的 deny/grant/revoke 演示和
 Foreign Popup 不误归因断言已闭环；应用层 Firebase 映射示例、黑名单和通用节流已提供，ThinkingData、
 通用 Widget 自动猜测、HTTP/Crash Adapter 尚未实现。
+
+Dispatcher 的稳定性边界已经收口：属性值、属性数量、黑名单和节流状态均有界；
+`sinkWriteTimeout` 是应用按需开启的慢 Sink 隔离开关，超时 Sink 会被跳过并通过
+`timedOutSinkWriteCount`/`quarantinedSinkCount` 提供无 payload 健康信号。默认不启用超时，
+保持已有 `close()` 等待语义。
 
 正式发布前的实施顺序、平台能力矩阵、全局 Widget 识别的实验边界、Firebase Adapter、性能/RSS/Heap
 基线，以及 Demo 的 Consent deny/grant/revoke 和 Foreign Popup 不误归因断言，统一见
