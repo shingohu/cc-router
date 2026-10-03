@@ -73,6 +73,13 @@ identity/value rather than their final identifier. Handler acceptance follows
 the Generator, including its existing `Future<void>?` support. An unresolved
 dependency value is not proof that the required Owner is missing.
 
+Annotation rules and their Quick Fixes verify the canonical CCRouter declaration
+library, including aliases exposed by a resolved public barrel. Application
+annotations with the same spelling do not trigger CCRouter diagnostics. An
+unrelated Dart error does not erase a proven identity. Without resolution, only
+an exact visible framework import with no local/ambiguous shadow is accepted;
+otherwise the rule waits for resolution or the generation gate.
+
 For concrete annotated Services, `ccrouter_service_disposable_missing` warns
 when a compatible instance `dispose()` is not connected to Scope's actual
 `CCDisposable`. Its Quick Fix adds only the unambiguously imported interface;

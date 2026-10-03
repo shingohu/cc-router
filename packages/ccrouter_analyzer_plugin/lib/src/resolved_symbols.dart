@@ -5,6 +5,96 @@ import 'package:analyzer/dart/element/type.dart';
 /// Internal shared symbol proof for diagnostics and source-preserving fixes.
 /// Uses the current resolved unit only; it owns no analysis sessions or caches.
 abstract final class CCRouterResolvedSymbols {
+  /// Canonical declaration libraries for supported framework annotations.
+  static const _annotationLibraries = <String, String>{
+    'CCRoute': 'route_annotation',
+    'CCRouteContract': 'route_annotation',
+    'CCRouteImplementation': 'route_annotation',
+    'CCService': 'service',
+    'CCServiceContract': 'service',
+    'CCCommandContract': 'messaging',
+    'CCCommandHandler': 'messaging',
+    'CCEventContract': 'messaging',
+    'CCEventSubscription': 'messaging',
+    'CCInitTask': 'initialization',
+    'CCComponentContribution': 'component',
+  };
+
+  /// Returns only a proven framework annotation identity, shared with fixes.
+  /// Resolved foreign declarations always win over spelling. An unresolved
+  /// buffer needs an exact public import and no visible competing namespace.
+  static String? annotationName(Annotation annotation) {
+    final element = annotation.element;
+    final type = annotation.elementAnnotation?.computeConstantValue()?.type;
+    final owner = element is ConstructorElement
+        ? element.enclosingElement
+        : type is InterfaceType
+        ? type.element
+        : null;
+    if (owner != null) {
+      final name = owner.name;
+      final file = _annotationLibraries[name];
+      return file != null &&
+              owner.library.uri.toString() ==
+                  'package:ccrouter_contracts/src/$file.dart'
+          ? name
+          : null;
+    }
+    if (element != null) return null;
+    final unit = annotation.thisOrAncestorOfType<CompilationUnit>();
+    if (unit == null) return null;
+    final name = annotation.name;
+    final (prefix, symbol) = switch (name) {
+      SimpleIdentifier n => (null, n.name),
+      PrefixedIdentifier n => (n.prefix.name, n.identifier.name),
+      _ => (null, ''),
+    };
+    final file = _annotationLibraries[symbol];
+    if (file == null) return null;
+    if (unit.declaredFragment != null) {
+      final resolved = references(unit, symbol)[name.toSource()];
+      return resolved is InterfaceElement &&
+              isFrameworkType(resolved.thisType, symbol, file)
+          ? symbol
+          : null;
+    }
+    if (unit.directives.any((d) => d is PartDirective || d is PartOfDirective))
+      return null;
+    for (final declaration in unit.declarations) {
+      final names = switch (declaration) {
+        TopLevelVariableDeclaration d => d.variables.variables.map(
+          (v) => v.name.lexeme,
+        ),
+        NamedCompilationUnitMember d => [d.name.lexeme],
+        ExtensionDeclaration d => [if (d.name != null) d.name!.lexeme],
+        _ => const <String>[],
+      };
+      if (names.contains(prefix ?? symbol)) return null;
+    }
+    var found = false;
+    for (final directive in unit.directives.whereType<ImportDirective>()) {
+      if (directive.prefix?.name != prefix) continue;
+      if (!directive.combinators.every(
+        (c) => switch (c) {
+          ShowCombinator c => c.shownNames.any((n) => n.name == symbol),
+          HideCombinator c => !c.hiddenNames.any((n) => n.name == symbol),
+        },
+      ))
+        continue;
+      if (directive.configurations.isNotEmpty ||
+          directive.deferredKeyword != null)
+        return null;
+      final uri = directive.uri.stringValue;
+      if (uri == 'package:ccrouter/ccrouter.dart' ||
+          uri == 'package:ccrouter_contracts/ccrouter_contracts.dart') {
+        found = true;
+      } else if (uri == null || !uri.startsWith('dart:')) {
+        return null;
+      }
+    }
+    return found ? symbol : null;
+  }
+
   /// Finds unambiguous references already visible in this library.
   /// Local declarations shadow unprefixed imports; reused prefixes are checked
   /// across all imports, including show/hide and transitive export namespaces.

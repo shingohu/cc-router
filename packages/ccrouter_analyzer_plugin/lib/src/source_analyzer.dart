@@ -8,6 +8,7 @@ import 'package:analyzer_plugin/protocol/protocol_common.dart';
 import 'package:ccrouter_analyzer_plugin/src/component_dependency_analyzer.dart';
 import 'package:ccrouter_analyzer_plugin/src/contract_owner_index.dart';
 import 'package:ccrouter_analyzer_plugin/src/service_lifecycle_analysis.dart';
+import 'resolved_symbols.dart';
 import 'package:path/path.dart' as path;
 import 'package:yaml/yaml.dart';
 
@@ -294,7 +295,7 @@ abstract final class CCRouterSourceAnalyzer {
   /// enables Metadata-proven cross-component dependency checks; omitting it
   /// keeps standalone single-file analysis available without Pub state.
   /// [resolvedUnit] must represent exactly [source]; the plugin checks current
-  /// overlay identity after resolution and declines incomplete semantic results.
+  /// overlay identity after resolution; each rule declines missing symbol proof.
   static List<CCRouterAnalyzerDiagnostic> analyze({
     required String source,
     required String filePath,
@@ -378,7 +379,7 @@ abstract final class CCRouterSourceAnalyzer {
     final sourceRelative = _relativeSourcePath(filePath, root);
     if (sourceRelative != null && sourceRelative.startsWith('lib/src/')) {
       for (final expectation in _generatedOutputExpectations(
-        parsed.unit,
+        unit,
         sourceRelative,
       )) {
         final missing = expectation.outputPaths
@@ -906,13 +907,9 @@ abstract final class CCRouterSourceAnalyzer {
     severity: AnalysisErrorSeverity.ERROR,
   );
 
-  /// Reads an annotation's unqualified source name.
-  static String? _annotationName(Annotation annotation) {
-    final name = annotation.name;
-    if (name is SimpleIdentifier) return name.name;
-    final source = name.toSource();
-    return source.substring(source.lastIndexOf('.') + 1);
-  }
+  /// Shares exact framework identity with generated-output and fix rules.
+  static String? _annotationName(Annotation annotation) =>
+      CCRouterResolvedSymbols.annotationName(annotation);
 
   /// Returns one named annotation argument without resolving workspace state.
   static Expression? _namedArgument(Annotation annotation, String name) {

@@ -3,6 +3,7 @@ import 'package:analyzer/dart/ast/ast.dart';
 import 'package:ccrouter_analyzer_plugin/src/component_dependency_analyzer.dart';
 import 'package:ccrouter_analyzer_plugin/src/contract_owner_index.dart';
 import 'package:ccrouter_analyzer_plugin/src/service_lifecycle_analysis.dart';
+import 'resolved_symbols.dart';
 
 /// One conservative source edit offered as an IDE Quick Fix.
 final class CCRouterSourceFix {
@@ -44,7 +45,7 @@ abstract final class CCRouterQuickFixes {
   /// [contractOwners] and [sourcePackage] are required only for a missing
   /// component-owner dependency. Without both, that diagnostic remains
   /// visible but does not offer a potentially incorrect edit.
-  /// [resolvedUnit] is a current, error-free analysis snapshot. It is required
+  /// [resolvedUnit] is a current analysis snapshot with per-symbol proofs. It is required
   /// for Service disposal fixes; no import or cleanup body is invented.
   static List<CCRouterSourceFix> compute({
     required String source,
@@ -291,11 +292,9 @@ abstract final class CCRouterQuickFixes {
     }
   }
 
-  /// Returns an annotation's unqualified name.
-  static String _annotationName(Annotation annotation) {
-    final source = annotation.name.toSource();
-    return source.substring(source.lastIndexOf('.') + 1);
-  }
+  /// Never offers an edit for a foreign same-named annotation.
+  static String? _annotationName(Annotation annotation) =>
+      CCRouterResolvedSymbols.annotationName(annotation);
 
   /// Computes a comma-aware deletion that preserves adjacent arguments.
   static (int, int)? _removalRange(

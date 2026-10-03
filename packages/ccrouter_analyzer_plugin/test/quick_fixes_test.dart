@@ -8,6 +8,7 @@ import 'package:test/test.dart';
 void main() {
   test('offers explicit alternatives for Route pattern conflicts', () {
     const source = '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 @CCRoute<void>(
   id: 'sample.route',
   pattern: CCPathPattern('/sample'),
@@ -38,6 +39,7 @@ class SamplePage {}
 
   test('offers explicit alternatives for InitTask identity conflicts', () {
     const source = '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 @CCInitTask(
   contract: startupTask,
   id: 'startup.task',
@@ -59,6 +61,7 @@ void initializeFeature() {}
 
   test('declines a deletion that would consume a source comment', () {
     const source = '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 @CCRoute<void>(
   id: 'sample.route',
   pattern: CCPathPattern('/sample'), // Keep this explanation.
@@ -77,6 +80,7 @@ class SamplePage {}
 
   test('does not offer guesses for non-conflict diagnostics', () {
     const source = '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 @CCServiceContract(id: 'Bad ID', alias: 'class')
 abstract interface class InvalidService {}
 ''';

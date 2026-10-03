@@ -19,6 +19,46 @@ void main() {
   });
   tearDown(() => root.deleteSync(recursive: true));
 
+  test('unresolved foreign hidden and ambiguous annotations are ignored', () {
+    for (final source in [
+      '@CCInitTask(id: "bad id", contract: 1) void start() {}',
+      "import 'package:other/other.dart';\n@CCInitTask() void start() {}",
+      "import 'package:ccrouter_contracts/ccrouter_contracts.dart' hide CCInitTask;\n@CCInitTask() void start() {}",
+      "import 'package:ccrouter_contracts/ccrouter_contracts.dart';\nclass CCInitTask { const CCInitTask(); }\n@CCInitTask() void start() {}",
+      "import 'package:ccrouter_contracts/ccrouter_contracts.dart';\nimport 'package:other/other.dart';\n@CCInitTask() void start() {}",
+      "import 'package:ccrouter_contracts/ccrouter_contracts.dart' if (dart.library.io) 'package:other/other.dart';\n@CCInitTask() void start() {}",
+    ]) {
+      expect(
+        CCRouterSourceAnalyzer.analyze(
+          source: source,
+          filePath: path.join(packageRoot, 'lib/src/foreign.dart'),
+          packageRoot: packageRoot,
+          packageName: 'sample_component',
+        ),
+        isEmpty,
+        reason: source,
+      );
+    }
+  });
+
+  test('unresolved exact prefixed framework imports still diagnose', () {
+    final diagnostics = CCRouterSourceAnalyzer.analyze(
+      source:
+          "import 'package:ccrouter_contracts/ccrouter_contracts.dart' as cc show CCInitTask;\n@cc.CCInitTask() void start() {}",
+      filePath: path.join(packageRoot, 'lib/src/init.dart'),
+      packageRoot: packageRoot,
+      packageName: 'sample_component',
+    );
+    expect(
+      diagnostics.map((d) => d.code),
+      contains('ccrouter_generated_output_missing'),
+    );
+    expect(
+      diagnostics.map((d) => d.code),
+      contains('ccrouter_annotation_arguments_conflict'),
+    );
+  });
+
   test('does not reject prefixed Future or unresolved return aliases', () {
     final diagnostics = CCRouterSourceAnalyzer.analyze(
       source: '''
@@ -57,10 +97,7 @@ Completion receiveAlias(Object event) async {}
 
   test('warns when a route output is missing', () {
     final source = '''
-class CCRoute<T> {
-  const CCRoute();
-}
-
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 @CCRoute<void>()
 class HomePage {}
 ''';
@@ -80,7 +117,8 @@ class HomePage {}
     _writeGenerated(packageRoot, 'route/home_page.route.g.dart');
     _writeGenerated(packageRoot, 'binding/home_page.route_binding.g.dart');
     final diagnostics = CCRouterSourceAnalyzer.analyze(
-      source: '@CCRoute<void>()\nclass HomePage {}',
+      source:
+          "import 'package:ccrouter_contracts/ccrouter_contracts.dart';\n@CCRoute<void>()\nclass HomePage {}",
       filePath: path.join(packageRoot, 'lib', 'src', 'home_page.dart'),
       packageRoot: packageRoot,
       packageName: 'sample_component',
@@ -156,6 +194,7 @@ class HomePage {}
   test('reports required InitTask without Contract or timeout', () {
     final diagnostics = CCRouterSourceAnalyzer.analyze(
       source: '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 @CCInitTask(
   id: 'startup.required',
   gate: CCInitTaskGate.appStarted,
@@ -180,6 +219,7 @@ Future<void> initializeRequired() async {}
   test('accepts a bounded required InitTask Contract Handler', () {
     final diagnostics = CCRouterSourceAnalyzer.analyze(
       source: '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 @CCInitTask(
   contract: startupRequired,
   gate: CCInitTaskGate.appStarted,
@@ -376,7 +416,8 @@ const consumerComponent = CCComponent(
   for (final generatedCase in generatedCases) {
     test('warns for missing ${generatedCase.label} output', () {
       final diagnostics = CCRouterSourceAnalyzer.analyze(
-        source: '${generatedCase.annotation}\n${generatedCase.declaration}\n',
+        source:
+            "import 'package:ccrouter_contracts/ccrouter_contracts.dart';\n${generatedCase.annotation}\n${generatedCase.declaration}\n",
         filePath: path.join(packageRoot, 'lib', 'src', 'capability.dart'),
         packageRoot: packageRoot,
         packageName: 'sample_component',
@@ -415,6 +456,7 @@ const consumerComponent = CCComponent(
     }
     final diagnostics = CCRouterSourceAnalyzer.analyze(
       source: '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 @CCRouteContract<void>()
 class RouteSchema {}
 @CCRouteImplementation(routeContract)
@@ -444,6 +486,7 @@ void initializeFeature() {}
   test('does not invent direct output for metadata-only Contracts', () {
     final diagnostics = CCRouterSourceAnalyzer.analyze(
       source: '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 @CCCommandContract()
 class SampleCommand {}
 @CCEventContract()
@@ -485,6 +528,7 @@ const startupTask = CCInitTaskContract(id: 'startup.task');
   test('reports non-public generic and method Handlers', () {
     final diagnostics = CCRouterSourceAnalyzer.analyze(
       source: '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 @CCCommandHandler()
 void _handleCommand<T>(T command) {}
 class Owner {
@@ -508,6 +552,7 @@ class Owner {
   test('reports mutually exclusive Route and InitTask arguments', () {
     final diagnostics = CCRouterSourceAnalyzer.analyze(
       source: '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 @CCRoute<void>(
   id: 'sample.route',
   pattern: CCPathPattern('/sample'),
@@ -538,6 +583,7 @@ void initializeFeature() {}
   test('reports missing InitTask identity after a complete annotation', () {
     final diagnostics = CCRouterSourceAnalyzer.analyze(
       source: '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 @CCInitTask(
   gate: CCInitTaskGate.appStarted,
   failurePolicy: CCInitTaskFailurePolicy.optional,
@@ -558,6 +604,7 @@ void initializeFeature() {}
   test('reports invalid literal IDs aliases Gates and timeouts', () {
     final diagnostics = CCRouterSourceAnalyzer.analyze(
       source: '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 @CCServiceContract(id: 'Bad ID', alias: 'class')
 abstract interface class InvalidService {}
 @CCInitTask(
@@ -587,9 +634,10 @@ void initializeFeature() {}
     );
   });
 
-  test('reports obvious Handler arity and return violations', () {
+  test('reports Handler arity and defers unresolved imported return types', () {
     final diagnostics = CCRouterSourceAnalyzer.analyze(
       source: '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 @CCCommandHandler()
 void handleCommand() {}
 @CCEventSubscription()
@@ -610,13 +658,14 @@ String initializeFeature([Object? context]) => '';
       diagnostics.where(
         (item) => item.code == 'ccrouter_handler_signature_invalid',
       ),
-      hasLength(4),
+      hasLength(2),
     );
   });
 
   test('does not guess non-literal identifiers aliases or timeouts', () {
     final diagnostics = CCRouterSourceAnalyzer.analyze(
       source: '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 @CCServiceContract(id: serviceId, alias: serviceAlias)
 abstract interface class DeferredService {}
 @CCInitTask(

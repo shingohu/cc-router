@@ -187,4 +187,7 @@ Demo Analyzer pin、推送提交或改变缓存策略。
   不扩大文件扫描范围、不创建 Analyzer Session；现有已读文件保留必要的命名空间边。
   Demo Network 的 Owner 解析涉及未索引 Dio import，预检不再宣称提前证明该 Owner，最终
   Builder 校验不变。新增两个原始误拒绝反例及 namespace 边界回归。
-- A01：待修复。
+- A01：注解规则、缺失生成物提示和参数 Quick Fix 共用声明身份校验；已解析外部同名声明
+  不再误报。保留与当前编辑文本一致的 resolved unit，即便另一个表达式存在 Dart 错误；
+  缺失语义时仅对明确框架导入作保守校验。已加入真实 Server 中 framework/foreign 注解
+  overlay 往返及无关 Dart error 的回归；旧测试占位声明替换为真实框架导入。

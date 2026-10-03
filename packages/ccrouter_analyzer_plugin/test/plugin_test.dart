@@ -29,6 +29,7 @@ void main() {
       path.join(root.path, 'pubspec.yaml'),
     ).writeAsStringSync('name: plugin_fix_test\n');
     const source = '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 @CCRoute<void>(
   id: 'sample.route',
   pattern: CCPathPattern('/sample'),
@@ -64,6 +65,7 @@ class SamplePage {}
       path.join(root.path, 'lib', 'src', 'sample_page.dart'),
     )..createSync(recursive: true);
     sourceFile.writeAsStringSync('''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 @CCRoute<void>(
   id: 'sample.route',
   pattern: CCPathPattern('/sample'),
@@ -77,6 +79,7 @@ class SamplePage {}
     await plugin.handleAnalysisUpdateContent(
       AnalysisUpdateContentParams({
         sourceFile.path: AddContentOverlay('''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 @CCRoute<void>(
   id: 'sample.route',
   pattern: CCPathPattern('/sample'),

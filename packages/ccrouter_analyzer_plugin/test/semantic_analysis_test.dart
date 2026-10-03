@@ -21,6 +21,40 @@ void main() {
   tearDown(() => fixture.dispose());
 
   test(
+    'foreign same-name annotations never produce framework diagnostics or fixes',
+    () async {
+      final result = await fixture.resolve('''
+class CCInitTask { const CCInitTask({String? id, Object? contract}); }
+class CCRoute<T> { const CCRoute({Object? pattern, Object? patterns}); }
+@CCInitTask(id: 'Bad ID', contract: 1)
+int _start(int a, int b) => 0;
+@CCRoute<void>(pattern: 1, patterns: 2)
+class Page {}
+''');
+      // Exercise generated-output checks as well as argument/signature rules.
+      final diagnostics = CCRouterSourceAnalyzer.analyze(
+        source: result.content,
+        filePath: path.join(fixture.root.path, 'lib/src/probe.dart'),
+        packageRoot: fixture.root.path,
+        packageName: 'consumer',
+        resolvedUnit: result.unit,
+      );
+      expect(diagnostics, isEmpty);
+      for (final name in ['CCInitTask', 'CCRoute']) {
+        expect(
+          CCRouterQuickFixes.compute(
+            source: result.content,
+            filePath: fixture.file,
+            offset: result.content.indexOf('@$name'),
+            resolvedUnit: result.unit,
+          ),
+          isEmpty,
+        );
+      }
+    },
+  );
+
+  test(
     'computed dependency values are deferred rather than guessed missing',
     () async {
       final result = await fixture.resolve(

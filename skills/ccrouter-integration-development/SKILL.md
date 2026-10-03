@@ -40,6 +40,9 @@ pre-escape business descriptions for generated Host DevTools Dart output.
 Dependency preflight follows proven Library import/export visibility. Same-Package
 unimported declarations do not establish ownership; conditional/part/unknown
 namespaces defer to the authoritative Builder instead of guessing.
+Analyzer diagnostics and annotation Quick Fixes require framework declaration
+identity. A foreign same-name annotation is ignored; unresolved ambiguous imports
+wait for semantic resolution rather than offering speculative edits.
 
 For generator, scaffolding, cleanup, source lookup, or deferred Contract
 migration work, also read

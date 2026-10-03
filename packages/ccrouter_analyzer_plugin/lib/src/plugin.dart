@@ -1,7 +1,6 @@
 import 'package:analyzer/dart/analysis/analysis_context.dart';
 import 'package:analyzer/dart/analysis/analysis_context_collection.dart';
 import 'package:analyzer/dart/ast/ast.dart';
-import 'package:analyzer/error/error.dart' show DiagnosticSeverity;
 import 'package:analyzer/file_system/file_system.dart';
 import 'package:analyzer/source/line_info.dart';
 import 'package:analyzer_plugin/plugin/plugin.dart';
@@ -200,16 +199,16 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
       'CCComponent',
       'CCInitTask',
       'CCEventSubscription',
+      'CCRoute',
+      'CCCommand',
+      'CCEventContract',
     ].any(source.contains))
       return null;
     try {
       final result = await getResolvedUnitResult(path);
-      if (result.content != source ||
-          result.diagnostics.any(
-            (error) =>
-                error.diagnosticCode.severity == DiagnosticSeverity.ERROR,
-          ))
-        return null;
+      // Errors elsewhere must not discard proven annotation/namespace identity.
+      // Each semantic rule still requires the exact elements it consumes.
+      if (result.content != source) return null;
       return result.unit;
     } on Object {
       return null;

@@ -20,6 +20,51 @@ bool _has(List<Map<String, dynamic>> errors, String code) =>
 
 void main() {
   test(
+    'real server clears foreign annotation diagnostics despite unrelated errors',
+    () async {
+      const framework = '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
+@CCInitTask(id: 'sample', gate: CCInitTaskGate.appStarted,
+  failurePolicy: CCInitTaskFailurePolicy.optional)
+void start() {}
+''';
+      const foreign = '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart' as framework;
+class CCInitTask { const CCInitTask({String? id, Object? contract}); }
+@CCInitTask(id: 'bad id', contract: 1)
+int _start(int a, int b) => 0;
+void broken() { missingFunction(); }
+''';
+      final server = await AnalysisServerSession.start({_file: framework});
+      addTearDown(server.close);
+      await server.waitFor(
+        _file,
+        (errors) => _has(errors, 'ccrouter_generated_output_missing'),
+      );
+      final revision = server.revisions[server.path(_file)]!;
+      await server.overlay(_file, foreign);
+      await server.waitFor(
+        _file,
+        (errors) =>
+            _has(errors, 'undefined_function') &&
+            !errors.any(
+              (e) =>
+                  (e['code'] as String).toLowerCase().startsWith('ccrouter_'),
+            ),
+        after: revision,
+      );
+      final restoredRevision = server.revisions[server.path(_file)]!;
+      await server.overlay(_file, framework);
+      await server.waitFor(
+        _file,
+        (errors) => _has(errors, 'ccrouter_generated_output_missing'),
+        after: restoredRevision,
+      );
+    },
+    timeout: const Timeout(Duration(minutes: 3)),
+  );
+
+  test(
     'real watcher refreshes consumers across workspace Contract packages',
     () async {
       const componentFile = 'lib/src/component.dart';
