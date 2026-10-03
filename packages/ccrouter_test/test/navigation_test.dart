@@ -41,6 +41,20 @@ final class RouteArgsCodec implements CCRouteCodec<RouteArgs> {
   );
 }
 
+final class RequiredExtraCodec implements CCRouteCodec<RouteArgs> {
+  const RequiredExtraCodec();
+  @override
+  RouteArgs decode(CCRouteCodecValues input) {
+    if (input.extra == null)
+      throw const CCRouteParameterError('Required Extra.');
+    return const RouteArgsCodec().decode(input);
+  }
+
+  @override
+  CCRouteCodecValues encode(RouteArgs value) =>
+      const RouteArgsCodec().encode(value);
+}
+
 final class MissingPathCodec implements CCRouteCodec<RouteArgs> {
   const MissingPathCodec();
 
@@ -355,12 +369,15 @@ final class UnidentifiedManagedPopAdapter
   final CCMemoryNavigationAdapter delegate = CCMemoryNavigationAdapter();
 
   @override
-  String get hostId => 'window.main';
+  String get hostId => activeHostId;
+
+  String activeHostId = 'window.main';
 
   @override
   CCNavigationAdapterCapabilities get capabilities =>
       const CCNavigationAdapterCapabilities(
         supportsManagedPopObservation: true,
+        supportsNestedNavigators: true,
       );
 
   @override
@@ -481,6 +498,426 @@ CCRouteDefinition<RouteArgs, String> pathRoute({
 );
 
 void main() {
+  test(
+    'shutdown isolates cancellation listener errors and consumes late interceptor errors',
+    () async {
+      final started = Completer<CCNavigationInterceptorContext>();
+      final release = Completer<CCNavigationInterceptorDecision>();
+      final adapter = CCMemoryNavigationAdapter();
+      final runtime = CCRouterRuntime.forTesting(
+        navigationAdapter: adapter,
+        globalInterceptors: [
+          CCGlobalNavigationInterceptor(
+            id: 'wait',
+            timeout: const Duration(seconds: 30),
+            interceptor: TestNavigationInterceptor('wait', (context) {
+              context.cancellation.addListener(
+                () => throw StateError('listener'),
+              );
+              started.complete(context);
+              return release.future;
+            }, []),
+          ),
+        ],
+        components: [
+          routeComponent(
+            'orders',
+            (registry) => registry.registerRoute(pathRoute()),
+          ),
+        ],
+      );
+      runtime.initialize();
+      final pushed = runtime.pushRoute(
+        const TestIntent<String>('orders.detail', RouteArgs('1')),
+      );
+      final context = await started.future;
+      final assertion = expectLater(
+        pushed,
+        throwsA(isA<CCRouteCancelledError>()),
+      );
+      await runtime.dispose();
+      await assertion;
+      expect(context.cancellation.isCancelled, isTrue);
+      release.completeError(StateError('late error'));
+      await Future<void>.delayed(Duration.zero);
+      expect(adapter.stack, isEmpty);
+    },
+  );
+
+  test(
+    'shutdown inside an interceptor prevents the next interceptor',
+    () async {
+      final calls = <String>[];
+      final adapter = CCMemoryNavigationAdapter();
+      late CCRouterRuntime runtime;
+      runtime = CCRouterRuntime.forTesting(
+        navigationAdapter: adapter,
+        globalInterceptors: [
+          CCGlobalNavigationInterceptor(
+            id: 'first',
+            interceptor: TestNavigationInterceptor('first', (_) {
+              unawaited(runtime.dispose());
+              return const CCNavigationProceed();
+            }, calls),
+          ),
+          CCGlobalNavigationInterceptor(
+            id: 'second',
+            interceptor: TestNavigationInterceptor('second', (_) {
+              return const CCNavigationProceed();
+            }, calls),
+          ),
+        ],
+        components: [
+          routeComponent(
+            'orders',
+            (registry) => registry.registerRoute(pathRoute()),
+          ),
+        ],
+      );
+      runtime.initialize();
+      await expectLater(
+        runtime.pushRoute(
+          const TestIntent<String>('orders.detail', RouteArgs('1')),
+        ),
+        throwsA(isA<CCRouteCancelledError>()),
+      );
+      await runtime.dispose();
+      expect(calls, ['first:orders.detail']);
+      expect(adapter.stack, isEmpty);
+    },
+  );
+
+  test('deferred result validation is preserved for both observers', () async {
+    var authorized = false;
+    final adapter = CCMemoryNavigationAdapter();
+    final runtime = CCRouterRuntime.forTesting(
+      navigationAdapter: adapter,
+      globalInterceptors: [
+        CCGlobalNavigationInterceptor(
+          id: 'auth',
+          interceptor: TestNavigationInterceptor(
+            'auth',
+            (_) => authorized
+                ? const CCNavigationProceed()
+                : const CCNavigationDefer(),
+            [],
+          ),
+        ),
+      ],
+      components: [
+        routeComponent(
+          'orders',
+          (registry) => registry.registerRoute(pathRoute()),
+        ),
+      ],
+    );
+    runtime.initialize();
+    final pushed = runtime.pushRoute(
+      const TestIntent<String>('orders.detail', RouteArgs('1')),
+    );
+    final pushedAssertion = expectLater(
+      pushed,
+      throwsA(isA<CCRouteResultTypeError>()),
+    );
+    await Future<void>.delayed(Duration.zero);
+    authorized = true;
+    final resumed = runtime.resumePendingNavigation(
+      runtime.pendingNavigations.single.navigationId,
+    );
+    final resumedAssertion = expectLater(
+      resumed,
+      throwsA(isA<CCRouteResultTypeError>()),
+    );
+    await Future<void>.delayed(Duration.zero);
+    runtime.popRoute(result: 42);
+    await Future.wait([pushedAssertion, resumedAssertion]);
+    expect(runtime.activeRouteEntries, isEmpty);
+    await runtime.dispose();
+  });
+
+  for (final dynamicUri in [false, true]) {
+    test(
+      'deferred ${dynamicUri ? 'URI' : 'typed'} keeps the original active Host and declared Outlet',
+      () async {
+        final adapter = UnidentifiedManagedPopAdapter();
+        var authorized = false;
+        final runtime = CCRouterRuntime.forTesting(
+          navigationAdapter: adapter,
+          globalInterceptors: [
+            CCGlobalNavigationInterceptor(
+              id: 'auth',
+              interceptor: TestNavigationInterceptor(
+                'auth',
+                (_) => authorized
+                    ? const CCNavigationProceed()
+                    : const CCNavigationDefer(),
+                [],
+              ),
+            ),
+          ],
+          components: [
+            routeComponent(
+              'orders',
+              (registry) => registry.registerRoute(
+                pathRoute(
+                  placement: const CCRoutePlacement(navigatorOutlet: 'detail'),
+                ),
+              ),
+            ),
+          ],
+        );
+        runtime.initialize();
+        final opened = dynamicUri
+            ? runtime.openRoute(
+                Uri.parse('/orders/42'),
+                mode: CCDeepLinkOpenMode.go,
+              )
+            : runtime.goRoute<void>(
+                const TestIntent<void>('orders.detail', RouteArgs('42')),
+              );
+        await Future<void>.delayed(Duration.zero);
+        final id = runtime.pendingNavigations.single.navigationId;
+        adapter.activeHostId = 'window.other';
+        authorized = true;
+        await runtime.resumePendingNavigation(id);
+        await opened;
+        expect(adapter.delegate.currentRequest?.hostId, 'window.main');
+        expect(
+          adapter.delegate.currentRequest?.placement.navigatorOutlet,
+          'detail',
+        );
+        expect(adapter.delegate.currentRequest?.navigationId, id);
+        expect(
+          (adapter.delegate.currentRequest?.arguments as RouteArgs).value,
+          '42',
+        );
+        await runtime.dispose();
+      },
+    );
+  }
+
+  test(
+    'resume redirect and repeated defer preserve call-site placement and typed Extra',
+    () async {
+      var stage = 0;
+      final payload = Object();
+      final redirectedArgs = RouteArgs('7', payload: payload);
+      final adapter = CCMemoryNavigationAdapter();
+      final runtime = CCRouterRuntime.forTesting(
+        navigationAdapter: adapter,
+        globalInterceptors: [
+          CCGlobalNavigationInterceptor(
+            id: 'auth',
+            interceptor: TestNavigationInterceptor('auth', (context) {
+              if (stage == 0) return const CCNavigationDefer();
+              if (context.request.routeId == 'orders.detail') {
+                return CCNavigationRedirect.toIntent(
+                  TestIntent<void>('orders.next', redirectedArgs),
+                );
+              }
+              return stage == 1
+                  ? const CCNavigationDefer()
+                  : const CCNavigationProceed();
+            }, []),
+          ),
+        ],
+        components: [
+          routeComponent('orders', (registry) {
+            registry.registerRoute(pathRoute());
+            registry.registerRoute(
+              pathRoute(routeId: 'orders.next', path: '/next/:value'),
+            );
+          }),
+        ],
+      );
+      runtime.initialize();
+      final opened = runtime.goRoute<void>(
+        const TestIntent<void>('orders.detail', RouteArgs('1')),
+        placementOverride: const CCRoutePlacement(
+          hostId: 'secondary',
+          navigatorOutlet: 'detail',
+        ),
+      );
+      await Future<void>.delayed(Duration.zero);
+      final id = runtime.pendingNavigations.single.navigationId;
+      stage = 1;
+      final firstResume = runtime.resumePendingNavigation(id);
+      await Future<void>.delayed(Duration.zero);
+      expect(runtime.pendingNavigations.single.navigationId, id);
+      stage = 2;
+      await runtime.resumePendingNavigation(id);
+      await firstResume;
+      await opened;
+      expect(adapter.currentRequest?.routeId, 'orders.next');
+      expect(adapter.currentRequest?.arguments, same(redirectedArgs));
+      expect(adapter.currentRequest?.extra, same(payload));
+      expect(adapter.currentRequest?.hostId, 'secondary');
+      expect(adapter.currentRequest?.placement.navigatorOutlet, 'detail');
+      expect(runtime.pendingNavigations, isEmpty);
+      await runtime.dispose();
+    },
+  );
+
+  for (final requiredExtra in [false, true]) {
+    test(
+      'deferred typed navigation preserves arguments and placement ($requiredExtra)',
+      () async {
+        var authorized = false;
+        final adapter = CCMemoryNavigationAdapter();
+        final runtime = CCRouterRuntime.forTesting(
+          navigationAdapter: adapter,
+          globalInterceptors: [
+            CCGlobalNavigationInterceptor(
+              id: 'auth',
+              interceptor: TestNavigationInterceptor(
+                'auth',
+                (_) => authorized
+                    ? const CCNavigationProceed()
+                    : const CCNavigationDefer(),
+                [],
+              ),
+            ),
+          ],
+          components: [
+            routeComponent(
+              'orders',
+              (registry) => registry.registerRoute(
+                CCRouteDefinition<RouteArgs, String>(
+                  routeId: 'orders.detail',
+                  patterns: [CCPathPattern('/orders/:value', primary: true)],
+                  codec: requiredExtra
+                      ? const RequiredExtraCodec()
+                      : const RouteArgsCodec(),
+                ),
+              ),
+            ),
+          ],
+        );
+        runtime.initialize();
+        final payload = Object();
+        final args = RouteArgs('42', payload: payload);
+        final pushed = runtime.pushRoute(
+          TestIntent<String>('orders.detail', args),
+          placementOverride: const CCRoutePlacement(
+            hostId: 'secondary',
+            navigatorOutlet: 'detail',
+          ),
+        );
+        // Observe both Futures even when a pre-dispatch resume check fails.
+        unawaited(
+          pushed.then<void>((_) {}, onError: (Object _, StackTrace __) {}),
+        );
+        await Future<void>.delayed(Duration.zero);
+        authorized = true;
+        final resumed = runtime.resumePendingNavigation(
+          runtime.pendingNavigations.single.navigationId,
+        );
+        unawaited(
+          resumed.then<void>((_) {}, onError: (Object _, StackTrace __) {}),
+        );
+        await Future<void>.delayed(Duration.zero);
+        expect(adapter.currentRequest?.arguments, same(args));
+        expect(adapter.currentRequest?.extra, same(payload));
+        expect(adapter.currentRequest?.hostId, 'secondary');
+        expect(adapter.currentRequest?.placement.navigatorOutlet, 'detail');
+        runtime.popRoute(result: 'done');
+        expect(await resumed, 'done');
+        expect(await pushed, 'done');
+        await runtime.dispose();
+      },
+    );
+  }
+
+  for (final lateDecision in <CCNavigationInterceptorDecision>[
+    const CCNavigationProceed(),
+    const CCNavigationDefer(),
+    const CCNavigationRedirect.toIntent(
+      TestIntent<void>('orders.detail', RouteArgs('2')),
+    ),
+  ]) {
+    test('shutdown cancels interception before late $lateDecision', () async {
+      final started = Completer<CCNavigationInterceptorContext>();
+      final release = Completer<CCNavigationInterceptorDecision>();
+      final adapter = CCMemoryNavigationAdapter();
+      var recoveryCalls = 0;
+      final runtime = CCRouterRuntime.forTesting(
+        navigationAdapter: adapter,
+        navigationFailurePolicy: TestNavigationFailurePolicy((_) {
+          recoveryCalls++;
+          return const CCNavigationFailurePropagate();
+        }),
+        globalInterceptors: [
+          CCGlobalNavigationInterceptor(
+            id: 'wait',
+            interceptor: TestNavigationInterceptor('wait', (context) {
+              started.complete(context);
+              return release.future;
+            }, []),
+          ),
+        ],
+        components: [
+          routeComponent(
+            'orders',
+            (registry) => registry.registerRoute(pathRoute()),
+          ),
+        ],
+      );
+      runtime.initialize();
+      final pushed = runtime.pushRoute(
+        const TestIntent<String>('orders.detail', RouteArgs('1')),
+      );
+      final context = await started.future;
+      final assertion = expectLater(
+        pushed.timeout(const Duration(seconds: 1)),
+        throwsA(isA<CCRouteCancelledError>()),
+      );
+      await runtime.dispose();
+      await assertion;
+      expect(context.cancellation.isCancelled, isTrue);
+      release.complete(lateDecision);
+      await Future<void>.delayed(Duration.zero);
+      expect(adapter.stack, isEmpty);
+      expect(runtime.pendingNavigations, isEmpty);
+      expect(runtime.activeRouteEntries, isEmpty);
+      expect(recoveryCalls, 0);
+    });
+  }
+
+  test('shutdown cancels a waiting failure policy', () async {
+    final started = Completer<void>();
+    final release = Completer<CCNavigationFailureDecision>();
+    final adapter = CCMemoryNavigationAdapter();
+    final runtime = CCRouterRuntime.forTesting(
+      navigationAdapter: adapter,
+      navigationFailurePolicy: TestNavigationFailurePolicy((_) {
+        started.complete();
+        return release.future;
+      }),
+      components: [
+        routeComponent(
+          'orders',
+          (registry) => registry.registerRoute(pathRoute()),
+        ),
+      ],
+    );
+    runtime.initialize();
+    final pushed = runtime.openRoute(Uri.parse('/missing'));
+    await started.future;
+    final assertion = expectLater(
+      pushed.timeout(const Duration(seconds: 1)),
+      throwsA(isA<CCRouteCancelledError>()),
+    );
+    await runtime.dispose();
+    await assertion;
+    release.complete(
+      const CCNavigationFailureRedirect.toIntent(
+        TestIntent<void>('orders.detail', RouteArgs('2')),
+      ),
+    );
+    await Future<void>.delayed(Duration.zero);
+    expect(adapter.stack, isEmpty);
+  });
+
   test(
     'call-site placement overrides only a default route placement',
     () async {

@@ -704,6 +704,9 @@ cancel    终止导航，返回标准取消原因
 
 - 注解和生成器自动生成 `interceptorIds`，减少手工维护。
 - 拦截器执行使用真实 Deadline/Timeout，并以专用错误报告超时和执行异常。
+- Runtime shutdown 关联正在执行的 Interceptor 取消信号，并结束 Interceptor/Failure Policy
+  等待，返回 `CCRouteCancelledError`；不再启动恢复导航。晚到结果/错误被消费，不继续分发。
+  每次 await 后检查关闭状态；终态移除监听并取消 Deadline Timer。业务 Future 仍需合作取消。
 - `CCNavigationDefer` 恢复时保留原始操作、目标和 RouteEntry 提交语义。
 
 可选后续增强：
@@ -794,13 +797,18 @@ hostId + navigatorOutlet + operation + routeId + normalizedUri
 
 待恢复导航至少保留：
 
-- Runtime 内部保存原始 Typed Intent 解码结果或动态 URI；对外只提供不含 Typed 参数和 `Extra` 的安全快照。
+- Runtime 内部保存原始 Typed arguments 或动态 URI；对外只提供不含 Typed 参数和 `Extra` 的安全快照。
 - 原始 `navigationId`、`origin`、`source` 和目标组件。
 - 内部导航需要保留的 `Extra`。
 - 原始操作类型和结果完成通道。
+- 原请求解析出的具体 Host、调用级 Outlet 和返回类型校验；恢复不跟随新的 active Host。
 - 超时、Session 和 Runtime 生命周期状态。
 
 恢复流程必须重新执行路由解析、参数校验和完整拦截器链，不能直接绕过策略进入页面。登录取消、恢复失败、Session 关闭、超时和 Runtime dispose 都必须清理待恢复导航；外部 Deep Link 的回跳目标还必须经过 Host 和 Deep Link 安全校验。
+Typed 请求重新通过原 Route Codec 的 encode 校验并保留 arguments/Extra 身份，不用 URI decode
+丢弃进程内参数；动态请求重新匹配和 decode，不引入额外的 Extra 通道。恢复后的 redirect
+继承已固定的调用级定位，目标显式声明的 placement 仍优先。再次 Defer 保留同一 navigationId
+和原结果通道，并重新建立本次期限。
 
 该能力用于登录、权限提升、首次引导和其他需要用户完成前置流程的场景。简单应用可以继续手动传递 `returnTo`，但不能将其视为跨组件 Typed Intent 和返回值的完整替代方案。
 

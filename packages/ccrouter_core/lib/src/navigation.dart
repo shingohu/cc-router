@@ -486,18 +486,20 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
       );
       onAttempt?.call(request.routeId);
       _emitAspectFound(request);
-      if (!_hasInterceptors(request.routeId)) {
-        final entry = _createRouteEntry(request);
-        return _dispatchRequest(
-          request,
-          () => action(request),
-          entry: entry,
-          commitEntry: commitEntry,
-          validateResult: validateResult,
-        );
-      }
       var adapterDispatchStarted = false;
       try {
+        _ensureNavigationAlive(cancellation);
+        if (!_hasInterceptors(request.routeId)) {
+          adapterDispatchStarted = true;
+          final entry = _createRouteEntry(request);
+          return _dispatchRequest(
+            request,
+            () => action(request),
+            entry: entry,
+            commitEntry: commitEntry,
+            validateResult: validateResult,
+          );
+        }
         final interceptClock = Stopwatch()..start();
         late final CCNavigationInterceptorDecision decision;
         try {
@@ -510,6 +512,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
           interceptClock.stop();
           _recordAspectIntercept(request.navigationId, interceptClock.elapsed);
         }
+        _ensureNavigationAlive(cancellation);
         switch (decision) {
           case CCNavigationProceed():
             adapterDispatchStarted = true;
@@ -533,6 +536,8 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
               timeout: timeout,
               action: action,
               commitEntry: commitEntry,
+              placementOverride: placementOverride,
+              validateResult: validateResult,
             );
           case CCNavigationCancel(:final code):
             throw CCRouteCancelledError(code);
@@ -630,6 +635,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
         cancellation: cancellation,
         redirectDepth: redirectDepth,
       );
+      _ensureNavigationAlive(cancellation);
       if (decision is! CCNavigationProceed) return decision;
     }
     final route = _routeRegistry.routeDefinition(request.routeId);
@@ -643,6 +649,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
         cancellation: cancellation,
         redirectDepth: redirectDepth,
       );
+      _ensureNavigationAlive(cancellation);
       if (decision is! CCNavigationProceed) return decision;
     }
     return const CCNavigationProceed();
@@ -665,20 +672,15 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
       deadline: deadline,
     );
     try {
-      var pending = _runAsyncNavigationDecisionCallback(
+      return await _awaitNavigationDecision(
         () => interceptor.intercept(context),
+        cancellation: cancellation,
+        timeout: timeout,
+        timeoutError: CCNavigationInterceptorTimeoutError(id),
       );
-      if (timeout != null) {
-        pending = pending.timeout(
-          timeout,
-          onTimeout: () {
-            cancellation.cancel();
-            throw CCNavigationInterceptorTimeoutError(id);
-          },
-        );
-      }
-      return await pending;
     } on CCNavigationInterceptorTimeoutError {
+      rethrow;
+    } on CCRouteCancelledError {
       rethrow;
     } catch (error) {
       throw CCNavigationInterceptorError(id, error.runtimeType.toString());

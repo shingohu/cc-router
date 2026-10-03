@@ -445,6 +445,222 @@ void main() {
     );
   });
 
+  test(
+    'independent readiness roots reject a shared dependency cycle',
+    () async {
+      final aStarted = Completer<void>();
+      final bStarted = Completer<void>();
+      runtime.registerService(
+        CCServiceProvider<ReadyA>(
+          factory: (_) => ReadyA(),
+          initializer: (_, _) async {
+            aStarted.complete();
+            await bStarted.future;
+            await runtime.serviceAsync<ReadyB>();
+          },
+        ),
+      );
+      runtime.registerService(
+        CCServiceProvider<ReadyB>(
+          factory: (_) => ReadyB(),
+          initializer: (_, _) async {
+            bStarted.complete();
+            await aStarted.future;
+            await runtime.serviceAsync<ReadyA>();
+          },
+        ),
+      );
+      runtime.initialize();
+      final a = runtime.serviceAsync<ReadyA>();
+      final b = runtime.serviceAsync<ReadyB>();
+      await Future.wait([
+        expectLater(
+          a.timeout(const Duration(seconds: 1)),
+          throwsA(isA<CCCircularServiceDependencyError>()),
+        ),
+        expectLater(
+          b.timeout(const Duration(seconds: 1)),
+          throwsA(isA<CCCircularServiceDependencyError>()),
+        ),
+      ]);
+      await expectLater(
+        runtime.serviceAsync<ReadyA>(),
+        throwsA(isA<CCCircularServiceDependencyError>()),
+      );
+    },
+  );
+
+  test(
+    'shared readiness DAG permits overlapping waits without a cycle',
+    () async {
+      final release = Completer<void>();
+      var initializations = 0;
+      runtime.registerService(
+        CCServiceProvider<ReadyB>(
+          factory: (_) => ReadyB(),
+          initializer: (_, _) {
+            initializations++;
+            return release.future;
+          },
+        ),
+      );
+      runtime.registerService(
+        CCServiceProvider<ReadyA>(
+          factory: (_) => ReadyA(),
+          initializer: (_, _) async {
+            await Future.wait([
+              runtime.serviceAsync<ReadyB>(),
+              runtime.serviceAsync<ReadyB>(),
+            ]);
+          },
+        ),
+      );
+      runtime.initialize();
+      final a = runtime.serviceAsync<ReadyA>();
+      final b = runtime.serviceAsync<ReadyB>();
+      release.complete();
+      await a;
+      expect(await b, same(runtime.service<ReadyB>()));
+      expect(initializations, 1);
+    },
+  );
+
+  test(
+    'readiness identities distinguish identical providers in other runtimes',
+    () async {
+      final other = CCRouterRuntime.forTesting();
+      addTearDown(other.dispose);
+      other.registerService(
+        CCServiceProvider<ReadyA>(
+          factory: (_) => ReadyA(),
+          initializer: (_, _) async {},
+        ),
+      );
+      other.initialize();
+      runtime.registerService(
+        CCServiceProvider<ReadyA>(
+          factory: (_) => ReadyA(),
+          initializer: (_, _) async {
+            await other.serviceAsync<ReadyA>();
+          },
+        ),
+      );
+      runtime.initialize();
+      expect(await runtime.serviceAsync<ReadyA>(), isA<ReadyA>());
+    },
+  );
+
+  test(
+    'three concurrent keyed Session roots fail once and a new Session starts clean',
+    () async {
+      var cyclic = true;
+      final started = List.generate(3, (_) => Completer<void>());
+      final created = <Counter>[];
+      for (var i = 0; i < 3; i++) {
+        runtime.registerService(
+          CCServiceProvider<Counter>(
+            key: CCServiceKey('key$i'),
+            scope: CCServiceScope.session,
+            factory: (_) {
+              final value = Counter('$i');
+              created.add(value);
+              return value;
+            },
+            initializer: (_, _) async {
+              if (!cyclic) return;
+              started[i].complete();
+              await Future.wait(started.map((item) => item.future));
+              await runtime.serviceAsync<Counter>(
+                key: CCServiceKey('key${(i + 1) % 3}'),
+              );
+            },
+          ),
+        );
+      }
+      runtime.initialize();
+      runtime.openSession(accountId: 'one');
+      await Future.wait(
+        List.generate(
+          3,
+          (i) => expectLater(
+            runtime
+                .serviceAsync<Counter>(key: CCServiceKey('key$i'))
+                .timeout(const Duration(seconds: 1)),
+            throwsA(isA<CCCircularServiceDependencyError>()),
+          ),
+        ),
+      );
+      await runtime.closeSession();
+      expect(created.every((value) => value.disposed), isTrue);
+      cyclic = false;
+      runtime.openSession(accountId: 'two');
+      expect((await runtime.servicesAsync<Counter>()).length, 3);
+    },
+  );
+
+  test(
+    'new-instance readiness still rejects recursive initialization',
+    () async {
+      runtime.registerService(
+        CCServiceProvider<ReadyA>(
+          creationPolicy: CCServiceCreationPolicy.newInstance,
+          factory: (_) => ReadyA(),
+          initializer: (_, _) async {
+            await runtime.serviceAsync<ReadyA>();
+          },
+        ),
+      );
+      runtime.initialize();
+      await expectLater(
+        runtime.serviceAsync<ReadyA>(),
+        throwsA(isA<CCCircularServiceDependencyError>()),
+      );
+    },
+  );
+
+  test(
+    'timed-out dependency wait removes its edge without poisoning the singleton',
+    () async {
+      final bStarted = Completer<void>();
+      final aTimedOut = Completer<void>();
+      final finishA = Completer<void>();
+      final bWaitsA = Completer<void>();
+      runtime.registerService(
+        CCServiceProvider<ReadyA>(
+          factory: (_) => ReadyA(),
+          initializer: (_, _) async {
+            await bStarted.future;
+            await expectLater(
+              runtime.serviceAsync<ReadyB>(
+                timeout: const Duration(milliseconds: 5),
+              ),
+              throwsA(isA<CCInvocationTimeoutError>()),
+            );
+            aTimedOut.complete();
+            await finishA.future;
+          },
+        ),
+      );
+      runtime.registerService(
+        CCServiceProvider<ReadyB>(
+          factory: (_) => ReadyB(),
+          initializer: (_, _) async {
+            bStarted.complete();
+            await aTimedOut.future;
+            bWaitsA.complete();
+            await runtime.serviceAsync<ReadyA>();
+          },
+        ),
+      );
+      runtime.initialize();
+      final a = runtime.serviceAsync<ReadyA>();
+      final b = runtime.serviceAsync<ReadyB>();
+      await bWaitsA.future;
+      finishA.complete();
+      await Future.wait([a, b]);
+    },
+  );
+
   test('Session close cancels pending Service readiness', () async {
     final pending = Completer<void>();
     final started = Completer<CCInvocationContext>();

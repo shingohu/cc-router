@@ -1,16 +1,109 @@
 part of 'runtime.dart';
 
-/// Isolated single-flight state for one singleton Service initializer.
+/// Isolated state for one Service initializer and its active dependency waits.
 ///
 /// A pending Future retains this small record rather than its owning Scope, so
 /// an initializer that ignores cooperative cancellation cannot by itself keep
-/// every Scope-owned instance reachable after the Scope clears its map.
+/// every Scope-owned instance reachable after the Scope clears its map. A
+/// singleton shares this record; new-instance providers allocate a fresh one.
 final class _ServiceReadinessRecord {
+  /// Completion installed before initialization or dependency traversal starts.
+  final Completer<void> _completion = Completer<void>();
+
   /// Readiness operation shared by concurrent callers.
-  late final Future<void> future;
+  Future<void> get future => _completion.future;
 
   /// Whether the operation completed successfully before Scope cancellation.
   bool ready = false;
+
+  /// Whether this initializer still participates in active readiness waits.
+  bool active = true;
+
+  /// Counted edges preserve overlapping resolutions of the same dependency.
+  final Map<_ServiceReadinessRecord, int> _dependencies = {};
+
+  /// Starts initialization after its Future and incoming wait edge are installed.
+  void start(
+    Future<void> Function() initialize,
+    CCCancellationToken token,
+    String scopeId,
+  ) {
+    final completion = _completion;
+    void deactivate() {
+      active = false;
+      _dependencies.clear();
+    }
+
+    final removeCancellation = token.addListener(deactivate);
+    void finish() {
+      deactivate();
+      removeCancellation();
+    }
+
+    unawaited(
+      Future<void>.sync(initialize).then<void>(
+        (_) {
+          finish();
+          if (token.isCancelled) {
+            completion.completeError(CCScopeClosedError(scopeId));
+          } else {
+            ready = true;
+            completion.complete();
+          }
+        },
+        onError: (Object error, StackTrace stack) {
+          finish();
+          completion.completeError(error, stack);
+        },
+      ),
+    );
+  }
+
+  /// Waits through a temporary edge, rejecting cycles between independent roots.
+  Future<void> waitFor(
+    _ServiceReadinessRecord? owner,
+    String identity,
+    CCCancellationToken waitCancellation,
+  ) async {
+    if (owner == null || !owner.active || !active) return future;
+    if (_reaches(owner, {})) {
+      throw CCCircularServiceDependencyError(identity);
+    }
+    owner._dependencies.update(this, (count) => count + 1, ifAbsent: () => 1);
+    var linked = true;
+    void unlink() {
+      if (!linked) return;
+      linked = false;
+      final count = owner._dependencies[this];
+      if (count == 1) {
+        owner._dependencies.remove(this);
+      } else if (count != null) {
+        owner._dependencies[this] = count - 1;
+      }
+    }
+
+    final cancelled = Completer<void>();
+    final remove = waitCancellation.addListener(() {
+      unlink();
+      cancelled.completeError(const CCInvocationCancelledError());
+    });
+    try {
+      await Future.any([future, cancelled.future]);
+    } finally {
+      unlink();
+      remove();
+    }
+  }
+
+  /// Traverses only live initializer edges; completed records cannot form cycles.
+  bool _reaches(
+    _ServiceReadinessRecord target,
+    Set<_ServiceReadinessRecord> visited,
+  ) {
+    if (!active || !visited.add(this)) return false;
+    if (identical(this, target)) return true;
+    return _dependencies.keys.any((next) => next._reaches(target, visited));
+  }
 }
 
 /// Internal lifecycle state of an instance-owning Scope.
@@ -114,20 +207,20 @@ final class CCScope {
   /// externally visible side effects; retry belongs inside the initializer.
   Future<void> ensureServiceReady(
     Object key,
-    Future<void> Function() initialize,
-  ) {
+    Future<void> Function(_ServiceReadinessRecord record) initialize, {
+    required _ServiceReadinessRecord? owner,
+    required String identity,
+    required CCCancellationToken waitCancellation,
+  }) {
     _ensureActive();
     final existing = _serviceReadiness[key];
-    if (existing != null) return existing.future;
+    if (existing != null)
+      return existing.waitFor(owner, identity, waitCancellation);
     final record = _ServiceReadinessRecord();
-    final cancellationSignal = cancellation;
-    final scopeId = id;
-    record.future = Future<void>.sync(initialize).then((_) {
-      if (cancellationSignal.isCancelled) throw CCScopeClosedError(scopeId);
-      record.ready = true;
-    });
     _serviceReadiness[key] = record;
-    return record.future;
+    final waiting = record.waitFor(owner, identity, waitCancellation);
+    record.start(() => initialize(record), cancellation, id);
+    return waiting;
   }
 
   /// Cancels owned work and disposes instances in reverse construction order.

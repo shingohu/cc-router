@@ -6,10 +6,10 @@
 - 基线：`769587b`。审查开始时的 Path 指纹修复、拓扑基准与文档改动，结束时已包含在该提交中。
 - 范围：Core/Contracts、Flutter Facade、GoRouter、五类能力生成器与 CLI、Analyzer、Analytics、
   DevTools、Demo 接入模式以及面向集成者的 Integration/CLI Skill。
-- 状态：审查完成；后续已按授权修复 F01/F02、F03/F04/F09 与 F05/F10/F11，验证记录见第 8–10 节。
+- 状态：审查完成；后续已按授权修复 F01–F11，验证记录见第 8–11 节。
   其余条目未实施。
 - 审查结论：现有测试基线通过，但不能认定框架没有严重缺陷或生成器绝对准确。原确认
-  5 项 P1、13 项 P2，其中 1 项 P2 属于 Demo；上述修复后剩余 0 项已确认 P1、10 项 P2。
+  5 项 P1、13 项 P2，其中 1 项 P2 属于 Demo；上述修复后剩余 0 项已确认 P1、7 项 P2。
   优先修复已有能力的组合边界，再扩展开发体验能力。
 
 P1 表示优先处理的业务结果、清理、授权或生成准确性风险；P2 表示特定合法输入或
@@ -144,6 +144,9 @@ Analyzer 测试在 `packages/ccrouter_analyzer_plugin/` 内执行 `fvm dart test
 
 ### F06（P2）：异步 Singleton 并发根调用相互等待，循环检测失效
 
+- 状态：已修复。Scope Singleton readiness 节点记录活跃等待边，在回调前发布节点与
+  Future；独立并发根的环也会失败。等待者取消/超时移除自己的边，不污染共享初始化。
+
 [runtime_host.dart](../packages/ccrouter_core/lib/src/runtime_host.dart) 第 2147 行只检查当前
 Zone 祖先链；[scope.dart](../packages/ccrouter_core/lib/src/scope.dart) 第 120 行直接共享已存在
 的 readiness Future。两个独立请求先同时启动 A/B initializer，随后 A await B、B await A，
@@ -153,6 +156,9 @@ Zone 祖先链；[scope.dart](../packages/ccrouter_core/lib/src/scope.dart) 第 
 跨 Scope、失败清理与超时测试。仅给调用者加 timeout 不会解除共享 readiness 的循环。
 
 ### F07（P2）：shutdown 没有取消正在等待的导航 Interceptor
+
+- 状态：已修复。Interceptor 和 Failure Policy 等待关联 App 取消；结束等待、清除 Timer
+  和监听，并在每次 await 衔接处检查关闭状态，阻止晚到 proceed/redirect/defer 和失败恢复。
 
 [navigation.dart](../packages/ccrouter_core/lib/src/navigation.dart) 第 475、652 行使用独立
 Token，并仅等待 Interceptor 本身或 timeout。它没有关联 Runtime 取消；shutdown 只取消
@@ -166,6 +172,9 @@ Token，并仅等待 Interceptor 本身或 timeout。它没有关联 Runtime 取
 也应在修复阶段逐项验证。
 
 ### F08（P2）：Defer 恢复没有保留完整导航上下文
+
+- 状态：已修复。Typed 请求重新 encode 校验并保留对象，动态 URI 重新匹配/decode；
+  固定原具体 Host，保留调用级 Outlet、原操作与结果校验，并传递到恢复后的重定向及再次 Defer。
 
 [navigation_pending.dart](../packages/ccrouter_core/lib/src/navigation_pending.dart) 第 152 行
 恢复时先 `prepareUri`，没有传入调用级 placement 或 Extra；第 167 行使用声明默认 placement，
@@ -317,7 +326,7 @@ dependencies 分别表达组件关系和实际消费，可用可靠 Quick Fix �
 
 ## 6. 核心价值逐项回归
 
-下表保留原始审查时的判断；后续修复及验证范围见第 8–10 节，不据此把已修项再次列为待办。
+下表保留原始审查时的判断；后续修复及验证范围见第 8–11 节，不据此把已修项再次列为待办。
 
 | # | 核心价值 | 本轮判断 | 证据与待完成项 |
 | --- | --- | --- | --- |
@@ -340,7 +349,7 @@ dependencies 分别表达组件关系和实际消费，可用可靠 Quick Fix �
 
 ## 7. 推荐实施顺序与完成定义
 
-F01/F02、F03/F04/F09 与 F05/F10/F11 已完成实现和回归；后续从第 4 项继续。每个独立缺陷先增加失败用例，再修复、回归，
+F01–F11 已完成实现和回归；后续从第 5 项继续。每个独立缺陷先增加失败用例，再修复、回归，
 按用户授权提交。
 
 1. **生命周期与返回保护：F01、F02。** 验证异常隔离和多层 Pop 决策，避免资源遗漏与数据丢失。
@@ -348,7 +357,7 @@ F01/F02、F03/F04/F09 与 F05/F10/F11 已完成实现和回归；后续从第 4 
    内容证明与默认常量编码；完整与缓存路径逐字节/错误语义一致后再测性能。
 3. **Analytics 安全与分发：F05、F10、F11（已完成）。** 授权代次、不可变快照、异步调度
    同属 Dispatcher 投递边界，一批修复并逐项独立测试，保持应用 Sink 边界。
-4. **Runtime 组合流程：F06、F07、F08。** 补并发根依赖环、shutdown during interception、
+4. **Runtime 组合流程：F06、F07、F08（已完成）。** 补并发根依赖环、shutdown during interception、
    Defer+Host/Outlet/Extra 组合矩阵。
 5. **采集和 Demo 生命周期：F12、F13、F18。** 用真实滚动 Widget 和 Fake Backend 验证。
 6. **IDE 与 AI 接入准确性：F14–F17。** 先修规则、修复和安装可用性，再缩短按需指南。
@@ -455,3 +464,45 @@ F01/F02、F03/F04/F09 与 F05/F10/F11 已完成实现和回归；后续从第 4 
   有界队列和异常隔离；未新增业务配置或公共 API。当前剩余 **10 项 P2**：
   F06/F07/F08/F12/F13/F14/F15/F16/F17/F18。下一批为 Runtime 组合流程；本次未重跑真实
   平台和长期 Heap 回归，不宣称全框架审查问题已清零。
+
+## 11. F06/F07/F08 修复验证（2026-10-03）
+
+- 本轮采用内部 Runtime 修复，无新增业务 API。只在应用层加超时无法解除共享 Service
+  等待环，也不能保证关闭后不分发导航；单纯保存 URI 无法还原 Typed Extra，因此不采用
+  调用方 workaround 或让业务手工重建原请求的方案。
+- [runtime_test.dart](../packages/ccrouter_test/test/runtime_test.dart) 新增 **6 项**：独立 A/B 根
+  等待环、共享 DAG 与重叠等待、不同 Runtime 同类型 Provider、三节点带 Key 的 Session
+  等待环及新 Session 重建、newInstance 递归、调用者超时移除等待边而保留共享初始化。
+  修复前 A/B 用例以测试兜底 TimeoutException 失败；修复后以标准循环依赖错误及时结束。
+- Scope 在调用 initializer 前发布 readiness Future 与等待边；等待关系有引用计数，
+  单次等待完成/取消/超时移除其边，initializer 完成或 Scope 取消清空出边。
+  newInstance 继续用实际 Runtime/Scope/Provider 身份的活跃祖先检测递归；没有增加全局
+  Service 实例表或业务对象缓存。初始化失败保持当前 Scope 内稳定，不隐式重试。
+- [navigation_test.dart](../packages/ccrouter_test/test/navigation_test.dart) 新增 **12 项**：
+  关闭后晚到的 proceed/defer/redirect、Failure Policy 等待、取消监听器异常与晚到错误、
+  拦截器内部关闭、required/optional Extra 身份、typed/dynamic 请求切换 active Host、
+  恢复后重定向与再次 Defer、原请求/恢复请求共享返回类型校验。关闭和 Extra 用例先失败
+  复现，再修复；假 Adapter 明确声明嵌套 Outlet 能力后验证 Host/Outlet 隔离。
+- Interceptor/Failure Policy 等待关联 App cancellation，终态撤销监听并取消 Deadline Timer；
+  await 之间也复核关闭状态。业务 Future 无法被强制中止，但其晚到结果不再进入下一个
+  Interceptor、Adapter 或失败恢复。取消 Listener 抛错记录安全诊断，不掩盖导航取消。
+- Typed resume 重新 encode 校验原 arguments，保留原 arguments/Extra 对象；dynamic
+  resume 重新匹配/decode。原具体 Host 与调用级 placement 固定，重定向目标的显式
+  placement 仍优先。返回校验、navigationId、操作与原结果通道跨再次 Defer 保持一致。
+- Pure Dart Runtime/Navigation 合计 **149/149 通过**，第 1 节全量框架/Flutter/Demo/模块/
+  DevTools 命令 **462/462 通过**，包含已有取消、超时、资源释放和 leak-tracker 用例。
+  完整回归后补强关闭与错误同时发生时的取消优先级，再跑上述 149 项通过。
+- Service 基准 10/100/1000 Provider 均通过实例回收断言。1000 Provider 样本的
+  singleton lookup P50/P95 **5/5us**、newInstance readiness **17/36us**、dispose
+  **226/858us**；只记录当前 SDK/JIT 样本，不与历史单次样本混作 A/B 加速结论。
+- Runtime 1000 次 Push/Pop、每 100 次重建通过；每周期 Entry/Pending/Backend 归零，
+  P50/P95 **46/95us**，RSS 增加 **33570816 bytes**，只作趋势观测，不证明长期 Heap 无泄漏。
+- README、Route/Service 设计、任务清单与集成 Skill 同步边界。官方生成器刷新 **8 份**
+  Portable State，仅依赖解析和合成摘要变化，业务 Dart、metadata 和 managed-output
+  摘要保持不变；本轮未修改 Generator/Analyzer，不重跑独立完整套件。
+- 最终 Workspace analyze 无问题；完整参考生成检查 **1819ms**（build_runner **824ms**）、
+  缓存检查 **223ms** 均通过。91 份 Markdown 文档检查、Skill YAML 解析与
+  `git diff --check` 通过。Skill Python 快检依赖的 PyYAML 仍缺失，不计为已执行。
+- 核心价值：修复并发等待、生命周期取消、类型安全与多 Host 确定性，保留原 Owner/Scope
+  和最小 API 边界，没有引入业务配置。当前剩余 **7 项 P2：F12–F18**，下一批为曝光采集
+  与 Demo Network 释放。本轮未重跑 macOS/iOS 真机或长期 Heap，不宣称已完成所有平台验收。

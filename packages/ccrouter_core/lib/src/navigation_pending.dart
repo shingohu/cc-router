@@ -15,6 +15,8 @@ final class _PendingNavigationRecord {
     required this.completer,
     required this.action,
     required this.commitEntry,
+    required this.placementOverride,
+    required this.validateResult,
     this.code = 'deferred',
     this.expiresAt,
   });
@@ -58,6 +60,12 @@ final class _PendingNavigationRecord {
   /// Optional RouteEntry commit strategy retained with the operation.
   final void Function(_RouteEntryRecord entry)? commitEntry;
 
+  /// Call-site placement pinned to the original Host for redirects and replay.
+  final CCRoutePlacement placementOverride;
+
+  /// Original result contract used before completing and removing the Entry.
+  final void Function(Object? result)? validateResult;
+
   /// Timer responsible for bounded retention when a timeout was requested.
   Timer? timer;
 
@@ -98,6 +106,8 @@ extension CCRouterRuntimePendingNavigation on CCRouterRuntime {
     required Duration? timeout,
     required Future<Object?> Function(CCNavigationRequest request) action,
     required void Function(_RouteEntryRecord entry)? commitEntry,
+    required CCRoutePlacement? placementOverride,
+    required void Function(Object? result)? validateResult,
   }) {
     final completer = Completer<Object?>();
     if (_disposed) {
@@ -120,6 +130,16 @@ extension CCRouterRuntimePendingNavigation on CCRouterRuntime {
       completer: completer,
       action: action,
       commitEntry: commitEntry,
+      placementOverride: CCRoutePlacement(
+        hostId:
+            placementOverride == null || placementOverride.hostId == 'default'
+            ? request.hostId
+            : placementOverride.hostId,
+        parentRouteId: placementOverride?.parentRouteId,
+        shellId: placementOverride?.shellId,
+        navigatorOutlet: placementOverride?.navigatorOutlet ?? 'root',
+      ),
+      validateResult: validateResult,
     );
     _pendingNavigations[request.navigationId] = record;
     if (timeout != null) {
@@ -137,7 +157,10 @@ extension CCRouterRuntimePendingNavigation on CCRouterRuntime {
   ///
   /// Resuming preserves the original navigation ID and typed payload while
   /// executing the complete interception chain again. A policy that still
-  /// returns [CCNavigationDefer] creates a fresh bounded continuation.
+  /// returns [CCNavigationDefer] creates a fresh bounded continuation. Typed
+  /// requests revalidate through encoding; dynamic URIs match/decode again.
+  /// The original concrete Host and call-site Outlet remain pinned across
+  /// focus changes, while explicit placement on a redirect target still wins.
   Future<Object?> resumePendingNavigation(String navigationId) async {
     _ensureNavigationCanStart();
     _ensureInitialized();
@@ -149,7 +172,20 @@ extension CCRouterRuntimePendingNavigation on CCRouterRuntime {
       final resolveClock = Stopwatch()..start();
       late final _PreparedRoute resolved;
       try {
-        resolved = _routeRegistry.prepareUri(record.request.uri, record.origin);
+        resolved = record.prepared.typed
+            ? _routeRegistry.prepareIntent(
+                _ResumedRouteIntent(
+                  record.request.routeId,
+                  record.prepared.arguments,
+                ),
+                origin: record.origin,
+                placementOverride: record.placementOverride,
+              )
+            : _routeRegistry.prepareUri(
+                record.request.uri,
+                record.origin,
+                placementOverride: record.placementOverride,
+              );
       } finally {
         resolveClock.stop();
         _recordAspectResolve(navigationId, resolveClock.elapsed);
@@ -157,6 +193,8 @@ extension CCRouterRuntimePendingNavigation on CCRouterRuntime {
       if (resolved.routeId != record.request.routeId) {
         throw CCRouteUnavailableError(record.request.routeId);
       }
+      // Even an explicitly declared Shell may have used the active Host alias.
+      // Replay must target the original concrete Host after focus changes.
       final replay = _PreparedRoute(
         routeId: resolved.routeId,
         ownerComponentId: resolved.ownerComponentId,
@@ -164,9 +202,15 @@ extension CCRouterRuntimePendingNavigation on CCRouterRuntime {
         arguments: resolved.arguments,
         extra: record.prepared.extra,
         presentation: resolved.presentation,
-        placement: resolved.placement,
+        placement: CCRoutePlacement(
+          hostId: record.request.hostId,
+          parentRouteId: resolved.placement.parentRouteId,
+          shellId: resolved.placement.shellId,
+          navigatorOutlet: resolved.placement.navigatorOutlet,
+        ),
         interceptorIds: resolved.interceptorIds,
         popGuardIds: resolved.popGuardIds,
+        typed: resolved.typed,
       );
       dispatchStarted = true;
       final result = await _dispatchNavigationUncoordinated(
@@ -178,6 +222,8 @@ extension CCRouterRuntimePendingNavigation on CCRouterRuntime {
         navigationId: record.request.navigationId,
         action: record.action,
         commitEntry: record.commitEntry,
+        placementOverride: record.placementOverride,
+        validateResult: record.validateResult,
       );
       record.completer.complete(result);
     } catch (error, stackTrace) {

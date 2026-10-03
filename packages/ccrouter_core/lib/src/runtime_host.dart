@@ -173,6 +173,9 @@ final class CCRouterRuntime {
   /// Zone key carrying provider identities in a readiness dependency chain.
   static final Object _readinessZoneKey = Object();
 
+  /// Active initializer node used to join waits from independent root calls.
+  static final Object _readinessOwnerZoneKey = Object();
+
   /// Zone key preventing navigation from asynchronous framework callbacks.
   static final Object _navigationCallbackZoneKey = Object();
 
@@ -2156,13 +2159,16 @@ final class CCRouterRuntime {
 
     final providerKey = _providerKey(provider);
     final inheritedChain = Zone.current[_readinessZoneKey];
-    final chain = inheritedChain is Set<Object>
+    final chain = inheritedChain is Map<Object, _ServiceReadinessRecord>
         ? inheritedChain
-        : const <Object>{};
-    if (chain.contains(providerKey)) {
+        : const <Object, _ServiceReadinessRecord>{};
+    final scopedKey = (_runtimeId, scope.id, providerKey);
+    if (provider.creationPolicy == CCServiceCreationPolicy.newInstance &&
+        (chain[scopedKey]?.active ?? false)) {
       throw CCCircularServiceDependencyError(_providerIdentity(provider));
     }
-    final nextChain = {...chain, providerKey};
+    final readinessOwner =
+        Zone.current[_readinessOwnerZoneKey] as _ServiceReadinessRecord?;
     final constructionOwner = _ServiceConstructionOwner(
       runtime: this,
       serviceScope: useParentScope ? owner.serviceScope : provider.scope,
@@ -2190,7 +2196,7 @@ final class CCRouterRuntime {
           )
         : context;
 
-    Future<void> initialize() => runZoned(
+    Future<void> initialize(_ServiceReadinessRecord record) => runZoned(
       () async {
         try {
           await initializer(instance, initializerContext);
@@ -2209,14 +2215,28 @@ final class CCRouterRuntime {
       zoneValues: {
         _invocationZoneKey: (this, initializerContext),
         _constructionZoneKey: constructionOwner,
-        _readinessZoneKey: nextChain,
+        _readinessZoneKey: {...chain, scopedKey: record},
+        _readinessOwnerZoneKey: record,
       },
     );
 
     if (provider.creationPolicy == CCServiceCreationPolicy.singleton) {
-      await scope.ensureServiceReady(providerKey, initialize);
+      await scope.ensureServiceReady(
+        providerKey,
+        initialize,
+        owner: readinessOwner,
+        identity: _providerIdentity(provider),
+        waitCancellation: context.cancellation,
+      );
     } else {
-      await initialize();
+      final record = _ServiceReadinessRecord();
+      final waiting = record.waitFor(
+        readinessOwner,
+        _providerIdentity(provider),
+        context.cancellation,
+      );
+      record.start(() => initialize(record), context.cancellation, scope.id);
+      await waiting;
     }
     if (context.cancellation.isCancelled) {
       throw const CCInvocationCancelledError();

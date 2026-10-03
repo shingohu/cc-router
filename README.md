@@ -671,8 +671,14 @@ Interceptor 是**导航前决策**，适合：
 proceed、cancel、redirect 或 defer。
 
 不要在 Interceptor 中调用 `CCRouter.navigator` 或 Adapter，也不要用它做 PV/UV、页面到达回调或业务数据加载。异步 Interceptor 必须有明确超时和取消语义。
+Runtime shutdown 会取消正在等待的 Interceptor 和 Failure Policy，以 `CCRouteCancelledError`
+结束导航；不会再执行失败恢复或接受晚到的 proceed/redirect/defer。Interceptor 应观察
+`context.cancellation` 主动停止业务工作，框架无法强制终止 Dart Future。
 
 `CCNavigationDefer` 会把原请求保存为 Pending Navigation。登录、授权或设备解锁成功后由 Host 调用 `resumePendingNavigation`；放弃流程时调用 `cancelPendingNavigation`。Failure Policy 仅处理稳定的解析、Codec、Adapter 等失败，默认传播错误；它不应吞掉编程错误或把未知地址静默送往错误页面。
+恢复会重新校验并执行拦截链：Typed 请求保留 arguments/Extra 对象，动态 URI 重新匹配和解码；
+保留原具体 Host、调用级 Outlet、操作和返回类型，切换 active Host 不会把待恢复页面送往新 Host。
+重定向目标显式声明的 Host/Outlet 仍优先；待恢复数据只在进程内保留，应配置超时或主动取消。
 
 ## PopGuard
 
@@ -921,6 +927,9 @@ final controller = CCRouter.routeService<OrderDraftController>(context);
 - 默认 `singleton` 是每个 Scope 一个懒实例。
 - `newInstance` 每次解析创建新实例，但需要销毁的实例仍由 Scope 统一拥有；不要用它模拟手工 dispose 的临时对象。
 - `initializer` 只用于实例无法在同步构造后立即工作的异步 readiness；调用方必须使用 `serviceAsync`。
+- 同一 Singleton 的并发调用共享初始化；跨独立调用根的 A→B→A 等等待环也会报
+  `CCCircularServiceDependencyError`。调用者超时/取消会撤销自己的等待关系，不破坏共享初始化；
+  初始化本身失败在当前 Scope 内保持失败，不隐式重试。
 - 多实现使用 `CCServiceKey<T>`；跨组件调用使用生成 Client。统一名称配置在
   `CCServiceContract.alias`，单个消费者或 Key 的覆盖配置在 `CCServiceDependency.alias`；组件内部
   解析仍使用 `CCRouter.service<T>()`。

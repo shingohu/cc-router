@@ -165,6 +165,19 @@ Use `context:` only when call-site Host/Outlet placement is required. Without
 Context, default placement resolves through the active Host while an explicit
 route Host/Outlet remains authoritative.
 
+Deferred navigation pins the original concrete Host and call-site placement.
+Changing the active Host does not retarget a saved request. Resume revalidates
+typed arguments with the codec encoder while preserving arguments/Extra identity;
+dynamic URI requests match and decode again. Redirect targets with explicit
+placement still override call-site defaults. Keep a timeout or cancel abandoned
+continuations so in-memory payloads are released.
+
+Runtime shutdown completes pending Interceptor and Failure Policy waits with
+`CCRouteCancelledError` and prevents late decisions from reaching the Adapter.
+Interceptors should observe `context.cancellation`; arbitrary business Futures
+cannot be forcibly stopped. Do not turn shutdown cancellation into a recovery
+navigation or use it to continue the ended Runtime.
+
 For an unsaved editor, local `PopScope` or `Form(canPop: false)` still vetoes
 system back and `CCRouter.navigator.maybePop` even when the framework PopGuard
 allows exit. Use the local refusal callback for confirmation UI and explicitly
@@ -412,6 +425,14 @@ void registerConfigurationServices(CCRegistry registry) {
 
 final config = await CCRouter.serviceAsync<RemoteConfig>();
 ```
+
+Singleton readiness is single-flight within its owning Scope. Runtime tracks
+active initializer dependencies, including independent concurrent roots, and
+rejects cycles with `CCCircularServiceDependencyError`. A caller's timeout or
+cancellation removes only its wait; other callers can still receive the shared
+instance. A failed initializer remains failed for that Scope. Resolve the
+dependency cycle or handle retry inside the initializer instead of polling
+`serviceAsync` to restart failed work.
 
 Resolve Route Service only from the exact managed page Context:
 

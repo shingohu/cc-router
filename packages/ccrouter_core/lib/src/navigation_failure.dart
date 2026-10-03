@@ -130,17 +130,39 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
           recoveryDepth: recoveryDepth,
         );
         final policy = navigationFailurePolicy;
-        if (policy == null) {
+        if (policy == null || _disposed) {
           _emitNavigationFailure(context, recovered: false);
           if (prepared == null) _discardNavigationObservation(navigationId);
           rethrow;
         }
         late final CCNavigationFailureDecision decision;
         try {
-          decision = await _runAsyncNavigationDecisionCallback(
+          decision = await _awaitNavigationDecision(
             () => policy.onFailure(context),
           );
+          _ensureNavigationAlive();
         } catch (policyError) {
+          if (policyError is CCRouteCancelledError && _disposed) {
+            _emitNavigationFailure(
+              CCNavigationFailureContext(
+                navigationId: context.navigationId,
+                operation: context.operation,
+                origin: context.origin,
+                openMode: context.openMode,
+                stage: CCNavigationFailureStage.interception,
+                reason: CCNavigationFailureReason.cancelled,
+                attempt: context.attempt,
+                routeId: context.routeId,
+                initialRouteId: context.initialRouteId,
+                source: context.source,
+                errorType: policyError.runtimeType.toString(),
+                recoveryDepth: context.recoveryDepth,
+              ),
+              recovered: false,
+            );
+            _discardNavigationObservation(navigationId);
+            rethrow;
+          }
           _recordNavigationCallbackFailure(
             'Navigation failure policy failed: ${policyError.runtimeType}.',
           );

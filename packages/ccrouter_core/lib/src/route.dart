@@ -46,6 +46,7 @@ final class _PreparedRoute {
     required this.placement,
     required this.interceptorIds,
     required this.popGuardIds,
+    this.typed = false,
   });
 
   /// Stable route identity selected by Intent or URI resolution.
@@ -74,6 +75,23 @@ final class _PreparedRoute {
 
   /// Route Pop guard IDs declared by the selected route definition.
   final List<String> popGuardIds;
+
+  /// Whether replay must preserve typed arguments instead of decoding the URI.
+  final bool typed;
+}
+
+/// Internal Intent retaining the typed payload across a deferred policy pass.
+final class _ResumedRouteIntent implements CCRouteIntent<Object?> {
+  /// Keeps the original argument object; the registered codec revalidates it.
+  const _ResumedRouteIntent(this.routeId, this.arguments);
+
+  /// Exact target selected before deferral, rather than a new URI match.
+  @override
+  final String routeId;
+
+  /// Original typed object revalidated by the route's encoder on resume.
+  @override
+  final Object arguments;
 }
 
 /// Candidate produced while comparing one URI against an installed pattern.
@@ -256,6 +274,7 @@ final class _RouteRegistry {
       ownerComponentId: route.ownerComponentId,
       uri: uri,
       arguments: intent.arguments,
+      typed: true,
       extra: encoded.extra,
       presentation: route.definition.presentation,
       placement: _effectivePlacement(

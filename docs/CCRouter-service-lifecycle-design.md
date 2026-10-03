@@ -51,6 +51,11 @@ Provider Factory 始终同步创建实例，使 Runtime 可以先把实例纳入
 - 同步 Proxy 方法保留契约原本的返回类型，不会隐式等待或启动 initializer；它在
   Provider 未 Ready 时抛出 `CCServiceNotReadyError`。
 - Singleton 在每个 Scope 内 single-flight 初始化一次；并发调用等待同一个 Future。
+- 每个 initializer 使用独立的活跃等待节点，Singleton 节点由 Scope/Provider 共享，调用
+  另一个未完成 Service 时登记有计数的等待关系。两个或多个独立根形成的等待环同样抛出
+  `CCCircularServiceDependencyError`，不只检查单根调用的 Zone 祖先链。
+- 节点/Future 在业务 initializer 回调前发布；等待完成、调用者取消或超时后移除对应关系，
+  initializer 终态和 Scope 取消时清空出边。不同 Runtime、Scope 和 Key 不混用节点。
 - `newInstance` 每次异步解析创建并初始化一个新实例，仍由当前 Scope 负责最终释放。
 - `service<T>()` 不会隐式启动异步工作；初始化完成前返回 `CCServiceNotReadyError`。
 - 初始化失败在当前 Singleton/Scope 内保持稳定，不自动重试有副作用的操作；业务重试策略应写在

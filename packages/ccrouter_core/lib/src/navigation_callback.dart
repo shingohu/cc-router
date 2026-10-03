@@ -51,6 +51,64 @@ extension CCRouterRuntimeNavigationCallbacks on CCRouterRuntime {
     zoneValues: {CCRouterRuntime._navigationCallbackZoneKey: this},
   );
 
+  /// Bounds a decision wait by Runtime lifetime and an optional deadline.
+  ///
+  /// Cancellation finishes the framework wait even if user code never returns.
+  /// Late values/errors are consumed without executing another pipeline step.
+  /// Listeners and the deadline Timer are released on every terminal path.
+  Future<T> _awaitNavigationDecision<T>(
+    FutureOr<T> Function() callback, {
+    CCCancellationToken? cancellation,
+    Duration? timeout,
+    CCRouterError? timeoutError,
+  }) async {
+    if (_disposed) throw const CCRouteCancelledError('runtime_disposed');
+    final interrupted = Completer<T>();
+    void interrupt(CCRouterError error) {
+      if (interrupted.isCompleted) return;
+      interrupted.completeError(error);
+      try {
+        cancellation?.cancel();
+      } catch (error) {
+        _recordNavigationCallbackFailure(
+          'Navigation cancellation listener failed: ${error.runtimeType}.',
+        );
+      }
+    }
+
+    final remove = appScope.cancellation.addListener(
+      () => interrupt(const CCRouteCancelledError('runtime_disposed')),
+    );
+    final timer = timeout == null
+        ? null
+        : Timer(timeout, () => interrupt(timeoutError!));
+    try {
+      final work = _runAsyncNavigationDecisionCallback(callback);
+      final value = await Future.any([work, interrupted.future]);
+      if (_disposed) throw const CCRouteCancelledError('runtime_disposed');
+      return value;
+    } catch (_) {
+      _ensureNavigationAlive(cancellation);
+      rethrow;
+    } finally {
+      timer?.cancel();
+      remove();
+    }
+  }
+
+  /// Rejects continuation after shutdown, including gaps between awaited steps.
+  void _ensureNavigationAlive([CCCancellationToken? cancellation]) {
+    if (!_disposed) return;
+    try {
+      cancellation?.cancel();
+    } catch (error) {
+      _recordNavigationCallbackFailure(
+        'Navigation cancellation listener failed: ${error.runtimeType}.',
+      );
+    }
+    throw const CCRouteCancelledError('runtime_disposed');
+  }
+
   /// Enqueues one event for a snapshot of observational subscribers.
   ///
   /// [isActive] is evaluated immediately before each callback, so removing a
