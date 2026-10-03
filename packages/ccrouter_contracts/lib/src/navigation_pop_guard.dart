@@ -29,6 +29,9 @@ sealed class CCPopGuardDecision {
 }
 
 /// Allows the Pop pipeline to continue to the next guard or adapter.
+///
+/// This does not override local Flutter PopScope/Form refusal when handling
+/// system back or `maybePop`. Explicit business Pop keeps its own semantics.
 final class CCPopAllow extends CCPopGuardDecision {
   /// Creates an allow decision.
   const CCPopAllow();

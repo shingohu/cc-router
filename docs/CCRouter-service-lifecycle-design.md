@@ -113,6 +113,25 @@ Session 表示一次账号会话，不表示 App 前后台、页面切换或闲�
 App Service 只在 Runtime dispose 时释放。账号切换必须先完整关闭旧 Session，再打开新
 Session；不能让旧 Service 引用自动指向新账号。
 
+### 4.1 取消回调与清理失败隔离
+
+取消通知是同步、协作式的，不得成为跳过资源清理的原因：
+
+- Token 先确定已取消并移除其持有的回调集合，再逐个通知本次回调快照；某个回调抛错
+  仍继续通知其余回调，最后向取消调用方重抛首个错误及其原始 StackTrace。
+- Token 重复取消是空操作。已取消 Token 新增 Listener 时立即通知，异常直接返回给
+  注册调用方；它不会重新进入 Token 持有的集合。
+- Scope 在取消前建立唯一的关闭 Future，并拒绝新解析；取消错误与 Service dispose 错误
+  一样进入内部 `disposalErrors`，其余实例仍逆序释放，最终进入 closed。
+- Runtime 在取消前建立唯一的 shutdown Future；早期 App 取消失败不会跳过 Route、Session、
+  App、Adapter 和 Listener 清理。结构化清理结束后再向 Owner 返回首个失败。
+- Facade 在任何停止回调之前建立 shutdown 门禁。取消回调中再次 shutdown 只能等待
+  同一轮清理，不能提前完成，也不能在旧 Runtime 尚未清理时重新 initialize。
+
+这不赋予 Service 或页面调用 shutdown 的权限；生命周期仍由 Composition Root/Runtime
+拥有。取消回调应保持同步、短小且无异常，业务不得在自己负责的 dispose 中等待同一
+Owner 的关闭 Future，以免形成自等待。
+
 ## 5. 与开源框架的对应关系
 
 - ARouter/TheRouter 的 Singleton/NewInstance 主要是缓存和创建策略，不是页面生命周期。

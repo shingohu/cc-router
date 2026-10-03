@@ -1263,8 +1263,8 @@ final class CCGoRouterAdapter
   /// A `PopEntry` is used instead of the deprecated scoped will-pop callback.
   /// Its conservative `canPop = false` state disables an interactive gesture
   /// that cannot synchronously await Runtime policy. A system back attempt
-  /// still invokes the entry callback; an allow decision retries the concrete
-  /// Navigator pop under the adapter's re-entrancy guard.
+  /// still invokes the entry callback; an allow decision opens only this gate
+  /// and rechecks `popDisposition`, preserving other PopScope/Form gates.
   void _installManagedPopGuard(Route<dynamic> route) {
     final evaluator = _popGuardEvaluator;
     if (evaluator == null || route is! ModalRoute<Object?>) return;
@@ -1289,23 +1289,61 @@ final class CCGoRouterAdapter
     if (evaluator == null || _managedPopGuardEntries.containsKey(route)) {
       return;
     }
-    final entry = _CCManagedPopEntry(
+    late final _CCManagedPopEntry entry;
+    entry = _CCManagedPopEntry(
       onInvoked: (didPop, result) {
-        if (didPop || _runtimeGuardedPopInProgress) return;
-        final currentEvaluator = _popGuardEvaluator;
-        if (currentEvaluator == null || !route.isActive) return;
-        final decision = currentEvaluator(CCPopTrigger.system);
-        if (decision is! CCPopAllow || route.navigator == null) return;
-        _runtimeGuardedPopInProgress = true;
-        try {
-          route.navigator!.pop<Object?>(result);
-        } finally {
-          _runtimeGuardedPopInProgress = false;
-        }
+        if (didPop || _runtimeGuardedPopInProgress || entry.retrying) return;
+        _retryManagedSystemPop(route, entry, result);
       },
     );
     route.registerPopEntry(entry);
     _managedPopGuardEntries[route] = entry;
+  }
+
+  /// Rechecks local Flutter gates before retrying one approved system Pop.
+  ///
+  /// The approval belongs to this concrete current Route, never whichever
+  /// Route happens to become active in another Outlet. The original
+  /// `maybePop` has already awaited legacy will-pop callbacks and checked its
+  /// Navigator history. Rechecking all PopEntries synchronously avoids calling
+  /// those callbacks twice or exposing an open gate across an asynchronous
+  /// retry. Refusals leave the pending typed result untouched.
+  void _retryManagedSystemPop(
+    ModalRoute<Object?> route,
+    _CCManagedPopEntry entry,
+    Object? result,
+  ) {
+    final evaluator = _popGuardEvaluator;
+    final navigator = route.navigator;
+    if (_disposed ||
+        evaluator == null ||
+        navigator == null ||
+        !route.isCurrent) {
+      return;
+    }
+    entry.retrying = true;
+    try {
+      final decision = evaluator(CCPopTrigger.system);
+      if (decision is! CCPopAllow ||
+          _disposed ||
+          !route.isCurrent ||
+          !identical(route.navigator, navigator) ||
+          !identical(_managedPopGuardEntries[route], entry)) {
+        return;
+      }
+      entry.canPopNotifier.value = true;
+      // The initial rejected attempt already notified local PopScope/Form
+      // listeners. Do not send a duplicate refusal when their gate is closed,
+      // and never force a root Route whose disposition is to bubble.
+      if (route.popDisposition != RoutePopDisposition.pop) return;
+      navigator.pop<Object?>(result);
+    } finally {
+      entry.retrying = false;
+      // Observer removal or a synchronous callback may dispose this entry.
+      if (identical(_managedPopGuardEntries[route], entry)) {
+        entry.canPopNotifier.value = false;
+      }
+    }
   }
 
   /// Removes one route-scoped gate after Flutter reports route removal.
@@ -1739,6 +1777,9 @@ final class _CCManagedPopEntry extends PopEntry<Object?> {
 
   /// Callback invoked by Flutter after a Pop attempt or blocked gesture.
   final void Function(bool didPop, Object? result) onInvoked;
+
+  /// Prevents a retry's blocked callback from evaluating the same guard again.
+  bool retrying = false;
 
   /// Mutable gate consumed by [ModalRoute.popDisposition].
   @override

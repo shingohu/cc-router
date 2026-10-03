@@ -55,7 +55,7 @@ final class CCScope {
   /// Cancellation signal shared by work owned by this Scope.
   final CCCancellationToken cancellation = CCCancellationToken();
 
-  /// Disposal failures retained without blocking remaining cleanup.
+  /// Cancellation and disposal failures retained without blocking cleanup.
   final List<Object> disposalErrors = [];
 
   /// Current mutable lifecycle state.
@@ -134,11 +134,21 @@ final class CCScope {
   ///
   /// Runtime lifecycle transitions call this on Session close and final host
   /// shutdown; callers must not use it merely because the App is backgrounded.
+  /// Cancellation listeners and disposables may fail independently: errors
+  /// enter [disposalErrors], while all remaining resources are still released.
+  /// Reentrant closes join the operation established before callbacks run.
   Future<void> close({Duration timeout = const Duration(seconds: 5)}) {
     if (_closeFuture != null) return _closeFuture!;
+    final completion = Completer<void>();
+    _closeFuture = completion.future;
     _state = CCScopeState.closing;
-    cancellation.cancel();
-    return _closeFuture = _dispose(timeout);
+    try {
+      cancellation.cancel();
+    } catch (error) {
+      disposalErrors.add(error);
+    }
+    completion.complete(_dispose(timeout));
+    return completion.future;
   }
 
   /// Runs isolated, timeout-bounded disposal for every owned instance.

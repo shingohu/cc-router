@@ -21,18 +21,37 @@ final class CCCancellationToken {
   Future<void> get whenCancelled => _completer.future;
 
   /// Requests cancellation and synchronously notifies registered listeners.
+  ///
+  /// The token releases its listener collection before notifying a snapshot.
+  /// All admitted listeners run even if one throws; the first error is
+  /// rethrown with its original stack after notification finishes. Cancellation
+  /// stays final, so repeated or reentrant calls do not repeat notification.
+  /// Lifecycle owners must catch notification failures and finish cleanup.
   void cancel() {
     if (isCancelled) return;
     _completer.complete();
-    for (final listener in _listeners.toList()) {
-      listener();
-    }
+    final listeners = _listeners.toList();
     _listeners.clear();
+    Object? firstError;
+    StackTrace? firstStackTrace;
+    for (final listener in listeners) {
+      try {
+        listener();
+      } catch (error, stackTrace) {
+        firstError ??= error;
+        firstStackTrace ??= stackTrace;
+      }
+    }
+    if (firstError != null) {
+      Error.throwWithStackTrace(firstError, firstStackTrace!);
+    }
   }
 
   /// Registers [listener] and returns a callback that removes it.
   ///
-  /// If this token is already cancelled, [listener] runs immediately.
+  /// If this token is already cancelled, [listener] runs immediately without
+  /// being retained; any error propagates directly to the registering caller.
+  /// Removal during notification affects no listener already in its snapshot.
   void Function() addListener(void Function() listener) {
     if (isCancelled) {
       listener();

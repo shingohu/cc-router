@@ -423,6 +423,11 @@ await CCRouter.shutdown();
 
 不要在页面 Pop、组件页面销毁、App 后台或 Session 关闭时 shutdown。Runtime 会先销毁它拥有的 Adapter，再释放 managed Backend 创建的 GoRouter；attach 模式不会销毁应用自己创建的 GoRouter。销毁、动态 Host 注销或 Host 初始化失败时采用 best-effort 结构化清理：某个 listener remover、PopGuard 解绑或子 Adapter 抛错不会跳过其它资源，调用方最终收到首个失败。
 
+取消 Listener 抛错也不会截断其余通知和资源释放。Token 通知结束后重抛首个错误；Scope 将
+取消错误与 Service dispose 错误一起留在内部清理记录中，继续逆序释放。Runtime 在早期
+App 取消通知失败时继续完成全部清理，再向 shutdown 调用方报告失败。关闭操作在调用
+Listener 之前建立门禁，重复调用只等待同一轮清理；即使回调同步重入，也不能提前 initialize。
+
 这里的命名按所有权层级区分：`CCRouter.initialize()` 创建并原子初始化进程默认 Runtime，
 `CCRouter.shutdown()` 由应用 Composition Root 停止该 Runtime；它们不是某个 Widget 或对象实例
 的 `init/dispose`。Runtime、Adapter、Scope、Service 等具体实例仍由各自 Owner 调用内部
@@ -667,6 +672,11 @@ proceed、cancel、redirect 或 defer。
 PopGuard 用于页面离开前可同步判断的规则，例如内存中的未保存编辑状态、不可中断步骤或受控流程。它必须同步且快速。需要弹确认框、网络请求或异步保存时使用 Flutter `PopScope` 管理 UI，再在确认后调用 `CCRouter.navigator.pop`。不要从 Guard 内再次发起导航。
 
 系统返回、普通 Pop、Cupertino 手势和 Android predictive back 都进入统一协调；foreign Popup 或 `LocalHistoryEntry` 消费返回时不会关闭底层 Managed Route Scope。
+
+系统返回或 `maybePop` 中，框架 Guard 返回 allow 只表示通过框架策略，页面自身的
+`PopScope(canPop: false)` / `Form(canPop: false)` 仍可拒绝退出。页面和结果 Future 会保持
+存活，本地拒绝回调可负责确认 UI。确认后主动调用 `pop` 仍是显式返回操作。Cupertino 页面
+无 Guard 时保留平台默认侧滑，有 Guard 时继续禁用侧滑，不会因本地保护修复而放宽。
 
 ## Aspect、Trace、Telemetry 与生命周期
 

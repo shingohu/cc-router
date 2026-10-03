@@ -577,6 +577,106 @@ void main() {
     },
   );
 
+  for (final useForm in [false, true]) {
+    testWidgets(
+      'system PopGuard allow preserves local ${useForm ? 'Form' : 'PopScope'} refusal and result',
+      (tester) async {
+        final observer = CCGoRouterNavigationObserver(outlet: 'root');
+        final allowFrameworkPop = ValueNotifier(true);
+        final allowLocalPop = ValueNotifier(false);
+        final triggers = <CCPopTrigger>[];
+        final localResults = <bool>[];
+        final detailRoute = GoRoute(
+          path: '/orders/:id',
+          builder: (_, _) => ValueListenableBuilder<bool>(
+            valueListenable: allowLocalPop,
+            builder: (_, canPop, _) {
+              const child = Text('unsaved editor');
+              return useForm
+                  ? Form(
+                      canPop: canPop,
+                      onPopInvokedWithResult: (didPop, _) =>
+                          localResults.add(didPop),
+                      child: child,
+                    )
+                  : PopScope<Object?>(
+                      canPop: canPop,
+                      onPopInvokedWithResult: (didPop, _) =>
+                          localResults.add(didPop),
+                      child: child,
+                    );
+            },
+          ),
+        );
+        final router = GoRouter(
+          observers: [observer],
+          routes: [
+            GoRoute(path: '/', builder: (_, _) => const Text('home')),
+            detailRoute,
+          ],
+        );
+        final adapter = CCGoRouterAdapter(
+          router: router,
+          observers: [observer],
+          bindings: [
+            CCGoRouterRouteBinding(
+              routeId: 'orders.detail',
+              goRoute: detailRoute,
+            ),
+          ],
+        );
+        final runtime = CCRouterRuntime.forTesting(
+          navigationAdapter: adapter,
+          components: [
+            CCComponentManifest(
+              id: 'orders',
+              version: '1.0.0',
+              registrar: _GuardedOrdersRegistrar(allowFrameworkPop, triggers),
+            ),
+          ],
+        );
+        addTearDown(allowFrameworkPop.dispose);
+        addTearDown(allowLocalPop.dispose);
+        addTearDown(router.dispose);
+        addTearDown(runtime.dispose);
+        runtime.initialize();
+        await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+        await tester.pumpAndSettle();
+        var resultCompleted = false;
+        final result = runtime
+            .pushRoute<String>(
+              const _OrderIntent<String>(_OrderArguments('unsaved')),
+            )
+            .then((value) {
+              resultCompleted = true;
+              return value;
+            });
+        await tester.pumpAndSettle();
+        final entryId = runtime.activeRouteEntries.single.routeEntryId;
+
+        expect(await router.routerDelegate.popRoute(), isTrue);
+        await tester.pumpAndSettle();
+        expect(find.text('unsaved editor'), findsOneWidget);
+        expect(runtime.activeRouteEntries.single.routeEntryId, entryId);
+        expect(resultCompleted, isFalse);
+        expect(triggers, [CCPopTrigger.system]);
+        expect(localResults, [false]);
+
+        allowLocalPop.value = true;
+        await tester.pump();
+        final navigator = Navigator.of(
+          tester.element(find.text('unsaved editor')),
+        );
+        expect(await navigator.maybePop<String>('saved'), isTrue);
+        await tester.pumpAndSettle();
+        expect(await result, 'saved');
+        expect(runtime.activeRouteEntries, isEmpty);
+        expect(triggers, [CCPopTrigger.system, CCPopTrigger.system]);
+        expect(localResults.where((didPop) => didPop), hasLength(1));
+      },
+    );
+  }
+
   testWidgets(
     'dynamic open pushes on GoRouter and completes before its later Pop',
     (tester) async {

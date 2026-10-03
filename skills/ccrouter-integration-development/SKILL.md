@@ -164,6 +164,7 @@ the Service Contract.
 - Use Interceptor only for pre-navigation decisions: authentication, permission, consent, maintenance, forced upgrade, feature flag, redirect, cancel, or defer.
 - Never use Interceptor for PV/UV, page arrival, data loading, UI side effects, or nested navigation.
 - Use PopGuard only for synchronous, in-memory exit decisions. Use Flutter `PopScope` for confirmation UI or asynchronous work.
+- A PopGuard allow decision does not override local `PopScope`/`Form` denial on system back or `maybePop`. Keep the page and its result pending until local policy permits exit; an explicit `pop` after confirmation remains a deliberate application action. Guarded Cupertino pages still disable interactive back, while unguarded pages retain platform gestures.
 - Use `CCNavigationAspect` only for observation and sanitized telemetry. It must not change navigation decisions or synchronously re-enter navigation.
 - Use `CCPageLifecycleMixin` or `CCPageLifecycleListener` for PageShow/PageHide and application foreground/background observation. Use Flutter `initState/dispose` for Widget lifetime.
 - Use Route Service for page-instance resources that must survive PageHide and be disposed only after the exact managed RouteEntry is removed.
@@ -178,6 +179,7 @@ the Service Contract.
   Composition Root ends the default Runtime. Page, component, Session,
   application-background, and individual navigation Host lifecycles must not
   call it. Reinitialize only after the shutdown Future completes.
+- Cancellation listeners must remain synchronous and short. A throwing listener does not skip other notifications or owned cleanup: Scope records notification/disposal failures internally, and Runtime reports an early App cancellation failure only after structural teardown. Reentrant shutdown joins that teardown and cannot permit early initialization. Never await an Owner's shutdown from an object that the same shutdown is waiting to dispose.
 - Select the narrowest Service Scope: app, session, or route.
 - Prefer singleton; use `newInstance` only for stateless or immutable helpers whose ownership remains safe.
 - Use async Service readiness only when callers cannot safely use the instance immediately after synchronous construction.

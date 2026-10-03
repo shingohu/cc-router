@@ -1879,11 +1879,17 @@ final class CCRouterRuntime {
   ///
   /// Hosts use this for final isolate teardown; use [closeSession] for logout so
   /// App-scoped services remain available.
+  /// Callback failures do not skip subsequent cleanup. The first structural
+  /// cleanup error is returned after teardown, including an App cancellation
+  /// notification failure. Reentrant calls share the same disposal Future.
   Future<void> dispose() {
     if (_disposeFuture != null) return _disposeFuture!;
+    final completion = Completer<void>();
+    _disposeFuture = completion.future;
     _disposed = true;
     _initialized = false;
-    return _disposeFuture = _closeScopes();
+    completion.complete(_closeScopes());
+    return completion.future;
   }
 
   /// Cancels Runtime work before disposing Session and App Scopes.
@@ -1897,7 +1903,11 @@ final class CCRouterRuntime {
     }
 
     // Stop invocations before awaiting any service disposal.
-    appScope.cancellation.cancel();
+    try {
+      appScope.cancellation.cancel();
+    } catch (error, stackTrace) {
+      capture(error, stackTrace);
+    }
     final initTaskRun = _initTaskRun;
     if (initTaskRun != null) {
       try {

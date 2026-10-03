@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter/ccrouter_host.dart';
 import 'package:ccrouter_core/ccrouter_core.dart';
@@ -512,6 +514,165 @@ void main() {
     adapter.dispose();
     await expectLater(pushed, throwsA(isA<CCNavigationAdapterError>()));
   });
+
+  testWidgets('a local refusal can open a foreign confirmation without Pop', (
+    tester,
+  ) async {
+    final observer = CCGoRouterNavigationObserver(outlet: 'root');
+    var guardCalls = 0;
+    Future<void>? confirmation;
+    final detailRoute = GoRoute(
+      path: '/detail/:value',
+      builder: (context, _) => PopScope<Object?>(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, _) {
+          if (didPop || confirmation != null) return;
+          confirmation = showDialog<void>(
+            context: context,
+            builder: (_) => const AlertDialog(content: Text('confirm save')),
+          );
+        },
+        child: const Text('unsaved editor'),
+      ),
+    );
+    final router = GoRouter(
+      observers: [observer],
+      routes: [
+        GoRoute(path: '/', builder: (_, _) => const Text('home')),
+        detailRoute,
+      ],
+    );
+    final adapter = CCGoRouterAdapter(
+      router: router,
+      observers: [observer],
+      bindings: [
+        CCGoRouterRouteBinding(routeId: 'detail', goRoute: detailRoute),
+      ],
+    );
+    addTearDown(router.dispose);
+    addTearDown(adapter.dispose);
+    adapter.initialize([route('detail', hasPopGuard: true)]);
+    adapter.bindPopGuardEvaluator((_) {
+      guardCalls += 1;
+      return const CCPopAllow();
+    });
+    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    await tester.pumpAndSettle();
+    final pushed = adapter.navigate(
+      request(
+        id: 'detail',
+        operation: CCNavigationOperation.push,
+        uri: Uri.parse('/detail/42'),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await router.routerDelegate.popRoute();
+    await tester.pumpAndSettle();
+    expect(find.text('confirm save'), findsOneWidget);
+    expect(find.text('unsaved editor'), findsOneWidget);
+    expect(guardCalls, 0);
+    await router.routerDelegate.popRoute();
+    await tester.pumpAndSettle();
+    await confirmation;
+    expect(guardCalls, 0);
+    expect(find.text('unsaved editor'), findsOneWidget);
+    adapter.pop(result: 'saved');
+    await tester.pumpAndSettle();
+    expect(await pushed, 'saved');
+  });
+
+  for (final failRetry in [false, true]) {
+    testWidgets(
+      'pending system back ${failRetry ? 'preserves its closed gate on legacy errors' : 'does not Pop a new foreign route'}',
+      (tester) async {
+        final observer = CCGoRouterNavigationObserver(outlet: 'root');
+        final retry = Completer<bool>();
+        var willPopCalls = 0;
+        var guardCalls = 0;
+        final detailRoute = GoRoute(
+          path: '/detail/:value',
+          // Deliberately exercise the asynchronous legacy callback still
+          // supported by Navigator.maybePop alongside modern PopEntry gates.
+          // ignore: deprecated_member_use
+          builder: (_, _) => WillPopScope(
+            onWillPop: () {
+              willPopCalls += 1;
+              return willPopCalls == 1 ? retry.future : Future.value(true);
+            },
+            child: const Text('legacy editor'),
+          ),
+        );
+        final router = GoRouter(
+          observers: [observer],
+          routes: [
+            GoRoute(path: '/', builder: (_, _) => const Text('home')),
+            detailRoute,
+          ],
+        );
+        final adapter = CCGoRouterAdapter(
+          router: router,
+          observers: [observer],
+          bindings: [
+            CCGoRouterRouteBinding(routeId: 'detail', goRoute: detailRoute),
+          ],
+        );
+        addTearDown(router.dispose);
+        addTearDown(adapter.dispose);
+        adapter.initialize([route('detail', hasPopGuard: true)]);
+        adapter.bindPopGuardEvaluator((_) {
+          guardCalls += 1;
+          return const CCPopAllow();
+        });
+        await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+        await tester.pumpAndSettle();
+        final pushed = adapter.navigate(
+          request(
+            id: 'detail',
+            operation: CCNavigationOperation.push,
+            uri: Uri.parse('/detail/42'),
+          ),
+        );
+        await tester.pumpAndSettle();
+        final context = tester.element(find.text('legacy editor'));
+        final modalRoute = ModalRoute.of(context)!;
+        final attempted = router.routerDelegate.popRoute();
+        await tester.pump();
+        expect(willPopCalls, 1);
+        expect(guardCalls, 0);
+        expect(modalRoute.popDisposition, RoutePopDisposition.doNotPop);
+
+        Future<void>? popup;
+        if (failRetry) {
+          final failure = expectLater(attempted, throwsA(isA<StateError>()));
+          retry.completeError(StateError('legacy callback failed'));
+          await failure;
+        } else {
+          popup = showDialog<void>(
+            context: context,
+            builder: (_) => const AlertDialog(content: Text('foreign popup')),
+          );
+          await tester.pumpAndSettle();
+          retry.complete(true);
+          expect(await attempted, isTrue);
+        }
+        await tester.pumpAndSettle();
+        if (!failRetry) {
+          expect(find.text('foreign popup'), findsOneWidget);
+          await router.routerDelegate.popRoute();
+          await tester.pumpAndSettle();
+          await popup;
+        }
+        expect(find.text('legacy editor'), findsOneWidget);
+        expect(modalRoute.popDisposition, RoutePopDisposition.doNotPop);
+        expect(guardCalls, 0);
+        await Navigator.of(context).maybePop<String>('saved');
+        await tester.pumpAndSettle();
+        expect(await pushed, 'saved');
+        expect(guardCalls, 1);
+        expect(willPopCalls, 2);
+      },
+    );
+  }
 
   testWidgets('Adapter retains bounded Navigator lifecycle events', (
     tester,
@@ -1283,6 +1444,159 @@ void main() {
     await tester.pumpAndSettle();
     expect(adapter.activePopTarget.navigatorOutlet, 'home');
     expect(adapter.popOutcome().handled, isFalse);
+  });
+
+  testWidgets('system Pop approval stays in its StatefulShell Outlet', (
+    tester,
+  ) async {
+    final keys = [GlobalKey<NavigatorState>(), GlobalKey<NavigatorState>()];
+    final observers = [
+      CCGoRouterNavigationObserver(outlet: 'home'),
+      CCGoRouterNavigationObserver(outlet: 'settings'),
+    ];
+    final siblingDispositions = <RoutePopDisposition>[];
+    ModalRoute<Object?>? settingsModalRoute;
+    late StatefulNavigationShell navigationShell;
+    final homeDetail = GoRoute(
+      path: 'detail',
+      builder: (_, _) => PopScope<Object?>(
+        onPopInvokedWithResult: (didPop, _) {
+          if (didPop) {
+            siblingDispositions.add(settingsModalRoute!.popDisposition);
+          }
+        },
+        child: const Text('home detail'),
+      ),
+    );
+    final settingsDetail = GoRoute(
+      path: 'detail',
+      builder: (_, _) => const Text('settings detail'),
+    );
+    final shell = StatefulShellRoute.indexedStack(
+      builder: (_, _, child) {
+        navigationShell = child;
+        return child;
+      },
+      branches: [
+        StatefulShellBranch(
+          navigatorKey: keys[0],
+          observers: [observers[0]],
+          routes: [
+            GoRoute(
+              path: '/home',
+              builder: (_, _) => const Text('home'),
+              routes: [homeDetail],
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          navigatorKey: keys[1],
+          observers: [observers[1]],
+          routes: [
+            GoRoute(
+              path: '/settings',
+              builder: (_, _) => const Text('settings'),
+              routes: [settingsDetail],
+            ),
+          ],
+        ),
+      ],
+    );
+    final router = GoRouter(initialLocation: '/home', routes: [shell]);
+    final adapter = CCGoRouterAdapter(
+      router: router,
+      observers: observers,
+      shells: [
+        CCGoRouterShellBinding(
+          shellId: 'tabs',
+          route: shell,
+          initialOutlet: 'home',
+          outlets: {'home': keys[0], 'settings': keys[1]},
+        ),
+      ],
+      bindings: [
+        CCGoRouterRouteBinding(routeId: 'home.detail', goRoute: homeDetail),
+        CCGoRouterRouteBinding(
+          routeId: 'settings.detail',
+          goRoute: settingsDetail,
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
+    addTearDown(adapter.dispose);
+    const placements = [
+      CCRoutePlacement(shellId: 'tabs', navigatorOutlet: 'home'),
+      CCRoutePlacement(shellId: 'tabs', navigatorOutlet: 'settings'),
+    ];
+    adapter.initialize(
+      [
+        for (final placement in placements)
+          route(
+            '${placement.navigatorOutlet}.detail',
+            path: '/${placement.navigatorOutlet}/detail',
+            placement: placement,
+            hasPopGuard: true,
+          ),
+      ],
+      shells: [
+        CCNavigationShell(
+          shellId: 'tabs',
+          type: CCShellType.statefulBranches,
+          outlets: const ['home', 'settings'],
+          initialOutlet: 'home',
+        ),
+      ],
+    );
+    var guardCalls = 0;
+    adapter.bindPopGuardEvaluator((_) {
+      guardCalls += 1;
+      return const CCPopAllow();
+    });
+    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    await tester.pumpAndSettle();
+    final results = <Future<Object?>>[];
+    for (var index = 0; index < placements.length; index += 1) {
+      navigationShell.goBranch(index);
+      await tester.pumpAndSettle();
+      final placement = placements[index];
+      results.add(
+        adapter.navigate(
+          request(
+            id: '${placement.navigatorOutlet}.detail',
+            operation: CCNavigationOperation.push,
+            uri: Uri.parse('/${placement.navigatorOutlet}/detail'),
+            placement: placement,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+    settingsModalRoute = ModalRoute.of(
+      tester.element(find.text('settings detail')),
+    );
+    navigationShell.goBranch(0);
+    await tester.pumpAndSettle();
+    expect(settingsModalRoute!.isCurrent, isTrue);
+    final homeNavigator = Navigator.of(
+      tester.element(find.text('home detail')),
+    );
+    // Both attempts start against the same page; only the first can remove it.
+    final first = homeNavigator.maybePop<String>('home result');
+    final second = homeNavigator.maybePop<String>('duplicate');
+    expect(await first, isTrue);
+    expect(await second, isTrue);
+    await tester.pumpAndSettle();
+    expect(await results[0], 'home result');
+    expect(guardCalls, 1);
+    expect(siblingDispositions, [RoutePopDisposition.doNotPop]);
+    expect(settingsModalRoute.popDisposition, RoutePopDisposition.doNotPop);
+    navigationShell.goBranch(1);
+    await tester.pumpAndSettle();
+    expect(find.text('settings detail'), findsOneWidget);
+    await keys[1].currentState!.maybePop<String>('settings result');
+    await tester.pumpAndSettle();
+    expect(await results[1], 'settings result');
+    expect(guardCalls, 2);
   });
 
   testWidgets('go and reset complete displaced managed results', (

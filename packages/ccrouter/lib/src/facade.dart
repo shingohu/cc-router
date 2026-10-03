@@ -602,6 +602,9 @@ abstract final class CCRouter {
   /// Do not call it from Flutter `State.dispose`, Page Pop, component teardown,
   /// Session close, application backgrounding, or one navigation Host's
   /// disposal. Await it only when the Composition Root ends the default Runtime.
+  /// Stopping and cancellation callbacks run behind the shutdown gate, so they
+  /// cannot reinitialize early. Cleanup continues after notification failures;
+  /// the Host receives the first structural failure after resources are released.
   static Future<void> shutdown() async {
     if (_runtimeResolver.hasOverlayRuntime) {
       throw StateError(
@@ -622,6 +625,9 @@ abstract final class CCRouter {
       return;
     }
 
+    final completion = Completer<void>();
+    final shuttingDown = completion.future;
+    _shuttingDown = shuttingDown;
     _backendDisposer = null;
     for (final integration in hostToolIntegrations) {
       try {
@@ -634,8 +640,7 @@ abstract final class CCRouter {
         );
       }
     }
-    final shuttingDown = _disposeRuntimeAndBackend(active, disposeBackend);
-    _shuttingDown = shuttingDown;
+    completion.complete(_disposeRuntimeAndBackend(active, disposeBackend));
     try {
       await shuttingDown;
     } finally {

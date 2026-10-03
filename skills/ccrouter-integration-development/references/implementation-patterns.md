@@ -65,6 +65,14 @@ the first cleanup error is still returned to the Host. A rejected Adapter attach
 remains Host-owned; Runtime rolls back its partial listener and ledger state so
 the Host can dispose that Adapter or safely attach another one.
 
+Cancellation listeners are notified from a released snapshot, so one throwing
+listener cannot retain the remaining callbacks or skip their notification.
+Scope records cancellation failures with its disposal errors and continues
+cleanup. An early App cancellation failure reaches the shutdown caller only
+after Runtime teardown. Shutdown establishes its reentry gate before callbacks;
+reentrant calls join cleanup, and initialization remains unavailable until it
+finishes. A disposable must not await its own Owner's teardown Future.
+
 Use `CCGoRouterApp.backendFactory` when the application needs custom Shell,
 redirect, refresh, or Router construction but can retain the standard Material
 application wrapper. The factory receives immutable configuration and is called
@@ -156,6 +164,13 @@ Use `replace` only when the current entry should no longer remain. Use `go` for 
 Use `context:` only when call-site Host/Outlet placement is required. Without
 Context, default placement resolves through the active Host while an explicit
 route Host/Outlet remains authoritative.
+
+For an unsaved editor, local `PopScope` or `Form(canPop: false)` still vetoes
+system back and `CCRouter.navigator.maybePop` even when the framework PopGuard
+allows exit. Use the local refusal callback for confirmation UI and explicitly
+call `CCRouter.navigator.pop` after confirmation; do not trigger navigation from
+the Guard. Cupertino pages with a Guard continue to disable interactive back;
+pages without one keep their default platform gesture.
 
 ## Dynamic and External URI
 

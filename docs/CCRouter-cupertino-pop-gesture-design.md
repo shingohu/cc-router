@@ -32,7 +32,8 @@ Foreign Route、PopupRoute、LocalHistoryEntry -> 只影响自身，不关闭底
     -> 解析精确的 Host / Outlet / Backend Entry
     -> 执行同步 CCPopGuard
     -> Allow：业务 maybePop 临时打开 PopEntry 并完成一次 Runtime reconciliation；
-             系统返回从 PopEntry 回调受控重试 Navigator Pop
+             系统返回只临时打开精确 Route 自身门闩，重新检查完整 popDisposition，
+             仅为 pop 时同步提交 Navigator Pop；本地 PopScope/Form 仍可拒绝
     -> Deny：RouteEntry、Scope 和结果 Future 保持不变
 
 受保护页面的交互式右滑仍然禁用，这是安全回退；无 PopGuard 页面不注册 PopEntry，因此
@@ -121,6 +122,12 @@ Observer 回调发生在 Route 状态变化之后，无法可靠阻止已经开�
 4. 已覆盖业务 `maybePop`、系统返回、Foreign Popup/LocalHistory 和 Adapter dispose 回归。
 5. 后续若 Flutter 提供可在手势开始前可靠执行同步 Guard 的动态能力，再评估允许受保护页手势。
 
+2026-10-03 修复补充：初始 Flutter `maybePop` 已执行 legacy willPop 判断。系统返回的
+框架 Gate 放行后，保持同步并检查同一 Route 的全部 Flutter PopEntry，而不二次调用
+异步 `maybePop`。这样避免重复调用业务 willPop，也避免临时放开的 Gate 跨 await 被另一个
+返回请求使用。若当前 Route、Navigator 或 Gate identity 已变化，停止该次提交。`finally`
+只恢复仍存活的同一门闩；不放开其它 Host/Outlet 的门闩。
+
 ## 7. 回归测试
 
 至少覆盖：
@@ -136,6 +143,8 @@ Observer 回调发生在 Route 状态变化之后，无法可靠阻止已经开�
 9. Route 替换、Host 注销和 Adapter dispose 后无残留 Pop Gate、Listener 或
    Route 引用。
 10. 动态能力不可用时，行为与当前“有 Guard 禁用侧滑”完全一致。
+11. 框架 allow/deny 与本地 PopScope/Form allow/deny 组合、拒绝回调打开 Foreign Popup、
+    legacy willPop 调用次数和 typed result 完成次数均保持确定性。
 
 ## 8. 验收与退出条件
 
