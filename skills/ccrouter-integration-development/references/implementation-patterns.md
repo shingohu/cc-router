@@ -603,6 +603,11 @@ Async dispatch is not isolate offloading: keep synchronous sink work short. Widg
 (for example, `tester.pump(Duration.zero)`) before asserting sink delivery;
 flushing microtasks alone does not run scheduled timers.
 
+`dispatcher.snapshot` provides payload-free per-Sink success, failure, timeout,
+quarantine, and cumulative duration counters in configured order. It is suitable
+for a health panel or benchmark only; it cannot prove durable upload and is not
+an audit or replay record.
+
 `CCAnalyticsExposureTarget` binds ancestor ScrollPositions and clips measurements
 to their paint bounds. It cancels dwell on revoke, background, or detach, and
 restarts after grant/resume without a business rebuild. `once` counts dispatcher

@@ -24,7 +24,10 @@ only after consent.
 
 The dispatcher exposes bounded, payload-free pressure counters for diagnostics
 and benchmarks: `acceptedEventCount`, `pendingEventCount`, `peakQueueDepth`,
-and `droppedEventCount`. These counters do not expose queued events and must
-not be treated as an audit log or replay source. A standalone reference run is
+`droppedEventCount`, `timedOutSinkWriteCount`, and `quarantinedSinkCount`.
+`dispatcher.snapshot` adds per-Sink success, failure, timeout, and duration
+counters in configured order. These values do not expose queued events or prove
+durable provider upload and must not be treated as an audit log or replay source.
+A standalone reference run is
 available at
 `packages/ccrouter_test/benchmark/analytics_dispatcher.dart`.

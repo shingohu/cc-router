@@ -139,6 +139,43 @@ void main() {
     expect(received, isEmpty);
   });
 
+  test(
+    'delivery snapshot reports bounded per-sink health without payloads',
+    () async {
+      final good = <String>[];
+      final dispatcher = CCAnalyticsEventDispatcher(
+        policy: CCAnalyticsPolicy(consentGranted: true),
+        sinks: [
+          _Sink((event) => good.add(event.eventId)),
+          _Sink((_) => throw StateError('private error detail')),
+        ],
+      );
+      dispatcher.dispatch(_event('health.event'));
+      await dispatcher.close();
+
+      final snapshot = dispatcher.snapshot;
+      expect(snapshot.acceptedEventCount, 1);
+      expect(snapshot.pendingEventCount, 0);
+      expect(snapshot.isClosed, isTrue);
+      expect(snapshot.sinkHealth, hasLength(2));
+      expect(snapshot.sinkHealth[0].sinkIndex, 0);
+      expect(snapshot.sinkHealth[0].successfulWriteCount, 1);
+      expect(snapshot.sinkHealth[0].failedWriteCount, 0);
+      expect(snapshot.sinkHealth[1].sinkIndex, 1);
+      expect(snapshot.sinkHealth[1].successfulWriteCount, 0);
+      expect(snapshot.sinkHealth[1].failedWriteCount, 1);
+      expect(
+        snapshot.sinkHealth[1].totalWriteDuration,
+        greaterThanOrEqualTo(Duration.zero),
+      );
+      expect(
+        () => snapshot.sinkHealth.add(snapshot.sinkHealth.first),
+        throwsUnsupportedError,
+      );
+      expect(good, ['health.event']);
+    },
+  );
+
   test('property snapshots lists before the caller can mutate them', () {
     final source = <Object?>['original', 7];
     final property = CCAnalyticsProperty('items', source);
@@ -305,6 +342,8 @@ void main() {
 
       expect(dispatcher.timedOutSinkWriteCount, 1);
       expect(dispatcher.quarantinedSinkCount, 1);
+      expect(dispatcher.snapshot.sinkHealth.first.timedOutWriteCount, 1);
+      expect(dispatcher.snapshot.sinkHealth.first.quarantined, isTrue);
       expect(slow.events, ['slow.event']);
       expect(received, ['slow.event', 'after.timeout']);
     },

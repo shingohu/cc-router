@@ -192,7 +192,8 @@ Foreign Popup 不误归因断言已闭环；应用层 Firebase 映射示例、�
 Dispatcher 的稳定性边界已经收口：属性值、属性数量、黑名单和节流状态均有界；
 `sinkWriteTimeout` 是应用按需开启的慢 Sink 隔离开关，超时 Sink 会被跳过并通过
 `timedOutSinkWriteCount`/`quarantinedSinkCount` 提供无 payload 健康信号。默认不启用超时，
-保持已有 `close()` 等待语义。
+保持已有 `close()` 等待语义。`snapshot` 还提供按配置顺序排列的 Sink 成功、失败、超时和
+累计耗时计数，可用于健康面板和基准比较，但不代表供应商已经持久化或上传。
 
 正式发布前的实施顺序、平台能力矩阵、全局 Widget 识别的实验边界、Firebase Adapter、性能/RSS/Heap
 基线，以及 Demo 的 Consent deny/grant/revoke 和 Foreign Popup 不误归因断言，统一见

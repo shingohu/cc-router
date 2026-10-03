@@ -517,7 +517,8 @@ Overlay 遮挡或像素透明度。Consent 拒绝、后台或暂时移出树会�
 
 分析 Dispatcher 还提供不含事件内容的压力指标：`acceptedEventCount`、`pendingEventCount`、
 `peakQueueDepth`、`droppedEventCount`，以及慢 Sink 的 `timedOutSinkWriteCount`、
-`quarantinedSinkCount`。它们只用于性能/健康诊断，不是审计日志或事件回放接口；可用
+`quarantinedSinkCount`。`dispatcher.snapshot` 还提供按 Sink 索引的成功/失败/超时和累计耗时
+快照。它们只用于性能/健康诊断，不是审计日志或事件回放接口；可用
 `packages/ccrouter_test/benchmark/analytics_dispatcher.dart` 在同一 SDK 和平台下输出入队延迟、队列压力
 与 RSS 趋势。
 

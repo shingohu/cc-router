@@ -497,6 +497,88 @@ abstract interface class CCAnalyticsSink {
 typedef CCAnalyticsSinkErrorHandler =
     void Function(Object error, StackTrace stackTrace, CCAnalyticsEvent event);
 
+/// Payload-free health counters for one configured Sink position.
+///
+/// [sinkIndex] follows the immutable order supplied to the Dispatcher. The
+/// snapshot deliberately omits the Sink object, event IDs, and error text so
+/// it can be forwarded to diagnostics without retaining application data.
+final class CCAnalyticsSinkHealth {
+  /// Creates one immutable Sink health snapshot.
+  const CCAnalyticsSinkHealth({
+    required this.sinkIndex,
+    required this.successfulWriteCount,
+    required this.failedWriteCount,
+    required this.timedOutWriteCount,
+    required this.totalWriteDuration,
+    required this.quarantined,
+  });
+
+  /// Position of the Sink in the Dispatcher configuration.
+  final int sinkIndex;
+
+  /// Number of writes that completed successfully.
+  final int successfulWriteCount;
+
+  /// Number of writes that failed, including timed out writes.
+  final int failedWriteCount;
+
+  /// Number of writes that exceeded the configured timeout.
+  final int timedOutWriteCount;
+
+  /// Sum of observed write durations for completed or failed writes.
+  final Duration totalWriteDuration;
+
+  /// Whether this Sink is currently quarantined after a timeout.
+  final bool quarantined;
+}
+
+/// Immutable, payload-free delivery health for one analytics Dispatcher.
+///
+/// Use this for bounded health dashboards and performance regression checks.
+/// It is not an audit log, replay source, or evidence that a provider
+/// durably uploaded an event.
+final class CCAnalyticsDeliverySnapshot {
+  /// Creates one delivery health snapshot.
+  const CCAnalyticsDeliverySnapshot({
+    required this.acceptedEventCount,
+    required this.pendingEventCount,
+    required this.peakQueueDepth,
+    required this.droppedEventCount,
+    required this.filteredEventCount,
+    required this.blacklistedEventCount,
+    required this.throttledEventCount,
+    required this.sinkHealth,
+    required this.isClosed,
+  });
+
+  /// Number of events accepted into the bounded queue.
+  final int acceptedEventCount;
+
+  /// Number of events currently waiting for a Sink.
+  final int pendingEventCount;
+
+  /// Highest queue depth observed since construction.
+  final int peakQueueDepth;
+
+  /// Number of events evicted under queue pressure.
+  final int droppedEventCount;
+
+  /// Number of events rejected by enablement, consent, or sampling.
+  final int filteredEventCount;
+
+  /// Number of events rejected by the blacklist.
+  final int blacklistedEventCount;
+
+  /// Number of events rejected by the common throttle.
+  final int throttledEventCount;
+
+  /// Health counters in configured Sink order.
+  final List<CCAnalyticsSinkHealth> sinkHealth;
+
+  /// Whether the Dispatcher has stopped accepting events.
+  final bool isClosed;
+}
+
 /// A bounded asynchronous fan-out dispatcher for analytics sinks.
 ///
 /// Events are delivered in FIFO order to each sink on a later event-loop turn.
@@ -614,6 +696,27 @@ final class CCAnalyticsEventDispatcher {
 
   /// Number of sink writes that exceeded [sinkWriteTimeout].
   int get timedOutSinkWriteCount => _timedOutSinkWriteCount;
+
+  /// Returns a payload-free health snapshot for this Dispatcher.
+  CCAnalyticsDeliverySnapshot get snapshot => CCAnalyticsDeliverySnapshot(
+    acceptedEventCount: acceptedEventCount,
+    pendingEventCount: pendingEventCount,
+    peakQueueDepth: peakQueueDepth,
+    droppedEventCount: droppedEventCount,
+    filteredEventCount: filteredEventCount,
+    blacklistedEventCount: blacklistedEventCount,
+    throttledEventCount: throttledEventCount,
+    sinkHealth: List.unmodifiable(
+      List.generate(
+        sinks.length,
+        (index) => _sinkHealth[index].snapshot(
+          sinkIndex: index,
+          quarantined: _quarantinedSinks.contains(sinks[index]),
+        ),
+      ),
+    ),
+    isClosed: isClosed,
+  );
 
   /// Whether [close] has stopped accepting new events.
   bool get isClosed => _closed;
@@ -749,6 +852,12 @@ final class CCAnalyticsEventDispatcher {
   /// Sinks whose writes exceeded the configured deadline.
   final Set<CCAnalyticsSink> _quarantinedSinks = Set.identity();
 
+  /// Mutable delivery counters in configured Sink order.
+  late final List<_MutableAnalyticsSinkHealth> _sinkHealth = List.generate(
+    sinks.length,
+    (_) => _MutableAnalyticsSinkHealth(),
+  );
+
   /// Number of writes that exceeded [sinkWriteTimeout].
   int _timedOutSinkWriteCount = 0;
 
@@ -776,13 +885,15 @@ final class CCAnalyticsEventDispatcher {
     while (_queue.isNotEmpty) {
       final event = _queue.removeFirst();
       final epoch = _deliveryEpoch;
-      for (final sink in sinks) {
+      for (var sinkIndex = 0; sinkIndex < sinks.length; sinkIndex++) {
+        final sink = sinks[sinkIndex];
         if (_quarantinedSinks.contains(sink)) continue;
         if (epoch != _deliveryEpoch ||
             !_policy.enabled ||
             !_policy.consentGranted) {
           break;
         }
+        final stopwatch = Stopwatch()..start();
         try {
           final write = Future<void>.sync(() => sink.write(event));
           final timeout = sinkWriteTimeout;
@@ -793,16 +904,21 @@ final class CCAnalyticsEventDispatcher {
               await write.timeout(timeout);
             } on TimeoutException {
               _timedOutSinkWriteCount++;
+              _sinkHealth[sinkIndex].timedOutWriteCount++;
               _quarantinedSinks.add(sink);
               rethrow;
             }
           }
+          _sinkHealth[sinkIndex].successfulWriteCount++;
         } catch (error, stackTrace) {
+          _sinkHealth[sinkIndex].failedWriteCount++;
           try {
             onSinkError?.call(error, stackTrace, event);
           } catch (_) {
             // Observability failures must never escape into the caller.
           }
+        } finally {
+          _sinkHealth[sinkIndex].totalWriteDuration += stopwatch.elapsed;
         }
       }
     }
@@ -856,6 +972,26 @@ final class CCAnalyticsEventDispatcher {
           !now.isBefore(timestamp) && now.difference(timestamp) >= window,
     );
   }
+}
+
+/// Mutable counterpart used only inside a Dispatcher.
+final class _MutableAnalyticsSinkHealth {
+  int successfulWriteCount = 0;
+  int failedWriteCount = 0;
+  int timedOutWriteCount = 0;
+  Duration totalWriteDuration = Duration.zero;
+
+  CCAnalyticsSinkHealth snapshot({
+    required int sinkIndex,
+    required bool quarantined,
+  }) => CCAnalyticsSinkHealth(
+    sinkIndex: sinkIndex,
+    successfulWriteCount: successfulWriteCount,
+    failedWriteCount: failedWriteCount,
+    timedOutWriteCount: timedOutWriteCount,
+    totalWriteDuration: totalWriteDuration,
+    quarantined: quarantined,
+  );
 }
 
 final math.Random _analyticsRandom = math.Random();
