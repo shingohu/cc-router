@@ -372,3 +372,19 @@ Firebase、ThinkingData、本地数据库和 HTTP 实现都放在应用或 `demo
 进入实现前必须建立基线：每次 pointer 处理耗时、每帧额外 build/layout 次数、长列表滚动 P95、
 事件误报/漏报率、队列峰值、RSS/Heap 增长和 Scope dispose 后残留对象。任何自动化路径如果不能
 证明不会改变手势结果、页面生命周期或业务 callback，都必须降级到显式 Target。
+
+### 10.10 当前 Demo 的 Schema 与策略评估
+
+当前 Demo 只有少量稳定事件：页面 PV/Leave、导航点击、一个滚动会话和一个曝光目标；
+属性都是固定的操作阶段、分桶值或安全关联 ID。`CCAnalyticsProperty` 的原语和容量校验、
+`CCAnalyticsContext`/`CCAnalyticsScope` 的公共上下文快照已经覆盖实际重复点，暂不新增
+强制 Schema/代码生成器。业务需要必填字段时，在应用层 Adapter 或自己的 Contract 中校验，
+避免框架替业务定义字段表。
+
+分类采样/节流目前也没有真实消费差异：Demo 仅需全局 Consent、黑名单和通用节流；将页面、
+点击、滚动拆成多套规则会增加配置和难以解释的采样偏差。应用可以按场景创建独立 Dispatcher
+或使用稳定 Event ID 的现有策略。只有真实项目证明不同类别需要独立预算、且能给出可诊断的
+优先级/公平性语义时，再增加分类策略 Contract。
+
+本阶段结论：不增加没有实际消费者的公共 Schema 或分类规则 API；保留应用层扩展点和本节
+触发条件，并以 Demo 的健康快照、Consent 和 Foreign Popup 断言作为回归基线。

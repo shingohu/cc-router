@@ -612,6 +612,16 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
           title: const Text('Analytics Consent'),
           subtitle: const Text('deny/grant/revoke 会清理待发送队列；未同意时事件不会进入 Sink。'),
         ),
+        ListTile(
+          leading: const Icon(Icons.monitor_heart_outlined),
+          title: const Text('Analytics 投递健康'),
+          subtitle: Text(
+            'accepted=${demoAnalyticsDispatcher.acceptedEventCount} · '
+            'pending=${demoAnalyticsDispatcher.pendingEventCount} · '
+            'dropped=${demoAnalyticsDispatcher.droppedEventCount} · '
+            'timeout=${demoAnalyticsDispatcher.timedOutSinkWriteCount}',
+          ),
+        ),
         _ActionTile(
           icon: Icons.restart_alt,
           title: '撤回 Analytics Consent',

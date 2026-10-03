@@ -522,6 +522,10 @@ Overlay 遮挡或像素透明度。Consent 拒绝、后台或暂时移出树会�
 `packages/ccrouter_test/benchmark/analytics_dispatcher.dart` 在同一 SDK 和平台下输出入队延迟、队列压力
 与 RSS 趋势。
 
+当前 Demo 的事件字段已经由原语校验、Context/Scope 和应用层 Adapter 覆盖；没有真实跨项目
+消费者前，框架不额外引入强制事件 Schema 或分类采样规则。需要更严格字段时由业务 Contract
+或 Adapter 校验，避免把产品字段表固化进框架。
+
 ```dart
 final confirmTarget = CCAnalyticsTarget(
   tracker: tracker,
