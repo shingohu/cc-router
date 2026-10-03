@@ -21,6 +21,11 @@ Use CCRouter as the application component boundary. Prefer its generated contrac
 7. Add focused tests for success, failure, lifecycle cleanup, and relevant concurrency.
 8. Run analyze, focused tests, and `generate --check` before completion.
 
+Commit generated output together with its Portable Generation State when
+distributing components. A cache hit must verify external source, dependency,
+and managed-output content; it does not excuse stale Git/Path artifacts.
+See the generation section in `references/implementation-patterns.md`.
+
 For generator, scaffolding, cleanup, source lookup, or deferred Contract
 migration work, also read
 [`skills/ccrouter-cli-development/SKILL.md`](../ccrouter-cli-development/SKILL.md).

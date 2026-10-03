@@ -6,9 +6,10 @@
 - 基线：`769587b`。审查开始时的 Path 指纹修复、拓扑基准与文档改动，结束时已包含在该提交中。
 - 范围：Core/Contracts、Flutter Facade、GoRouter、五类能力生成器与 CLI、Analyzer、Analytics、
   DevTools、Demo 接入模式以及面向集成者的 Integration/CLI Skill。
-- 状态：审查完成；后续已按授权修复 F01/F02，验证记录见第 8 节。其余条目未实施。
+- 状态：审查完成；后续已按授权修复 F01/F02 与 F03/F04/F09，验证记录见第 8、9 节。
+  其余条目未实施。
 - 审查结论：现有测试基线通过，但不能认定框架没有严重缺陷或生成器绝对准确。原确认
-  5 项 P1、13 项 P2，其中 1 项 P2 属于 Demo；F01/F02 修复后剩余 3 项 P1、13 项 P2。
+  5 项 P1、13 项 P2，其中 1 项 P2 属于 Demo；上述修复后剩余 1 项 P1、12 项 P2。
   优先修复已有能力的组合边界，再扩展开发体验能力。
 
 P1 表示优先处理的业务结果、清理、授权或生成准确性风险；P2 表示特定合法输入或
@@ -91,6 +92,8 @@ Analyzer 测试在 `packages/ccrouter_analyzer_plugin/` 内执行 `fvm dart test
 
 ### F03：Fast path 漏检外部 Path 源码，缓存与参考校验不等价
 
+- 状态：已修复。快速路径与 Portable State 共用源码、解析依赖和工具的内容证明，额外
+  读取全部外部受管输出；外部状态在 Builder 前检查，构建后再次检查。
 - 位置：[ccrouter_generator.dart](../packages/ccrouter_generator/bin/ccrouter_generator.dart)
   第 2422 行。
 - 触发：外部只读 Package 首次生成验证成功后，修改该 Package 的 authored source，保持
@@ -107,6 +110,8 @@ Analyzer 测试在 `packages/ccrouter_analyzer_plugin/` 内执行 `fvm dart test
 
 ### F04：Portable State 混入自身分发身份，阻断正常 Git/Pub 消费
 
+- 状态：已修复。分发证明排除作者开发依赖闭包及内容已证明的 Package 传输身份；依赖
+  版本、源码、语言配置和工具身份仍校验，本地 Build Plan 继续保留更严格的构建输入。
 - 位置：[build_plan.dart](../packages/ccrouter_generator/bin/src/build_plan.dart) 第 766 行、
   [portable_generation_state.dart](../packages/ccrouter_generator/bin/src/portable_generation_state.dart)
   第 103 行。
@@ -176,6 +181,8 @@ Token，并仅等待 Interceptor 本身或 timeout。它没有关联 Runtime 取
 
 ### F09（P2）：Service Proxy 默认字符串未转义 Dart 插值
 
+- 状态：已修复。默认字符串在 JSON 转义后补上 Dart `$` 转义；List/Set/Map 递归使用
+  同一规则，回归通过解析生成库并求值默认常量验证，不只匹配生成文本。
 [service_proxy_generator.dart](../packages/ccrouter_generator/lib/src/service_proxy_generator.dart)
 第 563 行直接用 `jsonEncode` 生成 Dart 字符串。真实 Builder 将合法
 `String price({String unit = r'$currency'})` 生成为 `unit = "$currency"`，引用了不存在的
@@ -303,6 +310,8 @@ dependencies 分别表达组件关系和实际消费，可用可靠 Quick Fix �
 
 ## 6. 核心价值逐项回归
 
+下表保留原始审查时的判断；后续修复及验证范围见第 8、9 节，不据此把已修项再次列为待办。
+
 | # | 核心价值 | 本轮判断 | 证据与待完成项 |
 | --- | --- | --- | --- |
 | 1 | 智能、可预测 | 部分满足 | 自动装配和稳定入口有效；F03/F04 削弱自动校验可预测性 |
@@ -324,7 +333,7 @@ dependencies 分别表达组件关系和实际消费，可用可靠 Quick Fix �
 
 ## 7. 推荐实施顺序与完成定义
 
-F01/F02 已完成实现和回归，其余条目待实施；每个独立缺陷先增加失败用例，再修复、回归，
+F01/F02 与 F03/F04/F09 已完成实现和定向回归；后续从第 3 项继续。每个独立缺陷先增加失败用例，再修复、回归，
 按用户授权提交。
 
 1. **生命周期与返回保护：F01、F02。** 验证异常隔离和多层 Pop 决策，避免资源遗漏与数据丢失。
@@ -371,4 +380,40 @@ F01/F02 已完成实现和回归，其余条目待实施；每个独立缺陷先
 
 本轮没有新增公开 API，没有重新执行 Generator/Analyzer Plugin 的独立全量套件，也没有
 重跑 macOS/iOS 真机手势或长期 Heap 测试；不将已有 Widget 测试解释为本轮真机验证。
-F03–F18 仍按原审查记录待修复，本节不扩展为其已修复结论。
+第 8 节仅记录 F01/F02；后续 F03/F04/F09 的修复见下节，其余仍待修复。
+
+## 9. F03/F04/F09 修复验证（2026-10-03）
+
+- [portable_distribution_test.dart](../packages/ccrouter_test/generator_test/portable_distribution_test.dart)
+  建立独立 producer/consumer，执行真实 Pub 解析、本地 Git 提交依赖和 Git archive 解包后的
+  Path 消费。消费者解析图不包含 producer 的 devDependencies，且断言未安装作者专用的
+  `test` Package；完整生成、缓存检查与
+  `--no-cache --check` 均通过，producer/consumer 的 `dart analyze lib` 均无问题。
+- 外部组件源码修改、Service 生成源码修改/删除、传递 Path DTO 修改分别比较缓存与完整
+  路径，均以稳定的 `authoredInputMismatch`、`managedOutputMismatch` 或
+  `resolutionMismatch` 拒绝。恢复原始内容后检查通过，外部原始生成物逐字节不变。
+- 删除生成文件时发现 Builder 先行可能触发 build_runner 对只读依赖的清理异常，因此新增
+  Builder 前置状态校验。聚合阶段保留二次校验，不把前置成功当作构建期间内容不变的证明。
+- [service_generator_test.dart](../packages/ccrouter_test/generator_test/service_generator_test.dart)
+  新增 `$name`、`${expression}`、引号、反斜线、换行、List、Set 和嵌套 Map 的默认值回归，
+  解析生成 Dart 库并求值常量，确认内容不变。修复前常量无法求值；修复后通过。
+- 分发样本只验证本地 Git 和源码归档，不宣称完成真实远端 Pub 发布/下载验证。测试复用
+  已下载 Hosted 依赖，Git clone 和临时 Pub 数据放入测试自有临时目录。
+- 这批修复不增加公开 API，不实施 P6 的语义摘要、注释过滤或公共依赖失效粒度优化。
+  README、集成 Skill 和生成操作指南同步了实际校验边界。
+- 生成器整套回归中的其余 **273 项通过**；新增分发夹具首次放在非规范目录而未生成目标
+  Service 文件，改为 `lib/src` 并补上生产者/消费者 Dart 分析后，单独复跑通过。
+  框架/Flutter/Demo/模块/DevTools **432/432 通过**，Workspace `fvm dart analyze` 无问题。
+- 最终 Demo `generate --no-cache --check --profile` 通过，内部耗时 **3734ms**，其中
+  build_runner **1778ms**；三次快速检查 **436/422/431ms**，均确认产物无需更新。
+  相比第 8 节历史单次样本 3606/312ms，快速校验开销增加；这不是同轮 A/B 或 P95 结论。
+  扩大外部验证范围是准确性修复，不以跳过校验追回这部分耗时。
+- 官方生成器刷新 11 份 Portable State，仅工具、解析及合成摘要变化，业务 Dart、metadata
+  和 managed-output 摘要未变。文档链接检查通过；Skill YAML 另行解析通过，系统 Python
+  缺少 PyYAML，因此 skill-creator 的 Python 快检脚本未能运行，不计为已通过的检查。
+- 核心价值复核：F03/F04 补齐内容证明与安全回退，F09 补齐类型安全默认值；保留只读依赖
+  所有权，不增加业务 API，且有真实消费者和完整路径对照。F05–F08、F10–F18 仍待处理，
+  本轮不重跑独立 Analyzer Plugin、真实设备或长时间 Heap，不宣称全框架问题已清零。
+- 3x 五类能力拓扑复测通过：18 组件、90 Route，个人/团队增删的 277 份受管输出均与
+  参考路径逐字节一致；可信新增和删除继续复用聚合路径。wall time 为稳定检查 0.842s、
+  个人新增 6.472s、团队预生成新增 2.698s，详见[性能报告](CCRouter-generator-performance-report.md#66-f03f04f09-准确性修复后的-3x-回归)。

@@ -642,6 +642,16 @@ retain `--no-cache --check` as the authoritative CI gate. Commit
 `lib/src/ccrouter_generated/metadata/ccrouter_generation_state.json`; the state
 under `.dart_tool/ccrouter/v1/build_plans/` remains disposable local data.
 
+Portable proofs exclude the component's own eventual Git/archive identity and
+the producer's development-only dependency closure. Exact source and runtime
+dependency content plus the generator toolchain still have to match. Consumers
+do not need the producer's unrelated test dependencies, and cannot repair stale
+read-only artifacts. The fast path recomputes the same external source and
+resolution identities as full verification and reads every external managed
+output, including when checking mutable transitive Path DTO dependencies.
+Do not remove or rewrite the state to suppress a mismatch; regenerate in the
+owning Package and distribute a complete, verified artifact set.
+
 After `ccrouter clean`, generation may temporarily bootstrap missing component
 Route, Command, and Event APIs from valid Builder metadata before build_runner.
 This only repairs the import graph for the same build pass: current metadata is

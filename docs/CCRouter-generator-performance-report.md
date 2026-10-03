@@ -211,6 +211,32 @@ authored fingerprint，但本地 Build Plan 原先没有计算，导致真实 Pa
 `resolution-unproven`。两者现共用同一套 Path 内容指纹采集；状态仍不持久化绝对路径。无法解析
 root 或 graph、源码变化、状态缺失/失配时仍 fail closed，不会为了命中性能路径降低准确性。
 
+### 6.6 F03/F04/F09 准确性修复后的 3x 回归
+
+2026-10-03 修复外部分发身份、外部文件缓存漏检与 Proxy 字符串默认值后，单独执行
+`fvm dart run packages/ccrouter_test/benchmark/generator_component_topology.dart 3`。
+仍为 18 个组件、90 Route，各 18 个 Service/Command/Event/InitTask；保持完整内容校验。
+
+| 场景 | 修复前历史 wall time | 修复后 wall time |
+| --- | ---: | ---: |
+| 冷种子 | 29.811s | 31.090s |
+| 稳定检查 | 0.819s | 0.842s |
+| 个人删除 | 2.389s | 2.566s |
+| 个人新增未生成组件 | 6.255s | 6.472s |
+| 团队新增预生成组件 | 2.721s | 2.698s |
+| 团队删除 | 2.244s | 2.280s |
+
+本轮 4 条增删路径全部 `byteExact=true`，逐文件比较 277 份受管输出，并分别通过
+`--no-cache --check`。个人新增仍执行 Builder（4081ms）；个人删除、团队新增/删除仍为
+`aggregateOnly`（Builder 0ms）。团队新增完整参考路径为 6.272s，author/teammate 的完整
+输出相同，删除后恢复相同基线。Pub 变更单独为 0.765–0.791s，不计入表中 generation。
+
+Demo 另测完整检查内部 3734ms、三次快速检查 436/422/431ms；相较审查上一批的历史
+单次快速检查 312ms 有增加。表中是同机分时单次样本，不是同轮 A/B 或 P95，不能把差异
+全部归因于补丁或宣称固定加速比例。该结果确认既有聚合复用和产物准确性保持成立；本轮
+未重测 5x/10x，也未实施 P6 注释/公共依赖失效优化。独立 Git/源码归档和外部文件篡改
+回归见[全框架审查第 9 节](CCRouter-framework-audit-2026-10-03.md#9-f03f04f09-修复验证2026-10-03)。
+
 ## 7. 后续触发条件
 
 只有真实生产样本满足以下任一条件时，再进入下一轮架构优化：

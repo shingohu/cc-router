@@ -1147,6 +1147,12 @@ Host 不会修改外部依赖。诊断基线保存在
 `--no-cache --check` 仍是 CI 权威门禁。Portable State 是应随受管生成物提交的内容证明；本机
 `.dart_tool` 状态仍不可提交或跨机器复用，也不能替代 CI 的完整 Builder 校验。
 
+Portable State 按组件内容验证，不绑定该组件自身尚未产生的 Git commit 或归档哈希，也不要求
+消费者安装作者的测试用 devDependencies；生成工具及实际运行依赖仍须匹配。只要依赖身份或
+源码不同，就需要由作者重新生成并分发，Host 不会修改只读依赖。快速路径与完整验证共享外部
+源码及解析依赖的内容证明，并重新读取全部外部受管输出；修改/删除生成文件或修改传递 Path
+依赖的 DTO 都会使快速路径失效。注释目前仍属于源码摘要输入，尚未实施语义摘要优化。
+
 fast path 未命中后，Generator 会先对 Host 依赖闭包执行保守的 Component Dependency
 Preflight：仅当直接 List、Contract 与 Owner 都能唯一证明时，才在 build_runner 前按组件和
 Owner 聚合报告缺失的 Service/Command required dependency；变量、spread、条件集合、歧义或

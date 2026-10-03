@@ -560,7 +560,11 @@ String _renderServiceConstant(
   _ServiceProxyImportPlan imports,
 ) {
   if (value.isNull) return 'null';
-  if (value.toStringValue() case final String text) return jsonEncode(text);
+  if (value.toStringValue() case final String text) {
+    // JSON handles quotes, control characters, and backslashes, but Dart also
+    // treats dollar signs as interpolation in a non-raw string literal.
+    return jsonEncode(text).replaceAll(r'$', r'\$');
+  }
   if (value.toBoolValue() case final bool flag) return '$flag';
   if (value.toIntValue() case final int number) return '$number';
   if (value.toDoubleValue() case final double number) {

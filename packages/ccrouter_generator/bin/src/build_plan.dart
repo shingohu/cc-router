@@ -714,26 +714,38 @@ final class _GenerationResolutionPlanningContext {
   }
 
   /// Builds a Package-specific transitive identity and portability decision.
+  ///
+  /// Distribution proofs omit producer-only development edges and transport
+  /// identities for content-backed Packages. The local Build Plan retains
+  /// those inputs to invalidate builds when the author's tool setup changes.
   _GenerationResolutionIdentity packageIdentity(
     CCResolvedPackage package, {
     required Map<String, String> authoredFingerprints,
     required Map<String, String?> indexFingerprints,
+    bool forDistribution = false,
   }) => _identityForRoots(
     [package.name],
     authoredFingerprints: authoredFingerprints,
     indexFingerprints: indexFingerprints,
-    rootDevDependencies: true,
+    rootDevDependencies: !forDistribution,
+    forDistribution: forDistribution,
   );
 
   /// Builds the build_runner/generator toolchain identity.
+  ///
+  /// Development dependencies of tool Packages are not executed by the Host.
+  /// Distribution mode uses authored content where available, preserving lock
+  /// identities for the remaining resolved tool dependencies.
   _GenerationResolutionIdentity toolIdentity({
     required Map<String, String> authoredFingerprints,
     required Map<String, String?> indexFingerprints,
+    bool forDistribution = false,
   }) => _identityForRoots(
     const ['build_runner', 'ccrouter_generator'],
     authoredFingerprints: authoredFingerprints,
     indexFingerprints: indexFingerprints,
     rootDevDependencies: false,
+    forDistribution: forDistribution,
   );
 
   /// Traverses deterministic graph slices from [roots].
@@ -742,6 +754,7 @@ final class _GenerationResolutionPlanningContext {
     required Map<String, String> authoredFingerprints,
     required Map<String, String?> indexFingerprints,
     required bool rootDevDependencies,
+    required bool forDistribution,
   }) {
     final rootSet = roots.where(graph.containsKey).toSet();
     final pending = rootSet.toList()..sort();
@@ -771,11 +784,16 @@ final class _GenerationResolutionPlanningContext {
         'name': name,
         'version': package['version'],
         'dependencies': _planningStrings(package['dependencies'])..sort(),
-        if (rootSet.contains(name))
+        if (rootDevDependencies && rootSet.contains(name))
           'devDependencies': _planningStrings(package['devDependencies'])
             ..sort(),
         'config': config[name],
-        'lock': lockIdentity,
+        // Source-controlled proofs cannot contain their own eventual Git ref
+        // or archive hash. Exact authored bytes also prove content-backed
+        // dependencies independently of workspace/Path/Git transport. Other
+        // dependencies retain their lock identity. The local Build Plan keeps
+        // its stricter source identity and root development dependency graph.
+        'lock': forDistribution && authored != null ? null : lockIdentity,
         'authoredFingerprint': authored,
         'indexFingerprint': indexFingerprints[name],
       });

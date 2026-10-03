@@ -16,6 +16,41 @@ abstract final class _CCPortableGenerationState {
   /// Managed file published beside `ccrouter_package.json`.
   static const String fileName = 'ccrouter_generation_state.json';
 
+  /// Rejects stale distributed artifacts before build_runner can touch them.
+  ///
+  /// Aggregation verifies again after building, so changes during a build
+  /// cannot be accepted merely because this preflight passed.
+  static Future<bool> verifyReadOnly(CCPackageWorkspace workspace) async {
+    final packages = workspace.packages.values.where(
+      (package) => !package.writable && package.requiresPackageIndex,
+    );
+    final results = await verify(
+      workspace,
+      packageNames: packages.map((package) => package.name).toSet(),
+    );
+    for (final package in packages) {
+      if (!package.indexFile.existsSync()) {
+        stderr.writeln(
+          'error: Read-only CCRouter Package "${package.name}" has no published '
+          'lib/src/ccrouter_generated/metadata/ccrouter_package.json. Regenerate that '
+          'Package before consuming it.',
+        );
+        return false;
+      }
+      final verification = results[package.name]!;
+      if (!verification.valid) {
+        stderr.writeln(
+          'error: Read-only CCRouter Package "${package.name}" has an '
+          'invalid Portable Generation State '
+          '(${verification.reason.name}). Regenerate and '
+          'republish that Package before consuming it.',
+        );
+        return false;
+      }
+    }
+    return true;
+  }
+
   /// Verifies selected Packages against their current source and output bytes.
   static Future<Map<String, _CCPortableGenerationStateVerification>> verify(
     CCPackageWorkspace workspace, {
@@ -187,6 +222,7 @@ final class _CCPortableGenerationContext {
     final toolIdentity = resolution.toolIdentity(
       authoredFingerprints: authored,
       indexFingerprints: const <String, String?>{},
+      forDistribution: true,
     );
     if (!toolIdentity.portable) {
       throw const FormatException(
@@ -199,6 +235,7 @@ final class _CCPortableGenerationContext {
         package,
         authoredFingerprints: authored,
         indexFingerprints: const <String, String?>{},
+        forDistribution: true,
       );
       if (!identity.portable) {
         throw FormatException(

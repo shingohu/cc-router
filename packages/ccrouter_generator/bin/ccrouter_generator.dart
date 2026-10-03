@@ -206,8 +206,19 @@ Future<void> main(List<String> arguments) async {
         stdout.writeln(buildPlan.profileDescription);
       }
     }
-    if (parsed.command == _GeneratorCommand.generate &&
-        fastPathWorkspace != null) {
+    if (parsed.command == _GeneratorCommand.generate) {
+      fastPathWorkspace ??= await CCPackageWorkspace.load(
+        buildRoot: buildContext!.root,
+        hostRoot: root,
+        workspace: buildContext.workspace,
+      );
+      // build_runner cannot repair read-only dependency artifacts. Reject
+      // stale external files before it sees missing generated libraries and
+      // attempts incremental cleanup outside its writable build Packages.
+      if (!await _CCPortableGenerationState.verifyReadOnly(fastPathWorkspace)) {
+        exitCode = 1;
+        return;
+      }
       final preflightWatch = Stopwatch()..start();
       final issues = await _componentDependencyPreflight(fastPathWorkspace);
       preflightWatch.stop();
@@ -2418,10 +2429,24 @@ abstract final class _GenerationStateFingerprint {
   /// Captures authored sources, resolution state, and generator implementation.
   static Future<String> captureInput(CCPackageWorkspace workspace) async {
     final inputs = <String, List<int>>{};
+    // Use the same source/dependency/tool identities as full external Package
+    // verification. In particular, a mutable transitive Path dependency can
+    // sit outside the Host runtime closure and still affect generated code.
+    final portable = await _CCPortableGenerationContext.capture(workspace);
+    inputs['portable/authored'] = utf8.encode(
+      computeCCCanonicalJsonFingerprint(portable.authoredFingerprints),
+    );
+    inputs['portable/resolution'] = utf8.encode(
+      computeCCCanonicalJsonFingerprint(portable.resolutionFingerprints),
+    );
+    inputs['portable/tool'] = utf8.encode(portable.toolFingerprint);
     for (final package in workspace.packages.values) {
-      if (package.writable) {
-        await _addAuthoredPackageInputs(inputs, package);
-      } else {
+      if (!package.writable) {
+        // An intact index/state cannot prove that its Dart outputs still
+        // exist or match. Re-read every managed artifact before a cache hit.
+        for (final entry in (await capturePackageOutput(package)).entries) {
+          inputs['external/${package.name}/${entry.key}'] = entry.value;
+        }
         await _addFile(
           inputs,
           'external/${package.name}/ccrouter_package.json',
@@ -2445,7 +2470,6 @@ abstract final class _GenerationStateFingerprint {
       }
     }
     await _addBuildStateInputs(inputs, workspace.buildRoot);
-    await _addGeneratorInputs(inputs);
     inputs['tool/dart-version'] = utf8.encode(Platform.version);
     inputs['tool/dart-executable'] = utf8.encode(
       path.normalize(Platform.resolvedExecutable),

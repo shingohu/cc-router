@@ -296,6 +296,51 @@ abstract interface class GenericOrderService {
     },
   );
 
+  test(
+    'proxy defaults preserve Dart string and collection constants',
+    () async {
+      final output = await generateProxy(
+        r'''
+const component = CCComponent(
+  id: CCComponentId('consumer'),
+  version: '1.0.0',
+  dependencies: [CCComponentId('owner')],
+  serviceDependencies: [CCServiceDependency<TextService>()],
+);
+''',
+        imports: "import 'package:ccrouter_test/text_contract.dart';",
+        additionalAssets: {
+          'ccrouter_test|lib/text_contract.dart': r'''
+import 'package:ccrouter/ccrouter.dart';
+@CCServiceContract(componentId: CCComponentId('owner'), id: 'owner.text')
+abstract interface class TextService {
+  String format({
+    String unit = r'$currency ${literal}',
+    String escaped = 'quote" slash\\ newline\n',
+    List<String> list = const [r'$item'],
+    Set<String> set = const {r'${item}'},
+    Map<String, List<String>> map = const {r'$key': [r'${value}']},
+  });
+}
+''',
+        },
+      );
+      const outputId = 'ccrouter_test|lib/proxy_verification.dart';
+      // Resolve the emitted library and evaluate its defaults, rather than
+      // accepting text that happens to look escaped but fails Dart semantics.
+      final verifier = _ProxyDefaultVerifier();
+      await testBuilder(
+        verifier,
+        {outputId: output},
+        rootPackage: 'ccrouter_test',
+        generateFor: {outputId},
+        isInput: (id) => id == outputId,
+        readerWriter: reader,
+      );
+      expect(verifier.verified, isTrue);
+    },
+  );
+
   test('proxy import prefixes avoid generic parameter names', () async {
     final output = await generateProxy(
       r'''
@@ -785,6 +830,41 @@ abstract interface class LegacySummaryService {}
   );
 }
 
+class _ProxyDefaultVerifier implements Builder {
+  bool verified = false;
+  @override
+  final buildExtensions = const {
+    '.dart': ['.verified'],
+  };
+
+  @override
+  Future<void> build(BuildStep buildStep) async {
+    if (buildStep.inputId.path != 'lib/proxy_verification.dart') return;
+    final library = await buildStep.resolver.libraryFor(buildStep.inputId);
+    final proxy = library.classes.singleWhere(
+      (type) => type.interfaces.isNotEmpty,
+    );
+    final method = proxy.methods.singleWhere(
+      (member) => member.name == 'format',
+    );
+    final defaults = {
+      for (final parameter in method.formalParameters)
+        parameter.name: parameter.computeConstantValue(),
+    };
+    expect(defaults['unit']?.toStringValue(), r'$currency ${literal}');
+    expect(defaults['escaped']?.toStringValue(), 'quote" slash\\ newline\n');
+    expect(defaults['list']?.toListValue()?.single.toStringValue(), r'$item');
+    expect(defaults['set']?.toSetValue()?.single.toStringValue(), r'${item}');
+    final map = defaults['map']?.toMapValue();
+    expect(map?.keys.single?.toStringValue(), r'$key');
+    expect(
+      map?.values.single?.toListValue()?.single.toStringValue(),
+      r'${value}',
+    );
+    verified = true;
+  }
+}
+
 Future<String> _generate({
   required TestReaderWriter reader,
   required Builder builder,
@@ -815,5 +895,6 @@ Future<String> _generate({
     expect(await reader.canRead(output), isFalse);
     return logs.join('\n');
   }
+  expect(await reader.canRead(output), isTrue, reason: logs.join('\n'));
   return reader.readAsString(output);
 }
