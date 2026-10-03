@@ -85,6 +85,9 @@ final class CCNavigationAnalyticsBridge {
     // Consent is checked before retaining a visit. A route shown before
     // consent and hidden after consent does not leak a pre-consent duration.
     if (!dispatcher.policy.enabled || !dispatcher.policy.consentGranted) {
+      if (event.phase == CCNavigationAspectPhase.hide) {
+        _visits.remove(request.navigationId);
+      }
       return;
     }
     final telemetry = request.telemetryContext;

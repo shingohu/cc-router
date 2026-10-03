@@ -380,6 +380,65 @@ void main() {
   );
 
   test(
+    'consent revocation discards an open visit before the next show',
+    () async {
+      final sink = _RecordingSink();
+      final dispatcher = CCAnalyticsEventDispatcher(
+        sinks: [sink],
+        policy: CCAnalyticsPolicy(consentGranted: true),
+      );
+      final bridge = CCNavigationAnalyticsBridge(dispatcher: dispatcher);
+      final aspect = bridge.createAspect();
+      final request = CCNavigationAspectRequest(
+        navigationId: 'runtime-navigation-consent',
+        operation: CCNavigationOperation.push,
+        routeId: 'order.detail',
+        routePattern: '/order/:id',
+        resolvedHostId: 'default',
+        navigatorOutlet: 'root',
+        ownerComponentId: 'order',
+        placement: const CCRoutePlacement.root(),
+        origin: CCNavigationOrigin.internal,
+        openMode: null,
+        source: null,
+        presentation: const CCPagePresentation(),
+        telemetryContext: null,
+      );
+      final at = DateTime(2026);
+      aspect.onArrival!(
+        CCNavigationAspectEvent(
+          phase: CCNavigationAspectPhase.arrival,
+          request: request,
+          timestamp: at,
+        ),
+      );
+      dispatcher.updatePolicy(CCAnalyticsPolicy(consentGranted: false));
+      aspect.onHide!(
+        CCNavigationAspectEvent(
+          phase: CCNavigationAspectPhase.hide,
+          request: request,
+          timestamp: at.add(const Duration(seconds: 1)),
+        ),
+      );
+      dispatcher.updatePolicy(CCAnalyticsPolicy(consentGranted: true));
+      aspect.onShow!(
+        CCNavigationAspectEvent(
+          phase: CCNavigationAspectPhase.show,
+          request: request,
+          timestamp: at.add(const Duration(seconds: 2)),
+        ),
+      );
+      await dispatcher.close();
+
+      expect(sink.events, hasLength(1));
+      expect(
+        sink.events.last.properties.values['visit_id'],
+        'runtime-navigation-consent.v2',
+      );
+    },
+  );
+
+  test(
     'explicit target records before running the business callback',
     () async {
       final sink = _RecordingSink();
