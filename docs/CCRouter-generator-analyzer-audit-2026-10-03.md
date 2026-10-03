@@ -182,4 +182,9 @@ Demo Analyzer pin、推送提交或改变缓存策略。
 - G03：已修复 Host 聚合器的 Dart literal 编码，所有 JSON-compatible metadata 写入 Dart
   时统一转义插值符号，JSON 元数据仍保留原始文本。新增真实生成后编译执行 Catalog 的回归，
   覆盖 `$currency`、`${literal}`、引号、反斜杠、换行和中文；修复前编译失败。
-- G04/A01：待修复。
+- G04：预检索引改为 Library URI，解析直接/相对 import、export 与 show/hide；局部声明
+  优先且同 Package 未导入声明不参与匹配。未知/条件命名空间与 part 保守交由 Builder。
+  不扩大文件扫描范围、不创建 Analyzer Session；现有已读文件保留必要的命名空间边。
+  Demo Network 的 Owner 解析涉及未索引 Dio import，预检不再宣称提前证明该 Owner，最终
+  Builder 校验不变。新增两个原始误拒绝反例及 namespace 边界回归。
+- A01：待修复。

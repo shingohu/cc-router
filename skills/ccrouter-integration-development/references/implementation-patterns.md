@@ -340,6 +340,9 @@ empty Sets behind an Object parameter. Types appearing only in defaults must
 also be publicly importable; private enums are rejected during generation.
 Catalog descriptions remain literal text when emitted into Host DevTools Dart;
 the generator owns Dart interpolation escaping, not the component author.
+Dependency preflight resolves owners within actual Library import/export scopes,
+including show/hide. Unavailable external namespaces, parts and conditional edges
+defer to Builder; an early report can contain fewer owners than final validation.
 
 Export the interface and its public value types from the business contracts barrel. Bind a simple
 implementation by directly implementing exactly one contract:

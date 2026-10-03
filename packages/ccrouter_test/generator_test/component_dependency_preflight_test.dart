@@ -9,6 +9,164 @@ import 'package:test/test.dart';
 
 void main() {
   group('component dependency preflight', () {
+    test('does not use unrelated same-Package owner constants', () {
+      final issues = CCComponentDependencyPreflight.inspect([
+        _source(
+          package: 'contracts',
+          file: 'api.dart',
+          contents: '''
+const ownerId = CCComponentId('owner');
+@CCServiceContract(componentId: ownerId, id: 'owner.service')
+abstract interface class SharedService {}
+''',
+        ),
+        _source(
+          package: 'consumer',
+          file: 'unrelated.dart',
+          contents: "const ownerId = CCComponentId('unrelated');",
+        ),
+        _source(
+          package: 'consumer',
+          file: 'component.dart',
+          writable: true,
+          contents: '''
+import 'package:contracts/api.dart';
+const component = CCComponent(id: CCComponentId('consumer'),
+  dependencies: [ownerId], serviceDependencies: [CCServiceDependency<SharedService>()]);
+''',
+        ),
+      ]);
+      expect(issues, isEmpty);
+    });
+
+    test(
+      'unimported Contracts cannot be discovered through Package membership',
+      () {
+        final issues = CCComponentDependencyPreflight.inspect([
+          _source(
+            package: 'contracts',
+            file: 'other.dart',
+            contents: '''
+@CCServiceContract(componentId: CCComponentId('owner'), id: 'owner.service')
+abstract interface class SharedService {}
+''',
+          ),
+          _source(
+            package: 'contracts',
+            file: 'api.dart',
+            contents: 'class SharedService {}',
+          ),
+          _source(
+            package: 'consumer',
+            file: 'component.dart',
+            writable: true,
+            contents: '''
+import 'package:contracts/api.dart';
+const component = CCComponent(id: CCComponentId('consumer'), dependencies: [],
+  serviceDependencies: [CCServiceDependency<SharedService>()]);
+''',
+          ),
+        ]);
+        expect(issues, isEmpty);
+      },
+    );
+
+    test('follows exact relative barrels and preserves local shadowing', () {
+      final contracts = _source(
+        package: 'contracts',
+        file: 'src/api.dart',
+        contents: '''
+const ownerId = CCComponentId('owner');
+@CCServiceContract(componentId: ownerId, id: 'owner.service')
+abstract interface class SharedService {}
+''',
+      );
+      for (final declaration in [
+        '',
+        "const ownerId = CCComponentId('another');",
+      ]) {
+        final issues = CCComponentDependencyPreflight.inspect([
+          contracts,
+          _source(
+            package: 'contracts',
+            file: 'api.dart',
+            contents: "export 'src/api.dart' show ownerId, SharedService;",
+          ),
+          _source(
+            package: 'consumer',
+            file: 'src/component.dart',
+            writable: true,
+            contents:
+                '''
+import 'package:contracts/api.dart';
+$declaration
+const component = CCComponent(id: CCComponentId('consumer'), dependencies: [ownerId],
+  serviceDependencies: [CCServiceDependency<SharedService>()]);
+''',
+          ),
+        ]);
+        expect(issues.length, declaration.isEmpty ? 0 : 1);
+        if (issues.isNotEmpty) expect(issues.single.ownerComponentId, 'owner');
+      }
+    });
+
+    test('unknown and conditional namespaces defer to Builder', () {
+      for (final import in [
+        "import 'package:contracts/api.dart' if (dart.library.io) 'package:contracts/other.dart';",
+        "import 'package:contracts/api.dart'; import 'package:unknown/api.dart';",
+        "import 'package:contracts/api.dart' show SharedService hide SharedService;",
+        "import 'package:contracts/api.dart'; part 'other.dart';",
+      ]) {
+        final issues = CCComponentDependencyPreflight.inspect([
+          _source(
+            package: 'contracts',
+            file: 'api.dart',
+            contents: '''
+@CCServiceContract(componentId: CCComponentId('owner'), id: 'owner.service')
+abstract interface class SharedService {}
+''',
+          ),
+          _source(
+            package: 'consumer',
+            file: 'component.dart',
+            writable: true,
+            contents:
+                '''
+$import
+const component = CCComponent(id: CCComponentId('consumer'), dependencies: [],
+  serviceDependencies: [CCServiceDependency<SharedService>()]);
+''',
+          ),
+        ]);
+        expect(issues, isEmpty, reason: import);
+      }
+    });
+
+    test('relative imports and CLI library paths use the same namespace', () {
+      final issues = CCComponentDependencyPreflight.inspect([
+        CCComponentDependencyPreflightSource(
+          packageName: 'consumer',
+          path: 'package:consumer/lib/src/service.dart',
+          writable: true,
+          contents: '''
+@CCServiceContract(componentId: CCComponentId('owner'), id: 'owner.service')
+abstract interface class SharedService {}
+''',
+        ),
+        _source(
+          package: 'consumer',
+          file: 'src/component.dart',
+          writable: true,
+          contents: '''
+import 'service.dart';
+const component = CCComponent(id: CCComponentId('consumer'), dependencies: [],
+  serviceDependencies: [CCServiceDependency<SharedService>()]);
+''',
+        ),
+      ]);
+      expect(issues.single.ownerComponentId, 'owner');
+    });
+
     test('aggregates capabilities by uniquely proven owner', () {
       final issues = CCComponentDependencyPreflight.inspect([
         _source(
@@ -186,7 +344,7 @@ const consumerComponent = CCComponent(
   });
 
   test(
-    'generate reports all missing owners before build_runner without writes',
+    'generate reports proven missing owners before build_runner without writes',
     () async {
       final root = _workspaceRoot();
       final componentSource = File(
@@ -244,7 +402,9 @@ const consumerComponent = CCComponent(
       expect(result.exitCode, 1, reason: output);
       expect(output, contains('component dependency preflight failed'));
       expect(output, contains('demo_order_component'));
-      expect(output, contains('demo_network_component'));
+      // Network's annotation library imports Dio, outside this AST index.
+      // Do not guess that the unknown namespace cannot shadow its owner ID.
+      expect(output, isNot(contains('demo_network_component')));
       expect(output, contains('demo_kv_storage_component'));
       expect(output, contains('Service "demo_order.summary"'));
       expect(output, contains('Command "demo_order.reserve"'));

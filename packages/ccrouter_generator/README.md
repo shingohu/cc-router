@@ -101,7 +101,9 @@ Contract 元数据解析 Owner 并校验三者一致，不会因为发现某个 
 静默修改组件源文件。稳定 Component API 聚合入口已经实现；Generator 会在 build_runner 前
 对直接、唯一可证明的声明按组件批量输出缺失 Owner，Analyzer 也能对直接 const List 提供单个
 或全部可证明 Owner 的显式 Quick Fix。变量、spread、条件集合和歧义输入仍由最终
-Builder/Workspace Validator 校验；`ccrouter find --usage` 可基于当前已生成 Index 为一个现有
+Builder/Workspace Validator 校验。AST 预检按 Library 的直接/相对导入和可证明的 export 链查找，
+不从 Package 级同名声明推断可见性；part、条件导入或外部命名空间不完整时不做早期拒绝。
+`ccrouter find --usage` 可基于当前已生成 Index 为一个现有
 消费组件输出只读接入建议，但不会编辑依赖或替代最终校验。
 
 不同消费组件如需统一 Service/Command Client 成员名，可在 Contract 上设置 lower-camel

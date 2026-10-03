@@ -906,6 +906,8 @@ FutureOr、callback、Flutter 类型、Contract 继承和未从公共 barrel 暴
 Route 与 Service Proxy 的集合默认值保留实际 List/Set/Map 类型及泛型参数，包括 `Object`
 参数下的空集合和嵌套集合；默认值涉及的枚举和类型也必须能被生成库公开导入。
 描述中的 `$`、引号和换行按普通文本保留；生成的 Host DevTools Catalog 不会将描述当作 Dart 插值。
+依赖预检按实际 Library、import/export 与 show/hide 查找 Owner；同 Package 的未导入声明
+不参与判断。条件导入、part 或不完整的外部命名空间交由 Builder 最终校验，不猜测 Owner。
 
 Route、Service、Command、Event、InitTask Contract 都有独立的 Contract SemVer。生成器会同时
 写入不包含源码路径和实现类名的 `shapeFingerprint`，消费者 metadata 和 Host Bundle 会携带

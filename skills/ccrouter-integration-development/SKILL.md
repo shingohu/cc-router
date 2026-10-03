@@ -37,6 +37,9 @@ Route and Service Proxy defaults preserve collection types; expose any enum or
 type used only inside a default through the same public Contract barrel.
 Descriptions are literal text, including dollar signs and newlines; do not
 pre-escape business descriptions for generated Host DevTools Dart output.
+Dependency preflight follows proven Library import/export visibility. Same-Package
+unimported declarations do not establish ownership; conditional/part/unknown
+namespaces defer to the authoritative Builder instead of guessing.
 
 For generator, scaffolding, cleanup, source lookup, or deferred Contract
 migration work, also read

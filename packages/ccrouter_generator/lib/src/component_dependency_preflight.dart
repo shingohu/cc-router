@@ -84,8 +84,9 @@ abstract final class CCComponentDependencyPreflight {
       ).unit;
       parsed.add(_ParsedSource(source: source, unit: unit));
     }
+    final scope = _LibraryScope(parsed);
     final componentIds = _componentIds(parsed);
-    final contracts = _contracts(parsed, componentIds);
+    final contracts = _contracts(parsed, componentIds, scope);
     final issues = <CCComponentDependencyPreflightIssue>[];
     for (final file in parsed.where((item) => item.source.writable)) {
       for (final declaration
@@ -100,6 +101,7 @@ abstract final class CCComponentDependencyPreflight {
             _namedArgument(arguments, 'id'),
             source: file,
             componentIds: componentIds,
+            scope: scope,
           );
           final dependencyExpression = _namedArgument(
             arguments,
@@ -121,6 +123,7 @@ abstract final class CCComponentDependencyPreflight {
               dependency,
               source: file,
               componentIds: componentIds,
+              scope: scope,
             );
             if (owner == null) {
               dependenciesAreExact = false;
@@ -137,6 +140,7 @@ abstract final class CCComponentDependencyPreflight {
             kind: 'Service',
             source: file,
             contracts: contracts,
+            scope: scope,
             requiredOwners: requiredOwners,
             target: missing,
           );
@@ -146,6 +150,7 @@ abstract final class CCComponentDependencyPreflight {
             kind: 'Command',
             source: file,
             contracts: contracts,
+            scope: scope,
             requiredOwners: requiredOwners,
             target: missing,
           );
@@ -178,7 +183,7 @@ abstract final class CCComponentDependencyPreflight {
     return List.unmodifiable(issues);
   }
 
-  /// Builds a symbol index only when one Package gives it one stable value.
+  /// Indexes constants by their declaring library, never by Package alone.
   static Map<_SymbolKey, String> _componentIds(List<_ParsedSource> sources) {
     final values = <_SymbolKey, Set<String>>{};
     for (final source in sources) {
@@ -191,7 +196,7 @@ abstract final class CCComponentDependencyPreflight {
           if (id == null) continue;
           values
               .putIfAbsent(
-                _SymbolKey(source.source.packageName, variable.name.lexeme),
+                _SymbolKey(source.libraryUri, variable.name.lexeme),
                 () => <String>{},
               )
               .add(id);
@@ -208,6 +213,7 @@ abstract final class CCComponentDependencyPreflight {
   static Map<_ContractKey, _Contract> _contracts(
     List<_ParsedSource> sources,
     Map<_SymbolKey, String> componentIds,
+    _LibraryScope scope,
   ) {
     final candidates = <_ContractKey, List<_Contract>>{};
     for (final source in sources) {
@@ -226,12 +232,13 @@ abstract final class CCComponentDependencyPreflight {
             _namedArgument(arguments.arguments, 'componentId'),
             source: source,
             componentIds: componentIds,
+            scope: scope,
           );
           final id = _stringLiteral(_namedArgument(arguments.arguments, 'id'));
           if (componentId == null || id == null) continue;
           final key = _ContractKey(
             kind,
-            source.source.packageName,
+            source.libraryUri,
             declaration.namePart.typeName.lexeme,
           );
           candidates
@@ -253,6 +260,7 @@ abstract final class CCComponentDependencyPreflight {
     required String kind,
     required _ParsedSource source,
     required Map<_ContractKey, _Contract> contracts,
+    required _LibraryScope scope,
     required Set<String> requiredOwners,
     required Map<String, List<CCComponentDependencyPreflightCapability>> target,
   }) {
@@ -263,19 +271,15 @@ abstract final class CCComponentDependencyPreflight {
     for (final dependency in expression.elements.whereType<Expression>()) {
       final contractType = _dependencyType(dependency, constructorName);
       if (contractType == null) continue;
-      final packages = source.importedPackages(
+      final symbol = scope.resolve(
+        source,
         prefix: contractType.$1,
         symbol: contractType.$2,
       );
-      final candidates = packages
-          .map(
-            (package) =>
-                contracts[_ContractKey(kind, package, contractType.$2)],
-          )
-          .whereType<_Contract>()
-          .toList(growable: false);
-      if (candidates.length != 1) continue;
-      final contract = candidates.single;
+      if (symbol == null) continue;
+      final contract =
+          contracts[_ContractKey(kind, symbol.libraryUri, symbol.symbol)];
+      if (contract == null) continue;
       if (requiredOwners.contains(contract.ownerComponentId)) {
         continue;
       }
@@ -299,6 +303,7 @@ abstract final class CCComponentDependencyPreflight {
     Expression? expression, {
     required _ParsedSource source,
     required Map<_SymbolKey, String> componentIds,
+    required _LibraryScope scope,
   }) {
     final literal = _componentIdLiteral(expression);
     if (literal != null) return literal;
@@ -312,18 +317,8 @@ abstract final class CCComponentDependencyPreflight {
       _ => null,
     };
     if (symbol == null) return null;
-    final local =
-        componentIds[_SymbolKey(source.source.packageName, symbol.$2)];
-    if (symbol.$1 == null && local != null) return local;
-    final candidatePackages = source
-        .importedPackages(prefix: symbol.$1, symbol: symbol.$2)
-        .where(
-          (package) => componentIds.containsKey(_SymbolKey(package, symbol.$2)),
-        )
-        .toList(growable: false);
-    return candidatePackages.length == 1
-        ? componentIds[_SymbolKey(candidatePackages.single, symbol.$2)]
-        : null;
+    final key = scope.resolve(source, prefix: symbol.$1, symbol: symbol.$2);
+    return key == null ? null : componentIds[key];
   }
 
   /// Reads the type argument of one direct dependency constructor.
@@ -402,70 +397,170 @@ final class _ParsedSource {
   /// Syntax tree parsed without semantic resolution.
   final CompilationUnit unit;
 
-  /// Returns every Package import through which [symbol] remains visible.
-  Set<String> importedPackages({
-    required String? prefix,
-    required String symbol,
-  }) {
-    final packages = <String>{};
-    for (final directive in unit.directives.whereType<ImportDirective>()) {
-      final uri = directive.uri.stringValue;
-      final parsed = uri == null ? null : Uri.tryParse(uri);
-      if (parsed == null ||
-          parsed.scheme != 'package' ||
-          parsed.pathSegments.isEmpty ||
-          directive.deferredKeyword != null) {
-        continue;
-      }
-      if (directive.prefix?.name != prefix) continue;
-      var visible = true;
-      for (final combinator in directive.combinators) {
-        if (combinator is ShowCombinator) {
-          visible = combinator.shownNames.any((name) => name.name == symbol);
-        } else if (combinator is HideCombinator &&
-            combinator.hiddenNames.any((name) => name.name == symbol)) {
-          visible = false;
-        }
-      }
-      if (visible) packages.add(parsed.pathSegments.first);
+  /// Canonical library identity for absolute and CLI diagnostic source paths.
+  String get libraryUri {
+    final normalized = source.path.replaceAll('\\', '/');
+    final marker = normalized.lastIndexOf('/lib/');
+    if (marker >= 0) {
+      return 'package:${source.packageName}/${normalized.substring(marker + 5)}';
     }
-    return packages;
+    return normalized;
+  }
+
+  /// Parts require resolved Library semantics and are left to Builder.
+  bool get hasParts =>
+      unit.directives.any((d) => d is PartDirective || d is PartOfDirective);
+
+  /// Counts declarations, including non-CCRouter names that shadow imports.
+  int declarations(String symbol) {
+    var count = 0;
+    for (final declaration in unit.declarations) {
+      final names = switch (declaration) {
+        TopLevelVariableDeclaration d => d.variables.variables.map(
+          (v) => v.name.lexeme,
+        ),
+        ClassDeclaration d => [d.namePart.typeName.lexeme],
+        EnumDeclaration d => [d.namePart.typeName.lexeme],
+        MixinDeclaration d => [d.name.lexeme],
+        ExtensionTypeDeclaration d => [d.primaryConstructor.typeName.lexeme],
+        ClassTypeAlias d => [d.name.lexeme],
+        ExtensionDeclaration d => [if (d.name != null) d.name!.lexeme],
+        FunctionDeclaration d => [d.name.lexeme],
+        GenericTypeAlias d => [d.name.lexeme],
+        FunctionTypeAlias d => [d.name.lexeme],
+        _ => const <String>[],
+      };
+      count += names.where((name) => name == symbol).length;
+    }
+    return count;
   }
 }
 
-/// Package-qualified source symbol.
-final class _SymbolKey {
-  /// Creates one Package-qualified symbol key.
-  const _SymbolKey(this.packageName, this.symbol);
+/// Conservative library namespace lookup without an Analyzer session.
+final class _LibraryScope {
+  /// Indexes already-read source; no filesystem or Package-wide symbol guess.
+  _LibraryScope(List<_ParsedSource> sources)
+    : files = {for (final source in sources) source.libraryUri: source};
 
-  /// Pub Package declaring the symbol.
-  final String packageName;
+  /// Authored sources keyed by canonical package URI.
+  final Map<String, _ParsedSource> files;
+
+  /// Resolves local declarations or one unambiguous visible imported symbol.
+  _SymbolKey? resolve(
+    _ParsedSource source, {
+    required String? prefix,
+    required String symbol,
+  }) {
+    if (source.hasParts) return null;
+    if (prefix == null && source.declarations(symbol) > 0) {
+      return source.declarations(symbol) == 1
+          ? _SymbolKey(source.libraryUri, symbol)
+          : null;
+    }
+    final candidates = <_SymbolKey>{};
+    for (final directive
+        in source.unit.directives.whereType<ImportDirective>()) {
+      if (directive.prefix?.name != prefix ||
+          !_visible(directive.combinators, symbol))
+        continue;
+      if (directive.configurations.isNotEmpty ||
+          directive.deferredKeyword != null) {
+        return null;
+      }
+      final uri = directive.uri.stringValue;
+      if (uri == null) return null;
+      final found = _exported(
+        Uri.parse(source.libraryUri).resolve(uri).toString(),
+        symbol,
+        {},
+      );
+      if (found == null) return null;
+      candidates.addAll(found);
+    }
+    return candidates.length == 1 ? candidates.single : null;
+  }
+
+  /// Follows exact export edges; an unavailable or conditional branch is unknown.
+  Set<_SymbolKey>? _exported(String uri, String symbol, Set<String> visiting) {
+    if (!visiting.add(uri)) return {};
+    try {
+      final source = files[uri];
+      if (source == null) {
+        // Framework and SDK imports cannot declare authored component identities.
+        if (uri.startsWith('dart:') ||
+            uri == 'package:ccrouter/ccrouter.dart' ||
+            uri == 'package:ccrouter_contracts/ccrouter_contracts.dart') {
+          return {};
+        }
+        return null;
+      }
+      if (source.hasParts) return null;
+      final count = source.declarations(symbol);
+      if (count > 0) return count == 1 ? {_SymbolKey(uri, symbol)} : null;
+      final result = <_SymbolKey>{};
+      for (final directive
+          in source.unit.directives.whereType<ExportDirective>()) {
+        if (!_visible(directive.combinators, symbol)) continue;
+        if (directive.configurations.isNotEmpty) return null;
+        final target = directive.uri.stringValue;
+        if (target == null) return null;
+        final found = _exported(
+          Uri.parse(uri).resolve(target).toString(),
+          symbol,
+          visiting,
+        );
+        if (found == null) return null;
+        result.addAll(found);
+      }
+      return result;
+    } finally {
+      visiting.remove(uri);
+    }
+  }
+
+  /// Applies every show/hide combinator as an intersection, in source order.
+  static bool _visible(NodeList<Combinator> combinators, String symbol) =>
+      combinators.every(
+        (c) => switch (c) {
+          ShowCombinator c => c.shownNames.any((n) => n.name == symbol),
+          HideCombinator c => !c.hiddenNames.any((n) => n.name == symbol),
+        },
+      );
+}
+
+/// Library-qualified source symbol.
+final class _SymbolKey {
+  /// Creates one Library-qualified symbol key.
+  const _SymbolKey(this.libraryUri, this.symbol);
+
+  /// Canonical URI of the declaring library.
+  final String libraryUri;
 
   /// Unqualified Dart symbol name.
   final String symbol;
 
-  /// Compares Package and symbol identity.
+  /// Compares Library and symbol identity.
   @override
   bool operator ==(Object other) =>
       other is _SymbolKey &&
-      other.packageName == packageName &&
+      other.libraryUri == libraryUri &&
       other.symbol == symbol;
 
-  /// Hashes Package and symbol identity.
+  /// Hashes Library and symbol identity.
   @override
-  int get hashCode => Object.hash(packageName, symbol);
+  int get hashCode => Object.hash(libraryUri, symbol);
 }
 
-/// Package-qualified Service or Command Contract symbol.
+/// Library-qualified Service or Command Contract symbol.
 final class _ContractKey {
-  /// Creates one kind- and Package-qualified Contract key.
-  const _ContractKey(this.kind, this.packageName, this.symbol);
+  /// Creates one kind- and Library-qualified Contract key.
+  const _ContractKey(this.kind, this.libraryUri, this.symbol);
 
   /// Capability category such as Service or Command.
   final String kind;
 
-  /// Pub Package declaring the Contract.
-  final String packageName;
+  /// Canonical URI of the library declaring the Contract.
+  final String libraryUri;
 
   /// Unqualified Contract type name.
   final String symbol;
@@ -475,12 +570,12 @@ final class _ContractKey {
   bool operator ==(Object other) =>
       other is _ContractKey &&
       other.kind == kind &&
-      other.packageName == packageName &&
+      other.libraryUri == libraryUri &&
       other.symbol == symbol;
 
   /// Hashes the complete Contract lookup identity.
   @override
-  int get hashCode => Object.hash(kind, packageName, symbol);
+  int get hashCode => Object.hash(kind, libraryUri, symbol);
 }
 
 /// Exact owner information read from one Contract annotation.

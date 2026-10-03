@@ -2966,7 +2966,7 @@ Future<bool> _runBuildRunner(
   return false;
 }
 
-/// Parses only CCRouter declaration sources for a conservative fast failure.
+/// Includes declaration sources and authored namespace edges for fast failure.
 Future<List<CCComponentDependencyPreflightIssue>> _componentDependencyPreflight(
   CCPackageWorkspace workspace,
 ) async {
@@ -2987,7 +2987,8 @@ Future<List<CCComponentDependencyPreflightIssue>> _componentDependencyPreflight(
       if (!source.contains('CCComponent(') &&
           !source.contains('CCComponentId(') &&
           !source.contains('@CCServiceContract') &&
-          !source.contains('@CCCommandContract')) {
+          !source.contains('@CCCommandContract') &&
+          !RegExp(r'\b(?:import|export|part)\s').hasMatch(source)) {
         continue;
       }
       sources.add(
