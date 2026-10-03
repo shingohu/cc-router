@@ -1,5 +1,7 @@
 import 'package:analyzer/dart/analysis/analysis_context.dart';
 import 'package:analyzer/dart/analysis/analysis_context_collection.dart';
+import 'package:analyzer/dart/ast/ast.dart';
+import 'package:analyzer/error/error.dart' show DiagnosticSeverity;
 import 'package:analyzer/file_system/file_system.dart';
 import 'package:analyzer/source/line_info.dart';
 import 'package:analyzer_plugin/plugin/plugin.dart';
@@ -113,12 +115,15 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
       );
       return;
     }
+    final resolvedUnit = await _resolvedCurrentUnit(path, source);
+    if (!_sourceStillCurrent(path, source)) return;
     final analysis = CCRouterSourceAnalyzer.analyzeWithLineInfo(
       source: source,
       filePath: path,
       packageRoot: packageContext.root,
       packageName: packageContext.name,
       contractOwners: _contractOwners.resolve(path),
+      resolvedUnit: resolvedUnit,
     );
     final errors = analysis.diagnostics
         .map(
@@ -133,6 +138,43 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
   /// Whether [path] can contain developer-authored CCRouter declarations.
   static bool _isAuthoredDartPath(String path) =>
       path.endsWith('.dart') && !CCRouterSourceAnalyzer.isGeneratedPath(path);
+
+  /// Uses the existing Analysis Server session only for rules needing types.
+  /// Partial/unresolved input falls back to conservative syntax checks. No
+  /// separate workspace scan/session or long-lived resolved AST cache is added.
+  Future<CompilationUnit?> _resolvedCurrentUnit(
+    String path,
+    String source,
+  ) async {
+    if (!const [
+      'CCService',
+      'CCComponent',
+      'CCInitTask',
+      'CCEventSubscription',
+    ].any(source.contains))
+      return null;
+    try {
+      final result = await getResolvedUnitResult(path);
+      if (result.content != source ||
+          result.diagnostics.any(
+            (error) =>
+                error.diagnosticCode.severity == DiagnosticSeverity.ERROR,
+          ))
+        return null;
+      return result.unit;
+    } on Object {
+      return null;
+    }
+  }
+
+  /// Drops stale asynchronous analysis/fixes rather than editing a newer buffer.
+  bool _sourceStillCurrent(String path, String source) {
+    try {
+      return resourceProvider.getFile(path).readAsStringSync() == source;
+    } on Object {
+      return false;
+    }
+  }
 
   /// Re-analyzes authored capability sources affected by generated changes.
   ///
@@ -205,12 +247,16 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
     }
     final packageContext = _packageContexts.resolve(parameters.file);
     if (packageContext == null) return EditGetFixesResult(const []);
+    final resolvedUnit = await _resolvedCurrentUnit(parameters.file, source);
+    if (!_sourceStillCurrent(parameters.file, source))
+      return EditGetFixesResult(const []);
     final analysis = CCRouterSourceAnalyzer.analyzeWithLineInfo(
       source: source,
       filePath: parameters.file,
       packageRoot: packageContext.root,
       packageName: packageContext.name,
       contractOwners: _contractOwners.resolve(parameters.file),
+      resolvedUnit: resolvedUnit,
     );
     final requestLine = analysis.lineInfo
         .getLocation(parameters.offset)
@@ -218,6 +264,7 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
     final errorFixes = <AnalysisErrorFixes>[];
     for (final diagnostic in analysis.diagnostics) {
       if ((diagnostic.code != 'ccrouter_annotation_arguments_conflict' &&
+              diagnostic.code != 'ccrouter_service_disposable_missing' &&
               diagnostic.code !=
                   'ccrouter_component_owner_dependency_missing') ||
           analysis.lineInfo.getLocation(diagnostic.offset).lineNumber !=
@@ -231,6 +278,7 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
         diagnosticCode: diagnostic.code,
         contractOwners: _contractOwners.resolve(parameters.file),
         sourcePackage: packageContext.name,
+        resolvedUnit: resolvedUnit,
       );
       if (fixes.isEmpty) continue;
       errorFixes.add(

@@ -19,6 +19,28 @@ void main() {
   });
   tearDown(() => root.deleteSync(recursive: true));
 
+  test('does not reject prefixed Future or unresolved return aliases', () {
+    final diagnostics = CCRouterSourceAnalyzer.analyze(
+      source: '''
+import 'dart:async' as async;
+typedef Completion = async.Future<void>;
+@CCEventSubscription()
+async.Future<void> receive(Object event) async {}
+@CCEventSubscription()
+Completion receiveAlias(Object event) async {}
+''',
+      filePath: path.join(packageRoot, 'lib', 'src', 'handlers.dart'),
+      packageRoot: packageRoot,
+      packageName: 'sample_component',
+    );
+    expect(
+      diagnostics.where(
+        (item) => item.code == 'ccrouter_handler_signature_invalid',
+      ),
+      isEmpty,
+    );
+  });
+
   test('rejects a foreign generated library import', () {
     final diagnostics = CCRouterSourceAnalyzer.analyze(
       source:

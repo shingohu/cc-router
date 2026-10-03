@@ -1,6 +1,6 @@
 # CCRouter IDE / Analysis Server 集成
 
-> 文档状态：当前接入契约与已知限制。Plugin 提供低误报单文件诊断和 Metadata 驱动的
+> 文档状态：当前接入契约与已知限制。Plugin 提供单文件诊断、按需类型解析和 Metadata 驱动的
 > Service/Command Owner 检查，Generator/Workspace Validator 仍是跨 Package 正确性的最终门禁。
 
 ## 目标与边界
@@ -32,8 +32,18 @@ Fix 时才会提交一个有界源码编辑。插件不可用时，项目仍可�
 | `ccrouter_alias_invalid` | error | 校验可确定的 Service/Command Client alias |
 | `ccrouter_timeout_invalid` | error | 拒绝可确定的零值或负值 InitTask timeout |
 | `ccrouter_component_owner_dependency_missing` | error | Service/Command Contract Owner 未进入消费组件 required `dependencies` |
+| `ccrouter_service_disposable_missing` | warning | 注解 Service 已有兼容的实例 `dispose()`，却未实现 Scope 识别的 `CCDisposable` |
+| `ccrouter_service_owned_resource` | warning | 注解 Service 的私有 final 字段直接持有自建可释放资源，但 Service 没有接入 Scope 释放 |
 
-除 Owner 规则外，这些诊断只处理单文件和当前 Package 的可确定信息。Owner 规则从最近的
+基础语法规则继续处理单文件可确定信息；Handler、Component、Service 相关源文件按需复用
+Analysis Server 已有 Session 的 resolved unit，解析 `dart:async` 前缀、typedef、继承和常量值。
+不另建分析引擎，不缓存 resolved AST，不自行递归扫描 Workspace。解析失败或存在 Dart 错误时
+退回保守语法检查；未知类型/依赖值不武断报错，Service 规则不在该回退路径运行。
+异步解析结果必须与当前 overlay 内容完全一致；源码已变化的诊断和 Quick Fix 请求直接丢弃。
+Event/InitTask 的 void-like 类型与 Generator 对齐，包括现有支持的 `Future<void>?`；这不扩大
+Service dispose Quick Fix 的签名范围。
+
+Owner 索引从最近的
 `.dart_tool/package_config.json` 获取精确 Package 根，只读取各 Package 固定位置的
 `ccrouter_package.json` 及 metadata 指向的 Contract 源文件；不会递归扫描仓库、运行 Generator
 或根据类型名猜 Owner。索引按 Pub 图有界缓存，并在 Package config、metadata 或相关 Contract
@@ -45,8 +55,8 @@ Owner Quick Fix 只在以下条件同时满足时提供：
 
 1. Contract Owner 在 metadata 中唯一；
 2. `CCComponent.dependencies` 缺失，或为没有 spread/条件元素的直接 List literal；
-3. 当前文件已有公共 import，并且递归 export 校验能证明该 import 暴露的
-   `CCComponentId` 常量值与 Owner 完全一致；
+3. 当前文件已有明确引用，解析后的 declaring library、import prefix 和常量值与 Owner
+   完全一致；同名导入或本地遮蔽不能充当证明；
 4. 当前 required 列表尚未包含该 Owner。
 
 插件始终保留“只补当前 Owner”的修复；如果同一个 `CCComponent` 的全部缺失 Owner 都满足上述
@@ -55,6 +65,24 @@ Owner 缺少可证明的公共常量，就不提供批量修复，避免形成�
 
 复杂变量、spread、条件集合、歧义 Owner、缺失或被 `show/hide` 排除的常量只保留 Generator
 门禁；插件不会自动插 import，也不会把 `optionalDependencies` 当作 required 能力依赖。
+
+### Service 生命周期提示与修复
+
+范围限定为解析成功的具体、非泛型 `@CCService` 类。继承链已经实现框架 `CCDisposable`
+时不提示；同名的外部接口不能冒充框架身份。
+
+- 已有可调用、无参、非泛型实例 `dispose()`，返回 `void`、非 nullable `Future<void>` 或
+  `FutureOr<void>`，但未实现框架接口：提示未接入 Scope。当前 import 唯一暴露正确接口时，
+  Quick Fix 仅补 `implements CCDisposable`（或追加到现有接口列表），保留方法体和注释。
+  不自动加 import，不承诺原方法已经正确释放所有资源。
+- 私有 final 实例字段在声明、构造初始化列表或构造体中直接创建已知可释放资源：提供所有权
+  警告，不生成释放方法。支持 generative `CCDisposable` 对象及明确的 SDK/Flutter 常见资源；
+  不维护 Dio 等应用供应商类型清单。
+- 构造注入、共享引用、任意 factory、辅助方法内分配、注册 Contribution 和复杂数据流不属于
+  自动所有权证明。没有警告不表示没有泄漏，Scope 关闭/重入/失败仍应有测试。
+
+这两条是 IDE 开发反馈，不新增 Runtime/Generator 必需接口，也不要求无资源的 Service
+编写空释放方法。
 
 ## 接入步骤
 
@@ -159,6 +187,10 @@ Owner Quick Fix、未保存 overlay 诊断、性能缓存和只读 CLI 健康检
 生产代码真实变化、隔离测试通过并
 推送远端后，才更新为对应的完整 commit SHA；禁止使用 `main` 或尚未推送的本地 SHA。
 
+2026-10-03 的 F14/F15 resolved 类型/Owner 修复与 Service 生命周期诊断已完成本地插件测试、
+真实 Plugin 会话验证和 loader 编译，尚未包含在上述固定 ref 中。Demo 当前 IDE 仍运行该
+远端版本；本地验证完成不等于已经分发，需推送并按上述流程更新 ref 后才能使用新增规则。
+
 Demo 运行时还接入了 `ccrouter_devtools`：进入 Navigation Lab 的“诊断”分区，点击
 “打开 CCRouter DevTools”，即可查看只读 Overview、Components、Entries、Timeline、
 Failures 和 InitTask DAG。该入口使用应用自己的本地 BottomSheet，不会把 DevTools 变成
@@ -187,6 +219,7 @@ fvm dart run ccrouter_generator:ccrouter generate demo --check
   开发者显式选择删除 Route `pattern/patterns`、InitTask `contract/id` 中的一个冲突参数，或把
   Metadata 唯一证明且已经由公共 import 暴露的一个或全部 Owner 常量加入直接 required
   dependency List。
+  另可为符合上述条件的 Service 补 `CCDisposable` 接口，但不生成资源清理逻辑。
   注释可能被覆盖、集合包含 spread/条件元素、Owner/import 不唯一时不提供；插件不会创建
   Contract、猜 alias/ID/timeout、改 pubspec 或运行生成。
 
@@ -202,6 +235,7 @@ IDE。因此：
 - “从官方 Extension 直接调用本地 IDE 打开文件”未完成；
 - 自动生成、自动 import、rename/alias migration Quick Fix 仍未实现；已提供互斥参数删除和受限
   Service/Command required Owner 补齐。
+  已有 Service dispose 接入 Scope 的受限 Quick Fix 也已提供；复杂资源释放仍需人工设计。
 
 这些剩余项不改变 Analyzer Plugin 的“不生成、无后台改写、显式安全 Quick Fix”边界。
 DevTools 当前实现与协议见 [`CCRouter-devtools.md`](CCRouter-devtools.md)，发布门槛见

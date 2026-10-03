@@ -94,6 +94,7 @@ abstract interface class InvalidService {}
     addTearDown(fixture.dispose);
     const source = '''
 import 'package:owner_contracts/owner_contracts.dart';
+const existingComponentId = CCComponentId('existing.component');
 
 const consumerComponent = CCComponent(
   id: consumerComponentId,

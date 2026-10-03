@@ -19,6 +19,49 @@ void main() {
     await reader.testing.loadIsolateSources();
   });
 
+  for (final type in [
+    'async.Future<void>',
+    'async.FutureOr<void>',
+    'async.Future<void>?',
+    'Completion',
+  ]) {
+    test('subscriber generator accepts resolved $type', () async {
+      final output = await _generate(
+        reader,
+        ccEventBuilder(BuilderOptions.empty),
+        '''
+import 'dart:async' as async;
+typedef Completion = async.Future<void>;
+@CCEventContract(id: 'orders.created')
+final class OrderCreatedEvent implements CCEvent { const OrderCreatedEvent(); }
+@CCEventSubscription(id: 'analytics.orders-created')
+$type trackOrder(OrderCreatedEvent event) => throw StateError('test');
+''',
+        'lib/src/ccrouter_generated/event/probe.event.g.dart',
+      );
+      expect(output, contains('event_source.trackOrder'));
+    });
+  }
+  for (final type in ['async.Future<int>', 'BadCompletion']) {
+    test('subscriber generator rejects resolved $type', () async {
+      final logs = await _generate(
+        reader,
+        ccEventBuilder(BuilderOptions.empty),
+        '''
+import 'dart:async' as async;
+typedef BadCompletion = async.Future<int>;
+@CCEventContract(id: 'orders.created')
+final class OrderCreatedEvent implements CCEvent { const OrderCreatedEvent(); }
+@CCEventSubscription(id: 'analytics.orders-created')
+$type trackOrder(OrderCreatedEvent event) => throw StateError('test');
+''',
+        'lib/src/ccrouter_generated/event/probe.event.g.dart',
+        fails: true,
+      );
+      expect(logs, contains('void'));
+    });
+  }
+
   test('subscriber builder emits stable typed registration', () async {
     final output = await _generate(
       reader,

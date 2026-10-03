@@ -2,10 +2,12 @@ import 'dart:io';
 
 import 'package:analyzer/dart/analysis/utilities.dart';
 import 'package:analyzer/dart/ast/ast.dart';
+import 'package:analyzer/dart/element/type.dart';
 import 'package:analyzer/source/line_info.dart';
 import 'package:analyzer_plugin/protocol/protocol_common.dart';
 import 'package:ccrouter_analyzer_plugin/src/component_dependency_analyzer.dart';
 import 'package:ccrouter_analyzer_plugin/src/contract_owner_index.dart';
+import 'package:ccrouter_analyzer_plugin/src/service_lifecycle_analysis.dart';
 import 'package:path/path.dart' as path;
 import 'package:yaml/yaml.dart';
 
@@ -291,27 +293,34 @@ abstract final class CCRouterSourceAnalyzer {
   /// plugin after discovery to avoid reparsing the manifest. [contractOwners]
   /// enables Metadata-proven cross-component dependency checks; omitting it
   /// keeps standalone single-file analysis available without Pub state.
+  /// [resolvedUnit] must represent exactly [source]; the plugin checks current
+  /// overlay identity after resolution and declines incomplete semantic results.
   static List<CCRouterAnalyzerDiagnostic> analyze({
     required String source,
     required String filePath,
     String? packageRoot,
     String? packageName,
     CCRouterContractOwnerIndex? contractOwners,
+    CompilationUnit? resolvedUnit,
   }) => analyzeWithLineInfo(
     source: source,
     filePath: filePath,
     packageRoot: packageRoot,
     packageName: packageName,
     contractOwners: contractOwners,
+    resolvedUnit: resolvedUnit,
   ).diagnostics;
 
   /// Analyzes one source and reuses its parser line mapping for IDE locations.
+  /// [resolvedUnit] optionally supplies current type/constant identities. Missing
+  /// semantic information suppresses lifecycle rules and uncertain type errors.
   static CCRouterSourceAnalysis analyzeWithLineInfo({
     required String source,
     required String filePath,
     String? packageRoot,
     String? packageName,
     CCRouterContractOwnerIndex? contractOwners,
+    CompilationUnit? resolvedUnit,
   }) {
     // Generated libraries are implementation artifacts. Their imports are
     // intentionally allowed to cross component boundaries and are validated
@@ -344,6 +353,7 @@ abstract final class CCRouterSourceAnalyzer {
       path: filePath,
       throwIfDiagnostics: false,
     );
+    final unit = resolvedUnit ?? parsed.unit;
     final diagnostics = <CCRouterAnalyzerDiagnostic>[];
     for (final directive
         in parsed.unit.directives.whereType<NamespaceDirective>()) {
@@ -389,10 +399,30 @@ abstract final class CCRouterSourceAnalyzer {
         );
       }
     }
-    diagnostics.addAll(_singleFileRuleDiagnostics(parsed.unit));
+    diagnostics.addAll(_singleFileRuleDiagnostics(unit));
+    for (final (declaration, fixable)
+        in CCRouterServiceLifecycleAnalysis.issues(unit)) {
+      diagnostics.add(
+        CCRouterAnalyzerDiagnostic(
+          offset: declaration.name.offset,
+          length: declaration.name.length,
+          code: fixable
+              ? 'ccrouter_service_disposable_missing'
+              : 'ccrouter_service_owned_resource',
+          message: fixable
+              ? 'This Service has dispose() but does not implement CCDisposable; Scope will not call it.'
+              : 'This Service creates a disposable resource but does not connect disposal to Scope.',
+          correction: fixable
+              ? 'Implement CCDisposable to connect the existing method to Scope cleanup.'
+              : 'Review ownership and implement CCDisposable with complete cleanup; do not dispose borrowed resources.',
+          severity: AnalysisErrorSeverity.WARNING,
+        ),
+      );
+    }
     if (contractOwners != null) {
       for (final missing in CCRouterComponentDependencyAnalyzer.findMissing(
-        unit: parsed.unit,
+        unit: unit,
+        sourcePath: filePath,
         sourcePackage: owner,
         owners: contractOwners,
       )) {
@@ -420,7 +450,7 @@ abstract final class CCRouterSourceAnalyzer {
       }
     }
     for (final declaration
-        in parsed.unit.declarations.whereType<FunctionDeclaration>()) {
+        in unit.declarations.whereType<FunctionDeclaration>()) {
       final annotation = declaration.metadata
           .where((item) => _annotationName(item) == 'CCInitTask')
           .firstOrNull;
@@ -441,9 +471,11 @@ abstract final class CCRouterSourceAnalyzer {
         );
       }
       final returnType = declaration.returnType?.toSource() ?? '';
-      final isAsync =
-          returnType.startsWith('Future<') ||
-          returnType.startsWith('FutureOr<');
+      final resolvedType = declaration.returnType?.type;
+      final isAsync = resolvedType != null
+          ? resolvedType.isDartAsyncFuture || resolvedType.isDartAsyncFutureOr
+          : returnType.startsWith('Future<') ||
+                returnType.startsWith('FutureOr<');
       if (isAsync && _namedArgument(annotation, 'timeout') == null) {
         diagnostics.add(
           CCRouterAnalyzerDiagnostic(
@@ -614,8 +646,8 @@ abstract final class CCRouterSourceAnalyzer {
     }
     if (annotationName == 'CCInitTask' ||
         annotationName == 'CCEventSubscription') {
-      final returnType = declaration.returnType?.toSource();
-      if (returnType != null && !_isVoidLikeReturnType(returnType)) {
+      final returnType = declaration.returnType;
+      if (returnType != null && _isVoidLikeReturnType(returnType) == false) {
         diagnostics.add(
           _ruleDiagnostic(
             annotation,
@@ -817,11 +849,47 @@ abstract final class CCRouterSourceAnalyzer {
     return null;
   }
 
-  /// Whether a written return type is one of the supported void forms.
-  static bool _isVoidLikeReturnType(String source) =>
-      source == 'void' ||
-      source.replaceAll(' ', '') == 'Future<void>' ||
-      source.replaceAll(' ', '') == 'FutureOr<void>';
+  /// Resolves aliases and prefixes when available; unknown syntax is not an error.
+  static bool? _isVoidLikeReturnType(TypeAnnotation annotation) {
+    final type = annotation.type;
+    if (type is VoidType) return true;
+    if (type is InterfaceType) {
+      return (type.isDartAsyncFuture || type.isDartAsyncFutureOr) &&
+          type.typeArguments.single is VoidType;
+    }
+    if (type != null && type is! InvalidType && type is! DynamicType)
+      return false;
+    // Without element resolution only reject unambiguous built-in primitives.
+    // Imported aliases and shadowed names are left to resolved analysis/generation.
+    if (annotation is! NamedType || annotation.importPrefix != null)
+      return null;
+    final name = annotation.name.lexeme;
+    if (name == 'void') return true;
+    final unit = annotation.root as CompilationUnit;
+    if (type is DynamicType && unit.declaredFragment != null) return false;
+    final shadowed = unit.declarations.any(
+      (declaration) => switch (declaration) {
+        ClassDeclaration d => d.name.lexeme == name,
+        GenericTypeAlias d => d.name.lexeme == name,
+        _ => false,
+      },
+    );
+    if (shadowed) return null;
+    if (unit.directives.whereType<ImportDirective>().any(
+      (directive) => !(directive.uri.stringValue?.startsWith('dart:') ?? false),
+    ))
+      return null;
+    return const {
+          'int',
+          'double',
+          'num',
+          'String',
+          'bool',
+          'Never',
+        }.contains(name)
+        ? false
+        : null;
+  }
 
   /// Creates a source-anchored error for one deterministic annotation rule.
   static CCRouterAnalyzerDiagnostic _ruleDiagnostic(

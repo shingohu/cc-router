@@ -1,4 +1,6 @@
 import 'package:analyzer/dart/ast/ast.dart';
+import 'package:analyzer/dart/element/element.dart';
+import 'package:analyzer/dart/element/type.dart';
 import 'package:ccrouter_analyzer_plugin/src/contract_owner_index.dart';
 
 /// One metadata-proven required owner missing from a component descriptor.
@@ -41,6 +43,7 @@ abstract final class CCRouterComponentDependencyAnalyzer {
     required CompilationUnit unit,
     required String sourcePackage,
     required CCRouterContractOwnerIndex owners,
+    String? sourcePath,
   }) {
     final importPrefixes = _importPrefixes(unit);
     final missing = <CCRouterMissingComponentDependency>[];
@@ -75,15 +78,18 @@ abstract final class CCRouterComponentDependencyAnalyzer {
           for (final element in value.elements.whereType<Expression>()) {
             final type = _dependencyContract(element, field.$2);
             if (type == null) continue;
-            final owner = owners.resolve(
-              kind: field.$2,
-              contractSymbol: type.$1,
-              prefix: type.$2,
-              importPrefixes: importPrefixes,
-              sourcePackage: sourcePackage,
-            );
+            final owner = unit.declaredFragment != null
+                ? owners.resolveType(field.$2, type.$3)
+                : owners.resolve(
+                    kind: field.$2,
+                    contractSymbol: type.$1,
+                    prefix: type.$2,
+                    importPrefixes: importPrefixes,
+                    sourcePackage: sourcePackage,
+                  );
             if (owner == null ||
-                _containsOwner(unit, required, owner) ||
+                _containsOwner(unit, required, owner, owners, sourcePath) !=
+                    false ||
                 !ownerIds.add(owner.componentId)) {
               continue;
             }
@@ -119,13 +125,27 @@ abstract final class CCRouterComponentDependencyAnalyzer {
   }
 
   /// Checks a direct dependency list for the exact owner value or symbol.
-  static bool _containsOwner(
+  static bool? _containsOwner(
     CompilationUnit unit,
     List<Expression> dependencies,
     CCRouterContractOwner owner,
+    CCRouterContractOwnerIndex owners,
+    String? sourcePath,
   ) {
+    if (unit.declaredFragment != null) {
+      final values = dependencies.map(_resolvedComponentId).toList();
+      if (values.contains(owner.componentId)) return true;
+      return values.contains(null) ? null : false;
+    }
     final symbols = <String>{};
-    if (owner.componentIdSymbol case final symbol?) symbols.add(symbol);
+    if (sourcePath != null) {
+      final reference = owners.visibleComponentIdReference(
+        unit: unit,
+        sourcePath: sourcePath,
+        owner: owner,
+      );
+      if (reference != null) symbols.add(reference);
+    }
     var changed = true;
     while (changed) {
       changed = false;
@@ -135,7 +155,8 @@ abstract final class CCRouterComponentDependencyAnalyzer {
         for (final variable in declaration.variables.variables) {
           final initializer = variable.initializer;
           if (initializer != null &&
-              symbols.contains(_terminalIdentifier(initializer)) &&
+              (symbols.contains(initializer.toSource()) ||
+                  _componentIdLiteral(initializer) == owner.componentId) &&
               symbols.add(variable.name.lexeme)) {
             changed = true;
           }
@@ -144,15 +165,68 @@ abstract final class CCRouterComponentDependencyAnalyzer {
     }
     for (final dependency in dependencies) {
       if (_componentIdLiteral(dependency) == owner.componentId) return true;
-      if (symbols.contains(_terminalIdentifier(dependency))) {
+      if (symbols.contains(dependency.toSource())) {
         return true;
       }
     }
-    return false;
+    // An unresolved imported/computed value is not proof of a missing owner.
+    return dependencies.any((entry) => _localLiteral(unit, entry, {}) == null)
+        ? null
+        : false;
+  }
+
+  /// Follows same-file const aliases without treating unknown imports as values.
+  static String? _localLiteral(
+    CompilationUnit unit,
+    Expression expression,
+    Set<String> visiting,
+  ) {
+    final direct = _componentIdLiteral(expression);
+    if (direct != null) return direct;
+    if (expression is! SimpleIdentifier || !visiting.add(expression.name))
+      return null;
+    for (final declaration
+        in unit.declarations.whereType<TopLevelVariableDeclaration>()) {
+      if (!declaration.variables.isConst) continue;
+      for (final variable in declaration.variables.variables) {
+        if (variable.name.lexeme == expression.name &&
+            variable.initializer != null) {
+          return _localLiteral(unit, variable.initializer!, visiting);
+        }
+      }
+    }
+    return null;
+  }
+
+  /// Reads only typed constant owner identities, including imported const aliases.
+  static String? _resolvedComponentId(Expression expression) {
+    final type = expression.staticType;
+    if (type is! InterfaceType ||
+        type.element.name != 'CCComponentId' ||
+        type.element.library.uri.toString() !=
+            'package:ccrouter_contracts/src/component.dart')
+      return null;
+    final element = switch (expression) {
+      SimpleIdentifier e => e.element,
+      PrefixedIdentifier e => e.identifier.element,
+      PropertyAccess e => e.propertyName.element,
+      _ => null,
+    };
+    final variable = switch (element) {
+      PropertyAccessorElement e => e.variable,
+      VariableElement e => e,
+      _ => null,
+    };
+    if (variable != null)
+      return variable
+          .computeConstantValue()
+          ?.getField('value')
+          ?.toStringValue();
+    return _componentIdLiteral(expression);
   }
 
   /// Reads one Contract type and its optional source import prefix.
-  static (String, String?)? _dependencyContract(
+  static (String, String?, DartType?)? _dependencyContract(
     Expression expression,
     CCRouterContractKind kind,
   ) {
@@ -171,7 +245,11 @@ abstract final class CCRouterComponentDependencyAnalyzer {
     if (typeArguments == null || typeArguments.length != 1) return null;
     final contract = typeArguments.single;
     if (contract is! NamedType) return null;
-    return (contract.name.lexeme, contract.importPrefix?.name.lexeme);
+    return (
+      contract.name.lexeme,
+      contract.importPrefix?.name.lexeme,
+      contract.type,
+    );
   }
 
   /// Returns arguments from one unresolved constructor-shaped invocation.
@@ -206,13 +284,4 @@ abstract final class CCRouterComponentDependencyAnalyzer {
     final value = arguments.single;
     return value is SimpleStringLiteral ? value.value : null;
   }
-
-  /// Returns the last identifier of a direct dependency expression.
-  static String? _terminalIdentifier(Expression expression) =>
-      switch (expression) {
-        SimpleIdentifier value => value.name,
-        PrefixedIdentifier value => value.identifier.name,
-        PropertyAccess value => value.propertyName.name,
-        _ => null,
-      };
 }

@@ -7,6 +7,37 @@ import 'package:path/path.dart' as path;
 import 'package:test/test.dart';
 
 void main() {
+  test('local shadowing cannot produce an imported owner Quick Fix', () {
+    final fixture = _OwnerFixture.create();
+    addTearDown(fixture.dispose);
+    final index = CCRouterContractOwnerIndexCache().resolve(
+      fixture.consumerSource.path,
+    );
+    final owner = index.resolve(
+      kind: CCRouterContractKind.service,
+      contractSymbol: 'SharedService',
+      prefix: null,
+      importPrefixes: const {
+        '': {'owner_contracts'},
+      },
+      sourcePackage: 'consumer',
+    )!;
+    final unit = parseString(
+      content: '''
+import 'package:owner_contracts/owner_contracts.dart';
+const ownerComponentId = CCComponentId('wrong.component');
+''',
+    ).unit;
+    expect(
+      index.visibleComponentIdReference(
+        unit: unit,
+        sourcePath: fixture.consumerSource.path,
+        owner: owner,
+      ),
+      isNull,
+    );
+  });
+
   test('reads exact Service and Command owners from resolved metadata', () {
     final fixture = _OwnerFixture.create();
     addTearDown(fixture.dispose);

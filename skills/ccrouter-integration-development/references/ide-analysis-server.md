@@ -28,7 +28,11 @@ The plugin is not a generator, general dependency resolver, Runtime validator,
 or authorization boundary. It must not call `build_runner`, inspect Widgets,
 or infer Contract ownership from names or a partial editor buffer. It may read
 only Pub-resolved Packages' exact generated metadata and the Contract sources
-named there to diagnose a missing required Service/Command owner. Complete
+named there to build the owner index. It may additionally reuse the existing
+Analysis Server session for current Handler/Component/Service type and constant
+resolution. It does not open a parallel workspace resolver or retain resolved
+ASTs. Unknown/invalid semantic results fall back conservatively; source changes
+during resolution invalidate the pending diagnostic/fix. Complete
 cross-file rules and generated output fingerprints remain the responsibility of:
 
 ```bash
@@ -47,6 +51,22 @@ each constant's stable value;
 variables, spreads, conditionals, ambiguous owners, hidden symbols, and import
 insertion remain manual. Never expect the plugin to invent a Contract, ID,
 alias, Gate, timeout, import, or owner identity.
+
+Resolved checks distinguish real `dart:async` Future types and typedefs from
+same-named application types, and compare component constants by declaration
+identity/value rather than their final identifier. Handler acceptance follows
+the Generator, including its existing `Future<void>?` support. An unresolved
+dependency value is not proof that the required Owner is missing.
+
+For concrete annotated Services, `ccrouter_service_disposable_missing` warns
+when a compatible instance `dispose()` is not connected to Scope's actual
+`CCDisposable`. Its Quick Fix adds only the unambiguously imported interface;
+it preserves the method body and cannot prove that cleanup itself is complete.
+`ccrouter_service_owned_resource` warns for direct fresh disposable allocations
+into private final fields in declarations/constructors. It has no cleanup fix.
+Do not generate empty disposers or dispose borrowed/shared resources to silence
+a warning. Factory/helper allocations, Contributions and complex ownership
+remain lifecycle-test/review responsibilities, not a claimed static guarantee.
 
 If the plugin is unavailable or incompatible with the current Analysis Server,
 disable it and continue using Dart Analyzer plus the CLI gate. Do not weaken

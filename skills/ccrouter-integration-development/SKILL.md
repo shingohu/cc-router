@@ -39,7 +39,8 @@ weaken lifecycle, type, failure, or diagnostic semantics to make the feature
 appear supported.
 
 For live IDE boundary feedback, use the optional `ccrouter_analyzer_plugin`.
-It reports only deterministic single-file diagnostics and never runs generation,
+It reports deterministic source diagnostics and uses the current Analysis Server
+session on demand for Handler/Owner/Service type proofs. It never runs generation,
 rewrites imports, or replaces `ccrouter generate --check`. Treat generated Dart
 APIs as the source of completion and auto-import behavior, `ccrouter find` and
 Catalog metadata as the source of location lookup, and the CLI/Workspace
@@ -189,6 +190,7 @@ the Service Contract.
 - Cancellation listeners must remain synchronous and short. A throwing listener does not skip other notifications or owned cleanup: Scope records notification/disposal failures internally, and Runtime reports an early App cancellation failure only after structural teardown. Reentrant shutdown joins that teardown and cannot permit early initialization. Never await an Owner's shutdown from an object that the same shutdown is waiting to dispose.
 - Select the narrowest Service Scope: app, session, or route.
 - A Service that owns a disposable client must itself implement `CCDisposable` and forward cleanup; implementing it only on the nested client is insufficient. Await owned asynchronous closure, make repeated disposal safe, and prevent late callbacks from retaining data after disposal. Consumers must not dispose a framework-owned Service.
+- The Analyzer can connect an existing compatible `dispose()` to `CCDisposable` through an explicit Quick Fix. Its owned-resource warning is conservative and never generates cleanup or proves absence of leaks. Keep Scope lifecycle tests and consult `references/ide-analysis-server.md` for coverage and fallback boundaries.
 - Prefer singleton; use `newInstance` only for stateless or immutable helpers whose ownership remains safe.
 - Use async Service readiness only when callers cannot safely use the instance immediately after synchronous construction.
 - Singleton readiness is shared, including across independent callers. Runtime rejects active dependency wait cycles; caller timeout/cancellation removes its wait without cancelling shared initialization. Do not retry a failed initializer implicitly within the same Scope.

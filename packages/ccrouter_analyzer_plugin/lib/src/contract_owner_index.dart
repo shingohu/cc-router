@@ -4,6 +4,8 @@ import 'dart:io';
 
 import 'package:analyzer/dart/analysis/utilities.dart';
 import 'package:analyzer/dart/ast/ast.dart';
+import 'package:analyzer/dart/element/type.dart';
+import 'package:ccrouter_analyzer_plugin/src/resolved_symbols.dart';
 import 'package:path/path.dart' as path;
 
 /// Capability kinds whose consumers require an explicit component dependency.
@@ -24,6 +26,7 @@ final class CCRouterContractOwner {
     required this.contractPackage,
     required this.componentId,
     required this.componentIdSymbol,
+    this.contractLibraryUri,
   });
 
   /// Whether this is a Service or Command Contract.
@@ -46,6 +49,9 @@ final class CCRouterContractOwner {
   /// remain available in that case, while Quick Fixes are deliberately
   /// withheld.
   final String? componentIdSymbol;
+
+  /// Exact declaration library when provided by generated metadata.
+  final String? contractLibraryUri;
 }
 
 /// Immutable Contract ownership snapshot built from resolved Package indexes.
@@ -74,6 +80,27 @@ final class CCRouterContractOwnerIndex {
 
   /// Resolved Package roots keyed by Pub Package name.
   final Map<String, String> _packageRoots;
+
+  /// Resolves a Contract's real declaration, including typedefs and re-exports.
+  CCRouterContractOwner? resolveType(
+    CCRouterContractKind kind,
+    DartType? type,
+  ) {
+    if (type is! InterfaceType) return null;
+    final uri = type.element.library.uri;
+    if (uri.scheme != 'package' || uri.pathSegments.isEmpty) return null;
+    final candidates = _owners
+        .where(
+          (owner) =>
+              owner.kind == kind &&
+              owner.contractSymbol == type.element.name &&
+              owner.contractPackage == uri.pathSegments.first &&
+              (owner.contractLibraryUri == null ||
+                  owner.contractLibraryUri == uri.toString()),
+        )
+        .toList();
+    return candidates.length == 1 ? candidates.single : null;
+  }
 
   /// Finds one unambiguous Contract owner visible from an authored source.
   ///
@@ -116,7 +143,19 @@ final class CCRouterContractOwnerIndex {
   }) {
     final symbol = owner.componentIdSymbol;
     if (symbol == null) return null;
+    if (unit.declaredFragment != null) {
+      final references = CCRouterResolvedSymbols.references(unit, symbol)
+          .entries
+          .where(
+            (entry) =>
+                CCRouterResolvedSymbols.componentId(entry.value) ==
+                owner.componentId,
+          )
+          .toList();
+      return references.length == 1 ? references.single.key : null;
+    }
     final references = <String>{};
+    final localNames = _declaredNames(unit);
     if (_unitDeclaresComponentId(unit, symbol, owner.componentId)) {
       references.add(symbol);
     }
@@ -139,10 +178,47 @@ final class CCRouterContractOwnerIndex {
         continue;
       }
       final prefix = directive.prefix?.name;
+      if (localNames.contains(prefix ?? symbol)) continue;
       references.add(prefix == null ? symbol : '$prefix.$symbol');
     }
+    // Parser-only clients must also reject ambiguous imported bindings.
+    references.removeWhere((reference) {
+      if (localNames.contains(reference)) return false;
+      final prefix = reference.contains('.')
+          ? reference.split('.').first
+          : null;
+      var contributors = 0;
+      for (final directive in unit.directives.whereType<ImportDirective>()) {
+        if (directive.prefix?.name != prefix ||
+            !_combinatorsExpose(directive.combinators, symbol))
+          continue;
+        final uri = directive.uri.stringValue;
+        final imported = uri == null ? null : _resolveLibrary(uri, sourcePath);
+        if (imported != null &&
+            _libraryExportsComponentId(imported, symbol, null, {}))
+          contributors++;
+      }
+      return contributors != 1;
+    });
     return references.length == 1 ? references.single : null;
   }
+
+  /// Top-level declarations that shadow imported names in parser-only analysis.
+  static Set<String> _declaredNames(CompilationUnit unit) => {
+    for (final declaration in unit.declarations)
+      ...switch (declaration) {
+        TopLevelVariableDeclaration d => d.variables.variables.map(
+          (v) => v.name.lexeme,
+        ),
+        ClassDeclaration d => [d.name.lexeme],
+        GenericTypeAlias d => [d.name.lexeme],
+        FunctionDeclaration d => [d.name.lexeme],
+        EnumDeclaration d => [d.name.lexeme],
+        MixinDeclaration d => [d.name.lexeme],
+        ExtensionTypeDeclaration d => [d.name.lexeme],
+        _ => <String>[],
+      },
+  };
 
   /// Resolves one authored import URI against Pub's Package roots.
   String? _resolveLibrary(String uri, String sourcePath) {
@@ -165,7 +241,7 @@ final class CCRouterContractOwnerIndex {
   bool _libraryExportsComponentId(
     String libraryPath,
     String symbol,
-    String componentId,
+    String? componentId,
     Set<String> visited,
   ) {
     final normalized = path.normalize(libraryPath);
@@ -182,7 +258,12 @@ final class CCRouterContractOwnerIndex {
     } on Object {
       return false;
     }
-    if (_unitDeclaresComponentId(unit, symbol, componentId)) return true;
+    if (_declaredNames(unit).contains(symbol)) {
+      return componentId == null ||
+          _unitDeclaresComponentId(unit, symbol, componentId);
+    }
+    var contributors = 0;
+    var matching = 0;
     for (final directive in unit.directives.whereType<ExportDirective>()) {
       if (directive.configurations.isNotEmpty ||
           !_combinatorsExpose(directive.combinators, symbol)) {
@@ -191,12 +272,18 @@ final class CCRouterContractOwnerIndex {
       final uri = directive.uri.stringValue;
       if (uri == null) continue;
       final exported = _resolveLibrary(uri, normalized);
-      if (exported != null &&
-          _libraryExportsComponentId(exported, symbol, componentId, visited)) {
-        return true;
-      }
+      if (exported == null) continue;
+      if (_libraryExportsComponentId(exported, symbol, null, {...visited}))
+        contributors++;
+      if (componentId != null &&
+          _libraryExportsComponentId(exported, symbol, componentId, {
+            ...visited,
+          }))
+        matching++;
     }
-    return false;
+    return componentId == null
+        ? contributors > 0
+        : contributors == 1 && matching == 1;
   }
 
   /// Whether one library directly declares the expected typed constant.
@@ -207,6 +294,7 @@ final class CCRouterContractOwnerIndex {
   ) {
     for (final declaration
         in unit.declarations.whereType<TopLevelVariableDeclaration>()) {
+      if (!declaration.variables.isConst) continue;
       for (final variable in declaration.variables.variables) {
         if (variable.name.lexeme != symbol) continue;
         if (_componentIdLiteral(variable.initializer) == componentId) {
@@ -498,6 +586,8 @@ final class CCRouterContractOwnerIndexCache {
         contractPackage: item.contractPackage,
         componentId: item.componentId,
         componentIdSymbol: _componentIdSymbol(item),
+        contractLibraryUri:
+            'package:${item.contractPackage}/${path.relative(item.contractSourcePath, from: path.join(roots[item.contractPackage]!, 'lib')).replaceAll(path.separator, '/')}',
       );
       final identity =
           '${owner.kind.name}\u0000${owner.contractPackage}\u0000'

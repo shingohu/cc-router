@@ -80,6 +80,11 @@ void 返回形态、Route `pattern/patterns`、InitTask `contract/id`、字面�
 直接 List 时，可以由开发者主动应用单 Owner Quick Fix；同一组件的全部缺失 Owner 都能被
 唯一证明时，还会提供一次补齐全部 Owner 的 Quick Fix。插件不会创建 Contract、猜测标识符、
 自动插入 import、改写复杂集合或运行 Generator。
+涉及 Handler 类型、Owner 常量和 Service 继承时，插件按需复用 Analysis Server 的当前解析结果，
+支持 `Future` 前缀、typedef、const alias 和导入遮蔽；无法证明的值暂缓判断，不按末尾名称猜测。
+`@CCService` 已有兼容 `dispose()` 却未实现 `CCDisposable` 时会警告；接口已明确导入时可用
+Quick Fix 补接口，保留原释放代码。直接自建并持有可释放资源却未接入 Scope 时提供所有权提示，
+不生成空 `dispose()` 或自动释放借用资源。没有提示不代表已证明无泄漏，仍需生命周期测试。
 当前仓库 Demo 已在 `demo/analysis_options.yaml` 启用它，并通过
 `demo/tools/ccrouter_analyzer_plugin_host` 提供官方要求的 `tools/analyzer_plugin` bootstrap。
 bootstrap 使用远端固定 Git commit 隔离 Analyzer 版本；发布后可切换到同目录的

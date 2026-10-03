@@ -6,10 +6,10 @@
 - 基线：`769587b`。审查开始时的 Path 指纹修复、拓扑基准与文档改动，结束时已包含在该提交中。
 - 范围：Core/Contracts、Flutter Facade、GoRouter、五类能力生成器与 CLI、Analyzer、Analytics、
   DevTools、Demo 接入模式以及面向集成者的 Integration/CLI Skill。
-- 状态：审查完成；后续已按授权修复 F01–F13 和 F18，验证记录见第 8–12 节。
+- 状态：审查完成；后续已按授权修复 F01–F15 和 F18，验证记录见第 8–13 节。
   其余条目未实施。
 - 审查结论：现有测试基线通过，但不能认定框架没有严重缺陷或生成器绝对准确。原确认
-  5 项 P1、13 项 P2，其中 1 项 P2 属于 Demo；上述修复后剩余 0 项已确认 P1、4 项 P2。
+  5 项 P1、13 项 P2，其中 1 项 P2 属于 Demo；上述修复后剩余 0 项已确认 P1、2 项 P2。
   优先修复已有能力的组合边界，再扩展开发体验能力。
 
 P1 表示优先处理的业务结果、清理、授权或生成准确性风险；P2 表示特定合法输入或
@@ -247,6 +247,8 @@ List/嵌套滚动、移出移入和销毁，而非仅手工派发通知或改变
 
 ### F14（P2）：Analyzer 对合法 Future 前缀/typedef 误报
 
+状态：已修复，验证见第 13 节。下述为修复前证据。
+
 [source_analyzer.dart](../packages/ccrouter_analyzer_plugin/lib/src/source_analyzer.dart) 第 617、
 821 行使用源码字符串验证 Handler 返回类型。实测 `async.Future<void>` 和
 `typedef Completion = Future<void>` 均被报 `ccrouter_handler_signature_invalid`，而
@@ -256,6 +258,8 @@ Generator 使用 resolved DartType，可以接受这些合法类型。
 使用相同的合法/非法输入矩阵校验 Analyzer 与 Generator 的一致性，避免提高配置噪音。
 
 ### F15（P2）：Analyzer Owner 判断丢失前缀，Quick Fix 未处理本地遮蔽
+
+状态：已修复，验证见第 13 节。下述为修复前证据。
 
 [component_dependency_analyzer.dart](../packages/ccrouter_analyzer_plugin/lib/src/component_dependency_analyzer.dart)
 第 147 行只比末尾标识符。依赖 `right.SharedService` 却写 `wrong.ownerComponentId`，只要
@@ -553,3 +557,40 @@ F01–F11 已完成实现和回归；后续从第 5 项继续。每个独立缺�
   同步更新。剩余 **4 项 P2：F14/F15 Analyzer、F16/F17 Skill**。
 - 几何检测不处理任意 Overlay 遮挡、opacity 或无通知的自定义布局动画；本轮未跑真机矩阵、
   长时间 Heap 或独立完整 Generator/Analyzer 套件，不把自动化通过视为这些范围已验收。
+
+## 13. F14/F15 与 Service 生命周期诊断修复验证（2026-10-03）
+
+- 根因与取舍：源码字符串不能证明 typedef、import prefix 或 Owner 常量身份；扫描整个
+  Workspace 或另建解析会话会增加编辑成本。采用 Analysis Server 现有会话按需解析当前文件，
+  诊断与 Quick Fix 共用类型、声明 Library 和常量值证明；不持有长期 resolved AST 缓存。
+  解析失败、Dart ERROR 或无法证明的依赖表达式退回保守检查，Generator 仍是最终校验入口。
+- F14：Event/InitTask Handler 接受真实 dart:async 的前缀及 typedef，拒绝同名应用类型和
+  非法返回值；required InitTask 的异步 timeout 规则也识别别名。对照测试发现 Generator
+  已支持 `Future<void>?`，因此 Analyzer 与该既有语义对齐，没有收紧 Generator。
+- F15：按真实 Contract 声明来源匹配 Owner，支持前缀与 const alias；本地遮蔽、重复前缀、
+  多 import 歧义和 deferred import 不提供未经证明的修复。未知计算依赖不当成缺失 Owner。
+  await 解析后复核当前 overlay，过期结果不发布诊断或编辑。
+- Service 新增两类 warning：已存在兼容实例 `dispose()` 但未实现 `CCDisposable`；直接创建
+  自有可释放资源但没有接入 Scope。前者仅在已有无歧义 import 时提供补接口的 Quick Fix，
+  保留原方法体和现有 implements；后者只提示所有权检查，不生成空 dispose 或猜测释放次序。
+  dispose 签名限于 void、非 nullable Future<void>/FutureOr<void>，不套用 Handler 的宽松规则。
+- 资源证明仅覆盖私有 final 实例字段的直接初始化、构造 initializer 和构造体赋值；排除借用
+  注入、共享值、任意 factory、static 和其他实例赋值。辅助方法、复杂控制流、Dio 等第三方
+  资源以及清理方法内部是否完整，不在当前静态规则保证范围内；不宣称可检测所有内存泄漏。
+- 独立 Analyzer **78/78 通过**，独立 Package 与 Workspace analyze 均无问题。新增真实
+  AnalysisContextCollection（加载真实 Contracts 源码）与 Plugin 会话回归，覆盖修复后重新
+  分析、overlay 更新丢弃旧结果、继承 dispose/CCDisposable 和资源所有权误报边界。
+- Generator Event 对照矩阵 **13/13 通过**；同批 InitTask/Service **45 项通过**。
+  框架/Flutter/Demo/模块/DevTools 全量 **478/478 通过**。本地 bootstrap analyze 与 loader
+  可执行文件编译通过；未修改 Demo 固定 Git ref，当前 Demo IDE 尚未分发本批规则。
+- 编辑基准包含 100/1000/3000 被动类与 20 次语义编辑，每次必须命中正确的 Service 诊断。
+  CCRouter 语义规则 P95 分别为 **338/995/3724us**；复用的 Analysis Server 解析 P95 分别为
+  **5176/23538/35987us**。首次冷解析约 **875ms**，与规则成本分开记录。这只是当前 SDK/JIT
+  样本，不能推导真实 IDE 全局 P95 或与旧版相比的加速比例。
+- `generate demo --no-cache --check --profile` **2935ms**（build_runner **1908ms**），
+  缓存 `--check --profile` **429ms**，均通过，业务生成物无变化。
+- README、IDE 设计与 Integration Skill 同步说明诊断和修复边界。核心价值侧保持编译期
+  类型证明、最小 API、低配置和明确资源所有权，不改变业务 Runtime 行为；新增 helper
+  保留在插件内部。剩余 **2 项 P2：F16/F17 Skill 安装完整性与指导一致性**。
+- 本轮未执行真机矩阵或长时间 Heap 分析。Skill Python 快检因缺少 PyYAML 无法运行，
+  使用 YAML 元数据解析与仓库文档检查验证，不将替代检查描述为 Python 快检通过。

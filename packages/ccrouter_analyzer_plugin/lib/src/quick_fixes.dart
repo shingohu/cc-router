@@ -2,6 +2,7 @@ import 'package:analyzer/dart/analysis/utilities.dart';
 import 'package:analyzer/dart/ast/ast.dart';
 import 'package:ccrouter_analyzer_plugin/src/component_dependency_analyzer.dart';
 import 'package:ccrouter_analyzer_plugin/src/contract_owner_index.dart';
+import 'package:ccrouter_analyzer_plugin/src/service_lifecycle_analysis.dart';
 
 /// One conservative source edit offered as an IDE Quick Fix.
 final class CCRouterSourceFix {
@@ -43,6 +44,8 @@ abstract final class CCRouterQuickFixes {
   /// [contractOwners] and [sourcePackage] are required only for a missing
   /// component-owner dependency. Without both, that diagnostic remains
   /// visible but does not offer a potentially incorrect edit.
+  /// [resolvedUnit] is a current, error-free analysis snapshot. It is required
+  /// for Service disposal fixes; no import or cleanup body is invented.
   static List<CCRouterSourceFix> compute({
     required String source,
     required String filePath,
@@ -50,12 +53,41 @@ abstract final class CCRouterQuickFixes {
     String diagnosticCode = 'ccrouter_annotation_arguments_conflict',
     CCRouterContractOwnerIndex? contractOwners,
     String? sourcePackage,
+    CompilationUnit? resolvedUnit,
   }) {
-    final unit = parseString(
-      content: source,
-      path: filePath,
-      throwIfDiagnostics: false,
-    ).unit;
+    final unit =
+        resolvedUnit ??
+        parseString(
+          content: source,
+          path: filePath,
+          throwIfDiagnostics: false,
+        ).unit;
+    if (diagnosticCode == 'ccrouter_service_disposable_missing') {
+      final reference = CCRouterServiceLifecycleAnalysis.disposableReference(
+        unit,
+      );
+      if (reference == null) return const [];
+      for (final (declaration, fixable)
+          in CCRouterServiceLifecycleAnalysis.issues(unit)) {
+        if (!fixable ||
+            declaration.name.offset != offset ||
+            declaration.leftBracket.isSynthetic)
+          continue;
+        final clause = declaration.implementsClause;
+        return [
+          CCRouterSourceFix(
+            id: 'ccrouter.implement_disposable',
+            message: 'Connect the existing dispose() to CCDisposable',
+            offset: clause?.end ?? declaration.leftBracket.offset,
+            length: 0,
+            replacement: clause == null
+                ? 'implements $reference '
+                : ', $reference',
+          ),
+        ];
+      }
+      return const [];
+    }
     if (diagnosticCode == 'ccrouter_component_owner_dependency_missing') {
       if (contractOwners == null || sourcePackage == null) return const [];
       return _componentDependencyFixes(
@@ -116,6 +148,7 @@ abstract final class CCRouterQuickFixes {
       unit: unit,
       sourcePackage: sourcePackage,
       owners: owners,
+      sourcePath: filePath,
     );
     final selected = allMissing
         .where((item) => item.offset == offset)
