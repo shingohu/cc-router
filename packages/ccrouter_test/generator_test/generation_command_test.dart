@@ -785,14 +785,27 @@ void probe() {
         ),
       );
       final originalGenerated = generatedProbe.readAsBytesSync();
+      final portableState = File(
+        path.join(
+          Directory.current.path,
+          'demo',
+          'lib',
+          'src',
+          'ccrouter_generated',
+          'metadata',
+          'ccrouter_generation_state.json',
+        ),
+      );
+      final originalPortableState = portableState.readAsBytesSync();
       addTearDown(() {
         if (sourceProbe.existsSync()) sourceProbe.deleteSync();
         generatedProbe.writeAsBytesSync(originalGenerated, flush: true);
+        portableState.writeAsBytesSync(originalPortableState, flush: true);
       });
 
       sourceProbe.writeAsStringSync('const fastPathProbe = true;\n');
       final changedSource = await generate(check: true);
-      expect(changedSource.exitCode, 0, reason: '${changedSource.stderr}');
+      expect(changedSource.exitCode, 1);
       expect('${changedSource.stdout}', contains('fast-path=miss'));
       expect('${changedSource.stdout}', contains('CCRouter profile build='));
       expect(
@@ -804,6 +817,21 @@ void probe() {
         contains('CCRouter profile dirty-packages='),
       );
       expect('${changedSource.stdout}', contains('ccrouter_demo[host]'));
+      expect(
+        '${changedSource.stderr}',
+        contains(
+          'modified: demo/lib/src/ccrouter_generated/metadata/'
+          'ccrouter_generation_state.json',
+        ),
+      );
+
+      final generatedWithSource = await generate();
+      expect(
+        generatedWithSource.exitCode,
+        0,
+        reason: '${generatedWithSource.stderr}',
+      );
+      expect('${generatedWithSource.stdout}', contains('fast-path=miss'));
 
       sourceProbe.deleteSync();
       final reseeded = await generate();
@@ -855,7 +883,7 @@ void probe() {
       )..writeAsStringSync('const ccrouterBuildPlanHostProbe = true;\n');
       try {
         final result = await _generateDemo(['--check', '--profile']);
-        expect(result.exitCode, 0, reason: '${result.stderr}');
+        expect(result.exitCode, 1);
         expect('${result.stdout}', contains('fast-path=miss'));
         expect(
           '${result.stdout}',
@@ -867,8 +895,11 @@ void probe() {
         expect('${result.stdout}', contains('CCRouter profile build-targets='));
         expect('${result.stdout}', contains('CCRouter profile build='));
         expect(
-          '${result.stdout}',
-          contains('CCRouter generated artifacts are up to date.'),
+          '${result.stderr}',
+          contains(
+            'modified: demo/lib/src/ccrouter_generated/metadata/'
+            'ccrouter_generation_state.json',
+          ),
         );
         expect(await _readDemoGeneratedArtifacts(), before);
       } finally {
@@ -903,7 +934,7 @@ void probe() {
           flush: true,
         );
         final changed = await _generateDemo(['--check', '--profile']);
-        expect(changed.exitCode, 0, reason: '${changed.stderr}');
+        expect(changed.exitCode, 1);
         expect(
           '${changed.stdout}',
           contains('suggested=runBuilder actual=runBuilder'),
@@ -911,6 +942,13 @@ void probe() {
         expect(
           '${changed.stdout}',
           contains('authored-input-changed:demo_payment'),
+        );
+        expect(
+          '${changed.stderr}',
+          contains(
+            'modified: demo/modules/payment/lib/src/'
+            'ccrouter_generated/metadata/ccrouter_generation_state.json',
+          ),
         );
       } finally {
         component.writeAsBytesSync(originalComponent, flush: true);
@@ -942,10 +980,14 @@ void probe() {
         state.writeAsStringSync(jsonEncode(unprovenDocument), flush: true);
 
         final unproven = await _generateDemo(['--check', '--profile']);
-        expect(unproven.exitCode, 0, reason: '${unproven.stderr}');
+        expect(unproven.exitCode, 1);
         expect(
           '${unproven.stdout}',
           contains('resolution-unproven:demo_payment'),
+        );
+        expect(
+          '${unproven.stderr}',
+          contains('ccrouter_generation_state.json'),
         );
 
         state.writeAsStringSync('{invalid planning state', flush: true);
@@ -954,7 +996,7 @@ void probe() {
           flush: true,
         );
         final invalid = await _generateDemo(['--check', '--profile']);
-        expect(invalid.exitCode, 0, reason: '${invalid.stderr}');
+        expect(invalid.exitCode, 1);
         expect(
           '${invalid.stdout}',
           contains(
@@ -962,7 +1004,8 @@ void probe() {
             'reasons=planning-state-invalid',
           ),
         );
-        expect(jsonDecode(state.readAsStringSync()), isA<Map>());
+        expect('${invalid.stderr}', contains('ccrouter_generation_state.json'));
+        expect(state.readAsStringSync(), '{invalid planning state');
       } finally {
         if (hostProbe.existsSync()) hostProbe.deleteSync();
         final converged = await _generateDemo(const []);
@@ -1045,6 +1088,185 @@ void probe() {
       }
     },
     timeout: const Timeout(Duration(minutes: 6)),
+  );
+
+  test(
+    'P3 reuses a verified prebuilt Package without Builder metadata',
+    () async {
+      final seeded = await _generateDemo(['--no-cache']);
+      expect(seeded.exitCode, 0, reason: '${seeded.stderr}');
+      final before = await _readDemoGeneratedArtifacts();
+      final portableState = File(
+        path.join(
+          Directory.current.path,
+          'demo',
+          'modules',
+          'payment',
+          'lib',
+          'src',
+          'ccrouter_generated',
+          'metadata',
+          'ccrouter_generation_state.json',
+        ),
+      );
+      expect(portableState.existsSync(), isTrue);
+      final portableContents = portableState.readAsStringSync();
+      expect(portableContents, isNot(contains(Directory.current.path)));
+      expect(portableContents, isNot(contains('rootUri')));
+      expect(portableContents, isNot(contains('.dart_tool')));
+
+      final graph = File(
+        path.join(Directory.current.path, '.dart_tool', 'package_graph.json'),
+      );
+      final originalGraph = graph.readAsBytesSync();
+      final metadataDirectory = Directory(
+        path.join(
+          Directory.current.path,
+          '.dart_tool',
+          'build',
+          'generated',
+          'demo_payment',
+        ),
+      );
+      try {
+        final document = jsonDecode(graph.readAsStringSync()) as Map;
+        final packages = document['packages'] as List;
+        final host = packages.cast<Map>().singleWhere(
+          (package) => package['name'] == 'ccrouter_demo',
+        );
+        (host['dependencies'] as List).remove('demo_payment');
+        graph.writeAsStringSync(jsonEncode(document), flush: true);
+
+        final removed = await _generateDemo(['--profile']);
+        expect(removed.exitCode, 0, reason: '${removed.stderr}');
+        expect(
+          '${removed.stdout}',
+          contains('actual=aggregateOnly reasons=host-graph-changed'),
+        );
+
+        graph.writeAsBytesSync(originalGraph, flush: true);
+        if (metadataDirectory.existsSync()) {
+          metadataDirectory.deleteSync(recursive: true);
+        }
+        final restored = await _generateDemo(['--profile']);
+        expect(restored.exitCode, 0, reason: '${restored.stderr}');
+        expect(
+          '${restored.stdout}',
+          contains(
+            'actual=aggregateOnly '
+            'reasons=host-graph-changed,portable-packages-added:demo_payment',
+          ),
+        );
+        expect(
+          '${restored.stdout}',
+          contains('CCRouter generation aggregate-only path;'),
+        );
+        expect('${restored.stdout}', isNot(contains('build-targets=')));
+        expect('${restored.stdout}', contains('CCRouter profile build=0ms'));
+        expect(await _readDemoGeneratedArtifacts(), before);
+
+        final reference = await _generateDemo([
+          '--check',
+          '--no-cache',
+          '--profile',
+        ]);
+        expect(reference.exitCode, 0, reason: '${reference.stderr}');
+        expect('${reference.stdout}', contains('reasons=no-cache-reference'));
+        expect(await _readDemoGeneratedArtifacts(), before);
+      } finally {
+        graph.writeAsBytesSync(originalGraph, flush: true);
+        final restored = await _generateDemo(['--no-cache']);
+        expect(restored.exitCode, 0, reason: '${restored.stderr}');
+        expect(await _readDemoGeneratedArtifacts(), before);
+      }
+    },
+    timeout: const Timeout(Duration(minutes: 8)),
+  );
+
+  test(
+    'P3 rejects a read-only Package without valid Portable Generation State',
+    () async {
+      final seeded = await _generateDemo(['--no-cache']);
+      expect(seeded.exitCode, 0, reason: '${seeded.stderr}');
+      final packageConfig = File(
+        path.join(Directory.current.path, '.dart_tool', 'package_config.json'),
+      );
+      final originalConfig = packageConfig.readAsBytesSync();
+      final externalRoot = await Directory.systemTemp.createTemp(
+        'ccrouter_external_payment_',
+      );
+      await _copyDirectory(
+        Directory(
+          path.join(Directory.current.path, 'demo', 'modules', 'payment'),
+        ),
+        externalRoot,
+      );
+      try {
+        final document = jsonDecode(packageConfig.readAsStringSync()) as Map;
+        final packages = document['packages'] as List;
+        final payment = packages.cast<Map>().singleWhere(
+          (package) => package['name'] == 'demo_payment',
+        );
+        payment['rootUri'] = externalRoot.uri.toString();
+        packageConfig.writeAsStringSync(jsonEncode(document), flush: true);
+
+        final valid = await _generateDemo(['--check', '--profile']);
+        expect(valid.exitCode, 0, reason: '${valid.stderr}');
+        expect('${valid.stdout}', contains('build-targets=7'));
+        expect(
+          '${valid.stdout}',
+          contains('builder-package-disabled:demo_payment'),
+        );
+
+        final externalState = File(
+          path.join(
+            externalRoot.path,
+            'lib',
+            'src',
+            'ccrouter_generated',
+            'metadata',
+            'ccrouter_generation_state.json',
+          ),
+        );
+        final originalState = externalState.readAsStringSync();
+        final tamperedDocument =
+            jsonDecode(originalState) as Map<String, Object?>;
+        tamperedDocument['contentFingerprint'] = 'tampered';
+        externalState.writeAsStringSync(
+          jsonEncode(tamperedDocument),
+          flush: true,
+        );
+        final tampered = await _generateDemo(['--check', '--profile']);
+        expect(tampered.exitCode, 1);
+        expect(
+          '${tampered.stderr}',
+          contains(
+            'Read-only CCRouter Package "demo_payment" has an invalid '
+            'Portable Generation State (invalid)',
+          ),
+        );
+
+        externalState.writeAsStringSync(originalState, flush: true);
+        externalState.deleteSync();
+        final missing = await _generateDemo(['--check', '--profile']);
+        expect(missing.exitCode, 1);
+        expect(
+          '${missing.stderr}',
+          contains(
+            'Read-only CCRouter Package "demo_payment" has an invalid '
+            'Portable Generation State (missing)',
+          ),
+        );
+      } finally {
+        packageConfig.writeAsBytesSync(originalConfig, flush: true);
+        if (externalRoot.existsSync()) {
+          externalRoot.deleteSync(recursive: true);
+        }
+        final restored = await _generateDemo(['--no-cache']);
+        expect(restored.exitCode, 0, reason: '${restored.stderr}');
+      }
+    },
+    timeout: const Timeout(Duration(minutes: 8)),
   );
 
   test(
@@ -1187,4 +1409,18 @@ File _demoBuildPlanState() {
     final decoded = jsonDecode(file.readAsStringSync());
     return decoded is Map && decoded['hostPackage'] == 'ccrouter_demo';
   });
+}
+
+Future<void> _copyDirectory(Directory source, Directory target) async {
+  await for (final entity in source.list(recursive: true, followLinks: false)) {
+    final relative = path.relative(entity.path, from: source.path);
+    final destination = path.join(target.path, relative);
+    if (entity is Directory) {
+      Directory(destination).createSync(recursive: true);
+    } else if (entity is File) {
+      final file = File(destination);
+      file.parent.createSync(recursive: true);
+      await entity.copy(file.path);
+    }
+  }
 }

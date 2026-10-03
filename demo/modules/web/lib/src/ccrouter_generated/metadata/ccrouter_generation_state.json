@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "generatorVersion": "0.1.5",
+  "package": {
+    "name": "demo_web",
+    "version": "0.1.0"
+  },
+  "toolFingerprint": "f2b8f2dcb76ec31da07666a3e73025db79170b3a3fba9e40c56626ad870ab232",
+  "authoredInputFingerprint": "060939aa10ed08ed018398f1314200bd2d125d0b50a9f85cd1c5cc41a3402699",
+  "resolutionFingerprint": "a770320dd99af4279daafb308288706f3f3aa7eda8f55c9c6a6aa95c7a20a658",
+  "metadataFingerprint": "e2eb0c6487502327dce750690b8d87e672859807b6fa5aae06a9772042ff9553",
+  "managedOutputFingerprint": "42f1f9dd0b4389d2c48634395cb928623e25c327fc9a45577fb9d8ace16db002",
+  "contentFingerprint": "56c356d2d3f1aeab171fd6ce87cd1d2f9d225b0be76ee0cb54a2aa9c4951d1c7"
+}

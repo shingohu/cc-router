@@ -22,6 +22,7 @@ import 'src/pub_hook.dart';
 import 'src/scaffold.dart';
 
 part 'src/build_plan.dart';
+part 'src/portable_generation_state.dart';
 
 final _dartFormatter = DartFormatter(
   languageVersion: DartFormatter.latestLanguageVersion,
@@ -263,6 +264,8 @@ Future<void> main(List<String> arguments) async {
             parsed,
             buildContext!,
             buildDuration: buildDuration,
+            prebuiltPackages:
+                buildPlan?.actualPrebuiltPackages ?? const <String>{},
           )
         : await _aggregate(root, parsed);
     if (!succeeded) {
@@ -593,6 +596,7 @@ Future<bool> _generateResolvedWorkspace(
   _Arguments parsed,
   _BuildContext buildContext, {
   required Duration buildDuration,
+  Set<String> prebuiltPackages = const <String>{},
 }) async {
   final discoveryWatch = Stopwatch()..start();
   CCPackageWorkspace workspace;
@@ -638,8 +642,43 @@ Future<bool> _generateResolvedWorkspace(
   final metadataSnapshots = <String, CCPackageMetadataSnapshot>{};
   final externalIndexes = <String, CCPackageIndex>{};
   final participating = <String>{workspace.host.name};
+  final portableVerifications = await _CCPortableGenerationState.verify(
+    workspace,
+    packageNames: {
+      ...prebuiltPackages,
+      for (final package in workspace.packages.values)
+        if (!package.writable && package.requiresPackageIndex) package.name,
+    },
+  );
   for (final package in workspace.packages.values) {
     if (package.writable) {
+      if (prebuiltPackages.contains(package.name)) {
+        final verification = portableVerifications[package.name];
+        if (verification == null || !verification.valid) {
+          stderr.writeln(
+            'error: Prebuilt CCRouter Package "${package.name}" no longer '
+            'matches its Portable Generation State '
+            '(${verification?.reason.name ?? 'missing'}). Rerun generation.',
+          );
+          return false;
+        }
+        try {
+          final index = await CCPackageIndex.read(package);
+          localMetadata[package.name] = _resolvePackageComponentOwners(
+            index.metadata,
+          );
+          metadataSnapshots[package.name] = CCPackageMetadataSnapshot(
+            fingerprint: verification.state!.metadataFingerprint,
+            documents: index.metadata,
+            cacheHit: false,
+          );
+          participating.add(package.name);
+          continue;
+        } on CCPackageWorkspaceException catch (error) {
+          stderr.writeln('error: ${error.message}');
+          return false;
+        }
+      }
       final cached = parsed.noCache ? null : cache.entries[package.name];
       final snapshot = await readCCPackageMetadata(
         workspace.intermediateMetadataDirectory(package),
@@ -659,6 +698,18 @@ Future<bool> _generateResolvedWorkspace(
       continue;
     }
     if (package.indexFile.existsSync()) {
+      if (package.requiresPackageIndex) {
+        final verification = portableVerifications[package.name];
+        if (verification == null || !verification.valid) {
+          stderr.writeln(
+            'error: Read-only CCRouter Package "${package.name}" has an '
+            'invalid Portable Generation State '
+            '(${verification?.reason.name ?? 'missing'}). Regenerate and '
+            'republish that Package before consuming it.',
+          );
+          return false;
+        }
+      }
       try {
         final index = await CCPackageIndex.read(package);
         externalIndexes[package.name] = index;
@@ -829,9 +880,19 @@ Future<bool> _generateResolvedWorkspace(
     indexes: indexes,
   );
 
-  final localFiles = _resolveMetadataFiles(
-    await _readWritableMetadataFiles(workspace),
-  );
+  final localFiles = _resolveMetadataFiles([
+    ...await _readWritableMetadataFiles(
+      workspace,
+      excludingPackages: prebuiltPackages,
+    ),
+    for (final packageName in prebuiltPackages)
+      for (final document in localMetadata[packageName] ?? const [])
+        _MetadataFile(
+          workspace.packages[packageName]!.indexFile,
+          document,
+          packageRoot: workspace.packages[packageName]!.root,
+        ),
+  ]);
 
   final documents = <Map<String, Object?>>[
     for (final name in order) ...?indexes[name]?.metadata,
@@ -935,6 +996,7 @@ Future<bool> _generateResolvedWorkspace(
   )) {
     await _removeEmptyGeneratedSourceDirectories(package.root);
   }
+  await _CCPortableGenerationState.write(workspace, indexes: indexes);
   stdout.writeln(
     'Validated ${validation.machineDocument['components'] is List ? (validation.machineDocument['components']! as List).length : 0} components and ${validation.machineDocument['routes'] is List ? (validation.machineDocument['routes']! as List).length : 0} routes across ${indexes.length} generated Packages.',
   );
@@ -1230,11 +1292,12 @@ List<String> _dependencyOrder(
 
 /// Reads current file-associated metadata from writable build caches only.
 Future<List<_MetadataFile>> _readWritableMetadataFiles(
-  CCPackageWorkspace workspace,
-) async {
+  CCPackageWorkspace workspace, {
+  Set<String> excludingPackages = const <String>{},
+}) async {
   final result = <_MetadataFile>[];
   for (final package in workspace.packages.values.where(
-    (package) => package.writable,
+    (package) => package.writable && !excludingPackages.contains(package.name),
   )) {
     final directory = workspace.intermediateMetadataDirectory(package);
     if (!directory.existsSync()) continue;
@@ -2369,6 +2432,16 @@ abstract final class _GenerationStateFingerprint {
           'external/${package.name}/${package.bundleFile.uri.pathSegments.last}',
           package.bundleFile,
         );
+        await _addFile(
+          inputs,
+          'external/${package.name}/${_CCPortableGenerationState.fileName}',
+          File(
+            path.join(
+              package.catalogDirectory.path,
+              _CCPortableGenerationState.fileName,
+            ),
+          ),
+        );
       }
     }
     await _addBuildStateInputs(inputs, workspace.buildRoot);
@@ -2398,7 +2471,7 @@ abstract final class _GenerationStateFingerprint {
   ) async {
     final inputs = <String, List<int>>{};
     await _addGeneratorInputs(inputs);
-    inputs['tool/dart-version'] = utf8.encode(Platform.version);
+    inputs['tool/dart-version'] = utf8.encode(_portableDartVersion());
     inputs['tool/resolution'] = utf8.encode(
       computeCCCanonicalJsonFingerprint(resolutionIdentity),
     );
@@ -2741,10 +2814,12 @@ Future<bool> _runBuildRunner(
   final targetRoots = <Directory>[
     for (final name in targets) workspace.packages[name]!.root,
   ];
-  final protectedOutputs = await _GeneratedArtifactsSnapshot.captureOutside(
-    context.root,
-    targetRoots,
-  );
+  final protectedOutputs = <_GeneratedArtifactsSnapshot>[
+    await _GeneratedArtifactsSnapshot.captureOutside(context.root, targetRoots),
+    for (final package in workspace.packages.values)
+      if (!package.writable && !_isWithin(context.root, package.root))
+        await _GeneratedArtifactsSnapshot.capture(package.root),
+  ];
   final arguments = <String>[
     'run',
     'build_runner',
@@ -2775,7 +2850,9 @@ Future<bool> _runBuildRunner(
     processExitCode = await process.exitCode;
     await forwarding;
   } finally {
-    await protectedOutputs.restoreMissing();
+    for (final snapshot in protectedOutputs) {
+      await snapshot.restore();
+    }
   }
   if (processExitCode == 0) return true;
   stderr.writeln('error: build_runner failed with exit code $processExitCode.');
@@ -2846,13 +2923,20 @@ void _writeComponentDependencyPreflightIssues(
 /// Immutable content snapshot for every CCRouter-managed generated file.
 final class _GeneratedArtifactsSnapshot {
   /// Captures exact bytes relative to [root] for later comparison or restore.
-  const _GeneratedArtifactsSnapshot._(this.root, this.files);
+  const _GeneratedArtifactsSnapshot._(
+    this.root,
+    this.files, {
+    this.excludedRoots = const <String>[],
+  });
 
   /// Root whose source-controlled CCRouter outputs are guarded.
   final Directory root;
 
   /// Original generated file bytes keyed by normalized relative path.
   final Map<String, List<int>> files;
+
+  /// Absolute subtrees outside this snapshot's ownership.
+  final List<String> excludedRoots;
 
   /// Reads the complete set of managed outputs below [root].
   static Future<_GeneratedArtifactsSnapshot> capture(Directory root) async =>
@@ -2865,8 +2949,9 @@ final class _GeneratedArtifactsSnapshot {
   ///
   /// Workspace build_runner may invalidate stale outputs globally when a
   /// Builder changes even though build filters select only the Host closure.
-  /// The protected snapshot prevents that cleanup from mutating unrelated
-  /// Packages without treating those Packages as generation inputs.
+  /// The protected snapshot restores exact managed bytes after the subprocess,
+  /// preventing cleanup or rewrites from mutating unrelated Packages without
+  /// treating those Packages as generation inputs.
   static Future<_GeneratedArtifactsSnapshot> captureOutside(
     Directory root,
     Iterable<Directory> excludedRoots,
@@ -2883,12 +2968,17 @@ final class _GeneratedArtifactsSnapshot {
             path.isWithin(excluded, absolute),
       );
     });
-    return _GeneratedArtifactsSnapshot._(root, files);
+    return _GeneratedArtifactsSnapshot._(
+      root,
+      files,
+      excludedRoots: List.unmodifiable(normalizedRoots),
+    );
   }
 
   /// Reports added, removed, or modified generated artifacts deterministically.
   Future<List<String>> changes() async {
     final current = await _readManagedGeneratedFiles(root);
+    _removeExcluded(current);
     final paths = <String>{...files.keys, ...current.keys}.toList()..sort();
     return [
       for (final path in paths)
@@ -2904,6 +2994,7 @@ final class _GeneratedArtifactsSnapshot {
   /// Restores the guarded output set so `--check` remains read-only.
   Future<void> restore() async {
     final current = await _readManagedGeneratedFiles(root);
+    _removeExcluded(current);
     for (final path in current.keys.where((path) => !files.containsKey(path))) {
       await File(_absolutePath(root, path)).delete();
     }
@@ -2918,17 +3009,17 @@ final class _GeneratedArtifactsSnapshot {
     }
   }
 
-  /// Restores only captured files that disappeared during an external build.
-  ///
-  /// Existing files are never overwritten, so a concurrent developer edit is
-  /// preserved. Newly created unrelated files are also left untouched.
-  Future<void> restoreMissing() async {
-    for (final entry in files.entries) {
-      final file = File(_absolutePath(root, entry.key));
-      if (file.existsSync()) continue;
-      await file.parent.create(recursive: true);
-      await file.writeAsBytes(entry.value, flush: true);
-    }
+  /// Removes files that belong to explicitly excluded Package roots.
+  void _removeExcluded(Map<String, List<int>> current) {
+    if (excludedRoots.isEmpty) return;
+    current.removeWhere((relative, _) {
+      final absolute = path.normalize(_absolutePath(root, relative));
+      return excludedRoots.any(
+        (excluded) =>
+            path.equals(absolute, excluded) ||
+            path.isWithin(excluded, absolute),
+      );
+    });
   }
 }
 
@@ -2958,6 +3049,7 @@ bool _isManagedGeneratedArtifact(List<String> segments, String name) {
   if (!segments.contains('ccrouter_generated')) return false;
   return name.endsWith('.g.dart') ||
       name == 'ccrouter_package.json' ||
+      name == _CCPortableGenerationState.fileName ||
       name == 'cc_routes.json' ||
       name == 'cc_catalog.md' ||
       name == 'cc_routes.md' ||

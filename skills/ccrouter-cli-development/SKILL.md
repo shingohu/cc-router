@@ -72,16 +72,20 @@ reason (`cache-missing`, `metadata`, `output`, `dependency-index`, or
 `propagated-from`) before changing cache behavior. Never remove caches just to
 make an ordinary generation run pass.
 The Build Plan reports `suggested`, `actual`, and bounded `reasons`. Only
-`actual=aggregateOnly` means that this invocation skipped build_runner. The
-implemented P2 scope is deliberately limited to a Host dependency closure that
-only removes Packages, adds none, and preserves every remaining Builder input,
-resolution identity, metadata file, and managed output exactly. Source changes,
-Package additions, and unproven external artifacts still use `actual=runBuilder`.
-Set `CCROUTER_DISABLE_AGGREGATE_ONLY=1` to disable the deletion optimization.
-The local baseline under `.dart_tool/ccrouter/v1/build_plans/` is disposable and
-must not be committed or treated as Portable Team State. `--no-cache --profile`
-must report `no-cache-reference` and run the authoritative full path; CI keeps
-using `--no-cache --check`.
+`actual=aggregateOnly` means that this invocation skipped build_runner. P2
+allows a pure Host dependency-closure deletion when every remaining Builder
+input, resolution identity, metadata file, and managed output is unchanged. P3
+also allows a pure Package addition when every added Package has a verified
+`lib/src/ccrouter_generated/metadata/ccrouter_generation_state.json`. The CLI
+recomputes source, configuration, resolution, metadata, and managed-output
+digests before trusting it. A writable unproven Package falls back to
+`actual=runBuilder`; a read-only Git/Pub/external-Path Package fails explicitly
+instead of being modified by the Host. Set `CCROUTER_DISABLE_AGGREGATE_ONLY=1`
+to disable both optimizations. Commit Portable Generation State with managed
+outputs, but never commit the disposable local baseline under
+`.dart_tool/ccrouter/v1/build_plans/`. `--no-cache --profile` must report
+`no-cache-reference` and run the authoritative full path; CI keeps using
+`--no-cache --check`.
 
 ### Find
 

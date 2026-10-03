@@ -618,12 +618,14 @@ startup should be proportional to that count.
 
 The Build Plan separately reports `suggested` and `actual`. Only
 `actual=aggregateOnly` means build_runner was skipped, and that optimization is
-currently limited to a Host dependency closure that only removes Packages while
-every remaining Builder input, resolution identity, metadata file, and managed
-output remains identical. Package additions and unproven changes still execute
-the full Builder path. Use `CCROUTER_DISABLE_AGGREGATE_ONLY=1` for an immediate
-local fallback and retain `--no-cache --check` as the authoritative CI gate; the
-state under `.dart_tool/ccrouter/v1/build_plans/` is not portable team state.
+limited to a pure Host Package removal with every remaining input unchanged, or
+a pure Package addition where every added Package has a verified committed
+Portable Generation State. Writable unproven additions execute the full Builder
+path; read-only external Packages with missing or stale state fail explicitly.
+Use `CCROUTER_DISABLE_AGGREGATE_ONLY=1` for an immediate local fallback and
+retain `--no-cache --check` as the authoritative CI gate. Commit
+`lib/src/ccrouter_generated/metadata/ccrouter_generation_state.json`; the state
+under `.dart_tool/ccrouter/v1/build_plans/` remains disposable local data.
 
 After `ccrouter clean`, generation may temporarily bootstrap missing component
 Route, Command, and Event APIs from valid Builder metadata before build_runner.

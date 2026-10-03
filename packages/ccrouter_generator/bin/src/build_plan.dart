@@ -2,10 +2,11 @@ part of '../ccrouter_generator.dart';
 
 /// Computes a fail-closed Build Plan for Builder and aggregation execution.
 ///
-/// P2 permits only a proven Host dependency-closure deletion to skip
-/// build_runner. Every other fast-path miss remains on the full Builder path.
-/// The persisted state contains no absolute paths and is written only after a
-/// complete successful generation.
+/// P2 permits a proven Host dependency-closure deletion to skip build_runner.
+/// P3 additionally permits a pure Package addition when every added Package
+/// carries a verified Portable Generation State. Every unproven fast-path miss
+/// remains on the full Builder path. The local baseline contains no absolute
+/// paths and is written only after a complete successful generation.
 abstract final class _GenerationBuildPlanner {
   /// Current disposable planning-state schema.
   static const int _schemaVersion = 1;
@@ -58,6 +59,22 @@ abstract final class _GenerationBuildPlanner {
 
     final current = await _GenerationPlanningState.capture(workspace);
     final baseline = previous.state!;
+    final addedPackages = current.packages.keys
+        .where((name) => !baseline.packages.containsKey(name))
+        .toList(growable: false);
+    final portableCandidates = <String>{
+      for (final name in addedPackages)
+        if (workspace.packages[name] case final package?
+            when package.declaresGenerationIntent ||
+                package.requiresPackageIndex ||
+                package.indexFile.existsSync())
+          name,
+    };
+    final portableVerifications = await _CCPortableGenerationState.verify(
+      workspace,
+      packageNames: portableCandidates,
+    );
+    final validPortableAdditions = <String>{};
     final reasons = <String>[];
     if (baseline.toolFingerprint != current.toolFingerprint) {
       reasons.add('tool-input-changed');
@@ -71,7 +88,16 @@ abstract final class _GenerationBuildPlanner {
       final old = baseline.packages[entry.key];
       if (package.builder) {
         if (old == null || !old.builder) {
-          reasons.add('builder-package-added:${entry.key}');
+          final portable = portableVerifications[entry.key];
+          if (old == null && (portable?.valid ?? false)) {
+            validPortableAdditions.add(entry.key);
+          } else {
+            reasons.add(
+              old == null && portable != null
+                  ? 'portable-state-${portable.reason.name}:${entry.key}'
+                  : 'builder-package-added:${entry.key}',
+            );
+          }
           continue;
         }
         if (package.authoredInputFingerprint != old.authoredInputFingerprint) {
@@ -93,7 +119,16 @@ abstract final class _GenerationBuildPlanner {
 
       if (!package.writable && package.indexFingerprint != null) {
         if (old == null) {
-          reasons.add('external-package-added-unproven:${entry.key}');
+          final portable = portableVerifications[entry.key];
+          if (portable?.valid ?? false) {
+            validPortableAdditions.add(entry.key);
+          } else {
+            reasons.add(
+              portable == null
+                  ? 'external-package-added-unproven:${entry.key}'
+                  : 'portable-state-${portable.reason.name}:${entry.key}',
+            );
+          }
         } else if (package.indexFingerprint != old.indexFingerprint) {
           reasons.add('external-index-changed:${entry.key}');
         }
@@ -117,17 +152,25 @@ abstract final class _GenerationBuildPlanner {
     final removedPackages = baseline.packages.keys
         .where((name) => !current.packages.containsKey(name))
         .toList(growable: false);
-    final addedPackages = current.packages.keys
-        .where((name) => !baseline.packages.containsKey(name))
-        .toList(growable: false);
+    final pureRemoval =
+        hostGraphChanged && removedPackages.isNotEmpty && addedPackages.isEmpty;
+    final purePortableAddition =
+        hostGraphChanged &&
+        addedPackages.isNotEmpty &&
+        removedPackages.isEmpty &&
+        portableCandidates.isNotEmpty &&
+        portableCandidates.length == validPortableAdditions.length;
     return _GenerationBuildPlanInspection.aggregateOnly(
       reasons: [
         !hostGraphChanged ? 'non-builder-input-only' : 'host-graph-changed',
+        if (purePortableAddition)
+          'portable-packages-added:${(validPortableAdditions.toList()..sort()).join('+')}',
       ],
-      p2Eligible:
-          hostGraphChanged &&
-          removedPackages.isNotEmpty &&
-          addedPackages.isEmpty,
+      aggregateOnlyEligible: pureRemoval || purePortableAddition,
+      prebuiltPackages: {
+        for (final name in validPortableAdditions)
+          if (workspace.packages[name]?.writable ?? false) name,
+      },
     );
   }
 
@@ -212,13 +255,15 @@ final class _GenerationBuildPlanInspection {
   /// Creates an aggregation-only suggestion for diagnostic comparison.
   const _GenerationBuildPlanInspection.aggregateOnly({
     required this.reasons,
-    required this.p2Eligible,
+    required this.aggregateOnlyEligible,
+    this.prebuiltPackages = const <String>{},
   }) : suggested = _GenerationBuildPlan.aggregateOnly;
 
   /// Creates a conservative full-Builder decision.
   const _GenerationBuildPlanInspection.runBuilder({required this.reasons})
     : suggested = _GenerationBuildPlan.runBuilder,
-      p2Eligible = false;
+      aggregateOnlyEligible = false,
+      prebuiltPackages = const <String>{};
 
   /// Suggested path derived from verified layered state.
   final _GenerationBuildPlan suggested;
@@ -226,12 +271,16 @@ final class _GenerationBuildPlanInspection {
   /// Stable, sanitized causes used for profile diagnostics.
   final List<String> reasons;
 
-  /// Whether this change is inside the deliberately narrow P2 deletion scope.
-  final bool p2Eligible;
+  /// Whether this change has a complete deletion or portable-addition proof.
+  final bool aggregateOnlyEligible;
 
-  /// Actual path after applying the P2 scope and emergency kill switch.
+  /// Writable added Packages whose published metadata replaces Builder cache.
+  final Set<String> prebuiltPackages;
+
+  /// Actual path after applying the proven scope and emergency kill switch.
   _GenerationBuildPlan get actual {
-    if (suggested != _GenerationBuildPlan.aggregateOnly || !p2Eligible) {
+    if (suggested != _GenerationBuildPlan.aggregateOnly ||
+        !aggregateOnlyEligible) {
       return _GenerationBuildPlan.runBuilder;
     }
     return Platform.environment['CCROUTER_DISABLE_AGGREGATE_ONLY'] == '1'
@@ -242,15 +291,22 @@ final class _GenerationBuildPlanInspection {
   /// Whether this invocation must execute build_runner.
   bool get runsBuilder => actual == _GenerationBuildPlan.runBuilder;
 
+  /// Prebuilt local Packages trusted only on the actual aggregation-only path.
+  Set<String> get actualPrebuiltPackages =>
+      actual == _GenerationBuildPlan.aggregateOnly
+      ? prebuiltPackages
+      : const <String>{};
+
   /// Bounded profile line that distinguishes suggestion from actual execution.
   String get profileDescription {
     const limit = 12;
     final actualReasons = <String>[
       ...reasons,
-      if (suggested == _GenerationBuildPlan.aggregateOnly && !p2Eligible)
+      if (suggested == _GenerationBuildPlan.aggregateOnly &&
+          !aggregateOnlyEligible)
         'p2-scope-excluded',
       if (suggested == _GenerationBuildPlan.aggregateOnly &&
-          p2Eligible &&
+          aggregateOnlyEligible &&
           actual == _GenerationBuildPlan.runBuilder)
         'aggregate-only-disabled',
     ];
@@ -537,6 +593,7 @@ final class _GenerationResolutionPlanningContext {
     required this.graph,
     required this.lock,
     required this.config,
+    required this.roots,
   });
 
   /// Full Package graph keyed by Package name.
@@ -547,6 +604,11 @@ final class _GenerationResolutionPlanningContext {
 
   /// Portable Package config fields keyed by Package name.
   final Map<String, Map<String, Object?>> config;
+
+  /// Resolved Package roots used only to hash local Path sources.
+  ///
+  /// Paths never enter a persisted identity; only their authored bytes do.
+  final Map<String, Directory> roots;
 
   /// Loads resolution state without retaining root URIs or local paths.
   static Future<_GenerationResolutionPlanningContext> load(
@@ -569,6 +631,7 @@ final class _GenerationResolutionPlanningContext {
       if (name.isNotEmpty) graph[name] = entry;
     }
     final config = <String, Map<String, Object?>>{};
+    final roots = <String, Directory>{};
     for (final entry in _planningObjects((configDocument as Map)['packages'])) {
       final name = '${entry['name'] ?? ''}';
       if (name.isEmpty) continue;
@@ -576,6 +639,19 @@ final class _GenerationResolutionPlanningContext {
         'languageVersion': entry['languageVersion'],
         'packageUri': entry['packageUri'],
       };
+      final rootUri = '${entry['rootUri'] ?? ''}';
+      if (rootUri.isNotEmpty) {
+        final resolved = File(
+          path.join(
+            workspace.buildRoot.path,
+            '.dart_tool',
+            'package_config.json',
+          ),
+        ).uri.resolve(rootUri);
+        if (resolved.scheme == 'file') {
+          roots[name] = Directory.fromUri(resolved).absolute;
+        }
+      }
     }
     final lock = <String, Map<String, Object?>>{};
     final lockFile = File(path.join(workspace.buildRoot.path, 'pubspec.lock'));
@@ -595,6 +671,7 @@ final class _GenerationResolutionPlanningContext {
       graph: Map.unmodifiable(graph),
       lock: Map.unmodifiable(lock),
       config: Map.unmodifiable(config),
+      roots: Map.unmodifiable(roots),
     );
   }
 

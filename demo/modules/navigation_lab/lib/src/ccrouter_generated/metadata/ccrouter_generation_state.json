@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "generatorVersion": "0.1.5",
+  "package": {
+    "name": "demo_navigation_lab",
+    "version": "0.1.0"
+  },
+  "toolFingerprint": "f2b8f2dcb76ec31da07666a3e73025db79170b3a3fba9e40c56626ad870ab232",
+  "authoredInputFingerprint": "cd7409ed8a3c5fa67ba26de9cd1dcbfd12c45407c239395bd611a56dd65f2112",
+  "resolutionFingerprint": "4e4596163c4a9d65a72dcc54849dcb10c358ee5abf8f50249ee1d28ed480b792",
+  "metadataFingerprint": "41496ab9294187465723819c8a97de27db7257458c55300aac000c88229c4d07",
+  "managedOutputFingerprint": "6c1228628d40f65b8d71dac77459d60fedaed6796bde86661dc4c297a10cd3f6",
+  "contentFingerprint": "c9690db5ff14c16790961095ea08adab12b05c13ea552e722ae42c77490a4b9c"
+}

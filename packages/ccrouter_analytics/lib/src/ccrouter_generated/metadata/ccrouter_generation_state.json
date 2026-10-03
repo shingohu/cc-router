@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "generatorVersion": "0.1.5",
+  "package": {
+    "name": "ccrouter_analytics",
+    "version": "0.1.0"
+  },
+  "toolFingerprint": "f2b8f2dcb76ec31da07666a3e73025db79170b3a3fba9e40c56626ad870ab232",
+  "authoredInputFingerprint": "84f68cc1c2026d2d1fa01db43d0d60af21729444d0f0665d6d5782124ac3df9a",
+  "resolutionFingerprint": "bc54bfac1a01e144b5cd0bfd128a00007d9b0fe7108cc0a9b0bec2f8b5490c37",
+  "metadataFingerprint": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "managedOutputFingerprint": "214174c1038c0a38be8216282645bc564763f9af39b3ef881b56bdf0638102fa",
+  "contentFingerprint": "79a5db34d4e6cd59e3ea89e66df22cd3b6b9c26161417f4bbb726f9358d3a94e"
+}

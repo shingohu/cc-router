@@ -264,7 +264,7 @@ fast path miss 时，Profile 还会输出本轮 `build-targets`，以及逐 Pack
 用于决定 Package API、Bundle 和 capability catalog 是否可以复用；它不是 build_runner 的
 输入目标列表。依赖图变化后，即使 dirty Package 很少，Workspace Analyzer 仍可能占据主要耗时。
 
-Build Plan 的 P1 诊断和 P2 删除组件优化会在 Profile 中输出：
+Build Plan 的 P1 诊断、P2 删除组件优化和 P3 Portable Package 新增路径会在 Profile 中输出：
 
 ```text
 CCRouter profile build-plan suggested=aggregateOnly actual=aggregateOnly reasons=host-graph-changed
@@ -275,13 +275,18 @@ CCRouter profile build-plan suggested=aggregateOnly actual=aggregateOnly reasons
 metadata 和受管输出完全一致时，`actual=aggregateOnly` 才跳过 build_runner；Validator、Host 聚合、
 旧产物清理和失败恢复仍完整执行。普通 Host 源码变化会显示
 `suggested=aggregateOnly actual=runBuilder reasons=non-builder-input-only,p2-scope-excluded`。
-新增本地、Git、Pub、外部 Path 或只读 Package 仍执行 Builder，不属于当前 P2 范围。
+纯新增 Package 只有在每个新增项的 Portable Generation State 与当前源码、配置、解析依赖、
+Package Index 和受管输出逐项一致时才允许 `aggregateOnly`。可写 Package 缺少或失配时回退完整
+Builder；Git/Pub/Workspace 外 Path 等只读 Package 缺失或失配时明确失败，Host 不在依赖目录运行
+Builder 或写文件。首次创建且尚未生成的本地组件仍执行 Builder。
 
 本地基线位于 `.dart_tool/ccrouter/v1/build_plans/`，不属于受管生成物，也不应提交；删除、损坏、
 Schema 不兼容或解析身份无法证明时都会 fail closed。设置
-`CCROUTER_DISABLE_AGGREGATE_ONLY=1` 可立即关闭删除优化。`--no-cache --profile` 固定报告
+`CCROUTER_DISABLE_AGGREGATE_ONLY=1` 可立即关闭 aggregation-only。`--no-cache --profile` 固定报告
 `suggested=runBuilder actual=runBuilder reasons=no-cache-reference`，用于逐字节参考回归；CI 继续使用
-`--no-cache --check`。新增组件的 Host-only aggregation 和可提交的跨 Clone Portable State 尚未实现。
+`--no-cache --check`。每个生成 Package 的
+`lib/src/ccrouter_generated/metadata/ccrouter_generation_state.json` 是可提交受管产物，只包含内容
+identity，不包含绝对路径、用户名、mtime、inode 或 `.dart_tool`；它不能替代 CI 权威门禁。
 
 fast path 未命中时会先执行保守的 Component Dependency Preflight，只有直接 List、Contract
 类型和 Owner 都唯一可证明时才提前失败；它不替代 Builder。所有正式 `generate` 都会在

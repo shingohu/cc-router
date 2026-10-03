@@ -1,8 +1,9 @@
 # CCRouter build_runner 与团队构建正确性优先优化计划
 
-> 文档状态：部分实施。P0、P1 已完成；P2 的 Host 纯删除场景已完成，P2 其余范围及 P3-P4 尚未实施。
+> 文档状态：部分实施。P0、P1、P2 Host 纯删除路径及 P3 Portable reuse 已完成；更宽的 P2
+> Host-only 范围与 P4 尚未实施。
 >
-> 日期：2026-09-30；P1/P2 删除场景实现更新：2026-10-03。
+> 日期：2026-09-30；P1/P2/P3 实现更新：2026-10-03。
 >
 > 核心约束：任何生成器性能优化都不能以漏生成、接受陈旧生成物、降低校验强度或改变错误
 > 语义为代价。无法证明等价时必须回退完整 `build_runner + validate + aggregate`。
@@ -236,16 +237,16 @@ P1 阶段的验收行为（P2 删除优化启用前）：
   `aggregateOnly` 建议；
 - 状态写入失败不改变本轮生成结果，仅使后续运行保守回退。
 
-该 `.dart_tool` 文件是可丢弃的单机诊断状态，不是 P3 计划中的可提交 Portable Team State。
-因此 P1 完成不代表 Host graph 已获得耗时优化，也不代表 Git/Pub/外部 Path 组件已经具备跨
-Clone 可信复用能力。
+该 `.dart_tool` 文件是可丢弃的单机诊断状态，不是可提交 Portable Team State。P3 另行生成
+`lib/src/ccrouter_generated/metadata/ccrouter_generation_state.json`；两者的所有权和提交规则
+不能混用。
 
 2026-10-03 在当前 Demo（8 个 Builder Package、6 个组件、33 条路由）回归中，三次
 `--no-cache --check --profile` 总耗时为 1.592-1.668 秒，build_runner 为 0.745-0.783 秒；
 稳定 fast path 总耗时为 0.158-0.192 秒。相较 P1 前约 1.5 秒的完整路径基线，诊断状态捕获没有
 出现数量级退化，但该数据只用于 P1 观测，不能作为 P2 跳过 Builder 的收益声明。
 
-### P2：仅开放删除和 Host-only graph 变化，部分完成
+### P2：开放精确删除路径，已完成
 
 当前已默认启用范围最窄的 aggregation-only：
 
@@ -254,13 +255,13 @@ Clone 可信复用能力。
 - Tool identity 和可移植解析身份完全未变；
 - 仍执行正式 Workspace Validator、Host 聚合、旧产物清理和受管文件原子恢复。
 
-以下范围尚未开放：新增 Git/Pub/外部 Path 或只读组件、新增本地预生成组件、跨 Clone Portable
-State，以及普通 Host 源码变化跳过 Builder。即使这些场景显示 `suggested=aggregateOnly`，
-`actual` 仍为 `runBuilder`，并附带 `p2-scope-excluded` 原因。
+普通 Host 源码变化跳过 Builder 仍未开放。它即使显示 `suggested=aggregateOnly`，`actual` 仍为
+`runBuilder`，并附带 `p2-scope-excluded` 原因。可信 Package 纯新增与跨 Clone 状态由 P3 独立
+证明，不扩大 P2 的删除判定。
 
 如果可信状态在写入前无法证明，或优化状态本身损坏，则回退同一请求的完整 Builder，而不是要求
 开发者清缓存。正式 Workspace Validator、Contract 或配置错误必须恢复快照并直接报告，不能通过
-重跑 Builder 吞掉或改写错误。`CCROUTER_DISABLE_AGGREGATE_ONLY=1` 是删除优化的紧急回退开关；
+重跑 Builder 吞掉或改写错误。`CCROUTER_DISABLE_AGGREGATE_ONLY=1` 是 aggregation-only 的紧急回退开关；
 `--no-cache` 始终强制完整路径，可作为权威对照，CI 保持 `--no-cache --check`。
 
 2026-10-03 在当前 Demo 删除 `demo_payment` 的同一依赖闭包样本中：关闭优化的完整 Builder 路径
@@ -269,15 +270,29 @@ State，以及普通 Host 源码变化跳过 Builder。即使这些场景显示 
 Builder 减少约 39% wall time，且随后参考路径确认受管生成物逐字节一致。该数据只说明当前样本收益；
 Validator、依赖发现和 Host 聚合仍会完整执行，不能据此承诺固定倍数。
 
-### P3：支持可信的本地预生成组件
+### P3：支持可信预生成组件，已完成
 
-只有 P2 的真实项目数据稳定后，才允许新增本地 Package 复用 Package Generation State。需要先
-解决 Package 移动、路径依赖、Generator 升级、Git checkout 和源码未提交状态的精确 identity。
+每个生成 Package 现在写入可提交的
+`lib/src/ccrouter_generated/metadata/ccrouter_generation_state.json`。状态只包含 schema、Generator、
+Dart SDK、Package identity、authored input、解析依赖、metadata 与受管输出的内容摘要，不包含
+绝对路径、用户名、时间戳、mtime、inode 或 `.dart_tool` 数据。
 
-P3 同时启用团队协作验证：Clone A 完成权威生成并提交确定性生成物与 Portable Generation
-State，Clone B 不携带 `.dart_tool/build` 或本机缓存，在重新计算当前源码、依赖和输出摘要后，
-只能选择 `unchanged`、`aggregateOnly` 或安全回退 `runBuilder`。不能因为状态来自其他机器而
-降低校验强度。
+当 Host 依赖闭包纯新增 Package 时，CLI 会在当前机器重新计算上述全部摘要。所有新增 Package
+均匹配时可选择 `aggregateOnly`；可写 Package 缺少或失配时安全回退 `runBuilder`。Git、Pub、
+Workspace 外 Path 等只读业务 Package 必须携带有效状态，缺失、损坏或陈旧时明确失败，Host 不在
+外部依赖目录运行 Builder 或修改文件。Package Index 可在 Builder metadata 不存在时作为已验证
+metadata 输入，但仍须通过正式 Workspace Validator、Contract 校验和 Host 聚合。
+
+状态文件纳入 `clean`、`--check`、失败恢复和 fast-path 外部输入摘要。实现已覆盖无 Builder cache
+的预生成 Package、只读外部 Package、缺失状态和篡改状态；`--no-cache --check` 继续作为逐字节
+权威对照，不能因为状态来自其他机器而降低校验强度。真实 Git/Pub 发布归档及 macOS/Linux 的
+Clone A/Clone B 矩阵属于持续发布门禁，不改变当前 fail-closed 语义。
+
+2026-10-03 在当前 Demo（6 个组件、33 条路由）重新加入已生成 `demo_payment`，并移走其本机
+Builder metadata 后，P3 `aggregateOnly` 为 1.091 秒（build_runner 0ms）；同轮
+`--no-cache --check` 权威路径为 1.961 秒（build_runner 913ms），wall time 减少约 44%。随后
+完整 Generator 272 项及两条生成门禁均通过。该结果是单机单次样本，不承诺固定比例，也不省略
+Validator、依赖发现、Portable State 重算或 Host 聚合成本。
 
 ### P4：评估剩余冷成本
 
@@ -440,11 +455,11 @@ Host 必须重新计算当前 Package 的生成相关源码、`pubspec.yaml`、`
 
 - **P1 / Observe，已完成**：生成不含本机路径的本地 disposable planning state 和计划报告；
   当前状态位于 `.dart_tool`，不提交，也不用于 Clone 间复用。
-- **P2 / Host graph，部分完成**：已开放 Host 依赖闭包纯删除的 `aggregateOnly`，可通过
-  `CCROUTER_DISABLE_AGGREGATE_ONLY=1` 立即关闭；新增可信只读组件仍未开放。严格外部 Artifact
-  Integrity 与可提交 Portable State 仍由 P3 实现。
-- **P3 / Portable reuse**：Clone A/Clone B 矩阵稳定后，才允许可信本地预生成组件跨机器复用，
-  并启用只读外部 Package 的严格 Artifact Integrity 门禁。
+- **P2 / Host graph，删除路径已完成**：已开放 Host 依赖闭包纯删除的 `aggregateOnly`；普通
+  Host 源码变化仍不跳过 Builder。
+- **P3 / Portable reuse，已完成**：可信纯新增 Package 可在重新验证 Portable State 后跳过
+  Builder；只读外部 Package 已启用严格 Artifact Integrity 门禁。设置
+  `CCROUTER_DISABLE_AGGREGATE_ONLY=1` 可统一关闭 P2/P3 优化。
 - **CI / Authority**：不走优化分支，使用 `generate --no-cache --check` 作为最终合并门禁。
 
 开发者不需要手工选择计划或维护缓存。CLI 和 Pub Hook 自动规划并在无法证明时回退；Profile
