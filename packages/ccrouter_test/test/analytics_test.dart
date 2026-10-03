@@ -323,6 +323,63 @@ void main() {
   });
 
   test(
+    'navigation bridge assigns visits and measures foreground dwell',
+    () async {
+      final sink = _RecordingSink();
+      final dispatcher = CCAnalyticsEventDispatcher(
+        sinks: [sink],
+        policy: CCAnalyticsPolicy(consentGranted: true),
+      );
+      final bridge = CCNavigationAnalyticsBridge(dispatcher: dispatcher);
+      final aspect = bridge.createAspect();
+      final request = CCNavigationAspectRequest(
+        navigationId: 'runtime-navigation-visit',
+        operation: CCNavigationOperation.push,
+        routeId: 'order.detail',
+        routePattern: '/order/:id',
+        resolvedHostId: 'default',
+        navigatorOutlet: 'root',
+        ownerComponentId: 'order',
+        placement: const CCRoutePlacement.root(),
+        origin: CCNavigationOrigin.internal,
+        openMode: null,
+        source: const CCNavigationSource.feature('order.list'),
+        presentation: const CCPagePresentation(),
+        telemetryContext: null,
+      );
+      final start = DateTime(2026);
+      aspect.onArrival!(
+        CCNavigationAspectEvent(
+          phase: CCNavigationAspectPhase.arrival,
+          request: request,
+          timestamp: start,
+        ),
+      );
+      bridge.onBackground(start.add(const Duration(seconds: 1)));
+      bridge.onForeground(start.add(const Duration(seconds: 3)));
+      aspect.onHide!(
+        CCNavigationAspectEvent(
+          phase: CCNavigationAspectPhase.hide,
+          request: request,
+          timestamp: start.add(const Duration(seconds: 4)),
+        ),
+      );
+      await dispatcher.close();
+
+      expect(sink.events, hasLength(2));
+      final visitId = sink.events.first.properties.values['visit_id'];
+      expect(visitId, 'runtime-navigation-visit.v1');
+      expect(sink.events.last.properties.values, {
+        'operation': 'push',
+        'phase': 'hide',
+        'visit_id': visitId,
+        'dwell_ms': 4000,
+        'foreground_dwell_ms': 2000,
+      });
+    },
+  );
+
+  test(
     'explicit target records before running the business callback',
     () async {
       final sink = _RecordingSink();

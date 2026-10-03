@@ -471,6 +471,9 @@ Firebase、ThinkingData、Sentry 或日志 Adapter。Sink 异常不会改变导�
 `CCAnalyticsScope`：根 Scope 注入应用拥有的 Dispatcher，页面 Scope 增量提供稳定的
 `CCAnalyticsContext`，业务通过 `CCAnalyticsScope.trackerOf(context)` 获得值对象 Tracker。
 Scope 不关闭 Dispatcher，也不扫描 Widget、Route 或 Foreign Popup；没有稳定上下文时应省略归因字段。
+导航桥接器还为每次 managed Arrival/Show 生成有界 `visit_id`，在 Hide 时记录总停留和
+前台停留毫秒数。Host 生命周期回调应调用 `onBackground/onForeground`，Host 销毁时调用
+`bridge.dispose()`；它不会把 Foreign Popup 当作页面访问。
 
 ```dart
 final analytics = CCAnalyticsEventDispatcher(

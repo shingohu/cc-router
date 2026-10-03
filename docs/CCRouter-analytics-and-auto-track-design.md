@@ -54,6 +54,12 @@ ccrouter_analytics_flutter           可选的显式 UI 目标和有限自动采
 - `hide`：页面不再是当前 Route，生成一次 `page_leave`；
 - `removed/disposed`：用于生命周期和资源诊断，不重复生成 `page_leave`。
 
+每次 Arrival/Show 会关联一个有界的 `visit_id`。Hide 会附带当前访问的 `dwell_ms` 和
+`foreground_dwell_ms`；后者只累计应用处于 resumed/foreground 的时间。Host 应在应用生命周期
+进入后台/前台时调用 `CCNavigationAnalyticsBridge.onBackground/onForeground`，这不会伪造
+PageHide/PageShow。Consent 未授予时桥接器不保留访问状态，避免把授权前停留时间带入授权后的事件。
+Host 销毁时调用 `bridge.dispose()` 清理未完成访问；桥接器不拥有 Dispatcher。
+
 Dialog、Modal Bottom Sheet 和透明页面保留其 Route 类型。Foreign Popup、Overlay、LocalHistoryEntry 和未绑定 Navigator 不自动转换成 CCRouter 页面分析事件。
 
 ## 5. Click、Scroll 和 Exposure
@@ -354,7 +360,8 @@ Firebase、ThinkingData、本地数据库和 HTTP 实现都放在应用或 `demo
 
 1. [x] 增加 Scope 的可行性实现，不替换现有 `CCAnalyticsTarget`；用 enabled 开关
    与现有显式路径 A/B 对照。
-2. 打通只读 RouteEntry 上下文，验证多 Host、Shell/Outlet、Dialog 和 Foreign Popup 不误归因。
+2. [x] 增加页面访问实例和总/前台停留统计；当前消费 Aspect 的脱敏快照，Host
+   仍需显式提供精确 RouteEntry 上下文以覆盖多 Host、Shell/Outlet、Dialog 和 Foreign Popup。
 3. 增加只识别稳定元数据的 Target，验证 disabled、Gesture Arena、拖动、长按、键盘和 Semantics。
 4. 增加页面级 Scroll 聚合；Exposure 继续使用现有显式 Target，不做全树轮询。
 5. 在 Demo 增加应用层本地环形 Sink 和 Fake Upload Sink，验证 Consent、断网、重试、队列压力和

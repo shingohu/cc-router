@@ -65,8 +65,17 @@ final class CCRouterDemoApp extends StatelessWidget {
         catalog: configuration.catalog,
         initialLocation: configuration.initialLocation,
       ),
-      onLifecycleChanged: (state) =>
-          demoNavigationLabStore.record('App lifecycle · ${state.name}'),
+      onLifecycleChanged: (state) {
+        demoNavigationLabStore.record('App lifecycle · ${state.name}');
+        final now = DateTime.now();
+        if (state == AppLifecycleState.resumed) {
+          demoNavigationAnalytics.onForeground(now);
+        } else if (state == AppLifecycleState.hidden ||
+            state == AppLifecycleState.paused ||
+            state == AppLifecycleState.detached) {
+          demoNavigationAnalytics.onBackground(now);
+        }
+      },
       debugShowCheckedModeBanner: false,
       title: 'CCRouter Lab',
       theme: ThemeData(

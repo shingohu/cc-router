@@ -618,6 +618,12 @@ never closes the Dispatcher or guesses Route/Foreign Popup attribution. Keep
 the explicit Target callback path for any action whose business success must be
 known.
 
+`CCNavigationAnalyticsBridge` creates one bounded visit instance per managed
+Arrival/Show and adds total/foreground dwell to its Hide event. Forward Host
+application lifecycle transitions to `onForeground` and `onBackground`; these
+methods do not emit PageShow/PageHide. Call `dispose()` when the Host releases
+the bridge. Consent-denied observations do not retain a visit.
+
 Custom integrations may observe `addPolicyListener` without receiving payloads.
 Read `policy/isClosed` for current state, keep the synchronous callback short,
 never update policy from it, and call the returned remover on detach. Callback
