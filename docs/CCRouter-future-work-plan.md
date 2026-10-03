@@ -109,11 +109,11 @@ Workspace/插件 analyze 及缓存/无缓存生成物检查通过。
   比较一致，并修复 Workspace 外 Path 依赖在 Build Plan 与 Portable State 间的指纹覆盖差异。
 - [ ] 仅在真实项目 Host 聚合超过总耗时 20% 时继续优化 dirty set 的输入摘要速度；不得用
   mtime/size 替代内容摘要。
-- [ ] build_runner 优化下一阶段 P6：F04/F03 正确性前置已修复，收益/边界评估见计划第 12.5 节，
-  P6-1/2/3 尚未实施；后续收窄公共依赖失效传播，评估普通
+- [~] build_runner 优化下一阶段 P6：F04/F03 正确性前置已修复，收益/边界评估见计划第 12.5 节，
+  P6-1 的只读归因与混合对照样本已完成（12.6）；传播收窄、P6-2/3 尚未实施。后续评估普通
   注释、生成文档与源码定位的分层摘要；减少状态变更与缩短生成耗时分别验收。详见
-  [优化计划第 12 节](CCRouter-build-runner-optimization-plan.md#12-p6生成状态摘要与依赖失效粒度优化待实施)。
-  当前仅记录、未实施；五类能力的准确性对照通过后再评估默认开启。
+  [优化计划第 12 节](CCRouter-build-runner-optimization-plan.md#12-p6生成状态摘要与依赖失效粒度优化)。
+  传播优化仍未实施；完整读取集合证明、准确性与净收益门禁通过后再评估默认开启。
 - [x] 建立冷启动、初始化、路由解析、导航延迟、并发导航、Runtime dispose 和长期 RSS 的
   同机趋势入口；长期趋势仍需按发布版本持续采样。
 - [x] 2026-09-29 完成 macOS、iOS Simulator、Android、Web 和 OHOS 构建 smoke；真实 iOS/macOS

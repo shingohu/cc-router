@@ -764,6 +764,8 @@ void probe() {
       final unchanged = await generate(check: true);
       expect(unchanged.exitCode, 0, reason: '${unchanged.stderr}');
       expect('${unchanged.stdout}', contains('fast-path=hit'));
+      expect(_profileDelta(unchanged, 'output-delta')['files'], 0);
+      expect('${unchanged.stdout}', contains('input-delta=unchanged'));
 
       final sourceProbe = File(
         path.join(
@@ -817,6 +819,17 @@ void probe() {
         contains('CCRouter profile dirty-packages='),
       );
       expect('${changedSource.stdout}', contains('ccrouter_demo[host]'));
+      final inputs = _profileDelta(changedSource, 'input-delta');
+      expect(inputs['status'], 'compared');
+      expect((inputs['authored'] as Map)['packages'], ['ccrouter_demo']);
+      final outputs = _profileDelta(changedSource, 'output-delta');
+      expect(outputs['files'], greaterThan(0));
+      expect((outputs['artifacts'] as Map)['dart'], {
+        'added': 0,
+        'removed': 0,
+        'modified': 0,
+      });
+      expect('${changedSource.stdout}', isNot(contains('const fastPathProbe')));
       expect(
         '${changedSource.stderr}',
         contains(
@@ -851,6 +864,11 @@ void probe() {
         contains('generated artifacts are stale'),
       );
       expect(generatedProbe.readAsBytesSync(), tamperedGenerated);
+      final repaired = _profileDelta(changedOutput, 'output-delta');
+      expect(
+        ((repaired['artifacts'] as Map)['metadata'] as Map)['modified'],
+        greaterThan(0),
+      );
     },
     timeout: const Timeout(Duration(minutes: 4)),
   );
@@ -861,6 +879,7 @@ void probe() {
       final before = await _readDemoGeneratedArtifacts();
       final seeded = await _generateDemo(['--no-cache', '--profile']);
       expect(seeded.exitCode, 0, reason: '${seeded.stderr}');
+      expect(_profileDelta(seeded, 'input-delta')['status'], 'unavailable');
       expect(
         '${seeded.stdout}',
         contains(
@@ -943,6 +962,12 @@ void probe() {
           '${changed.stdout}',
           contains('authored-input-changed:demo_payment'),
         );
+        final inputs = _profileDelta(changed, 'input-delta');
+        expect((inputs['authored'] as Map)['packages'], ['demo_payment']);
+        expect(
+          (inputs['resolutionOnly'] as Map)['packages'],
+          contains('ccrouter_demo'),
+        );
         expect(
           '${changed.stderr}',
           contains(
@@ -975,12 +1000,23 @@ void probe() {
         final paymentState = (packageStates['demo_payment']! as Map)
             .cast<String, Object?>();
         paymentState['resolutionPortable'] = false;
+        paymentState['authoredInputFingerprint'] = null;
+        paymentState['resolutionFingerprint'] = 'unknown-previous-resolution';
         unprovenDocument['contentFingerprint'] =
             computeCCCanonicalJsonFingerprint(unprovenDocument);
         state.writeAsStringSync(jsonEncode(unprovenDocument), flush: true);
 
         final unproven = await _generateDemo(['--check', '--profile']);
         expect(unproven.exitCode, 1);
+        final attribution = _profileDelta(unproven, 'input-delta');
+        expect(
+          (attribution['authoredUnavailable'] as Map)['packages'],
+          contains('demo_payment'),
+        );
+        expect(
+          (attribution['resolutionOnly'] as Map)['packages'],
+          isNot(contains('demo_payment')),
+        );
         expect(
           '${unproven.stdout}',
           contains('resolution-unproven:demo_payment'),
@@ -1409,6 +1445,14 @@ File _demoBuildPlanState() {
     final decoded = jsonDecode(file.readAsStringSync());
     return decoded is Map && decoded['hostPackage'] == 'ccrouter_demo';
   });
+}
+
+Map<String, dynamic> _profileDelta(ProcessResult result, String name) {
+  final match = RegExp(
+    'CCRouter profile $name=([^\\n]+)',
+  ).firstMatch('${result.stdout}');
+  expect(match, isNotNull, reason: '${result.stdout}');
+  return jsonDecode(match!.group(1)!) as Map<String, dynamic>;
 }
 
 Future<void> _copyDirectory(Directory source, Directory target) async {

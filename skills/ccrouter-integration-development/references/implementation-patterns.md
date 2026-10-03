@@ -721,6 +721,22 @@ from metadata, managed output, direct dependency indexes, and reverse dependency
 propagation. A small dirty set therefore does not imply that Workspace Analyzer
 startup should be proportional to that count.
 
+`input-delta` compares existing exact-content Build Plan facts with the last
+successful local baseline. `authored` means the Package's own source/config
+changed; `resolutionOnly` means unchanged own input but changed dependency
+resolution identity. It does not identify a proven causal edge or permit pruning
+dependencies. Missing either authored digest is `authoredUnavailable`, never
+proof of equal source. A missing/untrusted baseline or forced reference path reports
+`unavailable`. `output-delta` reports exact added/removed/modified counts for Dart,
+metadata JSON, Markdown and portable state, before `--check` restores originals.
+Equal Dart does not imply equal docs or source locations. A changed state file
+does not imply a changed business API. Names are bounded to 12 per group while
+counts remain complete; source values are never emitted. Diagnostics are opt-in
+via `--profile`, do not change cache decisions, and keep extra output comparison
+time separate as `output-delta-scan`.
+Input attribution follows the existing Build Plan scope: custom `--output-dir`
+does not provide `input-delta`.
+
 The Build Plan separately reports `suggested` and `actual`. Only
 `actual=aggregateOnly` means build_runner was skipped, and that optimization is
 limited to a pure Host Package removal with every remaining input unchanged, or

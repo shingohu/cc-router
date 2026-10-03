@@ -82,6 +82,15 @@ Use `--profile` only to investigate generation performance. On a miss, distingui
 reason (`cache-missing`, `metadata`, `output`, `dependency-index`, or
 `propagated-from`) before changing cache behavior. Never remove caches just to
 make an ordinary generation run pass.
+`input-delta` compares exact Package facts with the last successful local Build
+Plan: `authored` is an own-source/config change, `resolutionOnly` means unchanged
+own input with changed resolution identity. This is not a proven causal edge or
+semantic dependency graph. `output-delta` counts actual Dart, metadata, Markdown
+and portable-state additions/removals/modifications before `--check` restores.
+Missing either authored digest means `authoredUnavailable`, not equal source.
+No baseline means `unavailable`, not no change. A changed state file is not a
+changed business API; unchanged Dart does not prove unchanged docs/locations.
+Attribution never authorizes skipping Builder or rewriting Portable State.
 The Build Plan reports `suggested`, `actual`, and bounded `reasons`. Only
 `actual=aggregateOnly` means that this invocation skipped build_runner. P2
 allows a pure Host dependency-closure deletion when every remaining Builder

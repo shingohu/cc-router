@@ -281,6 +281,24 @@ fast path miss 时，Profile 还会输出本轮 `build-targets`，以及逐 Pack
 用于决定 Package API、Bundle 和 capability catalog 是否可以复用；它不是 build_runner 的
 输入目标列表。依赖图变化后，即使 dirty Package 很少，Workspace Analyzer 仍可能占据主要耗时。
 
+P6 的只读归因新增 `input-delta` 和 `output-delta`。前者用已有 Build Plan 基线区分自身
+authored 内容变化、解析环境变化及 `resolutionOnly`、工具/Host 图变化；后者统计本次成功
+生成前后 Dart、JSON metadata、Markdown、Portable State 的精确文件差异，并按新增/删除/
+修改分类。`--check` 恢复前报告，Builder/聚合失败不输出成功差异。两侧源码摘要缺失的
+Package 单列 `authoredUnavailable`，不视作源码一致。输入基线不可用时明确标记
+`unavailable`，不猜测；相同输入 fast path 则报告 unchanged 和零产物差异。最多输出每组
+12 个 Package 名，不输出业务值或完整路径。额外输出比较耗时单列 `output-delta-scan`。
+这些统计不证明语义一致，不改 schema、缓存命中或 Builder 跳过条件；不带 `--profile` 没有
+额外比较。输入归因沿用 Build Plan 的默认输出目录范围；自定义 `--output-dir` 不提供
+`input-delta`。采样命令：
+
+```sh
+fvm dart run packages/ccrouter_test/benchmark/generator_component_topology.dart --invalidation 1 3 5 10
+```
+
+样本包含五类能力与公共依赖，逐次变更注释、DartDoc、位置、实现、常量、描述和 barrel，
+每次比较全部受管文件并执行 `--no-cache --check`。单次样本不能作为真实项目 P95 或提速结论。
+
 Build Plan 的 P1 诊断、P2 删除组件优化和 P3 Portable Package 新增路径会在 Profile 中输出：
 
 ```text

@@ -3,6 +3,8 @@ import 'dart:io';
 
 import 'package:path/path.dart' as path;
 
+part 'generator_invalidation_scenarios.dart';
+
 /// Benchmarks multi-Package component additions and removals.
 ///
 /// Each synthetic component owns five Routes plus one Service, Command, Event,
@@ -17,14 +19,20 @@ import 'package:path/path.dart' as path;
 /// ```
 Future<void> main(List<String> arguments) async {
   final workspaceRoot = _findWorkspaceRoot(Directory.current);
-  final scales = arguments.isEmpty
+  final invalidation = arguments.contains('--invalidation');
+  final scaleArguments = arguments
+      .where((value) => value != '--invalidation')
+      .toList();
+  final scales = scaleArguments.isEmpty
       ? const <int>[3, 5, 10]
-      : arguments.map(int.parse).toList(growable: false);
+      : scaleArguments.map(int.parse).toList(growable: false);
   for (final scale in scales) {
     if (scale <= 0) {
       throw ArgumentError.value(scale, 'scale', 'must be positive');
     }
-    final report = await _runScale(workspaceRoot, scale);
+    final report = invalidation
+        ? await _runInvalidationScale(workspaceRoot, scale)
+        : await _runScale(workspaceRoot, scale);
     stdout.writeln(jsonEncode(report));
   }
 }
@@ -759,6 +767,7 @@ final class _GenerationRun {
     required this.routes,
     required this.packages,
     required this.buildTargets,
+    this.attribution = const {},
   });
 
   /// Parent-process elapsed time including Dart process startup.
@@ -803,6 +812,9 @@ final class _GenerationRun {
   /// Number of writable Package targets passed to build_runner.
   final int buildTargets;
 
+  /// Observational input/output deltas; never used as an equivalence proof.
+  final Map<String, Object?> attribution;
+
   /// Parses stable profile and validation lines from CLI [output].
   factory _GenerationRun.parse(String output, {required int wallMs}) {
     final plan = RegExp(
@@ -843,6 +855,14 @@ final class _GenerationRun {
       routes: validated == null ? -1 : int.parse(validated.group(2)!),
       packages: validated == null ? -1 : int.parse(validated.group(3)!),
       buildTargets: targets == null ? 0 : int.parse(targets.group(1)!),
+      attribution: {
+        for (final key in ['input-delta', 'output-delta', 'output-delta-scan'])
+          if (RegExp('CCRouter profile $key=([^\\n]+)').firstMatch(output)
+              case final match?)
+            key: match.group(1)!.startsWith('{')
+                ? jsonDecode(match.group(1)!)
+                : match.group(1),
+      },
     );
   }
 
@@ -862,6 +882,7 @@ final class _GenerationRun {
     'routes': routes,
     'packages': packages,
     'buildTargets': buildTargets,
+    if (attribution.isNotEmpty) 'attribution': attribution,
   };
 }
 

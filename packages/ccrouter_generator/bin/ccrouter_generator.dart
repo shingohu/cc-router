@@ -22,6 +22,7 @@ import 'src/pub_hook.dart';
 import 'src/scaffold.dart';
 
 part 'src/build_plan.dart';
+part 'src/generation_profile.dart';
 part 'src/portable_generation_state.dart';
 
 final _dartFormatter = DartFormatter(
@@ -191,6 +192,8 @@ Future<void> main(List<String> arguments) async {
               'CCRouter profile build-plan suggested=unchanged '
               'actual=unchanged reasons=verified-fast-path',
             );
+            stdout.writeln('CCRouter profile input-delta=unchanged');
+            _GenerationProfile.writeOutputs(const []);
           }
           return;
         }
@@ -198,12 +201,16 @@ Future<void> main(List<String> arguments) async {
         buildPlan = await _GenerationBuildPlanner.inspect(
           workspace: fastPathWorkspace,
           fastPathMissReason: fastPath.missReason,
+          profile: parsed.profile,
         );
       }
       verifiedInputFingerprint ??=
           await _GenerationStateFingerprint.captureInput(fastPathWorkspace);
       if (parsed.profile) {
         stdout.writeln(buildPlan.profileDescription);
+        stdout.writeln(
+          'CCRouter profile input-delta=${jsonEncode(buildPlan.inputDelta ?? const {'status': 'unavailable'})}',
+        );
       }
     }
     if (parsed.command == _GeneratorCommand.generate) {
@@ -284,8 +291,21 @@ Future<void> main(List<String> arguments) async {
       exitCode = 1;
       return;
     }
+    List<String>? outputChanges;
+    if (parsed.profile && snapshot != null) {
+      try {
+        final watch = Stopwatch()..start();
+        outputChanges = await snapshot.changes();
+        _GenerationProfile.writeOutputs(outputChanges);
+        stdout.writeln(
+          'CCRouter profile output-delta-scan=${watch.elapsedMilliseconds}ms',
+        );
+      } on Object {
+        stdout.writeln('CCRouter profile output-delta=unavailable');
+      }
+    }
     if (parsed.check && snapshot != null) {
-      final changes = await snapshot.changes();
+      final changes = outputChanges ?? await snapshot.changes();
       await snapshot.restore();
       if (changes.isNotEmpty) {
         stderr.writeln('error: CCRouter generated artifacts are stale:');

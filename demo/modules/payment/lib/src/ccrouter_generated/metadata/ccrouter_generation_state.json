@@ -5,10 +5,10 @@
     "name": "demo_payment",
     "version": "0.1.0"
   },
-  "toolFingerprint": "8c69c11e4fa2d80d5fa36c8532fc3174678878f04904256994a1d19387ae2e49",
+  "toolFingerprint": "015666c7858629cf75d772c475a392c0d5c8b65d5eaacbfad621ac645a01d8d0",
   "authoredInputFingerprint": "bee437a6d61d62199eda8610b43650f13fe13104417f33e658cdfbe31e16180f",
   "resolutionFingerprint": "5229a88978adb49b2240c73b10de718e71762a0e71192d5284bab073a7971d86",
   "metadataFingerprint": "364c152b1d1e21755b4fe457dfae7ccaae55ccfd010ea845b7fc2e5ea654351d",
   "managedOutputFingerprint": "0f22b87ca15db13f1b1fcc749b999f601295f3d24e8ef11d7c396f7da959995c",
-  "contentFingerprint": "be00848f5da3f75116001ce41e03df82ff2aa870f556db3fe419b3776baf57bd"
+  "contentFingerprint": "62dfd74bebf3d2bf6ae208e155a265f64be25b55ee2b3f9ce2eb32528436e986"
 }

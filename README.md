@@ -1168,6 +1168,15 @@ Route API 和 Package/Host metadata。跨组件 Route 不能直接由脚手架�
 `dirty-packages` 原因；`dirty` 是 build_runner 完成后的聚合复用判断，不表示 Builder 只分析
 这些 Package。
 
+`--profile` 的 `input-delta` 对比上次成功的本机 Build Plan：`authored` 是自身源码/配置变化，
+`resolutionOnly` 是自身未变但解析身份变化，另列工具与 Host 图变化。它不证明具体依赖边或
+生成语义；没有两侧源码摘要的 Package 单列 `authoredUnavailable`，不据此推断源码未变。
+缺少可用基线、强制参考路径等情况报告 `unavailable`。`output-delta` 按 Dart、JSON
+元数据、Markdown、Portable State 分别统计实际新增/删除/修改，`--check` 在恢复前统计。
+状态文件变化不等于业务 API 变化，Dart 不变也不代表文档/定位不变。Package 名称最多显示
+12 项，数量完整；不输出源码或业务值。不带 `--profile` 不做额外输出比较，缓存与生成决策不变。
+输入归因与既有 Build Plan 一样只覆盖默认输出目录；自定义 `--output-dir` 不提供输入归因。
+
 当前已完成 Build Plan 的 P1 诊断、P2“Host 依赖闭包删除组件”优化、P3 Portable
 Generation State 的可信 Package 新增路径、P4 冷成本评估，以及 P5 3x/5x/10x 多组件个人与
 团队拓扑回归。P4/P5 是正确性和性能验证阶段，不增加命令或公开 API；详细边界和样本见

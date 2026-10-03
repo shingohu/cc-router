@@ -15,11 +15,13 @@ abstract final class _GenerationBuildPlanner {
   static Future<_GenerationBuildPlanInspection> inspect({
     required CCPackageWorkspace workspace,
     required _GenerationFastPathMissReason? fastPathMissReason,
+    bool profile = false,
   }) async {
     try {
       return await _inspect(
         workspace: workspace,
         fastPathMissReason: fastPathMissReason,
+        profile: profile,
       );
     } on Object {
       return const _GenerationBuildPlanInspection.runBuilder(
@@ -32,6 +34,7 @@ abstract final class _GenerationBuildPlanner {
   static Future<_GenerationBuildPlanInspection> _inspect({
     required CCPackageWorkspace workspace,
     required _GenerationFastPathMissReason? fastPathMissReason,
+    required bool profile,
   }) async {
     final forcedReason = switch (fastPathMissReason) {
       _GenerationFastPathMissReason.manifestMissing =>
@@ -59,6 +62,9 @@ abstract final class _GenerationBuildPlanner {
 
     final current = await _GenerationPlanningState.capture(workspace);
     final baseline = previous.state!;
+    final inputDelta = profile
+        ? _GenerationProfile.inputs(baseline, current)
+        : null;
     final addedPackages = current.packages.keys
         .where((name) => !baseline.packages.containsKey(name))
         .toList(growable: false);
@@ -145,7 +151,10 @@ abstract final class _GenerationBuildPlanner {
 
     if (reasons.isNotEmpty) {
       reasons.sort();
-      return _GenerationBuildPlanInspection.runBuilder(reasons: reasons);
+      return _GenerationBuildPlanInspection.runBuilder(
+        reasons: reasons,
+        inputDelta: inputDelta,
+      );
     }
     final hostGraphChanged =
         baseline.hostGraphFingerprint != current.hostGraphFingerprint;
@@ -161,6 +170,7 @@ abstract final class _GenerationBuildPlanner {
         portableCandidates.isNotEmpty &&
         portableCandidates.length == validPortableAdditions.length;
     return _GenerationBuildPlanInspection.aggregateOnly(
+      inputDelta: inputDelta,
       reasons: [
         !hostGraphChanged ? 'non-builder-input-only' : 'host-graph-changed',
         if (purePortableAddition)
@@ -257,19 +267,25 @@ final class _GenerationBuildPlanInspection {
     required this.reasons,
     required this.aggregateOnlyEligible,
     this.prebuiltPackages = const <String>{},
+    this.inputDelta,
   }) : suggested = _GenerationBuildPlan.aggregateOnly;
 
   /// Creates a conservative full-Builder decision.
-  const _GenerationBuildPlanInspection.runBuilder({required this.reasons})
-    : suggested = _GenerationBuildPlan.runBuilder,
-      aggregateOnlyEligible = false,
-      prebuiltPackages = const <String>{};
+  const _GenerationBuildPlanInspection.runBuilder({
+    required this.reasons,
+    this.inputDelta,
+  }) : suggested = _GenerationBuildPlan.runBuilder,
+       aggregateOnlyEligible = false,
+       prebuiltPackages = const <String>{};
 
   /// Suggested path derived from verified layered state.
   final _GenerationBuildPlan suggested;
 
   /// Stable, sanitized causes used for profile diagnostics.
   final List<String> reasons;
+
+  /// Optional observations, never consulted by execution or content proofs.
+  final Map<String, Object?>? inputDelta;
 
   /// Whether this change has a complete deletion or portable-addition proof.
   final bool aggregateOnlyEligible;

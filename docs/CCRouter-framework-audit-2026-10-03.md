@@ -762,3 +762,31 @@ README、Generator 指南、计划状态、CLI/Integration Skill 已同步。P6 
 analyze 均无问题；缓存/无缓存检查、92 份 Markdown 链接、独立 Skill bundle 和
 `git diff --check` 通过。通用 Skill 验证脚本因缺 PyYAML 未运行，已用仓库检查和 Ruby YAML
 解析验证本次 Skill 更新；没有安装或修改系统 Python 依赖。
+
+## 19. P6 只读归因与对照采样（2026-10-03）
+
+已完成第 18 节后的下一项前置工作：`generate --profile` 复用既有 Build Plan 摘要报告自身
+输入、解析身份、Tool/Host 图变化，另按 Dart、metadata、Markdown、Portable State 报告
+实际产物差异。没有两侧 authored 摘要的 Package 单列不可比较，不能把 null 当作一致。
+字段只用于诊断，不改缓存协议、完整 SHA-256 校验、Builder 跳过条件或公共业务 API。
+
+1x/3x/5x/10x 混合样本覆盖 6/18/30/60 个组件，每个组件包含五类能力，共用一个真实被消费
+的 Dart 依赖。七类变更共 28 组逐文件、逐字节参考比较通过，最终归因实现另通过 1x 七场景
+复验。10x 共享实现变化只引起 61 份状态更新，但默认值变化能在 metadata 不变时修改 60 份
+生成 Dart。因此不能用“metadata 没变”代替完整输入证明，也不能统一忽略注释或依赖实现。
+
+核心价值回归：只在显式 Profile 下增加观察，不新增持久缓存、运行时资源、后台任务或业务
+API；Package 名称有界，源码/业务值不输出，诊断异常隔离；`--check` 恢复和参考路径不弱化。
+额外输出比较仅在 Profile 未命中时进行，实测 13–116ms，未把本轮解释能力当作提速成果。
+详见 [性能报告第 9 节](CCRouter-generator-performance-report.md#9-p6-只读归因与混合依赖采样2026-10-03)。
+
+P6-1 传播收窄本身及 P6-2/3 尚未完成。下一步必须建立五类 Builder 的读取集合证据，覆盖
+常量默认值、类型/泛型、Codec、导出和解析环境，再评估可关闭原型；本轮不满足真实项目
+P95、RSS、跨机器或全新 clone 的语义优化验收，不能默认开启新复用路径。
+
+最终验收：Generator 全量 **321 项通过、1 项网络测试默认跳过**；本轮没有再次执行该网络
+测试。Skill 分发/真实命令/示例编译 **8 项通过**；28 组规模对照与最终 1x 七场景复验单列，
+不重复累计到单元测试数。Workspace analyze 无问题；Demo 缓存与 `--no-cache --check --profile`
+均报告零产物差异，覆盖 6 个组件、33 条路由、11 个生成 Package。正式生成仅更新 11 份
+Portable State 的工具/内容摘要，业务生成代码不变。92 份 Markdown 链接、独立 Skill bundle、
+Skill YAML 解析与 `git diff --check` 通过；未新增系统 Python 依赖。
