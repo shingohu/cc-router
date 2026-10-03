@@ -568,6 +568,9 @@ const _usage = '''Usage:
   ccrouter create init-task <TaskName> [component-directory] [--with-contract]
   ccrouter analyzer status [host-root]
   ccrouter analyzer doctor [host-root]
+  ccrouter analyzer install [host-root] [--source hosted|git] [--version <range>] [--url <git-url>] [--ref <full-sha>] [--git-path <package-path>] [--dry-run]
+  ccrouter analyzer upgrade [host-root] [--version <range>] [--ref <full-sha>] [--dry-run]
+  ccrouter analyzer uninstall [host-root] [--dry-run]
   ccrouter pub-hook install [--sdk <flutter-sdk-root>]
   ccrouter pub-hook uninstall [--sdk <flutter-sdk-root>]
   ccrouter pub-hook status [--sdk <flutter-sdk-root>]
@@ -587,6 +590,10 @@ preserves build caches, read-only dependencies, and unknown user files.
 `analyzer status` inspects one Host-owned Analysis Server bootstrap without
 modifying it. `analyzer doctor` additionally verifies its locked dependencies,
 analysis, and loader compilation. Analyzer commands never run generation.
+`analyzer install/upgrade/uninstall` manage only an explicitly selected Flutter
+Host and CLI-owned files. Use `--dry-run` to preview without subprocesses or writes.
+Hosted installs require an explicit published `--version`; Git installs require
+a remote `--url` and full `--ref`. Existing manual bootstraps are never adopted.
 `pub-hook install` wraps the selected SDK entrypoints with a reversible post-pub
 and run/build preflight generator hook. Non-CCRouter projects are skipped. The
 hook is not installed automatically and is not part of Flutter's internal tool
@@ -1797,7 +1804,7 @@ _Arguments _parseArguments(List<String> arguments) {
   );
 }
 
-/// Parses the read-only Analyzer bootstrap command surface.
+/// Parses explicit Host Analyzer commands; write options never apply to doctor.
 _Arguments _parseAnalyzerArguments(List<String> arguments) {
   if (arguments.length < 2 ||
       arguments[1] == '--help' ||
@@ -1812,6 +1819,9 @@ _Arguments _parseAnalyzerArguments(List<String> arguments) {
   final action = switch (arguments[1]) {
     'status' => CCAnalyzerBootstrapAction.status,
     'doctor' => CCAnalyzerBootstrapAction.doctor,
+    'install' => CCAnalyzerBootstrapAction.install,
+    'upgrade' => CCAnalyzerBootstrapAction.upgrade,
+    'uninstall' => CCAnalyzerBootstrapAction.uninstall,
     _ => null,
   };
   if (action == null) {
@@ -1819,24 +1829,65 @@ _Arguments _parseAnalyzerArguments(List<String> arguments) {
       command: _GeneratorCommand.analyzer,
       rootPath: '',
       outputDirectoryPath: null,
-      error: 'analyzer requires `status` or `doctor`.',
+      error: 'analyzer requires status, doctor, install, upgrade or uninstall.',
     );
   }
-  if (arguments.length > 3 ||
-      (arguments.length == 3 && arguments[2].startsWith('-'))) {
-    return const _Arguments(
-      command: _GeneratorCommand.analyzer,
-      rootPath: '',
-      outputDirectoryPath: null,
-      error: 'analyzer accepts one action and one optional Host root.',
-    );
+  String? root;
+  final options = <String, String>{};
+  var dryRun = false;
+  String? error;
+  final allowed = switch (action) {
+    CCAnalyzerBootstrapAction.install => {
+      '--source',
+      '--version',
+      '--url',
+      '--ref',
+      '--git-path',
+    },
+    CCAnalyzerBootstrapAction.upgrade => {'--version', '--ref'},
+    _ => <String>{},
+  };
+  for (var index = 2; index < arguments.length; index++) {
+    final argument = arguments[index];
+    if (argument == '--dry-run' &&
+        action != CCAnalyzerBootstrapAction.status &&
+        action != CCAnalyzerBootstrapAction.doctor) {
+      if (dryRun) error = 'Duplicate --dry-run.';
+      dryRun = true;
+    } else if (allowed.contains(argument)) {
+      if (options.containsKey(argument) ||
+          index + 1 >= arguments.length ||
+          arguments[index + 1].startsWith('--')) {
+        error = 'Missing or duplicate value for $argument.';
+        break;
+      }
+      options[argument] = arguments[++index];
+    } else if (argument.startsWith('-')) {
+      error = 'Unsupported analyzer ${action.name} option: $argument';
+      break;
+    } else if (root != null) {
+      error = 'analyzer accepts one action and one optional Host root.';
+      break;
+    } else {
+      root = argument;
+    }
   }
-  final root = arguments.length == 3 ? arguments[2] : Directory.current.path;
+  root ??= Directory.current.path;
   return _Arguments(
     command: _GeneratorCommand.analyzer,
     rootPath: root,
     outputDirectoryPath: null,
-    analyzerRequest: CCAnalyzerBootstrapRequest(action: action, hostRoot: root),
+    error: error,
+    analyzerRequest: CCAnalyzerBootstrapRequest(
+      action: action,
+      hostRoot: root,
+      source: options['--source'],
+      version: options['--version'],
+      url: options['--url'],
+      ref: options['--ref'],
+      gitPath: options['--git-path'],
+      dryRun: dryRun,
+    ),
   );
 }
 

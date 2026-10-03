@@ -730,3 +730,35 @@ Context 和有界索引，不新增后台 watcher、Timer、业务 API 或 Runti
 - JIT 测试 loader 不验证 AOT 包装和用户缓存复制；这些仍由 doctor/loader smoke 和真实
   IDE 验收负责。无 manifest 的测试 loader 不能作为应用装配模板。
 - Analyzer 写入型 CLI 和 P6 失效归因仍未在本项实施，继续按独立任务推进。
+
+## 18. Analyzer CLI 显式自动装配（2026-10-03）
+
+已实现 `analyzer install/upgrade/uninstall` 及 `--dry-run`，补齐第 17 节之后的独立任务。
+采用显式 Host 工具方案：不在 generate/Pub Hook 中隐式安装，不接管现有手工 bootstrap，
+不修改 Runtime 或业务 API。Hosted 必须指定已发布版本，Git 必须提供远端完整 SHA，候选
+依赖和 loader 验证成功后才修改 Host 配置；Host Pub 明确禁用 Hook。
+
+YAML 结构编辑保留注释、无关规则和隐式祖先继承。ownership 摘要限制可修改的四个源文件，
+Workspace Pub owner 的文件锁阻止并发装配。普通失败恢复记录的配置及解析文件；用户并发
+修改或不可读取的 Pub 文件保留现场和原始字节日志，其余文件继续恢复。子进程输出有界，
+三分钟阶段超时后终止并等待退出；不创建常驻 watcher 或持有 Runtime 资源。
+
+真实 macOS SSH Git 安装、幂等、升级、doctor、卸载通过（约 88 秒）。最初 HTTPS 连接失败，
+只切换测试的远端协议，没有改全局 Git 配置。模拟 Hosted/事务测试不能代表已发布包可下载。
+完整 IDE/SDK/OS 矩阵和 Hosted 发布后验收仍未完成。Demo 手工 bootstrap 与 `a275d1d` pin
+保持不变，上一项的本地规则修复仍未通过远端 pin 进入 Demo IDE。
+
+准确性检查覆盖缓存和 `--no-cache --check`，6 个组件、33 条路由、11 个生成 Package 均一致。
+本次新增直接 YAML 编辑依赖，正式生成仅更新 11 份可移植状态的工具/内容摘要，没有手改
+生成物或业务生成代码。测试并行期间的生成计时不作为性能提升结论。
+
+核心价值边界：减少手工装配、显式且可诊断、冲突不猜测、失败可恢复、所有权可核验、
+工具可选、公开 API 不扩张；没有牺牲生成准确性或把 IDE 可用性当作业务运行前提。
+README、Generator 指南、计划状态、CLI/Integration Skill 已同步。P6 仍为下一独立任务。
+
+最终验收：Generator 全量 **321 项通过、1 项网络测试默认跳过**；该网络测试另行显式执行
+通过。Skill 分发/真实命令/示例编译 **8 项通过**，合计本轮 **330 项**独立用例通过。
+安装事务专项 36 项包含在 Generator 总数中，不重复计数。Workspace analyze 与改动文件
+analyze 均无问题；缓存/无缓存检查、92 份 Markdown 链接、独立 Skill bundle 和
+`git diff --check` 通过。通用 Skill 验证脚本因缺 PyYAML 未运行，已用仓库检查和 Ruby YAML
+解析验证本次 Skill 更新；没有安装或修改系统 Python 依赖。

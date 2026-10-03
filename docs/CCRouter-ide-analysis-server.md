@@ -109,7 +109,9 @@ SDK 改变缓存布局后仍需真实加载验收。
 `analyzer_plugin` 子目录：Dart 3.11 会复用仍存在的父目录，随后因 `bin/plugin.dart` 缺失
 而启动失败。不能清空整个 Pub cache 或其它插件缓存。
 
-计划中的 `install/upgrade/uninstall` 尚未实现，不能写入当前接入脚本或 CI。完整边界见
+`install/upgrade/uninstall` 已提供显式 Host 自动装配及 `--dry-run`。Hosted 必须指定已发布版本，
+Git 必须指定远端 URL 和完整 SHA；候选 loader 验证成功后才写 Host。已有手工 bootstrap
+不自动接管，Demo 保持原配置；CLI 成功也不代表正在运行的 IDE 已重新加载。完整边界见
 [`CCRouter-analyzer-cli-plan.md`](CCRouter-analyzer-cli-plan.md)。Analyzer 装配不会挂入
 `generate`、Pub Hook 或组件脚手架隐式执行。
 

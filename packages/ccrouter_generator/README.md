@@ -151,6 +151,23 @@ fvm flutter pub get
 fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo
 ```
 
+Analyzer 是可选的 Host 开发工具，独立于生成流程：
+
+```sh
+ccrouter analyzer status <host-root>
+ccrouter analyzer doctor <host-root>
+ccrouter analyzer install <host-root> --version <published-version> --dry-run
+ccrouter analyzer install <host-root> --source git --url <remote-url> --ref <full-commit-sha>
+ccrouter analyzer upgrade <host-root> --ref <full-commit-sha>
+ccrouter analyzer uninstall <host-root> --dry-run
+```
+
+写入命令支持 `--dry-run`，只管理 CLI 创建的隔离 bootstrap 和 Host 配置叶，先验证候选
+loader 再运行禁用 Hook 的 Host Pub。现有手工装配不自动接管，未知文件保留；普通失败恢复
+记录的配置/解析文件，并发冲突或中断保留恢复日志。Hosted 需显式指定已发布版本，Git 需远端
+完整 SHA。完成后重启 Analysis Server，并验证实际 IDE 诊断；不隐式挂入 generate 或 Pub Hook。
+完整说明见 [Analyzer CLI 指南](../../docs/CCRouter-analyzer-cli-plan.md)。
+
 如果希望在当前 Flutter SDK 的 `flutter pub get/upgrade/downgrade/add/remove` 成功后
 自动生成，可以显式安装可回滚的 hook：
 

@@ -117,8 +117,21 @@ Language Server 会话中验证，最终跨文件正确性仍以 `ccrouter gener
 未保存编辑、五类生成物磁盘变化及 Workspace Owner 元数据刷新；不替代当前 IDE 的
 bootstrap/ref 加载验证。具体 SDK 和多根工程边界见 IDE 文档。
 
-自动 `install/upgrade/uninstall` 尚未实现；当前不得把 Analyzer 装配隐式挂入 `generate` 或
-Pub Hook。
+新 Host 可用显式装配命令（下列版本必须已发布，Git 则使用已评审的远端完整 SHA）：
+
+```bash
+ccrouter analyzer install <host-root> --version <published-version> --dry-run
+ccrouter analyzer install <host-root> --source git --url <remote-url> --ref <full-commit-sha>
+ccrouter analyzer upgrade <host-root> --ref <full-commit-sha>
+ccrouter analyzer uninstall <host-root> --dry-run
+```
+
+三种写命令均支持 `--dry-run`；正式操作先验证隔离 loader，再更新 Host 并运行禁用 Hook 的
+Pub。只管理 `tools/ccrouter_analyzer_host/` 的固定文件和配置叶；保留用户规则与未知文件，
+冲突或手工 bootstrap 不自动接管。失败恢复受管配置与记录的解析文件；进程中断或并发编辑
+保留事务恢复记录并停止后续写入。Demo 仍保持手工 bootstrap 和现有远端 pin。
+Analyzer 装配不得隐式挂入 `generate`、Pub Hook 或组件脚手架。详见
+[Analyzer CLI 指南](docs/CCRouter-analyzer-cli-plan.md)。
 
 ### DevTools 只读面板
 
@@ -1296,7 +1309,7 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo --check
 - 生成后执行 analyze、针对性测试与 `generate --check`。
 
 CLI Skill 覆盖已经实现的 `generate`、`find`、`clean`、六类 `create` 脚手架、
-`analyzer status/doctor` 和显式 `pub-hook` 管理。Contract
+`analyzer status/doctor/install/upgrade/uninstall` 和显式 `pub-hook` 管理。Contract
 Scaffold/Promotion/Migration、alias 迁移和扩展生成失败诊断目前仍是 AI 辅助工作流，不是可直接
 调用的 CLI 命令；五类 Contract 版本兼容核心门禁已经由生成器、Host 聚合和 Runtime 自动执行。
 AI 辅助的迁移操作先说明影响和 dry-run；已有明确授权时继续实施，只有超出授权范围或仍有

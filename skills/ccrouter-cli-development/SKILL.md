@@ -47,6 +47,11 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter create event <EventNa
 fvm dart run --verbosity=error ccrouter_generator:ccrouter create init-task <TaskName> <component-directory> [--with-contract]
 fvm dart run --verbosity=error ccrouter_generator:ccrouter analyzer status [host-root]
 fvm dart run --verbosity=error ccrouter_generator:ccrouter analyzer doctor [host-root]
+fvm dart run --verbosity=error ccrouter_generator:ccrouter analyzer install <host-root> --version <published-version> [--dry-run]
+fvm dart run --verbosity=error ccrouter_generator:ccrouter analyzer install <host-root> --source git --url <remote-url> --ref <full-commit-sha> [--dry-run]
+fvm dart run --verbosity=error ccrouter_generator:ccrouter analyzer upgrade <host-root> --version <published-version> [--dry-run]
+fvm dart run --verbosity=error ccrouter_generator:ccrouter analyzer upgrade <host-root> --ref <full-commit-sha> [--dry-run]
+fvm dart run --verbosity=error ccrouter_generator:ccrouter analyzer uninstall <host-root> [--dry-run]
 fvm dart run --verbosity=error ccrouter_generator:ccrouter generate <host-root>
 fvm dart run --verbosity=error ccrouter_generator:ccrouter generate <host-root> --check
 fvm dart run --verbosity=error ccrouter_generator:ccrouter generate <host-root> --no-cache
@@ -60,8 +65,8 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook uninstall [-
 fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook run --project-root <host-root> [--pub-command <command>]
 ```
 
-The exact command help is authoritative. `analyzer status/doctor` are supported;
-`analyzer install/upgrade/uninstall`, `watch`, `promote`, and `migrate` are not.
+The exact command help is authoritative. `analyzer status/doctor/install/upgrade/uninstall`
+are supported; `watch`, `promote`, and `migrate` are not.
 Do not invent commands or flags because they appear in a design document.
 `--verbosity=error` belongs to `dart run`, not to CCRouter. Keep it before the
 Package executable so Dart/Pub cold-start resolution noise is suppressed while
@@ -178,17 +183,9 @@ Flutter command; projects without a resolved CCRouter graph are skipped.
 - If no generated capability exists, the generator should not leave an empty
   `ccrouter_generated` tree.
 
-## Deferred CLI 2.0 Workflows
+## Analyzer Plugin Bootstrap
 
-These workflows are AI-assisted procedures, not commands. Summarize affected
-declarations, dependencies, public exposure, and call sites before a migration.
-Proceed when the user has authorized those changes; a request for assessment
-alone does not authorize implementation. Ask only when a material choice or
-expansion beyond that scope remains, rather than reconfirming approved work.
-
-### Analyzer Plugin Bootstrap
-
-`ccrouter analyzer status [host-root]` inspects one manually installed Host
+`ccrouter analyzer status [host-root]` inspects one manual or CLI-managed Host
 bootstrap and reports its source, pinned identity, lockfile, and Analyzer
 compatibility. `ccrouter analyzer doctor [host-root]` additionally runs locked
 dependency resolution, analysis, and loader compilation in a temporary copy.
@@ -200,12 +197,31 @@ Server and back up the entire listed hash directory outside `.plugin_manager`,
 not just its `analyzer_plugin` child. Then restart and verify a real IDE
 diagnostic; doctor alone does not prove the live session loaded the plugin.
 
-The planned `install/upgrade/uninstall` commands are not implemented. Use the
-self-contained manual Host bootstrap procedure in
+Use explicit `install/upgrade/uninstall` for a CLI-owned installation. All three
+support `--dry-run` without processes or writes. Hosted requires an explicit
+published version; Git requires a remote URL and full SHA verified by remote
+fetch. The command validates a candidate loader before updating Host configuration
+and running Pub with Hook disabled. Existing manual bootstraps are not adopted;
+keep using the self-contained manual procedure in
 [`ide-analysis-server.md`](../ccrouter-integration-development/references/ide-analysis-server.md).
+The CLI preserves unrelated YAML and unknown files, refuses modified owned
+files, and serializes writes at the Workspace Pub owner. A failed transaction
+restores recorded configuration/resolution files; concurrent edits or interruption
+retain a recovery journal under `.dart_tool/ccrouter/analyzer/transactions`.
+Inspect its exact paths and recover deliberately; do not erase it to bypass the
+next command's recovery check. Commit owned source files, ownership marker and
+lockfiles, never the private journal. Installation success does not prove live IDE loading.
 Do not attach Analyzer setup to `generate`, Pub Hook, or component scaffolding.
 Do not change a pinned Git ref merely to follow local HEAD, use a branch name,
 or commit a local absolute path.
+
+## Deferred CLI 2.0 Workflows
+
+These workflows are AI-assisted procedures, not commands. Summarize affected
+declarations, dependencies, public exposure, and call sites before a migration.
+Proceed when the user has authorized those changes; a request for assessment
+alone does not authorize implementation. Ask only when a material choice or
+expansion beyond that scope remains, rather than reconfirming approved work.
 
 ### Contract Scaffold or Promotion
 

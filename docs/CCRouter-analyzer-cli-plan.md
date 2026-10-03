@@ -2,7 +2,7 @@
 
 ## 1. 状态与目标
 
-- 状态：部分实现；只读 `status/doctor` 已完成，写入型装配命令尚未实现。
+- 状态：`status/doctor/install/upgrade/uninstall` 已实现；Hosted 发布后真实安装和完整 IDE/SDK 矩阵仍待验收。
 - 优先级：P1，正式发布前的开发体验能力。
 - Owner：`ccrouter_generator` CLI；`ccrouter_analyzer_plugin` 继续只负责确定性诊断。
 - 目标：用显式、幂等、可诊断和可回滚的命令装配 Host Analysis Server bootstrap，减少
@@ -54,11 +54,11 @@ ccrouter analyzer status [host-root]
 ccrouter analyzer doctor [host-root]
 ```
 
-尚未实现，当前不能直接执行：
+写入型命令也已实现；以下三个命令都支持 `--dry-run`：
 
 ```text
 ccrouter analyzer install [host-root] [--source hosted|git] [--version <range>]
-                          [--url <git-url> --ref <full-commit-sha>]
+                          [--url <git-url> --ref <full-commit-sha>] [--git-path <package-path>]
 ccrouter analyzer upgrade [host-root] [--version <range> | --ref <full-commit-sha>]
 ccrouter analyzer uninstall [host-root]
 ```
@@ -66,11 +66,11 @@ ccrouter analyzer uninstall [host-root]
 ### `install`
 
 - 只面向明确的 Host Package，不把 Workspace 聚合根或组件 Package 猜成 Host。
-- 检测 Dart/Flutter SDK、Analyzer 和 `analyzer_plugin` 兼容矩阵。
-- 默认使用已发布 Hosted 版本；使用 Git 时必须同时提供 URL 和完整 commit SHA。
-- 创建隔离的 `tools/analyzer_plugin` bootstrap，不把 Plugin Analyzer 依赖混入应用或 Generator
+- 检测当前 Dart 3.10+、Host SDK constraint；loader 固定 Analyzer 8.4.0 / analyzer_plugin 0.13.10，实际解析、分析、编译验证兼容性，不承诺任意 SDK。
+- 默认来源为 Hosted，但必须显式 `--version`；仓库版本号不能证明包已发布。Git 必须同时提供远端 HTTPS/SSH URL 和完整 commit SHA，通过临时 bare fetch 验证远端可获取，拒绝本地路径和浮动引用。
+- 创建隔离的 `tools/ccrouter_analyzer_host/tools/analyzer_plugin` bootstrap，不把 Plugin Analyzer 依赖混入应用或 Generator
   Workspace。
-- 以可识别的受管区块更新 `analysis_options.yaml`，发现未知的同名配置或其它插件冲突时停止并
+- 以 YAML 结构叶和 ownership 记录更新 `analysis_options.yaml`，保留无关规则、注释及祖先规则继承；发现未知的同名配置或其它插件冲突时停止并
   给出差异，不覆盖用户内容。
 - 生成前提供 dry-run 摘要；重复执行相同配置不得改写文件或 lockfile。
 
@@ -97,27 +97,37 @@ ccrouter analyzer uninstall [host-root]
 
 - 只在开发者显式给出目标 Hosted 版本或远端 commit SHA 时更新。
 - 不自动跟随 `main`，不把本地 HEAD 当作 Git ref，不自动跨 Analyzer 兼容区间。
-- 更新前后均运行 `doctor`；失败时恢复 CLI 本次修改的 manifest 和 lockfile。
+- 更新前对现有安装运行 `doctor`，新版本先在临时目录通过依赖解析和 doctor，再写入 Host 并执行 Pub；失败时恢复受管配置和已记录的 Pub 解析文件。
+- 相同来源/版本且静态状态健康时直接幂等返回，不重新解析或修改 lockfile；改变来源类型需显式卸载后安装。
 
 ### `uninstall`
 
-- 只移除 CLI 标记的 bootstrap 文件和 `analysis_options.yaml` 受管区块。
+- 只移除 ownership 记录且摘要仍匹配的四个 bootstrap 文件、记录文件、Host dev_dependency 和 `analysis_options.yaml` 受管叶。
 - 保留未知文件、用户 Analyzer 配置和非 CCRouter Plugin。
-- 删除前输出 dry-run；部分内容被用户修改时默认拒绝删除，并给出手工处理范围。
+- 可先执行 `--dry-run`；部分内容被用户修改时拒绝删除，并给出手工处理范围。现有手工 bootstrap 不自动采用或迁移。
 
 ## 5. 所有权、失败与回滚
 
-- CLI 拥有其创建并带有受管标记的 bootstrap 和配置区块，不拥有 Host 的其它 IDE 配置。
+- CLI 拥有固定 bootstrap 路径及 `.ccrouter-analyzer.json` 记录的配置叶，不拥有 Host 的其它 IDE 配置。
 - Plugin 是开发期可选能力；任何安装、加载和版本故障都不得改变生成物、Runtime 或业务结果。
 - 文件写入采用临时文件和原子替换；多文件操作保留本次备份，全部验证成功后才完成提交。
-- 命令支持 `--dry-run` 的具体统一形式在实现前与现有 CLI 参数规范一起冻结。
+- `--dry-run` 不启动子进程、不写文件；实际操作在 Pub owner 下使用非阻塞文件锁，多 Host 共用 Workspace 时串行修改。
+- 只安装明确的 Flutter 应用：直接依赖 ccrouter/flutter，且有 app `.metadata` 或 `lib/main.dart` 顶层 main。Workspace 聚合根及普通组件不接受安装。
 - 多 Host Workspace 必须逐 Host 装配；命令不扫描并批量修改所有 Package。
 - 执行后提示重启 Dart Analysis Server 或 IDE，但 CLI 不主动终止 IDE 进程。
 
+提交 Host 的 pubspec/options、四个 bootstrap 文件、ownership 记录和 Pub lockfile；不要提交
+`.dart_tool`。Host Pub 使用当前 Dart 所属 Flutter SDK，并禁用 Pub Hook，不运行生成器。
+事务记录位于 Pub owner 的 `.dart_tool/ccrouter/analyzer/transactions/`，保存原始字节；普通
+失败恢复本次受管配置及 Host/Workspace 的 lockfile、package_config、package_graph、Flutter
+plugins dependency 文件。不会回滚全局 Pub cache 或其它平台缓存。并发用户改动、无法读取的
+Pub 结果或进程中断保留恢复记录，后续写命令拒绝继续；核对记录中的明确路径后恢复，不能清空
+缓存来绕过。未知文件保留。子进程输出有界，单阶段三分钟超时并结束子进程。
+
 ## 6. AI Skill 接入规则
 
-写入型命令实现前，AI 继续使用现有手工 bootstrap 指南，不得声称 CLI 可以自动安装、升级或
-卸载。已经装配的 Host 应优先运行 `status` 和 `doctor`，手工 smoke 作为回退，并遵守：
+新 Host 可使用显式写入命令；已手工装配的 Demo 继续使用手工指南，CLI 不自动接管。
+已经装配的 Host 应优先运行 `status` 和 `doctor`，并遵守：
 
 1. 先运行 `status` 和 `doctor`，再判断是否需要 `install` 或 `upgrade`。
 2. 未经明确请求不升级版本或 ref，不使用 Git `main`。
@@ -130,11 +140,11 @@ ccrouter analyzer uninstall [host-root]
 
 1. [x] 抽取 Host/bootstrap 状态探测，只读实现 `status`。
 2. [x] 实现无写入的 `doctor` 和兼容矩阵诊断。
-3. 实现 Hosted `install/uninstall`，覆盖幂等、冲突和回滚测试。
-4. 增加固定 Git commit 安装，并拒绝 branch、短 SHA、本地未推送 SHA 和非法组合。
-5. 实现显式 `upgrade` 与失败恢复。
-6. 更新 CLI help、根 README、IDE 文档和 Integration/CLI Skill。
-7. 在 Demo、临时 Host、VS Code 和 Android Studio 完成 Analysis Server smoke。
+3. [x] 实现 Hosted `install/uninstall`，覆盖幂等、冲突和回滚测试；真实 Hosted 下载待发布后验收。
+4. [x] 增加固定 Git commit 安装，并拒绝 branch、短 SHA、本地来源和非法组合；远端获取失败不写 Host。
+5. [x] 实现显式 `upgrade` 与失败恢复。
+6. [x] 更新 CLI help、根 README、IDE 文档和 Integration/CLI Skill。
+7. [~] 临时 Host 真实 Git/Pub/loader 验证与既有独立 Server 测试分别验收；完整 VS Code、Android Studio、SDK/OS 矩阵仍未完成。
 
 第 7 项已有独立进程自动化基础：Legacy/LSP 协议、overlay、修复应用、五类生成物磁盘
 变化和 Workspace Owner metadata/Contract 刷新已覆盖。它使用本地源码和临时缓存，不
@@ -144,3 +154,17 @@ SDK 独立多根冷启动边界见 [IDE 文档](CCRouter-ide-analysis-server.md)
 验收至少覆盖：重复安装、已有 Plugin 配置、多 Host、聚合根误判、Hosted/Git 两种来源、Analyzer
 不兼容、离线依赖失败、loader 编译失败、用户修改受管文件、卸载恢复和 Plugin 不可用时的业务
 构建回退。
+
+### 2026-10-03 实际验收边界
+
+- macOS / Dart 3.11.5：临时 Flutter Host 的真实 SSH Git 安装、重复安装、升级、doctor、卸载
+  全链路通过，约 88 秒。使用远端 `97c72da…` → `a275d1d…`，未修改 Demo 或推送任何 ref。
+- HTTPS GitHub 连接在本机失败；SSH 验证通过不代表 HTTPS 网络正常。可选测试由
+  `CCROUTER_ANALYZER_NETWORK_SMOKE=1` 开启，`CCROUTER_ANALYZER_GIT_URL` 可选择远端协议；
+  默认回归跳过网络测试，避免要求每个开发者都有 Git 凭据。
+- 安装事务测试覆盖模拟 Hosted、真实 YAML/文件操作、继承规则、来源冲突、共享锁、SDK、
+  幂等、失败恢复、并发编辑、无法读取的 Pub 结果和中断 journal；不把模拟 Hosted 当成真实发布验收。
+- 安装事务专项 36 项通过；Generator 全量 321 项通过（默认跳过的网络测试另行通过）。
+  Workspace analyze、缓存/无缓存生成检查、文档与 Skill 分发检查均通过。
+- 实际 loader 固定 Analyzer 8.4.0 / analyzer_plugin 0.13.10。Windows/Linux、其它 SDK、
+  新版插件机制和两个 IDE 的完整矩阵尚未验证，仍按独立兼容任务推进。

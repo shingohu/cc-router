@@ -1,18 +1,34 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:analyzer/dart/analysis/utilities.dart';
+import 'package:analyzer/dart/ast/ast.dart';
 import 'package:crypto/crypto.dart';
 import 'package:path/path.dart' as path;
 import 'package:pub_semver/pub_semver.dart';
 import 'package:yaml/yaml.dart';
+import 'package:yaml_edit/yaml_edit.dart';
 
-/// Read-only Analyzer bootstrap operation exposed by the CLI.
+part 'analyzer_installation.dart';
+part 'analyzer_installation_files.dart';
+
+/// Explicit Host Analyzer bootstrap operation exposed by the CLI.
 enum CCAnalyzerBootstrapAction {
   /// Reports installation identity and consistency without running tools.
   status,
 
   /// Verifies locked dependencies, analysis, and loader compilation.
   doctor,
+
+  /// Installs a verified, CLI-owned isolated bootstrap.
+  install,
+
+  /// Replaces only an unchanged CLI-owned bootstrap with an explicit version.
+  upgrade,
+
+  /// Removes only verified CLI-owned files and YAML entries.
+  uninstall,
 }
 
 /// Parsed request for one explicit Analyzer bootstrap operation.
@@ -21,26 +37,71 @@ final class CCAnalyzerBootstrapRequest {
   const CCAnalyzerBootstrapRequest({
     required this.action,
     required this.hostRoot,
+    this.source,
+    this.version,
+    this.url,
+    this.ref,
+    this.gitPath,
+    this.dryRun = false,
   });
 
-  /// Read-only operation selected by the developer.
+  /// Operation explicitly selected by the developer.
   final CCAnalyzerBootstrapAction action;
 
   /// Application Host that owns `analysis_options.yaml` and the bootstrap.
   final String hostRoot;
+
+  /// Hosted by default on install; upgrade inherits its existing source.
+  final String? source;
+
+  /// Explicit Hosted version constraint; no unpublished default is assumed.
+  final String? version;
+
+  /// Remote Git URL, never a local repository or relative path.
+  final String? url;
+
+  /// Full remote Git commit, never a branch, tag, or short SHA.
+  final String? ref;
+
+  /// Package directory inside the remote monorepo.
+  final String? gitPath;
+
+  /// Prints planned changes without running subprocesses or writing files.
+  final bool dryRun;
 }
+
+/// Internal CLI process seam for deterministic failure/rollback tests.
+/// It is not exported from the generator's package API.
+typedef AnalyzerBootstrapProcessRunner =
+    Future<ProcessResult> Function(
+      String executable,
+      List<String> arguments, {
+      required String workingDirectory,
+      Map<String, String>? environment,
+    });
 
 /// Executes one Analyzer bootstrap request and reports whether it is healthy.
 Future<bool> runAnalyzerBootstrapCommand(
-  CCAnalyzerBootstrapRequest request,
-) async {
+  CCAnalyzerBootstrapRequest request, {
+  AnalyzerBootstrapProcessRunner? processRunner,
+}) async {
+  final runner = processRunner ?? _runAnalyzerProcess;
+  if (request.action != CCAnalyzerBootstrapAction.status &&
+      request.action != CCAnalyzerBootstrapAction.doctor) {
+    try {
+      return await _runAnalyzerInstallation(request, runner);
+    } on Object catch (error) {
+      stderr.writeln('error: Analyzer ${request.action.name} failed: $error');
+      return false;
+    }
+  }
   final report = _AnalyzerBootstrapReport.inspect(
     Directory(request.hostRoot).absolute,
   );
   report.writeTo(stdout);
   if (report.state != _AnalyzerBootstrapState.healthy) return false;
   if (request.action == CCAnalyzerBootstrapAction.status) return true;
-  return _runDoctor(report);
+  return _runDoctor(report, runner: runner);
 }
 
 /// Stable installation states printed by `status` and consumed by `doctor`.
@@ -340,7 +401,10 @@ final class _AnalyzerBootstrapReport {
 }
 
 /// Runs bounded, non-mutating checks inside a healthy isolated bootstrap.
-Future<bool> _runDoctor(_AnalyzerBootstrapReport report) async {
+Future<bool> _runDoctor(
+  _AnalyzerBootstrapReport report, {
+  AnalyzerBootstrapProcessRunner runner = _runAnalyzerProcess,
+}) async {
   final bootstrapRoot = report.bootstrapRoot!;
   final staleCaches = _staleAnalyzerPluginManagerCaches(bootstrapRoot);
   if (staleCaches.isNotEmpty) {
@@ -387,7 +451,7 @@ Future<bool> _runDoctor(_AnalyzerBootstrapReport report) async {
     ];
     for (final check in checks) {
       stdout.writeln('CCRouter Analyzer doctor: ${check.name}...');
-      final result = await Process.run(
+      final result = await runner(
         Platform.resolvedExecutable,
         check.arguments,
         workingDirectory: isolatedBootstrap.path,

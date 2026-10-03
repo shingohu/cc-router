@@ -196,9 +196,9 @@ Workspace/插件 analyze 及缓存/无缓存生成物检查通过。
   import 依赖图过滤以及 JSON 未被关注的缺口；固定远端 pin 尚未包含本次本地修复。
 - [ ] 独立多根工程同时冷启动的 SDK legacy PluginManager 重复实例边界与完整 IDE/SDK
   矩阵；当前共享 Dart Workspace 验证不替代这一项，也不承诺监听分析根外的依赖。
-- [~] Analyzer Plugin 已提供 Host-only、只读的 `status/doctor`，覆盖固定来源、lockfile 和
-  Analyzer 兼容检查；`install/upgrade/uninstall` 自动装配仍未实现。后续写入型命令必须幂等、
-  可回滚和 Hosted 优先，不挂入 `generate`、Pub Hook 或组件脚手架。固定 Git ref 仅在插件
+- [x] Analyzer Plugin 已提供 Host-only 的 `status/doctor/install/upgrade/uninstall`，覆盖固定来源、lockfile、
+  Analyzer 兼容检查、幂等、候选验证、配置回滚和 `--dry-run`。Hosted 来源需显式版本；
+  发布后的真实 Hosted 安装及完整 IDE/SDK 矩阵仍待验收。不挂入 `generate`、Pub Hook 或组件脚手架。固定 Git ref 仅在插件
   实际变化、独立验证并推送远端后更新，不追随本地 HEAD。详见
   [Analyzer Plugin CLI 自动装配计划](CCRouter-analyzer-cli-plan.md)。
 - [x] 建立纯 Dart、版本化的 Catalog/Runtime Snapshot 与 Trace Edge 协议；静态记录携带

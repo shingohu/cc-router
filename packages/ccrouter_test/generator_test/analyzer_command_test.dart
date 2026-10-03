@@ -247,14 +247,63 @@ dependencies:
   }
 
   test('analyzer rejects unsupported actions and excess arguments', () async {
-    final unsupported = await _run(['analyzer', 'install']);
+    final unsupported = await _run(['analyzer', 'unknown']);
     expect(unsupported.exitCode, 2);
-    expect('${unsupported.stderr}', contains('requires `status` or `doctor`'));
+    expect('${unsupported.stderr}', contains('requires status, doctor'));
 
     final excess = await _run(['analyzer', 'status', '.', 'extra']);
     expect(excess.exitCode, 2);
     expect('${excess.stderr}', contains('one optional Host root'));
   });
+
+  test('write command parser rejects ambiguous or unsupported flags', () async {
+    for (final args in [
+      ['install', '--version', '1.0.0', '--version', '2.0.0'],
+      ['install', '--url'],
+      ['status', '--dry-run'],
+      ['upgrade', '--source', 'git'],
+      ['uninstall', '--version', '1.0.0'],
+      ['install', '--unknown'],
+    ]) {
+      final result = await _run(['analyzer', ...args]);
+      expect(result.exitCode, 2, reason: '$args: ${result.stderr}');
+    }
+  });
+
+  test(
+    'install dry-run parses explicit Git source without touching Host',
+    () async {
+      final root = await Directory.systemTemp.createTemp(
+        'ccrouter-analyzer-dry-',
+      );
+      addTearDown(() => root.delete(recursive: true));
+      _writeHost(root, enablePlugin: false);
+      final manifest = File(path.join(root.path, 'pubspec.yaml'));
+      manifest.writeAsStringSync(
+        '${manifest.readAsStringSync()}  flutter:\n    sdk: flutter\n',
+      );
+      File(
+        path.join(root.path, '.metadata'),
+      ).writeAsStringSync('project_type: app\n');
+      final before = manifest.readAsStringSync();
+      final result = await _run([
+        'analyzer',
+        'install',
+        root.path,
+        '--source',
+        'git',
+        '--url',
+        'https://example.com/router.git',
+        '--ref',
+        _gitRef,
+        '--dry-run',
+      ]);
+      expect(result.exitCode, 0, reason: '${result.stderr}');
+      expect('${result.stdout}', contains('(dry-run)'));
+      expect(manifest.readAsStringSync(), before);
+      expect(Directory(path.join(root.path, 'tools')).existsSync(), isFalse);
+    },
+  );
 }
 
 Future<({Directory root, Directory plugin})> _createFixture() async {
@@ -357,7 +406,11 @@ Future<ProcessResult> _run(
   Map<String, String>? environment,
 }) => Process.run(
   Platform.resolvedExecutable,
-  ['run', 'ccrouter_generator:ccrouter', ...arguments],
+  [
+    '--packages=${path.absolute('.dart_tool/package_config.json')}',
+    path.absolute('packages/ccrouter_generator/bin/ccrouter.dart'),
+    ...arguments,
+  ],
   workingDirectory: Directory.current.path,
   environment: environment,
 );

@@ -205,7 +205,37 @@ a shared plugin name. This SDK-specific cache check does not prove live IDE
 loading; verify a diagnostic and Quick Fix in the running IDE. Rerun doctor
 after the bootstrap or pinned ref changed.
 
-The planned `analyzer install/upgrade/uninstall` commands are not implemented.
-Keep using the manual Host bootstrap, do not attach setup
-to generation or Pub Hook, and do not change a pinned ref merely to follow
-repository HEAD.
+For a new Host, explicit installation is available:
+
+```bash
+ccrouter analyzer install <host-root> --version <published-version> --dry-run
+ccrouter analyzer install <host-root> --source git --url <remote-url> --ref <full-commit-sha>
+ccrouter analyzer upgrade <host-root> --ref <full-commit-sha>
+ccrouter analyzer uninstall <host-root> --dry-run
+```
+
+All three write commands support `--dry-run` without processes or file writes.
+Hosted requires an explicit published version; Git accepts remote HTTPS/SSH URLs
+and full SHA only (`--git-path` defaults to `packages/ccrouter_analyzer_plugin`).
+Upgrade keeps the source kind and requires an explicit version/ref. Repeating the
+same healthy installation preserves files and lockfiles. A Flutter application
+Host must directly depend on ccrouter/flutter and have an app `.metadata` or a
+top-level main in `lib/main.dart`; aggregators and library components are refused.
+
+The CLI creates `tools/ccrouter_analyzer_host/`, updates one Host dev_dependency
+and `analyzer.plugins`, and preserves unrelated rules, comments and inherited
+options. It records hashes in `.ccrouter-analyzer.json`; commit this marker, the
+wrapper manifest, inner bootstrap manifest/lockfile/loader and Host configuration.
+Candidate dependency resolution, analysis and loader compilation precede Host
+writes. Host Pub uses the current Flutter SDK with Pub Hook disabled. Shared
+Workspace writes are locked; no generated files or IDE caches are changed.
+
+Ordinary failure restores recorded configuration and Pub resolution files, not
+global caches. Concurrent user edits or interruption retain original bytes in
+the Pub owner's `.dart_tool/ccrouter/analyzer/transactions/` and block subsequent
+writes. Review those exact files for recovery; never remove caches to bypass this
+check. Modified owned files and existing manual bootstraps are not overwritten or
+adopted. Unknown files survive uninstall. For manual installations keep using the
+procedure above. Never attach setup to generation/Pub Hook or follow repository
+HEAD automatically. Restart Analysis Server after changes and verify a real
+diagnostic; command success alone is not proof of IDE loading.
