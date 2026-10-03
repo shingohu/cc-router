@@ -33,6 +33,8 @@ and managed-output content; it does not excuse stale Git/Path artifacts.
 See the generation section in `references/implementation-patterns.md`.
 Custom catalog directories retain the same `--check` file-restoration guarantee;
 they do not transfer ownership of neighboring application files to the CLI.
+Route and Service Proxy defaults preserve collection types; expose any enum or
+type used only inside a default through the same public Contract barrel.
 
 For generator, scaffolding, cleanup, source lookup, or deferred Contract
 migration work, also read

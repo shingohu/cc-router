@@ -8,6 +8,49 @@ import 'package:build_test/build_test.dart';
 import 'package:ccrouter_generator/builder.dart';
 import 'package:test/test.dart';
 
+class _RouteDefaultsVerifier implements Builder {
+  bool verified = false;
+  @override
+  final buildExtensions = const {
+    '.dart': ['.verified'],
+  };
+
+  @override
+  Future<void> build(BuildStep step) async {
+    if (step.inputId.path != 'lib/default_verification.dart') return;
+    final library = await step.resolver.libraryFor(step.inputId);
+    final parameters = library.classes
+        .expand((c) => c.constructors)
+        .expand((c) => c.formalParameters)
+        .where((p) => p.hasDefaultValue);
+    final defaults = {
+      for (final p in parameters) p.name: p.computeConstantValue(),
+    };
+    for (final entry in {
+      'set': 'Set<int>',
+      'list': 'List<String>',
+      'map': 'Map<String, int>',
+      'nested': 'Map<String, List<Mode?>>',
+      'dynamicList': 'List<dynamic>',
+      'mode': 'Mode',
+    }.entries) {
+      expect(
+        defaults[entry.key]?.type?.getDisplayString(),
+        entry.value,
+        reason: entry.key,
+      );
+    }
+    final nested = defaults['nested']!
+        .toMapValue()!
+        .values
+        .single!
+        .toListValue()!;
+    expect(nested[0].getField('index')?.toIntValue(), 0);
+    expect(nested[1].isNull, isTrue);
+    verified = true;
+  }
+}
+
 void main() {
   late TestReaderWriter reader;
 
@@ -47,6 +90,7 @@ void main() {
       expect(await reader.canRead(output), isFalse);
       return logs.join('\n');
     }
+    expect(await reader.canRead(output), isTrue, reason: logs.join('\n'));
     return reader.readAsString(output);
   }
 
@@ -1152,6 +1196,50 @@ final class Probe {
     expect(code, contains('values.sort()'));
     expect(code, contains('if (arguments.states != null)'));
     expect(code, contains('"states": ['));
+  });
+
+  test('standalone defaults preserve wide collection types', () async {
+    final source = StringBuffer('enum Mode { a }\n');
+    for (final entry in {
+      'set': 'const <int>{}',
+      'list': 'const <String>[]',
+      'map': 'const <String, int>{}',
+      'nested': "const <String, List<Mode?>>{'m': <Mode?>[Mode.a, null]}",
+      'dynamicList': 'const []',
+      'mode': 'Mode.a',
+    }.entries) {
+      final name = entry.key;
+      source.writeln('''
+@CCRoute<void>(id: 'probe.${name.toLowerCase()}', pattern: CCPathPattern('/$name'))
+final class Probe$name {
+  const Probe$name({@CCExtraParam() this.$name = ${entry.value}});
+  final Object $name;
+}
+''');
+    }
+    final code = await generate(source.toString());
+    final verifier = _RouteDefaultsVerifier();
+    await testBuilder(
+      verifier,
+      {'ccrouter_test|lib/default_verification.dart': code},
+      rootPackage: 'ccrouter_test',
+      generateFor: {'ccrouter_test|lib/default_verification.dart'},
+      readerWriter: reader,
+      flattenOutput: true,
+    );
+    expect(verifier.verified, isTrue);
+  });
+
+  test('standalone rejects private default-only enum types', () async {
+    final logs = await generate(r'''
+enum _Mode { a }
+@CCRoute<void>(id: 'probe', pattern: CCPathPattern('/probe'))
+final class Probe {
+  const Probe({@CCExtraParam() this.value = const <_Mode>[]});
+  final Object value;
+}
+''', fails: true);
+    expect(logs, contains('must be public'));
   });
 
   test('builder omits an empty collection that equals its default', () async {

@@ -15,7 +15,7 @@ final class _DemoDetailPageRouteArguments {
   _DemoDetailPageRouteArguments({
     required this.id,
     this.title = "类型安全详情",
-    List<String> tags = const [],
+    List<String> tags = const <String>[],
   }) : tags = List.unmodifiable(tags);
 
   /// path parameter id for demo_navigation_lab.detail.
@@ -37,7 +37,7 @@ abstract final class _DemoDetailPageRoute {
   static CCRouteIntent<String> intent({
     required int id,
     String title = "类型安全详情",
-    List<String> tags = const [],
+    List<String> tags = const <String>[],
   }) => _DemoDetailPageRouteIntent(
     _DemoDetailPageRouteArguments(id: id, title: title, tags: tags),
   );
@@ -132,7 +132,7 @@ final class _DemoDetailPageRouteCodec
         "Route \"demo_navigation_lab.detail\" parameter \"tags\" is invalid.",
       );
     final List<String> _value_tags = _values_tags == null
-        ? const []
+        ? const <String>[]
         : List<String>.unmodifiable(_values_tags.map((raw_tags) => raw_tags));
     return _DemoDetailPageRouteArguments(
       id: _value_id,
@@ -165,7 +165,7 @@ final class CCGeneratedDemoDetailPageRouteFactory {
   CCRouteIntent<String> call({
     required int id,
     String title = "类型安全详情",
-    List<String> tags = const [],
+    List<String> tags = const <String>[],
   }) => _DemoDetailPageRoute.intent(id: id, title: title, tags: tags);
 }
 

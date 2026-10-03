@@ -175,4 +175,8 @@ Demo Analyzer pin、推送提交或改变缓存策略。
   改动文件 analyze、缓存/无缓存检查通过。生成器代码变化由正式生成更新 Portable State。
 - G01：已修复生成回调 receiver、SPI 与类型导入前缀的名称遮蔽。新增用例实际编译并执行
   同步、异步、同名框架符号及同名泛型的方法转发；修复前编译失败，修复后通过。
-- G02/G03/G04/A01：待修复。
+- G02：已修复 Route/Proxy 集合常量类型丢失与默认值专属类型漏导入。Object 下空 Set、
+  List、Map、嵌套 nullable 枚举集合与 dynamic 空列表均覆盖；不可公开导入的私有默认类型
+  在生成期明确拒绝。Route/Service 原套件及新边界共 122 项通过，Workspace analyze、
+  缓存/无缓存检查通过。
+- G03/G04/A01：待修复。

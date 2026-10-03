@@ -45,6 +45,8 @@ final class _StandaloneRouteImportPlan {
       _collectType(route.resultType, route.page, uris);
       for (final parameter in route.parameters) {
         _collectType(parameter.element.type, parameter.element, uris);
+        final value = parameter.element.computeConstantValue();
+        if (value != null) _collectConstant(value, parameter.element, uris);
         if (parameter.queryCodecType case final codec?) {
           _collectType(codec, parameter.element, uris);
         }
@@ -94,6 +96,7 @@ final class _StandaloneRouteImportPlan {
 
   /// Renders one supported analyzer type using stable import prefixes.
   String typeSource(DartType type, Element owner) {
+    if (type is DynamicType) return 'dynamic';
     if (type is VoidType) return 'void';
     if (type is NeverType) return 'Never${_nullability(type)}';
     if (type is! InterfaceType) {
@@ -118,7 +121,13 @@ final class _StandaloneRouteImportPlan {
   }
 
   /// Collects one public type and every nested generic argument.
-  void _collectType(DartType type, Element owner, Set<Uri> imports) {
+  void _collectType(
+    DartType type,
+    Element owner,
+    Set<Uri> imports, {
+    bool constant = false,
+  }) {
+    if (constant && type is DynamicType) return;
     if (type is VoidType || type is NeverType) return;
     if (type is! InterfaceType) {
       _fail(
@@ -140,7 +149,7 @@ final class _StandaloneRouteImportPlan {
     final definitionUri = element.library.uri;
     if (definitionUri.toString() == 'dart:core') {
       for (final argument in arguments) {
-        _collectType(argument, owner, imports);
+        _collectType(argument, owner, imports, constant: constant);
       }
       return;
     }
@@ -159,8 +168,31 @@ final class _StandaloneRouteImportPlan {
       imports.add(importUri);
     }
     for (final argument in arguments) {
-      _collectType(argument, owner, imports);
+      _collectType(argument, owner, imports, constant: constant);
     }
+  }
+
+  /// Includes public types reachable only through a constructor default.
+  void _collectConstant(DartObject value, Element owner, Set<Uri> imports) {
+    if (value.isNull) return;
+    final type = value.type;
+    if (type != null) _collectType(type, owner, imports, constant: true);
+    for (final item
+        in value.toListValue() ?? value.toSetValue() ?? <DartObject>[]) {
+      _collectConstant(item, owner, imports);
+    }
+    for (final entry
+        in value.toMapValue()?.entries ??
+            <MapEntry<DartObject?, DartObject?>>[]) {
+      if (entry.key != null) _collectConstant(entry.key!, owner, imports);
+      if (entry.value != null) _collectConstant(entry.value!, owner, imports);
+    }
+  }
+
+  /// Retains Set/List/Map identity and reified types without contextual typing.
+  String _constantTypeArguments(DartObject value, Element owner) {
+    final type = value.type as InterfaceType;
+    return '<${type.typeArguments.map((t) => typeSource(t, owner)).join(', ')}>';
   }
 
   /// Finds the source import that exposes an external declaration.
@@ -199,13 +231,13 @@ final class _StandaloneRouteImportPlan {
       return '$number';
     }
     if (value.toListValue() case final values?) {
-      return 'const [${values.map((item) => _renderConstant(item, owner)).join(', ')}]';
+      return 'const ${_constantTypeArguments(value, owner)}[${values.map((item) => _renderConstant(item, owner)).join(', ')}]';
     }
     if (value.toSetValue() case final values?) {
-      return 'const {${values.map((item) => _renderConstant(item, owner)).join(', ')}}';
+      return 'const ${_constantTypeArguments(value, owner)}{${values.map((item) => _renderConstant(item, owner)).join(', ')}}';
     }
     if (value.toMapValue() case final values?) {
-      return 'const {${values.entries.map((entry) => '${_renderConstant(entry.key!, owner)}: ${_renderConstant(entry.value!, owner)}').join(', ')}}';
+      return 'const ${_constantTypeArguments(value, owner)}{${values.entries.map((entry) => '${_renderConstant(entry.key!, owner)}: ${_renderConstant(entry.value!, owner)}').join(', ')}}';
     }
     final type = value.type;
     if (type is InterfaceType && type.element is EnumElement) {

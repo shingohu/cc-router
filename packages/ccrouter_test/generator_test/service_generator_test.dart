@@ -343,6 +343,94 @@ abstract interface class TextService {
     },
   );
 
+  test('proxy preserves wide collection default types', () async {
+    const signature = '''
+  List<Object> inspect({
+    Object set = const <int>{},
+    Object list = const <String>[],
+    Object map = const <String, int>{},
+    Object nested = const <String, List<Mode?>>{'m': <Mode?>[Mode.a, null]},
+    Object dynamicList = const [],
+    Object mode = Mode.a,
+  });
+''';
+    const contract =
+        'enum Mode { a }\nabstract interface class AuditService { $signature }';
+    final output = await generateProxy(
+      '''
+const component = CCComponent(
+  id: CCComponentId('consumer'), version: '1.0.0',
+  dependencies: [CCComponentId('owner')],
+  serviceDependencies: [CCServiceDependency<AuditService>()],
+);
+''',
+      imports: "import 'package:ccrouter_test/audit_contract.dart';",
+      additionalAssets: {
+        'ccrouter_test|lib/audit_contract.dart':
+            '''
+import 'package:ccrouter/ccrouter.dart';
+enum Mode { a }
+@CCServiceContract(componentId: CCComponentId('owner'), id: 'owner.audit')
+abstract interface class AuditService { $signature }
+''',
+      },
+    );
+    final result = await runGeneratedProxyProgram(
+      output: output,
+      contract: contract,
+      program:
+          '''
+import 'proxy.dart';
+import 'contract.dart';
+import 'runtime.dart';
+class Implementation implements AuditService {
+  ${signature.replaceFirst(';', ' => [set, list, map, nested, dynamicList, mode];')}
+}
+void main() {
+  currentService = Implementation();
+  final values = ConsumerServices.audit.inspect();
+  if (values[0] is! Set<int> || values[1] is! List<String> ||
+      values[2] is! Map<String, int> ||
+      values[3] is! Map<String, List<Mode?>> ||
+      values[4] is! List<dynamic> || values[5] != Mode.a) {
+    throw StateError('Defaults changed: \$values');
+  }
+  final nested = values[3] as Map<String, List<Mode?>>;
+  if (nested['m']![0] != Mode.a || nested['m']![1] != null) {
+    throw StateError('Nested values changed');
+  }
+}
+''',
+    );
+    expect(result.exitCode, 0, reason: '${result.stdout}\n${result.stderr}');
+  });
+
+  test('proxy rejects inaccessible default-only enum types', () async {
+    final logs = await generateProxy(
+      '''
+const component = CCComponent(
+  id: CCComponentId('consumer'), version: '1.0.0',
+  dependencies: [CCComponentId('owner')],
+  serviceDependencies: [CCServiceDependency<AuditService>()],
+);
+''',
+      fails: true,
+      imports: "import 'package:ccrouter_test/audit_contract.dart';",
+      additionalAssets: {
+        'ccrouter_test|lib/audit_contract.dart': '''
+import 'package:ccrouter/ccrouter.dart';
+enum _Mode { a }
+@CCServiceContract(componentId: CCComponentId('owner'), id: 'owner.audit')
+abstract interface class AuditService { void inspect({Object value = const <_Mode>[]}); }
+''',
+      },
+    );
+    expect(
+      logs,
+      contains('must be available through an explicit public package import'),
+    );
+  });
+
   test('proxy forwards colliding parameter and generic names', () async {
     const contract = '''
 abstract interface class AuditService {

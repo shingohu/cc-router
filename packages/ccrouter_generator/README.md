@@ -93,6 +93,8 @@ Contract、Key、method ID 和 caller component ID。无消费声明时不生成
 实例方法/getter、同步或 Future 返回、可公开导入的 Pure Dart 类型，以及非泛型 Contract 上的
 受限方法级泛型；泛型 Contract、Stream、callback、继承等不支持项在生成期失败。
 Proxy 的内部回调变量和导入前缀自动避开业务参数、方法和泛型名称，不要求业务使用保留名称列表。
+Route/Proxy 默认集合保持常量的实际泛型类型，不能因参数声明为 Object 而丢失 Set/List/Map
+语义。仅在默认值出现的枚举/集合类型同样参与导入与可见性校验。
 
 `dependencies`、`serviceDependencies` 和 `commandDependencies` 目前必须显式维护。生成器会从
 Contract 元数据解析 Owner 并校验三者一致，不会因为发现某个 Contracts Package 或 Pub 依赖而

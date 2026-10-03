@@ -335,6 +335,9 @@ through a public Contract.
 
 Business parameter and generic names such as `service` remain valid: generated
 callback receivers and import prefixes are allocated outside those names.
+Route and Proxy collection defaults retain their actual generic types, including
+empty Sets behind an Object parameter. Types appearing only in defaults must
+also be publicly importable; private enums are rejected during generation.
 
 Export the interface and its public value types from the business contracts barrel. Bind a simple
 implementation by directly implementing exactly one contract:

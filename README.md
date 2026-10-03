@@ -903,6 +903,8 @@ initializer；`Future<T>` 方法会等待 readiness。生成器支持普通实�
 FutureOr、callback、Flutter 类型、Contract 继承和未从公共 barrel 暴露的 `src` 类型会在生成期
 失败。生成器会避开业务参数和泛型名称，为内部回调和导入分配不冲突的名字；业务无需回避
 `service` 等名称。组件内部 Service 仍直接使用 `CCRouter.service<T>()`，不需要声明或生成 Proxy。
+Route 与 Service Proxy 的集合默认值保留实际 List/Set/Map 类型及泛型参数，包括 `Object`
+参数下的空集合和嵌套集合；默认值涉及的枚举和类型也必须能被生成库公开导入。
 
 Route、Service、Command、Event、InitTask Contract 都有独立的 Contract SemVer。生成器会同时
 写入不包含源码路径和实现类名的 `shapeFingerprint`，消费者 metadata 和 Host Bundle 会携带

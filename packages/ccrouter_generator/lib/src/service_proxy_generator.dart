@@ -331,6 +331,8 @@ final class _ServiceProxyImportPlan {
         for (final parameter in member.parameters) {
           reservedPrefixes.add(parameter.displayName);
           _collectType(parameter.type, parameter, uris);
+          final value = parameter.computeConstantValue();
+          if (value != null) _collectConstant(value, parameter, uris);
         }
       }
     }
@@ -370,6 +372,7 @@ final class _ServiceProxyImportPlan {
 
   /// Renders one validated method type in the generated namespace.
   String typeSource(DartType type, Element owner) {
+    if (type is DynamicType) return 'dynamic';
     if (type is TypeParameterType) {
       return '${type.element.displayName}${_serviceNullability(type)}';
     }
@@ -416,7 +419,13 @@ final class _ServiceProxyImportPlan {
   }
 
   /// Adds all public declarations needed to render [type].
-  void _collectType(DartType type, Element owner, Set<Uri> imports) {
+  void _collectType(
+    DartType type,
+    Element owner,
+    Set<Uri> imports, {
+    bool constant = false,
+  }) {
+    if (constant && type is DynamicType) return;
     if (type is TypeParameterType) return;
     final alias = type.alias;
     if (alias != null) {
@@ -427,14 +436,14 @@ final class _ServiceProxyImportPlan {
       _elementImports[alias.element] = importUri;
       if (!_serviceFrameworkOrCoreUri(importUri)) imports.add(importUri);
       for (final argument in alias.typeArguments) {
-        _collectType(argument, owner, imports);
+        _collectType(argument, owner, imports, constant: constant);
       }
       return;
     }
     if (type is VoidType || type is NeverType) return;
     if (type is RecordType) {
       for (final field in [...type.positionalFields, ...type.namedFields]) {
-        _collectType(field.type, owner, imports);
+        _collectType(field.type, owner, imports, constant: constant);
       }
       return;
     }
@@ -453,8 +462,31 @@ final class _ServiceProxyImportPlan {
       if (!_serviceFrameworkOrCoreUri(importUri)) imports.add(importUri);
     }
     for (final argument in type.typeArguments) {
-      _collectType(argument, owner, imports);
+      _collectType(argument, owner, imports, constant: constant);
     }
+  }
+
+  /// Includes types used only in defaults, including nested collection values.
+  void _collectConstant(DartObject value, Element owner, Set<Uri> imports) {
+    if (value.isNull) return;
+    final type = value.type;
+    if (type != null) _collectType(type, owner, imports, constant: true);
+    for (final item
+        in value.toListValue() ?? value.toSetValue() ?? <DartObject>[]) {
+      _collectConstant(item, owner, imports);
+    }
+    for (final entry
+        in value.toMapValue()?.entries ??
+            <MapEntry<DartObject?, DartObject?>>[]) {
+      if (entry.key != null) _collectConstant(entry.key!, owner, imports);
+      if (entry.value != null) _collectConstant(entry.value!, owner, imports);
+    }
+  }
+
+  /// Preserves reified constant type arguments even with an Object parameter.
+  String constantTypeArguments(DartObject value, Element owner) {
+    final type = value.type as InterfaceType;
+    return '<${type.typeArguments.map((t) => typeSource(t, owner)).join(', ')}>';
   }
 
   /// Finds a public component-source import that exposes [element].
@@ -610,13 +642,13 @@ String _renderServiceConstant(
     return '${imports.typeSource(type, owner)}.${field.displayName}';
   }
   if (value.toListValue() case final values?) {
-    return 'const [${values.map((item) => _renderServiceConstant(item, owner, imports)).join(', ')}]';
+    return 'const ${imports.constantTypeArguments(value, owner)}[${values.map((item) => _renderServiceConstant(item, owner, imports)).join(', ')}]';
   }
   if (value.toSetValue() case final values?) {
-    return 'const {${values.map((item) => _renderServiceConstant(item, owner, imports)).join(', ')}}';
+    return 'const ${imports.constantTypeArguments(value, owner)}{${values.map((item) => _renderServiceConstant(item, owner, imports)).join(', ')}}';
   }
   if (value.toMapValue() case final values?) {
-    return 'const {${values.entries.map((entry) => '${_renderServiceConstant(entry.key!, owner, imports)}: ${_renderServiceConstant(entry.value!, owner, imports)}').join(', ')}}';
+    return 'const ${imports.constantTypeArguments(value, owner)}{${values.entries.map((entry) => '${_renderServiceConstant(entry.key!, owner, imports)}: ${_renderServiceConstant(entry.value!, owner, imports)}').join(', ')}}';
   }
   _failService(
     'Service Proxy default constants support null, primitives, enums, Lists, '
