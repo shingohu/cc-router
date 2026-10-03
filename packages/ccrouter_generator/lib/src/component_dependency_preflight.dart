@@ -15,7 +15,7 @@ final class CCComponentDependencyPreflightSource {
   /// Resolved Pub Package owning the source.
   final String packageName;
 
-  /// Absolute source path used only for actionable diagnostics.
+  /// Absolute source path or CLI `package:name/lib/...` diagnostic path.
   final String path;
 
   /// Exact authored source contents inspected by the preflight.
@@ -400,10 +400,25 @@ final class _ParsedSource {
   /// Canonical library identity for absolute and CLI diagnostic source paths.
   String get libraryUri {
     final normalized = source.path.replaceAll('\\', '/');
-    final marker = normalized.lastIndexOf('/lib/');
-    if (marker >= 0) {
-      return 'package:${source.packageName}/${normalized.substring(marker + 5)}';
+    final prefix = 'package:${source.packageName}/';
+    if (normalized.startsWith(prefix)) {
+      var relative = normalized.substring(prefix.length);
+      if (relative.startsWith('lib/')) relative = relative.substring(4);
+      return Uri(
+        scheme: 'package',
+        path: '${source.packageName}/$relative',
+      ).normalizePath().toString();
     }
+    final markers = RegExp('/lib/').allMatches(normalized).toList();
+    if (markers.length == 1) {
+      return Uri(
+        scheme: 'package',
+        path:
+            '${source.packageName}/${normalized.substring(markers.single.end)}',
+      ).normalizePath().toString();
+    }
+    // Without a Package root, multiple lib segments are ambiguous. Keep the
+    // absolute identity distinct and defer imported lookup to Builder.
     return normalized;
   }
 

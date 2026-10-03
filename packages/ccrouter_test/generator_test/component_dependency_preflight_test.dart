@@ -9,6 +9,50 @@ import 'package:test/test.dart';
 
 void main() {
   group('component dependency preflight', () {
+    test('nested lib directories never alias another Library', () {
+      for (final nestedPath in [
+        'package:contracts/lib/src/lib/api.dart',
+        '/workspace/contracts/lib/src/lib/api.dart',
+      ]) {
+        for (final includeDependency in [false, true]) {
+          final issues = CCComponentDependencyPreflight.inspect([
+            CCComponentDependencyPreflightSource(
+              packageName: 'contracts',
+              path: nestedPath,
+              writable: false,
+              contents: '''
+@CCServiceContract(componentId: CCComponentId('hidden'), id: 'hidden.service')
+abstract interface class SharedService {}
+''',
+            ),
+            CCComponentDependencyPreflightSource(
+              packageName: 'contracts',
+              path: 'package:contracts/lib/api.dart',
+              writable: false,
+              contents: 'class SharedService {}',
+            ),
+            _source(
+              package: 'consumer',
+              file: 'component.dart',
+              writable: true,
+              contents:
+                  '''
+import 'package:contracts/${includeDependency ? 'src/lib/' : ''}api.dart';
+const component = CCComponent(id: CCComponentId('consumer'), dependencies: [],
+  serviceDependencies: [CCServiceDependency<SharedService>()]);
+''',
+            ),
+          ]);
+          expect(
+            issues.length,
+            includeDependency && nestedPath.startsWith('package:') ? 1 : 0,
+          );
+          if (issues.isNotEmpty)
+            expect(issues.single.ownerComponentId, 'hidden');
+        }
+      }
+    });
+
     test('does not use unrelated same-Package owner constants', () {
       final issues = CCComponentDependencyPreflight.inspect([
         _source(
