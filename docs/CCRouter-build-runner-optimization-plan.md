@@ -2,11 +2,11 @@
 
 > 文档状态：既有实施阶段完成。P0、P1、P2 Host 纯删除路径、P3 Portable reuse、P4 冷成本
 > 评估与 P5 多组件个人/团队拓扑回归已完成；更宽的 Host-only 跳过 Builder 未获准，保留为
-> 指标触发项。P6 已完成只读归因与混合对照采样，见第 12 节。
+> 指标触发项。P6 已完成只读归因、混合对照采样和 Builder 读取范围核对，见第 12 节。
 > 后续审查发现的 F03/F04 缓存与分发校验缺陷已修复，验证见全框架审查第 9 节；
 > P6 的语义摘要与依赖失效粒度优化仍未实施。
 >
-> 日期：2026-09-30；P1–P6 实现与评估更新：2026-10-03。
+> 日期：2026-09-30；P1–P6 实现与评估更新：2026-10-04。
 >
 > 核心约束：任何生成器性能优化都不能以漏生成、接受陈旧生成物、降低校验强度或改变错误
 > 语义为代价。无法证明等价时必须回退完整 `build_runner + validate + aggregate`。
@@ -536,7 +536,7 @@ P2/P3 已满足其适用范围内的门禁并默认启用；所有无法证明�
 
 ## 12. P6：生成状态摘要与依赖失效粒度优化
 
-记录日期：2026-10-03。只读失效归因与对照样本已实现；依赖传播收窄、分层语义摘要尚未实现。
+记录日期：2026-10-03；2026-10-04 补充读取范围证据。只读失效归因与对照样本已实现；依赖传播收窄、分层语义摘要尚未实现。
 摘要算法、缓存协议和跳过 Builder 的条件未改。本阶段沿用本计划，不另建团队缓存协议，不增加业务公开 API。
 
 ### 12.1 问题与目标
@@ -562,10 +562,10 @@ Workspace/Path 依赖源码纳入依赖闭包。普通注释、格式或公共�
   后续 G01–G05/A01 复审缺陷亦已逐项修复，见
   [复审修复记录](CCRouter-generator-analyzer-audit-2026-10-03.md#5-修复进度)。
   Portable State 的生成期间输入变更边界仍需确定性验证，不能作为已证明安全的复用前提。
-- [~] **P6-1：收窄依赖失效传播。** 已完成前置的只读输入/产物归因与混合样本；尚未收窄任何传播。
-  下一步明确消费者生成时实际读取的类型、常量、注解、导出和
-  解析环境，评估以可证明的生成依赖信息替代整个公共依赖包的无差别传播。分开处理工具链
-  依赖和业务解析依赖，不能假定二者具有相同失效规则。
+- [~] **P6-1：收窄依赖失效传播。** 已完成前置的只读输入/产物归因、混合样本，以及五类能力
+  15 个 Builder 入口的源码核对与读取反例（12.7）；尚未收窄任何传播，也未建立完备的符号级证明。
+  下一步先验证生成期间输入一致性，再评估只观察、不影响 skip 决策的文件闭包原型。
+  工具链、Builder 解析和聚合校验分别建模，不共享一个被过度收窄的依赖身份。
 - [ ] **P6-2：分层处理源码、文档和定位变化。** 普通注释在不影响文档/定位时可保持生成
   状态不变；文档或行列变化应更新对应 metadata/Catalog，不迫使无关代码重新生成。
   只有能够用确定性规则复现完整 Builder 输出时，才允许局部更新路径。
@@ -615,8 +615,10 @@ P6 不放宽既有“真实项目 Host 聚合占比持续超过 20% 才继续做
 | Git/Pub/Path、嵌套依赖、独立 clone 和分支切换 | 同一内容证明可复算；合法分发不误拒，实际变化不漏检 |
 
 每个场景都必须与完整参考路径比较所有受管文件的逐字节内容、状态、错误码、旧产物删除
-和失败恢复行为。`--no-cache --check` 继续强制执行完整 Builder；同一份漏判规则不能同时
-决定优化路径与参考路径是否跳过。新状态协议只允许有计划的格式变化，不允许优化开关
+和失败恢复行为。`--no-cache --check` 强制进入 build_runner 和完整 metadata 解析，绕过
+CCRouter 的复用决策；它不清理 build_runner 自身的 Asset Graph，不能称为逐个 Builder 冷重建。
+传播优化还需在隔离夹具中增加无 Asset Graph 的冷构建对照，防止两侧共享相同遗漏。
+同一份漏判规则不能同时决定优化路径与参考路径是否跳过。新状态协议只允许有计划的格式变化，不允许优化开关
 导致同一输入得到不同生成物。
 
 同机记录 Demo 与五类能力混合的 3x/5x/10x 样本：冷/热 P50/P95、语义分类新增耗时、
@@ -677,5 +679,115 @@ Event、InitTask；再加入共享的普通 Dart 依赖，提供被消费的默�
 fvm dart run packages/ccrouter_test/benchmark/generator_component_topology.dart --invalidation 1 3 5 10
 ```
 
-场景名称来自受控测试动作，不是词法/AST 自动判定。尚未建立语义读取集合，不允许据此忽略
-注释、实现或公共依赖变化。规模采样及测量边界见 [性能报告](CCRouter-generator-performance-report.md)。
+场景名称来自受控测试动作，不是词法/AST 自动判定。12.7 已补读取范围核对和反例，仍未建立可用于
+跳过 Builder 的完备语义证明，不允许据此忽略注释、实现或公共依赖变化。
+规模采样及测量边界见 [性能报告](CCRouter-generator-performance-report.md)。
+
+### 12.7 五类 Builder 读取范围证据与 P6 决策（2026-10-04）
+
+结论：可以继续评估保守的**文件闭包**；目前不能按“公开签名不变”“没有本地注解”或
+“没有生成物变化”收窄传播。源码核对和受控反例证明了必须保留的读取边界，不是对所有
+Dart 程序的完备语义证明。本轮仅新增测试和文档，没有修改生产 Builder、缓存协议或 Build Plan。
+
+#### 入口与实际读取方式
+
+以 [build.yaml](../packages/ccrouter_generator/build.yaml) 和
+[Builder 工厂](../packages/ccrouter_generator/lib/builder.dart) 为准，五类能力并非只有五个 Builder：
+Route 4 个、Service 4 个、Command/Event/InitTask 各 2 个，加上共享 Component metadata，合计 **15 个**。
+
+9 个代码 Builder 使用 `source_gen.LibraryBuilder`，先 `resolver.isLibrary`，再
+`resolver.libraryFor`；6 个 metadata Builder 直接调用相同 Resolver。当前这些实现没有
+额外显式 `findAssets` 或 `readAsString` 扫描。这**不意味着只读当前文件**：LibraryElement、
+ConstantReader、类型系统和 import namespace 会读取传递依赖中的声明、常量和源码信息。
+
+当前锁定 `build_runner 2.15.1`、`build_test 3.5.16`、`source_gen 4.2.4`。上游
+`BuildStepResolver.libraryFor → AnalysisDriverModel.updateDriver` 用 `transitive: true`
+记录 Resolver entrypoint 并加载 Library cycle graph。`build_test.resolverEntrypointsTrackedFor`
+记录的是入口，不是“只依赖这个文件”；`assetsRead` 是本次构建的物理读取，不是最小符号读取集。
+`AssetDepsLoader` 对 `UriBasedDirective` 的主 URI 建边，不能把这个运行记录直接当作覆盖所有
+条件分支、目标平台和缺失文件的长期可移植证明。SDK 的 `dart:` 依赖还必须由解析环境身份覆盖。
+
+| 能力 / 入口 | 生成与校验实际消费的信息 | 主要实现 |
+| --- | --- | --- |
+| Route / routes、route_bindings、route_contracts、route_metadata | 注解及其常量链、Pattern/primary/presentation、构造参数类型/空值性/默认值、enum、集合的实际常量类型、公开导入 namespace；Contract-first 定义与实现参数兼容；Codec 构造器、父接口与类型参数；参数 DartDoc 和声明行列 | `route_model.dart`、`route_standalone_generator.dart`、`route_contract_generator.dart`、`route_binding_generator.dart`、`route_metadata_builder.dart` |
+| Service / services、service_contracts、service_proxies、service_metadata | 实现类及构造器、直接 Contract 与继承关系、Token/Key/Scope/creationPolicy；Contract 注解、方法/属性、typedef、泛型 bound、递归类型、默认值原文及求值后的值/类型；消费者 Component、依赖、alias、公开 namespace 和源码位置 | `service_generator.dart`、`service_proxy_generator.dart` |
+| Command / commands、command_metadata | Contract 注解/Owner/alias、`CCCommand<R>` 父接口、payload 字段、Handler 签名和结果类型；metadata 额外解析所有 Library fragment 的**函数体**，检查 `CCRouter.command` 的方法身份及参数静态类型上的注解；Contract/Handler 源码位置 | `command_generator.dart` |
+| Event / events、event_metadata | Event Contract/Owner、payload 字段、Subscriber 参数及返回类型、Future/FutureOr 的解析类型；metadata 同样遍历**函数体**，检查 `CCRouter.event` 绕过生成 Client；源码位置 | `event_generator.dart` |
+| InitTask / init_tasks、init_task_metadata | Contract 常量、ID/Owner/version/description、依赖 Owner/DAG、Gate、timeout、failurePolicy、Handler 签名；metadata 检查 `contract`/`dependsOn` 是否采用允许的顶层常量引用语法，不能只比较求值结果；源码位置 | `init_task_generator.dart` |
+| 共享 / component_metadata | 顶层 `CCComponent` 常量、组件依赖及版本、Service/Command 消费声明、对应 Contract 的身份和类型、公开导入边界、Client 名称及源码位置 | `component_metadata_builder.dart`、`route_model.dart` |
+
+注解类的构造默认值也属于常量求值链；SDK、语言版本、Package URI 映射、Builder 配置、
+生成器/格式化器及实际执行工具实现均属于解析或执行环境。不能只保护业务源码而忽略这些输入。
+上述表是读取职责清单，**不是可直接写入摘要的字段白名单**。
+
+#### 可执行证据
+
+[builder_dependency_scope_test.dart](../packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart)
+对真实生产工厂做冷构建。依赖 Package 只提供内存文件、不运行被测工厂；只对消费者运行
+目标 Builder，断言它的 Resolver entrypoint 和实际读取的跨包 barrel/类型/常量文件。
+读取快照在断言读取产物前采集，成功与失败均检查 BuildResult，不能用“空产物”掩盖构建失败。
+
+复现命令（从 Workspace 根执行；测试依赖已经解析）：
+
+```sh
+fvm dart test --concurrency=1 packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart
+fvm dart run packages/ccrouter_test/benchmark/generator_component_topology.dart --invalidation 1
+```
+
+验证结果：新增 **33 项**读取范围测试与既有五类 Builder 专项合计 **191 项通过**；测试文件
+Analyzer 无问题。Demo 缓存与无缓存检查均通过（6 组件、33 Route、11 generated Packages），
+生成物无差异；文档链接检查通过。此次没有重新运行整个 Generator/Runtime/Analyzer 插件套件。
+
+覆盖的边界：
+
+- 15 个入口分别验证跨包常量变化及非法常量诊断。Route Binding 对合法 ID 改名可保持字节
+  不变，但非法 ID 仍必须失败：**生成字节依赖与校验依赖不相等**。
+- 五类 metadata 分别验证尾部普通注释不改变产物、声明前加行改变源码位置；Route DartDoc
+  单独验证 metadata 改变、可执行 Route 文件不变。
+- Route、Route Contract、Service Proxy 会嵌入跨包默认常量；Service Proxy 读取泛型 bound，
+  typedef 指向不支持的函数类型时拒绝；Route Codec 的父接口类型参数变化也会触发校验。
+- 没有本地注解、原本不生成 metadata 的普通函数，新增 raw Command/Event 调用仍须拒绝。
+  消费者源码完全不变、只在跨包参数类型上新增 Command 注解，同样改变诊断。
+- InitTask 使用等值的 inline Contract 替代顶层引用会失败；barrel 切换导出目标、`part`
+  中声明位置变化均被观察；原本没有输出的普通输入新增 Route 后必须产生输出。
+
+原有 Route/Service 测试继续覆盖默认值专属 enum、集合实际类型、公开导出路径、Contract-first
+参数/Codec 兼容、受限泛型等组合。本轮不把历史测试当作条件导入全平台、任意语法、团队
+clone 或并发发布状态的完整证明。所有输入的新增/删除、此前不存在的 URI、`show/hide`、
+条件分支及工具升级仍是未来闭包原型的专门验收项，不因“上次未读取”就排除。
+
+混合端到端样本复用第 12.6 节 `--invalidation 1`：6 个组件，30 个 Route，以及各 6 个
+Service/Command/Event/InitTask。七种变更全部与 `--no-cache --check` 比较，**每组 97 份
+受管文件的路径及字节一致**。共享默认常量变更更新 6 份 Dart，而 metadata 不变；共享实现
+及等价 barrel 重排只更新 7 份 Portable State，进一步证明既有噪音真实存在，metadata 不变
+不能作为复用证明。计时与本轮测试并行，不作为新的 P95、优化收益或硬件对比。
+这些端到端参考检查保留 build_runner 自身缓存；本节新测试以独立内存构建补充 Builder 读取
+反例，但尚未完成“七种变更各自全新冷工作区”的端到端矩阵，不声称排除上游增量图的所有遗漏。
+
+#### 候选取舍与后续顺序
+
+| 方案 | 准确性 / 收益 | 决策 |
+| --- | --- | --- |
+| 保留完整 Package 内容传播 | 已有保守路径；公共依赖变动可能导致无关状态更新 | 继续作为当前默认及参考路径 |
+| 以文件闭包做候选传播 | 包含全部 eligible 消费者输入，以及 import/export/part 的保守传递闭包；排除未触达文件有潜在收益 | 下一步仅可做只读 shadow 原型，不接管 skip |
+| 只哈希公开签名、剥离注释/函数体、或仅比较 metadata | 已有反例证明会漏默认值、诊断、DartDoc 或定位 | 不采用 |
+| 生成模型与诊断共享符号级读取证明 | 才可能处理“同文件中无关实现变化”；成本高，必须避免再复制一套语义规则 | 暂缓，先验证文件闭包净收益 |
+
+文件闭包的上限必须明确：如果 barrel 导出了整个包，或实现和被消费常量位于同一文件，
+保守闭包仍会传播。本次共享实现样本就是后者；第一步不承诺解决这一类状态噪音。
+
+推荐后续按以下顺序实施，当前未执行：
+
+1. 先通过阶段屏障确定性测试，验证“Builder 读取输入”与“Portable State 发布输入”是同一
+   版本；发现不一致时修复并回归。该并发风险仍是待验证项，不能按已修复处理。
+2. 只读计算文件闭包及候选失效数，保持实际决策不变。保留全部自身输入的发现和完整 SHA-256；
+   纳入所有条件分支、缺失 URI 身份、Package/SDK/语言/配置与工具身份。不支持或无法解析时
+   标记 fallback，不把空集合视作无依赖。不得让副作用式物理读日志决定闭包。
+3. 将 Builder 证明与聚合器证明分离。公开 exposure、组件 DAG、索引、Host Catalog 和校验仍
+   读取它们自己的完整输入；不得以消费者 Builder 没变为由跳过依赖包自身生成/校验或接受
+   陈旧 Portable State。输入图变动、删除产物及只读外部分发继续走既有严格门禁。
+4. 覆盖新增/删除/重命名、barrel/part/条件分支、工具升级、并发保存及 Git/Pub/Path 的准确性
+   矩阵；候选决定必须独立于完整参考路径。再测 Demo、3x/5x/10x 的失效数、P50/P95、解析
+   开销、RSS 和团队 clone。证据不全或没有净收益，保留当前路径。
+5. 只有以上证明成立，才设计版本化可移植协议与可关闭的执行原型。P6-2 的代码/文档/位置
+   分层和 P6-3 默认开启仍未开始。不能把本节测试通过改写为“P6 收窄已完成”。
