@@ -37,11 +37,17 @@ Fix 时才会提交一个有界源码编辑。插件不可用时，项目仍可�
 
 基础语法规则继续处理单文件可确定信息；Handler、Component、Service 相关源文件按需复用
 Analysis Server 已有 Session 的 resolved unit，解析 `dart:async` 前缀、typedef、继承和常量值。
-不另建分析引擎，不缓存 resolved AST，不自行递归扫描 Workspace。解析失败或存在 Dart 错误时
-退回保守语法检查；未知类型/依赖值不武断报错，Service 规则不在该回退路径运行。
+不另建分析引擎，不缓存 resolved AST，不自行递归扫描 Workspace。无法取得当前 resolved unit
+时退回保守语法检查；其它表达式存在 Dart 错误时仍保留已证明的声明身份。未知类型/依赖值
+不武断报错，Service 规则不在纯语法回退路径运行。
 异步解析结果必须与当前 overlay 内容完全一致；源码已变化的诊断和 Quick Fix 请求直接丢弃。
 Event/InitTask 的 void-like 类型与 Generator 对齐，包括现有支持的 `Future<void>?`；这不扩大
 Service dispose Quick Fix 的签名范围。
+
+注解规则、生成物缺失提示与参数 Quick Fix 共享框架声明身份校验。优先核对 resolved
+annotation 的声明 Library；业务同名类不会触发 CCRouter 诊断。其它表达式的 Dart 错误
+不会抹掉已经证明的注解身份。无法解析时仅使用无本地遮蔽、无歧义的明确框架导入，
+否则等待语义解析或最终生成校验；不凭注解末端名称提供诊断或修改建议。
 
 Owner 索引从最近的
 `.dart_tool/package_config.json` 获取精确 Package 根，只读取各 Package 固定位置的

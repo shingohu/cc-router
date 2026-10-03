@@ -11,8 +11,9 @@
 - 正式发布是否具备条件只看[正式发布准备与门禁](CCRouter-release-readiness.md)，不从某份专项
   设计的完成勾选推断。
 - 2026-10-03 的[全框架审查](CCRouter-framework-audit-2026-10-03.md) 原 F01–F18 已修复；
-  后续[生成器与 Analyzer 复审](CCRouter-generator-analyzer-audit-2026-10-03.md) 新确认
-  6 项未修复问题。以下“已实现”表示能力存在，不表示所有组合边界已验证无误。
+  后续[生成器与 Analyzer 复审](CCRouter-generator-analyzer-audit-2026-10-03.md) 确认的
+  G01–G05/A01 六项问题也已逐项修复并独立提交，验证与剩余边界见该报告。
+  以下“已实现”表示能力存在，不表示所有组合边界已验证无误。
 
 ## 当前状态矩阵
 
