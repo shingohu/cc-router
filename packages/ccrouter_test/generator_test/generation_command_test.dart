@@ -4,6 +4,7 @@ library;
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:ccrouter_generator/src/package_workspace.dart';
 import 'package:path/path.dart' as path;
 import 'package:test/test.dart';
 
@@ -827,6 +828,195 @@ void probe() {
   );
 
   test(
+    'P1 build plan diagnoses Host-only changes without skipping Builder',
+    () async {
+      final before = await _readDemoGeneratedArtifacts();
+      final seeded = await _generateDemo(['--no-cache', '--profile']);
+      expect(seeded.exitCode, 0, reason: '${seeded.stderr}');
+      expect(
+        '${seeded.stdout}',
+        contains(
+          'build-plan suggested=runBuilder actual=runBuilder '
+          'reasons=no-cache-reference',
+        ),
+      );
+      final state = _demoBuildPlanState();
+      final stateContents = state.readAsStringSync();
+      expect(stateContents, isNot(contains(Directory.current.absolute.path)));
+      expect(stateContents, isNot(contains('rootUri')));
+
+      final probe = File(
+        path.join(
+          Directory.current.path,
+          'demo',
+          'lib',
+          '_ccrouter_build_plan_host_probe.dart',
+        ),
+      )..writeAsStringSync('const ccrouterBuildPlanHostProbe = true;\n');
+      try {
+        final result = await _generateDemo(['--check', '--profile']);
+        expect(result.exitCode, 0, reason: '${result.stderr}');
+        expect('${result.stdout}', contains('fast-path=miss'));
+        expect(
+          '${result.stdout}',
+          contains(
+            'build-plan suggested=aggregateOnly actual=runBuilder '
+            'reasons=non-builder-input-only',
+          ),
+        );
+        expect('${result.stdout}', contains('CCRouter profile build-targets='));
+        expect('${result.stdout}', contains('CCRouter profile build='));
+        expect(
+          '${result.stdout}',
+          contains('CCRouter generated artifacts are up to date.'),
+        );
+        expect(await _readDemoGeneratedArtifacts(), before);
+      } finally {
+        if (probe.existsSync()) probe.deleteSync();
+        final restored = await _generateDemo(const []);
+        expect(restored.exitCode, 0, reason: '${restored.stderr}');
+      }
+    },
+    timeout: const Timeout(Duration(minutes: 4)),
+  );
+
+  test(
+    'P1 build plan rejects changed source, unproven baseline, and bad state',
+    () async {
+      final seeded = await _generateDemo(['--no-cache']);
+      expect(seeded.exitCode, 0, reason: '${seeded.stderr}');
+      final component = File(
+        path.join(
+          Directory.current.path,
+          'demo',
+          'modules',
+          'payment',
+          'lib',
+          'src',
+          'demo_payment_component.dart',
+        ),
+      );
+      final originalComponent = component.readAsBytesSync();
+      try {
+        component.writeAsStringSync(
+          '${component.readAsStringSync()}\n// Build plan source probe.\n',
+          flush: true,
+        );
+        final changed = await _generateDemo(['--check', '--profile']);
+        expect(changed.exitCode, 0, reason: '${changed.stderr}');
+        expect(
+          '${changed.stdout}',
+          contains('suggested=runBuilder actual=runBuilder'),
+        );
+        expect(
+          '${changed.stdout}',
+          contains('authored-input-changed:demo_payment'),
+        );
+      } finally {
+        component.writeAsBytesSync(originalComponent, flush: true);
+      }
+
+      final restored = await _generateDemo(const []);
+      expect(restored.exitCode, 0, reason: '${restored.stderr}');
+      final state = _demoBuildPlanState();
+      final hostProbe = File(
+        path.join(
+          Directory.current.path,
+          'demo',
+          'lib',
+          '_ccrouter_invalid_plan_probe.dart',
+        ),
+      )..writeAsStringSync('const ccrouterInvalidPlanProbe = true;\n');
+      try {
+        final unprovenDocument =
+            (jsonDecode(state.readAsStringSync()) as Map)
+                .cast<String, Object?>()
+              ..remove('contentFingerprint');
+        final packageStates = (unprovenDocument['packages']! as Map)
+            .cast<String, Object?>();
+        final paymentState = (packageStates['demo_payment']! as Map)
+            .cast<String, Object?>();
+        paymentState['resolutionPortable'] = false;
+        unprovenDocument['contentFingerprint'] =
+            computeCCCanonicalJsonFingerprint(unprovenDocument);
+        state.writeAsStringSync(jsonEncode(unprovenDocument), flush: true);
+
+        final unproven = await _generateDemo(['--check', '--profile']);
+        expect(unproven.exitCode, 0, reason: '${unproven.stderr}');
+        expect(
+          '${unproven.stdout}',
+          contains('resolution-unproven:demo_payment'),
+        );
+
+        state.writeAsStringSync('{invalid planning state', flush: true);
+        hostProbe.writeAsStringSync(
+          'const ccrouterInvalidPlanProbe = false;\n',
+          flush: true,
+        );
+        final invalid = await _generateDemo(['--check', '--profile']);
+        expect(invalid.exitCode, 0, reason: '${invalid.stderr}');
+        expect(
+          '${invalid.stdout}',
+          contains(
+            'build-plan suggested=runBuilder actual=runBuilder '
+            'reasons=planning-state-invalid',
+          ),
+        );
+        expect(jsonDecode(state.readAsStringSync()), isA<Map>());
+      } finally {
+        if (hostProbe.existsSync()) hostProbe.deleteSync();
+        final converged = await _generateDemo(const []);
+        expect(converged.exitCode, 0, reason: '${converged.stderr}');
+      }
+    },
+    timeout: const Timeout(Duration(minutes: 5)),
+  );
+
+  test(
+    'P1 build plan identifies a Host dependency-closure change',
+    () async {
+      final seeded = await _generateDemo(['--no-cache']);
+      expect(seeded.exitCode, 0, reason: '${seeded.stderr}');
+      final graph = File(
+        path.join(Directory.current.path, '.dart_tool', 'package_graph.json'),
+      );
+      final originalGraph = graph.readAsBytesSync();
+      try {
+        final document = jsonDecode(graph.readAsStringSync()) as Map;
+        final packages = document['packages'] as List;
+        final host = packages.cast<Map>().singleWhere(
+          (package) => package['name'] == 'ccrouter_demo',
+        );
+        (host['dependencies'] as List).remove('demo_payment');
+        graph.writeAsStringSync(jsonEncode(document), flush: true);
+
+        final result = await _generateDemo(['--check', '--profile']);
+        expect(result.exitCode, 1);
+        expect(
+          '${result.stdout}',
+          contains(
+            'build-plan suggested=aggregateOnly actual=runBuilder '
+            'reasons=host-graph-changed',
+          ),
+        );
+        expect(
+          '${result.stdout}',
+          isNot(contains('build-targets=8 packages=')),
+        );
+        expect(
+          '${result.stderr}',
+          contains('CCRouter generated artifacts are stale'),
+        );
+      } finally {
+        graph.writeAsBytesSync(originalGraph, flush: true);
+        final restored = await _generateDemo(const []);
+        expect(restored.exitCode, 0, reason: '${restored.stderr}');
+      }
+    },
+    timeout: const Timeout(Duration(minutes: 4)),
+  );
+
+  test(
     'corrupted generation cache falls back to a full parse',
     () async {
       final cache = File(
@@ -940,4 +1130,26 @@ Future<Map<String, String>> _readDemoGeneratedArtifacts() async {
     artifacts[relative] = await entity.readAsString();
   }
   return Map.unmodifiable(artifacts);
+}
+
+Future<ProcessResult> _generateDemo(List<String> arguments) => Process.run(
+  Platform.resolvedExecutable,
+  ['run', 'ccrouter_generator:ccrouter', 'generate', 'demo', ...arguments],
+  workingDirectory: Directory.current.path,
+);
+
+File _demoBuildPlanState() {
+  final directory = Directory(
+    path.join(
+      Directory.current.path,
+      '.dart_tool',
+      'ccrouter',
+      'v1',
+      'build_plans',
+    ),
+  );
+  return directory.listSync().whereType<File>().firstWhere((file) {
+    final decoded = jsonDecode(file.readAsStringSync());
+    return decoded is Map && decoded['hostPackage'] == 'ccrouter_demo';
+  });
 }

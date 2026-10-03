@@ -71,6 +71,12 @@ Use `--profile` only to investigate generation performance. On a miss, distingui
 reason (`cache-missing`, `metadata`, `output`, `dependency-index`, or
 `propagated-from`) before changing cache behavior. Never remove caches just to
 make an ordinary generation run pass.
+The P1 diagnostic Build Plan also reports `suggested`, `actual`, and bounded
+`reasons`. Treat `suggested=aggregateOnly` only as an observation: until P2 is
+implemented, every fast-path miss still has `actual=runBuilder`. Its local
+baseline under `.dart_tool/ccrouter/v1/build_plans/` is disposable and must not
+be committed or treated as Portable Team State. `--no-cache --profile` must
+report `no-cache-reference` and run the authoritative full path.
 
 ### Find
 

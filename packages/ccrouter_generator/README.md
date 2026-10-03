@@ -264,6 +264,19 @@ fast path miss 时，Profile 还会输出本轮 `build-targets`，以及逐 Pack
 用于决定 Package API、Bundle 和 capability catalog 是否可以复用；它不是 build_runner 的
 输入目标列表。依赖图变化后，即使 dirty Package 很少，Workspace Analyzer 仍可能占据主要耗时。
 
+Build Plan 的 P1 诊断阶段还会在 Profile 中输出：
+
+```text
+CCRouter profile build-plan suggested=aggregateOnly actual=runBuilder reasons=host-graph-changed
+```
+
+`suggested` 只表示分层 Tool/Package/Host 状态认为后续可评估的路径，`actual` 表示本轮实际路径。
+当前 P1 除 fast path hit 外始终执行 build_runner，不会因为 `suggested=aggregateOnly` 跳过 Builder。
+本地基线位于 `.dart_tool/ccrouter/v1/build_plans/`，不属于受管生成物，也不应提交；删除、损坏、
+Schema 不兼容或解析身份无法证明时都会 fail closed。`--no-cache --profile` 固定报告
+`suggested=runBuilder actual=runBuilder reasons=no-cache-reference`，用于逐字节参考回归。真正的
+Host-only aggregation 和可提交的跨 Clone Portable State 尚未实现。
+
 fast path 未命中时会先执行保守的 Component Dependency Preflight，只有直接 List、Contract
 类型和 Owner 都唯一可证明时才提前失败；它不替代 Builder。所有正式 `generate` 都会在
 build_runner 前保存 CCRouter 受管源码快照，Builder、聚合或最终校验失败时恢复原内容，避免

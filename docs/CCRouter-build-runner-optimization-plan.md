@@ -1,8 +1,8 @@
 # CCRouter build_runner 与团队构建正确性优先优化计划
 
-> 文档状态：Proposal，尚未实施。
+> 文档状态：部分实施。P0、P1 已完成；P2-P4 尚未实施。
 >
-> 日期：2026-09-30。
+> 日期：2026-09-30；P1 实现更新：2026-10-03。
 >
 > 核心约束：任何生成器性能优化都不能以漏生成、接受陈旧生成物、降低校验强度或改变错误
 > 语义为代价。无法证明等价时必须回退完整 `build_runner + validate + aggregate`。
@@ -211,7 +211,7 @@ Route、Contract、Bundle、Catalog 和源码位置。被删除 Package 不得�
 - 输出逐 Package `dirty-packages` 和 `host/cache/metadata/output/dependency/propagated` 原因；
 - 保留完整生成、无缓存参考路径和真实 Package 增删性能样本。
 
-### P1：只计算计划，不跳过 Builder
+### P1：只计算计划，不跳过 Builder，已完成
 
 实现 Tool/Package/Host 分层状态和 Build Plan，但所有 miss 仍运行 build_runner。Profile 同时输出
 “建议计划”和“实际完整路径”，完成以下验证：
@@ -222,6 +222,28 @@ Route、Contract、Bundle、Catalog 和源码位置。被删除 Package 不得�
 - 状态读写不改变现有生成结果和错误。
 
 P1 是必须阶段，不能直接进入跳过 Builder 的实现。
+
+当前实现行为：
+
+- 每次 fast path miss 计算 Tool、Package、Host 分层 Build Plan，并通过 `--profile` 同时输出
+  `suggested`、`actual` 和有界 `reasons`；
+- `suggested=aggregateOnly` 仅用于收集等价性样本，`actual` 仍固定为 `runBuilder`；
+- `--no-cache` 输出 `no-cache-reference` 并始终执行完整参考路径；
+- 本地基线写入 `.dart_tool/ccrouter/v1/build_plans/`，只在完整生成成功且输入未变化后更新；
+- 状态不保存绝对路径、用户名、`rootUri`、mtime 或 inode，缺失、损坏和读取/计算异常均
+  fail closed 到 `runBuilder`；
+- 当前状态与上一次基线都必须能证明 Tool/Package 解析身份；任一侧不可证明时不输出
+  `aggregateOnly` 建议；
+- 状态写入失败不改变本轮生成结果，仅使后续运行保守回退。
+
+该 `.dart_tool` 文件是可丢弃的单机诊断状态，不是 P3 计划中的可提交 Portable Team State。
+因此 P1 完成不代表 Host graph 已获得耗时优化，也不代表 Git/Pub/外部 Path 组件已经具备跨
+Clone 可信复用能力。
+
+2026-10-03 在当前 Demo（8 个 Builder Package、6 个组件、33 条路由）回归中，三次
+`--no-cache --check --profile` 总耗时为 1.592-1.668 秒，build_runner 为 0.745-0.783 秒；
+稳定 fast path 总耗时为 0.158-0.192 秒。相较 P1 前约 1.5 秒的完整路径基线，诊断状态捕获没有
+出现数量级退化，但该数据只用于 P1 观测，不能作为 P2 跳过 Builder 的收益声明。
 
 ### P2：仅开放删除和 Host-only graph 变化
 
@@ -404,8 +426,9 @@ Host 必须重新计算当前 Package 的生成相关源码、`pubspec.yaml`、`
 
 团队能力沿用 P1-P3，不单独发明新的版本线：
 
-- **P1 / Observe**：生成 Portable State 和计划报告，但所有可写 Package miss 仍运行 Builder；
-  对只读依赖的缺失或失配先输出诊断，收集团队真实分支切换、合并和新 clone 数据。
+- **P1 / Observe，已完成**：生成不含本机路径的本地 disposable planning state 和计划报告，
+  但所有 fast path miss 仍运行 Builder；当前状态位于 `.dart_tool`，不提交，也不用于 Clone 间
+  复用。严格外部 Artifact Integrity 与可提交 Portable State 仍由 P3 实现。
 - **P2 / Host graph**：只开放 Host 删除组件、增删可信只读组件等最窄的 `aggregateOnly`；通过
   内部 feature gate 可立即关闭。
 - **P3 / Portable reuse**：Clone A/Clone B 矩阵稳定后，才允许可信本地预生成组件跨机器复用，

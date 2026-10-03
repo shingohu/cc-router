@@ -14,11 +14,14 @@ import 'package:ccrouter_generator/src/package_workspace.dart';
 import 'package:crypto/crypto.dart';
 import 'package:dart_style/dart_style.dart';
 import 'package:path/path.dart' as path;
+import 'package:yaml/yaml.dart';
 
 import 'src/analyzer_bootstrap.dart';
 import 'src/route_find.dart' as route_find;
 import 'src/pub_hook.dart';
 import 'src/scaffold.dart';
+
+part 'src/build_plan.dart';
 
 final _dartFormatter = DartFormatter(
   languageVersion: DartFormatter.latestLanguageVersion,
@@ -150,6 +153,7 @@ Future<void> main(List<String> arguments) async {
   _GeneratedArtifactsSnapshot? snapshot;
   CCPackageWorkspace? fastPathWorkspace;
   String? verifiedInputFingerprint;
+  _GenerationBuildPlanInspection? buildPlan;
   try {
     if (buildContext != null) {
       generationLock = await _GenerationLock.acquire(buildContext.root);
@@ -165,6 +169,9 @@ Future<void> main(List<String> arguments) async {
       if (parsed.noCache) {
         verifiedInputFingerprint =
             await _GenerationStateFingerprint.captureInput(fastPathWorkspace);
+        buildPlan = const _GenerationBuildPlanInspection.runBuilder(
+          reasons: ['no-cache-reference'],
+        );
       } else {
         final fastPath = await _GenerationFastPath.inspect(
           workspace: fastPathWorkspace,
@@ -179,13 +186,24 @@ Future<void> main(List<String> arguments) async {
           }
           if (parsed.profile) {
             stdout.writeln('CCRouter profile fast-path=hit');
+            stdout.writeln(
+              'CCRouter profile build-plan suggested=unchanged '
+              'actual=unchanged reasons=verified-fast-path',
+            );
           }
           return;
         }
         if (parsed.profile) stdout.writeln('CCRouter profile fast-path=miss');
+        buildPlan = await _GenerationBuildPlanner.inspect(
+          workspace: fastPathWorkspace,
+          fastPathMissReason: fastPath.missReason,
+        );
       }
       verifiedInputFingerprint ??=
           await _GenerationStateFingerprint.captureInput(fastPathWorkspace);
+      if (parsed.profile) {
+        stdout.writeln(buildPlan.profileDescription);
+      }
     }
     if (parsed.command == _GeneratorCommand.generate &&
         fastPathWorkspace != null) {
@@ -268,6 +286,19 @@ Future<void> main(List<String> arguments) async {
         workspace: fastPathWorkspace,
         expectedInputFingerprint: verifiedInputFingerprint!,
       );
+      try {
+        await _GenerationBuildPlanner.write(
+          workspace: fastPathWorkspace,
+          expectedInputFingerprint: verifiedInputFingerprint,
+        );
+      } on Object {
+        if (parsed.profile) {
+          stdout.writeln(
+            'CCRouter profile build-plan-state=write-failed; '
+            'future runs will conservatively use runBuilder.',
+          );
+        }
+      }
     }
   } on CCPackageWorkspaceException catch (error) {
     if (snapshot != null) await snapshot.restore();
@@ -2157,6 +2188,7 @@ abstract final class _GenerationFastPath {
     final file = _manifestFile(workspace);
     if (!file.existsSync()) {
       return _GenerationFastPathInspection.miss(
+        missReason: _GenerationFastPathMissReason.manifestMissing,
         inputFingerprint: await _GenerationStateFingerprint.captureInput(
           workspace,
         ),
@@ -2164,7 +2196,11 @@ abstract final class _GenerationFastPath {
     }
     try {
       final decoded = jsonDecode(await file.readAsString());
-      if (decoded is! Map) return const _GenerationFastPathInspection.miss();
+      if (decoded is! Map) {
+        return const _GenerationFastPathInspection.miss(
+          missReason: _GenerationFastPathMissReason.manifestInvalid,
+        );
+      }
       final document = decoded.cast<String, Object?>();
       if (document['schemaVersion'] != _schemaVersion ||
           document['generatorVersion'] !=
@@ -2173,7 +2209,9 @@ abstract final class _GenerationFastPath {
           document['inputFingerprint'] is! String ||
           document['outputFingerprint'] is! String ||
           document['contentFingerprint'] is! String) {
-        return const _GenerationFastPathInspection.miss();
+        return const _GenerationFastPathInspection.miss(
+          missReason: _GenerationFastPathMissReason.manifestInvalid,
+        );
       }
       final payload = <String, Object?>{
         'schemaVersion': document['schemaVersion'],
@@ -2184,23 +2222,38 @@ abstract final class _GenerationFastPath {
       };
       if (computeCCCanonicalJsonFingerprint(payload) !=
           document['contentFingerprint']) {
-        return const _GenerationFastPathInspection.miss();
+        return const _GenerationFastPathInspection.miss(
+          missReason: _GenerationFastPathMissReason.manifestInvalid,
+        );
       }
       final cache = await _GenerationCache.load(workspace.buildRoot);
       if (cache.corrupted) {
-        return const _GenerationFastPathInspection.miss();
+        return const _GenerationFastPathInspection.miss(
+          missReason: _GenerationFastPathMissReason.cacheInvalid,
+        );
       }
       final input = await _GenerationStateFingerprint.captureInput(workspace);
       if (input != document['inputFingerprint']) {
-        return _GenerationFastPathInspection.miss(inputFingerprint: input);
+        return _GenerationFastPathInspection.miss(
+          missReason: _GenerationFastPathMissReason.inputChanged,
+          inputFingerprint: input,
+        );
       }
       final output = await _GenerationStateFingerprint.captureOutput(workspace);
+      if (output != document['outputFingerprint']) {
+        return _GenerationFastPathInspection.miss(
+          missReason: _GenerationFastPathMissReason.outputChanged,
+          inputFingerprint: input,
+        );
+      }
       return _GenerationFastPathInspection(
-        matches: output == document['outputFingerprint'],
+        matches: true,
         inputFingerprint: input,
       );
     } on Object {
-      return const _GenerationFastPathInspection.miss();
+      return const _GenerationFastPathInspection.miss(
+        missReason: _GenerationFastPathMissReason.manifestInvalid,
+      );
     }
   }
 
@@ -2252,17 +2305,40 @@ final class _GenerationFastPathInspection {
   const _GenerationFastPathInspection({
     required this.matches,
     required this.inputFingerprint,
-  });
+  }) : missReason = null;
 
   /// Creates a miss when the manifest cannot be trusted or inputs differ.
-  const _GenerationFastPathInspection.miss({this.inputFingerprint})
-    : matches = false;
+  const _GenerationFastPathInspection.miss({
+    required this.missReason,
+    this.inputFingerprint,
+  }) : matches = false;
 
   /// Whether both authoritative inputs and managed outputs are unchanged.
   final bool matches;
 
   /// Current input digest reusable after a full run, when it was computed.
   final String? inputFingerprint;
+
+  /// Exact conservative reason the shortcut could not be trusted.
+  final _GenerationFastPathMissReason? missReason;
+}
+
+/// Fail-closed reason supplied to the diagnostic Build Plan.
+enum _GenerationFastPathMissReason {
+  /// No previous successful manifest exists for this Host.
+  manifestMissing,
+
+  /// The manifest schema, fingerprint, or JSON could not be trusted.
+  manifestInvalid,
+
+  /// The metadata cache failed its independent integrity check.
+  cacheInvalid,
+
+  /// At least one generation input differs from the successful baseline.
+  inputChanged,
+
+  /// Managed output bytes differ despite unchanged input bytes.
+  outputChanged,
 }
 
 /// Exact content digests for generation inputs and source-tree outputs.
@@ -2291,6 +2367,31 @@ abstract final class _GenerationStateFingerprint {
     inputs['tool/dart-version'] = utf8.encode(Platform.version);
     inputs['tool/dart-executable'] = utf8.encode(
       path.normalize(Platform.resolvedExecutable),
+    );
+    return _digestEntries(inputs);
+  }
+
+  /// Captures portable authored inputs for one resolved Package.
+  static Future<String> capturePackageAuthoredInput(
+    CCResolvedPackage package,
+  ) async {
+    final inputs = <String, List<int>>{};
+    await _addAuthoredPackageInputs(inputs, package);
+    return _digestEntries(inputs);
+  }
+
+  /// Captures generator source, build configuration, and Dart SDK identity.
+  ///
+  /// Unlike the process-local fast path, this digest intentionally excludes
+  /// the absolute Dart executable path so equal clones can compare it.
+  static Future<String> capturePortableToolInput(
+    Map<String, Object?> resolutionIdentity,
+  ) async {
+    final inputs = <String, List<int>>{};
+    await _addGeneratorInputs(inputs);
+    inputs['tool/dart-version'] = utf8.encode(Platform.version);
+    inputs['tool/resolution'] = utf8.encode(
+      computeCCCanonicalJsonFingerprint(resolutionIdentity),
     );
     return _digestEntries(inputs);
   }

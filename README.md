@@ -1114,6 +1114,15 @@ Route API 和 Package/Host metadata。跨组件 Route 不能直接由脚手架�
 `dirty-packages` 原因；`dirty` 是 build_runner 完成后的聚合复用判断，不表示 Builder 只分析
 这些 Package。
 
+当前已完成 Build Plan 的 P1 诊断阶段。fast path miss 时，`--profile` 还会输出
+`build-plan suggested=<unchanged|aggregateOnly|runBuilder> actual=<...> reasons=<...>`：
+`suggested` 是根据 Tool、Package 和 Host 分层内容摘要得到的后续优化建议，`actual` 才是本轮
+真实执行路径。除已验证的 fast path hit 外，P1 的 `actual` 始终为 `runBuilder`；即使显示
+`suggested=aggregateOnly`，当前也没有跳过 Builder。诊断基线保存在
+`.dart_tool/ccrouter/v1/build_plans/`，可以随时删除；缺失、损坏或无法证明解析身份时会保守回退。
+`--no-cache --profile` 会报告 `reasons=no-cache-reference` 并执行完整参考路径。真正启用
+Host-only aggregation 和跨 Clone Portable State 仍分别属于后续 P2、P3，当前没有实现。
+
 fast path 未命中后，Generator 会先对 Host 依赖闭包执行保守的 Component Dependency
 Preflight：仅当直接 List、Contract 与 Owner 都能唯一证明时，才在 build_runner 前按组件和
 Owner 聚合报告缺失的 Service/Command required dependency；变量、spread、条件集合、歧义或

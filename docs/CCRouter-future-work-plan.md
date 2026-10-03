@@ -75,10 +75,10 @@
 - [x] 2026-09-28 增加保守 per-Package dirty set：metadata、受管输出和直接依赖 Index 均用
   精确 fingerprint，dirty 沿反向依赖闭包传播；干净 Package 跳过聚合写入但仍执行 Validator、
   Host 组装和删除检查。缓存 schema 升级为 2，旧缓存自动 fail-closed。
-- [ ] 按 [build_runner 与团队构建正确性优先优化计划](CCRouter-build-runner-optimization-plan.md)
-  先实现只计算、不跳过 Builder 的分层 Build Plan；逐字节证明等价后，再逐步开放 Host-only
-  graph aggregation 和 Clone A/Clone B 的可移植状态复用。任何无法证明的情况继续回退完整
-  build_runner。
+- [~] [build_runner 与团队构建正确性优先优化计划](CCRouter-build-runner-optimization-plan.md)
+  的 P1 已完成：分层 Build Plan、`.dart_tool` 本地诊断状态和 `suggested/actual/reasons` Profile
+  已落地，所有 fast path miss 仍执行完整 build_runner。P2 Host-only aggregation 与 P3
+  Clone A/Clone B Portable State 尚未实施；任何无法证明的情况继续回退完整 Builder。
 - [ ] 仅在真实项目 Host 聚合超过总耗时 20% 时继续优化 dirty set 的输入摘要速度；不得用
   mtime/size 替代内容摘要。
 - [x] 建立冷启动、初始化、路由解析、导航延迟、并发导航、Runtime dispose 和长期 RSS 的
