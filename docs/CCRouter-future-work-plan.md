@@ -75,11 +75,12 @@
 - [x] 2026-09-28 增加保守 per-Package dirty set：metadata、受管输出和直接依赖 Index 均用
   精确 fingerprint，dirty 沿反向依赖闭包传播；干净 Package 跳过聚合写入但仍执行 Validator、
   Host 组装和删除检查。缓存 schema 升级为 2，旧缓存自动 fail-closed。
-- [~] [build_runner 与团队构建正确性优先优化计划](CCRouter-build-runner-optimization-plan.md)
-  的 P1、P2 纯删除路径和 P3 Portable Generation State 已完成：分层 Build Plan、`.dart_tool`
+- [x] [build_runner 与团队构建正确性优先优化计划](CCRouter-build-runner-optimization-plan.md)
+  的 P1、P2 纯删除路径、P3 Portable Generation State 和 P4 冷成本评估已完成：分层 Build Plan、`.dart_tool`
   本地诊断状态、`suggested/actual/reasons` Profile、精确删除与可信纯新增 aggregation-only、只读
   外部 Package Artifact Integrity 均已落地。可写 Package 无法证明时回退完整 Builder；只读外部
-  Package 缺失或失配时明确失败。更宽的 Host-only 变化与 P4 冷成本评估仍未实施，CI 保持
+  Package 缺失或失配时明确失败。P4 证明当前主要冷成本是 build_runner AOT，且新版受 Flutter
+  SDK 解析约束阻断；更宽的 Host-only 变化、watch/daemon 与自有 runner 暂不实施，CI 保持
   `--no-cache --check`。
 - [x] 2026-10-03 完成 P3 回归：全仓 Analyze、Generator `272/272`、增量与
   `--no-cache --check` 生成门禁均通过；状态缺失、篡改、无 Builder metadata 与只读外部 Package

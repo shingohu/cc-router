@@ -1,6 +1,7 @@
 # CCRouter 生成器性能优化与对比报告
 
-> 文档状态：2026-09-28 性能快照。实现边界仍有效，数值不自动代表后续提交或其他机器。
+> 文档状态：2026-09-28 性能快照；2026-10-03 补充 Build Plan P2-P4 样本。数值不自动代表
+> 后续提交或其他机器。
 
 Package 增删导致的 Workspace AOT 冷路径及后续正确性优先优化方案，见
 [build_runner 正确性优先优化计划](CCRouter-build-runner-optimization-plan.md)。
@@ -146,6 +147,22 @@ ccrouter_generator:ccrouter` 两次墙钟为 1.34 秒和 1.45 秒，CLI 内部�
 约 3.5 秒，因为源码入口需要重新加载和编译工具依赖。Pub Hook 继续使用项目解析图下的
 `dart run`，不切换到直接源码入口。预编译独立可执行文件会引入 Generator 版本与 Package Graph
 同步问题，只有真实高频样本证明约一秒启动成本不可接受时才重新评估。
+
+### 6.4 Build Plan P2-P4 补充样本
+
+2026-10-03 当前 Demo（6 个组件、33 条路由）的稳定 fast path 为 0.172 秒；warm
+`--no-cache --check` 为 1.961 秒，其中 build_runner 913ms。删除 `demo_payment` 的 P2
+aggregation-only 为 0.904-0.996 秒；重新加入该预生成 Package 且本机无对应 Builder metadata
+时，P3 Portable State 路径为 1.091 秒、build_runner 0ms，相对同轮权威路径减少约 44%。
+
+干净副本的过滤冷路径为 16.338 秒，其中 build_runner 15.560 秒、AOT 约 10 秒、Validator
+14ms。无 build filters 对照没有改善约 14 秒的 Builder 内部耗时，却把 CCRouter Builder 输入从
+`38/48` 增至 `47/58`，额外运行 76 个 `build_test:test_bootstrap` action，并将写出数量从 75
+提高到 230。过滤能控制作用域和无关输出，不能消除 AOT 成本。
+
+最新 `build_runner 2.16.1` 需要 `analyzer >=13.3.0` 和 `meta ^1.18.3`，与当前 Flutter 固定的
+`meta 1.17.0` 不可解析，因此没有进行无效的运行时对比或扩大 SDK 升级。当前数据不支持引入
+watch/daemon、自有 Analyzer runner 或 build_runner 私有 API。
 
 ## 7. 后续触发条件
 

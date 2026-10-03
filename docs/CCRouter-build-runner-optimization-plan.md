@@ -1,9 +1,9 @@
 # CCRouter build_runner 与团队构建正确性优先优化计划
 
-> 文档状态：部分实施。P0、P1、P2 Host 纯删除路径及 P3 Portable reuse 已完成；更宽的 P2
-> Host-only 范围与 P4 尚未实施。
+> 文档状态：当前实施阶段完成。P0、P1、P2 Host 纯删除路径、P3 Portable reuse 与 P4 冷成本
+> 评估已完成；更宽的 Host-only 跳过 Builder 未获准，保留为指标触发项。
 >
-> 日期：2026-09-30；P1/P2/P3 实现更新：2026-10-03。
+> 日期：2026-09-30；P1/P2/P3/P4 实现与评估更新：2026-10-03。
 >
 > 核心约束：任何生成器性能优化都不能以漏生成、接受陈旧生成物、降低校验强度或改变错误
 > 语义为代价。无法证明等价时必须回退完整 `build_runner + validate + aggregate`。
@@ -294,12 +294,25 @@ Builder metadata 后，P3 `aggregateOnly` 为 1.091 秒（build_runner 0ms）；
 完整 Generator 272 项及两条生成门禁均通过。该结果是单机单次样本，不承诺固定比例，也不省略
 Validator、依赖发现、Portable State 重算或 Host 聚合成本。
 
-### P4：评估剩余冷成本
+### P4：评估剩余冷成本，已完成
 
-- 在隔离分支比较当前锁定版本与新版 build_runner；
-- 测量 build filter 是否降低 action 数量，但不预设它能消除 Workspace AOT 成本；
-- 只有 P95 数据仍不可接受时，才评估常驻 daemon/watch 或自有 Analyzer runner；
-- 自有 runner 属于架构 2.0 候选，不进入 1.x 快速修补。
+2026-10-03 使用三个不携带 `.dart_tool` 的 `/tmp` 干净副本完成隔离评估：
+
+- 当前 Flutter `3.41.x` Workspace 锁定 `build_runner 2.15.1`。最新 `2.16.1` 要求
+  `analyzer >=13.3.0`，后者要求 `meta ^1.18.3`，但 Flutter SDK 固定 `meta 1.17.0`，因此候选
+  组合在依赖解析阶段即失败。不能为了未证明的性能收益联动升级 Flutter、Analyzer 和 Generator。
+- 当前带 Host closure build filters 的干净冷生成总耗时 16.338 秒，build_runner 15.560 秒；
+  其中 AOT 编译约 10 秒，Validator 14ms，aggregate/format/write 230ms。瓶颈不在 CCRouter 校验。
+- 去掉 filters 的相同干净构建仍约 14 秒，但 CCRouter Builder 输入从 `38/48` 增至 `47/58`，
+  额外执行 `build_test:test_bootstrap` 的 76 个 action，并写出 230 个输出；过滤路径只写 75 个。
+  Filter 明确减少无关 action 和副作用，但不能消除共享 AOT 启动成本，现有实现应保留。
+- 同一工作区 warm `--no-cache --check` 为 1.961 秒，稳定 fast path 为 0.172 秒。冷路径仍低于
+  30 秒触发阈值；P3 路径的 aggregate/format/write 占比约 21%，但绝对值只有 230ms，且尚无
+  生产 P95 证明继续拆分能获得正收益。
+
+结论：1.x 不引入常驻 daemon/watch，不访问 build_runner 私有 Asset Graph，不维护第二套
+Analyzer runner，也不为升级 build_runner 扩大 SDK 迁移面。后续只有达到第 9.7 节生产 P95 或
+第 7 节触发条件时重新立项；自有 runner 继续属于架构 2.0 候选。
 
 ## 7. 测试与回归矩阵
 
@@ -503,4 +516,5 @@ Host 必须重新计算当前 Package 的生成相关源码、`pubspec.yaml`、`
 6. 文档明确哪些操作仍必须运行 build_runner；
 7. `--no-cache` 回退路径保持可用且行为未弱化。
 
-在完成这些门禁前，当前完整 build_runner 路径继续作为默认实现。
+P2/P3 已满足其适用范围内的门禁并默认启用；所有无法证明等价的请求仍以完整 build_runner 路径
+作为默认回退。P4 没有证明继续扩大 1.x 优化能够产生净收益，因此不新增运行时代码或公开开关。
