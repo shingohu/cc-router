@@ -246,7 +246,19 @@ Future<void> main(List<String> arguments) async {
         fastPathWorkspace != null &&
         await _hasMissingGeneratedComponentImport(fastPathWorkspace);
     snapshot = parsed.command == _GeneratorCommand.generate
-        ? await _GeneratedArtifactsSnapshot.capture(buildContext!.root)
+        ? await _GeneratedArtifactsSnapshot.capture(
+            buildContext!.root,
+            explicitFiles: [
+              if (parsed.outputDirectoryPath case final output?)
+                for (final name in const [
+                  'cc_routes.json',
+                  'cc_catalog.md',
+                  'cc_routes.md',
+                  'cc_sources.md',
+                ])
+                  File(path.join(output, name)).absolute,
+            ],
+          )
         : null;
     if (needsBootstrap) {
       try {
@@ -3022,6 +3034,7 @@ final class _GeneratedArtifactsSnapshot {
     this.root,
     this.files, {
     this.excludedRoots = const <String>[],
+    this.explicitPaths = const <String>[],
   });
 
   /// Root whose source-controlled CCRouter outputs are guarded.
@@ -3033,12 +3046,38 @@ final class _GeneratedArtifactsSnapshot {
   /// Absolute subtrees outside this snapshot's ownership.
   final List<String> excludedRoots;
 
+  /// Exact catalog targets, including legacy names, outside default discovery.
+  /// These paths never grant ownership of other files in the same directory.
+  final List<String> explicitPaths;
+
   /// Reads the complete set of managed outputs below [root].
-  static Future<_GeneratedArtifactsSnapshot> capture(Directory root) async =>
-      _GeneratedArtifactsSnapshot._(
-        root,
-        await _readManagedGeneratedFiles(root),
-      );
+  /// Explicit targets also participate when their directory is named build or
+  /// lacks ccrouter_generated; absent files are tracked for creation rollback.
+  static Future<_GeneratedArtifactsSnapshot> capture(
+    Directory root, {
+    Iterable<File> explicitFiles = const [],
+  }) async {
+    final explicitPaths = explicitFiles
+        .map((file) => _relativePath(root, file))
+        .toSet()
+        .toList(growable: false);
+    final snapshot = _GeneratedArtifactsSnapshot._(
+      root,
+      await _readManagedGeneratedFiles(root),
+      explicitPaths: explicitPaths,
+    );
+    await snapshot._addExplicitFiles(snapshot.files);
+    return snapshot;
+  }
+
+  /// Adds only existing regular files; a directory occupying a target is not
+  /// removed or converted, and any write failure restores earlier file writes.
+  Future<void> _addExplicitFiles(Map<String, List<int>> target) async {
+    for (final relative in explicitPaths) {
+      final file = File(_absolutePath(root, relative));
+      if (await file.exists()) target[relative] = await file.readAsBytes();
+    }
+  }
 
   /// Captures managed files outside [excludedRoots] for deletion protection.
   ///
@@ -3073,6 +3112,7 @@ final class _GeneratedArtifactsSnapshot {
   /// Reports added, removed, or modified generated artifacts deterministically.
   Future<List<String>> changes() async {
     final current = await _readManagedGeneratedFiles(root);
+    await _addExplicitFiles(current);
     _removeExcluded(current);
     final paths = <String>{...files.keys, ...current.keys}.toList()..sort();
     return [
@@ -3089,6 +3129,7 @@ final class _GeneratedArtifactsSnapshot {
   /// Restores the guarded output set so `--check` remains read-only.
   Future<void> restore() async {
     final current = await _readManagedGeneratedFiles(root);
+    await _addExplicitFiles(current);
     _removeExcluded(current);
     for (final path in current.keys.where((path) => !files.containsKey(path))) {
       await File(_absolutePath(root, path)).delete();

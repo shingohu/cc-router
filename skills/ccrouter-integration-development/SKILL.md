@@ -31,6 +31,8 @@ Commit generated output together with its Portable Generation State when
 distributing components. A cache hit must verify external source, dependency,
 and managed-output content; it does not excuse stale Git/Path artifacts.
 See the generation section in `references/implementation-patterns.md`.
+Custom catalog directories retain the same `--check` file-restoration guarantee;
+they do not transfer ownership of neighboring application files to the CLI.
 
 For generator, scaffolding, cleanup, source lookup, or deferred Contract
 migration work, also read

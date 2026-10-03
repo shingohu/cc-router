@@ -218,6 +218,10 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo --check
 非零退出码，不依赖 Git，也不会把业务源码或其它工具的改动算作陈旧生成物。旧的
 `ccrouter_generator aggregate` metadata-only 入口仅为脚本兼容保留，新项目不应使用。
 
+自定义 `--output-dir` 的 Catalog 也参与比较及失败恢复，包括 docs/build 目录。只管理
+`cc_routes.json`、`cc_catalog.md` 和待迁移的 `cc_routes.md`、`cc_sources.md`，不接管同目录
+其它文件。`--check` 仍要求输出目录位于 Workspace/Package 构建根目录内。
+
 如果需要在重新生成前清理当前 Host 运行时依赖闭包中的 CCRouter 生成物，使用：
 
 ```sh

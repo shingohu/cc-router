@@ -77,6 +77,10 @@ CCRouter progress, diagnostics, and failures remain visible.
 Run `generate` after authored annotation, component, contribution, dependency,
 or Host topology changes. Use `--check` for a read-only freshness gate and
 `--no-cache --check` as the reference path when validating cache correctness.
+Custom `--output-dir` catalogs also participate in comparison and rollback,
+including docs/build directories. Only the explicit current/legacy catalog
+files are owned; neighboring files stay untouched. Check output must remain
+inside the build root.
 Use `--profile` only to investigate generation performance. On a miss, distinguish
 `build-targets` from the post-build `dirty-packages` reuse set and use the reported
 reason (`cache-missing`, `metadata`, `output`, `dependency-index`, or

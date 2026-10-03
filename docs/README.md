@@ -10,9 +10,9 @@
   已经发布 `1.0.0`。
 - 正式发布是否具备条件只看[正式发布准备与门禁](CCRouter-release-readiness.md)，不从某份专项
   设计的完成勾选推断。
-- 2026-10-03 的[全框架审查](CCRouter-framework-audit-2026-10-03.md) 确认仍有未修复的
-  生命周期、生成准确性、Analytics 与开发工具缺陷；以下“已实现”表示能力存在，不表示
-  所有组合边界已验证无误。后续 F01/F02 的清理与返回保护修复已完成，其余按报告跟进。
+- 2026-10-03 的[全框架审查](CCRouter-framework-audit-2026-10-03.md) 原 F01–F18 已修复；
+  后续[生成器与 Analyzer 复审](CCRouter-generator-analyzer-audit-2026-10-03.md) 新确认
+  6 项未修复问题。以下“已实现”表示能力存在，不表示所有组合边界已验证无误。
 
 ## 当前状态矩阵
 
@@ -89,6 +89,7 @@
 - [组件化框架能力对比与缺口记录](CCRouter-component-framework-comparison.md)
 - [核心价值与开发约定回归](CCRouter-core-principles-audit.md)
 - [2026-10-03 全框架审查与修复顺序](CCRouter-framework-audit-2026-10-03.md)
+- [2026-10-03 生成器与 Analyzer 复审](CCRouter-generator-analyzer-audit-2026-10-03.md)
 - [后续任务与实施计划](CCRouter-future-work-plan.md)
 - [最终 API 收口复审清单](CCRouter-final-api-review.md)
 - [正式发布前能力设计与实施计划](CCRouter-pre-release-capability-plan.md)

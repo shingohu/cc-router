@@ -1176,6 +1176,8 @@ Route API 和 Package/Host metadata。跨组件 Route 不能直接由脚手架�
 状态文件变化不等于业务 API 变化，Dart 不变也不代表文档/定位不变。Package 名称最多显示
 12 项，数量完整；不输出源码或业务值。不带 `--profile` 不做额外输出比较，缓存与生成决策不变。
 输入归因与既有 Build Plan 一样只覆盖默认输出目录；自定义 `--output-dir` 不提供输入归因。
+自定义 docs/build 输出目录的 Catalog 仍参与 `--check` 差异检测与恢复；同目录其它用户
+文件不受影响，检查模式仍要求输出目录位于构建根目录内。
 
 当前已完成 Build Plan 的 P1 诊断、P2“Host 依赖闭包删除组件”优化、P3 Portable
 Generation State 的可信 Package 新增路径、P4 冷成本评估，以及 P5 3x/5x/10x 多组件个人与

@@ -709,6 +709,11 @@ output fingerprints match a previous successful run. Use `--no-cache --check`
 when validating the reference path after generator, SDK, or build configuration
 changes; do not make application code depend on cache or manifest files.
 
+With `--output-dir`, check and failure rollback explicitly cover `cc_routes.json`,
+`cc_catalog.md`, and the migrated `cc_routes.md`/`cc_sources.md`, even under docs
+or build. Other files in that directory are not managed. `--check` still rejects
+output outside the Workspace/Package build root before writing.
+
 After a fast-path miss, the CLI may report direct, uniquely provable missing
 Service/Command owners before build_runner. This conservative preflight declines
 computed or ambiguous inputs and does not replace the Builder/Workspace
