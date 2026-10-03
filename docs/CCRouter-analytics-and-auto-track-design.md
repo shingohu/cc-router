@@ -207,14 +207,13 @@ Dispatcher 的稳定性边界已经收口：属性值、属性数量、黑名单
 执行 smoke，不能据此推导“全局 Widget 自动识别”已支持。分析 Dispatcher 的 Pure Dart 指标和
 Consent/黑名单策略可在所有 Dart 平台复用，RSS 结果只允许同 SDK、同平台进程内比较。
 
-## 10. 低配置智能采集方案（提案，尚未实现）
+## 10. 低配置智能采集方案
 
 ### 10.1 问题分析
 
 当前事件契约、Route 生命周期桥接、Consent、采样、有界队列、Scroll 和 Exposure 已经具备，
-但 UI 使用仍有三类重复配置：
+Scope 已提供上下文继承，但 UI 使用仍有两类需要显式声明的配置：
 
-- 页面或 Feature 需要手工创建并传递 `CCAnalyticsTracker`；
 - Click 需要先创建 `CCAnalyticsTarget`，Scroll/Exposure 还要分别包 Widget；
 - 本地记录和上传虽然可以实现 `CCAnalyticsSink`，但缺少应用层参考组合。
 
@@ -259,17 +258,14 @@ Pointer 只能说明发生了按下、抬起或移动，不能证明某个业务
 ### 10.5 建议结构
 
 ```text
-CCAnalyticsController（提案）
-  ├── CCAnalyticsEventDispatcher（现有）
+CCAnalyticsEventDispatcher（现有）
   ├── Consent / Sampling / Rules（现有基础）
-  ├── CCNavigationAnalyticsBridge（现有）
-  └── Host/Outlet -> 当前 managed Route 上下文快照
+  └── CCNavigationAnalyticsBridge（现有）
 
-CCAnalyticsScope（提案，应用根或页面一层 Widget）
-  ├── Inherited Tracker/Context
-  ├── NotificationListener<ScrollNotification>
-  ├── annotated Target 元数据解析
-  └── 可选 Debug Interaction Recorder
+CCAnalyticsScope（已实现，应用根或页面一层 Widget）
+  ├── Inherited Dispatcher/Context
+  ├── 本地 enabled 开关
+  └── 显式 Target / Scroll / Exposure
 
 应用拥有的 Sink
   ├── Firebase / ThinkingData Adapter
@@ -277,30 +273,26 @@ CCAnalyticsScope（提案，应用根或页面一层 Widget）
   └── HTTP Batch Uploader
 ```
 
-`CCAnalyticsScope` 只持有 Controller 和不可变上下文，不持有页面业务对象。managed 页面上下文应从
-RouteEntry 的只读快照获得；不能从完整 URL、Widget 文本或 `ModalRoute.settings.arguments` 猜测。
-如果 Host 不能提供精确 RouteEntry，上下文降级为 unknown，不能错误归因到栈顶页面。
+`CCAnalyticsScope` 只持有应用拥有的 Dispatcher 和不可变上下文，不持有页面业务对象，也不负责
+Dispatcher 的关闭。根 Scope 注入 Dispatcher，页面或 Feature Scope 可只提供增量 Context；
+`CCAnalyticsScope.trackerOf(context)` 返回值对象 Tracker，`maybeTrackerOf` 允许可选接入。
+当前 Scope 不读取 RouteEntry，也不依赖 CCRouter 内部 API；managed 页面可以由 Host 在页面边界
+显式传入稳定 route/Host/Outlet 字段。无法证明精确上下文时应省略字段，不能从完整 URL、Widget
+文本或 `ModalRoute.settings.arguments` 猜测，也不能把 Foreign Popup 自动归因到下层页面。
 
 ### 10.6 API 草案
 
 下面只用于确认开发体验，不代表公开 API 已确定：
 
 ```dart
-final analytics = CCAnalyticsController(
-  dispatcher: CCAnalyticsEventDispatcher(
-    sinks: [appLocalSink, appUploadSink],
-  ),
-);
-
-CCRouter.initialize(
-  hostAssembly: ccrouterGeneratedHostAssembly,
-  navigationAspects: [analytics.navigationAspect],
+final dispatcher = CCAnalyticsEventDispatcher(
+  sinks: [appLocalSink, appUploadSink],
 );
 
 runApp(
   CCAnalyticsScope(
-    controller: analytics,
-    mode: CCAnalyticsCollectionMode.annotated,
+    dispatcher: dispatcher,
+    context: const CCAnalyticsContext(componentId: 'order'),
     child: const CCGoRouterApp(),
   ),
 );
@@ -309,12 +301,21 @@ runApp(
 业务 Target 不再传递 Tracker，只声明稳定事件 ID：
 
 ```dart
-CCAnalyticsInteraction(
-  eventId: 'order.detail.confirm',
-  child: FilledButton(
-    onPressed: submitOrder,
-    child: const Text('确认订单'),
-  ),
+Builder(
+  builder: (context) {
+    final tracker = CCAnalyticsScope.trackerOf(
+      context,
+      analyticsContext: const CCAnalyticsContext(routeId: 'order.detail'),
+    );
+    final target = CCAnalyticsTarget(
+      tracker: tracker,
+      eventId: 'order.detail.confirm',
+    );
+    return FilledButton(
+      onPressed: () => target.run(submitOrder),
+      child: const Text('确认订单'),
+    );
+  },
 )
 ```
 
@@ -351,7 +352,7 @@ Firebase、ThinkingData、本地数据库和 HTTP 实现都放在应用或 `demo
 
 ### 10.9 实施顺序与验收
 
-1. 先增加 Scope/Controller 的可行性原型，不替换现有 `CCAnalyticsTarget`；用 Feature toggle
+1. [x] 增加 Scope 的可行性实现，不替换现有 `CCAnalyticsTarget`；用 enabled 开关
    与现有显式路径 A/B 对照。
 2. 打通只读 RouteEntry 上下文，验证多 Host、Shell/Outlet、Dialog 和 Foreign Popup 不误归因。
 3. 增加只识别稳定元数据的 Target，验证 disabled、Gesture Arena、拖动、长按、键盘和 Semantics。

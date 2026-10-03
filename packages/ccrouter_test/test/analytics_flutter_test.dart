@@ -216,6 +216,90 @@ void main() {
     expect(sink.events, isEmpty);
     await tester.pumpWidget(const SizedBox());
   });
+
+  testWidgets('Scope inherits dispatcher and merges page context', (
+    tester,
+  ) async {
+    final sink = _RecordingSink();
+    final dispatcher = CCAnalyticsEventDispatcher(
+      sinks: [sink],
+      policy: CCAnalyticsPolicy(consentGranted: true),
+    );
+    late CCAnalyticsTracker tracker;
+
+    await tester.pumpWidget(
+      CCAnalyticsScope(
+        dispatcher: dispatcher,
+        context: const CCAnalyticsContext(
+          componentId: 'order',
+          applicationSessionId: 'session-1',
+        ),
+        child: CCAnalyticsScope(
+          context: const CCAnalyticsContext(routeId: 'order.detail'),
+          child: Builder(
+            builder: (context) {
+              tracker = CCAnalyticsScope.trackerOf(context);
+              return const SizedBox();
+            },
+          ),
+        ),
+      ),
+    );
+
+    expect(tracker.custom(eventId: 'order.detail.open'), isTrue);
+    await tester.pump(Duration.zero);
+    expect(sink.events, hasLength(1));
+    await dispatcher.close();
+    expect(sink.events.single.componentId, 'order');
+    expect(sink.events.single.routeId, 'order.detail');
+    expect(sink.events.single.applicationSessionId, 'session-1');
+  });
+
+  testWidgets(
+    'disabled Scope returns a no-op tracker without changing policy',
+    (tester) async {
+      final sink = _RecordingSink();
+      final dispatcher = CCAnalyticsEventDispatcher(
+        sinks: [sink],
+        policy: CCAnalyticsPolicy(consentGranted: true),
+      );
+      late CCAnalyticsTracker tracker;
+
+      await tester.pumpWidget(
+        CCAnalyticsScope(
+          dispatcher: dispatcher,
+          enabled: false,
+          child: Builder(
+            builder: (context) {
+              tracker = CCAnalyticsScope.trackerOf(context);
+              return const SizedBox();
+            },
+          ),
+        ),
+      );
+
+      expect(tracker.enabled, isFalse);
+      expect(tracker.click(eventId: 'disabled.click'), isFalse);
+      expect(dispatcher.policy.consentGranted, isTrue);
+      expect(dispatcher.acceptedEventCount, 0);
+      await dispatcher.close();
+    },
+  );
+
+  testWidgets('Scope lookup is absent outside a configured Scope', (
+    tester,
+  ) async {
+    late CCAnalyticsTracker? tracker;
+    await tester.pumpWidget(
+      Builder(
+        builder: (context) {
+          tracker = CCAnalyticsScope.maybeTrackerOf(context);
+          return const SizedBox();
+        },
+      ),
+    );
+    expect(tracker, isNull);
+  });
 }
 
 FixedScrollMetrics _metrics(double pixels) => FixedScrollMetrics(

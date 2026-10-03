@@ -12,5 +12,12 @@ exposure event after a configurable visible-fraction and dwell-time threshold.
 It is suitable for stable cards, banners, and list items. It does not infer
 business meaning from Widget text or create a global visibility observer.
 
-This package does not enable tracking by itself. The application must create a
-`CCAnalyticsTracker` and explicitly wrap the target subtree.
+`CCAnalyticsScope` can be placed at the application or page boundary to inherit
+an application-owned Dispatcher and stable context. Nested Scopes merge only
+non-null context fields and may disable their subtree without changing global
+Consent. The Scope never closes the Dispatcher and does not inspect Routes,
+Widget text, pointer events, or foreign overlays.
+
+This package does not enable tracking by itself. The application must still
+declare stable event IDs and explicitly wrap scroll/exposure targets or use
+`CCAnalyticsTarget` for business callbacks.

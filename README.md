@@ -467,6 +467,11 @@ Listener 之前建立门禁，重复调用只等待同一轮清理；即使回�
 `arrival/show/hide` 转换成 `page.view.*` 和 `page.leave.*`，并通过有界异步 Dispatcher 交给应用自己的
 Firebase、ThinkingData、Sentry 或日志 Adapter。Sink 异常不会改变导航结果，队列满时会丢弃最旧的非关键分析事件。
 
+需要减少页面重复传递上下文时，可选依赖 `ccrouter_analytics_flutter` 的
+`CCAnalyticsScope`：根 Scope 注入应用拥有的 Dispatcher，页面 Scope 增量提供稳定的
+`CCAnalyticsContext`，业务通过 `CCAnalyticsScope.trackerOf(context)` 获得值对象 Tracker。
+Scope 不关闭 Dispatcher，也不扫描 Widget、Route 或 Foreign Popup；没有稳定上下文时应省略归因字段。
+
 ```dart
 final analytics = CCAnalyticsEventDispatcher(
   sinks: [applicationAnalyticsSink],

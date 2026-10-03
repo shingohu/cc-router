@@ -610,6 +610,14 @@ admission, not successful delivery. Sampling/blacklist/throttle rejection is one
 attempt per episode; do not poll until sampling eventually succeeds. Arbitrary
 Overlay occlusion and opacity are outside this geometric approximation.
 
+When several targets share a page or feature context, wrap that subtree in
+`CCAnalyticsScope` from `ccrouter_analytics_flutter`. The root Scope receives
+the application-owned Dispatcher; nested Scopes may add stable context fields
+or disable their subtree. `trackerOf` returns a value tracker and the Scope
+never closes the Dispatcher or guesses Route/Foreign Popup attribution. Keep
+the explicit Target callback path for any action whose business success must be
+known.
+
 Custom integrations may observe `addPolicyListener` without receiving payloads.
 Read `policy/isClosed` for current state, keep the synchronous callback short,
 never update policy from it, and call the returned remover on detach. Callback

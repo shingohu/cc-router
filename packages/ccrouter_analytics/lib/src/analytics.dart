@@ -252,6 +252,23 @@ final class CCAnalyticsContext {
 
   /// Pseudonymous application analytics session identity.
   final String? applicationSessionId;
+
+  /// Merges non-null fields from [override] over this context.
+  ///
+  /// An empty override preserves the current context. This is intended for
+  /// nested Flutter analytics scopes and does not retain either scope's
+  /// BuildContext or Widget.
+  CCAnalyticsContext merge(CCAnalyticsContext override) => CCAnalyticsContext(
+    navigationId: override.navigationId ?? navigationId,
+    traceId: override.traceId ?? traceId,
+    routeId: override.routeId ?? routeId,
+    componentId: override.componentId ?? componentId,
+    hostId: override.hostId ?? hostId,
+    outlet: override.outlet ?? outlet,
+    source: override.source ?? source,
+    anonymousVisitorId: override.anonymousVisitorId ?? anonymousVisitorId,
+    applicationSessionId: override.applicationSessionId ?? applicationSessionId,
+  );
 }
 
 /// Explicit event recorder for business callbacks and interaction boundaries.
@@ -264,6 +281,7 @@ final class CCAnalyticsTracker {
   const CCAnalyticsTracker({
     required this.dispatcher,
     this.context = const CCAnalyticsContext(),
+    this.enabled = true,
   });
 
   /// Bounded dispatcher receiving accepted events.
@@ -272,28 +290,37 @@ final class CCAnalyticsTracker {
   /// Stable page or feature context applied to each event.
   final CCAnalyticsContext context;
 
+  /// Whether this tracker is enabled by its owning Scope.
+  ///
+  /// A disabled tracker returns false without constructing or queueing an
+  /// event. This local switch does not change the Dispatcher's global policy.
+  final bool enabled;
+
   /// Records an event of [type] and returns whether it entered the queue.
   bool track({
     required String eventId,
     required CCAnalyticsEventType type,
     CCAnalyticsProperties properties = const CCAnalyticsProperties.empty(),
-  }) => dispatcher.dispatch(
-    CCAnalyticsEvent(
-      eventId: eventId,
-      type: type,
-      occurredAt: DateTime.now(),
-      navigationId: context.navigationId,
-      traceId: context.traceId,
-      routeId: context.routeId,
-      componentId: context.componentId,
-      hostId: context.hostId,
-      outlet: context.outlet,
-      source: context.source,
-      anonymousVisitorId: context.anonymousVisitorId,
-      applicationSessionId: context.applicationSessionId,
-      properties: properties,
-    ),
-  );
+  }) {
+    if (!enabled) return false;
+    return dispatcher.dispatch(
+      CCAnalyticsEvent(
+        eventId: eventId,
+        type: type,
+        occurredAt: DateTime.now(),
+        navigationId: context.navigationId,
+        traceId: context.traceId,
+        routeId: context.routeId,
+        componentId: context.componentId,
+        hostId: context.hostId,
+        outlet: context.outlet,
+        source: context.source,
+        anonymousVisitorId: context.anonymousVisitorId,
+        applicationSessionId: context.applicationSessionId,
+        properties: properties,
+      ),
+    );
+  }
 
   /// Records one explicit click or activation event.
   bool click({
