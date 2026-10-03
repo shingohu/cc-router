@@ -333,6 +333,9 @@ boundary, not a serialization mechanism; generic arguments must not be used to
 smuggle Flutter objects, callbacks, Streams, or private implementation types
 through a public Contract.
 
+Business parameter and generic names such as `service` remain valid: generated
+callback receivers and import prefixes are allocated outside those names.
+
 Export the interface and its public value types from the business contracts barrel. Bind a simple
 implementation by directly implementing exactly one contract:
 

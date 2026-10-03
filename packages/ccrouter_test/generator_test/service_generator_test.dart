@@ -8,6 +8,8 @@ import 'package:build_test/build_test.dart';
 import 'package:ccrouter_generator/builder.dart';
 import 'package:test/test.dart';
 
+import 'support/generated_proxy_program.dart';
+
 void main() {
   late TestReaderWriter reader;
 
@@ -341,6 +343,58 @@ abstract interface class TextService {
     },
   );
 
+  test('proxy forwards colliding parameter and generic names', () async {
+    const contract = '''
+abstract interface class AuditService {
+  String echo(String service, {required String service1});
+  Future<String> echoAsync(String service);
+  String bridge(String CCRouterGeneratedServiceBinding, String service_type_0,
+      String ccrouter_service_runtime);
+  service identity<service>(service value);
+}
+''';
+    final output = await generateProxy(
+      '''
+const component = CCComponent(id: CCComponentId('consumer'), version: '1.0.0',
+  dependencies: [CCComponentId('owner')],
+  serviceDependencies: [CCServiceDependency<AuditService>()]);
+''',
+      imports: "import 'package:ccrouter_test/audit_contract.dart';",
+      additionalAssets: {
+        'ccrouter_test|lib/audit_contract.dart':
+            '''
+import 'package:ccrouter/ccrouter.dart';
+@CCServiceContract(componentId: CCComponentId('owner'), id: 'owner.audit')
+$contract
+''',
+      },
+    );
+    final result = await runGeneratedProxyProgram(
+      output: output,
+      contract: contract,
+      program: '''
+import 'contract.dart';
+import 'proxy.dart';
+import 'runtime.dart';
+class Impl implements AuditService {
+  String echo(String service, {required String service1}) => service + service1;
+  Future<String> echoAsync(String service) async => service;
+  String bridge(String a, String b, String c) => a + b + c;
+  T identity<T>(T value) => value;
+}
+Future<void> main() async {
+  currentService = Impl();
+  final proxy = ConsumerServices.audit;
+  if (proxy.echo('a', service1: 'b') != 'ab') throw StateError('sync forwarding');
+  if (await proxy.echoAsync('async') != 'async') throw StateError('async forwarding');
+  if (proxy.bridge('c', 'd', 'e') != 'cde') throw StateError('bridge shadow');
+  if (proxy.identity<int>(42) != 42) throw StateError('generic shadow');
+}
+''',
+    );
+    expect(result.exitCode, 0, reason: '${result.stdout}\n${result.stderr}');
+  });
+
   test('proxy import prefixes avoid generic parameter names', () async {
     final output = await generateProxy(
       r'''
@@ -454,7 +508,7 @@ abstract interface class OrderSummaryService { String summaryFor(int id); }
       output,
       matches(
         RegExp(
-          r'key: const CCServiceKey<service_type_\d+\.OrderSummaryService>\("archived"\)',
+          r'key:\s*const ccrouter_service_runtime\.CCServiceKey<\s*service_type_\d+\.OrderSummaryService\s*>\("archived"\)',
         ),
       ),
     );

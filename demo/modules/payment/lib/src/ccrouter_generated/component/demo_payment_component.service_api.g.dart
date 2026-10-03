@@ -7,7 +7,7 @@
 // _ServiceProxyGenerator
 // **************************************************************************
 
-import 'package:ccrouter/ccrouter_generated.dart';
+import 'package:ccrouter/ccrouter_generated.dart' as ccrouter_service_runtime;
 import 'dart:async' as service_type_0;
 import 'package:demo_order_contracts/demo_order_contracts.dart'
     as service_type_1;
@@ -28,7 +28,7 @@ final class _OrderSummaryServiceProxy
   /// Invokes `demo_order.summary.invocationCount`.
   @override
   int get invocationCount =>
-      CCRouterGeneratedServiceBinding.invokeSync<
+      ccrouter_service_runtime.CCRouterGeneratedServiceBinding.invokeSync<
         service_type_1.OrderSummaryService,
         int
       >(
@@ -40,7 +40,7 @@ final class _OrderSummaryServiceProxy
   /// Invokes `demo_order.summary.loadSummary`.
   @override
   service_type_0.Future<String> loadSummary(int orderId) =>
-      CCRouterGeneratedServiceBinding.invoke<
+      ccrouter_service_runtime.CCRouterGeneratedServiceBinding.invoke<
         service_type_1.OrderSummaryService,
         String
       >(
@@ -54,7 +54,7 @@ final class _OrderSummaryServiceProxy
   service_type_0.Future<T> loadValue<T extends Object>(
     service_type_1.OrderSummaryValue<T> value,
   ) =>
-      CCRouterGeneratedServiceBinding.invoke<
+      ccrouter_service_runtime.CCRouterGeneratedServiceBinding.invoke<
         service_type_1.OrderSummaryService,
         T
       >(
@@ -66,7 +66,7 @@ final class _OrderSummaryServiceProxy
   /// Invokes `demo_order.summary.summaryFor`.
   @override
   String summaryFor(int orderId) =>
-      CCRouterGeneratedServiceBinding.invokeSync<
+      ccrouter_service_runtime.CCRouterGeneratedServiceBinding.invokeSync<
         service_type_1.OrderSummaryService,
         String
       >(
@@ -78,7 +78,7 @@ final class _OrderSummaryServiceProxy
   /// Invokes `demo_order.summary.unwrap`.
   @override
   T unwrap<T extends Object>(service_type_1.OrderSummaryValue<T> value) =>
-      CCRouterGeneratedServiceBinding.invokeSync<
+      ccrouter_service_runtime.CCRouterGeneratedServiceBinding.invokeSync<
         service_type_1.OrderSummaryService,
         T
       >(

@@ -7,7 +7,7 @@
 // _ServiceProxyGenerator
 // **************************************************************************
 
-import 'package:ccrouter/ccrouter_generated.dart';
+import 'package:ccrouter/ccrouter_generated.dart' as ccrouter_service_runtime;
 import 'dart:async' as service_type_0;
 import 'package:demo_kv_storage/demo_kv_storage.dart' as service_type_1;
 import 'package:demo_network/demo_network.dart' as service_type_2;
@@ -40,7 +40,7 @@ final class _DemoKeyValueStorageServiceProxy
   service_type_0.Future<void> clear(
     service_type_1.DemoStorageNamespace namespace,
   ) =>
-      CCRouterGeneratedServiceBinding.invoke<
+      ccrouter_service_runtime.CCRouterGeneratedServiceBinding.invoke<
         service_type_1.DemoKeyValueStorageService,
         void
       >(
@@ -55,7 +55,7 @@ final class _DemoKeyValueStorageServiceProxy
     service_type_1.DemoStorageNamespace namespace,
     String key,
   ) =>
-      CCRouterGeneratedServiceBinding.invoke<
+      ccrouter_service_runtime.CCRouterGeneratedServiceBinding.invoke<
         service_type_1.DemoKeyValueStorageService,
         bool?
       >(
@@ -70,7 +70,7 @@ final class _DemoKeyValueStorageServiceProxy
     service_type_1.DemoStorageNamespace namespace,
     String key,
   ) =>
-      CCRouterGeneratedServiceBinding.invoke<
+      ccrouter_service_runtime.CCRouterGeneratedServiceBinding.invoke<
         service_type_1.DemoKeyValueStorageService,
         double?
       >(
@@ -85,7 +85,7 @@ final class _DemoKeyValueStorageServiceProxy
     service_type_1.DemoStorageNamespace namespace,
     String key,
   ) =>
-      CCRouterGeneratedServiceBinding.invoke<
+      ccrouter_service_runtime.CCRouterGeneratedServiceBinding.invoke<
         service_type_1.DemoKeyValueStorageService,
         int?
       >(
@@ -100,7 +100,7 @@ final class _DemoKeyValueStorageServiceProxy
     service_type_1.DemoStorageNamespace namespace,
     String key,
   ) =>
-      CCRouterGeneratedServiceBinding.invoke<
+      ccrouter_service_runtime.CCRouterGeneratedServiceBinding.invoke<
         service_type_1.DemoKeyValueStorageService,
         Map<String, Object?>?
       >(
@@ -115,7 +115,7 @@ final class _DemoKeyValueStorageServiceProxy
     service_type_1.DemoStorageNamespace namespace,
     String key,
   ) =>
-      CCRouterGeneratedServiceBinding.invoke<
+      ccrouter_service_runtime.CCRouterGeneratedServiceBinding.invoke<
         service_type_1.DemoKeyValueStorageService,
         String?
       >(
@@ -129,7 +129,7 @@ final class _DemoKeyValueStorageServiceProxy
   service_type_0.Future<List<String>> keys(
     service_type_1.DemoStorageNamespace namespace,
   ) =>
-      CCRouterGeneratedServiceBinding.invoke<
+      ccrouter_service_runtime.CCRouterGeneratedServiceBinding.invoke<
         service_type_1.DemoKeyValueStorageService,
         List<String>
       >(
@@ -144,7 +144,7 @@ final class _DemoKeyValueStorageServiceProxy
     service_type_1.DemoStorageNamespace namespace,
     String key,
   ) =>
-      CCRouterGeneratedServiceBinding.invoke<
+      ccrouter_service_runtime.CCRouterGeneratedServiceBinding.invoke<
         service_type_1.DemoKeyValueStorageService,
         void
       >(
@@ -160,7 +160,7 @@ final class _DemoKeyValueStorageServiceProxy
     String key,
     bool value,
   ) =>
-      CCRouterGeneratedServiceBinding.invoke<
+      ccrouter_service_runtime.CCRouterGeneratedServiceBinding.invoke<
         service_type_1.DemoKeyValueStorageService,
         void
       >(
@@ -176,7 +176,7 @@ final class _DemoKeyValueStorageServiceProxy
     String key,
     double value,
   ) =>
-      CCRouterGeneratedServiceBinding.invoke<
+      ccrouter_service_runtime.CCRouterGeneratedServiceBinding.invoke<
         service_type_1.DemoKeyValueStorageService,
         void
       >(
@@ -192,7 +192,7 @@ final class _DemoKeyValueStorageServiceProxy
     String key,
     int value,
   ) =>
-      CCRouterGeneratedServiceBinding.invoke<
+      ccrouter_service_runtime.CCRouterGeneratedServiceBinding.invoke<
         service_type_1.DemoKeyValueStorageService,
         void
       >(
@@ -208,7 +208,7 @@ final class _DemoKeyValueStorageServiceProxy
     String key,
     Map<String, Object?> value,
   ) =>
-      CCRouterGeneratedServiceBinding.invoke<
+      ccrouter_service_runtime.CCRouterGeneratedServiceBinding.invoke<
         service_type_1.DemoKeyValueStorageService,
         void
       >(
@@ -224,7 +224,7 @@ final class _DemoKeyValueStorageServiceProxy
     String key,
     String value,
   ) =>
-      CCRouterGeneratedServiceBinding.invoke<
+      ccrouter_service_runtime.CCRouterGeneratedServiceBinding.invoke<
         service_type_1.DemoKeyValueStorageService,
         void
       >(
@@ -242,7 +242,7 @@ final class _NetworkServiceProxy implements service_type_2.DemoNetworkService {
   /// Invokes `demo.network.client.environmentId`.
   @override
   String get environmentId =>
-      CCRouterGeneratedServiceBinding.invokeSync<
+      ccrouter_service_runtime.CCRouterGeneratedServiceBinding.invokeSync<
         service_type_2.DemoNetworkService,
         String
       >(
@@ -254,7 +254,7 @@ final class _NetworkServiceProxy implements service_type_2.DemoNetworkService {
   /// Invokes `demo.network.client.isAuthenticated`.
   @override
   bool get isAuthenticated =>
-      CCRouterGeneratedServiceBinding.invokeSync<
+      ccrouter_service_runtime.CCRouterGeneratedServiceBinding.invokeSync<
         service_type_2.DemoNetworkService,
         bool
       >(
@@ -266,7 +266,7 @@ final class _NetworkServiceProxy implements service_type_2.DemoNetworkService {
   /// Invokes `demo.network.client.logs`.
   @override
   List<service_type_2.CCNetworkLogRecord> get logs =>
-      CCRouterGeneratedServiceBinding.invokeSync<
+      ccrouter_service_runtime.CCRouterGeneratedServiceBinding.invokeSync<
         service_type_2.DemoNetworkService,
         List<service_type_2.CCNetworkLogRecord>
       >(
@@ -278,7 +278,7 @@ final class _NetworkServiceProxy implements service_type_2.DemoNetworkService {
   /// Invokes `demo.network.client.removeDefaultHeader`.
   @override
   void removeDefaultHeader(String name) =>
-      CCRouterGeneratedServiceBinding.invokeSync<
+      ccrouter_service_runtime.CCRouterGeneratedServiceBinding.invokeSync<
         service_type_2.DemoNetworkService,
         void
       >(
@@ -292,7 +292,7 @@ final class _NetworkServiceProxy implements service_type_2.DemoNetworkService {
   service_type_0.Future<service_type_2.CCNetworkResponse<Object?>> request(
     service_type_2.CCNetworkRequest request,
   ) =>
-      CCRouterGeneratedServiceBinding.invoke<
+      ccrouter_service_runtime.CCRouterGeneratedServiceBinding.invoke<
         service_type_2.DemoNetworkService,
         service_type_2.CCNetworkResponse<Object?>
       >(
@@ -304,7 +304,7 @@ final class _NetworkServiceProxy implements service_type_2.DemoNetworkService {
   /// Invokes `demo.network.client.setAccessToken`.
   @override
   void setAccessToken(String? token) =>
-      CCRouterGeneratedServiceBinding.invokeSync<
+      ccrouter_service_runtime.CCRouterGeneratedServiceBinding.invokeSync<
         service_type_2.DemoNetworkService,
         void
       >(
@@ -316,7 +316,7 @@ final class _NetworkServiceProxy implements service_type_2.DemoNetworkService {
   /// Invokes `demo.network.client.setDefaultHeader`.
   @override
   void setDefaultHeader(String name, String value) =>
-      CCRouterGeneratedServiceBinding.invokeSync<
+      ccrouter_service_runtime.CCRouterGeneratedServiceBinding.invokeSync<
         service_type_2.DemoNetworkService,
         void
       >(
@@ -328,7 +328,7 @@ final class _NetworkServiceProxy implements service_type_2.DemoNetworkService {
   /// Invokes `demo.network.client.switchEnvironment`.
   @override
   void switchEnvironment(service_type_2.CCNetworkEnvironment environment) =>
-      CCRouterGeneratedServiceBinding.invokeSync<
+      ccrouter_service_runtime.CCRouterGeneratedServiceBinding.invokeSync<
         service_type_2.DemoNetworkService,
         void
       >(
@@ -347,7 +347,7 @@ final class _OrderSummaryServiceProxy
   /// Invokes `demo_order.summary.invocationCount`.
   @override
   int get invocationCount =>
-      CCRouterGeneratedServiceBinding.invokeSync<
+      ccrouter_service_runtime.CCRouterGeneratedServiceBinding.invokeSync<
         service_type_3.OrderSummaryService,
         int
       >(
@@ -359,7 +359,7 @@ final class _OrderSummaryServiceProxy
   /// Invokes `demo_order.summary.loadSummary`.
   @override
   service_type_0.Future<String> loadSummary(int orderId) =>
-      CCRouterGeneratedServiceBinding.invoke<
+      ccrouter_service_runtime.CCRouterGeneratedServiceBinding.invoke<
         service_type_3.OrderSummaryService,
         String
       >(
@@ -373,7 +373,7 @@ final class _OrderSummaryServiceProxy
   service_type_0.Future<T> loadValue<T extends Object>(
     service_type_3.OrderSummaryValue<T> value,
   ) =>
-      CCRouterGeneratedServiceBinding.invoke<
+      ccrouter_service_runtime.CCRouterGeneratedServiceBinding.invoke<
         service_type_3.OrderSummaryService,
         T
       >(
@@ -385,7 +385,7 @@ final class _OrderSummaryServiceProxy
   /// Invokes `demo_order.summary.summaryFor`.
   @override
   String summaryFor(int orderId) =>
-      CCRouterGeneratedServiceBinding.invokeSync<
+      ccrouter_service_runtime.CCRouterGeneratedServiceBinding.invokeSync<
         service_type_3.OrderSummaryService,
         String
       >(
@@ -397,7 +397,7 @@ final class _OrderSummaryServiceProxy
   /// Invokes `demo_order.summary.unwrap`.
   @override
   T unwrap<T extends Object>(service_type_3.OrderSummaryValue<T> value) =>
-      CCRouterGeneratedServiceBinding.invokeSync<
+      ccrouter_service_runtime.CCRouterGeneratedServiceBinding.invokeSync<
         service_type_3.OrderSummaryService,
         T
       >(

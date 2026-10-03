@@ -193,7 +193,9 @@ String _emitServiceProxyLibrary(
   final clientName =
       '${_servicePascal(_serviceComponentApiOwner(component.id))}Services';
   final out = StringBuffer()
-    ..writeln("import 'package:ccrouter/ccrouter_generated.dart';");
+    ..writeln(
+      "import 'package:ccrouter/ccrouter_generated.dart' as ${imports.frameworkPrefix};",
+    );
   for (final entry in imports.imports.entries) {
     out.writeln("import '${entry.key}' as ${entry.value};");
   }
@@ -270,12 +272,17 @@ void _emitServiceProxyMember(
   );
   final parameters = _serviceParameterSignature(member.parameters, imports);
   final invocation = member.isAsync ? 'invoke' : 'invokeSync';
+  final reserved = {
+    for (final parameter in member.parameters) parameter.displayName,
+    for (final parameter in member.typeParameters) parameter.displayName,
+  };
+  final receiver = _serviceUnusedName('service', reserved);
   final key = dependency.key == null
       ? ''
-      : '      key: const CCServiceKey<$contractType>(${jsonEncode(dependency.key)}),\n';
+      : '      key: const ${imports.frameworkPrefix}.CCServiceKey<$contractType>(${jsonEncode(dependency.key)}),\n';
   final call = member.kind == 'getter'
-      ? 'service.${member.element.displayName}'
-      : 'service.${member.element.displayName}$forwardedTypeArguments(${_serviceForwardedArguments(member.parameters)})';
+      ? '$receiver.${member.element.displayName}'
+      : '$receiver.${member.element.displayName}$forwardedTypeArguments(${_serviceForwardedArguments(member.parameters)})';
   out
     ..writeln('  /// Invokes `${dependency.contract.id}.${member.methodId}`.')
     ..writeln('  @override');
@@ -288,12 +295,12 @@ void _emitServiceProxyMember(
   }
   out
     ..writeln(
-      '      CCRouterGeneratedServiceBinding.$invocation<$contractType, $resultType>(',
+      '      ${imports.frameworkPrefix}.CCRouterGeneratedServiceBinding.$invocation<$contractType, $resultType>(',
     )
     ..write(key)
     ..writeln('        methodId: ${jsonEncode(member.methodId)},')
     ..writeln('        callerComponentId: ${jsonEncode(component.id)},')
-    ..writeln('        call: (service, _) => $call,')
+    ..writeln('        call: ($receiver, _) => $call,')
     ..writeln('      );')
     ..writeln();
 }
@@ -314,6 +321,7 @@ final class _ServiceProxyImportPlan {
         uris,
       );
       for (final member in dependency.contract.members) {
+        reservedPrefixes.add(member.element.displayName);
         for (final typeParameter in member.typeParameters) {
           reservedPrefixes.add(typeParameter.displayName);
           final bound = typeParameter.bound;
@@ -321,12 +329,18 @@ final class _ServiceProxyImportPlan {
         }
         _collectType(member.returnType, member.element, uris);
         for (final parameter in member.parameters) {
+          reservedPrefixes.add(parameter.displayName);
           _collectType(parameter.type, parameter, uris);
         }
       }
     }
     final sorted = uris.toList()
       ..sort((left, right) => left.toString().compareTo(right.toString()));
+    frameworkPrefix = _serviceUnusedName(
+      'ccrouter_service_runtime',
+      reservedPrefixes,
+    );
+    reservedPrefixes.add(frameworkPrefix);
     var prefixIndex = 0;
     _aliases = {};
     for (final uri in sorted) {
@@ -347,6 +361,9 @@ final class _ServiceProxyImportPlan {
 
   /// Import URI to deterministic generated prefix.
   late final Map<String, String> _aliases;
+
+  /// Qualified SPI namespace that no generated method can shadow.
+  late final String frameworkPrefix;
 
   /// Imports required by the generated standalone Proxy library.
   Map<String, String> get imports => Map.unmodifiable(_aliases);
@@ -471,9 +488,19 @@ final class _ServiceProxyImportPlan {
 
   /// Returns the generated prefix for one imported declaration.
   String _serviceTypePrefix(Element element, Uri importUri) {
-    if (_serviceFrameworkOrCoreUri(importUri)) return '';
+    if (importUri.toString() == 'dart:core') return '';
+    if (_serviceFrameworkOrCoreUri(importUri)) return '$frameworkPrefix.';
     return '${_aliases[importUri.toString()]!}.';
   }
+}
+
+/// Allocates a deterministic generated name outside the authored scope.
+String _serviceUnusedName(String preferred, Set<String> reserved) {
+  var candidate = preferred;
+  for (var suffix = 1; reserved.contains(candidate); suffix++) {
+    candidate = '$preferred$suffix';
+  }
+  return candidate;
 }
 
 /// Renders method-owned generic parameters and their public Pure Dart bounds.
@@ -620,7 +647,7 @@ String _servicePascal(String value) => value
     .map((part) => '${part[0].toUpperCase()}${part.substring(1)}')
     .join();
 
-/// Whether a URI needs no explicit generated prefix.
+/// Whether a URI is covered by Dart core or the shared framework SPI import.
 bool _serviceFrameworkOrCoreUri(Uri uri) =>
     uri.toString() == 'dart:core' ||
     uri.toString().startsWith('package:ccrouter_contracts/') ||
