@@ -78,13 +78,20 @@ FilledButton(
 
 ## 6. 安全与性能
 
-- 属性必须是 String、num、bool 或有限的 String/num 列表；
+- 属性必须是 String、num、bool 或有限的 String/num 列表；列表在属性创建时复制为不可变
+  快照，拒绝嵌套集合和任意对象，调用方和 Sink 均不能修改已验证值；
 - 禁止 Token、Cookie、完整 URI、Widget、Exception、业务对象和未脱敏账号信息；
-- 分析事件使用有界异步队列；队列满时允许丢弃非关键旧事件；
+- 分析事件使用有界异步队列；队列满时允许丢弃非关键旧事件；首个 Sink 也在后续事件循环
+  启动，分发前先建立单次调度状态，Sink 重入入队不会启动并行 drain；
 - Sink 异常不能影响导航、Service、Command、Event 或页面构建；
 - 同意前后必须可以切换事件策略；`CCAnalyticsEventDispatcher` 在入队前执行
-  Consent、启用和采样判断，撤销同意时清理待发送队列；已经进入外部 Sink 的事件无法撤回，
-  因此敏感供应商应在同意后再启用；
+  Consent、启用和采样判断。撤销同意或禁用时清理待发送队列，并使当前事件剩余 Sink 的
+  投递失效；立即重新授权也不能恢复旧事件。每个 Sink 启动前检查授权代次，不重复采样。
+  已经开始的外部 Sink 写入无法撤回，网络取消和供应商缓存清理由应用 Adapter 负责；
+- Composition Root 等待 `close()`，包括尚未启动的调度与在途写入；关闭后不接收新事件，
+  等待期间仍允许撤销授权以取消尚未开始的投递。Sink 不得在自己的 `write` 中等待
+  同一 Dispatcher 的 `close()`，以免形成自身等待。异步调度不是 Isolate 隔离，应用 Sink
+  仍须避免耗时同步工作；
 - 监听器、ScrollController、Timer 和 StreamSubscription 必须在 Host/页面销毁时释放；
 - 分析事件和框架错误诊断都必须支持分类开关和采样。
 

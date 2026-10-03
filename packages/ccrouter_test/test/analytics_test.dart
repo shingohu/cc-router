@@ -19,11 +19,13 @@ final class _RecordingSink implements CCAnalyticsSink {
 
 final class _BlockingSink implements CCAnalyticsSink {
   final ready = Completer<void>();
+  final started = Completer<void>();
   final events = <CCAnalyticsEvent>[];
 
   @override
   Future<void> write(CCAnalyticsEvent event) async {
     events.add(event);
+    if (!started.isCompleted) started.complete();
     await ready.future;
   }
 }
@@ -149,6 +151,7 @@ void main() {
       );
 
       dispatcher.dispatch(_event('custom.in_flight'));
+      await sink.started.future;
       dispatcher.dispatch(_event('custom.pending'));
       dispatcher.updatePolicy(CCAnalyticsPolicy(consentGranted: false));
       sink.ready.complete();
@@ -189,6 +192,7 @@ void main() {
       );
 
       dispatcher.dispatch(_event('custom.one'));
+      await sink.started.future;
       dispatcher.dispatch(_event('custom.two'));
       dispatcher.dispatch(_event('custom.three'));
       expect(dispatcher.droppedEventCount, 1);

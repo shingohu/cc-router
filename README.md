@@ -456,13 +456,20 @@ CCRouter.initialize(
   navigationAspects: [navigationAnalytics.createAspect()],
 );
 
-// 隐私授权完成后再开启分析；撤销授权会清理尚未发送的队列事件。
+// 隐私授权完成后再开启分析；撤销授权会取消尚未开始的投递。
 analytics.updatePolicy(
   CCAnalyticsPolicy(consentGranted: true, sampleRate: .25),
 );
 ```
 
 分析属性必须使用 `CCAnalyticsProperty` 声明，禁止放入 Token、完整 URI、Widget、异常对象或任意业务对象。
+支持的 String/num 列表在属性创建时复制为不可变快照，调用方或某个 Sink 的修改不能污染其他 Sink。
+撤销 Consent 或禁用分析会清空队列，并阻止当前事件继续投递到尚未开始的 Sink；立即重新授权也不会恢复旧事件。
+已经开始的 Sink 写入无法撤回，网络取消和供应商缓存清理由应用 Adapter 负责。
+
+`dispatch` 只负责入队，首个 Sink 也在后续事件循环启动。Composition Root 结束时应等待
+`analytics.close()`，它会停止接收并等待已接受的投递；不要在 Sink 自己的 `write` 中等待 `close()`，
+否则形成自身等待。异步分发不等于后台线程，Sink 仍应避免在 UI isolate 执行耗时同步计算。
 任意 Button、列表项点击和滚动不由 Core 猜测；使用 `CCAnalyticsTarget` 包装现有回调，自动 UI 采集只能作为默认关闭的独立插件接入。
 需要滚动会话或曝光时，按需依赖 `ccrouter_analytics_flutter`，显式包裹
 `CCAnalyticsScrollable` 或 `CCAnalyticsExposureTarget`；曝光默认按可见比例、最小停留

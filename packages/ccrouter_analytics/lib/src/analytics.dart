@@ -38,15 +38,18 @@ enum CCAnalyticsEventType {
 /// a sensitive object graph.
 final class CCAnalyticsProperty {
   /// Creates a validated property with a stable [name] and primitive [value].
-  CCAnalyticsProperty(this.name, this.value) {
+  CCAnalyticsProperty(this.name, Object value)
+    : value = _snapshotAnalyticsPropertyValue(value) {
     _validateAnalyticsPropertyName(name);
-    _validateAnalyticsPropertyValue(value);
   }
 
   /// Stable property name understood by the application analytics schema.
   final String name;
 
-  /// Provider-neutral primitive value.
+  /// Provider-neutral primitive value, copied into an immutable list if needed.
+  ///
+  /// Mutating the caller's original list cannot change this property or any
+  /// queued event; sinks receive the same immutable snapshot.
   final Object value;
 }
 
@@ -500,18 +503,24 @@ final class CCAnalyticsEventDispatcher {
 
   /// Replaces [nextPolicy] and clears pending events when delivery is disabled.
   ///
-  /// Events already executing in a sink cannot be retracted. Applications that
-  /// handle sensitive consent transitions should update the policy before
-  /// constructing or enabling the corresponding provider sink.
+  /// Revoking consent or disabling delivery also invalidates the remaining
+  /// sinks of an in-flight event, even if consent is granted again immediately.
+  /// A write already executing in a sink cannot be retracted. Other policy
+  /// fields (sampling, blacklist, throttle) apply when accepting new events.
   void updatePolicy(CCAnalyticsPolicy nextPolicy) {
     _policy = nextPolicy;
     _lastAcceptedAt.clear();
     if (!nextPolicy.enabled || !nextPolicy.consentGranted) {
+      _deliveryEpoch++;
       _queue.clear();
     }
   }
 
   /// Stops accepting events and waits for already queued events to finish.
+  ///
+  /// This also waits for a scheduled drain that has not started yet. A sink
+  /// must not await this Future from its own write, since close waits for that
+  /// same write. Consent revocation may still discard pending deliveries.
   Future<void> close() async {
     _closed = true;
     final drain = _drainFuture;
@@ -549,6 +558,12 @@ final class CCAnalyticsEventDispatcher {
   /// Current mutable policy slot updated only through [updatePolicy].
   CCAnalyticsPolicy _policy;
 
+  /// Revocation generation invalidating remaining writes of an active event.
+  ///
+  /// Granting consent never restores an older generation. Queued events are
+  /// cleared on revocation, so only the active drain needs to capture it.
+  int _deliveryEpoch = 0;
+
   /// Random source isolated for deterministic sampling tests.
   late final double Function() _randomSource;
 
@@ -561,14 +576,33 @@ final class CCAnalyticsEventDispatcher {
   /// Schedules exactly one asynchronous queue drain.
   void _scheduleDrain() {
     if (_drainFuture != null) return;
-    _drainFuture = _drain().whenComplete(() => _drainFuture = null);
+    // Establish single-flight ownership before invoking any user callback.
+    // Future schedules an event-loop turn rather than running the first sink
+    // synchronously on a navigation or widget callback stack.
+    _drainFuture = Future<void>(() async {
+      try {
+        do {
+          await _drain();
+          // Include events admitted by other completion listeners while the
+          // previous drain Future was completing, before releasing ownership.
+        } while (_queue.isNotEmpty);
+      } finally {
+        _drainFuture = null;
+      }
+    });
   }
 
   /// Delivers queued events while isolating every sink failure.
   Future<void> _drain() async {
     while (_queue.isNotEmpty) {
       final event = _queue.removeFirst();
+      final epoch = _deliveryEpoch;
       for (final sink in sinks) {
+        if (epoch != _deliveryEpoch ||
+            !_policy.enabled ||
+            !_policy.consentGranted) {
+          break;
+        }
         try {
           await sink.write(event);
         } catch (error, stackTrace) {
@@ -651,12 +685,17 @@ void _validateAnalyticsPropertyName(String value) {
   }
 }
 
-/// Validates the deliberately narrow analytics property value set.
-void _validateAnalyticsPropertyValue(Object value) {
-  if (value is String || value is num || value is bool) return;
-  if (value is List<Object?> &&
-      value.every((item) => item is String || item is num)) {
-    return;
+/// Copies and validates the deliberately narrow analytics property value set.
+///
+/// Validate the copied list so no caller-owned mutable collection survives the
+/// boundary. Nested collections and arbitrary objects remain unsupported.
+Object _snapshotAnalyticsPropertyValue(Object value) {
+  if (value is String || value is num || value is bool) return value;
+  if (value is List<Object?>) {
+    final snapshot = List<Object?>.unmodifiable(value);
+    if (snapshot.every((item) => item is String || item is num)) {
+      return snapshot;
+    }
   }
   throw ArgumentError.value(
     value,

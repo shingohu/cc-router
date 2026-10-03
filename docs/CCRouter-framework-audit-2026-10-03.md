@@ -6,10 +6,10 @@
 - 基线：`769587b`。审查开始时的 Path 指纹修复、拓扑基准与文档改动，结束时已包含在该提交中。
 - 范围：Core/Contracts、Flutter Facade、GoRouter、五类能力生成器与 CLI、Analyzer、Analytics、
   DevTools、Demo 接入模式以及面向集成者的 Integration/CLI Skill。
-- 状态：审查完成；后续已按授权修复 F01/F02 与 F03/F04/F09，验证记录见第 8、9 节。
+- 状态：审查完成；后续已按授权修复 F01/F02、F03/F04/F09 与 F05/F10/F11，验证记录见第 8–10 节。
   其余条目未实施。
 - 审查结论：现有测试基线通过，但不能认定框架没有严重缺陷或生成器绝对准确。原确认
-  5 项 P1、13 项 P2，其中 1 项 P2 属于 Demo；上述修复后剩余 1 项 P1、12 项 P2。
+  5 项 P1、13 项 P2，其中 1 项 P2 属于 Demo；上述修复后剩余 0 项已确认 P1、10 项 P2。
   优先修复已有能力的组合边界，再扩展开发体验能力。
 
 P1 表示优先处理的业务结果、清理、授权或生成准确性风险；P2 表示特定合法输入或
@@ -130,6 +130,8 @@ Analyzer 测试在 `packages/ccrouter_analyzer_plugin/` 内执行 `fvm dart test
 
 ### F05：撤销 Consent 后仍启动下一个 Analytics Sink
 
+- 状态：已修复。撤销/禁用递增投递代次并清空队列，每个 Sink 启动前复核授权和代次；
+  立即重新授权不会恢复旧事件，已经开始的 write 仍不可撤回。
 - 位置：[analytics.dart](../packages/ccrouter_analytics/lib/src/analytics.dart) 第 506、571 行。
 - 触发：一个事件同时发往 A/B 两个 Sink；A 正在等待时撤销 Consent，然后 A 完成。
 - 根因：撤销仅清空待处理队列，已取出的事件遍历 Sink 时不再校验策略。
@@ -191,6 +193,8 @@ Token，并仅等待 Interceptor 本身或 timeout。它没有关联 Runtime 取
 
 ### F10（P2）：Analytics 属性仅浅层只读，可绕过值校验
 
+- 状态：已修复。属性构造时复制并验证列表，向调用方及全部 Sink 暴露同一不可变快照。
+
 [analytics.dart](../packages/ccrouter_analytics/lib/src/analytics.dart) 第 41、72 行保留调用方
 List 引用，仅外层 Map.unmodifiable。实测先传合法 `['valid']`，再向原 List 加入 Map/Object，
 已经验证的事件能读到这些非法对象；Sink 也可修改该 List，污染后续 Sink。
@@ -199,6 +203,9 @@ List 引用，仅外层 Map.unmodifiable。实测先传合法 `['valid']`，再�
 验收调用方修改、Sink 修改、排队期间修改、拒绝嵌套对象。
 
 ### F11（P2）：Analytics 首个 Sink 同步进入业务调用栈
+
+- 状态：已修复。先建立单次调度状态，再通过事件循环分发；重入保持 FIFO，close 等待
+  尚未启动的调度，最后一个 Sink 的完成监听器新增事件也不会滞留。
 
 [analytics.dart](../packages/ccrouter_analytics/lib/src/analytics.dart) 第 564 行直接调用
 async `_drain()`，其首个 `await` 之前已经执行 `sink.write`。实测 dispatch 返回前 Sink
@@ -310,7 +317,7 @@ dependencies 分别表达组件关系和实际消费，可用可靠 Quick Fix �
 
 ## 6. 核心价值逐项回归
 
-下表保留原始审查时的判断；后续修复及验证范围见第 8、9 节，不据此把已修项再次列为待办。
+下表保留原始审查时的判断；后续修复及验证范围见第 8–10 节，不据此把已修项再次列为待办。
 
 | # | 核心价值 | 本轮判断 | 证据与待完成项 |
 | --- | --- | --- | --- |
@@ -333,14 +340,14 @@ dependencies 分别表达组件关系和实际消费，可用可靠 Quick Fix �
 
 ## 7. 推荐实施顺序与完成定义
 
-F01/F02 与 F03/F04/F09 已完成实现和定向回归；后续从第 3 项继续。每个独立缺陷先增加失败用例，再修复、回归，
+F01/F02、F03/F04/F09 与 F05/F10/F11 已完成实现和回归；后续从第 4 项继续。每个独立缺陷先增加失败用例，再修复、回归，
 按用户授权提交。
 
 1. **生命周期与返回保护：F01、F02。** 验证异常隔离和多层 Pop 决策，避免资源遗漏与数据丢失。
 2. **外部分发和生成准确性：F04、F03、F09。** 建立真实 producer/consumer 样本，再统一
    内容证明与默认常量编码；完整与缓存路径逐字节/错误语义一致后再测性能。
-3. **Analytics 安全与分发：F05、F10、F11。** 授权代次、不可变快照、异步调度一起评估，
-   每项独立测试和提交，保持应用 Sink 边界。
+3. **Analytics 安全与分发：F05、F10、F11（已完成）。** 授权代次、不可变快照、异步调度
+   同属 Dispatcher 投递边界，一批修复并逐项独立测试，保持应用 Sink 边界。
 4. **Runtime 组合流程：F06、F07、F08。** 补并发根依赖环、shutdown during interception、
    Defer+Host/Outlet/Extra 组合矩阵。
 5. **采集和 Demo 生命周期：F12、F13、F18。** 用真实滚动 Widget 和 Fake Backend 验证。
@@ -417,3 +424,34 @@ F01/F02 与 F03/F04/F09 已完成实现和定向回归；后续从第 3 项继�
 - 3x 五类能力拓扑复测通过：18 组件、90 Route，个人/团队增删的 277 份受管输出均与
   参考路径逐字节一致；可信新增和删除继续复用聚合路径。wall time 为稳定检查 0.842s、
   个人新增 6.472s、团队预生成新增 2.698s，详见[性能报告](CCRouter-generator-performance-report.md#66-f03f04f09-准确性修复后的-3x-回归)。
+
+## 10. F05/F10/F11 修复验证（2026-10-03）
+
+- 根因分别是授权仅在入队时检查、属性列表保留外部可变引用、async 函数在首个 await 前
+  同步调用 Sink。仅由应用 Sink 补检查会重复策略且无法保证所有消费者；本次选用
+  Dispatcher 内部修复，不增加公开 API，不改变应用供应商 Adapter 的所有权。
+- [analytics_dispatcher_regression_test.dart](../packages/ccrouter_test/test/analytics_dispatcher_regression_test.dart)
+  新增 **12 项**确定性回归，覆盖 revoke/re-grant、disable/re-enable、Sink 错误回调内撤销、
+  调用方/Sink 修改列表、首个写入异步、重入 FIFO、重复/重入 close、末尾完成监听器入队
+  以及首次写入前的队列溢出。先用失败用例复现，再修复；加上原有 Pure Dart 测试共
+  **23/23 通过**。
+- 第 1 节同一框架/Flutter/Demo/模块/DevTools 回归命令 **444/444 通过**。首次回归中曝光
+  断言失败、滚动用例等待未推进的 Timer；改为显式推进 Widget 假时钟后通过，没有删除
+  去重断言或回退异步分发。本次没有修复 F12/F13 的曝光采集逻辑。
+- Workspace `fvm dart analyze` 无问题。README、Analytics 设计和集成 Skill 同步了
+  不可变属性、授权代次、事件循环调度、Composition Root 等待 close 的语义，以及 Sink
+  不得等待自己的 Dispatcher close 的限制。异步调度不是后台线程，耗时同步 Sink 仍会
+  占用 UI isolate；已开始写入的取消由应用 Adapter 负责。
+- 官方生成器刷新 **3 份** Portable State，业务 Dart、metadata 和 managed-output 摘要未变。
+  完整参考 `generate demo --no-cache --check --profile` 通过，内部 **3473ms**，其中
+  build_runner **1597ms**；缓存检查同样通过，内部 **495ms**。本次未修改 Generator/Analyzer，
+  不重复它们的独立全量套件。91 份 Markdown 的文档检查、Skill YAML 解析和
+  `git diff --check` 通过；Python Skill 快检仍因环境缺少 PyYAML 未运行。
+- Analytics 5000 次连续入队、capacity=64：入队 P50/P95 **1/3us**、accepted=5000、
+  dropped=4936、peak=64、close 后 pending=0。首个事件现在也先入队等待，因此一次
+  不让出事件循环的突发只能保留最后 64 个；与旧同步首个 Sink 的 4935 丢弃数差 1 属于
+  时序修正，不是容量越界。RSS 增加 **2850816 bytes**，仅作短 JIT 趋势，不证明长期无泄漏。
+- 核心价值：修复授权与数据快照边界、避免业务调用栈同步进入 Sink，保持确定性 FIFO、
+  有界队列和异常隔离；未新增业务配置或公共 API。当前剩余 **10 项 P2**：
+  F06/F07/F08/F12/F13/F14/F15/F16/F17/F18。下一批为 Runtime 组合流程；本次未重跑真实
+  平台和长期 Heap 回归，不宣称全框架审查问题已清零。

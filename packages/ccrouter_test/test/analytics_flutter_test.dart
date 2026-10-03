@@ -81,12 +81,14 @@ void main() {
         ),
       ),
     );
-    await tester.pump();
+    // Advance the event loop for the zero-duration dwell and queued delivery.
+    await tester.pump(Duration.zero);
     expect(sink.events, hasLength(1));
     await tester.tap(find.byKey(const ValueKey<String>('toggle')));
     await tester.pump();
     await tester.tap(find.byKey(const ValueKey<String>('toggle')));
     await tester.pump();
+    await tester.pump(Duration.zero);
     expect(sink.events, hasLength(2));
     await dispatcher.close();
   });
@@ -163,7 +165,7 @@ void main() {
       direction: ScrollDirection.reverse,
     );
     _scrollEnd(notificationContext, pixels: 180);
-    await tester.pump();
+    await tester.pump(Duration.zero);
     await dispatcher.close();
 
     expect(sink.events.map((event) => event.eventId), [

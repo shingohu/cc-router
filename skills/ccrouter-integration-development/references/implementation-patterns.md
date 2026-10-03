@@ -513,6 +513,28 @@ The Runtime emits `componentGraph`, `componentRegistration`, and
 and error. A Host that needs the complete startup sequence must enable debug
 delivery instead of reproducing component lifecycle logging in its bootstrap.
 
+## Analytics delivery
+
+Keep product analytics separate from framework diagnostics. The application owns
+the `CCAnalyticsEventDispatcher`, consent transitions, and vendor sinks. Use
+validated primitive properties; supported String/num lists are copied into
+immutable snapshots when each `CCAnalyticsProperty` is constructed. Neither the
+caller nor a sink may mutate queued values.
+
+`dispatch` accepts into a bounded queue; even the first sink starts on a later
+event-loop turn. Sampling, blacklist, and throttle apply at admission. Revoking
+consent or disabling delivery clears pending events and invalidates remaining
+sinks of the active event. Immediate re-grant only permits new events; it cannot
+resume old delivery. Already-running writes require application-level cancellation
+if the vendor supports it.
+
+The owning Composition Root must await `close()` to stop admission and finish
+scheduled/in-flight delivery. Do not await that close from a sink's own `write`,
+because it waits for the same write. Async dispatch is not isolate offloading:
+keep synchronous sink work short. Widget tests must advance the event loop
+(for example, `tester.pump(Duration.zero)`) before asserting sink delivery;
+flushing microtasks alone does not run scheduled timers.
+
 ## Initialization
 
 Keep initialization identifiers in one component-owned constants class. Do not
