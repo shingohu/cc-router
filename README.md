@@ -474,6 +474,10 @@ analytics.updatePolicy(
 需要滚动会话或曝光时，按需依赖 `ccrouter_analytics_flutter`，显式包裹
 `CCAnalyticsScrollable` 或 `CCAnalyticsExposureTarget`；曝光默认按可见比例、最小停留
 时间和目标生命周期去重，不读取 Widget 文本，也不注册全局手势监听。
+Target 自动监听祖先滚动与分析策略；可见比例取 View 和祖先裁剪区域的交集，不判断任意
+Overlay 遮挡或像素透明度。Consent 拒绝、后台或暂时移出树会取消本次停留计时，恢复后
+必须重新满足完整时长。`once` 只在 Dispatcher 接受事件后生效，不保证 Sink 已成功写入；
+采样、黑名单或节流拒绝不会消耗一次额度，也不会逐帧重试。
 
 分析 Dispatcher 还提供不含事件内容的压力指标：`acceptedEventCount`、`pendingEventCount`、
 `peakQueueDepth` 和 `droppedEventCount`。它们只用于性能/健康诊断，不是审计日志或事件回放接口；可用

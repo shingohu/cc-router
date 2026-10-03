@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:ccrouter/ccrouter.dart';
 import 'package:dio/dio.dart';
 
@@ -40,11 +42,20 @@ abstract interface class DemoNetworkService {
 
 /// Dio-backed implementation used by the Demo shared network component.
 @CCService()
-final class DemoNetworkServiceImpl implements DemoNetworkService {
+final class DemoNetworkServiceImpl implements DemoNetworkService, CCDisposable {
   /// Creates an app-scoped network client with the Demo environments.
   DemoNetworkServiceImpl() {
+    _initializeClient(_DioNetworkBackend(Dio()));
+  }
+
+  /// Injects an owned transport for deterministic lifecycle tests.
+  DemoNetworkServiceImpl.withBackend(CCNetworkBackend backend) {
+    _initializeClient(backend);
+  }
+
+  void _initializeClient(CCNetworkBackend backend) {
     _client = CCNetworkClient(
-      backend: _DioNetworkBackend(Dio()),
+      backend: backend,
       configuration: CCNetworkConfigurationStore(
         environment: demoNetworkEnvironments.first,
         headers: const {'X-Demo-Client': 'ccrouter-network-demo'},
@@ -59,6 +70,8 @@ final class DemoNetworkServiceImpl implements DemoNetworkService {
   late final CCNetworkClient _client;
   String? _accessToken;
   final List<CCNetworkLogRecord> _logs = <CCNetworkLogRecord>[];
+  bool _disposed = false;
+  Future<void>? _disposal;
 
   @override
   String get environmentId => _client.configuration.environment.id;
@@ -75,27 +88,50 @@ final class DemoNetworkServiceImpl implements DemoNetworkService {
 
   @override
   void switchEnvironment(CCNetworkEnvironment environment) {
+    _ensureActive();
     _client.configuration.switchEnvironment(environment);
   }
 
   @override
   void setAccessToken(String? token) {
+    _ensureActive();
     _accessToken = token;
   }
 
   @override
   void setDefaultHeader(String name, String value) {
+    _ensureActive();
     _client.configuration.setHeader(name, value);
   }
 
   @override
   void removeDefaultHeader(String name) {
+    _ensureActive();
     _client.configuration.removeHeader(name);
   }
 
   void _addLog(CCNetworkLogRecord record) {
+    if (_disposed) return;
     _logs.add(record);
     if (_logs.length > 80) _logs.removeAt(0);
+  }
+
+  void _ensureActive() {
+    if (_disposed) throw StateError('DemoNetworkService is disposed.');
+  }
+
+  /// App Scope owns cleanup; business consumers must not dispose this Service.
+  /// Concurrent calls share transport closure, including its failure result.
+  @override
+  Future<void> dispose() {
+    if (_disposal case final pending?) return pending;
+    final completion = Completer<void>();
+    _disposal = completion.future;
+    _disposed = true;
+    _accessToken = null;
+    _logs.clear();
+    completion.complete(Future<void>.sync(_client.dispose));
+    return completion.future;
   }
 }
 

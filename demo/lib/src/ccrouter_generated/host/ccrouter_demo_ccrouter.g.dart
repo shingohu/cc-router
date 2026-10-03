@@ -29,7 +29,7 @@ final ccrouterGeneratedPackageBundle = CCGeneratedPackageBundle(
   packageName: 'ccrouter_demo',
   packageVersion: '0.1.0+1',
   contentFingerprint:
-      '193815c2316e8bd3ed4246f9785bff946271c118014b0c8b892df9144faf2064',
+      'dc070ea31f8687a0a1ed69fb7faa6ce63065be8628de62592538cadf1aae15d2',
   contractBundle: CCContractBundleDescriptor(
     packageName: 'ccrouter_demo',
     packageVersion: '0.1.0+1',

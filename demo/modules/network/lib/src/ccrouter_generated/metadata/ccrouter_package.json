@@ -5,7 +5,7 @@
     "name": "demo_network",
     "version": "0.1.0"
   },
-  "contentFingerprint": "904dff7f2382053ec8b8ebf99247fec5c2c84b93a009049de9109b9aff69b3ee",
+  "contentFingerprint": "f4cfd63d2fb0cac52b7d3db321e5fb1cba73e83fc5cfbdab3bdd00966ab51966",
   "bundle": {
     "library": "lib/src/ccrouter_generated/host/demo_network_ccrouter.g.dart",
     "symbol": "ccrouterGeneratedPackageBundle"
@@ -62,7 +62,7 @@
           "declaration": {
             "symbol": "DemoNetworkService",
             "packageUri": "package:demo_network/src/network_service.dart",
-            "line": 15,
+            "line": 17,
             "column": 26
           },
           "methods": [
@@ -83,7 +83,7 @@
               "declaration": {
                 "symbol": "environmentId",
                 "packageUri": "package:demo_network/src/network_service.dart",
-                "line": 17,
+                "line": 19,
                 "column": 14
               }
             },
@@ -104,7 +104,7 @@
               "declaration": {
                 "symbol": "isAuthenticated",
                 "packageUri": "package:demo_network/src/network_service.dart",
-                "line": 20,
+                "line": 22,
                 "column": 12
               }
             },
@@ -125,7 +125,7 @@
               "declaration": {
                 "symbol": "logs",
                 "packageUri": "package:demo_network/src/network_service.dart",
-                "line": 23,
+                "line": 25,
                 "column": 32
               }
             },
@@ -153,7 +153,7 @@
               "declaration": {
                 "symbol": "removeDefaultHeader",
                 "packageUri": "package:demo_network/src/network_service.dart",
-                "line": 38,
+                "line": 40,
                 "column": 8
               }
             },
@@ -182,7 +182,7 @@
               "declaration": {
                 "symbol": "request",
                 "packageUri": "package:demo_network/src/network_service.dart",
-                "line": 26,
+                "line": 28,
                 "column": 38
               }
             },
@@ -210,7 +210,7 @@
               "declaration": {
                 "symbol": "setAccessToken",
                 "packageUri": "package:demo_network/src/network_service.dart",
-                "line": 32,
+                "line": 34,
                 "column": 8
               }
             },
@@ -244,7 +244,7 @@
               "declaration": {
                 "symbol": "setDefaultHeader",
                 "packageUri": "package:demo_network/src/network_service.dart",
-                "line": 35,
+                "line": 37,
                 "column": 8
               }
             },
@@ -272,7 +272,7 @@
               "declaration": {
                 "symbol": "switchEnvironment",
                 "packageUri": "package:demo_network/src/network_service.dart",
-                "line": 29,
+                "line": 31,
                 "column": 8
               }
             }
@@ -302,13 +302,13 @@
           "implementation": {
             "symbol": "DemoNetworkServiceImpl",
             "packageUri": "package:demo_network/src/network_service.dart",
-            "line": 43,
+            "line": 45,
             "column": 13
           },
           "contract": {
             "symbol": "DemoNetworkService",
             "packageUri": "package:demo_network/src/network_service.dart",
-            "line": 15,
+            "line": 17,
             "column": 26
           },
           "registration": "ccrouterRegisterDemoNetworkServiceImplService",
@@ -335,13 +335,13 @@
         "contract": {
           "symbol": "DemoNetworkService",
           "packageUri": "package:demo_network/src/network_service.dart",
-          "line": 15,
+          "line": 17,
           "column": 26
         },
         "implementation": {
           "symbol": "DemoNetworkServiceImpl",
           "packageUri": "package:demo_network/src/network_service.dart",
-          "line": 43,
+          "line": 45,
           "column": 13
         },
         "generatedArtifacts": [

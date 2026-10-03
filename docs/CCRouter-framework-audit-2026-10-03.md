@@ -6,10 +6,10 @@
 - 基线：`769587b`。审查开始时的 Path 指纹修复、拓扑基准与文档改动，结束时已包含在该提交中。
 - 范围：Core/Contracts、Flutter Facade、GoRouter、五类能力生成器与 CLI、Analyzer、Analytics、
   DevTools、Demo 接入模式以及面向集成者的 Integration/CLI Skill。
-- 状态：审查完成；后续已按授权修复 F01–F11，验证记录见第 8–11 节。
+- 状态：审查完成；后续已按授权修复 F01–F13 和 F18，验证记录见第 8–12 节。
   其余条目未实施。
 - 审查结论：现有测试基线通过，但不能认定框架没有严重缺陷或生成器绝对准确。原确认
-  5 项 P1、13 项 P2，其中 1 项 P2 属于 Demo；上述修复后剩余 0 项已确认 P1、7 项 P2。
+  5 项 P1、13 项 P2，其中 1 项 P2 属于 Demo；上述修复后剩余 0 项已确认 P1、4 项 P2。
   优先修复已有能力的组合边界，再扩展开发体验能力。
 
 P1 表示优先处理的业务结果、清理、授权或生成准确性风险；P2 表示特定合法输入或
@@ -225,6 +225,8 @@ async `_drain()`，其首个 `await` 之前已经执行 `sink.write`。实测 di
 
 ### F12（P2）：曝光 Target 收不到祖先 Scrollable 的滚动通知
 
+状态：已修复，验证见第 12 节。下述为修复前证据。
+
 [exposure_tracking.dart](../packages/ccrouter_analytics_flutter/lib/src/exposure_tracking.dart)
 第 104 行把 NotificationListener 放在 Target 内，滚动通知沿祖先方向传播，不会进入位于
 Scrollable 子树中的列表项 Listener。
@@ -234,6 +236,8 @@ Scrollable 子树中的列表项 Listener。
 List/嵌套滚动、移出移入和销毁，而非仅手工派发通知或改变 child 高度。
 
 ### F13（P2）：Consent 拒绝时曝光仍被记为已经上报
+
+状态：已修复，验证见第 12 节。下述为修复前证据。
 
 同文件第 204 行忽略 `tracker.exposure` 的接受结果，总是置 `_hasReported = true`。
 实测 deny 下 Target 可见，随后 grant 并重建同一 Target，仍为 0 事件。
@@ -284,6 +288,8 @@ Generator 使用 resolved DartType，可以接受这些合法类型。
 证明所有 reference 中的代码建议正确，本轮这些冲突仍应作为未修复任务。
 
 ### F18（P2，Demo）：Network Service 没有把 Dio 清理接入 Scope
+
+状态：已修复，验证见第 12 节。下述为修复前证据。
 
 [network_service.dart](../demo/modules/network/lib/src/network_service.dart) 第 43 行的
 `DemoNetworkServiceImpl` 自建 `CCNetworkClient → Dio`，但未实现 CCDisposable，也未调用
@@ -506,3 +512,44 @@ F01–F11 已完成实现和回归；后续从第 5 项继续。每个独立缺�
 - 核心价值：修复并发等待、生命周期取消、类型安全与多 Host 确定性，保留原 Owner/Scope
   和最小 API 边界，没有引入业务配置。当前剩余 **7 项 P2：F12–F18**，下一批为曝光采集
   与 Demo Network 释放。本轮未重跑 macOS/iOS 真机或长期 Heap，不宣称已完成所有平台验收。
+
+## 12. F12/F13/F18 修复验证（2026-10-03）
+
+- 先复现：真实祖先滚动后曝光仍为 0、Consent grant 无业务 rebuild 时仍为 0；
+  generated Network Service 所在 App Scope 关闭后认证状态仍存活。
+- 方案取舍：要求业务反复 rebuild 会增加模板代码且无法统一取消旧 dwell；全局扫描 Widget
+  或轮询会增加采集与性能风险。本轮在可选 Flutter Target 内订阅祖先 ScrollPosition，按帧
+  合并测量，使用 View 和祖先 paint clip 交集；Core 不承担 UI 几何检测。
+- 跨 Pure Dart Dispatcher 与 Flutter Target 新增窄的 `addPolicyListener`，仅通知策略/关闭
+  状态，无 payload、不改变投递结果。同步回调异常隔离、拒绝重入策略更新；detach 调 remover，
+  close 清空监听。Timer、ScrollPosition Listener、Binding Observer 与 Target 生命周期对称，
+  后帧回调使用弱引用，避免无后续帧时保留已销毁 State。
+- `once` 只在 Dispatcher 接受事件后生效；deny/background/detach 不积累 dwell，grant/resume
+  后重新计时。采样/黑名单/节流拒绝不占 lifetime once，也不逐帧重试；授权变更不回放已接受事件。
+- [exposure_regression_test.dart](../packages/ccrouter_test/test/exposure_regression_test.dart)
+  新增 **10 项**真实 Widget 回归：祖先滚动与 50% viewport 裁剪、嵌套同轴滚动、中途移出重置、
+  最近 ScrollPosition 替换、GlobalKey 迁移、deny/grant、revoke/grant、过滤拒绝、后台重建和关闭。
+  [analytics_dispatcher_regression_test.dart](../packages/ccrouter_test/test/analytics_dispatcher_regression_test.dart)
+  新增 **3 项**策略观察边界：解绑/异常/重入策略更新、终态只通知一次、通知中关闭。
+- Demo Network 保留生成器要求的无参 generative constructor；增加测试用 Backend 注入入口，
+  实现 `CCDisposable` 并转发 Client → Dio 释放。释放 Future 在调用 Backend 前发布，重复/重入
+  dispose 共享结果；认证字段和日志及时清理，关闭失败或晚到日志不能重新填充。
+  不把 Dio、HTTP SPI 或业务网络策略上移到框架 Package。
+- [network_lifecycle_test.dart](../demo/test/network_lifecycle_test.dart) 新增 **3 项**：通过 Host
+  公开 Assembly 选取真实生成的 Manifest，验证 App Scope 释放，以及 Fake Backend 延迟关闭、
+  重复/重入关闭、失败和晚到日志。Demo 显式声明 `ccrouter_test` 开发依赖，测试不绕过跨包生成
+  文件边界，也不向组件业务 barrel 暴露 Registrar。
+- 全量框架/Flutter/Demo/模块/DevTools **478/478 通过**；Pure Dart Analytics **26/26 通过**。
+  最后补强 Backend 同步重入关闭后，Network 定向 **3/3 通过**。Workspace analyze 无问题。
+- Analytics 5000 次事件、capacity 64 压力基准通过：入队 P50/P95 **0/1us**，峰值队列 **64**，
+  丢弃 **4936**，关闭后待处理 **0**；RSS 增量 **2834432 bytes**。只作当前 SDK/JIT 样本，
+  不据此宣称 UI 测量零开销、优化加速或长期 Heap 无泄漏。
+- 官方生成器刷新源码位置、关联 Catalog/Bundle 指纹和 Portable State；Service API、Proxy
+  与注册逻辑没有漂移。最终完整参考检查 **2158ms**（build_runner **1149ms**）、缓存检查
+  **243ms** 均通过。91 份 Markdown 文档检查、Skill YAML 元数据解析和 `git diff --check`
+  通过；Skill Python 快检的 PyYAML 依赖仍未安装，不计为已执行。
+- 核心价值：减少应用手工 rebuild；明确接受与投递语义；隐私撤销不重放；观察者异常隔离；
+  Scope 资源所有权完整；生成服务契约与业务调用无需改写。README、设计、Demo 与集成 Skill
+  同步更新。剩余 **4 项 P2：F14/F15 Analyzer、F16/F17 Skill**。
+- 几何检测不处理任意 Overlay 遮挡、opacity 或无通知的自定义布局动画；本轮未跑真机矩阵、
+  长时间 Heap 或独立完整 Generator/Analyzer 套件，不把自动化通过视为这些范围已验收。

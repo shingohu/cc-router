@@ -556,6 +556,25 @@ keep synchronous sink work short. Widget tests must advance the event loop
 (for example, `tester.pump(Duration.zero)`) before asserting sink delivery;
 flushing microtasks alone does not run scheduled timers.
 
+`CCAnalyticsExposureTarget` binds ancestor ScrollPositions and clips measurements
+to their paint bounds. It cancels dwell on revoke, background, or detach, and
+restarts after grant/resume without a business rebuild. `once` counts dispatcher
+admission, not successful delivery. Sampling/blacklist/throttle rejection is one
+attempt per episode; do not poll until sampling eventually succeeds. Arbitrary
+Overlay occlusion and opacity are outside this geometric approximation.
+
+Custom integrations may observe `addPolicyListener` without receiving payloads.
+Read `policy/isClosed` for current state, keep the synchronous callback short,
+never update policy from it, and call the returned remover on detach. Callback
+exceptions are isolated; dispatcher close clears its observers. Ordinary targets
+already own this subscription, so applications need no additional listener.
+
+For nested resources, the registered Service must implement `CCDisposable` and
+forward disposal to its client/transport. Scope cannot discover arbitrary fields.
+The Demo Network Service illustrates shared asynchronous disposal, cleared token
+and logs, and suppression of late log callbacks; use a Fake Backend to verify
+Scope shutdown waits for closure and that a failure does not retain credentials.
+
 ## Initialization
 
 Keep initialization identifiers in one component-owned constants class. Do not

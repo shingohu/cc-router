@@ -46,6 +46,11 @@ typed Extra。完整的 macOS 验证矩阵、已修复问题和 Adapter 限制�
   user/environment/device ID，并使用内存 Backend 保证可重复测试。生产实现可替换为文件、数据库
   或 Secure Storage；命名空间不等于加密边界。真实 Session/Environment/Device Contract、游客
   迁移和持久化接入见 [KV Storage Demo 改造方案](docs/kv-storage-demo-migration.md)。
+- Network：`modules/network` 提供后端中立请求、授权/日志拦截、动态 Header 和 API 环境，
+  默认 Backend 使用 Dio，仍属于 Demo/应用层。注册的 `DemoNetworkServiceImpl` 实现
+  `CCDisposable`，App Scope 关闭时等待 Client → Dio 释放，清除 Token/日志并忽略晚到日志。
+  业务不手动 dispose；测试用 `withBackend` 注入可观察 Fake，见
+  [Network 生命周期回归](test/network_lifecycle_test.dart)。
 
 这些示例用于观察边界而不是模拟万能 EventBus：读取状态走 Service，需要唯一执行者的操作走
 Command，已经发生的事实才发布 Event，一次性启动依赖使用 InitTask。

@@ -450,6 +450,22 @@ final class CCAnalyticsEventDispatcher {
   /// Current immutable consent, enablement, and sampling policy.
   CCAnalyticsPolicy get policy => _policy;
 
+  /// Observes policy changes and closure without receiving event payloads.
+  ///
+  /// Explicit UI targets use this to cancel dwell timers on revocation and
+  /// start fresh measurements after grant. Callbacks run synchronously after
+  /// state changes, must be short, and must not call [updatePolicy] reentrantly.
+  /// Failures are isolated. The owner must call the returned remover on detach;
+  /// [close] notifies and releases all listeners. A close during notification
+  /// lets remaining observers read the terminal state in that same pass.
+  /// Closed dispatchers do not
+  /// accept listeners, and registration does not emit an initial notification.
+  void Function() addPolicyListener(void Function() listener) {
+    if (_closed) return () {};
+    _policyListeners.add(listener);
+    return () => _policyListeners.remove(listener);
+  }
+
   /// Number of events discarded because the bounded queue was full.
   int get droppedEventCount => _droppedEventCount;
 
@@ -508,12 +524,16 @@ final class CCAnalyticsEventDispatcher {
   /// A write already executing in a sink cannot be retracted. Other policy
   /// fields (sampling, blacklist, throttle) apply when accepting new events.
   void updatePolicy(CCAnalyticsPolicy nextPolicy) {
+    if (_notifyingPolicy) {
+      throw StateError('Analytics policy listeners cannot update policy.');
+    }
     _policy = nextPolicy;
     _lastAcceptedAt.clear();
     if (!nextPolicy.enabled || !nextPolicy.consentGranted) {
       _deliveryEpoch++;
       _queue.clear();
     }
+    _notifyPolicyListeners();
   }
 
   /// Stops accepting events and waits for already queued events to finish.
@@ -522,7 +542,11 @@ final class CCAnalyticsEventDispatcher {
   /// must not await this Future from its own write, since close waits for that
   /// same write. Consent revocation may still discard pending deliveries.
   Future<void> close() async {
-    _closed = true;
+    if (!_closed) {
+      _closed = true;
+      _notifyPolicyListeners();
+      if (!_notifyingPolicy) _policyListeners.clear();
+    }
     final drain = _drainFuture;
     if (drain != null) await drain;
     _queue.clear();
@@ -557,6 +581,31 @@ final class CCAnalyticsEventDispatcher {
 
   /// Current mutable policy slot updated only through [updatePolicy].
   CCAnalyticsPolicy _policy;
+
+  /// Lifecycle-owned observers; entries carry no analytics payloads.
+  final Set<void Function()> _policyListeners = {};
+
+  /// Prevents recursive policy mutation while a state snapshot is observed.
+  bool _notifyingPolicy = false;
+
+  /// Delivers lifecycle state changes without letting observers alter results.
+  void _notifyPolicyListeners() {
+    if (_notifyingPolicy) return;
+    _notifyingPolicy = true;
+    try {
+      for (final listener in _policyListeners.toList()) {
+        if (!_policyListeners.contains(listener)) continue;
+        try {
+          listener();
+        } catch (_) {
+          // Policy observation cannot interrupt consent or queue cleanup.
+        }
+      }
+    } finally {
+      _notifyingPolicy = false;
+      if (_closed) _policyListeners.clear();
+    }
+  }
 
   /// Revocation generation invalidating remaining writes of an active event.
   ///

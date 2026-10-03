@@ -5,6 +5,56 @@ import 'package:test/test.dart';
 
 void main() {
   test(
+    'policy observers see committed state, isolate errors and detach',
+    () async {
+      final dispatcher = CCAnalyticsEventDispatcher(sinks: []);
+      final states = <bool>[];
+      dispatcher.addPolicyListener(() => throw StateError('observer'));
+      final remove = dispatcher.addPolicyListener(() {
+        states.add(dispatcher.policy.consentGranted);
+        expect(
+          () => dispatcher.updatePolicy(CCAnalyticsPolicy()),
+          throwsStateError,
+        );
+      });
+      expect(states, isEmpty);
+      dispatcher.updatePolicy(CCAnalyticsPolicy(consentGranted: true));
+      dispatcher.updatePolicy(CCAnalyticsPolicy());
+      expect(states, [true, false]);
+      remove();
+      remove();
+      dispatcher.updatePolicy(CCAnalyticsPolicy(consentGranted: true));
+      await dispatcher.close();
+      expect(states, [true, false]);
+    },
+  );
+
+  test('close notifies terminal state once and releases observers', () async {
+    final dispatcher = CCAnalyticsEventDispatcher(sinks: []);
+    final states = <bool>[];
+    dispatcher.addPolicyListener(() => states.add(dispatcher.isClosed));
+    await dispatcher.close();
+    await dispatcher.close();
+    dispatcher.addPolicyListener(() => fail('closed listener retained'))();
+    dispatcher.updatePolicy(CCAnalyticsPolicy(consentGranted: true));
+    expect(states, [true]);
+  });
+
+  test('close during notification still reaches remaining observers', () async {
+    final dispatcher = CCAnalyticsEventDispatcher(sinks: []);
+    final states = <bool>[];
+    late Future<void> closing;
+    dispatcher.addPolicyListener(() {
+      closing = dispatcher.close();
+    });
+    dispatcher.addPolicyListener(() => states.add(dispatcher.isClosed));
+    dispatcher.updatePolicy(CCAnalyticsPolicy(consentGranted: true));
+    await closing;
+    dispatcher.updatePolicy(CCAnalyticsPolicy());
+    expect(states, [true]);
+  });
+
+  test(
     'a synchronous burst respects capacity before the first write',
     () async {
       final received = <String>[];

@@ -979,8 +979,8 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 ### Service `demo.network.client`
 
 - Declaring package: `demo_network`
-- Contract/declaration: `package:demo_network/src/network_service.dart:15:26` (`DemoNetworkService`)
-- Implementation: `package:demo_network/src/network_service.dart:43:13` (`DemoNetworkServiceImpl`)
+- Contract/declaration: `package:demo_network/src/network_service.dart:17:26` (`DemoNetworkService`)
+- Implementation: `package:demo_network/src/network_service.dart:45:13` (`DemoNetworkServiceImpl`)
 - Generated artifacts:
   - `serviceClient`: `package:demo_navigation_lab/src/ccrouter_generated/component/navigation_lab_component.service_api.g.dart` (`DemoNavigationLabServices.network`)
   - `serviceRegistration`: `package:demo_network/src/ccrouter_generated/service/network_service.service.g.dart` (`ccrouterRegisterDemoNetworkServiceImplService`)

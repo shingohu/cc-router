@@ -24,6 +24,7 @@ dependencies:
   demo_web_contracts: ^0.1.0
 
 dev_dependencies:
+  ccrouter_test: ^0.1.0
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0

@@ -76,6 +76,21 @@ FilledButton(
 
 曝光需要显式目标、可见比例阈值、最小停留时长和去重策略。长列表只记录曝光区间或稳定 Item ID，不记录文本内容。
 
+`CCAnalyticsExposureTarget` 订阅实际祖先 ScrollPosition，按帧合并测量；可见比例是目标
+全局矩形与 View、祖先 paint clip 的交集，支持嵌套滚动和最近 ScrollPosition 替换。
+它不是逐像素检测，不能推断任意 Overlay 遮挡、透明度或无通知的自定义布局动画。
+Target detach/dispose 会移除滚动/策略监听并取消 Timer；后帧回调只弱引用 State。
+
+Consent 拒绝、后台和 detach 不积累 dwell；grant/resume 后重新计满时长，不回放历史。
+`once` 表示同一 Target 状态生命周期内至多接受一次，不是 Sink 写入承诺。
+已接受的 Target 不因 revoke/grant 重放；采样、黑名单和节流拒绝只
+结束当前周期的一次尝试，新的可见周期或策略变化可重新测量，不逐帧重试提高采样概率。
+
+跨 Pure Dart Dispatcher 和可选 Flutter Target 使用窄的 `addPolicyListener` 只读观察接口：
+同步通知、不传事件 payload、异常隔离、禁止回调重入修改策略；注册不立即回调，消费者
+读取当前 `policy/isClosed`。调用方持有 remover 并在解绑时调用，close 通知终态后清空
+监听；通知中 close 时，尚未通知的观察者在该轮读取终态。无需应用手工重建曝光 Widget。
+
 ## 6. 安全与性能
 
 - 属性必须是 String、num、bool 或有限的 String/num 列表；列表在属性创建时复制为不可变
