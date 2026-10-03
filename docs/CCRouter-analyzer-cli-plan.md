@@ -16,12 +16,12 @@
 Demo bootstrap 当前固定到：
 
 ```yaml
-ref: 57ddd15e6f871ae227ee2d2ada893114b0c8dd61
+ref: c9495775b5da61ba8c63c7597939e3350bb08c0f
 ```
 
-该 commit 已存在于远端，并包含 2026-09-29 已通过 Plugin 测试、Generator 全量回归和
-loader smoke 的诊断、Quick Fix、性能缓存与只读 CLI 改动。后续仍不为了追随仓库 HEAD
-而更新 ref。
+该 commit 已存在于远端，并包含截至 2026-09-30 已通过 Plugin 测试、Generator 全量回归和
+loader smoke 的诊断、Quick Fix、性能缓存、只读 CLI 与未保存编辑诊断修复。后续仍不为了
+追随仓库 HEAD 而更新 ref。
 
 Git ref 只能更新到已推送、已评审并通过 Plugin Package 测试和 loader smoke 的完整 commit
 SHA。禁止使用分支名 `main`、未推送的本地 SHA 或浮动 tag。Hosted Package 发布后，默认使用

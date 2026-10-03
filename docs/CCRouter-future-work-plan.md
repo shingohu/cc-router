@@ -85,6 +85,10 @@
 - [x] 2026-10-03 完成 P3 回归：全仓 Analyze、Generator `272/272`、增量与
   `--no-cache --check` 生成门禁均通过；状态缺失、篡改、无 Builder metadata 与只读外部 Package
   边界均有专项测试，生成状态未包含本机路径或 `.dart_tool` 信息。
+- [x] 2026-10-03 完成 3x/5x/10x 多组件个人与团队增删回归：18/30/60 个组件分别包含
+  Route、Service、Command、Event、InitTask；个人未生成组件安全运行 Builder，团队可信预生成
+  新增和个人/团队删除走 aggregation-only。所有场景路径经 `--no-cache --check` 与逐文件逐字节
+  比较一致，并修复 Workspace 外 Path 依赖在 Build Plan 与 Portable State 间的指纹覆盖差异。
 - [ ] 仅在真实项目 Host 聚合超过总耗时 20% 时继续优化 dirty set 的输入摘要速度；不得用
   mtime/size 替代内容摘要。
 - [x] 建立冷启动、初始化、路由解析、导航延迟、并发导航、Runtime dispose 和长期 RSS 的

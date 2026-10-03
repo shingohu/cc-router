@@ -268,7 +268,7 @@ Event 的多个 Subscriber 以分支显示，失败隔离保持独立；Service 
 - 组件图筛选 required/optional 和反向依赖；
 - Runtime 未初始化、快照过期、源码缺失和 Extension 断连均显示降级状态。
 
-## 6. Analyzer Git `main` 接入
+## 6. Analyzer 固定 Git commit 接入
 
 当前 Demo 已通过独立 bootstrap 使用：
 
@@ -277,7 +277,7 @@ ccrouter_analyzer_plugin:
   git:
     url: https://github.com/shingohu/cc-router.git
     path: packages/ccrouter_analyzer_plugin
-    ref: 57ddd15e6f871ae227ee2d2ada893114b0c8dd61
+    ref: c9495775b5da61ba8c63c7597939e3350bb08c0f
 ```
 
 这个配置有正向收益：可以在 Hosted 发布前让 Demo 验证最新插件修复，同时不把 Analyzer 版本

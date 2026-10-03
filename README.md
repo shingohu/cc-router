@@ -1114,8 +1114,12 @@ Route API 和 Package/Host metadata。跨组件 Route 不能直接由脚手架�
 `dirty-packages` 原因；`dirty` 是 build_runner 完成后的聚合复用判断，不表示 Builder 只分析
 这些 Package。
 
-当前已完成 Build Plan 的 P1 诊断、P2“Host 依赖闭包删除组件”优化，以及 P3 Portable
-Generation State 的可信 Package 新增路径。
+当前已完成 Build Plan 的 P1 诊断、P2“Host 依赖闭包删除组件”优化、P3 Portable
+Generation State 的可信 Package 新增路径、P4 冷成本评估，以及 P5 3x/5x/10x 多组件个人与
+团队拓扑回归。P4/P5 是正确性和性能验证阶段，不增加命令或公开 API；详细边界和样本见
+[`docs/CCRouter-build-runner-optimization-plan.md`](docs/CCRouter-build-runner-optimization-plan.md)
+与
+[`docs/CCRouter-generator-performance-report.md`](docs/CCRouter-generator-performance-report.md)。
 fast path miss 时，`--profile` 还会输出
 `build-plan suggested=<unchanged|aggregateOnly|runBuilder> actual=<...> reasons=<...>`：
 `suggested` 是根据 Tool、Package 和 Host 分层内容摘要得到的候选计划，`actual` 才是本轮

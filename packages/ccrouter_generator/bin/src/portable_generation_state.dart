@@ -183,26 +183,7 @@ final class _CCPortableGenerationContext {
             package,
           );
     }
-    for (final entry in resolution.lock.entries) {
-      if (entry.value['source'] != 'path' || authored.containsKey(entry.key)) {
-        continue;
-      }
-      final root = resolution.roots[entry.key];
-      final graph = resolution.graph[entry.key];
-      if (root == null || graph == null) continue;
-      final package = CCResolvedPackage(
-        name: entry.key,
-        version: '${graph['version'] ?? '0.0.0'}',
-        root: root,
-        dependencies: _planningStrings(graph['dependencies']),
-        devDependencies: _planningStrings(graph['devDependencies']),
-        writable: false,
-      );
-      authored[entry.key] =
-          await _GenerationStateFingerprint.capturePackageAuthoredInput(
-            package,
-          );
-    }
+    await resolution.addPathAuthoredFingerprints(authored);
     final toolIdentity = resolution.toolIdentity(
       authoredFingerprints: authored,
       indexFingerprints: const <String, String?>{},

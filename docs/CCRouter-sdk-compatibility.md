@@ -85,7 +85,8 @@ fvm spawn 3.41.9 test packages/ccrouter_test/test --no-pub
 - GoRouter 当前锁定 `17.5.0`，升级版本需要重新执行 Adapter、Demo 和生成物回归，不能只更新
   `pubspec.yaml`。
 
-本轮本机验证结果：
+2026-09-22 本机多 SDK 验证历史快照如下。表中的测试数量保留当次执行口径，用于证明这些
+SDK 组合在当时通过，不代表当前测试套件总数：
 
 | SDK | 验证结果 |
 | --- | --- |
@@ -97,6 +98,10 @@ fvm spawn 3.41.9 test packages/ccrouter_test/test --no-pub
 此前在同一工作区并行切换 SDK 时出现的 `ink_sparkle.frag` 失败发生在 Flutter Material
 shader 资源加载，不是 CCRouter 断言失败；隔离每个 SDK 的 `.dart_tool` 和 `build` 后，
 3.44.9 与 3.47.2 均通过完整 244 项测试。兼容性回归必须遵守独立构建缓存和串行执行规则。
+
+2026-10-03 当前默认 OHOS SDK 已追加通过 Generator `272/272`、增量生成及
+`--no-cache --check` 回归；该结果没有重新执行上述全部标准 Flutter SDK 组合，因此不覆盖或
+伪装成新的多 SDK 矩阵。正式 RC 需要按本节命令重新建立同一提交上的完整兼容性快照。
 
 2026-09-29 在当前 FVM OHOS SDK 的 macOS 主机上追加平台构建 smoke：
 

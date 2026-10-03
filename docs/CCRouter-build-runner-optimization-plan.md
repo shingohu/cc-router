@@ -1,9 +1,10 @@
 # CCRouter build_runner 与团队构建正确性优先优化计划
 
-> 文档状态：当前实施阶段完成。P0、P1、P2 Host 纯删除路径、P3 Portable reuse 与 P4 冷成本
-> 评估已完成；更宽的 Host-only 跳过 Builder 未获准，保留为指标触发项。
+> 文档状态：当前实施阶段完成。P0、P1、P2 Host 纯删除路径、P3 Portable reuse、P4 冷成本
+> 评估与 P5 多组件个人/团队拓扑回归已完成；更宽的 Host-only 跳过 Builder 未获准，保留为
+> 指标触发项。
 >
-> 日期：2026-09-30；P1/P2/P3/P4 实现与评估更新：2026-10-03。
+> 日期：2026-09-30；P1/P2/P3/P4/P5 实现与评估更新：2026-10-03。
 >
 > 核心约束：任何生成器性能优化都不能以漏生成、接受陈旧生成物、降低校验强度或改变错误
 > 语义为代价。无法证明等价时必须回退完整 `build_runner + validate + aggregate`。
@@ -313,6 +314,18 @@ Validator、依赖发现、Portable State 重算或 Host 聚合成本。
 结论：1.x 不引入常驻 daemon/watch，不访问 build_runner 私有 Asset Graph，不维护第二套
 Analyzer runner，也不为升级 build_runner 扩大 SDK 迁移面。后续只有达到第 9.7 节生产 P95 或
 第 7 节触发条件时重新立项；自有 runner 继续属于架构 2.0 候选。
+
+### P5：多组件个人/团队拓扑回归，已完成
+
+2026-10-03 使用 18/30/60 个真实 Workspace 组件 Package 完成 3x/5x/10x 隔离回归。每个组件
+包含 Route、Service、Command、Event、InitTask 五类真实生成输入。个人新建未生成组件稳定
+选择 `runBuilder`；个人/团队删除和团队拉取可信预生成组件按已证明边界选择
+`aggregateOnly`。每条路径随后运行 `--no-cache --check` 并逐文件逐字节比较，全部一致。
+
+测试发现 Workspace 外 Path 工具依赖在 Portable State 与 Build Plan 间采用了不同 authored
+fingerprint 覆盖范围，导致安全但多余的 `resolution-unproven` 回退。实现已将 Path Package
+内容指纹收敛为同一内部入口；只持久化内容摘要，不持久化绝对路径。详细数据和命令见
+[生成器性能报告](CCRouter-generator-performance-report.md#65-多组件个人与团队增删样本)。
 
 ## 7. 测试与回归矩阵
 

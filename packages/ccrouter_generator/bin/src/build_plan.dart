@@ -364,6 +364,7 @@ final class _GenerationPlanningState {
       }
       indexes[package.name] = await _fileFingerprint(package.indexFile);
     }
+    await resolution.addPathAuthoredFingerprints(authored);
 
     final packageStates = <String, _GenerationPackagePlanningState>{};
     final names = workspace.packages.keys.toList()..sort();
@@ -673,6 +674,43 @@ final class _GenerationResolutionPlanningContext {
       config: Map.unmodifiable(config),
       roots: Map.unmodifiable(roots),
     );
+  }
+
+  /// Adds content identities for resolved Path Packages outside the workspace.
+  ///
+  /// Resolution identities never persist the resolved roots. Hashing every
+  /// Path Package here lets both the local Build Plan and Portable Generation
+  /// State prove the same dependency graph without trusting local paths.
+  Future<void> addPathAuthoredFingerprints(
+    Map<String, String> authoredFingerprints,
+  ) async {
+    final names =
+        lock.entries
+            .where(
+              (entry) =>
+                  entry.value['source'] == 'path' &&
+                  !authoredFingerprints.containsKey(entry.key),
+            )
+            .map((entry) => entry.key)
+            .toList()
+          ..sort();
+    for (final name in names) {
+      final root = roots[name];
+      final packageGraph = graph[name];
+      if (root == null || packageGraph == null) continue;
+      final package = CCResolvedPackage(
+        name: name,
+        version: '${packageGraph['version'] ?? '0.0.0'}',
+        root: root,
+        dependencies: _planningStrings(packageGraph['dependencies']),
+        devDependencies: _planningStrings(packageGraph['devDependencies']),
+        writable: false,
+      );
+      authoredFingerprints[name] =
+          await _GenerationStateFingerprint.capturePackageAuthoredInput(
+            package,
+          );
+    }
   }
 
   /// Builds a Package-specific transitive identity and portability decision.

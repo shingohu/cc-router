@@ -1,7 +1,7 @@
 # CCRouter 生成器性能优化与对比报告
 
-> 文档状态：2026-09-28 性能快照；2026-10-03 补充 Build Plan P2-P4 样本。数值不自动代表
-> 后续提交或其他机器。
+> 文档状态：2026-09-28 性能快照；2026-10-03 补充 Build Plan P2-P5，其中包含 3x/5x/10x
+> 多组件个人/团队拓扑样本。数值不自动代表后续提交或其他机器。
 
 Package 增删导致的 Workspace AOT 冷路径及后续正确性优先优化方案，见
 [build_runner 正确性优先优化计划](CCRouter-build-runner-optimization-plan.md)。
@@ -28,6 +28,8 @@ O(metadata × files)。930 条 Route 的旧压力样本仅 Validator 就耗时 2
 4. 修复 `clean -> generate` 的二次收敛：当 build cache 仍存在且 authored source 导入的
    Route/Command/Event 或稳定 Component API 已被 `clean` 删除时，先从缓存 metadata 临时恢复这些
    CLI aggregate，再运行 build_runner；当前轮仍会重新生成并完整校验所有最终产物。
+5. 增加多 Package 拓扑 benchmark，分别测量个人新建未生成组件、个人删除、团队拉取预生成
+   组件和团队删除，并在每条场景路径后执行权威 Builder 校验及逐文件逐字节比较。
 
 生成格式、公开契约和 Runtime 行为均未改变。
 
@@ -163,6 +165,51 @@ aggregation-only 为 0.904-0.996 秒；重新加入该预生成 Package 且本�
 最新 `build_runner 2.16.1` 需要 `analyzer >=13.3.0` 和 `meta ^1.18.3`，与当前 Flutter 固定的
 `meta 1.17.0` 不可解析，因此没有进行无效的运行时对比或扩大 SDK 升级。当前数据不支持引入
 watch/daemon、自有 Analyzer runner 或 build_runner 私有 API。
+
+### 6.5 多组件个人与团队增删样本
+
+永久基准位于：
+
+```text
+packages/ccrouter_test/benchmark/generator_component_topology.dart
+```
+
+```bash
+fvm dart run packages/ccrouter_test/benchmark/generator_component_topology.dart 3 5 10
+```
+
+当前 Demo 有 6 个业务组件，因此 3x、5x、10x 分别构造 18、30、60 个组件 Package。每个组件
+包含 5 Route、1 Service、1 Command、1 Event 和 1 InitTask；总能力数分别为 162、270、540。
+基准为 author 与 teammate 创建相互独立的临时 Workspace，并区分两类不能混淆的新增：
+
+- 个人新增：目标组件没有受管生成物，也没有本机 Builder metadata，必须 `runBuilder`；
+- 团队新增：拉取 author 已提交的受管生成物和 Portable Generation State，但本机没有该组件
+  Builder metadata，可以在验证当前源码、解析图和全部输出后 `aggregateOnly`。
+
+以下均为进程 wall time；Pub 依赖解析单独列出，不计入 generation。冷种子和 fresh clone 用于
+建立隔离基线，不代表日常每次生成。
+
+| 规模 | 组件 / Route | 冷种子 | 稳定检查 | 个人删除 | 个人新增未生成组件 | 团队新增预生成组件 | 团队删除 | Pub 变更 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 3x | 18 / 90 | 29.811s | 0.819s | 2.389s | 6.255s | 2.721s | 2.244s | 0.756-0.839s |
+| 5x | 30 / 150 | 32.909s | 0.852s | 3.348s | 7.702s | 3.662s | 2.978s | 1.040-1.080s |
+| 10x | 60 / 300 | 35.358s | 1.089s | 5.100s | 9.866s | 5.382s | 4.494s | 1.510-1.568s |
+
+个人新增未生成组件的 build_runner 为 4.004/4.648/5.145 秒，Build Plan 原因稳定为
+`portable-state-missing:<package>`。个人和团队删除、团队新增预生成组件的 build_runner 均为
+0ms。10x 团队新增完整参考路径为 9.894 秒，优化路径为 5.382 秒；该差值不能外推为固定比例，
+因为内容指纹和 Host 聚合仍完整执行。
+
+准确性结果：3 个规模、12 条新增/删除场景路径全部 `byteExact=true`；author 与 teammate 的完整
+受管源码生成物逐文件逐字节一致；删除后恢复到相同基线；组件/Route/Package 数量均与模型相符。
+每次场景路径后均执行 `--no-cache --check`，不是只比较 Catalog 数量或摘要。快照明确排除
+`.dart_tool/build`，因为它是不可提交且按机器不同的 Builder 中间状态，只比较 Package/Host 的
+`lib/src/ccrouter_generated` 受管输出。
+
+本轮同时发现并修复 Workspace 外 Path 依赖的证明不一致：Portable State 已计算这类依赖的
+authored fingerprint，但本地 Build Plan 原先没有计算，导致真实 Path 接入错误回退
+`resolution-unproven`。两者现共用同一套 Path 内容指纹采集；状态仍不持久化绝对路径。无法解析
+root 或 graph、源码变化、状态缺失/失配时仍 fail closed，不会为了命中性能路径降低准确性。
 
 ## 7. 后续触发条件
 
