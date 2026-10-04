@@ -3,6 +3,8 @@ part of '../ccrouter_generator.dart';
 const _watchCycleEnvironment = 'CCROUTER_WATCH_CYCLE';
 const _watchLockEnvironment = 'CCROUTER_WATCH_LOCK_HELD';
 const _watchKillSwitch = 'CCROUTER_DISABLE_BUILD_WATCH';
+const _watchCycleOptimizationKillSwitch =
+    'CCROUTER_DISABLE_WATCH_CYCLE_OPTIMIZATION';
 const _buildRunnerSuccessPattern = 'Built with build_runner';
 const _buildRunnerFailurePattern = 'Failed to build with build_runner';
 
@@ -12,6 +14,10 @@ bool get _isWatchAggregationCycle =>
 bool get _watchOwnsGenerationLock =>
     _isWatchAggregationCycle &&
     Platform.environment[_watchLockEnvironment] == '1';
+
+bool get _usesOptimizedWatchCycle =>
+    _isWatchAggregationCycle &&
+    Platform.environment[_watchCycleOptimizationKillSwitch] != '1';
 
 /// Keeps build_runner's AOT entrypoint and Analyzer graph alive for one root.
 Future<void> _runGenerationWatch({

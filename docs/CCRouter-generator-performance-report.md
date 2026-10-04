@@ -423,3 +423,16 @@ entrypoint 与 Analyzer graph 恢复成本，但非声明变化仍会触发 Buil
 Analyzer warm-up 抖动。后续优化应以这份 phase trace 为依据，不重新引入 private State body
 fingerprint 或 AST preflight；任何收缩都必须继续通过 kill switch、`--no-cache --check` 和逐字节
 A/B 对照。
+
+### 10.1 post-Builder planning 收缩
+
+watch 的 Builder 成功已经证明本轮 Builder 执行完成，原实现的子进程仍先运行普通 fast-path
+inspection 和 Build Plan 推导，再强制改为 aggregate-only；这些计算不参与最终决策。新路径从
+本轮开始即标记 `build-runner-watch-completed`，跳过这两个 planning span，但保留 input
+fingerprint、execution/before/after barriers、preflight、快照、Validator、聚合、cache 与本地
+state 写入。`CCROUTER_DISABLE_WATCH_CYCLE_OPTIMIZATION=1` 恢复原路径。
+
+同机以 Host 非生成语义 probe 连续运行，两侧受管输出均为逐字节 `files=0`：优化路径 `1110ms`，
+kill-switch reference `1193ms`，单样本减少 `83ms`（约 7%）。主要剩余时间仍是输入证明、聚合与
+两类本地 state 更新；该结果不是 P95，也不支持跳过 Validator 或重新引入 AST/private body
+fingerprint。

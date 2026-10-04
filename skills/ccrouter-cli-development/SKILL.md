@@ -94,6 +94,11 @@ successful Builder event is not final until `aggregationSucceeded`; wait for
 `CCROUTER_DISABLE_BUILD_WATCH=1` for the one-shot fallback. Watch owns one build
 root and holds its generation lock for the lease lifetime. Stop it before the
 final `--no-cache --check`; watch never replaces that authority.
+After Builder success, watch skips only the redundant ordinary fast-path and
+Build Plan decision. It retains input barriers, preflight, snapshots,
+validation, aggregation, and local state writes. Set
+`CCROUTER_DISABLE_WATCH_CYCLE_OPTIMIZATION=1` to restore the reference cycle for
+byte-for-byte A/B diagnosis without disabling watch.
 `input-delta` compares exact Package facts with the last successful local Build
 Plan: `authored` is an own-source/config change, `resolutionOnly` means unchanged
 own input with changed resolution identity. This is not a proven causal edge or

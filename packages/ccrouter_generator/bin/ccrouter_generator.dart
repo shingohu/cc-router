@@ -209,18 +209,25 @@ Future<void> main(List<String> arguments) async {
       );
       // Explicit prepare must refresh Portable State even when the ordinary
       // generation manifest proves all managed inputs and outputs unchanged.
-      if (parsed.noCache || parsed.portablePrepare) {
+      if (parsed.noCache ||
+          parsed.portablePrepare ||
+          _usesOptimizedWatchCycle) {
         verifiedInputFingerprint = await profileTrace.measure(
           'input-fingerprint-capture',
           () => _GenerationStateFingerprint.captureInput(fastPathWorkspace!),
         );
-        buildPlan = _GenerationBuildPlanInspection.runBuilder(
-          reasons: [
-            parsed.portablePrepare
-                ? 'portable-state-prepare'
-                : 'no-cache-reference',
-          ],
-        );
+        buildPlan = _usesOptimizedWatchCycle
+            ? const _GenerationBuildPlanInspection.aggregateOnly(
+                reasons: ['build-runner-watch-completed'],
+                aggregateOnlyEligible: true,
+              )
+            : _GenerationBuildPlanInspection.runBuilder(
+                reasons: [
+                  parsed.portablePrepare
+                      ? 'portable-state-prepare'
+                      : 'no-cache-reference',
+                ],
+              );
         profileTrace?.skip('fast-path-inspection');
         profileTrace?.skip('build-plan-inspection');
       } else {
@@ -336,7 +343,7 @@ Future<void> main(List<String> arguments) async {
         }
       }
       verifiedInputFingerprint = executionInput;
-      if (_isWatchAggregationCycle) {
+      if (_isWatchAggregationCycle && !_usesOptimizedWatchCycle) {
         buildPlan = const _GenerationBuildPlanInspection.aggregateOnly(
           reasons: ['build-runner-watch-succeeded'],
           aggregateOnlyEligible: true,

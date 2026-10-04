@@ -1219,6 +1219,10 @@ stderr。`CCROUTER_DISABLE_BUILD_WATCH=1` 会执行一次 one-shot 后退出。w
 CI 仍以 `generate <host> --no-cache --check` 为权威。一个活动 watch 会在 lease 生命周期内
 持有该 root 的 generation lock；先停止 watch 再执行最终门禁。当前 MVP 只编排一个 build root；嵌套且
 拥有独立 Pub build root 的 Package Host 应各自启动 watch，不做跨 root 合并。
+Builder 成功后的 watch cycle 会直接进入已完成 Builder 的聚合路径，避免重复执行普通 fast-path
+inspection 与 Build Plan 推导，但仍保留 input fingerprint/barrier、preflight、快照、Validator、
+聚合和状态写入。`CCROUTER_DISABLE_WATCH_CYCLE_OPTIMIZATION=1` 只恢复旧 cycle orchestration，
+用于逐字节 A/B 排查，不会关闭 watch。
 
 `--profile` 的 `input-delta` 对比上次成功的本机 Build Plan：`authored` 是自身源码/配置变化，
 `resolutionOnly` 是自身未变但解析身份变化，另列工具与 Host 图变化。它不证明具体依赖边或

@@ -334,6 +334,9 @@ CCRouter 校验、聚合、快照与原子提交；
 设置 `CCROUTER_DISABLE_BUILD_WATCH=1` 可回退为一次 one-shot。watch 不替代最终的
 `--no-cache --check`；它在 lease 内持有 root generation lock，应先停止再运行最终门禁。
 当前只支持单 build root，不合并嵌套 Package Host 的独立 Pub root。
+Builder 成功后的 cycle 会跳过已无决策价值的普通 fast-path inspection 和 Build Plan 推导，
+但不跳过 input barrier、preflight、Validator、聚合、快照或状态写入。设置
+`CCROUTER_DISABLE_WATCH_CYCLE_OPTIMIZATION=1` 可恢复旧 cycle 路径做 A/B 对照。
 
 生成主路径不会计算文件闭包 shadow，也不会为此扫描 Workspace Dart 文件。历史 shadow
 采样保留在性能报告中，仅作为 benchmark/tooling 研究数据；它不参与 Build Plan、Tool
