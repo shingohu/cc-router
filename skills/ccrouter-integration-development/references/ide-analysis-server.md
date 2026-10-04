@@ -97,6 +97,30 @@ bootstraps must pin a reviewed commit; after publication, use the bootstrap's
 Hosted dependency and rerun the same loader `analyze/compile` smoke. Follow the
 bundled bootstrap procedure below; it does not require framework repository files.
 
+## Field-formal annotation navigation limitation
+
+On the verified Android Studio 2026.1.4, Dart Plugin 509.0.0, and OHOS Flutter
+Dart 3.11.5 toolchain, ordinary Go to Declaration (`Cmd+B` on macOS) does not
+navigate from `@CCQueryParam()` or `@CCExtraParam()` when the annotation is on a
+field-formal parameter such as `this.id`. The Dart Analysis Server's whole-file
+`analysis.navigation` notification omits metadata visited through
+`FieldFormalParameter`, although an explicit `analysis.getNavigation` request
+and LSP `textDocument/definition` both resolve the correct declaration. This is
+an upstream SDK/IDE navigation limitation, not evidence that CCRouter analysis,
+generation, or runtime parameter handling failed.
+
+Use Go to Type Declaration (`Cmd+Shift+B` on macOS) as the non-invasive
+workaround. A real IDE jump was verified for `CCQueryParam`, and LSP definition
+requests resolve both annotation types. Do not rewrite constructors, clear
+IDE/global Pub caches, weaken generator validation, or disable the CCRouter
+Analyzer Plugin for this symptom. Dart Plugin 509.0.0
+gates ordinary LSP definition navigation on both Experimental LSP Features and
+a project Dart SDK of at least `3.14.0-65.0.dev`. Flutter and OHOS projects must
+upgrade the complete SDK distribution rather than substituting a standalone
+Dart SDK. After an upgrade, verify the whole-file navigation notification and a
+real IDE `Cmd+B`; a newer version number alone does not prove the upstream
+visitor omission is fixed.
+
 ## Manual Host bootstrap
 
 Keep the rule Package's Analyzer dependencies out of the application workspace.

@@ -187,6 +187,51 @@ dart analyze
 插件的多个 isolate，分别只持有部分 Context，造成跨根通知遗漏；本测试覆盖共享 Dart
 Workspace，不把这一 SDK 边界标记为已解决。分析根外的依赖文件也没有自动监听承诺。
 
+### Field-formal 参数注解的 IDE 跳转限制
+
+截至 2026-10-04，在 Android Studio 2026.1.4、Dart Plugin 509.0.0 与 OHOS Flutter 内置
+Dart 3.11.5 的组合中，光标位于 field-formal parameter 上的 `@CCQueryParam()` 或
+`@CCExtraParam()` 时，普通 Go to Declaration（macOS `Cmd+B`）会提示
+`Cannot find declaration to go to`。命名参数、位置参数和 required/optional 形态都会触发，
+例如：
+
+```dart
+const DetailPage({
+  @CCQueryParam() this.tab = 'summary',
+  @CCExtraParam() this.snapshot,
+});
+```
+
+这是当前 Dart Analysis Server/IDE 导航链的上游限制，不是 CCRouter 注解声明、barrel export、
+Generator 或 `ccrouter_analyzer_plugin` 的解析错误：
+
+1. 对同一源码位置直接请求 legacy `analysis.getNavigation`，可以正确返回
+   `route_annotation.dart` 中的注解声明；LSP `textDocument/definition` 也返回相同目标。
+2. 订阅整文件 `analysis.navigation` 时，通知包含类级 `CCRoute`，却遗漏 field-formal
+   parameter metadata 中的 `CCQueryParam`/`CCExtraParam`。
+3. 当前 navigation collector 的 `visitFieldFormalParameter` 路径处理字段、类型、类型参数和
+   函数参数，但没有继续遍历该参数的 `metadata`。Android Studio 当前 `Cmd+B` 消费这份整文件
+   navigation 数据，因此没有可跳转目标。
+4. 临时移除 Demo 的 CCRouter Analyzer Plugin 配置、重启 Analysis Server，以及禁用第三方
+   Translation Plugin 后分别复验，结果不变。清理 CCRouter 生成物或 IDE 缓存不会补回缺失的
+   Server navigation region。
+
+当前无侵入 workaround 是使用 Go to Type Declaration（macOS `Cmd+Shift+B`）；已在上述环境
+对 `CCQueryParam` 完成真实 IDE 跳转验证，且两个注解的 LSP definition 请求均能解析到声明。
+不要仅为 IDE 跳转把 field-formal parameter 批量改写为
+普通参数加 initializer，这会制造无业务收益的源码 churn，且注解原有生成、类型检查和运行时
+语义均正常。
+
+Dart Plugin 509.0.0 只有在启用 Experimental LSP Features 且项目 Dart SDK 不低于
+`3.14.0-65.0.dev` 时，才允许普通 Go to Definition 走 LSP navigation。Flutter/OHOS 项目使用
+Flutter 分发版内置的 Dart SDK，不能通过单独替换系统 Dart 安全升级。后续升级整个 SDK 后，
+必须同时复验整文件 `analysis.navigation`、LSP definition 和真实 IDE `Cmd+B`；达到版本门槛
+本身不是上游缺陷已经修复的证明。
+
+该问题归类为 Developer Experience gap。它不影响 `dart analyze`、CCRouter 生成、
+`generate --check` 或 Runtime 路由参数语义，也不应通过修改 CCRouter public API、放宽生成器
+校验或清理全局缓存规避。
+
 本次本地监听修复尚未进入 Demo 固定的远端 `a275d1d`。必须在提交经审核并推送后更新
 bootstrap ref、运行 doctor 并重启 IDE，不能仅凭本地测试声称 Demo 插件已升级。
 
