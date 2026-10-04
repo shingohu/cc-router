@@ -241,6 +241,29 @@ Future<void> main(List<String> arguments) async {
         return;
       }
     }
+    if (parsed.command == _GeneratorCommand.generate &&
+        fastPathWorkspace != null) {
+      // The plan was computed before preflight and may no longer describe the
+      // files that are about to be handed to build_runner. Revalidate at the
+      // execution boundary; a Host-graph-only plan must never skip Builder
+      // work after an authored input changed in the meantime.
+      final executionInput = await _GenerationStateFingerprint.captureInput(
+        fastPathWorkspace,
+      );
+      if (verifiedInputFingerprint != null &&
+          verifiedInputFingerprint != executionInput) {
+        buildPlan = const _GenerationBuildPlanInspection.runBuilder(
+          reasons: ['input-changed-before-execution'],
+        );
+        if (parsed.profile) {
+          stdout.writeln(
+            'CCRouter profile build-plan-revalidated=runBuilder '
+            'reason=input-changed-before-execution',
+          );
+        }
+      }
+      verifiedInputFingerprint = executionInput;
+    }
     final needsBootstrap =
         parsed.command == _GeneratorCommand.generate &&
         fastPathWorkspace != null &&
@@ -294,6 +317,7 @@ Future<void> main(List<String> arguments) async {
             parsed,
             buildContext!,
             buildDuration: buildDuration,
+            expectedInputFingerprint: verifiedInputFingerprint,
             prebuiltPackages:
                 buildPlan?.actualPrebuiltPackages ?? const <String>{},
           )
@@ -646,6 +670,7 @@ Future<bool> _generateResolvedWorkspace(
   _Arguments parsed,
   _BuildContext buildContext, {
   required Duration buildDuration,
+  String? expectedInputFingerprint,
   Set<String> prebuiltPackages = const <String>{},
 }) async {
   final discoveryWatch = Stopwatch()..start();
@@ -658,6 +683,14 @@ Future<bool> _generateResolvedWorkspace(
     );
   } on CCPackageWorkspaceException catch (error) {
     stderr.writeln('error: ${error.message}');
+    return false;
+  }
+  if (expectedInputFingerprint != null &&
+      !await _generationInputIsStable(
+        workspace,
+        expectedInputFingerprint,
+        stage: 'before-aggregation',
+      )) {
     return false;
   }
   discoveryWatch.stop();
@@ -1045,6 +1078,14 @@ Future<bool> _generateResolvedWorkspace(
     (package) => package.writable,
   )) {
     await _removeEmptyGeneratedSourceDirectories(package.root);
+  }
+  if (expectedInputFingerprint != null &&
+      !await _generationInputIsStable(
+        workspace,
+        expectedInputFingerprint,
+        stage: 'after-aggregation',
+      )) {
+    return false;
   }
   await _CCPortableGenerationState.write(workspace, indexes: indexes);
   stdout.writeln(
@@ -2507,6 +2548,26 @@ enum _GenerationFastPathMissReason {
   outputChanged,
 }
 
+/// Verifies that generation inputs stayed unchanged across one execution stage.
+///
+/// The check is deliberately performed at the Builder/aggregation boundary
+/// and again before publishing planning state. A changed authored input makes
+/// the current output untrustworthy, so the caller restores its artifact
+/// snapshot and asks the developer to rerun after edits settle.
+Future<bool> _generationInputIsStable(
+  CCPackageWorkspace workspace,
+  String expectedFingerprint, {
+  required String stage,
+}) async {
+  final actual = await _GenerationStateFingerprint.captureInput(workspace);
+  if (actual == expectedFingerprint) return true;
+  stderr.writeln(
+    'error: CCRouter generation input changed during $stage; '
+    'generated output was discarded. Rerun after source changes settle.',
+  );
+  return false;
+}
+
 /// Exact content digests for generation inputs and source-tree outputs.
 abstract final class _GenerationStateFingerprint {
   /// Captures authored sources, resolution state, and generator implementation.
@@ -2959,6 +3020,20 @@ Future<bool> _runBuildRunner(
   } finally {
     for (final snapshot in protectedOutputs) {
       await snapshot.restore();
+    }
+  }
+  // Test-only fault injection lets the generation command suite deterministically
+  // verify the post-Builder input barrier without relying on process timing.
+  final mutationPath =
+      Platform.environment['CCROUTER_TEST_MUTATE_INPUT_AFTER_BUILDER'];
+  if (processExitCode == 0 && mutationPath != null && mutationPath.isNotEmpty) {
+    final mutationFile = File(mutationPath);
+    if (mutationFile.existsSync()) {
+      await mutationFile.writeAsString(
+        '\n// CCRouter deterministic input-barrier probe.\n',
+        mode: FileMode.append,
+        flush: true,
+      );
     }
   }
   if (processExitCode == 0) return true;

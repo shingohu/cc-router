@@ -553,6 +553,49 @@ void probe() {
   );
 
   test(
+    'generation rejects authored input changed after build_runner',
+    () async {
+      final source = File(
+        path.join(
+          Directory.current.path,
+          'demo',
+          'modules',
+          'navigation_lab',
+          'lib',
+          'src',
+          'detail_page.dart',
+        ),
+      );
+      final original = source.readAsBytesSync();
+      final seeded = await _generateDemo(['--no-cache']);
+      expect(seeded.exitCode, 0, reason: '${seeded.stderr}');
+      try {
+        source.writeAsBytesSync([
+          ...original,
+          ...'\n// CCRouter pre-build input-barrier probe.\n'.codeUnits,
+        ], flush: true);
+        final result = await _generateDemo(
+          ['--profile'],
+          environment: {
+            'CCROUTER_TEST_MUTATE_INPUT_AFTER_BUILDER': source.path,
+          },
+        );
+        expect(result.exitCode, 1);
+        expect(
+          '${result.stderr}',
+          contains('generation input changed during before-aggregation'),
+        );
+        expect('${result.stderr}', contains('generated output was discarded'));
+      } finally {
+        source.writeAsBytesSync(original, flush: true);
+        final restored = await _generateDemo(['--no-cache']);
+        expect(restored.exitCode, 0, reason: '${restored.stderr}');
+      }
+    },
+    timeout: const Timeout(Duration(minutes: 5)),
+  );
+
+  test(
     'generation removes only obsolete source-tree metadata',
     () async {
       final legacyGeneratedRoot = Directory(

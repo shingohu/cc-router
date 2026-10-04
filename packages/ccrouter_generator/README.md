@@ -335,7 +335,9 @@ identity，不包含绝对路径、用户名、mtime、inode 或 `.dart_tool`；
 fast path 未命中时会先执行保守的 Component Dependency Preflight，只有直接 List、Contract
 类型和 Owner 都唯一可证明时才提前失败；它不替代 Builder。所有正式 `generate` 都会在
 build_runner 前保存 CCRouter 受管源码快照，Builder、聚合或最终校验失败时恢复原内容，避免
-失败生成覆盖上一次可用产物。
+失败生成覆盖上一次可用产物。生成期间还会在 Builder/聚合边界和状态发布前重新比较完整输入
+摘要；如果源码或解析环境在本轮发生变化，命令会恢复受管输出并失败，等待编辑稳定后重试。
+这项屏障不使用 `mtime/size` 猜测，也不改变完整 Builder 回退语义。
 
 生成结果：
 
