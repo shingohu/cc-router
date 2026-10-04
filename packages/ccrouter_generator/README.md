@@ -171,6 +171,9 @@ ccrouter analyzer uninstall <host-root> --dry-run
 loader 再运行禁用 Hook 的 Host Pub。现有手工装配不自动接管，未知文件保留；普通失败恢复
 记录的配置/解析文件，并发冲突或中断保留恢复日志。Hosted 需显式指定已发布版本，Git 需远端
 完整 SHA。完成后重启 Analysis Server，并验证实际 IDE 诊断；不隐式挂入 generate 或 Pub Hook。
+`install`/`upgrade` 目前是 legacy maintenance-only 路径，会输出弃用提示；Hosted 发布后优先
+在 Host 的普通 `dev_dependencies` 中声明插件。`status`/`doctor`/`uninstall` 仍用于既有隔离
+bootstrap 的诊断与回退，私有 `.plugin_manager` 只提供 advisory，不是跨 SDK 权威门禁。
 完整说明见 [Analyzer CLI 指南](../../docs/CCRouter-analyzer-cli-plan.md)。
 
 如果希望在当前 Flutter SDK 的 `flutter pub get/upgrade/downgrade/add/remove` 成功后

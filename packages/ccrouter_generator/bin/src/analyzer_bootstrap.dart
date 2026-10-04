@@ -88,6 +88,15 @@ Future<bool> runAnalyzerBootstrapCommand(
   final runner = processRunner ?? _runAnalyzerProcess;
   if (request.action != CCAnalyzerBootstrapAction.status &&
       request.action != CCAnalyzerBootstrapAction.doctor) {
+    if (request.action == CCAnalyzerBootstrapAction.install ||
+        request.action == CCAnalyzerBootstrapAction.upgrade) {
+      stderr.writeln(
+        'warning: analyzer ${request.action.name} is a legacy management '
+        'path. Prefer a normal Hosted dev_dependency after '
+        '`ccrouter_analyzer_plugin` is published; no new management '
+        'features will be added here.',
+      );
+    }
     try {
       return await _runAnalyzerInstallation(request, runner);
     } on Object catch (error) {
@@ -409,20 +418,20 @@ Future<bool> _runDoctor(
   final staleCaches = _staleAnalyzerPluginManagerCaches(bootstrapRoot);
   if (staleCaches.isNotEmpty) {
     stderr.writeln(
-      'error: Analyzer doctor found a stale Analysis Server plugin cache '
-      '(outdated or incomplete):',
+      'warning: Analyzer doctor found a stale legacy Analysis Server plugin '
+      'cache (advisory only):',
     );
     for (final cache in staleCaches) {
       stderr.writeln('  ${cache.path}');
     }
     stderr.writeln(
-      'Stop the Dart Analysis Server, move only the listed cache entry '
+      'The private .plugin_manager cache is not an authoritative cross-SDK '
+      'gate. If IDE diagnostics remain stale, stop the Dart Analysis Server, '
+      'move only the listed cache entry '
       'directory to a backup outside .plugin_manager, restart the server, and '
       'rerun doctor. Move the whole listed entry, not just its analyzer_plugin '
-      'child: an existing parent prevents the server from copying the plugin '
-      'again. The doctor command is read-only and will not delete IDE state.',
+      'child. The doctor command is read-only and will not delete IDE state.',
     );
-    return false;
   }
   final temporary = await Directory.systemTemp.createTemp(
     'ccrouter-analyzer-doctor-',

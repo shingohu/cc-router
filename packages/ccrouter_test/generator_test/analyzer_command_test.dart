@@ -139,47 +139,53 @@ void main() {
     },
   );
 
-  test('doctor rejects a stale Analysis Server plugin-manager copy', () async {
-    final fixture = await _createFixture();
-    final home = await Directory.systemTemp.createTemp(
-      'ccrouter-analyzer-home-',
-    );
-    addTearDown(() async {
-      await fixture.root.delete(recursive: true);
-      await home.delete(recursive: true);
-    });
-    final cached = Directory(
-      path.join(
-        home.path,
-        '.dartServer',
-        '.plugin_manager',
-        md5
-            .convert(
-              path
-                  .join(fixture.plugin.path, 'tools', 'analyzer_plugin')
-                  .codeUnits,
-            )
-            .toString(),
-        'analyzer_plugin',
-      ),
-    )..createSync(recursive: true);
-    File(path.join(cached.path, 'pubspec.yaml')).writeAsStringSync('''
+  test(
+    'doctor treats a stale Analysis Server plugin-manager copy as advisory',
+    () async {
+      final fixture = await _createFixture();
+      final home = await Directory.systemTemp.createTemp(
+        'ccrouter-analyzer-home-',
+      );
+      addTearDown(() async {
+        await fixture.root.delete(recursive: true);
+        await home.delete(recursive: true);
+      });
+      final cached = Directory(
+        path.join(
+          home.path,
+          '.dartServer',
+          '.plugin_manager',
+          md5
+              .convert(
+                path
+                    .join(fixture.plugin.path, 'tools', 'analyzer_plugin')
+                    .codeUnits,
+              )
+              .toString(),
+          'analyzer_plugin',
+        ),
+      )..createSync(recursive: true);
+      File(path.join(cached.path, 'pubspec.yaml')).writeAsStringSync('''
 name: analyzer_test_bootstrap
 dependencies:
   ccrouter_analyzer_plugin: 0.0.1
 ''');
 
-    final result = await _run(
-      ['analyzer', 'doctor', fixture.root.path],
-      environment: {...Platform.environment, 'HOME': home.path},
-    );
+      final result = await _run(
+        ['analyzer', 'doctor', fixture.root.path],
+        environment: {...Platform.environment, 'HOME': home.path},
+      );
 
-    expect(result.exitCode, 1);
-    expect('${result.stderr}', contains('stale Analysis Server plugin cache'));
-    expect('${result.stderr}', contains(cached.parent.path));
-    expect('${result.stderr}', contains('not just its analyzer_plugin child'));
-    expect('${result.stdout}', isNot(contains('Analyzer doctor:')));
-  });
+      expect(result.exitCode, 0, reason: '${result.stderr}\n${result.stdout}');
+      expect(
+        '${result.stderr}',
+        contains('stale Analysis Server plugin cache'),
+      );
+      expect('${result.stderr}', contains(cached.parent.path));
+      expect('${result.stderr}', contains('not authoritative cross-SDK gate'));
+      expect('${result.stdout}', contains('Analyzer doctor:'));
+    },
+  );
 
   for (final damage in [
     'missing child',
@@ -187,7 +193,7 @@ dependencies:
     'changed entrypoint',
   ]) {
     test(
-      'doctor rejects $damage without changing or blaming other caches',
+      'doctor reports $damage without changing or blaming other caches',
       () async {
         final fixture = await _createFixture();
         final home = await Directory.systemTemp.createTemp(
@@ -233,10 +239,14 @@ dependencies:
           ['analyzer', 'doctor', fixture.root.path],
           environment: {...Platform.environment, 'HOME': home.path},
         );
-        expect(result.exitCode, 1);
+        expect(
+          result.exitCode,
+          0,
+          reason: '${result.stderr}\n${result.stdout}',
+        );
         expect('${result.stderr}', contains(entry.path));
         expect('${result.stderr}', isNot(contains(unrelated.parent.path)));
-        expect('${result.stdout}', isNot(contains('Analyzer doctor:')));
+        expect('${result.stdout}', contains('Analyzer doctor:'));
         expect(entry.existsSync(), isTrue);
         expect(
           unrelatedManifest.readAsStringSync(),

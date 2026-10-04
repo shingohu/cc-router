@@ -25,8 +25,8 @@ ref: a275d1d46ddfdded6678ecbf1d2d23818cdbdfdc
 追随仓库 HEAD 而更新 ref。
 
 Git ref 只能更新到已推送、已评审并通过 Plugin Package 测试和 loader smoke 的完整 commit
-SHA。禁止使用分支名 `main`、未推送的本地 SHA 或浮动 tag。Hosted Package 发布后，默认使用
-Hosted 版本；Git bootstrap 只作为发布前或指定版本验证方式。
+SHA。禁止使用分支名 `main`、未推送的本地 SHA 或浮动 tag。Hosted Package 发布后，默认在
+Host 的普通 `dev_dependencies` 中声明 Hosted 版本；Git bootstrap 只作为发布前或指定版本验证方式。
 
 ## 3. 候选方案
 
@@ -106,6 +106,23 @@ ccrouter analyzer uninstall [host-root]
 - 保留未知文件、用户 Analyzer 配置和非 CCRouter Plugin。
 - 可先执行 `--dry-run`；部分内容被用户修改时拒绝删除，并给出手工处理范围。现有手工 bootstrap 不自动采用或迁移。
 
+### Hosted 迁移与弃用冻结（2026-10-05）
+
+`ccrouter analyzer install` 与 `upgrade` 进入 legacy maintenance-only 状态：实现保留可回滚
+能力，不再增加新的来源、IDE 或 SDK 管理特性，执行时会明确输出弃用提示。`status`、`doctor`
+和 `uninstall` 保留，用于诊断和撤销已有隔离 bootstrap；`doctor` 对私有
+`.dartServer/.plugin_manager` 只给 advisory，不把跨 SDK 的缓存目录当作权威门禁。普通 Hosted
+依赖的推荐迁移方式是直接编辑 Host：
+
+```yaml
+dev_dependencies:
+  ccrouter_analyzer_plugin: ^0.1.0
+```
+
+再在 `analysis_options.yaml` 启用插件并执行普通 `dart analyze`/IDE 重启。仓库保留
+`demo/tools/ccrouter_analyzer_plugin_host/tools/analyzer_plugin/pubspec.hosted.yaml` 作为发布后
+替换模板；在 Hosted 版本真正可解析前，Demo 继续使用固定 Git SHA，不执行隐式切换。
+
 ## 5. 所有权、失败与回滚
 
 - CLI 拥有固定 bootstrap 路径及 `.ccrouter-analyzer.json` 记录的配置叶，不拥有 Host 的其它 IDE 配置。
@@ -145,6 +162,8 @@ Pub 结果或进程中断保留恢复记录，后续写命令拒绝继续；核�
 5. [x] 实现显式 `upgrade` 与失败恢复。
 6. [x] 更新 CLI help、根 README、IDE 文档和 Integration/CLI Skill。
 7. [~] 临时 Host 真实 Git/Pub/loader 验证与既有独立 Server 测试分别验收；完整 VS Code、Android Studio、SDK/OS 矩阵仍未完成。
+8. [x] Hosted 普通 `dev_dependency` 迁移模板、legacy install/upgrade 弃用提示和
+   `.plugin_manager` 非权威语义已落地；Hosted 发布与干净消费者验证仍是外部前置条件。
 
 第 7 项已有独立进程自动化基础：Legacy/LSP 协议、overlay、修复应用、五类生成物磁盘
 变化和 Workspace Owner metadata/Contract 刷新已覆盖。它使用本地源码和临时缓存，不

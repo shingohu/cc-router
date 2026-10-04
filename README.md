@@ -87,7 +87,8 @@ Quick Fix 补接口，保留原释放代码。直接自建并持有可释放资�
 不生成空 `dispose()` 或自动释放借用资源。没有提示不代表已证明无泄漏，仍需生命周期测试。
 当前仓库 Demo 已在 `demo/analysis_options.yaml` 启用它，并通过
 `demo/tools/ccrouter_analyzer_plugin_host` 提供官方要求的 `tools/analyzer_plugin` bootstrap。
-bootstrap 使用远端固定 Git commit 隔离 Analyzer 版本；发布后可切换到同目录的
+bootstrap 使用远端固定 Git commit 隔离 Analyzer 版本；Hosted 发布后优先在 Host 的普通
+`dev_dependencies` 中声明 `ccrouter_analyzer_plugin`，可切换到同目录的
 `pubspec.hosted.yaml` Hosted manifest。不能把本地 Workspace path 直接放进 bootstrap，因为
 Analysis Server 会把 bootstrap 复制到临时目录。完整接入、固定 ref、Hosted fallback 和
 Analyzer 版本边界见
@@ -103,9 +104,10 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter analyzer doctor demo
 
 `status` 的 `healthy` 只代表 manifest、lockfile、固定来源和版本静态一致，不能证明 Analysis
 Server 已经加载插件；只有 `doctor` 通过后才证明当前凭据和隔离 bootstrap 可解析、分析并编译。
-`doctor` 还会检查当前 bootstrap 对应的 Analysis Server 缓存是否过期、残缺或入口变化，并给出
-完整缓存条目目录；停止 Analysis Server，将该条目移到 `.plugin_manager` 外备份，再重启复验。
-不能只移动其中的 `analyzer_plugin` 子目录，否则 Analysis Server 会复用残缺的父目录。
+`doctor` 对当前 bootstrap 对应的 Analysis Server 缓存只给 advisory；私有
+`.plugin_manager` 不是跨 SDK 权威门禁。若 IDE 诊断仍残缺，可停止 Analysis Server，将完整
+缓存条目移到 `.plugin_manager` 外备份，再重启复验；不能只移动其中的 `analyzer_plugin`
+子目录，否则 Analysis Server 会复用残缺的父目录。
 不同 Host 的同名插件缓存不据此判断为过期。bootstrap 或固定 ref 变化后
 仍需要重启 Dart Analysis Server。
 
@@ -117,7 +119,9 @@ Language Server 会话中验证，最终跨文件正确性仍以 `ccrouter gener
 未保存编辑、五类生成物磁盘变化及 Workspace Owner 元数据刷新；不替代当前 IDE 的
 bootstrap/ref 加载验证。具体 SDK 和多根工程边界见 IDE 文档。
 
-新 Host 可用显式装配命令（下列版本必须已发布，Git 则使用已评审的远端完整 SHA）：
+已存在隔离 bootstrap 的 Host 可用显式装配命令（`install`/`upgrade` 为 legacy
+maintenance-only，并会输出弃用提示；Hosted 发布后优先普通 `dev_dependency`，下列 Hosted
+版本必须已发布，Git 则使用已评审的远端完整 SHA）：
 
 ```bash
 ccrouter analyzer install <host-root> --version <published-version> --dry-run
