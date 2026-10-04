@@ -284,6 +284,12 @@ Host 依赖闭包内、明确可写且声明 `ccrouter_generator` 的 Package，
 fast path，`--profile` 会输出 `fast-path=hit/miss`。性能回归与混合能力基准见
 [`docs/CCRouter-generator-performance-report.md`](https://github.com/shingohu/cc-router/blob/main/docs/CCRouter-generator-performance-report.md)。
 
+Tool fingerprint 使用显式 execution-kernel ownership：生成器 `lib/`、主生成入口、Build
+Plan、Portable State 和 `build.yaml` 会影响身份；Analyzer bootstrap、scaffold 模板和
+Pub hook 属于 CLI integration，不会使生成 tool identity 变化。新增会影响生成结果的模块时，
+必须在 `bin/src/execution_kernel.dart` 中加入边界并增加 identity 回归，而不是扩大整个 `bin/`
+目录扫描。
+
 fast path miss 时，Profile 还会输出本轮 `build-targets`，以及逐 Package 的
 `dirty-packages` 原因：`host`、`cache-missing`、`metadata`、`output`、
 `dependency-index` 或 `propagated-from:<package>`。dirty set 在 build_runner 完成后计算，

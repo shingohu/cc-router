@@ -904,3 +904,9 @@ P2 纯删除和 P3 可信预生成新增的测试都同时验证了：
 即使 10x 样本的冷聚合增长明显，主要成本仍是 build_runner；当前数据不能证明语义摘要解析
 会带来稳定净收益。因此 P6-2/P6-3 继续保持未实施，默认路径仍为完整内容摘要、完整 Builder
 回退和完整聚合校验。
+
+2026-10-05 收敛时，Tool fingerprint 改为显式 execution-kernel ownership。生成结果相关的
+Generator `lib/`、主入口、Build Plan、Portable State 与 `build.yaml` 组成可审计边界；
+Analyzer/scaffold/pub-hook CLI 模块不再因为源码变化使 generation tool identity 失效。该边界
+只控制身份证明，不改变 generation lock、输入一致性屏障、P2/P3 `aggregateOnly` 或完整
+Builder fallback。

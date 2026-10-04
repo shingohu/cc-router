@@ -17,6 +17,7 @@ import 'package:path/path.dart' as path;
 import 'package:yaml/yaml.dart';
 
 import 'src/analyzer_bootstrap.dart';
+import 'src/execution_kernel.dart';
 import 'src/route_find.dart' as route_find;
 import 'src/pub_hook.dart';
 import 'src/scaffold.dart';
@@ -2720,28 +2721,18 @@ abstract final class _GenerationStateFingerprint {
     }
   }
 
-  /// Adds local generator code so same-version path edits cannot false-hit.
+  /// Adds only execution-kernel code so CLI integrations cannot invalidate
+  /// generation state. The ownership list lives in [CCGeneratorExecutionKernel]
+  /// and must be updated when generation semantics gain a new module.
   static Future<void> _addGeneratorInputs(Map<String, List<int>> inputs) async {
     final library = await Isolate.resolvePackageUri(
       Uri.parse('package:ccrouter_generator/ccrouter_generator.dart'),
     );
     if (library == null || library.scheme != 'file') return;
     final root = File.fromUri(library).parent.parent;
-    for (final directoryName in const ['lib', 'bin']) {
-      final directory = Directory(path.join(root.path, directoryName));
-      if (!directory.existsSync()) continue;
-      final files = <File>[];
-      await for (final entity in directory.list(
-        recursive: true,
-        followLinks: false,
-      )) {
-        if (entity is File && entity.path.endsWith('.dart')) files.add(entity);
-      }
-      files.sort((left, right) => left.path.compareTo(right.path));
-      for (final file in files) {
-        inputs['generator/${_relativePath(root, file)}'] = await file
-            .readAsBytes();
-      }
+    for (final file in await CCGeneratorExecutionKernel.files(root)) {
+      inputs['generator/${_relativePath(root, file)}'] = await file
+          .readAsBytes();
     }
     for (final name in const ['pubspec.yaml', 'build.yaml']) {
       await _addFile(

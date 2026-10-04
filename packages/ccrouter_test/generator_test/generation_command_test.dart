@@ -1139,6 +1139,66 @@ void probe() {
   );
 
   test(
+    'CLI integration edits do not change the generation tool identity',
+    () async {
+      final seeded = await _generateDemo(['--no-cache']);
+      expect(seeded.exitCode, 0, reason: '${seeded.stderr}');
+      final probe = File(
+        path.join(
+          Directory.current.path,
+          'packages',
+          'ccrouter_generator',
+          'bin',
+          'src',
+          'scaffold.dart',
+        ),
+      );
+      final original = probe.readAsBytesSync();
+      try {
+        await probe.writeAsBytes(<int>[...original, 10], flush: true);
+        final result = await _generateDemo(['--check', '--profile']);
+        expect(result.exitCode, 1, reason: '${result.stderr}');
+        expect('${result.stdout}', isNot(contains('tool-input-changed')));
+      } finally {
+        await probe.writeAsBytes(original, flush: true);
+        final restored = await _generateDemo(const []);
+        expect(restored.exitCode, 0, reason: '${restored.stderr}');
+      }
+    },
+    timeout: const Timeout(Duration(minutes: 5)),
+  );
+
+  test(
+    'execution-kernel edits invalidate the generation tool identity',
+    () async {
+      final seeded = await _generateDemo(['--no-cache']);
+      expect(seeded.exitCode, 0, reason: '${seeded.stderr}');
+      final probe = File(
+        path.join(
+          Directory.current.path,
+          'packages',
+          'ccrouter_generator',
+          'bin',
+          'src',
+          'execution_kernel.dart',
+        ),
+      );
+      final original = probe.readAsBytesSync();
+      try {
+        await probe.writeAsBytes(<int>[...original, 10], flush: true);
+        final result = await _generateDemo(['--check', '--profile']);
+        expect(result.exitCode, 1, reason: '${result.stderr}');
+        expect('${result.stdout}', contains('tool-input-changed'));
+      } finally {
+        await probe.writeAsBytes(original, flush: true);
+        final restored = await _generateDemo(const []);
+        expect(restored.exitCode, 0, reason: '${restored.stderr}');
+      }
+    },
+    timeout: const Timeout(Duration(minutes: 5)),
+  );
+
+  test(
     'P2 aggregate-only matches the full path for a Host component removal',
     () async {
       final before = await _readDemoGeneratedArtifacts();
