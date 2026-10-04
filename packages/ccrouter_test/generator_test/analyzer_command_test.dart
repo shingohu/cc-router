@@ -8,6 +8,8 @@ import 'package:crypto/crypto.dart';
 import 'package:path/path.dart' as path;
 import 'package:test/test.dart';
 
+import '../../ccrouter_generator/bin/src/analyzer_bootstrap.dart';
+
 const _gitRef = '0123456789abcdef0123456789abcdef01234567';
 
 void main() {
@@ -171,19 +173,17 @@ dependencies:
   ccrouter_analyzer_plugin: 0.0.1
 ''');
 
-      final result = await _run(
-        ['analyzer', 'doctor', fixture.root.path],
-        environment: {...Platform.environment, 'HOME': home.path},
-      );
+      final result = await _runDoctor(fixture, home);
 
-      expect(result.exitCode, 0, reason: '${result.stderr}\n${result.stdout}');
+      expect(result.ok, isTrue, reason: '${result.stderr}\n${result.stdout}');
       expect(
-        '${result.stderr}',
-        contains('stale Analysis Server plugin cache'),
+        result.stderr,
+        contains('stale legacy Analysis Server plugin cache'),
       );
-      expect('${result.stderr}', contains(cached.parent.path));
-      expect('${result.stderr}', contains('not authoritative cross-SDK gate'));
-      expect('${result.stdout}', contains('Analyzer doctor:'));
+      expect(result.stderr, contains(cached.parent.path));
+      expect(result.stderr, contains('not an authoritative cross-SDK gate'));
+      expect(result.stdout, contains('Analyzer doctor:'));
+      expect(result.calls, hasLength(3));
     },
   );
 
@@ -235,18 +235,12 @@ dependencies:
           path.join(unrelated.path, 'pubspec.yaml'),
         )..writeAsStringSync('name: analyzer_test_bootstrap\n');
 
-        final result = await _run(
-          ['analyzer', 'doctor', fixture.root.path],
-          environment: {...Platform.environment, 'HOME': home.path},
-        );
-        expect(
-          result.exitCode,
-          0,
-          reason: '${result.stderr}\n${result.stdout}',
-        );
-        expect('${result.stderr}', contains(entry.path));
-        expect('${result.stderr}', isNot(contains(unrelated.parent.path)));
-        expect('${result.stdout}', contains('Analyzer doctor:'));
+        final result = await _runDoctor(fixture, home);
+        expect(result.ok, isTrue, reason: '${result.stderr}\n${result.stdout}');
+        expect(result.stderr, contains(entry.path));
+        expect(result.stderr, isNot(contains(unrelated.parent.path)));
+        expect(result.stdout, contains('Analyzer doctor:'));
+        expect(result.calls, hasLength(3));
         expect(entry.existsSync(), isTrue);
         expect(
           unrelatedManifest.readAsStringSync(),
@@ -323,6 +317,38 @@ Future<({Directory root, Directory plugin})> _createFixture() async {
   _writePackageConfig(root, plugin);
   _writeBootstrap(plugin);
   return (root: root, plugin: plugin);
+}
+
+Future<({bool ok, String stdout, String stderr, List<String> calls})>
+_runDoctor(({Directory root, Directory plugin}) fixture, Directory home) async {
+  final output = StringBuffer();
+  final error = StringBuffer();
+  final calls = <String>[];
+  final ok = await runAnalyzerBootstrapCommand(
+    CCAnalyzerBootstrapRequest(
+      action: CCAnalyzerBootstrapAction.doctor,
+      hostRoot: fixture.root.path,
+    ),
+    processRunner:
+        (
+          executable,
+          arguments, {
+          required workingDirectory,
+          environment,
+        }) async {
+          calls.add('${path.basename(executable)} ${arguments.join(' ')}');
+          return ProcessResult(0, 0, '', '');
+        },
+    output: output,
+    error: error,
+    homeDirectory: home.path,
+  );
+  return (
+    ok: ok,
+    stdout: output.toString(),
+    stderr: error.toString(),
+    calls: calls,
+  );
 }
 
 void _writeHost(Directory host, {bool enablePlugin = true}) {

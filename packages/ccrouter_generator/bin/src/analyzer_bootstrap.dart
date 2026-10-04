@@ -84,6 +84,9 @@ typedef AnalyzerBootstrapProcessRunner =
 Future<bool> runAnalyzerBootstrapCommand(
   CCAnalyzerBootstrapRequest request, {
   AnalyzerBootstrapProcessRunner? processRunner,
+  StringSink? output,
+  StringSink? error,
+  String? homeDirectory,
 }) async {
   final runner = processRunner ?? _runAnalyzerProcess;
   if (request.action != CCAnalyzerBootstrapAction.status &&
@@ -107,10 +110,18 @@ Future<bool> runAnalyzerBootstrapCommand(
   final report = _AnalyzerBootstrapReport.inspect(
     Directory(request.hostRoot).absolute,
   );
-  report.writeTo(stdout);
+  final outputSink = output ?? stdout;
+  final errorSink = error ?? stderr;
+  report.writeTo(outputSink);
   if (report.state != _AnalyzerBootstrapState.healthy) return false;
   if (request.action == CCAnalyzerBootstrapAction.status) return true;
-  return _runDoctor(report, runner: runner);
+  return _runDoctor(
+    report,
+    runner: runner,
+    output: outputSink,
+    error: errorSink,
+    homeDirectory: homeDirectory,
+  );
 }
 
 /// Stable installation states printed by `status` and consumed by `doctor`.
@@ -390,7 +401,7 @@ final class _AnalyzerBootstrapReport {
   final String? analyzerPluginVersion;
 
   /// Writes stable field names suitable for humans and support logs.
-  void writeTo(IOSink sink) {
+  void writeTo(StringSink sink) {
     sink.writeln('CCRouter Analyzer status');
     sink.writeln('  host: ${hostRoot.path}');
     sink.writeln('  state: ${state.name}');
@@ -413,18 +424,26 @@ final class _AnalyzerBootstrapReport {
 Future<bool> _runDoctor(
   _AnalyzerBootstrapReport report, {
   AnalyzerBootstrapProcessRunner runner = _runAnalyzerProcess,
+  StringSink? output,
+  StringSink? error,
+  String? homeDirectory,
 }) async {
+  final outputSink = output ?? stdout;
+  final errorSink = error ?? stderr;
   final bootstrapRoot = report.bootstrapRoot!;
-  final staleCaches = _staleAnalyzerPluginManagerCaches(bootstrapRoot);
+  final staleCaches = _staleAnalyzerPluginManagerCaches(
+    bootstrapRoot,
+    homeDirectory: homeDirectory,
+  );
   if (staleCaches.isNotEmpty) {
-    stderr.writeln(
+    errorSink.writeln(
       'warning: Analyzer doctor found a stale legacy Analysis Server plugin '
       'cache (advisory only):',
     );
     for (final cache in staleCaches) {
-      stderr.writeln('  ${cache.path}');
+      errorSink.writeln('  ${cache.path}');
     }
-    stderr.writeln(
+    errorSink.writeln(
       'The private .plugin_manager cache is not an authoritative cross-SDK '
       'gate. If IDE diagnostics remain stale, stop the Dart Analysis Server, '
       'move only the listed cache entry '
@@ -459,18 +478,20 @@ Future<bool> _runDoctor(
       ),
     ];
     for (final check in checks) {
-      stdout.writeln('CCRouter Analyzer doctor: ${check.name}...');
+      outputSink.writeln('CCRouter Analyzer doctor: ${check.name}...');
       final result = await runner(
         Platform.resolvedExecutable,
         check.arguments,
         workingDirectory: isolatedBootstrap.path,
       );
       if (result.exitCode != 0) {
-        stderr.writeln('error: Analyzer doctor failed during ${check.name}.');
+        errorSink.writeln(
+          'error: Analyzer doctor failed during ${check.name}.',
+        );
         final output = '${result.stdout}\n${result.stderr}'.trim();
-        if (output.isNotEmpty) stderr.writeln(output);
+        if (output.isNotEmpty) errorSink.writeln(output);
         if (report.source == 'git' && _looksLikeGitCredentialFailure(output)) {
-          stderr.writeln(
+          errorSink.writeln(
             'error: The pinned Git Analyzer dependency could not authenticate. '
             'Configure credentials for the declared Git URL, or switch the '
             'bootstrap to the Hosted package after publication. IDE '
@@ -480,7 +501,7 @@ Future<bool> _runDoctor(
         return false;
       }
     }
-    stdout.writeln(
+    outputSink.writeln(
       'CCRouter Analyzer doctor passed. Restart the Dart Analysis Server after '
       'bootstrap or ref changes.',
     );
@@ -496,9 +517,14 @@ Future<bool> _runDoctor(
 /// code units and reuses an existing parent even when its child is missing.
 /// This is a read-only SDK compatibility check, not a content integrity hash.
 /// Never infer ownership from a shared package name in another Host's cache.
-List<Directory> _staleAnalyzerPluginManagerCaches(Directory bootstrapRoot) {
+List<Directory> _staleAnalyzerPluginManagerCaches(
+  Directory bootstrapRoot, {
+  String? homeDirectory,
+}) {
   final home =
-      Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'];
+      homeDirectory ??
+      Platform.environment['HOME'] ??
+      Platform.environment['USERPROFILE'];
   if (home == null || home.isEmpty) return const [];
   final manager = Directory(path.join(home, '.dartServer', '.plugin_manager'));
   final sourceManifest = File(path.join(bootstrapRoot.path, 'pubspec.yaml'));

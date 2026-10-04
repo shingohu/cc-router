@@ -479,9 +479,8 @@ void main() {
         ..lockSync(FileLock.exclusive);
       try {
         final result = await Process.run(Platform.resolvedExecutable, [
-          'run',
-          '--verbosity=error',
-          'ccrouter_generator:ccrouter',
+          '--packages=${path.absolute('.dart_tool/package_config.json')}',
+          path.absolute('packages/ccrouter_generator/bin/ccrouter.dart'),
           'analyzer',
           'install',
           host.host.path,

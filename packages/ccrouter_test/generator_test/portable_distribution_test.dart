@@ -48,6 +48,7 @@ void main() {
           extraOverrides: '  distribution_dto:\n    path: ${dto.path}\n',
         ),
       );
+      _write(producer, 'ccrouter.yaml', 'generation:\n  portable: true\n');
       _write(producer, 'lib/component.dart', "export 'src/component.dart';\n");
       _write(producer, 'lib/src/component.dart', '''
 import 'package:ccrouter/ccrouter.dart';
@@ -57,11 +58,16 @@ const component = CCComponent(id: CCComponentId('distributed'), version: '1.0.0'
 final class DistributedService { DistributedService(); Value value() => const Value(); }
 ''');
       await _pubGet(producer);
-      await _generate(producer, ['--no-cache']);
+      await _prepare(producer);
       await _run(Platform.resolvedExecutable, ['analyze', 'lib'], producer);
       final original = _generated(producer);
       await _run('git', ['init', '--quiet'], producer);
-      await _run('git', ['add', 'pubspec.yaml', 'lib'], producer);
+      await _run('git', [
+        'add',
+        'pubspec.yaml',
+        'ccrouter.yaml',
+        'lib',
+      ], producer);
       await _run('git', [
         '-c',
         'user.name=CCRouter Test',
@@ -260,6 +266,14 @@ Future<void> _pubGet(Directory root) async {
     Platform.isWindows ? 'flutter.bat' : 'flutter',
   );
   await _run(flutter, ['pub', 'get', '--offline'], root);
+  // Pub resolves package executables but does not materialize the local
+  // build_runner snapshot until the executable is invoked once. Generation
+  // relies on that snapshot so its package imports resolve from this Host.
+  await _run(Platform.resolvedExecutable, [
+    'run',
+    'build_runner',
+    '--help',
+  ], root);
 }
 
 Future<ProcessResult> _generate(
@@ -279,6 +293,16 @@ Future<ProcessResult> _generate(
   root,
   expectedExit: expectedExit,
 );
+
+Future<ProcessResult> _prepare(Directory root) =>
+    _run(Platform.resolvedExecutable, [
+      'run',
+      '--verbosity=error',
+      'ccrouter_generator:ccrouter',
+      'portable',
+      'prepare',
+      '.',
+    ], root);
 
 Map<String, String> _generated(Directory root) => {
   for (final file in Directory(
