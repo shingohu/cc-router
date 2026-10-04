@@ -1139,6 +1139,50 @@ import 'dart:io' if (dart.library.js_interop) 'dart:html';
   );
 
   test(
+    'P6 tool identity changes force the full Builder path',
+    () async {
+      final seeded = await _generateDemo(['--no-cache']);
+      expect(seeded.exitCode, 0, reason: '${seeded.stderr}');
+      final state = _demoBuildPlanState();
+      final original = state.readAsBytesSync();
+      final probe = File(
+        path.join(
+          Directory.current.path,
+          'demo',
+          'lib',
+          '_ccrouter_tool_identity_probe.dart',
+        ),
+      );
+      try {
+        probe.writeAsStringSync('const ccrouterToolIdentityProbe = true;\n');
+        final document =
+            (jsonDecode(state.readAsStringSync()) as Map)
+                .cast<String, Object?>()
+              ..remove('contentFingerprint');
+        document['toolFingerprint'] = 'p6-tool-identity-probe';
+        document['contentFingerprint'] = computeCCCanonicalJsonFingerprint(
+          document,
+        );
+        state.writeAsStringSync(jsonEncode(document), flush: true);
+
+        final result = await _generateDemo(['--check', '--profile']);
+        expect(result.exitCode, 1, reason: '${result.stderr}');
+        expect(
+          '${result.stdout}',
+          contains('build-plan suggested=runBuilder actual=runBuilder'),
+        );
+        expect('${result.stdout}', contains('tool-input-changed'));
+      } finally {
+        if (probe.existsSync()) probe.deleteSync();
+        state.writeAsBytesSync(original, flush: true);
+        final restored = await _generateDemo(const []);
+        expect(restored.exitCode, 0, reason: '${restored.stderr}');
+      }
+    },
+    timeout: const Timeout(Duration(minutes: 4)),
+  );
+
+  test(
     'P2 aggregate-only matches the full path for a Host component removal',
     () async {
       final before = await _readDemoGeneratedArtifacts();
@@ -1529,8 +1573,12 @@ File _demoBuildPlanState() {
     ),
   );
   return directory.listSync().whereType<File>().firstWhere((file) {
-    final decoded = jsonDecode(file.readAsStringSync());
-    return decoded is Map && decoded['hostPackage'] == 'ccrouter_demo';
+    try {
+      final decoded = jsonDecode(file.readAsStringSync());
+      return decoded is Map && decoded['hostPackage'] == 'ccrouter_demo';
+    } on FormatException {
+      return false;
+    }
   });
 }
 
