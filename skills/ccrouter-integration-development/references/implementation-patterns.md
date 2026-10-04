@@ -792,6 +792,16 @@ time separate as `output-delta-scan`.
 Input attribution follows the existing Build Plan scope: custom `--output-dir`
 does not provide `input-delta`.
 
+For iterative local work, `generate <host-root> --watch=auto --machine` keeps
+build_runner's AOT entrypoint and Analyzer graph alive for one resolved build
+root. Its stdout is schema `1` NDJSON; `buildSucceeded` only closes the Builder
+phase, while `aggregationSucceeded` closes CCRouter validation and atomic
+publication. `ready` means the initial cycle completed. Builder diagnostics stay
+on stderr. `flutter run` obtains the same watch through a wrapper-owned lease;
+`flutter build` stays one-shot. Use `CCROUTER_DISABLE_BUILD_WATCH=1` to fall
+back. The active watch holds the build root generation lock; stop it before
+running the final authoritative `--no-cache --check`.
+
 The Build Plan separately reports `suggested` and `actual`. Only
 `actual=aggregateOnly` means build_runner was skipped, and that optimization is
 limited to a pure Host Package removal with every remaining input unchanged, or

@@ -94,8 +94,8 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook uninstall
 
 ## `run` / `build` 前置生成
 
-当前 wrapper 还覆盖 `flutter run` 和 `flutter build`。它会在调用原始 Flutter
-入口前执行一次生成：
+当前 wrapper 还覆盖 `flutter run` 和 `flutter build`。两者都会在调用原始 Flutter
+入口前执行一次生成；`run` 在成功后额外持有 watch lease：
 
 1. POSIX/Windows wrapper 会在全局 Flutter 参数之后定位 `pub`、`run` 或 `build` 命令；
    因此 `flutter --no-color run` 不会绕过 Hook。
@@ -106,6 +106,10 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook uninstall
 4. 预生成失败会阻止原始 `flutter run/build`，避免启动或 Release 构建消费陈旧生成物。
 5. 没有 Package config、普通 Flutter 项目或还未完成首次 `pub get` 时安全跳过；后续
    `flutter pub get` 成功后会执行一次正常的 post-pub 生成。
+6. `flutter run` 的 preflight 成功后，wrapper 在后台启动
+   `generate <host> --watch=auto --machine`，日志写到
+   `.dart_tool/ccrouter/v1/watch/flutter-run.log`；原始 Flutter 进程退出时删除 lease 并终止
+   watch。`flutter build` 不启动常驻进程。
 
 这不是对 Flutter Tool 内部隐式 `pub get` 的监听：wrapper 无法可靠观察内部 Dart 调用，
 也不会修改 `shared.sh`、Dart snapshot 或 Flutter Tool 源码。`run/build` 的前置生成只保证
@@ -117,11 +121,18 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook uninstall
 CCROUTER_PUB_HOOK_DISABLE=1 flutter pub get
 ```
 
+只禁用 watch、但仍执行 Hook 的方式是：
+
+```bash
+CCROUTER_DISABLE_BUILD_WATCH=1 flutter run
+```
+
 ## 边界
 
 - 覆盖 `flutter pub`、`flutter run` 和 `flutter build`，但不覆盖直接执行的 `dart pub`，
   也不监听 Flutter Tool 内部隐式 `pub get`。
-- 当前不提供常驻 `watch` 进程；每次成功的依赖操作最多触发一次生成。
+- `flutter run` 自动持有单 build root watch；`flutter build` 和成功的依赖操作仍最多触发
+  一次生成。嵌套且可独立运行、拥有自己 Pub root 的 Package Host 使用独立 watch。
 - Flutter SDK 升级或 FVM 版本切换可能替换 `bin/flutter`，切换后应重新执行
   `status`，必要时对新 SDK 执行 `install`。
 - Hook 会让 Flutter SDK Git 工作树包含受管 wrapper 和备份文件；执行 Flutter
@@ -164,8 +175,8 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter generate <host-root> 
 
 执行 `flutter run` 或 `flutter build macos` 时，若项目已经完成依赖解析，控制台会输出
 `CCRouter preflight started/finished`；生成失败时输出有界的最近 Generator 诊断且 Flutter
-命令不会继续执行。`ccrouter pub-hook status` 会额外
-显示 `run/build preflight: enabled`。升级 SDK 或使用新的 FVM 版本后，如果状态显示
+命令不会继续执行。`ccrouter pub-hook status` 会额外显示
+`run/build preflight: enabled` 和 `run watch: enabled`。升级 SDK 或使用新的 FVM 版本后，如果状态显示
 `missing`，先卸载旧 wrapper 再重新安装，避免旧入口继续绕过前置生成。
 
 确认 hook 产生的结果已经通过只读一致性检查。

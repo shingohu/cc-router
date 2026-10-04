@@ -396,3 +396,30 @@ macOS 同机峰值 RSS 为 227,540,992 bytes。该 RSS 只用于同机趋势，�
 聚合阶段范围分别为 275–412ms、370–606ms、597–956ms。Shadow 候选规模保持为 38/256、
 62/424、122/844（Package/文件），fallback 全部为 `none`。主要耗时仍是 build_runner，尚
 未满足摘要或传播收窄的稳定净收益门槛。
+
+## 10. build_runner watch 实测（2026-10-05）
+
+实现使用正式 `build_runner watch --workspace`，按 Host closure 传 `asset:` filters。每个成功
+Builder 轮次后先验证 exact-content fast path；未命中时执行原 CCRouter preflight、输入屏障、
+快照恢复、Validator、聚合、原子写入和 planning state 提交。AI 入口为
+`generate demo --watch=auto --machine`；stdout 是 schema `1` NDJSON，build_runner 明细在 stderr。
+`CCROUTER_DISABLE_BUILD_WATCH=1` 回退 one-shot，CI 仍使用 `--no-cache --check`。
+
+同机 macOS arm64 / Dart 3.11.5 / build_runner 2.15.1，Demo 为 9 个 Builder Package、6 个组件、
+33 个 Route。以下为真实连续 session 的 wall time；样本量不足以称为 P95：
+
+| 场景 | build_runner | CCRouter 子轮次 | 合计 | 受管输出差异 |
+| --- | ---: | ---: | ---: | --- |
+| 首次 ready（cache warm） | 0.51s | 0.27s fast path | 约 1.39s（含启动/保护快照） | 0 |
+| 注释变化，首个增量 | 2.03s | 1.17s | 3.20s | 0 |
+| 注释恢复，稳态增量 | 0.39s | 1.16s | 1.55s | 0 |
+| Widget body 修改/恢复 | 0.40/0.40s | 1.17/1.20s | 1.57/1.60s | 0 |
+| Route annotation 修改 | 0.54s | 1.28s | 1.82s | 7 个文件 |
+| Route annotation 恢复 | 0.55s | 1.24s | 1.79s | 7 个文件，恢复 Git 基线 |
+
+结论不是“watch 已消除所有耗时”。它稳定消除了每轮外部 `dart run build_runner` 的进程、AOT
+entrypoint 与 Analyzer graph 恢复成本，但非声明变化仍会触发 Builder 的 source_gen/Analyzer
+解析，CCRouter 自身重复指纹、preflight、屏障、聚合与状态提交约占 1.2 秒。首个增量还可能出现
+Analyzer warm-up 抖动。后续优化应以这份 phase trace 为依据，不重新引入 private State body
+fingerprint 或 AST preflight；任何收缩都必须继续通过 kill switch、`--no-cache --check` 和逐字节
+A/B 对照。

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
@@ -23,6 +24,7 @@ import 'src/pub_hook.dart';
 import 'src/scaffold.dart';
 
 part 'src/build_plan.dart';
+part 'src/generation_watch.dart';
 part 'src/generation_profile.dart';
 part 'src/portable_generation_state.dart';
 
@@ -172,6 +174,14 @@ Future<void> main(List<String> arguments) async {
     exitCode = 2;
     return;
   }
+  if (parsed.watch) {
+    await _runGenerationWatch(
+      hostRoot: root,
+      buildContext: buildContext!,
+      parsed: parsed,
+    );
+    return;
+  }
   _GenerationLock? generationLock;
   _GeneratedArtifactsSnapshot? snapshot;
   CCPackageWorkspace? fastPathWorkspace;
@@ -179,7 +189,7 @@ Future<void> main(List<String> arguments) async {
   _GenerationBuildPlanInspection? buildPlan;
   var profileOutcome = 'failed';
   try {
-    if (buildContext != null) {
+    if (buildContext != null && !_watchOwnsGenerationLock) {
       generationLock = await profileTrace.measure(
         'generation-lock-wait',
         () => _GenerationLock.acquire(buildContext.root),
@@ -320,6 +330,15 @@ Future<void> main(List<String> arguments) async {
         }
       }
       verifiedInputFingerprint = executionInput;
+      if (_isWatchAggregationCycle) {
+        buildPlan = const _GenerationBuildPlanInspection.aggregateOnly(
+          reasons: ['build-runner-watch-succeeded'],
+          aggregateOnlyEligible: true,
+        );
+        if (parsed.profile) {
+          stdout.writeln(buildPlan.profileDescription);
+        }
+      }
     }
     final needsBootstrap = await profileTrace.measure(
       'missing-generated-import-scan',
@@ -742,6 +761,7 @@ Future<int> _countExistingFiles(Iterable<Directory> directories) async {
 
 const _usage = '''Usage:
   ccrouter generate [scan-root] [--output-dir <directory>] [--check] [--no-cache] [--profile]
+  ccrouter generate [scan-root] --watch=auto [--machine]
   ccrouter find <capability-id-or-route-pattern> [host-root] [--usage <component-id>]
   ccrouter clean [host-root]
   ccrouter portable prepare [host-root]
@@ -768,6 +788,11 @@ validates metadata and writes component indexes, Host assembly, and route docs.
 `--check` restores the original files and fails when generation would change a
 CCRouter-managed artifact. `--no-cache` forces the reference full-parse path.
 `--profile` reports phase timings, build targets, cache hits, and dirty reasons.
+`--watch=auto` keeps one build_runner watch process warm for the resolved build root
+and reruns CCRouter validation and aggregation after each successful build.
+`--machine` emits newline-delimited JSON events and is available only with
+watch mode. Set CCROUTER_DISABLE_BUILD_WATCH=1 to execute one fallback
+generation and exit.
 `find` reads existing Package indexes without generating and matches exact
 capability IDs or Route Pattern values. `--usage` adds a read-only integration
 recipe for one existing consumer component; it never edits dependencies.
@@ -1866,6 +1891,9 @@ final class _Arguments {
     this.check = false,
     this.noCache = false,
     this.profile = false,
+    this.watch = false,
+    this.machine = false,
+    this.watchLeasePath,
     this.help = false,
     this.error,
     this.scaffoldKind,
@@ -1903,6 +1931,15 @@ final class _Arguments {
 
   /// Whether phase timings and cache hit counts are printed.
   final bool profile;
+
+  /// Whether generation should remain attached to build_runner watch.
+  final bool watch;
+
+  /// Whether watch events are emitted as newline-delimited JSON.
+  final bool machine;
+
+  /// Internal lifecycle lease removed by the Flutter wrapper on exit.
+  final String? watchLeasePath;
 
   /// Whether command help was requested.
   final bool help;
@@ -1965,6 +2002,9 @@ _Arguments _parseArguments(List<String> arguments) {
   var check = false;
   var noCache = false;
   var profile = false;
+  var watch = false;
+  var machine = false;
+  String? watchLeasePath;
 
   for (var index = argumentStart; index < arguments.length; index++) {
     final argument = arguments[index];
@@ -2026,6 +2066,27 @@ _Arguments _parseArguments(List<String> arguments) {
       profile = true;
       continue;
     }
+    if (argument == '--watch=auto') {
+      watch = true;
+      continue;
+    }
+    if (argument == '--machine') {
+      machine = true;
+      continue;
+    }
+    if (argument == '--watch-lease') {
+      if (index + 1 >= arguments.length ||
+          arguments[index + 1].startsWith('-')) {
+        return _Arguments(
+          command: command,
+          rootPath: '',
+          outputDirectoryPath: null,
+          error: 'Missing value for --watch-lease.',
+        );
+      }
+      watchLeasePath = arguments[++index];
+      continue;
+    }
     if (argument == '--generate-component-registrars') {
       generateComponentRegistrars = true;
       continue;
@@ -2079,7 +2140,10 @@ _Arguments _parseArguments(List<String> arguments) {
           generateComponentRegistrars ||
           check ||
           noCache ||
-          profile)) {
+          profile ||
+          watch ||
+          machine ||
+          watchLeasePath != null)) {
     return _Arguments(
       command: command,
       rootPath: '',
@@ -2101,7 +2165,10 @@ _Arguments _parseArguments(List<String> arguments) {
           generateComponentRegistrars ||
           check ||
           noCache ||
-          profile)) {
+          profile ||
+          watch ||
+          machine ||
+          watchLeasePath != null)) {
     return _Arguments(
       command: command,
       rootPath: '',
@@ -2126,6 +2193,41 @@ _Arguments _parseArguments(List<String> arguments) {
       error: '--no-cache and --profile are only available with generate.',
     );
   }
+  if ((watch || machine || watchLeasePath != null) &&
+      command != _GeneratorCommand.generate) {
+    return _Arguments(
+      command: command,
+      rootPath: '',
+      outputDirectoryPath: null,
+      error:
+          '--watch, --machine, and --watch-lease are only available with generate.',
+    );
+  }
+  if (machine && !watch) {
+    return _Arguments(
+      command: command,
+      rootPath: '',
+      outputDirectoryPath: null,
+      error: '--machine requires --watch=auto.',
+    );
+  }
+  if (watchLeasePath != null && !watch) {
+    return _Arguments(
+      command: command,
+      rootPath: '',
+      outputDirectoryPath: null,
+      error: '--watch-lease requires --watch=auto.',
+    );
+  }
+  if (watch && (check || noCache || outputDirectoryPath != null)) {
+    return _Arguments(
+      command: command,
+      rootPath: '',
+      outputDirectoryPath: null,
+      error:
+          '--watch=auto cannot be combined with --check, --no-cache, or --output-dir.',
+    );
+  }
 
   return _Arguments(
     command: command,
@@ -2137,6 +2239,9 @@ _Arguments _parseArguments(List<String> arguments) {
     check: check,
     noCache: noCache,
     profile: profile,
+    watch: watch,
+    machine: machine,
+    watchLeasePath: watchLeasePath,
   );
 }
 
@@ -3349,10 +3454,9 @@ Future<bool> _runBuildRunner(
     ],
     counts: (snapshots) => {'snapshots': snapshots.length},
   );
+  final command = await _buildRunnerCommand(context.root, 'build');
   final arguments = <String>[
-    'run',
-    'build_runner',
-    'build',
+    ...command.skip(1),
     if (profile) '--verbose-durations',
     if (context.workspace) '--workspace',
     for (final package in targets) ...[
@@ -3371,7 +3475,7 @@ Future<bool> _runBuildRunner(
     final process = await trace.measure(
       'build-runner-process-start',
       () => Process.start(
-        Platform.resolvedExecutable,
+        command.first,
         arguments,
         workingDirectory: context.root.path,
       ),

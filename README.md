@@ -1147,6 +1147,9 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo --no-ca
 # 输出阶段耗时、Builder 目标、缓存命中率和 dirty 传播原因
 fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo --profile
 
+# 本地/AI 开发：常驻 build_runner watch；stdout 为 NDJSON 事件
+fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo --watch=auto --machine
+
 # Runtime/Service/Analytics/生成器性能与资源回收基准
 fvm dart run packages/ccrouter_test/benchmark/performance_regression.dart
 fvm dart run packages/ccrouter_test/benchmark/performance_regression.dart --full
@@ -1205,6 +1208,17 @@ Workspace/指纹/Build Plan、preflight、快照、build_runner 子进程、Vali
 有界计数，不包含绝对路径、源码或业务值，也不参与缓存和生成判断。Profile 模式会为
 build_runner 启用官方 `--verbose-durations`，其 Builder phase 明细用于继续区分 Analyzer、
 resolve、build、read/write 成本，但不属于 CCRouter trace schema。不带 `--profile` 不产生报告。
+
+`--watch=auto` 为一个 Host 解析单一 build root，并保持一套 `build_runner watch --workspace`
+进程、AOT entrypoint 和 Analyzer graph。watch 在 lease 内持有 generation lock；每个成功 Builder
+轮次后先执行 exact-content 一致性检查，未命中 fast path 时继续执行只读依赖校验、preflight、
+输入屏障、快照恢复、Validator、聚合、原子写入和本地 planning state 提交。失败轮次不会发布
+半成品。`--machine` 令 stdout 仅输出 schema `1` NDJSON 事件，适合
+AI Agent 等待 `ready`、`aggregationSucceeded`、`failed` 和 `stopped`，build_runner 详情写入
+stderr。`CCROUTER_DISABLE_BUILD_WATCH=1` 会执行一次 one-shot 后退出。watch 是开发加速路径，
+CI 仍以 `generate <host> --no-cache --check` 为权威。一个活动 watch 会在 lease 生命周期内
+持有该 root 的 generation lock；先停止 watch 再执行最终门禁。当前 MVP 只编排一个 build root；嵌套且
+拥有独立 Pub build root 的 Package Host 应各自启动 watch，不做跨 root 合并。
 
 `--profile` 的 `input-delta` 对比上次成功的本机 Build Plan：`authored` 是自身源码/配置变化，
 `resolutionOnly` 是自身未变但解析身份变化，另列工具与 Host 图变化。它不证明具体依赖边或
@@ -1277,9 +1291,10 @@ DAG；不存在统一的万能依赖列表或 InitTask 业务 Client。源码或
 `flutter build` 会在调用原始 Flutter 入口前执行同一生成器作为 fail-closed preflight。当前
 项目没有直接声明 `ccrouter`，或没有同时解析 `ccrouter` 和 `ccrouter_generator` 时直接跳过。
 因此 Workspace 聚合根不会被误判为 Host；Hook 不会猜测某个成员 Package 代替当前目录生成。
-它不覆盖 `dart pub`，不监听
-Flutter Tool 内部隐式 `pub get`，也不实现常驻 `watch`。SDK 切换后 `status` 应显示
-`run/build preflight: enabled`。
+它不覆盖 `dart pub`，也不监听 Flutter Tool 内部隐式 `pub get`。`flutter run` 在 preflight
+成功后会持有一个后台 watch lease，原始 Flutter 进程退出时释放；`flutter build` 仍只执行
+one-shot preflight。SDK 切换后 `status` 应显示 `run/build preflight: enabled` 和
+`run watch: enabled`。
 `run/build` 成功时控制台使用 `CCRouter preflight`，Pub 后生成使用
 `CCRouter post-pub generation`；成功只保留 fast-path、验证摘要与阶段耗时，失败则输出最近
 200 行且最多 64 KiB 的 Generator 日志，避免长构建刷屏或无界缓存，同时保留可操作错误。
@@ -1367,8 +1382,9 @@ CLI Skill 覆盖已经实现的 `generate`、`find`、`clean`、六类 `create` 
 Scaffold/Promotion/Migration、alias 迁移和扩展生成失败诊断目前仍是 AI 辅助工作流，不是可直接
 调用的 CLI 命令；五类 Contract 版本兼容核心门禁已经由生成器、Host 聚合和 Runtime 自动执行。
 AI 辅助的迁移操作先说明影响和 dry-run；已有明确授权时继续实施，只有超出授权范围或仍有
-关键选择时才询问，不反复确认已批准的修改。`watch` 当前明确不支持，
-不能因为设计文档提到它就自行添加命令或参数。
+关键选择时才询问，不反复确认已批准的修改。AI 开发可使用
+`generate <host> --watch=auto --machine` 消费 NDJSON 状态；结束任务前仍运行
+`generate <host> --no-cache --check`，不能把 watch 成功当作 CI 权威门禁。
 
 将下面**两个完整目录作为一套安装包**，从同一框架版本复制或同步到集成工程的 `skills/` 下，
 保留它们的相邻关系、`references/` 和 `agents/`，不要只复制单个 `SKILL.md`：

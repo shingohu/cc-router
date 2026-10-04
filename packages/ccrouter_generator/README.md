@@ -271,6 +271,7 @@ build_runner，也不修改生成物。查询是大小写敏感的精确 Route I
 ```sh
 fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo --profile
 fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo --no-cache
+fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo --watch=auto --machine
 ```
 
 默认缓存只复用内容 SHA-256 完全一致的 metadata 解析结果；损坏、Schema/版本不兼容时自动
@@ -325,6 +326,14 @@ fvm dart run packages/ccrouter_test/benchmark/generator_component_topology.dart 
 
 样本包含五类能力与公共依赖，逐次变更注释、DartDoc、位置、实现、常量、描述和 barrel，
 每次比较全部受管文件并执行 `--no-cache --check`。单次样本不能作为真实项目 P95 或提速结论。
+
+本地持续开发可用 `--watch=auto` 保持当前 build root 的 build_runner AOT entrypoint 和
+Analyzer graph。每次 Builder 成功后先验证 exact-content fast path；未命中时仍走完整
+CCRouter 校验、聚合、快照与原子提交；
+`--machine` 将 stdout 限定为 schema `1` NDJSON，普通 build_runner 日志走 stderr。
+设置 `CCROUTER_DISABLE_BUILD_WATCH=1` 可回退为一次 one-shot。watch 不替代最终的
+`--no-cache --check`；它在 lease 内持有 root generation lock，应先停止再运行最终门禁。
+当前只支持单 build root，不合并嵌套 Package Host 的独立 Pub root。
 
 生成主路径不会计算文件闭包 shadow，也不会为此扫描 Workspace Dart 文件。历史 shadow
 采样保留在性能报告中，仅作为 benchmark/tooling 研究数据；它不参与 Build Plan、Tool

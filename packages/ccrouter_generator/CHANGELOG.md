@@ -10,3 +10,6 @@
   build-target and per-Package dirty-reason diagnostics, and build_runner
   `--verbose-durations` forwarding without changing generation or cache
   invalidation behavior.
+- Added `generate --watch=auto --machine`, a single-build-root build_runner
+  watch path with NDJSON events, generation locking, artifact rollback, an
+  emergency kill switch, and a Flutter-run lifecycle lease.

@@ -30,10 +30,13 @@ void main() {
       isTrue,
     );
     expect(flutter.readAsStringSync(), contains('ccrouter_generator:ccrouter'));
+    expect(flutter.readAsStringSync(), contains('--watch=auto'));
+    expect(flutter.readAsStringSync(), contains('--watch-lease'));
     expect(
       flutterBat.readAsStringSync(),
       contains('ccrouter_generator:ccrouter'),
     );
+    expect(flutterBat.readAsStringSync(), contains('--watch=auto'));
 
     final status = await _run(['pub-hook', 'status', '--sdk', sdk.path]);
     expect(status.exitCode, 0, reason: '${status.stderr}');

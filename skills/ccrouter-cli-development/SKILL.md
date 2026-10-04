@@ -56,6 +56,7 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter generate <host-root>
 fvm dart run --verbosity=error ccrouter_generator:ccrouter generate <host-root> --check
 fvm dart run --verbosity=error ccrouter_generator:ccrouter generate <host-root> --no-cache
 fvm dart run --verbosity=error ccrouter_generator:ccrouter generate <host-root> --profile
+fvm dart run --verbosity=error ccrouter_generator:ccrouter generate <host-root> --watch=auto --machine
 fvm dart run --verbosity=error ccrouter_generator:ccrouter find <capability-id-or-route-pattern> <host-root>
 fvm dart run --verbosity=error ccrouter_generator:ccrouter find <capability-id-or-route-pattern> <host-root> --usage <consumer-component-id>
 fvm dart run --verbosity=error ccrouter_generator:ccrouter clean <host-root>
@@ -66,7 +67,7 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook run --projec
 ```
 
 The exact command help is authoritative. `analyzer status/doctor/install/upgrade/uninstall`
-are supported; `watch`, `promote`, and `migrate` are not.
+and generation watch are supported; `promote` and `migrate` are not.
 Do not invent commands or flags because they appear in a design document.
 `--verbosity=error` belongs to `dart run`, not to CCRouter. Keep it before the
 Package executable so Dart/Pub cold-start resolution noise is suppressed while
@@ -86,6 +87,13 @@ Use `--profile` only to investigate generation performance. On a miss, distingui
 reason (`cache-missing`, `metadata`, `output`, `dependency-index`, or
 `propagated-from`) before changing cache behavior. Never remove caches just to
 make an ordinary generation run pass.
+Use `--watch=auto --machine` for a long-lived local or AI development session.
+Consume its schema `1` NDJSON stdout and keep stderr as diagnostic text. A
+successful Builder event is not final until `aggregationSucceeded`; wait for
+`ready` before relying on the initial result. Set
+`CCROUTER_DISABLE_BUILD_WATCH=1` for the one-shot fallback. Watch owns one build
+root and holds its generation lock for the lease lifetime. Stop it before the
+final `--no-cache --check`; watch never replaces that authority.
 `input-delta` compares exact Package facts with the last successful local Build
 Plan: `authored` is an own-source/config change, `resolutionOnly` means unchanged
 own input with changed resolution identity. This is not a proven causal edge or
@@ -178,8 +186,10 @@ when the hook is missing or inconsistent. Use `uninstall` before removing a
 managed SDK. Set `CCROUTER_PUB_HOOK_DISABLE=1` for a one-shot bypass. Do not
 patch Flutter's `shared.sh`, snapshots, or tool sources manually. The hook does
 not cover direct `dart pub` commands or Flutter Tool's internal implicit
-`pub get`, and does not provide `watch`. `run/build` preflight failures stop the
-Flutter command; projects without a resolved CCRouter graph are skipped.
+`pub get`. After a successful `flutter run` preflight it starts watch under a
+lifecycle lease and removes the lease when Flutter exits; `flutter build`
+remains one-shot. `run/build` preflight failures stop the Flutter command;
+projects without a resolved CCRouter graph are skipped.
 
 ## Generated Output Rules
 

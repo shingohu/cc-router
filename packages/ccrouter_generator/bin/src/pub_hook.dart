@@ -114,10 +114,10 @@ final class CCPubHookManager {
       }
       await marker.writeAsString(
         const JsonEncoder.withIndent('  ').convert(<String, Object>{
-          'schema': 2,
+          'schema': 3,
           'entrypoint': 'flutter',
           'generator': 'ccrouter_generator',
-          'features': const <String>['pub', 'run', 'build'],
+          'features': const <String>['pub', 'run', 'build', 'run-watch'],
         }),
       );
     } catch (_) {
@@ -203,12 +203,16 @@ final class CCPubHookManager {
     final preflightEnabled =
         _supportsPreflight(posix) &&
         (!windowsExpected || _supportsPreflight(windows));
+    final runWatchEnabled =
+        _supportsRunWatch(posix) &&
+        (!windowsExpected || _supportsRunWatch(windows));
     final installed =
         markerValid &&
         posixBackupPresent &&
         posixValid &&
         windowsValid &&
-        preflightEnabled;
+        preflightEnabled &&
+        runWatchEnabled;
     stdout.writeln('CCRouter pub hook SDK: ${sdkRoot.path}');
     stdout.writeln(
       '  marker: ${marker.path} (${markerValid ? 'valid' : 'missing or invalid'})',
@@ -229,6 +233,7 @@ final class CCPubHookManager {
     }
     stdout.writeln(
       '  run/build preflight: ${preflightEnabled ? 'enabled' : 'missing'}, '
+      'run watch: ${runWatchEnabled ? 'enabled' : 'missing'}, '
       'pub post-hook: ${posixValid ? 'enabled' : 'missing'}',
     );
     stdout.writeln(
@@ -242,7 +247,7 @@ final class CCPubHookManager {
     try {
       final value = jsonDecode(file.readAsStringSync());
       return value is Map &&
-          (value['schema'] == 1 || value['schema'] == 2) &&
+          value['schema'] == 3 &&
           value['generator'] == 'ccrouter_generator';
     } on Object {
       return false;
@@ -271,6 +276,15 @@ final class CCPubHookManager {
     if (!file.existsSync()) return false;
     try {
       return file.readAsStringSync().contains('CCRouter preflight hook');
+    } on Object {
+      return false;
+    }
+  }
+
+  bool _supportsRunWatch(File file) {
+    if (!file.existsSync()) return false;
+    try {
+      return file.readAsStringSync().contains('--watch=auto');
     } on Object {
       return false;
     }
@@ -630,7 +644,30 @@ if [ "$FLUTTER_COMMAND" = "run" ] || [ "$FLUTTER_COMMAND" = "build" ]; then
     echo "CCRouter preflight hook failed before flutter $FLUTTER_COMMAND (exit $HOOK_EXIT)." >&2
     exit "$HOOK_EXIT"
   fi
-  exec "$ORIGINAL" "$@"
+  if [ "$FLUTTER_COMMAND" = "build" ] || [ "${CCROUTER_DISABLE_BUILD_WATCH:-0}" = "1" ]; then
+    exec "$ORIGINAL" "$@"
+  fi
+  WATCH_DIR="$PROJECT_ROOT/.dart_tool/ccrouter/v1/watch"
+  WATCH_LEASE="$WATCH_DIR/flutter-run-$$-${RANDOM:-0}.lease"
+  mkdir -p "$WATCH_DIR"
+  : > "$WATCH_LEASE"
+  "$DART" run --verbosity=error ccrouter_generator:ccrouter generate \
+    "$PROJECT_ROOT" --watch=auto --machine --watch-lease "$WATCH_LEASE" \
+    >> "$WATCH_DIR/flutter-run.log" 2>&1 &
+  WATCH_PID=$!
+  cleanup_ccrouter_watch() {
+    rm -f "$WATCH_LEASE"
+    if kill -0 "$WATCH_PID" 2>/dev/null; then
+      kill "$WATCH_PID" 2>/dev/null || true
+      wait "$WATCH_PID" 2>/dev/null || true
+    fi
+  }
+  trap cleanup_ccrouter_watch EXIT INT TERM
+  "$ORIGINAL" "$@"
+  ORIGINAL_EXIT=$?
+  cleanup_ccrouter_watch
+  trap - EXIT INT TERM
+  exit "$ORIGINAL_EXIT"
 fi
 
 if [ "$FLUTTER_COMMAND" != "pub" ]; then
@@ -713,7 +750,21 @@ goto find_package_config
 findstr /R /C:"\"name\"[ ]*:[ ]*\"ccrouter_generator\"" "%HOOK_DIR%\.dart_tool\package_config.json" >nul
 if not "%ERRORLEVEL%"=="0" goto invoke_original
 call "%SCRIPT_DIR%dart.bat" run --verbosity=error ccrouter_generator:ccrouter pub-hook run --project-root "%PROJECT_ROOT%" --pub-command "%HOOK_COMMAND%"
-if "%ERRORLEVEL%"=="0" goto invoke_original
+if not "%ERRORLEVEL%"=="0" goto hook_failed
+if /I "%HOOK_COMMAND%"=="build" goto invoke_original
+if /I not "%HOOK_COMMAND%"=="run" exit /b 0
+if "%CCROUTER_DISABLE_BUILD_WATCH%"=="1" goto invoke_original
+set "WATCH_DIR=%PROJECT_ROOT%\.dart_tool\ccrouter\v1\watch"
+if not exist "%WATCH_DIR%" mkdir "%WATCH_DIR%"
+set "WATCH_LEASE=%WATCH_DIR%\flutter-run-%RANDOM%-%RANDOM%.lease"
+type nul > "%WATCH_LEASE%"
+start "" /b "%SCRIPT_DIR%dart.bat" run --verbosity=error ccrouter_generator:ccrouter generate "%PROJECT_ROOT%" --watch=auto --machine --watch-lease "%WATCH_LEASE%" 1>>"%WATCH_DIR%\flutter-run.log" 2>>&1
+call "%ORIGINAL%" %*
+set "ORIGINAL_EXIT=%ERRORLEVEL%"
+del /q "%WATCH_LEASE%" >nul 2>&1
+exit /b %ORIGINAL_EXIT%
+
+:hook_failed
 echo CCRouter hook failed for flutter %HOOK_COMMAND%. 1>&2
 exit /b %ERRORLEVEL%
 
