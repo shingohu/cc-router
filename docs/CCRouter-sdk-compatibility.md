@@ -5,6 +5,8 @@
 - 版本：v0.1
 - 状态：持续验证记录，不是对所有 Flutter 平台和版本的永久承诺
 - 范围：Dart/Flutter SDK、GoRouter 适配器、Generator 和 Demo 路由回归
+- 2026-10-04 补充[Flutter / Dart 升级同步计划](CCRouter-sdk-upgrade-plan.md)：包含独立 Analyzer、
+  工具身份/只读组件、Hook、DevTools 与最低消费者门禁；该计划不代表目标 SDK 已升级或通过。
 
 ## 当前约束
 
@@ -48,7 +50,7 @@ fvm flutter --version
 
 ```sh
 fvm dart analyze
-fvm dart test packages/ccrouter_test/generator_test
+fvm dart test --concurrency=1 packages/ccrouter_test/generator_test
 fvm flutter test packages/ccrouter_test/test
 fvm flutter test demo/test
 fvm dart run ccrouter_generator:ccrouter generate demo --check
@@ -66,12 +68,17 @@ fvm spawn 3.47.2 test packages/ccrouter_test/test
 也不能复用另一个版本生成的 `.dart_tool/package_config.json` 或 `build/unit_test_assets`：
 
 ```sh
-fvm spawn 3.41.9 pub get
+CCROUTER_PUB_HOOK_DISABLE=1 fvm spawn 3.41.9 pub get
 fvm spawn 3.41.9 test packages/ccrouter_test/test --no-pub
 ```
 
 这些文件包含 Flutter SDK 的实际路径和测试 shader 资产，跨版本复用会产生误导性的
 `DisplayCornerRadii`、`HitTestRequest` 或 `ink_sparkle.frag` 错误。
+
+Workspace 根是聚合 Package；根目录解析时禁用 Pub Hook，并单独对实际 Host 执行
+`ccrouter generate demo --check`。优先为每个 SDK 使用独立工作区，不在当前工作区来回
+覆盖 lock、`.dart_tool` 和平台产物。Generator 测试中存在真实 Demo 修改夹具，必须串行，
+不能同时对同一个 Demo 执行生成或 Analyze。
 
 `demo` 的 macOS 构建和真实平台运行不属于 OHOS SDK 与标准 Flutter SDK 的同一项验证；
 应分别使用目标 SDK 的平台工具执行，不能用一个平台通过替代另一个平台。
@@ -82,7 +89,7 @@ fvm spawn 3.41.9 test packages/ccrouter_test/test --no-pub
 - Flutter 测试覆盖 GoRouter Adapter、Page/Route Factory、Host/Outlet、Dialog/BottomSheet、
   Shell、StatefulShell、系统返回和资源销毁。
 - Generator 测试覆盖 Analyzer、build_runner、Package Index、Catalog、源码定位和生成物校验。
-- GoRouter 当前锁定 `17.5.0`，升级版本需要重新执行 Adapter、Demo 和生成物回归，不能只更新
+- GoRouter 声明为 `^17.5.0`，当前 lock 解析为 `17.5.0`；升级版本需要重新执行 Adapter、Demo 和生成物回归，不能只更新
   `pubspec.yaml`。
 
 2026-09-22 本机多 SDK 验证历史快照如下。表中的测试数量保留当次执行口径，用于证明这些

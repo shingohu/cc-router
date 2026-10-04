@@ -117,6 +117,9 @@ Workspace/插件 analyze 及缓存/无缓存生成物检查通过。
   比较一致，并修复 Workspace 外 Path 依赖在 Build Plan 与 Portable State 间的指纹覆盖差异。
 - [ ] 仅在真实项目 Host 聚合超过总耗时 20% 时继续优化 dirty set 的输入摘要速度；不得用
   mtime/size 替代内容摘要。
+- [ ] Flutter / Dart 升级同步：已盘点当前 SDK、Generator/独立 Analyzer、Hook 和只读组件分发
+  边界，尚未选定或升级目标版本。按[升级计划 U0–U6](CCRouter-sdk-upgrade-plan.md) 执行隔离
+  解析、工具身份证明、最小兼容迁移、平台/性能回归和分发收口；不与 P6 传播优化捆绑启用。
 - [~] build_runner 优化下一阶段 P6：F04/F03 正确性前置已修复，收益/边界评估见计划第 12.5 节，
   P6-1 的只读归因、混合对照样本和 Builder 读取范围核对已完成（12.6–12.7）；传播收窄、P6-2/3 尚未实施。后续评估普通
   注释、生成文档与源码定位的分层摘要；减少状态变更与缩短生成耗时分别验收。详见

@@ -97,6 +97,7 @@
 - [正式发布准备与门禁](CCRouter-release-readiness.md)
 - [生产项目场景驱动演进流程](CCRouter-production-adoption-workflow.md)
 - [SDK 兼容性验证](CCRouter-sdk-compatibility.md)
+- [Flutter / Dart SDK 升级同步计划](CCRouter-sdk-upgrade-plan.md)
 
 ### 路由
 
