@@ -49,7 +49,8 @@
   也没有 rename/alias migration Quick Fix。已支持互斥参数安全删除，以及由生成 metadata 唯一
   证明、公共 import 已暴露 Owner 常量时的 Service/Command required dependency 实时诊断和
   直接 List Quick Fix；复杂集合和 import 插入仍不自动处理。CLI 已提供 Host-only 的只读
-  `analyzer status/doctor`；自动安装、升级和卸载仍未实现。
+  `analyzer status/doctor`；legacy 安装/升级/卸载仍保留为可回退管理路径，Hosted 发布后优先普通
+  `dev_dependency`，完整 Hosted/IDE/SDK 矩阵仍待外部验收。
 - 零 Subscriber Event：正常生成 Client、Workspace Validator 和 Runtime publisher identity 已覆盖；
   generated SPI 被手工伪造时没有独立 Event Contract Runtime Registry。该 Registry 仅在 generated
   SPI 需要成为严格防伪边界时再实现。
@@ -122,6 +123,7 @@
 - [注解与字段校验](CCRouter-annotation-validation.md)
 - [生成器性能报告](CCRouter-generator-performance-report.md)
 - [build_runner 与团队构建正确性优先优化计划](CCRouter-build-runner-optimization-plan.md)
+- [Generator / Analyzer 优化收敛验收](CCRouter-generator-analyzer-convergence-acceptance.md)
 - [CLI Pub Hook](CCRouter-cli-pub-hook.md)
 
 ### 工具与诊断
