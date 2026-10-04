@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 import 'package:path/path.dart' as path;
+import 'package:yaml/yaml.dart';
 
 part 'capability_source_catalog.dart';
 
@@ -92,6 +93,25 @@ final class CCResolvedPackage {
   bool get declaresGenerationIntent =>
       devDependencies.contains('ccrouter_generator') ||
       File(path.join(root.path, 'ccrouter.yaml')).existsSync();
+
+  /// Whether this Package explicitly opts into distributed pre-generated state.
+  ///
+  /// The opt-in is read from `ccrouter.yaml` as
+  /// `generation: { portable: true }`. A missing or malformed declaration is
+  /// treated as ordinary local generation, so it cannot accidentally publish a
+  /// state file or widen the P3 fast path.
+  bool get declaresPortableGeneration {
+    final file = File(path.join(root.path, 'ccrouter.yaml'));
+    if (!file.existsSync()) return false;
+    try {
+      final decoded = loadYaml(file.readAsStringSync());
+      if (decoded is! YamlMap) return false;
+      final generation = decoded['generation'];
+      return generation is YamlMap && generation['portable'] == true;
+    } on Object {
+      return false;
+    }
+  }
 
   /// Whether a non-framework dependency must publish a Package index.
   ///

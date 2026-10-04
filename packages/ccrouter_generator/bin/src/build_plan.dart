@@ -71,9 +71,7 @@ abstract final class _GenerationBuildPlanner {
     final portableCandidates = <String>{
       for (final name in addedPackages)
         if (workspace.packages[name] case final package?
-            when package.declaresGenerationIntent ||
-                package.requiresPackageIndex ||
-                package.indexFile.existsSync())
+            when package.declaresPortableGeneration)
           name,
     };
     final portableVerifications = await _CCPortableGenerationState.verify(

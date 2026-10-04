@@ -58,6 +58,13 @@ Future<void> main(List<String> arguments) async {
     return;
   }
 
+  if (parsed.command == _GeneratorCommand.portablePublish) {
+    if (!await _verifyPortablePublish(Directory(parsed.rootPath).absolute)) {
+      exitCode = 1;
+    }
+    return;
+  }
+
   final root = Directory(parsed.rootPath).absolute;
   if (!root.existsSync()) {
     stderr.writeln('error: Scan root does not exist: ${root.path}');
@@ -616,6 +623,8 @@ const _usage = '''Usage:
   ccrouter generate [scan-root] [--output-dir <directory>] [--check] [--no-cache] [--profile]
   ccrouter find <capability-id-or-route-pattern> [host-root] [--usage <component-id>]
   ccrouter clean [host-root]
+  ccrouter portable prepare [host-root]
+  ccrouter portable publish [host-root]
   ccrouter aggregate [scan-root] [--output-dir <directory>] [--generate-component-registrars]
   ccrouter create component <package-name> [parent-directory]
   ccrouter create page <PageName> [component-directory]
@@ -643,6 +652,11 @@ capability IDs or Route Pattern values. `--usage` adds a read-only integration
 recipe for one existing consumer component; it never edits dependencies.
 `clean` removes only CCRouter-owned source outputs in writable Packages; it
 preserves build caches, read-only dependencies, and unknown user files.
+`portable prepare` is the explicit full-generation step that writes Portable
+Generation State for Packages declaring `generation.portable: true` in
+`ccrouter.yaml`. `portable publish` only validates those states locally; it
+does not contact Pub, Git, or any external service. Ordinary `generate` never
+writes Portable State.
 `aggregate` preserves the metadata-only legacy path.
 `analyzer status` inspects one Host-owned Analysis Server bootstrap without
 modifying it. `analyzer doctor` additionally verifies its locked dependencies,
@@ -1088,7 +1102,12 @@ Future<bool> _generateResolvedWorkspace(
       )) {
     return false;
   }
-  await _CCPortableGenerationState.write(workspace, indexes: indexes);
+  if (parsed.portablePrepare) {
+    await _CCPortableGenerationState.write(workspace, indexes: indexes);
+    stdout.writeln(
+      'Prepared Portable Generation State for explicitly portable Packages.',
+    );
+  }
   stdout.writeln(
     'Validated ${validation.machineDocument['components'] is List ? (validation.machineDocument['components']! as List).length : 0} components and ${validation.machineDocument['routes'] is List ? (validation.machineDocument['routes']! as List).length : 0} routes across ${indexes.length} generated Packages.',
   );
@@ -1596,6 +1615,9 @@ enum _GeneratorCommand {
 
   /// Inspects or verifies one Host-owned Analysis Server bootstrap.
   analyzer,
+
+  /// Verifies that explicitly portable Packages have publishable state.
+  portablePublish,
 }
 
 /// Parsed inputs shared by generation, aggregation, and read-only lookup.
@@ -1616,6 +1638,7 @@ final class _Arguments {
     this.scaffoldName,
     this.scaffoldWithSubscriber = false,
     this.scaffoldWithContract = false,
+    this.portablePrepare = false,
     this.pubHookRequest,
     this.analyzerRequest,
   });
@@ -1665,6 +1688,9 @@ final class _Arguments {
   /// Whether an InitTask scaffold emits a reusable typed Task Contract.
   final bool scaffoldWithContract;
 
+  /// Whether this generate invocation is the explicit portable prepare phase.
+  final bool portablePrepare;
+
   /// Parsed request for the pub hook command.
   final CCPubHookRequest? pubHookRequest;
 
@@ -1693,6 +1719,8 @@ _Arguments _parseArguments(List<String> arguments) {
     return _parsePubHookArguments(arguments);
   } else if (arguments.isNotEmpty && arguments.first == 'analyzer') {
     return _parseAnalyzerArguments(arguments);
+  } else if (arguments.isNotEmpty && arguments.first == 'portable') {
+    return _parsePortableArguments(arguments);
   }
   var rootPath = Directory.current.path;
   String? outputDirectoryPath;
@@ -2082,6 +2110,92 @@ _Arguments _parsePubHookArguments(List<String> arguments) {
       pubCommand: pubCommand,
     ),
   );
+}
+
+/// Parses the explicit Portable State lifecycle commands.
+_Arguments _parsePortableArguments(List<String> arguments) {
+  if (arguments.length < 2 ||
+      (arguments[1] != 'prepare' && arguments[1] != 'publish')) {
+    return const _Arguments(
+      command: _GeneratorCommand.portablePublish,
+      rootPath: '',
+      outputDirectoryPath: null,
+      error: 'portable requires `prepare` or `publish`.',
+    );
+  }
+  if (arguments.length > 3 ||
+      (arguments.length == 3 && arguments[2].startsWith('-'))) {
+    return const _Arguments(
+      command: _GeneratorCommand.portablePublish,
+      rootPath: '',
+      outputDirectoryPath: null,
+      error: 'portable accepts one optional Host directory.',
+    );
+  }
+  final root = arguments.length == 3 ? arguments[2] : Directory.current.path;
+  if (arguments[1] == 'prepare') {
+    return _Arguments(
+      command: _GeneratorCommand.generate,
+      rootPath: root,
+      outputDirectoryPath: null,
+      generateComponentRegistrars: true,
+      portablePrepare: true,
+    );
+  }
+  return _Arguments(
+    command: _GeneratorCommand.portablePublish,
+    rootPath: root,
+    outputDirectoryPath: null,
+  );
+}
+
+/// Verifies the explicit publish boundary without contacting Pub or Git.
+Future<bool> _verifyPortablePublish(Directory root) async {
+  final context = _findBuildContext(root);
+  if (context == null) {
+    stderr.writeln('error: Cannot find a Pub Host for Portable State publish.');
+    return false;
+  }
+  try {
+    final workspace = await CCPackageWorkspace.load(
+      buildRoot: context.root,
+      hostRoot: root,
+      workspace: context.workspace,
+    );
+    final portable = workspace.packages.values
+        .where(
+          (package) => package.writable && package.declaresPortableGeneration,
+        )
+        .toList();
+    if (portable.isEmpty) {
+      stderr.writeln(
+        'error: No writable Package declares generation.portable: true.',
+      );
+      return false;
+    }
+    final verification = await _CCPortableGenerationState.verify(
+      workspace,
+      packageNames: portable.map((package) => package.name).toSet(),
+    );
+    for (final package in portable) {
+      final state = verification[package.name];
+      if (state == null || !state.valid) {
+        stderr.writeln(
+          'error: Portable Package "${package.name}" is not prepared '
+          '(${state?.reason.name ?? 'missing'}); run `portable prepare` first.',
+        );
+        return false;
+      }
+    }
+    stdout.writeln(
+      'Portable Generation State is ready for ${portable.length} Package(s). '
+      'External publishing remains a user-owned Pub/Git step.',
+    );
+    return true;
+  } on Object catch (error) {
+    stderr.writeln('error: Portable State publish validation failed: $error');
+    return false;
+  }
 }
 
 /// Parses the intentionally small, non-overwriting scaffold command surface.
@@ -2693,7 +2807,9 @@ abstract final class _GenerationStateFingerprint {
             await file.readAsBytes();
       }
     }
-    for (final name in const ['pubspec.yaml', 'build.yaml', 'ccrouter.yaml']) {
+    // `ccrouter.yaml` contains the distribution opt-in, not generation input;
+    // toggling publication policy must not invalidate already generated bytes.
+    for (final name in const ['pubspec.yaml', 'build.yaml']) {
       await _addFile(
         inputs,
         'package/${package.name}/$name',

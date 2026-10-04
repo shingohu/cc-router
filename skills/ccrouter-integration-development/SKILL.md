@@ -27,7 +27,15 @@ application's installed package APIs and CLI help if its version differs.
 7. Add focused tests for success, failure, lifecycle cleanup, and relevant concurrency.
 8. Run analyze, focused tests, and `generate --check` before completion.
 
-Commit generated output together with its Portable Generation State when
+Commit generated output together with its Portable Generation State only when
+the Package explicitly opts into distribution with `ccrouter.yaml`
+`generation: { portable: true }`. Generate that state through
+`ccrouter portable prepare <host-root>` and validate readiness with
+`ccrouter portable publish <host-root>`; ordinary local `generate` maintains
+only disposable `.dart_tool` planning state. A read-only declared Package with
+missing or stale state fails closed, while an unproven writable Package falls
+back to the full Builder path. Never treat the publish command as authorization
+to contact Pub or Git.
 distributing components. A cache hit must verify external source, dependency,
 and managed-output content; it does not excuse stale Git/Path artifacts.
 See the generation section in `references/implementation-patterns.md`.

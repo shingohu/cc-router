@@ -68,13 +68,17 @@ abstract final class _CCPortableGenerationState {
     return Map.unmodifiable(result);
   }
 
-  /// Writes deterministic state only for Packages that publish an index.
+  /// Writes deterministic state only for explicitly portable Packages.
   static Future<void> write(
     CCPackageWorkspace workspace, {
     required Map<String, CCPackageIndex> indexes,
   }) async {
     final writableNames = indexes.keys
-        .where((name) => workspace.packages[name]?.writable ?? false)
+        .where(
+          (name) =>
+              workspace.packages[name]?.writable == true &&
+              workspace.packages[name]?.declaresPortableGeneration == true,
+        )
         .toSet();
     if (writableNames.isEmpty) return;
     final context = await _CCPortableGenerationContext.capture(workspace);

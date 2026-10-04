@@ -340,8 +340,12 @@ Schema 不兼容或解析身份无法证明时都会 fail closed。设置
 `CCROUTER_DISABLE_AGGREGATE_ONLY=1` 可立即关闭 aggregation-only。`--no-cache --profile` 固定报告
 `suggested=runBuilder actual=runBuilder reasons=no-cache-reference`，用于逐字节参考回归；CI 继续使用
 `--no-cache --check`。每个生成 Package 的
-`lib/src/ccrouter_generated/metadata/ccrouter_generation_state.json` 是可提交受管产物，只包含内容
-identity，不包含绝对路径、用户名、mtime、inode 或 `.dart_tool`；它不能替代 CI 权威门禁。
+`lib/src/ccrouter_generated/metadata/ccrouter_generation_state.json` 只有在 Package 通过
+`ccrouter.yaml` 的 `generation: { portable: true }` 显式声明后，才由
+`ccrouter portable prepare <host-root>` 作为可提交受管产物写入；它只包含内容 identity，不包含
+绝对路径、用户名、mtime、inode 或 `.dart_tool`，也不能替代 CI 权威门禁。普通 `generate` 不再
+写入 Portable State；writable 未声明 Package 回退完整 Builder，已声明的只读 Package 缺失或
+失配则 fail closed。`ccrouter portable publish` 只做本地 readiness check。
 
 fast path 未命中时会先执行保守的 Component Dependency Preflight，只有直接 List、Contract
 类型和 Owner 都唯一可证明时才提前失败；它不替代 Builder。所有正式 `generate` 都会在

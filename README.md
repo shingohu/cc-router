@@ -1225,8 +1225,13 @@ Host 不会修改外部依赖。诊断基线保存在
 `.dart_tool/ccrouter/v1/build_plans/`，可以随时删除；缺失、损坏或无法证明解析身份时会保守回退。
 设置 `CCROUTER_DISABLE_AGGREGATE_ONLY=1` 可临时关闭该优化并恢复完整 Builder；
 `--no-cache --profile` 会报告 `reasons=no-cache-reference` 并始终执行完整参考路径，
-`--no-cache --check` 仍是 CI 权威门禁。Portable State 是应随受管生成物提交的内容证明；本机
-`.dart_tool` 状态仍不可提交或跨机器复用，也不能替代 CI 的完整 Builder 校验。
+`--no-cache --check` 仍是 CI 权威门禁。Portable State 是可选的分发契约，而不是普通本地
+生成的默认输出。Package 需要在 `ccrouter.yaml` 声明 `generation: { portable: true }`，然后
+由作者显式运行 `ccrouter portable prepare <host-root>` 生成状态，再用
+`ccrouter portable publish <host-root>` 做发布前验证；普通 `ccrouter generate` 只维护
+`.dart_tool` planning state。发布动作不会替代用户授权的 Pub/Git 发布，也不会连接外部系统。
+只读消费端对已声明预生成 Package 的状态缺失或失配 fail closed，writable Package 则回退完整
+Builder。
 
 Portable State 按组件内容验证，不绑定该组件自身尚未产生的 Git commit 或归档哈希，也不要求
 消费者安装作者的测试用 devDependencies；生成工具及实际运行依赖仍须匹配。只要依赖身份或

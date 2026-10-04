@@ -276,7 +276,8 @@ Validator、依赖发现和 Host 聚合仍会完整执行，不能据此承诺�
 
 ### P3：支持可信预生成组件，已完成
 
-每个生成 Package 现在写入可提交的
+显式声明 `generation: { portable: true }` 的生成 Package 才通过
+`ccrouter portable prepare` 写入可提交的
 `lib/src/ccrouter_generated/metadata/ccrouter_generation_state.json`。状态只包含 schema、Generator、
 Dart SDK、Package identity、authored input、解析依赖、metadata 与受管输出的内容摘要，不包含
 绝对路径、用户名、时间戳、mtime、inode 或 `.dart_tool` 数据。
@@ -287,7 +288,8 @@ Workspace 外 Path 等只读业务 Package 必须携带有效状态，缺失、�
 外部依赖目录运行 Builder 或修改文件。Package Index 可在 Builder metadata 不存在时作为已验证
 metadata 输入，但仍须通过正式 Workspace Validator、Contract 校验和 Host 聚合。
 
-状态文件纳入 `clean`、`--check`、失败恢复和 fast-path 外部输入摘要。实现已覆盖无 Builder cache
+普通本地 `generate` 不写 Portable State，只维护 `.dart_tool` planning state；`portable publish`
+只验证状态而不执行外部发布。状态文件纳入 `clean`、`--check`、失败恢复和 fast-path 外部输入摘要。实现已覆盖无 Builder cache
 的预生成 Package、只读外部 Package、缺失状态和篡改状态；`--no-cache --check` 继续作为逐字节
 权威对照，不能因为状态来自其他机器而降低校验强度。真实 Git/Pub 发布归档及 macOS/Linux 的
 Clone A/Clone B 矩阵属于持续发布门禁，不改变当前 fail-closed 语义。

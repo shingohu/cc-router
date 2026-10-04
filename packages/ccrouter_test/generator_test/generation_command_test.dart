@@ -875,10 +875,7 @@ void probe() {
       expect('${changedSource.stdout}', isNot(contains('const fastPathProbe')));
       expect(
         '${changedSource.stderr}',
-        contains(
-          'modified: demo/lib/src/ccrouter_generated/metadata/'
-          'ccrouter_generation_state.json',
-        ),
+        isNot(contains('ccrouter_generation_state.json')),
       );
 
       final generatedWithSource = await generate();
@@ -888,6 +885,7 @@ void probe() {
         reason: '${generatedWithSource.stderr}',
       );
       expect('${generatedWithSource.stdout}', contains('fast-path=miss'));
+      expect(portableState.readAsBytesSync(), originalPortableState);
 
       sourceProbe.deleteSync();
       final reseeded = await generate();

@@ -35,6 +35,31 @@ void main() {
     expect(workspace.packages, isNot(contains('dev_only')));
   });
 
+  test('Portable State requires an explicit package declaration', () async {
+    final fixture = await PackageResolutionFixture.create();
+    addTearDown(fixture.dispose);
+    final package = fixture.packageRoot('path_feature');
+    final resolved = CCResolvedPackage(
+      name: 'path_feature',
+      version: '1.0.0',
+      root: package,
+      dependencies: const ['git_feature'],
+      devDependencies: const [],
+      writable: true,
+    );
+    expect(resolved.declaresPortableGeneration, isFalse);
+    File(path.join(package.path, 'ccrouter.yaml')).writeAsStringSync('''
+generation:
+  portable: true
+''');
+    expect(resolved.declaresPortableGeneration, isTrue);
+    File(path.join(package.path, 'ccrouter.yaml')).writeAsStringSync('''
+generation:
+  portable: false
+''');
+    expect(resolved.declaresPortableGeneration, isFalse);
+  });
+
   test(
     'requires resolved Package graph instead of scanning the repository',
     () async {
