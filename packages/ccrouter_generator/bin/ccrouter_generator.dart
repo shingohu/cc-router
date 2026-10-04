@@ -65,6 +65,14 @@ Future<void> main(List<String> arguments) async {
     return;
   }
 
+  final profileTrace = parsed.profile
+      ? _GenerationProfileTrace(totalWatch)
+      : null;
+  profileTrace?.recordElapsed(
+    'argument-resolution',
+    startUs: 0,
+    durationUs: totalWatch.elapsedMicroseconds,
+  );
   final root = Directory(parsed.rootPath).absolute;
   if (!root.existsSync()) {
     stderr.writeln('error: Scan root does not exist: ${root.path}');
@@ -99,9 +107,14 @@ Future<void> main(List<String> arguments) async {
     }
     return;
   }
-  final buildContext = parsed.command != _GeneratorCommand.aggregate
-      ? _findBuildContext(root)
-      : null;
+  final buildContext = profileTrace.measureSync(
+    'build-context-resolution',
+    () => parsed.command != _GeneratorCommand.aggregate
+        ? _findBuildContext(root)
+        : null,
+    succeeded: (context) =>
+        parsed.command == _GeneratorCommand.aggregate || context != null,
+  );
   if (parsed.command != _GeneratorCommand.aggregate && buildContext == null) {
     stderr.writeln(
       'error: No standalone Package or enclosing Dart workspace was found '
@@ -164,27 +177,40 @@ Future<void> main(List<String> arguments) async {
   CCPackageWorkspace? fastPathWorkspace;
   String? verifiedInputFingerprint;
   _GenerationBuildPlanInspection? buildPlan;
+  var profileOutcome = 'failed';
   try {
     if (buildContext != null) {
-      generationLock = await _GenerationLock.acquire(buildContext.root);
+      generationLock = await profileTrace.measure(
+        'generation-lock-wait',
+        () => _GenerationLock.acquire(buildContext.root),
+      );
     }
     if (buildContext != null &&
         parsed.command == _GeneratorCommand.generate &&
         parsed.outputDirectoryPath == null) {
-      fastPathWorkspace = await CCPackageWorkspace.load(
-        buildRoot: buildContext.root,
-        hostRoot: root,
-        workspace: buildContext.workspace,
+      fastPathWorkspace = await profileTrace.measure<CCPackageWorkspace>(
+        'workspace-load',
+        () => CCPackageWorkspace.load(
+          buildRoot: buildContext.root,
+          hostRoot: root,
+          workspace: buildContext.workspace,
+        ),
+        counts: (workspace) => {'packages': workspace.packages.length},
       );
       if (parsed.noCache) {
-        verifiedInputFingerprint =
-            await _GenerationStateFingerprint.captureInput(fastPathWorkspace);
+        verifiedInputFingerprint = await profileTrace.measure(
+          'input-fingerprint-capture',
+          () => _GenerationStateFingerprint.captureInput(fastPathWorkspace!),
+        );
         buildPlan = const _GenerationBuildPlanInspection.runBuilder(
           reasons: ['no-cache-reference'],
         );
+        profileTrace?.skip('fast-path-inspection');
+        profileTrace?.skip('build-plan-inspection');
       } else {
-        final fastPath = await _GenerationFastPath.inspect(
-          workspace: fastPathWorkspace,
+        final fastPath = await profileTrace.measure(
+          'fast-path-inspection',
+          () => _GenerationFastPath.inspect(workspace: fastPathWorkspace!),
         );
         verifiedInputFingerprint = fastPath.inputFingerprint;
         if (fastPath.matches) {
@@ -203,39 +229,61 @@ Future<void> main(List<String> arguments) async {
             stdout.writeln('CCRouter profile input-delta=unchanged');
             _GenerationProfile.writeOutputs(const []);
           }
+          profileTrace?.skip('build-plan-inspection');
+          profileTrace?.skip('build-runner-process');
+          profileTrace?.skip('workspace-aggregation');
+          profileOutcome = 'success';
           return;
         }
         if (parsed.profile) stdout.writeln('CCRouter profile fast-path=miss');
-        buildPlan = await _GenerationBuildPlanner.inspect(
-          workspace: fastPathWorkspace,
-          fastPathMissReason: fastPath.missReason,
-          profile: parsed.profile,
+        buildPlan = await profileTrace.measure(
+          'build-plan-inspection',
+          () => _GenerationBuildPlanner.inspect(
+            workspace: fastPathWorkspace!,
+            fastPathMissReason: fastPath.missReason,
+            profile: parsed.profile,
+          ),
         );
       }
-      verifiedInputFingerprint ??=
-          await _GenerationStateFingerprint.captureInput(fastPathWorkspace);
+      verifiedInputFingerprint ??= await profileTrace.measure(
+        'input-fingerprint-capture',
+        () => _GenerationStateFingerprint.captureInput(fastPathWorkspace!),
+      );
       if (parsed.profile) {
-        stdout.writeln(buildPlan.profileDescription);
+        stdout.writeln(buildPlan!.profileDescription);
         stdout.writeln(
           'CCRouter profile input-delta=${jsonEncode(buildPlan.inputDelta ?? const {'status': 'unavailable'})}',
         );
       }
     }
     if (parsed.command == _GeneratorCommand.generate) {
-      fastPathWorkspace ??= await CCPackageWorkspace.load(
-        buildRoot: buildContext!.root,
-        hostRoot: root,
-        workspace: buildContext.workspace,
+      fastPathWorkspace ??= await profileTrace.measure<CCPackageWorkspace>(
+        'workspace-load',
+        () => CCPackageWorkspace.load(
+          buildRoot: buildContext!.root,
+          hostRoot: root,
+          workspace: buildContext.workspace,
+        ),
+        counts: (workspace) => {'packages': workspace.packages.length},
       );
       // build_runner cannot repair read-only dependency artifacts. Reject
       // stale external files before it sees missing generated libraries and
       // attempts incremental cleanup outside its writable build Packages.
-      if (!await _CCPortableGenerationState.verifyReadOnly(fastPathWorkspace)) {
+      if (!await profileTrace.measure(
+        'portable-state-readonly-verification',
+        () => _CCPortableGenerationState.verifyReadOnly(fastPathWorkspace!),
+        succeeded: (verified) => verified,
+      )) {
         exitCode = 1;
         return;
       }
       final preflightWatch = Stopwatch()..start();
-      final issues = await _componentDependencyPreflight(fastPathWorkspace);
+      final issues = await profileTrace.measure(
+        'component-dependency-preflight',
+        () => _componentDependencyPreflight(fastPathWorkspace!),
+        succeeded: (issues) => issues.isEmpty,
+        counts: (issues) => {'issues': issues.length},
+      );
       preflightWatch.stop();
       if (parsed.profile) {
         stdout.writeln(
@@ -255,8 +303,9 @@ Future<void> main(List<String> arguments) async {
       // files that are about to be handed to build_runner. Revalidate at the
       // execution boundary; a Host-graph-only plan must never skip Builder
       // work after an authored input changed in the meantime.
-      final executionInput = await _GenerationStateFingerprint.captureInput(
-        fastPathWorkspace,
+      final executionInput = await profileTrace.measure(
+        'execution-boundary-fingerprint',
+        () => _GenerationStateFingerprint.captureInput(fastPathWorkspace!),
       );
       if (verifiedInputFingerprint != null &&
           verifiedInputFingerprint != executionInput) {
@@ -272,66 +321,106 @@ Future<void> main(List<String> arguments) async {
       }
       verifiedInputFingerprint = executionInput;
     }
-    final needsBootstrap =
-        parsed.command == _GeneratorCommand.generate &&
-        fastPathWorkspace != null &&
-        await _hasMissingGeneratedComponentImport(fastPathWorkspace);
+    final needsBootstrap = await profileTrace.measure(
+      'missing-generated-import-scan',
+      () async =>
+          parsed.command == _GeneratorCommand.generate &&
+          fastPathWorkspace != null &&
+          await _hasMissingGeneratedComponentImport(fastPathWorkspace),
+    );
     snapshot = parsed.command == _GeneratorCommand.generate
-        ? await _GeneratedArtifactsSnapshot.capture(
-            buildContext!.root,
-            explicitFiles: [
-              if (parsed.outputDirectoryPath case final output?)
-                for (final name in const [
-                  'cc_routes.json',
-                  'cc_catalog.md',
-                  'cc_routes.md',
-                  'cc_sources.md',
-                ])
-                  File(path.join(output, name)).absolute,
-            ],
+        ? await profileTrace.measure(
+            'artifact-snapshot-capture',
+            () => _GeneratedArtifactsSnapshot.capture(
+              buildContext!.root,
+              explicitFiles: [
+                if (parsed.outputDirectoryPath case final output?)
+                  for (final name in const [
+                    'cc_routes.json',
+                    'cc_catalog.md',
+                    'cc_routes.md',
+                    'cc_sources.md',
+                  ])
+                    File(path.join(output, name)).absolute,
+              ],
+            ),
           )
         : null;
     if (needsBootstrap) {
       try {
-        if (await _bootstrapGeneratedComponentApis(fastPathWorkspace)) {
+        if (await profileTrace.measure(
+          'bootstrap-restore',
+          () => _bootstrapGeneratedComponentApis(fastPathWorkspace!),
+        )) {
           stdout.writeln(
             'Bootstrapped generated component APIs from validated build metadata.',
           );
         }
       } on Object {
-        await snapshot!.restore();
+        await profileTrace.measure(
+          'artifact-snapshot-restore',
+          snapshot!.restore,
+        );
       }
+    } else {
+      profileTrace?.skip('bootstrap-restore');
     }
     var buildDuration = Duration.zero;
     if (buildPlan?.runsBuilder ?? true) {
       final buildWatch = Stopwatch()..start();
-      if (buildContext != null &&
-          !await _runBuildRunner(buildContext, root, profile: parsed.profile)) {
-        if (snapshot != null) await snapshot.restore();
+      if (buildContext == null) {
+        profileTrace?.skip('build-runner-process');
+      } else if (!await profileTrace.measure(
+        'build-runner-process',
+        () => _runBuildRunner(
+          buildContext,
+          root,
+          profile: parsed.profile,
+          trace: profileTrace,
+        ),
+        succeeded: (succeeded) => succeeded,
+      )) {
+        if (snapshot != null) {
+          await profileTrace.measure(
+            'artifact-snapshot-restore',
+            snapshot.restore,
+          );
+        }
         exitCode = 1;
         return;
       }
       buildWatch.stop();
       buildDuration = buildWatch.elapsed;
     } else {
+      profileTrace?.skip('build-runner-process');
       stdout.writeln(
         'CCRouter generation aggregate-only path; verified Builder inputs '
         'are unchanged.',
       );
     }
-    final succeeded = parsed.command == _GeneratorCommand.generate
-        ? await _generateResolvedWorkspace(
-            root,
-            parsed,
-            buildContext!,
-            buildDuration: buildDuration,
-            expectedInputFingerprint: verifiedInputFingerprint,
-            prebuiltPackages:
-                buildPlan?.actualPrebuiltPackages ?? const <String>{},
-          )
-        : await _aggregate(root, parsed);
+    final succeeded = await profileTrace.measure(
+      'workspace-aggregation',
+      () => parsed.command == _GeneratorCommand.generate
+          ? _generateResolvedWorkspace(
+              root,
+              parsed,
+              buildContext!,
+              buildDuration: buildDuration,
+              expectedInputFingerprint: verifiedInputFingerprint,
+              prebuiltPackages:
+                  buildPlan?.actualPrebuiltPackages ?? const <String>{},
+              trace: profileTrace,
+            )
+          : _aggregate(root, parsed),
+      succeeded: (succeeded) => succeeded,
+    );
     if (!succeeded) {
-      if (snapshot != null) await snapshot.restore();
+      if (snapshot != null) {
+        await profileTrace.measure(
+          'artifact-snapshot-restore',
+          snapshot.restore,
+        );
+      }
       exitCode = 1;
       return;
     }
@@ -339,7 +428,11 @@ Future<void> main(List<String> arguments) async {
     if (parsed.profile && snapshot != null) {
       try {
         final watch = Stopwatch()..start();
-        outputChanges = await snapshot.changes();
+        outputChanges = await profileTrace.measure<List<String>>(
+          'output-delta-scan',
+          snapshot.changes,
+          counts: (changes) => {'files': changes.length},
+        );
         _GenerationProfile.writeOutputs(outputChanges);
         stdout.writeln(
           'CCRouter profile output-delta-scan=${watch.elapsedMilliseconds}ms',
@@ -350,7 +443,7 @@ Future<void> main(List<String> arguments) async {
     }
     if (parsed.check && snapshot != null) {
       final changes = outputChanges ?? await snapshot.changes();
-      await snapshot.restore();
+      await profileTrace.measure('check-restore', snapshot.restore);
       if (changes.isNotEmpty) {
         stderr.writeln('error: CCRouter generated artifacts are stale:');
         for (final change in changes) {
@@ -364,19 +457,28 @@ Future<void> main(List<String> arguments) async {
     if (buildContext != null &&
         parsed.command == _GeneratorCommand.generate &&
         parsed.outputDirectoryPath == null) {
-      fastPathWorkspace ??= await CCPackageWorkspace.load(
-        buildRoot: buildContext.root,
-        hostRoot: root,
-        workspace: buildContext.workspace,
+      fastPathWorkspace ??= await profileTrace.measure(
+        'workspace-reload-for-state',
+        () => CCPackageWorkspace.load(
+          buildRoot: buildContext.root,
+          hostRoot: root,
+          workspace: buildContext.workspace,
+        ),
       );
-      await _GenerationFastPath.write(
-        workspace: fastPathWorkspace,
-        expectedInputFingerprint: verifiedInputFingerprint!,
+      await profileTrace.measure(
+        'fast-path-manifest-write',
+        () => _GenerationFastPath.write(
+          workspace: fastPathWorkspace!,
+          expectedInputFingerprint: verifiedInputFingerprint!,
+        ),
       );
       try {
-        await _GenerationBuildPlanner.write(
-          workspace: fastPathWorkspace,
-          expectedInputFingerprint: verifiedInputFingerprint,
+        await profileTrace.measure(
+          'build-plan-state-write',
+          () => _GenerationBuildPlanner.write(
+            workspace: fastPathWorkspace!,
+            expectedInputFingerprint: verifiedInputFingerprint!,
+          ),
         );
       } on Object {
         if (parsed.profile) {
@@ -387,20 +489,39 @@ Future<void> main(List<String> arguments) async {
         }
       }
     }
+    profileOutcome = 'success';
   } on CCPackageWorkspaceException catch (error) {
-    if (snapshot != null) await snapshot.restore();
+    if (snapshot != null) {
+      await profileTrace.measure('artifact-snapshot-restore', snapshot.restore);
+    }
     stderr.writeln('error: ${error.message}');
     exitCode = 1;
   } catch (_) {
-    if (snapshot != null) await snapshot.restore();
+    if (snapshot != null) {
+      await profileTrace.measure('artifact-snapshot-restore', snapshot.restore);
+    }
     rethrow;
   } finally {
-    await generationLock?.release();
-    totalWatch.stop();
-    if (parsed.profile) {
-      stdout.writeln(
-        'CCRouter profile total=${totalWatch.elapsedMilliseconds}ms',
-      );
+    try {
+      if (generationLock != null) {
+        await profileTrace.measure(
+          'generation-lock-release',
+          generationLock.release,
+        );
+      }
+    } finally {
+      totalWatch.stop();
+      if (parsed.profile) {
+        stdout.writeln(
+          'CCRouter profile total=${totalWatch.elapsedMilliseconds}ms',
+        );
+        await profileTrace!.write(
+          buildRoot: buildContext?.root ?? root,
+          hostRoot: root,
+          command: parsed.command.name,
+          outcome: profileOutcome,
+        );
+      }
     }
   }
 }
@@ -687,30 +808,47 @@ Future<bool> _generateResolvedWorkspace(
   required Duration buildDuration,
   String? expectedInputFingerprint,
   Set<String> prebuiltPackages = const <String>{},
+  _GenerationProfileTrace? trace,
 }) async {
   final discoveryWatch = Stopwatch()..start();
   CCPackageWorkspace workspace;
   try {
-    workspace = await CCPackageWorkspace.load(
-      buildRoot: buildContext.root,
-      hostRoot: hostRoot,
-      workspace: buildContext.workspace,
+    workspace = await trace.measure(
+      'aggregation-workspace-reload',
+      () => CCPackageWorkspace.load(
+        buildRoot: buildContext.root,
+        hostRoot: hostRoot,
+        workspace: buildContext.workspace,
+      ),
+      counts: (workspace) => {'packages': workspace.packages.length},
     );
   } on CCPackageWorkspaceException catch (error) {
     stderr.writeln('error: ${error.message}');
     return false;
   }
   if (expectedInputFingerprint != null &&
-      !await _generationInputIsStable(
-        workspace,
-        expectedInputFingerprint,
-        stage: 'before-aggregation',
+      !await trace.measure(
+        'before-aggregation-input-barrier',
+        () => _generationInputIsStable(
+          workspace,
+          expectedInputFingerprint,
+          stage: 'before-aggregation',
+        ),
+        succeeded: (stable) => stable,
       )) {
     return false;
   }
+  if (expectedInputFingerprint == null) {
+    trace?.skip('before-aggregation-input-barrier');
+  }
   discoveryWatch.stop();
-  final internalApiErrors = CCGeneratedInternalApiBoundaryValidator.validate(
-    workspace.packages.values,
+  final internalApiErrors = trace.measureSync(
+    'internal-api-boundary-validation',
+    () => CCGeneratedInternalApiBoundaryValidator.validate(
+      workspace.packages.values,
+    ),
+    succeeded: (errors) => errors.isEmpty,
+    counts: (errors) => {'errors': errors.length},
   );
   if (internalApiErrors.isNotEmpty) {
     for (final error in internalApiErrors) {
@@ -726,9 +864,13 @@ Future<bool> _generateResolvedWorkspace(
     return false;
   }
 
-  final cache = parsed.noCache
-      ? _GenerationCache.empty(buildContext.root)
-      : await _GenerationCache.load(buildContext.root);
+  final cache = await trace.measure<_GenerationCache>(
+    'metadata-cache-load',
+    () async {
+      if (parsed.noCache) return _GenerationCache.empty(buildContext.root);
+      return _GenerationCache.load(buildContext.root);
+    },
+  );
   if (cache.corrupted) {
     stdout.writeln(
       'CCRouter cache was invalid and has been ignored; running a full parse.',
@@ -740,19 +882,25 @@ Future<bool> _generateResolvedWorkspace(
   final metadataSnapshots = <String, CCPackageMetadataSnapshot>{};
   final externalIndexes = <String, CCPackageIndex>{};
   final participating = <String>{workspace.host.name};
-  final portableVerifications = await _CCPortableGenerationState.verify(
-    workspace,
-    packageNames: {
-      ...prebuiltPackages,
-      for (final package in workspace.packages.values)
-        if (!package.writable && package.requiresPackageIndex) package.name,
-    },
+  final portableVerifications = await trace.measure(
+    'portable-state-verification',
+    () => _CCPortableGenerationState.verify(
+      workspace,
+      packageNames: {
+        ...prebuiltPackages,
+        for (final package in workspace.packages.values)
+          if (!package.writable && package.requiresPackageIndex) package.name,
+      },
+    ),
+    counts: (verifications) => {'packages': verifications.length},
   );
+  final metadataSpan = trace?.start('metadata-and-package-index-load');
   for (final package in workspace.packages.values) {
     if (package.writable) {
       if (prebuiltPackages.contains(package.name)) {
         final verification = portableVerifications[package.name];
         if (verification == null || !verification.valid) {
+          metadataSpan?.finish(status: 'failed');
           stderr.writeln(
             'error: Prebuilt CCRouter Package "${package.name}" no longer '
             'matches its Portable Generation State '
@@ -773,6 +921,7 @@ Future<bool> _generateResolvedWorkspace(
           participating.add(package.name);
           continue;
         } on CCPackageWorkspaceException catch (error) {
+          metadataSpan?.finish(status: 'failed');
           stderr.writeln('error: ${error.message}');
           return false;
         }
@@ -799,6 +948,7 @@ Future<bool> _generateResolvedWorkspace(
       if (package.requiresPackageIndex) {
         final verification = portableVerifications[package.name];
         if (verification == null || !verification.valid) {
+          metadataSpan?.finish(status: 'failed');
           stderr.writeln(
             'error: Read-only CCRouter Package "${package.name}" has an '
             'invalid Portable Generation State '
@@ -813,11 +963,13 @@ Future<bool> _generateResolvedWorkspace(
         externalIndexes[package.name] = index;
         participating.add(package.name);
       } on CCPackageWorkspaceException catch (error) {
+        metadataSpan?.finish(status: 'failed');
         stderr.writeln('error: ${error.message}');
         return false;
       }
     } else if (package.declaresGenerationIntent ||
         package.requiresPackageIndex) {
+      metadataSpan?.finish(status: 'failed');
       stderr.writeln(
         'error: Read-only CCRouter Package "${package.name}" has no published '
         'lib/src/ccrouter_generated/metadata/ccrouter_package.json. Regenerate that '
@@ -826,6 +978,16 @@ Future<bool> _generateResolvedWorkspace(
       return false;
     }
   }
+  metadataSpan?.finish(
+    counts: {
+      'localPackages': localMetadata.length,
+      'externalPackages': externalIndexes.length,
+      'documents': metadataSnapshots.values.fold<int>(
+        0,
+        (count, snapshot) => count + snapshot.documents.length,
+      ),
+    },
+  );
   parseWatch.stop();
 
   final localMetadataFiles = <_MetadataFile>[
@@ -837,22 +999,31 @@ Future<bool> _generateResolvedWorkspace(
           packageRoot: workspace.packages[entry.key]!.root,
         ),
   ];
-  final contractApiOutputs = await _generateContractApiEntrypoints(
-    localMetadataFiles,
+  final contractApiOutputs = await trace.measure(
+    'contract-api-generation',
+    () => _generateContractApiEntrypoints(localMetadataFiles),
+    counts: (outputs) => {'outputs': outputs.length},
   );
-  CCRouteBarrelExportValidator.annotatePublicLibraries(
-    localMetadata.values.expand((documents) => documents),
-    packageRoots: {
-      for (final package in workspace.packages.values)
-        if (package.writable) package.name: package.root,
-    },
+  trace.measureSync(
+    'public-library-annotation',
+    () => CCRouteBarrelExportValidator.annotatePublicLibraries(
+      localMetadata.values.expand((documents) => documents),
+      packageRoots: {
+        for (final package in workspace.packages.values)
+          if (package.writable) package.name: package.root,
+      },
+    ),
   );
 
-  _annotateConsumerContractMetadata(
-    localMetadata,
-    externalIndexes.values.expand((index) => index.metadata),
+  trace.measureSync(
+    'consumer-contract-annotation',
+    () => _annotateConsumerContractMetadata(
+      localMetadata,
+      externalIndexes.values.expand((index) => index.metadata),
+    ),
   );
 
+  final packageModelSpan = trace?.start('package-graph-and-index-construction');
   final runtimeBundles = <String>{
     for (final entry in localMetadata.entries)
       if (_hasRuntimeContribution(entry.value)) entry.key,
@@ -867,6 +1038,7 @@ Future<bool> _generateResolvedWorkspace(
       if (!package.dependencies.any(runtimeBundles.contains)) continue;
       if (package.name != workspace.host.name &&
           !package.dependencies.contains('ccrouter')) {
+        packageModelSpan?.finish(status: 'failed');
         stderr.writeln(
           'error: Package "${package.name}" contains a transitive CCRouter '
           'runtime Package but cannot publish a forwarding Bundle because it '
@@ -877,6 +1049,7 @@ Future<bool> _generateResolvedWorkspace(
       }
       if (!package.writable &&
           !(externalIndexes[package.name]?.hasRuntimeBundle ?? false)) {
+        packageModelSpan?.finish(status: 'failed');
         stderr.writeln(
           'error: Read-only Package "${package.name}" must publish a '
           'CCRouter Package index and forwarding Bundle for its transitive '
@@ -950,6 +1123,7 @@ Future<bool> _generateResolvedWorkspace(
         .toSet();
     if (!actual.keys.toSet().containsAll(expectedNames) ||
         !expectedNames.containsAll(actual.keys)) {
+      packageModelSpan?.finish(status: 'failed');
       stderr.writeln(
         'error: Package index for "${entry.key}" has stale direct generated '
         'dependencies. Regenerate and republish that Package.',
@@ -961,6 +1135,7 @@ Future<bool> _generateResolvedWorkspace(
       final recorded = actual[dependencyName]!;
       if (recorded.version != expected.packageVersion ||
           recorded.contentFingerprint != expected.contentFingerprint) {
+        packageModelSpan?.finish(status: 'failed');
         stderr.writeln(
           'error: Package index for "${entry.key}" was generated against a '
           'different "$dependencyName" identity. Regenerate and republish '
@@ -970,32 +1145,48 @@ Future<bool> _generateResolvedWorkspace(
       }
     }
   }
-
-  final dirtySet = await _GenerationDirtySet.compute(
-    workspace: workspace,
-    cache: cache,
-    snapshots: metadataSnapshots,
-    indexes: indexes,
+  packageModelSpan?.finish(
+    counts: {
+      'participatingPackages': participating.length,
+      'indexes': indexes.length,
+      'runtimeBundles': runtimeBundles.length,
+    },
   );
 
-  final localFiles = _resolveMetadataFiles([
-    ...await _readWritableMetadataFiles(
-      workspace,
-      excludingPackages: prebuiltPackages,
+  final dirtySet = await trace.measure(
+    'dirty-package-computation',
+    () => _GenerationDirtySet.compute(
+      workspace: workspace,
+      cache: cache,
+      snapshots: metadataSnapshots,
+      indexes: indexes,
     ),
-    for (final packageName in prebuiltPackages)
-      for (final document in localMetadata[packageName] ?? const [])
-        _MetadataFile(
-          workspace.packages[packageName]!.indexFile,
-          document,
-          packageRoot: workspace.packages[packageName]!.root,
-        ),
-  ]);
+    counts: (dirtySet) => {'packages': dirtySet.dirtyPackages.length},
+  );
+
+  final localFiles = await trace.measure(
+    'writable-metadata-read',
+    () async => _resolveMetadataFiles([
+      ...await _readWritableMetadataFiles(
+        workspace,
+        excludingPackages: prebuiltPackages,
+      ),
+      for (final packageName in prebuiltPackages)
+        for (final document in localMetadata[packageName] ?? const [])
+          _MetadataFile(
+            workspace.packages[packageName]!.indexFile,
+            document,
+            packageRoot: workspace.packages[packageName]!.root,
+          ),
+    ]),
+    counts: (files) => {'files': files.length},
+  );
 
   final documents = <Map<String, Object?>>[
     for (final name in order) ...?indexes[name]?.metadata,
   ];
   final validationWatch = Stopwatch()..start();
+  final validationSpan = trace?.start('workspace-validation');
   final validation = CCRouteWorkspaceValidator.validate(documents);
   final errors = [
     ...validation.errors,
@@ -1009,43 +1200,66 @@ Future<bool> _generateResolvedWorkspace(
     ),
   ]..sort();
   if (errors.isNotEmpty) {
+    validationSpan?.finish(
+      status: 'failed',
+      counts: {'documents': documents.length, 'errors': errors.length},
+    );
     for (final error in errors) {
       stderr.writeln('error: $error');
     }
     return false;
   }
+  validationSpan?.finish(counts: {'documents': documents.length, 'errors': 0});
   validationWatch.stop();
 
   final aggregateWatch = Stopwatch()..start();
-  final catalogs = await _generateComponentRouteIndexes(
-    localFiles,
-    generateLegacyEntrypoints: false,
-    dirtyPackages: dirtySet.dirtyPackages,
+  final catalogs = await trace.measure(
+    'component-index-generation',
+    () => _generateComponentRouteIndexes(
+      localFiles,
+      generateLegacyEntrypoints: false,
+      dirtyPackages: dirtySet.dirtyPackages,
+    ),
+    counts: (catalogs) => {'catalogs': catalogs.length},
   );
-  await _generateResolvedPackageBundles(
-    workspace: workspace,
-    indexes: indexes,
-    runtimeBundles: runtimeBundles,
-    catalogs: catalogs,
-    dirtyPackages: dirtySet.dirtyPackages,
+  await trace.measure(
+    'package-bundle-generation',
+    () => _generateResolvedPackageBundles(
+      workspace: workspace,
+      indexes: indexes,
+      runtimeBundles: runtimeBundles,
+      catalogs: catalogs,
+      dirtyPackages: dirtySet.dirtyPackages,
+    ),
   );
-  await _generateResolvedHostCatalog(workspace, indexes);
-  for (final name in order) {
-    final package = workspace.packages[name]!;
-    final index = indexes[name];
-    if (!package.writable || index == null) continue;
-    await _writeIfChanged(package.indexFile, index.toJson());
-  }
-  await _writePackageCapabilityCatalogs(
-    workspace: workspace,
-    indexes: indexes,
-    dirtyPackages: dirtySet.dirtyPackages,
+  await trace.measure(
+    'host-catalog-generation',
+    () => _generateResolvedHostCatalog(workspace, indexes),
   );
-  await _deleteObsoleteResolvedOutputs(
-    workspace: workspace,
-    runtimeBundles: runtimeBundles,
-    catalogs: catalogs,
-    contractApiOutputs: contractApiOutputs,
+  await trace.measure('package-index-write', () async {
+    for (final name in order) {
+      final package = workspace.packages[name]!;
+      final index = indexes[name];
+      if (!package.writable || index == null) continue;
+      await _writeIfChanged(package.indexFile, index.toJson());
+    }
+  });
+  await trace.measure(
+    'capability-catalog-write',
+    () => _writePackageCapabilityCatalogs(
+      workspace: workspace,
+      indexes: indexes,
+      dirtyPackages: dirtySet.dirtyPackages,
+    ),
+  );
+  await trace.measure(
+    'obsolete-output-cleanup',
+    () => _deleteObsoleteResolvedOutputs(
+      workspace: workspace,
+      runtimeBundles: runtimeBundles,
+      catalogs: catalogs,
+      contractApiOutputs: contractApiOutputs,
+    ),
   );
 
   final outputDirectory = Directory(
@@ -1058,74 +1272,94 @@ Future<bool> _generateResolvedWorkspace(
           'metadata',
         ),
   ).absolute;
-  await outputDirectory.create(recursive: true);
-  await _writeIfChanged(
-    File(path.join(outputDirectory.path, 'cc_routes.json')),
-    validation.machineDocumentJson,
-  );
-  await _writeIfChanged(
-    File(path.join(outputDirectory.path, 'cc_catalog.md')),
-    _catalogMarkdown(
-      routeCatalog: validation.markdownDocument,
-      initTaskCatalog: _initTaskDagMarkdown(documents),
-      sourceCatalog: CCCapabilitySourceCatalog.fromMetadata(
-        documents,
-      ).toMarkdown(scope: 'host:${workspace.host.name}'),
-    ),
-  );
-  await _deleteManagedCatalogFiles(outputDirectory, const [
-    'cc_routes.md',
-    'cc_sources.md',
-  ]);
-  await _removeLegacyMetadataArtifacts(
-    workspace.packages.values
-        .where((package) => package.writable)
-        .expand(
-          (package) => [
-            Directory(path.join(package.root.path, 'ccrouter_generated')),
-            Directory(
-              path.join(package.root.path, 'lib', 'ccrouter_generated'),
-            ),
-          ],
-        ),
-  );
-  for (final package in workspace.packages.values.where(
-    (package) => package.writable,
-  )) {
-    await _removeEmptyGeneratedSourceDirectories(package.root);
-  }
+  await trace.measure('host-artifact-write', () async {
+    await outputDirectory.create(recursive: true);
+    await _writeIfChanged(
+      File(path.join(outputDirectory.path, 'cc_routes.json')),
+      validation.machineDocumentJson,
+    );
+    await _writeIfChanged(
+      File(path.join(outputDirectory.path, 'cc_catalog.md')),
+      _catalogMarkdown(
+        routeCatalog: validation.markdownDocument,
+        initTaskCatalog: _initTaskDagMarkdown(documents),
+        sourceCatalog: CCCapabilitySourceCatalog.fromMetadata(
+          documents,
+        ).toMarkdown(scope: 'host:${workspace.host.name}'),
+      ),
+    );
+  });
+  await trace.measure('legacy-output-cleanup', () async {
+    await _deleteManagedCatalogFiles(outputDirectory, const [
+      'cc_routes.md',
+      'cc_sources.md',
+    ]);
+    await _removeLegacyMetadataArtifacts(
+      workspace.packages.values
+          .where((package) => package.writable)
+          .expand(
+            (package) => [
+              Directory(path.join(package.root.path, 'ccrouter_generated')),
+              Directory(
+                path.join(package.root.path, 'lib', 'ccrouter_generated'),
+              ),
+            ],
+          ),
+    );
+    for (final package in workspace.packages.values.where(
+      (package) => package.writable,
+    )) {
+      await _removeEmptyGeneratedSourceDirectories(package.root);
+    }
+  });
   if (expectedInputFingerprint != null &&
-      !await _generationInputIsStable(
-        workspace,
-        expectedInputFingerprint,
-        stage: 'after-aggregation',
+      !await trace.measure(
+        'after-aggregation-input-barrier',
+        () => _generationInputIsStable(
+          workspace,
+          expectedInputFingerprint,
+          stage: 'after-aggregation',
+        ),
+        succeeded: (stable) => stable,
       )) {
     return false;
   }
+  if (expectedInputFingerprint == null) {
+    trace?.skip('after-aggregation-input-barrier');
+  }
   if (parsed.portablePrepare) {
-    await _CCPortableGenerationState.write(workspace, indexes: indexes);
+    await trace.measure(
+      'portable-state-prepare',
+      () => _CCPortableGenerationState.write(workspace, indexes: indexes),
+    );
     stdout.writeln(
       'Prepared Portable Generation State for explicitly portable Packages.',
     );
+  } else {
+    trace?.skip('portable-state-prepare');
   }
   stdout.writeln(
     'Validated ${validation.machineDocument['components'] is List ? (validation.machineDocument['components']! as List).length : 0} components and ${validation.machineDocument['routes'] is List ? (validation.machineDocument['routes']! as List).length : 0} routes across ${indexes.length} generated Packages.',
   );
   if (!parsed.noCache && !parsed.check) {
-    final persistedOutputFingerprints = <String, String>{};
-    for (final package in workspace.packages.values.where(
-      (package) => package.writable,
-    )) {
-      persistedOutputFingerprints[package.name] =
-          _GenerationStateFingerprint.digestEntries(
-            await _GenerationStateFingerprint.capturePackageOutput(package),
-          );
-    }
-    await cache.write(
-      metadataSnapshots,
-      outputFingerprints: persistedOutputFingerprints,
-      dependencyFingerprints: dirtySet.dependencyFingerprints,
-    );
+    await trace.measure('metadata-cache-persist', () async {
+      final persistedOutputFingerprints = <String, String>{};
+      for (final package in workspace.packages.values.where(
+        (package) => package.writable,
+      )) {
+        persistedOutputFingerprints[package.name] =
+            _GenerationStateFingerprint.digestEntries(
+              await _GenerationStateFingerprint.capturePackageOutput(package),
+            );
+      }
+      await cache.write(
+        metadataSnapshots,
+        outputFingerprints: persistedOutputFingerprints,
+        dependencyFingerprints: dirtySet.dependencyFingerprints,
+      );
+    });
+  } else {
+    trace?.skip('metadata-cache-persist');
   }
   aggregateWatch.stop();
   if (parsed.profile) {
@@ -3060,20 +3294,29 @@ Future<bool> _runBuildRunner(
   _BuildContext context,
   Directory hostRoot, {
   required bool profile,
+  _GenerationProfileTrace? trace,
 }) async {
-  final workspace = await CCPackageWorkspace.load(
-    buildRoot: context.root,
-    hostRoot: hostRoot,
-    workspace: context.workspace,
+  final workspace = await trace.measure(
+    'build-runner-workspace-load',
+    () => CCPackageWorkspace.load(
+      buildRoot: context.root,
+      hostRoot: hostRoot,
+      workspace: context.workspace,
+    ),
+    counts: (workspace) => {'packages': workspace.packages.length},
   );
-  final targets =
-      workspace.packages.values
-          .where(
-            (package) => package.writable && package.declaresGenerationIntent,
-          )
-          .map((package) => package.name)
-          .toList()
-        ..sort();
+  final targets = trace.measureSync(
+    'build-target-resolution',
+    () =>
+        workspace.packages.values
+            .where(
+              (package) => package.writable && package.declaresGenerationIntent,
+            )
+            .map((package) => package.name)
+            .toList()
+          ..sort(),
+    counts: (targets) => {'packages': targets.length},
+  );
   if (profile) {
     stdout.writeln(
       'CCRouter profile build-targets=${targets.length} '
@@ -3081,6 +3324,10 @@ Future<bool> _runBuildRunner(
     );
   }
   if (targets.isEmpty) {
+    trace?.skip('build-runner-protection-snapshot');
+    trace?.skip('build-runner-process-start');
+    trace?.skip('build-runner-execution');
+    trace?.skip('build-runner-protection-restore');
     stdout.writeln(
       'No writable CCRouter Builder Packages were found; skipping build_runner.',
     );
@@ -3089,16 +3336,24 @@ Future<bool> _runBuildRunner(
   final targetRoots = <Directory>[
     for (final name in targets) workspace.packages[name]!.root,
   ];
-  final protectedOutputs = <_GeneratedArtifactsSnapshot>[
-    await _GeneratedArtifactsSnapshot.captureOutside(context.root, targetRoots),
-    for (final package in workspace.packages.values)
-      if (!package.writable && !_isWithin(context.root, package.root))
-        await _GeneratedArtifactsSnapshot.capture(package.root),
-  ];
+  final protectedOutputs = await trace.measure(
+    'build-runner-protection-snapshot',
+    () async => <_GeneratedArtifactsSnapshot>[
+      await _GeneratedArtifactsSnapshot.captureOutside(
+        context.root,
+        targetRoots,
+      ),
+      for (final package in workspace.packages.values)
+        if (!package.writable && !_isWithin(context.root, package.root))
+          await _GeneratedArtifactsSnapshot.capture(package.root),
+    ],
+    counts: (snapshots) => {'snapshots': snapshots.length},
+  );
   final arguments = <String>[
     'run',
     'build_runner',
     'build',
+    if (profile) '--verbose-durations',
     if (context.workspace) '--workspace',
     for (final package in targets) ...[
       '--build-filter',
@@ -3113,21 +3368,29 @@ Future<bool> _runBuildRunner(
   );
   late final int processExitCode;
   try {
-    final process = await Process.start(
-      Platform.resolvedExecutable,
-      arguments,
-      workingDirectory: context.root.path,
+    final process = await trace.measure(
+      'build-runner-process-start',
+      () => Process.start(
+        Platform.resolvedExecutable,
+        arguments,
+        workingDirectory: context.root.path,
+      ),
     );
-    final forwarding = Future.wait<void>([
-      stdout.addStream(process.stdout),
-      stderr.addStream(process.stderr),
-    ]);
-    processExitCode = await process.exitCode;
-    await forwarding;
+    processExitCode = await trace.measure('build-runner-execution', () async {
+      final forwarding = Future.wait<void>([
+        stdout.addStream(process.stdout),
+        stderr.addStream(process.stderr),
+      ]);
+      final code = await process.exitCode;
+      await forwarding;
+      return code;
+    }, succeeded: (code) => code == 0);
   } finally {
-    for (final snapshot in protectedOutputs) {
-      await snapshot.restore();
-    }
+    await trace.measure('build-runner-protection-restore', () async {
+      for (final snapshot in protectedOutputs) {
+        await snapshot.restore();
+      }
+    });
   }
   // Test-only fault injection lets the generation command suite deterministically
   // verify the post-Builder input barrier without relying on process timing.

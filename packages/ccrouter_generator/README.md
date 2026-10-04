@@ -299,6 +299,15 @@ fast path miss 时，Profile 还会输出本轮 `build-targets`，以及逐 Pack
 用于决定 Package API、Bundle 和 capability catalog 是否可以复用；它不是 build_runner 的
 输入目标列表。依赖图变化后，即使 dirty Package 很少，Workspace Analyzer 仍可能占据主要耗时。
 
+`--profile` 还会输出 `CCRouter profile trace=<json>`，其中 schema `1` 使用单调时钟记录
+锁等待、Workspace/Build Plan/fingerprint、Portable State、preflight、快照、build_runner
+子进程、聚合/校验/写入、`--check` 恢复和本地状态提交等阶段的 `startUs`、`durationUs`、
+`status` 与有界计数。最新报告会原子写到
+`.dart_tool/ccrouter/v1/profiles/<host-identity>/latest.json`，不包含绝对路径、源码或业务值，
+也不参与生成决策。Profile 模式同时向 build_runner 传入官方 `--verbose-durations`，用于查看
+各 Builder phase 的 analyzing/resolving/tracking/building/reading/writing 明细；该上游文本不是
+CCRouter JSON schema 的一部分。未传 `--profile` 时不会创建或更新报告。
+
 P6 的只读归因新增 `input-delta` 和 `output-delta`。前者用已有 Build Plan 基线区分自身
 authored 内容变化、解析环境变化及 `resolutionOnly`、工具/Host 图变化；后者统计本次成功
 生成前后 Dart、JSON metadata、Markdown、Portable State 的精确文件差异，并按新增/删除/

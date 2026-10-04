@@ -764,6 +764,18 @@ from metadata, managed output, direct dependency indexes, and reverse dependency
 propagation. A small dirty set therefore does not imply that Workspace Analyzer
 startup should be proportional to that count.
 
+Profile output includes a schema `1` `CCRouter profile trace=<json>` line and an
+atomic latest report under
+`.dart_tool/ccrouter/v1/profiles/<host-identity>/latest.json`. Each span contains
+`name`, monotonic `startUs`, `durationUs`, `status`, and optional bounded counts.
+It covers lock wait/release, fingerprints and Build Plan, Portable State checks,
+preflight, snapshot protection, build_runner, validation, aggregation, check
+restore, and local planning-state writes. It contains no absolute paths, source
+text, or business values. Profile mode also enables build_runner's supported
+`--verbose-durations` output for Builder phase details. Treat that upstream text
+as human diagnostics rather than part of the CCRouter JSON schema. Do not commit
+profile reports or use timing values as generation or CI correctness inputs.
+
 `input-delta` compares existing exact-content Build Plan facts with the last
 successful local baseline. `authored` means the Package's own source/config
 changed; `resolutionOnly` means unchanged own input but changed dependency

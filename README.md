@@ -1198,6 +1198,14 @@ Route API 和 Package/Host metadata。跨组件 Route 不能直接由脚手架�
 `dirty-packages` 原因；`dirty` 是 build_runner 完成后的聚合复用判断，不表示 Builder 只分析
 这些 Package。
 
+性能诊断还会输出 schema `1` 的 `CCRouter profile trace=<json>`，按单调时钟细分锁等待、
+Workspace/指纹/Build Plan、preflight、快照、build_runner 子进程、Validator、聚合写入、
+`--check` 恢复和 planning state 提交。最新 JSON 会原子写入
+`.dart_tool/ccrouter/v1/profiles/<host-identity>/latest.json`；只包含阶段名、微秒耗时、状态和
+有界计数，不包含绝对路径、源码或业务值，也不参与缓存和生成判断。Profile 模式会为
+build_runner 启用官方 `--verbose-durations`，其 Builder phase 明细用于继续区分 Analyzer、
+resolve、build、read/write 成本，但不属于 CCRouter trace schema。不带 `--profile` 不产生报告。
+
 `--profile` 的 `input-delta` 对比上次成功的本机 Build Plan：`authored` 是自身源码/配置变化，
 `resolutionOnly` 是自身未变但解析身份变化，另列工具与 Host 图变化。它不证明具体依赖边或
 生成语义；没有两侧源码摘要的 Package 单列 `authoredUnavailable`，不据此推断源码未变。

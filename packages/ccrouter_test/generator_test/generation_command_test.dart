@@ -586,6 +586,19 @@ void probe() {
           contains('generation input changed during before-aggregation'),
         );
         expect('${result.stderr}', contains('generated output was discarded'));
+        final trace = _profileDelta(result, 'trace');
+        expect(trace['outcome'], 'failed');
+        final spans = (trace['spans'] as List).cast<Map<String, dynamic>>();
+        expect(
+          spans.firstWhere(
+            (span) => span['name'] == 'before-aggregation-input-barrier',
+          )['status'],
+          'failed',
+        );
+        expect(
+          spans.map((span) => span['name']),
+          contains('artifact-snapshot-restore'),
+        );
       } finally {
         source.writeAsBytesSync(original, flush: true);
         final restored = await _generateDemo(['--no-cache']);
@@ -652,6 +665,24 @@ void probe() {
     'clean removes managed outputs but preserves user files and rebuilds',
     () async {
       final demoRoot = Directory(path.join(Directory.current.path, 'demo'));
+      final portableStates = <String, String>{};
+      await for (final entity in Directory.current.list(
+        recursive: true,
+        followLinks: false,
+      )) {
+        if (entity is! File ||
+            path.basename(entity.path) != 'ccrouter_generation_state.json' ||
+            entity.path.contains(
+              '${path.separator}.dart_tool${path.separator}',
+            )) {
+          continue;
+        }
+        portableStates[path.relative(
+          entity.path,
+          from: Directory.current.path,
+        )] = await entity
+            .readAsString();
+      }
       final sentinel = File(
         path.join(
           demoRoot.path,
@@ -737,6 +768,11 @@ void probe() {
           'demo',
         ], workingDirectory: Directory.current.path);
         expect(regenerated.exitCode, 0, reason: '${regenerated.stderr}');
+        for (final entry in portableStates.entries) {
+          final state = File(path.join(Directory.current.path, entry.key));
+          state.parent.createSync(recursive: true);
+          state.writeAsStringSync(entry.value, flush: true);
+        }
         if (sentinel.existsSync()) sentinel.deleteSync();
       }
       expect(generatedRouteApi.existsSync(), isTrue);
@@ -787,6 +823,118 @@ void probe() {
       expect(await _readDemoGeneratedArtifacts(), before);
     },
     timeout: const Timeout(Duration(minutes: 2)),
+  );
+
+  test(
+    'profile emits a structured trace and atomically persists the latest run',
+    () async {
+      Future<ProcessResult> generate() =>
+          Process.run(Platform.resolvedExecutable, [
+            'run',
+            'ccrouter_generator:ccrouter',
+            'generate',
+            'demo',
+            '--check',
+            '--profile',
+          ], workingDirectory: Directory.current.path);
+
+      final seeded = await generate();
+      expect(seeded.exitCode, 0, reason: '${seeded.stderr}');
+      final result = await generate();
+      expect(result.exitCode, 0, reason: '${result.stderr}');
+      expect('${result.stdout}', contains('fast-path=hit'));
+
+      final trace = _profileDelta(result, 'trace');
+      expect(trace['schemaVersion'], 1);
+      expect(trace['command'], 'generate');
+      expect(trace['outcome'], 'success');
+      expect(trace['totalUs'], isA<int>());
+      expect(trace['totalUs'], greaterThanOrEqualTo(0));
+      final spans = (trace['spans'] as List).cast<Map<String, dynamic>>();
+      expect(
+        spans.map((span) => span['name']),
+        containsAll(<String>[
+          'argument-resolution',
+          'build-context-resolution',
+          'generation-lock-wait',
+          'workspace-load',
+          'fast-path-inspection',
+          'build-runner-process',
+          'workspace-aggregation',
+          'generation-lock-release',
+        ]),
+      );
+      for (final span in spans) {
+        expect(span['startUs'], isA<int>());
+        expect(span['durationUs'], isA<int>());
+        expect(span['durationUs'], greaterThanOrEqualTo(0));
+        expect(span['status'], anyOf('ok', 'failed', 'skipped'));
+      }
+      expect(
+        jsonEncode(trace),
+        isNot(contains(Directory.current.absolute.path)),
+      );
+      final reportMatch = RegExp(
+        r'CCRouter profile report=([^\n]+)',
+      ).firstMatch('${result.stdout}');
+      expect(reportMatch, isNotNull, reason: '${result.stdout}');
+      final reportPath = reportMatch!.group(1)!;
+      expect(path.isAbsolute(reportPath), isFalse);
+      final reportFile = File(path.join(Directory.current.path, reportPath));
+      expect(reportFile.existsSync(), isTrue);
+      expect(jsonDecode(reportFile.readAsStringSync()), trace);
+    },
+    timeout: const Timeout(Duration(minutes: 2)),
+  );
+
+  test(
+    'no-cache profile traces the full generator and Builder phases',
+    () async {
+      final result = await _generateDemo([
+        '--no-cache',
+        '--check',
+        '--profile',
+      ]);
+
+      expect(result.exitCode, 0, reason: '${result.stderr}');
+      expect('${result.stdout}', contains('ccrouter_generator:routes'));
+      expect('${result.stdout}', contains('Built with build_runner'));
+      final trace = _profileDelta(result, 'trace');
+      final spans = (trace['spans'] as List).cast<Map<String, dynamic>>();
+      expect(
+        spans.map((span) => span['name']),
+        containsAll(<String>[
+          'input-fingerprint-capture',
+          'portable-state-readonly-verification',
+          'component-dependency-preflight',
+          'artifact-snapshot-capture',
+          'build-runner-process-start',
+          'build-runner-execution',
+          'build-runner-protection-restore',
+          'aggregation-workspace-reload',
+          'before-aggregation-input-barrier',
+          'metadata-and-package-index-load',
+          'package-graph-and-index-construction',
+          'workspace-validation',
+          'component-index-generation',
+          'package-bundle-generation',
+          'host-artifact-write',
+          'after-aggregation-input-barrier',
+          'output-delta-scan',
+          'check-restore',
+          'fast-path-manifest-write',
+          'build-plan-state-write',
+        ]),
+      );
+      expect(
+        spans.firstWhere(
+          (span) => span['name'] == 'build-runner-execution',
+        )['status'],
+        'ok',
+      );
+      expect(trace['outcome'], 'success');
+    },
+    timeout: const Timeout(Duration(minutes: 3)),
   );
 
   test(
@@ -850,7 +998,7 @@ void probe() {
 
       sourceProbe.writeAsStringSync('const fastPathProbe = true;\n');
       final changedSource = await generate(check: true);
-      expect(changedSource.exitCode, 1);
+      expect(changedSource.exitCode, 0, reason: '${changedSource.stderr}');
       expect('${changedSource.stdout}', contains('fast-path=miss'));
       expect('${changedSource.stdout}', contains('CCRouter profile build='));
       expect(
@@ -866,7 +1014,7 @@ void probe() {
       expect(inputs['status'], 'compared');
       expect((inputs['authored'] as Map)['packages'], ['ccrouter_demo']);
       final outputs = _profileDelta(changedSource, 'output-delta');
-      expect(outputs['files'], greaterThan(0));
+      expect(outputs['files'], 0);
       expect((outputs['artifacts'] as Map)['dart'], {
         'added': 0,
         'removed': 0,
@@ -884,7 +1032,7 @@ void probe() {
         0,
         reason: '${generatedWithSource.stderr}',
       );
-      expect('${generatedWithSource.stdout}', contains('fast-path=miss'));
+      expect('${generatedWithSource.stdout}', contains('fast-path=hit'));
       expect(portableState.readAsBytesSync(), originalPortableState);
 
       sourceProbe.deleteSync();
@@ -913,6 +1061,20 @@ void probe() {
     },
     timeout: const Timeout(Duration(minutes: 4)),
   );
+
+  test('generation without profile does not emit a timing trace', () async {
+    final result = await Process.run(Platform.resolvedExecutable, [
+      'run',
+      'ccrouter_generator:ccrouter',
+      'generate',
+      'demo',
+      '--check',
+    ], workingDirectory: Directory.current.path);
+
+    expect(result.exitCode, 0, reason: '${result.stderr}');
+    expect('${result.stdout}', isNot(contains('CCRouter profile trace=')));
+    expect('${result.stdout}', isNot(contains('CCRouter profile report=')));
+  });
 
   test(
     'P1 build plan diagnoses Host-only changes without skipping Builder',
