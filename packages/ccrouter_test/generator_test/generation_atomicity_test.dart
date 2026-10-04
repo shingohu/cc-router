@@ -41,8 +41,14 @@ void main() {
       );
 
       final result = await Process.run(Platform.resolvedExecutable, [
-        'run',
-        'ccrouter_generator:ccrouter',
+        '--packages=${path.join(root.path, '.dart_tool', 'package_config.json')}',
+        path.join(
+          root.path,
+          'packages',
+          'ccrouter_generator',
+          'bin',
+          'ccrouter.dart',
+        ),
         'generate',
         'demo',
       ], workingDirectory: root.path);
