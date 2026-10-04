@@ -816,7 +816,11 @@ Builder 成功后修改受管源码，命令必须失败并报告 `before-aggreg
 本项完成的是一致性门禁，不等于 P6 传播收窄。文件闭包仍只能先以 shadow 结果观察，默认继续
 使用完整传播和完整 Builder 回退。
 
-### 12.9 文件闭包 Shadow 原型（2026-10-04）
+### 12.9 文件闭包 Shadow 原型（历史 benchmark，已移出生产路径）
+
+本节记录的实现和采样只用于研究候选失效规模。Shadow 计算已从生成 CLI 和 Tool
+fingerprint 热路径移除，后续任何传播收窄都必须重新设计并通过独立 benchmark 验证；生产
+路径继续使用完整内容摘要和保守 Builder 回退。
 
 `generate --profile` 在失效路径上现在会计算一个只读的保守文件闭包，并输出总源码文件数、
 反向 Package 候选数量、候选文件数量和无法精确解析的 Package。它只遍历当前解析 Host 的

@@ -376,8 +376,9 @@ Dart 数量包含携带静态 Catalog 的生成代码，不等同于业务 API �
 屏障，见
 [优化计划 12.7](CCRouter-build-runner-optimization-plan.md#127-五类-builder-读取范围证据与-p6-决策2026-10-04)。
 下一步评估只观察的保守文件闭包，不直接启用传播收窄；屏障实现和测试见优化计划 12.8。
-同日加入的 `--profile` `shadow-closure` 只读计算用于观察候选失效规模，不参与默认传播或
-Builder 跳过；Demo 参考值、1x/3x/5x/10x 规模数据和边界见优化计划 12.9。四个规模的七种
+历史版本曾加入 `--profile` `shadow-closure` 只读计算用于观察候选失效规模，不参与默认传播或
+Builder 跳过；相关 Demo 参考值、1x/3x/5x/10x 规模数据和边界见优化计划 12.9。该诊断已从
+生产生成路径移除，研究数据仅保留在本文档和 benchmark/tooling 记录中。四个规模的七种
 变更均与完整 `--no-cache --check` 路径逐文件、逐字节一致，Shadow fallback 均为 `none`，
 但这仍只是受控拓扑证据，未证明可移植的符号级语义闭包。
 尚未实施语义摘要或默认开启；本轮没有新增 clone/RSS/Heap/P95

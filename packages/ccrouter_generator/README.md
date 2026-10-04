@@ -308,10 +308,10 @@ fvm dart run packages/ccrouter_test/benchmark/generator_component_topology.dart 
 样本包含五类能力与公共依赖，逐次变更注释、DartDoc、位置、实现、常量、描述和 barrel，
 每次比较全部受管文件并执行 `--no-cache --check`。单次样本不能作为真实项目 P95 或提速结论。
 
-失效路径的 Profile 还会输出 `shadow-closure`，这是只读的本地 Dart 文件闭包诊断，展示潜在
-反向 Package/文件候选和 `fallback` Package。它不参与 Build Plan 或 Builder 跳过条件；条件
-导入、缺失目标和生成目录等无法证明的输入会保守地落到 Package-wide fallback。该诊断用于
-评估未来传播收窄的收益，不能替代完整内容摘要或 `--no-cache` 参考生成。
+生成主路径不会计算文件闭包 shadow，也不会为此扫描 Workspace Dart 文件。历史 shadow
+采样保留在性能报告中，仅作为 benchmark/tooling 研究数据；它不参与 Build Plan、Tool
+fingerprint、Builder 跳过条件或任何正确性判断。完整内容摘要、输入一致性屏障和
+`--no-cache --check` 仍是唯一的生成正确性参考。
 
 Build Plan 的 P1 诊断、P2 删除组件优化和 P3 Portable Package 新增路径会在 Profile 中输出：
 

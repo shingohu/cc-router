@@ -264,10 +264,6 @@ Future<void> main(List<String> arguments) async {
       }
       verifiedInputFingerprint = executionInput;
     }
-    if (parsed.profile && fastPathWorkspace != null && buildPlan != null) {
-      final shadow = await _GenerationShadowClosure.compute(fastPathWorkspace);
-      stdout.writeln('CCRouter profile shadow-closure=${shadow.description}');
-    }
     final needsBootstrap =
         parsed.command == _GeneratorCommand.generate &&
         fastPathWorkspace != null &&
