@@ -957,6 +957,10 @@ void probe() {
         expect('${result.stdout}', contains('CCRouter profile build-targets='));
         expect('${result.stdout}', contains('CCRouter profile build='));
         expect(
+          '${result.stdout}',
+          contains('CCRouter profile shadow-closure='),
+        );
+        expect(
           '${result.stderr}',
           contains(
             'modified: demo/lib/src/ccrouter_generated/metadata/'

@@ -815,3 +815,20 @@ Builder 成功后修改受管源码，命令必须失败并报告 `before-aggreg
 
 本项完成的是一致性门禁，不等于 P6 传播收窄。文件闭包仍只能先以 shadow 结果观察，默认继续
 使用完整传播和完整 Builder 回退。
+
+### 12.9 文件闭包 Shadow 原型（2026-10-04）
+
+`generate --profile` 在失效路径上现在会计算一个只读的保守文件闭包，并输出总源码文件数、
+反向 Package 候选数量、候选文件数量和无法精确解析的 Package。它只遍历当前解析 Host 的
+可写 Package `lib/**/*.dart`，解析本地相对 `import`/`export`/`part` 和已解析 Workspace
+Package URI；条件 URI、缺失目标、生成目录、语法异常或不明确的 URI 进入 Package-wide
+`fallback`。外部 Pub/Git 依赖不被扫描，也不会因为 shadow 读取改变其只读校验。
+
+该结果完全不参与 Build Plan、dirty set、传播或 Builder 跳过决策，故不会改变生成准确性；
+shadow 解析失败也不会让生成失败。它的用途是收集真实项目的候选失效规模，判断文件闭包是否
+有净收益。当前 Demo 的一次参考输出为 `packages=17 files=162 candidate-packages=74
+candidate-files=660 fallback=none`，这个数字只是诊断样本，不是默认传播承诺。
+
+后续只有在多规模和真实团队样本中证明候选闭包与完整参考路径逐字节一致、并且解析开销有稳定
+净收益时，才考虑可关闭的执行原型；任何 fallback、条件分支、新增/删除/重命名、工具升级或
+外部依赖边界不确定时仍必须走完整路径。
