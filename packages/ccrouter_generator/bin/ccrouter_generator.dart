@@ -207,13 +207,19 @@ Future<void> main(List<String> arguments) async {
         ),
         counts: (workspace) => {'packages': workspace.packages.length},
       );
-      if (parsed.noCache) {
+      // Explicit prepare must refresh Portable State even when the ordinary
+      // generation manifest proves all managed inputs and outputs unchanged.
+      if (parsed.noCache || parsed.portablePrepare) {
         verifiedInputFingerprint = await profileTrace.measure(
           'input-fingerprint-capture',
           () => _GenerationStateFingerprint.captureInput(fastPathWorkspace!),
         );
-        buildPlan = const _GenerationBuildPlanInspection.runBuilder(
-          reasons: ['no-cache-reference'],
+        buildPlan = _GenerationBuildPlanInspection.runBuilder(
+          reasons: [
+            parsed.portablePrepare
+                ? 'portable-state-prepare'
+                : 'no-cache-reference',
+          ],
         );
         profileTrace?.skip('fast-path-inspection');
         profileTrace?.skip('build-plan-inspection');

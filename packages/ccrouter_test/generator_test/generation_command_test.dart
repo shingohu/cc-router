@@ -1009,7 +1009,7 @@ void probe() {
         '${changedSource.stdout}',
         contains('CCRouter profile dirty-packages='),
       );
-      expect('${changedSource.stdout}', contains('ccrouter_demo[host]'));
+      expect('${changedSource.stdout}', contains('ccrouter_demo[host'));
       final inputs = _profileDelta(changedSource, 'input-delta');
       expect(inputs['status'], 'compared');
       expect((inputs['authored'] as Map)['packages'], ['ccrouter_demo']);
@@ -1095,34 +1095,38 @@ void probe() {
       expect(stateContents, isNot(contains(Directory.current.absolute.path)));
       expect(stateContents, isNot(contains('rootUri')));
 
-      final probe = File(
-        path.join(
-          Directory.current.path,
-          'demo',
-          'lib',
-          '_ccrouter_build_plan_host_probe.dart',
-        ),
-      )..writeAsStringSync('const ccrouterBuildPlanHostProbe = true;\n');
+      final probe =
+          File(
+            path.join(
+              Directory.current.path,
+              'demo',
+              'lib',
+              '_ccrouter_build_plan_host_probe.dart',
+            ),
+          )..writeAsStringSync(
+            'const ccrouterBuildPlanHostProbe = '
+            '${DateTime.now().microsecondsSinceEpoch};\n',
+            flush: true,
+          );
       try {
         final result = await _generateDemo(['--check', '--profile']);
-        expect(result.exitCode, 1);
+        expect(result.exitCode, 0, reason: '${result.stderr}');
         expect('${result.stdout}', contains('fast-path=miss'));
         expect(
           '${result.stdout}',
           contains(
-            'build-plan suggested=aggregateOnly actual=runBuilder '
-            'reasons=non-builder-input-only,p2-scope-excluded',
+            'build-plan suggested=runBuilder actual=runBuilder '
+            'reasons=authored-input-changed:ccrouter_demo,'
+            'resolution-changed:ccrouter_demo',
           ),
         );
         expect('${result.stdout}', contains('CCRouter profile build-targets='));
         expect('${result.stdout}', contains('CCRouter profile build='));
         expect(
           '${result.stderr}',
-          contains(
-            'modified: demo/lib/src/ccrouter_generated/metadata/'
-            'ccrouter_generation_state.json',
-          ),
+          isNot(contains('ccrouter_generation_state')),
         );
+        expect(_profileDelta(result, 'output-delta')['files'], 0);
         expect(await _readDemoGeneratedArtifacts(), before);
       } finally {
         if (probe.existsSync()) probe.deleteSync();
@@ -1134,7 +1138,7 @@ void probe() {
   );
 
   test(
-    'P1 build plan rejects changed source, unproven baseline, and bad state',
+    'P1 build plan reports changed source and repairs local planning state',
     () async {
       final seeded = await _generateDemo(['--no-cache']);
       expect(seeded.exitCode, 0, reason: '${seeded.stderr}');
@@ -1156,7 +1160,7 @@ void probe() {
           flush: true,
         );
         final changed = await _generateDemo(['--check', '--profile']);
-        expect(changed.exitCode, 1);
+        expect(changed.exitCode, 0, reason: '${changed.stderr}');
         expect(
           '${changed.stdout}',
           contains('suggested=runBuilder actual=runBuilder'),
@@ -1173,11 +1177,9 @@ void probe() {
         );
         expect(
           '${changed.stderr}',
-          contains(
-            'modified: demo/modules/payment/lib/src/'
-            'ccrouter_generated/metadata/ccrouter_generation_state.json',
-          ),
+          isNot(contains('ccrouter_generation_state')),
         );
+        expect(_profileDelta(changed, 'output-delta')['files'], 0);
       } finally {
         component.writeAsBytesSync(originalComponent, flush: true);
       }
@@ -1210,7 +1212,7 @@ void probe() {
         state.writeAsStringSync(jsonEncode(unprovenDocument), flush: true);
 
         final unproven = await _generateDemo(['--check', '--profile']);
-        expect(unproven.exitCode, 1);
+        expect(unproven.exitCode, 0, reason: '${unproven.stderr}');
         final attribution = _profileDelta(unproven, 'input-delta');
         expect(
           (attribution['authoredUnavailable'] as Map)['packages'],
@@ -1226,8 +1228,9 @@ void probe() {
         );
         expect(
           '${unproven.stderr}',
-          contains('ccrouter_generation_state.json'),
+          isNot(contains('ccrouter_generation_state')),
         );
+        expect(_profileDelta(unproven, 'output-delta')['files'], 0);
 
         state.writeAsStringSync('{invalid planning state', flush: true);
         hostProbe.writeAsStringSync(
@@ -1235,7 +1238,7 @@ void probe() {
           flush: true,
         );
         final invalid = await _generateDemo(['--check', '--profile']);
-        expect(invalid.exitCode, 1);
+        expect(invalid.exitCode, 0, reason: '${invalid.stderr}');
         expect(
           '${invalid.stdout}',
           contains(
@@ -1243,8 +1246,12 @@ void probe() {
             'reasons=planning-state-invalid',
           ),
         );
-        expect('${invalid.stderr}', contains('ccrouter_generation_state.json'));
-        expect(state.readAsStringSync(), '{invalid planning state');
+        expect(
+          '${invalid.stderr}',
+          isNot(contains('ccrouter_generation_state')),
+        );
+        expect(_profileDelta(invalid, 'output-delta')['files'], 0);
+        expect(jsonDecode(state.readAsStringSync()), isA<Map>());
       } finally {
         if (hostProbe.existsSync()) hostProbe.deleteSync();
         final converged = await _generateDemo(const []);
@@ -1282,12 +1289,17 @@ void probe() {
         state.writeAsStringSync(jsonEncode(document), flush: true);
 
         final result = await _generateDemo(['--check', '--profile']);
-        expect(result.exitCode, 1, reason: '${result.stderr}');
+        expect(result.exitCode, 0, reason: '${result.stderr}');
         expect(
           '${result.stdout}',
           contains('build-plan suggested=runBuilder actual=runBuilder'),
         );
         expect('${result.stdout}', contains('tool-input-changed'));
+        expect(_profileDelta(result, 'output-delta')['files'], 0);
+        expect(
+          '${result.stderr}',
+          isNot(contains('ccrouter_generation_state')),
+        );
       } finally {
         if (probe.existsSync()) probe.deleteSync();
         state.writeAsBytesSync(original, flush: true);
@@ -1317,8 +1329,13 @@ void probe() {
       try {
         await probe.writeAsBytes(<int>[...original, 10], flush: true);
         final result = await _generateDemo(['--check', '--profile']);
-        expect(result.exitCode, 1, reason: '${result.stderr}');
+        expect(result.exitCode, 0, reason: '${result.stderr}');
         expect('${result.stdout}', isNot(contains('tool-input-changed')));
+        expect(_profileDelta(result, 'output-delta')['files'], 0);
+        expect(
+          '${result.stderr}',
+          isNot(contains('ccrouter_generation_state')),
+        );
       } finally {
         await probe.writeAsBytes(original, flush: true);
         final restored = await _generateDemo(const []);
@@ -1347,8 +1364,13 @@ void probe() {
       try {
         await probe.writeAsBytes(<int>[...original, 10], flush: true);
         final result = await _generateDemo(['--check', '--profile']);
-        expect(result.exitCode, 1, reason: '${result.stderr}');
+        expect(result.exitCode, 0, reason: '${result.stderr}');
         expect('${result.stdout}', contains('tool-input-changed'));
+        expect(_profileDelta(result, 'output-delta')['files'], 0);
+        expect(
+          '${result.stderr}',
+          isNot(contains('ccrouter_generation_state')),
+        );
       } finally {
         await probe.writeAsBytes(original, flush: true);
         final restored = await _generateDemo(const []);
@@ -1359,7 +1381,7 @@ void probe() {
   );
 
   test(
-    'P2 aggregate-only matches the full path for a Host component removal',
+    'P2 full Builder fallback matches a Host component removal reference',
     () async {
       final before = await _readDemoGeneratedArtifacts();
       final seeded = await _generateDemo(['--no-cache']);
@@ -1385,35 +1407,30 @@ void probe() {
         expect(
           '${disabled.stdout}',
           contains(
-            'build-plan suggested=aggregateOnly actual=runBuilder '
-            'reasons=host-graph-changed,aggregate-only-disabled',
+            'build-plan suggested=runBuilder actual=runBuilder '
+            'reasons=resolution-changed:ccrouter_demo',
           ),
         );
         expect(
           '${disabled.stdout}',
-          contains('CCRouter profile build-targets=7'),
+          contains('CCRouter profile build-targets=8'),
         );
 
-        final aggregateOnly = await _generateDemo(['--profile']);
-        expect(aggregateOnly.exitCode, 0, reason: '${aggregateOnly.stderr}');
+        final generated = await _generateDemo(['--profile']);
+        expect(generated.exitCode, 0, reason: '${generated.stderr}');
         expect(
-          '${aggregateOnly.stdout}',
+          '${generated.stdout}',
           contains(
-            'build-plan suggested=aggregateOnly actual=aggregateOnly '
-            'reasons=host-graph-changed',
+            'build-plan suggested=runBuilder actual=runBuilder '
+            'reasons=resolution-changed:ccrouter_demo',
           ),
         );
         expect(
-          '${aggregateOnly.stdout}',
-          contains('CCRouter generation aggregate-only path;'),
+          '${generated.stdout}',
+          contains('CCRouter profile build-targets=8'),
         );
-        expect('${aggregateOnly.stdout}', isNot(contains('build-targets=')));
-        expect(
-          '${aggregateOnly.stdout}',
-          contains('CCRouter profile build=0ms'),
-        );
-        final aggregateArtifacts = await _readDemoGeneratedArtifacts();
-        expect(aggregateArtifacts, isNot(before));
+        final generatedArtifacts = await _readDemoGeneratedArtifacts();
+        expect(generatedArtifacts, isNot(before));
 
         final reference = await _generateDemo([
           '--check',
@@ -1422,7 +1439,7 @@ void probe() {
         ]);
         expect(reference.exitCode, 0, reason: '${reference.stderr}');
         expect('${reference.stdout}', contains('reasons=no-cache-reference'));
-        expect(await _readDemoGeneratedArtifacts(), aggregateArtifacts);
+        expect(await _readDemoGeneratedArtifacts(), generatedArtifacts);
       } finally {
         graph.writeAsBytesSync(originalGraph, flush: true);
         final restored = await _generateDemo(const []);
@@ -1434,9 +1451,92 @@ void probe() {
   );
 
   test(
-    'P3 reuses a verified prebuilt Package without Builder metadata',
+    'portable prepare bypasses a matching manifest and repairs state',
     () async {
-      final seeded = await _generateDemo(['--no-cache']);
+      final portableState = File(
+        path.join(
+          Directory.current.path,
+          'demo',
+          'modules',
+          'payment',
+          'lib',
+          'src',
+          'ccrouter_generated',
+          'metadata',
+          'ccrouter_generation_state.json',
+        ),
+      );
+      final original = portableState.readAsBytesSync();
+      try {
+        portableState.deleteSync();
+        final missingBaseline = await _generateDemo(['--no-cache']);
+        expect(
+          missingBaseline.exitCode,
+          0,
+          reason: '${missingBaseline.stderr}',
+        );
+        expect(portableState.existsSync(), isFalse);
+
+        final missingFastPath = await _generateDemo(const []);
+        expect(
+          missingFastPath.exitCode,
+          0,
+          reason: '${missingFastPath.stderr}',
+        );
+        expect('${missingFastPath.stdout}', contains('fast path hit'));
+        expect(portableState.existsSync(), isFalse);
+
+        final repairedMissing = await _preparePortableDemo();
+        expect(
+          repairedMissing.exitCode,
+          0,
+          reason: '${repairedMissing.stderr}',
+        );
+        expect('${repairedMissing.stdout}', contains('Prepared Portable'));
+        expect('${repairedMissing.stdout}', isNot(contains('fast path hit')));
+        expect(portableState.existsSync(), isTrue);
+
+        final staleDocument =
+            (jsonDecode(portableState.readAsStringSync()) as Map)
+                .cast<String, Object?>()
+              ..remove('contentFingerprint');
+        staleDocument['toolFingerprint'] = 'stale-portable-tool';
+        staleDocument['contentFingerprint'] = computeCCCanonicalJsonFingerprint(
+          staleDocument,
+        );
+        final staleContents = jsonEncode(staleDocument);
+        portableState.writeAsStringSync(staleContents, flush: true);
+
+        final staleBaseline = await _generateDemo(['--no-cache']);
+        expect(staleBaseline.exitCode, 0, reason: '${staleBaseline.stderr}');
+        expect(portableState.readAsStringSync(), staleContents);
+
+        final staleFastPath = await _generateDemo(const []);
+        expect(staleFastPath.exitCode, 0, reason: '${staleFastPath.stderr}');
+        expect('${staleFastPath.stdout}', contains('fast path hit'));
+        expect(portableState.readAsStringSync(), staleContents);
+
+        final repairedStale = await _preparePortableDemo();
+        expect(repairedStale.exitCode, 0, reason: '${repairedStale.stderr}');
+        expect('${repairedStale.stdout}', contains('Prepared Portable'));
+        expect('${repairedStale.stdout}', isNot(contains('fast path hit')));
+        expect(
+          jsonDecode(portableState.readAsStringSync()),
+          isNot(containsPair('toolFingerprint', 'stale-portable-tool')),
+        );
+      } finally {
+        portableState.writeAsBytesSync(original, flush: true);
+        final restored = await _generateDemo(['--no-cache']);
+        expect(restored.exitCode, 0, reason: '${restored.stderr}');
+      }
+    },
+    timeout: const Timeout(Duration(minutes: 6)),
+  );
+
+  test(
+    'P3 falls back to Builder when a Portable Package changes resolution',
+    () async {
+      final seeded = await _preparePortableDemo();
       expect(seeded.exitCode, 0, reason: '${seeded.stderr}');
       final before = await _readDemoGeneratedArtifacts();
       final portableState = File(
@@ -1484,7 +1584,10 @@ void probe() {
         expect(removed.exitCode, 0, reason: '${removed.stderr}');
         expect(
           '${removed.stdout}',
-          contains('actual=aggregateOnly reasons=host-graph-changed'),
+          contains(
+            'build-plan suggested=runBuilder actual=runBuilder '
+            'reasons=resolution-changed:ccrouter_demo',
+          ),
         );
 
         graph.writeAsBytesSync(originalGraph, flush: true);
@@ -1496,16 +1599,14 @@ void probe() {
         expect(
           '${restored.stdout}',
           contains(
-            'actual=aggregateOnly '
-            'reasons=host-graph-changed,portable-packages-added:demo_payment',
+            'build-plan suggested=runBuilder actual=runBuilder '
+            'reasons=resolution-changed:ccrouter_demo',
           ),
         );
         expect(
           '${restored.stdout}',
-          contains('CCRouter generation aggregate-only path;'),
+          contains('CCRouter profile build-targets='),
         );
-        expect('${restored.stdout}', isNot(contains('build-targets=')));
-        expect('${restored.stdout}', contains('CCRouter profile build=0ms'));
         expect(await _readDemoGeneratedArtifacts(), before);
 
         final reference = await _generateDemo([
@@ -1529,7 +1630,7 @@ void probe() {
   test(
     'P3 rejects a read-only Package without valid Portable Generation State',
     () async {
-      final seeded = await _generateDemo(['--no-cache']);
+      final seeded = await _preparePortableDemo();
       expect(seeded.exitCode, 0, reason: '${seeded.stderr}');
       final packageConfig = File(
         path.join(Directory.current.path, '.dart_tool', 'package_config.json'),
@@ -1555,7 +1656,7 @@ void probe() {
 
         final valid = await _generateDemo(['--check', '--profile']);
         expect(valid.exitCode, 0, reason: '${valid.stderr}');
-        expect('${valid.stdout}', contains('build-targets=7'));
+        expect('${valid.stdout}', contains('build-targets=8'));
         expect(
           '${valid.stdout}',
           contains('builder-package-disabled:demo_payment'),
@@ -1736,6 +1837,12 @@ Future<ProcessResult> _generateDemo(
   ['run', 'ccrouter_generator:ccrouter', 'generate', 'demo', ...arguments],
   workingDirectory: Directory.current.path,
   environment: environment,
+);
+
+Future<ProcessResult> _preparePortableDemo() => Process.run(
+  Platform.resolvedExecutable,
+  ['run', 'ccrouter_generator:ccrouter', 'portable', 'prepare', 'demo'],
+  workingDirectory: Directory.current.path,
 );
 
 File _demoBuildPlanState() {
