@@ -829,6 +829,45 @@ shadow 解析失败也不会让生成失败。它的用途是收集真实项目�
 有净收益。当前 Demo 的一次参考输出为 `packages=17 files=162 candidate-packages=74
 candidate-files=660 fallback=none`，这个数字只是诊断样本，不是默认传播承诺。
 
+在 1x 混合合成样本（6 个组件、30 Route、各 6 个 Service/Command/Event/InitTask）中，七种
+变更均输出 `packages=8 files=46 candidate-packages=14 candidate-files=88 fallback=none`，
+并与 `--no-cache --check` 的完整路径逐文件、逐字节一致。shadow 计算不改变任何 Build Plan，
+当前只作为 Profile 归因。
+
+随后完成的同机 3x/5x/10x 采样也覆盖相同七种变更和完整参考路径，候选规模如下：
+
+| 规模 | 可写 Package | Dart 文件 | candidate Packages | candidate 文件 | fallback |
+| --- | ---: | ---: | ---: | ---: | --- |
+| 1x | 8 | 46 | 14 | 88 | none |
+| 3x | 20 | 130 | 38 | 256 | none |
+| 5x | 32 | 214 | 62 | 424 | none |
+| 10x | 62 | 424 | 122 | 844 | none |
+
+四个规模共 28 组变更均通过 `--no-cache --check` 的完整路径逐文件、逐字节比较；没有发现
+Shadow 候选与参考产物不一致的样本。该结果只证明当前受控拓扑下 Shadow 是保守候选集合，
+不构成 Dart 条件导入、任意 Package 图或外部依赖的完备语义证明。Shadow 的解析开销也未
+证明稳定净收益，因此仍不参与 dirty set、传播或 Builder 跳过。
+
 后续只有在多规模和真实团队样本中证明候选闭包与完整参考路径逐字节一致、并且解析开销有稳定
 净收益时，才考虑可关闭的执行原型；任何 fallback、条件分支、新增/删除/重命名、工具升级或
 外部依赖边界不确定时仍必须走完整路径。
+
+### 12.10 Builder 证明与聚合器证明分离（2026-10-04）
+
+本轮对 `aggregateOnly` 的执行边界做了代码与测试复核。Builder 是否可以跳过只由已验证的
+Build Plan 决定；进入聚合阶段后，仍然重新加载当前 Workspace，执行内部 API 边界校验、Host
+直接依赖校验、只读 Package Portable State 校验、Package Index 依赖身份校验、运行时 Bundle
+闭包校验和 Workspace Validator。`dirtyPackages` 只控制可复用的聚合写入范围，不会跳过索引、
+Contract exposure、Host Catalog、删除检查或最终输入一致性屏障。
+
+P2 纯删除和 P3 可信预生成新增的测试都同时验证了：
+
+- `CCROUTER_DISABLE_AGGREGATE_ONLY=1` 会强制完整 Builder，结果与聚合路径逐文件、逐字节一致；
+- 聚合路径不会读取或接受缺失、篡改、版本不匹配的外部 Index/Portable State；
+- 通过聚合路径产生的结果再经 `--no-cache --check` 参考生成，文件名、字节和错误语义一致；
+- Builder 没有运行时，聚合仍会重新计算依赖顺序、运行时 Bundle 和 Host Catalog。
+
+因此当前可以确认两套证明已经在执行上分离，但不能把这项分离扩大成“消费者 Builder 未变就
+可以忽略依赖 Package 的生成或校验”。任何新增/删除/重命名、barrel/part/条件导入、工具升级、
+并发保存或 Git/Pub/Path 依赖边界变化仍回退完整路径。P6-2 的分层语义摘要以及 P6-3 的默认
+启用继续暂缓，直到有真实项目净收益和更完整的可移植证明。

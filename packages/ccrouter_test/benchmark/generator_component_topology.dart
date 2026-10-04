@@ -856,7 +856,12 @@ final class _GenerationRun {
       packages: validated == null ? -1 : int.parse(validated.group(3)!),
       buildTargets: targets == null ? 0 : int.parse(targets.group(1)!),
       attribution: {
-        for (final key in ['input-delta', 'output-delta', 'output-delta-scan'])
+        for (final key in [
+          'input-delta',
+          'output-delta',
+          'output-delta-scan',
+          'shadow-closure',
+        ])
           if (RegExp('CCRouter profile $key=([^\\n]+)').firstMatch(output)
               case final match?)
             key: match.group(1)!.startsWith('{')
