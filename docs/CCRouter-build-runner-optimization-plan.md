@@ -848,6 +848,10 @@ Shadow 候选与参考产物不一致的样本。该结果只证明当前受控�
 不构成 Dart 条件导入、任意 Package 图或外部依赖的完备语义证明。Shadow 的解析开销也未
 证明稳定净收益，因此仍不参与 dirty set、传播或 Builder 跳过。
 
+`generation_command_test.dart` 另有条件 URI 反例：Host 新增 `dart:io`/`dart:html` 条件导入时，
+Profile 必须报告 `fallback=ccrouter_demo`，并保持 `actual=runBuilder`。这保证平台分支无法被
+误认为精确的空文件闭包；测试结束后会恢复 Demo 生成物。
+
 后续只有在多规模和真实团队样本中证明候选闭包与完整参考路径逐字节一致、并且解析开销有稳定
 净收益时，才考虑可关闭的执行原型；任何 fallback、条件分支、新增/删除/重命名、工具升级或
 外部依赖边界不确定时仍必须走完整路径。

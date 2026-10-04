@@ -978,6 +978,46 @@ void probe() {
   );
 
   test(
+    'P6 shadow closure falls back for conditional URI imports',
+    () async {
+      final probe = File(
+        path.join(
+          Directory.current.path,
+          'demo',
+          'lib',
+          '_ccrouter_shadow_conditional_probe.dart',
+        ),
+      );
+      expect(probe.existsSync(), isFalse);
+      final seeded = await _generateDemo(const []);
+      expect(seeded.exitCode, 0, reason: '${seeded.stderr}');
+      try {
+        probe.writeAsStringSync('''
+// This fixture verifies that unresolved platform branches stay conservative.
+// ignore_for_file: unused_import
+import 'dart:io' if (dart.library.js_interop) 'dart:html';
+''');
+        final result = await _generateDemo(['--check', '--profile']);
+        expect(result.exitCode, 1);
+        expect(
+          '${result.stdout}',
+          contains('CCRouter profile shadow-closure='),
+        );
+        expect('${result.stdout}', contains('fallback=ccrouter_demo'));
+        expect(
+          '${result.stdout}',
+          contains('build-plan suggested=aggregateOnly actual=runBuilder'),
+        );
+      } finally {
+        if (probe.existsSync()) probe.deleteSync();
+        final restored = await _generateDemo(const []);
+        expect(restored.exitCode, 0, reason: '${restored.stderr}');
+      }
+    },
+    timeout: const Timeout(Duration(minutes: 4)),
+  );
+
+  test(
     'P1 build plan rejects changed source, unproven baseline, and bad state',
     () async {
       final seeded = await _generateDemo(['--no-cache']);
