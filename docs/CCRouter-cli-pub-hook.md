@@ -109,7 +109,8 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook uninstall
 6. `flutter run` 的 preflight 成功后，wrapper 在后台启动
    `generate <host> --watch=auto --machine`，日志写到
    `.dart_tool/ccrouter/v1/watch/flutter-run.log`；原始 Flutter 进程退出时删除 lease 并终止
-   watch。启动时 stderr 会输出 watch PID、状态文件和日志路径；`flutter build` 不启动常驻进程。
+   watch。启动成功时 stdout 会输出 watch PID、状态文件和日志路径，避免 IDE 将正常状态按
+   stderr 渲染为红色错误；真实失败仍写 stderr。`flutter build` 不启动常驻进程。
 
 Hook 不默认采集详细 profile。遇到慢生成时，在独立终端显式运行 `generate <host> --profile`
 定位阶段耗时；性能 benchmark 或 AI 诊断也应显式传入该参数。

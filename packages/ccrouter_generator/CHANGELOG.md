@@ -24,6 +24,9 @@
   and `watch follow` commands. Flutter-run hooks print the status and log paths
   without mixing watch NDJSON into Flutter Tool's machine stdout; status
   publication remains fail-open and cannot fail generation.
+- Routed the successful Flutter-run watch start summary through stdout like
+  preflight success, while retaining real hook failures on stderr so IDEs do
+  not render a healthy background watch as an error.
 - Added diagnostic-only structured build_runner phase, activity, execution,
   and invalidation counters to watch build events and the real-edit benchmark.
   Unknown upstream formats remain bounded raw diagnostics and never affect

@@ -244,9 +244,11 @@ not cover direct `dart pub` commands or Flutter Tool's internal implicit
 `pub get`. After a successful `flutter run` preflight it starts watch under a
 lifecycle lease and removes the lease when Flutter exits; `flutter build`
 remains one-shot. `run/build` preflight failures stop the Flutter command;
-projects without a resolved CCRouter graph are skipped. The run wrapper prints
-the watch PID plus status/log paths to stderr so developers can observe the
-background process without corrupting Flutter Tool's stdout protocol.
+projects without a resolved CCRouter graph are skipped. Before the original
+Flutter process starts, the run wrapper prints the successful watch start plus
+its PID and status/log paths to stdout, consistently with successful preflight
+messages; actual failures remain on stderr. Watch NDJSON stays redirected to
+the log and is never mixed into Flutter Tool's machine stream.
 
 ## Generated Output Rules
 

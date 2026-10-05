@@ -291,7 +291,8 @@ exit "\${CCROUTER_DART_EXIT:-0}"
       environment: environment,
     );
     expect(run.exitCode, 0, reason: '${run.stderr}');
-    expect('${run.stderr}', contains('CCRouter watch starting'));
+    expect('${run.stdout}', contains('CCRouter watch starting'));
+    expect('${run.stderr}', isNot(contains('CCRouter watch starting')));
     final runTrace = File(trace).readAsLinesSync();
     expect(
       runTrace.first,

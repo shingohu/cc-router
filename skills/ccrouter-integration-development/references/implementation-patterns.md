@@ -815,6 +815,8 @@ Wrapper-started watches atomically publish
 `watch status <host-root>` for a snapshot or `watch follow <host-root>` for
 concise state changes; keep complete diagnostics in `watch/flutter-run.log`
 instead of injecting watch NDJSON into Flutter Tool's machine stdout. This
+wrapper prints only its pre-Flutter successful start summary to stdout so IDEs
+do not render it as an error; failures remain on stderr. This
 status channel is fail-open and never participates in generation correctness,
 locking, validation, artifact restoration, or atomic publication. If an abrupt
 exit leaves an `active` record, the read-only commands report it as `stale`

@@ -297,6 +297,9 @@ explicitly for benchmarks or AI diagnosis of a slow run; only then require
 build_runner verbose durations and the complete cycle trace.
 When Flutter's Hook owns the background watch, use `watch status <host-root>`
 for one read-only snapshot or `watch follow <host-root>` for concise changes.
+The wrapper prints its successful watch-start summary to stdout before the
+original Flutter process begins; failures remain on stderr. This summary is not
+watch NDJSON.
 The atomic local state is `.dart_tool/ccrouter/v1/watch/status.json`; complete
 Hook diagnostics remain in `watch/flutter-run.log` and are never mixed into
 Flutter Tool's machine stdout. Failure to publish observational state does not

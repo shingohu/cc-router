@@ -653,7 +653,7 @@ if [ "$FLUTTER_COMMAND" = "run" ] || [ "$FLUTTER_COMMAND" = "build" ]; then
     "$PROJECT_ROOT" --watch=auto --machine --watch-lease "$WATCH_LEASE" \
     >> "$WATCH_DIR/flutter-run.log" 2>&1 &
   WATCH_PID=$!
-  echo "CCRouter watch starting (pid=$WATCH_PID). Status: $WATCH_DIR/status.json; log: $WATCH_DIR/flutter-run.log" >&2
+  echo "CCRouter watch starting (pid=$WATCH_PID). Status: $WATCH_DIR/status.json; log: $WATCH_DIR/flutter-run.log"
   cleanup_ccrouter_watch() {
     rm -f "$WATCH_LEASE"
     if kill -0 "$WATCH_PID" 2>/dev/null; then
@@ -758,7 +758,7 @@ if not exist "%WATCH_DIR%" mkdir "%WATCH_DIR%"
 set "WATCH_LEASE=%WATCH_DIR%\flutter-run-%RANDOM%-%RANDOM%.lease"
 type nul > "%WATCH_LEASE%"
 start "" /b "%SCRIPT_DIR%dart.bat" run --verbosity=error ccrouter_generator:ccrouter generate "%PROJECT_ROOT%" --watch=auto --machine --watch-lease "%WATCH_LEASE%" 1>>"%WATCH_DIR%\flutter-run.log" 2>>&1
-echo CCRouter watch starting. Status: %WATCH_DIR%\status.json; log: %WATCH_DIR%\flutter-run.log 1>&2
+echo CCRouter watch starting. Status: %WATCH_DIR%\status.json; log: %WATCH_DIR%\flutter-run.log
 call "%ORIGINAL%" %*
 set "ORIGINAL_EXIT=%ERRORLEVEL%"
 del /q "%WATCH_LEASE%" >nul 2>&1

@@ -361,6 +361,8 @@ build_runner 正式 console 输出，不访问 private Asset Graph；未知终�
 迭代期应等待 machine stream 的 `aggregationSucceeded`。已有 one-shot 正在执行或等待时，新的
 watch 同样会快速失败，调用方可在命令完成后重试启动 watch。
 当前只支持单 build root，不合并嵌套 Package Host 的独立 Pub root。
+Hook 的 watch 启动成功提示写入 stdout，与 preflight 成功信息保持一致；真正失败仍写 stderr，
+避免 IDE 将正常启动渲染成红色错误。
 watch 会原子发布 `.dart_tool/ccrouter/v1/watch/status.json`；`watch status <host>` 读取一次
 当前状态，`watch follow <host>` 持续输出简洁状态变化。Hook 启动的完整 build_runner 日志仍在
 `.dart_tool/ccrouter/v1/watch/flutter-run.log`，不会污染 Flutter Tool 的 machine stdout。

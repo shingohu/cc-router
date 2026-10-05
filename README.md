@@ -1350,7 +1350,8 @@ DAG；不存在统一的万能依赖列表或 InitTask 业务 Client。源码或
 因此 Workspace 聚合根不会被误判为 Host；Hook 不会猜测某个成员 Package 代替当前目录生成。
 它不覆盖 `dart pub`，也不监听 Flutter Tool 内部隐式 `pub get`。`flutter run` 在 preflight
 成功后会持有一个后台 watch lease，原始 Flutter 进程退出时释放；`flutter build` 仍只执行
-one-shot preflight。watch 启动时 stderr 会打印 PID、状态文件和完整日志路径；可用
+one-shot preflight。watch 启动成功提示会与 preflight 一样写入 stdout，避免 IDE 将正常状态
+渲染为红色错误；其中包含 PID、状态文件和完整日志路径。可用
 `ccrouter watch status <host>` 或 `ccrouter watch follow <host>` 验证保存后的生成轮次。
 SDK 切换后 `status` 应显示 `run/build preflight: enabled` 和
 `run watch: enabled`。
