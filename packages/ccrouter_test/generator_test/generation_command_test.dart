@@ -1600,7 +1600,7 @@ void probe() {
         (host['dependencies'] as List).remove('demo_payment');
         graph.writeAsStringSync(jsonEncode(document), flush: true);
 
-        final disabled = await _generateDemo(
+        final disabled = await _generateDemoWithoutPubResolution(
           ['--check', '--profile'],
           environment: const {'CCROUTER_DISABLE_AGGREGATE_ONLY': '1'},
         );
@@ -1617,7 +1617,9 @@ void probe() {
           contains('CCRouter profile build-targets=8'),
         );
 
-        final generated = await _generateDemo(['--profile']);
+        final generated = await _generateDemoWithoutPubResolution([
+          '--profile',
+        ]);
         expect(generated.exitCode, 0, reason: '${generated.stderr}');
         expect(
           '${generated.stdout}',
@@ -1633,7 +1635,7 @@ void probe() {
         final generatedArtifacts = await _readDemoGeneratedArtifacts();
         expect(generatedArtifacts, isNot(before));
 
-        final reference = await _generateDemo([
+        final reference = await _generateDemoWithoutPubResolution([
           '--check',
           '--no-cache',
           '--profile',
@@ -1781,7 +1783,7 @@ void probe() {
         (host['dependencies'] as List).remove('demo_payment');
         graph.writeAsStringSync(jsonEncode(document), flush: true);
 
-        final removed = await _generateDemo(['--profile']);
+        final removed = await _generateDemoWithoutPubResolution(['--profile']);
         expect(removed.exitCode, 0, reason: '${removed.stderr}');
         expect(
           '${removed.stdout}',
@@ -2040,10 +2042,28 @@ Future<ProcessResult> _generateDemo(
   environment: environment,
 );
 
+Future<ProcessResult> _generateDemoWithoutPubResolution(
+  List<String> arguments, {
+  Map<String, String>? environment,
+}) => Process.run(
+  Platform.resolvedExecutable,
+  [_generatorEntrypoint, 'generate', 'demo', ...arguments],
+  workingDirectory: Directory.current.path,
+  environment: environment,
+);
+
 Future<ProcessResult> _preparePortableDemo() => Process.run(
   Platform.resolvedExecutable,
   ['run', 'ccrouter_generator:ccrouter', 'portable', 'prepare', 'demo'],
   workingDirectory: Directory.current.path,
+);
+
+String get _generatorEntrypoint => path.join(
+  Directory.current.path,
+  'packages',
+  'ccrouter_generator',
+  'bin',
+  'ccrouter.dart',
 );
 
 File _demoBuildPlanState() {

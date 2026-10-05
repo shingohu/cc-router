@@ -253,7 +253,7 @@ Workspace/插件 analyze 及缓存/无缓存生成物检查通过。
   协调，不直接代理整个 Flutter daemon。实现须保留 kill switch，并用声明变更/非声明变更、
   连续保存、生成失败、resolved graph stale、topology 变化及通常 reload 的真实 `flutter run`
   时序回归验收。
-- [ ] **Pub 拓扑变化后重启 watch session**：普通 `pub get`、版本变化，以及仍被当前
+- [x] **Pub 拓扑变化后重启 watch session**：普通 `pub get`、版本变化，以及仍被当前
   targets 安全覆盖的依赖删除，继续等待现有 watch cycle。新增 Package 或重算后的生成目标/
   `--build-filter` 集合无法由当前 session 覆盖时，watch owner 应在持有同一 Host lease 期间
   有序停止旧 build_runner、重新解析 build root/targets，并启动带新 session identity 的
@@ -262,6 +262,11 @@ Workspace/插件 analyze 及缓存/无缓存生成物检查通过。
   验收覆盖 Package 新增/删除/重命名、Host dependency edge 变化、Dart 文件新增/删除/
   重命名、重启期间并发 Pub 命令、进程退出与逐字节 `--no-cache --check` 对照；保留
   独立 kill switch 以回退到显式停止 watch 后执行 one-shot 的参考路径。
+  已实现 exact resolution monitor、`resolutionStarted` 聚合 cycle、同 lease 的 session identity
+  轮换和新 session `ready` 栅栏。实测 build_runner 在部分依赖删除/版本解析变化时会主动退出，
+  因而“安全删除必定复用原 child”不是可靠上游契约；supervisor 仅在 exact resolution 已变化时
+  将该退出收敛为受控 restart，resolution 未变化的退出仍 fail closed。监视器以 stat 低成本
+  唤醒、exact fingerprint 判定并保留低频 exact 兜底，不把 mtime 当正确性证明。
 - [ ] **结构化生成诊断与 Analyzer watch bridge**：当前 Workspace Validator 只返回无位置
   字符串，Host 缺失实现 Package 会展开为多条 Handler、Route、InitTask 和 owner 级联错误；
   Dart Analyzer 又会因 Workspace `package_config.json` 仍包含兄弟 Package 而无法证明 Host closure

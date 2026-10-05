@@ -590,8 +590,16 @@ Future<_CCPubHookWatchResult?> _waitForPostPubWatch(
     final lastEvent = status['lastEvent'] as String;
     final matchesResolution =
         status['resolutionFingerprint'] == requiredResolutionFingerprint;
+    final sessionId = status['sessionId'] as String?;
+    final sessionChanged =
+        baselineSessionId != null &&
+        sessionId != null &&
+        sessionId != baselineSessionId;
+    final sessionReady = status['sessionReady'] == true;
     if (matchesResolution &&
-        (lastEvent == 'aggregationSucceeded' || lastEvent == 'ready')) {
+        (lastEvent == 'ready' ||
+            (lastEvent == 'aggregationSucceeded' &&
+                (!sessionChanged || sessionReady)))) {
       return _CCPubHookWatchResult(
         succeeded: true,
         cycle: cycle,
@@ -599,7 +607,6 @@ Future<_CCPubHookWatchResult?> _waitForPostPubWatch(
         logFile: _pubHookWatchLogFile(hostRoot),
       );
     }
-    final sessionId = status['sessionId'] as String?;
     final eventRevision = status['eventRevision'] as int?;
     final isNewTerminalEvent = switch ((
       baselineSessionId,

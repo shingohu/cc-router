@@ -217,6 +217,144 @@ void main() {
   );
 
   test(
+    'watch restarts only when the resolved Host closure needs a new session',
+    () async {
+      final pubspec = File(
+        path.join(Directory.current.path, 'demo', 'pubspec.yaml'),
+      );
+      final originalPubspec = pubspec.readAsStringSync();
+      final originalArtifacts = await _managedArtifacts();
+      var restoredResolution = false;
+      try {
+        final watch = await _runWatchUntilReady(
+          onReady: () async {
+            final initial = await _readWatchStatus();
+            final initialSession = initial['sessionId'] as String;
+
+            final added = _replaceOnce(
+              originalPubspec,
+              '  demo_order: ^0.1.0\n',
+              '  demo_order: ^0.1.0\n'
+                  '  demo_analytics_firebase: ^0.1.0\n',
+            );
+            pubspec.writeAsStringSync(added, flush: true);
+            final addPub = await _runDemoPubGet();
+            expect(addPub.exitCode, 0, reason: '${addPub.stderr}');
+            final restarted = await _waitForWatchStatus(
+              (status) =>
+                  status['sessionId'] != initialSession &&
+                  status['lastEvent'] == 'ready',
+            );
+            final restartedSession = restarted['sessionId'] as String;
+            expect(restarted['sessionReady'], isTrue);
+
+            pubspec.writeAsStringSync(originalPubspec, flush: true);
+            final removePub = await _runDemoPubGet();
+            expect(removePub.exitCode, 0, reason: '${removePub.stderr}');
+            restoredResolution = true;
+            await _waitForWatchStatus(
+              (status) =>
+                  (status['sessionId'] == restartedSession &&
+                      status['cycle'] is int &&
+                      (status['cycle'] as int) > 1 &&
+                      status['lastEvent'] == 'aggregationSucceeded') ||
+                  (status['sessionId'] != restartedSession &&
+                      status['lastEvent'] == 'ready'),
+            );
+          },
+        );
+
+        expect(
+          watch.eventTypes.where((type) => type == 'sessionRestarting'),
+          isNotEmpty,
+        );
+        expect(await _managedArtifacts(), originalArtifacts);
+      } finally {
+        pubspec.writeAsStringSync(originalPubspec, flush: true);
+        if (!restoredResolution) {
+          final restorePub = await _runDemoPubGet();
+          expect(restorePub.exitCode, 0, reason: '${restorePub.stderr}');
+        }
+      }
+    },
+    timeout: const Timeout(Duration(minutes: 6)),
+  );
+
+  test(
+    'watch handles Dart file add rename and delete without session restart',
+    () async {
+      final source = _watchProbeSource();
+      final renamed = _watchProbeSource(renamed: true);
+      final sourceOutputs = _watchProbeOutputs();
+      final renamedOutputs = _watchProbeOutputs(renamed: true);
+      final originalArtifacts = await _managedArtifacts();
+      try {
+        final added = await _runWatchUntilReady(
+          onReady: () async {
+            final initial = await _readWatchStatus();
+            final session = initial['sessionId'];
+            final cycle = initial['cycle'] as int;
+            source.writeAsStringSync(_watchProbeContents, flush: true);
+            await _waitForWatchStatus(
+              (status) =>
+                  status['sessionId'] == session &&
+                  status['cycle'] is int &&
+                  (status['cycle'] as int) > cycle &&
+                  status['lastEvent'] == 'aggregationSucceeded' &&
+                  sourceOutputs.every((file) => file.existsSync()),
+            );
+          },
+        );
+        expect(added.eventTypes, isNot(contains('sessionRestarting')));
+
+        final moved = await _runWatchUntilReady(
+          onReady: () async {
+            final initial = await _readWatchStatus();
+            final session = initial['sessionId'];
+            final cycle = initial['cycle'] as int;
+            source.renameSync(renamed.path);
+            await _waitForWatchStatus(
+              (status) =>
+                  status['sessionId'] == session &&
+                  status['cycle'] is int &&
+                  (status['cycle'] as int) > cycle &&
+                  status['lastEvent'] == 'aggregationSucceeded' &&
+                  sourceOutputs.every((file) => !file.existsSync()) &&
+                  renamedOutputs.every((file) => file.existsSync()),
+            );
+          },
+        );
+        expect(moved.eventTypes, isNot(contains('sessionRestarting')));
+
+        final deleted = await _runWatchUntilReady(
+          onReady: () async {
+            final initial = await _readWatchStatus();
+            final session = initial['sessionId'];
+            final cycle = initial['cycle'] as int;
+            renamed.deleteSync();
+            await _waitForWatchStatus(
+              (status) =>
+                  status['sessionId'] == session &&
+                  status['cycle'] is int &&
+                  (status['cycle'] as int) > cycle &&
+                  status['lastEvent'] == 'aggregationSucceeded' &&
+                  renamedOutputs.every((file) => !file.existsSync()),
+            );
+          },
+        );
+        expect(deleted.eventTypes, isNot(contains('sessionRestarting')));
+        expect(await _managedArtifacts(), originalArtifacts);
+      } finally {
+        if (source.existsSync()) source.deleteSync();
+        if (renamed.existsSync()) renamed.deleteSync();
+        final restored = await _run(['generate', 'demo', '--no-cache']);
+        expect(restored.exitCode, 0, reason: '${restored.stderr}');
+      }
+    },
+    timeout: const Timeout(Duration(minutes: 8)),
+  );
+
+  test(
     'one-shot generation fails fast while the root watch is active',
     () async {
       ProcessResult? result;
@@ -425,6 +563,97 @@ Future<void> _waitForOneShotWatchGuard() async {
     await Future<void>.delayed(const Duration(milliseconds: 20));
   }
   throw TimeoutException('one-shot command did not acquire its watch guard');
+}
+
+File _watchProbeSource({bool renamed = false}) => File(
+  path.join(
+    Directory.current.path,
+    'demo',
+    'modules',
+    'navigation_lab',
+    'lib',
+    'src',
+    renamed
+        ? 'ccrouter_watch_file_probe_renamed.dart'
+        : 'ccrouter_watch_file_probe.dart',
+  ),
+);
+
+List<File> _watchProbeOutputs({bool renamed = false}) {
+  final stem = renamed
+      ? 'ccrouter_watch_file_probe_renamed'
+      : 'ccrouter_watch_file_probe';
+  final generated = path.join(
+    Directory.current.path,
+    'demo',
+    'modules',
+    'navigation_lab',
+    'lib',
+    'src',
+    'ccrouter_generated',
+  );
+  return [
+    File(path.join(generated, 'route', '$stem.route.g.dart')),
+    File(path.join(generated, 'binding', '$stem.route_binding.g.dart')),
+  ];
+}
+
+const _watchProbeContents = '''
+import 'package:ccrouter/ccrouter.dart';
+import 'package:flutter/widgets.dart';
+
+@CCRoute<void>(
+  id: 'demo_navigation_lab.watch_probe',
+  pattern: CCPathPattern('/lab/watch-probe'),
+)
+final class CCRouterWatchProbePage extends StatelessWidget {
+  const CCRouterWatchProbePage({super.key});
+
+  @override
+  Widget build(BuildContext context) => const SizedBox.shrink();
+}
+''';
+
+Future<ProcessResult> _runDemoPubGet() => Process.run(
+  'fvm',
+  const ['flutter', 'pub', 'get'],
+  workingDirectory: path.join(Directory.current.path, 'demo'),
+  environment: {...Platform.environment, 'CCROUTER_PUB_HOOK_DISABLE': '1'},
+);
+
+Future<Map<String, dynamic>> _readWatchStatus() async =>
+    jsonDecode(
+          await File(
+            path.join(
+              Directory.current.path,
+              'demo',
+              '.dart_tool',
+              'ccrouter',
+              'v1',
+              'watch',
+              'status.json',
+            ),
+          ).readAsString(),
+        )
+        as Map<String, dynamic>;
+
+Future<Map<String, dynamic>> _waitForWatchStatus(
+  bool Function(Map<String, dynamic> status) predicate,
+) async {
+  final deadline = DateTime.now().add(const Duration(minutes: 2));
+  Map<String, dynamic>? latest;
+  while (DateTime.now().isBefore(deadline)) {
+    try {
+      latest = await _readWatchStatus();
+      if (predicate(latest)) return latest;
+    } on FileSystemException {
+      // Atomic publication may briefly replace the status file.
+    } on FormatException {
+      // Retry if a non-atomic filesystem exposes an intermediate write.
+    }
+    await Future<void>.delayed(const Duration(milliseconds: 100));
+  }
+  throw TimeoutException('watch status did not match: ${jsonEncode(latest)}');
 }
 
 File _lockFile(String relative) => File(

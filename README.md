@@ -1242,6 +1242,13 @@ CI 仍以 `generate <host> --no-cache --check` 为权威。一个活动 watch �
 `aggregationSucceeded`，不会无限阻塞；反过来已有 one-shot 正在执行或排队时，新 watch 也会快速失败。
 先停止 watch 再执行最终门禁。当前 MVP 只编排一个 build root；嵌套且
 拥有独立 Pub build root 的 Package Host 应各自启动 watch，不做跨 root 合并。
+watch 还监视 Host manifest 与 Pub resolution 的精确内容变化；普通版本/依赖边变化在当前
+Builder target 集合仍可覆盖时发布 `resolutionStarted` 并直接执行完整聚合校验。Host closure
+新增 Package、Builder target/`--build-filter` 集合变化，或 build_runner 因 resolution 更新自行
+退出时，supervisor 会在同一 generation lock 和 lease 内发布 `sessionRestarting`、等待旧 child
+完整退出并启动新 session。Pub Hook 只有在新 session 到达 `ready` 后才接受其
+`aggregationSucceeded`。`CCROUTER_DISABLE_WATCH_SESSION_RESTART=1` 会让需要 restart 的变化
+fail closed，并要求停止 watch 后运行 one-shot，供紧急回退和 A/B 使用。
 后台 watch 会原子维护
 `.dart_tool/ccrouter/v1/watch/status.json`。`watch status <host>` 一次性显示活动状态、PID、
 轮次和最近 Builder/聚合耗时；`watch follow <host>` 只打印简洁状态变化，完整 build_runner
@@ -1363,7 +1370,8 @@ one-shot；它等待 Pub 解析变更之后的 `aggregationSucceeded`。该轮�
 watch 的有界 Generator diagnostics。watch 状态使用 `sessionId`、`cycle` 和单调
 `eventRevision` 区分历史事件；若 Pub 在 cycle 中途改写 resolution，新的 terminal failure 会
 立即报告该轮不能作为成功证明并要求新 cycle/session，不再等待 5 分钟。成功仍必须匹配当前
-resolution exact-content fingerprint。设置
+resolution exact-content fingerprint；若 topology 需要新 build_runner graph，Hook 会继续等待
+新 session 的 `ready`，不会接受该 session 尚未 ready 时的中间聚合成功。设置
 `CCROUTER_DISABLE_PUB_HOOK_WATCH_FAILURE_FENCE=1` 可临时恢复旧的严格 fingerprint-only
 失败等待路径；状态不可用、watch 退出或最终超时仍 fail-closed。
 SDK 切换或升级后需要重新检查 `pub-hook status`。详细语义见

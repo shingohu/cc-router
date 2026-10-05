@@ -448,6 +448,63 @@ dev_dependencies:
     expect(output, isNot(contains('historical failure')));
   });
 
+  test('post-pub hook waits for ready after a watch session restart', () async {
+    final project = await _createWatchCoordinatedProject();
+    addTearDown(() => project.delete(recursive: true));
+    final owner = await _lockWatchOwner(project);
+    addTearDown(() async {
+      await owner.unlock();
+      await owner.close();
+    });
+    await _writeWatchStatus(
+      project,
+      lastEvent: 'aggregationStarted',
+      cycle: 5,
+      eventRevision: 9,
+      sessionId: 'old-session',
+      updatedAt: DateTime.now().toUtc(),
+    );
+
+    final result = await _runAfterHookStartedWithProcess(
+      [
+        'pub-hook',
+        'run',
+        '--project-root',
+        project.path,
+        '--pub-command',
+        'get',
+      ],
+      (process) async {
+        await _writeWatchStatus(
+          project,
+          lastEvent: 'aggregationSucceeded',
+          cycle: 1,
+          eventRevision: 4,
+          sessionId: 'new-session',
+          sessionReady: false,
+          updatedAt: DateTime.now().toUtc(),
+        );
+        var completedBeforeReady = false;
+        process.exitCode.then((_) => completedBeforeReady = true);
+        await Future<void>.delayed(const Duration(milliseconds: 600));
+        expect(completedBeforeReady, isFalse);
+        await _writeWatchStatus(
+          project,
+          lastEvent: 'ready',
+          cycle: 1,
+          eventRevision: 5,
+          sessionId: 'new-session',
+          sessionReady: true,
+          updatedAt: DateTime.now().toUtc(),
+        );
+      },
+    );
+    final output = '${result.stdout}\n${result.stderr}';
+
+    expect(result.exitCode, 0, reason: output);
+    expect(output, contains('reused active watch cycle 1'));
+  });
+
   test(
     'post-pub hook fences a new failure from a legacy watch status',
     () async {
@@ -574,6 +631,11 @@ Future<ProcessResult> _run(List<String> arguments) => Process.run(
 Future<ProcessResult> _runAfterHookStarted(
   List<String> arguments,
   Future<void> Function() publishStatus,
+) => _runAfterHookStartedWithProcess(arguments, (_) => publishStatus());
+
+Future<ProcessResult> _runAfterHookStartedWithProcess(
+  List<String> arguments,
+  Future<void> Function(Process process) publishStatus,
 ) async {
   final process = await Process.start(Platform.resolvedExecutable, [
     'run',
@@ -601,7 +663,7 @@ Future<ProcessResult> _runAfterHookStarted(
       .asFuture<void>();
   await started.future.timeout(const Duration(seconds: 15));
   await Future<void>.delayed(const Duration(milliseconds: 400));
-  await publishStatus();
+  await publishStatus(process);
   final processExitCode = await process.exitCode;
   await Future.wait([stdoutDone, stderrDone]);
   return ProcessResult(
@@ -678,6 +740,7 @@ Future<String> _writeWatchStatus(
   String? resolutionFingerprint,
   bool includeResolutionFingerprint = true,
   bool includeEventIdentity = true,
+  bool? sessionReady,
   String? cycleResolutionState,
 }) async {
   final file = File(
@@ -698,7 +761,7 @@ Future<String> _writeWatchStatus(
             )
       : null;
   file.writeAsStringSync(
-    '${jsonEncode(<String, Object?>{'schemaVersion': 1, 'state': lastEvent == 'failed' ? 'failed' : 'building', 'active': true, 'lastEvent': lastEvent, 'pid': pid, if (includeEventIdentity) 'sessionId': sessionId, if (includeEventIdentity) 'eventRevision': eventRevision, 'cycle': cycle, 'startedAt': updatedAt.subtract(const Duration(seconds: 1)).toIso8601String(), 'updatedAt': updatedAt.toIso8601String(), 'hostRoot': project.path, 'buildRoot': project.path, 'managedByLease': false, if (effectiveResolutionFingerprint != null) 'resolutionFingerprint': effectiveResolutionFingerprint, if (cycleResolutionState != null) 'cycleResolutionState': cycleResolutionState, if (failureStage != null) 'failureStage': failureStage, if (failureDiagnostics != null) 'failureDiagnostics': failureDiagnostics})}\n',
+    '${jsonEncode(<String, Object?>{'schemaVersion': 1, 'state': lastEvent == 'failed' ? 'failed' : 'building', 'active': true, 'lastEvent': lastEvent, 'pid': pid, if (includeEventIdentity) 'sessionId': sessionId, if (includeEventIdentity) 'eventRevision': eventRevision, if (sessionReady != null) 'sessionReady': sessionReady, 'cycle': cycle, 'startedAt': updatedAt.subtract(const Duration(seconds: 1)).toIso8601String(), 'updatedAt': updatedAt.toIso8601String(), 'hostRoot': project.path, 'buildRoot': project.path, 'managedByLease': false, if (effectiveResolutionFingerprint != null) 'resolutionFingerprint': effectiveResolutionFingerprint, if (cycleResolutionState != null) 'cycleResolutionState': cycleResolutionState, if (failureStage != null) 'failureStage': failureStage, if (failureDiagnostics != null) 'failureDiagnostics': failureDiagnostics})}\n',
   );
   return effectiveResolutionFingerprint ?? '';
 }

@@ -89,7 +89,10 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook uninstall
    因此不会用 generation lock 遮蔽真实错误。状态中的 `sessionId`、`cycle` 和单调
    `eventRevision` 用于排除等待前的历史失败；若 cycle 执行期间 resolution 发生变化，等待后
    出现的新 terminal failure 会立即报告该轮无法作为成功证明，并要求新 cycle/session。
-   成功仍必须严格匹配当前 resolution fingerprint，不能用快速失败逻辑放宽。
+   watch 对 resolution-only 变化执行明确的聚合 cycle；Host closure 新增 Package、生成 target
+   集合变化，或 build_runner 因 resolution 更新自行退出时，会在同一 lock/lease 内轮换
+   `sessionId` 并重建 child。Hook 必须等新 session 的 `ready`，成功仍严格匹配当前 resolution
+   fingerprint，不能用快速失败逻辑放宽。
 6. 成功时只打印 fast-path、验证摘要和总耗时；生成器失败时打印最近
    200 行且最多 64 KiB 的有界日志并返回非零，使 CI 能发现生成物过期或元数据错误，
    同时避免长时间 Builder 输出造成控制台刷屏或内存无界增长。
@@ -139,6 +142,13 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter watch follow <host-ro
 不会阻断生成锁、Builder、Validator、快照恢复或原子发布。若 watch 被强制终止而来不及写入
 `stopped`，只读命令会通过已释放的 owner lock 将遗留 `active` 记录显示为 `stale`；它不会
 回写历史 `status.json`。
+
+watch 使用文件 stat 作为低成本唤醒信号，再以 exact-content fingerprint 确认 Pub resolution
+变化；低频 exact scan 只作事件遗漏兜底，成功证据从不依赖 mtime。需要新 Analyzer graph 或
+`--build-filter` 时发布 `sessionRestarting`，恢复当前 cycle 快照并在同一 lease 内启动新 child；
+新 session 的 `aggregationSucceeded` 在 `ready` 前不能满足 Pub Hook。设置
+`CCROUTER_DISABLE_WATCH_SESSION_RESTART=1` 后，这类变化会 fail closed，并提示停止 watch 后运行
+one-shot，不会静默沿用旧 target 集合。
 
 这不是对 Flutter Tool 内部隐式 `pub get` 的监听：wrapper 无法可靠观察内部 Dart 调用，
 也不会修改 `shared.sh`、Dart snapshot 或 Flutter Tool 源码。`run/build` 的前置生成只保证

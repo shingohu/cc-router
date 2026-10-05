@@ -836,6 +836,15 @@ resolution fingerprint. Set
 fingerprint-only failure wait. Exit, unavailable state, or timeout stays
 fail-closed. This exception is specific to post-pub coordination, not permission
 for concurrent one-shot generation.
+The watch also polls cheap resolution file stats and confirms every candidate
+with an exact-content fingerprint; a low-frequency exact scan covers missed
+wakeups. Covered resolution-only changes publish `resolutionStarted` and run
+aggregation without pretending Builder ran. A new closure Package, changed
+Builder target/filter set, or child exit after an exact resolution change
+publishes `sessionRestarting`, restores the current artifact snapshot, and
+starts a new child under the same lock/lease. Consumers must wait for the new
+session's `ready`. `CCROUTER_DISABLE_WATCH_SESSION_RESTART=1` makes this path
+fail closed so a stopped-watch one-shot can serve as the reference.
 After a successful Builder cycle, watch skips only the ordinary fast-path and
 Build Plan decision that can no longer change whether Builder runs. Input
 fingerprints and barriers, dependency preflight, artifact snapshots, Workspace

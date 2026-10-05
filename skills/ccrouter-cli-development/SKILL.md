@@ -117,6 +117,14 @@ has an active watch; wait for `aggregationSucceeded` during iteration, then
 stop the watch before the final reference gate. Do not retry the blocked command
 in a polling loop. Starting watch while a one-shot command owns or awaits the
 root lock also fails fast; retry watch only after that command completes.
+Watch detects exact Pub-resolution changes independently of build_runner's
+source events. A covered version or dependency-edge change runs a
+`resolutionStarted` aggregation cycle without claiming that Builder ran. A new
+Host-closure Package, changed Builder target/filter set, or a child that exits
+after resolution changes rotates `sessionId` under the same lock and lease.
+Wait for the new session's `ready`; its earlier `aggregationSucceeded` is not a
+completion fence. Set `CCROUTER_DISABLE_WATCH_SESSION_RESTART=1` only to make
+such changes fail closed and require a stopped-watch one-shot reference.
 After Builder success, watch skips only the redundant ordinary fast-path and
 Build Plan decision. It retains input barriers, preflight, snapshots,
 validation, aggregation, and local state writes. Set
@@ -246,6 +254,9 @@ current resolution fingerprint. Set
 `CCROUTER_DISABLE_PUB_HOOK_WATCH_FAILURE_FENCE=1` only for the legacy
 fingerprint-only A/B fallback. Missing state, watch exit, or the bounded
 five-minute wait also fails; never treat another Host's status as evidence.
+When watch rotates its child after Pub topology changes, Hook accepts the new
+session only after `sessionReady: true`/`ready` and an exact matching resolution
+fingerprint. It must not reuse that session's pre-ready aggregation event.
 
 Use `status` after an FVM version switch; it prints the resolved SDK path and
 verifies the marker, POSIX/Windows wrapper, and backups. It returns non-zero

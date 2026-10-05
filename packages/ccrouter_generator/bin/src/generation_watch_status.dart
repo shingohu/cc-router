@@ -17,11 +17,13 @@ final class _GenerationWatchStatusTracker {
   final Directory buildRoot;
   final String? _leasePath;
   final String _startedAt;
-  final String _sessionId;
+  String _sessionId;
 
   bool _watchStarted = false;
+  bool _sessionReady = false;
   bool _disabled = false;
   bool _warned = false;
+  int _sessionSequence = 0;
   int _cycle = 0;
   int _eventRevision = 0;
   int? _lastBuildElapsedMs;
@@ -36,6 +38,33 @@ final class _GenerationWatchStatusTracker {
   String? _completedResolutionFingerprint;
   String? _cycleResolutionState;
 
+  /// Starts a distinct build_runner child session under the same watch lease.
+  void beginNewSession() {
+    _sessionSequence++;
+    _sessionId =
+        '$pid-${DateTime.now().microsecondsSinceEpoch}-$_sessionSequence';
+    _sessionReady = false;
+    _eventRevision = 0;
+    _cycle = 0;
+    _lastBuildElapsedMs = null;
+    _lastBuildRunnerMs = null;
+    _lastAggregationElapsedMs = null;
+    _lastCycleMode = null;
+    _lastSucceededAt = null;
+    _lastFailureAt = null;
+    _failureStage = null;
+    _failureDiagnostics = null;
+    _cycleResolutionFingerprint = null;
+    _completedResolutionFingerprint = null;
+    _cycleResolutionState = null;
+  }
+
+  /// Identity of the currently supervised build_runner child session.
+  String get sessionId => _sessionId;
+
+  /// Monotonic persisted event revision within the current child session.
+  int get eventRevision => _eventRevision;
+
   /// Records one public watch event and persists only developer-useful states.
   Future<void> observe(
     String type, {
@@ -43,7 +72,8 @@ final class _GenerationWatchStatusTracker {
     required Map<String, Object?> data,
   }) async {
     if (type == 'watchStarted') _watchStarted = true;
-    if (type == 'buildStarted') {
+    if (type == 'ready') _sessionReady = true;
+    if (type == 'buildStarted' || type == 'resolutionStarted') {
       _cycle++;
       _failureStage = null;
       _failureDiagnostics = null;
@@ -92,8 +122,10 @@ final class _GenerationWatchStatusTracker {
     final state = _stateFor(type);
     final active = switch (type) {
       'starting' ||
+      'sessionRestarting' ||
       'watchStarted' ||
       'buildStarted' ||
+      'resolutionStarted' ||
       'buildSucceeded' ||
       'aggregationStarted' ||
       'aggregationSucceeded' ||
@@ -109,6 +141,7 @@ final class _GenerationWatchStatusTracker {
       'pid': pid,
       'sessionId': _sessionId,
       'eventRevision': _eventRevision,
+      'sessionReady': _sessionReady,
       'cycle': _cycle,
       'startedAt': _startedAt,
       'updatedAt': timestamp,
@@ -149,10 +182,12 @@ final class _GenerationWatchStatusTracker {
 
   bool _shouldPersist(String type) => switch (type) {
     'starting' ||
+    'sessionRestarting' ||
     'fallback' ||
     'succeeded' ||
     'watchStarted' ||
     'buildStarted' ||
+    'resolutionStarted' ||
     'aggregationStarted' ||
     'aggregationSucceeded' ||
     'ready' ||
@@ -163,8 +198,10 @@ final class _GenerationWatchStatusTracker {
 
   String _stateFor(String type) => switch (type) {
     'buildStarted' || 'buildSucceeded' => 'building',
+    'resolutionStarted' => 'resolving',
     'aggregationStarted' => 'aggregating',
     'aggregationSucceeded' => 'succeeded',
+    'sessionRestarting' => 'restarting',
     'watchStarted' => 'starting',
     'fallback' => 'fallback',
     'succeeded' || 'stopped' => 'stopped',

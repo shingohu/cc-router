@@ -327,6 +327,13 @@ immediately and requires another cycle/session, while success still requires an
 exact current fingerprint. This does not permit arbitrary one-shot generation
 beside a watch or reuse status belonging to another Host. Use
 `CCROUTER_DISABLE_PUB_HOOK_WATCH_FAILURE_FENCE=1` only for legacy A/B fallback.
+Watch independently observes exact Pub-resolution changes. Covered resolution
+changes run an aggregation cycle; a new closure Package, changed Builder target
+set, or build_runner exit caused by resolution churn rotates to a new child
+under the same lock/lease. Pub Hook must wait for that session's `ready`, not
+only an earlier `aggregationSucceeded`. Use
+`CCROUTER_DISABLE_WATCH_SESSION_RESTART=1` only for a fail-closed one-shot
+fallback after stopping watch.
 The post-Builder cycle may skip redundant planning, but never its input
 barriers, preflight, snapshot, validation, aggregation, or local state writes.
 Use `CCROUTER_DISABLE_WATCH_CYCLE_OPTIMIZATION=1` for a reference-cycle A/B

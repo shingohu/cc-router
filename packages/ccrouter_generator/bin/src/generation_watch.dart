@@ -7,6 +7,8 @@ const _watchCycleOptimizationKillSwitch =
     'CCROUTER_DISABLE_WATCH_CYCLE_OPTIMIZATION';
 const _watchInProcessCycleKillSwitch =
     'CCROUTER_DISABLE_WATCH_IN_PROCESS_CYCLE';
+const _watchSessionRestartKillSwitch = 'CCROUTER_DISABLE_WATCH_SESSION_RESTART';
+const _watchResolutionExactPollInterval = Duration(seconds: 5);
 const _buildRunnerSuccessPattern = 'Built with build_runner';
 const _buildRunnerFailurePattern = 'Failed to build with build_runner';
 
@@ -55,67 +57,6 @@ Future<void> _runGenerationWatch({
     exitCode = fallback.exitCode;
     return;
   }
-
-  final workspaceWatch = Stopwatch()..start();
-  late final CCPackageWorkspace workspace;
-  try {
-    workspace = await CCPackageWorkspace.load(
-      buildRoot: buildContext.root,
-      hostRoot: hostRoot,
-      workspace: buildContext.workspace,
-    );
-  } on Object catch (error) {
-    await events.emit(
-      'failed',
-      data: {'stage': 'workspace', 'error': '$error'},
-    );
-    exitCode = 1;
-    return;
-  }
-  final targets =
-      workspace.packages.values
-          .where(
-            (package) => package.writable && package.declaresGenerationIntent,
-          )
-          .map((package) => package.name)
-          .toList()
-        ..sort();
-  if (targets.isEmpty) {
-    await events.emit(
-      'failed',
-      data: {
-        'stage': 'target-resolution',
-        'error': 'No writable CCRouter Builder Packages were found.',
-      },
-    );
-    exitCode = 1;
-    return;
-  }
-  workspaceWatch.stop();
-  await events.emit(
-    'targetsResolved',
-    data: {
-      'elapsedMs': workspaceWatch.elapsedMilliseconds,
-      'packages': targets,
-    },
-  );
-
-  final protectionWatch = Stopwatch()..start();
-  final targetRoots = <Directory>[
-    for (final name in targets) workspace.packages[name]!.root,
-  ];
-  final protectedOutputs = <_GeneratedArtifactsSnapshot>[
-    await _GeneratedArtifactsSnapshot.captureOutside(
-      buildContext.root,
-      targetRoots,
-    ),
-    for (final package in workspace.packages.values)
-      if (!package.writable && !_isWithin(buildContext.root, package.root))
-        await _GeneratedArtifactsSnapshot.capture(package.root),
-  ];
-  protectionWatch.stop();
-
-  var command = await _buildRunnerCommand(buildContext.root, 'watch');
   late final _GenerationWatchOwnership watchOwnership;
   try {
     watchOwnership = await _GenerationWatchOwnership.acquire(buildContext.root);
@@ -139,60 +80,14 @@ Future<void> _runGenerationWatch({
     exitCode = 1;
     return;
   }
-  var cycleSnapshot = await _GeneratedArtifactsSnapshot.capture(
-    buildContext.root,
-  );
-  final processWatch = Stopwatch()..start();
-  late final Process process;
-  try {
-    command = await _recoverWrongBuildRunnerSnapshotBeforeWatch(
-      command,
-      buildContext.root,
-    );
-    final arguments = <String>[
-      ...command.arguments,
-      if (parsed.profile) '--verbose-durations',
-      if (buildContext.workspace) '--workspace',
-      for (final package in targets) ...[
-        '--build-filter',
-        'asset:$package/lib/**',
-        '--build-filter',
-        'asset:$package/ccrouter_generated/**',
-      ],
-    ];
-    process = await Process.start(
-      command.executable,
-      arguments,
-      workingDirectory: buildContext.root.path,
-    );
-  } on Object catch (error) {
-    try {
-      await generationLock.release();
-    } finally {
-      await watchOwnership.release();
-    }
-    await events.emit(
-      'failed',
-      data: {'stage': 'watch-start', 'error': '$error'},
-    );
-    exitCode = 1;
-    return;
-  }
-  await events.emit(
-    'watchStarted',
-    data: {
-      'elapsedMs': processWatch.elapsedMilliseconds,
-      'protectionSnapshotMs': protectionWatch.elapsedMilliseconds,
-    },
-  );
-  await events.emit('buildStarted', data: {'initial': true});
 
   final stop = Completer<void>();
   final signalSubscriptions = <StreamSubscription<ProcessSignal>>[];
+  Process? activeProcess;
   void requestStop() {
     if (stop.isCompleted) return;
     stop.complete();
-    process.kill(ProcessSignal.sigterm);
+    activeProcess?.kill(ProcessSignal.sigint);
   }
 
   for (final signal in [ProcessSignal.sigint, ProcessSignal.sigterm]) {
@@ -210,32 +105,396 @@ Future<void> _runGenerationWatch({
     });
   }
 
-  final lines = StreamController<_BuildRunnerWatchLine>();
+  try {
+    var sessionIndex = 0;
+    _GenerationWatchTopology? topology;
+    while (!stop.isCompleted) {
+      final workspaceWatch = Stopwatch()..start();
+      try {
+        topology ??= await _resolveGenerationWatchTopology(
+          hostRoot: hostRoot,
+          buildContext: buildContext,
+        );
+      } on Object catch (error) {
+        await events.emit(
+          'failed',
+          data: {'stage': 'workspace', 'error': '$error'},
+        );
+        exitCode = 1;
+        break;
+      }
+      workspaceWatch.stop();
+      if (sessionIndex > 0) events.beginNewSession();
+      await events.emit(
+        'targetsResolved',
+        data: {
+          'elapsedMs': workspaceWatch.elapsedMilliseconds,
+          'packages': topology.targets,
+          'topologyFingerprint': topology.fingerprint,
+        },
+      );
+      final nextTopology = await _runGenerationWatchSession(
+        hostRoot: hostRoot,
+        buildContext: buildContext,
+        parsed: parsed,
+        events: events,
+        topology: topology,
+        stop: stop,
+        setActiveProcess: (process) => activeProcess = process,
+        runInProcessCycle: runInProcessCycle,
+      );
+      if (nextTopology == null) break;
+      topology = nextTopology;
+      sessionIndex++;
+    }
+  } finally {
+    leaseTimer?.cancel();
+    for (final subscription in signalSubscriptions) {
+      await subscription.cancel();
+    }
+    try {
+      await generationLock.release();
+    } finally {
+      await watchOwnership.release();
+    }
+    if (exitCode == 0) await events.emit('stopped');
+  }
+}
+
+/// One resolved Host topology that determines a build_runner child session.
+final class _GenerationWatchTopology {
+  const _GenerationWatchTopology({
+    required this.workspace,
+    required this.targets,
+    required this.fingerprint,
+  });
+
+  final CCPackageWorkspace workspace;
+  final List<String> targets;
+  final String fingerprint;
+
+  /// Whether [next] contains work that the current child cannot observe.
+  ///
+  /// A version change or a dependency-edge change inside the already loaded
+  /// Package universe remains covered by the current child. Package additions
+  /// require a fresh Analyzer graph, while any target-set change requires new
+  /// build filters. Removing a non-target Package is therefore the only
+  /// Package-set change that can safely retain this session.
+  bool requiresRestartFor(_GenerationWatchTopology next) {
+    final currentPackages = workspace.packages.keys.toSet();
+    final addedPackages = next.workspace.packages.keys.where(
+      (name) => !currentPackages.contains(name),
+    );
+    final nextTargets = next.targets.toSet();
+    return addedPackages.isNotEmpty ||
+        targets.length != nextTargets.length ||
+        targets.any((target) => !nextTargets.contains(target));
+  }
+}
+
+/// Resolves only topology facts that require a new build_runner Analyzer graph.
+Future<_GenerationWatchTopology> _resolveGenerationWatchTopology({
+  required Directory hostRoot,
+  required _BuildContext buildContext,
+}) async {
+  final workspace = await CCPackageWorkspace.load(
+    buildRoot: buildContext.root,
+    hostRoot: hostRoot,
+    workspace: buildContext.workspace,
+  );
+  final targets =
+      workspace.packages.values
+          .where(
+            (package) => package.writable && package.declaresGenerationIntent,
+          )
+          .map((package) => package.name)
+          .toList()
+        ..sort();
+  if (targets.isEmpty) {
+    throw const CCPackageWorkspaceException(
+      'No writable CCRouter Builder Packages were found.',
+    );
+  }
+  final packageNames = workspace.packages.keys.toList()..sort();
+  final fingerprint = computeCCCanonicalJsonFingerprint(<String, Object?>{
+    'host': workspace.host.name,
+    'packages': packageNames,
+    'dependencies': <String, Object?>{
+      for (final name in packageNames)
+        name: workspace.packages[name]!.dependencies,
+    },
+    'targets': targets,
+  });
+  return _GenerationWatchTopology(
+    workspace: workspace,
+    targets: List.unmodifiable(targets),
+    fingerprint: fingerprint,
+  );
+}
+
+/// Runs one child session and returns the topology requiring a restart.
+Future<_GenerationWatchTopology?> _runGenerationWatchSession({
+  required Directory hostRoot,
+  required _BuildContext buildContext,
+  required _Arguments parsed,
+  required _GenerationWatchEvents events,
+  required _GenerationWatchTopology topology,
+  required Completer<void> stop,
+  required void Function(Process? process) setActiveProcess,
+  required Future<_GenerationCycleResult> Function() runInProcessCycle,
+}) async {
+  final protectionWatch = Stopwatch()..start();
+  final targetRoots = <Directory>[
+    for (final name in topology.targets)
+      topology.workspace.packages[name]!.root,
+  ];
+  final protectedOutputs = <_GeneratedArtifactsSnapshot>[
+    await _GeneratedArtifactsSnapshot.captureOutside(
+      buildContext.root,
+      targetRoots,
+    ),
+    for (final package in topology.workspace.packages.values)
+      if (!package.writable && !_isWithin(buildContext.root, package.root))
+        await _GeneratedArtifactsSnapshot.capture(package.root),
+  ];
+  protectionWatch.stop();
+
+  var command = await _buildRunnerCommand(buildContext.root, 'watch');
+  final processWatch = Stopwatch()..start();
+  late final Process process;
+  try {
+    command = await _recoverWrongBuildRunnerSnapshotBeforeWatch(
+      command,
+      buildContext.root,
+    );
+    process = await Process.start(command.executable, <String>[
+      ...command.arguments,
+      if (parsed.profile) '--verbose-durations',
+      if (buildContext.workspace) '--workspace',
+      for (final package in topology.targets) ...[
+        '--build-filter',
+        'asset:$package/lib/**',
+        '--build-filter',
+        'asset:$package/ccrouter_generated/**',
+      ],
+    ], workingDirectory: buildContext.root.path);
+  } on Object catch (error) {
+    await events.emit(
+      'failed',
+      data: {'stage': 'watch-start', 'error': '$error'},
+    );
+    exitCode = 1;
+    return null;
+  }
+  setActiveProcess(process);
+  await events.emit(
+    'watchStarted',
+    data: {
+      'elapsedMs': processWatch.elapsedMilliseconds,
+      'protectionSnapshotMs': protectionWatch.elapsedMilliseconds,
+      'topologyFingerprint': topology.fingerprint,
+    },
+  );
+  await events.emit('buildStarted', data: {'initial': true});
+
+  final signals = StreamController<_GenerationWatchSignal>();
   final outputSubscriptions = <StreamSubscription<String>>[
     process.stdout
         .transform(utf8.decoder)
         .transform(const LineSplitter())
-        .listen((line) => lines.add(_BuildRunnerWatchLine(line))),
+        .listen((line) => signals.add(_GenerationWatchSignal.line(line))),
     process.stderr
         .transform(utf8.decoder)
         .transform(const LineSplitter())
-        .listen((line) => lines.add(_BuildRunnerWatchLine(line))),
+        .listen((line) => signals.add(_GenerationWatchSignal.line(line))),
   ];
-  final iterator = StreamIterator(lines.stream);
+  String? resolutionBaseline;
+  String? resolutionStamp;
+  try {
+    resolutionBaseline = await CCPubResolutionFingerprint.capture(
+      hostRoot: hostRoot,
+      buildRoot: buildContext.root,
+    );
+    resolutionStamp = await _captureWatchResolutionStamp(
+      hostRoot: hostRoot,
+      buildRoot: buildContext.root,
+    );
+  } on Object {
+    // The first complete resolution observed by the timer becomes the baseline.
+  }
+  final sessionResolutionFingerprint = resolutionBaseline;
+  final exactResolutionPoll = Stopwatch()..start();
+  Future<void>? activeResolutionCheck;
+  late final Timer resolutionTimer;
+  resolutionTimer = Timer.periodic(_generationWatchStatusPollInterval, (_) {
+    if (activeResolutionCheck != null || stop.isCompleted) return;
+    final check = () async {
+      try {
+        var currentStamp = await _captureWatchResolutionStamp(
+          hostRoot: hostRoot,
+          buildRoot: buildContext.root,
+        );
+        if (currentStamp == resolutionStamp &&
+            exactResolutionPoll.elapsed < _watchResolutionExactPollInterval) {
+          return;
+        }
+        var current = await CCPubResolutionFingerprint.capture(
+          hostRoot: hostRoot,
+          buildRoot: buildContext.root,
+        );
+        exactResolutionPoll.reset();
+        if (resolutionBaseline == null) {
+          resolutionBaseline = current;
+          resolutionStamp = currentStamp;
+          return;
+        }
+        if (current == resolutionBaseline) {
+          resolutionStamp = currentStamp;
+          return;
+        }
+        await Future<void>.delayed(_generationWatchStatusPollInterval);
+        if (stop.isCompleted) return;
+        currentStamp = await _captureWatchResolutionStamp(
+          hostRoot: hostRoot,
+          buildRoot: buildContext.root,
+        );
+        current = await CCPubResolutionFingerprint.capture(
+          hostRoot: hostRoot,
+          buildRoot: buildContext.root,
+        );
+        exactResolutionPoll.reset();
+        if (current == resolutionBaseline) return;
+        resolutionBaseline = current;
+        resolutionStamp = currentStamp;
+        signals.add(_GenerationWatchSignal.resolutionChanged(current));
+      } on Object {
+        // Pub may atomically replace several files; retry on the next tick.
+      }
+    }();
+    activeResolutionCheck = check;
+    check.whenComplete(() {
+      if (identical(activeResolutionCheck, check)) activeResolutionCheck = null;
+    });
+  });
+  final iterator = StreamIterator(signals.stream);
+  var cycleSnapshot = await _GeneratedArtifactsSnapshot.capture(
+    buildContext.root,
+  );
   var buildWatch = Stopwatch()..start();
   final buildRunnerPhases = CCBuildRunnerPhaseCollector();
   var initialBuild = true;
   var readyEmitted = false;
+  var buildActive = true;
+  String? pendingResolutionFingerprint;
   final failureTail = <String>[];
+  _GenerationWatchTopology? nextTopology;
+
+  Future<_GenerationWatchTopology?> topologyRequiringRestart() async {
+    final current = await _resolveGenerationWatchTopology(
+      hostRoot: hostRoot,
+      buildContext: buildContext,
+    );
+    if (!topology.requiresRestartFor(current)) return null;
+    if (Platform.environment[_watchSessionRestartKillSwitch] == '1') {
+      throw const CCPackageWorkspaceException(
+        'The resolved Host topology requires a new build_runner session, but '
+        'automatic restart is disabled by '
+        'CCROUTER_DISABLE_WATCH_SESSION_RESTART=1. Stop the watch and run '
+        'one-shot generation.',
+      );
+    }
+    return current;
+  }
+
+  Future<bool> restartIfChanged() async {
+    try {
+      final changed = await topologyRequiringRestart();
+      if (changed == null) return false;
+      await cycleSnapshot.restore();
+      nextTopology = changed;
+      await events.emit(
+        'sessionRestarting',
+        data: {
+          'reason': 'topology-changed',
+          'previousTopologyFingerprint': topology.fingerprint,
+          'nextTopologyFingerprint': changed.fingerprint,
+          'packages': changed.targets,
+        },
+      );
+      process.kill(ProcessSignal.sigint);
+      return true;
+    } on Object catch (error) {
+      await cycleSnapshot.restore();
+      await events.emit(
+        'failed',
+        data: {'stage': 'topology-resolution', 'error': '$error'},
+      );
+      cycleSnapshot = await _GeneratedArtifactsSnapshot.capture(
+        buildContext.root,
+      );
+      return true;
+    }
+  }
+
+  Future<bool> runResolutionAggregation(String fingerprint) async {
+    await events.emit(
+      'resolutionStarted',
+      data: {'resolutionFingerprint': fingerprint},
+    );
+    await events.emit(
+      'aggregationStarted',
+      data: {'initial': false, 'trigger': 'resolution'},
+    );
+    final usesSubprocessReference =
+        Platform.environment[_watchInProcessCycleKillSwitch] == '1';
+    final aggregation = usesSubprocessReference
+        ? await _runWatchGenerationSubprocess(
+            hostRoot: hostRoot,
+            buildRoot: buildContext.root,
+            watchCycle: true,
+            lockHeld: true,
+            profile: parsed.profile,
+          )
+        : await runInProcessCycle();
+    if (await restartIfChanged()) return true;
+    await events.emit(
+      aggregation.succeeded ? 'aggregationSucceeded' : 'failed',
+      data: {
+        'stage': 'aggregation',
+        'initial': false,
+        'trigger': 'resolution',
+        'cycleMode': usesSubprocessReference
+            ? 'subprocessReference'
+            : 'inProcess',
+        ...aggregation.toEventData(),
+      },
+    );
+    cycleSnapshot = await _GeneratedArtifactsSnapshot.capture(
+      buildContext.root,
+    );
+    failureTail.clear();
+    return false;
+  }
+
   try {
-    while (!stop.isCompleted) {
+    while (!stop.isCompleted && nextTopology == null) {
       final hasLine = await Future.any<bool>([
         iterator.moveNext(),
         stop.future.then((_) => false),
         process.exitCode.then((_) => false),
       ]);
       if (!hasLine || stop.isCompleted) break;
-      final line = _stripAnsi(iterator.current.text);
+      final signal = iterator.current;
+      final resolutionFingerprint = signal.resolutionFingerprint;
+      if (resolutionFingerprint != null) {
+        if (buildActive) {
+          pendingResolutionFingerprint = resolutionFingerprint;
+          continue;
+        }
+        if (await runResolutionAggregation(resolutionFingerprint)) continue;
+        continue;
+      }
+      final line = _stripAnsi(signal.line!);
       buildRunnerPhases.addLine(line);
       if (line.trim().isNotEmpty) {
         _commandStderr.writeln('build_runner: $line');
@@ -245,6 +504,7 @@ Future<void> _runGenerationWatch({
       if (line.contains('Starting build #')) {
         buildRunnerPhases.reset();
         buildWatch = Stopwatch()..start();
+        buildActive = true;
         await events.emit('buildStarted', data: {'initial': false});
         continue;
       }
@@ -253,6 +513,7 @@ Future<void> _runGenerationWatch({
       if (!succeeded && !failed) continue;
 
       final restoreWatch = Stopwatch()..start();
+      buildActive = false;
       final buildRunnerReport = buildRunnerPhases.finish(line);
       for (final snapshot in protectedOutputs) {
         await snapshot.restore();
@@ -261,6 +522,7 @@ Future<void> _runGenerationWatch({
       final buildElapsed = buildWatch.elapsedMilliseconds;
       if (failed) {
         await cycleSnapshot.restore();
+        if (await restartIfChanged()) continue;
         await events.emit(
           'failed',
           data: {
@@ -278,6 +540,9 @@ Future<void> _runGenerationWatch({
         );
         failureTail.clear();
         initialBuild = false;
+        final pending = pendingResolutionFingerprint;
+        pendingResolutionFingerprint = null;
+        if (pending != null) await runResolutionAggregation(pending);
         continue;
       }
 
@@ -303,6 +568,7 @@ Future<void> _runGenerationWatch({
               profile: parsed.profile,
             )
           : await runInProcessCycle();
+      if (await restartIfChanged()) continue;
       await events.emit(
         aggregation.succeeded ? 'aggregationSucceeded' : 'failed',
         data: {
@@ -323,24 +589,62 @@ Future<void> _runGenerationWatch({
       }
       initialBuild = false;
       failureTail.clear();
+      final pending = pendingResolutionFingerprint;
+      pendingResolutionFingerprint = null;
+      if (pending != null) await runResolutionAggregation(pending);
     }
   } finally {
-    leaseTimer?.cancel();
-    for (final subscription in signalSubscriptions) {
-      await subscription.cancel();
-    }
+    resolutionTimer.cancel();
+    await activeResolutionCheck;
+    final processCode = await _stopBuildRunnerWatchProcess(process);
     for (final subscription in outputSubscriptions) {
       await subscription.cancel();
     }
     await iterator.cancel();
-    await lines.close();
-    final processCode = await process.exitCode;
-    try {
-      await generationLock.release();
-    } finally {
-      await watchOwnership.release();
+    await signals.close();
+    setActiveProcess(null);
+    if (nextTopology == null && !stop.isCompleted) {
+      try {
+        final currentResolution = await CCPubResolutionFingerprint.capture(
+          hostRoot: hostRoot,
+          buildRoot: buildContext.root,
+        );
+        if (sessionResolutionFingerprint != null &&
+            currentResolution != sessionResolutionFingerprint) {
+          if (Platform.environment[_watchSessionRestartKillSwitch] == '1') {
+            throw const CCPackageWorkspaceException(
+              'build_runner exited after Pub resolution changed, but automatic '
+              'session restart is disabled by '
+              'CCROUTER_DISABLE_WATCH_SESSION_RESTART=1. Stop the watch and '
+              'run one-shot generation.',
+            );
+          }
+          final currentTopology = await _resolveGenerationWatchTopology(
+            hostRoot: hostRoot,
+            buildContext: buildContext,
+          );
+          await cycleSnapshot.restore();
+          nextTopology = currentTopology;
+          await events.emit(
+            'sessionRestarting',
+            data: {
+              'reason': 'build-runner-exited-after-resolution-change',
+              'previousTopologyFingerprint': topology.fingerprint,
+              'nextTopologyFingerprint': currentTopology.fingerprint,
+              'packages': currentTopology.targets,
+              'exitCode': processCode,
+            },
+          );
+        }
+      } on Object catch (error) {
+        exitCode = 1;
+        await events.emit(
+          'failed',
+          data: {'stage': 'topology-resolution', 'error': '$error'},
+        );
+      }
     }
-    if (processCode != 0 && !stop.isCompleted) {
+    if (nextTopology == null && !stop.isCompleted) {
       exitCode = 1;
       await events.emit(
         'failed',
@@ -351,8 +655,42 @@ Future<void> _runGenerationWatch({
         },
       );
     }
-    await events.emit('stopped');
   }
+  return nextTopology;
+}
+
+/// Lets build_runner clean up its child before escalating a stuck shutdown.
+Future<int> _stopBuildRunnerWatchProcess(Process process) async {
+  process.kill(ProcessSignal.sigint);
+  try {
+    return await process.exitCode.timeout(const Duration(seconds: 10));
+  } on TimeoutException {
+    process.kill(ProcessSignal.sigterm);
+    return process.exitCode;
+  }
+}
+
+/// Cheap wake-up evidence for the exact resolution fingerprint monitor.
+Future<String> _captureWatchResolutionStamp({
+  required Directory hostRoot,
+  required Directory buildRoot,
+}) async {
+  final files = <File>[
+    File(path.join(hostRoot.path, 'pubspec.yaml')),
+    File(path.join(buildRoot.path, 'pubspec.yaml')),
+    File(path.join(buildRoot.path, 'pubspec.lock')),
+    File(path.join(buildRoot.path, '.dart_tool', 'package_config.json')),
+    File(path.join(buildRoot.path, '.dart_tool', 'package_graph.json')),
+  ];
+  final parts = <String>[];
+  for (final file in files) {
+    final stat = await file.stat();
+    parts.add(
+      '${file.path}\u0000${stat.type}\u0000${stat.size}\u0000'
+      '${stat.modified.microsecondsSinceEpoch}',
+    );
+  }
+  return parts.join('\u0001');
 }
 
 /// Uses Pub's cached executable snapshot and heals a missing cache via Pub.
@@ -483,10 +821,17 @@ String? _reportedBuildDuration(String line) {
   return match?.group(1);
 }
 
-final class _BuildRunnerWatchLine {
-  const _BuildRunnerWatchLine(this.text);
+/// One merged child-process or exact Pub-resolution watch signal.
+final class _GenerationWatchSignal {
+  const _GenerationWatchSignal._({this.line, this.resolutionFingerprint});
 
-  final String text;
+  const _GenerationWatchSignal.line(String line) : this._(line: line);
+
+  const _GenerationWatchSignal.resolutionChanged(String fingerprint)
+    : this._(resolutionFingerprint: fingerprint);
+
+  final String? line;
+  final String? resolutionFingerprint;
 }
 
 final class _GenerationWatchEvents {
@@ -506,6 +851,9 @@ final class _GenerationWatchEvents {
   final Directory hostRoot;
   final _GenerationWatchStatusTracker _status;
 
+  /// Rotates the child-session identity while retaining the outer watch lease.
+  void beginNewSession() => _status.beginNewSession();
+
   Future<void> emit(String type, {Map<String, Object?> data = const {}}) async {
     final timestamp = DateTime.now().toUtc().toIso8601String();
     await _status.observe(type, timestamp: timestamp, data: data);
@@ -517,6 +865,8 @@ final class _GenerationWatchEvents {
           'timestamp': timestamp,
           'buildRoot': buildRoot.path,
           'hostRoot': hostRoot.path,
+          'sessionId': _status.sessionId,
+          'eventRevision': _status.eventRevision,
           ...data,
         }),
       );
