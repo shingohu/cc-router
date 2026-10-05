@@ -143,6 +143,16 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter watch follow <host-ro
 `stopped`，只读命令会通过已释放的 owner lock 将遗留 `active` 记录显示为 `stale`；它不会
 回写历史 `status.json`。
 
+Workspace Validator 失败还会原子发布同目录的 `diagnostics.json`。它与 `status.json` 分开写入，
+最多保留 100 条结构诊断，并绑定 Host/build root、`sessionId`、`cycle`、`eventRevision` 和当前
+resolution fingerprint。成功、新 cycle 或 session restart 会发布空 snapshot 清除旧错误。
+Analyzer Plugin 只在两份文件身份完全一致且 `cycleResolutionState=matched` 时显示 authored Dart
+诊断；Pub 解析暂时落后于 `pubspec.yaml` 时只提示先执行 Pub get，不推断缺失 Owner。
+Analysis Server 通常不转发 `.dart_tool` 文件变化，插件使用 500ms 的有界 file-identity polling，
+仅在输入变化时刷新受影响文件；它不运行 Generator 或创建独立 Analyzer graph。可用
+`CCROUTER_DISABLE_ANALYZER_WATCH_BRIDGE=1` 关闭该 IDE bridge。diagnostics 写入或消费失败不会改变
+Generator/Hook 的 fail-closed 结果，最终仍需 `--no-cache --check`。
+
 watch 使用文件 stat 作为低成本唤醒信号，再以 exact-content fingerprint 确认 Pub resolution
 变化；低频 exact scan 只作事件遗漏兜底，成功证据从不依赖 mtime。需要新 Analyzer graph 或
 `--build-filter` 时发布 `sessionRestarting`，恢复当前 cycle 快照并在同一 lease 内启动新 child；

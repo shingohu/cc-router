@@ -112,6 +112,17 @@ failure to update it never changes locking, Builder, validation, restoration,
 atomic artifact publication, or the final reference gate. If an abrupt exit
 leaves an `active` record, the read-only commands report it as `stale` once the
 owner lock is released; they do not rewrite the historical status file.
+Workspace validation failures also atomically publish a bounded
+`watch/diagnostics.json` beside the status file. It is tied to Host/build root,
+session, cycle, event revision, and exact resolution fingerprint; a success,
+new cycle, or restarted session clears it. The optional Analyzer bridge accepts
+only a fully matching, resolution-stable pair and folds capability fallout from
+one missing Owner into one authored-source root cause. It polls file identities
+at 500ms because Analysis Server does not reliably forward `.dart_tool` events,
+and reanalyzes only after a change. Set
+`CCROUTER_DISABLE_ANALYZER_WATCH_BRIDGE=1` to disable this IDE-only bridge.
+Publication and consumption remain fail-open; they do not replace the final
+`--no-cache --check` gate.
 One-shot generate, check, and clean commands fail fast when that root already
 has an active watch; wait for `aggregationSucceeded` during iteration, then
 stop the watch before the final reference gate. Do not retry the blocked command

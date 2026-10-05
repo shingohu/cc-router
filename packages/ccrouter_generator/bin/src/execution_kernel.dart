@@ -3,6 +3,7 @@ part of '../ccrouter_generator.dart';
 final _commandStdoutZoneKey = Object();
 final _commandStderrZoneKey = Object();
 final _generationCycleModeZoneKey = Object();
+final _generationDiagnosticsZoneKey = Object();
 const _sharedPlanningSnapshotKillSwitch =
     'CCROUTER_DISABLE_SHARED_PLANNING_SNAPSHOT';
 const _watchEvidenceReuseKillSwitch = 'CCROUTER_DISABLE_WATCH_EVIDENCE_REUSE';
@@ -70,6 +71,7 @@ final class _GenerationCycleResult {
     required this.trace,
     required this.outputDelta,
     required this.diagnostics,
+    required this.structuredDiagnostics,
   });
 
   final int exitCode;
@@ -77,6 +79,9 @@ final class _GenerationCycleResult {
   final Map<String, Object?>? trace;
   final Map<String, Object?>? outputDelta;
   final String? diagnostics;
+
+  /// Versioned Generator diagnostics captured without parsing rendered text.
+  final List<Map<String, Object?>> structuredDiagnostics;
 
   bool get succeeded => exitCode == 0;
 
@@ -86,7 +91,20 @@ final class _GenerationCycleResult {
     if (trace != null) 'profile': trace!,
     if (outputDelta != null) 'outputDelta': outputDelta!,
     if (diagnostics != null) 'diagnostics': diagnostics!,
+    if (structuredDiagnostics.isNotEmpty)
+      'structuredDiagnostics': structuredDiagnostics,
   };
+}
+
+/// Records Workspace diagnostics for the currently executing watch cycle.
+void _recordGenerationDiagnostics(Iterable<CCWorkspaceDiagnostic> diagnostics) {
+  final recorder =
+      Zone.current[_generationDiagnosticsZoneKey]
+          as List<Map<String, Object?>>?;
+  if (recorder == null) return;
+  recorder
+    ..clear()
+    ..addAll(diagnostics.take(100).map((item) => item.toJson()));
 }
 
 /// Executes one complete generation transaction for CLI or watch.
@@ -122,6 +140,7 @@ Future<_GenerationCycleResult> _runGenerationCycle({
   Map<String, Object>? outputDelta;
   List<String>? outputChanges;
   _GeneratedArtifactsDelta? generatedArtifactsDelta;
+  final structuredDiagnostics = <Map<String, Object?>>[];
 
   Future<void> executeCycle(
     _Arguments parsed,
@@ -659,6 +678,7 @@ Future<_GenerationCycleResult> _runGenerationCycle({
       _commandStdoutZoneKey: _CommandOutputSink.buffer(outputBuffer),
     if (errorBuffer != null)
       _commandStderrZoneKey: _CommandOutputSink.buffer(errorBuffer),
+    _generationDiagnosticsZoneKey: structuredDiagnostics,
   };
   try {
     await runZoned(
@@ -678,6 +698,7 @@ Future<_GenerationCycleResult> _runGenerationCycle({
     trace: profileReport,
     outputDelta: outputDelta,
     diagnostics: cycleExitCode == 0 ? null : errorBuffer?.toString().trim(),
+    structuredDiagnostics: List.unmodifiable(structuredDiagnostics),
   );
 }
 

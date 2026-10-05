@@ -19,6 +19,179 @@ bool _has(List<Map<String, dynamic>> errors, String code) =>
     errors.any((error) => (error['code'] as String).toLowerCase() == code);
 
 void main() {
+  for (final lsp in [false, true]) {
+    test(
+      'real ${lsp ? 'LSP' : 'legacy'} server bridges and clears current watch diagnostics',
+      () async {
+        const sourcePath = 'lib/src/bridge.dart';
+        final server = await AnalysisServerSession.start({
+          sourcePath: 'const bridgeValue = 1;\n',
+        }, lsp: lsp);
+        addTearDown(server.close);
+        final statusPath = '.dart_tool/ccrouter/v1/watch/status.json';
+        final diagnosticsPath = '.dart_tool/ccrouter/v1/watch/diagnostics.json';
+        Map<String, Object?> identity(int revision) => {
+          'schemaVersion': 1,
+          'hostRoot': server.host.path,
+          'buildRoot': server.host.path,
+          'sessionId': 'session-1',
+          'eventRevision': revision,
+          'cycle': 2,
+          'resolutionFingerprint': 'resolution-1',
+        };
+        server.write(
+          diagnosticsPath,
+          jsonEncode({
+            ...identity(7),
+            'lastEvent': 'failed',
+            'cycleResolutionState': 'matched',
+            'diagnostics': [
+              {
+                'code': 'ccrouter_host_component_owner_missing',
+                'severity': 'error',
+                'message': 'Host closure is missing owner component "orders".',
+                'correction': 'Restore the owner Package and run Pub get.',
+                'rootCauseGroup': 'missing-owner:orders',
+                'primaryLocation': {
+                  'uri': 'package:e2e_host/src/bridge.dart',
+                  'line': 1,
+                  'column': 7,
+                  'length': 11,
+                },
+              },
+            ],
+          }),
+        );
+        server.write(
+          statusPath,
+          jsonEncode({...identity(7), 'active': true, 'lastEvent': 'failed'}),
+        );
+
+        const code = 'ccrouter_host_component_owner_missing';
+        await server.waitFor(sourcePath, (errors) => _has(errors, code));
+        final failedRevision = server.revisions[server.path(sourcePath)]!;
+        server.write(
+          statusPath,
+          jsonEncode({
+            ...identity(8),
+            'active': true,
+            'lastEvent': 'aggregationSucceeded',
+          }),
+        );
+        server.write(
+          diagnosticsPath,
+          jsonEncode({
+            ...identity(8),
+            'lastEvent': 'aggregationSucceeded',
+            'cycleResolutionState': 'matched',
+            'diagnostics': const <Object?>[],
+          }),
+        );
+        await server.waitFor(
+          sourcePath,
+          (errors) => !_has(errors, code),
+          after: failedRevision,
+        );
+
+        final recoveredRevision = server.revisions[server.path(sourcePath)]!;
+        server.write(
+          diagnosticsPath,
+          jsonEncode({
+            ...identity(7),
+            'lastEvent': 'failed',
+            'cycleResolutionState': 'matched',
+            'diagnostics': [
+              {
+                'code': code,
+                'severity': 'error',
+                'message': 'Stale diagnostic.',
+                'correction': 'Must not be shown.',
+                'rootCauseGroup': 'missing-owner:stale',
+                'primaryLocation': {
+                  'uri': 'package:e2e_host/src/bridge.dart',
+                  'line': 1,
+                  'column': 7,
+                  'length': 11,
+                },
+              },
+            ],
+          }),
+        );
+        await Future<void>.delayed(const Duration(seconds: 1));
+        server.checkHealthy();
+        expect(
+          server.diagnostics[server.path(sourcePath)] ?? const [],
+          isNot(contains(predicate<Map>((error) => error['code'] == code))),
+        );
+        expect(
+          server.revisions[server.path(sourcePath)] ?? recoveredRevision,
+          greaterThanOrEqualTo(recoveredRevision),
+        );
+      },
+      timeout: const Timeout(Duration(minutes: 3)),
+    );
+  }
+
+  for (final lsp in [false, true]) {
+    test(
+      'real ${lsp ? 'LSP' : 'legacy'} server publishes and clears stale Pub resolution hints',
+      () async {
+        final server = await AnalysisServerSession.start({
+          _file: 'const sample = 1;\n',
+        }, lsp: lsp);
+        addTearDown(server.close);
+        server.write(
+          '.dart_tool/ccrouter/v1/watch/status.json',
+          jsonEncode({
+            'schemaVersion': 1,
+            'active': true,
+            'hostRoot': server.host.path,
+            'buildRoot': server.host.path,
+            'sessionId': 'session-1',
+            'eventRevision': 1,
+            'cycle': 1,
+            'lastEvent': 'ready',
+          }),
+        );
+        void writeGraph(List<String> dependencies) {
+          server.write(
+            '.dart_tool/package_graph.json',
+            jsonEncode({
+              'packages': [
+                {
+                  'name': 'e2e_host',
+                  'version': '1.0.0',
+                  'dependencies': dependencies,
+                },
+              ],
+            }),
+          );
+        }
+
+        writeGraph(['ccrouter', 'demo_order']);
+        server.write('pubspec.yaml', '''
+name: e2e_host
+environment:
+  sdk: ^3.10.0
+dependencies:
+  ccrouter: any
+  # demo_order: any
+''');
+        const code = 'ccrouter_pub_resolution_stale';
+        await server.waitFor('pubspec.yaml', (errors) => _has(errors, code));
+
+        final staleRevision = server.revisions[server.path('pubspec.yaml')]!;
+        writeGraph(['ccrouter']);
+        await server.waitFor(
+          'pubspec.yaml',
+          (errors) => !_has(errors, code),
+          after: staleRevision,
+        );
+      },
+      timeout: const Timeout(Duration(minutes: 3)),
+    );
+  }
+
   test(
     'real server clears foreign annotation diagnostics despite unrelated errors',
     () async {

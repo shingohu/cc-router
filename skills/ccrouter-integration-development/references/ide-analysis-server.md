@@ -24,6 +24,26 @@ This does not promise automatic watching of arbitrary dependencies outside the
 Server's active roots. Do not silence a stale diagnostic by importing internal
 generated files; verify the installed plugin version and keep `generate --check`.
 
+An active Generator watch additionally publishes bounded structured Workspace
+diagnostics to `.dart_tool/ccrouter/v1/watch/diagnostics.json`. The plugin never
+parses CLI/log text. It accepts a snapshot only when Host/build root, session,
+cycle, event revision, and resolution fingerprint match current `status.json`,
+the cycle resolution stayed matched, and the watch is active. One missing Host
+Owner is shown at an exact authored `package:` location with capability fallout
+folded under that root cause. A successful/new cycle or session clears the old
+diagnostic. Saved `pubspec.yaml` versus resolved graph drift produces only
+`ccrouter_pub_resolution_stale`; ownership is not inferred until Pub get.
+
+Analysis Server does not reliably emit plugin filesystem events for
+`.dart_tool`. The plugin therefore compares the two watch snapshots plus
+manifest/Package-graph file identities every 500ms and reads/reanalyzes only
+after an identity change. The Timer is owned by the plugin and is cancelled on
+context replacement, shutdown, and channel close. Set
+`CCROUTER_DISABLE_ANALYZER_WATCH_BRIDGE=1` before starting Analysis Server to
+disable this bridge without disabling source rules. Snapshot publication and
+consumption are fail-open diagnostics; generation, Pub Hook failure, and the
+final `--no-cache --check` gate remain authoritative.
+
 Framework maintainers can run `test/analysis_server_integration_test.dart`
 from the isolated plugin Package. It starts actual SDK Server processes for
 Legacy/LSP diagnostics, overlays, fixes, and disk events. It uses local plugin

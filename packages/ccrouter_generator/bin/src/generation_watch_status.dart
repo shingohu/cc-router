@@ -1,6 +1,7 @@
 part of '../ccrouter_generator.dart';
 
 const _generationWatchStatusSchemaVersion = 1;
+const _generationWatchDiagnosticsSchemaVersion = 1;
 const _generationWatchStatusPollInterval = Duration(milliseconds: 200);
 
 /// Publishes a bounded local view of one watch without affecting generation.
@@ -23,6 +24,8 @@ final class _GenerationWatchStatusTracker {
   bool _sessionReady = false;
   bool _disabled = false;
   bool _warned = false;
+  bool _diagnosticsDisabled = false;
+  bool _diagnosticsWarned = false;
   int _sessionSequence = 0;
   int _cycle = 0;
   int _eventRevision = 0;
@@ -116,7 +119,7 @@ final class _GenerationWatchStatusTracker {
         }
       }
     }
-    if (!_shouldPersist(type) || _disabled) return;
+    if (!_shouldPersist(type)) return;
     _eventRevision++;
 
     final state = _stateFor(type);
@@ -165,17 +168,83 @@ final class _GenerationWatchStatusTracker {
       if (_cycleResolutionState != null)
         'cycleResolutionState': _cycleResolutionState,
     };
+    if (!_disabled) {
+      try {
+        await _writeIfChanged(
+          _generationWatchStatusFile(hostRoot),
+          '${const JsonEncoder.withIndent('  ').convert(document)}\n',
+        );
+      } on Object catch (error) {
+        _disabled = true;
+        if (!_warned) {
+          _warned = true;
+          _commandStderr.writeln(
+            'warning: CCRouter watch status updates are disabled: $error',
+          );
+        }
+      }
+    }
+    await _publishStructuredDiagnostics(
+      type: type,
+      timestamp: timestamp,
+      data: data,
+    );
+  }
+
+  /// Publishes diagnostics independently so observability stays fail-open.
+  Future<void> _publishStructuredDiagnostics({
+    required String type,
+    required String timestamp,
+    required Map<String, Object?> data,
+  }) async {
+    if (_diagnosticsDisabled ||
+        !const <String>{
+          'sessionRestarting',
+          'buildStarted',
+          'resolutionStarted',
+          'aggregationSucceeded',
+          'ready',
+          'failed',
+          'stopped',
+        }.contains(type)) {
+      return;
+    }
+    final raw = type == 'failed' ? data['structuredDiagnostics'] : null;
+    final diagnostics = raw is List
+        ? raw
+              .whereType<Map>()
+              .take(100)
+              .map((item) {
+                return item.cast<String, Object?>();
+              })
+              .toList(growable: false)
+        : const <Map<String, Object?>>[];
+    final document = <String, Object?>{
+      'schemaVersion': _generationWatchDiagnosticsSchemaVersion,
+      'hostRoot': hostRoot.path,
+      'buildRoot': buildRoot.path,
+      'sessionId': _sessionId,
+      'eventRevision': _eventRevision,
+      'cycle': _cycle,
+      'lastEvent': type,
+      'updatedAt': timestamp,
+      if (_completedResolutionFingerprint != null)
+        'resolutionFingerprint': _completedResolutionFingerprint,
+      if (_cycleResolutionState != null)
+        'cycleResolutionState': _cycleResolutionState,
+      'diagnostics': diagnostics,
+    };
     try {
       await _writeIfChanged(
-        _generationWatchStatusFile(hostRoot),
+        _generationWatchDiagnosticsFile(hostRoot),
         '${const JsonEncoder.withIndent('  ').convert(document)}\n',
       );
     } on Object catch (error) {
-      _disabled = true;
-      if (_warned) return;
-      _warned = true;
+      _diagnosticsDisabled = true;
+      if (_diagnosticsWarned) return;
+      _diagnosticsWarned = true;
       _commandStderr.writeln(
-        'warning: CCRouter watch status updates are disabled: $error',
+        'warning: CCRouter structured watch diagnostics are disabled: $error',
       );
     }
   }
@@ -394,6 +463,17 @@ File _generationWatchStatusFile(Directory hostRoot) => File(
     'v1',
     'watch',
     'status.json',
+  ),
+);
+
+File _generationWatchDiagnosticsFile(Directory hostRoot) => File(
+  path.join(
+    hostRoot.path,
+    '.dart_tool',
+    'ccrouter',
+    'v1',
+    'watch',
+    'diagnostics.json',
   ),
 );
 

@@ -799,6 +799,7 @@ Future<_GenerationCycleResult> _runWatchGenerationSubprocess({
     trace: trace,
     outputDelta: outputDelta,
     diagnostics: result.exitCode == 0 ? null : errors.trim(),
+    structuredDiagnostics: const [],
   );
 }
 

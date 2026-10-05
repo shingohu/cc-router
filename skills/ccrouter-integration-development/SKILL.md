@@ -306,6 +306,17 @@ Flutter Tool's machine stdout. Failure to publish observational state does not
 fail or weaken generation. If an abrupt exit leaves an `active` record, the
 read-only commands report it as `stale` after the owner lock is released and do
 not rewrite the historical status file.
+Workspace validation failures also publish a bounded atomic
+`watch/diagnostics.json`. The Analyzer Plugin accepts it only when Host/build
+root, session, cycle, event revision, and resolution fingerprint match the
+current status. It then maps `package:` locations through Package config and
+folds one missing Owner's capability fallout into one root-cause diagnostic.
+If saved `pubspec.yaml` dependencies differ from the resolved graph, the plugin
+only asks for Pub get and suspends ownership conclusions. Because Analysis
+Server does not reliably forward `.dart_tool` events, the plugin polls only
+these file identities every 500ms and reanalyzes after changes; it does not open
+a second Analyzer graph. Use `CCROUTER_DISABLE_ANALYZER_WATCH_BRIDGE=1` for an
+IDE-only fallback. Keep `--no-cache --check` as the final authority.
 `buildSucceeded.buildRunner` is diagnostic-only structured phase data. Its
 `invalidatedInputs` count is inferred from build_runner's public counters; it
 does not expose AssetIds, prove semantic output impact, or authorize skipping a

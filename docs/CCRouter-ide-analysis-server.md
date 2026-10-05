@@ -32,6 +32,8 @@ Fix 时才会提交一个有界源码编辑。插件不可用时，项目仍可�
 | `ccrouter_alias_invalid` | error | 校验可确定的 Service/Command Client alias |
 | `ccrouter_timeout_invalid` | error | 拒绝可确定的零值或负值 InitTask timeout |
 | `ccrouter_component_owner_dependency_missing` | error | Service/Command Contract Owner 未进入消费组件 required `dependencies` |
+| `ccrouter_host_component_owner_missing` | error | active watch 已证明 Host closure 缺少能力声明的 Owner；同一根因的级联错误折叠显示 |
+| `ccrouter_pub_resolution_stale` | warning | 保存的 Host dependencies 与 resolved Pub graph 不一致；先运行 Pub get，期间暂停 Owner 推断 |
 | `ccrouter_service_disposable_missing` | warning | 注解 Service 已有兼容的实例 `dispose()`，却未实现 Scope 识别的 `CCDisposable` |
 | `ccrouter_service_owned_resource` | warning | 注解 Service 的私有 final 字段直接持有自建可释放资源，但 Service 没有接入 Scope 释放 |
 
@@ -56,6 +58,19 @@ Owner 索引从最近的
 源码变化时失效。Command/Event/InitTask Contract 本身只进入 metadata，Component API 聚合依赖
 Package Catalog，插件不会为它们虚构同源输出。完整依赖闭包、Pattern 冲突、参数 Codec、聚合
 入口和生成物指纹仍由 `ccrouter generate --check` 权威校验。
+
+active watch 会把 Workspace Validator 的有界结构诊断原子写入
+`.dart_tool/ccrouter/v1/watch/diagnostics.json`。Plugin 不解析日志，只在该 snapshot 与
+`status.json` 的 Host/build root、session、cycle、event revision、resolution fingerprint 全部
+匹配，且 cycle resolution 未变化时消费；成功、新 cycle/session 会清空旧错误。缺失 Owner
+使用 metadata 的 `package:` 坐标定位 authored Dart，同一根因的能力级 fallout 作为 related
+locations，不在编辑器重复报错。
+
+Analysis Server 不可靠转发 `.dart_tool` 变化，因此 Plugin 每 500ms 只比较 watch snapshot、
+Host manifest 和 resolved graph 的 file identity，变化时才读取并刷新相关文件，不建立第二套
+Analyzer graph。Timer 在 context replacement、plugin shutdown 和 channel close 时取消。
+`CCROUTER_DISABLE_ANALYZER_WATCH_BRIDGE=1` 可关闭这一 bridge；结构诊断读写失败保持 fail-open，
+不改变 Generator/Pub Hook 的失败结果，也不替代 `--no-cache --check`。
 
 Owner Quick Fix 只在以下条件同时满足时提供：
 

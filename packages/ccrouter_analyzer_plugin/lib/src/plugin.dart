@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:io' as io;
+
 import 'package:analyzer/dart/analysis/analysis_context.dart';
 import 'package:analyzer/dart/analysis/analysis_context_collection.dart';
 import 'package:analyzer/dart/ast/ast.dart';
@@ -7,9 +10,11 @@ import 'package:analyzer_plugin/plugin/plugin.dart';
 import 'package:analyzer_plugin/protocol/protocol_common.dart';
 import 'package:analyzer_plugin/protocol/protocol_generated.dart';
 import 'package:ccrouter_analyzer_plugin/src/contract_owner_index.dart';
+import 'package:ccrouter_analyzer_plugin/src/generator_diagnostics_bridge.dart';
 import 'package:ccrouter_analyzer_plugin/src/package_context_cache.dart';
 import 'package:ccrouter_analyzer_plugin/src/quick_fixes.dart';
 import 'package:ccrouter_analyzer_plugin/src/source_analyzer.dart';
+import 'package:path/path.dart' as path;
 import 'package:pub_semver/pub_semver.dart';
 
 /// Analysis Server plugin that publishes CCRouter-specific diagnostics.
@@ -26,9 +31,23 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
   final CCRouterContractOwnerIndexCache _contractOwners =
       CCRouterContractOwnerIndexCache();
 
+  /// Read-only structured Generator evidence and Pub-resolution hints.
+  final CCRouterGeneratorDiagnosticsBridge _generatorDiagnostics =
+      CCRouterGeneratorDiagnosticsBridge();
+
   /// Borrowed active contexts, released before the Server disposes them.
   /// Used only to route explicit non-import dependency refreshes.
   AnalysisContextCollection? _activeContexts;
+
+  /// Polling fallback for `.dart_tool`, which Analysis Server does not
+  /// consistently expose through plugin watch events.
+  Timer? _watchBridgeTimer;
+
+  /// Prevents overlapping polling cycles when analysis exceeds one interval.
+  bool _watchBridgePollActive = false;
+
+  /// Invalidates asynchronous polling work when contexts are replaced.
+  int _watchBridgeLifecycleRevision = 0;
 
   /// Watches Dart sources and the exact generated Contract ownership index.
   /// JSON is an invalidation input only; no JSON diagnostics are published.
@@ -36,6 +55,7 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
   List<String> get fileGlobsToAnalyze => const <String>[
     '**/*.dart',
     '**/ccrouter_generated/metadata/ccrouter_package.json',
+    '**/pubspec.yaml',
   ];
 
   /// Human-readable plugin name shown by Analysis Server diagnostics.
@@ -69,7 +89,11 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
           .where(_isAuthoredDartPath)
           .toList(growable: false);
       await analyzeFiles(analysisContext: analysisContext, paths: paths);
+      await _publishPubResolutionHint(
+        path.join(analysisContext.contextRoot.root.path, 'pubspec.yaml'),
+      );
     }
+    _startWatchBridgePolling();
   }
 
   /// Releases borrowed contexts and package indexes when roots are replaced.
@@ -77,12 +101,92 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
   Future<void> beforeContextCollectionDispose({
     required AnalysisContextCollection contextCollection,
   }) async {
+    _stopWatchBridgePolling();
     _activeContexts = null;
     _packageContexts.clear();
     _contractOwners.clear();
+    _generatorDiagnostics.clear();
     await super.beforeContextCollectionDispose(
       contextCollection: contextCollection,
     );
+  }
+
+  /// Starts one low-frequency poller for the current Analysis contexts.
+  void _startWatchBridgePolling() {
+    _stopWatchBridgePolling();
+    if (!_generatorDiagnostics.enabled || _activeContexts == null) return;
+    final revision = _watchBridgeLifecycleRevision;
+    _watchBridgeTimer = Timer.periodic(const Duration(milliseconds: 500), (_) {
+      unawaited(_pollWatchBridge(revision));
+    });
+    unawaited(_pollWatchBridge(revision));
+  }
+
+  /// Re-analyzes only paths whose structured watch evidence changed.
+  Future<void> _pollWatchBridge(int lifecycleRevision) async {
+    if (_watchBridgePollActive ||
+        lifecycleRevision != _watchBridgeLifecycleRevision) {
+      return;
+    }
+    final contexts = _activeContexts;
+    if (contexts == null) return;
+    _watchBridgePollActive = true;
+    try {
+      final refresh = <String>{};
+      final resolutionChanged = <String>{};
+      for (final context in contexts.contexts) {
+        final root = io.Directory(context.contextRoot.root.path);
+        refresh.addAll(_generatorDiagnostics.pollAffectedDartPaths(root));
+        if (_generatorDiagnostics.pollPubResolutionChanged(root)) {
+          resolutionChanged.add(root.path);
+        }
+      }
+      if (lifecycleRevision != _watchBridgeLifecycleRevision) {
+        return;
+      }
+      for (final root in resolutionChanged) {
+        await _publishPubResolutionHint(path.join(root, 'pubspec.yaml'));
+      }
+      if (refresh.isEmpty) return;
+      for (final context in contexts.contexts) {
+        if (lifecycleRevision != _watchBridgeLifecycleRevision) return;
+        await analyzeFiles(
+          analysisContext: context,
+          paths: refresh
+              .where(context.contextRoot.isAnalyzed)
+              .toList(growable: false),
+        );
+      }
+    } on Object {
+      // The bridge is diagnostic-only and must not destabilize Analysis Server.
+    } finally {
+      _watchBridgePollActive = false;
+    }
+  }
+
+  /// Cancels owned polling and invalidates any asynchronous continuation.
+  void _stopWatchBridgePolling() {
+    _watchBridgeLifecycleRevision++;
+    _watchBridgeTimer?.cancel();
+    _watchBridgeTimer = null;
+  }
+
+  /// Releases lifecycle-bound polling before the plugin process shuts down.
+  @override
+  Future<PluginShutdownResult> handlePluginShutdown(
+    PluginShutdownParams parameters,
+  ) async {
+    _stopWatchBridgePolling();
+    _generatorDiagnostics.clear();
+    return super.handlePluginShutdown(parameters);
+  }
+
+  /// Releases polling if the Analysis Server channel closes unexpectedly.
+  @override
+  void onDone() {
+    _stopWatchBridgePolling();
+    _generatorDiagnostics.clear();
+    super.onDone();
   }
 
   /// Preserves original changed paths before Analyzer narrows them to Dart
@@ -91,9 +195,20 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
   @override
   Future<void> contentChanged(List<String> paths) async {
     final refresh = <String>{};
+    var resolutionInputChanged = false;
     for (final changedPath in paths) {
       _packageContexts.invalidate(changedPath);
       refresh.addAll(_contractOwners.invalidate(changedPath));
+      refresh.addAll(_generatorDiagnostics.affectedDartPaths(changedPath));
+      if (path.basename(changedPath) == 'pubspec.yaml') {
+        await _publishPubResolutionHint(changedPath);
+      }
+      if (changedPath.endsWith(path.join('.dart_tool', 'package_graph.json')) ||
+          changedPath.endsWith(
+            path.join('.dart_tool', 'package_config.json'),
+          )) {
+        resolutionInputChanged = true;
+      }
       final authored = CCRouterSourceAnalyzer.authoredPathForGenerated(
         changedPath,
       );
@@ -103,6 +218,11 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
     final contexts = _activeContexts;
     if (contexts == null) return;
     for (final context in contexts.contexts) {
+      if (resolutionInputChanged) {
+        await _publishPubResolutionHint(
+          path.join(context.contextRoot.root.path, 'pubspec.yaml'),
+        );
+      }
       await analyzeFiles(
         analysisContext: context,
         paths: refresh
@@ -173,7 +293,12 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
       contractOwners: _contractOwners.resolve(path),
       resolvedUnit: resolvedUnit,
     );
-    final errors = analysis.diagnostics
+    final diagnostics = <CCRouterAnalyzerDiagnostic>[
+      ...analysis.diagnostics,
+      for (final diagnostic in _generatorDiagnostics.diagnosticsFor(path))
+        diagnostic.toAnalyzerDiagnostic(source, analysis.lineInfo),
+    ];
+    final errors = diagnostics
         .map(
           (diagnostic) => _protocolError(path, analysis.lineInfo, diagnostic),
         )
@@ -239,6 +364,11 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
     final analyzedPaths = <String>{};
     for (final changedPath in paths) {
       _packageContexts.invalidate(changedPath);
+      analyzedPaths.addAll(
+        _generatorDiagnostics
+            .affectedDartPaths(changedPath)
+            .where(analysisContext.contextRoot.isAnalyzed),
+      );
       for (final componentSource in _contractOwners.invalidate(changedPath)) {
         if (analysisContext.contextRoot.isAnalyzed(componentSource)) {
           analyzedPaths.add(componentSource);
@@ -258,6 +388,48 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
     await analyzeFiles(
       analysisContext: analysisContext,
       paths: analyzedPaths.toList(growable: false),
+    );
+  }
+
+  /// Publishes only the fact that saved and resolved dependency sets differ.
+  Future<void> _publishPubResolutionHint(String pubspecPath) async {
+    final file = io.File(pubspecPath);
+    if (!file.existsSync()) return;
+    final hint = _generatorDiagnostics.pubResolutionHint(file);
+    if (hint == null) {
+      channel.sendNotification(
+        AnalysisErrorsParams(pubspecPath, const []).toNotification(),
+      );
+      return;
+    }
+    late final String source;
+    try {
+      source = file.readAsStringSync();
+    } on Object {
+      return;
+    }
+    final lineInfo = LineInfo.fromContent(source);
+    final start = lineInfo.getLocation(hint.offset);
+    final end = lineInfo.getLocation(hint.offset + hint.length);
+    channel.sendNotification(
+      AnalysisErrorsParams(pubspecPath, [
+        AnalysisError(
+          AnalysisErrorSeverity.WARNING,
+          AnalysisErrorType.LINT,
+          Location(
+            pubspecPath,
+            hint.offset,
+            hint.length,
+            start.lineNumber,
+            start.columnNumber,
+            endLine: end.lineNumber,
+            endColumn: end.columnNumber,
+          ),
+          hint.message,
+          'ccrouter_pub_resolution_stale',
+          correction: hint.correction,
+        ),
+      ]).toNotification(),
     );
   }
 

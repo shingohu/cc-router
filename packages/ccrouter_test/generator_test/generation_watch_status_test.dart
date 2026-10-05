@@ -152,6 +152,20 @@ environment:
       ),
     );
     final status = jsonDecode(statusFile.readAsStringSync()) as Map;
+    final diagnostics =
+        jsonDecode(
+              File(
+                path.join(
+                  host.path,
+                  '.dart_tool',
+                  'ccrouter',
+                  'v1',
+                  'watch',
+                  'diagnostics.json',
+                ),
+              ).readAsStringSync(),
+            )
+            as Map;
 
     expect(result.exitCode, 1);
     expect(status['lastEvent'], 'failed');
@@ -164,6 +178,14 @@ environment:
       status['failureDiagnostics'],
       contains('Resolved Package graph is missing'),
     );
+    expect(diagnostics['schemaVersion'], 1);
+    expect(diagnostics['hostRoot'], status['hostRoot']);
+    expect(diagnostics['buildRoot'], status['buildRoot']);
+    expect(diagnostics['sessionId'], status['sessionId']);
+    expect(diagnostics['eventRevision'], status['eventRevision']);
+    expect(diagnostics['cycle'], status['cycle']);
+    expect(diagnostics['lastEvent'], status['lastEvent']);
+    expect(diagnostics['diagnostics'], isEmpty);
   });
 
   test('watch status verifies active records against the owner lock', () async {

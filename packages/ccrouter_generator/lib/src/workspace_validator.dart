@@ -133,14 +133,160 @@ final class _WorkspacePatternConflictIndex {
   }
 }
 
+/// Severity carried by one machine-readable Workspace validation diagnostic.
+enum CCWorkspaceDiagnosticSeverity {
+  /// A validation failure that prevents generated Host assembly publication.
+  error,
+
+  /// An actionable concern that does not by itself invalidate generation.
+  warning,
+
+  /// Context that helps tooling explain a related validation failure.
+  information,
+}
+
+/// Portable authored source location emitted by Workspace validation.
+final class CCWorkspaceDiagnosticLocation {
+  /// Creates a location addressed by a `package:` URI and one-based position.
+  const CCWorkspaceDiagnosticLocation({
+    required this.uri,
+    required this.line,
+    required this.column,
+    this.length = 1,
+  });
+
+  /// Portable `package:` URI of the authored declaration.
+  final String uri;
+
+  /// One-based source line.
+  final int line;
+
+  /// One-based source column.
+  final int column;
+
+  /// Positive source length used by IDE diagnostics.
+  final int length;
+
+  /// Encodes the stable schema consumed by local Generator tooling.
+  Map<String, Object?> toJson() => <String, Object?>{
+    'uri': uri,
+    'line': line,
+    'column': column,
+    'length': length,
+  };
+}
+
+/// Additional authored location related to a primary Workspace diagnostic.
+final class CCWorkspaceRelatedDiagnosticLocation {
+  /// Creates one related location with a concise explanatory [message].
+  const CCWorkspaceRelatedDiagnosticLocation({
+    required this.message,
+    required this.location,
+  });
+
+  /// Why this location participates in the root cause.
+  final String message;
+
+  /// Portable authored declaration location.
+  final CCWorkspaceDiagnosticLocation location;
+
+  /// Encodes the related-location schema.
+  Map<String, Object?> toJson() => <String, Object?>{
+    'message': message,
+    'location': location.toJson(),
+  };
+}
+
+/// Versioned, source-oriented Workspace validation diagnostic.
+///
+/// The CLI renders [message] for compatibility. Watch and Analyzer integrations
+/// consume the structured fields and never parse that rendered text.
+final class CCWorkspaceDiagnostic {
+  /// Creates one immutable diagnostic and bounds its related locations.
+  CCWorkspaceDiagnostic({
+    required this.code,
+    required this.severity,
+    required this.message,
+    required this.rootCauseGroup,
+    this.primaryLocation,
+    Iterable<CCWorkspaceRelatedDiagnosticLocation> relatedLocations = const [],
+    this.correction,
+  }) : relatedLocations = List.unmodifiable(relatedLocations.take(20));
+
+  /// Stable machine identity independent of rendered wording.
+  final String code;
+
+  /// Generator severity used by CLI and IDE consumers.
+  final CCWorkspaceDiagnosticSeverity severity;
+
+  /// Human-readable failure text retained by the existing CLI contract.
+  final String message;
+
+  /// Stable key grouping cascades under one actionable root cause.
+  final String rootCauseGroup;
+
+  /// Best authored source location, when metadata proves one.
+  final CCWorkspaceDiagnosticLocation? primaryLocation;
+
+  /// Other authored declarations affected by the same root cause.
+  final List<CCWorkspaceRelatedDiagnosticLocation> relatedLocations;
+
+  /// Optional corrective action that does not guess an unproven Package.
+  final String? correction;
+
+  /// Encodes schema fields embedded in a watch diagnostics snapshot.
+  Map<String, Object?> toJson() => <String, Object?>{
+    'code': code,
+    'severity': severity.name,
+    'message': message,
+    'rootCauseGroup': rootCauseGroup,
+    if (primaryLocation != null) 'primaryLocation': primaryLocation!.toJson(),
+    if (relatedLocations.isNotEmpty)
+      'relatedLocations': [for (final item in relatedLocations) item.toJson()],
+    if (correction != null) 'correction': correction,
+  };
+}
+
+/// Metadata entity retained only while assigning diagnostic source locations.
+final class _WorkspaceDiagnosticEntity {
+  /// Creates one entity from a nested metadata record and its parent document.
+  const _WorkspaceDiagnosticEntity({
+    required this.kind,
+    required this.id,
+    required this.ownerId,
+    required this.value,
+    required this.document,
+  });
+
+  /// Capability or component kind used in related-location descriptions.
+  final String kind;
+
+  /// Stable capability or component identifier.
+  final String id;
+
+  /// Declared component owner, or an empty string when not applicable.
+  final String ownerId;
+
+  /// Nested metadata object carrying declaration details.
+  final Map<String, Object?> value;
+
+  /// Parent document supplying Package and source fallbacks.
+  final Map<String, Object?> document;
+}
+
 /// Result of validating every generated component and route metadata document.
 final class CCRouteWorkspaceValidationResult {
   /// Creates an immutable validation result and aggregate documentation.
   CCRouteWorkspaceValidationResult({
     required List<String> errors,
+    required List<CCWorkspaceDiagnostic> diagnostics,
     required this.machineDocument,
     required this.markdownDocument,
-  }) : errors = List.unmodifiable(errors);
+  }) : errors = List.unmodifiable(errors),
+       diagnostics = List.unmodifiable(diagnostics);
+
+  /// Structured diagnostics used by watch and Analyzer integrations.
+  final List<CCWorkspaceDiagnostic> diagnostics;
 
   /// Stable diagnostic messages; an empty list means validation succeeded.
   final List<String> errors;
@@ -173,6 +319,7 @@ abstract final class CCRouteWorkspaceValidator {
   static CCRouteWorkspaceValidationResult validate(
     Iterable<Map<String, Object?>> documents,
   ) {
+    final documentList = documents.toList(growable: false);
     final errors = <String>[];
     final components = <String, Map<String, Object?>>{};
     final componentDeclarationCounts = <String, int>{};
@@ -191,7 +338,7 @@ abstract final class CCRouteWorkspaceValidator {
     final initTasks = <String, Map<String, Object?>>{};
     final defaultServices = <String, String>{};
     var hasContractCompatibilityMetadata = false;
-    for (final document in documents) {
+    for (final document in documentList) {
       if (document['schemaVersion'] != 2 &&
           document['schemaVersion'] != 3 &&
           document['schemaVersion'] != 4) {
@@ -849,6 +996,11 @@ abstract final class CCRouteWorkspaceValidator {
     _validateParentRelationships(components, routes, errors);
     _validatePatternConflicts(routes.values, errors);
     errors.sort();
+    final diagnostics = _structuredDiagnostics(
+      errors: errors,
+      documents: documentList,
+      componentIds: components.keys.toSet(),
+    );
     final routeList =
         routes.values.map((route) {
           final implementation = routeImplementations['${route['id']}'];
@@ -872,9 +1024,263 @@ abstract final class CCRouteWorkspaceValidator {
     };
     return CCRouteWorkspaceValidationResult(
       errors: errors,
+      diagnostics: diagnostics,
       machineDocument: machineDocument,
       markdownDocument: _markdown(componentList, routeList),
     );
+  }
+
+  /// Converts compatibility strings into stable codes and authored locations.
+  static List<CCWorkspaceDiagnostic> _structuredDiagnostics({
+    required List<String> errors,
+    required List<Map<String, Object?>> documents,
+    required Set<String> componentIds,
+  }) {
+    final entities = _diagnosticEntities(documents);
+    final missingOwners = <String, List<_WorkspaceDiagnosticEntity>>{};
+    for (final entity in entities) {
+      if (!_isContractDiagnosticEntity(entity.kind) ||
+          entity.ownerId.isEmpty ||
+          componentIds.contains(entity.ownerId)) {
+        continue;
+      }
+      missingOwners.putIfAbsent(entity.ownerId, () => []).add(entity);
+    }
+
+    final diagnostics = <CCWorkspaceDiagnostic>[];
+    for (final entry in missingOwners.entries) {
+      final declarations = entry.value
+        ..sort((left, right) => left.id.compareTo(right.id));
+      final located =
+          <
+            ({
+              _WorkspaceDiagnosticEntity entity,
+              CCWorkspaceDiagnosticLocation location,
+            })
+          >[];
+      for (final entity in declarations) {
+        final location = _diagnosticLocation(entity);
+        if (location != null) located.add((entity: entity, location: location));
+      }
+      final primary = located.firstOrNull;
+      diagnostics.add(
+        CCWorkspaceDiagnostic(
+          code: 'ccrouter_host_component_owner_missing',
+          severity: CCWorkspaceDiagnosticSeverity.error,
+          message:
+              'Host closure is missing owner component "${entry.key}"; '
+              '${declarations.length} generated capability declaration(s) '
+              'cannot be completed.',
+          rootCauseGroup: 'missing-owner:${entry.key}',
+          primaryLocation: primary?.location,
+          relatedLocations: [
+            for (final item in located.skip(primary == null ? 0 : 1))
+              CCWorkspaceRelatedDiagnosticLocation(
+                message:
+                    '${item.entity.kind} "${item.entity.id}" requires the '
+                    'missing owner.',
+                location: item.location,
+              ),
+          ],
+          correction:
+              'Resolve the Package that declares component "${entry.key}" '
+              'into the Host runtime dependency closure, run Pub get, and '
+              'regenerate.',
+        ),
+      );
+    }
+
+    for (final error in errors) {
+      if (_isMissingOwnerCascade(error, missingOwners)) continue;
+      final matches = entities
+          .where((entity) => error.contains('"${entity.id}"'))
+          .toList(growable: false);
+      final primary = matches.firstOrNull;
+      diagnostics.add(
+        CCWorkspaceDiagnostic(
+          code: _diagnosticCode(error),
+          severity: CCWorkspaceDiagnosticSeverity.error,
+          message: error,
+          rootCauseGroup: _diagnosticRootCause(error, primary?.id),
+          primaryLocation: primary == null
+              ? null
+              : _diagnosticLocation(primary),
+          relatedLocations: [
+            for (final entity in matches.skip(1))
+              if (_diagnosticLocation(entity) case final location?)
+                CCWorkspaceRelatedDiagnosticLocation(
+                  message: '${entity.kind} "${entity.id}" is related.',
+                  location: location,
+                ),
+          ],
+          correction: _diagnosticCorrection(error),
+        ),
+      );
+    }
+    diagnostics.sort((left, right) => left.message.compareTo(right.message));
+    return List.unmodifiable(diagnostics);
+  }
+
+  /// Enumerates source-bearing entities from generated metadata documents.
+  static List<_WorkspaceDiagnosticEntity> _diagnosticEntities(
+    List<Map<String, Object?>> documents,
+  ) {
+    const collections = <String, ({String kind, String idKey})>{
+      'components': (kind: 'Component', idKey: 'id'),
+      'routes': (kind: 'Route', idKey: 'id'),
+      'routeImplementations': (kind: 'Route implementation', idKey: 'routeId'),
+      'serviceContracts': (kind: 'Service contract', idKey: 'id'),
+      'serviceImplementations': (kind: 'Service implementation', idKey: 'id'),
+      'commandContracts': (kind: 'Command contract', idKey: 'id'),
+      'commandHandlers': (kind: 'Command Handler', idKey: 'id'),
+      'eventContracts': (kind: 'Event contract', idKey: 'id'),
+      'eventSubscriptions': (kind: 'Event Subscriber', idKey: 'id'),
+      'initTaskContracts': (kind: 'InitTask Contract', idKey: 'id'),
+      'initTasks': (kind: 'InitTask', idKey: 'id'),
+      'contributions': (kind: 'Component contribution', idKey: 'id'),
+    };
+    final result = <_WorkspaceDiagnosticEntity>[];
+    for (final document in documents) {
+      for (final collection in collections.entries) {
+        for (final value in _objects(document[collection.key])) {
+          final id = '${value[collection.value.idKey] ?? ''}';
+          if (id.isEmpty) continue;
+          result.add(
+            _WorkspaceDiagnosticEntity(
+              kind: collection.value.kind,
+              id: id,
+              ownerId: '${value['componentId'] ?? ''}',
+              value: value,
+              document: document,
+            ),
+          );
+        }
+      }
+    }
+    return result;
+  }
+
+  /// Whether an entity declares a capability whose owner must be in the Host.
+  static bool _isContractDiagnosticEntity(String kind) => switch (kind) {
+    'Route' ||
+    'Service contract' ||
+    'Command contract' ||
+    'Event contract' ||
+    'InitTask Contract' => true,
+    _ => false,
+  };
+
+  /// Locates a declaration through exact metadata rather than name guessing.
+  static CCWorkspaceDiagnosticLocation? _diagnosticLocation(
+    _WorkspaceDiagnosticEntity entity,
+  ) {
+    for (final candidate in [
+      entity.value['declaration'],
+      entity.value['implementation'],
+      entity.value['contract'],
+      entity.value,
+    ]) {
+      if (candidate is! Map) continue;
+      final map = candidate.cast<Object?, Object?>();
+      final uri = map['packageUri'];
+      if (uri is String && uri.startsWith('package:')) {
+        return CCWorkspaceDiagnosticLocation(
+          uri: uri,
+          line: _positiveInt(map['line']) ?? 1,
+          column: _positiveInt(map['column']) ?? 1,
+        );
+      }
+    }
+    final package = '${entity.document['package'] ?? ''}';
+    final source = '${entity.document['source'] ?? ''}';
+    if (package.isEmpty || !source.startsWith('lib/')) return null;
+    return CCWorkspaceDiagnosticLocation(
+      uri: 'package:$package/${source.substring('lib/'.length)}',
+      line: 1,
+      column: 1,
+    );
+  }
+
+  /// Reads a positive JSON integer used by source metadata.
+  static int? _positiveInt(Object? value) =>
+      value is int && value > 0 ? value : null;
+
+  /// Suppresses capability-level fallout once a missing owner is primary.
+  static bool _isMissingOwnerCascade(
+    String error,
+    Map<String, List<_WorkspaceDiagnosticEntity>> missingOwners,
+  ) {
+    const cascadeMarkers = <String>[
+      'unknown owner component',
+      'has no Handler',
+      'has no implementation',
+      'has no CCRouteImplementation',
+      'references missing Contract',
+    ];
+    if (!cascadeMarkers.any(error.contains)) return false;
+    for (final entry in missingOwners.entries) {
+      if (error.contains('"${entry.key}"') ||
+          entry.value.any((entity) => error.contains('"${entity.id}"'))) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /// Assigns a bounded stable category to compatibility text.
+  static String _diagnosticCode(String error) {
+    if (error.startsWith('Unsupported metadata schema')) {
+      return 'ccrouter_metadata_schema_unsupported';
+    }
+    if (error.contains('declared more than once') ||
+        error.contains('more than one implementation') ||
+        error.contains('conflicting descriptors')) {
+      return 'ccrouter_workspace_duplicate';
+    }
+    if (error.contains('invalid') || error.contains('must be valid')) {
+      return 'ccrouter_workspace_identifier_invalid';
+    }
+    if (error.contains('cycle')) return 'ccrouter_workspace_dependency_cycle';
+    if (error.contains('ambiguous patterns')) {
+      return 'ccrouter_route_pattern_ambiguous';
+    }
+    if (error.contains('does not require') ||
+        error.contains('dependency') ||
+        error.contains('requires missing')) {
+      return 'ccrouter_component_dependency_invalid';
+    }
+    if (error.contains('unknown owner component')) {
+      return 'ccrouter_component_owner_unknown';
+    }
+    if (error.contains('has no Handler') ||
+        error.contains('has no implementation') ||
+        error.contains('has no CCRouteImplementation')) {
+      return 'ccrouter_capability_implementation_missing';
+    }
+    if (error.contains('unknown source exposure')) {
+      return 'ccrouter_route_exposure_invalid';
+    }
+    return 'ccrouter_workspace_validation_failed';
+  }
+
+  /// Computes one stable grouping key without depending on message ordering.
+  static String _diagnosticRootCause(String error, String? entityId) =>
+      '${_diagnosticCode(error)}:${entityId ?? 'workspace'}';
+
+  /// Supplies conservative corrections only when the text proves the action.
+  static String? _diagnosticCorrection(String error) {
+    if (error.contains('does not require owner component') ||
+        error.contains('does not require it')) {
+      return 'Declare the proven owner as a required component dependency and '
+          'regenerate.';
+    }
+    if (error.contains('has no Handler') ||
+        error.contains('has no implementation') ||
+        error.contains('has no CCRouteImplementation')) {
+      return 'Add the matching implementation in its declared owner component '
+          'and regenerate.';
+    }
+    return null;
   }
 
   /// Converts loosely decoded JSON arrays into checked object maps.

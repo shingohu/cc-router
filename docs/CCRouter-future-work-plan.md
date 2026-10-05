@@ -267,23 +267,18 @@ Workspace/插件 analyze 及缓存/无缓存生成物检查通过。
   因而“安全删除必定复用原 child”不是可靠上游契约；supervisor 仅在 exact resolution 已变化时
   将该退出收敛为受控 restart，resolution 未变化的退出仍 fail closed。监视器以 stat 低成本
   唤醒、exact fingerprint 判定并保留低频 exact 兜底，不把 mtime 当正确性证明。
-- [ ] **结构化生成诊断与 Analyzer watch bridge**：当前 Workspace Validator 只返回无位置
-  字符串，Host 缺失实现 Package 会展开为多条 Handler、Route、InitTask 和 owner 级联错误；
-  Dart Analyzer 又会因 Workspace `package_config.json` 仍包含兄弟 Package 而无法证明 Host closure
-  已缺失实现。先将 Validator 诊断收敛为版本化对象，至少包含稳定 `code`、severity、
-  primary/related source locations、correction 和 root-cause group；CLI 保留可读文本渲染，但将
-  “Host closure 缺失 owner component”作为主错误，其余问题折叠为 related diagnostics。
-  只在 resolved graph 与精确 metadata 能唯一证明实现 Package 时定位并建议修改 Host
-  `pubspec.yaml`；否则定位到消费组件或 Contract 声明，不根据 component/package 名称猜测。
-  watch 再原子发布有界的结构化诊断，并绑定 Host、session identity、cycle 和
-  resolution fingerprint；成功 cycle 清理旧诊断，旧 session/cycle 不得覆盖新状态。
-  Analyzer Plugin 只消费该结构化证据并刷新受影响的 authored Dart 位置，不解析控制台
-  文本、不运行 Generator，也不替代 `--no-cache --check`。另增加窄化的 Host
-  `pubspec.yaml`/resolved graph 失配提示，覆盖保存依赖变化但未主动运行 Pub Hook 的空窗；
-  该提示只要求重新解析依赖，不在旧 graph 上给出所有权结论。实现顺序应复用上一项的
-  session identity，保留 Analyzer bridge 独立 kill switch，且诊断发布失败不得改变生成结果。
-  验收覆盖无 Pub Hook 保存、活动 watch 失败/恢复、级联折叠、位置跳转、旧 cycle 拒绝、
-  Legacy/LSP 真实 Analysis Server 与 CLI 原文兼容性。
+- [x] **结构化生成诊断与 Analyzer watch bridge**：Workspace Validator 保留原 CLI 全量错误文本，
+  同时返回带稳定 code、severity、`package:` 位置、correction 和 root-cause group 的结构诊断；
+  同一缺失 Owner 引起的能力级错误在结构 snapshot 中保留 related locations，IDE 当前只显示
+  折叠后的一个主错误。watch 独立
+  原子发布 `diagnostics.json`，绑定 Host/build root、session、cycle、event revision 和 resolution
+  fingerprint，成功、新 cycle/session 会清空。Analyzer 只接受与当前 `status.json` 完全一致、
+  resolution matched 的证据，并以 500ms file-identity polling 弥补 Analysis Server 不转发
+  `.dart_tool` 事件的限制；只有 identity 变化才重新分析。`pubspec.yaml` 与 resolved graph 失配
+  只发布 `ccrouter_pub_resolution_stale`，不推断 Owner。Legacy/LSP 均已验证错误出现、恢复清除、
+  旧 revision 拒绝与 stale Pub 提示清除；bridge 可由
+  `CCROUTER_DISABLE_ANALYZER_WATCH_BRIDGE=1` 独立关闭，诊断发布失败不改变生成结果；CLI 原文
+  兼容性、无 Pub Hook 保存、活动 watch 失败/恢复、位置跳转和旧 cycle 拒绝均有回归覆盖。
 - [x] KV Storage Demo 已提供 Scoped Facade，通过 Host-owned Context Provider 动态解析用户、
   API 环境和设备命名空间，并保留内存 Backend 和可替换 Backend 边界。真实持久化、Secure
   Storage 和生产 Session/Environment/Device 绑定仍由应用 Composition Root 落地。

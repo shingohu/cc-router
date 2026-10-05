@@ -972,6 +972,7 @@ Future<bool> _generateResolvedWorkspace(
     ),
   ]..sort();
   if (errors.isNotEmpty) {
+    _recordGenerationDiagnostics(validation.diagnostics);
     validationSpan?.finish(
       status: 'failed',
       counts: {'documents': documents.length, 'errors': errors.length},

@@ -732,6 +732,43 @@ void main() {
       ),
     ]);
     expect(result.errors, contains(contains('unknown owner component')));
+    final diagnostic = result.diagnostics.singleWhere(
+      (item) => item.code == 'ccrouter_host_component_owner_missing',
+    );
+    expect(diagnostic.rootCauseGroup, 'missing-owner:missing');
+  });
+
+  test('missing owner diagnostics retain exact authored locations', () {
+    final missing = route(
+      'orders.detail',
+      'orders',
+      publicContract: true,
+      contractPackage: 'order_contracts',
+    );
+    missing['declaration'] = {
+      'packageUri': 'package:order_contracts/src/detail.dart',
+      'line': 12,
+      'column': 7,
+    };
+    final result = CCRouteWorkspaceValidator.validate([
+      document(
+        package: 'order_contracts',
+        source: 'lib/src/detail.dart',
+        components: const [],
+        routes: [missing],
+      ),
+    ]);
+
+    expect(result.diagnostics, hasLength(1));
+    final diagnostic = result.diagnostics.single;
+    expect(diagnostic.code, 'ccrouter_host_component_owner_missing');
+    expect(
+      diagnostic.primaryLocation?.uri,
+      'package:order_contracts/src/detail.dart',
+    );
+    expect(diagnostic.primaryLocation?.line, 12);
+    expect(diagnostic.primaryLocation?.column, 7);
+    expect(diagnostic.toJson()['severity'], 'error');
   });
 
   test('rejects duplicate and unknown component contributions', () {

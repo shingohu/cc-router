@@ -1257,6 +1257,16 @@ fail closed，并要求停止 watch 后运行 one-shot，供紧急回退和 A/B 
 不会改变生成锁、Builder、Validator、原子发布或最终参考门禁。若 watch 被强制终止而来不及
 写入 `stopped`，只读命令会根据已释放的 owner lock 将遗留 `active` 记录显示为 `stale`，
 但不会改写历史 `status.json`。
+Workspace Validator 失败时，watch 还会独立原子发布
+`.dart_tool/ccrouter/v1/watch/diagnostics.json`。该文件只包含最多 100 条版本化结构诊断，并绑定
+Host/build root、session、cycle、`eventRevision` 与 Pub resolution fingerprint；成功、新 cycle
+或 session restart 会清空旧诊断。Analyzer Plugin 只消费与当前 `status.json` 完全匹配且
+resolution 未在 cycle 中变化的失败证据，把同一缺失 Owner 引起的 Route/Service/Command/Event/
+InitTask 级联折叠到 authored Dart 主位置。`pubspec.yaml` 与 resolved Package graph 暂时不一致时，
+IDE 只提示先运行 Pub get，不猜测 Owner。Analysis Server 不可靠转发 `.dart_tool` 文件事件，因此
+插件每 500ms 只比较两个 snapshot 与 Pub 输入的文件 identity，变化时才重新分析相关文件；不创建
+第二套 Analyzer graph。设置 `CCROUTER_DISABLE_ANALYZER_WATCH_BRIDGE=1` 可关闭该 bridge。
+诊断发布/消费均为 fail-open 可观察性，不改变生成成功与否；CI 仍以 `--no-cache --check` 为权威。
 Builder 成功后的 watch cycle 会直接进入已完成 Builder 的聚合路径，避免重复执行普通 fast-path
 inspection 与 Build Plan 推导，但仍保留 input fingerprint/barrier、preflight、快照、Validator、
 聚合和状态写入。聚合 cycle 默认在 watch 进程内执行，避免再次启动 Dart、加载 generator AOT
