@@ -20,3 +20,7 @@
   diagnostic instead of waiting indefinitely behind an active root watch;
   watch startup also fails fast while a one-shot command owns or awaits the
   root generation lock.
+- Watch aggregation cycles now execute through the generator kernel in process,
+  avoiding a fresh Dart/generator startup after every successful Builder cycle.
+  `CCROUTER_DISABLE_WATCH_IN_PROCESS_CYCLE=1` restores the subprocess reference
+  path for byte-for-byte and timing comparisons.

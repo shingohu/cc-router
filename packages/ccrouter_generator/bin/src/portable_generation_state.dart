@@ -30,7 +30,7 @@ abstract final class _CCPortableGenerationState {
     );
     for (final package in packages) {
       if (!package.indexFile.existsSync()) {
-        stderr.writeln(
+        _commandStderr.writeln(
           'error: Read-only CCRouter Package "${package.name}" has no published '
           'lib/src/ccrouter_generated/metadata/ccrouter_package.json. Regenerate that '
           'Package before consuming it.',
@@ -39,7 +39,7 @@ abstract final class _CCPortableGenerationState {
       }
       final verification = results[package.name]!;
       if (!verification.valid) {
-        stderr.writeln(
+        _commandStderr.writeln(
           'error: Read-only CCRouter Package "${package.name}" has an '
           'invalid Portable Generation State '
           '(${verification.reason.name}). Regenerate and '

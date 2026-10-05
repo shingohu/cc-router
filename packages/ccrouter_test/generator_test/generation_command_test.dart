@@ -1346,7 +1346,7 @@ void probe() {
   );
 
   test(
-    'execution-kernel edits invalidate the generation tool identity',
+    'generation-cycle kernel edits invalidate the generation tool identity',
     () async {
       final seeded = await _generateDemo(['--no-cache']);
       expect(seeded.exitCode, 0, reason: '${seeded.stderr}');
@@ -1357,7 +1357,7 @@ void probe() {
           'ccrouter_generator',
           'bin',
           'src',
-          'execution_kernel.dart',
+          'generation_watch.dart',
         ),
       );
       final original = probe.readAsBytesSync();

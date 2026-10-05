@@ -436,3 +436,17 @@ state 写入。`CCROUTER_DISABLE_WATCH_CYCLE_OPTIMIZATION=1` 恢复原路径。
 kill-switch reference `1193ms`，单样本减少 `83ms`（约 7%）。主要剩余时间仍是输入证明、聚合与
 两类本地 state 更新；该结果不是 P95，也不支持跳过 Validator 或重新引入 AST/private body
 fingerprint。
+
+### 10.2 generation cycle 进程内执行
+
+post-Builder 路径原先每轮通过子进程重新进入 generator CLI，虽然不再启动 build_runner，仍会
+重复支付 Dart process、generator entrypoint 和 CLI library graph 的启动成本。现在 one-shot 与
+watch 共享结构化 generation cycle result；watch 默认在进程内执行并隔离普通 stdout，machine
+stream 仍逐行保持 schema `1` NDJSON。`CCROUTER_DISABLE_WATCH_IN_PROCESS_CYCLE=1` 保留原
+subprocess reference，`aggregationSucceeded.cycleMode` 明确记录实际路径。
+
+同机、同一测试进程连续运行默认与 reference 路径，全部受管产物逐字节一致且 `files=0`：
+in-process `1083ms`，subprocess reference `2626ms`，单样本减少 `1543ms`（约 59%）。完整
+generator suite 并发负载下的观察值分别为 `2062ms` 与 `4127ms`，方向一致但不纳入基准结论。
+这些仍不是 P50/P95；它只验证消除重复进程启动有明确收益，不能据此缩减 input barrier、快照、
+Validator、原子写入或最终 `--no-cache --check`。

@@ -339,7 +339,11 @@ watch 同样会快速失败，调用方可在命令完成后重试启动 watch�
 当前只支持单 build root，不合并嵌套 Package Host 的独立 Pub root。
 Builder 成功后的 cycle 会跳过已无决策价值的普通 fast-path inspection 和 Build Plan 推导，
 但不跳过 input barrier、preflight、Validator、聚合、快照或状态写入。设置
-`CCROUTER_DISABLE_WATCH_CYCLE_OPTIMIZATION=1` 可恢复旧 cycle 路径做 A/B 对照。
+`CCROUTER_DISABLE_WATCH_CYCLE_OPTIMIZATION=1` 可恢复旧 cycle planning 路径做 A/B 对照。
+cycle 默认直接复用 watch 进程内的 generation kernel，不再为每轮启动 generator 子进程；
+machine 事件通过 `aggregationSucceeded.cycleMode=inProcess` 明确该路径。设置
+`CCROUTER_DISABLE_WATCH_IN_PROCESS_CYCLE=1` 可恢复 `subprocessReference`，用于逐字节和耗时
+A/B；该开关不允许跳过快照、Validator、原子提交或最终 `--no-cache --check`。
 
 生成主路径不会计算文件闭包 shadow，也不会为此扫描 Workspace Dart 文件。历史 shadow
 采样保留在性能报告中，仅作为 benchmark/tooling 研究数据；它不参与 Build Plan、Tool

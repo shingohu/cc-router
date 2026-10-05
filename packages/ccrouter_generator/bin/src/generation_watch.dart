@@ -5,25 +5,31 @@ const _watchLockEnvironment = 'CCROUTER_WATCH_LOCK_HELD';
 const _watchKillSwitch = 'CCROUTER_DISABLE_BUILD_WATCH';
 const _watchCycleOptimizationKillSwitch =
     'CCROUTER_DISABLE_WATCH_CYCLE_OPTIMIZATION';
+const _watchInProcessCycleKillSwitch =
+    'CCROUTER_DISABLE_WATCH_IN_PROCESS_CYCLE';
 const _buildRunnerSuccessPattern = 'Built with build_runner';
 const _buildRunnerFailurePattern = 'Failed to build with build_runner';
 
 bool get _isWatchAggregationCycle =>
+    _generationCycleMode?.watchCycle ??
     Platform.environment[_watchCycleEnvironment] == '1';
 
 bool get _watchOwnsGenerationLock =>
-    _isWatchAggregationCycle &&
-    Platform.environment[_watchLockEnvironment] == '1';
+    _generationCycleMode?.lockHeld ??
+    (_isWatchAggregationCycle &&
+        Platform.environment[_watchLockEnvironment] == '1');
 
 bool get _usesOptimizedWatchCycle =>
-    _isWatchAggregationCycle &&
-    Platform.environment[_watchCycleOptimizationKillSwitch] != '1';
+    _generationCycleMode?.optimized ??
+    (_isWatchAggregationCycle &&
+        Platform.environment[_watchCycleOptimizationKillSwitch] != '1');
 
 /// Keeps build_runner's AOT entrypoint and Analyzer graph alive for one root.
 Future<void> _runGenerationWatch({
   required Directory hostRoot,
   required _BuildContext buildContext,
   required _Arguments parsed,
+  required Future<_GenerationCycleResult> Function() runInProcessCycle,
 }) async {
   final events = _GenerationWatchEvents(
     machine: parsed.machine,
@@ -218,7 +224,7 @@ Future<void> _runGenerationWatch({
       if (!hasLine || stop.isCompleted) break;
       final line = _stripAnsi(iterator.current.text);
       if (line.trim().isNotEmpty) {
-        stderr.writeln('build_runner: $line');
+        _commandStderr.writeln('build_runner: $line');
         failureTail.add(line);
         if (failureTail.length > 30) failureTail.removeAt(0);
       }
@@ -268,17 +274,24 @@ Future<void> _runGenerationWatch({
         },
       );
       events.emit('aggregationStarted', data: {'initial': initialBuild});
-      final aggregation = await _runWatchGenerationSubprocess(
-        hostRoot: hostRoot,
-        buildRoot: buildContext.root,
-        watchCycle: true,
-        lockHeld: true,
-      );
+      final usesSubprocessReference =
+          Platform.environment[_watchInProcessCycleKillSwitch] == '1';
+      final aggregation = usesSubprocessReference
+          ? await _runWatchGenerationSubprocess(
+              hostRoot: hostRoot,
+              buildRoot: buildContext.root,
+              watchCycle: true,
+              lockHeld: true,
+            )
+          : await runInProcessCycle();
       events.emit(
         aggregation.succeeded ? 'aggregationSucceeded' : 'failed',
         data: {
           'stage': 'aggregation',
           'initial': initialBuild,
+          'cycleMode': usesSubprocessReference
+              ? 'subprocessReference'
+              : 'inProcess',
           ...aggregation.toEventData(),
         },
       );
@@ -328,6 +341,7 @@ Future<List<String>> _buildRunnerCommand(
   Directory buildRoot,
   String command,
 ) async {
+  final dartExecutable = _dartVmExecutable();
   final snapshotDirectory = Directory(
     path.join(buildRoot.path, '.dart_tool', 'pub', 'bin', 'build_runner'),
   );
@@ -347,7 +361,7 @@ Future<List<String>> _buildRunnerCommand(
           right.lastModifiedSync().compareTo(left.lastModifiedSync()),
     );
     if (snapshots.isNotEmpty) {
-      return [Platform.resolvedExecutable, snapshots.first.path, command];
+      return [dartExecutable, snapshots.first.path, command];
     }
   }
 
@@ -365,7 +379,7 @@ Future<List<String>> _buildRunnerCommand(
     final packageRoot = packageConfig.uri.resolve(rootUri).toFilePath();
     final entrypoint = File(path.join(packageRoot, 'bin', 'build_runner.dart'));
     if (entrypoint.existsSync()) {
-      return [Platform.resolvedExecutable, entrypoint.path, command];
+      return [dartExecutable, entrypoint.path, command];
     }
   }
   throw const FileSystemException(
@@ -373,7 +387,19 @@ Future<List<String>> _buildRunnerCommand(
   );
 }
 
-Future<_WatchGenerationResult> _runWatchGenerationSubprocess({
+/// Resolves the Dart CLI even when Pub launched this command via AOT runtime.
+String _dartVmExecutable() {
+  final resolved = File(Platform.resolvedExecutable);
+  if (path.basenameWithoutExtension(resolved.path) != 'dartaotruntime') {
+    return resolved.path;
+  }
+  final sibling = File(
+    path.join(resolved.parent.path, Platform.isWindows ? 'dart.exe' : 'dart'),
+  );
+  return sibling.existsSync() ? sibling.path : resolved.path;
+}
+
+Future<_GenerationCycleResult> _runWatchGenerationSubprocess({
   required Directory hostRoot,
   required Directory buildRoot,
   required bool watchCycle,
@@ -420,8 +446,9 @@ Future<_WatchGenerationResult> _runWatchGenerationSubprocess({
       );
     }
   }
-  if (result.exitCode != 0 && errors.trim().isNotEmpty) stderr.write(errors);
-  return _WatchGenerationResult(
+  if (result.exitCode != 0 && errors.trim().isNotEmpty)
+    _commandStderr.write(errors);
+  return _GenerationCycleResult(
     exitCode: result.exitCode,
     elapsedMs: stopwatch.elapsedMilliseconds,
     trace: trace,
@@ -455,32 +482,6 @@ final class _BuildRunnerWatchLine {
   final String text;
 }
 
-final class _WatchGenerationResult {
-  const _WatchGenerationResult({
-    required this.exitCode,
-    required this.elapsedMs,
-    required this.trace,
-    required this.outputDelta,
-    required this.diagnostics,
-  });
-
-  final int exitCode;
-  final int elapsedMs;
-  final Map<String, Object?>? trace;
-  final Map<String, Object?>? outputDelta;
-  final String? diagnostics;
-
-  bool get succeeded => exitCode == 0;
-
-  Map<String, Object?> toEventData() => {
-    'exitCode': exitCode,
-    'elapsedMs': elapsedMs,
-    if (trace != null) 'profile': trace!,
-    if (outputDelta != null) 'outputDelta': outputDelta!,
-    if (diagnostics != null) 'diagnostics': diagnostics!,
-  };
-}
-
 final class _GenerationWatchEvents {
   const _GenerationWatchEvents({
     required this.machine,
@@ -494,7 +495,7 @@ final class _GenerationWatchEvents {
 
   void emit(String type, {Map<String, Object?> data = const {}}) {
     if (machine) {
-      stdout.writeln(
+      _commandStdout.writeln(
         jsonEncode(<String, Object?>{
           'schemaVersion': 1,
           'type': type,
@@ -507,7 +508,7 @@ final class _GenerationWatchEvents {
       return;
     }
     final elapsed = data['elapsedMs'];
-    stdout.writeln(
+    _commandStdout.writeln(
       'CCRouter watch $type${elapsed is int ? ' (${elapsed}ms)' : ''}.',
     );
   }

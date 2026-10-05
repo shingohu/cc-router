@@ -811,6 +811,11 @@ fingerprints and barriers, dependency preflight, artifact snapshots, Workspace
 validation, aggregation, atomic publication, and local state writes remain.
 Set `CCROUTER_DISABLE_WATCH_CYCLE_OPTIMIZATION=1` to restore the reference cycle
 for byte-for-byte comparison without turning off watch.
+The aggregation cycle reuses the watch process and reports
+`aggregationSucceeded.cycleMode=inProcess`. For differential diagnosis,
+`CCROUTER_DISABLE_WATCH_IN_PROCESS_CYCLE=1` restores the
+`subprocessReference` implementation; compare all managed artifact bytes and
+still finish with `--no-cache --check`.
 
 The Build Plan separately reports `suggested` and `actual`. Only
 `actual=aggregateOnly` means build_runner was skipped, and that optimization is

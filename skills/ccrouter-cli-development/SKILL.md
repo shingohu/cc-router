@@ -104,6 +104,11 @@ Build Plan decision. It retains input barriers, preflight, snapshots,
 validation, aggregation, and local state writes. Set
 `CCROUTER_DISABLE_WATCH_CYCLE_OPTIMIZATION=1` to restore the reference cycle for
 byte-for-byte A/B diagnosis without disabling watch.
+Aggregation runs through the in-process generation kernel by default; machine
+events report `aggregationSucceeded.cycleMode=inProcess`. Set
+`CCROUTER_DISABLE_WATCH_IN_PROCESS_CYCLE=1` only for the subprocess reference
+used in byte-for-byte or timing A/B checks. Neither switch weakens the final
+`--no-cache --check` gate.
 `input-delta` compares exact Package facts with the last successful local Build
 Plan: `authored` is an own-source/config change, `resolutionOnly` means unchanged
 own input with changed resolution identity. This is not a proven causal edge or

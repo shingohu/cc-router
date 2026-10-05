@@ -1223,8 +1223,12 @@ CI 仍以 `generate <host> --no-cache --check` 为权威。一个活动 watch �
 拥有独立 Pub build root 的 Package Host 应各自启动 watch，不做跨 root 合并。
 Builder 成功后的 watch cycle 会直接进入已完成 Builder 的聚合路径，避免重复执行普通 fast-path
 inspection 与 Build Plan 推导，但仍保留 input fingerprint/barrier、preflight、快照、Validator、
-聚合和状态写入。`CCROUTER_DISABLE_WATCH_CYCLE_OPTIMIZATION=1` 只恢复旧 cycle orchestration，
-用于逐字节 A/B 排查，不会关闭 watch。
+聚合和状态写入。聚合 cycle 默认在 watch 进程内执行，避免再次启动 Dart、加载 generator AOT
+entrypoint 和恢复 CLI library graph；`aggregationSucceeded.cycleMode` 为 `inProcess`。设置
+`CCROUTER_DISABLE_WATCH_IN_PROCESS_CYCLE=1` 可恢复 subprocess reference（事件值为
+`subprocessReference`）做逐字节与耗时 A/B；`CCROUTER_DISABLE_WATCH_CYCLE_OPTIMIZATION=1`
+则只恢复旧 cycle planning 路径。两个 kill switch 均不关闭 watch，也不改变最终
+`--no-cache --check` 的权威性。
 
 `--profile` 的 `input-delta` 对比上次成功的本机 Build Plan：`authored` 是自身源码/配置变化，
 `resolutionOnly` 是自身未变但解析身份变化，另列工具与 Host 图变化。它不证明具体依赖边或

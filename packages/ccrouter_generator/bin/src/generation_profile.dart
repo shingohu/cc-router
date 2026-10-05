@@ -50,7 +50,7 @@ final class _GenerationProfileTrace {
   }
 
   /// Emits stable JSON and atomically persists the latest local trace.
-  Future<void> write({
+  Future<Map<String, Object>> write({
     required Directory buildRoot,
     required Directory hostRoot,
     required String command,
@@ -69,7 +69,7 @@ final class _GenerationProfileTrace {
       'spans': [for (final entry in orderedSpans) entry.$2.toJson()],
     };
     final encoded = jsonEncode(report);
-    stdout.writeln('CCRouter profile trace=$encoded');
+    _commandStdout.writeln('CCRouter profile trace=$encoded');
     try {
       final relativeHost = path.normalize(
         path.relative(hostRoot.path, from: buildRoot.path),
@@ -90,13 +90,14 @@ final class _GenerationProfileTrace {
         ),
       );
       await _writeIfChanged(reportFile, '$encoded\n');
-      stdout.writeln(
+      _commandStdout.writeln(
         'CCRouter profile report='
         '.dart_tool/ccrouter/v1/profiles/$hostIdentity/latest.json',
       );
     } on Object {
-      stdout.writeln('CCRouter profile report=write-failed');
+      _commandStdout.writeln('CCRouter profile report=write-failed');
     }
+    return report;
   }
 
   void _complete(
@@ -277,7 +278,7 @@ abstract final class _GenerationProfile {
   /// Reports exact added/removed/modified artifact counts before check restores.
   /// Code, JSON metadata, Markdown and portable proof state stay distinct: a
   /// changed proof is not a changed business API, and equal Dart is not equal metadata.
-  static void writeOutputs(List<String> changes) {
+  static Map<String, Object> writeOutputs(List<String> changes) {
     final groups = <String, Map<String, int>>{
       for (final kind in [
         'dart',
@@ -304,8 +305,13 @@ abstract final class _GenerationProfile {
           : 'other';
       groups[kind]![operation] = groups[kind]![operation]! + 1;
     }
-    stdout.writeln(
-      'CCRouter profile output-delta=${jsonEncode({'files': changes.length, 'artifacts': groups})}',
+    final report = <String, Object>{
+      'files': changes.length,
+      'artifacts': groups,
+    };
+    _commandStdout.writeln(
+      'CCRouter profile output-delta=${jsonEncode(report)}',
     );
+    return report;
   }
 }

@@ -18,12 +18,12 @@ import 'package:path/path.dart' as path;
 import 'package:yaml/yaml.dart';
 
 import 'src/analyzer_bootstrap.dart';
-import 'src/execution_kernel.dart';
 import 'src/route_find.dart' as route_find;
 import 'src/pub_hook.dart';
 import 'src/scaffold.dart';
 
 part 'src/build_plan.dart';
+part 'src/execution_kernel.dart';
 part 'src/generation_watch.dart';
 part 'src/generation_profile.dart';
 part 'src/portable_generation_state.dart';
@@ -39,12 +39,12 @@ Future<void> main(List<String> arguments) async {
   final totalWatch = Stopwatch()..start();
   final parsed = _parseArguments(arguments);
   if (parsed.help) {
-    stdout.writeln(_usage);
+    _commandStdout.writeln(_usage);
     return;
   }
   if (parsed.error != null) {
-    stderr.writeln('error: ${parsed.error}');
-    stderr.writeln(_usage);
+    _commandStderr.writeln('error: ${parsed.error}');
+    _commandStderr.writeln(_usage);
     exitCode = 2;
     return;
   }
@@ -77,7 +77,7 @@ Future<void> main(List<String> arguments) async {
   );
   final root = Directory(parsed.rootPath).absolute;
   if (!root.existsSync()) {
-    stderr.writeln('error: Scan root does not exist: ${root.path}');
+    _commandStderr.writeln('error: Scan root does not exist: ${root.path}');
     exitCode = 2;
     return;
   }
@@ -90,7 +90,7 @@ Future<void> main(List<String> arguments) async {
         withSubscriber: parsed.scaffoldWithSubscriber,
         withContract: parsed.scaffoldWithContract,
       );
-      stdout.writeln(
+      _commandStdout.writeln(
         'Created ${parsed.scaffoldKind!.name} scaffold:\n'
         '${created.map((file) => '  ${file.path}').join('\n')}',
       );
@@ -99,12 +99,12 @@ Future<void> main(List<String> arguments) async {
         root: root,
         createdFiles: created,
       );
-      stdout.writeln(
+      _commandStdout.writeln(
         'Next steps:\n'
         '${steps.indexed.map((entry) => '  ${entry.$1 + 1}. ${entry.$2}').join('\n')}',
       );
     } on CCScaffoldException catch (error) {
-      stderr.writeln('error: ${error.message}');
+      _commandStderr.writeln('error: ${error.message}');
       exitCode = 1;
     }
     return;
@@ -118,7 +118,7 @@ Future<void> main(List<String> arguments) async {
         parsed.command == _GeneratorCommand.aggregate || context != null,
   );
   if (parsed.command != _GeneratorCommand.aggregate && buildContext == null) {
-    stderr.writeln(
+    _commandStderr.writeln(
       'error: No standalone Package or enclosing Dart workspace was found '
       'for ${root.path}.',
     );
@@ -137,10 +137,10 @@ Future<void> main(List<String> arguments) async {
         exitCode = 1;
       }
     } on CCPackageWorkspaceException catch (error) {
-      stderr.writeln('error: ${error.message}');
+      _commandStderr.writeln('error: ${error.message}');
       exitCode = 1;
     } on FormatException catch (error) {
-      stderr.writeln('error: ${error.message}');
+      _commandStderr.writeln('error: ${error.message}');
       exitCode = 1;
     }
     return;
@@ -153,10 +153,10 @@ Future<void> main(List<String> arguments) async {
         exitCode = 1;
       }
     } on _GenerationWatchActiveException catch (error) {
-      stderr.writeln('error: ${error.message}');
+      _commandStderr.writeln('error: ${error.message}');
       exitCode = 1;
     } on CCPackageWorkspaceException catch (error) {
-      stderr.writeln('error: ${error.message}');
+      _commandStderr.writeln('error: ${error.message}');
       exitCode = 1;
     } finally {
       await cleanLock?.release();
@@ -170,7 +170,7 @@ Future<void> main(List<String> arguments) async {
         buildContext!.root,
         Directory(parsed.outputDirectoryPath!).absolute,
       )) {
-    stderr.writeln(
+    _commandStderr.writeln(
       'error: --check requires --output-dir to remain inside '
       '${buildContext.root.path}.',
     );
@@ -182,389 +182,28 @@ Future<void> main(List<String> arguments) async {
       hostRoot: root,
       buildContext: buildContext!,
       parsed: parsed,
+      runInProcessCycle: () => _runGenerationCycle(
+        root: root,
+        buildContext: buildContext,
+        parsed: parsed,
+        invocationWatch: totalWatch,
+        invocationTrace: profileTrace,
+        watchCycle: true,
+        captureOutput: true,
+      ),
     );
     return;
   }
-  _GenerationLock? generationLock;
-  _GeneratedArtifactsSnapshot? snapshot;
-  CCPackageWorkspace? fastPathWorkspace;
-  String? verifiedInputFingerprint;
-  _GenerationBuildPlanInspection? buildPlan;
-  var profileOutcome = 'failed';
-  try {
-    if (buildContext != null && !_watchOwnsGenerationLock) {
-      generationLock = await profileTrace.measure(
-        'generation-lock-wait',
-        () => _GenerationLock.acquire(buildContext.root),
-      );
-    }
-    if (buildContext != null &&
-        parsed.command == _GeneratorCommand.generate &&
-        parsed.outputDirectoryPath == null) {
-      fastPathWorkspace = await profileTrace.measure<CCPackageWorkspace>(
-        'workspace-load',
-        () => CCPackageWorkspace.load(
-          buildRoot: buildContext.root,
-          hostRoot: root,
-          workspace: buildContext.workspace,
-        ),
-        counts: (workspace) => {'packages': workspace.packages.length},
-      );
-      // Explicit prepare must refresh Portable State even when the ordinary
-      // generation manifest proves all managed inputs and outputs unchanged.
-      if (parsed.noCache ||
-          parsed.portablePrepare ||
-          _usesOptimizedWatchCycle) {
-        verifiedInputFingerprint = await profileTrace.measure(
-          'input-fingerprint-capture',
-          () => _GenerationStateFingerprint.captureInput(fastPathWorkspace!),
-        );
-        buildPlan = _usesOptimizedWatchCycle
-            ? const _GenerationBuildPlanInspection.aggregateOnly(
-                reasons: ['build-runner-watch-completed'],
-                aggregateOnlyEligible: true,
-              )
-            : _GenerationBuildPlanInspection.runBuilder(
-                reasons: [
-                  parsed.portablePrepare
-                      ? 'portable-state-prepare'
-                      : 'no-cache-reference',
-                ],
-              );
-        profileTrace?.skip('fast-path-inspection');
-        profileTrace?.skip('build-plan-inspection');
-      } else {
-        final fastPath = await profileTrace.measure(
-          'fast-path-inspection',
-          () => _GenerationFastPath.inspect(workspace: fastPathWorkspace!),
-        );
-        verifiedInputFingerprint = fastPath.inputFingerprint;
-        if (fastPath.matches) {
-          stdout.writeln(
-            'CCRouter generation fast path hit; inputs and outputs are unchanged.',
-          );
-          if (parsed.check) {
-            stdout.writeln('CCRouter generated artifacts are up to date.');
-          }
-          if (parsed.profile) {
-            stdout.writeln('CCRouter profile fast-path=hit');
-            stdout.writeln(
-              'CCRouter profile build-plan suggested=unchanged '
-              'actual=unchanged reasons=verified-fast-path',
-            );
-            stdout.writeln('CCRouter profile input-delta=unchanged');
-            _GenerationProfile.writeOutputs(const []);
-          }
-          profileTrace?.skip('build-plan-inspection');
-          profileTrace?.skip('build-runner-process');
-          profileTrace?.skip('workspace-aggregation');
-          profileOutcome = 'success';
-          return;
-        }
-        if (parsed.profile) stdout.writeln('CCRouter profile fast-path=miss');
-        buildPlan = await profileTrace.measure(
-          'build-plan-inspection',
-          () => _GenerationBuildPlanner.inspect(
-            workspace: fastPathWorkspace!,
-            fastPathMissReason: fastPath.missReason,
-            profile: parsed.profile,
-          ),
-        );
-      }
-      verifiedInputFingerprint ??= await profileTrace.measure(
-        'input-fingerprint-capture',
-        () => _GenerationStateFingerprint.captureInput(fastPathWorkspace!),
-      );
-      if (parsed.profile) {
-        stdout.writeln(buildPlan!.profileDescription);
-        stdout.writeln(
-          'CCRouter profile input-delta=${jsonEncode(buildPlan.inputDelta ?? const {'status': 'unavailable'})}',
-        );
-      }
-    }
-    if (parsed.command == _GeneratorCommand.generate) {
-      fastPathWorkspace ??= await profileTrace.measure<CCPackageWorkspace>(
-        'workspace-load',
-        () => CCPackageWorkspace.load(
-          buildRoot: buildContext!.root,
-          hostRoot: root,
-          workspace: buildContext.workspace,
-        ),
-        counts: (workspace) => {'packages': workspace.packages.length},
-      );
-      // build_runner cannot repair read-only dependency artifacts. Reject
-      // stale external files before it sees missing generated libraries and
-      // attempts incremental cleanup outside its writable build Packages.
-      if (!await profileTrace.measure(
-        'portable-state-readonly-verification',
-        () => _CCPortableGenerationState.verifyReadOnly(fastPathWorkspace!),
-        succeeded: (verified) => verified,
-      )) {
-        exitCode = 1;
-        return;
-      }
-      final preflightWatch = Stopwatch()..start();
-      final issues = await profileTrace.measure(
-        'component-dependency-preflight',
-        () => _componentDependencyPreflight(fastPathWorkspace!),
-        succeeded: (issues) => issues.isEmpty,
-        counts: (issues) => {'issues': issues.length},
-      );
-      preflightWatch.stop();
-      if (parsed.profile) {
-        stdout.writeln(
-          'CCRouter profile dependency-preflight='
-          '${preflightWatch.elapsedMilliseconds}ms',
-        );
-      }
-      if (issues.isNotEmpty) {
-        _writeComponentDependencyPreflightIssues(issues);
-        exitCode = 1;
-        return;
-      }
-    }
-    if (parsed.command == _GeneratorCommand.generate &&
-        fastPathWorkspace != null) {
-      // The plan was computed before preflight and may no longer describe the
-      // files that are about to be handed to build_runner. Revalidate at the
-      // execution boundary; a Host-graph-only plan must never skip Builder
-      // work after an authored input changed in the meantime.
-      final executionInput = await profileTrace.measure(
-        'execution-boundary-fingerprint',
-        () => _GenerationStateFingerprint.captureInput(fastPathWorkspace!),
-      );
-      if (verifiedInputFingerprint != null &&
-          verifiedInputFingerprint != executionInput) {
-        buildPlan = const _GenerationBuildPlanInspection.runBuilder(
-          reasons: ['input-changed-before-execution'],
-        );
-        if (parsed.profile) {
-          stdout.writeln(
-            'CCRouter profile build-plan-revalidated=runBuilder '
-            'reason=input-changed-before-execution',
-          );
-        }
-      }
-      verifiedInputFingerprint = executionInput;
-      if (_isWatchAggregationCycle && !_usesOptimizedWatchCycle) {
-        buildPlan = const _GenerationBuildPlanInspection.aggregateOnly(
-          reasons: ['build-runner-watch-succeeded'],
-          aggregateOnlyEligible: true,
-        );
-        if (parsed.profile) {
-          stdout.writeln(buildPlan.profileDescription);
-        }
-      }
-    }
-    final needsBootstrap = await profileTrace.measure(
-      'missing-generated-import-scan',
-      () async =>
-          parsed.command == _GeneratorCommand.generate &&
-          fastPathWorkspace != null &&
-          await _hasMissingGeneratedComponentImport(fastPathWorkspace),
-    );
-    snapshot = parsed.command == _GeneratorCommand.generate
-        ? await profileTrace.measure(
-            'artifact-snapshot-capture',
-            () => _GeneratedArtifactsSnapshot.capture(
-              buildContext!.root,
-              explicitFiles: [
-                if (parsed.outputDirectoryPath case final output?)
-                  for (final name in const [
-                    'cc_routes.json',
-                    'cc_catalog.md',
-                    'cc_routes.md',
-                    'cc_sources.md',
-                  ])
-                    File(path.join(output, name)).absolute,
-              ],
-            ),
-          )
-        : null;
-    if (needsBootstrap) {
-      try {
-        if (await profileTrace.measure(
-          'bootstrap-restore',
-          () => _bootstrapGeneratedComponentApis(fastPathWorkspace!),
-        )) {
-          stdout.writeln(
-            'Bootstrapped generated component APIs from validated build metadata.',
-          );
-        }
-      } on Object {
-        await profileTrace.measure(
-          'artifact-snapshot-restore',
-          snapshot!.restore,
-        );
-      }
-    } else {
-      profileTrace?.skip('bootstrap-restore');
-    }
-    var buildDuration = Duration.zero;
-    if (buildPlan?.runsBuilder ?? true) {
-      final buildWatch = Stopwatch()..start();
-      if (buildContext == null) {
-        profileTrace?.skip('build-runner-process');
-      } else if (!await profileTrace.measure(
-        'build-runner-process',
-        () => _runBuildRunner(
-          buildContext,
-          root,
-          profile: parsed.profile,
-          trace: profileTrace,
-        ),
-        succeeded: (succeeded) => succeeded,
-      )) {
-        if (snapshot != null) {
-          await profileTrace.measure(
-            'artifact-snapshot-restore',
-            snapshot.restore,
-          );
-        }
-        exitCode = 1;
-        return;
-      }
-      buildWatch.stop();
-      buildDuration = buildWatch.elapsed;
-    } else {
-      profileTrace?.skip('build-runner-process');
-      stdout.writeln(
-        'CCRouter generation aggregate-only path; verified Builder inputs '
-        'are unchanged.',
-      );
-    }
-    final succeeded = await profileTrace.measure(
-      'workspace-aggregation',
-      () => parsed.command == _GeneratorCommand.generate
-          ? _generateResolvedWorkspace(
-              root,
-              parsed,
-              buildContext!,
-              buildDuration: buildDuration,
-              expectedInputFingerprint: verifiedInputFingerprint,
-              prebuiltPackages:
-                  buildPlan?.actualPrebuiltPackages ?? const <String>{},
-              trace: profileTrace,
-            )
-          : _aggregate(root, parsed),
-      succeeded: (succeeded) => succeeded,
-    );
-    if (!succeeded) {
-      if (snapshot != null) {
-        await profileTrace.measure(
-          'artifact-snapshot-restore',
-          snapshot.restore,
-        );
-      }
-      exitCode = 1;
-      return;
-    }
-    List<String>? outputChanges;
-    if (parsed.profile && snapshot != null) {
-      try {
-        final watch = Stopwatch()..start();
-        outputChanges = await profileTrace.measure<List<String>>(
-          'output-delta-scan',
-          snapshot.changes,
-          counts: (changes) => {'files': changes.length},
-        );
-        _GenerationProfile.writeOutputs(outputChanges);
-        stdout.writeln(
-          'CCRouter profile output-delta-scan=${watch.elapsedMilliseconds}ms',
-        );
-      } on Object {
-        stdout.writeln('CCRouter profile output-delta=unavailable');
-      }
-    }
-    if (parsed.check && snapshot != null) {
-      final changes = outputChanges ?? await snapshot.changes();
-      await profileTrace.measure('check-restore', snapshot.restore);
-      if (changes.isNotEmpty) {
-        stderr.writeln('error: CCRouter generated artifacts are stale:');
-        for (final change in changes) {
-          stderr.writeln('  $change');
-        }
-        exitCode = 1;
-        return;
-      }
-      stdout.writeln('CCRouter generated artifacts are up to date.');
-    }
-    if (buildContext != null &&
-        parsed.command == _GeneratorCommand.generate &&
-        parsed.outputDirectoryPath == null) {
-      fastPathWorkspace ??= await profileTrace.measure(
-        'workspace-reload-for-state',
-        () => CCPackageWorkspace.load(
-          buildRoot: buildContext.root,
-          hostRoot: root,
-          workspace: buildContext.workspace,
-        ),
-      );
-      await profileTrace.measure(
-        'fast-path-manifest-write',
-        () => _GenerationFastPath.write(
-          workspace: fastPathWorkspace!,
-          expectedInputFingerprint: verifiedInputFingerprint!,
-        ),
-      );
-      try {
-        await profileTrace.measure(
-          'build-plan-state-write',
-          () => _GenerationBuildPlanner.write(
-            workspace: fastPathWorkspace!,
-            expectedInputFingerprint: verifiedInputFingerprint!,
-          ),
-        );
-      } on Object {
-        if (parsed.profile) {
-          stdout.writeln(
-            'CCRouter profile build-plan-state=write-failed; '
-            'future runs will conservatively use runBuilder.',
-          );
-        }
-      }
-    }
-    profileOutcome = 'success';
-  } on _GenerationWatchActiveException catch (error) {
-    if (snapshot != null) {
-      await profileTrace.measure('artifact-snapshot-restore', snapshot.restore);
-    }
-    stderr.writeln('error: ${error.message}');
-    exitCode = 1;
-  } on CCPackageWorkspaceException catch (error) {
-    if (snapshot != null) {
-      await profileTrace.measure('artifact-snapshot-restore', snapshot.restore);
-    }
-    stderr.writeln('error: ${error.message}');
-    exitCode = 1;
-  } catch (_) {
-    if (snapshot != null) {
-      await profileTrace.measure('artifact-snapshot-restore', snapshot.restore);
-    }
-    rethrow;
-  } finally {
-    try {
-      if (generationLock != null) {
-        await profileTrace.measure(
-          'generation-lock-release',
-          generationLock.release,
-        );
-      }
-    } finally {
-      totalWatch.stop();
-      if (parsed.profile) {
-        stdout.writeln(
-          'CCRouter profile total=${totalWatch.elapsedMilliseconds}ms',
-        );
-        await profileTrace!.write(
-          buildRoot: buildContext?.root ?? root,
-          hostRoot: root,
-          command: parsed.command.name,
-          outcome: profileOutcome,
-        );
-      }
-    }
-  }
+  final generation = await _runGenerationCycle(
+    root: root,
+    buildContext: buildContext,
+    parsed: parsed,
+    invocationWatch: totalWatch,
+    invocationTrace: profileTrace,
+    watchCycle: false,
+    captureOutput: false,
+  );
+  exitCode = generation.exitCode;
 }
 
 /// Executes an install, uninstall, status, or post-pub generation operation.
@@ -575,7 +214,7 @@ Future<void> _runPubHookCommand(CCPubHookRequest request) async {
         request.projectRoot ?? Directory.current.path,
       ).absolute;
       if (!projectRoot.existsSync()) {
-        stderr.writeln(
+        _commandStderr.writeln(
           'error: Pub hook project root does not exist: ${projectRoot.path}',
         );
         exitCode = 2;
@@ -602,7 +241,7 @@ Future<void> _runPubHookCommand(CCPubHookRequest request) async {
         throw StateError('The run action is handled above.');
     }
   } on Object catch (error) {
-    stderr.writeln('error: $error');
+    _commandStderr.writeln('error: $error');
     exitCode = 1;
   }
 }
@@ -681,7 +320,7 @@ Future<bool> _aggregate(Directory root, _Arguments parsed) async {
   ]..sort();
   if (errors.isNotEmpty) {
     for (final error in errors) {
-      stderr.writeln('error: $error');
+      _commandStderr.writeln('error: $error');
     }
     return false;
   }
@@ -721,7 +360,7 @@ Future<bool> _aggregate(Directory root, _Arguments parsed) async {
     Directory(path.join(root.path, 'lib', 'ccrouter_generated')),
   ]);
   await _removeEmptyGeneratedSourceDirectories(root);
-  stdout.writeln(
+  _commandStdout.writeln(
     'Validated ${result.machineDocument['components'] is List ? (result.machineDocument['components']! as List).length : 0} components and ${result.machineDocument['routes'] is List ? (result.machineDocument['routes']! as List).length : 0} routes.',
   );
   return true;
@@ -762,7 +401,9 @@ Future<bool> _cleanResolvedWorkspace(
     removed += beforeLegacy;
     await _removeEmptyGeneratedSourceDirectories(package.root);
   }
-  stdout.writeln('Removed $removed CCRouter generated source artifact(s).');
+  _commandStdout.writeln(
+    'Removed $removed CCRouter generated source artifact(s).',
+  );
   return true;
 }
 
@@ -814,7 +455,8 @@ CCRouter-managed artifact. `--no-cache` forces the reference full-parse path.
 and reruns CCRouter validation and aggregation after each successful build.
 `--machine` emits newline-delimited JSON events and is available only with
 watch mode. Set CCROUTER_DISABLE_BUILD_WATCH=1 to execute one fallback
-generation and exit.
+generation and exit. Set CCROUTER_DISABLE_WATCH_IN_PROCESS_CYCLE=1 only to
+compare watch aggregation with the subprocess reference path.
 `find` reads existing Package indexes without generating and matches exact
 capability IDs or Route Pattern values. `--usage` adds a read-only integration
 recipe for one existing consumer component; it never edits dependencies.
@@ -870,7 +512,7 @@ Future<bool> _generateResolvedWorkspace(
       counts: (workspace) => {'packages': workspace.packages.length},
     );
   } on CCPackageWorkspaceException catch (error) {
-    stderr.writeln('error: ${error.message}');
+    _commandStderr.writeln('error: ${error.message}');
     return false;
   }
   if (expectedInputFingerprint != null &&
@@ -899,12 +541,12 @@ Future<bool> _generateResolvedWorkspace(
   );
   if (internalApiErrors.isNotEmpty) {
     for (final error in internalApiErrors) {
-      stderr.writeln('error: $error');
+      _commandStderr.writeln('error: $error');
     }
     return false;
   }
   if (!workspace.host.dependencies.contains('ccrouter')) {
-    stderr.writeln(
+    _commandStderr.writeln(
       'error: Host Package "${workspace.host.name}" must directly depend on '
       '`ccrouter` before generated Host assembly can be imported.',
     );
@@ -919,7 +561,7 @@ Future<bool> _generateResolvedWorkspace(
     },
   );
   if (cache.corrupted) {
-    stdout.writeln(
+    _commandStdout.writeln(
       'CCRouter cache was invalid and has been ignored; running a full parse.',
     );
   }
@@ -948,7 +590,7 @@ Future<bool> _generateResolvedWorkspace(
         final verification = portableVerifications[package.name];
         if (verification == null || !verification.valid) {
           metadataSpan?.finish(status: 'failed');
-          stderr.writeln(
+          _commandStderr.writeln(
             'error: Prebuilt CCRouter Package "${package.name}" no longer '
             'matches its Portable Generation State '
             '(${verification?.reason.name ?? 'missing'}). Rerun generation.',
@@ -969,7 +611,7 @@ Future<bool> _generateResolvedWorkspace(
           continue;
         } on CCPackageWorkspaceException catch (error) {
           metadataSpan?.finish(status: 'failed');
-          stderr.writeln('error: ${error.message}');
+          _commandStderr.writeln('error: ${error.message}');
           return false;
         }
       }
@@ -996,7 +638,7 @@ Future<bool> _generateResolvedWorkspace(
         final verification = portableVerifications[package.name];
         if (verification == null || !verification.valid) {
           metadataSpan?.finish(status: 'failed');
-          stderr.writeln(
+          _commandStderr.writeln(
             'error: Read-only CCRouter Package "${package.name}" has an '
             'invalid Portable Generation State '
             '(${verification?.reason.name ?? 'missing'}). Regenerate and '
@@ -1011,13 +653,13 @@ Future<bool> _generateResolvedWorkspace(
         participating.add(package.name);
       } on CCPackageWorkspaceException catch (error) {
         metadataSpan?.finish(status: 'failed');
-        stderr.writeln('error: ${error.message}');
+        _commandStderr.writeln('error: ${error.message}');
         return false;
       }
     } else if (package.declaresGenerationIntent ||
         package.requiresPackageIndex) {
       metadataSpan?.finish(status: 'failed');
-      stderr.writeln(
+      _commandStderr.writeln(
         'error: Read-only CCRouter Package "${package.name}" has no published '
         'lib/src/ccrouter_generated/metadata/ccrouter_package.json. Regenerate that '
         'Package before consuming it.',
@@ -1086,7 +728,7 @@ Future<bool> _generateResolvedWorkspace(
       if (package.name != workspace.host.name &&
           !package.dependencies.contains('ccrouter')) {
         packageModelSpan?.finish(status: 'failed');
-        stderr.writeln(
+        _commandStderr.writeln(
           'error: Package "${package.name}" contains a transitive CCRouter '
           'runtime Package but cannot publish a forwarding Bundle because it '
           'does not directly depend on `ccrouter`. Add that dependency and '
@@ -1097,7 +739,7 @@ Future<bool> _generateResolvedWorkspace(
       if (!package.writable &&
           !(externalIndexes[package.name]?.hasRuntimeBundle ?? false)) {
         packageModelSpan?.finish(status: 'failed');
-        stderr.writeln(
+        _commandStderr.writeln(
           'error: Read-only Package "${package.name}" must publish a '
           'CCRouter Package index and forwarding Bundle for its transitive '
           'runtime components.',
@@ -1171,7 +813,7 @@ Future<bool> _generateResolvedWorkspace(
     if (!actual.keys.toSet().containsAll(expectedNames) ||
         !expectedNames.containsAll(actual.keys)) {
       packageModelSpan?.finish(status: 'failed');
-      stderr.writeln(
+      _commandStderr.writeln(
         'error: Package index for "${entry.key}" has stale direct generated '
         'dependencies. Regenerate and republish that Package.',
       );
@@ -1183,7 +825,7 @@ Future<bool> _generateResolvedWorkspace(
       if (recorded.version != expected.packageVersion ||
           recorded.contentFingerprint != expected.contentFingerprint) {
         packageModelSpan?.finish(status: 'failed');
-        stderr.writeln(
+        _commandStderr.writeln(
           'error: Package index for "${entry.key}" was generated against a '
           'different "$dependencyName" identity. Regenerate and republish '
           'that Package.',
@@ -1252,7 +894,7 @@ Future<bool> _generateResolvedWorkspace(
       counts: {'documents': documents.length, 'errors': errors.length},
     );
     for (final error in errors) {
-      stderr.writeln('error: $error');
+      _commandStderr.writeln('error: $error');
     }
     return false;
   }
@@ -1379,13 +1021,13 @@ Future<bool> _generateResolvedWorkspace(
       'portable-state-prepare',
       () => _CCPortableGenerationState.write(workspace, indexes: indexes),
     );
-    stdout.writeln(
+    _commandStdout.writeln(
       'Prepared Portable Generation State for explicitly portable Packages.',
     );
   } else {
     trace?.skip('portable-state-prepare');
   }
-  stdout.writeln(
+  _commandStdout.writeln(
     'Validated ${validation.machineDocument['components'] is List ? (validation.machineDocument['components']! as List).length : 0} components and ${validation.machineDocument['routes'] is List ? (validation.machineDocument['routes']! as List).length : 0} routes across ${indexes.length} generated Packages.',
   );
   if (!parsed.noCache && !parsed.check) {
@@ -1413,7 +1055,7 @@ Future<bool> _generateResolvedWorkspace(
     final hits = metadataSnapshots.values
         .where((snapshot) => snapshot.cacheHit)
         .length;
-    stdout.writeln(
+    _commandStdout.writeln(
       'CCRouter profile build=${buildDuration.inMilliseconds}ms '
       'discovery=${discoveryWatch.elapsedMilliseconds}ms '
       'parse=${parseWatch.elapsedMilliseconds}ms '
@@ -1422,7 +1064,7 @@ Future<bool> _generateResolvedWorkspace(
       'cache=$hits/${metadataSnapshots.length} '
       'dirty=${dirtySet.dirtyPackages.length}/${workspace.packages.values.where((package) => package.writable).length}',
     );
-    stdout.writeln(
+    _commandStdout.writeln(
       'CCRouter profile dirty-packages=${dirtySet.profileDescription}',
     );
   }
@@ -2514,7 +2156,9 @@ _Arguments _parsePortableArguments(List<String> arguments) {
 Future<bool> _verifyPortablePublish(Directory root) async {
   final context = _findBuildContext(root);
   if (context == null) {
-    stderr.writeln('error: Cannot find a Pub Host for Portable State publish.');
+    _commandStderr.writeln(
+      'error: Cannot find a Pub Host for Portable State publish.',
+    );
     return false;
   }
   try {
@@ -2529,7 +2173,7 @@ Future<bool> _verifyPortablePublish(Directory root) async {
         )
         .toList();
     if (portable.isEmpty) {
-      stderr.writeln(
+      _commandStderr.writeln(
         'error: No writable Package declares generation.portable: true.',
       );
       return false;
@@ -2541,20 +2185,22 @@ Future<bool> _verifyPortablePublish(Directory root) async {
     for (final package in portable) {
       final state = verification[package.name];
       if (state == null || !state.valid) {
-        stderr.writeln(
+        _commandStderr.writeln(
           'error: Portable Package "${package.name}" is not prepared '
           '(${state?.reason.name ?? 'missing'}); run `portable prepare` first.',
         );
         return false;
       }
     }
-    stdout.writeln(
+    _commandStdout.writeln(
       'Portable Generation State is ready for ${portable.length} Package(s). '
       'External publishing remains a user-owned Pub/Git step.',
     );
     return true;
   } on Object catch (error) {
-    stderr.writeln('error: Portable State publish validation failed: $error');
+    _commandStderr.writeln(
+      'error: Portable State publish validation failed: $error',
+    );
     return false;
   }
 }
@@ -3170,7 +2816,7 @@ Future<bool> _generationInputIsStable(
 }) async {
   final actual = await _GenerationStateFingerprint.captureInput(workspace);
   if (actual == expectedFingerprint) return true;
-  stderr.writeln(
+  _commandStderr.writeln(
     'error: CCRouter generation input changed during $stage; '
     'generated output was discarded. Rerun after source changes settle.',
   );
@@ -3578,7 +3224,7 @@ Future<bool> _runBuildRunner(
     counts: (targets) => {'packages': targets.length},
   );
   if (profile) {
-    stdout.writeln(
+    _commandStdout.writeln(
       'CCRouter profile build-targets=${targets.length} '
       'packages=${targets.join(',')}',
     );
@@ -3588,7 +3234,7 @@ Future<bool> _runBuildRunner(
     trace?.skip('build-runner-process-start');
     trace?.skip('build-runner-execution');
     trace?.skip('build-runner-protection-restore');
-    stdout.writeln(
+    _commandStdout.writeln(
       'No writable CCRouter Builder Packages were found; skipping build_runner.',
     );
     return true;
@@ -3621,7 +3267,7 @@ Future<bool> _runBuildRunner(
       'asset:$package/ccrouter_generated/**',
     ],
   ];
-  stdout.writeln(
+  _commandStdout.writeln(
     'Generating Package artifacts for ${targets.join(', ')} from '
     '${context.root.path}...',
   );
@@ -3637,8 +3283,8 @@ Future<bool> _runBuildRunner(
     );
     processExitCode = await trace.measure('build-runner-execution', () async {
       final forwarding = Future.wait<void>([
-        stdout.addStream(process.stdout),
-        stderr.addStream(process.stderr),
+        _commandStdout.addStream(process.stdout),
+        _commandStderr.addStream(process.stderr),
       ]);
       final code = await process.exitCode;
       await forwarding;
@@ -3666,7 +3312,9 @@ Future<bool> _runBuildRunner(
     }
   }
   if (processExitCode == 0) return true;
-  stderr.writeln('error: build_runner failed with exit code $processExitCode.');
+  _commandStderr.writeln(
+    'error: build_runner failed with exit code $processExitCode.',
+  );
   return false;
 }
 
@@ -3712,21 +3360,21 @@ Future<List<CCComponentDependencyPreflightIssue>> _componentDependencyPreflight(
 void _writeComponentDependencyPreflightIssues(
   List<CCComponentDependencyPreflightIssue> issues,
 ) {
-  stderr.writeln(
+  _commandStderr.writeln(
     'error: CCRouter component dependency preflight failed before '
     'build_runner:',
   );
   for (final issue in issues) {
-    stderr.writeln(
+    _commandStderr.writeln(
       '  ${issue.componentId} is missing required owner '
       '${issue.ownerComponentId}',
     );
     for (final capability in issue.capabilities) {
-      stderr.writeln('    - ${capability.kind} "${capability.id}"');
+      _commandStderr.writeln('    - ${capability.kind} "${capability.id}"');
     }
-    stderr.writeln('    source: ${issue.sourcePath}');
+    _commandStderr.writeln('    source: ${issue.sourcePath}');
   }
-  stderr.writeln(
+  _commandStderr.writeln(
     'Add every owner to CCComponent.dependencies; optionalDependencies '
     'cannot satisfy required capabilities. No generated source was changed.',
   );
@@ -5726,12 +5374,12 @@ Future<void> _removeLegacyMetadataArtifacts(
     }
     if (unknownFiles.isNotEmpty) {
       unknownFiles.sort();
-      stderr.writeln(
+      _commandStderr.writeln(
         'warning: Preserved unknown files in legacy CCRouter metadata '
         'directory ${path.join(generatedDirectory.path, 'metadata')}:',
       );
       for (final file in unknownFiles) {
-        stderr.writeln('  $file');
+        _commandStderr.writeln('  $file');
       }
     }
   }

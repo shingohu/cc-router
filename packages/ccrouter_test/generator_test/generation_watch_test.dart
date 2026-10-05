@@ -30,7 +30,7 @@ void main() {
       expect(result.exitCode, 0, reason: '${result.stderr}');
       final events = const LineSplitter()
           .convert('${result.stdout}')
-          .where((line) => line.trimLeft().startsWith('{'))
+          .where((line) => line.trim().isNotEmpty)
           .map((line) => jsonDecode(line) as Map<String, dynamic>)
           .toList();
       expect(events.map((event) => event['type']), [
@@ -53,6 +53,7 @@ void main() {
         environment: {
           ...Platform.environment,
           'CCROUTER_DISABLE_WATCH_CYCLE_OPTIMIZATION': '1',
+          'CCROUTER_DISABLE_WATCH_IN_PROCESS_CYCLE': '1',
         },
       );
       final referenceArtifacts = await _managedArtifacts();
@@ -61,6 +62,13 @@ void main() {
       expect(
         optimized.eventTypes,
         containsAllInOrder(['buildSucceeded', 'aggregationSucceeded', 'ready']),
+      );
+      expect(optimized.aggregation['cycleMode'], 'inProcess');
+      expect(reference.aggregation['cycleMode'], 'subprocessReference');
+      print(
+        'watch aggregation timing: '
+        'inProcess=${optimized.aggregation['elapsedMs']}ms '
+        'subprocessReference=${reference.aggregation['elapsedMs']}ms',
       );
       expect(
         _profileSpan(optimized.aggregation, 'fast-path-inspection')['status'],
@@ -219,8 +227,18 @@ Future<_WatchRun> _runWatchUntilReady({
       .transform(const LineSplitter())
       .listen((line) {
         outputLines.add(line);
-        if (!line.trimLeft().startsWith('{')) return;
-        final event = jsonDecode(line) as Map<String, dynamic>;
+        if (line.trim().isEmpty) return;
+        late final Map<String, dynamic> event;
+        try {
+          event = jsonDecode(line) as Map<String, dynamic>;
+        } on Object catch (error) {
+          if (!ready.isCompleted) {
+            ready.completeError(
+              StateError('watch emitted non-machine stdout: $line ($error)'),
+            );
+          }
+          return;
+        }
         eventTypes.add(event['type'] as String);
         if (event['type'] == 'aggregationSucceeded') aggregation = event;
         if (event['type'] == 'ready' && !ready.isCompleted) {
