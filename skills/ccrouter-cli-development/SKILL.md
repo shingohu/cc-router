@@ -124,6 +124,10 @@ fast-path manifest and Build Plan state. Use
 A/B against the separate-scan reference path; it does not disable input
 barriers, validation, artifact restoration, atomic state writes, or the final
 `--no-cache --check` authority.
+The `aggregation-input-fingerprint` profile span reports a SHA-256 identity in
+`attributes.fingerprint` for Builder metadata, resolved Package indexes, and
+the Host aggregation graph. It is diagnostic-only: equality is not permission
+to skip Builder, validation, aggregation, writes, or the final reference gate.
 The Build Plan reports `suggested`, `actual`, and bounded `reasons`. Only
 `actual=aggregateOnly` means that this invocation skipped build_runner. P2
 allows a pure Host dependency-closure deletion when every remaining Builder

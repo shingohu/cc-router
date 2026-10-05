@@ -821,6 +821,9 @@ fast-path manifest and Build Plan state. Set
 `CCROUTER_DISABLE_SHARED_PLANNING_SNAPSHOT=1` to restore separate scans for
 byte-for-byte or timing A/B; input barriers, validation, restoration, atomic
 writes, and the final `--no-cache --check` remain unchanged.
+Profile traces may carry an `aggregation-input-fingerprint` span with a SHA-256
+`attributes.fingerprint` for Builder metadata, Package indexes, and Host graph
+inputs. This is diagnostic evidence only and does not authorize a skip path.
 
 The Build Plan separately reports `suggested` and `actual`. Only
 `actual=aggregateOnly` means build_runner was skipped, and that optimization is

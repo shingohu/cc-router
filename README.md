@@ -1208,6 +1208,9 @@ Workspace/指纹/Build Plan、preflight、快照、build_runner 子进程、Vali
 有界计数，不包含绝对路径、源码或业务值，也不参与缓存和生成判断。Profile 模式会为
 build_runner 启用官方 `--verbose-durations`，其 Builder phase 明细用于继续区分 Analyzer、
 resolve、build、read/write 成本，但不属于 CCRouter trace schema。不带 `--profile` 不产生报告。
+`aggregation-input-fingerprint` span 额外携带一个 SHA-256 `attributes.fingerprint`，覆盖 Builder
+metadata、Package Index identity 与 Host graph 等聚合输入；它当前只用于 benchmark 诊断，不能
+跳过 Builder、Validator、aggregation 或最终 `--no-cache --check`。
 
 `--watch=auto` 为一个 Host 解析单一 build root，并保持一套 `build_runner watch --workspace`
 进程、AOT entrypoint 和 Analyzer graph。watch 在 lease 内持有 generation lock；每个成功 Builder

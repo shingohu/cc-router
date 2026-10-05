@@ -920,6 +920,7 @@ void probe() {
           'before-aggregation-input-barrier',
           'metadata-and-package-index-load',
           'package-graph-and-index-construction',
+          'aggregation-input-fingerprint',
           'workspace-validation',
           'component-index-generation',
           'package-bundle-generation',
@@ -937,6 +938,14 @@ void probe() {
           (span) => span['name'] == 'build-runner-execution',
         )['status'],
         'ok',
+      );
+      final aggregationInput = spans.singleWhere(
+        (span) => span['name'] == 'aggregation-input-fingerprint',
+      );
+      expect(aggregationInput['status'], 'ok');
+      expect(
+        (aggregationInput['attributes'] as Map)['fingerprint'],
+        matches(RegExp(r'^[0-9a-f]{64}$')),
       );
       expect(trace['outcome'], 'success');
     },

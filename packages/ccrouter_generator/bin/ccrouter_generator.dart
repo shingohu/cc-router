@@ -842,6 +842,31 @@ Future<bool> _generateResolvedWorkspace(
     },
   );
 
+  final aggregationInputFingerprint = await trace.measure(
+    'aggregation-input-fingerprint',
+    () async => _GenerationAggregationInputFingerprint.capture(
+      workspace: workspace,
+      metadataSnapshots: metadataSnapshots,
+      indexes: indexes,
+      participatingPackages: participating,
+      runtimeBundles: runtimeBundles,
+      dependencyOrder: order,
+    ),
+    counts: (_) => {
+      'packages': indexes.length,
+      'documents': indexes.values.fold<int>(
+        0,
+        (count, index) => count + index.metadata.length,
+      ),
+    },
+    attributes: (fingerprint) => {'fingerprint': fingerprint},
+  );
+  if (parsed.profile) {
+    _commandStdout.writeln(
+      'CCRouter profile aggregation-input=$aggregationInputFingerprint',
+    );
+  }
+
   final dirtySet = await trace.measure(
     'dirty-package-computation',
     () => _GenerationDirtySet.compute(

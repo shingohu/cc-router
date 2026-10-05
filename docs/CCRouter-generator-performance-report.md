@@ -515,3 +515,27 @@ Portable State 的显式 `prepare/publish` 语义。设置
 受管产物的路径与字节完全相同，最终指纹仍为
 `3d71ce6d5006aa92dfe4931505fc9cd6515ba2136e417b6371cabf346fb3b0fc`，并通过
 `generate demo --no-cache --check`。
+
+### 10.5 post-Builder aggregation input 诊断
+
+下一阶段先增加 diagnostic-only `aggregation-input-fingerprint`，不增加缓存状态、不跳过 Builder、
+Validator、aggregation 或写入。identity 覆盖 Builder metadata 的逐字节摘要、经过 public-barrel
+和 consumer annotation 后的 Package Index identity、Host closure、依赖顺序及 runtime bundle
+集合；普通源码全文不直接进入该 identity。fingerprint 作为 profile span 的安全 `attributes`
+进入 one-shot trace 和 watch machine event。
+
+同机 macOS arm64 / Dart 3.11.5，每种场景 10 个 apply 样本：
+
+| 编辑场景 | baseline 匹配 | 不同 fingerprint | fingerprint P50/P95 | wall P50/P95 | aggregation P50/P95 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 仅注释 | 10/10 | 1 | 0.220/0.264ms | 1591/1638ms | 609/624ms |
+| Widget body | 10/10 | 1 | 0.209/0.369ms | 1563/1655ms | 601/635ms |
+| `initState` body | 10/10 | 1 | 0.212/0.400ms | 1561/1599ms | 601/620ms |
+| 新增普通函数 | 10/10 | 1 | 0.210/0.249ms | 1552/1612ms | 597/612ms |
+| Route annotation | 0/10 | 10 | 0.214/0.240ms | 1714/1810ms | 641/687ms |
+
+每个 restore cycle 都恢复同一 baseline identity；非生成语义编辑稳定保持 identity，Route
+description 的每个不同值都产生不同 identity。最终源码恢复，99 个受管产物逐字节一致，指纹为
+`9bd22a574ca8a17c68223a602b90fbb42469670b6a70b07e961f17c1fd1637b6`，并通过
+`generate demo --no-cache --check`。该结果只证明当前五类场景的区分能力；在公共 barrel、依赖边、
+声明删除、位置和 DartDoc 矩阵完成前，不授权 aggregation reuse。

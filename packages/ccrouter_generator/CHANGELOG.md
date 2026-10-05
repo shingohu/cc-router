@@ -28,3 +28,6 @@
   manifest and Build Plan state, removing duplicate cycle-end scans while
   retaining atomic writes and all input barriers. Set
   `CCROUTER_DISABLE_SHARED_PLANNING_SNAPSHOT=1` for the reference path.
+- Added a diagnostic-only aggregation-input fingerprint to profile traces and
+  watch benchmarks. It distinguishes unchanged Builder/Host aggregation inputs
+  without yet authorizing any aggregation skip or cache decision.

@@ -20,6 +20,7 @@ final class _GenerationProfileTrace {
     required int durationUs,
     String status = 'ok',
     Map<String, int> counts = const {},
+    Map<String, Object> attributes = const {},
   }) {
     _spans.add(
       _GenerationProfileSpan(
@@ -28,6 +29,7 @@ final class _GenerationProfileTrace {
         durationUs: durationUs,
         status: status,
         counts: counts,
+        attributes: attributes,
       ),
     );
   }
@@ -37,7 +39,11 @@ final class _GenerationProfileTrace {
       _GenerationProfileOpenSpan(this, name, _clock.elapsedMicroseconds);
 
   /// Records a phase that was intentionally not executed.
-  void skip(String name, {Map<String, int> counts = const {}}) {
+  void skip(
+    String name, {
+    Map<String, int> counts = const {},
+    Map<String, Object> attributes = const {},
+  }) {
     _spans.add(
       _GenerationProfileSpan(
         name: name,
@@ -45,6 +51,7 @@ final class _GenerationProfileTrace {
         durationUs: 0,
         status: 'skipped',
         counts: counts,
+        attributes: attributes,
       ),
     );
   }
@@ -105,6 +112,7 @@ final class _GenerationProfileTrace {
     int startUs, {
     required String status,
     Map<String, int> counts = const {},
+    Map<String, Object> attributes = const {},
   }) {
     _spans.add(
       _GenerationProfileSpan(
@@ -113,6 +121,7 @@ final class _GenerationProfileTrace {
         durationUs: _clock.elapsedMicroseconds - startUs,
         status: status,
         counts: counts,
+        attributes: attributes,
       ),
     );
   }
@@ -125,6 +134,7 @@ extension _NullableGenerationProfileTrace on _GenerationProfileTrace? {
     Future<T> Function() action, {
     bool Function(T value)? succeeded,
     Map<String, int> Function(T value)? counts,
+    Map<String, Object> Function(T value)? attributes,
   }) async {
     final trace = this;
     if (trace == null) return action();
@@ -134,6 +144,7 @@ extension _NullableGenerationProfileTrace on _GenerationProfileTrace? {
       span.finish(
         status: succeeded == null || succeeded(value) ? 'ok' : 'failed',
         counts: counts?.call(value) ?? const {},
+        attributes: attributes?.call(value) ?? const {},
       );
       return value;
     } on Object {
@@ -147,6 +158,7 @@ extension _NullableGenerationProfileTrace on _GenerationProfileTrace? {
     T Function() action, {
     bool Function(T value)? succeeded,
     Map<String, int> Function(T value)? counts,
+    Map<String, Object> Function(T value)? attributes,
   }) {
     final trace = this;
     if (trace == null) return action();
@@ -156,6 +168,7 @@ extension _NullableGenerationProfileTrace on _GenerationProfileTrace? {
       span.finish(
         status: succeeded == null || succeeded(value) ? 'ok' : 'failed',
         counts: counts?.call(value) ?? const {},
+        attributes: attributes?.call(value) ?? const {},
       );
       return value;
     } on Object {
@@ -174,10 +187,20 @@ final class _GenerationProfileOpenSpan {
   final int _startUs;
   bool _finished = false;
 
-  void finish({String status = 'ok', Map<String, int> counts = const {}}) {
+  void finish({
+    String status = 'ok',
+    Map<String, int> counts = const {},
+    Map<String, Object> attributes = const {},
+  }) {
     if (_finished) return;
     _finished = true;
-    _trace._complete(_name, _startUs, status: status, counts: counts);
+    _trace._complete(
+      _name,
+      _startUs,
+      status: status,
+      counts: counts,
+      attributes: attributes,
+    );
   }
 }
 
@@ -189,6 +212,7 @@ final class _GenerationProfileSpan {
     required this.durationUs,
     required this.status,
     required this.counts,
+    required this.attributes,
   });
 
   final String name;
@@ -196,6 +220,7 @@ final class _GenerationProfileSpan {
   final int durationUs;
   final String status;
   final Map<String, int> counts;
+  final Map<String, Object> attributes;
 
   Map<String, Object> toJson() => {
     'name': name,
@@ -203,7 +228,52 @@ final class _GenerationProfileSpan {
     'durationUs': durationUs,
     'status': status,
     if (counts.isNotEmpty) 'counts': counts,
+    if (attributes.isNotEmpty) 'attributes': attributes,
   };
+}
+
+/// Diagnostic identity of the exact inputs consumed by Host aggregation.
+///
+/// This fingerprint is deliberately observational. It cannot skip Builder,
+/// validation, aggregation, or writes. Benchmarks must first prove which
+/// authored edits preserve it before any reuse path can be considered.
+abstract final class _GenerationAggregationInputFingerprint {
+  static const int _schemaVersion = 1;
+
+  /// Hashes normalized Builder, Package graph, and resolved index identities.
+  static String capture({
+    required CCPackageWorkspace workspace,
+    required Map<String, CCPackageMetadataSnapshot> metadataSnapshots,
+    required Map<String, CCPackageIndex> indexes,
+    required Set<String> participatingPackages,
+    required Set<String> runtimeBundles,
+    required List<String> dependencyOrder,
+  }) {
+    final packageNames = workspace.packages.keys.toList()..sort();
+    final participating = participatingPackages.toList()..sort();
+    final bundles = runtimeBundles.toList()..sort();
+    final payload = <String, Object?>{
+      'schemaVersion': _schemaVersion,
+      'generatorVersion': ccrouterPackageIndexGeneratorVersion,
+      'hostPackage': workspace.host.name,
+      'dependencyOrder': dependencyOrder,
+      'participatingPackages': participating,
+      'runtimeBundles': bundles,
+      'packages': <String, Object?>{
+        for (final name in packageNames)
+          name: <String, Object?>{
+            'version': workspace.packages[name]!.version,
+            'writable': workspace.packages[name]!.writable,
+            'dependencies': workspace.packages[name]!.dependencies,
+            'builderMetadataFingerprint': metadataSnapshots[name]?.fingerprint,
+            'packageIndexFingerprint': indexes[name]?.contentFingerprint,
+            'bundleLibrary': indexes[name]?.bundleLibrary,
+            'bundleSymbol': indexes[name]?.bundleSymbol,
+          },
+      },
+    };
+    return computeCCCanonicalJsonFingerprint(payload);
+  }
 }
 
 /// Read-only attribution from existing exact content proofs and output diffs.

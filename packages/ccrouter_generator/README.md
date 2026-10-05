@@ -326,6 +326,9 @@ fvm dart run packages/ccrouter_test/benchmark/generator_component_topology.dart 
 
 样本包含五类能力与公共依赖，逐次变更注释、DartDoc、位置、实现、常量、描述和 barrel，
 每次比较全部受管文件并执行 `--no-cache --check`。单次样本不能作为真实项目 P95 或提速结论。
+Profile 的 `aggregation-input-fingerprint` span 会在 `attributes.fingerprint` 中报告 Builder
+metadata、Package Index identity 与 Host graph 的聚合输入摘要。该摘要目前只用于 benchmark
+诊断，不参与生成、缓存或 Builder/aggregation 跳过决策。
 
 本地持续开发可用 `--watch=auto` 保持当前 build root 的 build_runner AOT entrypoint 和
 Analyzer graph。每次 Builder 成功后先验证 exact-content fast path；未命中时仍走完整

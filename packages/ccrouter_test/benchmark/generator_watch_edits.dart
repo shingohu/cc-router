@@ -37,6 +37,7 @@ Future<void> main(List<String> arguments) async {
   StackTrace? failureStack;
   final scenarioReports = <Map<String, Object?>>[];
   Map<String, Object?>? warmup;
+  String? baselineAggregationInputFingerprint;
   try {
     session = await _WatchSession.start(root);
     final warmupSource = _replaceOnce(
@@ -54,6 +55,16 @@ Future<void> main(List<String> arguments) async {
       expectedSource = original;
     });
     warmup = {'apply': warmupApply.toJson(), 'restore': warmupRestore.toJson()};
+    baselineAggregationInputFingerprint =
+        warmupRestore.aggregationInputFingerprint;
+    if (warmupApply.aggregationInputFingerprint !=
+            baselineAggregationInputFingerprint ||
+        session.initial.aggregationInputFingerprint !=
+            baselineAggregationInputFingerprint) {
+      throw StateError(
+        'Comment warm-up changed aggregation inputs before sampling.',
+      );
+    }
 
     for (final scenario in _scenarios) {
       final samples = <_CycleSample>[];
@@ -64,10 +75,16 @@ Future<void> main(List<String> arguments) async {
           expectedSource = changed;
         });
         samples.add(applied);
-        await session.runCycle(() {
+        final restored = await session.runCycle(() {
           _writeExpected(source, expectedSource, original);
           expectedSource = original;
         });
+        if (restored.aggregationInputFingerprint !=
+            baselineAggregationInputFingerprint) {
+          throw StateError(
+            '${scenario.name} restore did not recover aggregation inputs.',
+          );
+        }
       }
       final unexpectedOutput = samples.where(
         (sample) => scenario.changesGeneratedOutput
@@ -83,9 +100,33 @@ Future<void> main(List<String> arguments) async {
       if (samples.any((sample) => sample.cycleMode != 'inProcess')) {
         throw StateError('${scenario.name} did not use in-process cycles.');
       }
+      final matchingAggregationInputs = samples
+          .where(
+            (sample) =>
+                sample.aggregationInputFingerprint ==
+                baselineAggregationInputFingerprint,
+          )
+          .length;
+      final expectedMatches = scenario.changesGeneratedOutput
+          ? 0
+          : samples.length;
+      if (matchingAggregationInputs != expectedMatches) {
+        throw StateError(
+          '${scenario.name} aggregation-input matches '
+          '$matchingAggregationInputs/${samples.length}; expected '
+          '$expectedMatches/${samples.length}.',
+        );
+      }
       scenarioReports.add({
         'scenario': scenario.name,
         'changesGeneratedOutput': scenario.changesGeneratedOutput,
+        'aggregationInput': {
+          'baselineMatches': matchingAggregationInputs,
+          'distinctFingerprints': samples
+              .map((sample) => sample.aggregationInputFingerprint)
+              .toSet()
+              .length,
+        },
         'summary': _summarize(samples),
         if (options.includeRawSamples)
           'samples': [for (final sample in samples) sample.toJson()],
@@ -146,6 +187,8 @@ Future<void> main(List<String> arguments) async {
               '1'
           ? 'legacySeparateWrites'
           : 'sharedSnapshot',
+      'baselineAggregationInputFingerprint':
+          baselineAggregationInputFingerprint,
       'initial': session!.initial.toJson(),
       'warmup': warmup,
       'scenarios': scenarioReports,
@@ -466,10 +509,19 @@ final class _WatchSession {
     final profile = (aggregation['profile'] as Map).cast<String, dynamic>();
     final spans = <String, int>{};
     final statuses = <String, String>{};
+    String? aggregationInputFingerprint;
     for (final raw in (profile['spans'] as List).cast<Map>()) {
       final span = raw.cast<String, dynamic>();
       spans[span['name'] as String] = span['durationUs'] as int;
       statuses[span['name'] as String] = span['status'] as String;
+      if (span['name'] == 'aggregation-input-fingerprint') {
+        final attributes = (span['attributes'] as Map?)
+            ?.cast<String, dynamic>();
+        aggregationInputFingerprint = attributes?['fingerprint'] as String?;
+      }
+    }
+    if (aggregationInputFingerprint == null) {
+      throw StateError('Aggregation input fingerprint is missing.');
     }
     final outputDelta = (aggregation['outputDelta'] as Map?)
         ?.cast<String, dynamic>();
@@ -479,6 +531,7 @@ final class _WatchSession {
       aggregationMs: aggregation['elapsedMs'] as int,
       outputFiles: outputDelta?['files'] as int? ?? -1,
       cycleMode: aggregation['cycleMode'] as String,
+      aggregationInputFingerprint: aggregationInputFingerprint,
       spanDurationsUs: spans,
       spanStatuses: statuses,
     );
@@ -552,6 +605,7 @@ final class _CycleSample {
     required this.aggregationMs,
     required this.outputFiles,
     required this.cycleMode,
+    required this.aggregationInputFingerprint,
     required this.spanDurationsUs,
     required this.spanStatuses,
   });
@@ -561,6 +615,7 @@ final class _CycleSample {
   final int aggregationMs;
   final int outputFiles;
   final String cycleMode;
+  final String aggregationInputFingerprint;
   final Map<String, int> spanDurationsUs;
   final Map<String, String> spanStatuses;
 
@@ -570,6 +625,7 @@ final class _CycleSample {
     aggregationMs: aggregationMs,
     outputFiles: outputFiles,
     cycleMode: cycleMode,
+    aggregationInputFingerprint: aggregationInputFingerprint,
     spanDurationsUs: spanDurationsUs,
     spanStatuses: spanStatuses,
   );
@@ -580,6 +636,7 @@ final class _CycleSample {
     'aggregationMs': aggregationMs,
     'outputFiles': outputFiles,
     'cycleMode': cycleMode,
+    'aggregationInputFingerprint': aggregationInputFingerprint,
     'profileSpansUs': spanDurationsUs,
     'profileSpanStatuses': spanStatuses,
   };
