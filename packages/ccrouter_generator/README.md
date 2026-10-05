@@ -367,6 +367,10 @@ aggregation-owned bytes，但始终重新读取当前 Builder-owned outputs。Pr
 `planning-snapshot-capture.attributes.evidenceMode` 为 `input-and-aggregation-output`、`input` 或
 `recaptured`。设置 `CCROUTER_DISABLE_WATCH_EVIDENCE_REUSE=1` 可恢复完整 recapture 做 A/B；
 该开关不改变 barrier、Validator、原子写入、失败恢复或最终 `--no-cache --check`。
+watch 的 `output-delta-scan` 已经读取本轮 Builder 和 aggregation 完成后的 current managed-output
+bytes，因此 planning state 直接消费同一份 exact-content evidence，Profile 报告
+`input-and-current-output`。`CCROUTER_DISABLE_WATCH_OUTPUT_EVIDENCE_REUSE=1` 只关闭 current-output
+复用并退回上一层 evidence；`CCROUTER_DISABLE_WATCH_EVIDENCE_REUSE=1` 仍关闭全部 evidence reuse。
 
 生成主路径不会计算文件闭包 shadow，也不会为此扫描 Workspace Dart 文件。历史 shadow
 采样保留在性能报告中，仅作为 benchmark/tooling 研究数据；它不参与 Build Plan、Tool

@@ -130,6 +130,11 @@ the verified aggregation-owned entry bytes, while rereading current
 Builder-owned outputs. The `planning-snapshot-capture` span reports
 `attributes.evidenceMode`; set `CCROUTER_DISABLE_WATCH_EVIDENCE_REUSE=1` to
 restore complete planning recapture for byte-for-byte and timing A/B.
+The watch output-delta scan also supplies its exact current managed-output
+bytes to planning publication after Builder, aggregation, and the final input
+barrier succeed. This reports `input-and-current-output`. Set
+`CCROUTER_DISABLE_WATCH_OUTPUT_EVIDENCE_REUSE=1` to restore only the separate
+planning output scan while retaining input and aggregation evidence reuse.
 The `aggregation-input-fingerprint` profile span reports a SHA-256 identity in
 `attributes.fingerprint` for Builder metadata, resolved Package indexes, and
 the Host aggregation graph. It is diagnostic-only: equality is not permission

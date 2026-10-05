@@ -1250,6 +1250,11 @@ aggregation reuse 命中时，planning capture 还会复用入口快照中已验
 aggregation-owned bytes，同时重新读取当前 Builder-owned outputs。它不删除或合并 barrier。
 `planning-snapshot-capture.attributes.evidenceMode` 报告 `input-and-aggregation-output`、`input` 或
 `recaptured`；`CCROUTER_DISABLE_WATCH_EVIDENCE_REUSE=1` 恢复完整 recapture，供逐字节和耗时 A/B。
+watch 的 profile output-delta scan 还会把它刚读取的 current managed-output bytes 交给 planning
+state，避免随后再次扫描相同输出；此路径报告 `input-and-current-output`。设置
+`CCROUTER_DISABLE_WATCH_OUTPUT_EVIDENCE_REUSE=1` 只关闭本项并退回上述 aggregation/input evidence，
+总开关仍关闭全部 watch evidence reuse。该复用发生在 Builder、aggregation 和最终 input barrier
+成功之后，不会用 cycle 入口 bytes 代替本轮 Builder 输出。
 
 `--profile` 的 `input-delta` 对比上次成功的本机 Build Plan：`authored` 是自身源码/配置变化，
 `resolutionOnly` 是自身未变但解析身份变化，另列工具与 Host 图变化。它不证明具体依赖边或

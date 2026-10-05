@@ -160,9 +160,15 @@ Future<void> main(List<String> arguments) async {
       }
       final evidenceReuseDisabled =
           Platform.environment['CCROUTER_DISABLE_WATCH_EVIDENCE_REUSE'] == '1';
+      final outputEvidenceReuseDisabled =
+          Platform
+              .environment['CCROUTER_DISABLE_WATCH_OUTPUT_EVIDENCE_REUSE'] ==
+          '1';
       final unexpectedEvidence = samples.where((sample) {
         final expected = evidenceReuseDisabled
             ? 'recaptured'
+            : !outputEvidenceReuseDisabled
+            ? 'input-and-current-output'
             : sample.aggregationReuseResult == 'hit'
             ? 'input-and-aggregation-output'
             : 'input';
@@ -203,6 +209,8 @@ Future<void> main(List<String> arguments) async {
         'aggregationReuse': {'hits': reuseHits, 'disabled': reuseDisabled},
         'planningEvidence': {
           'reused': !evidenceReuseDisabled,
+          'currentOutputReused':
+              !evidenceReuseDisabled && !outputEvidenceReuseDisabled,
           'modes':
               samples
                   .map((sample) => sample.planningEvidenceMode)

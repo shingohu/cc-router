@@ -547,6 +547,7 @@ final class _GenerationPlanningSnapshot {
     CCPackageWorkspace workspace, {
     _GenerationInputFingerprintSnapshot? verifiedInputSnapshot,
     Map<String, List<int>>? verifiedAggregationOutputs,
+    Map<String, List<int>>? verifiedManagedOutputs,
   }) async {
     final input =
         verifiedInputSnapshot ??
@@ -560,13 +561,17 @@ final class _GenerationPlanningSnapshot {
         indexes[package.name] = await _fileFingerprint(package.indexFile);
         continue;
       }
-      final outputs = await _GenerationStateFingerprint.capturePackageOutput(
-        package,
-        includeAggregationOutputs: verifiedAggregationOutputs == null,
-      );
-      if (verifiedAggregationOutputs != null) {
+      final outputs = verifiedManagedOutputs == null
+          ? await _GenerationStateFingerprint.capturePackageOutput(
+              package,
+              includeAggregationOutputs: verifiedAggregationOutputs == null,
+            )
+          : <String, List<int>>{};
+      final verifiedOutputs =
+          verifiedManagedOutputs ?? verifiedAggregationOutputs;
+      if (verifiedOutputs != null) {
         final packageRoot = path.normalize(package.root.absolute.path);
-        for (final entry in verifiedAggregationOutputs.entries) {
+        for (final entry in verifiedOutputs.entries) {
           final absolute = path.normalize(
             _absolutePath(workspace.buildRoot, entry.key),
           );

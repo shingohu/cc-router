@@ -6,6 +6,8 @@ final _generationCycleModeZoneKey = Object();
 const _sharedPlanningSnapshotKillSwitch =
     'CCROUTER_DISABLE_SHARED_PLANNING_SNAPSHOT';
 const _watchEvidenceReuseKillSwitch = 'CCROUTER_DISABLE_WATCH_EVIDENCE_REUSE';
+const _watchOutputEvidenceReuseKillSwitch =
+    'CCROUTER_DISABLE_WATCH_OUTPUT_EVIDENCE_REUSE';
 
 /// Output channel scoped to one command or in-process generation cycle.
 final class _CommandOutputSink {
@@ -119,6 +121,7 @@ Future<_GenerationCycleResult> _runGenerationCycle({
   Map<String, Object>? profileReport;
   Map<String, Object>? outputDelta;
   List<String>? outputChanges;
+  _GeneratedArtifactsDelta? generatedArtifactsDelta;
 
   Future<void> executeCycle(
     _Arguments parsed,
@@ -426,11 +429,13 @@ Future<_GenerationCycleResult> _runGenerationCycle({
       if (parsed.profile && snapshot != null) {
         try {
           final watch = Stopwatch()..start();
-          outputChanges = await profileTrace.measure<List<String>>(
-            'output-delta-scan',
-            snapshot.changes,
-            counts: (changes) => {'files': changes.length},
-          );
+          generatedArtifactsDelta = await profileTrace
+              .measure<_GeneratedArtifactsDelta>(
+                'output-delta-scan',
+                snapshot.captureDelta,
+                counts: (delta) => {'files': delta.changes.length},
+              );
+          outputChanges = generatedArtifactsDelta!.changes;
           outputDelta = _GenerationProfile.writeOutputs(outputChanges!);
           _commandStdout.writeln(
             'CCRouter profile output-delta-scan=${watch.elapsedMilliseconds}ms',
@@ -504,8 +509,16 @@ Future<_GenerationCycleResult> _runGenerationCycle({
                   snapshot != null
               ? snapshot.aggregationOutputFiles(fastPathWorkspace!)
               : null;
+          final verifiedManagedOutputs =
+              evidenceReuseEnabled &&
+                  Platform.environment[_watchOutputEvidenceReuseKillSwitch] !=
+                      '1'
+              ? generatedArtifactsDelta?.writableOutputFiles(fastPathWorkspace!)
+              : null;
           final evidenceMode = verifiedInputSnapshot == null
               ? 'recaptured'
+              : verifiedManagedOutputs != null
+              ? 'input-and-current-output'
               : verifiedAggregationOutputs == null
               ? 'input'
               : 'input-and-aggregation-output';
@@ -515,6 +528,7 @@ Future<_GenerationCycleResult> _runGenerationCycle({
               fastPathWorkspace!,
               verifiedInputSnapshot: verifiedInputSnapshot,
               verifiedAggregationOutputs: verifiedAggregationOutputs,
+              verifiedManagedOutputs: verifiedManagedOutputs,
             ),
             attributes: (_) => {'evidenceMode': evidenceMode},
           );

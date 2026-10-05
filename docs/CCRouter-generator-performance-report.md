@@ -517,6 +517,37 @@ Portable State 的显式 `prepare/publish` 语义。设置
 `3d71ce6d5006aa92dfe4931505fc9cd6515ba2136e417b6371cabf346fb3b0fc`，并通过
 `generate demo --no-cache --check`。
 
+### 10.9 watch current-output evidence reuse（2026-10-05）
+
+10.8 后继续拆分 reuse-hit cycle，发现 `workspace-aggregation` P50 约 123–127ms，其中 before/after
+input barrier 各约 45–48ms；实际 metadata/model/validation 已不是主要耗时。更明显的重复来自
+`output-delta-scan` 已读取本轮 current managed-output bytes，而紧随其后的 planning snapshot 又扫描
+同一批输出。现在 delta scan 返回变化列表和 exact bytes，planning state 直接消费；Builder、完整
+aggregation、两次 barrier、Validator、artifact restore、原子写入均不变。
+`CCROUTER_DISABLE_WATCH_OUTPUT_EVIDENCE_REUSE=1` 保留 delta scan 但恢复独立 planning output scan；
+Profile 默认报告 `input-and-current-output`。
+
+同机连续 optimized/reference A/B，每场景 3 个 apply 样本；两侧仅切换本项 kill switch。机器仍为
+Battery + macOS Low Power Mode，因此只用于方向判断：
+
+| 编辑场景 | wall optimized/reference P50 | aggregation optimized/reference P50 | planning snapshot optimized/reference P50 |
+| --- | ---: | ---: | ---: |
+| 普通注释 | 1352/1397ms | 399/430ms | 23.4/60.2ms |
+| Widget body | 1349/1389ms | 390/427ms | 23.5/59.9ms |
+| `initState` body | 1364/1385ms | 390/425ms | 23.3/60.3ms |
+| 新增普通函数 | 1353/1385ms | 387/422ms | 23.1/59.5ms |
+| Route annotation | 1658/1732ms | 547/596ms | 24.4/65.1ms |
+| 新增 Dart 文件 | 951/993ms | 389/426ms | 23.1/60.1ms |
+| 删除 Dart 文件 | 954/963ms | 400/436ms | 23.2/60.7ms |
+| 重命名 Dart 文件 | 960/1007ms | 395/445ms | 23.4/60.3ms |
+
+planning snapshot P50 减少 36–41ms，aggregation cycle 减少 31–50ms，wall P50 减少 9–74ms。
+optimized 八个场景均报告 `input-and-current-output`；reference 的七个 reuse hit 场景为
+`input-and-aggregation-output`，Route annotation miss 为 `input`。两轮均恢复源码、删除 fixture、
+得到相同的 99 文件指纹
+`1a09cc7e146346a1490ea72190c2d9147788c318950c004d4e138e015cef7dc5`，并通过
+`generate demo --no-cache --check`。
+
 ### 10.5 post-Builder aggregation input 诊断
 
 下一阶段先增加 diagnostic-only `aggregation-input-fingerprint`，不增加缓存状态、不跳过 Builder、

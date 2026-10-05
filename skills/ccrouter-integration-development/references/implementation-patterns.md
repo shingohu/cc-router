@@ -828,6 +828,11 @@ aggregation-owned bytes; current Builder-owned outputs are still read from
 disk. `planning-snapshot-capture.attributes.evidenceMode` exposes the selected
 path. Set `CCROUTER_DISABLE_WATCH_EVIDENCE_REUSE=1` for full recapture without
 removing barriers, validation, atomic publication, or the final reference gate.
+The post-cycle output-delta scan also provides its exact current managed-output
+bytes to planning publication, avoiding a second output scan. Profile reports
+`input-and-current-output`; set
+`CCROUTER_DISABLE_WATCH_OUTPUT_EVIDENCE_REUSE=1` to isolate this optimization
+while retaining the input and aggregation evidence paths.
 Profile traces may carry an `aggregation-input-fingerprint` span with a SHA-256
 `attributes.fingerprint` for Builder metadata, Package indexes, and Host graph
 inputs. It never authorizes skipping Builder. After Builder succeeds, matching

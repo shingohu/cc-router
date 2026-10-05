@@ -55,6 +55,14 @@ void main() {
       final optimized = await _runWatchUntilReady();
       final optimizedArtifacts = await _managedArtifacts();
       final optimizedPlanningState = await _localPlanningState();
+      final outputEvidenceReference = await _runWatchUntilReady(
+        environment: {
+          ...Platform.environment,
+          'CCROUTER_DISABLE_WATCH_OUTPUT_EVIDENCE_REUSE': '1',
+        },
+      );
+      final outputEvidenceReferenceArtifacts = await _managedArtifacts();
+      final outputEvidenceReferencePlanningState = await _localPlanningState();
       final evidenceReference = await _runWatchUntilReady(
         environment: {
           ...Platform.environment,
@@ -103,6 +111,14 @@ void main() {
               'planning-snapshot-capture',
             )['attributes']
             as Map)['evidenceMode'],
+        'input-and-current-output',
+      );
+      expect(
+        (_profileSpan(
+              outputEvidenceReference.aggregation,
+              'planning-snapshot-capture',
+            )['attributes']
+            as Map)['evidenceMode'],
         isIn(const ['input', 'input-and-aggregation-output']),
       );
       expect(
@@ -114,8 +130,10 @@ void main() {
         'recaptured',
       );
       expect(optimizedArtifacts, before);
+      expect(outputEvidenceReferenceArtifacts, optimizedArtifacts);
       expect(evidenceReferenceArtifacts, optimizedArtifacts);
       expect(referenceArtifacts, optimizedArtifacts);
+      expect(outputEvidenceReferencePlanningState, optimizedPlanningState);
       expect(evidenceReferencePlanningState, optimizedPlanningState);
       expect(referencePlanningState, optimizedPlanningState);
     },
@@ -202,7 +220,7 @@ void main() {
                 'planning-snapshot-capture',
               )['attributes']
               as Map)['evidenceMode'],
-          'input-and-aggregation-output',
+          'input-and-current-output',
         );
         final optimizedArtifacts = await _managedArtifacts();
         final optimizedPlanningState = await _localPlanningState();

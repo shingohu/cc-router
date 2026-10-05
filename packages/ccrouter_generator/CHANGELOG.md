@@ -36,6 +36,10 @@
   state and, on a verified aggregation hit, reused only aggregation-owned entry
   bytes while rereading current Builder outputs. Profile traces report the
   evidence mode; `CCROUTER_DISABLE_WATCH_EVIDENCE_REUSE=1` restores recapture.
+- Reused the exact current managed-output bytes already read by the watch
+  output-delta scan when publishing planning state. Set
+  `CCROUTER_DISABLE_WATCH_OUTPUT_EVIDENCE_REUSE=1` to retain delta reporting
+  while restoring the separate planning output scan for isolated A/B.
 - Added a diagnostic-only aggregation-input fingerprint to profile traces and
   watch benchmarks, then used the proven identity only after Builder completes
   to reuse verified aggregation outputs. The local proof also checks exact

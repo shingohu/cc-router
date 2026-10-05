@@ -318,6 +318,10 @@ planning state directly. A verified aggregation hit may also reuse only the
 aggregation-owned entry bytes while current Builder-owned outputs are reread.
 Use `CCROUTER_DISABLE_WATCH_EVIDENCE_REUSE=1` for the full-recapture A/B path;
 it does not remove a barrier or weaken `--no-cache --check`.
+After a successful watch cycle, planning state may also consume the exact
+current output bytes already captured for profile delta reporting. Use
+`CCROUTER_DISABLE_WATCH_OUTPUT_EVIDENCE_REUSE=1` to disable only this reuse;
+Builder execution, aggregation, validation, barriers, and rollback are unchanged.
 The profile trace may include `aggregation-input-fingerprint` with a bounded
 SHA-256 `attributes.fingerprint`. It never authorizes skipping Builder. After a
 successful Builder cycle, matching Tool/input identities and exact
