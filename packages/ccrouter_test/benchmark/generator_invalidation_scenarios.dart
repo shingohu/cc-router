@@ -34,7 +34,11 @@ Future<Map<String, Object?>> _runInvalidationScale(
       target.writeAsStringSync(source.replaceAll(from, to));
     }
 
-    replace('pubspec.yaml', 'workspace:\n', 'workspace:\n  - shared_values\n');
+    replace(
+      'pubspec.yaml',
+      'workspace:\n',
+      'workspace:\n  - shared_values\n  - edge_values\n',
+    );
     write('shared_values/pubspec.yaml', '''name: shared_values
 version: 1.0.0
 resolution: workspace
@@ -50,6 +54,13 @@ const sharedDescription = 'Shared capability description.';
 int sharedImplementation(int value) => value + 1;
 ''');
     write('shared_values/lib/src/other.dart', 'const otherValue = 10;\n');
+    write('edge_values/pubspec.yaml', '''name: edge_values
+version: 1.0.0
+resolution: workspace
+environment:
+  sdk: ^3.10.0
+''');
+    write('edge_values/lib/edge_values.dart', 'const unusedEdgeValue = 1;\n');
     for (var index = 0; index < count; index++) {
       final name = _packageName(index);
       final prefix = 'components/$name';
@@ -92,67 +103,162 @@ int sharedImplementation(int value) => value + 1;
         'sharedImplementation(value)',
       );
     }
+    final name = _packageName(0);
+    final routes = 'components/$name/lib/src/${name}_routes.dart';
+    final publicBarrel = 'components/$name/lib/$name.dart';
+    final componentExport =
+        "export 'src/${name}_component.dart' show ${_componentName(0)};";
+    final markerExport =
+        "export 'src/${name}_public_marker.dart' show benchmarkPublicMarker0;";
+    write(
+      'components/$name/lib/src/${name}_public_marker.dart',
+      'const benchmarkPublicMarker0 = 0;\n',
+    );
+    write(publicBarrel, '$componentExport\n$markerExport\n');
+    final removableRoute =
+        'components/$name/lib/src/${name}_removable_route.dart';
+    write(removableRoute, '''import 'package:ccrouter/ccrouter.dart';
+import 'package:flutter/widgets.dart';
+
+@CCRoute<void>(
+  id: 'benchmark.component.removable',
+  pattern: CCPathPattern('/benchmark/removable'),
+)
+final class BenchmarkRemovableRoutePage extends StatelessWidget {
+  const BenchmarkRemovableRoutePage({super.key});
+
+  @override
+  Widget build(BuildContext context) => const SizedBox.shrink();
+}
+''');
     final pubMs = await _pubGet(fixture);
     final cold = await _runGeneration(fixture, noCache: true);
     _expectCatalog(
       cold,
       components: count,
-      routes: count * _routesPerComponent,
+      routes: count * _routesPerComponent + 1,
       packages: count + 1,
     );
+    var previousAggregationInputFingerprint =
+        cold.aggregationInputFingerprint ??
+        (throw StateError(
+          'Cold generation did not report aggregation inputs.',
+        ));
     final warm = <Map<String, Object>>[];
     for (var i = 0; i < 3; i++) {
       final run = await _runGeneration(fixture, check: true);
       _expectPlan(run, 'unchanged');
       warm.add(run.toJson());
     }
-    final name = _packageName(0);
-    final routes = 'components/$name/lib/src/${name}_routes.dart';
-    final scenarios = <String, void Function()>{
-      'local-trailing-comment': () => write(
-        routes,
-        '${file(routes).readAsStringSync()}\n// ordinary trailing comment\n',
+    final scenarios = <_InvalidationScenario>[
+      _InvalidationScenario(
+        'local-trailing-comment',
+        changesAggregationInput: false,
+        apply: () => write(
+          routes,
+          '${file(routes).readAsStringSync()}\n// ordinary trailing comment\n',
+        ),
       ),
-      'local-dartdoc': () =>
-          replace(routes, 'Initial item identity.', 'Updated item identity.'),
-      'local-position': () {
-        for (final kind in [
-          'routes',
-          'service',
-          'command',
-          'event',
-          'init_task',
-        ]) {
-          final relative = 'components/$name/lib/src/${name}_$kind.dart';
-          write(relative, '\n${file(relative).readAsStringSync()}');
-        }
-      },
-      'dependency-implementation': () => replace(
-        'shared_values/lib/src/values.dart',
-        'value + 1',
-        'value + 2',
+      _InvalidationScenario(
+        'local-dartdoc',
+        changesAggregationInput: true,
+        apply: () =>
+            replace(routes, 'Initial item identity.', 'Updated item identity.'),
       ),
-      'dependency-constant': () => replace(
-        'shared_values/lib/src/values.dart',
-        'sharedDefault = 1',
-        'sharedDefault = 2',
+      _InvalidationScenario(
+        'local-position',
+        changesAggregationInput: true,
+        apply: () {
+          for (final kind in [
+            'routes',
+            'service',
+            'command',
+            'event',
+            'init_task',
+          ]) {
+            final relative = 'components/$name/lib/src/${name}_$kind.dart';
+            write(relative, '\n${file(relative).readAsStringSync()}');
+          }
+        },
       ),
-      'dependency-description': () => replace(
-        'shared_values/lib/src/values.dart',
-        'Shared capability description.',
-        'Updated capability description.',
+      _InvalidationScenario(
+        'dependency-implementation',
+        changesAggregationInput: false,
+        apply: () => replace(
+          'shared_values/lib/src/values.dart',
+          'value + 1',
+          'value + 2',
+        ),
       ),
-      'dependency-barrel': () => write(
-        'shared_values/lib/shared_values.dart',
-        "export 'src/other.dart';\nexport 'src/values.dart';\n",
+      _InvalidationScenario(
+        'dependency-constant',
+        changesAggregationInput: false,
+        apply: () => replace(
+          'shared_values/lib/src/values.dart',
+          'sharedDefault = 1',
+          'sharedDefault = 2',
+        ),
       ),
-    };
+      _InvalidationScenario(
+        'dependency-description',
+        changesAggregationInput: true,
+        apply: () => replace(
+          'shared_values/lib/src/values.dart',
+          'Shared capability description.',
+          'Updated capability description.',
+        ),
+      ),
+      _InvalidationScenario(
+        'dependency-barrel',
+        changesAggregationInput: false,
+        apply: () => write(
+          'shared_values/lib/shared_values.dart',
+          "export 'src/other.dart';\nexport 'src/values.dart';\n",
+        ),
+      ),
+      _InvalidationScenario(
+        'local-public-barrel',
+        changesAggregationInput: false,
+        apply: () => write(publicBarrel, '$markerExport\n$componentExport\n'),
+      ),
+      _InvalidationScenario(
+        'package-dependency-edge',
+        changesAggregationInput: true,
+        apply: () async {
+          replace(
+            'components/$name/pubspec.yaml',
+            'dependencies:\n  shared_values:',
+            'dependencies:\n  edge_values: ^1.0.0\n  shared_values:',
+          );
+          await _pubGet(fixture);
+        },
+      ),
+      _InvalidationScenario(
+        'local-declaration-delete',
+        changesAggregationInput: true,
+        apply: () => file(removableRoute).deleteSync(),
+      ),
+    ];
     final samples = <Map<String, Object?>>[];
-    for (final entry in scenarios.entries) {
+    for (final scenario in scenarios) {
       final before = await _ArtifactSnapshot.capture(fixture);
-      entry.value();
+      await scenario.apply();
       final run = await _runGeneration(fixture);
       _expectPlan(run, 'runBuilder');
+      final aggregationInputFingerprint =
+          run.aggregationInputFingerprint ??
+          (throw StateError(
+            '${scenario.name} did not report aggregation inputs.',
+          ));
+      final aggregationInputChanged =
+          aggregationInputFingerprint != previousAggregationInputFingerprint;
+      if (aggregationInputChanged != scenario.changesAggregationInput) {
+        throw StateError(
+          '${scenario.name} aggregation input changed '
+          '$aggregationInputChanged; expected '
+          '${scenario.changesAggregationInput}.',
+        );
+      }
       final after = await _ArtifactSnapshot.capture(fixture);
       final delta = run.attribution['output-delta'] as Map;
       final actualChanges = <String>{...before.files.keys, ...after.files.keys}
@@ -172,15 +278,18 @@ int sharedImplementation(int value) => value + 1;
             'local-trailing-comment',
             'dependency-implementation',
             'dependency-barrel',
-          ].contains(entry.key) &&
+            'local-public-barrel',
+            'package-dependency-edge',
+          ].contains(scenario.name) &&
           (changed('dart') != 0 ||
               changed('metadata') != 0 ||
               changed('documentation') != 0)) {
         throw StateError(
-          'Non-generating scenario changed business artifacts: ${entry.key}',
+          'Non-generating scenario changed business artifacts: '
+          '${scenario.name}',
         );
       }
-      if (entry.key == 'dependency-constant' && changed('dart') == 0) {
+      if (scenario.name == 'dependency-constant' && changed('dart') == 0) {
         throw StateError(
           'A consumed default value did not update generated Dart.',
         );
@@ -189,7 +298,7 @@ int sharedImplementation(int value) => value + 1;
             'local-dartdoc',
             'local-position',
             'dependency-description',
-          ].contains(entry.key) &&
+          ].contains(scenario.name) &&
           changed('metadata') == 0) {
         throw StateError('Documentation/location metadata did not update.');
       }
@@ -198,9 +307,20 @@ int sharedImplementation(int value) => value + 1;
           (inputs['authored'] as Map)['count'] != 1) {
         throw StateError('Expected one changed source Package.');
       }
-      if (entry.key.startsWith('dependency-') &&
+      if (scenario.name.startsWith('dependency-') &&
           (inputs['resolutionOnly'] as Map)['count'] < count) {
         throw StateError('Shared dependency propagation was not observed.');
+      }
+      if (scenario.name == 'package-dependency-edge') {
+        final added = inputs['added'] as Map;
+        if (inputs['hostGraphChanged'] != true ||
+            !(added['packages'] as List).contains('edge_values')) {
+          throw StateError('Package dependency edge was not attributed.');
+        }
+      }
+      if (scenario.name == 'local-declaration-delete' &&
+          (kinds['dart'] as Map)['removed'] == 0) {
+        throw StateError('Deleted declaration left stale Builder Dart.');
       }
       for (final group in [
         'authored',
@@ -217,14 +337,32 @@ int sharedImplementation(int value) => value + 1;
           throw StateError('Attribution truncation lost complete counts.');
         }
       }
-      final accuracy = await _verifyReference(fixture);
+      if (scenario.name == 'local-declaration-delete') {
+        _expectCatalog(
+          run,
+          components: count,
+          routes: count * _routesPerComponent,
+          packages: count + 1,
+        );
+      }
+      final accuracy = await _verifyReference(
+        fixture,
+        expectedAggregationInputFingerprint: aggregationInputFingerprint,
+      );
       samples.add({
-        'change': entry.key,
+        'change': scenario.name,
+        'aggregationInput': {
+          'before': previousAggregationInputFingerprint,
+          'after': aggregationInputFingerprint,
+          'changed': aggregationInputChanged,
+          'expectedChanged': scenario.changesAggregationInput,
+        },
         ...run.toJson(),
         'reference': accuracy.toJson(),
       });
+      previousAggregationInputFingerprint = aggregationInputFingerprint;
       stderr.writeln(
-        'Invalidation ${scale}x ${entry.key}: exact reference passed.',
+        'Invalidation ${scale}x ${scenario.name}: exact reference passed.',
       );
     }
     succeeded = true;
@@ -254,4 +392,16 @@ int sharedImplementation(int value) => value + 1;
       );
     }
   }
+}
+
+final class _InvalidationScenario {
+  const _InvalidationScenario(
+    this.name, {
+    required this.changesAggregationInput,
+    required this.apply,
+  });
+
+  final String name;
+  final bool changesAggregationInput;
+  final FutureOr<void> Function() apply;
 }

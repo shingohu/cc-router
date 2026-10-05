@@ -912,3 +912,21 @@ Generator `lib/`、主入口、Build Plan、Portable State 与 `build.yaml` 组�
 Analyzer/scaffold/pub-hook CLI 模块不再因为源码变化使 generation tool identity 失效。该边界
 只控制身份证明，不改变 generation lock、输入一致性屏障、P2/P3 `aggregateOnly` 或完整
 Builder fallback。
+
+### 12.12 post-Builder aggregation 输入矩阵（2026-10-05）
+
+diagnostic-only `aggregation-input-fingerprint` 已接入 1x 隔离组件拓扑基准。除原有普通注释、
+DartDoc、声明位置、共享实现、默认常量、描述和 dependency barrel 外，新增组件 public barrel
+等价重排、Package dependency edge 和 Route 声明文件删除。10 个场景都要求 optimized 与
+`--no-cache --check` reference 得到相同 fingerprint，并继续逐文件名、逐字节比较全部受管产物。
+
+结果表明不能把 Builder outputs 和 aggregation inputs 混为一谈：共享默认常量变化会更新 6 份
+Builder Dart，但不会改变 aggregation 消费的 metadata/index，因此 fingerprint 正确保持稳定；
+共享描述、DartDoc、位置和声明删除会改变 metadata/index，因此必须失效。等价 dependency/public
+barrel 重排保持稳定；新增未使用 dependency edge 虽然当前没有产物差异，仍因 Host/Package graph
+变化而失效。
+
+该矩阵补齐了 post-Builder reuse 的主要成功路径和结构性反例，但本阶段仍没有生产 skip。下一步
+若实现 execution prototype，必须只位于 Builder 成功之后，并保留 Validator、输入一致性屏障、
+生成锁、快照恢复和原子写入；提供 `CCROUTER_DISABLE_AGGREGATION_REUSE=1`，且 optimized/reference
+继续逐字节对照。fingerprint 永远不能授权跳过 Builder，`--no-cache --check` 继续强制完整路径。

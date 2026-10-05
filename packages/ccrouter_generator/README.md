@@ -324,11 +324,14 @@ Package 单列 `authoredUnavailable`，不视作源码一致。输入基线不�
 fvm dart run packages/ccrouter_test/benchmark/generator_component_topology.dart --invalidation 1 3 5 10
 ```
 
-样本包含五类能力与公共依赖，逐次变更注释、DartDoc、位置、实现、常量、描述和 barrel，
-每次比较全部受管文件并执行 `--no-cache --check`。单次样本不能作为真实项目 P95 或提速结论。
+样本包含五类能力与公共依赖，逐次变更注释、DartDoc、位置、实现、常量、描述、dependency/public
+barrel、Package dependency edge 和声明删除；每次比较全部受管文件并执行 `--no-cache --check`。
+单次样本不能作为真实项目 P95 或提速结论。
 Profile 的 `aggregation-input-fingerprint` span 会在 `attributes.fingerprint` 中报告 Builder
 metadata、Package Index identity 与 Host graph 的聚合输入摘要。该摘要目前只用于 benchmark
-诊断，不参与生成、缓存或 Builder/aggregation 跳过决策。
+诊断，不参与生成、缓存或 Builder/aggregation 跳过决策。矩阵会同时要求 optimized 与
+`--no-cache` reference 得到相同 fingerprint；被 Builder 消费但不被 aggregation 消费的默认常量
+允许只改变 Builder Dart，Package dependency edge 即使没有当前产物差异也必须改变 fingerprint。
 
 本地持续开发可用 `--watch=auto` 保持当前 build root 的 build_runner AOT entrypoint 和
 Analyzer graph。每次 Builder 成功后先验证 exact-content fast path；未命中时仍走完整

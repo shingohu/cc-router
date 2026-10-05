@@ -537,5 +537,27 @@ Validator、aggregation 或写入。identity 覆盖 Builder metadata 的逐字�
 每个 restore cycle 都恢复同一 baseline identity；非生成语义编辑稳定保持 identity，Route
 description 的每个不同值都产生不同 identity。最终源码恢复，99 个受管产物逐字节一致，指纹为
 `9bd22a574ca8a17c68223a602b90fbb42469670b6a70b07e961f17c1fd1637b6`，并通过
-`generate demo --no-cache --check`。该结果只证明当前五类场景的区分能力；在公共 barrel、依赖边、
-声明删除、位置和 DartDoc 矩阵完成前，不授权 aggregation reuse。
+`generate demo --no-cache --check`。
+
+随后复用 1x 隔离组件拓扑样本补齐 aggregation 输入矩阵：6 个组件覆盖五类能力和共享依赖，
+初始 31 个 Route；10 个变更串行执行，每次 optimized 结果都与 `--no-cache --check` 的
+aggregation fingerprint 一致，并逐文件名、逐字节比较 92 份受管产物（声明删除后为 90 份）。
+
+| 变更 | aggregation fingerprint | 受管产物差异 | 结论 |
+| --- | --- | ---: | --- |
+| 本地尾部普通注释 | 不变 | 0 | aggregation 不消费普通注释 |
+| Route 参数 DartDoc | 变化 | 6 | 位置/文档 metadata 属于 aggregation 输入 |
+| 五类声明前增加一行 | 变化 | 7 | 源码位置属于 aggregation 输入 |
+| 共享依赖方法实现 | 不变 | 0 | 未被生成消费的实现不进入 aggregation identity |
+| 被消费的共享默认常量 | 不变 | 6 Dart | Builder 输出变化，但 aggregation 输入不变 |
+| 被消费的共享描述 | 变化 | 22 | Builder metadata、Catalog 和文档都需要更新 |
+| 共享依赖等价 barrel 重排 | 不变 | 0 | 解析后的有效输入未变 |
+| 组件 public barrel 等价重排 | 不变 | 0 | public annotation 结果未变 |
+| 新增未使用的 Package dependency edge | 变化 | 0 | Host/Package graph identity 必须失效 |
+| 删除一个 Route 声明文件 | 变化 | 11 | 删除、索引、Catalog 和旧产物清理必须执行 |
+
+默认常量场景是关键边界：`aggregation-input-fingerprint` 描述的是 **post-Builder aggregation**
+读取集合，不是全部 Builder outputs 的摘要。Builder 已经正确更新 6 份 Route Dart 后，稳定
+fingerprint 才能授权未来只复用 aggregation 结果；它绝不能用于跳过 Builder。反过来，新增未使用
+dependency edge 虽然当前产物为零差异，仍因图身份变化而失效，避免把一次输出巧合当作长期证明。
+本轮矩阵仍只提供 diagnostic 证据，生产路径没有增加 aggregation skip、缓存状态或 kill switch。

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -574,10 +575,22 @@ Future<_GenerationRun> _runGeneration(
 }
 
 /// Runs the full Builder reference path and proves it made no byte changes.
-Future<_AccuracyResult> _verifyReference(Directory fixture) async {
+Future<_AccuracyResult> _verifyReference(
+  Directory fixture, {
+  String? expectedAggregationInputFingerprint,
+}) async {
   final before = await _ArtifactSnapshot.capture(fixture);
   final reference = await _runGeneration(fixture, noCache: true, check: true);
   _expectPlan(reference, 'runBuilder');
+  if (expectedAggregationInputFingerprint != null &&
+      reference.aggregationInputFingerprint !=
+          expectedAggregationInputFingerprint) {
+    throw StateError(
+      'Optimized/reference aggregation inputs differ: '
+      '$expectedAggregationInputFingerprint != '
+      '${reference.aggregationInputFingerprint}',
+    );
+  }
   final after = await _ArtifactSnapshot.capture(fixture);
   _expectExact(before, after, 'optimized output differs from reference output');
   return _AccuracyResult(
@@ -767,6 +780,7 @@ final class _GenerationRun {
     required this.routes,
     required this.packages,
     required this.buildTargets,
+    required this.aggregationInputFingerprint,
     this.attribution = const {},
   });
 
@@ -812,6 +826,9 @@ final class _GenerationRun {
   /// Number of writable Package targets passed to build_runner.
   final int buildTargets;
 
+  /// Exact post-Builder aggregation input identity, absent on a fast-path hit.
+  final String? aggregationInputFingerprint;
+
   /// Observational input/output deltas; never used as an equivalence proof.
   final Map<String, Object?> attribution;
 
@@ -840,6 +857,12 @@ final class _GenerationRun {
     final targets = RegExp(
       r'CCRouter profile build-targets=(\d+)',
     ).firstMatch(output);
+    final aggregationInput = RegExp(
+      r'CCRouter profile aggregation-input=([0-9a-f]{64})',
+    ).firstMatch(output);
+    if (!fastPath && aggregationInput == null) {
+      throw FormatException('Missing aggregation input fingerprint:\n$output');
+    }
     return _GenerationRun(
       wallMs: wallMs,
       profileTotalMs: int.parse(total.group(1)!),
@@ -855,6 +878,7 @@ final class _GenerationRun {
       routes: validated == null ? -1 : int.parse(validated.group(2)!),
       packages: validated == null ? -1 : int.parse(validated.group(3)!),
       buildTargets: targets == null ? 0 : int.parse(targets.group(1)!),
+      aggregationInputFingerprint: aggregationInput?.group(1),
       attribution: {
         for (final key in ['input-delta', 'output-delta', 'output-delta-scan'])
           if (RegExp('CCRouter profile $key=([^\\n]+)').firstMatch(output)
@@ -882,6 +906,8 @@ final class _GenerationRun {
     'routes': routes,
     'packages': packages,
     'buildTargets': buildTargets,
+    if (aggregationInputFingerprint case final fingerprint?)
+      'aggregationInputFingerprint': fingerprint,
     if (attribution.isNotEmpty) 'attribution': attribution,
   };
 }
