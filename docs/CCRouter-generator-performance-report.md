@@ -1,6 +1,7 @@
 # CCRouter 生成器性能优化与对比报告
 
-> 文档状态：2026-09-28 性能快照；2026-10-03 补充 Build Plan P2-P5，以及 P6 只读失效归因。
+> 文档状态：2026-09-28 性能快照；2026-10-03 补充 Build Plan P2-P5，以及 P6 只读失效归因；
+> 2026-10-05 补充 generation watch 多轮编辑基线。
 > 包含多组件个人/团队拓扑与五类能力共享依赖样本。数值不自动代表后续提交或其他机器。
 
 Package 增删导致的 Workspace AOT 冷路径及后续正确性优先优化方案，见
@@ -450,3 +451,39 @@ in-process `1083ms`，subprocess reference `2626ms`，单样本减少 `1543ms`�
 generator suite 并发负载下的观察值分别为 `2062ms` 与 `4127ms`，方向一致但不纳入基准结论。
 这些仍不是 P50/P95；它只验证消除重复进程启动有明确收益，不能据此缩减 input barrier、快照、
 Validator、原子写入或最终 `--no-cache --check`。
+
+### 10.3 连续编辑 P50/P95 基线
+
+新增可重复 benchmark：
+
+```bash
+fvm dart run packages/ccrouter_test/benchmark/generator_watch_edits.dart --samples=10
+```
+
+它在同一 watch/Analyzer session 中依次修改真实 Demo 的注释、Widget body、`initState`、新增普通
+函数和 Route annotation。每个 apply 样本后都恢复原始源码并等待完整
+`aggregationSucceeded`；默认输出每个 profile span 的 min/P50/P95/max，`--raw-samples` 可附带
+逐轮明细。benchmark 对源码采用 exact-content 写入门禁，拒绝覆盖并发编辑；结束后比较全部 99 个
+受管产物的路径和字节，并在停止 watch 后执行 `generate demo --no-cache --check`。
+
+同机 macOS arm64 / Dart 3.11.5，每种场景 10 个 apply 样本。首次 ready 为 `4578ms`；单独记录的
+首个增量 warm-up 为 `3687ms`，不计入下面的稳态分布：
+
+| 编辑场景 | wall P50/P95 | build_runner P50/P95 | aggregation P50/P95 | 受管输出差异 |
+| --- | ---: | ---: | ---: | ---: |
+| 仅注释 | 1623/1686ms | 488/524ms | 702/721ms | 0 |
+| Widget body | 1588/1638ms | 482/500ms | 699/709ms | 0 |
+| `initState` body | 1632/1672ms | 510/516ms | 700/707ms | 0 |
+| 新增普通函数 | 1632/1676ms | 509/526ms | 697/707ms | 0 |
+| Route annotation | 1717/1762ms | 615/638ms | 741/765ms | 7 |
+
+四种非生成语义编辑的耗时分布基本一致，说明当前剩余成本不是产物写入，而是 Builder 对源文件的
+Analyzer/source_gen 失效处理，以及 generation cycle 的固定证明和状态提交。各 span 中，
+`fast-path-manifest-write` P50 为 95–98ms，`build-plan-state-write` P50 为 135–141ms；两者每轮合计
+约 230ms，是下一步合并 exact-content planning snapshot 的直接证据。输入 fingerprint、执行边界、
+聚合前后 barrier 仍分别约 45ms，属于正确性门禁；本数据不支持删除或合并这些屏障。
+
+本轮 5 类场景全部使用 `cycleMode=inProcess`，非生成变更稳定为 `files=0`，Route annotation
+稳定为 7 个文件；最终受管产物指纹为
+`3d71ce6d5006aa92dfe4931505fc9cd6515ba2136e417b6371cabf346fb3b0fc`，逐字节恢复和
+`--no-cache --check` 均通过。该基线只用于同机 A/B，不是跨机器性能门槛。
