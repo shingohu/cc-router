@@ -1005,6 +1005,83 @@ void probe() {
   );
 
   test(
+    'post-Builder aggregation reuse matches the kill-switch reference',
+    () async {
+      final source = File(
+        path.join(
+          Directory.current.path,
+          'demo',
+          'modules',
+          'navigation_lab',
+          'lib',
+          'src',
+          'stack_page.dart',
+        ),
+      );
+      final original = source.readAsStringSync();
+      final before = await _readDemoGeneratedArtifacts();
+      try {
+        source.writeAsStringSync(
+          '$original\n// Aggregation reuse seed.\n',
+          flush: true,
+        );
+        final seed = await _generateDemo(['--profile']);
+        expect(seed.exitCode, 0, reason: '${seed.stderr}');
+
+        source.writeAsStringSync(
+          '$original\n// Aggregation reuse hit.\n',
+          flush: true,
+        );
+        final optimized = await _generateDemo(['--profile']);
+        expect(optimized.exitCode, 0, reason: '${optimized.stderr}');
+        expect(
+          '${optimized.stdout}',
+          contains('aggregation-reuse=hit reason=verified'),
+        );
+        final optimizedSpans =
+            (_profileDelta(optimized, 'trace')['spans'] as List)
+                .cast<Map<String, dynamic>>();
+        for (final name in const [
+          'dirty-package-computation',
+          'component-index-generation',
+          'metadata-cache-persist',
+        ]) {
+          expect(
+            optimizedSpans.singleWhere(
+              (span) => span['name'] == name,
+            )['status'],
+            'skipped',
+          );
+        }
+        expect(await _readDemoGeneratedArtifacts(), before);
+
+        source.writeAsStringSync(
+          '$original\n// Aggregation reuse reference.\n',
+          flush: true,
+        );
+        final reference = await _generateDemo(
+          ['--profile'],
+          environment: {
+            ...Platform.environment,
+            'CCROUTER_DISABLE_AGGREGATION_REUSE': '1',
+          },
+        );
+        expect(reference.exitCode, 0, reason: '${reference.stderr}');
+        expect(
+          '${reference.stdout}',
+          contains('aggregation-reuse=miss reason=disabled'),
+        );
+        expect(await _readDemoGeneratedArtifacts(), before);
+      } finally {
+        source.writeAsStringSync(original, flush: true);
+        final restored = await _generateDemo(const []);
+        expect(restored.exitCode, 0, reason: '${restored.stderr}');
+      }
+    },
+    timeout: const Timeout(Duration(minutes: 5)),
+  );
+
+  test(
     'shared planning snapshot isolates Build Plan state failures',
     () async {
       final before = await _readDemoGeneratedArtifacts();
@@ -1111,9 +1188,12 @@ void probe() {
       );
       expect(
         '${changedSource.stdout}',
-        contains('CCRouter profile dirty-packages='),
+        contains('aggregation-reuse=hit reason=verified'),
       );
-      expect('${changedSource.stdout}', contains('ccrouter_demo[host'));
+      expect(
+        '${changedSource.stdout}',
+        contains('dirty-packages=reused-aggregation-outputs'),
+      );
       final inputs = _profileDelta(changedSource, 'input-delta');
       expect(inputs['status'], 'compared');
       expect((inputs['authored'] as Map)['packages'], ['ccrouter_demo']);

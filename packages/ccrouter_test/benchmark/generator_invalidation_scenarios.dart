@@ -117,6 +117,8 @@ environment:
     write(publicBarrel, '$componentExport\n$markerExport\n');
     final removableRoute =
         'components/$name/lib/src/${name}_removable_route.dart';
+    final capabilityCatalog =
+        'components/$name/lib/src/ccrouter_generated/metadata/cc_catalog.md';
     write(removableRoute, '''import 'package:ccrouter/ccrouter.dart';
 import 'package:flutter/widgets.dart';
 
@@ -150,10 +152,28 @@ final class BenchmarkRemovableRoutePage extends StatelessWidget {
       _expectPlan(run, 'unchanged');
       warm.add(run.toJson());
     }
+    final routesBaseline = file(routes).readAsStringSync();
+    write(routes, '$routesBaseline\n// aggregation reuse warm-up\n');
+    final aggregationReuseSeed = await _runGeneration(fixture);
+    if (aggregationReuseSeed.aggregationInputFingerprint !=
+            previousAggregationInputFingerprint ||
+        aggregationReuseSeed.aggregationReuseResult != 'miss' ||
+        aggregationReuseSeed.aggregationReuseReason != 'state-missing') {
+      throw StateError('Aggregation reuse warm-up did not seed full output.');
+    }
+    write(routes, routesBaseline);
+    final aggregationReuseRestore = await _runGeneration(fixture);
+    if (aggregationReuseRestore.aggregationInputFingerprint !=
+            previousAggregationInputFingerprint ||
+        aggregationReuseRestore.aggregationReuseResult != 'hit' ||
+        aggregationReuseRestore.aggregationReuseReason != 'verified') {
+      throw StateError('Aggregation reuse warm-up restore did not hit.');
+    }
     final scenarios = <_InvalidationScenario>[
       _InvalidationScenario(
         'local-trailing-comment',
         changesAggregationInput: false,
+        expectedAggregationReuseReason: 'verified',
         apply: () => write(
           routes,
           '${file(routes).readAsStringSync()}\n// ordinary trailing comment\n',
@@ -162,12 +182,14 @@ final class BenchmarkRemovableRoutePage extends StatelessWidget {
       _InvalidationScenario(
         'local-dartdoc',
         changesAggregationInput: true,
+        expectedAggregationReuseReason: 'input-changed',
         apply: () =>
             replace(routes, 'Initial item identity.', 'Updated item identity.'),
       ),
       _InvalidationScenario(
         'local-position',
         changesAggregationInput: true,
+        expectedAggregationReuseReason: 'input-changed',
         apply: () {
           for (final kind in [
             'routes',
@@ -184,6 +206,7 @@ final class BenchmarkRemovableRoutePage extends StatelessWidget {
       _InvalidationScenario(
         'dependency-implementation',
         changesAggregationInput: false,
+        expectedAggregationReuseReason: 'verified',
         apply: () => replace(
           'shared_values/lib/src/values.dart',
           'value + 1',
@@ -193,6 +216,7 @@ final class BenchmarkRemovableRoutePage extends StatelessWidget {
       _InvalidationScenario(
         'dependency-constant',
         changesAggregationInput: false,
+        expectedAggregationReuseReason: 'verified',
         apply: () => replace(
           'shared_values/lib/src/values.dart',
           'sharedDefault = 1',
@@ -202,6 +226,7 @@ final class BenchmarkRemovableRoutePage extends StatelessWidget {
       _InvalidationScenario(
         'dependency-description',
         changesAggregationInput: true,
+        expectedAggregationReuseReason: 'input-changed',
         apply: () => replace(
           'shared_values/lib/src/values.dart',
           'Shared capability description.',
@@ -211,6 +236,7 @@ final class BenchmarkRemovableRoutePage extends StatelessWidget {
       _InvalidationScenario(
         'dependency-barrel',
         changesAggregationInput: false,
+        expectedAggregationReuseReason: 'verified',
         apply: () => write(
           'shared_values/lib/shared_values.dart',
           "export 'src/other.dart';\nexport 'src/values.dart';\n",
@@ -219,11 +245,13 @@ final class BenchmarkRemovableRoutePage extends StatelessWidget {
       _InvalidationScenario(
         'local-public-barrel',
         changesAggregationInput: false,
+        expectedAggregationReuseReason: 'verified',
         apply: () => write(publicBarrel, '$markerExport\n$componentExport\n'),
       ),
       _InvalidationScenario(
         'package-dependency-edge',
         changesAggregationInput: true,
+        expectedAggregationReuseReason: 'input-changed',
         apply: () async {
           replace(
             'components/$name/pubspec.yaml',
@@ -234,15 +262,27 @@ final class BenchmarkRemovableRoutePage extends StatelessWidget {
         },
       ),
       _InvalidationScenario(
+        'aggregation-output-tamper',
+        changesAggregationInput: false,
+        expectedAggregationReuseReason: 'output-changed',
+        expectedInputDeltaStatus: 'unavailable',
+        expectedAuthoredChanges: 0,
+        apply: () => write(
+          capabilityCatalog,
+          '${file(capabilityCatalog).readAsStringSync()}\n<!-- tampered -->\n',
+        ),
+      ),
+      _InvalidationScenario(
         'local-declaration-delete',
         changesAggregationInput: true,
+        expectedAggregationReuseReason: 'input-changed',
         apply: () => file(removableRoute).deleteSync(),
       ),
     ];
     final samples = <Map<String, Object?>>[];
     for (final scenario in scenarios) {
-      final before = await _ArtifactSnapshot.capture(fixture);
       await scenario.apply();
+      final before = await _ArtifactSnapshot.capture(fixture);
       final run = await _runGeneration(fixture);
       _expectPlan(run, 'runBuilder');
       final aggregationInputFingerprint =
@@ -257,6 +297,20 @@ final class BenchmarkRemovableRoutePage extends StatelessWidget {
           '${scenario.name} aggregation input changed '
           '$aggregationInputChanged; expected '
           '${scenario.changesAggregationInput}.',
+        );
+      }
+      final expectedReuseResult =
+          scenario.expectedAggregationReuseReason == 'verified'
+          ? 'hit'
+          : 'miss';
+      if (run.aggregationReuseResult != expectedReuseResult ||
+          run.aggregationReuseReason !=
+              scenario.expectedAggregationReuseReason) {
+        throw StateError(
+          '${scenario.name} aggregation reuse was '
+          '${run.aggregationReuseResult}/${run.aggregationReuseReason}; '
+          'expected $expectedReuseResult/'
+          '${scenario.expectedAggregationReuseReason}.',
         );
       }
       final after = await _ArtifactSnapshot.capture(fixture);
@@ -303,39 +357,50 @@ final class BenchmarkRemovableRoutePage extends StatelessWidget {
         throw StateError('Documentation/location metadata did not update.');
       }
       final inputs = run.attribution['input-delta'] as Map;
-      if (inputs['status'] != 'compared' ||
-          (inputs['authored'] as Map)['count'] != 1) {
-        throw StateError('Expected one changed source Package.');
+      if (inputs['status'] != scenario.expectedInputDeltaStatus) {
+        throw StateError(
+          'Expected input delta ${scenario.expectedInputDeltaStatus} for '
+          '${scenario.name}, got ${inputs['status']}.',
+        );
       }
-      if (scenario.name.startsWith('dependency-') &&
-          (inputs['resolutionOnly'] as Map)['count'] < count) {
-        throw StateError('Shared dependency propagation was not observed.');
-      }
-      if (scenario.name == 'package-dependency-edge') {
-        final added = inputs['added'] as Map;
-        if (inputs['hostGraphChanged'] != true ||
-            !(added['packages'] as List).contains('edge_values')) {
-          throw StateError('Package dependency edge was not attributed.');
+      if (inputs['status'] == 'compared') {
+        if ((inputs['authored'] as Map)['count'] !=
+            scenario.expectedAuthoredChanges) {
+          throw StateError(
+            'Expected ${scenario.expectedAuthoredChanges} changed source '
+            'Package(s) for ${scenario.name}.',
+          );
+        }
+        if (scenario.name.startsWith('dependency-') &&
+            (inputs['resolutionOnly'] as Map)['count'] < count) {
+          throw StateError('Shared dependency propagation was not observed.');
+        }
+        if (scenario.name == 'package-dependency-edge') {
+          final added = inputs['added'] as Map;
+          if (inputs['hostGraphChanged'] != true ||
+              !(added['packages'] as List).contains('edge_values')) {
+            throw StateError('Package dependency edge was not attributed.');
+          }
+        }
+        for (final group in [
+          'authored',
+          'authoredUnavailable',
+          'resolution',
+          'resolutionOnly',
+          'added',
+          'removed',
+        ]) {
+          final values = inputs[group] as Map;
+          final names = values['packages'] as List;
+          if (names.length > 12 ||
+              names.length + (values['omitted'] as int) != values['count']) {
+            throw StateError('Attribution truncation lost complete counts.');
+          }
         }
       }
       if (scenario.name == 'local-declaration-delete' &&
           (kinds['dart'] as Map)['removed'] == 0) {
         throw StateError('Deleted declaration left stale Builder Dart.');
-      }
-      for (final group in [
-        'authored',
-        'authoredUnavailable',
-        'resolution',
-        'resolutionOnly',
-        'added',
-        'removed',
-      ]) {
-        final values = inputs[group] as Map;
-        final names = values['packages'] as List;
-        if (names.length > 12 ||
-            names.length + (values['omitted'] as int) != values['count']) {
-          throw StateError('Attribution truncation lost complete counts.');
-        }
       }
       if (scenario.name == 'local-declaration-delete') {
         _expectCatalog(
@@ -356,6 +421,10 @@ final class BenchmarkRemovableRoutePage extends StatelessWidget {
           'after': aggregationInputFingerprint,
           'changed': aggregationInputChanged,
           'expectedChanged': scenario.changesAggregationInput,
+        },
+        'aggregationReuse': {
+          'result': run.aggregationReuseResult,
+          'reason': run.aggregationReuseReason,
         },
         ...run.toJson(),
         'reference': accuracy.toJson(),
@@ -380,6 +449,10 @@ final class BenchmarkRemovableRoutePage extends StatelessWidget {
       'pubMs': pubMs,
       'cold': cold.toJson(),
       'warm': warm,
+      'aggregationReuseWarmup': {
+        'seed': aggregationReuseSeed.toJson(),
+        'restore': aggregationReuseRestore.toJson(),
+      },
       'samples': samples,
       'equivalence': 'all managed file names and bytes, with no-cache --check',
     };
@@ -398,10 +471,16 @@ final class _InvalidationScenario {
   const _InvalidationScenario(
     this.name, {
     required this.changesAggregationInput,
+    required this.expectedAggregationReuseReason,
+    this.expectedInputDeltaStatus = 'compared',
+    this.expectedAuthoredChanges = 1,
     required this.apply,
   });
 
   final String name;
   final bool changesAggregationInput;
+  final String expectedAggregationReuseReason;
+  final String expectedInputDeltaStatus;
+  final int expectedAuthoredChanges;
   final FutureOr<void> Function() apply;
 }

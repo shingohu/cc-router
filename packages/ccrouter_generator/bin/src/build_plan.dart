@@ -519,6 +519,7 @@ final class _GenerationPlanningSnapshot {
   const _GenerationPlanningSnapshot({
     required this.input,
     required this.outputFingerprint,
+    required this.aggregationOutputFingerprint,
     required this.indexes,
     required this.packageOutputFingerprints,
   });
@@ -531,6 +532,9 @@ final class _GenerationPlanningSnapshot {
 
   /// Full writable managed-output digest captured after aggregation.
   final String outputFingerprint;
+
+  /// Aggregation-owned output digest in build-root-relative identity space.
+  final String aggregationOutputFingerprint;
 
   /// Exact Package Index digests captured with the input and output facts.
   final Map<String, String?> indexes;
@@ -548,6 +552,7 @@ final class _GenerationPlanningSnapshot {
     final indexes = <String, String?>{};
     final packageOutputFingerprints = <String, String?>{};
     final workspaceOutputs = <String, List<int>>{};
+    final aggregationOutputs = <String, List<int>>{};
     for (final package in workspace.packages.values) {
       indexes[package.name] = await _fileFingerprint(package.indexFile);
       if (!package.writable) continue;
@@ -558,6 +563,11 @@ final class _GenerationPlanningSnapshot {
           _GenerationStateFingerprint.digestEntries(outputs);
       for (final entry in outputs.entries) {
         workspaceOutputs['${package.name}/${entry.key}'] = entry.value;
+        aggregationOutputs[_relativePath(
+              workspace.buildRoot,
+              File(_absolutePath(package.root, entry.key)),
+            )] =
+            entry.value;
       }
     }
     return _GenerationPlanningSnapshot(
@@ -565,6 +575,10 @@ final class _GenerationPlanningSnapshot {
       outputFingerprint: _GenerationStateFingerprint.digestEntries(
         workspaceOutputs,
       ),
+      aggregationOutputFingerprint:
+          _GenerationAggregationReuseState.captureOutputFingerprint(
+            aggregationOutputs,
+          ),
       indexes: Map.unmodifiable(indexes),
       packageOutputFingerprints: Map.unmodifiable(packageOutputFingerprints),
     );

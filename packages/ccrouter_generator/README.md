@@ -328,10 +328,16 @@ fvm dart run packages/ccrouter_test/benchmark/generator_component_topology.dart 
 barrel、Package dependency edge 和声明删除；每次比较全部受管文件并执行 `--no-cache --check`。
 单次样本不能作为真实项目 P95 或提速结论。
 Profile 的 `aggregation-input-fingerprint` span 会在 `attributes.fingerprint` 中报告 Builder
-metadata、Package Index identity 与 Host graph 的聚合输入摘要。该摘要目前只用于 benchmark
-诊断，不参与生成、缓存或 Builder/aggregation 跳过决策。矩阵会同时要求 optimized 与
-`--no-cache` reference 得到相同 fingerprint；被 Builder 消费但不被 aggregation 消费的默认常量
-允许只改变 Builder Dart，Package dependency edge 即使没有当前产物差异也必须改变 fingerprint。
+metadata、Package Index identity 与 Host graph 的聚合输入摘要。它不允许跳过 Builder；Builder
+成功后，只有该摘要、Tool identity 和全部 aggregation-owned output bytes 同时匹配上次成功的
+本地证明，才跳过重复的 aggregation rendering/writes。Workspace Validator、Package graph/index
+构造和前后 input barrier 始终执行。状态位于 `.dart_tool/ccrouter/v1/aggregation_reuse/`，缺失、
+损坏、输出篡改、metadata cache 损坏或 identity 变化均 fail closed；损坏 cache 由完整路径重建。
+`CCROUTER_DISABLE_AGGREGATION_REUSE=1` 恢复完整 aggregation，`--no-cache` 固定报告
+`miss/no-cache-reference`。矩阵同时要求 optimized 与
+`--no-cache --check` reference 得到相同 fingerprint 和逐字节产物；被 Builder 消费但不被
+aggregation 消费的默认常量允许只改变 Builder Dart，Package dependency edge 即使没有当前
+产物差异也必须改变 fingerprint。
 
 本地持续开发可用 `--watch=auto` 保持当前 build root 的 build_runner AOT entrypoint 和
 Analyzer graph。每次 Builder 成功后先验证 exact-content fast path；未命中时仍走完整
@@ -353,6 +359,8 @@ A/B；该开关不允许跳过快照、Validator、原子提交或最终 `--no-c
 成功 cycle 的 fast-path manifest 与本机 Build Plan state 复用一次 exact-content planning
 snapshot，并继续分别原子写入。设置 `CCROUTER_DISABLE_SHARED_PLANNING_SNAPSHOT=1` 可恢复
 两个状态各自扫描的 reference 路径，用于逐字节和耗时 A/B；它不削弱任何输入屏障或最终门禁。
+aggregation reuse 直接复用 cycle 入口 artifact snapshot 和上述 cycle-end planning snapshot
+中的 bytes，不额外扫描生成目录；命中时也不重写 metadata cache，未来 miss 只会更保守地重算。
 
 生成主路径不会计算文件闭包 shadow，也不会为此扫描 Workspace Dart 文件。历史 shadow
 采样保留在性能报告中，仅作为 benchmark/tooling 研究数据；它不参与 Build Plan、Tool

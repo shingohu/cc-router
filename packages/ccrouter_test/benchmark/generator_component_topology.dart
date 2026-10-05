@@ -582,6 +582,14 @@ Future<_AccuracyResult> _verifyReference(
   final before = await _ArtifactSnapshot.capture(fixture);
   final reference = await _runGeneration(fixture, noCache: true, check: true);
   _expectPlan(reference, 'runBuilder');
+  if (reference.aggregationReuseResult != 'miss' ||
+      reference.aggregationReuseReason != 'no-cache-reference') {
+    throw StateError(
+      'No-cache reference attempted aggregation reuse: '
+      '${reference.aggregationReuseResult}/'
+      '${reference.aggregationReuseReason}',
+    );
+  }
   if (expectedAggregationInputFingerprint != null &&
       reference.aggregationInputFingerprint !=
           expectedAggregationInputFingerprint) {
@@ -781,6 +789,8 @@ final class _GenerationRun {
     required this.packages,
     required this.buildTargets,
     required this.aggregationInputFingerprint,
+    required this.aggregationReuseResult,
+    required this.aggregationReuseReason,
     this.attribution = const {},
   });
 
@@ -829,6 +839,12 @@ final class _GenerationRun {
   /// Exact post-Builder aggregation input identity, absent on a fast-path hit.
   final String? aggregationInputFingerprint;
 
+  /// Whether post-Builder aggregation outputs were reused.
+  final String? aggregationReuseResult;
+
+  /// Stable reason for the aggregation reuse decision.
+  final String? aggregationReuseReason;
+
   /// Observational input/output deltas; never used as an equivalence proof.
   final Map<String, Object?> attribution;
 
@@ -860,8 +876,13 @@ final class _GenerationRun {
     final aggregationInput = RegExp(
       r'CCRouter profile aggregation-input=([0-9a-f]{64})',
     ).firstMatch(output);
-    if (!fastPath && aggregationInput == null) {
-      throw FormatException('Missing aggregation input fingerprint:\n$output');
+    final aggregationReuse = RegExp(
+      r'CCRouter profile aggregation-reuse=(hit|miss) reason=([^\n]+)',
+    ).firstMatch(output);
+    if (!fastPath && (aggregationInput == null || aggregationReuse == null)) {
+      throw FormatException(
+        'Missing aggregation input/reuse profile:\n$output',
+      );
     }
     return _GenerationRun(
       wallMs: wallMs,
@@ -879,6 +900,8 @@ final class _GenerationRun {
       packages: validated == null ? -1 : int.parse(validated.group(3)!),
       buildTargets: targets == null ? 0 : int.parse(targets.group(1)!),
       aggregationInputFingerprint: aggregationInput?.group(1),
+      aggregationReuseResult: aggregationReuse?.group(1),
+      aggregationReuseReason: aggregationReuse?.group(2),
       attribution: {
         for (final key in ['input-delta', 'output-delta', 'output-delta-scan'])
           if (RegExp('CCRouter profile $key=([^\\n]+)').firstMatch(output)
@@ -908,6 +931,10 @@ final class _GenerationRun {
     'buildTargets': buildTargets,
     if (aggregationInputFingerprint case final fingerprint?)
       'aggregationInputFingerprint': fingerprint,
+    if (aggregationReuseResult case final result?)
+      'aggregationReuseResult': result,
+    if (aggregationReuseReason case final reason?)
+      'aggregationReuseReason': reason,
     if (attribution.isNotEmpty) 'attribution': attribution,
   };
 }

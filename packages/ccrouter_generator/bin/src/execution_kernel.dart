@@ -128,6 +128,9 @@ Future<_GenerationCycleResult> _runGenerationCycle({
     _GeneratedArtifactsSnapshot? snapshot;
     CCPackageWorkspace? fastPathWorkspace;
     String? verifiedInputFingerprint;
+    String? aggregationToolFingerprint;
+    String? currentAggregationOutputFingerprint;
+    _GenerationAggregationOutcome? aggregationOutcome;
     _GenerationBuildPlanInspection? buildPlan;
     var profileOutcome = 'failed';
     try {
@@ -154,10 +157,14 @@ Future<_GenerationCycleResult> _runGenerationCycle({
         if (parsed.noCache ||
             parsed.portablePrepare ||
             _usesOptimizedWatchCycle) {
-          verifiedInputFingerprint = await profileTrace.measure(
+          final inputSnapshot = await profileTrace.measure(
             'input-fingerprint-capture',
-            () => _GenerationStateFingerprint.captureInput(fastPathWorkspace!),
+            () => _GenerationStateFingerprint.captureInputSnapshot(
+              fastPathWorkspace!,
+            ),
           );
+          verifiedInputFingerprint = inputSnapshot.fingerprint;
+          aggregationToolFingerprint = inputSnapshot.portable.toolFingerprint;
           buildPlan = _usesOptimizedWatchCycle
               ? const _GenerationBuildPlanInspection.aggregateOnly(
                   reasons: ['build-runner-watch-completed'],
@@ -274,10 +281,12 @@ Future<_GenerationCycleResult> _runGenerationCycle({
         // work after an authored input changed in the meantime.
         final executionInput = await profileTrace.measure(
           'execution-boundary-fingerprint',
-          () => _GenerationStateFingerprint.captureInput(fastPathWorkspace!),
+          () => _GenerationStateFingerprint.captureInputSnapshot(
+            fastPathWorkspace!,
+          ),
         );
         if (verifiedInputFingerprint != null &&
-            verifiedInputFingerprint != executionInput) {
+            verifiedInputFingerprint != executionInput.fingerprint) {
           buildPlan = const _GenerationBuildPlanInspection.runBuilder(
             reasons: ['input-changed-before-execution'],
           );
@@ -288,7 +297,8 @@ Future<_GenerationCycleResult> _runGenerationCycle({
             );
           }
         }
-        verifiedInputFingerprint = executionInput;
+        verifiedInputFingerprint = executionInput.fingerprint;
+        aggregationToolFingerprint = executionInput.portable.toolFingerprint;
         if (_isWatchAggregationCycle && !_usesOptimizedWatchCycle) {
           buildPlan = const _GenerationBuildPlanInspection.aggregateOnly(
             reasons: ['build-runner-watch-succeeded'],
@@ -324,6 +334,10 @@ Future<_GenerationCycleResult> _runGenerationCycle({
               ),
             )
           : null;
+      if (snapshot != null && fastPathWorkspace != null) {
+        currentAggregationOutputFingerprint = snapshot
+            .aggregationOutputFingerprint(fastPathWorkspace);
+      }
       if (needsBootstrap) {
         try {
           if (await profileTrace.measure(
@@ -385,6 +399,12 @@ Future<_GenerationCycleResult> _runGenerationCycle({
                 buildContext!,
                 buildDuration: buildDuration,
                 expectedInputFingerprint: verifiedInputFingerprint,
+                aggregationToolFingerprint: aggregationToolFingerprint,
+                currentAggregationOutputFingerprint:
+                    currentAggregationOutputFingerprint,
+                onAggregationCompleted: (outcome) {
+                  aggregationOutcome = outcome;
+                },
                 prebuiltPackages:
                     buildPlan?.actualPrebuiltPackages ?? const <String>{},
                 trace: profileTrace,
@@ -446,6 +466,7 @@ Future<_GenerationCycleResult> _runGenerationCycle({
         );
         if (Platform.environment[_sharedPlanningSnapshotKillSwitch] == '1') {
           profileTrace?.skip('planning-snapshot-capture');
+          profileTrace?.skip('aggregation-reuse-state-write');
           await profileTrace.measure(
             'fast-path-manifest-write',
             () => _GenerationFastPath.write(
@@ -477,6 +498,7 @@ Future<_GenerationCycleResult> _runGenerationCycle({
           if (planningSnapshot.inputFingerprint != verifiedInputFingerprint) {
             profileTrace?.skip('fast-path-manifest-write');
             profileTrace?.skip('build-plan-state-write');
+            profileTrace?.skip('aggregation-reuse-state-write');
           } else {
             await profileTrace.measure(
               'fast-path-manifest-write',
@@ -504,6 +526,31 @@ Future<_GenerationCycleResult> _runGenerationCycle({
                   'future runs will conservatively use runBuilder.',
                 );
               }
+            }
+            final outcome = aggregationOutcome;
+            if (outcome != null && outcome.publishState) {
+              try {
+                await profileTrace.measure(
+                  'aggregation-reuse-state-write',
+                  () => _GenerationAggregationReuseState.write(
+                    workspace: fastPathWorkspace!,
+                    aggregationInputFingerprint: outcome.inputFingerprint,
+                    toolFingerprint:
+                        planningSnapshot.input.portable.toolFingerprint,
+                    aggregationOutputFingerprint:
+                        planningSnapshot.aggregationOutputFingerprint,
+                  ),
+                );
+              } on Object {
+                if (parsed.profile) {
+                  _commandStdout.writeln(
+                    'CCRouter profile aggregation-reuse-state=write-failed; '
+                    'future runs will use full aggregation.',
+                  );
+                }
+              }
+            } else {
+              profileTrace?.skip('aggregation-reuse-state-write');
             }
           }
         }
@@ -619,6 +666,7 @@ abstract final class CCGeneratorExecutionKernel {
     }
     for (final relative in const [
       'bin/ccrouter_generator.dart',
+      'bin/src/aggregation_reuse.dart',
       'bin/src/build_plan.dart',
       'bin/src/execution_kernel.dart',
       // Owns the in-process cycle mode that decides whether Builder reruns.

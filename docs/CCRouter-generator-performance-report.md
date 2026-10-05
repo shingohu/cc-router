@@ -560,4 +560,32 @@ aggregation fingerprint 一致，并逐文件名、逐字节比较 92 份受管�
 读取集合，不是全部 Builder outputs 的摘要。Builder 已经正确更新 6 份 Route Dart 后，稳定
 fingerprint 才能授权未来只复用 aggregation 结果；它绝不能用于跳过 Builder。反过来，新增未使用
 dependency edge 虽然当前产物为零差异，仍因图身份变化而失效，避免把一次输出巧合当作长期证明。
-本轮矩阵仍只提供 diagnostic 证据，生产路径没有增加 aggregation skip、缓存状态或 kill switch。
+该矩阵先作为 diagnostic 证据建立边界；后续 production prototype 与结果见 10.6。
+
+### 10.6 post-Builder aggregation reuse（2026-10-05）
+
+production path 只在 Builder 已成功后检查三项 exact-content proof：Tool fingerprint、10.5 定义的
+aggregation input fingerprint，以及入口 artifact snapshot 中 aggregation-owned outputs 的 bytes。
+命中只跳过 aggregation rendering/writes、dirty-set 计算和本轮无必要的 metadata-cache persist；
+内部 API/Portable 校验、Package graph/index 构造、Workspace Validator、前后 input barrier、
+generation lock、artifact restore 和原子 state publication 均保留。入口与 cycle-end output proof
+分别复用已有 artifact/planning snapshot，不额外扫描磁盘。状态只位于
+`.dart_tool/ccrouter/v1/aggregation_reuse/`，`CCROUTER_DISABLE_AGGREGATION_REUSE=1` 恢复完整路径，
+`--no-cache --check` 强制 `miss/no-cache-reference`；metadata cache 损坏也强制完整路径并重建缓存。
+
+同机 Demo watch、每场景 5 个 apply 样本的 optimized/reference P50 如下（macOS arm64，Dart
+3.11.5；只作同机趋势）：
+
+| 编辑场景 | reuse | wall optimized/reference | aggregation optimized/reference |
+| --- | ---: | ---: | ---: |
+| 普通注释 | 5/5 | 1419/1525ms | 488/584ms |
+| Widget body | 5/5 | 1428/1574ms | 466/581ms |
+| `initState` body | 5/5 | 1406/1564ms | 460/581ms |
+| 新增普通函数 | 5/5 | 1417/1542ms | 462/595ms |
+| Route annotation | 0/5 | 1694/1726ms | 619/630ms |
+
+四类命中场景 wall P50 减少 106–158ms，`workspace-aggregation` P50 从约 240–250ms 降至
+119–126ms。Route annotation 保持 miss 并执行完整 aggregation。扩展后的 1x 矩阵共 11 个场景，
+新增 output tamper 必须报告 `miss/output-changed` 并修复；所有场景均通过 `--no-cache --check`
+逐文件名、逐字节对照。optimized/reference 最终 99 个受管文件 fingerprint 同为
+`1bd915a3a986a88f94337111aa37b7114c41afabad1727548ab75a23ab766c14`。

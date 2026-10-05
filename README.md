@@ -1209,8 +1209,13 @@ Workspace/指纹/Build Plan、preflight、快照、build_runner 子进程、Vali
 build_runner 启用官方 `--verbose-durations`，其 Builder phase 明细用于继续区分 Analyzer、
 resolve、build、read/write 成本，但不属于 CCRouter trace schema。不带 `--profile` 不产生报告。
 `aggregation-input-fingerprint` span 额外携带一个 SHA-256 `attributes.fingerprint`，覆盖 Builder
-metadata、Package Index identity 与 Host graph 等聚合输入；它当前只用于 benchmark 诊断，不能
-跳过 Builder、Validator、aggregation 或最终 `--no-cache --check`。
+metadata、Package Index identity 与 Host graph 等聚合输入。它永远不能授权跳过 Builder；Builder
+成功后，若该 identity、Tool identity 与入口 artifact snapshot 中全部 aggregation-owned bytes
+同时匹配上次成功的本地证明，则可跳过重复的 aggregation rendering/writes。命中前仍执行只读
+依赖校验、Package graph/index 构造、Workspace Validator 和前后 input barrier。状态缺失、损坏、
+输出篡改、metadata cache 损坏或任一 identity 变化都会 fail closed；损坏 cache 会由该轮完整
+路径重建。`CCROUTER_DISABLE_AGGREGATION_REUSE=1` 可恢复完整 aggregation 做 A/B，
+`--no-cache --check` 始终强制权威参考路径。
 
 `--watch=auto` 为一个 Host 解析单一 build root，并保持一套 `build_runner watch --workspace`
 进程、AOT entrypoint 和 Analyzer graph。watch 在 lease 内持有 generation lock；每个成功 Builder
@@ -1237,6 +1242,9 @@ entrypoint 和恢复 CLI library graph；`aggregationSucceeded.cycleMode` 为 `i
 planning snapshot，并由两个状态文件复用；两者仍分别原子写入。设置
 `CCROUTER_DISABLE_SHARED_PLANNING_SNAPSHOT=1` 可恢复各自独立扫描，用于逐字节和耗时 A/B；
 该开关不改变 input barrier、Validator、artifact snapshot 或最终 `--no-cache --check`。
+同一入口 artifact snapshot 和 cycle-end planning snapshot 也分别提供 aggregation output proof，
+不会为 reuse 额外扫描生成目录；证明只写入 `.dart_tool/ccrouter/v1/aggregation_reuse/`，不属于
+Portable State 或可提交生成物。
 
 `--profile` 的 `input-delta` 对比上次成功的本机 Build Plan：`authored` 是自身源码/配置变化，
 `resolutionOnly` 是自身未变但解析身份变化，另列工具与 Host 图变化。它不证明具体依赖边或

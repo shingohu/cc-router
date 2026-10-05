@@ -32,5 +32,8 @@
   retaining atomic writes and all input barriers. Set
   `CCROUTER_DISABLE_SHARED_PLANNING_SNAPSHOT=1` for the reference path.
 - Added a diagnostic-only aggregation-input fingerprint to profile traces and
-  watch benchmarks. It distinguishes unchanged Builder/Host aggregation inputs
-  without yet authorizing any aggregation skip or cache decision.
+  watch benchmarks, then used the proven identity only after Builder completes
+  to reuse verified aggregation outputs. The local proof also checks exact
+  output bytes, reuses existing cycle snapshots instead of rescanning, retains
+  validation and input barriers, and fails closed behind
+  `CCROUTER_DISABLE_AGGREGATION_REUSE=1` and `--no-cache --check` references.

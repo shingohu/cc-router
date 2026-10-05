@@ -100,6 +100,29 @@ Future<void> main(List<String> arguments) async {
       if (samples.any((sample) => sample.cycleMode != 'inProcess')) {
         throw StateError('${scenario.name} did not use in-process cycles.');
       }
+      final reuseDisabled =
+          Platform.environment['CCROUTER_DISABLE_AGGREGATION_REUSE'] == '1';
+      final expectedReuseHits = reuseDisabled
+          ? 0
+          : scenario.changesGeneratedOutput
+          ? 0
+          : samples.length;
+      final reuseHits = samples
+          .where((sample) => sample.aggregationReuseResult == 'hit')
+          .length;
+      if (reuseHits != expectedReuseHits) {
+        throw StateError(
+          '${scenario.name} aggregation reuse hits '
+          '$reuseHits/${samples.length}; expected '
+          '$expectedReuseHits/${samples.length}.',
+        );
+      }
+      if (reuseDisabled &&
+          samples.any(
+            (sample) => sample.aggregationReuseReason != 'disabled',
+          )) {
+        throw StateError('${scenario.name} did not honor the kill switch.');
+      }
       final matchingAggregationInputs = samples
           .where(
             (sample) =>
@@ -127,6 +150,7 @@ Future<void> main(List<String> arguments) async {
               .toSet()
               .length,
         },
+        'aggregationReuse': {'hits': reuseHits, 'disabled': reuseDisabled},
         'summary': _summarize(samples),
         if (options.includeRawSamples)
           'samples': [for (final sample in samples) sample.toJson()],
@@ -510,6 +534,8 @@ final class _WatchSession {
     final spans = <String, int>{};
     final statuses = <String, String>{};
     String? aggregationInputFingerprint;
+    String? aggregationReuseResult;
+    String? aggregationReuseReason;
     for (final raw in (profile['spans'] as List).cast<Map>()) {
       final span = raw.cast<String, dynamic>();
       spans[span['name'] as String] = span['durationUs'] as int;
@@ -519,9 +545,18 @@ final class _WatchSession {
             ?.cast<String, dynamic>();
         aggregationInputFingerprint = attributes?['fingerprint'] as String?;
       }
+      if (span['name'] == 'aggregation-reuse-inspection') {
+        final attributes = (span['attributes'] as Map?)
+            ?.cast<String, dynamic>();
+        aggregationReuseResult = attributes?['result'] as String?;
+        aggregationReuseReason = attributes?['reason'] as String?;
+      }
     }
     if (aggregationInputFingerprint == null) {
       throw StateError('Aggregation input fingerprint is missing.');
+    }
+    if (aggregationReuseResult == null || aggregationReuseReason == null) {
+      throw StateError('Aggregation reuse inspection is missing.');
     }
     final outputDelta = (aggregation['outputDelta'] as Map?)
         ?.cast<String, dynamic>();
@@ -532,6 +567,8 @@ final class _WatchSession {
       outputFiles: outputDelta?['files'] as int? ?? -1,
       cycleMode: aggregation['cycleMode'] as String,
       aggregationInputFingerprint: aggregationInputFingerprint,
+      aggregationReuseResult: aggregationReuseResult,
+      aggregationReuseReason: aggregationReuseReason,
       spanDurationsUs: spans,
       spanStatuses: statuses,
     );
@@ -606,6 +643,8 @@ final class _CycleSample {
     required this.outputFiles,
     required this.cycleMode,
     required this.aggregationInputFingerprint,
+    required this.aggregationReuseResult,
+    required this.aggregationReuseReason,
     required this.spanDurationsUs,
     required this.spanStatuses,
   });
@@ -616,6 +655,8 @@ final class _CycleSample {
   final int outputFiles;
   final String cycleMode;
   final String aggregationInputFingerprint;
+  final String aggregationReuseResult;
+  final String aggregationReuseReason;
   final Map<String, int> spanDurationsUs;
   final Map<String, String> spanStatuses;
 
@@ -626,6 +667,8 @@ final class _CycleSample {
     outputFiles: outputFiles,
     cycleMode: cycleMode,
     aggregationInputFingerprint: aggregationInputFingerprint,
+    aggregationReuseResult: aggregationReuseResult,
+    aggregationReuseReason: aggregationReuseReason,
     spanDurationsUs: spanDurationsUs,
     spanStatuses: spanStatuses,
   );
@@ -637,6 +680,8 @@ final class _CycleSample {
     'outputFiles': outputFiles,
     'cycleMode': cycleMode,
     'aggregationInputFingerprint': aggregationInputFingerprint,
+    'aggregationReuseResult': aggregationReuseResult,
+    'aggregationReuseReason': aggregationReuseReason,
     'profileSpansUs': spanDurationsUs,
     'profileSpanStatuses': spanStatuses,
   };

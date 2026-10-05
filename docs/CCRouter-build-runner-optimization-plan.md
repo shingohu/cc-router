@@ -930,3 +930,23 @@ barrel 重排保持稳定；新增未使用 dependency edge 虽然当前没有�
 若实现 execution prototype，必须只位于 Builder 成功之后，并保留 Validator、输入一致性屏障、
 生成锁、快照恢复和原子写入；提供 `CCROUTER_DISABLE_AGGREGATION_REUSE=1`，且 optimized/reference
 继续逐字节对照。fingerprint 永远不能授权跳过 Builder，`--no-cache --check` 继续强制完整路径。
+
+### 12.13 post-Builder aggregation reuse 收敛（2026-10-05）
+
+execution prototype 已按 12.12 的边界落地。入口 artifact snapshot 提供当前 aggregation-owned
+output fingerprint，cycle-end planning snapshot 提供成功输出 fingerprint；两者使用同一
+build-root-relative identity，不新增目录扫描。只有 Tool、aggregation input 和 output bytes 都与
+上次成功的 `.dart_tool` 本地状态一致时才命中。状态在完整 generation transaction 成功且 planning
+snapshot 已验证输入稳定后原子发布，失败事务不会提前留下证明。
+
+命中仍重建 Package graph/index 并运行 Workspace Validator 和前后 input barrier，只跳过确定性
+aggregation rendering/writes、仅供这些写入使用的 dirty-set 计算，以及无需刷新的 metadata cache。
+未来一次 miss 若面对旧 metadata cache，只会保守重算，不会接受旧产物。状态缺失/损坏、Tool 或
+输入变化、aggregation output 篡改、metadata cache 损坏、自定义输出目录、Portable prepare、
+`--no-cache` 或 kill switch 都会走完整 aggregation；损坏 cache 由该轮完整路径重建。
+
+11 场景 1x matrix 逐字节通过，其中 output tamper 明确 `miss/output-changed`；Demo watch 的 5 样本
+A/B 中，四类非生成语义编辑 wall P50 减少 106–158ms，Route annotation 保持 miss。最终 optimized
+与 `CCROUTER_DISABLE_AGGREGATION_REUSE=1` reference 的 99 个受管文件 fingerprint 完全一致，并均
+通过 `--no-cache --check`。因此保留该 production path；它不是 P6 语义摘要，也不改变 Builder
+执行范围。

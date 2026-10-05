@@ -23,6 +23,7 @@ import 'src/pub_hook.dart';
 import 'src/scaffold.dart';
 
 part 'src/build_plan.dart';
+part 'src/aggregation_reuse.dart';
 part 'src/execution_kernel.dart';
 part 'src/generation_watch.dart';
 part 'src/generation_profile.dart';
@@ -496,6 +497,9 @@ Future<bool> _generateResolvedWorkspace(
   _BuildContext buildContext, {
   required Duration buildDuration,
   String? expectedInputFingerprint,
+  String? aggregationToolFingerprint,
+  String? currentAggregationOutputFingerprint,
+  void Function(_GenerationAggregationOutcome outcome)? onAggregationCompleted,
   Set<String> prebuiltPackages = const <String>{},
   _GenerationProfileTrace? trace,
 }) async {
@@ -867,34 +871,59 @@ Future<bool> _generateResolvedWorkspace(
     );
   }
 
-  final dirtySet = await trace.measure(
-    'dirty-package-computation',
-    () => _GenerationDirtySet.compute(
+  final aggregationReuseDisabledReason = switch ((
+    cache.corrupted,
+    parsed.noCache,
+    parsed.portablePrepare,
+    parsed.outputDirectoryPath,
+    Platform.environment[_aggregationReuseKillSwitch],
+  )) {
+    (true, _, _, _, _) => 'metadata-cache-invalid',
+    (_, true, _, _, _) => 'no-cache-reference',
+    (_, _, true, _, _) => 'portable-state-prepare',
+    (_, _, _, String(), _) => 'custom-output-directory',
+    (_, _, _, _, '1') => 'disabled',
+    _ => null,
+  };
+  final aggregationReuse = await trace.measure(
+    'aggregation-reuse-inspection',
+    () => _GenerationAggregationReuseState.inspect(
       workspace: workspace,
-      cache: cache,
-      snapshots: metadataSnapshots,
-      indexes: indexes,
+      aggregationInputFingerprint: aggregationInputFingerprint,
+      toolFingerprint: aggregationToolFingerprint,
+      currentOutputFingerprint: currentAggregationOutputFingerprint,
+      disabledReason: aggregationReuseDisabledReason,
     ),
-    counts: (dirtySet) => {'packages': dirtySet.dirtyPackages.length},
+    succeeded: (_) => true,
+    attributes: (inspection) => {
+      'result': inspection.matches ? 'hit' : 'miss',
+      'reason': inspection.reason,
+    },
   );
+  if (parsed.profile) {
+    _commandStdout.writeln(
+      'CCRouter profile aggregation-reuse='
+      '${aggregationReuse.matches ? 'hit' : 'miss'} '
+      'reason=${aggregationReuse.reason}',
+    );
+  }
 
-  final localFiles = await trace.measure(
-    'writable-metadata-read',
-    () async => _resolveMetadataFiles([
-      ...await _readWritableMetadataFiles(
-        workspace,
-        excludingPackages: prebuiltPackages,
+  final _GenerationDirtySet? dirtySet;
+  if (aggregationReuse.matches) {
+    trace?.skip('dirty-package-computation');
+    dirtySet = null;
+  } else {
+    dirtySet = await trace.measure<_GenerationDirtySet>(
+      'dirty-package-computation',
+      () => _GenerationDirtySet.compute(
+        workspace: workspace,
+        cache: cache,
+        snapshots: metadataSnapshots,
+        indexes: indexes,
       ),
-      for (final packageName in prebuiltPackages)
-        for (final document in localMetadata[packageName] ?? const [])
-          _MetadataFile(
-            workspace.packages[packageName]!.indexFile,
-            document,
-            packageRoot: workspace.packages[packageName]!.root,
-          ),
-    ]),
-    counts: (files) => {'files': files.length},
-  );
+      counts: (dirtySet) => {'packages': dirtySet.dirtyPackages.length},
+    );
+  }
 
   final documents = <Map<String, Object?>>[
     for (final name in order) ...?indexes[name]?.metadata,
@@ -926,106 +955,147 @@ Future<bool> _generateResolvedWorkspace(
   validationSpan?.finish(counts: {'documents': documents.length, 'errors': 0});
   validationWatch.stop();
 
-  final aggregateWatch = Stopwatch()..start();
-  final catalogs = await trace.measure(
-    'component-index-generation',
-    () => _generateComponentRouteIndexes(
-      localFiles,
-      generateLegacyEntrypoints: false,
-      dirtyPackages: dirtySet.dirtyPackages,
-    ),
-    counts: (catalogs) => {'catalogs': catalogs.length},
-  );
-  await trace.measure(
-    'package-bundle-generation',
-    () => _generateResolvedPackageBundles(
-      workspace: workspace,
-      indexes: indexes,
-      runtimeBundles: runtimeBundles,
-      catalogs: catalogs,
-      dirtyPackages: dirtySet.dirtyPackages,
-    ),
-  );
-  await trace.measure(
-    'host-catalog-generation',
-    () => _generateResolvedHostCatalog(workspace, indexes),
-  );
-  await trace.measure('package-index-write', () async {
-    for (final name in order) {
-      final package = workspace.packages[name]!;
-      final index = indexes[name];
-      if (!package.writable || index == null) continue;
-      await _writeIfChanged(package.indexFile, index.toJson());
-    }
-  });
-  await trace.measure(
-    'capability-catalog-write',
-    () => _writePackageCapabilityCatalogs(
-      workspace: workspace,
-      indexes: indexes,
-      dirtyPackages: dirtySet.dirtyPackages,
-    ),
-  );
-  await trace.measure(
-    'obsolete-output-cleanup',
-    () => _deleteObsoleteResolvedOutputs(
-      workspace: workspace,
-      runtimeBundles: runtimeBundles,
-      catalogs: catalogs,
-      contractApiOutputs: contractApiOutputs,
-    ),
-  );
-
-  final outputDirectory = Directory(
-    parsed.outputDirectoryPath ??
-        path.join(
-          hostRoot.path,
-          'lib',
-          'src',
-          'ccrouter_generated',
-          'metadata',
+  late final List<_MetadataFile> localFiles;
+  if (aggregationReuse.matches) {
+    trace?.skip('writable-metadata-read');
+    localFiles = const [];
+  } else {
+    localFiles = await trace.measure(
+      'writable-metadata-read',
+      () async => _resolveMetadataFiles([
+        ...await _readWritableMetadataFiles(
+          workspace,
+          excludingPackages: prebuiltPackages,
         ),
-  ).absolute;
-  await trace.measure('host-artifact-write', () async {
-    await outputDirectory.create(recursive: true);
-    await _writeIfChanged(
-      File(path.join(outputDirectory.path, 'cc_routes.json')),
-      validation.machineDocumentJson,
+        for (final packageName in prebuiltPackages)
+          for (final document in localMetadata[packageName] ?? const [])
+            _MetadataFile(
+              workspace.packages[packageName]!.indexFile,
+              document,
+              packageRoot: workspace.packages[packageName]!.root,
+            ),
+      ]),
+      counts: (files) => {'files': files.length},
     );
-    await _writeIfChanged(
-      File(path.join(outputDirectory.path, 'cc_catalog.md')),
-      _catalogMarkdown(
-        routeCatalog: validation.markdownDocument,
-        initTaskCatalog: _initTaskDagMarkdown(documents),
-        sourceCatalog: CCCapabilitySourceCatalog.fromMetadata(
-          documents,
-        ).toMarkdown(scope: 'host:${workspace.host.name}'),
+  }
+
+  final aggregateWatch = Stopwatch()..start();
+  if (aggregationReuse.matches) {
+    for (final phase in const [
+      'component-index-generation',
+      'package-bundle-generation',
+      'host-catalog-generation',
+      'package-index-write',
+      'capability-catalog-write',
+      'obsolete-output-cleanup',
+      'host-artifact-write',
+      'legacy-output-cleanup',
+    ]) {
+      trace?.skip(phase);
+    }
+    _commandStdout.writeln('Reused verified CCRouter aggregation outputs.');
+  } else {
+    final fullDirtySet = dirtySet!;
+    final catalogs = await trace.measure(
+      'component-index-generation',
+      () => _generateComponentRouteIndexes(
+        localFiles,
+        generateLegacyEntrypoints: false,
+        dirtyPackages: fullDirtySet.dirtyPackages,
+      ),
+      counts: (catalogs) => {'catalogs': catalogs.length},
+    );
+    await trace.measure(
+      'package-bundle-generation',
+      () => _generateResolvedPackageBundles(
+        workspace: workspace,
+        indexes: indexes,
+        runtimeBundles: runtimeBundles,
+        catalogs: catalogs,
+        dirtyPackages: fullDirtySet.dirtyPackages,
       ),
     );
-  });
-  await trace.measure('legacy-output-cleanup', () async {
-    await _deleteManagedCatalogFiles(outputDirectory, const [
-      'cc_routes.md',
-      'cc_sources.md',
-    ]);
-    await _removeLegacyMetadataArtifacts(
-      workspace.packages.values
-          .where((package) => package.writable)
-          .expand(
-            (package) => [
-              Directory(path.join(package.root.path, 'ccrouter_generated')),
-              Directory(
-                path.join(package.root.path, 'lib', 'ccrouter_generated'),
-              ),
-            ],
-          ),
+    await trace.measure(
+      'host-catalog-generation',
+      () => _generateResolvedHostCatalog(workspace, indexes),
     );
-    for (final package in workspace.packages.values.where(
-      (package) => package.writable,
-    )) {
-      await _removeEmptyGeneratedSourceDirectories(package.root);
-    }
-  });
+    await trace.measure('package-index-write', () async {
+      for (final name in order) {
+        final package = workspace.packages[name]!;
+        final index = indexes[name];
+        if (!package.writable || index == null) continue;
+        await _writeIfChanged(package.indexFile, index.toJson());
+      }
+    });
+    await trace.measure(
+      'capability-catalog-write',
+      () => _writePackageCapabilityCatalogs(
+        workspace: workspace,
+        indexes: indexes,
+        dirtyPackages: fullDirtySet.dirtyPackages,
+      ),
+    );
+    await trace.measure(
+      'obsolete-output-cleanup',
+      () => _deleteObsoleteResolvedOutputs(
+        workspace: workspace,
+        runtimeBundles: runtimeBundles,
+        catalogs: catalogs,
+        contractApiOutputs: contractApiOutputs,
+      ),
+    );
+
+    final outputDirectory = Directory(
+      parsed.outputDirectoryPath ??
+          path.join(
+            hostRoot.path,
+            'lib',
+            'src',
+            'ccrouter_generated',
+            'metadata',
+          ),
+    ).absolute;
+    await trace.measure('host-artifact-write', () async {
+      await outputDirectory.create(recursive: true);
+      await _writeIfChanged(
+        File(path.join(outputDirectory.path, 'cc_routes.json')),
+        validation.machineDocumentJson,
+      );
+      await _writeIfChanged(
+        File(path.join(outputDirectory.path, 'cc_catalog.md')),
+        _catalogMarkdown(
+          routeCatalog: validation.markdownDocument,
+          initTaskCatalog: _initTaskDagMarkdown(documents),
+          sourceCatalog: CCCapabilitySourceCatalog.fromMetadata(
+            documents,
+          ).toMarkdown(scope: 'host:${workspace.host.name}'),
+        ),
+      );
+    });
+    await trace.measure('legacy-output-cleanup', () async {
+      await _deleteManagedCatalogFiles(outputDirectory, const [
+        'cc_routes.md',
+        'cc_sources.md',
+      ]);
+      await _removeLegacyMetadataArtifacts(
+        workspace.packages.values
+            .where((package) => package.writable)
+            .expand(
+              (package) => [
+                Directory(path.join(package.root.path, 'ccrouter_generated')),
+                Directory(
+                  path.join(package.root.path, 'lib', 'ccrouter_generated'),
+                ),
+              ],
+            ),
+      );
+      for (final package in workspace.packages.values.where(
+        (package) => package.writable,
+      )) {
+        await _removeEmptyGeneratedSourceDirectories(package.root);
+      }
+    });
+  }
   if (expectedInputFingerprint != null &&
       !await trace.measure(
         'after-aggregation-input-barrier',
@@ -1041,6 +1111,17 @@ Future<bool> _generateResolvedWorkspace(
   if (expectedInputFingerprint == null) {
     trace?.skip('after-aggregation-input-barrier');
   }
+  onAggregationCompleted?.call(
+    _GenerationAggregationOutcome(
+      inputFingerprint: aggregationInputFingerprint,
+      reused: aggregationReuse.matches,
+      publishState:
+          !aggregationReuse.matches &&
+          aggregationReuseDisabledReason == null &&
+          aggregationToolFingerprint != null &&
+          !parsed.check,
+    ),
+  );
   if (parsed.portablePrepare) {
     await trace.measure(
       'portable-state-prepare',
@@ -1055,7 +1136,7 @@ Future<bool> _generateResolvedWorkspace(
   _commandStdout.writeln(
     'Validated ${validation.machineDocument['components'] is List ? (validation.machineDocument['components']! as List).length : 0} components and ${validation.machineDocument['routes'] is List ? (validation.machineDocument['routes']! as List).length : 0} routes across ${indexes.length} generated Packages.',
   );
-  if (!parsed.noCache && !parsed.check) {
+  if (!aggregationReuse.matches && !parsed.noCache && !parsed.check) {
     await trace.measure('metadata-cache-persist', () async {
       final persistedOutputFingerprints = <String, String>{};
       for (final package in workspace.packages.values.where(
@@ -1069,7 +1150,7 @@ Future<bool> _generateResolvedWorkspace(
       await cache.write(
         metadataSnapshots,
         outputFingerprints: persistedOutputFingerprints,
-        dependencyFingerprints: dirtySet.dependencyFingerprints,
+        dependencyFingerprints: dirtySet!.dependencyFingerprints,
       );
     });
   } else {
@@ -1087,10 +1168,11 @@ Future<bool> _generateResolvedWorkspace(
       'validate=${validationWatch.elapsedMilliseconds}ms '
       'aggregate/format/write=${aggregateWatch.elapsedMilliseconds}ms '
       'cache=$hits/${metadataSnapshots.length} '
-      'dirty=${dirtySet.dirtyPackages.length}/${workspace.packages.values.where((package) => package.writable).length}',
+      'dirty=${dirtySet == null ? 'reused' : '${dirtySet.dirtyPackages.length}/${workspace.packages.values.where((package) => package.writable).length}'}',
     );
     _commandStdout.writeln(
-      'CCRouter profile dirty-packages=${dirtySet.profileDescription}',
+      'CCRouter profile dirty-packages='
+      '${dirtySet?.profileDescription ?? 'reused-aggregation-outputs'}',
     );
   }
   return true;
@@ -3463,6 +3545,29 @@ final class _GeneratedArtifactsSnapshot {
   /// Exact catalog targets, including legacy names, outside default discovery.
   /// These paths never grant ownership of other files in the same directory.
   final List<String> explicitPaths;
+
+  /// Digests aggregation-owned bytes for writable Packages without rescanning.
+  String aggregationOutputFingerprint(CCPackageWorkspace workspace) {
+    final writableRoots = workspace.packages.values
+        .where((package) => package.writable)
+        .map((package) => path.normalize(package.root.absolute.path))
+        .toList(growable: false);
+    final workspaceFiles = <String, List<int>>{};
+    for (final entry in files.entries) {
+      final absolute = path.normalize(_absolutePath(root, entry.key));
+      if (!writableRoots.any(
+        (packageRoot) =>
+            path.equals(packageRoot, absolute) ||
+            path.isWithin(packageRoot, absolute),
+      )) {
+        continue;
+      }
+      workspaceFiles[entry.key] = entry.value;
+    }
+    return _GenerationAggregationReuseState.captureOutputFingerprint(
+      workspaceFiles,
+    );
+  }
 
   /// Reads the complete set of managed outputs below [root].
   /// Explicit targets also participate when their directory is named build or

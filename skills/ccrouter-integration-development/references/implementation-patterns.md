@@ -823,7 +823,15 @@ byte-for-byte or timing A/B; input barriers, validation, restoration, atomic
 writes, and the final `--no-cache --check` remain unchanged.
 Profile traces may carry an `aggregation-input-fingerprint` span with a SHA-256
 `attributes.fingerprint` for Builder metadata, Package indexes, and Host graph
-inputs. This is diagnostic evidence only and does not authorize a skip path.
+inputs. It never authorizes skipping Builder. After Builder succeeds, matching
+Tool/input identities plus exact aggregation-owned output bytes can skip only
+aggregation rendering and writes. Package verification, graph/index
+construction, Workspace validation, artifact restoration, and both input
+barriers remain. The proof is disposable local `.dart_tool` state; missing,
+invalid, tampered, or metadata-cache-corrupted state fails closed; a corrupted
+metadata cache is rebuilt by that full path. Use
+`CCROUTER_DISABLE_AGGREGATION_REUSE=1` for the full-aggregation A/B path and
+retain `--no-cache --check` as the authoritative reference.
 
 The Build Plan separately reports `suggested` and `actual`. Only
 `actual=aggregateOnly` means build_runner was skipped, and that optimization is
