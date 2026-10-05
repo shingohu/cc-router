@@ -1,4 +1,5 @@
 @TestOn('vm')
+@Timeout(Duration(minutes: 20))
 library;
 
 import 'dart:convert';
@@ -8,7 +9,11 @@ import 'package:ccrouter_generator/src/package_workspace.dart';
 import 'package:path/path.dart' as path;
 import 'package:test/test.dart';
 
+import 'support/real_workspace_test_lock.dart';
+
 void main() {
+  serializeRealWorkspaceTests();
+
   test(
     'generate check rejects cross-Package internal imports despite ignores',
     () async {

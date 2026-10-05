@@ -1,4 +1,5 @@
 @TestOn('vm')
+@Timeout(Duration(minutes: 20))
 library;
 
 import 'dart:async';
@@ -8,7 +9,11 @@ import 'dart:io';
 import 'package:path/path.dart' as path;
 import 'package:test/test.dart';
 
+import 'support/real_workspace_test_lock.dart';
+
 void main() {
+  serializeRealWorkspaceTests();
+
   test('machine requires watch mode', () async {
     final result = await _run(['generate', 'demo', '--machine']);
 

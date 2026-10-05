@@ -1,4 +1,5 @@
 @TestOn('vm')
+@Timeout(Duration(minutes: 20))
 library;
 
 import 'dart:convert';
@@ -7,7 +8,11 @@ import 'dart:io';
 import 'package:path/path.dart' as path;
 import 'package:test/test.dart';
 
+import 'support/real_workspace_test_lock.dart';
+
 void main() {
+  serializeRealWorkspaceTests();
+
   test(
     'Host Catalog descriptions round-trip as compiled Dart literals',
     () async {

@@ -1,4 +1,5 @@
 @TestOn('vm')
+@Timeout(Duration(minutes: 20))
 library;
 
 import 'dart:io';
@@ -7,7 +8,11 @@ import 'package:ccrouter_generator/src/component_dependency_preflight.dart';
 import 'package:path/path.dart' as path;
 import 'package:test/test.dart';
 
+import 'support/real_workspace_test_lock.dart';
+
 void main() {
+  serializeRealWorkspaceTests();
+
   group('component dependency preflight', () {
     test('nested lib directories never alias another Library', () {
       for (final nestedPath in [
