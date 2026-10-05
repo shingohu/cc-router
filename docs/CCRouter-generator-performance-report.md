@@ -711,3 +711,46 @@ API 均没有生产入口。通过私有 `src/`、修改 Pub cache 或自维护 
 
 benchmark 最终恢复源码、删除 fixture、保留 99 个生成物的逐字节一致性，并通过
 `generate demo --no-cache --check`。
+
+### 10.11 Builder phase 与 Asset Graph 失效归因（2026-10-05）
+
+watch machine event 的 `buildSucceeded.buildRunner` 现按 build_runner 2.15.1 正式
+`--verbose-durations` console 格式记录每个 Builder phase 的 duration、inputs、skipped、
+not-triggered、new/same/no-op output 和 analyzing/resolving/tracking/building/reading/writing。
+`invalidatedInputs = inputs - skipped`，`executedInputs = output + same + no-op`；它们是上游计数的
+诊断解释，不是 private Asset Graph 节点列表，也不参与任何生成决策。中间 progress line 不计入，
+未知终态格式有界保留但不使生成失败。parser 位于 CLI diagnostic 层，不进入 execution-kernel
+fingerprint。
+
+3-sample 真实编辑矩阵的 P50 如下。`inputs`、`invalidated` 是 15 个 phase 的合计，同一个 Dart
+asset 会在多个 phase 中重复计数，不能解释为唯一文件数：
+
+| 编辑场景 | wall | 调度等待 | Builder | aggregation | inputs / skipped / invalidated / executed | new / same / no-op |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 普通注释 | 2272ms | 501ms | 890ms | 746ms | 660 / 639 / 21 / 21 | 0 / 3 / 18 |
+| Widget body | 2246ms | 489ms | 900ms | 730ms | 660 / 639 / 21 / 21 | 0 / 3 / 18 |
+| `initState` body | 2293ms | 503ms | 940ms | 737ms | 660 / 639 / 21 / 21 | 0 / 3 / 18 |
+| 新增普通函数 | 2261ms | 500ms | 910ms | 725ms | 660 / 639 / 21 / 21 | 0 / 3 / 18 |
+| Route annotation | 2787ms | 508ms | 1110ms | 1018ms | 660 / 535 / 125 / 125 | 2 / 26 / 97 |
+| 新增无注解 Dart 文件 | 1460ms | 513ms | 90ms | 734ms | 675 / 660 / 15 / 15 | 0 / 0 / 15 |
+| 删除无注解 Dart 文件 | 1453ms | 512ms | 60ms | 746ms | 645 / 645 / 0 / 0 | 0 / 0 / 0 |
+| 重命名无注解 Dart 文件 | 1509ms | 513ms | 100ms | 749ms | 660 / 645 / 15 / 15 | 0 / 0 / 15 |
+
+普通注释、Widget body、`initState` 和新增普通函数的失效形状完全相同：变更 asset 在所有相关
+Builder 上重新执行，最终 18 次 no-op、3 次 same output、0 次 new output。耗时主要记在第一个
+`service_contracts` phase，其 P50 为 760–810ms，其中 `resolving` 为 710–760ms、`analyzing`
+约 30–40ms。该归因表示 long-lived Analyzer 在首个需要 Resolver 的 phase 更新 library graph，
+不表示 Service Contract 业务生成本身耗时 800ms。build_runner 终态可能写 `wrote 3 outputs`，
+这里对应 3 个 byte-identical `sameOutputs`，不是三份实际变化的生成物。
+
+Route annotation 会真实扩大失效：125 次 Builder 执行、2 个 new output，并使 aggregation miss；
+因此不能用“普通 body 编辑无输出”的结论跳过 Builder。无注解文件增删改名样本仅证明这类孤立
+fixture 的 graph update 很低，不能外推到被 import、带注解或改变 public API 的文件。
+
+结论是当前剩余 Builder 时间首先来自 Resolver/library graph update，其次才是 15-phase 的 no-op
+执行。直接按 AST/body/comment 预判或跳过 Builder 仍不成立。下一轮若继续优化，应优先研究能否在
+保持自动注解发现的前提下合并同一 asset 的 Resolver/Generator 遍历，并用现有逐 phase 指标验证；
+不能退回手工 Binding，也不能依赖 build_runner private Asset Graph 或 testing-only debounce API。
+
+本轮 benchmark 恢复源码、删除所有 add/delete/rename fixture，99 个受管生成物逐字节一致，并通过
+`generate demo --no-cache --check`。

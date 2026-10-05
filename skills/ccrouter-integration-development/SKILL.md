@@ -291,7 +291,12 @@ fvm dart run ccrouter_generator:ccrouter generate <host-root> --check
 For a long-lived local or AI development session, use `generate <host-root>
 --watch=auto --machine`. Treat stdout as schema `1` NDJSON, wait for `ready`
 before the first consumer action, and require `aggregationSucceeded` rather
-than only `buildSucceeded` after changes. Keep stderr as diagnostic text. Set
+than only `buildSucceeded` after changes. Keep stderr as diagnostic text.
+`buildSucceeded.buildRunner` is diagnostic-only structured phase data. Its
+`invalidatedInputs` count is inferred from build_runner's public counters; it
+does not expose AssetIds, prove semantic output impact, or authorize skipping a
+Builder. Unknown upstream terminal formats are bounded in
+`unparsedFinalLines` and do not fail generation. Set
 `CCROUTER_DISABLE_BUILD_WATCH=1` for a one-shot fallback. Watch is scoped to one
 resolved build root; an independently runnable nested Package Host with its own
 Pub root uses a separate watch. It holds the root generation lock, so stop it

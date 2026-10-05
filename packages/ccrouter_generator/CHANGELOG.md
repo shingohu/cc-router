@@ -17,6 +17,10 @@
 - Added `generate --watch=auto --machine`, a single-build-root build_runner
   watch path with NDJSON events, generation locking, artifact rollback, an
   emergency kill switch, and a Flutter-run lifecycle lease.
+- Added diagnostic-only structured build_runner phase, activity, execution,
+  and invalidation counters to watch build events and the real-edit benchmark.
+  Unknown upstream formats remain bounded raw diagnostics and never affect
+  generation decisions.
 - Removed redundant fast-path and Build Plan inspection after a successful
   watch Builder cycle while retaining all validation and input barriers; added
   `CCROUTER_DISABLE_WATCH_CYCLE_OPTIMIZATION` for reference-path comparison.

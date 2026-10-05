@@ -215,6 +215,7 @@ Future<void> _runGenerationWatch({
   ];
   final iterator = StreamIterator(lines.stream);
   var buildWatch = Stopwatch()..start();
+  final buildRunnerPhases = CCBuildRunnerPhaseCollector();
   var initialBuild = true;
   var readyEmitted = false;
   final failureTail = <String>[];
@@ -227,12 +228,14 @@ Future<void> _runGenerationWatch({
       ]);
       if (!hasLine || stop.isCompleted) break;
       final line = _stripAnsi(iterator.current.text);
+      buildRunnerPhases.addLine(line);
       if (line.trim().isNotEmpty) {
         _commandStderr.writeln('build_runner: $line');
         failureTail.add(line);
         if (failureTail.length > 30) failureTail.removeAt(0);
       }
       if (line.contains('Starting build #')) {
+        buildRunnerPhases.reset();
         buildWatch = Stopwatch()..start();
         events.emit('buildStarted', data: {'initial': false});
         continue;
@@ -242,6 +245,7 @@ Future<void> _runGenerationWatch({
       if (!succeeded && !failed) continue;
 
       final restoreWatch = Stopwatch()..start();
+      final buildRunnerReport = buildRunnerPhases.finish(line);
       for (final snapshot in protectedOutputs) {
         await snapshot.restore();
       }
@@ -256,6 +260,7 @@ Future<void> _runGenerationWatch({
             'initial': initialBuild,
             'elapsedMs': buildElapsed,
             'reportedDuration': _reportedBuildDuration(line),
+            'buildRunner': buildRunnerReport.toJson(),
             'protectionRestoreMs': restoreWatch.elapsedMilliseconds,
             'diagnostics': failureTail.join('\n'),
           },
@@ -274,6 +279,7 @@ Future<void> _runGenerationWatch({
           'initial': initialBuild,
           'elapsedMs': buildElapsed,
           'reportedDuration': _reportedBuildDuration(line),
+          'buildRunner': buildRunnerReport.toJson(),
           'protectionRestoreMs': restoreWatch.elapsedMilliseconds,
         },
       );

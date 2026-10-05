@@ -797,7 +797,13 @@ build_runner's AOT entrypoint and Analyzer graph alive for one resolved build
 root. Its stdout is schema `1` NDJSON; `buildSucceeded` only closes the Builder
 phase, while `aggregationSucceeded` closes CCRouter validation and atomic
 publication. `ready` means the initial cycle completed. Builder diagnostics stay
-on stderr. `flutter run` obtains the same watch through a wrapper-owned lease;
+on stderr. `buildSucceeded.buildRunner` also reports structured per-phase
+duration, inputs, skipped/not-triggered, inferred invalidated inputs, executed
+inputs, new/same/no-op outputs, and thresholded activities. These are
+diagnostic public-counter interpretations, not private Asset Graph access or a
+generation decision input. Unknown terminal formats are retained in bounded
+`unparsedFinalLines` without failing generation. `flutter run` obtains the same
+watch through a wrapper-owned lease;
 `flutter build` stays one-shot. Use `CCROUTER_DISABLE_BUILD_WATCH=1` to fall
 back. The active watch holds the build root generation lock; stop it before
 running the final authoritative `--no-cache --check`.

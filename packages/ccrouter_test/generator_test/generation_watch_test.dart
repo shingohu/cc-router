@@ -82,6 +82,17 @@ void main() {
       final referencePlanningState = await _localPlanningState();
 
       expect(optimized.ready['schemaVersion'], 1);
+      final buildRunner = (optimized.build['buildRunner'] as Map)
+          .cast<String, dynamic>();
+      expect(buildRunner['formatVersion'], 1);
+      expect(buildRunner['durationMs'], isA<int>());
+      expect(buildRunner['writtenOutputs'], isA<int>());
+      expect((buildRunner['phases'] as List), isNotEmpty);
+      expect(
+        (buildRunner['totals'] as Map)['inputs'],
+        greaterThanOrEqualTo((buildRunner['totals'] as Map)['skipped'] as int),
+      );
+      expect(buildRunner['unparsedFinalLines'], isNull);
       expect(
         optimized.eventTypes,
         containsAllInOrder(['buildSucceeded', 'aggregationSucceeded', 'ready']),
@@ -393,6 +404,7 @@ Future<_WatchRun> _runWatchUntilReady({
   final outputLines = <String>[];
   final errorLines = <String>[];
   Map<String, dynamic>? aggregation;
+  Map<String, dynamic>? build;
   var aggregationCount = 0;
   int? targetAggregationCount;
   final additionalAggregationsCompleted = Completer<void>();
@@ -414,6 +426,9 @@ Future<_WatchRun> _runWatchUntilReady({
           return;
         }
         eventTypes.add(event['type'] as String);
+        if (event['type'] == 'buildSucceeded') {
+          build = event;
+        }
         if (event['type'] == 'aggregationSucceeded') {
           aggregation = event;
           aggregationCount += 1;
@@ -465,6 +480,7 @@ Future<_WatchRun> _runWatchUntilReady({
     expect(await process.exitCode, 0);
     return _WatchRun(
       ready: readyEvent,
+      build: build!,
       aggregation: aggregation!,
       eventTypes: eventTypes,
     );
@@ -564,11 +580,13 @@ String _replaceOnce(String source, String from, String to) {
 final class _WatchRun {
   const _WatchRun({
     required this.ready,
+    required this.build,
     required this.aggregation,
     required this.eventTypes,
   });
 
   final Map<String, dynamic> ready;
+  final Map<String, dynamic> build;
   final Map<String, dynamic> aggregation;
   final List<String> eventTypes;
 }

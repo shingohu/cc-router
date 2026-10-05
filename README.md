@@ -1223,7 +1223,11 @@ metadata、Package Index identity 与 Host graph 等聚合输入。它永远不�
 输入屏障、快照恢复、Validator、聚合、原子写入和本地 planning state 提交。失败轮次不会发布
 半成品。`--machine` 令 stdout 仅输出 schema `1` NDJSON 事件，适合
 AI Agent 等待 `ready`、`aggregationSucceeded`、`failed` 和 `stopped`，build_runner 详情写入
-stderr。`CCROUTER_DISABLE_BUILD_WATCH=1` 会执行一次 one-shot 后退出。watch 是开发加速路径，
+stderr。`buildSucceeded.buildRunner` 同时提供结构化 `formatVersion: 1` 诊断：每个 Builder
+phase 的 `durationMs`、`inputs`、`skipped`、`invalidatedInputs`、`executedInputs`、`outputs`、
+`sameOutputs`、`noOp` 和已达到 build_runner 报告阈值的 activity 耗时。它只解析上游正式
+console 格式，不读取 private Asset Graph；无法识别的终态保留在有界 `unparsedFinalLines`，
+不会改变生成结果。`CCROUTER_DISABLE_BUILD_WATCH=1` 会执行一次 one-shot 后退出。watch 是开发加速路径，
 CI 仍以 `generate <host> --no-cache --check` 为权威。一个活动 watch 会在 lease 生命周期内
 持有该 root 的 generation lock；同 root 的 one-shot generate/check/clean 会快速失败并提示等待
 `aggregationSucceeded`，不会无限阻塞；反过来已有 one-shot 正在执行或排队时，新 watch 也会快速失败。

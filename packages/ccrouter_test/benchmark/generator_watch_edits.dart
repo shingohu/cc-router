@@ -491,9 +491,13 @@ void _renameExpected(File source, File destination, String expected) {
 
 Map<String, Object?> _summarize(List<_CycleSample> samples) {
   final spanSamples = <String, List<int>>{};
+  final builderPhaseSamples = <String, List<_BuilderPhaseSample>>{};
   for (final sample in samples) {
     for (final entry in sample.spanDurationsUs.entries) {
       spanSamples.putIfAbsent(entry.key, () => []).add(entry.value);
+    }
+    for (final phase in sample.buildRunner.phases) {
+      builderPhaseSamples.putIfAbsent(phase.name, () => []).add(phase);
     }
   }
   return {
@@ -517,11 +521,99 @@ Map<String, Object?> _summarize(List<_CycleSample> samples) {
     'outputFiles': _distribution(
       samples.map((sample) => sample.outputFiles).toList(),
     ),
+    'buildRunner': {
+      'durationMs': _distribution(
+        samples.map((sample) => sample.buildRunner.durationMs).toList(),
+      ),
+      'writtenOutputs': _distribution(
+        samples.map((sample) => sample.buildRunner.writtenOutputs).toList(),
+      ),
+      'invalidationTotals': _summarizeBuilderCounters(
+        samples.map((sample) => sample.buildRunner).toList(),
+      ),
+      'phases': {
+        for (final entry in builderPhaseSamples.entries)
+          entry.key: _summarizeBuilderPhase(entry.value, samples.length),
+      },
+      'unparsedFinalLines': samples.fold<int>(
+        0,
+        (total, sample) => total + sample.buildRunner.unparsedFinalLines.length,
+      ),
+    },
     'profileSpansUs': {
       for (final entry in spanSamples.entries)
         entry.key: _distribution(entry.value),
     },
   };
+}
+
+Map<String, Object?> _summarizeBuilderPhase(
+  List<_BuilderPhaseSample> phases,
+  int cycleCount,
+) {
+  final activitySamples = <String, List<int>>{};
+  for (final phase in phases) {
+    for (final entry in phase.activitiesMs.entries) {
+      activitySamples.putIfAbsent(entry.key, () => []).add(entry.value);
+    }
+  }
+  return {
+    'reportedCycles': phases.length,
+    'missingCycles': cycleCount - phases.length,
+    'durationMs': _distribution(
+      phases.map((phase) => phase.durationMs).toList(),
+    ),
+    ..._summarizeBuilderCounters(phases),
+    'activitiesMs': {
+      for (final entry in activitySamples.entries)
+        entry.key: {
+          'reportedCycles': entry.value.length,
+          'durationMs': _distribution(entry.value),
+        },
+    },
+  };
+}
+
+Map<String, Object?> _summarizeBuilderCounters(
+  Iterable<_BuilderCounters> values,
+) => {
+  for (final field in _builderCounterFields)
+    field.name: _distribution(values.map(field.read).toList()),
+};
+
+const _builderCounterFields = <_BuilderCounterField>[
+  _BuilderCounterField('inputs', _readBuilderInputs),
+  _BuilderCounterField('skipped', _readBuilderSkipped),
+  _BuilderCounterField('notTriggered', _readBuilderNotTriggered),
+  _BuilderCounterField('invalidatedInputs', _readBuilderInvalidatedInputs),
+  _BuilderCounterField('executedInputs', _readBuilderExecutedInputs),
+  _BuilderCounterField('outputs', _readBuilderOutputs),
+  _BuilderCounterField('sameOutputs', _readBuilderSameOutputs),
+  _BuilderCounterField('noOp', _readBuilderNoOp),
+];
+
+int _readBuilderInputs(_BuilderCounters value) => value.inputs;
+
+int _readBuilderSkipped(_BuilderCounters value) => value.skipped;
+
+int _readBuilderNotTriggered(_BuilderCounters value) => value.notTriggered;
+
+int _readBuilderInvalidatedInputs(_BuilderCounters value) =>
+    value.invalidatedInputs;
+
+int _readBuilderExecutedInputs(_BuilderCounters value) => value.executedInputs;
+
+int _readBuilderOutputs(_BuilderCounters value) => value.outputs;
+
+int _readBuilderSameOutputs(_BuilderCounters value) => value.sameOutputs;
+
+int _readBuilderNoOp(_BuilderCounters value) => value.noOp;
+
+final class _BuilderCounterField {
+  const _BuilderCounterField(this.name, this.read);
+
+  final String name;
+  final int Function(_BuilderCounters value) read;
 }
 
 Map<String, int> _distribution(List<int> values) => {
@@ -785,6 +877,9 @@ final class _WatchSession {
     }
     final outputDelta = (aggregation['outputDelta'] as Map?)
         ?.cast<String, dynamic>();
+    final buildRunner = _BuilderCycleSample.fromJson(
+      (build['buildRunner'] as Map?)?.cast<String, dynamic>(),
+    );
     return _CycleSample(
       wallMs: 0,
       buildMs: build['elapsedMs'] as int,
@@ -795,6 +890,7 @@ final class _WatchSession {
       aggregationReuseResult: aggregationReuseResult,
       aggregationReuseReason: aggregationReuseReason,
       planningEvidenceMode: planningEvidenceMode,
+      buildRunner: buildRunner,
       spanDurationsUs: spans,
       spanStatuses: statuses,
     );
@@ -891,6 +987,7 @@ final class _CycleSample {
     required this.aggregationReuseResult,
     required this.aggregationReuseReason,
     required this.planningEvidenceMode,
+    required this.buildRunner,
     required this.spanDurationsUs,
     required this.spanStatuses,
   });
@@ -908,6 +1005,7 @@ final class _CycleSample {
   final String aggregationReuseResult;
   final String aggregationReuseReason;
   final String planningEvidenceMode;
+  final _BuilderCycleSample buildRunner;
   final Map<String, int> spanDurationsUs;
   final Map<String, String> spanStatuses;
 
@@ -921,6 +1019,7 @@ final class _CycleSample {
     aggregationReuseResult: aggregationReuseResult,
     aggregationReuseReason: aggregationReuseReason,
     planningEvidenceMode: planningEvidenceMode,
+    buildRunner: buildRunner,
     spanDurationsUs: spanDurationsUs,
     spanStatuses: spanStatuses,
   );
@@ -953,6 +1052,7 @@ final class _CycleSample {
       aggregationReuseResult: aggregationReuseResult,
       aggregationReuseReason: aggregationReuseReason,
       planningEvidenceMode: planningEvidenceMode,
+      buildRunner: buildRunner,
       spanDurationsUs: spanDurationsUs,
       spanStatuses: spanStatuses,
     );
@@ -976,8 +1076,208 @@ final class _CycleSample {
     'aggregationReuseResult': aggregationReuseResult,
     'aggregationReuseReason': aggregationReuseReason,
     'planningEvidenceMode': planningEvidenceMode,
+    'buildRunner': buildRunner.toJson(),
     'profileSpansUs': spanDurationsUs,
     'profileSpanStatuses': spanStatuses,
+  };
+}
+
+abstract interface class _BuilderCounters {
+  int get inputs;
+
+  int get skipped;
+
+  int get notTriggered;
+
+  int get invalidatedInputs;
+
+  int get executedInputs;
+
+  int get outputs;
+
+  int get sameOutputs;
+
+  int get noOp;
+}
+
+final class _BuilderCycleSample implements _BuilderCounters {
+  const _BuilderCycleSample({
+    required this.durationMs,
+    required this.writtenOutputs,
+    required this.inputs,
+    required this.skipped,
+    required this.notTriggered,
+    required this.invalidatedInputs,
+    required this.executedInputs,
+    required this.outputs,
+    required this.sameOutputs,
+    required this.noOp,
+    required this.phases,
+    required this.unparsedFinalLines,
+  });
+
+  final int durationMs;
+  final int writtenOutputs;
+  @override
+  final int inputs;
+  @override
+  final int skipped;
+  @override
+  final int notTriggered;
+  @override
+  final int invalidatedInputs;
+  @override
+  final int executedInputs;
+  @override
+  final int outputs;
+  @override
+  final int sameOutputs;
+  @override
+  final int noOp;
+  final List<_BuilderPhaseSample> phases;
+  final List<String> unparsedFinalLines;
+
+  factory _BuilderCycleSample.fromJson(Map<String, dynamic>? json) {
+    if (json == null || json['formatVersion'] != 1) {
+      throw StateError('Structured build_runner diagnostics are missing.');
+    }
+    final durationMs = json['durationMs'];
+    final writtenOutputs = json['writtenOutputs'];
+    final totals = (json['totals'] as Map?)?.cast<String, dynamic>();
+    final rawPhases = json['phases'];
+    if (durationMs is! int ||
+        writtenOutputs is! int ||
+        totals == null ||
+        rawPhases is! List) {
+      throw StateError('Structured build_runner diagnostics are incomplete.');
+    }
+    final phases = rawPhases
+        .cast<Map>()
+        .map((phase) => _BuilderPhaseSample.fromJson(phase.cast()))
+        .toList(growable: false);
+    if (phases.isEmpty) {
+      throw StateError('Structured build_runner phase list is empty.');
+    }
+    int counter(String name) {
+      final value = totals[name];
+      if (value is! int) {
+        throw StateError('build_runner total $name is missing.');
+      }
+      return value;
+    }
+
+    return _BuilderCycleSample(
+      durationMs: durationMs,
+      writtenOutputs: writtenOutputs,
+      inputs: counter('inputs'),
+      skipped: counter('skipped'),
+      notTriggered: counter('notTriggered'),
+      invalidatedInputs: counter('invalidatedInputs'),
+      executedInputs: counter('executedInputs'),
+      outputs: counter('outputs'),
+      sameOutputs: counter('sameOutputs'),
+      noOp: counter('noOp'),
+      phases: phases,
+      unparsedFinalLines:
+          (json['unparsedFinalLines'] as List?)?.cast<String>() ?? const [],
+    );
+  }
+
+  Map<String, Object?> toJson() => {
+    'durationMs': durationMs,
+    'writtenOutputs': writtenOutputs,
+    'totals': {
+      'inputs': inputs,
+      'skipped': skipped,
+      'notTriggered': notTriggered,
+      'invalidatedInputs': invalidatedInputs,
+      'executedInputs': executedInputs,
+      'outputs': outputs,
+      'sameOutputs': sameOutputs,
+      'noOp': noOp,
+    },
+    'phases': [for (final phase in phases) phase.toJson()],
+    if (unparsedFinalLines.isNotEmpty) 'unparsedFinalLines': unparsedFinalLines,
+  };
+}
+
+final class _BuilderPhaseSample implements _BuilderCounters {
+  const _BuilderPhaseSample({
+    required this.name,
+    required this.durationMs,
+    required this.inputs,
+    required this.skipped,
+    required this.notTriggered,
+    required this.invalidatedInputs,
+    required this.executedInputs,
+    required this.outputs,
+    required this.sameOutputs,
+    required this.noOp,
+    required this.activitiesMs,
+  });
+
+  final String name;
+  final int durationMs;
+  @override
+  final int inputs;
+  @override
+  final int skipped;
+  @override
+  final int notTriggered;
+  @override
+  final int invalidatedInputs;
+  @override
+  final int executedInputs;
+  @override
+  final int outputs;
+  @override
+  final int sameOutputs;
+  @override
+  final int noOp;
+  final Map<String, int> activitiesMs;
+
+  factory _BuilderPhaseSample.fromJson(Map<String, dynamic> json) {
+    int counter(String name) {
+      final value = json[name];
+      if (value is! int) {
+        throw StateError('build_runner phase counter $name is missing.');
+      }
+      return value;
+    }
+
+    final name = json['name'];
+    final durationMs = json['durationMs'];
+    if (name is! String || durationMs is! int) {
+      throw StateError('build_runner phase identity is incomplete.');
+    }
+    return _BuilderPhaseSample(
+      name: name,
+      durationMs: durationMs,
+      inputs: counter('inputs'),
+      skipped: counter('skipped'),
+      notTriggered: counter('notTriggered'),
+      invalidatedInputs: counter('invalidatedInputs'),
+      executedInputs: counter('executedInputs'),
+      outputs: counter('outputs'),
+      sameOutputs: counter('sameOutputs'),
+      noOp: counter('noOp'),
+      activitiesMs:
+          (json['activitiesMs'] as Map?)?.cast<String, int>() ?? const {},
+    );
+  }
+
+  Map<String, Object?> toJson() => {
+    'name': name,
+    'durationMs': durationMs,
+    'inputs': inputs,
+    'skipped': skipped,
+    'notTriggered': notTriggered,
+    'invalidatedInputs': invalidatedInputs,
+    'executedInputs': executedInputs,
+    'outputs': outputs,
+    'sameOutputs': sameOutputs,
+    'noOp': noOp,
+    if (activitiesMs.isNotEmpty) 'activitiesMs': activitiesMs,
   };
 }
 

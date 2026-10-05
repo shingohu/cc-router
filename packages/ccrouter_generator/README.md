@@ -343,6 +343,11 @@ aggregation 消费的默认常量允许只改变 Builder Dart，Package dependen
 Analyzer graph。每次 Builder 成功后先验证 exact-content fast path；未命中时仍走完整
 CCRouter 校验、聚合、快照与原子提交；
 `--machine` 将 stdout 限定为 schema `1` NDJSON，普通 build_runner 日志走 stderr。
+`buildSucceeded.buildRunner` 和 Builder 阶段失败事件中的同名字段额外携带结构化
+`formatVersion: 1` 诊断，包含每个 phase 的耗时、inputs、skipped、not-triggered、
+invalidated/executed input、new/same/no-op output 和达到上游阈值的 activity 耗时。该统计仅解析
+build_runner 正式 console 输出，不访问 private Asset Graph；未知终态格式以有界
+`unparsedFinalLines` 保留且不影响生成成败。
 设置 `CCROUTER_DISABLE_BUILD_WATCH=1` 可回退为一次 one-shot。watch 不替代最终的
 `--no-cache --check`；它在 lease 内持有 root generation lock，应先停止再运行最终门禁。
 同 root 的 one-shot generate、check 或 clean 会在检测到活动 watch 时快速失败，而不是无限等待锁；

@@ -1499,19 +1499,29 @@ void probe() {
     () async {
       final seeded = await _generateDemo(['--no-cache']);
       expect(seeded.exitCode, 0, reason: '${seeded.stderr}');
-      final probe = File(
-        path.join(
-          Directory.current.path,
-          'packages',
-          'ccrouter_generator',
-          'bin',
-          'src',
-          'scaffold.dart',
-        ),
-      );
-      final original = probe.readAsBytesSync();
+      final probes = [
+        for (final name in ['scaffold.dart', 'build_runner_phase_report.dart'])
+          File(
+            path.join(
+              Directory.current.path,
+              'packages',
+              'ccrouter_generator',
+              'bin',
+              'src',
+              name,
+            ),
+          ),
+      ];
+      final originals = {
+        for (final probe in probes) probe.path: probe.readAsBytesSync(),
+      };
       try {
-        await probe.writeAsBytes(<int>[...original, 10], flush: true);
+        for (final probe in probes) {
+          await probe.writeAsBytes(<int>[
+            ...originals[probe.path]!,
+            10,
+          ], flush: true);
+        }
         final result = await _generateDemo(['--check', '--profile']);
         expect(result.exitCode, 0, reason: '${result.stderr}');
         expect('${result.stdout}', isNot(contains('tool-input-changed')));
@@ -1521,7 +1531,9 @@ void probe() {
           isNot(contains('ccrouter_generation_state')),
         );
       } finally {
-        await probe.writeAsBytes(original, flush: true);
+        for (final probe in probes) {
+          await probe.writeAsBytes(originals[probe.path]!, flush: true);
+        }
         final restored = await _generateDemo(const []);
         expect(restored.exitCode, 0, reason: '${restored.stderr}');
       }
