@@ -8,9 +8,10 @@ import 'package:path/path.dart' as path;
 
 /// Measures repeated authored edits in one long-lived generation watch.
 ///
-/// The benchmark edits one real Demo source with exact-content guards, waits
-/// for both Builder and CCRouter aggregation, restores the source after every
-/// sample, and finishes with a byte comparison plus `--no-cache --check`.
+/// The benchmark edits one real Demo source and performs real Dart file add,
+/// delete, and rename mutations with exact-content guards. It waits for both
+/// Builder and CCRouter aggregation, restores every mutation after each sample,
+/// and finishes with a byte comparison plus `--no-cache --check`.
 Future<void> main(List<String> arguments) async {
   final options = _BenchmarkOptions.parse(arguments);
   final sampleCount = options.sampleCount;
@@ -31,8 +32,44 @@ Future<void> main(List<String> arguments) async {
   final baselineArtifacts = await _ManagedArtifacts.capture(root);
   await _referenceCheck(root);
 
+  final fixturePrefix = 'ccrouter_watch_benchmark_$pid';
+  final addedFile = File(
+    path.join(source.parent.path, '${fixturePrefix}_added.dart'),
+  );
+  final deletedFile = File(
+    path.join(source.parent.path, '${fixturePrefix}_deleted.dart'),
+  );
+  final renameSource = File(
+    path.join(source.parent.path, '${fixturePrefix}_rename_source.dart'),
+  );
+  final renameDestination = File(
+    path.join(source.parent.path, '${fixturePrefix}_rename_destination.dart'),
+  );
+  final fixtureFiles = [
+    addedFile,
+    deletedFile,
+    renameSource,
+    renameDestination,
+  ];
+  for (final fixture in fixtureFiles) {
+    if (fixture.existsSync()) {
+      throw StateError('Benchmark fixture already exists: ${fixture.path}');
+    }
+  }
+  const deletedContents =
+      '// CCRouter watch delete benchmark fixture.\n'
+      'const int ccrouterWatchDeletedFixture = 1;\n';
+  const renameContents =
+      '// CCRouter watch rename benchmark fixture.\n'
+      'const int ccrouterWatchRenamedFixture = 1;\n';
+  _createExpectedAbsent(deletedFile, deletedContents);
+  _createExpectedAbsent(renameSource, renameContents);
+
   _WatchSession? session;
   var expectedSource = original;
+  String? addedContents;
+  var deletedFilePresent = true;
+  var renameLocation = _RenameLocation.source;
   Object? failure;
   StackTrace? failureStack;
   final scenarioReports = <Map<String, Object?>>[];
@@ -40,6 +77,7 @@ Future<void> main(List<String> arguments) async {
   String? baselineAggregationInputFingerprint;
   try {
     session = await _WatchSession.start(root);
+    final activeSession = session;
     final warmupSource = _replaceOnce(
       original,
       'final entries = CCRouter.activeRouteEntries;',
@@ -66,45 +104,42 @@ Future<void> main(List<String> arguments) async {
       );
     }
 
-    for (final scenario in _scenarios) {
+    Future<void> runScenario({
+      required String name,
+      required String mutation,
+      required FutureOr<void> Function(int index) apply,
+      required FutureOr<void> Function(int index) restore,
+      bool changesGeneratedOutput = false,
+    }) async {
       final samples = <_CycleSample>[];
       for (var index = 0; index < sampleCount; index++) {
-        final changed = scenario.edit(original, index);
-        final applied = await session.runCycle(() {
-          _writeExpected(source, expectedSource, changed);
-          expectedSource = changed;
-        });
+        final applied = await activeSession.runCycle(() => apply(index));
         samples.add(applied);
-        final restored = await session.runCycle(() {
-          _writeExpected(source, expectedSource, original);
-          expectedSource = original;
-        });
+        final restored = await activeSession.runCycle(() => restore(index));
         if (restored.aggregationInputFingerprint !=
             baselineAggregationInputFingerprint) {
-          throw StateError(
-            '${scenario.name} restore did not recover aggregation inputs.',
-          );
+          throw StateError('$name restore did not recover aggregation inputs.');
         }
       }
       final unexpectedOutput = samples.where(
-        (sample) => scenario.changesGeneratedOutput
+        (sample) => changesGeneratedOutput
             ? sample.outputFiles <= 0
             : sample.outputFiles != 0,
       );
       if (unexpectedOutput.isNotEmpty) {
         throw StateError(
-          '${scenario.name} reported unexpected output deltas: '
+          '$name reported unexpected output deltas: '
           '${unexpectedOutput.map((sample) => sample.outputFiles).join(', ')}',
         );
       }
       if (samples.any((sample) => sample.cycleMode != 'inProcess')) {
-        throw StateError('${scenario.name} did not use in-process cycles.');
+        throw StateError('$name did not use in-process cycles.');
       }
       final reuseDisabled =
           Platform.environment['CCROUTER_DISABLE_AGGREGATION_REUSE'] == '1';
       final expectedReuseHits = reuseDisabled
           ? 0
-          : scenario.changesGeneratedOutput
+          : changesGeneratedOutput
           ? 0
           : samples.length;
       final reuseHits = samples
@@ -112,7 +147,7 @@ Future<void> main(List<String> arguments) async {
           .length;
       if (reuseHits != expectedReuseHits) {
         throw StateError(
-          '${scenario.name} aggregation reuse hits '
+          '$name aggregation reuse hits '
           '$reuseHits/${samples.length}; expected '
           '$expectedReuseHits/${samples.length}.',
         );
@@ -121,7 +156,7 @@ Future<void> main(List<String> arguments) async {
           samples.any(
             (sample) => sample.aggregationReuseReason != 'disabled',
           )) {
-        throw StateError('${scenario.name} did not honor the kill switch.');
+        throw StateError('$name did not honor the kill switch.');
       }
       final matchingAggregationInputs = samples
           .where(
@@ -130,19 +165,18 @@ Future<void> main(List<String> arguments) async {
                 baselineAggregationInputFingerprint,
           )
           .length;
-      final expectedMatches = scenario.changesGeneratedOutput
-          ? 0
-          : samples.length;
+      final expectedMatches = changesGeneratedOutput ? 0 : samples.length;
       if (matchingAggregationInputs != expectedMatches) {
         throw StateError(
-          '${scenario.name} aggregation-input matches '
+          '$name aggregation-input matches '
           '$matchingAggregationInputs/${samples.length}; expected '
           '$expectedMatches/${samples.length}.',
         );
       }
       scenarioReports.add({
-        'scenario': scenario.name,
-        'changesGeneratedOutput': scenario.changesGeneratedOutput,
+        'scenario': name,
+        'mutation': mutation,
+        'changesGeneratedOutput': changesGeneratedOutput,
         'aggregationInput': {
           'baselineMatches': matchingAggregationInputs,
           'distinctFingerprints': samples
@@ -156,44 +190,142 @@ Future<void> main(List<String> arguments) async {
           'samples': [for (final sample in samples) sample.toJson()],
       });
       stderr.writeln(
-        'Watch benchmark ${scenario.name}: '
-        '${samples.length} samples completed.',
+        'Watch benchmark $name: ${samples.length} samples completed.',
       );
     }
+
+    for (final scenario in _scenarios) {
+      await runScenario(
+        name: scenario.name,
+        mutation: 'content-edit',
+        changesGeneratedOutput: scenario.changesGeneratedOutput,
+        apply: (index) {
+          final changed = scenario.edit(original, index);
+          _writeExpected(source, expectedSource, changed);
+          expectedSource = changed;
+        },
+        restore: (_) {
+          _writeExpected(source, expectedSource, original);
+          expectedSource = original;
+        },
+      );
+    }
+
+    await runScenario(
+      name: 'dart-file-add',
+      mutation: 'file-add',
+      apply: (index) {
+        addedContents =
+            '// CCRouter watch add benchmark sample ${index + 1}.\n'
+            'const int ccrouterWatchAddedFixture = ${index + 1};\n';
+        _createExpectedAbsent(addedFile, addedContents!);
+      },
+      restore: (_) {
+        _deleteExpected(addedFile, addedContents!);
+        addedContents = null;
+      },
+    );
+    await runScenario(
+      name: 'dart-file-delete',
+      mutation: 'file-delete',
+      apply: (_) {
+        _deleteExpected(deletedFile, deletedContents);
+        deletedFilePresent = false;
+      },
+      restore: (_) {
+        _createExpectedAbsent(deletedFile, deletedContents);
+        deletedFilePresent = true;
+      },
+    );
+    await runScenario(
+      name: 'dart-file-rename',
+      mutation: 'file-rename',
+      apply: (_) {
+        _renameExpected(renameSource, renameDestination, renameContents);
+        renameLocation = _RenameLocation.destination;
+      },
+      restore: (_) {
+        _renameExpected(renameDestination, renameSource, renameContents);
+        renameLocation = _RenameLocation.source;
+      },
+    );
   } on Object catch (error, stackTrace) {
     failure = error;
     failureStack = stackTrace;
   } finally {
     final activeSession = session;
-    final current = source.readAsStringSync();
-    if (current == expectedSource && current != original) {
-      if (activeSession != null) {
-        try {
-          await activeSession.runCycle(() {
-            _writeExpected(source, expectedSource, original);
-            expectedSource = original;
-          });
-        } on Object catch (error, stackTrace) {
-          failure ??= error;
-          failureStack ??= stackTrace;
-        }
-      } else {
-        source.writeAsBytesSync(originalBytes, flush: true);
+    void restoreWorkspace() {
+      if (expectedSource != original) {
+        _writeExpected(source, expectedSource, original);
         expectedSource = original;
       }
-    } else if (current != original) {
-      failure ??= StateError(
-        'Benchmark source changed concurrently; preserving current bytes: '
-        '${source.path}',
-      );
+      final currentAddedContents = addedContents;
+      if (currentAddedContents != null) {
+        _deleteExpected(addedFile, currentAddedContents);
+        addedContents = null;
+      }
+      if (!deletedFilePresent) {
+        _createExpectedAbsent(deletedFile, deletedContents);
+        deletedFilePresent = true;
+      }
+      if (renameLocation == _RenameLocation.destination) {
+        _renameExpected(renameDestination, renameSource, renameContents);
+        renameLocation = _RenameLocation.source;
+      }
+      if (deletedFilePresent) {
+        _deleteExpected(deletedFile, deletedContents);
+        deletedFilePresent = false;
+      }
+      if (renameLocation == _RenameLocation.source) {
+        _deleteExpected(renameSource, renameContents);
+        renameLocation = _RenameLocation.absent;
+      }
     }
-    await activeSession?.stop();
+
+    if (activeSession != null) {
+      try {
+        await activeSession.runCycle(restoreWorkspace);
+      } on Object catch (error, stackTrace) {
+        failure ??= error;
+        failureStack ??= stackTrace;
+        try {
+          restoreWorkspace();
+        } on Object catch (cleanupError, cleanupStack) {
+          failure = StateError(
+            'Watch cleanup failed after $error: $cleanupError',
+          );
+          failureStack = cleanupStack;
+        }
+      }
+    } else {
+      try {
+        restoreWorkspace();
+      } on Object catch (error, stackTrace) {
+        failure ??= error;
+        failureStack ??= stackTrace;
+      }
+    }
+    try {
+      await activeSession?.stop();
+    } on Object catch (error, stackTrace) {
+      failure ??= error;
+      failureStack ??= stackTrace;
+    }
   }
   if (failure != null) Error.throwWithStackTrace(failure, failureStack!);
 
   final finalBytes = source.readAsBytesSync();
   if (!_bytesEqual(originalBytes, finalBytes)) {
     throw StateError('Benchmark did not restore ${source.path}.');
+  }
+  final remainingFixtures = fixtureFiles
+      .where((fixture) => fixture.existsSync())
+      .map((fixture) => fixture.path)
+      .toList();
+  if (remainingFixtures.isNotEmpty) {
+    throw StateError(
+      'Benchmark did not remove fixtures: ${remainingFixtures.join(', ')}',
+    );
   }
   final finalArtifacts = await _ManagedArtifacts.capture(root);
   baselineArtifacts.expectEqual(finalArtifacts);
@@ -218,6 +350,7 @@ Future<void> main(List<String> arguments) async {
       'scenarios': scenarioReports,
       'equivalence': {
         'sourceRestored': true,
+        'fileFixturesRemoved': true,
         'managedArtifactsByteExact': true,
         'artifactCount': finalArtifacts.files.length,
         'artifactFingerprint': finalArtifacts.fingerprint,
@@ -288,6 +421,38 @@ void _writeExpected(File file, String expected, String replacement) {
     );
   }
   file.writeAsStringSync(replacement, flush: true);
+}
+
+void _createExpectedAbsent(File file, String contents) {
+  if (file.existsSync()) {
+    throw StateError(
+      'Benchmark expected an absent file; refusing to overwrite ${file.path}.',
+    );
+  }
+  file.writeAsStringSync(contents, flush: true);
+}
+
+void _deleteExpected(File file, String expected) {
+  if (!file.existsSync() || file.readAsStringSync() != expected) {
+    throw StateError(
+      'Benchmark file changed concurrently; refusing to delete ${file.path}.',
+    );
+  }
+  file.deleteSync();
+}
+
+void _renameExpected(File source, File destination, String expected) {
+  if (!source.existsSync() || source.readAsStringSync() != expected) {
+    throw StateError(
+      'Benchmark file changed concurrently; refusing to rename ${source.path}.',
+    );
+  }
+  if (destination.existsSync()) {
+    throw StateError(
+      'Benchmark rename destination already exists: ${destination.path}.',
+    );
+  }
+  source.renameSync(destination.path);
 }
 
 Map<String, Object?> _summarize(List<_CycleSample> samples) {
@@ -378,6 +543,8 @@ final class _EditScenario {
   final String Function(String source, int index) edit;
   final bool changesGeneratedOutput;
 }
+
+enum _RenameLocation { source, destination, absent }
 
 final class _BenchmarkOptions {
   const _BenchmarkOptions({

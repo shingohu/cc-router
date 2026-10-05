@@ -461,9 +461,10 @@ fvm dart run packages/ccrouter_test/benchmark/generator_watch_edits.dart --sampl
 ```
 
 它在同一 watch/Analyzer session 中依次修改真实 Demo 的注释、Widget body、`initState`、新增普通
-函数和 Route annotation。每个 apply 样本后都恢复原始源码并等待完整
+函数和 Route annotation，并执行真实 Dart 文件的新增、删除和重命名。每个 apply 样本后都恢复原始源码或文件布局并等待完整
 `aggregationSucceeded`；默认输出每个 profile span 的 min/P50/P95/max，`--raw-samples` 可附带
-逐轮明细。benchmark 对源码采用 exact-content 写入门禁，拒绝覆盖并发编辑；结束后比较全部 99 个
+逐轮明细。文件生命周期场景使用 PID 隔离的 benchmark fixture，删除和重命名前同样校验精确
+内容，拒绝覆盖并发编辑；结束后比较全部 99 个
 受管产物的路径和字节，并在停止 watch 后执行 `generate demo --no-cache --check`。
 
 同机 macOS arm64 / Dart 3.11.5，每种场景 10 个 apply 样本。首次 ready 为 `4578ms`；单独记录的
@@ -589,3 +590,27 @@ generation lock、artifact restore 和原子 state publication 均保留。入�
 新增 output tamper 必须报告 `miss/output-changed` 并修复；所有场景均通过 `--no-cache --check`
 逐文件名、逐字节对照。optimized/reference 最终 99 个受管文件 fingerprint 同为
 `1bd915a3a986a88f94337111aa37b7114c41afabad1727548ab75a23ab766c14`。
+
+### 10.7 Dart 文件生命周期 smoke A/B（2026-10-05）
+
+在 10.3 的 benchmark 中补充三类真实 asset graph mutation：新增此前不存在的 Dart 文件、删除
+watch 启动时已存在的 Dart 文件，以及把已存在文件重命名后再改回。fixture 均位于
+`demo/modules/navigation_lab/lib/src`，不包含 CCRouter 注解；每次 apply/restore 都等待完整
+`aggregationSucceeded`。异常路径按 exact contents 恢复，结束时要求 fixture 全部删除、99 个受管
+产物逐字节不变，并通过 `--no-cache --check`。
+
+以下为同机连续 optimized/reference A/B，每场景 3 个 apply 样本。机器运行于 Battery + macOS
+Low Power Mode；样本量只够验证方向，因此列 P50/max，不把 max 表述为稳定 P95：
+
+| 文件操作 | wall optimized/reference P50 | wall optimized/reference max | build_runner optimized/reference P50 | aggregation optimized/reference P50 |
+| --- | ---: | ---: | ---: | ---: |
+| 新增 Dart 文件 | 1622/1875ms | 1624/1876ms | 214/231ms | 900/1130ms |
+| 删除 Dart 文件 | 1606/1856ms | 1616/1856ms | 193/193ms | 907/1147ms |
+| 重命名 Dart 文件 | 1650/1875ms | 1679/1899ms | 229/226ms | 909/1132ms |
+
+三类操作的 optimized 路径均为 `cycleMode=inProcess`、`aggregation-reuse=hit 3/3`、受管输出
+`files=0`；kill switch 路径均为 `miss/disabled`。复用降低 wall P50 约 233–253ms，但 Builder
+本身只有 193–229ms，当前文件生命周期场景的主要固定成本仍是 CCRouter input proof、barrier、
+snapshot 和 planning state，而不是 build_runner 对新增/删除 asset 的图更新。本轮结果不支持
+跳过这些正确性门禁；若要形成性能门槛，应在 AC Power、关闭 Low Power Mode 后执行至少 10 个
+样本重新建立 P50/P95。
