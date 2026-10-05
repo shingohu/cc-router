@@ -1,10 +1,13 @@
 @TestOn('vm')
 library;
 
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:path/path.dart' as path;
 import 'package:test/test.dart';
+
+import '../../ccrouter_generator/bin/src/pub_hook_watch_coordination.dart';
 
 void main() {
   test('pub-hook install, status, and uninstall are reversible', () async {
@@ -247,6 +250,101 @@ dev_dependencies:
     expect(output, isNot(contains('CCRouter pub hook finished')));
   });
 
+  test('post-pub hook waits for an active watch aggregation', () async {
+    final project = await _createWatchCoordinatedProject();
+    addTearDown(() => project.delete(recursive: true));
+    final owner = await _lockWatchOwner(project);
+    addTearDown(() async {
+      await owner.unlock();
+      await owner.close();
+    });
+    final staleFingerprint = await _writeWatchStatus(
+      project,
+      lastEvent: 'buildStarted',
+      cycle: 2,
+      updatedAt: DateTime.now().toUtc(),
+    );
+    File(
+      path.join(project.path, 'pubspec.yaml'),
+    ).writeAsStringSync('\n# resolution changed\n', mode: FileMode.append);
+
+    final pending = _run([
+      'pub-hook',
+      'run',
+      '--project-root',
+      project.path,
+      '--pub-command',
+      'get',
+    ]);
+    await Future<void>.delayed(const Duration(milliseconds: 400));
+    await _writeWatchStatus(
+      project,
+      lastEvent: 'aggregationSucceeded',
+      cycle: 2,
+      updatedAt: DateTime.now().toUtc(),
+      resolutionFingerprint: staleFingerprint,
+    );
+    await Future<void>.delayed(const Duration(milliseconds: 400));
+    await _writeWatchStatus(
+      project,
+      lastEvent: 'aggregationSucceeded',
+      cycle: 3,
+      updatedAt: DateTime.now().toUtc(),
+    );
+    final result = await pending;
+    final output = '${result.stdout}\n${result.stderr}';
+
+    expect(result.exitCode, 0, reason: output);
+    expect(output, contains('reused active watch cycle 3'));
+    expect(output, contains('post-pub generation finished'));
+    expect(output, isNot(contains('active CCRouter generation watch owns')));
+  });
+
+  test('post-pub hook surfaces active watch generation diagnostics', () async {
+    final project = await _createWatchCoordinatedProject();
+    addTearDown(() => project.delete(recursive: true));
+    final owner = await _lockWatchOwner(project);
+    addTearDown(() async {
+      await owner.unlock();
+      await owner.close();
+    });
+    await _writeWatchStatus(
+      project,
+      lastEvent: 'aggregationStarted',
+      cycle: 3,
+      updatedAt: DateTime.now().toUtc(),
+    );
+
+    final pending = _run([
+      'pub-hook',
+      'run',
+      '--project-root',
+      project.path,
+      '--pub-command',
+      'get',
+    ]);
+    await Future<void>.delayed(const Duration(milliseconds: 400));
+    await _writeWatchStatus(
+      project,
+      lastEvent: 'failed',
+      cycle: 3,
+      updatedAt: DateTime.now().toUtc(),
+      failureStage: 'aggregation',
+      failureDiagnostics: 'error: Public route contract has no implementation.',
+    );
+    final result = await pending;
+    final output = '${result.stdout}\n${result.stderr}';
+
+    expect(result.exitCode, 1, reason: output);
+    expect(output, contains('active watch cycle 3 failed at aggregation'));
+    expect(output, contains('Generator output:'));
+    expect(
+      output,
+      contains('error: Public route contract has no implementation.'),
+    );
+    expect(output, isNot(contains('active CCRouter generation watch owns')));
+  });
+
   test('run and build execute a generation preflight before Flutter', () async {
     final sdk = await Directory.systemTemp.createTemp(
       'ccrouter_pub_hook_preflight_ sdk',
@@ -335,4 +433,77 @@ Directory _workspaceRoot() {
     }
     current = parent;
   }
+}
+
+Future<Directory> _createWatchCoordinatedProject() async {
+  final project = await Directory.systemTemp.createTemp(
+    'ccrouter_pub_hook_watch_',
+  );
+  File(path.join(project.path, 'pubspec.yaml')).writeAsStringSync('''
+name: watch_host
+dependencies:
+  ccrouter: any
+dev_dependencies:
+  ccrouter_generator: any
+''');
+  final dartTool = Directory(path.join(project.path, '.dart_tool'))
+    ..createSync();
+  File(path.join(dartTool.path, 'package_config.json')).writeAsStringSync('''
+{"configVersion":2,"packages":[
+  {"name":"ccrouter","rootUri":"../ccrouter"},
+  {"name":"ccrouter_generator","rootUri":"../ccrouter_generator"}
+]}
+''');
+  File(
+    path.join(dartTool.path, 'package_graph.json'),
+  ).writeAsStringSync('{}\n');
+  File(path.join(project.path, 'pubspec.lock')).writeAsStringSync('{}\n');
+  return project;
+}
+
+Future<RandomAccessFile> _lockWatchOwner(Directory project) async {
+  final file = File(
+    path.join(
+      project.path,
+      '.dart_tool',
+      'ccrouter',
+      'v1',
+      'watch',
+      'owner.lock',
+    ),
+  )..parent.createSync(recursive: true);
+  final owner = await file.open(mode: FileMode.append);
+  await owner.lock(FileLock.exclusive);
+  return owner;
+}
+
+Future<String> _writeWatchStatus(
+  Directory project, {
+  required String lastEvent,
+  required int cycle,
+  required DateTime updatedAt,
+  String? failureStage,
+  String? failureDiagnostics,
+  String? resolutionFingerprint,
+}) async {
+  final file = File(
+    path.join(
+      project.path,
+      '.dart_tool',
+      'ccrouter',
+      'v1',
+      'watch',
+      'status.json',
+    ),
+  )..parent.createSync(recursive: true);
+  final effectiveResolutionFingerprint =
+      resolutionFingerprint ??
+      await CCPubResolutionFingerprint.capture(
+        hostRoot: project,
+        buildRoot: project,
+      );
+  file.writeAsStringSync(
+    '${jsonEncode(<String, Object?>{'schemaVersion': 1, 'state': lastEvent == 'failed' ? 'failed' : 'building', 'active': true, 'lastEvent': lastEvent, 'pid': pid, 'cycle': cycle, 'startedAt': updatedAt.subtract(const Duration(seconds: 1)).toIso8601String(), 'updatedAt': updatedAt.toIso8601String(), 'hostRoot': project.path, 'buildRoot': project.path, 'managedByLease': false, 'resolutionFingerprint': effectiveResolutionFingerprint, if (failureStage != null) 'failureStage': failureStage, if (failureDiagnostics != null) 'failureDiagnostics': failureDiagnostics})}\n',
+  );
+  return effectiveResolutionFingerprint;
 }

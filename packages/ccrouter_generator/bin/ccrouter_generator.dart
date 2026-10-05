@@ -22,6 +22,7 @@ import 'src/analyzer_bootstrap.dart';
 import 'src/build_runner_phase_report.dart';
 import 'src/route_find.dart' as route_find;
 import 'src/pub_hook.dart';
+import 'src/pub_hook_watch_coordination.dart';
 import 'src/scaffold.dart';
 
 part 'src/build_plan.dart';

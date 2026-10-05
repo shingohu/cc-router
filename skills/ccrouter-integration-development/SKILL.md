@@ -318,6 +318,11 @@ before finishing with `--no-cache --check`.
 One-shot generation, check, and clean commands fail fast while that root watch
 is active. Wait for `aggregationSucceeded` instead of polling one-shot commands.
 Watch startup also fails fast while a one-shot command owns or awaits the root.
+Successful hooked Pub dependency commands are the exception: for the same Host,
+the Hook waits for the active watch cycle after the latest resolution input and
+reuses its completed aggregation. Watch failure diagnostics are surfaced and
+the Pub Hook remains fail-closed; this does not permit arbitrary one-shot
+generation beside a watch or reuse status belonging to another Host.
 The post-Builder cycle may skip redundant planning, but never its input
 barriers, preflight, snapshot, validation, aggregation, or local state writes.
 Use `CCROUTER_DISABLE_WATCH_CYCLE_OPTIMIZATION=1` for a reference-cycle A/B

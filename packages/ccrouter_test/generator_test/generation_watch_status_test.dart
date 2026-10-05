@@ -124,6 +124,44 @@ void main() {
     expect('${result.stderr}', contains('watch status is unavailable'));
   });
 
+  test('watch status persists failure diagnostics', () async {
+    final host = await Directory.systemTemp.createTemp(
+      'ccrouter_watch_status_diagnostics_',
+    );
+    addTearDown(() => host.delete(recursive: true));
+    File(path.join(host.path, 'pubspec.yaml')).writeAsStringSync('''
+name: broken_watch_host
+environment:
+  sdk: ^3.10.0
+''');
+
+    final result = await _run([
+      'generate',
+      host.path,
+      '--watch=auto',
+      '--machine',
+    ]);
+    final statusFile = File(
+      path.join(
+        host.path,
+        '.dart_tool',
+        'ccrouter',
+        'v1',
+        'watch',
+        'status.json',
+      ),
+    );
+    final status = jsonDecode(statusFile.readAsStringSync()) as Map;
+
+    expect(result.exitCode, 1);
+    expect(status['lastEvent'], 'failed');
+    expect(status['failureStage'], 'workspace');
+    expect(
+      status['failureDiagnostics'],
+      contains('Resolved Package graph is missing'),
+    );
+  });
+
   test('watch status verifies active records against the owner lock', () async {
     final host = await Directory.systemTemp.createTemp(
       'ccrouter_watch_status_liveness_',

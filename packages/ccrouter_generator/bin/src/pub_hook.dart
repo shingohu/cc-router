@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:path/path.dart' as path;
 import 'package:yaml/yaml.dart';
 
+import 'pub_hook_watch_coordination.dart';
+
 /// The operation requested from the pub hook command.
 enum CCPubHookAction {
   /// Installs a reversible wrapper around the selected Flutter SDK.
@@ -383,6 +385,33 @@ Future<bool> runCCPubHook({
   stdout.writeln(
     'CCRouter ${operation.label} started for ${operation.target}.',
   );
+  if (operation.isPostPub) {
+    final watch = await _waitForPostPubWatch(root, packageConfig.parent.parent);
+    if (watch != null) {
+      stopwatch.stop();
+      if (watch.succeeded) {
+        stdout.writeln(
+          'CCRouter ${operation.label} reused active watch cycle '
+          '${watch.cycle}.',
+        );
+        stdout.writeln(
+          'CCRouter ${operation.label} finished: '
+          'elapsed=${stopwatch.elapsedMilliseconds}ms.',
+        );
+      } else {
+        stderr.writeln(
+          'CCRouter ${operation.label} failed for ${operation.target}: '
+          '${watch.message}, elapsed=${stopwatch.elapsedMilliseconds}ms.',
+        );
+        if (watch.diagnostics case final diagnostics?) {
+          stderr.writeln('Generator output:');
+          stderr.writeln(diagnostics);
+        }
+        stderr.writeln('Watch log: ${watch.logFile.path}');
+      }
+      return watch.succeeded;
+    }
+  }
   final process = await Process.start(Platform.resolvedExecutable, [
     'run',
     'ccrouter_generator:ccrouter',
@@ -448,7 +477,11 @@ bool _declaresDirectDependency(Directory root, String packageName) {
 /// User-facing naming for one Hook-triggered generation pass.
 final class _CCPubHookOperation {
   /// Creates one immutable operation label.
-  const _CCPubHookOperation({required this.label, required this.target});
+  const _CCPubHookOperation({
+    required this.label,
+    required this.target,
+    required this.isPostPub,
+  });
 
   /// Selects preflight terminology for `run/build` and post-pub terminology
   /// for dependency commands.
@@ -463,6 +496,7 @@ final class _CCPubHookOperation {
     return _CCPubHookOperation(
       label: isPreflight ? 'preflight' : 'post-pub generation',
       target: target,
+      isPostPub: !isPreflight,
     );
   }
 
@@ -471,7 +505,193 @@ final class _CCPubHookOperation {
 
   /// Triggering Flutter command without project or argument details.
   final String target;
+
+  /// Whether an active watch may satisfy this dependency-change generation.
+  final bool isPostPub;
 }
+
+/// Result of waiting for the active Host watch after a successful Pub command.
+final class _CCPubHookWatchResult {
+  const _CCPubHookWatchResult({
+    required this.succeeded,
+    required this.cycle,
+    required this.message,
+    required this.logFile,
+    this.diagnostics,
+  });
+
+  final bool succeeded;
+  final int cycle;
+  final String message;
+  final File logFile;
+  final String? diagnostics;
+}
+
+/// Reuses one active Host watch instead of racing it with a one-shot generate.
+///
+/// Pub may rewrite Workspace resolution files before this process starts. Only
+/// a terminal watch event for their exact current contents can satisfy the Hook.
+Future<_CCPubHookWatchResult?> _waitForPostPubWatch(
+  Directory hostRoot,
+  Directory buildRoot,
+) async {
+  final statusFile = File(
+    path.join(
+      hostRoot.path,
+      '.dart_tool',
+      'ccrouter',
+      'v1',
+      'watch',
+      'status.json',
+    ),
+  );
+  var status = await _readPubHookWatchStatus(statusFile);
+  if (status == null) {
+    if (!await _pubHookWatchOwnerIsHeld(buildRoot)) return null;
+    return _CCPubHookWatchResult(
+      succeeded: false,
+      cycle: 0,
+      message: 'active watch status is unavailable',
+      logFile: _pubHookWatchLogFile(hostRoot),
+    );
+  }
+  if (!_pubHookStatusMatchesHost(status, hostRoot)) {
+    return null;
+  }
+  if (!await _pubHookWatchIsActive(status)) return null;
+
+  final requiredResolutionFingerprint =
+      await CCPubResolutionFingerprint.capture(
+        hostRoot: hostRoot,
+        buildRoot: buildRoot,
+      );
+  final timeout = Stopwatch()..start();
+  const maximumWait = Duration(minutes: 5);
+  while (timeout.elapsed < maximumWait) {
+    status = await _readPubHookWatchStatus(statusFile);
+    if (status == null || !_pubHookStatusMatchesHost(status, hostRoot)) {
+      return _CCPubHookWatchResult(
+        succeeded: false,
+        cycle: 0,
+        message: 'active watch status became unavailable',
+        logFile: _pubHookWatchLogFile(hostRoot),
+      );
+    }
+    final cycle = status['cycle'] as int;
+    final lastEvent = status['lastEvent'] as String;
+    final matchesResolution =
+        status['resolutionFingerprint'] == requiredResolutionFingerprint;
+    if (matchesResolution &&
+        (lastEvent == 'aggregationSucceeded' || lastEvent == 'ready')) {
+      return _CCPubHookWatchResult(
+        succeeded: true,
+        cycle: cycle,
+        message: 'active watch aggregation succeeded',
+        logFile: _pubHookWatchLogFile(hostRoot),
+      );
+    }
+    if (matchesResolution && lastEvent == 'failed') {
+      return _CCPubHookWatchResult(
+        succeeded: false,
+        cycle: cycle,
+        message:
+            'active watch cycle $cycle failed at '
+            '${status['failureStage'] ?? 'generation'}',
+        diagnostics: status['failureDiagnostics'] as String?,
+        logFile: _pubHookWatchLogFile(hostRoot),
+      );
+    }
+    if (!await _pubHookWatchIsActive(status)) {
+      return _CCPubHookWatchResult(
+        succeeded: false,
+        cycle: cycle,
+        message: 'active watch stopped before post-pub aggregation completed',
+        diagnostics: status['failureDiagnostics'] as String?,
+        logFile: _pubHookWatchLogFile(hostRoot),
+      );
+    }
+    await Future<void>.delayed(const Duration(milliseconds: 200));
+  }
+  final latestStatus = status!;
+  return _CCPubHookWatchResult(
+    succeeded: false,
+    cycle: latestStatus['cycle'] as int,
+    message:
+        'active watch did not complete post-pub aggregation within '
+        '${maximumWait.inMinutes} minutes',
+    diagnostics: latestStatus['failureDiagnostics'] as String?,
+    logFile: _pubHookWatchLogFile(hostRoot),
+  );
+}
+
+Future<Map<String, Object?>?> _readPubHookWatchStatus(File file) async {
+  if (!file.existsSync()) return null;
+  try {
+    final decoded = jsonDecode(await file.readAsString());
+    if (decoded is! Map ||
+        decoded['schemaVersion'] != 1 ||
+        decoded['active'] is! bool ||
+        decoded['lastEvent'] is! String ||
+        decoded['cycle'] is! int ||
+        decoded['updatedAt'] is! String ||
+        decoded['hostRoot'] is! String ||
+        decoded['buildRoot'] is! String) {
+      return null;
+    }
+    return decoded.cast<String, Object?>();
+  } on Object {
+    return null;
+  }
+}
+
+bool _pubHookStatusMatchesHost(
+  Map<String, Object?> status,
+  Directory hostRoot,
+) => path.equals(
+  path.normalize('${status['hostRoot']}'),
+  path.normalize(hostRoot.absolute.path),
+);
+
+Future<bool> _pubHookWatchIsActive(Map<String, Object?> status) async {
+  if (status['active'] != true) return false;
+  return _pubHookWatchOwnerIsHeld(Directory(status['buildRoot'] as String));
+}
+
+Future<bool> _pubHookWatchOwnerIsHeld(Directory buildRoot) async {
+  final owner = File(
+    path.join(
+      buildRoot.path,
+      '.dart_tool',
+      'ccrouter',
+      'v1',
+      'watch',
+      'owner.lock',
+    ),
+  );
+  if (!owner.existsSync()) return false;
+  RandomAccessFile? opened;
+  try {
+    opened = await owner.open(mode: FileMode.append);
+    await opened.lock(FileLock.shared);
+    await opened.unlock();
+    return false;
+  } on FileSystemException {
+    return true;
+  } finally {
+    await opened?.close();
+  }
+}
+
+File _pubHookWatchLogFile(Directory hostRoot) => File(
+  path.join(
+    hostRoot.path,
+    '.dart_tool',
+    'ccrouter',
+    'v1',
+    'watch',
+    'flutter-run.log',
+  ),
+);
 
 /// Bounded child-process output retained until generation succeeds or fails.
 final class _CCPubHookOutput {

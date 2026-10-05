@@ -27,6 +27,10 @@
 - Routed the successful Flutter-run watch start summary through stdout like
   preflight success, while retaining real hook failures on stderr so IDEs do
   not render a healthy background watch as an error.
+- Coordinated post-pub generation with an already active same-Host watch. The
+  Hook now waits for aggregation proven against the exact current Pub
+  resolution inputs and surfaces bounded Builder/validation diagnostics on
+  failure instead of reporting only a generation-lock conflict.
 - Added diagnostic-only structured build_runner phase, activity, execution,
   and invalidation counters to watch build events and the real-edit benchmark.
   Unknown upstream formats remain bounded raw diagnostics and never affect

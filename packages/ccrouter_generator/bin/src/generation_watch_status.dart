@@ -28,6 +28,9 @@ final class _GenerationWatchStatusTracker {
   String? _lastSucceededAt;
   String? _lastFailureAt;
   String? _failureStage;
+  String? _failureDiagnostics;
+  String? _cycleResolutionFingerprint;
+  String? _completedResolutionFingerprint;
 
   /// Records one public watch event and persists only developer-useful states.
   Future<void> observe(
@@ -39,6 +42,8 @@ final class _GenerationWatchStatusTracker {
     if (type == 'buildStarted') {
       _cycle++;
       _failureStage = null;
+      _failureDiagnostics = null;
+      _cycleResolutionFingerprint = await _captureResolutionFingerprint();
     }
     if (type == 'buildSucceeded') {
       _lastBuildElapsedMs = data['elapsedMs'] as int?;
@@ -52,10 +57,21 @@ final class _GenerationWatchStatusTracker {
       _lastCycleMode = data['cycleMode'] as String?;
       _lastSucceededAt = timestamp;
       _failureStage = null;
+      await _completeResolutionFingerprint();
     }
     if (type == 'failed') {
       _lastFailureAt = timestamp;
       _failureStage = data['stage'] as String?;
+      _failureDiagnostics = _boundedWatchFailureDiagnostics(
+        switch (data['diagnostics']) {
+          final String value when value.trim().isNotEmpty => value,
+          _ => switch (data['error']) {
+            final String value when value.trim().isNotEmpty => value,
+            _ => null,
+          },
+        },
+      );
+      await _completeResolutionFingerprint();
       if (_failureStage == 'build') {
         _lastBuildElapsedMs = data['elapsedMs'] as int?;
         final report = data['buildRunner'];
@@ -100,6 +116,10 @@ final class _GenerationWatchStatusTracker {
       if (_lastSucceededAt != null) 'lastSucceededAt': _lastSucceededAt,
       if (_lastFailureAt != null) 'lastFailureAt': _lastFailureAt,
       if (_failureStage != null) 'failureStage': _failureStage,
+      if (_failureDiagnostics != null)
+        'failureDiagnostics': _failureDiagnostics,
+      if (_completedResolutionFingerprint != null)
+        'resolutionFingerprint': _completedResolutionFingerprint,
     };
     try {
       await _writeIfChanged(
@@ -139,6 +159,50 @@ final class _GenerationWatchStatusTracker {
     'succeeded' || 'stopped' => 'stopped',
     _ => type,
   };
+
+  Future<void> _completeResolutionFingerprint() async {
+    final started = _cycleResolutionFingerprint;
+    if (started == null) {
+      _completedResolutionFingerprint = null;
+      return;
+    }
+    final current = await _captureResolutionFingerprint();
+    _completedResolutionFingerprint = current == started ? current : null;
+  }
+
+  Future<String?> _captureResolutionFingerprint() async {
+    try {
+      return await CCPubResolutionFingerprint.capture(
+        hostRoot: hostRoot,
+        buildRoot: buildRoot,
+      );
+    } on FileSystemException {
+      return null;
+    }
+  }
+}
+
+String? _boundedWatchFailureDiagnostics(String? value) {
+  if (value == null) return null;
+  const maximumLines = 200;
+  const maximumCharacters = 64 * 1024;
+  final lines = const LineSplitter().convert(value.trim());
+  final retained = <String>[];
+  var characters = 0;
+  for (final line in lines.reversed) {
+    final cost = line.length + 1;
+    if (retained.length >= maximumLines ||
+        (retained.isNotEmpty && characters + cost > maximumCharacters)) {
+      break;
+    }
+    if (retained.isEmpty && cost > maximumCharacters) {
+      retained.add(line.substring(line.length - maximumCharacters));
+      break;
+    }
+    retained.add(line);
+    characters += cost;
+  }
+  return retained.reversed.join('\n');
 }
 
 /// Runs the read-only human status or follow command for [hostRoot].

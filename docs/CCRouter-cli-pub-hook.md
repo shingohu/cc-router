@@ -83,7 +83,11 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook uninstall
    `pubspec.yaml`。
 4. 没有 resolved Package config、当前 Package 没有直接声明 `ccrouter`，或解析图没有
    同时包含 `ccrouter` 与 `ccrouter_generator` 时，打印跳过原因并返回成功。
-5. 成功时只打印 fast-path、验证摘要和总耗时；生成器失败时打印最近
+5. 同一 Host 已有活动 watch 时，post-pub 不再并发启动 one-shot；它以当前 Pub 解析文件的
+   exact-content fingerprint 为完成栅栏，等待 watch 的 `aggregationSucceeded`。watch 的
+   Builder、Validator 或 aggregation 失败时，Hook 返回非零并输出该轮有界 diagnostics，
+   因此不会用 generation lock 遮蔽真实错误。
+6. 成功时只打印 fast-path、验证摘要和总耗时；生成器失败时打印最近
    200 行且最多 64 KiB 的有界日志并返回非零，使 CI 能发现生成物过期或元数据错误，
    同时避免长时间 Builder 输出造成控制台刷屏或内存无界增长。
 
@@ -158,6 +162,8 @@ CCROUTER_DISABLE_BUILD_WATCH=1 flutter run
   Flutter SDK 仓库。
 - Hook 不修改 `pubspec.yaml`、锁文件或生成物恢复策略；所有生成校验仍由
   `ccrouter generate` 负责。
+- Hook 与同 Host watch 并发时最多等待 5 分钟；状态损坏、watch 退出、失败或超时均 fail-closed。
+  不同 Host 即使共享 build root，也不会互相冒认完成轮次。
 - 安装是显式操作，不应在项目初始化、CI 或普通 `pub get` 中隐式修改 SDK。
 
 ### Workspace 聚合根

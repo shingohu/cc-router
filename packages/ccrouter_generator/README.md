@@ -366,6 +366,10 @@ Hook 的 watch 启动成功提示写入 stdout，与 preflight 成功信息保�
 watch 会原子发布 `.dart_tool/ccrouter/v1/watch/status.json`；`watch status <host>` 读取一次
 当前状态，`watch follow <host>` 持续输出简洁状态变化。Hook 启动的完整 build_runner 日志仍在
 `.dart_tool/ccrouter/v1/watch/flutter-run.log`，不会污染 Flutter Tool 的 machine stdout。
+同一 Host 执行成功的 `flutter pub get/upgrade/downgrade/add/remove` 时，post-pub Hook 会以
+当前 Pub 解析文件为栅栏等待活动 watch，而不是并发启动 one-shot。成功复用对应
+`aggregationSucceeded`；失败则返回非零并输出该轮有界 diagnostics。状态不可用、watch 退出
+或 5 分钟超时均 fail-closed，且不会把另一个 Host 的状态当作完成证据。
 状态发布失败只警告并停止后续状态写入，不影响生成锁、Builder、Validator、快照恢复、原子发布
 或最终 `--no-cache --check`。watch 异常退出且未写入 `stopped` 时，只读命令会根据已释放的
 owner lock 将遗留 `active` 记录显示为 `stale`，但不会改写历史状态文件。

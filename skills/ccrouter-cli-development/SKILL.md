@@ -234,6 +234,12 @@ path, validation summary, and final elapsed time; Hook does not enable detailed
 profiling by default. Failure preserves the recent
 bounded generator tail so actionable Builder errors remain visible without
 unbounded buffering or routine console noise.
+When the same Host already has an active watch, post-pub generation waits for
+an `aggregationSucceeded` event published after the latest Pub resolution
+input instead of starting a conflicting one-shot command. A Builder,
+validation, or aggregation failure remains fail-closed and its bounded watch
+diagnostics are surfaced by the Hook. Missing state, watch exit, or the bounded
+five-minute wait also fails; never treat another Host's status as evidence.
 
 Use `status` after an FVM version switch; it prints the resolved SDK path and
 verifies the marker, POSIX/Windows wrapper, and backups. It returns non-zero

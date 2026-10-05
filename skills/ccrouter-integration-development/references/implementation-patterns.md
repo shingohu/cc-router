@@ -825,6 +825,12 @@ One-shot generate, check, and clean commands fail fast while the root watch is
 active. Iterative clients should wait for `aggregationSucceeded`; they must not
 poll a command that cannot own the lock. Watch startup also fails fast while a
 one-shot command owns or awaits that root.
+After a successful hooked Pub dependency command, the same-Host Hook performs
+that coordination itself: it fences on exact current resolution-file contents
+and waits for the active watch's terminal aggregation event. Success reuses
+that cycle; failure, exit, unavailable state, or timeout stays fail-closed and
+reports the bounded watch diagnostics. This exception is specific to post-pub
+coordination, not permission for concurrent one-shot generation.
 After a successful Builder cycle, watch skips only the ordinary fast-path and
 Build Plan decision that can no longer change whether Builder runs. Input
 fingerprints and barriers, dependency preflight, artifact snapshots, Workspace
