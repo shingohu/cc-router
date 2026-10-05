@@ -54,6 +54,15 @@ void main() {
       final before = await _managedArtifacts();
       final optimized = await _runWatchUntilReady();
       final optimizedArtifacts = await _managedArtifacts();
+      final optimizedPlanningState = await _localPlanningState();
+      final evidenceReference = await _runWatchUntilReady(
+        environment: {
+          ...Platform.environment,
+          'CCROUTER_DISABLE_WATCH_EVIDENCE_REUSE': '1',
+        },
+      );
+      final evidenceReferenceArtifacts = await _managedArtifacts();
+      final evidenceReferencePlanningState = await _localPlanningState();
       final reference = await _runWatchUntilReady(
         environment: {
           ...Platform.environment,
@@ -62,6 +71,7 @@ void main() {
         },
       );
       final referenceArtifacts = await _managedArtifacts();
+      final referencePlanningState = await _localPlanningState();
 
       expect(optimized.ready['schemaVersion'], 1);
       expect(
@@ -87,8 +97,27 @@ void main() {
         _profileSpan(reference.aggregation, 'fast-path-inspection')['status'],
         isNot('skipped'),
       );
+      expect(
+        (_profileSpan(
+              optimized.aggregation,
+              'planning-snapshot-capture',
+            )['attributes']
+            as Map)['evidenceMode'],
+        isIn(const ['input', 'input-and-aggregation-output']),
+      );
+      expect(
+        (_profileSpan(
+              evidenceReference.aggregation,
+              'planning-snapshot-capture',
+            )['attributes']
+            as Map)['evidenceMode'],
+        'recaptured',
+      );
       expect(optimizedArtifacts, before);
+      expect(evidenceReferenceArtifacts, optimizedArtifacts);
       expect(referenceArtifacts, optimizedArtifacts);
+      expect(evidenceReferencePlanningState, optimizedPlanningState);
+      expect(referencePlanningState, optimizedPlanningState);
     },
     timeout: const Timeout(Duration(minutes: 5)),
   );
@@ -114,6 +143,124 @@ void main() {
       expect('${result!.stderr}', contains('aggregationSucceeded'));
     },
     timeout: const Timeout(Duration(minutes: 3)),
+  );
+
+  test(
+    'watch evidence reuse keeps current Builder-only output bytes',
+    () async {
+      final source = File(
+        path.join(
+          Directory.current.path,
+          'demo',
+          'modules',
+          'navigation_lab',
+          'lib',
+          'src',
+          'stack_page.dart',
+        ),
+      );
+      final original = source.readAsStringSync();
+      final originalArtifacts = await _managedArtifacts();
+      final seededSource = _replaceOnce(
+        _replaceOnce(
+          original,
+          "import 'ccrouter_generated/demo_navigation_lab_component.api.g.dart';\n",
+          "import 'ccrouter_generated/demo_navigation_lab_component.api.g.dart';\n\n"
+              'const ccrouterWatchDefaultReturnsResult = false;\n',
+        ),
+        'this.returnsResult = false',
+        'this.returnsResult = ccrouterWatchDefaultReturnsResult',
+      );
+      final changedSource = _replaceOnce(
+        seededSource,
+        'ccrouterWatchDefaultReturnsResult = false',
+        'ccrouterWatchDefaultReturnsResult = true',
+      );
+      try {
+        source.writeAsStringSync(seededSource, flush: true);
+        final seed = await _run(['generate', 'demo']);
+        expect(seed.exitCode, 0, reason: '${seed.stderr}');
+        final seededArtifacts = await _managedArtifacts();
+
+        final optimized = await _runWatchUntilReady(
+          onReady: () async {
+            source.writeAsStringSync(changedSource, flush: true);
+          },
+          additionalAggregationCycles: 1,
+        );
+        expect(
+          (_profileSpan(
+                optimized.aggregation,
+                'aggregation-reuse-inspection',
+              )['attributes']
+              as Map)['result'],
+          'hit',
+        );
+        expect(
+          (_profileSpan(
+                optimized.aggregation,
+                'planning-snapshot-capture',
+              )['attributes']
+              as Map)['evidenceMode'],
+          'input-and-aggregation-output',
+        );
+        final optimizedArtifacts = await _managedArtifacts();
+        final optimizedPlanningState = await _localPlanningState();
+        expect(
+          _changedArtifactPaths(seededArtifacts, optimizedArtifacts),
+          contains(
+            path.join(
+              'demo',
+              'modules',
+              'navigation_lab',
+              'lib',
+              'src',
+              'ccrouter_generated',
+              'route',
+              'stack_page.route.g.dart',
+            ),
+          ),
+        );
+
+        source.writeAsStringSync(seededSource, flush: true);
+        final referenceSeed = await _run(['generate', 'demo']);
+        expect(referenceSeed.exitCode, 0, reason: '${referenceSeed.stderr}');
+        final evidenceReference = await _runWatchUntilReady(
+          environment: {
+            ...Platform.environment,
+            'CCROUTER_DISABLE_WATCH_EVIDENCE_REUSE': '1',
+          },
+          onReady: () async {
+            source.writeAsStringSync(changedSource, flush: true);
+          },
+          additionalAggregationCycles: 1,
+        );
+        expect(
+          (_profileSpan(
+                evidenceReference.aggregation,
+                'aggregation-reuse-inspection',
+              )['attributes']
+              as Map)['result'],
+          'hit',
+        );
+        expect(
+          (_profileSpan(
+                evidenceReference.aggregation,
+                'planning-snapshot-capture',
+              )['attributes']
+              as Map)['evidenceMode'],
+          'recaptured',
+        );
+        expect(await _managedArtifacts(), optimizedArtifacts);
+        expect(await _localPlanningState(), optimizedPlanningState);
+      } finally {
+        source.writeAsStringSync(original, flush: true);
+        final restored = await _run(['generate', 'demo']);
+        expect(restored.exitCode, 0, reason: '${restored.stderr}');
+        expect(await _managedArtifacts(), originalArtifacts);
+      }
+    },
+    timeout: const Timeout(Duration(minutes: 8)),
   );
 
   test(
@@ -191,6 +338,7 @@ File _lockFile(String relative) => File(
 Future<_WatchRun> _runWatchUntilReady({
   Map<String, String>? environment,
   Future<void> Function()? onReady,
+  int additionalAggregationCycles = 0,
 }) async {
   final leaseDirectory = Directory(
     path.join(
@@ -227,6 +375,9 @@ Future<_WatchRun> _runWatchUntilReady({
   final outputLines = <String>[];
   final errorLines = <String>[];
   Map<String, dynamic>? aggregation;
+  var aggregationCount = 0;
+  int? targetAggregationCount;
+  final additionalAggregationsCompleted = Completer<void>();
   final outputSubscription = process.stdout
       .transform(utf8.decoder)
       .transform(const LineSplitter())
@@ -245,7 +396,16 @@ Future<_WatchRun> _runWatchUntilReady({
           return;
         }
         eventTypes.add(event['type'] as String);
-        if (event['type'] == 'aggregationSucceeded') aggregation = event;
+        if (event['type'] == 'aggregationSucceeded') {
+          aggregation = event;
+          aggregationCount += 1;
+          final target = targetAggregationCount;
+          if (target != null &&
+              aggregationCount >= target &&
+              !additionalAggregationsCompleted.isCompleted) {
+            additionalAggregationsCompleted.complete();
+          }
+        }
         if (event['type'] == 'ready' && !ready.isCompleted) {
           ready.complete(event);
         }
@@ -270,7 +430,18 @@ Future<_WatchRun> _runWatchUntilReady({
         'stderr:\n${errorLines.join('\n')}',
       ),
     );
+    targetAggregationCount = aggregationCount + additionalAggregationCycles;
     await onReady?.call();
+    if (additionalAggregationCycles > 0) {
+      await additionalAggregationsCompleted.future.timeout(
+        const Duration(minutes: 2),
+        onTimeout: () => throw TimeoutException(
+          'watch did not complete $additionalAggregationCycles additional '
+          'aggregation cycle(s)\nstdout:\n${outputLines.join('\n')}\n'
+          'stderr:\n${errorLines.join('\n')}',
+        ),
+      );
+    }
     await lease.delete();
     await stopped.future.timeout(const Duration(seconds: 10));
     expect(await process.exitCode, 0);
@@ -318,6 +489,58 @@ Future<Map<String, List<int>>> _managedArtifacts() async {
     }
   }
   return artifacts;
+}
+
+Future<Map<String, List<int>>> _localPlanningState() async {
+  final state = <String, List<int>>{};
+  for (final directoryName in const ['manifests', 'build_plans']) {
+    final directory = Directory(
+      path.join(
+        Directory.current.path,
+        '.dart_tool',
+        'ccrouter',
+        'v1',
+        directoryName,
+      ),
+    );
+    if (!directory.existsSync()) continue;
+    for (final file in directory.listSync().whereType<File>()) {
+      final decoded = jsonDecode(file.readAsStringSync());
+      if (decoded is! Map || decoded['hostPackage'] != 'ccrouter_demo')
+        continue;
+      state['$directoryName/${path.basename(file.path)}'] = await file
+          .readAsBytes();
+    }
+  }
+  return state;
+}
+
+List<String> _changedArtifactPaths(
+  Map<String, List<int>> before,
+  Map<String, List<int>> after,
+) {
+  bool bytesEqual(List<int>? left, List<int>? right) {
+    if (left == null || right == null || left.length != right.length) {
+      return false;
+    }
+    for (var index = 0; index < left.length; index++) {
+      if (left[index] != right[index]) return false;
+    }
+    return true;
+  }
+
+  return <String>{
+    ...before.keys,
+    ...after.keys,
+  }.where((name) => !bytesEqual(before[name], after[name])).toList()..sort();
+}
+
+String _replaceOnce(String source, String from, String to) {
+  final first = source.indexOf(from);
+  if (first < 0 || source.indexOf(from, first + from.length) >= 0) {
+    throw StateError('Expected exactly one source marker: $from');
+  }
+  return source.replaceRange(first, first + from.length, to);
 }
 
 final class _WatchRun {

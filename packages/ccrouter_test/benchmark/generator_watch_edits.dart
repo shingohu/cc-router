@@ -158,6 +158,22 @@ Future<void> main(List<String> arguments) async {
           )) {
         throw StateError('$name did not honor the kill switch.');
       }
+      final evidenceReuseDisabled =
+          Platform.environment['CCROUTER_DISABLE_WATCH_EVIDENCE_REUSE'] == '1';
+      final unexpectedEvidence = samples.where((sample) {
+        final expected = evidenceReuseDisabled
+            ? 'recaptured'
+            : sample.aggregationReuseResult == 'hit'
+            ? 'input-and-aggregation-output'
+            : 'input';
+        return sample.planningEvidenceMode != expected;
+      });
+      if (unexpectedEvidence.isNotEmpty) {
+        throw StateError(
+          '$name reported unexpected planning evidence modes: '
+          '${unexpectedEvidence.map((sample) => sample.planningEvidenceMode).join(', ')}',
+        );
+      }
       final matchingAggregationInputs = samples
           .where(
             (sample) =>
@@ -185,6 +201,15 @@ Future<void> main(List<String> arguments) async {
               .length,
         },
         'aggregationReuse': {'hits': reuseHits, 'disabled': reuseDisabled},
+        'planningEvidence': {
+          'reused': !evidenceReuseDisabled,
+          'modes':
+              samples
+                  .map((sample) => sample.planningEvidenceMode)
+                  .toSet()
+                  .toList()
+                ..sort(),
+        },
         'summary': _summarize(samples),
         if (options.includeRawSamples)
           'samples': [for (final sample in samples) sample.toJson()],
@@ -703,6 +728,7 @@ final class _WatchSession {
     String? aggregationInputFingerprint;
     String? aggregationReuseResult;
     String? aggregationReuseReason;
+    String? planningEvidenceMode;
     for (final raw in (profile['spans'] as List).cast<Map>()) {
       final span = raw.cast<String, dynamic>();
       spans[span['name'] as String] = span['durationUs'] as int;
@@ -718,12 +744,20 @@ final class _WatchSession {
         aggregationReuseResult = attributes?['result'] as String?;
         aggregationReuseReason = attributes?['reason'] as String?;
       }
+      if (span['name'] == 'planning-snapshot-capture') {
+        final attributes = (span['attributes'] as Map?)
+            ?.cast<String, dynamic>();
+        planningEvidenceMode = attributes?['evidenceMode'] as String?;
+      }
     }
     if (aggregationInputFingerprint == null) {
       throw StateError('Aggregation input fingerprint is missing.');
     }
     if (aggregationReuseResult == null || aggregationReuseReason == null) {
       throw StateError('Aggregation reuse inspection is missing.');
+    }
+    if (planningEvidenceMode == null) {
+      throw StateError('Planning evidence mode is missing.');
     }
     final outputDelta = (aggregation['outputDelta'] as Map?)
         ?.cast<String, dynamic>();
@@ -736,6 +770,7 @@ final class _WatchSession {
       aggregationInputFingerprint: aggregationInputFingerprint,
       aggregationReuseResult: aggregationReuseResult,
       aggregationReuseReason: aggregationReuseReason,
+      planningEvidenceMode: planningEvidenceMode,
       spanDurationsUs: spans,
       spanStatuses: statuses,
     );
@@ -812,6 +847,7 @@ final class _CycleSample {
     required this.aggregationInputFingerprint,
     required this.aggregationReuseResult,
     required this.aggregationReuseReason,
+    required this.planningEvidenceMode,
     required this.spanDurationsUs,
     required this.spanStatuses,
   });
@@ -824,6 +860,7 @@ final class _CycleSample {
   final String aggregationInputFingerprint;
   final String aggregationReuseResult;
   final String aggregationReuseReason;
+  final String planningEvidenceMode;
   final Map<String, int> spanDurationsUs;
   final Map<String, String> spanStatuses;
 
@@ -836,6 +873,7 @@ final class _CycleSample {
     aggregationInputFingerprint: aggregationInputFingerprint,
     aggregationReuseResult: aggregationReuseResult,
     aggregationReuseReason: aggregationReuseReason,
+    planningEvidenceMode: planningEvidenceMode,
     spanDurationsUs: spanDurationsUs,
     spanStatuses: spanStatuses,
   );
@@ -849,6 +887,7 @@ final class _CycleSample {
     'aggregationInputFingerprint': aggregationInputFingerprint,
     'aggregationReuseResult': aggregationReuseResult,
     'aggregationReuseReason': aggregationReuseReason,
+    'planningEvidenceMode': planningEvidenceMode,
     'profileSpansUs': spanDurationsUs,
     'profileSpanStatuses': spanStatuses,
   };

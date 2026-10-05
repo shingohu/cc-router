@@ -614,3 +614,37 @@ Low Power Mode；样本量只够验证方向，因此列 P50/max，不把 max �
 snapshot 和 planning state，而不是 build_runner 对新增/删除 asset 的图更新。本轮结果不支持
 跳过这些正确性门禁；若要形成性能门槛，应在 AC Power、关闭 Low Power Mode 后执行至少 10 个
 样本重新建立 P50/P95。
+
+### 10.8 watch barrier evidence reuse（2026-10-05）
+
+watch 的 after-aggregation barrier 原本完成一次 exact-content input capture 后只返回 `bool`，
+紧随其后的 planning snapshot 又读取相同输入。现在 barrier 返回完整 snapshot，planning state 直接
+消费该证据；aggregation reuse 命中时还复用入口 artifact snapshot 中已验证未变的
+aggregation-owned bytes，但 Builder-owned outputs 始终从当前文件重新读取。所有 barrier、
+Validator、artifact restore、独立原子状态写入和最终 `--no-cache --check` 均保留。
+`CCROUTER_DISABLE_WATCH_EVIDENCE_REUSE=1` 恢复完整 recapture；Profile 通过
+`planning-snapshot-capture.attributes.evidenceMode` 区分实际路径。
+
+同机连续 optimized/reference A/B，每场景 3 个 apply 样本；两侧均启用 aggregation reuse，只切换
+本项 kill switch。机器仍为 Battery + macOS Low Power Mode，因此只比较同轮 P50，不建立正式
+性能门槛：
+
+| 编辑场景 | wall optimized/reference P50 | aggregation optimized/reference P50 | planning snapshot optimized/reference P50 |
+| --- | ---: | ---: | ---: |
+| 普通注释 | 1384/1436ms | 437/473ms | 59.9/108.4ms |
+| Widget body | 1387/1463ms | 434/470ms | 59.6/108.3ms |
+| `initState` body | 1385/1413ms | 431/470ms | 59.5/108.3ms |
+| 新增普通函数 | 1382/1423ms | 422/465ms | 59.9/108.6ms |
+| Route annotation | 1674/1718ms | 584/636ms | 66.2/112.3ms |
+| 新增 Dart 文件 | 979/1058ms | 427/480ms | 59.8/109.7ms |
+| 删除 Dart 文件 | 990/1032ms | 441/485ms | 59.9/110.0ms |
+| 重命名 Dart 文件 | 1003/1054ms | 435/485ms | 59.5/110.8ms |
+
+planning snapshot P50 减少 46–51ms，wall P50 减少 28–79ms。七个 reuse-hit 场景报告
+`input-and-aggregation-output`；Route annotation 因 aggregation miss 报告 `input`，只复用最终
+barrier input。kill-switch reference 全部为 `recaptured`。额外的 Builder-only 边界测试把 Route
+默认 const 从 `false` 改为 `true`：`.route.g.dart` 更新而 aggregation 仍命中，optimized/reference
+的受管产物、fast-path manifest 和 Build Plan state 逐字节一致。两轮 benchmark 最终都恢复源码、
+删除 fixture、得到相同的 99 文件指纹
+`cb927a19b7867c0fcd6dd6dabe5c72e8b465975c2f73480b1b8258767783eab6`，并通过
+`generate demo --no-cache --check`。

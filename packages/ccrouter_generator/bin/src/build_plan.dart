@@ -544,21 +544,41 @@ final class _GenerationPlanningSnapshot {
 
   /// Captures exact content once for both disposable state documents.
   static Future<_GenerationPlanningSnapshot> capture(
-    CCPackageWorkspace workspace,
-  ) async {
-    final input = await _GenerationStateFingerprint.captureInputSnapshot(
-      workspace,
-    );
+    CCPackageWorkspace workspace, {
+    _GenerationInputFingerprintSnapshot? verifiedInputSnapshot,
+    Map<String, List<int>>? verifiedAggregationOutputs,
+  }) async {
+    final input =
+        verifiedInputSnapshot ??
+        await _GenerationStateFingerprint.captureInputSnapshot(workspace);
     final indexes = <String, String?>{};
     final packageOutputFingerprints = <String, String?>{};
     final workspaceOutputs = <String, List<int>>{};
     final aggregationOutputs = <String, List<int>>{};
     for (final package in workspace.packages.values) {
-      indexes[package.name] = await _fileFingerprint(package.indexFile);
-      if (!package.writable) continue;
+      if (!package.writable) {
+        indexes[package.name] = await _fileFingerprint(package.indexFile);
+        continue;
+      }
       final outputs = await _GenerationStateFingerprint.capturePackageOutput(
         package,
+        includeAggregationOutputs: verifiedAggregationOutputs == null,
       );
+      if (verifiedAggregationOutputs != null) {
+        final packageRoot = path.normalize(package.root.absolute.path);
+        for (final entry in verifiedAggregationOutputs.entries) {
+          final absolute = path.normalize(
+            _absolutePath(workspace.buildRoot, entry.key),
+          );
+          if (!path.isWithin(packageRoot, absolute)) continue;
+          outputs[_relativePath(package.root, File(absolute))] = entry.value;
+        }
+      }
+      final indexBytes =
+          outputs[_relativePath(package.root, package.indexFile)];
+      indexes[package.name] = indexBytes == null
+          ? null
+          : sha256.convert(indexBytes).toString();
       packageOutputFingerprints[package.name] =
           _GenerationStateFingerprint.digestEntries(outputs);
       for (final entry in outputs.entries) {

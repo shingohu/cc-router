@@ -5,6 +5,7 @@ final _commandStderrZoneKey = Object();
 final _generationCycleModeZoneKey = Object();
 const _sharedPlanningSnapshotKillSwitch =
     'CCROUTER_DISABLE_SHARED_PLANNING_SNAPSHOT';
+const _watchEvidenceReuseKillSwitch = 'CCROUTER_DISABLE_WATCH_EVIDENCE_REUSE';
 
 /// Output channel scoped to one command or in-process generation cycle.
 final class _CommandOutputSink {
@@ -491,9 +492,31 @@ Future<_GenerationCycleResult> _runGenerationCycle({
             }
           }
         } else {
+          final evidenceReuseEnabled =
+              _usesOptimizedWatchCycle &&
+              Platform.environment[_watchEvidenceReuseKillSwitch] != '1';
+          final verifiedInputSnapshot = evidenceReuseEnabled
+              ? aggregationOutcome?.verifiedInputSnapshot
+              : null;
+          final verifiedAggregationOutputs =
+              evidenceReuseEnabled &&
+                  (aggregationOutcome?.reused ?? false) &&
+                  snapshot != null
+              ? snapshot.aggregationOutputFiles(fastPathWorkspace!)
+              : null;
+          final evidenceMode = verifiedInputSnapshot == null
+              ? 'recaptured'
+              : verifiedAggregationOutputs == null
+              ? 'input'
+              : 'input-and-aggregation-output';
           final planningSnapshot = await profileTrace.measure(
             'planning-snapshot-capture',
-            () => _GenerationPlanningSnapshot.capture(fastPathWorkspace!),
+            () => _GenerationPlanningSnapshot.capture(
+              fastPathWorkspace!,
+              verifiedInputSnapshot: verifiedInputSnapshot,
+              verifiedAggregationOutputs: verifiedAggregationOutputs,
+            ),
+            attributes: (_) => {'evidenceMode': evidenceMode},
           );
           if (planningSnapshot.inputFingerprint != verifiedInputFingerprint) {
             profileTrace?.skip('fast-path-manifest-write');

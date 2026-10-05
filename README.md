@@ -1245,6 +1245,11 @@ planning snapshot，并由两个状态文件复用；两者仍分别原子写入
 同一入口 artifact snapshot 和 cycle-end planning snapshot 也分别提供 aggregation output proof，
 不会为 reuse 额外扫描生成目录；证明只写入 `.dart_tool/ccrouter/v1/aggregation_reuse/`，不属于
 Portable State 或可提交生成物。
+watch 的最终 input barrier 会把刚验证的 exact-content snapshot 直接交给 planning state；当
+aggregation reuse 命中时，planning capture 还会复用入口快照中已验证未变的
+aggregation-owned bytes，同时重新读取当前 Builder-owned outputs。它不删除或合并 barrier。
+`planning-snapshot-capture.attributes.evidenceMode` 报告 `input-and-aggregation-output`、`input` 或
+`recaptured`；`CCROUTER_DISABLE_WATCH_EVIDENCE_REUSE=1` 恢复完整 recapture，供逐字节和耗时 A/B。
 
 `--profile` 的 `input-delta` 对比上次成功的本机 Build Plan：`authored` 是自身源码/配置变化，
 `resolutionOnly` 是自身未变但解析身份变化，另列工具与 Host 图变化。它不证明具体依赖边或

@@ -520,19 +520,18 @@ Future<bool> _generateResolvedWorkspace(
     _commandStderr.writeln('error: ${error.message}');
     return false;
   }
-  if (expectedInputFingerprint != null &&
-      !await trace.measure(
-        'before-aggregation-input-barrier',
-        () => _generationInputIsStable(
-          workspace,
-          expectedInputFingerprint,
-          stage: 'before-aggregation',
-        ),
-        succeeded: (stable) => stable,
-      )) {
-    return false;
-  }
-  if (expectedInputFingerprint == null) {
+  if (expectedInputFingerprint != null) {
+    final stableInput = await trace.measure(
+      'before-aggregation-input-barrier',
+      () => _captureStableGenerationInput(
+        workspace,
+        expectedInputFingerprint,
+        stage: 'before-aggregation',
+      ),
+      succeeded: (snapshot) => snapshot != null,
+    );
+    if (stableInput == null) return false;
+  } else {
     trace?.skip('before-aggregation-input-barrier');
   }
   discoveryWatch.stop();
@@ -1097,24 +1096,25 @@ Future<bool> _generateResolvedWorkspace(
       }
     });
   }
-  if (expectedInputFingerprint != null &&
-      !await trace.measure(
-        'after-aggregation-input-barrier',
-        () => _generationInputIsStable(
-          workspace,
-          expectedInputFingerprint,
-          stage: 'after-aggregation',
-        ),
-        succeeded: (stable) => stable,
-      )) {
-    return false;
-  }
-  if (expectedInputFingerprint == null) {
+  _GenerationInputFingerprintSnapshot? finalInputSnapshot;
+  if (expectedInputFingerprint != null) {
+    finalInputSnapshot = await trace.measure(
+      'after-aggregation-input-barrier',
+      () => _captureStableGenerationInput(
+        workspace,
+        expectedInputFingerprint,
+        stage: 'after-aggregation',
+      ),
+      succeeded: (snapshot) => snapshot != null,
+    );
+    if (finalInputSnapshot == null) return false;
+  } else {
     trace?.skip('after-aggregation-input-barrier');
   }
   onAggregationCompleted?.call(
     _GenerationAggregationOutcome(
       inputFingerprint: aggregationInputFingerprint,
+      verifiedInputSnapshot: finalInputSnapshot,
       reused: aggregationReuse.matches,
       publishState:
           !aggregationReuse.matches &&
@@ -2930,18 +2930,20 @@ enum _GenerationFastPathMissReason {
 /// and again before publishing planning state. A changed authored input makes
 /// the current output untrustworthy, so the caller restores its artifact
 /// snapshot and asks the developer to rerun after edits settle.
-Future<bool> _generationInputIsStable(
+Future<_GenerationInputFingerprintSnapshot?> _captureStableGenerationInput(
   CCPackageWorkspace workspace,
   String expectedFingerprint, {
   required String stage,
 }) async {
-  final actual = await _GenerationStateFingerprint.captureInput(workspace);
-  if (actual == expectedFingerprint) return true;
+  final actual = await _GenerationStateFingerprint.captureInputSnapshot(
+    workspace,
+  );
+  if (actual.fingerprint == expectedFingerprint) return actual;
   _commandStderr.writeln(
     'error: CCRouter generation input changed during $stage; '
     'generated output was discarded. Rerun after source changes settle.',
   );
-  return false;
+  return null;
 }
 
 /// Exact content digests for generation inputs and source-tree outputs.
@@ -3047,8 +3049,15 @@ abstract final class _GenerationStateFingerprint {
 
   /// Captures exact managed output bytes for one writable Package.
   static Future<Map<String, List<int>>> capturePackageOutput(
-    CCResolvedPackage package,
-  ) => _readManagedGeneratedFiles(package.root);
+    CCResolvedPackage package, {
+    bool includeAggregationOutputs = true,
+  }) => _readManagedGeneratedFiles(
+    package.root,
+    include: includeAggregationOutputs
+        ? null
+        : (relative) =>
+              !_GenerationAggregationReuseState._isAggregationOutput(relative),
+  );
 
   /// Computes a deterministic digest for one logical byte map.
   static String digestEntries(Map<String, List<int>> entries) =>
@@ -3612,14 +3621,17 @@ final class _GeneratedArtifactsSnapshot {
   /// These paths never grant ownership of other files in the same directory.
   final List<String> explicitPaths;
 
-  /// Digests aggregation-owned bytes for writable Packages without rescanning.
-  String aggregationOutputFingerprint(CCPackageWorkspace workspace) {
+  /// Returns aggregation-owned bytes for writable Packages without rescanning.
+  Map<String, List<int>> aggregationOutputFiles(CCPackageWorkspace workspace) {
     final writableRoots = workspace.packages.values
         .where((package) => package.writable)
         .map((package) => path.normalize(package.root.absolute.path))
         .toList(growable: false);
     final workspaceFiles = <String, List<int>>{};
     for (final entry in files.entries) {
+      if (!_GenerationAggregationReuseState._isAggregationOutput(entry.key)) {
+        continue;
+      }
       final absolute = path.normalize(_absolutePath(root, entry.key));
       if (!writableRoots.any(
         (packageRoot) =>
@@ -3630,8 +3642,13 @@ final class _GeneratedArtifactsSnapshot {
       }
       workspaceFiles[entry.key] = entry.value;
     }
+    return Map.unmodifiable(workspaceFiles);
+  }
+
+  /// Digests aggregation-owned bytes for writable Packages without rescanning.
+  String aggregationOutputFingerprint(CCPackageWorkspace workspace) {
     return _GenerationAggregationReuseState.captureOutputFingerprint(
-      workspaceFiles,
+      aggregationOutputFiles(workspace),
     );
   }
 
@@ -3746,8 +3763,9 @@ final class _GeneratedArtifactsSnapshot {
 
 /// Reads managed generated outputs while excluding caches and build products.
 Future<Map<String, List<int>>> _readManagedGeneratedFiles(
-  Directory root,
-) async {
+  Directory root, {
+  bool Function(String relative)? include,
+}) async {
   final files = <String, List<int>>{};
   await for (final entity in root.list(recursive: true, followLinks: false)) {
     if (entity is! File) continue;
@@ -3756,6 +3774,7 @@ Future<Map<String, List<int>>> _readManagedGeneratedFiles(
     if (segments.contains('.dart_tool') || segments.contains('build')) continue;
     final name = segments.last;
     if (!_isManagedGeneratedArtifact(segments, name)) continue;
+    if (include != null && !include(relative)) continue;
     files[relative] = await entity.readAsBytes();
   }
   return files;

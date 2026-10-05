@@ -821,6 +821,13 @@ fast-path manifest and Build Plan state. Set
 `CCROUTER_DISABLE_SHARED_PLANNING_SNAPSHOT=1` to restore separate scans for
 byte-for-byte or timing A/B; input barriers, validation, restoration, atomic
 writes, and the final `--no-cache --check` remain unchanged.
+The final watch input barrier returns its exact snapshot to planning-state
+publication instead of discarding and immediately recapturing it. On an
+aggregation reuse hit, the entry artifact snapshot supplies only verified
+aggregation-owned bytes; current Builder-owned outputs are still read from
+disk. `planning-snapshot-capture.attributes.evidenceMode` exposes the selected
+path. Set `CCROUTER_DISABLE_WATCH_EVIDENCE_REUSE=1` for full recapture without
+removing barriers, validation, atomic publication, or the final reference gate.
 Profile traces may carry an `aggregation-input-fingerprint` span with a SHA-256
 `attributes.fingerprint` for Builder metadata, Package indexes, and Host graph
 inputs. It never authorizes skipping Builder. After Builder succeeds, matching

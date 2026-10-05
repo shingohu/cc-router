@@ -32,6 +32,10 @@
   manifest and Build Plan state, removing duplicate cycle-end scans while
   retaining atomic writes and all input barriers. Set
   `CCROUTER_DISABLE_SHARED_PLANNING_SNAPSHOT=1` for the reference path.
+- Reused the final watch input-barrier snapshot when publishing local planning
+  state and, on a verified aggregation hit, reused only aggregation-owned entry
+  bytes while rereading current Builder outputs. Profile traces report the
+  evidence mode; `CCROUTER_DISABLE_WATCH_EVIDENCE_REUSE=1` restores recapture.
 - Added a diagnostic-only aggregation-input fingerprint to profile traces and
   watch benchmarks, then used the proven identity only after Builder completes
   to reuse verified aggregation outputs. The local proof also checks exact

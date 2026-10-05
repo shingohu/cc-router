@@ -171,12 +171,16 @@ final class _GenerationAggregationReuseInspection {
 final class _GenerationAggregationOutcome {
   const _GenerationAggregationOutcome({
     required this.inputFingerprint,
+    required this.verifiedInputSnapshot,
     required this.reused,
     required this.publishState,
   });
 
   /// Exact post-Builder semantic input used by aggregation.
   final String inputFingerprint;
+
+  /// Exact authored and resolution facts verified by the final input barrier.
+  final _GenerationInputFingerprintSnapshot? verifiedInputSnapshot;
 
   /// Whether rendering and aggregation-owned writes were skipped.
   final bool reused;

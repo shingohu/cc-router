@@ -124,6 +124,12 @@ fast-path manifest and Build Plan state. Use
 A/B against the separate-scan reference path; it does not disable input
 barriers, validation, artifact restoration, atomic state writes, or the final
 `--no-cache --check` authority.
+Watch planning publication reuses the exact input snapshot already captured by
+the final barrier. On an aggregation reuse hit it may additionally reuse only
+the verified aggregation-owned entry bytes, while rereading current
+Builder-owned outputs. The `planning-snapshot-capture` span reports
+`attributes.evidenceMode`; set `CCROUTER_DISABLE_WATCH_EVIDENCE_REUSE=1` to
+restore complete planning recapture for byte-for-byte and timing A/B.
 The `aggregation-input-fingerprint` profile span reports a SHA-256 identity in
 `attributes.fingerprint` for Builder metadata, resolved Package indexes, and
 the Host aggregation graph. It is diagnostic-only: equality is not permission

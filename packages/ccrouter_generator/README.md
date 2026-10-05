@@ -361,6 +361,12 @@ snapshot，并继续分别原子写入。设置 `CCROUTER_DISABLE_SHARED_PLANNIN
 两个状态各自扫描的 reference 路径，用于逐字节和耗时 A/B；它不削弱任何输入屏障或最终门禁。
 aggregation reuse 直接复用 cycle 入口 artifact snapshot 和上述 cycle-end planning snapshot
 中的 bytes，不额外扫描生成目录；命中时也不重写 metadata cache，未来 miss 只会更保守地重算。
+watch 的 after-aggregation barrier 返回它刚完成的 exact-content input snapshot，cycle-end
+planning state 直接复用该证据；aggregation reuse 命中时还复用入口 snapshot 中已验证未变的
+aggregation-owned bytes，但始终重新读取当前 Builder-owned outputs。Profile 的
+`planning-snapshot-capture.attributes.evidenceMode` 为 `input-and-aggregation-output`、`input` 或
+`recaptured`。设置 `CCROUTER_DISABLE_WATCH_EVIDENCE_REUSE=1` 可恢复完整 recapture 做 A/B；
+该开关不改变 barrier、Validator、原子写入、失败恢复或最终 `--no-cache --check`。
 
 生成主路径不会计算文件闭包 shadow，也不会为此扫描 Workspace Dart 文件。历史 shadow
 采样保留在性能报告中，仅作为 benchmark/tooling 研究数据；它不参与 Build Plan、Tool
