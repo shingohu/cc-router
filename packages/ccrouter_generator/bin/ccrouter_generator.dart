@@ -8,6 +8,7 @@ import 'package:analyzer/dart/analysis/features.dart';
 import 'package:analyzer/dart/analysis/utilities.dart';
 import 'package:analyzer/dart/ast/ast.dart';
 import 'package:ccrouter_generator/ccrouter_generator.dart';
+import 'package:ccrouter_generator/src/build_runner_command.dart';
 import 'package:ccrouter_generator/src/component_dependency_preflight.dart';
 import 'package:ccrouter_generator/src/generated_client_naming.dart';
 import 'package:ccrouter_generator/src/internal_api_boundary_validator.dart';
@@ -3398,40 +3399,52 @@ Future<bool> _runBuildRunner(
     ],
     counts: (snapshots) => {'snapshots': snapshots.length},
   );
-  final command = await _buildRunnerCommand(context.root, 'build');
-  final arguments = <String>[
-    ...command.skip(1),
-    if (profile) '--verbose-durations',
-    if (context.workspace) '--workspace',
-    for (final package in targets) ...[
-      '--build-filter',
-      'asset:$package/lib/**',
-      '--build-filter',
-      'asset:$package/ccrouter_generated/**',
-    ],
-  ];
+  var command = await _buildRunnerCommand(context.root, 'build');
   _commandStdout.writeln(
     'Generating Package artifacts for ${targets.join(', ')} from '
     '${context.root.path}...',
   );
   late final int processExitCode;
   try {
-    final process = await trace.measure(
+    var process = await trace.measure(
       'build-runner-process-start',
       () => Process.start(
-        command.first,
-        arguments,
+        command.executable,
+        _buildRunnerArguments(
+          command,
+          profile: profile,
+          workspace: context.workspace,
+          targets: targets,
+        ),
         workingDirectory: context.root.path,
       ),
     );
     processExitCode = await trace.measure('build-runner-execution', () async {
-      final forwarding = Future.wait<void>([
-        _commandStdout.addStream(process.stdout),
-        _commandStderr.addStream(process.stderr),
-      ]);
-      final code = await process.exitCode;
-      await forwarding;
-      return code;
+      var completion = await _forwardBuildRunnerProcess(process);
+      final invalidated =
+          completion.exitCode != 0 &&
+          await command.invalidateIfWrongSnapshotVersion(
+            completion.diagnostics,
+          );
+      if (!invalidated) return completion.exitCode;
+
+      _commandStderr.writeln(
+        'warning: cached build_runner snapshot is incompatible with the '
+        'current Dart SDK; rebuilding it once through dart run.',
+      );
+      command = await _buildRunnerCommand(context.root, 'build');
+      process = await Process.start(
+        command.executable,
+        _buildRunnerArguments(
+          command,
+          profile: profile,
+          workspace: context.workspace,
+          targets: targets,
+        ),
+        workingDirectory: context.root.path,
+      );
+      completion = await _forwardBuildRunnerProcess(process);
+      return completion.exitCode;
     }, succeeded: (code) => code == 0);
   } finally {
     await trace.measure('build-runner-protection-restore', () async {
@@ -3459,6 +3472,59 @@ Future<bool> _runBuildRunner(
     'error: build_runner failed with exit code $processExitCode.',
   );
   return false;
+}
+
+/// Appends CCRouter's stable filters to one resolved build_runner invocation.
+List<String> _buildRunnerArguments(
+  CCBuildRunnerCommand command, {
+  required bool profile,
+  required bool workspace,
+  required List<String> targets,
+}) => <String>[
+  ...command.arguments,
+  if (profile) '--verbose-durations',
+  if (workspace) '--workspace',
+  for (final package in targets) ...[
+    '--build-filter',
+    'asset:$package/lib/**',
+    '--build-filter',
+    'asset:$package/ccrouter_generated/**',
+  ],
+];
+
+/// Exit status and diagnostics captured while preserving streamed CLI output.
+final class _BuildRunnerProcessCompletion {
+  /// Creates the result of one build_runner process attempt.
+  const _BuildRunnerProcessCompletion({
+    required this.exitCode,
+    required this.diagnostics,
+  });
+
+  /// Child-process exit status.
+  final int exitCode;
+
+  /// Standard error retained solely for snapshot compatibility detection.
+  final String diagnostics;
+}
+
+/// Forwards process output and retains stderr for one compatibility decision.
+Future<_BuildRunnerProcessCompletion> _forwardBuildRunnerProcess(
+  Process process,
+) async {
+  final diagnostics = StringBuffer();
+  final forwarding = Future.wait<void>([
+    _commandStdout.addStream(process.stdout),
+    process.stderr.transform(utf8.decoder).forEach((chunk) {
+      diagnostics.write(chunk);
+      _commandStderr.write(chunk);
+    }),
+  ]);
+  final code = await process.exitCode;
+  await forwarding;
+  return _BuildRunnerProcessCompletion(
+    exitCode: code,
+    diagnostics: diagnostics.toString(),
+  );
 }
 
 /// Includes declaration sources and authored namespace edges for fast failure.

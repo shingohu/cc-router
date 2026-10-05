@@ -110,18 +110,7 @@ Future<void> _runGenerationWatch({
   ];
   protectionWatch.stop();
 
-  final command = await _buildRunnerCommand(buildContext.root, 'watch');
-  final arguments = <String>[
-    ...command.skip(1),
-    '--verbose-durations',
-    if (buildContext.workspace) '--workspace',
-    for (final package in targets) ...[
-      '--build-filter',
-      'asset:$package/lib/**',
-      '--build-filter',
-      'asset:$package/ccrouter_generated/**',
-    ],
-  ];
+  var command = await _buildRunnerCommand(buildContext.root, 'watch');
   late final _GenerationWatchOwnership watchOwnership;
   try {
     watchOwnership = await _GenerationWatchOwnership.acquire(buildContext.root);
@@ -151,8 +140,23 @@ Future<void> _runGenerationWatch({
   final processWatch = Stopwatch()..start();
   late final Process process;
   try {
+    command = await _recoverWrongBuildRunnerSnapshotBeforeWatch(
+      command,
+      buildContext.root,
+    );
+    final arguments = <String>[
+      ...command.arguments,
+      '--verbose-durations',
+      if (buildContext.workspace) '--workspace',
+      for (final package in targets) ...[
+        '--build-filter',
+        'asset:$package/lib/**',
+        '--build-filter',
+        'asset:$package/ccrouter_generated/**',
+      ],
+    ];
     process = await Process.start(
-      command.first,
+      command.executable,
       arguments,
       workingDirectory: buildContext.root.path,
     );
@@ -336,60 +340,42 @@ Future<void> _runGenerationWatch({
   }
 }
 
-/// Uses Pub's cached executable snapshot without resolving dependencies again.
-Future<List<String>> _buildRunnerCommand(
+/// Uses Pub's cached executable snapshot and heals a missing cache via Pub.
+Future<CCBuildRunnerCommand> _buildRunnerCommand(
   Directory buildRoot,
   String command,
-) async {
-  final dartExecutable = _dartVmExecutable();
-  final snapshotDirectory = Directory(
-    path.join(buildRoot.path, '.dart_tool', 'pub', 'bin', 'build_runner'),
-  );
-  if (snapshotDirectory.existsSync()) {
-    final sdkVersion = Platform.version.split(' ').first;
-    final snapshots = snapshotDirectory
-        .listSync(followLinks: false)
-        .whereType<File>()
-        .where(
-          (file) =>
-              path.basename(file.path) ==
-              'build_runner.dart-$sdkVersion.snapshot',
-        )
-        .toList();
-    snapshots.sort(
-      (left, right) =>
-          right.lastModifiedSync().compareTo(left.lastModifiedSync()),
-    );
-    if (snapshots.isNotEmpty) {
-      return [dartExecutable, snapshots.first.path, command];
-    }
-  }
+) => resolveCCBuildRunnerCommand(
+  buildRoot: buildRoot,
+  command: command,
+  dartExecutable: _dartVmExecutable(),
+);
 
-  final packageConfig = File(
-    path.join(buildRoot.path, '.dart_tool', 'package_config.json'),
-  );
-  final decoded = jsonDecode(await packageConfig.readAsString());
-  if (decoded is! Map || decoded['packages'] is! List) {
-    throw const FormatException('Invalid package_config.json.');
+/// Probes the long-lived watch entrypoint before it acquires Analyzer state.
+///
+/// A normal cached snapshot is retained. Only the Dart VM's exact full-version
+/// diagnostic authorizes deletion and a self-healing `dart run` invocation.
+Future<CCBuildRunnerCommand> _recoverWrongBuildRunnerSnapshotBeforeWatch(
+  CCBuildRunnerCommand command,
+  Directory buildRoot,
+) async {
+  final snapshot = command.cachedSnapshot;
+  if (snapshot == null) return command;
+  if (!await snapshot.exists()) {
+    return _buildRunnerCommand(buildRoot, 'watch');
   }
-  for (final entry in decoded['packages'] as List) {
-    if (entry is! Map || entry['name'] != 'build_runner') continue;
-    final rootUri = entry['rootUri'];
-    if (rootUri is! String) break;
-    final packageRoot = packageConfig.uri.resolve(rootUri).toFilePath();
-    final entrypoint = File(path.join(packageRoot, 'bin', 'build_runner.dart'));
-    if (entrypoint.existsSync()) {
-      return [
-        dartExecutable,
-        '--packages=${packageConfig.absolute.path}',
-        entrypoint.path,
-        command,
-      ];
-    }
+  final probe = await Process.run(command.executable, [
+    snapshot.path,
+    '--help',
+  ], workingDirectory: buildRoot.path);
+  final diagnostics = '${probe.stdout}\n${probe.stderr}';
+  if (!await command.invalidateIfWrongSnapshotVersion(diagnostics)) {
+    return command;
   }
-  throw const FileSystemException(
-    'Unable to resolve the build_runner entrypoint.',
+  _commandStderr.writeln(
+    'warning: cached build_runner snapshot is incompatible with the current '
+    'Dart SDK; rebuilding it once through dart run.',
   );
+  return _buildRunnerCommand(buildRoot, 'watch');
 }
 
 /// Resolves the Dart CLI even when Pub launched this command via AOT runtime.

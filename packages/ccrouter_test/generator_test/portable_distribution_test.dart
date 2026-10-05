@@ -266,14 +266,6 @@ Future<void> _pubGet(Directory root) async {
     Platform.isWindows ? 'flutter.bat' : 'flutter',
   );
   await _run(flutter, ['pub', 'get', '--offline'], root);
-  // Pub resolves package executables but does not materialize the local
-  // build_runner snapshot until the executable is invoked once. Generation
-  // relies on that snapshot so its package imports resolve from this Host.
-  await _run(Platform.resolvedExecutable, [
-    'run',
-    'build_runner',
-    '--help',
-  ], root);
 }
 
 Future<ProcessResult> _generate(

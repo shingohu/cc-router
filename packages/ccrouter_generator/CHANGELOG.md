@@ -3,9 +3,10 @@
 ## 0.1.0 - Unreleased
 
 - Preparing the first public release of CCRouter generation and CLI tooling.
-- Fixed clean Workspace generation when Pub has not yet compiled a local
-  build_runner executable snapshot by passing the build root package config to
-  the Pub Cache entrypoint fallback.
+- Fixed clean Workspace and SDK-switch generation by rebuilding a missing
+  build_runner executable snapshot through Pub and retrying once after Dart
+  reports `Wrong full snapshot version`, instead of leaving generation on the
+  slower source entrypoint.
 - Simplified internal capability scaffolds: Services no longer create a
   redundant Contract, while Event Subscribers and reusable InitTask Contracts
   are explicit opt-ins.
