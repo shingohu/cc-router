@@ -100,6 +100,9 @@ void main() {
       expect(activeDocument!['lastBuildRunnerMs'], isNull);
       expect(activeDocument!['lastAggregationElapsedMs'], isA<int>());
       expect(activeDocument!['lastCycleMode'], 'inProcess');
+      expect(activeDocument!['inputRevision'], 0);
+      expect(activeDocument!['completedInputRevision'], 0);
+      expect(activeDocument!['hotRestartRequired'], isFalse);
       expect(watch.aggregation.containsKey('profile'), isFalse);
 
       final stopped = await _run(['watch', 'status', 'demo']);
@@ -247,6 +250,7 @@ void main() {
             );
             final restartedSession = restarted['sessionId'] as String;
             expect(restarted['sessionReady'], isTrue);
+            expect(restarted['hotRestartRequired'], isTrue);
 
             pubspec.writeAsStringSync(originalPubspec, flush: true);
             final removePub = await _runDemoPubGet();
@@ -281,6 +285,57 @@ void main() {
   );
 
   test(
+    'watch does not attribute a mid-cycle save to the older cycle',
+    () async {
+      final source = _watchProbeSource();
+      final originalArtifacts = await _managedArtifacts();
+      Map<String, dynamic>? firstCompletion;
+      var secondSaveWritten = false;
+      try {
+        await _runWatchUntilReady(
+          onReady: () async {
+            source.writeAsStringSync(_watchProbeContents, flush: true);
+          },
+          onEvent: (event) {
+            if (event['type'] == 'buildStarted' &&
+                event['initial'] == false &&
+                !secondSaveWritten) {
+              secondSaveWritten = true;
+              source.writeAsStringSync(
+                '$_watchProbeContents\n// Mid-cycle authored save.\n',
+                flush: true,
+              );
+              return;
+            }
+            if (event['type'] == 'aggregationSucceeded' &&
+                secondSaveWritten &&
+                firstCompletion == null) {
+              firstCompletion = _readWatchStatusSync();
+            }
+          },
+          additionalAggregationCycles: 2,
+        );
+
+        expect(secondSaveWritten, isTrue);
+        expect(firstCompletion, isNotNull);
+        expect(
+          firstCompletion!['completedInputRevision'],
+          lessThan(firstCompletion!['inputRevision'] as int),
+        );
+        final completed = await _readWatchStatus();
+        expect(completed['lastEvent'], 'stopped');
+        expect(completed['completedInputRevision'], completed['inputRevision']);
+      } finally {
+        if (source.existsSync()) source.deleteSync();
+        final restored = await _run(['generate', 'demo', '--no-cache']);
+        expect(restored.exitCode, 0, reason: '${restored.stderr}');
+        expect(await _managedArtifacts(), originalArtifacts);
+      }
+    },
+    timeout: const Timeout(Duration(minutes: 4)),
+  );
+
+  test(
     'watch handles Dart file add rename and delete without session restart',
     () async {
       final source = _watchProbeSource();
@@ -294,14 +349,20 @@ void main() {
             final initial = await _readWatchStatus();
             final session = initial['sessionId'];
             final cycle = initial['cycle'] as int;
+            final inputRevision = initial['inputRevision'] as int;
             source.writeAsStringSync(_watchProbeContents, flush: true);
-            await _waitForWatchStatus(
+            final completed = await _waitForWatchStatus(
               (status) =>
                   status['sessionId'] == session &&
                   status['cycle'] is int &&
                   (status['cycle'] as int) > cycle &&
                   status['lastEvent'] == 'aggregationSucceeded' &&
                   sourceOutputs.every((file) => file.existsSync()),
+            );
+            expect(completed['inputRevision'], greaterThan(inputRevision));
+            expect(
+              completed['completedInputRevision'],
+              completed['inputRevision'],
             );
           },
         );
@@ -637,6 +698,22 @@ Future<Map<String, dynamic>> _readWatchStatus() async =>
         )
         as Map<String, dynamic>;
 
+Map<String, dynamic> _readWatchStatusSync() =>
+    jsonDecode(
+          File(
+            path.join(
+              Directory.current.path,
+              'demo',
+              '.dart_tool',
+              'ccrouter',
+              'v1',
+              'watch',
+              'status.json',
+            ),
+          ).readAsStringSync(),
+        )
+        as Map<String, dynamic>;
+
 Future<Map<String, dynamic>> _waitForWatchStatus(
   bool Function(Map<String, dynamic> status) predicate,
 ) async {
@@ -663,6 +740,7 @@ File _lockFile(String relative) => File(
 Future<_WatchRun> _runWatchUntilReady({
   Map<String, String>? environment,
   Future<void> Function()? onReady,
+  void Function(Map<String, dynamic> event)? onEvent,
   int additionalAggregationCycles = 0,
   bool profile = false,
 }) async {
@@ -724,6 +802,7 @@ Future<_WatchRun> _runWatchUntilReady({
           return;
         }
         eventTypes.add(event['type'] as String);
+        onEvent?.call(event);
         if (event['type'] == 'buildSucceeded') {
           build = event;
         }

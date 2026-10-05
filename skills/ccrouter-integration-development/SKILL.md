@@ -300,6 +300,13 @@ for one read-only snapshot or `watch follow <host-root>` for concise changes.
 The wrapper prints its successful watch-start summary to stdout before the
 original Flutter process begins; failures remain on stderr. This summary is not
 watch NDJSON.
+For `flutter run --machine`, the Hook's stdin-only reload gate waits until
+watch has completed the saved authored-input revision before forwarding
+`app.restart`. Generation failure appears as a Hot Reload daemon error
+instead of allowing old generated code. A topology-changing watch restart
+requires an explicit Hot Restart. Interactive terminal `r` is outside this
+machine boundary; wait for `watch follow` success first. Use
+`CCROUTER_DISABLE_HOT_RELOAD_GATE=1` only for isolated fallback comparison.
 The atomic local state is `.dart_tool/ccrouter/v1/watch/status.json`; complete
 Hook diagnostics remain in `watch/flutter-run.log` and are never mixed into
 Flutter Tool's machine stdout. Failure to publish observational state does not

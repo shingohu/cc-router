@@ -29,6 +29,11 @@ final class _GenerationWatchStatusTracker {
   int _sessionSequence = 0;
   int _cycle = 0;
   int _eventRevision = 0;
+  int _inputRevision = 0;
+  int _cycleInputRevision = 0;
+  int? _completedInputRevision;
+  int? _failedInputRevision;
+  bool _hotRestartRequired = false;
   int? _lastBuildElapsedMs;
   int? _lastBuildRunnerMs;
   int? _lastAggregationElapsedMs;
@@ -60,6 +65,8 @@ final class _GenerationWatchStatusTracker {
     _cycleResolutionFingerprint = null;
     _completedResolutionFingerprint = null;
     _cycleResolutionState = null;
+    _cycleInputRevision = _inputRevision;
+    _failedInputRevision = null;
   }
 
   /// Identity of the currently supervised build_runner child session.
@@ -76,10 +83,20 @@ final class _GenerationWatchStatusTracker {
   }) async {
     if (type == 'watchStarted') _watchStarted = true;
     if (type == 'ready') _sessionReady = true;
-    if (type == 'buildStarted' || type == 'resolutionStarted') {
-      _cycle++;
+    if (type == 'inputChanged') {
+      _inputRevision++;
       _failureStage = null;
       _failureDiagnostics = null;
+    }
+    if (type == 'sessionRestarting' && data['reason'] == 'topology-changed') {
+      _hotRestartRequired = true;
+    }
+    if (type == 'buildStarted' || type == 'resolutionStarted') {
+      _cycle++;
+      _cycleInputRevision = _inputRevision;
+      _failureStage = null;
+      _failureDiagnostics = null;
+      _failedInputRevision = null;
       _completedResolutionFingerprint = null;
       _cycleResolutionState = 'pending';
       _cycleResolutionFingerprint = await _captureResolutionFingerprint();
@@ -96,6 +113,8 @@ final class _GenerationWatchStatusTracker {
       _lastCycleMode = data['cycleMode'] as String?;
       _lastSucceededAt = timestamp;
       _failureStage = null;
+      _completedInputRevision = _cycleInputRevision;
+      _failedInputRevision = null;
       await _completeResolutionFingerprint();
     }
     if (type == 'failed') {
@@ -110,6 +129,7 @@ final class _GenerationWatchStatusTracker {
           },
         },
       );
+      _failedInputRevision = _cycleInputRevision;
       await _completeResolutionFingerprint();
       if (_failureStage == 'build') {
         _lastBuildElapsedMs = data['elapsedMs'] as int?;
@@ -127,6 +147,7 @@ final class _GenerationWatchStatusTracker {
       'starting' ||
       'sessionRestarting' ||
       'watchStarted' ||
+      'inputChanged' ||
       'buildStarted' ||
       'resolutionStarted' ||
       'buildSucceeded' ||
@@ -146,6 +167,13 @@ final class _GenerationWatchStatusTracker {
       'eventRevision': _eventRevision,
       'sessionReady': _sessionReady,
       'cycle': _cycle,
+      'inputRevision': _inputRevision,
+      'cycleInputRevision': _cycleInputRevision,
+      if (_completedInputRevision != null)
+        'completedInputRevision': _completedInputRevision,
+      if (_failedInputRevision != null)
+        'failedInputRevision': _failedInputRevision,
+      'hotRestartRequired': _hotRestartRequired,
       'startedAt': _startedAt,
       'updatedAt': timestamp,
       'hostRoot': hostRoot.path,
@@ -255,6 +283,7 @@ final class _GenerationWatchStatusTracker {
     'fallback' ||
     'succeeded' ||
     'watchStarted' ||
+    'inputChanged' ||
     'buildStarted' ||
     'resolutionStarted' ||
     'aggregationStarted' ||
@@ -267,6 +296,7 @@ final class _GenerationWatchStatusTracker {
 
   String _stateFor(String type) => switch (type) {
     'buildStarted' || 'buildSucceeded' => 'building',
+    'inputChanged' => 'pending',
     'resolutionStarted' => 'resolving',
     'aggregationStarted' => 'aggregating',
     'aggregationSucceeded' => 'succeeded',
@@ -534,6 +564,9 @@ void _writeGenerationWatchStatus(
     'last event': status['lastEvent'],
     'pid': status['pid'],
     'cycle': status['cycle'],
+    'input revision': status['inputRevision'],
+    'completed input revision': status['completedInputRevision'],
+    if (status['hotRestartRequired'] == true) 'hot restart required': true,
     'updated': status['updatedAt'],
     'build': status['lastBuildElapsedMs'] == null
         ? null
@@ -562,6 +595,10 @@ void _writeGenerationWatchFollowEvent(Map<String, Object?> status) {
     'state=${status['state']}',
     'event=${status['lastEvent']}',
     'cycle=${status['cycle']}',
+    if (status['inputRevision'] case final int value) 'input=$value',
+    if (status['completedInputRevision'] case final int value)
+      'completed_input=$value',
+    if (status['hotRestartRequired'] == true) 'hot_restart_required=true',
     if (status['lastBuildElapsedMs'] case final int value) 'build=${value}ms',
     if (status['lastBuildRunnerMs'] case final int value)
       'build_runner=${value}ms',

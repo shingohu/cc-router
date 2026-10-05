@@ -125,6 +125,13 @@ terminal failure 快速栅栏，恢复旧的 fingerprint-only 失败判断与有
    `.dart_tool/ccrouter/v1/watch/flutter-run.log`；原始 Flutter 进程退出时删除 lease 并终止
    watch。启动成功时 stdout 会输出 watch PID、状态文件和日志路径，避免 IDE 将正常状态按
    stderr 渲染为红色错误；真实失败仍写 stderr。`flutter build` 不启动常驻进程。
+7. IDE/AI 使用的 `flutter run --machine` 由一个窄 stdin gate 启动原 Flutter Tool。它不改写
+   或缓冲 daemon stdout，仅透传解析与 Hot Restart 匹配的 response；它只延迟
+   `app.restart`：watch 的 `completedInputRevision` 必须覆盖
+   保存对应的 `inputRevision`，且成功状态经过短暂稳定窗口。Builder/Validator/aggregation
+   失败会以标准 daemon error 返回有界诊断。Host topology 变化发布
+   `hotRestartRequired: true`，普通 Hot Reload 会被拒绝，显式 Hot Restart 经 daemon
+   `code=0` 确认后才解除当前 run session 的栅栏。
 
 Hook 不默认采集详细 profile。遇到慢生成时，在独立终端显式运行 `generate <host> --profile`
 定位阶段耗时；性能 benchmark 或 AI 诊断也应显式传入该参数。
@@ -176,12 +183,21 @@ CCROUTER_PUB_HOOK_DISABLE=1 flutter pub get
 CCROUTER_DISABLE_BUILD_WATCH=1 flutter run
 ```
 
+只关闭 machine Hot Reload 栅栏、保留 preflight 与后台 watch：
+
+```bash
+CCROUTER_DISABLE_HOT_RELOAD_GATE=1 flutter run --machine
+```
+
 ## 边界
 
 - 覆盖 `flutter pub`、`flutter run` 和 `flutter build`，但不覆盖直接执行的 `dart pub`，
   也不监听 Flutter Tool 内部隐式 `pub get`。
 - `flutter run` 自动持有单 build root watch；`flutter build` 和成功的依赖操作仍最多触发
   一次生成。嵌套且可独立运行、拥有自己 Pub root 的 Package Host 使用独立 watch。
+- reload gate 只覆盖 Flutter daemon 的 `--machine` `app.restart`，也就是 IDE 和自动化主路径。
+  普通终端交互式 `r` 不经过该 gate，因为 shell wrapper 无法在不破坏 TTY、设备选择与信号
+  语义的情况下安全接管按键；该场景先用 `watch follow` 等待成功，或使用 IDE Hot Reload。
 - Flutter SDK 升级或 FVM 版本切换可能替换 `bin/flutter`，切换后应重新执行
   `status`，必要时对新 SDK 执行 `install`。
 - Hook 会让 Flutter SDK Git 工作树包含受管 wrapper 和备份文件；执行 Flutter
@@ -228,7 +244,8 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter generate <host-root> 
 `CCRouter preflight started/finished`；生成失败时输出有界的最近 Generator 诊断且 Flutter
 命令不会继续执行。`flutter run` 还会输出 watch 的状态文件与日志路径；保存源码后可用
 `ccrouter watch follow <host-root>` 等待下一次成功状态。`ccrouter pub-hook status` 会额外显示
-`run/build preflight: enabled` 和 `run watch: enabled`。升级 SDK 或使用新的 FVM 版本后，如果状态显示
+`run/build preflight: enabled`、`run watch: enabled` 和
+`machine reload gate: enabled`。升级 SDK 或使用新的 FVM 版本后，如果状态显示
 `missing`，先卸载旧 wrapper 再重新安装，避免旧入口继续绕过前置生成。
 
 确认 hook 产生的结果已经通过只读一致性检查。

@@ -363,6 +363,13 @@ watch 同样会快速失败，调用方可在命令完成后重试启动 watch�
 当前只支持单 build root，不合并嵌套 Package Host 的独立 Pub root。
 Hook 的 watch 启动成功提示写入 stdout，与 preflight 成功信息保持一致；真正失败仍写 stderr，
 避免 IDE 将正常启动渲染成红色错误。
+Hook 对 `flutter run --machine` 增加只代理 stdin 的 reload gate。它等待 watch 的
+`completedInputRevision` 覆盖保存时的 `inputRevision` 且状态稳定，再把
+`app.restart` 转发给原 Flutter Tool；失败返回标准 daemon error 和有界 Generator
+diagnostics。topology 变化设置 `hotRestartRequired`，Hot Reload 被拒绝，显式 Hot
+Restart 得到 daemon 成功响应后才解除当前 run session 的栅栏。普通交互式终端 `r`
+不经过该 machine gate；使用前先通过 `watch follow` 确认本轮聚合成功。
+`CCROUTER_DISABLE_HOT_RELOAD_GATE=1` 只回退这一协调层。
 watch 会原子发布 `.dart_tool/ccrouter/v1/watch/status.json`；`watch status <host>` 读取一次
 当前状态，`watch follow <host>` 持续输出简洁状态变化。Hook 启动的完整 build_runner 日志仍在
 `.dart_tool/ccrouter/v1/watch/flutter-run.log`，不会污染 Flutter Tool 的 machine stdout。

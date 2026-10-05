@@ -24,6 +24,11 @@
   and `watch follow` commands. Flutter-run hooks print the status and log paths
   without mixing watch NDJSON into Flutter Tool's machine stdout; status
   publication remains fail-open and cannot fail generation.
+- Added a narrow stdin-only gate for Hook-started `flutter run --machine`.
+  IDE reload requests now wait for a stable watch input revision, surface
+  Generator failures as daemon errors, and require Hot Restart after Host
+  topology changes. `CCROUTER_DISABLE_HOT_RELOAD_GATE=1` restores direct
+  machine input forwarding.
 - Routed the successful Flutter-run watch start summary through stdout like
   preflight success, while retaining real hook failures on stderr so IDEs do
   not render a healthy background watch as an error.

@@ -240,7 +240,7 @@ Workspace/插件 analyze 及缓存/无缓存生成物检查通过。
   cycle 中途更新 resolution、无完成 fingerprint 的 aggregation 失败、等待前历史失败不得误用、
   等待后新失败快速返回，以及后续匹配成功 cycle 正常复用。协调逻辑保留独立 kill switch，
   one-shot `--no-cache --check` 和逐字节输出对照仍为最终权威门禁。
-- [ ] **Hot Reload / watch 完成栅栏**：当前 Flutter Hot Reload 与 CCRouter watch 可由同一次
+- [x] **Hot Reload / watch 完成栅栏**：当前 Flutter Hot Reload 与 CCRouter watch 可由同一次
   保存并行触发，第一轮 reload 可能在相应 `aggregationSucceeded` 之前读取旧生成物。
   后续需先设计 Flutter Tool/Hook 可接入的协调边界，再为会影响生成声明的修改等待与该次
   输入匹配的 `aggregationSucceeded`；不得把旧 cycle 或 `buildSucceeded` 当作完成证据。
@@ -253,6 +253,14 @@ Workspace/插件 analyze 及缓存/无缓存生成物检查通过。
   协调，不直接代理整个 Flutter daemon。实现须保留 kill switch，并用声明变更/非声明变更、
   连续保存、生成失败、resolved graph stale、topology 变化及通常 reload 的真实 `flutter run`
   时序回归验收。
+  已为 Hook 启动的 `flutter run --machine` 增加 stdin-only gate；watch 通过 authored input
+  revision 与完成/失败 revision 关联保存和 cycle，gate 只在稳定的匹配
+  `aggregationSucceeded` 后转发 `app.restart`。失败返回标准 daemon error 和有界诊断；
+  topology restart 发布 `hotRestartRequired`，显式 Hot Restart 得到成功响应后才解除当前
+  run session 的栅栏。实现不解析 Dart AST、不参与 Builder 跳过，也不改写或缓冲
+  Flutter daemon stdout，只透传解析与 Hot Restart 匹配的 response；
+  `CCROUTER_DISABLE_HOT_RELOAD_GATE=1` 可独立回退。普通交互式终端 `r`
+  因 TTY/信号所有权不在安全接入边界内，仍需先通过 `watch follow` 确认成功，此限制保持显式。
 - [x] **Pub 拓扑变化后重启 watch session**：普通 `pub get`、版本变化，以及仍被当前
   targets 安全覆盖的依赖删除，继续等待现有 watch cycle。新增 Package 或重算后的生成目标/
   `--build-filter` 集合无法由当前 session 覆盖时，watch owner 应在持有同一 Host lease 期间

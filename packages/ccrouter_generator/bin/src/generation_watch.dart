@@ -295,6 +295,10 @@ Future<_GenerationWatchTopology?> _runGenerationWatchSession({
       'topologyFingerprint': topology.fingerprint,
     },
   );
+  final inputObserver = _GenerationWatchInputObserver.start(
+    topology.workspace,
+    () => events.emit('inputChanged'),
+  );
   await events.emit('buildStarted', data: {'initial': true});
 
   final signals = StreamController<_GenerationWatchSignal>();
@@ -594,6 +598,7 @@ Future<_GenerationWatchTopology?> _runGenerationWatchSession({
       if (pending != null) await runResolutionAggregation(pending);
     }
   } finally {
+    await inputObserver.close();
     resolutionTimer.cancel();
     await activeResolutionCheck;
     final processCode = await _stopBuildRunnerWatchProcess(process);
@@ -835,6 +840,104 @@ final class _GenerationWatchSignal {
   final String? resolutionFingerprint;
 }
 
+/// Observes authored Builder inputs so Flutter reload can wait for their cycle.
+///
+/// This observer records only a monotonic revision. It does not parse Dart,
+/// classify declarations, or authorize skipping Builder work.
+final class _GenerationWatchInputObserver {
+  _GenerationWatchInputObserver._(this._subscriptions, this._onChanged);
+
+  /// Starts bounded filesystem observation for writable generation Packages.
+  static _GenerationWatchInputObserver start(
+    CCPackageWorkspace workspace,
+    Future<void> Function() onChanged,
+  ) {
+    final subscriptions = <StreamSubscription<FileSystemEvent>>[];
+    final observer = _GenerationWatchInputObserver._(subscriptions, onChanged);
+    for (final package in workspace.packages.values) {
+      if (!package.writable || !package.declaresGenerationIntent) continue;
+      final lib = Directory(path.join(package.root.path, 'lib'));
+      if (lib.existsSync()) {
+        try {
+          subscriptions.add(
+            lib
+                .watch(recursive: true)
+                .listen(
+                  observer._observeLibraryEvent,
+                  onError: observer._ignoreWatchError,
+                ),
+          );
+        } on FileSystemException {
+          // build_runner remains authoritative when platform watch is absent.
+        }
+      }
+      try {
+        subscriptions.add(
+          package.root.watch().listen(
+            observer._observePackageEvent,
+            onError: observer._ignoreWatchError,
+          ),
+        );
+      } on FileSystemException {
+        // build_runner remains authoritative when platform watch is absent.
+      }
+    }
+    return observer;
+  }
+
+  final List<StreamSubscription<FileSystemEvent>> _subscriptions;
+  final Future<void> Function() _onChanged;
+  Timer? _coalesceWindow;
+  bool _closed = false;
+
+  void _observeLibraryEvent(FileSystemEvent event) {
+    final normalized = path.normalize(event.path);
+    if (!normalized.endsWith('.dart') ||
+        normalized.contains(
+          '${path.separator}src${path.separator}ccrouter_generated'
+          '${path.separator}',
+        ) ||
+        path.basename(normalized).endsWith('.g.dart')) {
+      return;
+    }
+    _scheduleRevision();
+  }
+
+  void _observePackageEvent(FileSystemEvent event) {
+    if (!const <String>{
+      'pubspec.yaml',
+      'build.yaml',
+      'ccrouter.yaml',
+    }.contains(path.basename(event.path))) {
+      return;
+    }
+    _scheduleRevision();
+  }
+
+  void _scheduleRevision() {
+    if (_closed || _coalesceWindow != null) return;
+    unawaited(_onChanged());
+    _coalesceWindow = Timer(const Duration(milliseconds: 40), () {
+      _coalesceWindow = null;
+    });
+  }
+
+  void _ignoreWatchError(Object _, [StackTrace? __]) {
+    // Source observation is a reload fence hint; Builder correctness is intact.
+  }
+
+  /// Cancels every directory subscription owned by this child session.
+  Future<void> close() async {
+    if (_closed) return;
+    _closed = true;
+    _coalesceWindow?.cancel();
+    _coalesceWindow = null;
+    for (final subscription in _subscriptions) {
+      await subscription.cancel();
+    }
+  }
+}
+
 final class _GenerationWatchEvents {
   _GenerationWatchEvents({
     required this.machine,
@@ -851,11 +954,24 @@ final class _GenerationWatchEvents {
   final Directory buildRoot;
   final Directory hostRoot;
   final _GenerationWatchStatusTracker _status;
+  Future<void> _emissionTail = Future<void>.value();
 
   /// Rotates the child-session identity while retaining the outer watch lease.
   void beginNewSession() => _status.beginNewSession();
 
-  Future<void> emit(String type, {Map<String, Object?> data = const {}}) async {
+  Future<void> emit(String type, {Map<String, Object?> data = const {}}) {
+    final operation = _emissionTail.then((_) => _emitNow(type, data: data));
+    _emissionTail = operation.then<void>(
+      (_) {},
+      onError: (Object _, StackTrace __) {},
+    );
+    return operation;
+  }
+
+  Future<void> _emitNow(
+    String type, {
+    required Map<String, Object?> data,
+  }) async {
     final timestamp = DateTime.now().toUtc().toIso8601String();
     await _status.observe(type, timestamp: timestamp, data: data);
     if (machine) {

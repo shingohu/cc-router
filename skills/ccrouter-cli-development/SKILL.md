@@ -123,6 +123,17 @@ and reanalyzes only after a change. Set
 `CCROUTER_DISABLE_ANALYZER_WATCH_BRIDGE=1` to disable this IDE-only bridge.
 Publication and consumption remain fail-open; they do not replace the final
 `--no-cache --check` gate.
+For Hook-started `flutter run --machine`, the wrapper launches the original
+Flutter Tool behind a narrow stdin-only reload gate. Watch publishes monotonic
+`inputRevision`, `completedInputRevision`, and
+`failedInputRevision` evidence; the gate forwards `app.restart` only
+after the corresponding stable `aggregationSucceeded`. It returns a standard
+daemon error with bounded Generator diagnostics on failure. A topology-changing
+session restart publishes `hotRestartRequired`; reject Hot Reload until an
+explicit Hot Restart receives a successful daemon response. This does not cover
+interactive terminal `r` and does not parse Flutter daemon stdout except for
+the matching Hot Restart response. Use
+`CCROUTER_DISABLE_HOT_RELOAD_GATE=1` for an isolated fallback.
 One-shot generate, check, and clean commands fail fast when that root already
 has an active watch; wait for `aggregationSucceeded` during iteration, then
 stop the watch before the final reference gate. Do not retry the blocked command

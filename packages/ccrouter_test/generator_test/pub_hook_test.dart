@@ -39,16 +39,25 @@ void main() {
     expect(flutter.readAsStringSync(), contains('CCRouter watch starting'));
     expect(flutter.readAsStringSync(), contains('status.json'));
     expect(
+      flutter.readAsStringSync(),
+      contains('ccrouter_generator:ccrouter_flutter_run_gate'),
+    );
+    expect(
       flutterBat.readAsStringSync(),
       contains('ccrouter_generator:ccrouter'),
     );
     expect(flutterBat.readAsStringSync(), contains('--watch=auto'));
     expect(flutterBat.readAsStringSync(), contains('CCRouter watch starting'));
     expect(flutterBat.readAsStringSync(), contains('status.json'));
+    expect(
+      flutterBat.readAsStringSync(),
+      contains('ccrouter_generator:ccrouter_flutter_run_gate'),
+    );
 
     final status = await _run(['pub-hook', 'status', '--sdk', sdk.path]);
     expect(status.exitCode, 0, reason: '${status.stderr}');
     expect('${status.stdout}', contains('installed'));
+    expect('${status.stdout}', contains('machine reload gate: enabled'));
 
     final removed = await _run(['pub-hook', 'uninstall', '--sdk', sdk.path]);
     expect(removed.exitCode, 0, reason: '${removed.stderr}');
@@ -602,6 +611,46 @@ exit "\${CCROUTER_DART_EXIT:-0}"
       startsWith('dart:run --verbosity=error ccrouter_generator:ccrouter'),
     );
     expect(runTrace.last, 'flutter:--no-color run -d macos');
+
+    File(trace).writeAsStringSync('');
+    final machineRun = await Process.run(
+      flutter.path,
+      <String>['run', '--machine', '-d', 'macos'],
+      workingDirectory: project.path,
+      environment: environment,
+    );
+    expect(machineRun.exitCode, 0, reason: '${machineRun.stderr}');
+    final machineTrace = File(trace).readAsLinesSync();
+    expect(
+      machineTrace,
+      contains(
+        contains(
+          'ccrouter_generator:ccrouter_flutter_run_gate '
+          '--host-root ',
+        ),
+      ),
+    );
+    expect(machineTrace.where((line) => line.startsWith('flutter:')), isEmpty);
+
+    File(trace).writeAsStringSync('');
+    final bypassedMachineRun = await Process.run(
+      flutter.path,
+      <String>['run', '--machine', '-d', 'macos'],
+      workingDirectory: project.path,
+      environment: <String, String>{
+        ...environment,
+        'CCROUTER_DISABLE_HOT_RELOAD_GATE': '1',
+      },
+    );
+    expect(
+      bypassedMachineRun.exitCode,
+      0,
+      reason: '${bypassedMachineRun.stderr}',
+    );
+    expect(
+      File(trace).readAsLinesSync().last,
+      'flutter:run --machine -d macos',
+    );
 
     File(trace).writeAsStringSync('');
     final failedDart = File(path.join(bin.path, 'dart'))

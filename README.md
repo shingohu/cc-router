@@ -1257,6 +1257,16 @@ fail closed，并要求停止 watch 后运行 one-shot，供紧急回退和 A/B 
 不会改变生成锁、Builder、Validator、原子发布或最终参考门禁。若 watch 被强制终止而来不及
 写入 `stopped`，只读命令会根据已释放的 owner lock 将遗留 `active` 记录显示为 `stale`，
 但不会改写历史 `status.json`。
+Hook 启动的 `flutter run --machine` 还会通过一个仅处理 stdin 的 reload gate 协调 IDE/AI
+Hot Reload：watch 为 authored Dart/config 保存发布单调 `inputRevision`，成功 cycle 发布
+`completedInputRevision`；只有状态稳定且相应 revision 已到达 `aggregationSucceeded` 后，
+`app.restart` 才转发给原 Flutter Tool。生成失败会按 Flutter daemon 标准 error 返回并携带有界
+诊断，不会让第一次 reload 消费旧生成物。Host topology 变化会发布
+`hotRestartRequired: true`，普通 Hot Reload 被拒绝，须显式 Hot Restart；只有 daemon 确认
+restart 成功后，当前 run session 才继续接受 reload。该 gate 不改写或缓冲 Flutter stdout，
+仅透传解析与 Hot Restart 匹配的 daemon response，也不代理
+普通交互式终端 `r`；后者仍应先通过 `watch follow` 确认成功。设置
+`CCROUTER_DISABLE_HOT_RELOAD_GATE=1` 可只关闭 machine reload 协调，保留 preflight 和 watch。
 Workspace Validator 失败时，watch 还会独立原子发布
 `.dart_tool/ccrouter/v1/watch/diagnostics.json`。该文件只包含最多 100 条版本化结构诊断，并绑定
 Host/build root、session、cycle、`eventRevision` 与 Pub resolution fingerprint；成功、新 cycle
