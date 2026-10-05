@@ -379,7 +379,12 @@ Future<List<String>> _buildRunnerCommand(
     final packageRoot = packageConfig.uri.resolve(rootUri).toFilePath();
     final entrypoint = File(path.join(packageRoot, 'bin', 'build_runner.dart'));
     if (entrypoint.existsSync()) {
-      return [dartExecutable, entrypoint.path, command];
+      return [
+        dartExecutable,
+        '--packages=${packageConfig.absolute.path}',
+        entrypoint.path,
+        command,
+      ];
     }
   }
   throw const FileSystemException(
