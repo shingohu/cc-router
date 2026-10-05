@@ -1,6 +1,7 @@
 @TestOn('vm')
 library;
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -315,24 +316,26 @@ dev_dependencies:
       updatedAt: DateTime.now().toUtc(),
     );
 
-    final pending = _run([
-      'pub-hook',
-      'run',
-      '--project-root',
-      project.path,
-      '--pub-command',
-      'get',
-    ]);
-    await Future<void>.delayed(const Duration(milliseconds: 400));
-    await _writeWatchStatus(
-      project,
-      lastEvent: 'failed',
-      cycle: 3,
-      updatedAt: DateTime.now().toUtc(),
-      failureStage: 'aggregation',
-      failureDiagnostics: 'error: Public route contract has no implementation.',
+    final result = await _runAfterHookStarted(
+      [
+        'pub-hook',
+        'run',
+        '--project-root',
+        project.path,
+        '--pub-command',
+        'get',
+      ],
+      () => _writeWatchStatus(
+        project,
+        lastEvent: 'failed',
+        cycle: 3,
+        eventRevision: 2,
+        updatedAt: DateTime.now().toUtc(),
+        failureStage: 'aggregation',
+        failureDiagnostics:
+            'error: Public route contract has no implementation.',
+      ),
     );
-    final result = await pending;
     final output = '${result.stdout}\n${result.stderr}';
 
     expect(result.exitCode, 1, reason: output);
@@ -344,6 +347,151 @@ dev_dependencies:
     );
     expect(output, isNot(contains('active CCRouter generation watch owns')));
   });
+
+  test(
+    'post-pub hook fails quickly when resolution changes during a failed cycle',
+    () async {
+      final project = await _createWatchCoordinatedProject();
+      addTearDown(() => project.delete(recursive: true));
+      final owner = await _lockWatchOwner(project);
+      addTearDown(() async {
+        await owner.unlock();
+        await owner.close();
+      });
+      const sessionId = 'watch-session';
+      await _writeWatchStatus(
+        project,
+        lastEvent: 'aggregationStarted',
+        cycle: 4,
+        eventRevision: 7,
+        sessionId: sessionId,
+        updatedAt: DateTime.now().toUtc(),
+      );
+
+      final stopwatch = Stopwatch()..start();
+      final result = await _runAfterHookStarted(
+        [
+          'pub-hook',
+          'run',
+          '--project-root',
+          project.path,
+          '--pub-command',
+          'get',
+        ],
+        () => _writeWatchStatus(
+          project,
+          lastEvent: 'failed',
+          cycle: 4,
+          eventRevision: 8,
+          sessionId: sessionId,
+          updatedAt: DateTime.now().toUtc(),
+          includeResolutionFingerprint: false,
+          cycleResolutionState: 'changed',
+          failureStage: 'aggregation',
+          failureDiagnostics: 'error: Host dependency closure is invalid.',
+        ),
+      );
+      stopwatch.stop();
+      final output = '${result.stdout}\n${result.stderr}';
+
+      expect(result.exitCode, 1, reason: output);
+      expect(stopwatch.elapsed, lessThan(const Duration(seconds: 5)));
+      expect(output, contains('Pub resolution changed during the cycle'));
+      expect(output, contains('a new cycle or watch session is required'));
+      expect(output, contains('Host dependency closure is invalid'));
+      expect(output, isNot(contains('within 5 minutes')));
+    },
+  );
+
+  test('post-pub hook does not reuse a historical watch failure', () async {
+    final project = await _createWatchCoordinatedProject();
+    addTearDown(() => project.delete(recursive: true));
+    final owner = await _lockWatchOwner(project);
+    addTearDown(() async {
+      await owner.unlock();
+      await owner.close();
+    });
+    const sessionId = 'watch-session';
+    await _writeWatchStatus(
+      project,
+      lastEvent: 'failed',
+      cycle: 3,
+      eventRevision: 6,
+      sessionId: sessionId,
+      updatedAt: DateTime.now().toUtc(),
+      failureStage: 'aggregation',
+      failureDiagnostics: 'error: historical failure',
+    );
+
+    final result = await _runAfterHookStarted(
+      [
+        'pub-hook',
+        'run',
+        '--project-root',
+        project.path,
+        '--pub-command',
+        'get',
+      ],
+      () => _writeWatchStatus(
+        project,
+        lastEvent: 'aggregationSucceeded',
+        cycle: 4,
+        eventRevision: 7,
+        sessionId: sessionId,
+        updatedAt: DateTime.now().toUtc(),
+      ),
+    );
+    final output = '${result.stdout}\n${result.stderr}';
+
+    expect(result.exitCode, 0, reason: output);
+    expect(output, contains('reused active watch cycle 4'));
+    expect(output, isNot(contains('historical failure')));
+  });
+
+  test(
+    'post-pub hook fences a new failure from a legacy watch status',
+    () async {
+      final project = await _createWatchCoordinatedProject();
+      addTearDown(() => project.delete(recursive: true));
+      final owner = await _lockWatchOwner(project);
+      addTearDown(() async {
+        await owner.unlock();
+        await owner.close();
+      });
+      await _writeWatchStatus(
+        project,
+        lastEvent: 'aggregationStarted',
+        cycle: 5,
+        updatedAt: DateTime.now().toUtc(),
+        includeEventIdentity: false,
+      );
+
+      final result = await _runAfterHookStarted(
+        [
+          'pub-hook',
+          'run',
+          '--project-root',
+          project.path,
+          '--pub-command',
+          'get',
+        ],
+        () => _writeWatchStatus(
+          project,
+          lastEvent: 'failed',
+          cycle: 5,
+          updatedAt: DateTime.now().toUtc().add(const Duration(seconds: 1)),
+          includeEventIdentity: false,
+          failureStage: 'aggregation',
+          failureDiagnostics: 'error: legacy watch failure',
+        ),
+      );
+      final output = '${result.stdout}\n${result.stderr}';
+
+      expect(result.exitCode, 1, reason: output);
+      expect(output, contains('active watch cycle 5 failed at aggregation'));
+      expect(output, contains('legacy watch failure'));
+    },
+  );
 
   test('run and build execute a generation preflight before Flutter', () async {
     final sdk = await Directory.systemTemp.createTemp(
@@ -423,6 +571,47 @@ Future<ProcessResult> _run(List<String> arguments) => Process.run(
   workingDirectory: Directory.current.path,
 );
 
+Future<ProcessResult> _runAfterHookStarted(
+  List<String> arguments,
+  Future<void> Function() publishStatus,
+) async {
+  final process = await Process.start(Platform.resolvedExecutable, [
+    'run',
+    'ccrouter_generator:ccrouter',
+    ...arguments,
+  ], workingDirectory: Directory.current.path);
+  final stdoutLines = <String>[];
+  final stderrLines = <String>[];
+  final started = Completer<void>();
+  final stdoutDone = process.stdout
+      .transform(utf8.decoder)
+      .transform(const LineSplitter())
+      .listen((line) {
+        stdoutLines.add(line);
+        if (!started.isCompleted &&
+            line.contains('CCRouter post-pub generation started')) {
+          started.complete();
+        }
+      })
+      .asFuture<void>();
+  final stderrDone = process.stderr
+      .transform(utf8.decoder)
+      .transform(const LineSplitter())
+      .listen(stderrLines.add)
+      .asFuture<void>();
+  await started.future.timeout(const Duration(seconds: 15));
+  await Future<void>.delayed(const Duration(milliseconds: 400));
+  await publishStatus();
+  final processExitCode = await process.exitCode;
+  await Future.wait([stdoutDone, stderrDone]);
+  return ProcessResult(
+    process.pid,
+    processExitCode,
+    stdoutLines.join('\n'),
+    stderrLines.join('\n'),
+  );
+}
+
 Directory _workspaceRoot() {
   var current = Directory.current.absolute;
   while (true) {
@@ -482,9 +671,14 @@ Future<String> _writeWatchStatus(
   required String lastEvent,
   required int cycle,
   required DateTime updatedAt,
+  int eventRevision = 1,
+  String sessionId = 'test-watch-session',
   String? failureStage,
   String? failureDiagnostics,
   String? resolutionFingerprint,
+  bool includeResolutionFingerprint = true,
+  bool includeEventIdentity = true,
+  String? cycleResolutionState,
 }) async {
   final file = File(
     path.join(
@@ -496,14 +690,15 @@ Future<String> _writeWatchStatus(
       'status.json',
     ),
   )..parent.createSync(recursive: true);
-  final effectiveResolutionFingerprint =
-      resolutionFingerprint ??
-      await CCPubResolutionFingerprint.capture(
-        hostRoot: project,
-        buildRoot: project,
-      );
+  final effectiveResolutionFingerprint = includeResolutionFingerprint
+      ? resolutionFingerprint ??
+            await CCPubResolutionFingerprint.capture(
+              hostRoot: project,
+              buildRoot: project,
+            )
+      : null;
   file.writeAsStringSync(
-    '${jsonEncode(<String, Object?>{'schemaVersion': 1, 'state': lastEvent == 'failed' ? 'failed' : 'building', 'active': true, 'lastEvent': lastEvent, 'pid': pid, 'cycle': cycle, 'startedAt': updatedAt.subtract(const Duration(seconds: 1)).toIso8601String(), 'updatedAt': updatedAt.toIso8601String(), 'hostRoot': project.path, 'buildRoot': project.path, 'managedByLease': false, 'resolutionFingerprint': effectiveResolutionFingerprint, if (failureStage != null) 'failureStage': failureStage, if (failureDiagnostics != null) 'failureDiagnostics': failureDiagnostics})}\n',
+    '${jsonEncode(<String, Object?>{'schemaVersion': 1, 'state': lastEvent == 'failed' ? 'failed' : 'building', 'active': true, 'lastEvent': lastEvent, 'pid': pid, if (includeEventIdentity) 'sessionId': sessionId, if (includeEventIdentity) 'eventRevision': eventRevision, 'cycle': cycle, 'startedAt': updatedAt.subtract(const Duration(seconds: 1)).toIso8601String(), 'updatedAt': updatedAt.toIso8601String(), 'hostRoot': project.path, 'buildRoot': project.path, 'managedByLease': false, if (effectiveResolutionFingerprint != null) 'resolutionFingerprint': effectiveResolutionFingerprint, if (cycleResolutionState != null) 'cycleResolutionState': cycleResolutionState, if (failureStage != null) 'failureStage': failureStage, if (failureDiagnostics != null) 'failureDiagnostics': failureDiagnostics})}\n',
   );
-  return effectiveResolutionFingerprint;
+  return effectiveResolutionFingerprint ?? '';
 }

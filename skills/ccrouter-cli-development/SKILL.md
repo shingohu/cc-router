@@ -238,7 +238,13 @@ When the same Host already has an active watch, post-pub generation waits for
 an `aggregationSucceeded` event published after the latest Pub resolution
 input instead of starting a conflicting one-shot command. A Builder,
 validation, or aggregation failure remains fail-closed and its bounded watch
-diagnostics are surfaced by the Hook. Missing state, watch exit, or the bounded
+diagnostics are surfaced by the Hook. `sessionId`, `cycle`, and monotonic
+`eventRevision` reject failures that predate the wait. If Pub resolution changes
+during a cycle, a new terminal failure returns immediately with the available
+diagnostics and requires another cycle/session; success still requires the exact
+current resolution fingerprint. Set
+`CCROUTER_DISABLE_PUB_HOOK_WATCH_FAILURE_FENCE=1` only for the legacy
+fingerprint-only A/B fallback. Missing state, watch exit, or the bounded
 five-minute wait also fails; never treat another Host's status as evidence.
 
 Use `status` after an FVM version switch; it prints the resolved SDK path and

@@ -1360,7 +1360,12 @@ SDK 切换后 `status` 应显示 `run/build preflight: enabled` 和
 200 行且最多 64 KiB 的 Generator 日志，避免长构建刷屏或无界缓存，同时保留可操作错误。
 当同一 Host 的 watch 已活动时，post-pub 不会再启动一个必然与 generation lock 冲突的
 one-shot；它等待 Pub 解析变更之后的 `aggregationSucceeded`。该轮失败时仍返回非零并转发
-watch 的有界 Generator diagnostics，状态不可用、watch 退出或 5 分钟超时也 fail-closed。
+watch 的有界 Generator diagnostics。watch 状态使用 `sessionId`、`cycle` 和单调
+`eventRevision` 区分历史事件；若 Pub 在 cycle 中途改写 resolution，新的 terminal failure 会
+立即报告该轮不能作为成功证明并要求新 cycle/session，不再等待 5 分钟。成功仍必须匹配当前
+resolution exact-content fingerprint。设置
+`CCROUTER_DISABLE_PUB_HOOK_WATCH_FAILURE_FENCE=1` 可临时恢复旧的严格 fingerprint-only
+失败等待路径；状态不可用、watch 退出或最终超时仍 fail-closed。
 SDK 切换或升级后需要重新检查 `pub-hook status`。详细语义见
 [`docs/CCRouter-cli-pub-hook.md`](docs/CCRouter-cli-pub-hook.md)。
 

@@ -86,7 +86,10 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook uninstall
 5. 同一 Host 已有活动 watch 时，post-pub 不再并发启动 one-shot；它以当前 Pub 解析文件的
    exact-content fingerprint 为完成栅栏，等待 watch 的 `aggregationSucceeded`。watch 的
    Builder、Validator 或 aggregation 失败时，Hook 返回非零并输出该轮有界 diagnostics，
-   因此不会用 generation lock 遮蔽真实错误。
+   因此不会用 generation lock 遮蔽真实错误。状态中的 `sessionId`、`cycle` 和单调
+   `eventRevision` 用于排除等待前的历史失败；若 cycle 执行期间 resolution 发生变化，等待后
+   出现的新 terminal failure 会立即报告该轮无法作为成功证明，并要求新 cycle/session。
+   成功仍必须严格匹配当前 resolution fingerprint，不能用快速失败逻辑放宽。
 6. 成功时只打印 fast-path、验证摘要和总耗时；生成器失败时打印最近
    200 行且最多 64 KiB 的有界日志并返回非零，使 CI 能发现生成物过期或元数据错误，
    同时避免长时间 Builder 输出造成控制台刷屏或内存无界增长。
@@ -95,6 +98,10 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook uninstall
 启动前输出的重复依赖解析和 executable 构建信息，不会隐藏 CCRouter 的阶段、耗时、
 跳过原因、标准错误或非零退出码。直接省略该参数仍可运行，但冷启动或依赖变化后可能
 看到多次 `Resolving dependencies`。
+
+`CCROUTER_DISABLE_PUB_HOOK_WATCH_FAILURE_FENCE=1` 仅用于 A/B 或紧急回退：它关闭等待基线后的
+terminal failure 快速栅栏，恢复旧的 fingerprint-only 失败判断与有界超时。该开关不放宽成功
+条件，也不关闭 watch、generation lock、Validator、原子写入或最终 `--no-cache --check` 门禁。
 
 ## `run` / `build` 前置生成
 

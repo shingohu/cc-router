@@ -6,6 +6,9 @@ import 'package:yaml/yaml.dart';
 
 import 'pub_hook_watch_coordination.dart';
 
+const _pubHookWatchFailureFenceKillSwitch =
+    'CCROUTER_DISABLE_PUB_HOOK_WATCH_FAILURE_FENCE';
+
 /// The operation requested from the pub hook command.
 enum CCPubHookAction {
   /// Installs a reversible wrapper around the selected Flutter SDK.
@@ -565,6 +568,12 @@ Future<_CCPubHookWatchResult?> _waitForPostPubWatch(
         hostRoot: hostRoot,
         buildRoot: buildRoot,
       );
+  final baselineSessionId = status['sessionId'] as String?;
+  final baselineEventRevision = status['eventRevision'] as int?;
+  final baselineCycle = status['cycle'] as int;
+  final baselineUpdatedAt = status['updatedAt'] as String;
+  final failureFenceEnabled =
+      Platform.environment[_pubHookWatchFailureFenceKillSwitch] != '1';
   final timeout = Stopwatch()..start();
   const maximumWait = Duration(minutes: 5);
   while (timeout.elapsed < maximumWait) {
@@ -590,13 +599,40 @@ Future<_CCPubHookWatchResult?> _waitForPostPubWatch(
         logFile: _pubHookWatchLogFile(hostRoot),
       );
     }
-    if (matchesResolution && lastEvent == 'failed') {
+    final sessionId = status['sessionId'] as String?;
+    final eventRevision = status['eventRevision'] as int?;
+    final isNewTerminalEvent = switch ((
+      baselineSessionId,
+      baselineEventRevision,
+      sessionId,
+      eventRevision,
+    )) {
+      (
+        final String baselineSession,
+        final int baselineRevision,
+        final String currentSession,
+        final int currentRevision,
+      ) =>
+        currentSession != baselineSession || currentRevision > baselineRevision,
+      _ => cycle > baselineCycle || status['updatedAt'] != baselineUpdatedAt,
+    };
+    final acceptsFailure = failureFenceEnabled
+        ? isNewTerminalEvent
+        : matchesResolution;
+    if (lastEvent == 'failed' && acceptsFailure) {
+      final resolutionState = status['cycleResolutionState'] as String?;
+      final message = matchesResolution
+          ? 'active watch cycle $cycle failed at '
+                '${status['failureStage'] ?? 'generation'}'
+          : resolutionState == 'changed'
+          ? 'active watch cycle $cycle failed after Pub resolution changed '
+                'during the cycle; a new cycle or watch session is required'
+          : 'active watch cycle $cycle failed without a matching Pub '
+                'resolution proof; a new cycle or watch session is required';
       return _CCPubHookWatchResult(
         succeeded: false,
         cycle: cycle,
-        message:
-            'active watch cycle $cycle failed at '
-            '${status['failureStage'] ?? 'generation'}',
+        message: message,
         diagnostics: status['failureDiagnostics'] as String?,
         logFile: _pubHookWatchLogFile(hostRoot),
       );

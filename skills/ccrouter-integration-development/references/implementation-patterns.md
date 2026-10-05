@@ -828,9 +828,14 @@ one-shot command owns or awaits that root.
 After a successful hooked Pub dependency command, the same-Host Hook performs
 that coordination itself: it fences on exact current resolution-file contents
 and waits for the active watch's terminal aggregation event. Success reuses
-that cycle; failure, exit, unavailable state, or timeout stays fail-closed and
-reports the bounded watch diagnostics. This exception is specific to post-pub
-coordination, not permission for concurrent one-shot generation.
+that cycle. A monotonic `eventRevision` within one `sessionId` rejects historical
+failures; a new failure after resolution churn returns immediately with bounded
+diagnostics and requires a new cycle/session. Success never accepts a mismatched
+resolution fingerprint. Set
+`CCROUTER_DISABLE_PUB_HOOK_WATCH_FAILURE_FENCE=1` only to compare the legacy
+fingerprint-only failure wait. Exit, unavailable state, or timeout stays
+fail-closed. This exception is specific to post-pub coordination, not permission
+for concurrent one-shot generation.
 After a successful Builder cycle, watch skips only the ordinary fast-path and
 Build Plan decision that can no longer change whether Builder runs. Input
 fingerprints and barriers, dependency preflight, artifact snapshots, Workspace

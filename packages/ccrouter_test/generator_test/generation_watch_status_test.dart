@@ -155,6 +155,10 @@ environment:
 
     expect(result.exitCode, 1);
     expect(status['lastEvent'], 'failed');
+    expect(status['sessionId'], isA<String>());
+    expect((status['sessionId'] as String), isNotEmpty);
+    expect(status['eventRevision'], isA<int>());
+    expect(status['eventRevision'], greaterThan(0));
     expect(status['failureStage'], 'workspace');
     expect(
       status['failureDiagnostics'],

@@ -321,8 +321,12 @@ Watch startup also fails fast while a one-shot command owns or awaits the root.
 Successful hooked Pub dependency commands are the exception: for the same Host,
 the Hook waits for the active watch cycle after the latest resolution input and
 reuses its completed aggregation. Watch failure diagnostics are surfaced and
-the Pub Hook remains fail-closed; this does not permit arbitrary one-shot
-generation beside a watch or reuse status belonging to another Host.
+the Pub Hook remains fail-closed. A failure must belong to a new
+`sessionId/cycle/eventRevision` after the wait begins; resolution churn returns
+immediately and requires another cycle/session, while success still requires an
+exact current fingerprint. This does not permit arbitrary one-shot generation
+beside a watch or reuse status belonging to another Host. Use
+`CCROUTER_DISABLE_PUB_HOOK_WATCH_FAILURE_FENCE=1` only for legacy A/B fallback.
 The post-Builder cycle may skip redundant planning, but never its input
 barriers, preflight, snapshot, validation, aggregation, or local state writes.
 Use `CCROUTER_DISABLE_WATCH_CYCLE_OPTIMIZATION=1` for a reference-cycle A/B

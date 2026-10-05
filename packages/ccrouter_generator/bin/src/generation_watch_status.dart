@@ -10,17 +10,20 @@ final class _GenerationWatchStatusTracker {
     required this.buildRoot,
     required String? leasePath,
   }) : _leasePath = leasePath == null ? null : File(leasePath).absolute.path,
-       _startedAt = DateTime.now().toUtc().toIso8601String();
+       _startedAt = DateTime.now().toUtc().toIso8601String(),
+       _sessionId = '$pid-${DateTime.now().microsecondsSinceEpoch}';
 
   final Directory hostRoot;
   final Directory buildRoot;
   final String? _leasePath;
   final String _startedAt;
+  final String _sessionId;
 
   bool _watchStarted = false;
   bool _disabled = false;
   bool _warned = false;
   int _cycle = 0;
+  int _eventRevision = 0;
   int? _lastBuildElapsedMs;
   int? _lastBuildRunnerMs;
   int? _lastAggregationElapsedMs;
@@ -31,6 +34,7 @@ final class _GenerationWatchStatusTracker {
   String? _failureDiagnostics;
   String? _cycleResolutionFingerprint;
   String? _completedResolutionFingerprint;
+  String? _cycleResolutionState;
 
   /// Records one public watch event and persists only developer-useful states.
   Future<void> observe(
@@ -43,6 +47,8 @@ final class _GenerationWatchStatusTracker {
       _cycle++;
       _failureStage = null;
       _failureDiagnostics = null;
+      _completedResolutionFingerprint = null;
+      _cycleResolutionState = 'pending';
       _cycleResolutionFingerprint = await _captureResolutionFingerprint();
     }
     if (type == 'buildSucceeded') {
@@ -81,6 +87,7 @@ final class _GenerationWatchStatusTracker {
       }
     }
     if (!_shouldPersist(type) || _disabled) return;
+    _eventRevision++;
 
     final state = _stateFor(type);
     final active = switch (type) {
@@ -100,6 +107,8 @@ final class _GenerationWatchStatusTracker {
       'active': active,
       'lastEvent': type,
       'pid': pid,
+      'sessionId': _sessionId,
+      'eventRevision': _eventRevision,
       'cycle': _cycle,
       'startedAt': _startedAt,
       'updatedAt': timestamp,
@@ -120,6 +129,8 @@ final class _GenerationWatchStatusTracker {
         'failureDiagnostics': _failureDiagnostics,
       if (_completedResolutionFingerprint != null)
         'resolutionFingerprint': _completedResolutionFingerprint,
+      if (_cycleResolutionState != null)
+        'cycleResolutionState': _cycleResolutionState,
     };
     try {
       await _writeIfChanged(
@@ -164,10 +175,18 @@ final class _GenerationWatchStatusTracker {
     final started = _cycleResolutionFingerprint;
     if (started == null) {
       _completedResolutionFingerprint = null;
+      _cycleResolutionState = 'unavailable';
       return;
     }
     final current = await _captureResolutionFingerprint();
-    _completedResolutionFingerprint = current == started ? current : null;
+    if (current == null) {
+      _completedResolutionFingerprint = null;
+      _cycleResolutionState = 'unavailable';
+      return;
+    }
+    final matches = current == started;
+    _completedResolutionFingerprint = matches ? current : null;
+    _cycleResolutionState = matches ? 'matched' : 'changed';
   }
 
   Future<String?> _captureResolutionFingerprint() async {

@@ -106,8 +106,8 @@ Workspace/插件 analyze 及缓存/无缓存生成物检查通过。
   本地诊断状态、`suggested/actual/reasons` Profile、精确删除与可信纯新增 aggregation-only、只读
   外部 Package Artifact Integrity 均已落地。可写 Package 无法证明时回退完整 Builder；只读外部
   Package 缺失或失配时明确失败。P4 证明当前主要冷成本是 build_runner AOT，且新版受 Flutter
-  SDK 解析约束阻断；更宽的 Host-only 变化、watch/daemon 与自有 runner 暂不实施，CI 保持
-  `--no-cache --check`。
+  SDK 解析约束阻断；后续已单独实现 build_runner watch 开发路径，仍不引入自有
+  runner，CI 保持 `--no-cache --check`。
 - [x] 2026-10-03 完成 P3 回归：全仓 Analyze、Generator `272/272`、增量与
   `--no-cache --check` 生成门禁均通过；状态缺失、篡改、无 Builder metadata 与只读外部 Package
   边界均有专项测试，生成状态未包含本机路径或 `.dart_tool` 信息。
@@ -228,6 +228,57 @@ Workspace/插件 analyze 及缓存/无缓存生成物检查通过。
 - [x] Pub Hook 已支持成功的显式 `flutter pub` 后置生成，以及 `flutter run/build` fail-closed
   前置生成；复用 fingerprint fast-path，覆盖 POSIX/Windows wrapper 和全局参数前缀。Flutter
   Tool 内部隐式 `pub get` 与直接 `dart pub` 仍明确不在 Hook 边界。
+- [x] **Pub Hook 等待期间的 resolution churn 快速失败**：active watch 可能在 Pub 正在
+  更新 resolution 文件时启动 cycle；若 cycle 开始与结束的 resolution fingerprint 不一致，
+  watch 即使已经在 aggregation 阶段失败，也无法发布可供 Hook 匹配的完成 fingerprint，Hook
+  会错误等待到 5 分钟超时。成功证据仍须严格要求当前 resolution fingerprint 匹配，不能为了
+  避免超时而接受旧 cycle；Hook 应记录等待基线 `sessionId/cycle/eventRevision`，对等待开始后
+  出现的新 terminal failure 立即 fail-closed。fingerprint 可证明匹配时转发原始 Validator/
+  aggregation diagnostics；确认发生 resolution churn 时立即报告“当前 cycle 不能作为成功证明，
+  需要新 cycle 或 session”，并附已有的有界 diagnostics，不再等待固定超时。
+  已以 `sessionId/cycle/eventRevision` 和 `cycleResolutionState` 实现等待基线与快速失败；验收覆盖
+  cycle 中途更新 resolution、无完成 fingerprint 的 aggregation 失败、等待前历史失败不得误用、
+  等待后新失败快速返回，以及后续匹配成功 cycle 正常复用。协调逻辑保留独立 kill switch，
+  one-shot `--no-cache --check` 和逐字节输出对照仍为最终权威门禁。
+- [ ] **Hot Reload / watch 完成栅栏**：当前 Flutter Hot Reload 与 CCRouter watch 可由同一次
+  保存并行触发，第一轮 reload 可能在相应 `aggregationSucceeded` 之前读取旧生成物。
+  后续需先设计 Flutter Tool/Hook 可接入的协调边界，再为会影响生成声明的修改等待与该次
+  输入匹配的 `aggregationSucceeded`；不得把旧 cycle 或 `buildSucceeded` 当作完成证据。
+  Builder/Validator/aggregation 失败时必须阻止消费旧生成物并显示原始诊断；普通 Widget body、
+  `initState` 或注释修改不应引入无界等待。未保存的 `pubspec.yaml` 修改不产生 generation
+  诊断；已保存但尚未执行 Pub 时应报告 resolved graph stale 并要求执行 Pub，不得声称依赖变化
+  已生效；Pub 完成但 watch aggregation 失败时必须显式显示生成错误，不能把 Flutter 增量编译
+  成功解释为 CCRouter graph 成功；Host topology 成功变化后应发布 `hotRestartRequired`，因为
+  `main()`/`CCRouter.initialize()` 不会由普通 Hot Reload 重新执行。优先采用结构化状态与诊断
+  协调，不直接代理整个 Flutter daemon。实现须保留 kill switch，并用声明变更/非声明变更、
+  连续保存、生成失败、resolved graph stale、topology 变化及通常 reload 的真实 `flutter run`
+  时序回归验收。
+- [ ] **Pub 拓扑变化后重启 watch session**：普通 `pub get`、版本变化，以及仍被当前
+  targets 安全覆盖的依赖删除，继续等待现有 watch cycle。新增 Package 或重算后的生成目标/
+  `--build-filter` 集合无法由当前 session 覆盖时，watch owner 应在持有同一 Host lease 期间
+  有序停止旧 build_runner、重新解析 build root/targets，并启动带新 session identity 的
+  build_runner。Pub Hook 只能在新 session 的 `ready` 之后接受与当前 Pub 解析指纹匹配的
+  `aggregationSucceeded`；重启、新 cycle 或状态发布失败均 fail-closed 并转发有界诊断。
+  验收覆盖 Package 新增/删除/重命名、Host dependency edge 变化、Dart 文件新增/删除/
+  重命名、重启期间并发 Pub 命令、进程退出与逐字节 `--no-cache --check` 对照；保留
+  独立 kill switch 以回退到显式停止 watch 后执行 one-shot 的参考路径。
+- [ ] **结构化生成诊断与 Analyzer watch bridge**：当前 Workspace Validator 只返回无位置
+  字符串，Host 缺失实现 Package 会展开为多条 Handler、Route、InitTask 和 owner 级联错误；
+  Dart Analyzer 又会因 Workspace `package_config.json` 仍包含兄弟 Package 而无法证明 Host closure
+  已缺失实现。先将 Validator 诊断收敛为版本化对象，至少包含稳定 `code`、severity、
+  primary/related source locations、correction 和 root-cause group；CLI 保留可读文本渲染，但将
+  “Host closure 缺失 owner component”作为主错误，其余问题折叠为 related diagnostics。
+  只在 resolved graph 与精确 metadata 能唯一证明实现 Package 时定位并建议修改 Host
+  `pubspec.yaml`；否则定位到消费组件或 Contract 声明，不根据 component/package 名称猜测。
+  watch 再原子发布有界的结构化诊断，并绑定 Host、session identity、cycle 和
+  resolution fingerprint；成功 cycle 清理旧诊断，旧 session/cycle 不得覆盖新状态。
+  Analyzer Plugin 只消费该结构化证据并刷新受影响的 authored Dart 位置，不解析控制台
+  文本、不运行 Generator，也不替代 `--no-cache --check`。另增加窄化的 Host
+  `pubspec.yaml`/resolved graph 失配提示，覆盖保存依赖变化但未主动运行 Pub Hook 的空窗；
+  该提示只要求重新解析依赖，不在旧 graph 上给出所有权结论。实现顺序应复用上一项的
+  session identity，保留 Analyzer bridge 独立 kill switch，且诊断发布失败不得改变生成结果。
+  验收覆盖无 Pub Hook 保存、活动 watch 失败/恢复、级联折叠、位置跳转、旧 cycle 拒绝、
+  Legacy/LSP 真实 Analysis Server 与 CLI 原文兼容性。
 - [x] KV Storage Demo 已提供 Scoped Facade，通过 Host-owned Context Provider 动态解析用户、
   API 环境和设备命名空间，并保留内存 Backend 和可替换 Backend 边界。真实持久化、Secure
   Storage 和生产 Session/Environment/Device 绑定仍由应用 Composition Root 落地。
@@ -263,7 +314,8 @@ Workspace/插件 analyze 及缓存/无缓存生成物检查通过。
 
 ## 6. 明确暂不做
 
-- [ ] 不实现 `ccrouter watch`；当前采用显式生成命令，后续仍只评估单次生成性能。
+- [ ] 不把多个独立 Pub build root 合并为一个 watch；嵌套 Package Host 仍各自持有
+  session 与 generation lock，只在真实多 Host 协调样本证明需求后再评估跨 root 编排。
 - [ ] 不增加单独的 `ccrouter help` 作为 1.x 收尾能力。
 - [ ] 不在 1.x 增加动态组件激活、停用或卸载 API。
 - [ ] 不在 1.x 增加完整状态恢复 API，只保留脱敏 restoration opportunity 诊断。
