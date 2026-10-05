@@ -10,8 +10,9 @@ import 'package:path/path.dart' as path;
 ///
 /// The benchmark edits one real Demo source and performs real Dart file add,
 /// delete, and rename mutations with exact-content guards. It waits for both
-/// Builder and CCRouter aggregation, restores every mutation after each sample,
-/// and finishes with a byte comparison plus `--no-cache --check`.
+/// Builder and CCRouter aggregation, records the scheduling boundaries around
+/// both phases, restores every mutation after each sample, and finishes with a
+/// byte comparison plus `--no-cache --check`.
 Future<void> main(List<String> arguments) async {
   final options = _BenchmarkOptions.parse(arguments);
   final sampleCount = options.sampleCount;
@@ -497,6 +498,18 @@ Map<String, Object?> _summarize(List<_CycleSample> samples) {
   }
   return {
     'wallMs': _distribution(samples.map((sample) => sample.wallMs).toList()),
+    'changeToBuildStartMs': _distribution(
+      samples.map((sample) => sample.changeToBuildStartMs!).toList(),
+    ),
+    'observedBuildWindowMs': _distribution(
+      samples.map((sample) => sample.observedBuildWindowMs!).toList(),
+    ),
+    'buildToAggregationHandoffMs': _distribution(
+      samples.map((sample) => sample.buildToAggregationHandoffMs!).toList(),
+    ),
+    'observedAggregationWindowMs': _distribution(
+      samples.map((sample) => sample.observedAggregationWindowMs!).toList(),
+    ),
     'buildMs': _distribution(samples.map((sample) => sample.buildMs).toList()),
     'aggregationMs': _distribution(
       samples.map((sample) => sample.aggregationMs).toList(),
@@ -691,18 +704,21 @@ final class _WatchSession {
             return;
           }
           final type = event['type'];
-          if (type == 'buildSucceeded') {
+          final pending = _pending;
+          if (type == 'buildStarted') {
+            pending?.recordBuildStarted();
+          } else if (type == 'buildSucceeded') {
+            pending?.recordBuildSucceeded();
             _lastBuild = event;
+          } else if (type == 'aggregationStarted') {
+            pending?.recordAggregationStarted();
           } else if (type == 'aggregationSucceeded') {
             final sample = _cycleSample(event);
-            final pending = _pending;
             if (!_ready.isCompleted) {
               initial = sample;
             } else if (pending != null && !pending.completer.isCompleted) {
               pending.stopwatch.stop();
-              pending.completer.complete(
-                sample.withWallMs(pending.stopwatch.elapsedMilliseconds),
-              );
+              pending.completer.complete(sample.withObservedTiming(pending));
               _pending = null;
             }
           } else if (type == 'ready') {
@@ -843,11 +859,30 @@ final class _PendingCycle {
 
   final Stopwatch stopwatch;
   final Completer<_CycleSample> completer = Completer<_CycleSample>();
+  int? buildStartedMs;
+  int? buildSucceededMs;
+  int? aggregationStartedMs;
+
+  void recordBuildStarted() {
+    buildStartedMs ??= stopwatch.elapsedMilliseconds;
+  }
+
+  void recordBuildSucceeded() {
+    buildSucceededMs ??= stopwatch.elapsedMilliseconds;
+  }
+
+  void recordAggregationStarted() {
+    aggregationStartedMs ??= stopwatch.elapsedMilliseconds;
+  }
 }
 
 final class _CycleSample {
   const _CycleSample({
     required this.wallMs,
+    this.changeToBuildStartMs,
+    this.observedBuildWindowMs,
+    this.buildToAggregationHandoffMs,
+    this.observedAggregationWindowMs,
     required this.buildMs,
     required this.aggregationMs,
     required this.outputFiles,
@@ -861,6 +896,10 @@ final class _CycleSample {
   });
 
   final int wallMs;
+  final int? changeToBuildStartMs;
+  final int? observedBuildWindowMs;
+  final int? buildToAggregationHandoffMs;
+  final int? observedAggregationWindowMs;
   final int buildMs;
   final int aggregationMs;
   final int outputFiles;
@@ -886,8 +925,49 @@ final class _CycleSample {
     spanStatuses: spanStatuses,
   );
 
+  _CycleSample withObservedTiming(_PendingCycle pending) {
+    final buildStarted = pending.buildStartedMs;
+    final buildSucceeded = pending.buildSucceededMs;
+    final aggregationStarted = pending.aggregationStartedMs;
+    if (buildStarted == null ||
+        buildSucceeded == null ||
+        aggregationStarted == null) {
+      throw StateError(
+        'Watch cycle is missing scheduling events: '
+        'buildStarted=$buildStarted, buildSucceeded=$buildSucceeded, '
+        'aggregationStarted=$aggregationStarted.',
+      );
+    }
+    return _CycleSample(
+      wallMs: pending.stopwatch.elapsedMilliseconds,
+      changeToBuildStartMs: buildStarted,
+      observedBuildWindowMs: buildSucceeded - buildStarted,
+      buildToAggregationHandoffMs: aggregationStarted - buildSucceeded,
+      observedAggregationWindowMs:
+          pending.stopwatch.elapsedMilliseconds - aggregationStarted,
+      buildMs: buildMs,
+      aggregationMs: aggregationMs,
+      outputFiles: outputFiles,
+      cycleMode: cycleMode,
+      aggregationInputFingerprint: aggregationInputFingerprint,
+      aggregationReuseResult: aggregationReuseResult,
+      aggregationReuseReason: aggregationReuseReason,
+      planningEvidenceMode: planningEvidenceMode,
+      spanDurationsUs: spanDurationsUs,
+      spanStatuses: spanStatuses,
+    );
+  }
+
   Map<String, Object?> toJson() => {
     'wallMs': wallMs,
+    if (changeToBuildStartMs != null)
+      'changeToBuildStartMs': changeToBuildStartMs,
+    if (observedBuildWindowMs != null)
+      'observedBuildWindowMs': observedBuildWindowMs,
+    if (buildToAggregationHandoffMs != null)
+      'buildToAggregationHandoffMs': buildToAggregationHandoffMs,
+    if (observedAggregationWindowMs != null)
+      'observedAggregationWindowMs': observedAggregationWindowMs,
     'buildMs': buildMs,
     'aggregationMs': aggregationMs,
     'outputFiles': outputFiles,

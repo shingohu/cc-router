@@ -679,3 +679,35 @@ barrier input。kill-switch reference 全部为 `recaptured`。额外的 Builder
 删除 fixture、得到相同的 99 文件指纹
 `cb927a19b7867c0fcd6dd6dabe5c72e8b465975c2f73480b1b8258767783eab6`，并通过
 `generate demo --no-cache --check`。
+
+### 10.10 watch 调度窗口拆分（2026-10-05）
+
+在 10.9 后继续拆分 `wall - build - aggregation` 的稳定空档。benchmark 现在直接监听 machine
+events，并记录 `changeToBuildStartMs`、`observedBuildWindowMs`、
+`buildToAggregationHandoffMs` 和 `observedAggregationWindowMs`；任一调度事件缺失都会 fail-fast。
+3-sample 真实编辑矩阵得到：
+
+| 编辑场景 | wall P50 | change → build start P50 | observed build P50 | handoff P50 | observed aggregation P50 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 普通注释 | 2235ms | 497ms | 967ms | 0ms | 760ms |
+| Widget body | 2208ms | 500ms | 981ms | 0ms | 741ms |
+| `initState` body | 2218ms | 498ms | 981ms | 0ms | 736ms |
+| 新增普通函数 | 2208ms | 499ms | 982ms | 0ms | 722ms |
+| Route annotation | 2774ms | 507ms | 1240ms | 0ms | 1020ms |
+| 新增 Dart 文件 | 1448ms | 507ms | 209ms | 0ms | 728ms |
+| 删除 Dart 文件 | 1439ms | 506ms | 186ms | 0ms | 747ms |
+| 重命名 Dart 文件 | 1481ms | 508ms | 225ms | 0ms | 750ms |
+
+本轮仍为 Battery + macOS Low Power Mode，build/aggregation 绝对值受当时机器负载影响；调度边界
+仍清晰：build 完成到 CCRouter aggregation 启动的 P50 为 0ms，观察窗口与双方内部报告只差
+0–2ms，CCRouter handoff 没有待消除的固定等待。约 500ms 全部位于 build_runner 开始构建前。
+
+依赖源码解释了该窗口：`watcher 1.2.1` 的 macOS recursive watcher 在原生事件后固定等待 200ms，
+待文件系统更新稳定后再 poll；`build_runner 2.15.1` 随后使用固定 250ms trailing
+`debounceBuffer`。build_runner 只允许 testing-only `TestingOverrides.debounceDelay` 覆盖，CLI 和公开
+API 均没有生产入口。通过私有 `src/`、修改 Pub cache 或自维护 bootstrap 降低 debounce 会引入
+版本耦合，还会削弱编辑器 safe-write 与 AI agent 多文件写入的事件合并，因此本轮明确不改生产
+调度。后续仅在 build_runner 提供正式配置时，用新增阶段指标对 250ms reference 做 A/B。
+
+benchmark 最终恢复源码、删除 fixture、保留 99 个生成物的逐字节一致性，并通过
+`generate demo --no-cache --check`。
