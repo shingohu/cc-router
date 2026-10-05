@@ -3,6 +3,8 @@ part of '../ccrouter_generator.dart';
 final _commandStdoutZoneKey = Object();
 final _commandStderrZoneKey = Object();
 final _generationCycleModeZoneKey = Object();
+const _sharedPlanningSnapshotKillSwitch =
+    'CCROUTER_DISABLE_SHARED_PLANNING_SNAPSHOT';
 
 /// Output channel scoped to one command or in-process generation cycle.
 final class _CommandOutputSink {
@@ -442,27 +444,67 @@ Future<_GenerationCycleResult> _runGenerationCycle({
             workspace: buildContext.workspace,
           ),
         );
-        await profileTrace.measure(
-          'fast-path-manifest-write',
-          () => _GenerationFastPath.write(
-            workspace: fastPathWorkspace!,
-            expectedInputFingerprint: verifiedInputFingerprint!,
-          ),
-        );
-        try {
+        if (Platform.environment[_sharedPlanningSnapshotKillSwitch] == '1') {
+          profileTrace?.skip('planning-snapshot-capture');
           await profileTrace.measure(
-            'build-plan-state-write',
-            () => _GenerationBuildPlanner.write(
+            'fast-path-manifest-write',
+            () => _GenerationFastPath.write(
               workspace: fastPathWorkspace!,
               expectedInputFingerprint: verifiedInputFingerprint!,
             ),
           );
-        } on Object {
-          if (parsed.profile) {
-            _commandStdout.writeln(
-              'CCRouter profile build-plan-state=write-failed; '
-              'future runs will conservatively use runBuilder.',
+          try {
+            await profileTrace.measure(
+              'build-plan-state-write',
+              () => _GenerationBuildPlanner.write(
+                workspace: fastPathWorkspace!,
+                expectedInputFingerprint: verifiedInputFingerprint!,
+              ),
             );
+          } on Object {
+            if (parsed.profile) {
+              _commandStdout.writeln(
+                'CCRouter profile build-plan-state=write-failed; '
+                'future runs will conservatively use runBuilder.',
+              );
+            }
+          }
+        } else {
+          final planningSnapshot = await profileTrace.measure(
+            'planning-snapshot-capture',
+            () => _GenerationPlanningSnapshot.capture(fastPathWorkspace!),
+          );
+          if (planningSnapshot.inputFingerprint != verifiedInputFingerprint) {
+            profileTrace?.skip('fast-path-manifest-write');
+            profileTrace?.skip('build-plan-state-write');
+          } else {
+            await profileTrace.measure(
+              'fast-path-manifest-write',
+              () => _GenerationFastPath.writeSnapshot(
+                workspace: fastPathWorkspace!,
+                inputFingerprint: planningSnapshot.inputFingerprint,
+                outputFingerprint: planningSnapshot.outputFingerprint,
+              ),
+            );
+            try {
+              await profileTrace.measure('build-plan-state-write', () async {
+                final workspace = fastPathWorkspace!;
+                final state = await planningSnapshot.capturePlanningState(
+                  workspace,
+                );
+                await _GenerationBuildPlanner.writeSnapshot(
+                  workspace: workspace,
+                  state: state,
+                );
+              });
+            } on Object {
+              if (parsed.profile) {
+                _commandStdout.writeln(
+                  'CCRouter profile build-plan-state=write-failed; '
+                  'future runs will conservatively use runBuilder.',
+                );
+              }
+            }
           }
         }
       }

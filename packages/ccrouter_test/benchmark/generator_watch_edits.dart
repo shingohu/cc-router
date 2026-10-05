@@ -141,6 +141,11 @@ Future<void> main(List<String> arguments) async {
       'sdk': Platform.version,
       'platform': Platform.operatingSystem,
       'samplesPerScenario': sampleCount,
+      'planningStateMode':
+          Platform.environment['CCROUTER_DISABLE_SHARED_PLANNING_SNAPSHOT'] ==
+              '1'
+          ? 'legacySeparateWrites'
+          : 'sharedSnapshot',
       'initial': session!.initial.toJson(),
       'warmup': warmup,
       'scenarios': scenarioReports,

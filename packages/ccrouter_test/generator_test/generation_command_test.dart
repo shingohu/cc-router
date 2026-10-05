@@ -927,6 +927,7 @@ void probe() {
           'after-aggregation-input-barrier',
           'output-delta-scan',
           'check-restore',
+          'planning-snapshot-capture',
           'fast-path-manifest-write',
           'build-plan-state-write',
         ]),
@@ -938,6 +939,95 @@ void probe() {
         'ok',
       );
       expect(trace['outcome'], 'success');
+    },
+    timeout: const Timeout(Duration(minutes: 3)),
+  );
+
+  test(
+    'shared planning snapshot matches legacy state bytes',
+    () async {
+      final before = await _readDemoGeneratedArtifacts();
+      final optimized = await _generateDemo([
+        '--no-cache',
+        '--check',
+        '--profile',
+      ]);
+      expect(optimized.exitCode, 0, reason: '${optimized.stderr}');
+      final optimizedSpans =
+          (_profileDelta(optimized, 'trace')['spans'] as List)
+              .cast<Map<String, dynamic>>();
+      expect(
+        optimizedSpans.singleWhere(
+          (span) => span['name'] == 'planning-snapshot-capture',
+        )['status'],
+        'ok',
+      );
+      final optimizedManifest = _demoFastPathManifest().readAsBytesSync();
+      final optimizedPlan = _demoBuildPlanState().readAsBytesSync();
+
+      final reference = await _generateDemo(
+        ['--no-cache', '--check', '--profile'],
+        environment: {
+          ...Platform.environment,
+          'CCROUTER_DISABLE_SHARED_PLANNING_SNAPSHOT': '1',
+        },
+      );
+      expect(reference.exitCode, 0, reason: '${reference.stderr}');
+      final referenceSpans =
+          (_profileDelta(reference, 'trace')['spans'] as List)
+              .cast<Map<String, dynamic>>();
+      expect(
+        referenceSpans.singleWhere(
+          (span) => span['name'] == 'planning-snapshot-capture',
+        )['status'],
+        'skipped',
+      );
+      expect(
+        _demoFastPathManifest().readAsBytesSync(),
+        orderedEquals(optimizedManifest),
+      );
+      expect(
+        _demoBuildPlanState().readAsBytesSync(),
+        orderedEquals(optimizedPlan),
+      );
+      expect(await _readDemoGeneratedArtifacts(), before);
+    },
+    timeout: const Timeout(Duration(minutes: 5)),
+  );
+
+  test(
+    'shared planning snapshot isolates Build Plan state failures',
+    () async {
+      final before = await _readDemoGeneratedArtifacts();
+      final stateDirectory = _demoBuildPlanState().parent;
+      final backup = Directory('${stateDirectory.path}.failure-test-$pid');
+      expect(backup.existsSync(), isFalse);
+      stateDirectory.renameSync(backup.path);
+      final blocker = File(stateDirectory.path)
+        ..writeAsStringSync('Build Plan directory failure probe.\n');
+      try {
+        final result = await _generateDemo(['--no-cache', '--profile']);
+        expect(result.exitCode, 0, reason: '${result.stderr}');
+        expect('${result.stdout}', contains('build-plan-state=write-failed'));
+        final spans = (_profileDelta(result, 'trace')['spans'] as List)
+            .cast<Map<String, dynamic>>();
+        expect(
+          spans.singleWhere(
+            (span) => span['name'] == 'fast-path-manifest-write',
+          )['status'],
+          'ok',
+        );
+        expect(
+          spans.singleWhere(
+            (span) => span['name'] == 'build-plan-state-write',
+          )['status'],
+          'failed',
+        );
+        expect(await _readDemoGeneratedArtifacts(), before);
+      } finally {
+        if (blocker.existsSync()) blocker.deleteSync();
+        if (backup.existsSync()) backup.renameSync(stateDirectory.path);
+      }
     },
     timeout: const Timeout(Duration(minutes: 3)),
   );
@@ -1858,6 +1948,26 @@ File _demoBuildPlanState() {
       'ccrouter',
       'v1',
       'build_plans',
+    ),
+  );
+  return directory.listSync().whereType<File>().firstWhere((file) {
+    try {
+      final decoded = jsonDecode(file.readAsStringSync());
+      return decoded is Map && decoded['hostPackage'] == 'ccrouter_demo';
+    } on FormatException {
+      return false;
+    }
+  });
+}
+
+File _demoFastPathManifest() {
+  final directory = Directory(
+    path.join(
+      Directory.current.path,
+      '.dart_tool',
+      'ccrouter',
+      'v1',
+      'manifests',
     ),
   );
   return directory.listSync().whereType<File>().firstWhere((file) {

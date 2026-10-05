@@ -487,3 +487,31 @@ Analyzer/source_gen 失效处理，以及 generation cycle 的固定证明和状
 稳定为 7 个文件；最终受管产物指纹为
 `3d71ce6d5006aa92dfe4931505fc9cd6515ba2136e417b6371cabf346fb3b0fc`，逐字节恢复和
 `--no-cache --check` 均通过。该基线只用于同机 A/B，不是跨机器性能门槛。
+
+### 10.4 cycle 末尾 shared planning snapshot
+
+基线中 `fast-path-manifest-write` 与 `build-plan-state-write` 分别重新扫描 authored inputs、
+Package Index 和受管输出。新路径在 aggregation 成功后捕获一次 exact-content planning snapshot，
+由 fast-path manifest 和本机 Build Plan state 共同消费，再分别原子写入。它没有合并或跳过
+execution/aggregation input barrier、Validator、artifact snapshot、`--check` restore，也不改变
+Portable State 的显式 `prepare/publish` 语义。设置
+`CCROUTER_DISABLE_SHARED_PLANNING_SNAPSHOT=1` 可恢复两次独立扫描，供逐字节与耗时 A/B。
+
+同机 macOS arm64 / Dart 3.11.5，每种场景各 10 个 apply 样本：
+
+| 编辑场景 | shared wall P50/P95 | reference wall P50/P95 | shared aggregation P50/P95 | reference aggregation P50/P95 |
+| --- | ---: | ---: | ---: | ---: |
+| 仅注释 | 1532/1583ms | 1629/1717ms | 594/608ms | 704/744ms |
+| Widget body | 1542/1598ms | 1574/1660ms | 589/600ms | 698/717ms |
+| `initState` body | 1535/1603ms | 1662/1796ms | 590/601ms | 711/845ms |
+| 新增普通函数 | 1497/1567ms | 1651/1676ms | 589/596ms | 709/723ms |
+| Route annotation | 1636/1685ms | 1762/1848ms | 626/657ms | 753/803ms |
+
+10 样本采集时 shared cycle-end state path P50 约为 123–126ms，reference 的两次扫描 P50
+分别为 95–99ms 和 136–144ms。最终实现为保留 Build Plan failure isolation，将 shared facts
+捕获和 Build Plan 派生分别计时；最后一次权威检查分别为 112.9ms 和 21.0ms，manifest 原子写入
+为 0.25ms。Build Plan 本地状态失败只令后续运行保守执行完整 Builder。aggregation P50 稳定减少
+109–127ms，收益来自删除重复 I/O 与摘要计算，而不是猜测 Dart 语义。两侧都恢复原始源码，99 个
+受管产物的路径与字节完全相同，最终指纹仍为
+`3d71ce6d5006aa92dfe4931505fc9cd6515ba2136e417b6371cabf346fb3b0fc`，并通过
+`generate demo --no-cache --check`。

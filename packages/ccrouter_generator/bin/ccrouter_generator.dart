@@ -2727,12 +2727,25 @@ abstract final class _GenerationFastPath {
     final input = await _GenerationStateFingerprint.captureInput(workspace);
     if (input != expectedInputFingerprint) return;
     final output = await _GenerationStateFingerprint.captureOutput(workspace);
+    await writeSnapshot(
+      workspace: workspace,
+      inputFingerprint: input,
+      outputFingerprint: output,
+    );
+  }
+
+  /// Atomically records fingerprints captured by one shared planning snapshot.
+  static Future<void> writeSnapshot({
+    required CCPackageWorkspace workspace,
+    required String inputFingerprint,
+    required String outputFingerprint,
+  }) async {
     final payload = <String, Object?>{
       'schemaVersion': _schemaVersion,
       'generatorVersion': ccrouterPackageIndexGeneratorVersion,
       'hostPackage': workspace.host.name,
-      'inputFingerprint': input,
-      'outputFingerprint': output,
+      'inputFingerprint': inputFingerprint,
+      'outputFingerprint': outputFingerprint,
     };
     final contents =
         '${const JsonEncoder.withIndent('  ').convert({...payload, 'contentFingerprint': computeCCCanonicalJsonFingerprint(payload)})}\n';
@@ -2826,7 +2839,13 @@ Future<bool> _generationInputIsStable(
 /// Exact content digests for generation inputs and source-tree outputs.
 abstract final class _GenerationStateFingerprint {
   /// Captures authored sources, resolution state, and generator implementation.
-  static Future<String> captureInput(CCPackageWorkspace workspace) async {
+  static Future<String> captureInput(CCPackageWorkspace workspace) async =>
+      (await captureInputSnapshot(workspace)).fingerprint;
+
+  /// Captures the input digest and reusable exact-content planning facts.
+  static Future<_GenerationInputFingerprintSnapshot> captureInputSnapshot(
+    CCPackageWorkspace workspace,
+  ) async {
     final inputs = <String, List<int>>{};
     // Use the same source/dependency/tool identities as full external Package
     // verification. In particular, a mutable transitive Path dependency can
@@ -2873,7 +2892,10 @@ abstract final class _GenerationStateFingerprint {
     inputs['tool/dart-executable'] = utf8.encode(
       path.normalize(Platform.resolvedExecutable),
     );
-    return _digestEntries(inputs);
+    return _GenerationInputFingerprintSnapshot(
+      fingerprint: _digestEntries(inputs),
+      portable: portable,
+    );
   }
 
   /// Captures portable authored inputs for one resolved Package.
@@ -3021,6 +3043,20 @@ abstract final class _GenerationStateFingerprint {
     }
     return sha256.convert(bytes.takeBytes()).toString();
   }
+}
+
+/// One exact input proof with parsed facts reusable by local state capture.
+final class _GenerationInputFingerprintSnapshot {
+  const _GenerationInputFingerprintSnapshot({
+    required this.fingerprint,
+    required this.portable,
+  });
+
+  /// Digest compared by execution and aggregation barriers.
+  final String fingerprint;
+
+  /// Authored and resolution facts used to derive the digest.
+  final _CCPortableGenerationContext portable;
 }
 
 /// Classifies writable Packages whose aggregate output can be reused safely.

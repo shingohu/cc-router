@@ -190,6 +190,14 @@ abstract final class _GenerationBuildPlanner {
     final input = await _GenerationStateFingerprint.captureInput(workspace);
     if (input != expectedInputFingerprint) return;
     final state = await _GenerationPlanningState.capture(workspace);
+    await writeSnapshot(workspace: workspace, state: state);
+  }
+
+  /// Atomically records a planning state captured with the fast-path manifest.
+  static Future<void> writeSnapshot({
+    required CCPackageWorkspace workspace,
+    required _GenerationPlanningState state,
+  }) async {
     final payload = state.toJson();
     final document = <String, Object?>{
       ...payload,
@@ -362,23 +370,38 @@ final class _GenerationPlanningState {
 
   /// Captures the current workspace without retaining filesystem paths.
   static Future<_GenerationPlanningState> capture(
-    CCPackageWorkspace workspace,
-  ) async {
-    final resolution = await _GenerationResolutionPlanningContext.load(
-      workspace,
-    );
+    CCPackageWorkspace workspace, {
+    _GenerationInputFingerprintSnapshot? inputSnapshot,
+    Map<String, String?>? capturedIndexes,
+    Map<String, String?>? capturedOutputFingerprints,
+  }) async {
+    final resolution =
+        inputSnapshot?.portable.resolution ??
+        await _GenerationResolutionPlanningContext.load(workspace);
     final authored = <String, String>{};
-    final indexes = <String, String?>{};
-    for (final package in workspace.packages.values) {
-      if (package.writable) {
+    if (inputSnapshot == null) {
+      for (final package in workspace.packages.values) {
+        if (!package.writable) continue;
         authored[package.name] =
             await _GenerationStateFingerprint.capturePackageAuthoredInput(
               package,
             );
       }
-      indexes[package.name] = await _fileFingerprint(package.indexFile);
+    } else {
+      for (final package in workspace.packages.values) {
+        if (!package.writable) continue;
+        final fingerprint =
+            inputSnapshot.portable.authoredFingerprints[package.name];
+        if (fingerprint != null) authored[package.name] = fingerprint;
+      }
     }
     await resolution.addPathAuthoredFingerprints(authored);
+    final indexes =
+        capturedIndexes ??
+        <String, String?>{
+          for (final package in workspace.packages.values)
+            package.name: await _fileFingerprint(package.indexFile),
+        };
 
     final packageStates = <String, _GenerationPackagePlanningState>{};
     final names = workspace.packages.keys.toList()..sort();
@@ -396,7 +419,8 @@ final class _GenerationPlanningState {
         metadataFingerprint = (await readCCPackageMetadata(
           workspace.intermediateMetadataDirectory(package),
         )).fingerprint;
-        outputFingerprint = _GenerationStateFingerprint.digestEntries(
+        outputFingerprint = capturedOutputFingerprints?[name];
+        outputFingerprint ??= _GenerationStateFingerprint.digestEntries(
           await _GenerationStateFingerprint.capturePackageOutput(package),
         );
       }
@@ -488,6 +512,73 @@ final class _GenerationPlanningState {
       },
     };
   }
+}
+
+/// Exact cycle-end facts shared by the fast path and local Build Plan state.
+final class _GenerationPlanningSnapshot {
+  const _GenerationPlanningSnapshot({
+    required this.input,
+    required this.outputFingerprint,
+    required this.indexes,
+    required this.packageOutputFingerprints,
+  });
+
+  /// Full generation input facts captured after aggregation.
+  final _GenerationInputFingerprintSnapshot input;
+
+  /// Full generation input digest captured after aggregation.
+  String get inputFingerprint => input.fingerprint;
+
+  /// Full writable managed-output digest captured after aggregation.
+  final String outputFingerprint;
+
+  /// Exact Package Index digests captured with the input and output facts.
+  final Map<String, String?> indexes;
+
+  /// Exact writable managed-output digest by Package.
+  final Map<String, String?> packageOutputFingerprints;
+
+  /// Captures exact content once for both disposable state documents.
+  static Future<_GenerationPlanningSnapshot> capture(
+    CCPackageWorkspace workspace,
+  ) async {
+    final input = await _GenerationStateFingerprint.captureInputSnapshot(
+      workspace,
+    );
+    final indexes = <String, String?>{};
+    final packageOutputFingerprints = <String, String?>{};
+    final workspaceOutputs = <String, List<int>>{};
+    for (final package in workspace.packages.values) {
+      indexes[package.name] = await _fileFingerprint(package.indexFile);
+      if (!package.writable) continue;
+      final outputs = await _GenerationStateFingerprint.capturePackageOutput(
+        package,
+      );
+      packageOutputFingerprints[package.name] =
+          _GenerationStateFingerprint.digestEntries(outputs);
+      for (final entry in outputs.entries) {
+        workspaceOutputs['${package.name}/${entry.key}'] = entry.value;
+      }
+    }
+    return _GenerationPlanningSnapshot(
+      input: input,
+      outputFingerprint: _GenerationStateFingerprint.digestEntries(
+        workspaceOutputs,
+      ),
+      indexes: Map.unmodifiable(indexes),
+      packageOutputFingerprints: Map.unmodifiable(packageOutputFingerprints),
+    );
+  }
+
+  /// Derives disposable local state without rescanning shared file facts.
+  Future<_GenerationPlanningState> capturePlanningState(
+    CCPackageWorkspace workspace,
+  ) => _GenerationPlanningState.capture(
+    workspace,
+    inputSnapshot: input,
+    capturedIndexes: indexes,
+    capturedOutputFingerprints: packageOutputFingerprints,
+  );
 }
 
 /// One Package slice of the portable planning baseline.

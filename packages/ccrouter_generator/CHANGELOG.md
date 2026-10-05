@@ -24,3 +24,7 @@
   avoiding a fresh Dart/generator startup after every successful Builder cycle.
   `CCROUTER_DISABLE_WATCH_IN_PROCESS_CYCLE=1` restores the subprocess reference
   path for byte-for-byte and timing comparisons.
+- Reused one exact-content planning snapshot when publishing the local fast-path
+  manifest and Build Plan state, removing duplicate cycle-end scans while
+  retaining atomic writes and all input barriers. Set
+  `CCROUTER_DISABLE_SHARED_PLANNING_SNAPSHOT=1` for the reference path.

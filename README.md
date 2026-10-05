@@ -1230,6 +1230,11 @@ entrypoint 和恢复 CLI library graph；`aggregationSucceeded.cycleMode` 为 `i
 则只恢复旧 cycle planning 路径。两个 kill switch 均不关闭 watch，也不改变最终
 `--no-cache --check` 的权威性。
 
+成功 cycle 在发布本机 fast-path manifest 与 Build Plan state 前只捕获一次 exact-content
+planning snapshot，并由两个状态文件复用；两者仍分别原子写入。设置
+`CCROUTER_DISABLE_SHARED_PLANNING_SNAPSHOT=1` 可恢复各自独立扫描，用于逐字节和耗时 A/B；
+该开关不改变 input barrier、Validator、artifact snapshot 或最终 `--no-cache --check`。
+
 `--profile` 的 `input-delta` 对比上次成功的本机 Build Plan：`authored` 是自身源码/配置变化，
 `resolutionOnly` 是自身未变但解析身份变化，另列工具与 Host 图变化。它不证明具体依赖边或
 生成语义；没有两侧源码摘要的 Package 单列 `authoredUnavailable`，不据此推断源码未变。

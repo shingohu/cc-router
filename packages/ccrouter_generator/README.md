@@ -344,6 +344,9 @@ cycle 默认直接复用 watch 进程内的 generation kernel，不再为每轮�
 machine 事件通过 `aggregationSucceeded.cycleMode=inProcess` 明确该路径。设置
 `CCROUTER_DISABLE_WATCH_IN_PROCESS_CYCLE=1` 可恢复 `subprocessReference`，用于逐字节和耗时
 A/B；该开关不允许跳过快照、Validator、原子提交或最终 `--no-cache --check`。
+成功 cycle 的 fast-path manifest 与本机 Build Plan state 复用一次 exact-content planning
+snapshot，并继续分别原子写入。设置 `CCROUTER_DISABLE_SHARED_PLANNING_SNAPSHOT=1` 可恢复
+两个状态各自扫描的 reference 路径，用于逐字节和耗时 A/B；它不削弱任何输入屏障或最终门禁。
 
 生成主路径不会计算文件闭包 shadow，也不会为此扫描 Workspace Dart 文件。历史 shadow
 采样保留在性能报告中，仅作为 benchmark/tooling 研究数据；它不参与 Build Plan、Tool

@@ -816,6 +816,11 @@ The aggregation cycle reuses the watch process and reports
 `CCROUTER_DISABLE_WATCH_IN_PROCESS_CYCLE=1` restores the
 `subprocessReference` implementation; compare all managed artifact bytes and
 still finish with `--no-cache --check`.
+Successful cycles reuse one exact-content planning snapshot for the local
+fast-path manifest and Build Plan state. Set
+`CCROUTER_DISABLE_SHARED_PLANNING_SNAPSHOT=1` to restore separate scans for
+byte-for-byte or timing A/B; input barriers, validation, restoration, atomic
+writes, and the final `--no-cache --check` remain unchanged.
 
 The Build Plan separately reports `suggested` and `actual`. Only
 `actual=aggregateOnly` means build_runner was skipped, and that optimization is

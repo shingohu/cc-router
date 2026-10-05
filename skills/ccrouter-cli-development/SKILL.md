@@ -118,6 +118,12 @@ Missing either authored digest means `authoredUnavailable`, not equal source.
 No baseline means `unavailable`, not no change. A changed state file is not a
 changed business API; unchanged Dart does not prove unchanged docs/locations.
 Attribution never authorizes skipping Builder or rewriting Portable State.
+Successful cycles reuse one exact-content planning snapshot for the local
+fast-path manifest and Build Plan state. Use
+`CCROUTER_DISABLE_SHARED_PLANNING_SNAPSHOT=1` only for byte-for-byte or timing
+A/B against the separate-scan reference path; it does not disable input
+barriers, validation, artifact restoration, atomic state writes, or the final
+`--no-cache --check` authority.
 The Build Plan reports `suggested`, `actual`, and bounded `reasons`. Only
 `actual=aggregateOnly` means that this invocation skipped build_runner. P2
 allows a pure Host dependency-closure deletion when every remaining Builder

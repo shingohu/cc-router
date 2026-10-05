@@ -191,6 +191,7 @@ final class _CCPortableGenerationContext {
     required this.toolFingerprint,
     required this.authoredFingerprints,
     required this.resolutionFingerprints,
+    required this.resolution,
   });
 
   /// Exact generator implementation, SDK version, and tool resolution digest.
@@ -201,6 +202,9 @@ final class _CCPortableGenerationContext {
 
   /// Transitive portable resolution digest by Package name.
   final Map<String, String> resolutionFingerprints;
+
+  /// Parsed resolution facts reused by local planning within one cycle.
+  final _GenerationResolutionPlanningContext resolution;
 
   /// Captures all current Package sources instead of trusting source type.
   static Future<_CCPortableGenerationContext> capture(
@@ -257,6 +261,7 @@ final class _CCPortableGenerationContext {
           ),
       authoredFingerprints: Map.unmodifiable(authored),
       resolutionFingerprints: Map.unmodifiable(resolutionFingerprints),
+      resolution: resolution,
     );
   }
 }
