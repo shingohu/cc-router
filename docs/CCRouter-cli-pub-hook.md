@@ -12,7 +12,7 @@ Package 直接声明 `ccrouter`，并且解析图同时包含 `ccrouter` 与
 `ccrouter_generator` 时，才运行一次：
 
 ```bash
-dart run --verbosity=error ccrouter_generator:ccrouter generate <project-root> --profile
+dart run --verbosity=error ccrouter_generator:ccrouter generate <project-root>
 ```
 
 因此普通 Flutter 项目和仅聚合成员的 Workspace 根不会触发生成，也不会因为没有
@@ -83,7 +83,7 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook uninstall
    `pubspec.yaml`。
 4. 没有 resolved Package config、当前 Package 没有直接声明 `ccrouter`，或解析图没有
    同时包含 `ccrouter` 与 `ccrouter_generator` 时，打印跳过原因并返回成功。
-5. 成功时只打印 fast-path、验证摘要、阶段耗时和总耗时；生成器失败时打印最近
+5. 成功时只打印 fast-path、验证摘要和总耗时；生成器失败时打印最近
    200 行且最多 64 KiB 的有界日志并返回非零，使 CI 能发现生成物过期或元数据错误，
    同时避免长时间 Builder 输出造成控制台刷屏或内存无界增长。
 
@@ -110,6 +110,9 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook uninstall
    `generate <host> --watch=auto --machine`，日志写到
    `.dart_tool/ccrouter/v1/watch/flutter-run.log`；原始 Flutter 进程退出时删除 lease 并终止
    watch。启动时 stderr 会输出 watch PID、状态文件和日志路径；`flutter build` 不启动常驻进程。
+
+Hook 不默认采集详细 profile。遇到慢生成时，在独立终端显式运行 `generate <host> --profile`
+定位阶段耗时；性能 benchmark 或 AI 诊断也应显式传入该参数。
 
 后台 watch 会原子维护 `.dart_tool/ccrouter/v1/watch/status.json`。不需要把 watch NDJSON
 混入 Flutter Tool 的 machine stdout；另开终端读取即可：

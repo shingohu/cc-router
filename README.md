@@ -1144,7 +1144,7 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo --check
 # 禁用 metadata 缓存，验证参考全量路径
 fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo --no-cache
 
-# 输出阶段耗时、Builder 目标、缓存命中率和 dirty 传播原因
+# 耗时过长时再输出阶段耗时、Builder 目标、缓存命中率和 dirty 传播原因
 fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo --profile
 
 # 本地/AI 开发：常驻 build_runner watch；stdout 为 NDJSON 事件
@@ -1200,7 +1200,8 @@ Route API 和 Package/Host metadata。跨组件 Route 不能直接由脚手架�
 普通 `generate` 会在持有生成锁后校验版本化 manifest。只有 authored Dart 源码、Pub graph、
 生成器与 Dart SDK identity、外部 Package Index 及全部 CCRouter 受管输出的内容摘要完全一致时，
 才跳过 build_runner 和聚合；任一缺失、损坏或变化都会自动回退完整生成。该路径不依赖 mtime
-或文件大小。`--no-cache` 始终绕过 fast path，是生成正确性的权威参考路径；`--profile` 会明确
+或文件大小。普通生成只额外输出最终总耗时；`--no-cache` 始终绕过 fast path，是生成正确性的
+权威参考路径。需要诊断慢生成时再传 `--profile`，它会明确
 报告 `fast-path=hit/miss`。miss 时还会输出 `build-targets` 和逐 Package 的
 `dirty-packages` 原因；`dirty` 是 build_runner 完成后的聚合复用判断，不表示 Builder 只分析
 这些 Package。
@@ -1227,7 +1228,11 @@ metadata、Package Index identity 与 Host graph 等聚合输入。它永远不�
 输入屏障、快照恢复、Validator、聚合、原子写入和本地 planning state 提交。失败轮次不会发布
 半成品。`--machine` 令 stdout 仅输出 schema `1` NDJSON 事件，适合
 AI Agent 等待 `ready`、`aggregationSucceeded`、`failed` 和 `stopped`，build_runner 详情写入
-stderr。`buildSucceeded.buildRunner` 同时提供结构化 `formatVersion: 1` 诊断：每个 Builder
+stderr。默认事件保留 Builder 与聚合最终耗时；性能测试或慢任务诊断显式追加 `--profile` 后，
+build_runner 才启用 `--verbose-durations`，且 `aggregationSucceeded.profile` 才包含完整 cycle
+trace。默认 `build` 是 CCRouter 观测的端到端耗时，精细的 `build_runner` 上游耗时仅在 Profile
+模式可用。`buildSucceeded.buildRunner` 始终提供
+结构化 `formatVersion: 1` 诊断：每个 Builder
 phase 的 `durationMs`、`inputs`、`skipped`、`invalidatedInputs`、`executedInputs`、`outputs`、
 `sameOutputs`、`noOp` 和已达到 build_runner 报告阈值的 activity 耗时。它只解析上游正式
 console 格式，不读取 private Asset Graph；无法识别的终态保留在有界 `unparsedFinalLines`，
@@ -1350,7 +1355,7 @@ one-shot preflight。watch 启动时 stderr 会打印 PID、状态文件和完�
 SDK 切换后 `status` 应显示 `run/build preflight: enabled` 和
 `run watch: enabled`。
 `run/build` 成功时控制台使用 `CCRouter preflight`，Pub 后生成使用
-`CCRouter post-pub generation`；成功只保留 fast-path、验证摘要与阶段耗时，失败则输出最近
+`CCRouter post-pub generation`；成功只保留 fast-path、验证摘要与最终总耗时，失败则输出最近
 200 行且最多 64 KiB 的 Generator 日志，避免长构建刷屏或无界缓存，同时保留可操作错误。
 SDK 切换或升级后需要重新检查 `pub-hook status`。详细语义见
 [`docs/CCRouter-cli-pub-hook.md`](docs/CCRouter-cli-pub-hook.md)。

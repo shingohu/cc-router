@@ -388,7 +388,6 @@ Future<bool> runCCPubHook({
     'ccrouter_generator:ccrouter',
     'generate',
     root.path,
-    '--profile',
   ], workingDirectory: root.path);
   final output = _CCPubHookOutput();
   final stdoutDone = process.stdout
@@ -532,7 +531,6 @@ final class _CCPubHookOutput {
 
   /// Recognizes concise, version-stable generator completion messages.
   bool _isSummary(String line) =>
-      line.startsWith('CCRouter profile ') ||
       line.startsWith('Validated ') ||
       line == 'CCRouter generated artifacts are up to date.' ||
       line.startsWith('CCRouter generation fast path hit;') ||

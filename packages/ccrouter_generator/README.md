@@ -266,7 +266,8 @@ build_runner，也不修改生成物。查询是大小写敏感的精确 Route I
 分别建议 `serviceDependencies`/`commandDependencies`；Event 建议 top-level Subscription 而不是
 虚构 `eventDependencies`；InitTask 建议任务 `dependsOn`，不生成业务调用 Client。
 
-大型工程可以观察分阶段耗时和缓存命中率，或强制走无缓存参考路径：
+普通生成默认只额外输出最终总耗时。大型工程在耗时异常时可以显式观察分阶段耗时和缓存
+命中率，或强制走无缓存参考路径：
 
 ```sh
 fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo --profile
@@ -345,6 +346,10 @@ aggregation 消费的默认常量允许只改变 Builder Dart，Package dependen
 Analyzer graph。每次 Builder 成功后先验证 exact-content fast path；未命中时仍走完整
 CCRouter 校验、聚合、快照与原子提交；
 `--machine` 将 stdout 限定为 schema `1` NDJSON，普通 build_runner 日志走 stderr。
+默认事件保留 Builder 与聚合最终耗时；只有显式追加 `--profile` 时，
+build_runner 才启用 `--verbose-durations`，且 `aggregationSucceeded.profile` 才携带完整 cycle
+trace。默认 `build` 是 CCRouter 观测的端到端耗时，精细的 `build_runner` 上游耗时仅在 Profile
+模式可用。性能 benchmark 和 AI 慢任务诊断应显式使用该参数，不根据调用者身份隐式开启。
 `buildSucceeded.buildRunner` 和 Builder 阶段失败事件中的同名字段额外携带结构化
 `formatVersion: 1` 诊断，包含每个 phase 的耗时、inputs、skipped、not-triggered、
 invalidated/executed input、new/same/no-op output 和达到上游阈值的 activity 耗时。该统计仅解析

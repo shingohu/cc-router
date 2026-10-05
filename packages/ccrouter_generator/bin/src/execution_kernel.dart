@@ -108,11 +108,11 @@ Future<_GenerationCycleResult> _runGenerationCycle({
           rootPath: root.path,
           outputDirectoryPath: null,
           generateComponentRegistrars: true,
-          profile: true,
+          profile: parsed.profile,
         )
       : parsed;
   final cycleWatch = watchCycle ? (Stopwatch()..start()) : invocationWatch;
-  final cycleTrace = watchCycle
+  final cycleTrace = watchCycle && parsed.profile
       ? _GenerationProfileTrace(cycleWatch)
       : invocationTrace;
   final outputBuffer = captureOutput ? StringBuffer() : null;

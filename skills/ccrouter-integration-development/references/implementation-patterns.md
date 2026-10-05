@@ -797,7 +797,10 @@ build_runner's AOT entrypoint and Analyzer graph alive for one resolved build
 root. Its stdout is schema `1` NDJSON; `buildSucceeded` only closes the Builder
 phase, while `aggregationSucceeded` closes CCRouter validation and atomic
 publication. `ready` means the initial cycle completed. Builder diagnostics stay
-on stderr. `buildSucceeded.buildRunner` also reports structured per-phase
+on stderr. Default events retain final build and aggregation timings; add
+`--profile` explicitly for benchmarks or slow-run diagnosis when the complete
+cycle trace and build_runner verbose durations are needed.
+`buildSucceeded.buildRunner` also reports structured per-phase
 duration, inputs, skipped/not-triggered, inferred invalidated inputs, executed
 inputs, new/same/no-op outputs, and thresholded activities. These are
 diagnostic public-counter interpretations, not private Asset Graph access or a

@@ -178,8 +178,9 @@ workspace:
         preflightOutput,
         contains('CCRouter preflight started for `flutter run`.'),
       );
-      expect(preflightOutput, contains('CCRouter profile '));
+      expect(preflightOutput, isNot(contains('CCRouter profile ')));
       expect(preflightOutput, contains('CCRouter preflight finished:'));
+      expect(preflightOutput, matches(RegExp(r'elapsed=\d+ms\.')));
       expect(preflightOutput, isNot(contains('CCRouter pub hook started')));
       expect(preflightOutput, isNot(contains('Generating Package artifacts')));
       expect(

@@ -46,6 +46,7 @@ Future<void> _runGenerationWatch({
       buildRoot: buildContext.root,
       watchCycle: false,
       lockHeld: false,
+      profile: parsed.profile,
     );
     await events.emit(
       fallback.succeeded ? 'succeeded' : 'failed',
@@ -150,7 +151,7 @@ Future<void> _runGenerationWatch({
     );
     final arguments = <String>[
       ...command.arguments,
-      '--verbose-durations',
+      if (parsed.profile) '--verbose-durations',
       if (buildContext.workspace) '--workspace',
       for (final package in targets) ...[
         '--build-filter',
@@ -299,6 +300,7 @@ Future<void> _runGenerationWatch({
               buildRoot: buildContext.root,
               watchCycle: true,
               lockHeld: true,
+              profile: parsed.profile,
             )
           : await runInProcessCycle();
       await events.emit(
@@ -408,6 +410,7 @@ Future<_GenerationCycleResult> _runWatchGenerationSubprocess({
   required Directory buildRoot,
   required bool watchCycle,
   required bool lockHeld,
+  required bool profile,
 }) async {
   final stopwatch = Stopwatch()..start();
   final environment = <String, String>{...Platform.environment};
@@ -426,7 +429,7 @@ Future<_GenerationCycleResult> _runWatchGenerationSubprocess({
       directEntrypoint.path,
     'generate',
     hostRoot.path,
-    '--profile',
+    if (profile) '--profile',
   ];
   final result = await Process.run(
     Platform.resolvedExecutable,

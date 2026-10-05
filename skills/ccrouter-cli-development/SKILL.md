@@ -84,7 +84,10 @@ Custom `--output-dir` catalogs also participate in comparison and rollback,
 including docs/build directories. Only the explicit current/legacy catalog
 files are owned; neighboring files stay untouched. Check output must remain
 inside the build root.
-Use `--profile` only to investigate generation performance. On a miss, distinguish
+Ordinary one-shot generation prints only its final elapsed time. Use `--profile`
+only to investigate generation performance. Benchmarks and AI performance
+diagnostics must pass it explicitly; never infer an AI caller from environment
+or terminal heuristics. On a miss, distinguish
 `build-targets` from the post-build `dirty-packages` reuse set and use the reported
 reason (`cache-missing`, `metadata`, `output`, `dependency-index`, or
 `propagated-from`) before changing cache behavior. Never remove caches just to
@@ -92,7 +95,11 @@ make an ordinary generation run pass.
 Use `--watch=auto --machine` for a long-lived local or AI development session.
 Consume its schema `1` NDJSON stdout and keep stderr as diagnostic text. A
 successful Builder event is not final until `aggregationSucceeded`; wait for
-`ready` before relying on the initial result. Set
+`ready` before relying on the initial result. Default events retain final build
+and aggregation timings; add `--profile` explicitly when a benchmark or slow
+run needs build_runner verbose durations and the complete cycle trace. Treat
+the default `build` value as CCRouter's end-to-end observation; the narrower
+upstream build_runner duration is profile-only. Set
 `CCROUTER_DISABLE_BUILD_WATCH=1` for the one-shot fallback. Watch owns one build
 root and holds its generation lock for the lease lifetime. Stop it before the
 final `--no-cache --check`; watch never replaces that authority.
@@ -223,7 +230,8 @@ a Host or used to guess one of its members.
 
 Successful run/build output is labeled `preflight`; successful Pub-triggered
 output is labeled `post-pub generation`. Success prints only the generator fast
-path, validation summary, and profile timings. Failure preserves the recent
+path, validation summary, and final elapsed time; Hook does not enable detailed
+profiling by default. Failure preserves the recent
 bounded generator tail so actionable Builder errors remain visible without
 unbounded buffering or routine console noise.
 

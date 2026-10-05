@@ -292,6 +292,9 @@ For a long-lived local or AI development session, use `generate <host-root>
 --watch=auto --machine`. Treat stdout as schema `1` NDJSON, wait for `ready`
 before the first consumer action, and require `aggregationSucceeded` rather
 than only `buildSucceeded` after changes. Keep stderr as diagnostic text.
+Default events retain final build and aggregation timings. Add `--profile`
+explicitly for benchmarks or AI diagnosis of a slow run; only then require
+build_runner verbose durations and the complete cycle trace.
 When Flutter's Hook owns the background watch, use `watch status <host-root>`
 for one read-only snapshot or `watch follow <host-root>` for concise changes.
 The atomic local state is `.dart_tool/ccrouter/v1/watch/status.json`; complete

@@ -223,6 +223,10 @@ Future<void> main(List<String> arguments) async {
     captureOutput: false,
   );
   exitCode = generation.exitCode;
+  _commandStdout.writeln(
+    'CCRouter generation ${generation.succeeded ? 'finished' : 'failed'}: '
+    'elapsed=${generation.elapsedMs}ms.',
+  );
 }
 
 /// Executes an install, uninstall, status, or post-pub generation operation.
@@ -443,7 +447,7 @@ Future<int> _countExistingFiles(Iterable<Directory> directories) async {
 
 const _usage = '''Usage:
   ccrouter generate [scan-root] [--output-dir <directory>] [--check] [--no-cache] [--profile]
-  ccrouter generate [scan-root] --watch=auto [--machine]
+  ccrouter generate [scan-root] --watch=auto [--machine] [--profile]
   ccrouter watch status [host-root]
   ccrouter watch follow [host-root]
   ccrouter find <capability-id-or-route-pattern> [host-root] [--usage <component-id>]
@@ -471,9 +475,11 @@ const _usage = '''Usage:
 validates metadata and writes component indexes, Host assembly, and route docs.
 `--check` restores the original files and fails when generation would change a
 CCRouter-managed artifact. `--no-cache` forces the reference full-parse path.
-`--profile` reports phase timings, build targets, cache hits, and dirty reasons.
+Every one-shot generation reports its final elapsed time. `--profile` additionally
+reports phase timings, build targets, cache hits, and dirty reasons.
 `--watch=auto` keeps one build_runner watch process warm for the resolved build root
-and reruns CCRouter validation and aggregation after each successful build.
+and reruns CCRouter validation and aggregation after each successful build. Its
+detailed cycle trace is also opt-in through `--profile`.
 `--machine` emits newline-delimited JSON events and is available only with
 watch mode. Set CCROUTER_DISABLE_BUILD_WATCH=1 to execute one fallback
 generation and exit. Set CCROUTER_DISABLE_WATCH_IN_PROCESS_CYCLE=1 only to

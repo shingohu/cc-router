@@ -43,7 +43,22 @@ void main() {
         'fallback',
         'succeeded',
       ]);
-      expect(events.last['profile'], isA<Map>());
+      expect(events.last.containsKey('profile'), isFalse);
+
+      final profiled = await _run(
+        ['generate', 'demo', '--watch=auto', '--machine', '--profile'],
+        environment: {
+          ...Platform.environment,
+          'CCROUTER_DISABLE_BUILD_WATCH': '1',
+        },
+      );
+      expect(profiled.exitCode, 0, reason: '${profiled.stderr}');
+      final profiledEvents = const LineSplitter()
+          .convert('${profiled.stdout}')
+          .where((line) => line.trim().isNotEmpty)
+          .map((line) => jsonDecode(line) as Map<String, dynamic>)
+          .toList();
+      expect(profiledEvents.last['profile'], isA<Map>());
     },
     timeout: const Timeout(Duration(minutes: 2)),
   );
@@ -54,7 +69,7 @@ void main() {
       ProcessResult? activeStatus;
       Map<String, dynamic>? activeDocument;
 
-      await _runWatchUntilReady(
+      final watch = await _runWatchUntilReady(
         onReady: () async {
           activeStatus = await _run(['watch', 'status', 'demo']);
           activeDocument =
@@ -81,9 +96,11 @@ void main() {
       expect(activeDocument!['state'], 'ready');
       expect(activeDocument!['active'], isTrue);
       expect(activeDocument!['lastEvent'], 'ready');
-      expect(activeDocument!['lastBuildRunnerMs'], isA<int>());
+      expect(activeDocument!['lastBuildElapsedMs'], isA<int>());
+      expect(activeDocument!['lastBuildRunnerMs'], isNull);
       expect(activeDocument!['lastAggregationElapsedMs'], isA<int>());
       expect(activeDocument!['lastCycleMode'], 'inProcess');
+      expect(watch.aggregation.containsKey('profile'), isFalse);
 
       final stopped = await _run(['watch', 'status', 'demo']);
       expect(stopped.exitCode, 0, reason: '${stopped.stderr}');
@@ -97,10 +114,11 @@ void main() {
     'optimized and reference watch cycles publish identical artifacts',
     () async {
       final before = await _managedArtifacts();
-      final optimized = await _runWatchUntilReady();
+      final optimized = await _runWatchUntilReady(profile: true);
       final optimizedArtifacts = await _managedArtifacts();
       final optimizedPlanningState = await _localPlanningState();
       final outputEvidenceReference = await _runWatchUntilReady(
+        profile: true,
         environment: {
           ...Platform.environment,
           'CCROUTER_DISABLE_WATCH_OUTPUT_EVIDENCE_REUSE': '1',
@@ -109,6 +127,7 @@ void main() {
       final outputEvidenceReferenceArtifacts = await _managedArtifacts();
       final outputEvidenceReferencePlanningState = await _localPlanningState();
       final evidenceReference = await _runWatchUntilReady(
+        profile: true,
         environment: {
           ...Platform.environment,
           'CCROUTER_DISABLE_WATCH_EVIDENCE_REUSE': '1',
@@ -117,6 +136,7 @@ void main() {
       final evidenceReferenceArtifacts = await _managedArtifacts();
       final evidenceReferencePlanningState = await _localPlanningState();
       final reference = await _runWatchUntilReady(
+        profile: true,
         environment: {
           ...Platform.environment,
           'CCROUTER_DISABLE_WATCH_CYCLE_OPTIMIZATION': '1',
@@ -257,6 +277,7 @@ void main() {
         final seededArtifacts = await _managedArtifacts();
 
         final optimized = await _runWatchUntilReady(
+          profile: true,
           onReady: () async {
             source.writeAsStringSync(changedSource, flush: true);
           },
@@ -300,6 +321,7 @@ void main() {
         final referenceSeed = await _run(['generate', 'demo']);
         expect(referenceSeed.exitCode, 0, reason: '${referenceSeed.stderr}');
         final evidenceReference = await _runWatchUntilReady(
+          profile: true,
           environment: {
             ...Platform.environment,
             'CCROUTER_DISABLE_WATCH_EVIDENCE_REUSE': '1',
@@ -413,6 +435,7 @@ Future<_WatchRun> _runWatchUntilReady({
   Map<String, String>? environment,
   Future<void> Function()? onReady,
   int additionalAggregationCycles = 0,
+  bool profile = false,
 }) async {
   final leaseDirectory = Directory(
     path.join(
@@ -437,6 +460,7 @@ Future<_WatchRun> _runWatchUntilReady({
       'demo',
       '--watch=auto',
       '--machine',
+      if (profile) '--profile',
       '--watch-lease',
       lease.path,
     ],

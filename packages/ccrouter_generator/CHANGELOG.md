@@ -14,6 +14,9 @@
   build-target and per-Package dirty-reason diagnostics, and build_runner
   `--verbose-durations` forwarding without changing generation or cache
   invalidation behavior.
+- Made detailed profiling opt-in for direct generation, Pub Hook preflight, and
+  watch cycles. Default output retains only the final elapsed time; benchmarks
+  and diagnostic agents can request the complete trace with `--profile`.
 - Added `generate --watch=auto --machine`, a single-build-root build_runner
   watch path with NDJSON events, generation locking, artifact rollback, an
   emergency kill switch, and a Flutter-run lifecycle lease.

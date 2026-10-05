@@ -1246,7 +1246,7 @@ void probe() {
     timeout: const Timeout(Duration(minutes: 4)),
   );
 
-  test('generation without profile does not emit a timing trace', () async {
+  test('generation without profile emits only the final timing', () async {
     final result = await Process.run(Platform.resolvedExecutable, [
       'run',
       'ccrouter_generator:ccrouter',
@@ -1256,6 +1256,11 @@ void probe() {
     ], workingDirectory: Directory.current.path);
 
     expect(result.exitCode, 0, reason: '${result.stderr}');
+    expect(
+      '${result.stdout}',
+      matches(RegExp(r'CCRouter generation finished: elapsed=\d+ms\.')),
+    );
+    expect('${result.stdout}', isNot(contains('CCRouter profile total=')));
     expect('${result.stdout}', isNot(contains('CCRouter profile trace=')));
     expect('${result.stdout}', isNot(contains('CCRouter profile report=')));
   });
