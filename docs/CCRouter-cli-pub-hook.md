@@ -109,7 +109,21 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook uninstall
 6. `flutter run` 的 preflight 成功后，wrapper 在后台启动
    `generate <host> --watch=auto --machine`，日志写到
    `.dart_tool/ccrouter/v1/watch/flutter-run.log`；原始 Flutter 进程退出时删除 lease 并终止
-   watch。`flutter build` 不启动常驻进程。
+   watch。启动时 stderr 会输出 watch PID、状态文件和日志路径；`flutter build` 不启动常驻进程。
+
+后台 watch 会原子维护 `.dart_tool/ccrouter/v1/watch/status.json`。不需要把 watch NDJSON
+混入 Flutter Tool 的 machine stdout；另开终端读取即可：
+
+```bash
+fvm dart run --verbosity=error ccrouter_generator:ccrouter watch status <host-root>
+fvm dart run --verbosity=error ccrouter_generator:ccrouter watch follow <host-root>
+```
+
+`status` 显示活动状态、PID、轮次和最近 Builder/聚合耗时；`follow` 只输出简洁状态变化，
+完整诊断继续写入 `flutter-run.log`。状态文件是本地可观察性，不参与生成决策；写入失败仅警告，
+不会阻断生成锁、Builder、Validator、快照恢复或原子发布。若 watch 被强制终止而来不及写入
+`stopped`，只读命令会通过已释放的 owner lock 将遗留 `active` 记录显示为 `stale`；它不会
+回写历史 `status.json`。
 
 这不是对 Flutter Tool 内部隐式 `pub get` 的监听：wrapper 无法可靠观察内部 Dart 调用，
 也不会修改 `shared.sh`、Dart snapshot 或 Flutter Tool 源码。`run/build` 的前置生成只保证
@@ -175,7 +189,8 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter generate <host-root> 
 
 执行 `flutter run` 或 `flutter build macos` 时，若项目已经完成依赖解析，控制台会输出
 `CCRouter preflight started/finished`；生成失败时输出有界的最近 Generator 诊断且 Flutter
-命令不会继续执行。`ccrouter pub-hook status` 会额外显示
+命令不会继续执行。`flutter run` 还会输出 watch 的状态文件与日志路径；保存源码后可用
+`ccrouter watch follow <host-root>` 等待下一次成功状态。`ccrouter pub-hook status` 会额外显示
 `run/build preflight: enabled` 和 `run watch: enabled`。升级 SDK 或使用新的 FVM 版本后，如果状态显示
 `missing`，先卸载旧 wrapper 再重新安装，避免旧入口继续绕过前置生成。
 

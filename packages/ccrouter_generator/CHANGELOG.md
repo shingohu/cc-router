@@ -17,6 +17,10 @@
 - Added `generate --watch=auto --machine`, a single-build-root build_runner
   watch path with NDJSON events, generation locking, artifact rollback, an
   emergency kill switch, and a Flutter-run lifecycle lease.
+- Added atomically published local watch status plus read-only `watch status`
+  and `watch follow` commands. Flutter-run hooks print the status and log paths
+  without mixing watch NDJSON into Flutter Tool's machine stdout; status
+  publication remains fail-open and cannot fail generation.
 - Added diagnostic-only structured build_runner phase, activity, execution,
   and invalidation counters to watch build events and the real-edit benchmark.
   Unknown upstream formats remain bounded raw diagnostics and never affect

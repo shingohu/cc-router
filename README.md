@@ -1150,6 +1150,10 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo --profi
 # 本地/AI 开发：常驻 build_runner watch；stdout 为 NDJSON 事件
 fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo --watch=auto --machine
 
+# 人工确认 Hook/后台 watch 状态，或持续查看简洁状态变化
+fvm dart run --verbosity=error ccrouter_generator:ccrouter watch status demo
+fvm dart run --verbosity=error ccrouter_generator:ccrouter watch follow demo
+
 # Runtime/Service/Analytics/生成器性能与资源回收基准
 fvm dart run packages/ccrouter_test/benchmark/performance_regression.dart
 fvm dart run packages/ccrouter_test/benchmark/performance_regression.dart --full
@@ -1233,6 +1237,14 @@ CI 仍以 `generate <host> --no-cache --check` 为权威。一个活动 watch �
 `aggregationSucceeded`，不会无限阻塞；反过来已有 one-shot 正在执行或排队时，新 watch 也会快速失败。
 先停止 watch 再执行最终门禁。当前 MVP 只编排一个 build root；嵌套且
 拥有独立 Pub build root 的 Package Host 应各自启动 watch，不做跨 root 合并。
+后台 watch 会原子维护
+`.dart_tool/ccrouter/v1/watch/status.json`。`watch status <host>` 一次性显示活动状态、PID、
+轮次和最近 Builder/聚合耗时；`watch follow <host>` 只打印简洁状态变化，完整 build_runner
+输出继续保留在 `.dart_tool/ccrouter/v1/watch/flutter-run.log`，不会注入 Flutter Tool 的
+`--machine` stdout。状态发布属于 fail-open 可观察性：写入失败只警告并停止更新状态文件，
+不会改变生成锁、Builder、Validator、原子发布或最终参考门禁。若 watch 被强制终止而来不及
+写入 `stopped`，只读命令会根据已释放的 owner lock 将遗留 `active` 记录显示为 `stale`，
+但不会改写历史 `status.json`。
 Builder 成功后的 watch cycle 会直接进入已完成 Builder 的聚合路径，避免重复执行普通 fast-path
 inspection 与 Build Plan 推导，但仍保留 input fingerprint/barrier、preflight、快照、Validator、
 聚合和状态写入。聚合 cycle 默认在 watch 进程内执行，避免再次启动 Dart、加载 generator AOT
@@ -1333,7 +1345,9 @@ DAG；不存在统一的万能依赖列表或 InitTask 业务 Client。源码或
 因此 Workspace 聚合根不会被误判为 Host；Hook 不会猜测某个成员 Package 代替当前目录生成。
 它不覆盖 `dart pub`，也不监听 Flutter Tool 内部隐式 `pub get`。`flutter run` 在 preflight
 成功后会持有一个后台 watch lease，原始 Flutter 进程退出时释放；`flutter build` 仍只执行
-one-shot preflight。SDK 切换后 `status` 应显示 `run/build preflight: enabled` 和
+one-shot preflight。watch 启动时 stderr 会打印 PID、状态文件和完整日志路径；可用
+`ccrouter watch status <host>` 或 `ccrouter watch follow <host>` 验证保存后的生成轮次。
+SDK 切换后 `status` 应显示 `run/build preflight: enabled` 和
 `run watch: enabled`。
 `run/build` 成功时控制台使用 `CCRouter preflight`，Pub 后生成使用
 `CCRouter post-pub generation`；成功只保留 fast-path、验证摘要与阶段耗时，失败则输出最近

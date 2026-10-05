@@ -272,6 +272,8 @@ build_runner，也不修改生成物。查询是大小写敏感的精确 Route I
 fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo --profile
 fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo --no-cache
 fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo --watch=auto --machine
+fvm dart run --verbosity=error ccrouter_generator:ccrouter watch status demo
+fvm dart run --verbosity=error ccrouter_generator:ccrouter watch follow demo
 ```
 
 默认缓存只复用内容 SHA-256 完全一致的 metadata 解析结果；损坏、Schema/版本不兼容时自动
@@ -354,6 +356,12 @@ build_runner 正式 console 输出，不访问 private Asset Graph；未知终�
 迭代期应等待 machine stream 的 `aggregationSucceeded`。已有 one-shot 正在执行或等待时，新的
 watch 同样会快速失败，调用方可在命令完成后重试启动 watch。
 当前只支持单 build root，不合并嵌套 Package Host 的独立 Pub root。
+watch 会原子发布 `.dart_tool/ccrouter/v1/watch/status.json`；`watch status <host>` 读取一次
+当前状态，`watch follow <host>` 持续输出简洁状态变化。Hook 启动的完整 build_runner 日志仍在
+`.dart_tool/ccrouter/v1/watch/flutter-run.log`，不会污染 Flutter Tool 的 machine stdout。
+状态发布失败只警告并停止后续状态写入，不影响生成锁、Builder、Validator、快照恢复、原子发布
+或最终 `--no-cache --check`。watch 异常退出且未写入 `stopped` 时，只读命令会根据已释放的
+owner lock 将遗留 `active` 记录显示为 `stale`，但不会改写历史状态文件。
 Builder 成功后的 cycle 会跳过已无决策价值的普通 fast-path inspection 和 Build Plan 推导，
 但不跳过 input barrier、preflight、Validator、聚合、快照或状态写入。设置
 `CCROUTER_DISABLE_WATCH_CYCLE_OPTIMIZATION=1` 可恢复旧 cycle planning 路径做 A/B 对照。

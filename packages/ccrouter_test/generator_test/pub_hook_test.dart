@@ -32,11 +32,15 @@ void main() {
     expect(flutter.readAsStringSync(), contains('ccrouter_generator:ccrouter'));
     expect(flutter.readAsStringSync(), contains('--watch=auto'));
     expect(flutter.readAsStringSync(), contains('--watch-lease'));
+    expect(flutter.readAsStringSync(), contains('CCRouter watch starting'));
+    expect(flutter.readAsStringSync(), contains('status.json'));
     expect(
       flutterBat.readAsStringSync(),
       contains('ccrouter_generator:ccrouter'),
     );
     expect(flutterBat.readAsStringSync(), contains('--watch=auto'));
+    expect(flutterBat.readAsStringSync(), contains('CCRouter watch starting'));
+    expect(flutterBat.readAsStringSync(), contains('status.json'));
 
     final status = await _run(['pub-hook', 'status', '--sdk', sdk.path]);
     expect(status.exitCode, 0, reason: '${status.stderr}');
@@ -286,6 +290,7 @@ exit "\${CCROUTER_DART_EXIT:-0}"
       environment: environment,
     );
     expect(run.exitCode, 0, reason: '${run.stderr}');
+    expect('${run.stderr}', contains('CCRouter watch starting'));
     final runTrace = File(trace).readAsLinesSync();
     expect(
       runTrace.first,

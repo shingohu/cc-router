@@ -292,6 +292,14 @@ For a long-lived local or AI development session, use `generate <host-root>
 --watch=auto --machine`. Treat stdout as schema `1` NDJSON, wait for `ready`
 before the first consumer action, and require `aggregationSucceeded` rather
 than only `buildSucceeded` after changes. Keep stderr as diagnostic text.
+When Flutter's Hook owns the background watch, use `watch status <host-root>`
+for one read-only snapshot or `watch follow <host-root>` for concise changes.
+The atomic local state is `.dart_tool/ccrouter/v1/watch/status.json`; complete
+Hook diagnostics remain in `watch/flutter-run.log` and are never mixed into
+Flutter Tool's machine stdout. Failure to publish observational state does not
+fail or weaken generation. If an abrupt exit leaves an `active` record, the
+read-only commands report it as `stale` after the owner lock is released and do
+not rewrite the historical status file.
 `buildSucceeded.buildRunner` is diagnostic-only structured phase data. Its
 `invalidatedInputs` count is inferred from build_runner's public counters; it
 does not expose AssetIds, prove semantic output impact, or authorize skipping a

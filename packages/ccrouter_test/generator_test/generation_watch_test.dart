@@ -49,6 +49,51 @@ void main() {
   );
 
   test(
+    'watch publishes active and stopped local status',
+    () async {
+      ProcessResult? activeStatus;
+      Map<String, dynamic>? activeDocument;
+
+      await _runWatchUntilReady(
+        onReady: () async {
+          activeStatus = await _run(['watch', 'status', 'demo']);
+          activeDocument =
+              jsonDecode(
+                    File(
+                      path.join(
+                        Directory.current.path,
+                        'demo',
+                        '.dart_tool',
+                        'ccrouter',
+                        'v1',
+                        'watch',
+                        'status.json',
+                      ),
+                    ).readAsStringSync(),
+                  )
+                  as Map<String, dynamic>;
+        },
+      );
+
+      expect(activeStatus, isNotNull);
+      expect(activeStatus!.exitCode, 0, reason: '${activeStatus!.stderr}');
+      expect('${activeStatus!.stdout}', contains('watch status: active'));
+      expect(activeDocument!['state'], 'ready');
+      expect(activeDocument!['active'], isTrue);
+      expect(activeDocument!['lastEvent'], 'ready');
+      expect(activeDocument!['lastBuildRunnerMs'], isA<int>());
+      expect(activeDocument!['lastAggregationElapsedMs'], isA<int>());
+      expect(activeDocument!['lastCycleMode'], 'inProcess');
+
+      final stopped = await _run(['watch', 'status', 'demo']);
+      expect(stopped.exitCode, 0, reason: '${stopped.stderr}');
+      expect('${stopped.stdout}', contains('watch status: inactive'));
+      expect('${stopped.stdout}', contains('state: stopped'));
+    },
+    timeout: const Timeout(Duration(minutes: 3)),
+  );
+
+  test(
     'optimized and reference watch cycles publish identical artifacts',
     () async {
       final before = await _managedArtifacts();

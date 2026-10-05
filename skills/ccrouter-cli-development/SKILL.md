@@ -57,6 +57,8 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter generate <host-root> 
 fvm dart run --verbosity=error ccrouter_generator:ccrouter generate <host-root> --no-cache
 fvm dart run --verbosity=error ccrouter_generator:ccrouter generate <host-root> --profile
 fvm dart run --verbosity=error ccrouter_generator:ccrouter generate <host-root> --watch=auto --machine
+fvm dart run --verbosity=error ccrouter_generator:ccrouter watch status <host-root>
+fvm dart run --verbosity=error ccrouter_generator:ccrouter watch follow <host-root>
 fvm dart run --verbosity=error ccrouter_generator:ccrouter find <capability-id-or-route-pattern> <host-root>
 fvm dart run --verbosity=error ccrouter_generator:ccrouter find <capability-id-or-route-pattern> <host-root> --usage <consumer-component-id>
 fvm dart run --verbosity=error ccrouter_generator:ccrouter clean <host-root>
@@ -94,6 +96,15 @@ successful Builder event is not final until `aggregationSucceeded`; wait for
 `CCROUTER_DISABLE_BUILD_WATCH=1` for the one-shot fallback. Watch owns one build
 root and holds its generation lock for the lease lifetime. Stop it before the
 final `--no-cache --check`; watch never replaces that authority.
+For a wrapper-started background watch, use read-only `watch status <host-root>`
+for one snapshot or `watch follow <host-root>` for concise state changes. The
+watch atomically publishes `.dart_tool/ccrouter/v1/watch/status.json`; complete
+Hook diagnostics stay in `watch/flutter-run.log` and must not be copied into
+Flutter Tool's machine stdout. Status publication is fail-open observability:
+failure to update it never changes locking, Builder, validation, restoration,
+atomic artifact publication, or the final reference gate. If an abrupt exit
+leaves an `active` record, the read-only commands report it as `stale` once the
+owner lock is released; they do not rewrite the historical status file.
 One-shot generate, check, and clean commands fail fast when that root already
 has an active watch; wait for `aggregationSucceeded` during iteration, then
 stop the watch before the final reference gate. Do not retry the blocked command
@@ -225,7 +236,9 @@ not cover direct `dart pub` commands or Flutter Tool's internal implicit
 `pub get`. After a successful `flutter run` preflight it starts watch under a
 lifecycle lease and removes the lease when Flutter exits; `flutter build`
 remains one-shot. `run/build` preflight failures stop the Flutter command;
-projects without a resolved CCRouter graph are skipped.
+projects without a resolved CCRouter graph are skipped. The run wrapper prints
+the watch PID plus status/log paths to stderr so developers can observe the
+background process without corrupting Flutter Tool's stdout protocol.
 
 ## Generated Output Rules
 

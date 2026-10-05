@@ -28,6 +28,7 @@ part 'src/build_plan.dart';
 part 'src/aggregation_reuse.dart';
 part 'src/execution_kernel.dart';
 part 'src/generation_watch.dart';
+part 'src/generation_watch_status.dart';
 part 'src/generation_profile.dart';
 part 'src/portable_generation_state.dart';
 
@@ -67,6 +68,21 @@ Future<void> main(List<String> arguments) async {
     if (!await _verifyPortablePublish(Directory(parsed.rootPath).absolute)) {
       exitCode = 1;
     }
+    return;
+  }
+
+  if (parsed.command == _GeneratorCommand.watchStatus ||
+      parsed.command == _GeneratorCommand.watchFollow) {
+    final root = Directory(parsed.rootPath).absolute;
+    if (!root.existsSync()) {
+      _commandStderr.writeln('error: Host root does not exist: ${root.path}');
+      exitCode = 2;
+      return;
+    }
+    await _runGenerationWatchObservation(
+      root,
+      follow: parsed.command == _GeneratorCommand.watchFollow,
+    );
     return;
   }
 
@@ -428,6 +444,8 @@ Future<int> _countExistingFiles(Iterable<Directory> directories) async {
 const _usage = '''Usage:
   ccrouter generate [scan-root] [--output-dir <directory>] [--check] [--no-cache] [--profile]
   ccrouter generate [scan-root] --watch=auto [--machine]
+  ccrouter watch status [host-root]
+  ccrouter watch follow [host-root]
   ccrouter find <capability-id-or-route-pattern> [host-root] [--usage <component-id>]
   ccrouter clean [host-root]
   ccrouter portable prepare [host-root]
@@ -460,6 +478,9 @@ and reruns CCRouter validation and aggregation after each successful build.
 watch mode. Set CCROUTER_DISABLE_BUILD_WATCH=1 to execute one fallback
 generation and exit. Set CCROUTER_DISABLE_WATCH_IN_PROCESS_CYCLE=1 only to
 compare watch aggregation with the subprocess reference path.
+`watch status` reads the latest atomically published local watch state.
+`watch follow` prints concise state changes without mixing watch NDJSON into
+Flutter Tool's machine protocol. Both commands are read-only.
 `find` reads existing Package indexes without generating and matches exact
 capability IDs or Route Pattern values. `--usage` adds a read-only integration
 recipe for one existing consumer component; it never edits dependencies.
@@ -1650,6 +1671,12 @@ enum _GeneratorCommand {
 
   /// Verifies that explicitly portable Packages have publishable state.
   portablePublish,
+
+  /// Reads the latest local generation watch state.
+  watchStatus,
+
+  /// Streams concise local generation watch state changes.
+  watchFollow,
 }
 
 /// Parsed inputs shared by generation, aggregation, and read-only lookup.
@@ -1765,6 +1792,8 @@ _Arguments _parseArguments(List<String> arguments) {
     return _parseAnalyzerArguments(arguments);
   } else if (arguments.isNotEmpty && arguments.first == 'portable') {
     return _parsePortableArguments(arguments);
+  } else if (arguments.isNotEmpty && arguments.first == 'watch') {
+    return _parseWatchArguments(arguments);
   }
   var rootPath = Directory.current.path;
   String? outputDirectoryPath;
@@ -2015,6 +2044,47 @@ _Arguments _parseArguments(List<String> arguments) {
     watch: watch,
     machine: machine,
     watchLeasePath: watchLeasePath,
+  );
+}
+
+/// Parses read-only watch observation commands.
+_Arguments _parseWatchArguments(List<String> arguments) {
+  if (arguments.length < 2 ||
+      arguments[1] == '--help' ||
+      arguments[1] == '-h') {
+    return const _Arguments(
+      command: _GeneratorCommand.watchStatus,
+      rootPath: '',
+      outputDirectoryPath: null,
+      help: true,
+    );
+  }
+  final command = switch (arguments[1]) {
+    'status' => _GeneratorCommand.watchStatus,
+    'follow' => _GeneratorCommand.watchFollow,
+    _ => null,
+  };
+  if (command == null) {
+    return const _Arguments(
+      command: _GeneratorCommand.watchStatus,
+      rootPath: '',
+      outputDirectoryPath: null,
+      error: 'watch requires `status` or `follow`.',
+    );
+  }
+  if (arguments.length > 3 ||
+      (arguments.length == 3 && arguments[2].startsWith('-'))) {
+    return _Arguments(
+      command: command,
+      rootPath: '',
+      outputDirectoryPath: null,
+      error: 'watch ${arguments[1]} accepts one optional Host root.',
+    );
+  }
+  return _Arguments(
+    command: command,
+    rootPath: arguments.length == 3 ? arguments[2] : Directory.current.path,
+    outputDirectoryPath: null,
   );
 }
 

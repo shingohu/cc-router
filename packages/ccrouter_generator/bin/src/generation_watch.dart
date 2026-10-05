@@ -35,18 +35,19 @@ Future<void> _runGenerationWatch({
     machine: parsed.machine,
     buildRoot: buildContext.root,
     hostRoot: hostRoot,
+    leasePath: parsed.watchLeasePath,
   );
-  events.emit('starting', data: {'mode': 'auto'});
+  await events.emit('starting', data: {'mode': 'auto'});
 
   if (Platform.environment[_watchKillSwitch] == '1') {
-    events.emit('fallback', data: {'reason': 'kill-switch'});
+    await events.emit('fallback', data: {'reason': 'kill-switch'});
     final fallback = await _runWatchGenerationSubprocess(
       hostRoot: hostRoot,
       buildRoot: buildContext.root,
       watchCycle: false,
       lockHeld: false,
     );
-    events.emit(
+    await events.emit(
       fallback.succeeded ? 'succeeded' : 'failed',
       data: fallback.toEventData(),
     );
@@ -63,7 +64,10 @@ Future<void> _runGenerationWatch({
       workspace: buildContext.workspace,
     );
   } on Object catch (error) {
-    events.emit('failed', data: {'stage': 'workspace', 'error': '$error'});
+    await events.emit(
+      'failed',
+      data: {'stage': 'workspace', 'error': '$error'},
+    );
     exitCode = 1;
     return;
   }
@@ -76,7 +80,7 @@ Future<void> _runGenerationWatch({
           .toList()
         ..sort();
   if (targets.isEmpty) {
-    events.emit(
+    await events.emit(
       'failed',
       data: {
         'stage': 'target-resolution',
@@ -87,7 +91,7 @@ Future<void> _runGenerationWatch({
     return;
   }
   workspaceWatch.stop();
-  events.emit(
+  await events.emit(
     'targetsResolved',
     data: {
       'elapsedMs': workspaceWatch.elapsedMilliseconds,
@@ -115,7 +119,7 @@ Future<void> _runGenerationWatch({
   try {
     watchOwnership = await _GenerationWatchOwnership.acquire(buildContext.root);
   } on _GenerationWatchOwnershipConflictException catch (error) {
-    events.emit(
+    await events.emit(
       'failed',
       data: {'stage': 'watch-lock', 'error': error.message},
     );
@@ -127,7 +131,7 @@ Future<void> _runGenerationWatch({
     generationLock = await _GenerationLock.acquireForWatch(buildContext.root);
   } on Object catch (error) {
     await watchOwnership.release();
-    events.emit(
+    await events.emit(
       'failed',
       data: {'stage': 'generation-lock', 'error': '$error'},
     );
@@ -166,18 +170,21 @@ Future<void> _runGenerationWatch({
     } finally {
       await watchOwnership.release();
     }
-    events.emit('failed', data: {'stage': 'watch-start', 'error': '$error'});
+    await events.emit(
+      'failed',
+      data: {'stage': 'watch-start', 'error': '$error'},
+    );
     exitCode = 1;
     return;
   }
-  events.emit(
+  await events.emit(
     'watchStarted',
     data: {
       'elapsedMs': processWatch.elapsedMilliseconds,
       'protectionSnapshotMs': protectionWatch.elapsedMilliseconds,
     },
   );
-  events.emit('buildStarted', data: {'initial': true});
+  await events.emit('buildStarted', data: {'initial': true});
 
   final stop = Completer<void>();
   final signalSubscriptions = <StreamSubscription<ProcessSignal>>[];
@@ -237,7 +244,7 @@ Future<void> _runGenerationWatch({
       if (line.contains('Starting build #')) {
         buildRunnerPhases.reset();
         buildWatch = Stopwatch()..start();
-        events.emit('buildStarted', data: {'initial': false});
+        await events.emit('buildStarted', data: {'initial': false});
         continue;
       }
       final succeeded = line.contains(_buildRunnerSuccessPattern);
@@ -253,7 +260,7 @@ Future<void> _runGenerationWatch({
       final buildElapsed = buildWatch.elapsedMilliseconds;
       if (failed) {
         await cycleSnapshot.restore();
-        events.emit(
+        await events.emit(
           'failed',
           data: {
             'stage': 'build',
@@ -273,7 +280,7 @@ Future<void> _runGenerationWatch({
         continue;
       }
 
-      events.emit(
+      await events.emit(
         'buildSucceeded',
         data: {
           'initial': initialBuild,
@@ -283,7 +290,7 @@ Future<void> _runGenerationWatch({
           'protectionRestoreMs': restoreWatch.elapsedMilliseconds,
         },
       );
-      events.emit('aggregationStarted', data: {'initial': initialBuild});
+      await events.emit('aggregationStarted', data: {'initial': initialBuild});
       final usesSubprocessReference =
           Platform.environment[_watchInProcessCycleKillSwitch] == '1';
       final aggregation = usesSubprocessReference
@@ -294,7 +301,7 @@ Future<void> _runGenerationWatch({
               lockHeld: true,
             )
           : await runInProcessCycle();
-      events.emit(
+      await events.emit(
         aggregation.succeeded ? 'aggregationSucceeded' : 'failed',
         data: {
           'stage': 'aggregation',
@@ -309,7 +316,7 @@ Future<void> _runGenerationWatch({
         buildContext.root,
       );
       if (!readyEmitted && aggregation.succeeded) {
-        events.emit('ready');
+        await events.emit('ready');
         readyEmitted = true;
       }
       initialBuild = false;
@@ -333,7 +340,7 @@ Future<void> _runGenerationWatch({
     }
     if (processCode != 0 && !stop.isCompleted) {
       exitCode = 1;
-      events.emit(
+      await events.emit(
         'failed',
         data: {
           'stage': 'watch-exit',
@@ -342,7 +349,7 @@ Future<void> _runGenerationWatch({
         },
       );
     }
-    events.emit('stopped');
+    await events.emit('stopped');
   }
 }
 
@@ -480,23 +487,31 @@ final class _BuildRunnerWatchLine {
 }
 
 final class _GenerationWatchEvents {
-  const _GenerationWatchEvents({
+  _GenerationWatchEvents({
     required this.machine,
     required this.buildRoot,
     required this.hostRoot,
-  });
+    required String? leasePath,
+  }) : _status = _GenerationWatchStatusTracker(
+         hostRoot: hostRoot,
+         buildRoot: buildRoot,
+         leasePath: leasePath,
+       );
 
   final bool machine;
   final Directory buildRoot;
   final Directory hostRoot;
+  final _GenerationWatchStatusTracker _status;
 
-  void emit(String type, {Map<String, Object?> data = const {}}) {
+  Future<void> emit(String type, {Map<String, Object?> data = const {}}) async {
+    final timestamp = DateTime.now().toUtc().toIso8601String();
+    await _status.observe(type, timestamp: timestamp, data: data);
     if (machine) {
       _commandStdout.writeln(
         jsonEncode(<String, Object?>{
           'schemaVersion': 1,
           'type': type,
-          'timestamp': DateTime.now().toUtc().toIso8601String(),
+          'timestamp': timestamp,
           'buildRoot': buildRoot.path,
           'hostRoot': hostRoot.path,
           ...data,

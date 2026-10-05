@@ -807,6 +807,15 @@ watch through a wrapper-owned lease;
 `flutter build` stays one-shot. Use `CCROUTER_DISABLE_BUILD_WATCH=1` to fall
 back. The active watch holds the build root generation lock; stop it before
 running the final authoritative `--no-cache --check`.
+Wrapper-started watches atomically publish
+`.dart_tool/ccrouter/v1/watch/status.json`. Use read-only
+`watch status <host-root>` for a snapshot or `watch follow <host-root>` for
+concise state changes; keep complete diagnostics in `watch/flutter-run.log`
+instead of injecting watch NDJSON into Flutter Tool's machine stdout. This
+status channel is fail-open and never participates in generation correctness,
+locking, validation, artifact restoration, or atomic publication. If an abrupt
+exit leaves an `active` record, the read-only commands report it as `stale`
+after the owner lock is released without rewriting the historical status file.
 One-shot generate, check, and clean commands fail fast while the root watch is
 active. Iterative clients should wait for `aggregationSucceeded`; they must not
 poll a command that cannot own the lock. Watch startup also fails fast while a
