@@ -16,3 +16,7 @@
 - Removed redundant fast-path and Build Plan inspection after a successful
   watch Builder cycle while retaining all validation and input barriers; added
   `CCROUTER_DISABLE_WATCH_CYCLE_OPTIMIZATION` for reference-path comparison.
+- One-shot generation, check, and clean commands now fail with an actionable
+  diagnostic instead of waiting indefinitely behind an active root watch;
+  watch startup also fails fast while a one-shot command owns or awaits the
+  root generation lock.

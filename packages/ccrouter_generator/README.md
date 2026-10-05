@@ -333,6 +333,9 @@ CCRouter 校验、聚合、快照与原子提交；
 `--machine` 将 stdout 限定为 schema `1` NDJSON，普通 build_runner 日志走 stderr。
 设置 `CCROUTER_DISABLE_BUILD_WATCH=1` 可回退为一次 one-shot。watch 不替代最终的
 `--no-cache --check`；它在 lease 内持有 root generation lock，应先停止再运行最终门禁。
+同 root 的 one-shot generate、check 或 clean 会在检测到活动 watch 时快速失败，而不是无限等待锁；
+迭代期应等待 machine stream 的 `aggregationSucceeded`。已有 one-shot 正在执行或等待时，新的
+watch 同样会快速失败，调用方可在命令完成后重试启动 watch。
 当前只支持单 build root，不合并嵌套 Package Host 的独立 Pub root。
 Builder 成功后的 cycle 会跳过已无决策价值的普通 fast-path inspection 和 Build Plan 推导，
 但不跳过 input barrier、preflight、Validator、聚合、快照或状态写入。设置

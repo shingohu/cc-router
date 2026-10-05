@@ -94,6 +94,11 @@ successful Builder event is not final until `aggregationSucceeded`; wait for
 `CCROUTER_DISABLE_BUILD_WATCH=1` for the one-shot fallback. Watch owns one build
 root and holds its generation lock for the lease lifetime. Stop it before the
 final `--no-cache --check`; watch never replaces that authority.
+One-shot generate, check, and clean commands fail fast when that root already
+has an active watch; wait for `aggregationSucceeded` during iteration, then
+stop the watch before the final reference gate. Do not retry the blocked command
+in a polling loop. Starting watch while a one-shot command owns or awaits the
+root lock also fails fast; retry watch only after that command completes.
 After Builder success, watch skips only the redundant ordinary fast-path and
 Build Plan decision. It retains input barriers, preflight, snapshots,
 validation, aggregation, and local state writes. Set

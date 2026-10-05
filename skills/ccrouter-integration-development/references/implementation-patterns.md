@@ -801,6 +801,10 @@ on stderr. `flutter run` obtains the same watch through a wrapper-owned lease;
 `flutter build` stays one-shot. Use `CCROUTER_DISABLE_BUILD_WATCH=1` to fall
 back. The active watch holds the build root generation lock; stop it before
 running the final authoritative `--no-cache --check`.
+One-shot generate, check, and clean commands fail fast while the root watch is
+active. Iterative clients should wait for `aggregationSucceeded`; they must not
+poll a command that cannot own the lock. Watch startup also fails fast while a
+one-shot command owns or awaits that root.
 After a successful Builder cycle, watch skips only the ordinary fast-path and
 Build Plan decision that can no longer change whether Builder runs. Input
 fingerprints and barriers, dependency preflight, artifact snapshots, Workspace

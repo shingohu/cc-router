@@ -152,6 +152,9 @@ Future<void> main(List<String> arguments) async {
       if (!await _cleanResolvedWorkspace(root, buildContext)) {
         exitCode = 1;
       }
+    } on _GenerationWatchActiveException catch (error) {
+      stderr.writeln('error: ${error.message}');
+      exitCode = 1;
     } on CCPackageWorkspaceException catch (error) {
       stderr.writeln('error: ${error.message}');
       exitCode = 1;
@@ -522,6 +525,12 @@ Future<void> main(List<String> arguments) async {
       }
     }
     profileOutcome = 'success';
+  } on _GenerationWatchActiveException catch (error) {
+    if (snapshot != null) {
+      await profileTrace.measure('artifact-snapshot-restore', snapshot.restore);
+    }
+    stderr.writeln('error: ${error.message}');
+    exitCode = 1;
   } on CCPackageWorkspaceException catch (error) {
     if (snapshot != null) {
       await profileTrace.measure('artifact-snapshot-restore', snapshot.restore);
@@ -2652,14 +2661,34 @@ final class _BuildContext {
 
 /// Process-wide filesystem lock serializing generation for one build root.
 final class _GenerationLock {
-  /// Creates a held lock around [file].
-  const _GenerationLock._(this.file);
+  /// Creates a held lock around [file] and an optional watch [guard].
+  const _GenerationLock._(this.file, {this.guard});
 
   /// Open lock file whose exclusive lock remains held for this instance.
   final RandomAccessFile file;
 
+  /// Shared watch guard preventing a watch from racing a one-shot command.
+  final _GenerationWatchOwnership? guard;
+
   /// Waits for and acquires the versioned CCRouter generation lock.
   static Future<_GenerationLock> acquire(Directory buildRoot) async {
+    final guard = await _GenerationWatchOwnership.acquireShared(buildRoot);
+    try {
+      return await _acquire(buildRoot, guard: guard);
+    } on Object {
+      await guard.release();
+      rethrow;
+    }
+  }
+
+  /// Waits for the lock already owned conceptually by the active watch.
+  static Future<_GenerationLock> acquireForWatch(Directory buildRoot) =>
+      _acquire(buildRoot);
+
+  static Future<_GenerationLock> _acquire(
+    Directory buildRoot, {
+    _GenerationWatchOwnership? guard,
+  }) async {
     final lockFile = File(
       path.join(
         buildRoot.path,
@@ -2671,15 +2700,128 @@ final class _GenerationLock {
     );
     await lockFile.parent.create(recursive: true);
     final file = await lockFile.open(mode: FileMode.append);
-    await file.lock(FileLock.blockingExclusive);
-    return _GenerationLock._(file);
+    try {
+      await file.lock(FileLock.blockingExclusive);
+      return _GenerationLock._(file, guard: guard);
+    } on Object {
+      await file.close();
+      rethrow;
+    }
   }
 
-  /// Releases the exclusive lock and closes its file descriptor.
+  /// Releases the generation lock and its optional shared watch guard.
   Future<void> release() async {
-    await file.unlock();
-    await file.close();
+    try {
+      try {
+        await file.unlock();
+      } finally {
+        await file.close();
+      }
+    } finally {
+      await guard?.release();
+    }
   }
+}
+
+/// Owns the process-level marker that distinguishes a long-lived watch lock.
+final class _GenerationWatchOwnership {
+  /// Creates an acquired watch ownership around [file].
+  const _GenerationWatchOwnership._(this.file);
+
+  /// Open file whose non-blocking exclusive lock lives with the watch process.
+  final RandomAccessFile file;
+
+  /// Acquires exclusive watch ownership or reports an already active watch.
+  static Future<_GenerationWatchOwnership> acquire(Directory buildRoot) async {
+    return _acquire(
+      buildRoot,
+      FileLock.exclusive,
+      onConflict: () => _GenerationWatchOwnershipConflictException(buildRoot),
+    );
+  }
+
+  /// Acquires a one-shot shared guard or reports an active watch.
+  static Future<_GenerationWatchOwnership> acquireShared(
+    Directory buildRoot,
+  ) async {
+    return _acquire(
+      buildRoot,
+      FileLock.shared,
+      onConflict: () => _GenerationWatchActiveException(buildRoot),
+    );
+  }
+
+  static Future<_GenerationWatchOwnership> _acquire(
+    Directory buildRoot,
+    FileLock mode, {
+    required Exception Function() onConflict,
+  }) async {
+    final file = await _open(buildRoot);
+    try {
+      await file.lock(mode);
+      return _GenerationWatchOwnership._(file);
+    } on FileSystemException {
+      await file.close();
+      throw onConflict();
+    }
+  }
+
+  static Future<RandomAccessFile> _open(Directory buildRoot) async {
+    final lockFile = File(
+      path.join(
+        buildRoot.path,
+        '.dart_tool',
+        'ccrouter',
+        'v1',
+        'watch',
+        'owner.lock',
+      ),
+    );
+    await lockFile.parent.create(recursive: true);
+    return lockFile.open(mode: FileMode.append);
+  }
+
+  /// Releases watch ownership after the generation lock is no longer held.
+  Future<void> release() async {
+    try {
+      await file.unlock();
+    } finally {
+      await file.close();
+    }
+  }
+}
+
+/// Reports that a watch cannot start beside another root generation owner.
+final class _GenerationWatchOwnershipConflictException implements Exception {
+  /// Creates a neutral diagnostic because the existing owner may be either a
+  /// one-shot command or another watch.
+  _GenerationWatchOwnershipConflictException(Directory buildRoot)
+    : message =
+          'Another CCRouter generation command or watch owns '
+          '${buildRoot.path}. Wait for that command to finish or stop the '
+          'existing watch before starting a new watch.';
+
+  /// Actionable user-facing explanation without guessing the owner type.
+  final String message;
+
+  @override
+  String toString() => message;
+}
+
+/// Reports that a one-shot command cannot run beside an active root watch.
+final class _GenerationWatchActiveException implements Exception {
+  /// Creates a diagnostic for the conflicting [buildRoot].
+  _GenerationWatchActiveException(Directory buildRoot)
+    : message =
+          'An active CCRouter generation watch owns ${buildRoot.path}. '
+          'Stop the watch before running a one-shot generate, check, or clean '
+          'command; while it is active, wait for aggregationSucceeded instead.';
+
+  /// Actionable user-facing explanation without implementation details.
+  final String message;
+
+  @override
+  String toString() => message;
 }
 
 /// One content-addressed metadata cache entry.

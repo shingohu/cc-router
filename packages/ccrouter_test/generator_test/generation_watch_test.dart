@@ -79,10 +79,105 @@ void main() {
     },
     timeout: const Timeout(Duration(minutes: 5)),
   );
+
+  test(
+    'one-shot generation fails fast while the root watch is active',
+    () async {
+      ProcessResult? result;
+
+      await _runWatchUntilReady(
+        onReady: () async {
+          result = await _run([
+            'generate',
+            'demo',
+            '--check',
+          ]).timeout(const Duration(seconds: 30));
+        },
+      );
+
+      expect(result, isNotNull);
+      expect(result!.exitCode, 1);
+      expect('${result!.stderr}', contains('active CCRouter generation watch'));
+      expect('${result!.stderr}', contains('aggregationSucceeded'));
+    },
+    timeout: const Timeout(Duration(minutes: 3)),
+  );
+
+  test(
+    'watch fails fast while one-shot generation is waiting for the root lock',
+    () async {
+      final generationFile = await _lockFile(
+        'generation.lock',
+      ).open(mode: FileMode.append);
+      await generationFile.lock(FileLock.exclusive);
+      final oneShot = await Process.start(Platform.resolvedExecutable, [
+        _generatorEntrypoint,
+        'generate',
+        'demo',
+        '--check',
+      ], workingDirectory: Directory.current.path);
+      final oneShotOutput = utf8.decodeStream(oneShot.stdout);
+      final oneShotError = utf8.decodeStream(oneShot.stderr);
+      ProcessResult? watch;
+      try {
+        await _waitForOneShotWatchGuard();
+        watch = await _run([
+          'generate',
+          'demo',
+          '--watch=auto',
+          '--machine',
+        ]).timeout(const Duration(seconds: 30));
+      } finally {
+        await generationFile.unlock();
+        await generationFile.close();
+      }
+
+      final oneShotCode = await oneShot.exitCode.timeout(
+        const Duration(minutes: 2),
+      );
+      expect(
+        oneShotCode,
+        0,
+        reason: '${await oneShotError}\n${await oneShotOutput}',
+      );
+      expect(watch, isNotNull);
+      expect(watch.exitCode, 1);
+      expect('${watch.stdout}', contains('"stage":"watch-lock"'));
+      expect(
+        '${watch.stdout}',
+        contains('Another CCRouter generation command or watch owns'),
+      );
+    },
+    timeout: const Timeout(Duration(minutes: 3)),
+  );
 }
+
+Future<void> _waitForOneShotWatchGuard() async {
+  final deadline = DateTime.now().add(const Duration(seconds: 30));
+  while (DateTime.now().isBefore(deadline)) {
+    final probe = await _lockFile(
+      path.join('watch', 'owner.lock'),
+    ).open(mode: FileMode.append);
+    try {
+      await probe.lock(FileLock.exclusive);
+      await probe.unlock();
+    } on FileSystemException {
+      return;
+    } finally {
+      await probe.close();
+    }
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+  }
+  throw TimeoutException('one-shot command did not acquire its watch guard');
+}
+
+File _lockFile(String relative) => File(
+  path.join(Directory.current.path, '.dart_tool', 'ccrouter', 'v1', relative),
+);
 
 Future<_WatchRun> _runWatchUntilReady({
   Map<String, String>? environment,
+  Future<void> Function()? onReady,
 }) async {
   final leaseDirectory = Directory(
     path.join(
@@ -131,6 +226,11 @@ Future<_WatchRun> _runWatchUntilReady({
         if (event['type'] == 'ready' && !ready.isCompleted) {
           ready.complete(event);
         }
+        if (event['type'] == 'failed' && !ready.isCompleted) {
+          ready.completeError(
+            StateError('watch failed before ready: ${jsonEncode(event)}'),
+          );
+        }
         if (event['type'] == 'stopped' && !stopped.isCompleted) {
           stopped.complete(event);
         }
@@ -147,6 +247,7 @@ Future<_WatchRun> _runWatchUntilReady({
         'stderr:\n${errorLines.join('\n')}',
       ),
     );
+    await onReady?.call();
     await lease.delete();
     await stopped.future.timeout(const Duration(seconds: 10));
     expect(await process.exitCode, 0);
@@ -157,6 +258,7 @@ Future<_WatchRun> _runWatchUntilReady({
     );
   } finally {
     process.kill(ProcessSignal.sigterm);
+    if (lease.existsSync()) await lease.delete();
     await outputSubscription.cancel();
     await errorSubscription.cancel();
     if (leaseDirectory.existsSync() && leaseDirectory.listSync().isEmpty) {

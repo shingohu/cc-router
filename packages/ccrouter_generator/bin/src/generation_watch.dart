@@ -116,7 +116,29 @@ Future<void> _runGenerationWatch({
       'asset:$package/ccrouter_generated/**',
     ],
   ];
-  final generationLock = await _GenerationLock.acquire(buildContext.root);
+  late final _GenerationWatchOwnership watchOwnership;
+  try {
+    watchOwnership = await _GenerationWatchOwnership.acquire(buildContext.root);
+  } on _GenerationWatchOwnershipConflictException catch (error) {
+    events.emit(
+      'failed',
+      data: {'stage': 'watch-lock', 'error': error.message},
+    );
+    exitCode = 1;
+    return;
+  }
+  late final _GenerationLock generationLock;
+  try {
+    generationLock = await _GenerationLock.acquireForWatch(buildContext.root);
+  } on Object catch (error) {
+    await watchOwnership.release();
+    events.emit(
+      'failed',
+      data: {'stage': 'generation-lock', 'error': '$error'},
+    );
+    exitCode = 1;
+    return;
+  }
   var cycleSnapshot = await _GeneratedArtifactsSnapshot.capture(
     buildContext.root,
   );
@@ -129,7 +151,11 @@ Future<void> _runGenerationWatch({
       workingDirectory: buildContext.root.path,
     );
   } on Object catch (error) {
-    await generationLock.release();
+    try {
+      await generationLock.release();
+    } finally {
+      await watchOwnership.release();
+    }
     events.emit('failed', data: {'stage': 'watch-start', 'error': '$error'});
     exitCode = 1;
     return;
@@ -277,7 +303,11 @@ Future<void> _runGenerationWatch({
     await iterator.cancel();
     await lines.close();
     final processCode = await process.exitCode;
-    await generationLock.release();
+    try {
+      await generationLock.release();
+    } finally {
+      await watchOwnership.release();
+    }
     if (processCode != 0 && !stop.isCompleted) {
       exitCode = 1;
       events.emit(

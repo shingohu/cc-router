@@ -1217,7 +1217,9 @@ resolve、build、read/write 成本，但不属于 CCRouter trace schema。不�
 AI Agent 等待 `ready`、`aggregationSucceeded`、`failed` 和 `stopped`，build_runner 详情写入
 stderr。`CCROUTER_DISABLE_BUILD_WATCH=1` 会执行一次 one-shot 后退出。watch 是开发加速路径，
 CI 仍以 `generate <host> --no-cache --check` 为权威。一个活动 watch 会在 lease 生命周期内
-持有该 root 的 generation lock；先停止 watch 再执行最终门禁。当前 MVP 只编排一个 build root；嵌套且
+持有该 root 的 generation lock；同 root 的 one-shot generate/check/clean 会快速失败并提示等待
+`aggregationSucceeded`，不会无限阻塞；反过来已有 one-shot 正在执行或排队时，新 watch 也会快速失败。
+先停止 watch 再执行最终门禁。当前 MVP 只编排一个 build root；嵌套且
 拥有独立 Pub build root 的 Package Host 应各自启动 watch，不做跨 root 合并。
 Builder 成功后的 watch cycle 会直接进入已完成 Builder 的聚合路径，避免重复执行普通 fast-path
 inspection 与 Build Plan 推导，但仍保留 input fingerprint/barrier、preflight、快照、Validator、
