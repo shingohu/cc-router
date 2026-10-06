@@ -855,7 +855,9 @@ Wrapper-started watches atomically publish
 concise state changes; keep complete diagnostics in `watch/flutter-run.log`
 instead of injecting watch NDJSON into Flutter Tool's machine stdout. This
 wrapper prints its pre-Flutter starting and ready summaries to stdout so IDEs
-do not render it as an error; failures remain on stderr. This
+do not render it as an error; failures remain on stderr. The stdin gate closes
+the original Flutter Tool's stdin when its IDE/AI parent reaches EOF, preserving
+the direct process lifecycle instead of retaining an orphaned child. This
 status channel is fail-open for direct generation and never changes locking,
 validation, artifact restoration, or atomic publication. The Hook still fails
 closed when this channel cannot prove readiness for its exact lease. If an abrupt

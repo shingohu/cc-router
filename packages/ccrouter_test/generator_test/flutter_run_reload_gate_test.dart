@@ -201,6 +201,21 @@ void main() {
     expect(await output, isEmpty);
   });
 
+  test('machine proxy forwards parent stdin EOF to Flutter', () async {
+    final host = await _createHost();
+    addTearDown(() => host.delete(recursive: true));
+    final trace = File(path.join(host.path, 'machine-eof.txt'));
+    final original = await _fakeFlutterWaitingForEof(host, trace);
+    final process = await _startProxy(host, original);
+    final errors = process.stderr.transform(utf8.decoder).join();
+
+    await process.stdin.close();
+    final result = await process.exitCode.timeout(const Duration(seconds: 10));
+
+    expect(result, 0, reason: await errors);
+    expect(trace.readAsStringSync(), 'eof\n');
+  });
+
   test(
     'machine proxy returns daemon error and withholds failed reload',
     () async {
@@ -290,6 +305,17 @@ Future<File> _fakeFlutter(Directory host, File trace) async {
 IFS= read -r line
 printf "%s\\n" "\$line" > "${trace.path}"
 exit 0
+''');
+  final chmod = await Process.run('chmod', <String>['+x', file.path]);
+  expect(chmod.exitCode, 0, reason: '${chmod.stderr}');
+  return file;
+}
+
+Future<File> _fakeFlutterWaitingForEof(Directory host, File trace) async {
+  final file = File(path.join(host.path, 'fake-flutter-eof'));
+  file.writeAsStringSync('''#!/usr/bin/env bash
+cat >/dev/null
+printf "eof\\n" > "${trace.path}"
 ''');
   final chmod = await Process.run('chmod', <String>['+x', file.path]);
   expect(chmod.exitCode, 0, reason: '${chmod.stderr}');

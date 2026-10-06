@@ -160,7 +160,8 @@ terminal failure 快速栅栏，恢复旧的 fingerprint-only 失败判断与有
    保存对应的 `inputRevision`，且成功状态经过短暂稳定窗口。Builder/Validator/aggregation
    失败会以标准 daemon error 返回有界诊断。Host topology 变化发布
    `hotRestartRequired: true`，普通 Hot Reload 会被拒绝，显式 Hot Restart 经 daemon
-   `code=0` 确认后才解除当前 run session 的栅栏。
+   `code=0` 确认后才解除当前 run session 的栅栏。IDE/AI 关闭父 stdin 时，gate 同步关闭
+   原 Flutter Tool stdin，保留直接启动时的 EOF 退出语义。
 
 Hook 不默认采集详细 profile。遇到慢生成时，在独立终端显式运行 `generate <host> --profile`
 定位阶段耗时；性能 benchmark 或 AI 诊断也应显式传入该参数。

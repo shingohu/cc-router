@@ -271,6 +271,9 @@ final class CCFlutterMachineRunProxy {
           onError: (_) {
             process.kill();
           },
+          onDone: () {
+            unawaited(process.stdin.close());
+          },
         );
     final childExitCode = await process.exitCode;
     await inputSubscription.cancel();

@@ -1323,7 +1323,8 @@ Hot Reload：watch 为 authored Dart/config 保存发布单调 `inputRevision`�
 诊断，不会让第一次 reload 消费旧生成物。Host topology 变化会发布
 `hotRestartRequired: true`，普通 Hot Reload 被拒绝，须显式 Hot Restart；只有 daemon 确认
 restart 成功后，当前 run session 才继续接受 reload。该 gate 不改写或缓冲 Flutter stdout，
-仅透传解析与 Hot Restart 匹配的 daemon response，也不代理
+仅透传解析与 Hot Restart 匹配的 daemon response；IDE/AI 关闭 machine stdin 时，gate 会同步
+关闭原 Flutter Tool 的 stdin，使其按直接启动时相同的 EOF 生命周期退出。gate 不代理
 普通交互式终端 `r`；后者仍应先通过 `watch follow` 确认成功。设置
 `CCROUTER_DISABLE_HOT_RELOAD_GATE=1` 可只关闭 machine reload 协调，保留 preflight 和 watch。
 Workspace Validator 失败时，watch 还会独立原子发布
