@@ -225,6 +225,7 @@ final class CCFlutterMachineRunProxy {
     required this.flutterArguments,
     required this.hostRoot,
     this.watchLease,
+    this.abortSignal,
     Map<String, String>? environment,
   }) : environment = environment ?? Platform.environment;
 
@@ -239,6 +240,9 @@ final class CCFlutterMachineRunProxy {
 
   /// Optional wrapper-created lease owned for the child lifetime.
   final File? watchLease;
+
+  /// Optional supervisor failure that terminates the Flutter child.
+  final Future<void>? abortSignal;
 
   /// Process environment used for the kill switch and child launch.
   final Map<String, String> environment;
@@ -311,7 +315,15 @@ final class CCFlutterMachineRunProxy {
           },
         );
     try {
-      final childExitCode = await process.exitCode;
+      final childExitCode = abortSignal == null
+          ? await process.exitCode
+          : await Future.any<int>(<Future<int>>[
+              process.exitCode,
+              abortSignal!.then((_) async {
+                process.kill();
+                return process.exitCode;
+              }),
+            ]);
       if (heartbeatFailure != null) {
         stderr.writeln(
           'error: CCRouter Flutter-run watch lease heartbeat failed: '

@@ -80,6 +80,30 @@ void main() {
       first.sessionDocument(firstHost).parent.path,
       path.join(first.projectDirectory.path, 'sessions'),
     );
+    final firstLease = first.newFlutterRunLease(
+      firstHost,
+      ownerPid: 42,
+      nonce: 7,
+    );
+    final secondLease = first.newFlutterRunLease(
+      secondHost,
+      ownerPid: 42,
+      nonce: 7,
+    );
+    expect(
+      firstLease.parent.path,
+      path.join(
+        first.projectDirectory.path,
+        'leases',
+        first.hostIdentity(firstHost),
+      ),
+    );
+    expect(firstLease.path, isNot(secondLease.path));
+    expect(
+      path.isWithin(firstRoot.path, firstLease.path),
+      isFalse,
+      reason: 'a project clean must not delete a live Flutter-run lease',
+    );
 
     await first.prepare();
     final document =

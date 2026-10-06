@@ -8,7 +8,8 @@ Future<void> main(List<String> arguments) async {
   if (separator < 0) {
     stderr.writeln(
       'error: expected --host-root <path> --original <path> '
-      '--watch-lease <path> [--reload-gate] -- <flutter args>',
+      '(--launch-watch | --watch-lease <path>) [--reload-gate] '
+      '-- <flutter args>',
     );
     exitCode = 2;
     return;
@@ -16,11 +17,16 @@ Future<void> main(List<String> arguments) async {
   String? hostRoot;
   String? original;
   String? watchLease;
+  var launchWatch = false;
   var reloadGate = false;
   for (var index = 0; index < separator; index++) {
     final option = arguments[index];
     if (option == '--reload-gate') {
       reloadGate = true;
+      continue;
+    }
+    if (option == '--launch-watch') {
+      launchWatch = true;
       continue;
     }
     if ((option == '--host-root' ||
@@ -42,9 +48,12 @@ Future<void> main(List<String> arguments) async {
     exitCode = 2;
     return;
   }
-  if (hostRoot == null || original == null || watchLease == null) {
+  if (hostRoot == null ||
+      original == null ||
+      (launchWatch == (watchLease != null))) {
     stderr.writeln(
-      'error: --host-root, --original, and --watch-lease are required.',
+      'error: --host-root, --original, and exactly one of --launch-watch or '
+      '--watch-lease are required.',
     );
     exitCode = 2;
     return;
@@ -54,7 +63,8 @@ Future<void> main(List<String> arguments) async {
       originalFlutter: original,
       flutterArguments: arguments.sublist(separator + 1),
       hostRoot: Directory(hostRoot).absolute,
-      watchLease: File(watchLease).absolute,
+      watchLease: watchLease == null ? null : File(watchLease).absolute,
+      launchWatch: launchWatch,
       coordinateMachineReloads: reloadGate,
       environment: Platform.environment,
     ).run();

@@ -121,18 +121,12 @@ void main() {
         contains('CCROUTER_PUB_HOOK_NESTED_FLUTTER=1'),
       ),
     );
-    expect(flutter.readAsStringSync(), contains('--watch=auto'));
-    expect(flutter.readAsStringSync(), contains('--watch-lease'));
-    expect(flutter.readAsStringSync(), contains('CCRouter watch starting'));
-    expect(flutter.readAsStringSync(), contains('status.json'));
+    expect(flutter.readAsStringSync(), contains('--launch-watch'));
     expect(
       flutter.readAsStringSync(),
-      contains('ccrouter_generator:ccrouter_flutter_run_gate'),
+      contains('ccrouter_generator:ccrouter_flutter_run_supervisor'),
     );
-    expect(
-      flutter.readAsStringSync(),
-      contains('ccrouter_generator:ccrouter_watch_startup'),
-    );
+    expect(flutter.readAsStringSync(), contains('--reload-gate'));
     expect(
       flutterBat.readAsStringSync(),
       allOf(
@@ -168,7 +162,7 @@ void main() {
     expect('${status.stdout}', contains('clean guard: enabled'));
     expect('${status.stdout}', contains('machine reload gate: enabled'));
     expect('${status.stdout}', contains('watch startup handshake: enabled'));
-    expect('${status.stdout}', contains('Windows run supervisor: enabled'));
+    expect('${status.stdout}', contains('run supervisor: enabled'));
     expect('${status.stdout}', contains('dart pub post-hook: enabled'));
 
     final removed = await _run(['pub-hook', 'uninstall', '--sdk', sdk.path]);
@@ -1573,8 +1567,26 @@ exit 0
     final dart = File(path.join(bin.path, 'dart'))
       ..writeAsStringSync('''#!/usr/bin/env bash
 printf "dart:%s\\n" "\$*" >> "\$CCROUTER_TRACE"
-if [[ "\$*" == *"ccrouter_generator:ccrouter_watch_startup"* ]]; then
-  exit "\${CCROUTER_WATCH_HANDSHAKE_EXIT:-0}"
+if [[ "\$*" == *"ccrouter_generator:ccrouter_flutter_run_supervisor"* ]]; then
+  if [[ "\${CCROUTER_DISABLE_WATCH_STARTUP_HANDSHAKE:-0}" != "1" ]] && \
+     [[ "\${CCROUTER_WATCH_HANDSHAKE_EXIT:-0}" != "0" ]]; then
+    echo "error: CCRouter watch startup failed" >&2
+    exit "\${CCROUTER_WATCH_HANDSHAKE_EXIT}"
+  fi
+  echo "CCRouter watch starting (pid=123)."
+  ORIGINAL=""
+  while [[ "\$#" -gt 0 ]]; do
+    if [[ "\$1" == "--original" ]]; then
+      shift
+      ORIGINAL="\$1"
+    elif [[ "\$1" == "--" ]]; then
+      shift
+      break
+    fi
+    shift
+  done
+  "\$ORIGINAL" "\$@"
+  exit "\$?"
 fi
 exit "\${CCROUTER_DART_EXIT:-0}"
 ''');
@@ -1628,12 +1640,12 @@ exit "\${CCROUTER_DART_EXIT:-0}"
       machineTrace,
       contains(
         contains(
-          'ccrouter_generator:ccrouter_flutter_run_gate '
+          'ccrouter_generator:ccrouter_flutter_run_supervisor '
           '--host-root ',
         ),
       ),
     );
-    expect(machineTrace.where((line) => line.startsWith('flutter:')), isEmpty);
+    expect(machineTrace, contains('flutter:run --machine -d macos'));
 
     File(trace).writeAsStringSync('');
     final bypassedMachineRun = await Process.run(
@@ -1668,7 +1680,7 @@ exit "\${CCROUTER_DART_EXIT:-0}"
     expect(failedHandshake.exitCode, 9);
     expect(
       '${failedHandshake.stderr}',
-      contains('watch startup blocked flutter run'),
+      contains('CCRouter watch startup failed'),
     );
     expect(
       File(

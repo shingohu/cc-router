@@ -117,6 +117,26 @@ final class CCRouterCoordinationPaths {
   File get builderSessionDocument =>
       File(path.join(projectDirectory.path, 'builder-session.json'));
 
+  /// Stable lifecycle directory for Flutter runs owned by [hostRoot].
+  Directory flutterRunLeaseDirectory(Directory hostRoot) => Directory(
+    path.join(projectDirectory.path, 'leases', hostIdentity(hostRoot)),
+  );
+
+  /// Creates a unique stable lease path for one supervised Flutter run.
+  ///
+  /// The file is intentionally outside the project so `flutter clean` cannot
+  /// silently turn a live run into an unrelated lease-expiry event.
+  File newFlutterRunLease(
+    Directory hostRoot, {
+    required int ownerPid,
+    required int nonce,
+  }) => File(
+    path.join(
+      flutterRunLeaseDirectory(hostRoot).path,
+      'flutter-run-$ownerPid-$nonce.lease',
+    ),
+  );
+
   /// Full SHA-256 identity of one canonical Host root.
   String hostIdentity(Directory hostRoot) =>
       _identity(canonicalDirectoryIdentity(hostRoot.path));

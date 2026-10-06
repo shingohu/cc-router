@@ -150,15 +150,17 @@ terminal failure 快速栅栏，恢复旧的 fingerprint-only 失败判断与有
 4. 预生成失败会阻止原始 `flutter run/build`，避免启动或 Release 构建消费陈旧生成物。
 5. 没有 Package config、普通 Flutter 项目或还未完成首次 `pub get` 时安全跳过；后续
    `flutter pub get` 成功后会执行一次正常的 post-pub 生成。
-6. `flutter run` 的 preflight 成功后，wrapper 在后台启动
+6. `flutter run` 的 preflight 成功后，POSIX 与 Windows wrapper 都把生命周期交给同一个 Dart
+   supervisor，由它在后台启动
    `generate <host> --watch=auto --machine`，日志写到
-   `.dart_tool/ccrouter/v1/watch/flutter-run.log`；原始 Flutter 进程退出时删除 lease 并终止
+   `.dart_tool/ccrouter/v1/watch/flutter-run.log`；lease 写入 project/Host 隔离的
+   `CCROUTER_HOME` coordination 目录，原始 Flutter 进程退出时删除 lease 并终止
    watch。wrapper 不把进程 fork 当作启动成功：它等待同一 lease 的 `sessionReady`，并确认
    build root owner lock 仍被持有，随后才启动原 Flutter Tool。Dart/AOT 入口 30 秒内没有
    匹配状态，或初始 Builder/aggregation 5 分钟内没有到达 `ready`，都会 fail-closed。
    `watch starting` 和 `watch ready` 写 stdout，真实失败与完整日志路径写 stderr。
    `flutter build` 不启动常驻进程。
-   Windows wrapper 通过 Dart supervisor 继承终端启动原 Flutter Tool，并每秒刷新版本化
+   supervisor 继承终端启动原 Flutter Tool，并每秒刷新版本化
    lease heartbeat。正常退出、non-zero exit 和可处理的 Ctrl+C 会立即删除 lease；若 supervisor
    被强制终止而无法运行清理，watch 会在 5 秒无 heartbeat 后删除 stale lease 并退出。
 7. IDE/AI 使用的 `flutter run --machine` 由一个窄 stdin gate 启动原 Flutter Tool。它不改写
@@ -173,14 +175,15 @@ terminal failure 快速栅栏，恢复旧的 fingerprint-only 失败判断与有
 Hook 不默认采集详细 profile。遇到慢生成时，在独立终端显式运行 `generate <host> --profile`
 定位阶段耗时；性能 benchmark 或 AI 诊断也应显式传入该参数。
 
-后台 watch 的权威锁与 Host registration 位于用户级 `CCROUTER_HOME`：macOS/Linux 默认
+后台 watch 的权威锁、Host registration 与 Flutter-run lease 位于用户级 `CCROUTER_HOME`：macOS/Linux 默认
 `~/.ccrouter`，Windows 默认 `%LOCALAPPDATA%\CCRouter`。canonical build root 与 Host 分别使用
 完整 SHA-256 做两级隔离，并保存最小 Host/Builder session authority；
 `.dart_tool/ccrouter/v1/watch/status.json` 继续作为 Analyzer/IDE 本地观察镜像。活动 watch 会重建
 被删除的镜像，Pub Hook 优先读取 stable session，因此本地状态清理不会再变成 5 分钟等待或泛化
 generation-lock 错误。planning cache、Portable State 与 build_runner Asset Graph 仍只在项目内。
 启动发现仍被旧进程持有的 V1 owner lock 时会 fail-fast，需停止旧 watch 并重新安装 Pub Hook；
-`CCROUTER_USE_LEGACY_DART_TOOL_LOCKS=1` 只用于短期 A/B，不支持新旧协议并发。
+`CCROUTER_USE_LEGACY_DART_TOOL_LOCKS=1` 只用于短期 A/B，并会把 lease 恢复到 Host
+`.dart_tool`；不支持新旧协议并发。
 Wrapper 会在真正的 top-level `flutter clean` 前执行只读 clean guard。同 build root 存在活动
 watch 时，clean 会 fail-fast，并提示先停止 `flutter run/watch` 后重试；guard 不会主动杀进程。
 `--help`、未知全局 option 或参数值中的 `clean` 不会误触发。仅在明确恢复或 A/B 时设置

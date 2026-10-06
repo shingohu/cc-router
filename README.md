@@ -1273,7 +1273,7 @@ build_runner，各 Host 仍分别执行聚合、Validator、原子发布，并�
 `builderOwnerPid` 是共享 Builder owner，subscriber 场景下两者可以不同。owner 退出后，仍活动的
 subscriber 会接管并重新到达 `ready`；同一 Host 的第二个 watch 会在写共享状态前快速失败。
 `CCROUTER_DISABLE_MULTI_HOST_WATCH=1` 可恢复一个 build root 只允许一个 watch 的旧语义做 A/B。
-watch ownership、generation、aggregation、Host registration 以及最小 Host/Builder session
+watch ownership、generation、aggregation、Host registration、Flutter-run lease 以及最小 Host/Builder session
 authority 位于用户级
 `CCROUTER_HOME`；macOS/Linux 默认是 `~/.ccrouter`，Windows 默认是
 `%LOCALAPPDATA%\CCRouter`。每个 canonical build root 使用完整 SHA-256 项目目录，同一项目内再按
@@ -1286,7 +1286,8 @@ Pub Hook 优先读取 stable session，因此 Host 本地 watch 状态被清理�
 实际 coordination schema 和路径。
 若启动时检测到仍持有 V1 `.dart_tool` owner lock 的旧 CLI/watch，新版会 fail-fast，要求停止旧进程
 并重新安装 Pub Hook；不会尝试让两种协议静默并发。短期可设置
-`CCROUTER_USE_LEGACY_DART_TOOL_LOCKS=1` 做 A/B，该开关不承诺新旧进程互操作。
+`CCROUTER_USE_LEGACY_DART_TOOL_LOCKS=1` 做 A/B；它也会把 Flutter-run lease 恢复到 Host
+`.dart_tool`，但不承诺新旧进程互操作。
 已安装的 Flutter wrapper 还会在真正的 top-level `flutter clean` 前检查该 build root：活动 watch
 存在时直接阻止 clean，要求先停止 `flutter run/watch`，不会擅自终止开发会话。Help、未知全局
 参数和业务参数中的 `clean` 不触发检查。`CCROUTER_DISABLE_FLUTTER_CLEAN_GUARD=1` 可单次绕过
@@ -1337,7 +1338,9 @@ fail closed，并要求停止 watch 后运行 one-shot，供紧急回退和 A/B 
 取得 lease-bound readiness proof 时会拒绝启动 Flutter。若 watch 被强制终止而来不及
 写入 `stopped`，只读命令会根据已释放的 owner lock 将遗留 `active` 记录显示为 `stale`，
 但不会改写历史 `status.json`。
-Pub Hook 启动 `flutter run` 时不会把后台进程已经 fork 当成 watch 可用：wrapper 先等待同一
+Pub Hook 启动 `flutter run` 时不会把后台进程已经 fork 当成 watch 可用：POSIX 与 Windows
+wrapper 都把 watch 启动、stable lease heartbeat、readiness handshake、原 Flutter Tool 和退出
+清理交给同一个 Dart supervisor。supervisor 先等待同一
 lease 的 `sessionReady`，并确认 build root owner lock 仍被持有，随后才启动原 Flutter Tool。
 Dart/AOT 入口 30 秒内未发布匹配状态、初始 Builder/aggregation 5 分钟内未到达 `ready`、
 watch-lock 冲突、进程退出或结构化失败都会阻止 `flutter run`，并保留状态与日志路径。可用
@@ -1479,17 +1482,20 @@ wrapper 按已知 global option 的 arity 定位第一个真实 Flutter/Dart com
 执行 `cache/dart-sdk/bin/dart.exe` 则仍在边界之外，`status` 会明确显示该限制。它不监听
 Flutter Tool 内部隐式 `pub get`。`flutter run` 在 preflight
 成功后会持有一个后台 watch lease，原始 Flutter 进程退出时释放；`flutter build` 仍只执行
-one-shot preflight。wrapper 会先输出 `watch starting`，再以结构化状态和 owner lock 等待
+one-shot preflight。lease 位于 project/Host 隔离的 `CCROUTER_HOME` coordination 目录，不会因
+`flutter clean` 删除 Host `.dart_tool` 而先于 clean invalidation 消失。wrapper 会先输出
+`watch starting`，再以结构化状态和 owner lock 等待
 该 lease 的 `watch ready`；只有后者成功才启动 Flutter。两条正常提示都写入 stdout，避免 IDE
 将正常状态渲染为红色错误；其中包含 PID、状态文件和完整日志路径。可用
 `ccrouter watch status <host>` 或 `ccrouter watch follow <host>` 验证保存后的生成轮次。
-Windows wrapper 会用 Dart supervisor 继承终端启动原 Flutter Tool，并持续刷新版本化 lease
+POSIX 与 Windows wrapper 都用同一个 Dart supervisor 启动 watch、继承终端运行原 Flutter Tool，
+并持续刷新版本化 lease
 heartbeat；正常退出、non-zero exit 和可处理的 Ctrl+C 都会释放 lease。即使 supervisor 被强制
 终止、无法执行清理，watch 也会在 heartbeat 过期后停止，避免后台进程长期残留。可用
 `CCROUTER_DISABLE_WINDOWS_RUN_SUPERVISOR=1` 临时恢复旧 batch 生命周期做 A/B；该回退不关闭
 preflight、watch startup handshake 或 generation lock。
 SDK 切换后 `status` 应显示 `run/build preflight: enabled`、`run watch: enabled`、
-`watch startup handshake: enabled`、`Windows run supervisor: enabled` 以及当前平台的
+`watch startup handshake: enabled`、`run supervisor: enabled` 以及当前平台的
 `dart pub post-hook: enabled`。旧 schema 4 安装需先 `uninstall` 再重新 `install`。
 `run/build` 成功时控制台使用 `CCRouter preflight`，Pub 后生成使用
 `CCRouter post-pub generation`；成功只保留 fast-path、验证摘要与最终总耗时，失败则输出最近

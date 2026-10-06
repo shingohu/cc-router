@@ -374,8 +374,9 @@ final class CCPubHookManager {
     final watchStartupHandshakeEnabled =
         _supportsWatchStartupHandshake(posix) &&
         (!windowsExpected || _supportsWatchStartupHandshake(windows));
-    final windowsRunSupervisorEnabled =
-        !windowsExpected || _supportsWindowsRunSupervisor(windows);
+    final runSupervisorEnabled =
+        _supportsRunSupervisor(posix) &&
+        (!windowsExpected || _supportsRunSupervisor(windows));
     final installed =
         markerValid &&
         posixBackupPresent &&
@@ -388,7 +389,7 @@ final class CCPubHookManager {
         runWatchEnabled &&
         cleanGuardEnabled &&
         watchStartupHandshakeEnabled &&
-        windowsRunSupervisorEnabled &&
+        runSupervisorEnabled &&
         reloadGateEnabled;
     stdout.writeln('CCRouter pub hook SDK: ${sdkRoot.path}');
     stdout.writeln(
@@ -440,7 +441,7 @@ final class CCPubHookManager {
       'run watch: ${runWatchEnabled ? 'enabled' : 'missing'}, '
       'clean guard: ${cleanGuardEnabled ? 'enabled' : 'missing'}, '
       'watch startup handshake: ${watchStartupHandshakeEnabled ? 'enabled' : 'missing'}, '
-      'Windows run supervisor: ${windowsRunSupervisorEnabled ? 'enabled' : 'missing'}, '
+      'run supervisor: ${runSupervisorEnabled ? 'enabled' : 'missing'}, '
       'machine reload gate: ${reloadGateEnabled ? 'enabled' : 'missing'}, '
       'flutter pub post-hook: ${posixValid ? 'enabled' : 'missing'}, '
       'dart pub post-hook: ${dartPosixValid && dartWindowsValid ? 'enabled' : 'missing'}',
@@ -511,7 +512,9 @@ final class CCPubHookManager {
   bool _supportsRunWatch(File file) {
     if (!file.existsSync()) return false;
     try {
-      return file.readAsStringSync().contains('--watch=auto');
+      final contents = file.readAsStringSync();
+      return contents.contains('--launch-watch') ||
+          contents.contains('--watch=auto');
     } on Object {
       return false;
     }
@@ -531,9 +534,9 @@ final class CCPubHookManager {
   bool _supportsReloadGate(File file) {
     if (!file.existsSync()) return false;
     try {
-      return file.readAsStringSync().contains(
-        'ccrouter_generator:ccrouter_flutter_run_gate',
-      );
+      final contents = file.readAsStringSync();
+      return contents.contains('--reload-gate') ||
+          contents.contains('ccrouter_generator:ccrouter_flutter_run_gate');
     } on Object {
       return false;
     }
@@ -542,15 +545,15 @@ final class CCPubHookManager {
   bool _supportsWatchStartupHandshake(File file) {
     if (!file.existsSync()) return false;
     try {
-      return file.readAsStringSync().contains(
-        'ccrouter_generator:ccrouter_watch_startup',
-      );
+      final contents = file.readAsStringSync();
+      return contents.contains('--launch-watch') ||
+          contents.contains('ccrouter_generator:ccrouter_watch_startup');
     } on Object {
       return false;
     }
   }
 
-  bool _supportsWindowsRunSupervisor(File file) {
+  bool _supportsRunSupervisor(File file) {
     if (!file.existsSync()) return false;
     try {
       return file.readAsStringSync().contains(
@@ -1423,35 +1426,6 @@ if [ "$FLUTTER_COMMAND" = "run" ] || [ "$FLUTTER_COMMAND" = "build" ]; then
   if [ "$FLUTTER_COMMAND" = "build" ] || [ "${CCROUTER_DISABLE_BUILD_WATCH:-0}" = "1" ]; then
     exec "$ORIGINAL" "$@"
   fi
-  WATCH_DIR="$PROJECT_ROOT/.dart_tool/ccrouter/v1/watch"
-  WATCH_LEASE="$WATCH_DIR/flutter-run-$$-${RANDOM:-0}.lease"
-  mkdir -p "$WATCH_DIR"
-  : > "$WATCH_LEASE"
-  "$DART" run --verbosity=error ccrouter_generator:ccrouter generate \
-    "$PROJECT_ROOT" --watch=auto --machine --watch-lease "$WATCH_LEASE" \
-    >> "$WATCH_DIR/flutter-run.log" 2>&1 &
-  WATCH_PID=$!
-  cleanup_ccrouter_watch() {
-    rm -f "$WATCH_LEASE"
-    if kill -0 "$WATCH_PID" 2>/dev/null; then
-      kill "$WATCH_PID" 2>/dev/null || true
-      wait "$WATCH_PID" 2>/dev/null || true
-    fi
-  }
-  trap cleanup_ccrouter_watch EXIT INT TERM
-  echo "CCRouter watch starting (pid=$WATCH_PID). Status: $WATCH_DIR/status.json; log: $WATCH_DIR/flutter-run.log"
-  if [ "${CCROUTER_DISABLE_WATCH_STARTUP_HANDSHAKE:-0}" != "1" ]; then
-    "$DART" run --verbosity=error \
-      ccrouter_generator:ccrouter_watch_startup \
-      --host-root "$PROJECT_ROOT" --watch-lease "$WATCH_LEASE"
-    HANDSHAKE_EXIT=$?
-    if [ "$HANDSHAKE_EXIT" -ne 0 ]; then
-      cleanup_ccrouter_watch
-      trap - EXIT INT TERM
-      echo "CCRouter watch startup blocked flutter run (exit $HANDSHAKE_EXIT)." >&2
-      exit "$HANDSHAKE_EXIT"
-    fi
-  fi
   FLUTTER_MACHINE=0
   for ARG in "$@"; do
     if [ "$ARG" = "--machine" ]; then
@@ -1462,15 +1436,16 @@ if [ "$FLUTTER_COMMAND" = "run" ] || [ "$FLUTTER_COMMAND" = "build" ]; then
   if [ "$FLUTTER_MACHINE" -eq 1 ] && \
      [ "${CCROUTER_DISABLE_HOT_RELOAD_GATE:-0}" != "1" ]; then
     "$DART" run --verbosity=error \
-      ccrouter_generator:ccrouter_flutter_run_gate \
-      --host-root "$PROJECT_ROOT" --original "$ORIGINAL" -- "$@"
+      ccrouter_generator:ccrouter_flutter_run_supervisor \
+      --host-root "$PROJECT_ROOT" --original "$ORIGINAL" \
+      --launch-watch --reload-gate -- "$@"
   else
-    "$ORIGINAL" "$@"
+    "$DART" run --verbosity=error \
+      ccrouter_generator:ccrouter_flutter_run_supervisor \
+      --host-root "$PROJECT_ROOT" --original "$ORIGINAL" \
+      --launch-watch -- "$@"
   fi
-  ORIGINAL_EXIT=$?
-  cleanup_ccrouter_watch
-  trap - EXIT INT TERM
-  exit "$ORIGINAL_EXIT"
+  exit $?
 fi
 
 if [ "$FLUTTER_COMMAND" != "pub" ]; then
@@ -1869,6 +1844,18 @@ if /I "%HOOK_COMMAND%"=="clean" goto invoke_original
 if /I "%HOOK_COMMAND%"=="build" goto invoke_original
 if /I not "%HOOK_COMMAND%"=="run" exit /b 0
 if "%CCROUTER_DISABLE_BUILD_WATCH%"=="1" goto invoke_original
+set "FLUTTER_MACHINE=0"
+for %%A in (%*) do if "%%~A"=="--machine" set "FLUTTER_MACHINE=1"
+if "%CCROUTER_DISABLE_WINDOWS_RUN_SUPERVISOR%"=="1" goto run_with_legacy_watch
+if "%FLUTTER_MACHINE%"=="1" if not "%CCROUTER_DISABLE_HOT_RELOAD_GATE%"=="1" goto run_with_supervisor_reload_gate
+call "%SCRIPT_DIR%dart.bat" run --verbosity=error ccrouter_generator:ccrouter_flutter_run_supervisor --host-root "%PROJECT_ROOT%" --original "%ORIGINAL%" --launch-watch -- %*
+exit /b %ERRORLEVEL%
+
+:run_with_supervisor_reload_gate
+call "%SCRIPT_DIR%dart.bat" run --verbosity=error ccrouter_generator:ccrouter_flutter_run_supervisor --host-root "%PROJECT_ROOT%" --original "%ORIGINAL%" --launch-watch --reload-gate -- %*
+exit /b %ERRORLEVEL%
+
+:run_with_legacy_watch
 set "WATCH_DIR=%PROJECT_ROOT%\.dart_tool\ccrouter\v1\watch"
 if not exist "%WATCH_DIR%" mkdir "%WATCH_DIR%"
 set "WATCH_LEASE=%WATCH_DIR%\flutter-run-%RANDOM%-%RANDOM%.lease"
@@ -1880,16 +1867,6 @@ call "%SCRIPT_DIR%dart.bat" run --verbosity=error ccrouter_generator:ccrouter_wa
 set "WATCH_HANDSHAKE_EXIT=%ERRORLEVEL%"
 if not "%WATCH_HANDSHAKE_EXIT%"=="0" goto watch_handshake_failed
 :watch_handshake_complete
-set "FLUTTER_MACHINE=0"
-for %%A in (%*) do if "%%~A"=="--machine" set "FLUTTER_MACHINE=1"
-if "%CCROUTER_DISABLE_WINDOWS_RUN_SUPERVISOR%"=="1" goto run_without_supervisor
-if "%FLUTTER_MACHINE%"=="1" if not "%CCROUTER_DISABLE_HOT_RELOAD_GATE%"=="1" goto run_with_supervisor_reload_gate
-call "%SCRIPT_DIR%dart.bat" run --verbosity=error ccrouter_generator:ccrouter_flutter_run_supervisor --host-root "%PROJECT_ROOT%" --original "%ORIGINAL%" --watch-lease "%WATCH_LEASE%" -- %*
-goto run_finished
-:run_with_supervisor_reload_gate
-call "%SCRIPT_DIR%dart.bat" run --verbosity=error ccrouter_generator:ccrouter_flutter_run_supervisor --host-root "%PROJECT_ROOT%" --original "%ORIGINAL%" --watch-lease "%WATCH_LEASE%" --reload-gate -- %*
-goto run_finished
-:run_without_supervisor
 if "%FLUTTER_MACHINE%"=="1" if not "%CCROUTER_DISABLE_HOT_RELOAD_GATE%"=="1" goto run_with_reload_gate
 call "%ORIGINAL%" %*
 goto run_finished

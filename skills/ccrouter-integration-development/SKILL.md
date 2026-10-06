@@ -342,6 +342,9 @@ explicitly for benchmarks or AI diagnosis of a slow run; only then require
 build_runner verbose durations and the complete cycle trace.
 When Flutter's Hook owns the background watch, use `watch status <host-root>`
 for one read-only snapshot or `watch follow <host-root>` for concise changes.
+POSIX and Windows use the same Dart supervisor; its project/Host-isolated lease
+lives under `CCROUTER_HOME`, while status, diagnostics, and logs remain local
+`.dart_tool` mirrors. A project clean must not be treated as Flutter-run exit.
 The wrapper prints its successful watch-start summary to stdout before the
 original Flutter process begins. It must first observe `sessionReady` for the
 exact wrapper lease and confirm the build-root owner lock; a forked background

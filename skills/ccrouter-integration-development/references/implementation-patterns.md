@@ -838,7 +838,8 @@ inputs, new/same/no-op outputs, and thresholded activities. These are
 diagnostic public-counter interpretations, not private Asset Graph access or a
 generation decision input. Unknown terminal formats are retained in bounded
 `unparsedFinalLines` without failing generation. `flutter run` obtains the same
-watch through a wrapper-owned lease;
+watch through a Dart-supervisor-owned lease under the project/Host-isolated
+`CCROUTER_HOME` coordination directory;
 `flutter build` stays one-shot. Use `CCROUTER_DISABLE_BUILD_WATCH=1` to fall
 back. The active watch holds the build root generation lock; stop it before
 running the final authoritative `--no-cache --check`.
@@ -854,9 +855,9 @@ startup, ownership conflict, initial generation failure, exit, and timeout all
 fail closed with the watch log path. Use
 `CCROUTER_DISABLE_WATCH_STARTUP_HANDSHAKE=1` only for an isolated A/B fallback;
 it does not disable preflight, watch, generation locking, or reload gating.
-Wrapper-started watches keep stable ownership and serialization under the
-user-level `CCROUTER_HOME`, isolated first by canonical build root and then by
-Host. Minimal Host/Builder session authority lets Pub Hook coordinate even when
+Wrapper-started watches keep stable ownership, serialization, and Flutter-run
+leases under the user-level `CCROUTER_HOME`, isolated first by canonical build
+root and then by Host. Minimal Host/Builder session authority lets Pub Hook coordinate even when
 project-local observation files were removed. Watches atomically publish and
 repair the Analyzer/IDE mirror at `.dart_tool/ccrouter/v1/watch/status.json`.
 Use read-only
@@ -866,9 +867,9 @@ instead of injecting watch NDJSON into Flutter Tool's machine stdout. This
 wrapper prints its pre-Flutter starting and ready summaries to stdout so IDEs
 do not render it as an error; failures remain on stderr. The stdin gate closes
 the original Flutter Tool's stdin when its IDE/AI parent reaches EOF, preserving
-the direct process lifecycle instead of retaining an orphaned child. On Windows,
-a terminal-inheriting Dart supervisor owns a versioned lease heartbeat for both
-machine and interactive runs. Handled exits delete the lease; if the supervisor
+the direct process lifecycle instead of retaining an orphaned child. On POSIX
+and Windows, one terminal-inheriting Dart supervisor owns watch startup and a
+versioned lease heartbeat for both machine and interactive runs. Handled exits delete the lease; if the supervisor
 is force-killed, watch expires the heartbeat and stops within a bounded interval.
 `CCROUTER_DISABLE_WINDOWS_RUN_SUPERVISOR=1` restores the former batch-only
 lifecycle for A/B comparison. This status channel is fail-open for direct
