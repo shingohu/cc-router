@@ -277,11 +277,12 @@ ccrouter_analyzer_plugin:
   git:
     url: git@github.com:shingohu/cc-router.git
     path: packages/ccrouter_analyzer_plugin
-    ref: 9ed240e911fdd4649f3de44ae0a16d7a7ba62f30
+    ref: <reviewed-full-commit-sha>
 ```
 
 这个配置有正向收益：可以在 Hosted 发布前让 Demo 验证最新插件修复，同时不把 Analyzer 版本
 约束混入生成器 Workspace。它不是正式发布依赖，不能复制到生产组件模板。
+Demo 的当前值以活动 bootstrap manifest 及 lockfile 的 `resolved-ref` 为准，本文不复制。
 
 同目录的 `pubspec.hosted.yaml` 提供发布后的 Hosted fallback。两个 manifest 不能同时作为
 同一个 bootstrap Package 的活动依赖。

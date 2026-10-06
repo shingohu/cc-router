@@ -201,8 +201,12 @@ dependencies:
     git:
       url: git@github.com:shingohu/cc-router.git
       path: packages/ccrouter_analyzer_plugin
-      ref: 9ed240e911fdd4649f3de44ae0a16d7a7ba62f30
+      ref: <reviewed-full-commit-sha>
 ```
+
+For the maintained Demo, read the active bootstrap manifest and lockfile instead
+of copying its current ref into guidance. Their `ref` and `resolved-ref` are the
+source of truth and must match.
 
 Use this inner `bin/plugin.dart`. The implementation import is intentional only
 in this isolated tool entrypoint, never in feature/application code:

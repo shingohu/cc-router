@@ -21,7 +21,8 @@ F03/F04/F09 已修复并补上真实分发及常量解析回归；Analytics F05/
 曝光采集 F12/F13 与 Demo Network 生命周期 F18 已修复，完成 478 项框架/Flutter/Demo 回归。
 F14/F15 Analyzer 已修复，并补上 Service 生命周期 warning 与保守 Quick Fix，独立插件
 78 项测试通过；Demo 后续已同步 structured watch diagnostics bridge 与 canonical Host identity，
-固定到远端提交 `9ed240e`，IDE 需重启 Analysis Server 加载。
+固定到远端可解析提交，IDE 需重启 Analysis Server 加载。当前值只在 Demo bootstrap
+manifest/lock 中维护。
 F16/F17 AI Skill 安装与接入指导已修复，两个完整 Skill 组成独立安装包，并增加孤立目录
 引用、真实 CLI 命令和关键 Dart 示例校验。本轮 18 项已确认缺陷均已关闭；当前 Demo 的
 本机旧插件缓存与 Android Studio Service Quick Fix 后续已验收；Demo Shell/Outlet/Owner
