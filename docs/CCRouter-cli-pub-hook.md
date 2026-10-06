@@ -108,7 +108,13 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook uninstall
    集合变化，或 build_runner 因 resolution 更新自行退出时，会在同一 lock/lease 内轮换
    `sessionId` 并重建 child。Hook 必须等新 session 的 `ready`，成功仍严格匹配当前 resolution
    fingerprint，不能用快速失败逻辑放宽。
-6. 成功时只打印 fast-path、验证摘要和总耗时；生成器失败时打印最近
+6. 同一 build root 中从 component/contracts Package 触发 Pub 时，Host watch 的 target 名称
+   不是本次 requested Package manifest 的精确完成栅栏，因此 package-local Hook 不复用该
+   Host cycle。它验证 `builder-status.json` 的 schema、build-root identity 与实际 owner lock，
+   然后明确报告 owner Host、requested Package 以及 target 是否被覆盖，并返回非零。被覆盖时
+   可以等待 Host 的 `aggregationSucceeded`；若要求当前 Pub Hook 成功，或 Package 未被覆盖，
+   则停止 watch 后从该 Package 重试。stale、损坏或路径不匹配的状态不会被信任。
+7. 成功时只打印 fast-path、验证摘要和总耗时；生成器失败时打印最近
    200 行且最多 64 KiB 的有界日志并返回非零，使 CI 能发现生成物过期或元数据错误，
    同时避免长时间 Builder 输出造成控制台刷屏或内存无界增长。
 

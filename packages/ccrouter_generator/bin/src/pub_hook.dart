@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:ccrouter_generator/src/project_context.dart';
 import 'package:ccrouter_generator/src/project_role.dart';
 import 'package:path/path.dart' as path;
+import 'package:yaml/yaml.dart';
 
 import 'canonical_directory_identity.dart';
 import 'pub_hook_watch_coordination.dart';
@@ -653,6 +654,17 @@ Future<bool> runCCPubHook({
       return watch.succeeded;
     }
   }
+  if (operation.isPostPub && projectRole.role == CCProjectRole.package) {
+    final conflict = await _activePackageLocalWatchConflict(context, operation);
+    if (conflict != null) {
+      stopwatch.stop();
+      stderr.writeln(
+        'CCRouter ${operation.label} failed for ${operation.target}: '
+        '${conflict.message}, elapsed=${stopwatch.elapsedMilliseconds}ms.',
+      );
+      return false;
+    }
+  }
   final process = await Process.start(Platform.resolvedExecutable, [
     'run',
     'ccrouter_generator:ccrouter',
@@ -687,6 +699,104 @@ Future<bool> runCCPubHook({
     output.writeFailureTail();
   }
   return exitCode == 0;
+}
+
+/// Actionable package-local diagnostic for a verified shared build-root watch.
+final class _CCPubHookPackageWatchConflict {
+  const _CCPubHookPackageWatchConflict(this.message);
+
+  final String message;
+}
+
+/// Detects a Host watch that prevents package-local one-shot generation.
+///
+/// A target name is useful for diagnostics, but is not exact completion
+/// evidence for the Package manifest that triggered Pub. The Hook therefore
+/// remains fail-closed instead of reusing a Host cycle.
+Future<_CCPubHookPackageWatchConflict?> _activePackageLocalWatchConflict(
+  CCProjectContext context,
+  _CCPubHookOperation operation,
+) async {
+  final buildRoot = context.resolutionRoot;
+  final status = await _readPubHookBuildRootWatchStatus(buildRoot);
+  if (status == null || status['active'] != true) return null;
+  if (!hasSameDirectoryIdentity(
+    status['buildRoot'] as String,
+    buildRoot.path,
+  )) {
+    return null;
+  }
+  if (!await _pubHookWatchOwnerIsHeld(buildRoot)) return null;
+  final packageName = _readPubHookPackageName(context.requestedRoot);
+  if (packageName == null) return null;
+
+  final hostRoot = status['hostRoot'] as String;
+  final targets = (status['targets'] as List).cast<String>();
+  final retry =
+      'stop the watch, then retry ${operation.target} from '
+      '"${context.requestedRoot.path}"';
+  if (targets.contains(packageName)) {
+    return _CCPubHookPackageWatchConflict(
+      'active Host watch at "$hostRoot" owns build root '
+      '"${buildRoot.path}" and covers requested Package "$packageName", '
+      'but package-local post-pub generation cannot use that Host cycle as '
+      'exact completion evidence; wait for its `aggregationSucceeded`, or '
+      '$retry',
+    );
+  }
+  return _CCPubHookPackageWatchConflict(
+    'active Host watch at "$hostRoot" owns build root '
+    '"${buildRoot.path}" but does not cover requested Package '
+    '"$packageName"; $retry',
+  );
+}
+
+Future<Map<String, Object?>?> _readPubHookBuildRootWatchStatus(
+  Directory buildRoot,
+) async {
+  final file = File(
+    path.join(
+      buildRoot.path,
+      '.dart_tool',
+      'ccrouter',
+      'v1',
+      'watch',
+      'builder-status.json',
+    ),
+  );
+  if (!file.existsSync()) return null;
+  try {
+    final decoded = jsonDecode(await file.readAsString());
+    if (decoded is! Map ||
+        decoded['schemaVersion'] != 1 ||
+        decoded['active'] is! bool ||
+        decoded['pid'] is! int ||
+        decoded['cycleRevision'] is! int ||
+        decoded['failureRevision'] is! int ||
+        decoded['targets'] is! List ||
+        !(decoded['targets'] as List).every((target) => target is String) ||
+        decoded['hostRoot'] is! String ||
+        decoded['buildRoot'] is! String ||
+        decoded['updatedAt'] is! String) {
+      return null;
+    }
+    return decoded.cast<String, Object?>();
+  } on Object {
+    return null;
+  }
+}
+
+String? _readPubHookPackageName(Directory packageRoot) {
+  try {
+    final document = loadYaml(
+      File(path.join(packageRoot.path, 'pubspec.yaml')).readAsStringSync(),
+    );
+    final name = document is YamlMap ? document['name'] : null;
+    if (name is String && name.trim().isNotEmpty) return name.trim();
+  } on Object {
+    // The generator owns the authoritative malformed-manifest diagnostic.
+  }
+  return null;
 }
 
 /// User-facing naming for one Hook-triggered generation pass.

@@ -477,6 +477,138 @@ workspace:
     timeout: const Timeout(Duration(minutes: 2)),
   );
 
+  test('package-local post-pub reports a covering active Host watch', () async {
+    final fixture = await _createPackageWatchFixture();
+    addTearDown(() => fixture.workspace.delete(recursive: true));
+    final owner = await _lockWatchOwner(fixture.workspace);
+    addTearDown(() async {
+      await owner.unlock();
+      await owner.close();
+    });
+    await _writeBuildRootWatchStatus(
+      fixture,
+      targets: const ['watched_component'],
+    );
+
+    final result = await _run([
+      'pub-hook',
+      'run',
+      '--project-root',
+      fixture.package.path,
+      '--pub-command',
+      'get',
+    ]);
+    final output = '${result.stdout}\n${result.stderr}';
+
+    expect(result.exitCode, 1, reason: output);
+    expect(output, contains('active Host watch at "${fixture.host.path}"'));
+    expect(output, contains('covers requested Package "watched_component"'));
+    expect(output, contains('wait for its `aggregationSucceeded`'));
+    expect(output, contains('stop the watch, then retry'));
+    expect(output, isNot(contains('Generator output:')));
+    expect(output, isNot(contains('active CCRouter generation watch owns')));
+  });
+
+  test(
+    'package-local post-pub reports an active Host watch without its target',
+    () async {
+      final fixture = await _createPackageWatchFixture();
+      addTearDown(() => fixture.workspace.delete(recursive: true));
+      final owner = await _lockWatchOwner(fixture.workspace);
+      addTearDown(() async {
+        await owner.unlock();
+        await owner.close();
+      });
+      await _writeBuildRootWatchStatus(
+        fixture,
+        targets: const ['another_component'],
+      );
+
+      final result = await _run([
+        'pub-hook',
+        'run',
+        '--project-root',
+        fixture.package.path,
+        '--pub-command',
+        'get',
+      ]);
+      final output = '${result.stdout}\n${result.stderr}';
+
+      expect(result.exitCode, 1, reason: output);
+      expect(output, contains('active Host watch at "${fixture.host.path}"'));
+      expect(
+        output,
+        contains('does not cover requested Package "watched_component"'),
+      );
+      expect(output, contains('stop the watch, then retry'));
+      expect(output, isNot(contains('Generator output:')));
+      expect(output, isNot(contains('active CCRouter generation watch owns')));
+    },
+  );
+
+  test(
+    'package-local post-pub ignores stale build-root watch status',
+    () async {
+      final fixture = await _createPackageWatchFixture();
+      addTearDown(() => fixture.workspace.delete(recursive: true));
+      await _writeBuildRootWatchStatus(
+        fixture,
+        targets: const ['watched_component'],
+      );
+
+      final result = await _run([
+        'pub-hook',
+        'run',
+        '--project-root',
+        fixture.package.path,
+        '--pub-command',
+        'get',
+      ]);
+      final output = '${result.stdout}\n${result.stderr}';
+
+      expect(result.exitCode, 1, reason: output);
+      expect(output, contains('exitCode='));
+      expect(output, isNot(contains('active Host watch at')));
+    },
+  );
+
+  test(
+    'package-local post-pub rejects malformed or wrong-root watch evidence',
+    () async {
+      for (final malformed in [true, false]) {
+        final fixture = await _createPackageWatchFixture();
+        addTearDown(() => fixture.workspace.delete(recursive: true));
+        final owner = await _lockWatchOwner(fixture.workspace);
+        addTearDown(() async {
+          await owner.unlock();
+          await owner.close();
+        });
+        final status = await _writeBuildRootWatchStatus(
+          fixture,
+          targets: const ['watched_component'],
+          buildRoot: malformed
+              ? fixture.workspace
+              : Directory(path.join(fixture.workspace.path, 'other-root')),
+        );
+        if (malformed) status.writeAsStringSync('{not-json\n');
+
+        final result = await _run([
+          'pub-hook',
+          'run',
+          '--project-root',
+          fixture.package.path,
+          '--pub-command',
+          'get',
+        ]);
+        final output = '${result.stdout}\n${result.stderr}';
+
+        expect(result.exitCode, 1, reason: output);
+        expect(output, contains('exitCode='));
+        expect(output, isNot(contains('active Host watch at')));
+      }
+    },
+  );
+
   test(
     'run and pub hooks emit concise phase-specific generation logs',
     () async {
@@ -1144,6 +1276,88 @@ Directory _workspaceRoot() {
     }
     current = parent;
   }
+}
+
+final class _PackageWatchFixture {
+  const _PackageWatchFixture({
+    required this.workspace,
+    required this.package,
+    required this.host,
+  });
+
+  final Directory workspace;
+  final Directory package;
+  final Directory host;
+}
+
+Future<_PackageWatchFixture> _createPackageWatchFixture() async {
+  final workspace = await Directory.systemTemp.createTemp(
+    'ccrouter_pub_hook_package_watch_',
+  );
+  final package = Directory(path.join(workspace.path, 'packages', 'component'))
+    ..createSync(recursive: true);
+  final host = Directory(path.join(workspace.path, 'apps', 'host'))
+    ..createSync(recursive: true);
+  File(path.join(workspace.path, 'pubspec.yaml')).writeAsStringSync('''
+name: package_watch_workspace
+publish_to: none
+environment:
+  sdk: ^3.10.0
+workspace:
+  - packages/component
+''');
+  File(path.join(package.path, '.metadata')).writeAsStringSync('''
+project_type: package
+''');
+  File(path.join(package.path, 'pubspec.yaml')).writeAsStringSync('''
+name: watched_component
+publish_to: none
+resolution: workspace
+environment:
+  sdk: ^3.10.0
+dependencies:
+  ccrouter: any
+dev_dependencies:
+  ccrouter_generator: any
+''');
+  final dartTool = Directory(path.join(workspace.path, '.dart_tool'))
+    ..createSync();
+  File(path.join(dartTool.path, 'package_config.json')).writeAsStringSync('''
+{"configVersion":2,"packages":[
+  {"name":"ccrouter","rootUri":"../ccrouter"},
+  {"name":"ccrouter_generator","rootUri":"../ccrouter_generator"}
+]}
+''');
+  File(
+    path.join(dartTool.path, 'package_graph.json'),
+  ).writeAsStringSync('{}\n');
+  File(path.join(workspace.path, 'pubspec.lock')).writeAsStringSync('{}\n');
+  return _PackageWatchFixture(
+    workspace: workspace,
+    package: package,
+    host: host,
+  );
+}
+
+Future<File> _writeBuildRootWatchStatus(
+  _PackageWatchFixture fixture, {
+  required List<String> targets,
+  Directory? buildRoot,
+}) async {
+  final file = File(
+    path.join(
+      fixture.workspace.path,
+      '.dart_tool',
+      'ccrouter',
+      'v1',
+      'watch',
+      'builder-status.json',
+    ),
+  )..parent.createSync(recursive: true);
+  await file.writeAsString(
+    '${jsonEncode(<String, Object?>{'schemaVersion': 1, 'active': true, 'pid': pid, 'sessionId': 'package-watch-session', 'eventRevision': 4, 'lastEvent': 'aggregationSucceeded', 'cycleRevision': 2, 'failureRevision': 0, 'targets': targets, 'hostRoot': fixture.host.path, 'buildRoot': (buildRoot ?? fixture.workspace).path, 'updatedAt': DateTime.now().toUtc().toIso8601String()})}\n',
+  );
+  return file;
 }
 
 Future<Directory> _createWatchCoordinatedProject() async {

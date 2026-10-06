@@ -327,9 +327,15 @@ five-minute wait also fails; never treat another Host's status as evidence.
 When watch rotates its child after Pub topology changes, Hook accepts the new
 session only after `sessionReady: true`/`ready` and an exact matching resolution
 fingerprint. It must not reuse that session's pre-ready aggregation event.
-Package-local post-pub generation does not consume Host watch status or perform
-Host validation; it invokes the package-local one-shot path for the requested
-Package.
+Package-local post-pub generation never treats a Host target name as exact
+completion evidence or performs Host validation. Before starting its one-shot
+path, it may consume only a schema-valid build-root `builder-status.json` whose
+canonical build root matches and whose owner lock is actually held. It then
+fails early with the owner Host, requested Package, coverage, and stop/retry
+guidance instead of falling through to a generic generation-lock error. Stale,
+malformed, or wrong-root status is ignored. A covered Package may wait for the
+Host `aggregationSucceeded`, but a Hook invocation that must itself succeed
+still requires stopping the watch and retrying from that Package.
 
 Use `status` after an FVM version switch; it prints the resolved SDK path and
 verifies the marker, Flutter/Dart POSIX/Windows wrappers, and backups. It returns non-zero

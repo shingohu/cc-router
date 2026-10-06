@@ -1464,6 +1464,12 @@ resolution exact-content fingerprint；若 topology 需要新 build_runner graph
 新 session 的 `ready`，不会接受该 session 尚未 ready 时的中间聚合成功。设置
 `CCROUTER_DISABLE_PUB_HOOK_WATCH_FAILURE_FENCE=1` 可临时恢复旧的严格 fingerprint-only
 失败等待路径；状态不可用、watch 退出或最终超时仍 fail-closed。
+同一 build root 中从 component/contracts Package 触发 Pub 时，package-local Hook 不会把
+Host watch 的 target 名称当作该 Package 本次 manifest 的完成证明。若活动 Host watch 持有
+owner lock，Hook 会在启动 one-shot 前报告 owner Host、requested Package 以及它是否位于当前
+target 集合中，并返回非零：被覆盖时可等待该 Host 的 `aggregationSucceeded`，需要当前 Pub
+命令成功退出或未被覆盖时则停止 watch 后从该 Package 重试。stale、损坏或 build-root 不匹配的
+`builder-status.json` 不会被信任。
 SDK 切换或升级后需要重新检查 `pub-hook status`。详细语义见
 [`docs/CCRouter-cli-pub-hook.md`](docs/CCRouter-cli-pub-hook.md)。
 

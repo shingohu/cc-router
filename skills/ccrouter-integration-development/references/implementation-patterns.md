@@ -876,6 +876,14 @@ resolution fingerprint. Set
 fingerprint-only failure wait. Exit, unavailable state, or timeout stays
 fail-closed. This exception is specific to post-pub coordination, not permission
 for concurrent one-shot generation.
+Package-local Pub in the same build root is deliberately not another exception:
+membership in the Host watch target set does not prove completion for the
+requested Package's current manifest. The Hook validates build-root status and
+the live owner lock, then reports the owner Host and whether it covers that
+Package before failing without starting a conflicting one-shot. Wait for the
+Host `aggregationSucceeded` for iterative coverage, or stop the watch and retry
+from the Package when the Hook invocation must succeed. Stale, malformed, and
+wrong-root status must fall through to the authoritative generation path.
 The watch also polls cheap resolution file stats and confirms every candidate
 with an exact-content fingerprint; a low-frequency exact scan covers missed
 wakeups. Covered resolution-only changes publish `resolutionStarted` and run
