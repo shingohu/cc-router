@@ -1442,8 +1442,9 @@ for %%A in (%*) do (
 )
 if "%SKIP_PUB_HOOK%"=="1" exit /b 0
 if not defined PUB_COMMAND exit /b 0
-set "PROJECT_ROOT=%CD%"
-set "HOOK_DIR=%CD%"
+call :resolve_project_root %*
+if not "%ERRORLEVEL%"=="0" exit /b 0
+set "HOOK_DIR=%PROJECT_ROOT%"
 :find_package_config
 if exist "%HOOK_DIR%\.dart_tool\package_config.json" goto package_config_found
 for %%i in ("%HOOK_DIR%\..") do set "PARENT_DIR=%%~fi"
@@ -1453,13 +1454,43 @@ goto find_package_config
 :package_config_found
 findstr /R /C:"\"name\"[ ]*:[ ]*\"ccrouter_generator\"" "%HOOK_DIR%\.dart_tool\package_config.json" >nul
 if not "%ERRORLEVEL%"=="0" exit /b 0
+pushd "%PROJECT_ROOT%" || exit /b 1
 call "%ORIGINAL%" run --verbosity=error ccrouter_generator:ccrouter pub-hook run --project-root "%PROJECT_ROOT%" --pub-command "dart:%PUB_COMMAND%"
-if not "%ERRORLEVEL%"=="0" echo CCRouter pub hook failed after successful dart pub ^(exit %ERRORLEVEL%^). 1>&2
-exit /b %ERRORLEVEL%
+set "HOOK_EXIT=%ERRORLEVEL%"
+popd
+if not "%HOOK_EXIT%"=="0" echo CCRouter pub hook failed after successful dart pub ^(exit %HOOK_EXIT%^). 1>&2
+exit /b %HOOK_EXIT%
 
 :invoke_original
 call "%ORIGINAL%" %*
 exit /b %ERRORLEVEL%
+
+:resolve_project_root
+set "HOOK_DIR=%CD%"
+:resolve_project_root_argument
+if "%~1"=="" goto resolve_project_root_path
+if /I "%~1"=="-C" goto resolve_project_root_value
+if /I "%~1"=="--directory" goto resolve_project_root_value
+set "HOOK_ARGUMENT=%~1"
+if /I "%HOOK_ARGUMENT:~0,12%"=="--directory=" set "HOOK_DIR=%HOOK_ARGUMENT:~12%"
+shift
+goto resolve_project_root_argument
+:resolve_project_root_value
+shift
+if not "%~1"=="" set "HOOK_DIR=%~f1"
+shift
+goto resolve_project_root_argument
+:resolve_project_root_path
+for %%i in ("%HOOK_DIR%") do set "HOOK_DIR=%%~fi"
+:resolve_project_root_parent
+if exist "%HOOK_DIR%\pubspec.yaml" (
+  set "PROJECT_ROOT=%HOOK_DIR%"
+  exit /b 0
+)
+for %%i in ("%HOOK_DIR%\..") do set "PARENT_DIR=%%~fi"
+if /I "%PARENT_DIR%"=="%HOOK_DIR%" exit /b 1
+set "HOOK_DIR=%PARENT_DIR%"
+goto resolve_project_root_parent
 ''';
 
 /// Windows wrapper installed as `bin/flutter.bat`.
@@ -1509,9 +1540,9 @@ set "HOOK_COMMAND=%FLUTTER_COMMAND%"
 goto run_hook
 
 :run_hook
-set "HOOK_DIR=%CD%"
-if not exist "%HOOK_DIR%\pubspec.yaml" goto invoke_original
-set "PROJECT_ROOT=%CD%"
+call :resolve_project_root %*
+if not "%ERRORLEVEL%"=="0" goto invoke_original
+set "HOOK_DIR=%PROJECT_ROOT%"
 :find_package_config
 if exist "%HOOK_DIR%\.dart_tool\package_config.json" goto package_config_found
 for %%i in ("%HOOK_DIR%\..") do set "PARENT_DIR=%%~fi"
@@ -1521,8 +1552,11 @@ goto find_package_config
 :package_config_found
 findstr /R /C:"\"name\"[ ]*:[ ]*\"ccrouter_generator\"" "%HOOK_DIR%\.dart_tool\package_config.json" >nul
 if not "%ERRORLEVEL%"=="0" goto invoke_original
+pushd "%PROJECT_ROOT%" || goto hook_failed
 call "%SCRIPT_DIR%dart.bat" run --verbosity=error ccrouter_generator:ccrouter pub-hook run --project-root "%PROJECT_ROOT%" --pub-command "%HOOK_COMMAND%"
-if not "%ERRORLEVEL%"=="0" goto hook_failed
+set "HOOK_EXIT=%ERRORLEVEL%"
+popd
+if not "%HOOK_EXIT%"=="0" goto hook_failed_with_exit
 if /I "%HOOK_COMMAND%"=="build" goto invoke_original
 if /I not "%HOOK_COMMAND%"=="run" exit /b 0
 if "%CCROUTER_DISABLE_BUILD_WATCH%"=="1" goto invoke_original
@@ -1558,7 +1592,38 @@ exit /b %WATCH_HANDSHAKE_EXIT%
 echo CCRouter hook failed for flutter %HOOK_COMMAND%. 1>&2
 exit /b %ERRORLEVEL%
 
+:hook_failed_with_exit
+echo CCRouter hook failed for flutter %HOOK_COMMAND%. 1>&2
+exit /b %HOOK_EXIT%
+
 :invoke_original
 call "%ORIGINAL%" %*
 exit /b %ERRORLEVEL%
+
+:resolve_project_root
+set "HOOK_DIR=%CD%"
+:resolve_project_root_argument
+if "%~1"=="" goto resolve_project_root_path
+if /I "%~1"=="-C" goto resolve_project_root_value
+if /I "%~1"=="--directory" goto resolve_project_root_value
+set "HOOK_ARGUMENT=%~1"
+if /I "%HOOK_ARGUMENT:~0,12%"=="--directory=" set "HOOK_DIR=%HOOK_ARGUMENT:~12%"
+shift
+goto resolve_project_root_argument
+:resolve_project_root_value
+shift
+if not "%~1"=="" set "HOOK_DIR=%~f1"
+shift
+goto resolve_project_root_argument
+:resolve_project_root_path
+for %%i in ("%HOOK_DIR%") do set "HOOK_DIR=%%~fi"
+:resolve_project_root_parent
+if exist "%HOOK_DIR%\pubspec.yaml" (
+  set "PROJECT_ROOT=%HOOK_DIR%"
+  exit /b 0
+)
+for %%i in ("%HOOK_DIR%\..") do set "PARENT_DIR=%%~fi"
+if /I "%PARENT_DIR%"=="%HOOK_DIR%" exit /b 1
+set "HOOK_DIR=%PARENT_DIR%"
+goto resolve_project_root_parent
 ''';

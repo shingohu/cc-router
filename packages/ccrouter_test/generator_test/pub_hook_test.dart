@@ -89,6 +89,9 @@ void main() {
         contains('CCRouter Dart pub hook wrapper'),
         contains('dart:%PUB_COMMAND%'),
         contains('CCROUTER_PUB_HOOK_NESTED_FLUTTER'),
+        contains(':resolve_project_root'),
+        contains('--directory='),
+        contains('pushd "%PROJECT_ROOT%"'),
       ),
     );
     expect(
@@ -115,6 +118,9 @@ void main() {
       allOf(
         contains('ccrouter_generator:ccrouter'),
         contains('CCROUTER_PUB_HOOK_NESTED_FLUTTER=1'),
+        contains(':resolve_project_root'),
+        contains('--directory='),
+        contains('pushd "%PROJECT_ROOT%"'),
       ),
     );
     expect(flutterBat.readAsStringSync(), contains('--watch=auto'));
