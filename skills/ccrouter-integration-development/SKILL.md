@@ -320,6 +320,10 @@ covered; direct IDE execution of `cache/dart-sdk/bin/dart.exe` remains outside
 the boundary and is reported by `pub-hook status`. Flutter Tool's own implicit
 Pub resolution is not a Hook event. Use `CCROUTER_PUB_HOOK_DISABLE=1` only for
 an explicit one-shot bypass, then run the appropriate generation check.
+Wrapper command detection consumes only known global options and their declared
+values before selecting the first real top-level command and Pub subcommand.
+Tokens inside option values, Dart script arguments, or business arguments never
+trigger generation; unknown global-option arity safely bypasses the Hook.
 
 Validate with:
 

@@ -1176,12 +1176,109 @@ if [ "${CCROUTER_PUB_HOOK_DISABLE:-0}" = "1" ]; then
   exec "$ORIGINAL" "$@"
 fi
 
-find_flutter_command() {
-  FLUTTER_COMMAND=""
-  for ARG in "$@"; do
+parse_pub_invocation() {
+  PUB_COMMAND=""
+  PROJECT_DIRECTORY=""
+  while [ "$#" -gt 0 ]; do
+    ARG="$1"
+    shift
     case "$ARG" in
-      pub|run|build)
+      -h|--help)
+        SKIP_PUB_HOOK=1
+        return 0
+        ;;
+      -v|--verbose|--color|--no-color)
+        ;;
+      -C|--directory)
+        if [ "$#" -eq 0 ]; then
+          SKIP_PUB_HOOK=1
+          return 0
+        fi
+        PROJECT_DIRECTORY="$1"
+        shift
+        ;;
+      --directory=*)
+        PROJECT_DIRECTORY="${ARG#--directory=}"
+        ;;
+      --)
+        if [ "$#" -gt 0 ]; then
+          PUB_COMMAND="$1"
+          shift
+        fi
+        break
+        ;;
+      -*)
+        SKIP_PUB_HOOK=1
+        return 0
+        ;;
+      *)
+        PUB_COMMAND="$ARG"
+        break
+        ;;
+    esac
+  done
+  while [ "$#" -gt 0 ]; do
+    ARG="$1"
+    shift
+    case "$ARG" in
+      --help|-h|--dry-run|-n)
+        SKIP_PUB_HOOK=1
+        ;;
+      -C|--directory)
+        if [ "$#" -gt 0 ]; then
+          PROJECT_DIRECTORY="$1"
+          shift
+        fi
+        ;;
+      --directory=*)
+        PROJECT_DIRECTORY="${ARG#--directory=}"
+        ;;
+    esac
+  done
+}
+
+parse_flutter_invocation() {
+  FLUTTER_COMMAND=""
+  PUB_COMMAND=""
+  PROJECT_DIRECTORY=""
+  SKIP_PUB_HOOK=0
+  while [ "$#" -gt 0 ]; do
+    ARG="$1"
+    shift
+    case "$ARG" in
+      -h|--help|--version)
+        SKIP_PUB_HOOK=1
+        return 0
+        ;;
+      -v|-vv|--verbose|--prefixed-errors|--quiet|--wrap|--no-wrap|--machine|--color|--no-color|--version-check|--no-version-check|--enable-analytics|--disable-analytics|--suppress-analytics|--print-dtd|--show-test-device|--show-web-server-device|--ci)
+        ;;
+      -d|--device-id|--wrap-column|--packages|--local-engine-src-path|--local-engine|--local-engine-host|--local-web-sdk|--debug-logs-dir)
+        if [ "$#" -eq 0 ]; then
+          return 0
+        fi
+        shift
+        ;;
+      --device-id=*|--wrap-column=*|--packages=*|--local-engine-src-path=*|--local-engine=*|--local-engine-host=*|--local-web-sdk=*|--debug-logs-dir=*)
+        ;;
+      --)
+        if [ "$#" -eq 0 ]; then
+          return 0
+        fi
+        FLUTTER_COMMAND="$1"
+        shift
+        if [ "$FLUTTER_COMMAND" = "pub" ]; then
+          parse_pub_invocation "$@"
+        fi
+        return 0
+        ;;
+      -*)
+        return 0
+        ;;
+      *)
         FLUTTER_COMMAND="$ARG"
+        if [ "$FLUTTER_COMMAND" = "pub" ]; then
+          parse_pub_invocation "$@"
+        fi
         return 0
         ;;
     esac
@@ -1189,18 +1286,7 @@ find_flutter_command() {
 }
 
 resolve_project_root() {
-  HOOK_DIR="$PWD"
-  EXPECTING_DIRECTORY=0
-  for ARG in "$@"; do
-    if [ "$EXPECTING_DIRECTORY" -eq 1 ]; then
-      HOOK_DIR="$ARG"
-      EXPECTING_DIRECTORY=0
-    elif [ "$ARG" = "--directory" ] || [ "$ARG" = "-C" ]; then
-      EXPECTING_DIRECTORY=1
-    elif [[ "$ARG" == --directory=* ]]; then
-      HOOK_DIR="${ARG#--directory=}"
-    fi
-  done
+  HOOK_DIR="${PROJECT_DIRECTORY:-$PWD}"
   if [[ "$HOOK_DIR" != /* ]]; then
     HOOK_DIR="$PWD/$HOOK_DIR"
   fi
@@ -1210,6 +1296,7 @@ resolve_project_root() {
   if [ ! -f "$HOOK_DIR/pubspec.yaml" ]; then
     return 1
   fi
+  HOOK_DIR="$(cd -- "$HOOK_DIR" && pwd -P)" || return 1
   PROJECT_ROOT="$HOOK_DIR"
   PACKAGE_CONFIG="$HOOK_DIR/.dart_tool/package_config.json"
   while [ ! -f "$PACKAGE_CONFIG" ] && [ "$HOOK_DIR" != "/" ]; do
@@ -1226,7 +1313,7 @@ resolve_project_root() {
 run_generator_hook() {
   HOOK_COMMAND="$1"
   shift
-  if ! resolve_project_root "$@"; then
+  if ! resolve_project_root; then
     return 0
   fi
   (
@@ -1236,7 +1323,7 @@ run_generator_hook() {
   )
 }
 
-find_flutter_command "$@"
+parse_flutter_invocation "$@"
 if [ "$FLUTTER_COMMAND" = "run" ] || [ "$FLUTTER_COMMAND" = "build" ]; then
   run_generator_hook "$FLUTTER_COMMAND" "$@"
   HOOK_EXIT=$?
@@ -1307,21 +1394,14 @@ if [ "$PUB_EXIT" -ne 0 ]; then
   exit "$PUB_EXIT"
 fi
 
-PUB_COMMAND=""
-SKIP_PUB_HOOK=0
-for ARG in "$@"; do
-  case "$ARG" in
-    --help|-h|--dry-run|-n)
-      SKIP_PUB_HOOK=1
-      ;;
-    get|upgrade|downgrade|add|remove)
-      if [ -z "$PUB_COMMAND" ]; then
-        PUB_COMMAND="$ARG"
-      fi
-      ;;
-  esac
-done
-if [ "$SKIP_PUB_HOOK" -eq 1 ] || [ -z "$PUB_COMMAND" ]; then
+case "$PUB_COMMAND" in
+  get|upgrade|downgrade|add|remove)
+    ;;
+  *)
+    SKIP_PUB_HOOK=1
+    ;;
+esac
+if [ "$SKIP_PUB_HOOK" -eq 1 ]; then
   exit 0
 fi
 run_generator_hook "$PUB_COMMAND" "$@"
@@ -1347,13 +1427,105 @@ if [ "${CCROUTER_PUB_HOOK_NESTED_FLUTTER:-0}" = "1" ]; then
   exec "$ORIGINAL" "$@"
 fi
 
-DART_COMMAND=""
-for ARG in "$@"; do
-  if [ "$ARG" = "pub" ]; then
-    DART_COMMAND="pub"
-    break
-  fi
-done
+parse_pub_invocation() {
+  PUB_COMMAND=""
+  PROJECT_DIRECTORY=""
+  SKIP_PUB_HOOK=0
+  while [ "$#" -gt 0 ]; do
+    ARG="$1"
+    shift
+    case "$ARG" in
+      -h|--help)
+        SKIP_PUB_HOOK=1
+        return 0
+        ;;
+      -v|--verbose|--color|--no-color)
+        ;;
+      -C|--directory)
+        if [ "$#" -eq 0 ]; then
+          SKIP_PUB_HOOK=1
+          return 0
+        fi
+        PROJECT_DIRECTORY="$1"
+        shift
+        ;;
+      --directory=*)
+        PROJECT_DIRECTORY="${ARG#--directory=}"
+        ;;
+      --)
+        if [ "$#" -gt 0 ]; then
+          PUB_COMMAND="$1"
+          shift
+        fi
+        break
+        ;;
+      -*)
+        SKIP_PUB_HOOK=1
+        return 0
+        ;;
+      *)
+        PUB_COMMAND="$ARG"
+        break
+        ;;
+    esac
+  done
+  while [ "$#" -gt 0 ]; do
+    ARG="$1"
+    shift
+    case "$ARG" in
+      --help|-h|--dry-run|-n)
+        SKIP_PUB_HOOK=1
+        ;;
+      -C|--directory)
+        if [ "$#" -gt 0 ]; then
+          PROJECT_DIRECTORY="$1"
+          shift
+        fi
+        ;;
+      --directory=*)
+        PROJECT_DIRECTORY="${ARG#--directory=}"
+        ;;
+    esac
+  done
+}
+
+parse_dart_invocation() {
+  DART_COMMAND=""
+  while [ "$#" -gt 0 ]; do
+    ARG="$1"
+    shift
+    case "$ARG" in
+      -h|--help|--version)
+        return 0
+        ;;
+      -v|--verbose|--enable-analytics|--disable-analytics|--diagnostics|--suppress-analytics)
+        ;;
+      --)
+        if [ "$#" -eq 0 ]; then
+          return 0
+        fi
+        DART_COMMAND="$1"
+        shift
+        if [ "$DART_COMMAND" = "pub" ]; then
+          parse_pub_invocation "$@"
+        fi
+        return 0
+        ;;
+      -*)
+        return 0
+        ;;
+      *)
+        DART_COMMAND="$ARG"
+        if [ "$DART_COMMAND" = "pub" ]; then
+          parse_pub_invocation "$@"
+        fi
+        return 0
+        ;;
+    esac
+  done
+}
+
+parse_dart_invocation "$@"
 if [ "$DART_COMMAND" != "pub" ]; then
   exec "$ORIGINAL" "$@"
 fi
@@ -1364,36 +1536,18 @@ if [ "$PUB_EXIT" -ne 0 ]; then
   exit "$PUB_EXIT"
 fi
 
-PUB_COMMAND=""
-SKIP_PUB_HOOK=0
-for ARG in "$@"; do
-  case "$ARG" in
-    --help|-h|--dry-run|-n)
-      SKIP_PUB_HOOK=1
-      ;;
-    get|upgrade|downgrade|add|remove)
-      if [ -z "$PUB_COMMAND" ]; then
-        PUB_COMMAND="$ARG"
-      fi
-      ;;
-  esac
-done
-if [ "$SKIP_PUB_HOOK" -eq 1 ] || [ -z "$PUB_COMMAND" ]; then
+case "$PUB_COMMAND" in
+  get|upgrade|downgrade|add|remove)
+    ;;
+  *)
+    SKIP_PUB_HOOK=1
+    ;;
+esac
+if [ "$SKIP_PUB_HOOK" -eq 1 ]; then
   exit 0
 fi
 
-HOOK_DIR="$PWD"
-EXPECTING_DIRECTORY=0
-for ARG in "$@"; do
-  if [ "$EXPECTING_DIRECTORY" -eq 1 ]; then
-    HOOK_DIR="$ARG"
-    EXPECTING_DIRECTORY=0
-  elif [ "$ARG" = "--directory" ] || [ "$ARG" = "-C" ]; then
-    EXPECTING_DIRECTORY=1
-  elif [[ "$ARG" == --directory=* ]]; then
-    HOOK_DIR="${ARG#--directory=}"
-  fi
-done
+HOOK_DIR="${PROJECT_DIRECTORY:-$PWD}"
 if [[ "$HOOK_DIR" != /* ]]; then
   HOOK_DIR="$PWD/$HOOK_DIR"
 fi
@@ -1403,6 +1557,7 @@ done
 if [ ! -f "$HOOK_DIR/pubspec.yaml" ]; then
   exit 0
 fi
+HOOK_DIR="$(cd -- "$HOOK_DIR" && pwd -P)" || exit 0
 PROJECT_ROOT="$HOOK_DIR"
 PACKAGE_CONFIG="$HOOK_DIR/.dart_tool/package_config.json"
 while [ ! -f "$PACKAGE_CONFIG" ] && [ "$HOOK_DIR" != "/" ]; do
@@ -1437,28 +1592,16 @@ set "ORIGINAL=%SCRIPT_DIR%dart.ccrouter-original.bat"
 if "%CCROUTER_PUB_HOOK_DISABLE%"=="1" goto invoke_original
 if "%CCROUTER_PUB_HOOK_NESTED_FLUTTER%"=="1" goto invoke_original
 
-set "DART_COMMAND="
-for %%A in (%*) do if /I "%%~A"=="pub" if not defined DART_COMMAND set "DART_COMMAND=pub"
+call :parse_dart_invocation %*
 if /I not "%DART_COMMAND%"=="pub" goto invoke_original
 
 call "%ORIGINAL%" %*
 if not "%ERRORLEVEL%"=="0" exit /b %ERRORLEVEL%
-set "PUB_COMMAND="
-set "SKIP_PUB_HOOK=0"
-for %%A in (%*) do (
-  if /I "%%~A"=="--help" set "SKIP_PUB_HOOK=1"
-  if /I "%%~A"=="-h" set "SKIP_PUB_HOOK=1"
-  if /I "%%~A"=="--dry-run" set "SKIP_PUB_HOOK=1"
-  if /I "%%~A"=="-n" set "SKIP_PUB_HOOK=1"
-  if /I "%%~A"=="get" if not defined PUB_COMMAND set "PUB_COMMAND=get"
-  if /I "%%~A"=="upgrade" if not defined PUB_COMMAND set "PUB_COMMAND=upgrade"
-  if /I "%%~A"=="downgrade" if not defined PUB_COMMAND set "PUB_COMMAND=downgrade"
-  if /I "%%~A"=="add" if not defined PUB_COMMAND set "PUB_COMMAND=add"
-  if /I "%%~A"=="remove" if not defined PUB_COMMAND set "PUB_COMMAND=remove"
-)
 if "%SKIP_PUB_HOOK%"=="1" exit /b 0
-if not defined PUB_COMMAND exit /b 0
-call :resolve_project_root %*
+set "RUN_PUB_HOOK=0"
+for %%C in (get upgrade downgrade add remove) do if /I "%PUB_COMMAND%"=="%%C" set "RUN_PUB_HOOK=1"
+if not "%RUN_PUB_HOOK%"=="1" exit /b 0
+call :resolve_project_root
 if not "%ERRORLEVEL%"=="0" exit /b 0
 set "HOOK_DIR=%PROJECT_ROOT%"
 :find_package_config
@@ -1481,21 +1624,87 @@ exit /b %HOOK_EXIT%
 call "%ORIGINAL%" %*
 exit /b %ERRORLEVEL%
 
+:parse_dart_invocation
+set "DART_COMMAND="
+set "PUB_COMMAND="
+set "PROJECT_DIRECTORY="
+set "SKIP_PUB_HOOK=0"
+:parse_dart_global
+if "%~1"=="" exit /b 0
+if /I "%~1"=="-h" exit /b 0
+if /I "%~1"=="--help" exit /b 0
+if /I "%~1"=="--version" exit /b 0
+for %%O in (-v --verbose --enable-analytics --disable-analytics --diagnostics --suppress-analytics) do if /I "%~1"=="%%O" goto parse_dart_shift
+if "%~1"=="--" goto parse_dart_separator
+set "HOOK_ARGUMENT=%~1"
+if "%HOOK_ARGUMENT:~0,1%"=="-" exit /b 0
+goto parse_dart_command
+:parse_dart_shift
+shift
+goto parse_dart_global
+:parse_dart_separator
+shift
+if "%~1"=="" exit /b 0
+:parse_dart_command
+set "DART_COMMAND=%~1"
+shift
+if /I "%DART_COMMAND%"=="pub" call :parse_pub_invocation %*
+exit /b 0
+
+:parse_pub_invocation
+:parse_pub_global
+if "%~1"=="" exit /b 0
+if /I "%~1"=="-h" goto parse_pub_skip
+if /I "%~1"=="--help" goto parse_pub_skip
+for %%O in (-v --verbose --color --no-color) do if /I "%~1"=="%%O" goto parse_pub_shift
+if /I "%~1"=="-C" goto parse_pub_directory
+if /I "%~1"=="--directory" goto parse_pub_directory
+set "HOOK_ARGUMENT=%~1"
+if /I "%HOOK_ARGUMENT:~0,12%"=="--directory=" goto parse_pub_inline_directory
+if "%~1"=="--" goto parse_pub_separator
+if "%HOOK_ARGUMENT:~0,1%"=="-" goto parse_pub_skip
+goto parse_pub_command
+:parse_pub_directory
+shift
+if "%~1"=="" goto parse_pub_skip
+set "PROJECT_DIRECTORY=%~1"
+:parse_pub_shift
+shift
+goto parse_pub_global
+:parse_pub_inline_directory
+set "PROJECT_DIRECTORY=%HOOK_ARGUMENT:~12%"
+goto parse_pub_shift
+:parse_pub_separator
+shift
+if "%~1"=="" exit /b 0
+:parse_pub_command
+set "PUB_COMMAND=%~1"
+shift
+:parse_pub_tail
+if "%~1"=="" exit /b 0
+if /I "%~1"=="-h" set "SKIP_PUB_HOOK=1"
+if /I "%~1"=="--help" set "SKIP_PUB_HOOK=1"
+if /I "%~1"=="-n" set "SKIP_PUB_HOOK=1"
+if /I "%~1"=="--dry-run" set "SKIP_PUB_HOOK=1"
+if /I "%~1"=="-C" goto parse_pub_tail_directory
+if /I "%~1"=="--directory" goto parse_pub_tail_directory
+set "HOOK_ARGUMENT=%~1"
+if /I "%HOOK_ARGUMENT:~0,12%"=="--directory=" set "PROJECT_DIRECTORY=%HOOK_ARGUMENT:~12%"
+shift
+goto parse_pub_tail
+:parse_pub_tail_directory
+shift
+if "%~1"=="" exit /b 0
+set "PROJECT_DIRECTORY=%~1"
+shift
+goto parse_pub_tail
+:parse_pub_skip
+set "SKIP_PUB_HOOK=1"
+exit /b 0
+
 :resolve_project_root
 set "HOOK_DIR=%CD%"
-:resolve_project_root_argument
-if "%~1"=="" goto resolve_project_root_path
-if /I "%~1"=="-C" goto resolve_project_root_value
-if /I "%~1"=="--directory" goto resolve_project_root_value
-set "HOOK_ARGUMENT=%~1"
-if /I "%HOOK_ARGUMENT:~0,12%"=="--directory=" set "HOOK_DIR=%HOOK_ARGUMENT:~12%"
-shift
-goto resolve_project_root_argument
-:resolve_project_root_value
-shift
-if not "%~1"=="" set "HOOK_DIR=%~f1"
-shift
-goto resolve_project_root_argument
+if defined PROJECT_DIRECTORY set "HOOK_DIR=%PROJECT_DIRECTORY%"
 :resolve_project_root_path
 for %%i in ("%HOOK_DIR%") do set "HOOK_DIR=%%~fi"
 :resolve_project_root_parent
@@ -1517,12 +1726,7 @@ set "SCRIPT_DIR=%~dp0"
 set "ORIGINAL=%SCRIPT_DIR%flutter.ccrouter-original.bat"
 if "%CCROUTER_PUB_HOOK_DISABLE%"=="1" goto invoke_original
 
-set "FLUTTER_COMMAND="
-for %%A in (%*) do (
-  if /I "%%~A"=="pub" if not defined FLUTTER_COMMAND set "FLUTTER_COMMAND=pub"
-  if /I "%%~A"=="run" if not defined FLUTTER_COMMAND set "FLUTTER_COMMAND=run"
-  if /I "%%~A"=="build" if not defined FLUTTER_COMMAND set "FLUTTER_COMMAND=build"
-)
+call :parse_flutter_invocation %*
 if /I "%FLUTTER_COMMAND%"=="run" goto preflight
 if /I "%FLUTTER_COMMAND%"=="build" goto preflight
 if /I not "%FLUTTER_COMMAND%"=="pub" goto invoke_original
@@ -1533,21 +1737,10 @@ call "%ORIGINAL%" %*
 set "PUB_EXIT=%ERRORLEVEL%"
 endlocal & set "PUB_EXIT=%PUB_EXIT%"
 if not "%PUB_EXIT%"=="0" exit /b %PUB_EXIT%
-set "PUB_COMMAND="
-set "SKIP_PUB_HOOK=0"
-for %%A in (%*) do (
-  if /I "%%~A"=="--help" set "SKIP_PUB_HOOK=1"
-  if /I "%%~A"=="-h" set "SKIP_PUB_HOOK=1"
-  if /I "%%~A"=="--dry-run" set "SKIP_PUB_HOOK=1"
-  if /I "%%~A"=="-n" set "SKIP_PUB_HOOK=1"
-  if /I "%%~A"=="get" if not defined PUB_COMMAND set "PUB_COMMAND=get"
-  if /I "%%~A"=="upgrade" if not defined PUB_COMMAND set "PUB_COMMAND=upgrade"
-  if /I "%%~A"=="downgrade" if not defined PUB_COMMAND set "PUB_COMMAND=downgrade"
-  if /I "%%~A"=="add" if not defined PUB_COMMAND set "PUB_COMMAND=add"
-  if /I "%%~A"=="remove" if not defined PUB_COMMAND set "PUB_COMMAND=remove"
-)
 if "%SKIP_PUB_HOOK%"=="1" exit /b 0
-if not defined PUB_COMMAND exit /b 0
+set "RUN_PUB_HOOK=0"
+for %%C in (get upgrade downgrade add remove) do if /I "%PUB_COMMAND%"=="%%C" set "RUN_PUB_HOOK=1"
+if not "%RUN_PUB_HOOK%"=="1" exit /b 0
 set "HOOK_COMMAND=%PUB_COMMAND%"
 goto run_hook
 
@@ -1556,7 +1749,7 @@ set "HOOK_COMMAND=%FLUTTER_COMMAND%"
 goto run_hook
 
 :run_hook
-call :resolve_project_root %*
+call :resolve_project_root
 if not "%ERRORLEVEL%"=="0" goto invoke_original
 set "HOOK_DIR=%PROJECT_ROOT%"
 :find_package_config
@@ -1624,21 +1817,99 @@ exit /b %HOOK_EXIT%
 call "%ORIGINAL%" %*
 exit /b %ERRORLEVEL%
 
+:parse_flutter_invocation
+set "FLUTTER_COMMAND="
+set "PUB_COMMAND="
+set "PROJECT_DIRECTORY="
+set "SKIP_PUB_HOOK=0"
+:parse_flutter_global
+if "%~1"=="" exit /b 0
+if /I "%~1"=="-h" exit /b 0
+if /I "%~1"=="--help" exit /b 0
+if /I "%~1"=="--version" exit /b 0
+for %%O in (-v -vv --verbose --prefixed-errors --quiet --wrap --no-wrap --machine --color --no-color --version-check --no-version-check --enable-analytics --disable-analytics --suppress-analytics --print-dtd --show-test-device --show-web-server-device --ci) do if /I "%~1"=="%%O" goto parse_flutter_shift
+for %%O in (-d --device-id --wrap-column --packages --local-engine-src-path --local-engine --local-engine-host --local-web-sdk --debug-logs-dir) do if /I "%~1"=="%%O" goto parse_flutter_value
+set "HOOK_ARGUMENT=%~1"
+if /I "%HOOK_ARGUMENT:~0,12%"=="--device-id=" goto parse_flutter_shift
+if /I "%HOOK_ARGUMENT:~0,14%"=="--wrap-column=" goto parse_flutter_shift
+if /I "%HOOK_ARGUMENT:~0,11%"=="--packages=" goto parse_flutter_shift
+if /I "%HOOK_ARGUMENT:~0,24%"=="--local-engine-src-path=" goto parse_flutter_shift
+if /I "%HOOK_ARGUMENT:~0,15%"=="--local-engine=" goto parse_flutter_shift
+if /I "%HOOK_ARGUMENT:~0,20%"=="--local-engine-host=" goto parse_flutter_shift
+if /I "%HOOK_ARGUMENT:~0,16%"=="--local-web-sdk=" goto parse_flutter_shift
+if /I "%HOOK_ARGUMENT:~0,17%"=="--debug-logs-dir=" goto parse_flutter_shift
+if "%~1"=="--" goto parse_flutter_separator
+if "%HOOK_ARGUMENT:~0,1%"=="-" exit /b 0
+goto parse_flutter_command
+:parse_flutter_value
+shift
+if "%~1"=="" exit /b 0
+:parse_flutter_shift
+shift
+goto parse_flutter_global
+:parse_flutter_separator
+shift
+if "%~1"=="" exit /b 0
+:parse_flutter_command
+set "FLUTTER_COMMAND=%~1"
+shift
+if /I "%FLUTTER_COMMAND%"=="pub" call :parse_pub_invocation %*
+exit /b 0
+
+:parse_pub_invocation
+:parse_pub_global
+if "%~1"=="" exit /b 0
+if /I "%~1"=="-h" goto parse_pub_skip
+if /I "%~1"=="--help" goto parse_pub_skip
+for %%O in (-v --verbose --color --no-color) do if /I "%~1"=="%%O" goto parse_pub_shift
+if /I "%~1"=="-C" goto parse_pub_directory
+if /I "%~1"=="--directory" goto parse_pub_directory
+set "HOOK_ARGUMENT=%~1"
+if /I "%HOOK_ARGUMENT:~0,12%"=="--directory=" goto parse_pub_inline_directory
+if "%~1"=="--" goto parse_pub_separator
+if "%HOOK_ARGUMENT:~0,1%"=="-" goto parse_pub_skip
+goto parse_pub_command
+:parse_pub_directory
+shift
+if "%~1"=="" goto parse_pub_skip
+set "PROJECT_DIRECTORY=%~1"
+:parse_pub_shift
+shift
+goto parse_pub_global
+:parse_pub_inline_directory
+set "PROJECT_DIRECTORY=%HOOK_ARGUMENT:~12%"
+goto parse_pub_shift
+:parse_pub_separator
+shift
+if "%~1"=="" exit /b 0
+:parse_pub_command
+set "PUB_COMMAND=%~1"
+shift
+:parse_pub_tail
+if "%~1"=="" exit /b 0
+if /I "%~1"=="-h" set "SKIP_PUB_HOOK=1"
+if /I "%~1"=="--help" set "SKIP_PUB_HOOK=1"
+if /I "%~1"=="-n" set "SKIP_PUB_HOOK=1"
+if /I "%~1"=="--dry-run" set "SKIP_PUB_HOOK=1"
+if /I "%~1"=="-C" goto parse_pub_tail_directory
+if /I "%~1"=="--directory" goto parse_pub_tail_directory
+set "HOOK_ARGUMENT=%~1"
+if /I "%HOOK_ARGUMENT:~0,12%"=="--directory=" set "PROJECT_DIRECTORY=%HOOK_ARGUMENT:~12%"
+shift
+goto parse_pub_tail
+:parse_pub_tail_directory
+shift
+if "%~1"=="" exit /b 0
+set "PROJECT_DIRECTORY=%~1"
+shift
+goto parse_pub_tail
+:parse_pub_skip
+set "SKIP_PUB_HOOK=1"
+exit /b 0
+
 :resolve_project_root
 set "HOOK_DIR=%CD%"
-:resolve_project_root_argument
-if "%~1"=="" goto resolve_project_root_path
-if /I "%~1"=="-C" goto resolve_project_root_value
-if /I "%~1"=="--directory" goto resolve_project_root_value
-set "HOOK_ARGUMENT=%~1"
-if /I "%HOOK_ARGUMENT:~0,12%"=="--directory=" set "HOOK_DIR=%HOOK_ARGUMENT:~12%"
-shift
-goto resolve_project_root_argument
-:resolve_project_root_value
-shift
-if not "%~1"=="" set "HOOK_DIR=%~f1"
-shift
-goto resolve_project_root_argument
+if defined PROJECT_DIRECTORY set "HOOK_DIR=%PROJECT_DIRECTORY%"
 :resolve_project_root_path
 for %%i in ("%HOOK_DIR%") do set "HOOK_DIR=%%~fi"
 :resolve_project_root_parent

@@ -93,8 +93,11 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook uninstall
 
 1. 先完整执行原始 `flutter pub` 或 `dart pub`。
 2. 原始命令失败时，直接返回原始退出码，不运行生成器。
-3. 原始命令成功后，wrapper 查找 `--directory`/`-C` 指定的项目并向上定位
-   `pubspec.yaml`。
+3. wrapper 按已知 global option 的 arity 定位第一个真实 top-level command，再读取 `pub`
+   后的第一个真实 subcommand。option value、Dart script 参数或业务参数中的 `pub`、`run`、
+   `build`、`get` 不参与命令判定；未知且无法确定 arity 的 global option 安全跳过 Hook 并交给
+   原 CLI。原始 Pub 成功后，wrapper 使用 subcommand 前后官方支持的 `--directory`/`-C`
+   指定项目并向上定位 `pubspec.yaml`。
 4. 没有 resolved Package config、当前 Package 没有直接声明 `ccrouter`/
    `ccrouter_contracts`，或解析图没有对应 Package 与 `ccrouter_generator` 时，打印跳过原因
    并返回成功。Host 进入完整聚合和校验；其它参与 Package 只更新自身生成物。
@@ -138,7 +141,8 @@ terminal failure 快速栅栏，恢复旧的 fingerprint-only 失败判断与有
 入口前执行一次生成；`run` 在成功后额外持有 watch lease：
 
 1. POSIX/Windows wrapper 会在全局 Flutter 参数之后定位 `pub`、`run` 或 `build` 命令；
-   因此 `flutter --no-color run` 不会绕过 Hook。
+   因此 `flutter --no-color run` 不会绕过 Hook，`-d run pub get` 中作为 device ID 的 `run`
+   也不会被误判为 command。
 2. `run`/`build` 使用当前目录（以及兼容的 `--directory`/`-C`）向上定位项目，只有
    同时解析 `ccrouter` 和 `ccrouter_generator` 的 resolved Package config 才运行生成。
 3. 生成器使用自身的内容 fingerprint fast path；没有变化时只做有界校验，不重复运行完整

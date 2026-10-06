@@ -842,6 +842,11 @@ watch through a wrapper-owned lease;
 `flutter build` stays one-shot. Use `CCROUTER_DISABLE_BUILD_WATCH=1` to fall
 back. The active watch holds the build root generation lock; stop it before
 running the final authoritative `--no-cache --check`.
+The POSIX and Windows wrappers consume known global-option values before
+selecting the first real Flutter/Dart command and the first real Pub subcommand.
+They never scan arbitrary values or trailing business arguments for command
+names; an unknown option with unproven arity bypasses the Hook and remains the
+original CLI's responsibility.
 Before the original Flutter Tool starts, the wrapper waits for `sessionReady`
 from the exact lease it launched and confirms that the build-root owner lock is
 still held. A process ID or `starting` line alone is not readiness. Entrypoint

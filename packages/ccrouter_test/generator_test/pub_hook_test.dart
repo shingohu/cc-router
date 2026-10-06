@@ -92,8 +92,10 @@ void main() {
         contains(':resolve_project_root'),
         contains('--directory='),
         contains('pushd "%PROJECT_ROOT%"'),
+        contains(':parse_dart_invocation'),
       ),
     );
+    expect(dartBat.readAsStringSync(), contains(':parse_pub_invocation'));
     expect(
       flutter.readAsStringSync(),
       allOf(
@@ -122,8 +124,10 @@ void main() {
         contains('--directory='),
         contains('pushd "%PROJECT_ROOT%"'),
         contains('ccrouter_generator:ccrouter_flutter_run_supervisor'),
+        contains(':parse_flutter_invocation'),
       ),
     );
+    expect(flutterBat.readAsStringSync(), contains('--device-id'));
     expect(
       flutterBat.readAsStringSync(),
       contains('CCROUTER_DISABLE_WINDOWS_RUN_SUPERVISOR'),
@@ -338,6 +342,86 @@ dev_dependencies:
     },
   );
 
+  test('Flutter wrapper locates only the real top-level command', () async {
+    final sdk = await Directory.systemTemp.createTemp(
+      'ccrouter_flutter_command_parser_',
+    );
+    addTearDown(() => sdk.delete(recursive: true));
+    final bin = Directory(path.join(sdk.path, 'bin'))..createSync();
+    final trace = path.join(sdk.path, 'command-trace.txt');
+    final flutter = File(path.join(bin.path, 'flutter'))
+      ..writeAsStringSync('''#!/usr/bin/env bash
+printf "flutter:%s\\n" "\$*" >> "\$CCROUTER_TRACE"
+exit 0
+''');
+    final dart = File(path.join(bin.path, 'dart'))
+      ..writeAsStringSync('''#!/usr/bin/env bash
+printf "dart:%s\\n" "\$*" >> "\$CCROUTER_TRACE"
+exit 0
+''');
+    File(
+      path.join(bin.path, 'flutter.bat'),
+    ).writeAsStringSync('@echo off\r\nexit /b 0\r\n');
+    await _writeFakeInnerDart(sdk, '#!/usr/bin/env bash\nexit 0\n');
+    await Process.run('chmod', ['+x', flutter.path, dart.path]);
+    final installed = await _run(['pub-hook', 'install', '--sdk', sdk.path]);
+    expect(installed.exitCode, 0, reason: '${installed.stderr}');
+
+    final project = Directory(path.join(sdk.path, 'project'))..createSync();
+    File(path.join(project.path, 'pubspec.yaml')).writeAsStringSync('''
+name: flutter_command_parser
+dependencies:
+  ccrouter: any
+dev_dependencies:
+  ccrouter_generator: any
+''');
+    Directory(path.join(project.path, '.dart_tool')).createSync();
+    File(
+      path.join(project.path, '.dart_tool', 'package_config.json'),
+    ).writeAsStringSync('''{"configVersion":2,"packages":[
+  {"name":"ccrouter_generator","rootUri":"../missing_generator"}
+]}''');
+    final environment = <String, String>{
+      ...Platform.environment,
+      'CCROUTER_TRACE': trace,
+    };
+
+    for (final arguments in const <List<String>>[
+      ['create', 'run', 'build', 'pub', 'get'],
+      ['--help', 'run'],
+      ['--future-global-option', 'pub', 'get'],
+    ]) {
+      File(trace).writeAsStringSync('');
+      final result = await Process.run(
+        flutter.path,
+        arguments,
+        workingDirectory: project.path,
+        environment: environment,
+      );
+      expect(result.exitCode, 0, reason: '${result.stderr}');
+      expect(File(trace).readAsLinesSync(), ['flutter:${arguments.join(' ')}']);
+    }
+
+    for (final arguments in const <List<String>>[
+      ['-d', 'run', 'pub', 'get'],
+      ['--packages', 'run', 'pub', 'get'],
+      ['--no-color', 'pub', 'add', 'run'],
+    ]) {
+      File(trace).writeAsStringSync('');
+      final result = await Process.run(
+        flutter.path,
+        arguments,
+        workingDirectory: project.path,
+        environment: environment,
+      );
+      expect(result.exitCode, 0, reason: '${result.stderr}');
+      final lines = File(trace).readAsLinesSync();
+      expect(lines.first, 'flutter:${arguments.join(' ')}');
+      expect(lines, hasLength(2));
+      expect(lines.last, contains('ccrouter_generator:ccrouter pub-hook run'));
+    }
+  });
+
   test(
     'inner Dart wrapper runs post-pub once and preserves bypass semantics',
     () async {
@@ -397,6 +481,32 @@ dev_dependencies:
           contains('--pub-command dart:get'),
         ),
       );
+
+      for (final arguments in const <List<String>>[
+        ['run', 'tool.dart', 'pub', 'get'],
+        ['--help', 'pub', 'get'],
+        ['--future-global-option', 'pub', 'get'],
+      ]) {
+        File(trace).writeAsStringSync('');
+        final ignored = await Process.run(
+          innerDart.path,
+          arguments,
+          workingDirectory: project.path,
+          environment: environment,
+        );
+        expect(ignored.exitCode, 0);
+        expect(File(trace).readAsLinesSync(), [arguments.join(' ')]);
+      }
+
+      File(trace).writeAsStringSync('');
+      final globalOption = await Process.run(
+        innerDart.path,
+        ['--verbose', 'pub', 'get'],
+        workingDirectory: project.path,
+        environment: environment,
+      );
+      expect(globalOption.exitCode, 0, reason: '${globalOption.stderr}');
+      expect(File(trace).readAsLinesSync(), hasLength(2));
 
       for (final arguments in const [
         ['pub', 'get', '--help'],
@@ -482,6 +592,7 @@ dev_dependencies:
     final lines = File(trace).readAsLinesSync();
     final canonicalLibrary = library.resolveSymbolicLinksSync();
     final canonicalProject = project.resolveSymbolicLinksSync();
+    final canonicalSdk = sdk.resolveSymbolicLinksSync();
     expect(lines, hasLength(2));
     expect(lines.first, '$canonicalLibrary|pub get');
     expect(
@@ -491,6 +602,27 @@ dev_dependencies:
         contains('ccrouter_generator:ccrouter pub-hook run'),
       ),
     );
+
+    for (final arguments in <List<String>>[
+      ['pub', '--directory', project.path, 'get'],
+      ['pub', '--directory=${project.path}', 'get'],
+      ['pub', 'get', '--directory', project.path],
+      ['pub', 'get', '--directory=${project.path}'],
+    ]) {
+      File(trace).writeAsStringSync('');
+      final directed = await Process.run(
+        innerDart.path,
+        arguments,
+        workingDirectory: sdk.path,
+        environment: {...Platform.environment, 'CCROUTER_TRACE': trace},
+      );
+
+      expect(directed.exitCode, 0, reason: '${directed.stderr}');
+      final directedLines = File(trace).readAsLinesSync();
+      expect(directedLines, hasLength(2));
+      expect(directedLines.first, startsWith('$canonicalSdk|pub '));
+      expect(directedLines.last, startsWith('$canonicalProject|run '));
+    }
   });
 
   test('Flutter wrapper suppresses nested Dart post-pub hooks', () async {

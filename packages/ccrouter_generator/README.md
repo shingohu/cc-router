@@ -196,8 +196,10 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook uninstall
 Hook 按 SDK 版本独立安装，不修改 Flutter snapshot；macOS/Linux 同时包装 Flutter SDK 的
 inner Dart executable，Windows 包装 `bin/dart.bat`，但无法拦截 IDE 直接执行的 `dart.exe`。
 非 CCRouter 项目以及没有直接声明
-`ccrouter` 的 Workspace 聚合根会跳过，不会猜测成员 Host。完整的
-退出码语义、FVM 版本切换和禁用方式见
+`ccrouter` 的 Workspace 聚合根会跳过，不会猜测成员 Host。wrapper 只按已知 global option
+arity 定位真实 top-level command 和 Pub subcommand；参数值中
+出现 `pub`、`run`、`build` 或 `get` 不会触发 Hook，未知 global option 则安全交还原 CLI。
+完整退出码语义、FVM 版本切换和禁用方式见
 [`docs/CCRouter-cli-pub-hook.md`](https://github.com/shingohu/cc-router/blob/main/docs/CCRouter-cli-pub-hook.md)。
 `--verbosity=error` 只压低 Dart/Pub 在 CLI 启动前的依赖解析和 executable 构建噪声，
 不会隐藏 CCRouter 自己的进度、诊断或失败。

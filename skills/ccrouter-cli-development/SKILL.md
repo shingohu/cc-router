@@ -299,6 +299,11 @@ first; only a successful `get`, `upgrade`, `downgrade`, `add`, or `remove` may
 trigger post-pub generation. Help and dry-run invocations (`--help`, `-h`,
 `--dry-run`, or `-n`) never trigger it. `flutter run` and `flutter build` run the same
 generator as a fail-closed preflight before the original Flutter entrypoint.
+The wrappers locate the first real top-level command by consuming known global
+option values, then accept only the first real Pub subcommand. Never scan all
+tokens: option values, script arguments, and business arguments named `pub`,
+`run`, `build`, or `get` are not commands. An unknown global option with
+unproven arity skips the Hook and remains owned by the original CLI.
 It resolves the current Package role from `.metadata`, `ccrouter.yaml`, and its
 direct `ccrouter`/`ccrouter_contracts` dependency. An app-role Host runs Host
 generation; other participating Packages run package-local generation. The

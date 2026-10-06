@@ -1443,6 +1443,10 @@ SDK 解析优先使用 `FLUTTER_ROOT` 和当前目录向上的 `.fvm/flutter_sdk
 `ccrouter_generator` 时直接跳过。app-role Host 运行完整 Host generation；Flutter component 与
 Pure Dart contracts Package 运行 package-local generation。因此 Workspace 聚合根不会被误判为
 Host；Hook 不会猜测某个成员 Package 代替当前目录生成。
+wrapper 按已知 global option 的 arity 定位第一个真实 Flutter/Dart command，再只读取 `pub`
+后的第一个真实 subcommand；option value、脚本参数或后续业务参数中的 `pub`/`run`/`build` 不会
+误触发生成。无法判断 arity 的未知 global option 会安全跳过 Hook 并交给原 CLI；可用
+`CCROUTER_PUB_HOOK_DISABLE=1` 做完整原路径对照。
 在 macOS/Linux 上，安装器包装 Flutter SDK 的 inner Dart executable，因此 IDE 直接调用
 `bin/cache/dart-sdk/bin/dart pub get` 也会触发 Hook；Windows 只包装 `bin/dart.bat`，IDE 若直接
 执行 `cache/dart-sdk/bin/dart.exe` 则仍在边界之外，`status` 会明确显示该限制。它不监听
