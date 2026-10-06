@@ -168,12 +168,10 @@ final class CCPubHookManager {
         }),
       );
     } catch (_) {
-      if (posix.existsSync()) await posix.delete();
-      if (windows.existsSync()) await windows.delete();
-      if (_isDartPosixWrapper(dartPosix)) await dartPosix.delete();
-      if (_isDartWindowsWrapper(dartWindows)) await dartWindows.delete();
+      if (marker.existsSync()) await marker.delete();
       for (final item in moved.reversed) {
         if (item.backup.existsSync()) {
+          if (item.source.existsSync()) await item.source.delete();
           await item.backup.rename(item.source.path);
         }
       }

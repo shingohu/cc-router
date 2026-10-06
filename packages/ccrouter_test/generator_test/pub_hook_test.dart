@@ -11,6 +11,38 @@ import 'package:test/test.dart';
 import '../../ccrouter_generator/bin/src/pub_hook_watch_coordination.dart';
 
 void main() {
+  test(
+    'pub-hook install preserves an entrypoint when its rename fails',
+    () async {
+      final sdk = await Directory.systemTemp.createTemp(
+        'ccrouter_pub_hook_rename_failure_',
+      );
+      addTearDown(() => sdk.delete(recursive: true));
+      final bin = Directory(path.join(sdk.path, 'bin'))..createSync();
+      final flutter = File(path.join(bin.path, 'flutter'))
+        ..writeAsStringSync('#!/usr/bin/env bash\nexit 0\n');
+      final originalBytes = flutter.readAsBytesSync();
+      File(
+        path.join(bin.path, 'flutter.bat'),
+      ).writeAsStringSync('@echo off\r\nexit /b 0\r\n');
+      File(
+        path.join(bin.path, 'dart.bat'),
+      ).writeAsStringSync('@echo off\r\nexit /b 0\r\n');
+      await _writeFakeInnerDart(sdk, '#!/usr/bin/env bash\nexit 0\n');
+      Directory(path.join(bin.path, 'flutter.ccrouter-original')).createSync();
+
+      final installed = await _run(['pub-hook', 'install', '--sdk', sdk.path]);
+
+      expect(installed.exitCode, 1);
+      expect(flutter.existsSync(), isTrue);
+      expect(flutter.readAsBytesSync(), originalBytes);
+      expect(
+        File(path.join(bin.path, '.ccrouter_pub_hook.json')).existsSync(),
+        isFalse,
+      );
+    },
+  );
+
   test('pub-hook install, status, and uninstall are reversible', () async {
     final sdk = await Directory.systemTemp.createTemp('ccrouter_pub_hook_sdk_');
     addTearDown(() => sdk.delete(recursive: true));
