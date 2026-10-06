@@ -46,16 +46,26 @@ void main() {
     expect(File('${innerDart.path}.ccrouter-original').existsSync(), isTrue);
     expect(
       innerDart.readAsStringSync(),
-      contains('CCRouter Dart pub hook wrapper'),
+      allOf(
+        contains('CCRouter Dart pub hook wrapper'),
+        contains('CCROUTER_PUB_HOOK_NESTED_FLUTTER'),
+      ),
     );
     expect(
       dartBat.readAsStringSync(),
       allOf(
         contains('CCRouter Dart pub hook wrapper'),
         contains('dart:%PUB_COMMAND%'),
+        contains('CCROUTER_PUB_HOOK_NESTED_FLUTTER'),
       ),
     );
-    expect(flutter.readAsStringSync(), contains('ccrouter_generator:ccrouter'));
+    expect(
+      flutter.readAsStringSync(),
+      allOf(
+        contains('ccrouter_generator:ccrouter'),
+        contains('CCROUTER_PUB_HOOK_NESTED_FLUTTER=1'),
+      ),
+    );
     expect(flutter.readAsStringSync(), contains('--watch=auto'));
     expect(flutter.readAsStringSync(), contains('--watch-lease'));
     expect(flutter.readAsStringSync(), contains('CCRouter watch starting'));
@@ -70,7 +80,10 @@ void main() {
     );
     expect(
       flutterBat.readAsStringSync(),
-      contains('ccrouter_generator:ccrouter'),
+      allOf(
+        contains('ccrouter_generator:ccrouter'),
+        contains('CCROUTER_PUB_HOOK_NESTED_FLUTTER=1'),
+      ),
     );
     expect(flutterBat.readAsStringSync(), contains('--watch=auto'));
     expect(flutterBat.readAsStringSync(), contains('CCRouter watch starting'));
@@ -377,6 +390,71 @@ dev_dependencies:
       expect(File(trace).readAsLinesSync(), ['pub get']);
     },
   );
+
+  test('Flutter wrapper suppresses nested Dart post-pub hooks', () async {
+    final sdk = await Directory.systemTemp.createTemp(
+      'ccrouter_nested_pub_hook_',
+    );
+    addTearDown(() => sdk.delete(recursive: true));
+    final bin = Directory(path.join(sdk.path, 'bin'))..createSync();
+    final flutter = File(path.join(bin.path, 'flutter'))
+      ..writeAsStringSync('''#!/usr/bin/env bash
+"\$CCROUTER_FAKE_INNER_DART" pub get
+"\$CCROUTER_FAKE_INNER_DART" pub get
+''');
+    File(
+      path.join(bin.path, 'flutter.bat'),
+    ).writeAsStringSync('@echo off\r\nexit /b 0\r\n');
+    final trace = path.join(sdk.path, 'dart-trace.txt');
+    final innerDart = await _writeFakeInnerDart(sdk, '''#!/usr/bin/env bash
+printf "%s\\n" "\$*" >> "\$CCROUTER_TRACE"
+exit 0
+''');
+    final dart = File(path.join(bin.path, 'dart'))
+      ..writeAsStringSync('''#!/usr/bin/env bash
+exec "\$(cd -- "\$(dirname -- "\${BASH_SOURCE[0]}")" && pwd -P)/cache/dart-sdk/bin/dart" "\$@"
+''');
+    await Process.run('chmod', ['+x', dart.path]);
+    await Process.run('chmod', ['+x', flutter.path]);
+    final installed = await _run(['pub-hook', 'install', '--sdk', sdk.path]);
+    expect(installed.exitCode, 0, reason: '${installed.stderr}');
+
+    final project = Directory(path.join(sdk.path, 'project'))..createSync();
+    File(path.join(project.path, 'pubspec.yaml')).writeAsStringSync('''
+name: nested_hook_project
+dependencies:
+  ccrouter: any
+dev_dependencies:
+  ccrouter_generator: any
+''');
+    Directory(path.join(project.path, '.dart_tool')).createSync();
+    File(
+      path.join(project.path, '.dart_tool', 'package_config.json'),
+    ).writeAsStringSync('''{"configVersion":2,"packages":[
+  {"name":"ccrouter_generator","rootUri":"../missing_generator"}
+]}''');
+
+    final result = await Process.run(
+      flutter.path,
+      ['pub', 'get'],
+      workingDirectory: project.path,
+      environment: {
+        ...Platform.environment,
+        'CCROUTER_TRACE': trace,
+        'CCROUTER_FAKE_INNER_DART': innerDart.path,
+      },
+    );
+
+    expect(result.exitCode, 0, reason: '${result.stderr}');
+    final lines = File(trace).readAsLinesSync();
+    expect(lines.where((line) => line == 'pub get'), hasLength(2));
+    expect(
+      lines.where(
+        (line) => line.contains('ccrouter_generator:ccrouter pub-hook run'),
+      ),
+      hasLength(1),
+    );
+  });
 
   test(
     'pub-hook run skips a project without resolved CCRouter packages',

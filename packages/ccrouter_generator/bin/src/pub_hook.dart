@@ -1284,7 +1284,7 @@ if [ "$FLUTTER_COMMAND" != "pub" ]; then
   exec "$ORIGINAL" "$@"
 fi
 
-"$ORIGINAL" "$@"
+CCROUTER_PUB_HOOK_NESTED_FLUTTER=1 "$ORIGINAL" "$@"
 PUB_EXIT=$?
 if [ "$PUB_EXIT" -ne 0 ]; then
   exit "$PUB_EXIT"
@@ -1324,6 +1324,9 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 ORIGINAL="$SCRIPT_DIR/dart.ccrouter-original"
 
 if [ "${CCROUTER_PUB_HOOK_DISABLE:-0}" = "1" ]; then
+  exec "$ORIGINAL" "$@"
+fi
+if [ "${CCROUTER_PUB_HOOK_NESTED_FLUTTER:-0}" = "1" ]; then
   exec "$ORIGINAL" "$@"
 fi
 
@@ -1412,6 +1415,7 @@ rem CCRouter Dart pub hook wrapper. The original Dart entrypoint is kept beside 
 set "SCRIPT_DIR=%~dp0"
 set "ORIGINAL=%SCRIPT_DIR%dart.ccrouter-original.bat"
 if "%CCROUTER_PUB_HOOK_DISABLE%"=="1" goto invoke_original
+if "%CCROUTER_PUB_HOOK_NESTED_FLUTTER%"=="1" goto invoke_original
 
 set "DART_COMMAND="
 for %%A in (%*) do if /I "%%~A"=="pub" if not defined DART_COMMAND set "DART_COMMAND=pub"
@@ -1472,8 +1476,12 @@ if /I "%FLUTTER_COMMAND%"=="run" goto preflight
 if /I "%FLUTTER_COMMAND%"=="build" goto preflight
 if /I not "%FLUTTER_COMMAND%"=="pub" goto invoke_original
 
+setlocal
+set "CCROUTER_PUB_HOOK_NESTED_FLUTTER=1"
 call "%ORIGINAL%" %*
-if not "%ERRORLEVEL%"=="0" exit /b %ERRORLEVEL%
+set "PUB_EXIT=%ERRORLEVEL%"
+endlocal & set "PUB_EXIT=%PUB_EXIT%"
+if not "%PUB_EXIT%"=="0" exit /b %PUB_EXIT%
 set "PUB_COMMAND="
 set "SKIP_PUB_HOOK=0"
 for %%A in (%*) do (
