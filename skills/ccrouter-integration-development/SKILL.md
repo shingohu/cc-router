@@ -366,9 +366,14 @@ does not expose AssetIds, prove semantic output impact, or authorize skipping a
 Builder. Unknown upstream terminal formats are bounded in
 `unparsedFinalLines` and do not fail generation. Set
 `CCROUTER_DISABLE_BUILD_WATCH=1` for a one-shot fallback. Watch is scoped to one
-resolved build root; an independently runnable nested Package Host with its own
-Pub root uses a separate watch. It holds the root generation lock, so stop it
-before finishing with `--no-cache --check`.
+resolved build root. Different Hosts in that root share one Builder owner and
+target union, but each retains its own aggregation, validation, lease, status,
+diagnostics, and Host-scoped input revision. `builderOwnerPid` may therefore
+differ from the Host status `pid`; an active subscriber takes over when the
+owner exits. Do not start a second watch for the same Host. An independently
+runnable nested Package Host with its own Pub root uses a separate watch. Set
+`CCROUTER_DISABLE_MULTI_HOST_WATCH=1` only for an A/B fallback. Stop all watches
+for the root before finishing with `--no-cache --check`.
 One-shot generation, check, and clean commands fail fast while that root watch
 is active. Wait for `aggregationSucceeded` instead of polling one-shot commands.
 Watch startup also fails fast while a one-shot command owns or awaits the root.

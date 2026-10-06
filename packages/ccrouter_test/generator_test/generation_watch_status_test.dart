@@ -133,7 +133,12 @@ void main() {
 name: broken_watch_host
 environment:
   sdk: ^3.10.0
+dependencies:
+  ccrouter: any
 ''');
+    File(
+      path.join(host.path, '.metadata'),
+    ).writeAsStringSync('project_type: app\n');
 
     final result = await _run([
       'generate',

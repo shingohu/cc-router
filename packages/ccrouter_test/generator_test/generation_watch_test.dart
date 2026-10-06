@@ -212,9 +212,30 @@ void main() {
       expect(outputEvidenceReferenceArtifacts, optimizedArtifacts);
       expect(evidenceReferenceArtifacts, optimizedArtifacts);
       expect(referenceArtifacts, optimizedArtifacts);
-      expect(outputEvidenceReferencePlanningState, optimizedPlanningState);
-      expect(evidenceReferencePlanningState, optimizedPlanningState);
-      expect(referencePlanningState, optimizedPlanningState);
+      expect(
+        outputEvidenceReferencePlanningState,
+        optimizedPlanningState,
+        reason: _planningStateDifferenceReason(
+          optimizedPlanningState,
+          outputEvidenceReferencePlanningState,
+        ),
+      );
+      expect(
+        evidenceReferencePlanningState,
+        optimizedPlanningState,
+        reason: _planningStateDifferenceReason(
+          optimizedPlanningState,
+          evidenceReferencePlanningState,
+        ),
+      );
+      expect(
+        referencePlanningState,
+        optimizedPlanningState,
+        reason: _planningStateDifferenceReason(
+          optimizedPlanningState,
+          referencePlanningState,
+        ),
+      );
     },
     timeout: const Timeout(Duration(minutes: 5)),
   );
@@ -439,6 +460,234 @@ void main() {
   );
 
   test(
+    'Hosts sharing one build root reuse one Builder owner in either start order',
+    () async {
+      final demoRoot = Directory(path.join(Directory.current.path, 'demo'));
+      final exampleRoot = Directory(
+        path.join(demoRoot.path, 'modules', 'order', 'example'),
+      );
+      final source = File(
+        path.join(
+          demoRoot.path,
+          'modules',
+          'navigation_lab',
+          'lib',
+          'src',
+          'stack_page.dart',
+        ),
+      );
+      final original = source.readAsStringSync();
+
+      Future<void> verifyOrder(Directory first, Directory second) async {
+        final owner = await _ConcurrentWatch.start(first);
+        _ConcurrentWatch? subscriber;
+        try {
+          final ownerReady = await owner.waitUntilReady();
+          subscriber = await _ConcurrentWatch.start(second);
+          final subscriberReady = await subscriber.waitUntilReady();
+          expect(ownerReady['builderOwnerPid'], isA<int>());
+          expect(
+            subscriberReady['builderOwnerPid'],
+            ownerReady['builderOwnerPid'],
+          );
+
+          final ownerCycle = ownerReady['cycle'] as int;
+          final subscriberCycle = subscriberReady['cycle'] as int;
+          source.writeAsStringSync(
+            '$original\n// Shared build-root watch probe.\n',
+            flush: true,
+          );
+          final ownerAfter = await owner.waitForCycleAfter(ownerCycle);
+          final subscriberAfter = await subscriber.waitForCycleAfter(
+            subscriberCycle,
+          );
+          final ownerIsDemo = path.equals(first.path, demoRoot.path);
+          final demoBefore = ownerIsDemo ? ownerReady : subscriberReady;
+          final demoAfter = ownerIsDemo ? ownerAfter : subscriberAfter;
+          final exampleBefore = ownerIsDemo ? subscriberReady : ownerReady;
+          final exampleAfter = ownerIsDemo ? subscriberAfter : ownerAfter;
+          expect(
+            demoAfter['inputRevision'] as int,
+            greaterThan(demoBefore['inputRevision'] as int),
+          );
+          expect(exampleAfter['inputRevision'], exampleBefore['inputRevision']);
+          source.writeAsStringSync(original, flush: true);
+          await owner.waitForCycleAfter(ownerCycle + 1);
+          await subscriber.waitForCycleAfter(subscriberCycle + 1);
+        } finally {
+          source.writeAsStringSync(original, flush: true);
+          await subscriber?.stop();
+          await owner.stop();
+        }
+      }
+
+      await verifyOrder(demoRoot, exampleRoot);
+      await verifyOrder(exampleRoot, demoRoot);
+      final reference = await _run([
+        'generate',
+        'demo',
+        '--no-cache',
+        '--check',
+      ]);
+      expect(reference.exitCode, 0, reason: '${reference.stderr}');
+      final exampleReference = await _run([
+        'generate',
+        'demo/modules/order/example',
+        '--no-cache',
+        '--check',
+      ]);
+      expect(
+        exampleReference.exitCode,
+        0,
+        reason: '${exampleReference.stderr}',
+      );
+    },
+    timeout: const Timeout(Duration(minutes: 8)),
+  );
+
+  test(
+    'subscriber takes over the shared Builder when its owner exits',
+    () async {
+      final demoRoot = Directory(path.join(Directory.current.path, 'demo'));
+      final exampleRoot = Directory(
+        path.join(demoRoot.path, 'modules', 'order', 'example'),
+      );
+      final owner = await _ConcurrentWatch.start(demoRoot);
+      _ConcurrentWatch? subscriber;
+      try {
+        final ownerReady = await owner.waitUntilReady();
+        subscriber = await _ConcurrentWatch.start(exampleRoot);
+        final subscriberReady = await subscriber.waitUntilReady();
+        final originalOwnerPid = ownerReady['builderOwnerPid'] as int;
+        expect(subscriberReady['builderOwnerPid'], originalOwnerPid);
+
+        await owner.stop();
+        final promoted = await subscriber.waitForBuilderOwnerAfter(
+          originalOwnerPid,
+        );
+        expect(promoted['builderOwnerPid'], subscriber.process.pid);
+        expect(promoted['pid'], subscriber.process.pid);
+        expect(promoted['sessionReady'], isTrue);
+      } finally {
+        await subscriber?.stop();
+        await owner.stop();
+      }
+    },
+    timeout: const Timeout(Duration(minutes: 4)),
+  );
+
+  test(
+    'subscriber rotates its Host session when its topology adds a target',
+    () async {
+      final demoRoot = Directory(path.join(Directory.current.path, 'demo'));
+      final exampleRoot = Directory(
+        path.join(demoRoot.path, 'modules', 'order', 'example'),
+      );
+      final pubspec = File(path.join(demoRoot.path, 'pubspec.yaml'));
+      final originalPubspec = pubspec.readAsStringSync();
+      final owner = await _ConcurrentWatch.start(exampleRoot);
+      _ConcurrentWatch? subscriber;
+      var resolutionChanged = false;
+      try {
+        final ownerReady = await owner.waitUntilReady();
+        subscriber = await _ConcurrentWatch.start(demoRoot);
+        final subscriberReady = await subscriber.waitUntilReady();
+        final initialSession = subscriberReady['sessionId'] as String;
+        final builderOwnerPid = ownerReady['builderOwnerPid'];
+
+        pubspec.writeAsStringSync(
+          _replaceOnce(
+            originalPubspec,
+            '  demo_order: ^0.1.0\n',
+            '  demo_order: ^0.1.0\n'
+                '  demo_analytics_firebase: ^0.1.0\n',
+          ),
+          flush: true,
+        );
+        final pub = await _runDemoPubGet();
+        expect(pub.exitCode, 0, reason: '${pub.stderr}');
+        resolutionChanged = true;
+
+        final restarted = await subscriber.waitForSessionAfter(initialSession);
+        expect(restarted['builderOwnerPid'], builderOwnerPid);
+        expect(restarted['hotRestartRequired'], isTrue);
+      } finally {
+        pubspec.writeAsStringSync(originalPubspec, flush: true);
+        if (resolutionChanged) {
+          final restorePub = await _runDemoPubGet();
+          expect(restorePub.exitCode, 0, reason: '${restorePub.stderr}');
+        }
+        await subscriber?.stop();
+        await owner.stop();
+      }
+    },
+    timeout: const Timeout(Duration(minutes: 6)),
+  );
+
+  test(
+    'multi-Host watch kill switch preserves fail-fast ownership',
+    () async {
+      final demoRoot = Directory(path.join(Directory.current.path, 'demo'));
+      final exampleRoot = Directory(
+        path.join(demoRoot.path, 'modules', 'order', 'example'),
+      );
+      final environment = <String, String>{
+        ...Platform.environment,
+        'CCROUTER_DISABLE_MULTI_HOST_WATCH': '1',
+      };
+      final owner = await _ConcurrentWatch.start(
+        demoRoot,
+        environment: environment,
+      );
+      _ConcurrentWatch? conflicting;
+      try {
+        await owner.waitUntilReady();
+        conflicting = await _ConcurrentWatch.start(
+          exampleRoot,
+          environment: environment,
+        );
+        final code = await conflicting.process.exitCode.timeout(
+          const Duration(seconds: 30),
+        );
+        expect(code, 1);
+        expect(
+          conflicting.output.join('\n'),
+          contains('Another CCRouter generation command or watch owns'),
+        );
+      } finally {
+        await conflicting?.stop();
+        await owner.stop();
+      }
+    },
+    timeout: const Timeout(Duration(minutes: 3)),
+  );
+
+  test(
+    'duplicate watch for one Host fails before sharing its status file',
+    () async {
+      final demoRoot = Directory(path.join(Directory.current.path, 'demo'));
+      final owner = await _ConcurrentWatch.start(demoRoot);
+      _ConcurrentWatch? duplicate;
+      try {
+        await owner.waitUntilReady();
+        duplicate = await _ConcurrentWatch.start(demoRoot);
+        final code = await duplicate.process.exitCode.timeout(
+          const Duration(seconds: 30),
+        );
+        expect(code, 1);
+        expect(
+          duplicate.output.join('\n'),
+          contains('already has an active CCRouter generation watch'),
+        );
+      } finally {
+        await duplicate?.stop();
+        await owner.stop();
+      }
+    },
+    timeout: const Timeout(Duration(minutes: 3)),
+  );
+
+  test(
     'watch evidence reuse keeps current Builder-only output bytes',
     () async {
       final source = File(
@@ -547,7 +796,15 @@ void main() {
           'recaptured',
         );
         expect(await _managedArtifacts(), optimizedArtifacts);
-        expect(await _localPlanningState(), optimizedPlanningState);
+        final evidenceReferencePlanningState = await _localPlanningState();
+        expect(
+          evidenceReferencePlanningState,
+          optimizedPlanningState,
+          reason: _planningStateDifferenceReason(
+            optimizedPlanningState,
+            evidenceReferencePlanningState,
+          ),
+        );
       } finally {
         source.writeAsStringSync(original, flush: true);
         final restored = await _run(['generate', 'demo']);
@@ -737,6 +994,166 @@ File _lockFile(String relative) => File(
   path.join(Directory.current.path, '.dart_tool', 'ccrouter', 'v1', relative),
 );
 
+final class _ConcurrentWatch {
+  _ConcurrentWatch._({
+    required this.hostRoot,
+    required this.process,
+    required this.lease,
+    required this.stdoutSubscription,
+    required this.stderrSubscription,
+    required this.output,
+  });
+
+  final Directory hostRoot;
+  final Process process;
+  final File lease;
+  final StreamSubscription<String> stdoutSubscription;
+  final StreamSubscription<String> stderrSubscription;
+  final List<String> output;
+  bool _stopped = false;
+
+  static Future<_ConcurrentWatch> start(
+    Directory hostRoot, {
+    Map<String, String>? environment,
+  }) async {
+    final watchDirectory = Directory(
+      path.join(hostRoot.path, '.dart_tool', 'ccrouter', 'v1', 'watch'),
+    );
+    await watchDirectory.create(recursive: true);
+    final lease = File(
+      path.join(
+        watchDirectory.path,
+        'test-${DateTime.now().microsecondsSinceEpoch}-$pid.lease',
+      ),
+    )..writeAsStringSync('test');
+    final process = await Process.start(
+      Platform.resolvedExecutable,
+      [
+        _generatorEntrypoint,
+        'generate',
+        hostRoot.path,
+        '--watch=auto',
+        '--machine',
+        '--watch-lease',
+        lease.path,
+      ],
+      workingDirectory: Directory.current.path,
+      environment: environment,
+    );
+    final output = <String>[];
+    final stdoutSubscription = process.stdout
+        .transform(utf8.decoder)
+        .transform(const LineSplitter())
+        .listen((line) => output.add('stdout: $line'));
+    final stderrSubscription = process.stderr
+        .transform(utf8.decoder)
+        .transform(const LineSplitter())
+        .listen((line) => output.add('stderr: $line'));
+    return _ConcurrentWatch._(
+      hostRoot: hostRoot,
+      process: process,
+      lease: lease,
+      stdoutSubscription: stdoutSubscription,
+      stderrSubscription: stderrSubscription,
+      output: output,
+    );
+  }
+
+  Future<Map<String, dynamic>> waitUntilReady() => _waitForStatus(
+    (status) =>
+        status['active'] == true &&
+        status['sessionReady'] == true &&
+        status['lastEvent'] == 'ready',
+  );
+
+  Future<Map<String, dynamic>> waitForCycleAfter(int cycle) => _waitForStatus(
+    (status) =>
+        status['active'] == true &&
+        (status['cycle'] as int) > cycle &&
+        status['lastEvent'] == 'aggregationSucceeded',
+  );
+
+  Future<Map<String, dynamic>> waitForBuilderOwnerAfter(int ownerPid) =>
+      _waitForStatus(
+        (status) =>
+            status['active'] == true &&
+            status['sessionReady'] == true &&
+            status['lastEvent'] == 'ready' &&
+            status['builderOwnerPid'] != ownerPid,
+      );
+
+  Future<Map<String, dynamic>> waitForSessionAfter(String sessionId) =>
+      _waitForStatus(
+        (status) =>
+            status['active'] == true &&
+            status['sessionReady'] == true &&
+            status['lastEvent'] == 'ready' &&
+            status['sessionId'] != sessionId,
+      );
+
+  Future<Map<String, dynamic>> _waitForStatus(
+    bool Function(Map<String, dynamic>) predicate,
+  ) async {
+    final statusFile = File(
+      path.join(
+        hostRoot.path,
+        '.dart_tool',
+        'ccrouter',
+        'v1',
+        'watch',
+        'status.json',
+      ),
+    );
+    final deadline = DateTime.now().add(const Duration(minutes: 2));
+    var exited = false;
+    int? processExitCode;
+    unawaited(
+      process.exitCode.then((value) {
+        exited = true;
+        processExitCode = value;
+      }),
+    );
+    Map<String, dynamic>? latest;
+    while (DateTime.now().isBefore(deadline)) {
+      if (exited) {
+        throw StateError(
+          'watch exited with $processExitCode before expected status\n'
+          '${output.join('\n')}',
+        );
+      }
+      try {
+        latest =
+            jsonDecode(await statusFile.readAsString()) as Map<String, dynamic>;
+        if (predicate(latest)) return latest;
+      } on FileSystemException {
+        // Atomic status publication may briefly replace the file.
+      } on FormatException {
+        // Retry an incomplete read on non-atomic filesystems.
+      }
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+    }
+    throw TimeoutException(
+      'watch status did not match for ${hostRoot.path}: '
+      '${jsonEncode(latest)}\n${output.join('\n')}',
+    );
+  }
+
+  Future<void> stop() async {
+    if (_stopped) return;
+    _stopped = true;
+    if (lease.existsSync()) await lease.delete();
+    try {
+      await process.exitCode.timeout(const Duration(seconds: 15));
+    } on TimeoutException {
+      process.kill(ProcessSignal.sigterm);
+      await process.exitCode;
+    } finally {
+      await stdoutSubscription.cancel();
+      await stderrSubscription.cancel();
+    }
+  }
+}
+
 Future<_WatchRun> _runWatchUntilReady({
   Map<String, String>? environment,
   Future<void> Function()? onReady,
@@ -924,6 +1341,58 @@ Future<Map<String, List<int>>> _localPlanningState() async {
     }
   }
   return state;
+}
+
+String _planningStateDifferenceReason(
+  Map<String, List<int>> expected,
+  Map<String, List<int>> actual,
+) {
+  final differences = <String>[];
+  final files = <String>{...expected.keys, ...actual.keys}.toList()..sort();
+  for (final file in files) {
+    final expectedBytes = expected[file];
+    final actualBytes = actual[file];
+    if (expectedBytes == null || actualBytes == null) {
+      differences.add(
+        '$file: ${expectedBytes == null ? 'missing expected' : 'missing actual'}',
+      );
+      continue;
+    }
+    final expectedJson = jsonDecode(utf8.decode(expectedBytes));
+    final actualJson = jsonDecode(utf8.decode(actualBytes));
+    _collectJsonDifferences(file, expectedJson, actualJson, differences);
+  }
+  return differences.isEmpty
+      ? 'Planning-state JSON is equal but serialized bytes differ.'
+      : differences.take(20).join('\n');
+}
+
+void _collectJsonDifferences(
+  String location,
+  Object? expected,
+  Object? actual,
+  List<String> differences,
+) {
+  if (expected is Map && actual is Map) {
+    final keys = <Object?>{...expected.keys, ...actual.keys}.toList()
+      ..sort((left, right) => '$left'.compareTo('$right'));
+    for (final key in keys) {
+      _collectJsonDifferences(
+        '$location.$key',
+        expected[key],
+        actual[key],
+        differences,
+      );
+    }
+    return;
+  }
+  if (expected is List && actual is List) {
+    if (jsonEncode(expected) != jsonEncode(actual)) {
+      differences.add('$location: $expected != $actual');
+    }
+    return;
+  }
+  if (expected != actual) differences.add('$location: $expected != $actual');
 }
 
 List<String> _changedArtifactPaths(

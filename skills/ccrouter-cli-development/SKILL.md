@@ -121,6 +121,14 @@ upstream build_runner duration is profile-only. Set
 `CCROUTER_DISABLE_BUILD_WATCH=1` for the one-shot fallback. Watch owns one build
 root and holds its generation lock for the lease lifetime. Stop it before the
 final `--no-cache --check`; watch never replaces that authority.
+Different Hosts resolving to that same build root share one Builder owner. The
+owner watches the union of their active target closures, while every Host keeps
+its own aggregation, validation, lease, status, diagnostics, and input revision.
+`status.json.pid` identifies the Host watch and `builderOwnerPid` identifies the
+shared owner. A subscriber takes over if the owner exits. A duplicate watch for
+the same Host fails before it can compete for the status file. Set
+`CCROUTER_DISABLE_MULTI_HOST_WATCH=1` only for the previous one-watch-per-root
+A/B fallback. Hosts with distinct Pub build roots never share a Builder.
 For a wrapper-started background watch, use read-only `watch status <host-root>`
 for one snapshot or `watch follow <host-root>` for concise state changes. The
 watch atomically publishes `.dart_tool/ccrouter/v1/watch/status.json`; complete
@@ -165,6 +173,10 @@ source events. A covered version or dependency-edge change runs a
 `resolutionStarted` aggregation cycle without claiming that Builder ran. A new
 Host-closure Package, changed Builder target/filter set, or a child that exits
 after resolution changes rotates `sessionId` under the same lock and lease.
+Adding a subscriber may therefore expand and restart the shared child; removing
+one retains the harmless target superset until the owner exits. Actual Pub target
+removal still rotates the session. Each affected subscriber refreshes its own
+closure and publishes its own new `ready` fence.
 Wait for the new session's `ready`; its earlier `aggregationSucceeded` is not a
 completion fence. Set `CCROUTER_DISABLE_WATCH_SESSION_RESTART=1` only to make
 such changes fail closed and require a stopped-watch one-shot reference.

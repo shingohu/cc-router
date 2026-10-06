@@ -1264,7 +1264,14 @@ metadata、Package Index identity 与 Host graph 等聚合输入。它永远不�
 `--no-cache --check` 始终强制权威参考路径。
 
 `--watch=auto` 为一个 Host 解析单一 build root，并保持一套 `build_runner watch --workspace`
-进程、AOT entrypoint 和 Analyzer graph。watch 在 lease 内持有 generation lock；每个成功 Builder
+进程、AOT entrypoint 和 Analyzer graph。同一 resolved build root 下启动的不同 Host 会注册到
+同一个 Builder owner；owner 以所有活动 Host dependency closure 的 target union 启动或扩容
+build_runner，各 Host 仍分别执行聚合、Validator、原子发布，并维护自己的 lease、
+`status.json`、diagnostics 与 `inputRevision`。状态中的 `pid` 是该 Host watch 进程，
+`builderOwnerPid` 是共享 Builder owner，subscriber 场景下两者可以不同。owner 退出后，仍活动的
+subscriber 会接管并重新到达 `ready`；同一 Host 的第二个 watch 会在写共享状态前快速失败。
+`CCROUTER_DISABLE_MULTI_HOST_WATCH=1` 可恢复一个 build root 只允许一个 watch 的旧语义做 A/B。
+watch 在 lease 内持有 generation lock；每个成功 Builder
 轮次后先执行 exact-content 一致性检查，未命中 fast path 时继续执行只读依赖校验、preflight、
 输入屏障、快照恢复、Validator、聚合、原子写入和本地 planning state 提交。失败轮次不会发布
 半成品。`--machine` 令 stdout 仅输出 schema `1` NDJSON 事件，适合
@@ -1281,8 +1288,10 @@ console 格式，不读取 private Asset Graph；无法识别的终态保留在�
 CI 仍以 `generate <host> --no-cache --check` 为权威。一个活动 watch 会在 lease 生命周期内
 持有该 root 的 generation lock；同 root 的 one-shot generate/check/clean 会快速失败并提示等待
 `aggregationSucceeded`，不会无限阻塞；反过来已有 one-shot 正在执行或排队时，新 watch 也会快速失败。
-先停止 watch 再执行最终门禁。当前 MVP 只编排一个 build root；嵌套且
-拥有独立 Pub build root 的 Package Host 应各自启动 watch，不做跨 root 合并。
+先停止 watch 再执行最终门禁。共享仅发生在同一个 resolved build root；嵌套且
+拥有独立 Pub build root 的 Package Host 仍各自启动 watch，不做跨 root 合并。subscriber
+离开时当前 child 可保留已加载的 target superset，避免无意义 restart；真实 Pub resolution
+删除仍按精确 topology 重新启动 session。
 watch 还监视 Host manifest 与 Pub resolution 的精确内容变化；普通版本/依赖边变化在当前
 Builder target 集合仍可覆盖时发布 `resolutionStarted` 并直接执行完整聚合校验。Host closure
 新增 Package、Builder target/`--build-filter` 集合变化，或 build_runner 因 resolution 更新自行

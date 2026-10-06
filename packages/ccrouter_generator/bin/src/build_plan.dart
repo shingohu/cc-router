@@ -575,7 +575,7 @@ final class _GenerationPlanningSnapshot {
           final absolute = path.normalize(
             _absolutePath(workspace.buildRoot, entry.key),
           );
-          if (!path.isWithin(packageRoot, absolute)) continue;
+          if (!_packageRootOwnsPath(packageRoot, absolute)) continue;
           outputs[_relativePath(package.root, File(absolute))] = entry.value;
         }
       }

@@ -365,6 +365,11 @@ aggregation 消费的默认常量允许只改变 Builder Dart，Package dependen
 本地持续开发可用 `--watch=auto` 保持当前 build root 的 build_runner AOT entrypoint 和
 Analyzer graph。每次 Builder 成功后先验证 exact-content fast path；未命中时仍走完整
 CCRouter 校验、聚合、快照与原子提交；
+同一 resolved build root 的不同 Host 共享一个 Builder owner 和活动 Host target union，但保留
+各自的 aggregation、Validator、原子发布、lease、状态、diagnostics 与 Host-scoped
+`inputRevision`。`status.json.pid` 表示本 Host watch，`builderOwnerPid` 表示共享 Builder owner；
+owner 退出后 subscriber 可接管。同一 Host 不允许同时启动两份 watch，以免竞争同一状态文件。
+设置 `CCROUTER_DISABLE_MULTI_HOST_WATCH=1` 可恢复旧的单 watch ownership 语义做 A/B。
 `--machine` 将 stdout 限定为 schema `1` NDJSON，普通 build_runner 日志走 stderr。
 默认事件保留 Builder 与聚合最终耗时；只有显式追加 `--profile` 时，
 build_runner 才启用 `--verbose-durations`，且 `aggregationSucceeded.profile` 才携带完整 cycle
@@ -380,7 +385,8 @@ build_runner 正式 console 输出，不访问 private Asset Graph；未知终�
 同 root 的 one-shot generate、check 或 clean 会在检测到活动 watch 时快速失败，而不是无限等待锁；
 迭代期应等待 machine stream 的 `aggregationSucceeded`。已有 one-shot 正在执行或等待时，新的
 watch 同样会快速失败，调用方可在命令完成后重试启动 watch。
-当前只支持单 build root，不合并嵌套 Package Host 的独立 Pub root。
+共享只覆盖单个 resolved build root，不合并嵌套 Package Host 的独立 Pub root。subscriber
+退出不会为了收缩 target union 重启当前 child；Pub resolution 中真实的 target 删除仍会重启。
 Hook 的 watch 启动成功提示写入 stdout，与 preflight 成功信息保持一致；真正失败仍写 stderr，
 避免 IDE 将正常启动渲染成红色错误。
 Hook 对 `flutter run --machine` 增加只代理 stdin 的 reload gate。它等待 watch 的

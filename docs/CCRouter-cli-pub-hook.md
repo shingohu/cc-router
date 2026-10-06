@@ -159,6 +159,12 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter watch follow <host-ro
 `stopped`，只读命令会通过已释放的 owner lock 将遗留 `active` 记录显示为 `stale`；它不会
 回写历史 `status.json`。
 
+同一 resolved build root 的不同 Host 会共享一个 Builder owner，但每个 Hook 只读取自己 Host 的
+lease/status/diagnostics 并等待自己的 aggregation。`status.json.pid` 是本 Host watch，
+`builderOwnerPid` 可指向另一个 Host 的 owner 进程。owner 退出时活动 subscriber 会接管；同一
+Host 的重复 watch 会 fail-fast，不会同时写同一状态文件。可用
+`CCROUTER_DISABLE_MULTI_HOST_WATCH=1` 恢复旧的单 watch ownership 路径做 A/B。
+
 Workspace Validator 失败还会原子发布同目录的 `diagnostics.json`。它与 `status.json` 分开写入，
 最多保留 100 条结构诊断，并绑定 Host/build root、`sessionId`、`cycle`、`eventRevision` 和当前
 resolution fingerprint。成功、新 cycle 或 session restart 会发布空 snapshot 清除旧错误。
@@ -210,7 +216,8 @@ CCROUTER_DISABLE_WATCH_STARTUP_HANDSHAKE=1 flutter run
 
 - 覆盖 `flutter pub`、`flutter run` 和 `flutter build`，但不覆盖直接执行的 `dart pub`，
   也不监听 Flutter Tool 内部隐式 `pub get`。
-- `flutter run` 自动持有单 build root watch；`flutter build` 和成功的依赖操作仍最多触发
+- `flutter run` 自动持有 Host watch；同一 resolved build root 的不同 Host 共享一个 Builder
+  owner，各自保留聚合与 Hook completion fence。`flutter build` 和成功的依赖操作仍最多触发
   一次生成。嵌套且可独立运行、拥有自己 Pub root 的 Package Host 使用独立 watch。
 - reload gate 只覆盖 Flutter daemon 的 `--machine` `app.restart`，也就是 IDE 和自动化主路径。
   普通终端交互式 `r` 不经过该 gate，因为 shell wrapper 无法在不破坏 TTY、设备选择与信号

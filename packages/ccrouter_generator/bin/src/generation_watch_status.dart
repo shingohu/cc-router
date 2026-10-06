@@ -45,6 +45,10 @@ final class _GenerationWatchStatusTracker {
   String? _cycleResolutionFingerprint;
   String? _completedResolutionFingerprint;
   String? _cycleResolutionState;
+  int? _builderOwnerPid;
+
+  /// Associates this Host status with the process owning build_runner.
+  void setBuilderOwnerPid(int value) => _builderOwnerPid = value;
 
   /// Starts a distinct build_runner child session under the same watch lease.
   void beginNewSession() {
@@ -179,6 +183,7 @@ final class _GenerationWatchStatusTracker {
       'hostRoot': hostRoot.path,
       'buildRoot': buildRoot.path,
       'managedByLease': _leasePath != null,
+      if (_builderOwnerPid != null) 'builderOwnerPid': _builderOwnerPid,
       if (_leasePath != null) 'leasePath': _leasePath,
       if (_lastBuildElapsedMs != null)
         'lastBuildElapsedMs': _lastBuildElapsedMs,

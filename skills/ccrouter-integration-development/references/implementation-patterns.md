@@ -819,6 +819,15 @@ publication. `ready` means the initial cycle completed. Builder diagnostics stay
 on stderr. Default events retain final build and aggregation timings; add
 `--profile` explicitly for benchmarks or slow-run diagnosis when the complete
 cycle trace and build_runner verbose durations are needed.
+Different Hosts in the same resolved build root register with one Builder owner,
+which watches their target union. Each Host still owns its aggregation,
+validation, lease, status, diagnostics, and input revision; `builderOwnerPid`
+can differ from the Host process `pid`. A live subscriber takes over after the
+owner exits. A second watch for the same Host fails before status publication.
+Hosts with distinct Pub roots remain independent. Use
+`CCROUTER_DISABLE_MULTI_HOST_WATCH=1` only to compare the former exclusive-root
+behavior. Subscriber departure keeps the current target superset to avoid a
+restart; actual Pub target removal still rotates the child session.
 `buildSucceeded.buildRunner` also reports structured per-phase
 duration, inputs, skipped/not-triggered, inferred invalidated inputs, executed
 inputs, new/same/no-op outputs, and thresholded activities. These are
