@@ -1292,6 +1292,12 @@ Pub Hook 优先读取 stable session，因此 Host 本地 watch 状态被清理�
 参数和业务参数中的 `clean` 不触发检查。`CCROUTER_DISABLE_FLUTTER_CLEAN_GUARD=1` 可单次绕过
 做恢复或 A/B；`CCROUTER_PUB_HOOK_DISABLE=1` 仍可绕过整个 wrapper。两种 bypass 都不保证活动
 watch 能跨越被删除的 Pub/build_runner 状态继续工作。
+若 clean 通过未安装 wrapper、kill switch 或直接删除目录绕过 guard，watch 会对 build root 的
+`package_config.json`、`package_graph.json` 和已建立的 build_runner Asset Graph 做 500ms
+二次确认。持续缺失会发布 `invalidatedByClean`，有界停止 build_runner、保留最后完整生成物并
+释放 stable locks；不会无限等待 `pub get` 或尝试在失效 Analyzer graph 上继续。重新执行 Pub get
+后启动新的 watch。仅清理 Workspace member Host 自己的 `.dart_tool`、而共享 build root 状态仍
+完整时，不会误判为 clean invalidation。
 watch 在 lease 内持有 generation lock；每个成功 Builder
 轮次后先执行 exact-content 一致性检查，未命中 fast path 时继续执行只读依赖校验、preflight、
 输入屏障、快照恢复、Validator、聚合、原子写入和本地 planning state 提交。失败轮次不会发布

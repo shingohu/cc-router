@@ -150,6 +150,12 @@ final class _GenerationWatchStatusTracker {
         }
       }
     }
+    if (type == 'invalidatedByClean') {
+      _lastFailureAt = timestamp;
+      _failureStage = data['stage'] as String?;
+      _failureDiagnostics = data['reason'] as String?;
+      _failedInputRevision = _inputRevision;
+    }
     if (!_shouldPersist(type)) return;
     _eventRevision++;
 
@@ -165,6 +171,7 @@ final class _GenerationWatchStatusTracker {
       'aggregationStarted' ||
       'aggregationSucceeded' ||
       'ready' => true,
+      'invalidatedByClean' => false,
       'failed' => _watchStarted && data['stage'] != 'watch-exit',
       _ => false,
     };
@@ -266,6 +273,7 @@ final class _GenerationWatchStatusTracker {
           'resolutionStarted',
           'aggregationSucceeded',
           'ready',
+          'invalidatedByClean',
           'failed',
           'stopped',
         }.contains(type)) {
@@ -385,6 +393,7 @@ final class _GenerationWatchStatusTracker {
     'aggregationStarted' ||
     'aggregationSucceeded' ||
     'ready' ||
+    'invalidatedByClean' ||
     'failed' ||
     'stopped' => true,
     _ => false,
@@ -397,6 +406,7 @@ final class _GenerationWatchStatusTracker {
     'aggregationStarted' => 'aggregating',
     'aggregationSucceeded' => 'succeeded',
     'sessionRestarting' => 'restarting',
+    'invalidatedByClean' => 'invalidatedByClean',
     'watchStarted' => 'starting',
     'fallback' => 'fallback',
     'succeeded' || 'stopped' => 'stopped',
@@ -492,6 +502,10 @@ Future<void> _runGenerationWatchObservation(
   if (usedStableSession) {
     final observed = await _observeGenerationWatchLiveness(initial);
     _writeGenerationWatchFollowEvent(observed);
+    if (observed['active'] != true &&
+        _isTerminalGenerationWatchState(observed['state'])) {
+      return;
+    }
     previous =
         '${jsonEncode(initial)}\u0000${observed['active']}\u0000'
         '${observed['state']}';
@@ -524,12 +538,7 @@ Future<void> _runGenerationWatchObservation(
             _writeGenerationWatchFollowEvent(observed);
           }
           if (observed['active'] != true &&
-              const {
-                'stopped',
-                'fallback',
-                'failed',
-                'stale',
-              }.contains(observed['state'])) {
+              _isTerminalGenerationWatchState(observed['state'])) {
             return;
           }
         }
@@ -545,6 +554,14 @@ Future<void> _runGenerationWatchObservation(
     }
   }
 }
+
+bool _isTerminalGenerationWatchState(Object? state) => const {
+  'stopped',
+  'fallback',
+  'failed',
+  'invalidatedByClean',
+  'stale',
+}.contains(state);
 
 Future<Map<String, Object?>?> _readStableGenerationWatchStatus(
   Directory hostRoot,

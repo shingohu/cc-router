@@ -885,6 +885,10 @@ The installed Flutter wrapper likewise fail-fast guards a real top-level
 `flutter clean` while the build root has an active watch. Stop the run/watch
 first; do not rely on the recovery-only
 `CCROUTER_DISABLE_FLUTTER_CLEAN_GUARD=1` bypass during normal development.
+If bypassed clean persistently removes build-root Pub/build_runner state, watch
+publishes `invalidatedByClean`, performs bounded child shutdown, and releases
+its stable locks. Restore Pub state and start a new watch instead of waiting for
+in-place recovery.
 After a successful hooked Pub dependency command, the same-Host Hook performs
 that coordination itself: it fences on exact current resolution-file contents
 and waits for the active watch's terminal aggregation event. Success reuses

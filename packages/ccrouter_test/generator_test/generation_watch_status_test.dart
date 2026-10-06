@@ -116,6 +116,51 @@ void main() {
     expect('${follow.stdout}', contains('build_runner=820ms'));
   });
 
+  test(
+    'watch follow exits from a stable terminal session without a mirror',
+    () async {
+      final host = await Directory.systemTemp.createTemp(
+        'ccrouter_watch_status_stable_terminal_',
+      );
+      addTearDown(() => host.delete(recursive: true));
+      File(path.join(host.path, 'pubspec.yaml')).writeAsStringSync('''
+name: stable_terminal_host
+environment:
+  sdk: ^3.10.0
+dependencies:
+  ccrouter: any
+''');
+      File(
+        path.join(host.path, '.metadata'),
+      ).writeAsStringSync('project_type: app\n');
+      await publishCCRouterHostSession(
+        hostRoot: host,
+        buildRoot: host,
+        environment: _testEnvironment,
+        status: <String, Object?>{
+          'schemaVersion': 1,
+          'state': 'invalidatedByClean',
+          'active': false,
+          'lastEvent': 'invalidatedByClean',
+          'pid': 123,
+          'cycle': 1,
+          'startedAt': '2026-10-05T10:00:00.000Z',
+          'updatedAt': '2026-10-05T10:00:01.000Z',
+          'hostRoot': host.path,
+          'buildRoot': host.path,
+          'managedByLease': false,
+          'failureStage': 'clean-invalidation',
+        },
+      );
+
+      final follow = await _run(['watch', 'follow', host.path]);
+
+      expect(follow.exitCode, 0, reason: '${follow.stderr}');
+      expect('${follow.stdout}', contains('state=invalidatedByClean'));
+      expect('${follow.stdout}', contains('failure=clean-invalidation'));
+    },
+  );
+
   test('watch status rejects malformed local state', () async {
     final host = await Directory.systemTemp.createTemp(
       'ccrouter_watch_status_malformed_',

@@ -378,6 +378,9 @@ An installed Flutter wrapper blocks a real top-level `flutter clean` while the
 resolved build root has an active watch. Stop `flutter run/watch` before clean;
 the guard deliberately does not kill another development process. The narrow
 `CCROUTER_DISABLE_FLUTTER_CLEAN_GUARD=1` bypass is for recovery/A/B only.
+When the guard is bypassed, persistent loss of build-root Pub/build_runner
+state publishes `invalidatedByClean`, stops the child, and releases locks. Run
+Pub get and start a new watch; do not expect that session to recover in place.
 Workspace validation failures also publish a bounded atomic
 `watch/diagnostics.json`. The Analyzer Plugin accepts it only when Host/build
 root, session, cycle, event revision, and resolution fingerprint match the

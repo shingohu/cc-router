@@ -374,6 +374,12 @@ options, and argument values named `clean` do not trigger the guard. Use
 `CCROUTER_DISABLE_FLUTTER_CLEAN_GUARD=1` only for an explicit recovery or A/B
 run; bypassing does not make a watch valid after Pub or build_runner state is
 deleted.
+If the guard is bypassed, watch confirms persistent loss of the build root's
+package config, package graph, or established build_runner Asset Graph before
+publishing `invalidatedByClean`, stopping the child within the normal bounded
+shutdown, and releasing stable locks. Restore Pub state and start a new watch;
+never wait for that invalidated session to recover. Cleaning only a Workspace
+member's local `.dart_tool` does not invalidate an intact shared build root.
 Upgrade a schema 4 installation by uninstalling it before reinstalling. After a
 successful `flutter run` preflight it starts watch under a
 lifecycle lease and removes the lease when Flutter exits; `flutter build`

@@ -175,6 +175,67 @@ void main() {
   );
 
   test(
+    'watch invalidates after persistent build-root state removal',
+    () async {
+      final demoRoot = Directory(path.join(Directory.current.path, 'demo'));
+      final packageGraph = File(
+        path.join(Directory.current.path, '.dart_tool', 'package_graph.json'),
+      );
+      final backup = File(
+        '${packageGraph.path}.ccrouter-clean-test-$pid-'
+        '${DateTime.now().microsecondsSinceEpoch}',
+      );
+      final before = await _managedArtifacts();
+      final watch = await _ConcurrentWatch.start(demoRoot);
+      addTearDown(watch.stop);
+      await watch.waitUntilReady();
+      var exited = false;
+      watch.process.exitCode.then((_) => exited = true);
+      try {
+        packageGraph.renameSync(backup.path);
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+        backup.renameSync(packageGraph.path);
+        await Future<void>.delayed(const Duration(milliseconds: 700));
+        expect(exited, isFalse, reason: watch.output.join('\n'));
+
+        packageGraph.renameSync(backup.path);
+        final deadline = DateTime.now().add(const Duration(seconds: 10));
+        while (!watch.output.any(
+              (line) => line.contains('"type":"invalidatedByClean"'),
+            ) &&
+            DateTime.now().isBefore(deadline)) {
+          await Future<void>.delayed(const Duration(milliseconds: 100));
+        }
+        expect(watch.output, contains(contains('"type":"invalidatedByClean"')));
+      } finally {
+        if (backup.existsSync()) backup.renameSync(packageGraph.path);
+      }
+
+      final result = await watch.process.exitCode.timeout(
+        const Duration(seconds: 30),
+      );
+      expect(result, 1, reason: watch.output.join('\n'));
+      expect(
+        watch.output.join('\n'),
+        contains('Pub package graph was removed'),
+      );
+      final status = await _readWatchStatus();
+      expect(status['active'], isFalse);
+      expect(status['lastEvent'], 'invalidatedByClean');
+      expect(status['failureStage'], 'clean-invalidation');
+      expect(await _managedArtifacts(), before);
+
+      final owner = await _coordinationPaths.ownerLock.open(
+        mode: FileMode.append,
+      );
+      await owner.lock(FileLock.exclusive);
+      await owner.unlock();
+      await owner.close();
+    },
+    timeout: const Timeout(Duration(minutes: 3)),
+  );
+
+  test(
     'watch stops after a supervised Flutter lease heartbeat expires',
     () async {
       final watch = await _ConcurrentWatch.start(

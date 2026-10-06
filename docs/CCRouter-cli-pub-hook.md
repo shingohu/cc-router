@@ -186,6 +186,10 @@ watch 时，clean 会 fail-fast，并提示先停止 `flutter run/watch` 后重�
 `--help`、未知全局 option 或参数值中的 `clean` 不会误触发。仅在明确恢复或 A/B 时设置
 `CCROUTER_DISABLE_FLUTTER_CLEAN_GUARD=1` 单次绕过；它不保证 watch 能跨越被删除的
 package config 或 build_runner Asset Graph 继续运行。
+若通过未安装 wrapper、kill switch 或直接文件操作绕过 guard，watch 会对 build root 的 Pub
+config/graph 与已建立的 Asset Graph 做 500ms 二次确认。持续缺失发布
+`invalidatedByClean`，有界停止 child 并释放锁；恢复 Pub 状态后需要启动新 watch。Workspace
+member 只删除自己的 `.dart_tool` 而共享 build root 仍完整时不会触发该失效。
 不需要把 watch NDJSON
 混入 Flutter Tool 的 machine stdout；另开终端读取即可：
 

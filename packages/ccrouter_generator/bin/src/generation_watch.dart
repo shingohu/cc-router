@@ -285,6 +285,9 @@ Future<bool> _runGenerationWatchSubscriber({
   var seenCycleRevision = 0;
   var seenFailureRevision = 0;
   String? builderSessionId;
+  final buildStateMonitor = _GenerationWatchBuildStateMonitor(
+    buildContext.resolutionRoot,
+  );
 
   Future<void> refreshOwnTopology() async {
     final current = await _resolveGenerationWatchTopology(
@@ -322,6 +325,15 @@ Future<bool> _runGenerationWatchSubscriber({
   try {
     await events.emit('watchStarted', data: {'sharedBuilder': true});
     while (!stop.isCompleted) {
+      final invalidation = await buildStateMonitor.confirmedInvalidation();
+      if (invalidation != null) {
+        exitCode = 1;
+        await events.emit(
+          'invalidatedByClean',
+          data: {'stage': 'clean-invalidation', 'reason': invalidation},
+        );
+        return false;
+      }
       final ownerHeld = await _generationWatchOwnershipIsHeld(
         buildContext.resolutionRoot,
       );
@@ -653,11 +665,25 @@ Future<_GenerationWatchTopology?> _runGenerationWatchSession({
   final sessionResolutionFingerprint = resolutionBaseline;
   final exactResolutionPoll = Stopwatch()..start();
   Future<void>? activeResolutionCheck;
+  final buildStateMonitor = _GenerationWatchBuildStateMonitor(
+    buildContext.resolutionRoot,
+  );
+  var invalidationSignaled = false;
   late final Timer resolutionTimer;
   resolutionTimer = Timer.periodic(_generationWatchStatusPollInterval, (_) {
-    if (activeResolutionCheck != null || stop.isCompleted) return;
+    if (activeResolutionCheck != null ||
+        stop.isCompleted ||
+        invalidationSignaled) {
+      return;
+    }
     final check = () async {
       try {
+        final invalidation = await buildStateMonitor.confirmedInvalidation();
+        if (invalidation != null) {
+          invalidationSignaled = true;
+          signals.add(_GenerationWatchSignal.invalidatedByClean(invalidation));
+          return;
+        }
         if (includeRegisteredHosts) {
           final currentRegistrationStamp = await _captureWatchRegistrationStamp(
             buildContext.resolutionRoot,
@@ -721,6 +747,7 @@ Future<_GenerationWatchTopology?> _runGenerationWatchSession({
   final buildRunnerPhases = CCBuildRunnerPhaseCollector();
   var initialBuild = true;
   var readyEmitted = false;
+  var invalidatedByClean = false;
   var buildActive = true;
   String? pendingResolutionFingerprint;
   final failureTail = <String>[];
@@ -840,6 +867,17 @@ Future<_GenerationWatchTopology?> _runGenerationWatchSession({
       ]);
       if (!hasLine || stop.isCompleted) break;
       final signal = iterator.current;
+      if (signal.cleanInvalidationReason case final reason?) {
+        await cycleSnapshot.restore();
+        invalidatedByClean = true;
+        exitCode = 1;
+        await events.emit(
+          'invalidatedByClean',
+          data: {'stage': 'clean-invalidation', 'reason': reason},
+        );
+        process.kill(ProcessSignal.sigint);
+        break;
+      }
       if (signal.topologyChanged) {
         if (!buildActive && !stop.isCompleted) await restartIfChanged();
         continue;
@@ -984,7 +1022,7 @@ Future<_GenerationWatchTopology?> _runGenerationWatchSession({
       return null;
     }
     final completedProcessCode = processCode!;
-    if (nextTopology == null && !stop.isCompleted) {
+    if (nextTopology == null && !stop.isCompleted && !invalidatedByClean) {
       try {
         final currentResolution = await CCPubResolutionFingerprint.capture(
           hostRoot: hostRoot,
@@ -1026,7 +1064,7 @@ Future<_GenerationWatchTopology?> _runGenerationWatchSession({
         );
       }
     }
-    if (nextTopology == null && !stop.isCompleted) {
+    if (nextTopology == null && !stop.isCompleted && !invalidatedByClean) {
       exitCode = 1;
       await events.emit(
         'failed',
@@ -1225,6 +1263,7 @@ final class _GenerationWatchSignal {
   const _GenerationWatchSignal._({
     this.line,
     this.resolutionFingerprint,
+    this.cleanInvalidationReason,
     this.topologyChanged = false,
   });
 
@@ -1236,9 +1275,61 @@ final class _GenerationWatchSignal {
   const _GenerationWatchSignal.topologyChanged()
     : this._(topologyChanged: true);
 
+  const _GenerationWatchSignal.invalidatedByClean(String reason)
+    : this._(cleanInvalidationReason: reason);
+
   final String? line;
   final String? resolutionFingerprint;
+  final String? cleanInvalidationReason;
   final bool topologyChanged;
+}
+
+/// Detects persistent removal of the Pub/build_runner state owned by a watch.
+final class _GenerationWatchBuildStateMonitor {
+  _GenerationWatchBuildStateMonitor(this.buildRoot)
+    : _assetGraphObserved = _assetGraph(buildRoot).existsSync();
+
+  final Directory buildRoot;
+  bool _assetGraphObserved;
+
+  Future<String?> confirmedInvalidation() async {
+    final first = _missingState();
+    if (first == null) return null;
+    await Future<void>.delayed(const Duration(milliseconds: 500));
+    final second = _missingState();
+    return second == first ? first : null;
+  }
+
+  String? _missingState() {
+    final assetGraph = _assetGraph(buildRoot);
+    if (assetGraph.existsSync()) _assetGraphObserved = true;
+    final required = <({String label, File file})>[
+      (
+        label: 'Pub package config',
+        file: File(
+          path.join(buildRoot.path, '.dart_tool', 'package_config.json'),
+        ),
+      ),
+      (
+        label: 'Pub package graph',
+        file: File(
+          path.join(buildRoot.path, '.dart_tool', 'package_graph.json'),
+        ),
+      ),
+      if (_assetGraphObserved)
+        (label: 'build_runner Asset Graph', file: assetGraph),
+    ];
+    for (final item in required) {
+      if (!item.file.existsSync()) {
+        return '${item.label} was removed at ${item.file.path}';
+      }
+    }
+    return null;
+  }
+
+  static File _assetGraph(Directory buildRoot) => File(
+    path.join(buildRoot.path, '.dart_tool', 'build', 'asset_graph.json'),
+  );
 }
 
 /// Observes authored Builder inputs so Flutter reload can wait for their cycle.
@@ -1687,6 +1778,7 @@ final class _GenerationWatchEvents {
       }
       final active =
           type != 'stopped' &&
+          type != 'invalidatedByClean' &&
           !(type == 'failed' &&
               const {
                 'watch-start',
