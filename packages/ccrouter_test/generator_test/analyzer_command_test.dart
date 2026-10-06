@@ -46,6 +46,14 @@ void main() {
     expect('${result.stdout}', contains('state: healthy'));
     expect('${result.stdout}', contains('source: git'));
     expect('${result.stdout}', contains('ref: $_gitRef'));
+    expect(
+      '${result.stdout}',
+      contains(
+        'source pin: current (manifest/lock/resolved-ref identity only)',
+      ),
+    );
+    expect('${result.stdout}', contains('cache artifact: unchecked'));
+    expect('${result.stdout}', contains('live state: unverified'));
     expect('${result.stdout}', contains('loadability is unchecked'));
   });
 
@@ -333,6 +341,16 @@ dependencies:
       expect(result.stderr, contains('will not kill processes'));
       expect(result.stderr, contains('not an authoritative cross-SDK gate'));
       expect(result.stdout, contains('Analyzer doctor:'));
+      expect(
+        result.stdout,
+        contains('cache artifact: stale (manual rebuild pending)'),
+      );
+      expect(
+        result.stdout,
+        contains('loader smoke: passed in a temporary copy'),
+      );
+      expect(result.stdout, contains('Analysis Server restart: required'));
+      expect(result.stdout, contains('live IDE verification: pending'));
       expect(result.calls, hasLength(4));
     },
   );
@@ -369,6 +387,65 @@ dependencies:
     expect(result.stderr, contains('analysis_server.dart.snapshot --lsp'));
     expect(result.stderr, contains('doctor will not kill processes'));
     expect(cached.parent.existsSync(), isTrue);
+  });
+
+  test('doctor distinguishes a current legacy cache artifact', () async {
+    final fixture = await _createFixture();
+    final home = await Directory.systemTemp.createTemp(
+      'ccrouter-analyzer-home-',
+    );
+    addTearDown(() async {
+      await fixture.root.delete(recursive: true);
+      await home.delete(recursive: true);
+    });
+    final bootstrap = Directory(
+      path.join(fixture.plugin.path, 'tools', 'analyzer_plugin'),
+    );
+    final cached = Directory(
+      path.join(
+        home.path,
+        '.dartServer',
+        '.plugin_manager',
+        md5.convert(bootstrap.path.codeUnits).toString(),
+        'analyzer_plugin',
+      ),
+    )..createSync(recursive: true);
+    File(
+      path.join(bootstrap.path, 'pubspec.yaml'),
+    ).copySync(path.join(cached.path, 'pubspec.yaml'));
+    Directory(path.join(cached.path, 'bin')).createSync();
+    File(
+      path.join(bootstrap.path, 'bin', 'plugin.dart'),
+    ).copySync(path.join(cached.path, 'bin', 'plugin.dart'));
+
+    final result = await _runDoctor(fixture, home);
+
+    expect(result.ok, isTrue, reason: '${result.stderr}\n${result.stdout}');
+    expect(
+      result.stdout,
+      contains('cache artifact: current (1 matching legacy cache entry(s))'),
+    );
+    expect(result.stderr, isNot(contains('Manual recovery only')));
+    expect(result.calls, hasLength(3));
+  });
+
+  test('doctor reports an absent cache without claiming a live load', () async {
+    final fixture = await _createFixture();
+    final home = await Directory.systemTemp.createTemp(
+      'ccrouter-analyzer-home-',
+    );
+    addTearDown(() async {
+      await fixture.root.delete(recursive: true);
+      await home.delete(recursive: true);
+    });
+
+    final result = await _runDoctor(fixture, home);
+
+    expect(result.ok, isTrue, reason: '${result.stderr}\n${result.stdout}');
+    expect(result.stdout, contains('cache artifact: absent'));
+    expect(result.stdout, contains('not the IDE session'));
+    expect(result.stdout, contains('live IDE verification: pending'));
+    expect(result.calls, hasLength(3));
   });
 
   for (final damage in [

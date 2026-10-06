@@ -630,6 +630,13 @@ final class _AnalyzerBootstrapReport {
     if (analyzerPluginVersion != null) {
       sink.writeln('  analyzer_plugin: $analyzerPluginVersion');
     }
+    if (state == _AnalyzerBootstrapState.healthy && source == 'git') {
+      sink.writeln(
+        '  source pin: current (manifest/lock/resolved-ref identity only)',
+      );
+      sink.writeln('  cache artifact: unchecked (run analyzer doctor)');
+      sink.writeln('  Analysis Server live state: unverified');
+    }
     sink.writeln('  detail: $message');
   }
 }
@@ -646,10 +653,14 @@ Future<bool> _runDoctor(
   final outputSink = output ?? stdout;
   final errorSink = error ?? stderr;
   final bootstrapRoot = report.bootstrapRoot!;
-  final staleCaches = _staleAnalyzerPluginManagerCaches(
+  final cacheEntries = _analyzerPluginManagerCaches(
     bootstrapRoot,
     homeDirectory: homeDirectory,
   );
+  final staleCaches = cacheEntries
+      .where((entry) => !entry.current)
+      .map((entry) => entry.directory)
+      .toList(growable: false);
   if (staleCaches.isNotEmpty) {
     errorSink.writeln(
       'warning: Analyzer doctor found a stale legacy Analysis Server plugin '
@@ -770,9 +781,28 @@ Future<bool> _runDoctor(
         return false;
       }
     }
+    final cacheState = staleCaches.isNotEmpty
+        ? 'stale (manual rebuild pending)'
+        : cacheEntries.isEmpty
+        ? 'absent (Analysis Server has not built this legacy cache entry)'
+        : 'current (${cacheEntries.length} matching legacy cache entry(s))';
+    outputSink.writeln('CCRouter Analyzer doctor summary');
     outputSink.writeln(
-      'CCRouter Analyzer doctor passed. Restart the Dart Analysis Server after '
-      'bootstrap or ref changes.',
+      report.source == 'git'
+          ? '  source pin: current (manifest/lock/resolved-ref identity)'
+          : '  source dependency: current (manifest/lock version identity)',
+    );
+    outputSink.writeln('  cache artifact: $cacheState');
+    outputSink.writeln(
+      '  loader smoke: passed in a temporary copy (not the IDE session)',
+    );
+    outputSink.writeln(
+      '  Analysis Server restart: required before claiming bootstrap/ref or '
+      'cache changes are live',
+    );
+    outputSink.writeln(
+      '  live IDE verification: pending (doctor cannot observe or control the '
+      'IDE Analysis Server)',
     );
     return true;
   } finally {
@@ -941,13 +971,27 @@ String _formatElapsedSeconds(int seconds) {
   return days == 0 ? time : '${days}d $time';
 }
 
-/// Finds outdated or incomplete cache entries for this exact bootstrap path.
+/// One existing legacy cache entry and its bootstrap-byte consistency.
+final class _AnalyzerPluginManagerCacheEntry {
+  const _AnalyzerPluginManagerCacheEntry({
+    required this.directory,
+    required this.current,
+  });
+
+  /// Complete hash entry that a developer may back up manually.
+  final Directory directory;
+
+  /// Whether the cached manifest and loader match the active bootstrap.
+  final bool current;
+}
+
+/// Finds existing cache entries for this exact bootstrap path.
 ///
 /// Dart 3.11's legacy PluginManager keys each entry by MD5 of the source path's
 /// code units and reuses an existing parent even when its child is missing.
 /// This is a read-only SDK compatibility check, not a content integrity hash.
 /// Never infer ownership from a shared package name in another Host's cache.
-List<Directory> _staleAnalyzerPluginManagerCaches(
+List<_AnalyzerPluginManagerCacheEntry> _analyzerPluginManagerCaches(
   Directory bootstrapRoot, {
   String? homeDirectory,
 }) {
@@ -969,7 +1013,7 @@ List<Directory> _staleAnalyzerPluginManagerCaches(
     for (final sourcePath in sourcePaths)
       md5.convert(sourcePath.codeUnits).toString(),
   };
-  final stale = <Directory>[];
+  final entries = <_AnalyzerPluginManagerCacheEntry>[];
   for (final id in cacheIds) {
     final entry = Directory(path.join(manager.path, id));
     if (FileSystemEntity.typeSync(entry.path, followLinks: false) !=
@@ -977,6 +1021,7 @@ List<Directory> _staleAnalyzerPluginManagerCaches(
       continue;
     }
     final cachedRoot = Directory(path.join(entry.path, 'analyzer_plugin'));
+    var current = true;
     for (final relative in ['pubspec.yaml', path.join('bin', 'plugin.dart')]) {
       final sourceFile = File(path.join(bootstrapRoot.path, relative));
       final cachedFile = File(path.join(cachedRoot.path, relative));
@@ -985,13 +1030,18 @@ List<Directory> _staleAnalyzerPluginManagerCaches(
             sourceFile.readAsBytesSync(),
             cachedFile.readAsBytesSync(),
           )) {
-        stale.add(entry);
+        current = false;
         break;
       }
     }
+    entries.add(
+      _AnalyzerPluginManagerCacheEntry(directory: entry, current: current),
+    );
   }
-  stale.sort((left, right) => left.path.compareTo(right.path));
-  return List.unmodifiable(stale);
+  entries.sort(
+    (left, right) => left.directory.path.compareTo(right.directory.path),
+  );
+  return List<_AnalyzerPluginManagerCacheEntry>.unmodifiable(entries);
 }
 
 /// Compares two manifest byte sequences without allocating encoded strings.

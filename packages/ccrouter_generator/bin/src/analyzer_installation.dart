@@ -693,9 +693,9 @@ environment:
     );
     try {
       if (source != null &&
-          _staleAnalyzerPluginManagerCaches(
+          _analyzerPluginManagerCaches(
             Directory(path.join(wrapper.path, 'tools', 'analyzer_plugin')),
-          ).isNotEmpty) {
+          ).any((entry) => !entry.current)) {
         stdout.writeln(
           'The previous IDE cache may be stale; doctor will identify the exact entry. No IDE cache was modified.',
         );
