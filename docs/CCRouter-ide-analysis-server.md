@@ -37,6 +37,33 @@ Fix 时才会提交一个有界源码编辑。插件不可用时，项目仍可�
 | `ccrouter_service_disposable_missing` | warning | 注解 Service 已有兼容的实例 `dispose()`，却未实现 Scope 识别的 `CCDisposable` |
 | `ccrouter_service_owned_resource` | warning | 注解 Service 的私有 final 字段直接持有自建可释放资源，但 Service 没有接入 Scope 释放 |
 
+### Generated-src 诊断重复调研（2026-10-06）
+
+`ccrouter_cross_package_generated_import` 与 Dart `implementation_imports` 在一个受限场景中会
+重叠：外部 Package 使用 `package:owner/src/ccrouter_generated/...` URI，且当前文件的有效
+Analysis Options 启用了 `implementation_imports`。如果该 import 尚未使用，Dart 还可能同时
+报告 `unused_import`；后者只描述使用状态，并不证明或替代 CCRouter 的组件/API 边界。
+
+本轮不删除、降级或按配置静态关闭 CCRouter 规则，原因如下：
+
+- CCRouter 规则还覆盖跨 Package 的 relative import；不能假设通用 lint 对这类路径具有相同
+  覆盖。
+- 消费者可以不启用 `implementation_imports`，也可以通过 error severity、file/line ignore
+  屏蔽单条通用诊断。只读取 lint 开关会在这些情况下丢失边界诊断。
+- Legacy Plugin 通过独立 `analysis.errors` notification 发布 CCRouter 结果。当前 source
+  analyzer 不消费同一 overlay 上 Analysis Server 最终保留的 core diagnostics；按异步到达顺序
+  猜测会产生闪烁或漏报。
+- `unused_import` 不能作为降噪证明：一旦 import 开始使用，该诊断会消失，而跨 Package
+  generated-src 边界仍然存在。
+
+后续只有同时满足以下条件才实施降噪：从当前 Analysis Server session 的同一 source/overlay
+revision 取得最终有效 diagnostics；仅当同一 import URI offset 已存在未被 ignore 的
+`implementation_imports` 时抑制 CCRouter 重复项；relative import、lint 未启用、severity
+ignore、inline/file ignore、解析失败时继续保留 CCRouter 规则。必须为 Legacy/LSP 各覆盖
+lint enabled/disabled、used/unused import、两类 ignore、relative import 与 unsaved overlay。
+该变更属于 Plugin 生产诊断行为变化，仍须先独立提交、验证并推送 Plugin，再在另一个提交中
+更新 Demo 远端 pin；不能在禁止推送或无法远端解析新 SHA 的工作中提前修改规则。
+
 基础语法规则继续处理单文件可确定信息；Handler、Component、Service 相关源文件按需复用
 Analysis Server 已有 Session 的 resolved unit，解析 `dart:async` 前缀、typedef、继承和常量值。
 不另建分析引擎，不缓存 resolved AST，不自行递归扫描 Workspace。无法取得当前 resolved unit
