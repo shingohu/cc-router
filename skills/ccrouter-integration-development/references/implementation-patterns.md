@@ -731,6 +731,13 @@ Run one orchestration command after annotations or component graph changes:
 fvm dart run ccrouter_generator:ccrouter generate demo
 ```
 
+The selected Package is the `requestedRoot`; the Package or Pub Workspace that
+owns dependency resolution, build cache, and generation locks is the
+`resolutionRoot`. A member declaring `resolution: workspace` uses Pub's
+validated workspace reference. A stale reference is repaired with Pub get and
+must not fall through to an arbitrary ancestor Package graph. A standalone
+Package nested below a Workspace remains its own resolution root.
+
 The command owns files under `lib/src/ccrouter_generated/`. Do not edit or
 relocate generated outputs. A Host's handwritten public barrel may re-export
 the generated `src/ccrouter_generated/ccrouter_host.api.g.dart`; do not point it

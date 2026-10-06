@@ -119,6 +119,66 @@ void main() {
   );
 
   test(
+    'installed wrapper never runs generation for help or dry-run Pub calls',
+    () async {
+      final sdk = await Directory.systemTemp.createTemp(
+        'ccrouter_pub_hook_read_only_',
+      );
+      addTearDown(() => sdk.delete(recursive: true));
+      final bin = Directory(path.join(sdk.path, 'bin'))..createSync();
+      final argsFile = path.join(sdk.path, 'args.txt');
+      final flutter = File(path.join(bin.path, 'flutter'))
+        ..writeAsStringSync(
+          '#!/usr/bin/env bash\nprintf "%s" "\$*" > "$argsFile"\nexit 0\n',
+        );
+      File(
+        path.join(bin.path, 'flutter.bat'),
+      ).writeAsStringSync('@echo off\r\nexit /b 0\r\n');
+      await Process.run('chmod', ['+x', flutter.path]);
+      final installed = await _run(['pub-hook', 'install', '--sdk', sdk.path]);
+      expect(installed.exitCode, 0, reason: '${installed.stderr}');
+
+      final project = Directory(path.join(sdk.path, 'project'))..createSync();
+      File(path.join(project.path, 'pubspec.yaml')).writeAsStringSync('''
+name: ccrouter_project
+dependencies:
+  ccrouter: any
+dev_dependencies:
+  ccrouter_generator: any
+''');
+      Directory(path.join(project.path, '.dart_tool')).createSync();
+      File(
+        path.join(project.path, '.dart_tool', 'package_config.json'),
+      ).writeAsStringSync('''{"configVersion":2,"packages":[
+  {"name":"ccrouter_generator","rootUri":"../missing_generator"}
+]}''');
+
+      for (final arguments in const <List<String>>[
+        ['pub', 'get', '--help'],
+        ['pub', 'get', '-h'],
+        ['pub', 'get', '--dry-run'],
+        ['pub', 'get', '-n'],
+      ]) {
+        final result = await Process.run(
+          flutter.path,
+          arguments,
+          workingDirectory: project.path,
+        );
+        expect(
+          result.exitCode,
+          0,
+          reason: 'arguments=$arguments stderr=${result.stderr}',
+        );
+        expect(
+          File(path.join(sdk.path, 'args.txt')).readAsStringSync(),
+          arguments.join(' '),
+        );
+        expect('${result.stdout}${result.stderr}', isNot(contains('CCRouter')));
+      }
+    },
+  );
+
+  test(
     'pub-hook run skips a project without resolved CCRouter packages',
     () async {
       final project = await Directory.systemTemp.createTemp(

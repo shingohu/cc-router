@@ -1006,15 +1006,20 @@ if [ "$PUB_EXIT" -ne 0 ]; then
 fi
 
 PUB_COMMAND=""
+SKIP_PUB_HOOK=0
 for ARG in "$@"; do
   case "$ARG" in
+    --help|-h|--dry-run|-n)
+      SKIP_PUB_HOOK=1
+      ;;
     get|upgrade|downgrade|add|remove)
-      PUB_COMMAND="$ARG"
-      break
+      if [ -z "$PUB_COMMAND" ]; then
+        PUB_COMMAND="$ARG"
+      fi
       ;;
   esac
 done
-if [ -z "$PUB_COMMAND" ]; then
+if [ "$SKIP_PUB_HOOK" -eq 1 ] || [ -z "$PUB_COMMAND" ]; then
   exit 0
 fi
 run_generator_hook "$PUB_COMMAND" "$@"
@@ -1046,13 +1051,19 @@ if /I not "%FLUTTER_COMMAND%"=="pub" goto invoke_original
 call "%ORIGINAL%" %*
 if not "%ERRORLEVEL%"=="0" exit /b %ERRORLEVEL%
 set "PUB_COMMAND="
+set "SKIP_PUB_HOOK=0"
 for %%A in (%*) do (
+  if /I "%%~A"=="--help" set "SKIP_PUB_HOOK=1"
+  if /I "%%~A"=="-h" set "SKIP_PUB_HOOK=1"
+  if /I "%%~A"=="--dry-run" set "SKIP_PUB_HOOK=1"
+  if /I "%%~A"=="-n" set "SKIP_PUB_HOOK=1"
   if /I "%%~A"=="get" if not defined PUB_COMMAND set "PUB_COMMAND=get"
   if /I "%%~A"=="upgrade" if not defined PUB_COMMAND set "PUB_COMMAND=upgrade"
   if /I "%%~A"=="downgrade" if not defined PUB_COMMAND set "PUB_COMMAND=downgrade"
   if /I "%%~A"=="add" if not defined PUB_COMMAND set "PUB_COMMAND=add"
   if /I "%%~A"=="remove" if not defined PUB_COMMAND set "PUB_COMMAND=remove"
 )
+if "%SKIP_PUB_HOOK%"=="1" exit /b 0
 if not defined PUB_COMMAND exit /b 0
 set "HOOK_COMMAND=%PUB_COMMAND%"
 goto run_hook

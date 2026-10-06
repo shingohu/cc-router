@@ -85,6 +85,10 @@ Custom `--output-dir` catalogs also participate in comparison and rollback,
 including docs/build directories. Only the explicit current/legacy catalog
 files are owned; neighboring files stay untouched. Check output must remain
 inside the build root.
+The selected Package is the `requestedRoot`; the Package or Workspace that owns
+Pub state, build cache, and the generation lock is the `resolutionRoot`.
+Workspace members must validate Pub's `workspace_ref.json` or exact Workspace
+membership, while standalone nested Packages remain independent.
 Ordinary one-shot generation prints only its final elapsed time. Use `--profile`
 only to investigate generation performance. Benchmarks and AI performance
 diagnostics must pass it explicitly; never infer an AI caller from environment
@@ -252,7 +256,8 @@ dependency edits.
 entrypoints, keeps reversible backups, and must never be run against an SDK
 without first resolving its path. The wrapper runs the original `flutter pub`
 first; only a successful `get`, `upgrade`, `downgrade`, `add`, or `remove` may
-trigger post-pub generation. `flutter run` and `flutter build` run the same
+trigger post-pub generation. Help and dry-run invocations (`--help`, `-h`,
+`--dry-run`, or `-n`) never trigger it. `flutter run` and `flutter build` run the same
 generator as a fail-closed preflight before the original Flutter entrypoint.
 It skips projects whose current Package does not directly declare `ccrouter`,
 or whose resolved Package config does not contain both `ccrouter` and

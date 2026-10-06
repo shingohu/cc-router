@@ -110,7 +110,7 @@ void _recordGenerationDiagnostics(Iterable<CCWorkspaceDiagnostic> diagnostics) {
 /// Executes one complete generation transaction for CLI or watch.
 Future<_GenerationCycleResult> _runGenerationCycle({
   required Directory root,
-  required _BuildContext? buildContext,
+  required CCProjectContext? buildContext,
   required _Arguments parsed,
   required Stopwatch invocationWatch,
   required _GenerationProfileTrace? invocationTrace,
@@ -160,7 +160,7 @@ Future<_GenerationCycleResult> _runGenerationCycle({
       if (buildContext != null && !_watchOwnsGenerationLock) {
         generationLock = await profileTrace.measure(
           'generation-lock-wait',
-          () => _GenerationLock.acquire(buildContext.root),
+          () => _GenerationLock.acquire(buildContext.resolutionRoot),
         );
       }
       if (buildContext != null &&
@@ -169,9 +169,9 @@ Future<_GenerationCycleResult> _runGenerationCycle({
         fastPathWorkspace = await profileTrace.measure<CCPackageWorkspace>(
           'workspace-load',
           () => CCPackageWorkspace.load(
-            buildRoot: buildContext.root,
+            buildRoot: buildContext.resolutionRoot,
             hostRoot: root,
-            workspace: buildContext.workspace,
+            workspace: buildContext.isWorkspace,
           ),
           counts: (workspace) => {'packages': workspace.packages.length},
         );
@@ -259,9 +259,9 @@ Future<_GenerationCycleResult> _runGenerationCycle({
         fastPathWorkspace ??= await profileTrace.measure<CCPackageWorkspace>(
           'workspace-load',
           () => CCPackageWorkspace.load(
-            buildRoot: buildContext!.root,
+            buildRoot: buildContext!.resolutionRoot,
             hostRoot: root,
-            workspace: buildContext.workspace,
+            workspace: buildContext.isWorkspace,
           ),
           counts: (workspace) => {'packages': workspace.packages.length},
         );
@@ -343,7 +343,7 @@ Future<_GenerationCycleResult> _runGenerationCycle({
           ? await profileTrace.measure(
               'artifact-snapshot-capture',
               () => _GeneratedArtifactsSnapshot.capture(
-                buildContext!.root,
+                buildContext!.resolutionRoot,
                 explicitFiles: [
                   if (parsed.outputDirectoryPath case final output?)
                     for (final name in const [
@@ -484,9 +484,9 @@ Future<_GenerationCycleResult> _runGenerationCycle({
         fastPathWorkspace ??= await profileTrace.measure(
           'workspace-reload-for-state',
           () => CCPackageWorkspace.load(
-            buildRoot: buildContext.root,
+            buildRoot: buildContext.resolutionRoot,
             hostRoot: root,
-            workspace: buildContext.workspace,
+            workspace: buildContext.isWorkspace,
           ),
         );
         if (Platform.environment[_sharedPlanningSnapshotKillSwitch] == '1') {
@@ -653,7 +653,7 @@ Future<_GenerationCycleResult> _runGenerationCycle({
             'CCRouter profile total=${totalWatch.elapsedMilliseconds}ms',
           );
           profileReport = await profileTrace!.write(
-            buildRoot: buildContext?.root ?? root,
+            buildRoot: buildContext?.resolutionRoot ?? root,
             hostRoot: root,
             command: parsed.command.name,
             outcome: profileOutcome,

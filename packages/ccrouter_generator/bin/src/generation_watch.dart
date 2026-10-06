@@ -29,13 +29,13 @@ bool get _usesOptimizedWatchCycle =>
 /// Keeps build_runner's AOT entrypoint and Analyzer graph alive for one root.
 Future<void> _runGenerationWatch({
   required Directory hostRoot,
-  required _BuildContext buildContext,
+  required CCProjectContext buildContext,
   required _Arguments parsed,
   required Future<_GenerationCycleResult> Function() runInProcessCycle,
 }) async {
   final events = _GenerationWatchEvents(
     machine: parsed.machine,
-    buildRoot: buildContext.root,
+    buildRoot: buildContext.resolutionRoot,
     hostRoot: hostRoot,
     leasePath: parsed.watchLeasePath,
   );
@@ -45,7 +45,7 @@ Future<void> _runGenerationWatch({
     await events.emit('fallback', data: {'reason': 'kill-switch'});
     final fallback = await _runWatchGenerationSubprocess(
       hostRoot: hostRoot,
-      buildRoot: buildContext.root,
+      buildRoot: buildContext.resolutionRoot,
       watchCycle: false,
       lockHeld: false,
       profile: parsed.profile,
@@ -59,7 +59,9 @@ Future<void> _runGenerationWatch({
   }
   late final _GenerationWatchOwnership watchOwnership;
   try {
-    watchOwnership = await _GenerationWatchOwnership.acquire(buildContext.root);
+    watchOwnership = await _GenerationWatchOwnership.acquire(
+      buildContext.resolutionRoot,
+    );
   } on _GenerationWatchOwnershipConflictException catch (error) {
     await events.emit(
       'failed',
@@ -70,7 +72,9 @@ Future<void> _runGenerationWatch({
   }
   late final _GenerationLock generationLock;
   try {
-    generationLock = await _GenerationLock.acquireForWatch(buildContext.root);
+    generationLock = await _GenerationLock.acquireForWatch(
+      buildContext.resolutionRoot,
+    );
   } on Object catch (error) {
     await watchOwnership.release();
     await events.emit(
@@ -195,12 +199,12 @@ final class _GenerationWatchTopology {
 /// Resolves only topology facts that require a new build_runner Analyzer graph.
 Future<_GenerationWatchTopology> _resolveGenerationWatchTopology({
   required Directory hostRoot,
-  required _BuildContext buildContext,
+  required CCProjectContext buildContext,
 }) async {
   final workspace = await CCPackageWorkspace.load(
-    buildRoot: buildContext.root,
+    buildRoot: buildContext.resolutionRoot,
     hostRoot: hostRoot,
-    workspace: buildContext.workspace,
+    workspace: buildContext.isWorkspace,
   );
   final targets =
       workspace.packages.values
@@ -235,7 +239,7 @@ Future<_GenerationWatchTopology> _resolveGenerationWatchTopology({
 /// Runs one child session and returns the topology requiring a restart.
 Future<_GenerationWatchTopology?> _runGenerationWatchSession({
   required Directory hostRoot,
-  required _BuildContext buildContext,
+  required CCProjectContext buildContext,
   required _Arguments parsed,
   required _GenerationWatchEvents events,
   required _GenerationWatchTopology topology,
@@ -250,34 +254,35 @@ Future<_GenerationWatchTopology?> _runGenerationWatchSession({
   ];
   final protectedOutputs = <_GeneratedArtifactsSnapshot>[
     await _GeneratedArtifactsSnapshot.captureOutside(
-      buildContext.root,
+      buildContext.resolutionRoot,
       targetRoots,
     ),
     for (final package in topology.workspace.packages.values)
-      if (!package.writable && !_isWithin(buildContext.root, package.root))
+      if (!package.writable &&
+          !_isWithin(buildContext.resolutionRoot, package.root))
         await _GeneratedArtifactsSnapshot.capture(package.root),
   ];
   protectionWatch.stop();
 
-  var command = await _buildRunnerCommand(buildContext.root, 'watch');
+  var command = await _buildRunnerCommand(buildContext.resolutionRoot, 'watch');
   final processWatch = Stopwatch()..start();
   late final Process process;
   try {
     command = await _recoverWrongBuildRunnerSnapshotBeforeWatch(
       command,
-      buildContext.root,
+      buildContext.resolutionRoot,
     );
     process = await Process.start(command.executable, <String>[
       ...command.arguments,
       if (parsed.profile) '--verbose-durations',
-      if (buildContext.workspace) '--workspace',
+      if (buildContext.isWorkspace) '--workspace',
       for (final package in topology.targets) ...[
         '--build-filter',
         'asset:$package/lib/**',
         '--build-filter',
         'asset:$package/ccrouter_generated/**',
       ],
-    ], workingDirectory: buildContext.root.path);
+    ], workingDirectory: buildContext.resolutionRoot.path);
   } on Object catch (error) {
     await events.emit(
       'failed',
@@ -317,11 +322,11 @@ Future<_GenerationWatchTopology?> _runGenerationWatchSession({
   try {
     resolutionBaseline = await CCPubResolutionFingerprint.capture(
       hostRoot: hostRoot,
-      buildRoot: buildContext.root,
+      buildRoot: buildContext.resolutionRoot,
     );
     resolutionStamp = await _captureWatchResolutionStamp(
       hostRoot: hostRoot,
-      buildRoot: buildContext.root,
+      buildRoot: buildContext.resolutionRoot,
     );
   } on Object {
     // The first complete resolution observed by the timer becomes the baseline.
@@ -336,7 +341,7 @@ Future<_GenerationWatchTopology?> _runGenerationWatchSession({
       try {
         var currentStamp = await _captureWatchResolutionStamp(
           hostRoot: hostRoot,
-          buildRoot: buildContext.root,
+          buildRoot: buildContext.resolutionRoot,
         );
         if (currentStamp == resolutionStamp &&
             exactResolutionPoll.elapsed < _watchResolutionExactPollInterval) {
@@ -344,7 +349,7 @@ Future<_GenerationWatchTopology?> _runGenerationWatchSession({
         }
         var current = await CCPubResolutionFingerprint.capture(
           hostRoot: hostRoot,
-          buildRoot: buildContext.root,
+          buildRoot: buildContext.resolutionRoot,
         );
         exactResolutionPoll.reset();
         if (resolutionBaseline == null) {
@@ -360,11 +365,11 @@ Future<_GenerationWatchTopology?> _runGenerationWatchSession({
         if (stop.isCompleted) return;
         currentStamp = await _captureWatchResolutionStamp(
           hostRoot: hostRoot,
-          buildRoot: buildContext.root,
+          buildRoot: buildContext.resolutionRoot,
         );
         current = await CCPubResolutionFingerprint.capture(
           hostRoot: hostRoot,
-          buildRoot: buildContext.root,
+          buildRoot: buildContext.resolutionRoot,
         );
         exactResolutionPoll.reset();
         if (current == resolutionBaseline) return;
@@ -382,7 +387,7 @@ Future<_GenerationWatchTopology?> _runGenerationWatchSession({
   });
   final iterator = StreamIterator(signals.stream);
   var cycleSnapshot = await _GeneratedArtifactsSnapshot.capture(
-    buildContext.root,
+    buildContext.resolutionRoot,
   );
   var buildWatch = Stopwatch()..start();
   final buildRunnerPhases = CCBuildRunnerPhaseCollector();
@@ -434,7 +439,7 @@ Future<_GenerationWatchTopology?> _runGenerationWatchSession({
         data: {'stage': 'topology-resolution', 'error': '$error'},
       );
       cycleSnapshot = await _GeneratedArtifactsSnapshot.capture(
-        buildContext.root,
+        buildContext.resolutionRoot,
       );
       return true;
     }
@@ -454,7 +459,7 @@ Future<_GenerationWatchTopology?> _runGenerationWatchSession({
     final aggregation = usesSubprocessReference
         ? await _runWatchGenerationSubprocess(
             hostRoot: hostRoot,
-            buildRoot: buildContext.root,
+            buildRoot: buildContext.resolutionRoot,
             watchCycle: true,
             lockHeld: true,
             profile: parsed.profile,
@@ -474,7 +479,7 @@ Future<_GenerationWatchTopology?> _runGenerationWatchSession({
       },
     );
     cycleSnapshot = await _GeneratedArtifactsSnapshot.capture(
-      buildContext.root,
+      buildContext.resolutionRoot,
     );
     failureTail.clear();
     return false;
@@ -540,7 +545,7 @@ Future<_GenerationWatchTopology?> _runGenerationWatchSession({
           },
         );
         cycleSnapshot = await _GeneratedArtifactsSnapshot.capture(
-          buildContext.root,
+          buildContext.resolutionRoot,
         );
         failureTail.clear();
         initialBuild = false;
@@ -566,7 +571,7 @@ Future<_GenerationWatchTopology?> _runGenerationWatchSession({
       final aggregation = usesSubprocessReference
           ? await _runWatchGenerationSubprocess(
               hostRoot: hostRoot,
-              buildRoot: buildContext.root,
+              buildRoot: buildContext.resolutionRoot,
               watchCycle: true,
               lockHeld: true,
               profile: parsed.profile,
@@ -585,7 +590,7 @@ Future<_GenerationWatchTopology?> _runGenerationWatchSession({
         },
       );
       cycleSnapshot = await _GeneratedArtifactsSnapshot.capture(
-        buildContext.root,
+        buildContext.resolutionRoot,
       );
       if (!readyEmitted && aggregation.succeeded) {
         await events.emit('ready');
@@ -612,7 +617,7 @@ Future<_GenerationWatchTopology?> _runGenerationWatchSession({
       try {
         final currentResolution = await CCPubResolutionFingerprint.capture(
           hostRoot: hostRoot,
-          buildRoot: buildContext.root,
+          buildRoot: buildContext.resolutionRoot,
         );
         if (sessionResolutionFingerprint != null &&
             currentResolution != sessionResolutionFingerprint) {

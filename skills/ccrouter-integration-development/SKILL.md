@@ -39,6 +39,10 @@ to contact Pub or Git.
 distributing components. A cache hit must verify external source, dependency,
 and managed-output content; it does not excuse stale Git/Path artifacts.
 See the generation section in `references/implementation-patterns.md`.
+Generation keeps the selected Package `requestedRoot` separate from the Pub
+`resolutionRoot`. A Workspace member uses only its validated
+`.dart_tool/pub/workspace_ref.json` or an exact enclosing Workspace membership;
+a standalone nested Package does not inherit an unrelated ancestor graph.
 Custom catalog directories retain the same `--check` file-restoration guarantee;
 they do not transfer ownership of neighboring application files to the CLI.
 Route and Service Proxy defaults preserve collection types; expose any enum or

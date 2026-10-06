@@ -1183,6 +1183,13 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook uninstall
 这里的 `--verbosity=error` 是 `dart run` 的启动参数，只隐藏 Dart/Pub 冷启动时重复的依赖解析与
 executable 构建信息；CCRouter 自己的阶段、耗时、跳过原因和错误仍会输出。
 
+生成命令会把调用者选中的最近 Package 记为 `requestedRoot`，把实际拥有 Pub
+`.dart_tool`、build_runner cache 和 generation lock 的 Package/Workspace 记为
+`resolutionRoot`。声明 `resolution: workspace` 的成员优先使用 Pub 写入的
+`.dart_tool/pub/workspace_ref.json` 并验证 Workspace membership；普通嵌套 Package 不会因为
+物理目录位于 Workspace 下而被误判为成员。reference 缺失时才向上验证 Workspace，reference
+损坏或过期则 fail-closed 并要求重新执行 Pub get。
+
 `create component` 只创建新的 Package、`lib/src` 下的顶层 `CCComponent` Descriptor 和 Package barrel；
 `create page` 只创建带 `@CCRoute` 的最小 Flutter Page；`create service`、`create command`、
 `create event` 和 `create init-task` 分别创建真实注解的 Service/Command/Event/InitTask 起始模板。

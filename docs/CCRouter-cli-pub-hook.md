@@ -102,6 +102,11 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook uninstall
 跳过原因、标准错误或非零退出码。直接省略该参数仍可运行，但冷启动或依赖变化后可能
 看到多次 `Resolving dependencies`。
 
+Wrapper 会先完整执行原始 Pub 命令，但 `--help`、`-h`、`--dry-run` 和 `-n` 只保留原始
+命令语义，不触发 CCRouter post-pub generation。真实依赖写操作使用调用 Package 作为
+`requestedRoot`，使用 Pub Workspace reference 验证后的根作为 `resolutionRoot`；两者不能
+通过向上找到任意 `package_config.json` 来混为一谈。
+
 `CCROUTER_DISABLE_PUB_HOOK_WATCH_FAILURE_FENCE=1` 仅用于 A/B 或紧急回退：它关闭等待基线后的
 terminal failure 快速栅栏，恢复旧的 fingerprint-only 失败判断与有界超时。该开关不放宽成功
 条件，也不关闭 watch、generation lock、Validator、原子写入或最终 `--no-cache --check` 门禁。

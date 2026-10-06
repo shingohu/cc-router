@@ -13,6 +13,7 @@ import 'package:ccrouter_generator/src/component_dependency_preflight.dart';
 import 'package:ccrouter_generator/src/generated_client_naming.dart';
 import 'package:ccrouter_generator/src/internal_api_boundary_validator.dart';
 import 'package:ccrouter_generator/src/package_workspace.dart';
+import 'package:ccrouter_generator/src/project_context.dart';
 import 'package:crypto/crypto.dart';
 import 'package:dart_style/dart_style.dart';
 import 'package:path/path.dart' as path;
@@ -129,14 +130,21 @@ Future<void> main(List<String> arguments) async {
     }
     return;
   }
-  final buildContext = profileTrace.measureSync(
-    'build-context-resolution',
-    () => parsed.command != _GeneratorCommand.aggregate
-        ? _findBuildContext(root)
-        : null,
-    succeeded: (context) =>
-        parsed.command == _GeneratorCommand.aggregate || context != null,
-  );
+  CCProjectContext? buildContext;
+  try {
+    buildContext = profileTrace.measureSync(
+      'build-context-resolution',
+      () => parsed.command != _GeneratorCommand.aggregate
+          ? CCProjectContext.resolve(root)
+          : null,
+      succeeded: (context) =>
+          parsed.command == _GeneratorCommand.aggregate || context != null,
+    );
+  } on CCProjectContextException catch (error) {
+    _commandStderr.writeln('error: ${error.message}');
+    exitCode = 2;
+    return;
+  }
   if (parsed.command != _GeneratorCommand.aggregate && buildContext == null) {
     _commandStderr.writeln(
       'error: No standalone Package or enclosing Dart workspace was found '
@@ -148,9 +156,9 @@ Future<void> main(List<String> arguments) async {
   if (parsed.command == _GeneratorCommand.find) {
     try {
       if (!await route_find.findCapability(
-        buildRoot: buildContext!.root,
-        hostRoot: root,
-        workspace: buildContext.workspace,
+        buildRoot: buildContext!.resolutionRoot,
+        hostRoot: buildContext.requestedRoot,
+        workspace: buildContext.isWorkspace,
         query: parsed.query!,
         usageComponentId: parsed.usageComponentId,
       )) {
@@ -168,8 +176,11 @@ Future<void> main(List<String> arguments) async {
   if (parsed.command == _GeneratorCommand.clean) {
     _GenerationLock? cleanLock;
     try {
-      cleanLock = await _GenerationLock.acquire(buildContext!.root);
-      if (!await _cleanResolvedWorkspace(root, buildContext)) {
+      cleanLock = await _GenerationLock.acquire(buildContext!.resolutionRoot);
+      if (!await _cleanResolvedWorkspace(
+        buildContext.requestedRoot,
+        buildContext,
+      )) {
         exitCode = 1;
       }
     } on _GenerationWatchActiveException catch (error) {
@@ -187,24 +198,25 @@ Future<void> main(List<String> arguments) async {
   if (parsed.check &&
       parsed.outputDirectoryPath != null &&
       !_isWithin(
-        buildContext!.root,
+        buildContext!.resolutionRoot,
         Directory(parsed.outputDirectoryPath!).absolute,
       )) {
     _commandStderr.writeln(
       'error: --check requires --output-dir to remain inside '
-      '${buildContext.root.path}.',
+      '${buildContext.resolutionRoot.path}.',
     );
     exitCode = 2;
     return;
   }
   if (parsed.watch) {
+    final watchContext = buildContext!;
     await _runGenerationWatch(
-      hostRoot: root,
-      buildContext: buildContext!,
+      hostRoot: watchContext.requestedRoot,
+      buildContext: watchContext,
       parsed: parsed,
       runInProcessCycle: () => _runGenerationCycle(
-        root: root,
-        buildContext: buildContext,
+        root: watchContext.requestedRoot,
+        buildContext: watchContext,
         parsed: parsed,
         invocationWatch: totalWatch,
         invocationTrace: profileTrace,
@@ -215,7 +227,7 @@ Future<void> main(List<String> arguments) async {
     return;
   }
   final generation = await _runGenerationCycle(
-    root: root,
+    root: buildContext?.requestedRoot ?? root,
     buildContext: buildContext,
     parsed: parsed,
     invocationWatch: totalWatch,
@@ -398,12 +410,12 @@ Future<bool> _aggregate(Directory root, _Arguments parsed) async {
 /// catalogs and Dart glue.
 Future<bool> _cleanResolvedWorkspace(
   Directory hostRoot,
-  _BuildContext buildContext,
+  CCProjectContext buildContext,
 ) async {
   final workspace = await CCPackageWorkspace.load(
-    buildRoot: buildContext.root,
+    buildRoot: buildContext.resolutionRoot,
     hostRoot: hostRoot,
-    workspace: buildContext.workspace,
+    workspace: buildContext.isWorkspace,
   );
   var removed = 0;
   for (final package in workspace.packages.values.where(
@@ -527,7 +539,7 @@ output.''';
 Future<bool> _generateResolvedWorkspace(
   Directory hostRoot,
   _Arguments parsed,
-  _BuildContext buildContext, {
+  CCProjectContext buildContext, {
   required Duration buildDuration,
   String? expectedInputFingerprint,
   String? aggregationToolFingerprint,
@@ -542,9 +554,9 @@ Future<bool> _generateResolvedWorkspace(
     workspace = await trace.measure(
       'aggregation-workspace-reload',
       () => CCPackageWorkspace.load(
-        buildRoot: buildContext.root,
+        buildRoot: buildContext.resolutionRoot,
         hostRoot: hostRoot,
-        workspace: buildContext.workspace,
+        workspace: buildContext.isWorkspace,
       ),
       counts: (workspace) => {'packages': workspace.packages.length},
     );
@@ -592,8 +604,9 @@ Future<bool> _generateResolvedWorkspace(
   final cache = await trace.measure<_GenerationCache>(
     'metadata-cache-load',
     () async {
-      if (parsed.noCache) return _GenerationCache.empty(buildContext.root);
-      return _GenerationCache.load(buildContext.root);
+      if (parsed.noCache)
+        return _GenerationCache.empty(buildContext.resolutionRoot);
+      return _GenerationCache.load(buildContext.resolutionRoot);
     },
   );
   if (cache.corrupted) {
@@ -2347,18 +2360,18 @@ _Arguments _parsePortableArguments(List<String> arguments) {
 
 /// Verifies the explicit publish boundary without contacting Pub or Git.
 Future<bool> _verifyPortablePublish(Directory root) async {
-  final context = _findBuildContext(root);
-  if (context == null) {
-    _commandStderr.writeln(
-      'error: Cannot find a Pub Host for Portable State publish.',
-    );
+  late final CCProjectContext context;
+  try {
+    context = CCProjectContext.resolve(root);
+  } on CCProjectContextException catch (error) {
+    _commandStderr.writeln('error: ${error.message}');
     return false;
   }
   try {
     final workspace = await CCPackageWorkspace.load(
-      buildRoot: context.root,
-      hostRoot: root,
-      workspace: context.workspace,
+      buildRoot: context.resolutionRoot,
+      hostRoot: context.requestedRoot,
+      workspace: context.isWorkspace,
     );
     final portable = workspace.packages.values
         .where(
@@ -2484,18 +2497,6 @@ _Arguments _parseCreateArguments(List<String> arguments) {
     scaffoldWithSubscriber: withSubscriber,
     scaffoldWithContract: withContract,
   );
-}
-
-/// Build-runner root and mode selected from enclosing pubspec files.
-final class _BuildContext {
-  /// Creates the process context for a workspace or standalone package.
-  const _BuildContext({required this.root, required this.workspace});
-
-  /// Directory where build_runner resolves the package configuration.
-  final Directory root;
-
-  /// Whether build_runner must traverse every package in a Dart workspace.
-  final bool workspace;
 }
 
 /// Process-wide filesystem lock serializing generation for one build root.
@@ -3393,49 +3394,13 @@ bool _sameStringMap(Map<String, String> left, Map<String, String> right) {
   return true;
 }
 
-/// Finds the build root while honoring a Package's workspace opt-in.
-///
-/// A standalone Package remains independent even when it is physically nested
-/// below an unrelated workspace. Only `resolution: workspace` causes the
-/// search to continue to an enclosing pubspec with a `workspace` declaration.
-_BuildContext? _findBuildContext(Directory scanRoot) {
-  Directory? nearestPackage;
-  var requiresWorkspace = false;
-  var current = scanRoot.absolute;
-  while (true) {
-    final pubspec = File(
-      '${current.path}${Platform.pathSeparator}pubspec.yaml',
-    );
-    if (pubspec.existsSync()) {
-      final contents = pubspec.readAsStringSync();
-      if (nearestPackage == null) {
-        nearestPackage = current;
-        requiresWorkspace = RegExp(
-          r'^resolution\s*:\s*workspace\s*$',
-          multiLine: true,
-        ).hasMatch(contents);
-        if (!requiresWorkspace) {
-          return _BuildContext(root: current, workspace: false);
-        }
-      }
-      if (RegExp(r'^workspace\s*:', multiLine: true).hasMatch(contents)) {
-        return _BuildContext(root: current, workspace: true);
-      }
-    }
-    final parent = current.parent;
-    if (parent.path == current.path) break;
-    current = parent;
-  }
-  return null;
-}
-
 /// Runs build_runner only for writable generator Packages in the Host closure.
 ///
 /// Build filters include source code and logical metadata output assets. Cache
 /// builders materialize the latter below `.dart_tool/build/generated`; external
 /// path/Git/pub dependencies remain read-only and consume published indexes.
 Future<bool> _runBuildRunner(
-  _BuildContext context,
+  CCProjectContext context,
   Directory hostRoot, {
   required bool profile,
   _GenerationProfileTrace? trace,
@@ -3443,9 +3408,9 @@ Future<bool> _runBuildRunner(
   final workspace = await trace.measure(
     'build-runner-workspace-load',
     () => CCPackageWorkspace.load(
-      buildRoot: context.root,
+      buildRoot: context.resolutionRoot,
       hostRoot: hostRoot,
-      workspace: context.workspace,
+      workspace: context.isWorkspace,
     ),
     counts: (workspace) => {'packages': workspace.packages.length},
   );
@@ -3484,19 +3449,20 @@ Future<bool> _runBuildRunner(
     'build-runner-protection-snapshot',
     () async => <_GeneratedArtifactsSnapshot>[
       await _GeneratedArtifactsSnapshot.captureOutside(
-        context.root,
+        context.resolutionRoot,
         targetRoots,
       ),
       for (final package in workspace.packages.values)
-        if (!package.writable && !_isWithin(context.root, package.root))
+        if (!package.writable &&
+            !_isWithin(context.resolutionRoot, package.root))
           await _GeneratedArtifactsSnapshot.capture(package.root),
     ],
     counts: (snapshots) => {'snapshots': snapshots.length},
   );
-  var command = await _buildRunnerCommand(context.root, 'build');
+  var command = await _buildRunnerCommand(context.resolutionRoot, 'build');
   _commandStdout.writeln(
     'Generating Package artifacts for ${targets.join(', ')} from '
-    '${context.root.path}...',
+    '${context.resolutionRoot.path}...',
   );
   late final int processExitCode;
   try {
@@ -3507,10 +3473,10 @@ Future<bool> _runBuildRunner(
         _buildRunnerArguments(
           command,
           profile: profile,
-          workspace: context.workspace,
+          workspace: context.isWorkspace,
           targets: targets,
         ),
-        workingDirectory: context.root.path,
+        workingDirectory: context.resolutionRoot.path,
       ),
     );
     processExitCode = await trace.measure('build-runner-execution', () async {
@@ -3526,16 +3492,16 @@ Future<bool> _runBuildRunner(
         'warning: cached build_runner snapshot is incompatible with the '
         'current Dart SDK; rebuilding it once through dart run.',
       );
-      command = await _buildRunnerCommand(context.root, 'build');
+      command = await _buildRunnerCommand(context.resolutionRoot, 'build');
       process = await Process.start(
         command.executable,
         _buildRunnerArguments(
           command,
           profile: profile,
-          workspace: context.workspace,
+          workspace: context.isWorkspace,
           targets: targets,
         ),
-        workingDirectory: context.root.path,
+        workingDirectory: context.resolutionRoot.path,
       );
       completion = await _forwardBuildRunnerProcess(process);
       return completion.exitCode;
