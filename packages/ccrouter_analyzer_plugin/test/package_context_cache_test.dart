@@ -46,6 +46,26 @@ void main() {
     expect(cache.entryCount, 0);
   });
 
+  test('invalidates Package context when project role inputs change', () {
+    final root = Directory.systemTemp.createTempSync('ccrouter-cache-');
+    addTearDown(() => root.deleteSync(recursive: true));
+    File(
+      path.join(root.path, 'pubspec.yaml'),
+    ).writeAsStringSync('name: role_package\n');
+    final source = File(path.join(root.path, 'lib', 'feature.dart'))
+      ..createSync(recursive: true);
+    final cache = CCRouterPackageContextCache();
+
+    var previous = cache.resolve(source.path)!;
+    for (final input in ['.metadata', 'ccrouter.yaml']) {
+      final changed = File(path.join(root.path, input))..writeAsStringSync('');
+      cache.invalidate(changed.path);
+      final refreshed = cache.resolve(source.path)!;
+      expect(identical(previous, refreshed), isFalse, reason: input);
+      previous = refreshed;
+    }
+  });
+
   test('does not cache malformed or missing manifests', () {
     final root = Directory.systemTemp.createTempSync('ccrouter-cache-');
     addTearDown(() => root.deleteSync(recursive: true));

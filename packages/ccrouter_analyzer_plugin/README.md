@@ -12,6 +12,13 @@ declaration identity checks. Same-name application annotations are ignored.
 Resolved identities remain usable when another expression has a Dart error;
 unresolved ambiguous imports defer to later resolution or generation.
 
+Package discovery is Workspace-aware. The plugin validates Pub's
+`workspace_ref.json` or exact Workspace membership and never borrows an
+unrelated ancestor's Package graph for a standalone nested Package. It also
+reports saved-versus-resolved dependency drift without requiring an active
+Generator watch, selecting Host/package-local and Flutter/Dart Pub guidance
+from `.metadata`, `ccrouter.yaml`, and direct CCRouter dependencies.
+
 The plugin uses an isolated Analysis Server bootstrap because its Analyzer
 version must not constrain the application Workspace. Follow the
 [IDE integration guide](https://github.com/shingohu/cc-router/blob/main/docs/CCRouter-ide-analysis-server.md)

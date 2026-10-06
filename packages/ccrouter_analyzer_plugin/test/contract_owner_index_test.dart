@@ -166,6 +166,80 @@ const ownerComponentId = CCComponentId('wrong.component');
     expect(affected, contains(path.normalize(fixture.consumerSource.path)));
     expect(cache.entryCount, 1);
   });
+
+  test(
+    'does not borrow an ancestor Package graph for a standalone Package',
+    () {
+      final fixture = _OwnerFixture.create();
+      addTearDown(fixture.dispose);
+      final standalone = Directory(
+        path.join(fixture.root.path, 'nested', 'standalone'),
+      )..createSync(recursive: true);
+      File(path.join(standalone.path, 'pubspec.yaml')).writeAsStringSync('''
+name: standalone
+dependencies:
+  owner_contracts: any
+''');
+      final source = File(path.join(standalone.path, 'lib', 'component.dart'))
+        ..createSync(recursive: true);
+
+      final owner = CCRouterContractOwnerIndexCache()
+          .resolve(source.path)
+          .resolve(
+            kind: CCRouterContractKind.service,
+            contractSymbol: 'SharedService',
+            prefix: null,
+            importPrefixes: const {
+              '': {'owner_contracts'},
+            },
+            sourcePackage: 'standalone',
+          );
+
+      expect(owner, isNull);
+    },
+  );
+
+  test('uses Pub workspace_ref instead of a nearer unrelated config', () {
+    final fixture = _OwnerFixture.create();
+    addTearDown(fixture.dispose);
+    final consumerRoot = fixture.consumerSource.parent.parent.parent;
+    File(path.join(consumerRoot.path, 'pubspec.yaml')).writeAsStringSync('''
+name: consumer
+resolution: workspace
+dependencies:
+  owner_contracts: any
+''');
+    File(path.join(fixture.root.path, 'pubspec.yaml')).writeAsStringSync('''
+name: owner_workspace
+workspace:
+  - consumer
+  - owner_contracts
+''');
+    File(path.join(consumerRoot.path, '.dart_tool', 'package_config.json'))
+      ..createSync(recursive: true)
+      ..writeAsStringSync(
+        jsonEncode({'configVersion': 2, 'packages': <Object>[]}),
+      );
+    File(
+        path.join(consumerRoot.path, '.dart_tool', 'pub', 'workspace_ref.json'),
+      )
+      ..createSync(recursive: true)
+      ..writeAsStringSync('{"workspaceRoot":"../../.."}');
+
+    final owner = CCRouterContractOwnerIndexCache()
+        .resolve(fixture.consumerSource.path)
+        .resolve(
+          kind: CCRouterContractKind.service,
+          contractSymbol: 'SharedService',
+          prefix: null,
+          importPrefixes: const {
+            '': {'owner_contracts'},
+          },
+          sourcePackage: 'consumer',
+        );
+
+    expect(owner?.componentId, 'owner.component');
+  });
 }
 
 final class _OwnerFixture {
@@ -185,14 +259,21 @@ final class _OwnerFixture {
       ..createSync(recursive: true);
     final contracts = Directory(path.join(root.path, 'owner_contracts'))
       ..createSync(recursive: true);
+    File(path.join(root.path, 'pubspec.yaml')).writeAsStringSync('''
+name: owner_workspace
+workspace:
+  - consumer
+  - owner_contracts
+''');
     File(path.join(consumer.path, 'pubspec.yaml')).writeAsStringSync('''
 name: consumer
+resolution: workspace
 dependencies:
   owner_contracts: any
 ''');
     File(
       path.join(contracts.path, 'pubspec.yaml'),
-    ).writeAsStringSync('name: owner_contracts\n');
+    ).writeAsStringSync('name: owner_contracts\nresolution: workspace\n');
     final consumerSource = File(
       path.join(consumer.path, 'lib', 'src', 'component.dart'),
     )..createSync(recursive: true);

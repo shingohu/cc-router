@@ -5,3 +5,5 @@
 - Preparing the first public release of CCRouter Analysis Server diagnostics.
 - Added Metadata-driven missing Service/Command owner diagnostics and a
   conservative required-dependency Quick Fix for directly editable lists.
+- Aligned Package role and Workspace resolution hints with Generator semantics,
+  including package-local/Pure Dart guidance without an active watch.

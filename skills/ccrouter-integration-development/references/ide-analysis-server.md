@@ -24,6 +24,13 @@ This does not promise automatic watching of arbitrary dependencies outside the
 Server's active roots. Do not silence a stale diagnostic by importing internal
 generated files; verify the installed plugin version and keep `generate --check`.
 
+Package and Workspace identity follow the same authored evidence as generation.
+The analyzed Package is the `requestedRoot`; only its own Pub root or a Workspace
+proven by `workspace_ref.json`/exact membership is the `resolutionRoot`. A
+standalone Package nested below another Workspace never borrows that ancestor's
+Package graph. Changes to `pubspec.yaml`, `.metadata`, `ccrouter.yaml`, and the
+Workspace reference invalidate the relevant Plugin caches.
+
 An active Generator watch additionally publishes bounded structured Workspace
 diagnostics to `.dart_tool/ccrouter/v1/watch/diagnostics.json`. The plugin never
 parses CLI/log text. It accepts a snapshot only when Host/build root, session,
@@ -31,14 +38,18 @@ cycle, event revision, and resolution fingerprint match current `status.json`,
 the cycle resolution stayed matched, and the watch is active. One missing Host
 Owner is shown at an exact authored `package:` location with capability fallout
 folded under that root cause. A successful/new cycle or session clears the old
-diagnostic. Saved `pubspec.yaml` versus resolved graph drift produces only
-`ccrouter_pub_resolution_stale`; ownership is not inferred until Pub get.
+diagnostic. Independently of watch availability, saved `pubspec.yaml` versus
+resolved graph drift produces only `ccrouter_pub_resolution_stale`; ownership
+is not inferred until Pub get. The hint identifies Host versus package-local
+from `.metadata` and `ccrouter.yaml`, and selects Flutter Pub for Flutter
+Packages or Dart Pub for Pure Dart Packages.
 
 Analysis Server does not reliably emit plugin filesystem events for
 `.dart_tool`. The plugin therefore compares the two watch snapshots plus
-manifest/Package-graph file identities every 500ms and reads/reanalyzes only
-after an identity change. The Timer is owned by the plugin and is cancelled on
-context replacement, shutdown, and channel close. Set
+manifest, role, Workspace-reference, Package-graph, and Package-config file
+identities every 500ms and reads/reanalyzes only after an identity change. The
+Timer is owned by the plugin and is cancelled on context replacement, shutdown,
+and channel close. Set
 `CCROUTER_DISABLE_ANALYZER_WATCH_BRIDGE=1` before starting Analysis Server to
 disable this bridge without disabling source rules. Snapshot publication and
 consumption are fail-open diagnostics; generation, Pub Hook failure, and the
@@ -299,9 +310,11 @@ All three write commands support `--dry-run` without processes or file writes.
 Hosted requires an explicit published version; Git accepts remote HTTPS/SSH URLs
 and full SHA only (`--git-path` defaults to `packages/ccrouter_analyzer_plugin`).
 Upgrade keeps the source kind and requires an explicit version/ref. Repeating the
-same healthy installation preserves files and lockfiles. A Flutter application
-Host must directly depend on ccrouter/flutter and have an app `.metadata` or a
-top-level main in `lib/main.dart`; aggregators and library components are refused.
+same healthy installation preserves files and lockfiles. The selected Package
+must resolve to the shared Host role: `project_type: app` with direct
+`ccrouter`/Flutter dependencies, or a direct runtime Package with explicit
+`ccrouter.yaml` `host.enabled: true`. `host.enabled: false`, aggregators, and
+package-local components are refused; `lib/main.dart` is not Host evidence.
 
 The CLI creates `tools/ccrouter_analyzer_host/`, updates one Host dev_dependency
 and `analyzer.plugins`, and preserves unrelated rules, comments and inherited

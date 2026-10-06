@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:analyzer/dart/analysis/utilities.dart';
 import 'package:analyzer/dart/ast/ast.dart';
 import 'package:analyzer/dart/element/type.dart';
+import 'package:ccrouter_analyzer_plugin/src/project_context.dart';
 import 'package:ccrouter_analyzer_plugin/src/resolved_symbols.dart';
 import 'package:path/path.dart' as path;
 
@@ -396,14 +397,24 @@ final class CCRouterContractOwnerIndexCache {
 
   /// Resolves or builds the ownership index for [sourcePath].
   CCRouterContractOwnerIndex resolve(String sourcePath) {
-    final configPath = _findPackageConfig(sourcePath);
-    if (configPath == null) return CCRouterContractOwnerIndex.empty();
+    final context = CCRouterAnalyzerProjectContext.resolve(sourcePath);
+    if (context == null) return CCRouterContractOwnerIndex.empty();
+    final configPath = path.normalize(
+      path.join(
+        context.resolutionRoot.path,
+        '.dart_tool',
+        'package_config.json',
+      ),
+    );
+    if (!File(configPath).existsSync()) {
+      return CCRouterContractOwnerIndex.empty();
+    }
     final cached = _entries.remove(configPath);
     if (cached != null && _packageConfigMatches(cached)) {
       _entries[configPath] = cached;
       return cached.index;
     }
-    final built = _build(configPath);
+    final built = _build(configPath, context);
     if (built == null) return CCRouterContractOwnerIndex.empty();
     _entries[configPath] = built;
     while (_entries.length > maximumEntries) {
@@ -440,20 +451,6 @@ final class CCRouterContractOwnerIndexCache {
   /// Releases all cached metadata and source path strings.
   void clear() => _entries.clear();
 
-  /// Finds the nearest Pub package configuration above one source file.
-  static String? _findPackageConfig(String sourcePath) {
-    var current = File(sourcePath).absolute.parent;
-    while (true) {
-      final candidate = File(
-        path.join(current.path, '.dart_tool', 'package_config.json'),
-      );
-      if (candidate.existsSync()) return path.normalize(candidate.path);
-      final parent = current.parent;
-      if (parent.path == current.path) return null;
-      current = parent;
-    }
-  }
-
   /// Verifies the cheap identity of one cached Pub resolution file.
   static bool _packageConfigMatches(_CCRouterContractOwnerCacheEntry entry) {
     final file = File(entry.packageConfigPath);
@@ -465,7 +462,10 @@ final class CCRouterContractOwnerIndexCache {
   }
 
   /// Builds one index from exact resolved Package metadata paths.
-  static _CCRouterContractOwnerCacheEntry? _build(String configPath) {
+  static _CCRouterContractOwnerCacheEntry? _build(
+    String configPath,
+    CCRouterAnalyzerProjectContext context,
+  ) {
     final configFile = File(configPath);
     late final Map<String, Object?> config;
     try {
@@ -491,7 +491,21 @@ final class CCRouterContractOwnerIndexCache {
         continue;
       }
     }
-    final watched = <String>{path.normalize(configPath)};
+    final watched = <String>{
+      path.normalize(configPath),
+      path.normalize(path.join(context.requestedRoot.path, 'pubspec.yaml')),
+      path.normalize(path.join(context.requestedRoot.path, '.metadata')),
+      path.normalize(path.join(context.requestedRoot.path, 'ccrouter.yaml')),
+      path.normalize(
+        path.join(
+          context.requestedRoot.path,
+          '.dart_tool',
+          'pub',
+          'workspace_ref.json',
+        ),
+      ),
+      path.normalize(path.join(context.resolutionRoot.path, 'pubspec.yaml')),
+    };
     final componentSources = <String>{};
     final pending = <String, _PendingContractOwner>{};
     final packageNames = roots.keys.toList()..sort();

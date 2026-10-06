@@ -65,6 +65,71 @@ dependencies:
     expect(fixture.bridge.pubResolutionHint(fixture.pubspec), isNull);
   });
 
+  test(
+    'uses role-specific stale resolution guidance without an active watch',
+    () {
+      final host = _BridgeFixture.create();
+      final flutterPackage = _BridgeFixture.create();
+      final dartPackage = _BridgeFixture.create();
+      addTearDown(host.dispose);
+      addTearDown(flutterPackage.dispose);
+      addTearDown(dartPackage.dispose);
+      host.writeProject(
+        dependency: 'ccrouter',
+        projectType: 'app',
+        hostEnabled: null,
+      );
+      flutterPackage.writeProject(
+        dependency: 'ccrouter',
+        projectType: 'package',
+        hostEnabled: null,
+      );
+      dartPackage.writeProject(
+        dependency: 'ccrouter_contracts',
+        projectType: null,
+        hostEnabled: null,
+      );
+      host.writePackageGraph(['ccrouter', 'stale_dependency']);
+      flutterPackage.writePackageGraph(['ccrouter', 'stale_dependency']);
+      dartPackage.writePackageGraph(['ccrouter_contracts', 'stale_dependency']);
+
+      final hostHint = host.bridge.pubResolutionHint(host.pubspec)!;
+      final flutterHint = flutterPackage.bridge.pubResolutionHint(
+        flutterPackage.pubspec,
+      )!;
+      final dartHint = dartPackage.bridge.pubResolutionHint(
+        dartPackage.pubspec,
+      )!;
+
+      expect(hostHint.message, contains('Saved Host dependencies'));
+      expect(hostHint.correction, contains('flutter pub get'));
+      expect(flutterHint.message, contains('Saved Package dependencies'));
+      expect(flutterHint.correction, contains('flutter pub get'));
+      expect(dartHint.message, contains('Saved Package dependencies'));
+      expect(dartHint.correction, contains('dart pub get'));
+      expect(dartHint.correction, isNot(contains('flutter pub get')));
+    },
+  );
+
+  test('treats role and Workspace reference files as bridge inputs', () {
+    final fixture = _BridgeFixture.create();
+    addTearDown(fixture.dispose);
+
+    for (final relativePath in const [
+      '.metadata',
+      'ccrouter.yaml',
+      '.dart_tool/pub/workspace_ref.json',
+    ]) {
+      expect(
+        fixture.bridge.isBridgeInput(
+          path.join(fixture.root.path, relativePath),
+        ),
+        isTrue,
+        reason: relativePath,
+      );
+    }
+  });
+
   test('accepts watch identity through a symlinked Host path', () {
     if (Platform.isWindows) return;
     final fixture = _BridgeFixture.create();
@@ -227,6 +292,28 @@ final class _BridgeFixture {
           ],
         }),
       );
+  }
+
+  void writeProject({
+    required String dependency,
+    required String? projectType,
+    required bool? hostEnabled,
+  }) {
+    pubspec.writeAsStringSync('''
+name: bridge_host
+dependencies:
+  $dependency: any
+''');
+    if (projectType != null) {
+      File(
+        path.join(root.path, '.metadata'),
+      ).writeAsStringSync('project_type: $projectType\n');
+    }
+    if (hostEnabled != null) {
+      File(
+        path.join(root.path, 'ccrouter.yaml'),
+      ).writeAsStringSync('host:\n  enabled: $hostEnabled\n');
+    }
   }
 
   void dispose() => root.deleteSync(recursive: true);

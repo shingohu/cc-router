@@ -113,33 +113,18 @@ dependencies:
 ''';
 }
 
-/// Explicitly proves an application target instead of treating every component
-/// depending on ccrouter as a Host. No library scan or platform mutation occurs.
+/// Verifies Analyzer-specific Flutter and SDK constraints after the shared role
+/// resolver has proven that [host] is a CCRouter Host.
 Map<String, Object?> _inspectAnalyzerHost(Directory host) {
   final manifest = _readYamlMap(File(path.join(host.path, 'pubspec.yaml')));
   if (manifest == null)
     throw StateError('Host pubspec.yaml is missing or invalid.');
   final dependencies = _stringKeyedMap(manifest['dependencies']);
-  final appMarker =
-      _readYamlMap(File(path.join(host.path, '.metadata')))?['project_type'] ==
-      'app';
-  final entrypoint = File(path.join(host.path, 'lib', 'main.dart'));
-  var hasMain = false;
-  if (entrypoint.existsSync()) {
-    final unit = parseString(
-      content: entrypoint.readAsStringSync(),
-      throwIfDiagnostics: false,
-    ).unit;
-    hasMain = unit.declarations.whereType<FunctionDeclaration>().any(
-      (function) => function.name.lexeme == 'main',
-    );
-  }
   if (!dependencies.containsKey('ccrouter') ||
-      _stringKeyedMap(dependencies['flutter'])['sdk'] != 'flutter' ||
-      (!appMarker && !hasMain)) {
+      _stringKeyedMap(dependencies['flutter'])['sdk'] != 'flutter') {
     throw StateError(
-      'Select a Flutter application Host with direct ccrouter/flutter dependencies '
-      'and an app .metadata marker or lib/main.dart entrypoint; aggregators and components are not installation targets.',
+      'Select a Flutter CCRouter Host with direct ccrouter/flutter dependencies; '
+      'aggregators and non-Host Packages are not installation targets.',
     );
   }
   final name = manifest['name'];
@@ -157,23 +142,6 @@ Map<String, Object?> _inspectAnalyzerHost(Directory host) {
     );
   }
   return _stringKeyedMap(manifest);
-}
-
-/// Resolves the shared Pub owner only when the selected Host uses a workspace.
-Directory _analyzerResolutionRoot(
-  Directory host,
-  Map<String, Object?> manifest,
-) {
-  if (manifest['resolution'] != 'workspace') return host;
-  var current = host.parent;
-  while (current.path != current.parent.path) {
-    final parent = _readYamlMap(File(path.join(current.path, 'pubspec.yaml')));
-    if (parent?['workspace'] is List) return current;
-    current = current.parent;
-  }
-  throw StateError(
-    'Host declares workspace resolution but no enclosing workspace exists.',
-  );
 }
 
 /// Refuses inherited plugin conflicts as well as locally enabled plugins.
@@ -326,9 +294,17 @@ Future<bool> _runAnalyzerInstallation(
   final input = Directory(request.hostRoot).absolute;
   if (!input.existsSync())
     throw StateError('Host does not exist: ${input.path}');
-  final host = Directory(input.resolveSymbolicLinksSync());
+  final context = CCProjectContext.resolve(input);
+  final role = CCProjectRoleResolver.resolve(context);
+  if (role.role != CCProjectRole.host) {
+    throw StateError(
+      'Selected Package is `${role.role.name}`, not a CCRouter Host. Use '
+      '`.metadata` project_type app or set `ccrouter.yaml` host.enabled true.',
+    );
+  }
+  final host = Directory(context.requestedRoot.resolveSymbolicLinksSync());
   final manifest = _inspectAnalyzerHost(host);
-  final owner = _analyzerResolutionRoot(host, manifest);
+  final owner = Directory(context.resolutionRoot.resolveSymbolicLinksSync());
   final wrapper = Directory(path.join(host.path, _analyzerWrapperPath));
   final marker = File(path.join(wrapper.path, _analyzerOwnershipFile));
   final pluginName = '${manifest['name']}_ccrouter_analyzer';

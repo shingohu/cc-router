@@ -71,6 +71,11 @@ analyzer:
 对应的声明源文件，避免生成成功后仍保留旧的“生成物缺失”提示。依赖跨文件 Catalog 的
 Component API 聚合与 metadata-only Contract 继续由 `ccrouter generate --check` 校验，插件不做
 不可靠的单文件猜测。
+Plugin 使用与 Generator 一致的 `requestedRoot/resolutionRoot` 语义：Workspace member 只接受
+有效 `workspace_ref.json` 或精确 membership，standalone 嵌套 Package 不继承父 Workspace graph。
+保存的依赖与 resolved graph 不一致时，即使没有 active watch，IDE 也会按 Host、Flutter
+package-local 或 Pure Dart package-local 提示对应的 `flutter pub get`/`dart pub get`；该提示只
+暂停 Owner 推断，不执行 Pub 或生成。
 
 插件还会在编辑期检查 Handler 的 public/top-level/non-generic 形态、显然不支持的参数数量和
 void 返回形态、Route `pattern/patterns`、InitTask `contract/id`、字面量 ID/alias/Gate ID 与
@@ -1292,9 +1297,11 @@ Host/build root、session、cycle、`eventRevision` 与 Pub resolution fingerpri
 或 session restart 会清空旧诊断。Analyzer Plugin 只消费与当前 `status.json` 完全匹配且
 resolution 未在 cycle 中变化的失败证据，把同一缺失 Owner 引起的 Route/Service/Command/Event/
 InitTask 级联折叠到 authored Dart 主位置。`pubspec.yaml` 与 resolved Package graph 暂时不一致时，
-IDE 只提示先运行 Pub get，不猜测 Owner。Analysis Server 不可靠转发 `.dart_tool` 文件事件，因此
-插件每 500ms 只比较两个 snapshot 与 Pub 输入的文件 identity，变化时才重新分析相关文件；不创建
-第二套 Analyzer graph。设置 `CCROUTER_DISABLE_ANALYZER_WATCH_BRIDGE=1` 可关闭该 bridge。
+IDE 根据 `.metadata`、`ccrouter.yaml` 与直接依赖识别 Host/package-local，并提示相应的 Flutter
+或 Dart Pub get，不猜测 Owner；该 stale-resolution 提示不要求 watch 处于 active。Analysis Server
+不可靠转发 `.dart_tool` 文件事件，因此插件每 500ms 只比较两个 snapshot、role inputs、
+`workspace_ref.json` 与 Pub graph/config identity，变化时才重新分析相关文件；不创建第二套
+Analyzer graph。设置 `CCROUTER_DISABLE_ANALYZER_WATCH_BRIDGE=1` 可关闭该 bridge。
 诊断发布/消费均为 fail-open 可观察性，不改变生成成功与否；CI 仍以 `--no-cache --check` 为权威。
 Builder 成功后的 watch cycle 会直接进入已完成 Builder 的聚合路径，避免重复执行普通 fast-path
 inspection 与 Build Plan 推导，但仍保留 input fingerprint/barrier、preflight、快照、Validator、

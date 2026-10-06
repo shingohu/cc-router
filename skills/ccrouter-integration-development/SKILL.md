@@ -77,6 +77,11 @@ Catalog metadata as the source of location lookup, and the CLI/Workspace
 Validator as the final authority. Follow
 [`references/ide-analysis-server.md`](references/ide-analysis-server.md) for
 setup, version isolation, and fallback behavior.
+Its Pub-resolution hint uses the selected Package's explicit
+`requestedRoot/resolutionRoot`, `.metadata`, and `ccrouter.yaml` role. It can
+therefore distinguish Host, Flutter package-local, and Pure Dart package-local
+guidance without an active watch. Treat malformed or stale Workspace evidence
+as unavailable diagnostics, not permission to borrow an ancestor graph.
 
 Read [implementation-patterns.md](references/implementation-patterns.md) when adding or changing code. Read [review-checklist.md](references/review-checklist.md) when reviewing, migrating, or validating a feature.
 
@@ -334,11 +339,13 @@ root, session, cycle, event revision, and resolution fingerprint match the
 current status. It then maps `package:` locations through Package config and
 folds one missing Owner's capability fallout into one root-cause diagnostic.
 If saved `pubspec.yaml` dependencies differ from the resolved graph, the plugin
-only asks for Pub get and suspends ownership conclusions. Because Analysis
-Server does not reliably forward `.dart_tool` events, the plugin polls only
-these file identities every 500ms and reanalyzes after changes; it does not open
-a second Analyzer graph. Use `CCROUTER_DISABLE_ANALYZER_WATCH_BRIDGE=1` for an
-IDE-only fallback. Keep `--no-cache --check` as the final authority.
+only asks for the role-appropriate Flutter or Dart Pub get and suspends
+ownership conclusions; this hint is available without an active watch. Because
+Analysis Server does not reliably forward `.dart_tool` events, the plugin polls
+the watch snapshots, role inputs, Workspace reference, and Pub graph/config
+identities every 500ms and reanalyzes after changes; it does not open a second
+Analyzer graph. Use `CCROUTER_DISABLE_ANALYZER_WATCH_BRIDGE=1` for an IDE-only
+fallback. Keep `--no-cache --check` as the final authority.
 `buildSucceeded.buildRunner` is diagnostic-only structured phase data. Its
 `invalidatedInputs` count is inferred from build_runner's public counters; it
 does not expose AssetIds, prove semantic output impact, or authorize skipping a

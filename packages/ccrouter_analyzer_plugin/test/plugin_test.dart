@@ -106,12 +106,18 @@ class SamplePage {}
       ..createSync(recursive: true);
     final owner = Directory(path.join(root.path, 'owner_contracts'))
       ..createSync(recursive: true);
+    File(path.join(root.path, 'pubspec.yaml')).writeAsStringSync('''
+name: plugin_owner_workspace
+workspace:
+  - consumer
+  - owner_contracts
+''');
     File(
       path.join(consumer.path, 'pubspec.yaml'),
-    ).writeAsStringSync('name: consumer\n');
+    ).writeAsStringSync('name: consumer\nresolution: workspace\n');
     File(
       path.join(owner.path, 'pubspec.yaml'),
-    ).writeAsStringSync('name: owner_contracts\n');
+    ).writeAsStringSync('name: owner_contracts\nresolution: workspace\n');
     File(path.join(owner.path, 'lib', 'src', 'contracts.dart'))
       ..createSync(recursive: true)
       ..writeAsStringSync('''

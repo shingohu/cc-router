@@ -56,6 +56,9 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
     '**/*.dart',
     '**/ccrouter_generated/metadata/ccrouter_package.json',
     '**/pubspec.yaml',
+    '**/.metadata',
+    '**/ccrouter.yaml',
+    '**/.dart_tool/pub/workspace_ref.json',
   ];
 
   /// Human-readable plugin name shown by Analysis Server diagnostics.
@@ -200,12 +203,16 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
       _packageContexts.invalidate(changedPath);
       refresh.addAll(_contractOwners.invalidate(changedPath));
       refresh.addAll(_generatorDiagnostics.affectedDartPaths(changedPath));
-      if (path.basename(changedPath) == 'pubspec.yaml') {
-        await _publishPubResolutionHint(changedPath);
+      final projectPubspec = _projectPubspecForInput(changedPath);
+      if (projectPubspec != null) {
+        await _publishPubResolutionHint(projectPubspec);
       }
       if (changedPath.endsWith(path.join('.dart_tool', 'package_graph.json')) ||
           changedPath.endsWith(
             path.join('.dart_tool', 'package_config.json'),
+          ) ||
+          changedPath.endsWith(
+            path.join('.dart_tool', 'pub', 'workspace_ref.json'),
           )) {
         resolutionInputChanged = true;
       }
@@ -431,6 +438,27 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
         ),
       ]).toNotification(),
     );
+  }
+
+  /// Maps Package role inputs back to the manifest receiving a stale-resolution
+  /// hint. Workspace-owned graph files are handled separately for every active
+  /// Analysis context because they can affect multiple member manifests.
+  static String? _projectPubspecForInput(String changedPath) {
+    final normalized = path.normalize(changedPath);
+    final basename = path.basename(normalized);
+    if (basename == 'pubspec.yaml') return normalized;
+    if (basename == '.metadata' || basename == 'ccrouter.yaml') {
+      return path.join(path.dirname(normalized), 'pubspec.yaml');
+    }
+    if (normalized.endsWith(
+      path.join('.dart_tool', 'pub', 'workspace_ref.json'),
+    )) {
+      return path.join(
+        path.dirname(path.dirname(path.dirname(normalized))),
+        'pubspec.yaml',
+      );
+    }
+    return null;
   }
 
   /// Refreshes diagnostics for generated capability files added, changed, or

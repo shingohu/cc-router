@@ -281,17 +281,17 @@ void main() {
   );
 
   test('rejects a component or aggregator without an App identity', () async {
-    host.file('.metadata').deleteSync();
+    host.write('.metadata', 'project_type: package\n');
     final before = host.snapshot();
     expect(await host.run(), isFalse);
     expect(host.snapshot(), before);
   });
 
   test(
-    'supports app entrypoint and initially absent options/dev dependencies',
+    'supports explicit module Host and initially absent options/dev dependencies',
     () async {
-      host.file('.metadata').deleteSync();
-      host.write('lib/main.dart', 'void main() {}\n');
+      host.write('.metadata', 'project_type: module\n');
+      host.write('ccrouter.yaml', 'host:\n  enabled: true\n');
       host.file('analysis_options.yaml').deleteSync();
       host
           .file('pubspec.yaml')
@@ -313,6 +313,16 @@ void main() {
       );
     },
   );
+
+  test('host.enabled false rejects an app installation target', () async {
+    host.write('ccrouter.yaml', 'host:\n  enabled: false\n');
+    final before = host.snapshot();
+
+    expect(await host.run(), isFalse);
+
+    expect(host.snapshot(), before);
+    expect(host.calls, isEmpty);
+  });
 
   test('symlink bootstrap cannot redirect installation writes', () async {
     final outside = Directory(path.join(host.root.path, 'outside'))

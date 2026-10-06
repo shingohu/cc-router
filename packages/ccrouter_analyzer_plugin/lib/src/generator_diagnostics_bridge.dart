@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:analyzer/source/line_info.dart';
 import 'package:analyzer_plugin/protocol/protocol_common.dart';
+import 'package:ccrouter_analyzer_plugin/src/project_context.dart';
 import 'package:ccrouter_analyzer_plugin/src/source_analyzer.dart';
 import 'package:path/path.dart' as path;
 import 'package:yaml/yaml.dart';
@@ -145,6 +146,11 @@ final class CCRouterGeneratorDiagnosticsBridge {
           ),
         ) ||
         path.basename(normalized) == 'pubspec.yaml' ||
+        path.basename(normalized) == '.metadata' ||
+        path.basename(normalized) == 'ccrouter.yaml' ||
+        normalized.endsWith(
+          path.join('.dart_tool', 'pub', 'workspace_ref.json'),
+        ) ||
         normalized.endsWith(path.join('.dart_tool', 'package_graph.json')) ||
         normalized.endsWith(path.join('.dart_tool', 'package_config.json'));
   }
@@ -172,25 +178,42 @@ final class CCRouterGeneratorDiagnosticsBridge {
     return _affectedDartPathsForHost(hostRoot);
   }
 
-  /// Reports whether the Host manifest or its resolved Package graph changed.
+  /// Reports whether project role inputs or the resolved Package graph changed.
   ///
   /// The first observation establishes a baseline because initial context
   /// setup already publishes the current hint.
   bool pollPubResolutionChanged(Directory hostRoot) {
     if (!enabled) return false;
-    final absoluteHost = hostRoot.absolute;
-    final status = _readObject(_statusFile(absoluteHost));
-    final buildRootValue = status?['buildRoot'];
-    final buildRoot = buildRootValue is String && buildRootValue.isNotEmpty
-        ? Directory(buildRootValue)
-        : absoluteHost;
+    final context = CCRouterAnalyzerProjectContext.resolve(hostRoot.path);
+    if (context == null) return false;
+    final requestedRoot = context.requestedRoot;
+    final resolutionRoot = context.resolutionRoot;
     final signature = [
-      _fileIdentity(File(path.join(absoluteHost.path, 'pubspec.yaml'))),
+      _fileIdentity(File(path.join(requestedRoot.path, 'pubspec.yaml'))),
+      _fileIdentity(File(path.join(requestedRoot.path, '.metadata'))),
+      _fileIdentity(File(path.join(requestedRoot.path, 'ccrouter.yaml'))),
       _fileIdentity(
-        File(path.join(buildRoot.path, '.dart_tool', 'package_graph.json')),
+        File(
+          path.join(
+            requestedRoot.path,
+            '.dart_tool',
+            'pub',
+            'workspace_ref.json',
+          ),
+        ),
+      ),
+      _fileIdentity(
+        File(
+          path.join(resolutionRoot.path, '.dart_tool', 'package_graph.json'),
+        ),
+      ),
+      _fileIdentity(
+        File(
+          path.join(resolutionRoot.path, '.dart_tool', 'package_config.json'),
+        ),
       ),
     ].join('|');
-    final key = _canonicalDirectoryIdentity(absoluteHost.path);
+    final key = _canonicalDirectoryIdentity(requestedRoot.path);
     final previous = _observedResolutionInputByHost[key];
     _observedResolutionInputByHost[key] = signature;
     return previous != null && previous != signature;
@@ -253,24 +276,21 @@ final class CCRouterGeneratorDiagnosticsBridge {
     _observedResolutionInputByHost.clear();
   }
 
-  /// Compares one active Host manifest with its last resolved direct graph.
+  /// Compares one participating Package manifest with its resolved direct graph.
   CCRouterPubResolutionHint? pubResolutionHint(File pubspec) {
     if (!enabled || !pubspec.existsSync()) return null;
-    final hostRoot = pubspec.parent.absolute;
-    final status = _readObject(_statusFile(hostRoot));
-    if (status == null ||
-        status['schemaVersion'] != 1 ||
-        status['active'] != true ||
-        !_hasSameDirectoryIdentity(
-          '${status['hostRoot'] ?? ''}',
-          hostRoot.path,
-        )) {
+    final context = CCRouterAnalyzerProjectContext.resolve(pubspec.path);
+    if (context == null || context.role == CCRouterAnalyzerProjectRole.skip) {
       return null;
     }
-    final buildRootValue = status['buildRoot'];
-    if (buildRootValue is! String || buildRootValue.isEmpty) return null;
     final graph = _readObject(
-      File(path.join(buildRootValue, '.dart_tool', 'package_graph.json')),
+      File(
+        path.join(
+          context.resolutionRoot.path,
+          '.dart_tool',
+          'package_graph.json',
+        ),
+      ),
     );
     if (graph == null) return null;
     late final String contents;
@@ -301,7 +321,10 @@ final class CCRouterGeneratorDiagnosticsBridge {
       final List values => values.whereType<String>().toSet(),
       _ => <String>{},
     };
-    if (!declared.contains('ccrouter') && !resolved.contains('ccrouter')) {
+    if (!declared.contains('ccrouter') &&
+        !resolved.contains('ccrouter') &&
+        !declared.contains('ccrouter_contracts') &&
+        !resolved.contains('ccrouter_contracts')) {
       return null;
     }
     final unresolvedAdds = declared.difference(resolved).toList()..sort();
@@ -317,14 +340,19 @@ final class CCRouterGeneratorDiagnosticsBridge {
       if (unresolvedRemovals.isNotEmpty)
         'still resolved: ${unresolvedRemovals.take(5).join(', ')}',
     ].join('; ');
+    final roleLabel = context.role == CCRouterAnalyzerProjectRole.host
+        ? 'Host'
+        : 'Package';
+    final pubTool = context.isFlutterProject ? 'flutter' : 'dart';
     return CCRouterPubResolutionHint(
       offset: offset,
       length: dependencyOffset < 0 ? 1 : 'dependencies'.length,
       message:
-          'Saved Host dependencies do not match the resolved Pub graph '
+          'Saved $roleLabel dependencies do not match the resolved Pub graph '
           '($summary). CCRouter ownership conclusions are suspended until Pub '
           'resolution is refreshed.',
-      correction: 'Run `fvm flutter pub get` for this Host.',
+      correction:
+          'Run `fvm $pubTool pub get` for this ${roleLabel.toLowerCase()}.',
     );
   }
 

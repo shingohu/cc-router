@@ -124,7 +124,10 @@ new cycle, or restarted session clears it. The optional Analyzer bridge accepts
 only a fully matching, resolution-stable pair and folds capability fallout from
 one missing Owner into one authored-source root cause. It polls file identities
 at 500ms because Analysis Server does not reliably forward `.dart_tool` events,
-and reanalyzes only after a change. Set
+and reanalyzes only after a change. Saved-versus-resolved Pub hints do not
+require an active watch: they use validated requested/resolution roots plus
+`.metadata` and `ccrouter.yaml` to distinguish Host, Flutter package-local, and
+Pure Dart package-local commands. Set
 `CCROUTER_DISABLE_ANALYZER_WATCH_BRIDGE=1` to disable this IDE-only bridge.
 Publication and consumption remain fail-open; they do not replace the final
 `--no-cache --check` gate.
@@ -354,6 +357,11 @@ lockfiles, never the private journal. Installation success does not prove live I
 Do not attach Analyzer setup to `generate`, Pub Hook, or component scaffolding.
 Do not change a pinned Git ref merely to follow local HEAD, use a branch name,
 or commit a local absolute path.
+Analyzer installation accepts only the shared Host role. An app `.metadata`
+defaults to Host for a direct runtime Package; `host.enabled: true` may promote
+another Flutter project type, while `host.enabled: false` demotes an app.
+`lib/main.dart` is not Host evidence. The Plugin itself remains read-only and
+uses the same role inputs only to select diagnostics and Pub guidance.
 
 ## Deferred CLI 2.0 Workflows
 

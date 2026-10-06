@@ -76,9 +76,15 @@ final class CCRouterPackageContextCache {
     return entry.context;
   }
 
-  /// Invalidates contexts owned by a changed `pubspec.yaml`.
+  /// Invalidates contexts owned by changed Package identity or role inputs.
   void invalidate(String changedPath) {
-    if (path.basename(changedPath) != 'pubspec.yaml') return;
+    if (!const {
+      'pubspec.yaml',
+      '.metadata',
+      'ccrouter.yaml',
+    }.contains(path.basename(changedPath))) {
+      return;
+    }
     final root = path.normalize(File(changedPath).absolute.parent.path);
     _entries.removeWhere((_, entry) => entry.context.root == root);
   }
