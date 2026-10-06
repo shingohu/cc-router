@@ -1312,12 +1312,15 @@ AI Agent 等待 `ready`、`aggregationSucceeded`、`failed` 和 `stopped`，buil
 stderr。默认事件保留 Builder 与聚合最终耗时；性能测试或慢任务诊断显式追加 `--profile` 后，
 build_runner 才启用 `--verbose-durations`，且 `aggregationSucceeded.profile` 才包含完整 cycle
 trace。默认 `build` 是 CCRouter 观测的端到端耗时，精细的 `build_runner` 上游耗时仅在 Profile
-模式可用。`buildSucceeded.buildRunner` 始终提供
-结构化 `formatVersion: 1` 诊断：每个 Builder
-phase 的 `durationMs`、`inputs`、`skipped`、`invalidatedInputs`、`executedInputs`、`outputs`、
-`sameOutputs`、`noOp` 和已达到 build_runner 报告阈值的 activity 耗时。它只解析上游正式
+模式可用。`buildSucceeded.buildRunner` 使用结构化 `formatVersion: 2`：默认明确发布
+`available: false, reason: profile-disabled`，不会把未采集的 Builder counters 伪装成零；仍保留
+外层 CCRouter 实测耗时。`--profile` 下发布 `available: true`，并携带 Builder 报告的总耗时、
+写入数以及每个 Builder phase
+的 `durationMs`、`inputs`、`skipped`、`invalidatedInputs`、`executedInputs`、`outputs`、
+`sameOutputs`、`noOp` 和达到 build_runner 报告阈值的 activity 耗时。它只解析上游正式
 console 格式，不读取 private Asset Graph；无法识别的终态保留在有界 `unparsedFinalLines`，
-不会改变生成结果。`CCROUTER_DISABLE_BUILD_WATCH=1` 会执行一次 one-shot 后退出。watch 是开发加速路径，
+不会改变生成结果。`CCROUTER_LEGACY_UNPROFILED_BUILD_RUNNER_REPORT=1` 可恢复旧的默认空 counters
+做 A/B；`CCROUTER_DISABLE_BUILD_WATCH=1` 会执行一次 one-shot 后退出。watch 是开发加速路径，
 CI 仍以 `generate <host> --no-cache --check` 为权威。一个活动 watch 会在 lease 生命周期内
 持有该 root 的 generation lock；同 root 的 one-shot generate/check/clean 会快速失败并提示等待
 `aggregationSucceeded`，不会无限阻塞；反过来已有 one-shot 正在执行或排队时，新 watch 也会快速失败。

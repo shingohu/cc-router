@@ -46,7 +46,10 @@ final class CCBuildRunnerPhaseCollector {
   }
 
   /// Completes a diagnostic report from build_runner's terminal status line.
-  CCBuildRunnerCycleReport finish(String statusLine) {
+  CCBuildRunnerCycleReport finish(
+    String statusLine, {
+    bool phaseDetailsAvailable = true,
+  }) {
     final status = RegExp(
       r'build_runner/(?:aot|jit) in (\d+\.\d{2}s)(?: with warnings)?; '
       r'wrote (\d+) outputs?\.',
@@ -54,6 +57,7 @@ final class CCBuildRunnerPhaseCollector {
     return CCBuildRunnerCycleReport(
       durationMs: status == null ? null : _durationMs(status.group(1)!),
       writtenOutputs: status == null ? null : int.parse(status.group(2)!),
+      phaseDetailsAvailable: phaseDetailsAvailable,
       phases: _phases.values.toList(growable: false),
       unparsedFinalLines: List.unmodifiable(_unparsedFinalLines),
     );
@@ -134,6 +138,7 @@ final class CCBuildRunnerCycleReport {
   CCBuildRunnerCycleReport({
     required this.durationMs,
     required this.writtenOutputs,
+    required this.phaseDetailsAvailable,
     required List<CCBuildRunnerPhaseReport> phases,
     required List<String> unparsedFinalLines,
   }) : phases = List.unmodifiable(phases),
@@ -144,6 +149,9 @@ final class CCBuildRunnerCycleReport {
 
   /// Overall written-output count, or `null` for an unknown status format.
   final int? writtenOutputs;
+
+  /// Whether verbose Builder phase counters were enabled for this cycle.
+  final bool phaseDetailsAvailable;
 
   /// Completed phase diagnostics in upstream display order.
   final List<CCBuildRunnerPhaseReport> phases;
@@ -157,26 +165,30 @@ final class CCBuildRunnerCycleReport {
     int sum(int Function(CCBuildRunnerPhaseReport phase) read) =>
         phases.fold(0, (total, phase) => total + read(phase));
     return {
-      'formatVersion': 1,
+      'formatVersion': 2,
+      'available': phaseDetailsAvailable,
+      if (!phaseDetailsAvailable) 'reason': 'profile-disabled',
       if (durationMs case final durationMs?) 'durationMs': durationMs,
       if (writtenOutputs case final writtenOutputs?)
         'writtenOutputs': writtenOutputs,
-      'totals': {
-        'phases': phases.length,
-        'inputs': knownInputPhases.fold<int>(
-          0,
-          (total, phase) => total + phase.inputs!,
-        ),
-        'skipped': sum((phase) => phase.skipped),
-        'notTriggered': sum((phase) => phase.notTriggered),
-        'invalidatedInputs': sum((phase) => phase.invalidatedInputs),
-        'executedInputs': sum((phase) => phase.executedInputs),
-        'outputs': sum((phase) => phase.outputs),
-        'sameOutputs': sum((phase) => phase.sameOutputs),
-        'noOp': sum((phase) => phase.noOp),
-      },
-      'phases': [for (final phase in phases) phase.toJson()],
-      if (unparsedFinalLines.isNotEmpty)
+      if (phaseDetailsAvailable)
+        'totals': {
+          'phases': phases.length,
+          'inputs': knownInputPhases.fold<int>(
+            0,
+            (total, phase) => total + phase.inputs!,
+          ),
+          'skipped': sum((phase) => phase.skipped),
+          'notTriggered': sum((phase) => phase.notTriggered),
+          'invalidatedInputs': sum((phase) => phase.invalidatedInputs),
+          'executedInputs': sum((phase) => phase.executedInputs),
+          'outputs': sum((phase) => phase.outputs),
+          'sameOutputs': sum((phase) => phase.sameOutputs),
+          'noOp': sum((phase) => phase.noOp),
+        },
+      if (phaseDetailsAvailable)
+        'phases': [for (final phase in phases) phase.toJson()],
+      if (phaseDetailsAvailable && unparsedFinalLines.isNotEmpty)
         'unparsedFinalLines': unparsedFinalLines,
     };
   }

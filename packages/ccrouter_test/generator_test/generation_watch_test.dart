@@ -124,6 +124,11 @@ void main() {
       expect(activeDocument!['completedInputRevision'], 0);
       expect(activeDocument!['hotRestartRequired'], isFalse);
       expect(watch.aggregation.containsKey('profile'), isFalse);
+      expect(watch.build['buildRunner'], {
+        'formatVersion': 2,
+        'available': false,
+        'reason': 'profile-disabled',
+      });
 
       final stopped = await _run(['watch', 'status', 'demo']);
       expect(stopped.exitCode, 0, reason: '${stopped.stderr}');
@@ -333,7 +338,8 @@ void main() {
       expect(optimized.ready['schemaVersion'], 1);
       final buildRunner = (optimized.build['buildRunner'] as Map)
           .cast<String, dynamic>();
-      expect(buildRunner['formatVersion'], 1);
+      expect(buildRunner['formatVersion'], 2);
+      expect(buildRunner['available'], isTrue);
       expect(buildRunner['durationMs'], isA<int>());
       expect(buildRunner['writtenOutputs'], isA<int>());
       expect((buildRunner['phases'] as List), isNotEmpty);

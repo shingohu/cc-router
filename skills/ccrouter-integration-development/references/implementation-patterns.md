@@ -832,9 +832,10 @@ Hosts with distinct Pub roots remain independent. Use
 `CCROUTER_DISABLE_MULTI_HOST_WATCH=1` only to compare the former exclusive-root
 behavior. Subscriber departure keeps the current target superset to avoid a
 restart; actual Pub target removal still rotates the child session.
-`buildSucceeded.buildRunner` also reports structured per-phase
-duration, inputs, skipped/not-triggered, inferred invalidated inputs, executed
-inputs, new/same/no-op outputs, and thresholded activities. These are
+`buildSucceeded.buildRunner` uses `formatVersion: 2`. The default unprofiled
+event reports `available: false` instead of zero counters. With `--profile` it
+reports structured per-phase duration, inputs, skipped/not-triggered, inferred
+invalidated inputs, executed inputs, new/same/no-op outputs, and thresholded activities. These are
 diagnostic public-counter interpretations, not private Asset Graph access or a
 generation decision input. Unknown terminal formats are retained in bounded
 `unparsedFinalLines` without failing generation. `flutter run` obtains the same

@@ -25,6 +25,8 @@ void main() {
 
     expect(report['durationMs'], 4260);
     expect(report['writtenOutputs'], 3);
+    expect(report['formatVersion'], 2);
+    expect(report['available'], isTrue);
     expect(report['unparsedFinalLines'], isNull);
     expect(report['totals'], {
       'phases': 1,
@@ -116,5 +118,24 @@ void main() {
 
     expect(phases, hasLength(1));
     expect((phases.single as Map)['name'], 'ccrouter_generator:services');
+  });
+
+  test('does not encode unavailable phase details as zero counters', () {
+    final collector = CCBuildRunnerPhaseCollector();
+
+    final report = collector
+        .finish(
+          'Built with build_runner/aot in 0.20s; wrote 0 outputs.',
+          phaseDetailsAvailable: false,
+        )
+        .toJson();
+
+    expect(report['formatVersion'], 2);
+    expect(report['available'], isFalse);
+    expect(report['reason'], 'profile-disabled');
+    expect(report['durationMs'], 200);
+    expect(report['writtenOutputs'], 0);
+    expect(report.containsKey('totals'), isFalse);
+    expect(report.containsKey('phases'), isFalse);
   });
 }

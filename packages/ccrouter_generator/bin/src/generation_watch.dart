@@ -12,6 +12,8 @@ const _multiHostWatchKillSwitch = 'CCROUTER_DISABLE_MULTI_HOST_WATCH';
 const _watchResolutionExactPollInterval = Duration(seconds: 5);
 const _buildRunnerSuccessPattern = 'Built with build_runner';
 const _buildRunnerFailurePattern = 'Failed to build with build_runner';
+const _legacyUnprofiledBuildRunnerReport =
+    'CCROUTER_LEGACY_UNPROFILED_BUILD_RUNNER_REPORT';
 
 bool get _isWatchAggregationCycle =>
     _generationCycleMode?.watchCycle ??
@@ -911,7 +913,12 @@ Future<_GenerationWatchTopology?> _runGenerationWatchSession({
 
       final restoreWatch = Stopwatch()..start();
       buildActive = false;
-      final buildRunnerReport = buildRunnerPhases.finish(line);
+      final buildRunnerReport = buildRunnerPhases.finish(
+        line,
+        phaseDetailsAvailable:
+            parsed.profile ||
+            Platform.environment[_legacyUnprofiledBuildRunnerReport] == '1',
+      );
       for (final snapshot in protectedOutputs) {
         await snapshot.restore();
       }

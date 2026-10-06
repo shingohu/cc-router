@@ -381,11 +381,14 @@ watch 停止或 session restart 时，build_runner child 依次获得 10 秒 SIG
 build_runner 才启用 `--verbose-durations`，且 `aggregationSucceeded.profile` 才携带完整 cycle
 trace。默认 `build` 是 CCRouter 观测的端到端耗时，精细的 `build_runner` 上游耗时仅在 Profile
 模式可用。性能 benchmark 和 AI 慢任务诊断应显式使用该参数，不根据调用者身份隐式开启。
-`buildSucceeded.buildRunner` 和 Builder 阶段失败事件中的同名字段额外携带结构化
-`formatVersion: 1` 诊断，包含每个 phase 的耗时、inputs、skipped、not-triggered、
-invalidated/executed input、new/same/no-op output 和达到上游阈值的 activity 耗时。该统计仅解析
-build_runner 正式 console 输出，不访问 private Asset Graph；未知终态格式以有界
-`unparsedFinalLines` 保留且不影响生成成败。
+`buildSucceeded.buildRunner` 和 Builder 阶段失败事件中的同名字段使用结构化
+`formatVersion: 2`。默认是 `available: false, reason: profile-disabled`，不会把未采集数据表示成
+零 counters；外层事件仍保留 CCRouter 实测耗时。`--profile` 下是 `available: true`，包含 Builder
+报告的总耗时、写入数以及每个 phase 的耗时、inputs、skipped、not-triggered、
+invalidated/executed input、new/same/no-op output
+和达到上游阈值的 activity 耗时。该统计仅解析 build_runner 正式 console 输出，不访问 private
+Asset Graph；未知终态格式以有界 `unparsedFinalLines` 保留且不影响生成成败。
+`CCROUTER_LEGACY_UNPROFILED_BUILD_RUNNER_REPORT=1` 可恢复旧空 counters 做 A/B。
 设置 `CCROUTER_DISABLE_BUILD_WATCH=1` 可回退为一次 one-shot。watch 不替代最终的
 `--no-cache --check`；它在 lease 内持有 root generation lock，应先停止再运行最终门禁。
 同 root 的 one-shot generate、check 或 clean 会在检测到活动 watch 时快速失败，而不是无限等待锁；

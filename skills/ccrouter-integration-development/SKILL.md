@@ -411,11 +411,13 @@ explicit nested Workspace Hosts every 500ms and reanalyzes after changes; it
 does not open a second Analyzer graph. Use
 `CCROUTER_DISABLE_ANALYZER_WATCH_BRIDGE=1` for an IDE-only fallback. Keep
 `--no-cache --check` as the final authority.
-`buildSucceeded.buildRunner` is diagnostic-only structured phase data. Its
-`invalidatedInputs` count is inferred from build_runner's public counters; it
+`buildSucceeded.buildRunner` uses `formatVersion: 2`. Without `--profile` it
+reports `available: false` instead of zero phase counters; with `--profile` its
+`invalidatedInputs` count is inferred from build_runner's public counters. It
 does not expose AssetIds, prove semantic output impact, or authorize skipping a
 Builder. Unknown upstream terminal formats are bounded in
-`unparsedFinalLines` and do not fail generation. Set
+`unparsedFinalLines` and do not fail generation. Use
+`CCROUTER_LEGACY_UNPROFILED_BUILD_RUNNER_REPORT=1` only for A/B fallback. Set
 `CCROUTER_DISABLE_BUILD_WATCH=1` for a one-shot fallback. Watch is scoped to one
 resolved build root. Different Hosts in that root share one Builder owner and
 target union, but each retains its own aggregation, validation, lease, status,
