@@ -119,8 +119,17 @@ run needs build_runner verbose durations and the complete cycle trace. Treat
 the default `build` value as CCRouter's end-to-end observation; the narrower
 upstream build_runner duration is profile-only. Set
 `CCROUTER_DISABLE_BUILD_WATCH=1` for the one-shot fallback. Watch owns one build
-root and holds its generation lock for the lease lifetime. Stop it before the
-final `--no-cache --check`; watch never replaces that authority.
+root and holds its generation lock for the lease lifetime. Coordination locks
+and Host registrations live under the user-level
+`CCROUTER_HOME` (`~/.ccrouter` on macOS/Linux or `%LOCALAPPDATA%\\CCRouter` on
+Windows) in a full-SHA-256 build-root directory; `.dart_tool` retains
+disposable build/planning data and Host-facing status/diagnostics. Use
+`watch status` to inspect the effective schema and path. V2 fails fast when a
+live V1 owner is detected; stop the old process and reinstall the current Pub
+Hook instead of mixing protocols. `CCROUTER_USE_LEGACY_DART_TOOL_LOCKS=1` is a
+temporary A/B fallback and does not make old and new processes interoperable.
+Stop watch before the final `--no-cache --check`; watch never replaces that
+authority.
 Different Hosts resolving to that same build root share one Builder owner. The
 owner watches the union of their active target closures, while every Host keeps
 its own aggregation, validation, lease, status, diagnostics, and input revision.

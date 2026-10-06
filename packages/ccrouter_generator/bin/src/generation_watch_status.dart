@@ -466,16 +466,7 @@ Future<Map<String, Object?>> _observeGenerationWatchLiveness(
 
 /// Returns false only when the existing owner lock can be acquired shared.
 Future<bool> _generationWatchOwnershipIsHeld(Directory buildRoot) async {
-  final lockFile = File(
-    path.join(
-      buildRoot.path,
-      '.dart_tool',
-      'ccrouter',
-      'v1',
-      'watch',
-      'owner.lock',
-    ),
-  );
+  final lockFile = ccrouterWatchOwnerLockFile(buildRoot);
   if (!lockFile.existsSync()) return false;
   RandomAccessFile? opened;
   try {
@@ -560,6 +551,10 @@ void _writeGenerationWatchStatus(
   required File file,
   required Directory hostRoot,
 }) {
+  final buildRoot = Directory(status['buildRoot'] as String);
+  final coordination = usesLegacyCCRouterCoordination()
+      ? legacyCCRouterWatchOwnerLockFile(buildRoot).parent
+      : CCRouterCoordinationPaths.forBuildRoot(buildRoot).projectDirectory;
   _commandStdout.writeln(
     'CCRouter watch status: ${status['active'] == true ? 'active' : 'inactive'}',
   );
@@ -584,6 +579,8 @@ void _writeGenerationWatchStatus(
         : '${status['lastAggregationElapsedMs']}ms',
     'cycle mode': status['lastCycleMode'],
     'failure stage': status['failureStage'],
+    'coordination schema': usesLegacyCCRouterCoordination() ? 'v1' : 'v2',
+    'coordination path': coordination.path,
     'status file': file.path,
     if (status['managedByLease'] == true)
       'log file': _generationWatchLogFile(hostRoot).path,

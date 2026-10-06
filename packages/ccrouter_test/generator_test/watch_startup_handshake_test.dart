@@ -7,6 +7,8 @@ import 'dart:io';
 import 'package:path/path.dart' as path;
 import 'package:test/test.dart';
 
+import '../../ccrouter_generator/bin/src/coordination_home.dart';
+
 void main() {
   test('accepts only the exact ready lease with a live owner', () async {
     final fixture = await _HandshakeFixture.create();
@@ -97,6 +99,7 @@ final class _HandshakeFixture {
     required this.leaseFile,
     required this.statusFile,
     required this.ownerFile,
+    required this.coordinationHome,
   });
 
   final Directory host;
@@ -104,6 +107,7 @@ final class _HandshakeFixture {
   final File leaseFile;
   final File statusFile;
   final File ownerFile;
+  final Directory coordinationHome;
 
   static Future<_HandshakeFixture> create() async {
     final host = await Directory.systemTemp.createTemp(
@@ -114,12 +118,19 @@ final class _HandshakeFixture {
     )..createSync(recursive: true);
     final leaseFile = File(path.join(watchDirectory.path, 'flutter-run.lease'))
       ..writeAsStringSync('');
+    final coordinationHome = Directory(path.join(host.path, 'coordination'));
+    final coordination = CCRouterCoordinationPaths.forBuildRoot(
+      host,
+      environment: {ccrouterHomeEnvironment: coordinationHome.path},
+    );
+    await coordination.prepare();
     return _HandshakeFixture._(
       host: host,
       watchDirectory: watchDirectory,
       leaseFile: leaseFile,
       statusFile: File(path.join(watchDirectory.path, 'status.json')),
-      ownerFile: File(path.join(watchDirectory.path, 'owner.lock')),
+      ownerFile: coordination.ownerLock,
+      coordinationHome: coordinationHome,
     );
   }
 
@@ -145,19 +156,27 @@ final class _HandshakeFixture {
   Future<ProcessResult> run({
     int startupTimeoutMs = 500,
     int readyTimeoutMs = 1000,
-  }) => Process.run(Platform.resolvedExecutable, <String>[
-    'run',
-    '--verbosity=error',
-    'ccrouter_generator:ccrouter_watch_startup',
-    '--host-root',
-    host.path,
-    '--watch-lease',
-    leaseFile.path,
-    '--startup-timeout-ms',
-    '$startupTimeoutMs',
-    '--ready-timeout-ms',
-    '$readyTimeoutMs',
-  ], workingDirectory: Directory.current.path);
+  }) => Process.run(
+    Platform.resolvedExecutable,
+    <String>[
+      'run',
+      '--verbosity=error',
+      'ccrouter_generator:ccrouter_watch_startup',
+      '--host-root',
+      host.path,
+      '--watch-lease',
+      leaseFile.path,
+      '--startup-timeout-ms',
+      '$startupTimeoutMs',
+      '--ready-timeout-ms',
+      '$readyTimeoutMs',
+    ],
+    workingDirectory: Directory.current.path,
+    environment: {
+      ...Platform.environment,
+      ccrouterHomeEnvironment: coordinationHome.path,
+    },
+  );
 
   Future<void> dispose() => host.delete(recursive: true);
 }

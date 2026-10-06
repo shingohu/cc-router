@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:path/path.dart' as path;
 
 import 'canonical_directory_identity.dart';
+import 'coordination_home.dart';
 
 /// Terminal outcome of waiting for one wrapper-owned generation watch.
 enum CCWatchStartupOutcome {
@@ -220,16 +221,7 @@ Future<Map<String, Object?>?> _readWatchStartupStatus(File file) async {
 
 /// Proves that the ready status still has a live exclusive watch owner.
 Future<bool> _watchStartupOwnerIsHeld(Directory buildRoot) async {
-  final owner = File(
-    path.join(
-      buildRoot.path,
-      '.dart_tool',
-      'ccrouter',
-      'v1',
-      'watch',
-      'owner.lock',
-    ),
-  );
+  final owner = ccrouterWatchOwnerLockFile(buildRoot);
   if (!owner.existsSync()) return false;
   RandomAccessFile? opened;
   try {

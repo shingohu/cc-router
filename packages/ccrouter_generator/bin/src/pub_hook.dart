@@ -7,6 +7,7 @@ import 'package:path/path.dart' as path;
 import 'package:yaml/yaml.dart';
 
 import 'canonical_directory_identity.dart';
+import 'coordination_home.dart';
 import 'pub_hook_watch_coordination.dart';
 
 const _pubHookWatchFailureFenceKillSwitch =
@@ -1036,16 +1037,7 @@ Future<bool> _pubHookWatchIsActive(Map<String, Object?> status) async {
 }
 
 Future<bool> _pubHookWatchOwnerIsHeld(Directory buildRoot) async {
-  final owner = File(
-    path.join(
-      buildRoot.path,
-      '.dart_tool',
-      'ccrouter',
-      'v1',
-      'watch',
-      'owner.lock',
-    ),
-  );
+  final owner = ccrouterWatchOwnerLockFile(buildRoot);
   if (!owner.existsSync()) return false;
   RandomAccessFile? opened;
   try {

@@ -173,7 +173,12 @@ terminal failure 快速栅栏，恢复旧的 fingerprint-only 失败判断与有
 Hook 不默认采集详细 profile。遇到慢生成时，在独立终端显式运行 `generate <host> --profile`
 定位阶段耗时；性能 benchmark 或 AI 诊断也应显式传入该参数。
 
-后台 watch 会原子维护 `.dart_tool/ccrouter/v1/watch/status.json`。不需要把 watch NDJSON
+后台 watch 的权威锁与 Host registration 位于用户级 `CCROUTER_HOME`：macOS/Linux 默认
+`~/.ccrouter`，Windows 默认 `%LOCALAPPDATA%\CCRouter`。canonical build root 与 Host 分别使用
+完整 SHA-256 做两级隔离；`.dart_tool/ccrouter/v1/watch/status.json` 继续保存本地观察状态。
+启动发现仍被旧进程持有的 V1 owner lock 时会 fail-fast，需停止旧 watch 并重新安装 Pub Hook；
+`CCROUTER_USE_LEGACY_DART_TOOL_LOCKS=1` 只用于短期 A/B，不支持新旧协议并发。
+不需要把 watch NDJSON
 混入 Flutter Tool 的 machine stdout；另开终端读取即可：
 
 ```bash
@@ -181,7 +186,7 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter watch status <host-ro
 fvm dart run --verbosity=error ccrouter_generator:ccrouter watch follow <host-root>
 ```
 
-`status` 显示活动状态、PID、轮次和最近 Builder/聚合耗时；`follow` 只输出简洁状态变化，
+`status` 显示活动状态、PID、轮次、coordination schema/path 和最近 Builder/聚合耗时；`follow` 只输出简洁状态变化，
 完整诊断继续写入 `flutter-run.log`。状态文件是本地可观察性，不参与生成决策；写入失败仅警告，
 不会阻断 direct watch 的生成锁、Builder、Validator、快照恢复或原子发布；但 Hook 无法取得
 同一 lease 的 readiness proof 时会拒绝启动 Flutter。若 watch 被强制终止而来不及写入

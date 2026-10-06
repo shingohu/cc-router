@@ -13,6 +13,12 @@ const ccrouterHomeEnvironment = 'CCROUTER_HOME';
 const ccrouterLegacyCoordinationEnvironment =
     'CCROUTER_USE_LEGACY_DART_TOOL_LOCKS';
 
+/// Whether this invocation explicitly selects project-local V1 locks.
+bool usesLegacyCCRouterCoordination({Map<String, String>? environment}) =>
+    (environment ??
+        Platform.environment)[ccrouterLegacyCoordinationEnvironment] ==
+    '1';
+
 /// User-level, project-isolated paths for CCRouter's coordination plane.
 ///
 /// Generated output, planning state, profiles, and build_runner data do not
@@ -163,6 +169,34 @@ final class CCRouterCoordinationPaths {
   static String _identity(String value) =>
       sha256.convert(utf8.encode(value)).toString();
 }
+
+/// Returns the owner lock selected for this invocation without creating it.
+File ccrouterWatchOwnerLockFile(
+  Directory buildRoot, {
+  Map<String, String>? environment,
+  String? operatingSystem,
+}) {
+  if (usesLegacyCCRouterCoordination(environment: environment)) {
+    return legacyCCRouterWatchOwnerLockFile(buildRoot);
+  }
+  return CCRouterCoordinationPaths.forBuildRoot(
+    buildRoot,
+    environment: environment,
+    operatingSystem: operatingSystem,
+  ).ownerLock;
+}
+
+/// Project-local owner lock used by the pre-V2 implementation.
+File legacyCCRouterWatchOwnerLockFile(Directory buildRoot) => File(
+  path.join(
+    buildRoot.path,
+    '.dart_tool',
+    'ccrouter',
+    'v1',
+    'watch',
+    'owner.lock',
+  ),
+);
 
 /// Resolves the CCRouter user home without creating it.
 Directory resolveCCRouterHome({

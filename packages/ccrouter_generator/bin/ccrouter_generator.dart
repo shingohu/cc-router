@@ -23,6 +23,7 @@ import 'package:yaml/yaml.dart';
 import 'src/analyzer_bootstrap.dart';
 import 'src/bounded_process_shutdown.dart';
 import 'src/build_runner_phase_report.dart';
+import 'src/coordination_home.dart';
 import 'src/flutter_run_watch_lease.dart';
 import 'src/route_find.dart' as route_find;
 import 'src/pub_hook.dart';
@@ -2669,15 +2670,7 @@ final class _GenerationLock {
     Directory buildRoot, {
     _GenerationWatchOwnership? guard,
   }) async {
-    final lockFile = File(
-      path.join(
-        buildRoot.path,
-        '.dart_tool',
-        'ccrouter',
-        'v1',
-        'generation.lock',
-      ),
-    );
+    final lockFile = await _coordinationGenerationLockFile(buildRoot);
     await lockFile.parent.create(recursive: true);
     final file = await lockFile.open(mode: FileMode.append);
     try {
@@ -2717,6 +2710,8 @@ final class _GenerationWatchOwnership {
       buildRoot,
       FileLock.exclusive,
       onConflict: () => _GenerationWatchOwnershipConflictException(buildRoot),
+      onLegacyConflict: () =>
+          _GenerationWatchOwnershipConflictException.legacy(buildRoot),
     );
   }
 
@@ -2728,6 +2723,7 @@ final class _GenerationWatchOwnership {
       buildRoot,
       FileLock.shared,
       onConflict: () => _GenerationWatchActiveException(buildRoot),
+      onLegacyConflict: () => _GenerationWatchActiveException.legacy(buildRoot),
     );
   }
 
@@ -2735,8 +2731,9 @@ final class _GenerationWatchOwnership {
     Directory buildRoot,
     FileLock mode, {
     required Exception Function() onConflict,
+    required Exception Function() onLegacyConflict,
   }) async {
-    final file = await _open(buildRoot);
+    final file = await _open(buildRoot, onLegacyConflict: onLegacyConflict);
     try {
       await file.lock(mode);
       return _GenerationWatchOwnership._(file);
@@ -2746,17 +2743,17 @@ final class _GenerationWatchOwnership {
     }
   }
 
-  static Future<RandomAccessFile> _open(Directory buildRoot) async {
-    final lockFile = File(
-      path.join(
-        buildRoot.path,
-        '.dart_tool',
-        'ccrouter',
-        'v1',
-        'watch',
-        'owner.lock',
-      ),
-    );
+  static Future<RandomAccessFile> _open(
+    Directory buildRoot, {
+    required Exception Function() onLegacyConflict,
+  }) async {
+    if (!usesLegacyCCRouterCoordination()) {
+      final legacy = legacyCCRouterWatchOwnerLockFile(buildRoot);
+      if (await _coordinationLockIsHeld(legacy, FileLock.exclusive)) {
+        throw onLegacyConflict();
+      }
+    }
+    final lockFile = await _coordinationOwnerLockFile(buildRoot);
     await lockFile.parent.create(recursive: true);
     return lockFile.open(mode: FileMode.append);
   }
@@ -2781,6 +2778,12 @@ final class _GenerationWatchOwnershipConflictException implements Exception {
           '${buildRoot.path}. Wait for that command to finish or stop the '
           'existing watch before starting a new watch.';
 
+  _GenerationWatchOwnershipConflictException.legacy(Directory buildRoot)
+    : message =
+          'A legacy CCRouter generation command or watch still owns '
+          '${buildRoot.path}. Stop it and reinstall the current Pub Hook '
+          'before starting a V2 watch.';
+
   /// Actionable user-facing explanation without guessing the owner type.
   final String message;
 
@@ -2797,11 +2800,58 @@ final class _GenerationWatchActiveException implements Exception {
           'Stop the watch before running a one-shot generate, check, or clean '
           'command; while it is active, wait for aggregationSucceeded instead.';
 
+  _GenerationWatchActiveException.legacy(Directory buildRoot)
+    : message =
+          'A legacy CCRouter generation command or watch still owns '
+          '${buildRoot.path}. Stop it and reinstall the current Pub Hook '
+          'before running a V2 one-shot command.';
+
   /// Actionable user-facing explanation without implementation details.
   final String message;
 
   @override
   String toString() => message;
+}
+
+Future<File> _coordinationGenerationLockFile(Directory buildRoot) async {
+  if (usesLegacyCCRouterCoordination()) {
+    return File(
+      path.join(
+        buildRoot.path,
+        '.dart_tool',
+        'ccrouter',
+        'v1',
+        'generation.lock',
+      ),
+    );
+  }
+  final coordination = CCRouterCoordinationPaths.forBuildRoot(buildRoot);
+  await coordination.prepare();
+  return coordination.generationLock;
+}
+
+Future<File> _coordinationOwnerLockFile(Directory buildRoot) async {
+  if (usesLegacyCCRouterCoordination()) {
+    return legacyCCRouterWatchOwnerLockFile(buildRoot);
+  }
+  final coordination = CCRouterCoordinationPaths.forBuildRoot(buildRoot);
+  await coordination.prepare();
+  return coordination.ownerLock;
+}
+
+Future<bool> _coordinationLockIsHeld(File file, FileLock probeMode) async {
+  if (!file.existsSync()) return false;
+  RandomAccessFile? opened;
+  try {
+    opened = await file.open(mode: FileMode.append);
+    await opened.lock(probeMode);
+    await opened.unlock();
+    return false;
+  } on FileSystemException {
+    return true;
+  } finally {
+    await opened?.close();
+  }
 }
 
 /// One content-addressed metadata cache entry.

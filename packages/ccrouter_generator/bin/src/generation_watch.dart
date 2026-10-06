@@ -1071,7 +1071,7 @@ Future<String> _captureWatchResolutionStamp({
 
 /// Cheap exact-enough wake-up stamp for active Host registration changes.
 Future<String> _captureWatchRegistrationStamp(Directory buildRoot) async {
-  final directory = _GenerationWatchRegistration._directory(buildRoot);
+  final directory = await _GenerationWatchRegistration._directory(buildRoot);
   if (!directory.existsSync()) return '';
   final files =
       directory
@@ -1365,12 +1365,16 @@ final class _GenerationWatchRegistration {
     required Directory buildRoot,
     required String? leasePath,
   }) async {
-    final directory = _directory(buildRoot);
+    final directory = await _directory(buildRoot);
     await directory.create(recursive: true);
-    final identity = sha256
-        .convert(utf8.encode(path.normalize(hostRoot.absolute.path)))
-        .toString()
-        .substring(0, 24);
+    final identity = usesLegacyCCRouterCoordination()
+        ? sha256
+              .convert(utf8.encode(path.normalize(hostRoot.absolute.path)))
+              .toString()
+              .substring(0, 24)
+        : CCRouterCoordinationPaths.forBuildRoot(
+            buildRoot,
+          ).hostIdentity(hostRoot);
     final document = File(path.join(directory.path, '$identity.json'));
     final lockFile = File(path.join(directory.path, '$identity.lock'));
     final lock = await lockFile.open(mode: FileMode.append);
@@ -1403,7 +1407,7 @@ final class _GenerationWatchRegistration {
 
   /// Returns only registrations whose process still owns the companion lock.
   static Future<List<Directory>> activeHostRoots(Directory buildRoot) async {
-    final directory = _directory(buildRoot);
+    final directory = await _directory(buildRoot);
     if (!directory.existsSync()) return <Directory>[];
     final documents =
         directory
@@ -1440,16 +1444,25 @@ final class _GenerationWatchRegistration {
     return hosts.values.toList()..sort((a, b) => a.path.compareTo(b.path));
   }
 
-  static Directory _directory(Directory buildRoot) => Directory(
-    path.join(
-      buildRoot.path,
-      '.dart_tool',
-      'ccrouter',
-      'v1',
-      'watch',
-      'registrations',
-    ),
-  );
+  static Future<Directory> _directory(Directory buildRoot) async {
+    if (usesLegacyCCRouterCoordination()) {
+      return Directory(
+        path.join(
+          buildRoot.path,
+          '.dart_tool',
+          'ccrouter',
+          'v1',
+          'watch',
+          'registrations',
+        ),
+      );
+    }
+    final coordination = CCRouterCoordinationPaths.forBuildRoot(buildRoot);
+    await coordination.prepare();
+    return Directory(
+      path.join(coordination.projectDirectory.path, 'registrations'),
+    );
+  }
 
   static Future<bool> _isHeld(File file) async {
     if (!file.existsSync()) return false;
@@ -1503,16 +1516,23 @@ final class _GenerationWatchAggregationLock {
   static Future<_GenerationWatchAggregationLock> acquire(
     Directory buildRoot,
   ) async {
-    final lockFile = File(
-      path.join(
-        buildRoot.path,
-        '.dart_tool',
-        'ccrouter',
-        'v1',
-        'watch',
-        'aggregation.lock',
-      ),
-    );
+    late final File lockFile;
+    if (usesLegacyCCRouterCoordination()) {
+      lockFile = File(
+        path.join(
+          buildRoot.path,
+          '.dart_tool',
+          'ccrouter',
+          'v1',
+          'watch',
+          'aggregation.lock',
+        ),
+      );
+    } else {
+      final coordination = CCRouterCoordinationPaths.forBuildRoot(buildRoot);
+      await coordination.prepare();
+      lockFile = coordination.aggregationLock;
+    }
     await lockFile.parent.create(recursive: true);
     final file = await lockFile.open(mode: FileMode.append);
     try {

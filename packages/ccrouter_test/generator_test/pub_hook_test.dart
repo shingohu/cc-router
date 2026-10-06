@@ -8,11 +8,25 @@ import 'dart:io';
 import 'package:path/path.dart' as path;
 import 'package:test/test.dart';
 
+import '../../ccrouter_generator/bin/src/coordination_home.dart';
 import '../../ccrouter_generator/bin/src/pub_hook_watch_coordination.dart';
 import 'support/real_workspace_test_lock.dart';
 
+late Directory _testCoordinationHome;
+
 void main() {
   serializeRealWorkspaceTests();
+
+  setUpAll(() async {
+    _testCoordinationHome = await Directory.systemTemp.createTemp(
+      'ccrouter_pub_hook_coordination_',
+    );
+  });
+  tearDownAll(() async {
+    if (_testCoordinationHome.existsSync()) {
+      await _testCoordinationHome.delete(recursive: true);
+    }
+  });
 
   test(
     'pub-hook install preserves an entrypoint when its rename fails',
@@ -1533,6 +1547,7 @@ Future<ProcessResult> _run(List<String> arguments) => Process.run(
   Platform.resolvedExecutable,
   ['run', 'ccrouter_generator:ccrouter', ...arguments],
   workingDirectory: Directory.current.path,
+  environment: _testEnvironment,
 );
 
 Future<ProcessResult> _runAfterHookStarted(
@@ -1544,11 +1559,12 @@ Future<ProcessResult> _runAfterHookStartedWithProcess(
   List<String> arguments,
   Future<void> Function(Process process) publishStatus,
 ) async {
-  final process = await Process.start(Platform.resolvedExecutable, [
-    'run',
-    'ccrouter_generator:ccrouter',
-    ...arguments,
-  ], workingDirectory: Directory.current.path);
+  final process = await Process.start(
+    Platform.resolvedExecutable,
+    ['run', 'ccrouter_generator:ccrouter', ...arguments],
+    workingDirectory: Directory.current.path,
+    environment: _testEnvironment,
+  );
   final stdoutLines = <String>[];
   final stderrLines = <String>[];
   final started = Completer<void>();
@@ -1705,20 +1721,21 @@ dev_dependencies:
 }
 
 Future<RandomAccessFile> _lockWatchOwner(Directory project) async {
-  final file = File(
-    path.join(
-      project.path,
-      '.dart_tool',
-      'ccrouter',
-      'v1',
-      'watch',
-      'owner.lock',
-    ),
-  )..parent.createSync(recursive: true);
+  final paths = CCRouterCoordinationPaths.forBuildRoot(
+    project,
+    environment: _testEnvironment,
+  );
+  await paths.prepare();
+  final file = paths.ownerLock..parent.createSync(recursive: true);
   final owner = await file.open(mode: FileMode.append);
   await owner.lock(FileLock.exclusive);
   return owner;
 }
+
+Map<String, String> get _testEnvironment => {
+  ...Platform.environment,
+  ccrouterHomeEnvironment: _testCoordinationHome.path,
+};
 
 Future<String> _writeWatchStatus(
   Directory project, {

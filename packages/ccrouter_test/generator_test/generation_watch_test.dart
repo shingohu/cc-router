@@ -9,11 +9,25 @@ import 'dart:io';
 import 'package:path/path.dart' as path;
 import 'package:test/test.dart';
 
+import '../../ccrouter_generator/bin/src/coordination_home.dart';
 import '../../ccrouter_generator/bin/src/flutter_run_watch_lease.dart';
 import 'support/real_workspace_test_lock.dart';
 
+late Directory _testCoordinationHome;
+
 void main() {
   serializeRealWorkspaceTests();
+
+  setUpAll(() async {
+    _testCoordinationHome = await Directory.systemTemp.createTemp(
+      'ccrouter_generation_watch_coordination_',
+    );
+  });
+  tearDownAll(() async {
+    if (_testCoordinationHome.existsSync()) {
+      await _testCoordinationHome.delete(recursive: true);
+    }
+  });
 
   test('machine requires watch mode', () async {
     final result = await _run(['generate', 'demo', '--machine']);
@@ -94,6 +108,11 @@ void main() {
       expect(activeStatus, isNotNull);
       expect(activeStatus!.exitCode, 0, reason: '${activeStatus!.stderr}');
       expect('${activeStatus!.stdout}', contains('watch status: active'));
+      expect('${activeStatus!.stdout}', contains('coordination schema: v2'));
+      expect(
+        '${activeStatus!.stdout}',
+        contains(_coordinationPaths.projectDirectory.path),
+      );
       expect(activeDocument!['state'], 'ready');
       expect(activeDocument!['active'], isTrue);
       expect(activeDocument!['lastEvent'], 'ready');
@@ -140,7 +159,7 @@ void main() {
   test(
     'shared Builder status publication is fail-open',
     () async {
-      final status = _lockFile(path.join('watch', 'builder-status.json'));
+      final status = _localStateFile(path.join('watch', 'builder-status.json'));
       final original = status.existsSync() ? status.readAsBytesSync() : null;
       if (status.existsSync()) status.deleteSync();
       Directory(status.path).createSync(recursive: true);
@@ -910,16 +929,16 @@ void main() {
   test(
     'watch fails fast while one-shot generation is waiting for the root lock',
     () async {
-      final generationFile = await _lockFile(
-        'generation.lock',
-      ).open(mode: FileMode.append);
+      final generationFile = await _coordinationPaths.generationLock.open(
+        mode: FileMode.append,
+      );
       await generationFile.lock(FileLock.exclusive);
-      final oneShot = await Process.start(Platform.resolvedExecutable, [
-        _generatorEntrypoint,
-        'generate',
-        'demo',
-        '--check',
-      ], workingDirectory: Directory.current.path);
+      final oneShot = await Process.start(
+        Platform.resolvedExecutable,
+        [_generatorEntrypoint, 'generate', 'demo', '--check'],
+        workingDirectory: Directory.current.path,
+        environment: _environment(),
+      );
       final oneShotOutput = utf8.decodeStream(oneShot.stdout);
       final oneShotError = utf8.decodeStream(oneShot.stderr);
       ProcessResult? watch;
@@ -954,14 +973,40 @@ void main() {
     },
     timeout: const Timeout(Duration(minutes: 3)),
   );
+
+  test(
+    'V2 startup rejects a still-active legacy owner',
+    () async {
+      final legacy = legacyCCRouterWatchOwnerLockFile(Directory.current)
+        ..parent.createSync(recursive: true);
+      final held = await legacy.open(mode: FileMode.append);
+      await held.lock(FileLock.shared);
+      try {
+        final result = await _run([
+          'generate',
+          'demo',
+          '--watch=auto',
+          '--machine',
+        ]).timeout(const Duration(seconds: 30));
+
+        expect(result.exitCode, 1);
+        expect('${result.stdout}', contains('legacy CCRouter generation'));
+        expect('${result.stdout}', contains('reinstall the current Pub Hook'));
+      } finally {
+        await held.unlock();
+        await held.close();
+      }
+    },
+    timeout: const Timeout(Duration(minutes: 1)),
+  );
 }
 
 Future<void> _waitForOneShotWatchGuard() async {
   final deadline = DateTime.now().add(const Duration(seconds: 30));
   while (DateTime.now().isBefore(deadline)) {
-    final probe = await _lockFile(
-      path.join('watch', 'owner.lock'),
-    ).open(mode: FileMode.append);
+    final probe = await _coordinationPaths.ownerLock.open(
+      mode: FileMode.append,
+    );
     try {
       await probe.lock(FileLock.exclusive);
       await probe.unlock();
@@ -1028,7 +1073,7 @@ Future<ProcessResult> _runDemoPubGet() => Process.run(
   'fvm',
   const ['flutter', 'pub', 'get'],
   workingDirectory: path.join(Directory.current.path, 'demo'),
-  environment: {...Platform.environment, 'CCROUTER_PUB_HOOK_DISABLE': '1'},
+  environment: _environment({'CCROUTER_PUB_HOOK_DISABLE': '1'}),
 );
 
 Future<Map<String, dynamic>> _readWatchStatus() async =>
@@ -1082,20 +1127,19 @@ Future<Map<String, dynamic>> _waitForWatchStatus(
   throw TimeoutException('watch status did not match: ${jsonEncode(latest)}');
 }
 
-File _lockFile(String relative) => File(
+File _localStateFile(String relative) => File(
   path.join(Directory.current.path, '.dart_tool', 'ccrouter', 'v1', relative),
 );
 
+CCRouterCoordinationPaths get _coordinationPaths =>
+    CCRouterCoordinationPaths.forBuildRoot(
+      Directory.current,
+      environment: _environment(),
+    );
+
 ({File document, File lock}) _watchRegistrationForHost(Directory hostRoot) {
   final directory = Directory(
-    path.join(
-      Directory.current.path,
-      '.dart_tool',
-      'ccrouter',
-      'v1',
-      'watch',
-      'registrations',
-    ),
+    path.join(_coordinationPaths.projectDirectory.path, 'registrations'),
   );
   for (final document in directory.listSync().whereType<File>()) {
     if (!document.path.endsWith('.json')) continue;
@@ -1156,7 +1200,7 @@ final class _ConcurrentWatch {
         lease.path,
       ],
       workingDirectory: Directory.current.path,
-      environment: environment,
+      environment: _environment(environment),
     );
     final output = <String>[];
     final stdoutSubscription = process.stdout
@@ -1307,7 +1351,7 @@ Future<_WatchRun> _runWatchUntilReady({
       lease.path,
     ],
     workingDirectory: Directory.current.path,
-    environment: environment,
+    environment: _environment(environment),
   );
   final ready = Completer<Map<String, dynamic>>();
   final stopped = Completer<Map<String, dynamic>>();
@@ -1565,8 +1609,14 @@ Future<ProcessResult> _run(
   Platform.resolvedExecutable,
   [_generatorEntrypoint, ...arguments],
   workingDirectory: Directory.current.path,
-  environment: environment,
+  environment: _environment(environment),
 );
+
+Map<String, String> _environment([Map<String, String>? overrides]) => {
+  ...Platform.environment,
+  ...?overrides,
+  ccrouterHomeEnvironment: _testCoordinationHome.path,
+};
 
 String get _generatorEntrypoint => path.join(
   Directory.current.path,
