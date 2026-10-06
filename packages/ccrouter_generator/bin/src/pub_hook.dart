@@ -13,6 +13,10 @@ import 'pub_hook_watch_coordination.dart';
 const _pubHookWatchFailureFenceKillSwitch =
     'CCROUTER_DISABLE_PUB_HOOK_WATCH_FAILURE_FENCE';
 
+/// Disables only the pre-clean active-watch guard for A/B diagnosis.
+const ccrouterFlutterCleanGuardKillSwitch =
+    'CCROUTER_DISABLE_FLUTTER_CLEAN_GUARD';
+
 /// The operation requested from the pub hook command.
 enum CCPubHookAction {
   /// Installs a reversible wrapper around the selected Flutter SDK.
@@ -26,6 +30,32 @@ enum CCPubHookAction {
 
   /// Runs generation for a project after `flutter pub` or before `flutter run/build`.
   run,
+
+  /// Refuses `flutter clean` while its build root has a live watch owner.
+  cleanGuard,
+}
+
+/// Returns false when `flutter clean` would unlink active watch state.
+Future<bool> guardCCFlutterClean(Directory projectRoot) async {
+  if (Platform.environment[ccrouterFlutterCleanGuardKillSwitch] == '1') {
+    return true;
+  }
+  final context = CCProjectContext.resolve(projectRoot);
+  final buildRoot = context.resolutionRoot;
+  final selectedOwner = ccrouterWatchOwnerLockFile(buildRoot);
+  final legacyOwner = legacyCCRouterWatchOwnerLockFile(buildRoot);
+  final selectedHeld = await _pubHookOwnerFileIsHeld(selectedOwner);
+  final legacyHeld = path.equals(selectedOwner.path, legacyOwner.path)
+      ? false
+      : await _pubHookOwnerFileIsHeld(legacyOwner);
+  if (!selectedHeld && !legacyHeld) return true;
+  stderr.writeln(
+    'error: An active CCRouter generation watch owns ${buildRoot.path}. '
+    'Stop the Flutter run/watch before `flutter clean`, then retry. '
+    'Set $ccrouterFlutterCleanGuardKillSwitch=1 only to bypass this guard '
+    'for an explicit A/B or recovery run.',
+  );
+  return false;
 }
 
 /// Parsed options for the `ccrouter pub-hook` command.
@@ -335,6 +365,9 @@ final class CCPubHookManager {
     final runWatchEnabled =
         _supportsRunWatch(posix) &&
         (!windowsExpected || _supportsRunWatch(windows));
+    final cleanGuardEnabled =
+        _supportsCleanGuard(posix) &&
+        (!windowsExpected || _supportsCleanGuard(windows));
     final reloadGateEnabled =
         _supportsReloadGate(posix) &&
         (!windowsExpected || _supportsReloadGate(windows));
@@ -353,6 +386,7 @@ final class CCPubHookManager {
         dartWindowsValid &&
         preflightEnabled &&
         runWatchEnabled &&
+        cleanGuardEnabled &&
         watchStartupHandshakeEnabled &&
         windowsRunSupervisorEnabled &&
         reloadGateEnabled;
@@ -404,6 +438,7 @@ final class CCPubHookManager {
     stdout.writeln(
       '  run/build preflight: ${preflightEnabled ? 'enabled' : 'missing'}, '
       'run watch: ${runWatchEnabled ? 'enabled' : 'missing'}, '
+      'clean guard: ${cleanGuardEnabled ? 'enabled' : 'missing'}, '
       'watch startup handshake: ${watchStartupHandshakeEnabled ? 'enabled' : 'missing'}, '
       'Windows run supervisor: ${windowsRunSupervisorEnabled ? 'enabled' : 'missing'}, '
       'machine reload gate: ${reloadGateEnabled ? 'enabled' : 'missing'}, '
@@ -477,6 +512,17 @@ final class CCPubHookManager {
     if (!file.existsSync()) return false;
     try {
       return file.readAsStringSync().contains('--watch=auto');
+    } on Object {
+      return false;
+    }
+  }
+
+  bool _supportsCleanGuard(File file) {
+    if (!file.existsSync()) return false;
+    try {
+      return file.readAsStringSync().contains(
+        'CCROUTER_DISABLE_FLUTTER_CLEAN_GUARD',
+      );
     } on Object {
       return false;
     }
@@ -1064,7 +1110,10 @@ Future<bool> _pubHookWatchIsActive(Map<String, Object?> status) async {
 }
 
 Future<bool> _pubHookWatchOwnerIsHeld(Directory buildRoot) async {
-  final owner = ccrouterWatchOwnerLockFile(buildRoot);
+  return _pubHookOwnerFileIsHeld(ccrouterWatchOwnerLockFile(buildRoot));
+}
+
+Future<bool> _pubHookOwnerFileIsHeld(File owner) async {
   if (!owner.existsSync()) return false;
   RandomAccessFile? opened;
   try {
@@ -1342,7 +1391,28 @@ run_generator_hook() {
   )
 }
 
+run_clean_guard() {
+  if ! resolve_project_root; then
+    return 0
+  fi
+  (
+    cd "$PROJECT_ROOT" || exit 1
+    "$DART" run --verbosity=error ccrouter_generator:ccrouter pub-hook \
+      guard-clean --project-root "$PROJECT_ROOT"
+  )
+}
+
 parse_flutter_invocation "$@"
+if [ "$FLUTTER_COMMAND" = "clean" ] && \
+   [ "${CCROUTER_DISABLE_FLUTTER_CLEAN_GUARD:-0}" != "1" ]; then
+  run_clean_guard
+  GUARD_EXIT=$?
+  if [ "$GUARD_EXIT" -ne 0 ]; then
+    echo "CCRouter clean guard blocked flutter clean (exit $GUARD_EXIT)." >&2
+    exit "$GUARD_EXIT"
+  fi
+  exec "$ORIGINAL" "$@"
+fi
 if [ "$FLUTTER_COMMAND" = "run" ] || [ "$FLUTTER_COMMAND" = "build" ]; then
   run_generator_hook "$FLUTTER_COMMAND" "$@"
   HOOK_EXIT=$?
@@ -1746,6 +1816,7 @@ set "ORIGINAL=%SCRIPT_DIR%flutter.ccrouter-original.bat"
 if "%CCROUTER_PUB_HOOK_DISABLE%"=="1" goto invoke_original
 
 call :parse_flutter_invocation %*
+if /I "%FLUTTER_COMMAND%"=="clean" goto clean_guard
 if /I "%FLUTTER_COMMAND%"=="run" goto preflight
 if /I "%FLUTTER_COMMAND%"=="build" goto preflight
 if /I not "%FLUTTER_COMMAND%"=="pub" goto invoke_original
@@ -1767,6 +1838,11 @@ goto run_hook
 set "HOOK_COMMAND=%FLUTTER_COMMAND%"
 goto run_hook
 
+:clean_guard
+if "%CCROUTER_DISABLE_FLUTTER_CLEAN_GUARD%"=="1" goto invoke_original
+set "HOOK_COMMAND=clean"
+goto run_hook
+
 :run_hook
 call :resolve_project_root
 if not "%ERRORLEVEL%"=="0" goto invoke_original
@@ -1781,10 +1857,15 @@ goto find_package_config
 findstr /R /C:"\"name\"[ ]*:[ ]*\"ccrouter_generator\"" "%HOOK_DIR%\.dart_tool\package_config.json" >nul
 if not "%ERRORLEVEL%"=="0" goto invoke_original
 pushd "%PROJECT_ROOT%" || goto hook_failed
-call "%SCRIPT_DIR%dart.bat" run --verbosity=error ccrouter_generator:ccrouter pub-hook run --project-root "%PROJECT_ROOT%" --pub-command "%HOOK_COMMAND%"
+if /I "%HOOK_COMMAND%"=="clean" (
+  call "%SCRIPT_DIR%dart.bat" run --verbosity=error ccrouter_generator:ccrouter pub-hook guard-clean --project-root "%PROJECT_ROOT%"
+) else (
+  call "%SCRIPT_DIR%dart.bat" run --verbosity=error ccrouter_generator:ccrouter pub-hook run --project-root "%PROJECT_ROOT%" --pub-command "%HOOK_COMMAND%"
+)
 set "HOOK_EXIT=%ERRORLEVEL%"
 popd
 if not "%HOOK_EXIT%"=="0" goto hook_failed_with_exit
+if /I "%HOOK_COMMAND%"=="clean" goto invoke_original
 if /I "%HOOK_COMMAND%"=="build" goto invoke_original
 if /I not "%HOOK_COMMAND%"=="run" exit /b 0
 if "%CCROUTER_DISABLE_BUILD_WATCH%"=="1" goto invoke_original

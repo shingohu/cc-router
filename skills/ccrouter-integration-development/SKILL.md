@@ -374,6 +374,10 @@ fail or weaken direct generation, but the Hook refuses to launch Flutter when
 it cannot prove readiness for its exact lease. If an abrupt exit leaves an `active` record, the
 read-only commands report it as `stale` after the owner lock is released and do
 not rewrite the historical status file.
+An installed Flutter wrapper blocks a real top-level `flutter clean` while the
+resolved build root has an active watch. Stop `flutter run/watch` before clean;
+the guard deliberately does not kill another development process. The narrow
+`CCROUTER_DISABLE_FLUTTER_CLEAN_GUARD=1` bypass is for recovery/A/B only.
 Workspace validation failures also publish a bounded atomic
 `watch/diagnostics.json`. The Analyzer Plugin accepts it only when Host/build
 root, session, cycle, event revision, and resolution fingerprint match the

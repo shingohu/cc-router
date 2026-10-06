@@ -67,6 +67,7 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook install [--s
 fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook status [--sdk <flutter-sdk-root>]
 fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook uninstall [--sdk <flutter-sdk-root>]
 fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook run --project-root <host-root> [--pub-command <command>]
+fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook guard-clean --project-root <project-root>
 ```
 
 The exact command help is authoritative. `analyzer status/doctor/install/upgrade/uninstall`
@@ -366,6 +367,13 @@ hook wraps `bin/cache/dart-sdk/bin/dart`, including IDE direct `dart pub`
 invocations. On Windows it wraps `bin/dart.bat`; direct IDE execution of
 `cache/dart-sdk/bin/dart.exe` remains unsupported and must be reported by
 `status`. Flutter Tool's internal implicit `pub get` remains outside the hook.
+The Flutter wrapper runs the internal `guard-clean` check before a real
+top-level `flutter clean`. A live watch for the resolved build root blocks clean
+without killing it; stop `flutter run/watch` and retry. Help, unknown global
+options, and argument values named `clean` do not trigger the guard. Use
+`CCROUTER_DISABLE_FLUTTER_CLEAN_GUARD=1` only for an explicit recovery or A/B
+run; bypassing does not make a watch valid after Pub or build_runner state is
+deleted.
 Upgrade a schema 4 installation by uninstalling it before reinstalling. After a
 successful `flutter run` preflight it starts watch under a
 lifecycle lease and removes the lease when Flutter exits; `flutter build`

@@ -296,7 +296,8 @@ Future<void> main(List<String> arguments) async {
 /// Executes an install, uninstall, status, or post-pub generation operation.
 Future<void> _runPubHookCommand(CCPubHookRequest request) async {
   try {
-    if (request.action == CCPubHookAction.run) {
+    if (request.action == CCPubHookAction.run ||
+        request.action == CCPubHookAction.cleanGuard) {
       final projectRoot = Directory(
         request.projectRoot ?? Directory.current.path,
       ).absolute;
@@ -307,10 +308,13 @@ Future<void> _runPubHookCommand(CCPubHookRequest request) async {
         exitCode = 2;
         return;
       }
-      if (!await runCCPubHook(
-        projectRoot: projectRoot,
-        pubCommand: request.pubCommand,
-      )) {
+      final succeeded = request.action == CCPubHookAction.cleanGuard
+          ? await guardCCFlutterClean(projectRoot)
+          : await runCCPubHook(
+              projectRoot: projectRoot,
+              pubCommand: request.pubCommand,
+            );
+      if (!succeeded) {
         exitCode = 1;
       }
       return;
@@ -326,6 +330,8 @@ Future<void> _runPubHookCommand(CCPubHookRequest request) async {
         if (!manager.status()) exitCode = 1;
       case CCPubHookAction.run:
         throw StateError('The run action is handled above.');
+      case CCPubHookAction.cleanGuard:
+        throw StateError('The cleanGuard action is handled above.');
     }
   } on Object catch (error) {
     _commandStderr.writeln('error: $error');
@@ -542,6 +548,7 @@ const _usage = '''Usage:
   ccrouter pub-hook uninstall [--sdk <flutter-sdk-root>]
   ccrouter pub-hook status [--sdk <flutter-sdk-root>]
   ccrouter pub-hook run --project-root <host-root> [--pub-command <command>]
+  ccrouter pub-hook guard-clean --project-root <project-root>
 
 `generate` resolves the requested Package role. A Host runs build_runner for
 its writable dependency closure, then performs cross-Package validation and
@@ -2337,6 +2344,7 @@ _Arguments _parsePubHookArguments(List<String> arguments) {
     'uninstall' => CCPubHookAction.uninstall,
     'status' => CCPubHookAction.status,
     'run' => CCPubHookAction.run,
+    'guard-clean' => CCPubHookAction.cleanGuard,
     _ => null,
   };
   if (action == null) {
@@ -2344,7 +2352,9 @@ _Arguments _parsePubHookArguments(List<String> arguments) {
       command: _GeneratorCommand.pubHook,
       rootPath: '',
       outputDirectoryPath: null,
-      error: 'pub-hook requires `install`, `uninstall`, `status`, or `run`.',
+      error:
+          'pub-hook requires `install`, `uninstall`, `status`, `run`, or '
+          '`guard-clean`.',
     );
   }
   String? sdkPath;
@@ -2410,20 +2420,23 @@ _Arguments _parsePubHookArguments(List<String> arguments) {
         pubCommand = value;
     }
   }
-  if (action == CCPubHookAction.run && projectRoot == null) {
+  if ((action == CCPubHookAction.run || action == CCPubHookAction.cleanGuard) &&
+      projectRoot == null) {
     return const _Arguments(
       command: _GeneratorCommand.pubHook,
       rootPath: '',
       outputDirectoryPath: null,
-      error: 'pub-hook run requires --project-root.',
+      error: 'pub-hook run/guard-clean requires --project-root.',
     );
   }
-  if (action != CCPubHookAction.run && projectRoot != null) {
+  if (action != CCPubHookAction.run &&
+      action != CCPubHookAction.cleanGuard &&
+      projectRoot != null) {
     return const _Arguments(
       command: _GeneratorCommand.pubHook,
       rootPath: '',
       outputDirectoryPath: null,
-      error: '--project-root is only available with pub-hook run.',
+      error: '--project-root is only available with pub-hook run/guard-clean.',
     );
   }
   return _Arguments(

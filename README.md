@@ -1287,6 +1287,11 @@ Pub Hook 优先读取 stable session，因此 Host 本地 watch 状态被清理�
 若启动时检测到仍持有 V1 `.dart_tool` owner lock 的旧 CLI/watch，新版会 fail-fast，要求停止旧进程
 并重新安装 Pub Hook；不会尝试让两种协议静默并发。短期可设置
 `CCROUTER_USE_LEGACY_DART_TOOL_LOCKS=1` 做 A/B，该开关不承诺新旧进程互操作。
+已安装的 Flutter wrapper 还会在真正的 top-level `flutter clean` 前检查该 build root：活动 watch
+存在时直接阻止 clean，要求先停止 `flutter run/watch`，不会擅自终止开发会话。Help、未知全局
+参数和业务参数中的 `clean` 不触发检查。`CCROUTER_DISABLE_FLUTTER_CLEAN_GUARD=1` 可单次绕过
+做恢复或 A/B；`CCROUTER_PUB_HOOK_DISABLE=1` 仍可绕过整个 wrapper。两种 bypass 都不保证活动
+watch 能跨越被删除的 Pub/build_runner 状态继续工作。
 watch 在 lease 内持有 generation lock；每个成功 Builder
 轮次后先执行 exact-content 一致性检查，未命中 fast path 时继续执行只读依赖校验、preflight、
 输入屏障、快照恢复、Validator、聚合、原子写入和本地 planning state 提交。失败轮次不会发布

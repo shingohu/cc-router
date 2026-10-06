@@ -9,6 +9,7 @@ import 'package:path/path.dart' as path;
 import 'package:test/test.dart';
 
 import '../../ccrouter_generator/bin/src/coordination_home.dart';
+import '../../ccrouter_generator/bin/src/pub_hook.dart';
 import '../../ccrouter_generator/bin/src/pub_hook_watch_coordination.dart';
 import 'support/real_workspace_test_lock.dart';
 
@@ -164,6 +165,7 @@ void main() {
     final status = await _run(['pub-hook', 'status', '--sdk', sdk.path]);
     expect(status.exitCode, 0, reason: '${status.stderr}');
     expect('${status.stdout}', contains('installed'));
+    expect('${status.stdout}', contains('clean guard: enabled'));
     expect('${status.stdout}', contains('machine reload gate: enabled'));
     expect('${status.stdout}', contains('watch startup handshake: enabled'));
     expect('${status.stdout}', contains('Windows run supervisor: enabled'));
@@ -374,7 +376,7 @@ exit 0
     final dart = File(path.join(bin.path, 'dart'))
       ..writeAsStringSync('''#!/usr/bin/env bash
 printf "dart:%s\\n" "\$*" >> "\$CCROUTER_TRACE"
-exit 0
+exit "\${CCROUTER_FAKE_DART_EXIT:-0}"
 ''');
     File(
       path.join(bin.path, 'flutter.bat'),
@@ -436,6 +438,104 @@ dev_dependencies:
       expect(lines.first, 'flutter:${arguments.join(' ')}');
       expect(lines, hasLength(2));
       expect(lines.last, contains('ccrouter_generator:ccrouter pub-hook run'));
+    }
+
+    File(trace).writeAsStringSync('');
+    final clean = await Process.run(
+      flutter.path,
+      const ['clean'],
+      workingDirectory: project.path,
+      environment: environment,
+    );
+    expect(clean.exitCode, 0, reason: '${clean.stderr}');
+    expect(File(trace).readAsLinesSync(), [
+      contains('ccrouter_generator:ccrouter pub-hook guard-clean'),
+      'flutter:clean',
+    ]);
+
+    File(trace).writeAsStringSync('');
+    final blocked = await Process.run(
+      flutter.path,
+      const ['clean'],
+      workingDirectory: project.path,
+      environment: {...environment, 'CCROUTER_FAKE_DART_EXIT': '23'},
+    );
+    expect(blocked.exitCode, 23);
+    expect(
+      '${blocked.stderr}',
+      contains('CCRouter clean guard blocked flutter clean'),
+    );
+    expect(File(trace).readAsLinesSync(), [
+      contains('ccrouter_generator:ccrouter pub-hook guard-clean'),
+    ]);
+
+    File(trace).writeAsStringSync('');
+    final bypassed = await Process.run(
+      flutter.path,
+      const ['clean'],
+      workingDirectory: project.path,
+      environment: {
+        ...environment,
+        'CCROUTER_FAKE_DART_EXIT': '23',
+        ccrouterFlutterCleanGuardKillSwitch: '1',
+      },
+    );
+    expect(bypassed.exitCode, 0, reason: '${bypassed.stderr}');
+    expect(File(trace).readAsLinesSync(), ['flutter:clean']);
+  });
+
+  test('clean guard rejects only a live watch owner', () async {
+    final project = await _createWatchCoordinatedProject();
+    addTearDown(() => project.delete(recursive: true));
+
+    final idle = await _run([
+      'pub-hook',
+      'guard-clean',
+      '--project-root',
+      project.path,
+    ]);
+    expect(idle.exitCode, 0, reason: '${idle.stderr}');
+
+    final owner = await _lockWatchOwner(project);
+    try {
+      final blocked = await _run([
+        'pub-hook',
+        'guard-clean',
+        '--project-root',
+        project.path,
+      ]);
+      expect(blocked.exitCode, 1);
+      expect('${blocked.stderr}', contains('active CCRouter generation watch'));
+      expect('${blocked.stderr}', contains('Stop the Flutter run/watch'));
+      expect(
+        '${blocked.stderr}',
+        contains(ccrouterFlutterCleanGuardKillSwitch),
+      );
+    } finally {
+      await owner.unlock();
+      await owner.close();
+    }
+  });
+
+  test('clean guard also rejects a live V1 watch owner', () async {
+    final project = await _createWatchCoordinatedProject();
+    addTearDown(() => project.delete(recursive: true));
+    final legacy = legacyCCRouterWatchOwnerLockFile(project)
+      ..parent.createSync(recursive: true);
+    final owner = await legacy.open(mode: FileMode.append);
+    await owner.lock(FileLock.exclusive);
+    try {
+      final blocked = await _run([
+        'pub-hook',
+        'guard-clean',
+        '--project-root',
+        project.path,
+      ]);
+      expect(blocked.exitCode, 1);
+      expect('${blocked.stderr}', contains('active CCRouter generation watch'));
+    } finally {
+      await owner.unlock();
+      await owner.close();
     }
   });
 

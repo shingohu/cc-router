@@ -181,6 +181,11 @@ Hook 不默认采集详细 profile。遇到慢生成时，在独立终端显式�
 generation-lock 错误。planning cache、Portable State 与 build_runner Asset Graph 仍只在项目内。
 启动发现仍被旧进程持有的 V1 owner lock 时会 fail-fast，需停止旧 watch 并重新安装 Pub Hook；
 `CCROUTER_USE_LEGACY_DART_TOOL_LOCKS=1` 只用于短期 A/B，不支持新旧协议并发。
+Wrapper 会在真正的 top-level `flutter clean` 前执行只读 clean guard。同 build root 存在活动
+watch 时，clean 会 fail-fast，并提示先停止 `flutter run/watch` 后重试；guard 不会主动杀进程。
+`--help`、未知全局 option 或参数值中的 `clean` 不会误触发。仅在明确恢复或 A/B 时设置
+`CCROUTER_DISABLE_FLUTTER_CLEAN_GUARD=1` 单次绕过；它不保证 watch 能跨越被删除的
+package config 或 build_runner Asset Graph 继续运行。
 不需要把 watch NDJSON
 混入 Flutter Tool 的 machine stdout；另开终端读取即可：
 
