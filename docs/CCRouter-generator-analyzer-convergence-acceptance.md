@@ -76,3 +76,21 @@ dart analyze demo
 Plugin `lib` drift 只报告 `pending`，不阻断第一阶段 Plugin PR；推送并取得远端可解析 SHA 后，
 再由独立 pin bump 收敛为 `none`。剩余平台风险是 Windows CIM 目前有自动化解析测试但没有真实
 Windows/IDE 本机验收；live diagnostic/Quick Fix 仍必须由实际 IDE 会话确认。
+
+## 2026-10-07 one-shot diagnostics 与真实 IDE 收尾
+
+- Analyzer Plugin 全套 110 项通过，覆盖 watch/one-shot 优先级、fingerprint 失效、Workspace 嵌套
+  Host polling，以及 Legacy/LSP `pubspec.yaml` 未保存 overlay 的提示出现与清除。
+- Plugin 修复已推送为 `23ff0d2`；Demo bootstrap manifest、lock 与 `resolved-ref` 固定到完整 SHA
+  `23ff0d24acf63c3cf9674ad1651a4a4446beb88c`，`analyzer pin-check` 确认远端可解析且无 production drift。
+- 在没有活动 Analysis Server 后，将旧 cache 整体移动到
+  `~/.dartServer/ccrouter-plugin-cache-backup/2830316c39d53daed22fb3806abbfdb7`，未删除内容；Android Studio
+  启动后重建 `.plugin_manager` cache，Package config 和 lock 均指向当前固定 SHA，`analyzer doctor`
+  报告 cache current、bootstrap analysis 与临时 loader smoke 通过。
+- 真实 Android Studio 会话中，未保存地注释 Demo 的 `demo_order` 后出现
+  `ccrouter_pub_resolution_stale`，恢复原 overlay 后具体诊断和编辑器高亮均清除；磁盘
+  `demo/pubspec.yaml` 与 Git 工作区未被修改。
+- Generator 完整单线程 suite 以
+  `fvm dart test --concurrency=1 packages/ccrouter_test/generator_test` 验收：497 项通过、1 项需显式
+  开启网络的 smoke 按预期跳过，耗时约 20 分 54 秒。当前 Workspace analyze 和 Demo
+  `--no-cache --check` 继续作为本轮最终门禁。

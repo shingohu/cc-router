@@ -20,9 +20,9 @@ F03/F04/F09 已修复并补上真实分发及常量解析回归；Analytics F05/
 444 项框架/Flutter/Demo 回归。Runtime F06/F07/F08 已修复并完成 462 项回归。
 曝光采集 F12/F13 与 Demo Network 生命周期 F18 已修复，完成 478 项框架/Flutter/Demo 回归。
 F14/F15 Analyzer 已修复，并补上 Service 生命周期 warning 与保守 Quick Fix，独立插件
-78 项测试通过；Demo 后续已同步 structured watch diagnostics bridge 与 canonical Host identity，
-固定到远端可解析提交，IDE 需重启 Analysis Server 加载。当前值只在 Demo bootstrap
-manifest/lock 中维护。
+110 项测试通过；Demo 后续已同步 watch/one-shot structured diagnostics bridge、canonical Host
+identity 与当前 editor overlay 的 Pub resolution 提示，固定到远端可解析提交 `23ff0d2`。Demo
+bootstrap manifest/lock/`resolved-ref` 已一致，Android Studio 重建 cache 后完成真实提示出现/清除往返。
 F16/F17 AI Skill 安装与接入指导已修复，两个完整 Skill 组成独立安装包，并增加孤立目录
 引用、真实 CLI 命令和关键 Dart 示例校验。本轮 18 项已确认缺陷均已关闭；当前 Demo 的
 本机旧插件缓存与 Android Studio Service Quick Fix 后续已验收；Demo Shell/Outlet/Owner
@@ -39,8 +39,9 @@ Workspace/插件 analyze 及缓存/无缓存生成物检查通过。
 集合类型、G03 Host 描述转义、G04 preflight Library 作用域、A01 同名注解误报。
 新增反例与验证记录见复审报告；2026-10-04 已补五类能力 15 个 Builder 入口的读取范围
 核对与受控反例，见[优化计划 12.7](CCRouter-build-runner-optimization-plan.md#127-五类-builder-读取范围证据与-p6-决策2026-10-04)。
-这不是完备的符号级复用证明；P6 尚未收窄传播或改变摘要。生成期间输入变更与 Portable State 一致性的并发边界仍待确定性验证，
-目前不计为已确认缺陷，也不标记已修复。
+这不是完备的符号级复用证明；P6 尚未收窄传播或改变摘要。生成期间输入一致性屏障已经完成；
+生产路径中的 Shadow Closure 已删除，历史实现只保留 benchmark 证据。没有真实项目净收益和完整
+可移植证明前，不再把文件闭包原型列为默认下一步。
 
 生产项目中发现的新场景、缺陷和能力候选，先按
 [生产项目场景驱动演进流程](CCRouter-production-adoption-workflow.md) 分类和验证，再决定进入
@@ -122,12 +123,12 @@ Workspace/插件 analyze 及缓存/无缓存生成物检查通过。
 - [ ] Flutter / Dart 升级同步：已盘点当前 SDK、Generator/独立 Analyzer、Hook 和只读组件分发
   边界，尚未选定或升级目标版本。按[升级计划 U0–U6](CCRouter-sdk-upgrade-plan.md) 执行隔离
   解析、工具身份证明、最小兼容迁移、平台/性能回归和分发收口；不与 P6 传播优化捆绑启用。
-- [~] build_runner 优化下一阶段 P6：F04/F03 正确性前置已修复，收益/边界评估见计划第 12.5 节，
-  P6-1 的只读归因、混合对照样本和 Builder 读取范围核对已完成（12.6–12.7）；传播收窄、P6-2/3 尚未实施。后续评估普通
-  注释、生成文档与源码定位的分层摘要；减少状态变更与缩短生成耗时分别验收。详见
+- [~] build_runner 优化下一阶段 P6：F04/F03 正确性前置、生成期间输入一致性屏障、只读归因、
+  混合对照样本和 Builder 读取范围核对已完成；生产 Shadow Closure 已删除，传播收窄和 P6-2/3
+  尚未实施。普通注释、生成文档与源码定位的分层摘要仅在真实项目慢样本证明收益后重新评估；
+  减少状态变更与缩短生成耗时分别验收。详见
   [优化计划第 12 节](CCRouter-build-runner-optimization-plan.md#12-p6生成状态摘要与依赖失效粒度优化)。
-  下一步先确定性验证生成期间输入一致性，再评估不影响执行选择的文件闭包 shadow 原型。
-  完整证明、准确性与净收益门禁通过后再评估执行原型及默认开启。
+  完整证明、准确性与净收益门禁通过前，不增加新的 production skip 或默认优化路径。
 - [x] 建立冷启动、初始化、路由解析、导航延迟、并发导航、Runtime dispose 和长期 RSS 的
   同机趋势入口；长期趋势仍需按发布版本持续采样。
 - [x] 2026-09-29 完成 macOS、iOS Simulator、Android、Web 和 OHOS 构建 smoke；真实 iOS/macOS
@@ -205,9 +206,10 @@ Workspace/插件 analyze 及缓存/无缓存生成物检查通过。
   和 Workspace Validator 保持最终权威。
 - [x] Demo Analyzer bootstrap 已切换为固定 Git commit，保留独立 Analyzer 依赖图；增加
   loader `analyze/compile` smoke、兼容性边界测试和发布后的 Hosted fallback manifest。
-- [x] 独立真实 Analysis Server Legacy/LSP 回归覆盖 overlay、Quick Fix/codeAction、五类
-  生成物磁盘变化及 Workspace 跨包 Owner metadata/Contract 变化。已修复原始事件被
-  import 依赖图过滤以及 JSON 未被关注的缺口；固定远端 pin 尚未包含本次本地修复。
+- [x] 独立真实 Analysis Server Legacy/LSP 回归覆盖 Dart/pubspec overlay、Quick Fix/codeAction、
+  五类生成物磁盘变化、Workspace 跨包 Owner metadata/Contract 变化及嵌套 Host diagnostics polling。
+  已修复原始事件被 import 依赖图过滤、JSON 未被关注、无 watch one-shot 诊断缺失和恢复依赖后
+  stale hint 残留；Demo 固定远端 pin 已包含当前 Plugin 修复。
 - [ ] 独立多根工程同时冷启动的 SDK legacy PluginManager 重复实例边界与完整 IDE/SDK
   矩阵；当前共享 Dart Workspace 验证不替代这一项，也不承诺监听分析根外的依赖。
 - [x] Analyzer Plugin 已提供 Host-only 的 `status/doctor/install/upgrade/uninstall`，覆盖固定来源、lockfile、
@@ -291,9 +293,11 @@ Workspace/插件 analyze 及缓存/无缓存生成物检查通过。
   原子发布 `diagnostics.json`，绑定 Host/build root、session、cycle、event revision 和 resolution
   fingerprint，成功、新 cycle/session 会清空。Analyzer 只接受与当前 `status.json` 完全一致、
   resolution matched 的证据，并以 500ms file-identity polling 弥补 Analysis Server 不转发
-  `.dart_tool` 事件的限制；只有 identity 变化才重新分析。`pubspec.yaml` 与 resolved graph 失配
-  只发布 `ccrouter_pub_resolution_stale`，不推断 Owner。Legacy/LSP 均已验证错误出现、恢复清除、
-  旧 revision 拒绝与 stale Pub 提示清除；bridge 可由
+  `.dart_tool` 事件的限制；只有 identity 变化才重新分析。无活动 watch 时，普通 Host generation
+  发布带 exact Pub-resolution fingerprint 的 one-shot 终态，成功或输入变化清除旧错误；活动 watch
+  始终优先且不会回退旧 one-shot。`pubspec.yaml` 与 resolved graph 失配只发布
+  `ccrouter_pub_resolution_stale`，并读取当前 editor overlay，不推断 Owner。Legacy/LSP 与真实
+  Android Studio 均已验证错误出现、恢复清除、旧 revision 拒绝与 stale Pub 提示清除；bridge 可由
   `CCROUTER_DISABLE_ANALYZER_WATCH_BRIDGE=1` 独立关闭，诊断发布失败不改变生成结果；CLI 原文
   兼容性、无 Pub Hook 保存、活动 watch 失败/恢复、位置跳转和旧 cycle 拒绝均有回归覆盖。
 - [x] KV Storage Demo 已提供 Scoped Facade，通过 Host-owned Context Provider 动态解析用户、
