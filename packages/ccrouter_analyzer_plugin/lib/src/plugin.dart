@@ -28,6 +28,10 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
   final CCRouterPackageContextCache _packageContexts =
       CCRouterPackageContextCache();
 
+  /// Cached role and Pub-owner contexts for explicitly indexed Packages.
+  final CCRouterAnalyzerProjectContextCache _projectContexts =
+      CCRouterAnalyzerProjectContextCache();
+
   /// Bounded Metadata snapshots shared across edits in one Pub graph.
   final CCRouterContractOwnerIndexCache _contractOwners =
       CCRouterContractOwnerIndexCache();
@@ -117,6 +121,7 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
     _stopWatchBridgePolling();
     _activeContexts = null;
     _packageContexts.clear();
+    _projectContexts.clear();
     _contractOwners.clear();
     _generatorDiagnostics.clear();
     _pubspecPathsByContext.clear();
@@ -149,25 +154,41 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
     try {
       final refresh = <String>{};
       final resolutionChanged = <String>{};
+      final pubspecsByResolutionRoot = <String, Set<String>>{};
+      final resolutionRoots = <String, io.Directory>{};
       for (final context in contexts.contexts) {
-        resolutionChanged.addAll(_refreshPubspecIndex(context));
+        final reindexed = _refreshPubspecIndex(context);
+        resolutionChanged.addAll(reindexed);
+        for (final pubspec in reindexed) {
+          _projectContexts.invalidate(pubspec);
+        }
         final hostRoots = <String, io.Directory>{};
         final contextRoot = io.Directory(context.contextRoot.root.path);
         hostRoots[_canonicalDirectoryPath(contextRoot)] = contextRoot;
         for (final pubspec in _indexedPubspecs(context)) {
-          final project = CCRouterAnalyzerProjectContext.resolve(pubspec);
-          if (project?.role == CCRouterAnalyzerProjectRole.host) {
-            final root = project!.requestedRoot;
+          final observation = _projectContexts.observe(pubspec);
+          if (observation.inputChanged) resolutionChanged.add(pubspec);
+          final project = observation.context;
+          if (project == null) continue;
+          if (project.role == CCRouterAnalyzerProjectRole.host) {
+            final root = project.requestedRoot;
             hostRoots[_canonicalDirectoryPath(root)] = root;
           }
-          if (_generatorDiagnostics.pollPubResolutionChanged(
-            io.File(pubspec).parent,
-          )) {
-            resolutionChanged.add(pubspec);
-          }
+          final resolutionKey = _canonicalDirectoryPath(project.resolutionRoot);
+          resolutionRoots[resolutionKey] = project.resolutionRoot;
+          pubspecsByResolutionRoot
+              .putIfAbsent(resolutionKey, () => <String>{})
+              .add(pubspec);
         }
         for (final root in hostRoots.values) {
           refresh.addAll(_generatorDiagnostics.pollAffectedDartPaths(root));
+        }
+      }
+      for (final entry in resolutionRoots.entries) {
+        if (_generatorDiagnostics.pollResolutionGraphChanged(entry.value)) {
+          resolutionChanged.addAll(
+            pubspecsByResolutionRoot[entry.key] ?? const <String>{},
+          );
         }
       }
       if (lifecycleRevision != _watchBridgeLifecycleRevision) {
@@ -207,6 +228,7 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
   ) async {
     _stopWatchBridgePolling();
     _generatorDiagnostics.clear();
+    _projectContexts.clear();
     _pubspecPathsByContext.clear();
     _workspaceManifestIdentityByContext.clear();
     return super.handlePluginShutdown(parameters);
@@ -217,6 +239,7 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
   void onDone() {
     _stopWatchBridgePolling();
     _generatorDiagnostics.clear();
+    _projectContexts.clear();
     _pubspecPathsByContext.clear();
     _workspaceManifestIdentityByContext.clear();
     super.onDone();
@@ -231,6 +254,7 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
     var resolutionInputChanged = false;
     for (final changedPath in paths) {
       _packageContexts.invalidate(changedPath);
+      _projectContexts.invalidate(changedPath);
       refresh.addAll(_contractOwners.invalidate(changedPath));
       refresh.addAll(_generatorDiagnostics.affectedDartPaths(changedPath));
       final projectPubspec = _projectPubspecForInput(changedPath);

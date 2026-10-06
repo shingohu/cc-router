@@ -171,6 +171,96 @@ final class CCRouterAnalyzerProjectContext {
   }
 }
 
+/// One cached project-context observation and whether its authored inputs moved.
+final class CCRouterAnalyzerProjectContextObservation {
+  /// Creates an immutable observation for one Package manifest.
+  const CCRouterAnalyzerProjectContextObservation({
+    required this.context,
+    required this.inputChanged,
+  });
+
+  /// Current context, or null while its configuration is unavailable or invalid.
+  final CCRouterAnalyzerProjectContext? context;
+
+  /// Whether a previously observed role or Workspace-reference input changed.
+  final bool inputChanged;
+}
+
+/// Caches project role and Pub-owner resolution between low-frequency polls.
+///
+/// Filesystem metadata remains the invalidation authority. Unchanged Packages
+/// avoid YAML parsing and Workspace-owner traversal; malformed configurations
+/// are cached too so an idle Analysis Server does not repeatedly parse them.
+final class CCRouterAnalyzerProjectContextCache {
+  /// Last observation keyed by canonical requested Package directory.
+  final Map<String, _CachedAnalyzerProjectContext> _entries =
+      <String, _CachedAnalyzerProjectContext>{};
+
+  /// Observes the Package owning [pubspecPath].
+  ///
+  /// The first observation establishes a baseline and therefore reports
+  /// [CCRouterAnalyzerProjectContextObservation.inputChanged] as false.
+  CCRouterAnalyzerProjectContextObservation observe(String pubspecPath) {
+    final root = File(pubspecPath).absolute.parent;
+    final key = _directoryIdentity(root);
+    final signature = _projectInputIdentity(root);
+    final previous = _entries[key];
+    if (previous != null && previous.signature == signature) {
+      return CCRouterAnalyzerProjectContextObservation(
+        context: previous.context,
+        inputChanged: false,
+      );
+    }
+    final context = CCRouterAnalyzerProjectContext.resolve(pubspecPath);
+    _entries[key] = _CachedAnalyzerProjectContext(
+      signature: signature,
+      context: context,
+    );
+    return CCRouterAnalyzerProjectContextObservation(
+      context: context,
+      inputChanged: previous != null,
+    );
+  }
+
+  /// Invalidates the Package containing one authored role or resolution input.
+  void invalidate(String changedPath) {
+    final normalized = path.normalize(File(changedPath).absolute.path);
+    final basename = path.basename(normalized);
+    Directory? root;
+    if (basename == 'pubspec.yaml' ||
+        basename == '.metadata' ||
+        basename == 'ccrouter.yaml') {
+      root = File(normalized).parent;
+    } else if (normalized.endsWith(
+      path.join('.dart_tool', 'pub', 'workspace_ref.json'),
+    )) {
+      root = File(normalized).parent.parent.parent;
+    }
+    if (root != null) _entries.remove(_directoryIdentity(root));
+  }
+
+  /// Removes every cached observation when Analysis contexts are replaced.
+  void clear() => _entries.clear();
+
+  /// Number of explicitly indexed Package observations retained in memory.
+  int get entryCount => _entries.length;
+}
+
+/// Cached parse result paired with the exact authored-input identity.
+final class _CachedAnalyzerProjectContext {
+  /// Creates one process-local cache entry.
+  const _CachedAnalyzerProjectContext({
+    required this.signature,
+    required this.context,
+  });
+
+  /// Filesystem identity of every input that can alter the resolved context.
+  final String signature;
+
+  /// Parsed context, including a cached null for invalid configurations.
+  final CCRouterAnalyzerProjectContext? context;
+}
+
 /// Sentinel distinguishing an invalid `host.enabled` from an absent value.
 const Object _invalidHostOverride = Object();
 
@@ -246,6 +336,27 @@ List<String> _workspaceMembers(Map<String, Object?> manifest) {
     for (final member in workspace)
       if (member is String) member,
   ];
+}
+
+/// Returns a cheap identity for inputs that can change a Package context.
+String _projectInputIdentity(Directory root) => <String>[
+  _fileIdentity(File(path.join(root.path, 'pubspec.yaml'))),
+  _fileIdentity(File(path.join(root.path, '.metadata'))),
+  _fileIdentity(File(path.join(root.path, 'ccrouter.yaml'))),
+  _fileIdentity(
+    File(path.join(root.path, '.dart_tool', 'pub', 'workspace_ref.json')),
+  ),
+].join('|');
+
+/// Returns bounded filesystem metadata without opening or parsing [file].
+String _fileIdentity(File file) {
+  try {
+    final stat = file.statSync();
+    return '${stat.type}:${stat.size}:${stat.modified.microsecondsSinceEpoch}:'
+        '${stat.changed.microsecondsSinceEpoch}';
+  } on Object {
+    return 'missing';
+  }
 }
 
 /// Reads string keys from a YAML mapping.

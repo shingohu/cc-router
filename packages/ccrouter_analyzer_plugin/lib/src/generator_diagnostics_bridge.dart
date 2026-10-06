@@ -137,8 +137,8 @@ final class CCRouterGeneratorDiagnosticsBridge {
   final Map<String, Map<String, Object?>> _validatedSnapshotByHost =
       <String, Map<String, Object?>>{};
 
-  /// Last manifest and resolved-graph file identity observed per Host.
-  final Map<String, String> _observedResolutionInputByHost = <String, String>{};
+  /// Last resolved-graph file identity observed per Pub resolution root.
+  final Map<String, String> _observedResolutionGraphByRoot = <String, String>{};
 
   /// Whether the bridge is enabled for this Analysis Server process.
   final bool enabled;
@@ -198,30 +198,13 @@ final class CCRouterGeneratorDiagnosticsBridge {
     return _affectedDartPathsForHost(hostRoot);
   }
 
-  /// Reports whether project role inputs or the resolved Package graph changed.
+  /// Reports whether one Pub resolution root's shared Package graph changed.
   ///
   /// The first observation establishes a baseline because initial context
   /// setup already publishes the current hint.
-  bool pollPubResolutionChanged(Directory hostRoot) {
+  bool pollResolutionGraphChanged(Directory resolutionRoot) {
     if (!enabled) return false;
-    final context = CCRouterAnalyzerProjectContext.resolve(hostRoot.path);
-    if (context == null) return false;
-    final requestedRoot = context.requestedRoot;
-    final resolutionRoot = context.resolutionRoot;
     final signature = [
-      _fileIdentity(File(path.join(requestedRoot.path, 'pubspec.yaml'))),
-      _fileIdentity(File(path.join(requestedRoot.path, '.metadata'))),
-      _fileIdentity(File(path.join(requestedRoot.path, 'ccrouter.yaml'))),
-      _fileIdentity(
-        File(
-          path.join(
-            requestedRoot.path,
-            '.dart_tool',
-            'pub',
-            'workspace_ref.json',
-          ),
-        ),
-      ),
       _fileIdentity(
         File(
           path.join(resolutionRoot.path, '.dart_tool', 'package_graph.json'),
@@ -233,9 +216,9 @@ final class CCRouterGeneratorDiagnosticsBridge {
         ),
       ),
     ].join('|');
-    final key = _canonicalDirectoryIdentity(requestedRoot.path);
-    final previous = _observedResolutionInputByHost[key];
-    _observedResolutionInputByHost[key] = signature;
+    final key = _canonicalDirectoryIdentity(resolutionRoot.path);
+    final previous = _observedResolutionGraphByRoot[key];
+    _observedResolutionGraphByRoot[key] = signature;
     return previous != null && previous != signature;
   }
 
@@ -295,7 +278,7 @@ final class CCRouterGeneratorDiagnosticsBridge {
     _observedSnapshotByHost.clear();
     _validatedSnapshotSignatureByHost.clear();
     _validatedSnapshotByHost.clear();
-    _observedResolutionInputByHost.clear();
+    _observedResolutionGraphByRoot.clear();
   }
 
   /// Compares one participating Package manifest with its resolved direct graph.

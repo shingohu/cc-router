@@ -226,6 +226,20 @@ dependencies:
     }
   });
 
+  test('polls one shared resolution graph as a stable baseline', () {
+    final fixture = _BridgeFixture.create();
+    addTearDown(fixture.dispose);
+    fixture.writePackageGraph(['ccrouter']);
+
+    expect(fixture.bridge.pollResolutionGraphChanged(fixture.root), isFalse);
+    expect(fixture.bridge.pollResolutionGraphChanged(fixture.root), isFalse);
+
+    fixture.writePackageGraph(['ccrouter', 'new_dependency']);
+
+    expect(fixture.bridge.pollResolutionGraphChanged(fixture.root), isTrue);
+    expect(fixture.bridge.pollResolutionGraphChanged(fixture.root), isFalse);
+  });
+
   test('accepts watch identity through a symlinked Host path', () {
     if (Platform.isWindows) return;
     final fixture = _BridgeFixture.create();
