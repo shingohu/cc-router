@@ -688,6 +688,38 @@ void main() {
   );
 
   test(
+    'stopped Host watch retains a stable registration lock for restart',
+    () async {
+      final demoRoot = Directory(path.join(Directory.current.path, 'demo'));
+      final first = await _ConcurrentWatch.start(demoRoot);
+      _ConcurrentWatch? replacement;
+      late final ({File document, File lock}) registration;
+      try {
+        await first.waitUntilReady();
+        registration = _watchRegistrationForHost(demoRoot);
+        expect(registration.document.existsSync(), isTrue);
+        expect(registration.lock.existsSync(), isTrue);
+
+        await first.stop();
+        expect(registration.document.existsSync(), isFalse);
+        expect(registration.lock.existsSync(), isTrue);
+
+        replacement = await _ConcurrentWatch.start(demoRoot);
+        await replacement.waitUntilReady();
+        final restarted = _watchRegistrationForHost(demoRoot);
+        expect(restarted.document.path, registration.document.path);
+        expect(restarted.lock.path, registration.lock.path);
+      } finally {
+        await replacement?.stop();
+        await first.stop();
+      }
+      expect(registration.document.existsSync(), isFalse);
+      expect(registration.lock.existsSync(), isTrue);
+    },
+    timeout: const Timeout(Duration(minutes: 4)),
+  );
+
+  test(
     'watch evidence reuse keeps current Builder-only output bytes',
     () async {
       final source = File(
@@ -993,6 +1025,32 @@ Future<Map<String, dynamic>> _waitForWatchStatus(
 File _lockFile(String relative) => File(
   path.join(Directory.current.path, '.dart_tool', 'ccrouter', 'v1', relative),
 );
+
+({File document, File lock}) _watchRegistrationForHost(Directory hostRoot) {
+  final directory = Directory(
+    path.join(
+      Directory.current.path,
+      '.dart_tool',
+      'ccrouter',
+      'v1',
+      'watch',
+      'registrations',
+    ),
+  );
+  for (final document in directory.listSync().whereType<File>()) {
+    if (!document.path.endsWith('.json')) continue;
+    final decoded = jsonDecode(document.readAsStringSync()) as Map;
+    if (decoded['hostRoot'] is String &&
+        path.equals(decoded['hostRoot'] as String, hostRoot.absolute.path)) {
+      final stem = path.basenameWithoutExtension(document.path);
+      return (
+        document: document,
+        lock: File(path.join(directory.path, '$stem.lock')),
+      );
+    }
+  }
+  throw StateError('No active watch registration for ${hostRoot.path}.');
+}
 
 final class _ConcurrentWatch {
   _ConcurrentWatch._({

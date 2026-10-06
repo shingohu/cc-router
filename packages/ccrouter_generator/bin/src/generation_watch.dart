@@ -1460,16 +1460,21 @@ final class _GenerationWatchRegistration {
     }
   }
 
-  /// Removes only this process's registration after releasing its OS lock.
+  /// Removes this process's document before releasing its stable OS lock.
+  ///
+  /// The lock path remains as a stable inode so a waiter cannot acquire an
+  /// unlinked lock while a third process creates and locks a replacement file.
   Future<void> release() async {
     _ownedIdentities.remove(identity);
     try {
-      await lock.unlock();
+      if (document.existsSync()) await document.delete();
     } finally {
-      await lock.close();
+      try {
+        await lock.unlock();
+      } finally {
+        await lock.close();
+      }
     }
-    if (document.existsSync()) await document.delete();
-    if (lockFile.existsSync()) await lockFile.delete();
   }
 }
 
