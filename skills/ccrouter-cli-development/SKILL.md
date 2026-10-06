@@ -111,6 +111,12 @@ or terminal heuristics. On a miss, distinguish
 reason (`cache-missing`, `metadata`, `output`, `dependency-index`, or
 `propagated-from`) before changing cache behavior. Never remove caches just to
 make an ordinary generation run pass.
+After a successful Pub command, keep Pub success distinct from a failed CCRouter
+phase. If Builder completed before Workspace validation failed, render its
+summary plus structured root causes, corrections, requested Host/Package, and
+resolution root; suppress routine Builder progress/skipped lines. `--profile`
+retains raw validation errors. If Builder itself did not complete, retain the
+full bounded output tail.
 Use `--watch=auto --machine` for a long-lived local or AI development session.
 Consume its schema `1` NDJSON stdout and keep stderr as diagnostic text. A
 successful Builder event is not final until `aggregationSucceeded`; wait for

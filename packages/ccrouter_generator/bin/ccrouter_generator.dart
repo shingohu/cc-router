@@ -407,14 +407,18 @@ Future<bool> _aggregate(Directory root, _Arguments parsed) async {
     },
   );
   final result = CCRouteWorkspaceValidator.validate(documents);
-  final errors = [
-    ...result.errors,
-    ...CCRouteBarrelExportValidator.validate(root, documents),
-  ]..sort();
+  final additionalErrors = CCRouteBarrelExportValidator.validate(
+    root,
+    documents,
+  )..sort();
+  final errors = [...result.errors, ...additionalErrors]..sort();
   if (errors.isNotEmpty) {
-    for (final error in errors) {
-      _commandStderr.writeln('error: $error');
-    }
+    _writeWorkspaceValidationFailure(
+      diagnostics: result.diagnostics,
+      allErrors: errors,
+      additionalErrors: additionalErrors,
+      includeRawDetails: parsed.profile,
+    );
     return false;
   }
   if (parsed.generateComponentRegistrars) {
@@ -1060,19 +1064,17 @@ Future<bool> _generateResolvedWorkspace(
   final validatedDocuments = hostGeneration
       ? documents
       : localMetadata[workspace.host.name] ?? const <Map<String, Object?>>[];
-  final errors = [
-    ...?validation?.errors,
-    ...CCRouteBarrelExportValidator.validate(
-      hostRoot,
-      validatedDocuments,
-      packageRoots: {
-        for (final package in workspace.packages.values.where(
-          (package) => hostGeneration || package.writable,
-        ))
-          package.name: package.root,
-      },
-    ),
-  ]..sort();
+  final additionalErrors = CCRouteBarrelExportValidator.validate(
+    hostRoot,
+    validatedDocuments,
+    packageRoots: {
+      for (final package in workspace.packages.values.where(
+        (package) => hostGeneration || package.writable,
+      ))
+        package.name: package.root,
+    },
+  )..sort();
+  final errors = [...?validation?.errors, ...additionalErrors]..sort();
   if (errors.isNotEmpty) {
     if (validation != null) {
       _recordGenerationDiagnostics(validation.diagnostics);
@@ -1081,9 +1083,12 @@ Future<bool> _generateResolvedWorkspace(
       status: 'failed',
       counts: {'documents': validatedDocuments.length, 'errors': errors.length},
     );
-    for (final error in errors) {
-      _commandStderr.writeln('error: $error');
-    }
+    _writeWorkspaceValidationFailure(
+      diagnostics: validation?.diagnostics ?? const [],
+      allErrors: errors,
+      additionalErrors: additionalErrors,
+      includeRawDetails: parsed.profile,
+    );
     return false;
   }
   validationSpan?.finish(

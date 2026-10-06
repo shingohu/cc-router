@@ -324,6 +324,12 @@ Wrapper command detection consumes only known global options and their declared
 values before selecting the first real top-level command and Pub subcommand.
 Tokens inside option values, Dart script arguments, or business arguments never
 trigger generation; unknown global-option arity safely bypasses the Hook.
+After Pub succeeds, a CCRouter failure remains a separate non-zero post-Pub
+result. When Builder succeeded but Workspace validation failed, default output
+folds cascades into structured root causes and suppresses only routine Builder
+progress; it retains the Builder summary, corrections, requested project, and
+resolution root. Use `--profile` for raw validation details. A Builder failure
+always keeps its complete bounded diagnostic tail.
 
 Validate with:
 

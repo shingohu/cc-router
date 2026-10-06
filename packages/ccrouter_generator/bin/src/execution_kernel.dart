@@ -107,6 +107,58 @@ void _recordGenerationDiagnostics(Iterable<CCWorkspaceDiagnostic> diagnostics) {
     ..addAll(diagnostics.take(100).map((item) => item.toJson()));
 }
 
+/// Renders actionable root causes while retaining raw validation under profile.
+void _writeWorkspaceValidationFailure({
+  required List<CCWorkspaceDiagnostic> diagnostics,
+  required List<String> allErrors,
+  required List<String> additionalErrors,
+  required bool includeRawDetails,
+}) {
+  if (diagnostics.isEmpty) {
+    for (final error in allErrors) {
+      _commandStderr.writeln('error: $error');
+    }
+    return;
+  }
+  for (final diagnostic in diagnostics) {
+    _commandStderr.writeln(
+      '${diagnostic.severity.name} [${diagnostic.code}]: '
+      '${diagnostic.message}',
+    );
+    final primary = diagnostic.primaryLocation;
+    if (primary != null) {
+      _commandStderr.writeln(
+        '  at ${primary.uri}:${primary.line}:${primary.column}',
+      );
+    }
+    final related = diagnostic.relatedLocations;
+    for (final item in related.take(3)) {
+      final location = item.location;
+      _commandStderr.writeln(
+        '  related: ${item.message} '
+        '(${location.uri}:${location.line}:${location.column})',
+      );
+    }
+    if (related.length > 3) {
+      _commandStderr.writeln(
+        '  related: ${related.length - 3} more declaration(s)',
+      );
+    }
+    if (diagnostic.correction case final correction?) {
+      _commandStderr.writeln('  fix: $correction');
+    }
+  }
+  for (final error in additionalErrors) {
+    _commandStderr.writeln('error: $error');
+  }
+  if (includeRawDetails) {
+    _commandStderr.writeln('CCRouter profile raw validation errors:');
+    for (final error in allErrors) {
+      _commandStderr.writeln('  - $error');
+    }
+  }
+}
+
 /// Executes one complete generation transaction for CLI or watch.
 Future<_GenerationCycleResult> _runGenerationCycle({
   required Directory root,

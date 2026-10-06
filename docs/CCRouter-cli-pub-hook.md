@@ -117,9 +117,10 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook uninstall
    然后明确报告 owner Host、requested Package 以及 target 是否被覆盖，并返回非零。被覆盖时
    可以等待 Host 的 `aggregationSucceeded`；若要求当前 Pub Hook 成功，或 Package 未被覆盖，
    则停止 watch 后从该 Package 重试。stale、损坏或路径不匹配的状态不会被信任。
-7. 成功时只打印 fast-path、验证摘要和总耗时；生成器失败时打印最近
-   200 行且最多 64 KiB 的有界日志并返回非零，使 CI 能发现生成物过期或元数据错误，
-   同时避免长时间 Builder 输出造成控制台刷屏或内存无界增长。
+7. 成功时只打印 fast-path、验证摘要和总耗时；生成器失败时最多保留最近
+   200 行、64 KiB。Builder 已成功而 Validator 失败时，默认去掉正常 progress/skipped 行，
+   显示 Builder 汇总、structured root cause、修复建议及 requested/resolution root；`--profile`
+   才附 raw validation errors。Builder 自身未成功时保留完整有界 tail，避免隐藏未知错误。
 
 所有推荐命令都给 `dart run` 传入 `--verbosity=error`。它只压低 Dart/Pub 在 CLI
 启动前输出的重复依赖解析和 executable 构建信息，不会隐藏 CCRouter 的阶段、耗时、

@@ -29,6 +29,48 @@ void main() {
     }
   });
 
+  test('failure rendering removes routine Builder progress after success', () {
+    final lines = ccPubHookConciseFailureLines(const [
+      (line: 'Generating Package artifacts for host...', isError: false),
+      (
+        line: '  0s ccrouter_generator:routes on 3 inputs: 3 skipped',
+        isError: false,
+      ),
+      (
+        line: '  Built with build_runner/aot in 1s; wrote 0 outputs.',
+        isError: false,
+      ),
+      (
+        line: 'error [ccrouter_host_component_owner_missing]: missing owner',
+        isError: true,
+      ),
+      (line: '  fix: Restore its Package.', isError: true),
+    ]);
+
+    expect(lines, [
+      '  Built with build_runner/aot in 1s; wrote 0 outputs.',
+      'error [ccrouter_host_component_owner_missing]: missing owner',
+      '  fix: Restore its Package.',
+    ]);
+  });
+
+  test(
+    'failure rendering preserves complete output before Builder success',
+    () {
+      final lines = ccPubHookConciseFailureLines(const [
+        (line: 'Generating Package artifacts for host...', isError: false),
+        (line: '  0s ccrouter_generator:routes on 3 inputs', isError: false),
+        (line: 'Build failed.', isError: true),
+      ]);
+
+      expect(lines, [
+        'Generating Package artifacts for host...',
+        '  0s ccrouter_generator:routes on 3 inputs',
+        'Build failed.',
+      ]);
+    },
+  );
+
   test(
     'pub-hook install preserves an entrypoint when its rename fails',
     () async {
@@ -928,7 +970,7 @@ workspace:
     expect(output, contains('covers requested Package "watched_component"'));
     expect(output, contains('wait for its `aggregationSucceeded`'));
     expect(output, contains('stop the watch, then retry'));
-    expect(output, isNot(contains('Generator output:')));
+    expect(output, isNot(contains('Generator diagnostics:')));
     expect(output, isNot(contains('active CCRouter generation watch owns')));
   });
 
@@ -1005,7 +1047,7 @@ workspace:
         contains('does not cover requested Package "watched_component"'),
       );
       expect(output, contains('stop the watch, then retry'));
-      expect(output, isNot(contains('Generator output:')));
+      expect(output, isNot(contains('Generator diagnostics:')));
       expect(output, isNot(contains('active CCRouter generation watch owns')));
     },
   );
@@ -1171,7 +1213,7 @@ dev_dependencies:
     expect(result.exitCode, 1, reason: output);
     expect(output, contains('CCRouter preflight started'));
     expect(output, contains('CCRouter preflight failed'));
-    expect(output, contains('Generator output:'));
+    expect(output, contains('Generator diagnostics:'));
     expect(output, isNot(contains('CCRouter pub hook finished')));
   });
 
@@ -1342,7 +1384,7 @@ dev_dependencies:
 
     expect(result.exitCode, 1, reason: output);
     expect(output, contains('active watch cycle 3 failed at aggregation'));
-    expect(output, contains('Generator output:'));
+    expect(output, contains('Generator diagnostics:'));
     expect(
       output,
       contains('error: Public route contract has no implementation.'),

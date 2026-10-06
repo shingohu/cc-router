@@ -1504,7 +1504,10 @@ SDK 切换后 `status` 应显示 `run/build preflight: enabled`、`run watch: en
 `dart pub post-hook: enabled`。旧 schema 4 安装需先 `uninstall` 再重新 `install`。
 `run/build` 成功时控制台使用 `CCRouter preflight`，Pub 后生成使用
 `CCRouter post-pub generation`；成功只保留 fast-path、验证摘要与最终总耗时，失败则输出最近
-200 行且最多 64 KiB 的 Generator 日志，避免长构建刷屏或无界缓存，同时保留可操作错误。
+200 行且最多 64 KiB 的 Generator 日志。若 Builder 已成功而后续 Workspace Validator 失败，
+默认输出会删除正常的 Builder progress/skipped 行，只保留 Builder 汇总、structured root cause、
+修复建议以及 requested Host/Package 和 resolution root；`--profile` 额外保留 raw validation errors。
+Builder 自身失败时仍输出完整有界 tail，不会因精简呈现隐藏未知错误。
 当同一 Host 的 watch 已活动时，post-pub 不会再启动一个必然与 generation lock 冲突的
 one-shot；它等待 Pub 解析变更之后的 `aggregationSucceeded`。该轮失败时仍返回非零并转发
 watch 的有界 Generator diagnostics。watch 状态使用 `sessionId`、`cycle` 和单调

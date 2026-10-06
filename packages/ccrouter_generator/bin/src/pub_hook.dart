@@ -709,8 +709,9 @@ Future<bool> runCCPubHook({
           'CCRouter ${operation.label} failed for ${operation.target}: '
           '${watch.message}, elapsed=${stopwatch.elapsedMilliseconds}ms.',
         );
+        _writePubHookProjectContext(context, projectRole.role);
         if (watch.diagnostics case final diagnostics?) {
-          stderr.writeln('Generator output:');
+          stderr.writeln('Generator diagnostics:');
           stderr.writeln(diagnostics);
         }
         stderr.writeln('Watch log: ${watch.logFile.path}');
@@ -760,9 +761,19 @@ Future<bool> runCCPubHook({
       'CCRouter ${operation.label} failed for ${operation.target}: '
       'exitCode=$exitCode, elapsed=${stopwatch.elapsedMilliseconds}ms.',
     );
+    _writePubHookProjectContext(context, projectRole.role);
     output.writeFailureTail();
   }
   return exitCode == 0;
+}
+
+/// Adds exact requested/resolution roots only when post-Pub generation fails.
+void _writePubHookProjectContext(CCProjectContext context, CCProjectRole role) {
+  stderr.writeln(
+    '${role == CCProjectRole.host ? 'Host' : 'Package'}: '
+    '${context.requestedRoot.path}',
+  );
+  stderr.writeln('Resolution root: ${context.resolutionRoot.path}');
 }
 
 /// Actionable package-local diagnostic for a verified shared build-root watch.
@@ -1165,7 +1176,7 @@ final class _CCPubHookOutput {
   /// Records one child line and selects stable success-summary lines.
   void add(String line, {required bool isError}) {
     if (!isError && _isSummary(line)) _summary.add(line);
-    final item = _CCPubHookOutputLine(line);
+    final item = _CCPubHookOutputLine(line, isError: isError);
     _tail.add(item);
     _tailCharacters += item.characterCount;
     while (_tail.length > _maximumLines ||
@@ -1188,13 +1199,16 @@ final class _CCPubHookOutput {
       stderr.writeln('No generator diagnostics were produced.');
       return;
     }
+    final visible = ccPubHookConciseFailureLines(
+      _tail.map((item) => (line: item.line, isError: item.isError)),
+    );
     stderr.writeln(
       _truncated
-          ? 'Recent generator output (older lines omitted):'
-          : 'Generator output:',
+          ? 'Recent generator diagnostics (older lines omitted):'
+          : 'Generator diagnostics:',
     );
-    for (final item in _tail) {
-      stderr.writeln(item.line);
+    for (final line in visible) {
+      stderr.writeln(line);
     }
   }
 
@@ -1208,13 +1222,50 @@ final class _CCPubHookOutput {
       line.startsWith('Bootstrapped generated component APIs ');
 }
 
+/// Removes routine Builder progress after a successful Builder phase.
+///
+/// Unknown output and every stderr line remain visible. If Builder never
+/// reached its success summary, the complete bounded tail is returned so a
+/// build failure cannot be hidden by presentation filtering.
+List<String> ccPubHookConciseFailureLines(
+  Iterable<({String line, bool isError})> lines,
+) {
+  final retained = lines.toList(growable: false);
+  final builderSucceeded = retained.any(
+    (item) =>
+        !item.isError &&
+        item.line.trimLeft().startsWith('Built with build_runner'),
+  );
+  if (!builderSucceeded) {
+    return retained.map((item) => item.line).toList(growable: false);
+  }
+  return retained
+      .where(
+        (item) => item.isError || !_isRoutineBuildRunnerProgress(item.line),
+      )
+      .map((item) => item.line)
+      .toList(growable: false);
+}
+
+/// Whether one stdout line is routine build_runner progress rather than a
+/// terminal summary or Generator diagnostic.
+bool _isRoutineBuildRunnerProgress(String line) {
+  if (line.startsWith('Generating Package artifacts for ')) return true;
+  return RegExp(
+    r'^\s*\d+(?:\.\d+)?s\s+ccrouter_generator:[^\s]+\s+on\s+',
+  ).hasMatch(line);
+}
+
 /// One retained line plus its encoded-size approximation.
 final class _CCPubHookOutputLine {
   /// Creates one retained child-process line.
-  const _CCPubHookOutputLine(this.line);
+  const _CCPubHookOutputLine(this.line, {required this.isError});
 
   /// Exact decoded line without its newline terminator.
   final String line;
+
+  /// Whether the child emitted this line on stderr.
+  final bool isError;
 
   /// Bounded-buffer cost including one newline character.
   int get characterCount => line.length + 1;
