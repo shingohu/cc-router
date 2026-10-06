@@ -277,7 +277,7 @@ ccrouter_analyzer_plugin:
   git:
     url: git@github.com:shingohu/cc-router.git
     path: packages/ccrouter_analyzer_plugin
-    ref: a275d1d46ddfdded6678ecbf1d2d23818cdbdfdc
+    ref: 9ed240e911fdd4649f3de44ae0a16d7a7ba62f30
 ```
 
 这个配置有正向收益：可以在 Hosted 发布前让 Demo 验证最新插件修复，同时不把 Analyzer 版本

@@ -201,7 +201,7 @@ dependencies:
     git:
       url: git@github.com:shingohu/cc-router.git
       path: packages/ccrouter_analyzer_plugin
-      ref: a275d1d46ddfdded6678ecbf1d2d23818cdbdfdc
+      ref: 9ed240e911fdd4649f3de44ae0a16d7a7ba62f30
 ```
 
 Use this inner `bin/plugin.dart`. The implementation import is intentional only
@@ -231,6 +231,19 @@ After an actual Hosted release, replace only the inner rule dependency with its
 reviewed Hosted version and revalidate the isolated graph. Do not infer that
 `0.1.0` is published from its source manifest. If the current SDK is incompatible,
 disable the plugin entry without weakening Dart analysis or generation gates.
+
+For maintained Git bootstraps, a Plugin production change that affects
+diagnostics, fixes, watch/metadata invalidation, path identity, Server lifecycle,
+loader protocol, or SDK compatibility requires a corresponding pin update.
+Perform it in two stages: commit, verify, and push the Plugin first; then update
+the Host manifest and lockfile to that remotely resolvable full SHA in a separate
+commit. A commit cannot point its own dependency at itself. Pure tests, comments,
+and behavior-preserving refactors do not require a pin bump. Never use a branch,
+floating tag, or unpushed SHA. After the pin changes, run `analyzer doctor`,
+restart Analysis Server, and verify a real IDE diagnostic or Quick Fix before
+claiming the Host uses the new revision. Keep the isolated `analyzer` and
+`analyzer_plugin` versions unchanged unless SDK compatibility independently
+requires their upgrade.
 
 Expanded rationale is optional background:
 [IDE integration design](https://github.com/shingohu/cc-router/blob/main/docs/CCRouter-ide-analysis-server.md).

@@ -69,6 +69,23 @@ developer guidance in the same change:
 Internal refactors that do not change integration behavior do not require
 documentation churn.
 
+## Analyzer Plugin Demo Pin Workflow
+
+When production changes under `packages/ccrouter_analyzer_plugin` alter
+diagnostics, Quick Fixes, watch/metadata invalidation, Host or path identity,
+Analysis Server lifecycle, loader protocol, or SDK compatibility, synchronize
+the Demo bootstrap Git ref. Pure tests, comments, and behavior-preserving
+refactors do not require a pin update.
+
+The update is necessarily two-stage: first commit, verify, and push the Plugin
+change; then use its remotely resolvable full commit SHA in a separate Demo
+bootstrap update. Never pin the Demo to a branch, floating tag, unpushed SHA,
+or the same commit that edits its own ref. Update the bootstrap lockfile, run
+`ccrouter analyzer doctor demo`, restart the Dart Analysis Server, and verify a
+real IDE diagnostic or Quick Fix before claiming the Demo uses the new Plugin.
+Do not upgrade the isolated `analyzer` or `analyzer_plugin` constraints unless
+SDK compatibility itself requires that separate change.
+
 ## Workspace Pub Hook Verification
 
 The repository root is a Dart workspace aggregator, not a CCRouter Host. While

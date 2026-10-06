@@ -16,13 +16,13 @@
 Demo bootstrap 当前固定到：
 
 ```yaml
-ref: a275d1d46ddfdded6678ecbf1d2d23818cdbdfdc
+ref: 9ed240e911fdd4649f3de44ae0a16d7a7ba62f30
 ```
 
 该 commit 已存在于远端，在既有诊断、Quick Fix、性能缓存、只读 CLI 与未保存编辑诊断之上，
-包含 2026-10-03 的 F14/F15 与 Service 生命周期诊断修复，已通过独立 Plugin 测试、
-生成物检查和 loader smoke。后续仍不为了
-追随仓库 HEAD 而更新 ref。
+包含 2026-10-03 的 F14/F15、Service 生命周期诊断、structured watch diagnostics bridge 与
+canonical Host identity 修复，已通过独立 Plugin 测试、生成物检查和 loader smoke。后续仍不
+为了追随仓库 HEAD 而更新 ref。
 
 Git ref 只能更新到已推送、已评审并通过 Plugin Package 测试和 loader smoke 的完整 commit
 SHA。禁止使用分支名 `main`、未推送的本地 SHA 或浮动 tag。Hosted Package 发布后，默认在

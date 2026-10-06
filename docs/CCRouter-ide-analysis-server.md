@@ -255,8 +255,9 @@ Flutter 分发版内置的 Dart SDK，不能通过单独替换系统 Dart 安全
 `generate --check` 或 Runtime 路由参数语义，也不应通过修改 CCRouter public API、放宽生成器
 校验或清理全局缓存规避。
 
-本次本地监听修复尚未进入 Demo 固定的远端 `a275d1d`。必须在提交经审核并推送后更新
-bootstrap ref、运行 doctor 并重启 IDE，不能仅凭本地测试声称 Demo 插件已升级。
+watch diagnostics bridge 与 canonical Host identity 修复已推送，并进入 Demo 固定的远端
+`9ed240e`。bootstrap ref 与 lockfile 必须保持一致；运行 doctor 后仍需重启 IDE，不能仅凭
+依赖解析或本地插件测试声称正在运行的 IDE 已升级。
 
 ## Demo 接入
 
@@ -273,7 +274,7 @@ demo/tools/ccrouter_analyzer_plugin_host/
 Demo 的 `pubspec.yaml` 只依赖这个不带 Analyzer 约束的 Host Package；真正的规则 Package
 在 bootstrap 的独立依赖环境中解析。这样不会把 Analyzer 8.4.0 与 Workspace 生成器的
 Analyzer 10 混在一个依赖图里。bootstrap 当前使用远端 `main` 上固定的 commit
-`a275d1d46ddfdded6678ecbf1d2d23818cdbdfdc`，可由 Analysis Server
+`9ed240e911fdd4649f3de44ae0a16d7a7ba62f30`，可由 Analysis Server
 复制到临时目录并正常启动。bootstrap 目录同时保留 `pubspec.hosted.yaml` 作为发布后的
 Hosted fallback；发布到 Hosted 后只能二选一替换活动 manifest，不能在同一个 bootstrap
 Package 同时声明 Git 和 Hosted 两个来源。
@@ -291,15 +292,24 @@ Analysis Server entrypoint 可加载，不会启动常驻 Analysis Server。插�
 验证，验证完成后恢复固定 Git ref；绝对 path 不得提交。Git ref 更新前必须先运行插件
 Package 的 analyze/test 和 loader smoke。
 
-当前固定 ref `a275d1d46ddfdded6678ecbf1d2d23818cdbdfdc` 已包含 2026-10-03 完成的
+当前固定 ref `9ed240e911fdd4649f3de44ae0a16d7a7ba62f30` 已包含 2026-10-03 完成的
 F14/F15 类型与 Owner 修复、Service 生命周期诊断，以及既有的单个/批量 Owner Quick Fix、
-未保存 overlay 诊断、性能缓存和只读 CLI 健康检查。无需仅为追随本地 HEAD 而更新。只有 Plugin
-生产代码真实变化、隔离测试通过并
-推送远端后，才更新为对应的完整 commit SHA；禁止使用 `main` 或尚未推送的本地 SHA。
+未保存 overlay 诊断、性能缓存、structured watch diagnostics bridge、canonical Host identity
+和只读 CLI 健康检查。无需仅为追随本地 HEAD 而更新。只有 Plugin 生产代码真实变化、隔离测试
+通过并推送远端后，才更新为对应的完整 commit SHA；禁止使用 `main` 或尚未推送的本地 SHA。
 
-上述修复已完成本地插件测试、真实 Plugin 会话验证和 loader 编译，并已推送远端。
-Demo bootstrap 已固定该版本；更新依赖不等于正在运行的 IDE 已重新加载，需重启
-Dart Analysis Server 后使用新增规则。
+该同步是强制的两阶段流程，不能把“之后再更新 Demo”留作隐含约定：第一阶段独立提交并验证
+Plugin，推送后确保完整 SHA 可被 bootstrap 的 Git URL 解析；第二阶段用另一个提交执行
+`ccrouter analyzer upgrade demo --ref <full-sha>`，提交 manifest 与 lockfile，再运行
+`ccrouter analyzer doctor demo`。随后重启 Dart Analysis Server，并用真实 diagnostic 或 Quick Fix
+确认 IDE 已加载新版本。一个提交不能让依赖 ref 指向它自身，也不能使用浮动 tag。纯测试、注释
+和不改变行为的重构不要求更新 ref。除非新 Plugin 改动同时改变 SDK 兼容区间，否则不要顺带升级
+隔离 bootstrap 的 `analyzer`/`analyzer_plugin` 版本。
+
+2026-10-03 的 F14/F15、Service 生命周期诊断等旧修复，以及后续 watch diagnostics bridge 与
+canonical identity 改动，均已完成各自的插件测试并推送远端；Demo bootstrap 当前固定到
+`9ed240e`。任何 ref 更新都不等于正在运行的 IDE 已重新加载，仍需重启 Dart Analysis Server
+后验证新增规则。
 
 2026-10-03 已完成本机 Android Studio 的实际验收：关闭工程停止 Analysis Server，备份
 指定旧缓存条目后重开；临时 `@CCService` 的既有 `dispose()` 触发
