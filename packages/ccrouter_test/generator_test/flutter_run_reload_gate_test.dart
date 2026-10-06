@@ -10,6 +10,8 @@ import 'package:test/test.dart';
 
 import '../../ccrouter_generator/bin/src/canonical_directory_identity.dart';
 import '../../ccrouter_generator/bin/src/flutter_run_reload_gate.dart';
+import '../../ccrouter_generator/bin/src/flutter_run_supervisor.dart';
+import '../../ccrouter_generator/bin/src/flutter_run_watch_lease.dart';
 
 void main() {
   test(
@@ -217,6 +219,102 @@ void main() {
   });
 
   test(
+    'Flutter run supervisor preserves exit and removes its lease',
+    () async {
+      final host = await _createHost();
+      addTearDown(() => host.delete(recursive: true));
+      final lease = File(path.join(host.path, 'flutter-run.lease'))
+        ..writeAsStringSync('');
+      final original = File(path.join(host.path, 'fake-flutter-exit'))
+        ..writeAsStringSync('#!/usr/bin/env bash\nexit 23\n');
+      final chmod = await Process.run('chmod', <String>['+x', original.path]);
+      expect(chmod.exitCode, 0, reason: '${chmod.stderr}');
+
+      final result = await CCFlutterRunSupervisor(
+        originalFlutter: original.path,
+        flutterArguments: const <String>['run'],
+        hostRoot: host,
+        watchLease: lease,
+        coordinateMachineReloads: false,
+        environment: Platform.environment,
+      ).run();
+
+      expect(result, 23);
+      expect(lease.existsSync(), isFalse);
+    },
+    skip: Platform.isWindows ? 'POSIX fixture executable' : false,
+  );
+
+  test(
+    'Flutter run supervisor cleans its lease after termination',
+    () async {
+      final host = await _createHost();
+      addTearDown(() => host.delete(recursive: true));
+      final lease = File(path.join(host.path, 'flutter-run-signal.lease'))
+        ..writeAsStringSync('');
+      final ready = File(path.join(host.path, 'flutter-ready'));
+      final original = File(path.join(host.path, 'fake-flutter-wait'))
+        ..writeAsStringSync('''#!/usr/bin/env bash
+trap 'exit 0' INT TERM
+touch "${ready.path}"
+while true; do sleep 1; done
+''');
+      final chmod = await Process.run('chmod', <String>['+x', original.path]);
+      expect(chmod.exitCode, 0, reason: '${chmod.stderr}');
+      final process = await Process.start(Platform.resolvedExecutable, <String>[
+        'run',
+        'ccrouter_generator:ccrouter_flutter_run_supervisor',
+        '--host-root',
+        host.path,
+        '--original',
+        original.path,
+        '--watch-lease',
+        lease.path,
+        '--',
+        'run',
+      ], workingDirectory: Directory.current.path);
+      final errors = process.stderr.transform(utf8.decoder).join();
+      await _waitFor(() => ready.existsSync() && _hasHeartbeat(lease));
+
+      expect(process.kill(ProcessSignal.sigterm), isTrue);
+      final result = await process.exitCode.timeout(
+        const Duration(seconds: 10),
+      );
+
+      expect(result, isNot(1), reason: await errors);
+      expect(lease.existsSync(), isFalse);
+    },
+    skip: Platform.isWindows ? 'POSIX signal fixture' : false,
+  );
+
+  test('stale supervised lease expires an orphaned watch', () async {
+    final host = await _createHost();
+    addTearDown(() => host.delete(recursive: true));
+    final lease = File(path.join(host.path, 'flutter-run-stale.lease'))
+      ..writeAsStringSync('$ccrouterFlutterRunLeaseHeartbeatMarker\n');
+    final expired = Completer<void>();
+    final monitor = CCFlutterRunWatchLeaseMonitor.start(
+      lease,
+      () => expired.complete(),
+      pollInterval: const Duration(milliseconds: 5),
+      staleAfter: const Duration(milliseconds: 50),
+    );
+    addTearDown(monitor.close);
+    sleep(const Duration(milliseconds: 120));
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+
+    expect(
+      expired.isCompleted,
+      isFalse,
+      reason: 'suspension is not owner death',
+    );
+
+    await expired.future.timeout(const Duration(seconds: 1));
+
+    expect(lease.existsSync(), isFalse);
+  });
+
+  test(
     'machine proxy returns daemon error and withholds failed reload',
     () async {
       final host = await _createHost();
@@ -334,3 +432,22 @@ Future<Process> _startProxy(Directory host, File original) =>
       'run',
       '--machine',
     ], workingDirectory: Directory.current.path);
+
+Future<void> _waitFor(bool Function() predicate) async {
+  final watch = Stopwatch()..start();
+  while (!predicate()) {
+    if (watch.elapsed > const Duration(seconds: 10)) {
+      throw TimeoutException('Timed out waiting for test process readiness.');
+    }
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+  }
+}
+
+bool _hasHeartbeat(File lease) {
+  try {
+    return lease.readAsStringSync().trim() ==
+        ccrouterFlutterRunLeaseHeartbeatMarker;
+  } on FileSystemException {
+    return false;
+  }
+}

@@ -29,6 +29,9 @@
   Generator failures as daemon errors, and require Hot Restart after Host
   topology changes. `CCROUTER_DISABLE_HOT_RELOAD_GATE=1` restores direct
   machine input forwarding.
+- Added a Windows Flutter-run supervisor with a versioned watch-lease
+  heartbeat. Handled exits clean up immediately, while watch expires an orphaned
+  lease after an uncatchable supervisor termination.
 - Routed the successful Flutter-run watch start summary through stdout like
   preflight success, while retaining real hook failures on stderr so IDEs do
   not render a healthy background watch as an error.

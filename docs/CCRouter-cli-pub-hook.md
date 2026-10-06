@@ -154,6 +154,9 @@ terminal failure 快速栅栏，恢复旧的 fingerprint-only 失败判断与有
    匹配状态，或初始 Builder/aggregation 5 分钟内没有到达 `ready`，都会 fail-closed。
    `watch starting` 和 `watch ready` 写 stdout，真实失败与完整日志路径写 stderr。
    `flutter build` 不启动常驻进程。
+   Windows wrapper 通过 Dart supervisor 继承终端启动原 Flutter Tool，并每秒刷新版本化
+   lease heartbeat。正常退出、non-zero exit 和可处理的 Ctrl+C 会立即删除 lease；若 supervisor
+   被强制终止而无法运行清理，watch 会在 5 秒无 heartbeat 后删除 stale lease 并退出。
 7. IDE/AI 使用的 `flutter run --machine` 由一个窄 stdin gate 启动原 Flutter Tool。它不改写
    或缓冲 daemon stdout，仅透传解析与 Hot Restart 匹配的 response；它只延迟
    `app.restart`：watch 的 `completedInputRevision` 必须覆盖
@@ -235,6 +238,15 @@ CCROUTER_DISABLE_WATCH_STARTUP_HANDSHAKE=1 flutter run
 ```
 
 该开关不关闭 preflight、watch、generation lock、Validator、原子写入或 machine reload gate。
+
+只在 Windows 回退到原有 batch 直接运行与末尾清理路径：
+
+```bat
+set CCROUTER_DISABLE_WINDOWS_RUN_SUPERVISOR=1
+flutter run
+```
+
+该回退保留 preflight、watch 与启动握手，但不再提供 heartbeat 失活回收保证。
 
 ## 边界
 

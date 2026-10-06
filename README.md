@@ -1452,9 +1452,14 @@ one-shot preflight。wrapper 会先输出 `watch starting`，再以结构化状�
 该 lease 的 `watch ready`；只有后者成功才启动 Flutter。两条正常提示都写入 stdout，避免 IDE
 将正常状态渲染为红色错误；其中包含 PID、状态文件和完整日志路径。可用
 `ccrouter watch status <host>` 或 `ccrouter watch follow <host>` 验证保存后的生成轮次。
+Windows wrapper 会用 Dart supervisor 继承终端启动原 Flutter Tool，并持续刷新版本化 lease
+heartbeat；正常退出、non-zero exit 和可处理的 Ctrl+C 都会释放 lease。即使 supervisor 被强制
+终止、无法执行清理，watch 也会在 heartbeat 过期后停止，避免后台进程长期残留。可用
+`CCROUTER_DISABLE_WINDOWS_RUN_SUPERVISOR=1` 临时恢复旧 batch 生命周期做 A/B；该回退不关闭
+preflight、watch startup handshake 或 generation lock。
 SDK 切换后 `status` 应显示 `run/build preflight: enabled`、`run watch: enabled`、
-`watch startup handshake: enabled` 以及当前平台的 `dart pub post-hook: enabled`。旧 schema 4
-安装需先 `uninstall` 再重新 `install`。
+`watch startup handshake: enabled`、`Windows run supervisor: enabled` 以及当前平台的
+`dart pub post-hook: enabled`。旧 schema 4 安装需先 `uninstall` 再重新 `install`。
 `run/build` 成功时控制台使用 `CCRouter preflight`，Pub 后生成使用
 `CCRouter post-pub generation`；成功只保留 fast-path、验证摘要与最终总耗时，失败则输出最近
 200 行且最多 64 KiB 的 Generator 日志，避免长构建刷屏或无界缓存，同时保留可操作错误。

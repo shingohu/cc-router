@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:path/path.dart' as path;
 
 import 'canonical_directory_identity.dart';
+import 'flutter_run_watch_lease.dart';
 
 /// Environment switch that bypasses only Flutter machine reload coordination.
 const String ccrouterHotReloadGateKillSwitch =
@@ -223,6 +224,7 @@ final class CCFlutterMachineRunProxy {
     required this.originalFlutter,
     required this.flutterArguments,
     required this.hostRoot,
+    this.watchLease,
     Map<String, String>? environment,
   }) : environment = environment ?? Platform.environment;
 
@@ -234,6 +236,9 @@ final class CCFlutterMachineRunProxy {
 
   /// CCRouter Host associated with this Flutter run.
   final Directory hostRoot;
+
+  /// Optional wrapper-created lease owned for the child lifetime.
+  final File? watchLease;
 
   /// Process environment used for the kill switch and child launch.
   final Map<String, String> environment;
@@ -248,7 +253,25 @@ final class CCFlutterMachineRunProxy {
       flutterArguments,
       workingDirectory: Directory.current.path,
       environment: environment,
+      runInShell: Platform.isWindows,
     );
+    Object? heartbeatFailure;
+    final leaseOwner = watchLease == null
+        ? null
+        : CCFlutterRunWatchLeaseOwner(watchLease!);
+    try {
+      await leaseOwner?.start(
+        onFailure: (error, _) {
+          heartbeatFailure ??= error;
+          process.kill();
+        },
+      );
+    } on Object {
+      process.kill();
+      await process.exitCode;
+      await leaseOwner?.close();
+      rethrow;
+    }
     final stdoutDone = process.stdout
         .transform(utf8.decoder)
         .transform(const LineSplitter())
@@ -257,10 +280,22 @@ final class CCFlutterMachineRunProxy {
     final stderrDone = process.stderr.listen(stderr.add).asFuture<void>();
     final signalSubscriptions = <StreamSubscription<ProcessSignal>>[];
     for (final signal in <ProcessSignal>[
-      if (!Platform.isWindows) ProcessSignal.sigint,
+      ProcessSignal.sigint,
       if (!Platform.isWindows) ProcessSignal.sigterm,
     ]) {
-      signalSubscriptions.add(signal.watch().listen(process.kill));
+      try {
+        signalSubscriptions.add(
+          signal.watch().listen((_) {
+            if (Platform.isWindows) {
+              process.kill();
+            } else {
+              process.kill(signal);
+            }
+          }),
+        );
+      } on Object {
+        // A platform may not expose every signal.
+      }
     }
     final inputSubscription = stdin
         .transform(utf8.decoder)
@@ -275,13 +310,24 @@ final class CCFlutterMachineRunProxy {
             unawaited(process.stdin.close());
           },
         );
-    final childExitCode = await process.exitCode;
-    await inputSubscription.cancel();
-    for (final subscription in signalSubscriptions) {
-      await subscription.cancel();
+    try {
+      final childExitCode = await process.exitCode;
+      if (heartbeatFailure != null) {
+        stderr.writeln(
+          'error: CCRouter Flutter-run watch lease heartbeat failed: '
+          '$heartbeatFailure',
+        );
+        return 1;
+      }
+      return childExitCode;
+    } finally {
+      await inputSubscription.cancel();
+      for (final subscription in signalSubscriptions) {
+        await subscription.cancel();
+      }
+      await Future.wait<void>([stdoutDone, stderrDone]);
+      await leaseOwner?.close();
     }
-    await Future.wait<void>([stdoutDone, stderrDone]);
-    return childExitCode;
   }
 
   Future<void> _forwardMachineLine(Process process, String line) async {

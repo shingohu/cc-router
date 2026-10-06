@@ -9,6 +9,7 @@ import 'dart:io';
 import 'package:path/path.dart' as path;
 import 'package:test/test.dart';
 
+import '../../ccrouter_generator/bin/src/flutter_run_watch_lease.dart';
 import 'support/real_workspace_test_lock.dart';
 
 void main() {
@@ -109,6 +110,29 @@ void main() {
       expect(stopped.exitCode, 0, reason: '${stopped.stderr}');
       expect('${stopped.stdout}', contains('watch status: inactive'));
       expect('${stopped.stdout}', contains('state: stopped'));
+    },
+    timeout: const Timeout(Duration(minutes: 3)),
+  );
+
+  test(
+    'watch stops after a supervised Flutter lease heartbeat expires',
+    () async {
+      final watch = await _ConcurrentWatch.start(
+        Directory(path.join(Directory.current.path, 'demo')),
+      );
+      addTearDown(watch.stop);
+      await watch.waitUntilReady();
+      watch.lease.writeAsStringSync(
+        '$ccrouterFlutterRunLeaseHeartbeatMarker\n',
+      );
+
+      final result = await watch.process.exitCode.timeout(
+        const Duration(seconds: 15),
+      );
+
+      expect(result, 0, reason: watch.output.join('\n'));
+      expect(watch.lease.existsSync(), isFalse);
+      expect(watch.output, contains(contains('"type":"stopped"')));
     },
     timeout: const Timeout(Duration(minutes: 3)),
   );

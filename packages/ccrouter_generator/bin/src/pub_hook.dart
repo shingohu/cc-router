@@ -164,6 +164,7 @@ final class CCPubHookManager {
             'run-watch',
             'watch-startup-handshake',
             'machine-reload-gate',
+            'windows-run-supervisor',
           ],
         }),
       );
@@ -339,6 +340,8 @@ final class CCPubHookManager {
     final watchStartupHandshakeEnabled =
         _supportsWatchStartupHandshake(posix) &&
         (!windowsExpected || _supportsWatchStartupHandshake(windows));
+    final windowsRunSupervisorEnabled =
+        !windowsExpected || _supportsWindowsRunSupervisor(windows);
     final installed =
         markerValid &&
         posixBackupPresent &&
@@ -350,6 +353,7 @@ final class CCPubHookManager {
         preflightEnabled &&
         runWatchEnabled &&
         watchStartupHandshakeEnabled &&
+        windowsRunSupervisorEnabled &&
         reloadGateEnabled;
     stdout.writeln('CCRouter pub hook SDK: ${sdkRoot.path}');
     stdout.writeln(
@@ -400,6 +404,7 @@ final class CCPubHookManager {
       '  run/build preflight: ${preflightEnabled ? 'enabled' : 'missing'}, '
       'run watch: ${runWatchEnabled ? 'enabled' : 'missing'}, '
       'watch startup handshake: ${watchStartupHandshakeEnabled ? 'enabled' : 'missing'}, '
+      'Windows run supervisor: ${windowsRunSupervisorEnabled ? 'enabled' : 'missing'}, '
       'machine reload gate: ${reloadGateEnabled ? 'enabled' : 'missing'}, '
       'flutter pub post-hook: ${posixValid ? 'enabled' : 'missing'}, '
       'dart pub post-hook: ${dartPosixValid && dartWindowsValid ? 'enabled' : 'missing'}',
@@ -492,6 +497,17 @@ final class CCPubHookManager {
     try {
       return file.readAsStringSync().contains(
         'ccrouter_generator:ccrouter_watch_startup',
+      );
+    } on Object {
+      return false;
+    }
+  }
+
+  bool _supportsWindowsRunSupervisor(File file) {
+    if (!file.existsSync()) return false;
+    try {
+      return file.readAsStringSync().contains(
+        'ccrouter_generator:ccrouter_flutter_run_supervisor',
       );
     } on Object {
       return false;
@@ -1573,6 +1589,14 @@ if not "%WATCH_HANDSHAKE_EXIT%"=="0" goto watch_handshake_failed
 :watch_handshake_complete
 set "FLUTTER_MACHINE=0"
 for %%A in (%*) do if "%%~A"=="--machine" set "FLUTTER_MACHINE=1"
+if "%CCROUTER_DISABLE_WINDOWS_RUN_SUPERVISOR%"=="1" goto run_without_supervisor
+if "%FLUTTER_MACHINE%"=="1" if not "%CCROUTER_DISABLE_HOT_RELOAD_GATE%"=="1" goto run_with_supervisor_reload_gate
+call "%SCRIPT_DIR%dart.bat" run --verbosity=error ccrouter_generator:ccrouter_flutter_run_supervisor --host-root "%PROJECT_ROOT%" --original "%ORIGINAL%" --watch-lease "%WATCH_LEASE%" -- %*
+goto run_finished
+:run_with_supervisor_reload_gate
+call "%SCRIPT_DIR%dart.bat" run --verbosity=error ccrouter_generator:ccrouter_flutter_run_supervisor --host-root "%PROJECT_ROOT%" --original "%ORIGINAL%" --watch-lease "%WATCH_LEASE%" --reload-gate -- %*
+goto run_finished
+:run_without_supervisor
 if "%FLUTTER_MACHINE%"=="1" if not "%CCROUTER_DISABLE_HOT_RELOAD_GATE%"=="1" goto run_with_reload_gate
 call "%ORIGINAL%" %*
 goto run_finished

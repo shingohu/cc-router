@@ -391,6 +391,10 @@ watch 同样会快速失败，调用方可在命令完成后重试启动 watch�
 退出不会为了收缩 target union 重启当前 child；Pub resolution 中真实的 target 删除仍会重启。
 Hook 的 watch 启动成功提示写入 stdout，与 preflight 成功信息保持一致；真正失败仍写 stderr，
 避免 IDE 将正常启动渲染成红色错误。
+Windows 的原 Flutter Tool 由 Dart supervisor 继承终端运行。supervisor 在进程存活期间刷新
+版本化 lease heartbeat，并在正常或可处理的异常退出时删除 lease；强制终止时 watch 会在
+heartbeat 过期后自行停止。`CCROUTER_DISABLE_WINDOWS_RUN_SUPERVISOR=1` 仅用于恢复旧 batch
+生命周期做 A/B。
 Hook 对 `flutter run --machine` 增加只代理 stdin 的 reload gate。它等待 watch 的
 `completedInputRevision` 覆盖保存时的 `inputRevision` 且状态稳定，再把
 `app.restart` 转发给原 Flutter Tool；失败返回标准 daemon error 和有界 Generator

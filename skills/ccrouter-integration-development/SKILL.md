@@ -354,6 +354,12 @@ machine boundary; wait for `watch follow` success first. Closing the parent
 machine stdin also closes the original Flutter Tool's stdin so IDE/AI session
 termination retains Flutter's normal EOF lifecycle. Use
 `CCROUTER_DISABLE_HOT_RELOAD_GATE=1` only for isolated fallback comparison.
+On Windows, the wrapper runs the original Flutter Tool through a terminal-
+inheriting Dart supervisor. It owns and refreshes the versioned watch lease;
+normal, non-zero, and handled interrupt exits remove the lease, while a forced
+supervisor death makes watch stop after the bounded heartbeat expiry. Use
+`CCROUTER_DISABLE_WINDOWS_RUN_SUPERVISOR=1` only to compare the former batch
+lifecycle; it deliberately removes that orphan-recovery guarantee.
 The atomic local state is `.dart_tool/ccrouter/v1/watch/status.json`; complete
 Hook diagnostics remain in `watch/flutter-run.log` and are never mixed into
 Flutter Tool's machine stdout. Failure to publish observational state does not

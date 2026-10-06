@@ -121,7 +121,12 @@ void main() {
         contains(':resolve_project_root'),
         contains('--directory='),
         contains('pushd "%PROJECT_ROOT%"'),
+        contains('ccrouter_generator:ccrouter_flutter_run_supervisor'),
       ),
+    );
+    expect(
+      flutterBat.readAsStringSync(),
+      contains('CCROUTER_DISABLE_WINDOWS_RUN_SUPERVISOR'),
     );
     expect(flutterBat.readAsStringSync(), contains('--watch=auto'));
     expect(flutterBat.readAsStringSync(), contains('CCRouter watch starting'));
@@ -140,6 +145,7 @@ void main() {
     expect('${status.stdout}', contains('installed'));
     expect('${status.stdout}', contains('machine reload gate: enabled'));
     expect('${status.stdout}', contains('watch startup handshake: enabled'));
+    expect('${status.stdout}', contains('Windows run supervisor: enabled'));
     expect('${status.stdout}', contains('dart pub post-hook: enabled'));
 
     final removed = await _run(['pub-hook', 'uninstall', '--sdk', sdk.path]);

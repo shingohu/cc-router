@@ -174,12 +174,10 @@ Future<void> _runGenerationWatchOwner({
       // A platform may not expose every POSIX signal.
     }
   }
-  Timer? leaseTimer;
+  CCFlutterRunWatchLeaseMonitor? leaseMonitor;
   if (parsed.watchLeasePath case final leasePath?) {
     final lease = File(leasePath).absolute;
-    leaseTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (!lease.existsSync()) requestStop();
-    });
+    leaseMonitor = CCFlutterRunWatchLeaseMonitor.start(lease, requestStop);
   }
 
   try {
@@ -227,7 +225,7 @@ Future<void> _runGenerationWatchOwner({
       sessionIndex++;
     }
   } finally {
-    leaseTimer?.cancel();
+    leaseMonitor?.close();
     for (final subscription in signalSubscriptions) {
       await subscription.cancel();
     }
@@ -277,12 +275,10 @@ Future<bool> _runGenerationWatchSubscriber({
       // A platform may not expose every POSIX signal.
     }
   }
-  Timer? leaseTimer;
+  CCFlutterRunWatchLeaseMonitor? leaseMonitor;
   if (parsed.watchLeasePath case final leasePath?) {
     final lease = File(leasePath).absolute;
-    leaseTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (!lease.existsSync()) requestStop();
-    });
+    leaseMonitor = CCFlutterRunWatchLeaseMonitor.start(lease, requestStop);
   }
 
   var ready = false;
@@ -425,7 +421,7 @@ Future<bool> _runGenerationWatchSubscriber({
     return false;
   } finally {
     await inputObserver.close();
-    leaseTimer?.cancel();
+    leaseMonitor?.close();
     for (final subscription in signalSubscriptions) {
       await subscription.cancel();
     }

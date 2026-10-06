@@ -857,8 +857,13 @@ instead of injecting watch NDJSON into Flutter Tool's machine stdout. This
 wrapper prints its pre-Flutter starting and ready summaries to stdout so IDEs
 do not render it as an error; failures remain on stderr. The stdin gate closes
 the original Flutter Tool's stdin when its IDE/AI parent reaches EOF, preserving
-the direct process lifecycle instead of retaining an orphaned child. This
-status channel is fail-open for direct generation and never changes locking,
+the direct process lifecycle instead of retaining an orphaned child. On Windows,
+a terminal-inheriting Dart supervisor owns a versioned lease heartbeat for both
+machine and interactive runs. Handled exits delete the lease; if the supervisor
+is force-killed, watch expires the heartbeat and stops within a bounded interval.
+`CCROUTER_DISABLE_WINDOWS_RUN_SUPERVISOR=1` restores the former batch-only
+lifecycle for A/B comparison. This status channel is fail-open for direct
+generation and never changes locking,
 validation, artifact restoration, or atomic publication. The Hook still fails
 closed when this channel cannot prove readiness for its exact lease. If an abrupt
 exit leaves an `active` record, the read-only commands report it as `stale`

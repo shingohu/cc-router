@@ -350,6 +350,10 @@ Upgrade a schema 4 installation by uninstalling it before reinstalling. After a
 successful `flutter run` preflight it starts watch under a
 lifecycle lease and removes the lease when Flutter exits; `flutter build`
 remains one-shot. `run/build` preflight failures stop the Flutter command;
+on Windows a terminal-inheriting Dart supervisor refreshes a versioned lease
+heartbeat, removes it after normal/non-zero/handled-interrupt exits, and lets
+watch expire the lease after an uncatchable supervisor termination. Use
+`CCROUTER_DISABLE_WINDOWS_RUN_SUPERVISOR=1` only for old-path A/B comparison.
 projects without a resolved CCRouter graph are skipped. Before the original
 Flutter process starts, the run wrapper prints the successful watch start plus
 its PID and status/log paths to stdout, consistently with successful preflight
