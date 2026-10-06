@@ -13,6 +13,7 @@ import 'support/real_workspace_test_lock.dart';
 
 void main() {
   serializeRealWorkspaceTests();
+  _restorePortableGenerationStatesAfterSuite();
 
   test(
     'package-local generation publishes a Pure Dart Package without Host validation',
@@ -2262,6 +2263,47 @@ Future<Map<String, String>> _readGeneratedArtifacts(Directory root) async {
     artifacts[relative] = await entity.readAsString();
   }
   return Map.unmodifiable(artifacts);
+}
+
+void _restorePortableGenerationStatesAfterSuite() {
+  final originalStates = <String, List<int>>{};
+
+  setUpAll(() async {
+    originalStates.addAll(await _readPortableGenerationStates());
+  });
+
+  tearDownAll(() async {
+    final currentStates = await _readPortableGenerationStates();
+    for (final relativePath in currentStates.keys) {
+      if (originalStates.containsKey(relativePath)) continue;
+      await File(path.join(Directory.current.path, relativePath)).delete();
+    }
+    for (final entry in originalStates.entries) {
+      final state = File(path.join(Directory.current.path, entry.key));
+      await state.parent.create(recursive: true);
+      await state.writeAsBytes(entry.value, flush: true);
+    }
+  });
+}
+
+Future<Map<String, List<int>>> _readPortableGenerationStates() async {
+  final states = <String, List<int>>{};
+  await for (final entity in Directory.current.list(
+    recursive: true,
+    followLinks: false,
+  )) {
+    if (entity is! File ||
+        path.basename(entity.path) != 'ccrouter_generation_state.json' ||
+        entity.path.contains('${path.separator}.dart_tool${path.separator}')) {
+      continue;
+    }
+    final relativePath = path.relative(
+      entity.path,
+      from: Directory.current.path,
+    );
+    states[relativePath] = await entity.readAsBytes();
+  }
+  return states;
 }
 
 Future<ProcessResult> _generateDemo(
