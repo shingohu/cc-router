@@ -1436,8 +1436,10 @@ DAG；不存在统一的万能依赖列表或 InitTask 业务 Client。源码或
 `FLUTTER_ROOT` 和当前目录向上的 `.fvm/flutter_sdk`。它只在原始
 `flutter pub get/upgrade/downgrade/add/remove` 成功后运行；`flutter run` 和
 `flutter build` 会在调用原始 Flutter 入口前执行同一生成器作为 fail-closed preflight。当前
-项目没有直接声明 `ccrouter`，或没有同时解析 `ccrouter` 和 `ccrouter_generator` 时直接跳过。
-因此 Workspace 聚合根不会被误判为 Host；Hook 不会猜测某个成员 Package 代替当前目录生成。
+项目没有直接声明 `ccrouter`/`ccrouter_contracts`，或没有解析对应 Package 与
+`ccrouter_generator` 时直接跳过。app-role Host 运行完整 Host generation；Flutter component 与
+Pure Dart contracts Package 运行 package-local generation。因此 Workspace 聚合根不会被误判为
+Host；Hook 不会猜测某个成员 Package 代替当前目录生成。
 它不覆盖 `dart pub`，也不监听 Flutter Tool 内部隐式 `pub get`。`flutter run` 在 preflight
 成功后会持有一个后台 watch lease，原始 Flutter 进程退出时释放；`flutter build` 仍只执行
 one-shot preflight。wrapper 会先输出 `watch starting`，再以结构化状态和 owner lock 等待

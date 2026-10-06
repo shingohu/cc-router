@@ -243,6 +243,41 @@ workspace:
   });
 
   test(
+    'post-pub hook runs package-local generation for participating Packages',
+    () async {
+      final workspace = _workspaceRoot();
+      for (final packagePath in const [
+        'demo/modules/navigation_lab',
+        'demo/modules/web_contracts',
+      ]) {
+        final package = Directory(path.join(workspace.path, packagePath));
+        final result = await _run([
+          'pub-hook',
+          'run',
+          '--project-root',
+          package.path,
+          '--pub-command',
+          'get',
+        ]);
+        final output = '${result.stdout}\n${result.stderr}';
+
+        expect(result.exitCode, 0, reason: '$packagePath\n$output');
+        expect(
+          output,
+          contains('CCRouter post-pub generation finished:'),
+          reason: packagePath,
+        );
+        expect(
+          output,
+          isNot(contains('pub hook skipped')),
+          reason: packagePath,
+        );
+      }
+    },
+    timeout: const Timeout(Duration(minutes: 2)),
+  );
+
+  test(
     'run and pub hooks emit concise phase-specific generation logs',
     () async {
       final demo = Directory(path.join(_workspaceRoot().path, 'demo'));
@@ -889,6 +924,9 @@ Future<Directory> _createWatchCoordinatedProject() async {
   final project = await Directory.systemTemp.createTemp(
     'ccrouter_pub_hook_watch_',
   );
+  File(
+    path.join(project.path, '.metadata'),
+  ).writeAsStringSync('project_type: app\n');
   File(path.join(project.path, 'pubspec.yaml')).writeAsStringSync('''
 name: watch_host
 dependencies:

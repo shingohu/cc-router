@@ -304,10 +304,12 @@ An independently runnable nested example owns its subtree from its own
 `pubspec.yaml`; parent Package generation and clean do not mutate its artifacts.
 
 The repository Workspace root is an aggregator rather than a Host. The Pub Hook
-skips any current Package that does not directly declare `ccrouter`, even when
-its resolved Workspace graph contains CCRouter Packages. Run Host generation
-from the actual Host directory (for this repository, `demo/`); the Hook never
-guesses a member Host from an aggregator.
+skips any current Package that does not directly declare `ccrouter` or
+`ccrouter_contracts`, even when its resolved Workspace graph contains CCRouter
+Packages. An app-role Host runs Host generation; a participating Flutter/Pure
+Dart Package runs package-local generation. Run Host generation from the actual
+Host directory (for this repository, `demo/`); the Hook never guesses a member
+Host from an aggregator.
 
 Validate with:
 

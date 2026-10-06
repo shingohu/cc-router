@@ -298,8 +298,10 @@ first; only a successful `get`, `upgrade`, `downgrade`, `add`, or `remove` may
 trigger post-pub generation. Help and dry-run invocations (`--help`, `-h`,
 `--dry-run`, or `-n`) never trigger it. `flutter run` and `flutter build` run the same
 generator as a fail-closed preflight before the original Flutter entrypoint.
-It skips projects whose current Package does not directly declare `ccrouter`,
-or whose resolved Package config does not contain both `ccrouter` and
+It resolves the current Package role from `.metadata`, `ccrouter.yaml`, and its
+direct `ccrouter`/`ccrouter_contracts` dependency. An app-role Host runs Host
+generation; other participating Packages run package-local generation. The
+resolved Package config must contain the matching runtime/contracts Package and
 `ccrouter_generator`. A Workspace aggregator is skipped rather than treated as
 a Host or used to guess one of its members.
 
@@ -324,6 +326,9 @@ five-minute wait also fails; never treat another Host's status as evidence.
 When watch rotates its child after Pub topology changes, Hook accepts the new
 session only after `sessionReady: true`/`ready` and an exact matching resolution
 fingerprint. It must not reuse that session's pre-ready aggregation event.
+Package-local post-pub generation does not consume Host watch status or perform
+Host validation; it invokes the package-local one-shot path for the requested
+Package.
 
 Use `status` after an FVM version switch; it prints the resolved SDK path and
 verifies the marker, POSIX/Windows wrapper, and backups. It returns non-zero

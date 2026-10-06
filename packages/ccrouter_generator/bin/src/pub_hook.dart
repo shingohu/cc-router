@@ -1,8 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:ccrouter_generator/src/project_context.dart';
+import 'package:ccrouter_generator/src/project_role.dart';
 import 'package:path/path.dart' as path;
-import 'package:yaml/yaml.dart';
 
 import 'canonical_directory_identity.dart';
 import 'pub_hook_watch_coordination.dart';
@@ -411,16 +412,26 @@ Future<bool> runCCPubHook({
       }
     }
   }
-  if (!packageNames.contains('ccrouter') ||
-      !packageNames.contains('ccrouter_generator')) {
-    stdout.writeln('CCRouter pub hook skipped: project does not use CCRouter.');
+  final context = CCProjectContext.resolve(root);
+  final projectRole = CCProjectRoleResolver.resolve(context);
+  if (projectRole.role == CCProjectRole.skip) {
+    stdout.writeln(
+      'CCRouter pub hook skipped: project does not use CCRouter directly; '
+      'the current Package does not depend on ccrouter or '
+      'ccrouter_contracts (Workspace aggregators are not Hosts and do not '
+      'participate in generation).',
+    );
     return true;
   }
-  if (!_declaresDirectDependency(root, 'ccrouter')) {
-    stdout.writeln(
-      'CCRouter pub hook skipped: current Package does not directly depend '
-      'on ccrouter (Workspace aggregators are not Hosts).',
-    );
+  final runtimePackage = switch (projectRole.participation) {
+    CCProjectParticipation.runtime => 'ccrouter',
+    CCProjectParticipation.contracts => 'ccrouter_contracts',
+    CCProjectParticipation.none => null,
+  };
+  if (runtimePackage == null ||
+      !packageNames.contains(runtimePackage) ||
+      !packageNames.contains('ccrouter_generator')) {
+    stdout.writeln('CCRouter pub hook skipped: project does not use CCRouter.');
     return true;
   }
   final stopwatch = Stopwatch()..start();
@@ -428,8 +439,8 @@ Future<bool> runCCPubHook({
   stdout.writeln(
     'CCRouter ${operation.label} started for ${operation.target}.',
   );
-  if (operation.isPostPub) {
-    final watch = await _waitForPostPubWatch(root, packageConfig.parent.parent);
+  if (operation.isPostPub && projectRole.role == CCProjectRole.host) {
+    final watch = await _waitForPostPubWatch(root, context.resolutionRoot);
     if (watch != null) {
       stopwatch.stop();
       if (watch.succeeded) {
@@ -489,32 +500,6 @@ Future<bool> runCCPubHook({
     output.writeFailureTail();
   }
   return exitCode == 0;
-}
-
-/// Whether [root]'s own manifest declares [packageName] as a dependency.
-///
-/// Package config contains the complete resolved Workspace graph, so it cannot
-/// distinguish a Host from an aggregator. Requiring a direct declaration keeps
-/// root Workspace commands from accidentally generating against the aggregator
-/// while retaining explicit component and Host Package workflows.
-bool _declaresDirectDependency(Directory root, String packageName) {
-  final pubspec = File(path.join(root.path, 'pubspec.yaml'));
-  if (!pubspec.existsSync()) return false;
-  try {
-    final document = loadYaml(pubspec.readAsStringSync());
-    if (document is! YamlMap) return false;
-    for (final section in const ['dependencies', 'dev_dependencies']) {
-      final dependencies = document[section];
-      if (dependencies is YamlMap && dependencies.containsKey(packageName)) {
-        return true;
-      }
-    }
-  } on YamlException {
-    return false;
-  } on FileSystemException {
-    return false;
-  }
-  return false;
 }
 
 /// User-facing naming for one Hook-triggered generation pass.
@@ -832,6 +817,7 @@ final class _CCPubHookOutput {
   /// Recognizes concise, version-stable generator completion messages.
   bool _isSummary(String line) =>
       line.startsWith('Validated ') ||
+      line.startsWith('Generated Package artifacts for ') ||
       line == 'CCRouter generated artifacts are up to date.' ||
       line.startsWith('CCRouter generation fast path hit;') ||
       line.startsWith('CCRouter generation aggregate-only path;') ||

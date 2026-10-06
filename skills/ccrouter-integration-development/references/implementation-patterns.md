@@ -105,8 +105,10 @@ the bundled [CLI Skill](../../ccrouter-cli-development/SKILL.md#pub-hook). Do no
 modify Flutter internals manually. The hook covers successful `flutter pub`
 commands and runs a fail-closed preflight before `flutter run/build`; direct
 `dart pub` and Flutter Tool's internal implicit `pub get` remain outside its
-boundary. The current Package must directly declare `ccrouter`; a Workspace
-aggregator is skipped even when its resolved graph contains CCRouter Packages.
+boundary. The current Package must directly declare `ccrouter` or
+`ccrouter_contracts`; app-role Hosts run Host generation and other participating
+Packages run package-local generation. A Workspace aggregator is skipped even
+when its resolved graph contains CCRouter Packages.
 
 Use the generator CLI to create a new component Package or an internal Route
 page when starting a feature:

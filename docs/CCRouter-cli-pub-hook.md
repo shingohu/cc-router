@@ -8,15 +8,16 @@
 `ccrouter pub-hook` 为当前 Flutter SDK 安装一个可回滚的 `flutter` wrapper。
 当 `flutter pub get`、`upgrade`、`downgrade`、`add` 或 `remove` 成功后，wrapper
 会检查当前项目自己的 `pubspec.yaml` 和 `.dart_tool/package_config.json`：只有当前
-Package 直接声明 `ccrouter`，并且解析图同时包含 `ccrouter` 与
-`ccrouter_generator` 时，才运行一次：
+Package 直接声明 `ccrouter` 或 `ccrouter_contracts`，并且解析图包含对应 runtime/contracts
+Package 与 `ccrouter_generator` 时，才运行一次：
 
 ```bash
 dart run --verbosity=error ccrouter_generator:ccrouter generate <project-root>
 ```
 
-因此普通 Flutter 项目和仅聚合成员的 Workspace 根不会触发生成，也不会因为没有
-CCRouter Host 依赖而报错。
+app-role Host 执行 Host generation、聚合和跨 Package 校验；Flutter component 与 Pure Dart
+contracts Package 执行 package-local generation。普通项目和仅聚合成员的 Workspace 根不会
+触发生成，Hook 也不会猜测其中某个成员 Host。
 
 ## 安装
 
@@ -81,8 +82,9 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook uninstall
 2. 原始命令失败时，直接返回原始退出码，不运行生成器。
 3. 原始命令成功后，wrapper 查找 `--directory`/`-C` 指定的项目并向上定位
    `pubspec.yaml`。
-4. 没有 resolved Package config、当前 Package 没有直接声明 `ccrouter`，或解析图没有
-   同时包含 `ccrouter` 与 `ccrouter_generator` 时，打印跳过原因并返回成功。
+4. 没有 resolved Package config、当前 Package 没有直接声明 `ccrouter`/
+   `ccrouter_contracts`，或解析图没有对应 Package 与 `ccrouter_generator` 时，打印跳过原因
+   并返回成功。Host 进入完整聚合和校验；其它参与 Package 只更新自身生成物。
 5. 同一 Host 已有活动 watch 时，post-pub 不再并发启动 one-shot；它以当前 Pub 解析文件的
    exact-content fingerprint 为完成栅栏，等待 watch 的 `aggregationSucceeded`。watch 的
    Builder、Validator 或 aggregation 失败时，Hook 返回非零并输出该轮有界 diagnostics，
