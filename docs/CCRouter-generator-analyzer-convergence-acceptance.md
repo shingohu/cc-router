@@ -53,3 +53,26 @@ dart analyze demo
 2. 在干净 Flutter Host 中验证普通 `dev_dependency`、Analysis Server reload、`status/doctor` 回退和 IDE 矩阵。
 3. 在网络可用的真实 Host 执行 `portable prepare`、`portable publish`、缓存路径与 `--no-cache --check` 的逐字节 A/B。
 4. 不执行 `pub publish`、远端 push 或任何外部状态修改，除非用户另行授权。
+
+## 2026-10-06 Analyzer 状态收敛回归
+
+本轮针对 Demo Git bootstrap 的三层状态割裂完成只读收敛，实际结果：
+
+- `analyzer_command_test.dart` 21 项通过；`analyzer_installation_test.dart` 36 项通过。
+- `analyzer_installation_smoke_test.dart` 的 1 项真实网络安装测试按设计跳过，未设置
+  `CCROUTER_ANALYZER_NETWORK_SMOKE=1`；真实 Demo 的 `pin-check` 已另行完成远端精确 SHA fetch。
+- `analyzer pin-check demo` 通过：manifest/lock/`resolved-ref` 一致，远端可解析，pinned SHA
+  之后 Plugin `lib` 无生产变化。
+- `analyzer doctor demo` 的 locked dependencies、bootstrap analysis、loader compile 通过；legacy
+  cache artifact 为 `current`。该结果只证明临时 loader smoke 与 cache 文件一致，live IDE
+  verification 仍为 `pending`，未由 CLI 重启或控制 Analysis Server。
+- `fvm dart analyze` 全 Workspace 通过。
+- Skill bundle 的 8 项检查中 7 项通过；命令/flag 不得虚构、链接和示例分析均通过。剩余 1 项
+  是既有命令矩阵解析器把三条 `generate <host-root> --check/--no-cache` 示例误判为 unsupported，
+  与本轮新增 `analyzer pin-check` 无关。
+
+个人开发回归关注误操作成本：status/doctor/pin-check 不修改 Host、Git index 或全局 cache；doctor
+只报告候选进程和精确手工恢复路径，不自动 kill/move/delete。团队协作回归关注两阶段发布窗口：
+Plugin `lib` drift 只报告 `pending`，不阻断第一阶段 Plugin PR；推送并取得远端可解析 SHA 后，
+再由独立 pin bump 收敛为 `none`。剩余平台风险是 Windows CIM 目前有自动化解析测试但没有真实
+Windows/IDE 本机验收；live diagnostic/Quick Fix 仍必须由实际 IDE 会话确认。
