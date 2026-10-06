@@ -763,6 +763,7 @@ final class _WatchSession {
       'demo',
       '--watch=auto',
       '--machine',
+      '--profile',
       '--watch-lease',
       lease.path,
     ], workingDirectory: root.path);
@@ -773,12 +774,17 @@ final class _WatchSession {
       startupWatch: startupWatch,
     );
     session._listen();
-    await session._ready.future.timeout(
-      const Duration(minutes: 2),
-      onTimeout: () => throw TimeoutException(
-        'Generation watch did not reach ready.\n${session._diagnostics}',
-      ),
-    );
+    try {
+      await session._ready.future.timeout(
+        const Duration(minutes: 2),
+        onTimeout: () => throw TimeoutException(
+          'Generation watch did not reach ready.\n${session._diagnostics}',
+        ),
+      );
+    } on Object {
+      await session.stop();
+      rethrow;
+    }
     return session;
   }
 
@@ -805,7 +811,13 @@ final class _WatchSession {
           } else if (type == 'aggregationStarted') {
             pending?.recordAggregationStarted();
           } else if (type == 'aggregationSucceeded') {
-            final sample = _cycleSample(event);
+            _CycleSample sample;
+            try {
+              sample = _cycleSample(event);
+            } on Object catch (error, stackTrace) {
+              _fail(error, stackTrace);
+              return;
+            }
             if (!_ready.isCompleted) {
               initial = sample;
             } else if (pending != null && !pending.completer.isCompleted) {
@@ -814,9 +826,10 @@ final class _WatchSession {
               _pending = null;
             }
           } else if (type == 'ready') {
+            if (_ready.isCompleted) return;
             _startupWatch.stop();
             initial = initial.withWallMs(_startupWatch.elapsedMilliseconds);
-            if (!_ready.isCompleted) _ready.complete();
+            _ready.complete();
           } else if (type == 'failed') {
             _fail(StateError('Generation watch failed: ${jsonEncode(event)}'));
           } else if (type == 'stopped' && !_stopped.isCompleted) {
@@ -913,13 +926,13 @@ final class _WatchSession {
     }
   }
 
-  void _fail(Object error) {
+  void _fail(Object error, [StackTrace? stackTrace]) {
     final pending = _pending;
     if (pending != null && !pending.completer.isCompleted) {
-      pending.completer.completeError(error);
+      pending.completer.completeError(error, stackTrace);
       _pending = null;
     }
-    if (!_ready.isCompleted) _ready.completeError(error);
+    if (!_ready.isCompleted) _ready.completeError(error, stackTrace);
   }
 
   String get _diagnostics => _stderrTail.join('\n');
