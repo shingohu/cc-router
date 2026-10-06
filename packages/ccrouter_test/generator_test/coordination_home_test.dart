@@ -20,7 +20,7 @@ void main() {
       operatingSystem: 'linux',
     );
 
-    expect(resolved.path, root.absolute.path);
+    expect(resolved.path, root.resolveSymbolicLinksSync());
   });
 
   test('platform defaults follow CLI tool conventions', () {
@@ -103,6 +103,19 @@ void main() {
       path.isWithin(firstRoot.path, firstLease.path),
       isFalse,
       reason: 'a project clean must not delete a live Flutter-run lease',
+    );
+    expect(
+      first.analyzerOperationLock.path,
+      path.join(first.projectDirectory.path, 'analyzer', 'operation.lock'),
+    );
+    expect(
+      first.analyzerTransactionDirectory.path,
+      path.join(first.projectDirectory.path, 'analyzer', 'transactions'),
+    );
+    expect(
+      path.isWithin(firstRoot.path, first.analyzerOperationLock.path),
+      isFalse,
+      reason: 'project cleanup must not unlink an active Analyzer operation',
     );
 
     await first.prepare();

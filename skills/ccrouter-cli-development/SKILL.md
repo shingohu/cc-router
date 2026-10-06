@@ -441,7 +441,12 @@ keep using the self-contained manual procedure in
 The CLI preserves unrelated YAML and unknown files, refuses modified owned
 files, and serializes writes at the Workspace Pub owner. A failed transaction
 restores recorded configuration/resolution files; concurrent edits or interruption
-retain a recovery journal under `.dart_tool/ccrouter/analyzer/transactions`.
+retain a recovery journal in the canonical Pub owner's project-isolated
+`CCROUTER_HOME/coordination/v2` directory. The operation lock lives there too,
+so `flutter clean` cannot unlink an active transaction or its recovery evidence.
+`CCROUTER_USE_LEGACY_DART_TOOL_LOCKS=1` moves both back under the Pub owner's
+`.dart_tool/ccrouter/analyzer` only for A/B; stable and legacy writers fail fast
+when the other protocol still owns its lock.
 Inspect its exact paths and recover deliberately; do not erase it to bypass the
 next command's recovery check. Commit owned source files, ownership marker and
 lockfiles, never the private journal. Installation success does not prove live IDE loading.

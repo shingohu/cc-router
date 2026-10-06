@@ -145,7 +145,10 @@ ccrouter analyzer uninstall <host-root> --dry-run
 三种写命令均支持 `--dry-run`；正式操作先验证隔离 loader，再更新 Host 并运行禁用 Hook 的
 Pub。只管理 `tools/ccrouter_analyzer_host/` 的固定文件和配置叶；保留用户规则与未知文件，
 冲突或手工 bootstrap 不自动接管。失败恢复受管配置与记录的解析文件；进程中断或并发编辑
-保留事务恢复记录并停止后续写入。Demo 仍保持手工 bootstrap 和现有远端 pin。
+保留事务恢复记录并停止后续写入。写事务按 canonical Workspace Pub owner 串行化；lock 与
+恢复记录位于 project-isolated `CCROUTER_HOME/coordination/v2`，不会被 `flutter clean` 删除。
+`CCROUTER_USE_LEGACY_DART_TOOL_LOCKS=1` 可把它们临时切回 Pub owner 的 `.dart_tool` 做 A/B；
+新旧模式检测到对方仍持锁时会 fail-fast。Demo 仍保持手工 bootstrap 和现有远端 pin。
 Analyzer 装配不得隐式挂入 `generate`、Pub Hook 或组件脚手架。详见
 [Analyzer CLI 指南](docs/CCRouter-analyzer-cli-plan.md)。
 
@@ -1273,13 +1276,14 @@ build_runner，各 Host 仍分别执行聚合、Validator、原子发布，并�
 `builderOwnerPid` 是共享 Builder owner，subscriber 场景下两者可以不同。owner 退出后，仍活动的
 subscriber 会接管并重新到达 `ready`；同一 Host 的第二个 watch 会在写共享状态前快速失败。
 `CCROUTER_DISABLE_MULTI_HOST_WATCH=1` 可恢复一个 build root 只允许一个 watch 的旧语义做 A/B。
-watch ownership、generation、aggregation、Host registration、Flutter-run lease 以及最小 Host/Builder session
-authority 位于用户级
+watch ownership、generation、aggregation、Host registration、Flutter-run lease、Analyzer CLI
+写事务及最小 Host/Builder session authority 位于用户级
 `CCROUTER_HOME`；macOS/Linux 默认是 `~/.ccrouter`，Windows 默认是
 `%LOCALAPPDATA%\CCRouter`。每个 canonical build root 使用完整 SHA-256 项目目录，同一项目内再按
 canonical Host SHA-256 隔离 registration，因此不同项目完全隔离、同一 build root 的多个 Host
-共享 Builder 锁但不共享 Host 状态。锁文件只 unlock/close，不在停止时删除，避免 unlink 后创建
-新 inode 导致双 owner。`.dart_tool` 继续保存 build_runner graph、planning/cache、profile，并将
+共享 Builder 与 Analyzer operation lock，但不共享 Host 状态。锁文件只 unlock/close，不在
+停止时删除，避免 unlink 后创建新 inode 导致双 owner。`.dart_tool` 继续保存 build_runner
+graph、planning/cache、profile，并将
 status/diagnostics 作为面向 IDE/Analyzer 的本地镜像；活动 watch 每秒检查并重建被删除的镜像。
 Pub Hook 优先读取 stable session，因此 Host 本地 watch 状态被清理时不会误启 one-shot、卡满超时
 或丢失 package-local 冲突诊断。`watch status` 也可在本地镜像缺失时读取 stable session，并显示
@@ -1287,7 +1291,8 @@ Pub Hook 优先读取 stable session，因此 Host 本地 watch 状态被清理�
 若启动时检测到仍持有 V1 `.dart_tool` owner lock 的旧 CLI/watch，新版会 fail-fast，要求停止旧进程
 并重新安装 Pub Hook；不会尝试让两种协议静默并发。短期可设置
 `CCROUTER_USE_LEGACY_DART_TOOL_LOCKS=1` 做 A/B；它也会把 Flutter-run lease 恢复到 Host
-`.dart_tool`，但不承诺新旧进程互操作。
+`.dart_tool`，并把 Analyzer operation lock/journal 恢复到 Pub owner `.dart_tool`，但不承诺
+新旧进程互操作。
 已安装的 Flutter wrapper 还会在真正的 top-level `flutter clean` 前检查该 build root：活动 watch
 存在时直接阻止 clean，要求先停止 `flutter run/watch`，不会擅自终止开发会话。Help、未知全局
 参数和业务参数中的 `clean` 不触发检查。`CCROUTER_DISABLE_FLUTTER_CLEAN_GUARD=1` 可单次绕过

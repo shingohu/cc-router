@@ -328,7 +328,8 @@ Workspace writes are locked; no generated files or IDE caches are changed.
 
 Ordinary failure restores recorded configuration and Pub resolution files, not
 global caches. Concurrent user edits or interruption retain original bytes in
-the Pub owner's `.dart_tool/ccrouter/analyzer/transactions/` and block subsequent
+the canonical Pub owner's project-isolated
+`CCROUTER_HOME/coordination/v2/.../analyzer/transactions/` and block subsequent
 writes. Review those exact files for recovery; never remove caches to bypass this
 check. Modified owned files and existing manual bootstraps are not overwritten or
 adopted. Unknown files survive uninstall. For manual installations keep using the

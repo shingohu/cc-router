@@ -10,6 +10,8 @@ import 'package:pub_semver/pub_semver.dart';
 import 'package:yaml/yaml.dart';
 import 'package:yaml_edit/yaml_edit.dart';
 
+import 'coordination_home.dart';
+
 part 'analyzer_installation.dart';
 part 'analyzer_installation_files.dart';
 
@@ -91,6 +93,7 @@ Future<bool> runAnalyzerBootstrapCommand(
   StringSink? error,
   String? homeDirectory,
   String? operatingSystem,
+  Map<String, String>? environment,
 }) async {
   final runner = processRunner ?? _runAnalyzerProcess;
   final readOnly =
@@ -108,7 +111,11 @@ Future<bool> runAnalyzerBootstrapCommand(
       );
     }
     try {
-      return await _runAnalyzerInstallation(request, runner);
+      return await _runAnalyzerInstallation(
+        request,
+        runner,
+        environment: environment,
+      );
     } on Object catch (error) {
       stderr.writeln('error: Analyzer ${request.action.name} failed: $error');
       return false;

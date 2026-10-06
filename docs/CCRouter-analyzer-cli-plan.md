@@ -146,7 +146,9 @@ dev_dependencies:
 
 提交 Host 的 pubspec/options、四个 bootstrap 文件、ownership 记录和 Pub lockfile；不要提交
 `.dart_tool`。Host Pub 使用当前 Dart 所属 Flutter SDK，并禁用 Pub Hook，不运行生成器。
-事务记录位于 Pub owner 的 `.dart_tool/ccrouter/analyzer/transactions/`，保存原始字节；普通
+事务记录位于 canonical Pub owner 对应的 project-isolated
+`CCROUTER_HOME/coordination/v2/.../analyzer/transactions/`，保存原始字节；operation lock 与其
+同级，因此 `flutter clean` 不会解除活动写事务或删除恢复证据。普通
 失败恢复本次受管配置及 Host/Workspace 的 lockfile、package_config、package_graph、Flutter
 plugins dependency 文件。不会回滚全局 Pub cache 或其它平台缓存。并发用户改动、无法读取的
 Pub 结果或进程中断保留恢复记录，后续写命令拒绝继续；核对记录中的明确路径后恢复，不能清空

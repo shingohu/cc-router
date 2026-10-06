@@ -8,13 +8,17 @@ import 'package:path/path.dart' as path;
 import 'package:test/test.dart';
 
 import '../../ccrouter_generator/bin/src/analyzer_bootstrap.dart';
+import '../../ccrouter_generator/bin/src/coordination_home.dart';
 
 const _ref = 'a275d1d46ddfdded6678ecbf1d2d23818cdbdfdc';
 
 void main() {
   late _Host host;
   setUp(() => host = _Host());
-  tearDown(() => host.root.deleteSync(recursive: true));
+  tearDown(() {
+    host.root.deleteSync(recursive: true);
+    host.coordinationHome.deleteSync(recursive: true);
+  });
 
   test(
     'dry-run validates source and Host without files or processes',
@@ -483,11 +487,12 @@ void main() {
   test(
     'CLI process rejects a concurrently locked Pub owner before network work',
     () async {
-      final file = host.file('.dart_tool/ccrouter/analyzer/operation.lock');
+      final file = host.analyzerOperationLock;
       file.parent.createSync(recursive: true);
       final lock = file.openSync(mode: FileMode.append)
         ..lockSync(FileLock.exclusive);
       try {
+        host.file('.dart_tool').deleteSync(recursive: true);
         final result = await Process.run(Platform.resolvedExecutable, [
           '--packages=${path.absolute('.dart_tool/package_config.json')}',
           path.absolute('packages/ccrouter_generator/bin/ccrouter.dart'),
@@ -496,7 +501,7 @@ void main() {
           host.host.path,
           '--version',
           '1.0.0',
-        ]);
+        ], environment: host.environment);
         expect(result.exitCode, 1);
         expect(
           '${result.stdout}',
@@ -516,23 +521,61 @@ void main() {
   test(
     'interrupted transaction blocks subsequent writes and preserves recovery bytes',
     () async {
-      host.write(
-        '.dart_tool/ccrouter/analyzer/transactions/interrupted/originals.json',
-        '{"recover":"me"}',
+      final recovery = File(
+        path.join(
+          host.analyzerTransactions.path,
+          'interrupted',
+          'originals.json',
+        ),
       );
+      recovery.parent.createSync(recursive: true);
+      recovery.writeAsStringSync('{"recover":"me"}');
       final before = host.snapshot();
       expect(await host.run(), isFalse);
       expect(host.snapshot(), before);
-      expect(
-        host
-            .file(
-              '.dart_tool/ccrouter/analyzer/transactions/interrupted/originals.json',
-            )
-            .readAsStringSync(),
-        '{"recover":"me"}',
-      );
+      expect(recovery.readAsStringSync(), '{"recover":"me"}');
     },
   );
+
+  test('stable mode rejects an active legacy Analyzer writer', () async {
+    final legacyLock = host.file('.dart_tool/ccrouter/analyzer/operation.lock');
+    legacyLock.parent.createSync(recursive: true);
+    final lock = legacyLock.openSync(mode: FileMode.append)
+      ..lockSync(FileLock.exclusive);
+    try {
+      final result = await Process.run(Platform.resolvedExecutable, [
+        '--packages=${path.absolute('.dart_tool/package_config.json')}',
+        path.absolute('packages/ccrouter_generator/bin/ccrouter.dart'),
+        'analyzer',
+        'install',
+        host.host.path,
+        '--version',
+        '1.0.0',
+      ], environment: host.environment);
+      expect(result.exitCode, 1);
+      expect(
+        '${result.stdout}\n${result.stderr}',
+        contains('legacy V1 coordination path is active'),
+      );
+      expect(host.calls, isEmpty);
+      expect(host.coordination.analyzerDirectory.existsSync(), isFalse);
+    } finally {
+      lock.unlockSync();
+      lock.closeSync();
+    }
+  });
+
+  test('legacy A/B mode retains its journal under .dart_tool', () async {
+    final recovery = host.file(
+      '.dart_tool/ccrouter/analyzer/transactions/interrupted/originals.json',
+    );
+    recovery.parent.createSync(recursive: true);
+    recovery.writeAsStringSync('{"recover":"legacy"}');
+
+    expect(await host.run(legacyCoordination: true), isFalse);
+    expect(recovery.readAsStringSync(), '{"recover":"legacy"}');
+    expect(host.coordination.analyzerDirectory.existsSync(), isFalse);
+  });
 
   test(
     'unreadable Pub result restores other files and retains recovery journal',
@@ -551,12 +594,7 @@ void main() {
         host.file('$wrapper/.ccrouter-analyzer.json').existsSync(),
         isFalse,
       );
-      expect(
-        Directory(
-          host.file('.dart_tool/ccrouter/analyzer/transactions').path,
-        ).listSync(),
-        isNotEmpty,
-      );
+      expect(host.analyzerTransactions.listSync(), isNotEmpty);
     },
   );
 
@@ -577,12 +615,7 @@ void main() {
         host.file('$wrapper/.ccrouter-analyzer.json').existsSync(),
         isFalse,
       );
-      expect(
-        Directory(
-          host.file('.dart_tool/ccrouter/analyzer/transactions').path,
-        ).listSync(),
-        isNotEmpty,
-      );
+      expect(host.analyzerTransactions.listSync(), isNotEmpty);
     },
   );
 }
@@ -591,7 +624,10 @@ const wrapper = 'tools/ccrouter_analyzer_host';
 
 class _Host {
   _Host()
-    : root = Directory.systemTemp.createTempSync('ccrouter-install-test-') {
+    : root = Directory.systemTemp.createTempSync('ccrouter-install-test-'),
+      coordinationHome = Directory.systemTemp.createTempSync(
+        'ccrouter-install-coordination-',
+      ) {
     host = root;
     write('pubspec.yaml', '''# application configuration
 name: sample
@@ -616,6 +652,7 @@ dev_dependencies:
     );
   }
   final Directory root;
+  final Directory coordinationHome;
   late Directory host;
   final calls = <String>[];
   String? failAt;
@@ -624,6 +661,15 @@ dev_dependencies:
   void Function()? onHostPub;
 
   File file(String relative) => File(path.join(host.path, relative));
+  Map<String, String> get environment => <String, String>{
+    ...Platform.environment,
+    ccrouterHomeEnvironment: coordinationHome.path,
+  };
+  CCRouterCoordinationPaths get coordination =>
+      CCRouterCoordinationPaths.forBuildRoot(root, environment: environment);
+  File get analyzerOperationLock => coordination.analyzerOperationLock;
+  Directory get analyzerTransactions =>
+      coordination.analyzerTransactionDirectory;
   void write(String relative, String content) {
     final target = file(relative);
     target.parent.createSync(recursive: true);
@@ -666,6 +712,7 @@ dev_dependencies:
     String? url,
     String? ref,
     bool dryRun = false,
+    bool legacyCoordination = false,
   }) => runAnalyzerBootstrapCommand(
     CCAnalyzerBootstrapRequest(
       action: action,
@@ -677,6 +724,10 @@ dev_dependencies:
       dryRun: dryRun,
     ),
     processRunner: process,
+    environment: <String, String>{
+      ...environment,
+      if (legacyCoordination) ccrouterLegacyCoordinationEnvironment: '1',
+    },
   );
 
   Future<ProcessResult> process(

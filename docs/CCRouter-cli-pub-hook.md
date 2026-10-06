@@ -175,7 +175,7 @@ terminal failure 快速栅栏，恢复旧的 fingerprint-only 失败判断与有
 Hook 不默认采集详细 profile。遇到慢生成时，在独立终端显式运行 `generate <host> --profile`
 定位阶段耗时；性能 benchmark 或 AI 诊断也应显式传入该参数。
 
-后台 watch 的权威锁、Host registration 与 Flutter-run lease 位于用户级 `CCROUTER_HOME`：macOS/Linux 默认
+后台 watch 的权威锁、Host registration、Flutter-run lease 与 Analyzer CLI 写事务位于用户级 `CCROUTER_HOME`：macOS/Linux 默认
 `~/.ccrouter`，Windows 默认 `%LOCALAPPDATA%\CCRouter`。canonical build root 与 Host 分别使用
 完整 SHA-256 做两级隔离，并保存最小 Host/Builder session authority；
 `.dart_tool/ccrouter/v1/watch/status.json` 继续作为 Analyzer/IDE 本地观察镜像。活动 watch 会重建
@@ -183,7 +183,10 @@ Hook 不默认采集详细 profile。遇到慢生成时，在独立终端显式�
 generation-lock 错误。planning cache、Portable State 与 build_runner Asset Graph 仍只在项目内。
 启动发现仍被旧进程持有的 V1 owner lock 时会 fail-fast，需停止旧 watch 并重新安装 Pub Hook；
 `CCROUTER_USE_LEGACY_DART_TOOL_LOCKS=1` 只用于短期 A/B，并会把 lease 恢复到 Host
-`.dart_tool`；不支持新旧协议并发。
+`.dart_tool`、把 Analyzer operation lock/journal 恢复到 Pub owner `.dart_tool`；不支持新旧协议
+并发。Analyzer `install/upgrade/uninstall` 按 canonical Workspace Pub owner 共享一把 operation
+lock，未能安全回滚时保留逐字节 transaction journal；因此 `flutter clean` 不会解除活动事务锁
+或删除恢复证据。
 Wrapper 会在真正的 top-level `flutter clean` 前执行只读 clean guard。同 build root 存在活动
 watch 时，clean 会 fail-fast，并提示先停止 `flutter run/watch` 后重试；guard 不会主动杀进程。
 `--help`、未知全局 option 或参数值中的 `clean` 不会误触发。仅在明确恢复或 A/B 时设置

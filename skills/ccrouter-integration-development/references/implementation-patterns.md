@@ -878,6 +878,12 @@ validation, artifact restoration, or atomic publication. The Hook still fails
 closed when this channel cannot prove readiness for its exact lease. If an abrupt
 exit leaves an `active` record, the read-only commands report it as `stale`
 after the owner lock is released without rewriting the historical status file.
+Analyzer `install/upgrade/uninstall` uses that same canonical build-root identity
+for one Workspace-wide operation lock and a fail-closed byte-preserving recovery
+journal. Both live under the stable project coordination directory, so project
+cleanup cannot silently permit a second writer or erase recovery evidence. The
+legacy coordination kill switch moves both back under `.dart_tool` only for A/B;
+an active lock in the other protocol makes the command fail fast.
 One-shot generate, check, and clean commands fail fast while the root watch is
 active. Iterative clients should wait for `aggregationSucceeded`; they must not
 poll a command that cannot own the lock. Watch startup also fails fast while a

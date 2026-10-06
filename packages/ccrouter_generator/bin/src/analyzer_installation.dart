@@ -289,8 +289,9 @@ Future<void> _verifyAnalyzerCandidate(
 /// Prints a concrete plan and applies it under the Pub owner's exclusive lock.
 Future<bool> _runAnalyzerInstallation(
   CCAnalyzerBootstrapRequest request,
-  AnalyzerBootstrapProcessRunner runner,
-) async {
+  AnalyzerBootstrapProcessRunner runner, {
+  Map<String, String>? environment,
+}) async {
   final input = Directory(request.hostRoot).absolute;
   if (!input.existsSync())
     throw StateError('Host does not exist: ${input.path}');
@@ -446,9 +447,29 @@ Future<bool> _runAnalyzerInstallation(
     return true;
   }
 
-  final stateRoot = Directory(
+  final values = environment ?? Platform.environment;
+  final legacyStateRoot = Directory(
     path.join(owner.path, '.dart_tool', 'ccrouter', 'analyzer'),
   );
+  final coordination = CCRouterCoordinationPaths.forBuildRoot(
+    owner,
+    environment: values,
+  );
+  final useLegacy = usesLegacyCCRouterCoordination(environment: values);
+  final stateRoot = useLegacy
+      ? legacyStateRoot
+      : coordination.analyzerDirectory;
+  final foreignLock = useLegacy
+      ? coordination.analyzerOperationLock
+      : File(path.join(legacyStateRoot.path, 'operation.lock'));
+  if (_analyzerOperationLockIsHeld(foreignLock)) {
+    throw StateError(
+      'An Analyzer operation using the ${useLegacy ? 'stable V2' : 'legacy V1'} '
+      'coordination path is active. Wait for it to finish before switching '
+      'CCRouter coordination modes.',
+    );
+  }
+  if (!useLegacy) await coordination.prepare();
   _checkAnalyzerPath(stateRoot.path);
   stateRoot.createSync(recursive: true);
   final lock = File(
@@ -694,5 +715,21 @@ environment:
     if (staging?.existsSync() ?? false) staging!.deleteSync(recursive: true);
     if (locked) lock.unlockSync();
     lock.closeSync();
+  }
+}
+
+/// Whether another process currently owns one Analyzer operation lock.
+bool _analyzerOperationLockIsHeld(File file) {
+  if (!file.existsSync()) return false;
+  RandomAccessFile? opened;
+  try {
+    opened = file.openSync(mode: FileMode.append);
+    opened.lockSync(FileLock.shared);
+    opened.unlockSync();
+    return false;
+  } on FileSystemException {
+    return true;
+  } finally {
+    opened?.closeSync();
   }
 }

@@ -117,6 +117,18 @@ final class CCRouterCoordinationPaths {
   File get builderSessionDocument =>
       File(path.join(projectDirectory.path, 'builder-session.json'));
 
+  /// Stable serialization and recovery directory for Analyzer CLI writes.
+  Directory get analyzerDirectory =>
+      Directory(path.join(projectDirectory.path, 'analyzer'));
+
+  /// Stable lock serializing Analyzer install, upgrade, and uninstall.
+  File get analyzerOperationLock =>
+      File(path.join(analyzerDirectory.path, 'operation.lock'));
+
+  /// Stable journals retained when an Analyzer write cannot roll back safely.
+  Directory get analyzerTransactionDirectory =>
+      Directory(path.join(analyzerDirectory.path, 'transactions'));
+
   /// Stable lifecycle directory for Flutter runs owned by [hostRoot].
   Directory flutterRunLeaseDirectory(Directory hostRoot) => Directory(
     path.join(projectDirectory.path, 'leases', hostIdentity(hostRoot)),
@@ -364,7 +376,7 @@ Directory resolveCCRouterHome({
   final values = environment ?? Platform.environment;
   final override = values[ccrouterHomeEnvironment]?.trim();
   if (override != null && override.isNotEmpty) {
-    return Directory(override).absolute;
+    return _canonicalExistingDirectory(Directory(override));
   }
   final os = operatingSystem ?? Platform.operatingSystem;
   if (os == 'windows') {
@@ -386,4 +398,12 @@ Directory resolveCCRouterHome({
     'Cannot resolve CCRouter home. Set $ccrouterHomeEnvironment to an '
     'absolute writable directory.',
   );
+}
+
+/// Resolves an existing directory through platform aliases such as macOS
+/// `/var`, while leaving a not-yet-created home as an absolute path.
+Directory _canonicalExistingDirectory(Directory directory) {
+  final absolute = directory.absolute;
+  if (!absolute.existsSync()) return absolute;
+  return Directory(absolute.resolveSymbolicLinksSync());
 }
