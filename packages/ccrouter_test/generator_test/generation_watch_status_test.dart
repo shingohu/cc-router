@@ -7,7 +7,22 @@ import 'dart:io';
 import 'package:path/path.dart' as path;
 import 'package:test/test.dart';
 
+import '../../ccrouter_generator/bin/src/coordination_home.dart';
+
+late Directory _testCoordinationHome;
+
 void main() {
+  setUpAll(() async {
+    _testCoordinationHome = await Directory.systemTemp.createTemp(
+      'ccrouter_watch_status_coordination_',
+    );
+  });
+  tearDownAll(() async {
+    if (_testCoordinationHome.existsSync()) {
+      await _testCoordinationHome.delete(recursive: true);
+    }
+  });
+
   test(
     'watch status reports a missing local state without creating it',
     () async {
@@ -205,9 +220,12 @@ dependencies:
     statusFile.writeAsStringSync(
       '${jsonEncode(<String, Object?>{'schemaVersion': 1, 'state': 'ready', 'active': true, 'lastEvent': 'ready', 'pid': 123, 'cycle': 1, 'startedAt': '2026-10-05T10:00:00.000Z', 'updatedAt': '2026-10-05T10:00:01.000Z', 'hostRoot': host.path, 'buildRoot': host.path, 'managedByLease': false})}\n',
     );
-    final owner = await File(
-      path.join(watchDirectory.path, 'owner.lock'),
-    ).open(mode: FileMode.append);
+    final coordination = CCRouterCoordinationPaths.forBuildRoot(
+      host,
+      environment: _testEnvironment,
+    );
+    await coordination.prepare();
+    final owner = await coordination.ownerLock.open(mode: FileMode.append);
     await owner.lock(FileLock.exclusive);
     try {
       final active = await _run(['watch', 'status', host.path]);
@@ -248,4 +266,10 @@ Future<ProcessResult> _run(List<String> arguments) => Process.run(
   Platform.resolvedExecutable,
   ['run', 'ccrouter_generator:ccrouter', ...arguments],
   workingDirectory: Directory.current.path,
+  environment: _testEnvironment,
 );
+
+Map<String, String> get _testEnvironment => {
+  ...Platform.environment,
+  ccrouterHomeEnvironment: _testCoordinationHome.path,
+};

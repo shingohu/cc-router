@@ -113,6 +113,10 @@ final class CCRouterCoordinationPaths {
     ),
   );
 
+  /// Stable authoritative session document for the shared Builder owner.
+  File get builderSessionDocument =>
+      File(path.join(projectDirectory.path, 'builder-session.json'));
+
   /// Full SHA-256 identity of one canonical Host root.
   String hostIdentity(Directory hostRoot) =>
       _identity(canonicalDirectoryIdentity(hostRoot.path));
@@ -168,6 +172,140 @@ final class CCRouterCoordinationPaths {
 
   static String _identity(String value) =>
       sha256.convert(utf8.encode(value)).toString();
+}
+
+/// Atomically publishes one Host watch session into stable V2 coordination.
+Future<void> publishCCRouterHostSession({
+  required Directory hostRoot,
+  required Directory buildRoot,
+  required Map<String, Object?> status,
+  Map<String, String>? environment,
+}) async {
+  final paths = CCRouterCoordinationPaths.forBuildRoot(
+    buildRoot,
+    environment: environment,
+  );
+  await paths.prepare();
+  await _writeCoordinationDocument(
+    paths.sessionDocument(hostRoot),
+    <String, Object?>{
+      'schemaVersion': 2,
+      'kind': 'host-session',
+      'buildRoot': paths.canonicalBuildRoot,
+      'hostRoot': canonicalDirectoryIdentity(hostRoot.path),
+      'status': status,
+    },
+  );
+}
+
+/// Reads one exact Host watch session from stable V2 coordination.
+Future<Map<String, Object?>?> readCCRouterHostSession({
+  required Directory hostRoot,
+  required Directory buildRoot,
+  Map<String, String>? environment,
+}) async {
+  final paths = CCRouterCoordinationPaths.forBuildRoot(
+    buildRoot,
+    environment: environment,
+  );
+  final document = await _readCoordinationDocument(
+    paths.sessionDocument(hostRoot),
+  );
+  if (document == null ||
+      document['schemaVersion'] != 2 ||
+      document['kind'] != 'host-session' ||
+      document['buildRoot'] != paths.canonicalBuildRoot ||
+      document['hostRoot'] != canonicalDirectoryIdentity(hostRoot.path) ||
+      document['status'] is! Map) {
+    return null;
+  }
+  return (document['status'] as Map).cast<String, Object?>();
+}
+
+/// Atomically publishes the shared Builder owner's V2 session.
+Future<void> publishCCRouterBuilderSession({
+  required Directory buildRoot,
+  required Map<String, Object?> status,
+  Map<String, String>? environment,
+}) async {
+  final paths = CCRouterCoordinationPaths.forBuildRoot(
+    buildRoot,
+    environment: environment,
+  );
+  await paths.prepare();
+  await _writeCoordinationDocument(
+    paths.builderSessionDocument,
+    <String, Object?>{
+      'schemaVersion': 2,
+      'kind': 'builder-session',
+      'buildRoot': paths.canonicalBuildRoot,
+      'status': status,
+    },
+  );
+}
+
+/// Reads the shared Builder owner's session from stable V2 coordination.
+Future<Map<String, Object?>?> readCCRouterBuilderSession({
+  required Directory buildRoot,
+  Map<String, String>? environment,
+}) async {
+  final paths = CCRouterCoordinationPaths.forBuildRoot(
+    buildRoot,
+    environment: environment,
+  );
+  final document = await _readCoordinationDocument(
+    paths.builderSessionDocument,
+  );
+  if (document == null ||
+      document['schemaVersion'] != 2 ||
+      document['kind'] != 'builder-session' ||
+      document['buildRoot'] != paths.canonicalBuildRoot ||
+      document['status'] is! Map) {
+    return null;
+  }
+  return (document['status'] as Map).cast<String, Object?>();
+}
+
+Future<Map<String, Object?>?> _readCoordinationDocument(File file) async {
+  if (!file.existsSync()) return null;
+  try {
+    final decoded = jsonDecode(await file.readAsString());
+    return decoded is Map ? decoded.cast<String, Object?>() : null;
+  } on Object {
+    return null;
+  }
+}
+
+Future<void> _writeCoordinationDocument(
+  File file,
+  Map<String, Object?> document,
+) async {
+  final contents = '${const JsonEncoder.withIndent('  ').convert(document)}\n';
+  if (file.existsSync() && await file.readAsString() == contents) return;
+  await file.parent.create(recursive: true);
+  final suffix = '$pid.${DateTime.now().microsecondsSinceEpoch}';
+  final temporary = File('${file.path}.ccrouter.$suffix.tmp');
+  final backup = File('${file.path}.ccrouter.$suffix.bak');
+  await temporary.writeAsString(contents, flush: true);
+  var committed = false;
+  try {
+    await temporary.rename(file.path);
+    committed = true;
+  } on FileSystemException {
+    final hadOriginal = file.existsSync();
+    if (hadOriginal) await file.rename(backup.path);
+    try {
+      await temporary.rename(file.path);
+      committed = true;
+    } on Object {
+      if (file.existsSync()) await file.delete();
+      if (backup.existsSync()) await backup.rename(file.path);
+      rethrow;
+    }
+  } finally {
+    if (temporary.existsSync()) await temporary.delete();
+    if (committed && backup.existsSync()) await backup.delete();
+  }
 }
 
 /// Returns the owner lock selected for this invocation without creating it.

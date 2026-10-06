@@ -364,9 +364,10 @@ normal, non-zero, and handled interrupt exits remove the lease, while a forced
 supervisor death makes watch stop after the bounded heartbeat expiry. Use
 `CCROUTER_DISABLE_WINDOWS_RUN_SUPERVISOR=1` only to compare the former batch
 lifecycle; it deliberately removes that orphan-recovery guarantee.
-The user-level `CCROUTER_HOME` owns stable V2 generation/watch locking. The
-atomic local `.dart_tool/ccrouter/v1/watch/status.json` remains the Host-facing
-observability state. Complete
+The user-level `CCROUTER_HOME` owns stable V2 generation/watch locking and the
+minimal Host/Builder session authority. The atomic local
+`.dart_tool/ccrouter/v1/watch/status.json` is the Host-facing observability
+mirror and an active watch recreates it after local cleanup. Complete
 Hook diagnostics remain in `watch/flutter-run.log` and are never mixed into
 Flutter Tool's machine stdout. Failure to publish observational state does not
 fail or weaken direct generation, but the Hook refuses to launch Flutter when

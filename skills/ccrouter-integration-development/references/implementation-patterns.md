@@ -856,8 +856,10 @@ fail closed with the watch log path. Use
 it does not disable preflight, watch, generation locking, or reload gating.
 Wrapper-started watches keep stable ownership and serialization under the
 user-level `CCROUTER_HOME`, isolated first by canonical build root and then by
-Host. They atomically publish project-local observability to
-`.dart_tool/ccrouter/v1/watch/status.json`. Use read-only
+Host. Minimal Host/Builder session authority lets Pub Hook coordinate even when
+project-local observation files were removed. Watches atomically publish and
+repair the Analyzer/IDE mirror at `.dart_tool/ccrouter/v1/watch/status.json`.
+Use read-only
 `watch status <host-root>` for a snapshot or `watch follow <host-root>` for
 concise state changes; keep complete diagnostics in `watch/flutter-run.log`
 instead of injecting watch NDJSON into Flutter Tool's machine stdout. This

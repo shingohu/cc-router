@@ -117,4 +117,65 @@ void main() {
     expect(linked.canonicalBuildRoot, direct.canonicalBuildRoot);
     expect(linked.projectIdentity, direct.projectIdentity);
   });
+
+  test('stable Host and Builder sessions validate exact identities', () async {
+    final temporary = await Directory.systemTemp.createTemp(
+      'ccrouter_coordination_sessions_',
+    );
+    addTearDown(() => temporary.delete(recursive: true));
+    final buildRoot = Directory(path.join(temporary.path, 'workspace'))
+      ..createSync();
+    final hostRoot = Directory(path.join(buildRoot.path, 'app'))..createSync();
+    final otherHost = Directory(path.join(buildRoot.path, 'other'))
+      ..createSync();
+    final environment = {
+      ccrouterHomeEnvironment: path.join(temporary.path, 'home'),
+    };
+    final hostStatus = <String, Object?>{
+      'schemaVersion': 1,
+      'active': true,
+      'sessionId': 'host-session',
+    };
+    final builderStatus = <String, Object?>{
+      'schemaVersion': 1,
+      'active': true,
+      'sessionId': 'builder-session',
+    };
+
+    await publishCCRouterHostSession(
+      hostRoot: hostRoot,
+      buildRoot: buildRoot,
+      status: hostStatus,
+      environment: environment,
+    );
+    await publishCCRouterBuilderSession(
+      buildRoot: buildRoot,
+      status: builderStatus,
+      environment: environment,
+    );
+
+    expect(
+      await readCCRouterHostSession(
+        hostRoot: hostRoot,
+        buildRoot: buildRoot,
+        environment: environment,
+      ),
+      hostStatus,
+    );
+    expect(
+      await readCCRouterHostSession(
+        hostRoot: otherHost,
+        buildRoot: buildRoot,
+        environment: environment,
+      ),
+      isNull,
+    );
+    expect(
+      await readCCRouterBuilderSession(
+        buildRoot: buildRoot,
+        environment: environment,
+      ),
+      builderStatus,
+    );
+  });
 }

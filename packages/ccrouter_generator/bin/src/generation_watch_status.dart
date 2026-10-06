@@ -3,6 +3,7 @@ part of '../ccrouter_generator.dart';
 const _generationWatchStatusSchemaVersion = 1;
 const _generationWatchDiagnosticsSchemaVersion = 1;
 const _generationWatchStatusPollInterval = Duration(milliseconds: 200);
+const _generationWatchMirrorRepairInterval = Duration(seconds: 1);
 
 /// Publishes a bounded local view of one watch without affecting generation.
 final class _GenerationWatchStatusTracker {
@@ -24,8 +25,14 @@ final class _GenerationWatchStatusTracker {
   bool _sessionReady = false;
   bool _disabled = false;
   bool _warned = false;
+  bool _stableSessionDisabled = false;
+  bool _stableSessionWarned = false;
   bool _diagnosticsDisabled = false;
   bool _diagnosticsWarned = false;
+  String? _latestStatusContents;
+  String? _latestDiagnosticsContents;
+  Timer? _mirrorRepairTimer;
+  Future<void> _mirrorRepairTail = Future<void>.value();
   int _sessionSequence = 0;
   int _cycle = 0;
   int _eventRevision = 0;
@@ -201,11 +208,32 @@ final class _GenerationWatchStatusTracker {
       if (_cycleResolutionState != null)
         'cycleResolutionState': _cycleResolutionState,
     };
+    final statusContents =
+        '${const JsonEncoder.withIndent('  ').convert(document)}\n';
+    _latestStatusContents = statusContents;
+    if (!usesLegacyCCRouterCoordination() && !_stableSessionDisabled) {
+      try {
+        await publishCCRouterHostSession(
+          hostRoot: hostRoot,
+          buildRoot: buildRoot,
+          status: document,
+        );
+      } on Object catch (error) {
+        _stableSessionDisabled = true;
+        if (!_stableSessionWarned) {
+          _stableSessionWarned = true;
+          _commandStderr.writeln(
+            'warning: CCRouter stable Host session updates are disabled: '
+            '$error',
+          );
+        }
+      }
+    }
     if (!_disabled) {
       try {
         await _writeIfChanged(
           _generationWatchStatusFile(hostRoot),
-          '${const JsonEncoder.withIndent('  ').convert(document)}\n',
+          statusContents,
         );
       } on Object catch (error) {
         _disabled = true;
@@ -222,6 +250,7 @@ final class _GenerationWatchStatusTracker {
       timestamp: timestamp,
       data: data,
     );
+    _updateMirrorRepair(active);
   }
 
   /// Publishes diagnostics independently so observability stays fail-open.
@@ -267,10 +296,13 @@ final class _GenerationWatchStatusTracker {
         'cycleResolutionState': _cycleResolutionState,
       'diagnostics': diagnostics,
     };
+    final diagnosticsContents =
+        '${const JsonEncoder.withIndent('  ').convert(document)}\n';
+    _latestDiagnosticsContents = diagnosticsContents;
     try {
       await _writeIfChanged(
         _generationWatchDiagnosticsFile(hostRoot),
-        '${const JsonEncoder.withIndent('  ').convert(document)}\n',
+        diagnosticsContents,
       );
     } on Object catch (error) {
       _diagnosticsDisabled = true;
@@ -279,6 +311,65 @@ final class _GenerationWatchStatusTracker {
       _commandStderr.writeln(
         'warning: CCRouter structured watch diagnostics are disabled: $error',
       );
+    }
+  }
+
+  void _updateMirrorRepair(bool active) {
+    if (!active) {
+      _mirrorRepairTimer?.cancel();
+      _mirrorRepairTimer = null;
+      return;
+    }
+    _mirrorRepairTimer ??= Timer.periodic(
+      _generationWatchMirrorRepairInterval,
+      (_) {
+        _mirrorRepairTail = _mirrorRepairTail.then(
+          (_) => _restoreMissingMirrors(),
+          onError: (Object _, StackTrace __) => _restoreMissingMirrors(),
+        );
+      },
+    );
+  }
+
+  Future<void> _restoreMissingMirrors() async {
+    final statusContents = _latestStatusContents;
+    if (!_disabled &&
+        statusContents != null &&
+        !_generationWatchStatusFile(hostRoot).existsSync()) {
+      try {
+        await _writeIfChanged(
+          _generationWatchStatusFile(hostRoot),
+          statusContents,
+        );
+      } on Object catch (error) {
+        _disabled = true;
+        if (!_warned) {
+          _warned = true;
+          _commandStderr.writeln(
+            'warning: CCRouter watch status updates are disabled: $error',
+          );
+        }
+      }
+    }
+    final diagnosticsContents = _latestDiagnosticsContents;
+    if (!_diagnosticsDisabled &&
+        diagnosticsContents != null &&
+        !_generationWatchDiagnosticsFile(hostRoot).existsSync()) {
+      try {
+        await _writeIfChanged(
+          _generationWatchDiagnosticsFile(hostRoot),
+          diagnosticsContents,
+        );
+      } on Object catch (error) {
+        _diagnosticsDisabled = true;
+        if (!_diagnosticsWarned) {
+          _diagnosticsWarned = true;
+          _commandStderr.writeln(
+            'warning: CCRouter structured watch diagnostics are disabled: '
+            '$error',
+          );
+        }
+      }
     }
   }
 
@@ -371,7 +462,12 @@ Future<void> _runGenerationWatchObservation(
   required bool follow,
 }) async {
   final file = _generationWatchStatusFile(hostRoot);
-  final initial = await _readGenerationWatchStatus(file);
+  var initial = await _readGenerationWatchStatus(file);
+  var usedStableSession = false;
+  if (initial == null && !usesLegacyCCRouterCoordination()) {
+    initial = await _readStableGenerationWatchStatus(hostRoot);
+    usedStableSession = initial != null;
+  }
   if (initial == null) {
     _commandStderr.writeln(
       'CCRouter watch status is unavailable for ${hostRoot.path}.',
@@ -393,6 +489,13 @@ Future<void> _runGenerationWatchObservation(
     'Following CCRouter watch status for ${hostRoot.path}. Press Ctrl+C to stop.',
   );
   var previous = '';
+  if (usedStableSession) {
+    final observed = await _observeGenerationWatchLiveness(initial);
+    _writeGenerationWatchFollowEvent(observed);
+    previous =
+        '${jsonEncode(initial)}\u0000${observed['active']}\u0000'
+        '${observed['state']}';
+  }
   final stop = Completer<void>();
   final subscriptions = <StreamSubscription<ProcessSignal>>[];
   for (final signal in [ProcessSignal.sigint, ProcessSignal.sigterm]) {
@@ -440,6 +543,21 @@ Future<void> _runGenerationWatchObservation(
     for (final subscription in subscriptions) {
       await subscription.cancel();
     }
+  }
+}
+
+Future<Map<String, Object?>?> _readStableGenerationWatchStatus(
+  Directory hostRoot,
+) async {
+  try {
+    final context = CCProjectContext.resolve(hostRoot);
+    final status = await readCCRouterHostSession(
+      hostRoot: context.requestedRoot,
+      buildRoot: context.resolutionRoot,
+    );
+    return status == null ? null : _validateGenerationWatchStatus(status);
+  } on Object {
+    return null;
   }
 }
 
@@ -526,8 +644,19 @@ Future<Map<String, Object?>?> _readGenerationWatchStatus(File file) async {
 Map<String, Object?>? _decodeGenerationWatchStatus(String contents) {
   try {
     final decoded = jsonDecode(contents);
-    if (decoded is! Map ||
-        decoded['schemaVersion'] != _generationWatchStatusSchemaVersion ||
+    return decoded is Map
+        ? _validateGenerationWatchStatus(decoded.cast<String, Object?>())
+        : null;
+  } on Object {
+    return null;
+  }
+}
+
+Map<String, Object?>? _validateGenerationWatchStatus(
+  Map<String, Object?> decoded,
+) {
+  try {
+    if (decoded['schemaVersion'] != _generationWatchStatusSchemaVersion ||
         decoded['state'] is! String ||
         decoded['active'] is! bool ||
         decoded['lastEvent'] is! String ||
@@ -540,7 +669,7 @@ Map<String, Object?>? _decodeGenerationWatchStatus(String contents) {
         decoded['updatedAt'] is! String) {
       return null;
     }
-    return decoded.cast<String, Object?>();
+    return decoded;
   } on Object {
     return null;
   }

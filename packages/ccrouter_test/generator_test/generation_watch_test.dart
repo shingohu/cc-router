@@ -134,6 +134,47 @@ void main() {
   );
 
   test(
+    'watch restores deleted Host observability from stable session',
+    () async {
+      final demoRoot = Directory(path.join(Directory.current.path, 'demo'));
+      final watch = await _ConcurrentWatch.start(demoRoot);
+      addTearDown(watch.stop);
+      await watch.waitUntilReady();
+      final status = File(
+        path.join(
+          demoRoot.path,
+          '.dart_tool',
+          'ccrouter',
+          'v1',
+          'watch',
+          'status.json',
+        ),
+      );
+      final diagnostics = File(
+        path.join(status.parent.path, 'diagnostics.json'),
+      );
+      status.deleteSync();
+      if (diagnostics.existsSync()) diagnostics.deleteSync();
+
+      final observed = await _run(['watch', 'status', demoRoot.path]);
+      expect(observed.exitCode, 0, reason: '${observed.stderr}');
+      expect('${observed.stdout}', contains('watch status: active'));
+      expect(_coordinationPaths.sessionDocument(demoRoot).existsSync(), isTrue);
+
+      final deadline = DateTime.now().add(const Duration(seconds: 5));
+      while (!status.existsSync() && DateTime.now().isBefore(deadline)) {
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+      }
+      expect(status.existsSync(), isTrue);
+      expect(
+        (jsonDecode(status.readAsStringSync()) as Map)['lastEvent'],
+        'ready',
+      );
+    },
+    timeout: const Timeout(Duration(minutes: 3)),
+  );
+
+  test(
     'watch stops after a supervised Flutter lease heartbeat expires',
     () async {
       final watch = await _ConcurrentWatch.start(

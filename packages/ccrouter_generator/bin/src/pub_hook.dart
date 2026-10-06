@@ -769,20 +769,22 @@ Future<_CCPubHookPackageWatchConflict?> _activePackageLocalWatchConflict(
 Future<Map<String, Object?>?> _readPubHookBuildRootWatchStatus(
   Directory buildRoot,
 ) async {
-  final file = File(
-    path.join(
-      buildRoot.path,
-      '.dart_tool',
-      'ccrouter',
-      'v1',
-      'watch',
-      'builder-status.json',
-    ),
-  );
-  if (!file.existsSync()) return null;
   try {
-    final decoded = jsonDecode(await file.readAsString());
-    if (decoded is! Map ||
+    final decoded = usesLegacyCCRouterCoordination()
+        ? await _readPubHookJsonFile(
+            File(
+              path.join(
+                buildRoot.path,
+                '.dart_tool',
+                'ccrouter',
+                'v1',
+                'watch',
+                'builder-status.json',
+              ),
+            ),
+          )
+        : await readCCRouterBuilderSession(buildRoot: buildRoot);
+    if (decoded == null ||
         decoded['schemaVersion'] != 1 ||
         decoded['active'] is! bool ||
         decoded['pid'] is! int ||
@@ -795,7 +797,7 @@ Future<Map<String, Object?>?> _readPubHookBuildRootWatchStatus(
         decoded['updatedAt'] is! String) {
       return null;
     }
-    return decoded.cast<String, Object?>();
+    return decoded;
   } on Object {
     return null;
   }
@@ -887,7 +889,11 @@ Future<_CCPubHookWatchResult?> _waitForPostPubWatch(
       'status.json',
     ),
   );
-  var status = await _readPubHookWatchStatus(statusFile);
+  var status = await _readPostPubWatchStatus(
+    hostRoot: hostRoot,
+    buildRoot: buildRoot,
+    localStatusFile: statusFile,
+  );
   if (status == null) {
     if (!await _pubHookWatchOwnerIsHeld(buildRoot)) return null;
     return _CCPubHookWatchResult(
@@ -916,7 +922,11 @@ Future<_CCPubHookWatchResult?> _waitForPostPubWatch(
   final timeout = Stopwatch()..start();
   const maximumWait = Duration(minutes: 5);
   while (timeout.elapsed < maximumWait) {
-    status = await _readPubHookWatchStatus(statusFile);
+    status = await _readPostPubWatchStatus(
+      hostRoot: hostRoot,
+      buildRoot: buildRoot,
+      localStatusFile: statusFile,
+    );
     if (status == null || !_pubHookStatusMatchesHost(status, hostRoot)) {
       return _CCPubHookWatchResult(
         succeeded: false,
@@ -1024,6 +1034,23 @@ Future<Map<String, Object?>?> _readPubHookWatchStatus(File file) async {
   } on Object {
     return null;
   }
+}
+
+Future<Map<String, Object?>?> _readPostPubWatchStatus({
+  required Directory hostRoot,
+  required Directory buildRoot,
+  required File localStatusFile,
+}) {
+  if (usesLegacyCCRouterCoordination()) {
+    return _readPubHookWatchStatus(localStatusFile);
+  }
+  return readCCRouterHostSession(hostRoot: hostRoot, buildRoot: buildRoot);
+}
+
+Future<Map<String, Object?>?> _readPubHookJsonFile(File file) async {
+  if (!file.existsSync()) return null;
+  final decoded = jsonDecode(await file.readAsString());
+  return decoded is Map ? decoded.cast<String, Object?>() : null;
 }
 
 bool _pubHookStatusMatchesHost(

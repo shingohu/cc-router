@@ -839,6 +839,47 @@ workspace:
   });
 
   test(
+    'package-local post-pub uses stable Builder session without local status',
+    () async {
+      final fixture = await _createPackageWatchFixture();
+      addTearDown(() => fixture.workspace.delete(recursive: true));
+      final owner = await _lockWatchOwner(fixture.workspace);
+      addTearDown(() async {
+        await owner.unlock();
+        await owner.close();
+      });
+      await _writeBuildRootWatchStatus(
+        fixture,
+        targets: const ['watched_component'],
+      );
+      File(
+        path.join(
+          fixture.workspace.path,
+          '.dart_tool',
+          'ccrouter',
+          'v1',
+          'watch',
+          'builder-status.json',
+        ),
+      ).deleteSync();
+
+      final result = await _run([
+        'pub-hook',
+        'run',
+        '--project-root',
+        fixture.package.path,
+        '--pub-command',
+        'get',
+      ]);
+      final output = '${result.stdout}\n${result.stderr}';
+
+      expect(result.exitCode, 1, reason: output);
+      expect(output, contains('active Host watch at "${fixture.host.path}"'));
+      expect(output, contains('covers requested Package "watched_component"'));
+    },
+  );
+
+  test(
     'package-local post-pub reports an active Host watch without its target',
     () async {
       final fixture = await _createPackageWatchFixture();
@@ -1088,6 +1129,46 @@ dev_dependencies:
     expect(output, contains('reused active watch cycle 3'));
     expect(output, contains('post-pub generation finished'));
     expect(output, isNot(contains('active CCRouter generation watch owns')));
+  });
+
+  test('post-pub hook uses stable Host session without local status', () async {
+    final project = await _createWatchCoordinatedProject();
+    addTearDown(() => project.delete(recursive: true));
+    final owner = await _lockWatchOwner(project);
+    addTearDown(() async {
+      await owner.unlock();
+      await owner.close();
+    });
+    await _writeWatchStatus(
+      project,
+      lastEvent: 'ready',
+      cycle: 2,
+      sessionReady: true,
+      updatedAt: DateTime.now().toUtc(),
+    );
+    File(
+      path.join(
+        project.path,
+        '.dart_tool',
+        'ccrouter',
+        'v1',
+        'watch',
+        'status.json',
+      ),
+    ).deleteSync();
+
+    final result = await _run([
+      'pub-hook',
+      'run',
+      '--project-root',
+      project.path,
+      '--pub-command',
+      'get',
+    ]);
+    final output = '${result.stdout}\n${result.stderr}';
+
+    expect(result.exitCode, 0, reason: output);
+    expect(output, contains('reused active watch cycle 2'));
   });
 
   test('post-pub hook reuses a watch through a symlinked Host path', () async {
@@ -1685,10 +1766,30 @@ Future<File> _writeBuildRootWatchStatus(
       'builder-status.json',
     ),
   )..parent.createSync(recursive: true);
-  await file.writeAsString(
-    '${jsonEncode(<String, Object?>{'schemaVersion': 1, 'active': true, 'pid': pid, 'sessionId': 'package-watch-session', 'eventRevision': 4, 'lastEvent': 'aggregationSucceeded', 'cycleRevision': 2, 'failureRevision': 0, 'targets': targets, 'hostRoot': fixture.host.path, 'buildRoot': (buildRoot ?? fixture.workspace).path, 'updatedAt': DateTime.now().toUtc().toIso8601String()})}\n',
+  final document = <String, Object?>{
+    'schemaVersion': 1,
+    'active': true,
+    'pid': pid,
+    'sessionId': 'package-watch-session',
+    'eventRevision': 4,
+    'lastEvent': 'aggregationSucceeded',
+    'cycleRevision': 2,
+    'failureRevision': 0,
+    'targets': targets,
+    'hostRoot': fixture.host.path,
+    'buildRoot': (buildRoot ?? fixture.workspace).path,
+    'updatedAt': DateTime.now().toUtc().toIso8601String(),
+  };
+  await file.writeAsString('${jsonEncode(document)}\n');
+  await publishCCRouterBuilderSession(
+    buildRoot: fixture.workspace,
+    status: document,
+    environment: _testEnvironment,
   );
-  return file;
+  return CCRouterCoordinationPaths.forBuildRoot(
+    fixture.workspace,
+    environment: _testEnvironment,
+  ).builderSessionDocument;
 }
 
 Future<Directory> _createWatchCoordinatedProject() async {
@@ -1769,8 +1870,36 @@ Future<String> _writeWatchStatus(
               buildRoot: project,
             )
       : null;
-  file.writeAsStringSync(
-    '${jsonEncode(<String, Object?>{'schemaVersion': 1, 'state': lastEvent == 'failed' ? 'failed' : 'building', 'active': true, 'lastEvent': lastEvent, 'pid': pid, if (includeEventIdentity) 'sessionId': sessionId, if (includeEventIdentity) 'eventRevision': eventRevision, if (sessionReady != null) 'sessionReady': sessionReady, 'cycle': cycle, 'startedAt': updatedAt.subtract(const Duration(seconds: 1)).toIso8601String(), 'updatedAt': updatedAt.toIso8601String(), 'hostRoot': project.path, 'buildRoot': project.path, 'managedByLease': false, if (effectiveResolutionFingerprint != null) 'resolutionFingerprint': effectiveResolutionFingerprint, if (cycleResolutionState != null) 'cycleResolutionState': cycleResolutionState, if (failureStage != null) 'failureStage': failureStage, if (failureDiagnostics != null) 'failureDiagnostics': failureDiagnostics})}\n',
+  final document = <String, Object?>{
+    'schemaVersion': 1,
+    'state': lastEvent == 'failed' ? 'failed' : 'building',
+    'active': true,
+    'lastEvent': lastEvent,
+    'pid': pid,
+    if (includeEventIdentity) 'sessionId': sessionId,
+    if (includeEventIdentity) 'eventRevision': eventRevision,
+    if (sessionReady != null) 'sessionReady': sessionReady,
+    'cycle': cycle,
+    'startedAt': updatedAt
+        .subtract(const Duration(seconds: 1))
+        .toIso8601String(),
+    'updatedAt': updatedAt.toIso8601String(),
+    'hostRoot': project.path,
+    'buildRoot': project.path,
+    'managedByLease': false,
+    if (effectiveResolutionFingerprint != null)
+      'resolutionFingerprint': effectiveResolutionFingerprint,
+    if (cycleResolutionState != null)
+      'cycleResolutionState': cycleResolutionState,
+    if (failureStage != null) 'failureStage': failureStage,
+    if (failureDiagnostics != null) 'failureDiagnostics': failureDiagnostics,
+  };
+  file.writeAsStringSync('${jsonEncode(document)}\n');
+  await publishCCRouterHostSession(
+    hostRoot: project,
+    buildRoot: project,
+    status: document,
+    environment: _testEnvironment,
   );
   return effectiveResolutionFingerprint ?? '';
 }

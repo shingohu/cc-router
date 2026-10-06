@@ -1579,11 +1579,13 @@ File _generationWatchBuildRootStatusFile(Directory buildRoot) => File(
 Future<Map<String, Object?>?> _readGenerationWatchBuildRootStatus(
   Directory buildRoot,
 ) async {
-  final file = _generationWatchBuildRootStatusFile(buildRoot);
-  if (!file.existsSync()) return null;
   try {
-    final decoded = jsonDecode(await file.readAsString());
-    if (decoded is! Map ||
+    final decoded = usesLegacyCCRouterCoordination()
+        ? await _readGenerationWatchBuildRootStatusFile(
+            _generationWatchBuildRootStatusFile(buildRoot),
+          )
+        : await readCCRouterBuilderSession(buildRoot: buildRoot);
+    if (decoded == null ||
         decoded['schemaVersion'] != 1 ||
         decoded['active'] is! bool ||
         decoded['pid'] is! int ||
@@ -1592,10 +1594,18 @@ Future<Map<String, Object?>?> _readGenerationWatchBuildRootStatus(
         decoded['targets'] is! List) {
       return null;
     }
-    return decoded.cast<String, Object?>();
+    return decoded;
   } on Object {
     return null;
   }
+}
+
+Future<Map<String, Object?>?> _readGenerationWatchBuildRootStatusFile(
+  File file,
+) async {
+  if (!file.existsSync()) return null;
+  final decoded = jsonDecode(await file.readAsString());
+  return decoded is Map ? decoded.cast<String, Object?>() : null;
 }
 
 final class _GenerationWatchEvents {
@@ -1621,6 +1631,8 @@ final class _GenerationWatchEvents {
   List<String> _buildRootTargets = const [];
   bool _buildRootStatusDisabled = false;
   bool _buildRootStatusWarned = false;
+  bool _stableBuilderSessionDisabled = false;
+  bool _stableBuilderSessionWarned = false;
 
   /// Marks this process as the single Builder owner for the shared build root.
   void becomeBuilderOwner() {
@@ -1681,11 +1693,45 @@ final class _GenerationWatchEvents {
                 'watch-exit',
                 'generation-lock',
               }.contains(data['stage']));
+      final builderDocument = <String, Object?>{
+        'schemaVersion': 1,
+        'active': active,
+        'pid': pid,
+        'sessionId': _status.sessionId,
+        'eventRevision': _status.eventRevision,
+        'lastEvent': type,
+        'cycleRevision': _buildRootCycleRevision,
+        'failureRevision': _buildRootFailureRevision,
+        'targets': _buildRootTargets,
+        'hostRoot': hostRoot.path,
+        'buildRoot': buildRoot.path,
+        'updatedAt': timestamp,
+        if (type == 'failed') 'failureStage': data['stage'],
+        if (type == 'failed' && data['diagnostics'] != null)
+          'failureDiagnostics': data['diagnostics'],
+      };
+      if (!usesLegacyCCRouterCoordination() && !_stableBuilderSessionDisabled) {
+        try {
+          await publishCCRouterBuilderSession(
+            buildRoot: buildRoot,
+            status: builderDocument,
+          );
+        } on Object catch (error) {
+          _stableBuilderSessionDisabled = true;
+          if (!_stableBuilderSessionWarned) {
+            _stableBuilderSessionWarned = true;
+            _commandStderr.writeln(
+              'warning: CCRouter stable Builder session updates are disabled: '
+              '$error',
+            );
+          }
+        }
+      }
       if (!_buildRootStatusDisabled) {
         try {
           await _writeIfChanged(
             _generationWatchBuildRootStatusFile(buildRoot),
-            '${jsonEncode(<String, Object?>{'schemaVersion': 1, 'active': active, 'pid': pid, 'sessionId': _status.sessionId, 'eventRevision': _status.eventRevision, 'lastEvent': type, 'cycleRevision': _buildRootCycleRevision, 'failureRevision': _buildRootFailureRevision, 'targets': _buildRootTargets, 'hostRoot': hostRoot.path, 'buildRoot': buildRoot.path, 'updatedAt': timestamp, if (type == 'failed') 'failureStage': data['stage'], if (type == 'failed' && data['diagnostics'] != null) 'failureDiagnostics': data['diagnostics']})}\n',
+            '${jsonEncode(builderDocument)}\n',
           );
         } on Object catch (error) {
           _buildRootStatusDisabled = true;

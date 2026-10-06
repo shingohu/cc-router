@@ -175,7 +175,10 @@ Hook 不默认采集详细 profile。遇到慢生成时，在独立终端显式�
 
 后台 watch 的权威锁与 Host registration 位于用户级 `CCROUTER_HOME`：macOS/Linux 默认
 `~/.ccrouter`，Windows 默认 `%LOCALAPPDATA%\CCRouter`。canonical build root 与 Host 分别使用
-完整 SHA-256 做两级隔离；`.dart_tool/ccrouter/v1/watch/status.json` 继续保存本地观察状态。
+完整 SHA-256 做两级隔离，并保存最小 Host/Builder session authority；
+`.dart_tool/ccrouter/v1/watch/status.json` 继续作为 Analyzer/IDE 本地观察镜像。活动 watch 会重建
+被删除的镜像，Pub Hook 优先读取 stable session，因此本地状态清理不会再变成 5 分钟等待或泛化
+generation-lock 错误。planning cache、Portable State 与 build_runner Asset Graph 仍只在项目内。
 启动发现仍被旧进程持有的 V1 owner lock 时会 fail-fast，需停止旧 watch 并重新安装 Pub Hook；
 `CCROUTER_USE_LEGACY_DART_TOOL_LOCKS=1` 只用于短期 A/B，不支持新旧协议并发。
 不需要把 watch NDJSON

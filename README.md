@@ -1273,13 +1273,17 @@ build_runner，各 Host 仍分别执行聚合、Validator、原子发布，并�
 `builderOwnerPid` 是共享 Builder owner，subscriber 场景下两者可以不同。owner 退出后，仍活动的
 subscriber 会接管并重新到达 `ready`；同一 Host 的第二个 watch 会在写共享状态前快速失败。
 `CCROUTER_DISABLE_MULTI_HOST_WATCH=1` 可恢复一个 build root 只允许一个 watch 的旧语义做 A/B。
-watch ownership、generation、aggregation 和 Host registration 锁位于用户级
+watch ownership、generation、aggregation、Host registration 以及最小 Host/Builder session
+authority 位于用户级
 `CCROUTER_HOME`；macOS/Linux 默认是 `~/.ccrouter`，Windows 默认是
 `%LOCALAPPDATA%\CCRouter`。每个 canonical build root 使用完整 SHA-256 项目目录，同一项目内再按
 canonical Host SHA-256 隔离 registration，因此不同项目完全隔离、同一 build root 的多个 Host
 共享 Builder 锁但不共享 Host 状态。锁文件只 unlock/close，不在停止时删除，避免 unlink 后创建
-新 inode 导致双 owner。`.dart_tool` 继续保存 build_runner graph、planning/cache、profile 以及
-面向 IDE 的 status/diagnostics。`watch status` 会显示实际 coordination schema 和路径。
+新 inode 导致双 owner。`.dart_tool` 继续保存 build_runner graph、planning/cache、profile，并将
+status/diagnostics 作为面向 IDE/Analyzer 的本地镜像；活动 watch 每秒检查并重建被删除的镜像。
+Pub Hook 优先读取 stable session，因此 Host 本地 watch 状态被清理时不会误启 one-shot、卡满超时
+或丢失 package-local 冲突诊断。`watch status` 也可在本地镜像缺失时读取 stable session，并显示
+实际 coordination schema 和路径。
 若启动时检测到仍持有 V1 `.dart_tool` owner lock 的旧 CLI/watch，新版会 fail-fast，要求停止旧进程
 并重新安装 Pub Hook；不会尝试让两种协议静默并发。短期可设置
 `CCROUTER_USE_LEGACY_DART_TOOL_LOCKS=1` 做 A/B，该开关不承诺新旧进程互操作。
@@ -1313,7 +1317,7 @@ Builder target 集合仍可覆盖时发布 `resolutionStarted` 并直接执行�
 Pub Hook 只有在新 session 到达 `ready` 后才接受其
 `aggregationSucceeded`。`CCROUTER_DISABLE_WATCH_SESSION_RESTART=1` 会让需要 restart 的变化
 fail closed，并要求停止 watch 后运行 one-shot，供紧急回退和 A/B 使用。
-后台 watch 会原子维护本地观察状态
+后台 watch 会原子维护本地观察镜像
 `.dart_tool/ccrouter/v1/watch/status.json`。`watch status <host>` 一次性显示活动状态、PID、
 轮次和最近 Builder/聚合耗时；`watch follow <host>` 只打印简洁状态变化，完整 build_runner
 输出继续保留在 `.dart_tool/ccrouter/v1/watch/flutter-run.log`，不会注入 Flutter Tool 的
