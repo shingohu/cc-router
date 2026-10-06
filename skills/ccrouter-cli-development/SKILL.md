@@ -53,16 +53,16 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter analyzer install <hos
 fvm dart run --verbosity=error ccrouter_generator:ccrouter analyzer upgrade <host-root> --version <published-version> [--dry-run]
 fvm dart run --verbosity=error ccrouter_generator:ccrouter analyzer upgrade <host-root> --ref <full-commit-sha> [--dry-run]
 fvm dart run --verbosity=error ccrouter_generator:ccrouter analyzer uninstall <host-root> [--dry-run]
-fvm dart run --verbosity=error ccrouter_generator:ccrouter generate <host-root>
-fvm dart run --verbosity=error ccrouter_generator:ccrouter generate <host-root> --check
-fvm dart run --verbosity=error ccrouter_generator:ccrouter generate <host-root> --no-cache
-fvm dart run --verbosity=error ccrouter_generator:ccrouter generate <host-root> --profile
+fvm dart run --verbosity=error ccrouter_generator:ccrouter generate <project-root>
+fvm dart run --verbosity=error ccrouter_generator:ccrouter generate <project-root> --check
+fvm dart run --verbosity=error ccrouter_generator:ccrouter generate <project-root> --no-cache
+fvm dart run --verbosity=error ccrouter_generator:ccrouter generate <project-root> --profile
 fvm dart run --verbosity=error ccrouter_generator:ccrouter generate <host-root> --watch=auto --machine
 fvm dart run --verbosity=error ccrouter_generator:ccrouter watch status <host-root>
 fvm dart run --verbosity=error ccrouter_generator:ccrouter watch follow <host-root>
 fvm dart run --verbosity=error ccrouter_generator:ccrouter find <capability-id-or-route-pattern> <host-root>
 fvm dart run --verbosity=error ccrouter_generator:ccrouter find <capability-id-or-route-pattern> <host-root> --usage <consumer-component-id>
-fvm dart run --verbosity=error ccrouter_generator:ccrouter clean <host-root>
+fvm dart run --verbosity=error ccrouter_generator:ccrouter clean <project-root>
 fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook install [--sdk <flutter-sdk-root>]
 fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook status [--sdk <flutter-sdk-root>]
 fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook uninstall [--sdk <flutter-sdk-root>]
@@ -89,6 +89,19 @@ The selected Package is the `requestedRoot`; the Package or Workspace that owns
 Pub state, build cache, and the generation lock is the `resolutionRoot`.
 Workspace members must validate Pub's `workspace_ref.json` or exact Workspace
 membership, while standalone nested Packages remain independent.
+Resolve the requested project role before generation. An app-role Host owns
+Builder publication across its writable dependency closure, cross-Package
+validation, Host assembly, and Host catalogs. A Flutter component or Pure Dart
+contracts Package owns only its requested Package Builder/API/Bundle/index and
+package catalog; it must not publish a Host facade or reject an independent
+Contract merely because no implementation is present locally. A
+non-participating Workspace aggregator is skipped. `--output-dir` and watch are
+Host-only until package-local watch has an explicit target/ownership model.
+Read-only sibling Workspace members are local index inputs, not distributed
+Packages requiring Portable State. External Hosted, Git, and out-of-Workspace
+Path dependencies still require verified published artifacts. Shared metadata
+cache writes merge Package entries under the generation lock so one
+package-local invocation cannot evict another Host's local planning data.
 Ordinary one-shot generation prints only its final elapsed time. Use `--profile`
 only to investigate generation performance. Benchmarks and AI performance
 diagnostics must pass it explicitly; never infer an AI caller from environment
@@ -230,8 +243,11 @@ Command, Event, and InitTask models distinct; in particular, do not invent
 
 `clean` is scoped to explicitly writable Packages and removes only files with
 CCRouter's generated marker. It must preserve authored source, unknown files,
-read-only dependencies, and unrelated build output. After cleaning, run a full
-`generate` before making code changes based on generated imports.
+read-only dependencies, and unrelated build output. Package ownership stops at
+a nested `pubspec.yaml`; an independently runnable example Host is never owned
+by its parent component's clean, fingerprint, or Builder protection scope.
+After cleaning, run a full `generate` before making code changes based on
+generated imports.
 
 ### Scaffold
 

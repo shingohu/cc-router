@@ -1198,6 +1198,21 @@ executable 构建信息；CCRouter 自己的阶段、耗时、跳过原因和错
 物理目录位于 Workspace 下而被误判为成员。reference 缺失时才向上验证 Workspace，reference
 损坏或过期则 fail-closed 并要求重新执行 Pub get。
 
+`generate` 随后按 requested Package 的显式角色执行：直接依赖 `ccrouter` 的 Flutter
+`project_type: app` 默认是 Host；`ccrouter.yaml` 的 `host.enabled` 可显式覆盖；其它直接依赖
+`ccrouter` 或 `ccrouter_contracts` 的 Flutter/Pure Dart Package 走 package-local。Host 拥有其
+可写 dependency closure 的 Package 生成、跨 Package 校验、Host assembly 和 Host catalog；
+package-local 只运行并发布 requested Package 的 Builder、API、Bundle、Package index 与本地
+catalog，不生成 Host facade，也不会用某个 Host 的完整性规则拒绝独立 Contracts Package。
+没有直接参与 CCRouter 的 Workspace aggregator 会明确 skip。package-local 暂不接受 Host 专属
+`--output-dir` 和 watch；最终 `--no-cache --check` 应在实际 Host 上执行。
+
+同一 Workspace 中未被本次 package-local 命令授予写权限的 sibling Package 只作为现有
+Package index 输入，不会被写入或清理，也不会仅因本次只读而被误判成外部分发依赖。Hosted、
+Git 或 Workspace 外 Path dependency 仍须提供可验证的预生成 index/Portable State。metadata
+parse cache、Build Plan 和 aggregation state 继续只保存在 `resolutionRoot/.dart_tool`；一次
+package-local 成功会合并自己的 cache entry，不会驱逐其它 Host/Package 的本地 entries。
+
 `create component` 创建新的 Flutter library Package、`project_type: package` metadata、`lib/src` 下的
 顶层 `CCComponent` Descriptor 和 Package barrel。`--with-example` 还会通过当前 Flutter SDK 的
 官方 app template 创建 `example/`，显式依赖组件、`ccrouter` 与 `ccrouter_generator`；其
@@ -1372,8 +1387,9 @@ Host 不会修改外部依赖。诊断基线保存在
 `--no-cache --profile` 会报告 `reasons=no-cache-reference` 并始终执行完整参考路径，
 `--no-cache --check` 仍是 CI 权威门禁。Portable State 是可选的分发契约，而不是普通本地
 生成的默认输出。Package 需要在 `ccrouter.yaml` 声明 `generation: { portable: true }`，然后
-由作者显式运行 `ccrouter portable prepare <host-root>` 生成状态，再用
-`ccrouter portable publish <host-root>` 做发布前验证；普通 `ccrouter generate` 只维护
+由作者显式运行 `ccrouter portable prepare <project-root>` 生成当前角色写作用域内声明为
+portable 的状态，再用 `ccrouter portable publish <project-root>` 做发布前验证；普通
+`ccrouter generate` 只维护
 `.dart_tool` planning state。发布动作不会替代用户授权的 Pub/Git 发布，也不会连接外部系统。
 只读消费端对已声明预生成 Package 的状态缺失或失配 fail closed，writable Package 则回退完整
 Builder。
@@ -1394,6 +1410,9 @@ Owner 聚合报告缺失的 Service/Command required dependency；变量、sprea
 执行 `ccrouter clean` 后，如果 build cache 仍有效，下一次 `generate` 会在 build_runner 前
 临时恢复源码已导入的 Route/Command/Event component API，避免 import graph 需要第二轮才能
 收敛；当前轮仍会重新构建并完整校验最终生成物，bootstrap 失败不会保留半成品。
+Package 的生成物 ownership 在遇到下一级 `pubspec.yaml` 时终止；因此组件目录中的独立
+`example/` Host 不属于父组件的 clean、fingerprint 或 Builder 写入范围，必须由 example Host
+自己的 generate/clean 管理。
 
 `find` 会返回 Contract、实现与生成桥接的 Package URI 和源码坐标，只读取当前 Host 依赖闭包中
 已有的 Package Index，不运行 Builder，也不扫描源码。增加

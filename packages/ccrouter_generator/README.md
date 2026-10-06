@@ -222,8 +222,13 @@ Package、Owner 和依赖声明。
 的 `pub get` 和 `generate`。创建成功后会输出 `Next steps`：Component 会提示 Workspace 与
 消费者依赖装配，其它模板会提示先完善源码再为实际 Host 生成；提示本身不会修改工程。
 
-该命令自动寻找包或 Dart workspace 根目录，先调用现有 build_runner，再执行 metadata 校验、
-组件索引、Host Catalog 和文档聚合。非 workspace 包也使用同一命令，不需要自行拼接两步流程。
+该命令先解析 requested Package 与 Pub resolution root，再按 `.metadata`、`ccrouter.yaml` 和
+直接 CCRouter 依赖选择角色。app-role Host 为其可写 dependency closure 运行 Builder、跨
+Package 校验、Host assembly 和 Host Catalog；其它 Flutter/Pure Dart 参与 Package 只更新
+自身 Builder/API/Bundle/Package index/catalog，不执行 Host 完整性校验，也不写入 sibling
+Package。无直接 CCRouter 依赖的 Workspace aggregator 会跳过。package-local 暂不支持
+`--output-dir` 或 watch，Host CI 仍使用最终 `--no-cache --check` 权威门禁。
+非 workspace 包也使用同一命令，不需要自行拼接两步流程。
 新增或修改注解页面后再次运行相同命令；源码无需添加 `part` 或手动更新 Registrar。
 首次生成前 IDE 不会提供尚不存在的 Route API 符号；生成完成后可使用 IDE 自动导入
 本组件稳定的 `src/ccrouter_generated/<componentId>.api.g.dart`。业务源码不直接导入其
@@ -252,7 +257,9 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter clean demo
 `clean` 只删除框架标记且位于可写 Package 的 `lib/src/ccrouter_generated/` 下的受管源码输出；
 会保留业务源码、手写同名文件、只读依赖、`.dart_tool/build` 缓存和平台构建产物。清理后可
 再次执行 `generate` 完整恢复。它不是通用的 `clean` 或 `flutter clean`，不会删除 Package
-之外的文件。保留的 build cache 有效时，`generate` 会先从 Builder metadata 临时恢复 authored
+之外的文件。扫描遇到嵌套 `pubspec.yaml` 即停止，组件内独立运行的 `example/` Host 由自己的
+generate/clean 管理，父组件或其它 Host 不会删除、覆盖或计入它的生成物。保留的 build cache
+有效时，`generate` 会先从 Builder metadata 临时恢复 authored
 源码已导入但被清理的 Route/Command/Event component API，使 build_runner 在同一轮看到完整
 import graph；该 bootstrap 不替代当前轮构建与最终校验，失败时会恢复生成前现场。
 
@@ -444,7 +451,8 @@ Schema 不兼容或解析身份无法证明时都会 fail closed。设置
 `--no-cache --check`。每个生成 Package 的
 `lib/src/ccrouter_generated/metadata/ccrouter_generation_state.json` 只有在 Package 通过
 `ccrouter.yaml` 的 `generation: { portable: true }` 显式声明后，才由
-`ccrouter portable prepare <host-root>` 作为可提交受管产物写入；它只包含内容 identity，不包含
+`ccrouter portable prepare <project-root>` 按 Host closure 或 requested Package 的角色写作用域，
+作为可提交受管产物写入；它只包含内容 identity，不包含
 绝对路径、用户名、mtime、inode 或 `.dart_tool`，也不能替代 CI 权威门禁。普通 `generate` 不再
 写入 Portable State；writable 未声明 Package 回退完整 Builder，已声明的只读 Package 缺失或
 失配则 fail closed。`ccrouter portable publish` 只做本地 readiness check。

@@ -114,12 +114,14 @@ Future<_GenerationCycleResult> _runGenerationCycle({
   required _Arguments parsed,
   required Stopwatch invocationWatch,
   required _GenerationProfileTrace? invocationTrace,
+  required CCProjectRole? projectRole,
   required bool watchCycle,
   required bool captureOutput,
 }) async {
   final inheritedWatchCycle =
       Platform.environment[_watchCycleEnvironment] == '1';
   final effectiveWatchCycle = watchCycle || inheritedWatchCycle;
+  final packageLocal = projectRole == CCProjectRole.package;
   final cycleParsed = watchCycle
       ? _Arguments(
           command: _GeneratorCommand.generate,
@@ -172,6 +174,9 @@ Future<_GenerationCycleResult> _runGenerationCycle({
             buildRoot: buildContext.resolutionRoot,
             hostRoot: root,
             workspace: buildContext.isWorkspace,
+            writeScope: packageLocal
+                ? CCPackageWriteScope.requestedPackage
+                : CCPackageWriteScope.dependencyClosure,
           ),
           counts: (workspace) => {'packages': workspace.packages.length},
         );
@@ -262,6 +267,9 @@ Future<_GenerationCycleResult> _runGenerationCycle({
             buildRoot: buildContext!.resolutionRoot,
             hostRoot: root,
             workspace: buildContext.isWorkspace,
+            writeScope: packageLocal
+                ? CCPackageWriteScope.requestedPackage
+                : CCPackageWriteScope.dependencyClosure,
           ),
           counts: (workspace) => {'packages': workspace.packages.length},
         );
@@ -390,6 +398,9 @@ Future<_GenerationCycleResult> _runGenerationCycle({
           () => _runBuildRunner(
             buildContext,
             root,
+            writeScope: packageLocal
+                ? CCPackageWriteScope.requestedPackage
+                : CCPackageWriteScope.dependencyClosure,
             profile: parsed.profile,
             trace: profileTrace,
           ),
@@ -420,6 +431,7 @@ Future<_GenerationCycleResult> _runGenerationCycle({
                 root,
                 parsed,
                 buildContext!,
+                projectRole: projectRole!,
                 buildDuration: buildDuration,
                 expectedInputFingerprint: verifiedInputFingerprint,
                 aggregationToolFingerprint: aggregationToolFingerprint,
@@ -487,6 +499,9 @@ Future<_GenerationCycleResult> _runGenerationCycle({
             buildRoot: buildContext.resolutionRoot,
             hostRoot: root,
             workspace: buildContext.isWorkspace,
+            writeScope: packageLocal
+                ? CCPackageWriteScope.requestedPackage
+                : CCPackageWriteScope.dependencyClosure,
           ),
         );
         if (Platform.environment[_sharedPlanningSnapshotKillSwitch] == '1') {

@@ -14,6 +14,7 @@ import 'package:ccrouter_generator/src/generated_client_naming.dart';
 import 'package:ccrouter_generator/src/internal_api_boundary_validator.dart';
 import 'package:ccrouter_generator/src/package_workspace.dart';
 import 'package:ccrouter_generator/src/project_context.dart';
+import 'package:ccrouter_generator/src/project_role.dart';
 import 'package:crypto/crypto.dart';
 import 'package:dart_style/dart_style.dart';
 import 'package:path/path.dart' as path;
@@ -154,6 +155,49 @@ Future<void> main(List<String> arguments) async {
     exitCode = 2;
     return;
   }
+  CCProjectRoleResolution? projectRole;
+  if (buildContext != null) {
+    try {
+      projectRole = profileTrace.measureSync(
+        'project-role-resolution',
+        () => CCProjectRoleResolver.resolve(buildContext!),
+      );
+    } on CCProjectRoleException catch (error) {
+      _commandStderr.writeln('error: ${error.message}');
+      exitCode = 2;
+      return;
+    }
+  }
+  if (projectRole?.role == CCProjectRole.skip &&
+      parsed.command == _GeneratorCommand.generate) {
+    totalWatch.stop();
+    _commandStdout.writeln(
+      'CCRouter generation skipped; the requested Package does not directly '
+      'depend on `ccrouter` or `ccrouter_contracts`.',
+    );
+    _commandStdout.writeln(
+      'CCRouter generation finished: elapsed=${totalWatch.elapsedMilliseconds}ms.',
+    );
+    return;
+  }
+  if (projectRole?.role == CCProjectRole.package &&
+      parsed.command == _GeneratorCommand.generate &&
+      parsed.outputDirectoryPath != null) {
+    _commandStderr.writeln(
+      'error: --output-dir is available only for Host generation; '
+      'package-local generation publishes only Package-owned artifacts.',
+    );
+    exitCode = 2;
+    return;
+  }
+  if (projectRole?.role == CCProjectRole.package && parsed.watch) {
+    _commandStderr.writeln(
+      'error: package-local watch is not supported yet; run one-shot generate '
+      'for this Package or start watch from an app-role Host.',
+    );
+    exitCode = 2;
+    return;
+  }
   if (parsed.command == _GeneratorCommand.find) {
     try {
       if (!await route_find.findCapability(
@@ -181,6 +225,7 @@ Future<void> main(List<String> arguments) async {
       if (!await _cleanResolvedWorkspace(
         buildContext.requestedRoot,
         buildContext,
+        projectRole: projectRole!.role,
       )) {
         exitCode = 1;
       }
@@ -221,6 +266,7 @@ Future<void> main(List<String> arguments) async {
         parsed: parsed,
         invocationWatch: totalWatch,
         invocationTrace: profileTrace,
+        projectRole: projectRole!.role,
         watchCycle: true,
         captureOutput: true,
       ),
@@ -233,6 +279,7 @@ Future<void> main(List<String> arguments) async {
     parsed: parsed,
     invocationWatch: totalWatch,
     invocationTrace: profileTrace,
+    projectRole: projectRole?.role,
     watchCycle: false,
     captureOutput: false,
   );
@@ -411,18 +458,25 @@ Future<bool> _aggregate(Directory root, _Arguments parsed) async {
 /// catalogs and Dart glue.
 Future<bool> _cleanResolvedWorkspace(
   Directory hostRoot,
-  CCProjectContext buildContext,
-) async {
+  CCProjectContext buildContext, {
+  required CCProjectRole projectRole,
+}) async {
   final workspace = await CCPackageWorkspace.load(
     buildRoot: buildContext.resolutionRoot,
     hostRoot: hostRoot,
     workspace: buildContext.isWorkspace,
+    writeScope: projectRole == CCProjectRole.package
+        ? CCPackageWriteScope.requestedPackage
+        : CCPackageWriteScope.dependencyClosure,
   );
   var removed = 0;
   for (final package in workspace.packages.values.where(
     (package) => package.writable,
   )) {
-    final generated = await _readManagedGeneratedFiles(package.root);
+    final generated = await _readManagedGeneratedFiles(
+      package.root,
+      stopAtNestedPackages: true,
+    );
     for (final relative in generated.keys) {
       final file = File(_absolutePath(package.root, relative));
       if (!file.existsSync()) continue;
@@ -486,8 +540,11 @@ const _usage = '''Usage:
   ccrouter pub-hook status [--sdk <flutter-sdk-root>]
   ccrouter pub-hook run --project-root <host-root> [--pub-command <command>]
 
-`generate` runs build_runner for the enclosing Dart workspace or package, then
-validates metadata and writes component indexes, Host assembly, and route docs.
+`generate` resolves the requested Package role. A Host runs build_runner for
+its writable dependency closure, then performs cross-Package validation and
+publishes Host assembly. A component or contracts Package runs package-local
+Builder/index/API publication only. A non-participating Workspace aggregator is
+skipped. Package-local generation does not accept `--output-dir` or watch mode.
 `--check` restores the original files and fails when generation would change a
 CCRouter-managed artifact. `--no-cache` forces the reference full-parse path.
 Every one-shot generation reports its final elapsed time. `--profile` additionally
@@ -543,6 +600,7 @@ Future<bool> _generateResolvedWorkspace(
   Directory hostRoot,
   _Arguments parsed,
   CCProjectContext buildContext, {
+  required CCProjectRole projectRole,
   required Duration buildDuration,
   String? expectedInputFingerprint,
   String? aggregationToolFingerprint,
@@ -551,6 +609,7 @@ Future<bool> _generateResolvedWorkspace(
   Set<String> prebuiltPackages = const <String>{},
   _GenerationProfileTrace? trace,
 }) async {
+  final hostGeneration = projectRole == CCProjectRole.host;
   final discoveryWatch = Stopwatch()..start();
   CCPackageWorkspace workspace;
   try {
@@ -560,6 +619,9 @@ Future<bool> _generateResolvedWorkspace(
         buildRoot: buildContext.resolutionRoot,
         hostRoot: hostRoot,
         workspace: buildContext.isWorkspace,
+        writeScope: hostGeneration
+            ? CCPackageWriteScope.dependencyClosure
+            : CCPackageWriteScope.requestedPackage,
       ),
       counts: (workspace) => {'packages': workspace.packages.length},
     );
@@ -596,7 +658,7 @@ Future<bool> _generateResolvedWorkspace(
     }
     return false;
   }
-  if (!workspace.host.dependencies.contains('ccrouter')) {
+  if (hostGeneration && !workspace.host.dependencies.contains('ccrouter')) {
     _commandStderr.writeln(
       'error: Host Package "${workspace.host.name}" must directly depend on '
       '`ccrouter` before generated Host assembly can be imported.',
@@ -630,7 +692,10 @@ Future<bool> _generateResolvedWorkspace(
       packageNames: {
         ...prebuiltPackages,
         for (final package in workspace.packages.values)
-          if (!package.writable && package.requiresPackageIndex) package.name,
+          if (!package.writable &&
+              !workspace.isLocalWorkspaceMember(package) &&
+              package.requiresPackageIndex)
+            package.name,
       },
     ),
     counts: (verifications) => {'packages': verifications.length},
@@ -686,7 +751,8 @@ Future<bool> _generateResolvedWorkspace(
       continue;
     }
     if (package.indexFile.existsSync()) {
-      if (package.requiresPackageIndex) {
+      if (package.requiresPackageIndex &&
+          !workspace.isLocalWorkspaceMember(package)) {
         final verification = portableVerifications[package.name];
         if (verification == null || !verification.valid) {
           metadataSpan?.finish(status: 'failed');
@@ -803,7 +869,7 @@ Future<bool> _generateResolvedWorkspace(
       changed = true;
     }
   }
-  runtimeBundles.add(workspace.host.name);
+  if (hostGeneration) runtimeBundles.add(workspace.host.name);
 
   final order = _dependencyOrder(workspace, participating);
   final indexes = <String, CCPackageIndex>{};
@@ -978,30 +1044,41 @@ Future<bool> _generateResolvedWorkspace(
   ];
   final validationWatch = Stopwatch()..start();
   final validationSpan = trace?.start('workspace-validation');
-  final validation = CCRouteWorkspaceValidator.validate(documents);
+  final validation = hostGeneration
+      ? CCRouteWorkspaceValidator.validate(documents)
+      : null;
+  final validatedDocuments = hostGeneration
+      ? documents
+      : localMetadata[workspace.host.name] ?? const <Map<String, Object?>>[];
   final errors = [
-    ...validation.errors,
+    ...?validation?.errors,
     ...CCRouteBarrelExportValidator.validate(
       hostRoot,
-      documents,
+      validatedDocuments,
       packageRoots: {
-        for (final package in workspace.packages.values)
+        for (final package in workspace.packages.values.where(
+          (package) => hostGeneration || package.writable,
+        ))
           package.name: package.root,
       },
     ),
   ]..sort();
   if (errors.isNotEmpty) {
-    _recordGenerationDiagnostics(validation.diagnostics);
+    if (validation != null) {
+      _recordGenerationDiagnostics(validation.diagnostics);
+    }
     validationSpan?.finish(
       status: 'failed',
-      counts: {'documents': documents.length, 'errors': errors.length},
+      counts: {'documents': validatedDocuments.length, 'errors': errors.length},
     );
     for (final error in errors) {
       _commandStderr.writeln('error: $error');
     }
     return false;
   }
-  validationSpan?.finish(counts: {'documents': documents.length, 'errors': 0});
+  validationSpan?.finish(
+    counts: {'documents': validatedDocuments.length, 'errors': 0},
+  );
   validationWatch.stop();
 
   late final List<_MetadataFile> localFiles;
@@ -1016,6 +1093,14 @@ Future<bool> _generateResolvedWorkspace(
           workspace,
           excludingPackages: prebuiltPackages,
         ),
+        if (!hostGeneration)
+          for (final entry in externalIndexes.entries)
+            for (final document in entry.value.metadata)
+              _MetadataFile(
+                workspace.packages[entry.key]!.indexFile,
+                document,
+                packageRoot: workspace.packages[entry.key]!.root,
+              ),
         for (final packageName in prebuiltPackages)
           for (final document in localMetadata[packageName] ?? const [])
             _MetadataFile(
@@ -1064,10 +1149,14 @@ Future<bool> _generateResolvedWorkspace(
         dirtyPackages: fullDirtySet.dirtyPackages,
       ),
     );
-    await trace.measure(
-      'host-catalog-generation',
-      () => _generateResolvedHostCatalog(workspace, indexes),
-    );
+    if (hostGeneration) {
+      await trace.measure(
+        'host-catalog-generation',
+        () => _generateResolvedHostCatalog(workspace, indexes),
+      );
+    } else {
+      trace?.skip('host-catalog-generation');
+    }
     await trace.measure('package-index-write', () async {
       for (final name in order) {
         final package = workspace.packages[name]!;
@@ -1082,6 +1171,7 @@ Future<bool> _generateResolvedWorkspace(
         workspace: workspace,
         indexes: indexes,
         dirtyPackages: fullDirtySet.dirtyPackages,
+        includeRequestedPackage: !hostGeneration,
       ),
     );
     await trace.measure(
@@ -1091,6 +1181,7 @@ Future<bool> _generateResolvedWorkspace(
         runtimeBundles: runtimeBundles,
         catalogs: catalogs,
         contractApiOutputs: contractApiOutputs,
+        includeHostArtifacts: hostGeneration,
       ),
     );
 
@@ -1104,28 +1195,34 @@ Future<bool> _generateResolvedWorkspace(
             'metadata',
           ),
     ).absolute;
-    await trace.measure('host-artifact-write', () async {
-      await outputDirectory.create(recursive: true);
-      await _writeIfChanged(
-        File(path.join(outputDirectory.path, 'cc_routes.json')),
-        validation.machineDocumentJson,
-      );
-      await _writeIfChanged(
-        File(path.join(outputDirectory.path, 'cc_catalog.md')),
-        _catalogMarkdown(
-          routeCatalog: validation.markdownDocument,
-          initTaskCatalog: _initTaskDagMarkdown(documents),
-          sourceCatalog: CCCapabilitySourceCatalog.fromMetadata(
-            documents,
-          ).toMarkdown(scope: 'host:${workspace.host.name}'),
-        ),
-      );
-    });
+    if (hostGeneration) {
+      await trace.measure('host-artifact-write', () async {
+        await outputDirectory.create(recursive: true);
+        await _writeIfChanged(
+          File(path.join(outputDirectory.path, 'cc_routes.json')),
+          validation!.machineDocumentJson,
+        );
+        await _writeIfChanged(
+          File(path.join(outputDirectory.path, 'cc_catalog.md')),
+          _catalogMarkdown(
+            routeCatalog: validation.markdownDocument,
+            initTaskCatalog: _initTaskDagMarkdown(documents),
+            sourceCatalog: CCCapabilitySourceCatalog.fromMetadata(
+              documents,
+            ).toMarkdown(scope: 'host:${workspace.host.name}'),
+          ),
+        );
+      });
+    } else {
+      trace?.skip('host-artifact-write');
+    }
     await trace.measure('legacy-output-cleanup', () async {
-      await _deleteManagedCatalogFiles(outputDirectory, const [
-        'cc_routes.md',
-        'cc_sources.md',
-      ]);
+      if (hostGeneration) {
+        await _deleteManagedCatalogFiles(outputDirectory, const [
+          'cc_routes.md',
+          'cc_sources.md',
+        ]);
+      }
       await _removeLegacyMetadataArtifacts(
         workspace.packages.values
             .where((package) => package.writable)
@@ -1183,9 +1280,16 @@ Future<bool> _generateResolvedWorkspace(
   } else {
     trace?.skip('portable-state-prepare');
   }
-  _commandStdout.writeln(
-    'Validated ${validation.machineDocument['components'] is List ? (validation.machineDocument['components']! as List).length : 0} components and ${validation.machineDocument['routes'] is List ? (validation.machineDocument['routes']! as List).length : 0} routes across ${indexes.length} generated Packages.',
-  );
+  if (hostGeneration) {
+    _commandStdout.writeln(
+      'Validated ${validation!.machineDocument['components'] is List ? (validation.machineDocument['components']! as List).length : 0} components and ${validation.machineDocument['routes'] is List ? (validation.machineDocument['routes']! as List).length : 0} routes across ${indexes.length} generated Packages.',
+    );
+  } else {
+    _commandStdout.writeln(
+      'Generated Package artifacts for "${workspace.host.name}" without '
+      'Host aggregation or cross-Package validation.',
+    );
+  }
   if (!aggregationReuse.matches && !parsed.noCache && !parsed.check) {
     await trace.measure('metadata-cache-persist', () async {
       final persistedOutputFingerprints = <String, String>{};
@@ -1326,9 +1430,13 @@ Future<void> _writePackageCapabilityCatalogs({
   required CCPackageWorkspace workspace,
   required Map<String, CCPackageIndex> indexes,
   required Set<String> dirtyPackages,
+  bool includeRequestedPackage = false,
 }) async {
   for (final package in workspace.packages.values) {
-    if (!package.writable || package.name == workspace.host.name) continue;
+    if (!package.writable ||
+        (!includeRequestedPackage && package.name == workspace.host.name)) {
+      continue;
+    }
     final index = indexes[package.name];
     if (index == null) continue;
     if (!dirtyPackages.contains(package.name)) continue;
@@ -2006,7 +2114,7 @@ _Arguments _parseArguments(List<String> arguments) {
       command: command,
       rootPath: '',
       outputDirectoryPath: null,
-      error: 'clean accepts only an optional Host root.',
+      error: 'clean accepts only an optional project root.',
     );
   }
 
@@ -2345,7 +2453,7 @@ _Arguments _parsePortableArguments(List<String> arguments) {
       command: _GeneratorCommand.portablePublish,
       rootPath: '',
       outputDirectoryPath: null,
-      error: 'portable accepts one optional Host directory.',
+      error: 'portable accepts one optional project directory.',
     );
   }
   final root = arguments.length == 3 ? arguments[2] : Directory.current.path;
@@ -2368,9 +2476,14 @@ _Arguments _parsePortableArguments(List<String> arguments) {
 /// Verifies the explicit publish boundary without contacting Pub or Git.
 Future<bool> _verifyPortablePublish(Directory root) async {
   late final CCProjectContext context;
+  late final CCProjectRoleResolution role;
   try {
     context = CCProjectContext.resolve(root);
+    role = CCProjectRoleResolver.resolve(context);
   } on CCProjectContextException catch (error) {
+    _commandStderr.writeln('error: ${error.message}');
+    return false;
+  } on CCProjectRoleException catch (error) {
     _commandStderr.writeln('error: ${error.message}');
     return false;
   }
@@ -2379,6 +2492,9 @@ Future<bool> _verifyPortablePublish(Directory root) async {
       buildRoot: context.resolutionRoot,
       hostRoot: context.requestedRoot,
       workspace: context.isWorkspace,
+      writeScope: role.role == CCProjectRole.package
+          ? CCPackageWriteScope.requestedPackage
+          : CCPackageWriteScope.dependencyClosure,
     );
     final portable = workspace.packages.values
         .where(
@@ -2818,24 +2934,37 @@ final class _GenerationCache {
     }
   }
 
-  /// Atomically replaces cached entries with this successful generation run.
+  /// Atomically merges entries from this successful generation run.
+  ///
+  /// One build root may serve several Hosts and package-local invocations. An
+  /// invocation updates only the Packages it owns; retained entries still need
+  /// exact metadata, output, and dependency fingerprints before reuse.
   Future<void> write(
     Map<String, CCPackageMetadataSnapshot> snapshots, {
     required Map<String, String> outputFingerprints,
     required Map<String, Map<String, String>> dependencyFingerprints,
   }) async {
-    final names = snapshots.keys.toList()..sort();
+    final merged = <String, _GenerationCacheEntry>{...entries};
+    for (final entry in snapshots.entries) {
+      merged[entry.key] = _GenerationCacheEntry(
+        fingerprint: entry.value.fingerprint,
+        documents: entry.value.documents,
+        outputFingerprint: outputFingerprints[entry.key],
+        dependencyFingerprints:
+            dependencyFingerprints[entry.key] ?? const <String, String>{},
+      );
+    }
+    final names = merged.keys.toList()..sort();
     final payload = <String, Object?>{
       'schemaVersion': 2,
       'generatorVersion': ccrouterPackageIndexGeneratorVersion,
       'entries': <String, Object?>{
         for (final name in names)
           name: <String, Object?>{
-            'fingerprint': snapshots[name]!.fingerprint,
-            'documents': snapshots[name]!.documents,
-            'outputFingerprint': outputFingerprints[name],
-            'dependencyFingerprints':
-                dependencyFingerprints[name] ?? const <String, String>{},
+            'fingerprint': merged[name]!.fingerprint,
+            'documents': merged[name]!.documents,
+            'outputFingerprint': merged[name]!.outputFingerprint,
+            'dependencyFingerprints': merged[name]!.dependencyFingerprints,
           },
       },
     };
@@ -3161,6 +3290,7 @@ abstract final class _GenerationStateFingerprint {
     bool includeAggregationOutputs = true,
   }) => _readManagedGeneratedFiles(
     package.root,
+    stopAtNestedPackages: true,
     include: includeAggregationOutputs
         ? null
         : (relative) =>
@@ -3424,6 +3554,7 @@ bool _sameStringMap(Map<String, String> left, Map<String, String> right) {
 Future<bool> _runBuildRunner(
   CCProjectContext context,
   Directory hostRoot, {
+  required CCPackageWriteScope writeScope,
   required bool profile,
   _GenerationProfileTrace? trace,
 }) async {
@@ -3433,6 +3564,7 @@ Future<bool> _runBuildRunner(
       buildRoot: context.resolutionRoot,
       hostRoot: hostRoot,
       workspace: context.isWorkspace,
+      writeScope: writeScope,
     ),
     counts: (workspace) => {'packages': workspace.packages.length},
   );
@@ -3477,7 +3609,10 @@ Future<bool> _runBuildRunner(
       for (final package in workspace.packages.values)
         if (!package.writable &&
             !_isWithin(context.resolutionRoot, package.root))
-          await _GeneratedArtifactsSnapshot.capture(package.root),
+          await _GeneratedArtifactsSnapshot.capture(
+            package.root,
+            stopAtNestedPackages: true,
+          ),
     ],
     counts: (snapshots) => {'snapshots': snapshots.length},
   );
@@ -3679,6 +3814,7 @@ final class _GeneratedArtifactsSnapshot {
     this.files, {
     this.excludedRoots = const <String>[],
     this.explicitPaths = const <String>[],
+    this.stopAtNestedPackages = false,
   });
 
   /// Root whose source-controlled CCRouter outputs are guarded.
@@ -3693,6 +3829,9 @@ final class _GeneratedArtifactsSnapshot {
   /// Exact catalog targets, including legacy names, outside default discovery.
   /// These paths never grant ownership of other files in the same directory.
   final List<String> explicitPaths;
+
+  /// Whether rescans stop before independently owned nested Packages.
+  final bool stopAtNestedPackages;
 
   /// Returns aggregation-owned bytes for writable Packages without rescanning.
   Map<String, List<int>> aggregationOutputFiles(CCPackageWorkspace workspace) {
@@ -3717,6 +3856,7 @@ final class _GeneratedArtifactsSnapshot {
   static Future<_GeneratedArtifactsSnapshot> capture(
     Directory root, {
     Iterable<File> explicitFiles = const [],
+    bool stopAtNestedPackages = false,
   }) async {
     final explicitPaths = explicitFiles
         .map((file) => _relativePath(root, file))
@@ -3724,8 +3864,12 @@ final class _GeneratedArtifactsSnapshot {
         .toList(growable: false);
     final snapshot = _GeneratedArtifactsSnapshot._(
       root,
-      await _readManagedGeneratedFiles(root),
+      await _readManagedGeneratedFiles(
+        root,
+        stopAtNestedPackages: stopAtNestedPackages,
+      ),
       explicitPaths: explicitPaths,
+      stopAtNestedPackages: stopAtNestedPackages,
     );
     await snapshot._addExplicitFiles(snapshot.files);
     return snapshot;
@@ -3758,9 +3902,7 @@ final class _GeneratedArtifactsSnapshot {
     files.removeWhere((relative, _) {
       final absolute = path.normalize(_absolutePath(root, relative));
       return normalizedRoots.any(
-        (excluded) =>
-            path.equals(absolute, excluded) ||
-            path.isWithin(excluded, absolute),
+        (excluded) => _packageRootOwnsPath(excluded, absolute),
       );
     });
     return _GeneratedArtifactsSnapshot._(
@@ -3775,7 +3917,10 @@ final class _GeneratedArtifactsSnapshot {
 
   /// Captures current generated bytes once for delta reporting and planning.
   Future<_GeneratedArtifactsDelta> captureDelta() async {
-    final current = await _readManagedGeneratedFiles(root);
+    final current = await _readManagedGeneratedFiles(
+      root,
+      stopAtNestedPackages: stopAtNestedPackages,
+    );
     await _addExplicitFiles(current);
     _removeExcluded(current);
     final paths = <String>{...files.keys, ...current.keys}.toList()..sort();
@@ -3797,7 +3942,10 @@ final class _GeneratedArtifactsSnapshot {
 
   /// Restores the guarded output set so `--check` remains read-only.
   Future<void> restore() async {
-    final current = await _readManagedGeneratedFiles(root);
+    final current = await _readManagedGeneratedFiles(
+      root,
+      stopAtNestedPackages: stopAtNestedPackages,
+    );
     await _addExplicitFiles(current);
     _removeExcluded(current);
     for (final path in current.keys.where((path) => !files.containsKey(path))) {
@@ -3820,9 +3968,7 @@ final class _GeneratedArtifactsSnapshot {
     current.removeWhere((relative, _) {
       final absolute = path.normalize(_absolutePath(root, relative));
       return excludedRoots.any(
-        (excluded) =>
-            path.equals(absolute, excluded) ||
-            path.isWithin(excluded, absolute),
+        (excluded) => _packageRootOwnsPath(excluded, absolute),
       );
     });
   }
@@ -3864,9 +4010,7 @@ Map<String, List<int>> _writableManagedOutputFiles({
     if (include != null && !include(entry.key)) continue;
     final absolute = path.normalize(_absolutePath(root, entry.key));
     if (!writableRoots.any(
-      (packageRoot) =>
-          path.equals(packageRoot, absolute) ||
-          path.isWithin(packageRoot, absolute),
+      (packageRoot) => _packageRootOwnsPath(packageRoot, absolute),
     )) {
       continue;
     }
@@ -3879,19 +4023,59 @@ Map<String, List<int>> _writableManagedOutputFiles({
 Future<Map<String, List<int>>> _readManagedGeneratedFiles(
   Directory root, {
   bool Function(String relative)? include,
+  bool stopAtNestedPackages = false,
 }) async {
   final files = <String, List<int>>{};
-  await for (final entity in root.list(recursive: true, followLinks: false)) {
-    if (entity is! File) continue;
-    final relative = _relativePath(root, entity);
-    final segments = relative.split('/');
-    if (segments.contains('.dart_tool') || segments.contains('build')) continue;
-    final name = segments.last;
-    if (!_isManagedGeneratedArtifact(segments, name)) continue;
-    if (include != null && !include(relative)) continue;
-    files[relative] = await entity.readAsBytes();
+  final packageRoot = path.normalize(root.absolute.path);
+  final pending = <Directory>[root.absolute];
+  while (pending.isNotEmpty) {
+    final directory = pending.removeLast();
+    final entities = await directory.list(followLinks: false).toList()
+      ..sort((left, right) => left.path.compareTo(right.path));
+    for (final entity in entities) {
+      if (entity is Directory) {
+        final name = path.basename(entity.path);
+        if (name == '.dart_tool' || name == 'build') continue;
+        if (stopAtNestedPackages &&
+            !path.equals(path.normalize(entity.absolute.path), packageRoot) &&
+            File(path.join(entity.path, 'pubspec.yaml')).existsSync()) {
+          continue;
+        }
+        pending.add(entity);
+        continue;
+      }
+      if (entity is! File) continue;
+      final relative = _relativePath(root, entity);
+      final segments = relative.split('/');
+      final name = segments.last;
+      if (!_isManagedGeneratedArtifact(segments, name)) continue;
+      if (include != null && !include(relative)) continue;
+      files[relative] = await entity.readAsBytes();
+    }
   }
   return files;
+}
+
+/// Whether [absoluteFile] belongs to [packageRoot] rather than a nested Package.
+///
+/// The closest ancestor `pubspec.yaml` defines filesystem ownership. This lets
+/// a parent component contain an independently runnable example Host without
+/// allowing parent clean, snapshots, or fingerprints to claim its artifacts.
+bool _packageRootOwnsPath(String packageRoot, String absoluteFile) {
+  final normalizedRoot = path.normalize(path.absolute(packageRoot));
+  final normalizedFile = path.normalize(path.absolute(absoluteFile));
+  if (!path.isWithin(normalizedRoot, normalizedFile)) return false;
+
+  var directory = Directory(path.dirname(normalizedFile));
+  while (!path.equals(path.normalize(directory.path), normalizedRoot)) {
+    if (File(path.join(directory.path, 'pubspec.yaml')).existsSync()) {
+      return false;
+    }
+    final parent = directory.parent;
+    if (path.equals(parent.path, directory.path)) return false;
+    directory = parent;
+  }
+  return true;
 }
 
 /// Whether a source-tree file is owned by CCRouter generation.
@@ -5815,28 +5999,31 @@ Future<void> _deleteObsoleteResolvedOutputs({
   required Set<String> runtimeBundles,
   required Iterable<_GeneratedComponentCatalog> catalogs,
   required Set<String> contractApiOutputs,
+  required bool includeHostArtifacts,
 }) async {
   final expected = <String>{
     ...contractApiOutputs,
-    path.normalize(
-      path.join(
-        workspace.host.root.path,
-        'lib',
-        'src',
-        'ccrouter_generated',
-        'ccrouter_host.api.g.dart',
+    if (includeHostArtifacts) ...[
+      path.normalize(
+        path.join(
+          workspace.host.root.path,
+          'lib',
+          'src',
+          'ccrouter_generated',
+          'ccrouter_host.api.g.dart',
+        ),
       ),
-    ),
-    path.normalize(
-      path.join(
-        workspace.host.root.path,
-        'lib',
-        'src',
-        'ccrouter_generated',
-        'host',
-        'ccrouter_host.routes.g.dart',
+      path.normalize(
+        path.join(
+          workspace.host.root.path,
+          'lib',
+          'src',
+          'ccrouter_generated',
+          'host',
+          'ccrouter_host.routes.g.dart',
+        ),
       ),
-    ),
+    ],
     for (final packageName in runtimeBundles)
       if (workspace.packages[packageName]?.writable ?? false)
         path.normalize(workspace.packages[packageName]!.bundleFile.path),

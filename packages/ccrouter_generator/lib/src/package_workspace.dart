@@ -135,6 +135,17 @@ const Set<String> _ccrouterFrameworkPackages = {
   'ccrouter_test',
 };
 
+/// Filesystem ownership granted to one resolved generation invocation.
+enum CCPackageWriteScope {
+  /// The requested Package and writable members in its dependency closure may
+  /// publish generated artifacts. Host generation uses this scope.
+  dependencyClosure,
+
+  /// Only the requested Package may publish generated artifacts. Package-local
+  /// generation uses this scope even when Pub resolution is Workspace-wide.
+  requestedPackage,
+}
+
 /// Exact resolved Package universe reachable from one Host.
 ///
 /// Discovery starts from the Host Package and follows only runtime
@@ -156,6 +167,17 @@ final class CCPackageWorkspace {
 
   /// Runtime dependency closure keyed by Package name.
   final Map<String, CCResolvedPackage> packages;
+
+  /// Whether [package] is resolved as a member of this local Pub Workspace.
+  ///
+  /// A package-local invocation may deliberately withhold write ownership from
+  /// sibling members. They remain local planning inputs and must not be treated
+  /// as externally distributed Packages solely because [CCResolvedPackage.writable]
+  /// is false for this invocation.
+  bool isLocalWorkspaceMember(CCResolvedPackage package) =>
+      path.equals(package.root.absolute.path, host.root.absolute.path) ||
+      (path.isWithin(buildRoot.absolute.path, package.root.absolute.path) &&
+          _usesWorkspaceResolution(package.root));
 
   /// Locates one writable Package's Builder-owned intermediate metadata.
   ///
@@ -185,6 +207,7 @@ final class CCPackageWorkspace {
     required Directory buildRoot,
     required Directory hostRoot,
     required bool workspace,
+    CCPackageWriteScope writeScope = CCPackageWriteScope.dependencyClosure,
   }) async {
     final dartTool = Directory(path.join(buildRoot.path, '.dart_tool'));
     final graphFile = File(path.join(dartTool.path, 'package_graph.json'));
@@ -260,7 +283,8 @@ final class CCPackageWorkspace {
       final isHost = name == hostName;
       final writable =
           isHost ||
-          (workspace &&
+          (writeScope == CCPackageWriteScope.dependencyClosure &&
+              workspace &&
               path.isWithin(
                 path.normalize(buildRoot.absolute.path),
                 path.normalize(root.absolute.path),

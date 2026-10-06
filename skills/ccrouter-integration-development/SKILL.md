@@ -293,6 +293,16 @@ After Route, Service, Command, Event, or InitTask annotation, component definiti
 fvm dart run ccrouter_generator:ccrouter generate <host-root>
 ```
 
+The argument selects a Package, not always a Host. An app-role Host generates
+its writable dependency closure and performs cross-Package validation and Host
+assembly. A component or contracts Package runs package-local generation and
+publishes only its own API, Bundle, index, and catalog; use this after editing
+that Package when no Host-level validation is required yet. Finish integration
+work with `generate <actual-host> --no-cache --check`. Do not use a Workspace
+aggregator as a surrogate Host, and start watch only from an app-role Host.
+An independently runnable nested example owns its subtree from its own
+`pubspec.yaml`; parent Package generation and clean do not mutate its artifacts.
+
 The repository Workspace root is an aggregator rather than a Host. The Pub Hook
 skips any current Package that does not directly declare `ccrouter`, even when
 its resolved Workspace graph contains CCRouter Packages. Run Host generation

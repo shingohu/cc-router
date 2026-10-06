@@ -15,6 +15,220 @@ void main() {
   serializeRealWorkspaceTests();
 
   test(
+    'package-local generation publishes a Pure Dart Package without Host validation',
+    () async {
+      final packageRoot = Directory(
+        path.join(Directory.current.path, 'demo', 'modules', 'web_contracts'),
+      );
+      final index = File(
+        path.join(
+          packageRoot.path,
+          'lib',
+          'src',
+          'ccrouter_generated',
+          'metadata',
+          'ccrouter_package.json',
+        ),
+      );
+      final original = index.readAsBytesSync();
+      final siblingHost = Directory(
+        path.join(
+          Directory.current.path,
+          'demo',
+          'modules',
+          'order',
+          'example',
+        ),
+      );
+      final siblingArtifacts = await _readGeneratedArtifacts(siblingHost);
+      try {
+        index.deleteSync();
+
+        final result = await Process.run(Platform.resolvedExecutable, [
+          'run',
+          'ccrouter_generator:ccrouter',
+          'generate',
+          packageRoot.path,
+          '--no-cache',
+        ], workingDirectory: Directory.current.path);
+
+        expect(
+          result.exitCode,
+          0,
+          reason: '${result.stdout}\n${result.stderr}',
+        );
+        expect(index.existsSync(), isTrue);
+        expect(index.readAsBytesSync(), original);
+        expect(await _readGeneratedArtifacts(siblingHost), siblingArtifacts);
+        expect(
+          Directory(
+            path.join(
+              packageRoot.path,
+              'lib',
+              'src',
+              'ccrouter_generated',
+              'host',
+            ),
+          ).existsSync(),
+          isFalse,
+        );
+      } finally {
+        index
+          ..createSync(recursive: true)
+          ..writeAsBytesSync(original, flush: true);
+      }
+    },
+    timeout: const Timeout(Duration(minutes: 2)),
+  );
+
+  test(
+    'package-local generation preserves Flutter component artifacts',
+    () async {
+      final packageRoot = path.join(
+        Directory.current.path,
+        'demo',
+        'modules',
+        'order',
+      );
+
+      final result = await Process.run(Platform.resolvedExecutable, [
+        'run',
+        'ccrouter_generator:ccrouter',
+        'generate',
+        packageRoot,
+        '--no-cache',
+        '--check',
+      ], workingDirectory: Directory.current.path);
+
+      expect(result.exitCode, 0, reason: '${result.stdout}\n${result.stderr}');
+      expect(
+        '${result.stdout}',
+        contains('without Host aggregation or cross-Package validation'),
+      );
+      expect(
+        '${result.stdout}',
+        contains('generated artifacts are up to date'),
+      );
+      expect(
+        File(
+          path.join(
+            packageRoot,
+            'lib',
+            'src',
+            'ccrouter_generated',
+            'ccrouter_host.api.g.dart',
+          ),
+        ).existsSync(),
+        isFalse,
+      );
+    },
+    timeout: const Timeout(Duration(minutes: 2)),
+  );
+
+  test('generate skips a non-participating Workspace aggregator', () async {
+    final result = await Process.run(Platform.resolvedExecutable, [
+      'run',
+      'ccrouter_generator:ccrouter',
+      'generate',
+      Directory.current.path,
+    ], workingDirectory: Directory.current.path);
+
+    expect(result.exitCode, 0, reason: '${result.stdout}\n${result.stderr}');
+    expect('${result.stdout}', contains('generation skipped'));
+    expect('${result.stdout}', isNot(contains('Generating Package artifacts')));
+  });
+
+  test(
+    'package-local portable lifecycle owns only the requested Package',
+    () async {
+      final webRoot = Directory(
+        path.join(Directory.current.path, 'demo', 'modules', 'web_contracts'),
+      );
+      final webState = File(
+        path.join(
+          webRoot.path,
+          'lib',
+          'src',
+          'ccrouter_generated',
+          'metadata',
+          'ccrouter_generation_state.json',
+        ),
+      );
+      final siblingState = File(
+        path.join(
+          Directory.current.path,
+          'demo',
+          'modules',
+          'order',
+          'lib',
+          'src',
+          'ccrouter_generated',
+          'metadata',
+          'ccrouter_generation_state.json',
+        ),
+      );
+      final originalWebState = webState.readAsBytesSync();
+      final originalSiblingState = siblingState.readAsBytesSync();
+      try {
+        webState.deleteSync();
+
+        final prepared = await Process.run(Platform.resolvedExecutable, [
+          'run',
+          'ccrouter_generator:ccrouter',
+          'portable',
+          'prepare',
+          webRoot.path,
+        ], workingDirectory: Directory.current.path);
+        expect(
+          prepared.exitCode,
+          0,
+          reason: '${prepared.stdout}\n${prepared.stderr}',
+        );
+        expect(webState.existsSync(), isTrue);
+        expect(siblingState.readAsBytesSync(), originalSiblingState);
+
+        final published = await Process.run(Platform.resolvedExecutable, [
+          'run',
+          'ccrouter_generator:ccrouter',
+          'portable',
+          'publish',
+          webRoot.path,
+        ], workingDirectory: Directory.current.path);
+        expect(
+          published.exitCode,
+          0,
+          reason: '${published.stdout}\n${published.stderr}',
+        );
+      } finally {
+        webState.writeAsBytesSync(originalWebState, flush: true);
+      }
+    },
+    timeout: const Timeout(Duration(minutes: 2)),
+  );
+
+  test(
+    'Host generation preserves a sibling example Host byte for byte',
+    () async {
+      final exampleRoot = Directory(
+        path.join(
+          Directory.current.path,
+          'demo',
+          'modules',
+          'order',
+          'example',
+        ),
+      );
+      final before = await _readGeneratedArtifacts(exampleRoot);
+
+      final result = await _generateDemo(['--no-cache']);
+
+      expect(result.exitCode, 0, reason: '${result.stdout}\n${result.stderr}');
+      expect(await _readGeneratedArtifacts(exampleRoot), before);
+    },
+    timeout: const Timeout(Duration(minutes: 2)),
+  );
+
+  test(
     'generate check rejects cross-Package internal imports despite ignores',
     () async {
       final probe = File(
@@ -670,6 +884,11 @@ void probe() {
     'clean removes managed outputs but preserves user files and rebuilds',
     () async {
       final demoRoot = Directory(path.join(Directory.current.path, 'demo'));
+      final nestedHostRoot = Directory(
+        path.join(demoRoot.path, 'modules', 'order', 'example'),
+      );
+      final nestedHostArtifacts = await _readGeneratedArtifacts(nestedHostRoot);
+      expect(nestedHostArtifacts, isNotEmpty);
       final portableStates = <String, String>{};
       await for (final entity in Directory.current.list(
         recursive: true,
@@ -761,6 +980,11 @@ void probe() {
         expect(generatedOrderContractsApi.existsSync(), isFalse);
         expect(sentinel.readAsStringSync(), 'user-owned');
         expect(
+          await _readGeneratedArtifacts(nestedHostRoot),
+          nestedHostArtifacts,
+          reason: 'clean must not cross a nested Package boundary.',
+        );
+        expect(
           paymentGeneratedRoot.existsSync(),
           isFalse,
           reason: 'clean must remove an empty generated root.',
@@ -783,6 +1007,10 @@ void probe() {
       expect(generatedRouteApi.existsSync(), isTrue);
       expect(generatedInitTask.existsSync(), isTrue);
       expect(generatedOrderContractsApi.existsSync(), isTrue);
+      expect(
+        await _readGeneratedArtifacts(nestedHostRoot),
+        nestedHostArtifacts,
+      );
       expect(
         generatedOrderContractsApi.readAsStringSync(),
         allOf(
@@ -2014,6 +2242,10 @@ void probe() {
 
 Future<Map<String, String>> _readDemoGeneratedArtifacts() async {
   final root = Directory(path.join(Directory.current.path, 'demo'));
+  return _readGeneratedArtifacts(root);
+}
+
+Future<Map<String, String>> _readGeneratedArtifacts(Directory root) async {
   final artifacts = <String, String>{};
   await for (final entity in root.list(recursive: true, followLinks: false)) {
     if (entity is! File) continue;

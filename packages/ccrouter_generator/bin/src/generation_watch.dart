@@ -260,7 +260,10 @@ Future<_GenerationWatchTopology?> _runGenerationWatchSession({
     for (final package in topology.workspace.packages.values)
       if (!package.writable &&
           !_isWithin(buildContext.resolutionRoot, package.root))
-        await _GeneratedArtifactsSnapshot.capture(package.root),
+        await _GeneratedArtifactsSnapshot.capture(
+          package.root,
+          stopAtNestedPackages: true,
+        ),
   ];
   protectionWatch.stop();
 

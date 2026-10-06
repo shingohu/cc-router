@@ -22,7 +22,10 @@ abstract final class _CCPortableGenerationState {
   /// cannot be accepted merely because this preflight passed.
   static Future<bool> verifyReadOnly(CCPackageWorkspace workspace) async {
     final packages = workspace.packages.values.where(
-      (package) => !package.writable && package.requiresPackageIndex,
+      (package) =>
+          !package.writable &&
+          !workspace.isLocalWorkspaceMember(package) &&
+          package.requiresPackageIndex,
     );
     final results = await verify(
       workspace,

@@ -35,6 +35,26 @@ void main() {
     expect(workspace.packages, isNot(contains('dev_only')));
   });
 
+  test(
+    'requested Package write scope keeps Workspace dependencies read-only',
+    () async {
+      final fixture = await PackageResolutionFixture.create();
+      addTearDown(fixture.dispose);
+
+      final workspace = await CCPackageWorkspace.load(
+        buildRoot: fixture.root,
+        hostRoot: fixture.packageRoot('host'),
+        workspace: true,
+        writeScope: CCPackageWriteScope.requestedPackage,
+      );
+
+      expect(workspace.packages['host']!.writable, isTrue);
+      expect(workspace.packages['path_feature']!.writable, isFalse);
+      expect(workspace.packages['git_feature']!.writable, isFalse);
+      expect(workspace.packages['pub_feature']!.writable, isFalse);
+    },
+  );
+
   test('Portable State requires an explicit package declaration', () async {
     final fixture = await PackageResolutionFixture.create();
     addTearDown(fixture.dispose);
