@@ -90,6 +90,7 @@ Future<bool> runAnalyzerBootstrapCommand(
   StringSink? output,
   StringSink? error,
   String? homeDirectory,
+  String? operatingSystem,
 }) async {
   final runner = processRunner ?? _runAnalyzerProcess;
   final readOnly =
@@ -135,6 +136,7 @@ Future<bool> runAnalyzerBootstrapCommand(
     output: outputSink,
     error: errorSink,
     homeDirectory: homeDirectory,
+    operatingSystem: operatingSystem,
   );
 }
 
@@ -639,6 +641,7 @@ Future<bool> _runDoctor(
   StringSink? output,
   StringSink? error,
   String? homeDirectory,
+  String? operatingSystem,
 }) async {
   final outputSink = output ?? stdout;
   final errorSink = error ?? stderr;
@@ -655,13 +658,67 @@ Future<bool> _runDoctor(
     for (final cache in staleCaches) {
       errorSink.writeln('  ${cache.path}');
     }
+    final processReport = await _relatedAnalyzerProcesses(
+      bootstrapRoot: bootstrapRoot,
+      cacheEntries: staleCaches,
+      runner: runner,
+      operatingSystem: operatingSystem ?? Platform.operatingSystem,
+    );
+    if (processReport.error != null) {
+      errorSink.writeln(
+        'warning: Related process details are unavailable: '
+        '${processReport.error}',
+      );
+    } else if (processReport.processes.isEmpty) {
+      errorSink.writeln(
+        'No related Analysis Server or exact-path process was identified. '
+        'The process list is advisory and may be restricted by the OS.',
+      );
+    } else {
+      errorSink.writeln(
+        'Related process candidates (advisory; command matching does not '
+        'prove cache ownership):',
+      );
+      for (final process in processReport.processes) {
+        errorSink.writeln(
+          '  PID ${process.pid} | PPID ${process.parentPid} | '
+          'elapsed ${process.elapsed} | command: ${process.command}',
+        );
+      }
+    }
     errorSink.writeln(
       'The private .plugin_manager cache is not an authoritative cross-SDK '
-      'gate. If IDE diagnostics remain stale, stop the Dart Analysis Server, '
-      'move only the listed cache entry '
-      'directory to a backup outside .plugin_manager, restart the server, and '
-      'rerun doctor. Move the whole listed entry, not just its analyzer_plugin '
-      'child. The doctor command is read-only and will not delete IDE state.',
+      'gate. Manual recovery only; doctor will not kill processes, move files, '
+      'or delete IDE state:',
+    );
+    errorSink.writeln(
+      '  1. Save editor work and stop the Dart Analysis Server from the IDE '
+      '(or close the IDE window that owns this Host).',
+    );
+    errorSink.writeln(
+      '  2. Wait for the relevant process candidates above to exit; do not '
+      'kill a PID unless you have independently confirmed its ownership.',
+    );
+    final backupRoot = Directory(
+      path.join(
+        staleCaches.first.parent.parent.path,
+        'ccrouter-plugin-cache-backup',
+      ),
+    );
+    for (final cache in staleCaches) {
+      errorSink.writeln('  3. Move the whole cache entry manually:');
+      errorSink.writeln('       source: ${cache.path}');
+      errorSink.writeln(
+        '       backup: ${path.join(backupRoot.path, path.basename(cache.path))}',
+      );
+    }
+    errorSink.writeln(
+      '     If the backup destination exists, choose a new sibling name. Do '
+      'not move only the analyzer_plugin child or clear unrelated caches.',
+    );
+    errorSink.writeln(
+      '  4. Restart the Dart Analysis Server, rerun doctor, then verify a real '
+      'IDE diagnostic or Quick Fix.',
     );
   }
   final temporary = await Directory.systemTemp.createTemp(
@@ -721,6 +778,167 @@ Future<bool> _runDoctor(
   } finally {
     if (temporary.existsSync()) await temporary.delete(recursive: true);
   }
+}
+
+/// One conservatively matched process that may retain Analyzer or cache state.
+final class _AnalyzerRelatedProcess {
+  const _AnalyzerRelatedProcess({
+    required this.pid,
+    required this.parentPid,
+    required this.elapsed,
+    required this.command,
+  });
+
+  /// Operating-system process identifier.
+  final int pid;
+
+  /// Parent process identifier reported by the operating system.
+  final int parentPid;
+
+  /// Human-readable elapsed runtime.
+  final String elapsed;
+
+  /// Full command line reported by the operating system.
+  final String command;
+}
+
+/// Result of one best-effort, read-only process inventory.
+typedef _AnalyzerProcessReport = ({
+  List<_AnalyzerRelatedProcess> processes,
+  String? error,
+});
+
+/// Lists only Analysis Server or exact-path process candidates.
+Future<_AnalyzerProcessReport> _relatedAnalyzerProcesses({
+  required Directory bootstrapRoot,
+  required List<Directory> cacheEntries,
+  required AnalyzerBootstrapProcessRunner runner,
+  required String operatingSystem,
+}) async {
+  late final ProcessResult result;
+  try {
+    if (operatingSystem == 'windows') {
+      result = await runner('powershell.exe', const [
+        '-NoProfile',
+        '-NonInteractive',
+        '-Command',
+        r'$now=[DateTime]::UtcNow; Get-CimInstance Win32_Process | '
+            r'ForEach-Object { [PSCustomObject]@{ pid=$_.ProcessId; '
+            r'ppid=$_.ParentProcessId; elapsed=[int](($now-'
+            r'$_.CreationDate.ToUniversalTime()).TotalSeconds); '
+            r'command=$_.CommandLine } } | ConvertTo-Json -Compress',
+      ], workingDirectory: bootstrapRoot.path);
+    } else {
+      result = await runner('ps', const [
+        '-axo',
+        'pid=,ppid=,etime=,command=',
+      ], workingDirectory: bootstrapRoot.path);
+    }
+  } on Object catch (failure) {
+    return (
+      processes: const <_AnalyzerRelatedProcess>[],
+      error: failure.toString(),
+    );
+  }
+  if (result.exitCode != 0) {
+    final detail = '${result.stdout}\n${result.stderr}'.trim();
+    return (
+      processes: const <_AnalyzerRelatedProcess>[],
+      error: detail.isEmpty
+          ? 'process inventory exited ${result.exitCode}'
+          : detail,
+    );
+  }
+  final candidates = operatingSystem == 'windows'
+      ? _parseWindowsAnalyzerProcesses('${result.stdout}')
+      : _parsePosixAnalyzerProcesses('${result.stdout}');
+  final paths = <String>{
+    bootstrapRoot.absolute.path.toLowerCase(),
+    for (final cache in cacheEntries) cache.absolute.path.toLowerCase(),
+  };
+  final filtered = candidates.where((process) {
+    final command = process.command.toLowerCase();
+    final analysisServer =
+        command.contains('analysis_server.dart.snapshot') ||
+        command.contains('dart language-server') ||
+        command.contains('dart analysis-server') ||
+        command.contains('dart analysis server');
+    final exactPath = paths.any(command.contains);
+    return analysisServer || exactPath;
+  }).toList()..sort((left, right) => left.pid.compareTo(right.pid));
+  return (
+    processes: List<_AnalyzerRelatedProcess>.unmodifiable(filtered),
+    error: null,
+  );
+}
+
+/// Parses POSIX `ps` columns without interpreting command contents.
+List<_AnalyzerRelatedProcess> _parsePosixAnalyzerProcesses(String contents) {
+  final processes = <_AnalyzerRelatedProcess>[];
+  final row = RegExp(r'^\s*(\d+)\s+(\d+)\s+(\S+)\s+(.+)$');
+  for (final line in contents.split(RegExp(r'\r?\n'))) {
+    final match = row.firstMatch(line);
+    if (match == null) continue;
+    processes.add(
+      _AnalyzerRelatedProcess(
+        pid: int.parse(match.group(1)!),
+        parentPid: int.parse(match.group(2)!),
+        elapsed: match.group(3)!,
+        command: match.group(4)!,
+      ),
+    );
+  }
+  return processes;
+}
+
+/// Parses the bounded PowerShell JSON process projection used on Windows.
+List<_AnalyzerRelatedProcess> _parseWindowsAnalyzerProcesses(String contents) {
+  if (contents.trim().isEmpty) return const [];
+  try {
+    final decoded = jsonDecode(contents);
+    final rows = decoded is List<Object?> ? decoded : <Object?>[decoded];
+    final processes = <_AnalyzerRelatedProcess>[];
+    for (final row in rows.whereType<Map<String, Object?>>()) {
+      final pid = row['pid'];
+      final parentPid = row['ppid'];
+      final elapsed = row['elapsed'];
+      final command = row['command'];
+      if (pid is! num ||
+          parentPid is! num ||
+          elapsed is! num ||
+          command is! String ||
+          command.isEmpty) {
+        continue;
+      }
+      processes.add(
+        _AnalyzerRelatedProcess(
+          pid: pid.toInt(),
+          parentPid: parentPid.toInt(),
+          elapsed: _formatElapsedSeconds(elapsed.toInt()),
+          command: command,
+        ),
+      );
+    }
+    return processes;
+  } on FormatException {
+    return const [];
+  }
+}
+
+/// Formats elapsed seconds without locale or wall-clock dependencies.
+String _formatElapsedSeconds(int seconds) {
+  final safe = seconds < 0 ? 0 : seconds;
+  final days = safe ~/ Duration.secondsPerDay;
+  final remainder = safe % Duration.secondsPerDay;
+  final hours = remainder ~/ Duration.secondsPerHour;
+  final minutes =
+      (remainder % Duration.secondsPerHour) ~/ Duration.secondsPerMinute;
+  final secs = remainder % Duration.secondsPerMinute;
+  final time =
+      '${hours.toString().padLeft(2, '0')}:'
+      '${minutes.toString().padLeft(2, '0')}:'
+      '${secs.toString().padLeft(2, '0')}';
+  return days == 0 ? time : '${days}d $time';
 }
 
 /// Finds outdated or incomplete cache entries for this exact bootstrap path.

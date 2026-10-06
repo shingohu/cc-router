@@ -326,11 +326,50 @@ dependencies:
         contains('stale legacy Analysis Server plugin cache'),
       );
       expect(result.stderr, contains(cached.parent.path));
+      expect(result.stderr, contains('Related process candidates'));
+      expect(result.stderr, contains('PID 321 | PPID 12 | elapsed 01:02'));
+      expect(result.stderr, contains('Manual recovery only'));
+      expect(result.stderr, contains('ccrouter-plugin-cache-backup'));
+      expect(result.stderr, contains('will not kill processes'));
       expect(result.stderr, contains('not an authoritative cross-SDK gate'));
       expect(result.stdout, contains('Analyzer doctor:'));
-      expect(result.calls, hasLength(3));
+      expect(result.calls, hasLength(4));
     },
   );
+
+  test('doctor parses Windows process details without taking action', () async {
+    final fixture = await _createFixture();
+    final home = await Directory.systemTemp.createTemp(
+      'ccrouter-analyzer-home-',
+    );
+    addTearDown(() async {
+      await fixture.root.delete(recursive: true);
+      await home.delete(recursive: true);
+    });
+    final bootstrap = Directory(
+      path.join(fixture.plugin.path, 'tools', 'analyzer_plugin'),
+    );
+    final cached = Directory(
+      path.join(
+        home.path,
+        '.dartServer',
+        '.plugin_manager',
+        md5.convert(bootstrap.path.codeUnits).toString(),
+        'analyzer_plugin',
+      ),
+    )..createSync(recursive: true);
+    File(
+      path.join(cached.path, 'pubspec.yaml'),
+    ).writeAsStringSync('stale: true');
+
+    final result = await _runDoctor(fixture, home, operatingSystem: 'windows');
+
+    expect(result.ok, isTrue, reason: '${result.stderr}\n${result.stdout}');
+    expect(result.stderr, contains('PID 765 | PPID 42 | elapsed 01:01:01'));
+    expect(result.stderr, contains('analysis_server.dart.snapshot --lsp'));
+    expect(result.stderr, contains('doctor will not kill processes'));
+    expect(cached.parent.existsSync(), isTrue);
+  });
 
   for (final damage in [
     'missing child',
@@ -385,7 +424,7 @@ dependencies:
         expect(result.stderr, contains(entry.path));
         expect(result.stderr, isNot(contains(unrelated.parent.path)));
         expect(result.stdout, contains('Analyzer doctor:'));
-        expect(result.calls, hasLength(3));
+        expect(result.calls, hasLength(4));
         expect(entry.existsSync(), isTrue);
         expect(
           unrelatedManifest.readAsStringSync(),
@@ -468,7 +507,11 @@ Future<({Directory root, Directory plugin})> _createFixture() async {
 }
 
 Future<({bool ok, String stdout, String stderr, List<String> calls})>
-_runDoctor(({Directory root, Directory plugin}) fixture, Directory home) async {
+_runDoctor(
+  ({Directory root, Directory plugin}) fixture,
+  Directory home, {
+  String operatingSystem = 'macos',
+}) async {
   final output = StringBuffer();
   final error = StringBuffer();
   final calls = <String>[];
@@ -485,11 +528,35 @@ _runDoctor(({Directory root, Directory plugin}) fixture, Directory home) async {
           environment,
         }) async {
           calls.add('${path.basename(executable)} ${arguments.join(' ')}');
+          if (path.basename(executable) == 'ps') {
+            return ProcessResult(
+              0,
+              0,
+              '321 12 01:02 /sdk/dart analysis_server.dart.snapshot --lsp\n'
+                  '654 1 00:03 /usr/bin/unrelated --flag\n',
+              '',
+            );
+          }
+          if (path.basename(executable) == 'powershell.exe') {
+            return ProcessResult(
+              0,
+              0,
+              jsonEncode({
+                'pid': 765,
+                'ppid': 42,
+                'elapsed': 3661,
+                'command':
+                    r'C:\sdk\dart.exe analysis_server.dart.snapshot --lsp',
+              }),
+              '',
+            );
+          }
           return ProcessResult(0, 0, '', '');
         },
     output: output,
     error: error,
     homeDirectory: home.path,
+    operatingSystem: operatingSystem,
   );
   return (
     ok: ok,
