@@ -131,6 +131,44 @@ final class CCRouterAnalyzerProjectContext {
       return null;
     }
   }
+
+  /// Returns the bounded Package roots declared by the input's Pub owner.
+  ///
+  /// Standalone Packages return only their requested root. Workspace inputs
+  /// return the resolution root and its explicit members without scanning the
+  /// filesystem. Invalid or unavailable manifests return an empty list so the
+  /// diagnostic-only plugin remains fail-open.
+  static List<Directory> analysisPackageRoots(String inputPath) {
+    try {
+      final requestedRoot = _nearestPackageRoot(inputPath);
+      if (requestedRoot == null) return const <Directory>[];
+      final requestedManifest = _readYamlMap(
+        File(path.join(requestedRoot.path, 'pubspec.yaml')),
+      );
+      if (requestedManifest == null) return const <Directory>[];
+      final resolutionRoot = _resolutionRoot(requestedRoot, requestedManifest);
+      if (resolutionRoot == null) return const <Directory>[];
+      final resolutionManifest = _readYamlMap(
+        File(path.join(resolutionRoot.path, 'pubspec.yaml')),
+      );
+      if (resolutionManifest == null) return const <Directory>[];
+      final roots = <String, Directory>{};
+      void add(Directory root) {
+        final manifest = File(path.join(root.path, 'pubspec.yaml'));
+        if (!manifest.existsSync()) return;
+        roots[_directoryIdentity(root)] = root.absolute;
+      }
+
+      add(resolutionRoot);
+      for (final member in _workspaceMembers(resolutionManifest)) {
+        add(Directory(path.join(resolutionRoot.path, member)));
+      }
+      if (roots.isEmpty) add(requestedRoot);
+      return List<Directory>.unmodifiable(roots.values);
+    } on Object {
+      return const <Directory>[];
+    }
+  }
 }
 
 /// Sentinel distinguishing an invalid `host.enabled` from an absent value.

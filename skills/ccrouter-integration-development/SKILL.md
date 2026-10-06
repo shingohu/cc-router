@@ -81,7 +81,10 @@ Its Pub-resolution hint uses the selected Package's explicit
 `requestedRoot/resolutionRoot`, `.metadata`, and `ccrouter.yaml` role. It can
 therefore distinguish Host, Flutter package-local, and Pure Dart package-local
 guidance without an active watch. Treat malformed or stale Workspace evidence
-as unavailable diagnostics, not permission to borrow an ancestor graph.
+as unavailable diagnostics, not permission to borrow an ancestor graph. When a
+Workspace root is analyzed, every explicit participating member receives and
+clears its own saved-versus-resolved hint; the plugin indexes the manifest list
+instead of recursively scanning the Workspace.
 
 Read [implementation-patterns.md](references/implementation-patterns.md) when adding or changing code. Read [review-checklist.md](references/review-checklist.md) when reviewing, migrating, or validating a feature.
 

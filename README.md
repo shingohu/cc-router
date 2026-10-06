@@ -75,7 +75,9 @@ Plugin 使用与 Generator 一致的 `requestedRoot/resolutionRoot` 语义：Wor
 有效 `workspace_ref.json` 或精确 membership，standalone 嵌套 Package 不继承父 Workspace graph。
 保存的依赖与 resolved graph 不一致时，即使没有 active watch，IDE 也会按 Host、Flutter
 package-local 或 Pure Dart package-local 提示对应的 `flutter pub get`/`dart pub get`；该提示只
-暂停 Owner 推断，不执行 Pub 或生成。
+暂停 Owner 推断，不执行 Pub 或生成。打开 Workspace 根目录时，Plugin 会从根 manifest 的
+显式 member 列表建立有界索引，因此每个参与生成的 member 都会独立获得、清除该提示；
+500ms polling 不递归扫描 Workspace。
 
 插件还会在编辑期检查 Handler 的 public/top-level/non-generic 形态、显然不支持的参数数量和
 void 返回形态、Route `pattern/patterns`、InitTask `contract/id`、字面量 ID/alias/Gate ID 与

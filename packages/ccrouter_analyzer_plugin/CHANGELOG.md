@@ -7,3 +7,5 @@
   conservative required-dependency Quick Fix for directly editable lists.
 - Aligned Package role and Workspace resolution hints with Generator semantics,
   including package-local/Pure Dart guidance without an active watch.
+- Publish and clear Pub-resolution drift hints for explicit Workspace members,
+  including members analyzed through a shared Workspace context.

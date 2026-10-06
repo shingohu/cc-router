@@ -28,6 +28,7 @@ class AnalysisServerSession {
     Map<String, String> sources, {
     bool lsp = false,
     Map<String, Map<String, String>> dependencyPackages = const {},
+    Map<String, String> dependencyManifests = const {},
   }) async {
     final root = Directory.systemTemp.createTempSync('ccrouter-server-e2e-');
     try {
@@ -63,7 +64,8 @@ class AnalysisServerSession {
         });
         _write(
           p.join(directory.path, 'pubspec.yaml'),
-          'name: ${dependency.key}\nresolution: workspace\nenvironment:\n  sdk: ^3.10.0\n',
+          dependencyManifests[dependency.key] ??
+              'name: ${dependency.key}\nresolution: workspace\nenvironment:\n  sdk: ^3.10.0\n',
         );
         for (final file in dependency.value.entries) {
           _write(p.join(directory.path, file.key), file.value);

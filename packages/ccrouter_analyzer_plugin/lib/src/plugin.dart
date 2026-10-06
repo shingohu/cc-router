@@ -12,6 +12,7 @@ import 'package:analyzer_plugin/protocol/protocol_generated.dart';
 import 'package:ccrouter_analyzer_plugin/src/contract_owner_index.dart';
 import 'package:ccrouter_analyzer_plugin/src/generator_diagnostics_bridge.dart';
 import 'package:ccrouter_analyzer_plugin/src/package_context_cache.dart';
+import 'package:ccrouter_analyzer_plugin/src/project_context.dart';
 import 'package:ccrouter_analyzer_plugin/src/quick_fixes.dart';
 import 'package:ccrouter_analyzer_plugin/src/source_analyzer.dart';
 import 'package:path/path.dart' as path;
@@ -48,6 +49,12 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
 
   /// Invalidates asynchronous polling work when contexts are replaced.
   int _watchBridgeLifecycleRevision = 0;
+
+  /// Explicit Package manifests participating in each active Analysis context.
+  final Map<String, List<String>> _pubspecPathsByContext = {};
+
+  /// Last observed Workspace manifest identity for each Analysis context.
+  final Map<String, String> _workspaceManifestIdentityByContext = {};
 
   /// Watches Dart sources and the exact generated Contract ownership index.
   /// JSON is an invalidation input only; no JSON diagnostics are published.
@@ -92,9 +99,12 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
           .where(_isAuthoredDartPath)
           .toList(growable: false);
       await analyzeFiles(analysisContext: analysisContext, paths: paths);
-      await _publishPubResolutionHint(
-        path.join(analysisContext.contextRoot.root.path, 'pubspec.yaml'),
-      );
+      for (final pubspec in _refreshPubspecIndex(
+        analysisContext,
+        force: true,
+      )) {
+        await _publishPubResolutionHint(pubspec);
+      }
     }
     _startWatchBridgePolling();
   }
@@ -109,6 +119,8 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
     _packageContexts.clear();
     _contractOwners.clear();
     _generatorDiagnostics.clear();
+    _pubspecPathsByContext.clear();
+    _workspaceManifestIdentityByContext.clear();
     await super.beforeContextCollectionDispose(
       contextCollection: contextCollection,
     );
@@ -140,15 +152,20 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
       for (final context in contexts.contexts) {
         final root = io.Directory(context.contextRoot.root.path);
         refresh.addAll(_generatorDiagnostics.pollAffectedDartPaths(root));
-        if (_generatorDiagnostics.pollPubResolutionChanged(root)) {
-          resolutionChanged.add(root.path);
+        resolutionChanged.addAll(_refreshPubspecIndex(context));
+        for (final pubspec in _indexedPubspecs(context)) {
+          if (_generatorDiagnostics.pollPubResolutionChanged(
+            io.File(pubspec).parent,
+          )) {
+            resolutionChanged.add(pubspec);
+          }
         }
       }
       if (lifecycleRevision != _watchBridgeLifecycleRevision) {
         return;
       }
-      for (final root in resolutionChanged) {
-        await _publishPubResolutionHint(path.join(root, 'pubspec.yaml'));
+      for (final pubspec in resolutionChanged) {
+        await _publishPubResolutionHint(pubspec);
       }
       if (refresh.isEmpty) return;
       for (final context in contexts.contexts) {
@@ -181,6 +198,8 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
   ) async {
     _stopWatchBridgePolling();
     _generatorDiagnostics.clear();
+    _pubspecPathsByContext.clear();
+    _workspaceManifestIdentityByContext.clear();
     return super.handlePluginShutdown(parameters);
   }
 
@@ -189,6 +208,8 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
   void onDone() {
     _stopWatchBridgePolling();
     _generatorDiagnostics.clear();
+    _pubspecPathsByContext.clear();
+    _workspaceManifestIdentityByContext.clear();
     super.onDone();
   }
 
@@ -225,10 +246,19 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
     final contexts = _activeContexts;
     if (contexts == null) return;
     for (final context in contexts.contexts) {
+      final contextPubspec = path.join(
+        context.contextRoot.root.path,
+        'pubspec.yaml',
+      );
+      if (paths.any((changed) => path.equals(changed, contextPubspec))) {
+        for (final pubspec in _refreshPubspecIndex(context, force: true)) {
+          await _publishPubResolutionHint(pubspec);
+        }
+      }
       if (resolutionInputChanged) {
-        await _publishPubResolutionHint(
-          path.join(context.contextRoot.root.path, 'pubspec.yaml'),
-        );
+        for (final pubspec in _indexedPubspecs(context)) {
+          await _publishPubResolutionHint(pubspec);
+        }
       }
       await analyzeFiles(
         analysisContext: context,
@@ -459,6 +489,57 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
       );
     }
     return null;
+  }
+
+  /// Rebuilds one context's explicit Workspace member manifest index on demand.
+  ///
+  /// The returned union lets callers publish newly added members and clear
+  /// diagnostics associated with members that left the Workspace.
+  Set<String> _refreshPubspecIndex(
+    AnalysisContext analysisContext, {
+    bool force = false,
+  }) {
+    final contextRoot = analysisContext.contextRoot.root.path;
+    final key = path.normalize(io.Directory(contextRoot).absolute.path);
+    final workspaceManifest = io.File(path.join(contextRoot, 'pubspec.yaml'));
+    final identity = _filesystemIdentity(workspaceManifest);
+    if (!force && _workspaceManifestIdentityByContext[key] == identity) {
+      return const <String>{};
+    }
+    _workspaceManifestIdentityByContext[key] = identity;
+    final previous = _pubspecPathsByContext[key] ?? const <String>[];
+    final current =
+        <String>[
+              for (final root
+                  in CCRouterAnalyzerProjectContext.analysisPackageRoots(
+                    contextRoot,
+                  ))
+                path.normalize(path.join(root.path, 'pubspec.yaml')),
+            ]
+            .where(analysisContext.contextRoot.isAnalyzed)
+            .toList(growable: false)
+          ..sort();
+    _pubspecPathsByContext[key] = List<String>.unmodifiable(current);
+    return <String>{...previous, ...current};
+  }
+
+  /// Returns the already indexed Package manifests for one Analysis context.
+  List<String> _indexedPubspecs(AnalysisContext analysisContext) {
+    final key = path.normalize(
+      io.Directory(analysisContext.contextRoot.root.path).absolute.path,
+    );
+    return _pubspecPathsByContext[key] ?? const <String>[];
+  }
+
+  /// Uses bounded filesystem metadata to detect Workspace manifest changes.
+  static String _filesystemIdentity(io.File file) {
+    try {
+      final stat = file.statSync();
+      return '${stat.type}:${stat.size}:${stat.modified.microsecondsSinceEpoch}:'
+          '${stat.changed.microsecondsSinceEpoch}';
+    } on Object {
+      return 'missing';
+    }
   }
 
   /// Refreshes diagnostics for generated capability files added, changed, or

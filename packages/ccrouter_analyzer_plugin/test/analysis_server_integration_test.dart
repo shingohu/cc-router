@@ -193,6 +193,67 @@ dependencies:
   }
 
   test(
+    'real server publishes an initial stale Pub hint for a Workspace member',
+    () async {
+      const member = 'member_contracts';
+      final server = await AnalysisServerSession.start(
+        {
+          _file: 'const sample = 1;\n',
+          '.dart_tool/package_graph.json': jsonEncode({
+            'packages': [
+              {
+                'name': member,
+                'version': '1.0.0',
+                'dependencies': ['ccrouter_contracts', 'stale_dependency'],
+              },
+            ],
+          }),
+        },
+        dependencyPackages: {
+          member: {'lib/member.dart': 'const memberValue = 1;\n'},
+        },
+        dependencyManifests: const {
+          member: '''
+name: member_contracts
+resolution: workspace
+environment:
+  sdk: ^3.10.0
+dependencies:
+  ccrouter_contracts: any
+''',
+        },
+      );
+      addTearDown(server.close);
+
+      const code = 'ccrouter_pub_resolution_stale';
+      await server.waitFor(
+        'modules/$member/pubspec.yaml',
+        (errors) => _has(errors, code),
+      );
+      final staleRevision =
+          server.revisions[server.path('modules/$member/pubspec.yaml')]!;
+      server.write(
+        '.dart_tool/package_graph.json',
+        jsonEncode({
+          'packages': [
+            {
+              'name': member,
+              'version': '1.0.0',
+              'dependencies': ['ccrouter_contracts'],
+            },
+          ],
+        }),
+      );
+      await server.waitFor(
+        'modules/$member/pubspec.yaml',
+        (errors) => !_has(errors, code),
+        after: staleRevision,
+      );
+    },
+    timeout: const Timeout(Duration(minutes: 3)),
+  );
+
+  test(
     'real server clears foreign annotation diagnostics despite unrelated errors',
     () async {
       const framework = '''

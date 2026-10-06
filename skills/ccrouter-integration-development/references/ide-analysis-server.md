@@ -42,7 +42,9 @@ diagnostic. Independently of watch availability, saved `pubspec.yaml` versus
 resolved graph drift produces only `ccrouter_pub_resolution_stale`; ownership
 is not inferred until Pub get. The hint identifies Host versus package-local
 from `.metadata` and `ccrouter.yaml`, and selects Flutter Pub for Flutter
-Packages or Dart Pub for Pure Dart Packages.
+Packages or Dart Pub for Pure Dart Packages. An analyzed Workspace root indexes
+its explicit member manifests and publishes or clears the hint independently
+for each participating member; it does not recursively scan the repository.
 
 Analysis Server does not reliably emit plugin filesystem events for
 `.dart_tool`. The plugin therefore compares the two watch snapshots plus

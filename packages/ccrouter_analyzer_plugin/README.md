@@ -17,7 +17,9 @@ Package discovery is Workspace-aware. The plugin validates Pub's
 unrelated ancestor's Package graph for a standalone nested Package. It also
 reports saved-versus-resolved dependency drift without requiring an active
 Generator watch, selecting Host/package-local and Flutter/Dart Pub guidance
-from `.metadata`, `ccrouter.yaml`, and direct CCRouter dependencies.
+from `.metadata`, `ccrouter.yaml`, and direct CCRouter dependencies. Workspace
+analysis indexes explicit member manifests so each participating Package gets
+its own current drift diagnostic without a recursive directory scan.
 
 The plugin uses an isolated Analysis Server bootstrap because its Analyzer
 version must not constrain the application Workspace. Follow the
