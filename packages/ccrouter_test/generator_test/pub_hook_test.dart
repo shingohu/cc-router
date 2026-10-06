@@ -391,6 +391,64 @@ dev_dependencies:
     },
   );
 
+  test('inner Dart wrapper runs generation from the Package root', () async {
+    final sdk = await Directory.systemTemp.createTemp(
+      'ccrouter_dart_pub_hook_cwd_',
+    );
+    addTearDown(() => sdk.delete(recursive: true));
+    final bin = Directory(path.join(sdk.path, 'bin'))..createSync();
+    File(
+      path.join(bin.path, 'flutter'),
+    ).writeAsStringSync('#!/usr/bin/env bash\nexit 0\n');
+    File(
+      path.join(bin.path, 'flutter.bat'),
+    ).writeAsStringSync('@echo off\r\nexit /b 0\r\n');
+    final trace = path.join(sdk.path, 'dart-cwd-trace.txt');
+    final innerDart = await _writeFakeInnerDart(sdk, '''#!/usr/bin/env bash
+printf "%s|%s\\n" "\$PWD" "\$*" >> "\$CCROUTER_TRACE"
+exit 0
+''');
+    final installed = await _run(['pub-hook', 'install', '--sdk', sdk.path]);
+    expect(installed.exitCode, 0, reason: '${installed.stderr}');
+
+    final project = Directory(path.join(sdk.path, 'project'))..createSync();
+    final library = Directory(path.join(project.path, 'lib'))..createSync();
+    File(path.join(project.path, 'pubspec.yaml')).writeAsStringSync('''
+name: dart_hook_cwd_project
+dependencies:
+  ccrouter: any
+dev_dependencies:
+  ccrouter_generator: any
+''');
+    Directory(path.join(project.path, '.dart_tool')).createSync();
+    File(
+      path.join(project.path, '.dart_tool', 'package_config.json'),
+    ).writeAsStringSync('''{"configVersion":2,"packages":[
+  {"name":"ccrouter_generator","rootUri":"../missing_generator"}
+]}''');
+
+    final result = await Process.run(
+      innerDart.path,
+      ['pub', 'get'],
+      workingDirectory: library.path,
+      environment: {...Platform.environment, 'CCROUTER_TRACE': trace},
+    );
+
+    expect(result.exitCode, 0, reason: '${result.stderr}');
+    final lines = File(trace).readAsLinesSync();
+    final canonicalLibrary = library.resolveSymbolicLinksSync();
+    final canonicalProject = project.resolveSymbolicLinksSync();
+    expect(lines, hasLength(2));
+    expect(lines.first, '$canonicalLibrary|pub get');
+    expect(
+      lines.last,
+      allOf(
+        startsWith('$canonicalProject|run '),
+        contains('ccrouter_generator:ccrouter pub-hook run'),
+      ),
+    );
+  });
+
   test('Flutter wrapper suppresses nested Dart post-pub hooks', () async {
     final sdk = await Directory.systemTemp.createTemp(
       'ccrouter_nested_pub_hook_',

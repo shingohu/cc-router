@@ -1215,8 +1215,11 @@ run_generator_hook() {
   if ! resolve_project_root "$@"; then
     return 0
   fi
-  "$DART" run --verbosity=error ccrouter_generator:ccrouter pub-hook run \
-    --project-root "$PROJECT_ROOT" --pub-command "$HOOK_COMMAND"
+  (
+    cd "$PROJECT_ROOT" || exit 1
+    "$DART" run --verbosity=error ccrouter_generator:ccrouter pub-hook run \
+      --project-root "$PROJECT_ROOT" --pub-command "$HOOK_COMMAND"
+  )
 }
 
 find_flutter_command "$@"
@@ -1397,8 +1400,11 @@ if [ ! -f "$PACKAGE_CONFIG" ] || \
   exit 0
 fi
 
-"$ORIGINAL" run --verbosity=error ccrouter_generator:ccrouter pub-hook run \
-  --project-root "$PROJECT_ROOT" --pub-command "dart:$PUB_COMMAND"
+(
+  cd "$PROJECT_ROOT" || exit 1
+  "$ORIGINAL" run --verbosity=error ccrouter_generator:ccrouter pub-hook run \
+    --project-root "$PROJECT_ROOT" --pub-command "dart:$PUB_COMMAND"
+)
 HOOK_EXIT=$?
 if [ "$HOOK_EXIT" -ne 0 ]; then
   echo "CCRouter pub hook failed after successful dart pub (exit $HOOK_EXIT)." >&2
