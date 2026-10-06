@@ -24,6 +24,7 @@ workspace:
   - demo/modules/analytics_firebase
   - demo/modules/kv_storage
   - demo/modules/order
+  - demo/modules/order/example
   - demo/modules/order_contracts
   - demo/modules/payment
   - demo/modules/navigation_lab

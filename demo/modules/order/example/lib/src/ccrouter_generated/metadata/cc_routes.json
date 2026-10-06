@@ -1,0 +1,140 @@
+{
+  "schemaVersion": 2,
+  "components": [
+    {
+      "id": "demo_order_component",
+      "version": "0.1.0",
+      "dependencies": [],
+      "optionalDependencies": [],
+      "serviceDependencies": [],
+      "commandDependencies": []
+    }
+  ],
+  "routes": [
+    {
+      "id": "order.detail",
+      "version": "0.1.0",
+      "shapeFingerprint": "6ee7d5adc723f67d460fe0dc28b24514793e3bb1f89e8a2836952223f8dfeb73",
+      "componentId": "demo_order_component",
+      "exposure": "external",
+      "deepLink": "disabled",
+      "description": "订单详情，确认后返回订单编号。",
+      "interceptorIds": [],
+      "popGuardIds": [],
+      "declaration": {
+        "package": "demo_order_contracts",
+        "library": "lib/src/order_detail_route_contract.dart",
+        "kind": "contract",
+        "symbol": "OrderDetailRouteContract",
+        "packageUri": "package:demo_order_contracts/src/order_detail_route_contract.dart",
+        "line": 16,
+        "column": 16
+      },
+      "navigationSources": [
+        "typedIntent",
+        "internalUri"
+      ],
+      "restoration": {
+        "status": "unsupported"
+      },
+      "placement": {
+        "hostId": "default",
+        "parentRouteId": null,
+        "shellId": null,
+        "navigatorOutlet": "root"
+      },
+      "presentation": {
+        "type": "page",
+        "routeType": "platformDefault",
+        "transition": "platformDefault",
+        "opaque": true,
+        "fullscreenDialog": false
+      },
+      "contracts": {
+        "route": "OrderDetailRoute",
+        "arguments": "OrderDetailRouteArguments",
+        "package": "demo_order_contracts",
+        "library": "lib/src/ccrouter_generated/contract/order_detail_route_contract.route.contract.g.dart",
+        "publicLibraries": [
+          "package:demo_order_contracts/demo_order_contracts.dart"
+        ]
+      },
+      "generatedArtifacts": [
+        {
+          "role": "routeContract",
+          "symbol": "OrderDetailRoute",
+          "packageUri": "package:demo_order_contracts/src/ccrouter_generated/contract/order_detail_route_contract.route.contract.g.dart"
+        }
+      ],
+      "patterns": [
+        {
+          "type": "CCPathPattern",
+          "value": "/orders/:orderId",
+          "primary": true,
+          "constraints": {}
+        },
+        {
+          "type": "CCPathPattern",
+          "value": "/order/:orderId",
+          "primary": false,
+          "constraints": {}
+        }
+      ],
+      "parameters": [
+        {
+          "name": "orderId",
+          "wireName": "orderId",
+          "source": "path",
+          "type": "int",
+          "required": true,
+          "default": null,
+          "description": "Stable order identity encoded in the path."
+        },
+        {
+          "name": "tab",
+          "wireName": "tab",
+          "source": "query",
+          "type": "String",
+          "cardinality": "single",
+          "required": false,
+          "default": "'summary'",
+          "description": "Initially selected detail tab encoded as a query value."
+        }
+      ],
+      "resultType": "String",
+      "implementation": {
+        "routeId": "order.detail",
+        "componentId": "demo_order_component",
+        "package": "demo_order",
+        "source": "lib/src/order_detail_page.dart",
+        "contract": {
+          "symbol": "OrderDetailRouteContract",
+          "packageUri": "package:demo_order_contracts/src/order_detail_route_contract.dart",
+          "line": 16,
+          "column": 16
+        },
+        "implementation": {
+          "symbol": "OrderDetailPage",
+          "packageUri": "package:demo_order/src/order_detail_page.dart",
+          "line": 6,
+          "column": 13
+        },
+        "registration": "ccrouterRegisterOrderDetailPageRoute",
+        "registrationLibrary": "lib/src/ccrouter_generated/binding/order_detail_page.route_binding.g.dart",
+        "destination": {
+          "descriptor": "ccrouterDescribeOrderDetailPageRoute",
+          "builder": "ccrouterBuildOrderDetailPageRoute",
+          "library": "lib/src/ccrouter_generated/binding/order_detail_page.route_binding.g.dart",
+          "builderLibrary": "lib/src/ccrouter_generated/binding/order_detail_page.route_binding.g.dart"
+        },
+        "generatedArtifacts": [
+          {
+            "role": "routeBinding",
+            "symbol": "ccrouterRegisterOrderDetailPageRoute",
+            "packageUri": "package:demo_order/src/ccrouter_generated/binding/order_detail_page.route_binding.g.dart"
+          }
+        ]
+      }
+    }
+  ]
+}

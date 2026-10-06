@@ -1,0 +1,25 @@
+name: demo_order_example
+description: Standalone CCRouter Host for the demo_order component.
+publish_to: none
+resolution: workspace
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.11.5
+
+dependencies:
+  ccrouter: ^0.1.0
+  ccrouter_go_router: ^0.1.0
+  demo_order: ^0.1.0
+  demo_order_contracts: ^0.1.0
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  ccrouter_generator: ^0.1.0
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
