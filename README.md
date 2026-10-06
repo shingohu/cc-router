@@ -1362,6 +1362,8 @@ restart 成功后，当前 run session 才继续接受 reload。该 gate 不改�
 关闭原 Flutter Tool 的 stdin，使其按直接启动时相同的 EOF 生命周期退出。gate 不代理
 普通交互式终端 `r`；后者仍应先通过 `watch follow` 确认成功。设置
 `CCROUTER_DISABLE_HOT_RELOAD_GATE=1` 可只关闭 machine reload 协调，保留 preflight 和 watch。
+交互式 `flutter run` 启动时会明确打印这一限制；该提示表示 watch 正常运行，但不应把普通
+终端 `r/R` 误认为已经受 generation gate 保护。
 Workspace Validator 失败时，watch 还会独立原子发布
 `.dart_tool/ccrouter/v1/watch/diagnostics.json`。该文件只包含最多 100 条版本化结构诊断，并绑定
 Host/build root、session、cycle、`eventRevision` 与 Pub resolution fingerprint；成功、新 cycle

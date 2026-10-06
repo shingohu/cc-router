@@ -363,7 +363,8 @@ watch has completed the saved authored-input revision before forwarding
 `app.restart`. Generation failure appears as a Hot Reload daemon error
 instead of allowing old generated code. A topology-changing watch restart
 requires an explicit Hot Restart. Interactive terminal `r` is outside this
-machine boundary; wait for `watch follow` success first. Closing the parent
+machine boundary; the supervisor reports that limitation at startup, and you
+must wait for `watch follow` success first. Closing the parent
 machine stdin also closes the original Flutter Tool's stdin so IDE/AI session
 termination retains Flutter's normal EOF lifecycle. Use
 `CCROUTER_DISABLE_HOT_RELOAD_GATE=1` only for isolated fallback comparison.

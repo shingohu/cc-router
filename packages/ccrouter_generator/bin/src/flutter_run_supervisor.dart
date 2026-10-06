@@ -74,6 +74,11 @@ final class CCFlutterRunSupervisor {
         environment: environment,
       ).run();
     }
+    stdout.writeln(
+      'CCRouter interactive Hot Reload is not generation-gated. '
+      'After changing generated declarations, wait for '
+      '`aggregationSucceeded` before pressing r or R.',
+    );
     return _CCFlutterInheritedRunProxy(
       originalFlutter: originalFlutter,
       flutterArguments: flutterArguments,

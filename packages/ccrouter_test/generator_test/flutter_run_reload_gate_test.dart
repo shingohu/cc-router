@@ -246,6 +246,41 @@ void main() {
   );
 
   test(
+    'interactive supervisor reports that terminal reload is ungated',
+    () async {
+      final host = await _createHost();
+      addTearDown(() => host.delete(recursive: true));
+      final lease = File(path.join(host.path, 'flutter-run.lease'))
+        ..writeAsStringSync('');
+      final original = File(path.join(host.path, 'fake-flutter-exit'))
+        ..writeAsStringSync('#!/usr/bin/env bash\nexit 0\n');
+      final chmod = await Process.run('chmod', <String>['+x', original.path]);
+      expect(chmod.exitCode, 0, reason: '${chmod.stderr}');
+
+      final process = await Process.run(Platform.resolvedExecutable, <String>[
+        'run',
+        'ccrouter_generator:ccrouter_flutter_run_supervisor',
+        '--host-root',
+        host.path,
+        '--original',
+        original.path,
+        '--watch-lease',
+        lease.path,
+        '--',
+        'run',
+      ], workingDirectory: Directory.current.path);
+
+      expect(process.exitCode, 0, reason: '${process.stderr}');
+      expect(
+        '${process.stdout}',
+        allOf(contains('not generation-gated'), contains('pressing r or R')),
+      );
+      expect(lease.existsSync(), isFalse);
+    },
+    skip: Platform.isWindows ? 'POSIX fixture executable' : false,
+  );
+
+  test(
     'Flutter run supervisor cleans its lease after termination',
     () async {
       final host = await _createHost();

@@ -405,6 +405,8 @@ Hook 对 `flutter run --machine` 增加只代理 stdin 的 reload gate。它等�
 diagnostics。topology 变化设置 `hotRestartRequired`，Hot Reload 被拒绝，显式 Hot
 Restart 得到 daemon 成功响应后才解除当前 run session 的栅栏。普通交互式终端 `r`
 不经过该 machine gate；使用前先通过 `watch follow` 确认本轮聚合成功。
+交互式 `flutter run` 会在启动 Flutter Tool 前明确打印这一限制，避免把已启动 watch
+误认为终端 `r/R` 同样受到 generation gate 保护。
 `CCROUTER_DISABLE_HOT_RELOAD_GATE=1` 只回退这一协调层。
 watch 会原子发布 `.dart_tool/ccrouter/v1/watch/status.json`；`watch status <host>` 读取一次
 当前状态，`watch follow <host>` 持续输出简洁状态变化。Hook 启动的完整 build_runner 日志仍在
