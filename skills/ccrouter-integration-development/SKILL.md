@@ -298,7 +298,11 @@ build_runner verbose durations and the complete cycle trace.
 When Flutter's Hook owns the background watch, use `watch status <host-root>`
 for one read-only snapshot or `watch follow <host-root>` for concise changes.
 The wrapper prints its successful watch-start summary to stdout before the
-original Flutter process begins; failures remain on stderr. This summary is not
+original Flutter process begins. It must first observe `sessionReady` for the
+exact wrapper lease and confirm the build-root owner lock; a forked background
+process is not readiness. Startup conflict, exit, structured failure, or timeout
+blocks Flutter and remains on stderr. `CCROUTER_DISABLE_WATCH_STARTUP_HANDSHAKE=1`
+is an isolated A/B fallback, not a normal workflow. These summaries are not
 watch NDJSON.
 For `flutter run --machine`, the Hook's stdin-only reload gate waits until
 watch has completed the saved authored-input revision before forwarding
@@ -310,7 +314,8 @@ machine boundary; wait for `watch follow` success first. Use
 The atomic local state is `.dart_tool/ccrouter/v1/watch/status.json`; complete
 Hook diagnostics remain in `watch/flutter-run.log` and are never mixed into
 Flutter Tool's machine stdout. Failure to publish observational state does not
-fail or weaken generation. If an abrupt exit leaves an `active` record, the
+fail or weaken direct generation, but the Hook refuses to launch Flutter when
+it cannot prove readiness for its exact lease. If an abrupt exit leaves an `active` record, the
 read-only commands report it as `stale` after the owner lock is released and do
 not rewrite the historical status file.
 Workspace validation failures also publish a bounded atomic

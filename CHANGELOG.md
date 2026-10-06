@@ -13,3 +13,5 @@ published.
 - Added GoRouter Host integration, lifecycle, interception, diagnostics,
   analytics, read-only DevTools, Analyzer diagnostics, and release tooling.
 - Added multi-platform Demo coverage and explicit release-readiness gates.
+- Made Hook-started `flutter run` wait for the exact leased generation watch to
+  publish a live ready session before launching Flutter.

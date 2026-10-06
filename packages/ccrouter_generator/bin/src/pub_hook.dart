@@ -128,6 +128,7 @@ final class CCPubHookManager {
             'run',
             'build',
             'run-watch',
+            'watch-startup-handshake',
             'machine-reload-gate',
           ],
         }),
@@ -221,6 +222,9 @@ final class CCPubHookManager {
     final reloadGateEnabled =
         _supportsReloadGate(posix) &&
         (!windowsExpected || _supportsReloadGate(windows));
+    final watchStartupHandshakeEnabled =
+        _supportsWatchStartupHandshake(posix) &&
+        (!windowsExpected || _supportsWatchStartupHandshake(windows));
     final installed =
         markerValid &&
         posixBackupPresent &&
@@ -228,6 +232,7 @@ final class CCPubHookManager {
         windowsValid &&
         preflightEnabled &&
         runWatchEnabled &&
+        watchStartupHandshakeEnabled &&
         reloadGateEnabled;
     stdout.writeln('CCRouter pub hook SDK: ${sdkRoot.path}');
     stdout.writeln(
@@ -250,6 +255,7 @@ final class CCPubHookManager {
     stdout.writeln(
       '  run/build preflight: ${preflightEnabled ? 'enabled' : 'missing'}, '
       'run watch: ${runWatchEnabled ? 'enabled' : 'missing'}, '
+      'watch startup handshake: ${watchStartupHandshakeEnabled ? 'enabled' : 'missing'}, '
       'machine reload gate: ${reloadGateEnabled ? 'enabled' : 'missing'}, '
       'pub post-hook: ${posixValid ? 'enabled' : 'missing'}',
     );
@@ -312,6 +318,17 @@ final class CCPubHookManager {
     try {
       return file.readAsStringSync().contains(
         'ccrouter_generator:ccrouter_flutter_run_gate',
+      );
+    } on Object {
+      return false;
+    }
+  }
+
+  bool _supportsWatchStartupHandshake(File file) {
+    if (!file.existsSync()) return false;
+    try {
+      return file.readAsStringSync().contains(
+        'ccrouter_generator:ccrouter_watch_startup',
       );
     } on Object {
       return false;
@@ -936,7 +953,6 @@ if [ "$FLUTTER_COMMAND" = "run" ] || [ "$FLUTTER_COMMAND" = "build" ]; then
     "$PROJECT_ROOT" --watch=auto --machine --watch-lease "$WATCH_LEASE" \
     >> "$WATCH_DIR/flutter-run.log" 2>&1 &
   WATCH_PID=$!
-  echo "CCRouter watch starting (pid=$WATCH_PID). Status: $WATCH_DIR/status.json; log: $WATCH_DIR/flutter-run.log"
   cleanup_ccrouter_watch() {
     rm -f "$WATCH_LEASE"
     if kill -0 "$WATCH_PID" 2>/dev/null; then
@@ -945,6 +961,19 @@ if [ "$FLUTTER_COMMAND" = "run" ] || [ "$FLUTTER_COMMAND" = "build" ]; then
     fi
   }
   trap cleanup_ccrouter_watch EXIT INT TERM
+  echo "CCRouter watch starting (pid=$WATCH_PID). Status: $WATCH_DIR/status.json; log: $WATCH_DIR/flutter-run.log"
+  if [ "${CCROUTER_DISABLE_WATCH_STARTUP_HANDSHAKE:-0}" != "1" ]; then
+    "$DART" run --verbosity=error \
+      ccrouter_generator:ccrouter_watch_startup \
+      --host-root "$PROJECT_ROOT" --watch-lease "$WATCH_LEASE"
+    HANDSHAKE_EXIT=$?
+    if [ "$HANDSHAKE_EXIT" -ne 0 ]; then
+      cleanup_ccrouter_watch
+      trap - EXIT INT TERM
+      echo "CCRouter watch startup blocked flutter run (exit $HANDSHAKE_EXIT)." >&2
+      exit "$HANDSHAKE_EXIT"
+    fi
+  fi
   FLUTTER_MACHINE=0
   for ARG in "$@"; do
     if [ "$ARG" = "--machine" ]; then
@@ -1056,6 +1085,11 @@ set "WATCH_LEASE=%WATCH_DIR%\flutter-run-%RANDOM%-%RANDOM%.lease"
 type nul > "%WATCH_LEASE%"
 start "" /b "%SCRIPT_DIR%dart.bat" run --verbosity=error ccrouter_generator:ccrouter generate "%PROJECT_ROOT%" --watch=auto --machine --watch-lease "%WATCH_LEASE%" 1>>"%WATCH_DIR%\flutter-run.log" 2>>&1
 echo CCRouter watch starting. Status: %WATCH_DIR%\status.json; log: %WATCH_DIR%\flutter-run.log
+if "%CCROUTER_DISABLE_WATCH_STARTUP_HANDSHAKE%"=="1" goto watch_handshake_complete
+call "%SCRIPT_DIR%dart.bat" run --verbosity=error ccrouter_generator:ccrouter_watch_startup --host-root "%PROJECT_ROOT%" --watch-lease "%WATCH_LEASE%"
+set "WATCH_HANDSHAKE_EXIT=%ERRORLEVEL%"
+if not "%WATCH_HANDSHAKE_EXIT%"=="0" goto watch_handshake_failed
+:watch_handshake_complete
 set "FLUTTER_MACHINE=0"
 for %%A in (%*) do if "%%~A"=="--machine" set "FLUTTER_MACHINE=1"
 if "%FLUTTER_MACHINE%"=="1" if not "%CCROUTER_DISABLE_HOT_RELOAD_GATE%"=="1" goto run_with_reload_gate
@@ -1067,6 +1101,11 @@ call "%SCRIPT_DIR%dart.bat" run --verbosity=error ccrouter_generator:ccrouter_fl
 set "ORIGINAL_EXIT=%ERRORLEVEL%"
 del /q "%WATCH_LEASE%" >nul 2>&1
 exit /b %ORIGINAL_EXIT%
+
+:watch_handshake_failed
+del /q "%WATCH_LEASE%" >nul 2>&1
+echo CCRouter watch startup blocked flutter run ^(exit %WATCH_HANDSHAKE_EXIT%^). 1>&2
+exit /b %WATCH_HANDSHAKE_EXIT%
 
 :hook_failed
 echo CCRouter hook failed for flutter %HOOK_COMMAND%. 1>&2

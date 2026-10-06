@@ -43,6 +43,10 @@ void main() {
       contains('ccrouter_generator:ccrouter_flutter_run_gate'),
     );
     expect(
+      flutter.readAsStringSync(),
+      contains('ccrouter_generator:ccrouter_watch_startup'),
+    );
+    expect(
       flutterBat.readAsStringSync(),
       contains('ccrouter_generator:ccrouter'),
     );
@@ -53,11 +57,16 @@ void main() {
       flutterBat.readAsStringSync(),
       contains('ccrouter_generator:ccrouter_flutter_run_gate'),
     );
+    expect(
+      flutterBat.readAsStringSync(),
+      contains('ccrouter_generator:ccrouter_watch_startup'),
+    );
 
     final status = await _run(['pub-hook', 'status', '--sdk', sdk.path]);
     expect(status.exitCode, 0, reason: '${status.stderr}');
     expect('${status.stdout}', contains('installed'));
     expect('${status.stdout}', contains('machine reload gate: enabled'));
+    expect('${status.stdout}', contains('watch startup handshake: enabled'));
 
     final removed = await _run(['pub-hook', 'uninstall', '--sdk', sdk.path]);
     expect(removed.exitCode, 0, reason: '${removed.stderr}');
@@ -612,6 +621,9 @@ exit 0
     final dart = File(path.join(bin.path, 'dart'))
       ..writeAsStringSync('''#!/usr/bin/env bash
 printf "dart:%s\\n" "\$*" >> "\$CCROUTER_TRACE"
+if [[ "\$*" == *"ccrouter_generator:ccrouter_watch_startup"* ]]; then
+  exit "\${CCROUTER_WATCH_HANDSHAKE_EXIT:-0}"
+fi
 exit "\${CCROUTER_DART_EXIT:-0}"
 ''');
     await Process.run('chmod', ['+x', flutter.path, dart.path]);
@@ -689,6 +701,46 @@ exit "\${CCROUTER_DART_EXIT:-0}"
       File(trace).readAsLinesSync().last,
       'flutter:run --machine -d macos',
     );
+
+    File(trace).writeAsStringSync('');
+    final failedHandshake = await Process.run(
+      flutter.path,
+      <String>['run', '-d', 'macos'],
+      workingDirectory: project.path,
+      environment: <String, String>{
+        ...environment,
+        'CCROUTER_WATCH_HANDSHAKE_EXIT': '9',
+      },
+    );
+    expect(failedHandshake.exitCode, 9);
+    expect(
+      '${failedHandshake.stderr}',
+      contains('watch startup blocked flutter run'),
+    );
+    expect(
+      File(
+        trace,
+      ).readAsLinesSync().where((line) => line.startsWith('flutter:')),
+      isEmpty,
+    );
+
+    File(trace).writeAsStringSync('');
+    final bypassedHandshake = await Process.run(
+      flutter.path,
+      <String>['run', '-d', 'macos'],
+      workingDirectory: project.path,
+      environment: <String, String>{
+        ...environment,
+        'CCROUTER_WATCH_HANDSHAKE_EXIT': '9',
+        'CCROUTER_DISABLE_WATCH_STARTUP_HANDSHAKE': '1',
+      },
+    );
+    expect(
+      bypassedHandshake.exitCode,
+      0,
+      reason: '${bypassedHandshake.stderr}',
+    );
+    expect(File(trace).readAsLinesSync().last, 'flutter:run -d macos');
 
     File(trace).writeAsStringSync('');
     final failedDart = File(path.join(bin.path, 'dart'))

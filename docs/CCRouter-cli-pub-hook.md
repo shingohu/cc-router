@@ -123,8 +123,11 @@ terminal failure 快速栅栏，恢复旧的 fingerprint-only 失败判断与有
 6. `flutter run` 的 preflight 成功后，wrapper 在后台启动
    `generate <host> --watch=auto --machine`，日志写到
    `.dart_tool/ccrouter/v1/watch/flutter-run.log`；原始 Flutter 进程退出时删除 lease 并终止
-   watch。启动成功时 stdout 会输出 watch PID、状态文件和日志路径，避免 IDE 将正常状态按
-   stderr 渲染为红色错误；真实失败仍写 stderr。`flutter build` 不启动常驻进程。
+   watch。wrapper 不把进程 fork 当作启动成功：它等待同一 lease 的 `sessionReady`，并确认
+   build root owner lock 仍被持有，随后才启动原 Flutter Tool。Dart/AOT 入口 30 秒内没有
+   匹配状态，或初始 Builder/aggregation 5 分钟内没有到达 `ready`，都会 fail-closed。
+   `watch starting` 和 `watch ready` 写 stdout，真实失败与完整日志路径写 stderr。
+   `flutter build` 不启动常驻进程。
 7. IDE/AI 使用的 `flutter run --machine` 由一个窄 stdin gate 启动原 Flutter Tool。它不改写
    或缓冲 daemon stdout，仅透传解析与 Hot Restart 匹配的 response；它只延迟
    `app.restart`：watch 的 `completedInputRevision` 必须覆盖
@@ -146,7 +149,8 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter watch follow <host-ro
 
 `status` 显示活动状态、PID、轮次和最近 Builder/聚合耗时；`follow` 只输出简洁状态变化，
 完整诊断继续写入 `flutter-run.log`。状态文件是本地可观察性，不参与生成决策；写入失败仅警告，
-不会阻断生成锁、Builder、Validator、快照恢复或原子发布。若 watch 被强制终止而来不及写入
+不会阻断 direct watch 的生成锁、Builder、Validator、快照恢复或原子发布；但 Hook 无法取得
+同一 lease 的 readiness proof 时会拒绝启动 Flutter。若 watch 被强制终止而来不及写入
 `stopped`，只读命令会通过已释放的 owner lock 将遗留 `active` 记录显示为 `stale`；它不会
 回写历史 `status.json`。
 
@@ -188,6 +192,14 @@ CCROUTER_DISABLE_BUILD_WATCH=1 flutter run
 ```bash
 CCROUTER_DISABLE_HOT_RELOAD_GATE=1 flutter run --machine
 ```
+
+只关闭 watch 启动握手、恢复旧的“后台进程启动后立即运行 Flutter”路径用于 A/B：
+
+```bash
+CCROUTER_DISABLE_WATCH_STARTUP_HANDSHAKE=1 flutter run
+```
+
+该开关不关闭 preflight、watch、generation lock、Validator、原子写入或 machine reload gate。
 
 ## 边界
 

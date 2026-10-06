@@ -1254,9 +1254,16 @@ fail closed，并要求停止 watch 后运行 one-shot，供紧急回退和 A/B 
 轮次和最近 Builder/聚合耗时；`watch follow <host>` 只打印简洁状态变化，完整 build_runner
 输出继续保留在 `.dart_tool/ccrouter/v1/watch/flutter-run.log`，不会注入 Flutter Tool 的
 `--machine` stdout。状态发布属于 fail-open 可观察性：写入失败只警告并停止更新状态文件，
-不会改变生成锁、Builder、Validator、原子发布或最终参考门禁。若 watch 被强制终止而来不及
+不会改变 direct watch 的生成锁、Builder、Validator、原子发布或最终参考门禁；但 Hook 无法
+取得 lease-bound readiness proof 时会拒绝启动 Flutter。若 watch 被强制终止而来不及
 写入 `stopped`，只读命令会根据已释放的 owner lock 将遗留 `active` 记录显示为 `stale`，
 但不会改写历史 `status.json`。
+Pub Hook 启动 `flutter run` 时不会把后台进程已经 fork 当成 watch 可用：wrapper 先等待同一
+lease 的 `sessionReady`，并确认 build root owner lock 仍被持有，随后才启动原 Flutter Tool。
+Dart/AOT 入口 30 秒内未发布匹配状态、初始 Builder/aggregation 5 分钟内未到达 `ready`、
+watch-lock 冲突、进程退出或结构化失败都会阻止 `flutter run`，并保留状态与日志路径。可用
+`CCROUTER_DISABLE_WATCH_STARTUP_HANDSHAKE=1` 单独恢复旧的立即启动行为做 A/B；它不关闭
+preflight、watch、generation lock 或 reload gate。
 Hook 启动的 `flutter run --machine` 还会通过一个仅处理 stdin 的 reload gate 协调 IDE/AI
 Hot Reload：watch 为 authored Dart/config 保存发布单调 `inputRevision`，成功 cycle 发布
 `completedInputRevision`；只有状态稳定且相应 revision 已到达 `aggregationSucceeded` 后，
@@ -1377,11 +1384,12 @@ DAG；不存在统一的万能依赖列表或 InitTask 业务 Client。源码或
 因此 Workspace 聚合根不会被误判为 Host；Hook 不会猜测某个成员 Package 代替当前目录生成。
 它不覆盖 `dart pub`，也不监听 Flutter Tool 内部隐式 `pub get`。`flutter run` 在 preflight
 成功后会持有一个后台 watch lease，原始 Flutter 进程退出时释放；`flutter build` 仍只执行
-one-shot preflight。watch 启动成功提示会与 preflight 一样写入 stdout，避免 IDE 将正常状态
-渲染为红色错误；其中包含 PID、状态文件和完整日志路径。可用
+one-shot preflight。wrapper 会先输出 `watch starting`，再以结构化状态和 owner lock 等待
+该 lease 的 `watch ready`；只有后者成功才启动 Flutter。两条正常提示都写入 stdout，避免 IDE
+将正常状态渲染为红色错误；其中包含 PID、状态文件和完整日志路径。可用
 `ccrouter watch status <host>` 或 `ccrouter watch follow <host>` 验证保存后的生成轮次。
 SDK 切换后 `status` 应显示 `run/build preflight: enabled` 和
-`run watch: enabled`。
+`run watch: enabled`、`watch startup handshake: enabled`。
 `run/build` 成功时控制台使用 `CCRouter preflight`，Pub 后生成使用
 `CCRouter post-pub generation`；成功只保留 fast-path、验证摘要与最终总耗时，失败则输出最近
 200 行且最多 64 KiB 的 Generator 日志，避免长构建刷屏或无界缓存，同时保留可操作错误。

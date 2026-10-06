@@ -275,6 +275,12 @@ Workspace/插件 analyze 及缓存/无缓存生成物检查通过。
   因而“安全删除必定复用原 child”不是可靠上游契约；supervisor 仅在 exact resolution 已变化时
   将该退出收敛为受控 restart，resolution 未变化的退出仍 fail closed。监视器以 stat 低成本
   唤醒、exact fingerprint 判定并保留低频 exact 兜底，不把 mtime 当正确性证明。
+- [x] **Flutter wrapper 等待 watch 启动就绪**：`flutter run` 的后台进程 fork 不再等价于
+  watch 可用。wrapper 通过独立 Dart handshake 只接受同一 Host、同一 lease、
+  `sessionReady=true` 且 owner lock 仍被持有的结构化状态；watch-lock 冲突、入口未启动、初始
+  generation 失败、进程退出和有界超时均在原 Flutter Tool 启动前 fail-closed，并保留日志路径。
+  POSIX/Windows wrapper 使用相同协议；`CCROUTER_DISABLE_WATCH_STARTUP_HANDSHAKE=1` 仅回退
+  此握手，不关闭 preflight、watch、reload gate 或最终 `--no-cache --check`。
 - [x] **结构化生成诊断与 Analyzer watch bridge**：Workspace Validator 保留原 CLI 全量错误文本，
   同时返回带稳定 code、severity、`package:` 位置、correction 和 root-cause group 的结构诊断；
   同一缺失 Owner 引起的能力级错误在结构 snapshot 中保留 related locations，IDE 当前只显示
