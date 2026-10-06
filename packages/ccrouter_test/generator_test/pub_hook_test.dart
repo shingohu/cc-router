@@ -22,6 +22,12 @@ void main() {
       );
     final flutterBat = File(path.join(bin.path, 'flutter.bat'))
       ..writeAsStringSync('@echo off\r\nexit /b 0\r\n');
+    final dartBat = File(path.join(bin.path, 'dart.bat'))
+      ..writeAsStringSync('@echo off\r\nexit /b 0\r\n');
+    final innerDart = await _writeFakeInnerDart(
+      sdk,
+      '#!/usr/bin/env bash\nexit 0\n',
+    );
 
     final installed = await _run(['pub-hook', 'install', '--sdk', sdk.path]);
     expect(installed.exitCode, 0, reason: '${installed.stderr}');
@@ -32,6 +38,22 @@ void main() {
     expect(
       File(path.join(bin.path, 'flutter.ccrouter-original.bat')).existsSync(),
       isTrue,
+    );
+    expect(
+      File(path.join(bin.path, 'dart.ccrouter-original.bat')).existsSync(),
+      isTrue,
+    );
+    expect(File('${innerDart.path}.ccrouter-original').existsSync(), isTrue);
+    expect(
+      innerDart.readAsStringSync(),
+      contains('CCRouter Dart pub hook wrapper'),
+    );
+    expect(
+      dartBat.readAsStringSync(),
+      allOf(
+        contains('CCRouter Dart pub hook wrapper'),
+        contains('dart:%PUB_COMMAND%'),
+      ),
     );
     expect(flutter.readAsStringSync(), contains('ccrouter_generator:ccrouter'));
     expect(flutter.readAsStringSync(), contains('--watch=auto'));
@@ -67,16 +89,95 @@ void main() {
     expect('${status.stdout}', contains('installed'));
     expect('${status.stdout}', contains('machine reload gate: enabled'));
     expect('${status.stdout}', contains('watch startup handshake: enabled'));
+    expect('${status.stdout}', contains('dart pub post-hook: enabled'));
 
     final removed = await _run(['pub-hook', 'uninstall', '--sdk', sdk.path]);
     expect(removed.exitCode, 0, reason: '${removed.stderr}');
     expect(flutter.existsSync(), isTrue);
     expect(flutter.readAsStringSync(), contains('exit 0'));
+    expect(innerDart.readAsStringSync(), contains('exit 0'));
+    expect(dartBat.readAsStringSync(), contains('exit /b 0'));
     expect(flutterBat.existsSync(), isTrue);
     expect(
       File(path.join(bin.path, '.ccrouter_pub_hook.json')).existsSync(),
       isFalse,
     );
+  });
+
+  test(
+    'pub-hook uninstall safely restores a verified schema 4 install',
+    () async {
+      final sdk = await Directory.systemTemp.createTemp(
+        'ccrouter_pub_hook_legacy_',
+      );
+      addTearDown(() => sdk.delete(recursive: true));
+      final bin = Directory(path.join(sdk.path, 'bin'))..createSync();
+      final flutter = File(path.join(bin.path, 'flutter'))
+        ..writeAsStringSync('#!/usr/bin/env bash\nexit 0\n');
+      File(
+        path.join(bin.path, 'flutter.bat'),
+      ).writeAsStringSync('@echo off\r\nexit /b 0\r\n');
+      final innerDart = await _writeFakeInnerDart(
+        sdk,
+        '#!/usr/bin/env bash\nexit 0\n',
+      );
+      final installed = await _run(['pub-hook', 'install', '--sdk', sdk.path]);
+      expect(installed.exitCode, 0, reason: '${installed.stderr}');
+
+      await innerDart.delete();
+      await File('${innerDart.path}.ccrouter-original').rename(innerDart.path);
+      File(path.join(bin.path, '.ccrouter_pub_hook.json')).writeAsStringSync(
+        jsonEncode(<String, Object>{
+          'schema': 4,
+          'entrypoint': 'flutter',
+          'generator': 'ccrouter_generator',
+        }),
+      );
+
+      final status = await _run(['pub-hook', 'status', '--sdk', sdk.path]);
+      expect(status.exitCode, 1);
+      final removed = await _run(['pub-hook', 'uninstall', '--sdk', sdk.path]);
+      expect(removed.exitCode, 0, reason: '${removed.stderr}');
+      expect(flutter.readAsStringSync(), contains('exit 0'));
+      expect(innerDart.readAsStringSync(), contains('exit 0'));
+    },
+  );
+
+  test('schema 4 uninstall rejects unowned Dart backups', () async {
+    final sdk = await Directory.systemTemp.createTemp(
+      'ccrouter_pub_hook_legacy_conflict_',
+    );
+    addTearDown(() => sdk.delete(recursive: true));
+    final bin = Directory(path.join(sdk.path, 'bin'))..createSync();
+    final flutter = File(path.join(bin.path, 'flutter'))
+      ..writeAsStringSync('#!/usr/bin/env bash\nexit 0\n');
+    File(
+      path.join(bin.path, 'flutter.bat'),
+    ).writeAsStringSync('@echo off\r\nexit /b 0\r\n');
+    final innerDart = await _writeFakeInnerDart(
+      sdk,
+      '#!/usr/bin/env bash\nexit 0\n',
+    );
+    final installed = await _run(['pub-hook', 'install', '--sdk', sdk.path]);
+    expect(installed.exitCode, 0, reason: '${installed.stderr}');
+    File(path.join(bin.path, '.ccrouter_pub_hook.json')).writeAsStringSync(
+      jsonEncode(<String, Object>{
+        'schema': 4,
+        'entrypoint': 'flutter',
+        'generator': 'ccrouter_generator',
+      }),
+    );
+
+    final removed = await _run(['pub-hook', 'uninstall', '--sdk', sdk.path]);
+
+    expect(removed.exitCode, 1);
+    expect('${removed.stderr}', contains('unexpectedly has Dart backups'));
+    expect(flutter.readAsStringSync(), contains('CCRouter pub hook wrapper'));
+    expect(
+      innerDart.readAsStringSync(),
+      contains('CCRouter Dart pub hook wrapper'),
+    );
+    expect(File('${innerDart.path}.ccrouter-original').existsSync(), isTrue);
   });
 
   test(
@@ -94,6 +195,7 @@ void main() {
         );
       final flutterBat = File(path.join(bin.path, 'flutter.bat'))
         ..writeAsStringSync('@echo off\r\nexit /b 0\r\n');
+      await _writeFakeInnerDart(sdk, '#!/usr/bin/env bash\nexit 0\n');
       await Process.run('chmod', ['+x', flutter.path]);
       await _run(['pub-hook', 'install', '--sdk', sdk.path]);
 
@@ -134,6 +236,7 @@ void main() {
       File(
         path.join(bin.path, 'flutter.bat'),
       ).writeAsStringSync('@echo off\r\nexit /b 0\r\n');
+      await _writeFakeInnerDart(sdk, '#!/usr/bin/env bash\nexit 0\n');
       await Process.run('chmod', ['+x', flutter.path]);
       final installed = await _run(['pub-hook', 'install', '--sdk', sdk.path]);
       expect(installed.exitCode, 0, reason: '${installed.stderr}');
@@ -175,6 +278,103 @@ dev_dependencies:
         );
         expect('${result.stdout}${result.stderr}', isNot(contains('CCRouter')));
       }
+    },
+  );
+
+  test(
+    'inner Dart wrapper runs post-pub once and preserves bypass semantics',
+    () async {
+      final sdk = await Directory.systemTemp.createTemp(
+        'ccrouter_dart_pub_hook_',
+      );
+      addTearDown(() => sdk.delete(recursive: true));
+      final bin = Directory(path.join(sdk.path, 'bin'))..createSync();
+      File(
+        path.join(bin.path, 'flutter'),
+      ).writeAsStringSync('#!/usr/bin/env bash\nexit 0\n');
+      File(
+        path.join(bin.path, 'flutter.bat'),
+      ).writeAsStringSync('@echo off\r\nexit /b 0\r\n');
+      final trace = path.join(sdk.path, 'dart-trace.txt');
+      final innerDart = await _writeFakeInnerDart(sdk, '''#!/usr/bin/env bash
+printf "%s\\n" "\$*" >> "\$CCROUTER_TRACE"
+exit "\${CCROUTER_FAKE_DART_EXIT:-0}"
+''');
+      final installed = await _run(['pub-hook', 'install', '--sdk', sdk.path]);
+      expect(installed.exitCode, 0, reason: '${installed.stderr}');
+
+      final project = Directory(path.join(sdk.path, 'project'))..createSync();
+      File(path.join(project.path, 'pubspec.yaml')).writeAsStringSync('''
+name: dart_hook_project
+dependencies:
+  ccrouter: any
+dev_dependencies:
+  ccrouter_generator: any
+''');
+      Directory(path.join(project.path, '.dart_tool')).createSync();
+      File(
+        path.join(project.path, '.dart_tool', 'package_config.json'),
+      ).writeAsStringSync('''{"configVersion":2,"packages":[
+  {"name":"ccrouter_generator","rootUri":"../missing_generator"}
+]}''');
+      final environment = <String, String>{
+        ...Platform.environment,
+        'CCROUTER_TRACE': trace,
+      };
+
+      final generated = await Process.run(
+        innerDart.path,
+        ['pub', 'get'],
+        workingDirectory: project.path,
+        environment: environment,
+      );
+      expect(generated.exitCode, 0, reason: '${generated.stderr}');
+      final generatedTrace = File(trace).readAsLinesSync();
+      expect(generatedTrace, hasLength(2));
+      expect(generatedTrace.first, 'pub get');
+      expect(
+        generatedTrace.last,
+        allOf(
+          contains('ccrouter_generator:ccrouter pub-hook run'),
+          contains('--project-root '),
+          contains('--pub-command dart:get'),
+        ),
+      );
+
+      for (final arguments in const [
+        ['pub', 'get', '--help'],
+        ['pub', 'get', '--dry-run'],
+      ]) {
+        File(trace).writeAsStringSync('');
+        final readOnly = await Process.run(
+          innerDart.path,
+          arguments,
+          workingDirectory: project.path,
+          environment: environment,
+        );
+        expect(readOnly.exitCode, 0);
+        expect(File(trace).readAsLinesSync(), [arguments.join(' ')]);
+      }
+
+      File(trace).writeAsStringSync('');
+      final bypassed = await Process.run(
+        innerDart.path,
+        ['pub', 'get'],
+        workingDirectory: project.path,
+        environment: {...environment, 'CCROUTER_PUB_HOOK_DISABLE': '1'},
+      );
+      expect(bypassed.exitCode, 0);
+      expect(File(trace).readAsLinesSync(), ['pub get']);
+
+      File(trace).writeAsStringSync('');
+      final failed = await Process.run(
+        innerDart.path,
+        ['pub', 'get'],
+        workingDirectory: project.path,
+        environment: {...environment, 'CCROUTER_FAKE_DART_EXIT': '7'},
+      );
+      expect(failed.exitCode, 7);
+      expect(File(trace).readAsLinesSync(), ['pub get']);
     },
   );
 
@@ -321,6 +521,21 @@ workspace:
       );
       expect(postPubOutput, contains('CCRouter post-pub generation finished:'));
       expect(postPubOutput, isNot(contains('Generating Package artifacts')));
+
+      final dartPostPub = await _run([
+        'pub-hook',
+        'run',
+        '--project-root',
+        demo.path,
+        '--pub-command',
+        'dart:get',
+      ]);
+      final dartPostPubOutput = '${dartPostPub.stdout}\n${dartPostPub.stderr}';
+      expect(dartPostPub.exitCode, 0, reason: dartPostPubOutput);
+      expect(
+        dartPostPubOutput,
+        contains('CCRouter post-pub generation started for `dart pub get`.'),
+      );
     },
     timeout: const Timeout(Duration(minutes: 2)),
   );
@@ -721,6 +936,7 @@ if [[ "\$*" == *"ccrouter_generator:ccrouter_watch_startup"* ]]; then
 fi
 exit "\${CCROUTER_DART_EXIT:-0}"
 ''');
+    await _writeFakeInnerDart(sdk, '#!/usr/bin/env bash\nexit 0\n');
     await Process.run('chmod', ['+x', flutter.path, dart.path]);
     await _run(['pub-hook', 'install', '--sdk', sdk.path]);
 
@@ -835,7 +1051,7 @@ exit "\${CCROUTER_DART_EXIT:-0}"
       0,
       reason: '${bypassedHandshake.stderr}',
     );
-    expect(File(trace).readAsLinesSync().last, 'flutter:run -d macos');
+    expect(File(trace).readAsLinesSync(), contains('flutter:run -d macos'));
 
     File(trace).writeAsStringSync('');
     final failedDart = File(path.join(bin.path, 'dart'))
@@ -854,6 +1070,16 @@ exit 7
     expect(File(trace).readAsLinesSync(), hasLength(1));
     expect(File(trace).readAsStringSync(), startsWith('dart:'));
   });
+}
+
+Future<File> _writeFakeInnerDart(Directory sdk, String contents) async {
+  final file = File(
+    path.join(sdk.path, 'bin', 'cache', 'dart-sdk', 'bin', 'dart'),
+  );
+  file.parent.createSync(recursive: true);
+  file.writeAsStringSync(contents);
+  await Process.run('chmod', ['+x', file.path]);
+  return file;
 }
 
 Future<ProcessResult> _run(List<String> arguments) => Process.run(

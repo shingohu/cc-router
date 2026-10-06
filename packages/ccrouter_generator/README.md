@@ -184,8 +184,8 @@ bump pin 的两阶段流程。`doctor` 把 source、cache、temporary loader smo
 verification 分开报告；cache 异常时只列出相关进程候选和手工备份路径，不自动 kill 或清理。
 完整说明见 [Analyzer CLI 指南](../../docs/CCRouter-analyzer-cli-plan.md)。
 
-如果希望在当前 Flutter SDK 的 `flutter pub get/upgrade/downgrade/add/remove` 成功后
-自动生成，可以显式安装可回滚的 hook：
+如果希望在当前 Flutter SDK 的 `flutter pub` 或 `dart pub`
+`get/upgrade/downgrade/add/remove` 成功后自动生成，可以显式安装可回滚的 hook：
 
 ```sh
 fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook install
@@ -193,7 +193,9 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook status
 fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook uninstall
 ```
 
-Hook 按 SDK 版本独立安装，不修改 Flutter snapshot；非 CCRouter 项目以及没有直接声明
+Hook 按 SDK 版本独立安装，不修改 Flutter snapshot；macOS/Linux 同时包装 Flutter SDK 的
+inner Dart executable，Windows 包装 `bin/dart.bat`，但无法拦截 IDE 直接执行的 `dart.exe`。
+非 CCRouter 项目以及没有直接声明
 `ccrouter` 的 Workspace 聚合根会跳过，不会猜测成员 Host。完整的
 退出码语义、FVM 版本切换和禁用方式见
 [`docs/CCRouter-cli-pub-hook.md`](https://github.com/shingohu/cc-router/blob/main/docs/CCRouter-cli-pub-hook.md)。
@@ -399,7 +401,8 @@ Restart 得到 daemon 成功响应后才解除当前 run session 的栅栏。普
 watch 会原子发布 `.dart_tool/ccrouter/v1/watch/status.json`；`watch status <host>` 读取一次
 当前状态，`watch follow <host>` 持续输出简洁状态变化。Hook 启动的完整 build_runner 日志仍在
 `.dart_tool/ccrouter/v1/watch/flutter-run.log`，不会污染 Flutter Tool 的 machine stdout。
-同一 Host 执行成功的 `flutter pub get/upgrade/downgrade/add/remove` 时，post-pub Hook 会以
+同一 Host 执行成功的 `flutter pub` 或 `dart pub` `get/upgrade/downgrade/add/remove` 时，
+post-pub Hook 会以
 当前 Pub 解析文件为栅栏等待活动 watch，而不是并发启动 one-shot。成功复用对应
 `aggregationSucceeded`；失败则返回非零并输出该轮有界 diagnostics。状态不可用、watch 退出
 或 5 分钟超时均 fail-closed，且不会把另一个 Host 的状态当作完成证据。

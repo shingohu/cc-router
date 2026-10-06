@@ -227,9 +227,10 @@ Workspace/插件 analyze 及缓存/无缓存生成物检查通过。
   开启、Release 强制关闭。不得让 `ccrouter` 反向依赖 `ccrouter_devtools`，也不得由业务组件或
   任意 Navigation Host dispose 管理 isolate endpoint。详见
   [DevTools Host 自动装配计划](CCRouter-devtools-host-integration-plan.md)。
-- [x] Pub Hook 已支持成功的显式 `flutter pub` 后置生成，以及 `flutter run/build` fail-closed
-  前置生成；复用 fingerprint fast-path，覆盖 POSIX/Windows wrapper 和全局参数前缀。Flutter
-  Tool 内部隐式 `pub get` 与直接 `dart pub` 仍明确不在 Hook 边界。
+- [x] Pub Hook 已支持成功的显式 `flutter pub` 和 `dart pub` 后置生成，以及
+  `flutter run/build` fail-closed 前置生成；复用 fingerprint fast-path，覆盖 POSIX/Windows
+  wrapper 和全局参数前缀。POSIX 包装 inner Dart executable；Windows 只覆盖 `bin/dart.bat`，
+  IDE 直接执行 `dart.exe` 以及 Flutter Tool 内部隐式 `pub get` 仍明确不在 Hook 边界。
 - [x] **Pub Hook 等待期间的 resolution churn 快速失败**：active watch 可能在 Pub 正在
   更新 resolution 文件时启动 cycle；若 cycle 开始与结束的 resolution fingerprint 不一致，
   watch 即使已经在 aggregation 阶段失败，也无法发布可供 Hook 匹配的完成 fingerprint，Hook

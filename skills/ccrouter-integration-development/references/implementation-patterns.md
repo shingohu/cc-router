@@ -102,10 +102,12 @@ dry-run summary before changing Contracts, dependencies, or public exposure.
 If automatic generation after dependency resolution is desired, install the
 explicit per-SDK `pub-hook` documented in
 the bundled [CLI Skill](../../ccrouter-cli-development/SKILL.md#pub-hook). Do not
-modify Flutter internals manually. The hook covers successful `flutter pub`
-commands and runs a fail-closed preflight before `flutter run/build`; direct
-`dart pub` and Flutter Tool's internal implicit `pub get` remain outside its
-boundary. The current Package must directly declare `ccrouter` or
+modify Flutter internals manually. The hook covers successful `flutter pub` and
+direct `dart pub` commands and runs a fail-closed preflight before
+`flutter run/build`. On POSIX it wraps Flutter's inner Dart executable; on
+Windows only `bin/dart.bat` is covered, so an IDE that invokes `dart.exe`
+directly remains outside the boundary. Flutter Tool's internal implicit
+`pub get` also remains outside its boundary. The current Package must directly declare `ccrouter` or
 `ccrouter_contracts`; app-role Hosts run Host generation and other participating
 Packages run package-local generation. A Workspace aggregator is skipped even
 when its resolved graph contains CCRouter Packages.

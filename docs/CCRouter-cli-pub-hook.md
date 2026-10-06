@@ -5,8 +5,9 @@
 
 ## 目的
 
-`ccrouter pub-hook` 为当前 Flutter SDK 安装一个可回滚的 `flutter` wrapper。
-当 `flutter pub get`、`upgrade`、`downgrade`、`add` 或 `remove` 成功后，wrapper
+`ccrouter pub-hook` 为当前 Flutter SDK 安装一组可回滚的 Flutter/Dart wrapper。
+当 `flutter pub` 或 `dart pub` 的 `get`、`upgrade`、`downgrade`、`add` 或 `remove`
+成功后，wrapper
 会检查当前项目自己的 `pubspec.yaml` 和 `.dart_tool/package_config.json`：只有当前
 Package 直接声明 `ccrouter` 或 `ccrouter_contracts`，并且解析图包含对应 runtime/contracts
 Package 与 `ccrouter_generator` 时，才运行一次：
@@ -35,16 +36,21 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook install \
   --sdk /path/to/flutter-sdk
 ```
 
-每一个 FVM 版本都是独立 SDK，必须分别安装。安装只改动该 SDK 的 `bin/flutter`
-和 `bin/flutter.bat`，原文件会保存为：
+每一个 FVM 版本都是独立 SDK，必须分别安装。安装会管理该 SDK 的 Flutter 入口，并在
+macOS/Linux 包装 Flutter 实际使用的 inner Dart executable，在 Windows 包装 `bin/dart.bat`。
+原文件会保存为：
 
 ```text
 bin/flutter.ccrouter-original
 bin/flutter.ccrouter-original.bat
+bin/cache/dart-sdk/bin/dart.ccrouter-original # macOS/Linux
+bin/dart.ccrouter-original.bat                 # Windows
 bin/.ccrouter_pub_hook.json
 ```
 
 不会修改 Flutter 的 `shared.sh`、Dart snapshot 或 Flutter 工具源码。
+schema 4 只管理 Flutter wrapper；升级时先用当前 CLI 执行一次 `uninstall`，再执行 `install`，
+不得直接覆盖旧 marker 或备份。
 
 ## 状态与卸载
 
@@ -52,7 +58,7 @@ bin/.ccrouter_pub_hook.json
 fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook status
 ```
 
-`status` 会打印实际解析到的 SDK 绝对路径、marker、POSIX/Windows wrapper 与备份
+`status` 会打印实际解析到的 SDK 绝对路径、marker、Flutter/Dart POSIX/Windows wrapper 与备份
 文件路径，并校验 wrapper 内容是否仍然是 CCRouter wrapper。只有显示
 `installed and verified` 时返回码才为 0；SDK 被升级覆盖或文件不完整时会显示
 `not installed or inconsistent` 并返回非零。
@@ -64,8 +70,15 @@ CCRouter pub hook SDK: /path/to/flutter-sdk
   marker: /path/to/flutter-sdk/bin/.ccrouter_pub_hook.json (valid)
   POSIX wrapper: /path/to/flutter-sdk/bin/flutter (verified)
   POSIX backup: /path/to/flutter-sdk/bin/flutter.ccrouter-original (present)
+  Dart POSIX wrapper: /path/to/flutter-sdk/bin/cache/dart-sdk/bin/dart (verified)
+  Dart POSIX backup: /path/to/flutter-sdk/bin/cache/dart-sdk/bin/dart.ccrouter-original (present)
 CCRouter pub hook result: installed and verified
 ```
+
+Windows 的 `status` 还会明确显示：`cache/dart-sdk/bin/dart.exe` 不受管理。该平台只有经
+`bin/dart.bat` 启动的 `dart pub` 会触发 Hook；IDE 若绕过 batch 直接执行 `dart.exe`，必须改用
+Flutter Pub、CLI generation，或在 IDE 中配置 batch 入口，不能把 `status` 的成功理解为已拦截
+任意 direct executable。
 
 卸载命令：
 
@@ -78,7 +91,7 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook uninstall
 
 ## 执行语义
 
-1. 先完整执行原始 `flutter pub`。
+1. 先完整执行原始 `flutter pub` 或 `dart pub`。
 2. 原始命令失败时，直接返回原始退出码，不运行生成器。
 3. 原始命令成功后，wrapper 查找 `--directory`/`-C` 指定的项目并向上定位
    `pubspec.yaml`。
@@ -184,14 +197,16 @@ watch 使用文件 stat 作为低成本唤醒信号，再以 exact-content finge
 `CCROUTER_DISABLE_WATCH_SESSION_RESTART=1` 后，这类变化会 fail closed，并提示停止 watch 后运行
 one-shot，不会静默沿用旧 target 集合。
 
-这不是对 Flutter Tool 内部隐式 `pub get` 的监听：wrapper 无法可靠观察内部 Dart 调用，
-也不会修改 `shared.sh`、Dart snapshot 或 Flutter Tool 源码。`run/build` 的前置生成只保证
+这不是对 Flutter Tool 内部隐式 `pub get` 的监听：即使 direct `dart pub` 已覆盖，Flutter Tool
+仍可能在自身进程或 snapshot 内完成依赖解析。wrapper 不会修改 `shared.sh`、Dart snapshot 或
+Flutter Tool 源码。`run/build` 的前置生成只保证
 调用 Flutter 前当前已有依赖解析和生成物是最新的。
 
-可以临时禁用 hook，但仍保留原始 `flutter` 行为：
+可以临时禁用全部 Flutter/Dart wrapper Hook，但仍保留原始命令行为：
 
 ```bash
 CCROUTER_PUB_HOOK_DISABLE=1 flutter pub get
+CCROUTER_PUB_HOOK_DISABLE=1 dart pub get
 ```
 
 只禁用 watch、但仍执行 Hook 的方式是：
@@ -216,8 +231,9 @@ CCROUTER_DISABLE_WATCH_STARTUP_HANDSHAKE=1 flutter run
 
 ## 边界
 
-- 覆盖 `flutter pub`、`flutter run` 和 `flutter build`，但不覆盖直接执行的 `dart pub`，
-  也不监听 Flutter Tool 内部隐式 `pub get`。
+- 覆盖 `flutter pub`、`flutter run`、`flutter build` 和平台支持的 direct `dart pub`。POSIX
+  包装 inner Dart executable；Windows 只覆盖 `bin/dart.bat`，不覆盖 IDE 直接执行
+  `cache/dart-sdk/bin/dart.exe`。也不监听 Flutter Tool 内部隐式 `pub get`。
 - `flutter run` 自动持有 Host watch；同一 resolved build root 的不同 Host 共享一个 Builder
   owner，各自保留聚合与 Hook completion fence。`flutter build` 和成功的依赖操作仍最多触发
   一次生成。嵌套且可独立运行、拥有自己 Pub root 的 Package Host 使用独立 watch。

@@ -310,6 +310,13 @@ Packages. An app-role Host runs Host generation; a participating Flutter/Pure
 Dart Package runs package-local generation. Run Host generation from the actual
 Host directory (for this repository, `demo/`); the Hook never guesses a member
 Host from an aggregator.
+The per-SDK Hook covers successful `flutter pub` and direct `dart pub` dependency
+commands. On macOS/Linux it wraps Flutter's inner Dart executable, including the
+path commonly launched by IDE Pub actions. On Windows only `bin/dart.bat` is
+covered; direct IDE execution of `cache/dart-sdk/bin/dart.exe` remains outside
+the boundary and is reported by `pub-hook status`. Flutter Tool's own implicit
+Pub resolution is not a Hook event. Use `CCROUTER_PUB_HOOK_DISABLE=1` only for
+an explicit one-shot bypass, then run the appropriate generation check.
 
 Validate with:
 

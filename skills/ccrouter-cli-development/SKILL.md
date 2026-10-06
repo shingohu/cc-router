@@ -291,9 +291,10 @@ dependency edits.
 
 ### Pub Hook
 
-`pub-hook install` is explicit and per-SDK. It wraps only the Flutter SDK
-entrypoints, keeps reversible backups, and must never be run against an SDK
-without first resolving its path. The wrapper runs the original `flutter pub`
+`pub-hook install` is explicit and per-SDK. It wraps the Flutter SDK entrypoints
+and the platform-supported Dart entrypoint, keeps reversible backups, and must
+never be run against an SDK without first resolving its path. The wrappers run
+the original `flutter pub` or `dart pub`
 first; only a successful `get`, `upgrade`, `downgrade`, `add`, or `remove` may
 trigger post-pub generation. Help and dry-run invocations (`--help`, `-h`,
 `--dry-run`, or `-n`) never trigger it. `flutter run` and `flutter build` run the same
@@ -331,12 +332,16 @@ Host validation; it invokes the package-local one-shot path for the requested
 Package.
 
 Use `status` after an FVM version switch; it prints the resolved SDK path and
-verifies the marker, POSIX/Windows wrapper, and backups. It returns non-zero
+verifies the marker, Flutter/Dart POSIX/Windows wrappers, and backups. It returns non-zero
 when the hook is missing or inconsistent. Use `uninstall` before removing a
 managed SDK. Set `CCROUTER_PUB_HOOK_DISABLE=1` for a one-shot bypass. Do not
-patch Flutter's `shared.sh`, snapshots, or tool sources manually. The hook does
-not cover direct `dart pub` commands or Flutter Tool's internal implicit
-`pub get`. After a successful `flutter run` preflight it starts watch under a
+patch Flutter's `shared.sh`, snapshots, or tool sources manually. On POSIX the
+hook wraps `bin/cache/dart-sdk/bin/dart`, including IDE direct `dart pub`
+invocations. On Windows it wraps `bin/dart.bat`; direct IDE execution of
+`cache/dart-sdk/bin/dart.exe` remains unsupported and must be reported by
+`status`. Flutter Tool's internal implicit `pub get` remains outside the hook.
+Upgrade a schema 4 installation by uninstalling it before reinstalling. After a
+successful `flutter run` preflight it starts watch under a
 lifecycle lease and removes the lease when Flutter exits; `flutter build`
 remains one-shot. `run/build` preflight failures stop the Flutter command;
 projects without a resolved CCRouter graph are skipped. Before the original

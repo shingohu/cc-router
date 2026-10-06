@@ -1182,7 +1182,7 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter find demo_order.summa
 # 只清理 CCRouter 标记的生成源码
 fvm dart run --verbosity=error ccrouter_generator:ccrouter clean demo
 
-# 可选：给当前 Flutter SDK 安装可回滚的 pub 成功后生成 hook
+# 可选：给当前 Flutter SDK 安装可回滚的 Flutter/Dart Pub 成功后生成 hook
 fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook install
 fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook status
 fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook uninstall
@@ -1432,22 +1432,26 @@ Service/Command 分别使用各自 dependency list，Event 使用 Subscription�
 DAG；不存在统一的万能依赖列表或 InitTask 业务 Client。源码或依赖声明变更后应先运行 `generate`。
 
 `pub-hook` 是显式、按 Flutter SDK 版本安装的可回滚 wrapper；`status` 会打印实际 SDK
-路径并校验 wrapper、备份和 marker，只有 `installed and verified` 才返回成功。SDK 解析优先使用
-`FLUTTER_ROOT` 和当前目录向上的 `.fvm/flutter_sdk`。它只在原始
-`flutter pub get/upgrade/downgrade/add/remove` 成功后运行；`flutter run` 和
+路径并校验 Flutter/Dart wrapper、备份和 marker，只有 `installed and verified` 才返回成功。
+SDK 解析优先使用 `FLUTTER_ROOT` 和当前目录向上的 `.fvm/flutter_sdk`。它只在原始
+`flutter pub` 或 `dart pub` 的 `get/upgrade/downgrade/add/remove` 成功后运行；`flutter run` 和
 `flutter build` 会在调用原始 Flutter 入口前执行同一生成器作为 fail-closed preflight。当前
 项目没有直接声明 `ccrouter`/`ccrouter_contracts`，或没有解析对应 Package 与
 `ccrouter_generator` 时直接跳过。app-role Host 运行完整 Host generation；Flutter component 与
 Pure Dart contracts Package 运行 package-local generation。因此 Workspace 聚合根不会被误判为
 Host；Hook 不会猜测某个成员 Package 代替当前目录生成。
-它不覆盖 `dart pub`，也不监听 Flutter Tool 内部隐式 `pub get`。`flutter run` 在 preflight
+在 macOS/Linux 上，安装器包装 Flutter SDK 的 inner Dart executable，因此 IDE 直接调用
+`bin/cache/dart-sdk/bin/dart pub get` 也会触发 Hook；Windows 只包装 `bin/dart.bat`，IDE 若直接
+执行 `cache/dart-sdk/bin/dart.exe` 则仍在边界之外，`status` 会明确显示该限制。它不监听
+Flutter Tool 内部隐式 `pub get`。`flutter run` 在 preflight
 成功后会持有一个后台 watch lease，原始 Flutter 进程退出时释放；`flutter build` 仍只执行
 one-shot preflight。wrapper 会先输出 `watch starting`，再以结构化状态和 owner lock 等待
 该 lease 的 `watch ready`；只有后者成功才启动 Flutter。两条正常提示都写入 stdout，避免 IDE
 将正常状态渲染为红色错误；其中包含 PID、状态文件和完整日志路径。可用
 `ccrouter watch status <host>` 或 `ccrouter watch follow <host>` 验证保存后的生成轮次。
-SDK 切换后 `status` 应显示 `run/build preflight: enabled` 和
-`run watch: enabled`、`watch startup handshake: enabled`。
+SDK 切换后 `status` 应显示 `run/build preflight: enabled`、`run watch: enabled`、
+`watch startup handshake: enabled` 以及当前平台的 `dart pub post-hook: enabled`。旧 schema 4
+安装需先 `uninstall` 再重新 `install`。
 `run/build` 成功时控制台使用 `CCRouter preflight`，Pub 后生成使用
 `CCRouter post-pub generation`；成功只保留 fast-path、验证摘要与最终总耗时，失败则输出最近
 200 行且最多 64 KiB 的 Generator 日志，避免长构建刷屏或无界缓存，同时保留可操作错误。
