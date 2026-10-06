@@ -440,12 +440,13 @@ exact current fingerprint. This does not permit arbitrary one-shot generation
 beside a watch or reuse status belonging to another Host. Use
 `CCROUTER_DISABLE_PUB_HOOK_WATCH_FAILURE_FENCE=1` only for legacy A/B fallback.
 For a package-local Pub command in the same build root, a Host watch target name
-is not exact completion evidence. The Hook verifies build-root status plus the
-live owner lock, reports whether that Host covers the requested Package, and
-fails before starting a conflicting one-shot. Wait for `aggregationSucceeded`
-when coverage is sufficient for iteration, or stop the watch and retry from the
-Package when the Hook command itself must succeed. Ignore stale, malformed, or
-wrong-root status.
+alone is not completion evidence. A successful cycle publishes exact per-target
+Pub resolution, authored-input, and managed-output fingerprints in the stable
+Builder session. The Hook recomputes the requested Package bytes and reuses the
+cycle only when every identity matches. Missing targets, legacy evidence,
+failure, timeout, or mismatched bytes stay fail-closed without starting a
+conflicting one-shot. Use `CCROUTER_DISABLE_PACKAGE_WATCH_REUSE=1` for the
+former reject-only A/B path. Ignore stale, malformed, or wrong-root status.
 Watch independently observes exact Pub-resolution changes. Covered resolution
 changes run an aggregation cycle; a new closure Package, changed Builder target
 set, or build_runner exit caused by resolution churn rotates to a new child

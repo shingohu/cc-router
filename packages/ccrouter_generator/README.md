@@ -421,7 +421,10 @@ post-pub Hook 会以
 或 5 分钟超时均 fail-closed，且不会把另一个 Host 的状态当作完成证据。
 非 Host 的 Flutter component 与 Pure Dart contracts Package 由同一 Hook 触发
 package-local generation，只更新 requested Package 的 artifacts，不执行 Host 聚合或跨 Package
-校验。无直接 `ccrouter`/`ccrouter_contracts` 依赖的 Workspace aggregator 继续跳过。
+校验。若同 build root 的 Host watch 活跃，成功 cycle 会发布 Package 级 Pub resolution、authored
+input 和 managed output 指纹；Hook 重新计算并完全匹配后复用，不再要求停止 watch。旧版状态、
+target 缺失、指纹不匹配或失败仍 fail-closed。`CCROUTER_DISABLE_PACKAGE_WATCH_REUSE=1` 可恢复
+原有拒绝行为做 A/B。无直接 `ccrouter`/`ccrouter_contracts` 依赖的 Workspace aggregator 继续跳过。
 状态发布失败只警告并停止后续状态写入，不影响生成锁、Builder、Validator、快照恢复、原子发布
 或最终 `--no-cache --check`。watch 异常退出且未写入 `stopped` 时，只读命令会根据已释放的
 owner lock 将遗留 `active` 记录显示为 `stale`，但不会改写历史状态文件。

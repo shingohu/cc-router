@@ -1243,6 +1243,7 @@ Future<_GenerationCycleResult> _runWatchGenerationSubprocess({
     outputDelta: outputDelta,
     diagnostics: result.exitCode == 0 ? null : errors.trim(),
     structuredDiagnostics: const [],
+    packageCompletionEvidence: const {},
   );
 }
 
@@ -1727,6 +1728,8 @@ final class _GenerationWatchEvents {
   int _buildRootCycleRevision = 0;
   int _buildRootFailureRevision = 0;
   List<String> _buildRootTargets = const [];
+  Map<String, Map<String, Object?>> _buildRootPackageEvidence = const {};
+  String _buildRootPackageEvidenceState = 'pending';
   bool _buildRootStatusDisabled = false;
   bool _buildRootStatusWarned = false;
   bool _stableBuilderSessionDisabled = false;
@@ -1750,6 +1753,8 @@ final class _GenerationWatchEvents {
       _buildRootCycleRevision = 0;
       _buildRootFailureRevision = 0;
       _buildRootTargets = const [];
+      _buildRootPackageEvidence = const {};
+      _buildRootPackageEvidenceState = 'pending';
     }
   }
 
@@ -1776,9 +1781,32 @@ final class _GenerationWatchEvents {
             ) ??
             const [];
       }
+      if (type == 'buildStarted' ||
+          type == 'resolutionStarted' ||
+          type == 'sessionRestarting') {
+        _buildRootPackageEvidence = const {};
+        _buildRootPackageEvidenceState = 'pending';
+      }
       if (type == 'aggregationSucceeded' ||
           (type == 'failed' && data['stage'] == 'aggregation')) {
         _buildRootCycleRevision++;
+      }
+      if (type == 'aggregationSucceeded') {
+        final raw = data['packageCompletionEvidence'];
+        _buildRootPackageEvidence = raw is Map
+            ? <String, Map<String, Object?>>{
+                for (final entry in raw.entries)
+                  if (entry.key is String && entry.value is Map)
+                    entry.key as String: (entry.value as Map)
+                        .cast<String, Object?>(),
+              }
+            : const {};
+        _buildRootPackageEvidenceState = _buildRootPackageEvidence.isEmpty
+            ? 'unavailable'
+            : 'available';
+      } else if (type == 'failed') {
+        _buildRootPackageEvidence = const {};
+        _buildRootPackageEvidenceState = 'unavailable';
       }
       if (type == 'failed' && data['stage'] == 'build') {
         _buildRootFailureRevision++;
@@ -1802,6 +1830,10 @@ final class _GenerationWatchEvents {
         'cycleRevision': _buildRootCycleRevision,
         'failureRevision': _buildRootFailureRevision,
         'targets': _buildRootTargets,
+        'packageCompletionEvidenceVersion': 1,
+        'packageCompletionEvidenceState': _buildRootPackageEvidenceState,
+        if (_buildRootPackageEvidence.isNotEmpty)
+          'packageCompletionEvidence': _buildRootPackageEvidence,
         'hostRoot': hostRoot.path,
         'buildRoot': buildRoot.path,
         'updatedAt': timestamp,
@@ -1845,6 +1877,8 @@ final class _GenerationWatchEvents {
       }
     }
     if (machine) {
+      final publicData = Map<String, Object?>.of(data)
+        ..remove('packageCompletionEvidence');
       _commandStdout.writeln(
         jsonEncode(<String, Object?>{
           'schemaVersion': 1,
@@ -1854,7 +1888,7 @@ final class _GenerationWatchEvents {
           'hostRoot': hostRoot.path,
           'sessionId': _status.sessionId,
           'eventRevision': _status.eventRevision,
-          ...data,
+          ...publicData,
         }),
       );
       return;

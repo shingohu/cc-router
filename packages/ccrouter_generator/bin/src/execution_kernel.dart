@@ -72,6 +72,7 @@ final class _GenerationCycleResult {
     required this.outputDelta,
     required this.diagnostics,
     required this.structuredDiagnostics,
+    required this.packageCompletionEvidence,
   });
 
   final int exitCode;
@@ -83,6 +84,9 @@ final class _GenerationCycleResult {
   /// Versioned Generator diagnostics captured without parsing rendered text.
   final List<Map<String, Object?>> structuredDiagnostics;
 
+  /// Exact per-Package inputs and outputs proven by a successful watch cycle.
+  final Map<String, Map<String, Object?>> packageCompletionEvidence;
+
   bool get succeeded => exitCode == 0;
 
   Map<String, Object?> toEventData() => {
@@ -93,7 +97,43 @@ final class _GenerationCycleResult {
     if (diagnostics != null) 'diagnostics': diagnostics!,
     if (structuredDiagnostics.isNotEmpty)
       'structuredDiagnostics': structuredDiagnostics,
+    if (packageCompletionEvidence.isNotEmpty)
+      'packageCompletionEvidence': packageCompletionEvidence,
   };
+}
+
+/// Builds Package-local completion proofs from an already captured snapshot.
+Future<Map<String, Map<String, Object?>>> _capturePackageCompletionEvidence({
+  required CCPackageWorkspace workspace,
+  required _GenerationPlanningSnapshot snapshot,
+}) async {
+  final roots = <String, Directory>{
+    for (final package in workspace.packages.values)
+      if (package.writable && package.declaresGenerationIntent)
+        package.name: package.root,
+  };
+  final pubFingerprints = await CCPubResolutionFingerprint.captureMany(
+    requestedRoots: roots,
+    buildRoot: workspace.buildRoot,
+  );
+  final evidence = <String, Map<String, Object?>>{};
+  for (final entry in roots.entries) {
+    final authored = snapshot.input.portable.authoredFingerprints[entry.key];
+    final output = snapshot.packageOutputFingerprints[entry.key];
+    final pub = pubFingerprints[entry.key];
+    if (authored == null || output == null || pub == null) {
+      continue;
+    }
+    evidence[entry.key] = <String, Object?>{
+      'schemaVersion': 1,
+      'package': entry.key,
+      'packageRoot': entry.value.absolute.path,
+      'pubResolutionFingerprint': pub,
+      'authoredInputFingerprint': authored,
+      'managedOutputFingerprint': output,
+    };
+  }
+  return Map<String, Map<String, Object?>>.unmodifiable(evidence);
 }
 
 /// Records Workspace diagnostics for the currently executing watch cycle.
@@ -195,6 +235,7 @@ Future<_GenerationCycleResult> _runGenerationCycle({
   List<String>? outputChanges;
   _GeneratedArtifactsDelta? generatedArtifactsDelta;
   final structuredDiagnostics = <Map<String, Object?>>[];
+  Map<String, Map<String, Object?>> packageCompletionEvidence = const {};
 
   Future<void> executeCycle(
     _Arguments parsed,
@@ -623,6 +664,13 @@ Future<_GenerationCycleResult> _runGenerationCycle({
             profileTrace?.skip('build-plan-state-write');
             profileTrace?.skip('aggregation-reuse-state-write');
           } else {
+            packageCompletionEvidence = await _capturePackageCompletionEvidence(
+              workspace: fastPathWorkspace!,
+              snapshot: planningSnapshot,
+            );
+            final planningState = await planningSnapshot.capturePlanningState(
+              fastPathWorkspace!,
+            );
             await profileTrace.measure(
               'fast-path-manifest-write',
               () => _GenerationFastPath.writeSnapshot(
@@ -633,13 +681,9 @@ Future<_GenerationCycleResult> _runGenerationCycle({
             );
             try {
               await profileTrace.measure('build-plan-state-write', () async {
-                final workspace = fastPathWorkspace!;
-                final state = await planningSnapshot.capturePlanningState(
-                  workspace,
-                );
                 await _GenerationBuildPlanner.writeSnapshot(
-                  workspace: workspace,
-                  state: state,
+                  workspace: fastPathWorkspace!,
+                  state: planningState,
                 );
               });
             } on Object {
@@ -766,6 +810,7 @@ Future<_GenerationCycleResult> _runGenerationCycle({
     outputDelta: outputDelta,
     diagnostics: cycleExitCode == 0 ? null : errorBuffer?.toString().trim(),
     structuredDiagnostics: List.unmodifiable(structuredDiagnostics),
+    packageCompletionEvidence: packageCompletionEvidence,
   );
 }
 

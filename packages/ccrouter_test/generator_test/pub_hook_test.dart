@@ -968,11 +968,80 @@ workspace:
     expect(result.exitCode, 1, reason: output);
     expect(output, contains('active Host watch at "${fixture.host.path}"'));
     expect(output, contains('covers requested Package "watched_component"'));
-    expect(output, contains('wait for its `aggregationSucceeded`'));
+    expect(output, contains('does not publish versioned Package'));
     expect(output, contains('stop the watch, then retry'));
     expect(output, isNot(contains('Generator diagnostics:')));
     expect(output, isNot(contains('active CCRouter generation watch owns')));
   });
+
+  test(
+    'package-local post-pub reuses exact active Host watch evidence',
+    () async {
+      final fixture = await _createPackageWatchFixture();
+      addTearDown(() => fixture.workspace.delete(recursive: true));
+      final owner = await _lockWatchOwner(fixture.workspace);
+      addTearDown(() async {
+        await owner.unlock();
+        await owner.close();
+      });
+      await _writeBuildRootWatchStatus(
+        fixture,
+        targets: const ['watched_component'],
+        packageCompletionEvidence: {
+          'watched_component': await _packageWatchEvidence(fixture),
+        },
+      );
+
+      final result = await _run([
+        'pub-hook',
+        'run',
+        '--project-root',
+        fixture.package.path,
+        '--pub-command',
+        'get',
+      ]);
+      final output = '${result.stdout}\n${result.stderr}';
+
+      expect(result.exitCode, 0, reason: output);
+      expect(output, contains('reused active watch cycle 2'));
+      expect(output, contains('exact Package evidence'));
+      expect(output, isNot(contains('active CCRouter generation watch owns')));
+    },
+  );
+
+  test(
+    'package-local post-pub fails fast when evidence is unavailable',
+    () async {
+      final fixture = await _createPackageWatchFixture();
+      addTearDown(() => fixture.workspace.delete(recursive: true));
+      final owner = await _lockWatchOwner(fixture.workspace);
+      addTearDown(() async {
+        await owner.unlock();
+        await owner.close();
+      });
+      await _writeBuildRootWatchStatus(
+        fixture,
+        targets: const ['watched_component'],
+        packageCompletionEvidence: const {},
+      );
+
+      final watch = Stopwatch()..start();
+      final result = await _run([
+        'pub-hook',
+        'run',
+        '--project-root',
+        fixture.package.path,
+        '--pub-command',
+        'get',
+      ]);
+      watch.stop();
+      final output = '${result.stdout}\n${result.stderr}';
+
+      expect(result.exitCode, 1, reason: output);
+      expect(watch.elapsed, lessThan(const Duration(seconds: 5)));
+      expect(output, contains('completed without exact Package evidence'));
+    },
+  );
 
   test(
     'package-local post-pub uses stable Builder session without local status',
@@ -1909,6 +1978,7 @@ Future<File> _writeBuildRootWatchStatus(
   _PackageWatchFixture fixture, {
   required List<String> targets,
   Directory? buildRoot,
+  Map<String, Map<String, Object?>>? packageCompletionEvidence,
 }) async {
   final file = File(
     path.join(
@@ -1930,6 +2000,14 @@ Future<File> _writeBuildRootWatchStatus(
     'cycleRevision': 2,
     'failureRevision': 0,
     'targets': targets,
+    if (packageCompletionEvidence != null)
+      'packageCompletionEvidenceVersion': 1,
+    if (packageCompletionEvidence != null)
+      'packageCompletionEvidenceState': packageCompletionEvidence.isEmpty
+          ? 'unavailable'
+          : 'available',
+    if (packageCompletionEvidence != null)
+      'packageCompletionEvidence': packageCompletionEvidence,
     'hostRoot': fixture.host.path,
     'buildRoot': (buildRoot ?? fixture.workspace).path,
     'updatedAt': DateTime.now().toUtc().toIso8601String(),
@@ -1945,6 +2023,25 @@ Future<File> _writeBuildRootWatchStatus(
     environment: _testEnvironment,
   ).builderSessionDocument;
 }
+
+Future<Map<String, Object?>> _packageWatchEvidence(
+  _PackageWatchFixture fixture,
+) async => <String, Object?>{
+  'schemaVersion': 1,
+  'package': 'watched_component',
+  'packageRoot': fixture.package.path,
+  'pubResolutionFingerprint': await CCPubResolutionFingerprint.capture(
+    hostRoot: fixture.package,
+    buildRoot: fixture.workspace,
+  ),
+  'authoredInputFingerprint':
+      await CCPackageWatchFingerprint.captureAuthoredInput(
+        packageName: 'watched_component',
+        packageRoot: fixture.package,
+      ),
+  'managedOutputFingerprint':
+      await CCPackageWatchFingerprint.captureManagedOutput(fixture.package),
+};
 
 Future<Directory> _createWatchCoordinatedProject() async {
   final project = await Directory.systemTemp.createTemp(

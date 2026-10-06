@@ -12,6 +12,7 @@ import 'pub_hook_watch_coordination.dart';
 
 const _pubHookWatchFailureFenceKillSwitch =
     'CCROUTER_DISABLE_PUB_HOOK_WATCH_FAILURE_FENCE';
+const _packageWatchReuseKillSwitch = 'CCROUTER_DISABLE_PACKAGE_WATCH_REUSE';
 
 /// Disables only the pre-clean active-watch guard for A/B diagnosis.
 const ccrouterFlutterCleanGuardKillSwitch =
@@ -720,14 +721,30 @@ Future<bool> runCCPubHook({
     }
   }
   if (operation.isPostPub && projectRole.role == CCProjectRole.package) {
-    final conflict = await _activePackageLocalWatchConflict(context, operation);
-    if (conflict != null) {
+    final watch = await _waitForPackagePostPubWatch(context, operation);
+    if (watch != null) {
       stopwatch.stop();
-      stderr.writeln(
-        'CCRouter ${operation.label} failed for ${operation.target}: '
-        '${conflict.message}, elapsed=${stopwatch.elapsedMilliseconds}ms.',
-      );
-      return false;
+      if (watch.succeeded) {
+        stdout.writeln(
+          'CCRouter ${operation.label} reused active watch cycle '
+          '${watch.cycle} for exact Package evidence.',
+        );
+        stdout.writeln(
+          'CCRouter ${operation.label} finished: '
+          'elapsed=${stopwatch.elapsedMilliseconds}ms.',
+        );
+      } else {
+        stderr.writeln(
+          'CCRouter ${operation.label} failed for ${operation.target}: '
+          '${watch.message}, elapsed=${stopwatch.elapsedMilliseconds}ms.',
+        );
+        if (watch.diagnostics case final diagnostics?) {
+          stderr.writeln('Generator diagnostics:');
+          stderr.writeln(diagnostics);
+        }
+        stderr.writeln('Watch log: ${watch.logFile.path}');
+      }
+      return watch.succeeded;
     }
   }
   final process = await Process.start(Platform.resolvedExecutable, [
@@ -776,24 +793,13 @@ void _writePubHookProjectContext(CCProjectContext context, CCProjectRole role) {
   stderr.writeln('Resolution root: ${context.resolutionRoot.path}');
 }
 
-/// Actionable package-local diagnostic for a verified shared build-root watch.
-final class _CCPubHookPackageWatchConflict {
-  const _CCPubHookPackageWatchConflict(this.message);
-
-  final String message;
-}
-
-/// Detects a Host watch that prevents package-local one-shot generation.
-///
-/// A target name is useful for diagnostics, but is not exact completion
-/// evidence for the Package manifest that triggered Pub. The Hook therefore
-/// remains fail-closed instead of reusing a Host cycle.
-Future<_CCPubHookPackageWatchConflict?> _activePackageLocalWatchConflict(
+/// Waits for exact Package inputs and outputs from a shared Host watch.
+Future<_CCPubHookWatchResult?> _waitForPackagePostPubWatch(
   CCProjectContext context,
   _CCPubHookOperation operation,
 ) async {
   final buildRoot = context.resolutionRoot;
-  final status = await _readPubHookBuildRootWatchStatus(buildRoot);
+  var status = await _readPubHookBuildRootWatchStatus(buildRoot);
   if (status == null || status['active'] != true) return null;
   if (!hasSameDirectoryIdentity(
     status['buildRoot'] as String,
@@ -806,25 +812,189 @@ Future<_CCPubHookPackageWatchConflict?> _activePackageLocalWatchConflict(
   if (packageName == null) return null;
 
   final hostRoot = status['hostRoot'] as String;
-  final targets = (status['targets'] as List).cast<String>();
+  final logFile = _pubHookWatchLogFile(Directory(hostRoot));
   final retry =
       'stop the watch, then retry ${operation.target} from '
       '"${context.requestedRoot.path}"';
-  if (targets.contains(packageName)) {
-    return _CCPubHookPackageWatchConflict(
-      'active Host watch at "$hostRoot" owns build root '
-      '"${buildRoot.path}" and covers requested Package "$packageName", '
-      'but package-local post-pub generation cannot use that Host cycle as '
-      'exact completion evidence; wait for its `aggregationSucceeded`, or '
-      '$retry',
+  if (Platform.environment[_packageWatchReuseKillSwitch] == '1') {
+    return _CCPubHookWatchResult(
+      succeeded: false,
+      cycle: status['cycleRevision'] as int,
+      message:
+          'Package watch reuse is disabled by '
+          '$_packageWatchReuseKillSwitch=1; $retry',
+      logFile: logFile,
     );
   }
-  return _CCPubHookPackageWatchConflict(
-    'active Host watch at "$hostRoot" owns build root '
-    '"${buildRoot.path}" but does not cover requested Package '
-    '"$packageName"; $retry',
+  if (status['packageCompletionEvidenceVersion'] != 1) {
+    final targets = (status['targets'] as List).whereType<String>().toSet();
+    final coverage = targets.contains(packageName)
+        ? 'covers requested Package "$packageName"'
+        : 'does not cover requested Package "$packageName"';
+    return _CCPubHookWatchResult(
+      succeeded: false,
+      cycle: status['cycleRevision'] as int,
+      message:
+          'active Host watch at "$hostRoot" owns build root '
+          '"${buildRoot.path}" and $coverage, but does not publish versioned Package '
+          'completion evidence; $retry',
+      logFile: logFile,
+    );
+  }
+
+  var required = await _captureCurrentPackageWatchEvidence(
+    packageName: packageName,
+    packageRoot: context.requestedRoot,
+    buildRoot: buildRoot,
+    includeOutput: false,
+  );
+  final timeout = Stopwatch()..start();
+  const maximumWait = Duration(minutes: 5);
+  while (timeout.elapsed < maximumWait) {
+    status = await _readPubHookBuildRootWatchStatus(buildRoot);
+    if (status == null ||
+        status['active'] != true ||
+        !hasSameDirectoryIdentity(
+          status['buildRoot'] as String,
+          buildRoot.path,
+        ) ||
+        !await _pubHookWatchOwnerIsHeld(buildRoot)) {
+      return _CCPubHookWatchResult(
+        succeeded: false,
+        cycle: 0,
+        message: 'active Host watch became unavailable; $retry',
+        logFile: logFile,
+      );
+    }
+    final cycle = status['cycleRevision'] as int;
+    final targets = (status['targets'] as List).whereType<String>().toSet();
+    final rawEvidence = status['packageCompletionEvidence'];
+    final packageEvidence = rawEvidence is Map
+        ? rawEvidence[packageName]
+        : null;
+    if (targets.contains(packageName) && packageEvidence is Map) {
+      final candidate = packageEvidence.cast<String, Object?>();
+      final current = await _captureCurrentPackageWatchEvidence(
+        packageName: packageName,
+        packageRoot: context.requestedRoot,
+        buildRoot: buildRoot,
+        includeOutput: true,
+      );
+      if (!_packageWatchInputsEqual(current, required)) required = current;
+      if (_packageWatchEvidenceMatches(
+            candidate,
+            required,
+            packageName: packageName,
+            packageRoot: context.requestedRoot,
+          ) &&
+          candidate['managedOutputFingerprint'] ==
+              current.managedOutputFingerprint) {
+        return _CCPubHookWatchResult(
+          succeeded: true,
+          cycle: cycle,
+          message: 'active watch Package generation succeeded',
+          logFile: logFile,
+        );
+      }
+    }
+    if (status['lastEvent'] == 'failed') {
+      return _CCPubHookWatchResult(
+        succeeded: false,
+        cycle: cycle,
+        message:
+            'active Host watch cycle $cycle failed at '
+            '${status['failureStage'] ?? 'generation'}',
+        diagnostics: status['failureDiagnostics'] as String?,
+        logFile: logFile,
+      );
+    }
+    if (targets.contains(packageName) &&
+        status['packageCompletionEvidenceState'] == 'unavailable') {
+      return _CCPubHookWatchResult(
+        succeeded: false,
+        cycle: cycle,
+        message:
+            'active Host watch cycle $cycle completed without exact Package '
+            'evidence for "$packageName"; $retry',
+        logFile: logFile,
+      );
+    }
+    await Future<void>.delayed(const Duration(milliseconds: 200));
+  }
+  final lastStatus = status!;
+  final targets = (lastStatus['targets'] as List).whereType<String>().toSet();
+  final coverage = targets.contains(packageName)
+      ? 'covers requested Package "$packageName" but did not publish '
+            'matching completion evidence'
+      : 'does not cover requested Package "$packageName"';
+  return _CCPubHookWatchResult(
+    succeeded: false,
+    cycle: lastStatus['cycleRevision'] as int,
+    message:
+        'active Host watch at "$hostRoot" owns build root '
+        '"${buildRoot.path}" and $coverage within 5 minutes; $retry',
+    logFile: logFile,
   );
 }
+
+/// Current exact Package inputs, plus outputs when validating a candidate.
+final class _CCPackageWatchEvidence {
+  const _CCPackageWatchEvidence({
+    required this.pubResolutionFingerprint,
+    required this.authoredInputFingerprint,
+    required this.managedOutputFingerprint,
+  });
+
+  final String pubResolutionFingerprint;
+  final String authoredInputFingerprint;
+  final String? managedOutputFingerprint;
+}
+
+Future<_CCPackageWatchEvidence> _captureCurrentPackageWatchEvidence({
+  required String packageName,
+  required Directory packageRoot,
+  required Directory buildRoot,
+  required bool includeOutput,
+}) async => _CCPackageWatchEvidence(
+  pubResolutionFingerprint: await CCPubResolutionFingerprint.capture(
+    hostRoot: packageRoot,
+    buildRoot: buildRoot,
+  ),
+  authoredInputFingerprint:
+      await CCPackageWatchFingerprint.captureAuthoredInput(
+        packageName: packageName,
+        packageRoot: packageRoot,
+      ),
+  managedOutputFingerprint: includeOutput
+      ? await CCPackageWatchFingerprint.captureManagedOutput(packageRoot)
+      : null,
+);
+
+bool _packageWatchEvidenceMatches(
+  Map<String, Object?> candidate,
+  _CCPackageWatchEvidence required, {
+  required String packageName,
+  required Directory packageRoot,
+}) =>
+    candidate['schemaVersion'] == 1 &&
+    candidate['package'] == packageName &&
+    candidate['packageRoot'] is String &&
+    hasSameDirectoryIdentity(
+      candidate['packageRoot']! as String,
+      packageRoot.path,
+    ) &&
+    candidate['pubResolutionFingerprint'] ==
+        required.pubResolutionFingerprint &&
+    candidate['authoredInputFingerprint'] ==
+        required.authoredInputFingerprint &&
+    candidate['managedOutputFingerprint'] is String;
+
+bool _packageWatchInputsEqual(
+  _CCPackageWatchEvidence left,
+  _CCPackageWatchEvidence right,
+) =>
+    left.pubResolutionFingerprint == right.pubResolutionFingerprint &&
+    left.authoredInputFingerprint == right.authoredInputFingerprint;
 
 Future<Map<String, Object?>?> _readPubHookBuildRootWatchStatus(
   Directory buildRoot,
