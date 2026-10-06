@@ -8,9 +8,18 @@ import 'dart:io';
 import 'package:path/path.dart' as path;
 import 'package:test/test.dart';
 
+import '../../ccrouter_generator/bin/src/canonical_directory_identity.dart';
 import '../../ccrouter_generator/bin/src/flutter_run_reload_gate.dart';
 
 void main() {
+  test(
+    'canonical identity resolves the macOS temporary-directory alias',
+    () {
+      expect(hasSameDirectoryIdentity('/tmp', '/private/tmp'), isTrue);
+    },
+    skip: Platform.isMacOS ? false : 'macOS filesystem alias only',
+  );
+
   test('reload waits for the cycle covering the observed input', () async {
     final host = await _createHost();
     addTearDown(() => host.delete(recursive: true));

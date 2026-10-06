@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:path/path.dart' as path;
 import 'package:yaml/yaml.dart';
 
+import 'canonical_directory_identity.dart';
 import 'pub_hook_watch_coordination.dart';
 
 const _pubHookWatchFailureFenceKillSwitch =
@@ -712,10 +713,7 @@ Future<Map<String, Object?>?> _readPubHookWatchStatus(File file) async {
 bool _pubHookStatusMatchesHost(
   Map<String, Object?> status,
   Directory hostRoot,
-) => path.equals(
-  path.normalize('${status['hostRoot']}'),
-  path.normalize(hostRoot.absolute.path),
-);
+) => hasSameDirectoryIdentity('${status['hostRoot']}', hostRoot.path);
 
 Future<bool> _pubHookWatchIsActive(Map<String, Object?> status) async {
   if (status['active'] != true) return false;

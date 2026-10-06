@@ -65,6 +65,37 @@ dependencies:
     expect(fixture.bridge.pubResolutionHint(fixture.pubspec), isNull);
   });
 
+  test('accepts watch identity through a symlinked Host path', () {
+    if (Platform.isWindows) return;
+    final fixture = _BridgeFixture.create();
+    final aliases = Directory.systemTemp.createTempSync(
+      'ccrouter-bridge-alias-',
+    );
+    final alias = Directory(path.join(aliases.path, 'host'));
+    Link(alias.path).createSync(fixture.root.path);
+    addTearDown(() => aliases.deleteSync(recursive: true));
+    addTearDown(fixture.dispose);
+    fixture.writeStatus(eventRevision: 7);
+    fixture.writeDiagnostics(eventRevision: 7);
+    fixture.pubspec.writeAsStringSync('''
+name: bridge_host
+dependencies:
+  ccrouter: any
+#  demo_order: any
+''');
+    fixture.writePackageGraph(['ccrouter', 'demo_order']);
+
+    final aliasedSource = path.join(alias.path, 'lib', 'src', 'component.dart');
+    final diagnostics = fixture.bridge.diagnosticsFor(aliasedSource);
+    final hint = fixture.bridge.pubResolutionHint(
+      File(path.join(alias.path, 'pubspec.yaml')),
+    );
+
+    expect(diagnostics, hasLength(1));
+    expect(hint, isNotNull);
+    expect(hint!.message, contains('still resolved: demo_order'));
+  });
+
   test('kill switch disables snapshots and Pub resolution hints', () {
     final fixture = _BridgeFixture.create();
     addTearDown(fixture.dispose);

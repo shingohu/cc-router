@@ -161,7 +161,7 @@ final class CCRouterGeneratorDiagnosticsBridge {
   /// `.dart_tool` changes from its filesystem event stream.
   Set<String> pollAffectedDartPaths(Directory hostRoot) {
     if (!enabled) return const <String>{};
-    final key = path.normalize(hostRoot.absolute.path);
+    final key = _canonicalDirectoryIdentity(hostRoot.path);
     final signature =
         '${_fileIdentity(_statusFile(hostRoot))}|'
         '${_fileIdentity(_diagnosticsFile(hostRoot))}';
@@ -190,7 +190,7 @@ final class CCRouterGeneratorDiagnosticsBridge {
         File(path.join(buildRoot.path, '.dart_tool', 'package_graph.json')),
       ),
     ].join('|');
-    final key = path.normalize(absoluteHost.path);
+    final key = _canonicalDirectoryIdentity(absoluteHost.path);
     final previous = _observedResolutionInputByHost[key];
     _observedResolutionInputByHost[key] = signature;
     return previous != null && previous != signature;
@@ -205,7 +205,7 @@ final class CCRouterGeneratorDiagnosticsBridge {
             for (final diagnostic in _decodeDiagnostics(snapshot))
               diagnostic.path,
           };
-    final key = path.normalize(hostRoot.absolute.path);
+    final key = _canonicalDirectoryIdentity(hostRoot.path);
     final affected = <String>{...?_publishedPathsByHost[key], ...current};
     if (current.isEmpty) {
       _publishedPathsByHost.remove(key);
@@ -226,15 +226,21 @@ final class CCRouterGeneratorDiagnosticsBridge {
     if (snapshot == null) {
       return const <CCRouterBridgedGeneratorDiagnostic>[];
     }
-    final normalized = path.normalize(File(filePath).absolute.path);
+    final sourcePath = path.normalize(File(filePath).absolute.path);
+    final sourceIdentity = _canonicalFileIdentity(sourcePath);
     final diagnostics = _decodeDiagnostics(snapshot)
-        .where((diagnostic) => path.equals(diagnostic.path, normalized))
+        .where(
+          (diagnostic) => path.equals(
+            _canonicalFileIdentity(diagnostic.path),
+            sourceIdentity,
+          ),
+        )
         .toList(growable: false);
     if (diagnostics.isNotEmpty) {
-      final key = path.normalize(hostRoot.absolute.path);
+      final key = _canonicalDirectoryIdentity(hostRoot.path);
       _publishedPathsByHost[key] = Set.unmodifiable({
         ...?_publishedPathsByHost[key],
-        normalized,
+        sourcePath,
       });
     }
     return diagnostics;
@@ -255,7 +261,10 @@ final class CCRouterGeneratorDiagnosticsBridge {
     if (status == null ||
         status['schemaVersion'] != 1 ||
         status['active'] != true ||
-        !path.equals('${status['hostRoot'] ?? ''}', hostRoot.path)) {
+        !_hasSameDirectoryIdentity(
+          '${status['hostRoot'] ?? ''}',
+          hostRoot.path,
+        )) {
       return null;
     }
     final buildRootValue = status['buildRoot'];
@@ -332,9 +341,20 @@ final class CCRouterGeneratorDiagnosticsBridge {
         snapshot['cycleResolutionState'] != 'matched') {
       return null;
     }
+    final statusHostRoot = status['hostRoot'];
+    final snapshotHostRoot = snapshot['hostRoot'];
+    final statusBuildRoot = status['buildRoot'];
+    final snapshotBuildRoot = snapshot['buildRoot'];
+    if (statusHostRoot is! String ||
+        snapshotHostRoot is! String ||
+        statusBuildRoot is! String ||
+        snapshotBuildRoot is! String ||
+        !_hasSameDirectoryIdentity(statusHostRoot, snapshotHostRoot) ||
+        !_hasSameDirectoryIdentity(statusBuildRoot, snapshotBuildRoot) ||
+        !_hasSameDirectoryIdentity(statusHostRoot, hostRoot.path)) {
+      return null;
+    }
     for (final key in const <String>[
-      'hostRoot',
-      'buildRoot',
       'sessionId',
       'eventRevision',
       'cycle',
@@ -502,3 +522,29 @@ final class CCRouterGeneratorDiagnosticsBridge {
     ),
   );
 }
+
+/// Returns one stable directory identity across symlinks and platform aliases.
+String _canonicalDirectoryIdentity(String value) {
+  final directory = Directory(value).absolute;
+  try {
+    return path.normalize(directory.resolveSymbolicLinksSync());
+  } on FileSystemException {
+    return path.normalize(directory.path);
+  }
+}
+
+/// Returns one stable file identity while preserving missing-path diagnostics.
+String _canonicalFileIdentity(String value) {
+  final file = File(value).absolute;
+  try {
+    return path.normalize(file.resolveSymbolicLinksSync());
+  } on FileSystemException {
+    return path.normalize(file.path);
+  }
+}
+
+/// Reports whether two directory spellings identify the same filesystem root.
+bool _hasSameDirectoryIdentity(String first, String second) => path.equals(
+  _canonicalDirectoryIdentity(first),
+  _canonicalDirectoryIdentity(second),
+);

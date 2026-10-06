@@ -310,6 +310,44 @@ dev_dependencies:
     expect(output, isNot(contains('active CCRouter generation watch owns')));
   });
 
+  test('post-pub hook reuses a watch through a symlinked Host path', () async {
+    if (Platform.isWindows) return;
+    final project = await _createWatchCoordinatedProject();
+    final aliases = await Directory.systemTemp.createTemp(
+      'ccrouter_pub_hook_alias_',
+    );
+    final alias = Directory(path.join(aliases.path, 'host'));
+    await Link(alias.path).create(project.path);
+    addTearDown(() => aliases.delete(recursive: true));
+    addTearDown(() => project.delete(recursive: true));
+    final owner = await _lockWatchOwner(project);
+    addTearDown(() async {
+      await owner.unlock();
+      await owner.close();
+    });
+    await _writeWatchStatus(
+      project,
+      lastEvent: 'ready',
+      cycle: 2,
+      sessionReady: true,
+      updatedAt: DateTime.now().toUtc(),
+    );
+
+    final result = await _run([
+      'pub-hook',
+      'run',
+      '--project-root',
+      alias.path,
+      '--pub-command',
+      'get',
+    ]);
+    final output = '${result.stdout}\n${result.stderr}';
+
+    expect(result.exitCode, 0, reason: output);
+    expect(output, contains('reused active watch cycle 2'));
+    expect(output, isNot(contains('active CCRouter generation watch owns')));
+  });
+
   test('post-pub hook surfaces active watch generation diagnostics', () async {
     final project = await _createWatchCoordinatedProject();
     addTearDown(() => project.delete(recursive: true));

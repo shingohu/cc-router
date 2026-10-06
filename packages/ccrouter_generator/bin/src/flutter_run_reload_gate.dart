@@ -4,6 +4,8 @@ import 'dart:io';
 
 import 'package:path/path.dart' as path;
 
+import 'canonical_directory_identity.dart';
+
 /// Environment switch that bypasses only Flutter machine reload coordination.
 const String ccrouterHotReloadGateKillSwitch =
     'CCROUTER_DISABLE_HOT_RELOAD_GATE';
@@ -84,7 +86,7 @@ final class CCFlutterReloadGate {
     required bool fullRestart,
     String? acknowledgedHotRestartSessionId,
   }) async {
-    final normalizedHost = await _canonicalDirectoryPath(hostRoot.path);
+    final normalizedHost = canonicalDirectoryIdentity(hostRoot.path);
     final watch = Stopwatch()..start();
     var requiredInputRevision = 0;
     var stableSince = Duration.zero;
@@ -104,7 +106,7 @@ final class CCFlutterReloadGate {
         previousIdentity = identity;
         stableSince = watch.elapsed;
       }
-      final statusHost = await _canonicalDirectoryPath(
+      final statusHost = canonicalDirectoryIdentity(
         status['hostRoot'] as String,
       );
       if (!path.equals(statusHost, normalizedHost)) {
@@ -210,18 +212,6 @@ final class CCFlutterReloadGate {
       return decoded.cast<String, Object?>();
     } on Object {
       return null;
-    }
-  }
-
-  /// Resolves platform aliases such as macOS `/tmp` and `/private/tmp` before
-  /// comparing Host ownership.
-  Future<String> _canonicalDirectoryPath(String value) async {
-    try {
-      return path.normalize(
-        await Directory(value).absolute.resolveSymbolicLinks(),
-      );
-    } on FileSystemException {
-      return path.normalize(Directory(value).absolute.path);
     }
   }
 }
