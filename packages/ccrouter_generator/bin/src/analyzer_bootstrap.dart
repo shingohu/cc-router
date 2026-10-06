@@ -21,6 +21,9 @@ enum CCAnalyzerBootstrapAction {
   /// Verifies locked dependencies, analysis, and loader compilation.
   doctor,
 
+  /// Verifies the maintained Git pin and reports production drift after it.
+  pinCheck,
+
   /// Installs a verified, CLI-owned isolated bootstrap.
   install,
 
@@ -89,8 +92,11 @@ Future<bool> runAnalyzerBootstrapCommand(
   String? homeDirectory,
 }) async {
   final runner = processRunner ?? _runAnalyzerProcess;
-  if (request.action != CCAnalyzerBootstrapAction.status &&
-      request.action != CCAnalyzerBootstrapAction.doctor) {
+  final readOnly =
+      request.action == CCAnalyzerBootstrapAction.status ||
+      request.action == CCAnalyzerBootstrapAction.doctor ||
+      request.action == CCAnalyzerBootstrapAction.pinCheck;
+  if (!readOnly) {
     if (request.action == CCAnalyzerBootstrapAction.install ||
         request.action == CCAnalyzerBootstrapAction.upgrade) {
       stderr.writeln(
@@ -115,6 +121,14 @@ Future<bool> runAnalyzerBootstrapCommand(
   report.writeTo(outputSink);
   if (report.state != _AnalyzerBootstrapState.healthy) return false;
   if (request.action == CCAnalyzerBootstrapAction.status) return true;
+  if (request.action == CCAnalyzerBootstrapAction.pinCheck) {
+    return _runAnalyzerPinCheck(
+      report,
+      runner: runner,
+      output: outputSink,
+      error: errorSink,
+    );
+  }
   return _runDoctor(
     report,
     runner: runner,
@@ -122,6 +136,204 @@ Future<bool> runAnalyzerBootstrapCommand(
     error: errorSink,
     homeDirectory: homeDirectory,
   );
+}
+
+/// Verifies one maintained Git bootstrap without mutating repository state.
+///
+/// Production drift is advisory because the supported two-stage workflow first
+/// pushes Plugin changes and only then updates the Host pin in another commit.
+Future<bool> _runAnalyzerPinCheck(
+  _AnalyzerBootstrapReport report, {
+  AnalyzerBootstrapProcessRunner runner = _runAnalyzerProcess,
+  StringSink? output,
+  StringSink? error,
+}) async {
+  final outputSink = output ?? stdout;
+  final errorSink = error ?? stderr;
+  if (report.source != 'git' || report.bootstrapRoot == null) {
+    errorSink.writeln(
+      'error: Analyzer pin-check applies only to a Git bootstrap. Hosted '
+      'dependencies use their published version and lockfile identity.',
+    );
+    return false;
+  }
+  final manifest = _readYamlMap(
+    File(path.join(report.bootstrapRoot!.path, 'pubspec.yaml')),
+  );
+  final dependency = _stringKeyedMap(
+    _stringKeyedMap(manifest?['dependencies'])['ccrouter_analyzer_plugin'],
+  );
+  final git = _stringKeyedMap(dependency['git']);
+  final url = git['url']?.toString();
+  final gitPath = git['path']?.toString();
+  final ref = git['ref']?.toString();
+  if (url == null || gitPath == null || ref == null) {
+    errorSink.writeln(
+      'error: Analyzer pin-check requires Git url, path, and ref in the '
+      'active bootstrap manifest.',
+    );
+    return false;
+  }
+  late final _AnalyzerSource source;
+  try {
+    source = _AnalyzerSource.select(
+      CCAnalyzerBootstrapRequest(
+        action: CCAnalyzerBootstrapAction.pinCheck,
+        hostRoot: report.hostRoot.path,
+        source: 'git',
+        url: url,
+        ref: ref,
+        gitPath: gitPath,
+      ),
+      null,
+    );
+  } on ArgumentError catch (failure) {
+    errorSink.writeln(
+      'error: Analyzer pin-check rejected the Git identity: '
+      '${failure.message}',
+    );
+    return false;
+  }
+
+  final repository = _findGitRepository(report.hostRoot);
+  if (repository == null) {
+    errorSink.writeln(
+      'error: Analyzer pin-check must run from a Host inside the maintained '
+      'cc-router Git checkout.',
+    );
+    return false;
+  }
+  final productionPath = path.posix.join(source.gitPath!, 'lib');
+  final productionDirectory = Directory(
+    path.join(repository.path, path.joinAll(productionPath.split('/'))),
+  );
+  if (!productionDirectory.existsSync()) {
+    errorSink.writeln(
+      'error: Pinned Plugin production directory was not found in the '
+      'maintainer checkout: ${productionDirectory.path}',
+    );
+    return false;
+  }
+
+  outputSink.writeln('CCRouter Analyzer pin check');
+  outputSink.writeln('  source pin: current ($ref)');
+  outputSink.writeln('  manifest/lock/resolved-ref: current');
+  final temporary = await Directory.systemTemp.createTemp(
+    'ccrouter-analyzer-pin-check-',
+  );
+  try {
+    final init = await runner(
+      'git',
+      const ['init', '--bare', '--quiet'],
+      workingDirectory: temporary.path,
+      environment: const {'GIT_TERMINAL_PROMPT': '0'},
+    );
+    if (init.exitCode != 0) {
+      _writeAnalyzerPinProcessFailure(errorSink, 'prepare remote proof', init);
+      return false;
+    }
+    final fetch = await runner(
+      'git',
+      ['fetch', '--quiet', '--no-tags', '--depth=1', source.url!, source.ref!],
+      workingDirectory: temporary.path,
+      environment: const {'GIT_TERMINAL_PROMPT': '0'},
+    );
+    if (fetch.exitCode != 0) {
+      _writeAnalyzerPinProcessFailure(errorSink, 'resolve remote pin', fetch);
+      return false;
+    }
+    outputSink.writeln('  remote ref: resolvable');
+
+    final localCommit = await runner(
+      'git',
+      ['cat-file', '-e', '${source.ref}^{commit}'],
+      workingDirectory: repository.path,
+      environment: const {'GIT_TERMINAL_PROMPT': '0'},
+    );
+    if (localCommit.exitCode != 0) {
+      _writeAnalyzerPinProcessFailure(
+        errorSink,
+        'resolve pinned commit in maintainer checkout',
+        localCommit,
+      );
+      return false;
+    }
+    final ancestry = await runner(
+      'git',
+      ['merge-base', '--is-ancestor', source.ref!, 'HEAD'],
+      workingDirectory: repository.path,
+      environment: const {'GIT_TERMINAL_PROMPT': '0'},
+    );
+    if (ancestry.exitCode != 0) {
+      errorSink.writeln(
+        'error: The pinned commit is not an ancestor of the maintainer '
+        'checkout HEAD, so changes "after" the pin cannot be classified '
+        'reliably.',
+      );
+      return false;
+    }
+    final diff = await runner(
+      'git',
+      ['diff', '--name-only', source.ref!, '--', productionPath],
+      workingDirectory: repository.path,
+      environment: const {'GIT_TERMINAL_PROMPT': '0'},
+    );
+    if (diff.exitCode != 0) {
+      _writeAnalyzerPinProcessFailure(
+        errorSink,
+        'compare Plugin production sources',
+        diff,
+      );
+      return false;
+    }
+    final changed = '${diff.stdout}'
+        .split(RegExp(r'\r?\n'))
+        .map((value) => value.trim())
+        .where((value) => value.isNotEmpty)
+        .toList(growable: false);
+    if (changed.isEmpty) {
+      outputSink.writeln('  production changes after pin: none');
+    } else {
+      outputSink.writeln(
+        '  production changes after pin: pending (${changed.length} file(s))',
+      );
+      for (final file in changed) {
+        outputSink.writeln('    $file');
+      }
+      outputSink.writeln(
+        '  advisory: keep the current pin until the Plugin change is '
+        'verified and pushed; then bump manifest/lock in a separate commit.',
+      );
+    }
+    return true;
+  } finally {
+    if (temporary.existsSync()) await temporary.delete(recursive: true);
+  }
+}
+
+/// Writes bounded subprocess context for one failed pin proof stage.
+void _writeAnalyzerPinProcessFailure(
+  StringSink sink,
+  String stage,
+  ProcessResult result,
+) {
+  sink.writeln('error: Analyzer pin-check failed to $stage.');
+  final detail = '${result.stdout}\n${result.stderr}'.trim();
+  if (detail.isNotEmpty) sink.writeln(detail);
+}
+
+/// Finds the enclosing Git checkout without invoking or modifying Git.
+Directory? _findGitRepository(Directory start) {
+  var current = start.absolute;
+  while (true) {
+    final marker = path.join(current.path, '.git');
+    if (FileSystemEntity.typeSync(marker, followLinks: false) !=
+        FileSystemEntityType.notFound) {
+      return current;
+    }
+    if (current.path == current.parent.path) return null;
+    current = current.parent;
+  }
 }
 
 /// Stable installation states printed by `status` and consumed by `doctor`.

@@ -128,6 +128,151 @@ void main() {
   });
 
   test(
+    'pin-check reports production drift without failing two-stage flow',
+    () async {
+      final fixture = await _createFixture();
+      addTearDown(() => fixture.root.delete(recursive: true));
+      Directory(path.join(fixture.root.path, '.git')).createSync();
+      Directory(
+        path.join(
+          fixture.root.path,
+          'packages',
+          'ccrouter_analyzer_plugin',
+          'lib',
+        ),
+      ).createSync(recursive: true);
+      final output = StringBuffer();
+      final error = StringBuffer();
+      final calls = <String>[];
+
+      final ok = await runAnalyzerBootstrapCommand(
+        CCAnalyzerBootstrapRequest(
+          action: CCAnalyzerBootstrapAction.pinCheck,
+          hostRoot: fixture.root.path,
+        ),
+        processRunner:
+            (
+              executable,
+              arguments, {
+              required workingDirectory,
+              environment,
+            }) async {
+              calls.add('$executable ${arguments.join(' ')}');
+              final stdout = arguments.first == 'diff'
+                  ? 'packages/ccrouter_analyzer_plugin/lib/src/plugin.dart\n'
+                  : '';
+              return ProcessResult(0, 0, stdout, '');
+            },
+        output: output,
+        error: error,
+      );
+
+      expect(ok, isTrue, reason: error.toString());
+      expect(output.toString(), contains('source pin: current ($_gitRef)'));
+      expect(output.toString(), contains('remote ref: resolvable'));
+      expect(
+        output.toString(),
+        contains('production changes after pin: pending'),
+      );
+      expect(
+        output.toString(),
+        contains('bump manifest/lock in a separate commit'),
+      );
+      expect(calls.where((call) => call.contains(' fetch ')), hasLength(1));
+      expect(
+        calls.where((call) => call.contains(' merge-base ')),
+        hasLength(1),
+      );
+      expect(calls.where((call) => call.contains(' diff ')), hasLength(1));
+    },
+  );
+
+  test('pin-check fails when the exact remote commit is unavailable', () async {
+    final fixture = await _createFixture();
+    addTearDown(() => fixture.root.delete(recursive: true));
+    Directory(path.join(fixture.root.path, '.git')).createSync();
+    Directory(
+      path.join(
+        fixture.root.path,
+        'packages',
+        'ccrouter_analyzer_plugin',
+        'lib',
+      ),
+    ).createSync(recursive: true);
+    final output = StringBuffer();
+    final error = StringBuffer();
+
+    final ok = await runAnalyzerBootstrapCommand(
+      CCAnalyzerBootstrapRequest(
+        action: CCAnalyzerBootstrapAction.pinCheck,
+        hostRoot: fixture.root.path,
+      ),
+      processRunner:
+          (
+            executable,
+            arguments, {
+            required workingDirectory,
+            environment,
+          }) async => arguments.first == 'fetch'
+          ? ProcessResult(0, 1, '', 'remote ref not found')
+          : ProcessResult(0, 0, '', ''),
+      output: output,
+      error: error,
+    );
+
+    expect(ok, isFalse);
+    expect(error.toString(), contains('failed to resolve remote pin'));
+    expect(error.toString(), contains('remote ref not found'));
+  });
+
+  test(
+    'pin-check rejects a local Git URL before running subprocesses',
+    () async {
+      final fixture = await _createFixture();
+      addTearDown(() => fixture.root.delete(recursive: true));
+      Directory(path.join(fixture.root.path, '.git')).createSync();
+      Directory(
+        path.join(
+          fixture.root.path,
+          'packages',
+          'ccrouter_analyzer_plugin',
+          'lib',
+        ),
+      ).createSync(recursive: true);
+      _writeBootstrap(
+        fixture.plugin,
+        gitUrl: path.join(fixture.root.path, 'local.git'),
+      );
+      final output = StringBuffer();
+      final error = StringBuffer();
+      var subprocessCalled = false;
+
+      final ok = await runAnalyzerBootstrapCommand(
+        CCAnalyzerBootstrapRequest(
+          action: CCAnalyzerBootstrapAction.pinCheck,
+          hostRoot: fixture.root.path,
+        ),
+        processRunner:
+            (
+              executable,
+              arguments, {
+              required workingDirectory,
+              environment,
+            }) async {
+              subprocessCalled = true;
+              return ProcessResult(0, 0, '', '');
+            },
+        output: output,
+        error: error,
+      );
+
+      expect(ok, isFalse);
+      expect(subprocessCalled, isFalse);
+      expect(error.toString(), contains('remote HTTPS/SSH'));
+    },
+  );
+
+  test(
     'doctor stops before subprocess checks when status is unhealthy',
     () async {
       final root = await Directory.systemTemp.createTemp('ccrouter-analyzer-');
@@ -253,7 +398,10 @@ dependencies:
   test('analyzer rejects unsupported actions and excess arguments', () async {
     final unsupported = await _run(['analyzer', 'unknown']);
     expect(unsupported.exitCode, 2);
-    expect('${unsupported.stderr}', contains('requires status, doctor'));
+    expect(
+      '${unsupported.stderr}',
+      contains('requires status, doctor, pin-check'),
+    );
 
     final excess = await _run(['analyzer', 'status', '.', 'extra']);
     expect(excess.exitCode, 2);
@@ -388,6 +536,7 @@ void _writeBootstrap(
   String? dependency,
   String analyzerConstraint = '8.4.0',
   String resolvedRef = _gitRef,
+  String gitUrl = 'https://example.com/cc-router.git',
   String lockedPluginSource = 'git',
   String lockedPluginVersion = '0.1.0',
 }) {
@@ -401,7 +550,7 @@ void _writeBootstrap(
   final dependencyYaml =
       dependency ??
       '''git:
-      url: https://example.com/cc-router.git
+      url: $gitUrl
       path: packages/ccrouter_analyzer_plugin
       ref: $_gitRef''';
   File(path.join(bootstrap.path, 'pubspec.yaml')).writeAsStringSync('''
@@ -418,7 +567,7 @@ dependencies:
       ? '''      path: packages/ccrouter_analyzer_plugin
       ref: $_gitRef
       resolved-ref: $resolvedRef
-      url: https://example.com/cc-router.git'''
+      url: $gitUrl'''
       : '''      name: ccrouter_analyzer_plugin
       url: https://pub.dev''';
   File(path.join(bootstrap.path, 'pubspec.lock')).writeAsStringSync('''

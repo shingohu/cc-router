@@ -464,6 +464,7 @@ const _usage = '''Usage:
   ccrouter create init-task <TaskName> [component-directory] [--with-contract]
   ccrouter analyzer status [host-root]
   ccrouter analyzer doctor [host-root]
+  ccrouter analyzer pin-check [host-root]
   ccrouter analyzer install [host-root] [--source hosted|git] [--version <range>] [--url <git-url>] [--ref <full-sha>] [--git-path <package-path>] [--dry-run]
   ccrouter analyzer upgrade [host-root] [--version <range>] [--ref <full-sha>] [--dry-run]
   ccrouter analyzer uninstall [host-root] [--dry-run]
@@ -501,7 +502,9 @@ writes Portable State.
 `aggregate` preserves the metadata-only legacy path.
 `analyzer status` inspects one Host-owned Analysis Server bootstrap without
 modifying it. `analyzer doctor` additionally verifies its locked dependencies,
-analysis, and loader compilation. Analyzer commands never run generation.
+analysis, and loader compilation. `analyzer pin-check` is a maintainer/release
+check for Git pin identity, remote resolvability, and Plugin production drift.
+Analyzer commands never run generation.
 `analyzer install/upgrade/uninstall` manage only an explicitly selected Flutter
 Host and CLI-owned files. Use `--dry-run` to preview without subprocesses or writes.
 Hosted installs require an explicit published `--version`; Git installs require
@@ -2111,6 +2114,7 @@ _Arguments _parseAnalyzerArguments(List<String> arguments) {
   final action = switch (arguments[1]) {
     'status' => CCAnalyzerBootstrapAction.status,
     'doctor' => CCAnalyzerBootstrapAction.doctor,
+    'pin-check' => CCAnalyzerBootstrapAction.pinCheck,
     'install' => CCAnalyzerBootstrapAction.install,
     'upgrade' => CCAnalyzerBootstrapAction.upgrade,
     'uninstall' => CCAnalyzerBootstrapAction.uninstall,
@@ -2121,7 +2125,8 @@ _Arguments _parseAnalyzerArguments(List<String> arguments) {
       command: _GeneratorCommand.analyzer,
       rootPath: '',
       outputDirectoryPath: null,
-      error: 'analyzer requires status, doctor, install, upgrade or uninstall.',
+      error:
+          'analyzer requires status, doctor, pin-check, install, upgrade or uninstall.',
     );
   }
   String? root;
@@ -2143,7 +2148,8 @@ _Arguments _parseAnalyzerArguments(List<String> arguments) {
     final argument = arguments[index];
     if (argument == '--dry-run' &&
         action != CCAnalyzerBootstrapAction.status &&
-        action != CCAnalyzerBootstrapAction.doctor) {
+        action != CCAnalyzerBootstrapAction.doctor &&
+        action != CCAnalyzerBootstrapAction.pinCheck) {
       if (dryRun) error = 'Duplicate --dry-run.';
       dryRun = true;
     } else if (allowed.contains(argument)) {
