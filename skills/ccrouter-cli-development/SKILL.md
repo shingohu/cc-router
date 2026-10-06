@@ -177,6 +177,10 @@ Adding a subscriber may therefore expand and restart the shared child; removing
 one retains the harmless target superset until the owner exits. Actual Pub target
 removal still rotates the session. Each affected subscriber refreshes its own
 closure and publishes its own new `ready` fence.
+Stopping or rotating a build_runner child is bounded: allow 10 seconds after
+SIGINT, 5 seconds after SIGTERM, then send SIGKILL and wait at most 5 more
+seconds. Never leave session restart or generation-lock release waiting on an
+unbounded child exit.
 Wait for the new session's `ready`; its earlier `aggregationSucceeded` is not a
 completion fence. Set `CCROUTER_DISABLE_WATCH_SESSION_RESTART=1` only to make
 such changes fail closed and require a stopped-watch one-shot reference.

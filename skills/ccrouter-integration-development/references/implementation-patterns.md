@@ -905,6 +905,9 @@ publishes `sessionRestarting`, restores the current artifact snapshot, and
 starts a new child under the same lock/lease. Consumers must wait for the new
 session's `ready`. `CCROUTER_DISABLE_WATCH_SESSION_RESTART=1` makes this path
 fail closed so a stopped-watch one-shot can serve as the reference.
+Child shutdown is bounded: SIGINT gets 10 seconds, SIGTERM gets 5 seconds, and
+the final SIGKILL wait is capped at 5 seconds. This preserves graceful cleanup
+without allowing a stuck child to retain session restart or the generation lock.
 After a successful Builder cycle, watch skips only the ordinary fast-path and
 Build Plan decision that can no longer change whether Builder runs. Input
 fingerprints and barriers, dependency preflight, artifact snapshots, Workspace

@@ -21,6 +21,7 @@ import 'package:path/path.dart' as path;
 import 'package:yaml/yaml.dart';
 
 import 'src/analyzer_bootstrap.dart';
+import 'src/bounded_process_shutdown.dart';
 import 'src/build_runner_phase_report.dart';
 import 'src/flutter_run_watch_lease.dart';
 import 'src/route_find.dart' as route_find;

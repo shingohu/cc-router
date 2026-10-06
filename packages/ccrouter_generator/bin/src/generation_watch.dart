@@ -961,13 +961,29 @@ Future<_GenerationWatchTopology?> _runGenerationWatchSession({
     await inputObserver.close();
     resolutionTimer.cancel();
     await activeResolutionCheck;
-    final processCode = await _stopBuildRunnerWatchProcess(process);
-    for (final subscription in outputSubscriptions) {
-      await subscription.cancel();
+    int? processCode;
+    Object? shutdownError;
+    try {
+      processCode = await _stopBuildRunnerWatchProcess(process);
+    } on Object catch (error) {
+      shutdownError = error;
+    } finally {
+      for (final subscription in outputSubscriptions) {
+        await subscription.cancel();
+      }
+      await iterator.cancel();
+      await signals.close();
+      setActiveProcess(null);
     }
-    await iterator.cancel();
-    await signals.close();
-    setActiveProcess(null);
+    if (shutdownError != null) {
+      exitCode = 1;
+      await events.emit(
+        'failed',
+        data: {'stage': 'build-runner-shutdown', 'error': '$shutdownError'},
+      );
+      return null;
+    }
+    final completedProcessCode = processCode!;
     if (nextTopology == null && !stop.isCompleted) {
       try {
         final currentResolution = await CCPubResolutionFingerprint.capture(
@@ -998,7 +1014,7 @@ Future<_GenerationWatchTopology?> _runGenerationWatchSession({
               'previousTopologyFingerprint': topology.fingerprint,
               'nextTopologyFingerprint': currentTopology.fingerprint,
               'packages': currentTopology.targets,
-              'exitCode': processCode,
+              'exitCode': completedProcessCode,
             },
           );
         }
@@ -1016,7 +1032,7 @@ Future<_GenerationWatchTopology?> _runGenerationWatchSession({
         'failed',
         data: {
           'stage': 'watch-exit',
-          'exitCode': processCode,
+          'exitCode': completedProcessCode,
           'diagnostics': failureTail.join('\n'),
         },
       );
@@ -1027,13 +1043,7 @@ Future<_GenerationWatchTopology?> _runGenerationWatchSession({
 
 /// Lets build_runner clean up its child before escalating a stuck shutdown.
 Future<int> _stopBuildRunnerWatchProcess(Process process) async {
-  process.kill(ProcessSignal.sigint);
-  try {
-    return await process.exitCode.timeout(const Duration(seconds: 10));
-  } on TimeoutException {
-    process.kill(ProcessSignal.sigterm);
-    return process.exitCode;
-  }
+  return stopProcessWithEscalation(process);
 }
 
 /// Cheap wake-up evidence for the exact resolution fingerprint monitor.

@@ -35,6 +35,8 @@
 - Made POSIX and Windows Pub Hook wrappers locate real Flutter/Dart commands by
   global-option arity instead of matching command-like text in arbitrary
   option values, script arguments, or trailing business arguments.
+- Bounded build_runner watch shutdown through SIGINT, SIGTERM, and final
+  SIGKILL stages so a stuck child cannot block session restart indefinitely.
 - Routed the successful Flutter-run watch start summary through stdout like
   preflight success, while retaining real hook failures on stderr so IDEs do
   not render a healthy background watch as an error.

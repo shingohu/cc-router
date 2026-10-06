@@ -424,6 +424,9 @@ under the same lock/lease. Pub Hook must wait for that session's `ready`, not
 only an earlier `aggregationSucceeded`. Use
 `CCROUTER_DISABLE_WATCH_SESSION_RESTART=1` only for a fail-closed one-shot
 fallback after stopping watch.
+Child shutdown is bounded at 10 seconds for SIGINT, 5 seconds for SIGTERM, and
+5 seconds after final SIGKILL so a stuck build_runner cannot retain the
+generation lock indefinitely.
 The post-Builder cycle may skip redundant planning, but never its input
 barriers, preflight, snapshot, validation, aggregation, or local state writes.
 Use `CCROUTER_DISABLE_WATCH_CYCLE_OPTIMIZATION=1` for a reference-cycle A/B

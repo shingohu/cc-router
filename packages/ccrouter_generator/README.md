@@ -374,6 +374,8 @@ CCRouter 校验、聚合、快照与原子提交；
 `inputRevision`。`status.json.pid` 表示本 Host watch，`builderOwnerPid` 表示共享 Builder owner；
 owner 退出后 subscriber 可接管。同一 Host 不允许同时启动两份 watch，以免竞争同一状态文件。
 设置 `CCROUTER_DISABLE_MULTI_HOST_WATCH=1` 可恢复旧的单 watch ownership 语义做 A/B。
+watch 停止或 session restart 时，build_runner child 依次获得 10 秒 SIGINT、5 秒 SIGTERM 和
+5 秒 SIGKILL 回收窗口；每一阶段都有上限，卡住的 child 不会让 generation lock 永久不释放。
 `--machine` 将 stdout 限定为 schema `1` NDJSON，普通 build_runner 日志走 stderr。
 默认事件保留 Builder 与聚合最终耗时；只有显式追加 `--profile` 时，
 build_runner 才启用 `--verbose-durations`，且 `aggregationSucceeded.profile` 才携带完整 cycle

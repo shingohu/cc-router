@@ -210,6 +210,9 @@ watch 使用文件 stat 作为低成本唤醒信号，再以 exact-content finge
 新 session 的 `aggregationSucceeded` 在 `ready` 前不能满足 Pub Hook。设置
 `CCROUTER_DISABLE_WATCH_SESSION_RESTART=1` 后，这类变化会 fail closed，并提示停止 watch 后运行
 one-shot，不会静默沿用旧 target 集合。
+旧 child 的停止过程是有界的：SIGINT 最多 10 秒、SIGTERM 最多 5 秒，最后 SIGKILL 最多等待
+5 秒。正常 child 仍有机会完成清理，忽略退出信号的 child 不会无限阻塞 session restart 或
+generation lock 释放。
 
 这不是对 Flutter Tool 内部隐式 `pub get` 的监听：即使 direct `dart pub` 已覆盖，Flutter Tool
 仍可能在自身进程或 snapshot 内完成依赖解析。wrapper 不会修改 `shared.sh`、Dart snapshot 或

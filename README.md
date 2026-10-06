@@ -1298,7 +1298,9 @@ watch 还监视 Host manifest 与 Pub resolution 的精确内容变化；普通�
 Builder target 集合仍可覆盖时发布 `resolutionStarted` 并直接执行完整聚合校验。Host closure
 新增 Package、Builder target/`--build-filter` 集合变化，或 build_runner 因 resolution 更新自行
 退出时，supervisor 会在同一 generation lock 和 lease 内发布 `sessionRestarting`、等待旧 child
-完整退出并启动新 session。Pub Hook 只有在新 session 到达 `ready` 后才接受其
+完整退出并启动新 session。停止过程先给 build_runner 10 秒处理 SIGINT，再给 SIGTERM 5 秒；
+仍未退出则发送 SIGKILL，并只再等待 5 秒，因此异常 child 不会无限持有 generation lock。
+Pub Hook 只有在新 session 到达 `ready` 后才接受其
 `aggregationSucceeded`。`CCROUTER_DISABLE_WATCH_SESSION_RESTART=1` 会让需要 restart 的变化
 fail closed，并要求停止 watch 后运行 one-shot，供紧急回退和 A/B 使用。
 后台 watch 会原子维护
