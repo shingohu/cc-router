@@ -97,6 +97,7 @@ final class DistributedService { DistributedService(); Value value() => const Va
 ''',
         ),
       );
+      _write(consumer, 'ccrouter.yaml', 'host:\n  enabled: true\n');
       _write(consumer, 'lib/host.dart', '// Host composition fixture.\n');
       await _pubGet(consumer);
       final graph =
