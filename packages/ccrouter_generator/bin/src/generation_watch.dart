@@ -1593,6 +1593,8 @@ final class _GenerationWatchEvents {
   int _buildRootCycleRevision = 0;
   int _buildRootFailureRevision = 0;
   List<String> _buildRootTargets = const [];
+  bool _buildRootStatusDisabled = false;
+  bool _buildRootStatusWarned = false;
 
   /// Marks this process as the single Builder owner for the shared build root.
   void becomeBuilderOwner() {
@@ -1653,10 +1655,23 @@ final class _GenerationWatchEvents {
                 'watch-exit',
                 'generation-lock',
               }.contains(data['stage']));
-      await _writeIfChanged(
-        _generationWatchBuildRootStatusFile(buildRoot),
-        '${jsonEncode(<String, Object?>{'schemaVersion': 1, 'active': active, 'pid': pid, 'sessionId': _status.sessionId, 'eventRevision': _status.eventRevision, 'lastEvent': type, 'cycleRevision': _buildRootCycleRevision, 'failureRevision': _buildRootFailureRevision, 'targets': _buildRootTargets, 'hostRoot': hostRoot.path, 'buildRoot': buildRoot.path, 'updatedAt': timestamp, if (type == 'failed') 'failureStage': data['stage'], if (type == 'failed' && data['diagnostics'] != null) 'failureDiagnostics': data['diagnostics']})}\n',
-      );
+      if (!_buildRootStatusDisabled) {
+        try {
+          await _writeIfChanged(
+            _generationWatchBuildRootStatusFile(buildRoot),
+            '${jsonEncode(<String, Object?>{'schemaVersion': 1, 'active': active, 'pid': pid, 'sessionId': _status.sessionId, 'eventRevision': _status.eventRevision, 'lastEvent': type, 'cycleRevision': _buildRootCycleRevision, 'failureRevision': _buildRootFailureRevision, 'targets': _buildRootTargets, 'hostRoot': hostRoot.path, 'buildRoot': buildRoot.path, 'updatedAt': timestamp, if (type == 'failed') 'failureStage': data['stage'], if (type == 'failed' && data['diagnostics'] != null) 'failureDiagnostics': data['diagnostics']})}\n',
+          );
+        } on Object catch (error) {
+          _buildRootStatusDisabled = true;
+          if (!_buildRootStatusWarned) {
+            _buildRootStatusWarned = true;
+            _commandStderr.writeln(
+              'warning: CCRouter shared Builder status updates are disabled: '
+              '$error',
+            );
+          }
+        }
+      }
     }
     if (machine) {
       _commandStdout.writeln(

@@ -114,6 +114,42 @@ void main() {
   );
 
   test(
+    'shared Builder status publication is fail-open',
+    () async {
+      final status = _lockFile(path.join('watch', 'builder-status.json'));
+      final original = status.existsSync() ? status.readAsBytesSync() : null;
+      if (status.existsSync()) status.deleteSync();
+      Directory(status.path).createSync(recursive: true);
+      try {
+        final watch = await _runWatchUntilReady();
+
+        expect(
+          watch.eventTypes,
+          containsAll(['aggregationSucceeded', 'ready']),
+        );
+        expect(
+          watch.errors.where(
+            (line) => line.contains(
+              'CCRouter shared Builder status updates are disabled',
+            ),
+          ),
+          hasLength(1),
+        );
+      } finally {
+        if (Directory(status.path).existsSync()) {
+          Directory(status.path).deleteSync(recursive: true);
+        }
+        if (original != null) {
+          status
+            ..parent.createSync(recursive: true)
+            ..writeAsBytesSync(original);
+        }
+      }
+    },
+    timeout: const Timeout(Duration(minutes: 3)),
+  );
+
+  test(
     'optimized and reference watch cycles publish identical artifacts',
     () async {
       final before = await _managedArtifacts();
@@ -1335,6 +1371,7 @@ Future<_WatchRun> _runWatchUntilReady({
       build: build!,
       aggregation: aggregation!,
       eventTypes: eventTypes,
+      errors: errorLines,
     );
   } finally {
     process.kill(ProcessSignal.sigterm);
@@ -1487,12 +1524,14 @@ final class _WatchRun {
     required this.build,
     required this.aggregation,
     required this.eventTypes,
+    required this.errors,
   });
 
   final Map<String, dynamic> ready;
   final Map<String, dynamic> build;
   final Map<String, dynamic> aggregation;
   final List<String> eventTypes;
+  final List<String> errors;
 }
 
 Future<ProcessResult> _run(
