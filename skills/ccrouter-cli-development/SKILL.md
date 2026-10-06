@@ -47,6 +47,7 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter create event <EventNa
 fvm dart run --verbosity=error ccrouter_generator:ccrouter create init-task <TaskName> <component-directory> [--with-contract]
 fvm dart run --verbosity=error ccrouter_generator:ccrouter analyzer status [host-root]
 fvm dart run --verbosity=error ccrouter_generator:ccrouter analyzer doctor [host-root]
+fvm dart run --verbosity=error ccrouter_generator:ccrouter analyzer pin-check [host-root]
 fvm dart run --verbosity=error ccrouter_generator:ccrouter analyzer install <host-root> --version <published-version> [--dry-run]
 fvm dart run --verbosity=error ccrouter_generator:ccrouter analyzer install <host-root> --source git --url <remote-url> --ref <full-commit-sha> [--dry-run]
 fvm dart run --verbosity=error ccrouter_generator:ccrouter analyzer upgrade <host-root> --version <published-version> [--dry-run]
@@ -316,13 +317,20 @@ the log and is never mixed into Flutter Tool's machine stream.
 bootstrap and reports its source, pinned identity, lockfile, and Analyzer
 compatibility. `ccrouter analyzer doctor [host-root]` additionally runs locked
 dependency resolution, analysis, and loader compilation in a temporary copy.
-Run `status` before `doctor`; neither command runs generation or rewrites Host
-configuration.
+`ccrouter analyzer pin-check [host-root]` is a manual maintainer/release check
+for Git manifest/lock/resolved identity, exact remote SHA fetch, and production
+changes after the pin. Pending production changes remain advisory for the
+two-stage push-then-pin workflow. Run `status` before `doctor`; none of these
+commands runs generation or rewrites Host configuration.
 
 If doctor reports a stale or incomplete plugin-manager entry, stop the Analysis
-Server and back up the entire listed hash directory outside `.plugin_manager`,
-not just its `analyzer_plugin` child. Then restart and verify a real IDE
-diagnostic; doctor alone does not prove the live session loaded the plugin.
+Server from the IDE, use the reported PID/PPID/elapsed/command only as candidate
+ownership evidence, confirm the process exited, and manually back up the entire
+listed hash directory to the exact path outside `.plugin_manager`, not just its
+`analyzer_plugin` child. Doctor never kills, moves, or deletes global state.
+It reports source, cache, temporary loader smoke, restart, and live verification
+separately. Then restart and verify a real IDE diagnostic; doctor alone does not
+prove the live session loaded the plugin.
 
 Use explicit `install/upgrade/uninstall` for a CLI-owned installation. All three
 support `--dry-run` without processes or writes. Hosted requires an explicit

@@ -100,16 +100,21 @@ Analyzer 版本边界见
 ```bash
 fvm dart run --verbosity=error ccrouter_generator:ccrouter analyzer status demo
 fvm dart run --verbosity=error ccrouter_generator:ccrouter analyzer doctor demo
+fvm dart run --verbosity=error ccrouter_generator:ccrouter analyzer pin-check demo
 ```
 
 `status` 的 `healthy` 只代表 manifest、lockfile、固定来源和版本静态一致，不能证明 Analysis
-Server 已经加载插件；只有 `doctor` 通过后才证明当前凭据和隔离 bootstrap 可解析、分析并编译。
-`doctor` 对当前 bootstrap 对应的 Analysis Server 缓存只给 advisory；私有
-`.plugin_manager` 不是跨 SDK 权威门禁。若 IDE 诊断仍残缺，可停止 Analysis Server，将完整
-缓存条目移到 `.plugin_manager` 外备份，再重启复验；不能只移动其中的 `analyzer_plugin`
-子目录，否则 Analysis Server 会复用残缺的父目录。
-不同 Host 的同名插件缓存不据此判断为过期。bootstrap 或固定 ref 变化后
-仍需要重启 Dart Analysis Server。
+Server 已经加载插件；`doctor` 通过只证明当前凭据和临时副本中的隔离 bootstrap 可解析、分析
+并编译。它会分别报告 source pin、legacy cache artifact、restart 和 live verification 状态，
+不会把 loader compile 写成 IDE live success。`pin-check` 是 maintainer/release 手动检查：验证
+Demo 活动 manifest/lock/`resolved-ref`、远端完整 SHA，并以 advisory 报告 pin 之后 Plugin
+`lib` 是否有生产变化；它不接入普通 Plugin PR 硬门禁。
+
+`doctor` 对当前 bootstrap 对应的 Analysis Server 缓存只给 advisory；私有 `.plugin_manager`
+不是跨 SDK 权威门禁。发现 stale/incomplete 条目时，它会尽可能报告候选 PID、PPID、elapsed、
+command 和精确备份路径，但不会自动 kill、移动或删除。先从 IDE 停止 Analysis Server，确认
+相关进程退出，再把列出的完整 hash entry 手工移到 `.plugin_manager` 外；不能只移动其中的
+`analyzer_plugin` 子目录，也不能清空无关 cache。重启后仍需用真实 diagnostic/Quick Fix 验证。
 
 `dart analyze` 不运行 legacy Analysis Server Plugin，只能验证 Dart 自带规则；不能用它判断
 CCRouter IDE 诊断是否加载。实时规则必须在 Android Studio、IntelliJ、VS Code 或真实

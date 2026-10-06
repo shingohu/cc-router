@@ -81,8 +81,13 @@ The update is necessarily two-stage: first commit, verify, and push the Plugin
 change; then use its remotely resolvable full commit SHA in a separate Demo
 bootstrap update. Never pin the Demo to a branch, floating tag, unpushed SHA,
 or the same commit that edits its own ref. Update the bootstrap lockfile, run
-`ccrouter analyzer doctor demo`, restart the Dart Analysis Server, and verify a
-real IDE diagnostic or Quick Fix before claiming the Demo uses the new Plugin.
+`ccrouter analyzer pin-check demo` to verify the remote ref and production
+drift, then run `ccrouter analyzer doctor demo`, restart the Dart Analysis
+Server, and verify a real IDE diagnostic or Quick Fix before claiming the Demo
+uses the new Plugin. Pin-check is a maintainer/release command, not a mandatory
+gate for the first-stage Plugin commit; pending production drift is expected
+until the separate pin bump. The active Demo manifest and lockfile are the only
+source of truth for the current SHA.
 Do not upgrade the isolated `analyzer` or `analyzer_plugin` constraints unless
 SDK compatibility itself requires that separate change.
 

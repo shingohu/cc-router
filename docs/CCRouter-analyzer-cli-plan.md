@@ -47,6 +47,7 @@ IDE 配置，并把可选工具故障混入 Pub、生成或运行链路，也无
 ```text
 ccrouter analyzer status [host-root]
 ccrouter analyzer doctor [host-root]
+ccrouter analyzer pin-check [host-root]
 ```
 
 写入型命令也已实现；以下三个命令都支持 `--dry-run`：
@@ -84,9 +85,24 @@ ccrouter analyzer uninstall [host-root]
 - 先执行 `status`，再验证依赖解析、loader `dart analyze` 和
   `dart compile exe bin/plugin.dart`。
 - 不启动常驻 Analysis Server，不运行生成器，不修改配置。
-- 检查当前 bootstrap 对应的 legacy 缓存 manifest 和入口，拒绝过期或残缺条目；提示停服后
-  备份整个指定哈希目录，不只移动子目录，不按 Package 同名误报其他 Host 的缓存。
-- 输出重启 Analysis Server 的建议和普通 Dart Analyzer + `generate --check` 回退路径。
+- 检查当前 bootstrap 对应的 legacy 缓存 manifest 和入口，区分 cache artifact
+  `absent/current/stale`；stale 保持 advisory，不按 Package 同名误报其他 Host 的缓存。
+- cache 异常时以 POSIX `ps` 或 Windows CIM 做只读、保守的进程匹配，报告 PID、PPID、elapsed
+  和 command。候选匹配不是所有权证明，CLI 不自动 kill、move 或 delete。
+- 分别输出 source pin、cache artifact、temporary loader smoke、Analysis Server restart 与 live IDE
+  verification；loader compile 或 `dart analyze` 不能证明运行中的 IDE 已加载插件。
+- 给出完整 hash entry 的精确 source/backup 路径；开发者必须先从 IDE 停止 Server、确认进程
+  退出，再手工备份整个条目并重启。禁止只移动 `analyzer_plugin` 子目录或清空无关 cache。
+
+### `pin-check`
+
+- 供 maintainer/release 手动运行，不接入所有 Plugin PR 的默认硬门禁。
+- 只接受健康的 Git bootstrap；校验完整 40 位 SHA、manifest/lock/`resolved-ref` 一致，并在
+  临时 bare repository 中精确 fetch 该 SHA，拒绝本地 Git URL 和越界 package path。
+- 在当前维护仓库中比较 pinned SHA 与工作树的 `packages/ccrouter_analyzer_plugin/lib`。存在
+  生产变化时报告 `pending` 及文件列表但返回成功：先验证并推送 Plugin，再在独立提交中 bump
+  manifest/lock；bump 后重新运行应报告 `none`。
+- 不修改 Host、活动 bootstrap、lockfile、Git index、全局 cache 或 IDE 进程。
 
 ### `upgrade`
 
@@ -139,7 +155,8 @@ Pub 结果或进程中断保留恢复记录，后续写命令拒绝继续；核�
 ## 6. AI Skill 接入规则
 
 新 Host 可使用显式写入命令；已手工装配的 Demo 继续使用手工指南，CLI 不自动接管。
-已经装配的 Host 应优先运行 `status` 和 `doctor`，并遵守：
+已经装配的 Host 应优先运行 `status` 和 `doctor`；maintainer/release 处理 Git pin 时再运行
+`pin-check`，并遵守：
 
 1. 先运行 `status` 和 `doctor`，再判断是否需要 `install` 或 `upgrade`。
 2. 未经明确请求不升级版本或 ref，不使用 Git `main`。
@@ -159,6 +176,8 @@ Pub 结果或进程中断保留恢复记录，后续写命令拒绝继续；核�
 7. [~] 临时 Host 真实 Git/Pub/loader 验证与既有独立 Server 测试分别验收；完整 VS Code、Android Studio、SDK/OS 矩阵仍未完成。
 8. [x] Hosted 普通 `dev_dependency` 迁移模板、legacy install/upgrade 弃用提示和
    `.plugin_manager` 非权威语义已落地；Hosted 发布与干净消费者验证仍是外部前置条件。
+9. [x] 增加手动 `pin-check`、legacy cache 进程诊断，以及 source/cache/live 分层状态；不把
+   这些诊断接入普通 PR 硬门禁或 IDE 控制链路。
 
 第 7 项已有独立进程自动化基础：Legacy/LSP 协议、overlay、修复应用、五类生成物磁盘
 变化和 Workspace Owner metadata/Contract 刷新已覆盖。它使用本地源码和临时缓存，不

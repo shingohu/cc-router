@@ -259,19 +259,32 @@ For an already configured Host, prefer the implemented read-only checks:
 ```bash
 fvm dart run --verbosity=error ccrouter_generator:ccrouter analyzer status <host-root>
 fvm dart run --verbosity=error ccrouter_generator:ccrouter analyzer doctor <host-root>
+fvm dart run --verbosity=error ccrouter_generator:ccrouter analyzer pin-check <host-root>
 ```
 
 `status: healthy` proves only that the bootstrap manifest, lockfile, source, and
 versions are statically consistent. `doctor` additionally proves dependency
-resolution, bootstrap analysis, loader compilation, and checks for stale or
-incomplete legacy cache entries belonging to the current bootstrap path.
-If it names a cache, stop the Analysis Server and move the entire listed hash
-directory outside `.plugin_manager` as a backup before restarting. Moving only
-its `analyzer_plugin` child leaves an existing parent that Dart 3.11 reuses and
-fails to load. Do not clear unrelated IDE or Pub caches or infer ownership from
-a shared plugin name. This SDK-specific cache check does not prove live IDE
-loading; verify a diagnostic and Quick Fix in the running IDE. Rerun doctor
-after the bootstrap or pinned ref changed.
+resolution, bootstrap analysis, and loader compilation in a temporary copy. It
+reports source pin, legacy cache artifact (`absent`, `current`, or `stale`),
+restart, and live-verification state separately. A passed loader smoke is not a
+live IDE result.
+
+`pin-check` is a manual maintainer/release command for a Git bootstrap. It
+verifies the full manifest/lock/resolved SHA, fetches that exact remote commit
+in a temporary bare repository, and reports production changes under the
+Plugin `lib` after the pin. Pending changes are advisory so the first Plugin
+commit can be verified and pushed before a separate pin bump; do not wire this
+state into every Plugin PR as a hard gate.
+
+If doctor names a cache, use its PID/PPID/elapsed/command list only as ownership
+candidates. Save work, stop Analysis Server from the IDE, confirm the relevant
+process has exited, then manually move the entire listed hash directory to the
+exact backup path outside `.plugin_manager`. Doctor never kills a process or
+moves/deletes global state. Moving only the `analyzer_plugin` child leaves an
+existing parent that Dart 3.11 reuses and fails to load. Do not clear unrelated
+IDE or Pub caches or infer ownership from a shared plugin name. Restart, rerun
+doctor, and verify a real diagnostic or Quick Fix; the CLI cannot observe or
+control the running IDE session.
 
 For a new Host, explicit installation is available:
 

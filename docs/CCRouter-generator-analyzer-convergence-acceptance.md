@@ -11,7 +11,7 @@
 | P6 Shadow Closure | 从生产 CLI、Build Plan 和 profile 热路径移除；历史数据仅作 benchmark 资料 | 完整内容摘要与 `--no-cache --check` |
 | Tool identity | `execution_kernel.dart` 显式拥有 Generator `lib/`、主入口、Build Plan、Portable State、`build.yaml` | Analyzer/scaffold/pub-hook 修改不失效；kernel 修改失效 |
 | Portable State | `ccrouter.yaml` 的 `generation.portable: true` + `portable prepare` 才写入；`portable publish` 只验证 | writable 未声明回退 Builder；只读已声明包缺失/失配 fail-closed |
-| Analyzer | Hosted 普通 `dev_dependency` 是发布后首选；install/upgrade legacy maintenance-only | status/doctor/uninstall 保留；`.plugin_manager` 仅 advisory |
+| Analyzer | Hosted 普通 `dev_dependency` 是发布后首选；install/upgrade legacy maintenance-only | status/doctor/uninstall 保留；maintainer `pin-check` 手动运行；`.plugin_manager` 仅 advisory，live IDE 独立验收 |
 
 ## 必保留验收入口
 
@@ -45,6 +45,7 @@ dart analyze demo
 - Portable opt-in、普通 generate 不写 Portable State；
 - P2/P3 aggregate-only、kill switch、输入屏障和快照恢复；
 - Analyzer stale `.plugin_manager` 仅 advisory；安装事务的原子/回滚/逐字节快照。
+- Analyzer source/cache/live 分层状态、POSIX/Windows 候选进程报告与手工恢复边界；CLI 不控制 IDE 或清理全局 cache。
 
 ## 外部前置条件
 

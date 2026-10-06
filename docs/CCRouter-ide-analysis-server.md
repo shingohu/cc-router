@@ -139,6 +139,7 @@ Owner 缺少可证明的公共常量，就不提供批量修复，避免形成�
 ```bash
 fvm dart run --verbosity=error ccrouter_generator:ccrouter analyzer status demo
 fvm dart run --verbosity=error ccrouter_generator:ccrouter analyzer doctor demo
+fvm dart run --verbosity=error ccrouter_generator:ccrouter analyzer pin-check demo
 ```
 
 `status` 区分 `notInstalled`、`incomplete`、`stale`、`incompatible`、`modified` 和
@@ -146,14 +147,23 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter analyzer doctor demo
 静态配置一致，不证明 Git 凭据可用或 Analysis Server 已成功加载插件。
 `doctor` 只在静态状态健康时，在临时副本中校验 lockfile、执行 bootstrap analyze 和 loader
 compile；不修改 Host、活动 bootstrap manifest 或 lockfile，也不运行 Generator。Git 凭据或
-SSH Key 不可用时会明确说明 IDE 诊断尚不可用；`doctor` 通过后，bootstrap/ref 变化仍需重启
-Dart Analysis Server。对当前 bootstrap 路径及其真实路径对应的 legacy plugin-manager 条目，
-`doctor` 会比较 manifest 和 `bin/plugin.dart`，拒绝过期或残缺缓存，不按同名 Package 猜测
-其它 Host 的缓存所有权。该检查适配 Dart 3.11 的路径 MD5 缓存键；它不是生成物内容证明，
-SDK 改变缓存布局后仍需真实加载验收。
+SSH Key 不可用时会明确说明 IDE 诊断尚不可用。输出分别标记 source pin、cache artifact、
+temporary loader smoke、Analysis Server restart 和 live IDE verification；bootstrap analyze 或
+loader compile 不能升级为 live success。对当前 bootstrap 路径及其真实路径对应的 legacy
+plugin-manager 条目，`doctor` 会比较 manifest 和 `bin/plugin.dart`，报告
+`absent/current/stale`，不按同名 Package 猜测其它 Host 的缓存所有权。该检查适配 Dart 3.11
+的路径 MD5 缓存键；它不是生成物内容证明，SDK 改变缓存布局后仍需真实加载验收。
 
-发现问题时，先停止 Analysis Server，将 doctor 列出的**整个哈希条目目录**移到
-`~/.dartServer/.plugin_manager` 外备份，再重启并运行 doctor。不能只移走条目中的
+`pin-check` 只供 maintainer/release 手动运行。它复用静态 identity 检查，在临时 bare Git
+repository 中验证完整 SHA 可从 manifest 声明的远端精确 fetch，并报告该 pin 到当前工作树的
+`packages/ccrouter_analyzer_plugin/lib` 生产变化。`pending` 是两阶段流程中第一阶段提交/推送后
+的预期状态，不导致命令失败，也不应成为所有 Plugin PR 的默认门禁；pin bump 后应重新运行并
+得到 `none`。命令不修改 Host、lockfile、Git index 或全局 cache。
+
+发现问题时，doctor 会尽可能报告候选进程的 PID、PPID、elapsed、command 以及每个 cache
+entry 的精确 source/backup 路径。候选命令匹配不是所有权证明，CLI 不自动 kill、move 或
+delete。先从 IDE 停止 Analysis Server，确认相关进程退出，再将 doctor 列出的**整个哈希条目
+目录**手工移到 `~/.dartServer/.plugin_manager` 外备份，之后重启并运行 doctor。不能只移走条目中的
 `analyzer_plugin` 子目录：Dart 3.11 会复用仍存在的父目录，随后因 `bin/plugin.dart` 缺失
 而启动失败。不能清空整个 Pub cache 或其它插件缓存。
 

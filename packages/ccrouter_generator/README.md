@@ -161,6 +161,7 @@ Analyzer 是可选的 Host 开发工具，独立于生成流程：
 ```sh
 ccrouter analyzer status <host-root>
 ccrouter analyzer doctor <host-root>
+ccrouter analyzer pin-check <host-root>
 ccrouter analyzer install <host-root> --version <published-version> --dry-run
 ccrouter analyzer install <host-root> --source git --url <remote-url> --ref <full-commit-sha>
 ccrouter analyzer upgrade <host-root> --ref <full-commit-sha>
@@ -174,6 +175,10 @@ loader 再运行禁用 Hook 的 Host Pub。现有手工装配不自动接管，�
 `install`/`upgrade` 目前是 legacy maintenance-only 路径，会输出弃用提示；Hosted 发布后优先
 在 Host 的普通 `dev_dependencies` 中声明插件。`status`/`doctor`/`uninstall` 仍用于既有隔离
 bootstrap 的诊断与回退，私有 `.plugin_manager` 只提供 advisory，不是跨 SDK 权威门禁。
+`pin-check` 只供 maintainer/release 手动验证 Git manifest/lock/`resolved-ref`、远端完整 SHA
+和 pin 之后的 Plugin `lib` 变化；发现 pending 生产变化不会失败，以保留先推 Plugin、再独立
+bump pin 的两阶段流程。`doctor` 把 source、cache、temporary loader smoke、restart 与 live IDE
+verification 分开报告；cache 异常时只列出相关进程候选和手工备份路径，不自动 kill 或清理。
 完整说明见 [Analyzer CLI 指南](../../docs/CCRouter-analyzer-cli-plan.md)。
 
 如果希望在当前 Flutter SDK 的 `flutter pub get/upgrade/downgrade/add/remove` 成功后
