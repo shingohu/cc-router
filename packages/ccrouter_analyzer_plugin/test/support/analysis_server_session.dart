@@ -27,6 +27,7 @@ class AnalysisServerSession {
   static Future<AnalysisServerSession> start(
     Map<String, String> sources, {
     bool lsp = false,
+    String? hostManifest,
     Map<String, Map<String, String>> dependencyPackages = const {},
     Map<String, String> dependencyManifests = const {},
   }) async {
@@ -114,8 +115,9 @@ class AnalysisServerSession {
       );
       _write(
         p.join(host.path, 'pubspec.yaml'),
-        'name: e2e_host\nenvironment:\n  sdk: ^3.10.0\ndependencies:\n  ccrouter_contracts: any\n'
-        '${dependencyPackages.isEmpty ? '' : 'workspace:\n${dependencyPackages.keys.map((name) => '  - modules/$name\n').join()}'}',
+        hostManifest ??
+            'name: e2e_host\nenvironment:\n  sdk: ^3.10.0\ndependencies:\n  ccrouter_contracts: any\n'
+                '${dependencyPackages.isEmpty ? '' : 'workspace:\n${dependencyPackages.keys.map((name) => '  - modules/$name\n').join()}'}',
       );
       _write(
         p.join(host.path, 'analysis_options.yaml'),

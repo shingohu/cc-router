@@ -25,6 +25,7 @@ import 'src/bounded_process_shutdown.dart';
 import 'src/build_runner_phase_report.dart';
 import 'src/coordination_home.dart';
 import 'src/flutter_run_watch_lease.dart';
+import 'src/one_shot_generation_diagnostics.dart';
 import 'src/route_find.dart' as route_find;
 import 'src/pub_hook.dart';
 import 'src/pub_hook_watch_coordination.dart';
@@ -286,6 +287,24 @@ Future<void> main(List<String> arguments) async {
     watchCycle: false,
     captureOutput: false,
   );
+  if (parsed.command == _GeneratorCommand.generate &&
+      projectRole?.role == CCProjectRole.host &&
+      parsed.outputDirectoryPath == null &&
+      Platform.environment[_watchCycleEnvironment] != '1') {
+    try {
+      await CCOneShotGenerationDiagnosticsPublisher.publish(
+        hostRoot: buildContext!.requestedRoot,
+        buildRoot: buildContext.resolutionRoot,
+        succeeded: generation.succeeded,
+        structuredDiagnostics: generation.structuredDiagnostics,
+      );
+    } on Object catch (error) {
+      _commandStderr.writeln(
+        'warning: CCRouter one-shot diagnostic snapshot was not updated: '
+        '$error',
+      );
+    }
+  }
   exitCode = generation.exitCode;
   _commandStdout.writeln(
     'CCRouter generation ${generation.succeeded ? 'finished' : 'failed'}: '

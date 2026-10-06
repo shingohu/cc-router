@@ -93,11 +93,19 @@ active watch 会把 Workspace Validator 的有界结构诊断原子写入
 使用 metadata 的 `package:` 坐标定位 authored Dart，同一根因的能力级 fallout 作为 related
 locations，不在编辑器重复报错。
 
-Analysis Server 不可靠转发 `.dart_tool` 变化，因此 Plugin 每 500ms 只比较 watch snapshot、
-Host manifest 和 resolved graph 的 file identity，变化时才读取并刷新相关文件，不建立第二套
-Analyzer graph。Timer 在 context replacement、plugin shutdown 和 channel close 时取消。
-`CCROUTER_DISABLE_ANALYZER_WATCH_BRIDGE=1` 可关闭这一 bridge；结构诊断读写失败保持 fail-open，
-不改变 Generator/Pub Hook 的失败结果，也不替代 `--no-cache --check`。
+无活动 watch 时，Host one-shot generation 会原子发布
+`.dart_tool/ccrouter/v1/generation/diagnostics.json`。Plugin 重新计算 Host manifest、build manifest、
+lock、Package config 与 Package graph 的逐字节 fingerprint；仅匹配时接受失败终态，成功终态或任一
+输入变化都会清除旧诊断。活动 watch 是唯一优先权威，其 building/success/failed 状态均不会回退到
+旧 one-shot snapshot。
+
+Analysis Server 不可靠转发 `.dart_tool` 变化，因此 Plugin 每 500ms 比较 context root 及 Workspace
+显式嵌套 Host 的 watch/one-shot snapshot、Host manifest 和 resolved graph file identity，变化时才
+读取并刷新相关文件，不建立第二套 Analyzer graph。`pubspec.yaml` drift 检查读取当前 Analysis
+Server overlay，注释或恢复依赖不必先保存即可出现或撤销提示。Timer 在 context replacement、
+plugin shutdown 和 channel close 时取消。`CCROUTER_DISABLE_ANALYZER_WATCH_BRIDGE=1` 可关闭整个
+Generator diagnostics bridge；结构诊断读写失败保持 fail-open，不改变 Generator/Pub Hook 的失败
+结果，也不替代 `--no-cache --check`。
 
 Owner Quick Fix 只在以下条件同时满足时提供：
 

@@ -5,10 +5,11 @@ import 'package:analyzer/source/line_info.dart';
 import 'package:analyzer_plugin/protocol/protocol_common.dart';
 import 'package:ccrouter_analyzer_plugin/src/project_context.dart';
 import 'package:ccrouter_analyzer_plugin/src/source_analyzer.dart';
+import 'package:crypto/crypto.dart';
 import 'package:path/path.dart' as path;
 import 'package:yaml/yaml.dart';
 
-/// Environment switch that disables only Analyzer consumption of watch state.
+/// Environment switch that disables Analyzer consumption of Generator state.
 const String ccrouterAnalyzerWatchBridgeKillSwitch =
     'CCROUTER_DISABLE_ANALYZER_WATCH_BRIDGE';
 
@@ -96,11 +97,12 @@ final class CCRouterPubResolutionHint {
   final String correction;
 }
 
-/// Read-only bridge from versioned watch snapshots to Analysis Server input.
+/// Read-only bridge from versioned Generator snapshots to Analysis Server input.
 ///
-/// The bridge accepts diagnostics only when `status.json` and
-/// `diagnostics.json` agree on Host, session, cycle, event revision, and exact
-/// resolution fingerprint. It never parses console output or runs generation.
+/// Active watch state is authoritative. Without an active watch, the bridge
+/// accepts a terminal one-shot snapshot only while its exact Pub-resolution
+/// fingerprint remains current. It never parses console output or runs
+/// generation.
 final class CCRouterGeneratorDiagnosticsBridge {
   /// Creates a bridge using the process environment or a deterministic test
   /// override to evaluate its independent kill switch once.
@@ -116,6 +118,9 @@ final class CCRouterGeneratorDiagnosticsBridge {
   /// File name of the watch identity and lifecycle snapshot.
   static const String statusFileName = 'status.json';
 
+  /// Relative directory containing terminal one-shot generation evidence.
+  static const String oneShotDirectoryName = 'generation';
+
   /// Last source paths published per Host, retained only to clear recovered
   /// diagnostics after the current snapshot becomes empty or invalid.
   final Map<String, Set<String>> _publishedPathsByHost =
@@ -123,6 +128,14 @@ final class CCRouterGeneratorDiagnosticsBridge {
 
   /// Last watch snapshot file identity observed by the polling fallback.
   final Map<String, String> _observedSnapshotByHost = <String, String>{};
+
+  /// Last complete Generator input signature validated per Host.
+  final Map<String, String> _validatedSnapshotSignatureByHost =
+      <String, String>{};
+
+  /// Valid snapshots cached only while their complete input signature matches.
+  final Map<String, Map<String, Object?>> _validatedSnapshotByHost =
+      <String, Map<String, Object?>>{};
 
   /// Last manifest and resolved-graph file identity observed per Host.
   final Map<String, String> _observedResolutionInputByHost = <String, String>{};
@@ -145,6 +158,15 @@ final class CCRouterGeneratorDiagnosticsBridge {
             diagnosticsFileName,
           ),
         ) ||
+        normalized.endsWith(
+          path.join(
+            '.dart_tool',
+            'ccrouter',
+            'v1',
+            oneShotDirectoryName,
+            diagnosticsFileName,
+          ),
+        ) ||
         path.basename(normalized) == 'pubspec.yaml' ||
         path.basename(normalized) == '.metadata' ||
         path.basename(normalized) == 'ccrouter.yaml' ||
@@ -163,14 +185,12 @@ final class CCRouterGeneratorDiagnosticsBridge {
     return _affectedDartPathsForHost(hostRoot);
   }
 
-  /// Polls the two bounded watch snapshots when Analysis Server excludes
-  /// `.dart_tool` changes from its filesystem event stream.
+  /// Polls bounded Generator and Pub-resolution inputs when Analysis Server
+  /// excludes `.dart_tool` changes from its filesystem event stream.
   Set<String> pollAffectedDartPaths(Directory hostRoot) {
     if (!enabled) return const <String>{};
     final key = _canonicalDirectoryIdentity(hostRoot.path);
-    final signature =
-        '${_fileIdentity(_statusFile(hostRoot))}|'
-        '${_fileIdentity(_diagnosticsFile(hostRoot))}';
+    final signature = _snapshotInputSignature(hostRoot);
     if (_observedSnapshotByHost[key] == signature) {
       return const <String>{};
     }
@@ -273,11 +293,16 @@ final class CCRouterGeneratorDiagnosticsBridge {
   void clear() {
     _publishedPathsByHost.clear();
     _observedSnapshotByHost.clear();
+    _validatedSnapshotSignatureByHost.clear();
+    _validatedSnapshotByHost.clear();
     _observedResolutionInputByHost.clear();
   }
 
   /// Compares one participating Package manifest with its resolved direct graph.
-  CCRouterPubResolutionHint? pubResolutionHint(File pubspec) {
+  CCRouterPubResolutionHint? pubResolutionHint(
+    File pubspec, {
+    String? contents,
+  }) {
     if (!enabled || !pubspec.existsSync()) return null;
     final context = CCRouterAnalyzerProjectContext.resolve(pubspec.path);
     if (context == null || context.role == CCRouterAnalyzerProjectRole.skip) {
@@ -293,11 +318,11 @@ final class CCRouterGeneratorDiagnosticsBridge {
       ),
     );
     if (graph == null) return null;
-    late final String contents;
+    late final String effectiveContents;
     late final Object? manifest;
     try {
-      contents = pubspec.readAsStringSync();
-      manifest = loadYaml(contents);
+      effectiveContents = contents ?? pubspec.readAsStringSync();
+      manifest = loadYaml(effectiveContents);
     } on Object {
       return null;
     }
@@ -330,7 +355,7 @@ final class CCRouterGeneratorDiagnosticsBridge {
     final unresolvedAdds = declared.difference(resolved).toList()..sort();
     final unresolvedRemovals = resolved.difference(declared).toList()..sort();
     if (unresolvedAdds.isEmpty && unresolvedRemovals.isEmpty) return null;
-    final dependencyOffset = contents.indexOf(
+    final dependencyOffset = effectiveContents.indexOf(
       RegExp(r'^dependencies\s*:', multiLine: true),
     );
     final offset = dependencyOffset < 0 ? 0 : dependencyOffset;
@@ -356,26 +381,74 @@ final class CCRouterGeneratorDiagnosticsBridge {
     );
   }
 
-  /// Resolves one diagnostics snapshot only when its paired status is current.
+  /// Resolves one current watch or one-shot diagnostics snapshot.
   Map<String, Object?>? _validatedSnapshot(Directory hostRoot) {
+    final key = _canonicalDirectoryIdentity(hostRoot.path);
+    final signature = _snapshotInputSignature(hostRoot);
+    if (_validatedSnapshotSignatureByHost[key] == signature) {
+      return _validatedSnapshotByHost[key];
+    }
+    _validatedSnapshotSignatureByHost[key] = signature;
+    final validated = _validateCurrentSnapshot(hostRoot);
+    if (validated == null) {
+      _validatedSnapshotByHost.remove(key);
+    } else {
+      _validatedSnapshotByHost[key] = validated;
+    }
+    return validated;
+  }
+
+  /// Applies watch precedence before considering terminal one-shot evidence.
+  Map<String, Object?>? _validateCurrentSnapshot(Directory hostRoot) {
     final status = _readObject(_statusFile(hostRoot));
-    final snapshot = _readObject(_diagnosticsFile(hostRoot));
-    if (status == null || snapshot == null) return null;
-    if (status['schemaVersion'] != 1 || snapshot['schemaVersion'] != 1) {
+    final activeWatchBuildRoot = _activeWatchBuildRoot(status, hostRoot);
+    if (activeWatchBuildRoot != null) {
+      return _validatedWatchSnapshot(hostRoot, status!, activeWatchBuildRoot) ??
+          <String, Object?>{
+            'buildRoot': activeWatchBuildRoot,
+            'diagnostics': const <Object?>[],
+          };
+    }
+    return _validatedOneShotSnapshot(hostRoot);
+  }
+
+  /// Returns the active watch build root only when it belongs to [hostRoot].
+  String? _activeWatchBuildRoot(
+    Map<String, Object?>? status,
+    Directory hostRoot,
+  ) {
+    if (status == null ||
+        status['schemaVersion'] != 1 ||
+        status['active'] != true) {
       return null;
     }
-    if (status['active'] != true ||
-        snapshot['lastEvent'] != 'failed' ||
+    final statusHostRoot = status['hostRoot'];
+    final statusBuildRoot = status['buildRoot'];
+    if (statusHostRoot is! String ||
+        statusBuildRoot is! String ||
+        !_hasSameDirectoryIdentity(statusHostRoot, hostRoot.path)) {
+      return null;
+    }
+    return statusBuildRoot;
+  }
+
+  /// Accepts failed watch diagnostics only when both watch files agree exactly.
+  Map<String, Object?>? _validatedWatchSnapshot(
+    Directory hostRoot,
+    Map<String, Object?> status,
+    String statusBuildRoot,
+  ) {
+    final snapshot = _readObject(_diagnosticsFile(hostRoot));
+    if (snapshot == null || snapshot['schemaVersion'] != 1) return null;
+    if (snapshot['lastEvent'] != 'failed' ||
         snapshot['cycleResolutionState'] != 'matched') {
       return null;
     }
     final statusHostRoot = status['hostRoot'];
     final snapshotHostRoot = snapshot['hostRoot'];
-    final statusBuildRoot = status['buildRoot'];
     final snapshotBuildRoot = snapshot['buildRoot'];
     if (statusHostRoot is! String ||
         snapshotHostRoot is! String ||
-        statusBuildRoot is! String ||
         snapshotBuildRoot is! String ||
         !_hasSameDirectoryIdentity(statusHostRoot, snapshotHostRoot) ||
         !_hasSameDirectoryIdentity(statusBuildRoot, snapshotBuildRoot) ||
@@ -392,6 +465,83 @@ final class CCRouterGeneratorDiagnosticsBridge {
     }
     final diagnostics = snapshot['diagnostics'];
     return diagnostics is List ? snapshot : null;
+  }
+
+  /// Accepts terminal one-shot evidence only for the current resolution bytes.
+  Map<String, Object?>? _validatedOneShotSnapshot(Directory hostRoot) {
+    final snapshot = _readObject(_oneShotDiagnosticsFile(hostRoot));
+    if (snapshot == null ||
+        snapshot['schemaVersion'] != 1 ||
+        snapshot['producer'] != 'oneShot') {
+      return null;
+    }
+    final snapshotHostRoot = snapshot['hostRoot'];
+    final snapshotBuildRoot = snapshot['buildRoot'];
+    final fingerprint = snapshot['resolutionFingerprint'];
+    final outcome = snapshot['outcome'];
+    final diagnostics = snapshot['diagnostics'];
+    if (snapshotHostRoot is! String ||
+        snapshotBuildRoot is! String ||
+        fingerprint is! String ||
+        (outcome != 'failed' && outcome != 'succeeded') ||
+        diagnostics is! List ||
+        !_hasSameDirectoryIdentity(snapshotHostRoot, hostRoot.path) ||
+        fingerprint !=
+            _resolutionFingerprint(
+              hostRoot: hostRoot,
+              buildRoot: Directory(snapshotBuildRoot),
+            )) {
+      return null;
+    }
+    if (outcome == 'succeeded') {
+      return <String, Object?>{...snapshot, 'diagnostics': const <Object?>[]};
+    }
+    return snapshot;
+  }
+
+  /// Reproduces the Generator's ordered Pub-resolution fingerprint exactly.
+  String _resolutionFingerprint({
+    required Directory hostRoot,
+    required Directory buildRoot,
+  }) {
+    final files = <String, File>{
+      'host/pubspec.yaml': File(path.join(hostRoot.path, 'pubspec.yaml')),
+      'build/pubspec.yaml': File(path.join(buildRoot.path, 'pubspec.yaml')),
+      'build/pubspec.lock': File(path.join(buildRoot.path, 'pubspec.lock')),
+      'build/.dart_tool/package_config.json': File(
+        path.join(buildRoot.path, '.dart_tool', 'package_config.json'),
+      ),
+      'build/.dart_tool/package_graph.json': File(
+        path.join(buildRoot.path, '.dart_tool', 'package_graph.json'),
+      ),
+    };
+    final contents = <String, String?>{};
+    for (final entry in files.entries) {
+      try {
+        contents[entry.key] = entry.value.existsSync()
+            ? base64Encode(entry.value.readAsBytesSync())
+            : null;
+      } on Object {
+        contents[entry.key] = null;
+      }
+    }
+    return sha256.convert(utf8.encode(jsonEncode(contents))).toString();
+  }
+
+  /// Identifies snapshots and every byte source used to validate one-shot data.
+  String _snapshotInputSignature(Directory hostRoot) {
+    final context = CCRouterAnalyzerProjectContext.resolve(hostRoot.path);
+    final buildRoot = context?.resolutionRoot ?? hostRoot;
+    return <File>[
+      _statusFile(hostRoot),
+      _diagnosticsFile(hostRoot),
+      _oneShotDiagnosticsFile(hostRoot),
+      File(path.join(hostRoot.path, 'pubspec.yaml')),
+      File(path.join(buildRoot.path, 'pubspec.yaml')),
+      File(path.join(buildRoot.path, 'pubspec.lock')),
+      File(path.join(buildRoot.path, '.dart_tool', 'package_config.json')),
+      File(path.join(buildRoot.path, '.dart_tool', 'package_graph.json')),
+    ].map(_fileIdentity).join('|');
   }
 
   /// Decodes bounded primary and related locations from one trusted snapshot.
@@ -474,12 +624,13 @@ final class CCRouterGeneratorDiagnosticsBridge {
     );
   }
 
-  /// Finds the nearest Host carrying a watch diagnostics directory.
+  /// Finds the nearest Host carrying watch or one-shot diagnostics evidence.
   Directory? _discoverHostRoot(String filePath) {
     var current = File(filePath).absolute.parent;
     while (true) {
       if (_diagnosticsFile(current).existsSync() ||
-          _statusFile(current).existsSync()) {
+          _statusFile(current).existsSync() ||
+          _oneShotDiagnosticsFile(current).existsSync()) {
         return current;
       }
       final parent = current.parent;
@@ -488,7 +639,7 @@ final class CCRouterGeneratorDiagnosticsBridge {
     }
   }
 
-  /// Extracts a Host root from an exact watch snapshot path.
+  /// Extracts a Host root from an exact Generator snapshot path.
   Directory? _hostRootForInput(String changedPath) {
     final normalized = path.normalize(File(changedPath).absolute.path);
     final watchSuffix = path.join('.dart_tool', 'ccrouter', 'v1', 'watch');
@@ -496,6 +647,17 @@ final class CCRouterGeneratorDiagnosticsBridge {
     final markerIndex = normalized.lastIndexOf(marker);
     if (markerIndex >= 0) {
       return Directory(normalized.substring(0, markerIndex));
+    }
+    final oneShotSuffix = path.join(
+      '.dart_tool',
+      'ccrouter',
+      'v1',
+      oneShotDirectoryName,
+    );
+    final oneShotMarker = '${path.separator}$oneShotSuffix${path.separator}';
+    final oneShotMarkerIndex = normalized.lastIndexOf(oneShotMarker);
+    if (oneShotMarkerIndex >= 0) {
+      return Directory(normalized.substring(0, oneShotMarkerIndex));
     }
     return _discoverHostRoot(changedPath);
   }
@@ -546,6 +708,18 @@ final class CCRouterGeneratorDiagnosticsBridge {
       'ccrouter',
       'v1',
       'watch',
+      diagnosticsFileName,
+    ),
+  );
+
+  /// Current Host terminal one-shot diagnostics file.
+  File _oneShotDiagnosticsFile(Directory hostRoot) => File(
+    path.join(
+      hostRoot.path,
+      '.dart_tool',
+      'ccrouter',
+      'v1',
+      oneShotDirectoryName,
       diagnosticsFileName,
     ),
   );

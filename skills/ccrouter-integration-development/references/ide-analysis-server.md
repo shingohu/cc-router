@@ -38,24 +38,29 @@ cycle, event revision, and resolution fingerprint match current `status.json`,
 the cycle resolution stayed matched, and the watch is active. One missing Host
 Owner is shown at an exact authored `package:` location with capability fallout
 folded under that root cause. A successful/new cycle or session clears the old
-diagnostic. Independently of watch availability, saved `pubspec.yaml` versus
-resolved graph drift produces only `ccrouter_pub_resolution_stale`; ownership
-is not inferred until Pub get. The hint identifies Host versus package-local
-from `.metadata` and `ccrouter.yaml`, and selects Flutter Pub for Flutter
-Packages or Dart Pub for Pure Dart Packages. An analyzed Workspace root indexes
-its explicit member manifests and publishes or clears the hint independently
-for each participating member; it does not recursively scan the repository.
+diagnostic. Without an active watch, terminal Host generation writes
+`.dart_tool/ccrouter/v1/generation/diagnostics.json`; the Plugin consumes it only
+while its exact Pub-resolution fingerprint remains current. Active watch state
+always wins and cannot revive older one-shot errors. Independently of watch
+availability, the current `pubspec.yaml` editor overlay versus resolved graph
+drift produces only `ccrouter_pub_resolution_stale`; ownership is not inferred
+until Pub get. The hint identifies Host versus package-local from `.metadata`
+and `ccrouter.yaml`, selects Flutter Pub for Flutter Packages or Dart Pub for
+Pure Dart Packages, and clears immediately when the overlay is restored. An
+analyzed Workspace root indexes its explicit member manifests and publishes or
+clears the hint independently for each participating member; it does not
+recursively scan the repository.
 
 Analysis Server does not reliably emit plugin filesystem events for
-`.dart_tool`. The plugin therefore compares the two watch snapshots plus
+`.dart_tool`. The plugin therefore compares watch and one-shot snapshots plus
 manifest, role, Workspace-reference, Package-graph, and Package-config file
-identities every 500ms and reads/reanalyzes only after an identity change. The
-Timer is owned by the plugin and is cancelled on context replacement, shutdown,
-and channel close. Set
+identities for the context root and explicit nested Hosts every 500ms, then
+reads/reanalyzes only after an identity change. The Timer is owned by the plugin
+and is cancelled on context replacement, shutdown, and channel close. Set
 `CCROUTER_DISABLE_ANALYZER_WATCH_BRIDGE=1` before starting Analysis Server to
-disable this bridge without disabling source rules. Snapshot publication and
-consumption are fail-open diagnostics; generation, Pub Hook failure, and the
-final `--no-cache --check` gate remain authoritative.
+disable the whole Generator diagnostics bridge without disabling source rules.
+Snapshot publication and consumption are fail-open diagnostics; generation,
+Pub Hook failure, and the final `--no-cache --check` gate remain authoritative.
 
 Framework maintainers can run `test/analysis_server_integration_test.dart`
 from the isolated plugin Package. It starts actual SDK Server processes for

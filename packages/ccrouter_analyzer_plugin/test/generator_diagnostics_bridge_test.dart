@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:ccrouter_analyzer_plugin/src/generator_diagnostics_bridge.dart';
+import 'package:crypto/crypto.dart';
 import 'package:path/path.dart' as path;
 import 'package:test/test.dart';
 
@@ -44,6 +45,69 @@ void main() {
     expect(fixture.bridge.affectedDartPaths(fixture.status.path), isEmpty);
   });
 
+  test('accepts a current failed one-shot snapshot without watch', () {
+    final fixture = _BridgeFixture.create();
+    addTearDown(fixture.dispose);
+    fixture.writeOneShotDiagnostics(succeeded: false);
+
+    final accepted = fixture.bridge.diagnosticsFor(fixture.source.path);
+
+    expect(accepted, hasLength(1));
+    expect(accepted.single.code, 'ccrouter_host_component_owner_missing');
+    expect(fixture.bridge.affectedDartPaths(fixture.oneShotDiagnostics.path), {
+      fixture.source.path,
+    });
+  });
+
+  test('invalidates one-shot diagnostics when resolution inputs change', () {
+    final fixture = _BridgeFixture.create();
+    addTearDown(fixture.dispose);
+    fixture.writeOneShotDiagnostics(succeeded: false);
+
+    expect(fixture.bridge.pollAffectedDartPaths(fixture.root), {
+      fixture.source.path,
+    });
+    fixture.pubspec.writeAsStringSync('''
+name: bridge_host
+dependencies:
+  ccrouter: any
+  changed_dependency: any
+''');
+
+    expect(fixture.bridge.pollAffectedDartPaths(fixture.root), {
+      fixture.source.path,
+    });
+    expect(fixture.bridge.diagnosticsFor(fixture.source.path), isEmpty);
+  });
+
+  test('successful one-shot clears a previously published failure', () {
+    final fixture = _BridgeFixture.create();
+    addTearDown(fixture.dispose);
+    fixture.writeOneShotDiagnostics(succeeded: false);
+    expect(fixture.bridge.diagnosticsFor(fixture.source.path), hasLength(1));
+
+    fixture.writeOneShotDiagnostics(succeeded: true);
+
+    expect(fixture.bridge.affectedDartPaths(fixture.oneShotDiagnostics.path), {
+      fixture.source.path,
+    });
+    expect(fixture.bridge.diagnosticsFor(fixture.source.path), isEmpty);
+  });
+
+  test('active successful watch suppresses an older failed one-shot', () {
+    final fixture = _BridgeFixture.create();
+    addTearDown(fixture.dispose);
+    fixture.writeOneShotDiagnostics(succeeded: false);
+    fixture.writeStatus(eventRevision: 8, lastEvent: 'aggregationSucceeded');
+    fixture.writeDiagnostics(
+      eventRevision: 8,
+      lastEvent: 'aggregationSucceeded',
+      includeDiagnostic: false,
+    );
+
+    expect(fixture.bridge.diagnosticsFor(fixture.source.path), isEmpty);
+  });
+
   test('reports only saved manifest versus resolved graph drift', () {
     final fixture = _BridgeFixture.create();
     addTearDown(fixture.dispose);
@@ -63,6 +127,38 @@ dependencies:
 
     fixture.writePackageGraph(['ccrouter']);
     expect(fixture.bridge.pubResolutionHint(fixture.pubspec), isNull);
+  });
+
+  test('compares an unsaved manifest overlay with the resolved graph', () {
+    final fixture = _BridgeFixture.create();
+    addTearDown(fixture.dispose);
+    fixture.pubspec.writeAsStringSync('''
+name: bridge_host
+dependencies:
+  ccrouter: any
+  demo_order: any
+''');
+    fixture.writePackageGraph(['ccrouter', 'demo_order']);
+
+    final stale = fixture.bridge.pubResolutionHint(
+      fixture.pubspec,
+      contents: '''
+name: bridge_host
+dependencies:
+  ccrouter: any
+#  demo_order: any
+''',
+    );
+
+    expect(stale, isNotNull);
+    expect(stale!.message, contains('still resolved: demo_order'));
+    expect(
+      fixture.bridge.pubResolutionHint(
+        fixture.pubspec,
+        contents: fixture.pubspec.readAsStringSync(),
+      ),
+      isNull,
+    );
   });
 
   test(
@@ -179,6 +275,8 @@ dependencies:
     expect(bridge.enabled, isFalse);
     expect(bridge.diagnosticsFor(fixture.source.path), isEmpty);
     expect(bridge.affectedDartPaths(fixture.status.path), isEmpty);
+    fixture.writeOneShotDiagnostics(succeeded: false);
+    expect(bridge.affectedDartPaths(fixture.oneShotDiagnostics.path), isEmpty);
     expect(bridge.pubResolutionHint(fixture.pubspec), isNull);
   });
 }
@@ -190,6 +288,7 @@ final class _BridgeFixture {
     required this.pubspec,
     required this.status,
     required this.diagnostics,
+    required this.oneShotDiagnostics,
   });
 
   final Directory root;
@@ -197,6 +296,7 @@ final class _BridgeFixture {
   final File pubspec;
   final File status;
   final File diagnostics;
+  final File oneShotDiagnostics;
   final CCRouterGeneratorDiagnosticsBridge bridge =
       CCRouterGeneratorDiagnosticsBridge();
 
@@ -212,6 +312,16 @@ final class _BridgeFixture {
     )..createSync(recursive: true);
     final status = File(path.join(watch.path, 'status.json'));
     final diagnostics = File(path.join(watch.path, 'diagnostics.json'));
+    final oneShotDiagnostics = File(
+      path.join(
+        root.path,
+        '.dart_tool',
+        'ccrouter',
+        'v1',
+        'generation',
+        'diagnostics.json',
+      ),
+    );
     File(path.join(root.path, '.dart_tool', 'package_config.json'))
       ..parent.createSync(recursive: true)
       ..writeAsStringSync(
@@ -228,15 +338,16 @@ final class _BridgeFixture {
       pubspec: pubspec,
       status: status,
       diagnostics: diagnostics,
+      oneShotDiagnostics: oneShotDiagnostics,
     );
   }
 
-  void writeStatus({required int eventRevision}) {
+  void writeStatus({required int eventRevision, String lastEvent = 'failed'}) {
     status.writeAsStringSync(
       jsonEncode({
         'schemaVersion': 1,
         'active': true,
-        'lastEvent': 'failed',
+        'lastEvent': lastEvent,
         'hostRoot': root.path,
         'buildRoot': root.path,
         'sessionId': 'session-1',
@@ -247,7 +358,11 @@ final class _BridgeFixture {
     );
   }
 
-  void writeDiagnostics({required int eventRevision}) {
+  void writeDiagnostics({
+    required int eventRevision,
+    String lastEvent = 'failed',
+    bool includeDiagnostic = true,
+  }) {
     diagnostics.writeAsStringSync(
       jsonEncode({
         'schemaVersion': 1,
@@ -256,26 +371,79 @@ final class _BridgeFixture {
         'sessionId': 'session-1',
         'eventRevision': eventRevision,
         'cycle': 2,
-        'lastEvent': 'failed',
+        'lastEvent': lastEvent,
         'resolutionFingerprint': 'resolution-1',
         'cycleResolutionState': 'matched',
         'diagnostics': [
-          {
-            'code': 'ccrouter_host_component_owner_missing',
-            'severity': 'error',
-            'message': 'Host closure is missing an owner.',
-            'correction': 'Run Pub get.',
-            'rootCauseGroup': 'missing-owner:orders',
-            'primaryLocation': {
-              'uri': 'package:bridge_host/src/component.dart',
-              'line': 1,
-              'column': 7,
-              'length': 9,
+          if (includeDiagnostic)
+            {
+              'code': 'ccrouter_host_component_owner_missing',
+              'severity': 'error',
+              'message': 'Host closure is missing an owner.',
+              'correction': 'Run Pub get.',
+              'rootCauseGroup': 'missing-owner:orders',
+              'primaryLocation': {
+                'uri': 'package:bridge_host/src/component.dart',
+                'line': 1,
+                'column': 7,
+                'length': 9,
+              },
             },
-          },
         ],
       }),
     );
+  }
+
+  void writeOneShotDiagnostics({required bool succeeded}) {
+    oneShotDiagnostics
+      ..parent.createSync(recursive: true)
+      ..writeAsStringSync(
+        jsonEncode({
+          'schemaVersion': 1,
+          'producer': 'oneShot',
+          'hostRoot': root.path,
+          'buildRoot': root.path,
+          'outcome': succeeded ? 'succeeded' : 'failed',
+          'resolutionFingerprint': _resolutionFingerprint(),
+          'diagnostics': [
+            if (!succeeded)
+              {
+                'code': 'ccrouter_host_component_owner_missing',
+                'severity': 'error',
+                'message': 'Host closure is missing an owner.',
+                'correction': 'Run Pub get.',
+                'rootCauseGroup': 'missing-owner:orders',
+                'primaryLocation': {
+                  'uri': 'package:bridge_host/src/component.dart',
+                  'line': 1,
+                  'column': 7,
+                  'length': 9,
+                },
+              },
+          ],
+        }),
+      );
+  }
+
+  String _resolutionFingerprint() {
+    final files = <String, File>{
+      'host/pubspec.yaml': pubspec,
+      'build/pubspec.yaml': pubspec,
+      'build/pubspec.lock': File(path.join(root.path, 'pubspec.lock')),
+      'build/.dart_tool/package_config.json': File(
+        path.join(root.path, '.dart_tool', 'package_config.json'),
+      ),
+      'build/.dart_tool/package_graph.json': File(
+        path.join(root.path, '.dart_tool', 'package_graph.json'),
+      ),
+    };
+    final contents = <String, String?>{};
+    for (final entry in files.entries) {
+      contents[entry.key] = entry.value.existsSync()
+          ? base64Encode(entry.value.readAsBytesSync())
+          : null;
+    }
+    return sha256.convert(utf8.encode(jsonEncode(contents))).toString();
   }
 
   void writePackageGraph(List<String> dependencies) {

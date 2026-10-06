@@ -150,15 +150,24 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
       final refresh = <String>{};
       final resolutionChanged = <String>{};
       for (final context in contexts.contexts) {
-        final root = io.Directory(context.contextRoot.root.path);
-        refresh.addAll(_generatorDiagnostics.pollAffectedDartPaths(root));
         resolutionChanged.addAll(_refreshPubspecIndex(context));
+        final hostRoots = <String, io.Directory>{};
+        final contextRoot = io.Directory(context.contextRoot.root.path);
+        hostRoots[_canonicalDirectoryPath(contextRoot)] = contextRoot;
         for (final pubspec in _indexedPubspecs(context)) {
+          final project = CCRouterAnalyzerProjectContext.resolve(pubspec);
+          if (project?.role == CCRouterAnalyzerProjectRole.host) {
+            final root = project!.requestedRoot;
+            hostRoots[_canonicalDirectoryPath(root)] = root;
+          }
           if (_generatorDiagnostics.pollPubResolutionChanged(
             io.File(pubspec).parent,
           )) {
             resolutionChanged.add(pubspec);
           }
+        }
+        for (final root in hostRoots.values) {
+          refresh.addAll(_generatorDiagnostics.pollAffectedDartPaths(root));
         }
       }
       if (lifecycleRevision != _watchBridgeLifecycleRevision) {
@@ -287,6 +296,11 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
     AnalysisUpdateContentParams parameters,
   ) async {
     final result = await super.handleAnalysisUpdateContent(parameters);
+    for (final manifestPath in parameters.files.keys.where(
+      (candidate) => path.basename(candidate) == 'pubspec.yaml',
+    )) {
+      await _publishPubResolutionHint(manifestPath);
+    }
     for (final path in parameters.files.keys.where(_isAuthoredDartPath)) {
       await _analyzeCurrentSource(path);
     }
@@ -430,19 +444,22 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
 
   /// Publishes only the fact that saved and resolved dependency sets differ.
   Future<void> _publishPubResolutionHint(String pubspecPath) async {
-    final file = io.File(pubspecPath);
-    if (!file.existsSync()) return;
-    final hint = _generatorDiagnostics.pubResolutionHint(file);
+    final resource = resourceProvider.getFile(pubspecPath);
+    if (!resource.exists) return;
+    late final String source;
+    try {
+      source = resource.readAsStringSync();
+    } on Object {
+      return;
+    }
+    final hint = _generatorDiagnostics.pubResolutionHint(
+      io.File(pubspecPath),
+      contents: source,
+    );
     if (hint == null) {
       channel.sendNotification(
         AnalysisErrorsParams(pubspecPath, const []).toNotification(),
       );
-      return;
-    }
-    late final String source;
-    try {
-      source = file.readAsStringSync();
-    } on Object {
       return;
     }
     final lineInfo = LineInfo.fromContent(source);
@@ -539,6 +556,15 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
           '${stat.changed.microsecondsSinceEpoch}';
     } on Object {
       return 'missing';
+    }
+  }
+
+  /// Returns one stable directory key for deduplicating nested Host polling.
+  static String _canonicalDirectoryPath(io.Directory directory) {
+    try {
+      return path.normalize(directory.resolveSymbolicLinksSync());
+    } on io.FileSystemException {
+      return path.normalize(directory.absolute.path);
     }
   }
 

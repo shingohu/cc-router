@@ -222,11 +222,14 @@ Workspace Validator 失败还会原子发布同目录的 `diagnostics.json`。�
 最多保留 100 条结构诊断，并绑定 Host/build root、`sessionId`、`cycle`、`eventRevision` 和当前
 resolution fingerprint。成功、新 cycle 或 session restart 会发布空 snapshot 清除旧错误。
 Analyzer Plugin 只在两份文件身份完全一致且 `cycleResolutionState=matched` 时显示 authored Dart
-诊断；Pub 解析暂时落后于 `pubspec.yaml` 时只提示先执行 Pub get，不推断缺失 Owner。
-Analysis Server 通常不转发 `.dart_tool` 文件变化，插件使用 500ms 的有界 file-identity polling，
-仅在输入变化时刷新受影响文件；它不运行 Generator 或创建独立 Analyzer graph。可用
-`CCROUTER_DISABLE_ANALYZER_WATCH_BRIDGE=1` 关闭该 IDE bridge。diagnostics 写入或消费失败不会改变
-Generator/Hook 的 fail-closed 结果，最终仍需 `--no-cache --check`。
+诊断。无活动 watch 的 Host one-shot 会另行发布 `generation/diagnostics.json`；Plugin 仅消费与当前
+Pub resolution fingerprint 一致的终态，活动 watch 始终覆盖它。Pub 解析暂时落后于当前
+`pubspec.yaml` editor overlay 时只提示先执行 Pub get，不推断缺失 Owner，恢复 overlay 会立即清除
+提示。Analysis Server 通常不转发 `.dart_tool` 文件变化，插件使用 500ms 的有界 file-identity
+polling，覆盖 context root 和 Workspace 内显式 Host，仅在输入变化时刷新受影响文件；它不运行
+Generator 或创建独立 Analyzer graph。可用 `CCROUTER_DISABLE_ANALYZER_WATCH_BRIDGE=1` 关闭整个
+Generator diagnostics bridge。diagnostics 写入或消费失败不会改变 Generator/Hook 的 fail-closed
+结果，最终仍需 `--no-cache --check`。
 
 watch 使用文件 stat 作为低成本唤醒信号，再以 exact-content fingerprint 确认 Pub resolution
 变化；低频 exact scan 只作事件遗漏兜底，成功证据从不依赖 mtime。需要新 Analyzer graph 或

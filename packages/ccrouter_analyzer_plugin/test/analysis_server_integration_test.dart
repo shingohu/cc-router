@@ -134,6 +134,84 @@ void main() {
 
   for (final lsp in [false, true]) {
     test(
+      'real ${lsp ? 'LSP' : 'legacy'} server follows unsaved Pub manifest overlays',
+      () async {
+        const manifest = '''
+name: e2e_host
+environment:
+  sdk: ^3.10.0
+dependencies:
+  ccrouter_contracts: any
+  demo_order: any
+''';
+        const staleManifest = '''
+name: e2e_host
+environment:
+  sdk: ^3.10.0
+dependencies:
+  ccrouter_contracts: any
+#  demo_order: any
+''';
+        final server = await AnalysisServerSession.start(
+          {
+            _file: 'const sample = 1;\n',
+            '.dart_tool/package_graph.json': jsonEncode({
+              'packages': [
+                {
+                  'name': 'e2e_host',
+                  'version': '1.0.0',
+                  'dependencies': ['ccrouter_contracts', 'demo_order'],
+                },
+              ],
+            }),
+          },
+          lsp: lsp,
+          hostManifest: manifest,
+        );
+        addTearDown(server.close);
+        const code = 'ccrouter_pub_resolution_stale';
+        final pubspecPath = server.path('pubspec.yaml');
+
+        if (lsp) {
+          server.notify('textDocument/didOpen', {
+            'textDocument': {
+              'uri': Uri.file(pubspecPath).toString(),
+              'languageId': 'yaml',
+              'version': 1,
+              'text': staleManifest,
+            },
+          });
+        } else {
+          await server.overlay('pubspec.yaml', staleManifest);
+        }
+        await server.waitFor('pubspec.yaml', (errors) => _has(errors, code));
+
+        final staleRevision = server.revisions[pubspecPath]!;
+        if (lsp) {
+          server.notify('textDocument/didChange', {
+            'textDocument': {
+              'uri': Uri.file(pubspecPath).toString(),
+              'version': 2,
+            },
+            'contentChanges': [
+              {'text': manifest},
+            ],
+          });
+        } else {
+          await server.overlay('pubspec.yaml', manifest);
+        }
+        await server.waitFor(
+          'pubspec.yaml',
+          (errors) => !_has(errors, code),
+          after: staleRevision,
+        );
+      },
+      timeout: const Timeout(Duration(minutes: 3)),
+    );
+  }
+
+  for (final lsp in [false, true]) {
+    test(
       'real ${lsp ? 'LSP' : 'legacy'} server publishes and clears stale Pub resolution hints',
       () async {
         final server = await AnalysisServerSession.start({
@@ -249,6 +327,75 @@ dependencies:
         (errors) => !_has(errors, code),
         after: staleRevision,
       );
+    },
+    timeout: const Timeout(Duration(minutes: 3)),
+  );
+
+  test(
+    'real server polls structured diagnostics for a nested Workspace Host',
+    () async {
+      const nestedHost = 'nested_host';
+      const sourcePath = 'modules/$nestedHost/lib/src/bridge.dart';
+      final server = await AnalysisServerSession.start(
+        {_file: 'const sample = 1;\n'},
+        dependencyPackages: {
+          nestedHost: {
+            '.metadata': 'project_type: app\n',
+            'lib/src/bridge.dart': 'const nestedBridge = 1;\n',
+          },
+        },
+        dependencyManifests: const {
+          nestedHost: '''
+name: nested_host
+resolution: workspace
+environment:
+  sdk: ^3.10.0
+dependencies:
+  ccrouter: any
+''',
+        },
+      );
+      addTearDown(server.close);
+      final nestedRoot = Directory(server.path('modules/$nestedHost'));
+      final identity = <String, Object?>{
+        'schemaVersion': 1,
+        'hostRoot': nestedRoot.path,
+        'buildRoot': server.host.path,
+        'sessionId': 'nested-session',
+        'eventRevision': 1,
+        'cycle': 1,
+        'resolutionFingerprint': 'nested-resolution',
+      };
+      server.write(
+        'modules/$nestedHost/.dart_tool/ccrouter/v1/watch/status.json',
+        jsonEncode({...identity, 'active': true, 'lastEvent': 'failed'}),
+      );
+      server.write(
+        'modules/$nestedHost/.dart_tool/ccrouter/v1/watch/diagnostics.json',
+        jsonEncode({
+          ...identity,
+          'lastEvent': 'failed',
+          'cycleResolutionState': 'matched',
+          'diagnostics': [
+            {
+              'code': 'ccrouter_host_component_owner_missing',
+              'severity': 'error',
+              'message': 'Nested Host closure is missing an owner.',
+              'correction': 'Restore the owner Package and run Pub get.',
+              'rootCauseGroup': 'missing-owner:nested',
+              'primaryLocation': {
+                'uri': 'package:nested_host/src/bridge.dart',
+                'line': 1,
+                'column': 7,
+                'length': 12,
+              },
+            },
+          ],
+        }),
+      );
+
+      const code = 'ccrouter_host_component_owner_missing';
+      await server.waitFor(sourcePath, (errors) => _has(errors, code));
     },
     timeout: const Timeout(Duration(minutes: 3)),
   );

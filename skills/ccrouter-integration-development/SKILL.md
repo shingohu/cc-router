@@ -398,14 +398,18 @@ Workspace validation failures also publish a bounded atomic
 root, session, cycle, event revision, and resolution fingerprint match the
 current status. It then maps `package:` locations through Package config and
 folds one missing Owner's capability fallout into one root-cause diagnostic.
-If saved `pubspec.yaml` dependencies differ from the resolved graph, the plugin
-only asks for the role-appropriate Flutter or Dart Pub get and suspends
-ownership conclusions; this hint is available without an active watch. Because
-Analysis Server does not reliably forward `.dart_tool` events, the plugin polls
-the watch snapshots, role inputs, Workspace reference, and Pub graph/config
-identities every 500ms and reanalyzes after changes; it does not open a second
-Analyzer graph. Use `CCROUTER_DISABLE_ANALYZER_WATCH_BRIDGE=1` for an IDE-only
-fallback. Keep `--no-cache --check` as the final authority.
+Without an active watch, a Host one-shot publishes `generation/diagnostics.json`;
+the Plugin accepts it only while the exact Pub-resolution fingerprint remains
+current, and never falls back to it while a watch is active. If the current
+`pubspec.yaml` editor overlay differs from the resolved graph, the plugin only
+asks for the role-appropriate Flutter or Dart Pub get and suspends ownership
+conclusions; restoring the overlay clears the hint without a save or restart.
+Because Analysis Server does not reliably forward `.dart_tool` events, the
+plugin polls snapshots and resolution identities for the context root and
+explicit nested Workspace Hosts every 500ms and reanalyzes after changes; it
+does not open a second Analyzer graph. Use
+`CCROUTER_DISABLE_ANALYZER_WATCH_BRIDGE=1` for an IDE-only fallback. Keep
+`--no-cache --check` as the final authority.
 `buildSucceeded.buildRunner` is diagnostic-only structured phase data. Its
 `invalidatedInputs` count is inferred from build_runner's public counters; it
 does not expose AssetIds, prove semantic output impact, or authorize skipping a
