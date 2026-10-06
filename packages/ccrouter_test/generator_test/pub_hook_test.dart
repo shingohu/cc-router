@@ -9,8 +9,11 @@ import 'package:path/path.dart' as path;
 import 'package:test/test.dart';
 
 import '../../ccrouter_generator/bin/src/pub_hook_watch_coordination.dart';
+import 'support/real_workspace_test_lock.dart';
 
 void main() {
+  serializeRealWorkspaceTests();
+
   test(
     'pub-hook install preserves an entrypoint when its rename fails',
     () async {
