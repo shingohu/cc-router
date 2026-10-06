@@ -3,8 +3,12 @@ library;
 
 import 'dart:io';
 
+import 'package:ccrouter_generator/src/project_context.dart';
+import 'package:ccrouter_generator/src/project_role.dart';
 import 'package:path/path.dart' as path;
 import 'package:test/test.dart';
+
+import '../../ccrouter_generator/bin/src/scaffold.dart';
 
 void main() {
   test(
@@ -30,6 +34,14 @@ void main() {
       expect('${component.stdout}', contains('flutter pub get'));
 
       final packageRoot = Directory(path.join(parent.path, 'demo_inventory'));
+      expect(
+        File(path.join(packageRoot.path, '.metadata')).readAsStringSync(),
+        contains('project_type: package'),
+      );
+      expect(
+        Directory(path.join(packageRoot.path, 'example')).existsSync(),
+        isFalse,
+      );
       final page = await _run([
         'create',
         'page',
@@ -98,6 +110,132 @@ void main() {
     );
   });
 
+  test('create component can atomically add a runnable example Host', () async {
+    final parent = await Directory.systemTemp.createTemp('ccrouter-scaffold-');
+    addTearDown(() => parent.delete(recursive: true));
+    final framework = Directory(path.join(parent.path, 'framework'))
+      ..createSync();
+    final runtime = Directory(path.join(framework.path, 'ccrouter'))
+      ..createSync();
+    final generator = Directory(path.join(framework.path, 'generator'))
+      ..createSync();
+    File(path.join(runtime.path, 'pubspec.yaml')).writeAsStringSync('''
+name: ccrouter
+version: 0.1.0
+environment:
+  sdk: ^3.10.0
+dependencies:
+  flutter:
+    sdk: flutter
+''');
+    File(path.join(runtime.path, 'lib', 'ccrouter.dart'))
+      ..createSync(recursive: true)
+      ..writeAsStringSync('library;\n');
+    File(path.join(generator.path, 'pubspec.yaml')).writeAsStringSync('''
+name: ccrouter_generator
+version: 0.1.0
+environment:
+  sdk: ^3.10.0
+''');
+    File(path.join(parent.path, 'pubspec.yaml')).writeAsStringSync('''
+name: scaffold_owner
+environment:
+  sdk: ^3.10.0
+dependencies:
+  ccrouter:
+    path: framework/ccrouter
+dev_dependencies:
+  ccrouter_generator:
+    path: framework/generator
+''');
+
+    final result = await _run([
+      'create',
+      'component',
+      'demo_inventory',
+      parent.path,
+      '--with-example',
+    ]);
+
+    expect(result.exitCode, 0, reason: '${result.stdout}\n${result.stderr}');
+    final packageRoot = Directory(path.join(parent.path, 'demo_inventory'));
+    final example = Directory(path.join(packageRoot.path, 'example'));
+    expect(
+      File(path.join(packageRoot.path, '.metadata')).readAsStringSync(),
+      contains('project_type: package'),
+    );
+    expect(
+      File(path.join(example.path, '.metadata')).readAsStringSync(),
+      contains('project_type: app'),
+    );
+    expect(
+      File(path.join(example.path, 'lib', 'main.dart')).existsSync(),
+      isTrue,
+    );
+    final manifest = File(
+      path.join(example.path, 'pubspec.yaml'),
+    ).readAsStringSync();
+    expect(manifest, contains('name: demo_inventory_example'));
+    expect(manifest, contains('ccrouter:'));
+    expect(manifest, contains('demo_inventory:'));
+    expect(manifest, contains('path: ..'));
+    expect(manifest, contains('ccrouter_generator:'));
+    expect(
+      '${result.stdout}',
+      contains('generated example is a CCRouter Host'),
+    );
+    final pub = await Process.run(
+      _flutterExecutable(),
+      ['pub', 'get'],
+      workingDirectory: example.path,
+      environment: {...Platform.environment, 'CCROUTER_PUB_HOOK_DISABLE': '1'},
+    );
+    expect(pub.exitCode, 0, reason: '${pub.stdout}\n${pub.stderr}');
+    expect(
+      CCProjectRoleResolver.resolve(CCProjectContext.resolve(packageRoot)).role,
+      CCProjectRole.package,
+    );
+    expect(
+      CCProjectRoleResolver.resolve(CCProjectContext.resolve(example)).role,
+      CCProjectRole.host,
+    );
+  });
+
+  test('failed example creation publishes no partial component', () async {
+    final parent = await Directory.systemTemp.createTemp('ccrouter-scaffold-');
+    addTearDown(() => parent.delete(recursive: true));
+
+    await expectLater(
+      createScaffold(
+        kind: CCScaffoldKind.component,
+        name: 'demo_inventory',
+        root: parent,
+        withExample: true,
+        processRunner:
+            (executable, arguments, {workingDirectory, environment}) async =>
+                ProcessResult(1, 1, '', 'injected flutter failure'),
+      ),
+      throwsA(
+        isA<CCScaffoldException>().having(
+          (error) => error.message,
+          'message',
+          contains('injected flutter failure'),
+        ),
+      ),
+    );
+
+    expect(
+      Directory(path.join(parent.path, 'demo_inventory')).existsSync(),
+      isFalse,
+    );
+    expect(
+      parent.listSync().whereType<Directory>().where(
+        (directory) => path.basename(directory.path).startsWith('.ccrouter-'),
+      ),
+      isEmpty,
+    );
+  });
+
   test('create component reports its exact workspace entry', () async {
     final workspace = await Directory.systemTemp.createTemp(
       'ccrouter-scaffold-workspace-',
@@ -118,6 +256,7 @@ workspace:
       'component',
       'demo_inventory',
       modules.path,
+      '--with-example',
     ]);
 
     expect(result.exitCode, 0, reason: '${result.stderr}');
@@ -127,6 +266,17 @@ workspace:
         'Add `modules/demo_inventory` to `${workspace.path}/pubspec.yaml`',
       ),
     );
+    expect(
+      '${result.stdout}',
+      contains(
+        'Add `modules/demo_inventory/example` to `${workspace.path}/pubspec.yaml`',
+      ),
+    );
+    final exampleManifest = File(
+      path.join(modules.path, 'demo_inventory', 'example', 'pubspec.yaml'),
+    ).readAsStringSync();
+    expect(exampleManifest, contains('resolution: workspace'));
+    expect(exampleManifest, contains('demo_inventory: ^0.1.0'));
   });
 
   test('create component inherits resolved dependency sources', () async {
@@ -289,6 +439,19 @@ workspace:
       ]);
       expect(invalid.exitCode, 2);
       expect('${invalid.stderr}', contains('only once for `create init-task`'));
+
+      final invalidExample = await _run([
+        'create',
+        'page',
+        'InvalidExample',
+        packageRoot.path,
+        '--with-example',
+      ]);
+      expect(invalidExample.exitCode, 2);
+      expect(
+        '${invalidExample.stderr}',
+        contains('only once for `create component`'),
+      );
     },
   );
 
@@ -304,3 +467,13 @@ Future<ProcessResult> _run(List<String> arguments) => Process.run(
   ['run', 'ccrouter_generator:ccrouter', ...arguments],
   workingDirectory: Directory.current.path,
 );
+
+String _flutterExecutable() {
+  final name = Platform.isWindows ? 'flutter.bat' : 'flutter';
+  var sdkBin = File(Platform.resolvedExecutable).absolute.parent;
+  for (var index = 0; index < 3; index++) {
+    sdkBin = sdkBin.parent;
+  }
+  final paired = File(path.join(sdkBin.path, name));
+  return paired.existsSync() ? paired.path : name;
+}

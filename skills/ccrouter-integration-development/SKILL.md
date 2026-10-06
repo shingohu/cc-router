@@ -261,7 +261,7 @@ For a new component or internal page, the generator CLI provides non-overwriting
 templates:
 
 ```bash
-fvm dart run ccrouter_generator:ccrouter create component <package-name> <parent-directory>
+fvm dart run ccrouter_generator:ccrouter create component <package-name> <parent-directory> [--with-example]
 fvm dart run ccrouter_generator:ccrouter create page <PageName> <component-directory>
 fvm dart run ccrouter_generator:ccrouter create service <ServiceName> <component-directory>
 fvm dart run ccrouter_generator:ccrouter create command <CommandName> <component-directory>
@@ -279,6 +279,10 @@ For a new Component, the CLI inherits the nearest proven Dart SDK and CCRouter
 dependency sources, rebasing direct Path dependencies for the new Package. It
 does not assume a hosted framework version when the current Workspace cannot
 prove one.
+The component itself is explicitly `project_type: package`. `--with-example`
+uses Flutter's official empty app template and creates an app-role Host with
+direct component and CCRouter dependencies. Add both directories to a Workspace
+when prompted, resolve Pub from the example Host, then generate that Host.
 Treat the CLI's printed `Next steps` as non-mutating guidance. Confirm the actual
 Host and dependency owner before applying them; the scaffold does not infer or
 edit that ownership.

@@ -1134,6 +1134,9 @@ Host 在 `CCRouter.initialize` 后调用 `CCRouter.runInitTasks(gate: ...)`。�
 # 创建组件 Package（第二个参数是父目录，默认当前目录）
 fvm dart run --verbosity=error ccrouter_generator:ccrouter create component demo_inventory demo/modules
 
+# 可选：同时用 Flutter 官方 app template 创建独立 example Host
+fvm dart run --verbosity=error ccrouter_generator:ccrouter create component demo_inventory demo/modules --with-example
+
 # 在已有组件中创建内部页面（第二个参数是组件根目录，默认当前目录）
 fvm dart run --verbosity=error ccrouter_generator:ccrouter create page InventoryPage demo/modules/demo_inventory
 
@@ -1195,15 +1198,21 @@ executable 构建信息；CCRouter 自己的阶段、耗时、跳过原因和错
 物理目录位于 Workspace 下而被误判为成员。reference 缺失时才向上验证 Workspace，reference
 损坏或过期则 fail-closed 并要求重新执行 Pub get。
 
-`create component` 只创建新的 Package、`lib/src` 下的顶层 `CCComponent` Descriptor 和 Package barrel；
+`create component` 创建新的 Flutter library Package、`project_type: package` metadata、`lib/src` 下的
+顶层 `CCComponent` Descriptor 和 Package barrel。`--with-example` 还会通过当前 Flutter SDK 的
+官方 app template 创建 `example/`，显式依赖组件、`ccrouter` 与 `ccrouter_generator`；其
+`project_type: app` 因而默认按独立 Host 生成与校验。Workspace 场景会提示同时登记组件和
+example，非 Workspace 场景使用 `path: ..` 连接组件。
 `create page` 只创建带 `@CCRoute` 的最小 Flutter Page；`create service`、`create command`、
 `create event` 和 `create init-task` 分别创建真实注解的 Service/Command/Event/InitTask 起始模板。
 内部 Service 默认是带稳定 ID 的 concrete `@CCService`，不会提前创建跨组件 Contract。Event
 默认只声明已发生事实，只有 `--with-subscriber` 才增加同组件 Subscriber；独立内部 InitTask
 默认直接使用 `id`，只有 `--with-contract` 才生成可被其它任务引用的 typed Contract。
 这些能力模板默认属于当前组件，不会自动提升为跨组件 Contract，也不会修改 Host 依赖。
-所有命令都会先检查全部目标文件，
-目标已存在或名称非法时返回非零并拒绝覆盖，不修改 Host 的 `pubspec.yaml`，也不写入生成目录。
+所有命令都会先检查全部目标文件，目标已存在或名称非法时返回非零并拒绝覆盖，不修改已有 Host
+的 `pubspec.yaml`，也不写入生成目录。Component 与可选 example 会先在父目录的临时目录中
+完整创建；Flutter template 或 manifest 配置失败时删除临时目录，只有全部成功后才通过同文件系统
+rename 发布最终 Package，避免留下半成品。
 创建成功后 CLI 会按模板类型输出确定性的 `Next steps`；它只提示需要补齐的源码、Workspace/
 Host 依赖和生成命令，不会猜测 Host 或自动修改依赖。
 Component 模板会优先继承目标目录最近 Package/Workspace 中明确声明的 `ccrouter`、

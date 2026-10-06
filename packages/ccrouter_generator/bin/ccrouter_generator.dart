@@ -110,6 +110,7 @@ Future<void> main(List<String> arguments) async {
         root: root,
         withSubscriber: parsed.scaffoldWithSubscriber,
         withContract: parsed.scaffoldWithContract,
+        withExample: parsed.scaffoldWithExample,
       );
       _commandStdout.writeln(
         'Created ${parsed.scaffoldKind!.name} scaffold:\n'
@@ -468,7 +469,7 @@ const _usage = '''Usage:
   ccrouter portable prepare [host-root]
   ccrouter portable publish [host-root]
   ccrouter aggregate [scan-root] [--output-dir <directory>] [--generate-component-registrars]
-  ccrouter create component <package-name> [parent-directory]
+  ccrouter create component <package-name> [parent-directory] [--with-example]
   ccrouter create page <PageName> [component-directory]
   ccrouter create service <ServiceName> [component-directory]
   ccrouter create command <CommandName> [component-directory]
@@ -525,8 +526,10 @@ a remote `--url` and full `--ref`. Existing manual bootstraps are never adopted.
 and run/build preflight generator hook. Non-CCRouter projects are skipped. The
 hook is not installed automatically and is not part of Flutter's internal tool
 snapshot.
-`create component <package-name> [parent-directory]` creates a new component
-Package without overwriting existing files. `create page <PageName>
+`create component <package-name> [parent-directory] [--with-example]` creates a
+new component Package without overwriting existing files. The optional example
+is a Flutter application Host created through Flutter's official template.
+`create page <PageName>
 [component-directory]` creates an internal typed Route page. `create service`,
 `create command`, `create event`, and `create init-task` create one internal
 capability template in an existing component Package. Event Subscribers and
@@ -1724,6 +1727,7 @@ final class _Arguments {
     this.scaffoldName,
     this.scaffoldWithSubscriber = false,
     this.scaffoldWithContract = false,
+    this.scaffoldWithExample = false,
     this.portablePrepare = false,
     this.pubHookRequest,
     this.analyzerRequest,
@@ -1782,6 +1786,9 @@ final class _Arguments {
 
   /// Whether an InitTask scaffold emits a reusable typed Task Contract.
   final bool scaffoldWithContract;
+
+  /// Whether a component scaffold includes a Flutter application Host.
+  final bool scaffoldWithExample;
 
   /// Whether this generate invocation is the explicit portable prepare phase.
   final bool portablePrepare;
@@ -2450,6 +2457,7 @@ _Arguments _parseCreateArguments(List<String> arguments) {
   final name = arguments[2];
   var withSubscriber = false;
   var withContract = false;
+  var withExample = false;
   String? root;
   for (final argument in arguments.skip(3)) {
     if (argument == '--with-subscriber') {
@@ -2477,6 +2485,19 @@ _Arguments _parseCreateArguments(List<String> arguments) {
       withContract = true;
       continue;
     }
+    if (argument == '--with-example') {
+      if (kind != CCScaffoldKind.component || withExample) {
+        return const _Arguments(
+          command: _GeneratorCommand.create,
+          rootPath: '',
+          outputDirectoryPath: null,
+          error:
+              '--with-example is available only once for `create component`.',
+        );
+      }
+      withExample = true;
+      continue;
+    }
     if (argument.startsWith('-') || root != null) {
       return const _Arguments(
         command: _GeneratorCommand.create,
@@ -2496,6 +2517,7 @@ _Arguments _parseCreateArguments(List<String> arguments) {
     scaffoldName: name,
     scaffoldWithSubscriber: withSubscriber,
     scaffoldWithContract: withContract,
+    scaffoldWithExample: withExample,
   );
 }
 

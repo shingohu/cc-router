@@ -38,6 +38,15 @@ final class CCScaffoldException implements Exception {
   String toString() => message;
 }
 
+/// Injectable process boundary used only for Flutter's official app template.
+typedef CCScaffoldProcessRunner =
+    Future<ProcessResult> Function(
+      String executable,
+      List<String> arguments, {
+      String? workingDirectory,
+      Map<String, String>? environment,
+    });
+
 /// Creates a component or page template after checking every target file.
 Future<List<File>> createScaffold({
   required CCScaffoldKind kind,
@@ -45,9 +54,19 @@ Future<List<File>> createScaffold({
   required Directory root,
   bool withSubscriber = false,
   bool withContract = false,
+  bool withExample = false,
+  CCScaffoldProcessRunner processRunner = _runScaffoldProcess,
 }) async {
+  if (kind == CCScaffoldKind.component) {
+    return _createComponentScaffold(
+      name,
+      root,
+      withExample: withExample,
+      processRunner: processRunner,
+    );
+  }
   final files = switch (kind) {
-    CCScaffoldKind.component => _componentFiles(name, root),
+    CCScaffoldKind.component => throw StateError('Handled above.'),
     CCScaffoldKind.page => _pageFiles(name, root),
     CCScaffoldKind.service => _serviceFiles(name, root),
     CCScaffoldKind.command => _commandFiles(name, root),
@@ -88,6 +107,180 @@ Future<List<File>> createScaffold({
   return created;
 }
 
+/// Builds one complete component beside its final path and publishes it with a
+/// single same-filesystem rename only after every optional tool step succeeds.
+Future<List<File>> _createComponentScaffold(
+  String rawName,
+  Directory parent, {
+  required bool withExample,
+  required CCScaffoldProcessRunner processRunner,
+}) async {
+  final packageName = _packageName(rawName);
+  final packageRoot = Directory(path.join(parent.path, packageName));
+  final finalFiles = _componentFiles(packageName, parent);
+  final stagingRoot = await parent.createTemp('.ccrouter-$packageName-');
+  final stagingFiles = <File, String>{
+    for (final entry in finalFiles.entries)
+      File(
+        path.join(
+          stagingRoot.path,
+          path.relative(entry.key.path, from: packageRoot.path),
+        ),
+      ): entry.value,
+  };
+  try {
+    for (final entry in stagingFiles.entries) {
+      await entry.key.parent.create(recursive: true);
+      await entry.key.writeAsString(entry.value, flush: true);
+    }
+    if (withExample) {
+      await _createExampleHost(
+        packageName: packageName,
+        stagingRoot: stagingRoot,
+        finalRoot: packageRoot,
+        processRunner: processRunner,
+      );
+    }
+    if (packageRoot.existsSync()) {
+      throw CCScaffoldException(
+        'Component target appeared during creation; refusing to overwrite: '
+        '${packageRoot.path}',
+      );
+    }
+    await stagingRoot.rename(packageRoot.path);
+    return <File>[
+      ...finalFiles.keys,
+      if (withExample) ...[
+        File(path.join(packageRoot.path, 'example', 'pubspec.yaml')),
+        File(path.join(packageRoot.path, 'example', 'lib', 'main.dart')),
+      ],
+    ];
+  } on CCScaffoldException {
+    if (stagingRoot.existsSync()) await stagingRoot.delete(recursive: true);
+    rethrow;
+  } on Object catch (error) {
+    if (stagingRoot.existsSync()) await stagingRoot.delete(recursive: true);
+    throw CCScaffoldException(
+      'Scaffold creation failed before publication: ${error.runtimeType}.',
+    );
+  }
+}
+
+/// Creates and configures an application Host through Flutter's own template.
+Future<void> _createExampleHost({
+  required String packageName,
+  required Directory stagingRoot,
+  required Directory finalRoot,
+  required CCScaffoldProcessRunner processRunner,
+}) async {
+  final exampleRoot = Directory(path.join(stagingRoot.path, 'example'));
+  final result = await processRunner(
+    _flutterExecutable(),
+    [
+      'create',
+      '--template=app',
+      '--empty',
+      '--no-pub',
+      '--project-name',
+      '${packageName}_example',
+      exampleRoot.path,
+    ],
+    workingDirectory: stagingRoot.path,
+    environment: {...Platform.environment, 'CCROUTER_PUB_HOOK_DISABLE': '1'},
+  );
+  if (result.exitCode != 0) {
+    final details = '${result.stderr}'.trim().isNotEmpty
+        ? '${result.stderr}'.trim()
+        : '${result.stdout}'.trim();
+    final bounded = details.length > 2000
+        ? details.substring(details.length - 2000)
+        : details;
+    throw CCScaffoldException(
+      'Flutter example creation failed (exit ${result.exitCode}).'
+      '${bounded.isEmpty ? '' : '\n$bounded'}',
+    );
+  }
+  final exampleManifest = File(path.join(exampleRoot.path, 'pubspec.yaml'));
+  final generated = _readYamlMap(exampleManifest);
+  final component = _readYamlMap(
+    File(path.join(stagingRoot.path, 'pubspec.yaml')),
+  );
+  if (generated == null || component == null) {
+    throw const CCScaffoldException(
+      'Flutter example creation did not produce a readable pubspec.yaml.',
+    );
+  }
+  final document = (_normalizeYaml(generated) as Map).cast<String, Object>();
+  final dependencies = switch (document['dependencies']) {
+    final Map value => value.cast<String, Object>(),
+    _ => <String, Object>{},
+  };
+  final devDependencies = switch (document['dev_dependencies']) {
+    final Map value => value.cast<String, Object>(),
+    _ => <String, Object>{},
+  };
+  final componentDependencies = component['dependencies'];
+  final componentDevDependencies = component['dev_dependencies'];
+  if (componentDependencies is! YamlMap ||
+      componentDevDependencies is! YamlMap ||
+      !componentDependencies.containsKey('ccrouter') ||
+      !componentDevDependencies.containsKey('ccrouter_generator')) {
+    throw const CCScaffoldException(
+      'Generated component manifest is missing CCRouter dependencies.',
+    );
+  }
+  final finalExampleRoot = Directory(path.join(finalRoot.path, 'example'));
+  dependencies['ccrouter'] = _rebasePathDependency(
+    _normalizeYaml(componentDependencies['ccrouter']),
+    finalRoot,
+    finalExampleRoot,
+  );
+  dependencies[packageName] = _hasWorkspaceRoot(finalRoot)
+      ? '^0.1.0'
+      : <String, Object>{'path': '..'};
+  devDependencies['ccrouter_generator'] = _rebasePathDependency(
+    _normalizeYaml(componentDevDependencies['ccrouter_generator']),
+    finalRoot,
+    finalExampleRoot,
+  );
+  document['dependencies'] = dependencies;
+  document['dev_dependencies'] = devDependencies;
+  if (_hasWorkspaceRoot(finalRoot)) document['resolution'] = 'workspace';
+  await exampleManifest.writeAsString(
+    '${_renderYamlDocument(document)}\n',
+    flush: true,
+  );
+}
+
+/// Executes one external scaffold process without shell interpolation.
+Future<ProcessResult> _runScaffoldProcess(
+  String executable,
+  List<String> arguments, {
+  String? workingDirectory,
+  Map<String, String>? environment,
+}) => Process.run(
+  executable,
+  arguments,
+  workingDirectory: workingDirectory,
+  environment: environment,
+);
+
+/// Resolves the Flutter executable paired with the running Dart SDK.
+String _flutterExecutable() {
+  final executableName = Platform.isWindows ? 'flutter.bat' : 'flutter';
+  final explicitRoot = Platform.environment['FLUTTER_ROOT'];
+  if (explicitRoot != null) {
+    final explicit = File(path.join(explicitRoot, 'bin', executableName));
+    if (explicit.existsSync()) return explicit.path;
+  }
+  var sdkBin = File(Platform.resolvedExecutable).absolute.parent;
+  for (var index = 0; index < 3; index++) {
+    sdkBin = sdkBin.parent;
+  }
+  final paired = File(path.join(sdkBin.path, executableName));
+  return paired.existsSync() ? paired.path : executableName;
+}
+
 /// Returns deterministic follow-up guidance for one successful scaffold.
 ///
 /// The guidance never mutates Workspace or Host dependencies because the CLI
@@ -118,6 +311,8 @@ List<String> scaffoldCompletionSteps({
         ),
       );
   final workspaceRoot = _findWorkspaceRoot(root);
+  final packageName = path.basename(packageRoot.path);
+  final exampleRoot = Directory(path.join(packageRoot.path, 'example'));
   final steps = <String>[];
   if (workspaceRoot != null) {
     final relativePackage = path.relative(
@@ -127,11 +322,27 @@ List<String> scaffoldCompletionSteps({
     steps.add(
       'Add `$relativePackage` to `${path.join(workspaceRoot.path, 'pubspec.yaml')}` workspace entries.',
     );
+    if (exampleRoot.existsSync()) {
+      final relativeExample = path.relative(
+        exampleRoot.path,
+        from: workspaceRoot.path,
+      );
+      steps.add(
+        'Add `$relativeExample` to `${path.join(workspaceRoot.path, 'pubspec.yaml')}` workspace entries.',
+      );
+    }
   }
-  steps.addAll(const <String>[
-    'Add the new Package to the intended Host or consuming component dependencies.',
-    'Run `flutter pub get` from the actual Host, then `ccrouter generate <host-root>`.',
-  ]);
+  if (exampleRoot.existsSync()) {
+    steps.addAll(<String>[
+      'The generated example is a CCRouter Host with a direct `$packageName` dependency.',
+      'Run `flutter pub get` from `${exampleRoot.path}`, then `ccrouter generate ${exampleRoot.path}`.',
+    ]);
+  } else {
+    steps.addAll(const <String>[
+      'Add the new Package to the intended Host or consuming component dependencies.',
+      'Run `flutter pub get` from the actual Host, then `ccrouter generate <host-root>`.',
+    ]);
+  }
   return List<String>.unmodifiable(steps);
 }
 
@@ -186,6 +397,7 @@ const $componentSymbol = CCComponent(
   return <File, String>{
     File(path.join(packageRoot.path, 'pubspec.yaml')):
         '${pubspec.toString()}\n',
+    File(path.join(packageRoot.path, '.metadata')): 'project_type: package\n',
     File(path.join(packageRoot.path, 'lib', '$packageName.dart')): barrel,
     File(
       path.join(
@@ -707,6 +919,20 @@ Object _normalizeYaml(Object? value) {
   if (value is String || value is num || value is bool) return value!;
   if (value == null) return 'any';
   return '$value';
+}
+
+/// Renders one generated YAML document using the supported deterministic subset.
+String _renderYamlDocument(Map<String, Object> document) {
+  final output = StringBuffer();
+  for (final entry in document.entries) {
+    if (entry.value is Map || entry.value is List) {
+      output.writeln('${entry.key}:');
+      _writeYamlValue(output, entry.value, 2);
+    } else {
+      output.writeln('${entry.key}: ${_yamlScalar(entry.value)}');
+    }
+  }
+  return output.toString().trimRight();
 }
 
 /// Writes one dependency using a deterministic YAML subset.

@@ -39,7 +39,7 @@ operation. Prefer the command, then inspect its result.
 Run commands from the workspace root with the project's FVM toolchain:
 
 ```bash
-fvm dart run --verbosity=error ccrouter_generator:ccrouter create component <package-name> <parent-directory>
+fvm dart run --verbosity=error ccrouter_generator:ccrouter create component <package-name> <parent-directory> [--with-example]
 fvm dart run --verbosity=error ccrouter_generator:ccrouter create page <PageName> <component-directory>
 fvm dart run --verbosity=error ccrouter_generator:ccrouter create service <ServiceName> <component-directory>
 fvm dart run --verbosity=error ccrouter_generator:ccrouter create command <CommandName> <component-directory>
@@ -244,6 +244,14 @@ require `--with-subscriber`; reusable InitTask Contracts require
 `--with-contract`. The scaffold does not edit Host dependencies, generated
 output, or Contract exposure. A cross-component Contract is a later design
 decision.
+Component output includes `.metadata` `project_type: package`. With
+`--with-example`, run the current Flutter SDK's `create --template=app --empty
+--no-pub` in a same-filesystem staging directory, add direct component/runtime/
+generator dependencies, and retain the app `project_type`; the example is
+therefore a Host by default. Publish the component directory only after all
+steps succeed. A failure removes only that unique staging directory. In a
+Workspace, list both the component and example as members; outside one, the
+example uses `path: ..` for the component.
 Component manifests inherit the nearest explicit Dart SDK constraint and
 `ccrouter`/`ccrouter_generator` Hosted, Git, or rebased Path declarations. A
 resolved Package version is used only when no explicit declaration exists; if

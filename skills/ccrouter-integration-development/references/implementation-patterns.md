@@ -113,6 +113,7 @@ page when starting a feature:
 
 ```bash
 fvm dart run ccrouter_generator:ccrouter create component catalog demo/modules
+fvm dart run ccrouter_generator:ccrouter create component catalog demo/modules --with-example
 fvm dart run ccrouter_generator:ccrouter create page ProductPage demo/modules/catalog
 ```
 
@@ -120,6 +121,10 @@ The Component template inherits the nearest explicit SDK and CCRouter
 dependency declarations. Git declarations are retained and direct Path
 dependencies are rebased relative to the new Package; an unresolved source
 fails before any scaffold file is written.
+The component declares Flutter `project_type: package`. The optional example is
+created from Flutter's empty app template, keeps `project_type: app`, and has
+direct component/CCRouter dependencies so it is independently generated as a
+Host. Workspace projects must register both directories before Pub resolution.
 
 The command creates only missing authored files and fails before writing when a
 target already exists. Run Pub resolution and `ccrouter generate` afterwards;

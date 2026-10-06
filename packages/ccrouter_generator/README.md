@@ -141,6 +141,9 @@ placeholder，Builder 完成后立即替换为正式 exports。
 # 创建一个新的组件 Package；不会覆盖已有文件
 fvm dart run --verbosity=error ccrouter_generator:ccrouter create component demo_inventory demo/modules
 
+# 可选：同时创建默认作为 CCRouter Host 的 Flutter example app
+fvm dart run --verbosity=error ccrouter_generator:ccrouter create component demo_inventory demo/modules --with-example
+
 # 在组件中创建一个内部 Route 页面；不会自动创建跨组件 Contract
 fvm dart run --verbosity=error ccrouter_generator:ccrouter create page InventoryPage demo/modules/demo_inventory
 
@@ -197,8 +200,12 @@ Hook 按 SDK 版本独立安装，不修改 Flutter snapshot；非 CCRouter 项�
 `--verbosity=error` 只压低 Dart/Pub 在 CLI 启动前的依赖解析和 executable 构建噪声，
 不会隐藏 CCRouter 自己的进度、诊断或失败。
 
-`create component <package-name> [parent-directory]` 会生成 `pubspec.yaml`、Package barrel
-和 `lib/src/<package>_component.dart`；Descriptor 不会从根 barrel 导出。`create page <PageName> [component-directory]` 会生成
+`create component <package-name> [parent-directory] [--with-example]` 会生成
+`pubspec.yaml`、`project_type: package` metadata、Package barrel 和
+`lib/src/<package>_component.dart`；Descriptor 不会从根 barrel 导出。可选 example 由当前
+Flutter SDK 的 app template 生成，直接依赖组件与 CCRouter 工具，`project_type: app` 默认是
+Host。Workspace 需要按 `Next steps` 同时登记组件和 example。
+`create page <PageName> [component-directory]` 会生成
 `lib/src/<page>_page.dart`、内部 `@CCRoute<void>`、稳定默认 Route ID 和 `/page` Path。
 新 Component 的 manifest 优先继承目标目录最近 Package/Workspace 的 Dart SDK 约束及
 `ccrouter`/`ccrouter_generator` Hosted、Git 或 Path 声明；Path 会相对新 Package 重新计算。
@@ -210,7 +217,8 @@ Command 生成 Contract 与 Handler；Event 默认只生成 Contract，`--with-s
 Task Contract。它们默认是组件内部能力；真实出现跨组件消费者后，仍需显式建立 Contracts
 Package、Owner 和依赖声明。
 所有脚手架命令都是非覆盖式的：任何目标文件已存在、目标组件目录已存在或名称不符合 Dart
-命名约束时都会失败并返回非零。它们不修改 Host 依赖、不创建 generated 文件，也不替代后续
+命名约束时都会失败并返回非零。Component 会在同一父目录中完整 staging，Flutter example
+创建失败不会发布部分 Package，成功后才原子 rename。它们不修改已有 Host 依赖、不创建 generated 文件，也不替代后续
 的 `pub get` 和 `generate`。创建成功后会输出 `Next steps`：Component 会提示 Workspace 与
 消费者依赖装配，其它模板会提示先完善源码再为实际 Host 生成；提示本身不会修改工程。
 
