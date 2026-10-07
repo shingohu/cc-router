@@ -68,27 +68,37 @@ List<String> checkSkillCommands(String markdown, String help) {
             !word.startsWith('-'),
       )
       .join(' ');
-  final surfaces = {for (final line in usage) route(line): line};
+  final surfaces = <String, List<String>>{};
+  for (final line in usage) {
+    surfaces.putIfAbsent(route(line), () => <String>[]).add(line);
+  }
   final findings = <String>[];
   var commands = 0;
+  final documentedRoutes = <String>{};
   for (final line in markdown.split('\n')) {
     const prefix =
         'fvm dart run --verbosity=error ccrouter_generator:ccrouter ';
     if (!line.startsWith(prefix)) continue;
     commands++;
     final command = 'ccrouter ${line.substring(prefix.length)}';
+    documentedRoutes.add(route(command));
     final declared = surfaces[route(command)];
     if (declared == null) {
       findings.add('Unknown documented CLI command: $command');
       continue;
     }
     for (final flag in RegExp(r'--[a-z][a-z-]*').allMatches(command)) {
-      if (!RegExp(
-        r'--[a-z][a-z-]*',
-      ).allMatches(declared).any((entry) => entry.group(0) == flag.group(0))) {
+      if (!RegExp(r'--[a-z][a-z-]*')
+          .allMatches(declared.join(' '))
+          .any((entry) => entry.group(0) == flag.group(0))) {
         findings.add('Unsupported documented flag: $command');
       }
     }
+  }
+  for (final surface in surfaces.keys.where(
+    (surface) => !documentedRoutes.contains(surface),
+  )) {
+    findings.add('Undocumented CLI command: $surface');
   }
   if (surfaces.isEmpty) findings.add('CLI help has no command surface.');
   if (commands == 0) findings.add('Skill contains no verifiable CLI matrix.');
@@ -125,9 +135,7 @@ Future<void> main() async {
     copySkillBundle(Directory('${root.path}/skills'), temporary);
     final findings = checkSkillBundle(temporary);
     final help = await Process.run(Platform.resolvedExecutable, [
-      'run',
-      '--verbosity=error',
-      'ccrouter_generator:ccrouter',
+      'packages/ccrouter_generator/bin/ccrouter_generator.dart',
       '--help',
     ], workingDirectory: root.path);
     if (help.exitCode != 0) {

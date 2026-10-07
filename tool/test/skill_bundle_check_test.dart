@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:test/test.dart';
@@ -75,7 +76,7 @@ void main() {
         'fvm dart run --verbosity=error ccrouter_generator:ccrouter ';
     expect(
       checkSkillCommands('${prefix}analyzer status <host-root>', help),
-      isEmpty,
+      contains(contains('Undocumented CLI command: ccrouter generate')),
     );
     expect(
       checkSkillCommands('${prefix}analyzer install <host-root>', help),
@@ -87,13 +88,25 @@ void main() {
     );
   });
 
+  test('CLI matrix cannot omit an executable command', () {
+    const help = '''Usage:
+  ccrouter generate [host-root]
+  ccrouter portable prepare [host-root]
+''';
+    const prefix =
+        'fvm dart run --verbosity=error ccrouter_generator:ccrouter ';
+
+    expect(
+      checkSkillCommands('${prefix}generate <host-root>', help),
+      contains('Undocumented CLI command: ccrouter portable prepare'),
+    );
+  });
+
   test('documented CLI matrix matches current executable help', () async {
     final result = await Process.run(Platform.resolvedExecutable, [
-      'run',
-      '--verbosity=error',
-      'ccrouter_generator:ccrouter',
+      'packages/ccrouter_generator/bin/ccrouter_generator.dart',
       '--help',
-    ]);
+    ], environment: _isolatedEnvironment(temporary));
     expect(result.exitCode, 0, reason: '${result.stderr}');
     expect(
       checkSkillCommands(
@@ -118,11 +131,25 @@ void main() {
         return match!.group(1)!;
       }
 
-      // Inherit Demo's real dependencies without resolving a fixture Package.
+      // Inherit the resolved Workspace graph without entering Demo's legacy
+      // Analysis Server Plugin context.
       final fixture = Directory(
-        '${Directory.current.path}/demo/.dart_tool',
+        '${Directory.current.path}/.dart_tool',
       ).createTempSync('ccrouter-skill-examples-');
+      final processHome = Directory('${temporary.path}/process-home')
+        ..createSync(recursive: true);
       try {
+        File('${fixture.path}/pubspec.yaml').writeAsStringSync('''
+name: ccrouter_skill_examples
+publish_to: none
+environment:
+  sdk: ^3.10.0
+dependencies:
+  ccrouter: any
+  flutter:
+    sdk: flutter
+''');
+        _writeAbsolutePackageConfig(fixture);
         final file = File('${fixture.path}/examples.dart')
           ..writeAsStringSync('''
 // ignore_for_file: public_member_api_docs
@@ -141,11 +168,11 @@ ${snippet('service-implementation')}
 ${snippet('route-page')}
 ${snippet('extra-page')}
 ''');
-        final result = await Process.run(Platform.resolvedExecutable, [
-          'analyze',
-          '--fatal-infos',
-          file.path,
-        ]);
+        final result = await Process.run(
+          Platform.resolvedExecutable,
+          ['analyze', '--fatal-infos', file.path],
+          environment: _isolatedEnvironment(processHome),
+        );
         expect(
           result.exitCode,
           0,
@@ -166,10 +193,11 @@ ${snippet('extra-page')}
         ]) {
           expect(invalid, isNot(valid));
           file.writeAsStringSync(invalid);
-          final rejected = await Process.run(Platform.resolvedExecutable, [
-            'analyze',
-            file.path,
-          ]);
+          final rejected = await Process.run(
+            Platform.resolvedExecutable,
+            ['analyze', file.path],
+            environment: _isolatedEnvironment(processHome),
+          );
           expect(rejected.exitCode, isNot(0), reason: '${rejected.stdout}');
         }
       } finally {
@@ -178,4 +206,28 @@ ${snippet('extra-page')}
     },
     timeout: const Timeout(Duration(minutes: 2)),
   );
+}
+
+Map<String, String> _isolatedEnvironment(Directory home) => {
+  ...Platform.environment,
+  'HOME': home.path,
+  'USERPROFILE': home.path,
+  'APPDATA': '${home.path}/app-data',
+  'LOCALAPPDATA': '${home.path}/local-app-data',
+  'CCROUTER_HOME': '${home.path}/ccrouter',
+  'PUB_CACHE': '${home.path}/pub-cache',
+};
+
+void _writeAbsolutePackageConfig(Directory fixture) {
+  final source = File('.dart_tool/package_config.json').absolute;
+  final document =
+      jsonDecode(source.readAsStringSync()) as Map<String, Object?>;
+  final packages = document['packages'] as List<Object?>;
+  for (final value in packages.whereType<Map<String, Object?>>()) {
+    final root = value['rootUri'];
+    if (root is String) value['rootUri'] = source.uri.resolve(root).toString();
+  }
+  final target = File('${fixture.path}/.dart_tool/package_config.json')
+    ..createSync(recursive: true);
+  target.writeAsStringSync(jsonEncode(document));
 }
