@@ -7,6 +7,9 @@ import 'package:ccrouter_generator/src/reverse_dependency_closure.dart';
 void main() {
   _benchmarkWorkspaceValidation();
   _benchmarkDirtyPropagation();
+  _benchmarkRuntimeBundlePropagation();
+  _benchmarkInitTaskOptionalReachability();
+  _benchmarkRouteVisibilityClosure();
 }
 
 /// Measures the complete authoritative validator at realistic component scales.
@@ -79,6 +82,305 @@ void _benchmarkDirtyPropagation() {
       samples: packageCount < 5000 ? 10 : 5,
     );
   }
+}
+
+/// Measures Runtime Bundle forwarding on a reverse-ordered Package chain.
+void _benchmarkRuntimeBundlePropagation() {
+  for (final packageCount in const [100, 1000, 5000]) {
+    final graph = <String, Set<String>>{
+      for (var index = packageCount - 1; index >= 0; index--)
+        'package_$index': {if (index > 0) 'package_${index - 1}'},
+    };
+    final referenceSamples = <int>[];
+    final candidateSamples = <int>[];
+    final expected = _fixedPointClosure(graph, const {'package_0'});
+    for (var sample = 0; sample < (packageCount < 5000 ? 10 : 5); sample++) {
+      final referenceWatch = Stopwatch()..start();
+      final reference = _fixedPointClosure(graph, const {'package_0'});
+      referenceWatch.stop();
+      final candidateWatch = Stopwatch()..start();
+      final candidate = CCReverseDependencyClosure.compute(
+        dependenciesByNode: graph,
+        seeds: const {'package_0'},
+      );
+      candidateWatch.stop();
+      if (!_sameSet(reference, candidate)) {
+        throw StateError('Runtime Bundle closure differs at $packageCount.');
+      }
+      referenceSamples.add(referenceWatch.elapsedMicroseconds);
+      candidateSamples.add(candidateWatch.elapsedMicroseconds);
+    }
+    referenceSamples.sort();
+    candidateSamples.sort();
+    print(
+      jsonEncode({
+        'scenario': 'runtime-bundle-adversarial-chain',
+        'packages': packageCount,
+        'runtimePackages': expected.length,
+        'referenceP50Us': _percentile(referenceSamples, 0.50),
+        'referenceP95Us': _percentile(referenceSamples, 0.95),
+        'candidateP50Us': _percentile(candidateSamples, 0.50),
+        'candidateP95Us': _percentile(candidateSamples, 0.95),
+      }),
+    );
+  }
+}
+
+/// Measures repeated optional-ancestor queries against one memoized DAG walk.
+void _benchmarkInitTaskOptionalReachability() {
+  _verifyInitTaskOptionalReachability();
+  for (final taskCount in const [100, 500, 1000]) {
+    final dependencies = <String, List<String>>{
+      for (var index = 0; index < taskCount; index++)
+        'task_$index': [if (index > 0) 'task_${index - 1}'],
+    };
+    final optionalTasks = const {'task_0'};
+    final referenceSamples = <int>[];
+    final candidateSamples = <int>[];
+    for (var sample = 0; sample < (taskCount < 1000 ? 10 : 5); sample++) {
+      final referenceWatch = Stopwatch()..start();
+      final reference = <String, String?>{
+        for (final id in dependencies.keys)
+          id: _findOptionalReference(
+            id,
+            dependencies: dependencies,
+            optionalTasks: optionalTasks,
+            visiting: <String>{},
+          ),
+      };
+      referenceWatch.stop();
+      final candidateWatch = Stopwatch()..start();
+      final candidate = _memoizedOptionalAncestors(dependencies, optionalTasks);
+      candidateWatch.stop();
+      if (!_sameNullableStringMap(reference, candidate)) {
+        throw StateError(
+          'InitTask optional reachability differs at $taskCount.',
+        );
+      }
+      referenceSamples.add(referenceWatch.elapsedMicroseconds);
+      candidateSamples.add(candidateWatch.elapsedMicroseconds);
+    }
+    referenceSamples.sort();
+    candidateSamples.sort();
+    print(
+      jsonEncode({
+        'scenario': 'init-task-optional-adversarial-chain',
+        'tasks': taskCount,
+        'referenceP50Us': _percentile(referenceSamples, 0.50),
+        'referenceP95Us': _percentile(referenceSamples, 0.95),
+        'candidateP50Us': _percentile(candidateSamples, 0.50),
+        'candidateP95Us': _percentile(candidateSamples, 0.95),
+      }),
+    );
+  }
+}
+
+/// Measures per-Route component closure walks against per-owner memoization.
+void _benchmarkRouteVisibilityClosure() {
+  const routesPerComponent = 20;
+  for (final componentCount in const [100, 500, 1000]) {
+    final dependencies = <String, List<String>>{
+      for (var index = 0; index < componentCount; index++)
+        'component_$index': [if (index > 0) 'component_${index - 1}'],
+    };
+    final routeOwners = <String>[
+      for (var index = 0; index < componentCount; index++)
+        for (var route = 0; route < routesPerComponent; route++)
+          'component_$index',
+    ];
+    final exactCache = <String, Set<String>>{};
+    for (final owner in dependencies.keys) {
+      final reference = _transitiveDependenciesReference(owner, dependencies);
+      final candidate = exactCache.putIfAbsent(
+        owner,
+        () => _transitiveDependenciesReference(owner, dependencies),
+      );
+      if (!_sameSet(reference, candidate)) {
+        throw StateError(
+          'Route visibility closure differs for $owner at '
+          '$componentCount components.',
+        );
+      }
+    }
+    final referenceSamples = <int>[];
+    final candidateSamples = <int>[];
+    for (var sample = 0; sample < (componentCount < 1000 ? 10 : 5); sample++) {
+      final referenceWatch = Stopwatch()..start();
+      var referenceClosureEntries = 0;
+      for (final owner in routeOwners) {
+        referenceClosureEntries += _transitiveDependenciesReference(
+          owner,
+          dependencies,
+        ).length;
+      }
+      referenceWatch.stop();
+      final candidateWatch = Stopwatch()..start();
+      final cache = <String, Set<String>>{};
+      var candidateClosureEntries = 0;
+      for (final owner in routeOwners) {
+        candidateClosureEntries += cache
+            .putIfAbsent(
+              owner,
+              () => _transitiveDependenciesReference(owner, dependencies),
+            )
+            .length;
+      }
+      candidateWatch.stop();
+      if (referenceClosureEntries != candidateClosureEntries) {
+        throw StateError(
+          'Route visibility closure differs at $componentCount components.',
+        );
+      }
+      referenceSamples.add(referenceWatch.elapsedMicroseconds);
+      candidateSamples.add(candidateWatch.elapsedMicroseconds);
+    }
+    referenceSamples.sort();
+    candidateSamples.sort();
+    print(
+      jsonEncode({
+        'scenario': 'route-visibility-component-cache',
+        'components': componentCount,
+        'routes': routeOwners.length,
+        'referenceP50Us': _percentile(referenceSamples, 0.50),
+        'referenceP95Us': _percentile(referenceSamples, 0.95),
+        'candidateP50Us': _percentile(candidateSamples, 0.50),
+        'candidateP95Us': _percentile(candidateSamples, 0.95),
+      }),
+    );
+  }
+}
+
+/// Verifies memoization against ordering, diamond, and missing-node cases.
+void _verifyInitTaskOptionalReachability() {
+  final fixtures = <Map<String, List<String>>>[
+    {
+      'required': ['first', 'second'],
+      'first': ['shared'],
+      'second': ['optional_second'],
+      'shared': const [],
+      'optional_second': const [],
+    },
+    {
+      'required': ['optional_first', 'optional_second'],
+      'optional_first': const [],
+      'optional_second': const [],
+    },
+    {
+      'left': ['shared_optional'],
+      'right': ['shared_optional'],
+      'shared_optional': const [],
+      'missing_consumer': ['missing'],
+    },
+  ];
+  final optionalTasks = {
+    'optional_first',
+    'optional_second',
+    'shared_optional',
+  };
+  for (var fixtureIndex = 0; fixtureIndex < fixtures.length; fixtureIndex++) {
+    final dependencies = fixtures[fixtureIndex];
+    final reference = <String, String?>{
+      for (final id in dependencies.keys)
+        id: _findOptionalReference(
+          id,
+          dependencies: dependencies,
+          optionalTasks: optionalTasks,
+          visiting: <String>{},
+        ),
+    };
+    final candidate = _memoizedOptionalAncestors(dependencies, optionalTasks);
+    if (!_sameNullableStringMap(reference, candidate)) {
+      throw StateError(
+        'InitTask optional reachability fixture $fixtureIndex differs.',
+      );
+    }
+  }
+}
+
+/// Reproduces the current recursive optional-ancestor lookup.
+String? _findOptionalReference(
+  String id, {
+  required Map<String, List<String>> dependencies,
+  required Set<String> optionalTasks,
+  required Set<String> visiting,
+}) {
+  if (!visiting.add(id)) return null;
+  if (!dependencies.containsKey(id)) return null;
+  if (optionalTasks.contains(id)) return id;
+  for (final dependency in dependencies[id]!) {
+    final optional = _findOptionalReference(
+      dependency,
+      dependencies: dependencies,
+      optionalTasks: optionalTasks,
+      visiting: visiting,
+    );
+    if (optional != null) return optional;
+  }
+  return null;
+}
+
+/// Computes the first optional ancestor once per InitTask.
+Map<String, String?> _memoizedOptionalAncestors(
+  Map<String, List<String>> dependencies,
+  Set<String> optionalTasks,
+) {
+  final cache = <String, String?>{};
+  final visiting = <String>{};
+  String? resolve(String id) {
+    if (cache.containsKey(id)) return cache[id];
+    if (!visiting.add(id)) return null;
+    String? result;
+    if (dependencies.containsKey(id)) {
+      if (optionalTasks.contains(id)) {
+        result = id;
+      } else {
+        for (final dependency in dependencies[id]!) {
+          result = resolve(dependency);
+          if (result != null) break;
+        }
+      }
+    }
+    visiting.remove(id);
+    cache[id] = result;
+    return result;
+  }
+
+  for (final id in dependencies.keys) {
+    resolve(id);
+  }
+  return <String, String?>{for (final id in dependencies.keys) id: cache[id]};
+}
+
+/// Reproduces one component dependency closure walk.
+Set<String> _transitiveDependenciesReference(
+  String component,
+  Map<String, List<String>> dependencies,
+) {
+  final found = <String>{};
+  void visit(String id) {
+    for (final dependency in dependencies[id] ?? const <String>[]) {
+      if (dependencies.containsKey(dependency) && found.add(dependency)) {
+        visit(dependency);
+      }
+    }
+  }
+
+  visit(component);
+  return found;
+}
+
+/// Compares nullable lookup results by task identity.
+bool _sameNullableStringMap(
+  Map<String, String?> left,
+  Map<String, String?> right,
+) {
+  if (left.length != right.length) return false;
+  for (final entry in left.entries) {
+    if (!right.containsKey(entry.key) || right[entry.key] != entry.value) {
+      return false;
+    }
+  }
+  return true;
 }
 
 /// Measures both closure algorithms after warming their JIT paths.
