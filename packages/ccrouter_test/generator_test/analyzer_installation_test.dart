@@ -11,6 +11,10 @@ import '../../ccrouter_generator/bin/src/analyzer_bootstrap.dart';
 import '../../ccrouter_generator/bin/src/coordination_home.dart';
 
 const _ref = 'a275d1d46ddfdded6678ecbf1d2d23818cdbdfdc';
+const _loaderExclude = 'tool/ccrouter_analyzer_host/tools/analyzer_plugin/**';
+const _legacyWrapper = 'tools/ccrouter_analyzer_host';
+const _legacyLoaderExclude =
+    'tools/ccrouter_analyzer_host/tools/analyzer_plugin/**';
 
 void main() {
   late _Host host;
@@ -42,6 +46,19 @@ void main() {
         host.file('analysis_options.yaml').readAsStringSync(),
         contains('unused_local_variable: warning'),
       );
+      expect(
+        host.file('analysis_options.yaml').readAsStringSync(),
+        contains(_loaderExclude),
+      );
+      final ownership =
+          jsonDecode(
+                host
+                    .file('$wrapper/.ccrouter-analyzer.json')
+                    .readAsStringSync(),
+              )
+              as Map<String, Object?>;
+      expect(ownership['schema'], 2);
+      expect(ownership['ownedLoaderExclude'], isTrue);
       expect(
         host.file('pubspec.yaml').readAsStringSync(),
         contains('test: any'),
@@ -80,6 +97,10 @@ void main() {
         isNot(contains('plugins:')),
       );
       expect(
+        host.file('analysis_options.yaml').readAsStringSync(),
+        isNot(contains(_loaderExclude)),
+      );
+      expect(
         host.file('pubspec.yaml').readAsStringSync(),
         isNot(contains('sample_ccrouter_analyzer')),
       );
@@ -91,6 +112,127 @@ void main() {
       );
     },
   );
+
+  test('install merges and uninstall removes only its loader exclude', () async {
+    host.write(
+      'analysis_options.yaml',
+      '# keep this comment\nanalyzer:\n  exclude:\n    - build/** # keep exclude comment\n  errors:\n    unused_local_variable: warning\n',
+    );
+
+    expect(await host.run(), isTrue);
+    final installed = host.file('analysis_options.yaml').readAsStringSync();
+    expect(installed, contains('build/**'));
+    expect(installed, contains(_loaderExclude));
+
+    expect(await host.run(action: CCAnalyzerBootstrapAction.uninstall), isTrue);
+    final uninstalled = host.file('analysis_options.yaml').readAsStringSync();
+    expect(uninstalled, contains('build/**'));
+    expect(uninstalled, contains('# keep exclude comment'));
+    expect(uninstalled, isNot(contains(_loaderExclude)));
+    expect(uninstalled, contains('unused_local_variable: warning'));
+  });
+
+  test(
+    'same-source install migrates legacy ownership and adds exclude',
+    () async {
+      expect(await host.run(), isTrue);
+      final marker = host.file('$wrapper/.ccrouter-analyzer.json');
+      final legacy =
+          jsonDecode(marker.readAsStringSync()) as Map<String, Object?>
+            ..['schema'] = 1
+            ..remove('hadExcludes')
+            ..remove('ownedLoaderExclude');
+      marker.writeAsStringSync('${jsonEncode(legacy)}\n');
+      final options = host.file('analysis_options.yaml');
+      options.writeAsStringSync(
+        options.readAsStringSync().replaceFirst(
+          '  exclude:\n    - $_loaderExclude\n',
+          '',
+        ),
+      );
+
+      expect(await host.run(), isTrue);
+
+      final migrated =
+          jsonDecode(marker.readAsStringSync()) as Map<String, Object?>;
+      expect(migrated['schema'], 2);
+      expect(migrated['ownedLoaderExclude'], isTrue);
+      expect(options.readAsStringSync(), contains(_loaderExclude));
+    },
+  );
+
+  test('legacy tools wrapper remains manageable without relocation', () async {
+    expect(await host.run(), isTrue);
+    host.file(_legacyWrapper).parent.createSync(recursive: true);
+    Directory(
+      host.file(wrapper).path,
+    ).renameSync(host.file(_legacyWrapper).path);
+    final manifest = host.file('pubspec.yaml');
+    manifest.writeAsStringSync(
+      manifest.readAsStringSync().replaceAll(wrapper, _legacyWrapper),
+    );
+    final options = host.file('analysis_options.yaml');
+    options.writeAsStringSync(
+      options.readAsStringSync().replaceAll(
+        _loaderExclude,
+        _legacyLoaderExclude,
+      ),
+    );
+    final packageConfig = host.file('.dart_tool/package_config.json');
+    packageConfig.writeAsStringSync(
+      packageConfig.readAsStringSync().replaceAll(
+        Directory(host.file(wrapper).path).uri.toString(),
+        Directory(host.file(_legacyWrapper).path).uri.toString(),
+      ),
+    );
+
+    expect(await host.run(), isTrue);
+    expect(
+      host.file('pubspec.yaml').readAsStringSync(),
+      contains('path: $_legacyWrapper'),
+    );
+    expect(options.readAsStringSync(), contains(_legacyLoaderExclude));
+
+    expect(await host.run(action: CCAnalyzerBootstrapAction.uninstall), isTrue);
+    expect(Directory(host.file(_legacyWrapper).path).existsSync(), isFalse);
+    expect(options.readAsStringSync(), isNot(contains(_legacyLoaderExclude)));
+  });
+
+  test('pre-existing loader exclude is preserved and never claimed', () async {
+    host.write(
+      'analysis_options.yaml',
+      'analyzer:\n  exclude:\n    - $_loaderExclude\n',
+    );
+
+    expect(await host.run(), isTrue);
+    final ownership =
+        jsonDecode(
+              host.file('$wrapper/.ccrouter-analyzer.json').readAsStringSync(),
+            )
+            as Map<String, Object?>;
+    expect(ownership['ownedLoaderExclude'], isFalse);
+
+    expect(await host.run(action: CCAnalyzerBootstrapAction.uninstall), isTrue);
+    expect(
+      host.file('analysis_options.yaml').readAsStringSync(),
+      contains(_loaderExclude),
+    );
+  });
+
+  test('modified CLI-owned loader exclude is refused without writes', () async {
+    expect(await host.run(), isTrue);
+    final options = host.file('analysis_options.yaml');
+    options.writeAsStringSync(
+      options.readAsStringSync().replaceAll(_loaderExclude, 'tools/other/**'),
+    );
+    final before = host.snapshot();
+
+    expect(
+      await host.run(action: CCAnalyzerBootstrapAction.uninstall),
+      isFalse,
+    );
+    expect(host.snapshot(), before);
+  });
 
   test(
     'Git source verifies a remotely fetchable full commit before Pub',
@@ -620,7 +762,7 @@ void main() {
   );
 }
 
-const wrapper = 'tools/ccrouter_analyzer_host';
+const wrapper = 'tool/ccrouter_analyzer_host';
 
 class _Host {
   _Host()

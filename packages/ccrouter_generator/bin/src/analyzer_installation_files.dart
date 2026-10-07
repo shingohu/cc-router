@@ -9,7 +9,14 @@ const _analyzerOwnedFiles = [
 ];
 
 /// Host-relative wrapper location; it is not a Workspace member.
-const _analyzerWrapperPath = 'tools/ccrouter_analyzer_host';
+const _analyzerWrapperPath = 'tool/ccrouter_analyzer_host';
+
+/// Previous wrapper location retained for managed-installation compatibility.
+const _legacyAnalyzerWrapperPath = 'tools/ccrouter_analyzer_host';
+
+/// Host Analyzer exclusion for the loader's deliberately isolated Pub graph.
+String _analyzerLoaderExcludeFor(String wrapperPath) =>
+    '$wrapperPath/tools/analyzer_plugin/**';
 
 /// Records ownership, content hashes, source identity, and reversible YAML leaves.
 const _analyzerOwnershipFile = '.ccrouter-analyzer.json';
@@ -193,6 +200,44 @@ String _setAnalyzerLeaf(String source, List<String> keys, Object? value) {
     }
   }
   editor.update(keys, value);
+  return editor.toString();
+}
+
+/// Appends one scalar without replacing comments on existing list entries.
+String _appendAnalyzerListItem(String source, List<String> keys, String value) {
+  final editor = YamlEditor(source);
+  final current = editor
+      .parseAt(keys, orElse: () => YamlScalar.wrap(null))
+      .value;
+  if (current == null) return _setAnalyzerLeaf(source, keys, [value]);
+  if (current is! List || current.any((entry) => entry is! String)) {
+    throw StateError('${keys.join('.')} must be a YAML string list.');
+  }
+  editor.appendToList(keys, value);
+  return editor.toString();
+}
+
+/// Removes one exact scalar and optionally removes its now-empty list leaf.
+String _removeAnalyzerListItem(
+  String source,
+  List<String> keys,
+  String value, {
+  required bool removeLeaf,
+}) {
+  final editor = YamlEditor(source);
+  final current = editor.parseAt(keys).value;
+  if (current is! List || current.any((entry) => entry is! String)) {
+    throw StateError('${keys.join('.')} must be a YAML string list.');
+  }
+  final index = current.indexOf(value);
+  if (index < 0) {
+    throw StateError('CLI-owned ${keys.join('.')} entry was removed.');
+  }
+  if (current.length == 1 && removeLeaf) {
+    editor.remove(keys);
+  } else {
+    editor.remove([...keys, index]);
+  }
   return editor.toString();
 }
 

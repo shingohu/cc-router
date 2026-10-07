@@ -64,17 +64,18 @@ ccrouter analyzer uninstall [host-root]
 - 只面向明确的 Host Package，不把 Workspace 聚合根或组件 Package 猜成 Host。
 - 检测当前 Dart 3.10+、Host SDK constraint；loader 固定 Analyzer 8.4.0 / analyzer_plugin 0.13.10，实际解析、分析、编译验证兼容性，不承诺任意 SDK。
 - 默认来源为 Hosted，但必须显式 `--version`；仓库版本号不能证明包已发布。Git 必须同时提供远端 HTTPS/SSH URL 和完整 commit SHA，通过临时 bare fetch 验证远端可获取，拒绝本地路径和浮动引用。
-- 创建隔离的 `tools/ccrouter_analyzer_host/tools/analyzer_plugin` bootstrap，不把 Plugin Analyzer 依赖混入应用或 Generator
+- 创建隔离的 `tool/ccrouter_analyzer_host/tools/analyzer_plugin` bootstrap，不把 Plugin Analyzer 依赖混入应用或 Generator
   Workspace。
-- 以 YAML 结构叶和 ownership 记录更新 `analysis_options.yaml`，保留无关规则、注释及祖先规则继承；发现未知的同名配置或其它插件冲突时停止并
-  给出差异，不覆盖用户内容。
+- 以 YAML 结构叶和 ownership 记录更新 `analysis_options.yaml`，自动添加隔离 loader 的
+  `analyzer.exclude`；只认领 CLI 新增的列表项，保留预先存在的相同项、其它规则、注释及祖先
+  规则继承。发现未知的同名配置或其它插件冲突时停止并给出差异，不覆盖用户内容。
 - 生成前提供 dry-run 摘要；重复执行相同配置不得改写文件或 lockfile。
 
 ### `status`
 
 - 已实现，只读取指定 Host 与最近的 enclosing Workspace Package config。
 - 输出 Host、bootstrap 路径、Plugin 来源、Hosted 版本或 Git ref、Analyzer 版本、lockfile
-  状态以及 `analysis_options.yaml` 是否启用。
+  状态，以及 `analysis_options.yaml` 是否启用 Plugin 并排除其隔离 loader 源码。
 - 区分 `notInstalled`、`healthy`、`stale`、`incompatible`、`modified` 和 `incomplete`，不把
   Plugin 状态错误描述成应用构建错误。
 
@@ -113,7 +114,8 @@ ccrouter analyzer uninstall [host-root]
 
 ### `uninstall`
 
-- 只移除 ownership 记录且摘要仍匹配的四个 bootstrap 文件、记录文件、Host dev_dependency 和 `analysis_options.yaml` 受管叶。
+- 只移除 ownership 记录且摘要仍匹配的四个 bootstrap 文件、记录文件、Host dev_dependency、
+  `analysis_options.yaml` 受管叶和 CLI 自己添加的 loader exclude；预先存在的相同 exclude 不删除。
 - 保留未知文件、用户 Analyzer 配置和非 CCRouter Plugin。
 - 可先执行 `--dry-run`；部分内容被用户修改时拒绝删除，并给出手工处理范围。现有手工 bootstrap 不自动采用或迁移。
 
@@ -136,7 +138,8 @@ dev_dependencies:
 
 ## 5. 所有权、失败与回滚
 
-- CLI 拥有固定 bootstrap 路径及 `.ccrouter-analyzer.json` 记录的配置叶，不拥有 Host 的其它 IDE 配置。
+- CLI 拥有固定 bootstrap 路径及 `.ccrouter-analyzer.json` 记录的配置叶；loader exclude 采用
+  列表项级 ownership，只有 CLI 新增时才拥有，不拥有 Host 的其它 IDE 配置。
 - Plugin 是开发期可选能力；任何安装、加载和版本故障都不得改变生成物、Runtime 或业务结果。
 - 文件写入采用临时文件和原子替换；多文件操作保留本次备份，全部验证成功后才完成提交。
 - `--dry-run` 不启动子进程、不写文件；实际操作在 Pub owner 下使用非阻塞文件锁，多 Host 共用 Workspace 时串行修改。

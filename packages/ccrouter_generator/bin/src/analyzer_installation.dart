@@ -261,9 +261,13 @@ Future<void> _verifyAnalyzerCandidate(
   File(
     path.join(probe.path, 'pubspec.yaml'),
   ).writeAsStringSync('name: analyzer_probe\ndependencies:\n  ccrouter: any\n');
-  File(
-    path.join(probe.path, 'analysis_options.yaml'),
-  ).writeAsStringSync('analyzer:\n  plugins:\n    - $pluginName\n');
+  File(path.join(probe.path, 'analysis_options.yaml')).writeAsStringSync(
+    'analyzer:\n'
+    '  exclude:\n'
+    '    - ../candidate/tools/analyzer_plugin/**\n'
+    '  plugins:\n'
+    '    - $pluginName\n',
+  );
   Directory(path.join(probe.path, '.dart_tool')).createSync();
   File(
     path.join(probe.path, '.dart_tool', 'package_config.json'),
@@ -306,8 +310,28 @@ Future<bool> _runAnalyzerInstallation(
   final host = Directory(context.requestedRoot.resolveSymbolicLinksSync());
   final manifest = _inspectAnalyzerHost(host);
   final owner = Directory(context.resolutionRoot.resolveSymbolicLinksSync());
-  final wrapper = Directory(path.join(host.path, _analyzerWrapperPath));
+  final defaultWrapper = Directory(path.join(host.path, _analyzerWrapperPath));
+  final legacyWrapper = Directory(
+    path.join(host.path, _legacyAnalyzerWrapperPath),
+  );
+  final defaultMarker = File(
+    path.join(defaultWrapper.path, _analyzerOwnershipFile),
+  );
+  final legacyMarker = File(
+    path.join(legacyWrapper.path, _analyzerOwnershipFile),
+  );
+  if (defaultMarker.existsSync() && legacyMarker.existsSync()) {
+    throw StateError(
+      'Multiple CLI-owned Analyzer installations exist; preserve both and recover manually.',
+    );
+  }
+  final usesLegacyWrapper = legacyMarker.existsSync();
+  final wrapperPath = usesLegacyWrapper
+      ? _legacyAnalyzerWrapperPath
+      : _analyzerWrapperPath;
+  final wrapper = usesLegacyWrapper ? legacyWrapper : defaultWrapper;
   final marker = File(path.join(wrapper.path, _analyzerOwnershipFile));
+  final loaderExclude = _analyzerLoaderExcludeFor(wrapperPath);
   final pluginName = '${manifest['name']}_ccrouter_analyzer';
   final manifestFile = File(path.join(host.path, 'pubspec.yaml'));
   final optionsFile = File(path.join(host.path, 'analysis_options.yaml'));
@@ -333,13 +357,34 @@ Future<bool> _runAnalyzerInstallation(
     }
   }
   final options = _analyzerYaml(originalOptions, optionsFile.path);
+  final analyzerOptions = _stringKeyedMap(options['analyzer']);
+  final excludeValue = analyzerOptions['exclude'];
+  if (excludeValue != null &&
+      (excludeValue is! List ||
+          excludeValue.any((entry) => entry is! String))) {
+    throw StateError('analyzer.exclude must be a YAML string list.');
+  }
+  final hasLoaderExclude =
+      excludeValue is List && excludeValue.contains(loaderExclude);
   _checkAnalyzerPath(marker.path);
   Map<String, Object?>? installed;
+  var installedSchema = 0;
+  var ownedLoaderExclude = false;
   if (marker.existsSync()) {
     installed = (jsonDecode(marker.readAsStringSync()) as Map)
         .cast<String, Object?>();
-    if (installed['schema'] != 1 || installed['plugin'] != pluginName)
+    installedSchema = installed['schema'] as int? ?? 0;
+    if (![1, 2].contains(installedSchema) ||
+        installed['plugin'] != pluginName) {
       throw StateError('Unknown Analyzer ownership record.');
+    }
+    if (installedSchema == 2 &&
+        (installed['ownedLoaderExclude'] is! bool ||
+            installed['hadExcludes'] is! bool)) {
+      throw StateError('Invalid Analyzer YAML ownership record.');
+    }
+    ownedLoaderExclude =
+        installedSchema == 2 && installed['ownedLoaderExclude'] == true;
     final files = _stringKeyedMap(installed['files']);
     if (files.length != _analyzerOwnedFiles.length ||
         !files.keys.toSet().containsAll(_analyzerOwnedFiles)) {
@@ -359,8 +404,9 @@ Future<bool> _runAnalyzerInstallation(
     );
     final plugins = _stringKeyedMap(options['analyzer'])['plugins'];
     if (dependency.length != 1 ||
-        dependency['path'] != _analyzerWrapperPath ||
-        jsonEncode(plugins) != jsonEncode([pluginName])) {
+        dependency['path'] != wrapperPath ||
+        jsonEncode(plugins) != jsonEncode([pluginName]) ||
+        (ownedLoaderExclude && !hasLoaderExclude)) {
       throw StateError(
         'CLI-owned YAML entries changed; refusing to overwrite user configuration.',
       );
@@ -368,7 +414,8 @@ Future<bool> _runAnalyzerInstallation(
     _checkAnalyzerIncludes(host, optionsFile, {}, ownedPlugin: pluginName);
   } else {
     if (request.action == CCAnalyzerBootstrapAction.uninstall &&
-        !wrapper.existsSync() &&
+        !defaultWrapper.existsSync() &&
+        !legacyWrapper.existsSync() &&
         !_stringKeyedMap(
           manifest['dev_dependencies'],
         ).containsKey(pluginName)) {
@@ -380,8 +427,16 @@ Future<bool> _runAnalyzerInstallation(
       throw StateError(
         'No CLI-owned Analyzer installation. Manual bootstraps are never adopted implicitly.',
       );
-    if (wrapper.existsSync())
-      throw StateError('Unmanaged bootstrap already exists: ${wrapper.path}');
+    final unmanagedWrapper = defaultWrapper.existsSync()
+        ? defaultWrapper
+        : legacyWrapper.existsSync()
+        ? legacyWrapper
+        : null;
+    if (unmanagedWrapper != null) {
+      throw StateError(
+        'Unmanaged bootstrap already exists: ${unmanagedWrapper.path}',
+      );
+    }
     _checkAnalyzerIncludes(host, optionsFile, {});
     for (final field in [
       'dependencies',
@@ -421,7 +476,7 @@ Future<bool> _runAnalyzerInstallation(
       '  source: ${source.kind}\n  identity: ${source.version ?? source.ref}',
     );
   stdout.writeln(
-    '  managed: Host dev_dependency, analyzer.plugins, ${_analyzerOwnedFiles.length} bootstrap files and ownership record',
+    '  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, ${_analyzerOwnedFiles.length} bootstrap files and ownership record',
   );
   stdout.writeln(
     '  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts',
@@ -430,13 +485,14 @@ Future<bool> _runAnalyzerInstallation(
       installed != null &&
       source != null &&
       jsonEncode(installed['source']) == jsonEncode(source.toJson());
+  final currentConfiguration = installedSchema == 2 && hasLoaderExclude;
   if (request.action == CCAnalyzerBootstrapAction.install &&
       installed != null &&
       !sameSource) {
     throw StateError('Installed source differs; use explicit upgrade.');
   }
   if (request.dryRun) return true;
-  if (sameSource) {
+  if (sameSource && currentConfiguration) {
     if (_AnalyzerBootstrapReport.inspect(host).state !=
         _AnalyzerBootstrapState.healthy) {
       throw StateError(
@@ -499,7 +555,10 @@ Future<bool> _runAnalyzerInstallation(
       throw StateError('Host configuration changed during preflight; retry.');
     }
     if (request.action == CCAnalyzerBootstrapAction.upgrade) {
-      final previous = _AnalyzerBootstrapReport.inspect(host);
+      final previous = _AnalyzerBootstrapReport.inspect(
+        host,
+        requireLoaderExclude: currentConfiguration,
+      );
       if (previous.state != _AnalyzerBootstrapState.healthy ||
           !await _runDoctor(previous, runner: runner)) {
         throw StateError(
@@ -545,7 +604,7 @@ environment:
         hashes[relative] = sha256.convert(bytes).toString();
       }
       final ownership = <String, Object?>{
-        'schema': 1,
+        'schema': 2,
         'inheritedInclude': installed?['inheritedInclude'] ?? inheritedInclude,
         'plugin': pluginName,
         'source': source.toJson(),
@@ -558,6 +617,9 @@ environment:
         'hadPlugins':
             installed?['hadPlugins'] ??
             _stringKeyedMap(options['analyzer']).containsKey('plugins'),
+        'hadExcludes':
+            installed?['hadExcludes'] ?? analyzerOptions.containsKey('exclude'),
+        'ownedLoaderExclude': ownedLoaderExclude || !hasLoaderExclude,
         'hadOptions':
             installed?['hadOptions'] ?? (originalOptionsBytes != null),
       };
@@ -569,16 +631,25 @@ environment:
           _setAnalyzerLeaf(
             originalManifest,
             ['dev_dependencies', pluginName],
-            {'path': _analyzerWrapperPath},
+            {'path': wrapperPath},
           ),
         );
-        changes[optionsFile.path] = utf8.encode(
-          _setAnalyzerLeaf(
-            originalOptions,
-            ['analyzer', 'plugins'],
-            [pluginName],
-          ),
-        );
+      }
+      var updatedOptions = installed == null
+          ? _setAnalyzerLeaf(
+              originalOptions,
+              ['analyzer', 'plugins'],
+              [pluginName],
+            )
+          : originalOptions;
+      if (!hasLoaderExclude) {
+        updatedOptions = _appendAnalyzerListItem(updatedOptions, [
+          'analyzer',
+          'exclude',
+        ], loaderExclude);
+      }
+      if (updatedOptions != originalOptions) {
+        changes[optionsFile.path] = utf8.encode(updatedOptions);
       }
     } else {
       for (final relative in _analyzerOwnedFiles) {
@@ -591,12 +662,21 @@ environment:
           pluginName,
         ], removeParent: installed!['hadDevDependencies'] == false),
       );
-      var restoredOptions = installed['hadPlugins'] == true
-          ? _setAnalyzerLeaf(originalOptions, [
+      var restoredOptions = originalOptions;
+      if (installedSchema == 2 && ownedLoaderExclude) {
+        restoredOptions = _removeAnalyzerListItem(
+          restoredOptions,
+          ['analyzer', 'exclude'],
+          loaderExclude,
+          removeLeaf: installed['hadExcludes'] == false,
+        );
+      }
+      restoredOptions = installed['hadPlugins'] == true
+          ? _setAnalyzerLeaf(restoredOptions, [
               'analyzer',
               'plugins',
             ], <String>[])
-          : _removeAnalyzerLeaf(originalOptions, [
+          : _removeAnalyzerLeaf(restoredOptions, [
               'analyzer',
               'plugins',
             ], removeParent: installed['hadAnalyzer'] == false);

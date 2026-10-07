@@ -36,7 +36,10 @@ void main() {
       ..createSync(recursive: true);
     final plugin = Directory(path.join(workspace.path, 'tooling', 'plugin'))
       ..createSync(recursive: true);
-    _writeHost(host);
+    _writeHost(
+      host,
+      loaderExclude: '../../tooling/plugin/tools/analyzer_plugin/**',
+    );
     _writePackageConfig(workspace, plugin);
     _writeBootstrap(plugin);
 
@@ -67,6 +70,24 @@ void main() {
     expect(result.exitCode, 1);
     expect('${result.stdout}', contains('state: incomplete'));
     expect('${result.stdout}', contains('package configuration'));
+  });
+
+  test('status reports a configured loader without a Host exclude', () async {
+    final fixture = await _createFixture();
+    addTearDown(() => fixture.root.delete(recursive: true));
+    File(
+      path.join(fixture.root.path, 'analysis_options.yaml'),
+    ).writeAsStringSync('''
+analyzer:
+  plugins:
+    - ccrouter_test_analyzer_plugin
+''');
+
+    final result = await _run(['analyzer', 'status', fixture.root.path]);
+
+    expect(result.exitCode, 1);
+    expect('${result.stdout}', contains('state: incomplete'));
+    expect('${result.stdout}', contains('exclude'));
   });
 
   test('status rejects path and floating Git dependencies', () async {
@@ -643,7 +664,11 @@ _runDoctor(
   );
 }
 
-void _writeHost(Directory host, {bool enablePlugin = true}) {
+void _writeHost(
+  Directory host, {
+  bool enablePlugin = true,
+  String loaderExclude = 'plugin/tools/analyzer_plugin/**',
+}) {
   File(path.join(host.path, 'pubspec.yaml')).writeAsStringSync('''
 name: analyzer_test_host
 environment:
@@ -653,6 +678,8 @@ dependencies:
 ''');
   File(path.join(host.path, 'analysis_options.yaml')).writeAsStringSync('''
 analyzer:
+  exclude:
+    - $loaderExclude
   plugins:${enablePlugin ? '\n    - ccrouter_test_analyzer_plugin' : ' []'}
 ''');
 }

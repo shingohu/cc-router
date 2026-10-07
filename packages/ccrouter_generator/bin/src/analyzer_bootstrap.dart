@@ -383,7 +383,13 @@ final class _AnalyzerBootstrapReport {
   });
 
   /// Inspects only the selected Host and its configured bootstrap Package.
-  factory _AnalyzerBootstrapReport.inspect(Directory hostRoot) {
+  ///
+  /// Legacy ownership migration may disable [requireLoaderExclude] while it
+  /// verifies the previous loader before adding the newly managed boundary.
+  factory _AnalyzerBootstrapReport.inspect(
+    Directory hostRoot, {
+    bool requireLoaderExclude = true,
+  }) {
     final hostManifest = _readYamlMap(
       File(path.join(hostRoot.path, 'pubspec.yaml')),
     );
@@ -438,6 +444,34 @@ final class _AnalyzerBootstrapReport {
     final bootstrapRoot = Directory(
       path.join(pluginRoot.path, 'tools', 'analyzer_plugin'),
     );
+    if (requireLoaderExclude) {
+      final excludeValue = analyzer['exclude'];
+      if (excludeValue != null &&
+          (excludeValue is! List ||
+              excludeValue.any((entry) => entry is! String))) {
+        return _AnalyzerBootstrapReport(
+          hostRoot: hostRoot,
+          pluginName: pluginName,
+          bootstrapRoot: bootstrapRoot,
+          state: _AnalyzerBootstrapState.modified,
+          message: 'analyzer.exclude must be a YAML string list.',
+        );
+      }
+      final canonicalHost = hostRoot.resolveSymbolicLinksSync();
+      final canonicalPlugin = pluginRoot.resolveSymbolicLinksSync();
+      final loaderExclude =
+          '${path.relative(path.join(canonicalPlugin, 'tools', 'analyzer_plugin'), from: canonicalHost).replaceAll(path.separator, '/')}/**';
+      if (excludeValue is! List || !excludeValue.contains(loaderExclude)) {
+        return _AnalyzerBootstrapReport(
+          hostRoot: hostRoot,
+          pluginName: pluginName,
+          bootstrapRoot: bootstrapRoot,
+          state: _AnalyzerBootstrapState.incomplete,
+          message:
+              'analysis_options.yaml must exclude the isolated loader source: $loaderExclude',
+        );
+      }
+    }
     final bootstrapManifestFile = File(
       path.join(bootstrapRoot.path, 'pubspec.yaml'),
     );

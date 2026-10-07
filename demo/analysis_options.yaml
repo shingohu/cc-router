@@ -1,6 +1,8 @@
 include: package:flutter_lints/flutter.yaml
 
 analyzer:
+  exclude:
+    - tools/ccrouter_analyzer_plugin_host/tools/analyzer_plugin/**
   plugins:
     - ccrouter_demo_analyzer_plugin
   errors:

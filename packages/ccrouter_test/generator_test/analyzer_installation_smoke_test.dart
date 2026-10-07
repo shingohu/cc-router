@@ -113,7 +113,7 @@ dependencies:
       );
       expect(
         Directory(
-          path.join(app, 'tools', 'ccrouter_analyzer_host'),
+          path.join(app, 'tool', 'ccrouter_analyzer_host'),
         ).existsSync(),
         isFalse,
       );

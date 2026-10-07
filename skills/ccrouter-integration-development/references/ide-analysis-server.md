@@ -181,7 +181,7 @@ Keep the rule Package's Analyzer dependencies out of the application workspace.
 For the current development version, create a Host-owned wrapper Package:
 
 ```text
-<host>/tools/ccrouter_analyzer_host/
+<host>/tool/ccrouter_analyzer_host/
   pubspec.yaml
   tools/analyzer_plugin/
     pubspec.yaml
@@ -207,15 +207,25 @@ if that owner is above the Host. Merge the plugin entry into the Host's existing
 # Host pubspec.yaml
 dev_dependencies:
   app_ccrouter_analyzer:
-    path: tools/ccrouter_analyzer_host
+    path: tool/ccrouter_analyzer_host
 ```
 
 ```yaml
 # Host analysis_options.yaml
 analyzer:
+  exclude:
+    - tool/ccrouter_analyzer_host/tools/analyzer_plugin/**
   plugins:
     - app_ccrouter_analyzer
 ```
+
+The inner loader is deliberately outside the Host dependency graph. Exclude its
+source from ordinary Host `dart analyze` / `flutter analyze`; otherwise those
+commands may resolve `bin/plugin.dart` with the application Package config and
+report missing `analyzer_plugin` imports even though the isolated loader is
+healthy. `analyzer doctor` analyzes and compiles the loader against its own
+locked graph. Adjust the exclude path only when a manually maintained bootstrap
+uses a different directory name.
 
 The inner `tools/analyzer_plugin/pubspec.yaml` owns an isolated dependency graph.
 This pinned example matches the reviewed 2026-10-03 plugin; compare it with the
@@ -339,10 +349,18 @@ must resolve to the shared Host role: `project_type: app` with direct
 `ccrouter.yaml` `host.enabled: true`. `host.enabled: false`, aggregators, and
 package-local components are refused; `lib/main.dart` is not Host evidence.
 
-The CLI creates `tools/ccrouter_analyzer_host/`, updates one Host dev_dependency
-and `analyzer.plugins`, and preserves unrelated rules, comments and inherited
-options. It records hashes in `.ccrouter-analyzer.json`; commit this marker, the
-wrapper manifest, inner bootstrap manifest/lockfile/loader and Host configuration.
+The CLI creates `tool/ccrouter_analyzer_host/`, updates one Host dev_dependency,
+`analyzer.plugins`, and the exact inner-loader `analyzer.exclude`. It records
+whether that exclude was newly added in `.ccrouter-analyzer.json`; uninstall
+removes only a CLI-owned entry and preserves a pre-existing identical entry,
+other excludes, rules, comments and inherited options. `status` and `doctor`
+report a missing loader exclude as incomplete. Commit the marker, wrapper
+manifest, inner bootstrap manifest/lockfile/loader and Host configuration.
+CLI-owned installations created by older versions under
+`tools/ccrouter_analyzer_host/` remain manageable in place; install, upgrade,
+and uninstall do not silently relocate user directories. A source-controlled
+manual migration must move the complete wrapper and update both the Host path
+dependency and exact loader exclude in the same change.
 Candidate dependency resolution, analysis and loader compilation precede Host
 writes. Host Pub uses the current Flutter SDK with Pub Hook disabled. Shared
 Workspace writes are locked; no generated files or IDE caches are changed.

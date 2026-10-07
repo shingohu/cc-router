@@ -322,8 +322,10 @@ commit。当前值以 Demo bootstrap manifest/lock 为准；两者必须保持�
 
 ## Demo 接入
 
-`demo/analysis_options.yaml` 已启用 `ccrouter_demo_analyzer_plugin`。这是一个只属于 Demo
-Host 的 bootstrap Package，位置为：
+`demo/analysis_options.yaml` 已启用 `ccrouter_demo_analyzer_plugin`，并排除
+`tools/ccrouter_analyzer_plugin_host/tools/analyzer_plugin/**`。内层 loader 由自己的 Pub graph
+和 `analyzer doctor` 验证，不由 Demo 的普通 Analyzer graph 解析。这是一个只属于 Demo Host
+的 bootstrap Package，位置为：
 
 ```text
 demo/tools/ccrouter_analyzer_plugin_host/

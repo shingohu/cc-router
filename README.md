@@ -60,9 +60,16 @@ import 'package:ccrouter_go_router/ccrouter_go_router.dart';
 
 ```yaml
 analyzer:
+  exclude:
+    - tool/ccrouter_analyzer_host/tools/analyzer_plugin/**
   plugins:
     - ccrouter_analyzer_plugin
 ```
+
+隔离 loader 不属于 Host 的应用依赖图。Host 的 `dart analyze` / `flutter analyze` 必须排除内层
+`tools/analyzer_plugin/**` 源码；其依赖解析、analysis 与 loader compile 由
+`ccrouter analyzer doctor <host-root>` 在隔离图中验证。Demo 的自定义目录使用对应的
+`tools/ccrouter_analyzer_plugin_host/tools/analyzer_plugin/**` 路径。
 
 插件只提供轻量诊断，不执行生成、不在后台修改源代码，也不替代 `ccrouter generate --check`。
 它读取 Analysis Server 的当前 overlay，未保存的 `.dart` 编辑也会触发实时诊断；Plugin
@@ -145,8 +152,12 @@ ccrouter analyzer uninstall <host-root> --dry-run
 ```
 
 三种写命令均支持 `--dry-run`；正式操作先验证隔离 loader，再更新 Host 并运行禁用 Hook 的
-Pub。只管理 `tools/ccrouter_analyzer_host/` 的固定文件和配置叶；保留用户规则与未知文件，
-冲突或手工 bootstrap 不自动接管。失败恢复受管配置与记录的解析文件；进程中断或并发编辑
+Pub。CLI 会自动把内层 loader 路径加入 Host `analyzer.exclude`，并在 ownership marker 中记录
+该列表项是否由 CLI 新增；卸载只删除自己新增的项，预先存在的相同项、其它 excludes、规则、
+注释与未知文件都保留。冲突或手工 bootstrap 不自动接管。`status`/`doctor` 会把缺少 loader
+exclude 报告为未完成配置。新安装统一写入现有 Dart 工具目录
+`tool/ccrouter_analyzer_host`；旧版 CLI 已管理的 `tools/ccrouter_analyzer_host` 仍可原地升级和卸载，
+命令不会隐式搬移用户目录。失败恢复受管配置与记录的解析文件；进程中断或并发编辑
 保留事务恢复记录并停止后续写入。写事务按 canonical Workspace Pub owner 串行化；lock 与
 恢复记录位于 project-isolated `CCROUTER_HOME/coordination/v2`，不会被 `flutter clean` 删除。
 `CCROUTER_USE_LEGACY_DART_TOOL_LOCKS=1` 可把它们临时切回 Pub owner 的 `.dart_tool` 做 A/B；
