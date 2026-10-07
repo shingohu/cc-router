@@ -319,6 +319,129 @@ void main() {
     );
   });
 
+  test('preserves first optional InitTask order across shared DAG paths', () {
+    final taskIds = [
+      'optional_left',
+      'optional_right',
+      'left',
+      'right',
+      'diamond_left',
+      'diamond_right',
+      'ordered_root',
+      'diamond_root',
+    ];
+    final result = CCRouteWorkspaceValidator.validate([
+      document(
+        components: [component('orders')],
+        routes: const [],
+        initTaskContracts: [
+          for (final id in taskIds) {'id': id, 'componentId': 'orders'},
+        ],
+        initTasks: [
+          for (final id in ['optional_left', 'optional_right'])
+            {
+              'id': id,
+              'componentId': 'orders',
+              'contractId': id,
+              'dependsOn': <String>[],
+              'gateId': 'appStarted',
+              'failurePolicy': 'optional',
+            },
+          for (final entry in const {
+            'left': ['optional_left'],
+            'right': ['optional_right'],
+            'diamond_left': ['optional_left'],
+            'diamond_right': ['optional_left'],
+            'ordered_root': ['right', 'left'],
+            'diamond_root': ['diamond_left', 'diamond_right'],
+          }.entries)
+            {
+              'id': entry.key,
+              'componentId': 'orders',
+              'contractId': entry.key,
+              'dependsOn': entry.value,
+              'gateId': 'appStarted',
+              'failurePolicy': 'required',
+              'isAsync': false,
+            },
+        ],
+      ),
+    ]);
+
+    expect(
+      result.errors,
+      contains(
+        'Required InitTask "ordered_root" cannot depend directly or '
+        'indirectly on optional InitTask "optional_right".',
+      ),
+    );
+    expect(
+      result.errors,
+      contains(
+        'Required InitTask "diamond_root" cannot depend directly or '
+        'indirectly on optional InitTask "optional_left".',
+      ),
+    );
+  });
+
+  test('keeps cycle and optional InitTask diagnostics on reference path', () {
+    final result = CCRouteWorkspaceValidator.validate([
+      document(
+        components: [component('orders')],
+        routes: const [],
+        initTaskContracts: const [
+          {'id': 'a', 'componentId': 'orders'},
+          {'id': 'b', 'componentId': 'orders'},
+          {'id': 'optional', 'componentId': 'orders'},
+        ],
+        initTasks: const [
+          {
+            'id': 'a',
+            'componentId': 'orders',
+            'contractId': 'a',
+            'dependsOn': ['b'],
+            'gateId': 'appStarted',
+            'failurePolicy': 'required',
+            'isAsync': false,
+          },
+          {
+            'id': 'b',
+            'componentId': 'orders',
+            'contractId': 'b',
+            'dependsOn': ['a', 'optional'],
+            'gateId': 'appStarted',
+            'failurePolicy': 'required',
+            'isAsync': false,
+          },
+          {
+            'id': 'optional',
+            'componentId': 'orders',
+            'contractId': 'optional',
+            'dependsOn': <String>[],
+            'gateId': 'appStarted',
+            'failurePolicy': 'optional',
+          },
+        ],
+      ),
+    ]);
+
+    expect(result.errors, contains('InitTask dependency cycle at "a".'));
+    expect(
+      result.errors,
+      contains(
+        'Required InitTask "a" cannot depend directly or indirectly on '
+        'optional InitTask "optional".',
+      ),
+    );
+    expect(
+      result.errors,
+      contains(
+        'Required InitTask "b" cannot depend directly or indirectly on '
+        'optional InitTask "optional".',
+      ),
+    );
+  });
+
   test('accepts Event subscribers through required or optional owners', () {
     final result = CCRouteWorkspaceValidator.validate([
       document(

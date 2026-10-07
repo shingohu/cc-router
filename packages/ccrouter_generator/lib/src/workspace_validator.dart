@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 
@@ -6,6 +7,10 @@ import 'generated_client_naming.dart';
 
 /// Maximum supported length of an identifier carried by generated metadata.
 const int _workspaceIdentifierLength = 128;
+
+/// Restores per-query InitTask reachability for differential diagnosis.
+const String _initTaskReachabilityMemoKillSwitch =
+    'CCROUTER_DISABLE_INIT_TASK_REACHABILITY_MEMO';
 
 /// Stable identifier syntax rechecked at Package and Host aggregation.
 final RegExp _workspaceIdentifierPattern = RegExp(
@@ -899,9 +904,11 @@ abstract final class CCRouteWorkspaceValidator {
     }
     final visitingTasks = <String>{};
     final visitedTasks = <String>{};
+    var hasInitTaskDependencyCycle = false;
     void visitTask(String id) {
       if (visitedTasks.contains(id) || !initTasks.containsKey(id)) return;
       if (!visitingTasks.add(id)) {
+        hasInitTaskDependencyCycle = true;
         errors.add('InitTask dependency cycle at "$id".');
         return;
       }
@@ -929,11 +936,40 @@ abstract final class CCRouteWorkspaceValidator {
       return null;
     }
 
+    final optionalDependencyCache = <String, String?>{};
+
+    /// Returns the first optional ancestor while preserving dependency order.
+    String? findOptionalDependencyMemoized(String id) {
+      if (optionalDependencyCache.containsKey(id)) {
+        return optionalDependencyCache[id];
+      }
+      final task = initTasks[id];
+      String? result;
+      if (task != null) {
+        if (task['failurePolicy'] == 'optional') {
+          result = id;
+        } else {
+          for (final dependency in _strings(task['dependsOn'])) {
+            result = findOptionalDependencyMemoized(dependency);
+            if (result != null) break;
+          }
+        }
+      }
+      optionalDependencyCache[id] = result;
+      return result;
+    }
+
+    final useMemoizedOptionalReachability =
+        !hasInitTaskDependencyCycle &&
+        Platform.environment[_initTaskReachabilityMemoKillSwitch] != '1';
+
     for (final task in initTasks.values) {
       if (task['failurePolicy'] != 'required') continue;
       final id = '${task['id'] ?? ''}';
       for (final dependency in _strings(task['dependsOn'])) {
-        final optional = findOptionalDependency(dependency, <String>{});
+        final optional = useMemoizedOptionalReachability
+            ? findOptionalDependencyMemoized(dependency)
+            : findOptionalDependency(dependency, <String>{});
         if (optional != null) {
           errors.add(
             'Required InitTask "$id" cannot depend directly or indirectly '
