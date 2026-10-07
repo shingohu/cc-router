@@ -189,6 +189,9 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
               .add(pubspec);
         }
         for (final root in hostRoots.values) {
+          if (_generatorDiagnostics.pollSuccessfulGenerationChanged(root)) {
+            refresh.addAll(_generatedOutputs.affectedPaths);
+          }
           refresh.addAll(_generatorDiagnostics.pollAffectedDartPaths(root));
         }
       }

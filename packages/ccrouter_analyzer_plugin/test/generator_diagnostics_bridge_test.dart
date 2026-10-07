@@ -108,6 +108,88 @@ dependencies:
     expect(fixture.bridge.diagnosticsFor(fixture.source.path), isEmpty);
   });
 
+  test('reports only new validated successful watch epochs', () {
+    final fixture = _BridgeFixture.create();
+    addTearDown(fixture.dispose);
+
+    expect(
+      fixture.bridge.pollSuccessfulGenerationChanged(fixture.root),
+      isFalse,
+    );
+    fixture.writeStatus(
+      eventRevision: 8,
+      cycle: 2,
+      lastEvent: 'aggregationSucceeded',
+    );
+    expect(
+      fixture.bridge.pollSuccessfulGenerationChanged(fixture.root),
+      isFalse,
+      reason: 'status alone cannot prove a completed generation',
+    );
+    fixture.writeDiagnostics(
+      eventRevision: 8,
+      cycle: 2,
+      lastEvent: 'aggregationSucceeded',
+      includeDiagnostic: false,
+    );
+    expect(
+      fixture.bridge.pollSuccessfulGenerationChanged(fixture.root),
+      isTrue,
+    );
+    expect(
+      fixture.bridge.pollSuccessfulGenerationChanged(fixture.root),
+      isFalse,
+    );
+
+    fixture.writeStatus(eventRevision: 9, cycle: 2, lastEvent: 'ready');
+    fixture.writeDiagnostics(
+      eventRevision: 9,
+      cycle: 2,
+      lastEvent: 'ready',
+      includeDiagnostic: false,
+    );
+    expect(
+      fixture.bridge.pollSuccessfulGenerationChanged(fixture.root),
+      isFalse,
+    );
+
+    fixture.writeStatus(
+      eventRevision: 10,
+      cycle: 3,
+      lastEvent: 'aggregationSucceeded',
+    );
+    fixture.writeDiagnostics(
+      eventRevision: 10,
+      cycle: 3,
+      lastEvent: 'aggregationSucceeded',
+      includeDiagnostic: false,
+    );
+    expect(
+      fixture.bridge.pollSuccessfulGenerationChanged(fixture.root),
+      isTrue,
+    );
+  });
+
+  test('reports a successful one-shot published after the baseline', () {
+    final fixture = _BridgeFixture.create();
+    addTearDown(fixture.dispose);
+    expect(
+      fixture.bridge.pollSuccessfulGenerationChanged(fixture.root),
+      isFalse,
+    );
+
+    fixture.writeOneShotDiagnostics(succeeded: true, revision: 1);
+
+    expect(
+      fixture.bridge.pollSuccessfulGenerationChanged(fixture.root),
+      isTrue,
+    );
+    expect(
+      fixture.bridge.pollSuccessfulGenerationChanged(fixture.root),
+      isFalse,
+    );
+  });
+
   test('reports only saved manifest versus resolved graph drift', () {
     final fixture = _BridgeFixture.create();
     addTearDown(fixture.dispose);
@@ -356,7 +438,11 @@ final class _BridgeFixture {
     );
   }
 
-  void writeStatus({required int eventRevision, String lastEvent = 'failed'}) {
+  void writeStatus({
+    required int eventRevision,
+    int cycle = 2,
+    String lastEvent = 'failed',
+  }) {
     status.writeAsStringSync(
       jsonEncode({
         'schemaVersion': 1,
@@ -366,7 +452,7 @@ final class _BridgeFixture {
         'buildRoot': root.path,
         'sessionId': 'session-1',
         'eventRevision': eventRevision,
-        'cycle': 2,
+        'cycle': cycle,
         'resolutionFingerprint': 'resolution-1',
       }),
     );
@@ -374,6 +460,7 @@ final class _BridgeFixture {
 
   void writeDiagnostics({
     required int eventRevision,
+    int cycle = 2,
     String lastEvent = 'failed',
     bool includeDiagnostic = true,
   }) {
@@ -384,7 +471,7 @@ final class _BridgeFixture {
         'buildRoot': root.path,
         'sessionId': 'session-1',
         'eventRevision': eventRevision,
-        'cycle': 2,
+        'cycle': cycle,
         'lastEvent': lastEvent,
         'resolutionFingerprint': 'resolution-1',
         'cycleResolutionState': 'matched',
@@ -408,7 +495,7 @@ final class _BridgeFixture {
     );
   }
 
-  void writeOneShotDiagnostics({required bool succeeded}) {
+  void writeOneShotDiagnostics({required bool succeeded, int revision = 0}) {
     oneShotDiagnostics
       ..parent.createSync(recursive: true)
       ..writeAsStringSync(
@@ -418,6 +505,7 @@ final class _BridgeFixture {
           'hostRoot': root.path,
           'buildRoot': root.path,
           'outcome': succeeded ? 'succeeded' : 'failed',
+          'updatedAt': '2026-10-07T00:00:00.00000${revision}Z',
           'resolutionFingerprint': _resolutionFingerprint(),
           'diagnostics': [
             if (!succeeded)

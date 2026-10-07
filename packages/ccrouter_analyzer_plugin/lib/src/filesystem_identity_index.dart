@@ -44,6 +44,12 @@ final class CCRouterFilesystemIdentityIndex {
   Set<String> get registrationIdentities =>
       Set.unmodifiable(_registrations.keys);
 
+  /// All authored paths affected by currently retained registrations.
+  Set<String> get affectedPaths => Set.unmodifiable({
+    for (final registration in _registrations.values)
+      ...registration.affectedPaths,
+  });
+
   /// Adds or atomically replaces one caller-owned registration.
   void replace(
     String registration, {

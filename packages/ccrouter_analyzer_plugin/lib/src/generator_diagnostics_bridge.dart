@@ -140,6 +140,10 @@ final class CCRouterGeneratorDiagnosticsBridge {
   /// Last resolved-graph file identity observed per Pub resolution root.
   final Map<String, String> _observedResolutionGraphByRoot = <String, String>{};
 
+  /// Last validated successful generation epoch observed for each Host.
+  final Map<String, String?> _observedSuccessfulGenerationByHost =
+      <String, String?>{};
+
   /// Whether the bridge is enabled for this Analysis Server process.
   final bool enabled;
 
@@ -222,6 +226,22 @@ final class CCRouterGeneratorDiagnosticsBridge {
     return previous != null && previous != signature;
   }
 
+  /// Reports a new atomically published successful generation for [hostRoot].
+  ///
+  /// The first valid observation establishes a baseline. Later watch cycles or
+  /// one-shot generations return true only after their resolution evidence is
+  /// validated by the same rules used for Generator diagnostics.
+  bool pollSuccessfulGenerationChanged(Directory hostRoot) {
+    if (!enabled) return false;
+    final key = _canonicalDirectoryIdentity(hostRoot.path);
+    final snapshot = _validatedSnapshot(hostRoot);
+    final identity = _successfulGenerationIdentity(snapshot);
+    final observed = _observedSuccessfulGenerationByHost.containsKey(key);
+    final previous = _observedSuccessfulGenerationByHost[key];
+    _observedSuccessfulGenerationByHost[key] = identity;
+    return observed && identity != null && identity != previous;
+  }
+
   /// Resolves both newly published and previously visible diagnostic paths.
   Set<String> _affectedDartPathsForHost(Directory hostRoot) {
     final snapshot = _validatedSnapshot(hostRoot);
@@ -279,6 +299,7 @@ final class CCRouterGeneratorDiagnosticsBridge {
     _validatedSnapshotSignatureByHost.clear();
     _validatedSnapshotByHost.clear();
     _observedResolutionGraphByRoot.clear();
+    _observedSuccessfulGenerationByHost.clear();
   }
 
   /// Compares one participating Package manifest with its resolved direct graph.
@@ -415,7 +436,7 @@ final class CCRouterGeneratorDiagnosticsBridge {
     return statusBuildRoot;
   }
 
-  /// Accepts failed watch diagnostics only when both watch files agree exactly.
+  /// Accepts terminal watch evidence only when both watch files agree exactly.
   Map<String, Object?>? _validatedWatchSnapshot(
     Directory hostRoot,
     Map<String, Object?> status,
@@ -423,7 +444,10 @@ final class CCRouterGeneratorDiagnosticsBridge {
   ) {
     final snapshot = _readObject(_diagnosticsFile(hostRoot));
     if (snapshot == null || snapshot['schemaVersion'] != 1) return null;
-    if (snapshot['lastEvent'] != 'failed' ||
+    final lastEvent = snapshot['lastEvent'];
+    final failure = lastEvent == 'failed';
+    final success = lastEvent == 'aggregationSucceeded' || lastEvent == 'ready';
+    if ((!failure && !success) ||
         snapshot['cycleResolutionState'] != 'matched') {
       return null;
     }
@@ -447,7 +471,31 @@ final class CCRouterGeneratorDiagnosticsBridge {
       if (status[key] != snapshot[key]) return null;
     }
     final diagnostics = snapshot['diagnostics'];
-    return diagnostics is List ? snapshot : null;
+    if (diagnostics is! List || (success && diagnostics.isNotEmpty))
+      return null;
+    return snapshot;
+  }
+
+  /// Builds a stable epoch only from a validated successful snapshot.
+  static String? _successfulGenerationIdentity(Map<String, Object?>? snapshot) {
+    if (snapshot == null) return null;
+    if (snapshot['producer'] == 'oneShot' &&
+        snapshot['outcome'] == 'succeeded') {
+      final updatedAt = snapshot['updatedAt'];
+      final fingerprint = snapshot['resolutionFingerprint'];
+      return updatedAt is String && fingerprint is String
+          ? 'oneShot:$updatedAt:$fingerprint'
+          : null;
+    }
+    final lastEvent = snapshot['lastEvent'];
+    if (lastEvent != 'aggregationSucceeded' && lastEvent != 'ready') {
+      return null;
+    }
+    final sessionId = snapshot['sessionId'];
+    final cycle = snapshot['cycle'];
+    return sessionId is String && cycle is int
+        ? 'watch:$sessionId:$cycle'
+        : null;
   }
 
   /// Accepts terminal one-shot evidence only for the current resolution bytes.
