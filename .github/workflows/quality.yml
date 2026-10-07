@@ -13,7 +13,7 @@ concurrency:
 env:
   CI: true
   PUB_ENVIRONMENT: bot.github
-  CCROUTER_HOME: ${{ runner.temp }}/ccrouter-home
+  CCROUTER_HOME: /tmp/ccrouter-home
 
 jobs:
   static-and-skills:
