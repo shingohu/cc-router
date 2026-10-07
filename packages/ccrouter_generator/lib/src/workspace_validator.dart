@@ -12,6 +12,10 @@ const int _workspaceIdentifierLength = 128;
 const String _initTaskReachabilityMemoKillSwitch =
     'CCROUTER_DISABLE_INIT_TASK_REACHABILITY_MEMO';
 
+/// Restores per-Route component closure walks for differential diagnosis.
+const String _routeVisibilityMemoKillSwitch =
+    'CCROUTER_DISABLE_ROUTE_VISIBILITY_MEMO';
+
 /// Stable identifier syntax rechecked at Package and Host aggregation.
 final RegExp _workspaceIdentifierPattern = RegExp(
   r'^[a-z][A-Za-z0-9]*(?:[._-][A-Za-z0-9]+)*$',
@@ -1528,6 +1532,9 @@ abstract final class CCRouteWorkspaceValidator {
     List<String> errors,
   ) {
     final parentByRoute = <String, String>{};
+    final dependencyClosureByComponent = <String, Set<String>>{};
+    final useMemoizedVisibility =
+        Platform.environment[_routeVisibilityMemoKillSwitch] != '1';
     for (final route in routes.values) {
       final routeId = '${route['id']}';
       final placement = route['placement'];
@@ -1546,7 +1553,12 @@ abstract final class CCRouteWorkspaceValidator {
       final ownerId = '${route['componentId']}';
       final parentOwnerId = '${parent['componentId']}';
       if (ownerId != parentOwnerId) {
-        final dependencies = _transitiveDependencies(ownerId, components);
+        final dependencies = useMemoizedVisibility
+            ? dependencyClosureByComponent.putIfAbsent(
+                ownerId,
+                () => _transitiveDependencies(ownerId, components),
+              )
+            : _transitiveDependencies(ownerId, components);
         if (!dependencies.contains(parentOwnerId) ||
             parent['exposure'] != 'public') {
           errors.add(

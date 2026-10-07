@@ -1308,6 +1308,54 @@ void main() {
     expect(visible.errors, isEmpty);
   });
 
+  test(
+    'reuses exact parent visibility through present optional dependencies',
+    () {
+      final result = CCRouteWorkspaceValidator.validate([
+        document(
+          package: 'orders',
+          components: [component('orders')],
+          routes: [
+            route(
+              'orders.root',
+              'orders',
+              pattern: '/root/:id',
+              publicContract: true,
+            ),
+          ],
+          routeImplementations: [implementation('orders.root', 'orders')],
+        ),
+        document(
+          package: 'bridge',
+          components: [
+            component('bridge', dependencies: ['orders']),
+          ],
+          routes: const [],
+        ),
+        document(
+          package: 'checkout',
+          components: [
+            component(
+              'checkout',
+              optionalDependencies: ['bridge', 'missing_optional'],
+            ),
+          ],
+          routes: [
+            for (var index = 0; index < 20; index++)
+              route(
+                'checkout.detail_$index',
+                'checkout',
+                pattern: '/checkout/$index/:id',
+                parentRouteId: 'orders.root',
+              ),
+          ],
+        ),
+      ]);
+
+      expect(result.errors, isEmpty);
+    },
+  );
+
   test('rejects equal-specificity overlapping path patterns', () {
     final result = CCRouteWorkspaceValidator.validate([
       document(
