@@ -34,6 +34,8 @@ jobs:
           dart analyze tool
       - name: Validate documentation
         run: dart tool/documentation_check.dart
+      - name: Check release-sensitive files
+        run: dart tool/release_sensitivity_check.dart
       - name: Validate isolated Skill bundle
         run: dart test tool/test/skill_bundle_check_test.dart
 
