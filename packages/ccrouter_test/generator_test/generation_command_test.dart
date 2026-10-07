@@ -1182,7 +1182,7 @@ void probe() {
   );
 
   test(
-    'shared planning snapshot matches legacy state bytes',
+    'shared planning and unified epoch snapshots match reference state bytes',
     () async {
       final before = await _readDemoGeneratedArtifacts();
       final optimized = await _generateDemo([
@@ -1200,8 +1200,42 @@ void probe() {
         )['status'],
         'ok',
       );
+      expect(
+        (optimizedSpans.singleWhere(
+              (span) => span['name'] == 'planning-snapshot-capture',
+            )['attributes']
+            as Map)['evidenceMode'],
+        'input-and-current-output',
+      );
       final optimizedManifest = _demoFastPathManifest().readAsBytesSync();
       final optimizedPlan = _demoBuildPlanState().readAsBytesSync();
+
+      final epochReference = await _generateDemo(
+        ['--no-cache', '--check', '--profile'],
+        environment: {
+          ...Platform.environment,
+          'CCROUTER_DISABLE_UNIFIED_EPOCH_SNAPSHOT': '1',
+        },
+      );
+      expect(epochReference.exitCode, 0, reason: '${epochReference.stderr}');
+      final epochReferenceSpans =
+          (_profileDelta(epochReference, 'trace')['spans'] as List)
+              .cast<Map<String, dynamic>>();
+      expect(
+        (epochReferenceSpans.singleWhere(
+              (span) => span['name'] == 'planning-snapshot-capture',
+            )['attributes']
+            as Map)['evidenceMode'],
+        'recaptured',
+      );
+      expect(
+        _demoFastPathManifest().readAsBytesSync(),
+        orderedEquals(optimizedManifest),
+      );
+      expect(
+        _demoBuildPlanState().readAsBytesSync(),
+        orderedEquals(optimizedPlan),
+      );
 
       final reference = await _generateDemo(
         ['--no-cache', '--check', '--profile'],

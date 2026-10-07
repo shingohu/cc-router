@@ -948,6 +948,12 @@ fast-path manifest and Build Plan state. Set
 `CCROUTER_DISABLE_SHARED_PLANNING_SNAPSHOT=1` to restore separate scans for
 byte-for-byte or timing A/B; input barriers, validation, restoration, atomic
 writes, and the final `--no-cache --check` remain unchanged.
+The one-shot and watch kernels also form unified epoch evidence from the final
+input barrier plus exact output bytes already read for output delta or metadata
+cache publication. Set `CCROUTER_DISABLE_UNIFIED_EPOCH_SNAPSHOT=1` to restore
+full planning recapture. Entry rollback snapshots, every input barrier,
+restore-time scans, byte comparisons, and the final reference gate remain
+independent correctness boundaries.
 The final watch input barrier returns its exact snapshot to planning-state
 publication instead of discarding and immediately recapturing it. On an
 aggregation reuse hit, the entry artifact snapshot supplies only verified

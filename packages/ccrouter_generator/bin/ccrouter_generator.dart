@@ -1308,18 +1308,6 @@ Future<bool> _generateResolvedWorkspace(
   } else {
     trace?.skip('after-aggregation-input-barrier');
   }
-  onAggregationCompleted?.call(
-    _GenerationAggregationOutcome(
-      inputFingerprint: aggregationInputFingerprint,
-      verifiedInputSnapshot: finalInputSnapshot,
-      reused: aggregationReuse.matches,
-      publishState:
-          !aggregationReuse.matches &&
-          aggregationReuseDisabledReason == null &&
-          aggregationToolFingerprint != null &&
-          !parsed.check,
-    ),
-  );
   if (parsed.portablePrepare) {
     await trace.measure(
       'portable-state-prepare',
@@ -1341,26 +1329,49 @@ Future<bool> _generateResolvedWorkspace(
       'Host aggregation or cross-Package validation.',
     );
   }
+  Map<String, List<int>>? verifiedManagedOutputs;
   if (!aggregationReuse.matches && !parsed.noCache && !parsed.check) {
     await trace.measure('metadata-cache-persist', () async {
       final persistedOutputFingerprints = <String, String>{};
+      final managedOutputs = <String, List<int>>{};
       for (final package in workspace.packages.values.where(
         (package) => package.writable,
       )) {
+        final packageOutputs =
+            await _GenerationStateFingerprint.capturePackageOutput(package);
         persistedOutputFingerprints[package.name] =
-            _GenerationStateFingerprint.digestEntries(
-              await _GenerationStateFingerprint.capturePackageOutput(package),
-            );
+            _GenerationStateFingerprint.digestEntries(packageOutputs);
+        for (final entry in packageOutputs.entries) {
+          managedOutputs[_relativePath(
+                workspace.buildRoot,
+                File(_absolutePath(package.root, entry.key)),
+              )] =
+              entry.value;
+        }
       }
       await cache.write(
         metadataSnapshots,
         outputFingerprints: persistedOutputFingerprints,
         dependencyFingerprints: dirtySet!.dependencyFingerprints,
       );
+      verifiedManagedOutputs = Map.unmodifiable(managedOutputs);
     });
   } else {
     trace?.skip('metadata-cache-persist');
   }
+  onAggregationCompleted?.call(
+    _GenerationAggregationOutcome(
+      inputFingerprint: aggregationInputFingerprint,
+      verifiedInputSnapshot: finalInputSnapshot,
+      verifiedManagedOutputs: verifiedManagedOutputs,
+      reused: aggregationReuse.matches,
+      publishState:
+          !aggregationReuse.matches &&
+          aggregationReuseDisabledReason == null &&
+          aggregationToolFingerprint != null &&
+          !parsed.check,
+    ),
+  );
   aggregateWatch.stop();
   if (parsed.profile) {
     final hits = metadataSnapshots.values

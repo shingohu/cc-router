@@ -1413,14 +1413,20 @@ entrypoint 和恢复 CLI library graph；`aggregationSucceeded.cycleMode` 为 `i
 planning snapshot，并由两个状态文件复用；两者仍分别原子写入。设置
 `CCROUTER_DISABLE_SHARED_PLANNING_SNAPSHOT=1` 可恢复各自独立扫描，用于逐字节和耗时 A/B；
 该开关不改变 input barrier、Validator、artifact snapshot 或最终 `--no-cache --check`。
+普通 one-shot 与 watch 还会把最终 input barrier、profile/check current-output scan 或
+metadata-cache persist 已读取的 exact bytes 组合为 unified generation epoch，供 planning state
+派生，避免在同一成功边界再次读盘。设置 `CCROUTER_DISABLE_UNIFIED_EPOCH_SNAPSHOT=1` 可恢复
+完整 planning recapture；入口 artifact snapshot、Builder 前后 input barrier、restore 重扫和
+逐字节比较仍保持独立，不能由 epoch evidence 替代。
 同一入口 artifact snapshot 和 cycle-end planning snapshot 也分别提供 aggregation output proof，
 不会为 reuse 额外扫描生成目录；证明只写入 `.dart_tool/ccrouter/v1/aggregation_reuse/`，不属于
 Portable State 或可提交生成物。
 watch 的最终 input barrier 会把刚验证的 exact-content snapshot 直接交给 planning state；当
 aggregation reuse 命中时，planning capture 还会复用入口快照中已验证未变的
 aggregation-owned bytes，同时重新读取当前 Builder-owned outputs。它不删除或合并 barrier。
-`planning-snapshot-capture.attributes.evidenceMode` 报告 `input-and-aggregation-output`、`input` 或
-`recaptured`；`CCROUTER_DISABLE_WATCH_EVIDENCE_REUSE=1` 恢复完整 recapture，供逐字节和耗时 A/B。
+`planning-snapshot-capture.attributes.evidenceMode` 还会报告
+`input-and-current-output` 或 `input-and-persisted-output`；
+`CCROUTER_DISABLE_WATCH_EVIDENCE_REUSE=1` 恢复 watch 完整 recapture，供逐字节和耗时 A/B。
 watch 的 profile output-delta scan 还会把它刚读取的 current managed-output bytes 交给 planning
 state，避免随后再次扫描相同输出；此路径报告 `input-and-current-output`。设置
 `CCROUTER_DISABLE_WATCH_OUTPUT_EVIDENCE_REUSE=1` 只关闭本项并退回上述 aggregation/input evidence，

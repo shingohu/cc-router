@@ -71,6 +71,11 @@
   output-delta scan when publishing planning state. Set
   `CCROUTER_DISABLE_WATCH_OUTPUT_EVIDENCE_REUSE=1` to retain delta reporting
   while restoring the separate planning output scan for isolated A/B.
+- Unified successful one-shot and watch cycle-end evidence so planning state
+  reuses the final input barrier and exact outputs already read for delta or
+  metadata-cache persistence. Entry snapshots, barriers, restore scans, and
+  byte comparisons remain independent; set
+  `CCROUTER_DISABLE_UNIFIED_EPOCH_SNAPSHOT=1` for full-recapture A/B.
 - Added a diagnostic-only aggregation-input fingerprint to profile traces and
   watch benchmarks, then used the proven identity only after Builder completes
   to reuse verified aggregation outputs. The local proof also checks exact

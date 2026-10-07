@@ -438,6 +438,10 @@ A/B；该开关不允许跳过快照、Validator、原子提交或最终 `--no-c
 成功 cycle 的 fast-path manifest 与本机 Build Plan state 复用一次 exact-content planning
 snapshot，并继续分别原子写入。设置 `CCROUTER_DISABLE_SHARED_PLANNING_SNAPSHOT=1` 可恢复
 两个状态各自扫描的 reference 路径，用于逐字节和耗时 A/B；它不削弱任何输入屏障或最终门禁。
+one-shot 与 watch 默认还复用最终 input barrier、profile/check output delta 或 metadata-cache
+persist 已读取的 exact bytes，形成只供本轮 planning 派生的 unified epoch evidence。设置
+`CCROUTER_DISABLE_UNIFIED_EPOCH_SNAPSHOT=1` 可恢复独立 planning recapture；入口 rollback snapshot、
+Builder/aggregation barrier 和 restore 时的独立重扫均不受影响。
 aggregation reuse 直接复用 cycle 入口 artifact snapshot 和上述 cycle-end planning snapshot
 中的 bytes，不额外扫描生成目录；命中时也不重写 metadata cache，未来 miss 只会更保守地重算。
 watch 的 after-aggregation barrier 返回它刚完成的 exact-content input snapshot，cycle-end

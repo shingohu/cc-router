@@ -790,3 +790,19 @@ reverse closure 的 P95 约为 2.49ms/0.66ms；5,000 Package 的反向严格链�
 367ms/0.70ms。100 Package 稀疏图也未出现负优化。完整 `CCRouteWorkspaceValidator` 在 120 个
 component、600 routes 时约 10.7ms P95，远低于当前真实 watch 的 Builder 和 aggregation 耗时；
 因此本阶段不引入增量 Validator，也不缩小权威校验范围。
+
+### 10.14 Generator unified epoch snapshot（2026-10-07）
+
+新增独立 filesystem benchmark，按 Demo 等价 11 个 Package 扩展到 1x/3x/5x/10x，分别读取
+authored inputs、全部 managed outputs、writable outputs 和 aggregation outputs。reference 每个视图
+独立遍历，candidate 一次 exact-content capture 后派生不可变视图；两侧对 baseline 及 input/output
+的 add/change/delete/rename 均逐路径、逐字节、逐 fingerprint 相同。1x 的 reference/candidate P95
+约为 38.2/18.9ms，10x 约为 396.8/196.9ms，四个 scale 均约 2.0x。
+
+生产路径只复用处于同一成功边界的证据：最终 input barrier snapshot、profile/check 的 current
+output delta，或 metadata-cache persist 已读取的 writable output bytes。入口 artifact snapshot、
+Builder 前后 input barrier、`--check` restore 重扫仍独立保留，读取失败继续 fail closed。真实 Demo
+的 `--no-cache --profile --check` 单次 A/B 中，planning capture 由约 101ms 降至 18.7ms，
+wall 由约 1976ms 降至 1917ms；该 wall 数据仅作方向验证，Builder 抖动不计为算法收益。
+`CCROUTER_DISABLE_UNIFIED_EPOCH_SNAPSHOT=1` 恢复完整 planning recapture，默认/reference 的生成物、
+fast-path manifest 和 Build Plan state 逐字节一致，最终仍以 `--no-cache --check` 为权威门禁。

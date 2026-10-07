@@ -172,6 +172,7 @@ final class _GenerationAggregationOutcome {
   const _GenerationAggregationOutcome({
     required this.inputFingerprint,
     required this.verifiedInputSnapshot,
+    required this.verifiedManagedOutputs,
     required this.reused,
     required this.publishState,
   });
@@ -181,6 +182,9 @@ final class _GenerationAggregationOutcome {
 
   /// Exact authored and resolution facts verified by the final input barrier.
   final _GenerationInputFingerprintSnapshot? verifiedInputSnapshot;
+
+  /// Writable managed-output bytes already read for metadata persistence.
+  final Map<String, List<int>>? verifiedManagedOutputs;
 
   /// Whether rendering and aggregation-owned writes were skipped.
   final bool reused;

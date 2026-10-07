@@ -481,6 +481,12 @@ fast-path manifest and Build Plan state. Use
 `CCROUTER_DISABLE_SHARED_PLANNING_SNAPSHOT=1` only for byte-for-byte or timing
 A/B against the separate-scan reference; all input barriers, validation,
 artifact restoration, atomic writes, and the final reference gate remain.
+One-shot and watch cycles may also derive planning state from a unified epoch
+made of the final input barrier and exact output bytes already read for delta
+reporting or metadata-cache persistence. Use
+`CCROUTER_DISABLE_UNIFIED_EPOCH_SNAPSHOT=1` for full planning recapture A/B.
+Never use epoch evidence in place of the entry rollback snapshot, an input
+barrier, restore-time rescan, byte comparison, or `--no-cache --check`.
 In watch mode, the final input barrier's exact snapshot may feed the local
 planning state directly. A verified aggregation hit may also reuse only the
 aggregation-owned entry bytes while current Builder-owned outputs are reread.

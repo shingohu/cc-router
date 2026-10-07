@@ -10,6 +10,10 @@ const _watchEvidenceReuseKillSwitch = 'CCROUTER_DISABLE_WATCH_EVIDENCE_REUSE';
 const _watchOutputEvidenceReuseKillSwitch =
     'CCROUTER_DISABLE_WATCH_OUTPUT_EVIDENCE_REUSE';
 
+/// Restores independent cycle-end planning scans for differential A/B checks.
+const _unifiedEpochSnapshotKillSwitch =
+    'CCROUTER_DISABLE_UNIFIED_EPOCH_SNAPSHOT';
+
 /// Output channel scoped to one command or in-process generation cycle.
 final class _CommandOutputSink {
   const _CommandOutputSink.system(this._system) : _buffer = null;
@@ -550,7 +554,29 @@ Future<_GenerationCycleResult> _runGenerationCycle({
         cycleExitCode = 1;
         return;
       }
-      if (parsed.profile && snapshot != null) {
+      final unifiedEpochSnapshotEnabled =
+          Platform.environment[_unifiedEpochSnapshotKillSwitch] != '1';
+      final planningEvidenceReuseEnabled =
+          unifiedEpochSnapshotEnabled &&
+          (!_usesOptimizedWatchCycle ||
+              Platform.environment[_watchEvidenceReuseKillSwitch] != '1');
+      final managedOutputEvidenceReuseEnabled =
+          planningEvidenceReuseEnabled &&
+          (!_usesOptimizedWatchCycle ||
+              Platform.environment[_watchOutputEvidenceReuseKillSwitch] != '1');
+      final canPersistPlanningState =
+          buildContext != null &&
+          parsed.command == _GeneratorCommand.generate &&
+          parsed.outputDirectoryPath == null;
+      final needsCurrentOutputEvidence =
+          snapshot != null &&
+          unifiedEpochSnapshotEnabled &&
+          (parsed.profile ||
+              parsed.check ||
+              (canPersistPlanningState &&
+                  managedOutputEvidenceReuseEnabled &&
+                  aggregationOutcome?.verifiedManagedOutputs == null));
+      if (needsCurrentOutputEvidence || (parsed.profile && snapshot != null)) {
         try {
           final watch = Stopwatch()..start();
           generatedArtifactsDelta = await profileTrace
@@ -559,13 +585,20 @@ Future<_GenerationCycleResult> _runGenerationCycle({
                 snapshot.captureDelta,
                 counts: (delta) => {'files': delta.changes.length},
               );
-          outputChanges = generatedArtifactsDelta!.changes;
-          outputDelta = _GenerationProfile.writeOutputs(outputChanges!);
-          _commandStdout.writeln(
-            'CCRouter profile output-delta-scan=${watch.elapsedMilliseconds}ms',
-          );
+          if (parsed.profile || parsed.check) {
+            outputChanges = generatedArtifactsDelta!.changes;
+          }
+          if (parsed.profile) {
+            outputDelta = _GenerationProfile.writeOutputs(outputChanges!);
+            _commandStdout.writeln(
+              'CCRouter profile output-delta-scan='
+              '${watch.elapsedMilliseconds}ms',
+            );
+          }
         } on Object {
-          _commandStdout.writeln('CCRouter profile output-delta=unavailable');
+          if (parsed.profile) {
+            _commandStdout.writeln('CCRouter profile output-delta=unavailable');
+          }
         }
       }
       if (parsed.check && snapshot != null) {
@@ -583,9 +616,7 @@ Future<_GenerationCycleResult> _runGenerationCycle({
         }
         _commandStdout.writeln('CCRouter generated artifacts are up to date.');
       }
-      if (buildContext != null &&
-          parsed.command == _GeneratorCommand.generate &&
-          parsed.outputDirectoryPath == null) {
+      if (canPersistPlanningState) {
         fastPathWorkspace ??= await profileTrace.measure(
           'workspace-reload-for-state',
           () => CCPackageWorkspace.load(
@@ -624,28 +655,29 @@ Future<_GenerationCycleResult> _runGenerationCycle({
             }
           }
         } else {
-          final evidenceReuseEnabled =
-              _usesOptimizedWatchCycle &&
-              Platform.environment[_watchEvidenceReuseKillSwitch] != '1';
-          final verifiedInputSnapshot = evidenceReuseEnabled
+          final verifiedInputSnapshot = planningEvidenceReuseEnabled
               ? aggregationOutcome?.verifiedInputSnapshot
               : null;
           final verifiedAggregationOutputs =
-              evidenceReuseEnabled &&
+              planningEvidenceReuseEnabled &&
                   (aggregationOutcome?.reused ?? false) &&
                   snapshot != null
               ? snapshot.aggregationOutputFiles(fastPathWorkspace!)
               : null;
-          final verifiedManagedOutputs =
-              evidenceReuseEnabled &&
-                  Platform.environment[_watchOutputEvidenceReuseKillSwitch] !=
-                      '1'
-              ? generatedArtifactsDelta?.writableOutputFiles(fastPathWorkspace!)
+          final verifiedManagedOutputs = managedOutputEvidenceReuseEnabled
+              ? generatedArtifactsDelta?.writableOutputFiles(
+                      fastPathWorkspace!,
+                    ) ??
+                    aggregationOutcome?.verifiedManagedOutputs
               : null;
+          final reusedCurrentOutputs =
+              verifiedManagedOutputs != null && generatedArtifactsDelta != null;
           final evidenceMode = verifiedInputSnapshot == null
               ? 'recaptured'
               : verifiedManagedOutputs != null
-              ? 'input-and-current-output'
+              ? reusedCurrentOutputs
+                    ? 'input-and-current-output'
+                    : 'input-and-persisted-output'
               : verifiedAggregationOutputs == null
               ? 'input'
               : 'input-and-aggregation-output';

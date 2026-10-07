@@ -234,6 +234,12 @@ fast-path manifest and Build Plan state. Use
 A/B against the separate-scan reference path; it does not disable input
 barriers, validation, artifact restoration, atomic state writes, or the final
 `--no-cache --check` authority.
+Successful one-shot and watch cycles also reuse final-barrier input facts and
+exact output bytes already read for delta reporting or metadata-cache
+persistence when deriving planning state. Use
+`CCROUTER_DISABLE_UNIFIED_EPOCH_SNAPSHOT=1` to restore full planning recapture
+for differential A/B. This switch does not merge the entry rollback snapshot,
+input barriers, restore rescan, validation, or authoritative reference check.
 Watch planning publication reuses the exact input snapshot already captured by
 the final barrier. On an aggregation reuse hit it may additionally reuse only
 the verified aggregation-owned entry bytes, while rereading current
