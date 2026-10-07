@@ -1,0 +1,12 @@
+[
+  {"name":"flutter_app","dependencies":["ccrouter"],"projectType":"app","role":"host","participation":"runtime"},
+  {"name":"flutter_module","dependencies":["ccrouter"],"projectType":"module","role":"package","participation":"runtime"},
+  {"name":"flutter_package","dependencies":["ccrouter"],"projectType":"package","role":"package","participation":"runtime"},
+  {"name":"flutter_plugin","dependencies":["ccrouter"],"projectType":"plugin","role":"package","participation":"runtime"},
+  {"name":"explicit_host","dependencies":["ccrouter"],"projectType":"package","hostEnabled":true,"role":"host","participation":"runtime"},
+  {"name":"disabled_app","dependencies":["ccrouter"],"projectType":"app","hostEnabled":false,"role":"package","participation":"runtime"},
+  {"name":"dart_contracts","dependencies":["ccrouter_contracts"],"role":"package","participation":"contracts"},
+  {"name":"workspace_aggregator","dependencies":[],"role":"skip","participation":"none"},
+  {"name":"invalid_contract_host","dependencies":["ccrouter_contracts"],"hostEnabled":true,"invalid":true},
+  {"name":"invalid_unrelated_host","dependencies":[],"hostEnabled":true,"invalid":true}
+]

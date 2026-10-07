@@ -405,10 +405,14 @@ current, and never falls back to it while a watch is active. If the current
 `pubspec.yaml` editor overlay differs from the resolved graph, the plugin only
 asks for the role-appropriate Flutter or Dart Pub get and suspends ownership
 conclusions; restoring the overlay clears the hint without a save or restart.
+Malformed YAML, a non-boolean `host.enabled`, or Host enablement without a
+direct `ccrouter` dependency publishes
+`ccrouter_project_configuration_invalid` on `ccrouter.yaml` and clears after
+the authored configuration becomes valid.
 Because Analysis Server does not reliably forward `.dart_tool` events, the
-plugin polls snapshots and resolution identities for the context root and
-explicit nested Workspace Hosts every 500ms and reanalyzes after changes; it
-does not open a second Analyzer graph. Use
+plugin polls snapshots every 500ms, caches Package role/context until authored
+identity changes, and checks shared resolution files once per Pub root before
+reanalyzing affected files. It does not open a second Analyzer graph. Use
 `CCROUTER_DISABLE_ANALYZER_WATCH_BRIDGE=1` for an IDE-only fallback. Keep
 `--no-cache --check` as the final authority.
 `buildSucceeded.buildRunner` uses `formatVersion: 2`. Without `--profile` it

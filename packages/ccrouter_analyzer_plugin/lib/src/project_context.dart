@@ -169,6 +169,81 @@ final class CCRouterAnalyzerProjectContext {
       return const <Directory>[];
     }
   }
+
+  /// Validates authored `ccrouter.yaml` role configuration for IDE feedback.
+  static CCRouterAnalyzerProjectConfigurationIssue? configurationIssue(
+    String inputPath,
+  ) {
+    final requestedRoot = _nearestPackageRoot(inputPath);
+    if (requestedRoot == null) return null;
+    final file = File(path.join(requestedRoot.path, 'ccrouter.yaml'));
+    if (!file.existsSync()) return null;
+    late final Object? document;
+    try {
+      document = loadYaml(file.readAsStringSync());
+    } on Object catch (error) {
+      return CCRouterAnalyzerProjectConfigurationIssue(
+        path: file.path,
+        message: 'Invalid ccrouter.yaml: $error',
+        correction: 'Fix the YAML syntax, then save the file.',
+      );
+    }
+    if (document != null && document is! Map) {
+      return CCRouterAnalyzerProjectConfigurationIssue(
+        path: file.path,
+        message: 'ccrouter.yaml must contain a YAML mapping.',
+        correction: 'Use mapping keys such as `host.enabled`.',
+      );
+    }
+    final configuration = document is Map
+        ? <String, Object?>{
+            for (final entry in document.entries) '${entry.key}': entry.value,
+          }
+        : <String, Object?>{};
+    final override = _hostOverride(configuration);
+    if (override == _invalidHostOverride) {
+      return CCRouterAnalyzerProjectConfigurationIssue(
+        path: file.path,
+        message: '`host.enabled` in ccrouter.yaml must be true or false.',
+        correction: 'Set `host.enabled: true`, `false`, or remove the key.',
+      );
+    }
+    if (override == true) {
+      final manifest = _readYamlMap(
+        File(path.join(requestedRoot.path, 'pubspec.yaml')),
+      );
+      final dependencies = _mapKeys(manifest?['dependencies']);
+      if (!dependencies.contains('ccrouter')) {
+        return CCRouterAnalyzerProjectConfigurationIssue(
+          path: file.path,
+          message:
+              '`host.enabled: true` requires a direct `ccrouter` dependency.',
+          correction:
+              'Add `ccrouter` under dependencies or disable Host generation.',
+        );
+      }
+    }
+    return null;
+  }
+}
+
+/// One actionable authored project-configuration error for Analysis Server.
+final class CCRouterAnalyzerProjectConfigurationIssue {
+  /// Creates a file-level configuration issue.
+  const CCRouterAnalyzerProjectConfigurationIssue({
+    required this.path,
+    required this.message,
+    required this.correction,
+  });
+
+  /// Absolute configuration file receiving the diagnostic.
+  final String path;
+
+  /// Human-readable invalid declaration or syntax failure.
+  final String message;
+
+  /// Conservative action that restores a resolvable project role.
+  final String correction;
 }
 
 /// One cached project-context observation and whether its authored inputs moved.

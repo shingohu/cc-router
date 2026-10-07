@@ -1378,10 +1378,12 @@ resolution 逐字节 fingerprint 仍一致时消费，成功终态或任一输�
 始终优先，不能回退并复活旧 one-shot 错误。`pubspec.yaml` 与 resolved Package graph 暂时不一致时，
 IDE 使用当前未保存 overlay，并根据 `.metadata`、`ccrouter.yaml` 与直接依赖识别 Host/package-local，
 提示相应的 Flutter 或 Dart Pub get，不猜测 Owner；恢复 overlay 后提示立即撤销，不要求保存、watch
-active 或重启 Analysis Server。Analysis Server 不可靠转发 `.dart_tool` 文件事件，因此插件每 500ms
-比较 context root 和 Workspace 内各 Host 的 watch/one-shot snapshot、role inputs、
-`workspace_ref.json` 与 Pub graph/config identity，变化时才重新分析相关文件；不创建第二套 Analyzer
-graph。设置 `CCROUTER_DISABLE_ANALYZER_WATCH_BRIDGE=1` 可关闭整个 Generator diagnostics bridge。
+active 或重启 Analysis Server。无效 YAML、非布尔 `host.enabled` 或缺少直接 `ccrouter` 依赖的 Host
+声明会在 `ccrouter.yaml` 上发布 `ccrouter_project_configuration_invalid`，修复后立即清除。
+Analysis Server 不可靠转发 `.dart_tool` 文件事件，因此插件每 500ms 比较 context root 和 Workspace
+内各 Host 的 watch/one-shot snapshot；Package role/context 只在 authored identity 变化时重算，共享
+Pub graph/config 每个 resolution root 只检查一次，不创建第二套 Analyzer graph。设置
+`CCROUTER_DISABLE_ANALYZER_WATCH_BRIDGE=1` 可关闭整个 Generator diagnostics bridge。
 诊断发布/消费均为 fail-open 可观察性，不改变生成成功与否；CI 仍以 `--no-cache --check` 为权威。
 Builder 成功后的 watch cycle 会直接进入已完成 Builder 的聚合路径，避免重复执行普通 fast-path
 inspection 与 Build Plan 推导，但仍保留 input fingerprint/barrier、preflight、快照、Validator、

@@ -468,6 +468,7 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
 
   /// Publishes only the fact that saved and resolved dependency sets differ.
   Future<void> _publishPubResolutionHint(String pubspecPath) async {
+    _publishProjectConfigurationDiagnostic(pubspecPath);
     final resource = resourceProvider.getFile(pubspecPath);
     if (!resource.exists) return;
     late final String source;
@@ -506,6 +507,49 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
           hint.message,
           'ccrouter_pub_resolution_stale',
           correction: hint.correction,
+        ),
+      ]).toNotification(),
+    );
+  }
+
+  /// Publishes or clears the authored `ccrouter.yaml` role diagnostic.
+  void _publishProjectConfigurationDiagnostic(String pubspecPath) {
+    final root = io.File(pubspecPath).parent;
+    final configurationPath = path.join(root.path, 'ccrouter.yaml');
+    final issue = CCRouterAnalyzerProjectContext.configurationIssue(
+      pubspecPath,
+    );
+    if (issue == null) {
+      channel.sendNotification(
+        AnalysisErrorsParams(configurationPath, const []).toNotification(),
+      );
+      return;
+    }
+    var source = '';
+    try {
+      source = io.File(issue.path).readAsStringSync();
+    } on Object {
+      // The file-level diagnostic remains useful during an atomic replacement.
+    }
+    final lineInfo = LineInfo.fromContent(source);
+    final end = lineInfo.getLocation(source.length);
+    channel.sendNotification(
+      AnalysisErrorsParams(issue.path, [
+        AnalysisError(
+          AnalysisErrorSeverity.ERROR,
+          AnalysisErrorType.LINT,
+          Location(
+            issue.path,
+            0,
+            source.isEmpty ? 0 : source.length,
+            1,
+            1,
+            endLine: end.lineNumber,
+            endColumn: end.columnNumber,
+          ),
+          issue.message,
+          'ccrouter_project_configuration_invalid',
+          correction: issue.correction,
         ),
       ]).toNotification(),
     );

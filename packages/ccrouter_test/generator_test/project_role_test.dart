@@ -5,6 +5,7 @@ library;
 // ignore_for_file: implementation_imports
 
 import 'dart:io';
+import 'dart:convert';
 
 import 'package:ccrouter_generator/src/project_context.dart';
 import 'package:ccrouter_generator/src/project_role.dart';
@@ -12,6 +13,45 @@ import 'package:path/path.dart' as path;
 import 'package:test/test.dart';
 
 void main() {
+  test('matches the shared Generator and Analyzer role matrix', () {
+    final cases =
+        jsonDecode(
+              File(
+                path.join(
+                  _workspaceRoot().path,
+                  'tool',
+                  'test_fixtures',
+                  'project_role_cases.json',
+                ),
+              ).readAsStringSync(),
+            )
+            as List;
+    for (final raw in cases.cast<Map>()) {
+      final item = raw.cast<String, Object?>();
+      final fixture = _RoleFixture.create(
+        dependencies: (item['dependencies']! as List).cast<String>(),
+        projectType: item['projectType'] as String?,
+        hostEnabled: item['hostEnabled'] as bool?,
+      );
+      addTearDown(fixture.dispose);
+      if (item['invalid'] == true) {
+        expect(
+          fixture.resolve,
+          throwsA(isA<CCProjectRoleException>()),
+          reason: item['name'] as String,
+        );
+        continue;
+      }
+      final resolved = fixture.resolve();
+      expect(resolved.role.name, item['role'], reason: item['name'] as String);
+      expect(
+        resolved.participation.name,
+        item['participation'],
+        reason: item['name'] as String,
+      );
+    }
+  });
+
   test('Flutter app defaults to Host', () {
     final fixture = _RoleFixture.create(
       dependencies: const ['ccrouter'],
@@ -110,6 +150,23 @@ void main() {
 
     expect(fixture.resolve, throwsA(isA<CCProjectRoleException>()));
   });
+}
+
+Directory _workspaceRoot() {
+  var current = Directory.current.absolute;
+  while (true) {
+    if (File(path.join(current.path, 'pubspec.yaml')).existsSync() &&
+        Directory(
+          path.join(current.path, 'tool', 'test_fixtures'),
+        ).existsSync()) {
+      return current;
+    }
+    final parent = current.parent;
+    if (path.equals(parent.path, current.path)) {
+      throw StateError('Workspace test fixtures were not found.');
+    }
+    current = parent;
+  }
 }
 
 final class _RoleFixture {

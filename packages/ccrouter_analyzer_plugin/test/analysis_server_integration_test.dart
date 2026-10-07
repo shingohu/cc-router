@@ -19,6 +19,26 @@ bool _has(List<Map<String, dynamic>> errors, String code) =>
     errors.any((error) => (error['code'] as String).toLowerCase() == code);
 
 void main() {
+  test('real server publishes and clears invalid ccrouter.yaml', () async {
+    const code = 'ccrouter_project_configuration_invalid';
+    final server = await AnalysisServerSession.start({
+      _file: _source,
+      'ccrouter.yaml': 'host:\n  enabled: yes\n',
+    });
+    addTearDown(server.close);
+
+    await server.waitFor('ccrouter.yaml', (errors) => _has(errors, code));
+    final invalidRevision = server.revisions[server.path('ccrouter.yaml')]!;
+
+    server.write('ccrouter.yaml', 'host:\n  enabled: false\n');
+
+    await server.waitFor(
+      'ccrouter.yaml',
+      (errors) => !_has(errors, code),
+      after: invalidRevision,
+    );
+  });
+
   for (final lsp in [false, true]) {
     test(
       'real ${lsp ? 'LSP' : 'legacy'} server bridges and clears current watch diagnostics',

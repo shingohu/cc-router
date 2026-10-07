@@ -50,12 +50,17 @@ Pure Dart Packages, and clears immediately when the overlay is restored. An
 analyzed Workspace root indexes its explicit member manifests and publishes or
 clears the hint independently for each participating member; it does not
 recursively scan the repository.
+Malformed YAML, a non-boolean `host.enabled`, and Host enablement without a
+direct `ccrouter` dependency publish
+`ccrouter_project_configuration_invalid` on `ccrouter.yaml`. Correcting or
+removing the invalid declaration clears the diagnostic without running the
+Generator.
 
 Analysis Server does not reliably emit plugin filesystem events for
-`.dart_tool`. The plugin therefore compares watch and one-shot snapshots plus
-manifest, role, Workspace-reference, Package-graph, and Package-config file
-identities for the context root and explicit nested Hosts every 500ms, then
-reads/reanalyzes only after an identity change. The Timer is owned by the plugin
+`.dart_tool`. The plugin therefore compares watch and one-shot snapshots every
+500ms, caches Package role/context parses until authored identities change, and
+checks Package-graph/config identity once per shared Pub resolution root. It
+reads/reanalyzes only after a relevant identity change. The Timer is owned by the plugin
 and is cancelled on context replacement, shutdown, and channel close. Set
 `CCROUTER_DISABLE_ANALYZER_WATCH_BRIDGE=1` before starting Analysis Server to
 disable the whole Generator diagnostics bridge without disabling source rules.
