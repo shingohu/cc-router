@@ -23,6 +23,47 @@ void main() {
     expect(resolved.path, root.resolveSymbolicLinksSync());
   });
 
+  test(
+    'CLI reports a non-directory CCROUTER_HOME without a stack trace',
+    () async {
+      final temporary = await Directory.systemTemp.createTemp(
+        'ccrouter_unwritable_home_',
+      );
+      addTearDown(() => temporary.delete(recursive: true));
+      final blockedHome = File(path.join(temporary.path, 'not-a-directory'))
+        ..writeAsStringSync('occupied');
+
+      await _expectCoordinationHomeFailure(
+        configuredHome: blockedHome.path,
+        expectedTarget: blockedHome.path,
+      );
+    },
+  );
+
+  test(
+    'CLI reports an unwritable CCROUTER_HOME without a stack trace',
+    () async {
+      if (Platform.isWindows) return;
+      final temporary = await Directory.systemTemp.createTemp(
+        'ccrouter_read_only_home_',
+      );
+      final readOnlyHome = Directory(path.join(temporary.path, 'home'))
+        ..createSync();
+      final canonicalHome = readOnlyHome.resolveSymbolicLinksSync();
+      addTearDown(() async {
+        await Process.run('chmod', ['700', readOnlyHome.path]);
+        await temporary.delete(recursive: true);
+      });
+      final chmod = await Process.run('chmod', ['500', readOnlyHome.path]);
+      expect(chmod.exitCode, 0, reason: '${chmod.stderr}');
+
+      await _expectCoordinationHomeFailure(
+        configuredHome: readOnlyHome.path,
+        expectedTarget: canonicalHome,
+      );
+    },
+  );
+
   test('platform defaults follow CLI tool conventions', () {
     expect(
       resolveCCRouterHome(
@@ -216,3 +257,39 @@ void main() {
     );
   });
 }
+
+Future<void> _expectCoordinationHomeFailure({
+  required String configuredHome,
+  required String expectedTarget,
+}) async {
+  final result = await Process.run(
+    Platform.resolvedExecutable,
+    [_generatorEntrypoint, 'generate', 'demo', '--check'],
+    workingDirectory: Directory.current.path,
+    environment: {
+      ...Platform.environment,
+      ccrouterHomeEnvironment: configuredHome,
+    },
+  );
+  final errors = '${result.stderr}';
+
+  expect(result.exitCode, 1);
+  expect(
+    errors,
+    contains('CCRouter cannot write coordination state at $expectedTarget'),
+  );
+  expect(
+    errors,
+    contains('Set CCROUTER_HOME to an absolute writable directory and retry.'),
+  );
+  expect(errors, isNot(contains('Unhandled exception')));
+  expect(errors, isNot(contains(RegExp(r'#\d+'))));
+}
+
+String get _generatorEntrypoint => path.join(
+  Directory.current.path,
+  'packages',
+  'ccrouter_generator',
+  'bin',
+  'ccrouter.dart',
+);

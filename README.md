@@ -123,9 +123,11 @@ command 和精确备份路径，但不会自动 kill、移动或删除。先从 
 相关进程退出，再把列出的完整 hash entry 手工移到 `.plugin_manager` 外；不能只移动其中的
 `analyzer_plugin` 子目录，也不能清空无关 cache。重启后仍需用真实 diagnostic/Quick Fix 验证。
 
-`dart analyze` 不运行 legacy Analysis Server Plugin，只能验证 Dart 自带规则；不能用它判断
-CCRouter IDE 诊断是否加载。实时规则必须在 Android Studio、IntelliJ、VS Code 或真实
-Language Server 会话中验证，最终跨文件正确性仍以 `ccrouter generate --check` 为准。
+`dart analyze` 不能证明当前 IDE 会话已经加载 CCRouter Plugin。Dart 3.11.5 在分析范围命中
+Host bootstrap 配置时会初始化 Plugin manager，可能报告 Plugin 诊断，也可能暴露 Server/Plugin
+启动或兼容性失败；它不能再被视为“只运行 Dart 内置规则”。该行为受 SDK、分析范围和
+bootstrap 状态影响，不能替代 Android Studio、IntelliJ、VS Code 或真实 Language Server
+会话验证。最终跨文件正确性仍以 `ccrouter generate --check` 为准。
 仓库提供独立 Server 进程回归：在 `packages/ccrouter_analyzer_plugin/` 执行
 `fvm dart test test/analysis_server_integration_test.dart`。测试覆盖 Legacy/LSP 修复往返、
 未保存编辑、五类生成物磁盘变化及 Workspace Owner 元数据刷新；不替代当前 IDE 的
@@ -220,12 +222,19 @@ GoRouter 当前无法可靠提供原子 `pushAndRemoveUntil`、精确 `removeRou
 首次运行：
 
 ```bash
-fvm flutter pub get
-fvm dart analyze
+CCROUTER_PUB_HOOK_DISABLE=1 fvm flutter pub get
+fvm dart analyze packages
+fvm dart analyze tool
 fvm flutter test packages/ccrouter_test/test
 fvm dart test --concurrency=1 packages/ccrouter_test/generator_test
-fvm flutter test demo
+fvm flutter test --no-pub demo
+fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo --no-cache --check
 ```
+
+仓库根目录是 Dart Workspace 聚合根，不是 CCRouter Host。根依赖解析必须禁用 Pub Hook，
+静态分析应按 `packages` 与 `tool` 分层执行，再对 `demo/` 这个真实 Host 单独执行测试与生成
+检查。根 `dart analyze` 会进入 Demo 的 legacy Plugin bootstrap，不是可靠的聚合门禁；不能把
+Plugin 启动失败或根 Hook 的 Host 识别失败报告成 Pub 依赖解析失败。
 
 运行 macOS Demo：
 
@@ -1288,6 +1297,8 @@ status/diagnostics 作为面向 IDE/Analyzer 的本地镜像；活动 watch 每�
 Pub Hook 优先读取 stable session，因此 Host 本地 watch 状态被清理时不会误启 one-shot、卡满超时
 或丢失 package-local 冲突诊断。`watch status` 也可在本地镜像缺失时读取 stable session，并显示
 实际 coordination schema 和路径。
+`CCROUTER_HOME` 不可写或不是目录时，CLI 会报告无法写入的目标路径并提示改到绝对可写目录，
+不会输出内部 Dart 堆栈。
 若启动时检测到仍持有 V1 `.dart_tool` owner lock 的旧 CLI/watch，新版会 fail-fast，要求停止旧进程
 并重新安装 Pub Hook；不会尝试让两种协议静默并发。短期可设置
 `CCROUTER_USE_LEGACY_DART_TOOL_LOCKS=1` 做 A/B；它也会把 Flutter-run lease 恢复到 Host

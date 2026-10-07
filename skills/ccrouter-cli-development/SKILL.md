@@ -134,7 +134,10 @@ Host registrations, Flutter-run leases, and minimal Host/Builder session authori
 `CCROUTER_HOME` (`~/.ccrouter` on macOS/Linux or `%LOCALAPPDATA%\\CCRouter` on
 Windows) in a full-SHA-256 build-root directory; `.dart_tool` retains
 disposable build/planning data plus Host-facing status/diagnostic mirrors. An
-active watch republishes deleted mirrors, while Pub Hook and `watch status`
+unwritable or non-directory `CCROUTER_HOME` fails with the exact target path and
+an instruction to select an absolute writable directory; it must not expose an
+internal Dart stack trace. An active watch republishes deleted mirrors, while
+Pub Hook and `watch status`
 can read exact stable sessions without treating planning or Builder caches as
 global state. Use `watch status` to inspect the effective schema and path. V2 fails fast when a
 live V1 owner is detected; stop the old process and reinstall the current Pub

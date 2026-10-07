@@ -212,9 +212,12 @@ Analysis Server 或 IDE。插件会在编辑 `.dart` 文件时发送标准 `anal
 当前未保存的 overlay；删除 required Owner 等问题不需要等到保存或运行 Generator 后才出现。
 Plugin 初始化只分析开发者编写的 Dart 源码，跳过平台/build 产物和 CCRouter 生成库。
 
-`dart analyze` 不运行 legacy Analysis Server Plugin，因此它只适合验证 Dart 自带规则，不能用来
-证明 CCRouter IDE 诊断已经加载。实时闭环应使用 Android Studio、IntelliJ、VS Code 或真实
-Language Server 协议测试；跨文件与生成物最终正确性继续由 `ccrouter generate --check` 保证。
+`dart analyze` 不能证明 CCRouter Plugin 已加载到当前 IDE 会话。Dart 3.11.5 在分析范围命中
+Host 的 `analysis_options.yaml` 与 bootstrap 时会初始化 Plugin manager，可能报告 Plugin
+诊断，也可能暴露 Server/Plugin 启动或兼容性失败；它不能再被视为“只运行 Dart 内置规则”。
+该行为取决于 SDK、分析范围和 bootstrap 状态。实时闭环仍应使用 Android Studio、IntelliJ、
+VS Code 或真实 Language Server 协议测试；跨文件与生成物最终正确性继续由
+`ccrouter generate --check` 保证。
 
 当前仓库尚未发布 Package 时，可先在插件 Package 本身验证：
 

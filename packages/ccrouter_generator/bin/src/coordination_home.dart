@@ -400,6 +400,30 @@ Directory resolveCCRouterHome({
   );
 }
 
+/// Whether [candidate] identifies the configured CCRouter coordination home or
+/// one of its descendants.
+bool isCCRouterHomePath(
+  String? candidate, {
+  Map<String, String>? environment,
+  String? operatingSystem,
+}) {
+  if (candidate == null || candidate.trim().isEmpty) return false;
+  final values = environment ?? Platform.environment;
+  late final String home;
+  try {
+    home = resolveCCRouterHome(
+      environment: values,
+      operatingSystem: operatingSystem,
+    ).absolute.path;
+  } on FileSystemException {
+    final override = values[ccrouterHomeEnvironment]?.trim();
+    if (override == null || override.isEmpty) rethrow;
+    home = Directory(override).absolute.path;
+  }
+  final target = path.normalize(path.absolute(candidate));
+  return path.equals(home, target) || path.isWithin(home, target);
+}
+
 /// Resolves an existing directory through platform aliases such as macOS
 /// `/var`, while leaving a not-yet-created home as an absolute path.
 Directory _canonicalExistingDirectory(Directory directory) {

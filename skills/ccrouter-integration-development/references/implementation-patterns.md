@@ -861,6 +861,9 @@ leases under the user-level `CCROUTER_HOME`, isolated first by canonical build
 root and then by Host. Minimal Host/Builder session authority lets Pub Hook coordinate even when
 project-local observation files were removed. Watches atomically publish and
 repair the Analyzer/IDE mirror at `.dart_tool/ccrouter/v1/watch/status.json`.
+If `CCROUTER_HOME` is unwritable or is not a directory, the CLI reports the
+exact failed target and asks for an absolute writable directory without exposing
+an internal Dart stack trace.
 Use read-only
 `watch status <host-root>` for a snapshot or `watch follow <host-root>` for
 concise state changes; keep complete diagnostics in `watch/flutter-run.log`

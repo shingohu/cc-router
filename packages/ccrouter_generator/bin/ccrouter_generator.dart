@@ -47,6 +47,22 @@ final _dartFormatter = DartFormatter(
 var _temporaryWriteSequence = 0;
 
 Future<void> main(List<String> arguments) async {
+  try {
+    await _runCommand(arguments);
+  } on FileSystemException catch (error) {
+    if (!isCCRouterHomePath(error.path)) rethrow;
+    final target = error.path ?? resolveCCRouterHome().path;
+    _commandStderr.writeln(
+      'error: CCRouter cannot write coordination state at $target.',
+    );
+    _commandStderr.writeln(
+      'Set CCROUTER_HOME to an absolute writable directory and retry.',
+    );
+    exitCode = 1;
+  }
+}
+
+Future<void> _runCommand(List<String> arguments) async {
   final totalWatch = Stopwatch()..start();
   final parsed = _parseArguments(arguments);
   if (parsed.help) {
