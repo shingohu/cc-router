@@ -68,6 +68,8 @@ Future<Map<String, Object?>> _runScale(int scale) async {
     );
     final referenceSamples = <int>[];
     final candidateSamples = <int>[];
+    final protectionReferenceSamples = <int>[];
+    final protectionCandidateSamples = <int>[];
     for (var sample = 0; sample < _sampleCount; sample++) {
       if (sample.isEven) {
         referenceSamples.add(
@@ -91,6 +93,38 @@ Future<Map<String, Object?>> _runScale(int scale) async {
       fixture,
       writablePackageCount: writablePackageCount,
     );
+    final expectedProtection = await _captureProtectionReference(
+      fixture,
+      writablePackageCount,
+    );
+    final derivedProtection = _deriveProtectionView(
+      finalSnapshot.managedOutputs,
+      writablePackageCount,
+    );
+    if (!_sameFiles(expectedProtection, derivedProtection)) {
+      throw StateError('Derived build protection differs from the reference.');
+    }
+    for (var sample = 0; sample < _sampleCount; sample++) {
+      final referenceWatch = Stopwatch()..start();
+      final referenceProtection = await _captureProtectionReference(
+        fixture,
+        writablePackageCount,
+      );
+      referenceWatch.stop();
+      final candidateWatch = Stopwatch()..start();
+      final candidateProtection = _deriveProtectionView(
+        finalSnapshot.managedOutputs,
+        writablePackageCount,
+      );
+      candidateWatch.stop();
+      if (!_sameFiles(referenceProtection, candidateProtection)) {
+        throw StateError('Build protection changed during sample $sample.');
+      }
+      protectionReferenceSamples.add(referenceWatch.elapsedMicroseconds);
+      protectionCandidateSamples.add(candidateWatch.elapsedMicroseconds);
+    }
+    protectionReferenceSamples.sort();
+    protectionCandidateSamples.sort();
     return <String, Object?>{
       'scenario': 'generator-snapshot-scaling',
       'scale': scale,
@@ -113,6 +147,11 @@ Future<Map<String, Object?>> _runScale(int scale) async {
         _percentile(referenceSamples, 0.95),
         _percentile(candidateSamples, 0.95),
       ),
+      'protectionFiles': derivedProtection.length,
+      'protectionReferenceP50Us': _percentile(protectionReferenceSamples, 0.50),
+      'protectionReferenceP95Us': _percentile(protectionReferenceSamples, 0.95),
+      'protectionDerivedP50Us': _percentile(protectionCandidateSamples, 0.50),
+      'protectionDerivedP95Us': _percentile(protectionCandidateSamples, 0.95),
       'differential': const <String>[
         'baseline',
         'add',
@@ -125,6 +164,26 @@ Future<Map<String, Object?>> _runScale(int scale) async {
     if (fixture.existsSync()) fixture.deleteSync(recursive: true);
   }
 }
+
+/// Repeats the production reference scan for managed non-target outputs.
+Future<Map<String, List<int>>> _captureProtectionReference(
+  Directory root,
+  int writablePackageCount,
+) => _readMatching(
+  root,
+  (relative) =>
+      _isManagedOutput(relative) &&
+      !_isWritable(relative, writablePackageCount),
+);
+
+/// Derives non-target protection bytes from an existing outer snapshot.
+Map<String, List<int>> _deriveProtectionView(
+  Map<String, List<int>> managedOutputs,
+  int writablePackageCount,
+) => Map.unmodifiable(<String, List<int>>{
+  for (final entry in managedOutputs.entries)
+    if (!_isWritable(entry.key, writablePackageCount)) entry.key: entry.value,
+});
 
 /// Measures the four independent reads performed by the reference path.
 Future<int> _measureReference(Directory root, int writablePackages) async {
