@@ -44,6 +44,10 @@ final _dartFormatter = DartFormatter(
   languageVersion: DartFormatter.latestLanguageVersion,
 );
 
+/// Restores fixed-point Runtime Bundle propagation for differential diagnosis.
+const _runtimeBundleGraphOptimizationKillSwitch =
+    'CCROUTER_DISABLE_RUNTIME_BUNDLE_GRAPH_OPTIMIZATION';
+
 /// Monotonic suffix preventing temporary output collisions within one process.
 var _temporaryWriteSequence = 0;
 
@@ -887,36 +891,79 @@ Future<bool> _generateResolvedWorkspace(
     for (final entry in externalIndexes.entries)
       if (entry.value.hasRuntimeBundle) entry.key,
   };
-  var changed = true;
-  while (changed) {
-    changed = false;
+  final runtimeBundleSeeds = Set<String>.of(runtimeBundles);
+  var runtimeBundlePropagation = 'fixed-point';
+  var useReverseClosure =
+      Platform.environment[_runtimeBundleGraphOptimizationKillSwitch] != '1';
+  Set<String>? runtimeBundleClosure;
+  if (useReverseClosure) {
+    runtimeBundleClosure = CCReverseDependencyClosure.compute(
+      dependenciesByNode: {
+        for (final package in workspace.packages.values)
+          package.name: package.dependencies,
+      },
+      seeds: runtimeBundleSeeds,
+    );
     for (final package in workspace.packages.values) {
-      if (runtimeBundles.contains(package.name)) continue;
-      if (!package.dependencies.any(runtimeBundles.contains)) continue;
-      if (package.name != workspace.host.name &&
-          !package.dependencies.contains('ccrouter')) {
-        packageModelSpan?.finish(status: 'failed');
-        _commandStderr.writeln(
-          'error: Package "${package.name}" contains a transitive CCRouter '
-          'runtime Package but cannot publish a forwarding Bundle because it '
-          'does not directly depend on `ccrouter`. Add that dependency and '
-          'regenerate the Package.',
-        );
-        return false;
+      if (runtimeBundleSeeds.contains(package.name) ||
+          !runtimeBundleClosure.contains(package.name)) {
+        continue;
       }
-      if (!package.writable &&
-          !(externalIndexes[package.name]?.hasRuntimeBundle ?? false)) {
-        packageModelSpan?.finish(status: 'failed');
-        _commandStderr.writeln(
-          'error: Read-only Package "${package.name}" must publish a '
-          'CCRouter Package index and forwarding Bundle for its transitive '
-          'runtime components.',
-        );
-        return false;
+      final missingDirectRuntime =
+          package.name != workspace.host.name &&
+          !package.dependencies.contains('ccrouter');
+      final missingPublishedBundle =
+          !package.writable &&
+          !(externalIndexes[package.name]?.hasRuntimeBundle ?? false);
+      if (missingDirectRuntime || missingPublishedBundle) {
+        // Preserve the fixed-point path as the authority for error ordering.
+        useReverseClosure = false;
+        break;
+      }
+    }
+  }
+  if (useReverseClosure) {
+    runtimeBundlePropagation = 'reverse-closure';
+    for (final package in workspace.packages.values) {
+      if (runtimeBundleSeeds.contains(package.name) ||
+          !runtimeBundleClosure!.contains(package.name)) {
+        continue;
       }
       runtimeBundles.add(package.name);
       participating.add(package.name);
-      changed = true;
+    }
+  } else {
+    var changed = true;
+    while (changed) {
+      changed = false;
+      for (final package in workspace.packages.values) {
+        if (runtimeBundles.contains(package.name)) continue;
+        if (!package.dependencies.any(runtimeBundles.contains)) continue;
+        if (package.name != workspace.host.name &&
+            !package.dependencies.contains('ccrouter')) {
+          packageModelSpan?.finish(status: 'failed');
+          _commandStderr.writeln(
+            'error: Package "${package.name}" contains a transitive CCRouter '
+            'runtime Package but cannot publish a forwarding Bundle because it '
+            'does not directly depend on `ccrouter`. Add that dependency and '
+            'regenerate the Package.',
+          );
+          return false;
+        }
+        if (!package.writable &&
+            !(externalIndexes[package.name]?.hasRuntimeBundle ?? false)) {
+          packageModelSpan?.finish(status: 'failed');
+          _commandStderr.writeln(
+            'error: Read-only Package "${package.name}" must publish a '
+            'CCRouter Package index and forwarding Bundle for its transitive '
+            'runtime components.',
+          );
+          return false;
+        }
+        runtimeBundles.add(package.name);
+        participating.add(package.name);
+        changed = true;
+      }
     }
   }
   if (hostGeneration) runtimeBundles.add(workspace.host.name);
@@ -1008,6 +1055,7 @@ Future<bool> _generateResolvedWorkspace(
       'indexes': indexes.length,
       'runtimeBundles': runtimeBundles.length,
     },
+    attributes: {'runtimeBundlePropagation': runtimeBundlePropagation},
   );
 
   final aggregationInputFingerprint = await trace.measure(
