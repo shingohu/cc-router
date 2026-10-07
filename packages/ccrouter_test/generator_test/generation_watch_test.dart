@@ -428,6 +428,177 @@ void main() {
   );
 
   test(
+    'non-generating Dart edits preserve artifacts across generation entrypoints',
+    () async {
+      final demoRoot = Directory(path.join(Directory.current.path, 'demo'));
+      final source = File(
+        path.join(
+          demoRoot.path,
+          'modules',
+          'navigation_lab',
+          'lib',
+          'src',
+          'stack_page.dart',
+        ),
+      );
+      final original = source.readAsStringSync();
+      final originalArtifacts = await _managedArtifacts();
+      final initStateEdit = _replaceOnce(
+        original,
+        "_status = '当前是第 \${widget.level} 层';",
+        "_status = '当前层级 \${widget.level}';",
+      );
+      final functionEdit = _replaceOnce(
+        original,
+        '  void _complete() {',
+        '  int _nextLevel() => widget.level + 1;\n\n'
+            '  void _complete() {',
+      );
+      final widgetBodyEdit = _replaceOnce(
+        original,
+        'padding: const EdgeInsets.all(24),',
+        'padding: const EdgeInsets.all(25),',
+      );
+      final commentEdit = '$original\n// Generation entrypoint parity probe.\n';
+      _ConcurrentWatch? watch;
+      try {
+        source.writeAsStringSync(commentEdit, flush: true);
+        final oneShot = await _run(['generate', demoRoot.path]);
+        expect(oneShot.exitCode, 0, reason: _processOutput(oneShot));
+        expect(await _managedArtifacts(), originalArtifacts);
+
+        source.writeAsStringSync(initStateEdit, flush: true);
+        final reference = await _run([
+          'generate',
+          demoRoot.path,
+          '--no-cache',
+          '--check',
+        ]);
+        expect(reference.exitCode, 0, reason: _processOutput(reference));
+        expect('${reference.stdout}', contains('artifacts are up to date'));
+        expect(await _managedArtifacts(), originalArtifacts);
+
+        source.writeAsStringSync(functionEdit, flush: true);
+        final postPub = await _runHostPostPub(demoRoot);
+        expect(postPub.exitCode, 0, reason: _processOutput(postPub));
+        expect(
+          _processOutput(postPub),
+          contains('CCRouter post-pub generation finished:'),
+        );
+        expect(await _managedArtifacts(), originalArtifacts);
+
+        watch = await _ConcurrentWatch.start(demoRoot);
+        final ready = await watch.waitUntilReady();
+        source.writeAsStringSync(widgetBodyEdit, flush: true);
+        final bodyCycle = await watch.waitForCycleAfter(ready['cycle'] as int);
+        expect(bodyCycle['failureDiagnostics'], isNull);
+        expect(await _managedArtifacts(), originalArtifacts);
+
+        source.writeAsStringSync(commentEdit, flush: true);
+        final commentCycle = await watch.waitForCycleAfter(
+          bodyCycle['cycle'] as int,
+        );
+        expect(commentCycle['failureDiagnostics'], isNull);
+        final watchedArtifacts = await _managedArtifacts();
+        expect(watchedArtifacts, originalArtifacts);
+
+        final watchedPostPub = await _runHostPostPub(demoRoot);
+        expect(
+          watchedPostPub.exitCode,
+          0,
+          reason: _processOutput(watchedPostPub),
+        );
+        expect(
+          _processOutput(watchedPostPub),
+          contains('reused active watch cycle ${commentCycle['cycle']}'),
+        );
+        expect(await _managedArtifacts(), watchedArtifacts);
+      } finally {
+        source.writeAsStringSync(original, flush: true);
+        await watch?.stop();
+        final restored = await _run(['generate', demoRoot.path, '--no-cache']);
+        expect(restored.exitCode, 0, reason: _processOutput(restored));
+        expect(await _managedArtifacts(), originalArtifacts);
+      }
+    },
+    timeout: const Timeout(Duration(minutes: 8)),
+  );
+
+  test(
+    'generating annotation edits publish identical bytes across entrypoints',
+    () async {
+      final demoRoot = Directory(path.join(Directory.current.path, 'demo'));
+      final source = File(
+        path.join(
+          demoRoot.path,
+          'modules',
+          'navigation_lab',
+          'lib',
+          'src',
+          'stack_page.dart',
+        ),
+      );
+      final original = source.readAsStringSync();
+      final changed = _replaceOnce(
+        original,
+        "description: '交互验证 Push、Replace、Pop、Go 与 Reset。',",
+        "description: '交互验证生成入口的逐字节一致性。',",
+      );
+      final originalArtifacts = await _managedArtifacts();
+      _ConcurrentWatch? watch;
+      try {
+        source.writeAsStringSync(changed, flush: true);
+        final oneShot = await _run(['generate', demoRoot.path]);
+        expect(oneShot.exitCode, 0, reason: _processOutput(oneShot));
+        final expected = await _managedArtifacts();
+        expect(_changedArtifactPaths(originalArtifacts, expected), isNotEmpty);
+
+        final reference = await _run([
+          'generate',
+          demoRoot.path,
+          '--no-cache',
+          '--check',
+        ]);
+        expect(reference.exitCode, 0, reason: _processOutput(reference));
+        expect(await _managedArtifacts(), expected);
+
+        await _restoreSourceAndArtifacts(source, original, originalArtifacts);
+        source.writeAsStringSync(changed, flush: true);
+        final postPub = await _runHostPostPub(demoRoot);
+        expect(postPub.exitCode, 0, reason: _processOutput(postPub));
+        expect(await _managedArtifacts(), expected);
+
+        await _restoreSourceAndArtifacts(source, original, originalArtifacts);
+        watch = await _ConcurrentWatch.start(demoRoot);
+        final ready = await watch.waitUntilReady();
+        source.writeAsStringSync(changed, flush: true);
+        final completed = await watch.waitForCycleAfter(ready['cycle'] as int);
+        expect(completed['failureDiagnostics'], isNull);
+        expect(await _managedArtifacts(), expected);
+
+        final watchedPostPub = await _runHostPostPub(demoRoot);
+        expect(
+          watchedPostPub.exitCode,
+          0,
+          reason: _processOutput(watchedPostPub),
+        );
+        expect(
+          _processOutput(watchedPostPub),
+          contains('reused active watch cycle ${completed['cycle']}'),
+        );
+        expect(await _managedArtifacts(), expected);
+      } finally {
+        source.writeAsStringSync(original, flush: true);
+        await watch?.stop();
+        final restored = await _run(['generate', demoRoot.path, '--no-cache']);
+        expect(restored.exitCode, 0, reason: _processOutput(restored));
+        expect(await _managedArtifacts(), originalArtifacts);
+      }
+    },
+    timeout: const Timeout(Duration(minutes: 10)),
+  );
+
+  test(
     'watch restarts only when the resolved Host closure needs a new session',
     () async {
       final pubspec = File(
@@ -1183,6 +1354,29 @@ Future<ProcessResult> _runDemoPubGet() => Process.run(
   workingDirectory: path.join(Directory.current.path, 'demo'),
   environment: _environment({'CCROUTER_PUB_HOOK_DISABLE': '1'}),
 );
+
+Future<ProcessResult> _runHostPostPub(Directory hostRoot) => _run([
+  'pub-hook',
+  'run',
+  '--project-root',
+  hostRoot.path,
+  '--pub-command',
+  'get',
+]);
+
+Future<void> _restoreSourceAndArtifacts(
+  File source,
+  String contents,
+  Map<String, List<int>> expected,
+) async {
+  source.writeAsStringSync(contents, flush: true);
+  final restored = await _run(['generate', 'demo']);
+  expect(restored.exitCode, 0, reason: _processOutput(restored));
+  expect(await _managedArtifacts(), expected);
+}
+
+String _processOutput(ProcessResult result) =>
+    '${result.stdout}\n${result.stderr}';
 
 Future<Map<String, dynamic>> _readWatchStatus() async =>
     jsonDecode(
