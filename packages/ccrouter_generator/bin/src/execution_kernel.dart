@@ -669,7 +669,7 @@ Future<_GenerationCycleResult> _runGenerationCycle({
               snapshot: planningSnapshot,
             );
             final planningState = await planningSnapshot.capturePlanningState(
-              fastPathWorkspace!,
+              fastPathWorkspace,
             );
             await profileTrace.measure(
               'fast-path-manifest-write',

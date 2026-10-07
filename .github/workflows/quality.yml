@@ -1,0 +1,105 @@
+name: Quality
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: quality-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CI: true
+  PUB_ENVIRONMENT: bot.github
+  CCROUTER_HOME: ${{ runner.temp }}/ccrouter-home
+
+jobs:
+  static-and-skills:
+    name: Static analysis and Skills
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.41.9
+          channel: stable
+          cache: true
+      - name: Resolve Workspace dependencies
+        run: CCROUTER_PUB_HOOK_DISABLE=1 flutter pub get
+      - name: Analyze framework and tools
+        run: |
+          dart analyze packages
+          dart analyze tool
+      - name: Validate documentation
+        run: dart tool/documentation_check.dart
+      - name: Validate isolated Skill bundle
+        run: dart test tool/test/skill_bundle_check_test.dart
+
+  analyzer-plugin:
+    name: Analyzer Plugin and real servers
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/ccrouter_analyzer_plugin
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: 3.11.5
+      - name: Resolve isolated Plugin dependencies
+        run: dart pub get
+      - name: Analyze Plugin
+        run: dart analyze
+      - name: Test Plugin with Legacy and LSP servers
+        run: dart test --concurrency=1
+
+  framework:
+    name: Flutter framework regression
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.41.9
+          channel: stable
+          cache: true
+      - name: Resolve Workspace dependencies
+        run: CCROUTER_PUB_HOOK_DISABLE=1 flutter pub get
+      - name: Test framework behavior and lifecycle
+        run: flutter test --no-pub packages/ccrouter_test/test
+
+  generator:
+    name: Generator regression
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.41.9
+          channel: stable
+          cache: true
+      - name: Resolve Workspace dependencies
+        run: CCROUTER_PUB_HOOK_DISABLE=1 flutter pub get
+      - name: Test Generator and CLI
+        run: dart test --concurrency=1 packages/ccrouter_test/generator_test
+
+  demo:
+    name: Demo and generated output
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.41.9
+          channel: stable
+          cache: true
+      - name: Resolve Workspace dependencies
+        run: CCROUTER_PUB_HOOK_DISABLE=1 flutter pub get
+      - name: Test Demo
+        run: flutter test --no-pub demo
+      - name: Verify uncached generated output
+        run: >-
+          dart packages/ccrouter_generator/bin/ccrouter_generator.dart
+          generate demo --no-cache --check
