@@ -36,8 +36,8 @@ jobs:
         run: dart tool/documentation_check.dart
       - name: Check release-sensitive files
         run: dart tool/release_sensitivity_check.dart
-      - name: Validate isolated Skill bundle
-        run: dart test tool/test/skill_bundle_check_test.dart
+      - name: Test repository tools and isolated Skill bundle
+        run: dart test tool/test
 
   analyzer-plugin:
     name: Analyzer Plugin and real servers
@@ -105,3 +105,75 @@ jobs:
         run: >-
           dart packages/ccrouter_generator/bin/ccrouter_generator.dart
           generate demo --no-cache --check
+
+  performance:
+    name: Performance advisory
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.41.9
+          channel: stable
+          cache: true
+      - name: Resolve current Workspace dependencies
+        run: CCROUTER_PUB_HOOK_DISABLE=1 flutter pub get
+      - name: Select comparison revision
+        id: baseline
+        env:
+          BASE_REVISION: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          if [[ -z "$BASE_REVISION" || "$BASE_REVISION" =~ ^0+$ ]]; then
+            echo "available=false" >> "$GITHUB_OUTPUT"
+          elif git cat-file -e "$BASE_REVISION^{commit}"; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+            echo "revision=$BASE_REVISION" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Run baseline benchmark
+        if: steps.baseline.outputs.available == 'true'
+        env:
+          BASE_REVISION: ${{ steps.baseline.outputs.revision }}
+          BASELINE_DIRECTORY: ${{ runner.temp }}/ccrouter-performance-baseline
+          REPORT_DIRECTORY: ${{ runner.temp }}/ccrouter-performance
+        run: |
+          git worktree add --detach "$BASELINE_DIRECTORY" "$BASE_REVISION"
+          cd "$BASELINE_DIRECTORY"
+          CCROUTER_PUB_HOOK_DISABLE=1 flutter pub get
+          dart "$GITHUB_WORKSPACE/packages/ccrouter_test/benchmark/performance_regression.dart" \
+            --output="$REPORT_DIRECTORY/baseline.json"
+      - name: Run current benchmark
+        env:
+          REPORT_DIRECTORY: ${{ runner.temp }}/ccrouter-performance
+        run: >-
+          dart run packages/ccrouter_test/benchmark/performance_regression.dart
+          --output="$REPORT_DIRECTORY/current.json"
+      - name: Compare same-runner reports
+        if: steps.baseline.outputs.available == 'true'
+        env:
+          REPORT_DIRECTORY: ${{ runner.temp }}/ccrouter-performance
+        run: |
+          dart run tool/performance_compare.dart \
+            "$REPORT_DIRECTORY/baseline.json" \
+            "$REPORT_DIRECTORY/current.json" \
+            --max-regression=0.30 \
+            | tee "$REPORT_DIRECTORY/comparison.md"
+          cat "$REPORT_DIRECTORY/comparison.md" >> "$GITHUB_STEP_SUMMARY"
+      - name: Record unavailable baseline
+        if: steps.baseline.outputs.available != 'true'
+        env:
+          REPORT_DIRECTORY: ${{ runner.temp }}/ccrouter-performance
+        run: |
+          mkdir -p "$REPORT_DIRECTORY"
+          echo "Performance baseline was unavailable; current report was preserved." \
+            | tee "$REPORT_DIRECTORY/comparison.md" \
+            >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload performance reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-${{ runner.os }}-${{ github.sha }}
+          path: ${{ runner.temp }}/ccrouter-performance
+          if-no-files-found: error

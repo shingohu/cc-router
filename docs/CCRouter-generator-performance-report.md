@@ -273,6 +273,14 @@ fvm dart run packages/ccrouter_test/benchmark/performance_regression.dart --full
 并比较 P50/P95、丢弃数、峰值队列、生成物 fingerprint 和资源清理状态。Flutter Widget、真实
 设备和 OHOS smoke 仍由各平台命令单独执行，不能用 Pure Dart benchmark 冒充平台兼容性。
 
+CI 的 `Performance advisory` job 会在同一个 Linux runner、同一个 Flutter/Dart SDK 上依次
+运行目标分支的 base SHA 与当前 SHA，并通过 `--output=<path>` 保存两份完整 JSON artifact。
+`tool/performance_compare.dart` 比较各子 benchmark 的进程 wall time；相对 base 增长超过 30%
+时写入 Job Summary advisory，但当前阶段不阻断合并。报告 schema、平台、SDK、suite mode 或
+benchmark 集合不一致仍作为配置错误失败，防止把不可比样本误当成性能结论。首次 push 等没有
+有效 base SHA 的场景只保存 current 报告。该预算用于发现趋势，不是跨平台 SLA；微秒级
+P50/P95、RSS 与生成器内部指标保留在 artifact 中，出现 advisory 后再用重复采样确认归因。
+
 2026-09-29 在 macOS arm64、Dart 3.11.5 的一次完整运行结果：Runtime 10/100/1000 路由
 初始化 P95 为 40/120/502us，动态打开 P95 为 77/115/436us；Service 1000 Provider 初始化
 P95 为 3.4ms、销毁 P95 为 423us；并发导航 10 轮、每轮 100 次 push/pop 后最终保留 1 个

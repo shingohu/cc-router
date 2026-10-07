@@ -8,9 +8,11 @@ import 'dart:io';
 /// `--full` to include the end-to-end generator fixture at 1x/10x/20x/30x.
 /// Each child process owns its state so RSS samples are not mixed with the
 /// orchestrator or a test runner. This is a trend/reporting tool, not a fixed
-/// cross-platform performance assertion.
+/// cross-platform performance assertion. Pass `--output=<path>` to persist the
+/// final machine-readable report after every benchmark succeeds.
 Future<void> main(List<String> arguments) async {
   final full = arguments.contains('--full');
+  final outputPath = _outputPath(arguments);
   final root = _findWorkspaceRoot(Directory.current);
   final benchmarks = <_BenchmarkSpec>[
     const _BenchmarkSpec('runtime_scaling.dart'),
@@ -32,10 +34,12 @@ Future<void> main(List<String> arguments) async {
   ];
 
   final report = <String, Object?>{
+    'schemaVersion': 1,
     'suite': 'ccrouter-performance-regression',
     'full': full,
     'sdk': Platform.version,
     'platform': Platform.operatingSystem,
+    'revision': _revision(root),
     'benchmarks': <Object?>[],
   };
   final results = report['benchmarks']! as List<Object?>;
@@ -44,7 +48,43 @@ Future<void> main(List<String> arguments) async {
     results.add(result);
     stdout.writeln(jsonEncode(result));
   }
-  stdout.writeln(jsonEncode(report));
+  final encoded = jsonEncode(report);
+  if (outputPath != null) {
+    final output = File(outputPath);
+    output.parent.createSync(recursive: true);
+    output.writeAsStringSync(
+      '${const JsonEncoder.withIndent('  ').convert(report)}\n',
+    );
+  }
+  stdout.writeln(encoded);
+}
+
+String? _outputPath(List<String> arguments) {
+  String? result;
+  for (final argument in arguments) {
+    if (argument == '--full') continue;
+    if (!argument.startsWith('--output=')) {
+      throw ArgumentError.value(argument, 'arguments', 'Unknown option.');
+    }
+    final value = argument.substring('--output='.length).trim();
+    if (value.isEmpty || result != null) {
+      throw ArgumentError.value(
+        argument,
+        'arguments',
+        'Provide exactly one non-empty --output path.',
+      );
+    }
+    result = value;
+  }
+  return result;
+}
+
+String _revision(Directory root) {
+  final result = Process.runSync('git', [
+    'rev-parse',
+    'HEAD',
+  ], workingDirectory: root.path);
+  return result.exitCode == 0 ? '${result.stdout}'.trim() : 'unknown';
 }
 
 Future<Map<String, Object?>> _runBenchmark(
