@@ -40,6 +40,10 @@ final class CCRouterFilesystemIdentityIndex {
   /// Number of unique exact paths currently retained.
   int get watchedPathCount => _identityByPath.length;
 
+  /// Caller-owned registration identities currently retained by this index.
+  Set<String> get registrationIdentities =>
+      Set.unmodifiable(_registrations.keys);
+
   /// Adds or atomically replaces one caller-owned registration.
   void replace(
     String registration, {
@@ -83,7 +87,18 @@ final class CCRouterFilesystemIdentityIndex {
   }
 
   /// Inspects every registered path as a fallback for dropped server events.
-  CCRouterFilesystemPollResult pollAll() => pollPaths(_identityByPath.keys);
+  CCRouterFilesystemPollResult pollAll() {
+    final changedRegistrations = <String>{};
+    for (final entry in _identityByPath.entries) {
+      final current = _fileIdentity(entry.key);
+      if (current == entry.value) continue;
+      _identityByPath[entry.key] = current;
+      changedRegistrations.addAll(
+        _registrationsByPath[entry.key] ?? const <String>{},
+      );
+    }
+    return _result(changedRegistrations, _identityByPath.length);
+  }
 
   /// Inspects only exact registered [changedPaths] supplied by a file event.
   CCRouterFilesystemPollResult pollPaths(Iterable<String> changedPaths) {
@@ -102,6 +117,14 @@ final class CCRouterFilesystemIdentityIndex {
         _registrationsByPath[watchedPath] ?? const <String>{},
       );
     }
+    return _result(changedRegistrations, inspected.length);
+  }
+
+  /// Expands changed registration identities into authored refresh targets.
+  CCRouterFilesystemPollResult _result(
+    Set<String> changedRegistrations,
+    int inspectedPathCount,
+  ) {
     final affected = <String>{};
     for (final registration in changedRegistrations) {
       affected.addAll(
@@ -111,7 +134,7 @@ final class CCRouterFilesystemIdentityIndex {
     return CCRouterFilesystemPollResult(
       changedRegistrations: changedRegistrations,
       affectedPaths: affected,
-      inspectedPathCount: inspected.length,
+      inspectedPathCount: inspectedPathCount,
     );
   }
 

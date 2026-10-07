@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:ccrouter_analyzer_plugin/src/filesystem_identity_index.dart';
 import 'package:ccrouter_analyzer_plugin/src/generator_diagnostics_bridge.dart';
 import 'package:ccrouter_analyzer_plugin/src/project_context.dart';
 import 'package:path/path.dart' as path;
@@ -94,17 +95,30 @@ void _benchmarkExactPathPolling() {
   for (final pathCount in const <int>[100, 1000, 5000, 10000]) {
     final fixture = _ExactPathFixture.create(pathCount);
     try {
-      final poller = _FullScanReference(fixture.sourcesByPath);
-      poller.poll();
-      final samples = <int>[];
+      final reference = _FullScanReference(fixture.sourcesByPath)..poll();
+      final candidate = CCRouterFilesystemIdentityIndex();
+      for (final entry in fixture.pathsBySource.entries) {
+        candidate.replace(
+          entry.key,
+          watchedPaths: entry.value,
+          affectedPaths: [entry.key],
+        );
+      }
+      candidate.pollAll();
+      final referenceSamples = <int>[];
+      final candidateSamples = <int>[];
       for (var poll = 0; poll < 50; poll++) {
-        final watch = Stopwatch()..start();
-        final affected = poller.poll();
-        watch.stop();
-        if (affected.isNotEmpty) {
+        final referenceWatch = Stopwatch()..start();
+        final referenceAffected = reference.poll();
+        referenceWatch.stop();
+        final candidateWatch = Stopwatch()..start();
+        final candidateAffected = candidate.pollAll().affectedPaths;
+        candidateWatch.stop();
+        if (referenceAffected.isNotEmpty || candidateAffected.isNotEmpty) {
           throw StateError('Stable exact-path poll reported a false change.');
         }
-        samples.add(watch.elapsedMicroseconds);
+        referenceSamples.add(referenceWatch.elapsedMicroseconds);
+        candidateSamples.add(candidateWatch.elapsedMicroseconds);
       }
 
       final changedPath = fixture.paths[pathCount ~/ 2];
@@ -112,32 +126,44 @@ void _benchmarkExactPathPolling() {
       File(
         changedPath,
       ).writeAsStringSync('// changed\n', mode: FileMode.append);
-      final changedWatch = Stopwatch()..start();
-      final changedSources = poller.poll();
-      changedWatch.stop();
-      if (!_sameSet(changedSources, expectedSources)) {
+      final referenceChangedWatch = Stopwatch()..start();
+      final referenceChanged = reference.poll();
+      referenceChangedWatch.stop();
+      final eventChangedWatch = Stopwatch()..start();
+      final eventChanged = candidate.pollPaths([changedPath]).affectedPaths;
+      eventChangedWatch.stop();
+      if (!_sameSet(referenceChanged, expectedSources) ||
+          !_sameSet(eventChanged, expectedSources)) {
         throw StateError('Changed exact path returned the wrong sources.');
       }
 
       final removedPath = fixture.paths.last;
       final expectedRemovedSources = fixture.sourcesByPath[removedPath]!;
       File(removedPath).deleteSync();
-      final removedSources = poller.poll();
-      if (!_sameSet(removedSources, expectedRemovedSources)) {
+      final referenceRemoved = reference.poll();
+      final candidateRemoved = candidate.pollAll().affectedPaths;
+      if (!_sameSet(referenceRemoved, expectedRemovedSources) ||
+          !_sameSet(candidateRemoved, expectedRemovedSources)) {
         throw StateError('Deleted exact path returned the wrong sources.');
       }
       File(removedPath).writeAsStringSync('// recreated\n');
-      final recreatedSources = poller.poll();
-      if (!_sameSet(recreatedSources, expectedRemovedSources)) {
+      final referenceRecreated = reference.poll();
+      final candidateRecreated = candidate.pollAll().affectedPaths;
+      if (!_sameSet(referenceRecreated, expectedRemovedSources) ||
+          !_sameSet(candidateRecreated, expectedRemovedSources)) {
         throw StateError('Recreated exact path returned the wrong sources.');
       }
 
-      samples.sort();
+      referenceSamples.sort();
+      candidateSamples.sort();
       stdout.writeln(
         'CCRouter analyzer exactPaths=$pathCount polls=50 '
-        'steadyP50=${_percentile(samples, 0.50)}us '
-        'steadyP95=${_percentile(samples, 0.95)}us '
-        'singleChange=${changedWatch.elapsedMicroseconds}us',
+        'referenceP50=${_percentile(referenceSamples, 0.50)}us '
+        'referenceP95=${_percentile(referenceSamples, 0.95)}us '
+        'candidateP50=${_percentile(candidateSamples, 0.50)}us '
+        'candidateP95=${_percentile(candidateSamples, 0.95)}us '
+        'referenceChange=${referenceChangedWatch.elapsedMicroseconds}us '
+        'eventChange=${eventChangedWatch.elapsedMicroseconds}us',
       );
     } finally {
       fixture.dispose();
@@ -203,6 +229,17 @@ final class _ExactPathFixture {
 
   /// Reverse dependency evidence used by both reference and candidates.
   final Map<String, Set<String>> sourcesByPath;
+
+  /// Exact watched paths grouped by their authored source registration.
+  Map<String, Set<String>> get pathsBySource {
+    final result = <String, Set<String>>{};
+    for (final entry in sourcesByPath.entries) {
+      for (final source in entry.value) {
+        result.putIfAbsent(source, () => <String>{}).add(entry.key);
+      }
+    }
+    return result;
+  }
 
   /// Removes the complete temporary graph.
   void dispose() => root.deleteSync(recursive: true);

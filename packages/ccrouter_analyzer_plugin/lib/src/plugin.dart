@@ -10,6 +10,7 @@ import 'package:analyzer_plugin/plugin/plugin.dart';
 import 'package:analyzer_plugin/protocol/protocol_common.dart';
 import 'package:analyzer_plugin/protocol/protocol_generated.dart';
 import 'package:ccrouter_analyzer_plugin/src/contract_owner_index.dart';
+import 'package:ccrouter_analyzer_plugin/src/filesystem_identity_index.dart';
 import 'package:ccrouter_analyzer_plugin/src/generator_diagnostics_bridge.dart';
 import 'package:ccrouter_analyzer_plugin/src/package_context_cache.dart';
 import 'package:ccrouter_analyzer_plugin/src/project_context.dart';
@@ -60,8 +61,9 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
   /// Last observed Workspace manifest identity for each Analysis context.
   final Map<String, String> _workspaceManifestIdentityByContext = {};
 
-  /// Generated outputs tracked only for analyzed authored capability sources.
-  final Map<String, Map<String, String>> _generatedOutputIdentityBySource = {};
+  /// Exact generated outputs tracked by analyzed authored capability source.
+  final CCRouterFilesystemIdentityIndex _generatedOutputs =
+      CCRouterFilesystemIdentityIndex();
 
   /// Watches Dart sources and the exact generated Contract ownership index.
   /// JSON is an invalidation input only; no JSON diagnostics are published.
@@ -129,7 +131,7 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
     _generatorDiagnostics.clear();
     _pubspecPathsByContext.clear();
     _workspaceManifestIdentityByContext.clear();
-    _generatedOutputIdentityBySource.clear();
+    _generatedOutputs.clear();
     await super.beforeContextCollectionDispose(
       contextCollection: contextCollection,
     );
@@ -237,7 +239,7 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
     _projectContexts.clear();
     _pubspecPathsByContext.clear();
     _workspaceManifestIdentityByContext.clear();
-    _generatedOutputIdentityBySource.clear();
+    _generatedOutputs.clear();
     return super.handlePluginShutdown(parameters);
   }
 
@@ -249,7 +251,7 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
     _projectContexts.clear();
     _pubspecPathsByContext.clear();
     _workspaceManifestIdentityByContext.clear();
-    _generatedOutputIdentityBySource.clear();
+    _generatedOutputs.clear();
     super.onDone();
   }
 
@@ -258,7 +260,9 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
   /// imported by their authored declarations, but still change diagnostics.
   @override
   Future<void> contentChanged(List<String> paths) async {
-    final refresh = <String>{};
+    final refresh = <String>{
+      ..._generatedOutputs.pollPaths(paths).affectedPaths,
+    };
     var resolutionInputChanged = false;
     for (final changedPath in paths) {
       _packageContexts.invalidate(changedPath);
@@ -344,7 +348,7 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
     if (!_isAuthoredDartPath(path)) return;
     final file = resourceProvider.getFile(path);
     if (!file.exists) {
-      _generatedOutputIdentityBySource.remove(path);
+      _generatedOutputs.remove(path);
       return;
     }
     // Analysis Server can forward files matching a broad context glob,
@@ -439,35 +443,21 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
   /// Captures only outputs proven by the latest authored source analysis.
   void _trackGeneratedOutputs(String sourcePath, Set<String> outputPaths) {
     if (outputPaths.isEmpty) {
-      _generatedOutputIdentityBySource.remove(sourcePath);
+      _generatedOutputs.remove(sourcePath);
       return;
     }
-    _generatedOutputIdentityBySource[sourcePath] = {
-      for (final outputPath in outputPaths)
-        outputPath: _filesystemIdentity(io.File(outputPath)),
-    };
+    _generatedOutputs.replace(
+      sourcePath,
+      watchedPaths: outputPaths,
+      affectedPaths: [sourcePath],
+    );
   }
 
   /// Detects generated output changes even when Analysis Server drops events.
   Set<String> _pollGeneratedOutputs() {
-    final refresh = <String>{};
-    final removedSources = <String>[];
-    for (final entry in _generatedOutputIdentityBySource.entries) {
-      if (!io.File(entry.key).existsSync()) {
-        removedSources.add(entry.key);
-        continue;
-      }
-      var changed = false;
-      for (final outputPath in entry.value.keys.toList(growable: false)) {
-        final current = _filesystemIdentity(io.File(outputPath));
-        if (current == entry.value[outputPath]) continue;
-        entry.value[outputPath] = current;
-        changed = true;
-      }
-      if (changed) refresh.add(entry.key);
-    }
-    for (final source in removedSources) {
-      _generatedOutputIdentityBySource.remove(source);
+    final refresh = _generatedOutputs.pollAll().affectedPaths;
+    for (final source in _generatedOutputs.registrationIdentities) {
+      if (!io.File(source).existsSync()) _generatedOutputs.remove(source);
     }
     return refresh;
   }
@@ -484,7 +474,12 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
     required AnalysisContext analysisContext,
     required List<String> paths,
   }) async {
-    final analyzedPaths = <String>{};
+    final analyzedPaths = <String>{
+      ..._generatedOutputs
+          .pollPaths(paths)
+          .affectedPaths
+          .where(analysisContext.contextRoot.isAnalyzed),
+    };
     for (final changedPath in paths) {
       _packageContexts.invalidate(changedPath);
       analyzedPaths.addAll(
