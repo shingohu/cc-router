@@ -318,9 +318,11 @@ Validator、依赖发现、Portable State 重算或 Host 聚合成本。
   30 秒触发阈值；P3 路径的 aggregate/format/write 占比约 21%，但绝对值只有 230ms，且尚无
   生产 P95 证明继续拆分能获得正收益。
 
-结论：1.x 不引入常驻 daemon/watch，不访问 build_runner 私有 Asset Graph，不维护第二套
-Analyzer runner，也不为升级 build_runner 扩大 SDK 迁移面。后续只有达到第 9.7 节生产 P95 或
-第 7 节触发条件时重新立项；自有 runner 继续属于架构 2.0 候选。
+当时结论是 1.x 不引入常驻 daemon/watch、不访问 build_runner 私有 Asset Graph、不维护第二套
+Analyzer runner，也不为升级 build_runner 扩大 SDK 迁移面。该阶段结论后来被 2026-10-05 的
+Host-only `generate --watch=auto --machine` 实现部分取代：当前路径复用官方 build_runner watch，
+没有自建 Analyzer runner 或读取私有 Asset Graph，并保留 one-shot `--no-cache --check` 门禁。
+自有 runner 仍属于架构 2.0 候选，本节冷成本数据继续作为实现前历史基线。
 
 ### P5：多组件个人/团队拓扑回归，已完成
 

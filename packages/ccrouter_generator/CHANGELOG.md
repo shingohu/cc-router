@@ -3,6 +3,14 @@
 ## 0.1.0 - Unreleased
 
 - Preparing the first public release of CCRouter generation and CLI tooling.
+- Added explicit Host/package project-role resolution with separate requested
+  and Pub-resolution roots. Participating component and contracts Packages can
+  now run package-local generation without publishing Host assembly or mutating
+  sibling Packages.
+- Added the opt-in Portable Generation State lifecycle. `portable prepare`
+  writes verified state only for Packages declaring `generation.portable: true`,
+  while `portable publish` performs a local readiness check without contacting
+  Pub or Git.
 - Fixed clean Workspace and SDK-switch generation by rebuilding a missing
   build_runner executable snapshot through Pub and retrying once after Dart
   reports `Wrong full snapshot version`, instead of leaving generation on the
@@ -44,6 +52,10 @@
   Hook now waits for aggregation proven against the exact current Pub
   resolution inputs and surfaces bounded Builder/validation diagnostics on
   failure instead of reporting only a generation-lock conflict.
+- Allowed package-local Pub Hooks to reuse an active Host watch only when the
+  stable Builder session proves exact per-target Pub-resolution, authored-input,
+  and managed-output fingerprints. Missing or stale evidence remains
+  fail-closed without starting a conflicting one-shot.
 - Added diagnostic-only structured build_runner phase, activity, execution,
   and invalidation counters to watch build events and the real-edit benchmark.
   Unknown upstream formats remain bounded raw diagnostics and never affect

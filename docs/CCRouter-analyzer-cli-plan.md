@@ -140,7 +140,10 @@ dev_dependencies:
 - Plugin 是开发期可选能力；任何安装、加载和版本故障都不得改变生成物、Runtime 或业务结果。
 - 文件写入采用临时文件和原子替换；多文件操作保留本次备份，全部验证成功后才完成提交。
 - `--dry-run` 不启动子进程、不写文件；实际操作在 Pub owner 下使用非阻塞文件锁，多 Host 共用 Workspace 时串行修改。
-- 只安装明确的 Flutter 应用：直接依赖 ccrouter/flutter，且有 app `.metadata` 或 `lib/main.dart` 顶层 main。Workspace 聚合根及普通组件不接受安装。
+- 只安装明确的 Flutter Host：Package 必须直接依赖 `ccrouter`，并由 `.metadata` 的
+  `project_type: app` 或 `ccrouter.yaml` 的 `host.enabled: true` 证明 Host 角色；
+  `host.enabled: false` 可显式降级。`lib/main.dart` 不是 Host 证据，Workspace 聚合根及普通组件
+  不接受安装。
 - 多 Host Workspace 必须逐 Host 装配；命令不扫描并批量修改所有 Package。
 - 执行后提示重启 Dart Analysis Server 或 IDE，但 CLI 不主动终止 IDE 进程。
 

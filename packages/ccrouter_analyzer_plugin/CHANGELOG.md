@@ -9,3 +9,10 @@
   including package-local/Pure Dart guidance without an active watch.
 - Publish and clear Pub-resolution drift hints for explicit Workspace members,
   including members analyzed through a shared Workspace context.
+- Consume exact-resolution structured diagnostics from an active Generator
+  watch or the latest eligible Host one-shot result. Stale, mismatched, and
+  superseded snapshots remain fail-open and never replace generation checks.
+- Refresh authored diagnostics after generated metadata, Package role, or
+  Workspace resolution changes through bounded filesystem identity indexes,
+  without opening a second Analyzer graph or requiring an Analysis Server
+  restart for ordinary source changes.

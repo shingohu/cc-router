@@ -4,7 +4,7 @@
 
 - 版本：v0.1
 - 状态：调研记录，不代表新增 API 或实施承诺
-- 最近对齐：2026-09-29
+- 最近对齐：2026-10-07
 - 对比对象：ARouter、TheRouter、Flutter Modular、GetIt、AutoRoute
 
 本文用于回答“CCRouter 相比其他组件化框架还缺少什么能力”，并区分：
@@ -58,7 +58,7 @@ CCRouter 的核心 Runtime 能力并不落后。相较常见方案，CCRouter �
 | 启动任务 DAG | 通常较弱 | Module 初始化 | 异步依赖 | 外接 | InitTask + Gate + failure policy |
 | 动态模块治理 | 部分方案支持 | Module 生命周期 | Scope/unregister | 无统一语义 | 1.x 不支持，2.0 候选 |
 | IDE 路由定位 | ARouter 有插件 | 一般 | 无 | 生成 API | 生成 API + `ccrouter find`，另有可选 Analysis Server 边界诊断 |
-| Watch 增量生成 | 生态支持 | 部分支持 | 不适用 | 支持 | 1.x 不提供 `watch` |
+| Watch 增量生成 | 生态支持 | 部分支持 | 不适用 | 支持 | Host-only `generate --watch=auto --machine`，并提供 `watch status/follow`；最终门禁仍是 `--no-cache --check` |
 | DevTools | 部分 | 部分 | 注册查看 | 部分 | 嵌入式面板、官方只读 Extension、Catalog/Runtime 联动、依赖与调用链已支持；不直接控制 Runtime 或绑定本地 IDE |
 | 原生多窗口 | 平台相关 | 平台相关 | 无 | 后端相关 | Host 隔离已具备，原生桥接暂缓 |
 | 状态恢复 | 平台/后端相关 | 后端相关 | 无 | 部分 | 只记录恢复机会，完整恢复暂缓 |
@@ -111,7 +111,7 @@ Workspace 校验和自动 Registrar bridge。
 
 **状态：已完成当前批准的生成闭环；高级方法形态和动态能力仍按生产需求评估。**
 
-### 3. Generator 和 IDE 工具链不如成熟路由框架
+### 3. Generator 和 IDE 工具链仍有自动化缺口
 
 当前已有：
 
@@ -119,28 +119,31 @@ Workspace 校验和自动 Registrar bridge。
 - `--check`；
 - `--no-cache`；
 - `--profile`；
+- Host-only `--watch=auto --machine` 与 `watch status/follow`；
 - `find`；
 - `clean`；
+- 按 Host/Package 角色执行的 package-local generation；
+- `portable prepare/publish` 显式分发状态生命周期；
 - `create component` / `create page` / `create service` / `create command` /
   `create event` / `create init-task` 非覆盖式脚手架；
-- Package/Host Catalog。
+- Package/Host Catalog；
+- watch/one-shot Generator 结构化诊断到 Analyzer Plugin 的 fail-open bridge。
 
 仍缺少：
 
-- `ccrouter watch`；
 - Contract Promotion/Migration 和 alias 迁移自动化；
 - IDE 内直接打开本地源码、自动改 import 和 rename/alias migration Quick Fix；
-- 超出当前确定性单文件规则范围的生成失败 IDE 状态提示。
+- 跨文件自动重构，以及超出当前结构化 Generator snapshot 和确定性单文件规则的 IDE 诊断。
 
 静态 Catalog 与 Runtime 快照联动、只读组件依赖/反向依赖、源码 URI 和单次能力调用链已由
 嵌入式面板与官方 DevTools Extension 实现。Extension 不绑定任意本地 IDE，不能把 source URI
 展示误写成跨 IDE 自动跳转。
 
-建议维护 `find`、Catalog 和增量生成基准，再根据真实项目的生成 P95 决定是否实现 `watch`。
-当前优化后 Demo 空改动约 0.8 秒量级，尚不足以证明常驻 Watch 进程值得承担锁、资源和失败恢复成本；
-具体数字以带日期的生成器性能报告为准。
+当前 watch 通过稳定协调锁、逐轮输入栅栏、结构化状态、失败恢复和最终 one-shot 参考门禁限制
+常驻进程风险。后续重点是持续测量大型项目 P95/RSS、真实 IDE 时序和异常恢复，不把当前 Demo
+数据外推为所有工程收益；具体数字以带日期的生成器性能报告为准。
 
-**优先级：中，主要归入 2.0 开发体验。**
+**状态：watch 与结构化诊断桥接已完成；自动改写和迁移仍属后续开发体验能力。**
 
 ### 4. Service Scope 不是通用层级 Scope
 
@@ -216,8 +219,7 @@ Snapshot 协议展示 Overview、Catalog、Component Graph 和 Call Graph。两�
 6. 动态组件激活、停用和卸载；
 7. Action Pipeline；
 8. Service Proxy 当前明确拒绝的通用 generic Contract、Stream、callback、继承和高级 Route Scope 形态；
-9. CLI Contract Promotion/Migration 和 alias 迁移工具；
-10. Generator Watch。
+9. CLI Contract Promotion/Migration 和 alias 迁移工具。
 
 这些能力不是“缺少基础实现”，而是当前版本为了保持 API 表面积、生命周期和降级语义可控而主动不公开。
 
@@ -253,7 +255,7 @@ Snapshot 协议展示 Overview、Catalog、Component Graph 和 Call Graph。两�
 1. Navigator 1.0 Backend；
 2. Native 多窗口桥接；
 3. Route Restoration；
-4. Generator Watch 和 IDE 自动改写/迁移 Quick Fix；基础 Analysis Server 边界诊断与官方
+4. IDE 自动改写/迁移 Quick Fix；Generator Watch、基础 Analysis Server 边界诊断与官方
    只读 DevTools Extension 已落地；
 5. 分层 Scope；
 6. 动态组件治理；

@@ -350,8 +350,8 @@ CCRouter.navigator.push(
 
 IDE 可发现性属于方案验收条件：生成完成且 Workspace Analyzer 使用根目录 Package Config 时，
 输入 `DemoNavigationLabRoutes` 必须能得到代码补全和唯一的自动导包动作。新注解尚未生成时 IDE
-不能虚构符号，因此后续按实际耗时评估快速单次生成与 `ccrouter watch`，但不能通过自动修改
-业务源码插入 `part` 或 import 来模拟智能化。
+不能虚构符号，因此必须先通过显式 one-shot 或 Host generation watch 完成对应轮次；不能通过
+自动修改业务源码插入 `part` 或 import 来模拟智能化。
 
 独立 Library 无法访问另一个 Library 的私有声明，迁移时必须显式校验以下规则：
 
@@ -482,12 +482,12 @@ Metrics/Display Features，不自动产生原生窗口。未来每个 Flutter Vi
    激活、关闭和失效释放，不把同一窗口的旋转、折叠或多个 Outlet 当成新 Window。
 3. 完整 Route Restoration 在 2.0 只有恢复机会 Telemetry 证明收益后才实施；此前保持
    `unsupported` 诊断，不提供伪恢复语义。
-4. `ccrouter watch` 仍不纳入 1.x；官方只读 DevTools Extension、Snapshot/Trace 协议和
-   Catalog/Runtime 联动已完成，且没有扩大 Runtime 控制 API。当前以显式生成、`--check` 和
-   Package/Host Catalog 为确定性基础。临时页面的源码
-   重命名/移动与 IDE 导包已验收，但不外推至 IDE 重启或大型外部依赖工程。
-5. 原子组合栈事务和精确 Route Entry 操作在 2.0 重新评估；分别以稳定身份、原子回滚和
+4. 原子组合栈事务和精确 Route Entry 操作在 2.0 重新评估；分别以稳定身份、原子回滚和
    混合栈隔离为准，不能在 1.x 通过拼接已有操作模拟。
+
+Generator Watch 原属于本清单的 2.0 候选，现已作为不扩展 Runtime 公开 API 的 Host-only
+开发工具落地。它不改变显式 one-shot、`--check`、Package/Host Catalog 或最终
+`--no-cache --check` 的确定性边界，因此不再列入 2.0 能力清单。
 
 Service/Handler/Scope 的完整组件动态停用、组件脚手架的高级参数和 Contract promotion/migration
 CLI 也归入架构 2.0 的**非路由工作流**，需要独立设计和验收，不是路由 2.0 的必选依赖。
@@ -550,41 +550,32 @@ Generator 全套 131 项、Demo 25 项通过；受管生成物无残留或 Git �
 `--profile` 确认 Builder/解析/聚合瓶颈，再做可回退的独立快速路径，与统一命令逐字节
 比对生成物、错误和清理结果；不能把只更新页面文件的命令命名为完整生成。
 
-### 6.3 `ccrouter watch`（2.0 候选，具备监听基础）
+### 6.3 Generation Watch（已落地）
 
-本机 `build_runner watch --help` 确认支持 `--workspace` 与多个 `--build-filter`，
-理论上可监听 6.1 的可写依赖闭包；稳定的构建完成事件接入仍须验证。
-当前 CLI 是一次性事务：持有
-`.dart_tool/ccrouter/v1/generation.lock`，等待 build_runner 退出，再解析 metadata、
-校验、聚合、清理与发布 Catalog。简单地把 `build` 改成常驻 `watch` 会永远等不到聚合；
-让常驻进程一直持锁也会阻塞手动 `generate` / `--check`。
+当前 Host 可用 `generate <host-root> --watch=auto --machine` 保持一个 resolved build root 的
+build_runner AOT entrypoint 与 Analyzer graph 常驻。每轮 Builder 成功后仍执行 CCRouter
+Validator、聚合、输入栅栏、快照保护和原子发布；stdout 使用 schema `1` NDJSON，消费者必须
+等待 `ready` 和对应轮次的 `aggregationSucceeded`，不能把 `buildSucceeded` 当成完成证明。
 
-2.0 若实际页面编辑频率或 P95 延迟证明有需求，应作为独立可选命令，不改变现有
-`generate` 的行为，并按下列顺序实现与验收：
+同一 build root 的多个 Host 共享 Builder owner，但分别拥有聚合、状态、诊断和 lease。
+one-shot generate/check/clean 与活动 watch 冲突时 fail-fast；Pub Hook 只有在 Host resolution
+或 requested Package 的 Pub-resolution、authored-input、managed-output exact evidence 全部匹配时
+复用完成轮次。失败、拓扑变化、clean、进程退出和超时均 fail-closed，并保留 kill switch 用于
+differential A/B。watch 不替代最终实际 Host 的 `--no-cache --check`。
 
-1. 用可靠的 Builder 完成信号触发聚合，不解析易变的终端输出；多次文件事件合并，
-   每轮只处理最新确定完成的构建，不发布半轮生成物。
-2. 逐轮获取生成锁，并串行执行解析、跨 Package 校验、旧产物清理及原子发布；
-   与独立 `generate --check` 并发时不死锁、不覆盖对方的结果。
-3. 失败时保留上一次完整产物并报告明确的 stale 状态；恢复成功后重新校验依赖闭包，
-   包括 Package 增删、`pubspec.yaml`、Component ID 和路由冲突的变动。
-4. Ctrl-C、终端关闭或构建进程异常退出时终止子进程、释放锁和 Listener；测试快速连续
-   修改、重命名、删除、多组件并发，以及失败后修复的收敛结果。
-5. 与一次性 `generate` 和 `--no-cache` 比较产物与错误；增加资源占用和导航开发循环的
-   实测数据后，再决定是否提供默认启用或 IDE 集成。
+6.1 的 5–8 秒页面改动和约 2 秒稳定空改动是 watch 实现前的一次性生成快照，仅保留为历史
+基线；当前 watch、one-shot、Pub Hook wait 和 Analyzer latency 必须分别测量。
 
-当前 Demo 改一页约 5–8 秒、稳定空改动约 2 秒，尚不足以证明常驻监听的维护与资源成本
-值得承担。1.x 不启动后台服务，也不扩展公开 API；大型项目的实际 P95 是 2.0 决策的依据。
+### 6.4 Analysis Server 实时诊断（1.x 最小闭环已落地）
 
-### 6.5 Analysis Server 实时诊断（1.x 最小闭环已落地）
-
-可选 `ccrouter_analyzer_plugin` 仅报告单文件可确定的跨 Package 生成物引用和缺失 Route
-生成物；它不执行 Builder、不修改源文件，也不替代本计划中的 `generate --check`。由于
-官方 `analyzer_plugin` 与当前生成器 Analyzer 版本约束不同，插件保持独立开发工具 Package，
-避免改变主 Workspace 的 Analyzer 解析。接入、版本隔离和失败回退见
+可选 `ccrouter_analyzer_plugin` 报告可确定的单文件注解/生成物边界、Metadata 证明的
+Service/Command Owner 缺失，并消费身份匹配的 watch/one-shot Generator 结构化诊断。它不执行
+Builder、不修改源文件，也不替代本计划中的 `generate --check`。由于官方 `analyzer_plugin` 与
+当前生成器 Analyzer 版本约束不同，插件保持独立开发工具 Package，避免改变主 Workspace 的
+Analyzer 解析。接入、版本隔离和失败回退见
 [CCRouter-ide-analysis-server.md](CCRouter-ide-analysis-server.md)。
 
-### 6.4 能力源码定位命令（已落地）
+### 6.5 能力源码定位命令（已落地）
 
 `ccrouter find <capability-id-or-route-pattern> [host-root]` 只读取当前 Host 的 Pub 运行时
 依赖闭包与已发布的 Package Index，使用同一 Capability Source Catalog 合并跨 Package

@@ -373,14 +373,15 @@ When watch rotates its child after Pub topology changes, Hook accepts the new
 session only after `sessionReady: true`/`ready` and an exact matching resolution
 fingerprint. It must not reuse that session's pre-ready aggregation event.
 Package-local post-pub generation never treats a Host target name as exact
-completion evidence or performs Host validation. Before starting its one-shot
-path, it may consume only a schema-valid build-root `builder-status.json` whose
-canonical build root matches and whose owner lock is actually held. It then
-fails early with the owner Host, requested Package, coverage, and stop/retry
-guidance instead of falling through to a generic generation-lock error. Stale,
-malformed, or wrong-root status is ignored. A covered Package may wait for the
-Host `aggregationSucceeded`, but a Hook invocation that must itself succeed
-still requires stopping the watch and retrying from that Package.
+completion evidence or performs Host validation. A successful watch cycle
+publishes per-target Pub-resolution, authored-input, and managed-output
+fingerprints in the stable Builder session. The Hook recomputes the requested
+Package evidence and reuses the cycle only when every identity matches and the
+owner lock is still held. Missing targets, legacy or missing evidence, changed
+bytes, failure, watch exit, timeout, stale state, and wrong-root state all stay
+fail-closed without starting a conflicting one-shot. Use
+`CCROUTER_DISABLE_PACKAGE_WATCH_REUSE=1` only to restore the former reject-only
+path for differential diagnosis.
 
 Use `status` after an FVM version switch; it prints the resolved SDK path and
 verifies the marker, Flutter/Dart POSIX/Windows wrappers, and backups. It returns non-zero

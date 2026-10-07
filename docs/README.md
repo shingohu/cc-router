@@ -2,7 +2,7 @@
 
 ## 状态说明
 
-- 最近全量对齐：2026-10-03。
+- 最近全量对齐：2026-10-07。
 - 当前实现事实依次以生产代码、自动化测试、生成物和本文状态矩阵为准。
 - 专项设计文档用于解释语义和历史决策；其中的 Proposal、阶段计划和旧基准不能单独证明能力已实现。
 - 性能数字、测试数量和平台验证结果只代表文档注明日期的快照，不自动代表后续提交。
@@ -28,9 +28,11 @@
   Service Proxy，以及当前受限泛型方法矩阵。
 - 五类 Contract SemVer、shape fingerprint、Owner/消费者范围，以及生成、Host 聚合和 Runtime
   三层兼容门禁。
-- `ccrouter generate/find/clean`、Pub Hook、Component/Page/Service/Command/Event/InitTask
-  非覆盖式脚手架、增量缓存和全量回退。
-- Analysis Server 的跨 Package 生成物导入、确定性同源能力生成物缺失和 required InitTask 声明诊断。
+- `ccrouter generate/find/clean`、Host generation watch、`watch status/follow`、角色化
+  package-local generation、显式 Portable State prepare/publish、Pub Hook、六类非覆盖式脚手架、
+  增量缓存和 `--no-cache --check` 全量参考门禁。
+- Analysis Server 的跨 Package 生成物导入、确定性同源能力生成物缺失、required InitTask 声明
+  诊断，以及基于精确 resolution 身份的 watch/one-shot Generator 结构化诊断桥接。
 - 嵌入式只读 DevTools、版本化 Snapshot/Trace Edge 协议和官方 DevTools Extension；Catalog、
   Runtime、组件依赖和单次能力调用链可以关联展示。
 - Provider-neutral Analytics、显式点击/滚动/曝光采集、Consent、黑名单和节流；Firebase callback
@@ -49,8 +51,8 @@
   也没有 rename/alias migration Quick Fix。已支持互斥参数安全删除，以及由生成 metadata 唯一
   证明、公共 import 已暴露 Owner 常量时的 Service/Command required dependency 实时诊断和
   直接 List Quick Fix；复杂集合和 import 插入仍不自动处理。CLI 已提供 Host-only 的只读
-  `analyzer status/doctor`；legacy 安装/升级/卸载仍保留为可回退管理路径，Hosted 发布后优先普通
-  `dev_dependency`，完整 Hosted/IDE/SDK 矩阵仍待外部验收。
+  `analyzer status/doctor` 和 maintainer `pin-check`；legacy 安装/升级/卸载仍保留为可回退管理
+  路径，Hosted 发布后优先普通 `dev_dependency`，完整 Hosted/IDE/SDK 矩阵仍待外部验收。
 - 零 Subscriber Event：正常生成 Client、Workspace Validator 和 Runtime publisher identity 已覆盖；
   generated SPI 被手工伪造时没有独立 Event Contract Runtime Registry。该 Registry 仅在 generated
   SPI 需要成为严格防伪边界时再实现。
@@ -67,7 +69,7 @@
 - 完整 Route Restoration。
 - 动态组件 activate/deactivate/install/uninstall。
 - 受控 Workspace/Feature Scope 和 Action Pipeline。
-- `ccrouter watch`、Contract Scaffold/Promotion/Migration、alias migration CLI/Quick Fix。
+- Contract Scaffold/Promotion/Migration、alias migration CLI/Quick Fix。
 - Service Proxy 的通用 generic Contract、Stream、callback、继承和高级 Route Scope 代理。
 - 全局 Widget 自动识别，以及 ThinkingData、OpenTelemetry、HTTP/Crash Analytics Adapter。
 - 正式 Hosted 发布、release candidate 兼容样本和迁移发布流程。
@@ -80,6 +82,8 @@
   只读闭环；仅“Extension 直接打开本地 IDE”仍未实现。
 - Contract 版本兼容曾被标为不完整，现已完成核心生成/聚合/Runtime 门禁。
 - CLI 曾只记录 Component/Page；Service/Command/Event/InitTask scaffold 已实现。
+- Generator Watch 曾被列为 2.0 候选；当前已提供 Host-only `generate --watch=auto --machine`、
+  `watch status/follow`、Pub Hook 协调和 Flutter machine reload gate。
 - Capability Catalog 曾写成只包含 Route；当前已覆盖 Route、Service、Command、Event、InitTask。
 - Demo KV Storage 曾把 Scoped Facade 写成后续计划；该 Facade 已完成。
 

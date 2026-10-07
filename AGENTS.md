@@ -69,6 +69,38 @@ developer guidance in the same change:
 Internal refactors that do not change integration behavior do not require
 documentation churn.
 
+## Flutter Framework Verification
+
+The Flutter framework regression tests are centralized in the Workspace member
+`packages/ccrouter_test/test/`; `packages/ccrouter/` does not contain a `test/`
+directory. Run the framework suite from the repository root with:
+
+```text
+fvm flutter test packages/ccrouter_test/test
+```
+
+Do not run `fvm flutter test packages/ccrouter/test`. Dependency resolution may
+still succeed before Flutter reports that the test path does not exist, so that
+output must not be reported as an executed or successful framework test suite.
+
+## Analyzer Plugin Verification
+
+`packages/ccrouter_analyzer_plugin` is intentionally isolated from the root
+Dart workspace. Always run its analysis and tests with
+`packages/ccrouter_analyzer_plugin/` as the working directory, for example:
+
+```text
+fvm dart analyze
+fvm dart test
+```
+
+Do not run `fvm dart test packages/ccrouter_analyzer_plugin/test` from the
+repository root. That command uses the root `.dart_tool/package_config.json`,
+cannot resolve `ccrouter_analyzer_plugin` or `analyzer_plugin`, and makes the
+Analysis Server fixture look for the loader under the wrong root `tools/`
+directory. Treat those errors as an invalid test invocation, not a Plugin test
+failure, and rerun from the isolated Package directory.
+
 ## Analyzer Plugin Demo Pin Workflow
 
 When production changes under `packages/ccrouter_analyzer_plugin` alter
