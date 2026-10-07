@@ -1,8 +1,14 @@
 import 'dart:convert';
+import 'dart:io';
+
+import 'package:ccrouter_analyzer_plugin/src/contract_owner_index.dart';
+import 'package:ccrouter_analyzer_plugin/src/source_analyzer.dart';
+import 'package:path/path.dart' as path;
 
 /// Measures parser-only component-ID alias reachability at editor scale.
 void main() {
   _verifyAliasGraphEquivalence();
+  _benchmarkProductionAnalyzer();
   const queriesPerEdit = 20;
   for (final aliasCount in const [100, 500, 1000, 3000]) {
     final declarations = _reverseOrderedChain(aliasCount);
@@ -56,6 +62,88 @@ void main() {
       }),
     );
   }
+}
+
+/// Measures the complete parser-only Analyzer path, including index creation.
+void _benchmarkProductionAnalyzer() {
+  final root = Directory.systemTemp.createTempSync(
+    'ccrouter-analyzer-alias-bench-',
+  );
+  try {
+    final sourcePath = path.join(root.path, 'lib', 'src', 'component.dart');
+    final owners = CCRouterContractOwnerIndex(
+      owners: const [
+        CCRouterContractOwner(
+          kind: CCRouterContractKind.service,
+          contractSymbol: 'SharedService',
+          contractPackage: 'alias_benchmark',
+          componentId: 'owner.component',
+          componentIdSymbol: 'ownerComponentId',
+        ),
+      ],
+      packageRoots: const {},
+    );
+    for (final aliasCount in const [100, 500, 1000]) {
+      final source = _productionSource(aliasCount);
+      final samples = <int>[];
+      for (var sample = 0; sample < 10; sample++) {
+        final watch = Stopwatch()..start();
+        final diagnostics = CCRouterSourceAnalyzer.analyze(
+          source: source,
+          filePath: sourcePath,
+          packageRoot: root.path,
+          packageName: 'alias_benchmark',
+          contractOwners: owners,
+        );
+        watch.stop();
+        if (diagnostics.any(
+          (item) => item.code == 'ccrouter_component_owner_dependency_missing',
+        )) {
+          throw StateError('Production Analyzer lost the owner alias.');
+        }
+        samples.add(watch.elapsedMicroseconds);
+      }
+      samples.sort();
+      print(
+        jsonEncode({
+          'scenario': 'analyzer-component-alias-production',
+          'aliases': aliasCount,
+          'queriesPerEdit': 20,
+          'optimizationDisabled':
+              Platform
+                  .environment['CCROUTER_DISABLE_ANALYZER_COMPONENT_ALIAS_GRAPH'] ==
+              '1',
+          'p50Us': _percentile(samples, 0.50),
+          'p95Us': _percentile(samples, 0.95),
+        }),
+      );
+    }
+  } finally {
+    root.deleteSync(recursive: true);
+  }
+}
+
+/// Creates a parsed component with an adversarial but valid alias chain.
+String _productionSource(int aliasCount) {
+  final source = StringBuffer()
+    ..writeln("const ownerComponentId = CCComponentId('owner.component');");
+  for (var index = aliasCount; index >= 1; index--) {
+    source.writeln('const alias_$index = alias_${index - 1};');
+  }
+  source
+    ..writeln('const alias_0 = ownerComponentId;')
+    ..writeln('const consumerComponent = CCComponent(')
+    ..writeln("  id: CCComponentId('consumer.component'),")
+    ..writeln("  version: '1.0.0',")
+    ..writeln('  dependencies: [alias_$aliasCount],')
+    ..writeln('  serviceDependencies: [');
+  for (var query = 0; query < 20; query++) {
+    source.writeln('    CCServiceDependency<SharedService>(),');
+  }
+  source
+    ..writeln('  ],')
+    ..writeln(');');
+  return source.toString();
 }
 
 /// Exercises ordering, literal seeds, unknown aliases, and disconnected cycles.

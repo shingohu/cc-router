@@ -356,6 +356,92 @@ const consumerComponent = CCComponent(
     );
   });
 
+  test('accepts a reverse-ordered local owner alias chain', () {
+    const aliasCount = 200;
+    final aliases = StringBuffer();
+    for (var index = aliasCount; index >= 1; index--) {
+      aliases.writeln('const alias$index = alias${index - 1};');
+    }
+    aliases.writeln('const alias0 = ownerComponentId;');
+    final diagnostics = CCRouterSourceAnalyzer.analyze(
+      source:
+          '''
+const ownerComponentId = CCComponentId('owner.component');
+$aliases
+const consumerComponent = CCComponent(
+  id: CCComponentId('consumer.component'),
+  version: '1.0.0',
+  dependencies: [alias$aliasCount],
+  serviceDependencies: [
+    ${List.filled(20, 'CCServiceDependency<SharedService>()').join(',\n    ')},
+  ],
+);
+''',
+      filePath: path.join(packageRoot, 'lib', 'src', 'component.dart'),
+      packageRoot: packageRoot,
+      packageName: 'sample_component',
+      contractOwners: _localOwnerIndex(),
+    );
+
+    expect(
+      diagnostics.map((item) => item.code),
+      isNot(contains('ccrouter_component_owner_dependency_missing')),
+    );
+  });
+
+  test(
+    'preserves conservative cycles and rejects known wrong owner aliases',
+    () {
+      final cycleDiagnostics = CCRouterSourceAnalyzer.analyze(
+        source: '''
+const ownerComponentId = CCComponentId('owner.component');
+const cycleA = cycleB;
+const cycleB = cycleA;
+const consumerComponent = CCComponent(
+  id: CCComponentId('consumer.component'),
+  version: '1.0.0',
+  dependencies: [cycleA],
+  serviceDependencies: [CCServiceDependency<SharedService>()],
+);
+''',
+        filePath: path.join(packageRoot, 'lib', 'src', 'component.dart'),
+        packageRoot: packageRoot,
+        packageName: 'sample_component',
+        contractOwners: _localOwnerIndex(),
+      );
+      expect(
+        cycleDiagnostics.map((item) => item.code),
+        isNot(contains('ccrouter_component_owner_dependency_missing')),
+      );
+
+      final wrongOwnerDiagnostics = CCRouterSourceAnalyzer.analyze(
+        source: '''
+const ownerComponentId = CCComponentId('owner.component');
+const wrongOwner = CCComponentId('wrong.component');
+const consumerComponent = CCComponent(
+  id: CCComponentId('consumer.component'),
+  version: '1.0.0',
+  dependencies: [wrongOwner],
+  serviceDependencies: [CCServiceDependency<SharedService>()],
+);
+''',
+        filePath: path.join(packageRoot, 'lib', 'src', 'component.dart'),
+        packageRoot: packageRoot,
+        packageName: 'sample_component',
+        contractOwners: _localOwnerIndex(),
+      );
+      expect(
+        wrongOwnerDiagnostics
+            .where(
+              (item) =>
+                  item.code == 'ccrouter_component_owner_dependency_missing',
+            )
+            .length,
+        1,
+      );
+    },
+  );
+
   test('does not let an optional dependency satisfy a Service consumer', () {
     final diagnostics = CCRouterSourceAnalyzer.analyze(
       source: '''
@@ -739,6 +825,19 @@ CCRouterContractOwnerIndex _ownerIndex() => CCRouterContractOwnerIndex(
       kind: CCRouterContractKind.command,
       contractSymbol: 'RunCommand',
       contractPackage: 'owner_contracts',
+      componentId: 'owner.component',
+      componentIdSymbol: 'ownerComponentId',
+    ),
+  ],
+  packageRoots: const {},
+);
+
+CCRouterContractOwnerIndex _localOwnerIndex() => CCRouterContractOwnerIndex(
+  owners: const [
+    CCRouterContractOwner(
+      kind: CCRouterContractKind.service,
+      contractSymbol: 'SharedService',
+      contractPackage: 'sample_component',
       componentId: 'owner.component',
       componentIdSymbol: 'ownerComponentId',
     ),

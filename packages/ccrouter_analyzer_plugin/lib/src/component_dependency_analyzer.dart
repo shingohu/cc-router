@@ -1,7 +1,13 @@
+import 'dart:io';
+
 import 'package:analyzer/dart/ast/ast.dart';
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/type.dart';
 import 'package:ccrouter_analyzer_plugin/src/contract_owner_index.dart';
+
+/// Restores repeated parser-only alias scans for differential diagnosis.
+const String _componentAliasGraphKillSwitch =
+    'CCROUTER_DISABLE_ANALYZER_COMPONENT_ALIAS_GRAPH';
 
 /// One metadata-proven required owner missing from a component descriptor.
 final class CCRouterMissingComponentDependency {
@@ -46,6 +52,11 @@ abstract final class CCRouterComponentDependencyAnalyzer {
     String? sourcePath,
   }) {
     final importPrefixes = _importPrefixes(unit);
+    final aliasIndex =
+        unit.declaredFragment == null &&
+            Platform.environment[_componentAliasGraphKillSwitch] != '1'
+        ? _LocalComponentAliasIndex(unit)
+        : null;
     final missing = <CCRouterMissingComponentDependency>[];
     for (final declaration
         in unit.declarations.whereType<TopLevelVariableDeclaration>()) {
@@ -88,7 +99,14 @@ abstract final class CCRouterComponentDependencyAnalyzer {
                     sourcePackage: sourcePackage,
                   );
             if (owner == null ||
-                _containsOwner(unit, required, owner, owners, sourcePath) !=
+                _containsOwner(
+                      unit,
+                      required,
+                      owner,
+                      owners,
+                      sourcePath,
+                      aliasIndex,
+                    ) !=
                     false ||
                 !ownerIds.add(owner.componentId)) {
               continue;
@@ -131,6 +149,7 @@ abstract final class CCRouterComponentDependencyAnalyzer {
     CCRouterContractOwner owner,
     CCRouterContractOwnerIndex owners,
     String? sourcePath,
+    _LocalComponentAliasIndex? aliasIndex,
   ) {
     if (unit.declaredFragment != null) {
       final values = dependencies.map(_resolvedComponentId).toList();
@@ -145,6 +164,13 @@ abstract final class CCRouterComponentDependencyAnalyzer {
         owner: owner,
       );
       if (reference != null) symbols.add(reference);
+    }
+    if (aliasIndex != null) {
+      return aliasIndex.containsOwner(
+        dependencies,
+        ownerId: owner.componentId,
+        visibleReference: symbols.singleOrNull,
+      );
     }
     var changed = true;
     while (changed) {
@@ -283,5 +309,109 @@ abstract final class CCRouterComponentDependencyAnalyzer {
     if (arguments == null || arguments.length != 1) return null;
     final value = arguments.single;
     return value is SimpleStringLiteral ? value.value : null;
+  }
+}
+
+/// Parser-only const-alias index shared by all dependency checks in one unit.
+final class _LocalComponentAliasIndex {
+  /// Indexes exact initializer spellings and direct component-ID literals.
+  _LocalComponentAliasIndex(CompilationUnit unit) {
+    for (final declaration
+        in unit.declarations.whereType<TopLevelVariableDeclaration>()) {
+      if (!declaration.variables.isConst) continue;
+      for (final variable in declaration.variables.variables) {
+        final initializer = variable.initializer;
+        if (initializer == null) continue;
+        final name = variable.name.lexeme;
+        _firstInitializerByName.putIfAbsent(name, () => initializer);
+        (_aliasesByInitializer[initializer.toSource()] ??= <String>[]).add(
+          name,
+        );
+        final ownerId = CCRouterComponentDependencyAnalyzer._componentIdLiteral(
+          initializer,
+        );
+        if (ownerId != null) {
+          (_aliasesByOwner[ownerId] ??= <String>[]).add(name);
+        }
+      }
+    }
+  }
+
+  /// Exact alias edges keyed by initializer source text.
+  final Map<String, List<String>> _aliasesByInitializer = {};
+
+  /// Direct literal aliases keyed by stable component ID.
+  final Map<String, List<String>> _aliasesByOwner = {};
+
+  /// First initializer for each name, matching the legacy declaration walk.
+  final Map<String, Expression> _firstInitializerByName = {};
+
+  /// Reachable aliases memoized by owner identity and visible source symbol.
+  final Map<(String, String?), Set<String>> _closureByOwner = {};
+
+  /// Resolved local literal values, including cached unknown aliases.
+  final Map<String, String?> _localLiteralByName = {};
+
+  /// Checks whether [dependencies] prove the exact required [ownerId].
+  ///
+  /// Returns `null` when any dependency remains imported, computed, or cyclic,
+  /// preserving the Generator-authoritative fallback used by the legacy walk.
+  bool? containsOwner(
+    List<Expression> dependencies, {
+    required String ownerId,
+    required String? visibleReference,
+  }) {
+    final symbols = _aliasesFor(
+      ownerId: ownerId,
+      visibleReference: visibleReference,
+    );
+    for (final dependency in dependencies) {
+      if (CCRouterComponentDependencyAnalyzer._componentIdLiteral(dependency) ==
+              ownerId ||
+          symbols.contains(dependency.toSource())) {
+        return true;
+      }
+    }
+    return dependencies.any((entry) => _localLiteral(entry, <String>{}) == null)
+        ? null
+        : false;
+  }
+
+  /// Returns the complete exact-source alias closure for one owner.
+  Set<String> _aliasesFor({
+    required String ownerId,
+    required String? visibleReference,
+  }) => _closureByOwner.putIfAbsent((ownerId, visibleReference), () {
+    final closure = <String>{if (visibleReference != null) visibleReference};
+    final pending = <String>[...closure, ...?_aliasesByOwner[ownerId]];
+    closure.addAll(pending);
+    for (var cursor = 0; cursor < pending.length; cursor++) {
+      for (final alias
+          in _aliasesByInitializer[pending[cursor]] ?? const <String>[]) {
+        if (closure.add(alias)) pending.add(alias);
+      }
+    }
+    return Set.unmodifiable(closure);
+  });
+
+  /// Resolves same-file simple aliases without guessing computed expressions.
+  String? _localLiteral(Expression expression, Set<String> visiting) {
+    final direct = CCRouterComponentDependencyAnalyzer._componentIdLiteral(
+      expression,
+    );
+    if (direct != null) return direct;
+    if (expression is! SimpleIdentifier) return null;
+    final name = expression.name;
+    if (_localLiteralByName.containsKey(name)) {
+      return _localLiteralByName[name];
+    }
+    if (!visiting.add(name)) return null;
+    final initializer = _firstInitializerByName[name];
+    final result = initializer == null
+        ? null
+        : _localLiteral(initializer, visiting);
+    visiting.remove(name);
+    _localLiteralByName[name] = result;
+    return result;
   }
 }
