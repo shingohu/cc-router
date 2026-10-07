@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:ccrouter_generator/ccrouter_generator.dart';
+import 'package:ccrouter_generator/src/reverse_dependency_closure.dart';
 
 /// Compares full Workspace validation with dirty Package graph propagation.
 void main() {
@@ -89,7 +90,10 @@ void _measureDirtyPropagation({
 }) {
   final seeds = {'package_0'};
   final expected = _fixedPointClosure(graph, seeds);
-  final warmCandidate = _reverseClosure(graph, seeds);
+  final warmCandidate = CCReverseDependencyClosure.compute(
+    dependenciesByNode: graph,
+    seeds: seeds,
+  );
   if (!_sameSet(expected, warmCandidate) || expected.length != packageCount) {
     throw StateError('Dirty closure mismatch at $packageCount Packages.');
   }
@@ -100,7 +104,10 @@ void _measureDirtyPropagation({
     final reference = _fixedPointClosure(graph, seeds);
     fixedPointWatch.stop();
     final reverseClosureWatch = Stopwatch()..start();
-    final candidate = _reverseClosure(graph, seeds);
+    final candidate = CCReverseDependencyClosure.compute(
+      dependenciesByNode: graph,
+      seeds: seeds,
+    );
     reverseClosureWatch.stop();
     if (!_sameSet(reference, candidate)) {
       throw StateError(
@@ -145,32 +152,6 @@ Set<String> _fixedPointClosure(
         dirty.add(entry.key);
         changed = true;
       }
-    }
-  }
-  return dirty;
-}
-
-/// Candidate O(V+E) reverse dependency closure used only for comparison.
-Set<String> _reverseClosure(
-  Map<String, Set<String>> dependenciesByPackage,
-  Set<String> seeds,
-) {
-  final dependents = <String, Set<String>>{
-    for (final package in dependenciesByPackage.keys) package: <String>{},
-  };
-  for (final entry in dependenciesByPackage.entries) {
-    for (final dependency in entry.value) {
-      dependents[dependency]?.add(entry.key);
-    }
-  }
-  final dirty = <String>{
-    for (final seed in seeds)
-      if (dependenciesByPackage.containsKey(seed)) seed,
-  };
-  final pending = dirty.toList(growable: true);
-  for (var cursor = 0; cursor < pending.length; cursor++) {
-    for (final dependent in dependents[pending[cursor]] ?? const <String>{}) {
-      if (dirty.add(dependent)) pending.add(dependent);
     }
   }
   return dirty;

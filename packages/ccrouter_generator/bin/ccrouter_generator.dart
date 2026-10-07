@@ -15,6 +15,7 @@ import 'package:ccrouter_generator/src/internal_api_boundary_validator.dart';
 import 'package:ccrouter_generator/src/package_workspace.dart';
 import 'package:ccrouter_generator/src/project_context.dart';
 import 'package:ccrouter_generator/src/project_role.dart';
+import 'package:ccrouter_generator/src/reverse_dependency_closure.dart';
 import 'package:crypto/crypto.dart';
 import 'package:dart_style/dart_style.dart';
 import 'package:path/path.dart' as path;
@@ -3507,9 +3508,10 @@ final class _GenerationDirtySet {
     markDirty(workspace.host.name, 'host');
     final outputFingerprints = <String, String>{};
     final dependencyFingerprints = <String, Map<String, String>>{};
-    for (final package in workspace.packages.values.where(
-      (package) => package.writable,
-    )) {
+    final writablePackages = workspace.packages.values
+        .where((package) => package.writable)
+        .toList(growable: false);
+    for (final package in writablePackages) {
       final output = await _GenerationStateFingerprint.capturePackageOutput(
         package,
       );
@@ -3542,23 +3544,21 @@ final class _GenerationDirtySet {
 
     // Any changed dependency can alter a generated Bundle or public API. The
     // reverse closure is safer than trying to infer which declaration changed.
-    var changed = true;
-    while (changed) {
-      changed = false;
-      for (final package in workspace.packages.values.where(
-        (package) => package.writable,
-      )) {
-        if (dirty.contains(package.name)) continue;
-        final dirtyDependencies =
-            package.dependencies.where(dirty.contains).toList()..sort();
-        if (dirtyDependencies.isNotEmpty) {
-          markDirty(
-            package.name,
-            'propagated-from:${dirtyDependencies.join('+')}',
-          );
-          changed = true;
-        }
+    final propagatedDirty = CCReverseDependencyClosure.compute(
+      dependenciesByNode: {
+        for (final package in writablePackages)
+          package.name: package.dependencies,
+      },
+      seeds: dirty,
+    );
+    for (final package in writablePackages) {
+      if (dirty.contains(package.name) ||
+          !propagatedDirty.contains(package.name)) {
+        continue;
       }
+      final dirtyDependencies =
+          package.dependencies.where(propagatedDirty.contains).toList()..sort();
+      markDirty(package.name, 'propagated-from:${dirtyDependencies.join('+')}');
     }
     final immutableDependencyFingerprints = <String, Map<String, String>>{
       for (final entry in dependencyFingerprints.entries)

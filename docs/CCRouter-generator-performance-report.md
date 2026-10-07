@@ -776,3 +776,17 @@ index 没有让 correctness fallback 产生负优化；单文件 event path 约 
 从 500ms 放宽到 5 秒。因此生产默认仍为逐 tick full scan，只通过
 `CCROUTER_ENABLE_ANALYZER_TIERED_POLL=1` 提供 maintainer A/B。启用该开关后的真实 Legacy/LSP
 Analysis Server 15 项回归通过；最终生成正确性仍由 Generator 与 `--no-cache --check` 负责。
+
+### 10.13 Generator dirty graph 算法基线（2026-10-07）
+
+`_GenerationDirtySet` 原先通过反复全图扫描传播上游失效；Package 迭代顺序与依赖方向相反时，
+严格链会退化为 O(V²)。生产路径现改为先建立 reverse adjacency，再以 queue 求传递闭包，保持
+“任一依赖 dirty 则所有可写下游 dirty”的保守边界，不改变 Builder、Validator、cache schema、
+fingerprint 或写入协议。链、菱形、断图、环、外部 seed 以及 240 轮确定性随机图均与原 fixed-point
+reference 得到完全相同的 dirty set。
+
+预热后的 benchmark 直接调用生产 helper。5,000 Package、约 10,000 edges 的稀疏图中，旧实现与
+reverse closure 的 P95 约为 2.49ms/0.66ms；5,000 Package 的反向严格链约为
+367ms/0.70ms。100 Package 稀疏图也未出现负优化。完整 `CCRouteWorkspaceValidator` 在 120 个
+component、600 routes 时约 10.7ms P95，远低于当前真实 watch 的 Builder 和 aggregation 耗时；
+因此本阶段不引入增量 Validator，也不缩小权威校验范围。
