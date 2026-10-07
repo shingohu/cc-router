@@ -815,6 +815,25 @@ time separate as `output-delta-scan`.
 Input attribution follows the existing Build Plan scope: custom `--output-dir`
 does not provide `input-delta`.
 
+Generation entrypoints share correctness semantics only where their ownership
+scope overlaps. A manual Host one-shot and a no-watch Pub Hook both enter the
+same generation kernel. A Host watch keeps build_runner resident, then invokes
+that kernel for validation, aggregation, barriers, rollback protection, and
+local state publication without repeating Builder work. An active-watch Pub
+Hook waits for exact Host resolution evidence or exact per-Package input/output
+evidence; it does not independently regenerate and compare a second result.
+Package-local generation intentionally omits Host assembly and Host-wide
+validation. Compare byte snapshots and structured diagnostics for correctness,
+but report one-shot, watch, Hook wait, and Analyzer latency separately.
+
+The Analyzer Plugin is a fail-open observer, not another generation entrypoint.
+Its component alias graph is enabled by default and must remain result-equivalent
+to the repeated-scan reference. Tiered exact-path polling is different: it is
+off by default, enabled only with `CCROUTER_ENABLE_ANALYZER_TIERED_POLL=1` before
+the Analysis Server starts, and trades a smaller per-tick scan for a five-second
+worst-case missed-event fallback. Terminal correctness remains the Host
+`--no-cache --check` result regardless of Analyzer availability or timing.
+
 For iterative local work, `generate <host-root> --watch=auto --machine` keeps
 build_runner's AOT entrypoint and Analyzer graph alive for one resolved build
 root. Its stdout is schema `1` NDJSON; `buildSucceeded` only closes the Builder

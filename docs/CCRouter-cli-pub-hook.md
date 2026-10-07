@@ -112,11 +112,12 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter pub-hook uninstall
    `sessionId` 并重建 child。Hook 必须等新 session 的 `ready`，成功仍严格匹配当前 resolution
    fingerprint，不能用快速失败逻辑放宽。
 6. 同一 build root 中从 component/contracts Package 触发 Pub 时，Host watch 的 target 名称
-   不是本次 requested Package manifest 的精确完成栅栏，因此 package-local Hook 不复用该
-   Host cycle。它验证 `builder-status.json` 的 schema、build-root identity 与实际 owner lock，
-   然后明确报告 owner Host、requested Package 以及 target 是否被覆盖，并返回非零。被覆盖时
-   可以等待 Host 的 `aggregationSucceeded`；若要求当前 Pub Hook 成功，或 Package 未被覆盖，
-   则停止 watch 后从该 Package 重试。stale、损坏或路径不匹配的状态不会被信任。
+   本身不是 requested Package 的完成栅栏。成功 watch cycle 会在 stable Builder session 中发布
+   每个 target 的 Pub resolution、authored input 与 managed output 精确指纹；package-local Hook
+   重新计算当前 Package 证据并在三者全部匹配时复用该 cycle，不再启动冲突 one-shot。target
+   缺失、旧版/缺失 evidence、指纹变化、失败、退出或超时均 fail closed，并明确报告 owner Host、
+   requested Package 和修复动作。`CCROUTER_DISABLE_PACKAGE_WATCH_REUSE=1` 可恢复原有 reject-only
+   路径做 A/B；stale、损坏或 build-root identity 不匹配的状态不会被信任。
 7. 成功时只打印 fast-path、验证摘要和总耗时；生成器失败时最多保留最近
    200 行、64 KiB。Builder 已成功而 Validator 失败时，默认去掉正常 progress/skipped 行，
    显示 Builder 汇总、structured root cause、修复建议及 requested/resolution root；`--profile`
@@ -131,6 +132,12 @@ Wrapper 会先完整执行原始 Pub 命令，但 `--help`、`-h`、`--dry-run` 
 命令语义，不触发 CCRouter post-pub generation。真实依赖写操作使用调用 Package 作为
 `requestedRoot`，使用 Pub Workspace reference 验证后的根作为 `resolutionRoot`；两者不能
 通过向上找到任意 `package_config.json` 来混为一谈。
+
+Hook 与手动 CLI 共享生成结果语义，但不承诺相同的进程和耗时路径。无活动 watch 时，Hook
+启动默认 `generate <requestedRoot>`；活动 watch 时，Hook 只等待上述 exact evidence。Host 与
+package-local 继续遵守各自 scope，后者不执行 Host assembly 或跨 Package Host 校验。Analyzer
+Plugin 只消费经身份校验的结构诊断，不参与 Hook 成败或生成物写入。性能比较必须分别记录
+one-shot、watch cycle 和 Hook wait，不能把某一入口的 wall-time 百分比套用到其它入口。
 
 `CCROUTER_DISABLE_PUB_HOOK_WATCH_FAILURE_FENCE=1` 仅用于 A/B 或紧急回退：它关闭等待基线后的
 terminal failure 快速栅栏，恢复旧的 fingerprint-only 失败判断与有界超时。该开关不放宽成功

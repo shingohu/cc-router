@@ -1,7 +1,8 @@
 # CCRouter 生成器性能优化与对比报告
 
 > 文档状态：2026-09-28 性能快照；2026-10-03 补充 Build Plan P2-P5，以及 P6 只读失效归因；
-> 2026-10-05 补充 generation watch 多轮编辑基线。
+> 2026-10-05 补充 generation watch 多轮编辑基线；2026-10-07 补充图算法、snapshot、Analyzer
+> alias graph 与组合交错 A/B。
 > 包含多组件个人/团队拓扑与五类能力共享依赖样本。数值不自动代表后续提交或其他机器。
 
 Package 增删导致的 Workspace AOT 冷路径及后续正确性优先优化方案，见
@@ -820,3 +821,53 @@ snapshot scale benchmark 中，1x reference/derived P95 约为 6.9ms/72us，10x 
 不能复用 build-root snapshot。同期 wall 约为 3471ms/3483ms，受 Builder 与 input scan 抖动影响，
 不作为总耗时收益证据。`CCROUTER_DISABLE_SHARED_BUILD_PROTECTION_SNAPSHOT=1` 恢复完整二次扫描，
 Profile 以 `evidenceMode=shared/recaptured` 区分，两侧生成物、状态与 `--no-cache --check` 一致。
+
+### 10.16 当前 Demo 组合交错 A/B 与入口边界（2026-10-07）
+
+为避免把单次 Builder 抖动当作收益，当前 11 generated Packages、6 components、33 routes 的 Demo
+先各做一次不计入统计的 warm-up，再按 `A-B-B-A` 交错执行 12 次；A 为当前默认路径，B 同时关闭
+unified epoch、shared build protection、shared planning snapshot、Runtime Bundle reverse closure、
+InitTask reachability memo 和 Route visibility memo。命令统一为：
+
+```bash
+fvm dart run ccrouter_generator:ccrouter generate demo --no-cache --check
+```
+
+该 B 组只覆盖上述六个现有 kill switch，不等同于把分支回退到所有优化前的历史提交。dirty graph
+没有独立环境开关，因此不进入这一端到端组合数据，而由 10.17 的内置 fixed-point reference 做
+集合等价和耗时对照。
+
+| 路径 | Reference P50/P95 | Optimized P50/P95 | 结论 |
+| --- | ---: | ---: | --- |
+| 权威 one-shot | 3.713s / 3.725s | 3.330s / 3.346s | P50 减少 383ms，约 10.3% |
+| unchanged fast path | 423ms / 430ms | 419ms / 421ms | 差异落在噪声范围 |
+
+拆分复测中，全部开启、只关闭三项图算法、只关闭三项 snapshot 复用的 P50 分别约为
+3.335s、3.338s、3.711s。因此当前小 Demo 的端到端可见收益主要来自同一 generation transaction
+复用已验证 snapshot；图算法收益在该规模下被 build_runner/AOT/Analyzer 固定成本淹没。该数据
+只代表 one-shot `--no-cache --check`，不能外推为 watch、Pub Hook wait 或 Analyzer latency。
+
+入口正确性以共享 kernel 和 exact evidence 收敛，而不是强制相同 orchestration：无 watch 的
+Pub Hook 启动默认 one-shot；活动 watch 复用常驻 Builder 并等待 exact Host/per-Package evidence；
+package-local 不执行 Host-wide 校验；Analyzer 只提供 advisory diagnostics。watch、one-shot 和
+Pub Hook 的逐字节/状态 differential 分别由对应 suite 覆盖，最终 CI 仍以实际 Host 的
+`--no-cache --check` 为权威。
+
+### 10.17 图算法与 Analyzer alias graph 放大 A/B（2026-10-07）
+
+同机 reference/candidate benchmark 每轮先验证集合、映射或诊断结果等价，再记录耗时：
+
+| 场景 | 指标 | Reference | Optimized | 约加速 |
+| --- | --- | ---: | ---: | ---: |
+| Dirty Package 反向链，5,000 Package | P95 | 697.9ms | 1.06ms | 657x |
+| Runtime Bundle 反向链，5,000 Package | P95 | 763.0ms | 1.24ms | 614x |
+| InitTask optional chain，1,000 tasks | P95 | 49.99ms | 0.30ms | 164x |
+| Route visibility，1,000 components / 20,000 routes | P95 | 818.1ms | 44.8ms | 18.3x |
+| Analyzer production alias，500 aliases | P50 | 464.4ms | 4.45ms | 104x |
+| Analyzer production alias，1,000 aliases | P50 | 1.808s | 4.86ms | 372x |
+
+这些是规模退化保护，不是“真实 Demo 提速数百倍”的声明。Generator 图算法作用于 Host
+aggregation/validation；Analyzer alias graph 只作用于 Plugin 单文件 Owner 检查。Analyzer 100
+alias 的 P95 受 JIT/GC warm-up 顺序影响明显，因此报告大型样本的 P50，不用一次尾部样本宣传收益。
+Analyzer tiered exact-path polling 仍默认关闭，它的延迟/吞吐取舍见 10.12，不能与默认开启的 alias
+graph 混为一项。

@@ -69,6 +69,12 @@ For maintainer scale A/B only,
 validated-generation refresh while distributing the exact-path fallback across
 ten 500ms shards. It is off by default and allows a five-second worst-case
 missed-event refresh.
+The same-file component alias graph optimization is separate and enabled by
+default; `CCROUTER_DISABLE_ANALYZER_COMPONENT_ALIAS_GRAPH=1` restores the
+repeated declaration scan only for differential diagnosis. Both switches are
+read from the long-lived Analysis Server Plugin process. Changing them in a
+terminal after the Server has started does nothing until the Server is fully
+restarted, and an IDE may not inherit a shell-only environment at all.
 Snapshot publication and consumption are fail-open diagnostics; generation,
 Pub Hook failure, and the final `--no-cache --check` gate remain authoritative.
 

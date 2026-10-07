@@ -1221,6 +1221,26 @@ catalog，不生成 Host facade，也不会用某个 Host 的完整性规则拒�
 没有直接参与 CCRouter 的 Workspace aggregator 会明确 skip。package-local 暂不接受 Host 专属
 `--output-dir` 和 watch；最终 `--no-cache --check` 应在实际 Host 上执行。
 
+### 生成入口一致性
+
+手动 `generate`、Host watch 和 Pub Hook 共享同一个 generation kernel，但“结果一致”不表示
+“执行过程或耗时相同”。在 requested root、resolution root 和输入 epoch 相同时，Host 路径使用
+相同的 Builder 输出、Workspace Validator、聚合、输入屏障、快照恢复和原子写入语义：无活动
+watch 的 Pub Hook 直接启动默认 `generate <requested-root>`；活动 watch 已覆盖当前请求时，Hook
+等待与当前 Pub resolution 精确匹配的 `aggregationSucceeded`，不并发启动第二个 one-shot。
+package-local Hook 也只有在 stable Builder session 发布的 requested Package Pub resolution、
+authored input 和 managed output 指纹全部匹配时才复用，否则 fail closed。
+
+各入口的性能不能直接互换：watch 复用常驻 build_runner AOT entrypoint 和 Analyzer graph，并增加
+in-process cycle/evidence reuse；普通 one-shot 可命中 fast path；`--no-cache --check` 则强制权威
+参考路径。package-local 只拥有 requested Package 生成物，不执行 Host assembly 和跨 Package
+完整性校验。Analyzer Plugin 更不是另一条生成路径，它只提供保守、fail-open 的编辑期诊断并消费
+已验证的 Generator snapshot；最终正确性始终以实际 Host 的 `--no-cache --check` 为准。Generator
+图算法、planning snapshot 和 Analyzer alias graph 默认启用；Analyzer tiered polling 仍仅通过
+`CCROUTER_ENABLE_ANALYZER_TIERED_POLL=1` 供 maintainer A/B，修改 Analyzer 环境开关后必须重启
+Analysis Server。完整入口矩阵和 A/B 结果见
+[`docs/CCRouter-generator-performance-report.md`](docs/CCRouter-generator-performance-report.md)。
+
 同一 Workspace 中未被本次 package-local 命令授予写权限的 sibling Package 只作为现有
 Package index 输入，不会被写入或清理，也不会仅因本次只读而被误判成外部分发依赖。Hosted、
 Git 或 Workspace 外 Path dependency 仍须提供可验证的预生成 index/Portable State。metadata

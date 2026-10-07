@@ -107,6 +107,14 @@ plugin shutdown 和 channel close 时取消。`CCROUTER_DISABLE_ANALYZER_WATCH_B
 Generator diagnostics bridge；结构诊断读写失败保持 fail-open，不改变 Generator/Pub Hook 的失败
 结果，也不替代 `--no-cache --check`。
 
+同文件 Component ID alias graph 优化默认开启；
+`CCROUTER_DISABLE_ANALYZER_COMPONENT_ALIAS_GRAPH=1` 只用于恢复重复 declaration scan 做 differential
+A/B。它与 tiered polling 是两项独立优化：前者不改变诊断刷新周期，后者默认关闭并以更长的
+missed-event 最坏延迟换取较小的单 tick filesystem scan。所有 Analyzer 开关都由长生命周期的
+Analysis Server Plugin 进程读取；修改环境变量后必须完整重启 Analysis Server，且 IDE 不一定继承
+终端临时环境。无论是否启用这些优化，Plugin 都只是 advisory observer，不与手动生成、watch 或
+Pub Hook 构成第二套权威生成结果。
+
 Owner Quick Fix 只在以下条件同时满足时提供：
 
 1. Contract Owner 在 metadata 中唯一；

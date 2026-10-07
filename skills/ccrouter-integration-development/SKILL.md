@@ -307,6 +307,20 @@ aggregator as a surrogate Host, and start watch only from an app-role Host.
 An independently runnable nested example owns its subtree from its own
 `pubspec.yaml`; parent Package generation and clean do not mutate its artifacts.
 
+Treat entrypoint parity as a generated-result contract, not as identical
+orchestration or timing. Manual Host generation, Host watch aggregation, and a
+Pub Hook one-shot use the same generation kernel for overlapping scope. With an
+active watch, the Hook waits for an exact current Host or per-Package completion
+proof instead of starting a competing one-shot. Package-local generation owns
+only the requested Package and therefore does not perform Host assembly or
+cross-Package Host validation. The Analyzer Plugin is advisory and never an
+alternative Generator: it may consume validated watch/one-shot diagnostics,
+but the actual Host `--no-cache --check` remains authoritative. Do not transfer
+one-shot benchmark percentages to watch or Analyzer paths; measure each entry
+separately. Generator graph/snapshot optimizations and the Analyzer alias index
+are default-on, while Analyzer tiered polling remains maintainer-only opt-in and
+requires an Analysis Server restart after changing its process environment.
+
 The repository Workspace root is an aggregator rather than a Host. The Pub Hook
 skips any current Package that does not directly declare `ccrouter` or
 `ccrouter_contracts`, even when its resolved Workspace graph contains CCRouter
