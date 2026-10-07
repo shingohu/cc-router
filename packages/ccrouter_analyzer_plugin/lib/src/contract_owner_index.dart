@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:analyzer/dart/analysis/utilities.dart';
 import 'package:analyzer/dart/ast/ast.dart';
 import 'package:analyzer/dart/element/type.dart';
+import 'package:ccrouter_analyzer_plugin/src/filesystem_identity_index.dart';
 import 'package:ccrouter_analyzer_plugin/src/project_context.dart';
 import 'package:ccrouter_analyzer_plugin/src/resolved_symbols.dart';
 import 'package:path/path.dart' as path;
@@ -352,7 +353,6 @@ final class _CCRouterContractOwnerCacheEntry {
     required this.packageConfigModifiedMilliseconds,
     required this.packageConfigSize,
     required this.watchedPaths,
-    required this.watchedPathIdentities,
     required this.componentSourcePaths,
   });
 
@@ -370,9 +370,6 @@ final class _CCRouterContractOwnerCacheEntry {
 
   /// Metadata and Contract source files that contributed to [index].
   final Set<String> watchedPaths;
-
-  /// Cheap filesystem identities captured when the index was built.
-  final Map<String, String> watchedPathIdentities;
 
   /// Exact authored component descriptors refreshed after index changes.
   final Set<String> componentSourcePaths;
@@ -396,6 +393,10 @@ final class CCRouterContractOwnerIndexCache {
   final LinkedHashMap<String, _CCRouterContractOwnerCacheEntry> _entries =
       LinkedHashMap<String, _CCRouterContractOwnerCacheEntry>();
 
+  /// Deduplicated exact inputs shared by retained Pub graph entries.
+  final CCRouterFilesystemIdentityIndex _filesystemIdentities =
+      CCRouterFilesystemIdentityIndex();
+
   /// Number of Pub graphs currently retained.
   int get entryCount => _entries.length;
 
@@ -418,11 +419,19 @@ final class CCRouterContractOwnerIndexCache {
       _entries[configPath] = cached;
       return cached.index;
     }
+    if (cached != null) _filesystemIdentities.remove(configPath);
     final built = _build(configPath, context);
     if (built == null) return CCRouterContractOwnerIndex.empty();
     _entries[configPath] = built;
+    _filesystemIdentities.replace(
+      configPath,
+      watchedPaths: built.watchedPaths,
+      affectedPaths: built.componentSourcePaths,
+    );
     while (_entries.length > maximumEntries) {
-      _entries.remove(_entries.keys.first);
+      final evicted = _entries.keys.first;
+      _entries.remove(evicted);
+      _filesystemIdentities.remove(evicted);
     }
     return built.index;
   }
@@ -441,12 +450,15 @@ final class CCRouterContractOwnerIndexCache {
       ),
     );
     final affectedSources = <String>{};
-    _entries.removeWhere((_, entry) {
+    _entries.removeWhere((registration, entry) {
       final affected =
           metadataChanged ||
           entry.packageConfigPath == normalized ||
           entry.watchedPaths.contains(normalized);
-      if (affected) affectedSources.addAll(entry.componentSourcePaths);
+      if (affected) {
+        affectedSources.addAll(entry.componentSourcePaths);
+        _filesystemIdentities.remove(registration);
+      }
       return affected;
     });
     return Set.unmodifiable(affectedSources);
@@ -458,19 +470,19 @@ final class CCRouterContractOwnerIndexCache {
   /// legacy plugins. Polling only paths already used by a cached index keeps
   /// the fallback bounded by resolved Pub evidence rather than the workspace.
   Set<String> pollChangedPaths() {
-    final affectedSources = <String>{};
-    _entries.removeWhere((_, entry) {
-      final changed = entry.watchedPathIdentities.entries.any(
-        (watched) => _fileIdentity(File(watched.key)) != watched.value,
-      );
-      if (changed) affectedSources.addAll(entry.componentSourcePaths);
-      return changed;
-    });
-    return Set.unmodifiable(affectedSources);
+    final result = _filesystemIdentities.pollAll();
+    for (final registration in result.changedRegistrations) {
+      _entries.remove(registration);
+      _filesystemIdentities.remove(registration);
+    }
+    return result.affectedPaths;
   }
 
   /// Releases all cached metadata and source path strings.
-  void clear() => _entries.clear();
+  void clear() {
+    _entries.clear();
+    _filesystemIdentities.clear();
+  }
 
   /// Verifies the cheap identity of one cached Pub resolution file.
   static bool _packageConfigMatches(_CCRouterContractOwnerCacheEntry entry) {
@@ -646,23 +658,8 @@ final class CCRouterContractOwnerIndexCache {
       packageConfigModifiedMilliseconds: stat.modified.millisecondsSinceEpoch,
       packageConfigSize: stat.size,
       watchedPaths: Set.unmodifiable(watched),
-      watchedPathIdentities: Map.unmodifiable({
-        for (final watchedPath in watched)
-          watchedPath: _fileIdentity(File(watchedPath)),
-      }),
       componentSourcePaths: Set.unmodifiable(componentSources),
     );
-  }
-
-  /// Returns a stable identity for an existing or missing watched file.
-  static String _fileIdentity(File file) {
-    try {
-      final stat = file.statSync();
-      return '${stat.type}:${stat.size}:${stat.modified.microsecondsSinceEpoch}:'
-          '${stat.changed.microsecondsSinceEpoch}';
-    } on Object {
-      return 'missing';
-    }
   }
 
   /// Reads the component-ID source identifier from the exact Contract
