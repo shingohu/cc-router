@@ -54,6 +54,7 @@ final class CCRouterSourceAnalysis {
   const CCRouterSourceAnalysis({
     required this.diagnostics,
     required this.lineInfo,
+    required this.generatedOutputPaths,
   });
 
   /// Deterministic CCRouter diagnostics for the source buffer.
@@ -61,6 +62,9 @@ final class CCRouterSourceAnalysis {
 
   /// Line mapping produced by the same parser pass as [diagnostics].
   final LineInfo lineInfo;
+
+  /// Exact generated files whose filesystem identity can change diagnostics.
+  final Set<String> generatedOutputPaths;
 }
 
 /// One source-preserving generated file required by an annotation.
@@ -330,6 +334,7 @@ abstract final class CCRouterSourceAnalyzer {
       return CCRouterSourceAnalysis(
         diagnostics: const <CCRouterAnalyzerDiagnostic>[],
         lineInfo: LineInfo.fromContent(source),
+        generatedOutputPaths: const <String>{},
       );
     }
     final root = packageRoot ?? _findPackageRoot(filePath);
@@ -337,6 +342,7 @@ abstract final class CCRouterSourceAnalyzer {
       return CCRouterSourceAnalysis(
         diagnostics: const <CCRouterAnalyzerDiagnostic>[],
         lineInfo: LineInfo.fromContent(source),
+        generatedOutputPaths: const <String>{},
       );
     }
     final owner = packageName ?? _readPackageName(root);
@@ -344,6 +350,7 @@ abstract final class CCRouterSourceAnalyzer {
       return CCRouterSourceAnalysis(
         diagnostics: const <CCRouterAnalyzerDiagnostic>[],
         lineInfo: LineInfo.fromContent(source),
+        generatedOutputPaths: const <String>{},
       );
     }
 
@@ -377,11 +384,15 @@ abstract final class CCRouterSourceAnalyzer {
     }
 
     final sourceRelative = _relativeSourcePath(filePath, root);
+    final generatedOutputPaths = <String>{};
     if (sourceRelative != null && sourceRelative.startsWith('lib/src/')) {
       for (final expectation in _generatedOutputExpectations(
         unit,
         sourceRelative,
       )) {
+        generatedOutputPaths.addAll(
+          expectation.outputPaths.map((output) => path.join(root, output)),
+        );
         final missing = expectation.outputPaths
             .where((output) => !File(path.join(root, output)).existsSync())
             .toList(growable: false);
@@ -493,6 +504,7 @@ abstract final class CCRouterSourceAnalyzer {
     return CCRouterSourceAnalysis(
       diagnostics: List.unmodifiable(diagnostics),
       lineInfo: parsed.lineInfo,
+      generatedOutputPaths: Set.unmodifiable(generatedOutputPaths),
     );
   }
 

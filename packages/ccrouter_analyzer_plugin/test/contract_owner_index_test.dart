@@ -168,6 +168,28 @@ const ownerComponentId = CCComponentId('wrong.component');
   });
 
   test(
+    'polls exact cached inputs when server filesystem events are absent',
+    () {
+      final fixture = _OwnerFixture.create();
+      addTearDown(fixture.dispose);
+      final cache = CCRouterContractOwnerIndexCache();
+      cache.resolve(fixture.consumerSource.path);
+
+      expect(cache.pollChangedPaths(), isEmpty);
+      fixture.contractSource.writeAsStringSync(
+        '${fixture.contractSource.readAsStringSync()}\n// changed\n',
+      );
+
+      expect(
+        cache.pollChangedPaths(),
+        contains(path.normalize(fixture.consumerSource.path)),
+      );
+      expect(cache.entryCount, 0);
+      expect(cache.pollChangedPaths(), isEmpty);
+    },
+  );
+
+  test(
     'does not borrow an ancestor Package graph for a standalone Package',
     () {
       final fixture = _OwnerFixture.create();

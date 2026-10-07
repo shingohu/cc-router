@@ -60,6 +60,9 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
   /// Last observed Workspace manifest identity for each Analysis context.
   final Map<String, String> _workspaceManifestIdentityByContext = {};
 
+  /// Generated outputs tracked only for analyzed authored capability sources.
+  final Map<String, Map<String, String>> _generatedOutputIdentityBySource = {};
+
   /// Watches Dart sources and the exact generated Contract ownership index.
   /// JSON is an invalidation input only; no JSON diagnostics are published.
   @override
@@ -126,6 +129,7 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
     _generatorDiagnostics.clear();
     _pubspecPathsByContext.clear();
     _workspaceManifestIdentityByContext.clear();
+    _generatedOutputIdentityBySource.clear();
     await super.beforeContextCollectionDispose(
       contextCollection: contextCollection,
     );
@@ -153,6 +157,8 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
     _watchBridgePollActive = true;
     try {
       final refresh = <String>{};
+      refresh.addAll(_pollGeneratedOutputs());
+      refresh.addAll(_contractOwners.pollChangedPaths());
       final resolutionChanged = <String>{};
       final pubspecsByResolutionRoot = <String, Set<String>>{};
       final resolutionRoots = <String, io.Directory>{};
@@ -231,6 +237,7 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
     _projectContexts.clear();
     _pubspecPathsByContext.clear();
     _workspaceManifestIdentityByContext.clear();
+    _generatedOutputIdentityBySource.clear();
     return super.handlePluginShutdown(parameters);
   }
 
@@ -242,6 +249,7 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
     _projectContexts.clear();
     _pubspecPathsByContext.clear();
     _workspaceManifestIdentityByContext.clear();
+    _generatedOutputIdentityBySource.clear();
     super.onDone();
   }
 
@@ -335,7 +343,10 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
   Future<void> _analyzeCurrentSource(String path) async {
     if (!_isAuthoredDartPath(path)) return;
     final file = resourceProvider.getFile(path);
-    if (!file.exists) return;
+    if (!file.exists) {
+      _generatedOutputIdentityBySource.remove(path);
+      return;
+    }
     // Analysis Server can forward files matching a broad context glob,
     // including binary assets in a Flutter Host. Such files are outside the
     // plugin's Dart-only contract and must not terminate the plugin isolate.
@@ -368,6 +379,7 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
       contractOwners: _contractOwners.resolve(path),
       resolvedUnit: resolvedUnit,
     );
+    _trackGeneratedOutputs(path, analysis.generatedOutputPaths);
     final diagnostics = <CCRouterAnalyzerDiagnostic>[
       ...analysis.diagnostics,
       for (final diagnostic in _generatorDiagnostics.diagnosticsFor(path))
@@ -422,6 +434,42 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
     } on Object {
       return false;
     }
+  }
+
+  /// Captures only outputs proven by the latest authored source analysis.
+  void _trackGeneratedOutputs(String sourcePath, Set<String> outputPaths) {
+    if (outputPaths.isEmpty) {
+      _generatedOutputIdentityBySource.remove(sourcePath);
+      return;
+    }
+    _generatedOutputIdentityBySource[sourcePath] = {
+      for (final outputPath in outputPaths)
+        outputPath: _filesystemIdentity(io.File(outputPath)),
+    };
+  }
+
+  /// Detects generated output changes even when Analysis Server drops events.
+  Set<String> _pollGeneratedOutputs() {
+    final refresh = <String>{};
+    final removedSources = <String>[];
+    for (final entry in _generatedOutputIdentityBySource.entries) {
+      if (!io.File(entry.key).existsSync()) {
+        removedSources.add(entry.key);
+        continue;
+      }
+      var changed = false;
+      for (final outputPath in entry.value.keys.toList(growable: false)) {
+        final current = _filesystemIdentity(io.File(outputPath));
+        if (current == entry.value[outputPath]) continue;
+        entry.value[outputPath] = current;
+        changed = true;
+      }
+      if (changed) refresh.add(entry.key);
+    }
+    for (final source in removedSources) {
+      _generatedOutputIdentityBySource.remove(source);
+    }
+    return refresh;
   }
 
   /// Re-analyzes authored capability sources affected by generated changes.

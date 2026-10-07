@@ -352,6 +352,7 @@ final class _CCRouterContractOwnerCacheEntry {
     required this.packageConfigModifiedMilliseconds,
     required this.packageConfigSize,
     required this.watchedPaths,
+    required this.watchedPathIdentities,
     required this.componentSourcePaths,
   });
 
@@ -369,6 +370,9 @@ final class _CCRouterContractOwnerCacheEntry {
 
   /// Metadata and Contract source files that contributed to [index].
   final Set<String> watchedPaths;
+
+  /// Cheap filesystem identities captured when the index was built.
+  final Map<String, String> watchedPathIdentities;
 
   /// Exact authored component descriptors refreshed after index changes.
   final Set<String> componentSourcePaths;
@@ -444,6 +448,23 @@ final class CCRouterContractOwnerIndexCache {
           entry.watchedPaths.contains(normalized);
       if (affected) affectedSources.addAll(entry.componentSourcePaths);
       return affected;
+    });
+    return Set.unmodifiable(affectedSources);
+  }
+
+  /// Evicts cached indexes whose exact metadata or source inputs changed.
+  ///
+  /// Analysis Server does not consistently forward generated JSON changes to
+  /// legacy plugins. Polling only paths already used by a cached index keeps
+  /// the fallback bounded by resolved Pub evidence rather than the workspace.
+  Set<String> pollChangedPaths() {
+    final affectedSources = <String>{};
+    _entries.removeWhere((_, entry) {
+      final changed = entry.watchedPathIdentities.entries.any(
+        (watched) => _fileIdentity(File(watched.key)) != watched.value,
+      );
+      if (changed) affectedSources.addAll(entry.componentSourcePaths);
+      return changed;
     });
     return Set.unmodifiable(affectedSources);
   }
@@ -625,8 +646,23 @@ final class CCRouterContractOwnerIndexCache {
       packageConfigModifiedMilliseconds: stat.modified.millisecondsSinceEpoch,
       packageConfigSize: stat.size,
       watchedPaths: Set.unmodifiable(watched),
+      watchedPathIdentities: Map.unmodifiable({
+        for (final watchedPath in watched)
+          watchedPath: _fileIdentity(File(watchedPath)),
+      }),
       componentSourcePaths: Set.unmodifiable(componentSources),
     );
+  }
+
+  /// Returns a stable identity for an existing or missing watched file.
+  static String _fileIdentity(File file) {
+    try {
+      final stat = file.statSync();
+      return '${stat.type}:${stat.size}:${stat.modified.microsecondsSinceEpoch}:'
+          '${stat.changed.microsecondsSinceEpoch}';
+    } on Object {
+      return 'missing';
+    }
   }
 
   /// Reads the component-ID source identifier from the exact Contract

@@ -113,6 +113,36 @@ class HomePage {}
     );
   });
 
+  test('reports exact generated outputs for bounded filesystem polling', () {
+    final sourcePath = path.join(packageRoot, 'lib', 'src', 'home_page.dart');
+    final analysis = CCRouterSourceAnalyzer.analyzeWithLineInfo(
+      source:
+          "import 'package:ccrouter_contracts/ccrouter_contracts.dart';\n@CCRoute<void>()\nclass HomePage {}",
+      filePath: sourcePath,
+      packageRoot: packageRoot,
+      packageName: 'sample_component',
+    );
+
+    expect(analysis.generatedOutputPaths, {
+      path.join(
+        packageRoot,
+        'lib',
+        'src',
+        'ccrouter_generated',
+        'route',
+        'home_page.route.g.dart',
+      ),
+      path.join(
+        packageRoot,
+        'lib',
+        'src',
+        'ccrouter_generated',
+        'binding',
+        'home_page.route_binding.g.dart',
+      ),
+    });
+  });
+
   test('does not warn after the route output exists', () {
     _writeGenerated(packageRoot, 'route/home_page.route.g.dart');
     _writeGenerated(packageRoot, 'binding/home_page.route_binding.g.dart');
