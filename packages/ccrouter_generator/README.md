@@ -442,6 +442,10 @@ one-shot 与 watch 默认还复用最终 input barrier、profile/check output de
 persist 已读取的 exact bytes，形成只供本轮 planning 派生的 unified epoch evidence。设置
 `CCROUTER_DISABLE_UNIFIED_EPOCH_SNAPSHOT=1` 可恢复独立 planning recapture；入口 rollback snapshot、
 Builder/aggregation barrier 和 restore 时的独立重扫均不受影响。
+one-shot build_runner 还会从入口 snapshot 派生 build root 内 non-target output protection；root 外
+read-only Package 继续独立捕获。`CCROUTER_DISABLE_SHARED_BUILD_PROTECTION_SNAPSHOT=1` 恢复二次
+filesystem scan，Profile 的 protection span 以 `evidenceMode=shared/recaptured` 区分。Builder 后
+restore 仍重新扫描并逐字节比较，build filters 不是正确性证明。
 aggregation reuse 直接复用 cycle 入口 artifact snapshot 和上述 cycle-end planning snapshot
 中的 bytes，不额外扫描生成目录；命中时也不重写 metadata cache，未来 miss 只会更保守地重算。
 watch 的 after-aggregation barrier 返回它刚完成的 exact-content input snapshot，cycle-end

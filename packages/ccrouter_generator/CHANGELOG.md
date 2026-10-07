@@ -76,6 +76,11 @@
   metadata-cache persistence. Entry snapshots, barriers, restore scans, and
   byte comparisons remain independent; set
   `CCROUTER_DISABLE_UNIFIED_EPOCH_SNAPSHOT=1` for full-recapture A/B.
+- Derived one-shot build_runner's build-root non-target protection bytes from
+  the existing rollback snapshot while retaining independent external Package
+  capture and post-Builder restore scans. Set
+  `CCROUTER_DISABLE_SHARED_BUILD_PROTECTION_SNAPSHOT=1` for the second-scan
+  reference path.
 - Added a diagnostic-only aggregation-input fingerprint to profile traces and
   watch benchmarks, then used the proven identity only after Builder completes
   to reuse verified aggregation outputs. The local proof also checks exact

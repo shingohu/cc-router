@@ -806,3 +806,17 @@ Builder 前后 input barrier、`--check` restore 重扫仍独立保留，读取�
 wall 由约 1976ms 降至 1917ms；该 wall 数据仅作方向验证，Builder 抖动不计为算法收益。
 `CCROUTER_DISABLE_UNIFIED_EPOCH_SNAPSHOT=1` 恢复完整 planning recapture，默认/reference 的生成物、
 fast-path manifest 和 Build Plan state 逐字节一致，最终仍以 `--no-cache --check` 为权威门禁。
+
+### 10.15 Builder protection snapshot reuse（2026-10-07）
+
+one-shot generation 的入口 artifact snapshot 已读取 build root 内全部 managed outputs，随后
+`_runBuildRunner` 为保护 non-target Package 又遍历一次相同目录。新路径从入口 bytes 派生 excluded
+target view；build root 外 read-only Package 仍单独捕获，Builder 后 restore 仍重新扫描当前路径并
+逐字节比较。bootstrap 只写 writable Builder targets，因此不会在两个时点之间合法改变被保护集合。
+
+snapshot scale benchmark 中，1x reference/derived P95 约为 6.9ms/72us，10x 约为
+79.8ms/2.17ms，所有 protection 路径与 bytes 完全一致。真实 Demo 单次 A/B 的
+`build-runner-protection-snapshot` 约为 149ms/60ms；剩余时间来自 32 个 root 外 read-only Package，
+不能复用 build-root snapshot。同期 wall 约为 3471ms/3483ms，受 Builder 与 input scan 抖动影响，
+不作为总耗时收益证据。`CCROUTER_DISABLE_SHARED_BUILD_PROTECTION_SNAPSHOT=1` 恢复完整二次扫描，
+Profile 以 `evidenceMode=shared/recaptured` 区分，两侧生成物、状态与 `--no-cache --check` 一致。

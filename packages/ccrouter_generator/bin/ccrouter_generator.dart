@@ -3634,6 +3634,7 @@ bool _sameStringMap(Map<String, String> left, Map<String, String> right) {
 Future<bool> _runBuildRunner(
   CCProjectContext context,
   Directory hostRoot, {
+  required _GeneratedArtifactsSnapshot generationSnapshot,
   required CCPackageWriteScope writeScope,
   required bool profile,
   _GenerationProfileTrace? trace,
@@ -3679,13 +3680,18 @@ Future<bool> _runBuildRunner(
   final targetRoots = <Directory>[
     for (final name in targets) workspace.packages[name]!.root,
   ];
+  final sharedProtectionSnapshot =
+      Platform.environment[_sharedBuildProtectionSnapshotKillSwitch] != '1';
   final protectedOutputs = await trace.measure(
     'build-runner-protection-snapshot',
     () async => <_GeneratedArtifactsSnapshot>[
-      await _GeneratedArtifactsSnapshot.captureOutside(
-        context.resolutionRoot,
-        targetRoots,
-      ),
+      if (sharedProtectionSnapshot)
+        generationSnapshot.deriveOutside(targetRoots)
+      else
+        await _GeneratedArtifactsSnapshot.captureOutside(
+          context.resolutionRoot,
+          targetRoots,
+        ),
       for (final package in workspace.packages.values)
         if (!package.writable &&
             !_isWithin(context.resolutionRoot, package.root))
@@ -3695,6 +3701,9 @@ Future<bool> _runBuildRunner(
           ),
     ],
     counts: (snapshots) => {'snapshots': snapshots.length},
+    attributes: (_) => {
+      'evidenceMode': sharedProtectionSnapshot ? 'shared' : 'recaptured',
+    },
   );
   var command = await _buildRunnerCommand(context.resolutionRoot, 'build');
   _commandStdout.writeln(
@@ -3988,6 +3997,33 @@ final class _GeneratedArtifactsSnapshot {
     return _GeneratedArtifactsSnapshot._(
       root,
       files,
+      excludedRoots: List.unmodifiable(normalizedRoots),
+    );
+  }
+
+  /// Derives managed bytes outside [excludedRoots] without rereading [root].
+  ///
+  /// Explicit custom-output targets that are not ordinary managed artifacts
+  /// stay outside build_runner protection, matching [captureOutside].
+  _GeneratedArtifactsSnapshot deriveOutside(Iterable<Directory> excludedRoots) {
+    final normalizedRoots = excludedRoots
+        .map((directory) => path.normalize(directory.absolute.path))
+        .toList(growable: false);
+    final derived = <String, List<int>>{};
+    for (final entry in files.entries) {
+      final segments = entry.key.split('/');
+      if (!_isManagedGeneratedArtifact(segments, segments.last)) continue;
+      final absolute = path.normalize(_absolutePath(root, entry.key));
+      if (normalizedRoots.any(
+        (excluded) => _packageRootOwnsPath(excluded, absolute),
+      )) {
+        continue;
+      }
+      derived[entry.key] = entry.value;
+    }
+    return _GeneratedArtifactsSnapshot._(
+      root,
+      derived,
       excludedRoots: List.unmodifiable(normalizedRoots),
     );
   }

@@ -954,6 +954,11 @@ cache publication. Set `CCROUTER_DISABLE_UNIFIED_EPOCH_SNAPSHOT=1` to restore
 full planning recapture. Entry rollback snapshots, every input barrier,
 restore-time scans, byte comparisons, and the final reference gate remain
 independent correctness boundaries.
+For one-shot build_runner execution, the entry rollback snapshot may also
+derive the build-root non-target protection view. External read-only Packages
+remain separately captured and post-Builder restore still rescans current
+files. `CCROUTER_DISABLE_SHARED_BUILD_PROTECTION_SNAPSHOT=1` restores the full
+second scan; build filters alone never establish non-target integrity.
 The final watch input barrier returns its exact snapshot to planning-state
 publication instead of discarding and immediately recapturing it. On an
 aggregation reuse hit, the entry artifact snapshot supplies only verified

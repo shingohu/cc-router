@@ -1418,6 +1418,11 @@ metadata-cache persist 已读取的 exact bytes 组合为 unified generation epo
 派生，避免在同一成功边界再次读盘。设置 `CCROUTER_DISABLE_UNIFIED_EPOCH_SNAPSHOT=1` 可恢复
 完整 planning recapture；入口 artifact snapshot、Builder 前后 input barrier、restore 重扫和
 逐字节比较仍保持独立，不能由 epoch evidence 替代。
+同一个入口 snapshot 还会派生 build root 内 non-target Package 的 build_runner protection view，
+避免在启动 Builder 前再次遍历相同 managed outputs；root 外 read-only Package 仍独立捕获和恢复。
+设置 `CCROUTER_DISABLE_SHARED_BUILD_PROTECTION_SNAPSHOT=1` 可恢复完整二次扫描。
+`build-runner-protection-snapshot.attributes.evidenceMode` 报告 `shared` 或 `recaptured`；两条路径
+都在 Builder 后重新扫描当前文件并逐字节恢复，不能用 build filter 代替越界写保护。
 同一入口 artifact snapshot 和 cycle-end planning snapshot 也分别提供 aggregation output proof，
 不会为 reuse 额外扫描生成目录；证明只写入 `.dart_tool/ccrouter/v1/aggregation_reuse/`，不属于
 Portable State 或可提交生成物。

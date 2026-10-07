@@ -1207,8 +1207,46 @@ void probe() {
             as Map)['evidenceMode'],
         'input-and-current-output',
       );
+      expect(
+        (optimizedSpans.singleWhere(
+              (span) => span['name'] == 'build-runner-protection-snapshot',
+            )['attributes']
+            as Map)['evidenceMode'],
+        'shared',
+      );
       final optimizedManifest = _demoFastPathManifest().readAsBytesSync();
       final optimizedPlan = _demoBuildPlanState().readAsBytesSync();
+
+      final protectionReference = await _generateDemo(
+        ['--no-cache', '--check', '--profile'],
+        environment: {
+          ...Platform.environment,
+          'CCROUTER_DISABLE_SHARED_BUILD_PROTECTION_SNAPSHOT': '1',
+        },
+      );
+      expect(
+        protectionReference.exitCode,
+        0,
+        reason: '${protectionReference.stderr}',
+      );
+      final protectionReferenceSpans =
+          (_profileDelta(protectionReference, 'trace')['spans'] as List)
+              .cast<Map<String, dynamic>>();
+      expect(
+        (protectionReferenceSpans.singleWhere(
+              (span) => span['name'] == 'build-runner-protection-snapshot',
+            )['attributes']
+            as Map)['evidenceMode'],
+        'recaptured',
+      );
+      expect(
+        _demoFastPathManifest().readAsBytesSync(),
+        orderedEquals(optimizedManifest),
+      );
+      expect(
+        _demoBuildPlanState().readAsBytesSync(),
+        orderedEquals(optimizedPlan),
+      );
 
       final epochReference = await _generateDemo(
         ['--no-cache', '--check', '--profile'],

@@ -487,6 +487,11 @@ reporting or metadata-cache persistence. Use
 `CCROUTER_DISABLE_UNIFIED_EPOCH_SNAPSHOT=1` for full planning recapture A/B.
 Never use epoch evidence in place of the entry rollback snapshot, an input
 barrier, restore-time rescan, byte comparison, or `--no-cache --check`.
+One-shot Builder protection may derive the build-root non-target view from the
+entry rollback snapshot. External read-only Packages stay independently
+captured, and restore always rescans current files. Use
+`CCROUTER_DISABLE_SHARED_BUILD_PROTECTION_SNAPSHOT=1` for the complete second
+scan reference; build filters never prove that non-target outputs were intact.
 In watch mode, the final input barrier's exact snapshot may feed the local
 planning state directly. A verified aggregation hit may also reuse only the
 aggregation-owned entry bytes while current Builder-owned outputs are reread.

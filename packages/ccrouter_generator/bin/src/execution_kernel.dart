@@ -14,6 +14,10 @@ const _watchOutputEvidenceReuseKillSwitch =
 const _unifiedEpochSnapshotKillSwitch =
     'CCROUTER_DISABLE_UNIFIED_EPOCH_SNAPSHOT';
 
+/// Restores the independent non-target build protection capture for A/B.
+const _sharedBuildProtectionSnapshotKillSwitch =
+    'CCROUTER_DISABLE_SHARED_BUILD_PROTECTION_SNAPSHOT';
+
 /// Output channel scoped to one command or in-process generation cycle.
 final class _CommandOutputSink {
   const _CommandOutputSink.system(this._system) : _buffer = null;
@@ -495,6 +499,7 @@ Future<_GenerationCycleResult> _runGenerationCycle({
           () => _runBuildRunner(
             buildContext,
             root,
+            generationSnapshot: snapshot!,
             writeScope: packageLocal
                 ? CCPackageWriteScope.requestedPackage
                 : CCPackageWriteScope.dependencyClosure,

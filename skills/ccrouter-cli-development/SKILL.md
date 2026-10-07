@@ -240,6 +240,11 @@ persistence when deriving planning state. Use
 `CCROUTER_DISABLE_UNIFIED_EPOCH_SNAPSHOT=1` to restore full planning recapture
 for differential A/B. This switch does not merge the entry rollback snapshot,
 input barriers, restore rescan, validation, or authoritative reference check.
+One-shot build_runner protection may derive its build-root non-target bytes
+from the entry rollback snapshot while independently capturing external
+read-only Packages. Set `CCROUTER_DISABLE_SHARED_BUILD_PROTECTION_SNAPSHOT=1`
+to restore the second filesystem scan. Restore still rescans and compares exact
+bytes; never treat build filters as protection evidence.
 Watch planning publication reuses the exact input snapshot already captured by
 the final barrier. On an aggregation reuse hit it may additionally reuse only
 the verified aggregation-owned entry bytes, while rereading current
