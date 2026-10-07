@@ -131,6 +131,51 @@ void main() {
     index.remove('route');
     expect(index.watchedPathCount, 0);
   });
+
+  test('all deterministic shards equal one full scan', () {
+    final fixture = _Fixture.create(101);
+    addTearDown(fixture.dispose);
+    final full = CCRouterFilesystemIdentityIndex();
+    final sharded = CCRouterFilesystemIdentityIndex();
+    for (
+      var registration = 0;
+      registration < fixture.paths.length;
+      registration++
+    ) {
+      final watched = [fixture.paths[registration]];
+      final affected = [fixture.source('$registration')];
+      full.replace(
+        '$registration',
+        watchedPaths: watched,
+        affectedPaths: affected,
+      );
+      sharded.replace(
+        '$registration',
+        watchedPaths: watched,
+        affectedPaths: affected,
+      );
+      fixture.change(registration);
+    }
+
+    final expected = full.pollAll();
+    final changed = <String>{};
+    final affected = <String>{};
+    var inspected = 0;
+    for (var shard = 0; shard < 10; shard++) {
+      final result = sharded.pollShard(shardIndex: shard, shardCount: 10);
+      changed.addAll(result.changedRegistrations);
+      affected.addAll(result.affectedPaths);
+      inspected += result.inspectedPathCount;
+    }
+
+    expect(changed, expected.changedRegistrations);
+    expect(affected, expected.affectedPaths);
+    expect(inspected, fixture.paths.length);
+    expect(
+      () => sharded.pollShard(shardIndex: 10, shardCount: 10),
+      throwsRangeError,
+    );
+  });
 }
 
 final class _PerRegistrationReference {

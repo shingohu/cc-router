@@ -106,6 +106,33 @@ final class CCRouterFilesystemIdentityIndex {
     return _result(changedRegistrations, _identityByPath.length);
   }
 
+  /// Inspects one deterministic shard of the registered exact paths.
+  ///
+  /// Calling every shard index from zero through [shardCount] minus one is
+  /// equivalent to one [pollAll] pass, while distributing filesystem calls
+  /// across multiple timer ticks.
+  CCRouterFilesystemPollResult pollShard({
+    required int shardIndex,
+    required int shardCount,
+  }) {
+    if (shardCount <= 0 || shardIndex < 0 || shardIndex >= shardCount) {
+      throw RangeError('Require 0 <= shardIndex < shardCount.');
+    }
+    final changedRegistrations = <String>{};
+    var inspected = 0;
+    for (final entry in _identityByPath.entries) {
+      if (_stableShard(entry.key, shardCount) != shardIndex) continue;
+      inspected++;
+      final current = _fileIdentity(entry.key);
+      if (current == entry.value) continue;
+      _identityByPath[entry.key] = current;
+      changedRegistrations.addAll(
+        _registrationsByPath[entry.key] ?? const <String>{},
+      );
+    }
+    return _result(changedRegistrations, inspected);
+  }
+
   /// Inspects only exact registered [changedPaths] supplied by a file event.
   CCRouterFilesystemPollResult pollPaths(Iterable<String> changedPaths) {
     final changedRegistrations = <String>{};
@@ -165,6 +192,16 @@ final class CCRouterFilesystemIdentityIndex {
     } on Object {
       return 'missing';
     }
+  }
+
+  /// Assigns a path to a stable process-independent FNV-1a shard.
+  static int _stableShard(String value, int shardCount) {
+    var hash = 0x811c9dc5;
+    for (final byte in value.codeUnits) {
+      hash ^= byte;
+      hash = (hash * 0x01000193) & 0xffffffff;
+    }
+    return hash % shardCount;
   }
 }
 

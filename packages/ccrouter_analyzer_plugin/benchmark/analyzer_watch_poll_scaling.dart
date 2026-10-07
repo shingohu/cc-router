@@ -107,6 +107,7 @@ void _benchmarkExactPathPolling() {
       candidate.pollAll();
       final referenceSamples = <int>[];
       final candidateSamples = <int>[];
+      final shardedSamples = <int>[];
       for (var poll = 0; poll < 50; poll++) {
         final referenceWatch = Stopwatch()..start();
         final referenceAffected = reference.poll();
@@ -114,11 +115,19 @@ void _benchmarkExactPathPolling() {
         final candidateWatch = Stopwatch()..start();
         final candidateAffected = candidate.pollAll().affectedPaths;
         candidateWatch.stop();
-        if (referenceAffected.isNotEmpty || candidateAffected.isNotEmpty) {
+        final shardedWatch = Stopwatch()..start();
+        final shardedAffected = candidate
+            .pollShard(shardIndex: poll % 10, shardCount: 10)
+            .affectedPaths;
+        shardedWatch.stop();
+        if (referenceAffected.isNotEmpty ||
+            candidateAffected.isNotEmpty ||
+            shardedAffected.isNotEmpty) {
           throw StateError('Stable exact-path poll reported a false change.');
         }
         referenceSamples.add(referenceWatch.elapsedMicroseconds);
         candidateSamples.add(candidateWatch.elapsedMicroseconds);
+        shardedSamples.add(shardedWatch.elapsedMicroseconds);
       }
 
       final changedPath = fixture.paths[pathCount ~/ 2];
@@ -156,12 +165,15 @@ void _benchmarkExactPathPolling() {
 
       referenceSamples.sort();
       candidateSamples.sort();
+      shardedSamples.sort();
       stdout.writeln(
         'CCRouter analyzer exactPaths=$pathCount polls=50 '
         'referenceP50=${_percentile(referenceSamples, 0.50)}us '
         'referenceP95=${_percentile(referenceSamples, 0.95)}us '
         'candidateP50=${_percentile(candidateSamples, 0.50)}us '
         'candidateP95=${_percentile(candidateSamples, 0.95)}us '
+        'shardedP50=${_percentile(shardedSamples, 0.50)}us '
+        'shardedP95=${_percentile(shardedSamples, 0.95)}us '
         'referenceChange=${referenceChangedWatch.elapsedMicroseconds}us '
         'eventChange=${eventChangedWatch.elapsedMicroseconds}us',
       );

@@ -252,6 +252,11 @@ dart analyze
 磁盘 fixture 验证监听效果，不等于在这些 fixture 上执行过 `clean/generate`。
 生成物正确性仍由独立的真实 CLI 回归保证。
 
+规模诊断可在启动 Server 前设置 `CCROUTER_ENABLE_ANALYZER_TIERED_POLL=1`。该实验模式保留文件
+事件和 validated generation epoch 的即时刷新，只把 exact-path 丢事件兜底分为 10 个 500ms
+shard；所有 shard 的 affected source 并集必须与一次 full scan 完全一致。它默认关闭，最坏
+fallback 刷新时间为 5 秒，不能用来替代最终生成检查。
+
 当前验证基于 Dart 3.11.5，不宣称覆盖所有 IDE/SDK。无 manifest 的临时 loader 绕过 Pub 与
 用户插件缓存；AOT loader 编译、发布 bootstrap 复制、固定 Git ref 和 IDE UI 另行验证。
 独立多根 Package 同时冷启动时，当前 SDK 的 legacy PluginManager 可能并发启动同一路径

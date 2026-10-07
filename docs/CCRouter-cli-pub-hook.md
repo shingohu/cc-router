@@ -231,6 +231,12 @@ Generator 或创建独立 Analyzer graph。可用 `CCROUTER_DISABLE_ANALYZER_WAT
 Generator diagnostics bridge。diagnostics 写入或消费失败不会改变 Generator/Hook 的 fail-closed
 结果，最终仍需 `--no-cache --check`。
 
+`CCROUTER_ENABLE_ANALYZER_TIERED_POLL=1` 仅供框架维护者做规模 A/B。开启后，正常文件事件和
+已经通过 `status.json`/`diagnostics.json` 双文件身份与 resolution 校验的成功 generation epoch
+仍即时失效；exact-path 丢事件兜底分为 10 个 500ms shard，最坏完整审计周期从 500ms 放宽到
+5 秒。默认继续逐 tick 完整检查 exact paths，实验模式不改变 Generator 或
+`--no-cache --check` 的权威性。
+
 watch 使用文件 stat 作为低成本唤醒信号，再以 exact-content fingerprint 确认 Pub resolution
 变化；低频 exact scan 只作事件遗漏兜底，成功证据从不依赖 mtime。需要新 Analyzer graph 或
 `--build-filter` 时发布 `sessionRestarting`，恢复当前 cycle 快照并在同一 lease 内启动新 child；

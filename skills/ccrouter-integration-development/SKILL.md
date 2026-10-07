@@ -416,6 +416,11 @@ identity changes, and checks shared resolution files once per Pub root before
 reanalyzing affected files. It does not open a second Analyzer graph. Use
 `CCROUTER_DISABLE_ANALYZER_WATCH_BRIDGE=1` for an IDE-only fallback. Keep
 `--no-cache --check` as the final authority.
+Framework maintainers may set `CCROUTER_ENABLE_ANALYZER_TIERED_POLL=1` before
+starting Analysis Server for a scale A/B. File events and validated successful
+generation epochs remain immediate, while the exact-path missed-event fallback
+is split across ten 500ms shards. The opt-in mode has a five-second worst-case
+fallback delay and is not an application correctness mechanism.
 `buildSucceeded.buildRunner` uses `formatVersion: 2`. Without `--profile` it
 reports `available: false` instead of zero phase counters; with `--profile` its
 `invalidatedInputs` count is inferred from build_runner's public counters. It

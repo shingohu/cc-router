@@ -19,6 +19,10 @@ import 'package:ccrouter_analyzer_plugin/src/source_analyzer.dart';
 import 'package:path/path.dart' as path;
 import 'package:pub_semver/pub_semver.dart';
 
+/// Opt-in A/B switch for distributing exact fallback scans across timer ticks.
+const String ccrouterAnalyzerTieredPollingEnable =
+    'CCROUTER_ENABLE_ANALYZER_TIERED_POLL';
+
 /// Analysis Server plugin that publishes CCRouter-specific diagnostics.
 final class CCRouterAnalyzerPlugin extends ServerPlugin {
   /// Creates a plugin backed by the Analysis Server [resourceProvider].
@@ -64,6 +68,16 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
   /// Exact generated outputs tracked by analyzed authored capability source.
   final CCRouterFilesystemIdentityIndex _generatedOutputs =
       CCRouterFilesystemIdentityIndex();
+
+  /// Whether this process uses the experimental sharded exact-path fallback.
+  final bool _usesTieredPolling =
+      io.Platform.environment[ccrouterAnalyzerTieredPollingEnable] == '1';
+
+  /// Timer-cycle shard selected for the next experimental exact-path poll.
+  int _exactPollShard = 0;
+
+  /// Number of 500ms ticks forming one complete experimental exact scan.
+  static const int _exactPollShardCount = 10;
 
   /// Watches Dart sources and the exact generated Contract ownership index.
   /// JSON is an invalidation input only; no JSON diagnostics are published.
@@ -159,8 +173,25 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
     _watchBridgePollActive = true;
     try {
       final refresh = <String>{};
-      refresh.addAll(_pollGeneratedOutputs());
-      refresh.addAll(_contractOwners.pollChangedPaths());
+      if (_usesTieredPolling) {
+        final shard = _exactPollShard;
+        _exactPollShard = (_exactPollShard + 1) % _exactPollShardCount;
+        refresh.addAll(
+          _pollGeneratedOutputs(
+            shardIndex: shard,
+            shardCount: _exactPollShardCount,
+          ),
+        );
+        refresh.addAll(
+          _contractOwners.pollChangedPaths(
+            shardIndex: shard,
+            shardCount: _exactPollShardCount,
+          ),
+        );
+      } else {
+        refresh.addAll(_pollGeneratedOutputs());
+        refresh.addAll(_contractOwners.pollChangedPaths());
+      }
       final resolutionChanged = <String>{};
       final pubspecsByResolutionRoot = <String, Set<String>>{};
       final resolutionRoots = <String, io.Directory>{};
@@ -191,6 +222,10 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
         for (final root in hostRoots.values) {
           if (_generatorDiagnostics.pollSuccessfulGenerationChanged(root)) {
             refresh.addAll(_generatedOutputs.affectedPaths);
+            if (_usesTieredPolling) {
+              refresh.addAll(_contractOwners.affectedPaths);
+              _contractOwners.clear();
+            }
           }
           refresh.addAll(_generatorDiagnostics.pollAffectedDartPaths(root));
         }
@@ -230,6 +265,7 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
     _watchBridgeLifecycleRevision++;
     _watchBridgeTimer?.cancel();
     _watchBridgeTimer = null;
+    _exactPollShard = 0;
   }
 
   /// Releases lifecycle-bound polling before the plugin process shuts down.
@@ -457,8 +493,14 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
   }
 
   /// Detects generated output changes even when Analysis Server drops events.
-  Set<String> _pollGeneratedOutputs() {
-    final refresh = _generatedOutputs.pollAll().affectedPaths;
+  Set<String> _pollGeneratedOutputs({int? shardIndex, int? shardCount}) {
+    final result = shardIndex == null || shardCount == null
+        ? _generatedOutputs.pollAll()
+        : _generatedOutputs.pollShard(
+            shardIndex: shardIndex,
+            shardCount: shardCount,
+          );
+    final refresh = result.affectedPaths;
     for (final source in _generatedOutputs.registrationIdentities) {
       if (!io.File(source).existsSync()) _generatedOutputs.remove(source);
     }

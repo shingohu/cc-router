@@ -1395,6 +1395,10 @@ Analysis Server 不可靠转发 `.dart_tool` 文件事件，因此插件每 500m
 内各 Host 的 watch/one-shot snapshot；Package role/context 只在 authored identity 变化时重算，共享
 Pub graph/config 每个 resolution root 只检查一次，不创建第二套 Analyzer graph。设置
 `CCROUTER_DISABLE_ANALYZER_WATCH_BRIDGE=1` 可关闭整个 Generator diagnostics bridge。
+框架维护者可在启动 Analysis Server 前设置
+`CCROUTER_ENABLE_ANALYZER_TIERED_POLL=1` 做规模 A/B：文件事件与通过双文件校验的成功 generation
+epoch 仍即时刷新，exact-path 丢事件兜底分为 10 个 500ms shard，最坏完整审计周期为 5 秒。
+该实验开关默认关闭，不能作为业务项目的生成正确性保证。
 诊断发布/消费均为 fail-open 可观察性，不改变生成成功与否；CI 仍以 `--no-cache --check` 为权威。
 Builder 成功后的 watch cycle 会直接进入已完成 Builder 的聚合路径，避免重复执行普通 fast-path
 inspection 与 Build Plan 推导，但仍保留 input fingerprint/barrier、preflight、快照、Validator、

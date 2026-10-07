@@ -400,6 +400,11 @@ final class CCRouterContractOwnerIndexCache {
   /// Number of Pub graphs currently retained.
   int get entryCount => _entries.length;
 
+  /// Authored component descriptors affected by any retained owner index.
+  Set<String> get affectedPaths => Set.unmodifiable({
+    for (final entry in _entries.values) ...entry.componentSourcePaths,
+  });
+
   /// Resolves or builds the ownership index for [sourcePath].
   CCRouterContractOwnerIndex resolve(String sourcePath) {
     final context = CCRouterAnalyzerProjectContext.resolve(sourcePath);
@@ -469,8 +474,13 @@ final class CCRouterContractOwnerIndexCache {
   /// Analysis Server does not consistently forward generated JSON changes to
   /// legacy plugins. Polling only paths already used by a cached index keeps
   /// the fallback bounded by resolved Pub evidence rather than the workspace.
-  Set<String> pollChangedPaths() {
-    final result = _filesystemIdentities.pollAll();
+  Set<String> pollChangedPaths({int? shardIndex, int? shardCount}) {
+    final result = shardIndex == null || shardCount == null
+        ? _filesystemIdentities.pollAll()
+        : _filesystemIdentities.pollShard(
+            shardIndex: shardIndex,
+            shardCount: shardCount,
+          );
     for (final registration in result.changedRegistrations) {
       _entries.remove(registration);
       _filesystemIdentities.remove(registration);

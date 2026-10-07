@@ -762,3 +762,17 @@ fixture 的 graph update 很低，不能外推到被 import、带注解或改变
 
 本轮 benchmark 恢复源码、删除所有 add/delete/rename fixture，99 个受管生成物逐字节一致，并通过
 `generate demo --no-cache --check`。
+
+### 10.12 Analyzer exact-path polling 算法基线（2026-10-07）
+
+Analyzer Plugin 的 scale benchmark 补充 100/1,000/5,000/10,000 exact paths，分别测量当前
+full-scan reference、共享 reverse identity index、10-shard fallback 和单文件 event path。候选与
+reference 对修改、删除、重建及 120 轮确定性 filesystem churn 的 affected source 集合完全一致；
+101 路径跨 10 个 shard 的 inspected path 总数和结果也与一次 full scan 一致。
+
+同机 10,000 路径样本中，reference/candidate full-scan P95 分别约 23.6/22.7ms，说明 reverse
+index 没有让 correctness fallback 产生负优化；单文件 event path 约 17us。10-shard 单 tick P95
+约 3.4ms，降低约 85%，代价是同时遗漏文件事件与 validated generation epoch 时，完整审计最坏
+从 500ms 放宽到 5 秒。因此生产默认仍为逐 tick full scan，只通过
+`CCROUTER_ENABLE_ANALYZER_TIERED_POLL=1` 提供 maintainer A/B。启用该开关后的真实 Legacy/LSP
+Analysis Server 15 项回归通过；最终生成正确性仍由 Generator 与 `--no-cache --check` 负责。

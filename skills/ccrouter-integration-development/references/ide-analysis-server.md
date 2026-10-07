@@ -64,6 +64,11 @@ reads/reanalyzes only after a relevant identity change. The Timer is owned by th
 and is cancelled on context replacement, shutdown, and channel close. Set
 `CCROUTER_DISABLE_ANALYZER_WATCH_BRIDGE=1` before starting Analysis Server to
 disable the whole Generator diagnostics bridge without disabling source rules.
+For maintainer scale A/B only,
+`CCROUTER_ENABLE_ANALYZER_TIERED_POLL=1` retains immediate file-event and
+validated-generation refresh while distributing the exact-path fallback across
+ten 500ms shards. It is off by default and allows a five-second worst-case
+missed-event refresh.
 Snapshot publication and consumption are fail-open diagnostics; generation,
 Pub Hook failure, and the final `--no-cache --check` gate remain authoritative.
 
