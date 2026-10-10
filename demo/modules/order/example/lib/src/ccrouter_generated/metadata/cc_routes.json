@@ -53,6 +53,7 @@
       "contracts": {
         "route": "OrderDetailRoute",
         "arguments": "OrderDetailRouteArguments",
+        "binding": "OrderDetailRouteContractBinding",
         "package": "demo_order_contracts",
         "library": "lib/src/ccrouter_generated/contract/order_detail_route_contract.route.contract.g.dart",
         "publicLibraries": [

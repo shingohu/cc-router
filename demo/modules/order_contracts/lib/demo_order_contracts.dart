@@ -2,7 +2,7 @@
 library;
 
 export 'src/ccrouter_generated/demo_order_contracts.contracts.api.g.dart'
-    show OrderDetailRoute, OrderDetailRouteArguments;
+    show OrderDetailRoute;
 export 'src/order_summary_service.dart'
     show OrderSummaryService, OrderSummaryValue;
 export 'src/order_commands.dart' show ReserveOrderCommand;

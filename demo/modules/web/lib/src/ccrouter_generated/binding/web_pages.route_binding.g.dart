@@ -17,19 +17,23 @@ import 'package:demo_web_contracts/src/ccrouter_generated/contract/web_route_con
 /// Registration retains the external Pure Dart contract as the single source
 /// of route identity, parameters, and navigation policy.
 void ccrouterRegisterDemoPublicWebPageRoute(CCRegistry registry) =>
-    registry.registerRoute(route_contract_0.DemoPublicWebRoute.definition);
+    registry.registerRoute(
+      route_contract_0.DemoPublicWebRouteContractBinding.definition,
+    );
 
 /// Package-internal route definition bridge used by Host generation.
 CCRouteDefinition<dynamic, dynamic> ccrouterDescribeDemoPublicWebPageRoute() =>
-    route_contract_0.DemoPublicWebRoute.definition;
+    route_contract_0.DemoPublicWebRouteContractBinding.definition;
 
 /// Package-internal page factory bound to the public route contract.
 route_page.DemoPublicWebPage ccrouterBuildDemoPublicWebPageRoute(
   CCRouteCodecValues arguments,
 ) {
-  final decoded = route_contract_0.DemoPublicWebRoute.definition.codec.decode(
-    arguments,
-  );
+  final decoded = route_contract_0
+      .DemoPublicWebRouteContractBinding
+      .definition
+      .codec
+      .decode(arguments);
   return route_page.DemoPublicWebPage(target: decoded.target);
 }
 
@@ -38,18 +42,22 @@ route_page.DemoPublicWebPage ccrouterBuildDemoPublicWebPageRoute(
 /// Registration retains the external Pure Dart contract as the single source
 /// of route identity, parameters, and navigation policy.
 void ccrouterRegisterDemoPrivateWebPageRoute(CCRegistry registry) =>
-    registry.registerRoute(route_contract_0.DemoPrivateWebRoute.definition);
+    registry.registerRoute(
+      route_contract_0.DemoPrivateWebRouteContractBinding.definition,
+    );
 
 /// Package-internal route definition bridge used by Host generation.
 CCRouteDefinition<dynamic, dynamic> ccrouterDescribeDemoPrivateWebPageRoute() =>
-    route_contract_0.DemoPrivateWebRoute.definition;
+    route_contract_0.DemoPrivateWebRouteContractBinding.definition;
 
 /// Package-internal page factory bound to the public route contract.
 route_page.DemoPrivateWebPage ccrouterBuildDemoPrivateWebPageRoute(
   CCRouteCodecValues arguments,
 ) {
-  final decoded = route_contract_0.DemoPrivateWebRoute.definition.codec.decode(
-    arguments,
-  );
+  final decoded = route_contract_0
+      .DemoPrivateWebRouteContractBinding
+      .definition
+      .codec
+      .decode(arguments);
   return route_page.DemoPrivateWebPage(decoded.request);
 }

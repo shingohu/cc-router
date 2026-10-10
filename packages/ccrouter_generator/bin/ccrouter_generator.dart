@@ -4556,10 +4556,8 @@ Future<Set<String>> _generateContractApiEntrypoints(
       final symbols = exportsByPackage
           .putIfAbsent(packageName, () => <String, Set<String>>{})
           .putIfAbsent(library.substring(prefix.length), () => <String>{});
-      for (final key in const ['route', 'arguments']) {
-        final symbol = '${contracts[key] ?? ''}';
-        if (symbol.isNotEmpty) symbols.add(symbol);
-      }
+      final symbol = '${contracts['route'] ?? ''}';
+      if (symbol.isNotEmpty) symbols.add(symbol);
     }
   }
 

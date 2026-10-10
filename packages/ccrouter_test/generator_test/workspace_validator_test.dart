@@ -1678,7 +1678,7 @@ void main() {
         ..writeAsStringSync(
           "export 'src/ccrouter_generated/contract/"
           "route.route.contract.g.dart' "
-          'show DetailRoute, DetailRouteArguments;\n'
+          'show DetailRoute;\n'
           "export 'src/service.dart' show SummaryService;\n"
           "export 'src/command.dart' show SubmitCommand;\n"
           "export 'src/event.dart' show SubmittedEvent;\n"
@@ -1748,11 +1748,11 @@ void main() {
       )..['package'] = 'demo_order';
       final barrel = File('${package.path}/lib/demo_order.dart');
       barrel.writeAsStringSync(
-        "export 'src/ccrouter_generated/contract/detail.route.contract.g.dart' show DetailRoute, DetailRouteArguments;\n",
+        "export 'src/ccrouter_generated/contract/detail.route.contract.g.dart' show DetailRoute;\n",
       );
       expect(CCRouteBarrelExportValidator.validate(root, [metadata]), isEmpty);
       barrel.writeAsStringSync(
-        "export 'src/detail.dart' show DetailRoute, DetailRouteArguments;\n",
+        "export 'src/detail.dart' show DetailRoute;\n",
       );
       expect(
         CCRouteBarrelExportValidator.validate(root, [metadata]),
@@ -1788,7 +1788,7 @@ void main() {
             'demo_order_contracts.contracts.api.g.dart',
           )..writeAsStringSync(
             "export 'contract/detail.route.contract.g.dart' "
-            'show DetailRoute, DetailRouteArguments;\n',
+            'show DetailRoute;\n',
           );
       final metadata = document(
         source: 'lib/src/detail.dart',
@@ -1808,7 +1808,7 @@ void main() {
         ..writeAsStringSync(
           "export 'src/ccrouter_generated/"
           "demo_order_contracts.contracts.api.g.dart' "
-          'show DetailRoute, DetailRouteArguments;\n',
+          'show DetailRoute;\n',
         );
 
       CCRouteBarrelExportValidator.annotatePublicLibraries(
@@ -1821,15 +1821,15 @@ void main() {
       );
       expect(CCRouteBarrelExportValidator.validate(root, [metadata]), isEmpty);
       stableBarrel.writeAsStringSync(
-        "export 'contract/detail.route.contract.g.dart' show DetailRoute;\n",
+        "export 'contract/detail.route.contract.g.dart' "
+        'show DetailRouteArguments;\n',
       );
       expect(
         CCRouteBarrelExportValidator.validate(root, [metadata]),
         contains(contains('Public route "orders.detail"')),
       );
       stableBarrel.writeAsStringSync(
-        "export 'contract/detail.route.contract.g.dart' "
-        'show DetailRoute, DetailRouteArguments;\n',
+        "export 'contract/detail.route.contract.g.dart' show DetailRoute;\n",
       );
       barrel.writeAsStringSync('library;\n');
       expect(

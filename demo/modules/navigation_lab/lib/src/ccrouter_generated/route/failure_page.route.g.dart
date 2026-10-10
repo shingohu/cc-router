@@ -57,11 +57,18 @@ abstract final class _DemoFailurePageRoute {
       routeId: routeId,
     ),
   );
+}
 
-  /// Component-owned definition; business callers should use [intent].
+/// Generated definition bridge for registration and page binding.
+///
+/// This symbol is intentionally kept out of stable Consumer barrels.
+/// Business code creates [_DemoFailurePageRoute] intents. Generated owner glue uses
+/// this binding to register and decode the route.
+abstract final class _DemoFailurePageRouteContractBinding {
+  /// The typed route definition consumed by generated owner glue.
   static final definition =
       CCRouteDefinition<_DemoFailurePageRouteArguments, void>(
-        routeId: id,
+        routeId: _DemoFailurePageRoute.id,
         patterns: const [
           const CCPathPattern(
             "/lab/failure",
@@ -213,7 +220,7 @@ final class CCGeneratedDemoFailurePageRouteFactory {
 /// Keep this symbol out of public package barrels. It exists so a component
 /// registrar can register library-private routes without exposing owner APIs.
 void ccrouterRegisterDemoFailurePageRoute(CCRegistry registry) =>
-    registry.registerRoute(_DemoFailurePageRoute.definition);
+    registry.registerRoute(_DemoFailurePageRouteContractBinding.definition);
 
 /// Typed route definition bridge shared by Host generation and page binding.
 ///
@@ -221,4 +228,5 @@ void ccrouterRegisterDemoFailurePageRoute(CCRegistry registry) =>
 /// access decoded fields without dynamic calls. Host aggregation may erase the
 /// type only after page construction has been bound.
 CCRouteDefinition<_DemoFailurePageRouteArguments, void>
-ccrouterDescribeDemoFailurePageRoute() => _DemoFailurePageRoute.definition;
+ccrouterDescribeDemoFailurePageRoute() =>
+    _DemoFailurePageRouteContractBinding.definition;

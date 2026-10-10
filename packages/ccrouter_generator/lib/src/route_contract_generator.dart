@@ -52,6 +52,7 @@ List<_RouteModel> _readContractModels(LibraryReader library) {
     for (final name in [
       model.api,
       model.arguments,
+      model.contractBinding,
       model.codec,
       model.intent,
     ]) {

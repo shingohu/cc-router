@@ -5,4 +5,4 @@
 ///
 /// Authored public barrels decide whether this generated API is exposed.
 export 'contract/order_detail_route_contract.route.contract.g.dart'
-    show OrderDetailRoute, OrderDetailRouteArguments;
+    show OrderDetailRoute;

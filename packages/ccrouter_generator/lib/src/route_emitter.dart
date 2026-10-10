@@ -33,7 +33,8 @@ String _emitPublicRouteContract(
   includeOwnerMethods: false,
 );
 
-/// Emits Arguments, Intent, Definition, and Codec into one contract library.
+/// Emits Arguments, Consumer Route, Owner binding, Intent, and Codec into one
+/// generated library.
 String _emitTypedRouteContract(
   _RouteModel route, {
   required _ParameterTypeEmitter parameterType,
@@ -100,10 +101,30 @@ abstract final class ${route.api} {
   /// Creates a typed Intent; navigate through CCRouter.navigator.
   static CCRouteIntent<$resultType> intent$signature =>
       ${route.intent}(${route.arguments}($assignments));
+''');
+  if (includeOwnerMethods) {
+    out.writeln('''
+  /// Called by the owning component registrar, never by a business caller.
+  static void register(CCRegistry registry) =>
+      registry.registerRoute(${route.contractBinding}.definition);
 
-  /// Component-owned definition; business callers should use [intent].
+  /// Injects already decoded arguments into the page without backend coupling.
+  static ${route.page.displayName} build(${route.arguments} arguments) =>
+      ${route.page.displayName}(${_pageArguments(params)});
+''');
+  }
+  out.writeln('''
+}
+
+/// Generated definition bridge for registration and page binding.
+///
+/// This symbol is intentionally kept out of stable Consumer barrels.
+/// Business code creates [${route.api}] intents. Generated owner glue uses
+/// this binding to register and decode the route.
+abstract final class ${route.contractBinding} {
+  /// The typed route definition consumed by generated owner glue.
   static final definition = CCRouteDefinition<${route.arguments}, $resultType>(
-    routeId: id,
+    routeId: ${route.api}.id,
     patterns: ${_emitPatterns(route)},
     codec: const ${route.codec}(),
     deepLink: ${_constant(route.annotation.read('deepLink').objectValue)},
@@ -113,16 +134,6 @@ abstract final class ${route.api} {
     popGuardIds: ${_constant(route.annotation.read('popGuards').objectValue)},
   );
 ''');
-  if (includeOwnerMethods) {
-    out.writeln('''
-  /// Called by the owning component registrar, never by a business caller.
-  static void register(CCRegistry registry) => registry.registerRoute(definition);
-
-  /// Injects already decoded arguments into the page without backend coupling.
-  static ${route.page.displayName} build(${route.arguments} arguments) =>
-      ${route.page.displayName}(${_pageArguments(params)});
-''');
-  }
   out.writeln('}\n');
   out.writeln('''
 /// Private data-only Intent carrying this route's typed result contract.
@@ -157,7 +168,7 @@ String _emitRouteOwnerGlue(_RouteModel route, {required String resultType}) =>
 /// Keep this symbol out of public package barrels. It exists so a component
 /// registrar can register library-private routes without exposing owner APIs.
 void ${route.registrationFunction}(CCRegistry registry) =>
-    registry.registerRoute(${route.api}.definition);
+    registry.registerRoute(${route.contractBinding}.definition);
 
 /// Typed route definition bridge shared by Host generation and page binding.
 ///
@@ -165,7 +176,7 @@ void ${route.registrationFunction}(CCRegistry registry) =>
 /// access decoded fields without dynamic calls. Host aggregation may erase the
 /// type only after page construction has been bound.
 CCRouteDefinition<${route.arguments}, $resultType> ${route.descriptorFunction}() =>
-    ${route.api}.definition;
+    ${route.contractBinding}.definition;
 ''';
 
 /// Emits the page construction bridge in an isolated Flutter binding library.
@@ -228,7 +239,7 @@ final class ${route.intentFactory} {
 String _emitImplementationGlue(
   _RouteImplementationModel implementation, {
   required String pageType,
-  required String contractApi,
+  required String contractBinding,
 }) {
   final route = implementation.contract;
   return '''
@@ -237,17 +248,17 @@ String _emitImplementationGlue(
 /// Registration retains the external Pure Dart contract as the single source
 /// of route identity, parameters, and navigation policy.
 void ${implementation.registrationFunction}(CCRegistry registry) =>
-    registry.registerRoute($contractApi.definition);
+    registry.registerRoute($contractBinding.definition);
 
 /// Package-internal route definition bridge used by Host generation.
 CCRouteDefinition<dynamic, dynamic> ${implementation.descriptorFunction}() =>
-    $contractApi.definition;
+    $contractBinding.definition;
 
 /// Package-internal page factory bound to the public route contract.
 $pageType ${implementation.builderFunction}(
   CCRouteCodecValues ${route.parameters.isEmpty ? '_' : 'arguments'},
 ) {
-  ${route.parameters.isEmpty ? 'return $pageType();' : 'final decoded = $contractApi.definition.codec.decode(arguments);\n  return $pageType(\n    ${_pageArgumentsFromDecoded(route.parameters, 'decoded')}\n  );'}
+  ${route.parameters.isEmpty ? 'return $pageType();' : 'final decoded = $contractBinding.definition.codec.decode(arguments);\n  return $pageType(\n    ${_pageArgumentsFromDecoded(route.parameters, 'decoded')}\n  );'}
 }
 ''';
 }

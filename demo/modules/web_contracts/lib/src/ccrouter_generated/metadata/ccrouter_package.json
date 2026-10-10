@@ -5,7 +5,7 @@
     "name": "demo_web_contracts",
     "version": "0.1.0"
   },
-  "contentFingerprint": "525eea42012a1f13451b1b4c9c1b32be0e7ff0cffc8988df8cde051d329708d9",
+  "contentFingerprint": "5886e63c302539b92c5b491fd9f9b85acaa39caa018ca151fa6af367b37ea30a",
   "bundle": null,
   "dependencies": [],
   "metadata": [
@@ -61,6 +61,7 @@
           "contracts": {
             "route": "DemoPublicWebRoute",
             "arguments": "DemoPublicWebRouteArguments",
+            "binding": "DemoPublicWebRouteContractBinding",
             "package": "demo_web_contracts",
             "library": "lib/src/ccrouter_generated/contract/web_route_contracts.route.contract.g.dart",
             "publicLibraries": [
@@ -139,6 +140,7 @@
           "contracts": {
             "route": "DemoPrivateWebRoute",
             "arguments": "DemoPrivateWebRouteArguments",
+            "binding": "DemoPrivateWebRouteContractBinding",
             "package": "demo_web_contracts",
             "library": "lib/src/ccrouter_generated/contract/web_route_contracts.route.contract.g.dart",
             "publicLibraries": [

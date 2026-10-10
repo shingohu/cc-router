@@ -5,7 +5,7 @@
     "name": "demo_navigation_lab",
     "version": "0.1.0"
   },
-  "contentFingerprint": "95f0abe17655774657899e32f82588e36bdc0e1e527bd2f411b15d15bef5fa5b",
+  "contentFingerprint": "c44131c3719955c3709a999d6c9907bdefe1ab8c2641538c3aa5aff56beb5aaa",
   "bundle": {
     "library": "lib/src/ccrouter_generated/host/demo_navigation_lab_ccrouter.g.dart",
     "symbol": "ccrouterGeneratedPackageBundle"
@@ -34,12 +34,12 @@
     {
       "name": "demo_order_contracts",
       "version": "0.1.0",
-      "contentFingerprint": "b3208f4a939dfa9cc5a5ae487b5dab6793f1e73c715ebde2c29de7efa68d5167"
+      "contentFingerprint": "75c836199470e34b4648bfc11f7f1cbbade6ac4950afc80fb342dee969b9c3bd"
     },
     {
       "name": "demo_web_contracts",
       "version": "0.1.0",
-      "contentFingerprint": "525eea42012a1f13451b1b4c9c1b32be0e7ff0cffc8988df8cde051d329708d9"
+      "contentFingerprint": "5886e63c302539b92c5b491fd9f9b85acaa39caa018ca151fa6af367b37ea30a"
     }
   ],
   "metadata": [
@@ -94,6 +94,7 @@
           "contracts": {
             "route": "_DemoCapabilitiesPageRoute",
             "arguments": "_DemoCapabilitiesPageRouteArguments",
+            "binding": "_DemoCapabilitiesPageRouteContractBinding",
             "package": "demo_navigation_lab",
             "library": "lib/src/ccrouter_generated/route/capability_page.route.g.dart",
             "intentFactory": "CCGeneratedDemoCapabilitiesPageRouteFactory"
@@ -405,6 +406,7 @@
           "contracts": {
             "route": "_DemoDetailPageRoute",
             "arguments": "_DemoDetailPageRouteArguments",
+            "binding": "_DemoDetailPageRouteContractBinding",
             "package": "demo_navigation_lab",
             "library": "lib/src/ccrouter_generated/route/detail_page.route.g.dart",
             "intentFactory": "CCGeneratedDemoDetailPageRouteFactory"
@@ -545,6 +547,7 @@
           "contracts": {
             "route": "_DemoFailurePageRoute",
             "arguments": "_DemoFailurePageRouteArguments",
+            "binding": "_DemoFailurePageRouteContractBinding",
             "package": "demo_navigation_lab",
             "library": "lib/src/ccrouter_generated/route/failure_page.route.g.dart",
             "intentFactory": "CCGeneratedDemoFailurePageRouteFactory"
@@ -686,6 +689,7 @@
           "contracts": {
             "route": "_DemoNavigationHomePageRoute",
             "arguments": "_DemoNavigationHomePageRouteArguments",
+            "binding": "_DemoNavigationHomePageRouteContractBinding",
             "package": "demo_navigation_lab",
             "library": "lib/src/ccrouter_generated/route/home_page.route.g.dart",
             "intentFactory": "CCGeneratedDemoNavigationHomePageRouteFactory"
@@ -776,6 +780,7 @@
           "contracts": {
             "route": "_DemoLifecyclePageRoute",
             "arguments": "_DemoLifecyclePageRouteArguments",
+            "binding": "_DemoLifecyclePageRouteContractBinding",
             "package": "demo_navigation_lab",
             "library": "lib/src/ccrouter_generated/route/lifecycle_page.route.g.dart",
             "intentFactory": "CCGeneratedDemoLifecyclePageRouteFactory"
@@ -1503,6 +1508,7 @@
           "contracts": {
             "route": "_DemoNetworkPageRoute",
             "arguments": "_DemoNetworkPageRouteArguments",
+            "binding": "_DemoNetworkPageRouteContractBinding",
             "package": "demo_navigation_lab",
             "library": "lib/src/ccrouter_generated/route/network_page.route.g.dart",
             "intentFactory": "CCGeneratedDemoNetworkPageRouteFactory"
@@ -1595,6 +1601,7 @@
           "contracts": {
             "route": "_DemoProceedPageRoute",
             "arguments": "_DemoProceedPageRouteArguments",
+            "binding": "_DemoProceedPageRouteContractBinding",
             "package": "demo_navigation_lab",
             "library": "lib/src/ccrouter_generated/route/policy_pages.route.g.dart",
             "intentFactory": "CCGeneratedDemoProceedPageRouteFactory"
@@ -1674,6 +1681,7 @@
           "contracts": {
             "route": "_DemoCancelledPageRoute",
             "arguments": "_DemoCancelledPageRouteArguments",
+            "binding": "_DemoCancelledPageRouteContractBinding",
             "package": "demo_navigation_lab",
             "library": "lib/src/ccrouter_generated/route/policy_pages.route.g.dart",
             "intentFactory": "CCGeneratedDemoCancelledPageRouteFactory"
@@ -1753,6 +1761,7 @@
           "contracts": {
             "route": "_DemoRedirectSourcePageRoute",
             "arguments": "_DemoRedirectSourcePageRouteArguments",
+            "binding": "_DemoRedirectSourcePageRouteContractBinding",
             "package": "demo_navigation_lab",
             "library": "lib/src/ccrouter_generated/route/policy_pages.route.g.dart",
             "intentFactory": "CCGeneratedDemoRedirectSourcePageRouteFactory"
@@ -1830,6 +1839,7 @@
           "contracts": {
             "route": "_DemoRedirectTargetPageRoute",
             "arguments": "_DemoRedirectTargetPageRouteArguments",
+            "binding": "_DemoRedirectTargetPageRouteContractBinding",
             "package": "demo_navigation_lab",
             "library": "lib/src/ccrouter_generated/route/policy_pages.route.g.dart",
             "intentFactory": "CCGeneratedDemoRedirectTargetPageRouteFactory"
@@ -1909,6 +1919,7 @@
           "contracts": {
             "route": "_DemoDeferredPageRoute",
             "arguments": "_DemoDeferredPageRouteArguments",
+            "binding": "_DemoDeferredPageRouteContractBinding",
             "package": "demo_navigation_lab",
             "library": "lib/src/ccrouter_generated/route/policy_pages.route.g.dart",
             "intentFactory": "CCGeneratedDemoDeferredPageRouteFactory"
@@ -1988,6 +1999,7 @@
           "contracts": {
             "route": "_DemoTimeoutPageRoute",
             "arguments": "_DemoTimeoutPageRouteArguments",
+            "binding": "_DemoTimeoutPageRouteContractBinding",
             "package": "demo_navigation_lab",
             "library": "lib/src/ccrouter_generated/route/policy_pages.route.g.dart",
             "intentFactory": "CCGeneratedDemoTimeoutPageRouteFactory"
@@ -2067,6 +2079,7 @@
           "contracts": {
             "route": "_DemoGuardedPageRoute",
             "arguments": "_DemoGuardedPageRouteArguments",
+            "binding": "_DemoGuardedPageRouteContractBinding",
             "package": "demo_navigation_lab",
             "library": "lib/src/ccrouter_generated/route/policy_pages.route.g.dart",
             "intentFactory": "CCGeneratedDemoGuardedPageRouteFactory"
@@ -2157,6 +2170,7 @@
           "contracts": {
             "route": "_DemoFadePageRoute",
             "arguments": "_DemoFadePageRouteArguments",
+            "binding": "_DemoFadePageRouteContractBinding",
             "package": "demo_navigation_lab",
             "library": "lib/src/ccrouter_generated/route/presentation_pages.route.g.dart",
             "intentFactory": "CCGeneratedDemoFadePageRouteFactory"
@@ -2234,6 +2248,7 @@
           "contracts": {
             "route": "_DemoScalePageRoute",
             "arguments": "_DemoScalePageRouteArguments",
+            "binding": "_DemoScalePageRouteContractBinding",
             "package": "demo_navigation_lab",
             "library": "lib/src/ccrouter_generated/route/presentation_pages.route.g.dart",
             "intentFactory": "CCGeneratedDemoScalePageRouteFactory"
@@ -2311,6 +2326,7 @@
           "contracts": {
             "route": "_DemoCupertinoPageRoute",
             "arguments": "_DemoCupertinoPageRouteArguments",
+            "binding": "_DemoCupertinoPageRouteContractBinding",
             "package": "demo_navigation_lab",
             "library": "lib/src/ccrouter_generated/route/presentation_pages.route.g.dart",
             "intentFactory": "CCGeneratedDemoCupertinoPageRouteFactory"
@@ -2388,6 +2404,7 @@
           "contracts": {
             "route": "_DemoBottomPageRoute",
             "arguments": "_DemoBottomPageRouteArguments",
+            "binding": "_DemoBottomPageRouteContractBinding",
             "package": "demo_navigation_lab",
             "library": "lib/src/ccrouter_generated/route/presentation_pages.route.g.dart",
             "intentFactory": "CCGeneratedDemoBottomPageRouteFactory"
@@ -2465,6 +2482,7 @@
           "contracts": {
             "route": "_DemoTransparentPageRoute",
             "arguments": "_DemoTransparentPageRouteArguments",
+            "binding": "_DemoTransparentPageRouteContractBinding",
             "package": "demo_navigation_lab",
             "library": "lib/src/ccrouter_generated/route/presentation_pages.route.g.dart",
             "intentFactory": "CCGeneratedDemoTransparentPageRouteFactory"
@@ -2541,6 +2559,7 @@
           "contracts": {
             "route": "_DemoDialogPageRoute",
             "arguments": "_DemoDialogPageRouteArguments",
+            "binding": "_DemoDialogPageRouteContractBinding",
             "package": "demo_navigation_lab",
             "library": "lib/src/ccrouter_generated/route/presentation_pages.route.g.dart",
             "intentFactory": "CCGeneratedDemoDialogPageRouteFactory"
@@ -2619,6 +2638,7 @@
           "contracts": {
             "route": "_DemoBottomSheetPageRoute",
             "arguments": "_DemoBottomSheetPageRouteArguments",
+            "binding": "_DemoBottomSheetPageRouteContractBinding",
             "package": "demo_navigation_lab",
             "library": "lib/src/ccrouter_generated/route/presentation_pages.route.g.dart",
             "intentFactory": "CCGeneratedDemoBottomSheetPageRouteFactory"
@@ -2709,6 +2729,7 @@
           "contracts": {
             "route": "_DemoShellFeedPageRoute",
             "arguments": "_DemoShellFeedPageRouteArguments",
+            "binding": "_DemoShellFeedPageRouteContractBinding",
             "package": "demo_navigation_lab",
             "library": "lib/src/ccrouter_generated/route/shell_pages.route.g.dart",
             "intentFactory": "CCGeneratedDemoShellFeedPageRouteFactory"
@@ -2786,6 +2807,7 @@
           "contracts": {
             "route": "_DemoShellDetailPageRoute",
             "arguments": "_DemoShellDetailPageRouteArguments",
+            "binding": "_DemoShellDetailPageRouteContractBinding",
             "package": "demo_navigation_lab",
             "library": "lib/src/ccrouter_generated/route/shell_pages.route.g.dart",
             "intentFactory": "CCGeneratedDemoShellDetailPageRouteFactory"
@@ -2873,6 +2895,7 @@
           "contracts": {
             "route": "_DemoShellSettingsPageRoute",
             "arguments": "_DemoShellSettingsPageRouteArguments",
+            "binding": "_DemoShellSettingsPageRouteContractBinding",
             "package": "demo_navigation_lab",
             "library": "lib/src/ccrouter_generated/route/shell_pages.route.g.dart",
             "intentFactory": "CCGeneratedDemoShellSettingsPageRouteFactory"
@@ -2950,6 +2973,7 @@
           "contracts": {
             "route": "_DemoWorkspaceHomePageRoute",
             "arguments": "_DemoWorkspaceHomePageRouteArguments",
+            "binding": "_DemoWorkspaceHomePageRouteContractBinding",
             "package": "demo_navigation_lab",
             "library": "lib/src/ccrouter_generated/route/shell_pages.route.g.dart",
             "intentFactory": "CCGeneratedDemoWorkspaceHomePageRouteFactory"
@@ -3028,6 +3052,7 @@
           "contracts": {
             "route": "_DemoWorkspaceDetailPageRoute",
             "arguments": "_DemoWorkspaceDetailPageRouteArguments",
+            "binding": "_DemoWorkspaceDetailPageRouteContractBinding",
             "package": "demo_navigation_lab",
             "library": "lib/src/ccrouter_generated/route/shell_pages.route.g.dart",
             "intentFactory": "CCGeneratedDemoWorkspaceDetailPageRouteFactory"
@@ -3115,6 +3140,7 @@
           "contracts": {
             "route": "_DemoWorkspaceActivityPageRoute",
             "arguments": "_DemoWorkspaceActivityPageRouteArguments",
+            "binding": "_DemoWorkspaceActivityPageRouteContractBinding",
             "package": "demo_navigation_lab",
             "library": "lib/src/ccrouter_generated/route/shell_pages.route.g.dart",
             "intentFactory": "CCGeneratedDemoWorkspaceActivityPageRouteFactory"
@@ -3192,6 +3218,7 @@
           "contracts": {
             "route": "_DemoWorkspaceProfilePageRoute",
             "arguments": "_DemoWorkspaceProfilePageRouteArguments",
+            "binding": "_DemoWorkspaceProfilePageRouteContractBinding",
             "package": "demo_navigation_lab",
             "library": "lib/src/ccrouter_generated/route/shell_pages.route.g.dart",
             "intentFactory": "CCGeneratedDemoWorkspaceProfilePageRouteFactory"
@@ -3269,6 +3296,7 @@
           "contracts": {
             "route": "_DemoExtraPageRoute",
             "arguments": "_DemoExtraPageRouteArguments",
+            "binding": "_DemoExtraPageRouteContractBinding",
             "package": "demo_navigation_lab",
             "library": "lib/src/ccrouter_generated/route/shell_pages.route.g.dart",
             "intentFactory": "CCGeneratedDemoExtraPageRouteFactory"
@@ -3369,6 +3397,7 @@
           "contracts": {
             "route": "_DemoStackPageRoute",
             "arguments": "_DemoStackPageRouteArguments",
+            "binding": "_DemoStackPageRouteContractBinding",
             "package": "demo_navigation_lab",
             "library": "lib/src/ccrouter_generated/route/stack_page.route.g.dart",
             "intentFactory": "CCGeneratedDemoStackPageRouteFactory"
@@ -3479,6 +3508,7 @@
           "contracts": {
             "route": "_DemoStoragePageRoute",
             "arguments": "_DemoStoragePageRouteArguments",
+            "binding": "_DemoStoragePageRouteContractBinding",
             "package": "demo_navigation_lab",
             "library": "lib/src/ccrouter_generated/route/storage_page.route.g.dart",
             "intentFactory": "CCGeneratedDemoStoragePageRouteFactory"

@@ -36,11 +36,18 @@ abstract final class OrderDetailRoute {
   }) => _OrderDetailRouteIntent(
     OrderDetailRouteArguments(orderId: orderId, tab: tab),
   );
+}
 
-  /// Component-owned definition; business callers should use [intent].
+/// Generated definition bridge for registration and page binding.
+///
+/// This symbol is intentionally kept out of stable Consumer barrels.
+/// Business code creates [OrderDetailRoute] intents. Generated owner glue uses
+/// this binding to register and decode the route.
+abstract final class OrderDetailRouteContractBinding {
+  /// The typed route definition consumed by generated owner glue.
   static final definition =
       CCRouteDefinition<OrderDetailRouteArguments, String>(
-        routeId: id,
+        routeId: OrderDetailRoute.id,
         patterns: const [
           const CCPathPattern(
             "/orders/:orderId",

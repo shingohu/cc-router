@@ -125,10 +125,10 @@ dependencies:
 
 ```dart
 export 'src/ccrouter_generated/order_contracts.contracts.api.g.dart'
-    show DetailPageRoute, DetailPageRouteArguments;
+    show DetailPageRoute;
 ```
 
-`<package>.contracts.api.g.dart` 只聚合公开 Route Contract 的生成类型，隐藏逐源码
+`<package>.contracts.api.g.dart` 只聚合公开 Route Consumer 的生成类型，隐藏逐源码
 `.route.contract.g.dart` 路径。authored Service、Command、Event 和 InitTask 契约仍由公共 barrel
 显式导出；生成器不会替 Package 决定这些 API。每层转发都必须保留完整 `show`，最终到达
 `lib/` 顶层 public library。`clean` 后的下一轮 `generate` 会为显式引用的缺失稳定入口创建受管
@@ -526,7 +526,8 @@ build_runner 前保存 CCRouter 受管源码快照，Builder、聚合或最终�
 - `lib/src/ccrouter_generated/<component-id>.api.g.dart`：组件业务源码使用的稳定聚合入口，
   通过受控 `export/show` 合并 Route、Service、Command 和 Event Client；没有可导出能力时不生成。
 - `lib/src/ccrouter_generated/<package>.contracts.api.g.dart`：Contracts Package authored barrel
-  使用的稳定 Route Contract 入口，只转发公开 Route/Arguments 类型，不替代 authored Contract
+  使用的稳定 Route Consumer 入口，只转发公开 Route 类型；Arguments、Definition 和 Codec
+  保留在 generated Owner SPI，不替代 authored Contract
   的显式 public export。
 - `<component-id>.component.g.dart`：自动生成私有 Registrar、Runtime Manifest 和后端中立的
   `CCFlutterRouteCatalog`，稳定装配 Route、Service 与 Contribution。
@@ -686,7 +687,7 @@ Package 的 `devDependencies` 是否被 Pub 保留，因此不会把“漏生成
 聚合校验组件/路由/Service ID、Route 与 Service 所有者、Service Contract/Provider 冲突、
 required dependency 缺失、自依赖、依赖环、契约 exposure 与声明形态是否一致、external
 实现所有权、静态 Pattern 冲突，以及
-所有非 internal 路由是否由公共 barrel 使用 `show` 同时导出 Route 和 Arguments 契约；
+所有非 internal 路由是否由公共 barrel 使用 `show` 导出 generated Route Consumer；
 不存在的 optional dependency 被忽略，存在时参与与 Runtime 一致的确定性拓扑排序；
 它会在 Host 的 `lib/src/ccrouter_generated/metadata/` 下生成机器可读的 `cc_routes.json` 和合并路由定义、
 源码位置、生成物位置的人类可读 `cc_catalog.md`。本仓库的扫描根目录是 `demo`，因此输出位于

@@ -53,7 +53,6 @@ final class CCRouteBarrelExportValidator {
           mutable,
           index.publicLibraries(File(_join(packageRoot.path, library)), {
             '${mutable['route']}',
-            '${mutable['arguments']}',
           }, packageName: packageName),
         );
       }
@@ -161,13 +160,10 @@ final class CCRouteBarrelExportValidator {
         requirements.add(
           _BarrelExportRequirement(
             target: File(_join(packageRoot.path, contractLibrary)),
-            requiredSymbols: {
-              '${contracts['route']}',
-              '${contracts['arguments']}',
-            },
+            requiredSymbols: {'${contracts['route']}'},
             error:
                 'Public route "${route['id']}" in $source must be re-exported '
-                'from $contractLibrary with both generated contracts in a '
+                'from $contractLibrary with the generated Route in a '
                 'public barrel using `show`.',
           ),
         );

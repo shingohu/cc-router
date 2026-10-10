@@ -27,7 +27,8 @@ Flutter Widget 或页面所在 library。同一个 Contract-first 形态既支�
 目标：
 
 - 为每个 Contract-first 路由生成独立的 Pure Dart 契约 library。
-- 契约包含稳定 Route ID、Arguments、Intent、Definition 和 Codec。
+- 契约 library 包含稳定 Route Consumer，以及供 generated owner glue 使用的 Arguments、
+  Definition 和 Codec；业务 barrel 只导出 Route Consumer。
 - 契约依赖 `ccrouter_contracts`，并可依赖页面显式导入的公开 Pure Dart 业务契约；
   不依赖 Flutter、`dart:ui`、页面类或 GoRouter。
 - 组件 Registrar 继续由 owner 组件控制，业务代码不能通过契约直接注册路由。
@@ -69,7 +70,7 @@ lib/
 ```
 
 `order_route_contracts.dart` 是组件作者维护的公共 barrel，只导出
-稳定 `<package>.contracts.api.g.dart` 中的公开契约，并使用 `show` 明确列出 Route 和 Arguments
+稳定 `<package>.contracts.api.g.dart` 中的公开 Route Consumer，并使用 `show` 明确列出 Route
 类型。稳定入口由生成器聚合逐源码 `*.route.contract.g.dart`，后者不再成为 authored barrel 的
 固定路径。页面专用 `.route_binding.g.dart` 只保留页面构造和 owner 注册 glue，
 不从公共 barrel 导出。
@@ -94,7 +95,8 @@ demo_order/
 `ccrouter_contracts`，不能依赖 Flutter、实现组件或具体导航后端。
 
 业务与 owner barrel 都应转发同一个稳定 `<package>.contracts.api.g.dart`，但分别用 `show`
-控制实际公开符号。该 generated barrel 只包含 Route/Arguments 生成类型；authored Service、
+控制实际公开符号。该 generated barrel 只包含 Route Consumer；Arguments、Definition 和 Codec
+属于 generated Owner SPI；authored Service、
 Command、Event 与 InitTask Contract 继续从其源文件显式导出。生成器校验转发链最终到达
 `lib/` 顶层 public library，`lib/src` 中间 barrel 本身不构成公开 API。`clean` 或首次生成时，
 CLI 会在 Builder 前为 authored barrel 的显式引用创建受管 placeholder，并在聚合阶段覆盖，
@@ -104,12 +106,12 @@ CLI 会在 Builder 前为 authored barrel 的显式引用创建受管 placeholde
 
 | 声明 | 纯契约 | 页面 glue | 原因 |
 | --- | --- | --- | --- |
-| `XxxRouteArguments` | 是 | 否 | 跨组件参数类型 |
+| `XxxRouteArguments` | Owner SPI | 否 | Intent 和 Codec 的内部传输类型 |
 | `XxxRoute.intent` | 是 | 否 | 业务导航入口 |
-| `XxxRoute.definition` | 是 | 否 | Runtime 注册所需的中立定义 |
+| `XxxRouteContractBinding.definition` | Owner SPI | 否 | Runtime 注册所需的中立定义 |
 | `XxxRoute.register` | 否 | 是 | 仅 owner Registrar 调用 |
 | `XxxRoute.build` | 否 | 是 | 需要访问页面构造器 |
-| Codec 实现 | 是 | 否 | 只依赖纯参数类型和 contracts |
+| Codec 实现 | Owner SPI | 否 | 只依赖纯参数类型和 contracts |
 | 页面构造器 | 否 | 否 | 页面实现属于组件内部 |
 
 纯契约中的导航入口只创建 `CCRouteIntent<R>`；实际调用仍必须经过
@@ -154,7 +156,7 @@ final class OrderDetailPage extends StatelessWidget {
 3. 契约生成发生在 schema 所在 Package 内；
    `build_runner` 不跨 Package 写文件。
 4. workspace barrel 校验要求所有公开路由从生成 contract library 使用 `show`
-   导出 `Route` 与 `Arguments`；页面 glue 和页面类不在该 library 中，无法被顺带导出。
+   导出 `Route`；Arguments、Definition、Codec 和页面 glue 不属于 Consumer barrel。
 
 这种声明分离避免同一个 Route ID 出现两套不兼容的 Definition；生成器不再提供
 与注解形态重复的契约生成开关。

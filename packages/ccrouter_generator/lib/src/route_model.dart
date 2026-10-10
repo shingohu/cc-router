@@ -69,8 +69,18 @@ final class _RouteModel {
   /// Public exported or library-private route API name.
   String get api => '${contractFirst ? '' : '_'}$apiStem';
 
-  /// Immutable argument type kept at the same exposure as the route API.
+  /// Generated transport type retained inside the owner contract library.
+  ///
+  /// The Consumer Route constructs this type behind [intent], while stable
+  /// public barrels intentionally omit it.
   String get arguments => '${api}Arguments';
+
+  /// Generated owner definition bridge kept out of the Consumer Route API.
+  ///
+  /// The binding remains in the generated contract library so implementation
+  /// glue can retain the exact typed Definition without exposing it from a
+  /// stable public barrel.
+  String get contractBinding => '${api}ContractBinding';
 
   /// Library-private boundary codec, never exported as a business API.
   String get codec => '_${api.replaceFirst(RegExp(r'^_'), '')}Codec';

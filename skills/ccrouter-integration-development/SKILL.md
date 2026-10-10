@@ -112,7 +112,9 @@ Read [implementation-patterns.md](references/implementation-patterns.md) when ad
   `show` list. Do not bind authored public barrels to individual
   `contract/*.route.contract.g.dart` files. Continue to export authored Service,
   Command, Event, and InitTask declarations explicitly; the generated entry does
-  not decide that public surface.
+  not decide that public surface. The Consumer Route is the only business
+  export; generated Arguments, Definition, and Codec remain Owner SPI even
+  when they live in the same generated library.
 - Do not simulate unsupported Action Pipeline, dynamic component activation/deactivation, complete state restoration, or Navigator 1.0 Backend. Generated Command/Event/InitTask capabilities and Service Proxies support only their documented declaration and dependency models.
 - Use `@CCEventContract` plus public top-level `@CCEventSubscription` functions for static component Events, and publish annotated Events only through the generated Owner Client. Omit a Subscriber ID only when the component has exactly one Subscriber for that Event. Keep `CCEventSubscriberId<E>`, `CCEventSubscriber<E>`, and the legacy string overload for unannotated migration capabilities and low-level tests.
 - Connect application logging through `CCDiagnosticsConfig(sink: ...)`. A `CCDiagnosticSink` is asynchronous, bounded, observational, and failure-isolated. Category policies control external delivery and sampling only; they do not disable Runtime traces or lifecycle state. Forward only the sanitized fields supplied by `CCDiagnosticEvent` and never append raw URI, arguments, Extra, tokens, widgets, backend objects, exception messages, or business results.

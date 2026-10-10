@@ -52,8 +52,8 @@ final class _RouteBindingGenerator extends Generator {
           _emitImplementationGlue(
             implementation,
             pageType: 'route_page.${implementation.page.displayName}',
-            contractApi:
-                '${aliases[contractUri]}.${implementation.contract.api}',
+            contractBinding:
+                '${aliases[contractUri]}.${implementation.contract.contractBinding}',
           ),
         )
         ..writeln();

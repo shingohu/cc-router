@@ -24,11 +24,18 @@ abstract final class _DemoNavigationHomePageRoute {
   static CCRouteIntent<void> intent() => _DemoNavigationHomePageRouteIntent(
     _DemoNavigationHomePageRouteArguments(),
   );
+}
 
-  /// Component-owned definition; business callers should use [intent].
+/// Generated definition bridge for registration and page binding.
+///
+/// This symbol is intentionally kept out of stable Consumer barrels.
+/// Business code creates [_DemoNavigationHomePageRoute] intents. Generated owner glue uses
+/// this binding to register and decode the route.
+abstract final class _DemoNavigationHomePageRouteContractBinding {
+  /// The typed route definition consumed by generated owner glue.
   static final definition =
       CCRouteDefinition<_DemoNavigationHomePageRouteArguments, void>(
-        routeId: id,
+        routeId: _DemoNavigationHomePageRoute.id,
         patterns: const [
           const CCPathPattern(
             "/",
@@ -102,7 +109,9 @@ final class CCGeneratedDemoNavigationHomePageRouteFactory {
 /// Keep this symbol out of public package barrels. It exists so a component
 /// registrar can register library-private routes without exposing owner APIs.
 void ccrouterRegisterDemoNavigationHomePageRoute(CCRegistry registry) =>
-    registry.registerRoute(_DemoNavigationHomePageRoute.definition);
+    registry.registerRoute(
+      _DemoNavigationHomePageRouteContractBinding.definition,
+    );
 
 /// Typed route definition bridge shared by Host generation and page binding.
 ///
@@ -111,4 +120,4 @@ void ccrouterRegisterDemoNavigationHomePageRoute(CCRegistry registry) =>
 /// type only after page construction has been bound.
 CCRouteDefinition<_DemoNavigationHomePageRouteArguments, void>
 ccrouterDescribeDemoNavigationHomePageRoute() =>
-    _DemoNavigationHomePageRoute.definition;
+    _DemoNavigationHomePageRouteContractBinding.definition;

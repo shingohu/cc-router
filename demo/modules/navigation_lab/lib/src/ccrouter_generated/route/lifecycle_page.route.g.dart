@@ -23,11 +23,18 @@ abstract final class _DemoLifecyclePageRoute {
   /// Creates a typed Intent; navigate through CCRouter.navigator.
   static CCRouteIntent<void> intent() =>
       _DemoLifecyclePageRouteIntent(_DemoLifecyclePageRouteArguments());
+}
 
-  /// Component-owned definition; business callers should use [intent].
+/// Generated definition bridge for registration and page binding.
+///
+/// This symbol is intentionally kept out of stable Consumer barrels.
+/// Business code creates [_DemoLifecyclePageRoute] intents. Generated owner glue uses
+/// this binding to register and decode the route.
+abstract final class _DemoLifecyclePageRouteContractBinding {
+  /// The typed route definition consumed by generated owner glue.
   static final definition =
       CCRouteDefinition<_DemoLifecyclePageRouteArguments, void>(
-        routeId: id,
+        routeId: _DemoLifecyclePageRoute.id,
         patterns: const [
           const CCPathPattern(
             "/lab/lifecycle",
@@ -101,7 +108,7 @@ final class CCGeneratedDemoLifecyclePageRouteFactory {
 /// Keep this symbol out of public package barrels. It exists so a component
 /// registrar can register library-private routes without exposing owner APIs.
 void ccrouterRegisterDemoLifecyclePageRoute(CCRegistry registry) =>
-    registry.registerRoute(_DemoLifecyclePageRoute.definition);
+    registry.registerRoute(_DemoLifecyclePageRouteContractBinding.definition);
 
 /// Typed route definition bridge shared by Host generation and page binding.
 ///
@@ -109,4 +116,5 @@ void ccrouterRegisterDemoLifecyclePageRoute(CCRegistry registry) =>
 /// access decoded fields without dynamic calls. Host aggregation may erase the
 /// type only after page construction has been bound.
 CCRouteDefinition<_DemoLifecyclePageRouteArguments, void>
-ccrouterDescribeDemoLifecyclePageRoute() => _DemoLifecyclePageRoute.definition;
+ccrouterDescribeDemoLifecyclePageRoute() =>
+    _DemoLifecyclePageRouteContractBinding.definition;

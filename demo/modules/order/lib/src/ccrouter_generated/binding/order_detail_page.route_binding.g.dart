@@ -16,19 +16,21 @@ import 'package:demo_order_contracts/src/ccrouter_generated/contract/order_detai
 ///
 /// Registration retains the external Pure Dart contract as the single source
 /// of route identity, parameters, and navigation policy.
-void ccrouterRegisterOrderDetailPageRoute(CCRegistry registry) =>
-    registry.registerRoute(route_contract_0.OrderDetailRoute.definition);
+void ccrouterRegisterOrderDetailPageRoute(CCRegistry registry) => registry
+    .registerRoute(route_contract_0.OrderDetailRouteContractBinding.definition);
 
 /// Package-internal route definition bridge used by Host generation.
 CCRouteDefinition<dynamic, dynamic> ccrouterDescribeOrderDetailPageRoute() =>
-    route_contract_0.OrderDetailRoute.definition;
+    route_contract_0.OrderDetailRouteContractBinding.definition;
 
 /// Package-internal page factory bound to the public route contract.
 route_page.OrderDetailPage ccrouterBuildOrderDetailPageRoute(
   CCRouteCodecValues arguments,
 ) {
-  final decoded = route_contract_0.OrderDetailRoute.definition.codec.decode(
-    arguments,
-  );
+  final decoded = route_contract_0
+      .OrderDetailRouteContractBinding
+      .definition
+      .codec
+      .decode(arguments);
   return route_page.OrderDetailPage(orderId: decoded.orderId, tab: decoded.tab);
 }

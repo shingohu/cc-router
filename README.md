@@ -690,10 +690,11 @@ Contracts Package 的 authored public barrel 一次性转发生成器维护的�
 
 ```dart
 export 'src/ccrouter_generated/order_contracts.contracts.api.g.dart'
-    show OrderDetailRoute, OrderDetailRouteArguments;
+    show OrderDetailRoute;
 ```
 
-该稳定入口只聚合公开 Route Contract 的生成类型；authored Service、Command、Event 和 InitTask
+该稳定入口只聚合公开 Route Consumer 的生成类型；`RouteArguments`、Definition 和 Codec 属于
+generated Owner SPI，不从业务 barrel 导出。authored Service、Command、Event 和 InitTask
 契约仍由 public barrel 使用独立 `export/show` 明确暴露。`show` 是 Package 的公开 API 边界，
 生成器会验证每一层转发都保留完整符号。执行 `clean` 后，下一次 `generate` 会在 Builder 前临时
 补齐缺失入口并在同一轮替换为正式内容，开发者不需要创建空文件。

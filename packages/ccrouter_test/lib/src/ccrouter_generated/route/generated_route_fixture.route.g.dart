@@ -65,11 +65,18 @@ abstract final class _GeneratedDetailPageRoute {
       snapshot: snapshot,
     ),
   );
+}
 
-  /// Component-owned definition; business callers should use [intent].
+/// Generated definition bridge for registration and page binding.
+///
+/// This symbol is intentionally kept out of stable Consumer barrels.
+/// Business code creates [_GeneratedDetailPageRoute] intents. Generated owner glue uses
+/// this binding to register and decode the route.
+abstract final class _GeneratedDetailPageRouteContractBinding {
+  /// The typed route definition consumed by generated owner glue.
   static final definition =
       CCRouteDefinition<_GeneratedDetailPageRouteArguments, String>(
-        routeId: id,
+        routeId: _GeneratedDetailPageRoute.id,
         patterns: const [
           const CCPathPattern(
             "/generated/detail/:id",
@@ -259,7 +266,7 @@ final class CCGeneratedGeneratedDetailPageRouteFactory {
 /// Keep this symbol out of public package barrels. It exists so a component
 /// registrar can register library-private routes without exposing owner APIs.
 void ccrouterRegisterGeneratedDetailPageRoute(CCRegistry registry) =>
-    registry.registerRoute(_GeneratedDetailPageRoute.definition);
+    registry.registerRoute(_GeneratedDetailPageRouteContractBinding.definition);
 
 /// Typed route definition bridge shared by Host generation and page binding.
 ///
@@ -268,7 +275,7 @@ void ccrouterRegisterGeneratedDetailPageRoute(CCRegistry registry) =>
 /// type only after page construction has been bound.
 CCRouteDefinition<_GeneratedDetailPageRouteArguments, String>
 ccrouterDescribeGeneratedDetailPageRoute() =>
-    _GeneratedDetailPageRoute.definition;
+    _GeneratedDetailPageRouteContractBinding.definition;
 
 /// Immutable arguments for route generated_route_fixture.internal; URI values remain typed.
 final class _GeneratedInternalPageRouteArguments {
@@ -284,11 +291,18 @@ abstract final class _GeneratedInternalPageRoute {
   /// Creates a typed Intent; navigate through CCRouter.navigator.
   static CCRouteIntent<void> intent() =>
       _GeneratedInternalPageRouteIntent(_GeneratedInternalPageRouteArguments());
+}
 
-  /// Component-owned definition; business callers should use [intent].
+/// Generated definition bridge for registration and page binding.
+///
+/// This symbol is intentionally kept out of stable Consumer barrels.
+/// Business code creates [_GeneratedInternalPageRoute] intents. Generated owner glue uses
+/// this binding to register and decode the route.
+abstract final class _GeneratedInternalPageRouteContractBinding {
+  /// The typed route definition consumed by generated owner glue.
   static final definition =
       CCRouteDefinition<_GeneratedInternalPageRouteArguments, void>(
-        routeId: id,
+        routeId: _GeneratedInternalPageRoute.id,
         patterns: const [
           const CCPathPattern(
             "/generated/internal",
@@ -361,8 +375,8 @@ final class CCGeneratedGeneratedInternalPageRouteFactory {
 ///
 /// Keep this symbol out of public package barrels. It exists so a component
 /// registrar can register library-private routes without exposing owner APIs.
-void ccrouterRegisterGeneratedInternalPageRoute(CCRegistry registry) =>
-    registry.registerRoute(_GeneratedInternalPageRoute.definition);
+void ccrouterRegisterGeneratedInternalPageRoute(CCRegistry registry) => registry
+    .registerRoute(_GeneratedInternalPageRouteContractBinding.definition);
 
 /// Typed route definition bridge shared by Host generation and page binding.
 ///
@@ -371,7 +385,7 @@ void ccrouterRegisterGeneratedInternalPageRoute(CCRegistry registry) =>
 /// type only after page construction has been bound.
 CCRouteDefinition<_GeneratedInternalPageRouteArguments, void>
 ccrouterDescribeGeneratedInternalPageRoute() =>
-    _GeneratedInternalPageRoute.definition;
+    _GeneratedInternalPageRouteContractBinding.definition;
 
 /// Immutable arguments for route generated_route_fixture.positional; URI values remain typed.
 final class _GeneratedPositionalPageRouteArguments {
@@ -400,11 +414,18 @@ abstract final class _GeneratedPositionalPageRoute {
   }) => _GeneratedPositionalPageRouteIntent(
     _GeneratedPositionalPageRouteArguments(value: value, input: input),
   );
+}
 
-  /// Component-owned definition; business callers should use [intent].
+/// Generated definition bridge for registration and page binding.
+///
+/// This symbol is intentionally kept out of stable Consumer barrels.
+/// Business code creates [_GeneratedPositionalPageRoute] intents. Generated owner glue uses
+/// this binding to register and decode the route.
+abstract final class _GeneratedPositionalPageRouteContractBinding {
+  /// The typed route definition consumed by generated owner glue.
   static final definition =
       CCRouteDefinition<_GeneratedPositionalPageRouteArguments, int>(
-        routeId: id,
+        routeId: _GeneratedPositionalPageRoute.id,
         patterns: const [
           const CCPathPattern(
             "/generated/position/:value",
@@ -501,7 +522,9 @@ final class CCGeneratedGeneratedPositionalPageRouteFactory {
 /// Keep this symbol out of public package barrels. It exists so a component
 /// registrar can register library-private routes without exposing owner APIs.
 void ccrouterRegisterGeneratedPositionalPageRoute(CCRegistry registry) =>
-    registry.registerRoute(_GeneratedPositionalPageRoute.definition);
+    registry.registerRoute(
+      _GeneratedPositionalPageRouteContractBinding.definition,
+    );
 
 /// Typed route definition bridge shared by Host generation and page binding.
 ///
@@ -510,7 +533,7 @@ void ccrouterRegisterGeneratedPositionalPageRoute(CCRegistry registry) =>
 /// type only after page construction has been bound.
 CCRouteDefinition<_GeneratedPositionalPageRouteArguments, int>
 ccrouterDescribeGeneratedPositionalPageRoute() =>
-    _GeneratedPositionalPageRoute.definition;
+    _GeneratedPositionalPageRouteContractBinding.definition;
 
 /// Immutable arguments for route generated_route_fixture.extra; URI values remain typed.
 final class _GeneratedExtraPageRouteArguments {
@@ -532,11 +555,18 @@ abstract final class _GeneratedExtraPageRoute {
   }) => _GeneratedExtraPageRouteIntent(
     _GeneratedExtraPageRouteArguments(snapshot: snapshot),
   );
+}
 
-  /// Component-owned definition; business callers should use [intent].
+/// Generated definition bridge for registration and page binding.
+///
+/// This symbol is intentionally kept out of stable Consumer barrels.
+/// Business code creates [_GeneratedExtraPageRoute] intents. Generated owner glue uses
+/// this binding to register and decode the route.
+abstract final class _GeneratedExtraPageRouteContractBinding {
+  /// The typed route definition consumed by generated owner glue.
   static final definition =
       CCRouteDefinition<_GeneratedExtraPageRouteArguments, bool>(
-        routeId: id,
+        routeId: _GeneratedExtraPageRoute.id,
         patterns: const [
           const CCPathPattern(
             "/generated/extra",
@@ -621,7 +651,7 @@ final class CCGeneratedGeneratedExtraPageRouteFactory {
 /// Keep this symbol out of public package barrels. It exists so a component
 /// registrar can register library-private routes without exposing owner APIs.
 void ccrouterRegisterGeneratedExtraPageRoute(CCRegistry registry) =>
-    registry.registerRoute(_GeneratedExtraPageRoute.definition);
+    registry.registerRoute(_GeneratedExtraPageRouteContractBinding.definition);
 
 /// Typed route definition bridge shared by Host generation and page binding.
 ///
@@ -630,7 +660,7 @@ void ccrouterRegisterGeneratedExtraPageRoute(CCRegistry registry) =>
 /// type only after page construction has been bound.
 CCRouteDefinition<_GeneratedExtraPageRouteArguments, bool>
 ccrouterDescribeGeneratedExtraPageRoute() =>
-    _GeneratedExtraPageRoute.definition;
+    _GeneratedExtraPageRouteContractBinding.definition;
 
 /// Immutable arguments for route generated_route_fixture.prefixed; URI values remain typed.
 final class _GeneratedPrefixedPageRouteArguments {
@@ -660,14 +690,21 @@ abstract final class _GeneratedPrefixedPageRoute {
   }) => _GeneratedPrefixedPageRouteIntent(
     _GeneratedPrefixedPageRouteArguments(mode: mode, payload: payload),
   );
+}
 
-  /// Component-owned definition; business callers should use [intent].
+/// Generated definition bridge for registration and page binding.
+///
+/// This symbol is intentionally kept out of stable Consumer barrels.
+/// Business code creates [_GeneratedPrefixedPageRoute] intents. Generated owner glue uses
+/// this binding to register and decode the route.
+abstract final class _GeneratedPrefixedPageRouteContractBinding {
+  /// The typed route definition consumed by generated owner glue.
   static final definition =
       CCRouteDefinition<
         _GeneratedPrefixedPageRouteArguments,
         route_type_0.GeneratedRouteResult
       >(
-        routeId: id,
+        routeId: _GeneratedPrefixedPageRoute.id,
         patterns: const [
           const CCPathPattern(
             "/generated/prefixed",
@@ -774,8 +811,8 @@ final class CCGeneratedGeneratedPrefixedPageRouteFactory {
 ///
 /// Keep this symbol out of public package barrels. It exists so a component
 /// registrar can register library-private routes without exposing owner APIs.
-void ccrouterRegisterGeneratedPrefixedPageRoute(CCRegistry registry) =>
-    registry.registerRoute(_GeneratedPrefixedPageRoute.definition);
+void ccrouterRegisterGeneratedPrefixedPageRoute(CCRegistry registry) => registry
+    .registerRoute(_GeneratedPrefixedPageRouteContractBinding.definition);
 
 /// Typed route definition bridge shared by Host generation and page binding.
 ///
@@ -787,4 +824,4 @@ CCRouteDefinition<
   route_type_0.GeneratedRouteResult
 >
 ccrouterDescribeGeneratedPrefixedPageRoute() =>
-    _GeneratedPrefixedPageRoute.definition;
+    _GeneratedPrefixedPageRouteContractBinding.definition;

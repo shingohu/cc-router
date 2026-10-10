@@ -16,7 +16,7 @@ final class _QueryCodecFixturePageRouteArguments {
   _QueryCodecFixturePageRouteArguments({
     required List<String> tags,
     required Set<int> ids,
-    List<String> labels = const [],
+    List<String> labels = const <String>[],
     List<route_type_0.QueryCodecFixtureState>? states,
     this.filter,
   }) : tags = List.unmodifiable(tags),
@@ -49,7 +49,7 @@ abstract final class _QueryCodecFixturePageRoute {
   static CCRouteIntent<void> intent({
     required List<String> tags,
     required Set<int> ids,
-    List<String> labels = const [],
+    List<String> labels = const <String>[],
     List<route_type_0.QueryCodecFixtureState>? states,
     route_type_0.QueryCodecFixtureFilter? filter,
   }) => _QueryCodecFixturePageRouteIntent(
@@ -61,11 +61,18 @@ abstract final class _QueryCodecFixturePageRoute {
       filter: filter,
     ),
   );
+}
 
-  /// Component-owned definition; business callers should use [intent].
+/// Generated definition bridge for registration and page binding.
+///
+/// This symbol is intentionally kept out of stable Consumer barrels.
+/// Business code creates [_QueryCodecFixturePageRoute] intents. Generated owner glue uses
+/// this binding to register and decode the route.
+abstract final class _QueryCodecFixturePageRouteContractBinding {
+  /// The typed route definition consumed by generated owner glue.
   static final definition =
       CCRouteDefinition<_QueryCodecFixturePageRouteArguments, void>(
-        routeId: id,
+        routeId: _QueryCodecFixturePageRoute.id,
         patterns: const [
           const CCPathPattern(
             "/query-codec-fixture",
@@ -149,7 +156,7 @@ final class _QueryCodecFixturePageRouteCodec
         "Route \"query_codec_fixture.detail\" parameter \"labels\" is invalid.",
       );
     final List<String> _value_labels = _values_labels == null
-        ? const []
+        ? const <String>[]
         : List<String>.unmodifiable(
             _values_labels.map((raw_labels) => raw_labels),
           );
@@ -260,7 +267,7 @@ final class CCGeneratedQueryCodecFixturePageRouteFactory {
   CCRouteIntent<void> call({
     required List<String> tags,
     required Set<int> ids,
-    List<String> labels = const [],
+    List<String> labels = const <String>[],
     List<route_type_0.QueryCodecFixtureState>? states,
     route_type_0.QueryCodecFixtureFilter? filter,
   }) => _QueryCodecFixturePageRoute.intent(
@@ -276,8 +283,8 @@ final class CCGeneratedQueryCodecFixturePageRouteFactory {
 ///
 /// Keep this symbol out of public package barrels. It exists so a component
 /// registrar can register library-private routes without exposing owner APIs.
-void ccrouterRegisterQueryCodecFixturePageRoute(CCRegistry registry) =>
-    registry.registerRoute(_QueryCodecFixturePageRoute.definition);
+void ccrouterRegisterQueryCodecFixturePageRoute(CCRegistry registry) => registry
+    .registerRoute(_QueryCodecFixturePageRouteContractBinding.definition);
 
 /// Typed route definition bridge shared by Host generation and page binding.
 ///
@@ -286,4 +293,4 @@ void ccrouterRegisterQueryCodecFixturePageRoute(CCRegistry registry) =>
 /// type only after page construction has been bound.
 CCRouteDefinition<_QueryCodecFixturePageRouteArguments, void>
 ccrouterDescribeQueryCodecFixturePageRoute() =>
-    _QueryCodecFixturePageRoute.definition;
+    _QueryCodecFixturePageRouteContractBinding.definition;

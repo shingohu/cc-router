@@ -322,6 +322,7 @@ Map<String, Object?> _routeJson(
   'contracts': {
     'route': route.api,
     'arguments': route.arguments,
+    'binding': route.contractBinding,
     'package': package,
     'library': route.contractFirst
         ? _routeContractOutputPath(source)

@@ -28,11 +28,18 @@ abstract final class DemoPublicWebRoute {
   static CCRouteIntent<void> intent({
     required contract_type_0.DemoPublicWebTarget target,
   }) => _DemoPublicWebRouteIntent(DemoPublicWebRouteArguments(target: target));
+}
 
-  /// Component-owned definition; business callers should use [intent].
+/// Generated definition bridge for registration and page binding.
+///
+/// This symbol is intentionally kept out of stable Consumer barrels.
+/// Business code creates [DemoPublicWebRoute] intents. Generated owner glue uses
+/// this binding to register and decode the route.
+abstract final class DemoPublicWebRouteContractBinding {
+  /// The typed route definition consumed by generated owner glue.
   static final definition =
       CCRouteDefinition<DemoPublicWebRouteArguments, void>(
-        routeId: id,
+        routeId: DemoPublicWebRoute.id,
         patterns: const [
           const CCPathPattern(
             "/web",
@@ -150,11 +157,18 @@ abstract final class DemoPrivateWebRoute {
   }) => _DemoPrivateWebRouteIntent(
     DemoPrivateWebRouteArguments(request: request),
   );
+}
 
-  /// Component-owned definition; business callers should use [intent].
+/// Generated definition bridge for registration and page binding.
+///
+/// This symbol is intentionally kept out of stable Consumer barrels.
+/// Business code creates [DemoPrivateWebRoute] intents. Generated owner glue uses
+/// this binding to register and decode the route.
+abstract final class DemoPrivateWebRouteContractBinding {
+  /// The typed route definition consumed by generated owner glue.
   static final definition =
       CCRouteDefinition<DemoPrivateWebRouteArguments, void>(
-        routeId: id,
+        routeId: DemoPrivateWebRoute.id,
         patterns: const [
           const CCPathPattern(
             "/web/private",

@@ -252,7 +252,7 @@ abstract final class DetailRoute {}
       path.join(contracts.path, 'lib', 'fixture_order_contracts.dart'),
     ).writeAsStringSync('''
 export 'src/ccrouter_generated/contract/detail.route.contract.g.dart'
-    show DetailRoute, DetailRouteArguments;
+    show DetailRoute;
 ''');
     final contractMetadata = File(
       path.join(
@@ -398,7 +398,8 @@ environment:
       stableContracts.readAsStringSync(),
       allOf(
         contains("export 'contract/detail.route.contract.g.dart'"),
-        contains('show DetailRoute, DetailRouteArguments'),
+        contains('show DetailRoute;'),
+        isNot(contains('DetailRouteArguments')),
       ),
     );
   });

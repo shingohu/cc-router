@@ -5,7 +5,7 @@
     "name": "demo_order_contracts",
     "version": "0.1.0"
   },
-  "contentFingerprint": "b3208f4a939dfa9cc5a5ae487b5dab6793f1e73c715ebde2c29de7efa68d5167",
+  "contentFingerprint": "75c836199470e34b4648bfc11f7f1cbbade6ac4950afc80fb342dee969b9c3bd",
   "bundle": null,
   "dependencies": [],
   "metadata": [
@@ -104,6 +104,7 @@
           "contracts": {
             "route": "OrderDetailRoute",
             "arguments": "OrderDetailRouteArguments",
+            "binding": "OrderDetailRouteContractBinding",
             "package": "demo_order_contracts",
             "library": "lib/src/ccrouter_generated/contract/order_detail_route_contract.route.contract.g.dart",
             "publicLibraries": [

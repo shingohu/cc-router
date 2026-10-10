@@ -5,8 +5,4 @@
 ///
 /// Authored public barrels decide whether this generated API is exposed.
 export 'contract/web_route_contracts.route.contract.g.dart'
-    show
-        DemoPrivateWebRoute,
-        DemoPrivateWebRouteArguments,
-        DemoPublicWebRoute,
-        DemoPublicWebRouteArguments;
+    show DemoPrivateWebRoute, DemoPublicWebRoute;

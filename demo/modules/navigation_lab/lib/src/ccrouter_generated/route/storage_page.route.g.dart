@@ -23,11 +23,18 @@ abstract final class _DemoStoragePageRoute {
   /// Creates a typed Intent; navigate through CCRouter.navigator.
   static CCRouteIntent<void> intent() =>
       _DemoStoragePageRouteIntent(_DemoStoragePageRouteArguments());
+}
 
-  /// Component-owned definition; business callers should use [intent].
+/// Generated definition bridge for registration and page binding.
+///
+/// This symbol is intentionally kept out of stable Consumer barrels.
+/// Business code creates [_DemoStoragePageRoute] intents. Generated owner glue uses
+/// this binding to register and decode the route.
+abstract final class _DemoStoragePageRouteContractBinding {
+  /// The typed route definition consumed by generated owner glue.
   static final definition =
       CCRouteDefinition<_DemoStoragePageRouteArguments, void>(
-        routeId: id,
+        routeId: _DemoStoragePageRoute.id,
         patterns: const [
           const CCPathPattern(
             "/lab/storage",
@@ -101,7 +108,7 @@ final class CCGeneratedDemoStoragePageRouteFactory {
 /// Keep this symbol out of public package barrels. It exists so a component
 /// registrar can register library-private routes without exposing owner APIs.
 void ccrouterRegisterDemoStoragePageRoute(CCRegistry registry) =>
-    registry.registerRoute(_DemoStoragePageRoute.definition);
+    registry.registerRoute(_DemoStoragePageRouteContractBinding.definition);
 
 /// Typed route definition bridge shared by Host generation and page binding.
 ///
@@ -109,4 +116,5 @@ void ccrouterRegisterDemoStoragePageRoute(CCRegistry registry) =>
 /// access decoded fields without dynamic calls. Host aggregation may erase the
 /// type only after page construction has been bound.
 CCRouteDefinition<_DemoStoragePageRouteArguments, void>
-ccrouterDescribeDemoStoragePageRoute() => _DemoStoragePageRoute.definition;
+ccrouterDescribeDemoStoragePageRoute() =>
+    _DemoStoragePageRouteContractBinding.definition;

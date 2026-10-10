@@ -169,6 +169,7 @@ List<_RouteModel> _readRouteModels(LibraryReader library) {
     for (final name in [
       model.api,
       model.arguments,
+      model.contractBinding,
       model.codec,
       model.intent,
       model.registrationFunction,

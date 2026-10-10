@@ -4,9 +4,7 @@ library;
 export 'src/ccrouter_generated/demo_web_contracts.contracts.api.g.dart'
     show
         DemoPrivateWebRoute,
-        DemoPrivateWebRouteArguments,
-        DemoPublicWebRoute,
-        DemoPublicWebRouteArguments;
+        DemoPublicWebRoute;
 export 'web_request.dart'
     show
         DemoPrivateWebRequest,

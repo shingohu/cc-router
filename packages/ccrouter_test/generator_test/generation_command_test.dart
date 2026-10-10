@@ -1018,7 +1018,8 @@ void probe() {
           contains(
             "export 'contract/order_detail_route_contract.route.contract.g.dart'",
           ),
-          contains('show OrderDetailRoute, OrderDetailRouteArguments'),
+          contains('show OrderDetailRoute;'),
+          isNot(contains('OrderDetailRouteArguments')),
           isNot(contains('placeholder')),
         ),
       );

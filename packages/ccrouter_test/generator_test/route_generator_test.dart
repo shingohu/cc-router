@@ -288,6 +288,7 @@ final class Probe {
     expect(route['contracts'], {
       'route': '_ProbeRoute',
       'arguments': '_ProbeRouteArguments',
+      'binding': '_ProbeRouteContractBinding',
       'package': 'ccrouter_test',
       'library': 'lib/src/ccrouter_generated/route/orders/probe.route.g.dart',
       'intentFactory': 'CCGeneratedProbeRouteFactory',
@@ -416,6 +417,7 @@ abstract class ProbeRouteContract { const ProbeRouteContract(); }
     expect(route['contracts'], {
       'route': 'ProbeRoute',
       'arguments': 'ProbeRouteArguments',
+      'binding': 'ProbeRouteContractBinding',
       'package': 'ccrouter_test',
       'library':
           'lib/src/ccrouter_generated/contract/orders/probe_contract.route.contract.g.dart',
@@ -866,7 +868,12 @@ final class Probe { const Probe({required this.id}); final int id; }
       expect(code, contains('abstract final class _ProbeRoute'));
       expect(code, contains('final class CCGeneratedProbeRouteFactory'));
       expect(code, contains('CCRouteIntent<void>'));
-      expect(code, contains('registry.registerRoute(_ProbeRoute.definition)'));
+      expect(
+        code,
+        contains(
+          'registry.registerRoute(_ProbeRouteContractBinding.definition)',
+        ),
+      );
       expect(code, contains('ccrouterRegisterProbeRoute'));
       expect(code, contains('ccrouterDescribeProbeRoute'));
       expect(code, isNot(contains('ccrouterBuildProbeRoute')));
@@ -988,7 +995,9 @@ abstract class ProbeRouteContract { const ProbeRouteContract({required this.id, 
     expect(code, contains('final class ProbeRouteArguments'));
     expect(code, contains('abstract final class ProbeRoute'));
     expect(code, contains('CCRouteIntent<String>'));
+    expect(code, contains('abstract final class ProbeRouteContractBinding'));
     expect(code, contains('CCRouteDefinition<ProbeRouteArguments, String>'));
+    expect(code, isNot(contains('ProbeRoute.definition')));
     expect(code, contains('final class _ProbeRouteCodec'));
     expect(code, isNot(contains('CCRegistry')));
     expect(code, isNot(contains('static Probe build')));
@@ -1053,6 +1062,10 @@ abstract class ProbeDetailRouteContract {
               r'''
 import 'package:ccrouter/ccrouter.dart';
 abstract final class ProbeDetailRoute {
+  static CCRouteIntent<String> intent({required int id, required String tab}) =>
+      throw UnimplementedError();
+}
+abstract final class ProbeDetailRouteContractBinding {
   static final definition = CCRouteDefinition<ProbeDetailRouteArguments, String>(
     routeId: 'probe.detail',
     patterns: const [CCPathPattern('/probe/:id', primary: true)],
@@ -1076,14 +1089,21 @@ final class _ProbeCodec implements CCRouteCodec<ProbeDetailRouteArguments> {
       );
       expect(
         code,
-        contains(
-          'registry.registerRoute(route_contract_0.ProbeDetailRoute.definition)',
+        matches(
+          RegExp(
+            r'registry\s+\.registerRoute\('
+            r'route_contract_0\.ProbeDetailRouteContractBinding\.definition\)',
+          ),
         ),
       );
       expect(
         code,
-        contains(
-          'final decoded = route_contract_0.ProbeDetailRoute.definition.codec',
+        matches(
+          RegExp(
+            r'final decoded = route_contract_0\s+'
+            r'\.ProbeDetailRouteContractBinding\s+'
+            r'\.definition\s+\.codec\s+\.decode\(arguments\)',
+          ),
         ),
       );
       expect(code, contains('return route_page.ProbePage('));

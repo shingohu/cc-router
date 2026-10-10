@@ -241,7 +241,8 @@ alias、类型名推导形成确定优先级，并保留调用方身份、Owner 
 
 公开 Route Contract 的逐源码生成文件继续保留增量职责，但 authored business/owner barrel 统一
 转发 `lib/src/ccrouter_generated/<package>.contracts.api.g.dart`，不再绑定
-`contract/*.route.contract.g.dart` 的路径。稳定入口只聚合 Route/Arguments 生成类型；authored
+`contract/*.route.contract.g.dart` 的路径。稳定入口只聚合 Route Consumer；Arguments、Definition
+和 Codec 属于 generated Owner SPI；authored
 Service、Command、Event 和 InitTask Contract 仍由 Package public barrel 显式导出。
 
 Workspace Validator 使用 Analyzer AST 验证完整转发链：每一层必须以 `show` 保留全部必需符号，

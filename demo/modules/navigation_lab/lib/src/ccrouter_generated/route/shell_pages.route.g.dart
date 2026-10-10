@@ -24,11 +24,18 @@ abstract final class _DemoShellFeedPageRoute {
   /// Creates a typed Intent; navigate through CCRouter.navigator.
   static CCRouteIntent<void> intent() =>
       _DemoShellFeedPageRouteIntent(_DemoShellFeedPageRouteArguments());
+}
 
-  /// Component-owned definition; business callers should use [intent].
+/// Generated definition bridge for registration and page binding.
+///
+/// This symbol is intentionally kept out of stable Consumer barrels.
+/// Business code creates [_DemoShellFeedPageRoute] intents. Generated owner glue uses
+/// this binding to register and decode the route.
+abstract final class _DemoShellFeedPageRouteContractBinding {
+  /// The typed route definition consumed by generated owner glue.
   static final definition =
       CCRouteDefinition<_DemoShellFeedPageRouteArguments, void>(
-        routeId: id,
+        routeId: _DemoShellFeedPageRoute.id,
         patterns: const [
           const CCPathPattern(
             "/shell/feed",
@@ -102,7 +109,7 @@ final class CCGeneratedDemoShellFeedPageRouteFactory {
 /// Keep this symbol out of public package barrels. It exists so a component
 /// registrar can register library-private routes without exposing owner APIs.
 void ccrouterRegisterDemoShellFeedPageRoute(CCRegistry registry) =>
-    registry.registerRoute(_DemoShellFeedPageRoute.definition);
+    registry.registerRoute(_DemoShellFeedPageRouteContractBinding.definition);
 
 /// Typed route definition bridge shared by Host generation and page binding.
 ///
@@ -110,7 +117,8 @@ void ccrouterRegisterDemoShellFeedPageRoute(CCRegistry registry) =>
 /// access decoded fields without dynamic calls. Host aggregation may erase the
 /// type only after page construction has been bound.
 CCRouteDefinition<_DemoShellFeedPageRouteArguments, void>
-ccrouterDescribeDemoShellFeedPageRoute() => _DemoShellFeedPageRoute.definition;
+ccrouterDescribeDemoShellFeedPageRoute() =>
+    _DemoShellFeedPageRouteContractBinding.definition;
 
 /// Immutable arguments for route demo_navigation_lab.shell.detail; URI values remain typed.
 final class _DemoShellDetailPageRouteArguments {
@@ -131,11 +139,18 @@ abstract final class _DemoShellDetailPageRoute {
       _DemoShellDetailPageRouteIntent(
         _DemoShellDetailPageRouteArguments(item: item),
       );
+}
 
-  /// Component-owned definition; business callers should use [intent].
+/// Generated definition bridge for registration and page binding.
+///
+/// This symbol is intentionally kept out of stable Consumer barrels.
+/// Business code creates [_DemoShellDetailPageRoute] intents. Generated owner glue uses
+/// this binding to register and decode the route.
+abstract final class _DemoShellDetailPageRouteContractBinding {
+  /// The typed route definition consumed by generated owner glue.
   static final definition =
       CCRouteDefinition<_DemoShellDetailPageRouteArguments, void>(
-        routeId: id,
+        routeId: _DemoShellDetailPageRoute.id,
         patterns: const [
           const CCPathPattern(
             "/shell/feed/:item",
@@ -223,7 +238,7 @@ final class CCGeneratedDemoShellDetailPageRouteFactory {
 /// Keep this symbol out of public package barrels. It exists so a component
 /// registrar can register library-private routes without exposing owner APIs.
 void ccrouterRegisterDemoShellDetailPageRoute(CCRegistry registry) =>
-    registry.registerRoute(_DemoShellDetailPageRoute.definition);
+    registry.registerRoute(_DemoShellDetailPageRouteContractBinding.definition);
 
 /// Typed route definition bridge shared by Host generation and page binding.
 ///
@@ -232,7 +247,7 @@ void ccrouterRegisterDemoShellDetailPageRoute(CCRegistry registry) =>
 /// type only after page construction has been bound.
 CCRouteDefinition<_DemoShellDetailPageRouteArguments, void>
 ccrouterDescribeDemoShellDetailPageRoute() =>
-    _DemoShellDetailPageRoute.definition;
+    _DemoShellDetailPageRouteContractBinding.definition;
 
 /// Immutable arguments for route demo_navigation_lab.shell.settings; URI values remain typed.
 final class _DemoShellSettingsPageRouteArguments {
@@ -248,11 +263,18 @@ abstract final class _DemoShellSettingsPageRoute {
   /// Creates a typed Intent; navigate through CCRouter.navigator.
   static CCRouteIntent<void> intent() =>
       _DemoShellSettingsPageRouteIntent(_DemoShellSettingsPageRouteArguments());
+}
 
-  /// Component-owned definition; business callers should use [intent].
+/// Generated definition bridge for registration and page binding.
+///
+/// This symbol is intentionally kept out of stable Consumer barrels.
+/// Business code creates [_DemoShellSettingsPageRoute] intents. Generated owner glue uses
+/// this binding to register and decode the route.
+abstract final class _DemoShellSettingsPageRouteContractBinding {
+  /// The typed route definition consumed by generated owner glue.
   static final definition =
       CCRouteDefinition<_DemoShellSettingsPageRouteArguments, void>(
-        routeId: id,
+        routeId: _DemoShellSettingsPageRoute.id,
         patterns: const [
           const CCPathPattern(
             "/shell/settings",
@@ -325,8 +347,8 @@ final class CCGeneratedDemoShellSettingsPageRouteFactory {
 ///
 /// Keep this symbol out of public package barrels. It exists so a component
 /// registrar can register library-private routes without exposing owner APIs.
-void ccrouterRegisterDemoShellSettingsPageRoute(CCRegistry registry) =>
-    registry.registerRoute(_DemoShellSettingsPageRoute.definition);
+void ccrouterRegisterDemoShellSettingsPageRoute(CCRegistry registry) => registry
+    .registerRoute(_DemoShellSettingsPageRouteContractBinding.definition);
 
 /// Typed route definition bridge shared by Host generation and page binding.
 ///
@@ -335,7 +357,7 @@ void ccrouterRegisterDemoShellSettingsPageRoute(CCRegistry registry) =>
 /// type only after page construction has been bound.
 CCRouteDefinition<_DemoShellSettingsPageRouteArguments, void>
 ccrouterDescribeDemoShellSettingsPageRoute() =>
-    _DemoShellSettingsPageRoute.definition;
+    _DemoShellSettingsPageRouteContractBinding.definition;
 
 /// Immutable arguments for route demo_navigation_lab.workspace.home; URI values remain typed.
 final class _DemoWorkspaceHomePageRouteArguments {
@@ -351,11 +373,18 @@ abstract final class _DemoWorkspaceHomePageRoute {
   /// Creates a typed Intent; navigate through CCRouter.navigator.
   static CCRouteIntent<void> intent() =>
       _DemoWorkspaceHomePageRouteIntent(_DemoWorkspaceHomePageRouteArguments());
+}
 
-  /// Component-owned definition; business callers should use [intent].
+/// Generated definition bridge for registration and page binding.
+///
+/// This symbol is intentionally kept out of stable Consumer barrels.
+/// Business code creates [_DemoWorkspaceHomePageRoute] intents. Generated owner glue uses
+/// this binding to register and decode the route.
+abstract final class _DemoWorkspaceHomePageRouteContractBinding {
+  /// The typed route definition consumed by generated owner glue.
   static final definition =
       CCRouteDefinition<_DemoWorkspaceHomePageRouteArguments, void>(
-        routeId: id,
+        routeId: _DemoWorkspaceHomePageRoute.id,
         patterns: const [
           const CCPathPattern(
             "/workspace/home",
@@ -428,8 +457,8 @@ final class CCGeneratedDemoWorkspaceHomePageRouteFactory {
 ///
 /// Keep this symbol out of public package barrels. It exists so a component
 /// registrar can register library-private routes without exposing owner APIs.
-void ccrouterRegisterDemoWorkspaceHomePageRoute(CCRegistry registry) =>
-    registry.registerRoute(_DemoWorkspaceHomePageRoute.definition);
+void ccrouterRegisterDemoWorkspaceHomePageRoute(CCRegistry registry) => registry
+    .registerRoute(_DemoWorkspaceHomePageRouteContractBinding.definition);
 
 /// Typed route definition bridge shared by Host generation and page binding.
 ///
@@ -438,7 +467,7 @@ void ccrouterRegisterDemoWorkspaceHomePageRoute(CCRegistry registry) =>
 /// type only after page construction has been bound.
 CCRouteDefinition<_DemoWorkspaceHomePageRouteArguments, void>
 ccrouterDescribeDemoWorkspaceHomePageRoute() =>
-    _DemoWorkspaceHomePageRoute.definition;
+    _DemoWorkspaceHomePageRouteContractBinding.definition;
 
 /// Immutable arguments for route demo_navigation_lab.workspace.detail; URI values remain typed.
 final class _DemoWorkspaceDetailPageRouteArguments {
@@ -459,11 +488,18 @@ abstract final class _DemoWorkspaceDetailPageRoute {
       _DemoWorkspaceDetailPageRouteIntent(
         _DemoWorkspaceDetailPageRouteArguments(item: item),
       );
+}
 
-  /// Component-owned definition; business callers should use [intent].
+/// Generated definition bridge for registration and page binding.
+///
+/// This symbol is intentionally kept out of stable Consumer barrels.
+/// Business code creates [_DemoWorkspaceDetailPageRoute] intents. Generated owner glue uses
+/// this binding to register and decode the route.
+abstract final class _DemoWorkspaceDetailPageRouteContractBinding {
+  /// The typed route definition consumed by generated owner glue.
   static final definition =
       CCRouteDefinition<_DemoWorkspaceDetailPageRouteArguments, void>(
-        routeId: id,
+        routeId: _DemoWorkspaceDetailPageRoute.id,
         patterns: const [
           const CCPathPattern(
             "/workspace/home/:item",
@@ -551,7 +587,9 @@ final class CCGeneratedDemoWorkspaceDetailPageRouteFactory {
 /// Keep this symbol out of public package barrels. It exists so a component
 /// registrar can register library-private routes without exposing owner APIs.
 void ccrouterRegisterDemoWorkspaceDetailPageRoute(CCRegistry registry) =>
-    registry.registerRoute(_DemoWorkspaceDetailPageRoute.definition);
+    registry.registerRoute(
+      _DemoWorkspaceDetailPageRouteContractBinding.definition,
+    );
 
 /// Typed route definition bridge shared by Host generation and page binding.
 ///
@@ -560,7 +598,7 @@ void ccrouterRegisterDemoWorkspaceDetailPageRoute(CCRegistry registry) =>
 /// type only after page construction has been bound.
 CCRouteDefinition<_DemoWorkspaceDetailPageRouteArguments, void>
 ccrouterDescribeDemoWorkspaceDetailPageRoute() =>
-    _DemoWorkspaceDetailPageRoute.definition;
+    _DemoWorkspaceDetailPageRouteContractBinding.definition;
 
 /// Immutable arguments for route demo_navigation_lab.workspace.activity; URI values remain typed.
 final class _DemoWorkspaceActivityPageRouteArguments {
@@ -577,11 +615,18 @@ abstract final class _DemoWorkspaceActivityPageRoute {
   static CCRouteIntent<void> intent() => _DemoWorkspaceActivityPageRouteIntent(
     _DemoWorkspaceActivityPageRouteArguments(),
   );
+}
 
-  /// Component-owned definition; business callers should use [intent].
+/// Generated definition bridge for registration and page binding.
+///
+/// This symbol is intentionally kept out of stable Consumer barrels.
+/// Business code creates [_DemoWorkspaceActivityPageRoute] intents. Generated owner glue uses
+/// this binding to register and decode the route.
+abstract final class _DemoWorkspaceActivityPageRouteContractBinding {
+  /// The typed route definition consumed by generated owner glue.
   static final definition =
       CCRouteDefinition<_DemoWorkspaceActivityPageRouteArguments, void>(
-        routeId: id,
+        routeId: _DemoWorkspaceActivityPageRoute.id,
         patterns: const [
           const CCPathPattern(
             "/workspace/activity",
@@ -658,7 +703,9 @@ final class CCGeneratedDemoWorkspaceActivityPageRouteFactory {
 /// Keep this symbol out of public package barrels. It exists so a component
 /// registrar can register library-private routes without exposing owner APIs.
 void ccrouterRegisterDemoWorkspaceActivityPageRoute(CCRegistry registry) =>
-    registry.registerRoute(_DemoWorkspaceActivityPageRoute.definition);
+    registry.registerRoute(
+      _DemoWorkspaceActivityPageRouteContractBinding.definition,
+    );
 
 /// Typed route definition bridge shared by Host generation and page binding.
 ///
@@ -667,7 +714,7 @@ void ccrouterRegisterDemoWorkspaceActivityPageRoute(CCRegistry registry) =>
 /// type only after page construction has been bound.
 CCRouteDefinition<_DemoWorkspaceActivityPageRouteArguments, void>
 ccrouterDescribeDemoWorkspaceActivityPageRoute() =>
-    _DemoWorkspaceActivityPageRoute.definition;
+    _DemoWorkspaceActivityPageRouteContractBinding.definition;
 
 /// Immutable arguments for route demo_navigation_lab.workspace.profile; URI values remain typed.
 final class _DemoWorkspaceProfilePageRouteArguments {
@@ -684,11 +731,18 @@ abstract final class _DemoWorkspaceProfilePageRoute {
   static CCRouteIntent<void> intent() => _DemoWorkspaceProfilePageRouteIntent(
     _DemoWorkspaceProfilePageRouteArguments(),
   );
+}
 
-  /// Component-owned definition; business callers should use [intent].
+/// Generated definition bridge for registration and page binding.
+///
+/// This symbol is intentionally kept out of stable Consumer barrels.
+/// Business code creates [_DemoWorkspaceProfilePageRoute] intents. Generated owner glue uses
+/// this binding to register and decode the route.
+abstract final class _DemoWorkspaceProfilePageRouteContractBinding {
+  /// The typed route definition consumed by generated owner glue.
   static final definition =
       CCRouteDefinition<_DemoWorkspaceProfilePageRouteArguments, void>(
-        routeId: id,
+        routeId: _DemoWorkspaceProfilePageRoute.id,
         patterns: const [
           const CCPathPattern(
             "/workspace/profile",
@@ -763,7 +817,9 @@ final class CCGeneratedDemoWorkspaceProfilePageRouteFactory {
 /// Keep this symbol out of public package barrels. It exists so a component
 /// registrar can register library-private routes without exposing owner APIs.
 void ccrouterRegisterDemoWorkspaceProfilePageRoute(CCRegistry registry) =>
-    registry.registerRoute(_DemoWorkspaceProfilePageRoute.definition);
+    registry.registerRoute(
+      _DemoWorkspaceProfilePageRouteContractBinding.definition,
+    );
 
 /// Typed route definition bridge shared by Host generation and page binding.
 ///
@@ -772,7 +828,7 @@ void ccrouterRegisterDemoWorkspaceProfilePageRoute(CCRegistry registry) =>
 /// type only after page construction has been bound.
 CCRouteDefinition<_DemoWorkspaceProfilePageRouteArguments, void>
 ccrouterDescribeDemoWorkspaceProfilePageRoute() =>
-    _DemoWorkspaceProfilePageRoute.definition;
+    _DemoWorkspaceProfilePageRouteContractBinding.definition;
 
 /// Immutable arguments for route demo_navigation_lab.extra; URI values remain typed.
 final class _DemoExtraPageRouteArguments {
@@ -793,11 +849,18 @@ abstract final class _DemoExtraPageRoute {
     required route_type_0.DemoExtraPayload payload,
   }) =>
       _DemoExtraPageRouteIntent(_DemoExtraPageRouteArguments(payload: payload));
+}
 
-  /// Component-owned definition; business callers should use [intent].
+/// Generated definition bridge for registration and page binding.
+///
+/// This symbol is intentionally kept out of stable Consumer barrels.
+/// Business code creates [_DemoExtraPageRoute] intents. Generated owner glue uses
+/// this binding to register and decode the route.
+abstract final class _DemoExtraPageRouteContractBinding {
+  /// The typed route definition consumed by generated owner glue.
   static final definition =
       CCRouteDefinition<_DemoExtraPageRouteArguments, void>(
-        routeId: id,
+        routeId: _DemoExtraPageRoute.id,
         patterns: const [
           const CCPathPattern(
             "/lab/extra",
@@ -881,7 +944,7 @@ final class CCGeneratedDemoExtraPageRouteFactory {
 /// Keep this symbol out of public package barrels. It exists so a component
 /// registrar can register library-private routes without exposing owner APIs.
 void ccrouterRegisterDemoExtraPageRoute(CCRegistry registry) =>
-    registry.registerRoute(_DemoExtraPageRoute.definition);
+    registry.registerRoute(_DemoExtraPageRouteContractBinding.definition);
 
 /// Typed route definition bridge shared by Host generation and page binding.
 ///
@@ -889,4 +952,5 @@ void ccrouterRegisterDemoExtraPageRoute(CCRegistry registry) =>
 /// access decoded fields without dynamic calls. Host aggregation may erase the
 /// type only after page construction has been bound.
 CCRouteDefinition<_DemoExtraPageRouteArguments, void>
-ccrouterDescribeDemoExtraPageRoute() => _DemoExtraPageRoute.definition;
+ccrouterDescribeDemoExtraPageRoute() =>
+    _DemoExtraPageRouteContractBinding.definition;
