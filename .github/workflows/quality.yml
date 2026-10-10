@@ -47,6 +47,18 @@ jobs:
         working-directory: packages/ccrouter_analyzer_plugin
     steps:
       - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.41.9
+          channel: stable
+          cache: true
+      # The Demo integration test resolves the contract-owner index from the
+      # committed package metadata, which requires the workspace Pub resolution
+      # (.dart_tool/package_config.json) to map Package names to roots. The
+      # isolated Plugin package is resolved separately below.
+      - name: Resolve Workspace dependencies
+        working-directory: ${{ github.workspace }}
+        run: CCROUTER_PUB_HOOK_DISABLE=1 flutter pub get
       - uses: dart-lang/setup-dart@v1
         with:
           sdk: 3.11.5
