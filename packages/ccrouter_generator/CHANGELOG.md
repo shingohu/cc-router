@@ -2,6 +2,10 @@
 
 ## 0.1.0 - Unreleased
 
+- Separated generated Route consumer APIs from owner bindings. Stable
+  `<package>.contracts.api.g.dart` entries now export only Route types;
+  generated registration and page glue use `XxxRouteContractBinding.definition`,
+  while Arguments and Codec types remain in generated owner libraries.
 - Preparing the first public release of CCRouter generation and CLI tooling.
 - Added explicit Host/package project-role resolution with separate requested
   and Pub-resolution roots. Participating component and contracts Packages can
