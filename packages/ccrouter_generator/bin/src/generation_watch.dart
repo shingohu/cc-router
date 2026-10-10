@@ -1363,17 +1363,21 @@ final class _GenerationWatchInputObserver {
     for (final package in packages.values) {
       final lib = Directory(path.join(package.root.path, 'lib'));
       if (lib.existsSync()) {
-        try {
-          subscriptions.add(
-            lib
-                .watch(recursive: true)
-                .listen(
-                  observer._observeLibraryEvent,
-                  onError: observer._ignoreWatchError,
-                ),
-          );
-        } on FileSystemException {
-          // build_runner remains authoritative when platform watch is absent.
+        if (Platform.isLinux) {
+          observer._watchLinuxLibraryTree(lib);
+        } else {
+          try {
+            subscriptions.add(
+              lib
+                  .watch(recursive: true)
+                  .listen(
+                    observer._observeLibraryEvent,
+                    onError: observer._ignoreWatchError,
+                  ),
+            );
+          } on FileSystemException {
+            // build_runner remains authoritative when platform watch is absent.
+          }
         }
       }
       try {
@@ -1392,20 +1396,66 @@ final class _GenerationWatchInputObserver {
 
   final List<StreamSubscription<FileSystemEvent>> _subscriptions;
   final Future<void> Function() _onChanged;
+  final Set<String> _watchedLibraryDirectories = <String>{};
   Timer? _coalesceWindow;
   bool _closed = false;
+
+  /// Linux inotify does not support recursive Directory.watch subscriptions.
+  void _watchLinuxLibraryTree(Directory lib) {
+    if (_closed || !lib.existsSync()) return;
+    _watchedLibraryDirectories.removeWhere(
+      (directoryPath) => !Directory(directoryPath).existsSync(),
+    );
+    final directories = <Directory>[lib];
+    try {
+      directories.addAll(
+        lib
+            .listSync(recursive: true, followLinks: false)
+            .whereType<Directory>(),
+      );
+    } on FileSystemException {
+      // A concurrent rename is covered by the next directory event.
+    }
+    for (final directory in directories) {
+      final directoryPath = path.normalize(directory.absolute.path);
+      if (_isGeneratedLibraryPath(directoryPath) ||
+          !_watchedLibraryDirectories.add(directoryPath)) {
+        continue;
+      }
+      try {
+        _subscriptions.add(
+          directory.watch().listen((event) {
+            if (event.isDirectory) {
+              if (!_isGeneratedLibraryPath(path.normalize(event.path))) {
+                _scheduleRevision();
+              }
+              _watchLinuxLibraryTree(lib);
+            } else {
+              _observeLibraryEvent(event);
+            }
+          }, onError: _ignoreWatchError),
+        );
+      } on FileSystemException {
+        _watchedLibraryDirectories.remove(directoryPath);
+      }
+    }
+  }
 
   void _observeLibraryEvent(FileSystemEvent event) {
     final normalized = path.normalize(event.path);
     if (!normalized.endsWith('.dart') ||
-        normalized.contains(
-          '${path.separator}src${path.separator}ccrouter_generated'
-          '${path.separator}',
-        ) ||
+        _isGeneratedLibraryPath(normalized) ||
         path.basename(normalized).endsWith('.g.dart')) {
       return;
     }
     _scheduleRevision();
+  }
+
+  /// Excludes the managed source tree from authored-input observation.
+  static bool _isGeneratedLibraryPath(String filePath) {
+    final marker = '${path.separator}src${path.separator}ccrouter_generated';
+    return filePath.endsWith(marker) ||
+        filePath.contains('$marker${path.separator}');
   }
 
   void _observePackageEvent(FileSystemEvent event) {

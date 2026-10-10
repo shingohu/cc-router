@@ -16,6 +16,7 @@ void main() {
     'custom catalogs are compared and restored in docs and build',
     () async {
       for (final parent in ['demo/docs', 'build']) {
+        Directory(parent).createSync(recursive: true);
         final output = Directory(parent).createTempSync('ccrouter-check-');
         addTearDown(() => output.deleteSync(recursive: true));
         final unknown = File(path.join(output.path, 'notes.txt'))
@@ -63,6 +64,7 @@ void main() {
   test(
     'custom catalog write failure restores earlier writes',
     () async {
+      Directory('build').createSync(recursive: true);
       final output = Directory(
         'build',
       ).createTempSync('ccrouter-check-failure-');

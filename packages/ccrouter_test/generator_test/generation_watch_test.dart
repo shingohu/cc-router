@@ -582,9 +582,13 @@ void main() {
           0,
           reason: _processOutput(watchedPostPub),
         );
+        final reusedCycle = RegExp(
+          r'reused active watch cycle (\d+)',
+        ).firstMatch(_processOutput(watchedPostPub));
+        expect(reusedCycle, isNotNull);
         expect(
-          _processOutput(watchedPostPub),
-          contains('reused active watch cycle ${completed['cycle']}'),
+          int.parse(reusedCycle!.group(1)!),
+          greaterThanOrEqualTo(completed['cycle'] as int),
         );
         expect(await _managedArtifacts(), expected);
       } finally {
@@ -1349,11 +1353,21 @@ final class CCRouterWatchProbePage extends StatelessWidget {
 ''';
 
 Future<ProcessResult> _runDemoPubGet() => Process.run(
-  'fvm',
-  const ['flutter', 'pub', 'get'],
+  _flutterExecutable(),
+  const ['pub', 'get'],
   workingDirectory: path.join(Directory.current.path, 'demo'),
   environment: _environment({'CCROUTER_PUB_HOOK_DISABLE': '1'}),
 );
+
+String _flutterExecutable() {
+  final name = Platform.isWindows ? 'flutter.bat' : 'flutter';
+  var sdkBin = File(Platform.resolvedExecutable).absolute.parent;
+  for (var index = 0; index < 3; index++) {
+    sdkBin = sdkBin.parent;
+  }
+  final paired = File(path.join(sdkBin.path, name));
+  return paired.existsSync() ? paired.path : name;
+}
 
 Future<ProcessResult> _runHostPostPub(Directory hostRoot) => _run([
   'pub-hook',

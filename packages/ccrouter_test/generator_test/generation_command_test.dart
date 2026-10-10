@@ -2221,6 +2221,11 @@ void probe() {
     () async {
       final seeded = await _preparePortableDemo();
       expect(seeded.exitCode, 0, reason: '${seeded.stderr}');
+      final baseline = await _generateDemo(['--profile']);
+      expect(baseline.exitCode, 0, reason: '${baseline.stderr}');
+      final cached = await _generateDemo(['--check', '--profile']);
+      expect(cached.exitCode, 0, reason: '${cached.stderr}');
+      expect('${cached.stdout}', contains('fast-path=hit'));
       final packageConfig = File(
         path.join(Directory.current.path, '.dart_tool', 'package_config.json'),
       );

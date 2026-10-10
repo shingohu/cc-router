@@ -3369,6 +3369,15 @@ abstract final class _GenerationStateFingerprint {
     inputs['portable/resolution'] = utf8.encode(
       computeCCCanonicalJsonFingerprint(portable.resolutionFingerprints),
     );
+    inputs['resolution/package-roots'] = utf8.encode(
+      computeCCCanonicalJsonFingerprint(<String, Object?>{
+        for (final package in workspace.packages.values)
+          package.name: <String, Object?>{
+            'root': path.normalize(package.root.absolute.path),
+            'writable': package.writable,
+          },
+      }),
+    );
     inputs['portable/tool'] = utf8.encode(portable.toolFingerprint);
     for (final package in workspace.packages.values) {
       if (!package.writable) {
