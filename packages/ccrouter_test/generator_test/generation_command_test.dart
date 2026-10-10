@@ -2248,7 +2248,10 @@ void probe() {
         payment['rootUri'] = externalRoot.uri.toString();
         packageConfig.writeAsStringSync(jsonEncode(document), flush: true);
 
-        final valid = await _generateDemo(['--check', '--profile']);
+        final valid = await _generateDemoWithoutPubResolution([
+          '--check',
+          '--profile',
+        ]);
         expect(valid.exitCode, 0, reason: '${valid.stderr}');
         expect('${valid.stdout}', contains('build-targets=8'));
         expect(
@@ -2274,7 +2277,10 @@ void probe() {
           jsonEncode(tamperedDocument),
           flush: true,
         );
-        final tampered = await _generateDemo(['--check', '--profile']);
+        final tampered = await _generateDemoWithoutPubResolution([
+          '--check',
+          '--profile',
+        ]);
         expect(tampered.exitCode, 1);
         expect(
           '${tampered.stderr}',
@@ -2286,7 +2292,10 @@ void probe() {
 
         externalState.writeAsStringSync(originalState, flush: true);
         externalState.deleteSync();
-        final missing = await _generateDemo(['--check', '--profile']);
+        final missing = await _generateDemoWithoutPubResolution([
+          '--check',
+          '--profile',
+        ]);
         expect(missing.exitCode, 1);
         expect(
           '${missing.stderr}',
