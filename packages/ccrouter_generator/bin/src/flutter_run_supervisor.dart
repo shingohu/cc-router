@@ -288,7 +288,10 @@ final class _CCFlutterInheritedRunProxy {
       await leaseOwner?.close();
       rethrow;
     }
-    final signalSubscriptions = _forwardTerminationSignals(process);
+    final signalSubscriptions = _forwardTerminationSignals(
+      process,
+      () async => leaseOwner?.close(),
+    );
     try {
       final childExitCode = await _waitForProcessOrAbort(process, abortSignal);
       if (heartbeatFailure != null) {
@@ -320,8 +323,9 @@ Future<int> _waitForProcessOrAbort(Process process, Future<void>? abortSignal) {
 }
 
 List<StreamSubscription<ProcessSignal>> _forwardTerminationSignals(
-  Process process,
-) {
+  Process process, [
+  Future<void> Function()? onSignal,
+]) {
   final subscriptions = <StreamSubscription<ProcessSignal>>[];
   for (final signal in <ProcessSignal>[
     ProcessSignal.sigint,
@@ -329,7 +333,10 @@ List<StreamSubscription<ProcessSignal>> _forwardTerminationSignals(
   ]) {
     try {
       subscriptions.add(
-        signal.watch().listen((_) {
+        signal.watch().listen((_) async {
+          if (onSignal != null) {
+            await onSignal();
+          }
           if (Platform.isWindows) {
             process.kill();
           } else {
