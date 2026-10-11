@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:path/path.dart' as path;
 
 import 'canonical_directory_identity.dart';
+import 'forward_termination_signals.dart';
 import 'flutter_run_watch_lease.dart';
 
 /// Environment switch that bypasses only Flutter machine reload coordination.
@@ -226,6 +227,7 @@ final class CCFlutterMachineRunProxy {
     required this.hostRoot,
     this.watchLease,
     this.abortSignal,
+    this.onTerminationSignal,
     Map<String, String>? environment,
   }) : environment = environment ?? Platform.environment;
 
@@ -243,6 +245,9 @@ final class CCFlutterMachineRunProxy {
 
   /// Optional supervisor failure that terminates the Flutter child.
   final Future<void>? abortSignal;
+
+  /// Cleanup owned by the enclosing supervisor when it receives a signal.
+  final Future<void> Function()? onTerminationSignal;
 
   /// Process environment used for the kill switch and child launch.
   final Map<String, String> environment;
@@ -282,25 +287,13 @@ final class CCFlutterMachineRunProxy {
         .listen(_forwardFlutterLine)
         .asFuture<void>();
     final stderrDone = process.stderr.listen(stderr.add).asFuture<void>();
-    final signalSubscriptions = <StreamSubscription<ProcessSignal>>[];
-    for (final signal in <ProcessSignal>[
-      ProcessSignal.sigint,
-      if (!Platform.isWindows) ProcessSignal.sigterm,
-    ]) {
-      try {
-        signalSubscriptions.add(
-          signal.watch().listen((_) {
-            if (Platform.isWindows) {
-              process.kill();
-            } else {
-              process.kill(signal);
-            }
-          }),
-        );
-      } on Object {
-        // A platform may not expose every signal.
-      }
-    }
+    final signalSubscriptions = forwardTerminationSignals(
+      process,
+      onSignal: () async {
+        await leaseOwner?.close();
+        await onTerminationSignal?.call();
+      },
+    );
     final inputSubscription = stdin
         .transform(utf8.decoder)
         .transform(const LineSplitter())

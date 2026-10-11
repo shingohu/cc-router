@@ -8,6 +8,7 @@ import 'bounded_process_shutdown.dart';
 import 'coordination_home.dart';
 import 'flutter_run_reload_gate.dart';
 import 'flutter_run_watch_lease.dart';
+import 'forward_termination_signals.dart';
 import 'watch_startup_handshake.dart';
 
 /// Owns the original Flutter process and its wrapper-created watch lease.
@@ -63,7 +64,11 @@ final class CCFlutterRunSupervisor {
     return _runFlutter(lease);
   }
 
-  Future<int> _runFlutter(File? lease, {Future<void>? abortSignal}) {
+  Future<int> _runFlutter(
+    File? lease, {
+    Future<void>? abortSignal,
+    Future<void> Function()? onTerminationSignal,
+  }) {
     if (coordinateMachineReloads) {
       return CCFlutterMachineRunProxy(
         originalFlutter: originalFlutter,
@@ -71,6 +76,7 @@ final class CCFlutterRunSupervisor {
         hostRoot: hostRoot,
         watchLease: lease,
         abortSignal: abortSignal,
+        onTerminationSignal: onTerminationSignal,
         environment: environment,
       ).run();
     }
@@ -84,6 +90,7 @@ final class CCFlutterRunSupervisor {
       flutterArguments: flutterArguments,
       watchLease: lease,
       abortSignal: abortSignal,
+      onTerminationSignal: onTerminationSignal,
       environment: environment,
     ).run();
   }
@@ -182,6 +189,7 @@ final class CCFlutterRunSupervisor {
       final result = await _runFlutter(
         null,
         abortSignal: heartbeatAbort.future,
+        onTerminationSignal: leaseOwner.close,
       );
       if (heartbeatFailure != null) {
         stderr.writeln(
@@ -253,6 +261,7 @@ final class _CCFlutterInheritedRunProxy {
     required this.flutterArguments,
     required this.watchLease,
     this.abortSignal,
+    this.onTerminationSignal,
     required this.environment,
   });
 
@@ -260,6 +269,7 @@ final class _CCFlutterInheritedRunProxy {
   final List<String> flutterArguments;
   final File? watchLease;
   final Future<void>? abortSignal;
+  final Future<void> Function()? onTerminationSignal;
   final Map<String, String> environment;
 
   Future<int> run() async {
@@ -288,9 +298,12 @@ final class _CCFlutterInheritedRunProxy {
       await leaseOwner?.close();
       rethrow;
     }
-    final signalSubscriptions = _forwardTerminationSignals(
+    final signalSubscriptions = forwardTerminationSignals(
       process,
-      () async => leaseOwner?.close(),
+      onSignal: () async {
+        await leaseOwner?.close();
+        await onTerminationSignal?.call();
+      },
     );
     try {
       final childExitCode = await _waitForProcessOrAbort(process, abortSignal);
@@ -320,33 +333,4 @@ Future<int> _waitForProcessOrAbort(Process process, Future<void>? abortSignal) {
       return process.exitCode;
     }),
   ]);
-}
-
-List<StreamSubscription<ProcessSignal>> _forwardTerminationSignals(
-  Process process, [
-  Future<void> Function()? onSignal,
-]) {
-  final subscriptions = <StreamSubscription<ProcessSignal>>[];
-  for (final signal in <ProcessSignal>[
-    ProcessSignal.sigint,
-    if (!Platform.isWindows) ProcessSignal.sigterm,
-  ]) {
-    try {
-      subscriptions.add(
-        signal.watch().listen((_) async {
-          if (onSignal != null) {
-            await onSignal();
-          }
-          if (Platform.isWindows) {
-            process.kill();
-          } else {
-            process.kill(signal);
-          }
-        }),
-      );
-    } on Object {
-      // A platform may not expose every signal.
-    }
-  }
-  return subscriptions;
 }

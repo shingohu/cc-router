@@ -44,6 +44,8 @@
 - Added a Windows Flutter-run supervisor with a versioned watch-lease
   heartbeat. Handled exits clean up immediately, while watch expires an orphaned
   lease after an uncatchable supervisor termination.
+- Fixed Flutter-run lease cleanup when the supervisor receives a handled
+  termination signal, including managed-watch and machine reload-gate paths.
 - Made POSIX and Windows Pub Hook wrappers locate real Flutter/Dart commands by
   global-option arity instead of matching command-like text in arbitrary
   option values, script arguments, or trailing business arguments.

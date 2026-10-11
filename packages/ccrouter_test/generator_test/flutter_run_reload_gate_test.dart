@@ -281,44 +281,14 @@ void main() {
   );
 
   test(
-    'Flutter run supervisor cleans its lease after termination',
-    () async {
-      final host = await _createHost();
-      addTearDown(() => host.delete(recursive: true));
-      final lease = File(path.join(host.path, 'flutter-run-signal.lease'))
-        ..writeAsStringSync('');
-      final ready = File(path.join(host.path, 'flutter-ready'));
-      final original = File(path.join(host.path, 'fake-flutter-wait'))
-        ..writeAsStringSync('''#!/usr/bin/env bash
-trap 'exit 0' INT TERM
-touch "${ready.path}"
-while true; do sleep 1; done
-''');
-      final chmod = await Process.run('chmod', <String>['+x', original.path]);
-      expect(chmod.exitCode, 0, reason: '${chmod.stderr}');
-      final process = await Process.start(Platform.resolvedExecutable, <String>[
-        'run',
-        'ccrouter_generator:ccrouter_flutter_run_supervisor',
-        '--host-root',
-        host.path,
-        '--original',
-        original.path,
-        '--watch-lease',
-        lease.path,
-        '--',
-        'run',
-      ], workingDirectory: Directory.current.path);
-      final errors = process.stderr.transform(utf8.decoder).join();
-      await _waitFor(() => ready.existsSync() && _hasHeartbeat(lease));
+    'interactive supervisor removes its lease before child termination',
+    () => _assertLeaseRemovedBeforeChildExit(coordinateMachineReloads: false),
+    skip: Platform.isWindows ? 'POSIX signal fixture' : false,
+  );
 
-      expect(process.kill(ProcessSignal.sigterm), isTrue);
-      final result = await process.exitCode.timeout(
-        const Duration(seconds: 10),
-      );
-
-      expect(result, isNot(1), reason: await errors);
-      expect(lease.existsSync(), isFalse);
-    },
+  test(
+    'machine supervisor removes its lease before child termination',
+    () => _assertLeaseRemovedBeforeChildExit(coordinateMachineReloads: true),
     skip: Platform.isWindows ? 'POSIX signal fixture' : false,
   );
 
@@ -485,4 +455,54 @@ bool _hasHeartbeat(File lease) {
   } on FileSystemException {
     return false;
   }
+}
+
+Future<void> _assertLeaseRemovedBeforeChildExit({
+  required bool coordinateMachineReloads,
+}) async {
+  final host = await _createHost();
+  addTearDown(() => host.delete(recursive: true));
+  final lease = File(path.join(host.path, 'flutter-run-signal.lease'))
+    ..writeAsStringSync('');
+  final ready = File(path.join(host.path, 'flutter-ready'));
+  final terminationStarted = File(path.join(host.path, 'termination-started'));
+  final childExited = File(path.join(host.path, 'child-exited'));
+  final original = File(path.join(host.path, 'fake-flutter-wait'))
+    ..writeAsStringSync('''#!/usr/bin/env bash
+trap 'touch "${terminationStarted.path}"; sleep 2; touch "${childExited.path}"; exit 0' INT TERM
+touch "${ready.path}"
+while true; do sleep 1; done
+''');
+  final chmod = await Process.run('chmod', <String>['+x', original.path]);
+  expect(chmod.exitCode, 0, reason: '${chmod.stderr}');
+  final arguments = <String>[
+    'run',
+    'ccrouter_generator:ccrouter_flutter_run_supervisor',
+    '--host-root',
+    host.path,
+    '--original',
+    original.path,
+    '--watch-lease',
+    lease.path,
+    if (coordinateMachineReloads) '--reload-gate',
+    '--',
+    'run',
+    if (coordinateMachineReloads) '--machine',
+  ];
+  final process = await Process.start(
+    Platform.resolvedExecutable,
+    arguments,
+    workingDirectory: Directory.current.path,
+  );
+  final errors = process.stderr.transform(utf8.decoder).join();
+  await _waitFor(() => ready.existsSync() && _hasHeartbeat(lease));
+
+  expect(process.kill(ProcessSignal.sigterm), isTrue);
+  await _waitFor(() => terminationStarted.existsSync());
+  await _waitFor(() => !lease.existsSync());
+  expect(childExited.existsSync(), isFalse);
+
+  final result = await process.exitCode.timeout(const Duration(seconds: 10));
+  expect(result, isNot(1), reason: await errors);
+  expect(lease.existsSync(), isFalse);
 }
