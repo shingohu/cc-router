@@ -799,26 +799,115 @@ void main() {
   );
 
   test(
-    'one-shot generation fails fast while the root watch is active',
+    'one-shot check reuses exact watch evidence while reference paths fail fast',
     () async {
-      ProcessResult? result;
+      ProcessResult? reused;
+      ProcessResult? generated;
+      ProcessResult? packageReused;
+      ProcessResult? reference;
+      ProcessResult? disabled;
 
       await _runWatchUntilReady(
         onReady: () async {
-          result = await _run([
+          reused = await _run([
             'generate',
             'demo',
             '--check',
           ]).timeout(const Duration(seconds: 30));
+          generated = await _run([
+            'generate',
+            'demo',
+          ]).timeout(const Duration(seconds: 30));
+          packageReused = await _run([
+            'generate',
+            'demo/modules/navigation_lab',
+            '--check',
+          ]).timeout(const Duration(seconds: 30));
+          reference = await _run([
+            'generate',
+            'demo',
+            '--no-cache',
+            '--check',
+          ]).timeout(const Duration(seconds: 30));
+          disabled = await _run(
+            ['generate', 'demo', '--check'],
+            environment: {'CCROUTER_DISABLE_ONE_SHOT_WATCH_REUSE': '1'},
+          ).timeout(const Duration(seconds: 30));
         },
       );
 
-      expect(result, isNotNull);
-      expect(result!.exitCode, 1);
-      expect('${result!.stderr}', contains('active CCRouter generation watch'));
-      expect('${result!.stderr}', contains('aggregationSucceeded'));
+      expect(reused, isNotNull);
+      expect(reused!.exitCode, 0, reason: '${reused!.stderr}');
+      expect('${reused!.stdout}', contains('reused active watch cycle'));
+      expect(
+        '${reused!.stdout}',
+        contains('generated artifacts are up to date'),
+      );
+      expect(generated, isNotNull);
+      expect(generated!.exitCode, 0, reason: '${generated!.stderr}');
+      expect('${generated!.stdout}', contains('reused active watch cycle'));
+      expect(packageReused, isNotNull);
+      expect(packageReused!.exitCode, 0, reason: '${packageReused!.stderr}');
+      expect('${packageReused!.stdout}', contains('reused active watch cycle'));
+
+      for (final blocked in [reference, disabled]) {
+        expect(blocked, isNotNull);
+        expect(blocked!.exitCode, 1);
+        expect(
+          '${blocked.stderr}',
+          contains('active CCRouter generation watch'),
+        );
+      }
     },
     timeout: const Timeout(Duration(minutes: 3)),
+  );
+
+  test(
+    'one-shot check waits for watch evidence matching a current source edit',
+    () async {
+      final source = File(
+        path.join(
+          Directory.current.path,
+          'demo',
+          'modules',
+          'navigation_lab',
+          'lib',
+          'src',
+          'stack_page.dart',
+        ),
+      );
+      final original = source.readAsStringSync();
+      ProcessResult? result;
+      var baselineCycle = 0;
+      var reusedCycle = 0;
+      try {
+        await _runWatchUntilReady(
+          onReady: () async {
+            baselineCycle = (await _readWatchStatus())['cycle'] as int;
+            source.writeAsStringSync(
+              '$original\n// One-shot active-watch evidence probe.\n',
+              flush: true,
+            );
+            result = await _run([
+              'generate',
+              'demo',
+              '--check',
+            ]).timeout(const Duration(minutes: 2));
+            reusedCycle = (await _readWatchStatus())['cycle'] as int;
+          },
+        );
+
+        expect(result, isNotNull);
+        expect(result!.exitCode, 0, reason: '${result!.stderr}');
+        expect('${result!.stdout}', contains('reused active watch cycle'));
+        expect(reusedCycle, greaterThan(baselineCycle));
+      } finally {
+        source.writeAsStringSync(original, flush: true);
+        final restored = await _run(['generate', 'demo']);
+        expect(restored.exitCode, 0, reason: '${restored.stderr}');
+      }
+    },
+    timeout: const Timeout(Duration(minutes: 4)),
   );
 
   test(

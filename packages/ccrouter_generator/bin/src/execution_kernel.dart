@@ -81,6 +81,7 @@ final class _GenerationCycleResult {
     required this.diagnostics,
     required this.structuredDiagnostics,
     required this.packageCompletionEvidence,
+    this.reusedActiveWatch = false,
   });
 
   final int exitCode;
@@ -94,6 +95,9 @@ final class _GenerationCycleResult {
 
   /// Exact per-Package inputs and outputs proven by a successful watch cycle.
   final Map<String, Map<String, Object?>> packageCompletionEvidence;
+
+  /// Whether this one-shot completed by validating an active watch cycle.
+  final bool reusedActiveWatch;
 
   bool get succeeded => exitCode == 0;
 
@@ -244,6 +248,7 @@ Future<_GenerationCycleResult> _runGenerationCycle({
   _GeneratedArtifactsDelta? generatedArtifactsDelta;
   final structuredDiagnostics = <Map<String, Object?>>[];
   Map<String, Map<String, Object?>> packageCompletionEvidence = const {};
+  var reusedActiveWatch = false;
 
   Future<void> executeCycle(
     _Arguments parsed,
@@ -767,6 +772,46 @@ Future<_GenerationCycleResult> _runGenerationCycle({
           snapshot.restore,
         );
       }
+      final mayReuseWatch =
+          buildContext != null &&
+          projectRole != null &&
+          parsed.command == _GeneratorCommand.generate &&
+          parsed.outputDirectoryPath == null &&
+          !parsed.noCache &&
+          !parsed.profile &&
+          !parsed.portablePrepare;
+      if (mayReuseWatch) {
+        final reuse = await waitForCCOneShotWatch(
+          context: buildContext,
+          role: projectRole,
+        );
+        if (reuse != null) {
+          if (reuse.succeeded) {
+            reusedActiveWatch = true;
+            profileOutcome = 'success';
+            _commandStdout.writeln(
+              'CCRouter generation reused active watch cycle ${reuse.cycle}; '
+              '${reuse.message}.',
+            );
+            if (parsed.check) {
+              _commandStdout.writeln(
+                'CCRouter generated artifacts are up to date.',
+              );
+            }
+          } else {
+            _commandStderr.writeln(
+              'error: Active CCRouter watch reuse failed: ${reuse.message}.',
+            );
+            if (reuse.diagnostics case final diagnostics?) {
+              _commandStderr.writeln('Generator diagnostics:');
+              _commandStderr.writeln(diagnostics);
+            }
+            _commandStderr.writeln('Watch log: ${reuse.logFile.path}');
+            cycleExitCode = 1;
+          }
+          return;
+        }
+      }
       _commandStderr.writeln('error: ${error.message}');
       cycleExitCode = 1;
     } on CCPackageWorkspaceException catch (error) {
@@ -848,6 +893,7 @@ Future<_GenerationCycleResult> _runGenerationCycle({
     diagnostics: cycleExitCode == 0 ? null : errorBuffer?.toString().trim(),
     structuredDiagnostics: List.unmodifiable(structuredDiagnostics),
     packageCompletionEvidence: packageCompletionEvidence,
+    reusedActiveWatch: reusedActiveWatch,
   );
 }
 

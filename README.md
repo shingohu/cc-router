@@ -1365,9 +1365,13 @@ console 格式，不读取 private Asset Graph；无法识别的终态保留在�
 不会改变生成结果。`CCROUTER_LEGACY_UNPROFILED_BUILD_RUNNER_REPORT=1` 可恢复旧的默认空 counters
 做 A/B；`CCROUTER_DISABLE_BUILD_WATCH=1` 会执行一次 one-shot 后退出。watch 是开发加速路径，
 CI 仍以 `generate <host> --no-cache --check` 为权威。一个活动 watch 会在 lease 生命周期内
-持有该 root 的 generation lock；同 root 的 one-shot generate/check/clean 会快速失败并提示等待
-`aggregationSucceeded`，不会无限阻塞；反过来已有 one-shot 正在执行或排队时，新 watch 也会快速失败。
-先停止 watch 再执行最终门禁。共享仅发生在同一个 resolved build root；嵌套且
+持有该 root 的 generation lock；同 root 的普通 `generate` 与 `generate --check` 不会启动第二个
+writer，而是等待并复用 active watch 对当前 Pub resolution、authored input 和 managed output 的
+精确完成证据。watch 失败、退出、证据不匹配或五分钟超时仍 fail-closed。`--no-cache`、`--profile`、
+自定义 `--output-dir`、portable prepare 与 `clean` 仍快速失败；设置
+`CCROUTER_DISABLE_ONE_SHOT_WATCH_REUSE=1` 可恢复普通 one-shot 的旧 fail-fast 路径做 A/B。
+反过来已有 one-shot 正在执行或排队时，新 watch 也会快速失败。先停止 watch 再执行最终
+`--no-cache --check` 门禁。共享仅发生在同一个 resolved build root；嵌套且
 拥有独立 Pub build root 的 Package Host 仍各自启动 watch，不做跨 root 合并。subscriber
 离开时当前 child 可保留已加载的 target superset，避免无意义 restart；真实 Pub resolution
 删除仍按精确 topology 重新启动 session。

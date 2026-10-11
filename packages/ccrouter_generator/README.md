@@ -391,9 +391,11 @@ Asset Graph；未知终态格式以有界 `unparsedFinalLines` 保留且不影�
 `CCROUTER_LEGACY_UNPROFILED_BUILD_RUNNER_REPORT=1` 可恢复旧空 counters 做 A/B。
 设置 `CCROUTER_DISABLE_BUILD_WATCH=1` 可回退为一次 one-shot。watch 不替代最终的
 `--no-cache --check`；它在 lease 内持有 root generation lock，应先停止再运行最终门禁。
-同 root 的 one-shot generate、check 或 clean 会在检测到活动 watch 时快速失败，而不是无限等待锁；
-迭代期应等待 machine stream 的 `aggregationSucceeded`。已有 one-shot 正在执行或等待时，新的
-watch 同样会快速失败，调用方可在命令完成后重试启动 watch。
+同 root 的普通 `generate` 与 `generate --check` 会等待并复用 active watch 的精确 Pub resolution、
+authored input 与 managed output 完成证据，不会并发启动第二个 writer；失败、退出、证据不匹配或
+五分钟超时仍 fail-closed。`--no-cache`、`--profile`、自定义输出、portable prepare 与 `clean`
+继续快速失败。`CCROUTER_DISABLE_ONE_SHOT_WATCH_REUSE=1` 可恢复旧 reject-only 路径做 A/B。
+已有 one-shot 正在执行或等待时，新的 watch 同样会快速失败，调用方可在命令完成后重试启动 watch。
 共享只覆盖单个 resolved build root，不合并嵌套 Package Host 的独立 Pub root。subscriber
 退出不会为了收缩 target union 重启当前 child；Pub resolution 中真实的 target 删除仍会重启。
 Hook 的 watch 启动成功提示写入 stdout，与 preflight 成功信息保持一致；真正失败仍写 stderr，

@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:ccrouter_generator/src/project_context.dart';
 import 'package:ccrouter_generator/src/project_role.dart';
+import 'package:ccrouter_generator/src/package_workspace.dart';
 import 'package:path/path.dart' as path;
 import 'package:yaml/yaml.dart';
 
@@ -13,6 +14,7 @@ import 'pub_hook_watch_coordination.dart';
 const _pubHookWatchFailureFenceKillSwitch =
     'CCROUTER_DISABLE_PUB_HOOK_WATCH_FAILURE_FENCE';
 const _packageWatchReuseKillSwitch = 'CCROUTER_DISABLE_PACKAGE_WATCH_REUSE';
+const _oneShotWatchReuseKillSwitch = 'CCROUTER_DISABLE_ONE_SHOT_WATCH_REUSE';
 
 /// Disables only the pre-clean active-watch guard for A/B diagnosis.
 const ccrouterFlutterCleanGuardKillSwitch =
@@ -794,7 +796,7 @@ void _writePubHookProjectContext(CCProjectContext context, CCProjectRole role) {
 }
 
 /// Waits for exact Package inputs and outputs from a shared Host watch.
-Future<_CCPubHookWatchResult?> _waitForPackagePostPubWatch(
+Future<CCWatchReuseResult?> _waitForPackagePostPubWatch(
   CCProjectContext context,
   _CCPubHookOperation operation,
 ) async {
@@ -817,7 +819,7 @@ Future<_CCPubHookWatchResult?> _waitForPackagePostPubWatch(
       'stop the watch, then retry ${operation.target} from '
       '"${context.requestedRoot.path}"';
   if (Platform.environment[_packageWatchReuseKillSwitch] == '1') {
-    return _CCPubHookWatchResult(
+    return CCWatchReuseResult(
       succeeded: false,
       cycle: status['cycleRevision'] as int,
       message:
@@ -831,7 +833,7 @@ Future<_CCPubHookWatchResult?> _waitForPackagePostPubWatch(
     final coverage = targets.contains(packageName)
         ? 'covers requested Package "$packageName"'
         : 'does not cover requested Package "$packageName"';
-    return _CCPubHookWatchResult(
+    return CCWatchReuseResult(
       succeeded: false,
       cycle: status['cycleRevision'] as int,
       message:
@@ -859,7 +861,7 @@ Future<_CCPubHookWatchResult?> _waitForPackagePostPubWatch(
           buildRoot.path,
         ) ||
         !await _pubHookWatchOwnerIsHeld(buildRoot)) {
-      return _CCPubHookWatchResult(
+      return CCWatchReuseResult(
         succeeded: false,
         cycle: 0,
         message: 'active Host watch became unavailable; $retry',
@@ -889,7 +891,7 @@ Future<_CCPubHookWatchResult?> _waitForPackagePostPubWatch(
           ) &&
           candidate['managedOutputFingerprint'] ==
               current.managedOutputFingerprint) {
-        return _CCPubHookWatchResult(
+        return CCWatchReuseResult(
           succeeded: true,
           cycle: cycle,
           message: 'active watch Package generation succeeded',
@@ -898,7 +900,7 @@ Future<_CCPubHookWatchResult?> _waitForPackagePostPubWatch(
       }
     }
     if (status['lastEvent'] == 'failed') {
-      return _CCPubHookWatchResult(
+      return CCWatchReuseResult(
         succeeded: false,
         cycle: cycle,
         message:
@@ -910,7 +912,7 @@ Future<_CCPubHookWatchResult?> _waitForPackagePostPubWatch(
     }
     if (targets.contains(packageName) &&
         status['packageCompletionEvidenceState'] == 'unavailable') {
-      return _CCPubHookWatchResult(
+      return CCWatchReuseResult(
         succeeded: false,
         cycle: cycle,
         message:
@@ -927,7 +929,7 @@ Future<_CCPubHookWatchResult?> _waitForPackagePostPubWatch(
       ? 'covers requested Package "$packageName" but did not publish '
             'matching completion evidence'
       : 'does not cover requested Package "$packageName"';
-  return _CCPubHookWatchResult(
+  return CCWatchReuseResult(
     succeeded: false,
     cycle: lastStatus['cycleRevision'] as int,
     message:
@@ -1084,9 +1086,9 @@ final class _CCPubHookOperation {
   final bool isPostPub;
 }
 
-/// Result of waiting for the active Host watch after a successful Pub command.
-final class _CCPubHookWatchResult {
-  const _CCPubHookWatchResult({
+/// Result of validating or waiting for an active generation watch.
+final class CCWatchReuseResult {
+  const CCWatchReuseResult({
     required this.succeeded,
     required this.cycle,
     required this.message,
@@ -1101,11 +1103,220 @@ final class _CCPubHookWatchResult {
   final String? diagnostics;
 }
 
+/// Reuses exact active-watch evidence for an ordinary one-shot generation.
+///
+/// Commands whose semantics require their own execution path, such as
+/// `--no-cache`, profile collection, custom output, and cleanup, do not call
+/// this function. A null result means no active watch was observed or the
+/// compatibility kill switch requested the former lock-conflict behavior.
+Future<CCWatchReuseResult?> waitForCCOneShotWatch({
+  required CCProjectContext context,
+  required CCProjectRole role,
+}) {
+  if (Platform.environment[_oneShotWatchReuseKillSwitch] == '1') {
+    return Future<CCWatchReuseResult?>.value();
+  }
+  return switch (role) {
+    CCProjectRole.host => _waitForOneShotHostWatch(context),
+    CCProjectRole.package => _waitForPackagePostPubWatch(
+      context,
+      _CCPubHookOperation(
+        label: 'generation',
+        target: '`ccrouter generate ${context.requestedRoot.path}`',
+        isPostPub: false,
+      ),
+    ),
+    CCProjectRole.skip => Future<CCWatchReuseResult?>.value(),
+  };
+}
+
+/// Requires exact current inputs and outputs from one Host watch cycle.
+Future<CCWatchReuseResult?> _waitForOneShotHostWatch(
+  CCProjectContext context,
+) async {
+  final hostRoot = context.requestedRoot;
+  final buildRoot = context.resolutionRoot;
+  final statusFile = File(
+    path.join(
+      hostRoot.path,
+      '.dart_tool',
+      'ccrouter',
+      'v1',
+      'watch',
+      'status.json',
+    ),
+  );
+  var status = await _readPostPubWatchStatus(
+    hostRoot: hostRoot,
+    buildRoot: buildRoot,
+    localStatusFile: statusFile,
+  );
+  if (status == null || !_pubHookStatusMatchesHost(status, hostRoot)) {
+    if (!await _pubHookWatchOwnerIsHeld(buildRoot)) return null;
+    return CCWatchReuseResult(
+      succeeded: false,
+      cycle: 0,
+      message:
+          'active watch owns ${buildRoot.path}, but exact Host status for '
+          '${hostRoot.path} is unavailable; stop and restart that watch',
+      logFile: _pubHookWatchLogFile(hostRoot),
+    );
+  }
+  if (!await _pubHookWatchIsActive(status)) return null;
+
+  var requiredResolutionFingerprint = await CCPubResolutionFingerprint.capture(
+    hostRoot: hostRoot,
+    buildRoot: buildRoot,
+  );
+  final timeout = Stopwatch()..start();
+  const maximumWait = Duration(minutes: 5);
+  while (timeout.elapsed < maximumWait) {
+    status = await _readPostPubWatchStatus(
+      hostRoot: hostRoot,
+      buildRoot: buildRoot,
+      localStatusFile: statusFile,
+    );
+    if (status == null ||
+        !_pubHookStatusMatchesHost(status, hostRoot) ||
+        !await _pubHookWatchIsActive(status)) {
+      return CCWatchReuseResult(
+        succeeded: false,
+        cycle: status?['cycle'] as int? ?? 0,
+        message: 'active Host watch became unavailable',
+        diagnostics: status?['failureDiagnostics'] as String?,
+        logFile: _pubHookWatchLogFile(hostRoot),
+      );
+    }
+    final cycle = status['cycle'] as int;
+    if (status['lastEvent'] == 'failed') {
+      return CCWatchReuseResult(
+        succeeded: false,
+        cycle: cycle,
+        message:
+            'active watch cycle $cycle failed at '
+            '${status['failureStage'] ?? 'generation'}',
+        diagnostics: status['failureDiagnostics'] as String?,
+        logFile: _pubHookWatchLogFile(hostRoot),
+      );
+    }
+    final lastEvent = status['lastEvent'];
+    final terminalSuccess =
+        lastEvent == 'ready' || lastEvent == 'aggregationSucceeded';
+    if (terminalSuccess) {
+      if (status['resolutionFingerprint'] != requiredResolutionFingerprint) {
+        requiredResolutionFingerprint =
+            await CCPubResolutionFingerprint.capture(
+              hostRoot: hostRoot,
+              buildRoot: buildRoot,
+            );
+      }
+    }
+    if (terminalSuccess &&
+        status['resolutionFingerprint'] == requiredResolutionFingerprint) {
+      if (status['packageCompletionEvidenceVersion'] != 1 ||
+          status['packageCompletionEvidenceState'] != 'available' ||
+          status['packageCompletionEvidence'] is! Map) {
+        return CCWatchReuseResult(
+          succeeded: false,
+          cycle: cycle,
+          message:
+              'active watch cycle $cycle does not publish exact Host Package '
+              'completion evidence; stop and restart the watch with the '
+              'current CCRouter CLI',
+          logFile: _pubHookWatchLogFile(hostRoot),
+        );
+      }
+      final sessionId = status['sessionId'];
+      final eventRevision = status['eventRevision'];
+      final evidence = (status['packageCompletionEvidence'] as Map)
+          .cast<Object?, Object?>();
+      if (await _hostPackageEvidenceMatches(evidence, context: context)) {
+        final confirmed = await _readPostPubWatchStatus(
+          hostRoot: hostRoot,
+          buildRoot: buildRoot,
+          localStatusFile: statusFile,
+        );
+        if (confirmed != null &&
+            confirmed['active'] == true &&
+            confirmed['sessionId'] == sessionId &&
+            confirmed['eventRevision'] == eventRevision &&
+            await _pubHookWatchIsActive(confirmed)) {
+          return CCWatchReuseResult(
+            succeeded: true,
+            cycle: cycle,
+            message: 'exact active Host watch evidence matched',
+            logFile: _pubHookWatchLogFile(hostRoot),
+          );
+        }
+      }
+    }
+    await Future<void>.delayed(const Duration(milliseconds: 200));
+  }
+  final latestStatus = status!;
+  return CCWatchReuseResult(
+    succeeded: false,
+    cycle: latestStatus['cycle'] as int,
+    message:
+        'active watch did not publish exact current Host completion evidence '
+        'within ${maximumWait.inMinutes} minutes',
+    diagnostics: latestStatus['failureDiagnostics'] as String?,
+    logFile: _pubHookWatchLogFile(hostRoot),
+  );
+}
+
+Future<bool> _hostPackageEvidenceMatches(
+  Map<Object?, Object?> evidence, {
+  required CCProjectContext context,
+}) async {
+  try {
+    final workspace = await CCPackageWorkspace.load(
+      buildRoot: context.resolutionRoot,
+      hostRoot: context.requestedRoot,
+      workspace: context.isWorkspace,
+    );
+    final expected = <String, Directory>{
+      for (final package in workspace.packages.values)
+        if (package.writable && package.declaresGenerationIntent)
+          package.name: package.root,
+    };
+    if (expected.isEmpty ||
+        evidence.length != expected.length ||
+        !evidence.keys.every(expected.containsKey)) {
+      return false;
+    }
+    for (final entry in expected.entries) {
+      final rawCandidate = evidence[entry.key];
+      if (rawCandidate is! Map) return false;
+      final candidate = rawCandidate.cast<String, Object?>();
+      final current = await _captureCurrentPackageWatchEvidence(
+        packageName: entry.key,
+        packageRoot: entry.value,
+        buildRoot: context.resolutionRoot,
+        includeOutput: true,
+      );
+      if (!_packageWatchEvidenceMatches(
+            candidate,
+            current,
+            packageName: entry.key,
+            packageRoot: entry.value,
+          ) ||
+          candidate['managedOutputFingerprint'] !=
+              current.managedOutputFingerprint) {
+        return false;
+      }
+    }
+    return true;
+  } on Object {
+    // Pub may atomically replace resolution files while watch starts a cycle.
+    return false;
+  }
+}
+
 /// Reuses one active Host watch instead of racing it with a one-shot generate.
 ///
 /// Pub may rewrite Workspace resolution files before this process starts. Only
 /// a terminal watch event for their exact current contents can satisfy the Hook.
-Future<_CCPubHookWatchResult?> _waitForPostPubWatch(
+Future<CCWatchReuseResult?> _waitForPostPubWatch(
   Directory hostRoot,
   Directory buildRoot,
 ) async {
@@ -1126,7 +1337,7 @@ Future<_CCPubHookWatchResult?> _waitForPostPubWatch(
   );
   if (status == null) {
     if (!await _pubHookWatchOwnerIsHeld(buildRoot)) return null;
-    return _CCPubHookWatchResult(
+    return CCWatchReuseResult(
       succeeded: false,
       cycle: 0,
       message: 'active watch status is unavailable',
@@ -1158,7 +1369,7 @@ Future<_CCPubHookWatchResult?> _waitForPostPubWatch(
       localStatusFile: statusFile,
     );
     if (status == null || !_pubHookStatusMatchesHost(status, hostRoot)) {
-      return _CCPubHookWatchResult(
+      return CCWatchReuseResult(
         succeeded: false,
         cycle: 0,
         message: 'active watch status became unavailable',
@@ -1179,7 +1390,7 @@ Future<_CCPubHookWatchResult?> _waitForPostPubWatch(
         (lastEvent == 'ready' ||
             (lastEvent == 'aggregationSucceeded' &&
                 (!sessionChanged || sessionReady)))) {
-      return _CCPubHookWatchResult(
+      return CCWatchReuseResult(
         succeeded: true,
         cycle: cycle,
         message: 'active watch aggregation succeeded',
@@ -1215,7 +1426,7 @@ Future<_CCPubHookWatchResult?> _waitForPostPubWatch(
                 'during the cycle; a new cycle or watch session is required'
           : 'active watch cycle $cycle failed without a matching Pub '
                 'resolution proof; a new cycle or watch session is required';
-      return _CCPubHookWatchResult(
+      return CCWatchReuseResult(
         succeeded: false,
         cycle: cycle,
         message: message,
@@ -1224,7 +1435,7 @@ Future<_CCPubHookWatchResult?> _waitForPostPubWatch(
       );
     }
     if (!await _pubHookWatchIsActive(status)) {
-      return _CCPubHookWatchResult(
+      return CCWatchReuseResult(
         succeeded: false,
         cycle: cycle,
         message: 'active watch stopped before post-pub aggregation completed',
@@ -1235,7 +1446,7 @@ Future<_CCPubHookWatchResult?> _waitForPostPubWatch(
     await Future<void>.delayed(const Duration(milliseconds: 200));
   }
   final latestStatus = status!;
-  return _CCPubHookWatchResult(
+  return CCWatchReuseResult(
     succeeded: false,
     cycle: latestStatus['cycle'] as int,
     message:

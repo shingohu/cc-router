@@ -188,11 +188,17 @@ explicit Hot Restart receives a successful daemon response. This does not cover
 interactive terminal `r` and does not parse Flutter daemon stdout except for
 the matching Hot Restart response. Use
 `CCROUTER_DISABLE_HOT_RELOAD_GATE=1` for an isolated fallback.
-One-shot generate, check, and clean commands fail fast when that root already
-has an active watch; wait for `aggregationSucceeded` during iteration, then
-stop the watch before the final reference gate. Do not retry the blocked command
-in a polling loop. Starting watch while a one-shot command owns or awaits the
-root lock also fails fast; retry watch only after that command completes.
+Ordinary one-shot `generate` and `generate --check` commands reuse an active
+watch instead of starting a second writer. They return success only after exact
+current Pub-resolution, authored-input, and managed-output evidence matches a
+successful Host or Package cycle. Watch failure, exit, unavailable evidence,
+or the bounded five-minute wait remains fail-closed. `--no-cache`, `--profile`,
+custom `--output-dir`, `portable prepare`, and `clean` still fail fast because
+watch evidence cannot satisfy their distinct execution or mutation semantics.
+Use `CCROUTER_DISABLE_ONE_SHOT_WATCH_REUSE=1` only to restore the former
+reject-only path for A/B. Stop the watch before the final reference gate.
+Starting watch while a one-shot command owns or awaits the root lock also fails
+fast; retry watch only after that command completes.
 Watch detects exact Pub-resolution changes independently of build_runner's
 source events. A covered version or dependency-edge change runs a
 `resolutionStarted` aggregation cycle without claiming that Builder ran. A new

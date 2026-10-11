@@ -311,6 +311,7 @@ Future<void> _runCommand(List<String> arguments) async {
   if (parsed.command == _GeneratorCommand.generate &&
       projectRole?.role == CCProjectRole.host &&
       parsed.outputDirectoryPath == null &&
+      !generation.reusedActiveWatch &&
       Platform.environment[_watchCycleEnvironment] != '1') {
     try {
       await CCOneShotGenerationDiagnosticsPublisher.publish(
@@ -2910,8 +2911,10 @@ final class _GenerationWatchActiveException implements Exception {
   _GenerationWatchActiveException(Directory buildRoot)
     : message =
           'An active CCRouter generation watch owns ${buildRoot.path}. '
-          'Stop the watch before running a one-shot generate, check, or clean '
-          'command; while it is active, wait for aggregationSucceeded instead.';
+          'This command requires an independent generation transaction or '
+          'active-watch reuse is disabled. Stop the watch before running '
+          '--no-cache, --profile, custom-output, portable, or clean paths; '
+          'ordinary generate/check can reuse exact watch evidence when enabled.';
 
   _GenerationWatchActiveException.legacy(Directory buildRoot)
     : message =

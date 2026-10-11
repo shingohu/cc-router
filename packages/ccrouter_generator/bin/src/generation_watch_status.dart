@@ -53,6 +53,8 @@ final class _GenerationWatchStatusTracker {
   String? _completedResolutionFingerprint;
   String? _cycleResolutionState;
   int? _builderOwnerPid;
+  Map<String, Map<String, Object?>> _packageCompletionEvidence = const {};
+  String _packageCompletionEvidenceState = 'pending';
 
   /// Associates this Host status with the process owning build_runner.
   void setBuilderOwnerPid(int value) => _builderOwnerPid = value;
@@ -78,6 +80,8 @@ final class _GenerationWatchStatusTracker {
     _cycleResolutionState = null;
     _cycleInputRevision = _inputRevision;
     _failedInputRevision = null;
+    _packageCompletionEvidence = const {};
+    _packageCompletionEvidenceState = 'pending';
   }
 
   /// Identity of the currently supervised build_runner child session.
@@ -111,6 +115,8 @@ final class _GenerationWatchStatusTracker {
       _completedResolutionFingerprint = null;
       _cycleResolutionState = 'pending';
       _cycleResolutionFingerprint = await _captureResolutionFingerprint();
+      _packageCompletionEvidence = const {};
+      _packageCompletionEvidenceState = 'pending';
     }
     if (type == 'buildSucceeded') {
       _lastBuildElapsedMs = data['elapsedMs'] as int?;
@@ -126,6 +132,18 @@ final class _GenerationWatchStatusTracker {
       _failureStage = null;
       _completedInputRevision = _cycleInputRevision;
       _failedInputRevision = null;
+      final rawEvidence = data['packageCompletionEvidence'];
+      _packageCompletionEvidence = rawEvidence is Map
+          ? <String, Map<String, Object?>>{
+              for (final entry in rawEvidence.entries)
+                if (entry.key is String && entry.value is Map)
+                  entry.key as String: (entry.value as Map)
+                      .cast<String, Object?>(),
+            }
+          : const {};
+      _packageCompletionEvidenceState = _packageCompletionEvidence.isEmpty
+          ? 'unavailable'
+          : 'available';
       await _completeResolutionFingerprint();
     }
     if (type == 'failed') {
@@ -141,6 +159,8 @@ final class _GenerationWatchStatusTracker {
         },
       );
       _failedInputRevision = _cycleInputRevision;
+      _packageCompletionEvidence = const {};
+      _packageCompletionEvidenceState = 'unavailable';
       await _completeResolutionFingerprint();
       if (_failureStage == 'build') {
         _lastBuildElapsedMs = data['elapsedMs'] as int?;
@@ -214,6 +234,10 @@ final class _GenerationWatchStatusTracker {
         'resolutionFingerprint': _completedResolutionFingerprint,
       if (_cycleResolutionState != null)
         'cycleResolutionState': _cycleResolutionState,
+      'packageCompletionEvidenceVersion': 1,
+      'packageCompletionEvidenceState': _packageCompletionEvidenceState,
+      if (_packageCompletionEvidence.isNotEmpty)
+        'packageCompletionEvidence': _packageCompletionEvidence,
     };
     final statusContents =
         '${const JsonEncoder.withIndent('  ').convert(document)}\n';

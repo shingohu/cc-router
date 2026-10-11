@@ -559,7 +559,8 @@ Validator、聚合、输入栅栏、快照保护和原子发布；stdout 使用 
 等待 `ready` 和对应轮次的 `aggregationSucceeded`，不能把 `buildSucceeded` 当成完成证明。
 
 同一 build root 的多个 Host 共享 Builder owner，但分别拥有聚合、状态、诊断和 lease。
-one-shot generate/check/clean 与活动 watch 冲突时 fail-fast；Pub Hook 只有在 Host resolution
+普通 generate/check 与活动 watch 冲突时复用精确的当前完成证据，reference/profile/custom-output/
+portable/clean 路径仍 fail-fast；Pub Hook 只有在 Host resolution
 或 requested Package 的 Pub-resolution、authored-input、managed-output exact evidence 全部匹配时
 复用完成轮次。失败、拓扑变化、clean、进程退出和超时均 fail-closed，并保留 kill switch 用于
 differential A/B。watch 不替代最终实际 Host 的 `--no-cache --check`。

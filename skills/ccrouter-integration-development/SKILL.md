@@ -458,17 +458,23 @@ owner exits. Do not start a second watch for the same Host. An independently
 runnable nested Package Host with its own Pub root uses a separate watch. Set
 `CCROUTER_DISABLE_MULTI_HOST_WATCH=1` only for an A/B fallback. Stop all watches
 for the root before finishing with `--no-cache --check`.
-One-shot generation, check, and clean commands fail fast while that root watch
-is active. Wait for `aggregationSucceeded` instead of polling one-shot commands.
-Watch startup also fails fast while a one-shot command owns or awaits the root.
-Successful hooked Pub dependency commands are the exception: for the same Host,
-the Hook waits for the active watch cycle after the latest resolution input and
-reuses its completed aggregation. Watch failure diagnostics are surfaced and
-the Pub Hook remains fail-closed. A failure must belong to a new
+Ordinary `generate` and `generate --check` commands reuse an active root watch
+only after exact current Pub-resolution, authored-input, and managed-output
+evidence matches a successful Host or Package cycle. They do not start a second
+writer. Watch failure, exit, unavailable evidence, or the bounded five-minute
+wait remains fail-closed. `--no-cache`, `--profile`, custom output, portable
+prepare, and clean retain fail-fast semantics; stop the watch before the final
+reference gate or destructive cleanup. Use
+`CCROUTER_DISABLE_ONE_SHOT_WATCH_REUSE=1` only for the former reject-only A/B
+path. Watch startup also fails fast while a one-shot command owns or awaits the
+root. Hooked Pub dependency commands use the same coordination principle, but
+fence specifically on the resolution change that triggered the Hook. Watch
+failure diagnostics are surfaced and the Pub Hook remains fail-closed. A
+failure must belong to a new
 `sessionId/cycle/eventRevision` after the wait begins; resolution churn returns
 immediately and requires another cycle/session, while success still requires an
-exact current fingerprint. This does not permit arbitrary one-shot generation
-beside a watch or reuse status belonging to another Host. Use
+exact current fingerprint. This does not permit a second generation writer or
+reuse status belonging to another Host. Use
 `CCROUTER_DISABLE_PUB_HOOK_WATCH_FAILURE_FENCE=1` only for legacy A/B fallback.
 For a package-local Pub command in the same build root, a Host watch target name
 alone is not completion evidence. A successful cycle publishes exact per-target

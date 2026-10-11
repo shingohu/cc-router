@@ -2,6 +2,10 @@
 
 ## 0.1.0 - Unreleased
 
+- Let ordinary `generate` and `generate --check` reuse exact current Host or
+  Package completion evidence from an active watch instead of failing on its
+  long-lived generation lock. Reference, profile, custom-output, portable, and
+  clean paths remain fail-fast, with an A/B kill switch for the former behavior.
 - Separated generated Route consumer APIs from owner bindings. Stable
   `<package>.contracts.api.g.dart` entries now export only Route types;
   generated registration and page glue use `XxxRouteContractBinding.definition`,
@@ -69,10 +73,10 @@
 - Removed redundant fast-path and Build Plan inspection after a successful
   watch Builder cycle while retaining all validation and input barriers; added
   `CCROUTER_DISABLE_WATCH_CYCLE_OPTIMIZATION` for reference-path comparison.
-- One-shot generation, check, and clean commands now fail with an actionable
-  diagnostic instead of waiting indefinitely behind an active root watch;
-  watch startup also fails fast while a one-shot command owns or awaits the
-  root generation lock.
+- One-shot reference/profile/custom-output/portable and clean commands fail
+  with an actionable diagnostic instead of waiting indefinitely behind an
+  active root watch; watch startup also fails fast while a one-shot command
+  owns or awaits the root generation lock.
 - Watch aggregation cycles now execute through the generator kernel in process,
   avoiding a fresh Dart/generator startup after every successful Builder cycle.
   `CCROUTER_DISABLE_WATCH_IN_PROCESS_CYCLE=1` restores the subprocess reference

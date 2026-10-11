@@ -908,9 +908,14 @@ journal. Both live under the stable project coordination directory, so project
 cleanup cannot silently permit a second writer or erase recovery evidence. The
 legacy coordination kill switch moves both back under `.dart_tool` only for A/B;
 an active lock in the other protocol makes the command fail fast.
-One-shot generate, check, and clean commands fail fast while the root watch is
-active. Iterative clients should wait for `aggregationSucceeded`; they must not
-poll a command that cannot own the lock. Watch startup also fails fast while a
+Ordinary `generate` and `generate --check` commands encountering the root watch
+lock wait for a successful cycle and validate exact current Pub resolution,
+authored inputs, and managed outputs. A match reuses the cycle without starting
+a second writer; watch failure, exit, missing evidence, or the bounded timeout
+stays fail-closed. `--no-cache`, `--profile`, custom output, portable prepare,
+and clean still fail fast because their semantics require an independent path.
+Set `CCROUTER_DISABLE_ONE_SHOT_WATCH_REUSE=1` only for reject-only A/B. Stop the
+watch before the final reference gate. Watch startup also fails fast while a
 one-shot command owns or awaits that root.
 The installed Flutter wrapper likewise fail-fast guards a real top-level
 `flutter clean` while the build root has an active watch. Stop the run/watch
@@ -926,11 +931,11 @@ and waits for the active watch's terminal aggregation event. Success reuses
 that cycle. A monotonic `eventRevision` within one `sessionId` rejects historical
 failures; a new failure after resolution churn returns immediately with bounded
 diagnostics and requires a new cycle/session. Success never accepts a mismatched
-resolution fingerprint. Set
+resolution fingerprint. This Hook fence is narrower than manual one-shot reuse,
+which additionally proves current authored and managed-output bytes. Set
 `CCROUTER_DISABLE_PUB_HOOK_WATCH_FAILURE_FENCE=1` only to compare the legacy
 fingerprint-only failure wait. Exit, unavailable state, or timeout stays
-fail-closed. This exception is specific to post-pub coordination, not permission
-for concurrent one-shot generation.
+fail-closed. Neither path permits concurrent generation writers.
 Package-local Pub in the same build root may reuse a Host watch only with
 versioned per-target evidence. The successful cycle publishes exact Pub
 resolution, authored-input, and managed-output fingerprints; the Hook
