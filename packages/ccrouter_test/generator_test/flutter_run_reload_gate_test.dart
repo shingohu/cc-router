@@ -228,7 +228,7 @@ void main() {
       final original = File(path.join(host.path, 'fake-flutter-exit'))
         ..writeAsStringSync('#!/usr/bin/env bash\nexit 23\n');
       final chmod = await Process.run('chmod', <String>['+x', original.path]);
-      expect(chmod.exitCode, 0, reason: '${chmod.stderr}');
+      expect(chmod.exitCode, 0, reason: '${chmod.stderr}');
 
       final result = await CCFlutterRunSupervisor(
         originalFlutter: original.path,
@@ -255,7 +255,7 @@ void main() {
       final original = File(path.join(host.path, 'fake-flutter-exit'))
         ..writeAsStringSync('#!/usr/bin/env bash\nexit 0\n');
       final chmod = await Process.run('chmod', <String>['+x', original.path]);
-      expect(chmod.exitCode, 0, reason: '${chmod.stderr}');
+      expect(chmod.exitCode, 0, reason: '${chmod.stderr}');
 
       final process = await Process.run(Platform.resolvedExecutable, <String>[
         'run',
@@ -270,9 +270,9 @@ void main() {
         'run',
       ], workingDirectory: Directory.current.path);
 
-      expect(process.exitCode, 0, reason: '${process.stderr}');
+      expect(process.exitCode, 0, reason: '${process.stderr}');
       expect(
-        '${process.stdout}',
+        '${process.stdout}',
         allOf(contains('not generation-gated'), contains('pressing r or R')),
       );
       expect(lease.existsSync(), isFalse);
@@ -398,7 +398,7 @@ void _writeStatus(
   bool hotRestartRequired = false,
 }) {
   _statusFile(host).writeAsStringSync(
-    '${jsonEncode(<String, Object?>{'schemaVersion': 1, 'state': lastEvent, 'active': true, 'lastEvent': lastEvent, 'pid': pid, 'sessionId': 'session-1', 'eventRevision': 1, 'sessionReady': true,[...] )}\n',
+    '${jsonEncode(<String, Object?>{'schemaVersion': 1, 'state': lastEvent, 'active': true, 'lastEvent': lastEvent, 'pid': pid, 'sessionId': 'session-1', 'eventRevision': 1, 'sessionReady': true, 'cycle': 1, 'inputRevision': inputRevision, 'cycleInputRevision': inputRevision, 'completedInputRevision': completedInputRevision, if (failedInputRevision != null) 'failedInputRevision': failedInputRevision, 'hotRestartRequired': hotRestartRequired, 'startedAt': DateTime.now().toUtc().toIso8601String(), 'updatedAt': DateTime.now().toUtc().toIso8601String(), 'hostRoot': host.path, 'buildRoot': host.path, 'managedByLease': true, if (failureStage != null) 'failureStage': failureStage, if (failureDiagnostics != null) 'failureDiagnostics': failureDiagnostics, if (cycleResolutionState != null) 'cycleResolutionState': cycleResolutionState})}\n',
   );
 }
 
@@ -410,7 +410,7 @@ printf "%s\\n" "\$line" > "${trace.path}"
 exit 0
 ''');
   final chmod = await Process.run('chmod', <String>['+x', file.path]);
-  expect(chmod.exitCode, 0, reason: '${chmod.stderr}');
+  expect(chmod.exitCode, 0, reason: '${chmod.stderr}');
   return file;
 }
 
@@ -421,7 +421,7 @@ cat >/dev/null
 printf "eof\\n" > "${trace.path}"
 ''');
   final chmod = await Process.run('chmod', <String>['+x', file.path]);
-  expect(chmod.exitCode, 0, reason: '${chmod.stderr}');
+  expect(chmod.exitCode, 0, reason: '${chmod.stderr}');
   return file;
 }
 
@@ -457,17 +457,6 @@ bool _hasHeartbeat(File lease) {
   }
 }
 
-// Fallback helper to send SIGTERM using the system kill(1) command
-// if Process.kill fails to deliver the signal reliably on CI.
-Future<bool> _killWithKillCmd(int pid) async {
-  try {
-    final result = await Process.run('kill', ['-TERM', pid.toString()]);
-    return result.exitCode == 0;
-  } catch (_) {
-    return false;
-  }
-}
-
 Future<void> _assertLeaseRemovedBeforeChildExit({
   required bool coordinateMachineReloads,
 }) async {
@@ -485,7 +474,7 @@ touch "${ready.path}"
 while true; do sleep 1; done
 ''');
   final chmod = await Process.run('chmod', <String>['+x', original.path]);
-  expect(chmod.exitCode, 0, reason: '${chmod.stderr}');
+  expect(chmod.exitCode, 0, reason: '${chmod.stderr}');
   final arguments = <String>[
     'run',
     'ccrouter_generator:ccrouter_flutter_run_supervisor',
@@ -508,32 +497,10 @@ while true; do sleep 1; done
   final errors = process.stderr.transform(utf8.decoder).join();
   await _waitFor(() => ready.existsSync() && _hasHeartbeat(lease));
 
-  final bool killed =
-      process.kill(ProcessSignal.sigterm) || await _killWithKillCmd(process.pid);
-  expect(
-    killed,
-    isTrue,
-    reason: 'failed to send SIGTERM to supervisor process (pid=${process.pid})',
-  );
-
+  expect(process.kill(ProcessSignal.sigterm), isTrue);
   await _waitFor(() => terminationStarted.existsSync());
   await _waitFor(() => !lease.existsSync());
-
-  // If the child already exited very quickly, assert ordering: lease removed
-  // must be before the child exit. Otherwise preserve original expectation.
-  if (childExited.existsSync()) {
-    final leaseRemovedAt = DateTime.now();
-    final childExitAt = childExited.statSync().modified;
-    expect(
-      leaseRemovedAt.isBefore(childExitAt) ||
-          leaseRemovedAt.isAtSameMomentAs(childExitAt),
-      isTrue,
-      reason:
-          'lease must be removed before child exit (lease removed at $leaseRemovedAt, child exited at $childExitAt)',
-    );
-  } else {
-    expect(childExited.existsSync(), isFalse);
-  }
+  expect(childExited.existsSync(), isFalse);
 
   final result = await process.exitCode.timeout(const Duration(seconds: 10));
   expect(result, isNot(1), reason: await errors);
