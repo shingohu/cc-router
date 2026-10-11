@@ -97,6 +97,12 @@ OHOS 原生模块位于 `ohos/`。在该目录中可使用：
 devecocli build
 ```
 
+根 `ohos/hvigorfile.ts` 在 Flutter `FlutterTask` 前注册 CCRouter preflight。它使用
+`ohos/local.properties` 中 Flutter SDK 自带的 Dart 执行与 `flutter build` wrapper 相同的
+Host generation：没有 watch 时执行 one-shot；已有 active watch 时等待并复用当前精确 cycle，
+不会启动第二个 writer。只有生成或校验失败才阻止 HAP 编译。紧急恢复或 A/B 可对单次构建设置
+`CCROUTER_DISABLE_HVIGOR_PREFLIGHT=1`；绕过后需自行先运行 Host generation check。
+
 仓库不保存 OHOS 签名证书、Profile、KeyStore 路径或密码。真机安装或签名构建前，开发者应
 在本机 DevEco Studio 中配置自己的签名材料，并确保这些本地值不会提交到
 `ohos/build-profile.json5`。

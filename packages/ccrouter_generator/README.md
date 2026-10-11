@@ -201,6 +201,10 @@ arity 定位真实 top-level command 和 Pub subcommand；参数值中
 出现 `pub`、`run`、`build` 或 `get` 不会触发 Hook，未知 global option 则安全交还原 CLI。
 完整退出码语义、FVM 版本切换和禁用方式见
 [`docs/CCRouter-cli-pub-hook.md`](https://github.com/shingohu/cc-router/blob/main/docs/CCRouter-cli-pub-hook.md)。
+普通 `flutter build` preflight 在 active watch 下会验证并复用精确 cycle 后继续平台构建，
+成功摘要保留 `reused active watch cycle`。DevEco/Hvigor 直构建绕过 Flutter wrapper；OHOS
+Host 需要在 Flutter Hvigor `FlutterTask` 前调用同一 `pub-hook run --pub-command build`，参考
+仓库 `demo/ohos/ccrouter-preflight.js` 与 `hvigorfile.ts`。
 `--verbosity=error` 只压低 Dart/Pub 在 CLI 启动前的依赖解析和 executable 构建噪声，
 不会隐藏 CCRouter 自己的进度、诊断或失败。
 

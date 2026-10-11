@@ -156,6 +156,8 @@ terminal failure 快速栅栏，恢复旧的 fingerprint-only 失败判断与有
 3. 生成器使用自身的内容 fingerprint fast path；没有变化时只做有界校验，不重复运行完整
    Builder。并发调用仍由生成锁串行化。
 4. 预生成失败会阻止原始 `flutter run/build`，避免启动或 Release 构建消费陈旧生成物。
+   active watch 本身不是失败：普通 `generate` 会等待当前 Pub resolution、authored input 与
+   managed output 的精确成功证据，命中后输出 `reused active watch cycle` 并继续原始构建。
 5. 没有 Package config、普通 Flutter 项目或还未完成首次 `pub get` 时安全跳过；后续
    `flutter pub get` 成功后会执行一次正常的 post-pub 生成。
 6. `flutter run` 的 preflight 成功后，POSIX 与 Windows wrapper 都把生命周期交给同一个 Dart
@@ -182,6 +184,24 @@ terminal failure 快速栅栏，恢复旧的 fingerprint-only 失败判断与有
 
 Hook 不默认采集详细 profile。遇到慢生成时，在独立终端显式运行 `generate <host> --profile`
 定位阶段耗时；性能 benchmark 或 AI 诊断也应显式传入该参数。
+
+## DevEco/Hvigor 直接构建
+
+DevEco Studio 或 `devecocli build` 直接执行 Hvigor，不进入上述 Flutter wrapper。OHOS Host
+必须把 CCRouter preflight 放在 Flutter Hvigor `FlutterTask` 之前，而不是仅检查“是否存在
+watch”后放行。推荐 task 使用 `ohos/local.properties` 解析到的 Flutter SDK 内置 Dart 执行：
+
+```text
+dart run --verbosity=error ccrouter_generator:ccrouter pub-hook run \
+  --project-root <host-root> --pub-command build
+```
+
+该公开入口与 Flutter build preflight 语义一致：watch 不活跃时运行普通 one-shot，watch 活跃
+时由普通 `generate` 等待并复用精确 cycle；只有生成、校验、watch 失败或证据不可用时才阻止
+Hvigor 后续编译。不要传 `--no-cache`、`--profile` 或自定义 output，这些路径不能由 watch
+证据满足。仓库 Demo 的可执行参考位于 `demo/ohos/ccrouter-preflight.js` 和
+`demo/ohos/hvigorfile.ts`。`CCROUTER_DISABLE_HVIGOR_PREFLIGHT=1` 只用于单次恢复或 A/B；绕过后
+调用者负责在构建前完成 Host generation check。
 
 后台 watch 的权威锁、Host registration、Flutter-run lease 与 Analyzer CLI 写事务位于用户级 `CCROUTER_HOME`：macOS/Linux 默认
 `~/.ccrouter`，Windows 默认 `%LOCALAPPDATA%\CCRouter`。canonical build root 与 Host 分别使用

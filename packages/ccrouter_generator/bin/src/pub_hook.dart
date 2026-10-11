@@ -1599,6 +1599,7 @@ final class _CCPubHookOutput {
       line.startsWith('Generated Package artifacts for ') ||
       line == 'CCRouter generated artifacts are up to date.' ||
       line.startsWith('CCRouter generation fast path hit;') ||
+      line.startsWith('CCRouter generation reused active watch cycle ') ||
       line.startsWith('CCRouter generation aggregate-only path;') ||
       line.startsWith('Bootstrapped generated component APIs ');
 }

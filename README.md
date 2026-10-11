@@ -1242,6 +1242,16 @@ watch 的 Pub Hook 直接启动默认 `generate <requested-root>`；活动 watch
 等待与当前 Pub resolution 精确匹配的 `aggregationSucceeded`，不并发启动第二个 one-shot。
 package-local Hook 也只有在 stable Builder session 发布的 requested Package Pub resolution、
 authored input 和 managed output 指纹全部匹配时才复用，否则 fail closed。
+`flutter build` preflight 走普通 `generate`，因此 active watch 存在时也会验证并复用同一份
+精确证据，而不是因为 generation lock 被长期持有就拒绝 Android、iOS 或 `flutter build hap`；
+成功摘要会保留 `reused active watch cycle` 以便确认该路径。
+
+DevEco Studio/Hvigor 直接构建不会经过 Flutter wrapper。OHOS Host 应像 `demo/ohos` 一样把
+`CCRouterPreflight` 注册为 Flutter Hvigor `FlutterTask` 的前置 task，并通过
+`ohos/local.properties` 所解析 Flutter SDK 的 Dart 执行同一个
+`pub-hook run --project-root <host> --pub-command build`。没有 watch 时它正常 one-shot 生成；
+有 watch 时普通生成会等待并复用精确 cycle，只有真实生成/校验失败才阻止 Hvigor 编译。
+不要在这个 task 中使用 `--no-cache`，该参考路径在 active watch 下仍按设计 fail-fast。
 
 各入口的性能不能直接互换：watch 复用常驻 build_runner AOT entrypoint 和 Analyzer graph，并增加
 in-process cycle/evidence reuse；普通 one-shot 可命中 fast path；`--no-cache --check` 则强制权威
@@ -1551,6 +1561,8 @@ SDK 解析优先使用 `FLUTTER_ROOT` 和当前目录向上的 `.fvm/flutter_sdk
 `ccrouter_generator` 时直接跳过。app-role Host 运行完整 Host generation；Flutter component 与
 Pure Dart contracts Package 运行 package-local generation。因此 Workspace 聚合根不会被误判为
 Host；Hook 不会猜测某个成员 Package 代替当前目录生成。
+preflight 遇到 active watch 时由普通 `generate` 验证并复用精确 Host/Package cycle，成功后继续
+原始平台构建；它不会仅因 watch 持有 generation lock 而拒绝构建。
 wrapper 按已知 global option 的 arity 定位第一个真实 Flutter/Dart command，再只读取 `pub`
 后的第一个真实 subcommand；option value、脚本参数或后续业务参数中的 `pub`/`run`/`build` 不会
 误触发生成。无法判断 arity 的未知 global option 会安全跳过 Hook 并交给原 CLI；可用

@@ -112,6 +112,18 @@ directly remains outside the boundary. Flutter Tool's internal implicit
 Packages run package-local generation. A Workspace aggregator is skipped even
 when its resolved graph contains CCRouter Packages.
 
+Flutter build preflight uses ordinary generation. If the same root already has
+an active watch, it validates and reuses exact current cycle evidence before
+continuing Android, iOS, or `flutter build hap`; watch ownership alone is not a
+build failure. DevEco/Hvigor direct builds bypass this wrapper. Register a Host-
+owned Hvigor task before the Flutter plugin's `FlutterTask`, resolve Dart from
+`ohos/local.properties`' Flutter SDK, and invoke
+`ccrouter_generator:ccrouter pub-hook run --project-root <host> --pub-command
+build`. This performs one-shot generation while idle or exact watch reuse while
+active. Do not request `--no-cache`, profiling, or custom output from this task.
+Keep a dedicated bypass environment variable for recovery/A/B only and run the
+Host generation gate separately whenever it is used.
+
 Use the generator CLI to create a new component Package or an internal Route
 page when starting a feature:
 

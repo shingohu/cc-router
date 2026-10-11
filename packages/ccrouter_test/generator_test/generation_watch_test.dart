@@ -11,6 +11,7 @@ import 'package:test/test.dart';
 
 import '../../ccrouter_generator/bin/src/coordination_home.dart';
 import '../../ccrouter_generator/bin/src/flutter_run_watch_lease.dart';
+import '../../ccrouter_generator/bin/src/pub_hook.dart';
 import 'support/real_workspace_test_lock.dart';
 
 late Directory _testCoordinationHome;
@@ -860,6 +861,54 @@ void main() {
       }
     },
     timeout: const Timeout(Duration(minutes: 3)),
+  );
+
+  test(
+    'installed flutter build preflight reuses an active watch',
+    () async {
+      final sdk = await Directory.systemTemp.createTemp(
+        'ccrouter_watch_build_wrapper_',
+      );
+      addTearDown(() => sdk.delete(recursive: true));
+      final bin = Directory(path.join(sdk.path, 'bin'))..createSync();
+      final trace = File(path.join(sdk.path, 'flutter-trace.txt'));
+      final flutter = File(path.join(bin.path, 'flutter'))
+        ..writeAsStringSync('''#!/usr/bin/env bash
+printf '%s\\n' "\$@" > "\$CCROUTER_TEST_TRACE"
+''');
+      final dart = File(path.join(bin.path, 'dart'))
+        ..writeAsStringSync('''#!/usr/bin/env bash
+exec ${_shellQuote(Platform.resolvedExecutable)} "\$@"
+''');
+      final innerDart = File(
+        path.join(bin.path, 'cache', 'dart-sdk', 'bin', 'dart'),
+      )..parent.createSync(recursive: true);
+      innerDart.writeAsStringSync('#!/usr/bin/env bash\nexit 0\n');
+      await Future.wait([
+        Process.run('chmod', ['+x', flutter.path]),
+        Process.run('chmod', ['+x', dart.path]),
+        Process.run('chmod', ['+x', innerDart.path]),
+      ]);
+      await CCPubHookManager(sdk).install();
+      ProcessResult? build;
+
+      await _runWatchUntilReady(
+        onReady: () async {
+          build = await Process.run(
+            flutter.path,
+            const ['build', 'apk', '--debug'],
+            workingDirectory: path.join(Directory.current.path, 'demo'),
+            environment: _environment({'CCROUTER_TEST_TRACE': trace.path}),
+          ).timeout(const Duration(minutes: 1));
+        },
+      );
+
+      expect(build, isNotNull);
+      expect(build!.exitCode, 0, reason: '${build!.stderr}');
+      expect('${build!.stdout}', contains('reused active watch cycle'));
+      expect(trace.readAsLinesSync(), const ['build', 'apk', '--debug']);
+    },
+    timeout: const Timeout(Duration(minutes: 4)),
   );
 
   test(
@@ -2030,3 +2079,5 @@ String get _generatorEntrypoint => path.join(
   'bin',
   'ccrouter.dart',
 );
+
+String _shellQuote(String value) => "'${value.replaceAll("'", "'\"'\"'")}'";

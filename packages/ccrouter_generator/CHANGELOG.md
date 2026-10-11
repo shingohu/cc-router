@@ -6,6 +6,10 @@
   Package completion evidence from an active watch instead of failing on its
   long-lived generation lock. Reference, profile, custom-output, portable, and
   clean paths remain fail-fast, with an A/B kill switch for the former behavior.
+- Kept active-watch reuse evidence in successful Flutter build preflight output
+  and added an OHOS Demo Hvigor preflight before Flutter asset compilation.
+  Direct DevEco builds now run one-shot generation when idle or reuse exact
+  watch evidence instead of consuming stale generated artifacts.
 - Separated generated Route consumer APIs from owner bindings. Stable
   `<package>.contracts.api.g.dart` entries now export only Route types;
   generated registration and page glue use `XxxRouteContractBinding.definition`,

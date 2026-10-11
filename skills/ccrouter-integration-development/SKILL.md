@@ -328,6 +328,16 @@ separately. Generator graph/snapshot optimizations and the Analyzer alias index
 are default-on, while Analyzer tiered polling remains maintainer-only opt-in and
 requires an Analysis Server restart after changing its process environment.
 
+Flutter `run/build` preflight uses ordinary generation, so an active watch must
+be validated and reused rather than treated as a lock-conflict failure. Direct
+DevEco/Hvigor builds bypass the Flutter wrapper: an OHOS Host must register a
+pre-Flutter Hvigor task that runs
+`ccrouter pub-hook run --project-root <host-root> --pub-command build` through
+the Dart executable belonging to the SDK resolved by `ohos/local.properties`.
+With no watch it performs one-shot generation; with a watch it reuses exact
+current evidence. Do not attach `--no-cache`, profiling, or custom-output
+semantics to that task, and keep any bypass isolated to recovery/A/B.
+
 The repository Workspace root is an aggregator rather than a Host. The Pub Hook
 skips any current Package that does not directly declare `ccrouter` or
 `ccrouter_contracts`, even when its resolved Workspace graph contains CCRouter

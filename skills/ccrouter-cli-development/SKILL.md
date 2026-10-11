@@ -363,6 +363,18 @@ path, validation summary, and final elapsed time; Hook does not enable detailed
 profiling by default. Failure preserves the recent
 bounded generator tail so actionable Builder errors remain visible without
 unbounded buffering or routine console noise.
+An active watch is not itself a run/build preflight failure. The ordinary
+`generate` child validates exact current Pub-resolution, authored-input, and
+managed-output evidence, prints the reused watch cycle in the concise success
+summary, and then lets the original Flutter build continue.
+DevEco/Hvigor direct builds do not enter the Flutter wrapper. An OHOS Host must
+register a task before the Flutter Hvigor `FlutterTask` that invokes
+`pub-hook run --project-root <host-root> --pub-command build` with the Dart
+executable from its resolved Flutter SDK. This runs one-shot generation when no
+watch is active and reuses exact watch evidence otherwise. Do not use
+`--no-cache`, `--profile`, or custom output in that task. A Host may expose an
+isolated bypass such as `CCROUTER_DISABLE_HVIGOR_PREFLIGHT=1` only for recovery
+or A/B, with an explicit generation check performed separately.
 When the same Host already has an active watch, post-pub generation waits for
 an `aggregationSucceeded` event published after the latest Pub resolution
 input instead of starting a conflicting one-shot command. A Builder,
