@@ -221,11 +221,25 @@ Future<Map<String, Object?>?> _readWatchStartupStatus(File file) async {
 
 /// Proves that the ready status still has a live exclusive watch owner.
 Future<bool> _watchStartupOwnerIsHeld(Directory buildRoot) async {
-  final owner = ccrouterWatchOwnerLockFile(buildRoot);
+  // Check both the selected V2 owner lock and the legacy V1 owner lock.
+  final selected = ccrouterWatchOwnerLockFile(buildRoot);
+  final legacy = legacyCCRouterWatchOwnerLockFile(buildRoot);
+
+  final selectedHeld = await _ownerFileIsHeld(selected);
+  final legacyHeld = path.equals(selected.path, legacy.path)
+      ? false
+      : await _ownerFileIsHeld(legacy);
+
+  return selectedHeld || legacyHeld;
+}
+
+/// Returns true when [owner] is currently exclusively held by another process.
+Future<bool> _ownerFileIsHeld(File owner) async {
   if (!owner.existsSync()) return false;
   RandomAccessFile? opened;
   try {
     opened = await owner.open(mode: FileMode.append);
+    // Try to acquire a shared lock; if this throws, an exclusive lock exists.
     await opened.lock(FileLock.shared);
     await opened.unlock();
     return false;
