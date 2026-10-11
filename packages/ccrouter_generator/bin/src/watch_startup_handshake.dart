@@ -131,19 +131,35 @@ Future<CCWatchStartupResult> waitForCCWatchStartup({
             sessionId: status['sessionId'] as String?,
           );
         }
-        if (status['sessionReady'] == true &&
-            await _watchStartupOwnerIsHeld(
-              Directory(status['buildRoot'] as String),
-            )) {
-          watch.stop();
-          return CCWatchStartupResult(
-            outcome: CCWatchStartupOutcome.ready,
-            message: 'watch session is ready',
-            elapsed: watch.elapsed,
-            logFile: logFile,
-            pid: status['pid'] as int?,
-            sessionId: status['sessionId'] as String?,
+        if (status['sessionReady'] == true) {
+          final ownership = await _watchStartupOwnership(
+            Directory(status['buildRoot'] as String),
           );
+          if (ownership == _WatchStartupOwnership.legacyConflict) {
+            watch.stop();
+            return CCWatchStartupResult(
+              outcome: CCWatchStartupOutcome.failed,
+              message:
+                  'a legacy CCRouter generation owner is still active; '
+                  'stop it and reinstall the current Pub Hook before '
+                  'starting a V2 watch',
+              elapsed: watch.elapsed,
+              logFile: logFile,
+              pid: status['pid'] as int?,
+              sessionId: status['sessionId'] as String?,
+            );
+          }
+          if (ownership == _WatchStartupOwnership.held) {
+            watch.stop();
+            return CCWatchStartupResult(
+              outcome: CCWatchStartupOutcome.ready,
+              message: 'watch session is ready',
+              elapsed: watch.elapsed,
+              logFile: logFile,
+              pid: status['pid'] as int?,
+              sessionId: status['sessionId'] as String?,
+            );
+          }
         }
       } else if (observedLease) {
         watch.stop();
@@ -219,18 +235,25 @@ Future<Map<String, Object?>?> _readWatchStartupStatus(File file) async {
   }
 }
 
-/// Proves that the ready status still has a live exclusive watch owner.
-Future<bool> _watchStartupOwnerIsHeld(Directory buildRoot) async {
-  // Check both the selected V2 owner lock and the legacy V1 owner lock.
+enum _WatchStartupOwnership { held, legacyConflict, missing }
+
+/// Classifies ownership for the coordination protocol selected by this process.
+Future<_WatchStartupOwnership> _watchStartupOwnership(
+  Directory buildRoot,
+) async {
   final selected = ccrouterWatchOwnerLockFile(buildRoot);
   final legacy = legacyCCRouterWatchOwnerLockFile(buildRoot);
-
-  final selectedHeld = await _ownerFileIsHeld(selected);
-  final legacyHeld = path.equals(selected.path, legacy.path)
-      ? false
-      : await _ownerFileIsHeld(legacy);
-
-  return selectedHeld || legacyHeld;
+  if (path.equals(selected.path, legacy.path)) {
+    return await _ownerFileIsHeld(selected)
+        ? _WatchStartupOwnership.held
+        : _WatchStartupOwnership.missing;
+  }
+  if (await _ownerFileIsHeld(legacy)) {
+    return _WatchStartupOwnership.legacyConflict;
+  }
+  return await _ownerFileIsHeld(selected)
+      ? _WatchStartupOwnership.held
+      : _WatchStartupOwnership.missing;
 }
 
 /// Returns true when [owner] is currently exclusively held by another process.

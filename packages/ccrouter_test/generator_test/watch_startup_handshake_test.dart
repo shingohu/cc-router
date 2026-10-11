@@ -80,6 +80,45 @@ void main() {
     expect('${result.stderr}', contains('initial generation'));
   });
 
+  test('rejects ready status backed only by a legacy V1 owner', () async {
+    final fixture = await _HandshakeFixture.create();
+    addTearDown(fixture.dispose);
+    final owner = await fixture.lockLegacyOwner();
+    addTearDown(() async {
+      await owner.unlock();
+      await owner.close();
+    });
+    fixture.writeStatus(lastEvent: 'ready', active: true, sessionReady: true);
+    final watch = Stopwatch()..start();
+
+    final result = await fixture.run();
+    watch.stop();
+
+    expect(result.exitCode, 1);
+    expect(watch.elapsed, lessThan(const Duration(seconds: 2)));
+    expect('${result.stderr}', contains('legacy CCRouter generation owner'));
+    expect('${result.stderr}', contains('reinstall the current Pub Hook'));
+  });
+
+  test(
+    'accepts the legacy owner when legacy coordination is selected',
+    () async {
+      final fixture = await _HandshakeFixture.create();
+      addTearDown(fixture.dispose);
+      final owner = await fixture.lockLegacyOwner();
+      addTearDown(() async {
+        await owner.unlock();
+        await owner.close();
+      });
+      fixture.writeStatus(lastEvent: 'ready', active: true, sessionReady: true);
+
+      final result = await fixture.run(useLegacyCoordination: true);
+
+      expect(result.exitCode, 0, reason: '${result.stderr}');
+      expect('${result.stdout}', contains('CCRouter watch ready'));
+    },
+  );
+
   test('fails immediately when the wrapper lease disappears', () async {
     final fixture = await _HandshakeFixture.create();
     addTearDown(fixture.dispose);
@@ -135,7 +174,15 @@ final class _HandshakeFixture {
   }
 
   Future<RandomAccessFile> lockOwner() async {
-    final owner = await ownerFile.open(mode: FileMode.append);
+    return _lock(ownerFile);
+  }
+
+  Future<RandomAccessFile> lockLegacyOwner() => _lock(
+    legacyCCRouterWatchOwnerLockFile(host)..parent.createSync(recursive: true),
+  );
+
+  Future<RandomAccessFile> _lock(File file) async {
+    final owner = await file.open(mode: FileMode.append);
     await owner.lock(FileLock.exclusive);
     return owner;
   }
@@ -156,6 +203,7 @@ final class _HandshakeFixture {
   Future<ProcessResult> run({
     int startupTimeoutMs = 500,
     int readyTimeoutMs = 1000,
+    bool useLegacyCoordination = false,
   }) => Process.run(
     Platform.resolvedExecutable,
     <String>[
@@ -175,6 +223,7 @@ final class _HandshakeFixture {
     environment: {
       ...Platform.environment,
       ccrouterHomeEnvironment: coordinationHome.path,
+      if (useLegacyCoordination) ccrouterLegacyCoordinationEnvironment: '1',
     },
   );
 
