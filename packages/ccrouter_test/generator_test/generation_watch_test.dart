@@ -10,6 +10,7 @@ import 'package:path/path.dart' as path;
 import 'package:test/test.dart';
 
 import '../../ccrouter_generator/bin/src/coordination_home.dart';
+import '../../ccrouter_generator/bin/src/bounded_process_shutdown.dart';
 import '../../ccrouter_generator/bin/src/flutter_run_watch_lease.dart';
 import '../../ccrouter_generator/bin/src/pub_hook.dart';
 import 'support/real_workspace_test_lock.dart';
@@ -1896,8 +1897,16 @@ Future<_WatchRun> _runWatchUntilReady({
       errors: errorLines,
     );
   } finally {
-    process.kill(ProcessSignal.sigterm);
     if (lease.existsSync()) await lease.delete();
+    // A failed assertion can reach this path before the watch has observed
+    // the deleted lease. Wait for the child to release its owner lock before
+    // the next test starts, escalating only if graceful shutdown stalls.
+    try {
+      await stopProcessWithEscalation(process);
+    } on Object {
+      // Preserve the original test failure; the process has still received
+      // bounded shutdown signals and the next test must not inherit it.
+    }
     await outputSubscription.cancel();
     await errorSubscription.cancel();
     if (leaseDirectory.existsSync() && leaseDirectory.listSync().isEmpty) {
