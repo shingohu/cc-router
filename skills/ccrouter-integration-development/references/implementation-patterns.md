@@ -860,6 +860,12 @@ which watches their target union. Each Host still owns its aggregation,
 validation, lease, status, diagnostics, and input revision; `builderOwnerPid`
 can differ from the Host process `pid`. A live subscriber takes over after the
 owner exits. A second watch for the same Host fails before status publication.
+Hook-managed concurrent `flutter run` sessions are a narrower case: they create
+one heartbeat lease per run and attach those leases to the existing Host watch,
+instead of starting a second writer. The watch survives individual run exits and
+stops only after its last valid lease disappears. A registration loser never
+publishes Host status; it waits for an exact attachment acknowledgement or
+retries after the exiting owner releases registration.
 Hosts with distinct Pub roots remain independent. Use
 `CCROUTER_DISABLE_MULTI_HOST_WATCH=1` only to compare the former exclusive-root
 behavior. Subscriber departure keeps the current target superset to avoid a
@@ -882,8 +888,9 @@ They never scan arbitrary values or trailing business arguments for command
 names; an unknown option with unproven arity bypasses the Hook and remains the
 original CLI's responsibility.
 Before the original Flutter Tool starts, the wrapper waits for `sessionReady`
-from the exact lease it launched and confirms that the build-root owner lock is
-still held. A process ID or `starting` line alone is not readiness. Entrypoint
+from either its primary watch lease or a watch-PID-bound acknowledgement that
+the active Host watch accepted that exact lease, and confirms that the build-root
+owner lock is still held. A process ID or `starting` line alone is not readiness. Entrypoint
 startup, ownership conflict, initial generation failure, exit, and timeout all
 fail closed with the watch log path. Use
 `CCROUTER_DISABLE_WATCH_STARTUP_HANDSHAKE=1` only for an isolated A/B fallback;
@@ -904,14 +911,17 @@ wrapper prints its pre-Flutter starting and ready summaries to stdout so IDEs
 do not render it as an error; failures remain on stderr. The stdin gate closes
 the original Flutter Tool's stdin when its IDE/AI parent reaches EOF, preserving
 the direct process lifecycle instead of retaining an orphaned child. On POSIX
-and Windows, one terminal-inheriting Dart supervisor owns watch startup and a
-versioned lease heartbeat for both machine and interactive runs. Handled exits delete the lease; if the supervisor
-is force-killed, watch expires the heartbeat and stops within a bounded interval.
+and Windows, one terminal-inheriting Dart supervisor owns each run's versioned
+lease heartbeat for both machine and interactive runs, while a detached
+coordinator keeps redirected watch output independent of any single supervisor.
+Handled exits delete only that run's lease; if a supervisor is force-killed,
+watch expires its heartbeat. The shared watch stops after its last lease expires.
 `CCROUTER_DISABLE_WINDOWS_RUN_SUPERVISOR=1` restores the former batch-only
 lifecycle for A/B comparison. This status channel is fail-open for direct
 generation and never changes locking,
 validation, artifact restoration, or atomic publication. The Hook still fails
-closed when this channel cannot prove readiness for its exact lease. If an abrupt
+closed when this channel cannot prove that the ready watch accepted its exact
+lease. If an abrupt
 exit leaves an `active` record, the read-only commands report it as `stale`
 after the owner lock is released without rewriting the historical status file.
 Analyzer `install/upgrade/uninstall` uses that same canonical build-root identity

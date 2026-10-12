@@ -19,8 +19,9 @@ Future<void> main(List<String> arguments) async {
     readyTimeout: Duration(milliseconds: parsed.readyTimeoutMs),
   );
   if (result.succeeded) {
+    final action = result.reusedExistingWatch ? 'reused' : 'ready';
     stdout.writeln(
-      'CCRouter watch ready (pid=${result.pid}, '
+      'CCRouter watch $action (pid=${result.pid}, '
       'elapsed=${result.elapsed.inMilliseconds}ms). '
       'Status: ${path.join(parsed.hostRoot!, '.dart_tool', 'ccrouter', 'v1', 'watch', 'status.json')}; '
       'log: ${result.logFile.path}',

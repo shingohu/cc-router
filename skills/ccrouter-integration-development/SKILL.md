@@ -380,13 +380,18 @@ explicitly for benchmarks or AI diagnosis of a slow run; only then require
 build_runner verbose durations and the complete cycle trace.
 When Flutter's Hook owns the background watch, use `watch status <host-root>`
 for one read-only snapshot or `watch follow <host-root>` for concise changes.
-POSIX and Windows use the same Dart supervisor; its project/Host-isolated lease
-lives under `CCROUTER_HOME`, while status, diagnostics, and logs remain local
-`.dart_tool` mirrors. A project clean must not be treated as Flutter-run exit.
+POSIX and Windows use the same Dart supervisor. Every concurrent run has its own
+project/Host-isolated lease under `CCROUTER_HOME`, while one shared Host watch,
+status, diagnostics, and local `.dart_tool` mirrors serve all of them. Releasing
+one lease must not stop another run; the watch exits after the last valid lease.
+A project clean must not be treated as Flutter-run exit.
 The wrapper prints its successful watch-start summary to stdout before the
-original Flutter process begins. It must first observe `sessionReady` for the
-exact wrapper lease and confirm the build-root owner lock; a forked background
-process is not readiness. Startup conflict, exit, structured failure, or timeout
+original Flutter process begins. It must first observe `sessionReady` for its
+primary lease or a watch-PID-bound acknowledgement accepting that exact lease,
+and confirm the build-root owner lock; a forked background process is not
+readiness. A concurrent candidate that loses Host registration must not replace
+the active status; it attaches to that watch or retries after its bounded exit.
+Startup conflict, exit, structured failure, or timeout
 blocks Flutter and remains on stderr. `CCROUTER_DISABLE_WATCH_STARTUP_HANDSHAKE=1`
 is an isolated A/B fallback, not a normal workflow. These summaries are not
 watch NDJSON.
@@ -401,9 +406,10 @@ machine stdin also closes the original Flutter Tool's stdin so IDE/AI session
 termination retains Flutter's normal EOF lifecycle. Use
 `CCROUTER_DISABLE_HOT_RELOAD_GATE=1` only for isolated fallback comparison.
 On Windows, the wrapper runs the original Flutter Tool through a terminal-
-inheriting Dart supervisor. It owns and refreshes the versioned watch lease;
-normal, non-zero, and handled interrupt exits remove the lease, while a forced
-supervisor death makes watch stop after the bounded heartbeat expiry. Use
+inheriting Dart supervisor. It owns and refreshes that run's versioned watch
+lease; normal, non-zero, and handled interrupt exits remove only that lease,
+while a forced supervisor death expires it after the bounded heartbeat window.
+The shared Host watch stops after its last lease expires. Use
 `CCROUTER_DISABLE_WINDOWS_RUN_SUPERVISOR=1` only to compare the former batch
 lifecycle; it deliberately removes that orphan-recovery guarantee.
 The user-level `CCROUTER_HOME` owns stable V2 generation/watch locking, Analyzer
@@ -416,7 +422,7 @@ mirror and an active watch recreates it after local cleanup. Complete
 Hook diagnostics remain in `watch/flutter-run.log` and are never mixed into
 Flutter Tool's machine stdout. Failure to publish observational state does not
 fail or weaken direct generation, but the Hook refuses to launch Flutter when
-it cannot prove readiness for its exact lease. If an abrupt exit leaves an `active` record, the
+it cannot prove that the ready watch accepted its exact lease. If an abrupt exit leaves an `active` record, the
 read-only commands report it as `stale` after the owner lock is released and do
 not rewrite the historical status file.
 An installed Flutter wrapper blocks a real top-level `flutter clean` while the

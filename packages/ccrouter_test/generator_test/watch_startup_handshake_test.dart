@@ -8,6 +8,7 @@ import 'package:path/path.dart' as path;
 import 'package:test/test.dart';
 
 import '../../ccrouter_generator/bin/src/coordination_home.dart';
+import '../../ccrouter_generator/bin/src/flutter_run_watch_lease.dart';
 
 void main() {
   test('accepts only the exact ready lease with a live owner', () async {
@@ -60,6 +61,60 @@ void main() {
       active: true,
       sessionReady: true,
       leasePath: staleLease.path,
+    );
+
+    final result = await fixture.run(startupTimeoutMs: 50);
+
+    expect(result.exitCode, 1);
+    expect('${result.stderr}', contains('lease-bound startup status'));
+  });
+
+  test('accepts an exact lease acknowledged by an existing watch', () async {
+    final fixture = await _HandshakeFixture.create();
+    addTearDown(fixture.dispose);
+    final owner = await fixture.lockOwner();
+    addTearDown(() async {
+      await owner.unlock();
+      await owner.close();
+    });
+    final primaryLease = File(
+      path.join(fixture.watchDirectory.path, 'primary.lease'),
+    )..writeAsStringSync('');
+    fixture.writeStatus(
+      lastEvent: 'ready',
+      active: true,
+      sessionReady: true,
+      leasePath: primaryLease.path,
+    );
+    ccrouterFlutterRunLeaseAttachmentFile(fixture.leaseFile).writeAsStringSync(
+      '${jsonEncode(<String, Object?>{'schemaVersion': 1, 'marker': ccrouterFlutterRunLeaseAttachmentMarker, 'watchPid': 4242})}\n',
+    );
+
+    final result = await fixture.run();
+
+    expect(result.exitCode, 0, reason: '${result.stderr}');
+    expect('${result.stdout}', contains('CCRouter watch reused'));
+  });
+
+  test('rejects an attachment acknowledged by a different watch PID', () async {
+    final fixture = await _HandshakeFixture.create();
+    addTearDown(fixture.dispose);
+    final owner = await fixture.lockOwner();
+    addTearDown(() async {
+      await owner.unlock();
+      await owner.close();
+    });
+    final primaryLease = File(
+      path.join(fixture.watchDirectory.path, 'primary.lease'),
+    )..writeAsStringSync('');
+    fixture.writeStatus(
+      lastEvent: 'ready',
+      active: true,
+      sessionReady: true,
+      leasePath: primaryLease.path,
+    );
+    ccrouterFlutterRunLeaseAttachmentFile(fixture.leaseFile).writeAsStringSync(
+      '${jsonEncode(<String, Object?>{'schemaVersion': 1, 'marker': ccrouterFlutterRunLeaseAttachmentMarker, 'watchPid': 9999})}\n',
     );
 
     final result = await fixture.run(startupTimeoutMs: 50);

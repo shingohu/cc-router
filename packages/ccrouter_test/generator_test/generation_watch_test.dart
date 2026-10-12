@@ -1170,7 +1170,7 @@ exec ${_shellQuote(Platform.resolvedExecutable)} "\$@"
       final owner = await _ConcurrentWatch.start(demoRoot);
       _ConcurrentWatch? duplicate;
       try {
-        await owner.waitUntilReady();
+        final ready = await owner.waitUntilReady();
         duplicate = await _ConcurrentWatch.start(demoRoot);
         final code = await duplicate.process.exitCode.timeout(
           const Duration(seconds: 30),
@@ -1180,11 +1180,116 @@ exec ${_shellQuote(Platform.resolvedExecutable)} "\$@"
           duplicate.output.join('\n'),
           contains('already has an active CCRouter generation watch'),
         );
+        final current =
+            jsonDecode(
+                  File(
+                    path.join(
+                      demoRoot.path,
+                      '.dart_tool',
+                      'ccrouter',
+                      'v1',
+                      'watch',
+                      'status.json',
+                    ),
+                  ).readAsStringSync(),
+                )
+                as Map<String, dynamic>;
+        expect(current['pid'], ready['pid']);
+        expect(current['active'], isTrue);
       } finally {
         await duplicate?.stop();
         await owner.stop();
       }
     },
+    timeout: const Timeout(Duration(minutes: 3)),
+  );
+
+  test(
+    'concurrent Flutter runs reuse one Host watch until the last lease exits',
+    () async {
+      final demoRoot = Directory(path.join(Directory.current.path, 'demo'));
+      final fixture = await Directory.systemTemp.createTemp(
+        'ccrouter-shared-flutter-run-',
+      );
+      addTearDown(() => fixture.delete(recursive: true));
+      final flutter = File(path.join(fixture.path, 'fake-flutter'))
+        ..writeAsStringSync('''#!/usr/bin/env bash
+LABEL="\${@: -1}"
+touch "\$CCROUTER_TEST_RUN_FIXTURE/ready-\$LABEL"
+while [ ! -f "\$CCROUTER_TEST_RUN_FIXTURE/release-\$LABEL" ]; do
+  sleep 0.1
+done
+''');
+      final chmod = await Process.run('chmod', <String>['+x', flutter.path]);
+      expect(chmod.exitCode, 0, reason: '${chmod.stderr}');
+      final environment = _environment(<String, String>{
+        'CCROUTER_TEST_RUN_FIXTURE': fixture.path,
+      });
+
+      Future<Process> start(String label) => Process.start(
+        Platform.resolvedExecutable,
+        <String>[
+          'run',
+          '--verbosity=error',
+          'ccrouter_generator:ccrouter_flutter_run_supervisor',
+          '--host-root',
+          demoRoot.path,
+          '--original',
+          flutter.path,
+          '--launch-watch',
+          '--',
+          'run',
+          label,
+        ],
+        workingDirectory: Directory.current.path,
+        environment: environment,
+      );
+
+      final first = await start('first');
+      final firstStdout = first.stdout.transform(utf8.decoder).join();
+      final firstStderr = first.stderr.transform(utf8.decoder).join();
+      Process? second;
+      var firstExited = false;
+      var secondExited = false;
+      addTearDown(() async {
+        File(path.join(fixture.path, 'release-first')).createSync();
+        File(path.join(fixture.path, 'release-second')).createSync();
+        if (!firstExited) first.kill();
+        if (!secondExited) second?.kill();
+      });
+
+      await _waitForFile(File(path.join(fixture.path, 'ready-first')));
+      final initial = await _waitForWatchStatus(
+        (status) => status['active'] == true && status['sessionReady'] == true,
+      );
+      second = await start('second');
+      final secondStdout = second.stdout.transform(utf8.decoder).join();
+      final secondStderr = second.stderr.transform(utf8.decoder).join();
+      await _waitForFile(File(path.join(fixture.path, 'ready-second')));
+      final shared = await _waitForWatchStatus(
+        (status) => status['active'] == true && status['sessionReady'] == true,
+      );
+      expect(shared['pid'], initial['pid']);
+
+      File(path.join(fixture.path, 'release-first')).createSync();
+      expect(await first.exitCode.timeout(const Duration(seconds: 15)), 0);
+      firstExited = true;
+      final afterFirstExit = await _waitForWatchStatus(
+        (status) => status['active'] == true && status['pid'] == initial['pid'],
+      );
+      expect(afterFirstExit['active'], isTrue);
+
+      File(path.join(fixture.path, 'release-second')).createSync();
+      expect(await second.exitCode.timeout(const Duration(seconds: 15)), 0);
+      secondExited = true;
+      await _waitForWatchStatus((status) => status['active'] == false);
+
+      expect(await firstStderr, isEmpty);
+      expect(await secondStderr, isEmpty);
+      expect(await firstStdout, contains('CCRouter watch ready'));
+      expect(await secondStdout, contains('CCRouter watch reused'));
+    },
+    skip: Platform.isWindows ? 'POSIX fixture executable' : false,
     timeout: const Timeout(Duration(minutes: 3)),
   );
 
@@ -1562,6 +1667,15 @@ Map<String, dynamic> _readWatchStatusSync() =>
           ).readAsStringSync(),
         )
         as Map<String, dynamic>;
+
+Future<void> _waitForFile(File file) async {
+  final deadline = DateTime.now().add(const Duration(minutes: 2));
+  while (DateTime.now().isBefore(deadline)) {
+    if (file.existsSync()) return;
+    await Future<void>.delayed(const Duration(milliseconds: 100));
+  }
+  throw TimeoutException('Timed out waiting for ${file.path}.');
+}
 
 Future<Map<String, dynamic>> _waitForWatchStatus(
   bool Function(Map<String, dynamic> status) predicate,

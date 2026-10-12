@@ -160,19 +160,23 @@ terminal failure 快速栅栏，恢复旧的 fingerprint-only 失败判断与有
    managed output 的精确成功证据，命中后输出 `reused active watch cycle` 并继续原始构建。
 5. 没有 Package config、普通 Flutter 项目或还未完成首次 `pub get` 时安全跳过；后续
    `flutter pub get` 成功后会执行一次正常的 post-pub 生成。
-6. `flutter run` 的 preflight 成功后，POSIX 与 Windows wrapper 都把生命周期交给同一个 Dart
-   supervisor，由它在后台启动
-   `generate <host> --watch=auto --machine`，日志写到
-   `.dart_tool/ccrouter/v1/watch/flutter-run.log`；lease 写入 project/Host 隔离的
-   `CCROUTER_HOME` coordination 目录，原始 Flutter 进程退出时删除 lease 并终止
-   watch。wrapper 不把进程 fork 当作启动成功：它等待同一 lease 的 `sessionReady`，并确认
-   build root owner lock 仍被持有，随后才启动原 Flutter Tool。Dart/AOT 入口 30 秒内没有
-   匹配状态，或初始 Builder/aggregation 5 分钟内没有到达 `ready`，都会 fail-closed。
-   `watch starting` 和 `watch ready` 写 stdout，真实失败与完整日志路径写 stderr。
+6. `flutter run` 的 preflight 成功后，POSIX 与 Windows wrapper 都把当前 run 生命周期交给
+   Dart supervisor；detached coordinator 负责启动或接入
+   `generate <host> --watch=auto --machine`，并把日志写到
+   `.dart_tool/ccrouter/v1/watch/flutter-run.log`。每个 run 在 project/Host 隔离的
+   `CCROUTER_HOME` coordination 目录持有独立 lease；同一 Host 的并行 run 通过当前 watch PID
+   绑定的 acknowledgement 复用一个 watch。任一 Flutter 进程退出只删除自己的 lease，最后一个
+   有效 lease 消失后 watch 才终止。registration 竞选失败的候选不覆盖 active status，而会等待
+   接入，或在旧 watch 正退出时重新竞选。wrapper 不把进程 fork 当作启动成功：它等待自己的
+   lease 成为主 lease 或被 active watch 精确接纳，并确认 `sessionReady` 与 build root owner
+   lock，随后才启动原 Flutter Tool。Dart/AOT 入口 30 秒内没有匹配状态，或初始
+   Builder/aggregation 5 分钟内没有到达 `ready`，都会 fail-closed。
+   `watch starting`、`watch ready` 和 `watch reused` 写 stdout，真实失败与完整日志路径写 stderr。
    `flutter build` 不启动常驻进程。
    supervisor 继承终端启动原 Flutter Tool，并每秒刷新版本化
-   lease heartbeat。正常退出、non-zero exit 和可处理的 Ctrl+C 会立即删除 lease；若 supervisor
-   被强制终止而无法运行清理，watch 会在 5 秒无 heartbeat 后删除 stale lease 并退出。
+   lease heartbeat。正常退出、non-zero exit 和可处理的 Ctrl+C 会立即删除该 run 的 lease；若
+   supervisor 被强制终止而无法运行清理，watch 会在 5 秒无 heartbeat 后删除 stale lease；只有
+   Host 的全部 lease 都失效时才退出。
 7. IDE/AI 使用的 `flutter run --machine` 由一个窄 stdin gate 启动原 Flutter Tool。它不改写
    或缓冲 daemon stdout，仅透传解析与 Hot Restart 匹配的 response；它只延迟
    `app.restart`：watch 的 `completedInputRevision` 必须覆盖
@@ -235,14 +239,15 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter watch follow <host-ro
 `status` 显示活动状态、PID、轮次、coordination schema/path 和最近 Builder/聚合耗时；`follow` 只输出简洁状态变化，
 完整诊断继续写入 `flutter-run.log`。状态文件是本地可观察性，不参与生成决策；写入失败仅警告，
 不会阻断 direct watch 的生成锁、Builder、Validator、快照恢复或原子发布；但 Hook 无法取得
-同一 lease 的 readiness proof 时会拒绝启动 Flutter。若 watch 被强制终止而来不及写入
+主 lease 或当前 watch PID 精确接纳其 lease 的 readiness proof 时会拒绝启动 Flutter。若 watch 被强制终止而来不及写入
 `stopped`，只读命令会通过已释放的 owner lock 将遗留 `active` 记录显示为 `stale`；它不会
 回写历史 `status.json`。
 
 同一 resolved build root 的不同 Host 会共享一个 Builder owner，但每个 Hook 只读取自己 Host 的
 lease/status/diagnostics 并等待自己的 aggregation。`status.json.pid` 是本 Host watch，
-`builderOwnerPid` 可指向另一个 Host 的 owner 进程。owner 退出时活动 subscriber 会接管；同一
-Host 的重复 watch 会 fail-fast，不会同时写同一状态文件。可用
+`builderOwnerPid` 可指向另一个 Host 的 owner 进程。owner 退出时活动 subscriber 会接管；手工
+启动的同一 Host 重复 watch 会 fail-fast，不会同时写同一状态文件，而 Hook 管理的并行
+`flutter run` 通过多 lease 接入现有 watch。可用
 `CCROUTER_DISABLE_MULTI_HOST_WATCH=1` 恢复旧的单 watch ownership 路径做 A/B。
 
 Workspace Validator 失败还会原子发布同目录的 `diagnostics.json`。它与 `status.json` 分开写入，

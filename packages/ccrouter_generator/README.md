@@ -377,6 +377,10 @@ CCRouter 校验、聚合、快照与原子提交；
 各自的 aggregation、Validator、原子发布、lease、状态、diagnostics 与 Host-scoped
 `inputRevision`。`status.json.pid` 表示本 Host watch，`builderOwnerPid` 表示共享 Builder owner；
 owner 退出后 subscriber 可接管。同一 Host 不允许同时启动两份 watch，以免竞争同一状态文件。
+Hook 管理的同 Host 并行 `flutter run` 不属于两份 watch：每个 run 维护独立 heartbeat lease，
+通过 watch PID 绑定的 acknowledgement 接入一个 Host watch；任一 run 退出只释放自身 lease，
+最后一个有效 lease 消失后 watch 才停止。并发候选若未取得 registration，不会覆盖 active
+status，而是等待接入或在旧 watch 退出后重新竞选。
 设置 `CCROUTER_DISABLE_MULTI_HOST_WATCH=1` 可恢复旧的单 watch ownership 语义做 A/B。
 watch 停止或 session restart 时，build_runner child 依次获得 10 秒 SIGINT、5 秒 SIGTERM 和
 5 秒 SIGKILL 回收窗口；每一阶段都有上限，卡住的 child 不会让 generation lock 永久不释放。
@@ -402,11 +406,12 @@ authored input 与 managed output 完成证据，不会并发启动第二个 wri
 已有 one-shot 正在执行或等待时，新的 watch 同样会快速失败，调用方可在命令完成后重试启动 watch。
 共享只覆盖单个 resolved build root，不合并嵌套 Package Host 的独立 Pub root。subscriber
 退出不会为了收缩 target union 重启当前 child；Pub resolution 中真实的 target 删除仍会重启。
-Hook 的 watch 启动成功提示写入 stdout，与 preflight 成功信息保持一致；真正失败仍写 stderr，
-避免 IDE 将正常启动渲染成红色错误。
+Hook 的 `watch ready`/`watch reused` 提示写入 stdout，与 preflight 成功信息保持一致；真正失败
+仍写 stderr，避免 IDE 将正常启动渲染成红色错误。detached coordinator 独立持有重定向后的
+watch 输出，不依赖任一 Flutter run supervisor 的存活。
 Windows 的原 Flutter Tool 由 Dart supervisor 继承终端运行。supervisor 在进程存活期间刷新
-版本化 lease heartbeat，并在正常或可处理的异常退出时删除 lease；强制终止时 watch 会在
-heartbeat 过期后自行停止。`CCROUTER_DISABLE_WINDOWS_RUN_SUPERVISOR=1` 仅用于恢复旧 batch
+自己的版本化 lease heartbeat，并在正常或可处理的异常退出时删除该 lease；强制终止时 watch
+会使该 heartbeat 过期，全部 Host lease 消失后自行停止。`CCROUTER_DISABLE_WINDOWS_RUN_SUPERVISOR=1` 仅用于恢复旧 batch
 生命周期做 A/B。
 Hook 对 `flutter run --machine` 增加只代理 stdin 的 reload gate。它等待 watch 的
 `completedInputRevision` 覆盖保存时的 `inputRevision` 且状态稳定，再把

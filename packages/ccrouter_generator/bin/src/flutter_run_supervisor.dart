@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:ccrouter_generator/src/project_context.dart';
 import 'package:path/path.dart' as path;
 
-import 'bounded_process_shutdown.dart';
 import 'coordination_home.dart';
 import 'flutter_run_reload_gate.dart';
 import 'flutter_run_watch_lease.dart';
@@ -110,51 +109,39 @@ final class CCFlutterRunSupervisor {
         'flutter-run.log',
       ),
     );
-    IOSink? log;
-    try {
-      await logFile.parent.create(recursive: true);
-      log = logFile.openWrite(mode: FileMode.append);
-    } on FileSystemException catch (error) {
-      stderr.writeln(
-        'warning: CCRouter watch log is unavailable at ${logFile.path}: '
-        '$error',
-      );
-    }
     final leaseOwner = CCFlutterRunWatchLeaseOwner(lease);
-    Process? watchProcess;
-    StreamSubscription<List<int>>? watchStdout;
-    StreamSubscription<List<int>>? watchStderr;
     Object? heartbeatFailure;
     final heartbeatAbort = Completer<void>();
     try {
       await leaseOwner.start(
         onFailure: (error, _) {
           heartbeatFailure ??= error;
-          watchProcess?.kill();
           if (!heartbeatAbort.isCompleted) heartbeatAbort.complete();
         },
       );
-      watchProcess = await Process.start(
+      await logFile.parent.create(recursive: true);
+      final coordinator = await Process.start(
         dartExecutable ?? Platform.resolvedExecutable,
         <String>[
           'run',
           '--verbosity=error',
-          'ccrouter_generator:ccrouter',
-          'generate',
+          'ccrouter_generator:ccrouter_flutter_run_watch_daemon',
+          '--host-root',
           canonicalHost.path,
-          '--watch=auto',
-          '--machine',
+          '--build-root',
+          buildRoot.path,
           '--watch-lease',
           lease.path,
+          '--log',
+          logFile.path,
         ],
         workingDirectory: buildRoot.path,
         environment: environment,
+        mode: ProcessStartMode.detached,
         runInShell: Platform.isWindows,
       );
-      watchStdout = _forwardWatchOutput(watchProcess.stdout, log);
-      watchStderr = _forwardWatchOutput(watchProcess.stderr, log);
       stdout.writeln(
-        'CCRouter watch starting (pid=${watchProcess.pid}). '
+        'CCRouter watch starting (coordinatorPid=${coordinator.pid}). '
         'Status: ${path.join(canonicalHost.path, '.dart_tool', 'ccrouter', 'v1', 'watch', 'status.json')}; '
         'log: ${logFile.path}',
       );
@@ -174,8 +161,10 @@ final class CCFlutterRunSupervisor {
           stderr.writeln('Watch log: ${startup.logFile.path}');
           return 1;
         }
+        final action = startup.reusedExistingWatch ? 'reused' : 'ready';
         stdout.writeln(
-          'CCRouter watch ready: elapsed=${startup.elapsed.inMilliseconds}ms.',
+          'CCRouter watch $action (pid=${startup.pid}): '
+          'elapsed=${startup.elapsed.inMilliseconds}ms.',
         );
       }
       if (heartbeatFailure != null) {
@@ -201,19 +190,6 @@ final class CCFlutterRunSupervisor {
       return result;
     } finally {
       await leaseOwner.close();
-      if (watchProcess case final process?) {
-        try {
-          await stopProcessWithEscalation(process);
-        } on Object catch (error) {
-          stderr.writeln(
-            'warning: failed to stop CCRouter generation watch: $error',
-          );
-        }
-      }
-      await watchStdout?.cancel();
-      await watchStderr?.cancel();
-      await log?.flush();
-      await log?.close();
     }
   }
 
@@ -243,17 +219,6 @@ final class CCFlutterRunSupervisor {
     return lease;
   }
 }
-
-StreamSubscription<List<int>> _forwardWatchOutput(
-  Stream<List<int>> source,
-  IOSink? log,
-) => source.listen((bytes) {
-  try {
-    log?.add(bytes);
-  } on Object {
-    // The watch result and status remain authoritative if logging is removed.
-  }
-}, onError: (_) {});
 
 final class _CCFlutterInheritedRunProxy {
   const _CCFlutterInheritedRunProxy({

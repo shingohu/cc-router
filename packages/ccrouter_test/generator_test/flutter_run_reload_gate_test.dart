@@ -319,6 +319,41 @@ void main() {
     expect(lease.existsSync(), isFalse);
   });
 
+  test('shared watch remains active until its last run lease exits', () async {
+    final host = await _createHost();
+    addTearDown(() => host.delete(recursive: true));
+    final leaseDirectory = Directory(path.join(host.path, 'leases'))
+      ..createSync();
+    final first = File(path.join(leaseDirectory.path, 'first.lease'))
+      ..writeAsStringSync('$ccrouterFlutterRunLeaseHeartbeatMarker\n');
+    final second = File(path.join(leaseDirectory.path, 'second.lease'))
+      ..writeAsStringSync('$ccrouterFlutterRunLeaseHeartbeatMarker\n');
+    final expired = Completer<void>();
+    final monitor = CCFlutterRunWatchLeaseGroupMonitor.start(
+      first,
+      expired.complete,
+      pollInterval: const Duration(milliseconds: 10),
+      staleAfter: const Duration(seconds: 2),
+    );
+    addTearDown(monitor.close);
+
+    await _waitFor(
+      () =>
+          ccrouterFlutterRunLeaseIsAttached(first, watchPid: pid) &&
+          ccrouterFlutterRunLeaseIsAttached(second, watchPid: pid),
+    );
+    first.deleteSync();
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+
+    expect(expired.isCompleted, isFalse);
+    expect(second.existsSync(), isTrue);
+
+    second.deleteSync();
+    await expired.future.timeout(const Duration(seconds: 1));
+    expect(ccrouterFlutterRunLeaseAttachmentFile(first).existsSync(), isFalse);
+    expect(ccrouterFlutterRunLeaseAttachmentFile(second).existsSync(), isFalse);
+  });
+
   test(
     'machine proxy returns daemon error and withholds failed reload',
     () async {

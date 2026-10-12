@@ -148,10 +148,15 @@ Stop watch before the final `--no-cache --check`; watch never replaces that
 authority.
 Different Hosts resolving to that same build root share one Builder owner. The
 owner watches the union of their active target closures, while every Host keeps
-its own aggregation, validation, lease, status, diagnostics, and input revision.
+its own aggregation, validation, status, diagnostics, and input revision.
 `status.json.pid` identifies the Host watch and `builderOwnerPid` identifies the
 shared owner. A subscriber takes over if the owner exits. A duplicate watch for
-the same Host fails before it can compete for the status file. Set
+the same Host fails before it can compete for the status file. Hook-managed
+concurrent `flutter run` processes for that same Host are not duplicate watches:
+they attach independent heartbeat leases to one Host watch through an exact
+watch-PID acknowledgement. The watch remains alive until the last valid lease
+exits. A losing startup candidate must not publish Host status; it waits to
+attach or retries ownership if the previous watch is already stopping. Set
 `CCROUTER_DISABLE_MULTI_HOST_WATCH=1` only for the previous one-watch-per-root
 A/B fallback. Hosts with distinct Pub build roots never share a Builder.
 For a wrapper-started background watch, use read-only `watch status <host-root>`
@@ -424,12 +429,14 @@ shutdown, and releasing stable locks. Restore Pub state and start a new watch;
 never wait for that invalidated session to recover. Cleaning only a Workspace
 member's local `.dart_tool` does not invalidate an intact shared build root.
 Upgrade a schema 4 installation by uninstalling it before reinstalling. After a
-successful `flutter run` preflight it starts watch under a
-lifecycle lease and removes the lease when Flutter exits; `flutter build`
-remains one-shot. `run/build` preflight failures stop the Flutter command;
-on Windows a terminal-inheriting Dart supervisor refreshes a versioned lease
-heartbeat, removes it after normal/non-zero/handled-interrupt exits, and lets
-watch expire the lease after an uncatchable supervisor termination. Use
+successful `flutter run` preflight it creates a Host-scoped lifecycle lease and
+starts or joins that Host's watch; `flutter build` remains one-shot. Concurrent
+runs use distinct leases and one writer. Each normal/non-zero/handled-interrupt
+exit removes only its own lease, and the watch stops after the last valid lease
+is gone. A detached coordinator owns redirected watch output independently of
+any one run; the terminal-inheriting Dart supervisor refreshes its versioned
+lease heartbeat, while watch expires it after an uncatchable supervisor
+termination. Use
 `CCROUTER_DISABLE_WINDOWS_RUN_SUPERVISOR=1` only for old-path A/B comparison.
 projects without a resolved CCRouter graph are skipped. Before the original
 Flutter process starts, the run wrapper prints the successful watch start plus

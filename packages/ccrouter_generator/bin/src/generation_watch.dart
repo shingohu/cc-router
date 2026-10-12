@@ -32,6 +32,31 @@ bool get _usesOptimizedWatchCycle =>
 bool get _usesMultiHostWatch =>
     Platform.environment[_multiHostWatchKillSwitch] != '1';
 
+void _writeWatchRegistrationConflict({
+  required bool machine,
+  required Directory hostRoot,
+  required Directory buildRoot,
+  required String message,
+}) {
+  if (!machine) {
+    _commandStderr.writeln('error: $message');
+    return;
+  }
+  _commandStdout.writeln(
+    jsonEncode(<String, Object?>{
+      'schemaVersion': 1,
+      'type': 'failed',
+      'timestamp': DateTime.now().toUtc().toIso8601String(),
+      'buildRoot': buildRoot.path,
+      'hostRoot': hostRoot.path,
+      'sessionId': '$pid-${DateTime.now().microsecondsSinceEpoch}',
+      'eventRevision': 1,
+      'stage': 'watch-registration',
+      'error': message,
+    }),
+  );
+}
+
 /// Keeps build_runner's AOT entrypoint and Analyzer graph alive for one root.
 Future<void> _runGenerationWatch({
   required Directory hostRoot,
@@ -39,15 +64,14 @@ Future<void> _runGenerationWatch({
   required _Arguments parsed,
   required Future<_GenerationCycleResult> Function() runInProcessCycle,
 }) async {
-  final events = _GenerationWatchEvents(
-    machine: parsed.machine,
-    buildRoot: buildContext.resolutionRoot,
-    hostRoot: hostRoot,
-    leasePath: parsed.watchLeasePath,
-  );
-  await events.emit('starting', data: {'mode': 'auto'});
-
   if (Platform.environment[_watchKillSwitch] == '1') {
+    final events = _GenerationWatchEvents(
+      machine: parsed.machine,
+      buildRoot: buildContext.resolutionRoot,
+      hostRoot: hostRoot,
+      leasePath: parsed.watchLeasePath,
+    );
+    await events.emit('starting', data: {'mode': 'auto'});
     await events.emit('fallback', data: {'reason': 'kill-switch'});
     final fallback = await _runWatchGenerationSubprocess(
       hostRoot: hostRoot,
@@ -72,14 +96,23 @@ Future<void> _runGenerationWatch({
         leasePath: parsed.watchLeasePath,
       );
     } on _GenerationWatchRegistrationConflictException catch (error) {
-      await events.emit(
-        'failed',
-        data: {'stage': 'watch-registration', 'error': error.message},
+      _writeWatchRegistrationConflict(
+        machine: parsed.machine,
+        hostRoot: hostRoot,
+        buildRoot: buildContext.resolutionRoot,
+        message: error.message,
       );
       exitCode = 1;
       return;
     }
   }
+  final events = _GenerationWatchEvents(
+    machine: parsed.machine,
+    buildRoot: buildContext.resolutionRoot,
+    hostRoot: hostRoot,
+    leasePath: parsed.watchLeasePath,
+  );
+  await events.emit('starting', data: {'mode': 'auto'});
   try {
     while (true) {
       try {
@@ -176,10 +209,10 @@ Future<void> _runGenerationWatchOwner({
       // A platform may not expose every POSIX signal.
     }
   }
-  CCFlutterRunWatchLeaseMonitor? leaseMonitor;
+  CCFlutterRunWatchLeaseGroupMonitor? leaseMonitor;
   if (parsed.watchLeasePath case final leasePath?) {
     final lease = File(leasePath).absolute;
-    leaseMonitor = CCFlutterRunWatchLeaseMonitor.start(lease, requestStop);
+    leaseMonitor = CCFlutterRunWatchLeaseGroupMonitor.start(lease, requestStop);
   }
 
   try {
@@ -277,10 +310,10 @@ Future<bool> _runGenerationWatchSubscriber({
       // A platform may not expose every POSIX signal.
     }
   }
-  CCFlutterRunWatchLeaseMonitor? leaseMonitor;
+  CCFlutterRunWatchLeaseGroupMonitor? leaseMonitor;
   if (parsed.watchLeasePath case final leasePath?) {
     final lease = File(leasePath).absolute;
-    leaseMonitor = CCFlutterRunWatchLeaseMonitor.start(lease, requestStop);
+    leaseMonitor = CCFlutterRunWatchLeaseGroupMonitor.start(lease, requestStop);
   }
 
   var ready = false;

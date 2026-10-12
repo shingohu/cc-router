@@ -6,6 +6,7 @@ import 'package:path/path.dart' as path;
 
 import 'canonical_directory_identity.dart';
 import 'coordination_home.dart';
+import 'flutter_run_watch_lease.dart';
 
 /// Terminal outcome of waiting for one wrapper-owned generation watch.
 enum CCWatchStartupOutcome {
@@ -33,6 +34,7 @@ final class CCWatchStartupResult {
     this.pid,
     this.sessionId,
     this.diagnostics,
+    this.reusedExistingWatch = false,
   });
 
   /// Terminal startup classification.
@@ -56,15 +58,19 @@ final class CCWatchStartupResult {
   /// Bounded failure diagnostics published by the watch, when available.
   final String? diagnostics;
 
+  /// Whether this lease attached to a watch launched by another supervisor.
+  final bool reusedExistingWatch;
+
   /// Whether Flutter may start while this leased watch remains active.
   bool get succeeded => outcome == CCWatchStartupOutcome.ready;
 }
 
-/// Waits for the exact wrapper lease to publish an owned, ready watch session.
+/// Waits for the wrapper lease to join an owned, ready Host watch session.
 ///
 /// [startupTimeout] bounds Dart/AOT entrypoint startup before any matching
 /// status exists. [readyTimeout] separately bounds initial Builder and
-/// aggregation work after launch. Existing or foreign status is never accepted.
+/// aggregation work after launch. A shared session is accepted only after that
+/// live watch acknowledges this exact lease.
 Future<CCWatchStartupResult> waitForCCWatchStartup({
   required Directory hostRoot,
   required File leaseFile,
@@ -99,9 +105,15 @@ Future<CCWatchStartupResult> waitForCCWatchStartup({
       final statusHost = status['hostRoot'] as String;
       final statusLease = status['leasePath'];
       final matchesHost = hasSameDirectoryIdentity(statusHost, hostRoot.path);
-      final matchesLease =
+      final matchesPrimaryLease =
           statusLease is String &&
           hasSameFileIdentity(statusLease, leaseFile.path);
+      final watchPid = status['pid'] as int;
+      final matchesAttachedLease = ccrouterFlutterRunLeaseIsAttached(
+        leaseFile,
+        watchPid: watchPid,
+      );
+      final matchesLease = matchesPrimaryLease || matchesAttachedLease;
       if (matchesHost && matchesLease) {
         observedLease = true;
         leaseObservedAt ??= watch.elapsed;
@@ -158,6 +170,7 @@ Future<CCWatchStartupResult> waitForCCWatchStartup({
               logFile: logFile,
               pid: status['pid'] as int?,
               sessionId: status['sessionId'] as String?,
+              reusedExistingWatch: matchesAttachedLease && !matchesPrimaryLease,
             );
           }
         }
@@ -223,6 +236,7 @@ Future<Map<String, Object?>?> _readWatchStartupStatus(File file) async {
         decoded['schemaVersion'] != 1 ||
         decoded['active'] is! bool ||
         decoded['lastEvent'] is! String ||
+        decoded['pid'] is! int ||
         decoded['hostRoot'] is! String ||
         decoded['buildRoot'] is! String ||
         decoded['managedByLease'] != true ||

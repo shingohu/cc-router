@@ -1326,6 +1326,11 @@ build_runner，各 Host 仍分别执行聚合、Validator、原子发布，并�
 `status.json`、diagnostics 与 `inputRevision`。状态中的 `pid` 是该 Host watch 进程，
 `builderOwnerPid` 是共享 Builder owner，subscriber 场景下两者可以不同。owner 退出后，仍活动的
 subscriber 会接管并重新到达 `ready`；同一 Host 的第二个 watch 会在写共享状态前快速失败。
+这里的“第二个 watch”指手工或独立 CLI watch writer。Hook 管理的同一 Host 多个
+`flutter run` 不会创建多个 writer：每个 run 持有独立 heartbeat lease，并通过当前 watch PID
+绑定的 acknowledgement 接入同一个 Host watch；任一 run 退出只释放自己的 lease，最后一个
+有效 lease 消失后 watch 才停止。并发启动时 registration 竞选失败的候选不会覆盖 active
+`status.json`，而会等待接入或在旧 watch 正退出时重新竞选。
 `CCROUTER_DISABLE_MULTI_HOST_WATCH=1` 可恢复一个 build root 只允许一个 watch 的旧语义做 A/B。
 watch ownership、generation、aggregation、Host registration、Flutter-run lease、Analyzer CLI
 写事务及最小 Host/Builder session authority 位于用户级
@@ -1404,9 +1409,11 @@ fail closed，并要求停止 watch 后运行 one-shot，供紧急回退和 A/B 
 写入 `stopped`，只读命令会根据已释放的 owner lock 将遗留 `active` 记录显示为 `stale`，
 但不会改写历史 `status.json`。
 Pub Hook 启动 `flutter run` 时不会把后台进程已经 fork 当成 watch 可用：POSIX 与 Windows
-wrapper 都把 watch 启动、stable lease heartbeat、readiness handshake、原 Flutter Tool 和退出
-清理交给同一个 Dart supervisor。supervisor 先等待同一
-lease 的 `sessionReady`，并确认 build root owner lock 仍被持有，随后才启动原 Flutter Tool。
+wrapper 都把 stable lease heartbeat、readiness handshake、原 Flutter Tool 和退出清理交给
+同一个 Dart supervisor，并由 detached coordinator 独立持有重定向后的 watch 输出。supervisor
+先等待自己的 lease 成为新 watch 的主 lease，或收到当前 active watch 基于其 PID 的精确接入
+acknowledgement，再确认 `sessionReady` 与 build root owner lock，随后才启动原 Flutter Tool。
+同一 Host 的并行 run 因此共享一份 watch，生命周期延续到最后一个 run lease 释放。
 Dart/AOT 入口 30 秒内未发布匹配状态、初始 Builder/aggregation 5 分钟内未到达 `ready`、
 watch-lock 冲突、进程退出或结构化失败都会阻止 `flutter run`，并保留状态与日志路径。可用
 `CCROUTER_DISABLE_WATCH_STARTUP_HANDSHAKE=1` 单独恢复旧的立即启动行为做 A/B；它不关闭
@@ -1573,13 +1580,15 @@ wrapper 按已知 global option 的 arity 定位第一个真实 Flutter/Dart com
 Flutter Tool 内部隐式 `pub get`。`flutter run` 在 preflight
 成功后会持有一个后台 watch lease，原始 Flutter 进程退出时释放；`flutter build` 仍只执行
 one-shot preflight。lease 位于 project/Host 隔离的 `CCROUTER_HOME` coordination 目录，不会因
-`flutter clean` 删除 Host `.dart_tool` 而先于 clean invalidation 消失。wrapper 会先输出
-`watch starting`，再以结构化状态和 owner lock 等待
-该 lease 的 `watch ready`；只有后者成功才启动 Flutter。两条正常提示都写入 stdout，避免 IDE
+`flutter clean` 删除 Host `.dart_tool` 而先于 clean invalidation 消失。同一 Host 的并行
+`flutter run` 各自持有 lease，但复用一个 watch；任一 run 退出不会中断其它 run，最后一个
+有效 lease 消失后 watch 才停止。wrapper 会先输出 `watch starting`，再以结构化状态、owner
+lock 和 PID-bound lease acknowledgement 等待 `watch ready` 或 `watch reused`；只有后者成功
+才启动 Flutter。正常提示都写入 stdout，避免 IDE
 将正常状态渲染为红色错误；其中包含 PID、状态文件和完整日志路径。可用
 `ccrouter watch status <host>` 或 `ccrouter watch follow <host>` 验证保存后的生成轮次。
-POSIX 与 Windows wrapper 都用同一个 Dart supervisor 启动 watch、继承终端运行原 Flutter Tool，
-并持续刷新版本化 lease
+POSIX 与 Windows wrapper 都用同一个 Dart supervisor 继承终端运行原 Flutter Tool，detached
+coordinator 负责 watch 竞选与日志重定向，supervisor 持续刷新版本化 lease
 heartbeat；正常退出、non-zero exit 和可处理的 Ctrl+C 都会释放 lease。即使 supervisor 被强制
 终止、无法执行清理，watch 也会在 heartbeat 过期后停止，避免后台进程长期残留。可用
 `CCROUTER_DISABLE_WINDOWS_RUN_SUPERVISOR=1` 临时恢复旧 batch 生命周期做 A/B；该回退不关闭
