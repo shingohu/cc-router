@@ -545,23 +545,23 @@ dependencies:
     expect('${excess.stderr}', contains('one optional Host root'));
   });
 
-  test(
-    'write command parser rejects ambiguous or unsupported flags',
-    () async {
-      for (final args in [
-        ['install', '--version', '1.0.0', '--version', '2.0.0'],
-        ['install', '--url'],
-        ['status', '--dry-run'],
-        ['upgrade', '--source', 'git'],
-        ['uninstall', '--version', '1.0.0'],
-        ['install', '--unknown'],
-      ]) {
+  for (final args in [
+    ['install', '--version', '1.0.0', '--version', '2.0.0'],
+    ['install', '--url'],
+    ['status', '--dry-run'],
+    ['upgrade', '--source', 'git'],
+    ['uninstall', '--version', '1.0.0'],
+    ['install', '--unknown'],
+  ]) {
+    test(
+      'write command parser rejects ${args.join(' ')}',
+      () async {
         final result = await _run(['analyzer', ...args]);
         expect(result.exitCode, 2, reason: '$args: ${result.stderr}');
-      }
-    },
-    timeout: const Timeout(Duration(minutes: 1)),
-  );
+      },
+      timeout: const Timeout(Duration(minutes: 1)),
+    );
+  }
 
   test(
     'install dry-run parses explicit Git source without touching Host',
