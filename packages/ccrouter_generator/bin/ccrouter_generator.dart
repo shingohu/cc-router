@@ -2862,10 +2862,28 @@ final class _GenerationWatchOwnership {
     required Exception Function() onLegacyConflict,
   }) async {
     if (!usesLegacyCCRouterCoordination()) {
-      final legacy = legacyCCRouterWatchOwnerLockFile(buildRoot);
-      if (await _coordinationLockIsHeld(legacy, FileLock.exclusive)) {
-        throw onLegacyConflict();
+      final coordination = CCRouterCoordinationPaths.forBuildRoot(buildRoot);
+      await coordination.prepare();
+      final probe = await coordination.legacyOwnerProbeLock.open(
+        mode: FileMode.append,
+      );
+      try {
+        // An exclusive probe detects both shared V1 one-shot owners and
+        // exclusive V1 watch owners. Serialize V2 probes so they cannot
+        // mistake each other for a legacy owner.
+        await probe.lock(FileLock.blockingExclusive);
+        try {
+          final legacy = legacyCCRouterWatchOwnerLockFile(buildRoot);
+          if (await _coordinationLockIsHeld(legacy, FileLock.exclusive)) {
+            throw onLegacyConflict();
+          }
+        } finally {
+          await probe.unlock();
+        }
+      } finally {
+        await probe.close();
       }
+      return coordination.ownerLock.open(mode: FileMode.append);
     }
     final lockFile = await _coordinationOwnerLockFile(buildRoot);
     await lockFile.parent.create(recursive: true);

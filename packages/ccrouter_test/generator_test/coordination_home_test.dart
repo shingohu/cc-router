@@ -150,6 +150,10 @@ void main() {
       path.join(first.projectDirectory.path, 'analyzer', 'operation.lock'),
     );
     expect(
+      first.legacyOwnerProbeLock.path,
+      path.join(first.projectDirectory.path, 'legacy-owner-probe.lock'),
+    );
+    expect(
       first.analyzerTransactionDirectory.path,
       path.join(first.projectDirectory.path, 'analyzer', 'transactions'),
     );

@@ -82,6 +82,10 @@ final class CCRouterCoordinationPaths {
   File get generationLock =>
       File(path.join(projectDirectory.path, 'generation.lock'));
 
+  /// Serializes V2 probes of the pre-V2 owner lock.
+  File get legacyOwnerProbeLock =>
+      File(path.join(projectDirectory.path, 'legacy-owner-probe.lock'));
+
   /// Stable cross-Host aggregation serialization lock.
   File get aggregationLock =>
       File(path.join(projectDirectory.path, 'aggregation.lock'));
