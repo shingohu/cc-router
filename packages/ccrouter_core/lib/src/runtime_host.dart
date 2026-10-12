@@ -2545,12 +2545,19 @@ final class CCRouterRuntime {
       final result = Future.any([work, cancelled.future]);
       if (deadline == null) return await result;
       final remaining = deadline.difference(DateTime.now());
-      return await result.timeout(
+      final value = await result.timeout(
         remaining.isNegative ? Duration.zero : remaining,
         onTimeout: () {
           throw const CCInvocationTimeoutError();
         },
       );
+      // Cooperative cancellation can let [work] finish in the same event-loop
+      // turn as the deadline timer. Preserve the deadline contract regardless
+      // of which completion Future.any observes first.
+      if (!deadline.isAfter(DateTime.now())) {
+        throw const CCInvocationTimeoutError();
+      }
+      return value;
     } catch (error) {
       status = error is CCInvocationCancelledError
           ? 'cancelled'

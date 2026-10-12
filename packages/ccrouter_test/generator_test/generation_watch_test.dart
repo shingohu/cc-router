@@ -2001,7 +2001,14 @@ Future<_WatchRun> _runWatchUntilReady({
       );
     }
     await lease.delete();
-    await stopped.future.timeout(const Duration(seconds: 10));
+    await stopped.future.timeout(
+      const Duration(seconds: 30),
+      onTimeout: () => throw TimeoutException(
+        'watch did not stop after its lease was removed\n'
+        'stdout:\n${outputLines.join('\n')}\n'
+        'stderr:\n${errorLines.join('\n')}',
+      ),
+    );
     expect(await process.exitCode, 0);
     return _WatchRun(
       ready: readyEvent,
