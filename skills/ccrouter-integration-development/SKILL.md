@@ -345,6 +345,12 @@ Packages. An app-role Host runs Host generation; a participating Flutter/Pure
 Dart Package runs package-local generation. Run Host generation from the actual
 Host directory (for this repository, `demo/`); the Hook never guesses a member
 Host from an aggregator.
+Every Hook-owned Dart entrypoint must explicitly bind the successful Pub
+resolution's `.dart_tool/package_config.json` through `--packages`. Never use a
+bare internal `dart run`: Dart-only dependency resolution can fail before the
+generator starts when a Host contains Flutter SDK dependencies.
+Schema 6 marks this execution contract; uninstall schema 4/5 installations
+before reinstalling the current wrappers.
 The per-SDK Hook covers successful `flutter pub` and direct `dart pub` dependency
 commands. On macOS/Linux it wraps Flutter's inner Dart executable, including the
 path commonly launched by IDE Pub actions. On Windows only `bin/dart.bat` is

@@ -123,6 +123,7 @@ final class CCFlutterRunSupervisor {
       final coordinator = await Process.start(
         dartExecutable ?? Platform.resolvedExecutable,
         <String>[
+          '--packages=${path.join(buildRoot.path, '.dart_tool', 'package_config.json')}',
           'run',
           '--verbosity=error',
           'ccrouter_generator:ccrouter_flutter_run_watch_daemon',

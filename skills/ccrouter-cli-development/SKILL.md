@@ -361,6 +361,11 @@ generation; other participating Packages run package-local generation. The
 resolved Package config must contain the matching runtime/contracts Package and
 `ccrouter_generator`. A Workspace aggregator is skipped rather than treated as
 a Host or used to guess one of its members.
+Every Hook-owned Dart entrypoint, including preflight, post-pub, supervisor,
+watch daemon, startup handshake, and reload gate paths, must use the verified
+Package config via `--packages`. A bare internal `dart run` can attempt
+Dart-only dependency resolution and fail before generator startup when the Host
+contains Flutter SDK dependencies.
 
 Successful run/build output is labeled `preflight`; successful Pub-triggered
 output is labeled `post-pub generation`. Success prints only the generator fast
@@ -428,7 +433,9 @@ publishing `invalidatedByClean`, stopping the child within the normal bounded
 shutdown, and releasing stable locks. Restore Pub state and start a new watch;
 never wait for that invalidated session to recover. Cleaning only a Workspace
 member's local `.dart_tool` does not invalidate an intact shared build root.
-Upgrade a schema 4 installation by uninstalling it before reinstalling. After a
+Upgrade a schema 4 or 5 installation by uninstalling it before reinstalling.
+Schema 6 identifies wrappers whose internal Dart entrypoints bind the verified
+Package config. After a
 successful `flutter run` preflight it creates a Host-scoped lifecycle lease and
 starts or joins that Host's watch; `flutter build` remains one-shot. Concurrent
 runs use distinct leases and one writer. Each normal/non-zero/handled-interrupt

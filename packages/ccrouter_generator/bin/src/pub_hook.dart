@@ -98,7 +98,7 @@ final class CCPubHookManager {
   static const _originalDartPosixName = 'dart.ccrouter-original';
   static const _originalDartWindowsName = 'dart.ccrouter-original.bat';
   static const _markerName = '.ccrouter_pub_hook.json';
-  static const _markerSchema = 5;
+  static const _markerSchema = 6;
 
   /// Resolves the current Flutter SDK root from an explicit path, environment,
   /// the nearest FVM link, or the `flutter` executable on PATH, in that order.
@@ -247,7 +247,9 @@ final class CCPubHookManager {
       return false;
     }
     final markerSchema = _readMarkerSchema(marker);
-    if (markerSchema != 4 && markerSchema != _markerSchema) {
+    final managesDartEntrypoints =
+        markerSchema == 5 || markerSchema == _markerSchema;
+    if (markerSchema != 4 && !managesDartEntrypoints) {
       throw const FileSystemException(
         'CCRouter pub hook marker is invalid; refusing to modify SDK entrypoints.',
       );
@@ -272,7 +274,7 @@ final class CCPubHookManager {
         'CCRouter Windows pub hook installation is incomplete; refusing to delete the SDK entrypoint.',
       );
     }
-    if (markerSchema == _markerSchema &&
+    if (managesDartEntrypoints &&
         !Platform.isWindows &&
         !dartPosixOriginal.existsSync()) {
       throw const FileSystemException(
@@ -280,7 +282,7 @@ final class CCPubHookManager {
         'SDK entrypoint.',
       );
     }
-    if (markerSchema == _markerSchema &&
+    if (managesDartEntrypoints &&
         Platform.isWindows &&
         !dartWindowsOriginal.existsSync()) {
       throw const FileSystemException(
@@ -288,7 +290,7 @@ final class CCPubHookManager {
         'SDK entrypoint.',
       );
     }
-    if (markerSchema == _markerSchema &&
+    if (managesDartEntrypoints &&
         dartPosixOriginal.existsSync() &&
         !_isDartPosixWrapper(dartPosix)) {
       throw const FileSystemException(
@@ -296,7 +298,7 @@ final class CCPubHookManager {
         'delete the SDK entrypoint.',
       );
     }
-    if (markerSchema == _markerSchema &&
+    if (managesDartEntrypoints &&
         dartWindowsOriginal.existsSync() &&
         !_isDartWindowsWrapper(dartWindows)) {
       throw const FileSystemException(
@@ -310,11 +312,11 @@ final class CCPubHookManager {
       if (windows.existsSync()) await windows.delete();
       await windowsOriginal.rename(windows.path);
     }
-    if (markerSchema == _markerSchema && dartPosixOriginal.existsSync()) {
+    if (managesDartEntrypoints && dartPosixOriginal.existsSync()) {
       if (dartPosix.existsSync()) await dartPosix.delete();
       await dartPosixOriginal.rename(dartPosix.path);
     }
-    if (markerSchema == _markerSchema && dartWindowsOriginal.existsSync()) {
+    if (managesDartEntrypoints && dartWindowsOriginal.existsSync()) {
       if (dartWindows.existsSync()) await dartWindows.delete();
       await dartWindowsOriginal.rename(dartWindows.path);
     }
@@ -750,6 +752,7 @@ Future<bool> runCCPubHook({
     }
   }
   final process = await Process.start(Platform.resolvedExecutable, [
+    '--packages=${packageConfig.path}',
     'run',
     'ccrouter_generator:ccrouter',
     'generate',
@@ -1822,7 +1825,8 @@ run_generator_hook() {
   fi
   (
     cd "$PROJECT_ROOT" || exit 1
-    "$DART" run --verbosity=error ccrouter_generator:ccrouter pub-hook run \
+    "$DART" --packages="$PACKAGE_CONFIG" run --verbosity=error \
+      ccrouter_generator:ccrouter pub-hook run \
       --project-root "$PROJECT_ROOT" --pub-command "$HOOK_COMMAND"
   )
 }
@@ -1833,7 +1837,8 @@ run_clean_guard() {
   fi
   (
     cd "$PROJECT_ROOT" || exit 1
-    "$DART" run --verbosity=error ccrouter_generator:ccrouter pub-hook \
+    "$DART" --packages="$PACKAGE_CONFIG" run --verbosity=error \
+      ccrouter_generator:ccrouter pub-hook \
       guard-clean --project-root "$PROJECT_ROOT"
   )
 }
@@ -1868,12 +1873,12 @@ if [ "$FLUTTER_COMMAND" = "run" ] || [ "$FLUTTER_COMMAND" = "build" ]; then
   done
   if [ "$FLUTTER_MACHINE" -eq 1 ] && \
      [ "${CCROUTER_DISABLE_HOT_RELOAD_GATE:-0}" != "1" ]; then
-    "$DART" run --verbosity=error \
+    "$DART" --packages="$PACKAGE_CONFIG" run --verbosity=error \
       ccrouter_generator:ccrouter_flutter_run_supervisor \
       --host-root "$PROJECT_ROOT" --original "$ORIGINAL" \
       --launch-watch --reload-gate -- "$@"
   else
-    "$DART" run --verbosity=error \
+    "$DART" --packages="$PACKAGE_CONFIG" run --verbosity=error \
       ccrouter_generator:ccrouter_flutter_run_supervisor \
       --host-root "$PROJECT_ROOT" --original "$ORIGINAL" \
       --launch-watch -- "$@"
@@ -2068,7 +2073,8 @@ fi
 
 (
   cd "$PROJECT_ROOT" || exit 1
-  "$ORIGINAL" run --verbosity=error ccrouter_generator:ccrouter pub-hook run \
+  "$ORIGINAL" --packages="$PACKAGE_CONFIG" run --verbosity=error \
+    ccrouter_generator:ccrouter pub-hook run \
     --project-root "$PROJECT_ROOT" --pub-command "dart:$PUB_COMMAND"
 )
 HOOK_EXIT=$?
@@ -2108,10 +2114,11 @@ if /I "%PARENT_DIR%"=="%HOOK_DIR%" exit /b 0
 set "HOOK_DIR=%PARENT_DIR%"
 goto find_package_config
 :package_config_found
+set "PACKAGE_CONFIG=%HOOK_DIR%\.dart_tool\package_config.json"
 findstr /R /C:"\"name\"[ ]*:[ ]*\"ccrouter_generator\"" "%HOOK_DIR%\.dart_tool\package_config.json" >nul
 if not "%ERRORLEVEL%"=="0" exit /b 0
 pushd "%PROJECT_ROOT%" || exit /b 1
-call "%ORIGINAL%" run --verbosity=error ccrouter_generator:ccrouter pub-hook run --project-root "%PROJECT_ROOT%" --pub-command "dart:%PUB_COMMAND%"
+call "%ORIGINAL%" --packages="%PACKAGE_CONFIG%" run --verbosity=error ccrouter_generator:ccrouter pub-hook run --project-root "%PROJECT_ROOT%" --pub-command "dart:%PUB_COMMAND%"
 set "HOOK_EXIT=%ERRORLEVEL%"
 popd
 if not "%HOOK_EXIT%"=="0" echo CCRouter pub hook failed after successful dart pub ^(exit %HOOK_EXIT%^). 1>&2
@@ -2262,13 +2269,14 @@ if /I "%PARENT_DIR%"=="%HOOK_DIR%" goto invoke_original
 set "HOOK_DIR=%PARENT_DIR%"
 goto find_package_config
 :package_config_found
+set "PACKAGE_CONFIG=%HOOK_DIR%\.dart_tool\package_config.json"
 findstr /R /C:"\"name\"[ ]*:[ ]*\"ccrouter_generator\"" "%HOOK_DIR%\.dart_tool\package_config.json" >nul
 if not "%ERRORLEVEL%"=="0" goto invoke_original
 pushd "%PROJECT_ROOT%" || goto hook_failed
 if /I "%HOOK_COMMAND%"=="clean" (
-  call "%SCRIPT_DIR%dart.bat" run --verbosity=error ccrouter_generator:ccrouter pub-hook guard-clean --project-root "%PROJECT_ROOT%"
+  call "%SCRIPT_DIR%dart.bat" --packages="%PACKAGE_CONFIG%" run --verbosity=error ccrouter_generator:ccrouter pub-hook guard-clean --project-root "%PROJECT_ROOT%"
 ) else (
-  call "%SCRIPT_DIR%dart.bat" run --verbosity=error ccrouter_generator:ccrouter pub-hook run --project-root "%PROJECT_ROOT%" --pub-command "%HOOK_COMMAND%"
+  call "%SCRIPT_DIR%dart.bat" --packages="%PACKAGE_CONFIG%" run --verbosity=error ccrouter_generator:ccrouter pub-hook run --project-root "%PROJECT_ROOT%" --pub-command "%HOOK_COMMAND%"
 )
 set "HOOK_EXIT=%ERRORLEVEL%"
 popd
@@ -2281,11 +2289,11 @@ set "FLUTTER_MACHINE=0"
 for %%A in (%*) do if "%%~A"=="--machine" set "FLUTTER_MACHINE=1"
 if "%CCROUTER_DISABLE_WINDOWS_RUN_SUPERVISOR%"=="1" goto run_with_legacy_watch
 if "%FLUTTER_MACHINE%"=="1" if not "%CCROUTER_DISABLE_HOT_RELOAD_GATE%"=="1" goto run_with_supervisor_reload_gate
-call "%SCRIPT_DIR%dart.bat" run --verbosity=error ccrouter_generator:ccrouter_flutter_run_supervisor --host-root "%PROJECT_ROOT%" --original "%ORIGINAL%" --launch-watch -- %*
+call "%SCRIPT_DIR%dart.bat" --packages="%PACKAGE_CONFIG%" run --verbosity=error ccrouter_generator:ccrouter_flutter_run_supervisor --host-root "%PROJECT_ROOT%" --original "%ORIGINAL%" --launch-watch -- %*
 exit /b %ERRORLEVEL%
 
 :run_with_supervisor_reload_gate
-call "%SCRIPT_DIR%dart.bat" run --verbosity=error ccrouter_generator:ccrouter_flutter_run_supervisor --host-root "%PROJECT_ROOT%" --original "%ORIGINAL%" --launch-watch --reload-gate -- %*
+call "%SCRIPT_DIR%dart.bat" --packages="%PACKAGE_CONFIG%" run --verbosity=error ccrouter_generator:ccrouter_flutter_run_supervisor --host-root "%PROJECT_ROOT%" --original "%ORIGINAL%" --launch-watch --reload-gate -- %*
 exit /b %ERRORLEVEL%
 
 :run_with_legacy_watch
@@ -2293,10 +2301,10 @@ set "WATCH_DIR=%PROJECT_ROOT%\.dart_tool\ccrouter\v1\watch"
 if not exist "%WATCH_DIR%" mkdir "%WATCH_DIR%"
 set "WATCH_LEASE=%WATCH_DIR%\flutter-run-%RANDOM%-%RANDOM%.lease"
 type nul > "%WATCH_LEASE%"
-start "" /b "%SCRIPT_DIR%dart.bat" run --verbosity=error ccrouter_generator:ccrouter generate "%PROJECT_ROOT%" --watch=auto --machine --watch-lease "%WATCH_LEASE%" 1>>"%WATCH_DIR%\flutter-run.log" 2>>&1
+start "" /b "%SCRIPT_DIR%dart.bat" --packages="%PACKAGE_CONFIG%" run --verbosity=error ccrouter_generator:ccrouter generate "%PROJECT_ROOT%" --watch=auto --machine --watch-lease "%WATCH_LEASE%" 1>>"%WATCH_DIR%\flutter-run.log" 2>>&1
 echo CCRouter watch starting. Status: %WATCH_DIR%\status.json; log: %WATCH_DIR%\flutter-run.log
 if "%CCROUTER_DISABLE_WATCH_STARTUP_HANDSHAKE%"=="1" goto watch_handshake_complete
-call "%SCRIPT_DIR%dart.bat" run --verbosity=error ccrouter_generator:ccrouter_watch_startup --host-root "%PROJECT_ROOT%" --watch-lease "%WATCH_LEASE%"
+call "%SCRIPT_DIR%dart.bat" --packages="%PACKAGE_CONFIG%" run --verbosity=error ccrouter_generator:ccrouter_watch_startup --host-root "%PROJECT_ROOT%" --watch-lease "%WATCH_LEASE%"
 set "WATCH_HANDSHAKE_EXIT=%ERRORLEVEL%"
 if not "%WATCH_HANDSHAKE_EXIT%"=="0" goto watch_handshake_failed
 :watch_handshake_complete
@@ -2304,7 +2312,7 @@ if "%FLUTTER_MACHINE%"=="1" if not "%CCROUTER_DISABLE_HOT_RELOAD_GATE%"=="1" got
 call "%ORIGINAL%" %*
 goto run_finished
 :run_with_reload_gate
-call "%SCRIPT_DIR%dart.bat" run --verbosity=error ccrouter_generator:ccrouter_flutter_run_gate --host-root "%PROJECT_ROOT%" --original "%ORIGINAL%" -- %*
+call "%SCRIPT_DIR%dart.bat" --packages="%PACKAGE_CONFIG%" run --verbosity=error ccrouter_generator:ccrouter_flutter_run_gate --host-root "%PROJECT_ROOT%" --original "%ORIGINAL%" -- %*
 :run_finished
 set "ORIGINAL_EXIT=%ERRORLEVEL%"
 del /q "%WATCH_LEASE%" >nul 2>&1
