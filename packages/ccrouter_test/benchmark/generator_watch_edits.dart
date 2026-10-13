@@ -1151,7 +1151,9 @@ final class _BuilderCycleSample implements _BuilderCounters {
   final List<String> unparsedFinalLines;
 
   factory _BuilderCycleSample.fromJson(Map<String, dynamic>? json) {
-    if (json == null || json['formatVersion'] != 1) {
+    if (json == null ||
+        json['formatVersion'] != 2 ||
+        json['available'] != true) {
       throw StateError('Structured build_runner diagnostics are missing.');
     }
     final durationMs = json['durationMs'];

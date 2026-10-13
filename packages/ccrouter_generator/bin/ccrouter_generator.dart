@@ -26,6 +26,7 @@ import 'src/bounded_process_shutdown.dart';
 import 'src/build_runner_phase_report.dart';
 import 'src/coordination_home.dart';
 import 'src/flutter_run_watch_lease.dart';
+import 'src/generation_file_reader.dart';
 import 'src/one_shot_generation_diagnostics.dart';
 import 'src/route_find.dart' as route_find;
 import 'src/pub_hook.dart';
@@ -3522,10 +3523,12 @@ abstract final class _GenerationStateFingerprint {
     );
     if (library == null || library.scheme != 'file') return;
     final root = File.fromUri(library).parent.parent;
-    for (final file in await CCGeneratorExecutionKernel.files(root)) {
-      inputs['generator/${_relativePath(root, file)}'] = await file
-          .readAsBytes();
-    }
+    inputs.addAll(
+      await CCGenerationFileReader.shared.readAll(<String, File>{
+        for (final file in await CCGeneratorExecutionKernel.files(root))
+          'generator/${_relativePath(root, file)}': file,
+      }),
+    );
     for (final name in const ['pubspec.yaml', 'build.yaml']) {
       await _addFile(
         inputs,
@@ -3924,11 +3927,17 @@ Future<List<CCComponentDependencyPreflightIssue>> _componentDependencyPreflight(
   )) {
     final lib = Directory(path.join(package.root.path, 'lib'));
     if (!lib.existsSync()) continue;
+    final files = <String, File>{};
     await for (final entity in lib.list(recursive: true, followLinks: false)) {
       if (entity is! File || !entity.path.endsWith('.dart')) continue;
       final relative = _relativePath(package.root, entity);
       if (relative.split('/').contains('ccrouter_generated')) continue;
-      final source = await entity.readAsString();
+      files[relative] = entity;
+    }
+    final contents = await CCGenerationFileReader.shared.readAll(files);
+    for (final entry in contents.entries) {
+      final relative = entry.key;
+      final source = utf8.decode(entry.value);
       if (!source.contains('CCComponent(') &&
           !source.contains('CCComponentId(') &&
           !source.contains('@CCServiceContract') &&
@@ -4219,7 +4228,7 @@ Future<Map<String, List<int>>> _readManagedGeneratedFiles(
   bool Function(String relative)? include,
   bool stopAtNestedPackages = false,
 }) async {
-  final files = <String, List<int>>{};
+  final files = <String, File>{};
   final packageRoot = path.normalize(root.absolute.path);
   final pending = <Directory>[root.absolute];
   while (pending.isNotEmpty) {
@@ -4244,10 +4253,10 @@ Future<Map<String, List<int>>> _readManagedGeneratedFiles(
       final name = segments.last;
       if (!_isManagedGeneratedArtifact(segments, name)) continue;
       if (include != null && !include(relative)) continue;
-      files[relative] = await entity.readAsBytes();
+      files[relative] = entity;
     }
   }
-  return files;
+  return CCGenerationFileReader.shared.readAll(files);
 }
 
 /// Whether [absoluteFile] belongs to [packageRoot] rather than a nested Package.

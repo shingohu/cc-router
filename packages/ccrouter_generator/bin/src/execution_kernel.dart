@@ -922,6 +922,8 @@ abstract final class CCGeneratorExecutionKernel {
       'bin/src/aggregation_reuse.dart',
       'bin/src/build_plan.dart',
       'bin/src/execution_kernel.dart',
+      // Owns exact-byte capture failure and concurrency semantics.
+      'bin/src/generation_file_reader.dart',
       // Owns the in-process cycle mode that decides whether Builder reruns.
       'bin/src/generation_watch.dart',
       'bin/src/portable_generation_state.dart',

@@ -990,6 +990,16 @@ The aggregation cycle reuses the watch process and reports
 `CCROUTER_DISABLE_WATCH_IN_PROCESS_CYCLE=1` restores the
 `subprocessReference` implementation; compare all managed artifact bytes and
 still finish with `--no-cache --check`.
+The source/output/kernel/preflight batch file reads share an isolate-local budget
+of four concurrent exact-byte reads. Use
+`CCROUTER_DISABLE_PARALLEL_FILE_READS=1` for the sequential A/B path; restart
+active watch processes for the environment change to take effect. Captures
+retain deterministic logical order and wait for in-flight reads to settle on
+failure before returning to restoration. There is no cross-cycle byte cache;
+every input barrier and restore scan still reads its own current filesystem
+evidence. Measure full commands and watch cycles separately from read/hash
+microbenchmarks; Analyzer Plugin I/O is outside this optimization.
+
 Successful cycles reuse one exact-content planning snapshot for the local
 fast-path manifest and Build Plan state. Set
 `CCROUTER_DISABLE_SHARED_PLANNING_SNAPSHOT=1` to restore separate scans for

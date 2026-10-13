@@ -519,6 +519,16 @@ default and reports `aggregationSucceeded.cycleMode=inProcess`. Use
 `CCROUTER_DISABLE_WATCH_IN_PROCESS_CYCLE=1` only to compare against the
 `subprocessReference` path; neither mode replaces the final
 `--no-cache --check`.
+Generator source/output/kernel/preflight batch reads share an isolate-local budget
+of four concurrent exact-byte file reads. Set
+`CCROUTER_DISABLE_PARALLEL_FILE_READS=1` for sequential-read A/B; restart an
+active watch after changing its environment. This changes
+only I/O scheduling: results retain deterministic logical order, failed reads
+drain before rollback, and no file bytes are cached across cycles. All input
+barriers, Builder execution, validation, restoration, and atomic writes remain.
+Do not transfer read-only microbenchmark speedups to whole generation, watch,
+Pub Hook, or Analyzer timings.
+
 Successful cycles share one exact-content planning snapshot between the local
 fast-path manifest and Build Plan state. Use
 `CCROUTER_DISABLE_SHARED_PLANNING_SNAPSHOT=1` only for byte-for-byte or timing

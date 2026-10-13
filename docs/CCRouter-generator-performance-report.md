@@ -2,7 +2,7 @@
 
 > 文档状态：2026-09-28 性能快照；2026-10-03 补充 Build Plan P2-P5，以及 P6 只读失效归因；
 > 2026-10-05 补充 generation watch 多轮编辑基线；2026-10-07 补充图算法、snapshot、Analyzer
-> alias graph 与组合交错 A/B。
+> alias graph 与组合交错 A/B；2026-10-13 补充有界文件读取 A/B。
 > 包含多组件个人/团队拓扑与五类能力共享依赖样本。数值不自动代表后续提交或其他机器。
 
 Package 增删导致的 Workspace AOT 冷路径及后续正确性优先优化方案，见
@@ -871,3 +871,85 @@ aggregation/validation；Analyzer alias graph 只作用于 Plugin 单文件 Owne
 alias 的 P95 受 JIT/GC warm-up 顺序影响明显，因此报告大型样本的 P50，不用一次尾部样本宣传收益。
 Analyzer tiered exact-path polling 仍默认关闭，它的延迟/吞吐取舍见 10.12，不能与默认开启的 alias
 graph 混为一项。
+
+### 10.18 有界 exact-byte 文件读取（2026-10-13）
+
+源码、managed outputs、Generator kernel 和 dependency preflight 的读取仍包含串行 I/O。
+本轮只调整读取调度：每个 isolate 共享最多 4 个读取许可，Package capture 之间不增加并发，
+每次 capture 独立读取完整 bytes，并按原 logical-name 顺序交付结果。任何读取失败都先排空
+已启动的操作，再抛出原始错误；不发布部分结果，也不让 rollback 与残留读取交错。
+`CCROUTER_DISABLE_PARALLEL_FILE_READS=1` 恢复串行读取。目录发现范围、摘要编码、input barriers、
+Validator、锁、恢复重扫和原子写入继续保留；没有引入跨 cycle 内容缓存。
+
+测量环境为 macOS arm64、Dart 3.11.5。规模 benchmark 使用当前 Demo 的 11 个 Package、155 个
+源码/配置/生成 Dart 与 metadata 文件，复制为 1x/3x/5x/10x。三个独立进程按 1/4/8 workers
+轮换顺序，每个进程预热两次、采样 12 次；每个结果均与独立串行 oracle 逐字节、逐摘要对照。
+以下仅包含读取和 hashing，不包含目录发现、Analyzer、Builder 或完整生成：
+
+| 规模 | 文件数 | 串行 P50 / P95 | 4 workers P50 / P95 |
+| --- | ---: | ---: | ---: |
+| 1x | 155 | 19.52 / 24.80ms | 14.67 / 19.29ms |
+| 3x | 465 | 52.73 / 77.29ms | 41.51 / 55.81ms |
+| 5x | 775 | 85.99 / 130.51ms | 82.39 / 100.21ms |
+| 10x | 1550 | 183.64 / 338.88ms | 142.79 / 200.75ms |
+
+8 workers 在部分样本中更快，但收益没有扩大到数量级，且会增加同时读入的文件数，因此采用
+4 workers 作为保守默认值。独立进程峰值 RSS 包括 Dart VM/JIT、oracle 和候选快照，不能当作
+reader 自身内存；10x 本轮峰值为串行约 301MiB、4 workers 约 361MiB、8 workers 约 377MiB。
+不宣称内存无代价或已证明任何规模下都不会负优化；生产 reader 不缓存结果，失败后许可归还
+和同时 capture 的总并发上限由确定性测试覆盖。
+
+真实 Demo 通过正常缓存 CLI 入口交错执行 6+6 个样本，预热不计入。与文件规模 benchmark
+分别计时，不能把阶段加速比例外推为完整生成收益：
+
+| 路径 | 串行 wall P50 | 4 workers wall P50 | 串行内部 P50 | 4 workers 内部 P50 |
+| --- | ---: | ---: | ---: | ---: |
+| 无改动 `--check --profile` | 722ms | 692ms | 308.90ms | 298.03ms |
+| `--no-cache --check --profile` | 2773ms | 2809ms | 2380.61ms | 2369.25ms |
+
+无改动 fast path 的 wall P50 减少约 30ms；完整参考路径基本持平，wall P50 反而高 36ms，
+不能据此宣传完整生成提速。完整参考路径 Builder actions 全 skipped，仍包含约 0.88s 子进程
+执行，以及快照、preflight、聚合和恢复。六样本 P95 接近最大值，仅用于描述这一轮波动，
+不建立产品尾延迟承诺。Analyzer Plugin 不使用此 reader，不需要升级 Plugin 或 Demo pin。
+
+复现命令：
+
+```bash
+fvm dart run packages/ccrouter_test/benchmark/generator_file_read_scaling.dart
+fvm dart run packages/ccrouter_test/benchmark/generator_file_read_scaling.dart --demo
+```
+
+完整 generation suite：`fvm dart test --concurrency=1 packages/ccrouter_test/generator_test`，
+545 项通过，1 项可选远端 Analyzer installation smoke 默认跳过。覆盖 Host/package-local、
+watch/Pub Hook 协作、输入中途变化、失败恢复、nested example 保护、Portable State 和缓存损坏。
+新增 A/B 回归还逐字节比较了生成物、fast-path manifest 和 Build Plan state。
+
+真实 watch 又按并发 / 串行 / 并发三个独立 session 跑编辑矩阵，每个场景每侧 3 个样本。
+三轮均恢复源码、清理新增/删除/重命名 fixture，并验证 105 个受管产物逐字节一致，最终
+fingerprint 均为 `4d8e60c8e2f1ca75fed7f172a0bb9bff5d5fcb99b6ff1b76db3b9b45751a83bf`。
+三轮最后的 `generate demo --no-cache --check` 全部通过。以下是串行中间轮与并发复测轮：
+
+| 编辑场景 | 串行 wall P50 | 并发复测 wall P50 | 串行 aggregation P50 | 并发复测 aggregation P50 |
+| --- | ---: | ---: | ---: | ---: |
+| 注释 | 2408ms | 1753ms | 794ms | 551ms |
+| Widget body | 1953ms | 1592ms | 556ms | 488ms |
+| initState | 2104ms | 1580ms | 598ms | 511ms |
+| 新增函数 | 1806ms | 1666ms | 658ms | 535ms |
+| Route annotation | 2441ms | 1886ms | 917ms | 629ms |
+| 新增 Dart 文件 | 1194ms | 1305ms | 509ms | 537ms |
+| 删除 Dart 文件 | 1193ms | 1269ms | 489ms | 573ms |
+| 重命名 Dart 文件 | 1232ms | 1210ms | 484ms | 520ms |
+
+这些不是交错于同一 Builder session 的纯 I/O 因果实验。Builder 和 debounce 也有波动，不能把
+全部 wall 差异归因于读取调度。第一轮并发的文件新增/删除 wall P50 为 1099/1155ms，复测为
+1305/1269ms：文件生命周期路径没有稳定的整体提速结论，也不能隐藏复测中比串行更慢的样本。
+本轮保留 4-worker 有界调度，以精确内容、失败排空、规模读取收益和全部正确性回归作为依据，
+不承诺任何项目或每次操作都更快；资源紧张或真实慢样本使用串行 kill switch 继续对照。
+
+watch benchmark 原有断言还停留在 `buildRunner.formatVersion: 1`；已更新为当前 `2` 并明确要求
+`available: true`。该变更只修复基准的协议检查，没有改变生产事件。
+
+```bash
+CCROUTER_DISABLE_PARALLEL_FILE_READS=0 fvm dart run packages/ccrouter_test/benchmark/generator_watch_edits.dart --samples=3
+CCROUTER_DISABLE_PARALLEL_FILE_READS=1 fvm dart run packages/ccrouter_test/benchmark/generator_watch_edits.dart --samples=3
+```

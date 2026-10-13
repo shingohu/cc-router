@@ -1462,6 +1462,15 @@ entrypoint 和恢复 CLI library graph；`aggregationSucceeded.cycleMode` 为 `i
 则只恢复旧 cycle planning 路径。两个 kill switch 均不关闭 watch，也不改变最终
 `--no-cache --check` 的权威性。
 
+源码 fingerprint、managed-output snapshot、Generator kernel fingerprint 和 dependency preflight
+的批量文件读取共享每个 isolate 最多 4 个并发读取的预算；文件内容仍逐字节校验，结果保持确定顺序。
+设置 `CCROUTER_DISABLE_PARALLEL_FILE_READS=1` 可回退串行读取做 A/B；活动 watch 需要重启后生效。
+读取失败会先等待已启动的
+读取结束，再进入失败/恢复流程；该开关不跳过 Builder、Validator 或任何 input barrier，也不缓存
+跨 cycle 的文件内容。规模基准：
+`fvm dart run packages/ccrouter_test/benchmark/generator_file_read_scaling.dart`；实际 Demo 交错 A/B
+追加 `--demo`。文件读取基准的收益不能直接当作完整生成或 Analyzer 的收益。
+
 成功 cycle 在发布本机 fast-path manifest 与 Build Plan state 前只捕获一次 exact-content
 planning snapshot，并由两个状态文件复用；两者仍分别原子写入。设置
 `CCROUTER_DISABLE_SHARED_PLANNING_SNAPSHOT=1` 可恢复各自独立扫描，用于逐字节和耗时 A/B；

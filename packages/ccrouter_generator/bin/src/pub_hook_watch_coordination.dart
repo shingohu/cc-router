@@ -5,6 +5,8 @@ import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:path/path.dart' as path;
 
+import 'generation_file_reader.dart';
+
 /// Exact identity of the Pub resolution inputs coordinated by Hook and watch.
 abstract final class CCPubResolutionFingerprint {
   /// Hashes the current Host manifest and build-root resolution files.
@@ -61,7 +63,7 @@ abstract final class CCPackageWatchFingerprint {
     required String packageName,
     required Directory packageRoot,
   }) async {
-    final inputs = <String, List<int>>{};
+    final inputs = <String, File>{};
     final lib = Directory(path.join(packageRoot.path, 'lib'));
     if (lib.existsSync()) {
       final files = <File>[];
@@ -77,16 +79,16 @@ abstract final class CCPackageWatchFingerprint {
       files.sort((left, right) => left.path.compareTo(right.path));
       for (final file in files) {
         inputs['package/$packageName/${_relativePath(packageRoot, file)}'] =
-            await file.readAsBytes();
+            file;
       }
     }
     for (final name in const <String>['pubspec.yaml', 'build.yaml']) {
       final file = File(path.join(packageRoot.path, name));
       if (file.existsSync()) {
-        inputs['package/$packageName/$name'] = await file.readAsBytes();
+        inputs['package/$packageName/$name'] = file;
       }
     }
-    return digestEntries(inputs);
+    return digestEntries(await CCGenerationFileReader.shared.readAll(inputs));
   }
 
   /// Reads exact CCRouter-owned source-tree artifacts below one Package.
@@ -94,7 +96,7 @@ abstract final class CCPackageWatchFingerprint {
     Directory packageRoot, {
     bool Function(String relative)? include,
   }) async {
-    final files = <String, List<int>>{};
+    final files = <String, File>{};
     final normalizedRoot = path.normalize(packageRoot.absolute.path);
     final pending = <Directory>[packageRoot.absolute];
     while (pending.isNotEmpty) {
@@ -120,10 +122,10 @@ abstract final class CCPackageWatchFingerprint {
         final segments = relative.split('/');
         if (!_isManagedGeneratedArtifact(segments, segments.last)) continue;
         if (include != null && !include(relative)) continue;
-        files[relative] = await entity.readAsBytes();
+        files[relative] = entity;
       }
     }
-    return files;
+    return CCGenerationFileReader.shared.readAll(files);
   }
 
   /// Hashes every currently managed source-tree artifact for one Package.

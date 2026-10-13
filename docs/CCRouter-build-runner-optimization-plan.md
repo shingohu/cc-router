@@ -954,3 +954,16 @@ A/B 中，四类非生成语义编辑 wall P50 减少 106–158ms，Route annota
 与 `CCROUTER_DISABLE_AGGREGATION_REUSE=1` reference 的 99 个受管文件 fingerprint 完全一致，并均
 通过 `--no-cache --check`。因此保留该 production path；它不是 P6 语义摘要，也不改变 Builder
 执行范围。
+
+### 12.14 有界文件读取（2026-10-13）
+
+在保留全部 exact-content capture 和 barrier 的前提下，源码、managed outputs、kernel fingerprint
+与 dependency preflight 使用 isolate 共享的 4-worker I/O budget。结果保持 logical-name 顺序，
+失败先排空正在读取的文件，再向恢复流程抛出原始错误；不缓存跨 cycle bytes。
+`CCROUTER_DISABLE_PARALLEL_FILE_READS=1` 保留串行 A/B。该调度器属于 fingerprint execution
+boundary，自身代码变化会使旧 planning proof 失效。
+
+11/33/55/110 Package 的 Demo 文件复制 benchmark 逐字节和摘要对照通过；文件读取阶段收益
+见性能报告 10.18。真实 Demo 无改动命令仅有约 30ms wall P50 收益，完整 `--no-cache --check`
+基本持平，因此不把阶段收益当作 Builder/Analyzer 或完整 watch 提速。保留保守并发上限和
+串行开关，继续以真实输入编辑、恢复及最终权威门禁验收。
