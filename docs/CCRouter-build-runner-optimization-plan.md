@@ -993,5 +993,30 @@ alias 也有候选重复，但当前 Demo 没有这类受管外部产物；不�
 原有 kill switch、Builder/Validator、输入屏障、快照恢复和原子写入继续保持原实现。
 
 以后只有真实项目出现大量外部分发 Package，且 Profile 与清单共同证明同一 capture 的重复
-读取已经成为可观成本时，才重新评估局部去重。下一候选是 incremental SHA-256 hashing 的
-内存复制成本评估，仍需独立授权、逐字节 A/B 和净收益验证。
+读取已经成为可观成本时，才重新评估局部去重。incremental SHA-256 hashing 的内存复制成本
+已继续按 12.16 完成评估。
+
+### 12.16 流式 SHA-256 评估（2026-10-13）
+
+状态：评估完成，**不启用生产路径**。两处既有 digest 会先拼接完整的 logical-name/content
+字节数组。临时候选用一个新 SHA-256 sink 分段消费同一排序、UTF-8 名称、NUL 分隔和完整
+文件 bytes；每次重新计算，没有跨 capture/cycle 缓存，也不按 mtime/size 跳过任何读取。
+
+研究 benchmark 使用当前 Demo 的 155 个文件、11 个 Package，复制为 1x/3x/5x/10x；另加
+1/8/32MiB 单文件合成样本。分别测全局摘要与逐 Package 摘要，并将独立进程 RSS 与同进程
+交错计时分开。独立编码 oracle、空输入、Unicode/NUL、SHA-256 block 边界、输入顺序、
+同大小/mtime 修改、增删/重命名及失败后的新 capture 全部通过。
+
+微基准的连续数组分配与 RSS 有候选收益，但耗时改善很小，P95 并不一致。临时生产原型
+曾通过独立开关进入 Generator 与 watch/Hook 共用的 Package fingerprint，并纳入 execution
+kernel ownership。真实 Demo 每侧每场景预热 1 次、交错采样 10 次，44 次 `--check` 成功；
+97 个受管产物和 10 份本地 manifest/Build Plan 文件逐文件名、逐字节一致。无改动命令略慢，
+完整参考路径略快；峰值 RSS 同样一升一降，明细见性能报告 10.20，不能据此认定稳定净收益。
+
+因此撤回全部生产原型、共享 digest 模块、kernel ownership 变更及实验开关，只保留
+`packages/ccrouter_test/benchmark/generator_digest_streaming.dart` 和评估记录。CLI 验收门槛未
+通过，本轮没有继续 watch A/B，也不宣称 Pub Hook 或 Analyzer 获益。所有原有锁、独立
+input barrier、Builder、Validator、恢复与原子写入保持原实现。
+
+后续暂停此类微优化，优先收集真实项目的慢样本或内存压力证据；只有摘要复制/GC 已成为
+可观成本时才重新评估，不自动转向跨 cycle 缓存或语义指纹跳过 Builder。

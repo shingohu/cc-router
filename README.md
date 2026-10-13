@@ -1476,6 +1476,12 @@ A/B 没有显示净收益，生产原型已撤回。局部研究清单与 benchm
 [性能报告 10.19](docs/CCRouter-generator-performance-report.md)；
 该评估没有新增运行时开关，也不改变 watch、Pub Hook 或 Analyzer 行为。
 
+流式 SHA-256 也已评估：它保持原有名称、排序、分隔符和完整文件字节，减少微基准中的
+连续数组分配，但真实 Demo CLI 的耗时与峰值 RSS 没有一致净收益，因此生产原型同样撤回。
+评估与验收边界见[性能报告 10.20](docs/CCRouter-generator-performance-report.md)；研究 benchmark：
+`fvm dart run packages/ccrouter_test/benchmark/generator_digest_streaming.dart`。
+该命令只运行局部 hash 对照，不启用生产优化，也不提供 CLI/watch A/B 开关。
+
 成功 cycle 在发布本机 fast-path manifest 与 Build Plan state 前只捕获一次 exact-content
 planning snapshot，并由两个状态文件复用；两者仍分别原子写入。设置
 `CCROUTER_DISABLE_SHARED_PLANNING_SNAPSHOT=1` 可恢复各自独立扫描，用于逐字节和耗时 A/B；

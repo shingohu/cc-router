@@ -1005,3 +1005,88 @@ benchmark 所用的直接 `yaml` dev dependency，解析版本保持现有解析
 最终 `generate demo --no-cache --check` 通过：6 个组件、33 条 Route、11 个生成 Package，
 Builder 写入 0 个输出，所有受管生成物保持最新。本轮无需更新 Plugin pin 或重装 Pub Hook。
 `fvm dart analyze` 无问题，benchmark 格式检查与 `git diff --check` 通过；无测试遗留源码或产物变更。
+
+### 10.20 流式 SHA-256：撤回生产原型（2026-10-13）
+
+结论：保留研究 benchmark，**不新增生产优化或运行时开关**。分段 hashing 可以避免
+`BytesBuilder.takeBytes()` 拼接完整连续数组，但真实 Demo CLI 尚未证明一致的耗时或内存净收益。
+这不是语义指纹，不跳过文件读取或 Builder；候选保持所有原有编码与正确性边界。
+
+原始字节编码为：按 logical name 排序，依次拼接 UTF-8 名称、NUL、完整文件 bytes、NUL。
+候选将这些片段送入同一个 SHA-256 sink，每次创建新 sink 并完整重新计算。独立 oracle 通过
+预分配数组和明确 offset 构造参考编码，不依赖候选的 chunk 逻辑。另验证空 map/空文件、
+Unicode 与 NUL、SHA-256 block 边界、插入顺序、输入 bytes 未被修改、同大小/mtime 编辑、
+文件新增/删除/重命名、缺失读取失败和下一 capture 恢复。它不证明并发修改期间的原子快照；
+生产的多个 input barrier 仍须分别读取当前内容。
+
+测量环境为 macOS arm64、Dart 3.11.5。Demo 文件 workload 包含 155 个源码/配置/生成 Dart
+与 metadata 文件、11 个 Package、965,164 bytes，复制为 1x/3x/5x/10x；不声称这些复制是
+实际解析的多 Host graph。大文件样本另用 1/8/32MiB 合成内容，不当作真实项目收益。
+
+微基准只计已经读入内存的 hash，不含目录发现、I/O、解析、Analyzer、Builder、完整生成或
+进程启动。独立进程测内存，每侧 3 个进程轮换顺序；每个进程预热 3 个 sample、采样 12 个，
+每 sample 计 2 次 hash 的平均值。另用 3 个进程内交错两种算法计时，避免把跨进程机器负载
+差异全部归因于算法。逐 Package 时间还包含相同的小摘要核对 proof，两侧口径一致。
+
+首次同进程交错计时如下，每侧 36 个有效样本；范围内存在进程和 GC 波动：
+
+| 文件规模 | 全局参考 / 流式 P50 | 全局参考 / 流式 P95 | 逐 Package 参考 / 流式 P50 |
+| --- | ---: | ---: | ---: |
+| 1x / 155 | 7.08 / 6.75ms | 9.71 / 8.19ms | 7.22 / 6.76ms |
+| 3x / 465 | 20.53 / 19.59ms | 26.38 / 25.74ms | 21.48 / 19.48ms |
+| 5x / 775 | 31.26 / 30.98ms | 55.95 / 44.21ms | 33.20 / 30.93ms |
+| 10x / 1550 | 64.14 / 60.31ms | 76.65 / 83.22ms | 63.20 / 62.01ms |
+| 合成 1MiB | 6.70 / 6.36ms | 7.71 / 6.98ms | 6.61 / 6.32ms |
+| 合成 8MiB | 53.74 / 53.39ms | 76.31 / 80.60ms | 53.77 / 53.04ms |
+| 合成 32MiB | 214.58 / 206.89ms | 255.16 / 279.49ms | 215.13 / 212.13ms |
+
+1x 每次摘要只减少约 0.3–0.5ms，不能直接放大为整条 CLI/watch 提速。10x 逐 Package
+P95 为 71.36 / 115.11ms，也没有一致的尾延迟改善。首次独立进程计时的 10x 全局 P50 为
+59.14 / 65.47ms，与同进程复测方向不同；不得隐藏这个反例或据此断言因果性的负优化。
+
+首次独立进程峰值 RSS 的 10x 最大值为参考约 623MiB、流式约 226MiB；32MiB 合成单文件
+为约 309 / 212MiB。RSS 包含整个 Dart VM/JIT、fixture、全局与逐 Package 多轮 hashing，
+不等于单次分配量或 Generator 内存。全局连续拼接 buffer 在 Demo 1x 为 976,897 bytes、
+10x 为 9,768,970 bytes，候选去除的是这份临时数组；名称编码、排序、原始 bytes 与 hash
+内部 buffer 仍存在。不能将长循环的 RSS 差额外推成真实 CLI 或常驻 watch 的节省。
+
+临时生产原型覆盖既有 Generator input/state 与 watch/Hook 共用的 Package digest，保留
+全部读取、独立 barrier、Builder、Validator、快照恢复和原子写入，并暂时纳入 execution
+kernel ownership。真实 Demo 用正常 CLI 入口交错运行以下两个场景，每侧预热 1 次、采样
+10 次，只切换本项临时开关，不关闭此前优化。每次成功检查 97 个受管产物和 10 份本地
+manifest/Build Plan 的完整文件名与 bytes；44 次 `--check` 均成功。
+
+| 真实命令 | 参考 wall P50 / P95 | 流式 wall P50 / P95 | 参考 / 流式内部 P50 | 参考 / 流式峰值 RSS P50 |
+| --- | ---: | ---: | ---: | ---: |
+| 无改动 `--check --profile` | 868 / 1398ms | 905 / 1417ms | 406.05 / 414.93ms | 165.34 / 170.53MiB |
+| `--no-cache --check --profile` | 3093 / 4030ms | 3030 / 8399ms | 2615.48 / 2545.90ms | 214.34 / 208.55MiB |
+
+峰值 RSS 取 macOS `/usr/bin/time -l` 同口径报告，不是多进程同时内存的求和。完整路径
+8.399s 流式慢样本同时包含 1.101s dependency preflight、2.852s build_runner execution、
+多个变慢的 I/O/快照阶段，不能把全部延迟归因于 hashing。无改动场景和完整参考路径的
+耗时与 RSS 方向不同，只能支持“净收益证据不足”，不能宣称必然变慢或 Builder/Analyzer
+已加速。这些绝对 wall 也不应直接与前序不同负载的历史测量比较。
+
+保留脚本的默认完整入口复跑中，1x/3x/5x/10x 同进程全局 P50 为参考
+5.75/17.39/29.07/57.25ms、流式 5.59/16.83/28.38/56.42ms；改善仅约
+0.15/0.56/0.69/0.83ms。该轮全局 P95 为参考 6.33/17.94/30.38/59.20ms、流式
+5.83/17.35/30.07/57.72ms，比首轮更稳定。两轮均完整保留摘要对照，方向和幅度的波动
+不应被选择性展示；这组局部复测也不能替代真实 CLI 的不一致验收结果。
+
+因此生产原型、独立模块、kernel 边界变更和临时开关已全部撤回。CLI 门槛未通过，没有
+继续 watch A/B；不新增无效果的生产环境变量，也不宣称 watch、Pub Hook 或 Analyzer 收益。
+保留的 benchmark 使用固定拼接参考和局部流式候选，两条实现均与独立编码 oracle 比较。
+
+```bash
+fvm dart run packages/ccrouter_test/benchmark/generator_digest_streaming.dart
+fvm dart run packages/ccrouter_test/benchmark/generator_digest_streaming.dart --timing-only
+fvm dart run packages/ccrouter_test/benchmark/generator_digest_streaming.dart --verify-only
+```
+
+默认入口同时报告独立进程 RSS 与同进程交错时间；`--timing-only` 不启动独立内存进程，
+`--verify-only` 只运行 correctness differential。它们不提供已撤回的真实 CLI 原型模式。
+
+撤回后文件读取/原子恢复回归 7 项通过；`fvm dart analyze` 无问题。Demo 普通生成、缓存
+`--check` 与最终 `--no-cache --check` 均成功，97 个受管文件仍逐字节一致，权威检查 Builder
+写入 0 个输出。最终生产文件无变更，未重复上一项已通过的完整 generation suite；无需
+更新 Analyzer Plugin pin、重装 Pub Hook 或修改 Integration Skill 的使用语义。
