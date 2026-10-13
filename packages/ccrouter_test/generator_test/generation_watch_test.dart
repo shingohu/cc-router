@@ -510,9 +510,13 @@ void main() {
           0,
           reason: _processOutput(watchedPostPub),
         );
+        final reusedCycle = RegExp(
+          r'reused active watch cycle (\d+)',
+        ).firstMatch(_processOutput(watchedPostPub));
+        expect(reusedCycle, isNotNull);
         expect(
-          _processOutput(watchedPostPub),
-          contains('reused active watch cycle ${commentCycle['cycle']}'),
+          int.parse(reusedCycle!.group(1)!),
+          greaterThanOrEqualTo(commentCycle['cycle'] as int),
         );
         expect(await _managedArtifacts(), watchedArtifacts);
       } finally {

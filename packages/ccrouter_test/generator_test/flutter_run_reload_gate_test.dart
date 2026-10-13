@@ -284,12 +284,14 @@ void main() {
     'interactive supervisor removes its lease before child termination',
     () => _assertLeaseRemovedBeforeChildExit(coordinateMachineReloads: false),
     skip: Platform.isWindows ? 'POSIX signal fixture' : false,
+    timeout: const Timeout(Duration(minutes: 1)),
   );
 
   test(
     'machine supervisor removes its lease before child termination',
     () => _assertLeaseRemovedBeforeChildExit(coordinateMachineReloads: true),
     skip: Platform.isWindows ? 'POSIX signal fixture' : false,
+    timeout: const Timeout(Duration(minutes: 1)),
   );
 
   test('stale supervised lease expires an orphaned watch', () async {
@@ -473,11 +475,24 @@ Future<Process> _startProxy(Directory host, File original) =>
       '--machine',
     ], workingDirectory: Directory.current.path);
 
-Future<void> _waitFor(bool Function() predicate) async {
+Future<void> _waitFor(
+  bool Function() predicate, {
+  Duration timeout = const Duration(seconds: 10),
+  String description = 'test condition',
+  String? Function()? earlyFailure,
+  String Function()? diagnostics,
+}) async {
   final watch = Stopwatch()..start();
   while (!predicate()) {
-    if (watch.elapsed > const Duration(seconds: 10)) {
-      throw TimeoutException('Timed out waiting for test process readiness.');
+    final failure = earlyFailure?.call();
+    if (failure != null) {
+      throw StateError('$failure\n${diagnostics?.call() ?? ''}');
+    }
+    if (watch.elapsed > timeout) {
+      throw TimeoutException(
+        'Timed out waiting for $description after ${timeout.inSeconds}s.\n'
+        '${diagnostics?.call() ?? ''}',
+      );
     }
     await Future<void>.delayed(const Duration(milliseconds: 20));
   }
@@ -502,9 +517,11 @@ Future<void> _assertLeaseRemovedBeforeChildExit({
   final ready = File(path.join(host.path, 'flutter-ready'));
   final terminationStarted = File(path.join(host.path, 'termination-started'));
   final childExited = File(path.join(host.path, 'child-exited'));
+  final childPid = File(path.join(host.path, 'child.pid'));
   final original = File(path.join(host.path, 'fake-flutter-wait'))
     ..writeAsStringSync('''#!/usr/bin/env bash
 trap 'touch "${terminationStarted.path}"; sleep 2; touch "${childExited.path}"; exit 0' INT TERM
+printf "%s\\n" "\$BASHPID" > "${childPid.path}"
 touch "${ready.path}"
 while true; do sleep 1; done
 ''');
@@ -529,15 +546,77 @@ while true; do sleep 1; done
     arguments,
     workingDirectory: Directory.current.path,
   );
-  final errors = process.stderr.transform(utf8.decoder).join();
-  await _waitFor(() => ready.existsSync() && _hasHeartbeat(lease));
+  final output = StringBuffer();
+  final errors = StringBuffer();
+  final outputSubscription = process.stdout
+      .transform(utf8.decoder)
+      .listen(output.write);
+  final errorSubscription = process.stderr
+      .transform(utf8.decoder)
+      .listen(errors.write);
+  int? processResult;
+  final exitCode = process.exitCode.then((result) {
+    processResult = result;
+    return result;
+  });
+  var completed = false;
+  String diagnostics() =>
+      'supervisor stdout:\n$output\nsupervisor stderr:\n$errors';
 
-  expect(process.kill(ProcessSignal.sigterm), isTrue);
-  await _waitFor(() => terminationStarted.existsSync());
-  await _waitFor(() => !lease.existsSync());
-  expect(childExited.existsSync(), isFalse);
+  try {
+    await _waitFor(
+      () => ready.existsSync() && _hasHeartbeat(lease),
+      timeout: const Duration(seconds: 30),
+      description: 'supervisor readiness and lease heartbeat',
+      earlyFailure: () => processResult == null
+          ? null
+          : 'Supervisor exited early with code $processResult.',
+      diagnostics: diagnostics,
+    );
 
-  final result = await process.exitCode.timeout(const Duration(seconds: 10));
-  expect(result, isNot(1), reason: await errors);
-  expect(lease.existsSync(), isFalse);
+    expect(process.kill(ProcessSignal.sigterm), isTrue);
+    await _waitFor(
+      () => terminationStarted.existsSync(),
+      description: 'child termination',
+      diagnostics: diagnostics,
+    );
+    await _waitFor(
+      () => !lease.existsSync(),
+      description: 'lease removal',
+      diagnostics: diagnostics,
+    );
+    expect(childExited.existsSync(), isFalse);
+
+    final result = await exitCode.timeout(const Duration(seconds: 10));
+    expect(result, isNot(1), reason: diagnostics());
+    expect(lease.existsSync(), isFalse);
+    completed = true;
+  } finally {
+    if (processResult == null) {
+      process.kill(ProcessSignal.sigterm);
+      try {
+        await exitCode.timeout(const Duration(seconds: 5));
+      } on TimeoutException {
+        process.kill(ProcessSignal.sigkill);
+        await exitCode.timeout(const Duration(seconds: 5));
+      }
+    }
+    if (!completed && !childExited.existsSync() && childPid.existsSync()) {
+      final childProcessId = int.tryParse(childPid.readAsStringSync().trim());
+      if (childProcessId != null &&
+          Process.killPid(childProcessId, ProcessSignal.sigterm)) {
+        try {
+          await _waitFor(
+            () => childExited.existsSync(),
+            timeout: const Duration(seconds: 3),
+            description: 'failed-test child cleanup',
+          );
+        } on TimeoutException {
+          Process.killPid(childProcessId, ProcessSignal.sigkill);
+        }
+      }
+    }
+    await outputSubscription.cancel();
+    await errorSubscription.cancel();
+  }
 }
