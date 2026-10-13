@@ -141,6 +141,7 @@ void main() {
       allOf(
         contains('CCRouter Dart pub hook wrapper'),
         contains('CCROUTER_PUB_HOOK_NESTED_FLUTTER'),
+        contains('--packages="\$PACKAGE_CONFIG"'),
       ),
     );
     expect(
@@ -157,10 +158,15 @@ void main() {
     );
     expect(dartBat.readAsStringSync(), contains(':parse_pub_invocation'));
     expect(
+      dartBat.readAsStringSync(),
+      contains('--packages="%PACKAGE_CONFIG%"'),
+    );
+    expect(
       flutter.readAsStringSync(),
       allOf(
         contains('ccrouter_generator:ccrouter'),
         contains('CCROUTER_PUB_HOOK_NESTED_FLUTTER=1'),
+        contains('--packages="\$PACKAGE_CONFIG"'),
       ),
     );
     expect(flutter.readAsStringSync(), contains('--launch-watch'));
@@ -180,6 +186,10 @@ void main() {
         contains('ccrouter_generator:ccrouter_flutter_run_supervisor'),
         contains(':parse_flutter_invocation'),
       ),
+    );
+    expect(
+      flutterBat.readAsStringSync(),
+      contains('--packages="%PACKAGE_CONFIG%"'),
     );
     expect(flutterBat.readAsStringSync(), contains('--device-id'));
     expect(
@@ -258,6 +268,40 @@ void main() {
       expect(innerDart.readAsStringSync(), contains('exit 0'));
     },
   );
+
+  test('schema 5 install is stale but remains safely uninstallable', () async {
+    final sdk = await Directory.systemTemp.createTemp(
+      'ccrouter_pub_hook_schema_5_',
+    );
+    addTearDown(() => sdk.delete(recursive: true));
+    final bin = Directory(path.join(sdk.path, 'bin'))..createSync();
+    final flutter = File(path.join(bin.path, 'flutter'))
+      ..writeAsStringSync('#!/usr/bin/env bash\nexit 0\n');
+    File(
+      path.join(bin.path, 'flutter.bat'),
+    ).writeAsStringSync('@echo off\r\nexit /b 0\r\n');
+    final innerDart = await _writeFakeInnerDart(
+      sdk,
+      '#!/usr/bin/env bash\nexit 0\n',
+    );
+    final installed = await _run(['pub-hook', 'install', '--sdk', sdk.path]);
+    expect(installed.exitCode, 0, reason: '${installed.stderr}');
+
+    File(path.join(bin.path, '.ccrouter_pub_hook.json')).writeAsStringSync(
+      jsonEncode(<String, Object>{
+        'schema': 5,
+        'entrypoints': <String>['flutter', 'dart'],
+        'generator': 'ccrouter_generator',
+      }),
+    );
+
+    final status = await _run(['pub-hook', 'status', '--sdk', sdk.path]);
+    expect(status.exitCode, 1);
+    final removed = await _run(['pub-hook', 'uninstall', '--sdk', sdk.path]);
+    expect(removed.exitCode, 0, reason: '${removed.stderr}');
+    expect(flutter.readAsStringSync(), contains('exit 0'));
+    expect(innerDart.readAsStringSync(), contains('exit 0'));
+  });
 
   test('schema 4 uninstall rejects unowned Dart backups', () async {
     final sdk = await Directory.systemTemp.createTemp(
@@ -624,11 +668,15 @@ dev_dependencies:
       );
       expect(generated.exitCode, 0, reason: '${generated.stderr}');
       final generatedTrace = File(trace).readAsLinesSync();
+      final canonicalProject = project.resolveSymbolicLinksSync();
       expect(generatedTrace, hasLength(2));
       expect(generatedTrace.first, 'pub get');
       expect(
         generatedTrace.last,
         allOf(
+          contains(
+            '--packages=${path.join(canonicalProject, '.dart_tool', 'package_config.json')}',
+          ),
           contains('ccrouter_generator:ccrouter pub-hook run'),
           contains('--project-root '),
           contains('--pub-command dart:get'),
@@ -751,7 +799,9 @@ dev_dependencies:
     expect(
       lines.last,
       allOf(
-        startsWith('$canonicalProject|run '),
+        startsWith(
+          '$canonicalProject|--packages=${path.join(canonicalProject, '.dart_tool', 'package_config.json')} run ',
+        ),
         contains('ccrouter_generator:ccrouter pub-hook run'),
       ),
     );
@@ -774,7 +824,12 @@ dev_dependencies:
       final directedLines = File(trace).readAsLinesSync();
       expect(directedLines, hasLength(2));
       expect(directedLines.first, startsWith('$canonicalSdk|pub '));
-      expect(directedLines.last, startsWith('$canonicalProject|run '));
+      expect(
+        directedLines.last,
+        startsWith(
+          '$canonicalProject|--packages=${path.join(canonicalProject, '.dart_tool', 'package_config.json')} run ',
+        ),
+      );
     }
   });
 
@@ -1732,9 +1787,13 @@ exit "\${CCROUTER_DART_EXIT:-0}"
     expect('${run.stdout}', contains('CCRouter watch starting'));
     expect('${run.stderr}', isNot(contains('CCRouter watch starting')));
     final runTrace = File(trace).readAsLinesSync();
+    final canonicalProject = project.resolveSymbolicLinksSync();
     expect(
       runTrace.first,
-      startsWith('dart:run --verbosity=error ccrouter_generator:ccrouter'),
+      startsWith(
+        'dart:--packages=${path.join(canonicalProject, '.dart_tool', 'package_config.json')} '
+        'run --verbosity=error ccrouter_generator:ccrouter',
+      ),
     );
     expect(runTrace.last, 'flutter:--no-color run -d macos');
 

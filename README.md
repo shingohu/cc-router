@@ -1588,6 +1588,9 @@ SDK 解析优先使用 `FLUTTER_ROOT` 和当前目录向上的 `.fvm/flutter_sdk
 `ccrouter_generator` 时直接跳过。app-role Host 运行完整 Host generation；Flutter component 与
 Pure Dart contracts Package 运行 package-local generation。因此 Workspace 聚合根不会被误判为
 Host；Hook 不会猜测某个成员 Package 代替当前目录生成。
+Hook 的 preflight、post-pub、supervisor 与 watch daemon 都显式使用刚由 Pub 成功写入的
+`.dart_tool/package_config.json`；这些内部 `dart run` 不会再次触发 Dart-only dependency
+resolution，因此含 Flutter SDK 依赖的 Host 也不会在 generator 入口前失败。
 preflight 遇到 active watch 时由普通 `generate` 验证并复用精确 Host/Package cycle，成功后继续
 原始平台构建；它不会仅因 watch 持有 generation lock 而拒绝构建。
 wrapper 按已知 global option 的 arity 定位第一个真实 Flutter/Dart command，再只读取 `pub`
@@ -1615,7 +1618,8 @@ heartbeat；正常退出、non-zero exit 和可处理的 Ctrl+C 都会释放 lea
 preflight、watch startup handshake 或 generation lock。
 SDK 切换后 `status` 应显示 `run/build preflight: enabled`、`run watch: enabled`、
 `watch startup handshake: enabled`、`run supervisor: enabled` 以及当前平台的
-`dart pub post-hook: enabled`。旧 schema 4 安装需先 `uninstall` 再重新 `install`。
+`dart pub post-hook: enabled`。旧 schema 4/5 安装需先 `uninstall` 再重新 `install`；schema 6
+确保所有 Hook 内部 Dart 入口绑定已解析的 package config。
 `run/build` 成功时控制台使用 `CCRouter preflight`，Pub 后生成使用
 `CCRouter post-pub generation`；成功只保留 fast-path、验证摘要与最终总耗时，失败则输出最近
 200 行且最多 64 KiB 的 Generator 日志。若 Builder 已成功而后续 Workspace Validator 失败，

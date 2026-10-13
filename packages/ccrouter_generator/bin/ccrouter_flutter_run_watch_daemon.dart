@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:path/path.dart' as path;
+
 import 'src/flutter_run_watch_lease.dart';
 
 /// Owns redirected watch output independently from any one Flutter run.
@@ -21,6 +23,7 @@ Future<void> main(List<String> arguments) async {
       final process = await Process.start(
         Platform.resolvedExecutable,
         <String>[
+          '--packages=${path.join(parsed.buildRoot!, '.dart_tool', 'package_config.json')}',
           'run',
           '--verbosity=error',
           'ccrouter_generator:ccrouter',

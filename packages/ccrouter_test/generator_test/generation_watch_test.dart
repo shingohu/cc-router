@@ -1233,6 +1233,7 @@ done
       Future<Process> start(String label) => Process.start(
         Platform.resolvedExecutable,
         <String>[
+          '--packages=${path.join(Directory.current.path, '.dart_tool', 'package_config.json')}',
           'run',
           '--verbosity=error',
           'ccrouter_generator:ccrouter_flutter_run_supervisor',
@@ -1262,14 +1263,26 @@ done
         if (!secondExited) second?.kill();
       });
 
-      await _waitForFile(File(path.join(fixture.path, 'ready-first')));
+      await _waitForProcessFile(
+        File(path.join(fixture.path, 'ready-first')),
+        process: first,
+        stdout: firstStdout,
+        stderr: firstStderr,
+        description: 'first Flutter run',
+      );
       final initial = await _waitForWatchStatus(
         (status) => status['active'] == true && status['sessionReady'] == true,
       );
       second = await start('second');
       final secondStdout = second.stdout.transform(utf8.decoder).join();
       final secondStderr = second.stderr.transform(utf8.decoder).join();
-      await _waitForFile(File(path.join(fixture.path, 'ready-second')));
+      await _waitForProcessFile(
+        File(path.join(fixture.path, 'ready-second')),
+        process: second,
+        stdout: secondStdout,
+        stderr: secondStderr,
+        description: 'second Flutter run',
+      );
       final shared = await _waitForWatchStatus(
         (status) => status['active'] == true && status['sessionReady'] == true,
       );
@@ -1672,13 +1685,35 @@ Map<String, dynamic> _readWatchStatusSync() =>
         )
         as Map<String, dynamic>;
 
-Future<void> _waitForFile(File file) async {
+Future<void> _waitForProcessFile(
+  File file, {
+  required Process process,
+  required Future<String> stdout,
+  required Future<String> stderr,
+  required String description,
+}) async {
   final deadline = DateTime.now().add(const Duration(minutes: 2));
+  var exited = false;
+  int? processExitCode;
+  unawaited(
+    process.exitCode.then((value) {
+      exited = true;
+      processExitCode = value;
+    }),
+  );
   while (DateTime.now().isBefore(deadline)) {
     if (file.existsSync()) return;
+    if (exited) {
+      throw StateError(
+        '$description exited with $processExitCode before ${file.path} '
+        'was created\nstdout:\n${await stdout}\nstderr:\n${await stderr}',
+      );
+    }
     await Future<void>.delayed(const Duration(milliseconds: 100));
   }
-  throw TimeoutException('Timed out waiting for ${file.path}.');
+  throw TimeoutException(
+    'Timed out waiting for $description to create ${file.path}.',
+  );
 }
 
 Future<Map<String, dynamic>> _waitForWatchStatus(

@@ -111,6 +111,12 @@ directly remains outside the boundary. Flutter Tool's internal implicit
 `ccrouter_contracts`; app-role Hosts run Host generation and other participating
 Packages run package-local generation. A Workspace aggregator is skipped even
 when its resolved graph contains CCRouter Packages.
+Every Hook-owned Dart entrypoint, including preflight, post-pub, supervisor,
+and watch daemon processes, must pass the package config produced by the
+successful Pub command through `--packages`. Never allow a bare internal
+`dart run` to perform Dart-only resolution for a Flutter Host.
+Schema 6 identifies wrappers with this contract. Upgrade schema 4/5 by
+uninstalling the old wrapper before installing the current one.
 
 Flutter build preflight uses ordinary generation. If the same root already has
 an active watch, it validates and reuses exact current cycle evidence before
