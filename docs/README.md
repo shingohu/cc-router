@@ -109,6 +109,7 @@
 - [路由子系统设计](CCRouter-route-design.md)
 - [路由契约文件设计](CCRouter-route-contract-design.md)
 - [混合路由改造设计](CCRouter-hybrid-routing-design.md)
+- [Host-owned Route Mount 设计与实施计划](CCRouter-host-owned-route-mount-design.md)
 - [路由完成计划](CCRouter-route-completion-plan.md)
 - [路由专项问题分析](CCRouter-route-follow-up-analysis.md)
 - [Navigator Backend 可行性](CCRouter-navigator-backend-feasibility.md)
