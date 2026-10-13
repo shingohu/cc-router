@@ -8,8 +8,10 @@
 > P6 的语义摘要与依赖失效粒度优化仍未实施。2026-10-07 已完成 dirty/runtime/InitTask/Route
 > 图算法、unified epoch、Builder protection snapshot 与 Analyzer alias graph 的正确性优先优化；
 > 当前 Demo 组合交错 A/B 和放大规模结果统一记录在性能报告 10.16-10.17，不在本计划重复维护。
+> 2026-10-13 完成有界读取，以及单个输入 snapshot 内读取去重评估；后者未获得净收益，已撤回
+> 生产原型，只保留 benchmark，见 12.14-12.15 与性能报告 10.18-10.19。
 >
-> 日期：2026-09-30；P1–P6 实现与评估更新：2026-10-07。
+> 日期：2026-09-30；P1–P6 实现与评估更新：2026-10-07；文件读取评估：2026-10-13。
 >
 > 核心约束：任何生成器性能优化都不能以漏生成、接受陈旧生成物、降低校验强度或改变错误
 > 语义为代价。无法证明等价时必须回退完整 `build_runner + validate + aggregate`。
@@ -967,3 +969,29 @@ boundary，自身代码变化会使旧 planning proof 失效。
 见性能报告 10.18。真实 Demo 无改动命令仅有约 30ms wall P50 收益，完整 `--no-cache --check`
 基本持平，因此不把阶段收益当作 Builder/Analyzer 或完整 watch 提速。保留保守并发上限和
 串行开关，继续以真实输入编辑、恢复及最终权威门禁验收。
+
+### 12.15 单个 input snapshot 内读取去重评估（2026-10-13）
+
+状态：评估完成，**不启用生产路径**。cycle-end planning snapshot 共享、unified epoch 和 watch
+current-output evidence reuse 已经消除了较大的重复扫描；不能把不同 input barrier、Builder 前后
+或不同 watch cycle 的重读算作可去重 I/O。
+
+核对当前 Demo 的单次 input capture，包括 runtime closure 和额外的 resolved Path bootstrap，
+223 次逻辑读取只有 3 次重复，来自解析后又进入 raw fingerprint 的 Pub graph/config/lock，
+约 82.7KB。外部分发 Package 的 managed-output map 与显式 index/Bundle/Portable State
+alias 也有候选重复，但当前 Demo 没有这类受管外部产物；不能把其假设收益计入验收。
+
+临时原型只在同一 capture 中复用 Pub 解析 bytes 和 external managed-output alias bytes，
+保留全部逻辑名称、SHA-256 编码、存在性检查及独立 barrier，以独立实验开关交错对照。
+真实 CLI 每个场景每侧预热 1 次、采样 10 次，97 个当前 Demo 受管文件逐字节保持一致；无改动
+命令和完整 `--no-cache --check` 的 wall 与内部 P50 都没有显示净收益，明细见性能报告 10.19。
+
+因此撤回整个生产原型和实验开关。研究保留在
+`packages/ccrouter_test/benchmark/generator_snapshot_read_dedup.dart`，只提供单次 capture 的
+读取清单、4-worker 读取/hash 对照和新 capture 的增改删/重命名/失败恢复验证；不保留已失效
+的真实 CLI A/B 模式，不用一个被生产代码忽略的环境变量制造两条参考路径。
+原有 kill switch、Builder/Validator、输入屏障、快照恢复和原子写入继续保持原实现。
+
+以后只有真实项目出现大量外部分发 Package，且 Profile 与清单共同证明同一 capture 的重复
+读取已经成为可观成本时，才重新评估局部去重。下一候选是 incremental SHA-256 hashing 的
+内存复制成本评估，仍需独立授权、逐字节 A/B 和净收益验证。

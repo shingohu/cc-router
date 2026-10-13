@@ -1471,6 +1471,11 @@ entrypoint 和恢复 CLI library graph；`aggregationSucceeded.cycleMode` 为 `i
 `fvm dart run packages/ccrouter_test/benchmark/generator_file_read_scaling.dart`；实际 Demo 交错 A/B
 追加 `--demo`。文件读取基准的收益不能直接当作完整生成或 Analyzer 的收益。
 
+单个 input snapshot 内进一步去重已经评估：当前 Demo 只有约 82.7KB 候选重复读取，真实 CLI
+A/B 没有显示净收益，生产原型已撤回。局部研究清单与 benchmark 见
+[性能报告 10.19](docs/CCRouter-generator-performance-report.md)；
+该评估没有新增运行时开关，也不改变 watch、Pub Hook 或 Analyzer 行为。
+
 成功 cycle 在发布本机 fast-path manifest 与 Build Plan state 前只捕获一次 exact-content
 planning snapshot，并由两个状态文件复用；两者仍分别原子写入。设置
 `CCROUTER_DISABLE_SHARED_PLANNING_SNAPSHOT=1` 可恢复各自独立扫描，用于逐字节和耗时 A/B；

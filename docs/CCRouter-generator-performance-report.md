@@ -2,7 +2,7 @@
 
 > 文档状态：2026-09-28 性能快照；2026-10-03 补充 Build Plan P2-P5，以及 P6 只读失效归因；
 > 2026-10-05 补充 generation watch 多轮编辑基线；2026-10-07 补充图算法、snapshot、Analyzer
-> alias graph 与组合交错 A/B；2026-10-13 补充有界文件读取 A/B。
+> alias graph 与组合交错 A/B；2026-10-13 补充有界文件读取 A/B 与单个 snapshot 内去重评估。
 > 包含多组件个人/团队拓扑与五类能力共享依赖样本。数值不自动代表后续提交或其他机器。
 
 Package 增删导致的 Workspace AOT 冷路径及后续正确性优先优化方案，见
@@ -953,3 +953,55 @@ watch benchmark 原有断言还停留在 `buildRunner.formatVersion: 1`；已更
 CCROUTER_DISABLE_PARALLEL_FILE_READS=0 fvm dart run packages/ccrouter_test/benchmark/generator_watch_edits.dart --samples=3
 CCROUTER_DISABLE_PARALLEL_FILE_READS=1 fvm dart run packages/ccrouter_test/benchmark/generator_watch_edits.dart --samples=3
 ```
+
+### 10.19 单个 input snapshot 内读取去重：撤回原型（2026-10-13）
+
+结论：当前 Demo 的候选重复很少，真实命令对照未显示可复现净收益。**没有新增生产缓存或默认
+优化**，临时原型和实验开关已经撤回，不宣称 watch、Pub Hook 或 Analyzer 提速。
+
+清单按当前 input capture 的组成统计，包含 49 个 resolved runtime Packages、额外的 Path
+bootstrap、authored inputs、Generator kernel、external managed artifacts 和 Pub resolution
+identity。223 次逻辑读取对应 220 个文件；3 次重复是 `package_graph.json`、
+`package_config.json` 与 `pubspec.lock` 解析后再进入原始字节摘要，占约 1.35% 读取次数、
+82,716 bytes（约 3.6% 读取字节）。它不是整个命令的系统调用 trace，也不包含必须保持独立的
+多次 barrier 或不同 cycle。大型外部分发拓扑可能有 index/Bundle/state alias 重复，当前 Demo
+不提供这类收益证据。
+
+临时生产原型仅复用同一次 capture 中的 Pub 解析 bytes 与已读取的 external managed-output
+alias bytes，保留存在性检查、逻辑名称、摘要编码和全部独立 input barrier。真实 Demo
+按相反顺序轮换原型与重复读取参考，每个场景每侧预热 1 次、采样 10 次，使用正常 CLI
+`generate demo --check --profile`，完整路径另加 `--no-cache`。每次命令检查 97 个当前 Demo
+受管文件的路径与全部 bytes，44 次命令均成功。只切换本项实验，不关闭已实施的其他优化。
+
+| 真实命令 | 参考 wall P50 / P95 | 原型 wall P50 / P95 | 参考 / 原型内部 P50 |
+| --- | ---: | ---: | ---: |
+| 无改动 `--check --profile` | 1541 / 1985ms | 1592 / 2222ms | 255.83 / 271.78ms |
+| `--no-cache --check --profile` | 3219 / 3782ms | 3263 / 4356ms | 1974.31 / 2012.04ms |
+
+完整路径的 input-fingerprint-capture P50 为 144.06 / 146.77ms；before-aggregation barrier
+为 65.85 / 67.61ms，after-aggregation barrier 为 67.57 / 65.04ms。各阶段和子进程都有波动，
+不能把本轮所有慢样本因果归于去重，也不能从这组结果推导稳定负优化。能支持的决定是：目前
+没有足够收益证据承担更多长期 byte evidence 和失效分支。机器负载与进程启动成本有变化，
+不应把本轮绝对 wall 与 10.18 的历史数值直接比较；这里只做本轮交错 A/B。
+
+撤回后保留的 benchmark 使用相同读取清单、4-worker budget、独立 byte oracle；每次 capture
+重新创建候选证据，只缓存会被再次消费的路径。每侧预热 2 次、交错采样 12 次，单次
+读取/hash（不含目录发现、解析、Builder、Analyzer）P50 为参考 22.96ms、候选 24.13ms，
+P95 为 29.70ms、29.24ms，同样没有明确净收益。另验证新增、同大小/mtime 修改、删除、
+重命名、缺失路径失败和下一 capture 恢复；这些验证不能证明并发修改期间的全局原子快照。
+
+```bash
+fvm dart run packages/ccrouter_test/benchmark/generator_snapshot_read_dedup.dart
+```
+
+此命令只运行 benchmark 内的局部研究原型。已撤回的 CLI 原型不再提供 `--demo` 模式或
+受支持的运行时开关；不要用无效果的环境变量重测所谓生产 A/B。`ccrouter_test` 仅增加
+benchmark 所用的直接 `yaml` dev dependency，解析版本保持现有解析结果，不升级 Analyzer。
+
+最终提交不修改 Generator、watch、Pub Hook、Analyzer 的生产文件。完整
+`fvm dart test --concurrency=1 packages/ccrouter_test/generator_test`：545 项通过，1 项可选
+远端 Analyzer installation smoke 默认跳过。覆盖入口一致性、watch/Pub Hook、多 Host、文件
+生命周期、Portable State、缓存损坏、失败恢复和 planning state 逐字节对照。
+最终 `generate demo --no-cache --check` 通过：6 个组件、33 条 Route、11 个生成 Package，
+Builder 写入 0 个输出，所有受管生成物保持最新。本轮无需更新 Plugin pin 或重装 Pub Hook。
+`fvm dart analyze` 无问题，benchmark 格式检查与 `git diff --check` 通过；无测试遗留源码或产物变更。
