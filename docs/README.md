@@ -71,6 +71,7 @@
 - 受控 Workspace/Feature Scope 和 Action Pipeline。
 - Contract Scaffold/Promotion/Migration、alias migration CLI/Quick Fix。
 - Service Proxy 的通用 generic Contract、Stream、callback、继承和高级 Route Scope 代理。
+- 类型化 UI Fragment Contract、Renderer 与静态装配（已形成 Proposal，尚未实现）。
 - 全局 Widget 自动识别，以及 ThinkingData、OpenTelemetry、HTTP/Crash Analytics Adapter。
 - 正式 Hosted 发布、release candidate 兼容样本和迁移发布流程。
 - 独立的 dev/test/staging/production Provider 选择抽象。
@@ -117,6 +118,7 @@
 
 ### 能力与生成器
 
+- [类型化 UI Fragment 设计与实施计划](CCRouter-ui-fragment-design.md)
 - [Service 生命周期设计](CCRouter-service-lifecycle-design.md)
 - [Service Proxy 生成设计](CCRouter-service-proxy-generation-design.md)
 - [Service 实施计划](CCRouter-service-completion-plan.md)
