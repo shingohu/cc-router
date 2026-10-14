@@ -74,7 +74,7 @@ Adapter、Host 和 `MaterialApp.router`：
 runApp(const CCGoRouterApp());
 ```
 
-应用必须先显式调用 `CCRouter.initialize(hostAssembly: ...)`；`CCGoRouterApp` 始终只负责
+应用必须先显式调用 `CCRouterHost.initialize(hostAssembly: ...)`；`CCGoRouterApp` 始终只负责
 Host，并自动使用初始化时安装的同一份 Catalog。已有 GoRouter 工程继续使用
 `CCGoRouterBackend.attach`；复杂 Shell、多 Outlet 或
 自定义 Router 构造可使用一次性 `backendFactory`，只有完全自定义 Widget 树才直接使用

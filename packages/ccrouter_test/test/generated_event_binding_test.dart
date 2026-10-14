@@ -1,3 +1,4 @@
+import 'package:ccrouter/ccrouter_host.dart';
 import 'package:ccrouter/ccrouter_generated.dart';
 import 'package:test/test.dart';
 
@@ -35,12 +36,12 @@ final class _GeneratedEventRegistrar implements CCComponentRegistrar {
 }
 
 void main() {
-  tearDown(CCRouter.shutdown);
+  tearDown(CCRouterHost.shutdown);
 
   test(
     'generated binding preserves stable Event and component identities',
     () async {
-      CCRouter.initialize(
+      CCRouterHost.initialize(
         hostAssembly: CCHostAssembly.fromComponents(
           components: const [
             CCComponentManifest(
@@ -79,7 +80,7 @@ void main() {
   );
 
   test('generated Event with zero subscribers is a traced no-op', () async {
-    CCRouter.initialize(
+    CCRouterHost.initialize(
       hostAssembly: CCHostAssembly.fromComponents(
         components: const [
           CCComponentManifest(
@@ -103,7 +104,7 @@ void main() {
   test(
     'generated binding rejects an Event ID mismatched with subscribers',
     () async {
-      CCRouter.initialize(
+      CCRouterHost.initialize(
         hostAssembly: CCHostAssembly.fromComponents(
           components: const [
             CCComponentManifest(
@@ -127,7 +128,7 @@ void main() {
   );
 
   test('generated binding rejects missing or unauthorized publisher', () async {
-    CCRouter.initialize(
+    CCRouterHost.initialize(
       hostAssembly: CCHostAssembly.fromComponents(
         components: const [
           CCComponentManifest(

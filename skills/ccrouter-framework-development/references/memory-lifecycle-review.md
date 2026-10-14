@@ -92,7 +92,7 @@ results in framework history or long-lived callbacks.
 
 ## CCRouter-Specific Invariants
 
-- `CCRouter` owns the default Runtime; business code cannot dispose it directly.
+- `CCRouterHost` controls the default Runtime for the Composition Root; business `CCRouter` cannot initialize, stop, or open InitTask Gates.
 - Runtime shutdown releases pending work, listeners, queues, Route/Backend
   entries, Scopes, owned Services, Adapter resources, and Host bindings.
 - Page Pop, Session close, component failure, Host detach, and Runtime shutdown

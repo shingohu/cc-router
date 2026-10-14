@@ -39,7 +39,7 @@ For local confirmation, menus, transient BottomSheet, `OverlayEntry`, `MenuAncho
 生成 metadata 会携带确定性的 `shapeFingerprint`；公共形状改变时应升级 Contract 版本，破坏性
 变更优先使用新 Contract ID，不要用组件版本或运行时字符串猜测兼容性。
 生成的 Host Assembly 同时携带 Contract descriptor 和消费者的精确版本/指纹要求；Host 启动时
-将完整 Assembly 通过 `CCRouter.initialize(hostAssembly: ...)` 传入，不单独传 `contractBundle`
+将完整 Assembly 通过 `CCRouterHost.initialize(hostAssembly: ...)` 传入，不单独传 `contractBundle`
 或 components，由 Generator、Host 和 Runtime 分层拒绝缺失、
 Owner 不匹配、版本范围不满足、指纹漂移、重复实现和陈旧生成物。业务不手写这些字符串。
 
@@ -76,7 +76,7 @@ Subscribers have stable typed IDs (`CCEventSubscriberId<E>`) and Runtime lifetim
 
 ## InitTask
 
-Choose `@CCInitTask` for one-time Runtime startup work that needs DAG ordering, a Gate, timeout, or explicit required/optional failure classification. Use a `CCInitTaskContract` when another task references it; keep handwritten `CCInitTaskDefinition` for unannotated migration or low-level registration. Examples: privacy-gated analytics startup, loading foundational config, preparing a native SDK. The declaration and `CCRouter.runInitTasks(gate: ...)` both require an explicit Gate; `appStarted` is a common value, not an API default. Task business failures are returned in `CCInitTaskRunResult`; only a Composition Root that cannot degrade should call `throwIfRequiredFailed()`.
+Choose `@CCInitTask` for one-time Runtime startup work that needs DAG ordering, a Gate, timeout, or explicit required/optional failure classification. Use a `CCInitTaskContract` when another task references it; keep handwritten `CCInitTaskDefinition` for unannotated migration or low-level registration. Examples: privacy-gated analytics startup, loading foundational config, preparing a native SDK. The declaration and `CCRouterHost.runInitTasks(gate: ...)` both require an explicit Gate; `appStarted` is a common value, not an API default. Task business failures are returned in `CCInitTaskRunResult`; only a Composition Root that cannot degrade should call `throwIfRequiredFailed()`.
 
 Do not use InitTask for every Service's normal construction, repeatable refresh work, page entry work, or work that must rerun for each Session. Use Service initializer for lazy instance readiness and Command for repeatable operations.
 

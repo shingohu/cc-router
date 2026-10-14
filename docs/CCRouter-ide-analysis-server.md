@@ -3,6 +3,16 @@
 > 文档状态：当前接入契约与已知限制。Plugin 提供单文件诊断、按需类型解析和 Metadata 驱动的
 > Service/Command Owner 检查，Generator/Workspace Validator 仍是跨 Package 正确性的最终门禁。
 
+## Host 生命周期边界
+
+`CCRouterHost.initialize/shutdown/runInitTasks` 与 `CCHostAssembly` 只从
+`ccrouter_host.dart` 导出，业务 `CCRouter` 不保留旧方法。Plugin 的
+`ccrouter_host_lifecycle_access` 错误检查非 Host 组件 Package 的 `lib/`：直接导入／转导出、
+条件分支以及解析身份明确的公共 barrel 引用均受约束。遵守 show/hide；Adapter 基础设施应只
+导入需要的 SPI。测试／工具、生成物和同名外部类不误报；无法证明角色或转导出身份时暂缓。
+Host 判定复用 `.metadata`、`ccrouter.yaml` 和直接依赖，已保存角色变动会刷新诊断。
+同一个 Host Package 内的装配代码与业务页面仍需审查，Plugin 不提供安全隔离或自动角色修复。
+
 ## 目标与边界
 
 CCRouter 的 IDE 支持分成四层：

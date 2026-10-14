@@ -19,6 +19,88 @@ void main() {
   });
   tearDown(() => root.deleteSync(recursive: true));
 
+  test('component cannot explicitly import or re-export Host lifecycle', () {
+    File(path.join(packageRoot, 'pubspec.yaml')).writeAsStringSync(
+      'name: sample_component\ndependencies:\n  ccrouter: any\n',
+    );
+    for (final source in [
+      "import 'package:ccrouter/ccrouter_host.dart';",
+      "import 'package:ccrouter/ccrouter_host.dart' show CCRouterHost;",
+      "export 'package:ccrouter/ccrouter_host.dart';",
+      "export 'safe.dart' if (dart.library.io) 'package:ccrouter/ccrouter_host.dart';",
+    ]) {
+      final diagnostics = CCRouterSourceAnalyzer.analyze(
+        source: source,
+        filePath: path.join(packageRoot, 'lib/src/component.dart'),
+        packageRoot: packageRoot,
+        packageName: 'sample_component',
+      );
+      expect(
+        diagnostics.map((d) => d.code),
+        contains('ccrouter_host_lifecycle_access'),
+      );
+    }
+  });
+
+  test(
+    'narrow Adapter SPI and unavailable roles do not trigger lifecycle errors',
+    () {
+      File(path.join(packageRoot, 'pubspec.yaml')).writeAsStringSync(
+        'name: sample_component\ndependencies:\n  ccrouter: any\n',
+      );
+      for (final source in [
+        "import 'package:ccrouter/ccrouter_host.dart' hide CCRouterHost;",
+        "import 'package:ccrouter/ccrouter_host.dart' show CCRouterHostBinding;",
+        "export 'package:ccrouter/ccrouter_host.dart' hide CCRouterHost;",
+      ]) {
+        expect(
+          CCRouterSourceAnalyzer.analyze(
+            source: source,
+            filePath: path.join(packageRoot, 'lib/src/adapter.dart'),
+            packageRoot: packageRoot,
+            packageName: 'sample_component',
+          ),
+          isEmpty,
+        );
+      }
+      File(
+        path.join(packageRoot, 'ccrouter.yaml'),
+      ).writeAsStringSync('host:\n  enabled: unknown\n');
+      expect(
+        CCRouterSourceAnalyzer.analyze(
+          source: "import 'package:ccrouter/ccrouter_host.dart';",
+          filePath: path.join(packageRoot, 'lib/src/unknown.dart'),
+          packageRoot: packageRoot,
+          packageName: 'sample_component',
+        ),
+        isEmpty,
+      );
+    },
+  );
+
+  test('Host role and test sources may import lifecycle', () {
+    File(path.join(packageRoot, 'pubspec.yaml')).writeAsStringSync(
+      'name: sample_component\ndependencies:\n  ccrouter: any\n',
+    );
+    const source =
+        "import 'package:ccrouter/ccrouter_host.dart' show CCRouterHost;";
+    List<String> codes(String file) => CCRouterSourceAnalyzer.analyze(
+      source: source,
+      filePath: path.join(packageRoot, file),
+      packageRoot: packageRoot,
+      packageName: 'sample_component',
+    ).map((d) => d.code).toList();
+    expect(codes('test/lifecycle_test.dart'), isEmpty);
+    File(
+      path.join(packageRoot, 'ccrouter.yaml'),
+    ).writeAsStringSync('host:\n  enabled: true\n');
+    expect(codes('lib/main.dart'), isEmpty);
+    File(
+      path.join(packageRoot, 'ccrouter.yaml'),
+    ).writeAsStringSync('host:\n  enabled: false\n');
+    expect(codes('lib/main.dart'), contains('ccrouter_host_lifecycle_access'));
+  });
+
   test('unresolved foreign hidden and ambiguous annotations are ignored', () {
     for (final source in [
       '@CCInitTask(id: "bad id", contract: 1) void start() {}',

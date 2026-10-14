@@ -55,7 +55,7 @@ final class CCNavigationAnalyticsBridge {
   /// The bridge never owns the Dispatcher and therefore does not close it.
   void dispose() => _visits.clear();
 
-  /// Creates a `CCNavigationAspect` for `CCRouter.initialize`.
+  /// Creates a `CCNavigationAspect` for `CCRouterHost.initialize`.
   ///
   /// The returned aspect is observation-only. It cannot cancel, redirect, or
   /// otherwise change navigation behavior.

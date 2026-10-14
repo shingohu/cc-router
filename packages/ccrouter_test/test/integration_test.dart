@@ -165,7 +165,7 @@ final class _RecordingNavigationAdapter
 }
 
 void main() {
-  tearDown(CCRouter.shutdown);
+  tearDown(CCRouterHost.shutdown);
 
   testWidgets(
     'foreign routes and local history never remove a managed Route Entry',
@@ -944,7 +944,7 @@ void main() {
       final adapter = _RecordingNavigationAdapter(goRouterAdapter);
       addTearDown(router.dispose);
 
-      CCRouter.initialize(
+      CCRouterHost.initialize(
         deepLinkIngressPolicy: CCDeepLinkIngressPolicy(
           allowedAuthorities: [
             CCDeepLinkAuthorityRule(scheme: 'https', host: 'example.com'),
@@ -1024,7 +1024,7 @@ void main() {
     addTearDown(router.dispose);
 
     final registrar = _DisabledRouteRegistrar();
-    CCRouter.initialize(
+    CCRouterHost.initialize(
       deepLinkIngressPolicy: CCDeepLinkIngressPolicy(allowRelativePaths: true),
       hostAssembly: CCHostAssembly.fromComponents(
         components: [

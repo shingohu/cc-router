@@ -33,7 +33,7 @@ abstract interface class CCRouterAppBackend {
   /// Backend-neutral generated destinations assembled for this Host.
   ///
   /// The application passes generated component manifests to
-  /// `CCRouter.initialize` before mounting [CCRouterApp.managed]. The managed
+  /// `CCRouterHost.initialize` before mounting [CCRouterApp.managed]. The managed
   /// binding compares their identities and versions with
   /// [CCFlutterRouteCatalog.componentVersions] so a Backend generated for
   /// another component set cannot attach.
@@ -60,9 +60,9 @@ abstract final class _CCRouterBackendBinding {
 
   /// Attaches [backend] to the explicitly initialized default Runtime.
   ///
-  /// The application must call `CCRouter.initialize` with its component
+  /// The application must call `CCRouterHost.initialize` with its component
   /// manifests first. On success the Runtime owns the Adapter, and
-  /// `CCRouter.shutdown` later disposes the Adapter before invoking
+  /// `CCRouterHost.shutdown` later disposes the Adapter before invoking
   /// [CCRouterAppBackend.dispose]. A rejected Adapter is disposed synchronously
   /// before the error is rethrown; asynchronous Backend resource cleanup is
   /// scheduled separately and reports failures through Flutter diagnostics.
@@ -340,11 +340,11 @@ final class CCRouterApp extends StatefulWidget {
 
   /// Creates an App that attaches and exposes a managed navigation Backend.
   ///
-  /// Call `CCRouter.initialize` with the startup components before mounting this
+  /// Call `CCRouterHost.initialize` with the startup components before mounting this
   /// widget. Backend attachment is synchronous, so the [child] is mounted on
   /// the first build only after the Adapter is fully configured. Removing the
   /// widget does not shut down CCRouter; the
-  /// application must call `CCRouter.shutdown`, which disposes the Runtime-owned
+  /// application must call `CCRouterHost.shutdown`, which disposes the Runtime-owned
   /// Adapter before releasing Backend-owned resources.
   ///
   /// Use this mode once at the application composition root. It intentionally

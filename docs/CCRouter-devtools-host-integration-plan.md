@@ -10,7 +10,7 @@
   Release 强制关闭、失败不影响应用。
 
 当前有效接入是 Host 直接依赖 `ccrouter_devtools`，由生成器写入静态 Catalog 和 Tool
-Integration，再通过 `CCRouter.initialize(hostAssembly: ...)` 驱动注册与清理。手工
+Integration，再通过 `CCRouterHost.initialize(hostAssembly: ...)` 驱动注册与清理。手工
 `CCDevToolsServiceExtension.register()` 只保留给测试和不使用生成 Assembly 的特殊 Host。
 
 ## 2. 当前问题
@@ -21,7 +21,7 @@ Integration，再通过 `CCRouter.initialize(hostAssembly: ...)` 驱动注册与
 1. VM Service Extension 是应用 Host/Isolate 级开发工具，不属于业务组件。
 2. 组件、能力、依赖关系和源码位置已经存在于生成 metadata/Catalog，手写副本容易漂移。
 3. Host 必须记住注册和清理，生命周期不完整。
-4. 一个简单的 `CCRouter.initialize(enableDevTools: true)` 无法提供静态 Catalog，也会迫使
+4. 一个简单的 `CCRouterHost.initialize(enableDevTools: true)` 无法提供静态 Catalog，也会迫使
    `ccrouter` 反向依赖当前已经依赖它的 `ccrouter_devtools`，形成循环依赖。
 5. 一个 Runtime 可以管理多个 Navigation Host/Outlet；任意 `CCRouterApp.dispose` 都不能代表
    isolate 级 DevTools endpoint 应被清理。
@@ -30,7 +30,7 @@ Integration，再通过 `CCRouter.initialize(hostAssembly: ...)` 驱动注册与
 
 ## 3. 方案比较
 
-### 3.1 `CCRouter.initialize(enableDevTools: true)`
+### 3.1 `CCRouterHost.initialize(enableDevTools: true)`
 
 不采用。调用简单，但会污染业务 API、破坏可选包依赖方向，且无法独立携带生成 Catalog、失败
 策略和清理逻辑。布尔值也不能证明 Host 是否直接安装了 DevTools Package。
@@ -42,7 +42,7 @@ Integration，再通过 `CCRouter.initialize(hostAssembly: ...)` 驱动注册与
 ### 3.3 生成式 Host Tool Integration
 
 采用。Core 定义窄的 Host-only 生命周期 SPI，`ccrouter_devtools` 提供具体实现，生成器从 Host
-Catalog 生成静态快照并写入 Host Assembly。`CCRouter.initialize/shutdown` 只驱动中立
+Catalog 生成静态快照并写入 Host Assembly。`CCRouterHost.initialize/shutdown` 只驱动中立
 Integration，不依赖 DevTools 协议或 UI。
 
 ## 4. 启用与生成规则
@@ -59,7 +59,7 @@ Host。没有直接依赖时：
 
 - 不生成 DevTools Host Integration；
 - 不生成 DevTools 协议静态快照；
-- 不向 `CCRouter.initialize` 注入任何调试工具；
+- 不向 `CCRouterHost.initialize` 注入任何调试工具；
 - 普通生成、构建和 Runtime 行为保持不变。
 
 存在直接依赖时，生成器从已验证的 Host Catalog 和 Package metadata 生成：
@@ -92,7 +92,7 @@ abstract interface class CCHostToolIntegration {
 生成的 `CCHostAssembly` 携带只读 Integration 列表，Host 初始化已收敛为：
 
 ```dart
-CCRouter.initialize(
+CCRouterHost.initialize(
   hostAssembly: ccrouterGeneratedHostAssembly,
   deepLinkIngressPolicy: appDeepLinkPolicy,
   // 其余真正属于应用的策略。
@@ -147,7 +147,7 @@ Release 依赖图中消失。若产品要求 Release 产物完全不解析或编
 
 清理顺序：
 
-1. `CCRouter.shutdown()` 取得默认 Runtime 后，立即调用 Integration 的
+1. `CCRouterHost.shutdown()` 取得默认 Runtime 后，立即调用 Integration 的
    `onRuntimeStopping()`。
 2. DevTools 调用 `CCDevToolsServiceExtension.clear()`，后续请求返回 uninitialized 快照。
 3. Runtime 和导航 Backend 按原顺序释放。
@@ -156,7 +156,7 @@ Release 依赖图中消失。若产品要求 Release 产物完全不解析或编
 注销 endpoint；重新初始化时复用已注册 handler 并更新 Provider/Catalog。
 
 DevTools 是可选观察工具。注册、快照转换和清理异常必须被隔离并产生脱敏诊断，不能导致
-`CCRouter.initialize`、导航、业务调用或 `shutdown` 失败。Integration 不得同步发起导航、解析
+`CCRouterHost.initialize`、导航、业务调用或 `shutdown` 失败。Integration 不得同步发起导航、解析
 Service、执行 Command 或修改 Runtime 状态。
 
 ## 8. Demo 迁移结果
@@ -176,7 +176,7 @@ Service、执行 Command 或修改 Runtime 状态。
 1. 已生成 Host DevTools 静态 Catalog，并删除 Demo 手写能力、关系和源码位置副本。
 2. 已增加 Host-only `CCHostToolIntegration`，生命周期同步、短时且异常隔离。
 3. 已扩展 `CCHostAssembly`，并校验空或重复 Integration ID。
-4. 已由 `CCRouter.initialize/shutdown` 驱动 Integration，且生成式 Host 使用单一
+4. 已由 `CCRouterHost.initialize/shutdown` 驱动 Integration，且生成式 Host 使用单一
    `hostAssembly` 参数。
 5. 已移除 Demo 手工 bootstrap 和业务组件的 Extension 所有权。
 6. 已增加 Runtime、Generator 与 DevTools focused 测试；多平台 smoke 继续作为发布门禁。

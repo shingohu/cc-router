@@ -74,7 +74,7 @@ not as a substitute for Dart privacy. Keep the
 
 Preserve these architecture boundaries:
 
-- `CCRouter` owns the default Runtime lifecycle.
+- `CCRouterHost` exposes default Runtime lifecycle control only to the application Composition Root; ownership implementation remains private.
 - Business code does not construct, open, close, or destroy the Runtime.
 - A component registrar receives `CCRegistry`, never the full Runtime.
 - Scope, dispatch, storage, and host lifecycle implementation stays internal.

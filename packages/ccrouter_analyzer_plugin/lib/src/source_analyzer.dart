@@ -9,6 +9,8 @@ import 'package:ccrouter_analyzer_plugin/src/component_dependency_analyzer.dart'
 import 'package:ccrouter_analyzer_plugin/src/contract_owner_index.dart';
 import 'package:ccrouter_analyzer_plugin/src/service_lifecycle_analysis.dart';
 import 'resolved_symbols.dart';
+import 'host_lifecycle_analysis.dart';
+import 'project_context.dart';
 import 'package:path/path.dart' as path;
 import 'package:yaml/yaml.dart';
 
@@ -300,6 +302,7 @@ abstract final class CCRouterSourceAnalyzer {
   /// keeps standalone single-file analysis available without Pub state.
   /// [resolvedUnit] must represent exactly [source]; the plugin checks current
   /// overlay identity after resolution; each rule declines missing symbol proof.
+  /// [projectRole] reuses cached Host/Package evidence when provided.
   static List<CCRouterAnalyzerDiagnostic> analyze({
     required String source,
     required String filePath,
@@ -307,6 +310,7 @@ abstract final class CCRouterSourceAnalyzer {
     String? packageName,
     CCRouterContractOwnerIndex? contractOwners,
     CompilationUnit? resolvedUnit,
+    CCRouterAnalyzerProjectRole? projectRole,
   }) => analyzeWithLineInfo(
     source: source,
     filePath: filePath,
@@ -314,11 +318,13 @@ abstract final class CCRouterSourceAnalyzer {
     packageName: packageName,
     contractOwners: contractOwners,
     resolvedUnit: resolvedUnit,
+    projectRole: projectRole,
   ).diagnostics;
 
   /// Analyzes one source and reuses its parser line mapping for IDE locations.
   /// [resolvedUnit] optionally supplies current type/constant identities. Missing
   /// semantic information suppresses lifecycle rules and uncertain type errors.
+  /// [projectRole] may reuse the plugin's cached Package role.
   static CCRouterSourceAnalysis analyzeWithLineInfo({
     required String source,
     required String filePath,
@@ -326,6 +332,7 @@ abstract final class CCRouterSourceAnalyzer {
     String? packageName,
     CCRouterContractOwnerIndex? contractOwners,
     CompilationUnit? resolvedUnit,
+    CCRouterAnalyzerProjectRole? projectRole,
   }) {
     // Generated libraries are implementation artifacts. Their imports are
     // intentionally allowed to cross component boundaries and are validated
@@ -378,6 +385,26 @@ abstract final class CCRouterSourceAnalyzer {
               'Cross-Package imports of src/ccrouter_generated are not a stable CCRouter API.',
           correction:
               'Import the owning Package public Contract or Host barrel instead.',
+          severity: AnalysisErrorSeverity.ERROR,
+        ),
+      );
+    }
+
+    for (final location in CCRouterHostLifecycleAnalysis.violations(
+      unit: unit,
+      filePath: filePath,
+      packageRoot: root,
+      projectRole: projectRole,
+    )) {
+      diagnostics.add(
+        CCRouterAnalyzerDiagnostic(
+          offset: location.offset,
+          length: location.length,
+          code: 'ccrouter_host_lifecycle_access',
+          message:
+              'Only the application Host Composition Root may control the CCRouter Runtime lifecycle.',
+          correction:
+              'Keep CCRouterHost in Host composition code; request product actions through a Host-provided callback or Contract.',
           severity: AnalysisErrorSeverity.ERROR,
         ),
       );

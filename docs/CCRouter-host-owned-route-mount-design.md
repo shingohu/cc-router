@@ -182,7 +182,7 @@ final hostAssembly = ccrouterGeneratedHostAssembly.withRouteMounts(
   ],
 );
 
-CCRouter.initialize(hostAssembly: hostAssembly);
+CCRouterHost.initialize(hostAssembly: hostAssembly);
 ```
 
 该方法不修改原 Assembly，不修改 generated Package Bundle，也不允许 Runtime ready 后变更。
@@ -201,7 +201,7 @@ v1 使用显式 Dart Host 配置，不扩展 `ccrouter.yaml`。原因是当前 S
 - 应用 Mount 后的 effective Route Catalog；
 - 一个只覆盖拓扑稳定 ID 的 `topologyFingerprint`。
 
-`CCRouter.initialize` 必须把同一份 Mount 表传给 Runtime，并把同一 Assembly 的 effective
+`CCRouterHost.initialize` 必须把同一份 Mount 表传给 Runtime，并把同一 Assembly 的 effective
 Catalog 保存到 Host Binding。禁止 Runtime 和 Catalog 分别重复解释 Host 配置。
 
 ## 5. Placement 解析与优先级

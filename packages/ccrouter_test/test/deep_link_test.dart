@@ -52,11 +52,11 @@ final _deepLinkPolicy = CCDeepLinkIngressPolicy(
 );
 
 void main() {
-  tearDown(CCRouter.shutdown);
+  tearDown(CCRouterHost.shutdown);
 
   test('fixed ingress methods preserve external origin and source', () async {
     final adapter = CCMemoryNavigationAdapter();
-    CCRouter.initialize(
+    CCRouterHost.initialize(
       deepLinkIngressPolicy: _deepLinkPolicy,
       hostAssembly: CCHostAssembly.fromComponents(
         components: const [
@@ -112,7 +112,7 @@ void main() {
 
   test('external ingress still enforces disabled Deep Link policy', () async {
     final adapter = CCMemoryNavigationAdapter();
-    CCRouter.initialize(
+    CCRouterHost.initialize(
       deepLinkIngressPolicy: _deepLinkPolicy,
       hostAssembly: CCHostAssembly.fromComponents(
         components: const [
@@ -136,7 +136,7 @@ void main() {
     'default Host policy rejects absolute and relative external input',
     () async {
       final adapter = CCMemoryNavigationAdapter();
-      CCRouter.initialize(
+      CCRouterHost.initialize(
         hostAssembly: CCHostAssembly.fromComponents(
           components: const [
             CCComponentManifest(
@@ -179,7 +179,7 @@ void main() {
     'authority rules match case and effective default Port exactly',
     () async {
       final adapter = CCMemoryNavigationAdapter();
-      CCRouter.initialize(
+      CCRouterHost.initialize(
         deepLinkIngressPolicy: CCDeepLinkIngressPolicy(
           allowedAuthorities: [
             CCDeepLinkAuthorityRule(scheme: 'HTTPS', host: 'EXAMPLE.COM'),

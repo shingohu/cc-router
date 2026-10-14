@@ -1,4 +1,4 @@
-import 'package:ccrouter/ccrouter_host.dart';
+import 'package:ccrouter/ccrouter_host.dart' hide CCRouterHost;
 import 'package:flutter/widgets.dart';
 
 /// Identifies a backend Navigator lifecycle transition.

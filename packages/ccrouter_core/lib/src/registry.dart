@@ -343,7 +343,7 @@ final class _Provider {
 /// The Core Runtime consumes this value only through
 /// [CCRouterRuntime.forTesting]. The public test package wraps it in
 /// `CCServiceOverride`, so production applications cannot install replacements
-/// through `CCRouter.initialize`. The target Provider must already be
+/// through `CCRouterHost.initialize`. The target Provider must already be
 /// registered; its Scope, creation policy, key, and contract identity remain
 /// authoritative for the replacement.
 @visibleForTesting

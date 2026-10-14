@@ -119,7 +119,7 @@ CCComponentManifest component(String id, String value) => CCComponentManifest(
 );
 
 void main() {
-  tearDown(CCRouter.shutdown);
+  tearDown(CCRouterHost.shutdown);
 
   test('facade fails before initialization', () {
     expect(CCRouter.isInitialized, isFalse);
@@ -134,7 +134,7 @@ void main() {
   });
 
   test('facade creates, owns, and shuts down the default Runtime', () async {
-    CCRouter.initialize(
+    CCRouterHost.initialize(
       hostAssembly: CCHostAssembly.fromComponents(
         components: [component('default', 'owned')],
       ),
@@ -149,7 +149,7 @@ void main() {
     expect(subscriberTrace.context.callerComponentId, 'default');
     expect(subscriberTrace.context.targetComponentId, 'default');
     expect(CCRouter.initTasks.single.state, CCInitTaskState.pending);
-    await CCRouter.runInitTasks(gate: CCInitTaskGate.appStarted);
+    await CCRouterHost.runInitTasks(gate: CCInitTaskGate.appStarted);
     final initializationTrace = CCRouter.recentTraces.singleWhere(
       (trace) => trace.operation == 'initTask',
     );
@@ -157,8 +157,8 @@ void main() {
     expect(CCRouter.initTasks.single.state, CCInitTaskState.succeeded);
     expect(CCRouter.registeredComponents.single.id, 'default');
 
-    await CCRouter.shutdown();
-    await CCRouter.shutdown();
+    await CCRouterHost.shutdown();
+    await CCRouterHost.shutdown();
 
     expect(CCRouter.isInitialized, isFalse);
     expect(
@@ -185,11 +185,11 @@ void main() {
       hostToolIntegrations: [integration],
     );
 
-    CCRouter.initialize(hostAssembly: assembly);
+    CCRouterHost.initialize(hostAssembly: assembly);
     expect(integration.events, ['ready']);
     expect(await CCRouter.command(ReadOnce()), 'ready');
 
-    await CCRouter.shutdown();
+    await CCRouterHost.shutdown();
     expect(integration.events, ['ready', 'stopping']);
   });
 
@@ -209,7 +209,7 @@ void main() {
     );
 
     expect(
-      () => CCRouter.initialize(
+      () => CCRouterHost.initialize(
         hostAssembly: assembly,
         diagnostics: CCDiagnosticsConfig(
           sink: sink,
@@ -220,7 +220,7 @@ void main() {
     );
     await Future<void>.delayed(Duration.zero);
     expect(await CCRouter.command(ReadOnce()), 'available');
-    await expectLater(CCRouter.shutdown(), completes);
+    await expectLater(CCRouterHost.shutdown(), completes);
     expect(integration.readyCalls, 1);
     expect(integration.stoppingCalls, 1);
     expect(
@@ -240,7 +240,7 @@ void main() {
     final hostAssembly = CCHostAssembly.fromComponents(
       components: [component('host', 'ready')],
     );
-    CCRouter.initialize(hostAssembly: hostAssembly);
+    CCRouterHost.initialize(hostAssembly: hostAssembly);
 
     expect(CCRouter.registeredComponents.single.id, 'host');
     expect(CCRouterHostBinding.routeCatalog, same(hostAssembly.routeCatalog));
@@ -250,20 +250,20 @@ void main() {
     final firstAssembly = CCHostAssembly.fromComponents(
       components: [component('a', 'a')],
     );
-    CCRouter.initialize(hostAssembly: firstAssembly);
+    CCRouterHost.initialize(hostAssembly: firstAssembly);
     expect(CCRouterHostBinding.routeCatalog, same(firstAssembly.routeCatalog));
     expect(
-      () => CCRouter.initialize(
+      () => CCRouterHost.initialize(
         hostAssembly: CCHostAssembly.fromComponents(components: const []),
       ),
       throwsA(isA<CCRouterAlreadyInitializedError>()),
     );
 
-    await CCRouter.shutdown();
+    await CCRouterHost.shutdown();
     final secondAssembly = CCHostAssembly.fromComponents(
       components: [component('b', 'b')],
     );
-    CCRouter.initialize(hostAssembly: secondAssembly);
+    CCRouterHost.initialize(hostAssembly: secondAssembly);
     expect(CCRouterHostBinding.routeCatalog, same(secondAssembly.routeCatalog));
     expect(
       CCRouterHostBinding.routeCatalog,
@@ -273,7 +273,7 @@ void main() {
   });
 
   test('facade resolves a promoted service by contract type', () async {
-    CCRouter.initialize(
+    CCRouterHost.initialize(
       hostAssembly: CCHostAssembly.fromComponents(
         components: const [
           CCComponentManifest(
@@ -291,7 +291,7 @@ void main() {
   });
 
   test('Session records account identity and is cleared on close', () async {
-    CCRouter.initialize(
+    CCRouterHost.initialize(
       hostAssembly: CCHostAssembly.fromComponents(components: const []),
     );
     final metadata = <String, Object?>{'tenant': 'cn'};
@@ -314,7 +314,7 @@ void main() {
     'navigator executes typed and dynamic routes through the adapter',
     () async {
       final adapter = CCMemoryNavigationAdapter();
-      CCRouter.initialize(
+      CCRouterHost.initialize(
         hostAssembly: CCHostAssembly.fromComponents(
           components: const [
             CCComponentManifest(
@@ -344,14 +344,14 @@ void main() {
         '43',
       );
 
-      await CCRouter.shutdown();
+      await CCRouterHost.shutdown();
       expect(adapter.isInitialized, isFalse);
     },
   );
 
   test('failed component registration leaves no partial Runtime', () async {
     expect(
-      () => CCRouter.initialize(
+      () => CCRouterHost.initialize(
         hostAssembly: CCHostAssembly.fromComponents(
           components: const [
             CCComponentManifest(

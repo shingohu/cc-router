@@ -33,7 +33,7 @@ await CCDeepLinkIngress.fromPlatform(
 时，应显式使用 `go`。GoRouter 的 `push` 可以打开 location，但 branch 切换本身不是一条
 可靠的可 Pop 页面历史，不能用它承诺“返回到原 Tab”。
 
-Demo 在 `CCRouter.initialize` 中配置 `demoDeepLinkIngressPolicy`：只接受
+Demo 在 `CCRouterHost.initialize` 中配置 `demoDeepLinkIngressPolicy`：只接受
 `ccrouter://lab/...`、`https://ccrouter.example/...`，并允许经过 Host mapper
 验证后生成的绝对 Path。框架默认策略是 `denyAll`，所以新增生产域名或自定义 Scheme
 时必须由宿主显式添加精确的 `CCDeepLinkAuthorityRule`，仅新增 `CCUriPattern` 不会放行。

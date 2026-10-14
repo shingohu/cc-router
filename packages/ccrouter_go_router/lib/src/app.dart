@@ -1,5 +1,5 @@
 import 'package:ccrouter/ccrouter.dart';
-import 'package:ccrouter/ccrouter_host.dart';
+import 'package:ccrouter/ccrouter_host.dart' hide CCRouterHost;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -86,7 +86,7 @@ final class CCGoRouterBackendConfiguration {
 
 /// Minimal GoRouter Host for applications that use generated CCRouter routes.
 ///
-/// The application Composition Root must call [CCRouter.initialize] before
+/// The application Composition Root must call [CCRouterHost.initialize] before
 /// mounting this widget. This widget deliberately does not initialize or shut
 /// down the process Runtime; it only creates and registers one navigation Host.
 ///
@@ -99,7 +99,7 @@ final class CCGoRouterBackendConfiguration {
 final class CCGoRouterApp extends StatefulWidget {
   /// Creates a managed GoRouter Host from the initialized Host Catalog.
   ///
-  /// The Composition Root must call `CCRouter.initialize` first. This wrapper
+  /// The Composition Root must call `CCRouterHost.initialize` first. This wrapper
   /// resolves the exact Catalog retained from that Host Assembly so callers do
   /// not repeat or accidentally mismatch generated startup inputs.
   const CCGoRouterApp({
@@ -290,7 +290,7 @@ final class _CCGoRouterAppState extends State<CCGoRouterApp> {
       catalog = CCRouterHostBinding.routeCatalog;
     } on CCRouterNotInitializedError {
       throw FlutterError(
-        'CCRouter is not initialized. Call CCRouter.initialize from the '
+        'CCRouter is not initialized. Call CCRouterHost.initialize from the '
         'application Composition Root before mounting CCGoRouterApp.',
       );
     }

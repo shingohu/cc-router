@@ -47,10 +47,18 @@ Firebase callback，不属于 CCRouter 框架 Package，也不构成框架对 Fi
 
 ```dart
 import 'package:ccrouter/ccrouter.dart';
-import 'package:ccrouter_go_router/ccrouter_go_router.dart';
 ```
 
 只有应用 Composition Root 可以导入 `ccrouter_go_router` 和 `package:ccrouter/ccrouter_host.dart`。业务代码不得导入 `ccrouter_core/src/*`、Adapter 或 Host SPI。
+
+`CCRouterHost.initialize`、`CCRouterHost.shutdown` 和 `CCRouterHost.runInitTasks` 只从
+`ccrouter_host.dart` 提供；装配类型 `CCHostAssembly` 也只属于 Host API。业务入口 `CCRouter`
+不提供这三个方法，不保留旧入口或兼容转发。Session 的 `openSession/closeSession` 和只读
+`initTasks` 仍属于业务 API。多个导航 Host 共享默认 Runtime，关闭某个导航 Host 不应关闭 Runtime。
+可选 Analyzer Plugin 通过 `ccrouter_host_lifecycle_access` 拒绝组件导入／转导出生命周期入口，
+并按框架声明身份检查经公共 barrel 使用的 `CCRouterHost`；Host 角色依据 `.metadata`、
+`ccrouter.yaml` 和直接依赖判定。该诊断针对组件 Package 的 `lib/`，测试／工具及生成物除外；
+同一个 Host Package 内无法自动区分装配文件与页面，仍需代码审查。Dart 导出边界独立于 Plugin 生效。
 
 ### IDE / Analysis Server 诊断
 
@@ -376,33 +384,37 @@ Host 自己的公共 barrel 只需转发生成的
 手写 `show` 列表。稳定入口只导出完整的 Host Assembly；初始化后 managed Host 会通过
 Host-only Binding 使用其中的 Catalog，避免重复传参或混用不同代生成物。
 
-`CCRouter.initialize` 只接受一个必填 `CCHostAssembly`。已有工程需要手写装配时使用
+`CCRouterHost.initialize` 只接受一个必填 `CCHostAssembly`。已有工程需要手写装配时使用
 `CCHostAssembly.fromComponents(components: ...)`，不要把 Component、Contract、Catalog
 和 Tool Integration 拆成多组初始化参数。手写 Host 自己提供页面目录时，也必须通过
 `fromComponents(routeCatalog: ...)` 放入同一个 Assembly；`CCGoRouterApp` 不提供覆盖入口。
 
 ```dart
+import 'package:ccrouter/ccrouter.dart';
+import 'package:ccrouter/ccrouter_host.dart';
+import 'package:ccrouter_go_router/ccrouter_go_router.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  CCRouter.initialize(
+  CCRouterHost.initialize(
     hostAssembly: ccrouterGeneratedHostAssembly,
   );
-  await CCRouter.runInitTasks(gate: CCInitTaskGate.appStarted);
+  await CCRouterHost.runInitTasks(gate: CCInitTaskGate.appStarted);
   runApp(const CCGoRouterApp());
 }
 ```
 
 上面的 `CCGoRouterApp` 会自动装配 managed GoRouter、Root Observer、Adapter、Host
-和 `MaterialApp.router`，但不会初始化或关闭进程 Runtime。`CCRouter.initialize` 始终由
+和 `MaterialApp.router`，但不会初始化或关闭进程 Runtime。`CCRouterHost.initialize` 始终由
 Composition Root 显式调用；全局拦截器、Deep Link 白名单、Aspect、Telemetry 等配置也放在
 这里：
 
 ```dart
-CCRouter.initialize(
+CCRouterHost.initialize(
   hostAssembly: ccrouterGeneratedHostAssembly,
   globalInterceptors: const [...],
 );
-final initResult = await CCRouter.runInitTasks(
+final initResult = await CCRouterHost.runInitTasks(
   gate: CCInitTaskGate.appStarted,
 );
 // 仅无法降级的 Host 才显式选择 fail-fast：
@@ -445,7 +457,7 @@ runApp(
 );
 ```
 
-默认 `CCGoRouterApp` 自动使用 `CCRouter.initialize` 安装的同一份 Catalog。只有直接使用
+默认 `CCGoRouterApp` 自动使用 `CCRouterHost.initialize` 安装的同一份 Catalog。只有直接使用
 `CCGoRouterBackend.managed/attach` 的高级 Host 或渐进式接入才显式传递 Catalog；业务代码
 不能通过 `CCRouter` 读取路由表。
 
@@ -478,10 +490,10 @@ final backend = CCGoRouterMultiHostBackend.managed(
 这不是大屏分栏、Bottom Tab 或 Shell 的默认方案；这些场景通常使用一个 Host 下的多个
 Outlet。聚合器也不代表平台 Window，不负责 macOS、Windows 或 iPadOS 原生窗口生命周期。
 
-`CCRouter.initialize` 同步完成全局配置和启动组件注册；`CCGoRouterApp` 不会在卸载时隐式 shutdown Runtime。应用最终退出或测试 Host 销毁时执行：
+`CCRouterHost.initialize` 同步完成全局配置和启动组件注册；`CCGoRouterApp` 不会在卸载时隐式 shutdown Runtime。应用 Composition Root 结束默认 Runtime 时执行（包括使用生产装配入口的集成测试）：
 
 ```dart
-await CCRouter.shutdown();
+await CCRouterHost.shutdown();
 ```
 
 不要在页面 Pop、组件页面销毁、App 后台或 Session 关闭时 shutdown。Runtime 会先销毁它拥有的 Adapter，再释放 managed Backend 创建的 GoRouter；attach 模式不会销毁应用自己创建的 GoRouter。销毁、动态 Host 注销或 Host 初始化失败时采用 best-effort 结构化清理：某个 listener remover、PopGuard 解绑或子 Adapter 抛错不会跳过其它资源，调用方最终收到首个失败。
@@ -491,10 +503,10 @@ await CCRouter.shutdown();
 App 取消通知失败时继续完成全部清理，再向 shutdown 调用方报告失败。关闭操作在调用
 Listener 之前建立门禁，重复调用只等待同一轮清理；即使回调同步重入，也不能提前 initialize。
 
-这里的命名按所有权层级区分：`CCRouter.initialize()` 创建并原子初始化进程默认 Runtime，
-`CCRouter.shutdown()` 由应用 Composition Root 停止该 Runtime；它们不是某个 Widget 或对象实例
+这里的命名按所有权层级区分：`CCRouterHost.initialize()` 创建并原子初始化进程默认 Runtime，
+`CCRouterHost.shutdown()` 由应用 Composition Root 停止该 Runtime；它们不是某个 Widget 或对象实例
 的 `init/dispose`。Runtime、Adapter、Scope、Service 等具体实例仍由各自 Owner 调用内部
-`dispose`。`CCRouter.runInitTasks(gate: ...)` 打开一个 `CCInitTaskGate` 并等待零到多个新就绪
+`dispose`。`CCRouterHost.runInitTasks(gate: ...)` 打开一个 `CCInitTaskGate` 并等待零到多个新就绪
 任务，它不会再次初始化或替换 Runtime，也不会重试已完成或失败的任务。所有 `shutdown()`
 调用都必须被 `await`，完成后才允许重新调用 `initialize()`。
 
@@ -522,7 +534,7 @@ final navigationAnalytics = CCNavigationAnalyticsBridge(
   dispatcher: analytics,
 );
 
-CCRouter.initialize(
+CCRouterHost.initialize(
   hostAssembly: ccrouterGeneratedHostAssembly,
   navigationAspects: [navigationAnalytics.createAspect()],
 );
@@ -752,7 +764,7 @@ Interceptor 是**导航前决策**，适合：
 - redirect 到登录/说明页
 - defer 原请求，外部条件满足后恢复
 
-全局 Interceptor 在 `CCRouter.initialize` 注入；路由级 Interceptor 通过组件
+全局 Interceptor 在 `CCRouterHost.initialize` 注入；路由级 Interceptor 通过组件
 `@CCComponentContribution` 注册，并由注解中的稳定 ID 引用。它们可以返回
 proceed、cancel、redirect 或 defer。
 
@@ -802,7 +814,7 @@ final class AppDiagnosticSink implements CCDiagnosticSink {
   }
 }
 
-CCRouter.initialize(
+CCRouterHost.initialize(
   hostAssembly: ccrouterGeneratedHostAssembly,
   diagnostics: CCDiagnosticsConfig(
     sink: AppDiagnosticSink(appLogger),
@@ -977,10 +989,10 @@ Contract、Owner 不匹配、版本范围不满足、指纹漂移、重复实现
 应显式升级版本，破坏性变更使用新的 Contract ID。
 
 生成的 Host Assembly 暴露只读 `contractBundle`。标准启动代码将它和组件 Manifest 一起交给
-`CCRouter.initialize`，因此业务不需要手写版本字符串：
+`CCRouterHost.initialize`，因此业务不需要手写版本字符串：
 
 ```dart
-CCRouter.initialize(
+CCRouterHost.initialize(
   hostAssembly: ccrouterGeneratedHostAssembly,
 );
 ```
@@ -1148,7 +1160,7 @@ Future<void> initializeAnalytics(CCInvocationContext context) =>
 放在公共 contracts Package，消费组件必须 required-depend on Owner。独立内部任务可以只填写
 `id`，`contract` 与 `id` 不能同时设置。
 
-Host 在 `CCRouter.initialize` 后调用 `CCRouter.runInitTasks(gate: ...)`。调用方必须显式选择 Gate；普通启动使用 `CCInitTaskGate.appStarted`，它不是 API 默认值。Runtime 仍保留重复 ID、缺失依赖、循环依赖以及 required 依赖 optional 的最终校验。并发打开 Gate 共享 single-flight drain；执行期间新打开 Gate 时，Runtime 会继续运行新就绪的 DAG 层直至稳定，不会遗留永久 `pending` 的任务。
+Host 在 `CCRouterHost.initialize` 后调用 `CCRouterHost.runInitTasks(gate: ...)`。调用方必须显式选择 Gate；普通启动使用 `CCInitTaskGate.appStarted`，它不是 API 默认值。Runtime 仍保留重复 ID、缺失依赖、循环依赖以及 required 依赖 optional 的最终校验。并发打开 Gate 共享 single-flight drain；执行期间新打开 Gate 时，Runtime 会继续运行新就绪的 DAG 层直至稳定，不会遗留永久 `pending` 的任务。
 
 `runInitTasks(gate: ...)` 返回 `CCInitTaskRunResult`。required 与 optional 业务失败都进入 Result、Snapshot、Trace 和 Diagnostics，仅依赖失败节点的分支会 `skipped`，无关分支和后续 Gate 仍可继续。默认不把业务失败作为未捕获异常抛给启动流程，因此现有“先 `await` InitTask、再 `runApp`”的顺序仍然支持；确实无法降级的 Host 可显式调用 `result.throwIfRequiredFailed()`。Runtime shutdown、取消和非法状态等框架错误仍直接抛出。`@CCInitTask` 同样要求显式 `gate`；CLI Scaffold 会生成 `gate: CCInitTaskGate.appStarted`，开发者可按真实条件修改。单个 Service 的异步准备应放在 `CCServiceProvider.initializer`，不要创建 InitTask 预热所有 Service。
 

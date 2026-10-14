@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:convert';
 
 import 'package:ccrouter/ccrouter.dart' as business;
 import 'package:ccrouter/ccrouter_host.dart' as host;
@@ -74,6 +75,7 @@ const _hostSpiTypes = <Type>[
   host.CCRouteRestorationOpportunityReason,
   host.CCGeneratedPackageBundle,
   host.CCHostAssembly,
+  host.CCRouterHost,
   host.CCHostAssemblyError,
   host.CCHostAssemblyErrorCode,
   host.CCFlutterRouteFactory,
@@ -82,11 +84,11 @@ const _hostSpiTypes = <Type>[
   host.CCFlutterDialogPage,
 ];
 
-const _businessFacadeTypes = <Type>[business.CCHostAssembly];
+const _businessFacadeTypes = <Type>[business.CCRouter];
 
 void main() {
   test('business barrel hides the complete Adapter SPI snapshot', () {
-    expect(_businessFacadeTypes, contains(business.CCHostAssembly));
+    expect(_businessFacadeTypes, contains(business.CCRouter));
     final root = _workspaceRoot();
     final businessBarrel = File(
       '${root.path}/packages/ccrouter/lib/ccrouter.dart',
@@ -104,6 +106,83 @@ void main() {
       isTrue,
     );
   });
+
+  test(
+    'Dart rejects lifecycle and assembly from the business surface',
+    () async {
+      final root = _workspaceRoot();
+      final fixture = Directory(
+        '${root.path}/.dart_tool',
+      ).createTempSync('host-api-boundary-');
+      try {
+        final original = File('${root.path}/.dart_tool/package_config.json');
+        final config =
+            jsonDecode(original.readAsStringSync()) as Map<String, dynamic>;
+        for (final entry in config['packages'] as List) {
+          entry['rootUri'] = original.uri
+              .resolve(entry['rootUri'] as String)
+              .toString();
+        }
+        Directory('${fixture.path}/.dart_tool').createSync();
+        File(
+          '${fixture.path}/.dart_tool/package_config.json',
+        ).writeAsStringSync(jsonEncode(config));
+        File('${fixture.path}/pubspec.yaml').writeAsStringSync(
+          'name: host_boundary_probe\nenvironment:\n  sdk: ^3.10.0\n',
+        );
+        final probe = File('${fixture.path}/probe.dart');
+        probe.writeAsStringSync("""
+import 'package:ccrouter/ccrouter.dart';
+void probe() {
+  CCRouter.initialize();
+  CCRouter.shutdown();
+  CCRouter.runInitTasks();
+  print(CCRouterHost);
+  print(CCHostAssembly);
+}
+""");
+        final rejected = await Process.run('fvm', [
+          'dart',
+          'analyze',
+          '--format=machine',
+          probe.path,
+        ], workingDirectory: root.path);
+        expect(rejected.exitCode, isNot(0));
+        final errors = '${rejected.stdout}\n${rejected.stderr}';
+        for (final name in [
+          'initialize',
+          'shutdown',
+          'runInitTasks',
+          'CCRouterHost',
+          'CCHostAssembly',
+        ]) {
+          expect(errors, contains(name));
+        }
+        probe.writeAsStringSync("""
+import 'package:ccrouter/ccrouter.dart';
+import 'package:ccrouter/ccrouter_host.dart';
+Future<void> probe() async {
+  CCRouterHost.initialize(hostAssembly: CCHostAssembly.fromComponents(components: const []));
+  await CCRouterHost.runInitTasks(gate: CCInitTaskGate.appStarted);
+  await CCRouterHost.shutdown();
+}
+""");
+        final accepted = await Process.run('fvm', [
+          'dart',
+          'analyze',
+          '--format=machine',
+          probe.path,
+        ], workingDirectory: root.path);
+        expect(
+          accepted.exitCode,
+          0,
+          reason: '${accepted.stdout}\n${accepted.stderr}',
+        );
+      } finally {
+        fixture.deleteSync(recursive: true);
+      }
+    },
+  );
 
   test('test Runtime binding has a dedicated entry point', () {
     final root = _workspaceRoot();
@@ -124,7 +203,7 @@ void main() {
     ).readAsStringSync();
 
     expect(_contractCombinatorNames(hostBarrel, 'show'), _hostContractNames);
-    expect(_hostSpiTypes, hasLength(29));
+    expect(_hostSpiTypes, hasLength(30));
   });
 }
 

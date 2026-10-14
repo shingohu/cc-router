@@ -17,3 +17,4 @@ export 'src/shell_pages.dart'
         demoWorkspaceActivityIntent,
         demoWorkspaceProfileIntent;
 export 'src/stack_page.dart' show demoStackIntent;
+export 'src/initialization_actions.dart' show DemoInitializationActions;

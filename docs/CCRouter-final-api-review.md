@@ -49,7 +49,7 @@ Service、Command、Event 和 InitTask 后续也已形成各自闭环，状态�
 - Multi Host Registry 在 RouteEntry 移除和 Adapter dispatch 失败时释放
   `navigationId -> hostId` 索引，不依赖 Backend Observer 必须存在。
 - Multi Host 初始化、动态注册和卸载均为同步原子事务；失败注册不会写入 Registry，Adapter
-  只执行一次同步清理。异步 Scope 和 Backend 资源由 `CCRouter.shutdown()` 统一等待。
+  只执行一次同步清理。异步 Scope 和 Backend 资源由 `CCRouterHost.shutdown()` 统一等待。
 - 恢复机会 Controller 的启动前信号缓冲有明确容量，不能在 Runtime 订阅前无限增长。
 - GoRouter Observer、RouterDelegate、Predictive Back、Foreign Route Bridge、页面生命周期和恢复
   信号订阅均有对应 removal/dispose 路径。
@@ -76,19 +76,23 @@ Service、Command、Event 和 InitTask 后续也已形成各自闭环，状态�
 `CCFlutterRouteDestination.fromDefinition` 创建 Adapter-facing `CCNavigationRoute`，因此页面
 library 不需要依赖 Host SPI。API surface 快照测试锁定两侧导出集合。
 
-`CCRouter.initialize(hostAssembly: ...)` 原子初始化完整 Host Assembly。生成、手写和测试
+`CCRouterHost` 和 `CCHostAssembly` 仅从 `ccrouter_host.dart` 导出；业务 `CCRouter`
+不再提供 initialize、shutdown、runInitTasks，也无兼容入口。初始化、关闭和 Gate 控制仅属于
+应用 Composition Root；Session API 和 InitTask 只读快照仍属于业务 API。
+
+`CCRouterHost.initialize(hostAssembly: ...)` 原子初始化完整 Host Assembly。生成、手写和测试
 Host 都通过同一个只读快照提供组件、Contract、Route Catalog 与可选 Tool Integration。新应用由
 `CCGoRouterApp()` 通过 Host-only Binding 自动读取该快照中的 Catalog，不在 Widget 层重复
 传递，也不向业务 `CCRouter` 暴露路由表。`CCRouterAppBackend` 提供 Adapter，
 `CCRouterApp.managed` 通过框架私有协调器完成所有权转移。
 Host/Adapter 的生命周期约束如下：
 
-- `CCRouter.shutdown()` 只由拥有默认 Runtime 的应用 Composition Root 调用并等待完成；页面、
+- `CCRouterHost.shutdown()` 只由拥有默认 Runtime 的应用 Composition Root 调用并等待完成；页面、
   组件、Session、App 后台和单个 Navigation Host 不拥有该生命周期，完成后才允许重新
   `initialize()`；
 - Adapter 由 Backend 交给 `CCRouterApp.managed`，再由 Runtime 初始化、销毁；
 - Adapter 初始化、初始 Backend Snapshot 和 dispose 都是同步事务，返回时状态已经稳定；
-- 异步平台资源必须在 Backend 构造前准备，或在 `CCRouter.shutdown()` 阶段释放；
+- 异步平台资源必须在 Backend 构造前准备，或在 `CCRouterHost.shutdown()` 阶段释放；
 - Backend 绑定协调器属于框架内部实现，不从 `ccrouter_host.dart` 导出；
 - dispose 后导航必须失败，且 Runtime 不允许重新初始化；
 - managed Backend 在 Runtime 关闭后销毁自有 GoRouter，attach Backend 不销毁应用 Router；

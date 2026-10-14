@@ -43,7 +43,7 @@ export 'package:ccrouter_contracts/ccrouter_contracts.dart'
         CCRouteRestorationOpportunitySignal,
         CCRouteRestorationOpportunitySource;
 export 'src/app.dart' show CCRouterAppBackend, CCPageLifecycleHostBridge;
-export 'src/facade.dart' show CCRouterHostBinding;
+export 'src/facade.dart' show CCRouterHost, CCRouterHostBinding;
 export 'src/flutter_route_factory.dart';
 export 'src/generated_package_bundle.dart';
 export 'src/host_tool_integration.dart';

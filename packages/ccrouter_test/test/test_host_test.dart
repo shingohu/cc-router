@@ -1,4 +1,5 @@
 import 'package:ccrouter/ccrouter.dart';
+import 'package:ccrouter/ccrouter_host.dart';
 import 'package:ccrouter_contracts/ccrouter_contracts.dart' show CCServiceToken;
 import 'package:ccrouter_core/ccrouter_core.dart';
 import 'package:ccrouter_test/ccrouter_test.dart';
@@ -156,13 +157,13 @@ void main() {
 
     expect(
       () => host.run(
-        () => CCRouter.initialize(
+        () => CCRouterHost.initialize(
           hostAssembly: CCHostAssembly.fromComponents(components: const []),
         ),
       ),
       throwsA(isA<CCRouterAlreadyInitializedError>()),
     );
-    await expectLater(host.run(CCRouter.shutdown), throwsA(isA<StateError>()));
+    await expectLater(host.run(CCRouterHost.shutdown), throwsA(isA<StateError>()));
   });
 
   test('test host owns an isolated Runtime and disposes its adapter', () async {

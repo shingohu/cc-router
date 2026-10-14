@@ -167,7 +167,7 @@ return const CCNavigationFailurePropagate();
 
 以下能力已经在成功返回时完成全部状态变更，应继续保持同步：
 
-- `CCRouter.initialize` 和 Runtime `initialize`；
+- `CCRouterHost.initialize` 和 Runtime `initialize`；
 - Adapter attach、`initialize`、`dispose`；
 - 组件静态注册、Route/Shell 所有权和结构校验；
 - `openSession`；

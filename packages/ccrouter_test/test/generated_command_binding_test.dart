@@ -1,3 +1,4 @@
+import 'package:ccrouter/ccrouter_host.dart';
 import 'package:ccrouter/ccrouter_generated.dart';
 import 'package:test/test.dart';
 
@@ -21,12 +22,12 @@ final class _GeneratedCommandRegistrar implements CCComponentRegistrar {
 }
 
 void main() {
-  tearDown(CCRouter.shutdown);
+  tearDown(CCRouterHost.shutdown);
 
   test(
     'generated binding preserves stable ID and component identities',
     () async {
-      CCRouter.initialize(
+      CCRouterHost.initialize(
         hostAssembly: CCHostAssembly.fromComponents(
           components: const [
             CCComponentManifest(
@@ -63,7 +64,7 @@ void main() {
   );
 
   test('generated binding rejects a mismatched stable ID', () async {
-    CCRouter.initialize(
+    CCRouterHost.initialize(
       hostAssembly: CCHostAssembly.fromComponents(
         components: const [
           CCComponentManifest(
@@ -86,7 +87,7 @@ void main() {
   });
 
   test('generated binding rejects forged component attribution', () async {
-    CCRouter.initialize(
+    CCRouterHost.initialize(
       hostAssembly: CCHostAssembly.fromComponents(
         components: const [
           CCComponentManifest(

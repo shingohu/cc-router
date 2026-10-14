@@ -325,7 +325,7 @@ Route      一次具体路由实例
 初始化成功后的业务代码统一从 `CCRouter` 进入：
 
 ```dart
-CCRouter.initialize(
+CCRouterHost.initialize(
   hostAssembly: ccrouterGeneratedHostAssembly,
 );
 
@@ -352,13 +352,15 @@ await CCRouter.event(OrderCreatedEvent(order.id));
 建议的正式门面如下：
 
 ```dart
-abstract final class CCRouter {
-  static void initialize({
-    required Iterable<CCComponentManifest> components,
-  });
-
+// 仅通过 ccrouter_host.dart 向应用装配根提供。
+abstract final class CCRouterHost {
+  static void initialize({required CCHostAssembly hostAssembly});
   static Future<void> shutdown();
+  static Future<CCInitTaskRunResult> runInitTasks({required CCInitTaskGate gate});
+}
 
+// 通过 ccrouter.dart 向业务提供。
+abstract final class CCRouter {
   static void openSession({
     required String accountId,
     Map<String, Object?> metadata,
@@ -389,28 +391,24 @@ abstract final class CCRouter {
     CCCancellationToken? cancellation,
   });
 
-  static Future<CCInitTaskRunResult> runInitTasks({
-    required CCInitTaskGate gate,
-  });
-
   static List<CCInitTaskSnapshot> get initTasks;
 }
 ```
 
 ### 6.1 静态 API 的内部实现约束
 
-- `CCRouter` 创建并持有默认 Runtime；应用组合根显式调用 initialize 和 shutdown，但不直接
+- 内部持有默认 Runtime；应用组合根通过 `CCRouterHost` 显式 initialize 和 shutdown，但不直接
   构造或销毁 Runtime。
 - `CCRouterApp.managed` 是 managed Backend 的唯一绑定入口；内部协调器不对 Host 或业务
   开放，避免 Adapter 在没有 Widget Host 生命周期的情况下被单独绑定。
-- `CCRouter.initialize(hostAssembly: ...)` 原子初始化全局配置和完整启动期 Host Assembly，不允许
+- `CCRouterHost.initialize(hostAssembly: ...)` 原子初始化全局配置和完整启动期 Host Assembly，不允许
   业务代码直接注入 Adapter，也不允许初始化后追加启动组件。
-- `CCRouter.initialize`、Adapter attach、Adapter 初始化和初始 Backend Snapshot 读取均为
+- `CCRouterHost.initialize`、Adapter attach、Adapter 初始化和初始 Backend Snapshot 读取均为
   同步事务；成功返回时必须已经可以导航，异步 Backend 准备必须在 attach 前完成。
 - 异步初始化任务不隐藏在 `initialize()` 内；Host 通过 `runInitTasks(gate: ...)` 显式
   等待已打开 Gate 的 DAG。Facade、Runtime、Annotation 和手写 Definition 均不提供默认
   Gate；普通启动也要显式选择 `CCInitTaskGate.appStarted`。Runtime shutdown 负责取消并等待活动任务收口。
-- `CCRouter.shutdown()` 停止新调用、销毁默认 Runtime，并在 Adapter 之后释放 Backend
+- `CCRouterHost.shutdown()` 停止新调用、销毁默认 Runtime，并在 Adapter 之后释放 Backend
   自有资源；它仍为异步，因为必须等待 Scope 和业务资源释放。只有拥有默认 Runtime 的应用
   Composition Root 可以调用并且必须等待完成；页面、组件、Session、App 后台和单个 Navigation
   Host 都不能触发它。只有 `shutdown()` 完成后才能重新调用 `initialize()`。
@@ -427,10 +425,10 @@ abstract final class CCRouter {
 
 Flutter 应用启动时选择一个 Backend。新 GoRouter 应用使用 `CCGoRouterApp`；已有 Router 使用
 attach Backend 并继续由应用持有 Router。挂载 Host 前始终由 Composition Root 显式调用
-`CCRouter.initialize`；`CCGoRouterApp` 不提供 Runtime 初始化简写：
+`CCRouterHost.initialize`；`CCGoRouterApp` 不提供 Runtime 初始化简写：
 
 ```dart
-CCRouter.initialize(
+CCRouterHost.initialize(
   hostAssembly: ccrouterGeneratedHostAssembly,
 );
 
@@ -1183,7 +1181,7 @@ ComponentTestHost
 ### 16.4 组件运行时边界
 
 1.x 将组件定义为静态装配与能力所有权边界。组件集合通过一次
-`CCRouter.initialize(hostAssembly: ...)` 确定，Runtime 不提供 `activateComponent`、
+`CCRouterHost.initialize(hostAssembly: ...)` 确定，Runtime 不提供 `activateComponent`、
 `deactivateComponent`、`install` 或 `uninstall`。可选组件由 Composition Root 决定是否装配
 Manifest；登录、权限和 Feature Flag 使用 Interceptor，而不是伪装成组件生命周期。
 

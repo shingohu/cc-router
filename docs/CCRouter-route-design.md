@@ -899,7 +899,7 @@ Adapter 生命周期由 `CCRouterRuntime` 统一拥有。Adapter `initialize`、
 所有权前同步抛出，dispose 返回时监听器和内存索引必须已经清理。Adapter 不允许在这些方法
 中执行网络、磁盘或 MethodChannel 等异步准备；此类资源由 Host 在构造 Backend 前准备。
 
-`CCRouter.initialize` 同样同步完成全局配置和启动组件注册。`CCRouter.shutdown` 仍为异步，
+`CCRouterHost.initialize` 同样同步完成全局配置和启动组件注册。`CCRouterHost.shutdown` 仍为异步，
 因为它需要等待 Route/Session/App Scope、业务 Service dispose 和 Backend 自有资源。Session
 Session 关闭和单个 RouteEntry Pop 只影响各自的 Scope 或栈状态，不触发 Adapter dispose。
 GoRouter Adapter 自身不销毁 `GoRouter`，只清理绑定和 RouteEntry 状态；
@@ -1044,14 +1044,14 @@ Restoration、桌面窗口重开或异常 Session Marker 等 Host 证据，并�
 ### 12.6 CCRouterApp 与 Backend 所有权
 
 `CCRouterApp` 提供两种互不混用的接入模式。应用组合根始终显式调用
-`CCRouter.initialize(hostAssembly: ...)/shutdown`。新应用优先使用 managed 模式绑定 Backend；
+`CCRouterHost.initialize(hostAssembly: ...)/shutdown`。新应用优先使用 managed 模式绑定 Backend；
 已有应用可继续使用默认构造器作为不拥有 Runtime 的 Host Wrapper，或者将已有 Router
 包装为 attach Backend。
 
 新应用的默认 GoRouter 接入：
 
 ```dart
-CCRouter.initialize(
+CCRouterHost.initialize(
   hostAssembly: ccrouterGeneratedHostAssembly,
 );
 
@@ -1077,7 +1077,7 @@ managed 模式负责：
 - Adapter 绑定成功前不挂载业务 App 子树，框架使用固定的空加载态。
 - Adapter 绑定失败时上报 `FlutterError` 并展示不泄露异常内容的固定安全错误 UI。
 - Widget 卸载只解除 App 生命周期和 Host 挂载观察，不关闭 Runtime 或 Backend。
-- 应用调用 `CCRouter.shutdown` 时先释放 Runtime、Adapter、RouteEntry、Scope 和 Listener，
+- 应用调用 `CCRouterHost.shutdown` 时先释放 Runtime、Adapter、RouteEntry、Scope 和 Listener，
   再调用 Backend dispose 释放其自有 Router。
 - 不自动打开或关闭 Session；Session 继续由登录、退出、切换账号等业务流程管理。
 
@@ -1297,7 +1297,7 @@ Platform URI
 
 安全规则：
 
-- Host 在 `CCRouter.initialize(deepLinkIngressPolicy: ...)` 中配置应用拥有的
+- Host 在 `CCRouterHost.initialize(deepLinkIngressPolicy: ...)` 中配置应用拥有的
   Scheme、Host 和有效端口；默认 `denyAll`，不接受隐式通配。
 - Path-only 外部输入默认拒绝。仅当 Host 已经验证或归一化通知、扫码或 Web
   输入时，才显式设置 `allowRelativePaths: true`；它仍不能绕过路由级策略。
@@ -1313,7 +1313,7 @@ Platform URI
 示例：
 
 ```dart
-CCRouter.initialize(
+CCRouterHost.initialize(
   hostAssembly: CCHostAssembly.fromComponents(components: components),
   deepLinkIngressPolicy: CCDeepLinkIngressPolicy(
     allowedAuthorities: [

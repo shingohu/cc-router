@@ -52,7 +52,7 @@ final class _ContextRouteRegistrar implements CCComponentRegistrar {
 }
 
 void main() {
-  tearDown(CCRouter.shutdown);
+  tearDown(CCRouterHost.shutdown);
 
   test('navigation Host validates stable Host and Outlet identities', () {
     expect(() => CCNavigationHost(id: 'Host Main'), throwsArgumentError);
@@ -173,7 +173,7 @@ void main() {
       navigatorKeys: {'detail': detailKey},
     );
     final adapter = CCMemoryNavigationAdapter();
-    CCRouter.initialize(
+    CCRouterHost.initialize(
       hostAssembly: CCHostAssembly.fromComponents(
         components: const [
           CCComponentManifest(
@@ -345,7 +345,7 @@ void main() {
   ) async {
     final backend = _TestAppBackend();
     var childBuilds = 0;
-    CCRouter.initialize(
+    CCRouterHost.initialize(
       hostAssembly: CCHostAssembly.fromComponents(
         components: backend.manifests,
       ),
@@ -375,7 +375,7 @@ void main() {
     expect(backend.disposed, isFalse);
     expect(backend.adapter.isInitialized, isTrue);
 
-    await CCRouter.shutdown();
+    await CCRouterHost.shutdown();
     expect(CCRouter.isInitialized, isFalse);
     expect(backend.disposed, isTrue);
     expect(backend.adapter.isInitialized, isFalse);
@@ -415,7 +415,7 @@ void main() {
         ),
       ],
     );
-    CCRouter.initialize(
+    CCRouterHost.initialize(
       hostAssembly: CCHostAssembly.fromComponents(components: const []),
     );
 
@@ -434,7 +434,7 @@ void main() {
   testWidgets('compatibility App never owns an initialized Runtime', (
     tester,
   ) async {
-    CCRouter.initialize(
+    CCRouterHost.initialize(
       hostAssembly: CCHostAssembly.fromComponents(components: const []),
     );
     expect(CCRouter.isInitialized, isTrue);
@@ -451,7 +451,7 @@ void main() {
   ) async {
     final activeBackend = _TestAppBackend(hostId: 'widget.active');
     final rejectedBackend = _TestAppBackend(hostId: 'widget.rejected');
-    CCRouter.initialize(
+    CCRouterHost.initialize(
       hostAssembly: CCHostAssembly.fromComponents(
         components: activeBackend.manifests,
       ),

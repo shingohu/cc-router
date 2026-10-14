@@ -9,7 +9,7 @@ final class CCInitTaskGate {
   /// Creates a gate identified by the stable [id].
   const CCInitTaskGate(this.id);
 
-  /// Gate used for ordinary post-`CCRouter.initialize` startup work.
+  /// Gate used for ordinary post-`CCRouterHost.initialize` startup work.
   static const CCInitTaskGate appStarted = CCInitTaskGate('appStarted');
 
   /// Gate opened explicitly by the Host after privacy consent is granted.

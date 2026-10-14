@@ -2,7 +2,7 @@ import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 
 /// Host-owned bridge for reporting route-restoration demand signals.
 ///
-/// Create this in application composition code, pass it to `CCRouter.initialize`,
+/// Create this in application composition code, pass it to `CCRouterHost.initialize`,
 /// and call [report] only when platform or
 /// persisted session evidence indicates a genuine recreation opportunity. This
 /// controller does not persist or restore navigation state.

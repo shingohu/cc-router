@@ -12,7 +12,7 @@ annotated Provider and its alternative handwritten Provider.
 
 The Host may import `ccrouter_go_router` and `ccrouter_host.dart`. A new GoRouter
 application should first call
-`CCRouter.initialize(hostAssembly: ccrouterGeneratedHostAssembly)` and then use
+`CCRouterHost.initialize(hostAssembly: ccrouterGeneratedHostAssembly)` and then use
 `const CCGoRouterApp()` for the minimal Host assembly path. The widget resolves
 the exact Catalog retained from initialization through a Host-only Binding; do
 not repeat the Catalog argument or expose it through the business Facade. The
@@ -20,7 +20,7 @@ generated stable Host barrel exports only the atomic Assembly.
 `CCGoRouterApp` never initializes or shuts down the process Runtime. The Host
 owns generated Host assembly, navigation Backend,
 Shell/Outlet topology, platform Deep Link ingress, global policies and final
-`CCRouter.shutdown`.
+`CCRouterHost.shutdown`.
 
 Direct `CCGoRouterBackend.managed/attach` usage remains an advanced Host SPI and
 still receives an explicit Catalog. This supports existing application-owned
@@ -49,10 +49,10 @@ final hostAssembly = CCHostAssembly.fromComponents(
   components: [ordersManifest, accountManifest],
   routeCatalog: applicationRouteCatalog,
 );
-CCRouter.initialize(hostAssembly: hostAssembly);
+CCRouterHost.initialize(hostAssembly: hostAssembly);
 ```
 
-Do not pass loose component or Contract collections to `CCRouter.initialize`;
+Do not pass loose component or Contract collections to `CCRouterHost.initialize`;
 the required Assembly is the compile-time boundary that keeps one startup
 snapshot internally consistent. A handwritten Host that owns routes must place
 its Catalog in the same `fromComponents` call; `CCGoRouterApp` has no separate
@@ -90,6 +90,17 @@ minimal widget is not an attach replacement and never disposes an external
 Router.
 
 Feature packages must not perform these duties.
+
+`CCRouterHost` and `CCHostAssembly` are Host-only exports from
+`package:ccrouter/ccrouter_host.dart`. `CCRouter` exposes neither lifecycle
+control nor an Assembly type. There are no deprecated aliases. A feature page
+that obtains privacy consent reports that product decision through a narrow
+Host-provided callback or Contract. The Host chooses
+`CCInitTaskGate.privacyGranted` and calls `CCRouterHost.runInitTasks`; do not
+inject a generic Gate runner or import Host SPI in the page. The Demo uses
+`DemoInitializationActions` callbacks installed by `demo/lib/demo_initialization.dart`
+for its privacy and timeout lab actions, including multi-Host composition.
+
 
 ### CLI Scaffolding
 
@@ -717,15 +728,15 @@ Future<void> loadConfiguration() async {}
 Future<void> initializeAnalytics(CCInvocationContext context) =>
     analytics.initialize(context.cancellation);
 
-final initResult = await CCRouter.runInitTasks(
+final initResult = await CCRouterHost.runInitTasks(
   gate: CCInitTaskGate.privacyGranted,
 );
 // Use only when this Host deliberately cannot start in degraded mode.
 // initResult.throwIfRequiredFailed();
 ```
 
-`CCRouter.initialize` creates the process-default Runtime and pairs with the
-Composition Root's awaited `CCRouter.shutdown`. Do not call `shutdown` from a
+`CCRouterHost.initialize` creates the process-default Runtime and pairs with the
+Composition Root's awaited `CCRouterHost.shutdown`. Do not call `shutdown` from a
 Widget, Page, component, Session, or individual navigation Host disposal.
 `runInitTasks` opens a `CCInitTaskGate` and drains zero or more newly ready
 tasks; it does not initialize or replace the Runtime a second time, select one

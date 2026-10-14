@@ -101,6 +101,23 @@ Read [implementation-patterns.md](references/implementation-patterns.md) when ad
   Service Proxy, Command, and Event APIs. Do not import the underlying
   `ccrouter_generated/component/*_api.g.dart` files; they are generator/Host SPI.
 - Do not access `CCRouterRuntime`, `CCScope`, mutable Route Entries, Registry internals, or framework disposal entry points.
+- Only the application Host Composition Root imports `CCRouterHost` and
+  `CCHostAssembly` from `ccrouter_host.dart`. Use `CCRouterHost.initialize`,
+  `shutdown`, and `runInitTasks`; the business `CCRouter` has no lifecycle
+  control methods or compatibility aliases. Feature components request product
+  actions through a Host-provided callback or Contract; they never receive a
+  generic Gate runner. Keep `openSession/closeSession` in authentication business
+  code and `initTasks` as read-only diagnostics. Releasing one navigation Host
+  does not stop the shared Runtime.
+- The optional Plugin reports `ccrouter_host_lifecycle_access` in non-Host
+  participating Package `lib/` sources for direct imports/re-exports that expose
+  `CCRouterHost` and resolved canonical class references through public barrels.
+  Host roles use `.metadata`, `ccrouter.yaml`, and direct CCRouter dependencies;
+  tests/tools and generated code are excluded, and unknown roles/symbols defer.
+  It cannot distinguish feature files inside the same Host Package; preserve
+  that boundary through review. Never reclassify a component as Host to silence
+  the diagnostic.
+
 - Do not manually dispose framework-owned Service instances, Route Scopes, Adapters, or Sessions.
 - Do not edit anything under `lib/src/ccrouter_generated/`.
 - Do not add a generated `part` to a page, Service, component definition, or contribution. Generated libraries are standalone files assembled by the generator.
@@ -118,7 +135,7 @@ Read [implementation-patterns.md](references/implementation-patterns.md) when ad
 - Do not simulate unsupported Action Pipeline, dynamic component activation/deactivation, complete state restoration, or Navigator 1.0 Backend. Generated Command/Event/InitTask capabilities and Service Proxies support only their documented declaration and dependency models.
 - Use `@CCEventContract` plus public top-level `@CCEventSubscription` functions for static component Events, and publish annotated Events only through the generated Owner Client. Omit a Subscriber ID only when the component has exactly one Subscriber for that Event. Keep `CCEventSubscriberId<E>`, `CCEventSubscriber<E>`, and the legacy string overload for unannotated migration capabilities and low-level tests.
 - Connect application logging through `CCDiagnosticsConfig(sink: ...)`. A `CCDiagnosticSink` is asynchronous, bounded, observational, and failure-isolated. Category policies control external delivery and sampling only; they do not disable Runtime traces or lifecycle state. Forward only the sanitized fields supplied by `CCDiagnosticEvent` and never append raw URI, arguments, Extra, tokens, widgets, backend objects, exception messages, or business results.
-- Treat `componentGraph`, `componentRegistration`, and `runtimeInitialize` as the framework-owned component/startup diagnostic flow. Configure the Host Sink at `CCRouter.initialize` with `CCDiagnosticLevel.debug` when start events are needed; do not duplicate these lifecycle logs in application bootstrap code.
+- Treat `componentGraph`, `componentRegistration`, and `runtimeInitialize` as the framework-owned component/startup diagnostic flow. Configure the Host Sink at `CCRouterHost.initialize` with `CCDiagnosticLevel.debug` when start events are needed; do not duplicate these lifecycle logs in application bootstrap code.
 - Use `ccrouter_analytics` for provider-neutral product events. Route page view/leave events may be bridged from `CCNavigationAspect`; click, scroll, and exposure events require stable explicit targets. Keep Firebase, ThinkingData, local persistence, and upload adapters in the application layer (the Demo example lives under `demo/modules/`); do not add vendor SDK dependencies to framework `packages/*`, and do not infer business event IDs from Widget text or arbitrary Keys.
 - Keep the analytics dispatcher behind an explicit `CCAnalyticsPolicy`: its default is consent-denied, and the app must call `updatePolicy` after privacy consent. Revocation clears pending events and invalidates remaining sinks of the active event, even after immediate re-grant; already-running writes cannot be retracted. See the Analytics delivery section in `references/implementation-patterns.md` for asynchronous delivery and shutdown ownership.
 - Use `ccrouter_analytics_flutter` only when the app opts in to `CCAnalyticsScope` and explicit `CCAnalyticsScrollable` or `CCAnalyticsExposureTarget` wrappers. Scope inherits an application-owned Dispatcher and immutable context, does not close it, and must not infer Route or Foreign Popup attribution. Configure exposure thresholds deliberately; do not treat the approximation as ad verification or a security signal.
@@ -167,12 +184,12 @@ Read [implementation-patterns.md](references/implementation-patterns.md) when ad
 - The analytics dispatcher exposes only payload-free pressure counters (`acceptedEventCount`, `pendingEventCount`, `peakQueueDepth`, `droppedEventCount`, `timedOutSinkWriteCount`, and `quarantinedSinkCount`) plus `snapshot` per-Sink health for bounded health/performance checks. Properties, blacklist IDs, and throttle state are bounded; non-finite numbers and oversized values fail at construction. An optional `sinkWriteTimeout` quarantines a slow application Sink so `close()` is bounded, but Dart Futures remain non-cancellable and the Sink must own cancellation. These counters are not an audit log, replay source, or permission to inspect queued events; use the standalone benchmark when comparing SDK/platform behavior.
 - Use `CCRouter.traceBundle(traceId)` for bounded local troubleshooting across nested calls. It is not an audit log, replay source, or business Event store; records may be incomplete after capacity rotation.
 - When using generated Host assembly, pass it directly to
-  `CCRouter.initialize(hostAssembly: ...)`; it supplies component Manifests,
+  `CCRouterHost.initialize(hostAssembly: ...)`; it supplies component Manifests,
   the read-only Contract Bundle, and optional Host Tool Integrations. Never hand-write
   Contract versions or fingerprints. Generation and Host/Runtime boundaries
   reject missing, owner-mismatched, out-of-range, fingerprint-drifted,
   duplicate, or stale Contract artifacts with stable compatibility codes.
-- `CCRouter.initialize` accepts exactly one required `CCHostAssembly`; it does
+- `CCRouterHost.initialize` accepts exactly one required `CCHostAssembly`; it does
   not accept loose component or Contract arguments. Generated Hosts use
   `ccrouterGeneratedHostAssembly`. A handwritten Host or focused Facade test
   uses `CCHostAssembly.fromComponents`, while ordinary Runtime tests prefer
@@ -240,10 +257,10 @@ the Service Contract.
 
 ## Lifecycle Rules
 
-- `CCRouter.initialize` receives one complete Host Assembly once.
+- `CCRouterHost.initialize` receives one complete Host Assembly once.
 - Open a Session after login or persisted authentication restoration. Close it on logout, token invalidation, account switch, or forced sign-out.
 - Do not close a Session on page Pop, backgrounding, or tab changes.
-- Call and await `CCRouter.shutdown` only when the owning application
+- Call and await `CCRouterHost.shutdown` only when the owning application
   Composition Root ends the default Runtime. Page, component, Session,
   application-background, and individual navigation Host lifecycles must not
   call it. Reinitialize only after the shutdown Future completes.
@@ -255,7 +272,7 @@ the Service Contract.
 - Use async Service readiness only when callers cannot safely use the instance immediately after synchronous construction.
 - Singleton readiness is shared, including across independent callers. Runtime rejects active dependency wait cycles; caller timeout/cancellation removes its wait without cancelling shared initialization. Do not retry a failed initializer implicitly within the same Scope.
 - Use `@CCService` only for a public concrete non-generic class with an unnamed zero-argument generative constructor. A promoted implementation must directly implement exactly one `@CCServiceContract`; do not pass or export a Service Token from business code. Use `@CCCommandContract` plus a public top-level `@CCCommandHandler` for generated Commands. Use `@CCEventContract` plus public top-level `@CCEventSubscription` functions for static Events. Use `CCInitTaskContract` plus a public top-level `@CCInitTask` function for generated initialization tasks. Use `@CCComponentContribution` for custom factories, constructor injection, async Service initializers, unannotated migration capabilities, Shell, and policy registration.
-- Keep InitTask dependency targets as top-level `const CCInitTaskContract` values. Set exactly one of `contract` and `id`; use `id` only for an independent component-internal task. Always declare `gate` and `failurePolicy` explicitly; ordinary startup uses `CCInitTaskGate.appStarted`, while generated CLI scaffolds merely write that value for you rather than relying on a framework default. Cross-component task dependencies require a public contracts-Package barrel and a required dependency on the task Owner. Call `CCRouter.runInitTasks(gate: ...)` with an explicit Gate from the Host, never invoke generated task bridges from business code.
+- Keep InitTask dependency targets as top-level `const CCInitTaskContract` values. Set exactly one of `contract` and `id`; use `id` only for an independent component-internal task. Always declare `gate` and `failurePolicy` explicitly; ordinary startup uses `CCInitTaskGate.appStarted`, while generated CLI scaffolds merely write that value for you rather than relying on a framework default. Cross-component task dependencies require a public contracts-Package barrel and a required dependency on the task Owner. Call `CCRouterHost.runInitTasks(gate: ...)` with an explicit Gate from the Host, never invoke generated task bridges from business code.
 - Declare every cross-component Service consumer in the consuming component's `serviceDependencies`, keep the owner in required `dependencies`, and call the generated `<Component>Services` member. Do not scan Package dependencies, handwrite a Proxy, pass caller IDs, or use a generated Client for a component-local Service.
 - Put a shared generated member name on `CCServiceContract.alias` or
   `CCCommandContract.alias`; use the matching Dependency alias only for a

@@ -183,8 +183,8 @@ ${snippet('extra-page')}
         // than silently ignoring the temporary file or missing method bodies.
         for (final invalid in [
           valid.replaceFirst(
-            'CCRouter.initialize(hostAssembly: hostAssembly)',
-            'CCRouter.initialize(contractBundle: hostAssembly.contractBundle)',
+            'CCRouterHost.initialize(hostAssembly: hostAssembly)',
+            'CCRouterHost.initialize(contractBundle: hostAssembly.contractBundle)',
           ),
           valid.replaceFirst(
             '  @override\n  T unwrap<T extends Object>(CartSummaryValue<T> value) => value.value;',

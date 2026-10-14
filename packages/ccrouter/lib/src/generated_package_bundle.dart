@@ -201,7 +201,7 @@ final class CCGeneratedPackageBundle {
 ///
 /// Generated Hosts create this snapshot from Package bundles. Handwritten
 /// Hosts and focused tests may instead use [CCHostAssembly.fromComponents].
-/// `CCRouter.initialize` accepts the complete assembly atomically so component,
+/// `CCRouterHost.initialize` accepts the complete assembly atomically so component,
 /// Contract, route, and tooling inputs cannot be mixed across generations. The
 /// assembly owns none of the referenced runtime objects.
 final class CCHostAssembly {

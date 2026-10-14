@@ -254,7 +254,7 @@ Workspace/插件 analyze 及缓存/无缓存生成物检查通过。
   诊断；已保存但尚未执行 Pub 时应报告 resolved graph stale 并要求执行 Pub，不得声称依赖变化
   已生效；Pub 完成但 watch aggregation 失败时必须显式显示生成错误，不能把 Flutter 增量编译
   成功解释为 CCRouter graph 成功；Host topology 成功变化后应发布 `hotRestartRequired`，因为
-  `main()`/`CCRouter.initialize()` 不会由普通 Hot Reload 重新执行。优先采用结构化状态与诊断
+  `main()`/`CCRouterHost.initialize()` 不会由普通 Hot Reload 重新执行。优先采用结构化状态与诊断
   协调，不直接代理整个 Flutter daemon。实现须保留 kill switch，并用声明变更/非声明变更、
   连续保存、生成失败、resolved graph stale、topology 变化及通常 reload 的真实 `flutter run`
   时序回归验收。

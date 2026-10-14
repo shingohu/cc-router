@@ -3,12 +3,12 @@
 ## 1. 状态与结论
 
 - 状态：Runtime 与注解生成器闭环已实现
-- 稳定入口：`CCRegistry.registerInitTask`、`CCRouter.runInitTasks`
+- 稳定入口：`CCRegistry.registerInitTask`、`CCRouterHost.runInitTasks`
 - 已实现：Task Contract、Handler 注解、注册桥接、metadata、DAG 文档和 Workspace 校验
 - 当前不做：自动重试、主线程标记、Session/前台周期任务、跨 Isolate 调度
 
 初始化任务用于 Runtime 完成同步组件装配后，执行一次性的异步启动工作，并在多个组件之间
-表达明确依赖。它不改变 `CCRouter.initialize()` 的同步语义，也不替代 Service readiness。
+表达明确依赖。它不改变 `CCRouterHost.initialize()` 的同步语义，也不替代 Service readiness。
 
 ## 2. 框架参考与取舍
 
@@ -44,15 +44,15 @@ Isolate/Service 能力完成，而不是给任务增加一个无法兑现的 `ba
 
 ## 4. 执行模型
 
-命名边界：`CCRouter.initialize()` 建立并同步校验默认 Runtime；`CCRouter.shutdown()` 由应用
+命名边界：`CCRouterHost.initialize()` 建立并同步校验默认 Runtime；`CCRouterHost.shutdown()` 由应用
 Owner 关闭它。`runInitTasks(gate: ...)` 是 InitTask Gate 执行入口，不是第二次初始化 Runtime；一次
 调用可能执行零个、一个或多个新就绪任务。`CCInitTaskGate` 一旦打开就在当前 Runtime 生命周期
 内保持打开，已经完成或失败的任务不会通过再次调用自动重试。
 
 1. 组件在 Registrar 中注册 `CCInitTaskDefinition`，Owner 由 Runtime 注入。
-2. `CCRouter.initialize()` 同步校验任务 ID、Gate、依赖、timeout、缺失节点和循环，不执行任务。
-3. Host 在适当时机调用 `await CCRouter.runInitTasks(gate: CCInitTaskGate.appStarted)` 打开普通启动 Gate。
-4. 隐私同意后调用 `await CCRouter.runInitTasks(gate: CCInitTaskGate.privacyGranted)`。
+2. `CCRouterHost.initialize()` 同步校验任务 ID、Gate、依赖、timeout、缺失节点和循环，不执行任务。
+3. Host 在适当时机调用 `await CCRouterHost.runInitTasks(gate: CCInitTaskGate.appStarted)` 打开普通启动 Gate。
+4. 隐私同意后调用 `await CCRouterHost.runInitTasks(gate: CCInitTaskGate.privacyGranted)`。
 5. 其它自定义条件使用带稳定 ID 的 `const CCInitTaskGate`，例如远程配置完成。
 6. Gate 打开后，依赖全部成功的同层任务按 ID 确定启动顺序，并发执行。
 7. 同一 Runtime 中每个任务最多运行一次；重叠调用共享一个 single-flight DAG drain。
@@ -91,17 +91,17 @@ registry.registerInitTask(
   ),
 );
 
-CCRouter.initialize(
+CCRouterHost.initialize(
   hostAssembly: ccrouterGeneratedHostAssembly,
 );
-final initResult = await CCRouter.runInitTasks(
+final initResult = await CCRouterHost.runInitTasks(
   gate: CCInitTaskGate.appStarted,
 );
 // 只有无法降级的 Composition Root 才启用严格模式：
 // initResult.throwIfRequiredFailed();
 
 // 用户明确同意隐私协议后：
-await CCRouter.runInitTasks(gate: CCInitTaskGate.privacyGranted);
+await CCRouterHost.runInitTasks(gate: CCInitTaskGate.privacyGranted);
 ```
 
 ## 6. 失败、重试与降级
@@ -211,7 +211,7 @@ Future<void> warmupAnalyticsCache() async {}
 Package 私有，只有真实跨组件依赖才通过公共 contracts Package barrel 导出。
 
 `CCInitTaskGate` 已经是带稳定 ID 的类型化值，因此不再增加语义重复的 Gate Contract。
-`CCRouter.runInitTasks`、`@CCInitTask` 和手写 `CCInitTaskDefinition` 都要求显式 Gate，避免
+`CCRouterHost.runInitTasks`、`@CCInitTask` 和手写 `CCInitTaskDefinition` 都要求显式 Gate，避免
 开发者无意依赖隐式启动时机。框架内置 `appStarted` 与 `privacyGranted`；CLI Scaffold 会
 显式生成 `appStarted`，自定义 Gate 使用公共 `const CCInitTaskGate`，
 由 Host 在条件成立时显式打开。跨 Package 使用的 Gate 必须从公共 contracts Package 导出；
@@ -285,8 +285,8 @@ Generator 校验不替代 Runtime。手写 Contribution、自定义 Registrar、
 
 ## 14. Runtime 与生命周期保持项
 
-- `CCRouter.initialize()` 继续同步完成配置和组件装配，不隐式执行异步任务；
-- Host 继续通过 `CCRouter.runInitTasks(gate: ...)` 明确打开 Gate；
+- `CCRouterHost.initialize()` 继续同步完成配置和组件装配，不隐式执行异步任务；
+- Host 继续通过 `CCRouterHost.runInitTasks(gate: ...)` 明确打开 Gate；
 - 同一 Runtime 中任务保持 single-flight、exactly-once 和同层稳定启动/并发执行；
 - `runInitTasks(gate: ...)` 返回不可变 `CCInitTaskRunResult`；required/optional 失败不会默认抛出，失败依赖
   分支 `skipped`，无关分支和未来 Gate 继续；

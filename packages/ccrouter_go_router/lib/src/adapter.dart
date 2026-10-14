@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:ccrouter/ccrouter.dart';
-import 'package:ccrouter/ccrouter_host.dart';
+import 'package:ccrouter/ccrouter_host.dart' hide CCRouterHost;
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 

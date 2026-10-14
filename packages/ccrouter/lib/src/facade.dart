@@ -15,6 +15,7 @@ part 'generated_command_binding.dart';
 part 'generated_event_binding.dart';
 part 'generated_service_binding.dart';
 part 'runtime_resolver.dart';
+part 'host_lifecycle.dart';
 part 'test_binding.dart';
 
 /// Resolves a strict call-site placement for the Flutter navigation facade.
@@ -62,24 +63,13 @@ final class _CCRouteServiceBinding extends InheritedWidget {
 
 /// Static business-facing entry point for all CCRouter capabilities.
 ///
-/// Applications initialize this facade once per isolate and use it for
-/// component services, messages, Sessions, diagnostics, and navigation. Do not
-/// construct or retain the lower-level Runtime in business code.
+/// Business code uses this facade for component services, messages, Sessions,
+/// diagnostics, and navigation. The application Composition Root initializes
+/// and shuts down the default Runtime through [CCRouterHost]. Business code
+/// cannot control or retain the lower-level Runtime.
 abstract final class CCRouter {
   /// Process-local navigation facade backed by the active Runtime.
   static final CCNavigator _navigator = _CCNavigator();
-
-  /// Shutdown operation currently in progress.
-  static Future<void>? _shuttingDown;
-
-  /// Releases Backend-owned resources after Runtime-owned Adapter disposal.
-  static Future<void> Function()? _backendDisposer;
-
-  /// Host tooling owned by the current process-default Runtime lifecycle.
-  static List<CCHostToolIntegration> _hostToolIntegrations = const [];
-
-  /// Backend-neutral routes owned by the current default Runtime lifecycle.
-  static CCFlutterRouteCatalog? _hostRouteCatalog;
 
   /// Returns the active Runtime or fails when the host is not initialized.
   static CCRouterRuntime get _runtime => _runtimeResolver.active;
@@ -256,7 +246,7 @@ abstract final class CCRouter {
   /// Unified business-facing navigation entry point.
   ///
   /// The returned object is stable across Runtime restarts and resolves the
-  /// currently active Runtime for each operation. Calls before [initialize]
+  /// currently active Runtime for each operation. Calls before [CCRouterHost.initialize]
   /// fail with [CCRouterNotInitializedError].
   static CCNavigator get navigator => _navigator;
 
@@ -278,96 +268,6 @@ abstract final class CCRouter {
     String navigationId, {
     String code = 'pending_cancelled',
   }) => _runtime.cancelPendingNavigation(navigationId, code: code);
-
-  /// Creates and initializes the process-default Runtime.
-  ///
-  /// Call this once during application startup with one complete [hostAssembly].
-  /// Generated, handwritten, and test Hosts all use the same atomic snapshot so
-  /// component, Contract, route, and tooling inputs cannot be mixed. Component
-  /// manifests are validated and registered before the Runtime becomes
-  /// observable, while navigation Backend binding remains the responsibility of
-  /// the Flutter Host.
-  /// Set [navigationDiagnosticCapacity] to bound each in-memory navigation
-  /// diagnostic history independently; zero disables retained histories without
-  /// disabling live listeners.
-  ///
-  /// Initialization is synchronous: successful return means the complete
-  /// component graph is available, while configuration failures throw before
-  /// any Runtime becomes observable. A second call before [shutdown] completes
-  /// throws [CCRouterAlreadyInitializedError]. Initialization from inside a
-  /// test Runtime overlay throws the same error because the Test Host owns that
-  /// Runtime lifecycle.
-  /// Global navigation interceptors are ordered by their stable IDs and run
-  /// before route-declared interceptors. Navigation aspects are ordered by
-  /// stable IDs and observe the same Runtime navigation pipeline.
-  /// [deepLinkIngressPolicy] is Host-owned and defaults to rejecting every
-  /// external authority and relative Path; configure exact rules only for URI
-  /// namespaces the application intentionally owns.
-  /// Generated Hosts pass their generated assembly directly. Handwritten Hosts
-  /// and focused tests create the same value with
-  /// [CCHostAssembly.fromComponents].
-  ///
-  /// The name describes framework Runtime initialization, not construction of
-  /// a disposable object and not asynchronous InitTask execution. Page,
-  /// component, Session, and navigation Host lifecycles must not call this
-  /// method. [runInitTasks] separately opens one InitTask Gate, while
-  /// [shutdown] is the matching application-owner operation that stops this
-  /// default Runtime. Concrete Runtime, Adapter, Scope, and Service instances
-  /// continue to use their owner-level `dispose` contracts internally.
-  static void initialize({
-    required CCHostAssembly hostAssembly,
-    int traceCapacity = 1000,
-    int navigationDiagnosticCapacity = 1000,
-    CCDiagnosticsConfig diagnostics = const CCDiagnosticsConfig(),
-    Iterable<CCGlobalNavigationInterceptor> globalInterceptors = const [],
-    Iterable<CCGlobalPopGuard> globalPopGuards = const [],
-    CCNavigationFailurePolicy? navigationFailurePolicy,
-    Iterable<CCNavigationAspect> navigationAspects = const [],
-    CCNavigationTelemetryContextProvider? telemetryContextProvider,
-    CCRouteRestorationOpportunitySource? restorationOpportunitySource,
-    CCNavigationConcurrencyPolicy navigationConcurrencyPolicy =
-        CCNavigationConcurrencyPolicy.allow,
-    CCDeepLinkIngressPolicy deepLinkIngressPolicy =
-        CCDeepLinkIngressPolicy.denyAll,
-  }) {
-    if (_runtimeResolver.hasOverlayRuntime ||
-        _runtimeResolver.defaultRuntime != null ||
-        _shuttingDown != null) {
-      throw const CCRouterAlreadyInitializedError();
-    }
-
-    final runtime = CCRouterRuntime.forHost(
-      components: hostAssembly.componentManifests,
-      contractBundle: hostAssembly.contractBundle,
-      traceCapacity: traceCapacity,
-      navigationDiagnosticCapacity: navigationDiagnosticCapacity,
-      diagnostics: diagnostics,
-      globalInterceptors: globalInterceptors,
-      globalPopGuards: globalPopGuards,
-      navigationFailurePolicy: navigationFailurePolicy,
-      navigationAspects: navigationAspects,
-      telemetryContextProvider: telemetryContextProvider,
-      restorationOpportunitySource: restorationOpportunitySource,
-      navigationConcurrencyPolicy: navigationConcurrencyPolicy,
-      deepLinkIngressPolicy: deepLinkIngressPolicy,
-    );
-    runtime.initialize();
-    _runtimeResolver.installDefault(runtime);
-    _hostRouteCatalog = hostAssembly.routeCatalog;
-    final integrations = hostAssembly.hostToolIntegrations;
-    _hostToolIntegrations = integrations;
-    for (final integration in integrations) {
-      try {
-        integration.onRuntimeReady();
-      } catch (error) {
-        runtime.recordHostToolLifecycleFailure(
-          integrationId: integration.id,
-          operation: 'hostToolStart',
-          errorType: error.runtimeType.toString(),
-        );
-      }
-    }
-  }
 
   /// Resolves the default or keyed implementation of service contract [T].
   ///
@@ -545,23 +445,6 @@ abstract final class CCRouter {
     CCCancellationToken? cancellation,
   }) => _runtime.event(event, timeout: timeout, cancellation: cancellation);
 
-  /// Opens the explicitly selected InitTask [gate] and awaits every newly ready
-  /// task.
-  ///
-  /// This does not initialize or replace the framework Runtime. The Gate stays
-  /// open for the Runtime lifetime, and one call may run zero, one, or multiple
-  /// newly ready tasks. Call it after synchronous [initialize]. Ordinary
-  /// startup uses [CCInitTaskGate.appStarted]; product conditions such as
-  /// privacy consent use an explicit stable Gate. Overlapping calls share one
-  /// DAG run, and completed tasks never execute twice. Task business failures
-  /// are returned in [CCInitTaskRunResult] and skip only dependent branches;
-  /// Runtime shutdown and cancellation still terminate the Future. A Host that
-  /// intentionally requires fail-fast startup may call
-  /// `result.throwIfRequiredFailed()` after awaiting this method.
-  static Future<CCInitTaskRunResult> runInitTasks({
-    required CCInitTaskGate gate,
-  }) => _runtime.runInitTasks(gate: gate);
-
   /// Immutable initialization task snapshots ordered by stable task ID.
   ///
   /// Use for startup diagnostics and tests. Snapshots contain only stable IDs,
@@ -584,112 +467,24 @@ abstract final class CCRouter {
   /// Call on logout, account switch, token invalidation, or forced sign-out;
   /// normal navigation and App backgrounding must not close the Session.
   static Future<void> closeSession() => _runtime.closeSession();
-
-  /// Shuts down the process-default Runtime and its owned resources.
-  ///
-  /// The application Composition Root uses this when ending the current default
-  /// Runtime. A Host Backend registered through [CCRouterHostBinding] is
-  /// released automatically after this call disposes the Runtime-owned
-  /// navigation Adapter. A new [initialize] call is allowed only after this
-  /// Future completes.
-  ///
-  /// Calling this method when no Runtime exists is a no-op. Calling it from a
-  /// test Runtime overlay throws [StateError]; dispose the owning Test Host
-  /// instead.
-  ///
-  /// This is intentionally named `shutdown`, rather than `dispose`, because
-  /// [CCRouter] is a static application facade and not a disposable instance.
-  /// Do not call it from Flutter `State.dispose`, Page Pop, component teardown,
-  /// Session close, application backgrounding, or one navigation Host's
-  /// disposal. Await it only when the Composition Root ends the default Runtime.
-  /// Stopping and cancellation callbacks run behind the shutdown gate, so they
-  /// cannot reinitialize early. Cleanup continues after notification failures;
-  /// the Host receives the first structural failure after resources are released.
-  static Future<void> shutdown() async {
-    if (_runtimeResolver.hasOverlayRuntime) {
-      throw StateError(
-        'A CCRouter test Runtime is owned by CCRouterTestHost and cannot be '
-        'shut down through the production facade.',
-      );
-    }
-    final existingShutdown = _shuttingDown;
-    if (existingShutdown != null) return existingShutdown;
-    final active = _runtimeResolver.takeDefault();
-    final disposeBackend = _backendDisposer;
-    final hostToolIntegrations = _hostToolIntegrations;
-    _hostRouteCatalog = null;
-    _hostToolIntegrations = const [];
-    if (active == null &&
-        disposeBackend == null &&
-        hostToolIntegrations.isEmpty) {
-      return;
-    }
-
-    final completion = Completer<void>();
-    final shuttingDown = completion.future;
-    _shuttingDown = shuttingDown;
-    _backendDisposer = null;
-    for (final integration in hostToolIntegrations) {
-      try {
-        integration.onRuntimeStopping();
-      } catch (error) {
-        active?.recordHostToolLifecycleFailure(
-          integrationId: integration.id,
-          operation: 'hostToolStop',
-          errorType: error.runtimeType.toString(),
-        );
-      }
-    }
-    completion.complete(_disposeRuntimeAndBackend(active, disposeBackend));
-    try {
-      await shuttingDown;
-    } finally {
-      if (identical(_shuttingDown, shuttingDown)) _shuttingDown = null;
-    }
-  }
-
-  /// Disposes Runtime-owned resources before Backend-owned resources.
-  static Future<void> _disposeRuntimeAndBackend(
-    CCRouterRuntime? runtime,
-    Future<void> Function()? disposeBackend,
-  ) async {
-    Object? runtimeError;
-    StackTrace? runtimeStackTrace;
-    try {
-      await runtime?.dispose();
-    } catch (error, stackTrace) {
-      runtimeError = error;
-      runtimeStackTrace = stackTrace;
-    }
-    try {
-      await disposeBackend?.call();
-    } catch (error, stackTrace) {
-      if (runtimeError == null) {
-        Error.throwWithStackTrace(error, stackTrace);
-      }
-    }
-    if (runtimeError != null) {
-      Error.throwWithStackTrace(runtimeError, runtimeStackTrace!);
-    }
-  }
 }
 
 /// Host-only bridge that binds navigation infrastructure to [CCRouter].
 ///
 /// Adapter packages and application composition roots use this after
-/// `CCRouter.initialize` installs the startup components. Business and component
+/// `CCRouterHost.initialize` installs the startup components. Business and component
 /// code must navigate through `CCRouter.navigator` and must never access this
 /// ownership boundary.
 abstract final class CCRouterHostBinding {
   /// Returns the route Catalog installed with the process-default Runtime.
   ///
   /// Managed application wrappers use this Host-only snapshot after
-  /// `CCRouter.initialize` so the Composition Root cannot accidentally pass a
+  /// `CCRouterHost.initialize` so the Composition Root cannot accidentally pass a
   /// Catalog from another generated assembly. Test Runtime overlays do not
   /// replace this value. Access before initialization or after shutdown throws
   /// [CCRouterNotInitializedError].
   static CCFlutterRouteCatalog get routeCatalog {
-    final catalog = CCRouter._hostRouteCatalog;
+    final catalog = CCRouterHost._hostRouteCatalog;
     if (catalog == null) throw const CCRouterNotInitializedError();
     return catalog;
   }
@@ -736,7 +531,7 @@ abstract final class CCRouterHostBinding {
   /// imports its initial stack before this method returns. It owns Adapter
   /// disposal after success. A failed binding leaves Adapter cleanup with the
   /// caller so Backend-specific resources can be released deterministically.
-  /// When supplied, [disposeBackend] is retained until `CCRouter.shutdown` and
+  /// When supplied, [disposeBackend] is retained until `CCRouterHost.shutdown` and
   /// runs only after Runtime disposal.
   /// Test Runtime overlays must inject their Adapter when constructing the Test
   /// Host and cannot bind one through this production ownership boundary.
@@ -749,12 +544,12 @@ abstract final class CCRouterHostBinding {
         'A test Runtime receives its Adapter from CCRouterTestHost.',
       );
     }
-    if (CCRouter._backendDisposer != null) {
+    if (CCRouterHost._backendDisposer != null) {
       throw const CCNavigationAdapterError(
         'A navigation Backend is already bound to CCRouter.',
       );
     }
     CCRouter._runtime.attachNavigationAdapter(adapter);
-    CCRouter._backendDisposer = disposeBackend;
+    CCRouterHost._backendDisposer = disposeBackend;
   }
 }

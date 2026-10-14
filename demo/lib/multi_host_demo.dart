@@ -10,29 +10,32 @@ import 'package:demo_navigation_lab/demo_navigation_lab_host.dart';
 import 'package:flutter/material.dart';
 
 import 'platform_deep_link_bridge.dart';
+import 'demo_initialization.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  CCRouter.initialize(
+  CCRouterHost.initialize(
     hostAssembly: ccrouterGeneratedHostAssembly,
     deepLinkIngressPolicy: demoDeepLinkIngressPolicy,
   );
   runApp(createMultiHostDemoApp());
 }
 
-Widget createMultiHostDemoApp() => _MultiHostDemoApp(
-  backend: CCGoRouterMultiHostBackend.managed(
-    defaultHostId: _primaryHostId,
-    hostFactories: {
-      _primaryHostId: (configuration) => createDemoRouterBackend(
-        catalog: configuration.catalog,
-        hostId: configuration.hostId,
-      ),
-      _secondaryHostId: (configuration) => createDemoRouterBackend(
-        catalog: configuration.catalog,
-        hostId: configuration.hostId,
-      ),
-    },
+Widget createMultiHostDemoApp() => withDemoInitializationActions(
+  _MultiHostDemoApp(
+    backend: CCGoRouterMultiHostBackend.managed(
+      defaultHostId: _primaryHostId,
+      hostFactories: {
+        _primaryHostId: (configuration) => createDemoRouterBackend(
+          catalog: configuration.catalog,
+          hostId: configuration.hostId,
+        ),
+        _secondaryHostId: (configuration) => createDemoRouterBackend(
+          catalog: configuration.catalog,
+          hostId: configuration.hostId,
+        ),
+      },
+    ),
   ),
 );
 

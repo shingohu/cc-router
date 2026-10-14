@@ -19,7 +19,7 @@
 
 Host 直接依赖 `ccrouter_devtools` 后，`ccrouter generate` 会生成静态 Catalog，并将
 `CCDevToolsHostIntegration` 写入 `CCHostAssembly`。Composition Root 只需把 Assembly
-交给 `CCRouter.initialize`，不再手工注册或清理 VM Service Extension。完整设计与实现边界见
+交给 `CCRouterHost.initialize`，不再手工注册或清理 VM Service Extension。完整设计与实现边界见
 [`CCRouter-devtools-host-integration-plan.md`](CCRouter-devtools-host-integration-plan.md)。
 
 仅在开发或内部诊断构建中加入依赖：
@@ -31,11 +31,11 @@ dependencies:
 ```
 
 ```dart
-CCRouter.initialize(hostAssembly: ccrouterGeneratedHostAssembly);
+CCRouterHost.initialize(hostAssembly: ccrouterGeneratedHostAssembly);
 ```
 
 必须是 Host 的直接依赖；组件传递依赖不会启用。Debug 默认注册，Profile 仅在
-`--dart-define=CCROUTER_DEVTOOLS=true` 时注册，Release 强制关闭。`CCRouter.shutdown()` 开始时
+`--dart-define=CCROUTER_DEVTOOLS=true` 时注册，Release 强制关闭。`CCRouterHost.shutdown()` 开始时
 会先清理 Provider 与 Catalog；页面、组件、Session 或单个 Navigation Host dispose 不参与该
 isolate 级生命周期。
 

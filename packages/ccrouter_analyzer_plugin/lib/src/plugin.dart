@@ -206,7 +206,16 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
         hostRoots[_canonicalDirectoryPath(contextRoot)] = contextRoot;
         for (final pubspec in _indexedPubspecs(context)) {
           final observation = _projectContexts.observe(pubspec);
-          if (observation.inputChanged) resolutionChanged.add(pubspec);
+          if (observation.inputChanged) {
+            resolutionChanged.add(pubspec);
+            refresh.addAll(
+              context.contextRoot.analyzedFiles().where(
+                (file) =>
+                    _isAuthoredDartPath(file) &&
+                    path.isWithin(path.dirname(pubspec), file),
+              ),
+            );
+          }
           final project = observation.context;
           if (project == null) continue;
           if (project.role == CCRouterAnalyzerProjectRole.host) {
@@ -344,6 +353,21 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
           await _publishPubResolutionHint(pubspec);
         }
       }
+      for (final changed in paths) {
+        if (const {
+          'pubspec.yaml',
+          '.metadata',
+          'ccrouter.yaml',
+        }.contains(path.basename(changed))) {
+          refresh.addAll(
+            context.contextRoot.analyzedFiles().where(
+              (file) =>
+                  _isAuthoredDartPath(file) &&
+                  path.isWithin(path.dirname(changed), file),
+            ),
+          );
+        }
+      }
       await analyzeFiles(
         analysisContext: context,
         paths: refresh
@@ -421,6 +445,10 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
       packageName: packageContext.name,
       contractOwners: _contractOwners.resolve(path),
       resolvedUnit: resolvedUnit,
+      projectRole: _projectContexts
+          .observe('${packageContext.root}/pubspec.yaml')
+          .context
+          ?.role,
     );
     _trackGeneratedOutputs(path, analysis.generatedOutputPaths);
     final diagnostics = <CCRouterAnalyzerDiagnostic>[
@@ -450,6 +478,7 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
     String source,
   ) async {
     if (!const [
+      'CCRouterHost',
       'CCService',
       'CCComponent',
       'CCInitTask',
@@ -768,6 +797,10 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
       packageName: packageContext.name,
       contractOwners: _contractOwners.resolve(parameters.file),
       resolvedUnit: resolvedUnit,
+      projectRole: _projectContexts
+          .observe('${packageContext.root}/pubspec.yaml')
+          .context
+          ?.role,
     );
     final requestLine = analysis.lineInfo
         .getLocation(parameters.offset)

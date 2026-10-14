@@ -19,6 +19,75 @@ bool _has(List<Map<String, dynamic>> errors, String code) =>
     errors.any((error) => (error['code'] as String).toLowerCase() == code);
 
 void main() {
+  test(
+    'real LSP diagnoses component lifecycle and refreshes after Host role change',
+    timeout: const Timeout(Duration(minutes: 2)),
+    () async {
+      const componentPath = 'modules/feature/lib/src/lifecycle.dart';
+      const code = 'ccrouter_host_lifecycle_access';
+      const source =
+          "import 'package:ccrouter/ccrouter_host.dart' as cc;\nvoid stop() => cc.CCRouterHost.shutdown();\n";
+      final server = await AnalysisServerSession.start(
+        {
+          'lib/main.dart':
+              "import 'package:ccrouter_contracts/ccrouter_contracts.dart';\n$source\n@CCInitTask() void start() {}\n",
+          '.metadata': 'project_type: app\n',
+        },
+        lsp: true,
+        hostManifest:
+            'name: e2e_host\nenvironment:\n  sdk: ^3.10.0\ndependencies:\n  ccrouter: any\nworkspace:\n  - modules/feature\n  - modules/ccrouter\n',
+        dependencyPackages: {
+          'feature': {'lib/src/lifecycle.dart': source},
+          'ccrouter': {
+            'lib/ccrouter_host.dart':
+                "export 'src/facade.dart' show CCRouterHost;",
+            'lib/src/facade.dart':
+                'abstract final class CCRouterHost { static void shutdown() {} }',
+          },
+        },
+        dependencyManifests: {
+          'feature':
+              'name: feature\nresolution: workspace\nenvironment:\n  sdk: ^3.10.0\ndependencies:\n  ccrouter: any\n',
+        },
+      );
+      addTearDown(server.close);
+      for (final file in ['lib/main.dart', componentPath]) {
+        server.notify('textDocument/didOpen', {
+          'textDocument': {
+            'uri': Uri.file(server.path(file)).toString(),
+            'languageId': 'dart',
+            'version': 1,
+            'text': File(server.path(file)).readAsStringSync(),
+          },
+        });
+      }
+      await server.waitFor(componentPath, (errors) => _has(errors, code));
+      await server.waitFor(
+        'lib/main.dart',
+        (errors) =>
+            _has(errors, 'ccrouter_annotation_arguments_conflict') &&
+            !_has(errors, code),
+      );
+      final revision = server.revisions[server.path(componentPath)]!;
+      server.write('modules/feature/ccrouter.yaml', 'host:\n  enabled: true\n');
+      await server.waitFor(
+        componentPath,
+        (errors) => !_has(errors, code),
+        after: revision,
+      );
+      final hostRevision = server.revisions[server.path(componentPath)]!;
+      server.write(
+        'modules/feature/ccrouter.yaml',
+        'host:\n  enabled: false\n',
+      );
+      await server.waitFor(
+        componentPath,
+        (errors) => _has(errors, code),
+        after: hostRevision,
+      );
+    },
+  );
+
   test('real server publishes and clears invalid ccrouter.yaml', () async {
     const code = 'ccrouter_project_configuration_invalid';
     final server = await AnalysisServerSession.start({

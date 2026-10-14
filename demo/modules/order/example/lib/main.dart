@@ -1,4 +1,5 @@
 import 'package:ccrouter/ccrouter.dart';
+import 'package:ccrouter/ccrouter_host.dart';
 import 'package:ccrouter_go_router/ccrouter_go_router.dart';
 import 'package:demo_order_contracts/demo_order_contracts.dart';
 import 'package:flutter/material.dart';
@@ -7,8 +8,8 @@ import 'src/ccrouter_generated/ccrouter_host.api.g.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  CCRouter.initialize(hostAssembly: ccrouterGeneratedHostAssembly);
-  await CCRouter.runInitTasks(gate: CCInitTaskGate.appStarted);
+  CCRouterHost.initialize(hostAssembly: ccrouterGeneratedHostAssembly);
+  await CCRouterHost.runInitTasks(gate: CCInitTaskGate.appStarted);
   runApp(const OrderExampleApp());
 }
 

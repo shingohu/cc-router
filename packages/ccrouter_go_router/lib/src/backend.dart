@@ -1,5 +1,5 @@
 import 'package:ccrouter/ccrouter.dart';
-import 'package:ccrouter/ccrouter_host.dart';
+import 'package:ccrouter/ccrouter_host.dart' hide CCRouterHost;
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 
@@ -162,7 +162,7 @@ final class CCGoRouterBackend implements CCRouterAppBackend {
   ///
   /// Attached Routers remain application-owned and are deliberately left
   /// usable. This method is idempotent and must not be used to bypass the
-  /// ordered teardown performed by `CCRouter.shutdown`.
+  /// ordered teardown performed by `CCRouterHost.shutdown`.
   Future<void> dispose() async {
     if (_disposed) return;
     _disposed = true;

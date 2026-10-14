@@ -17,8 +17,8 @@ Flutter SDK 选择：
 ```
 
 工程入口为 `lib/main.dart`。示例在 `runApp` 前显式调用
-`CCRouter.initialize(hostAssembly: ...)` 和
-`CCRouter.runInitTasks(gate: CCInitTaskGate.appStarted)`，再通过 `CCGoRouterApp` 的一次性
+`CCRouterHost.initialize(hostAssembly: ...)` 和
+`CCRouterHost.runInitTasks(gate: CCInitTaskGate.appStarted)`，再通过 `CCGoRouterApp` 的一次性
 `backendFactory` 复用 Demo Shell/Outlet Backend，并自动创建 `MaterialApp.router` 与 managed
 Host；业务代码不接触导航 Backend。
 
@@ -117,11 +117,11 @@ Contract-first Package；
 `lib/src/demo_order_component.dart` 声明唯一的顶层 `const CCComponent`；Route 与简单
 Service 由生成器自动装配，没有专用声明模型的能力放入 `@CCComponentContribution`。
 组件生成后端中立的页面 Catalog，宿主只导出原子的
-`ccrouterGeneratedHostAssembly`；`CCRouter.initialize` 安装该快照后，默认 managed Host
+`ccrouterGeneratedHostAssembly`；`CCRouterHost.initialize` 安装该快照后，默认 managed Host
 通过 Host-only Binding 自动读取同一份 Catalog；
 `CCGoRouterBackend.managed` 从 Catalog 自动创建 GoRouter routes、Adapter bindings 和
 Root Observer。`CCGoRouterApp` 只绑定 Host 和 Backend，不初始化或关闭 Runtime；最终由应用
-Composition Root 显式调用 `CCRouter.shutdown`。业务跳转仍统一通过 `CCRouter.navigator`。
+Composition Root 显式调用 `CCRouterHost.shutdown`。业务跳转仍统一通过 `CCRouter.navigator`。
 组件 Registrar、Manifest 与 Route Catalog 由独立 `.component.g.dart` 自动生成，并聚合到
 Host Assembly；组件业务 barrel 不导出 Registrar 或 Manifest。
 订单详情路由由 `@CCRouteContract` 声明，页面通过 `@CCRouteImplementation` 绑定；跨组件
@@ -164,3 +164,9 @@ Manifest 和 Catalog 保持在同一个 Assembly 快照中，
 契约声明参考 `modules/order_contracts/lib/src/order_detail_route_contract.dart`，页面绑定参考
 `modules/order/lib/src/order_detail_page.dart`，生成器约束与测试命令见
 [生成器说明](../packages/ccrouter_generator/README.md)。
+
+
+初始化、关闭和 Gate 执行通过 Host-only 的 `CCRouterHost`，组件只导入业务入口。
+能力实验页通过 `DemoInitializationActions` 提出隐私／超时场景请求，
+`lib/demo_initialization.dart` 在单 Host 和多 Host 树中安装回调并选择 Gate。
+组件不持有通用 Gate 执行器，也不控制默认 Runtime 生命周期。

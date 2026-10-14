@@ -45,6 +45,8 @@
 - Does Command have exactly one owner and the correct result type?
 - Is Event used only for an already completed fact whose subscribers are optional?
 - Does handler code cooperate with cancellation before irreversible side effects where possible?
+- Are `CCRouterHost.initialize/shutdown/runInitTasks` confined to the Host Composition Root, with no old `CCRouter` aliases?
+- Do component UI actions request product decisions through narrow callbacks/Contracts rather than receiving a generic Gate runner?
 - Is InitTask truly once-per-Runtime startup work?
 - Are DAG dependency, Gate, timeout, and failure policy explicit?
 

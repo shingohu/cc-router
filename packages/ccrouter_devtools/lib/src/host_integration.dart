@@ -1,4 +1,4 @@
-import 'package:ccrouter/ccrouter_host.dart';
+import 'package:ccrouter/ccrouter_host.dart' hide CCRouterHost;
 import 'package:ccrouter_devtools_protocol/ccrouter_devtools_protocol.dart';
 import 'package:flutter/foundation.dart';
 

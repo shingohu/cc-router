@@ -21,6 +21,46 @@ void main() {
   tearDown(() => fixture.dispose());
 
   test(
+    'prefixed and transitive lifecycle references retain framework identity',
+    () async {
+      final result = await fixture.resolve('''
+import 'package:owner_contracts/lifecycle.dart' as root;
+Future<void> stop() async {
+  root.CCRouterHost.initialize();
+  final stop = root.CCRouterHost.shutdown;
+  await stop();
+  await root.CCRouterHost.runInitTasks();
+}
+''');
+      final issues = fixture
+          .diagnostics(result)
+          .where((d) => d.code == 'ccrouter_host_lifecycle_access');
+      expect(issues, hasLength(3));
+      expect(
+        issues.every(
+          (d) =>
+              result.content.substring(d.offset, d.offset + d.length) ==
+              'CCRouterHost',
+        ),
+        isTrue,
+      );
+    },
+  );
+
+  test('foreign same-name lifecycle declarations are ignored', () async {
+    final result = await fixture.resolve('''
+abstract final class CCRouterHost { static void shutdown() {} }
+void stop() => CCRouterHost.shutdown();
+''');
+    expect(
+      fixture
+          .diagnostics(result)
+          .where((d) => d.code == 'ccrouter_host_lifecycle_access'),
+      isEmpty,
+    );
+  });
+
+  test(
     'foreign same-name annotations never produce framework diagnostics or fixes',
     () async {
       final result = await fixture.resolve('''
@@ -511,7 +551,22 @@ final class _Channel implements PluginCommunicationChannel {
 final class _Fixture {
   _Fixture() {
     final contracts = Directory('../ccrouter_contracts').absolute.path;
-    _write('pubspec.yaml', 'name: consumer\nenvironment:\n  sdk: ^3.10.0\n');
+    _write(
+      'pubspec.yaml',
+      'name: consumer\nenvironment:\n  sdk: ^3.10.0\ndependencies:\n  ccrouter: any\n',
+    );
+    _write(
+      'framework/lib/src/facade.dart',
+      'abstract final class CCRouterHost { static void initialize() {} static Future<void> shutdown() async {} static Future<void> runInitTasks() async {} }',
+    );
+    _write(
+      'framework/lib/ccrouter_host.dart',
+      "export 'src/facade.dart' show CCRouterHost;",
+    );
+    _write(
+      'owner/lib/lifecycle.dart',
+      "export 'package:ccrouter/ccrouter_host.dart' show CCRouterHost;",
+    );
     _write(
       'owner/lib/right.dart',
       "import 'package:ccrouter_contracts/ccrouter_contracts.dart';\nconst ownerComponentId = CCComponentId('right');\nabstract interface class SharedService {}\n",
@@ -534,6 +589,12 @@ final class _Fixture {
           {
             'name': 'owner_contracts',
             'rootUri': '../owner',
+            'packageUri': 'lib/',
+            'languageVersion': '3.10',
+          },
+          {
+            'name': 'ccrouter',
+            'rootUri': '../framework',
             'packageUri': 'lib/',
             'languageVersion': '3.10',
           },

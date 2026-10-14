@@ -1,5 +1,20 @@
 # ccrouter_analyzer_plugin
 
+The Plugin reports `ccrouter_host_lifecycle_access` as an error when a
+non-Host participating Package exposes `CCRouterHost` through a direct
+`ccrouter_host.dart` import/export, including conditional branches, or references
+the canonical framework class through a prefixed/transitive public barrel.
+Explicit show/hide lists are respected; Adapter infrastructure may import only
+its needed SPI without exposing the lifecycle class. Class spelling alone is
+never proof: foreign same-name declarations are ignored, and unresolved
+transitive identities defer. Roles use the same `.metadata`, `ccrouter.yaml`,
+and direct-dependency evidence as Host selection. The check applies only to
+Package `lib/` sources; tests/tools and generated code are excluded. Saved role
+changes refresh diagnostics without a Server restart. Unknown role evidence
+is deferred, and files inside a Host Package still require review to separate
+composition code from feature code. There is no automatic import or role fix.
+Dart API visibility remains enforced independently of this optional Plugin.
+
 Optional Analysis Server diagnostics for CCRouter source boundaries and
 deterministic generated outputs. The plugin provides low-noise editing feedback
 and Metadata-proven Service/Command owner checks, but does not run generation

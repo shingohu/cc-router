@@ -6,7 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  tearDown(CCRouter.shutdown);
+  tearDown(CCRouterHost.shutdown);
 
   testWidgets('CCGoRouterApp requires an explicitly initialized Runtime', (
     tester,
@@ -18,7 +18,7 @@ void main() {
       isA<FlutterError>().having(
         (error) => error.message,
         'message',
-        contains('Call CCRouter.initialize'),
+        contains('Call CCRouterHost.initialize'),
       ),
     );
   });
@@ -26,7 +26,7 @@ void main() {
   testWidgets('CCGoRouterApp uses an explicitly initialized Runtime', (
     tester,
   ) async {
-    CCRouter.initialize(
+    CCRouterHost.initialize(
       hostAssembly: CCHostAssembly.fromComponents(components: const []),
     );
 
@@ -48,7 +48,7 @@ void main() {
   testWidgets('CCGoRouterApp forwards MaterialApp.router configuration', (
     tester,
   ) async {
-    CCRouter.initialize(
+    CCRouterHost.initialize(
       hostAssembly: CCHostAssembly.fromComponents(components: const []),
     );
     final scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
@@ -151,7 +151,7 @@ void main() {
     tester,
   ) async {
     final hostAssembly = CCHostAssembly.fromComponents(components: const []);
-    CCRouter.initialize(hostAssembly: hostAssembly);
+    CCRouterHost.initialize(hostAssembly: hostAssembly);
     var factoryCalls = 0;
 
     await tester.pumpWidget(
@@ -243,7 +243,7 @@ void main() {
 
   test('multi-Host backend injects one initialized Catalog snapshot', () async {
     final hostAssembly = CCHostAssembly.fromComponents(components: const []);
-    CCRouter.initialize(hostAssembly: hostAssembly);
+    CCRouterHost.initialize(hostAssembly: hostAssembly);
     final configurations = <CCGoRouterHostBackendConfiguration>[];
 
     final backend = CCGoRouterMultiHostBackend.managed(
@@ -289,7 +289,7 @@ void main() {
 
   test('multi-Host backend rejects a factory with a mismatched Host', () {
     final hostAssembly = CCHostAssembly.fromComponents(components: const []);
-    CCRouter.initialize(hostAssembly: hostAssembly);
+    CCRouterHost.initialize(hostAssembly: hostAssembly);
     late CCGoRouterBackend rejectedBackend;
 
     expect(
@@ -325,7 +325,7 @@ void main() {
   testWidgets('multi-Host backend follows Runtime shutdown ownership order', (
     tester,
   ) async {
-    CCRouter.initialize(
+    CCRouterHost.initialize(
       hostAssembly: CCHostAssembly.fromComponents(components: const []),
     );
     final backend = CCGoRouterMultiHostBackend.managed(
@@ -350,7 +350,7 @@ void main() {
       'host.secondary',
     });
 
-    await CCRouter.shutdown();
+    await CCRouterHost.shutdown();
 
     expect(
       () => backend.adapter.activateHost('host.secondary'),

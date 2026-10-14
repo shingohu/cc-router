@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:ccrouter/ccrouter.dart';
-import 'package:ccrouter/ccrouter_host.dart';
+import 'package:ccrouter/ccrouter_host.dart' hide CCRouterHost;
 import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 
@@ -9,7 +9,7 @@ import 'backend.dart';
 
 /// Creates one GoRouter Backend for a declared navigation Host.
 ///
-/// The factory receives the Catalog installed by `CCRouter.initialize` and the
+/// The factory receives the Catalog installed by `CCRouterHost.initialize` and the
 /// Host ID declared by [CCGoRouterMultiHostBackend.managed]. It must return a
 /// Backend bound to that exact Host ID and Catalog snapshot.
 typedef CCGoRouterHostBackendFactory =
@@ -47,7 +47,7 @@ final class CCGoRouterHostBackendConfiguration {
 /// After attachment, the Runtime owns [adapter] and disposes every child Adapter
 /// before [dispose] releases the managed child Routers.
 final class CCGoRouterMultiHostBackend implements CCRouterAppBackend {
-  /// Creates child Backends from the Catalog installed by `CCRouter.initialize`.
+  /// Creates child Backends from the Catalog installed by `CCRouterHost.initialize`.
   ///
   /// [hostFactories] must contain [defaultHostId]. Every returned Backend must
   /// use its map key as `backend.host.id` and retain the exact supplied Catalog.

@@ -286,12 +286,12 @@ Route 和动态 Host/Shell/Interceptor 配置的最后防线。
   [注解字段与兼容性校验](CCRouter-annotation-validation.md#逐规则回归映射)。
 
 校验失败时机必须稳定：静态字段由 Generator/Workspace 直接阻断生成；动态注册关系在
-`CCRouter.initialize()` 阶段以稳定的 Registration Error 失败；外部 URI 的实际参数值由生成的
+`CCRouterHost.initialize()` 阶段以稳定的 Registration Error 失败；外部 URI 的实际参数值由生成的
 Codec 在解析边界返回标准 `CCRouteParameterError`。不得把本可在构建期发现的错误延迟到首次
 页面跳转，也不得为了提前失败而让 Generator 猜测运行时 Host 或 Adapter 状态。
 
 已核对的静态声明字段校验已经落地。Interceptor/PopGuard 的“引用是否已注册”以及动态 Host、Shell、
-Outlet/Adapter 能力仍在 `CCRouter.initialize()` 或 Adapter 绑定阶段校验，因为生成器无法可靠
+Outlet/Adapter 能力仍在 `CCRouterHost.initialize()` 或 Adapter 绑定阶段校验，因为生成器无法可靠
 推断运行时装配顺序；这是有意保留的运行时边界。
 
 #### P2-3 页面零 Part 与可发现 Route API（已落地）
@@ -406,7 +406,7 @@ IDE 可发现性属于方案验收条件：生成完成且 Workspace Analyzer �
 
 - [x] 分别生成 Runtime Manifest 集合和后端 Route Catalog，并通过 Catalog 的组件版本来源
   校验两者一致性；
-- [x] 应用通过 `CCRouter.initialize(hostAssembly: ...)` 原子初始化，并显式调用 `shutdown`；
+- [x] 应用通过 `CCRouterHost.initialize(hostAssembly: ...)` 原子初始化，并显式调用 `shutdown`；
 - [x] `CCRouterApp.managed` 只绑定 Host 与 Backend，并在 Adapter 绑定完成前阻止业务子树
   挂载；
 - [x] Adapter 注入由 `CCRouterApp.managed` 的私有协调器完成，不开放独立 Controller；

@@ -6,7 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   tearDown(() async {
     CCDevToolsServiceExtension.clear();
-    await CCRouter.shutdown();
+    await CCRouterHost.shutdown();
   });
 
   test(
@@ -112,13 +112,13 @@ void main() {
       hostToolIntegrations: [CCDevToolsHostIntegration(catalog: catalog)],
     );
 
-    CCRouter.initialize(hostAssembly: assembly);
+    CCRouterHost.initialize(hostAssembly: assembly);
     expect(
       const CCRouterDevToolsSnapshotProvider().snapshot().catalog,
       same(catalog),
     );
 
-    await CCRouter.shutdown();
+    await CCRouterHost.shutdown();
     expect(const CCRouterDevToolsSnapshotProvider().snapshot().catalog, isNull);
   });
 }

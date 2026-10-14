@@ -5,7 +5,7 @@ part of 'facade.dart';
 /// Production code uses the isolate-owned default Runtime. Test hosts install
 /// a Zone-local overlay so multiple tests can run with independent Runtime
 /// instances without changing production state. This resolver only selects and
-/// stores the Runtime reference; [CCRouter] remains responsible for
+/// stores the Runtime reference; [CCRouterHost] remains responsible for
 /// initialization, Adapter ownership, shutdown, and disposal.
 final class _CCRuntimeResolver {
   /// Zone key used only by the dedicated test-support Runtime overlay.

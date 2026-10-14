@@ -77,13 +77,13 @@ final class _RouteServiceRegistrar implements CCComponentRegistrar {
 }
 
 void main() {
-  tearDown(CCRouter.shutdown);
+  tearDown(CCRouterHost.shutdown);
 
   testWidgets('GoRouter page resolves and disposes its exact Route Service', (
     tester,
   ) async {
     final created = <_RouteService>[];
-    CCRouter.initialize(
+    CCRouterHost.initialize(
       hostAssembly: CCHostAssembly.fromComponents(
         components: [
           CCComponentManifest(
@@ -139,6 +139,6 @@ void main() {
     expect(created.single.disposed, isTrue);
 
     await tester.pumpWidget(const SizedBox());
-    await CCRouter.shutdown();
+    await CCRouterHost.shutdown();
   });
 }

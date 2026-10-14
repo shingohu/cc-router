@@ -39,7 +39,7 @@ Activity/Window 输入注入，不能覆盖 Flutter macOS 应用；本 Demo 采�
 - Entry 的 Host/Outlet 身份完整；
 - Flutter 没有未处理异常。
 
-用例结束后卸载 Widget，并由应用所有者显式调用 `CCRouter.shutdown()`，确认 Runtime 已终止。
+用例结束后卸载 Widget，并由应用所有者显式调用 `CCRouterHost.shutdown()`，确认 Runtime 已终止。
 这也验证 Deferred Navigation 的定时器能由 Runtime shutdown 统一取消。
 
 另有两个 DPR 2、980x700 物理像素的定向用例，验证 PopGuard 和 Failure fallback 在约

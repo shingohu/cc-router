@@ -1,17 +1,19 @@
 import 'dart:async';
 
 import 'package:ccrouter/ccrouter.dart';
+import 'package:ccrouter/ccrouter_host.dart';
 import 'package:ccrouter_go_router/ccrouter_go_router.dart';
 import 'package:demo_navigation_lab/demo_navigation_lab.dart';
 import 'package:flutter/material.dart';
 
 import 'ccrouter_demo.dart';
 import 'demo_router_backend.dart';
+import 'demo_initialization.dart';
 import 'platform_deep_link_bridge.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  CCRouter.initialize(
+  CCRouterHost.initialize(
     hostAssembly: ccrouterGeneratedHostAssembly,
     deepLinkIngressPolicy: demoDeepLinkIngressPolicy,
     globalInterceptors: const [
@@ -41,7 +43,7 @@ Future<void> main() async {
       ],
     ),
   );
-  await CCRouter.runInitTasks(gate: CCInitTaskGate.appStarted);
+  await CCRouterHost.runInitTasks(gate: CCInitTaskGate.appStarted);
   runApp(const CCRouterDemoApp());
 }
 
@@ -83,10 +85,13 @@ final class CCRouterDemoApp extends StatelessWidget {
         useMaterial3: true,
       ),
     );
-    if (!listenForPlatformLinks) return app;
-    return DemoPlatformDeepLinkBridge(
-      linkStream: platformLinkStream,
-      child: app,
+    return withDemoInitializationActions(
+      listenForPlatformLinks
+          ? DemoPlatformDeepLinkBridge(
+              linkStream: platformLinkStream,
+              child: app,
+            )
+          : app,
     );
   }
 }

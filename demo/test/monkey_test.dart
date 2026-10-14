@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:ccrouter/ccrouter.dart';
+import 'package:ccrouter/ccrouter_host.dart';
 import 'package:ccrouter_demo/ccrouter_demo.dart';
 import 'package:ccrouter_demo/main.dart';
 import 'package:ccrouter_demo/platform_deep_link_bridge.dart';
@@ -20,7 +21,7 @@ void main() {
       ..clear();
     demoDiagnosticsSink.clear();
     demoApplicationLogger.clear();
-    CCRouter.initialize(
+    CCRouterHost.initialize(
       hostAssembly: ccrouterGeneratedHostAssembly,
       deepLinkIngressPolicy: demoDeepLinkIngressPolicy,
       globalInterceptors: const [
@@ -40,10 +41,10 @@ void main() {
         defaultMinimumLevel: CCDiagnosticLevel.debug,
       ),
     );
-    await CCRouter.runInitTasks(gate: CCInitTaskGate.appStarted);
+    await CCRouterHost.runInitTasks(gate: CCInitTaskGate.appStarted);
   });
 
-  tearDown(CCRouter.shutdown);
+  tearDown(CCRouterHost.shutdown);
 
   testWidgets('PopGuard remains usable in a small desktop window', (
     tester,
@@ -69,7 +70,7 @@ void main() {
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pumpAndSettle();
-    await CCRouter.shutdown();
+    await CCRouterHost.shutdown();
   });
 
   testWidgets('failure fallback remains usable in a small desktop window', (
@@ -97,7 +98,7 @@ void main() {
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pumpAndSettle();
-    await CCRouter.shutdown();
+    await CCRouterHost.shutdown();
   });
 
   for (final seed in _seeds) {
@@ -158,7 +159,7 @@ final class _SemanticMonkey {
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pumpAndSettle();
     _record('unmount');
-    await CCRouter.shutdown();
+    await CCRouterHost.shutdown();
     await tester.pump();
     _record('shutdown');
     _assertNoFlutterException(_stepsPerSeed);

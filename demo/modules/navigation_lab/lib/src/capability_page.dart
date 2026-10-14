@@ -5,6 +5,7 @@ import 'package:demo_order_contracts/demo_order_contracts.dart';
 import 'package:flutter/material.dart';
 
 import 'component_capabilities.dart';
+import 'initialization_actions.dart';
 import 'ccrouter_generated/demo_navigation_lab_component.api.g.dart';
 import 'lab_configuration.dart';
 
@@ -184,9 +185,9 @@ final class _DemoCapabilitiesPageState extends State<DemoCapabilitiesPage> {
                 '打开 Privacy Gate',
                 '显式运行依赖基础任务、等待隐私同意的初始化节点。',
                 () => _run('Initialization privacy gate', () async {
-                  await CCRouter.runInitTasks(
-                    gate: CCInitTaskGate.privacyGranted,
-                  );
+                  await DemoInitializationActions.of(
+                    context,
+                  ).onPrivacyGranted();
                   return CCRouter.initTasks
                       .firstWhere(
                         (task) => task.id == DemoInitTaskIds.analytics,
@@ -200,9 +201,9 @@ final class _DemoCapabilitiesPageState extends State<DemoCapabilitiesPage> {
                 '打开 InitTask Timeout Gate',
                 '自定义 Gate 只启动对应可选任务，超时后记录失败但不阻断其它节点。',
                 () => _run('Initialization timeout gate', () async {
-                  await CCRouter.runInitTasks(
-                    gate: DemoInitializationGates.timeoutLab,
-                  );
+                  await DemoInitializationActions.of(
+                    context,
+                  ).onTimeoutLabRequested();
                   return CCRouter.initTasks
                       .firstWhere((task) => task.id == DemoInitTaskIds.timeout)
                       .state

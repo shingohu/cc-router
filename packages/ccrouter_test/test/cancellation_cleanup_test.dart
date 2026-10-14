@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:ccrouter/ccrouter.dart';
+import 'package:ccrouter/ccrouter_host.dart';
 import 'package:ccrouter_core/ccrouter_core.dart';
 import 'package:ccrouter_test/ccrouter_test.dart';
 import 'package:test/test.dart';
@@ -368,11 +369,11 @@ void main() {
                 factory: (context) {
                   context.cancellation.addListener(() {
                     try {
-                      CCRouter.initialize(hostAssembly: assembly);
+                      CCRouterHost.initialize(hostAssembly: assembly);
                     } catch (error) {
                       initializeFailure = error;
                     }
-                    reentrant = CCRouter.shutdown();
+                    reentrant = CCRouterHost.shutdown();
                     unawaited(
                       reentrant!.then((_) => reentrantCompleted = true),
                     );
@@ -384,24 +385,24 @@ void main() {
           }),
         ],
       );
-      CCRouter.initialize(hostAssembly: assembly);
+      CCRouterHost.initialize(hostAssembly: assembly);
       CCRouter.service<_Resource>();
 
-      final shuttingDown = CCRouter.shutdown();
+      final shuttingDown = CCRouterHost.shutdown();
       await Future<void>.delayed(Duration.zero);
       final completedBeforeRelease = reentrantCompleted;
       release.complete();
       await shuttingDown;
       await reentrant;
-      await CCRouter.shutdown();
+      await CCRouterHost.shutdown();
 
       expect(initializeFailure, isA<CCRouterAlreadyInitializedError>());
       expect(completedBeforeRelease, isFalse);
       expect(reentrantCompleted, isTrue);
       expect(resource.disposeCount, 1);
       expect(CCRouter.isInitialized, isFalse);
-      CCRouter.initialize(hostAssembly: assembly);
-      await CCRouter.shutdown();
+      CCRouterHost.initialize(hostAssembly: assembly);
+      await CCRouterHost.shutdown();
     },
   );
 }

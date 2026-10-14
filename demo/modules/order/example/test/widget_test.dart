@@ -1,15 +1,16 @@
 import 'package:ccrouter/ccrouter.dart';
+import 'package:ccrouter/ccrouter_host.dart';
 import 'package:demo_order_example/main.dart';
 import 'package:demo_order_example/src/ccrouter_generated/ccrouter_host.api.g.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   setUp(() async {
-    CCRouter.initialize(hostAssembly: ccrouterGeneratedHostAssembly);
-    await CCRouter.runInitTasks(gate: CCInitTaskGate.appStarted);
+    CCRouterHost.initialize(hostAssembly: ccrouterGeneratedHostAssembly);
+    await CCRouterHost.runInitTasks(gate: CCInitTaskGate.appStarted);
   });
 
-  tearDown(CCRouter.shutdown);
+  tearDown(CCRouterHost.shutdown);
 
   testWidgets('opens the generated Order Route and receives its result', (
     tester,
