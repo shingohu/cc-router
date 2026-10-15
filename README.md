@@ -1,4 +1,10 @@
+<p align="center">
+  <img src="docs/brand/ccrouter-icon-v1/ccrouter-icon-dark.svg" alt="CCRouter" width="128" height="128">
+</p>
+
 # CCRouter
+
+[简体中文](README.md) | [English](README.en.md) · [查看图标设计](docs/brand/ccrouter-icon-v1/README.md)
 
 CCRouter 是一个面向 Flutter 大型应用的组件化运行时与类型安全路由框架。它把组件装配、路由契约、导航策略、生命周期、跨组件能力调用和诊断统一到稳定的 Core Contract，同时允许 Host 选择 GoRouter 或后续其他导航后端。
 
@@ -1790,7 +1796,7 @@ $ccrouter-integration-development 为订单组件新增详情页，并返回类�
 $ccrouter-cli-development 检查并安全规划订单详情页的生成与跨组件 Contract 提升。
 ```
 
-Skill 使用主文件和按需 reference，既适合日常编码，也可用于代码审查。框架公开 API、生命周期、错误语义、生成命令、支持状态或推荐 Demo 用法发生变化时，维护者必须同步审查本 README、Integration/CLI Skill 及其 references。
+Skill 使用主文件和按需 reference，既适合日常编码，也可用于代码审查。框架公开 API、生命周期、错误语义、生成命令、支持状态或推荐 Demo 用法发生变化时，维护者必须同步审查本 README 的中英文版本、Integration/CLI Skill 及其 references。
 
 维护者在框架仓库执行 `fvm dart run tool/skill_bundle_check.dart`：它只复制这两个目录到临时
 消费目录，检查必需引用不越界，并对照真实 CLI 帮助校验命令和参数。该检查不会执行文档中的

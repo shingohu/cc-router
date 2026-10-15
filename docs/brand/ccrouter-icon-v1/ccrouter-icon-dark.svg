@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-labelledby="title"><title id="title">CCRouter — dark icon</title><rect width="512" height="512" rx="112" fill="#101A30"/><g fill="none" stroke-linecap="round" stroke-linejoin="round">
+ <path d="M352 128H232C155 128 112 175 112 256S155 384 232 384H352" stroke="#7F97FF" stroke-width="48"/>
+ <path d="M312 208H248C218 208 200 226 200 256S218 304 248 304H384M356 276L384 304L356 332" stroke="#5DE4CE" stroke-width="32"/>
+</g></svg>

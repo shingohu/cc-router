@@ -2,6 +2,9 @@
 
 CCRouter 的 Flutter 开发工程，使用 FVM `ohos/oh-3.41.9-release` SDK，包含 Android、iOS、macOS、Web 和 OHOS 平台目录。
 
+Demo 图标采用 CCRouter 双 C + 路由箭头设计；SVG 母版、平台导出命令及尺寸规范见
+[品牌资源说明](../docs/brand/ccrouter-icon-v1/README.md)。
+
 ## Android Studio
 
 直接打开本目录：

@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1080" viewBox="0 0 1600 1080" role="img" aria-labelledby="title"><title id="title">CCRouter icon design exploration</title><rect width="1600" height="1080" fill="#F3F5FA"/>
+<text x="80" y="78" font-family="Helvetica Neue,Arial,sans-serif" font-size="17" font-weight="700" letter-spacing="3" fill="#63718A">CCROUTER / IDENTITY EXPLORATION</text>
+<text x="1520" y="78" text-anchor="end" font-family="Helvetica Neue,Arial,sans-serif" font-size="16" fill="#63718A">01 — CONNECTED COMPONENTS</text>
+<rect x="64" y="114" width="1472" height="540" rx="32" fill="#101A30"/>
+<g transform="translate(102 128)"><g fill="none" stroke-linecap="round" stroke-linejoin="round">
+ <path d="M352 128H232C155 128 112 175 112 256S155 384 232 384H352" stroke="#7F97FF" stroke-width="48"/>
+ <path d="M312 208H248C218 208 200 226 200 256S218 304 248 304H384M356 276L384 304L356 332" stroke="#5DE4CE" stroke-width="32"/>
+</g></g><text x="702" y="352" font-family="Helvetica Neue,Arial,sans-serif" font-size="102" font-weight="700" letter-spacing="-4" fill="#FFFFFF">CCRouter</text>
+<text x="710" y="412" font-family="Helvetica Neue,Arial,sans-serif" font-size="25" fill="#A9B9D3">Component boundaries. Connected routes.</text>
+<path d="M710 457H763" stroke="#7F97FF" stroke-width="6" stroke-linecap="round"/>
+<path d="M780 457H833" stroke="#5DE4CE" stroke-width="6" stroke-linecap="round"/>
+<text x="710" y="536" font-family="Helvetica Neue,Arial,sans-serif" font-size="17" letter-spacing="2" fill="#7F90AE">COMPONENT RUNTIME + TYPE-SAFE ROUTING</text>
+<rect x="64" y="682" width="460" height="300" rx="24" fill="#FFFFFF"/>
+<rect x="550" y="682" width="460" height="300" rx="24" fill="#FFFFFF"/>
+<rect x="1036" y="682" width="500" height="300" rx="24" fill="#E7ECF5"/>
+<g transform="translate(196 706) scale(.38)"><g fill="none" stroke-linecap="round" stroke-linejoin="round">
+ <path d="M352 128H232C155 128 112 175 112 256S155 384 232 384H352" stroke="#4263EB" stroke-width="48"/>
+ <path d="M312 208H248C218 208 200 226 200 256S218 304 248 304H384M356 276L384 304L356 332" stroke="#16B8A6" stroke-width="32"/>
+</g></g><g transform="translate(682 706) scale(.38)"><g fill="none" stroke-linecap="round" stroke-linejoin="round">
+ <path d="M352 128H232C155 128 112 175 112 256S155 384 232 384H352" stroke="#17243C" stroke-width="48"/>
+ <path d="M312 208H248C218 208 200 226 200 256S218 304 248 304H384M356 276L384 304L356 332" stroke="#17243C" stroke-width="32"/>
+</g></g><g transform="translate(1080 754) scale(0.21875)"><rect width="512" height="512" rx="112" fill="#101A30"/><g fill="none" stroke-linecap="round" stroke-linejoin="round">
+ <path d="M352 128H232C155 128 112 175 112 256S155 384 232 384H352" stroke="#7F97FF" stroke-width="48"/>
+ <path d="M312 208H248C218 208 200 226 200 256S218 304 248 304H384M356 276L384 304L356 332" stroke="#5DE4CE" stroke-width="32"/>
+</g></g><g transform="translate(1230 778) scale(0.15625)"><rect width="512" height="512" rx="112" fill="#101A30"/><g fill="none" stroke-linecap="round" stroke-linejoin="round">
+ <path d="M352 128H232C155 128 112 175 112 256S155 384 232 384H352" stroke="#7F97FF" stroke-width="48"/>
+ <path d="M312 208H248C218 208 200 226 200 256S218 304 248 304H384M356 276L384 304L356 332" stroke="#5DE4CE" stroke-width="32"/>
+</g></g><g transform="translate(1348 802) scale(0.109375)"><rect width="512" height="512" rx="112" fill="#101A30"/><g fill="none" stroke-linecap="round" stroke-linejoin="round">
+ <path d="M352 128H232C155 128 112 175 112 256S155 384 232 384H352" stroke="#7F97FF" stroke-width="48"/>
+ <path d="M312 208H248C218 208 200 226 200 256S218 304 248 304H384M356 276L384 304L356 332" stroke="#5DE4CE" stroke-width="32"/>
+</g></g><g transform="translate(1444 826) scale(0.0625)"><rect width="512" height="512" rx="112" fill="#101A30"/><g fill="none" stroke-linecap="round" stroke-linejoin="round">
+ <path d="M352 128H232C155 128 112 175 112 256S155 384 232 384H352" stroke="#7F97FF" stroke-width="48"/>
+ <path d="M312 208H248C218 208 200 226 200 256S218 304 248 304H384M356 276L384 304L356 332" stroke="#5DE4CE" stroke-width="32"/>
+</g></g><g font-family="Helvetica Neue,Arial,sans-serif" font-size="15" font-weight="600" letter-spacing="2" fill="#63718A">
+<text x="96" y="950">01 / COLOR MARK</text><text x="582" y="950">02 / SINGLE COLOR</text><text x="1068" y="950">03 / SCALE CHECK</text></g>
+<text x="80" y="1036" font-family="Helvetica Neue,Arial,sans-serif" font-size="16" fill="#63718A">DOUBLE C + OPEN ROUTE</text>
+<text x="1520" y="1036" text-anchor="end" font-family="Helvetica Neue,Arial,sans-serif" font-size="16" fill="#63718A">VECTOR MASTER / V1</text></svg>
