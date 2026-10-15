@@ -268,6 +268,14 @@ final class CCFlutterMachineRunProxy {
     final leaseOwner = watchLease == null
         ? null
         : CCFlutterRunWatchLeaseOwner(watchLease!);
+    // Install handlers before the heartbeat can be observed as startup evidence.
+    final signalSubscriptions = forwardTerminationSignals(
+      process,
+      onSignal: () async {
+        await leaseOwner?.close();
+        await onTerminationSignal?.call();
+      },
+    );
     try {
       await leaseOwner?.start(
         onFailure: (error, _) {
@@ -278,6 +286,9 @@ final class CCFlutterMachineRunProxy {
     } on Object {
       process.kill();
       await process.exitCode;
+      for (final subscription in signalSubscriptions) {
+        await subscription.cancel();
+      }
       await leaseOwner?.close();
       rethrow;
     }
@@ -287,13 +298,6 @@ final class CCFlutterMachineRunProxy {
         .listen(_forwardFlutterLine)
         .asFuture<void>();
     final stderrDone = process.stderr.listen(stderr.add).asFuture<void>();
-    final signalSubscriptions = forwardTerminationSignals(
-      process,
-      onSignal: () async {
-        await leaseOwner?.close();
-        await onTerminationSignal?.call();
-      },
-    );
     final inputSubscription = stdin
         .transform(utf8.decoder)
         .transform(const LineSplitter())

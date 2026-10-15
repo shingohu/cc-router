@@ -123,6 +123,17 @@ void main() {
               .resolve(entry['rootUri'] as String)
               .toString();
         }
+        // flutter_tester is not a Dart CLI. Use the SDK that resolved Flutter
+        // for this workspace, without requiring a global FVM installation.
+        final flutterPackage = (config['packages'] as List).singleWhere(
+          (entry) => entry['name'] == 'flutter',
+        );
+        final sdkRoot = Directory.fromUri(
+          Uri.parse(flutterPackage['rootUri'] as String),
+        ).parent.parent;
+        final dartExecutable =
+            '${sdkRoot.path}/bin/cache/dart-sdk/bin/'
+            '${Platform.isWindows ? 'dart.exe' : 'dart'}';
         Directory('${fixture.path}/.dart_tool').createSync();
         File(
           '${fixture.path}/.dart_tool/package_config.json',
@@ -141,8 +152,7 @@ void probe() {
   print(CCHostAssembly);
 }
 """);
-        final rejected = await Process.run('fvm', [
-          'dart',
+        final rejected = await Process.run(dartExecutable, [
           'analyze',
           '--format=machine',
           probe.path,
@@ -167,8 +177,7 @@ Future<void> probe() async {
   await CCRouterHost.shutdown();
 }
 """);
-        final accepted = await Process.run('fvm', [
-          'dart',
+        final accepted = await Process.run(dartExecutable, [
           'analyze',
           '--format=machine',
           probe.path,

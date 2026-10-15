@@ -407,6 +407,10 @@ POSIX and Windows use the same Dart supervisor. Every concurrent run has its own
 project/Host-isolated lease under `CCROUTER_HOME`, while one shared Host watch,
 status, diagnostics, and local `.dart_tool` mirrors serve all of them. Releasing
 one lease must not stop another run; the watch exits after the last valid lease.
+During Flutter child supervision, a handled signal removes the run's lease
+before being forwarded; closing a starting lease cannot leave a heartbeat timer.
+Watch shutdown also works during child session startup, before `ready`; it must
+release its signal queue and generation lock even if no signal was read yet.
 A project clean must not be treated as Flutter-run exit.
 The wrapper prints its successful watch-start summary to stdout before the
 original Flutter process begins. It must first observe `sessionReady` for its

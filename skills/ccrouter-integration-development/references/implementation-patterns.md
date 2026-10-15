@@ -933,6 +933,9 @@ lease heartbeat for both machine and interactive runs, while a detached
 coordinator keeps redirected watch output independent of any single supervisor.
 Handled exits delete only that run's lease; if a supervisor is force-killed,
 watch expires its heartbeat. The shared watch stops after its last lease expires.
+During Flutter child supervision, a handled signal removes the lease before
+reaching the child; closing a lease during its initial write cannot leave a
+heartbeat timer running.
 `CCROUTER_DISABLE_WINDOWS_RUN_SUPERVISOR=1` restores the former batch-only
 lifecycle for A/B comparison. This status channel is fail-open for direct
 generation and never changes locking,
@@ -996,6 +999,9 @@ fail closed so a stopped-watch one-shot can serve as the reference.
 Child shutdown is bounded: SIGINT gets 10 seconds, SIGTERM gets 5 seconds, and
 the final SIGKILL wait is capped at 5 seconds. This preserves graceful cleanup
 without allowing a stuck child to retain session restart or the generation lock.
+Shutdown may arrive before a new child session reaches `ready` or reads its
+first queued signal. The internal signal subscription must still be canceled
+and its controller closed without retaining the generation lock.
 After a successful Builder cycle, watch skips only the ordinary fast-path and
 Build Plan decision that can no longer change whether Builder runs. Input
 fingerprints and barriers, dependency preflight, artifact snapshots, Workspace

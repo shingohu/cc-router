@@ -251,6 +251,14 @@ final class _CCFlutterInheritedRunProxy {
     final leaseOwner = watchLease == null
         ? null
         : CCFlutterRunWatchLeaseOwner(watchLease!);
+    // A visible heartbeat must not precede the signal handlers that release it.
+    final signalSubscriptions = forwardTerminationSignals(
+      process,
+      onSignal: () async {
+        await leaseOwner?.close();
+        await onTerminationSignal?.call();
+      },
+    );
     try {
       await leaseOwner?.start(
         onFailure: (error, _) {
@@ -261,16 +269,12 @@ final class _CCFlutterInheritedRunProxy {
     } on Object {
       process.kill();
       await process.exitCode;
+      for (final subscription in signalSubscriptions) {
+        await subscription.cancel();
+      }
       await leaseOwner?.close();
       rethrow;
     }
-    final signalSubscriptions = forwardTerminationSignals(
-      process,
-      onSignal: () async {
-        await leaseOwner?.close();
-        await onTerminationSignal?.call();
-      },
-    );
     try {
       final childExitCode = await _waitForProcessOrAbort(process, abortSignal);
       if (heartbeatFailure != null) {

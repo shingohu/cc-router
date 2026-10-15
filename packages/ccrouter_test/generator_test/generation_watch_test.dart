@@ -39,6 +39,31 @@ void main() {
   });
 
   test(
+    'watch stops during child session startup before reading signals',
+    () async {
+      final watch = await _ConcurrentWatch.start(
+        Directory(path.join(Directory.current.path, 'demo')),
+        onEvent: (process, event) {
+          if (event['type'] == 'watchStarted') {
+            process.kill(ProcessSignal.sigterm);
+          }
+        },
+      );
+      try {
+        expect(
+          await watch.process.exitCode.timeout(const Duration(seconds: 30)),
+          0,
+          reason: watch.output.join('\n'),
+        );
+        expect(watch.output, anyElement(contains('"type":"stopped"')));
+      } finally {
+        await watch.stop();
+      }
+    },
+    skip: Platform.isWindows ? 'POSIX signal fixture' : false,
+  );
+
+  test(
     'watch kill switch performs one machine-readable fallback',
     () async {
       final result = await _run(
@@ -1785,6 +1810,7 @@ final class _ConcurrentWatch {
   static Future<_ConcurrentWatch> start(
     Directory hostRoot, {
     Map<String, String>? environment,
+    void Function(Process process, Map<String, dynamic> event)? onEvent,
   }) async {
     final watchDirectory = Directory(
       path.join(hostRoot.path, '.dart_tool', 'ccrouter', 'v1', 'watch'),
@@ -1814,7 +1840,12 @@ final class _ConcurrentWatch {
     final stdoutSubscription = process.stdout
         .transform(utf8.decoder)
         .transform(const LineSplitter())
-        .listen((line) => output.add('stdout: $line'));
+        .listen((line) {
+          output.add('stdout: $line');
+          if (onEvent != null && line.trim().isNotEmpty) {
+            onEvent(process, jsonDecode(line) as Map<String, dynamic>);
+          }
+        });
     final stderrSubscription = process.stderr
         .transform(utf8.decoder)
         .transform(const LineSplitter())
@@ -1915,8 +1946,7 @@ final class _ConcurrentWatch {
     try {
       await process.exitCode.timeout(const Duration(seconds: 15));
     } on TimeoutException {
-      process.kill(ProcessSignal.sigterm);
-      await process.exitCode;
+      await stopProcessWithEscalation(process);
     } finally {
       await stdoutSubscription.cancel();
       await stderrSubscription.cancel();

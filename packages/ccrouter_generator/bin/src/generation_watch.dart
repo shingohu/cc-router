@@ -775,6 +775,10 @@ Future<_GenerationWatchTopology?> _runGenerationWatchSession({
     });
   });
   final iterator = StreamIterator(signals.stream);
+  // StreamIterator subscribes lazily. Attach before the asynchronous snapshot
+  // so startup cancellation can close the controller even without entering the
+  // read loop; an unlistened single-subscription controller never finishes close.
+  Future<bool>? pendingSignal = iterator.moveNext();
   var cycleSnapshot = await _GeneratedArtifactsSnapshot.capture(
     buildContext.resolutionRoot,
   );
@@ -896,10 +900,11 @@ Future<_GenerationWatchTopology?> _runGenerationWatchSession({
   try {
     while (!stop.isCompleted && nextTopology == null) {
       final hasLine = await Future.any<bool>([
-        iterator.moveNext(),
+        pendingSignal ??= iterator.moveNext(),
         stop.future.then((_) => false),
         process.exitCode.then((_) => false),
       ]);
+      pendingSignal = null;
       if (!hasLine || stop.isCompleted) break;
       final signal = iterator.current;
       if (signal.cleanInvalidationReason case final reason?) {

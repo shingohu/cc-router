@@ -14,6 +14,25 @@ import '../../ccrouter_generator/bin/src/flutter_run_supervisor.dart';
 import '../../ccrouter_generator/bin/src/flutter_run_watch_lease.dart';
 
 void main() {
+  test('lease close during startup cannot leave a heartbeat running', () async {
+    final host = await _createHost();
+    addTearDown(() => host.delete(recursive: true));
+    final lease = File(path.join(host.path, 'starting.lease'));
+    final failures = <Object>[];
+    final owner = CCFlutterRunWatchLeaseOwner(
+      lease,
+      heartbeatInterval: const Duration(milliseconds: 5),
+    );
+    addTearDown(owner.close);
+
+    final starting = owner.start(onFailure: (error, _) => failures.add(error));
+    await owner.close();
+    await starting;
+    expect(lease.existsSync(), isFalse);
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+    expect(failures, isEmpty);
+  });
+
   test(
     'canonical identity resolves the macOS temporary-directory alias',
     () {
@@ -294,6 +313,19 @@ void main() {
     timeout: const Timeout(Duration(minutes: 1)),
   );
 
+  for (final machine in [false, true]) {
+    test(
+      '${machine ? 'machine' : 'interactive'} supervisor handles termination '
+      'at the first heartbeat',
+      () => _assertLeaseRemovedBeforeChildExit(
+        coordinateMachineReloads: machine,
+        signalAtFirstHeartbeat: true,
+      ),
+      skip: Platform.isWindows ? 'POSIX signal fixture' : false,
+      timeout: const Timeout(Duration(minutes: 1)),
+    );
+  }
+
   test('stale supervised lease expires an orphaned watch', () async {
     final host = await _createHost();
     addTearDown(() => host.delete(recursive: true));
@@ -509,6 +541,7 @@ bool _hasHeartbeat(File lease) {
 
 Future<void> _assertLeaseRemovedBeforeChildExit({
   required bool coordinateMachineReloads,
+  bool signalAtFirstHeartbeat = false,
 }) async {
   final host = await _createHost();
   addTearDown(() => host.delete(recursive: true));
@@ -521,8 +554,11 @@ Future<void> _assertLeaseRemovedBeforeChildExit({
   final original = File(path.join(host.path, 'fake-flutter-wait'))
     ..writeAsStringSync('''#!/usr/bin/env bash
 trap 'touch "${terminationStarted.path}"; sleep 2; touch "${childExited.path}"; exit 0' INT TERM
-printf "%s\\n" "\$BASHPID" > "${childPid.path}"
+printf "%s\\n" "\$\$" > "${childPid.path}"
 touch "${ready.path}"
+${signalAtFirstHeartbeat ? '''while [ ! -s "${lease.path}" ]; do :; done
+kill -TERM "\$PPID"
+''' : ''}
 while true; do sleep 1; done
 ''');
   final chmod = await Process.run('chmod', <String>['+x', original.path]);
@@ -561,23 +597,29 @@ while true; do sleep 1; done
   });
   var completed = false;
   String diagnostics() =>
+      'supervisor exit: $processResult; lease exists: ${lease.existsSync()}\n'
       'supervisor stdout:\n$output\nsupervisor stderr:\n$errors';
 
   try {
-    await _waitFor(
-      () => ready.existsSync() && _hasHeartbeat(lease),
-      timeout: const Duration(seconds: 30),
-      description: 'supervisor readiness and lease heartbeat',
-      earlyFailure: () => processResult == null
-          ? null
-          : 'Supervisor exited early with code $processResult.',
-      diagnostics: diagnostics,
-    );
+    if (!signalAtFirstHeartbeat) {
+      await _waitFor(
+        () => ready.existsSync() && _hasHeartbeat(lease),
+        timeout: const Duration(seconds: 30),
+        description: 'supervisor readiness and lease heartbeat',
+        earlyFailure: () => processResult == null
+            ? null
+            : 'Supervisor exited early with code $processResult.',
+        diagnostics: diagnostics,
+      );
 
-    expect(process.kill(ProcessSignal.sigterm), isTrue);
+      expect(process.kill(ProcessSignal.sigterm), isTrue);
+    }
     await _waitFor(
       () => terminationStarted.existsSync(),
       description: 'child termination',
+      earlyFailure: () => processResult == null
+          ? null
+          : 'Supervisor exited before forwarding termination to its child.',
       diagnostics: diagnostics,
     );
     await _waitFor(

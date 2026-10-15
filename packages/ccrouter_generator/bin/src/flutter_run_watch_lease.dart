@@ -56,17 +56,26 @@ final class CCFlutterRunWatchLeaseOwner {
 
   Timer? _timer;
 
+  /// Prevents a pending initial write from installing a heartbeat after close.
+  bool _closed = false;
+
   /// Starts the heartbeat and reports a later refresh failure exactly once.
   Future<void> start({
     required void Function(Object error, StackTrace stackTrace) onFailure,
   }) async {
-    if (_timer != null) {
-      throw StateError('Flutter run watch lease heartbeat already started.');
+    if (_timer != null || _closed) {
+      throw StateError(
+        'Flutter run watch lease heartbeat already started or closed.',
+      );
     }
     await leaseFile.writeAsString(
       '$ccrouterFlutterRunLeaseHeartbeatMarker\n',
       flush: true,
     );
+    if (_closed) {
+      await close();
+      return;
+    }
     var failed = false;
     _timer = Timer.periodic(heartbeatInterval, (_) {
       if (failed) return;
@@ -82,6 +91,7 @@ final class CCFlutterRunWatchLeaseOwner {
 
   /// Stops refreshing and removes the lease when possible.
   Future<void> close() async {
+    _closed = true;
     _timer?.cancel();
     _timer = null;
     try {
