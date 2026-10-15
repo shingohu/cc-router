@@ -3,6 +3,11 @@
 
 import 'package:ccrouter/ccrouter_host.dart' show CCHostAssembly;
 import 'package:ccrouter_devtools/ccrouter_devtools.dart';
+import 'package:ccrouter_ui/ccrouter_ui_host.dart';
+import "package:demo_navigation_lab/src/ccrouter_generated/ui/navigation_lab_component.ui.g.dart"
+    as ui_package_0;
+import "package:demo_order/src/ccrouter_generated/ui/order_fragment_renderers.ui.g.dart"
+    as ui_package_1;
 
 import 'package:ccrouter_demo/src/ccrouter_generated/host/ccrouter_demo_ccrouter.g.dart'
     as host_package;
@@ -11,7 +16,7 @@ import 'package:ccrouter_demo/src/ccrouter_generated/host/ccrouter_demo_ccrouter
 final ccrouterGeneratedDevToolsCatalog = CCDevToolsStaticCatalogSnapshot(
   capturedAt: DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
   catalogFingerprint:
-      "0b0176a1e1d7d4976f8a490b0cbbedb05e88e329eb655550e096bea634dc0d2b",
+      "947d8997a1a2afaa87e7e8c57fa8197f1c923fc8394a475389880522b90d8f35",
   components: [
     CCDevToolsCatalogComponent(
       id: "demo_kv_storage_component",
@@ -602,6 +607,19 @@ final ccrouterGeneratedDevToolsCatalog = CCDevToolsStaticCatalogSnapshot(
     ),
     CCDevToolsCatalogRecord(
       kind: "route",
+      id: "demo_navigation_lab.ui_fragments",
+      ownerComponentId: "demo_navigation_lab_component",
+      packageName: "demo_navigation_lab",
+      description: "跨组件 UI Fragment、保活、输入更新与资源释放验证。",
+      source: CCDevToolsSourceLocation(
+        packageName: "demo_navigation_lab",
+        packageUri: "package:demo_navigation_lab/src/ui_fragment_page.dart",
+        line: 12,
+        column: 13,
+      ),
+    ),
+    CCDevToolsCatalogRecord(
+      kind: "route",
       id: "demo_navigation_lab.workspace.activity",
       ownerComponentId: "demo_navigation_lab_component",
       packageName: "demo_navigation_lab",
@@ -824,9 +842,19 @@ final ccrouterGeneratedDevToolsCatalog = CCDevToolsStaticCatalogSnapshot(
 );
 
 /// Validated generated Package graph installed in this Host.
-final ccrouterGeneratedHostAssembly = CCHostAssembly.fromPackageBundles(
-  [host_package.ccrouterGeneratedPackageBundle],
-  hostToolIntegrations: [
-    CCDevToolsHostIntegration(catalog: ccrouterGeneratedDevToolsCatalog),
+final ccrouterGeneratedHostAssembly = CCUIHostAssembly.attach(
+  CCHostAssembly.fromPackageBundles(
+    [host_package.ccrouterGeneratedPackageBundle],
+    hostToolIntegrations: [
+      CCDevToolsHostIntegration(catalog: ccrouterGeneratedDevToolsCatalog),
+    ],
+  ),
+  contributions: [
+    ...ui_package_0.ccUIContributions,
+    ...ui_package_1.ccUIContributions,
+  ],
+  requirements: [
+    ...ui_package_0.ccUIRequirements,
+    ...ui_package_1.ccUIRequirements,
   ],
 );

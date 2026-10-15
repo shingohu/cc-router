@@ -1,4 +1,5 @@
 import 'package:ccrouter/ccrouter.dart';
+import 'package:ccrouter_ui/ccrouter_ui.dart';
 import 'package:demo_order_contracts/demo_order_contracts.dart';
 import 'package:demo_network/demo_network.dart';
 import 'package:demo_kv_storage/demo_kv_storage.dart';
@@ -23,4 +24,14 @@ const demoNavigationLabComponent = CCComponent(
     CCServiceDependency<DemoKeyValueStorageService>(),
   ],
   commandDependencies: [CCCommandDependency<ReserveOrderCommand>()],
+  uiDependencies: [
+    CCUIFragmentDependency<OrderSummaryFragmentContract>(
+      versionRange: '^1.0.0',
+      alias: 'orderSummary',
+    ),
+    CCUIFragmentDependency<OrderRecommendationsFragmentContract>(
+      versionRange: '^1.0.0',
+      alias: 'orderRecommendations',
+    ),
+  ],
 );

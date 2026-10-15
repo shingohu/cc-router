@@ -1,0 +1,12 @@
+name: ccrouter_ui
+description: Optional typed Flutter UI composition for CCRouter components.
+version: 0.1.0
+publish_to: none
+resolution: workspace
+environment:
+  sdk: ^3.10.0
+dependencies:
+  ccrouter: ^0.1.0
+  ccrouter_contracts: ^0.1.0
+  flutter:
+    sdk: flutter

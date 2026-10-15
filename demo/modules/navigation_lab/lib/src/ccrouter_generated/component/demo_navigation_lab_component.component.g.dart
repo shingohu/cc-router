@@ -27,6 +27,8 @@ import '../binding/stack_page.route_binding.g.dart'
     as route_src_ccrouter_generated_binding_stack_page_route_binding_g_dart;
 import '../binding/storage_page.route_binding.g.dart'
     as route_src_ccrouter_generated_binding_storage_page_route_binding_g_dart;
+import '../binding/ui_fragment_page.route_binding.g.dart'
+    as route_src_ccrouter_generated_binding_ui_fragment_page_route_binding_g_dart;
 import '../command/navigation_lab_component_registrar.command.g.dart'
     as route_src_ccrouter_generated_command_navigation_lab_component_registrar_command_g_dart;
 import '../event/navigation_lab_component_registrar.event.g.dart'
@@ -55,6 +57,8 @@ import '../route/stack_page.route.g.dart'
     as route_src_ccrouter_generated_route_stack_page_route_g_dart;
 import '../route/storage_page.route.g.dart'
     as route_src_ccrouter_generated_route_storage_page_route_g_dart;
+import '../route/ui_fragment_page.route.g.dart'
+    as route_src_ccrouter_generated_route_ui_fragment_page_route_g_dart;
 import 'package:demo_navigation_lab/src/navigation_lab_component_registrar.dart'
     as route_src_navigation_lab_component_registrar_dart;
 
@@ -127,6 +131,8 @@ final class _DemoNavigationLabComponentGeneratedRegistrar
         .ccrouterRegisterDemoStackPageRoute(registry);
     route_src_ccrouter_generated_route_storage_page_route_g_dart
         .ccrouterRegisterDemoStoragePageRoute(registry);
+    route_src_ccrouter_generated_route_ui_fragment_page_route_g_dart
+        .ccrouterRegisterUIFragmentLabPageRoute(registry);
     route_src_ccrouter_generated_command_navigation_lab_component_registrar_command_g_dart
         .ccrouterRegisterHandleDemoCreateReceiptCommand(registry);
     route_src_ccrouter_generated_command_navigation_lab_component_registrar_command_g_dart
@@ -394,5 +400,12 @@ final demoNavigationLabComponentRouteCatalog = CCFlutterRouteCatalog([
     builder: (arguments) =>
         route_src_ccrouter_generated_binding_storage_page_route_binding_g_dart
             .ccrouterBuildDemoStoragePageRoute(arguments),
+  ),
+  CCFlutterRouteDestination.fromDefinition(
+    definition: route_src_ccrouter_generated_route_ui_fragment_page_route_g_dart
+        .ccrouterDescribeUIFragmentLabPageRoute(),
+    builder: (arguments) =>
+        route_src_ccrouter_generated_binding_ui_fragment_page_route_binding_g_dart
+            .ccrouterBuildUIFragmentLabPageRoute(arguments),
   ),
 ]);

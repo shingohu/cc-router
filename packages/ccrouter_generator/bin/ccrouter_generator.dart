@@ -32,6 +32,7 @@ import 'src/route_find.dart' as route_find;
 import 'src/pub_hook.dart';
 import 'src/pub_hook_watch_coordination.dart';
 import 'src/scaffold.dart';
+import 'package:ccrouter_generator/src/ui_fragment_workspace.dart';
 
 part 'src/build_plan.dart';
 part 'src/aggregation_reuse.dart';
@@ -40,6 +41,7 @@ part 'src/generation_watch.dart';
 part 'src/generation_watch_status.dart';
 part 'src/generation_profile.dart';
 part 'src/portable_generation_state.dart';
+part 'src/ui_fragment_assembly.dart';
 
 final _dartFormatter = DartFormatter(
   languageVersion: DartFormatter.latestLanguageVersion,
@@ -395,7 +397,8 @@ Future<bool> _aggregate(Directory root, _Arguments parsed) async {
             !entity.path.endsWith('.service.json') &&
             !entity.path.endsWith('.command.json') &&
             !entity.path.endsWith('.event.json') &&
-            !entity.path.endsWith('.init_task.json'))) {
+            !entity.path.endsWith('.init_task.json') &&
+            !entity.path.endsWith('.ui.json'))) {
       continue;
     }
     if (entity.path.contains(
@@ -453,6 +456,7 @@ Future<bool> _aggregate(Directory root, _Arguments parsed) async {
     root,
     documents,
   )..sort();
+  additionalErrors.addAll(validateUIFragmentWorkspace(documents, host: true));
   final errors = [...result.errors, ...additionalErrors]..sort();
   if (errors.isNotEmpty) {
     _writeWorkspaceValidationFailure(
@@ -1160,6 +1164,9 @@ Future<bool> _generateResolvedWorkspace(
         package.name: package.root,
     },
   )..sort();
+  additionalErrors.addAll(
+    validateUIFragmentWorkspace(documents, host: hostGeneration),
+  );
   final errors = [...?validation?.errors, ...additionalErrors]..sort();
   if (errors.isNotEmpty) {
     if (validation != null) {
@@ -1231,6 +1238,7 @@ Future<bool> _generateResolvedWorkspace(
     _commandStdout.writeln('Reused verified CCRouter aggregation outputs.');
   } else {
     final fullDirtySet = dirtySet!;
+    final uiApiOutputs = await _generateUIAPIs(workspace, indexes);
     final catalogs = await trace.measure(
       'component-index-generation',
       () => _generateComponentRouteIndexes(
@@ -1281,7 +1289,7 @@ Future<bool> _generateResolvedWorkspace(
         workspace: workspace,
         runtimeBundles: runtimeBundles,
         catalogs: catalogs,
-        contractApiOutputs: contractApiOutputs,
+        contractApiOutputs: {...contractApiOutputs, ...uiApiOutputs},
         includeHostArtifacts: hostGeneration,
       ),
     );
@@ -1723,7 +1731,8 @@ Future<List<_MetadataFile>> _readWritableMetadataFiles(
               entity.path.endsWith('.service.json') ||
               entity.path.endsWith('.command.json') ||
               entity.path.endsWith('.event.json') ||
-              entity.path.endsWith('.init_task.json'))) {
+              entity.path.endsWith('.init_task.json') ||
+              entity.path.endsWith('.ui.json'))) {
         files.add(entity);
       }
     }
@@ -4300,6 +4309,7 @@ bool _isManagedGeneratedArtifact(List<String> segments, String name) {
       name.endsWith('.command.json') ||
       name.endsWith('.event.json') ||
       name.endsWith('.init_task.json') ||
+      name.endsWith('.ui.json') ||
       name.endsWith('.route.md') ||
       name.endsWith('.component.json') ||
       name.endsWith('.component.md');
@@ -5766,21 +5776,23 @@ Future<void> _generateResolvedHostCatalog(
     CCDevToolsHostIntegration(catalog: ccrouterGeneratedDevToolsCatalog),
   ],'''
       : '';
+  final ui = _uiHostInputs(workspace, indexes);
+  final uiEnabled = ui.imports.isNotEmpty;
   final source = _dartFormatter.format('''
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint
 
 import 'package:ccrouter/ccrouter_host.dart'
     show CCHostAssembly;
-$devToolsImport
+${devToolsImport}${ui.imports}
 import 'package:${host.name}/src/ccrouter_generated/host/${host.name}_ccrouter.g.dart'
     as host_package;
 
 $devToolsCatalog
 /// Validated generated Package graph installed in this Host.
-final ccrouterGeneratedHostAssembly = CCHostAssembly.fromPackageBundles([
+final ccrouterGeneratedHostAssembly = ${uiEnabled ? 'CCUIHostAssembly.attach(' : ''}CCHostAssembly.fromPackageBundles([
   host_package.${hostIndex.bundleSymbol},
-],$hostToolArgument);
+],$hostToolArgument)${uiEnabled ? ', contributions: [${ui.contributions}], requirements: [${ui.requirements}])' : ''};
 ''');
   await _writeIfChanged(output, source);
   await _generateHostApiEntrypoint(host.root);
@@ -6189,6 +6201,7 @@ bool _isLegacyMetadataArtifact(File file) {
       name.endsWith('.command.json') ||
       name.endsWith('.event.json') ||
       name.endsWith('.init_task.json') ||
+      name.endsWith('.ui.json') ||
       name.endsWith('.route.md') ||
       name.endsWith('.component.json') ||
       name.endsWith('.component.md');

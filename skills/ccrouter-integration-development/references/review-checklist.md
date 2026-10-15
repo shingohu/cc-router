@@ -44,6 +44,9 @@
 
 ## Lifecycle
 
+- For optional UI Fragments, were required Owner edges, stable Keys, Props races,
+  latest callback dispatch, inactive Tabs, Session reset and final unmount tested?
+  Keep Renderer/Host SPI out of A and do not create a fake Route or new Scope.
 - Does Service use the narrowest valid Scope?
 - Is `@CCService` limited to the supported zero-argument construction model, with complex registration kept in `@CCComponentContribution`?
 - Does a promoted Service contract explicitly declare `componentId`, export only its interface from the business barrel, and is each simple `@CCService` implementation bound through exactly one direct Contract?

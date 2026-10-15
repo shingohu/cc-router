@@ -1,4 +1,24 @@
 builders:
+  ui_fragments:
+    import: "package:ccrouter_generator/builder.dart"
+    builder_factories: ["ccUIFragmentBuilder"]
+    build_extensions:
+      "^lib/src/{{}}.dart": ["lib/src/ccrouter_generated/ui/{{}}.ui.g.dart"]
+    auto_apply: dependents
+    build_to: source
+    defaults:
+      generate_for:
+        exclude: ["lib/**/ccrouter_generated/**"]
+  ui_metadata:
+    import: "package:ccrouter_generator/builder.dart"
+    builder_factories: ["ccUIFragmentMetadataBuilder"]
+    build_extensions:
+      "^lib/src/{{}}.dart": ["lib/src/ccrouter_generated/metadata/{{}}.ui.json"]
+    auto_apply: dependents
+    build_to: cache
+    defaults:
+      generate_for:
+        exclude: ["lib/**/ccrouter_generated/**"]
   init_tasks:
     import: "package:ccrouter_generator/builder.dart"
     builder_factories: ["ccInitTaskBuilder"]

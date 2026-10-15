@@ -10,6 +10,9 @@ abstract final class CCRouterHost {
   /// Shutdown operation currently in progress.
   static Future<void>? _shuttingDown;
 
+  /// Prevents optional attachment callbacks from reentering initialization.
+  static bool _initializing = false;
+
   /// Releases Backend-owned resources after Runtime-owned Adapter disposal.
   static Future<void> Function()? _backendDisposer;
 
@@ -18,6 +21,9 @@ abstract final class CCRouterHost {
 
   /// Backend-neutral routes owned by the current default Runtime lifecycle.
   static CCFlutterRouteCatalog? _hostRouteCatalog;
+
+  /// Successfully attached optional capability bindings for this generation.
+  static List<CCHostLifecycleBinding> _lifecycleBindings = const [];
 
   /// Creates and initializes the process-default Runtime.
   ///
@@ -70,42 +76,64 @@ abstract final class CCRouterHost {
     CCDeepLinkIngressPolicy deepLinkIngressPolicy =
         CCDeepLinkIngressPolicy.denyAll,
   }) {
-    if (_runtimeResolver.hasOverlayRuntime ||
+    if (_initializing ||
+        _runtimeResolver.hasOverlayRuntime ||
         _runtimeResolver.defaultRuntime != null ||
         _shuttingDown != null) {
       throw const CCRouterAlreadyInitializedError();
     }
 
-    final runtime = CCRouterRuntime.forHost(
-      components: hostAssembly.componentManifests,
-      contractBundle: hostAssembly.contractBundle,
-      traceCapacity: traceCapacity,
-      navigationDiagnosticCapacity: navigationDiagnosticCapacity,
-      diagnostics: diagnostics,
-      globalInterceptors: globalInterceptors,
-      globalPopGuards: globalPopGuards,
-      navigationFailurePolicy: navigationFailurePolicy,
-      navigationAspects: navigationAspects,
-      telemetryContextProvider: telemetryContextProvider,
-      restorationOpportunitySource: restorationOpportunitySource,
-      navigationConcurrencyPolicy: navigationConcurrencyPolicy,
-      deepLinkIngressPolicy: deepLinkIngressPolicy,
-    );
-    runtime.initialize();
-    _runtimeResolver.installDefault(runtime);
-    _hostRouteCatalog = hostAssembly.routeCatalog;
-    final integrations = hostAssembly.hostToolIntegrations;
-    _hostToolIntegrations = integrations;
-    for (final integration in integrations) {
-      try {
-        integration.onRuntimeReady();
-      } catch (error) {
-        runtime.recordHostToolLifecycleFailure(
-          integrationId: integration.id,
-          operation: 'hostToolStart',
-          errorType: error.runtimeType.toString(),
-        );
+    final attached = <CCHostLifecycleBinding>[];
+    _initializing = true;
+    try {
+      for (final binding in hostAssembly.lifecycleBindings) {
+        // Include partial attach in rollback; detach is explicitly idempotent.
+        attached.add(binding);
+        binding.attach();
       }
+      final runtime = CCRouterRuntime.forHost(
+        components: hostAssembly.componentManifests,
+        contractBundle: hostAssembly.contractBundle,
+        traceCapacity: traceCapacity,
+        navigationDiagnosticCapacity: navigationDiagnosticCapacity,
+        diagnostics: diagnostics,
+        globalInterceptors: globalInterceptors,
+        globalPopGuards: globalPopGuards,
+        navigationFailurePolicy: navigationFailurePolicy,
+        navigationAspects: navigationAspects,
+        telemetryContextProvider: telemetryContextProvider,
+        restorationOpportunitySource: restorationOpportunitySource,
+        navigationConcurrencyPolicy: navigationConcurrencyPolicy,
+        deepLinkIngressPolicy: deepLinkIngressPolicy,
+      );
+      runtime.initialize();
+      _runtimeResolver.installDefault(runtime);
+      _lifecycleBindings = List.unmodifiable(attached);
+      _hostRouteCatalog = hostAssembly.routeCatalog;
+      final integrations = hostAssembly.hostToolIntegrations;
+      _hostToolIntegrations = integrations;
+      for (final integration in integrations) {
+        try {
+          integration.onRuntimeReady();
+        } catch (error) {
+          runtime.recordHostToolLifecycleFailure(
+            integrationId: integration.id,
+            operation: 'hostToolStart',
+            errorType: error.runtimeType.toString(),
+          );
+        }
+      }
+    } catch (_) {
+      for (final binding in attached.reversed) {
+        try {
+          binding.detach();
+        } catch (_) {
+          /* Preserve startup failure. */
+        }
+      }
+      rethrow;
+    } finally {
+      _initializing = false;
     }
   }
 
@@ -158,11 +186,14 @@ abstract final class CCRouterHost {
     final active = _runtimeResolver.takeDefault();
     final disposeBackend = _backendDisposer;
     final hostToolIntegrations = _hostToolIntegrations;
+    final lifecycleBindings = _lifecycleBindings;
+    _lifecycleBindings = const [];
     _hostRouteCatalog = null;
     _hostToolIntegrations = const [];
     if (active == null &&
         disposeBackend == null &&
-        hostToolIntegrations.isEmpty) {
+        hostToolIntegrations.isEmpty &&
+        lifecycleBindings.isEmpty) {
       return;
     }
 
@@ -170,6 +201,16 @@ abstract final class CCRouterHost {
     final shuttingDown = completion.future;
     _shuttingDown = shuttingDown;
     _backendDisposer = null;
+    Object? bindingError;
+    StackTrace? bindingStack;
+    for (final binding in lifecycleBindings.reversed) {
+      try {
+        binding.detach();
+      } catch (error, stack) {
+        bindingError ??= error;
+        bindingStack ??= stack;
+      }
+    }
     for (final integration in hostToolIntegrations) {
       try {
         integration.onRuntimeStopping();
@@ -181,7 +222,11 @@ abstract final class CCRouterHost {
         );
       }
     }
-    completion.complete(_disposeRuntimeAndBackend(active, disposeBackend));
+    completion.complete(() async {
+      await _disposeRuntimeAndBackend(active, disposeBackend);
+      if (bindingError != null)
+        Error.throwWithStackTrace(bindingError, bindingStack!);
+    }());
     try {
       await shuttingDown;
     } finally {

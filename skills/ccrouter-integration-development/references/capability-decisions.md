@@ -21,6 +21,7 @@ an already selected managed Route, Service or message contract.
 
 | Need | Use | Do not use |
 | --- | --- | --- |
+| Embed another component's local business UI | Optional typed UI Fragment | Widget-returning Service or fake Route |
 | Show a page/modal and optionally return a result | Route | Service or Event as navigation |
 | Repeated methods, state reads, owned resource | Narrow Client; Service when framework Scope/readiness/resolution is needed | Command per getter or unowned global state |
 | Typed local data with explicit account/environment/device isolation | Owning storage API + namespace value object; Service if framework-managed | Unscoped global Map or EventBus |

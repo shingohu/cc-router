@@ -2310,6 +2310,84 @@
       "resultType": "void"
     },
     {
+      "id": "demo_navigation_lab.ui_fragments",
+      "version": "0.1.0",
+      "shapeFingerprint": "df1bd473a7fe5faa20cf97a8ba83383737af000c8ee6e95a27e47d411fe8d8da",
+      "componentId": "demo_navigation_lab_component",
+      "exposure": "internal",
+      "deepLink": "disabled",
+      "description": "跨组件 UI Fragment、保活、输入更新与资源释放验证。",
+      "interceptorIds": [],
+      "popGuardIds": [],
+      "declaration": {
+        "package": "demo_navigation_lab",
+        "library": "lib/src/ui_fragment_page.dart",
+        "kind": "page",
+        "symbol": "UIFragmentLabPage",
+        "packageUri": "package:demo_navigation_lab/src/ui_fragment_page.dart",
+        "line": 12,
+        "column": 13
+      },
+      "navigationSources": [
+        "typedIntent",
+        "internalUri"
+      ],
+      "restoration": {
+        "status": "unsupported"
+      },
+      "placement": {
+        "hostId": "default",
+        "parentRouteId": null,
+        "shellId": null,
+        "navigatorOutlet": "root"
+      },
+      "presentation": {
+        "type": "page",
+        "routeType": "platformDefault",
+        "transition": "platformDefault",
+        "opaque": true,
+        "fullscreenDialog": false
+      },
+      "contracts": {
+        "route": "_UIFragmentLabPageRoute",
+        "arguments": "_UIFragmentLabPageRouteArguments",
+        "binding": "_UIFragmentLabPageRouteContractBinding",
+        "package": "demo_navigation_lab",
+        "library": "lib/src/ccrouter_generated/route/ui_fragment_page.route.g.dart",
+        "intentFactory": "CCGeneratedUIFragmentLabPageRouteFactory"
+      },
+      "registration": "ccrouterRegisterUIFragmentLabPageRoute",
+      "registrationLibrary": "lib/src/ccrouter_generated/route/ui_fragment_page.route.g.dart",
+      "destination": {
+        "descriptor": "ccrouterDescribeUIFragmentLabPageRoute",
+        "builder": "ccrouterBuildUIFragmentLabPageRoute",
+        "library": "lib/src/ccrouter_generated/route/ui_fragment_page.route.g.dart",
+        "builderLibrary": "lib/src/ccrouter_generated/binding/ui_fragment_page.route_binding.g.dart"
+      },
+      "generatedArtifacts": [
+        {
+          "role": "routeLibrary",
+          "symbol": "_UIFragmentLabPageRoute",
+          "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/route/ui_fragment_page.route.g.dart"
+        },
+        {
+          "role": "routeBinding",
+          "symbol": "ccrouterBuildUIFragmentLabPageRoute",
+          "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/binding/ui_fragment_page.route_binding.g.dart"
+        }
+      ],
+      "patterns": [
+        {
+          "type": "CCPathPattern",
+          "value": "/ui-fragments",
+          "primary": true,
+          "constraints": {}
+        }
+      ],
+      "parameters": [],
+      "resultType": "void"
+    },
+    {
       "id": "demo_navigation_lab.workspace.activity",
       "version": "0.1.0",
       "shapeFingerprint": "0c1c1365fdafa7db333d2613b15d34e07c77e8c23e08cf2e7fec6a2b31b198c9",

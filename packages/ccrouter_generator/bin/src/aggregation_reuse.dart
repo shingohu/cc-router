@@ -125,6 +125,7 @@ abstract final class _GenerationAggregationReuseState {
       'init_task' => !name.endsWith('.init_task.g.dart'),
       'route' => !name.endsWith('.route.g.dart'),
       'service' => !name.endsWith('.service.g.dart'),
+      'ui' => !name.endsWith('.ui.g.dart'),
       'contract' =>
         !name.endsWith('.route.contract.g.dart') &&
             !name.endsWith('.service.contract.g.dart'),

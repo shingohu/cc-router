@@ -152,6 +152,30 @@ final class CCRouteBarrelExportValidator {
         () => <_BarrelExportRequirement>[],
       );
 
+      for (final contract in _objects(document['uiContracts'])) {
+        for (final type in _objects(contract['publicTypes'])) {
+          final typePackage = '${type['package'] ?? ''}';
+          final typeRoot = packages[typePackage];
+          final typeSource = '${type['source'] ?? ''}';
+          final symbol = '${type['symbol'] ?? ''}';
+          if (typeRoot == null ||
+              !typeSource.startsWith('lib/') ||
+              symbol.isEmpty)
+            continue;
+          requirementsByPackage
+              .putIfAbsent(typePackage, () => [])
+              .add(
+                _BarrelExportRequirement(
+                  target: File(_join(typeRoot.path, typeSource)),
+                  requiredSymbols: {symbol},
+                  error:
+                      'Public UI contract "${contract['id']}" must re-export '
+                      '"$symbol" from $typeSource in a public barrel using `show`.',
+                ),
+              );
+        }
+      }
+
       for (final route in _objects(document['routes'])) {
         if (route['exposure'] == 'internal') continue;
         final contracts = route['contracts'];

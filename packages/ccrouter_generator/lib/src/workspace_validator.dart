@@ -350,7 +350,9 @@ abstract final class CCRouteWorkspaceValidator {
     for (final document in documentList) {
       if (document['schemaVersion'] != 2 &&
           document['schemaVersion'] != 3 &&
-          document['schemaVersion'] != 4) {
+          document['schemaVersion'] != 4 &&
+          !(document['schemaVersion'] == 5 &&
+              document['uiSchemaVersion'] == 1)) {
         errors.add(
           'Unsupported metadata schema in ${document['source'] ?? 'unknown source'}.',
         );

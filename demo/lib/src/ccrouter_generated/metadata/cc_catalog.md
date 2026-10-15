@@ -483,6 +483,20 @@ ShellRoute 共享框架中的设置页。
 - Patterns:
   - `/lab/policy/timeout` (CCPathPattern, primary)
 
+### `demo_navigation_lab.ui_fragments`
+
+跨组件 UI Fragment、保活、输入更新与资源释放验证。
+
+- Exposure: `internal`; deep link: `disabled`; result: `void`
+- Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/route/ui_fragment_page.route.g.dart`
+- Declaration: `demo_navigation_lab:lib/src/ui_fragment_page.dart` (page)
+- Placement: host `default`, outlet `root`, shell `none`, parent `none`
+- Presentation: `page`
+- Navigation sources: `typedIntent, internalUri`
+- Restoration: `unsupported`
+- Patterns:
+  - `/ui-fragments` (CCPathPattern, primary)
+
 ### `demo_navigation_lab.workspace.activity`
 
 StatefulShellRoute 活动分支。
@@ -937,6 +951,15 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 - Generated artifacts:
   - `routeLibrary`: `package:demo_navigation_lab/src/ccrouter_generated/route/policy_pages.route.g.dart` (`_DemoTimeoutPageRoute`)
   - `routeBinding`: `package:demo_navigation_lab/src/ccrouter_generated/binding/policy_pages.route_binding.g.dart` (`ccrouterBuildDemoTimeoutPageRoute`)
+
+### Route `demo_navigation_lab.ui_fragments`
+
+- Declaring package: `demo_navigation_lab`
+- Contract/declaration: `package:demo_navigation_lab/src/ui_fragment_page.dart:12:13` (`UIFragmentLabPage`)
+- Implementation: `package:demo_navigation_lab/src/ui_fragment_page.dart:12:13` (`UIFragmentLabPage`)
+- Generated artifacts:
+  - `routeLibrary`: `package:demo_navigation_lab/src/ccrouter_generated/route/ui_fragment_page.route.g.dart` (`_UIFragmentLabPageRoute`)
+  - `routeBinding`: `package:demo_navigation_lab/src/ccrouter_generated/binding/ui_fragment_page.route_binding.g.dart` (`ccrouterBuildUIFragmentLabPageRoute`)
 
 ### Route `demo_navigation_lab.workspace.activity`
 

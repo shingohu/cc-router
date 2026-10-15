@@ -236,6 +236,14 @@ Contracts Package or a source relocation, read
 [contracts-layout.md](references/contracts-layout.md); internal domain folders
 and public library placement have different constraints.
 
+- For a component-owned local UI region, opt in to `ccrouter_ui` and read
+  [ui-fragments.md](references/ui-fragments.md). Consume only public Pure Dart
+  UI contracts and your own generated `<componentId>.ui.api.g.dart`; never
+  import the owner's Renderer or Widget. This does not relax Service types or
+  create a Route/Fragment Scope. Plain presentation reuse stays ordinary Flutter.
+  UI enums must have no authored members, constructors, mixins or interfaces.
+  DTO construction uses `this.field` parameters or constant field declarations;
+  initializer-list assignments and redirecting constructors are unsupported.
 - Use **Route** for showing a destination and optionally receiving a typed Pop result.
 - Use **Service** when repeatable methods, state reads, or resources need framework resolution, Scope/readiness, or generated dependency validation; otherwise keep a narrow ordinary API.
 - Use **Command<R>** for one requested operation with exactly one owner; use `R = void` when only completion matters.

@@ -504,7 +504,9 @@ final class _LibraryScope {
         // Framework and SDK imports cannot declare authored component identities.
         if (uri.startsWith('dart:') ||
             uri == 'package:ccrouter/ccrouter.dart' ||
-            uri == 'package:ccrouter_contracts/ccrouter_contracts.dart') {
+            uri == 'package:ccrouter_contracts/ccrouter_contracts.dart' ||
+            uri == 'package:ccrouter_contracts/ccrouter_ui_contracts.dart' ||
+            uri == 'package:ccrouter_ui/ccrouter_ui.dart') {
           return {};
         }
         return null;

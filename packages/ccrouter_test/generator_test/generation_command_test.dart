@@ -16,6 +16,39 @@ void main() {
   _restorePortableGenerationStatesAfterSuite();
 
   test(
+    'Renderer-only components do not opt an existing Host into UI',
+    () async {
+      final hostRoot = path.join('demo', 'modules', 'order', 'example');
+      final result = await Process.run(Platform.resolvedExecutable, [
+        'run',
+        'ccrouter_generator:ccrouter',
+        'generate',
+        hostRoot,
+        '--no-cache',
+        '--check',
+      ], workingDirectory: Directory.current.path);
+      expect(result.exitCode, 0, reason: '${result.stdout}\n${result.stderr}');
+      expect(
+        File(path.join(hostRoot, 'pubspec.yaml')).readAsStringSync(),
+        isNot(contains('ccrouter_ui:')),
+      );
+      final assembly = File(
+        path.join(
+          hostRoot,
+          'lib',
+          'src',
+          'ccrouter_generated',
+          'host',
+          'ccrouter_host.routes.g.dart',
+        ),
+      ).readAsStringSync();
+      expect(assembly, isNot(contains('CCUIHostAssembly')));
+      expect(assembly, isNot(contains('package:ccrouter_ui/')));
+    },
+    timeout: const Timeout(Duration(minutes: 2)),
+  );
+
+  test(
     'package-local generation publishes a Pure Dart Package without Host validation',
     () async {
       final packageRoot = Directory(
@@ -1033,11 +1066,22 @@ void probe() {
         '--profile',
       ], workingDirectory: Directory.current.path);
       expect(converged.exitCode, 0, reason: '${converged.stderr}');
-      expect('${converged.stdout}', contains('wrote 0 outputs'));
+      // UI Client barrels are published after Builder. After clean, Analyzer
+      // may refresh those newly restored export edges once, reporting `same`
+      // outputs. Require unchanged bytes immediately and no further work next.
+      expect(_profileDelta(converged, 'output-delta')['files'], 0);
       expect(
         '${converged.stdout}',
         contains('generated artifacts are up to date'),
       );
+      final stable = await _generateDemo([
+        '--no-cache',
+        '--check',
+        '--profile',
+      ]);
+      expect(stable.exitCode, 0, reason: '${stable.stdout}\n${stable.stderr}');
+      expect(_profileDelta(stable, 'output-delta')['files'], 0);
+      expect('${stable.stdout}', contains('wrote 0 outputs'));
     },
     timeout: const Timeout(Duration(minutes: 4)),
   );

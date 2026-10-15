@@ -1,5 +1,6 @@
 import 'messaging.dart';
 import 'service.dart';
+import 'ui_fragment.dart';
 
 /// Stable, typed identity shared by a component and its public contracts.
 ///
@@ -45,6 +46,7 @@ final class CCComponent {
     this.optionalDependencies = const [],
     this.serviceDependencies = const [],
     this.commandDependencies = const [],
+    this.uiDependencies = const [],
   });
 
   /// Globally unique component identifier used by generated ownership metadata.
@@ -80,6 +82,12 @@ final class CCComponent {
   /// methods carrying a trusted caller identity and stable Command ID. Commands
   /// owned by this component are included automatically and must not be listed.
   final List<CCCommandDependency<CCCommand<Object?>>> commandDependencies;
+
+  /// Required UI contracts consumed through the optional `ccrouter_ui` module.
+  ///
+  /// Owners must also occur in [dependencies]. Empty by default so existing
+  /// components neither opt in to UI generation nor acquire Flutter imports.
+  final List<CCUIFragmentDependency<Object>> uiDependencies;
 }
 
 /// Marks one package-internal capability registration contribution.

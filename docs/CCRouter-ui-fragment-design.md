@@ -2,16 +2,18 @@
 
 ## 文档状态
 
-- 版本：v0.1
-- 日期：2026-10-13
-- 状态：Proposal 已确认，尚未实现
+- 版本：v0.2（v1 实施记录）
+- 日期：设计 2026-10-13，实施 2026-10-15
+- 状态：静态 v1 已实施；平台实机、长期内存与性能基线仍需后续验证
 - 分类：跨组件 UI 契约与静态装配属于新的通用框架能力；具体 UI 和业务状态仍由组件负责
 - 适用范围：Flutter Widget 树内的跨组件局部 UI 组合
 - 推荐方案：可选 `ccrouter_ui` 模块，采用 UI Contract + generated Client + Renderer 静态注册
 
-本文用于后续实施，不提供当前可调用的 API。所有新增类型、生成路径和示例均为草案，
-须在 P0 冻结后实施。当前公开能力仍以[文档索引](README.md)和生产代码为准。
-本次只形成设计，不改变根 README、Integration Skill 或现有生成物的接入规则。
+本文保留设计依据与分阶段门禁，并按 v1 实现修正已冻结边界。当前公开能力以
+[文档索引](README.md)、[接入指导](../skills/ccrouter-integration-development/references/ui-fragments.md)
+和生产代码为准。实施选择 UI Assembly wrapper，未让 Core Bundle 承载 Widget factory。
+实际 API、回归证据、核心价值和剩余边界见
+[实施验收记录](CCRouter-ui-fragment-acceptance.md)。
 
 ## 1. 问题分析与能力边界
 
@@ -84,13 +86,13 @@ v1 范围：
 v1 不提供动态 install/uninstall、运行时替换 Renderer、多贡献者 Slot、排序规则、
 通用 UI 沙箱、自动曝光、状态恢复、跨进程或原生视图容器。Android/iOS/OHOS/Web
 上的 Flutter Widget 可按平台验证；原生 Fragment/ViewController/ArkUI 挂载不在承诺内。
-v1 不支持泛型 UI 契约、多个独立 Action 通道或任意函数型 Props。
+v1 不支持泛型 UI 契约、多个独立 Action 通道、集合、sealed Action 或任意函数型 Props。
 
 ## 5. Package、API 与依赖分层
 
 ### 5.1 分层
 
-| 层 | 草案位置 | 可见内容与使用者 |
+| 层 | 实现位置 | 可见内容与使用者 |
 | --- | --- | --- |
 | UI 契约声明 | `ccrouter_contracts` 独立 UI library | Pure Dart annotation、identity、Props/Action 描述与依赖声明 |
 | 业务与 Renderer API | `ccrouter_ui.dart` | 生成 Client 所需 Widget 包装、Renderer 输入；A/B 使用 |
@@ -118,15 +120,15 @@ B 的 Renderer implementation 不从公开 Contract barrel 导出。Host 聚合�
 贡献，A 的生成 Client 只能依赖公开契约和 `ccrouter_ui`。普通共享 UI Package 不受此装配
 流程约束。
 
-## 6. 契约与消费 API 草案
+## 6. 契约与消费 API
 
-以下为示意 Dart；注解泛型形式、构造参数和生成文件名须由 P0 编译夹具确认。
+以下展示已冻结的声明形式；应用类型和 Owner 常量由实际 contracts Package 提供。
 
 ### 6.1 B 声明 UI Contract
 
 ```dart
 @CCUIFragmentContract<OrderSummaryProps, OrderSummaryAction>(
-  componentId: 'order',
+  componentId: orderComponentId,
   id: 'order.summary',
   version: '1.0.0',
 )
@@ -140,26 +142,34 @@ final class OrderSummaryProps {
 enum OrderSummaryAction { openDetails, retry }
 ```
 
-Contract marker 必须非泛型；Props 为不可变 DTO，Action 为 enum 或具有可分析闭合集合的
-sealed DTO。可包含明确支持的 scalar、enum、嵌套 DTO 和类型化集合；不可包含 Widget、
+Contract marker 必须公开且非泛型；Props 为 final class，只提供 const generative constructor，
+不含继承、mixin、interface 或自定义方法；Action 和 DTO 中的 enum 均只能声明枚举值，
+不允许自定义字段、getter/setter、方法、构造器、mixin 或 interface（含 static 成员）。
+DTO 构造器参数只允许 `this.field`；每个字段必须在声明处提供常量初始值，或由每个构造器的
+`this.field` 初始化。参数默认值与字段初始值均按有效常量值计入指纹，等值表达式保持相同指纹。
+v1 拒绝初始化列表赋值和重定向构造器，避免未建模的构造表达式绕过默认值兼容校验。
+Props 字段仅支持 scalar、普通 enum 与无环嵌套 DTO（可空字段可用），不可包含集合、Widget、
 BuildContext、controller、Service 实例、Future、Stream 或 function。
 输入以 UI 所需最小数据为准，不把完整业务对象图或账号凭证传入视图。
 
-v1 每份 Props 必须有明确字段 schema；集合在构造边界防御性复制/冻结。不得在原对象中
+v1 每份 Props 必须有明确字段 schema，所有存储字段公开且 final。不得在原对象中
 修改字段期待 UI 自动刷新。更新应传入新的 Props；B 显式比较影响数据请求的字段。
-复杂对象、外部库类型和递归 schema 的支持范围由 P0 白名单确定，不自动开放任意 Dart 类型。
+复杂对象、通用外部库类型、递归 schema 和 sealed Action 暂不开放。
 
 ### 6.2 A 声明消费依赖
 
 ```dart
-@CCComponent(
-  id: 'account',
+const accountComponent = CCComponent(
+  id: accountComponentId,
+  version: '0.1.0',
+  dependencies: [orderComponentId],
   uiDependencies: [
     CCUIFragmentDependency<OrderSummaryFragmentContract>(
       versionRange: '^1.0.0',
+      alias: 'orderSummary',
     ),
   ],
-)
+);
 ```
 
 `uiDependencies` 是可选新增字段，默认空。v1 已声明依赖为 required，必须有实现；
@@ -216,25 +226,23 @@ callback、Stream 和 Flutter 类型的限制保持不变。
 
 1. 解析 Contract 的 Owner、ID、版本、Props/Action schema 与 Renderer 签名。
 2. 生成契约描述与 shape fingerprint、消费依赖和消费组件专属 Client。
-3. B 的 Package Bundle 输出 Renderer contribution；A 输出 UI requirement。
+3. B 的独立 UI 生成库输出 Renderer contribution；A 输出 UI requirement。
 4. Host 聚合所有 contribution/requirement，构建不可变 UI catalog 并执行兼容门禁。
 5. Runtime 初始化与 Host UI binding 使用同一份验证快照，避免验证与实际渲染不一致。
 
-建议 UI 使用显式 opt-in `<componentId>.ui.api.g.dart`，保持现有
+UI 使用显式 opt-in `<componentId>.ui.api.g.dart`，保持现有
 `<componentId>.api.g.dart` 的路径和 Pure Dart 使用者依赖不变。具体导出位置与命名
-在 P0 冻结。无 UI 声明的 Package 不新增 UI import、输出文件或 UI fingerprint 输入。
+已冻结。Client 名为完整 component ID 的 PascalCase 加 `Fragments`。
+无 UI 声明的 Package 不新增 UI import、输出文件或 UI fingerprint 输入。
 
 ### 7.2 避免反向依赖
 
-现有 Package Bundle/Host Assembly 增加默认空的可选 capability contribution 槽位，
-其中 Core 只理解 Pure Dart descriptor、requirement 和 identity。
-Renderer payload 由 `ccrouter_ui` 的 typed adapter 接收，业务不能手写无类型 Map。
-该桥接仅属于 Generated/Host SPI，不扩展业务 `CCRegistry` 的权限。
-
-实施必须验证这一桥接不会产生 `ccrouter -> ccrouter_ui -> ccrouter` 循环。
-若无法以最小稳定 SPI 达成，应在 P0 改为 UI Host Assembly 包装现有 Assembly，
-不要为复用现有 Bundle 强行让 Core 引入 Flutter UI factory。
-P0 必须冻结其中一种路径，不能在两套装配结果间运行时猜测。
+实施选择 UI Assembly wrapper：`CCUIHostAssembly.attach` 先校验独立 Renderer/requirement
+列表，再通过 Host-only `CCHostAssembly.withLifecycleBindings` 保留原 Assembly 的全部输入，
+附加一个 `CCHostLifecycleBinding`。原 `CCGeneratedPackageBundle` 不新增 UI payload。
+Core 只负责通用 binding 的 attach、初始化失败回滚和 shutdown detach，不理解 UI 工厂。
+`ccrouter_ui -> ccrouter` 单向依赖；业务 `CCRegistry` 权限不变。
+Host 仍只把最终的一个 Assembly 交给 `CCRouterHost.initialize`。
 
 ### 7.3 装配不变量
 
@@ -297,8 +305,9 @@ Session 切换时 B 必须清除旧账号展示状态、取消/失效旧请求�
 Host 应先卸载 UI 子树，再等待 Runtime shutdown。若 UI 尚挂载，binding 的 generation
 必须失效，包装层拒绝后续 lookup/action，并在重新渲染时显示明确的 Runtime 不可用状态。
 shutdown 不能直接调用 B 的 State.dispose；资源释放最终由实际 unmount 完成。
-重新初始化只通过 Host binding 的显式 generation 更新进入新 Runtime，旧 generation 的
-回调继续无效，不能自动重放旧 Action 或复活已关闭的 Service。
+重新初始化后 Host 必须显式重挂 UI 子树（例如更新根 Key），旧 State 报
+`runtimeGenerationMismatch`，不能静默迁入新 Runtime。旧 generation 的回调继续无效，
+不能自动重放旧 Action 或复活已关闭的 Service。
 
 ### 8.5 Scope 与继承环境
 
@@ -313,7 +322,7 @@ Fragment 不建立额外 Scope。A 自己在确切 Route Context 内使用本地
 B 的业务加载错误由 B 展示 retry/empty/error UI；A 决定是否隐藏整个区域。
 业务 fallback 不能掩盖 required 契约缺失。
 
-| 错误类别 | 草案诊断 | 发现时机 |
+| 错误类别 | 诊断语义 | 发现时机 |
 | --- | --- | --- |
 | 缺失或重复实现 | `missingImplementation` / `duplicateImplementation` | Host 聚合与初始化 |
 | Owner/消费依赖错误 | `ownerMismatch` / `dependencyMissing` | 生成、Workspace 校验与初始化 |
@@ -321,7 +330,8 @@ B 的业务加载错误由 B 展示 retry/empty/error UI；A 决定是否隐藏�
 | 生成物过期或 Renderer 签名非法 | `staleGeneratedOutput` / `rendererSignatureMismatch` | 生成与检查 |
 | 未绑定、已关闭或旧实例调用 | `runtimeUnavailable` / `runtimeGenerationMismatch` | mount、更新与 Action 分发 |
 
-错误码属于独立 UI 诊断 family，命名待 P0 冻结。Renderer 同步 factory 抛错沿用 Flutter
+错误码属于独立 UI 诊断 family；Host 可读至多 128 条生命周期与 ignored Action 摘要，
+没有逐帧日志或业务 payload。Renderer 同步 factory 抛错沿用 Flutter
 build 错误报告；其后代的异步/布局/事件错误仍由各自错误路径处理。
 不承诺一个通用 ErrorBoundary 可以捕获整棵 Flutter 子树的所有错误。
 
@@ -356,7 +366,7 @@ UI shape fingerprint 覆盖 identity、Props 字段/类型/必填与默认语义
 新增默认字段对普通调用可兼容，但生成 SPI、metadata 消费者和 Package 版本必须同步。
 不能声明任意版本的新旧工具可以混用。具体最低版本和迁移说明在实现时形成。
 
-## 11. 实施顺序与验证门禁
+## 11. 实施顺序与验证门禁（原计划，执行结果见验收记录）
 
 ### P0：冻结契约与基线
 

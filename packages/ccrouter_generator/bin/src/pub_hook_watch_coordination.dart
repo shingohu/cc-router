@@ -162,6 +162,7 @@ abstract final class CCPackageWatchFingerprint {
         name.endsWith('.command.json') ||
         name.endsWith('.event.json') ||
         name.endsWith('.init_task.json') ||
+        name.endsWith('.ui.json') ||
         name.endsWith('.route.md') ||
         name.endsWith('.component.json') ||
         name.endsWith('.component.md');

@@ -7,6 +7,7 @@ import 'package:flutter/widgets.dart';
 import 'app.dart';
 import 'generated_package_bundle.dart';
 import 'host_tool_integration.dart';
+import 'host_lifecycle_binding.dart';
 import 'route_catalog.dart';
 
 part 'navigation.dart';

@@ -19,6 +19,8 @@
 
 ### 已实现
 
+- 可选类型化 UI Fragment：Pure Dart DTO/enum 契约、消费 Client、Renderer 静态装配、
+  Host generation 校验与 Flutter State 生命周期；集合、sealed Action 和动态 Slot 未支持。
 - GoRouter managed/attach Host、Shell、StatefulShell、多 Outlet 和调用级 Context 定位。
 - 类型安全 Route、Service、Command、Event、InitTask Contract 及其生成、聚合、源码索引和
   Workspace 校验。
@@ -71,7 +73,6 @@
 - 受控 Workspace/Feature Scope 和 Action Pipeline。
 - Contract Scaffold/Promotion/Migration、alias migration CLI/Quick Fix。
 - Service Proxy 的通用 generic Contract、Stream、callback、继承和高级 Route Scope 代理。
-- 类型化 UI Fragment Contract、Renderer 与静态装配（已形成 Proposal，尚未实现）。
 - 全局 Widget 自动识别，以及 ThinkingData、OpenTelemetry、HTTP/Crash Analytics Adapter。
 - 正式 Hosted 发布、release candidate 兼容样本和迁移发布流程。
 - 独立的 dev/test/staging/production Provider 选择抽象。
@@ -119,6 +120,7 @@
 ### 能力与生成器
 
 - [类型化 UI Fragment 设计与实施计划](CCRouter-ui-fragment-design.md)
+- [类型化 UI Fragment 实施验收与核心价值回归](CCRouter-ui-fragment-acceptance.md)
 - [Service 生命周期设计](CCRouter-service-lifecycle-design.md)
 - [Service Proxy 生成设计](CCRouter-service-proxy-generation-design.md)
 - [Service 实施计划](CCRouter-service-completion-plan.md)

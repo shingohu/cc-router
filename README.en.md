@@ -32,6 +32,7 @@ This repository **is not yet ready for a formal release**. Blocking items includ
 | `ccrouter_analytics_flutter` | Explicit click, scroll, and exposure collection targets | Optional |
 | `ccrouter_core` | Runtime, Registry, Scope, scheduling, and diagnostic implementations | No |
 | `ccrouter` | Flutter business facade, `CCRouterApp`, and page lifecycles | Yes |
+| `ccrouter_ui` | Optional typed UI Fragments, Renderers, and static Host assembly | Optional |
 | `ccrouter_go_router` | Default GoRouter Backend, Assembler, Observer, and Shell integration | Host only |
 | `ccrouter_generator` | Annotation processing, Host aggregation, validation, lookup, and cleanup CLI | Dev dependency only |
 | `ccrouter_analyzer_plugin` | Live boundary and generated-artifact diagnostics in Analysis Server | Dev dependency only; explicit opt-in |
@@ -55,6 +56,43 @@ Only the application Composition Root may import `ccrouter_go_router` and `packa
 `CCRouterHost.initialize`, `CCRouterHost.shutdown`, and `CCRouterHost.runInitTasks` are available only through `ccrouter_host.dart`; the assembly type `CCHostAssembly` also belongs exclusively to the Host API. The business entry point `CCRouter` does not expose these three methods or retain legacy entry points or compatibility forwarding. Session `openSession/closeSession` and read-only `initTasks` remain business APIs. Multiple navigation Hosts share the default Runtime; closing one navigation Host must not shut down that Runtime.
 
 The optional Analyzer Plugin uses `ccrouter_host_lifecycle_access` to reject component imports/re-exports of lifecycle entry points and checks `CCRouterHost` access through public barrels by framework declaration identity. Host roles are determined from `.metadata`, `ccrouter.yaml`, and direct dependencies. The diagnostic targets component package `lib/` sources, excluding tests, tools, and generated artifacts. It cannot automatically distinguish composition files from pages inside the same Host package; code review remains necessary. Dart export boundaries apply independently of the plugin.
+
+### Cross-component Local UI
+
+For a component-owned order summary or recommendation list, opt in to
+`ccrouter_ui`. The owner declares `@CCUIFragmentContract<Props, Action>` in a
+Pure Dart contracts package and provides `@CCUIFragmentRenderer(Contract)` in
+its implementation package. The consumer declares the required contract,
+version range, and method alias in `CCComponent.uiDependencies`, keeps the
+owner in `dependencies`, and imports only public contracts and its own
+generated `<componentId>.ui.api.g.dart`, never the owner's Widget or Renderer.
+
+The consuming Host, consumer component, and Renderer package directly depend
+on `ccrouter_ui`. The existing `generate <host>` command validates UI metadata
+and wraps the Host Assembly; startup still passes one
+`ccrouterGeneratedHostAssembly`. A legacy Host with Renderers but no declared
+UI consumer does not enable UI assembly or need a new direct dependency.
+Components without UI declarations require no migration or new Flutter import.
+The original five Contract kinds and Service proxy restrictions retain their
+semantics. UI metadata uses an opt-in schema; adopters must use the matching
+Generator, Contracts, CCRouter, and UI packages together.
+
+Version 1 supports final, const DTO Props without inheritance (scalars, plain
+enums, and nested DTOs) and plain enum Actions. Collections, sealed Actions,
+function Props, dynamic Slots, and Renderer replacement are unsupported.
+Enums cannot declare custom members, constructors, mixins, or interfaces.
+DTOs use `this.field` parameters or constant field declarations; both default
+forms enter the fingerprint. Initializer-list assignments and redirecting
+constructors are unsupported. Typed `onAction` callbacks do not relax Service
+restrictions on Widget, BuildContext, callbacks, or Streams. Flutter Key/State
+owns instance identity, updates, and disposal; `active` is Host permission,
+not automatic exposure detection. Runtime shutdown invalidates old Actions;
+after reinitialization the Host must explicitly remount the UI subtree.
+
+Use an ordinary Flutter package for presentation-only reuse and Route for a
+complete routed page. See the [UI Fragment design](docs/CCRouter-ui-fragment-design.md).
+The Demo's Showcase entry demonstrates multiple instances, Tab retention,
+Props updates, account-key recreation, and business errors.
 
 ### IDE / Analysis Server Diagnostics
 

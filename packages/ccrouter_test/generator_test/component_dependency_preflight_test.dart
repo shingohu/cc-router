@@ -14,6 +14,41 @@ void main() {
   serializeRealWorkspaceTests();
 
   group('component dependency preflight', () {
+    for (final uiLibrary in [
+      'package:ccrouter_ui/ccrouter_ui.dart',
+      'package:ccrouter_contracts/ccrouter_ui_contracts.dart',
+    ]) {
+      test('framework UI barrel preserves exact owners: $uiLibrary', () {
+        final issues = CCComponentDependencyPreflight.inspect([
+          _source(
+            package: 'contracts',
+            file: 'api.dart',
+            contents:
+                '''
+import '$uiLibrary';
+const ownerId = CCComponentId('owner');
+@CCServiceContract(componentId: ownerId, id: 'owner.service')
+abstract interface class SharedService {}
+''',
+          ),
+          _source(
+            package: 'consumer',
+            file: 'component.dart',
+            writable: true,
+            contents:
+                '''
+import '$uiLibrary';
+import 'package:contracts/api.dart';
+const component = CCComponent(id: CCComponentId('consumer'),
+  dependencies: [], serviceDependencies: [CCServiceDependency<SharedService>()]);
+''',
+          ),
+        ]);
+        expect(issues, hasLength(1));
+        expect(issues.single.ownerComponentId, 'owner');
+      });
+    }
+
     test('nested lib directories never alias another Library', () {
       for (final nestedPath in [
         'package:contracts/lib/src/lib/api.dart',
@@ -480,7 +515,9 @@ CCComponentDependencyPreflightSource _source({
 Directory _workspaceRoot() {
   var current = Directory.current.absolute;
   while (true) {
-    if (Directory(path.join(current.path, '.git')).existsSync()) return current;
+    if (FileSystemEntity.typeSync(path.join(current.path, '.git')) !=
+        FileSystemEntityType.notFound)
+      return current;
     final parent = current.parent;
     if (parent.path == current.path) {
       throw StateError('CCRouter workspace root was not found.');
