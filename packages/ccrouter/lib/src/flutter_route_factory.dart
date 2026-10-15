@@ -75,7 +75,10 @@ abstract final class CCFlutterRouteFactory {
     ),
   };
 
-  /// Chooses native Material/Cupertino behavior or a custom Page transition.
+  /// 根据宿主选择 Material/Cupertino 路由，或使用显式页面转场。
+  ///
+  /// MaterialApp 自动提供 CupertinoTheme，不能以该 Theme 判断宿主类型；
+  /// Material 路由自身会按主题平台适配 iOS 返回手势和 Android 系统返回。
   static Route<T> _pageRoute<T>(
     BuildContext context,
     Widget child,
@@ -85,13 +88,7 @@ abstract final class CCFlutterRouteFactory {
     final useCupertino = switch (presentation.routeType) {
       CCPageRouteType.cupertino => true,
       CCPageRouteType.material => false,
-      CCPageRouteType.platformDefault =>
-        context.findAncestorWidgetOfExactType<CupertinoApp>() != null ||
-            context
-                    .dependOnInheritedWidgetOfExactType<
-                      InheritedCupertinoTheme
-                    >() !=
-                null,
+      CCPageRouteType.platformDefault => _usesCupertinoRouteFamily(context),
     };
     if (presentation.transition == CCPageTransitionType.platformDefault &&
         presentation.opaque) {
@@ -169,9 +166,7 @@ abstract final class CCFlutterRouteFactory {
     final useCupertino = switch (presentation.routeType) {
       CCDialogRouteType.cupertino => true,
       CCDialogRouteType.material => false,
-      CCDialogRouteType.platformDefault =>
-        context.dependOnInheritedWidgetOfExactType<InheritedCupertinoTheme>() !=
-            null,
+      CCDialogRouteType.platformDefault => _usesCupertinoRouteFamily(context),
     };
     final dismissible = presentation.barrierDismissible ?? !useCupertino;
     return useCupertino
@@ -188,6 +183,31 @@ abstract final class CCFlutterRouteFactory {
             useSafeArea: presentation.useSafeArea,
             settings: settings,
           );
+  }
+
+  /// Resolves the nearest known App family before consulting custom-host theme.
+  ///
+  /// MaterialApp installs an inherited Cupertino theme for widget compatibility,
+  /// so a known Material host must win before that theme is considered. When no
+  /// known App exists, an explicit inherited Cupertino theme preserves the
+  /// platform policy of custom Hosts built directly from WidgetsApp or Navigator.
+  static bool _usesCupertinoRouteFamily(BuildContext context) {
+    bool? useCupertino;
+    context.visitAncestorElements((element) {
+      final widget = element.widget;
+      if (widget is MaterialApp) {
+        useCupertino = false;
+        return false;
+      }
+      if (widget is CupertinoApp) {
+        useCupertino = true;
+        return false;
+      }
+      return true;
+    });
+    return useCupertino ??
+        context.dependOnInheritedWidgetOfExactType<InheritedCupertinoTheme>() !=
+            null;
   }
 }
 

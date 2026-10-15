@@ -713,6 +713,14 @@ generated Owner SPI，不从业务 barrel 导出。authored Service、Command、
 
 ## 页面展示与动画
 
+默认页面根据宿主选择路由：MaterialApp 使用 MaterialPageRoute，由主题适配 Android 系统返回、
+iOS 滑动返回和其它平台转场；CupertinoApp 使用 CupertinoPageRoute。MaterialApp 自动提供的
+CupertinoTheme 不代表 Cupertino 宿主，不应导致 Android 页面额外挂载 iOS 边缘返回手势。
+默认 Dialog 使用相同的宿主判定及对应 barrier 默认值。没有 MaterialApp/CupertinoApp 祖先的
+自定义 Host 可通过显式 CupertinoTheme 保留 Cupertino 默认策略。显式
+`CCPageRouteType.material` / `cupertino` 和 `CCDialogRouteType.material` / `cupertino` 仍优先于
+宿主默认值。
+
 `CCRoute.presentation` 是后端中立描述。当前支持：
 
 - 平台默认 PageRoute

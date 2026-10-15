@@ -255,6 +255,13 @@ Configure exact Host allowlist entries and explicitly enable external ingress on
 
 ## Component-Internal Route
 
+默认页面根据应用宿主选择 MaterialPageRoute / CupertinoPageRoute；MaterialApp 的 Material
+路由会按主题适配 iOS 滑动返回和 Android 系统返回。MaterialApp 也提供 CupertinoTheme，不能
+据此强制使用 Cupertino 路由。仅在产品明确需要时指定 `CCPageRouteType.cupertino`；不要为了
+Android 返回问题逐页加防抖或拦截系统返回。默认 Dialog 复用同一宿主判定并保留各自的 barrier
+默认值。没有 MaterialApp/CupertinoApp 祖先的自定义 Host 可用显式 CupertinoTheme 选择
+Cupertino 默认策略；已知 App 宿主始终优先于 Theme fallback。
+
 <!-- verified-example: route-page -->
 ```dart
 @CCRoute<void>(

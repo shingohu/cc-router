@@ -10,6 +10,33 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  testWidgets('Material Android 页面不额外响应 Cupertino 边缘返回手势', (tester) async {
+    final navigatorKey = GlobalKey<NavigatorState>();
+    await tester.pumpWidget(
+      MaterialApp(
+        navigatorKey: navigatorKey,
+        theme: ThemeData(platform: TargetPlatform.android),
+        home: const Text('root'),
+      ),
+    );
+    final route = CCFlutterRouteFactory.createRoute<void>(
+      context: navigatorKey.currentContext!,
+      child: const Text('detail'),
+      presentation: const CCPagePresentation(),
+    );
+    expect(route, isA<MaterialPageRoute<void>>());
+    navigatorKey.currentState!.push<void>(route);
+    await tester.pumpAndSettle();
+
+    await tester.dragFrom(const Offset(1, 300), const Offset(600, 0));
+    await tester.pumpAndSettle();
+    expect(find.text('detail'), findsOneWidget);
+
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.text('root'), findsOneWidget);
+  });
+
   testWidgets('creates neutral page types without GoRouter', (tester) async {
     final navigatorKey = GlobalKey<NavigatorState>();
     await tester.pumpWidget(
@@ -81,14 +108,65 @@ void main() {
       settings: const RouteSettings(name: '/typed-result'),
     );
 
-    expect(route, isA<PageRoute<void>>());
-    final pageRoute = route as PageRoute<void>;
+    expect(route, isA<MaterialPageRoute<void>>());
+    final pageRoute = route as MaterialPageRoute<void>;
     navigatorKey.currentState!.push<void>(route);
     await tester.pumpAndSettle();
 
     expect(pageRoute.popGestureEnabled, isTrue);
-    navigatorKey.currentState!.pop<void>();
+    await tester.dragFrom(const Offset(1, 300), const Offset(600, 0));
     await tester.pumpAndSettle();
+    expect(find.text('typed result'), findsNothing);
+  });
+
+  testWidgets('custom Cupertino hosts retain the Cupertino route family', (
+    tester,
+  ) async {
+    final navigatorKey = GlobalKey<NavigatorState>();
+    await tester.pumpWidget(
+      CupertinoTheme(
+        data: const CupertinoThemeData(),
+        child: Directionality(
+          textDirection: TextDirection.ltr,
+          child: Navigator(
+            key: navigatorKey,
+            onGenerateRoute: (_) => PageRouteBuilder<void>(
+              pageBuilder: (_, _, _) => const Text('root'),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final route = CCFlutterRouteFactory.createRoute<void>(
+      context: navigatorKey.currentContext!,
+      child: const Text('custom cupertino'),
+      presentation: const CCPagePresentation(),
+    );
+
+    expect(route, isA<CupertinoPageRoute<void>>());
+  });
+
+  testWidgets('the nearest known App determines the route family', (
+    tester,
+  ) async {
+    final navigatorKey = GlobalKey<NavigatorState>();
+    await tester.pumpWidget(
+      CupertinoApp(
+        home: MaterialApp(
+          navigatorKey: navigatorKey,
+          home: const SizedBox.shrink(),
+        ),
+      ),
+    );
+
+    final route = CCFlutterRouteFactory.createRoute<void>(
+      context: navigatorKey.currentContext!,
+      child: const Text('nested material'),
+      presentation: const CCPagePresentation(),
+    );
+
+    expect(route, isA<MaterialPageRoute<void>>());
   });
 
   testWidgets('creates configured custom page transitions', (tester) async {
@@ -175,6 +253,43 @@ void main() {
 
     expect(material, isA<DialogRoute<void>>());
     expect((material as DialogRoute<void>).barrierDismissible, isFalse);
+    expect(cupertino, isA<CupertinoDialogRoute<void>>());
+    expect(
+      (cupertino as CupertinoDialogRoute<void>).barrierDismissible,
+      isFalse,
+    );
+  });
+
+  testWidgets('default dialogs follow the host route family', (tester) async {
+    final materialNavigatorKey = GlobalKey<NavigatorState>();
+    await tester.pumpWidget(
+      MaterialApp(
+        navigatorKey: materialNavigatorKey,
+        home: const SizedBox.shrink(),
+      ),
+    );
+
+    final material = CCFlutterRouteFactory.createRoute<void>(
+      context: materialNavigatorKey.currentContext!,
+      child: const Text('material default dialog'),
+      presentation: const CCDialogPresentation(),
+    );
+    expect(material, isA<DialogRoute<void>>());
+    expect((material as DialogRoute<void>).barrierDismissible, isTrue);
+
+    final cupertinoNavigatorKey = GlobalKey<NavigatorState>();
+    await tester.pumpWidget(
+      CupertinoApp(
+        navigatorKey: cupertinoNavigatorKey,
+        home: const SizedBox.shrink(),
+      ),
+    );
+
+    final cupertino = CCFlutterRouteFactory.createRoute<void>(
+      context: cupertinoNavigatorKey.currentContext!,
+      child: const Text('cupertino default dialog'),
+      presentation: const CCDialogPresentation(),
+    );
     expect(cupertino, isA<CupertinoDialogRoute<void>>());
     expect(
       (cupertino as CupertinoDialogRoute<void>).barrierDismissible,

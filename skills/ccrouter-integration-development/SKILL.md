@@ -122,6 +122,7 @@ Read [implementation-patterns.md](references/implementation-patterns.md) when ad
 - Do not edit anything under `lib/src/ccrouter_generated/`.
 - Do not add a generated `part` to a page, Service, component definition, or contribution. Generated libraries are standalone files assembled by the generator.
 - Keep an internal route on `@CCRoute`. Promote it to `@CCRouteContract` only when a real external component consumer appears.
+- 默认 PageRoute 和 DialogRoute 按最近宿主选择：MaterialApp 使用随主题平台适配的 Material 路由，CupertinoApp 使用 Cupertino 路由；显式 routeType 优先。MaterialApp 也提供 CupertinoTheme，不能以该 Theme 判断宿主或在 Android 额外启用 iOS 边缘返回手势；没有已知 App 祖先的自定义 Host 才使用显式 CupertinoTheme 作为 Cupertino 策略 fallback。
 - Use `@CCExtraParam` only for typed, process-local, short-lived objects. Generated page bindings preserve the declared static type and reject a mismatched runtime object with `CCRouteParameterError`; Extra is not a Deep Link, restoration, persistence, or cross-process channel.
 - Put stable cross-component contracts in a Pure Dart contracts package. Consumers depend on the contracts package, not the implementation package.
 - Re-export generated Route contracts from the Package's stable
