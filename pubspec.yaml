@@ -13,6 +13,7 @@ workspace:
   - packages/ccrouter_analytics_flutter
   - packages/ccrouter_core
   - packages/ccrouter
+  - packages/ccrouter_ui
   - packages/ccrouter_go_router
   - packages/ccrouter_generator
   - packages/ccrouter_devtools

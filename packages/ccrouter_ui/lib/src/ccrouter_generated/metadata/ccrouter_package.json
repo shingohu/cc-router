@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 2,
+  "generatorVersion": "0.1.5",
+  "package": {
+    "name": "ccrouter_ui",
+    "version": "0.1.0"
+  },
+  "contentFingerprint": "1fed5e4d8a2e384fc2c7484c86b2ff09ea61809d26b8bb3e88aa20971a369979",
+  "bundle": null,
+  "dependencies": [],
+  "metadata": [],
+  "capabilityCatalog": {
+    "schemaVersion": 1,
+    "records": []
+  }
+}

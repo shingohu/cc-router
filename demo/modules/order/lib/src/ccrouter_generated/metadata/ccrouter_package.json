@@ -1,23 +1,88 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "generatorVersion": "0.1.5",
   "package": {
     "name": "demo_order",
     "version": "0.1.0"
   },
-  "contentFingerprint": "d7a377b81240c517271929ed6981d6c9b69bd9c14e7d8023ff8e1353d49c30d4",
+  "contentFingerprint": "c55b2227909aa57b7e523ff746eb1fd7281b8bdf0ac33b6a601d6b4ef3e8ebbe",
   "bundle": {
     "library": "lib/src/ccrouter_generated/host/demo_order_ccrouter.g.dart",
     "symbol": "ccrouterGeneratedPackageBundle"
   },
   "dependencies": [
     {
+      "name": "ccrouter_ui",
+      "version": "0.1.0",
+      "contentFingerprint": "1fed5e4d8a2e384fc2c7484c86b2ff09ea61809d26b8bb3e88aa20971a369979"
+    },
+    {
       "name": "demo_order_contracts",
       "version": "0.1.0",
-      "contentFingerprint": "75c836199470e34b4648bfc11f7f1cbbade6ac4950afc80fb342dee969b9c3bd"
+      "contentFingerprint": "9a30300b0a257958d7ed621f834ad4167b9cd05c3c2b3c94e645445e07b696a4"
     }
   ],
   "metadata": [
+    {
+      "schemaVersion": 5,
+      "componentDeclarations": [],
+      "package": "demo_order",
+      "source": "lib/src/order_fragment_renderers.dart",
+      "uiSchemaVersion": 1,
+      "uiLibrary": "lib/src/ccrouter_generated/ui/order_fragment_renderers.ui.g.dart",
+      "uiContracts": [],
+      "uiRenderers": [
+        {
+          "componentId": "demo_order_component",
+          "id": "order.summary",
+          "version": "1.0.0",
+          "shapeFingerprint": "61967f68b1e2278a9d01482a9c28957ef5b734e03b4b7b1770e9a1ee7e1fdbbb",
+          "publicTypes": [
+            {
+              "package": "demo_order_contracts",
+              "source": "lib/src/order_fragments.dart",
+              "symbol": "OrderSummaryAction"
+            },
+            {
+              "package": "demo_order_contracts",
+              "source": "lib/src/order_fragments.dart",
+              "symbol": "OrderSummaryFragmentContract"
+            },
+            {
+              "package": "demo_order_contracts",
+              "source": "lib/src/order_fragments.dart",
+              "symbol": "OrderSummaryProps"
+            }
+          ],
+          "function": "renderOrderSummary"
+        },
+        {
+          "componentId": "demo_order_component",
+          "id": "order.recommendations",
+          "version": "1.0.0",
+          "shapeFingerprint": "981dd30de35264dbec8ff547af3cd8af2c3f2eb680958b7c0b7626a395e9dc30",
+          "publicTypes": [
+            {
+              "package": "demo_order_contracts",
+              "source": "lib/src/order_fragments.dart",
+              "symbol": "OrderRecommendationsAction"
+            },
+            {
+              "package": "demo_order_contracts",
+              "source": "lib/src/order_fragments.dart",
+              "symbol": "OrderRecommendationsFragmentContract"
+            },
+            {
+              "package": "demo_order_contracts",
+              "source": "lib/src/order_fragments.dart",
+              "symbol": "OrderRecommendationsProps"
+            }
+          ],
+          "function": "renderOrderRecommendations"
+        }
+      ],
+      "uiRequirements": []
+    },
     {
       "schemaVersion": 4,
       "package": "demo_order",

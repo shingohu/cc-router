@@ -2,6 +2,7 @@ import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 import 'package:ccrouter_core/ccrouter_core.dart' show CCComponentManifest;
 
 import 'host_tool_integration.dart';
+import 'host_lifecycle_binding.dart';
 import 'route_catalog.dart';
 
 /// Stable failure categories produced while resolving Host assembly data.
@@ -205,6 +206,31 @@ final class CCGeneratedPackageBundle {
 /// Contract, route, and tooling inputs cannot be mixed across generations. The
 /// assembly owns none of the referenced runtime objects.
 final class CCHostAssembly {
+  /// Adds prevalidated optional capability bindings without splitting inputs.
+  ///
+  /// Optional adapters use this Host SPI to wrap an existing atomic assembly.
+  /// Business components must not create bindings or control their lifecycle.
+  factory CCHostAssembly.withLifecycleBindings(
+    CCHostAssembly assembly,
+    Iterable<CCHostLifecycleBinding> bindings,
+  ) {
+    final values = [...assembly.lifecycleBindings, ...bindings];
+    final ids = <String>{};
+    for (final binding in values) {
+      if (binding.id.isEmpty || !ids.add(binding.id)) {
+        throw StateError('Duplicate or empty Host lifecycle binding identity.');
+      }
+    }
+    return CCHostAssembly._(
+      packages: assembly.packages,
+      componentManifests: assembly.componentManifests,
+      routeCatalog: assembly.routeCatalog,
+      contractBundle: assembly.contractBundle,
+      hostToolIntegrations: assembly.hostToolIntegrations,
+      lifecycleBindings: List.unmodifiable(values),
+    );
+  }
+
   /// Resolves Package bundles into one deterministic Host assembly.
   ///
   /// Dependencies precede dependants, diamond dependencies are deduplicated,
@@ -261,6 +287,7 @@ final class CCHostAssembly {
     required this.routeCatalog,
     required this.contractBundle,
     this.hostToolIntegrations = const [],
+    this.lifecycleBindings = const [],
   });
 
   /// Resolved Packages in dependency-before-dependant deterministic order.
@@ -281,6 +308,9 @@ final class CCHostAssembly {
   /// into a supported tool Package. Business components must not invoke these
   /// integrations or treat them as application capabilities.
   final List<CCHostToolIntegration> hostToolIntegrations;
+
+  /// Optional capability bindings; empty for Hosts that do not opt in.
+  final List<CCHostLifecycleBinding> lifecycleBindings;
 }
 
 /// Copies and validates Host tooling before the assembly becomes observable.

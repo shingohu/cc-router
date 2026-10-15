@@ -386,6 +386,15 @@ Source locations use portable Package URIs. Line and column are 1-based when the
   - `routeLibrary`: `package:demo_navigation_lab/src/ccrouter_generated/route/policy_pages.route.g.dart` (`_DemoTimeoutPageRoute`)
   - `routeBinding`: `package:demo_navigation_lab/src/ccrouter_generated/binding/policy_pages.route_binding.g.dart` (`ccrouterBuildDemoTimeoutPageRoute`)
 
+### Route `demo_navigation_lab.ui_fragments`
+
+- Declaring package: `demo_navigation_lab`
+- Contract/declaration: `package:demo_navigation_lab/src/ui_fragment_page.dart:12:13` (`UIFragmentLabPage`)
+- Implementation: `package:demo_navigation_lab/src/ui_fragment_page.dart:12:13` (`UIFragmentLabPage`)
+- Generated artifacts:
+  - `routeLibrary`: `package:demo_navigation_lab/src/ccrouter_generated/route/ui_fragment_page.route.g.dart` (`_UIFragmentLabPageRoute`)
+  - `routeBinding`: `package:demo_navigation_lab/src/ccrouter_generated/binding/ui_fragment_page.route_binding.g.dart` (`ccrouterBuildUIFragmentLabPageRoute`)
+
 ### Route `demo_navigation_lab.workspace.activity`
 
 - Declaring package: `demo_navigation_lab`

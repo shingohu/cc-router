@@ -55,6 +55,8 @@ Classify every new or changed API before exposing it:
 - Business API: application-facing entry points such as `CCRouter`, contracts,
   and immutable diagnostics. Business code imports only
   `package:ccrouter/ccrouter.dart`.
+  The explicit optional UI path may also import `ccrouter_ui.dart` and its own
+  generated UI Client; UI Host/Generated SPI remains outside this surface.
 - Component-author API: manifests, component registrars, the restricted
   `CCRegistry`, and provider declarations needed to register components.
 - Test API: explicit test support. Low-level Runtime construction must not leak

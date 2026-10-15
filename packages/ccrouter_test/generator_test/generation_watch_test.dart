@@ -1655,14 +1655,25 @@ String _flutterExecutable() {
   return paired.existsSync() ? paired.path : name;
 }
 
-Future<ProcessResult> _runHostPostPub(Directory hostRoot) => _run([
-  'pub-hook',
-  'run',
-  '--project-root',
-  hostRoot.path,
-  '--pub-command',
-  'get',
-]);
+Future<ProcessResult> _runHostPostPub(Directory hostRoot) {
+  final flutter = File(_flutterExecutable());
+  return _run(
+    [
+      'pub-hook',
+      'run',
+      '--project-root',
+      hostRoot.path,
+      '--pub-command',
+      'get',
+    ],
+    environment: {
+      // A real Flutter wrapper exports its SDK root. This direct Dart fixture
+      // must provide the same context if a child needs Pub bootstrap.
+      if (path.isAbsolute(flutter.path) && flutter.existsSync())
+        'FLUTTER_ROOT': flutter.parent.parent.path,
+    },
+  );
+}
 
 Future<void> _restoreSourceAndArtifacts(
   File source,

@@ -8,6 +8,11 @@ annotated Provider and its alternative handwritten Provider.
 
 ## Package Roles
 
+For the optional cross-component UI path, follow [ui-fragments.md](ui-fragments.md).
+This path adds an explicit business `ccrouter_ui.dart` import and a separate
+generated UI Client barrel; it does not expose Host/Generated SPI or change
+the ordinary Route, Service, Command, Event and InitTask integration patterns.
+
 ### Host
 
 The Host may import `ccrouter_go_router` and `ccrouter_host.dart`. A new GoRouter

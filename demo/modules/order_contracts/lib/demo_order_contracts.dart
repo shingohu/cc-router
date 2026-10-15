@@ -1,6 +1,15 @@
 /// Business-facing Pure Dart contracts published by the order component.
 library;
 
+export 'src/order_fragments.dart'
+    show
+        OrderSummaryProps,
+        OrderSummaryAction,
+        OrderSummaryFragmentContract,
+        OrderRecommendationsProps,
+        OrderRecommendationsAction,
+        OrderRecommendationsFragmentContract;
+
 export 'src/ccrouter_generated/demo_order_contracts.contracts.api.g.dart'
     show OrderDetailRoute;
 export 'src/order_summary_service.dart'

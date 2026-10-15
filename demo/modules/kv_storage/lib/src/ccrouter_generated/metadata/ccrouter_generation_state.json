@@ -5,10 +5,10 @@
     "name": "demo_kv_storage",
     "version": "0.1.0"
   },
-  "toolFingerprint": "ac07044660fee32d19c42c388573e7525efdcdf3de72867505a6fe882585e29e",
+  "toolFingerprint": "5119b93b5d31d93eee6b08b0a719129d6096dd6366e20e845aac3491925cad6d",
   "authoredInputFingerprint": "b98c6fa87015c8591fd87e6d5ac660d82efc770ac2c9cd9d14c87aa5877b94db",
-  "resolutionFingerprint": "7098c0e4b77c2f99c8fad58da5c7cf790e631005694462a24facbafce253ebc3",
+  "resolutionFingerprint": "ddb6a90ed7c4bcf824ae7b1285b17a2ee25ff1119a03d7f4bcfde7affadaad7c",
   "metadataFingerprint": "3cffffa83bd3c2906bdb394973fcb2fea19720cfcfb0a15757ae57daee64822f",
   "managedOutputFingerprint": "26f53e082c1d511875e0205edfd34222c83b6305c42b29b925ca5655154e9215",
-  "contentFingerprint": "879ba0cc5edb758d005ac8f415169cb9deb32e78156ddf18916a17dde9edb09c"
+  "contentFingerprint": "dfc58b10dffddbf9895fab7ae9cf175671dd3bbbd4933093bd09cd545dd0b988"
 }

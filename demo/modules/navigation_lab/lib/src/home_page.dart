@@ -753,6 +753,15 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
     '普通 Page 动画、透明页、Managed Modal，以及不会污染 Managed 栈的 Foreign UI。',
     [
       _ActionTile(
+        icon: Icons.widgets_outlined,
+        title: '类型化 UI Fragment',
+        subtitle: '跨组件摘要、推荐、实例隔离与 Tab 保活',
+        onTap: () => observeDemoOperation(
+          'UI Fragment',
+          CCRouter.navigator.push<void>(DemoNavigationLabRoutes.uiFragments()),
+        ),
+      ),
+      _ActionTile(
         icon: Icons.blur_on,
         title: 'Fade Page',
         subtitle: 'CCPageTransitionType.fade',

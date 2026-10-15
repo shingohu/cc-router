@@ -24,6 +24,8 @@ import '../route/stack_page.route.g.dart'
     as route_src_ccrouter_generated_route_stack_page_route_g_dart;
 import '../route/storage_page.route.g.dart'
     as route_src_ccrouter_generated_route_storage_page_route_g_dart;
+import '../route/ui_fragment_page.route.g.dart'
+    as route_src_ccrouter_generated_route_ui_fragment_page_route_g_dart;
 
 /// Typed navigation entry points for routes internal to `demo_navigation_lab_component`.
 @internal
@@ -131,6 +133,10 @@ abstract final class DemoNavigationLabRoutes {
   /// Creates an Intent for `demo_navigation_lab.timeout`.
   static const timeout =
       route_src_ccrouter_generated_route_policy_pages_route_g_dart.CCGeneratedDemoTimeoutPageRouteFactory();
+
+  /// Creates an Intent for `demo_navigation_lab.ui_fragments`.
+  static const uiFragments =
+      route_src_ccrouter_generated_route_ui_fragment_page_route_g_dart.CCGeneratedUIFragmentLabPageRouteFactory();
 
   /// Creates an Intent for `demo_navigation_lab.workspace.activity`.
   static const workspaceActivity =

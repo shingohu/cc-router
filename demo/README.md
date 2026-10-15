@@ -37,6 +37,13 @@ typed Extra。完整的 macOS 验证矩阵、已修复问题和 Adapter 限制�
 真实窗口 Accessibility Monkey 和小窗口回归方法见
 [macOS Monkey 验证记录](docs/macos_monkey_validation.md)。
 
+首页“展示”→“类型化 UI Fragment”（`/ui-fragments`）使用真实生成 Host：
+`navigation_lab` 只依赖 `order_contracts`，订单组件提供摘要与推荐两个 Renderer。
+可验证两个摘要实例备注独立、切换 Tab 保留备注、更新 Props 保持 State、模拟账号 Key
+重建、推荐加载错误与重试。Fake 请求归 B 的 State 所有，卸载时取消并释放 controller。
+入口和边界见[UI Fragment 接入指导](../skills/ccrouter-integration-development/references/ui-fragments.md)，
+自动化验证见 [UI Fragment Demo 测试](test/ui_fragment_demo_test.dart)。
+
 首页的“组件能力实验室”使用真实 Runtime 展示非路由能力：
 
 - Command：typed result、`void`、timeout、caller cancellation 和 Handler error；

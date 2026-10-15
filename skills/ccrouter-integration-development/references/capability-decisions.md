@@ -6,6 +6,7 @@ Use this guide before selecting an API. Start from the business semantics, not f
 
 | Need | Use | Do not use |
 | --- | --- | --- |
+| Embed another component's local business UI | Optional typed UI Fragment | Widget-returning Service or fake Route |
 | Show a page/modal and optionally return a result | Route | Service or Event as navigation |
 | Repeated methods, state reads, owned resource | Service | Command per getter or global singleton |
 | Typed local data with explicit account/environment/device isolation | Service + namespace value object | Unscoped global Map or EventBus |

@@ -457,6 +457,14 @@ the log and is never mixed into Flutter Tool's machine stream.
 
 ## Generated Output Rules
 
+- Optional typed UI Fragments use `generate` and `portable prepare/publish` too.
+  Builder-owned `ui/*.ui.g.dart` and metadata feed the consumer-owned stable
+  `<componentId>.ui.api.g.dart`; do not copy factories into Core bundles or
+  import another component's generated Client. UI Package indexes use schema 3;
+  non-UI indexes retain schema 2. UI source metadata requires both schema 5 and
+  `uiSchemaVersion: 1`. UI-specific `find --usage`, DevTools Catalog views and
+  Analyzer Plugin diagnostics are not implemented; use generation validation
+  and the [UI integration guide](../ccrouter-integration-development/references/ui-fragments.md).
 - Never edit `lib/src/ccrouter_generated/` by hand.
 - Never add a generated `part` directive to authored source.
 - Do not manually register a generated Route, Service, Command, Event, or

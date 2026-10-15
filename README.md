@@ -29,6 +29,7 @@ README/CHANGELOG、Hosted 分发和干净消费者回归等阻塞项见
 | `ccrouter_analytics_flutter` | 显式点击、滚动和曝光采集 Target | 按需接入 |
 | `ccrouter_core` | Runtime、Registry、Scope、调度和诊断实现 | 否 |
 | `ccrouter` | Flutter 业务门面、`CCRouterApp`、页面生命周期 | 是 |
+| `ccrouter_ui` | 可选的类型化 UI Fragment、Renderer 与静态 Host 装配 | 按需接入 |
 | `ccrouter_go_router` | 默认 GoRouter Backend、Assembler、Observer 与 Shell 接入 | 仅 Host |
 | `ccrouter_generator` | 注解处理、Host 聚合、校验、查找与清理 CLI | 仅 dev dependency |
 | `ccrouter_analyzer_plugin` | Analysis Server 实时边界与生成物诊断 | 仅 dev dependency，需显式启用 |
@@ -59,6 +60,31 @@ import 'package:ccrouter/ccrouter.dart';
 并按框架声明身份检查经公共 barrel 使用的 `CCRouterHost`；Host 角色依据 `.metadata`、
 `ccrouter.yaml` 和直接依赖判定。该诊断针对组件 Package 的 `lib/`，测试／工具及生成物除外；
 同一个 Host Package 内无法自动区分装配文件与页面，仍需代码审查。Dart 导出边界独立于 Plugin 生效。
+
+### 跨组件局部 UI
+
+A 需要 B 的订单摘要或推荐列表时，可显式接入 `ccrouter_ui`：B 在 Pure Dart contracts
+Package 声明 `@CCUIFragmentContract<Props, Action>`，在实现 Package 提供
+`@CCUIFragmentRenderer(Contract)`；A 在 `CCComponent.uiDependencies` 声明 required
+依赖、版本范围和方法 alias，并保持 Owner 在 `dependencies` 中。A 只导入公开契约与自身
+生成的 `<componentId>.ui.api.g.dart`，不导入 B 的 Widget 或 Renderer。
+
+实际消费 UI 的 Host、消费组件和 Renderer Package 直接依赖 `ccrouter_ui` 后，现有 `generate <host>`
+会校验并包装原 Host Assembly，启动仍只传一个 `ccrouterGeneratedHostAssembly`。
+仅安装 Renderer 而无 UI 消费声明的旧 Host 不启用 UI 装配，也无需新增直接依赖。
+旧组件无需迁移；未声明 UI 的组件不新增 Flutter import，原五类 Contract 和 Service
+代理限制保持原语义。UI metadata 使用新的 opt-in schema，启用方必须同时使用本实现的
+Generator、Contracts、CCRouter 和 UI Package，不能混用旧生成工具。
+
+v1 支持 final、const、无继承的 DTO Props（scalar、普通 enum、嵌套 DTO）与普通 enum
+Action，暂不支持集合、sealed Action、函数型 Props、动态 Slot 或 Renderer 热替换。
+UI 层允许类型化 `onAction`，不放宽 Service 对 Widget、BuildContext、callback、Stream
+的限制。实例身份、更新和释放遵循 Flutter Key/State；`active` 是宿主许可，不是自动曝光。
+Runtime 关闭立即使旧 Action 失效；重新初始化后 Host 必须显式重挂 UI 子树。
+
+普通无业务 UI 仍用公共 Flutter Package；完整路由页面使用 Route。详见
+[UI Fragment 设计与实施](docs/CCRouter-ui-fragment-design.md)。Demo 首页“展示”中的
+“类型化 UI Fragment”演示多实例、Tab 保活、Props 更新、模拟账号重建和业务错误。
 
 ### IDE / Analysis Server 诊断
 

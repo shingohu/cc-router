@@ -12,6 +12,15 @@ import 'src/command_generator.dart';
 import 'src/event_generator.dart';
 import 'src/init_task_generator.dart';
 import 'src/service_generator.dart';
+import 'src/ui_fragment_generator.dart';
+
+/// Generates opt-in typed UI Clients and Renderer contributions.
+Builder ccUIFragmentBuilder(BuilderOptions options) =>
+    createUIFragmentBuilder(metadata: false);
+
+/// Generates cache-only UI schemas and static assembly requirements.
+Builder ccUIFragmentMetadataBuilder(BuilderOptions options) =>
+    createUIFragmentBuilder(metadata: true);
 
 /// Creates one standalone generated route library without backend coupling.
 ///

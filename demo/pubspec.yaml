@@ -12,6 +12,7 @@ dependencies:
     sdk: flutter
   app_links: ^7.0.0
   ccrouter: ^0.1.0
+  ccrouter_ui: ^0.1.0
   ccrouter_devtools: ^0.1.0
   ccrouter_go_router: ^0.1.0
   demo_order: ^0.1.0

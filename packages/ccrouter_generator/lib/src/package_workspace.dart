@@ -378,11 +378,12 @@ final class CCPackageIndex {
     final object = _decodeObject(await file.readAsString(), file.path);
     final schemaVersion = object['schemaVersion'];
     if (schemaVersion != 1 &&
+        schemaVersion != 3 &&
         schemaVersion != ccrouterPackageIndexSchemaVersion) {
       throw CCPackageWorkspaceException(
         'Unsupported CCRouter Package index schema in ${file.path}: '
         '${object['schemaVersion']}. Expected '
-        '1 or $ccrouterPackageIndexSchemaVersion.',
+        '1, $ccrouterPackageIndexSchemaVersion or 3 (UI opt-in).',
       );
     }
     final packageObject = object['package'];
@@ -411,7 +412,8 @@ final class CCPackageIndex {
     final metadata = _objectList(object['metadata']);
     final derivedCatalog = CCCapabilitySourceCatalog.fromMetadata(metadata);
     CCCapabilitySourceCatalog? publishedCatalog;
-    if (schemaVersion == ccrouterPackageIndexSchemaVersion) {
+    if (schemaVersion == ccrouterPackageIndexSchemaVersion ||
+        schemaVersion == 3) {
       final catalogObject = object['capabilityCatalog'];
       if (catalogObject is! Map) {
         throw CCPackageWorkspaceException(
@@ -464,7 +466,8 @@ final class CCPackageIndex {
       dependencies: index.dependencies,
       metadata: index.metadata,
       includeCapabilityCatalog:
-          schemaVersion == ccrouterPackageIndexSchemaVersion,
+          schemaVersion == ccrouterPackageIndexSchemaVersion ||
+          schemaVersion == 3,
     );
     if (index.contentFingerprint != expectedFingerprint) {
       throw CCPackageWorkspaceException(
@@ -488,7 +491,7 @@ final class CCPackageIndex {
   /// Encodes this index with stable key ordering and indentation.
   String toJson() =>
       '${const JsonEncoder.withIndent('  ').convert(<String, Object?>{
-        'schemaVersion': ccrouterPackageIndexSchemaVersion,
+        'schemaVersion': metadata.any((document) => document.containsKey('uiSchemaVersion')) ? 3 : ccrouterPackageIndexSchemaVersion,
         'generatorVersion': ccrouterPackageIndexGeneratorVersion,
         'package': <String, Object?>{'name': packageName, 'version': packageVersion},
         'contentFingerprint': contentFingerprint,
@@ -632,7 +635,8 @@ bool _isCurrentPackageMetadataFile(File file, Directory generatedDirectory) {
       relative.endsWith('.service.json') ||
       relative.endsWith('.command.json') ||
       relative.endsWith('.event.json') ||
-      relative.endsWith('.init_task.json');
+      relative.endsWith('.init_task.json') ||
+      relative.endsWith('.ui.json');
 }
 
 /// Computes the canonical SHA-256 digest stored in a Package index and Bundle.

@@ -14,6 +14,7 @@ dependencies:
   ccrouter_analytics: ^0.1.0
   ccrouter_analytics_flutter: ^0.1.0
   ccrouter: ^0.1.0
+  ccrouter_ui: ^0.1.0
   ccrouter_contracts: ^0.1.0
   ccrouter_core: ^0.1.0
   ccrouter_go_router: ^0.1.0
