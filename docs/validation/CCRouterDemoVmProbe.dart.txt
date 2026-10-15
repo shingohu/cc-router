@@ -1,0 +1,26 @@
+import 'dart:convert';
+import 'package:vm_service/vm_service.dart';
+import 'package:vm_service/vm_service_io.dart';
+
+Future<void> main(List<String> arguments) async {
+  final service = await vmServiceConnectUri(arguments.single);
+  try {
+    final vm = await service.getVM();
+    final isolateId = vm.isolates!.firstWhere((item) => item.name == 'main').id!;
+    final isolate = await service.getIsolate(isolateId);
+    final reference = isolate.libraries!.firstWhere((item) => item.uri == 'package:demo_navigation_lab/src/lab_configuration.dart');
+    final library = await service.getObject(isolateId, reference.id!) as Library;
+    final fieldRef = library.variables!.firstWhere((item) => item.name == 'demoNavigationLabStore');
+    final field = await service.getObject(isolateId, fieldRef.id!) as Field;
+    final storeRef = field.staticValue as InstanceRef;
+    final store = await service.getObject(isolateId, storeRef.id!) as Instance;
+    final eventsRef = store.fields!.firstWhere((item) => item.decl!.name == '_events').value as InstanceRef;
+    final events = await service.getObject(isolateId, eventsRef.id!) as Instance;
+    print(const JsonEncoder.withIndent('  ').convert({
+      'fields': {for(final field in store.fields!) field.decl!.name: (field.value is InstanceRef) ? (field.value as InstanceRef).valueAsString : null},
+      'events': events.elements!.cast<InstanceRef>().map((item) => item.valueAsString).toList(),
+    }));
+  } finally {
+    await service.dispose();
+  }
+}

@@ -199,7 +199,10 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
     }
   }
 
-  /// Applies only a committed ownership-aware predictive Pop.
+  /// Applies a committed ownership-aware predictive Pop at most once.
+  ///
+  /// The ordinary Observer or result Future may already have closed the same
+  /// Entry. A later phase report must not mark that valid removal desynchronized.
   void _recordPredictiveBackEvent(CCPredictiveBackEvent event) {
     if (event.phase != CCPredictiveBackPhase.committed) return;
     final outcome = event.outcome?.copyWith(
@@ -213,7 +216,8 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
     final backendEntry = _backendEntries[outcome.removedBackendEntryId];
     final routeEntryId = backendEntry?.routeEntryId;
     if (backendEntry?.owner != CCBackendEntryOwner.managed ||
-        routeEntryId == null) {
+        routeEntryId == null ||
+        !_routeEntries.any((entry) => entry.id == routeEntryId)) {
       return;
     }
     _applyManagedPopOutcome(outcome);

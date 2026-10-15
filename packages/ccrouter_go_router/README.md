@@ -17,6 +17,26 @@ Catalog and their declared Host ID. The aggregate does not choose a layout or
 provide native platform-window lifecycle integration. Tabs, Shell branches,
 and master-detail panes normally remain Outlets of one Host.
 
+`enablePredictiveBack` defaults to false and preserves existing Route types and
+Flutter back handling. When enabled, managed generated default Android Material
+pages connect automatically to the Adapter-owned phase bridge; Flutter alone
+executes Pop. Attached/custom/Shell Page builders explicitly pass
+`adapter.predictiveBackBridge` as `predictiveBackHandler`. Guard, modal, local
+history and custom-transition fallback remain unchanged. Do not manually forward
+phases for automatically wired Routes. A closed local gate at commit or a
+navigation change cancels the original preview without a second Pop. Ancestor
+Navigator popups protect covered nested pages, including transient coverage
+during a gesture. After attached Adapter disposal, old gestures remain invalid
+and new gestures on the surviving Router resume Flutter handling.
+Declined starts are exposed through the bounded, sanitized
+`adapter.predictiveBackFallbacks` Host diagnostic. It shares
+`lifecycleEventCapacity`; the disabled path allocates no fallback history.
+Adapter registration is rolled back atomically if construction fails, and a
+throwing custom handler lifetime probe relinquishes the Route to Flutter.
+
+See the [support and verification guide](../../docs/CCRouter-predictive-back.md)
+for Theme requirements, lifecycle semantics and platform limitations.
+
 See the
 [workspace README](https://github.com/shingohu/cc-router/blob/main/README.md),
 [route design](https://github.com/shingohu/cc-router/blob/main/docs/CCRouter-route-design.md),

@@ -1,5 +1,9 @@
 # CCRouter 路由专项问题分析
 
+> 2026-10-15 更新：本文保留当时分析；默认 Android Material 页现已支持可选预测返回
+> 自动桥，Guard 仍保留非交互 fallback。当前接线、边界和验证以
+> [预测返回接入说明](CCRouter-predictive-back.md) 为准。
+
 ## 1. 范围与结论
 
 - 分析日期：2026-09-20

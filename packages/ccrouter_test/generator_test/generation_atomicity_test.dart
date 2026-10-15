@@ -108,7 +108,10 @@ Map<String, List<int>> _generatedSourceSnapshot(Directory root) {
 Directory _workspaceRoot() {
   var current = Directory.current.absolute;
   while (true) {
-    if (Directory(path.join(current.path, '.git')).existsSync()) return current;
+    final gitPath = path.join(current.path, '.git');
+    if (Directory(gitPath).existsSync() || File(gitPath).existsSync()) {
+      return current;
+    }
     final parent = current.parent;
     if (parent.path == current.path) {
       throw StateError('CCRouter workspace root was not found.');

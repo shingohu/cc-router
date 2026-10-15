@@ -287,6 +287,45 @@ void main() {
     adapter.dispose();
   });
 
+  test('failed predictive adapter construction rolls back registrations', () {
+    final host = CCNavigationHost(id: 'failed.predictive');
+    final observer = CCGoRouterNavigationObserver(
+      hostId: host.id,
+      outlet: 'root',
+    );
+    final router = GoRouter(
+      navigatorKey: host.navigatorKey,
+      observers: [observer],
+      routes: [GoRoute(path: '/', builder: (_, _) => const SizedBox())],
+    );
+    router.dispose();
+
+    expect(
+      () => CCGoRouterAdapter(
+        router: router,
+        host: host,
+        observers: [observer],
+        enablePredictiveBack: true,
+      ),
+      throwsA(anything),
+    );
+
+    final replacementRouter = GoRouter(
+      navigatorKey: host.navigatorKey,
+      observers: [observer],
+      routes: [GoRoute(path: '/', builder: (_, _) => const SizedBox())],
+    );
+    addTearDown(replacementRouter.dispose);
+    final replacement = CCGoRouterAdapter(
+      router: replacementRouter,
+      host: host,
+      observers: [observer],
+      enablePredictiveBack: true,
+    );
+    expect(replacement.predictiveBackFallbacks, isEmpty);
+    replacement.dispose();
+  });
+
   test(
     'opaque UI bridge reports isolated lifecycle without navigating',
     () async {

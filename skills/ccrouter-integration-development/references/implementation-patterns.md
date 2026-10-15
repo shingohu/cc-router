@@ -27,6 +27,71 @@ still receives an explicit Catalog. This supports existing application-owned
 Routers, custom multi-Host composition, and focused Backend tests without
 making routing metadata available to feature code.
 
+### Optional Android predictive back
+
+The Host may use `CCGoRouterApp(enablePredictiveBack: true)` or the managed
+Backend option to observe generated default Android Material Route gestures.
+The default false preserves original Route construction and Flutter behavior,
+including native Flutter predictive animations, with no CCRouter gesture
+observer/state machine. Custom Backend factories must propagate the immutable
+configuration's `enablePredictiveBack` instead of silently discarding it.
+
+Attached GoRouters and manual overrides keep their authored Page builders.
+After constructing the Adapter, a Host `pageBuilder` can pass
+`predictiveBackHandler: adapter.predictiveBackBridge` to `ccGoRouterPage`,
+`CCGoRouterPage` or `CCFlutterRouteFactory.createPage`. Page construction runs
+after Adapter creation; use the Host-owned instance and preserve Page keys,
+settings, presentation and `CCRouterHostBinding.bindRouteEntry` payloads.
+The backend-neutral handler type is exported only by `ccrouter_host.dart`.
+Do not import it or the bridge from Feature code, and do not manually forward
+phases for the same automatically wired Route. Existing manual bridges remain
+available for integrations outside the automatic scope.
+
+Automatic support is limited to Android Material Routes with default opaque
+presentation and Flutter's stock `PredictiveBackPageTransitionsBuilder` or
+`PredictiveBackFullscreenPageTransitionsBuilder`. A navigation mutation
+invalidates the original preview; a closed PopScope/Form at commit cancels it
+without invoking business confirmation. Flutter alone drives animation/Pop;
+the Observer confirms removal before the bridge reports a committed outcome.
+Eligibility uses the transition selected by the current `Theme.platform`.
+Switching to a non-Android platform or a non-predictive transition during an
+accepted gesture cancels through Flutter's Route hook after the rebuild, even
+if the old detector has disappeared. The animation returns to its resting state
+and Navigator exits its gesture state without completing results or Scopes.
+The bridge keeps consuming the original terminal event; restoring the predictive
+Theme does not revive that preview. New gestures use the current Theme normally.
+Ancestor Navigator coverage blocks starts on nested pages, leaving fallback to
+the popup. An observed ancestor popup invalidates a pending preview even if it
+is dismissed before commit; retain observers on the relevant ancestor Outlets.
+Adapter disposal rejects its in-flight gesture, but a surviving attached Route
+detaches the retired handler at its next start and resumes Flutter behavior.
+The Host SPI handler exposes `isActive` for this lifetime boundary.
+If this lifetime probe throws, the Route detaches the custom handler and restores
+Flutter-owned back handling. Adapter construction registers Navigator Observer,
+RouterDelegate and binding observers atomically and rolls all of them back on
+failure.
+Cancel never completes typed results or closes Scopes. Guarded pages retain
+non-interactive system fallback, even when Guard evaluation allows exit.
+Modals, LocalHistory, custom transitions, Cupertino and other platforms retain
+their documented back paths. Runtime currently reconciles committed phases
+only; the Host bridge is not a new business lifecycle or analytics API.
+
+Use `adapter.predictiveBackFallbacks` for Host diagnostics when an automatic
+start is declined. The bounded history shares `lifecycleEventCapacity`, emits at
+most once per start, and exposes only a stable reason, Host, Outlet and timestamp.
+Do not add URIs, arguments, Extra, Widgets, contexts or business results. With
+`enablePredictiveBack: false`, the getter is empty and no fallback history is
+allocated.
+
+OS/embedding/Manifest settings, IME, platform views, native Activities and
+back-to-home animation require separate platform validation. Independently
+visible Router Hosts still require application-owned platform/active-Host
+arbitration; a per-Adapter bridge is not a global window dispatcher.
+Rollback by recreating the Host with the flag false; do not toggle it during
+an active gesture or perform an extra Pop when disabling it. Ordinary Demo
+startup remains false, while `lib/main_predictive_back.dart` is an explicit
+opt-in launch for A/B verification.
+
 When one application tree has multiple genuinely independent Router Hosts, use
 `CCGoRouterMultiHostBackend.managed`. It reads the initialized Catalog once,
 supplies that snapshot and each declared Host ID to the child Backend factories,

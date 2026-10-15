@@ -1934,6 +1934,64 @@ void main() {
     },
   );
 
+  for (final observerFirst in [false, true]) {
+    test(
+      'predictive commit is idempotent with Observer first=$observerFirst',
+      () async {
+        final adapter = BackendEventNavigationAdapter();
+        final runtime = CCRouterRuntime.forTesting(
+          navigationAdapter: adapter,
+          components: [
+            routeComponent(
+              'orders',
+              (registry) => registry.registerRoute(pathRoute()),
+            ),
+          ],
+        );
+        runtime.initialize();
+        await runtime.goRoute(
+          const TestIntent<void>('orders.detail', RouteArgs('42')),
+        );
+        final managed = runtime.activeRouteEntries.single;
+        adapter.emit(
+          CCNavigationBackendEventKind.push,
+          backendEntryId: 'predictive-idempotent',
+          backendOperationId: 'push-idempotent',
+          navigationId: managed.navigationId,
+          routeId: managed.routeId,
+          owner: CCBackendEntryOwner.managed,
+          sequence: 1,
+        );
+        void observed() => adapter.emit(
+          CCNavigationBackendEventKind.pop,
+          backendEntryId: 'predictive-idempotent',
+          backendOperationId: 'pop-idempotent',
+          owner: CCBackendEntryOwner.managed,
+          sequence: 2,
+        );
+        void committed() => adapter.emitPredictive(
+          CCPredictiveBackEvent(
+            phase: CCPredictiveBackPhase.committed,
+            progress: 1,
+            timestamp: DateTime.now(),
+            outcome: const CCPopOutcome(
+              handled: true,
+              removedBackendEntryId: 'predictive-idempotent',
+              removedEntryOwner: CCPopRemovedEntryOwner.managed,
+            ),
+          ),
+        );
+        if (observerFirst) observed();
+        committed();
+        committed();
+        if (!observerFirst) observed();
+        expect(runtime.activeRouteEntries, isEmpty);
+        expect(runtime.desynchronizedBackendHosts, isEmpty);
+        await runtime.dispose();
+      },
+    );
+  }
+
   test('predictive back closes a managed entry only after commit', () async {
     final adapter = BackendEventNavigationAdapter();
     final runtime = CCRouterRuntime.forTesting(

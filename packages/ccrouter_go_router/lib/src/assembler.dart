@@ -62,9 +62,13 @@ abstract final class CCGoRouterAssembler {
   /// aliases because GoRouter cannot reproduce those contracts as independent
   /// flat `GoRoute` declarations. Supply an override when the Host owns the
   /// corresponding route tree or compatibility matcher.
+  /// [predictiveBackHandler] is resolved when building generated pages, after
+  /// the Host has constructed its Adapter. Overrides keep explicit ownership
+  /// and must opt in through their Page's Host-only handler parameter.
   static CCGoRouterAssembly assemble({
     required CCFlutterRouteCatalog catalog,
     Map<String, CCGoRouterRouteOverride> overrides = const {},
+    CCFlutterPredictiveBackHandler? Function()? predictiveBackHandler,
   }) {
     final routeIds = catalog.destinations
         .map((destination) => destination.routeId)
@@ -111,7 +115,8 @@ abstract final class CCGoRouterAssembler {
         final goRoute = GoRoute(
           path: pattern.path,
           name: pattern.primary ? destination.routeId : null,
-          pageBuilder: (context, state) => _buildPage(destination, state),
+          pageBuilder: (context, state) =>
+              _buildPage(destination, state, predictiveBackHandler?.call()),
         );
         routes.add(goRoute);
         if (pattern.primary) {
@@ -179,6 +184,7 @@ abstract final class CCGoRouterAssembler {
   static Page<Object?> _buildPage(
     CCFlutterRouteDestination destination,
     GoRouterState state,
+    CCFlutterPredictiveBackHandler? predictiveBackHandler,
   ) {
     final payload = state.extra;
     final extra = CCRouterHostBinding.decodeRouteExtra(payload);
@@ -201,6 +207,7 @@ abstract final class CCGoRouterAssembler {
         key: state.pageKey,
         name: destination.routeId,
         arguments: extra,
+        predictiveBackHandler: predictiveBackHandler,
       ),
       final CCModalBottomSheetPresentation sheet => ccGoRouterBottomSheetPage(
         child: child,

@@ -1,0 +1,53 @@
+import android.os.SystemClock;
+import android.view.InputDevice;
+import android.view.InputEvent;
+import android.view.MotionEvent;
+import java.lang.reflect.Method;
+
+public final class CCRouterGestureProbe {
+  static Object manager;
+  static Method inject;
+  static long down;
+  static float y = 1100;
+  static void send(int action, float x) throws Exception {
+    MotionEvent event = MotionEvent.obtain(down, SystemClock.uptimeMillis(), action, x, y, 0);
+    event.setSource(InputDevice.SOURCE_TOUCHSCREEN);
+    try {
+      if (!((Boolean) inject.invoke(manager, event, 2))) throw new IllegalStateException("Input injection rejected");
+    } finally { event.recycle(); }
+  }
+  static void move(float from, float to, int steps) throws Exception {
+    for (int step=1; step<=steps; step++) {
+      SystemClock.sleep(16);
+      send(MotionEvent.ACTION_MOVE, from + (to-from)*step/steps);
+    }
+  }
+  public static void main(String[] args) throws Exception {
+    Class<?> type = Class.forName("android.hardware.input.InputManagerGlobal");
+    manager = type.getMethod("getInstance").invoke(null);
+    inject = type.getMethod("injectInputEvent", InputEvent.class, int.class);
+    boolean right = args[0].equals("right");
+    boolean cancel = args[1].equals("cancel");
+    float start = right ? 1078 : 1;
+    float preview = right ? 720 : 360;
+    float finish = right ? 250 : 830;
+    down = SystemClock.uptimeMillis();
+    send(MotionEvent.ACTION_DOWN, start);
+    try {
+      move(start, preview, 30);
+      SystemClock.sleep(200);
+      if (cancel) {
+        move(preview, start, 40);
+        SystemClock.sleep(200);
+        send(MotionEvent.ACTION_UP, start);
+      } else {
+        move(preview, finish, 20);
+        send(MotionEvent.ACTION_UP, finish);
+      }
+    } catch (Exception error) {
+      send(MotionEvent.ACTION_CANCEL, start);
+      throw error;
+    }
+    System.out.println(args[0] + " " + args[1] + " injected");
+  }
+}

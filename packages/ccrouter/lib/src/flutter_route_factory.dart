@@ -2,12 +2,17 @@ import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+part 'flutter_predictive_back.dart';
+
 /// Creates Flutter Routes and Pages from backend-neutral presentation data.
 ///
 /// Host backends use this factory; business code uses generated navigation
 /// Intents instead of constructing Flutter Routes or Pages directly.
 abstract final class CCFlutterRouteFactory {
   /// Creates a Page for a declarative Navigator with stable [key] identity.
+  ///
+  /// [predictiveBackHandler] is optional Host SPI for default Android Material
+  /// Pages only. Null preserves original Route construction and handling.
   static Page<T> createPage<T>({
     required Widget child,
     required CCRoutePresentation presentation,
@@ -15,6 +20,7 @@ abstract final class CCFlutterRouteFactory {
     String? name,
     Object? arguments,
     String? restorationId,
+    CCFlutterPredictiveBackHandler? predictiveBackHandler,
   }) => switch (presentation) {
     final CCPagePresentation value => CCFlutterPage<T>(
       child: child,
@@ -23,6 +29,7 @@ abstract final class CCFlutterRouteFactory {
       name: name,
       arguments: arguments,
       restorationId: restorationId,
+      predictiveBackHandler: predictiveBackHandler,
     ),
     final CCModalBottomSheetPresentation value => CCFlutterBottomSheetPage<T>(
       child: child,
@@ -46,17 +53,22 @@ abstract final class CCFlutterRouteFactory {
   ///
   /// For declarative navigation use [createPage]; its Page is passed as Route
   /// settings to preserve page identity. The Navigator owns the returned Route.
+  /// A non-null [predictiveBackHandler] opts default Android Material Routes
+  /// into observation and commit-time local gate checks; other presentations
+  /// retain their original constructors and handling.
   static Route<T> createRoute<T>({
     required BuildContext context,
     required Widget child,
     required CCRoutePresentation presentation,
     RouteSettings? settings,
+    CCFlutterPredictiveBackHandler? predictiveBackHandler,
   }) => switch (presentation) {
     final CCPagePresentation value => _pageRoute<T>(
       context,
       child,
       value,
       settings,
+      predictiveBackHandler,
     ),
     final CCModalBottomSheetPresentation value => ModalBottomSheetRoute<T>(
       builder: (_) => child,
@@ -84,6 +96,7 @@ abstract final class CCFlutterRouteFactory {
     Widget child,
     CCPagePresentation presentation,
     RouteSettings? settings,
+    CCFlutterPredictiveBackHandler? predictiveBackHandler,
   ) {
     final useCupertino = switch (presentation.routeType) {
       CCPageRouteType.cupertino => true,
@@ -92,17 +105,27 @@ abstract final class CCFlutterRouteFactory {
     };
     if (presentation.transition == CCPageTransitionType.platformDefault &&
         presentation.opaque) {
-      return useCupertino
-          ? CupertinoPageRoute<T>(
-              settings: settings,
-              fullscreenDialog: presentation.fullscreenDialog,
-              builder: (_) => child,
-            )
-          : MaterialPageRoute<T>(
-              settings: settings,
-              fullscreenDialog: presentation.fullscreenDialog,
-              builder: (_) => child,
-            );
+      if (useCupertino) {
+        return CupertinoPageRoute<T>(
+          settings: settings,
+          fullscreenDialog: presentation.fullscreenDialog,
+          builder: (_) => child,
+        );
+      }
+      if (predictiveBackHandler != null &&
+          Theme.of(context).platform == TargetPlatform.android) {
+        return _CCPredictiveMaterialPageRoute<T>(
+          settings: settings,
+          fullscreenDialog: presentation.fullscreenDialog,
+          builder: (_) => child,
+          handler: predictiveBackHandler,
+        );
+      }
+      return MaterialPageRoute<T>(
+        settings: settings,
+        fullscreenDialog: presentation.fullscreenDialog,
+        builder: (_) => child,
+      );
     }
     final duration =
         presentation.transition == CCPageTransitionType.none ||
@@ -221,6 +244,7 @@ base class CCFlutterPage<T> extends Page<T> {
     super.name,
     super.arguments,
     super.restorationId,
+    this.predictiveBackHandler,
   });
 
   /// Widget displayed by the Route.
@@ -228,6 +252,12 @@ base class CCFlutterPage<T> extends Page<T> {
 
   /// Material, Cupertino, opacity and transition options.
   final CCPagePresentation presentation;
+
+  /// Optional Host-only observer for default Android Material route gestures.
+  ///
+  /// Null preserves the original Route construction and Flutter behavior.
+  /// Custom transitions, Cupertino routes and modal pages do not use it.
+  final CCFlutterPredictiveBackHandler? predictiveBackHandler;
 
   @override
   /// Creates a Route retaining this Page as its settings.
@@ -237,6 +267,7 @@ base class CCFlutterPage<T> extends Page<T> {
         child: child,
         presentation: presentation,
         settings: this,
+        predictiveBackHandler: predictiveBackHandler,
       );
 }
 

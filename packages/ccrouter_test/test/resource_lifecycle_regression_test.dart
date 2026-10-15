@@ -50,6 +50,29 @@ final class _LifecycleRegistrar implements CCComponentRegistrar {
   }
 }
 
+void _attemptFailedPredictiveAdapterConstruction() {
+  final host = CCNavigationHost(id: 'predictive.construction.failure');
+  final observer = CCGoRouterNavigationObserver(
+    hostId: host.id,
+    outlet: 'root',
+  );
+  final router = GoRouter(
+    navigatorKey: host.navigatorKey,
+    observers: [observer],
+    routes: [GoRoute(path: '/', builder: (_, _) => const SizedBox())],
+  );
+  router.dispose();
+  expect(
+    () => CCGoRouterAdapter(
+      router: router,
+      host: host,
+      observers: [observer],
+      enablePredictiveBack: true,
+    ),
+    throwsA(anything),
+  );
+}
+
 void main() {
   LeakTesting.enable();
   LeakTracking.warnForUnsupportedPlatforms = false;
@@ -164,6 +187,15 @@ void main() {
 
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pumpAndSettle();
+    },
+  );
+
+  testWidgets(
+    'failed predictive adapter construction retains no binding observer chain',
+    experimentalLeakTesting: leakSettings,
+    (tester) async {
+      _attemptFailedPredictiveAdapterConstruction();
+      await tester.pump();
     },
   );
 }

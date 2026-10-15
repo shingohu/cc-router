@@ -25,6 +25,10 @@ final class CCGoRouterBackend implements CCRouterAppBackend {
   /// mounted before generated routes. Each [shells] route is also mounted at the
   /// root; its Outlet observers must already be configured on the corresponding
   /// Shell because GoRouter cannot add them after route construction.
+  /// With [enablePredictiveBack], generated default Android Material pages
+  /// automatically report gesture phases. False retains original Route types
+  /// and handling. Host overrides opt in explicitly; Guard/modal/custom
+  /// transitions retain Flutter's non-interactive fallback.
   factory CCGoRouterBackend.managed({
     required CCFlutterRouteCatalog catalog,
     CCNavigationHost? host,
@@ -46,9 +50,13 @@ final class CCGoRouterBackend implements CCRouterAppBackend {
       hostId: resolvedHost.id,
       outlet: 'root',
     );
+    late final CCGoRouterAdapter adapter;
     final assembly = CCGoRouterAssembler.assemble(
       catalog: catalog,
       overrides: overrides,
+      predictiveBackHandler: enablePredictiveBack
+          ? () => adapter.predictiveBackBridge
+          : null,
     );
     final routes = <RouteBase>[
       ...hostRoutes,
@@ -68,7 +76,7 @@ final class CCGoRouterBackend implements CCRouterAppBackend {
       routes: routes,
     );
     try {
-      final adapter = CCGoRouterAdapter(
+      adapter = CCGoRouterAdapter(
         router: router,
         bindings: assembly.bindings,
         shells: shellList,
@@ -96,6 +104,10 @@ final class CCGoRouterBackend implements CCRouterAppBackend {
   /// route configuration before creating this backend. [dispose] never disposes
   /// [router], so the application can remove CCRouter without changing the
   /// Router's lifetime.
+  /// [enablePredictiveBack] exposes the optional bridge; existing Pages are
+  /// not rewritten. Wire their `predictiveBackHandler` explicitly to observe
+  /// compatible Android Material gestures, or keep manual reporting for
+  /// platform paths outside automatic coverage.
   factory CCGoRouterBackend.attach({
     required CCFlutterRouteCatalog catalog,
     required GoRouter router,

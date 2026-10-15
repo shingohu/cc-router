@@ -79,6 +79,7 @@ const _hostSpiTypes = <Type>[
   host.CCHostAssemblyError,
   host.CCHostAssemblyErrorCode,
   host.CCFlutterRouteFactory,
+  host.CCFlutterPredictiveBackHandler,
   host.CCFlutterPage,
   host.CCFlutterBottomSheetPage,
   host.CCFlutterDialogPage,
@@ -150,6 +151,7 @@ void probe() {
   CCRouter.runInitTasks();
   print(CCRouterHost);
   print(CCHostAssembly);
+  print(CCFlutterPredictiveBackHandler);
 }
 """);
         final rejected = await Process.run(dartExecutable, [
@@ -165,6 +167,7 @@ void probe() {
           'runInitTasks',
           'CCRouterHost',
           'CCHostAssembly',
+          'CCFlutterPredictiveBackHandler',
         ]) {
           expect(errors, contains(name));
         }
@@ -212,7 +215,7 @@ Future<void> probe() async {
     ).readAsStringSync();
 
     expect(_contractCombinatorNames(hostBarrel, 'show'), _hostContractNames);
-    expect(_hostSpiTypes, hasLength(30));
+    expect(_hostSpiTypes, hasLength(31));
   });
 }
 

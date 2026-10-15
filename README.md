@@ -820,6 +820,46 @@ PopGuard 用于页面离开前可同步判断的规则，例如内存中的未�
 存活，本地拒绝回调可负责确认 UI。确认后主动调用 `pop` 仍是显式返回操作。Cupertino 页面
 无 Guard 时保留平台默认侧滑，有 Guard 时继续禁用侧滑，不会因本地保护修复而放宽。
 
+### Android 预测返回（可选自动桥）
+
+Host 可使用 `CCGoRouterApp(enablePredictiveBack: true)`，或在
+`CCGoRouterBackend.managed` 开启同名参数。默认 `false` 保留原有 Route 类型、返回处理和
+Flutter 自带预测动画，不创建 CCRouter 预测桥、手势观察者或阶段状态机。
+
+开启后，自动装配的默认 Android Material 页面报告 start/update/cancel/confirmed commit，
+Flutter 仍唯一驱动动画和实际 Pop。取消不触发正式 PageShow/PageHide、不完成 typed result、
+不销毁 Route Scope；提交依据具体 backendEntryId 确认，不能再次调用业务 pop。
+手势中发生导航或提交时 PopScope/Form 禁止退出，会终止预览；这种取消不自动弹业务确认框。
+开启时，祖先 Navigator 的弹窗会阻止底下嵌套页面接受新手势；手势中弹出后，即使弹窗先关闭，
+旧提交也不会退出底下页面。attach 模式销毁 Adapter 后，旧手势失效，存续 Router 的新手势恢复
+Flutter 返回行为。
+
+自动桥按当前 `Theme.platform` 校验实际转场。手势中切换到非 Android 平台或非预测转场时，
+原预览会取消并恢复动画、释放 Navigator 手势状态；迟到 commit 不退出页面，新手势按当前
+Theme 处理。恢复预测 Theme 不会重新激活旧预览。
+
+框架 PopGuard 页面仍走非交互系统 fallback，即使 Guard 最终 allow；Dialog、BottomSheet、
+LocalHistory、自定义转场和非预测 Theme 保留各自返回路径。支持的 Android Theme 转场为 Flutter
+内置 `PredictiveBackPageTransitionsBuilder` 和 `PredictiveBackFullscreenPageTransitionsBuilder`。
+系统版本、embedding、有效 Manifest 和手势导航配置仍由应用验证。
+
+应用自建 GoRouter、override 或 Shell Page 不会被改写，Host 须将
+`adapter.predictiveBackBridge` 传给 `ccGoRouterPage` / `CCFlutterRouteFactory.createPage`
+的 `predictiveBackHandler`。该 SPI 仅从 `ccrouter_host.dart` 导入；Feature 无需修改。
+不要为同一路由同时手动转发和自动接线。`supportsPredictiveBack` 表示桥可用，不代表所有自定义
+Route 或系统返回桌面动画均已接入。现有 Runtime 不提供全阶段业务观察 API。
+
+Host 可读取 `adapter.predictiveBackFallbacks` 定位自动桥为何未接受某次 start，例如三键返回、
+未接线 Page、非预测 Theme、本地门禁、非活动 Outlet 或未知 managed Entry。该只读历史与
+`lifecycleEventCapacity` 共用容量，只记录稳定 reason、Host、Outlet 和 timestamp，不包含 URI、
+arguments、Extra、Widget、BuildContext 或业务结果；关闭开关时始终为空且不分配历史。
+Adapter 构造期间的 Observer/listener 注册失败会原子回滚。自定义
+`CCFlutterPredictiveBackHandler.isActive` 抛错时，Route 会解除该 handler 并恢复 Flutter
+原有返回路径，诊断或 Host SPI 故障不会中断手势。
+
+Demo 默认入口保持关闭；可用 `fvm flutter run -t lib/main_predictive_back.dart` 从 `demo/`
+启动开启版本。支持范围、接线和回归见 [预测返回接入说明](docs/CCRouter-predictive-back.md)。
+
 ## Aspect、Trace、Telemetry 与生命周期
 
 `CCNavigationAspect` 只观察导航阶段，不做决策。它适合 PV/UV 与来源归因、route found/arrival/completion/failure 观察、耗时、跨 Host/Outlet 链路追踪和脱敏日志。Aspect 回调异常会被隔离；回调中不得同步重入导航。请求参数、完整 URI、Extra、Token 和业务返回对象不会进入默认诊断记录。

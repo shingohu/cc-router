@@ -32,6 +32,22 @@
 - Are `push`, `replace`, `go`, and `reset` used according to their real stack semantics?
 - Is the Pop result type correct and tested?
 - Are local overlays intentionally foreign rather than accidentally registered as routes?
+- If predictive back is enabled, does the custom Backend propagate its flag,
+  and do authored Page builders explicitly wire the Host bridge? Verify false
+  preserves original Route types, cancel has no result/Scope/lifecycle effects,
+  commit removes exactly one Entry, and navigation/local-gate changes invalidate
+  the preview. Change Theme platform before a start and platform/transition during
+  a preview: unsupported starts must fall back, replaced detectors must not leave
+  partial animation or `userGestureInProgress`, and late terminal events must not
+  revive the preview or Pop. Verify a new gesture after Theme recovery.
+  Include ancestor Navigator popups before/during a nested gesture,
+  dismissal before commit, and new gestures after an attached Adapter closes.
+  Keep Guard/custom/foreign fallback and avoid duplicate manual
+  forwarding. Verify failed Adapter construction rolls back every registration,
+  throwing handler lifetime probes restore Flutter fallback, and declined starts
+  produce one bounded sanitized `predictiveBackFallbacks` reason. With the
+  switch off, confirm the history is empty and unallocated. Do not infer OS or
+  multi-window coverage from bridge capability.
 
 ## Policies
 
