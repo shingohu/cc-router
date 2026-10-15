@@ -23,7 +23,7 @@ application's installed package APIs and CLI help if its version differs.
 3. When a production scenario appears unsupported, incomplete, or defective, use the bundled [production scenario assessment](references/production-scenarios.md) before inventing a workaround or requesting a framework API.
 4. Inspect existing generated APIs, the Package's single component definition, contribution registrations, and Host topology. Do not invent APIs from design documents.
 5. Implement through the narrowest public CCRouter API. Keep Host SPI out of feature code.
-6. Run generation after annotation or component assembly changes. Never edit generated files.
+6. Run generation after annotation, declaration path/public export, or component assembly changes. Never edit generated files.
 7. Add focused tests for success, failure, lifecycle cleanup, and relevant concurrency.
 8. Run analyze, focused tests, and `generate --check` before completion.
 
@@ -124,7 +124,7 @@ Read [implementation-patterns.md](references/implementation-patterns.md) when ad
 - Keep an internal route on `@CCRoute`. Promote it to `@CCRouteContract` only when a real external component consumer appears.
 - 默认 PageRoute 和 DialogRoute 按最近宿主选择：MaterialApp 使用随主题平台适配的 Material 路由，CupertinoApp 使用 Cupertino 路由；显式 routeType 优先。MaterialApp 也提供 CupertinoTheme，不能以该 Theme 判断宿主或在 Android 额外启用 iOS 边缘返回手势；没有已知 App 祖先的自定义 Host 才使用显式 CupertinoTheme 作为 Cupertino 策略 fallback。
 - Use `@CCExtraParam` only for typed, process-local, short-lived objects. Generated page bindings preserve the declared static type and reject a mismatched runtime object with `CCRouteParameterError`; Extra is not a Deep Link, restoration, persistence, or cross-process channel.
-- Put stable cross-component contracts in a Pure Dart contracts package. Consumers depend on the contracts package, not the implementation package.
+- Put promoted CCRouter cross-component contracts in a Pure Dart contracts package. Their consumers depend on that contracts package, not page implementations. Ordinary capability interfaces may remain in their owning Package when the dependency direction is valid.
 - Re-export generated Route contracts from the Package's stable
   `src/ccrouter_generated/<package>.contracts.api.g.dart` entry with an explicit
   `show` list. Do not bind authored public barrels to individual
@@ -228,15 +228,23 @@ Read [implementation-patterns.md](references/implementation-patterns.md) when ad
 
 ## Decision Rules
 
+Before choosing a framework capability, decide whether an ordinary narrow API
+with explicit ownership already meets the need. Cross-Package use alone does
+not require Service registration or a separate contracts Package. See
+[capability-decisions.md](references/capability-decisions.md). For a growing
+Contracts Package or a source relocation, read
+[contracts-layout.md](references/contracts-layout.md); internal domain folders
+and public library placement have different constraints.
+
 - Use **Route** for showing a destination and optionally receiving a typed Pop result.
-- Use **Service** for repeatable methods, state reads, or lifecycle-owned resources.
+- Use **Service** when repeatable methods, state reads, or resources need framework resolution, Scope/readiness, or generated dependency validation; otherwise keep a narrow ordinary API.
 - Use **Command<R>** for one requested operation with exactly one owner; use `R = void` when only completion matters.
 - Use **Event** for an already completed fact delivered to zero or more independent subscribers.
 - Use **InitTask** for one Runtime-lifetime startup task with dependencies or an explicit Gate.
 - Do not create a new public framework abstraction when these capabilities already express the behavior.
 
-For namespace-aware key-value storage, use a Service with an explicit namespace value
-object and typed primitive/JSON methods. Keep global, guest, user, API-environment,
+For namespace-aware key-value storage registered as a Service, use an explicit
+namespace value object and typed primitive/JSON methods. Keep global, guest, user, API-environment,
 and hardware namespaces distinct; the same key in two namespaces must not alias.
 Treat a namespace as an isolation and lifecycle selector, not as encryption or an
 authorization boundary. Keep the persistence/secure-storage implementation behind a

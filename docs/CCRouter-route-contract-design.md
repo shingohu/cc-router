@@ -102,6 +102,15 @@ Command、Event 与 InitTask Contract 继续从其源文件显式导出。生成
 CLI 会在 Builder 前为 authored barrel 的显式引用创建受管 placeholder，并在聚合阶段覆盖，
 避免 public barrel 与待生成文件形成首次构建循环。
 
+## 多领域组织与源文件迁移
+
+手写声明允许按 `lib/src/<domain>/` 分组，公开 Consumer、组件作者和值对象入口保持在根
+`lib/`。当前 public-library validator 不把 `lib/<domain>/entry.dart` 识别为公开终点，不能
+把内部嵌套目录的支持理解为公开入口嵌套支持。小型契约包不强制分目录。
+仅迁移源位置时保持公开 URI、Owner、Route ID、wire name、结果与版本稳定；生成文件由
+Generator 重新产出，独立核对契约形状和路径元数据。详见
+[目录与迁移流程](../skills/ccrouter-integration-development/references/contracts-layout.md)。
+
 ## API 归属
 
 | 声明 | 纯契约 | 页面 glue | 原因 |

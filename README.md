@@ -717,6 +717,23 @@ generated Owner SPI，不从业务 barrel 导出。authored Service、Command、
 生成器会验证每一层转发都保留完整符号。执行 `clean` 后，下一次 `generate` 会在 Builder 前临时
 补齐缺失入口并在同一轮替换为正式内容，开发者不需要创建空文件。
 
+### Contracts 的目录、选型与装配边界
+
+多领域 Contracts package 可将手写声明按 `lib/src/<domain>/` 归类；小型单领域包可继续平铺。
+当前 Generator 只认可 `lib/` 根目录的公开入口，内部领域分组不意味着可以把公开入口直接搬到
+`lib/<domain>/`。保留 Consumer、组件作者与值对象的窄入口和显式 `show`；目录重排不改变
+Owner、公开 URI、能力 ID、wire name 或契约版本，也不单凭文件数量拆 package。
+源位置与生成文件路径会变化，须重新生成并检查旧产物、消费者和项目自有路径门禁；契约
+`shapeFingerprint` 与包含路径的索引/生成摘要分开比较。流程及适用边界见
+[Contracts layout and relocation](skills/ccrouter-integration-development/references/contracts-layout.md)。
+
+跨包复用能力不自动要求注册 Service 或拆 Contracts。普通窄 Client 已能明确依赖和生命周期时
+可直接使用；需要框架 Scope/readiness、解析或生成依赖校验时再采用 Service。普通调用不会自动
+获得 CCRouter 的校验、Trace 或取消语义；已有框架托管契约也不能以此绕过。
+Host 装配应用级基础设施与平台绑定，组件装配自己的内部对象图；借用依赖不转移初始化或销毁权。
+进程内 Extra 若携带能力对象，调用方须明确 Owner、关闭后失效及在途操作语义，类型校验不代替
+生命周期管理。详见集成 Skill 的能力选择和装配模式。
+
 ## 页面展示与动画
 
 默认页面根据宿主选择路由：MaterialApp 使用 MaterialPageRoute，由主题适配 Android 系统返回、

@@ -190,9 +190,32 @@ Contract has no verified public exposure.
 
 ### Component Implementation
 
+The Host is the application composition root: it selects application-wide
+infrastructure, platform bindings and cross-component contracts. It is not the
+construction site for every component's internal object graph. Components
+create and release their own page controllers/ViewModels, coordinators and
+repositories, using narrow injected dependencies where a replacement boundary
+actually exists. Do not export these internals merely to let the Host wire them.
+Framework-owned Route/Session Services retain their documented Scope ownership;
+component assembly must not dispose framework-owned instances.
+
+An injected dependency, getter or process-local Extra grants use, not permission
+to reinitialize, replace or close its Owner's resource. For an Extra carrying a
+borrowed capability, document the Owner, lifetime, optional/missing behavior and
+failure after closure. If the caller can close while the destination remains
+open, make stale operations fail explicitly and define pending-Future handling;
+the destination must not silently bind the old reference to a new Session or
+Runtime. The framework's type check does not enforce these business lifetimes.
+An immutable result snapshot may outlive its producer under its own contract.
+
 The implementation Package owns exactly one public top-level `const CCComponent`, pages, local policies, Services and message handlers. The generator keeps its Registrar and Manifest private. Export only intended business contracts.
 
 ### Contracts Package
+
+For multiple domains, public/Owner/value entry points and safe source moves,
+see [Contracts layout and relocation](contracts-layout.md). Public libraries
+currently remain directly under `lib/`; nested handwritten declarations belong
+under `lib/src/<domain>/` when grouping improves cohesion.
 
 Keep it Pure Dart where possible. Depend on `ccrouter_contracts`, never on
 Flutter page implementations. Re-export generated Route Consumer types through the

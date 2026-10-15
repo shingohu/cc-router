@@ -8,6 +8,21 @@
 - Are unsupported framework capabilities avoided rather than locally reimplemented?
 - Does each implementation Package declare exactly one top-level `const CCComponent`, while contracts Packages declare only explicit `CCComponentId` owners?
 
+## Contracts Layout and Composition
+
+- Does an ordinary narrow API suffice, or is the chosen Service/Command needed
+  for actual framework semantics? Are plain calls' ownership and failures explicit?
+- Does the Host assemble application infrastructure while components own their
+  internal object graphs, without exporting internals for Host wiring?
+- For source moves, are public URIs/symbols, Owner, IDs, wire names and versions
+  stable, with shape fingerprints checked separately from path-bearing metadata?
+- Are public entries still root `lib/` libraries, with Consumer/Owner/value
+  audiences separated and application-specific guards kept exact?
+- Was generated output regenerated, obsolete output checked, and the real
+  consumer Host validated with `--no-cache --check`?
+- For borrowed Extra capabilities, are missing, closed-owner and pending-call
+  semantics explicit, with no transfer of disposal rights?
+
 ## Navigation
 
 - Does every managed navigation call use `CCRouter.navigator`?

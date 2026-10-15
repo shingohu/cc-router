@@ -547,6 +547,13 @@ decision, not a mechanical rename.
 
 ### Contract Migration
 
+For source-only regrouping inside an existing Contracts Package, follow
+[Contracts layout and relocation](../ccrouter-integration-development/references/contracts-layout.md).
+Preserve public URIs and capability semantics, regenerate rather than move
+managed output, and compare shape fingerprints separately from source/index
+fingerprints. Project-specific import allowlists remain the application's
+responsibility; do not replace them with wildcard generated-code exemptions.
+
 For a legacy declaration, first report the current declaration, generated
 consumers, and dependency direction. Prefer a reversible, additive migration:
 introduce the Contract, migrate one consumer, generate and test, then remove

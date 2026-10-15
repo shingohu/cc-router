@@ -2,13 +2,28 @@
 
 Use this guide before selecting an API. Start from the business semantics, not from which API is easiest to call.
 
+## Before Selecting a Framework Capability
+
+A capability can expose an ordinary narrow Client/interface when its Owner,
+construction, lifetime and dependency direction are already explicit. A second
+consumer or a native plugin does not itself require a CCRouter Service or a new
+contracts Package. Use Service when framework Scope, asynchronous readiness,
+resolution or generated cross-component dependency validation adds needed
+semantics. Plain calls do not receive those checks, tracing or cancellation
+semantics automatically; the component must own them where needed.
+
+Likewise, a local operation can remain a method or injected callback. Choose
+Command only when its single-owner dispatch/result semantics are needed, and
+Event only for independent fact subscribers. Do not use ordinary APIs to bypass
+an already selected managed Route, Service or message contract.
+
 ## Primary Capability Matrix
 
 | Need | Use | Do not use |
 | --- | --- | --- |
 | Show a page/modal and optionally return a result | Route | Service or Event as navigation |
-| Repeated methods, state reads, owned resource | Service | Command per getter or global singleton |
-| Typed local data with explicit account/environment/device isolation | Service + namespace value object | Unscoped global Map or EventBus |
+| Repeated methods, state reads, owned resource | Narrow Client; Service when framework Scope/readiness/resolution is needed | Command per getter or unowned global state |
+| Typed local data with explicit account/environment/device isolation | Owning storage API + namespace value object; Service if framework-managed | Unscoped global Map or EventBus |
 | Ask one owner to perform work | Command | Event when success matters |
 | Announce a fact after it happened | Event | Command fan-out |
 | Run startup work once with dependencies | InitTask | Page lifecycle callback |
@@ -43,7 +58,7 @@ For local confirmation, menus, transient BottomSheet, `OverlayEntry`, `MenuAncho
 或 components，由 Generator、Host 和 Runtime 分层拒绝缺失、
 Owner 不匹配、版本范围不满足、指纹漂移、重复实现和陈旧生成物。业务不手写这些字符串。
 
-Choose Service for a durable capability such as a repository, account state facade, analytics client, feature configuration, or page controller.
+Choose Service for a durable capability that needs the framework semantics above. A repository, account facade, analytics client or page controller is not automatically a Service merely because of its name.
 
 Scope selection:
 
@@ -51,7 +66,7 @@ Scope selection:
 - `session`: account-bound state that must be recreated after logout/account switch.
 - `route`: tied to one concrete managed RouteEntry, not merely a route ID or visible page.
 
-When a capability moves across Packages, declare `@CCServiceContract` in a Pure Dart contracts Package and let the implementation bind it automatically. Each consuming component adds an exact `CCServiceDependency<T>` and calls its generated `<Component>Services` Client; stable Token, caller identity and method ID plumbing belongs to generated code. Keep `CCRouter.service<T>()` for component-internal lookup. Use `CCServiceKey<T>` for multiple implementations and `serviceOrNull` only for a genuinely optional local capability.
+When a framework-managed Service moves across Packages, declare `@CCServiceContract` in a Pure Dart contracts Package and let the implementation bind it automatically. Each consuming component adds an exact `CCServiceDependency<T>` and calls its generated `<Component>Services` Client; stable Token, caller identity and method ID plumbing belongs to generated code. Keep `CCRouter.service<T>()` for component-internal lookup. Use `CCServiceKey<T>` for multiple implementations and `serviceOrNull` only for a genuinely optional local capability.
 
 Use a Contract alias when every consumer should see the same generated Client
 member. Use a Dependency alias only for a keyed implementation or local naming
