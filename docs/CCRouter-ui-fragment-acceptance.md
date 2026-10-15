@@ -65,7 +65,8 @@ shutdown/reinitialize。Demo 的 Timer 与 TextEditingController 均由 State �
 
 ## 4. 验证记录
 
-以下结果在本次 worktree 执行；生成器全量在冻结源码后完整重跑，退出码为 0。
+以下为首次实施提交 `91e58d8` 的验证结果；生成器全量在冻结源码后完整重跑，退出码为 0。
+后续 review 修复的增量验证见第 6 节。
 
 | 检查 | 结果 |
 | --- | --- |
@@ -120,3 +121,29 @@ macOS 桌面实测从首页「展示」进入，确认两个摘要实例分离�
 本次不宣称完成 Android/iOS/OHOS/Web 真机、长期内存压力或 UI 专属 Analyzer Plugin 验收；
 未改插件生产代码，不更新 Demo 插件 pin。UI 启用 Package index schema 3 需要配套新生成器，
 旧工具应显式拒绝；无 UI Package 保留 schema 2。
+
+## 6. Review 修复与增量回归
+
+审查发现两处 UI schema 遗漏：带 getter/method/mixin/interface 的 enum 可以穿过普通枚举
+边界；字段声明处的默认值变化不会改变 shape fingerprint。新增 13 项失败回归在修复前
+全部复现，另增加 1 项正向兼容测试。
+
+修复仅位于 UI Generator：
+
+- Action 和 DTO 中的 enum 均拒绝自定义成员、构造器、mixin、interface，包括 static 成员。
+- 字段声明处初始值按 Analyzer 求得的有效常量进入指纹，涵盖外部常量、普通 enum、nullable
+  字段和嵌套 DTO；等值表达式不改变指纹。
+- 构造器使用 `this.field` 参数或字段声明处的常量初始值。初始化列表赋值和重定向构造器
+  在 v1 明确拒绝，避免依赖 Analyzer 私有求值实现或把源码字符串当作有效默认值。
+  具名构造器及 `this.field` 参数默认值继续支持。
+
+本轮验证：UI Generator 专项完整 32 项、框架完整 436 项、Demo 完整 48 项通过；根
+`fvm dart analyze` 无问题。`portable prepare/publish demo` 和 Demo 的缓存／无缓存
+`generate --check` 通过。重新生成后 Dart API、Package Index、路由目录均无差异；
+9 个 Portable State 仅因生成工具变化更新 tool/content fingerprint。
+未直接依赖 UI 的 `demo/modules/order/example` Host 无缓存 `generate --check` 同样通过，
+Builder 写出 0 个输出。格式、文档链接、敏感信息扫描和独立 Skill bundle 校验通过。
+
+README、Integration Skill、UI 接入指南和设计文档已同步上述构造边界。本轮未重复首次实施的
+全部生成器 CLI/watch 场景或平台构建；第 4 节的 571 项全量及平台验证仍对应首次实施提交，
+不作为修复后重新执行的结果。

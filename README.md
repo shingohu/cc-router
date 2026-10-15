@@ -78,6 +78,8 @@ Generator、Contracts、CCRouter 和 UI Package，不能混用旧生成工具。
 
 v1 支持 final、const、无继承的 DTO Props（scalar、普通 enum、嵌套 DTO）与普通 enum
 Action，暂不支持集合、sealed Action、函数型 Props、动态 Slot 或 Renderer 热替换。
+普通 enum 不允许自定义成员、构造器、mixin 或 interface。DTO 通过 `this.field` 参数或字段
+声明处的常量初始值构造，两处默认值均计入指纹；v1 拒绝初始化列表赋值和重定向构造器。
 UI 层允许类型化 `onAction`，不放宽 Service 对 Widget、BuildContext、callback、Stream
 的限制。实例身份、更新和释放遵循 Flutter Key/State；`active` 是宿主许可，不是自动曝光。
 Runtime 关闭立即使旧 Action 失效；重新初始化后 Host 必须显式重挂 UI 子树。

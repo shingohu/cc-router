@@ -143,7 +143,11 @@ enum OrderSummaryAction { openDetails, retry }
 ```
 
 Contract marker 必须公开且非泛型；Props 为 final class，只提供 const generative constructor，
-不含继承、mixin、interface 或自定义方法；Action 为不携带额外数据的普通 enum。
+不含继承、mixin、interface 或自定义方法；Action 和 DTO 中的 enum 均只能声明枚举值，
+不允许自定义字段、getter/setter、方法、构造器、mixin 或 interface（含 static 成员）。
+DTO 构造器参数只允许 `this.field`；每个字段必须在声明处提供常量初始值，或由每个构造器的
+`this.field` 初始化。参数默认值与字段初始值均按有效常量值计入指纹，等值表达式保持相同指纹。
+v1 拒绝初始化列表赋值和重定向构造器，避免未建模的构造表达式绕过默认值兼容校验。
 Props 字段仅支持 scalar、普通 enum 与无环嵌套 DTO（可空字段可用），不可包含集合、Widget、
 BuildContext、controller、Service 实例、Future、Stream 或 function。
 输入以 UI 所需最小数据为准，不把完整业务对象图或账号凭证传入视图。

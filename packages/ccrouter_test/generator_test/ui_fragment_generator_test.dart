@@ -28,6 +28,7 @@ abstract final class Summary {}
 Future<({String output, String logs})> _generate(
   String source, {
   bool metadata = true,
+  Map<String, String> additionalSources = const {},
 }) async {
   final reader = TestReaderWriter(
     rootPackage: 'ccrouter_test',
@@ -39,7 +40,7 @@ Future<({String output, String logs})> _generate(
     metadata
         ? ccUIFragmentMetadataBuilder(BuilderOptions.empty)
         : ccUIFragmentBuilder(BuilderOptions.empty),
-    {'ccrouter_test|lib/src/ui_probe.dart': source},
+    {'ccrouter_test|lib/src/ui_probe.dart': source, ...additionalSources},
     rootPackage: 'ccrouter_test',
     generateFor: {'ccrouter_test|lib/src/ui_probe.dart'},
     isInput: (id) => id == 'ccrouter_test|lib/src/ui_probe.dart',
@@ -158,6 +159,107 @@ void main() {
       (first['uiContracts'] as List).single['shapeFingerprint'],
       isNot((second['uiContracts'] as List).single['shapeFingerprint']),
     );
+  });
+  test('effective field initializers participate in the fingerprint', () async {
+    final source = _source
+        .replaceFirst('const Props({required this.orderId});', 'const Props();')
+        .replaceFirst('final int orderId;', 'final int orderId = defaultId;');
+    String fingerprint(String output) =>
+        (jsonDecode(output)['uiContracts'] as List).single['shapeFingerprint']
+            as String;
+    final first = fingerprint(
+      (await _generate('$source\nconst defaultId = 1;')).output,
+    );
+    final changed = fingerprint(
+      (await _generate('$source\nconst defaultId = 2;')).output,
+    );
+    final equivalent = fingerprint(
+      (await _generate('$source\nconst defaultId = 1 + 0;')).output,
+    );
+    expect(changed, isNot(first));
+    expect(equivalent, first);
+  });
+  test(
+    'nested imported defaults and named DTO constructors remain supported',
+    () async {
+      final source =
+          "import 'package:ccrouter_test/src/ui_defaults.dart';\n" +
+          _source
+              .replaceFirst(
+                'const Props({required this.orderId});',
+                'const Props({required this.orderId}); '
+                    'const Props.named({this.orderId = 7});',
+              )
+              .replaceFirst(
+                'final int orderId;',
+                'final int orderId; '
+                    'final Nested settings = const Nested(value: defaultId); '
+                    'final Kind kind = Kind.first; final int? optional = null;',
+              ) +
+          '\nenum Kind { first, second }\n'
+              'final class Nested { const Nested({required this.value}); final int value; }';
+      Future<String> fingerprint(String value) async {
+        final result = await _generate(
+          source,
+          additionalSources: {
+            'ccrouter_test|lib/src/ui_defaults.dart':
+                'const defaultId = $value;',
+          },
+        );
+        expect(result.output, isNotEmpty, reason: result.logs);
+        return (jsonDecode(result.output)['uiContracts'] as List)
+                .single['shapeFingerprint']
+            as String;
+      }
+
+      final first = await fingerprint('1');
+      expect(await fingerprint('2'), isNot(first));
+      expect(await fingerprint('1 + 0'), first);
+    },
+  );
+  for (final constructor in [
+    'const Props() : orderId = 1;',
+    'const Props({int orderId = 1}) : orderId = orderId * 2;',
+    'const Props({required int orderId}) : orderId = orderId;',
+    'const Props() : this.named(1); const Props.named(this.orderId);',
+  ]) {
+    test('rejects unmodeled DTO construction: $constructor', () async {
+      final result = await _generate(
+        _source.replaceFirst(
+          'const Props({required this.orderId});',
+          constructor,
+        ),
+      );
+      expect(result.output, isEmpty);
+      expect(result.logs, contains('UI DTO constructors'));
+    });
+  }
+  for (final declaration in [
+    'enum Action { openDetails; Widget get content => const SizedBox(); }',
+    'enum Action { openDetails; Widget content() => const SizedBox(); }',
+    'enum Action { openDetails; set content(Widget value) {} }',
+    'enum Action { openDetails; static const label = "open"; }',
+    'mixin Behavior { Widget get content => const SizedBox(); } '
+        'enum Action with Behavior { openDetails }',
+    'abstract interface class Behavior {} '
+        'enum Action implements Behavior { openDetails }',
+    'enum Action { openDetails; const Action(); }',
+  ]) {
+    test('rejects enhanced UI enum: $declaration', () async {
+      final result = await _generate(
+        _source.replaceFirst('enum Action { openDetails }', declaration),
+      );
+      expect(result.output, isEmpty);
+      expect(result.logs, contains('UI v1 enums must be plain'));
+    });
+  }
+  test('nested DTO enum uses the same plain-enum boundary', () async {
+    final result = await _generate(
+      _source.replaceFirst('final int orderId;', 'final Kind orderId;') +
+          '\nenum Kind { value; Widget get content => const SizedBox(); }',
+    );
+    expect(result.output, isEmpty);
+    expect(result.logs, contains('UI v1 enums must be plain'));
   });
   for (final type in [
     'Widget',

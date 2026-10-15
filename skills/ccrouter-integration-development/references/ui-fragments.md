@@ -16,10 +16,16 @@ v1 Props are final classes with only const generative constructors, public final
 stored fields, no inheritance/mixins/interfaces or declared methods. Fields may
 contain scalar values, ordinary enums and nested DTOs, with supported nullable
 fields. Generic collections, dynamic/Object, Flutter types, Future/Stream,
-functions, enhanced enums with data, and sealed Action unions are unsupported.
-Use a plain public enum for Action. Breaking behavior or shape needs SemVer
-review; generated fingerprints include fields, constructor defaults and enum
-members, not just type names.
+functions, enhanced enums, and sealed Action unions are unsupported.
+Use a plain public enum for Action and enum fields: no authored fields, getters,
+setters, methods, constructors, mixins or interfaces, including static members.
+DTO constructors accept only `this.field` parameters. Each stored field must
+either have a constant declaration initializer or be initialized by every
+constructor's `this.field` parameter. Initializer-list assignments and redirecting
+constructors are rejected; move defaults to `this.field = value` or the field
+declaration. Breaking behavior or shape needs SemVer review; fingerprints include
+effective parameter defaults, effective field initializers and enum values, not
+just type names. Equivalent constant expressions produce the same fingerprint.
 
 The consuming `CCComponent` imports `ccrouter_ui.dart` and declares:
 

@@ -174,10 +174,21 @@ Object _schema(DartType type, Set<Element> stack, Element origin) {
         element,
       );
     }
-    if (element.fields.any(
-      (field) => !field.isStatic && field.isOriginDeclaration,
-    )) {
-      _fail('UI v1 enums cannot carry additional instance data.', element);
+    if (element.mixins.isNotEmpty ||
+        element.interfaces.isNotEmpty ||
+        element.fields.any(
+          (field) => field.isOriginDeclaration && !field.isEnumConstant,
+        ) ||
+        element.getters.any((getter) => getter.isOriginDeclaration) ||
+        element.setters.any((setter) => setter.isOriginDeclaration) ||
+        element.methods.any((method) => method.isOriginDeclaration) ||
+        element.constructors.any(
+          (constructor) => constructor.isOriginDeclaration,
+        )) {
+      _fail(
+        'UI v1 enums must be plain: no authored members, constructors, mixins or interfaces.',
+        element,
+      );
     }
     return {
       'type': '$uri#$name',
@@ -214,6 +225,7 @@ Object _schema(DartType type, Set<Element> stack, Element origin) {
   }
   final fields = element.fields.where((f) => !f.isStatic).toList()
     ..sort((a, b) => a.displayName.compareTo(b.displayName));
+  _validateDTOConstructors(element, fields);
   final result = {
     'type': '$uri#$name',
     'nullable': nullable,
@@ -226,6 +238,11 @@ Object _schema(DartType type, Set<Element> stack, Element origin) {
           return {
             'name': field.displayName,
             'schema': _schema(field.type, stack, field),
+            if (field.hasInitializer)
+              'initializer': _constantShape(
+                field.computeConstantValue(),
+                field,
+              ),
           };
         })(),
     ],
@@ -253,6 +270,35 @@ Object _schema(DartType type, Set<Element> stack, Element origin) {
   };
   stack.remove(element);
   return result;
+}
+
+/// Restricts construction to field defaults and directly modeled `this` inputs.
+///
+/// Initializer-list assignments and redirects can transform defaults without
+/// changing parameter signatures. Fail closed instead of fingerprinting source
+/// text or relying on Analyzer's private constructor evaluation implementation.
+void _validateDTOConstructors(ClassElement element, List<FieldElement> fields) {
+  for (final constructor in element.constructors) {
+    final parameters = constructor.formalParameters;
+    final initialized = {
+      for (final parameter
+          in parameters.whereType<FieldFormalParameterElement>())
+        parameter.field,
+    };
+    if (constructor.redirectedConstructor != null ||
+        parameters.any(
+          (parameter) => parameter is! FieldFormalParameterElement,
+        ) ||
+        fields.any(
+          (field) => !field.hasInitializer && !initialized.contains(field),
+        )) {
+      _fail(
+        'UI DTO constructors must initialize fields through this.field parameters '
+        'or constant field declarations; initializer-list assignments and redirects are unsupported.',
+        constructor,
+      );
+    }
+  }
 }
 
 /// Fingerprints effective constant defaults, including imported const values.

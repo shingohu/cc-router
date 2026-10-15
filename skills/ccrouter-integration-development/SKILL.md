@@ -232,6 +232,9 @@ Read [implementation-patterns.md](references/implementation-patterns.md) when ad
   UI contracts and your own generated `<componentId>.ui.api.g.dart`; never
   import the owner's Renderer or Widget. This does not relax Service types or
   create a Route/Fragment Scope. Plain presentation reuse stays ordinary Flutter.
+  UI enums must have no authored members, constructors, mixins or interfaces.
+  DTO construction uses `this.field` parameters or constant field declarations;
+  initializer-list assignments and redirecting constructors are unsupported.
 - Use **Route** for showing a destination and optionally receiving a typed Pop result.
 - Use **Service** for repeatable methods, state reads, or lifecycle-owned resources.
 - Use **Command<R>** for one requested operation with exactly one owner; use `R = void` when only completion matters.
