@@ -63,10 +63,12 @@ final class CCGoRouterBackendConfiguration {
   /// Initial location passed to the managed GoRouter.
   final String initialLocation;
 
-  /// Bounded backend lifecycle event capacity.
+  /// Per-history capacity for backend lifecycle and predictive fallback events.
   final int lifecycleEventCapacity;
 
-  /// Whether the predictive-back bridge is enabled for this Host.
+  /// Whether generated default Android Material Pages automatically report
+  /// predictive-back phases. False retains original Route handling; custom
+  /// Backend factories must propagate this option and wire their own Pages.
   final bool enablePredictiveBack;
 
   /// Creates the framework's default managed Backend from this configuration.
@@ -174,10 +176,13 @@ final class CCGoRouterApp extends StatefulWidget {
   /// Initial location passed to the managed GoRouter.
   final String initialLocation;
 
-  /// Bounded backend lifecycle event capacity.
+  /// Per-history capacity for backend lifecycle and predictive fallback events.
   final int lifecycleEventCapacity;
 
-  /// Whether the predictive-back bridge is enabled for this Host.
+  /// Enables automatic phase observation for generated default Android Material
+  /// Pages. False preserves existing Route types and Flutter back behavior.
+  /// Guard/modal/custom transitions retain non-interactive fallback; authored
+  /// Page builders explicitly opt in through the Adapter bridge.
   final bool enablePredictiveBack;
 
   /// Material application title.

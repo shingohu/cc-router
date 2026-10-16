@@ -3,6 +3,13 @@ import 'dart:async';
 import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter/ccrouter_host.dart' hide CCRouterHost;
 import 'package:flutter/widgets.dart';
+import 'package:flutter/services.dart' show PredictiveBackEvent;
+import 'package:flutter/material.dart'
+    show
+        Theme,
+        PageTransitionsBuilder,
+        PredictiveBackPageTransitionsBuilder,
+        PredictiveBackFullscreenPageTransitionsBuilder;
 import 'package:go_router/go_router.dart';
 
 import 'route_binding.dart';
@@ -104,6 +111,9 @@ final class CCGoRouterAdapter
        _lifecycleEventCapacity = lifecycleEventCapacity,
        _predictiveBackBridge = enablePredictiveBack
            ? CCGoRouterPredictiveBackBridge._()
+           : null,
+       _predictiveBackFallbacks = enablePredictiveBack
+           ? <CCGoRouterPredictiveBackFallbackEvent>[]
            : null {
     if (lifecycleEventCapacity < 0) {
       throw ArgumentError.value(
@@ -117,10 +127,25 @@ final class CCGoRouterAdapter
       publish: _recordForeignBridgeEvent,
       publishOpaque: _recordOpaqueBridgeEvent,
     );
-    for (final observer in _observers) {
-      _observerRemovers.add(observer.addListener(_recordLifecycleEvent));
+    var routerDelegateListenerAttached = false;
+    try {
+      for (final observer in _observers) {
+        _observerRemovers.add(observer.addListener(_recordLifecycleEvent));
+      }
+      _router.routerDelegate.addListener(_recordRouterConfigurationChange);
+      routerDelegateListenerAttached = true;
+      _predictiveBackBridge?._attach(this);
+    } catch (_) {
+      _predictiveBackBridge?._rollbackAttach();
+      if (routerDelegateListenerAttached) {
+        _router.routerDelegate.removeListener(_recordRouterConfigurationChange);
+      }
+      for (final remove in _observerRemovers.reversed) {
+        remove();
+      }
+      _observerRemovers.clear();
+      rethrow;
     }
-    _router.routerDelegate.addListener(_recordRouterConfigurationChange);
   }
 
   /// GoRouter instance that receives translated navigation operations.
@@ -129,8 +154,11 @@ final class CCGoRouterAdapter
   /// Backend capabilities exposed for Host setup and diagnostics.
   ///
   /// The supplied GoRouter remains application-owned. Predictive-back support
-  /// is reported only when the host opts into `enablePredictiveBack` and uses
-  /// [predictiveBackBridge] to forward platform phases. Its current match
+  /// is reported only when the host opts into `enablePredictiveBack`. Managed
+  /// generated pages wire the bridge automatically; custom/attached Pages must
+  /// explicitly pass [predictiveBackBridge] as their predictive handler or
+  /// retain manual platform forwarding for routes without automatic wiring.
+  /// Its current match
   /// tree and initial route-information location can still be reported as
   /// opaque backend entries when predictive back is disabled.
   @override
@@ -154,9 +182,10 @@ final class CCGoRouterAdapter
 
   /// Host-only predictive-back bridge, when explicitly enabled at creation.
   ///
-  /// The bridge reports platform gesture phases; it does not execute a Pop.
-  /// The host must report a committed phase only after its Navigator has
-  /// completed the corresponding backend removal.
+  /// The bridge observes automatically wired default Android Material Pages;
+  /// it never executes a Pop. An attached/custom Page opts in through its
+  /// `predictiveBackHandler` argument. Manual forwarding remains available for
+  /// uncovered platform integrations and must not duplicate automatic wiring.
   CCGoRouterPredictiveBackBridge? get predictiveBackBridge =>
       _predictiveBackBridge;
 
@@ -293,6 +322,9 @@ final class CCGoRouterAdapter
   /// Bounded lifecycle events emitted by configured Navigator observers.
   final List<CCGoRouterNavigationEvent> _lifecycleEvents = [];
 
+  /// Optional bounded fallback history, allocated only for the enabled bridge.
+  final List<CCGoRouterPredictiveBackFallbackEvent>? _predictiveBackFallbacks;
+
   /// Route metadata accepted by the Runtime during initialization.
   final List<CCNavigationRoute> _routes = [];
 
@@ -374,6 +406,15 @@ final class CCGoRouterAdapter
   /// Bounded snapshot of observed Navigator lifecycle events.
   List<CCGoRouterNavigationEvent> get lifecycleEvents =>
       List.unmodifiable(_lifecycleEvents);
+
+  /// Bounded, sanitized reasons why the automatic bridge declined a back start.
+  ///
+  /// This Host diagnostic contains no URI, arguments, Widgets, contexts, or
+  /// business results. The list is always empty when predictive back is off.
+  List<CCGoRouterPredictiveBackFallbackEvent> get predictiveBackFallbacks =>
+      _predictiveBackFallbacks == null
+      ? const []
+      : List.unmodifiable(_predictiveBackFallbacks);
 
   /// Whether every managed route Outlet has a confirmed top-route observer.
   ///
@@ -648,6 +689,28 @@ final class CCGoRouterAdapter
     _expectedBackendEvents.clear();
     _activeOutletsByShell.clear();
     _lifecycleEvents.clear();
+    _predictiveBackFallbacks?.clear();
+  }
+
+  /// Retains one sanitized predictive-back fallback with lifecycle capacity.
+  void _recordPredictiveBackFallback(
+    CCGoRouterPredictiveBackFallbackReason reason,
+  ) {
+    final events = _predictiveBackFallbacks;
+    if (_disposed || events == null || _lifecycleEventCapacity == 0) return;
+    try {
+      if (events.length == _lifecycleEventCapacity) events.removeAt(0);
+      events.add(
+        CCGoRouterPredictiveBackFallbackEvent(
+          reason: reason,
+          hostId: _hostId,
+          navigatorOutlet: _activeNavigatorOutlet,
+          timestamp: DateTime.now(),
+        ),
+      );
+    } catch (_) {
+      // Diagnostic retention must never interrupt the platform back callback.
+    }
   }
 
   /// Pushes one location and removes its tracked entry when it completes.
@@ -1105,6 +1168,7 @@ final class CCGoRouterAdapter
   /// visibility signal without treating the branch as removed.
   void _recordRouterConfigurationChange() {
     if (!_initialized || _disposed) return;
+    _predictiveBackBridge?._invalidateInactiveOutlets();
     final activation = _activeStatefulShellPlacement(
       _router.routerDelegate.currentConfiguration.matches,
     );
@@ -1252,6 +1316,7 @@ final class CCGoRouterAdapter
       timestamp: DateTime.now(),
     );
     _publishBackendEvent(backendEvent);
+    _predictiveBackBridge?._observeBackendEvent(backendEvent, event.route);
   }
 
   /// Whether the adapter snapshot marks [routeId] as requiring a Pop gate.

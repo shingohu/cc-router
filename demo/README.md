@@ -101,6 +101,32 @@ fvm flutter test
 fvm flutter run
 ```
 
+### Android 预测返回 A/B 验证
+
+默认 `lib/main.dart` 保持 `enablePredictiveBack=false`。开启自动桥的独立入口：
+
+```sh
+fvm flutter run -t lib/main_predictive_back.dart
+fvm flutter test test/predictive_back_demo_test.dart
+```
+
+从“导航 → Push + typed result”开始左/右边缘手势：取消应保留详情且不新增正式离页；
+提交应只返回一层。开启版本在诊断事件中显示 `Predictive back · started/cancelled/committed`，
+不逐帧记录 update。关闭版本仍可能有 Flutter 自带预测动画，但不产生这些 CCRouter 阶段事件。
+自动桥未接管 start 时，Host 可从 `backend.adapter.predictiveBackFallbacks` 查看有界、脱敏的
+稳定原因；关闭版本该列表始终为空。
+“策略 → PopGuard 未保存表单”保留非交互拒绝，保存后再返回；“Shell / StatefulShell”详情
+验证嵌套 Outlet，手势中切换分支后旧提交不能退出新分支。自建 Shell Page 已显式传入 Host handler。
+每次切换入口重新启动 Demo，不在进行中的手势里切换开关。
+Demo widget 回归还覆盖 Shell / StatefulShell 详情上的根弹窗：先弹出时返回只关闭弹窗，
+手势中弹出时取消旧预览，弹窗先关闭也不能恢复旧提交；后续独立手势仍正常。
+
+2026-10-15 已在三星 Android 16 完成开启 / 关闭入口的真机触摸输入注入冒烟；
+结果与限制见[设备验证记录](../docs/validation/android_predictive_back_samsung_20261015.md)。
+
+自动化测试覆盖上述场景；系统派发、有效 Manifest、IME、WebView/原生 Activity 和返回桌面
+仍须在目标设备验证。该入口不修改 targetSdk 或系统手势设置。
+
 OHOS 原生模块位于 `ohos/`。在该目录中可使用：
 
 ```sh

@@ -1,0 +1,216 @@
+{
+  "date": "2026-10-15",
+  "device": {
+    "model": "SM-S911U1",
+    "android": "16",
+    "api": 36,
+    "navigationMode": 2,
+    "resolution": "1080x2340"
+  },
+  "app": {
+    "applicationId": "dev.ccrouter.demo",
+    "targetSdk": 36,
+    "enabledEntry": "lib/main_predictive_back.dart",
+    "disabledEntry": "lib/main.dart",
+    "enabledApkSha256": "3190f2a96e7545238b107cc71686a11f9e23a39d277b3107cc44039b6ce20747",
+    "disabledApkSha256": "be7b8019f8c04446cbb79b6dec9d5bab771c4f8e946f2f74cc3c8bb3e1b6b526"
+  },
+  "method": "Android touchscreen MotionEvent injection through shell app_process; system gesture recognition and Flutter embedding; existing Demo store read through VM Service getObject, without expression evaluation or state mutation.",
+  "cases": [
+    {
+      "id": "enabled_left_cancel",
+      "enabled": true,
+      "edge": "left",
+      "action": "cancel",
+      "visibleAfter": "ID 42",
+      "events": [
+        "17:36:39  Predictive back · cancelled",
+        "17:36:37  Predictive back · started"
+      ],
+      "result": "passed"
+    },
+    {
+      "id": "enabled_right_cancel",
+      "enabled": true,
+      "edge": "right",
+      "action": "cancel",
+      "visibleAfter": "ID 42",
+      "events": [
+        "17:37:05  Predictive back · cancelled",
+        "17:37:04  Predictive back · started"
+      ],
+      "result": "passed"
+    },
+    {
+      "id": "enabled_right_commit_after_cancels",
+      "enabled": true,
+      "edge": "right",
+      "action": "commit",
+      "routeEntriesAfter": 0,
+      "events": [
+        "17:37:22  Detail dispose",
+        "17:37:22  Aspect after · demo_navigation_lab.detail · source=navigation.typed · 72070ms",
+        "17:37:22  Aspect disposed · demo_navigation_lab.detail · source=navigation.typed · 72070ms",
+        "17:37:22  Aspect removed · demo_navigation_lab.detail · source=navigation.typed · 72068ms",
+        "17:37:22  Sink · navigation/push · completed",
+        "17:37:22  Sink · lifecycle/routeEntry · disposed",
+        "17:37:22  Sink · backend/topChanged · observed",
+        "17:37:22  Sink · backend/pop · observed",
+        "17:37:22  Sink · lifecycle/routeEntry · removed",
+        "17:37:22  Sink · lifecycle/routeVisibility · didHide",
+        "17:37:22  Sink · lifecycle/routeEntry · popping",
+        "17:37:22  Sink · lifecycle/routeVisibility · willHide",
+        "17:37:22  Push typed detail · 完成",
+        "17:37:22  Home onPageShow",
+        "17:37:22  Detail onPageHide",
+        "17:37:22  Predictive back · committed",
+        "17:37:21  Predictive back · started"
+      ],
+      "result": "passed"
+    },
+    {
+      "id": "enabled_next_left_commit",
+      "enabled": true,
+      "edge": "left",
+      "action": "commit",
+      "routeEntriesAfter": 0,
+      "events": [
+        "17:37:48  Detail dispose",
+        "17:37:48  Sink · navigation/push · completed",
+        "17:37:48  Sink · lifecycle/routeEntry · disposed",
+        "17:37:48  Aspect after · demo_navigation_lab.detail · source=navigation.typed · 2398ms",
+        "17:37:48  Aspect disposed · demo_navigation_lab.detail · source=navigation.typed · 2398ms",
+        "17:37:48  Aspect removed · demo_navigation_lab.detail · source=navigation.typed · 2396ms",
+        "17:37:48  Push typed detail · 完成",
+        "17:37:48  Sink · backend/topChanged · observed",
+        "17:37:48  Sink · backend/pop · observed",
+        "17:37:48  Sink · lifecycle/routeEntry · removed",
+        "17:37:48  Sink · lifecycle/routeVisibility · didHide",
+        "17:37:48  Sink · lifecycle/routeEntry · popping",
+        "17:37:48  Sink · lifecycle/routeVisibility · willHide",
+        "17:37:48  Home onPageShow",
+        "17:37:48  Detail onPageHide",
+        "17:37:48  Predictive back · committed",
+        "17:37:47  Predictive back · started"
+      ],
+      "result": "passed"
+    },
+    {
+      "id": "enabled_immediate_back_during_entry",
+      "enabled": true,
+      "edge": "left",
+      "action": "commit-before-entry-animation-settled",
+      "routeEntriesAfter": 0,
+      "events": [
+        "17:37:25  Detail dispose",
+        "17:37:25  Aspect after · demo_navigation_lab.detail · source=navigation.typed · 1369ms",
+        "17:37:25  Aspect disposed · demo_navigation_lab.detail · source=navigation.typed · 1369ms",
+        "17:37:25  Aspect removed · demo_navigation_lab.detail · source=navigation.typed · 1367ms",
+        "17:37:25  Sink · navigation/push · completed",
+        "17:37:25  Sink · lifecycle/routeEntry · disposed",
+        "17:37:25  Sink · backend/topChanged · observed",
+        "17:37:25  Sink · backend/pop · observed",
+        "17:37:25  Sink · lifecycle/routeEntry · removed",
+        "17:37:25  Sink · lifecycle/routeVisibility · didHide",
+        "17:37:25  Sink · lifecycle/routeEntry · popping",
+        "17:37:25  Sink · lifecycle/routeVisibility · willHide",
+        "17:37:25  Push typed detail · 完成",
+        "17:37:25  Home onPageShow",
+        "17:37:25  Detail onPageHide"
+      ],
+      "result": "passed"
+    },
+    {
+      "id": "guard_unsaved_deny",
+      "enabled": true,
+      "edge": "left",
+      "action": "commit",
+      "visibleAfter": "PopGuard",
+      "dirtyForm": true,
+      "events": [
+        "17:38:34  PopGuard · system · deny"
+      ],
+      "result": "passed"
+    },
+    {
+      "id": "guard_saved_allow",
+      "enabled": true,
+      "edge": "right",
+      "action": "commit",
+      "routeEntriesAfter": 0,
+      "dirtyForm": false,
+      "events": [
+        "17:38:57  Aspect after · demo_navigation_lab.guarded · 26859ms",
+        "17:38:57  Aspect disposed · demo_navigation_lab.guarded · 26859ms",
+        "17:38:57  Aspect removed · demo_navigation_lab.guarded · 26857ms",
+        "17:38:57  Sink · navigation/push · completed",
+        "17:38:57  Sink · lifecycle/routeEntry · disposed",
+        "17:38:57  Sink · backend/topChanged · observed",
+        "17:38:57  Sink · backend/pop · observed",
+        "17:38:57  Sink · lifecycle/routeEntry · removed",
+        "17:38:57  Sink · lifecycle/routeVisibility · didHide",
+        "17:38:57  Sink · lifecycle/routeEntry · popping",
+        "17:38:57  Sink · lifecycle/routeVisibility · willHide",
+        "17:38:57  PopGuard route · 完成",
+        "17:38:57  Home onPageShow",
+        "17:38:57  PopGuard · system · allow"
+      ],
+      "result": "passed"
+    },
+    {
+      "id": "disabled_left_cancel",
+      "enabled": false,
+      "edge": "left",
+      "action": "cancel",
+      "visibleAfter": "ID 42",
+      "events": [
+        "17:40:58  Aspect arrival · demo_navigation_lab.detail · source=navigation.typed · 33ms",
+        "17:40:58  Sink · backend/topChanged · observed",
+        "17:40:58  Sink · lifecycle/routeVisibility · didShow",
+        "17:40:58  Sink · lifecycle/routeEntry · visible",
+        "17:40:58  Sink · lifecycle/routeVisibility · willShow",
+        "17:40:58  Sink · backend/push · observed",
+        "17:40:58  Detail onPageShow",
+        "17:40:58  Detail initState · id=42",
+        "17:40:58  Home onPageHide",
+        "17:40:58  Sink · lifecycle/routeEntry · pushed",
+        "17:40:58  Sink · navigation/push · requested",
+        "17:40:58  Sink · lifecycle/routeEntry · resolving",
+        "17:40:58  Aspect found · demo_navigation_lab.detail · source=navigation.typed · 7ms",
+        "17:40:58  Global before · push · demo_navigation_lab.detail",
+        "17:40:58  Push typed detail · 执行中"
+      ],
+      "result": "passed"
+    },
+    {
+      "id": "disabled_right_commit",
+      "enabled": false,
+      "edge": "right",
+      "action": "commit",
+      "routeEntriesAfter": 0,
+      "events": [
+        "17:41:34  Detail dispose",
+        "17:41:34  Aspect after · demo_navigation_lab.detail · source=navigation.typed · 35853ms",
+        "17:41:34  Aspect disposed · demo_navigation_lab.detail · source=navigation.typed · 35852ms",
+        "17:41:34  Aspect removed · demo_navigation_lab.detail · source=navigation.typed · 35847ms",
+        "17:41:34  Sink · navigation/push · completed",
+        "17:41:34  Sink · lifecycle/routeEntry · disposed",
+        "17:41:34  Sink · backend/topChanged · observed",
+        "17:41:34  Sink · backend/pop · observed",
+        "17:41:34  Sink · lifecycle/routeEntry · removed",
+        "17:41:34  Sink · lifecycle/routeVisibility · didHide",
+        "17:41:34  Sink · lifecycle/routeEntry · popping",
+        "17:41:34  Sink · lifecycle/routeVisibility · willHide",
+        "17:41:34  Push typed detail · 完成",
+        "17:41:34  Home onPageShow",
+        "17:41:34  Detail onPageHide"
+      ],
+      "result": "passed"
+    }
+  ],
+  "limits": [
+    "One Android 16 device only; Demo targetSdk is 36, no LiberLive target or Manifest changes.",
+    "No manual aesthetic approval of interactive animation.",
+    "IME, foreign Popup, WebView/platform views, native Activities, back-to-home, device multi-Host arbitration and Android 13/14/15 remain outside this device pass."
+  ]
+}

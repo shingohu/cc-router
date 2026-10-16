@@ -267,6 +267,33 @@ the Service Contract.
 - Observe Interceptor cancellation cooperatively. Runtime shutdown ends pending Interceptor/Failure Policy waits with `CCRouteCancelledError` and ignores late decisions; it cannot stop arbitrary Dart work. Defer/resume preserves typed payloads, the original concrete Host, call-site Outlet, and result contract while revalidating policy. Configure a timeout or explicitly cancel abandoned continuations.
 - Use PopGuard only for synchronous, in-memory exit decisions. Use Flutter `PopScope` for confirmation UI or asynchronous work.
 - A PopGuard allow decision does not override local `PopScope`/`Form` denial on system back or `maybePop`. Keep the page and its result pending until local policy permits exit; an explicit `pop` after confirmation remains a deliberate application action. Guarded Cupertino pages still disable interactive back, while unguarded pages retain platform gestures.
+- Android predictive-back automatic observation is Host opt-in through
+  `CCGoRouterApp` / managed Backend `enablePredictiveBack: true`. False preserves
+  original Routes and Flutter behavior and installs no CCRouter gesture observer.
+  Generated default Android Material pages wire automatically; attached/custom
+  or Shell Page builders pass the Adapter bridge as `predictiveBackHandler`
+  explicitly. Stock predictive Theme builders are supported; Guard, modal,
+  LocalHistory and custom-transition fallback remain intact. Eligibility follows
+  the current `Theme.platform`; switching to an unsupported platform/transition
+  during a gesture cancels and restores the preview and Navigator gesture state.
+  Late commits cannot pop that page, and restoring a predictive Theme does not
+  revive the old preview. New gestures follow the current Theme. A preview cancelled
+  by navigation or a closed local gate at commit must not complete results,
+  dispose Route Scopes or trigger business confirmation. Ancestor Navigator
+  popups block covered nested pages and invalidate existing previews, including
+  when the popup closes before commit. Attached Router pages recover ordinary
+  Flutter handling for new gestures after Adapter disposal; old gestures stay
+  invalid. Reading `Route.popGestureEnabled` during a retired gesture does not
+  detach its original commit fence; only its terminal callback ends that sequence.
+  Read `adapter.predictiveBackFallbacks` for bounded, sanitized start
+  rejection reasons; it shares `lifecycleEventCapacity` and is empty without
+  allocating history when the switch is false. Treat custom handler failures as
+  observational: a throwing `isActive` relinquishes an idle Route to Flutter;
+  it does not detach an in-flight gesture owner.
+  Adapter construction must atomically roll back all observer/listener
+  registration. Never add a second Pop
+  or manually forward phases for an automatically wired Route. See the Host
+  section of `references/implementation-patterns.md` for limits and rollback.
 - Use `CCNavigationAspect` only for observation and sanitized telemetry. It must not change navigation decisions or synchronously re-enter navigation.
 - Use `CCPageLifecycleMixin` or `CCPageLifecycleListener` for PageShow/PageHide and application foreground/background observation. Use Flutter `initState/dispose` for Widget lifetime.
 - Use Route Service for page-instance resources that must survive PageHide and be disposed only after the exact managed RouteEntry is removed.

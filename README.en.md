@@ -673,6 +673,57 @@ PopGuard handles synchronous pre-exit rules, such as in-memory unsaved edits, no
 
 System back, ordinary Pop, Cupertino gestures, and Android predictive back share the same coordination. A foreign popup or `LocalHistoryEntry` consuming back does not close the underlying Managed Route Scope.
 
+### Optional Android predictive-back bridge
+
+`CCGoRouterApp(enablePredictiveBack: true)` or the matching managed Backend
+option automatically connects generated default Android Material pages. The
+default `false` preserves existing Route types and Flutter back handling,
+including Flutter's own predictive animation; it creates no CCRouter gesture
+observer or phase state. Flutter remains the sole animation and Pop driver.
+Cancellation keeps lifecycle, typed results and Route Scopes unchanged; a
+committed report follows removal of the exact backend Entry. Navigation during
+a gesture or a closed PopScope/Form at commit cancels the preview without
+automatically invoking business confirmation UI. Ancestor Navigator popups prevent
+new gestures on covered nested pages and invalidate in-flight previews even if
+the popup closes before commit. Disposing an attached Adapter rejects its old
+gesture while restoring Flutter back handling for subsequent gestures on the
+surviving application-owned Router. Reading `popGestureEnabled` while the old
+gesture is in flight preserves its original commit fence until cancellation or
+commit.
+
+The bridge checks the transition selected by the current `Theme.platform`.
+Switching to a non-Android platform or a non-predictive transition during a
+gesture cancels the preview, restores its animation and releases Navigator's
+gesture state. A late commit cannot pop the page; new gestures follow the
+current Theme. Restoring a predictive Theme does not revive the old preview.
+
+Guarded pages retain non-interactive system fallback even when a Guard allows
+exit. Modals, local history, custom transitions and non-predictive Themes retain
+their existing back paths. Automatic observation supports Flutter's stock
+`PredictiveBackPageTransitionsBuilder` and
+`PredictiveBackFullscreenPageTransitionsBuilder`. Attached/custom/Shell Page
+builders explicitly pass `adapter.predictiveBackBridge` as
+`predictiveBackHandler` to `ccGoRouterPage` or `CCFlutterRouteFactory.createPage`;
+this is Host SPI, never Feature API. Do not also forward manual phases for the
+same Route. Bridge capability metadata does not prove coverage of every Route,
+platform configuration or back-to-home transition.
+
+Hosts can inspect `adapter.predictiveBackFallbacks` to learn why the automatic
+bridge declined a start, including button back, an unwired Page, an unsupported
+Theme, a local gate, an inactive Outlet, or an unknown managed Entry. This
+read-only history shares `lifecycleEventCapacity` and contains only a stable
+reason, Host, Outlet, and timestamp; it excludes URIs, arguments, Extra,
+Widgets, contexts, and business results. It stays empty and is not allocated
+when the switch is false. Adapter construction rolls back Observer/listener
+registration atomically. If a custom `CCFlutterPredictiveBackHandler.isActive`
+throws, an idle Route detaches that handler and restores Flutter's original
+back path. An in-flight gesture retains its original handler through its
+terminal callback so an eligibility query cannot authorize a late commit.
+
+The ordinary Demo stays disabled. From `demo/`, use
+`fvm flutter run -t lib/main_predictive_back.dart` for the opt-in launch and see
+the [integration and validation notes](docs/CCRouter-predictive-back.md).
+
 For system back or `maybePop`, an allow result from a framework Guard only passes framework policy. The page's own `PopScope(canPop: false)` / `Form(canPop: false)` can still reject exit. The page and result Future remain alive, and local rejection callbacks can show confirmation UI. An explicit `pop` after confirmation remains an intentional return operation. Cupertino pages retain default swipe-back without a Guard; with a Guard, swipe-back remains disabled. Local protection fixes do not relax this rule.
 
 ## Aspects, Trace, Telemetry, and Lifecycles

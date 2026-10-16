@@ -13,6 +13,7 @@ CCGoRouterBackend createDemoRouterBackend({
   required CCFlutterRouteCatalog catalog,
   String hostId = 'default',
   String initialLocation = '/',
+  bool enablePredictiveBack = false,
 }) {
   final single = _DemoShellOutlet(hostId, demoSingleShellOutlet);
   final home = _DemoShellOutlet(hostId, demoWorkspaceHomeOutlet);
@@ -28,7 +29,13 @@ CCGoRouterBackend createDemoRouterBackend({
         id: GlobalKey<NavigatorState>(debugLabel: '$hostId.$id'),
     },
   );
-  final mounts = _DemoRouteMounts(catalog);
+  late final CCGoRouterBackend backend;
+  final mounts = _DemoRouteMounts(
+    catalog,
+    predictiveBackHandler: enablePredictiveBack
+        ? () => backend.adapter.predictiveBackBridge
+        : null,
+  );
   final singleDetail = mounts.route(
     routeId: 'demo_navigation_lab.shell.detail',
     path: ':item',
@@ -91,7 +98,7 @@ CCGoRouterBackend createDemoRouterBackend({
     ],
   );
 
-  return CCGoRouterBackend.managed(
+  return backend = CCGoRouterBackend.managed(
     catalog: catalog,
     host: host,
     overrides: mounts.overrides,
@@ -113,6 +120,7 @@ CCGoRouterBackend createDemoRouterBackend({
     ],
     outletObservers: [for (final outlet in shellOutlets) outlet.observer],
     initialLocation: initialLocation,
+    enablePredictiveBack: enablePredictiveBack,
   );
 }
 
@@ -130,9 +138,10 @@ final class _DemoShellOutlet {
 /// Keeps manually placed Shell routes and their Adapter bindings in one place.
 /// The Host still explicitly chooses the Shell tree and relative child paths.
 final class _DemoRouteMounts {
-  _DemoRouteMounts(this.catalog);
+  _DemoRouteMounts(this.catalog, {this.predictiveBackHandler});
 
   final CCFlutterRouteCatalog catalog;
+  final CCFlutterPredictiveBackHandler? Function()? predictiveBackHandler;
   final overrides = <String, CCGoRouterRouteOverride>{};
 
   GoRoute route({
@@ -170,6 +179,7 @@ final class _DemoRouteMounts {
           key: state.pageKey,
           name: routeId,
           arguments: extra,
+          predictiveBackHandler: predictiveBackHandler?.call(),
         );
       },
       routes: routes,

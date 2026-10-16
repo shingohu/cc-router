@@ -11,7 +11,10 @@ import 'demo_router_backend.dart';
 import 'demo_initialization.dart';
 import 'platform_deep_link_bridge.dart';
 
-Future<void> main() async {
+Future<void> main() => runDemo();
+
+/// Shares startup with the opt-in predictive-back verification entry point.
+Future<void> runDemo({bool enablePredictiveBack = false}) async {
   WidgetsFlutterBinding.ensureInitialized();
   CCRouterHost.initialize(
     hostAssembly: ccrouterGeneratedHostAssembly,
@@ -44,7 +47,7 @@ Future<void> main() async {
     ),
   );
   await CCRouterHost.runInitTasks(gate: CCInitTaskGate.appStarted);
-  runApp(const CCRouterDemoApp());
+  runApp(CCRouterDemoApp(enablePredictiveBack: enablePredictiveBack));
 }
 
 final class CCRouterDemoApp extends StatelessWidget {
@@ -52,21 +55,37 @@ final class CCRouterDemoApp extends StatelessWidget {
     this.initialLocation = '/',
     this.listenForPlatformLinks = true,
     this.platformLinkStream,
+    this.enablePredictiveBack = false,
     super.key,
   });
 
   final String initialLocation;
   final bool listenForPlatformLinks;
   final Stream<Uri>? platformLinkStream;
+  final bool enablePredictiveBack;
 
   @override
   Widget build(BuildContext context) {
     final app = CCGoRouterApp(
       initialLocation: initialLocation,
-      backendFactory: (configuration) => createDemoRouterBackend(
-        catalog: configuration.catalog,
-        initialLocation: configuration.initialLocation,
-      ),
+      enablePredictiveBack: enablePredictiveBack,
+      backendFactory: (configuration) {
+        final backend = createDemoRouterBackend(
+          catalog: configuration.catalog,
+          initialLocation: configuration.initialLocation,
+          enablePredictiveBack: configuration.enablePredictiveBack,
+        );
+        backend.adapter.predictiveBackBridge?.addPredictiveBackListener((
+          event,
+        ) {
+          if (event.phase != CCPredictiveBackPhase.updated) {
+            demoNavigationLabStore.record(
+              'Predictive back · ${event.phase.name}',
+            );
+          }
+        });
+        return backend;
+      },
       onLifecycleChanged: (state) {
         demoNavigationLabStore.record('App lifecycle · ${state.name}');
         final now = DateTime.now();

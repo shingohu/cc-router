@@ -114,6 +114,7 @@
 - [Host-owned Route Mount 设计与实施计划](CCRouter-host-owned-route-mount-design.md)
 - [路由完成计划](CCRouter-route-completion-plan.md)
 - [路由专项问题分析](CCRouter-route-follow-up-analysis.md)
+- [Android 预测返回自动桥](CCRouter-predictive-back.md)
 - [Navigator Backend 可行性](CCRouter-navigator-backend-feasibility.md)
 - [Cupertino Pop 手势设计](CCRouter-cupertino-pop-gesture-design.md)
 
