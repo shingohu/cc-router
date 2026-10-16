@@ -99,6 +99,50 @@ void main() {
     });
   }
 
+  _demoTest('predictive back preserves and releases typed UI Fragments', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const CCRouterDemoApp(
+        enablePredictiveBack: true,
+        listenForPlatformLinks: false,
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('展示'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('类型化 UI Fragment'));
+    await tester.pump(const Duration(milliseconds: 200));
+    await tester.pumpAndSettle();
+
+    final count = CCRouter.activeRouteEntries.length;
+    expect(find.text('订单摘要 · 1'), findsOneWidget);
+    await tester.enterText(find.byType(TextField).first, '预测手势保留状态');
+    await _gesture(tester, 'startBackGesture');
+    await _gesture(tester, 'updateBackGestureProgress');
+    await _gesture(tester, 'cancelBackGesture');
+    await tester.pumpAndSettle();
+
+    expect(find.text('类型化 UI Fragment'), findsOneWidget);
+    expect(CCRouter.activeRouteEntries, hasLength(count));
+    expect(
+      tester.widget<TextField>(find.byType(TextField).first).controller!.text,
+      '预测手势保留状态',
+    );
+    expect(_phases, ['started', 'cancelled']);
+
+    await _gesture(tester, 'startBackGesture');
+    await _gesture(tester, 'commitBackGesture');
+    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 200));
+
+    expect(find.text('订单摘要 · 1'), findsNothing);
+    expect(CCRouter.activeRouteEntries, hasLength(count - 1));
+    expect(_phases, ['started', 'cancelled', 'started', 'committed']);
+    expect(tester.takeException(), isNull);
+    await _close(tester);
+  });
+
   _demoTest('real Demo Guard denies then allows non-interactive fallback', (
     tester,
   ) async {
