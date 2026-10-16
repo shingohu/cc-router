@@ -1485,6 +1485,72 @@ void main() {
     },
   );
 
+  test(
+    'sub-millisecond Event deadlines never succeed or add failure noise',
+    () async {
+      final contexts = <CCInvocationContext>[];
+      runtime.registerEvent<Changed>('slow', (_, context) async {
+        contexts.add(context);
+        await context.cancellation.whenCancelled;
+      });
+      runtime.initialize();
+
+      // Exercise the boundary where VM timers truncate a positive remaining
+      // duration to zero milliseconds. Repeat across different timer phases.
+      for (var i = 0; i < 20; i++) {
+        await expectLater(
+          runtime.event(Changed(), timeout: const Duration(microseconds: 900)),
+          throwsA(isA<CCInvocationTimeoutError>()),
+        );
+      }
+
+      expect(contexts, isNotEmpty);
+      expect(
+        contexts.every((context) => context.cancellation.isCancelled),
+        isTrue,
+      );
+      expect(runtime.subscriberErrors, isEmpty);
+      expect(
+        runtime.recentTraces
+            .where((trace) => trace.operation == 'event')
+            .map((trace) => trace.status),
+        everyElement('timedOut'),
+      );
+    },
+  );
+
+  test(
+    'a shorter nested timeout remains an isolated subscriber failure',
+    () async {
+      var received = false;
+      runtime.registerCommand<Refresh, void>((_, context) async {
+        await context.cancellation.whenCancelled;
+      });
+      runtime.registerEvent<Changed>('nested', (_, _) async {
+        await runtime.command(
+          Refresh(),
+          timeout: const Duration(milliseconds: 1),
+        );
+      });
+      runtime.registerEvent<Changed>('healthy', (_, _) => received = true);
+      runtime.initialize();
+
+      await runtime.event(Changed(), timeout: const Duration(seconds: 5));
+
+      expect(received, isTrue);
+      expect(
+        runtime.subscriberErrors.single.message,
+        contains('CCInvocationTimeoutError'),
+      );
+      expect(
+        runtime.recentTraces
+            .singleWhere((trace) => trace.operation == 'event')
+            .status,
+        'succeeded',
+      );
+    },
+  );
+
   test('Event caller cancellation reaches pending subscribers', () async {
     final started = Completer<void>();
     late CCInvocationContext subscriberContext;

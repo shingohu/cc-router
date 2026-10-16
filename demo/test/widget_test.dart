@@ -289,7 +289,34 @@ void main() {
     await _tapCapabilityAction(tester, 'Event · zero subscribers');
     expect(find.textContaining('Event zero subscribers · 完成'), findsOneWidget);
 
-    await _tapCapabilityAction(tester, 'Event · timeout');
+    await tester.scrollUntilVisible(
+      find.text('Event · timeout'),
+      350,
+      scrollable: find.byType(Scrollable).last,
+    );
+    // Runtime deadlines use wall time; keep their timers in the same real
+    // clock instead of advancing only the Widget test's fake timer clock.
+    await tester.runAsync(() async {
+      final completed = Completer<void>();
+      void onStatusChanged() {
+        if (!completed.isCompleted &&
+            demoNavigationLabStore.events.any(
+              (event) =>
+                  event.contains('Event timeout ·') && !event.endsWith('执行中'),
+            )) {
+          completed.complete();
+        }
+      }
+
+      demoNavigationLabStore.addListener(onStatusChanged);
+      try {
+        await tester.tap(find.text('Event · timeout'));
+        await completed.future.timeout(const Duration(seconds: 5));
+      } finally {
+        demoNavigationLabStore.removeListener(onStatusChanged);
+      }
+    });
+    await tester.pumpAndSettle();
     expect(find.textContaining('CCInvocationTimeoutError'), findsOneWidget);
 
     await _unmountDemo(tester);

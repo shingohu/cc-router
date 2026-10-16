@@ -702,6 +702,15 @@ all have distinct explicit IDs. Keep raw `CCRouter.event` and handwritten typed
 Subscriber registration for unannotated migration capabilities, Host
 composition, and low-level tests only.
 
+An overall Event deadline ends the publication Future with
+`CCInvocationTimeoutError` and cooperatively cancels pending Subscribers. A
+shared-deadline timeout is not a Subscriber failure diagnostic; a shorter
+nested call timeout remains isolated to its Subscriber. Timeout scheduling does
+not guarantee microsecond precision.
+In Widget tests, run wall-clock deadline work inside `tester.runAsync` and await
+its terminal result before pumping the UI. `pumpAndSettle` advances fake timers
+without advancing `DateTime.now()` and cannot prove real deadline behavior.
+
 Generated Command callers and Event publishers are not trusted as raw strings.
 Runtime verifies that they are installed and that Command consumers or Event
 subscribers have the required dependency edge to the capability Owner. Required

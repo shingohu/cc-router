@@ -1221,6 +1221,10 @@ await OrderEvents.publishOrderPaid(
 
 同一 Event 可以没有 Subscriber 或有多个 Subscriber。订阅按稳定 ID 确定启动顺序，单个 Subscriber 失败不会阻止其他 Subscriber；调用 Future 在本次分发完成后结束。同一组件只有一个对应 Subscriber 时可省略 `CCEventSubscription.id`，生成器使用 `<subscriberComponentId>.<eventId>`；存在多个时必须全部显式设置。跨组件 Contract 显式填写 `componentId`，订阅组件把 Owner 放入 required 或 optional dependencies。生成器只为 Owner 生成 Publication Client，不增加 `eventDependencies` 或任意发布权。
 
+发布的整体 deadline 到期时，Future 以 `CCInvocationTimeoutError` 结束，并向 Subscriber
+传播协作取消；共享 deadline 的超时不会计入 Subscriber 失败诊断。Subscriber 内部更短的
+子调用超时仍按单个 Subscriber 失败隔离。timeout 不提供微秒级定时精度保证。
+
 Runtime 会确认生成 Publication Client 声明的 Publisher 已安装，并逐一复核 Subscriber 对
 Publisher Owner 的 required/optional dependency。缺失 Publisher、Event ID 不一致或 Subscriber
 依赖缺失会在分发前以 `CCResolutionError` 失败；无 Subscriber 的合法 Event 仍是成功 no-op。

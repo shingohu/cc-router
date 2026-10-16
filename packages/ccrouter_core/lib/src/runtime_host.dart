@@ -2479,6 +2479,9 @@ final class CCRouterRuntime {
   }
 
   /// Executes [body] with tracing, inherited deadline, and cancellation.
+  ///
+  /// Deadline timer delays round up to whole milliseconds so Timer truncation
+  /// cannot expire a child before its inherited wall-clock deadline.
   Future<R> _invoke<R>(
     String operation,
     String target,
@@ -2544,9 +2547,20 @@ final class CCRouterRuntime {
       });
       final result = Future.any([work, cancelled.future]);
       if (deadline == null) return await result;
-      final remaining = deadline.difference(DateTime.now());
+      final remainingMicros = deadline
+          .difference(DateTime.now())
+          .inMicroseconds;
+      // Timer truncates fractional milliseconds. An early child timeout could
+      // otherwise be isolated as a subscriber failure while its publisher's
+      // shared deadline is still in the future, letting the Event succeed.
+      final timerDelay = Duration(
+        milliseconds: remainingMicros <= 0
+            ? 0
+            : (remainingMicros + Duration.microsecondsPerMillisecond - 1) ~/
+                  Duration.microsecondsPerMillisecond,
+      );
       final value = await result.timeout(
-        remaining.isNegative ? Duration.zero : remaining,
+        timerDelay,
         onTimeout: () {
           throw const CCInvocationTimeoutError();
         },
