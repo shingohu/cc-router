@@ -1,5 +1,5 @@
-cwd: /var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/main
-command: ['/Users/shingo/fvm/versions/3.41.9/bin/dart', 'test', '--concurrency=1', '--reporter=expanded', 'packages/ccrouter_test/generator_test']
+cwd: <TEMP_DIR>/ccrouter-review-20261015-g3s3se0r/main
+command: ['<USER_HOME>/fvm/versions/3.41.9/bin/dart', 'test', '--concurrency=1', '--reporter=expanded', 'packages/ccrouter_test/generator_test']
 00:00 +0: loading packages/ccrouter_test/generator_test/flutter_run_reload_gate_test.dart
 00:00 +0: packages/ccrouter_test/generator_test/flutter_run_reload_gate_test.dart: lease close during startup cannot leave a heartbeat running
 00:00 +1: packages/ccrouter_test/generator_test/flutter_run_reload_gate_test.dart: canonical identity resolves the macOS temporary-directory alias
@@ -198,14 +198,14 @@ watch aggregation timing: inProcess=800ms subprocessReference=4896ms
 15:28 +175 -1: packages/ccrouter_test/generator_test/generation_watch_test.dart: watch handles Dart file add rename and delete without session restart
 16:13 +176 -1: packages/ccrouter_test/generator_test/generation_watch_test.dart: one-shot check reuses exact watch evidence while reference paths fail fast
 16:40 +177 -1: packages/ccrouter_test/generator_test/generation_watch_test.dart: installed flutter build preflight reuses an active watch
-Installed CCRouter pub hook in Flutter SDK: /var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter_watch_build_wrapper_u3nlQA
+Installed CCRouter pub hook in Flutter SDK: <TEMP_DIR>/ccrouter_watch_build_wrapper_u3nlQA
 The hook runs after successful Flutter/Dart pub commands and before `flutter run/build`.
-CCRouter pub hook SDK: /var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter_watch_build_wrapper_u3nlQA
-  marker: /var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter_watch_build_wrapper_u3nlQA/bin/.ccrouter_pub_hook.json (valid)
-  POSIX wrapper: /var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter_watch_build_wrapper_u3nlQA/bin/flutter (verified)
-  POSIX backup: /var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter_watch_build_wrapper_u3nlQA/bin/flutter.ccrouter-original (present)
-  Dart POSIX wrapper: /var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter_watch_build_wrapper_u3nlQA/bin/cache/dart-sdk/bin/dart (verified)
-  Dart POSIX backup: /var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter_watch_build_wrapper_u3nlQA/bin/cache/dart-sdk/bin/dart.ccrouter-original (present)
+CCRouter pub hook SDK: <TEMP_DIR>/ccrouter_watch_build_wrapper_u3nlQA
+  marker: <TEMP_DIR>/ccrouter_watch_build_wrapper_u3nlQA/bin/.ccrouter_pub_hook.json (valid)
+  POSIX wrapper: <TEMP_DIR>/ccrouter_watch_build_wrapper_u3nlQA/bin/flutter (verified)
+  POSIX backup: <TEMP_DIR>/ccrouter_watch_build_wrapper_u3nlQA/bin/flutter.ccrouter-original (present)
+  Dart POSIX wrapper: <TEMP_DIR>/ccrouter_watch_build_wrapper_u3nlQA/bin/cache/dart-sdk/bin/dart (verified)
+  Dart POSIX backup: <TEMP_DIR>/ccrouter_watch_build_wrapper_u3nlQA/bin/cache/dart-sdk/bin/dart.ccrouter-original (present)
   run/build preflight: enabled, run watch: enabled, clean guard: enabled, watch startup handshake: enabled, run supervisor: enabled, machine reload gate: enabled, flutter pub post-hook: enabled, dart pub post-hook: enabled
 CCRouter pub hook result: installed and verified
 16:47 +177 -2: packages/ccrouter_test/generator_test/generation_watch_test.dart: installed flutter build preflight reuses an active watch [E]
@@ -263,7 +263,7 @@ CCRouter pub hook result: installed and verified
 21:14 +199 -5: packages/ccrouter_test/generator_test/pub_hook_test.dart: inner Dart wrapper runs generation from the Package root [E]
   Expected: an object with length of <2>
     Actual: [
-              '/private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter_dart_pub_hook_cwd_iJRBxg/project/lib|pub get'
+              '<TEMP_DIR>/ccrouter_dart_pub_hook_cwd_iJRBxg/project/lib|pub get'
             ]
      Which: has length of <1>
   
@@ -659,9 +659,9 @@ CCRouter pub hook result: installed and verified
 42:21 +527 ~1 -7: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: dry-run validates source and Host without files or processes
 warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
 CCRouter Analyzer install (dry-run)
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-dXvFSd
-  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-dXvFSd
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-dXvFSd/tool/ccrouter_analyzer_host
+  host: <TEMP_DIR>/ccrouter-install-test-dXvFSd
+  pub owner: <TEMP_DIR>/ccrouter-install-test-dXvFSd
+  bootstrap: <TEMP_DIR>/ccrouter-install-test-dXvFSd/tool/ccrouter_analyzer_host
   source: hosted
   identity: 1.0.0
   managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
@@ -669,9 +669,9 @@ CCRouter Analyzer install (dry-run)
 42:22 +528 ~1 -7: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: Hosted install, idempotency and uninstall preserve unrelated YAML
 warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
 CCRouter Analyzer install
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-qCWF5J
-  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-qCWF5J
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-qCWF5J/tool/ccrouter_analyzer_host
+  host: <TEMP_DIR>/ccrouter-install-test-qCWF5J
+  pub owner: <TEMP_DIR>/ccrouter-install-test-qCWF5J
+  bootstrap: <TEMP_DIR>/ccrouter-install-test-qCWF5J/tool/ccrouter_analyzer_host
   source: hosted
   identity: 1.0.0
   managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
@@ -690,27 +690,27 @@ CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
 Analyzer install completed. Restart the Dart Analysis Server. Run analyzer status/doctor before relying on IDE diagnostics.
 warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
 CCRouter Analyzer install
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-qCWF5J
-  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-qCWF5J
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-qCWF5J/tool/ccrouter_analyzer_host
+  host: <TEMP_DIR>/ccrouter-install-test-qCWF5J
+  pub owner: <TEMP_DIR>/ccrouter-install-test-qCWF5J
+  bootstrap: <TEMP_DIR>/ccrouter-install-test-qCWF5J/tool/ccrouter_analyzer_host
   source: hosted
   identity: 1.0.0
   managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
   preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
 Already installed; no files or lockfiles changed.
 CCRouter Analyzer uninstall
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-qCWF5J
-  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-qCWF5J
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-qCWF5J/tool/ccrouter_analyzer_host
+  host: <TEMP_DIR>/ccrouter-install-test-qCWF5J
+  pub owner: <TEMP_DIR>/ccrouter-install-test-qCWF5J
+  bootstrap: <TEMP_DIR>/ccrouter-install-test-qCWF5J/tool/ccrouter_analyzer_host
   managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
   preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
 CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
 Analyzer uninstall completed. Restart the Dart Analysis Server. Run analyzer status/doctor before relying on IDE diagnostics.
 warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
 CCRouter Analyzer install
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-qCWF5J
-  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-qCWF5J
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-qCWF5J/tool/ccrouter_analyzer_host
+  host: <TEMP_DIR>/ccrouter-install-test-qCWF5J
+  pub owner: <TEMP_DIR>/ccrouter-install-test-qCWF5J
+  bootstrap: <TEMP_DIR>/ccrouter-install-test-qCWF5J/tool/ccrouter_analyzer_host
   source: hosted
   identity: 1.0.0
   managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
@@ -730,9 +730,9 @@ Analyzer install completed. Restart the Dart Analysis Server. Run analyzer statu
 42:22 +529 ~1 -7: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: install merges and uninstall removes only its loader exclude
 warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
 CCRouter Analyzer install
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-fPKsP7
-  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-fPKsP7
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-fPKsP7/tool/ccrouter_analyzer_host
+  host: <TEMP_DIR>/ccrouter-install-test-fPKsP7
+  pub owner: <TEMP_DIR>/ccrouter-install-test-fPKsP7
+  bootstrap: <TEMP_DIR>/ccrouter-install-test-fPKsP7/tool/ccrouter_analyzer_host
   source: hosted
   identity: 1.0.0
   managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
@@ -750,9 +750,9 @@ CCRouter Analyzer doctor summary
 CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
 Analyzer install completed. Restart the Dart Analysis Server. Run analyzer status/doctor before relying on IDE diagnostics.
 CCRouter Analyzer uninstall
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-fPKsP7
-  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-fPKsP7
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-fPKsP7/tool/ccrouter_analyzer_host
+  host: <TEMP_DIR>/ccrouter-install-test-fPKsP7
+  pub owner: <TEMP_DIR>/ccrouter-install-test-fPKsP7
+  bootstrap: <TEMP_DIR>/ccrouter-install-test-fPKsP7/tool/ccrouter_analyzer_host
   managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
   preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
 CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
@@ -760,9 +760,9 @@ Analyzer uninstall completed. Restart the Dart Analysis Server. Run analyzer sta
 42:22 +530 ~1 -7: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: same-source install migrates legacy ownership and adds exclude
 warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
 CCRouter Analyzer install
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-q2np14
-  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-q2np14
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-q2np14/tool/ccrouter_analyzer_host
+  host: <TEMP_DIR>/ccrouter-install-test-q2np14
+  pub owner: <TEMP_DIR>/ccrouter-install-test-q2np14
+  bootstrap: <TEMP_DIR>/ccrouter-install-test-q2np14/tool/ccrouter_analyzer_host
   source: hosted
   identity: 1.0.0
   managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
@@ -781,9 +781,9 @@ CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
 Analyzer install completed. Restart the Dart Analysis Server. Run analyzer status/doctor before relying on IDE diagnostics.
 warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
 CCRouter Analyzer install
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-q2np14
-  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-q2np14
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-q2np14/tool/ccrouter_analyzer_host
+  host: <TEMP_DIR>/ccrouter-install-test-q2np14
+  pub owner: <TEMP_DIR>/ccrouter-install-test-q2np14
+  bootstrap: <TEMP_DIR>/ccrouter-install-test-q2np14/tool/ccrouter_analyzer_host
   source: hosted
   identity: 1.0.0
   managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
@@ -803,9 +803,9 @@ Analyzer install completed. Restart the Dart Analysis Server. Run analyzer statu
 42:22 +531 ~1 -7: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: legacy tools wrapper remains manageable without relocation
 warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
 CCRouter Analyzer install
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-zQpd86
-  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-zQpd86
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-zQpd86/tool/ccrouter_analyzer_host
+  host: <TEMP_DIR>/ccrouter-install-test-zQpd86
+  pub owner: <TEMP_DIR>/ccrouter-install-test-zQpd86
+  bootstrap: <TEMP_DIR>/ccrouter-install-test-zQpd86/tool/ccrouter_analyzer_host
   source: hosted
   identity: 1.0.0
   managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
@@ -824,18 +824,18 @@ CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
 Analyzer install completed. Restart the Dart Analysis Server. Run analyzer status/doctor before relying on IDE diagnostics.
 warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
 CCRouter Analyzer install
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-zQpd86
-  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-zQpd86
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-zQpd86/tools/ccrouter_analyzer_host
+  host: <TEMP_DIR>/ccrouter-install-test-zQpd86
+  pub owner: <TEMP_DIR>/ccrouter-install-test-zQpd86
+  bootstrap: <TEMP_DIR>/ccrouter-install-test-zQpd86/tools/ccrouter_analyzer_host
   source: hosted
   identity: 1.0.0
   managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
   preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
 Already installed; no files or lockfiles changed.
 CCRouter Analyzer uninstall
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-zQpd86
-  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-zQpd86
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-zQpd86/tools/ccrouter_analyzer_host
+  host: <TEMP_DIR>/ccrouter-install-test-zQpd86
+  pub owner: <TEMP_DIR>/ccrouter-install-test-zQpd86
+  bootstrap: <TEMP_DIR>/ccrouter-install-test-zQpd86/tools/ccrouter_analyzer_host
   managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
   preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
 CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
@@ -843,9 +843,9 @@ Analyzer uninstall completed. Restart the Dart Analysis Server. Run analyzer sta
 42:22 +532 ~1 -7: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: pre-existing loader exclude is preserved and never claimed
 warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
 CCRouter Analyzer install
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-liFMrF
-  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-liFMrF
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-liFMrF/tool/ccrouter_analyzer_host
+  host: <TEMP_DIR>/ccrouter-install-test-liFMrF
+  pub owner: <TEMP_DIR>/ccrouter-install-test-liFMrF
+  bootstrap: <TEMP_DIR>/ccrouter-install-test-liFMrF/tool/ccrouter_analyzer_host
   source: hosted
   identity: 1.0.0
   managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
@@ -863,9 +863,9 @@ CCRouter Analyzer doctor summary
 CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
 Analyzer install completed. Restart the Dart Analysis Server. Run analyzer status/doctor before relying on IDE diagnostics.
 CCRouter Analyzer uninstall
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-liFMrF
-  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-liFMrF
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-liFMrF/tool/ccrouter_analyzer_host
+  host: <TEMP_DIR>/ccrouter-install-test-liFMrF
+  pub owner: <TEMP_DIR>/ccrouter-install-test-liFMrF
+  bootstrap: <TEMP_DIR>/ccrouter-install-test-liFMrF/tool/ccrouter_analyzer_host
   managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
   preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
 CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
@@ -873,9 +873,9 @@ Analyzer uninstall completed. Restart the Dart Analysis Server. Run analyzer sta
 42:22 +533 ~1 -7: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: modified CLI-owned loader exclude is refused without writes
 warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
 CCRouter Analyzer install
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-xpPogn
-  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-xpPogn
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-xpPogn/tool/ccrouter_analyzer_host
+  host: <TEMP_DIR>/ccrouter-install-test-xpPogn
+  pub owner: <TEMP_DIR>/ccrouter-install-test-xpPogn
+  bootstrap: <TEMP_DIR>/ccrouter-install-test-xpPogn/tool/ccrouter_analyzer_host
   source: hosted
   identity: 1.0.0
   managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
@@ -896,9 +896,9 @@ error: Analyzer uninstall failed: Bad state: CLI-owned YAML entries changed; ref
 42:22 +534 ~1 -7: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: Git source verifies a remotely fetchable full commit before Pub
 warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
 CCRouter Analyzer install
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-CdeiwI
-  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-CdeiwI
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-CdeiwI/tool/ccrouter_analyzer_host
+  host: <TEMP_DIR>/ccrouter-install-test-CdeiwI
+  pub owner: <TEMP_DIR>/ccrouter-install-test-CdeiwI
+  bootstrap: <TEMP_DIR>/ccrouter-install-test-CdeiwI/tool/ccrouter_analyzer_host
   source: git
   identity: a275d1d46ddfdded6678ecbf1d2d23818cdbdfdc
   managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
@@ -941,9 +941,9 @@ error: Analyzer install failed: Invalid argument(s): Hosted install/upgrade requ
 42:22 +542 ~1 -7: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: failure in fetch preserves source and resolution bytes
 warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
 CCRouter Analyzer install
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-xiB0rb
-  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-xiB0rb
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-xiB0rb/tool/ccrouter_analyzer_host
+  host: <TEMP_DIR>/ccrouter-install-test-xiB0rb
+  pub owner: <TEMP_DIR>/ccrouter-install-test-xiB0rb
+  bootstrap: <TEMP_DIR>/ccrouter-install-test-xiB0rb/tool/ccrouter_analyzer_host
   source: git
   identity: a275d1d46ddfdded6678ecbf1d2d23818cdbdfdc
   managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
@@ -955,9 +955,9 @@ error: Analyzer install failed: Bad state: verify remote commit failed (1).
 injected failure
 warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
 CCRouter Analyzer install
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-xiB0rb
-  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-xiB0rb
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-xiB0rb/tool/ccrouter_analyzer_host
+  host: <TEMP_DIR>/ccrouter-install-test-xiB0rb
+  pub owner: <TEMP_DIR>/ccrouter-install-test-xiB0rb
+  bootstrap: <TEMP_DIR>/ccrouter-install-test-xiB0rb/tool/ccrouter_analyzer_host
   source: hosted
   identity: 1.0.0
   managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
@@ -977,9 +977,9 @@ Analyzer install completed. Restart the Dart Analysis Server. Run analyzer statu
 42:22 +543 ~1 -7: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: failure in pub get preserves source and resolution bytes
 warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
 CCRouter Analyzer install
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-KJVhHl
-  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-KJVhHl
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-KJVhHl/tool/ccrouter_analyzer_host
+  host: <TEMP_DIR>/ccrouter-install-test-KJVhHl
+  pub owner: <TEMP_DIR>/ccrouter-install-test-KJVhHl
+  bootstrap: <TEMP_DIR>/ccrouter-install-test-KJVhHl/tool/ccrouter_analyzer_host
   source: git
   identity: a275d1d46ddfdded6678ecbf1d2d23818cdbdfdc
   managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
@@ -992,9 +992,9 @@ error: Analyzer install failed: Bad state: resolve isolated bootstrap failed (1)
 injected failure
 warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
 CCRouter Analyzer install
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-KJVhHl
-  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-KJVhHl
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-KJVhHl/tool/ccrouter_analyzer_host
+  host: <TEMP_DIR>/ccrouter-install-test-KJVhHl
+  pub owner: <TEMP_DIR>/ccrouter-install-test-KJVhHl
+  bootstrap: <TEMP_DIR>/ccrouter-install-test-KJVhHl/tool/ccrouter_analyzer_host
   source: hosted
   identity: 1.0.0
   managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
@@ -1014,9 +1014,9 @@ Analyzer install completed. Restart the Dart Analysis Server. Run analyzer statu
 42:22 +544 ~1 -7: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: failure in analyze preserves source and resolution bytes
 warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
 CCRouter Analyzer install
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-v8O9KC
-  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-v8O9KC
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-v8O9KC/tool/ccrouter_analyzer_host
+  host: <TEMP_DIR>/ccrouter-install-test-v8O9KC
+  pub owner: <TEMP_DIR>/ccrouter-install-test-v8O9KC
+  bootstrap: <TEMP_DIR>/ccrouter-install-test-v8O9KC/tool/ccrouter_analyzer_host
   source: git
   identity: a275d1d46ddfdded6678ecbf1d2d23818cdbdfdc
   managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
@@ -1031,9 +1031,9 @@ injected failure
 error: Analyzer install failed: Bad state: Candidate loader verification failed.
 warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
 CCRouter Analyzer install
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-v8O9KC
-  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-v8O9KC
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-v8O9KC/tool/ccrouter_analyzer_host
+  host: <TEMP_DIR>/ccrouter-install-test-v8O9KC
+  pub owner: <TEMP_DIR>/ccrouter-install-test-v8O9KC
+  bootstrap: <TEMP_DIR>/ccrouter-install-test-v8O9KC/tool/ccrouter_analyzer_host
   source: hosted
   identity: 1.0.0
   managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
@@ -1053,9 +1053,9 @@ Analyzer install completed. Restart the Dart Analysis Server. Run analyzer statu
 42:22 +545 ~1 -7: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: failure in compile preserves source and resolution bytes
 warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
 CCRouter Analyzer install
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-C5dDF0
-  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-C5dDF0
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-C5dDF0/tool/ccrouter_analyzer_host
+  host: <TEMP_DIR>/ccrouter-install-test-C5dDF0
+  pub owner: <TEMP_DIR>/ccrouter-install-test-C5dDF0
+  bootstrap: <TEMP_DIR>/ccrouter-install-test-C5dDF0/tool/ccrouter_analyzer_host
   source: git
   identity: a275d1d46ddfdded6678ecbf1d2d23818cdbdfdc
   managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
@@ -1071,9 +1071,9 @@ injected failure
 error: Analyzer install failed: Bad state: Candidate loader verification failed.
 warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
 CCRouter Analyzer install
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-C5dDF0
-  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-C5dDF0
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-C5dDF0/tool/ccrouter_analyzer_host
+  host: <TEMP_DIR>/ccrouter-install-test-C5dDF0
+  pub owner: <TEMP_DIR>/ccrouter-install-test-C5dDF0
+  bootstrap: <TEMP_DIR>/ccrouter-install-test-C5dDF0/tool/ccrouter_analyzer_host
   source: hosted
   identity: 1.0.0
   managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
@@ -1093,9 +1093,9 @@ Analyzer install completed. Restart the Dart Analysis Server. Run analyzer statu
 42:22 +546 ~1 -7: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: failure in Host pub preserves source and resolution bytes
 warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
 CCRouter Analyzer install
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-0jwvdE
-  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-0jwvdE
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-0jwvdE/tool/ccrouter_analyzer_host
+  host: <TEMP_DIR>/ccrouter-install-test-0jwvdE
+  pub owner: <TEMP_DIR>/ccrouter-install-test-0jwvdE
+  bootstrap: <TEMP_DIR>/ccrouter-install-test-0jwvdE/tool/ccrouter_analyzer_host
   source: git
   identity: a275d1d46ddfdded6678ecbf1d2d23818cdbdfdc
   managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
@@ -1119,9 +1119,9 @@ error: Analyzer install failed: Bad state: resolve Host dependencies (Pub Hook d
 
 warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
 CCRouter Analyzer install
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-0jwvdE
-  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-0jwvdE
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-0jwvdE/tool/ccrouter_analyzer_host
+  host: <TEMP_DIR>/ccrouter-install-test-0jwvdE
+  pub owner: <TEMP_DIR>/ccrouter-install-test-0jwvdE
+  bootstrap: <TEMP_DIR>/ccrouter-install-test-0jwvdE/tool/ccrouter_analyzer_host
   source: hosted
   identity: 1.0.0
   managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
@@ -1141,9 +1141,9 @@ Analyzer install completed. Restart the Dart Analysis Server. Run analyzer statu
 42:22 +547 ~1 -7: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: upgrade verifies before and after; failed candidate keeps old installation
 warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
 CCRouter Analyzer install
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-wDrH1A
-  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-wDrH1A
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-wDrH1A/tool/ccrouter_analyzer_host
+  host: <TEMP_DIR>/ccrouter-install-test-wDrH1A
+  pub owner: <TEMP_DIR>/ccrouter-install-test-wDrH1A
+  bootstrap: <TEMP_DIR>/ccrouter-install-test-wDrH1A/tool/ccrouter_analyzer_host
   source: hosted
   identity: 1.0.0
   managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
@@ -1162,9 +1162,9 @@ CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
 Analyzer install completed. Restart the Dart Analysis Server. Run analyzer status/doctor before relying on IDE diagnostics.
 warning: analyzer upgrade is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
 CCRouter Analyzer upgrade
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-wDrH1A
-  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-wDrH1A
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-wDrH1A/tool/ccrouter_analyzer_host
+  host: <TEMP_DIR>/ccrouter-install-test-wDrH1A
+  pub owner: <TEMP_DIR>/ccrouter-install-test-wDrH1A
+  bootstrap: <TEMP_DIR>/ccrouter-install-test-wDrH1A/tool/ccrouter_analyzer_host
   source: hosted
   identity: 1.1.0
   managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
@@ -1184,9 +1184,9 @@ error: Analyzer upgrade failed: Bad state: resolve isolated bootstrap failed (1)
 candidate failed
 warning: analyzer upgrade is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
 CCRouter Analyzer upgrade
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-wDrH1A
-  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-wDrH1A
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-wDrH1A/tool/ccrouter_analyzer_host
+  host: <TEMP_DIR>/ccrouter-install-test-wDrH1A
+  pub owner: <TEMP_DIR>/ccrouter-install-test-wDrH1A
+  bootstrap: <TEMP_DIR>/ccrouter-install-test-wDrH1A/tool/ccrouter_analyzer_host
   source: hosted
   identity: 1.1.0
   managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
@@ -1215,9 +1215,9 @@ Analyzer upgrade completed. Restart the Dart Analysis Server. Run analyzer statu
 42:22 +548 ~1 -7: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: failed uninstall restores enabled bootstrap and Pub resolution
 warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
 CCRouter Analyzer install
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-1rBcy5
-  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-1rBcy5
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-1rBcy5/tool/ccrouter_analyzer_host
+  host: <TEMP_DIR>/ccrouter-install-test-1rBcy5
+  pub owner: <TEMP_DIR>/ccrouter-install-test-1rBcy5
+  bootstrap: <TEMP_DIR>/ccrouter-install-test-1rBcy5/tool/ccrouter_analyzer_host
   source: hosted
   identity: 1.0.0
   managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
@@ -1235,9 +1235,9 @@ CCRouter Analyzer doctor summary
 CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
 Analyzer install completed. Restart the Dart Analysis Server. Run analyzer status/doctor before relying on IDE diagnostics.
 CCRouter Analyzer uninstall
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-1rBcy5
-  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-1rBcy5
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-1rBcy5/tool/ccrouter_analyzer_host
+  host: <TEMP_DIR>/ccrouter-install-test-1rBcy5
+  pub owner: <TEMP_DIR>/ccrouter-install-test-1rBcy5
+  bootstrap: <TEMP_DIR>/ccrouter-install-test-1rBcy5/tool/ccrouter_analyzer_host
   managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
   preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
 CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
@@ -1248,9 +1248,9 @@ error: Analyzer uninstall failed: Bad state: resolve Host dependencies (Pub Hook
 42:22 +549 ~1 -7: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: modified owned entry is refused: tool/ccrouter_analyzer_host/tools/analyzer_plugin/bin/plugin.dart
 warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
 CCRouter Analyzer install
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-gVFO9Q
-  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-gVFO9Q
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-gVFO9Q/tool/ccrouter_analyzer_host
+  host: <TEMP_DIR>/ccrouter-install-test-gVFO9Q
+  pub owner: <TEMP_DIR>/ccrouter-install-test-gVFO9Q
+  bootstrap: <TEMP_DIR>/ccrouter-install-test-gVFO9Q/tool/ccrouter_analyzer_host
   source: hosted
   identity: 1.0.0
   managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
@@ -1271,9 +1271,9 @@ error: Analyzer uninstall failed: Bad state: CLI-owned Analyzer file was modifie
 42:22 +550 ~1 -7: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: modified owned entry is refused: analysis_options.yaml
 warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
 CCRouter Analyzer install
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-uQFC92
-  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-uQFC92
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-uQFC92/tool/ccrouter_analyzer_host
+  host: <TEMP_DIR>/ccrouter-install-test-uQFC92
+  pub owner: <TEMP_DIR>/ccrouter-install-test-uQFC92
+  bootstrap: <TEMP_DIR>/ccrouter-install-test-uQFC92/tool/ccrouter_analyzer_host
   source: hosted
   identity: 1.0.0
   managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
@@ -1294,9 +1294,9 @@ error: Analyzer uninstall failed: Bad state: CLI-owned YAML entries changed; ref
 42:22 +551 ~1 -7: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: modified owned entry is refused: pubspec.yaml
 warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
 CCRouter Analyzer install
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-hZlMwd
-  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-hZlMwd
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-hZlMwd/tool/ccrouter_analyzer_host
+  host: <TEMP_DIR>/ccrouter-install-test-hZlMwd
+  pub owner: <TEMP_DIR>/ccrouter-install-test-hZlMwd
+  bootstrap: <TEMP_DIR>/ccrouter-install-test-hZlMwd/tool/ccrouter_analyzer_host
   source: hosted
   identity: 1.0.0
   managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
@@ -1317,9 +1317,9 @@ error: Analyzer uninstall failed: Bad state: CLI-owned YAML entries changed; ref
 42:22 +552 ~1 -7: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: uninstall preserves unknown wrapper files
 warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
 CCRouter Analyzer install
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-p4Y0Gj
-  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-p4Y0Gj
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-p4Y0Gj/tool/ccrouter_analyzer_host
+  host: <TEMP_DIR>/ccrouter-install-test-p4Y0Gj
+  pub owner: <TEMP_DIR>/ccrouter-install-test-p4Y0Gj
+  bootstrap: <TEMP_DIR>/ccrouter-install-test-p4Y0Gj/tool/ccrouter_analyzer_host
   source: hosted
   identity: 1.0.0
   managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
@@ -1337,25 +1337,25 @@ CCRouter Analyzer doctor summary
 CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
 Analyzer install completed. Restart the Dart Analysis Server. Run analyzer status/doctor before relying on IDE diagnostics.
 CCRouter Analyzer uninstall
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-p4Y0Gj
-  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-p4Y0Gj
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-p4Y0Gj/tool/ccrouter_analyzer_host
+  host: <TEMP_DIR>/ccrouter-install-test-p4Y0Gj
+  pub owner: <TEMP_DIR>/ccrouter-install-test-p4Y0Gj
+  bootstrap: <TEMP_DIR>/ccrouter-install-test-p4Y0Gj/tool/ccrouter_analyzer_host
   managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
   preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
 CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
 Analyzer uninstall completed. Restart the Dart Analysis Server. Run analyzer status/doctor before relying on IDE diagnostics.
 42:22 +553 ~1 -7: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: rejects existing and inherited Analyzer plugins without modification
 warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
-error: Analyzer install failed: Bad state: Existing Analyzer plugin configuration must be managed manually: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-pvBxZ8/parent.yaml
+error: Analyzer install failed: Bad state: Existing Analyzer plugin configuration must be managed manually: <TEMP_DIR>/ccrouter-install-test-pvBxZ8/parent.yaml
 42:22 +554 ~1 -7: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: rejects a component or aggregator without an App identity
 warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
 error: Analyzer install failed: Bad state: Selected Package is `package`, not a CCRouter Host. Use `.metadata` project_type app or set `ccrouter.yaml` host.enabled true.
 42:22 +555 ~1 -7: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: supports explicit module Host and initially absent options/dev dependencies
 warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
 CCRouter Analyzer install
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-9HFve4
-  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-9HFve4
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-9HFve4/tool/ccrouter_analyzer_host
+  host: <TEMP_DIR>/ccrouter-install-test-9HFve4
+  pub owner: <TEMP_DIR>/ccrouter-install-test-9HFve4
+  bootstrap: <TEMP_DIR>/ccrouter-install-test-9HFve4/tool/ccrouter_analyzer_host
   source: hosted
   identity: 1.0.0
   managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
@@ -1373,9 +1373,9 @@ CCRouter Analyzer doctor summary
 CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
 Analyzer install completed. Restart the Dart Analysis Server. Run analyzer status/doctor before relying on IDE diagnostics.
 CCRouter Analyzer uninstall
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-9HFve4
-  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-9HFve4
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-9HFve4/tool/ccrouter_analyzer_host
+  host: <TEMP_DIR>/ccrouter-install-test-9HFve4
+  pub owner: <TEMP_DIR>/ccrouter-install-test-9HFve4
+  bootstrap: <TEMP_DIR>/ccrouter-install-test-9HFve4/tool/ccrouter_analyzer_host
   managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
   preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
 CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
@@ -1385,13 +1385,13 @@ warning: analyzer install is a legacy management path. Prefer a normal Hosted de
 error: Analyzer install failed: Bad state: Selected Package is `package`, not a CCRouter Host. Use `.metadata` project_type app or set `ccrouter.yaml` host.enabled true.
 42:23 +557 ~1 -7: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: symlink bootstrap cannot redirect installation writes
 warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
-error: Analyzer install failed: Bad state: Refusing Analyzer target through a symlink: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-dhcN0S/tool/ccrouter_analyzer_host
+error: Analyzer install failed: Bad state: Refusing Analyzer target through a symlink: <TEMP_DIR>/ccrouter-install-test-dhcN0S/tool/ccrouter_analyzer_host
 42:23 +558 ~1 -7: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: concurrent authored edit during verification is preserved
 warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
 CCRouter Analyzer install
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-5VsiLF
-  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-5VsiLF
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-5VsiLF/tool/ccrouter_analyzer_host
+  host: <TEMP_DIR>/ccrouter-install-test-5VsiLF
+  pub owner: <TEMP_DIR>/ccrouter-install-test-5VsiLF
+  bootstrap: <TEMP_DIR>/ccrouter-install-test-5VsiLF/tool/ccrouter_analyzer_host
   source: hosted
   identity: 1.0.0
   managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
@@ -1407,13 +1407,13 @@ CCRouter Analyzer doctor summary
   Analysis Server restart: required before claiming bootstrap/ref or cache changes are live
   live IDE verification: pending (doctor cannot observe or control the IDE Analysis Server)
 Restored CLI configuration and recorded Pub resolution files.
-error: Analyzer install failed: Bad state: File changed during verification; preserving /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-5VsiLF/pubspec.yaml.
+error: Analyzer install failed: Bad state: File changed during verification; preserving <TEMP_DIR>/ccrouter-install-test-5VsiLF/pubspec.yaml.
 42:23 +559 ~1 -7: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: Workspace installs target only one Host and rollback shared Pub state
 warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
 CCRouter Analyzer install
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-HE9K5I/app
-  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-HE9K5I
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-HE9K5I/app/tool/ccrouter_analyzer_host
+  host: <TEMP_DIR>/ccrouter-install-test-HE9K5I/app
+  pub owner: <TEMP_DIR>/ccrouter-install-test-HE9K5I
+  bootstrap: <TEMP_DIR>/ccrouter-install-test-HE9K5I/app/tool/ccrouter_analyzer_host
   source: hosted
   identity: 1.0.0
   managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
@@ -1435,9 +1435,9 @@ error: Analyzer install failed: Bad state: resolve Host dependencies (Pub Hook d
 
 warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
 CCRouter Analyzer install
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-HE9K5I/app
-  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-HE9K5I
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-HE9K5I/app/tool/ccrouter_analyzer_host
+  host: <TEMP_DIR>/ccrouter-install-test-HE9K5I/app
+  pub owner: <TEMP_DIR>/ccrouter-install-test-HE9K5I
+  bootstrap: <TEMP_DIR>/ccrouter-install-test-HE9K5I/app/tool/ccrouter_analyzer_host
   source: hosted
   identity: 1.0.0
   managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
@@ -1457,9 +1457,9 @@ Analyzer install completed. Restart the Dart Analysis Server. Run analyzer statu
 42:23 +560 ~1 -7: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: new Host options retain implicitly inherited Workspace rules
 warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
 CCRouter Analyzer install
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-CXCN0p/app
-  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-CXCN0p
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-CXCN0p/app/tool/ccrouter_analyzer_host
+  host: <TEMP_DIR>/ccrouter-install-test-CXCN0p/app
+  pub owner: <TEMP_DIR>/ccrouter-install-test-CXCN0p
+  bootstrap: <TEMP_DIR>/ccrouter-install-test-CXCN0p/app/tool/ccrouter_analyzer_host
   source: hosted
   identity: 1.0.0
   managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
@@ -1477,9 +1477,9 @@ CCRouter Analyzer doctor summary
 CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
 Analyzer install completed. Restart the Dart Analysis Server. Run analyzer status/doctor before relying on IDE diagnostics.
 CCRouter Analyzer uninstall
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-CXCN0p/app
-  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-CXCN0p
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-CXCN0p/app/tool/ccrouter_analyzer_host
+  host: <TEMP_DIR>/ccrouter-install-test-CXCN0p/app
+  pub owner: <TEMP_DIR>/ccrouter-install-test-CXCN0p
+  bootstrap: <TEMP_DIR>/ccrouter-install-test-CXCN0p/app/tool/ccrouter_analyzer_host
   managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
   preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
 CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
@@ -1487,9 +1487,9 @@ Analyzer uninstall completed. Restart the Dart Analysis Server. Run analyzer sta
 42:23 +561 ~1 -7: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: empty plugin list, repeated uninstall and same-version upgrade are reversible
 warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
 CCRouter Analyzer install
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-0VQg44
-  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-0VQg44
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-0VQg44/tool/ccrouter_analyzer_host
+  host: <TEMP_DIR>/ccrouter-install-test-0VQg44
+  pub owner: <TEMP_DIR>/ccrouter-install-test-0VQg44
+  bootstrap: <TEMP_DIR>/ccrouter-install-test-0VQg44/tool/ccrouter_analyzer_host
   source: hosted
   identity: 1.0.0
   managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
@@ -1508,32 +1508,32 @@ CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
 Analyzer install completed. Restart the Dart Analysis Server. Run analyzer status/doctor before relying on IDE diagnostics.
 warning: analyzer upgrade is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
 CCRouter Analyzer upgrade
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-0VQg44
-  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-0VQg44
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-0VQg44/tool/ccrouter_analyzer_host
+  host: <TEMP_DIR>/ccrouter-install-test-0VQg44
+  pub owner: <TEMP_DIR>/ccrouter-install-test-0VQg44
+  bootstrap: <TEMP_DIR>/ccrouter-install-test-0VQg44/tool/ccrouter_analyzer_host
   source: hosted
   identity: 1.0.0
   managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
   preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
 Already installed; no files or lockfiles changed.
 CCRouter Analyzer uninstall
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-0VQg44
-  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-0VQg44
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-0VQg44/tool/ccrouter_analyzer_host
+  host: <TEMP_DIR>/ccrouter-install-test-0VQg44
+  pub owner: <TEMP_DIR>/ccrouter-install-test-0VQg44
+  bootstrap: <TEMP_DIR>/ccrouter-install-test-0VQg44/tool/ccrouter_analyzer_host
   managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
   preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
 CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
 Analyzer uninstall completed. Restart the Dart Analysis Server. Run analyzer status/doctor before relying on IDE diagnostics.
-Analyzer is not installed for /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-0VQg44; no changes.
+Analyzer is not installed for <TEMP_DIR>/ccrouter-install-test-0VQg44; no changes.
 42:23 +562 ~1 -7: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: incompatible SDK constraint fails before tool execution
 warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
 error: Analyzer install failed: Bad state: Analyzer bootstrap requires a compatible Dart 3.10+ SDK and Host SDK constraint.
 42:23 +563 ~1 -7: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: upgrade refuses newly conflicting inherited plugins without writes
 warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
 CCRouter Analyzer install
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-s0DxMJ
-  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-s0DxMJ
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-s0DxMJ/tool/ccrouter_analyzer_host
+  host: <TEMP_DIR>/ccrouter-install-test-s0DxMJ
+  pub owner: <TEMP_DIR>/ccrouter-install-test-s0DxMJ
+  bootstrap: <TEMP_DIR>/ccrouter-install-test-s0DxMJ/tool/ccrouter_analyzer_host
   source: hosted
   identity: 1.0.0
   managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
@@ -1551,13 +1551,13 @@ CCRouter Analyzer doctor summary
 CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
 Analyzer install completed. Restart the Dart Analysis Server. Run analyzer status/doctor before relying on IDE diagnostics.
 warning: analyzer upgrade is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
-error: Analyzer upgrade failed: Bad state: Existing Analyzer plugin configuration must be managed manually: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-s0DxMJ/parent_options.yaml
+error: Analyzer upgrade failed: Bad state: Existing Analyzer plugin configuration must be managed manually: <TEMP_DIR>/ccrouter-install-test-s0DxMJ/parent_options.yaml
 42:23 +564 ~1 -7: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: dry-run upgrade and uninstall never mutate a managed installation
 warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
 CCRouter Analyzer install
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-lWw8ra
-  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-lWw8ra
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-lWw8ra/tool/ccrouter_analyzer_host
+  host: <TEMP_DIR>/ccrouter-install-test-lWw8ra
+  pub owner: <TEMP_DIR>/ccrouter-install-test-lWw8ra
+  bootstrap: <TEMP_DIR>/ccrouter-install-test-lWw8ra/tool/ccrouter_analyzer_host
   source: hosted
   identity: 1.0.0
   managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
@@ -1576,49 +1576,49 @@ CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
 Analyzer install completed. Restart the Dart Analysis Server. Run analyzer status/doctor before relying on IDE diagnostics.
 warning: analyzer upgrade is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
 CCRouter Analyzer upgrade (dry-run)
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-lWw8ra
-  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-lWw8ra
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-lWw8ra/tool/ccrouter_analyzer_host
+  host: <TEMP_DIR>/ccrouter-install-test-lWw8ra
+  pub owner: <TEMP_DIR>/ccrouter-install-test-lWw8ra
+  bootstrap: <TEMP_DIR>/ccrouter-install-test-lWw8ra/tool/ccrouter_analyzer_host
   source: hosted
   identity: 1.1.0
   managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
   preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
 CCRouter Analyzer uninstall (dry-run)
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-lWw8ra
-  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-lWw8ra
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-lWw8ra/tool/ccrouter_analyzer_host
+  host: <TEMP_DIR>/ccrouter-install-test-lWw8ra
+  pub owner: <TEMP_DIR>/ccrouter-install-test-lWw8ra
+  bootstrap: <TEMP_DIR>/ccrouter-install-test-lWw8ra/tool/ccrouter_analyzer_host
   managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
   preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
 42:23 +565 ~1 -7: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: CLI process rejects a concurrently locked Pub owner before network work
 42:28 +566 ~1 -7: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: interrupted transaction blocks subsequent writes and preserves recovery bytes
 warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
 CCRouter Analyzer install
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-HqDcam
-  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-HqDcam
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-HqDcam/tool/ccrouter_analyzer_host
+  host: <TEMP_DIR>/ccrouter-install-test-HqDcam
+  pub owner: <TEMP_DIR>/ccrouter-install-test-HqDcam
+  bootstrap: <TEMP_DIR>/ccrouter-install-test-HqDcam/tool/ccrouter_analyzer_host
   source: hosted
   identity: 1.0.0
   managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
   preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
-error: Analyzer install failed: Bad state: An interrupted Analyzer transaction needs recovery: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-coordination-KklYTS/coordination/v2/projects/0884aa4471750db501118e8e638957962f83d08488e5c225bb805fc3350ac853/analyzer/transactions
+error: Analyzer install failed: Bad state: An interrupted Analyzer transaction needs recovery: <TEMP_DIR>/ccrouter-install-coordination-KklYTS/coordination/v2/projects/0884aa4471750db501118e8e638957962f83d08488e5c225bb805fc3350ac853/analyzer/transactions
 42:28 +567 ~1 -7: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: stable mode rejects an active legacy Analyzer writer
 42:32 +568 ~1 -7: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: legacy A/B mode retains its journal under .dart_tool
 warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
 CCRouter Analyzer install
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-0oYedR
-  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-0oYedR
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-0oYedR/tool/ccrouter_analyzer_host
+  host: <TEMP_DIR>/ccrouter-install-test-0oYedR
+  pub owner: <TEMP_DIR>/ccrouter-install-test-0oYedR
+  bootstrap: <TEMP_DIR>/ccrouter-install-test-0oYedR/tool/ccrouter_analyzer_host
   source: hosted
   identity: 1.0.0
   managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
   preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
-error: Analyzer install failed: Bad state: An interrupted Analyzer transaction needs recovery: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-0oYedR/.dart_tool/ccrouter/analyzer/transactions
+error: Analyzer install failed: Bad state: An interrupted Analyzer transaction needs recovery: <TEMP_DIR>/ccrouter-install-test-0oYedR/.dart_tool/ccrouter/analyzer/transactions
 42:32 +569 ~1 -7: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: unreadable Pub result restores other files and retains recovery journal
 warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
 CCRouter Analyzer install
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-6PKgki
-  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-6PKgki
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-6PKgki/tool/ccrouter_analyzer_host
+  host: <TEMP_DIR>/ccrouter-install-test-6PKgki
+  pub owner: <TEMP_DIR>/ccrouter-install-test-6PKgki
+  bootstrap: <TEMP_DIR>/ccrouter-install-test-6PKgki/tool/ccrouter_analyzer_host
   source: hosted
   identity: 1.0.0
   managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
@@ -1634,13 +1634,13 @@ CCRouter Analyzer doctor summary
   Analysis Server restart: required before claiming bootstrap/ref or cache changes are live
   live IDE verification: pending (doctor cannot observe or control the IDE Analysis Server)
 CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
-error: Analyzer install failed: Bad state: Rollback preserved concurrent edits: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-6PKgki/pubspec.lock. Original bytes remain in /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-coordination-wgAHeq/coordination/v2/projects/074adf57b2d636c4e7914f57dae69f2cc7c76c9a8c1ede4e33b75a8ef0c4de9e/analyzer/transactions/68865-1792064489205983.
+error: Analyzer install failed: Bad state: Rollback preserved concurrent edits: <TEMP_DIR>/ccrouter-install-test-6PKgki/pubspec.lock. Original bytes remain in <TEMP_DIR>/ccrouter-install-coordination-wgAHeq/coordination/v2/projects/074adf57b2d636c4e7914f57dae69f2cc7c76c9a8c1ede4e33b75a8ef0c4de9e/analyzer/transactions/68865-1792064489205983.
 42:32 +570 ~1 -7: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: rollback conflict preserves user edit and restores remaining files
 warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
 CCRouter Analyzer install
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-1kywqG
-  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-1kywqG
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-1kywqG/tool/ccrouter_analyzer_host
+  host: <TEMP_DIR>/ccrouter-install-test-1kywqG
+  pub owner: <TEMP_DIR>/ccrouter-install-test-1kywqG
+  bootstrap: <TEMP_DIR>/ccrouter-install-test-1kywqG/tool/ccrouter_analyzer_host
   source: hosted
   identity: 1.0.0
   managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
@@ -1656,7 +1656,7 @@ CCRouter Analyzer doctor summary
   Analysis Server restart: required before claiming bootstrap/ref or cache changes are live
   live IDE verification: pending (doctor cannot observe or control the IDE Analysis Server)
 CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
-error: Analyzer install failed: Bad state: Rollback preserved concurrent edits: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-1kywqG/pubspec.yaml. Original bytes remain in /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-coordination-P42jrf/coordination/v2/projects/541e39179b845faaa1e66de0b0588d1b634b05dc183155d67ab35bc30dd969bb/analyzer/transactions/68865-1792064489222227.
+error: Analyzer install failed: Bad state: Rollback preserved concurrent edits: <TEMP_DIR>/ccrouter-install-test-1kywqG/pubspec.yaml. Original bytes remain in <TEMP_DIR>/ccrouter-install-coordination-P42jrf/coordination/v2/projects/541e39179b845faaa1e66de0b0588d1b634b05dc183155d67ab35bc30dd969bb/analyzer/transactions/68865-1792064489222227.
 42:32 +571 ~1 -7: loading packages/ccrouter_test/generator_test/generation_watch_status_test.dart
 42:32 +571 ~1 -7: packages/ccrouter_test/generator_test/generation_watch_status_test.dart: (setUpAll)
 42:32 +571 ~1 -7: packages/ccrouter_test/generator_test/generation_watch_status_test.dart: watch status reports a missing local state without creating it

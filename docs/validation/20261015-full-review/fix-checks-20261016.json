@@ -2,72 +2,72 @@
   {
     "label": "main",
     "name": "analyze-packages",
-    "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/main",
+    "cwd": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/main",
     "command": [
-      "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+      "<USER_HOME>/fvm/versions/3.41.9/bin/dart",
       "analyze",
       "packages"
     ],
     "exit_code": 3,
     "seconds": 19.36,
-    "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/logs/main-analyze-packages.log"
+    "log": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/logs/main-analyze-packages.log"
   },
   {
     "label": "main",
     "name": "analyze-packages-fixed",
-    "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/main",
+    "cwd": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/main",
     "command": [
-      "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+      "<USER_HOME>/fvm/versions/3.41.9/bin/dart",
       "analyze",
       "packages"
     ],
     "exit_code": 0,
     "seconds": 5.54,
-    "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/logs/main-analyze-packages-fixed.log"
+    "log": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/logs/main-analyze-packages-fixed.log"
   },
   {
     "label": "main",
     "name": "analyze-tool",
-    "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/main",
+    "cwd": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/main",
     "command": [
-      "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+      "<USER_HOME>/fvm/versions/3.41.9/bin/dart",
       "analyze",
       "tool"
     ],
     "exit_code": 0,
     "seconds": 4.19,
-    "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/logs/main-analyze-tool.log"
+    "log": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/logs/main-analyze-tool.log"
   },
   {
     "label": "main",
     "name": "documentation",
-    "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/main",
+    "cwd": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/main",
     "command": [
-      "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+      "<USER_HOME>/fvm/versions/3.41.9/bin/dart",
       "tool/documentation_check.dart"
     ],
     "exit_code": 1,
     "seconds": 2.34,
-    "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/logs/main-documentation.log"
+    "log": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/logs/main-documentation.log"
   },
   {
     "label": "main",
     "name": "documentation-current",
-    "cwd": "/Users/shingo/develop/LiberLive/cc-router",
+    "cwd": "<USER_HOME>/develop/LiberLive/cc-router",
     "command": [
-      "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+      "<USER_HOME>/fvm/versions/3.41.9/bin/dart",
       "tool/documentation_check.dart"
     ],
     "exit_code": 1,
     "seconds": 2.72,
-    "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/logs/main-documentation-current.log"
+    "log": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/logs/main-documentation-current.log"
   },
   {
     "label": "main",
     "name": "generate-cached",
-    "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/main",
+    "cwd": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/main",
     "command": [
-      "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+      "<USER_HOME>/fvm/versions/3.41.9/bin/dart",
       "packages/ccrouter_generator/bin/ccrouter_generator.dart",
       "generate",
       "demo",
@@ -75,14 +75,14 @@
     ],
     "exit_code": 0,
     "seconds": 4.19,
-    "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/logs/main-generate-cached.log"
+    "log": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/logs/main-generate-cached.log"
   },
   {
     "label": "main",
     "name": "generate-uncached",
-    "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/main",
+    "cwd": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/main",
     "command": [
-      "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+      "<USER_HOME>/fvm/versions/3.41.9/bin/dart",
       "packages/ccrouter_generator/bin/ccrouter_generator.dart",
       "generate",
       "demo",
@@ -91,56 +91,56 @@
     ],
     "exit_code": 0,
     "seconds": 6.21,
-    "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/logs/main-generate-uncached.log"
+    "log": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/logs/main-generate-uncached.log"
   },
   {
     "label": "main",
     "name": "release-sensitivity",
-    "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/main",
+    "cwd": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/main",
     "command": [
-      "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+      "<USER_HOME>/fvm/versions/3.41.9/bin/dart",
       "tool/release_sensitivity_check.dart"
     ],
     "exit_code": 0,
     "seconds": 2.19,
-    "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/logs/main-release-sensitivity.log"
+    "log": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/logs/main-release-sensitivity.log"
   },
   {
     "label": "main",
     "name": "resolve",
-    "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/main",
+    "cwd": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/main",
     "command": [
       "env",
       "CCROUTER_PUB_HOOK_DISABLE=1",
-      "/Users/shingo/fvm/versions/3.41.9/bin/flutter",
+      "<USER_HOME>/fvm/versions/3.41.9/bin/flutter",
       "pub",
       "get"
     ],
     "exit_code": 1,
     "seconds": 0.44,
-    "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/logs/main-resolve.log"
+    "log": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/logs/main-resolve.log"
   },
   {
     "label": "main",
     "name": "resolve-restored",
-    "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/main",
+    "cwd": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/main",
     "command": [
       "env",
       "CCROUTER_PUB_HOOK_DISABLE=1",
-      "/Users/shingo/fvm/versions/3.41.9/bin/flutter",
+      "<USER_HOME>/fvm/versions/3.41.9/bin/flutter",
       "pub",
       "get"
     ],
     "exit_code": 0,
     "seconds": 4.07,
-    "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/logs/main-resolve-restored.log"
+    "log": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/logs/main-resolve-restored.log"
   },
   {
     "label": "main",
     "name": "shutdown-and-coordination",
-    "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/main",
+    "cwd": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/main",
     "command": [
-      "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+      "<USER_HOME>/fvm/versions/3.41.9/bin/dart",
       "test",
       "--concurrency=1",
       "--reporter=expanded",
@@ -149,27 +149,27 @@
     ],
     "exit_code": 0,
     "seconds": 54.03,
-    "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/logs/main-shutdown-and-coordination.log"
+    "log": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/logs/main-shutdown-and-coordination.log"
   },
   {
     "label": "main",
     "name": "skill-bundle",
-    "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/main",
+    "cwd": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/main",
     "command": [
-      "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+      "<USER_HOME>/fvm/versions/3.41.9/bin/dart",
       "run",
       "tool/skill_bundle_check.dart"
     ],
     "exit_code": 0,
     "seconds": 35.6,
-    "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/logs/main-skill-bundle.log"
+    "log": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/logs/main-skill-bundle.log"
   },
   {
     "label": "main",
     "name": "watch-after",
-    "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/main",
+    "cwd": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/main",
     "command": [
-      "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+      "<USER_HOME>/fvm/versions/3.41.9/bin/dart",
       "test",
       "--concurrency=1",
       "--reporter=expanded",
@@ -179,14 +179,14 @@
     ],
     "exit_code": 1,
     "seconds": 45.89,
-    "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/logs/main-watch-after.log"
+    "log": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/logs/main-watch-after.log"
   },
   {
     "label": "main",
     "name": "watch-before",
-    "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/main",
+    "cwd": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/main",
     "command": [
-      "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+      "<USER_HOME>/fvm/versions/3.41.9/bin/dart",
       "test",
       "--concurrency=1",
       "--reporter=expanded",
@@ -196,14 +196,14 @@
     ],
     "exit_code": 1,
     "seconds": 7.43,
-    "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/logs/main-watch-before.log"
+    "log": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/logs/main-watch-before.log"
   },
   {
     "label": "main",
     "name": "watch-cleanup-debug",
-    "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/main",
+    "cwd": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/main",
     "command": [
-      "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+      "<USER_HOME>/fvm/versions/3.41.9/bin/dart",
       "test",
       "--concurrency=1",
       "--reporter=expanded",
@@ -213,14 +213,14 @@
     ],
     "exit_code": 1,
     "seconds": 45.77,
-    "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/logs/main-watch-cleanup-debug.log"
+    "log": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/logs/main-watch-cleanup-debug.log"
   },
   {
     "label": "main",
     "name": "watch-fixed",
-    "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/main",
+    "cwd": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/main",
     "command": [
-      "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+      "<USER_HOME>/fvm/versions/3.41.9/bin/dart",
       "test",
       "--concurrency=1",
       "--reporter=expanded",
@@ -230,14 +230,14 @@
     ],
     "exit_code": 0,
     "seconds": 29.68,
-    "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/logs/main-watch-fixed.log"
+    "log": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/logs/main-watch-fixed.log"
   },
   {
     "label": "main",
     "name": "watch-suite",
-    "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/main",
+    "cwd": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/main",
     "command": [
-      "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+      "<USER_HOME>/fvm/versions/3.41.9/bin/dart",
       "test",
       "--concurrency=1",
       "--reporter=expanded",
@@ -247,14 +247,14 @@
     ],
     "exit_code": 1,
     "seconds": 18.37,
-    "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/logs/main-watch-suite.log"
+    "log": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/logs/main-watch-suite.log"
   },
   {
     "label": "main",
     "name": "watch-suite-fixed",
-    "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/main",
+    "cwd": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/main",
     "command": [
-      "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+      "<USER_HOME>/fvm/versions/3.41.9/bin/dart",
       "test",
       "--concurrency=1",
       "--reporter=expanded",
@@ -264,38 +264,38 @@
     ],
     "exit_code": 0,
     "seconds": 1281.39,
-    "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/logs/main-watch-suite-fixed.log"
+    "log": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/logs/main-watch-suite-fixed.log"
   },
   {
     "label": "predictive",
     "name": "analyze",
-    "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/predictive",
+    "cwd": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/predictive",
     "command": [
-      "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+      "<USER_HOME>/fvm/versions/3.41.9/bin/dart",
       "analyze"
     ],
     "exit_code": 3,
     "seconds": 28.35,
-    "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/logs/predictive-analyze.log"
+    "log": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/logs/predictive-analyze.log"
   },
   {
     "label": "predictive",
     "name": "analyze-fixed",
-    "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/predictive",
+    "cwd": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/predictive",
     "command": [
-      "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+      "<USER_HOME>/fvm/versions/3.41.9/bin/dart",
       "analyze"
     ],
     "exit_code": 0,
     "seconds": 12.57,
-    "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/logs/predictive-analyze-fixed.log"
+    "log": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/logs/predictive-analyze-fixed.log"
   },
   {
     "label": "predictive",
     "name": "demo",
-    "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/predictive",
+    "cwd": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/predictive",
     "command": [
-      "/Users/shingo/fvm/versions/3.41.9/bin/flutter",
+      "<USER_HOME>/fvm/versions/3.41.9/bin/flutter",
       "test",
       "--no-pub",
       "--reporter=expanded",
@@ -303,27 +303,27 @@
     ],
     "exit_code": 0,
     "seconds": 15.69,
-    "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/logs/predictive-demo.log"
+    "log": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/logs/predictive-demo.log"
   },
   {
     "label": "predictive",
     "name": "documentation",
-    "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/predictive",
+    "cwd": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/predictive",
     "command": [
-      "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+      "<USER_HOME>/fvm/versions/3.41.9/bin/dart",
       "run",
       "tool/documentation_check.dart"
     ],
     "exit_code": 0,
     "seconds": 2.64,
-    "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/logs/predictive-documentation.log"
+    "log": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/logs/predictive-documentation.log"
   },
   {
     "label": "predictive",
     "name": "framework",
-    "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/predictive",
+    "cwd": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/predictive",
     "command": [
-      "/Users/shingo/fvm/versions/3.41.9/bin/flutter",
+      "<USER_HOME>/fvm/versions/3.41.9/bin/flutter",
       "test",
       "--no-pub",
       "--reporter=expanded",
@@ -331,14 +331,14 @@
     ],
     "exit_code": 0,
     "seconds": 14.77,
-    "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/logs/predictive-framework.log"
+    "log": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/logs/predictive-framework.log"
   },
   {
     "label": "predictive",
     "name": "generate-cached",
-    "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/predictive",
+    "cwd": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/predictive",
     "command": [
-      "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+      "<USER_HOME>/fvm/versions/3.41.9/bin/dart",
       "packages/ccrouter_generator/bin/ccrouter_generator.dart",
       "generate",
       "demo",
@@ -346,14 +346,14 @@
     ],
     "exit_code": 0,
     "seconds": 48.27,
-    "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/logs/predictive-generate-cached.log"
+    "log": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/logs/predictive-generate-cached.log"
   },
   {
     "label": "predictive",
     "name": "generate-uncached",
-    "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/predictive",
+    "cwd": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/predictive",
     "command": [
-      "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+      "<USER_HOME>/fvm/versions/3.41.9/bin/dart",
       "packages/ccrouter_generator/bin/ccrouter_generator.dart",
       "generate",
       "demo",
@@ -362,14 +362,14 @@
     ],
     "exit_code": 0,
     "seconds": 45.29,
-    "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/logs/predictive-generate-uncached.log"
+    "log": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/logs/predictive-generate-uncached.log"
   },
   {
     "label": "predictive",
     "name": "gesture-after",
-    "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/predictive",
+    "cwd": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/predictive",
     "command": [
-      "/Users/shingo/fvm/versions/3.41.9/bin/flutter",
+      "<USER_HOME>/fvm/versions/3.41.9/bin/flutter",
       "test",
       "--no-pub",
       "--reporter=expanded",
@@ -377,14 +377,14 @@
     ],
     "exit_code": 0,
     "seconds": 6.03,
-    "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/logs/predictive-gesture-after.log"
+    "log": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/logs/predictive-gesture-after.log"
   },
   {
     "label": "predictive",
     "name": "gesture-before",
-    "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/predictive",
+    "cwd": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/predictive",
     "command": [
-      "/Users/shingo/fvm/versions/3.41.9/bin/flutter",
+      "<USER_HOME>/fvm/versions/3.41.9/bin/flutter",
       "test",
       "--no-pub",
       "--reporter=expanded",
@@ -394,54 +394,54 @@
     ],
     "exit_code": 1,
     "seconds": 7.9,
-    "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/logs/predictive-gesture-before.log"
+    "log": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/logs/predictive-gesture-before.log"
   },
   {
     "label": "predictive",
     "name": "release-sensitivity",
-    "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/predictive",
+    "cwd": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/predictive",
     "command": [
-      "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+      "<USER_HOME>/fvm/versions/3.41.9/bin/dart",
       "tool/release_sensitivity_check.dart"
     ],
     "exit_code": 0,
     "seconds": 2.48,
-    "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/logs/predictive-release-sensitivity.log"
+    "log": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/logs/predictive-release-sensitivity.log"
   },
   {
     "label": "predictive",
     "name": "resolve",
-    "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/predictive",
+    "cwd": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/predictive",
     "command": [
       "env",
       "CCROUTER_PUB_HOOK_DISABLE=1",
-      "/Users/shingo/fvm/versions/3.41.9/bin/flutter",
+      "<USER_HOME>/fvm/versions/3.41.9/bin/flutter",
       "pub",
       "get"
     ],
     "exit_code": 0,
     "seconds": 2.0,
-    "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/logs/predictive-resolve.log"
+    "log": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/logs/predictive-resolve.log"
   },
   {
     "label": "predictive",
     "name": "skill-bundle",
-    "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/predictive",
+    "cwd": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/predictive",
     "command": [
-      "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+      "<USER_HOME>/fvm/versions/3.41.9/bin/dart",
       "run",
       "tool/skill_bundle_check.dart"
     ],
     "exit_code": 0,
     "seconds": 33.73,
-    "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/logs/predictive-skill-bundle.log"
+    "log": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/logs/predictive-skill-bundle.log"
   },
   {
     "label": "predictive",
     "name": "watch-regression",
-    "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/predictive",
+    "cwd": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/predictive",
     "command": [
-      "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+      "<USER_HOME>/fvm/versions/3.41.9/bin/dart",
       "test",
       "--concurrency=1",
       "--reporter=expanded",
@@ -451,26 +451,26 @@
     ],
     "exit_code": 0,
     "seconds": 187.03,
-    "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/logs/predictive-watch-regression.log"
+    "log": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/logs/predictive-watch-regression.log"
   },
   {
     "label": "predictive-ohos",
     "name": "analyze",
-    "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/predictive-ohos",
+    "cwd": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/predictive-ohos",
     "command": [
-      "/Users/shingo/fvm/versions/ohos/oh-3.41.9-release/bin/dart",
+      "<USER_HOME>/fvm/versions/ohos/oh-3.41.9-release/bin/dart",
       "analyze"
     ],
     "exit_code": 0,
     "seconds": 205.56,
-    "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/logs/predictive-ohos-analyze.log"
+    "log": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/logs/predictive-ohos-analyze.log"
   },
   {
     "label": "predictive-ohos",
     "name": "framework",
-    "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/predictive-ohos",
+    "cwd": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/predictive-ohos",
     "command": [
-      "/Users/shingo/fvm/versions/ohos/oh-3.41.9-release/bin/flutter",
+      "<USER_HOME>/fvm/versions/ohos/oh-3.41.9-release/bin/flutter",
       "test",
       "--no-pub",
       "--reporter=expanded",
@@ -478,14 +478,14 @@
     ],
     "exit_code": 1,
     "seconds": 98.36,
-    "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/logs/predictive-ohos-framework.log"
+    "log": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/logs/predictive-ohos-framework.log"
   },
   {
     "label": "predictive-ohos",
     "name": "framework-recheck",
-    "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/predictive-ohos",
+    "cwd": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/predictive-ohos",
     "command": [
-      "/Users/shingo/fvm/versions/ohos/oh-3.41.9-release/bin/flutter",
+      "<USER_HOME>/fvm/versions/ohos/oh-3.41.9-release/bin/flutter",
       "test",
       "--no-pub",
       "--reporter=expanded",
@@ -493,12 +493,12 @@
     ],
     "exit_code": 0,
     "seconds": 44.33,
-    "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/logs/predictive-ohos-framework-recheck.log"
+    "log": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/logs/predictive-ohos-framework-recheck.log"
   },
   {
     "label": "predictive-ohos",
     "name": "hap",
-    "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/predictive-ohos/demo/ohos",
+    "cwd": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/predictive-ohos/demo/ohos",
     "command": [
       "env",
       "DEVECO_CLI_STUDIO_PATH=/Applications/DevEco-Studio.app",
@@ -507,21 +507,21 @@
     ],
     "exit_code": 0,
     "seconds": 193.05,
-    "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/logs/predictive-ohos-hap.log"
+    "log": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/logs/predictive-ohos-hap.log"
   },
   {
     "label": "predictive-ohos",
     "name": "resolve",
-    "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/predictive-ohos",
+    "cwd": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/predictive-ohos",
     "command": [
       "env",
       "CCROUTER_PUB_HOOK_DISABLE=1",
-      "/Users/shingo/fvm/versions/ohos/oh-3.41.9-release/bin/flutter",
+      "<USER_HOME>/fvm/versions/ohos/oh-3.41.9-release/bin/flutter",
       "pub",
       "get"
     ],
     "exit_code": 0,
     "seconds": 27.28,
-    "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-fix-20261016-f0s6x1w8/logs/predictive-ohos-resolve.log"
+    "log": "<TEMP_DIR>/ccrouter-fix-20261016-f0s6x1w8/logs/predictive-ohos-resolve.log"
   }
 ]

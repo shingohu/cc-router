@@ -1,6 +1,6 @@
-cwd: /var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/predictive
-command: ['/Users/shingo/fvm/versions/3.41.9/bin/dart', 'packages/ccrouter_generator/bin/ccrouter_generator.dart', 'generate', 'demo', '--no-cache', '--check']
-Generating Package artifacts for ccrouter_demo, demo_kv_storage, demo_navigation_lab, demo_network, demo_order, demo_order_contracts, demo_payment, demo_web, demo_web_contracts from /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/predictive...
+cwd: <TEMP_DIR>/ccrouter-review-20261015-g3s3se0r/predictive
+command: ['<USER_HOME>/fvm/versions/3.41.9/bin/dart', 'packages/ccrouter_generator/bin/ccrouter_generator.dart', 'generate', 'demo', '--no-cache', '--check']
+Generating Package artifacts for ccrouter_demo, demo_kv_storage, demo_navigation_lab, demo_network, demo_order, demo_order_contracts, demo_payment, demo_web, demo_web_contracts from <TEMP_DIR>/ccrouter-review-20261015-g3s3se0r/predictive...
   0s ccrouter_generator:service_contracts on 39 inputs; demo_web_contracts|lib/src/web_request.dart
   0s ccrouter_generator:services on 39 inputs; demo_web_contracts|lib/src/web_request.dart
   0s ccrouter_generator:service_proxies on 39 inputs; demo_web_contracts|lib/src/web_request.dart

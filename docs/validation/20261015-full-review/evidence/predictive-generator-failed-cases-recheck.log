@@ -1,5 +1,5 @@
-cwd: /var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/predictive
-command: ['env', '-u', 'CCROUTER_PUB_HOOK_DISABLE', '/Users/shingo/fvm/versions/3.41.9/bin/dart', 'test', '--concurrency=1', '--reporter=expanded', 'packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart', 'packages/ccrouter_test/generator_test/generation_watch_test.dart', 'packages/ccrouter_test/generator_test/pub_hook_test.dart', '--name', '^(?:Route\\ DartDoc\\ affects\\ metadata\\ without\\ changing\\ executable\\ output|Service\\ Proxy\\ consumes\\ imported\\ generic\\ bounds\\ and\\ typedef\\ targets|Route\\ Codec\\ validation\\ follows\\ imported\\ supertype\\ arguments|installed\\ flutter\\ build\\ preflight\\ reuses\\ an\\ active\\ watch|Flutter\\ wrapper\\ locates\\ only\\ the\\ real\\ top\\-level\\ command|inner\\ Dart\\ wrapper\\ runs\\ post\\-pub\\ once\\ and\\ preserves\\ bypass\\ semantics|inner\\ Dart\\ wrapper\\ runs\\ generation\\ from\\ the\\ Package\\ root|Flutter\\ wrapper\\ suppresses\\ nested\\ Dart\\ post\\-pub\\ hooks|run\\ and\\ build\\ execute\\ a\\ generation\\ preflight\\ before\\ Flutter)$']
+cwd: <TEMP_DIR>/ccrouter-review-20261015-g3s3se0r/predictive
+command: ['env', '-u', 'CCROUTER_PUB_HOOK_DISABLE', '<USER_HOME>/fvm/versions/3.41.9/bin/dart', 'test', '--concurrency=1', '--reporter=expanded', 'packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart', 'packages/ccrouter_test/generator_test/generation_watch_test.dart', 'packages/ccrouter_test/generator_test/pub_hook_test.dart', '--name', '^(?:Route\\ DartDoc\\ affects\\ metadata\\ without\\ changing\\ executable\\ output|Service\\ Proxy\\ consumes\\ imported\\ generic\\ bounds\\ and\\ typedef\\ targets|Route\\ Codec\\ validation\\ follows\\ imported\\ supertype\\ arguments|installed\\ flutter\\ build\\ preflight\\ reuses\\ an\\ active\\ watch|Flutter\\ wrapper\\ locates\\ only\\ the\\ real\\ top\\-level\\ command|inner\\ Dart\\ wrapper\\ runs\\ post\\-pub\\ once\\ and\\ preserves\\ bypass\\ semantics|inner\\ Dart\\ wrapper\\ runs\\ generation\\ from\\ the\\ Package\\ root|Flutter\\ wrapper\\ suppresses\\ nested\\ Dart\\ post\\-pub\\ hooks|run\\ and\\ build\\ execute\\ a\\ generation\\ preflight\\ before\\ Flutter)$']
 00:00 +0: loading packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart
 00:00 +0: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: Route DartDoc affects metadata without changing executable output
 00:16 +1: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: Service Proxy consumes imported generic bounds and typedef targets
@@ -7,14 +7,14 @@ command: ['env', '-u', 'CCROUTER_PUB_HOOK_DISABLE', '/Users/shingo/fvm/versions/
 00:27 +3: loading packages/ccrouter_test/generator_test/generation_watch_test.dart
 00:27 +3: packages/ccrouter_test/generator_test/generation_watch_test.dart: (setUpAll)
 00:27 +3: packages/ccrouter_test/generator_test/generation_watch_test.dart: installed flutter build preflight reuses an active watch
-Installed CCRouter pub hook in Flutter SDK: /var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter_watch_build_wrapper_aWTlZK
+Installed CCRouter pub hook in Flutter SDK: <TEMP_DIR>/ccrouter_watch_build_wrapper_aWTlZK
 The hook runs after successful Flutter/Dart pub commands and before `flutter run/build`.
-CCRouter pub hook SDK: /var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter_watch_build_wrapper_aWTlZK
-  marker: /var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter_watch_build_wrapper_aWTlZK/bin/.ccrouter_pub_hook.json (valid)
-  POSIX wrapper: /var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter_watch_build_wrapper_aWTlZK/bin/flutter (verified)
-  POSIX backup: /var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter_watch_build_wrapper_aWTlZK/bin/flutter.ccrouter-original (present)
-  Dart POSIX wrapper: /var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter_watch_build_wrapper_aWTlZK/bin/cache/dart-sdk/bin/dart (verified)
-  Dart POSIX backup: /var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter_watch_build_wrapper_aWTlZK/bin/cache/dart-sdk/bin/dart.ccrouter-original (present)
+CCRouter pub hook SDK: <TEMP_DIR>/ccrouter_watch_build_wrapper_aWTlZK
+  marker: <TEMP_DIR>/ccrouter_watch_build_wrapper_aWTlZK/bin/.ccrouter_pub_hook.json (valid)
+  POSIX wrapper: <TEMP_DIR>/ccrouter_watch_build_wrapper_aWTlZK/bin/flutter (verified)
+  POSIX backup: <TEMP_DIR>/ccrouter_watch_build_wrapper_aWTlZK/bin/flutter.ccrouter-original (present)
+  Dart POSIX wrapper: <TEMP_DIR>/ccrouter_watch_build_wrapper_aWTlZK/bin/cache/dart-sdk/bin/dart (verified)
+  Dart POSIX backup: <TEMP_DIR>/ccrouter_watch_build_wrapper_aWTlZK/bin/cache/dart-sdk/bin/dart.ccrouter-original (present)
   run/build preflight: enabled, run watch: enabled, clean guard: enabled, watch startup handshake: enabled, run supervisor: enabled, machine reload gate: enabled, flutter pub post-hook: enabled, dart pub post-hook: enabled
 CCRouter pub hook result: installed and verified
 00:40 +4: packages/ccrouter_test/generator_test/generation_watch_test.dart: (tearDownAll)

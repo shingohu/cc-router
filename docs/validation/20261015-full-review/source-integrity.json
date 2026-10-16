@@ -1,9 +1,10 @@
 {
   "verified_at_utc": "2026-10-15T11:42:42.239571+00:00",
-  "baseline_manifest_sha256": "0294ebf122daec604c1d3a125b3e55c04c15e3bc968f9f9b0e85d2d7d611db48",
+  "baseline_manifest_sha256": "4037102ad5129cf59fe71d049918387c54540cb8a31185871bc358f91d14c985",
+  "baseline_manifest_before_redaction_sha256": "0294ebf122daec604c1d3a125b3e55c04c15e3bc968f9f9b0e85d2d7d611db48",
   "original_files": {
     "main": {
-      "source": "/Users/shingo/develop/LiberLive/cc-router",
+      "source": "<USER_HOME>/develop/LiberLive/cc-router",
       "initial_head": "7cdf3820ff6aed8260d26d1d2c62736809f9a789",
       "current_head": "7cdf3820ff6aed8260d26d1d2c62736809f9a789",
       "checked_files": 948,
@@ -12,7 +13,7 @@
       "new_files_before_delivery": []
     },
     "predictive": {
-      "source": "/Users/shingo/.codex/worktrees/predictive-back/cc-router",
+      "source": "<USER_HOME>/.codex/worktrees/predictive-back/cc-router",
       "initial_head": "cd03e48f75585c91c6118ddb9d11421f3f8b7b1f",
       "current_head": "1f7ce27a42b565cf25ad750618a82e68864cb8ee",
       "checked_files": 928,

@@ -1,9 +1,9 @@
 {
   "label": "main",
   "name": "generate-reference",
-  "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/main",
+  "cwd": "<TEMP_DIR>/ccrouter-review-20261015-g3s3se0r/main",
   "command": [
-    "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+    "<USER_HOME>/fvm/versions/3.41.9/bin/dart",
     "packages/ccrouter_generator/bin/ccrouter_generator.dart",
     "generate",
     "demo",
@@ -12,5 +12,5 @@
   ],
   "exit_code": 0,
   "seconds": 8.89,
-  "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/main-generate-reference.log"
+  "log": "<TEMP_DIR>/ccrouter-review-20261015-g3s3se0r/logs/main-generate-reference.log"
 }

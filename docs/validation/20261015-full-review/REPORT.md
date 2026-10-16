@@ -170,10 +170,17 @@ main 与 predictive 的临时整合出现 3 个 fixture 文本冲突：
 
 ## 7. 证据索引与重现约定
 
+2026-10-16 归档脱敏：本目录的 JSON、日志、复现脚本及两个日志压缩包统一使用
+`<USER_HOME>`、`<TEMP_DIR>` 代替本机用户目录和临时目录前缀，压缩包不保留本机属主信息。
+命令参数、退出码、耗时、失败与复验结果均保留；这些仍是历史验证记录，不表示重新执行。
+源码文件的历史 SHA-256 保持不变；`source-integrity.json` 同时记录脱敏前后的 manifest 摘要，
+其中 `baseline_manifest_sha256` 对应当前压缩包内脱敏后的 `source-manifest.json`。
+复现前需将路径占位符替换为本地 SDK、工作副本及临时目录。
+
 - [命令与退出码汇总](checks.json)：保留每条命令、cwd、exit code、耗时及原始日志路径。
-- [完整日志压缩包](full-logs.tar.gz)：包含初次失败和复验，不只保留成功结果。
+- [完整脱敏日志压缩包](full-logs.tar.gz)：包含初次失败和复验，不只保留成功结果。
 - [源码一致性校验](source-integrity.json)：两原工作区的既有文件逐一 SHA-256 比对；worktree 的提交发生在审查期间，文件内容与冻结快照一致。
-- [F1 复现](evidence/watch_probe.py)：保存本轮原始脚本，这是本轮原始脚本；还原时需把 root 指向包含 watch-probe 隔离副本的临时目录。只应在独立副本运行，脚本会短暂修改一个生成文件权限。
+- [F1 复现](evidence/watch_probe.py)：保存本轮复现脚本，已替换本机路径；还原时需把 root 指向包含 watch-probe 隔离副本的临时目录。只应在独立副本运行，脚本会短暂修改一个生成文件权限。
 - F2/F3 补丁按顺序应用于 predictive 分支：SDK compatibility → handler candidate → regression test。补丁未应用到用户原工作区。
 - 标准验证使用绝对 SDK 路径，避免全局 FVM 默认 OHOS 造成结果误读；根 pub get 才设置禁用 Hook，Hook 功能测试清除该变量。
 - 框架测试路径固定为 `packages/ccrouter_test/test`；Plugin 测试 cwd 固定为 `packages/ccrouter_analyzer_plugin`。

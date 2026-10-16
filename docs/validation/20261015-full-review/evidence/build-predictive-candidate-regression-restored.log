@@ -1,6 +1,6 @@
-cwd: /var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/build-predictive
-command: ['/Users/shingo/fvm/versions/3.41.9/bin/flutter', 'test', '--no-pub', '--reporter=expanded', 'packages/ccrouter_test/test/predictive_back_test.dart', '--plain-name', 'review: retired in-flight gesture survives eligibility query']
-00:00 +0: loading /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/build-predictive/packages/ccrouter_test/test/predictive_back_test.dart
+cwd: <TEMP_DIR>/ccrouter-review-20261015-g3s3se0r/build-predictive
+command: ['<USER_HOME>/fvm/versions/3.41.9/bin/flutter', 'test', '--no-pub', '--reporter=expanded', 'packages/ccrouter_test/test/predictive_back_test.dart', '--plain-name', 'review: retired in-flight gesture survives eligibility query']
+00:00 +0: loading <TEMP_DIR>/ccrouter-review-20261015-g3s3se0r/build-predictive/packages/ccrouter_test/test/predictive_back_test.dart
 00:00 +0: review: retired in-flight gesture survives eligibility query
 eligibility after disposal: true
 00:00 +1: All tests passed!

@@ -1,10 +1,10 @@
-cwd: /var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/main
-command: ['/Users/shingo/fvm/versions/3.41.9/bin/dart', 'packages/ccrouter_generator/bin/ccrouter_generator.dart', 'analyzer', 'doctor', 'demo']
+cwd: <TEMP_DIR>/ccrouter-review-20261015-g3s3se0r/main
+command: ['<USER_HOME>/fvm/versions/3.41.9/bin/dart', 'packages/ccrouter_generator/bin/ccrouter_generator.dart', 'analyzer', 'doctor', 'demo']
 CCRouter Analyzer status
-  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/main/demo
+  host: <TEMP_DIR>/ccrouter-review-20261015-g3s3se0r/main/demo
   state: healthy
   plugin: ccrouter_demo_analyzer_plugin
-  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/main/demo/tools/ccrouter_analyzer_plugin_host/tools/analyzer_plugin
+  bootstrap: <TEMP_DIR>/ccrouter-review-20261015-g3s3se0r/main/demo/tools/ccrouter_analyzer_plugin_host/tools/analyzer_plugin
   source: git
   version: 0.1.0
   ref: 5c69a72b769389d076d6f538e6964a0dafe88c27

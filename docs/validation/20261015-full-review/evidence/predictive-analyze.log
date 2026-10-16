@@ -1,5 +1,5 @@
-cwd: /var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/predictive
-command: ['/Users/shingo/fvm/versions/3.41.9/bin/dart', 'analyze']
+cwd: <TEMP_DIR>/ccrouter-review-20261015-g3s3se0r/predictive
+command: ['<USER_HOME>/fvm/versions/3.41.9/bin/dart', 'analyze']
 Analyzing predictive...
 
   error - packages/ccrouter_test/test/predictive_back_test.dart:800:62 - There's no constant named 'ohos' in 'TargetPlatform'. Try correcting the name to the name of an existing constant, or defining a constant named 'ohos'. - undefined_enum_constant

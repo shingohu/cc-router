@@ -125,6 +125,7 @@
 - [路由完成计划](CCRouter-route-completion-plan.md)
 - [路由专项问题分析](CCRouter-route-follow-up-analysis.md)
 - [Android 预测返回自动桥](CCRouter-predictive-back.md)
+- [Android 预测返回评估与验证边界](CCRouter-predictive-back-assessment.md)
 - [Navigator Backend 可行性](CCRouter-navigator-backend-feasibility.md)
 - [Cupertino Pop 手势设计](CCRouter-cupertino-pop-gesture-design.md)
 

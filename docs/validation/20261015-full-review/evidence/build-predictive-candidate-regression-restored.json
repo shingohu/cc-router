@@ -1,9 +1,9 @@
 {
   "label": "build-predictive",
   "name": "candidate-regression-restored",
-  "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/build-predictive",
+  "cwd": "<TEMP_DIR>/ccrouter-review-20261015-g3s3se0r/build-predictive",
   "command": [
-    "/Users/shingo/fvm/versions/3.41.9/bin/flutter",
+    "<USER_HOME>/fvm/versions/3.41.9/bin/flutter",
     "test",
     "--no-pub",
     "--reporter=expanded",
@@ -13,5 +13,5 @@
   ],
   "exit_code": 0,
   "seconds": 3.31,
-  "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/build-predictive-candidate-regression-restored.log"
+  "log": "<TEMP_DIR>/ccrouter-review-20261015-g3s3se0r/logs/build-predictive-candidate-regression-restored.log"
 }

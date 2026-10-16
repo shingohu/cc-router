@@ -1,5 +1,5 @@
-cwd: /var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/build-main
-command: ['env', 'CCROUTER_ANALYZER_NETWORK_SMOKE=1', 'CCROUTER_ANALYZER_GIT_URL=git@github.com:shingohu/cc-router.git', '/Users/shingo/fvm/versions/3.41.9/bin/dart', 'test', '--concurrency=1', '--reporter=expanded', 'packages/ccrouter_test/generator_test/analyzer_installation_smoke_test.dart']
+cwd: <TEMP_DIR>/ccrouter-review-20261015-g3s3se0r/build-main
+command: ['env', 'CCROUTER_ANALYZER_NETWORK_SMOKE=1', 'CCROUTER_ANALYZER_GIT_URL=git@github.com:shingohu/cc-router.git', '<USER_HOME>/fvm/versions/3.41.9/bin/dart', 'test', '--concurrency=1', '--reporter=expanded', 'packages/ccrouter_test/generator_test/analyzer_installation_smoke_test.dart']
 00:00 +0: loading packages/ccrouter_test/generator_test/analyzer_installation_smoke_test.dart
 00:00 +0: real remote Git install, upgrade, doctor and uninstall in a temporary Flutter Host
 01:19 +1: All tests passed!

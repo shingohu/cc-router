@@ -1,5 +1,5 @@
-cwd: /var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/build-main
-command: ['/Users/shingo/fvm/versions/3.41.9/bin/dart', 'test', '--concurrency=1', '--reporter=expanded', 'packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart', '--name', 'init_task_metadata resolves transitive|Route DartDoc affects metadata|Service Proxy consumes imported generic|Route Codec validation follows imported']
+cwd: <TEMP_DIR>/ccrouter-review-20261015-g3s3se0r/build-main
+command: ['<USER_HOME>/fvm/versions/3.41.9/bin/dart', 'test', '--concurrency=1', '--reporter=expanded', 'packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart', '--name', 'init_task_metadata resolves transitive|Route DartDoc affects metadata|Service Proxy consumes imported generic|Route Codec validation follows imported']
 00:00 +0: loading packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart
 00:00 +0: init_task_metadata resolves transitive cross-package inputs and constants
 00:13 +1: Route DartDoc affects metadata without changing executable output

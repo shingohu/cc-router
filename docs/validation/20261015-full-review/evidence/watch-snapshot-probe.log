@@ -1,30 +1,30 @@
-{"schemaVersion":1,"type":"starting","timestamp":"2026-10-15T11:08:30.800060Z","buildRoot":"/private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/watch-probe","hostRoot":"/private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/watch-probe/demo","sessionId":"80451-1792062510799639","eventRevision":1,"mode":"auto"}
-{"schemaVersion":1,"type":"targetsResolved","timestamp":"2026-10-15T11:08:30.844686Z","buildRoot":"/private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/watch-probe","hostRoot":"/private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/watch-probe/demo","sessionId":"80451-1792062510799639","eventRevision":1,"elapsedMs":29,"packages":["ccrouter_demo","demo_kv_storage","demo_navigation_lab","demo_network","demo_order","demo_order_contracts","demo_payment","demo_web","demo_web_contracts"],"topologyFingerprint":"46bb0393039804f6592c612fa51c9bee3970552896c4230c851720f29db56bdc"}
-{"schemaVersion":1,"type":"watchStarted","timestamp":"2026-10-15T11:08:31.098758Z","buildRoot":"/private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/watch-probe","hostRoot":"/private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/watch-probe/demo","sessionId":"80451-1792062510799639","eventRevision":2,"elapsedMs":14,"protectionSnapshotMs":232,"topologyFingerprint":"46bb0393039804f6592c612fa51c9bee3970552896c4230c851720f29db56bdc"}
-{"schemaVersion":1,"type":"buildStarted","timestamp":"2026-10-15T11:08:31.134616Z","buildRoot":"/private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/watch-probe","hostRoot":"/private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/watch-probe/demo","sessionId":"80451-1792062510799639","eventRevision":3,"initial":true}
-{"schemaVersion":1,"type":"stopped","timestamp":"2026-10-15T11:08:31.344024Z","buildRoot":"/private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/watch-probe","hostRoot":"/private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/watch-probe/demo","sessionId":"80451-1792062510799639","eventRevision":4}
+{"schemaVersion":1,"type":"starting","timestamp":"2026-10-15T11:08:30.800060Z","buildRoot":"<TEMP_DIR>/ccrouter-review-20261015-g3s3se0r/watch-probe","hostRoot":"<TEMP_DIR>/ccrouter-review-20261015-g3s3se0r/watch-probe/demo","sessionId":"80451-1792062510799639","eventRevision":1,"mode":"auto"}
+{"schemaVersion":1,"type":"targetsResolved","timestamp":"2026-10-15T11:08:30.844686Z","buildRoot":"<TEMP_DIR>/ccrouter-review-20261015-g3s3se0r/watch-probe","hostRoot":"<TEMP_DIR>/ccrouter-review-20261015-g3s3se0r/watch-probe/demo","sessionId":"80451-1792062510799639","eventRevision":1,"elapsedMs":29,"packages":["ccrouter_demo","demo_kv_storage","demo_navigation_lab","demo_network","demo_order","demo_order_contracts","demo_payment","demo_web","demo_web_contracts"],"topologyFingerprint":"46bb0393039804f6592c612fa51c9bee3970552896c4230c851720f29db56bdc"}
+{"schemaVersion":1,"type":"watchStarted","timestamp":"2026-10-15T11:08:31.098758Z","buildRoot":"<TEMP_DIR>/ccrouter-review-20261015-g3s3se0r/watch-probe","hostRoot":"<TEMP_DIR>/ccrouter-review-20261015-g3s3se0r/watch-probe/demo","sessionId":"80451-1792062510799639","eventRevision":2,"elapsedMs":14,"protectionSnapshotMs":232,"topologyFingerprint":"46bb0393039804f6592c612fa51c9bee3970552896c4230c851720f29db56bdc"}
+{"schemaVersion":1,"type":"buildStarted","timestamp":"2026-10-15T11:08:31.134616Z","buildRoot":"<TEMP_DIR>/ccrouter-review-20261015-g3s3se0r/watch-probe","hostRoot":"<TEMP_DIR>/ccrouter-review-20261015-g3s3se0r/watch-probe/demo","sessionId":"80451-1792062510799639","eventRevision":3,"initial":true}
+{"schemaVersion":1,"type":"stopped","timestamp":"2026-10-15T11:08:31.344024Z","buildRoot":"<TEMP_DIR>/ccrouter-review-20261015-g3s3se0r/watch-probe","hostRoot":"<TEMP_DIR>/ccrouter-review-20261015-g3s3se0r/watch-probe/demo","sessionId":"80451-1792062510799639","eventRevision":4}
 Unhandled exception:
-PathAccessException: Cannot open file, path = '/private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/watch-probe/demo/lib/src/ccrouter_generated/host/ccrouter_demo_ccrouter.g.dart' (OS Error: Permission denied, errno = 13)
+PathAccessException: Cannot open file, path = '<TEMP_DIR>/ccrouter-review-20261015-g3s3se0r/watch-probe/demo/lib/src/ccrouter_generated/host/ccrouter_demo_ccrouter.g.dart' (OS Error: Permission denied, errno = 13)
 #0      _checkForErrorResponse (dart:io/common.dart:58:9)
 #1      _File.open.<anonymous closure> (dart:io/file_impl.dart:438:7)
 <asynchronous suspension>
 #2      _File.readAsBytes.<anonymous closure> (dart:io/file_impl.dart:645:24)
 <asynchronous suspension>
-#3      CCGenerationFileReader.readAll.worker (file:///private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/watch-probe/packages/ccrouter_generator/bin/src/generation_file_reader.dart:51:29)
+#3      CCGenerationFileReader.readAll.worker (file://<TEMP_DIR>/ccrouter-review-20261015-g3s3se0r/watch-probe/packages/ccrouter_generator/bin/src/generation_file_reader.dart:51:29)
 <asynchronous suspension>
 #4      Future.wait.<anonymous closure> (dart:async/future.dart:546:21)
 <asynchronous suspension>
-#5      CCGenerationFileReader.readAll (file:///private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/watch-probe/packages/ccrouter_generator/bin/src/generation_file_reader.dart:65:5)
+#5      CCGenerationFileReader.readAll (file://<TEMP_DIR>/ccrouter-review-20261015-g3s3se0r/watch-probe/packages/ccrouter_generator/bin/src/generation_file_reader.dart:65:5)
 <asynchronous suspension>
-#6      _GeneratedArtifactsSnapshot.capture (file:///private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/watch-probe/packages/ccrouter_generator/bin/ccrouter_generator.dart:4052:7)
+#6      _GeneratedArtifactsSnapshot.capture (file://<TEMP_DIR>/ccrouter-review-20261015-g3s3se0r/watch-probe/packages/ccrouter_generator/bin/ccrouter_generator.dart:4052:7)
 <asynchronous suspension>
-#7      _runGenerationWatchSession (file:///private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/watch-probe/packages/ccrouter_generator/bin/src/generation_watch.dart:782:23)
+#7      _runGenerationWatchSession (file://<TEMP_DIR>/ccrouter-review-20261015-g3s3se0r/watch-probe/packages/ccrouter_generator/bin/src/generation_watch.dart:782:23)
 <asynchronous suspension>
-#8      _runGenerationWatchOwner (file:///private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/watch-probe/packages/ccrouter_generator/bin/src/generation_watch.dart:247:28)
+#8      _runGenerationWatchOwner (file://<TEMP_DIR>/ccrouter-review-20261015-g3s3se0r/watch-probe/packages/ccrouter_generator/bin/src/generation_watch.dart:247:28)
 <asynchronous suspension>
-#9      _runGenerationWatch (file:///private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/watch-probe/packages/ccrouter_generator/bin/src/generation_watch.dart:123:9)
+#9      _runGenerationWatch (file://<TEMP_DIR>/ccrouter-review-20261015-g3s3se0r/watch-probe/packages/ccrouter_generator/bin/src/generation_watch.dart:123:9)
 <asynchronous suspension>
-#10     _runCommand (file:///private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/watch-probe/packages/ccrouter_generator/bin/ccrouter_generator.dart:287:5)
+#10     _runCommand (file://<TEMP_DIR>/ccrouter-review-20261015-g3s3se0r/watch-probe/packages/ccrouter_generator/bin/ccrouter_generator.dart:287:5)
 <asynchronous suspension>
-#11     main (file:///private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/watch-probe/packages/ccrouter_generator/bin/ccrouter_generator.dart:59:5)
+#11     main (file://<TEMP_DIR>/ccrouter-review-20261015-g3s3se0r/watch-probe/packages/ccrouter_generator/bin/ccrouter_generator.dart:59:5)
 <asynchronous suspension>

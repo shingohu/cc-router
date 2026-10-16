@@ -1,5 +1,5 @@
-cwd: /var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/predictive
-command: ['/Users/shingo/fvm/versions/3.41.9/bin/dart', 'packages/ccrouter_generator/bin/ccrouter_generator.dart', 'generate', 'demo', '--check']
+cwd: <TEMP_DIR>/ccrouter-review-20261015-g3s3se0r/predictive
+command: ['<USER_HOME>/fvm/versions/3.41.9/bin/dart', 'packages/ccrouter_generator/bin/ccrouter_generator.dart', 'generate', 'demo', '--check']
 CCRouter generation fast path hit; inputs and outputs are unchanged.
 CCRouter generated artifacts are up to date.
 CCRouter generation finished: elapsed=272ms.

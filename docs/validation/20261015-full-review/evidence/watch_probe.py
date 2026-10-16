@@ -4,8 +4,8 @@ cwd=root/'watch-probe'
 target=cwd/'demo/lib/src/ccrouter_generated/host/ccrouter_demo_ccrouter.g.dart'
 original=target.stat().st_mode
 log=root/'logs/watch-snapshot-probe.log'
-env=os.environ.copy();env['CCROUTER_HOME']=str(root/'coordination/watch-probe');env['CCROUTER_PUB_HOOK_DISABLE']='1';env['FLUTTER_ROOT']='/Users/shingo/fvm/versions/3.41.9'
-command=['/Users/shingo/fvm/versions/3.41.9/bin/dart','packages/ccrouter_generator/bin/ccrouter_generator.dart','generate','demo','--watch=auto','--machine']
+env=os.environ.copy();env['CCROUTER_HOME']=str(root/'coordination/watch-probe');env['CCROUTER_PUB_HOOK_DISABLE']='1';env['FLUTTER_ROOT']='<USER_HOME>/fvm/versions/3.41.9'
+command=['<USER_HOME>/fvm/versions/3.41.9/bin/dart','packages/ccrouter_generator/bin/ccrouter_generator.dart','generate','demo','--watch=auto','--machine']
 process=None
 try:
  with log.open('w') as output:

@@ -1,9 +1,9 @@
 {
   "label": "predictive",
   "name": "generator",
-  "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/predictive",
+  "cwd": "<TEMP_DIR>/ccrouter-review-20261015-g3s3se0r/predictive",
   "command": [
-    "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+    "<USER_HOME>/fvm/versions/3.41.9/bin/dart",
     "test",
     "--concurrency=1",
     "--reporter=expanded",
@@ -11,5 +11,5 @@
   ],
   "exit_code": 1,
   "seconds": 2414.92,
-  "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/predictive-generator.log"
+  "log": "<TEMP_DIR>/ccrouter-review-20261015-g3s3se0r/logs/predictive-generator.log"
 }
