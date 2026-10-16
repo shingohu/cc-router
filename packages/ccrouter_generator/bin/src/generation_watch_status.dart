@@ -5,6 +5,16 @@ const _generationWatchDiagnosticsSchemaVersion = 1;
 const _generationWatchStatusPollInterval = Duration(milliseconds: 200);
 const _generationWatchMirrorRepairInterval = Duration(seconds: 1);
 
+/// Failures that end the watch instead of waiting for another source edit.
+const _terminalGenerationWatchFailureStages = {
+  'watch-start',
+  'watch-exit',
+  'generation-lock',
+  'watch-session',
+  'watch-session-cleanup',
+  'build-runner-shutdown',
+};
+
 /// Publishes a bounded local view of one watch without affecting generation.
 final class _GenerationWatchStatusTracker {
   _GenerationWatchStatusTracker({
@@ -192,7 +202,9 @@ final class _GenerationWatchStatusTracker {
       'aggregationSucceeded' ||
       'ready' => true,
       'invalidatedByClean' => false,
-      'failed' => _watchStarted && data['stage'] != 'watch-exit',
+      'failed' =>
+        _watchStarted &&
+            !_terminalGenerationWatchFailureStages.contains(data['stage']),
       _ => false,
     };
     final document = <String, Object?>{

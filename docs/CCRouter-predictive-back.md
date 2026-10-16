@@ -66,10 +66,11 @@ arguments、Extra、Widget、BuildContext 或业务结果。关闭开关时 gett
    弹窗先关闭也不恢复该次提交；相关祖先 Outlet 必须保留导航 Observer。
 7. attach 模式允许应用 Router 在 Adapter 销毁后存续。handler 的 `isActive` 变为 false，
    旧手势仍拒绝 commit；Route 在下次新手势开始时解除旧 handler，恢复 Flutter 返回行为。
-   该判断不重建 Route，也不让已失效的旧序列再次生效。
+   读取 `Route.popGestureEnabled` 不会解除进行中手势的原 handler；原 commit/cancel
+   终态到达前始终保留提交保护。该判断不重建 Route，也不让旧序列再次生效。
 8. Adapter 构造将 Navigator Observer listener、RouterDelegate listener 和 binding observer
-   作为一个事务注册；任一步失败会逆序清理。自定义 handler 的 `isActive` 抛错时，Route
-   解除故障 handler 并恢复 Flutter 返回，Host 观察故障不会阻断动画或 Pop。
+   作为一个事务注册；任一步失败会逆序清理。自定义 handler 的 `isActive` 抛错时，
+   空闲 Route 解除故障 handler 并恢复 Flutter 返回；进行中的手势仍保留原提交保护。
 9. start 按当前 `Theme.platform` 校验实际转场，不能仅凭 Android builder 的配置接受手势。
    预览期间切换到非 Android 平台或非预测转场时，Route 在 rebuild 后通过 Flutter 原有取消
    hook 恢复动画并结束 Navigator 手势状态，即使旧 detector 已被销毁。取消不完成结果或

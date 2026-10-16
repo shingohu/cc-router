@@ -75,19 +75,21 @@ final class _CCPredictiveMaterialPageRoute<T> extends MaterialPageRoute<T> {
     return true;
   }
 
-  /// Returns the live observer or detaches a broken Host integration.
+  /// Keeps the current gesture's owner, or detaches an idle retired observer.
   ///
   /// Lifetime probing is observational. A custom Host implementation that
-  /// throws here must relinquish this Route so Flutter can retain its normal
-  /// gesture and Pop behavior.
+  /// throws here relinquishes an idle Route to Flutter's normal gesture and Pop
+  /// behavior. A gesture already in flight retains its original commit fence
+  /// until cancellation or commit, even if the Host reads gesture eligibility.
   CCFlutterPredictiveBackHandler? get _activeHandler {
     final handler = _handler;
     if (handler == null) return null;
     try {
       if (handler.isActive) return handler;
     } catch (_) {
-      // A broken Host lifetime probe degrades to Flutter-owned behavior.
+      // A broken probe releases idle ownership but preserves an in-flight fence.
     }
+    if (_tracking) return handler;
     _handler = null;
     try {
       handler.onDispose(this);

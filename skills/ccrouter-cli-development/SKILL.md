@@ -448,6 +448,9 @@ During Flutter child supervision, handled signals remove its lease before
 being forwarded. Closing a starting lease cannot leave a heartbeat timer. A stop
 during child session startup must also cancel the internal signal subscription
 without waiting for `ready` or leaving the generation lock held.
+Initial snapshot/session setup errors stop the child and clean up acquired
+resources before releasing locks. Their terminal `failed` state is inactive;
+status mirror repair must also stop.
 Use `CCROUTER_DISABLE_WINDOWS_RUN_SUPERVISOR=1` only for old-path A/B comparison.
 projects without a resolved CCRouter graph are skipped. Before the original
 Flutter process starts, the run wrapper prints the successful watch start plus

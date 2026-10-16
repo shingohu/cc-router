@@ -649,7 +649,9 @@ automatically invoking business confirmation UI. Ancestor Navigator popups preve
 new gestures on covered nested pages and invalidate in-flight previews even if
 the popup closes before commit. Disposing an attached Adapter rejects its old
 gesture while restoring Flutter back handling for subsequent gestures on the
-surviving application-owned Router.
+surviving application-owned Router. Reading `popGestureEnabled` while the old
+gesture is in flight preserves its original commit fence until cancellation or
+commit.
 
 The bridge checks the transition selected by the current `Theme.platform`.
 Switching to a non-Android platform or a non-predictive transition during a
@@ -676,8 +678,9 @@ reason, Host, Outlet, and timestamp; it excludes URIs, arguments, Extra,
 Widgets, contexts, and business results. It stays empty and is not allocated
 when the switch is false. Adapter construction rolls back Observer/listener
 registration atomically. If a custom `CCFlutterPredictiveBackHandler.isActive`
-throws, the Route detaches that handler and restores Flutter's original back
-path instead of interrupting the gesture.
+throws, an idle Route detaches that handler and restores Flutter's original
+back path. An in-flight gesture retains its original handler through its
+terminal callback so an eligibility query cannot authorize a late commit.
 
 The ordinary Demo stays disabled. From `demo/`, use
 `fvm flutter run -t lib/main_predictive_back.dart` for the opt-in launch and see
@@ -1115,7 +1118,7 @@ The `aggregation-input-fingerprint` span additionally carries SHA-256 `attribute
 
 Here, a second watch means a manual or independent CLI watch writer. Multiple Hook-managed `flutter run` processes for the same Host do not create multiple writers: each holds an independent heartbeat lease and joins the same Host watch through an acknowledgement bound to the current watch PID. A run's exit releases only its lease; watch stops when the last valid lease disappears. During concurrent startup, a candidate losing the registration election does not overwrite active `status.json`; it waits to join or starts a new election after an old watch begins exiting.
 
-When interrupted while Flutter is running, the supervisor removes the run's lease before forwarding the signal to the child. Closing a lease before its initial write finishes does not leave a heartbeat timer. Watch can also stop before a new child session reaches `ready`; unread internal signals must not block cleanup or generation-lock release. `CCROUTER_DISABLE_MULTI_HOST_WATCH=1` restores the former one-watch-per-build-root behavior for A/B comparison.
+When interrupted while Flutter is running, the supervisor removes the run's lease before forwarding the signal to the child. Closing a lease before its initial write finishes does not leave a heartbeat timer. Watch can also stop before a new child session reaches `ready`; unread internal signals must not block cleanup or generation-lock release. Initial snapshot/session setup failures clean up the child and acquired resources before releasing locks, then publish an inactive `failed` state instead of `stopped`. `CCROUTER_DISABLE_MULTI_HOST_WATCH=1` restores the former one-watch-per-build-root behavior for A/B comparison.
 
 Watch ownership, generation, aggregation, Host registration, Flutter-run leases, Analyzer CLI write transactions, and minimal Host/Builder session authority live under user-level `CCROUTER_HOME`: by default `~/.ccrouter` on macOS/Linux and `%LOCALAPPDATA%\CCRouter` on Windows. Each canonical build root uses a full SHA-256 project directory; canonical Host SHA-256 directories isolate registrations within it. Projects are isolated, while Hosts in the same build root share Builder and Analyzer-operation locks but not Host state. Lock files are unlocked/closed, never deleted on stop, avoiding two owners caused by unlinking and recreating an inode.
 

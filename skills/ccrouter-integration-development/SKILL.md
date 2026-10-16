@@ -275,10 +275,13 @@ the Service Contract.
   popups block covered nested pages and invalidate existing previews, including
   when the popup closes before commit. Attached Router pages recover ordinary
   Flutter handling for new gestures after Adapter disposal; old gestures stay
-  invalid. Read `adapter.predictiveBackFallbacks` for bounded, sanitized start
+  invalid. Reading `Route.popGestureEnabled` during a retired gesture does not
+  detach its original commit fence; only its terminal callback ends that sequence.
+  Read `adapter.predictiveBackFallbacks` for bounded, sanitized start
   rejection reasons; it shares `lifecycleEventCapacity` and is empty without
   allocating history when the switch is false. Treat custom handler failures as
-  observational: a throwing `isActive` must relinquish the Route to Flutter.
+  observational: a throwing `isActive` relinquishes an idle Route to Flutter;
+  it does not detach an in-flight gesture owner.
   Adapter construction must atomically roll back all observer/listener
   registration. Never add a second Pop
   or manually forward phases for an automatically wired Route. See the Host
@@ -444,6 +447,8 @@ During Flutter child supervision, a handled signal removes the run's lease
 before being forwarded; closing a starting lease cannot leave a heartbeat timer.
 Watch shutdown also works during child session startup, before `ready`; it must
 release its signal queue and generation lock even if no signal was read yet.
+Initial snapshot or session setup failures report `failed`; child shutdown and
+cleanup of acquired observers, subscriptions and timers precede lock release.
 A project clean must not be treated as Flutter-run exit.
 The wrapper prints its successful watch-start summary to stdout before the
 original Flutter process begins. It must first observe `sessionReady` for its

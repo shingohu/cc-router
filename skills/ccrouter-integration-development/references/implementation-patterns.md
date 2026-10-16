@@ -65,9 +65,12 @@ the popup. An observed ancestor popup invalidates a pending preview even if it
 is dismissed before commit; retain observers on the relevant ancestor Outlets.
 Adapter disposal rejects its in-flight gesture, but a surviving attached Route
 detaches the retired handler at its next start and resumes Flutter behavior.
+While the old gesture is pending, `Route.popGestureEnabled` remains observational
+and preserves its original handler until commit/cancel rejects or ends it.
 The Host SPI handler exposes `isActive` for this lifetime boundary.
-If this lifetime probe throws, the Route detaches the custom handler and restores
-Flutter-owned back handling. Adapter construction registers Navigator Observer,
+If this lifetime probe throws while idle, the Route detaches the custom handler
+and restores Flutter-owned back handling. An in-flight gesture keeps its owner
+until its terminal callback. Adapter construction registers Navigator Observer,
 RouterDelegate and binding observers atomically and rolls all of them back on
 failure.
 Cancel never completes typed results or closes Scopes. Guarded pages retain
@@ -1096,7 +1099,10 @@ the final SIGKILL wait is capped at 5 seconds. This preserves graceful cleanup
 without allowing a stuck child to retain session restart or the generation lock.
 Shutdown may arrive before a new child session reaches `ready` or reads its
 first queued signal. The internal signal subscription must still be canceled
-and its controller closed without retaining the generation lock.
+and its controller closed without retaining the generation lock. Initial
+snapshot or session setup failures publish `failed` with stage `watch-session`;
+all acquired resources and the child are cleaned up before ownership/generation
+locks are released. A failed session must not publish a successful `stopped`.
 After a successful Builder cycle, watch skips only the ordinary fast-path and
 Build Plan decision that can no longer change whether Builder runs. Input
 fingerprints and barriers, dependency preflight, artifact snapshots, Workspace

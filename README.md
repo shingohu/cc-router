@@ -832,7 +832,8 @@ Flutter 仍唯一驱动动画和实际 Pop。取消不触发正式 PageShow/Page
 手势中发生导航或提交时 PopScope/Form 禁止退出，会终止预览；这种取消不自动弹业务确认框。
 开启时，祖先 Navigator 的弹窗会阻止底下嵌套页面接受新手势；手势中弹出后，即使弹窗先关闭，
 旧提交也不会退出底下页面。attach 模式销毁 Adapter 后，旧手势失效，存续 Router 的新手势恢复
-Flutter 返回行为。
+Flutter 返回行为。进行中的旧手势保留原 handler 到 commit/cancel；读取
+`Route.popGestureEnabled` 只查询能力，不会提前解除旧手势的提交保护。
 
 自动桥按当前 `Theme.platform` 校验实际转场。手势中切换到非 Android 平台或非预测转场时，
 原预览会取消并恢复动画、释放 Navigator 手势状态；迟到 commit 不退出页面，新手势按当前
@@ -1417,7 +1418,8 @@ subscriber 会接管并重新到达 `ready`；同一 Host 的第二个 watch 会
 Flutter 子进程运行期间，supervisor 处理中断时先移除当前 run 的 lease，再将信号转发给
 子进程；初始化 lease 的写入尚未完成时关闭它，也不会留下 heartbeat 定时器。
 Watch 在新 child session 尚未到达 `ready` 时也可停止，不会因尚未读取内部信号队列而阻塞
-清理和 generation lock 释放。
+清理和 generation lock 释放。首次快照或其它 session 初始化失败会报告 `failed`，
+在释放 ownership/generation lock 前停止 build_runner 并清理已创建的监听器、订阅与 Timer。
 `CCROUTER_DISABLE_MULTI_HOST_WATCH=1` 可恢复一个 build root 只允许一个 watch 的旧语义做 A/B。
 watch ownership、generation、aggregation、Host registration、Flutter-run lease、Analyzer CLI
 写事务及最小 Host/Builder session authority 位于用户级

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter/ccrouter_host.dart';
@@ -797,7 +798,11 @@ void _boundaryTests() {
     });
   }
 
-  for (final platform in [TargetPlatform.iOS, TargetPlatform.ohos]) {
+  for (final platform in [
+    TargetPlatform.iOS,
+    if (Platform.operatingSystem == 'ohos')
+      TargetPlatform.values.byName(Platform.operatingSystem),
+  ]) {
     testWidgets(
       '$platform retains original Material Route with bridge enabled',
       (tester) async {
@@ -927,6 +932,36 @@ Future<void> _event(
 
 void main() {
   tearDown(CCRouterHost.shutdown);
+  for (final terminal in ['commitBackGesture', 'cancelBackGesture']) {
+    testWidgets(
+      'eligibility query preserves retired gesture fence: $terminal',
+      (tester) async {
+        final harness = _Harness();
+        await harness.mount(tester, attached: true);
+        harness.push();
+        await tester.pumpAndSettle();
+        final route = harness.route(tester);
+        await _event(tester, 'startBackGesture');
+        harness.backend.adapter.dispose();
+        // A Host capability query must not change the in-flight gesture owner.
+        expect(route.popGestureEnabled, isTrue);
+        await _event(tester, terminal);
+        await tester.pumpAndSettle();
+        expect(find.text('detail:1'), findsOneWidget);
+        expect(route.animation!.value, 1);
+        expect(
+          harness.backend.host.navigatorKey.currentState!.userGestureInProgress,
+          isFalse,
+        );
+        await _event(tester, 'startBackGesture');
+        await _event(tester, 'commitBackGesture');
+        await tester.pumpAndSettle();
+        expect(find.text('detail:1'), findsNothing);
+        await harness.close(tester);
+        expect(harness.resources.single.disposeCount, 1);
+      },
+    );
+  }
   _boundaryTests();
   final cases = [
     (
