@@ -275,6 +275,9 @@ watch 使用文件 stat 作为低成本唤醒信号，再以 exact-content finge
 新 session 的 `aggregationSucceeded` 在 `ready` 前不能满足 Pub Hook。设置
 `CCROUTER_DISABLE_WATCH_SESSION_RESTART=1` 后，这类变化会 fail closed，并提示停止 watch 后运行
 one-shot，不会静默沿用旧 target 集合。
+首次快照或 session 初始化失败也会先停止 child 并清理已取得的资源，再释放锁。
+终止失败保留 `failed` 状态且 `active=false`，同时停止状态镜像修复 Timer，不发布成功的 `stopped`。
+
 旧 child 的停止过程是有界的：SIGINT 最多 10 秒、SIGTERM 最多 5 秒，最后 SIGKILL 最多等待
 5 秒。正常 child 仍有机会完成清理，忽略退出信号的 child 不会无限阻塞 session restart 或
 generation lock 释放。

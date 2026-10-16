@@ -428,6 +428,8 @@ During Flutter child supervision, a handled signal removes the run's lease
 before being forwarded; closing a starting lease cannot leave a heartbeat timer.
 Watch shutdown also works during child session startup, before `ready`; it must
 release its signal queue and generation lock even if no signal was read yet.
+Initial snapshot or session setup failures report `failed`; child shutdown and
+cleanup of acquired observers, subscriptions and timers precede lock release.
 A project clean must not be treated as Flutter-run exit.
 The wrapper prints its successful watch-start summary to stdout before the
 original Flutter process begins. It must first observe `sessionReady` for its

@@ -1405,7 +1405,8 @@ subscriber 会接管并重新到达 `ready`；同一 Host 的第二个 watch 会
 Flutter 子进程运行期间，supervisor 处理中断时先移除当前 run 的 lease，再将信号转发给
 子进程；初始化 lease 的写入尚未完成时关闭它，也不会留下 heartbeat 定时器。
 Watch 在新 child session 尚未到达 `ready` 时也可停止，不会因尚未读取内部信号队列而阻塞
-清理和 generation lock 释放。
+清理和 generation lock 释放。首次快照或其它 session 初始化失败会报告 `failed`，
+在释放 ownership/generation lock 前停止 build_runner 并清理已创建的监听器、订阅与 Timer。
 `CCROUTER_DISABLE_MULTI_HOST_WATCH=1` 可恢复一个 build root 只允许一个 watch 的旧语义做 A/B。
 watch ownership、generation、aggregation、Host registration、Flutter-run lease、Analyzer CLI
 写事务及最小 Host/Builder session authority 位于用户级

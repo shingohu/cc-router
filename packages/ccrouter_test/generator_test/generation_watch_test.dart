@@ -64,6 +64,104 @@ void main() {
   );
 
   test(
+    'initial snapshot failure stops the child before releasing ownership',
+    () async {
+      final target = File(
+        path.join(
+          Directory.current.path,
+          'demo/lib/src/ccrouter_generated/host/ccrouter_demo_ccrouter.g.dart',
+        ),
+      );
+      final originalMode = (target.statSync().mode & 0xfff).toRadixString(8);
+      final childPids = <int>[];
+      final events = <Map<String, dynamic>>[];
+      _ConcurrentWatch? watch;
+      try {
+        watch = await _ConcurrentWatch.start(
+          Directory(path.join(Directory.current.path, 'demo')),
+          onEvent: (process, event) {
+            events.add(event);
+            if (event['type'] != 'watchStarted') return;
+            // Pause only this fixture's CLI while injecting a real read error.
+            process.kill(ProcessSignal.sigstop);
+            try {
+              final ps = Process.runSync('ps', ['-axo', 'pid=,ppid=']);
+              for (final line in const LineSplitter().convert('${ps.stdout}')) {
+                final fields = line.trim().split(RegExp(r'\s+'));
+                if (fields.length == 2 &&
+                    int.tryParse(fields[1]) == process.pid) {
+                  childPids.add(int.parse(fields[0]));
+                }
+              }
+              final chmod = Process.runSync('chmod', ['000', target.path]);
+              expect(chmod.exitCode, 0, reason: '${chmod.stderr}');
+            } finally {
+              process.kill(ProcessSignal.sigcont);
+            }
+          },
+        );
+        expect(
+          await watch.process.exitCode.timeout(
+            const Duration(seconds: 30),
+            onTimeout: () => throw TimeoutException(watch!.output.join('\n')),
+          ),
+          1,
+          reason: watch.output.join('\n'),
+        );
+        expect(childPids, isNotEmpty);
+        for (final childPid in childPids) {
+          expect(
+            await _fixtureProcessIsAlive(childPid),
+            isFalse,
+            reason: 'orphan child $childPid',
+          );
+        }
+        expect(
+          events,
+          anyElement(
+            allOf(
+              containsPair('type', 'failed'),
+              containsPair('stage', 'watch-session'),
+              containsPair('error', contains('ccrouter_demo_ccrouter.g.dart')),
+            ),
+          ),
+        );
+        final status =
+            jsonDecode(
+                  File(
+                    path.join(
+                      Directory.current.path,
+                      'demo/.dart_tool/ccrouter/v1/watch/status.json',
+                    ),
+                  ).readAsStringSync(),
+                )
+                as Map;
+        expect(status['active'], isFalse);
+        expect(status['state'], 'failed');
+        expect(
+          events.map((event) => event['type']),
+          isNot(contains('stopped')),
+        );
+      } finally {
+        await Process.run('chmod', [originalMode, target.path]);
+        await watch?.stop();
+        // Also clean the intentionally failing pre-fix run's orphan child.
+        for (final childPid in childPids) {
+          await _stopFixtureProcess(childPid);
+        }
+      }
+      final retry = await _run(['generate', 'demo', '--check']);
+      expect(retry.exitCode, 0, reason: '${retry.stdout}\n${retry.stderr}');
+    },
+    skip:
+        Platform.isWindows ||
+            (!Platform.isWindows &&
+                '${Process.runSync('id', ['-u']).stdout}'.trim() == '0')
+        ? 'Requires POSIX file permissions and a non-root user'
+        : false,
+  );
+
+  test(
     'watch kill switch performs one machine-readable fallback',
     () async {
       final result = await _run(
@@ -1798,6 +1896,24 @@ CCRouterCoordinationPaths get _coordinationPaths =>
     }
   }
   throw StateError('No active watch registration for ${hostRoot.path}.');
+}
+
+/// Checks only a PID captured as a child of this test's watch process.
+Future<bool> _fixtureProcessIsAlive(int processId) async =>
+    (await Process.run('kill', ['-0', '$processId'])).exitCode == 0;
+
+/// Prevents a failing regression assertion from leaving its test child alive.
+Future<void> _stopFixtureProcess(int processId) async {
+  for (final signal in [ProcessSignal.sigterm, ProcessSignal.sigkill]) {
+    if (!await _fixtureProcessIsAlive(processId)) return;
+    Process.killPid(processId, signal);
+    final deadline = Stopwatch()..start();
+    while (await _fixtureProcessIsAlive(processId)) {
+      if (deadline.elapsed >= const Duration(seconds: 5)) break;
+      await Future<void>.delayed(const Duration(milliseconds: 25));
+    }
+  }
+  expect(await _fixtureProcessIsAlive(processId), isFalse);
 }
 
 final class _ConcurrentWatch {

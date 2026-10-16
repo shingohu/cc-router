@@ -1036,7 +1036,10 @@ the final SIGKILL wait is capped at 5 seconds. This preserves graceful cleanup
 without allowing a stuck child to retain session restart or the generation lock.
 Shutdown may arrive before a new child session reaches `ready` or reads its
 first queued signal. The internal signal subscription must still be canceled
-and its controller closed without retaining the generation lock.
+and its controller closed without retaining the generation lock. Initial
+snapshot or session setup failures publish `failed` with stage `watch-session`;
+all acquired resources and the child are cleaned up before ownership/generation
+locks are released. A failed session must not publish a successful `stopped`.
 After a successful Builder cycle, watch skips only the ordinary fast-path and
 Build Plan decision that can no longer change whether Builder runs. Input
 fingerprints and barriers, dependency preflight, artifact snapshots, Workspace
