@@ -1,0 +1,14 @@
+--- a/packages/ccrouter_test/test/predictive_back_test.dart
++++ b/packages/ccrouter_test/test/predictive_back_test.dart
+@@ -797,7 +797,10 @@
+     });
+   }
+ 
+-  for (final platform in [TargetPlatform.iOS, TargetPlatform.ohos]) {
++  for (final platform in [
++    TargetPlatform.iOS,
++    ...TargetPlatform.values.where((value) => value.name == 'ohos'),
++  ]) {
+     testWidgets(
+       '$platform retains original Material Route with bridge enabled',
+       (tester) async {

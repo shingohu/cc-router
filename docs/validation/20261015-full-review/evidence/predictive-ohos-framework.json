@@ -1,0 +1,15 @@
+{
+  "label": "predictive-ohos",
+  "name": "framework",
+  "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/predictive-ohos",
+  "command": [
+    "/Users/shingo/fvm/versions/ohos/oh-3.41.9-release/bin/flutter",
+    "test",
+    "--no-pub",
+    "--reporter=expanded",
+    "packages/ccrouter_test/test"
+  ],
+  "exit_code": 0,
+  "seconds": 26.49,
+  "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/predictive-ohos-framework.log"
+}

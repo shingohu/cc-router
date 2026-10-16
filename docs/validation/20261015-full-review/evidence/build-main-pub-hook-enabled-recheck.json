@@ -1,0 +1,18 @@
+{
+  "label": "build-main",
+  "name": "pub-hook-enabled-recheck",
+  "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/build-main",
+  "command": [
+    "env",
+    "-u",
+    "CCROUTER_PUB_HOOK_DISABLE",
+    "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+    "test",
+    "--concurrency=1",
+    "--reporter=expanded",
+    "packages/ccrouter_test/generator_test/pub_hook_test.dart"
+  ],
+  "exit_code": 0,
+  "seconds": 46.29,
+  "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/build-main-pub-hook-enabled-recheck.log"
+}

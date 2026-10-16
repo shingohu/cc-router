@@ -1,0 +1,12 @@
+{
+  "label": "predictive",
+  "name": "analyze",
+  "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/predictive",
+  "command": [
+    "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+    "analyze"
+  ],
+  "exit_code": 3,
+  "seconds": 48.14,
+  "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/predictive-analyze.log"
+}

@@ -860,8 +860,9 @@ Flutter 仍唯一驱动动画和实际 Pop。取消不触发正式 PageShow/Page
 手势中发生导航或提交时 PopScope/Form 禁止退出，会终止预览；这种取消不自动弹业务确认框。
 开启时，祖先 Navigator 的弹窗会阻止底下嵌套页面接受新手势；手势中弹出后，即使弹窗先关闭，
 旧提交也不会退出底下页面。attach 模式销毁 Adapter 后，旧手势失效，存续 Router 的新手势恢复
-Flutter 返回行为。进行中的旧手势保留原 handler 到 commit/cancel；读取
-`Route.popGestureEnabled` 只查询能力，不会提前解除旧手势的提交保护。
+Flutter 返回行为。读取 `Route.popGestureEnabled` 不会提前解除旧手势的提交保护。
+旧 commit/cancel 到达时结束原序列；若平台丢失终态，下一次 start 会先取消残留预览，再按
+当前 handler 活性开启新序列。已销毁 Adapter 的 handler 此时解除，存续 Router 恢复 Flutter 返回。
 
 自动桥按当前 `Theme.platform` 校验实际转场。手势中切换到非 Android 平台或非预测转场时，
 原预览会取消并恢复动画、释放 Navigator 手势状态；迟到 commit 不退出页面，新手势按当前
@@ -883,8 +884,8 @@ Host 可读取 `adapter.predictiveBackFallbacks` 定位自动桥为何未接受�
 `lifecycleEventCapacity` 共用容量，只记录稳定 reason、Host、Outlet 和 timestamp，不包含 URI、
 arguments、Extra、Widget、BuildContext 或业务结果；关闭开关时始终为空且不分配历史。
 Adapter 构造期间的 Observer/listener 注册失败会原子回滚。自定义
-`CCFlutterPredictiveBackHandler.isActive` 抛错时，Route 会解除该 handler 并恢复 Flutter
-原有返回路径，诊断或 Host SPI 故障不会中断手势。
+`CCFlutterPredictiveBackHandler.isActive` 抛错时，空闲 Route 会解除该 handler 并恢复 Flutter
+原有返回路径；进行中的手势仍保留原提交保护，直到终态到达或下一次 start 先取消旧序列。
 
 Demo 默认入口保持关闭；可用 `fvm flutter run -t lib/main_predictive_back.dart` 从 `demo/`
 启动开启版本。支持范围、接线和回归见 [预测返回接入说明](docs/CCRouter-predictive-back.md)。
@@ -1448,6 +1449,7 @@ Flutter 子进程运行期间，supervisor 处理中断时先移除当前 run �
 Watch 在新 child session 尚未到达 `ready` 时也可停止，不会因尚未读取内部信号队列而阻塞
 清理和 generation lock 释放。首次快照或其它 session 初始化失败会报告 `failed`，
 在释放 ownership/generation lock 前停止 build_runner 并清理已创建的监听器、订阅与 Timer。
+该终态为 inactive `failed`，不会被覆盖成 `stopped`，状态镜像修复 Timer 也随之停止。
 `CCROUTER_DISABLE_MULTI_HOST_WATCH=1` 可恢复一个 build root 只允许一个 watch 的旧语义做 A/B。
 watch ownership、generation、aggregation、Host registration、Flutter-run lease、Analyzer CLI
 写事务及最小 Host/Builder session authority 位于用户级

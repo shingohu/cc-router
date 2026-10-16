@@ -1,0 +1,14 @@
+{
+  "label": "combined",
+  "name": "runtime-health",
+  "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/combined",
+  "command": [
+    "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+    "run",
+    "packages/ccrouter_test/benchmark/performance_regression.dart",
+    "--output=/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/runtime-health-report.json"
+  ],
+  "exit_code": 0,
+  "seconds": 27.9,
+  "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/combined-runtime-health.log"
+}

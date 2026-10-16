@@ -2,6 +2,12 @@
 
 ## 0.1.0 - Unreleased
 
+- Added opt-in typed UI Fragment generation, consumer Client barrels, static
+  Renderer/Host assembly validation, and portable output support. Reject enhanced
+  enums and unsupported DTO constructors; fingerprint effective field defaults.
+- Clean up children, subscriptions, listeners, and timers on initial watch
+  snapshot/session setup failure and shutdown before `ready`. Startup failures
+  remain inactive `failed` instead of becoming `stopped`, and mirror repair ends.
 - Let ordinary `generate` and `generate --check` reuse exact current Host or
   Package completion evidence from an active watch instead of failing on its
   long-lived generation lock. Reference, profile, custom-output, portable, and

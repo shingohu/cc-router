@@ -96,6 +96,17 @@ Proxy 的内部回调变量和导入前缀自动避开业务参数、方法和�
 Route/Proxy 默认集合保持常量的实际泛型类型，不能因参数声明为 Object 而丢失 Set/List/Map
 语义。仅在默认值出现的枚举/集合类型同样参与导入与可见性校验。
 
+可选类型化 UI Fragment 也使用现有 `generate` 和 `portable prepare/publish`，不需要额外命令。
+契约包通过 `ccrouter_ui_contracts.dart` 声明 Contract，Renderer 和消费组件直接依赖
+`ccrouter_ui`；消费者在 `uiDependencies` 声明 Contract、版本范围与 alias，并把 Owner 保留在
+required `dependencies`。Generator 校验 DTO、普通 enum、有效默认值指纹和静态 Renderer
+装配，生成消费者专属 `<componentId>.ui.api.g.dart`。消费方不得导入 Owner Renderer 或
+`ui/*.ui.g.dart` SPI。实际消费 UI 的 Host 直接依赖 `ccrouter_ui`，启动仍传一个完整 Assembly。
+UI source metadata 使用 schema 5 / `uiSchemaVersion: 1`，UI Package Index 使用 schema 3；
+未声明 UI 的 Package 保持原 schema。必须配套使用匹配版本的 Generator、Contracts、CCRouter
+和 UI Package。UI 专属 `find --usage`、DevTools Catalog 与 Analyzer 诊断尚未实现；详见
+[UI Fragment 接入指南](../../skills/ccrouter-integration-development/references/ui-fragments.md)。
+
 `dependencies`、`serviceDependencies` 和 `commandDependencies` 目前必须显式维护。生成器会从
 Contract 元数据解析 Owner 并校验三者一致，不会因为发现某个 Contracts Package 或 Pub 依赖而
 静默修改组件源文件。稳定 Component API 聚合入口已经实现；Generator 会在 build_runner 前
@@ -155,9 +166,12 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter create event OrderPai
 fvm dart run --verbosity=error ccrouter_generator:ccrouter create init-task WarmCache demo/modules/demo_inventory
 fvm dart run --verbosity=error ccrouter_generator:ccrouter create init-task WarmCache demo/modules/demo_inventory --with-contract
 
-fvm flutter pub get
+CCROUTER_PUB_HOOK_DISABLE=1 fvm flutter pub get
 fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo
 ```
+
+这里禁用 Hook 的 Pub 命令仅用于本仓库 Workspace 聚合根的依赖解析；Host 生成仍显式选择
+`demo`。在外部应用中，应从实际 Host 运行 Pub 与生成检查。
 
 Analyzer 是可选的 Host 开发工具，独立于生成流程：
 

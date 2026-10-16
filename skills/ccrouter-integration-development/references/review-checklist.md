@@ -42,6 +42,9 @@
   revive the preview or Pop. Verify a new gesture after Theme recovery.
   Include ancestor Navigator popups before/during a nested gesture,
   dismissal before commit, and new gestures after an attached Adapter closes.
+  After Adapter disposal, read `popGestureEnabled` before the old terminal to
+  verify that its commit remains fenced; also omit the terminal and verify that
+  the next start cancels the leftover preview and restores Flutter handling.
   Keep Guard/custom/foreign fallback and avoid duplicate manual
   forwarding. Verify failed Adapter construction rolls back every registration,
   throwing handler lifetime probes restore Flutter fallback, and declined starts

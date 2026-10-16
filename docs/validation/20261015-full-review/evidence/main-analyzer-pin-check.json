@@ -1,0 +1,15 @@
+{
+  "label": "main",
+  "name": "analyzer-pin-check",
+  "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/main",
+  "command": [
+    "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+    "packages/ccrouter_generator/bin/ccrouter_generator.dart",
+    "analyzer",
+    "pin-check",
+    "demo"
+  ],
+  "exit_code": 0,
+  "seconds": 22.93,
+  "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/main-analyzer-pin-check.log"
+}

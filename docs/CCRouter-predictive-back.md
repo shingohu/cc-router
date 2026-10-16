@@ -1,6 +1,6 @@
 # CCRouter Android 预测返回自动桥
 
-状态：2026-10-15，已实现可选自动接线；平台验收范围见下文。
+状态：2026-10-16，已实现可选自动接线，并补齐丢失终态后的新手势恢复；平台验收范围见下文。
 
 ## 问题与方案选择
 
@@ -67,7 +67,9 @@ arguments、Extra、Widget、BuildContext 或业务结果。关闭开关时 gett
 7. attach 模式允许应用 Router 在 Adapter 销毁后存续。handler 的 `isActive` 变为 false，
    旧手势仍拒绝 commit；Route 在下次新手势开始时解除旧 handler，恢复 Flutter 返回行为。
    读取 `Route.popGestureEnabled` 不会解除进行中手势的原 handler；原 commit/cancel
-   终态到达前始终保留提交保护。该判断不重建 Route，也不让旧序列再次生效。
+   到达时结束旧序列。若平台丢失终态，下一次 start 会先取消残留预览，再重新判断 handler
+   活性并解除已销毁 Adapter 的 handler，新序列由 Flutter 处理。能力查询本身不触发恢复，
+   不重建 Route，也不让旧序列再次生效。
 8. Adapter 构造将 Navigator Observer listener、RouterDelegate listener 和 binding observer
    作为一个事务注册；任一步失败会逆序清理。自定义 handler 的 `isActive` 抛错时，
    空闲 Route 解除故障 handler 并恢复 Flutter 返回；进行中的手势仍保留原提交保护。
@@ -112,7 +114,7 @@ fvm flutter test test/predictive_back_demo_test.dart
 策略页验证未保存表单拒绝和保存后 fallback。Shell / StatefulShell 验证具体 Outlet
 及分支切换后的迟到提交。
 
-本次自动化验证：
+2026-10-15 首次实施验证快照（数量不代表后续提交的累计结果）：
 
 - 框架完整 Flutter suite：475 项通过，其中预测返回专项 43 项。
 - Demo 完整 suite：58 项通过，其中新增预测专项 12 项。
@@ -142,6 +144,13 @@ Theme 边界修复新增 6 项回归：修复前关闭开关的对照通过，�
 commit/cancel 与重复终态、预测 Theme 在旧 commit 前恢复，以及后续独立手势。取消不改变
 typed result、Route Scope 或正式页面生命周期。此轮框架 475 项、Demo 58 项、根和 Demo
 analyze、`ccrouter generate demo --check` 均通过；未重新执行平台构建或真机验证。
+
+2026-10-16 的 `b8584ba` 新增丢失终态回归：attach 模式关闭 Adapter 后先读取
+`popGestureEnabled`，省略旧手势的终态，再发起新 start/commit；新手势正常退出，资源只释放一次。
+`7128be0` 新增真实 Demo 的 UI Fragment 组合回归：取消保留输入内容和 RouteEntry，提交后移除
+页面与一个 Entry，阶段序列为 started/cancelled/started/committed，且无 Flutter 异常。
+用例分别位于[框架预测返回测试](../packages/ccrouter_test/test/predictive_back_test.dart)和
+[Demo 预测返回测试](../demo/test/predictive_back_demo_test.dart)。这些 Widget 回归不扩大真机验收范围。
 
 Android 16 三星 SM-S911U1（手势导航，Demo targetSdk 36）补充完成真机 Android
 触摸输入注入验证：开启时左右缘取消、提交、重新进页后的独立手势、入场未稳定时的

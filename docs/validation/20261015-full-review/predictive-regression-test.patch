@@ -1,0 +1,28 @@
+--- a/packages/ccrouter_test/test/predictive_back_test.dart
++++ b/packages/ccrouter_test/test/predictive_back_test.dart
+@@ -930,6 +930,25 @@
+ 
+ void main() {
+   tearDown(CCRouterHost.shutdown);
++  testWidgets('review: retired in-flight gesture survives eligibility query', (
++    tester,
++  ) async {
++    final harness = _Harness();
++    await harness.mount(tester, attached: true);
++    harness.push();
++    await tester.pumpAndSettle();
++    final route = harness.route(tester);
++    await _event(tester, 'startBackGesture');
++    harness.backend.adapter.dispose();
++    // A read-only Host capability probe must not revoke the old commit fence.
++    final enabled = route.popGestureEnabled;
++    debugPrint('eligibility after disposal: $enabled');
++    await _event(tester, 'commitBackGesture');
++    await tester.pumpAndSettle();
++    final keptPage = find.text('detail:1').evaluate().isNotEmpty;
++    await harness.close(tester);
++    expect(keptPage, isTrue);
++  });
+   _boundaryTests();
+   final cases = [
+     (

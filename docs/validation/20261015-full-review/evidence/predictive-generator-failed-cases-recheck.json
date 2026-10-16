@@ -1,0 +1,22 @@
+{
+  "label": "predictive",
+  "name": "generator-failed-cases-recheck",
+  "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/predictive",
+  "command": [
+    "env",
+    "-u",
+    "CCROUTER_PUB_HOOK_DISABLE",
+    "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+    "test",
+    "--concurrency=1",
+    "--reporter=expanded",
+    "packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart",
+    "packages/ccrouter_test/generator_test/generation_watch_test.dart",
+    "packages/ccrouter_test/generator_test/pub_hook_test.dart",
+    "--name",
+    "^(?:Route\\ DartDoc\\ affects\\ metadata\\ without\\ changing\\ executable\\ output|Service\\ Proxy\\ consumes\\ imported\\ generic\\ bounds\\ and\\ typedef\\ targets|Route\\ Codec\\ validation\\ follows\\ imported\\ supertype\\ arguments|installed\\ flutter\\ build\\ preflight\\ reuses\\ an\\ active\\ watch|Flutter\\ wrapper\\ locates\\ only\\ the\\ real\\ top\\-level\\ command|inner\\ Dart\\ wrapper\\ runs\\ post\\-pub\\ once\\ and\\ preserves\\ bypass\\ semantics|inner\\ Dart\\ wrapper\\ runs\\ generation\\ from\\ the\\ Package\\ root|Flutter\\ wrapper\\ suppresses\\ nested\\ Dart\\ post\\-pub\\ hooks|run\\ and\\ build\\ execute\\ a\\ generation\\ preflight\\ before\\ Flutter)$"
+  ],
+  "exit_code": 0,
+  "seconds": 53.46,
+  "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/predictive-generator-failed-cases-recheck.log"
+}

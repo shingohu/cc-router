@@ -1,0 +1,17 @@
+{
+  "label": "build-predictive",
+  "name": "candidate-regression-restored",
+  "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/build-predictive",
+  "command": [
+    "/Users/shingo/fvm/versions/3.41.9/bin/flutter",
+    "test",
+    "--no-pub",
+    "--reporter=expanded",
+    "packages/ccrouter_test/test/predictive_back_test.dart",
+    "--plain-name",
+    "review: retired in-flight gesture survives eligibility query"
+  ],
+  "exit_code": 0,
+  "seconds": 3.31,
+  "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/build-predictive-candidate-regression-restored.log"
+}

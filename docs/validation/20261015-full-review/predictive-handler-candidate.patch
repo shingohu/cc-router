@@ -1,0 +1,11 @@
+--- a/packages/ccrouter/lib/src/flutter_predictive_back.dart
++++ b/packages/ccrouter/lib/src/flutter_predictive_back.dart
+@@ -88,6 +88,8 @@
+     } catch (_) {
+       // A broken Host lifetime probe degrades to Flutter-owned behavior.
+     }
++    // Keep the original observer as the commit fence until this gesture ends.
++    if (_tracking) return handler;
+     _handler = null;
+     try {
+       handler.onDispose(this);

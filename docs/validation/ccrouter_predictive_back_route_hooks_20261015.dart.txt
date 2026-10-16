@@ -1,0 +1,127 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+class ProbeRoute extends MaterialPageRoute<String> {
+  ProbeRoute({required super.builder, required this.phases});
+  final List<String> phases;
+  final List<double> progressValues = [];
+
+  @override
+  void handleStartBackGesture({double progress = 0}) {
+    super.handleStartBackGesture(progress: progress);
+    phases.add('start');
+    progressValues.add(progress);
+  }
+
+  @override
+  void handleUpdateBackGestureProgress({required double progress}) {
+    super.handleUpdateBackGestureProgress(progress: progress);
+    phases.add('update');
+    progressValues.add(progress);
+  }
+
+  @override
+  void handleCancelBackGesture() {
+    super.handleCancelBackGesture();
+    phases.add('cancel');
+  }
+
+  @override
+  void handleCommitBackGesture() {
+    phases.add('commitRequested');
+    super.handleCommitBackGesture();
+  }
+}
+
+Future<void> sendGesture(WidgetTester tester, String method,
+    [double progress = 0]) async {
+  await tester.binding.defaultBinaryMessenger.handlePlatformMessage(
+    'flutter/backgesture',
+    const StandardMethodCodec().encodeMethodCall(MethodCall(method,
+        method == 'startBackGesture' || method == 'updateBackGestureProgress'
+            ? <String, Object>{
+                'touchOffset': <double>[5, 300],
+                'progress': progress,
+                'swipeEdge': 0,
+              }
+            : null)),
+    (_) {},
+  );
+  await tester.pump();
+}
+
+void main() {
+  testWidgets('public route hooks preserve Flutter cancel, commit and progress',
+      (tester) async {
+    final navKey = GlobalKey<NavigatorState>();
+    await tester.pumpWidget(MaterialApp(
+      navigatorKey: navKey,
+      theme: ThemeData(platform: TargetPlatform.android),
+      home: const Scaffold(body: Text('home')),
+    ));
+    final phases = <String>[];
+    final route = ProbeRoute(
+        builder: (_) => const Scaffold(body: Text('detail')), phases: phases);
+    var completions = 0;
+    navKey.currentState!.push(route).then((_) => completions++);
+    await tester.pumpAndSettle();
+    await sendGesture(tester, 'startBackGesture');
+    await sendGesture(tester, 'updateBackGestureProgress', .4);
+    expect(route.animation!.value, closeTo(.6, .001));
+    await sendGesture(tester, 'cancelBackGesture');
+    await tester.pumpAndSettle();
+    expect(route.isCurrent, isTrue);
+    expect(completions, 0);
+    expect(route.animation!.value, 1);
+    expect(phases, ['start', 'update', 'cancel']);
+    expect(route.progressValues, [1, .6]);
+    await sendGesture(tester, 'startBackGesture');
+    await sendGesture(tester, 'updateBackGestureProgress', .4);
+    await sendGesture(tester, 'commitBackGesture');
+    await tester.pumpAndSettle();
+    expect(completions, 1);
+    expect(find.text('detail'), findsNothing);
+    expect(navKey.currentState!.userGestureInProgress, isFalse);
+    expect(phases, ['start', 'update', 'cancel', 'start', 'update', 'commitRequested']);
+  });
+
+  testWidgets('SDK commit does not recheck PopScope changed after start',
+      (tester) async {
+    final allowed = ValueNotifier(true);
+    final navKey = GlobalKey<NavigatorState>();
+    await tester.pumpWidget(MaterialApp(
+      navigatorKey: navKey,
+      theme: ThemeData(platform: TargetPlatform.android),
+      home: const Scaffold(body: Text('home')),
+    ));
+    final didPop = <bool>[];
+    final route = ProbeRoute(
+      phases: [],
+      builder: (_) => ValueListenableBuilder<bool>(
+        valueListenable: allowed,
+        builder: (_, canPop, _) => PopScope<String>(
+          canPop: canPop,
+          onPopInvokedWithResult: (popped, _) => didPop.add(popped),
+          child: const Scaffold(body: Text('detail')),
+        ),
+      ),
+    );
+    var completions = 0;
+    navKey.currentState!.push(route).then((_) => completions++);
+    await tester.pumpAndSettle();
+    await sendGesture(tester, 'startBackGesture');
+    expect(navKey.currentState!.userGestureInProgress, isTrue);
+    allowed.value = false;
+    await tester.pump();
+    expect(route.popDisposition, RoutePopDisposition.doNotPop);
+    await sendGesture(tester, 'updateBackGestureProgress', .4);
+    await sendGesture(tester, 'commitBackGesture');
+    await tester.pumpAndSettle();
+    expect(completions, 1);
+    expect(didPop, [true]);
+    expect(find.text('detail'), findsNothing);
+    await tester.pumpWidget(const SizedBox());
+    allowed.dispose();
+  });
+}

@@ -1,0 +1,4 @@
+cwd: /var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/build-predictive
+command: ['/Users/shingo/fvm/versions/3.41.9/bin/dart', 'analyze']
+Analyzing build-predictive...
+No issues found!

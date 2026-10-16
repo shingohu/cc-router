@@ -284,7 +284,10 @@ the Service Contract.
   when the popup closes before commit. Attached Router pages recover ordinary
   Flutter handling for new gestures after Adapter disposal; old gestures stay
   invalid. Reading `Route.popGestureEnabled` during a retired gesture does not
-  detach its original commit fence; only its terminal callback ends that sequence.
+  detach its original commit fence. If the terminal callback is lost, the next
+  start first cancels the leftover preview, then reevaluates handler activity;
+  a retired attached Adapter handler detaches before Flutter handles the new
+  sequence. Do not treat an eligibility read as a replacement start.
   Read `adapter.predictiveBackFallbacks` for bounded, sanitized start
   rejection reasons; it shares `lifecycleEventCapacity` and is empty without
   allocating history when the switch is false. Treat custom handler failures as

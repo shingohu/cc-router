@@ -1,0 +1,21 @@
+cwd: /var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/main
+command: ['/Users/shingo/fvm/versions/3.41.9/bin/dart', 'packages/ccrouter_generator/bin/ccrouter_generator.dart', 'analyzer', 'pin-check', 'demo']
+CCRouter Analyzer status
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/main/demo
+  state: healthy
+  plugin: ccrouter_demo_analyzer_plugin
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/main/demo/tools/ccrouter_analyzer_plugin_host/tools/analyzer_plugin
+  source: git
+  version: 0.1.0
+  ref: 5c69a72b769389d076d6f538e6964a0dafe88c27
+  analyzer: 8.4.0
+  analyzer_plugin: 0.13.10
+  source pin: current (manifest/lock/resolved-ref identity only)
+  cache artifact: unchecked (run analyzer doctor)
+  Analysis Server live state: unverified
+  detail: Analyzer bootstrap is statically consistent; loadability is unchecked until `ccrouter analyzer doctor` passes.
+CCRouter Analyzer pin check
+  source pin: current (5c69a72b769389d076d6f538e6964a0dafe88c27)
+  manifest/lock/resolved-ref: current
+  remote ref: resolvable
+  production changes after pin: none

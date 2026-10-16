@@ -81,6 +81,7 @@ final class _CCPredictiveMaterialPageRoute<T> extends MaterialPageRoute<T> {
   /// throws here relinquishes an idle Route to Flutter's normal gesture and Pop
   /// behavior. A gesture already in flight retains its original commit fence
   /// until cancellation or commit, even if the Host reads gesture eligibility.
+  /// A new start first cancels any sequence whose terminal callback was lost.
   CCFlutterPredictiveBackHandler? get _activeHandler {
     final handler = _handler;
     if (handler == null) return null;
@@ -160,6 +161,9 @@ final class _CCPredictiveMaterialPageRoute<T> extends MaterialPageRoute<T> {
 
   @override
   /// Starts Flutter animation and then records the concrete Route identity.
+  ///
+  /// Cancels an unfinished sequence before probing its owner, so a lost terminal
+  /// cannot leave a retired handler attached to the next independent gesture.
   void handleStartBackGesture({double progress = 0}) {
     if (_disposed) return;
     // A new platform start supersedes a sequence whose terminal was lost.

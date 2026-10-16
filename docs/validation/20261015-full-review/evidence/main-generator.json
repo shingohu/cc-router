@@ -1,0 +1,15 @@
+{
+  "label": "main",
+  "name": "generator",
+  "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/main",
+  "command": [
+    "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+    "test",
+    "--concurrency=1",
+    "--reporter=expanded",
+    "packages/ccrouter_test/generator_test"
+  ],
+  "exit_code": 1,
+  "seconds": 2560.28,
+  "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/main-generator.log"
+}

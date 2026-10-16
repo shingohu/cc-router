@@ -3,6 +3,8 @@
 ## 状态说明
 
 - 最近全量对齐：2026-10-07。
+- 最近增量对齐：2026-10-16，覆盖 Host-only 生命周期、类型化 UI Fragment、默认路由族、
+  Android 预测返回自动桥与丢失终态恢复、watch 初始化失败清理；不表示重新执行全平台验收。
 - 当前实现事实依次以生产代码、自动化测试、生成物和本文状态矩阵为准。
 - 专项设计文档用于解释语义和历史决策；其中的 Proposal、阶段计划和旧基准不能单独证明能力已实现。
 - 性能数字、测试数量和平台验证结果只代表文档注明日期的快照，不自动代表后续提交。
@@ -22,6 +24,12 @@
 - 可选类型化 UI Fragment：Pure Dart DTO/enum 契约、消费 Client、Renderer 静态装配、
   Host generation 校验与 Flutter State 生命周期；集合、sealed Action 和动态 Slot 未支持。
 - GoRouter managed/attach Host、Shell、StatefulShell、多 Outlet 和调用级 Context 定位。
+- 默认 Page/Dialog 路由族按最近 MaterialApp/CupertinoApp 宿主选择，显式类型优先；Material
+  路由仍随主题平台适配。Android 预测返回可选自动桥默认关闭，支持普通 Material 页面与
+  显式接线的自定义 Page；Guard、模态和不支持的 Theme 保留 fallback，平台验收见
+  [专项说明](CCRouter-predictive-back.md)。
+- 默认 Runtime 初始化、关闭和 InitTask Gate 控制仅由 Composition Root 通过 `CCRouterHost`
+  调用；业务 `CCRouter` 保留 Session 操作与只读任务诊断，单个导航 Host 卸载不关闭 Runtime。
 - 类型安全 Route、Service、Command、Event、InitTask Contract 及其生成、聚合、源码索引和
   Workspace 校验。
 - Route Interceptor、Redirect、Defer、PopGuard、Aspect、页面生命周期、Deep Link policy、
@@ -55,6 +63,8 @@
   直接 List Quick Fix；复杂集合和 import 插入仍不自动处理。CLI 已提供 Host-only 的只读
   `analyzer status/doctor` 和 maintainer `pin-check`；legacy 安装/升级/卸载仍保留为可回退管理
   路径，Hosted 发布后优先普通 `dev_dependency`，完整 Hosted/IDE/SDK 矩阵仍待外部验收。
+- UI Fragment 工具链：已支持生成、兼容校验和 Portable State；UI 专属 `find --usage`、
+  DevTools Catalog 视图、Analyzer 诊断与 Quick Fix 尚未实现。
 - 零 Subscriber Event：正常生成 Client、Workspace Validator 和 Runtime publisher identity 已覆盖；
   generated SPI 被手工伪造时没有独立 Event Contract Runtime Registry。该 Registry 仅在 generated
   SPI 需要成为严格防伪边界时再实现。

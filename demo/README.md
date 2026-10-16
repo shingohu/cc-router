@@ -120,6 +120,8 @@ fvm flutter test test/predictive_back_demo_test.dart
 每次切换入口重新启动 Demo，不在进行中的手势里切换开关。
 Demo widget 回归还覆盖 Shell / StatefulShell 详情上的根弹窗：先弹出时返回只关闭弹窗，
 手势中弹出时取消旧预览，弹窗先关闭也不能恢复旧提交；后续独立手势仍正常。
+“展示 → 类型化 UI Fragment”还覆盖组合回归：取消保留输入内容与页面，提交后退出一层并卸载
+Fragment；对应 Widget 测试使用真实生成 Host，不代表已完成该场景的真机动画验收。
 
 2026-10-15 已在三星 Android 16 完成开启 / 关闭入口的真机触摸输入注入冒烟；
 结果与限制见[设备验证记录](../docs/validation/android_predictive_back_samsung_20261015.md)。

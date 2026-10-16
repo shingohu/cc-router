@@ -1,0 +1,25 @@
+cwd: /var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/main
+command: ['/Users/shingo/fvm/versions/3.41.9/bin/dart', 'packages/ccrouter_generator/bin/ccrouter_generator.dart', 'analyzer', 'doctor', 'demo']
+CCRouter Analyzer status
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/main/demo
+  state: healthy
+  plugin: ccrouter_demo_analyzer_plugin
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/main/demo/tools/ccrouter_analyzer_plugin_host/tools/analyzer_plugin
+  source: git
+  version: 0.1.0
+  ref: 5c69a72b769389d076d6f538e6964a0dafe88c27
+  analyzer: 8.4.0
+  analyzer_plugin: 0.13.10
+  source pin: current (manifest/lock/resolved-ref identity only)
+  cache artifact: unchecked (run analyzer doctor)
+  Analysis Server live state: unverified
+  detail: Analyzer bootstrap is statically consistent; loadability is unchecked until `ccrouter analyzer doctor` passes.
+CCRouter Analyzer doctor: locked dependencies...
+CCRouter Analyzer doctor: bootstrap analysis...
+CCRouter Analyzer doctor: loader compilation...
+CCRouter Analyzer doctor summary
+  source pin: current (manifest/lock/resolved-ref identity)
+  cache artifact: current (1 matching legacy cache entry(s))
+  loader smoke: passed in a temporary copy (not the IDE session)
+  Analysis Server restart: required before claiming bootstrap/ref or cache changes are live
+  live IDE verification: pending (doctor cannot observe or control the IDE Analysis Server)

@@ -1,0 +1,38 @@
+{
+  "main": {
+    "head": "7cdf3820ff6aed8260d26d1d2c62736809f9a789",
+    "changed_files_sha256": {
+      "README.en.md": "cfdad4395a2eebbcea473c4f358c3c0f0a012890f1f4605f537b19cf044c9013",
+      "README.md": "4976485d29b8876899af385bc07dcae482007d16df7dd8efffbd5edcc539adb1",
+      "demo/lib/main.dart": "edf166a92a74a62f24527404edbee95114aa847e57c8a1d2157f8ba006c75572",
+      "docs/CCRouter-cli-pub-hook.md": "b093e32bba0a897a5c4be68c7c99c00d0e946d1bc963f93cba09faa157fde7ed",
+      "packages/ccrouter_generator/bin/src/generation_watch.dart": "370e74825eae001dc8f2bbebe296ff17d1f81257cd0ae237b9ff418c22c72c60",
+      "packages/ccrouter_generator/bin/src/generation_watch_status.dart": "1c07bd46744ef408cce8b0f343d6893f809e70aa5c022c9d26483247b4c8008a",
+      "packages/ccrouter_test/generator_test/generation_watch_test.dart": "4f6f8e14c5176b2ec7e8f58adcc49bffe836141700d7423d79d53e0d70b3fdab",
+      "skills/ccrouter-cli-development/SKILL.md": "88f1d62d66e4dce93bc944806b7d6feaf3024940c765838a485268fb622ef95c",
+      "skills/ccrouter-integration-development/SKILL.md": "69efc107c06c7b1235e5f9619e0f9d1932723e58841de2ebcaff9b5b767117ed",
+      "skills/ccrouter-integration-development/references/implementation-patterns.md": "75f15f53612c2a31525172c0df4d7b8cac5fc7ffc9e351afd5ebb6134174e8ed"
+    },
+    "verification_copy_mismatches": []
+  },
+  "predictive": {
+    "head": "1f7ce27a42b565cf25ad750618a82e68864cb8ee",
+    "changed_files_sha256": {
+      "README.en.md": "0fb8d0aead761304b8a8c7fbbd8361306bf8e359a03c34d99c44d7ca2f852fe4",
+      "README.md": "92569be04f92865b6e64ffdfc149f98ee0085b6c4389d2048566b90e09e95b5c",
+      "docs/CCRouter-cli-pub-hook.md": "b093e32bba0a897a5c4be68c7c99c00d0e946d1bc963f93cba09faa157fde7ed",
+      "docs/CCRouter-predictive-back.md": "02bb3ae37ca5c79eedf258db6f0145b67e5149ba68bb955b4b28460ea25bb994",
+      "docs/README.md": "46d0558ac8672195b6ffeec47d2495f20db1896f95259c09d6a9e008883e8ef5",
+      "packages/ccrouter/lib/src/flutter_predictive_back.dart": "5d6fbbeff2b92714b0b67093ff857b110efa0bce02952c39de2a9cd1975371a5",
+      "packages/ccrouter_generator/bin/src/generation_watch.dart": "370e74825eae001dc8f2bbebe296ff17d1f81257cd0ae237b9ff418c22c72c60",
+      "packages/ccrouter_generator/bin/src/generation_watch_status.dart": "1c07bd46744ef408cce8b0f343d6893f809e70aa5c022c9d26483247b4c8008a",
+      "packages/ccrouter_test/generator_test/generation_watch_test.dart": "167fcc8e249636b8df12f899548c689c3301c8f14abda89e2ff7575cc1c7cdf4",
+      "packages/ccrouter_test/test/predictive_back_test.dart": "66d89f6811545bf65548f7e8db3890c85d040cdcc1d07c7fbb8b98df3cd594b8",
+      "skills/ccrouter-cli-development/SKILL.md": "eada69d2e123f2bc744ad830184b55e4b91bcc9f1028a0bf0e65529aafc612af",
+      "skills/ccrouter-integration-development/SKILL.md": "f6ec4d46a96401f0e362a4122972fcb484ef3493ecadcbfde1ed8d59d12956de",
+      "skills/ccrouter-integration-development/references/implementation-patterns.md": "ec2655c7ee60289e4a88fb7d8e1457d41c1666730b99183da3ef4b562490f9fb"
+    },
+    "verification_copy_mismatches": []
+  },
+  "shared_production_identical": true
+}

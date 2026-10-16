@@ -11,7 +11,10 @@ Intents; it must not call GoRouter directly for CCRouter-managed destinations.
 
 New single-Host applications initialize CCRouter with their generated Host
 Assembly and mount `CCGoRouterApp()`; the widget resolves the same Route Catalog
-automatically. An application tree with multiple independent Router surfaces
+automatically. Initialize, run startup Gates, and shut down the default Runtime
+only through `CCRouterHost` from `ccrouter_host.dart`; unmounting the navigation
+Host does not shut down the shared Runtime.
+An application tree with multiple independent Router surfaces
 may use `CCGoRouterMultiHostBackend.managed`, whose Host factories receive that
 Catalog and their declared Host ID. The aggregate does not choose a layout or
 provide native platform-window lifecycle integration. Tabs, Shell branches,
@@ -28,11 +31,18 @@ navigation change cancels the original preview without a second Pop. Ancestor
 Navigator popups protect covered nested pages, including transient coverage
 during a gesture. After attached Adapter disposal, old gestures remain invalid
 and new gestures on the surviving Router resume Flutter handling.
+Reading `Route.popGestureEnabled` preserves the old commit fence. If the platform
+loses the old terminal callback, the next start first cancels that preview before
+detaching the retired handler and starting a new Flutter gesture.
+Changing to an unsupported Theme platform/transition during a preview cancels
+the animation and releases Navigator gesture state without completing a result
+or disposing a Route Scope; restoring the Theme does not revive the old preview.
 Declined starts are exposed through the bounded, sanitized
 `adapter.predictiveBackFallbacks` Host diagnostic. It shares
 `lifecycleEventCapacity`; the disabled path allocates no fallback history.
 Adapter registration is rolled back atomically if construction fails, and a
-throwing custom handler lifetime probe relinquishes the Route to Flutter.
+throwing custom handler lifetime probe relinquishes an idle Route to Flutter;
+an in-flight sequence keeps its original commit protection until it ends.
 
 See the [support and verification guide](../../docs/CCRouter-predictive-back.md)
 for Theme requirements, lifecycle semantics and platform limitations.

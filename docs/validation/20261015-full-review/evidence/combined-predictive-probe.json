@@ -1,0 +1,15 @@
+{
+  "label": "combined",
+  "name": "predictive-probe",
+  "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/combined",
+  "command": [
+    "/Users/shingo/fvm/versions/3.41.9/bin/flutter",
+    "test",
+    "--no-pub",
+    "--reporter=expanded",
+    "packages/ccrouter_test/review/predictive_probe_test.dart"
+  ],
+  "exit_code": 1,
+  "seconds": 55.23,
+  "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/combined-predictive-probe.log"
+}

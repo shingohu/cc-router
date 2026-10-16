@@ -1,0 +1,30 @@
+cwd: /var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/build-predictive
+command: ['/Users/shingo/fvm/versions/3.41.9/bin/flutter', 'test', '--no-pub', '--reporter=expanded', 'packages/ccrouter_test/test/predictive_back_test.dart', '--plain-name', 'review: retired in-flight gesture survives eligibility query']
+00:00 +0: loading /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/build-predictive/packages/ccrouter_test/test/predictive_back_test.dart
+00:00 +0: review: retired in-flight gesture survives eligibility query
+eligibility after disposal: true
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: true
+  Actual: <false>
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/build-predictive/packages/ccrouter_test/test/predictive_back_test.dart:950:5)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/build-predictive/packages/ccrouter_test/test/predictive_back_test.dart line 950
+The test description was:
+  review: retired in-flight gesture survives eligibility query
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:01 +0 -1: review: retired in-flight gesture survives eligibility query [E]
+  Test failed. See exception logs above.
+  The test description was: review: retired in-flight gesture survives eligibility query
+  
+00:01 +0 -1: Some tests failed.

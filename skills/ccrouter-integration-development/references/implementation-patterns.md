@@ -71,13 +71,16 @@ is dismissed before commit; retain observers on the relevant ancestor Outlets.
 Adapter disposal rejects its in-flight gesture, but a surviving attached Route
 detaches the retired handler at its next start and resumes Flutter behavior.
 While the old gesture is pending, `Route.popGestureEnabled` remains observational
-and preserves its original handler until commit/cancel rejects or ends it.
+and preserves its original handler. A commit/cancel ends that sequence. If its
+terminal callback is lost, the next start first cancels the leftover Route
+preview, then reevaluates handler activity and detaches a retired handler before
+starting a new Flutter gesture. An eligibility read cannot perform this recovery.
 The Host SPI handler exposes `isActive` for this lifetime boundary.
 If this lifetime probe throws while idle, the Route detaches the custom handler
 and restores Flutter-owned back handling. An in-flight gesture keeps its owner
-until its terminal callback. Adapter construction registers Navigator Observer,
-RouterDelegate and binding observers atomically and rolls all of them back on
-failure.
+until its terminal callback or cancellation by the next start. Adapter construction
+registers Navigator Observer, RouterDelegate and binding observers atomically and
+rolls all of them back on failure.
 Cancel never completes typed results or closes Scopes. Guarded pages retain
 non-interactive system fallback, even when Guard evaluation allows exit.
 Modals, LocalHistory, custom transitions, Cupertino and other platforms retain

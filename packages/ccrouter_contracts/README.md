@@ -8,6 +8,15 @@ Use this package when a contracts-only package must stay independent from
 Flutter and implementation packages. Application feature code should normally
 depend on `ccrouter` instead.
 
+Optional typed local UI declarations have a separate Pure Dart entry point,
+`package:ccrouter_contracts/ccrouter_ui_contracts.dart`. It provides
+`CCUIFragmentContract`, `CCUIFragmentDependency`, and `CCUIFragmentRenderer`;
+`CCComponent.uiDependencies` records required UI consumption. Props use immutable
+DTOs and Actions use plain enums under the documented v1 constraints. Rendering
+and Host assembly require the separate Flutter package `ccrouter_ui`; these
+declarations do not create another navigation Contract kind or relax Service
+types. See the [UI integration guide](../../skills/ccrouter-integration-development/references/ui-fragments.md).
+
 The package does not provide a Runtime or a navigation backend. See the
 [architecture documentation](https://github.com/shingohu/cc-router/blob/main/docs/CCRouter-v0.1-architecture.md)
 and

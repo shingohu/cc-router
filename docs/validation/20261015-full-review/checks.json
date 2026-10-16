@@ -1,0 +1,1123 @@
+{
+  "verified_at_utc": "2026-10-15T11:42:41.976595+00:00",
+  "runner": "run.py in full-logs.tar.gz",
+  "runner_defaults": {
+    "CCROUTER_PUB_HOOK_DISABLE": "1",
+    "FLUTTER_ROOT": "/Users/shingo/fvm/versions/3.41.9",
+    "CCROUTER_HOME": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/coordination/<label>"
+  },
+  "note": "Command-level env overrides apply. Hook rechecks explicitly unset CCROUTER_PUB_HOOK_DISABLE. Original failing runs are retained.",
+  "generator_summary": {
+    "main": {
+      "passed": 579,
+      "failed": 7,
+      "skipped": 1,
+      "exit_code": 1,
+      "seconds": 2560.28,
+      "terminal": "42:38 +579 ~1 -7: Some tests failed.",
+      "failures": [
+        "06:56 +135 -1: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: init_task_metadata resolves transitive cross-package inputs and constants [E]",
+        "16:47 +177 -2: packages/ccrouter_test/generator_test/generation_watch_test.dart: installed flutter build preflight reuses an active watch [E]",
+        "21:05 +197 -3: packages/ccrouter_test/generator_test/pub_hook_test.dart: Flutter wrapper locates only the real top-level command [E]",
+        "21:12 +199 -4: packages/ccrouter_test/generator_test/pub_hook_test.dart: inner Dart wrapper runs post-pub once and preserves bypass semantics [E]",
+        "21:14 +199 -5: packages/ccrouter_test/generator_test/pub_hook_test.dart: inner Dart wrapper runs generation from the Package root [E]",
+        "21:17 +199 -6: packages/ccrouter_test/generator_test/pub_hook_test.dart: Flutter wrapper suppresses nested Dart post-pub hooks [E]",
+        "22:07 +219 -7: packages/ccrouter_test/generator_test/pub_hook_test.dart: run and build execute a generation preflight before Flutter [E]"
+      ]
+    },
+    "predictive": {
+      "passed": 542,
+      "failed": 9,
+      "skipped": 1,
+      "exit_code": 1,
+      "seconds": 2414.92,
+      "terminal": "40:13 +542 ~1 -9: Some tests failed.",
+      "failures": [
+        "07:16 +150 -1: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: Route DartDoc affects metadata without changing executable output [E]",
+        "07:46 +150 -2: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: Service Proxy consumes imported generic bounds and typedef targets [E]",
+        "08:16 +150 -3: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: Route Codec validation follows imported supertype arguments [E]",
+        "16:32 +175 -4: packages/ccrouter_test/generator_test/generation_watch_test.dart: installed flutter build preflight reuses an active watch [E]",
+        "20:51 +195 -5: packages/ccrouter_test/generator_test/pub_hook_test.dart: Flutter wrapper locates only the real top-level command [E]",
+        "20:58 +197 -6: packages/ccrouter_test/generator_test/pub_hook_test.dart: inner Dart wrapper runs post-pub once and preserves bypass semantics [E]",
+        "21:00 +197 -7: packages/ccrouter_test/generator_test/pub_hook_test.dart: inner Dart wrapper runs generation from the Package root [E]",
+        "21:05 +197 -8: packages/ccrouter_test/generator_test/pub_hook_test.dart: Flutter wrapper suppresses nested Dart post-pub hooks [E]",
+        "21:59 +217 -9: packages/ccrouter_test/generator_test/pub_hook_test.dart: run and build execute a generation preflight before Flutter [E]"
+      ]
+    }
+  },
+  "checks": [
+    {
+      "label": "build-main",
+      "name": "analyzer-network-smoke-ssh",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/build-main",
+      "command": [
+        "env",
+        "CCROUTER_ANALYZER_NETWORK_SMOKE=1",
+        "CCROUTER_ANALYZER_GIT_URL=git@github.com:shingohu/cc-router.git",
+        "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+        "test",
+        "--concurrency=1",
+        "--reporter=expanded",
+        "packages/ccrouter_test/generator_test/analyzer_installation_smoke_test.dart"
+      ],
+      "exit_code": 0,
+      "seconds": 80.3,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/build-main-analyzer-network-smoke-ssh.log",
+      "archived_log": "logs/build-main-analyzer-network-smoke-ssh.log",
+      "evidence_log": "evidence/build-main-analyzer-network-smoke-ssh.log"
+    },
+    {
+      "label": "build-main",
+      "name": "analyzer-network-smoke",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/build-main",
+      "command": [
+        "env",
+        "CCROUTER_ANALYZER_NETWORK_SMOKE=1",
+        "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+        "test",
+        "--concurrency=1",
+        "--reporter=expanded",
+        "packages/ccrouter_test/generator_test/analyzer_installation_smoke_test.dart"
+      ],
+      "exit_code": 1,
+      "seconds": 3.39,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/build-main-analyzer-network-smoke.log",
+      "archived_log": "logs/build-main-analyzer-network-smoke.log"
+    },
+    {
+      "label": "build-main",
+      "name": "android",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/build-main/demo",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/flutter",
+        "build",
+        "apk",
+        "--debug",
+        "--no-pub"
+      ],
+      "exit_code": 0,
+      "seconds": 48.23,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/build-main-android.log",
+      "archived_log": "logs/build-main-android.log"
+    },
+    {
+      "label": "build-main",
+      "name": "generator-timeout-recheck",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/build-main",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+        "test",
+        "--concurrency=1",
+        "--reporter=expanded",
+        "packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart",
+        "--name",
+        "init_task_metadata resolves transitive|Route DartDoc affects metadata|Service Proxy consumes imported generic|Route Codec validation follows imported"
+      ],
+      "exit_code": 0,
+      "seconds": 45.15,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/build-main-generator-timeout-recheck.log",
+      "archived_log": "logs/build-main-generator-timeout-recheck.log",
+      "evidence_log": "evidence/build-main-generator-timeout-recheck.log"
+    },
+    {
+      "label": "build-main",
+      "name": "hvigor-preflight-no-flutter-env",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/build-main/demo",
+      "command": [
+        "env",
+        "-u",
+        "FLUTTER_ROOT",
+        "node",
+        "-e",
+        "require(\"./ohos/ccrouter-preflight\").ccrouterBuildPreflight(process.cwd())"
+      ],
+      "exit_code": 0,
+      "seconds": 48.97,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/build-main-hvigor-preflight-no-flutter-env.log",
+      "archived_log": "logs/build-main-hvigor-preflight-no-flutter-env.log"
+    },
+    {
+      "label": "build-main",
+      "name": "macos",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/build-main/demo",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/flutter",
+        "build",
+        "macos",
+        "--debug",
+        "--no-pub"
+      ],
+      "exit_code": 0,
+      "seconds": 134.81,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/build-main-macos.log",
+      "archived_log": "logs/build-main-macos.log"
+    },
+    {
+      "label": "build-main",
+      "name": "pub-hook-enabled-recheck",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/build-main",
+      "command": [
+        "env",
+        "-u",
+        "CCROUTER_PUB_HOOK_DISABLE",
+        "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+        "test",
+        "--concurrency=1",
+        "--reporter=expanded",
+        "packages/ccrouter_test/generator_test/pub_hook_test.dart"
+      ],
+      "exit_code": 0,
+      "seconds": 46.29,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/build-main-pub-hook-enabled-recheck.log",
+      "archived_log": "logs/build-main-pub-hook-enabled-recheck.log",
+      "evidence_log": "evidence/build-main-pub-hook-enabled-recheck.log"
+    },
+    {
+      "label": "build-main",
+      "name": "resolve",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/build-main",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/flutter",
+        "pub",
+        "get"
+      ],
+      "exit_code": 0,
+      "seconds": 3.95,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/build-main-resolve.log",
+      "archived_log": "logs/build-main-resolve.log"
+    },
+    {
+      "label": "build-main",
+      "name": "watch-preflight-recheck",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/build-main",
+      "command": [
+        "env",
+        "-u",
+        "CCROUTER_PUB_HOOK_DISABLE",
+        "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+        "test",
+        "--concurrency=1",
+        "--reporter=expanded",
+        "packages/ccrouter_test/generator_test/generation_watch_test.dart",
+        "--plain-name",
+        "installed flutter build preflight reuses an active watch"
+      ],
+      "exit_code": 0,
+      "seconds": 9.97,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/build-main-watch-preflight-recheck.log",
+      "archived_log": "logs/build-main-watch-preflight-recheck.log",
+      "evidence_log": "evidence/build-main-watch-preflight-recheck.log"
+    },
+    {
+      "label": "build-main",
+      "name": "web",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/build-main/demo",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/flutter",
+        "build",
+        "web",
+        "--debug",
+        "--no-pub"
+      ],
+      "exit_code": 0,
+      "seconds": 58.1,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/build-main-web.log",
+      "archived_log": "logs/build-main-web.log"
+    },
+    {
+      "label": "build-predictive",
+      "name": "android",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/build-predictive/demo",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/flutter",
+        "build",
+        "apk",
+        "--debug",
+        "--no-pub",
+        "-t",
+        "lib/main_predictive_back.dart"
+      ],
+      "exit_code": 0,
+      "seconds": 54.74,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/build-predictive-android.log",
+      "archived_log": "logs/build-predictive-android.log"
+    },
+    {
+      "label": "build-predictive",
+      "name": "candidate-analyze",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/build-predictive",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+        "analyze"
+      ],
+      "exit_code": 0,
+      "seconds": 44.77,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/build-predictive-candidate-analyze.log",
+      "archived_log": "logs/build-predictive-candidate-analyze.log",
+      "evidence_log": "evidence/build-predictive-candidate-analyze.log"
+    },
+    {
+      "label": "build-predictive",
+      "name": "candidate-framework",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/build-predictive",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/flutter",
+        "test",
+        "--no-pub",
+        "--reporter=expanded",
+        "packages/ccrouter_test/test"
+      ],
+      "exit_code": 0,
+      "seconds": 25.19,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/build-predictive-candidate-framework.log",
+      "archived_log": "logs/build-predictive-candidate-framework.log",
+      "evidence_log": "evidence/build-predictive-candidate-framework.log"
+    },
+    {
+      "label": "build-predictive",
+      "name": "candidate-regression-restored",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/build-predictive",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/flutter",
+        "test",
+        "--no-pub",
+        "--reporter=expanded",
+        "packages/ccrouter_test/test/predictive_back_test.dart",
+        "--plain-name",
+        "review: retired in-flight gesture survives eligibility query"
+      ],
+      "exit_code": 0,
+      "seconds": 3.31,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/build-predictive-candidate-regression-restored.log",
+      "archived_log": "logs/build-predictive-candidate-regression-restored.log",
+      "evidence_log": "evidence/build-predictive-candidate-regression-restored.log"
+    },
+    {
+      "label": "build-predictive",
+      "name": "candidate-regression-unfixed",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/build-predictive",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/flutter",
+        "test",
+        "--no-pub",
+        "--reporter=expanded",
+        "packages/ccrouter_test/test/predictive_back_test.dart",
+        "--plain-name",
+        "review: retired in-flight gesture survives eligibility query"
+      ],
+      "exit_code": 1,
+      "seconds": 5.21,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/build-predictive-candidate-regression-unfixed.log",
+      "archived_log": "logs/build-predictive-candidate-regression-unfixed.log",
+      "evidence_log": "evidence/build-predictive-candidate-regression-unfixed.log"
+    },
+    {
+      "label": "build-predictive",
+      "name": "ios",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/build-predictive/demo",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/flutter",
+        "build",
+        "ios",
+        "--debug",
+        "--no-codesign",
+        "--no-pub",
+        "-t",
+        "lib/main_predictive_back.dart"
+      ],
+      "exit_code": 0,
+      "seconds": 61.66,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/build-predictive-ios.log",
+      "archived_log": "logs/build-predictive-ios.log"
+    },
+    {
+      "label": "build-predictive",
+      "name": "resolve",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/build-predictive",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/flutter",
+        "pub",
+        "get"
+      ],
+      "exit_code": 0,
+      "seconds": 3.93,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/build-predictive-resolve.log",
+      "archived_log": "logs/build-predictive-resolve.log"
+    },
+    {
+      "label": "combined",
+      "name": "analyze",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/combined",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+        "analyze"
+      ],
+      "exit_code": 0,
+      "seconds": 61.45,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/combined-analyze.log",
+      "archived_log": "logs/combined-analyze.log"
+    },
+    {
+      "label": "combined",
+      "name": "demo",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/combined",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/flutter",
+        "test",
+        "--no-pub",
+        "--reporter=expanded",
+        "demo"
+      ],
+      "exit_code": 0,
+      "seconds": 34.1,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/combined-demo.log",
+      "archived_log": "logs/combined-demo.log"
+    },
+    {
+      "label": "combined",
+      "name": "framework-handler-fix",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/combined",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/flutter",
+        "test",
+        "--no-pub",
+        "--reporter=expanded",
+        "packages/ccrouter_test/test"
+      ],
+      "exit_code": 0,
+      "seconds": 12.07,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/combined-framework-handler-fix.log",
+      "archived_log": "logs/combined-framework-handler-fix.log",
+      "evidence_log": "evidence/combined-framework-handler-fix.log"
+    },
+    {
+      "label": "combined",
+      "name": "framework",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/combined",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/flutter",
+        "test",
+        "--no-pub",
+        "--reporter=expanded",
+        "packages/ccrouter_test/test"
+      ],
+      "exit_code": 0,
+      "seconds": 17.13,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/combined-framework.log",
+      "archived_log": "logs/combined-framework.log"
+    },
+    {
+      "label": "combined",
+      "name": "generate-reference",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/combined",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+        "packages/ccrouter_generator/bin/ccrouter_generator.dart",
+        "generate",
+        "demo",
+        "--no-cache",
+        "--check"
+      ],
+      "exit_code": 0,
+      "seconds": 68.02,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/combined-generate-reference.log",
+      "archived_log": "logs/combined-generate-reference.log"
+    },
+    {
+      "label": "combined",
+      "name": "predictive-probe-fixed",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/combined",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/flutter",
+        "test",
+        "--no-pub",
+        "--reporter=expanded",
+        "packages/ccrouter_test/review/predictive_probe_test.dart",
+        "packages/ccrouter_test/test/predictive_back_test.dart"
+      ],
+      "exit_code": 0,
+      "seconds": 14.08,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/combined-predictive-probe-fixed.log",
+      "archived_log": "logs/combined-predictive-probe-fixed.log",
+      "evidence_log": "evidence/combined-predictive-probe-fixed.log"
+    },
+    {
+      "label": "combined",
+      "name": "predictive-probe",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/combined",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/flutter",
+        "test",
+        "--no-pub",
+        "--reporter=expanded",
+        "packages/ccrouter_test/review/predictive_probe_test.dart"
+      ],
+      "exit_code": 1,
+      "seconds": 55.23,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/combined-predictive-probe.log",
+      "archived_log": "logs/combined-predictive-probe.log",
+      "evidence_log": "evidence/combined-predictive-probe.log"
+    },
+    {
+      "label": "combined",
+      "name": "resolve",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/combined",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/flutter",
+        "pub",
+        "get"
+      ],
+      "exit_code": 0,
+      "seconds": 2.18,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/combined-resolve.log",
+      "archived_log": "logs/combined-resolve.log"
+    },
+    {
+      "label": "combined",
+      "name": "runtime-health",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/combined",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+        "run",
+        "packages/ccrouter_test/benchmark/performance_regression.dart",
+        "--output=/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/runtime-health-report.json"
+      ],
+      "exit_code": 0,
+      "seconds": 27.9,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/combined-runtime-health.log",
+      "archived_log": "logs/combined-runtime-health.log",
+      "evidence_log": "evidence/combined-runtime-health.log"
+    },
+    {
+      "label": "main",
+      "name": "analyze",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/main",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+        "analyze"
+      ],
+      "exit_code": 0,
+      "seconds": 48.17,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/main-analyze.log",
+      "archived_log": "logs/main-analyze.log"
+    },
+    {
+      "label": "main",
+      "name": "analyzer-doctor",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/main",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+        "packages/ccrouter_generator/bin/ccrouter_generator.dart",
+        "analyzer",
+        "doctor",
+        "demo"
+      ],
+      "exit_code": 0,
+      "seconds": 41.64,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/main-analyzer-doctor.log",
+      "archived_log": "logs/main-analyzer-doctor.log",
+      "evidence_log": "evidence/main-analyzer-doctor.log"
+    },
+    {
+      "label": "main",
+      "name": "analyzer-pin-check",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/main",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+        "packages/ccrouter_generator/bin/ccrouter_generator.dart",
+        "analyzer",
+        "pin-check",
+        "demo"
+      ],
+      "exit_code": 0,
+      "seconds": 22.93,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/main-analyzer-pin-check.log",
+      "archived_log": "logs/main-analyzer-pin-check.log",
+      "evidence_log": "evidence/main-analyzer-pin-check.log"
+    },
+    {
+      "label": "main",
+      "name": "analyzer-status",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/main",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+        "packages/ccrouter_generator/bin/ccrouter_generator.dart",
+        "analyzer",
+        "status",
+        "demo"
+      ],
+      "exit_code": 0,
+      "seconds": 7.42,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/main-analyzer-status.log",
+      "archived_log": "logs/main-analyzer-status.log"
+    },
+    {
+      "label": "main-committed",
+      "name": "docs",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/main-committed",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+        "tool/documentation_check.dart"
+      ],
+      "exit_code": 0,
+      "seconds": 0.32,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/main-committed-docs.log",
+      "archived_log": "logs/main-committed-docs.log",
+      "evidence_log": "evidence/main-committed-docs.log"
+    },
+    {
+      "label": "main",
+      "name": "demo",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/main",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/flutter",
+        "test",
+        "--no-pub",
+        "--reporter=expanded",
+        "demo"
+      ],
+      "exit_code": 0,
+      "seconds": 19.14,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/main-demo.log",
+      "archived_log": "logs/main-demo.log"
+    },
+    {
+      "label": "main",
+      "name": "devtools",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/main",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/flutter",
+        "test",
+        "--no-pub",
+        "--reporter=expanded",
+        "packages/ccrouter_devtools/test"
+      ],
+      "exit_code": 0,
+      "seconds": 2.54,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/main-devtools.log",
+      "archived_log": "logs/main-devtools.log"
+    },
+    {
+      "label": "main",
+      "name": "docs",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/main",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+        "tool/documentation_check.dart"
+      ],
+      "exit_code": 1,
+      "seconds": 0.31,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/main-docs.log",
+      "archived_log": "logs/main-docs.log",
+      "evidence_log": "evidence/main-docs.log"
+    },
+    {
+      "label": "main",
+      "name": "framework",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/main",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/flutter",
+        "test",
+        "--no-pub",
+        "--reporter=expanded",
+        "packages/ccrouter_test/test"
+      ],
+      "exit_code": 0,
+      "seconds": 27.03,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/main-framework.log",
+      "archived_log": "logs/main-framework.log"
+    },
+    {
+      "label": "main",
+      "name": "generate-cached",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/main",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+        "packages/ccrouter_generator/bin/ccrouter_generator.dart",
+        "generate",
+        "demo",
+        "--check"
+      ],
+      "exit_code": 0,
+      "seconds": 4.69,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/main-generate-cached.log",
+      "archived_log": "logs/main-generate-cached.log",
+      "evidence_log": "evidence/main-generate-cached.log"
+    },
+    {
+      "label": "main",
+      "name": "generate-reference",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/main",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+        "packages/ccrouter_generator/bin/ccrouter_generator.dart",
+        "generate",
+        "demo",
+        "--no-cache",
+        "--check"
+      ],
+      "exit_code": 0,
+      "seconds": 8.89,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/main-generate-reference.log",
+      "archived_log": "logs/main-generate-reference.log",
+      "evidence_log": "evidence/main-generate-reference.log"
+    },
+    {
+      "label": "main",
+      "name": "generator",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/main",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+        "test",
+        "--concurrency=1",
+        "--reporter=expanded",
+        "packages/ccrouter_test/generator_test"
+      ],
+      "exit_code": 1,
+      "seconds": 2560.28,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/main-generator.log",
+      "archived_log": "logs/main-generator.log",
+      "evidence_log": "evidence/main-generator.log"
+    },
+    {
+      "label": "main",
+      "name": "plugin-analyze",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/main/packages/ccrouter_analyzer_plugin",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+        "analyze"
+      ],
+      "exit_code": 0,
+      "seconds": 1.37,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/main-plugin-analyze.log",
+      "archived_log": "logs/main-plugin-analyze.log"
+    },
+    {
+      "label": "main",
+      "name": "plugin-resolve",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/main/packages/ccrouter_analyzer_plugin",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+        "pub",
+        "get"
+      ],
+      "exit_code": 0,
+      "seconds": 0.24,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/main-plugin-resolve.log",
+      "archived_log": "logs/main-plugin-resolve.log"
+    },
+    {
+      "label": "main",
+      "name": "plugin-tests",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/main/packages/ccrouter_analyzer_plugin",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+        "test",
+        "--concurrency=1",
+        "--reporter=expanded"
+      ],
+      "exit_code": 0,
+      "seconds": 177.9,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/main-plugin-tests.log",
+      "archived_log": "logs/main-plugin-tests.log"
+    },
+    {
+      "label": "main",
+      "name": "protocol",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/main",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+        "test",
+        "--reporter=expanded",
+        "packages/ccrouter_devtools_protocol/test"
+      ],
+      "exit_code": 0,
+      "seconds": 2.89,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/main-protocol.log",
+      "archived_log": "logs/main-protocol.log"
+    },
+    {
+      "label": "main",
+      "name": "release",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/main",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+        "tool/release_sensitivity_check.dart"
+      ],
+      "exit_code": 0,
+      "seconds": 0.43,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/main-release.log",
+      "archived_log": "logs/main-release.log"
+    },
+    {
+      "label": "main",
+      "name": "resolve",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/main",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/flutter",
+        "pub",
+        "get"
+      ],
+      "exit_code": 0,
+      "seconds": 4.32,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/main-resolve.log",
+      "archived_log": "logs/main-resolve.log"
+    },
+    {
+      "label": "main",
+      "name": "tools",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/main",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+        "test",
+        "--reporter=expanded",
+        "tool/test"
+      ],
+      "exit_code": 0,
+      "seconds": 18.35,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/main-tools.log",
+      "archived_log": "logs/main-tools.log"
+    },
+    {
+      "label": "predictive",
+      "name": "analyze",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/predictive",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+        "analyze"
+      ],
+      "exit_code": 3,
+      "seconds": 48.14,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/predictive-analyze.log",
+      "archived_log": "logs/predictive-analyze.log",
+      "evidence_log": "evidence/predictive-analyze.log"
+    },
+    {
+      "label": "predictive",
+      "name": "demo",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/predictive",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/flutter",
+        "test",
+        "--no-pub",
+        "--reporter=expanded",
+        "demo"
+      ],
+      "exit_code": 0,
+      "seconds": 19.41,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/predictive-demo.log",
+      "archived_log": "logs/predictive-demo.log"
+    },
+    {
+      "label": "predictive",
+      "name": "devtools",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/predictive",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/flutter",
+        "test",
+        "--no-pub",
+        "--reporter=expanded",
+        "packages/ccrouter_devtools/test"
+      ],
+      "exit_code": 0,
+      "seconds": 2.24,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/predictive-devtools.log",
+      "archived_log": "logs/predictive-devtools.log"
+    },
+    {
+      "label": "predictive",
+      "name": "docs",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/predictive",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+        "tool/documentation_check.dart"
+      ],
+      "exit_code": 1,
+      "seconds": 0.31,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/predictive-docs.log",
+      "archived_log": "logs/predictive-docs.log",
+      "evidence_log": "evidence/predictive-docs.log"
+    },
+    {
+      "label": "predictive",
+      "name": "framework",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/predictive",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/flutter",
+        "test",
+        "--no-pub",
+        "--reporter=expanded",
+        "packages/ccrouter_test/test"
+      ],
+      "exit_code": 1,
+      "seconds": 27.03,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/predictive-framework.log",
+      "archived_log": "logs/predictive-framework.log",
+      "evidence_log": "evidence/predictive-framework.log"
+    },
+    {
+      "label": "predictive",
+      "name": "generate-cached",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/predictive",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+        "packages/ccrouter_generator/bin/ccrouter_generator.dart",
+        "generate",
+        "demo",
+        "--check"
+      ],
+      "exit_code": 0,
+      "seconds": 3.18,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/predictive-generate-cached.log",
+      "archived_log": "logs/predictive-generate-cached.log",
+      "evidence_log": "evidence/predictive-generate-cached.log"
+    },
+    {
+      "label": "predictive",
+      "name": "generate-reference-after-recheck",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/predictive",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+        "packages/ccrouter_generator/bin/ccrouter_generator.dart",
+        "generate",
+        "demo",
+        "--no-cache",
+        "--check"
+      ],
+      "exit_code": 0,
+      "seconds": 10.64,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/predictive-generate-reference-after-recheck.log",
+      "archived_log": "logs/predictive-generate-reference-after-recheck.log"
+    },
+    {
+      "label": "predictive",
+      "name": "generate-reference",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/predictive",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+        "packages/ccrouter_generator/bin/ccrouter_generator.dart",
+        "generate",
+        "demo",
+        "--no-cache",
+        "--check"
+      ],
+      "exit_code": 0,
+      "seconds": 4.7,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/predictive-generate-reference.log",
+      "archived_log": "logs/predictive-generate-reference.log",
+      "evidence_log": "evidence/predictive-generate-reference.log"
+    },
+    {
+      "label": "predictive",
+      "name": "generator-failed-cases-recheck",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/predictive",
+      "command": [
+        "env",
+        "-u",
+        "CCROUTER_PUB_HOOK_DISABLE",
+        "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+        "test",
+        "--concurrency=1",
+        "--reporter=expanded",
+        "packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart",
+        "packages/ccrouter_test/generator_test/generation_watch_test.dart",
+        "packages/ccrouter_test/generator_test/pub_hook_test.dart",
+        "--name",
+        "^(?:Route\\ DartDoc\\ affects\\ metadata\\ without\\ changing\\ executable\\ output|Service\\ Proxy\\ consumes\\ imported\\ generic\\ bounds\\ and\\ typedef\\ targets|Route\\ Codec\\ validation\\ follows\\ imported\\ supertype\\ arguments|installed\\ flutter\\ build\\ preflight\\ reuses\\ an\\ active\\ watch|Flutter\\ wrapper\\ locates\\ only\\ the\\ real\\ top\\-level\\ command|inner\\ Dart\\ wrapper\\ runs\\ post\\-pub\\ once\\ and\\ preserves\\ bypass\\ semantics|inner\\ Dart\\ wrapper\\ runs\\ generation\\ from\\ the\\ Package\\ root|Flutter\\ wrapper\\ suppresses\\ nested\\ Dart\\ post\\-pub\\ hooks|run\\ and\\ build\\ execute\\ a\\ generation\\ preflight\\ before\\ Flutter)$"
+      ],
+      "exit_code": 0,
+      "seconds": 53.46,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/predictive-generator-failed-cases-recheck.log",
+      "archived_log": "logs/predictive-generator-failed-cases-recheck.log",
+      "evidence_log": "evidence/predictive-generator-failed-cases-recheck.log"
+    },
+    {
+      "label": "predictive",
+      "name": "generator",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/predictive",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+        "test",
+        "--concurrency=1",
+        "--reporter=expanded",
+        "packages/ccrouter_test/generator_test"
+      ],
+      "exit_code": 1,
+      "seconds": 2414.92,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/predictive-generator.log",
+      "archived_log": "logs/predictive-generator.log",
+      "evidence_log": "evidence/predictive-generator.log"
+    },
+    {
+      "label": "predictive-ohos",
+      "name": "analyze",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/predictive-ohos",
+      "command": [
+        "/Users/shingo/fvm/versions/ohos/oh-3.41.9-release/bin/dart",
+        "analyze"
+      ],
+      "exit_code": 0,
+      "seconds": 24.18,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/predictive-ohos-analyze.log",
+      "archived_log": "logs/predictive-ohos-analyze.log"
+    },
+    {
+      "label": "predictive-ohos",
+      "name": "framework",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/predictive-ohos",
+      "command": [
+        "/Users/shingo/fvm/versions/ohos/oh-3.41.9-release/bin/flutter",
+        "test",
+        "--no-pub",
+        "--reporter=expanded",
+        "packages/ccrouter_test/test"
+      ],
+      "exit_code": 0,
+      "seconds": 26.49,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/predictive-ohos-framework.log",
+      "archived_log": "logs/predictive-ohos-framework.log",
+      "evidence_log": "evidence/predictive-ohos-framework.log"
+    },
+    {
+      "label": "predictive-ohos",
+      "name": "hap-current-deveco",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/predictive-ohos/demo/ohos",
+      "command": [
+        "env",
+        "DEVECO_CLI_STUDIO_PATH=/Applications/DevEco-Studio.app",
+        "FLUTTER_ROOT=/Users/shingo/fvm/versions/ohos/oh-3.41.9-release",
+        "devecocli",
+        "build"
+      ],
+      "exit_code": 0,
+      "seconds": 52.55,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/predictive-ohos-hap-current-deveco.log",
+      "archived_log": "logs/predictive-ohos-hap-current-deveco.log"
+    },
+    {
+      "label": "predictive-ohos",
+      "name": "hap",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/predictive-ohos/demo/ohos",
+      "command": [
+        "devecocli",
+        "build"
+      ],
+      "exit_code": 1,
+      "seconds": 4.77,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/predictive-ohos-hap.log",
+      "archived_log": "logs/predictive-ohos-hap.log"
+    },
+    {
+      "label": "predictive-ohos",
+      "name": "resolve",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/predictive-ohos",
+      "command": [
+        "/Users/shingo/fvm/versions/ohos/oh-3.41.9-release/bin/flutter",
+        "pub",
+        "get"
+      ],
+      "exit_code": 0,
+      "seconds": 2.38,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/predictive-ohos-resolve.log",
+      "archived_log": "logs/predictive-ohos-resolve.log"
+    },
+    {
+      "label": "predictive",
+      "name": "plugin-analyze",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/predictive/packages/ccrouter_analyzer_plugin",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+        "analyze"
+      ],
+      "exit_code": 0,
+      "seconds": 1.35,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/predictive-plugin-analyze.log",
+      "archived_log": "logs/predictive-plugin-analyze.log"
+    },
+    {
+      "label": "predictive",
+      "name": "plugin-resolve",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/predictive/packages/ccrouter_analyzer_plugin",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+        "pub",
+        "get"
+      ],
+      "exit_code": 0,
+      "seconds": 0.24,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/predictive-plugin-resolve.log",
+      "archived_log": "logs/predictive-plugin-resolve.log"
+    },
+    {
+      "label": "predictive",
+      "name": "protocol",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/predictive",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+        "test",
+        "--reporter=expanded",
+        "packages/ccrouter_devtools_protocol/test"
+      ],
+      "exit_code": 0,
+      "seconds": 2.95,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/predictive-protocol.log",
+      "archived_log": "logs/predictive-protocol.log"
+    },
+    {
+      "label": "predictive",
+      "name": "release",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/predictive",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+        "tool/release_sensitivity_check.dart"
+      ],
+      "exit_code": 0,
+      "seconds": 0.43,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/predictive-release.log",
+      "archived_log": "logs/predictive-release.log"
+    },
+    {
+      "label": "predictive",
+      "name": "resolve",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/predictive",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/flutter",
+        "pub",
+        "get"
+      ],
+      "exit_code": 0,
+      "seconds": 4.32,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/predictive-resolve.log",
+      "archived_log": "logs/predictive-resolve.log"
+    },
+    {
+      "label": "predictive",
+      "name": "tools",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/predictive",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/dart",
+        "test",
+        "--reporter=expanded",
+        "tool/test"
+      ],
+      "exit_code": 0,
+      "seconds": 18.35,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/predictive-tools.log",
+      "archived_log": "logs/predictive-tools.log"
+    },
+    {
+      "label": "watch-probe",
+      "name": "resolve",
+      "cwd": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/watch-probe",
+      "command": [
+        "/Users/shingo/fvm/versions/3.41.9/bin/flutter",
+        "pub",
+        "get"
+      ],
+      "exit_code": 0,
+      "seconds": 4.51,
+      "log": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-review-20261015-g3s3se0r/logs/watch-probe-resolve.log",
+      "archived_log": "logs/watch-probe-resolve.log"
+    }
+  ]
+}
