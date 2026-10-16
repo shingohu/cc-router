@@ -962,6 +962,30 @@ void main() {
       },
     );
   }
+  testWidgets('new start replaces retired gesture with a lost terminal', (
+    tester,
+  ) async {
+    final harness = _Harness();
+    await harness.mount(tester, attached: true);
+    harness.push();
+    await tester.pumpAndSettle();
+    final route = harness.route(tester);
+    await _event(tester, 'startBackGesture');
+    harness.backend.adapter.dispose();
+
+    // An eligibility read keeps the old commit fence, but the next platform
+    // start is a new sequence and must retire the abandoned one.
+    expect(route.popGestureEnabled, isTrue);
+    await _event(tester, 'startBackGesture');
+    expect(route.navigator!.userGestureInProgress, isTrue);
+    await _event(tester, 'commitBackGesture');
+    await tester.pumpAndSettle();
+
+    expect(find.text('detail:1'), findsNothing);
+    expect(harness.phases, [CCPredictiveBackPhase.started]);
+    await harness.close(tester);
+    expect(harness.resources.single.disposeCount, 1);
+  });
   _boundaryTests();
   final cases = [
     (

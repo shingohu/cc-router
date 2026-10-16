@@ -162,6 +162,9 @@ final class _CCPredictiveMaterialPageRoute<T> extends MaterialPageRoute<T> {
   /// Starts Flutter animation and then records the concrete Route identity.
   void handleStartBackGesture({double progress = 0}) {
     if (_disposed) return;
+    // A new platform start supersedes a sequence whose terminal was lost.
+    // Finish that Route gesture before reevaluating a retired Host owner.
+    if (_tracking) handleCancelBackGesture();
     _activeHandler;
     super.handleStartBackGesture(progress: progress);
     _gestureSequence++;
