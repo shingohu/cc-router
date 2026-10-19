@@ -6,6 +6,7 @@ import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 import 'package:meta/meta.dart';
 
 part 'component.dart';
+part 'diagnostic_delivery.dart';
 part 'diagnostics.dart';
 part 'initialization.dart';
 part 'memory_navigation_adapter.dart';

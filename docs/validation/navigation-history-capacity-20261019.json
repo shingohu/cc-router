@@ -1,0 +1,413 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-19",
+  "navigationHistory": {
+    "benchmark": "navigation-history",
+    "sdk": "3.11.1 (stable) (Tue Feb 24 00:03:07 2026 -0800) on \"macos_arm64\"",
+    "rounds": 7,
+    "eventsPerRound": 20000,
+    "cpuClock": "mutator-thread",
+    "results": [
+      {
+        "capacity": 0,
+        "implementation": "legacy",
+        "writeMicrosecondsPerEvent": 0.83775,
+        "readMicrosecondsPerSnapshot": 0.076,
+        "writeSamples": [
+          0.7173,
+          5.88585,
+          0.62755,
+          0.79835,
+          4.5875,
+          0.83775,
+          2.0178
+        ],
+        "readSamples": [
+          0.198,
+          0.042,
+          0.076,
+          0.076,
+          0.08,
+          0.036,
+          0.034
+        ],
+        "writeCpuMicrosecondsPerEvent": 0.4698229000000283,
+        "readCpuMicrosecondsPerSnapshot": 0.0835,
+        "writeCpuSamples": [
+          0.5295625,
+          0.37451669999998993,
+          0.4698229000000283,
+          0.5153958000000101,
+          0.44313955000001004,
+          0.4087270999999717,
+          0.50530625
+        ],
+        "readCpuSamples": [
+          0.40241600000008476,
+          0.06391600000020116,
+          0.08366799999959768,
+          0.0835,
+          0.11116799999959767,
+          0.04083199999853969,
+          0.0458340000025928
+        ]
+      },
+      {
+        "capacity": 0,
+        "implementation": "snapshot",
+        "writeMicrosecondsPerEvent": 0.6645,
+        "readMicrosecondsPerSnapshot": 0.072,
+        "writeSamples": [
+          0.38745,
+          0.45395,
+          0.65315,
+          4.21635,
+          1.18635,
+          0.6645,
+          3.7547
+        ],
+        "readSamples": [
+          0.072,
+          0.036,
+          0.088,
+          0.072,
+          0.112,
+          0.036,
+          0.128
+        ],
+        "writeCpuMicrosecondsPerEvent": 0.37541664999998176,
+        "readCpuMicrosecondsPerSnapshot": 0.09116599999996834,
+        "writeCpuSamples": [
+          0.36593540000000213,
+          0.3609875,
+          0.46965,
+          0.37541664999998176,
+          0.44437080000001006,
+          0.36025,
+          0.5211583499999717
+        ],
+        "readCpuSamples": [
+          0.09116599999996834,
+          0.04258399999979883,
+          0.09825,
+          0.068,
+          0.11741600000113249,
+          0.041334000002592804,
+          0.10933399999886752
+        ]
+      },
+      {
+        "capacity": 2,
+        "implementation": "legacy",
+        "writeMicrosecondsPerEvent": 0.81985,
+        "readMicrosecondsPerSnapshot": 0.038,
+        "writeSamples": [
+          0.76025,
+          2.61555,
+          0.49515,
+          0.81985,
+          1.0104,
+          0.7813,
+          0.99095
+        ],
+        "readSamples": [
+          0.08,
+          0.034,
+          0.036,
+          0.036,
+          0.038,
+          0.084,
+          1.222
+        ],
+        "writeCpuMicrosecondsPerEvent": 0.4966521000000008,
+        "readCpuMicrosecondsPerSnapshot": 0.07175,
+        "writeCpuSamples": [
+          0.4966521000000008,
+          0.40823334999999494,
+          0.37182294999998994,
+          0.57557919999999,
+          0.50631875,
+          0.5235958499999717,
+          0.46657914999993516
+        ],
+        "readCpuSamples": [
+          0.08733400000003166,
+          0.0468340000002645,
+          0.04008399999886751,
+          0.040834000000730154,
+          0.07175,
+          0.091,
+          0.13575
+        ]
+      },
+      {
+        "capacity": 2,
+        "implementation": "snapshot",
+        "writeMicrosecondsPerEvent": 4.2661,
+        "readMicrosecondsPerSnapshot": 0.074,
+        "writeSamples": [
+          7.3531,
+          0.65855,
+          4.5075,
+          7.30055,
+          0.64665,
+          0.6424,
+          4.2661
+        ],
+        "readSamples": [
+          0.192,
+          0.166,
+          0.074,
+          0.096,
+          0.03,
+          0.03,
+          0.034
+        ],
+        "writeCpuMicrosecondsPerEvent": 0.421225,
+        "readCpuMicrosecondsPerSnapshot": 0.0813339999988675,
+        "writeCpuSamples": [
+          0.421225,
+          0.4791542000000016,
+          0.38846875,
+          0.39582919999998994,
+          0.47276039999998176,
+          0.5013916999999899,
+          0.40711875
+        ],
+        "readCpuSamples": [
+          0.19941599999996834,
+          0.18791600000020117,
+          0.0813339999988675,
+          0.096,
+          0.05458200000040233,
+          0.036415999999269845,
+          0.04125
+        ]
+      },
+      {
+        "capacity": 1000,
+        "implementation": "legacy",
+        "writeMicrosecondsPerEvent": 12.80235,
+        "readMicrosecondsPerSnapshot": 5.394,
+        "writeSamples": [
+          7.12045,
+          7.7002,
+          12.80235,
+          15.51665,
+          14.35695,
+          11.09065,
+          19.81815
+        ],
+        "readSamples": [
+          3.14,
+          4.132,
+          5.394,
+          4.628,
+          6.53,
+          6.762,
+          6.292
+        ],
+        "writeCpuMicrosecondsPerEvent": 3.7930541499999353,
+        "readCpuMicrosecondsPerSnapshot": 2.9804180000000633,
+        "writeCpuSamples": [
+          4.099510450000001,
+          3.684608349999995,
+          3.81403955000001,
+          4.3904875,
+          3.73359375,
+          3.7646125,
+          3.7930541499999353
+        ],
+        "readCpuSamples": [
+          2.9804180000000633,
+          2.801916000000201,
+          2.922666000000201,
+          3.8865839999988676,
+          4.278,
+          2.5035,
+          4.177833999998867
+        ]
+      },
+      {
+        "capacity": 1000,
+        "implementation": "snapshot",
+        "writeMicrosecondsPerEvent": 0.8757,
+        "readMicrosecondsPerSnapshot": 3.684,
+        "writeSamples": [
+          1.0833,
+          0.9068,
+          1.73255,
+          0.8168,
+          0.61805,
+          0.8757,
+          0.48785
+        ],
+        "readSamples": [
+          17.896,
+          3.684,
+          1.368,
+          2.462,
+          3.822,
+          79.788,
+          1.14
+        ],
+        "writeCpuMicrosecondsPerEvent": 0.47941454999999844,
+        "readCpuMicrosecondsPerSnapshot": 2.2014160000011325,
+        "writeCpuSamples": [
+          0.43425,
+          0.47941454999999844,
+          0.4831875,
+          0.5726604000000283,
+          0.4632520999999717,
+          0.5474916500000283,
+          0.39258545000003653
+        ],
+        "readCpuSamples": [
+          5.173165999999968,
+          2.70225,
+          1.2603320000004024,
+          2.104,
+          2.41825,
+          2.2014160000011325,
+          1.14725
+        ]
+      },
+      {
+        "capacity": 10000,
+        "implementation": "legacy",
+        "writeMicrosecondsPerEvent": 124.56525,
+        "readMicrosecondsPerSnapshot": 151.644,
+        "writeSamples": [
+          124.79575,
+          85.04895,
+          105.21605,
+          175.37085,
+          164.1351,
+          98.67675,
+          124.56525
+        ],
+        "readSamples": [
+          176.484,
+          34.566,
+          151.644,
+          206.778,
+          361.832,
+          90.786,
+          39.334
+        ],
+        "writeCpuMicrosecondsPerEvent": 34.72451045000004,
+        "readCpuMicrosecondsPerSnapshot": 33.693668000000066,
+        "writeCpuSamples": [
+          35.7161792,
+          32.90947919999999,
+          34.43132919999999,
+          41.5466375,
+          37.96841875,
+          34.72451045000004,
+          34.59538125
+        ],
+        "readCpuSamples": [
+          33.693668000000066,
+          30.4965839999998,
+          32.3985,
+          45.555082000000404,
+          43.55091600000113,
+          27.42441800000146,
+          34.69541599999741
+        ]
+      },
+      {
+        "capacity": 10000,
+        "implementation": "snapshot",
+        "writeMicrosecondsPerEvent": 0.7999,
+        "readMicrosecondsPerSnapshot": 86.184,
+        "writeSamples": [
+          0.62665,
+          1.6428,
+          1.4903,
+          0.7999,
+          0.6443,
+          3.1541,
+          0.77745
+        ],
+        "readSamples": [
+          86.184,
+          115.652,
+          22.384,
+          118.666,
+          206.6,
+          37.066,
+          37.866
+        ],
+        "writeCpuMicrosecondsPerEvent": 0.4827375,
+        "readCpuMicrosecondsPerSnapshot": 16.388584000000264,
+        "writeCpuSamples": [
+          0.42915625,
+          0.47797705000001006,
+          0.47080210000001826,
+          0.49655625,
+          0.5441916500000283,
+          0.4827375,
+          0.5146166499999352
+        ],
+        "readCpuSamples": [
+          16.388584000000264,
+          12.99575,
+          12.87016599999927,
+          22.3195,
+          16.00875,
+          18.29508199999854,
+          17.06475
+        ]
+      }
+    ]
+  },
+  "diagnosticCapacity": {
+    "benchmark": "diagnostic-capacity",
+    "results": [
+      {
+        "configuredCapacity": 0,
+        "retainedTraces": 0,
+        "commands": 2000,
+        "unfinishedSinkWrites": 2000,
+        "peakUnfinishedSinkWrites": 2000
+      },
+      {
+        "configuredCapacity": 64,
+        "retainedTraces": 64,
+        "commands": 2000,
+        "unfinishedSinkWrites": 2000,
+        "peakUnfinishedSinkWrites": 2000
+      },
+      {
+        "configuredCapacity": 128,
+        "retainedTraces": 128,
+        "commands": 2000,
+        "unfinishedSinkWrites": 2000,
+        "peakUnfinishedSinkWrites": 2000
+      },
+      {
+        "configuredCapacity": 1000,
+        "retainedTraces": 1000,
+        "commands": 2000,
+        "unfinishedSinkWrites": 2000,
+        "peakUnfinishedSinkWrites": 2000
+      }
+    ]
+  },
+  "limitations": [
+    "Local debug-mode microbenchmark; concurrent machine activity affects wall time.",
+    "Thread CPU excludes GC pauses and other threads; it is not frame latency.",
+    "Steady-state ring measurements exclude its one-time first-overflow mirror allocation.",
+    "The mirrored ring uses up to 2N logical reference slots for N distinct snapshots.",
+    "No original application/device ViewModel or Rive session measurements were performed."
+  ],
+  "verification": {
+    "frameworkTestsPassed": 505,
+    "demoTestsPassed": 61,
+    "workspaceAnalysis": "No issues found",
+    "originalImplementationGcControl": "capacity 0: 3 passed; capacity 1000: 3 failed",
+    "finalGcScenariosPassed": 9,
+    "historyBoundaryScenariosPassed": 5
+  }
+}

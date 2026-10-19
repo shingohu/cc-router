@@ -1,11 +1,198 @@
 # CCRouter 核心价值与开发约定回归
 
+## 2026-10-19 增量回归
+
+审查基线：`283b00b37ed71c13acea9d22691b6988d75fb60b`。本节记录该基线与本轮局部修正，
+后文保留历史审查，不将旧测试数量和平台结果累计为本轮证据。
+
+### 问题分析与结论
+
+CCRouter 的核心价值是：**组件通过类型安全契约协作，由生成工具承担装配胶水，由明确的
+Owner 和生命周期保证调用、取消与释放的一致性。** Route、Service、Command、Event、
+InitTask 和可选 UI Fragment 应按场景选择，不应成为每个普通方法或 Widget 的必经层。
+
+本次静态复核聚焦业务/Host/generated API 边界、Core 依赖、UI generation、预测返回
+opt-in 与终态、Event deadline，以及 watch 初始化失败清理；结合框架全量和 Demo 测试
+检查既有约定。没有在这些复核路径发现新的高置信度框架缺陷或 `not-disposed` /
+`not-GCed` 问题；这不是对全部生产源码、插件或平台组合的无缺陷证明。
+
+主要风险来自接入认知和证据分散：根 README 已同时承载最小接入、大量高级规则与工具维护，
+本报告原主体仍是 9 月快照。功能隔离仍在，但“已有实现”不能直接推出“新团队容易接入”。
+可替换 Backend 目前也主要由契约隔离与 GoRouter 实现支撑，尚无第二个生产 Backend 的验证。
+
+本轮发现并修正 Demo 入口未使用的 `dart:io` import；首次根分析因此退出 2，修正后无问题。
+发布候选清单遗漏已存在的可选 `ccrouter_ui`，本轮补入可选集合；不替 Owner 冻结发布集合。
+本报告新增当前证据入口，保留历史结论及其适用时间。
+
+### 候选方案与取舍
+
+| 方案 | 收益 | 代价与判断 |
+| --- | --- | --- |
+| 继续按能力清单扩张 Core | 快速增加覆盖面 | 扩大 API、生命周期和测试组合；缺少真实消费者时不采用 |
+| 立即合并或删除现有能力 | 表面减少 Package/API 数量 | 破坏已有契约与可选接入，迁移和回归成本高；本轮证据不支持 |
+| 保持边界，按生产场景收敛接入与质量证据 | 保留可回退实现，把成本用于真实接入 | 需要干净消费者和长期验证；推荐，当前仅做局部修正与证据更新 |
+
+### 13 条约定逐项复核
+
+“保持”表示本次所查实现与已执行测试未发现该约定的新增退化，不表示穷尽证明。
+
+| # | 核心价值 | 本次判断 | 实现依据与适用边界 |
+| --- | --- | --- | --- |
+| 1 | 智能 | 保持 | 仍以声明、生成 Client 和原子 Host Assembly 装配；UI 复用生成入口，不靠运行时反射猜测依赖 |
+| 2 | 简单易用 | 有条件保持 | 默认 Host 仍使用一个 Assembly；UI、高级 Host、预测返回按需接入。后续已补本地独立消费者闭环和首次接入指南，团队可用性与发布来源仍待验证 |
+| 3 | 功能强大 | 保持范围 | 六类能力各有场景；普通 API 优先规则仍在。动态组件、完整 Restoration、原生多窗口不计入已实现能力 |
+| 4 | 可扩展性 | 保持隔离 | Core/Contracts 无 Flutter、dart:ui、GoRouter 或 UI 包 import/export；第二个生产 Backend 的可行性仍待实际验证 |
+| 5 | 可测试 | 保持 | 框架、Demo 与生成器边界测试分层，后续另补真实 App 14 项及独立消费者 4 项。UI 仍只支持 process-default Runtime，不声明 TestHost Zone overlay 隔离 |
+| 6 | 最小公开 API | 保持分层 | `ccrouter.dart` 隐藏 Runtime、Scope、生命周期与 Adapter SPI；UI business/generated/Host 独立 barrel；Dart 正反向编译探针纳入框架测试 |
+| 7 | 编译器校验与类型安全 | 保持 | UI DTO/enum/default fingerprint 和跨组件依赖由 Generator 校验；Runtime 继续复核 generated caller/Owner。可选 Plugin 不取代生成门禁 |
+| 8 | 非侵入式 | 保持 | UI 沿用 Flutter State/Key；预测返回默认 false，关闭时不创建 bridge/fallback history；普通 Widget、局部弹层仍可用原生 API |
+| 9 | 可降级回退 | 保持 | 预测返回不满足条件时保留 Flutter fallback；required UI 装配错误显式失败。移除 UI 消费需要迁移消费点并重新生成，不冒充运行时热开关 |
+| 10 | 明确生命周期 | 保持所测路径 | UI detach 使 generation 失效并清空活动工厂表；旧 Action 不跨 Runtime；手势提交仍受原 Owner 约束；watch 异常需先停 child 再释放锁 |
+| 11 | 可观测可诊断可溯源 | 保持范围 | UI 诊断最多 128 条且无 Props/Action；预测返回 fallback 沿用有界容量；UI 专属 find/DevTools/IDE 仍未实现，本轮未重新验收这些工具 |
+| 12 | 并发安全 | 保持所测路径 | Event 共享 deadline 失败不转成 Subscriber 噪声；更短嵌套 timeout 保持隔离。旧 UI 回调和失效手势均有终态保护 |
+| 13 | 性能和稳定 | 有界状态通过，趋势待验 | 资源释放与诊断容量回归通过；不将本次测试耗时当性能基准，也不将实例归零当长期 Heap/RSS 证明 |
+
+主要源码与回归入口：
+
+- [业务 barrel](../packages/ccrouter/lib/ccrouter.dart)、[API 隔离测试](../packages/ccrouter_test/test/api_surface_test.dart)。
+- [UI generation 与 State](../packages/ccrouter_ui/lib/src/ui_fragment.dart)、[UI 生命周期测试](../packages/ccrouter_test/test/ui_fragment_test.dart)。
+- [Flutter 手势终态](../packages/ccrouter/lib/src/flutter_predictive_back.dart)、[Adapter bridge](../packages/ccrouter_go_router/lib/src/predictive_back_bridge.dart)、[预测返回测试](../packages/ccrouter_test/test/predictive_back_test.dart)。
+- [调用 deadline](../packages/ccrouter_core/lib/src/runtime_host.dart)、[Runtime 回归](../packages/ccrouter_test/test/runtime_test.dart)。
+- [watch 清理](../packages/ccrouter_generator/bin/src/generation_watch.dart)、[watch 故障测试](../packages/ccrouter_test/generator_test/generation_watch_test.dart)、[资源释放回归](../packages/ccrouter_test/test/resource_lifecycle_regression_test.dart)。
+
+### 本轮验证
+
+环境：macOS，FVM 实际解析到 Flutter `3.41.10-ohos-1.0.0`（revision `62357a93d6`），
+Dart `3.11.5`。这是 OHOS SDK 在 macOS 上的测试，不是 OHOS 真机执行或标准 Flutter SDK 复验。
+
+- `fvm flutter test --concurrency=1 --reporter expanded packages/ccrouter_test/test`：491 项通过。
+- `cd demo && fvm flutter test --concurrency=1 --reporter expanded test`：61 项通过。
+- `fvm dart analyze`：首次为上述 unused import 警告，修正后退出 0，`No issues found!`。
+
+- Generator 专项：UI schema/fingerprint、Workspace Validator、内部 API 边界、Route API 边界、
+  required Owner 依赖预检共 102 项通过，退出 0。实际命令：
+
+  ```sh
+  fvm dart test --concurrency=1 --reporter expanded \
+    packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart \
+    packages/ccrouter_test/generator_test/workspace_validator_test.dart \
+    packages/ccrouter_test/generator_test/internal_api_boundary_validator_test.dart \
+    packages/ccrouter_test/generator_test/route_api_boundary_test.dart \
+    packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart
+  ```
+
+- watch 初始化终态：启动期间停止、首次快照失败两项通过，退出 0；验证 child 清理和锁释放。
+  实际命令：
+
+  ```sh
+  fvm dart test --concurrency=1 --reporter expanded \
+    packages/ccrouter_test/generator_test/generation_watch_test.dart \
+    --name 'watch stops during child session startup before reading signals|initial snapshot failure stops the child before releasing ownership'
+  ```
+
+- `fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo --check`：通过。
+- `fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo --no-cache --check`：
+  通过，Builder 写出 0 个输出，校验 6 个组件、34 条 Route、12 个生成 Package。
+  最终 Git diff 不含生成物变更。
+
+本轮不重复全量 Generator/Analyzer Plugin、IDE live、平台构建和真机矩阵，也不执行
+Portable State 发布、Pub 发布、Git 提交/推送或 Plugin pin 变更。既有专项记录仍只代表各自基线。
+
+### 推荐后续顺序
+
+1. 保持现有 API 分层与可选路径；新需求先依照[生产场景评估流程](CCRouter-production-adoption-workflow.md)
+   判定为应用职责、接入缺口、实现缺陷或通用能力，避免用新增抽象代替问题定位。
+2. 选择一个实际消费者完成“契约 → 生成 → 导航/调用 → 失败与释放”的最小闭环；从干净依赖环境
+   验证，不以 Monorepo 内通过替代对外接入成功。
+3. 根据首次接入暴露的障碍再拆分入门与维护指南；分别衡量业务声明、Host 装配和工具维护成本，
+   不直接删除高级能力来追求表面简单。
+4. 按[唯一发布清单](CCRouter-release-readiness.md)处理 License、分发、版本与消费者门禁；
+   真实平台和长期 Heap/RSS 采样持续进行，满足对应证据后再提升承诺。
+
+## 2026-10-19 按推荐顺序执行：消费者与指南
+
+用户选择 `liberlive-flutter` 为第一阶段真实消费者。完整范围、可复现通用源码及退出码见
+[消费者验证记录](validation/consumer-adoption-20261019/README.md)。应用私有源码和认证数据
+未进入框架归档；上游仅保留通用合成场景。
+
+### 场景、取舍与责任
+
+选用已有登录 Route：Consumer 使用公开 typed Contract，Account 组件实现页面，App 的生成
+Assembly 装配。AccountRuntime 拥有 SignInGate/会话，页面与组件处理迟到认证响应；
+App Composition Root 最终负责 CCRouter Runtime。外部入口失败由应用 coordinator 映射。
+
+现有 API 足以表达场景，归类为 **A 已支持接入**；指南入口与旧包名/Skill 漂移归类为
+**C 文档缺口**。真实认证策略和迟到状态提交仍属 **D 应用职责**。没有证据要求修改 Core。
+
+| 方案 | 收益与成本 | 执行选择 |
+| --- | --- | --- |
+| 在真实 App 重写接入 | 可重新设计，但会打扰进行中的业务工作，迁移成本高 | 当前已有充分调用链，先验证既有实现 |
+| 只运行原 Monorepo Demo | 快速，但不能证明独立依赖解析与消费 | 复用前一轮证据，并补独立工程 |
+| 真实 App 既有测试 + 独立源码快照消费者 | 保留业务行为，区分真实场景与环境耦合；仍需单独验证正式分发 | 本轮采用 |
+
+### 实际结果
+
+| 验证 | 结果与证明范围 |
+| --- | --- |
+| App 登录 Route 与外部入口专项 | 14 项通过，覆盖成功返回、取消重开、覆盖后恢复、AccountRuntime 结束门禁、迟到认证响应及外部入口失败；测试使用内存/测试后端 |
+| App `generate app --check` | 通过；前后 985 个相关源码与依赖输入摘要一致 |
+| 新消费者首次 `flutter pub get --offline` | 独立 Pub 解析成功，已安装 Hook 自动生成 2 组件、1 Route、3 生成 Package；不借用框架 `.dart_tool` |
+| 独立消费者依赖身份 | 五个框架包全部来自独立复制品，Pub Workspace 为消费者自身；复制品仅移除框架 pubspec 的 Workspace membership，原源码不变 |
+| 独立消费者 Widget 测试 | 4 项通过：typed result、取消重开、业务失败保留页、shutdown 完成 pending result 并释放 Route Service/Timer |
+| 独立消费者分析与生成 | `fvm dart analyze`、缓存/无缓存 `generate . --check` 均通过 |
+| 独立标准 Analyzer 反向探针 | 预期退出 3，拒绝 String → int 参数及从业务 barrel 使用 `CCRouterHost`，不依赖 Plugin |
+
+App 测试通过其既有 `with_ohos_build_lock.py --cwd app` 入口执行；应用业务源码、依赖和平台
+配置保持原输入。标准 Flutter SDK、真机、真实认证后端和长期 Heap/RSS 均不属于本次验证。
+这里的独立消费者使用本地框架快照及本机下载缓存，不称为 Hosted 或正式发布归档验收。
+
+### 接入指导收敛
+
+根 README 与两个 Skill 的入口现在优先指向[首次接入指南](../skills/ccrouter-integration-development/references/first-integration.md)：
+先完成最窄 Route 和 Owner 终态，再按需查 watch、Analyzer、DevTools 等维护流程。
+该指南随两个完整 Skill 目录分发，不依赖框架仓库文档才能阅读。
+其中两个 Dart 片段已经用独立消费者的真实生成 API 编译验证，标准 Analyzer 退出 0。
+
+真实消费者已同步两个完整 Skill 目录，并修正其接入清单中的旧 `ccrouter_auto_track` 名称为
+`ccrouter_analytics_flutter`。消费者 README/接入基线注明本地来源和测试边界。
+本轮应用侧修改仅为上述开发者指导，不改变运行时依赖或业务行为。
+
+第一阶段在当前本地开发来源下完成，第二阶段的首次接入入口与文档同步完成。
+第三阶段沿用[发布执行清单](CCRouter-release-readiness.md)：License、正式来源、发布 Package
+集合、首发 SemVer 仍需 Owner 决策；发布归档/Hosted 的安装与升级 smoke 仍开放。
+没有把本次结果改写成可正式发布，也未执行发布、Git 提交/推送或 Plugin pin 变更。
+
+---
+
+以下为历史审查与既有增量入口。
+
 2026-10-15 类型化 UI Fragment 的增量实施与 13 项核心价值回归见
 [专项验收记录](CCRouter-ui-fragment-acceptance.md)。下述历史测试数量不代表该增量的结果。
 
 > 本文主体保留 2026-09-30 的审查快照。后续 2026-10-03 全框架审查发现的 F01–F18
 > 已修复；最新逐项结论、修复后核心价值与未覆盖范围见[全框架审查](CCRouter-framework-audit-2026-10-03.md#15-修复后核心价值与收尾边界2026-10-03)。
 > 下文“没有本轮未解决 P0/P1”仅代表历史审查，不能作为当前无缺陷结论。
+
+## 2026-10-19 Workspace 聚合根 Pub Hook 状态核对
+
+结论：Host 识别缺陷已由 `d01e8a1`（2026-10-01）修复，AGENTS.md 的开放状态没有同步。
+当前 Hook 使用共享的 `CCProjectRoleResolver`，先按当前 Package 的直接依赖确定参与身份，
+再根据 `.metadata` / `ccrouter.yaml` 区分 Host 与 package-local。完整解析图中出现框架包
+不会使无直接依赖的 Workspace 聚合根成为 Host。
+
+本次只修正 AGENTS.md 状态与 Hook 文档中的旧提示文本，没有修改生产实现或生成物。
+验证环境沿用本报告的 OHOS Flutter / Dart SDK：
+
+- `project_role_test.dart`：8 项通过，包含共享 Generator/Analyzer 角色矩阵与 Host override。
+- `pub_hook_test.dart` / `generation_command_test.dart` 定向回归：5 项通过，覆盖 Hook 聚合根
+  跳过、无框架项目跳过、临时 SDK wrapper 的 Pub 退出码、run/build preflight 和聚合根
+  `generate` 跳过；临时夹具不会安装到真实 SDK。
+- 仓库根 `ccrouter pub-hook run --project-root . --pub-command get`：退出 0，输出聚合根
+  跳过提示，未进入生成。此命令直接验证 Hook，不执行原始 `flutter pub get`。
+- `ccrouter generate demo --check`：退出 0，fast path，生成物一致。
+
+聚合根 Pub 成功仍不能替代真实 Host 生成检查；显式 Hook bypass 保留为依赖解析工具，
+不再以“Host 识别缺陷仍开放”为使用理由。
 
 ## 1. 审查结论
 

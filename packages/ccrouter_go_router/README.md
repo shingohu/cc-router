@@ -20,6 +20,15 @@ Catalog and their declared Host ID. The aggregate does not choose a layout or
 provide native platform-window lifecycle integration. Tabs, Shell branches,
 and master-detail panes normally remain Outlets of one Host.
 
+`adapter.lifecycleEvents` is an immutable, bounded list of value-only
+`CCGoRouterNavigationEventSnapshot` entries. Unlike synchronous Observer events,
+history never retains `Route`, arguments or controllers. Historical readers use
+`location` and `previousLocation`; raw Route-dependent logic belongs in the
+Observer callback and must not save its event. Names can contain application
+data and are for local troubleshooting, not production telemetry. The separate
+per-Host `lifecycleEventCapacity` defaults to 1000; zero skips history creation
+without disabling backend observations or navigation reconciliation.
+
 `enablePredictiveBack` defaults to false and preserves existing Route types and
 Flutter back handling. When enabled, managed generated default Android Material
 pages connect automatically to the Adapter-owned phase bridge; Flutter alone

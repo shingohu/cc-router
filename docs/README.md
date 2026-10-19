@@ -5,6 +5,12 @@
 - 最近全量对齐：2026-10-07。
 - 最近增量对齐：2026-10-16，覆盖 Host-only 生命周期、类型化 UI Fragment、默认路由族、
   Android 预测返回自动桥与丢失终态恢复、watch 初始化失败清理；不表示重新执行全平台验收。
+- 2026-10-19 的[核心价值增量回归](CCRouter-core-principles-audit.md)补充 13 条约定的当前证据、
+  Demo 静态分析修正、真实消费者与独立本地源码快照的最小闭环，并提供首次接入入口；
+  历史全量、平台和 IDE 结论不自动延续，本地快照验证不关闭 Hosted/发布归档门禁。
+- 2026-10-19 的[导航历史与容量评估](validation/navigation-history-capacity-20261019.md)和
+  [Sink 背压及 Host 清理验证](validation/diagnostic-sink-backpressure-20261019.md)记录 Route
+  回收、单在途有界投递、启动回滚与跨 error Zone 关闭等待；主机验证不替代业务真机验收。
 - 当前实现事实依次以生产代码、自动化测试、生成物和本文状态矩阵为准。
 - 专项设计文档用于解释语义和历史决策；其中的 Proposal、阶段计划和旧基准不能单独证明能力已实现。
 - 性能数字、测试数量和平台验证结果只代表文档注明日期的快照，不自动代表后续提交。
@@ -30,6 +36,7 @@
   [专项说明](CCRouter-predictive-back.md)。
 - 默认 Runtime 初始化、关闭和 InitTask Gate 控制仅由 Composition Root 通过 `CCRouterHost`
   调用；业务 `CCRouter` 保留 Session 操作与只读任务诊断，单个导航 Host 卸载不关闭 Runtime。
+  启动失败自动回收未发布 Runtime；回滚与正常关闭均支持不同 error Zone 的调用方加入清理。
 - 类型安全 Route、Service、Command、Event、InitTask Contract 及其生成、聚合、源码索引和
   Workspace 校验。
 - Route Interceptor、Redirect、Defer、PopGuard、Aspect、页面生命周期、Deep Link policy、
@@ -45,6 +52,8 @@
   诊断，以及基于精确 resolution 身份的 watch/one-shot Generator 结构化诊断桥接。
 - 嵌入式只读 DevTools、版本化 Snapshot/Trace Edge 协议和官方 DevTools Extension；Catalog、
   Runtime、组件依赖和单次能力调用链可以关联展示。
+- Diagnostic Sink 每 Runtime 单在途写入与独立有界等待队列、只读压力计数，以及不保留
+  Flutter Route 的 Adapter 历史快照；容量与主机验证边界见上面的 2026-10-19 专项报告。
 - Provider-neutral Analytics、显式点击/滚动/曝光采集、Consent、黑名单和节流；Firebase callback
   Adapter 作为应用层 Demo 提供。
 - Demo KV Storage Scoped Facade、Host-owned Context Provider 和可替换内存 Backend。
@@ -149,6 +158,8 @@
 
 ### 工具与诊断
 
+- [导航历史回收与框架容量评估](validation/navigation-history-capacity-20261019.md)
+- [Diagnostic Sink 背压与 Host 生命周期验证](validation/diagnostic-sink-backpressure-20261019.md)
 - [DevTools 只读可视化](CCRouter-devtools.md)
 - [DevTools Host 自动装配计划](CCRouter-devtools-host-integration-plan.md)
 - [IDE / Analysis Server 集成](CCRouter-ide-analysis-server.md)

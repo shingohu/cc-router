@@ -8,6 +8,9 @@
 
 CCRouter 是一个面向 Flutter 大型应用的组件化运行时与类型安全路由框架。它把组件装配、路由契约、导航策略、生命周期、跨组件能力调用和诊断统一到稳定的 Core Contract，同时允许 Host 选择 GoRouter 或后续其他导航后端。
 
+第一次接入或验证真实业务时，先阅读[首次接入指南](skills/ccrouter-integration-development/references/first-integration.md)，
+完成一个 typed Route 的生成、调用、失败与释放闭环，再按需要查阅下文的高级能力和工具维护规则。
+
 当前版本为 `0.1.0`，适合在本仓库 Workspace、Demo 和受控业务试点中验证。所有 Package 目前均为 `publish_to: none`，尚未发布到 pub.dev 或私有 Hosted；接入外部工程前需要先完成正式发布，或使用受控 Git 依赖。不要把本仓库的 Workspace 依赖写法直接复制到另一个仓库。
 
 当前仓库**尚未达到正式发布条件**。License、历史凭据治理、Package 发布集合、Package 级
@@ -524,13 +527,26 @@ final backend = CCGoRouterMultiHostBackend.managed(
 这不是大屏分栏、Bottom Tab 或 Shell 的默认方案；这些场景通常使用一个 Host 下的多个
 Outlet。聚合器也不代表平台 Window，不负责 macOS、Windows 或 iPadOS 原生窗口生命周期。
 
+#### Runtime 生命周期
+
 `CCRouterHost.initialize` 同步完成全局配置和启动组件注册；`CCGoRouterApp` 不会在卸载时隐式 shutdown Runtime。应用 Composition Root 结束默认 Runtime 时执行（包括使用生产装配入口的集成测试）：
 
 ```dart
 await CCRouterHost.shutdown();
 ```
 
-不要在页面 Pop、组件页面销毁、App 后台或 Session 关闭时 shutdown。Runtime 会先销毁它拥有的 Adapter，再释放 managed Backend 创建的 GoRouter；attach 模式不会销毁应用自己创建的 GoRouter。销毁、动态 Host 注销或 Host 初始化失败时采用 best-effort 结构化清理：某个 listener remover、PopGuard 解绑或子 Adapter 抛错不会跳过其它资源，调用方最终收到首个失败。
+如果 Runtime 已创建，但 `initialize` 在配置校验等后续步骤失败，Host 会自动释放这个未发布的
+Runtime，原始启动异常和 StackTrace 仍同步抛出。重试前可 `await CCRouterHost.shutdown()`
+等待回滚；清理完成前的新初始化会被拒绝。加入回滚的 shutdown 会报告结构性清理错误，
+没有调用方加入时，回滚错误也会被内部处理。构造本身或更早的绑定 attach 失败仍支持立即重试。
+直接创建低层 Runtime 的调用方继续自行负责 dispose。
+
+回滚或正常关闭期间，不同 error Zone 的调用方可各自调用 `shutdown()` 加入同一轮清理；
+清理错误按原始实例和 StackTrace 在各调用方 Zone 抛出。应在发起调用的 Zone 内 await/处理
+该 Future 后再传递结果；直接把可能失败的 Future 跨 error Zone 传递仍受 Dart 规则约束。
+门禁在任一等待者返回前解除，该等待者可以初始化新 Host；旧轮次的返回不会改动新轮次门禁。
+
+不要在页面 Pop、组件页面销毁、App 后台或 Session 关闭时 shutdown。Runtime 会先销毁它拥有的 Adapter，再释放 managed Backend 创建的 GoRouter；attach 模式不会销毁应用自己创建的 GoRouter。Backend 销毁、动态 Host 注销或 Backend 初始化失败时采用 best-effort 结构化清理：某个 listener remover、PopGuard 解绑或子 Adapter 抛错不会跳过其它资源，清理调用方最终收到首个失败。Runtime 启动回滚仍保留上文的原始启动异常。
 
 取消 Listener 抛错也不会截断其余通知和资源释放。Token 通知结束后重抛首个错误；Scope 将
 取消错误与 Service dispose 错误一起留在内部清理记录中，继续逆序释放。Runtime 在早期
@@ -541,8 +557,8 @@ Listener 之前建立门禁，重复调用只等待同一轮清理；即使回�
 `CCRouterHost.shutdown()` 由应用 Composition Root 停止该 Runtime；它们不是某个 Widget 或对象实例
 的 `init/dispose`。Runtime、Adapter、Scope、Service 等具体实例仍由各自 Owner 调用内部
 `dispose`。`CCRouterHost.runInitTasks(gate: ...)` 打开一个 `CCInitTaskGate` 并等待零到多个新就绪
-任务，它不会再次初始化或替换 Runtime，也不会重试已完成或失败的任务。所有 `shutdown()`
-调用都必须被 `await`，完成后才允许重新调用 `initialize()`。
+任务，它不会再次初始化或替换 Runtime，也不会重试已完成或失败的任务。调用方应 await 或显式
+处理 `shutdown()` 返回的 Future；需要重新初始化时，先等待该轮清理完成。
 
 已有 GoRouter 工程使用 `CCGoRouterBackend.attach`，把生成 bindings、Host 和已经安装到 Router 的 Observer 显式交给 CCRouter。只有需要完全自定义应用 Widget 树时才直接使用 `CCRouterApp.managed`。完整 Shell/Outlet 示例见 [`demo/lib/demo_router_backend.dart`](demo/lib/demo_router_backend.dart)。
 
@@ -892,11 +908,23 @@ Demo 默认入口保持关闭；可用 `fvm flutter run -t lib/main_predictive_b
 
 ## Aspect、Trace、Telemetry 与生命周期
 
+Host 诊断容量按容器分别计算：`traceCapacity` 默认 1000，分别约束 Trace 和订阅者错误；
+`navigationDiagnosticCapacity` 默认 1000，分别约束七份导航历史及已移除 Backend Entry 的保留，
+不是所有历史共用的 1000 条总预算。设为 0 关闭对应历史，但不会关闭 live listener、活动路由、
+去重或运行队列。该值还关联最小 64 的观察队列和去重窗口；Sink 未单独配置 `queueCapacity` 时也沿用该容量，调整前应验证突发负载。
+`CCGoRouterApp` / Backend / Adapter 的 `lifecycleEventCapacity` 是独立的每 Host 配置，默认 1000；
+设为 0 只关闭该 Adapter 的历史。`adapter.lifecycleEvents` 现在返回
+`List<CCGoRouterNavigationEventSnapshot>`，保留 `kind`、`hostId`、`outlet`、`location`，并提供
+`previousLocation`，不再保留 `route` / `previousRoute`。需要 Route 的 Host 逻辑放在同步 Observer
+回调中，勿保存原始事件。location 仍可能包含实际路径，仅供本地排查；生产日志使用脱敏 Sink。
+容量评估、建议与验证边界见 [导航历史与容量评估](docs/validation/navigation-history-capacity-20261019.md)。
+
 `CCNavigationAspect` 只观察导航阶段，不做决策。它适合 PV/UV 与来源归因、route found/arrival/completion/failure 观察、耗时、跨 Host/Outlet 链路追踪和脱敏日志。Aspect 回调异常会被隔离；回调中不得同步重入导航。请求参数、完整 URI、Extra、Token 和业务返回对象不会进入默认诊断记录。
 
 Runtime 还可以把 Command、Event、Service、InitTask、导航失败和后端降级统一投递到 Host 注入的 `CCDiagnosticSink`：
 
 ```dart
+// 此示例假定 logger.write 是同步写入；异步 Logger 必须返回实际写入 Future。
 final class AppDiagnosticSink implements CCDiagnosticSink {
   const AppDiagnosticSink(this.logger);
 
@@ -932,6 +960,28 @@ CCRouterHost.initialize(
   ),
 );
 ```
+
+Sink 每个 Runtime 最多有 **1 个未完成的 `record` Future**，存活事件按 FIFO 顺序启动；
+`record` 返回的 Future 必须代表实际写入完成。等待队列可通过
+`CCDiagnosticsConfig(queueCapacity: 128, sink: ...)` 独立设置正整数容量；省略时保留
+`max(64, navigationDiagnosticCapacity)` 的兼容行为。队列满时丢最旧等待事件（包括错误级别），
+不阻塞业务。可读取 `CCRouter.diagnosticDeliverySnapshot` 的等待数、在途数、峰值、
+成功/失败/丢弃数进行容量与采样调优；这些计数不包含 Sink 自己启动的后台缓存。
+
+投递及完成回调使用 Runtime 创建时的 Host Zone，保留 Host 日志上下文，不继承后续调用的
+invocation Zone。每批预算为启动时的等待数量，异步完成也沿用剩余预算；重入产生的新诊断
+在预算耗尽后通过 Timer 继续，让出事件循环，不为同批每条事件增加 Timer。
+
+Runtime 关闭时，若写入槽空闲会尝试最后一次投递，保留同步 Sink 的关闭日志；遇到首个未完成的
+Future 就停止并清空余量，不等待或取消写入，也不关闭 Host 所有的 Sink。
+Runtime 构造失败、未返回可供 dispose 的实例时，私有投递器会在下一轮事件循环执行同样的
+尽力投递和清理：同步失败日志仍可交付，异步写入未完成时余量会丢弃，原始构造异常立即抛出。
+Host 创建 Runtime 后的初始化失败会自动触发回滚，重试与跨 Zone 等待规则见
+[Runtime 生命周期](#runtime-生命周期)。失败诊断受容量与尽力投递规则约束，不保证全部送达。
+永不完成的 Future 会占住这个 Runtime 的唯一槽位；框架不会超时后继续启动不可取消的工作。
+Host 负责网络取消、Sink 自有队列限制和最终 flush，尤其是复用同一 Sink 或反复重建 Runtime 时。
+异步投递仍在当前 isolate，Sink 应避免耗时同步计算。
+实现边界与验证数据见 [Sink 背压修复](docs/validation/diagnostic-sink-backpressure-20261019.md)。
 
 Sink 是异步、有界、观察型边界：Sink 抛错、缓慢或关闭都不会改变业务结果；高负载下允许丢弃非关键诊断，但 Runtime 的有限 Trace 历史仍独立保留。类别策略只控制外部 Sink，不会关闭 Runtime 的错误与生命周期状态。应用可以把 `CCDiagnosticEvent` 映射到现有 Logger、Sentry、Crashlytics 或 OpenTelemetry，但必须继续遵守脱敏边界：不要自行追加完整 URI、参数、Extra、Token、Widget、Navigator、异常原文或业务返回对象。
 

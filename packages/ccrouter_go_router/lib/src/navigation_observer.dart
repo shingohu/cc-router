@@ -19,7 +19,12 @@ enum CCGoRouterNavigationEventKind {
   topChanged,
 }
 
-/// Immutable lifecycle data emitted by [CCGoRouterNavigationObserver].
+/// Live lifecycle data emitted synchronously by [CCGoRouterNavigationObserver].
+///
+/// [route] and [previousRoute] are borrowed Flutter objects. Do not store this
+/// event in history or long-lived callbacks: even disposed Routes can retain
+/// animation controllers and application payloads. Adapter history uses
+/// [CCGoRouterNavigationEventSnapshot] instead.
 final class CCGoRouterNavigationEvent {
   /// Creates an event for one observed Navigator transition.
   const CCGoRouterNavigationEvent({
@@ -47,6 +52,38 @@ final class CCGoRouterNavigationEvent {
 
   /// Route settings name, typically the GoRouter location.
   String? get location => route.settings.name;
+}
+
+/// Immutable Host diagnostic captured without retaining Flutter Route objects.
+///
+/// Contains only enum and string values, so keeping a history snapshot does not
+/// extend Route, controller, Widget or arguments lifetimes. Locations preserve
+/// the observed Route settings names and may contain application data; this is
+/// local Host troubleshooting data, not sanitized production telemetry.
+final class CCGoRouterNavigationEventSnapshot {
+  /// Captures the observed names and Outlet identity at notification time.
+  const CCGoRouterNavigationEventSnapshot({
+    required this.kind,
+    required this.hostId,
+    required this.outlet,
+    required this.location,
+    this.previousLocation,
+  });
+
+  /// Transition kind observed from Flutter's Navigator.
+  final CCGoRouterNavigationEventKind kind;
+
+  /// Stable Flutter Host identity associated with the observed Navigator.
+  final String hostId;
+
+  /// CCRouter Outlet name associated with the observer instance.
+  final String outlet;
+
+  /// Route settings name captured at the transition, without arguments/Extra.
+  final String? location;
+
+  /// Previous Route settings name, when Flutter supplies a previous Route.
+  final String? previousLocation;
 }
 
 /// NavigatorObserver that turns backend transitions into Outlet-tagged events.

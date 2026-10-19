@@ -1,0 +1,52 @@
+{
+  "date": "2026-10-19",
+  "frameworkBaseline": "283b00b37ed71c13acea9d22691b6988d75fb60b",
+  "environment": {
+    "host": "macOS",
+    "flutter": "3.41.10-ohos-1.0.0",
+    "dart": "3.11.5"
+  },
+  "application": {
+    "name": "liberlive-flutter",
+    "tests": 14,
+    "testExitCode": 0,
+    "generateCheckExitCode": 0,
+    "stableInputDigests": 985,
+    "changedInputsDuringVerification": 0,
+    "runtimeSourceChangedByThisTask": false,
+    "sourceGraph": "existing local framework overrides"
+  },
+  "independentConsumer": {
+    "source": "five local framework package snapshots; resolution: workspace removed only from copied framework manifests",
+    "separatePubResolution": true,
+    "consumerOwnWorkspace": true,
+    "originalFrameworkPackageConfigReused": false,
+    "offlinePubWithInstalledHookExitCode": 0,
+    "generatedComponents": 2,
+    "generatedRoutes": 1,
+    "generatedPackages": 3,
+    "widgetTests": 4,
+    "testExitCode": 0,
+    "analyzeExitCode": 0,
+    "cachedCheckExitCode": 0,
+    "referenceCheckExitCode": 0,
+    "negativeAnalyzerExitCode": 3,
+    "negativeAnalyzerCodes": [
+      "ARGUMENT_TYPE_NOT_ASSIGNABLE",
+      "UNDEFINED_IDENTIFIER"
+    ],
+    "archive": "consumer-source.tar.gz",
+    "archiveSha256": "b7b81bde766fc989c488c3b6396ac0d272b123f8fb10cfcfba41f1fe96c0207c",
+    "archivedFiles": 14,
+    "compiledGuideSnippets": 2,
+    "guideSnippetAnalyzeExitCode": 0
+  },
+  "notValidated": [
+    "Hosted or published-package archive installation",
+    "published-version upgrade/migration",
+    "standard Flutter SDK",
+    "native platform build or physical devices",
+    "live production authentication backend",
+    "long-term Heap/RSS"
+  ]
+}

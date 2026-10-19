@@ -8,7 +8,15 @@ export 'src/adaptive_layout.dart';
 export 'src/component.dart';
 export 'src/contract_compatibility.dart';
 export 'src/deep_link.dart';
-export 'src/diagnostics.dart';
+export 'src/diagnostics.dart'
+    show
+        CCDiagnosticCategory,
+        CCDiagnosticLevel,
+        CCDiagnosticCategoryPolicy,
+        CCDiagnosticsConfig,
+        CCDiagnosticEvent,
+        CCDiagnosticSink,
+        CCDiagnosticDeliverySnapshot;
 export 'src/errors.dart';
 export 'src/invocation.dart';
 export 'src/initialization.dart';

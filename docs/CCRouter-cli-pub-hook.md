@@ -349,16 +349,19 @@ flutter run
 
 在 Workspace 聚合根显式执行 hooked `flutter pub get` 时，resolved Package config 可能同时
 包含 `ccrouter` 与 `ccrouter_generator`。Hook 不能只凭完整解析图判断当前 Package 是 Host；
-它还会验证当前 `pubspec.yaml` 是否直接声明 `ccrouter`。聚合根不满足该条件时会输出：
+它先检查当前 `pubspec.yaml` 中的直接 `ccrouter` / `ccrouter_contracts` 依赖，再结合
+`.metadata` 和 `ccrouter.yaml` 选择 Host 或 package-local 角色。未直接参与 CCRouter 的
+聚合根会输出：
 
 ```text
-CCRouter pub hook skipped: current Package does not directly depend on ccrouter
-(Workspace aggregators are not Hosts).
+CCRouter pub hook skipped: project does not use CCRouter directly; the current Package does not depend on ccrouter or ccrouter_contracts (Workspace aggregators are not Hosts and do not participate in generation).
 ```
 
-跳过会保留原始 Pub 成功结果，也不会猜测某个 Workspace 成员作为 Host。真实 Host 或显式使用
-CCRouter 的组件 Package 仍以自身目录为根触发生成；`flutter run/build` 应始终从实际 Flutter
-Host 执行 fail-closed preflight。
+跳过会保留原始 Pub 成功结果，也不会猜测某个 Workspace 成员作为 Host。因此根目录 Pub
+成功不代表成员 Host 的生成已验证；应从真实 Host 运行 Hook 检查，或显式执行
+`ccrouter generate demo --check`。真实 Host 或显式使用 CCRouter 的组件/contracts Package
+仍以自身目录为根触发对应角色的生成；`flutter run/build` 应始终从实际 Flutter Host 执行
+fail-closed preflight。
 
 ## 验证
 

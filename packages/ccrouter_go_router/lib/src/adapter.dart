@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection' show UnmodifiableListView;
 
 import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter/ccrouter_host.dart' hide CCRouterHost;
@@ -42,6 +43,10 @@ final class CCGoRouterAdapter
         CCNavigationPopGuardBinding,
         CCNavigationPredictiveBackSourceProvider {
   /// Creates an adapter around an application-owned [router].
+  ///
+  /// [lifecycleEventCapacity] bounds each local diagnostic history; zero skips
+  /// history snapshots without disabling live Observer/backend events. History
+  /// stores only names and identities, never the borrowed Flutter Routes.
   factory CCGoRouterAdapter({
     required GoRouter router,
     Iterable<CCGoRouterRouteBinding> bindings = const [],
@@ -319,8 +324,15 @@ final class CCGoRouterAdapter
   /// Suppresses duplicate evaluation while Runtime already evaluated a Pop.
   bool _runtimeGuardedPopInProgress = false;
 
-  /// Bounded lifecycle events emitted by configured Navigator observers.
-  final List<CCGoRouterNavigationEvent> _lifecycleEvents = [];
+  /// Lazily grown mirrored ring with at most twice the capacity in references.
+  ///
+  /// Each snapshot has two slots after the first wrap, allowing one contiguous
+  /// copy for reads and constant-time writes. Snapshot objects and strings are
+  /// not duplicated; Flutter Routes and arguments are never retained.
+  final List<CCGoRouterNavigationEventSnapshot> _lifecycleEvents = [];
+
+  /// Oldest retained slot once the ring is full; zero before the first wrap.
+  int _lifecycleEventHead = 0;
 
   /// Optional bounded fallback history, allocated only for the enabled bridge.
   final List<CCGoRouterPredictiveBackFallbackEvent>? _predictiveBackFallbacks;
@@ -403,9 +415,26 @@ final class CCGoRouterAdapter
   /// Navigator observers subscribed by this Adapter.
   List<CCGoRouterNavigationObserver> get observers => _observers;
 
-  /// Bounded snapshot of observed Navigator lifecycle events.
-  List<CCGoRouterNavigationEvent> get lifecycleEvents =>
-      List.unmodifiable(_lifecycleEvents);
+  /// Bounded, immutable history with no strong references to Flutter Routes.
+  ///
+  /// Entries are [CCGoRouterNavigationEventSnapshot] values, not the live
+  /// [CCGoRouterNavigationEvent] objects passed to Observer callbacks. Use
+  /// `location`/`previousLocation` for historical names; Route access belongs
+  /// only in synchronous Observer callbacks. Zero capacity disables retention
+  /// without disabling backend event delivery or navigation reconciliation.
+  List<CCGoRouterNavigationEventSnapshot> get lifecycleEvents {
+    if (_lifecycleEvents.length <= _lifecycleEventCapacity) {
+      return List.unmodifiable(_lifecycleEvents);
+    }
+    // The slice is a private copy, so this view survives writes and disposal
+    // without exposing mutable ring slots or performing a second full copy.
+    return UnmodifiableListView(
+      _lifecycleEvents.sublist(
+        _lifecycleEventHead,
+        _lifecycleEventHead + _lifecycleEventCapacity,
+      ),
+    );
+  }
 
   /// Bounded, sanitized reasons why the automatic bridge declined a back start.
   ///
@@ -689,6 +718,7 @@ final class CCGoRouterAdapter
     _expectedBackendEvents.clear();
     _activeOutletsByShell.clear();
     _lifecycleEvents.clear();
+    _lifecycleEventHead = 0;
     _predictiveBackFallbacks?.clear();
   }
 
@@ -1109,10 +1139,28 @@ final class CCGoRouterAdapter
       _removeManagedPopGuard(event.route);
     }
     if (_lifecycleEventCapacity > 0) {
-      if (_lifecycleEvents.length == _lifecycleEventCapacity) {
-        _lifecycleEvents.removeAt(0);
+      final snapshot = CCGoRouterNavigationEventSnapshot(
+        kind: event.kind,
+        hostId: event.hostId,
+        outlet: event.outlet,
+        location: event.location,
+        previousLocation: event.previousRoute?.settings.name,
+      );
+      if (_lifecycleEvents.length >= _lifecycleEventCapacity) {
+        if (_lifecycleEvents.length == _lifecycleEventCapacity) {
+          // Allocate the mirror only at the first overflow, not at startup.
+          _lifecycleEvents.addAll(_lifecycleEvents.toList(growable: false));
+        }
+        _lifecycleEvents[_lifecycleEventHead] = snapshot;
+        _lifecycleEvents[_lifecycleEventHead + _lifecycleEventCapacity] =
+            snapshot;
+        _lifecycleEventHead++;
+        if (_lifecycleEventHead == _lifecycleEventCapacity) {
+          _lifecycleEventHead = 0;
+        }
+      } else {
+        _lifecycleEvents.add(snapshot);
       }
-      _lifecycleEvents.add(event);
     }
     final isAdapterOwned = _consumeExpectedBackendEvent(event.kind);
     final matchesActiveRequest = _matchesActiveRequest(event.location);

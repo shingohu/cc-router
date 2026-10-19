@@ -82,6 +82,7 @@ final class CCDiagnosticsConfig {
   /// Creates diagnostic delivery configuration.
   const CCDiagnosticsConfig({
     this.sink,
+    this.queueCapacity,
     this.policies = const [],
     this.defaultEnabled = true,
     this.defaultMinimumLevel = CCDiagnosticLevel.info,
@@ -90,6 +91,14 @@ final class CCDiagnosticsConfig {
 
   /// Optional application-owned structured diagnostic destination.
   final CCDiagnosticSink? sink;
+
+  /// Maximum waiting events, excluding the single unfinished Sink write.
+  ///
+  /// Set a positive value to tune delivery independently of retained history.
+  /// Null preserves the legacy limit, max(64, navigationDiagnosticCapacity).
+  /// Overflow discards the oldest waiting event, regardless of severity.
+  /// Use category policies to disable delivery; zero is not a valid capacity.
+  final int? queueCapacity;
 
   /// Category-specific overrides. At most one policy may target a category.
   final Iterable<CCDiagnosticCategoryPolicy> policies;
@@ -215,11 +224,74 @@ final class CCDiagnosticEvent {
 
 /// Receives sanitized framework diagnostics at the Host boundary.
 ///
-/// The Runtime invokes this Sink asynchronously from a bounded queue. Sink
+/// The Runtime invokes this Sink on a later event-loop turn from a bounded
+/// queue, with at most one unfinished [record] Future per Runtime. Surviving
+/// events start in FIFO order; a slow Sink causes oldest waiting events to be
+/// discarded, never business-operation backpressure. A returned Future must
+/// represent the actual write, not acceptance into another unbounded queue.
+/// Delivery and completion callbacks use the Zone in which the Runtime was
+/// created, preserving Host context without inheriting invocation Zone values.
+/// Each batch consumes a finite initial queue-length budget across Future
+/// completions too; reentrant diagnostics yield to the event loop between
+/// batches rather than extending a microtask chain indefinitely.
+///
+/// Shutdown attempts a final drain only if the write slot is free, preserving
+/// synchronous Sink delivery. It stops at the first unfinished Future, discards
+/// the remaining queue, and never waits for or cancels a write. The Host owns
+/// Sink cancellation and final flushing.
+/// If Runtime construction throws before returning an owner, the same final
+/// drain and cleanup run on a later event-loop turn. Synchronous failure logs
+/// are preserved; an unfinished Future causes the remaining logs to be dropped.
+/// The construction error is rethrown without waiting for diagnostic delivery.
+/// A never-completing Future occupies the slot until shutdown; Runtime does
+/// not time it out and start more uncancellable work. Keep synchronous work
+/// short: asynchronous delivery does not move work to another isolate. Sink
 /// failures are isolated and never change navigation, Service, Command, Event,
 /// or initialization results. Implementations should forward the immutable
 /// event to the application's existing logging or telemetry system quickly.
 abstract interface class CCDiagnosticSink {
   /// Records one sanitized event.
   FutureOr<void> record(CCDiagnosticEvent event);
+}
+
+/// Payload-free snapshot of one Runtime's external diagnostic delivery.
+///
+/// Use counters to tune sampling, queue capacity and the application Sink.
+/// This is observational state, not an audit log or delivery acknowledgement.
+final class CCDiagnosticDeliverySnapshot {
+  /// Captures queue state and cumulative counts at one point in time.
+  const CCDiagnosticDeliverySnapshot({
+    required this.queueCapacity,
+    required this.queuedEventCount,
+    required this.inFlightWriteCount,
+    required this.peakQueueDepth,
+    required this.deliveredEventCount,
+    required this.failedEventCount,
+    required this.droppedEventCount,
+    required this.isClosed,
+  });
+
+  /// Maximum waiting events; the one in-flight write is additional.
+  final int queueCapacity;
+
+  /// Events currently waiting for the Sink.
+  final int queuedEventCount;
+
+  /// Unfinished writes, either zero or one, including after shutdown.
+  final int inFlightWriteCount;
+
+  /// Largest observed number of waiting events, bounded by [queueCapacity].
+  final int peakQueueDepth;
+
+  /// Writes whose returned Future, or synchronous call, completed successfully.
+  final int deliveredEventCount;
+
+  /// Synchronous throws and asynchronous write failures, isolated from business.
+  final int failedEventCount;
+
+  /// Waiting events discarded by overflow or Runtime shutdown.
+  final int droppedEventCount;
+
+  /// Whether shutdown has stopped acceptance and released the waiting queue.
+  final bool isClosed;
 }

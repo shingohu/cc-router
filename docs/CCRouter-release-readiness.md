@@ -24,7 +24,7 @@ Package 集合、版本承诺和 Hosted 目标必须由仓库 Owner 明确决定
 | P0 | Package 文档 | 已有首发 README/CHANGELOG 骨架，内容尚未随 RC 冻结 | 每个发布 Package 具有面向其使用者的 README、CHANGELOG、LICENSE |
 | P0 | Contract 迁移基线 | 核心兼容门禁已实现，但没有上一发布版归档样本 | 保存首个 RC Index；后续版本以该样本做兼容回归 |
 | P0 | Analyzer 分发 | Demo 仍使用固定 Git commit bootstrap；无 GitHub 凭据环境可能在 Plugin fetch 阶段失败 | 发布 Hosted Plugin；保留固定 Git SHA 仅作发布前验证回退 |
-| P0 | 干净消费者验证 | 当前主要在 Monorepo Workspace 内验证 | 从发布归档/Hosted 依赖创建最小 Flutter 工程并完成生成、运行和升级 smoke |
+| P0 | 干净消费者验证 | 2026-10-19 已通过独立本地源码快照的 Pub/生成/typed Route/释放闭环，见[证据](validation/consumer-adoption-20261019/README.md)；尚未验证发布归档/Hosted 和版本升级 | 从发布归档/Hosted 依赖创建最小 Flutter 工程并完成生成、运行和升级 smoke |
 | P1 | 安全响应入口 | 已有基础 `SECURITY.md`，尚未形成稳定版响应承诺 | 发布前确认私密报告入口、支持版本和响应边界 |
 | P1 | 长期质量趋势 | 首轮性能、RSS/Heap 和真机回归已做 | RC 再采样并保存结果；长期趋势不作为一次性发布任务冒充完成 |
 
@@ -38,7 +38,7 @@ RC 文案和发布归档仍需再次 dry-run。这不是文档措辞问题，而
 
 1. **基础依赖闭包**：`ccrouter_contracts`、`ccrouter_core`、`ccrouter`、
    `ccrouter_go_router`、`ccrouter_generator`。
-2. **可选能力**：`ccrouter_analytics`、`ccrouter_analytics_flutter`、
+2. **可选能力**：`ccrouter_ui`、`ccrouter_analytics`、`ccrouter_analytics_flutter`、
    `ccrouter_devtools_protocol`、`ccrouter_devtools`、`ccrouter_analyzer_plugin`、
    `ccrouter_test`。每个 Package 必须有独立使用场景和维护承诺，不能仅因已经存在就发布。
 3. **不发布到 pub.dev**：Workspace 聚合 Package、`demo`、`demo/modules/*`、Demo Analyzer

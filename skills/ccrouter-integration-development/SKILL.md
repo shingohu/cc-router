@@ -15,6 +15,11 @@ application's installed package APIs and CLI help if its version differs.
 
 ## Workflow
 
+For a first Host or a production adoption check, start with
+[first-integration.md](references/first-integration.md). Complete one typed
+Route and its failure/ownership loop before adding optional capabilities or
+tooling; keep local-source validation distinct from distribution readiness.
+
 1. Identify the current package role before editing:
    - **Host**: application composition root, Backend, Shell, platform ingress.
    - **Component implementation**: pages, private capabilities, Registrar.
@@ -137,6 +142,9 @@ Read [implementation-patterns.md](references/implementation-patterns.md) when ad
 - Use `@CCEventContract` plus public top-level `@CCEventSubscription` functions for static component Events, and publish annotated Events only through the generated Owner Client. Omit a Subscriber ID only when the component has exactly one Subscriber for that Event. Keep `CCEventSubscriberId<E>`, `CCEventSubscriber<E>`, and the legacy string overload for unannotated migration capabilities and low-level tests.
 - An Event's overall deadline fails publication with `CCInvocationTimeoutError` and cooperatively cancels Subscribers without recording shared-deadline timeouts as Subscriber failures. A shorter nested call timeout stays isolated to its Subscriber. Do not rely on microsecond timer precision.
 - Connect application logging through `CCDiagnosticsConfig(sink: ...)`. A `CCDiagnosticSink` is asynchronous, bounded, observational, and failure-isolated. Category policies control external delivery and sampling only; they do not disable Runtime traces or lifecycle state. Forward only the sanitized fields supplied by `CCDiagnosticEvent` and never append raw URI, arguments, Extra, tokens, widgets, backend objects, exception messages, or business results.
+- Diagnostic delivery permits one unfinished `record` Future per Runtime; return the actual write completion, not acceptance into an unbounded application queue. Set positive `CCDiagnosticsConfig.queueCapacity` to decouple waiting capacity from navigation history; null preserves `max(64, navigationDiagnosticCapacity)`. Overflow drops the oldest waiting event of any severity. Monitor `CCRouter.diagnosticDeliverySnapshot` for depth, in-flight, peak, success/failure and drop counters. Shutdown attempts a final drain when idle (preserving synchronous shutdown logs), stops at the first unfinished Future and discards the rest without awaiting/cancelling writes or closing the Host-owned Sink; the Host owns cancellation and final flush. No automatic timeout starts replacement writes.
+- Diagnostic delivery and completion callbacks use the Runtime creation Zone, preserving Host context without inheriting later invocation Zones. Finite initial queue-length batch budgets span Future completions; reentrant diagnostics yield to the event loop after the budget is exhausted, without a Timer for every write in the same batch.
+- Runtime construction failure schedules the same best-effort final drain and cleanup on a later event-loop turn, since no Runtime is returned for disposal. Synchronous failure logs remain deliverable; the first unfinished write discards the remainder. The original construction error is rethrown immediately, and late completion cannot restart delivery.
 - Treat `componentGraph`, `componentRegistration`, and `runtimeInitialize` as the framework-owned component/startup diagnostic flow. Configure the Host Sink at `CCRouterHost.initialize` with `CCDiagnosticLevel.debug` when start events are needed; do not duplicate these lifecycle logs in application bootstrap code.
 - Use `ccrouter_analytics` for provider-neutral product events. Route page view/leave events may be bridged from `CCNavigationAspect`; click, scroll, and exposure events require stable explicit targets. Keep Firebase, ThinkingData, local persistence, and upload adapters in the application layer (the Demo example lives under `demo/modules/`); do not add vendor SDK dependencies to framework `packages/*`, and do not infer business event IDs from Widget text or arbitrary Keys.
 - Keep the analytics dispatcher behind an explicit `CCAnalyticsPolicy`: its default is consent-denied, and the app must call `updatePolicy` after privacy consent. Revocation clears pending events and invalidates remaining sinks of the active event, even after immediate re-grant; already-running writes cannot be retracted. See the Analytics delivery section in `references/implementation-patterns.md` for asynchronous delivery and shutdown ownership.
@@ -305,7 +313,24 @@ the Service Contract.
 
 ## Lifecycle Rules
 
+- Host diagnostic limits are per container, not a global memory budget:
+  `traceCapacity` defaults to 1000 for each of Trace/error history;
+  `navigationDiagnosticCapacity` defaults to 1000 for each of seven navigation
+  histories and removed Backend Entry retention. Zero disables history only;
+  live entries, observers, delivery queues and deduplication remain active.
+  That setting also sizes Observer queues/deduplication windows with a minimum
+  of 64, and the Sink queue unless `diagnostics.queueCapacity` is set;
+  do not reduce it as a memory-only switch without burst verification.
+  Adapter `lifecycleEventCapacity` is separate and per Host (default 1000).
+  `adapter.lifecycleEvents` returns value-only
+  `CCGoRouterNavigationEventSnapshot` entries; migrate historical Route reads
+  to `location`/`previousLocation`. Only synchronous Observer callbacks receive
+  raw Routes; never retain their events. Names can contain application data,
+  so forward only sanitized Runtime diagnostics to production telemetry.
+  See the diagnostic-capacity guidance in `references/implementation-patterns.md`.
 - `CCRouterHost.initialize` receives one complete Host Assembly once.
+- If `CCRouterHost.initialize` fails after creating a Runtime, Host automatically disposes that unpublished Runtime and synchronously rethrows the original startup error/stack. Await `CCRouterHost.shutdown()` to join rollback before retrying; initialization is rejected until cleanup completes. Joining shutdown callers observe structural cleanup errors; otherwise rollback errors are handled without replacing the startup error. Failures before Runtime creation still allow immediate retry. Direct low-level Runtime owners remain responsible for disposal after failed initialization.
+- Call `CCRouterHost.shutdown()` within each caller's Zone to join pending rollback or normal shutdown, even across distinct error Zones. Cleanup runs once; each joiner receives the original cleanup error/stack in its own Zone. Await/handle that returned Future in the calling Zone before transferring the result; passing a potentially failing Future directly across error Zones remains subject to Dart's propagation rules. The gate releases before a joiner returns, so it may initialize a new Host without older shutdown callers affecting the new generation.
 - Open a Session after login or persisted authentication restoration. Close it on logout, token invalidation, account switch, or forced sign-out.
 - Do not close a Session on page Pop, backgrounding, or tab changes.
 - Call and await `CCRouterHost.shutdown` only when the owning application

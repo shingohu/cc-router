@@ -7,8 +7,8 @@ part of 'facade.dart';
 /// Gates themselves. Multiple navigation Hosts share this Runtime; releasing
 /// one navigation surface does not shut down the application Runtime.
 abstract final class CCRouterHost {
-  /// Shutdown operation currently in progress.
-  static Future<void>? _shuttingDown;
+  /// Successful completion carrying optional failure data across error Zones.
+  static Future<_CCHostCleanupFailure?>? _shuttingDown;
 
   /// Prevents optional attachment callbacks from reentering initialization.
   static bool _initializing = false;
@@ -43,6 +43,12 @@ abstract final class CCRouterHost {
   /// throws [CCRouterAlreadyInitializedError]. Initialization from inside a
   /// test Runtime overlay throws the same error because the Test Host owns that
   /// Runtime lifecycle.
+  /// If a created Runtime fails initialization, the original error and stack
+  /// are rethrown synchronously and the Host disposes that unpublished Runtime.
+  /// Await [shutdown] to join rollback before retrying; initialization remains
+  /// blocked until cleanup completes. Rollback errors do not replace the startup
+  /// error or become unhandled; a joining [shutdown] observes structural cleanup
+  /// errors. Failure before a Runtime is created still permits immediate retry.
   /// Global navigation interceptors are ordered by their stable IDs and run
   /// before route-declared interceptors. Navigation aspects are ordered by
   /// stable IDs and observe the same Runtime navigation pipeline.
@@ -84,6 +90,7 @@ abstract final class CCRouterHost {
     }
 
     final attached = <CCHostLifecycleBinding>[];
+    CCRouterRuntime? pendingRuntime;
     _initializing = true;
     try {
       for (final binding in hostAssembly.lifecycleBindings) {
@@ -91,7 +98,7 @@ abstract final class CCRouterHost {
         attached.add(binding);
         binding.attach();
       }
-      final runtime = CCRouterRuntime.forHost(
+      final runtime = pendingRuntime = CCRouterRuntime.forHost(
         components: hostAssembly.componentManifests,
         contractBundle: hostAssembly.contractBundle,
         traceCapacity: traceCapacity,
@@ -108,6 +115,7 @@ abstract final class CCRouterHost {
       );
       runtime.initialize();
       _runtimeResolver.installDefault(runtime);
+      pendingRuntime = null;
       _lifecycleBindings = List.unmodifiable(attached);
       _hostRouteCatalog = hostAssembly.routeCatalog;
       final integrations = hostAssembly.hostToolIntegrations;
@@ -124,16 +132,90 @@ abstract final class CCRouterHost {
         }
       }
     } catch (_) {
-      for (final binding in attached.reversed) {
-        try {
-          binding.detach();
-        } catch (_) {
-          /* Preserve startup failure. */
+      final failedRuntime = pendingRuntime;
+      if (failedRuntime != null) {
+        _rollbackInitialization(failedRuntime, attached);
+      } else {
+        for (final binding in attached.reversed) {
+          try {
+            binding.detach();
+          } catch (_) {
+            /* Preserve startup failure. */
+          }
         }
       }
       rethrow;
     } finally {
       _initializing = false;
+    }
+  }
+
+  /// Releases an unpublished Runtime behind the shared shutdown gate.
+  ///
+  /// Install the gate before invoking detach or Runtime cancellation callbacks:
+  /// they may synchronously reenter Host lifecycle APIs. Failures cross error
+  /// Zones as data and become errors only for explicit shutdown callers.
+  static void _rollbackInitialization(
+    CCRouterRuntime runtime,
+    List<CCHostLifecycleBinding> attached,
+  ) {
+    final completion = _beginCleanup();
+    completion.complete(
+      _captureCleanup(() async {
+        Object? bindingError;
+        StackTrace? bindingStack;
+        for (final binding in attached.reversed) {
+          try {
+            binding.detach();
+          } catch (error, stack) {
+            bindingError ??= error;
+            bindingStack ??= stack;
+          }
+        }
+        await runtime.dispose();
+        if (bindingError != null) {
+          Error.throwWithStackTrace(bindingError, bindingStack!);
+        }
+      }),
+    );
+  }
+
+  /// Establishes a cleanup generation before any reentrant lifecycle callbacks.
+  ///
+  /// The shared Future always succeeds, with failures stored as data, so callers
+  /// in different error Zones can all join it. Register gate release first so
+  /// initialization is allowed before any joining shutdown Future returns.
+  static Completer<_CCHostCleanupFailure?> _beginCleanup() {
+    final completion = Completer<_CCHostCleanupFailure?>();
+    final cleanup = completion.future;
+    _shuttingDown = cleanup;
+    unawaited(
+      cleanup.then<void>((_) {
+        if (identical(_shuttingDown, cleanup)) _shuttingDown = null;
+      }),
+    );
+    return completion;
+  }
+
+  /// Observes cleanup errors in their originating Zone and returns them as data.
+  static Future<_CCHostCleanupFailure?> _captureCleanup(
+    Future<void> Function() cleanup,
+  ) async {
+    try {
+      await cleanup();
+      return null;
+    } catch (error, stackTrace) {
+      return (error: error, stackTrace: stackTrace);
+    }
+  }
+
+  /// Reports a completed cleanup failure in the joining caller's error Zone.
+  static Future<void> _joinCleanup(
+    Future<_CCHostCleanupFailure?> cleanup,
+  ) async {
+    final failure = await cleanup;
+    if (failure != null) {
+      Error.throwWithStackTrace(failure.error, failure.stackTrace);
     }
   }
 
@@ -162,9 +244,10 @@ abstract final class CCRouterHost {
   /// navigation Adapter. A new [initialize] call is allowed only after this
   /// Future completes.
   ///
-  /// Calling this method when no Runtime exists is a no-op. Calling it from a
-  /// test Runtime overlay throws [StateError]; dispose the owning Test Host
-  /// instead.
+  /// Joins pending initialization rollback even though no default Runtime was
+  /// published. Otherwise calling this method when no Runtime exists is a
+  /// no-op. Calling it from a test Runtime overlay throws [StateError]; dispose
+  /// the owning Test Host instead.
   ///
   /// This is intentionally named `shutdown`, rather than `dispose`, because
   /// [CCRouterHost] is static lifecycle control, not a disposable instance.
@@ -174,6 +257,11 @@ abstract final class CCRouterHost {
   /// Stopping and cancellation callbacks run behind the shutdown gate, so they
   /// cannot reinitialize early. Cleanup continues after notification failures;
   /// the Host receives the first structural failure after resources are released.
+  /// Each caller joins cleanup from its own Zone, including a different error
+  /// Zone from startup or the first shutdown call. Cleanup failures retain their
+  /// original identity and stack and are thrown in each joining caller's Zone.
+  /// Await or handle the returned Future in that Zone before passing its result
+  /// across an error-Zone boundary, as required for any error-completing Future.
   static Future<void> shutdown() async {
     if (_runtimeResolver.hasOverlayRuntime) {
       throw StateError(
@@ -182,7 +270,7 @@ abstract final class CCRouterHost {
       );
     }
     final existingShutdown = _shuttingDown;
-    if (existingShutdown != null) return existingShutdown;
+    if (existingShutdown != null) return _joinCleanup(existingShutdown);
     final active = _runtimeResolver.takeDefault();
     final disposeBackend = _backendDisposer;
     final hostToolIntegrations = _hostToolIntegrations;
@@ -197,9 +285,8 @@ abstract final class CCRouterHost {
       return;
     }
 
-    final completion = Completer<void>();
+    final completion = _beginCleanup();
     final shuttingDown = completion.future;
-    _shuttingDown = shuttingDown;
     _backendDisposer = null;
     Object? bindingError;
     StackTrace? bindingStack;
@@ -222,16 +309,15 @@ abstract final class CCRouterHost {
         );
       }
     }
-    completion.complete(() async {
-      await _disposeRuntimeAndBackend(active, disposeBackend);
-      if (bindingError != null)
-        Error.throwWithStackTrace(bindingError, bindingStack!);
-    }());
-    try {
-      await shuttingDown;
-    } finally {
-      if (identical(_shuttingDown, shuttingDown)) _shuttingDown = null;
-    }
+    completion.complete(
+      _captureCleanup(() async {
+        await _disposeRuntimeAndBackend(active, disposeBackend);
+        if (bindingError != null) {
+          Error.throwWithStackTrace(bindingError, bindingStack!);
+        }
+      }),
+    );
+    await _joinCleanup(shuttingDown);
   }
 
   /// Disposes Runtime-owned resources before Backend-owned resources.
@@ -259,3 +345,6 @@ abstract final class CCRouterHost {
     }
   }
 }
+
+/// Carries cleanup failure identity and stack across error Zones without throwing.
+typedef _CCHostCleanupFailure = ({Object error, StackTrace stackTrace});

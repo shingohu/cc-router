@@ -18,6 +18,10 @@ report version differences instead of silently upgrading its dependencies.
 
 ## First Decide the Operation
 
+For the first consumer Host, follow the bundled
+[first-integration guide](../ccrouter-integration-development/references/first-integration.md)
+before configuring watch, Pub Hook installation, or Analyzer maintenance.
+
 Inspect the workspace root, `pubspec.yaml` files, Dart workspace configuration,
 component descriptors, current generated indexes, and Git status before writing.
 Classify the request as one of these operations:

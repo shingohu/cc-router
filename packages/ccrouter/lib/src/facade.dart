@@ -103,6 +103,13 @@ abstract final class CCRouter {
   /// business events or sensitive request payloads.
   static List<CCTraceRecord> get recentTraces => _runtime.recentTraces;
 
+  /// Payload-free external diagnostic queue, write and drop counters.
+  ///
+  /// Use this to tune Host sampling and Sink capacity without reading events.
+  /// A slow Sink never blocks business operations; overflow drops waiting data.
+  static CCDiagnosticDeliverySnapshot get diagnosticDeliverySnapshot =>
+      _runtime.diagnosticDeliverySnapshot;
+
   /// Returns the retained invocation records associated with [traceId].
   ///
   /// Use this after a failure event to assemble a local troubleshooting view.

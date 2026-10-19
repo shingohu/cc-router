@@ -27,10 +27,73 @@ owns generated Host assembly, navigation Backend,
 Shell/Outlet topology, platform Deep Link ingress, global policies and final
 `CCRouterHost.shutdown`.
 
+If synchronous `CCRouterHost.initialize` fails after constructing the Runtime,
+the Host disposes the unpublished instance automatically and rethrows the
+original startup error and stack. Before retrying, await
+`CCRouterHost.shutdown()` to join that rollback; initialization is rejected until
+cleanup finishes. A joining shutdown reports structural cleanup errors. Without
+a joining caller those errors are handled, leaving the original startup error
+as the primary failure. Constructor or earlier binding-attach failure still
+allows immediate retry. This does not change direct low-level Runtime ownership
+or close a Host-owned diagnostic Sink; pending Sink I/O and final flush remain
+the Host's responsibility. Failure diagnostics are best-effort.
+
+Pending rollback and normal shutdown can be joined by calling
+`CCRouterHost.shutdown()` independently from the startup Zone, its parent, or
+another guarded error Zone. Cleanup executes once; each caller receives the
+original cleanup error and stack in its own Zone. Handle/await each returned
+Future within its calling Zone before moving the result across an error-Zone
+boundary. Passing the same error-completing Future directly across error Zones
+is still governed by Dart's error propagation rules. The cleanup gate releases
+before any joining call returns, allowing that caller to initialize a new Host.
+Older shutdown callers do not clear a newer Host generation's cleanup gate.
+
 Direct `CCGoRouterBackend.managed/attach` usage remains an advanced Host SPI and
 still receives an explicit Catalog. This supports existing application-owned
 Routers, custom multi-Host composition, and focused Backend tests without
 making routing metadata available to feature code.
+
+### Diagnostic history and capacity
+
+Configure Runtime `traceCapacity` and `navigationDiagnosticCapacity` at
+`CCRouterHost.initialize`; configure the independent, per-Host
+`lifecycleEventCapacity` at `CCGoRouterApp` or Backend/Adapter construction.
+Defaults are 1000 each. These are lazy per-container record limits, not a
+shared allocation or a byte budget. Runtime navigation capacity applies to
+seven separate histories and removed Backend Entry retention; trace capacity
+applies independently to completed traces and sanitized subscriber errors.
+
+Runtime history zero does not remove active Entries or disable listeners.
+Observer queues and Backend operation deduplication still use at least 64
+slots; their size remains coupled to navigation history capacity. Smaller
+settings therefore need burst/terminal-event tests, not just a heap comparison.
+The diagnostic Sink waiting queue defaults to the same legacy limit but can
+be independently configured with positive `CCDiagnosticsConfig.queueCapacity`.
+It has at most one additional unfinished write per Runtime. Overflow drops the
+oldest waiting event regardless of severity; it never backpressures business.
+Use `CCRouter.diagnosticDeliverySnapshot` for payload-free queue, in-flight,
+peak, completed/failed and dropped counts (including shutdown discards).
+
+Adapter history zero skips snapshot creation but keeps backend delivery and
+navigation reconciliation. `adapter.lifecycleEvents` now returns
+`List<CCGoRouterNavigationEventSnapshot>` instead of live
+`CCGoRouterNavigationEvent` objects. Existing `kind`, `hostId`, `outlet` and
+`location` reads remain available; migrate `previousRoute?.settings.name` to
+`previousLocation` and move other Route-dependent logic to synchronous Observer
+callbacks. Never save raw callback events or add Widget, Context, arguments,
+Extra or controller references to history. Immutable returned lists remain
+independent of later writes, eviction and Adapter disposal.
+
+Historical locations preserve Route settings names and may contain actual
+Path/Query data. Use sanitized `CCDiagnosticSink`/Runtime diagnostics for
+production logs; Adapter history is local Host troubleshooting data.
+For an application memory trial, 256 traces, 128 navigation records per history
+and 64 Adapter records per Host are reasonable starting points, not universal
+defaults or verified byte budgets. Measure event rate, wanted troubleshooting
+window, dropped observations, Sink backlog and device heap before adopting
+them. Keep the existing 1000 values available for an A/B baseline. Analytics
+has its own default queue of 256 and payload limits; use its drop/depth counters
+to tune it rather than increasing navigation history.
 
 ### Optional Android predictive back
 
@@ -727,6 +790,28 @@ traces. Forward only the sanitized fields in `CCDiagnosticEvent`; do not add
 raw URI, arguments, Extra, tokens, widgets, backend objects, exception text, or
 business result data. `CCRouter.traceBundle(traceId)` is a bounded troubleshooting
 view, not an audit log or replay source.
+
+Sink writes start FIFO, with at most one unfinished `record` Future per
+Runtime. Return actual write completion, not acceptance into an unbounded queue.
+An unfinished write pauses delivery; overflow keeps the latest waiting events.
+There is no automatic timeout that would start replacement uncancellable work.
+Delivery, completion callbacks and the final shutdown drain use the Runtime
+creation Zone, retaining Host logging context without capturing later invocation
+Zones. Each batch has the initial queue length as its write budget, including
+asynchronous success/error completions. Reentrant writes yield via a Timer once
+that budget is exhausted; remaining budget continues without a Timer per write.
+Shutdown attempts a final drain if idle, preserving synchronous shutdown logs;
+it stops at the first unfinished Future and releases all remaining waiting data
+without waiting for the in-flight write. Late completion/errors are absorbed without restarting work;
+the pending callback does not retain the Runtime. Host owns the Sink lifecycle,
+network cancellation and final flush. Reusing a Sink or rebuilding Runtimes
+requires Host cancellation; the bound is per Runtime, not global per Sink.
+If Runtime construction fails before returning an instance, its private delivery
+owner schedules a final drain and cleanup on the next event-loop turn. This
+preserves deferred synchronous failure logs while dropping the remainder at the
+first unfinished write. Construction errors propagate immediately; late Future
+success/errors cannot restart the discarded queue. No Sink is closed by Core.
+Keep synchronous work short because delivery uses the same isolate.
 
 The Runtime emits `componentGraph`, `componentRegistration`, and
 `runtimeInitialize` through the initialization diagnostic category. Their

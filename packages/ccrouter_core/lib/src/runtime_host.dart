@@ -122,6 +122,8 @@ final class CCRouterRuntime {
   /// Creates a Runtime with validated configuration and installed components.
   /// Global navigation interceptors are ordered by stable ID before navigation
   /// begins; component route interceptors are registered by their registrars.
+  /// Construction failure terminates diagnostic delivery after one deferred
+  /// best-effort final batch because no Runtime is returned for Host disposal.
   CCRouterRuntime._({
     this.traceCapacity = 1000,
     this.navigationDiagnosticCapacity = 1000,
@@ -160,8 +162,25 @@ final class CCRouterRuntime {
       );
     }
     _diagnosticPolicies = _validateDiagnosticPolicies(diagnostics);
-    _installComponents(components);
-    _applyServiceOverrides(serviceOverrides);
+    final diagnosticQueueCapacity =
+        diagnostics.queueCapacity ?? max(64, navigationDiagnosticCapacity);
+    if (diagnosticQueueCapacity <= 0) {
+      throw ArgumentError.value(
+        diagnosticQueueCapacity,
+        'diagnostics.queueCapacity',
+      );
+    }
+    _diagnosticDelivery = _DiagnosticDelivery(
+      sink: diagnostics.sink,
+      capacity: diagnosticQueueCapacity,
+    );
+    try {
+      _installComponents(components);
+      _applyServiceOverrides(serviceOverrides);
+    } on Object {
+      _diagnosticDelivery.closeDeferred();
+      rethrow;
+    }
   }
 
   /// Zone key carrying the current invocation and its parent trace.
@@ -314,17 +333,8 @@ final class CCRouterRuntime {
   late final Map<CCDiagnosticCategory, CCDiagnosticCategoryPolicy>
   _diagnosticPolicies;
 
-  /// FIFO of sanitized events waiting for the Host Sink.
-  final Queue<CCDiagnosticEvent> _diagnosticQueue = Queue();
-
-  /// Event-loop task draining the external diagnostic queue.
-  Timer? _diagnosticTimer;
-
-  /// Whether the diagnostic queue is currently being drained.
-  bool _drainingDiagnostics = false;
-
-  /// Whether new events may be queued for the external Sink.
-  bool _acceptingDiagnostics = true;
+  /// Independent delivery owner so unfinished Sink Futures retain no Runtime.
+  late final _DiagnosticDelivery _diagnosticDelivery;
 
   /// Pseudo-random source used only for non-critical diagnostic sampling.
   final Random _diagnosticRandom = Random();
@@ -475,6 +485,10 @@ final class CCRouterRuntime {
 
   /// Immutable snapshot of the bounded trace buffer.
   List<CCTraceRecord> get recentTraces => List.unmodifiable(_traces);
+
+  /// Payload-free external delivery state for capacity and slow-Sink diagnosis.
+  CCDiagnosticDeliverySnapshot get diagnosticDeliverySnapshot =>
+      _diagnosticDelivery.snapshot;
 
   /// Returns the retained invocation records for one trace identity.
   ///
@@ -2997,58 +3011,11 @@ final class CCRouterRuntime {
   }
 
   /// Queues one Sink event without blocking the framework operation.
-  void _enqueueDiagnostic(CCDiagnosticEvent event) {
-    if (!_acceptingDiagnostics || diagnostics.sink == null) return;
-    final capacity = max(64, navigationDiagnosticCapacity);
-    if (_diagnosticQueue.length >= capacity) _diagnosticQueue.removeFirst();
-    _diagnosticQueue.addLast(event);
-    if (_diagnosticTimer != null || _drainingDiagnostics) return;
-    _diagnosticTimer = Timer(Duration.zero, () {
-      _diagnosticTimer = null;
-      _drainDiagnostics();
-    });
-  }
+  void _enqueueDiagnostic(CCDiagnosticEvent event) =>
+      _diagnosticDelivery.enqueue(event);
 
-  /// Delivers queued Sink events while isolating Sink failures.
-  void _drainDiagnostics() {
-    if (_drainingDiagnostics) return;
-    _drainingDiagnostics = true;
-    final pending = <CCDiagnosticEvent>[];
-    while (_diagnosticQueue.isNotEmpty) {
-      pending.add(_diagnosticQueue.removeFirst());
-    }
-    try {
-      final sink = diagnostics.sink;
-      if (sink == null) return;
-      for (final event in pending) {
-        try {
-          final result = sink.record(event);
-          if (result is Future<void>) {
-            unawaited(result.catchError((_) {}));
-          }
-        } catch (_) {
-          // A diagnostic Sink is observational and must never affect Runtime.
-        }
-      }
-    } finally {
-      _drainingDiagnostics = false;
-      if (_diagnosticQueue.isNotEmpty && _acceptingDiagnostics) {
-        _diagnosticTimer ??= Timer(Duration.zero, () {
-          _diagnosticTimer = null;
-          _drainDiagnostics();
-        });
-      }
-    }
-  }
-
-  /// Stops Sink delivery and releases queued event closures during shutdown.
-  void _disposeDiagnostics() {
-    _acceptingDiagnostics = false;
-    _diagnosticTimer?.cancel();
-    _diagnosticTimer = null;
-    _drainDiagnostics();
-    _diagnosticQueue.clear();
-  }
+  /// Releases waiting diagnostics without awaiting an application-owned write.
+  void _disposeDiagnostics() => _diagnosticDelivery.close();
 
   /// Ensures capability registration has not been frozen or disposed.
   void _ensureConfigurable() {
