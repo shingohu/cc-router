@@ -25,6 +25,11 @@ the expression's return type, so ordinary factory functions cannot receive a
 constructor argument fix. Owner indexes retain distinct declaration libraries
 for same-name markers, while ambiguous parser-only lookups defer. Renderer
 annotations on nested functions are rejected even with an otherwise valid signature.
+Resolved `CCComponent` and `CCUIFragmentDependency` typedef constructors retain
+Owner diagnostics and Quick Fixes. Regenerate UI metadata for part declarations:
+`packageUri` retains the declaration location and `libraryUri` identifies its
+defining library. Legacy part metadata without library proof defers; malformed
+or foreign-package library identities never fall back to Package-only matching.
 
 Generator UI metadata records portable Contract, Renderer and consumer
 locations. Validated watch/Host one-shot snapshots can publish

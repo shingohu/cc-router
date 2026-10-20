@@ -607,13 +607,48 @@ final class CCRouterContractOwnerIndexCache {
               );
               if (!path.isWithin(path.join(sourceRoot, 'lib'), sourcePath))
                 continue;
+              final libraryValue = declaration['libraryUri'];
+              final libraryUri = !declaration.containsKey('libraryUri')
+                  ? uri
+                  : libraryValue is String
+                  ? Uri.tryParse(libraryValue)
+                  : null;
+              // Keep source locations separate from the defining library.
+              // Invalid explicit identity never falls back to Package + name.
+              if (libraryUri == null ||
+                  libraryUri.scheme != 'package' ||
+                  libraryUri.hasAuthority ||
+                  libraryUri.hasQuery ||
+                  libraryUri.hasFragment ||
+                  libraryUri.pathSegments.length < 2 ||
+                  libraryUri.pathSegments.first != contractPackage ||
+                  libraryUri.pathSegments.any(
+                    (segment) =>
+                        segment.isEmpty ||
+                        segment == '.' ||
+                        segment == '..' ||
+                        segment.contains('/') ||
+                        segment.contains(r'\'),
+                  ))
+                continue;
+              final libraryPath = path.normalize(
+                path.join(
+                  sourceRoot,
+                  'lib',
+                  path.joinAll(libraryUri.pathSegments.skip(1)),
+                ),
+              );
+              if (!path.isWithin(path.join(sourceRoot, 'lib'), libraryPath))
+                continue;
               watched.add(sourcePath);
+              watched.add(libraryPath);
               final item = _PendingContractOwner(
                 kind: CCRouterContractKind.uiFragment,
                 contractSymbol: declaration['symbol'] as String,
                 contractPackage: contractPackage,
                 componentId: ui['componentId'] as String,
                 contractSourcePath: sourcePath,
+                contractLibraryUri: libraryUri.toString(),
               );
               pending['uiFragment\u0000$contractPackage\u0000${item.contractSymbol}\u0000${item.componentId}\u0000$sourcePath'] =
                   item;
@@ -685,6 +720,7 @@ final class CCRouterContractOwnerIndexCache {
         componentId: item.componentId,
         componentIdSymbol: _componentIdSymbol(item),
         contractLibraryUri:
+            item.contractLibraryUri ??
             'package:${item.contractPackage}/${path.relative(item.contractSourcePath, from: path.join(roots[item.contractPackage]!, 'lib')).replaceAll(path.separator, '/')}',
       );
       final identity =
@@ -783,6 +819,7 @@ final class _PendingContractOwner {
     required this.contractPackage,
     required this.componentId,
     required this.contractSourcePath,
+    this.contractLibraryUri,
   });
 
   /// Contract capability kind.
@@ -797,6 +834,9 @@ final class _PendingContractOwner {
   /// Stable owner component value.
   final String componentId;
 
-  /// Exact Contract source path named by metadata.
+  /// Exact Contract source path named by metadata, including part files.
   final String contractSourcePath;
+
+  /// Defining library identity when metadata distinguishes it from the source.
+  final String? contractLibraryUri;
 }

@@ -181,6 +181,21 @@ abstract final class CCRouterResolvedSymbols {
     return found;
   }
 
+  /// Reads arguments only after proving the canonical framework constructor.
+  /// Resolved typedef aliases share the constructor identity of their target.
+  static ArgumentList? constructorArguments(
+    Expression expression,
+    String name,
+    String file,
+  ) {
+    if (!isFrameworkConstructor(expression, name, file)) return null;
+    return switch (expression) {
+      InstanceCreationExpression value => value.argumentList,
+      MethodInvocation value => value.argumentList,
+      _ => null,
+    };
+  }
+
   /// Finds unambiguous references already visible in this library.
   /// Local declarations shadow unprefixed imports; reused prefixes are checked
   /// across all imports, including show/hide and transitive export namespaces.

@@ -5,7 +5,7 @@
     "name": "demo_order_contracts",
     "version": "0.1.0"
   },
-  "contentFingerprint": "cca3899a7695dcd07aad42696a33b55ef859dfaebd139ad083c3fe89a06b1ea9",
+  "contentFingerprint": "878aa7b1dd564b9dcb28bf331b9d2f00746d8e038e1b406fdb4e2e648fecbeba",
   "bundle": null,
   "dependencies": [],
   "metadata": [
@@ -21,6 +21,7 @@
           "declaration": {
             "symbol": "OrderSummaryFragmentContract",
             "packageUri": "package:demo_order_contracts/src/order_fragments.dart",
+            "libraryUri": "package:demo_order_contracts/src/order_fragments.dart",
             "line": 19,
             "column": 22
           },
@@ -50,6 +51,7 @@
           "declaration": {
             "symbol": "OrderRecommendationsFragmentContract",
             "packageUri": "package:demo_order_contracts/src/order_fragments.dart",
+            "libraryUri": "package:demo_order_contracts/src/order_fragments.dart",
             "line": 33,
             "column": 22
           },

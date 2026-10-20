@@ -165,7 +165,13 @@ abstract final class CCRouterQuickFixes {
             offset > initializer.end) {
           continue;
         }
-        final arguments = _constructorArguments(initializer, 'CCComponent');
+        final arguments = unit.declaredFragment != null
+            ? CCRouterResolvedSymbols.constructorArguments(
+                initializer,
+                'CCComponent',
+                'component',
+              )
+            : _constructorArguments(initializer, 'CCComponent');
         if (arguments == null || arguments.rightParenthesis.isSynthetic) {
           return const [];
         }

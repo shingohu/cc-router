@@ -84,6 +84,10 @@ UI dependency checks prove the invoked framework constructor, not a function's
 return type. Owner metadata preserves declaration-library identity even when
 different libraries use the same marker name. Renderer functions must be at
 library scope; nested functions are diagnosed before Host generation.
+Resolved `CCComponent` / `CCUIFragmentDependency` typedef constructors retain
+Owner diagnostics and fixes. For contracts in `part` files, regenerate metadata:
+`packageUri` locates the declaration and `libraryUri` proves the defining library.
+Old part metadata without that proof defers; never match by Package + name alone.
 
 For live IDE boundary feedback, use the optional `ccrouter_analyzer_plugin`.
 It reports deterministic source diagnostics and uses the current Analysis Server

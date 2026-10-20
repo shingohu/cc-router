@@ -597,15 +597,17 @@ final class _UIFragmentBuilder implements Builder {
 }
 
 /// Encodes authored identity and position without checkout-specific paths.
+/// A part supplies the source position; its defining library supplies identity.
 Map<String, Object?> _sourceReference(Element element) {
   final fragment = element.firstFragment;
-  final library = fragment.libraryFragment!;
-  final location = library.lineInfo.getLocation(
+  final sourceFragment = fragment.libraryFragment!;
+  final location = sourceFragment.lineInfo.getLocation(
     fragment.nameOffset ?? fragment.offset,
   );
   return {
     'symbol': element.displayName,
-    'packageUri': library.source.uri.toString(),
+    'packageUri': sourceFragment.source.uri.toString(),
+    'libraryUri': element.library!.uri.toString(),
     'line': location.lineNumber,
     'column': location.columnNumber,
   };

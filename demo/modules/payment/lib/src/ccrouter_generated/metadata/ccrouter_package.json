@@ -5,7 +5,7 @@
     "name": "demo_payment",
     "version": "0.1.0"
   },
-  "contentFingerprint": "53ece294a050343528df2500e28df38cafc2f7246e0dc578215a2b2accc4322a",
+  "contentFingerprint": "085a37d8e2341a7f2fad857814bab791a2d18073f33ad8eeb35956c7ba715a3b",
   "bundle": {
     "library": "lib/src/ccrouter_generated/host/demo_payment_ccrouter.g.dart",
     "symbol": "ccrouterGeneratedPackageBundle"
@@ -14,7 +14,7 @@
     {
       "name": "demo_order_contracts",
       "version": "0.1.0",
-      "contentFingerprint": "cca3899a7695dcd07aad42696a33b55ef859dfaebd139ad083c3fe89a06b1ea9"
+      "contentFingerprint": "878aa7b1dd564b9dcb28bf331b9d2f00746d8e038e1b406fdb4e2e648fecbeba"
     }
   ],
   "metadata": [

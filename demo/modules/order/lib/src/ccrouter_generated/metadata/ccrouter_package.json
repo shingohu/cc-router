@@ -5,7 +5,7 @@
     "name": "demo_order",
     "version": "0.1.0"
   },
-  "contentFingerprint": "b67d94bfae12393fb9943a3eb3c1127c56bd665020e839953c4f8ed13df70768",
+  "contentFingerprint": "a5e898938d9bcee9bfb067956a92475e36acf7812152c24edcc0f5b58c989617",
   "bundle": {
     "library": "lib/src/ccrouter_generated/host/demo_order_ccrouter.g.dart",
     "symbol": "ccrouterGeneratedPackageBundle"
@@ -19,7 +19,7 @@
     {
       "name": "demo_order_contracts",
       "version": "0.1.0",
-      "contentFingerprint": "cca3899a7695dcd07aad42696a33b55ef859dfaebd139ad083c3fe89a06b1ea9"
+      "contentFingerprint": "878aa7b1dd564b9dcb28bf331b9d2f00746d8e038e1b406fdb4e2e648fecbeba"
     }
   ],
   "metadata": [
@@ -36,6 +36,7 @@
           "declaration": {
             "symbol": "OrderSummaryFragmentContract",
             "packageUri": "package:demo_order_contracts/src/order_fragments.dart",
+            "libraryUri": "package:demo_order_contracts/src/order_fragments.dart",
             "line": 19,
             "column": 22
           },
@@ -64,6 +65,7 @@
           "implementation": {
             "symbol": "renderOrderSummary",
             "packageUri": "package:demo_order/src/order_fragment_renderers.dart",
+            "libraryUri": "package:demo_order/src/order_fragment_renderers.dart",
             "line": 8,
             "column": 8
           }
@@ -72,6 +74,7 @@
           "declaration": {
             "symbol": "OrderRecommendationsFragmentContract",
             "packageUri": "package:demo_order_contracts/src/order_fragments.dart",
+            "libraryUri": "package:demo_order_contracts/src/order_fragments.dart",
             "line": 33,
             "column": 22
           },
@@ -100,6 +103,7 @@
           "implementation": {
             "symbol": "renderOrderRecommendations",
             "packageUri": "package:demo_order/src/order_fragment_renderers.dart",
+            "libraryUri": "package:demo_order/src/order_fragment_renderers.dart",
             "line": 18,
             "column": 8
           }

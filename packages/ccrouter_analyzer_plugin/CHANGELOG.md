@@ -2,6 +2,10 @@
 
 ## 0.1.0 - Unreleased
 
+- Restore missing UI Owner diagnostics and Quick Fixes for resolved typedef
+  constructors; distinguish part source locations from defining-library identity
+  in regenerated UI metadata without weakening exact Contract matching.
+
 - Fix UI constructor identity checks so ordinary factory functions cannot receive
   invalid dependency fixes; preserve same-name Contract Owners in separate
   libraries and reject nested Renderer functions.

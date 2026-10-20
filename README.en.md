@@ -110,6 +110,9 @@ UI dependency checks require an actual framework constructor; ordinary functions
 returning the same type do not trigger those checks or fixes. Owners retain their
 declaration library and symbol identity. Renderers must be library-level functions,
 not functions nested inside another function or method.
+Resolved typedef constructors for `CCComponent` and `CCUIFragmentDependency`
+support the same Owner checks and fixes. Regenerate metadata for contracts in
+`part` files to record source locations separately from defining-library identity.
 
 ### IDE / Analysis Server Diagnostics
 

@@ -2,6 +2,9 @@
 
 ## 0.1.0 - Unreleased
 
+- Record defining-library identity separately from source locations in UI
+  metadata so part-declared Contracts retain exact Analyzer Owner matching.
+
 - Added opt-in typed UI Fragment generation, consumer Client barrels, static
   Renderer/Host assembly validation, and portable output support. Reject enhanced
   enums and unsupported DTO constructors; fingerprint effective field defaults.

@@ -394,10 +394,37 @@ const component = CCComponent(id: CCComponentId('account'), version: '1.0.0',
           location['packageUri'],
           'package:ccrouter_test/src/ui_probe.dart',
         );
+        expect(
+          location['libraryUri'],
+          'package:ccrouter_test/src/ui_probe.dart',
+        );
         expect(location['symbol'], symbol);
         expect(location['line'], greaterThan(1));
         expect(location['column'], greaterThan(0));
       }
+    },
+  );
+  test(
+    'part UI metadata separates source location from library identity',
+    () async {
+      final declarations = _source.substring(_source.indexOf('const owner'));
+      final result = await _generate(
+        "import 'package:ccrouter/ccrouter.dart';\n"
+        "import 'package:ccrouter_ui/ccrouter_ui.dart';\n"
+        "import 'package:flutter/widgets.dart';\n"
+        "part 'ui_part.dart';",
+        additionalSources: {
+          'ccrouter_test|lib/src/ui_part.dart':
+              "part of 'ui_probe.dart';\n$declarations",
+        },
+      );
+      expect(result.output, isNotEmpty, reason: result.logs);
+      final location =
+          (jsonDecode(result.output) as Map)['uiContracts'][0]['declaration'];
+      expect(location['packageUri'], 'package:ccrouter_test/src/ui_part.dart');
+      expect(location['libraryUri'], 'package:ccrouter_test/src/ui_probe.dart');
+      expect(location['line'], 9);
+      expect(location['column'], greaterThan(0));
     },
   );
   test('UI workspace diagnostics preserve portable consumer location', () {

@@ -62,18 +62,15 @@ abstract final class CCRouterComponentDependencyAnalyzer {
     for (final declaration
         in unit.declarations.whereType<TopLevelVariableDeclaration>()) {
       for (final variable in declaration.variables.variables) {
-        final arguments = _constructorArguments(
-          variable.initializer,
-          'CCComponent',
-        );
+        final initializer = variable.initializer;
+        final arguments = unit.declaredFragment != null && initializer != null
+            ? CCRouterResolvedSymbols.constructorArguments(
+                initializer,
+                'CCComponent',
+                'component',
+              )?.arguments
+            : _constructorArguments(initializer, 'CCComponent');
         if (arguments == null) continue;
-        if (unit.declaredFragment != null &&
-            !CCRouterResolvedSymbols.isFrameworkConstructor(
-              variable.initializer!,
-              'CCComponent',
-              'component',
-            ))
-          continue;
         final dependencies = _namedArgument(arguments, 'dependencies');
         if (dependencies != null && dependencies is! ListLiteral) {
           continue;
@@ -295,6 +292,18 @@ abstract final class CCRouterComponentDependencyAnalyzer {
           'ui_fragment',
         ))
       return null;
+    // Resolved constructor aliases may rename or bind the type parameters.
+    // Read the instantiated dependency type after canonical constructor proof.
+    if (kind == CCRouterContractKind.uiFragment &&
+        expression.thisOrAncestorOfType<CompilationUnit>()?.declaredFragment !=
+            null) {
+      final dependency = expression.staticType;
+      if (dependency is! InterfaceType || dependency.typeArguments.length != 1)
+        return null;
+      final contract = dependency.typeArguments.single;
+      if (contract is! InterfaceType) return null;
+      return (contract.element.name ?? '', null, contract);
+    }
     final typeArguments = switch (expression) {
       InstanceCreationExpression value
           when value.constructorName.type.name.lexeme == expected =>

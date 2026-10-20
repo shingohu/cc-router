@@ -5,7 +5,7 @@
     "name": "demo_navigation_lab",
     "version": "0.1.0"
   },
-  "contentFingerprint": "6c4dc104739ffb0f48403cbd18ba132a494becf9ac717087ee268f50d3c6397b",
+  "contentFingerprint": "c8245d816829da0b9105d9e6b798f3034cb0c1028a12d9651a84c836bfea43a2",
   "bundle": {
     "library": "lib/src/ccrouter_generated/host/demo_navigation_lab_ccrouter.g.dart",
     "symbol": "ccrouterGeneratedPackageBundle"
@@ -39,7 +39,7 @@
     {
       "name": "demo_order_contracts",
       "version": "0.1.0",
-      "contentFingerprint": "cca3899a7695dcd07aad42696a33b55ef859dfaebd139ad083c3fe89a06b1ea9"
+      "contentFingerprint": "878aa7b1dd564b9dcb28bf331b9d2f00746d8e038e1b406fdb4e2e648fecbeba"
     },
     {
       "name": "demo_web_contracts",
@@ -62,6 +62,7 @@
           "declaration": {
             "symbol": "OrderSummaryFragmentContract",
             "packageUri": "package:demo_order_contracts/src/order_fragments.dart",
+            "libraryUri": "package:demo_order_contracts/src/order_fragments.dart",
             "line": 19,
             "column": 22
           },
@@ -89,6 +90,7 @@
           "consumerDeclaration": {
             "symbol": "demoNavigationLabComponent",
             "packageUri": "package:demo_navigation_lab/src/navigation_lab_component.dart",
+            "libraryUri": "package:demo_navigation_lab/src/navigation_lab_component.dart",
             "line": 12,
             "column": 7
           },
@@ -99,6 +101,7 @@
           "declaration": {
             "symbol": "OrderRecommendationsFragmentContract",
             "packageUri": "package:demo_order_contracts/src/order_fragments.dart",
+            "libraryUri": "package:demo_order_contracts/src/order_fragments.dart",
             "line": 33,
             "column": 22
           },
@@ -126,6 +129,7 @@
           "consumerDeclaration": {
             "symbol": "demoNavigationLabComponent",
             "packageUri": "package:demo_navigation_lab/src/navigation_lab_component.dart",
+            "libraryUri": "package:demo_navigation_lab/src/navigation_lab_component.dart",
             "line": 12,
             "column": 7
           },

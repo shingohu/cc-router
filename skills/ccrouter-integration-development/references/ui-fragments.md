@@ -147,6 +147,13 @@ The Owner must also appear in required `dependencies`; optional owners cannot
 satisfy this edge. Aliases and contract edges must be unique. The generated
 Client name is the PascalCase full component ID plus `Fragments`.
 
+The Analyzer Owner diagnostic and imported-constant Quick Fix also support
+resolved typedef constructors for `CCComponent` and `CCUIFragmentDependency`.
+For a Contract declared in a `part` file, regenerate metadata with the updated
+Generator: declaration `packageUri` keeps the part location, while `libraryUri`
+records the defining library for exact type matching. Older part metadata defers
+until regeneration; a shared Package and marker name alone cannot prove identity.
+
 ## Rendering and consuming
 
 The Owner implementation directly depends on `ccrouter_ui` and declares a public

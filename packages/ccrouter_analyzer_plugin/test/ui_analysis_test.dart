@@ -518,6 +518,88 @@ const component = CCComponent(id: CCComponentId('consumer'), version: '1.0.0',
       );
     },
   );
+  for (final variant in ['componentAlias', 'dependencyAlias', 'bothAliases']) {
+    test('UI Owner fix round-trips with $variant', () async {
+      final component = variant == 'dependencyAlias'
+          ? 'CCComponent'
+          : 'Component';
+      final dependency = variant == 'componentAlias'
+          ? 'CCUIFragmentDependency'
+          : 'Dependency';
+      final result = await fixture.resolve('''
+$_imports
+import 'package:owner_contracts/owner_contracts.dart';
+typedef Component = CCComponent;
+typedef Dependency<T extends Object> = CCUIFragmentDependency<T>;
+const component = $component(id: CCComponentId('consumer'), version: '1.0.0',
+  uiDependencies: [$dependency<OrderFragment>(alias: 'card', versionRange: '*')]);
+''');
+      final owners = CCRouterContractOwnerIndexCache().resolve(fixture.file);
+      await _expectOwnerFix(fixture, result, owners);
+    });
+  }
+  for (final libraryUri in <Object?>[
+    'package:owner_contracts/contract.dart',
+    null,
+    'package:consumer/contract.dart',
+    'package:owner_contracts/../contract.dart',
+    'package:owner_contracts/contract.dart?invalid',
+    'not a package URI',
+    123,
+  ]) {
+    test('part UI Owner validates library identity $libraryUri', () async {
+      final original = File(
+        p.join(fixture.root.path, 'owner/lib/contract.dart'),
+      ).readAsStringSync();
+      fixture.write(
+        'owner/lib/marker.dart',
+        "part of 'contract.dart';\n${original.replaceFirst(_imports, '')}",
+      );
+      fixture.write(
+        'owner/lib/contract.dart',
+        "$_imports\npart 'marker.dart';",
+      );
+      final metadataFile = File(
+        p.join(
+          fixture.root.path,
+          'owner/lib/src/ccrouter_generated/metadata/ccrouter_package.json',
+        ),
+      );
+      final metadata = jsonDecode(metadataFile.readAsStringSync()) as Map;
+      final declaration =
+          metadata['metadata'][0]['uiContracts'][0]['declaration'] as Map;
+      declaration['packageUri'] = 'package:owner_contracts/marker.dart';
+      if (libraryUri != null) declaration['libraryUri'] = libraryUri;
+      metadataFile.writeAsStringSync(jsonEncode(metadata));
+      final result = await fixture.resolve('''
+$_imports
+import 'package:owner_contracts/owner_contracts.dart';
+const component = CCComponent(id: CCComponentId('consumer'), version: '1.0.0',
+  uiDependencies: [CCUIFragmentDependency<OrderFragment>(alias: 'card', versionRange: '*')]);
+''');
+      expect(result.diagnostics, isEmpty);
+      final owners = CCRouterContractOwnerIndexCache().resolve(fixture.file);
+      if (libraryUri == 'package:owner_contracts/contract.dart') {
+        await _expectOwnerFix(fixture, result, owners);
+      } else {
+        expect(fixture.issues(result, owners: owners), isEmpty);
+        if (libraryUri != null) {
+          expect(
+            owners.resolve(
+              kind: CCRouterContractKind.uiFragment,
+              contractSymbol: 'OrderFragment',
+              prefix: null,
+              importPrefixes: {
+                '': {'owner_contracts'},
+              },
+              sourcePackage: 'consumer',
+            ),
+            isNull,
+          );
+        }
+      }
+    });
+  }
   for (final inMethod in [false, true]) {
     test(
       'nested Renderer in ${inMethod ? 'method' : 'function'} is rejected',
@@ -540,6 +622,38 @@ ${inMethod ? '}' : ''}
       },
     );
   }
+}
+
+Future<void> _expectOwnerFix(
+  _UIFixture fixture,
+  ResolvedUnitResult result,
+  CCRouterContractOwnerIndex owners,
+) async {
+  expect(result.diagnostics, isEmpty);
+  final issue = fixture
+      .issues(result, owners: owners)
+      .singleWhere(
+        (d) => d.code == 'ccrouter_component_owner_dependency_missing',
+      );
+  final fix = CCRouterQuickFixes.compute(
+    source: result.content,
+    filePath: fixture.file,
+    offset: issue.offset,
+    diagnosticCode: issue.code,
+    sourcePackage: 'consumer',
+    contractOwners: owners,
+    resolvedUnit: result.unit,
+  ).single;
+  expect(fix.replacement, contains('orderOwner'));
+  final fixed = await fixture.resolve(
+    result.content.replaceRange(
+      fix.offset,
+      fix.offset + fix.length,
+      fix.replacement,
+    ),
+  );
+  expect(fixed.diagnostics, isEmpty);
+  expect(fixture.issues(fixed, owners: owners), isEmpty);
 }
 
 String _consumer(String dependencies, {String extra = ''}) =>
