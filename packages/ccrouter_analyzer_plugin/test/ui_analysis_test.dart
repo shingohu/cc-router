@@ -69,10 +69,14 @@ CCUIFragmentDependency<Summary>(alias: 'card', versionRange: 'latest')
     );
   });
   test(
-    'data-bearing and enhanced Action types have explicit v1 diagnostics',
+    'invalid DTO and enhanced Action types have explicit diagnostics',
     () async {
       for (final action in [
-        'final class Action { const Action(this.id); final int id; }',
+        'class Action { const Action(this.id); final int id; }',
+        'final class Action { const Action(this.id); final Object id; }',
+        'final class Action { const Action(this.id); final List<int> id; }',
+        'final class Action { Action(this.id); final int id; }',
+        'sealed class Action { const Action(); }',
         'enum Action { select; String get label => "x"; }',
         'enum Action { select; static const label = "x"; }',
         'enum Action { select; const Action(); }',
@@ -82,6 +86,22 @@ CCUIFragmentDependency<Summary>(alias: 'card', versionRange: 'latest')
         );
         expect(fixture.codes(result), contains('ccrouter_ui_action_invalid'));
       }
+    },
+  );
+  test(
+    'immutable DTO Action and nested enum/DTO fields are accepted',
+    () async {
+      final result = await fixture.resolve(
+        '$_imports${_contract.replaceFirst('enum Action { select }', '''
+final class Action { const Action(this.id, this.detail); final String id; final Detail? detail; }
+final class Detail { const Detail(this.kind); final Kind kind; }
+enum Kind { recommendation, device }
+''')}',
+      );
+      expect(
+        fixture.codes(result),
+        isNot(contains('ccrouter_ui_action_invalid')),
+      );
     },
   );
   test(
@@ -253,6 +273,17 @@ const component = CCComponent(id: CCComponentId('consumer'), version: '1.0.0',
       'owner/lib/src/ccrouter_generated/metadata/ccrouter_package.json',
     );
     final metadata = jsonDecode(File(metadataPath).readAsStringSync());
+    metadata['schemaVersion'] = 4;
+    metadata['metadata'][0]['uiSchemaVersion'] = 2;
+    metadata['metadata'][0]['uiContracts'][0]['uiSchemaVersion'] = 2;
+    File(metadataPath).writeAsStringSync(jsonEncode(metadata));
+    cache.invalidate(metadataPath);
+    expect(
+      fixture
+          .issues(result, owners: cache.resolve(fixture.file))
+          .map((d) => d.code),
+      contains('ccrouter_component_owner_dependency_missing'),
+    );
     metadata['metadata'][0]['uiContracts'][0].remove('declaration');
     File(metadataPath).writeAsStringSync(jsonEncode(metadata));
     cache.invalidate(metadataPath);

@@ -16,7 +16,7 @@ typedef _Issue = ({
   String correction,
 });
 
-/// Read-only UI v1 checks; schema and Host closure remain Generator-owned.
+/// Read-only UI declaration checks; schema and Host closure remain Generator-owned.
 abstract final class CCRouterUIFragmentAnalysis {
   /// Examines authored declarations without starting sessions or generation.
   static List<_Issue> issues({
@@ -84,25 +84,12 @@ abstract final class CCRouterUIFragmentAnalysis {
         if (type is! InterfaceType || type.typeArguments.length != 2) continue;
         final action = type.typeArguments[1];
         if (_unknown(action)) continue;
-        final element = action is InterfaceType ? action.element : null;
-        if (element is! EnumElement ||
-            element.isPrivate ||
-            !element.library.uri.toString().startsWith('package:') ||
-            element.library.uri.toString().startsWith('package:flutter/') ||
-            element.mixins.isNotEmpty ||
-            element.interfaces.isNotEmpty ||
-            element.fields.any(
-              (f) => !f.isSynthetic && !f.isEnumConstant && f.name != 'values',
-            ) ||
-            element.getters.any((f) => !f.isSynthetic) ||
-            element.setters.any((f) => !f.isSynthetic) ||
-            element.methods.any((f) => !f.isSynthetic) ||
-            element.constructors.any((f) => !f.isSynthetic)) {
+        if (_invalidAction(action)) {
           add(
             annotation,
             'action_invalid',
-            'UI v1 requires a public plain enum Action without payload or authored members.',
-            'Use a plain enum; keep dynamic payload handling within the Owner component.',
+            'UI Action requires a public plain enum or immutable final DTO.',
+            'Use const generative constructors and public final stored scalar, plain enum or DTO fields; collections, behavior and sealed unions are unsupported. Regenerate with a UI schema 2 compatible Generator for DTO Actions.',
           );
         }
       } else if (name == 'CCUIFragmentRenderer') {
@@ -249,6 +236,70 @@ abstract final class CCRouterUIFragmentAnalysis {
       }
     }
     return issues;
+  }
+
+  /// Rejects proven non-data Action shapes; unresolved fields defer to generation.
+  /// Full constructor/default fingerprinting and public exports remain Generator-owned.
+  static bool _invalidAction(
+    DartType type, [
+    Set<InterfaceElement>? ancestors,
+  ]) {
+    if (_unknown(type)) return false;
+    if (type is! InterfaceType || type.typeArguments.isNotEmpty) return true;
+    final element = type.element;
+    final uri = element.library.uri.toString();
+    if (element.isPrivate ||
+        !uri.startsWith('package:') ||
+        uri.startsWith('package:flutter/'))
+      return true;
+    if (element is EnumElement) {
+      return element.mixins.isNotEmpty ||
+          element.interfaces.isNotEmpty ||
+          element.fields.any(
+            (f) => !f.isSynthetic && !f.isEnumConstant && f.name != 'values',
+          ) ||
+          element.getters.any((f) => !f.isSynthetic) ||
+          element.setters.any((f) => !f.isSynthetic) ||
+          element.methods.any((f) => !f.isSynthetic) ||
+          element.constructors.any((f) => !f.isSynthetic);
+    }
+    if (element is! ClassElement ||
+        !element.isFinal ||
+        const [
+          'package:ccrouter/',
+          'package:ccrouter_core/',
+          'package:ccrouter_contracts/',
+          'package:ccrouter_ui/',
+        ].any(uri.startsWith) ||
+        element.supertype?.element.name != 'Object' ||
+        element.mixins.isNotEmpty ||
+        element.interfaces.isNotEmpty ||
+        element.methods.isNotEmpty ||
+        element.getters.any((f) => !f.isSynthetic) ||
+        element.setters.any((f) => !f.isSynthetic) ||
+        element.constructors.isEmpty ||
+        element.constructors.any((c) => !c.isConst || c.isFactory))
+      return true;
+    final stack = ancestors ?? <InterfaceElement>{};
+    if (!stack.add(element)) return true;
+    for (final field in element.fields.where((f) => !f.isStatic)) {
+      if (!field.isFinal || field.isPrivate || field.isSynthetic) return true;
+      final fieldType = field.type;
+      if (_unknown(fieldType)) continue;
+      if (fieldType is InterfaceType &&
+          fieldType.element.library.uri.toString() == 'dart:core' &&
+          const {
+            'String',
+            'bool',
+            'int',
+            'double',
+            'num',
+          }.contains(fieldType.element.name))
+        continue;
+      if (_invalidAction(fieldType, stack)) return true;
+    }
+    stack.remove(element);
+    return false;
   }
 
   /// Unknown semantic evidence is deferred while an editor buffer is incomplete.

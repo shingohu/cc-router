@@ -145,6 +145,54 @@ void main() {
     timeout: const Timeout(Duration(minutes: 2)),
   );
 
+  test(
+    'real LSP accepts DTO Action after editor shape repair',
+    () async {
+      const file = 'lib/src/payload.dart';
+      const source = '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
+import 'package:ccrouter_contracts/ccrouter_ui_contracts.dart';
+final class Props { const Props(); }
+class Selection { const Selection(this.id); final String id; }
+@CCUIFragmentContract<Props, Selection>(componentId: CCComponentId('orders'), id: 'selection', version: '2.0.0')
+abstract final class Marker {}
+''';
+      final server = await AnalysisServerSession.start({
+        file: source,
+      }, lsp: true);
+      addTearDown(server.close);
+      final uri = Uri.file(server.path(file)).toString();
+      server.notify('textDocument/didOpen', {
+        'textDocument': {
+          'uri': uri,
+          'languageId': 'dart',
+          'version': 1,
+          'text': source,
+        },
+      });
+      const code = 'ccrouter_ui_action_invalid';
+      await server.waitFor(file, (errors) => _has(errors, code));
+      final revision = server.revisions[server.path(file)]!;
+      server.notify('textDocument/didChange', {
+        'textDocument': {'uri': uri, 'version': 2},
+        'contentChanges': [
+          {
+            'text': source.replaceFirst(
+              'class Selection',
+              'final class Selection',
+            ),
+          },
+        ],
+      });
+      await server.waitFor(
+        file,
+        (errors) => !_has(errors, code),
+        after: revision,
+      );
+    },
+    timeout: const Timeout(Duration(minutes: 2)),
+  );
+
   for (final (lsp, bridgeCode) in [
     (false, 'ccrouter_host_component_owner_missing'),
     (true, 'ccrouter_host_component_owner_missing'),

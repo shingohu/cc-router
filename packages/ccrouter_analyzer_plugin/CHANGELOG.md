@@ -2,6 +2,10 @@
 
 ## 0.1.0 - Unreleased
 
+- Accept immutable final DTO UI Actions, reject proven non-data/behavioral shapes,
+  and preserve required UI Owner checks for mixed UI schema 2 metadata.
+  Full constructor/default schema and export validation remain Generator-owned.
+
 - Restore missing UI Owner diagnostics and Quick Fixes for resolved typedef
   constructors; distinguish part source locations from defining-library identity
   in regenerated UI metadata without weakening exact Contract matching.
