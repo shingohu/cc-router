@@ -111,12 +111,15 @@ jobs:
           cache: true
       - name: Resolve Workspace dependencies
         run: CCROUTER_PUB_HOOK_DISABLE=1 flutter pub get
+      - name: Verify uncached generated output for every Demo Host
+        run: |
+          dart packages/ccrouter_generator/bin/ccrouter_generator.dart generate demo --no-cache --check
+          dart packages/ccrouter_generator/bin/ccrouter_generator.dart generate demo/modules/order/example --no-cache --check
       - name: Test Demo
         run: flutter test --no-pub demo
-      - name: Verify uncached generated output
-        run: >-
-          dart packages/ccrouter_generator/bin/ccrouter_generator.dart
-          generate demo --no-cache --check
+      - name: Test independent Order Example
+        working-directory: demo/modules/order/example
+        run: flutter test --no-pub test
 
   performance:
     name: Performance advisory

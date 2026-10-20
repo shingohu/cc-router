@@ -9,6 +9,76 @@ import 'package:path/path.dart' as path;
 import 'package:test/test.dart';
 
 void main() {
+  test(
+    'find ignores legacy framework indexes without changing files',
+    () async {
+      final root = Directory.systemTemp.createTempSync(
+        'ccrouter_find_framework_',
+      );
+      addTearDown(() => root.deleteSync(recursive: true));
+      final framework = Directory(path.join(root.path, 'framework'))
+        ..createSync();
+      final packages = {'find_host': root, 'ccrouter_ui': framework};
+      for (final entry in packages.entries) {
+        File(
+          path.join(entry.value.path, 'pubspec.yaml'),
+        ).writeAsStringSync('name: ${entry.key}\n');
+      }
+      final tool = Directory(path.join(root.path, '.dart_tool'))..createSync();
+      File(path.join(tool.path, 'package_graph.json')).writeAsStringSync(
+        jsonEncode({
+          'packages': [
+            for (final name in packages.keys)
+              {
+                'name': name,
+                'version': '1.0.0',
+                'dependencies': name == 'find_host' ? ['ccrouter_ui'] : [],
+                'devDependencies': [],
+              },
+          ],
+        }),
+      );
+      File(path.join(tool.path, 'package_config.json')).writeAsStringSync(
+        jsonEncode({
+          'configVersion': 2,
+          'packages': [
+            for (final entry in packages.entries)
+              {
+                'name': entry.key,
+                'rootUri': entry.value.uri.toString(),
+                'packageUri': 'lib/',
+                'languageVersion': '3.8',
+              },
+          ],
+        }),
+      );
+      final hostIndex = _writeIndex(root, 'find_host');
+      _writeIndex(framework, 'ccrouter_ui');
+      final legacy = File(
+        path.join(
+          framework.path,
+          'lib/src/ccrouter_generated/metadata/ccrouter_package.json',
+        ),
+      );
+      for (final contents in [legacy.readAsStringSync(), '{obsolete index']) {
+        legacy.writeAsStringSync(contents);
+        final result = await _find(['anything', root.path]);
+        expect(result.exitCode, 1);
+        expect('${result.stderr}', contains('No capability matched'));
+        expect(legacy.readAsStringSync(), contents);
+        expect(
+          File(
+            path.join(
+              root.path,
+              'lib/src/ccrouter_generated/metadata/ccrouter_package.json',
+            ),
+          ).readAsStringSync(),
+          hostIndex.toJson(),
+        );
+      }
+    },
+  );
+
   test('find merges contract and page sources across Package indexes', () async {
     final result = await _find(['order.detail', 'demo']);
     expect(result.exitCode, 0, reason: '${result.stderr}');

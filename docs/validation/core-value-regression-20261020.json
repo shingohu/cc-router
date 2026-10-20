@@ -1,0 +1,987 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-20",
+  "reviewHead": "672d0571a550aaa344f7a9b289464a5a1de2457c",
+  "range": "ee83979..672d057",
+  "commitsReviewed": 10,
+  "environment": {
+    "host": "macOS",
+    "flutter": "3.41.10-ohos-1.0.0",
+    "flutterRevision": "62357a93d6",
+    "dart": "3.11.5",
+    "standardFlutterRetested": false
+  },
+  "findings": [
+    {
+      "id": "R01",
+      "priority": 2,
+      "path": "demo/modules/order/example/lib/src/ccrouter_generated/metadata/ccrouter_package.json",
+      "line": 17,
+      "status": "open",
+      "introducedBy": "1e35b42",
+      "description": "Independent Example Host retains pre-1e35b42 dependency content fingerprints. The main Demo Host freshness check does not cover this independent Host."
+    },
+    {
+      "id": "R02",
+      "priority": 2,
+      "path": "packages/ccrouter_generator/lib/src/package_workspace.dart",
+      "line": 136,
+      "status": "open",
+      "introducedBy": "672d057",
+      "description": "ccrouter_ui is now a framework package, but its obsolete empty Package Index remains tracked and participates in dependency fingerprints. With all other artifacts restored to HEAD, missing legacy UI index makes full-reference Demo check fail for six files / 11 packages; restoring only the legacy index makes the check pass / 12 packages."
+    },
+    {
+      "id": "R03",
+      "priority": 3,
+      "path": "skills/ccrouter-cli-development/SKILL.md",
+      "line": 493,
+      "status": "open",
+      "description": "Generated Output Rules still prescribe UI schema 1 / Package Index 3 for all UI artifacts; DTO Actions require UI schema 2 / Package Index 4."
+    }
+  ],
+  "newFrameworkRuntimeAlgorithmDefects": [],
+  "highConfidenceLifecycleLeaks": [],
+  "executions": [
+    {
+      "id": "framework",
+      "command": "fvm flutter test packages/ccrouter_test/test",
+      "workingDirectory": ".",
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "rawLogSha256": "057de6020ae44bd6b19153f67197d919019c9eff0acc2959d6b7055479ea83c8",
+      "passed": 566,
+      "skipped": 0,
+      "failed": 0
+    },
+    {
+      "id": "generator",
+      "command": "fvm dart test --concurrency=1 packages/ccrouter_test/generator_test",
+      "workingDirectory": ".",
+      "exitCode": 1,
+      "expectedExitCode": 0,
+      "rawLogSha256": "903390c240c9722fb55dc9c642dbaf1cff5ed9d59dcf10e289c74c35146f8376",
+      "passed": 642,
+      "skipped": 1,
+      "failed": 1,
+      "knownFailure": {
+        "test": "builder_dependency_scope_test.dart: route_contracts resolves transitive cross-package inputs and constants",
+        "error": "TimeoutException after 0:00:30.000000",
+        "retry": "generator_timeout_retry",
+        "interpretation": "Initial full run remains failed. A focused retry with 2m limit passed in 11s; cause of the initial timeout is not proven."
+      }
+    },
+    {
+      "id": "generator_timeout_retry",
+      "command": "fvm dart test --concurrency=1 --timeout=2m packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart --name '^route_contracts resolves transitive cross-package inputs and constants$'",
+      "workingDirectory": ".",
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "rawLogSha256": "f42768ee5f12157b7a82d3c9f6563882ad5fef6af57067d9ebbdbd0c0cc2d1e7",
+      "passed": 1,
+      "skipped": 0,
+      "failed": 0
+    },
+    {
+      "id": "workspace_analyze",
+      "command": "fvm dart analyze",
+      "workingDirectory": ".",
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "rawLogSha256": "2376dbfa658ee9e627d32a2c9b545aa2a1fed655ef2fafe43d283229e1c7d8d3"
+    },
+    {
+      "id": "plugin_analyze",
+      "command": "fvm dart analyze",
+      "workingDirectory": "packages/ccrouter_analyzer_plugin",
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "rawLogSha256": "10f11a564b4f3e642bfca187a8a97602b30e2415d7ea459254368c16508feb53"
+    },
+    {
+      "id": "plugin_tests",
+      "command": "fvm dart test",
+      "workingDirectory": "packages/ccrouter_analyzer_plugin",
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "rawLogSha256": "6c992197fafdea8e4a6a7ad82fa17fa525ded4c86644b70cff5b677ee715f957",
+      "passed": 173,
+      "skipped": 0,
+      "failed": 0
+    },
+    {
+      "id": "demo_tests",
+      "command": "fvm flutter test test",
+      "workingDirectory": "demo",
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "rawLogSha256": "4bec23e574fb357a8fa24313fd4cd56fad9d404391b58ca438cce5ccc9fbbc14",
+      "passed": 62,
+      "skipped": 0,
+      "failed": 0
+    },
+    {
+      "id": "demo_reference",
+      "command": "fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo --no-cache --check",
+      "workingDirectory": ".",
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "rawLogSha256": "c537b125e9d9dd384763d4d51bf854548a717f9deb6233caee87d71450409610"
+    },
+    {
+      "id": "demo_cached",
+      "command": "fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo --check",
+      "workingDirectory": ".",
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "rawLogSha256": "470e6b5dc2f0011e619c084f880d01d6279e13365d130c58a82239ce4a7e609c"
+    },
+    {
+      "id": "plugin_pin",
+      "command": "fvm dart run --verbosity=error ccrouter_generator:ccrouter analyzer pin-check demo",
+      "workingDirectory": ".",
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "rawLogSha256": "f14b388bbe354ddd7abc96692403978d85c008402629924dcb93594268e97064"
+    },
+    {
+      "id": "documentation",
+      "command": "fvm dart run --verbosity=error tool/documentation_check.dart",
+      "workingDirectory": ".",
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "rawLogSha256": "7ea35bcfd42657b1624ebaadeb7c36f3084b380e2b4a045c93f5b1d29216b058"
+    },
+    {
+      "id": "performance",
+      "command": "fvm dart run --verbosity=error packages/ccrouter_test/benchmark/performance_regression.dart --output=<temporary-output.json>",
+      "workingDirectory": ".",
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "rawLogSha256": "0fbd8ae18ffcde1c1be8bbb5337da32896dc65f8b988803d9494fcba8d5e56f0"
+    },
+    {
+      "id": "diagnostic_delivery",
+      "command": "fvm dart run --verbosity=error packages/ccrouter_test/benchmark/diagnostic_delivery.dart review-672d057",
+      "workingDirectory": ".",
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "rawLogSha256": "cb70ee7ae615bef29bb1b5f42bcc1f56d70f040c04bded886f781af9a7d477b3"
+    },
+    {
+      "id": "navigation_history",
+      "command": "fvm flutter test --no-pub packages/ccrouter_test/benchmark/navigation_history.dart",
+      "workingDirectory": ".",
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "rawLogSha256": "34e427720e454c07d72a8f8ce6d89236e2169c6aab554b03bad3d2ab28a126dc",
+      "passed": 1,
+      "skipped": 0,
+      "failed": 0
+    },
+    {
+      "id": "example_freshness",
+      "command": "fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo/modules/order/example --no-cache --check",
+      "workingDirectory": ".",
+      "exitCode": 1,
+      "expectedExitCode": 1,
+      "rawLogSha256": "6da1d87d7ea37bd726935016d06d674b1a6da9a7cef29014c6e0fe9cba78e0f1"
+    },
+    {
+      "id": "example_find",
+      "command": "fvm dart run --verbosity=error ccrouter_generator:ccrouter find order.detail demo/modules/order/example",
+      "workingDirectory": ".",
+      "exitCode": 1,
+      "expectedExitCode": 1,
+      "rawLogSha256": "8bd94607ccdfa722255b137ccea830713a30934baea3c996ff49e279203d9c1a"
+    },
+    {
+      "id": "example_widget",
+      "command": "fvm flutter test --no-pub test",
+      "workingDirectory": "demo/modules/order/example",
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "rawLogSha256": "de8bbaa8dea1b63003f03b3c0330d2d87cccc08907936f203f8d906d57905be8",
+      "passed": 1,
+      "skipped": 0,
+      "failed": 0
+    },
+    {
+      "id": "demo_without_legacy_ui_index",
+      "command": "fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo --no-cache --check",
+      "workingDirectory": ".",
+      "exitCode": 1,
+      "expectedExitCode": 1,
+      "rawLogSha256": "fd49c27f1457a6b8766c388ec2fea7f5c082165cd87d18ab376944d102ad1d31"
+    },
+    {
+      "id": "demo_with_legacy_ui_index",
+      "command": "fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo --no-cache --check",
+      "workingDirectory": ".",
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "rawLogSha256": "116ca1bc0d809073c96a76d5f20794082940466d2f7cbf50e99c2cd7e470b8a1"
+    },
+    {
+      "id": "enum_default_probe",
+      "command": "fvm dart test --concurrency=1 <temporary-enum-default-probe-test.dart>",
+      "workingDirectory": ".",
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "rawLogSha256": "31ee4fe27653394f89d0a0941c30e5908d15530e0e9b96637f0ed5a7e9375466",
+      "passed": 1,
+      "skipped": 0,
+      "failed": 0
+    }
+  ],
+  "hostFreshnessScope": {
+    "mainDemo": "passed",
+    "orderExample": "failed (expected reproduction of R01)",
+    "initialWorktreeClean": true,
+    "testGeneratedExampleOutputsRestoredToHead": true,
+    "legacyUiIndexComparison": {
+      "withoutLegacyIndex": {
+        "exitCode": 1,
+        "generatedPackages": 11,
+        "staleFiles": 6
+      },
+      "withLegacyIndex": {
+        "exitCode": 0,
+        "generatedPackages": 12
+      },
+      "allTestMutationsRestoredToHead": true
+    }
+  },
+  "performanceContext": {
+    "isolatedBenchmarkHost": false,
+    "historicalCommitApplicationAB": false,
+    "frameRenderingMeasured": false,
+    "longTermHeapOrRssProven": false
+  },
+  "performance": {
+    "schemaVersion": 1,
+    "suite": "ccrouter-performance-regression",
+    "full": false,
+    "sdk": "3.11.5 (stable) (Fri Aug 7 16:17:51 2026 +0800) on \"macos_arm64\"",
+    "platform": "macos",
+    "revision": "672d0571a550aaa344f7a9b289464a5a1de2457c",
+    "benchmarks": [
+      {
+        "benchmark": "runtime_scaling.dart",
+        "wallMs": 9808,
+        "results": [
+          {
+            "scenario": "runtime-scaling",
+            "routes": 10,
+            "lifecycleSamples": 20,
+            "navigationSamples": 100,
+            "initializeUsP50": 53,
+            "initializeUsP95": 123,
+            "dynamicOpenUsP50": 78,
+            "dynamicOpenUsP95": 363,
+            "disposeUsP50": 21,
+            "disposeUsP95": 67
+          },
+          {
+            "scenario": "runtime-scaling",
+            "routes": 100,
+            "lifecycleSamples": 20,
+            "navigationSamples": 100,
+            "initializeUsP50": 132,
+            "initializeUsP95": 287,
+            "dynamicOpenUsP50": 176,
+            "dynamicOpenUsP95": 386,
+            "disposeUsP50": 59,
+            "disposeUsP95": 145
+          },
+          {
+            "scenario": "runtime-scaling",
+            "routes": 1000,
+            "lifecycleSamples": 20,
+            "navigationSamples": 100,
+            "initializeUsP50": 502,
+            "initializeUsP95": 2138,
+            "dynamicOpenUsP50": 428,
+            "dynamicOpenUsP95": 555,
+            "disposeUsP50": 52,
+            "disposeUsP95": 248
+          }
+        ]
+      },
+      {
+        "benchmark": "runtime_concurrency.dart",
+        "wallMs": 352,
+        "results": [
+          {
+            "scenario": "runtime-concurrency-and-reclamation",
+            "cycles": 10,
+            "concurrentPushesPerCycle": 100,
+            "cycleUsP50": 4418,
+            "cycleUsP95": 10216,
+            "peakActiveEntries": 101,
+            "peakPendingNavigations": 0,
+            "finalActiveEntries": 1,
+            "finalPendingNavigations": 0,
+            "finalAdapterEntries": 1
+          }
+        ]
+      },
+      {
+        "benchmark": "service_scaling.dart",
+        "wallMs": 602,
+        "results": [
+          {
+            "scenario": "service-scaling",
+            "providers": 10,
+            "lifecycleSamples": 20,
+            "lookupSamples": 1000,
+            "invocationSamples": 1000,
+            "readinessSamples": 100,
+            "assembleInitializeUsP50": 63,
+            "assembleInitializeUsP95": 182,
+            "singletonLookupUsP50": 2,
+            "singletonLookupUsP95": 6,
+            "invokeSyncUsP50": 10,
+            "invokeSyncUsP95": 25,
+            "newInstanceReadinessUsP50": 25,
+            "newInstanceReadinessUsP95": 101,
+            "disposeUsP50": 22,
+            "disposeUsP95": 48
+          },
+          {
+            "scenario": "service-scaling",
+            "providers": 100,
+            "lifecycleSamples": 20,
+            "lookupSamples": 1000,
+            "invocationSamples": 1000,
+            "readinessSamples": 100,
+            "assembleInitializeUsP50": 186,
+            "assembleInitializeUsP95": 434,
+            "singletonLookupUsP50": 0,
+            "singletonLookupUsP95": 0,
+            "invokeSyncUsP50": 4,
+            "invokeSyncUsP95": 6,
+            "newInstanceReadinessUsP50": 14,
+            "newInstanceReadinessUsP95": 49,
+            "disposeUsP50": 106,
+            "disposeUsP95": 170
+          },
+          {
+            "scenario": "service-scaling",
+            "providers": 1000,
+            "lifecycleSamples": 20,
+            "lookupSamples": 1000,
+            "invocationSamples": 1000,
+            "readinessSamples": 100,
+            "assembleInitializeUsP50": 3919,
+            "assembleInitializeUsP95": 5073,
+            "singletonLookupUsP50": 2,
+            "singletonLookupUsP95": 2,
+            "invokeSyncUsP50": 5,
+            "invokeSyncUsP95": 19,
+            "newInstanceReadinessUsP50": 12,
+            "newInstanceReadinessUsP95": 70,
+            "disposeUsP50": 176,
+            "disposeUsP95": 804
+          }
+        ]
+      },
+      {
+        "benchmark": "runtime_long_run.dart",
+        "wallMs": 436,
+        "results": [
+          {
+            "scenario": "runtime-long-run-rss",
+            "cycles": 1000,
+            "recreateEvery": 100,
+            "completedCycles": 1000,
+            "cycleUsP50": 50,
+            "cycleUsP95": 168,
+            "peakActiveEntries": 1,
+            "peakPendingNavigations": 0,
+            "initialRssBytes": 207175680,
+            "finalRssBytes": 240500736,
+            "rssDeltaBytes": 33325056,
+            "rssSamplesBytes": [
+              208994304,
+              211484672,
+              213909504,
+              216252416,
+              217497600,
+              216989696,
+              219414528,
+              221839360,
+              224886784,
+              226820096,
+              240484352
+            ],
+            "rssObservation": "trend-only; compare same SDK, platform, and process conditions"
+          }
+        ]
+      },
+      {
+        "benchmark": "analytics_dispatcher.dart",
+        "wallMs": 359,
+        "results": [
+          {
+            "scenario": "analytics-dispatcher-pressure",
+            "events": 5000,
+            "capacity": 64,
+            "enqueueUsP50": 0,
+            "enqueueUsP95": 3,
+            "acceptedEvents": 5000,
+            "droppedEvents": 4936,
+            "peakQueueDepth": 64,
+            "pendingEventsAfterClose": 0,
+            "initialRssBytes": 193642496,
+            "finalRssBytes": 195805184,
+            "rssDeltaBytes": 2162688,
+            "rssObservation": "trend-only; compare the same SDK, platform, and process conditions"
+          }
+        ]
+      }
+    ]
+  },
+  "diagnosticDelivery": {
+    "label": "review-672d057",
+    "commands": 10000,
+    "samples": [
+      {
+        "round": 2,
+        "mode": "off",
+        "commandUsPerEvent": 1.3725,
+        "deliveryUsPerEvent": 1.4631,
+        "commandCpuUsPerEvent": 1.3649083999999945,
+        "deliveryCpuUsPerEvent": 1.451475
+      },
+      {
+        "round": 2,
+        "mode": "sync",
+        "commandUsPerEvent": 1.3426,
+        "deliveryUsPerEvent": 1.4698,
+        "commandCpuUsPerEvent": 1.3321581000000036,
+        "deliveryCpuUsPerEvent": 1.4517125
+      },
+      {
+        "round": 2,
+        "mode": "future",
+        "commandUsPerEvent": 1.2702,
+        "deliveryUsPerEvent": 1.4766,
+        "commandCpuUsPerEvent": 1.2632798000000096,
+        "deliveryCpuUsPerEvent": 1.4628
+      },
+      {
+        "round": 3,
+        "mode": "future",
+        "commandUsPerEvent": 1.2992,
+        "deliveryUsPerEvent": 1.4941,
+        "commandCpuUsPerEvent": 1.2963572999999975,
+        "deliveryCpuUsPerEvent": 1.485325
+      },
+      {
+        "round": 3,
+        "mode": "sync",
+        "commandUsPerEvent": 1.3753,
+        "deliveryUsPerEvent": 1.4921,
+        "commandCpuUsPerEvent": 1.3590007000000042,
+        "deliveryCpuUsPerEvent": 1.4713
+      },
+      {
+        "round": 3,
+        "mode": "off",
+        "commandUsPerEvent": 1.5962,
+        "deliveryUsPerEvent": 1.6947,
+        "commandCpuUsPerEvent": 1.3589954999999987,
+        "deliveryCpuUsPerEvent": 1.4484457999999985
+      },
+      {
+        "round": 4,
+        "mode": "off",
+        "commandUsPerEvent": 1.3882,
+        "deliveryUsPerEvent": 1.4712,
+        "commandCpuUsPerEvent": 1.3644330999999599,
+        "deliveryCpuUsPerEvent": 1.4422457999999985
+      },
+      {
+        "round": 4,
+        "mode": "sync",
+        "commandUsPerEvent": 1.8039,
+        "deliveryUsPerEvent": 1.9607,
+        "commandCpuUsPerEvent": 1.731154200000019,
+        "deliveryCpuUsPerEvent": 1.8801875
+      },
+      {
+        "round": 4,
+        "mode": "future",
+        "commandUsPerEvent": 1.575,
+        "deliveryUsPerEvent": 1.8425,
+        "commandCpuUsPerEvent": 1.513883699999994,
+        "deliveryCpuUsPerEvent": 1.75695
+      },
+      {
+        "round": 5,
+        "mode": "future",
+        "commandUsPerEvent": 1.603,
+        "deliveryUsPerEvent": 1.8784,
+        "commandCpuUsPerEvent": 1.5417335999999895,
+        "deliveryCpuUsPerEvent": 1.8000208999999974
+      },
+      {
+        "round": 5,
+        "mode": "sync",
+        "commandUsPerEvent": 1.3721,
+        "deliveryUsPerEvent": 1.4885,
+        "commandCpuUsPerEvent": 1.3606624000000243,
+        "deliveryCpuUsPerEvent": 1.4712875
+      },
+      {
+        "round": 5,
+        "mode": "off",
+        "commandUsPerEvent": 1.3556,
+        "deliveryUsPerEvent": 1.4424,
+        "commandCpuUsPerEvent": 1.3409415999999503,
+        "deliveryCpuUsPerEvent": 1.4217582999999985
+      },
+      {
+        "round": 6,
+        "mode": "off",
+        "commandUsPerEvent": 1.3773,
+        "deliveryUsPerEvent": 1.4549,
+        "commandCpuUsPerEvent": 1.3605954000000027,
+        "deliveryCpuUsPerEvent": 1.432375
+      },
+      {
+        "round": 6,
+        "mode": "sync",
+        "commandUsPerEvent": 1.3262,
+        "deliveryUsPerEvent": 1.4239,
+        "commandCpuUsPerEvent": 1.3151752000000503,
+        "deliveryCpuUsPerEvent": 1.4093
+      },
+      {
+        "round": 6,
+        "mode": "future",
+        "commandUsPerEvent": 1.291,
+        "deliveryUsPerEvent": 1.4804,
+        "commandCpuUsPerEvent": 1.2770540000000445,
+        "deliveryCpuUsPerEvent": 1.4575583999999973
+      },
+      {
+        "round": 7,
+        "mode": "future",
+        "commandUsPerEvent": 1.3061,
+        "deliveryUsPerEvent": 1.4826,
+        "commandCpuUsPerEvent": 1.3003741000000737,
+        "deliveryCpuUsPerEvent": 1.4712207999999984
+      },
+      {
+        "round": 7,
+        "mode": "sync",
+        "commandUsPerEvent": 1.2818,
+        "deliveryUsPerEvent": 1.374,
+        "commandCpuUsPerEvent": 1.278433399999974,
+        "deliveryCpuUsPerEvent": 1.3674667000000016
+      },
+      {
+        "round": 7,
+        "mode": "off",
+        "commandUsPerEvent": 1.2925,
+        "deliveryUsPerEvent": 1.3639,
+        "commandCpuUsPerEvent": 1.2767922999999894,
+        "deliveryCpuUsPerEvent": 1.3445875
+      },
+      {
+        "round": 8,
+        "mode": "off",
+        "commandUsPerEvent": 1.2691,
+        "deliveryUsPerEvent": 1.3366,
+        "commandCpuUsPerEvent": 1.25945860000003,
+        "deliveryCpuUsPerEvent": 1.3224457999999983
+      },
+      {
+        "round": 8,
+        "mode": "sync",
+        "commandUsPerEvent": 1.2856,
+        "deliveryUsPerEvent": 1.3836,
+        "commandCpuUsPerEvent": 1.2712040999999676,
+        "deliveryCpuUsPerEvent": 1.3655082999999983
+      },
+      {
+        "round": 8,
+        "mode": "future",
+        "commandUsPerEvent": 1.366,
+        "deliveryUsPerEvent": 1.5674,
+        "commandCpuUsPerEvent": 1.3497712999999698,
+        "deliveryCpuUsPerEvent": 1.5395708000000043
+      }
+    ]
+  },
+  "navigationHistory": {
+    "benchmark": "navigation-history",
+    "sdk": "3.11.1 (stable) (Tue Feb 24 00:03:07 2026 -0800) on \"macos_arm64\"",
+    "rounds": 7,
+    "eventsPerRound": 20000,
+    "cpuClock": "mutator-thread",
+    "results": [
+      {
+        "capacity": 0,
+        "implementation": "legacy",
+        "writeMicrosecondsPerEvent": 0.44535,
+        "readMicrosecondsPerSnapshot": 0.044,
+        "writeSamples": [
+          0.44535,
+          0.44675,
+          0.4578,
+          0.3862,
+          0.3445,
+          0.37495,
+          0.65705
+        ],
+        "readSamples": [
+          0.058,
+          0.034,
+          0.044,
+          0.032,
+          0.08,
+          0.032,
+          0.082
+        ],
+        "writeCpuMicrosecondsPerEvent": 0.38881040000000505,
+        "readCpuMicrosecondsPerSnapshot": 0.05466799999959767,
+        "writeCpuSamples": [
+          0.4476854000000021,
+          0.38881040000000505,
+          0.41107914999998174,
+          0.35901875,
+          0.3278875,
+          0.34218335000006483,
+          0.56000625
+        ],
+        "readCpuSamples": [
+          0.1385,
+          0.037333999999798834,
+          0.05466799999959767,
+          0.04266799999959767,
+          0.09108399999886752,
+          0.0375,
+          0.0884159999974072
+        ]
+      },
+      {
+        "capacity": 0,
+        "implementation": "snapshot",
+        "writeMicrosecondsPerEvent": 0.4077,
+        "readMicrosecondsPerSnapshot": 0.076,
+        "writeSamples": [
+          0.34785,
+          0.4932,
+          0.31315,
+          0.41885,
+          0.4874,
+          0.4077,
+          0.3754
+        ],
+        "readSamples": [
+          0.072,
+          0.08,
+          0.178,
+          0.076,
+          0.09,
+          0.036,
+          0.036
+        ],
+        "writeCpuMicrosecondsPerEvent": 0.36350834999997167,
+        "readCpuMicrosecondsPerSnapshot": 0.08,
+        "writeCpuSamples": [
+          0.33400625,
+          0.453664599999995,
+          0.29305414999998175,
+          0.3917145999999717,
+          0.43363334999997166,
+          0.36350834999997167,
+          0.3515167000000365
+        ],
+        "readCpuSamples": [
+          0.07966599999996833,
+          0.08616799999959766,
+          0.115,
+          0.08,
+          0.11616599999926984,
+          0.04025,
+          0.03975
+        ]
+      },
+      {
+        "capacity": 2,
+        "implementation": "legacy",
+        "writeMicrosecondsPerEvent": 0.3883,
+        "readMicrosecondsPerSnapshot": 0.05,
+        "writeSamples": [
+          0.3883,
+          0.5778,
+          0.3662,
+          0.3245,
+          0.37835,
+          0.4247,
+          0.41295
+        ],
+        "readSamples": [
+          0.06,
+          0.066,
+          0.088,
+          0.036,
+          0.036,
+          0.036,
+          0.05
+        ],
+        "writeCpuMicrosecondsPerEvent": 0.3628833499999979,
+        "readCpuMicrosecondsPerSnapshot": 0.04908200000040233,
+        "writeCpuSamples": [
+          0.3628833499999979,
+          0.5343333500000066,
+          0.34981459999997166,
+          0.3131145999999717,
+          0.35458125,
+          0.38005210000001827,
+          0.3752478999999352
+        ],
+        "readCpuSamples": [
+          0.06683400000003166,
+          0.049,
+          0.0960839999988675,
+          0.04008200000040233,
+          0.04908200000040233,
+          0.04083200000040233,
+          0.05375
+        ]
+      },
+      {
+        "capacity": 2,
+        "implementation": "snapshot",
+        "writeMicrosecondsPerEvent": 0.5037,
+        "readMicrosecondsPerSnapshot": 0.03,
+        "writeSamples": [
+          0.3698,
+          0.58175,
+          0.56835,
+          0.47825,
+          0.5037,
+          0.45015,
+          0.515
+        ],
+        "readSamples": [
+          0.45,
+          0.064,
+          0.028,
+          0.026,
+          0.03,
+          0.03,
+          0.036
+        ],
+        "writeCpuMicrosecondsPerEvent": 0.46525625,
+        "readCpuMicrosecondsPerSnapshot": 0.0385,
+        "writeCpuSamples": [
+          0.36029794999999865,
+          0.5339541499999934,
+          0.4876354000000283,
+          0.4441896000000183,
+          0.46525625,
+          0.39773335000001825,
+          0.4821978999999352
+        ],
+        "readCpuSamples": [
+          0.4793340000000317,
+          0.06908400000026449,
+          0.03125,
+          0.03083399999886751,
+          0.0385,
+          0.036582000000402334,
+          0.04208399999886751
+        ]
+      },
+      {
+        "capacity": 1000,
+        "implementation": "legacy",
+        "writeMicrosecondsPerEvent": 3.3065,
+        "readMicrosecondsPerSnapshot": 2.37,
+        "writeSamples": [
+          3.84175,
+          3.7416,
+          2.803,
+          3.01235,
+          4.05045,
+          3.3065,
+          2.94175
+        ],
+        "readSamples": [
+          4.748,
+          1.972,
+          2.166,
+          2.136,
+          2.37,
+          3.938,
+          2.826
+        ],
+        "writeCpuMicrosecondsPerEvent": 2.8276041499999818,
+        "readCpuMicrosecondsPerSnapshot": 2.19475,
+        "writeCpuSamples": [
+          3.5532082999999983,
+          2.6673917000000014,
+          2.680854150000005,
+          2.8276041499999818,
+          3.769025,
+          3.1048666500000284,
+          2.766927100000065
+        ],
+        "readCpuSamples": [
+          4.356584000000032,
+          1.79725,
+          1.8864160000002013,
+          2.0749179999995975,
+          2.19475,
+          3.9083339999988675,
+          2.63716800000146
+        ]
+      },
+      {
+        "capacity": 1000,
+        "implementation": "snapshot",
+        "writeMicrosecondsPerEvent": 0.4444,
+        "readMicrosecondsPerSnapshot": 2.018,
+        "writeSamples": [
+          0.4973,
+          0.6518,
+          0.4444,
+          0.27445,
+          0.4292,
+          0.53295,
+          0.37345
+        ],
+        "readSamples": [
+          4.01,
+          2.666,
+          2.018,
+          1.026,
+          1.228,
+          1.756,
+          2.468
+        ],
+        "writeCpuMicrosecondsPerEvent": 0.39998539999998173,
+        "readCpuMicrosecondsPerSnapshot": 1.8045,
+        "writeCpuSamples": [
+          0.4405853999999992,
+          0.62194375,
+          0.399327099999995,
+          0.2641375,
+          0.39998539999998173,
+          0.49749580000001004,
+          0.3562458500000648
+        ],
+        "readCpuSamples": [
+          3.64475,
+          2.4258340000002643,
+          1.8045,
+          1.0306679999995976,
+          1.1754179999995977,
+          1.65475,
+          2.4295
+        ]
+      },
+      {
+        "capacity": 10000,
+        "implementation": "legacy",
+        "writeMicrosecondsPerEvent": 34.6394,
+        "readMicrosecondsPerSnapshot": 29.02,
+        "writeSamples": [
+          83.03585,
+          35.76005,
+          30.96495,
+          33.9585,
+          32.54475,
+          34.6394,
+          36.46915
+        ],
+        "readSamples": [
+          165.144,
+          29.02,
+          28.266,
+          28.094,
+          26.752,
+          31.678,
+          33.61
+        ],
+        "writeCpuMicrosecondsPerEvent": 31.769583349999973,
+        "readCpuMicrosecondsPerSnapshot": 27.343916000000203,
+        "writeCpuSamples": [
+          35.3514625,
+          32.56823334999999,
+          29.09006875,
+          31.769583349999973,
+          30.3154125,
+          30.949733350000017,
+          33.22846454999996
+        ],
+        "readCpuSamples": [
+          47.75175,
+          27.343916000000203,
+          25.83225,
+          25.95741599999927,
+          25.284,
+          27.7375,
+          27.936915999997407
+        ]
+      },
+      {
+        "capacity": 10000,
+        "implementation": "snapshot",
+        "writeMicrosecondsPerEvent": 0.51365,
+        "readMicrosecondsPerSnapshot": 20.136,
+        "writeSamples": [
+          1.11335,
+          0.3639,
+          0.52185,
+          0.51365,
+          0.45905,
+          0.47245,
+          0.55415
+        ],
+        "readSamples": [
+          42.822,
+          16.618,
+          17.658,
+          23.596,
+          18.454,
+          20.136,
+          26.696
+        ],
+        "writeCpuMicrosecondsPerEvent": 0.47014375,
+        "readCpuMicrosecondsPerSnapshot": 18.543,
+        "writeCpuSamples": [
+          0.47014375,
+          0.2921708500000066,
+          0.4932333499999717,
+          0.4734520999999717,
+          0.41909375,
+          0.42845414999998177,
+          0.4822542000000365
+        ],
+        "readCpuSamples": [
+          22.938334000000264,
+          13.848915999999736,
+          16.09266599999927,
+          20.8355,
+          17.063,
+          18.543,
+          20.34883199999854
+        ]
+      }
+    ]
+  },
+  "notCovered": [
+    "standard Flutter SDK",
+    "platform builds and real devices",
+    "current user IDE live load",
+    "Hosted/archive consumer installation and upgrades",
+    "long-term production Heap/RSS",
+    "second production Backend"
+  ]
+}

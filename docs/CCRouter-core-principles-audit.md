@@ -1,5 +1,198 @@
 # CCRouter 核心价值与开发约定回归
 
+## 2026-10-20 审查项修复
+
+下节保留 `672d057` 的修复前审查快照及首次验证结果；R01–R03 已在本次工作区修复，
+原生成器全量超时记录仍保留，不改写为通过。
+
+根因是框架包的“无需业务索引”规则只用于缺失校验，生成与查询仍读取遗留索引；同时，
+主 Demo 的 freshness 门禁没有覆盖独立 Example Host，CLI Skill 的 schema 说明也未同步 DTO。
+仅刷新现有产物成本较低，但不能解决旧索引重新出现时的身份漂移；删除遗留文件同样不能
+保护旧安装。采用统一框架依赖扫描规则，保持非框架业务 Package 的 fail-closed 校验。
+
+1. R02：生成聚合和 `find` 复用内部框架包分类，跳过框架依赖的业务索引。既有文件保留
+   时也不参与身份计算，writable/read-only 路径一致；未放宽其他可选包的验证，未增加业务 API。
+2. R01：通过 CLI 重生成主 Demo 和独立 Order Example 的 Host Bundle/Package Index，
+   并用 `portable prepare demo` 刷新显式 opt-in Package 的 Portable State。
+   CI 在 Demo 测试前分别检查两个 Host 的无缓存 freshness，并补独立 Example Widget 测试。
+3. R03：CLI Skill 明确 enum 的 UI schema 1 / Index 3、DTO 的 UI schema 2 / Index 4、
+   混合文档最高版本与非 UI Index 2；README、Integration Skill 和生成指导同步身份及多 Host 规则。
+
+新增的生成与查询回归在修复前均失败，修复后通过。生成回归覆盖遗留索引损坏与缺失、
+writable 与 read-only、缓存与参考路径；已有 clean 回归增加重建前后 Demo 产物逐字节
+一致断言，查询回归也要求不修改索引。业务依赖缺失、混合身份和 Portable State 的既有
+负向回归继续执行。代码和生成物可作为一个改动整体回退，没有改变 Runtime 或 Contract shape。
+
+修复验证：相关 Generator/CLI 六个测试文件 **73 项通过**，含 clean parity、
+Host aggregation、Package workspace、Route/UI find，以及独立 Git/归档消费；仓库工具
+14 项、主 Demo 62 项、独立 Example 1 项均通过。根静态分析、文档和发布敏感信息检查通过；
+两个 Host 的缓存与 `--no-cache --check` 均通过，Example 的 `order.detail` 查询和主 Demo 的
+`order.summary --usage demo_navigation_lab_component` 查询通过。`portable publish` 仅做本地验证，
+主 Demo 的 9 个、Example 闭包的 2 个 opt-in Package 状态均有效，未执行发布。
+命令与产物 SHA 见[修复验证记录](validation/core-value-remediation-20261020.json)。
+
+未重复执行修复前约 52 分钟的 Generator 全量，也未把前一轮框架、Plugin 和性能结果计入
+本次修复测试数量。修复前全量的单项超时与网络 smoke 跳过仍保留在原证据中。
+
+本次验证仍使用 macOS 上的 OHOS Flutter SDK；没有执行远端 CI、平台构建、用户 IDE
+重启或 Plugin pin 更新。修复不改变 Analyzer Plugin production code。
+
+## 2026-10-20 最近提交审查与核心价值回归
+
+审查对象为 `672d057`，范围为 `ee83979..672d057` 的最近 10 个提交，包含
+Event deadline、诊断背压与启动回滚、导航历史释放，以及 UI Fragment DTO Action、
+Analyzer 身份校验和 Demo pin。开始时工作区干净。本轮仅新增审查证据和文档，
+没有修改框架、Demo、生成物或 Plugin pin。
+
+### 审查发现
+
+**R01 / P2：独立 Order Example Host 的生成身份未随依赖同步。**
+[Example Package Index](../demo/modules/order/example/lib/src/ccrouter_generated/metadata/ccrouter_package.json)
+仍引用旧的 `demo_order` 和 `demo_order_contracts` contentFingerprint。
+`ee83979` 基线中的两个引用均匹配；`1e35b42` 更新依赖产物后变为不匹配，`672d057`
+再次升级 DTO/schema 时仍未刷新这个独立 Host。主 Demo 的 `generate demo --check`
+只验证其依赖闭包，不涵盖这个子目录里的独立 Host。
+
+实测 `generate demo/modules/order/example --no-cache --check` 退出 1，列出 Example 的
+Host Bundle 与 Package Index 陈旧；`find order.detail demo/modules/order/example` 同样退出 1，
+明确报告 Example 引用了不同的 `demo_order` identity。Example Widget 测试 1 项通过，
+说明此处已确认的是生成新鲜度与工具身份校验回归，不能直接推断页面运行失败。
+
+最小修复是从生成器运行 `generate demo/modules/order/example`，提交其更新的 Host Bundle
+和 Package Index；不要手改 fingerprint。把两个真实 CCRouter Host 的 `--check` 都纳入
+维护回归。这个问题不证明 Runtime 算法失效，但当前已提交 Example 未满足生成新鲜度和
+Package 身份约定，不能由主 Demo 门禁通过推断整个 Workspace 均已同步。
+
+**R02 / P2：UI 框架包归类后，遗留空索引仍影响生成身份。**
+`672d057` 在 [Package Workspace](../packages/ccrouter_generator/lib/src/package_workspace.dart)
+将 `ccrouter_ui` 归为不发布业务 metadata 的框架包，但仍提交其旧空 Package Index，
+主 Demo、Order 和 Navigation Lab 产物也仍记录该索引的 fingerprint。
+全量测试执行 clean 后，这个不再生成的旧索引被移除，依赖包 identity 随之变化。
+
+为排除测试残留，本轮把其余所有产物恢复为 HEAD 原始字节，仅保留测试清理后的旧索引缺失
+状态：主 Demo `generate demo --no-cache --check` 退出 1，报告 6 个文件陈旧、只发现
+11 个生成 Package；随后从 HEAD 恢复该空索引，不改源码或其他产物，同一命令退出 0，
+发现 12 个生成 Package。说明当前可复现产物取决于已不再发布的遗留文件，破坏 clean 与
+现有工作区生成一致性。没有据此证明 Runtime 执行异常或发布安装必然失败。
+
+推荐统一框架包身份规则：生成依赖扫描一致忽略该遗留框架索引，或在迁移时通过 CLI 清理旧
+产物并重生成两个 Host、刷新 Portable State；两种方案都需补 clean-generation parity
+回归。不要手改依赖 fingerprint，也不要将“忽略所有可选包索引”作为通用修复。
+本轮已恢复旧文件及所有测试改动，仅保留证据。
+
+**R03 / P3：CLI Skill 遗留 enum-only 的 schema 规则。**
+[CLI Skill 的 Generated Output Rules](../skills/ccrouter-cli-development/SKILL.md)
+仍将 UI Package Index 一律写为 schema 3、源 metadata 的 UI 版本一律写为 1。
+`672d057` 已加入 DTO Action，其真实产物为 UI schema 2 / Package Index 4；
+同文前面的 DTO 支持说明和 Generator README 已采用新规则。维护者或接入 Agent 按旧段落
+判断生成物时，会将合法 DTO 产物误判为不符合约定。应明确区分 enum 的 1/3 与 DTO 的 2/4，
+并说明混合 metadata 文档取最高 UI 版本、非 UI Index 仍为 2。生产实现已有覆盖，
+无需修改 schema 或增加 Runtime API；本轮按审查范围记录，未改写该接入 Skill。
+
+### 问题分析与审查结论
+
+发现两处生成身份/交付回归与一处文档漂移；所查框架 Runtime/Core 实现未发现新的高置信度
+算法缺陷，也没有证明新的 `not-disposed` 或 `not-GCed` 问题。结论仅覆盖本节范围和已执行测试，不构成全部平台、生产流量或任意
+Sink/Backend 的无缺陷证明。生成器全量首次存在一项 30 秒超时，详见验证表，不能称为
+“全部门禁首次通过”。
+
+近期改动对应三个具体问题，而非无场景扩展 Core：
+
+- Event 子调用的 Timer 毫秒截断可能早于共享 deadline；现向上取整，并保留结束时的
+  deadline 复核，避免把整体超时误记为孤立 Subscriber 失败。
+- 有界诊断队列原先不能限制未完成 Sink Future，导航历史原先可能延长 Route 生命周期。
+  新投递 Owner 限制单个在途写入，关闭释放队列/Sink；历史快照只保留值。启动回滚使用
+  成功完成、携带错误数据的共享 Future，使跨 error Zone 的 shutdown 可以加入清理。
+- B 私有加载选项后向 A 回传 selectedId，需要携带数据的 Action。受限不可变 DTO 沿
+  既有可选 UI 包扩展，未向 Core 引入 Widget、动态注册或新的调度能力。schema 与
+  Package Index 升级保留旧 enum 路径；Demo Contract 正确升 major 并同步消费范围。
+
+Analyzer 的 declaration library 身份、typedef/part、真实构造调用证明和跨包刷新已复核；
+它仍是可选诊断工具，不能替代生成校验。Demo pin-check 证明当前完整 SHA、lock 和远端
+身份一致且无 Plugin production drift；本轮没有重启用户 IDE，不能宣称其活跃实例已加载。
+
+### 13 条约定回归
+
+“保持”表示所查实现及测试未发现新增退化；有条件项保留其未验证边界。
+
+| # | 核心价值 | 本轮判断与证据 |
+| --- | --- | --- |
+| 1 | 智能 | 机制保持、产物一致性有缺口（R01、R02）：声明、生成 Client、Host Assembly 和静态 Owner 索引承担胶水；不依赖运行时反射猜测 |
+| 2 | 简单易用 | 有条件：scaffold/find 减少模板和查找成本，首次 UI 接入仍需协调 Contract、A/B、Host；未测新人耗时和误配率 |
+| 3 | 功能强大 | 保持明确范围：typed Route/Service/Command/Event/InitTask 回归，UI 新增单 DTO 输出；不包含 sealed union、动态 Slot 或完整 Restoration |
+| 4 | 可扩展性 | 保持分层：Contracts/Core 仍为 Pure Dart，UI 与 GoRouter 独立；尚无第二个生产 Backend 验证 |
+| 5 | 可测试 | 分层保持，独立 Host freshness 与 clean parity 门禁有遗漏（R01、R02）：框架、Demo、生成器、独立 Plugin 和真实 Server/LSP 分层；不把 UI process-default Runtime 说成 TestHost overlay 隔离 |
+| 6 | 最小公开 API | 保持：业务 Facade 不导出 Host 生命周期、Runtime 和 Adapter SPI；UI 业务、generated、Host barrel 分离，API 反向编译探针通过 |
+| 7 | 编译校验与类型安全 | 校验保持，产物未完全满足当前身份（R01、R02）：DTO UI schema 2 / Index 4 与 enum schema 1 / Index 3 区分；shape、Owner、版本和 public exports 继续 fail-closed |
+| 8 | 非侵入式 | 保持：UI 按需启用，沿用 Flutter Key/State；普通 Widget 和局部弹层不要求框架化 |
+| 9 | 可降级回退 | 保持边界：旧 enum 路径保留；缺 Renderer 或混合 schema 显式失败。DTO → enum 需迁移消费点和重生成，不能当作热开关 |
+| 10 | 明确生命周期 | 保持所测路径：单在途 Sink、构造失败 deferred cleanup、Host rollback、Route/Controller 弱引用回收及 UI 卸载/旧回调失效通过 |
+| 11 | 可观测与溯源 | 保持：有界值快照与无 payload 计数，UI find 和结构化 IDE 诊断已存在；UI DevTools Catalog 仍未实现 |
+| 12 | 并发安全 | 保持所测路径：共享 deadline、嵌套较短 timeout、跨 error Zone 清理加入、重复 shutdown 与旧 UI generation 终态受保护 |
+| 13 | 性能和稳定 | 有界行为通过，生成一致性有缺口（R02），性能趋势未定：补跑 Runtime/Service、并发、长运行、Analytics、诊断和导航历史基准；不由单次 RSS 或主机耗时推断生产性能 |
+
+主要复核入口为 [调用与 deadline](../packages/ccrouter_core/lib/src/runtime_host.dart)、
+[诊断投递 Owner](../packages/ccrouter_core/lib/src/diagnostic_delivery.dart)、
+[Host 清理](../packages/ccrouter/lib/src/host_lifecycle.dart)、
+[导航历史](../packages/ccrouter_go_router/lib/src/adapter.dart)、
+[UI schema 生成](../packages/ccrouter_generator/lib/src/ui_fragment_generator.dart)、
+[UI Analyzer](../packages/ccrouter_analyzer_plugin/lib/src/ui_fragment_analysis.dart) 和
+[Demo Renderer](../demo/modules/order/lib/src/order_fragment_renderers.dart)。
+
+### 候选方案、取舍与推荐顺序
+
+| 方案 | 收益 | 成本与判断 |
+| --- | --- | --- |
+| 继续扩展通用 Action/动态 UI/Core 调度 | 增加能力组合 | 增加 schema、生命周期和工具维护面；目前没有新的必要性证据，不推荐本轮推进 |
+| 回退到 enum-only 或放松 Owner/shape 校验 | 可减少部分规则 | 丢失私有加载结果回传能力或削弱组件边界；不推荐 |
+| 保持受限 DTO 与可选路径，先巩固验证和接入 | 满足真实 selectedId 场景，保留 Core 边界和旧 enum 对照 | 仍需承担四角色声明和工具维护；推荐 |
+
+1. 先统一 R02 的框架包索引身份，验证 clean 与现有工作区的生成结果一致，再通过生成器
+   刷新 R01 的独立 Example Host，执行两个 Host freshness、Widget 和 Portable State 回归，
+   同步 R03 的 CLI schema 说明。保持现有 Runtime/API 分层；保留生成器首次超时与单项复跑结果，若继续复现再定位
+   冷启动/资源竞争或时限设置，不以重复运行掩盖问题，也不直接放宽功能断言。
+2. 下一次接入继续从一个真实消费者的“契约 → 生成 → 调用 → 失败/取消 → 释放”闭环出发，
+   记录手工步骤和误配点，再决定是否调整工具；不以新增抽象代替接入问题定位。
+3. 面向 RC 再补标准 Flutter SDK、目标真机和发布归档/Hosted 安装升级验证；API 冻结、
+   License、发布集合等仍遵循[唯一发布清单](CCRouter-release-readiness.md)。
+
+### 本轮验证与边界
+
+环境为 macOS、Flutter `3.41.10-ohos-1.0.0`（`62357a93d6`）、Dart `3.11.5`。
+这是 OHOS Flutter SDK 在 macOS 主机上的验证，没有执行平台构建或真机测试。
+命令、结果和性能快照见[机器可读记录](validation/core-value-regression-20261020.json)。
+
+| 验证 | 本轮结果 |
+| --- | --- |
+| Framework `fvm flutter test packages/ccrouter_test/test` | 566 项通过 |
+| 主 Demo `fvm flutter test test` | 62 项通过 |
+| 独立 Analyzer Plugin `fvm dart test` | 173 项通过，含真实 Analysis Server/LSP |
+| Generator `fvm dart test --concurrency=1 packages/ccrouter_test/generator_test` | 642 项通过、1 项跳过、1 项失败；耗时 52 分 23 秒 |
+| Generator 超时单项复跑 | `route_contracts resolves transitive cross-package inputs and constants` 以 2 分钟上限复跑，11 秒通过；原全量仍记失败，首次超时原因未证实 |
+| Workspace / 独立 Plugin `fvm dart analyze` | 均无问题 |
+| 主 Demo 参考生成 / 缓存检查 | 原始 HEAD 产物状态下均通过，6 组件、34 Route、12 生成 Package |
+| UI 遗留索引对照 | 缺失旧索引时主 Demo freshness 失败；恢复旧索引即通过，确认 R02 |
+| Order Example | freshness 与 find 各退出 1，复现 R01；Widget 测试 1 项通过 |
+| Analyzer `pin-check demo` | 完整 SHA、manifest/lock/远端一致，无 production drift；不代表用户 IDE 已加载 |
+| 文档校验 | 119 个 Markdown 通过 |
+| 性能与生命周期基准 | 默认 5 个回归程序、诊断投递、导航历史基准均完成；适用边界见下文 |
+
+补充边界探针验证“DTO Action 内的 enum 默认值从 first 改为 second”会改变 fingerprint，
+1 项通过；探针放在临时目录，未增加框架测试或改写生产源码。
+
+Runtime 长运行完成 1000 轮，RSS 从约 197.6 MiB 到 229.4 MiB（增加约 31.8 MiB）。
+该脚本没有强制 GC 或对象 retaining path 证据，且本机存在其他开发进程；不能据此报告
+内存泄漏，也不能据此宣称长期 RSS 稳定。弱引用释放测试只证明其特定资源的回收路径。
+Analytics 5000 次事件压力中队列峰值为 64，关闭后 pending 为 0；10 × 100 并发导航后
+保留 1 个根 Entry，pending 为 0。导航历史的同进程旧实现参考与快照实现覆盖容量
+0/2/1000/10000；小容量存在分配开销取舍，大容量写入避免线性移位。这不是 UI 帧率测试。
+诊断 off/sync/Future 三种模式均完成每轮 10000 次 Command，启用投递的模式未丢事件；
+未与旧提交作完整应用 A/B，不给出整体性能提升比例。
+
+本轮没有复跑独立 Hosted/发布归档消费者，没有做业务真实认证、全平台构建、长期 Heap/RSS
+或用户当前 IDE live 验证；Analyzer 网络安装/升级 smoke 默认跳过，未额外开启；已有历史证据不累计为本轮结果。
+
+
 ## 2026-10-19 增量回归
 
 审查基线：`283b00b37ed71c13acea9d22691b6988d75fb60b`。本节记录该基线与本轮局部修正，

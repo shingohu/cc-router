@@ -118,7 +118,8 @@ Owner 按声明 Library 和符号区分；Renderer 必须声明在 Library 顶�
 查询真实 Client 和接入步骤。旧索引缺少公共导出或 alias 证据时需重新生成。
 脚手架默认生成 enum Action；动态选择结果可按[DTO Action 设计与验证](docs/CCRouter-ui-fragment-action-payload-design.md)改为受限 DTO。
 参与生成的 Contract、A、B 各包都需声明 `ccrouter_generator` 开发依赖，Host 还需 `build_runner`。
-`ccrouter_ui` 属于框架依赖，无需业务组件的 Portable State；分发业务组件的原有校验继续保留。
+`ccrouter_ui` 属于框架依赖，无需业务组件的 Package Index 或 Portable State；
+生成与 `find` 忽略框架依赖遗留的索引，分发业务组件的原有校验继续保留。
 
 [独立接入验证](docs/validation/ui-fragment-adoption-20261020/README.md)提供 enum/DTO 两条路径的
 可复现源码、日志与条件化成本记录。当前已完成本地技术闭环；未参与实现者的首次接入、
@@ -409,6 +410,14 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo
 ```
 
 统一命令会运行所需的 build_runner、生成 Package 内路由代码、组件索引、Host Bundle、Catalog 和文档。生成文件位于各 Package 的 `lib/src/ccrouter_generated/`，禁止手工编辑。
+
+每个独立 Host 都需要单独生成并检查；主 Demo 的依赖闭包不包含组件内部可独立运行的
+Example Host。仓库维护时分别验证：
+
+```bash
+fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo --no-cache --check
+fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo/modules/order/example --no-cache --check
+```
 
 ### 4. 命名空间 KV Storage（Demo）
 

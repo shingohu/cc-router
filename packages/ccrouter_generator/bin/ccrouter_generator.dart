@@ -776,6 +776,7 @@ Future<bool> _generateResolvedWorkspace(
   );
   final metadataSpan = trace?.start('metadata-and-package-index-load');
   for (final package in workspace.packages.values) {
+    if (package != workspace.host && package.isFrameworkPackage) continue;
     if (package.writable) {
       if (prebuiltPackages.contains(package.name)) {
         final verification = portableVerifications[package.name];

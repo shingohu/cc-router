@@ -1,0 +1,301 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-20",
+  "baseCommit": "672d0571a550aaa344f7a9b289464a5a1de2457c",
+  "reviewEvidence": "core-value-regression-20261020.json",
+  "findings": [
+    {
+      "id": "R01",
+      "status": "resolved",
+      "remediation": "Regenerated independent Example Host and added both Host freshness gates before Demo tests."
+    },
+    {
+      "id": "R02",
+      "status": "resolved",
+      "remediation": "Generation and find ignore classified framework dependency indexes; covered writable/read-only, malformed/missing indexes and clean-generation parity."
+    },
+    {
+      "id": "R03",
+      "status": "resolved",
+      "remediation": "CLI schema rules now distinguish enum/DTO and mixed metadata versions; README and integration guidance synchronized."
+    }
+  ],
+  "environment": {
+    "host": "macOS",
+    "flutter": "3.41.10-ohos-1.0.0",
+    "dart": "3.11.5"
+  },
+  "executions": [
+    {
+      "id": "pre_fix_regression",
+      "command": "fvm dart test --concurrency=1 packages/ccrouter_test/generator_test/generation_command_test.dart packages/ccrouter_test/generator_test/route_find_command_test.dart --name 'framework.*index'",
+      "workingDirectory": ".",
+      "exitCode": 1,
+      "expectedExitCode": 1,
+      "rawLogSha256": "b759a02ea131f0500b3eff1d1b9bc188643325d18cca90cfeec744eb0ac6a28c",
+      "passed": 0,
+      "skipped": 0,
+      "failed": 2
+    },
+    {
+      "id": "fixed_regression",
+      "command": "fvm dart test --concurrency=1 packages/ccrouter_test/generator_test/generation_command_test.dart packages/ccrouter_test/generator_test/route_find_command_test.dart --name 'framework.*index'",
+      "workingDirectory": ".",
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "rawLogSha256": "00061605fc596238047b50f892262fe10e3cd40228e5394d3ee4ef120342d7a5",
+      "passed": 2,
+      "skipped": 0,
+      "failed": 0
+    },
+    {
+      "id": "generator_related",
+      "command": "fvm dart test --concurrency=1 packages/ccrouter_test/generator_test/generation_command_test.dart packages/ccrouter_test/generator_test/route_find_command_test.dart packages/ccrouter_test/generator_test/ui_fragment_find_command_test.dart packages/ccrouter_test/generator_test/package_workspace_test.dart packages/ccrouter_test/generator_test/host_aggregation_test.dart packages/ccrouter_test/generator_test/portable_distribution_test.dart",
+      "workingDirectory": ".",
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "rawLogSha256": "a7a798107f990aea97b1a65ebeacea25f3a3006728f454a2f25e6f022c757a02",
+      "passed": 73,
+      "skipped": 0,
+      "failed": 0
+    },
+    {
+      "id": "workspace_analyze",
+      "command": "fvm dart analyze",
+      "workingDirectory": ".",
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "rawLogSha256": "2376dbfa658ee9e627d32a2c9b545aa2a1fed655ef2fafe43d283229e1c7d8d3"
+    },
+    {
+      "id": "tools",
+      "command": "fvm dart test --concurrency=1 tool/test",
+      "workingDirectory": ".",
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "rawLogSha256": "615d8bf2664aa2f6213c3e69b1df830a8f66875a98dc0703dbfac6d40b011cdf",
+      "passed": 14,
+      "skipped": 0,
+      "failed": 0
+    },
+    {
+      "id": "demo_tests",
+      "command": "fvm flutter test --no-pub test",
+      "workingDirectory": "demo",
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "rawLogSha256": "3e262b9cc68dd6153c608eb595cf337e3b316e05488cb51f5d9722ad04b24784",
+      "passed": 62,
+      "skipped": 0,
+      "failed": 0
+    },
+    {
+      "id": "example_tests",
+      "command": "fvm flutter test --no-pub test",
+      "workingDirectory": "demo/modules/order/example",
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "rawLogSha256": "de8bbaa8dea1b63003f03b3c0330d2d87cccc08907936f203f8d906d57905be8",
+      "passed": 1,
+      "skipped": 0,
+      "failed": 0
+    },
+    {
+      "id": "example_generate",
+      "command": "fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo/modules/order/example --no-cache",
+      "workingDirectory": ".",
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "rawLogSha256": "dd42b6855e8df7ea225d4163237f7411000f915379d5a7cba8b725627f389024"
+    },
+    {
+      "id": "portable_prepare",
+      "command": "fvm dart run --verbosity=error ccrouter_generator:ccrouter portable prepare demo",
+      "workingDirectory": ".",
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "rawLogSha256": "4b3e7f16f4e223f70fea7e76f0efdcc77b7b0f328c6354bd8a469dc0d438678c"
+    },
+    {
+      "id": "demo_reference",
+      "command": "fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo --no-cache --check",
+      "workingDirectory": ".",
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "rawLogSha256": "359c9bd883da64f1d26fdeffb28c49fc2df846920fca082855f1c06a36cc1a26"
+    },
+    {
+      "id": "demo_ui_find",
+      "command": "fvm dart run --verbosity=error ccrouter_generator:ccrouter find order.summary demo --usage demo_navigation_lab_component",
+      "workingDirectory": ".",
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "rawLogSha256": "5b642503f3f97091e2283fe0b5c0f1e62f2e16e22d63f7df37fd95ab75e4e86f"
+    },
+    {
+      "id": "documentation",
+      "command": "fvm dart run --verbosity=error tool/documentation_check.dart",
+      "workingDirectory": ".",
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "rawLogSha256": "7ea35bcfd42657b1624ebaadeb7c36f3084b380e2b4a045c93f5b1d29216b058"
+    },
+    {
+      "id": "release_sensitivity",
+      "command": "fvm dart run --verbosity=error tool/release_sensitivity_check.dart",
+      "workingDirectory": ".",
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "rawLogSha256": "5817b927def4bb0d063fe4d47f600b0e196ad1ca54372176a75e973f9835d586"
+    },
+    {
+      "id": "demo-cached-check",
+      "command": "fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo --check",
+      "workingDirectory": ".",
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "rawLogSha256": "4fa02c6da050e96c0cfb39e6a73963353374c2c4f1a3be055142c65888cf537d"
+    },
+    {
+      "id": "example-reference-check",
+      "command": "fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo/modules/order/example --no-cache --check",
+      "workingDirectory": ".",
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "rawLogSha256": "2c6830a6f2475d94efc7b5a8e294aaa2a7dd4d8c3e3acc1c6f7b7f5971104f73"
+    },
+    {
+      "id": "example-cached-check",
+      "command": "fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo/modules/order/example --check",
+      "workingDirectory": ".",
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "rawLogSha256": "ac3ac6aeb0dedfad3ecf12bf94068ae25ff4a7f460c49beee61e2a1958bcd9d1"
+    },
+    {
+      "id": "example-find",
+      "command": "fvm dart run --verbosity=error ccrouter_generator:ccrouter find order.detail demo/modules/order/example",
+      "workingDirectory": ".",
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "rawLogSha256": "5a254b0e371a63ac576c53753ea070ae8468aff8c6550b15b9843d9782c686bc"
+    },
+    {
+      "id": "portable-publish",
+      "command": "fvm dart run --verbosity=error ccrouter_generator:ccrouter portable publish demo",
+      "workingDirectory": ".",
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "rawLogSha256": "eb1646d3b4d6a48adf7f18c410c92689199f5e62dd1f6040c5ed4fd535d62279"
+    },
+    {
+      "id": "example-portable-publish",
+      "command": "fvm dart run --verbosity=error ccrouter_generator:ccrouter portable publish demo/modules/order/example",
+      "workingDirectory": ".",
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "rawLogSha256": "e5245f91672796ea6fd92f0930d290dcef51f86750cae910aeb2510f64b4490d"
+    }
+  ],
+  "invalidInvocation": {
+    "command": "fvm dart run --verbosity=error ccrouter_generator:ccrouter find demo_order.summary_card demo --usage demo_navigation_lab_component",
+    "exitCode": 1,
+    "reason": "Requested ID does not exist. Retried with order.summary from the authored Contract declaration; passed. This is not a generator defect.",
+    "rawLogSha256": "a5b2bf13e0cfc4f993648a3c00066005c95c6ed0bd77161958d1cda34b28d2bf"
+  },
+  "generatedArtifacts": [
+    {
+      "path": "demo/lib/src/ccrouter_generated/host/ccrouter_demo_ccrouter.g.dart",
+      "sha256": "83d6320b3842b537d66456747266d7d162992f6def9dac463b77acc17866ee8e"
+    },
+    {
+      "path": "demo/lib/src/ccrouter_generated/metadata/ccrouter_generation_state.json",
+      "sha256": "1bd603db62df1e46aaed028c04adbbe6d35c52245c42ac826c00486c9d94dd0c"
+    },
+    {
+      "path": "demo/lib/src/ccrouter_generated/metadata/ccrouter_package.json",
+      "sha256": "e55587e1ec7d15640fdd53231b03b9743b2265484ddc2ae389cffa6faaa8831f"
+    },
+    {
+      "path": "demo/modules/kv_storage/lib/src/ccrouter_generated/metadata/ccrouter_generation_state.json",
+      "sha256": "7ad5dee197a8bfd02be143d4762c16fc54265a277d8f1192b8920c5be22c85f0"
+    },
+    {
+      "path": "demo/modules/navigation_lab/lib/src/ccrouter_generated/host/demo_navigation_lab_ccrouter.g.dart",
+      "sha256": "632cbf9513b658e6ef1334937075b618feafc795a94439d40e94ace5f7d6c9c3"
+    },
+    {
+      "path": "demo/modules/navigation_lab/lib/src/ccrouter_generated/metadata/ccrouter_generation_state.json",
+      "sha256": "ddee9805ff13b2a138345b4477899ddafc2fc42d3cbdd8f43916be739cb3435d"
+    },
+    {
+      "path": "demo/modules/navigation_lab/lib/src/ccrouter_generated/metadata/ccrouter_package.json",
+      "sha256": "7e082ef3e0e72938f692dfcd46a29082b0018d31367af4991e5a35a46122354b"
+    },
+    {
+      "path": "demo/modules/network/lib/src/ccrouter_generated/metadata/ccrouter_generation_state.json",
+      "sha256": "52ee7f4c3604aaecaf7c5a6d1ba19582d0d28593df53bc622fb4532b4a0f7197"
+    },
+    {
+      "path": "demo/modules/order/example/lib/src/ccrouter_generated/host/demo_order_example_ccrouter.g.dart",
+      "sha256": "64272bdb6a98b39d2456b72482b8b0b640efcbe9e2c5fa5c22c03219951832d8"
+    },
+    {
+      "path": "demo/modules/order/example/lib/src/ccrouter_generated/metadata/ccrouter_package.json",
+      "sha256": "575a11b1f836674de32dae9e00e7ba823b7c82392896c08733187c0571a055d6"
+    },
+    {
+      "path": "demo/modules/order/lib/src/ccrouter_generated/host/demo_order_ccrouter.g.dart",
+      "sha256": "3964ac266999ca1de3c5e518d4075284ac6824c321e99473c408944b7ca42499"
+    },
+    {
+      "path": "demo/modules/order/lib/src/ccrouter_generated/metadata/ccrouter_generation_state.json",
+      "sha256": "69b507f436f1df62a1bd3d64dafe6d10df1372669b078500a178b298966191ad"
+    },
+    {
+      "path": "demo/modules/order/lib/src/ccrouter_generated/metadata/ccrouter_package.json",
+      "sha256": "b7b1f0b322dc097ceefc0f3692bf4b5d6e5923c63ab3ff17fd880923f9631873"
+    },
+    {
+      "path": "demo/modules/order_contracts/lib/src/ccrouter_generated/metadata/ccrouter_generation_state.json",
+      "sha256": "44ca5fb7b74188e8977f77541ac1c630d8e576a6e59676bfe96fe5a4bf82e6ef"
+    },
+    {
+      "path": "demo/modules/payment/lib/src/ccrouter_generated/metadata/ccrouter_generation_state.json",
+      "sha256": "997b2585284355b5189e4495e86434dff37fe834d8eaaae77fe1f0cd70216e3a"
+    },
+    {
+      "path": "demo/modules/web/lib/src/ccrouter_generated/metadata/ccrouter_generation_state.json",
+      "sha256": "37e7882da766e636e9d1e70bfe8c45d264eb9f26ca96ef9ea25b72fcaec0391a"
+    },
+    {
+      "path": "demo/modules/web_contracts/lib/src/ccrouter_generated/metadata/ccrouter_generation_state.json",
+      "sha256": "1a8e3ba607adfa65db5f01f3d2280c3435d7e103e5ea9aa4394f7306da4d3d94"
+    }
+  ],
+  "invariants": {
+    "packageMetadataAndContractShapesUnchanged": true,
+    "exampleDependencyFingerprintsMatch": true,
+    "legacyFrameworkIndexPreserved": true,
+    "portableStatesRefreshed": 9,
+    "businessApiAdded": false,
+    "analyzerPluginProductionChanged": false
+  },
+  "notRerun": [
+    "entire generator suite (prior review retained one 30s timeout and one opt-in network skip)",
+    "entire framework and isolated Analyzer suites (production changes are generator-only)",
+    "performance benchmarks"
+  ],
+  "notCovered": [
+    "standard Flutter SDK",
+    "remote CI execution",
+    "platform builds and real devices",
+    "user IDE live verification"
+  ],
+  "intermediateDocumentationCheck": {
+    "exitCode": 1,
+    "reason": "The report link was checked before the new evidence JSON was written. After creating that artifact, documentation validation passed.",
+    "resolvedBy": "documentation",
+    "rawLogSha256": "e724557395eb9fe138eda842e600dfa55739e9440a9168750440200e6dbc04a3"
+  }
+}

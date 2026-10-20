@@ -94,8 +94,12 @@ The Consumer component definition imports both the public Contract and
 `package:ccrouter_ui/ccrouter_ui.dart` before declaring its UI dependencies.
 Each participating Contract, Owner and Consumer Package declares a
 `ccrouter_generator` dev dependency; the Host also declares `build_runner`.
-The `ccrouter_ui` framework dependency does not need business component Portable
-State. Distributed business Packages still require their own verified state.
+The `ccrouter_ui` framework dependency does not need a business Package Index or
+Portable State. Generation and `find` ignore legacy indexes of framework
+dependencies in writable and read-only Packages. Distributed business Packages
+still require their own verified indexes and state.
+Generate and run `--no-cache --check` for each independent Host, including a
+component's runnable `example/`; a parent Host check covers only its own closure.
 After generation, `find <ui-id> <host-root> --usage <consumer-id>` reads verified
 UI schema exports and the actual alias; old indexes defer until regeneration.
 Both workflows preserve explicit Owner edges. The scaffold defaults to enum

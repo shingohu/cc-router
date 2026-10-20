@@ -16,6 +16,67 @@ void main() {
   _restorePortableGenerationStatesAfterSuite();
 
   test(
+    'framework dependency indexes do not change generated business identities',
+    () async {
+      final index = File(
+        'packages/ccrouter_ui/lib/src/ccrouter_generated/metadata/'
+        'ccrouter_package.json',
+      );
+      final original = index.existsSync() ? index.readAsBytesSync() : null;
+      final seeded = await _generateDemo(['--no-cache']);
+      expect(seeded.exitCode, 0, reason: '${seeded.stdout}\n${seeded.stderr}');
+      final before = await _readDemoGeneratedArtifacts();
+      try {
+        // Even an unreadable legacy framework index is not business metadata.
+        index
+          ..createSync(recursive: true)
+          ..writeAsStringSync('{obsolete framework index');
+        final writable = await _generateDemo(['--no-cache', '--check']);
+        expect(
+          writable.exitCode,
+          0,
+          reason: '${writable.stdout}\n${writable.stderr}',
+        );
+        final readOnly = await Process.run(Platform.resolvedExecutable, [
+          'run',
+          'ccrouter_generator:ccrouter',
+          'generate',
+          'demo/modules/order',
+          '--no-cache',
+          '--check',
+        ]);
+        expect(
+          readOnly.exitCode,
+          0,
+          reason: '${readOnly.stdout}\n${readOnly.stderr}',
+        );
+        index.deleteSync();
+        for (final flags in [
+          ['--no-cache', '--check'],
+          ['--check'],
+        ]) {
+          final missing = await _generateDemo(flags);
+          expect(
+            missing.exitCode,
+            0,
+            reason: '${missing.stdout}\n${missing.stderr}',
+          );
+        }
+        expect(await _readDemoGeneratedArtifacts(), before);
+      } finally {
+        if (original != null) {
+          index
+            ..createSync(recursive: true)
+            ..writeAsBytesSync(original, flush: true);
+        } else if (index.existsSync()) {
+          index.deleteSync();
+        }
+      }
+    },
+    timeout: const Timeout(Duration(minutes: 2)),
+  );
+
+  test(
     'Renderer-only components do not opt an existing Host into UI',
     () async {
       final hostRoot = path.join('demo', 'modules', 'order', 'example');
@@ -917,6 +978,7 @@ void probe() {
   test(
     'clean removes managed outputs but preserves user files and rebuilds',
     () async {
+      final originalArtifacts = await _readDemoGeneratedArtifacts();
       final demoRoot = Directory(path.join(Directory.current.path, 'demo'));
       final nestedHostRoot = Directory(
         path.join(demoRoot.path, 'modules', 'order', 'example'),
@@ -1041,6 +1103,12 @@ void probe() {
       expect(generatedRouteApi.existsSync(), isTrue);
       expect(generatedInitTask.existsSync(), isTrue);
       expect(generatedOrderContractsApi.existsSync(), isTrue);
+      expect(
+        await _readDemoGeneratedArtifacts(),
+        originalArtifacts,
+        reason:
+            'Clean generation must reproduce the committed Host identities.',
+      );
       expect(
         await _readGeneratedArtifacts(nestedHostRoot),
         nestedHostArtifacts,

@@ -5,17 +5,12 @@
     "name": "demo_order",
     "version": "0.1.0"
   },
-  "contentFingerprint": "ecc9f4411fb9c1f93e43e3abd5820e4e25cfb23e53595ebf03f6c14a4db4c5f0",
+  "contentFingerprint": "51e730e234a76711eeba8ed43121ba2637d7731e06b3c6dfd2f0f8f05c586758",
   "bundle": {
     "library": "lib/src/ccrouter_generated/host/demo_order_ccrouter.g.dart",
     "symbol": "ccrouterGeneratedPackageBundle"
   },
   "dependencies": [
-    {
-      "name": "ccrouter_ui",
-      "version": "0.1.0",
-      "contentFingerprint": "1fed5e4d8a2e384fc2c7484c86b2ff09ea61809d26b8bb3e88aa20971a369979"
-    },
     {
       "name": "demo_order_contracts",
       "version": "0.1.0",

@@ -27,6 +27,7 @@ Future<bool> findCapability({
   final patterns = <String, Set<_DeclaredPattern>>{};
   final matchingIds = <String>{};
   for (final package in resolved.packages.values) {
+    if (package != resolved.host && package.isFrameworkPackage) continue;
     if (!package.indexFile.existsSync()) {
       if (package == resolved.host || package.requiresPackageIndex) {
         throw CCPackageWorkspaceException(

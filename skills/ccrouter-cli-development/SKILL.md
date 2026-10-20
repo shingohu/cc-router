@@ -151,6 +151,11 @@ temporary A/B fallback; it also restores project-local Flutter-run leases and
 does not make old and new processes interoperable.
 Stop watch before the final `--no-cache --check`; watch never replaces that
 authority.
+Run the check for each independent Host, including a component's runnable
+`example/`; checking the parent Host does not cover nested independent Hosts.
+Framework dependencies such as `ccrouter_ui` contribute no business Package
+index. Generation and `find` ignore their legacy indexes, whether writable or
+read-only; business Package index and Portable State verification remain intact.
 Different Hosts resolving to that same build root share one Builder owner. The
 owner watches the union of their active target closures, while every Host keeps
 its own aggregation, validation, status, diagnostics, and input revision.
@@ -490,9 +495,11 @@ the log and is never mixed into Flutter Tool's machine stream.
 - Optional typed UI Fragments use `generate` and `portable prepare/publish` too.
   Builder-owned `ui/*.ui.g.dart` and metadata feed the consumer-owned stable
   `<componentId>.ui.api.g.dart`; do not copy factories into Core bundles or
-  import another component's generated Client. UI Package indexes use schema 3;
-  non-UI indexes retain schema 2. UI source metadata requires both schema 5 and
-  `uiSchemaVersion: 1`. UI metadata also records portable marker, Renderer and
+  import another component's generated Client. Enum Actions use UI schema 1 /
+  Package Index schema 3; DTO Actions use UI schema 2 / Package Index schema 4.
+  Mixed UI documents use the highest required UI version; non-UI indexes retain
+  schema 2. UI source metadata uses metadata schema 5 plus `uiSchemaVersion`
+  matching the required UI version. UI metadata also records portable marker, Renderer and
   consumer declarations for Owner checks and structured IDE diagnostics.
   UI-specific `find --usage` reads public-type import proofs and consumer aliases;
   DevTools Catalog views remain unimplemented.

@@ -113,6 +113,13 @@ final class CCResolvedPackage {
     }
   }
 
+  /// Whether this is framework implementation rather than a business Package.
+  ///
+  /// Framework dependencies do not contribute business metadata or Package
+  /// identities. Generation and lookup ignore any legacy indexes they contain,
+  /// so cleaning old output cannot change a consumer's generated dependencies.
+  bool get isFrameworkPackage => _ccrouterFrameworkPackages.contains(name);
+
   /// Whether a non-framework dependency must publish a Package index.
   ///
   /// Pub resolution may omit dependency Package dev-dependencies, so direct
@@ -120,7 +127,7 @@ final class CCResolvedPackage {
   /// signal. Packages with no annotations publish an empty index, which keeps
   /// missing external component metadata distinguishable from nonparticipants.
   bool get requiresPackageIndex =>
-      !_ccrouterFrameworkPackages.contains(name) &&
+      !isFrameworkPackage &&
       (dependencies.contains('ccrouter') ||
           dependencies.contains('ccrouter_contracts'));
 }

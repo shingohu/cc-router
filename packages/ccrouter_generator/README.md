@@ -110,7 +110,8 @@ UI `find --usage` 从索引中的完整 schema 公共导出和实际 alias 输�
 脚手架默认 enum Action，动态选择 ID 可显式改为受限 DTO；根 scalar Action 不支持。
 参与生成的 contracts、Owner、Consumer 各包需声明自己的 `ccrouter_generator` dev dependency，
 Host 同时需要 `build_runner`。生成后核对组件/UI 数量，Host 依赖不能代替成员包声明。
-`ccrouter_ui` 是框架依赖，无需业务 Portable State；外部分发业务组件仍需自己的有效状态。
+`ccrouter_ui` 是框架依赖，无需业务 Package Index 或 Portable State；生成与 `find`
+忽略框架依赖的遗留索引，外部分发业务组件仍需自己的有效索引与状态。
 Analyzer 已有保守 UI 诊断和 required Owner Quick Fix；UI DevTools Catalog 仍未实现。详见
 [UI Fragment 接入指南](../../skills/ccrouter-integration-development/references/ui-fragments.md)。
 [独立 enum/DTO 验证](../../docs/validation/ui-fragment-adoption-20261020/README.md)记录本地闭环与
