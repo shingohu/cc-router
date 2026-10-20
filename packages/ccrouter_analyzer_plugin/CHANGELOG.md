@@ -2,6 +2,9 @@
 
 ## 0.1.0 - Unreleased
 
+- Fix UI constructor identity checks so ordinary factory functions cannot receive
+  invalid dependency fixes; preserve same-name Contract Owners in separate
+  libraries and reject nested Renderer functions.
 - Add conservative UI Fragment alias, dependency, Action, Renderer and SPI
   diagnostics with canonical symbol identity and incomplete-buffer deferral.
 - Include UI Owner metadata in the required-dependency diagnostic and safe

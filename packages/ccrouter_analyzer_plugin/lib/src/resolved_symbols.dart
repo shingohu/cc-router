@@ -112,15 +112,22 @@ abstract final class CCRouterResolvedSymbols {
     'package:ccrouter_contracts/ccrouter_ui_contracts.dart',
   };
 
-  /// Proves a constructor identity; partial/foreign resolved types defer.
+  /// Proves the invoked constructor identity, never a function's return type.
   /// Parser-only checks require an exact public import and no shadowing.
   static bool isFrameworkConstructor(
     Expression expression,
     String name,
     String file,
   ) {
-    final type = expression.staticType;
-    if (type is InterfaceType) return isFrameworkType(type, name, file);
+    final element = switch (expression) {
+      InstanceCreationExpression e => e.constructorName.element,
+      MethodInvocation e => e.methodName.element,
+      _ => null,
+    };
+    if (element != null) {
+      return element is ConstructorElement &&
+          isFrameworkType(element.enclosingElement.thisType, name, file);
+    }
     final unit = expression.thisOrAncestorOfType<CompilationUnit>();
     if (unit == null || unit.declaredFragment != null) return false;
     final (prefix, symbol) = switch (expression) {

@@ -378,6 +378,168 @@ const component = CCComponent(id: CCComponentId('consumer'), version: '1.0.0',
       // The authoritative Generator rejects this declaration: use a local Widget.
     },
   );
+  for (final name in ['CCComponent', 'wrapComponent']) {
+    test('ordinary functions named $name cannot receive UI fixes', () async {
+      final result = await fixture.resolve('''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart' as cc;
+import 'package:ccrouter_contracts/ccrouter_ui_contracts.dart';
+import 'package:owner_contracts/owner_contracts.dart';
+cc.CCComponent $name({Object? uiDependencies}) => const cc.CCComponent(
+  id: cc.CCComponentId('consumer'), version: '1.0.0');
+final component = $name(uiDependencies: [
+  CCUIFragmentDependency<OrderFragment>(alias: 'bad-alias', versionRange: 'latest')]);
+''');
+      expect(result.diagnostics, isEmpty);
+      final owners = CCRouterContractOwnerIndexCache().resolve(fixture.file);
+      expect(fixture.issues(result, owners: owners), isEmpty);
+      expect(
+        CCRouterQuickFixes.compute(
+          source: result.content,
+          filePath: fixture.file,
+          offset: result.content.indexOf(
+            'CCUIFragmentDependency<OrderFragment>',
+          ),
+          diagnosticCode: 'ccrouter_component_owner_dependency_missing',
+          sourcePackage: 'consumer',
+          contractOwners: owners,
+          resolvedUnit: result.unit,
+        ),
+        isEmpty,
+      );
+    });
+  }
+  test(
+    'UI dependency factories do not inherit constructor semantics',
+    () async {
+      final result = await fixture.resolve('''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
+import 'package:ccrouter_contracts/ccrouter_ui_contracts.dart' as ui;
+import 'package:owner_contracts/owner_contracts.dart';
+ui.CCUIFragmentDependency<T> CCUIFragmentDependency<T extends Object>({
+  required String alias, required String versionRange,
+}) => ui.CCUIFragmentDependency<T>(alias: 'card', versionRange: '*');
+final component = CCComponent(id: CCComponentId('consumer'), version: '1.0.0',
+  uiDependencies: [CCUIFragmentDependency<OrderFragment>(
+    alias: 'bad-alias', versionRange: 'latest')]);
+''');
+      expect(result.diagnostics, isEmpty);
+      expect(
+        fixture.issues(
+          result,
+          owners: CCRouterContractOwnerIndexCache().resolve(fixture.file),
+        ),
+        isEmpty,
+      );
+    },
+  );
+  test('UI typedef constructors retain canonical identity', () async {
+    final result = await fixture.resolve('''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart' as cc;
+import 'package:ccrouter_contracts/ccrouter_ui_contracts.dart' as ui;
+typedef Component = cc.CCComponent;
+typedef Dependency<T extends Object> = ui.CCUIFragmentDependency<T>;
+class Marker {}
+const component = Component(id: cc.CCComponentId('consumer'), version: '1.0.0',
+  uiDependencies: [Dependency<Marker>(alias: 'bad-alias', versionRange: '*')]);
+''');
+    expect(result.diagnostics, isEmpty);
+    expect(fixture.codes(result), contains('ccrouter_ui_alias_invalid'));
+  });
+  test(
+    'same-name UI contracts in different libraries retain both Owners',
+    () async {
+      fixture.write(
+        'owner/lib/second.dart',
+        File(
+          p.join(fixture.root.path, 'owner/lib/contract.dart'),
+        ).readAsStringSync().replaceFirst('orders.card', 'orders.other'),
+      );
+      final metadataFile = File(
+        p.join(
+          fixture.root.path,
+          'owner/lib/src/ccrouter_generated/metadata/ccrouter_package.json',
+        ),
+      );
+      final metadata = jsonDecode(metadataFile.readAsStringSync()) as Map;
+      (metadata['metadata'][0]['uiContracts'] as List).add({
+        'componentId': 'orders',
+        'id': 'orders.other',
+        'declaration': {
+          'packageUri': 'package:owner_contracts/second.dart',
+          'symbol': 'OrderFragment',
+        },
+      });
+      metadataFile.writeAsStringSync(jsonEncode(metadata));
+      final owners = CCRouterContractOwnerIndexCache().resolve(fixture.file);
+      for (final library in ['contract.dart', 'second.dart']) {
+        final result = await fixture.resolve('''
+$_imports
+import 'package:owner_contracts/$library';
+const component = CCComponent(id: CCComponentId('consumer'), version: '1.0.0',
+  uiDependencies: [CCUIFragmentDependency<OrderFragment>(alias: 'card', versionRange: '*')]);
+''');
+        expect(result.diagnostics, isEmpty);
+        final issue = fixture
+            .issues(result, owners: owners)
+            .singleWhere(
+              (d) => d.code == 'ccrouter_component_owner_dependency_missing',
+            );
+        final fix = CCRouterQuickFixes.compute(
+          source: result.content,
+          filePath: fixture.file,
+          offset: issue.offset,
+          diagnosticCode: issue.code,
+          sourcePackage: 'consumer',
+          contractOwners: owners,
+          resolvedUnit: result.unit,
+        ).single;
+        final fixed = await fixture.resolve(
+          result.content.replaceRange(
+            fix.offset,
+            fix.offset + fix.length,
+            fix.replacement,
+          ),
+        );
+        expect(fixed.diagnostics, isEmpty);
+        expect(fixture.issues(fixed, owners: owners), isEmpty);
+      }
+      // Package-only evidence cannot distinguish these declaration libraries.
+      expect(
+        owners.resolve(
+          kind: CCRouterContractKind.uiFragment,
+          contractSymbol: 'OrderFragment',
+          prefix: null,
+          importPrefixes: {
+            '': {'owner_contracts'},
+          },
+          sourcePackage: 'consumer',
+        ),
+        isNull,
+      );
+    },
+  );
+  for (final inMethod in [false, true]) {
+    test(
+      'nested Renderer in ${inMethod ? 'method' : 'function'} is rejected',
+      () async {
+        final result = await fixture.resolve('''
+$_imports
+import 'package:flutter/widgets.dart';
+import 'package:ccrouter_ui/ccrouter_ui.dart';
+$_contract
+${inMethod ? 'class View {' : ''}
+void outer() {
+  @CCUIFragmentRenderer(Summary)
+  Widget render(CCUIFragmentRenderInput<Props, Action> input) => const Widget();
+  render(const CCUIFragmentRenderInput<Props, Action>());
+}
+${inMethod ? '}' : ''}
+''');
+        expect(result.diagnostics, isEmpty);
+        expect(fixture.codes(result), contains('ccrouter_ui_renderer_invalid'));
+      },
+    );
+  }
 }
 
 String _consumer(String dependencies, {String extra = ''}) =>

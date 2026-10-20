@@ -615,7 +615,7 @@ final class CCRouterContractOwnerIndexCache {
                 componentId: ui['componentId'] as String,
                 contractSourcePath: sourcePath,
               );
-              pending['uiFragment\u0000$contractPackage\u0000${item.contractSymbol}\u0000${item.componentId}'] =
+              pending['uiFragment\u0000$contractPackage\u0000${item.contractSymbol}\u0000${item.componentId}\u0000$sourcePath'] =
                   item;
             }
           }
@@ -689,7 +689,8 @@ final class CCRouterContractOwnerIndexCache {
       );
       final identity =
           '${owner.kind.name}\u0000${owner.contractPackage}\u0000'
-          '${owner.contractSymbol}\u0000${owner.componentId}';
+          '${owner.contractSymbol}\u0000${owner.componentId}\u0000'
+          '${owner.contractLibraryUri}';
       ownersByIdentity[identity] = owner;
     }
     final owners = ownersByIdentity.values.toList()

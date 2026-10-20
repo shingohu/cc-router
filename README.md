@@ -106,6 +106,8 @@ Runtime 关闭立即使旧 Action 失效；重新初始化后 Host 必须显式�
 Renderer 签名及 Host/Generated SPI 越界检查；缺少 required Owner 可在公共常量已导入时
 提供保守 Quick Fix。Host 完整性错误通过有效的 Generator 结构化快照进入 IDE；
 完整 Props schema 和最终正确性仍以 `generate --check` 为准。
+UI 依赖检查只接受真实框架构造器，返回同类型的普通函数不触发此类检查或修复。
+Owner 按声明 Library 和符号区分；Renderer 必须声明在 Library 顶层，不能嵌套在函数或方法内。
 
 ### IDE / Analysis Server 诊断
 

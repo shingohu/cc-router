@@ -106,6 +106,10 @@ boundaries. It offers a conservative missing required Owner fix only when the
 public constant is already imported. Validated Generator snapshots bridge Host
 closure errors into the IDE; full Props schemas and final correctness remain
 owned by `generate --check`.
+UI dependency checks require an actual framework constructor; ordinary functions
+returning the same type do not trigger those checks or fixes. Owners retain their
+declaration library and symbol identity. Renderers must be library-level functions,
+not functions nested inside another function or method.
 
 ### IDE / Analysis Server Diagnostics
 

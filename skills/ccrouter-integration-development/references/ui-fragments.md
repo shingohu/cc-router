@@ -186,6 +186,11 @@ marker identity and source positions. Host completeness errors enter the IDE
 only through a current validated Generator snapshot. Full schema validation is
 still Generator-owned; see [IDE setup and boundaries](ide-analysis-server.md).
 Plugin updates follow the two-stage remote commit then Demo pin workflow.
+Dependency checks and fixes require an actual framework constructor; a function
+returning `CCComponent` or `CCUIFragmentDependency<T>` does not establish that
+identity. Metadata distinguishes same-name markers by their declaration library;
+ambiguous parser-only evidence still defers. A Renderer nested inside a function
+or method is invalid even when its signature matches the Contract.
 
 ## Repair generation failures
 

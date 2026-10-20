@@ -107,7 +107,8 @@ abstract final class CCRouterUIFragmentAnalysis {
         }
       } else if (name == 'CCUIFragmentRenderer') {
         final parent = annotation.parent;
-        if (parent is! FunctionDeclaration) {
+        if (parent is! FunctionDeclaration ||
+            parent.parent is! CompilationUnit) {
           add(
             annotation,
             'renderer_invalid',

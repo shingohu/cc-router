@@ -20,6 +20,11 @@ spreads and ambiguous evidence never trigger speculative edits. Legacy metadata
 without UI declaration identity defers until regeneration. No alias, Action,
 Renderer or import rewrite is offered. Self-owner UI declarations defer to the
 Generator; a cyclic self dependency is never suggested.
+Constructor-based checks prove the invoked constructor declaration rather than
+the expression's return type, so ordinary factory functions cannot receive a
+constructor argument fix. Owner indexes retain distinct declaration libraries
+for same-name markers, while ambiguous parser-only lookups defer. Renderer
+annotations on nested functions are rejected even with an otherwise valid signature.
 
 Generator UI metadata records portable Contract, Renderer and consumer
 locations. Validated watch/Host one-shot snapshots can publish

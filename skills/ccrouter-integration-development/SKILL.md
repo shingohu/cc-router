@@ -80,6 +80,10 @@ boundaries. Metadata-proven UI Owners share the conservative required-edge fix;
 full Props schemas and Host completeness remain Generator-owned, with Host
 failures bridged only from current structured snapshots. Follow
 [UI Fragment guidance](references/ui-fragments.md) for coverage and limits.
+UI dependency checks prove the invoked framework constructor, not a function's
+return type. Owner metadata preserves declaration-library identity even when
+different libraries use the same marker name. Renderer functions must be at
+library scope; nested functions are diagnosed before Host generation.
 
 For live IDE boundary feedback, use the optional `ccrouter_analyzer_plugin`.
 It reports deterministic source diagnostics and uses the current Analysis Server
