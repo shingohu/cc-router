@@ -4,6 +4,7 @@ import 'package:analyzer/dart/ast/ast.dart';
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/type.dart';
 import 'package:ccrouter_analyzer_plugin/src/contract_owner_index.dart';
+import 'resolved_symbols.dart';
 
 /// Restores repeated parser-only alias scans for differential diagnosis.
 const String _componentAliasGraphKillSwitch =
@@ -20,7 +21,7 @@ final class CCRouterMissingComponentDependency {
     required this.contractSymbol,
   });
 
-  /// Offset of the Service or Command dependency that requires the owner.
+  /// Offset of the Service, Command or UI dependency that requires the owner.
   final int offset;
 
   /// Source length of the dependency expression highlighted by the IDE.
@@ -29,7 +30,7 @@ final class CCRouterMissingComponentDependency {
   /// Exact owner recovered from generated Package metadata.
   final CCRouterContractOwner owner;
 
-  /// Whether the consumer is a Service or Command dependency.
+  /// Whether the consumer is a Service, Command or UI dependency.
   final CCRouterContractKind contractKind;
 
   /// Authored Contract type that caused the missing edge.
@@ -66,6 +67,13 @@ abstract final class CCRouterComponentDependencyAnalyzer {
           'CCComponent',
         );
         if (arguments == null) continue;
+        if (unit.declaredFragment != null &&
+            !CCRouterResolvedSymbols.isFrameworkConstructor(
+              variable.initializer!,
+              'CCComponent',
+              'component',
+            ))
+          continue;
         final dependencies = _namedArgument(arguments, 'dependencies');
         if (dependencies != null && dependencies is! ListLiteral) {
           continue;
@@ -83,7 +91,15 @@ abstract final class CCRouterComponentDependencyAnalyzer {
         for (final field in const <(String, CCRouterContractKind)>[
           ('serviceDependencies', CCRouterContractKind.service),
           ('commandDependencies', CCRouterContractKind.command),
+          ('uiDependencies', CCRouterContractKind.uiFragment),
         ]) {
+          if (field.$2 == CCRouterContractKind.uiFragment &&
+              !CCRouterResolvedSymbols.isFrameworkConstructor(
+                variable.initializer!,
+                'CCComponent',
+                'component',
+              ))
+            continue;
           final value = _namedArgument(arguments, field.$1);
           if (value is! ListLiteral) continue;
           for (final element in value.elements.whereType<Expression>()) {
@@ -98,6 +114,17 @@ abstract final class CCRouterComponentDependencyAnalyzer {
                     importPrefixes: importPrefixes,
                     sourcePackage: sourcePackage,
                   );
+            // UI self-consumption is invalid in the Generator. Never suggest
+            // repairing it with a self dependency, which would introduce a cycle.
+            final consumerId = _namedArgument(arguments, 'id');
+            if (field.$2 == CCRouterContractKind.uiFragment &&
+                owner != null &&
+                consumerId != null &&
+                (unit.declaredFragment != null
+                        ? _resolvedComponentId(consumerId)
+                        : _localLiteral(unit, consumerId, {})) ==
+                    owner.componentId)
+              continue;
             if (owner == null ||
                 _containsOwner(
                       unit,
@@ -256,9 +283,18 @@ abstract final class CCRouterComponentDependencyAnalyzer {
     Expression expression,
     CCRouterContractKind kind,
   ) {
-    final expected = kind == CCRouterContractKind.service
-        ? 'CCServiceDependency'
-        : 'CCCommandDependency';
+    final expected = switch (kind) {
+      CCRouterContractKind.service => 'CCServiceDependency',
+      CCRouterContractKind.command => 'CCCommandDependency',
+      CCRouterContractKind.uiFragment => 'CCUIFragmentDependency',
+    };
+    if (kind == CCRouterContractKind.uiFragment &&
+        !CCRouterResolvedSymbols.isFrameworkConstructor(
+          expression,
+          expected,
+          'ui_fragment',
+        ))
+      return null;
     final typeArguments = switch (expression) {
       InstanceCreationExpression value
           when value.constructorName.type.name.lexeme == expected =>

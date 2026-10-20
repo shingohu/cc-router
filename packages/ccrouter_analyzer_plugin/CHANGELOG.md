@@ -2,6 +2,13 @@
 
 ## 0.1.0 - Unreleased
 
+- Add conservative UI Fragment alias, dependency, Action, Renderer and SPI
+  diagnostics with canonical symbol identity and incomplete-buffer deferral.
+- Include UI Owner metadata in the required-dependency diagnostic and safe
+  imported-constant Quick Fix; legacy metadata without identity defers.
+- Consume structured UI Host failures through the existing validated Generator
+  snapshot bridge without adding generation or another Analyzer session.
+
 - Preparing the first public release of CCRouter Analysis Server diagnostics.
 - Added Metadata-driven missing Service/Command owner diagnostics and a
   conservative required-dependency Quick Fix for directly editable lists.

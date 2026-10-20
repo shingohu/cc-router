@@ -298,13 +298,73 @@ const component = CCComponent(id: CCComponentId('account'), version: '1.0.0',
     expect(result.output, isNot(contains('CCRouterRuntime')));
     expect(result.output, isNot(contains('registerRoute')));
   });
-  test('missing required owner fails generation', () async {
-    final result = await _generate('''$_source
+  for (final optional in [false, true]) {
+    test(
+      'missing required owner explains the repair (optional: $optional)',
+      () async {
+        final result = await _generate('''$_source
 const component = CCComponent(id: CCComponentId('account'), version: '1.0.0',
+  ${optional ? 'optionalDependencies: [owner],' : ''}
   uiDependencies: [CCUIFragmentDependency<Summary>(alias: 'summary', versionRange: '^1.0.0')]);
 ''');
+        expect(result.output, isEmpty);
+        expect(result.logs, contains('dependencyMissing'));
+        expect(result.logs, contains('consumer "account"'));
+        expect(result.logs, contains('owner "orders"'));
+        expect(result.logs, contains('orders.summary'));
+        expect(result.logs, contains('CCComponent.dependencies'));
+        expect(result.logs, contains('optionalDependencies'));
+      },
+    );
+  }
+  for (final scenario in [
+    (alias: 'build-card', code: 'invalidAlias', repair: 'Dart member'),
+    (alias: 'toString', code: 'invalidAlias', repair: 'Dart member'),
+    (alias: 'summary', code: 'duplicateAlias', repair: 'unique alias'),
+    (alias: 'other', code: 'duplicateDependency', repair: 'one dependency'),
+  ]) {
+    test('consumer identifies ${scenario.code}: ${scenario.alias}', () async {
+      final result = await _generate('''$_source
+const component = CCComponent(id: CCComponentId('account'), version: '1.0.0',
+  dependencies: [owner], uiDependencies: [
+    CCUIFragmentDependency<Summary>(alias: 'summary', versionRange: '^1.0.0'),
+    CCUIFragmentDependency<Summary>(alias: '${scenario.alias}', versionRange: '^1.0.0'),
+  ]);
+''');
+      expect(result.output, isEmpty);
+      expect(result.logs, contains(scenario.code));
+      expect(result.logs, contains('account'));
+      expect(result.logs, contains('orders.summary'));
+      expect(result.logs, contains(scenario.repair));
+    });
+  }
+  test(
+    'data-bearing selection Action fails with the supported boundary',
+    () async {
+      final result = await _generate(
+        _source.replaceFirst(
+          'enum Action { openDetails }',
+          'final class Action { const Action({required this.selectedId}); '
+              'final int selectedId; }',
+        ),
+      );
+      expect(result.output, isEmpty);
+      expect(result.logs, contains('enum Action'));
+      expect(result.logs, contains('payload'));
+      expect(result.logs, contains('Summary'));
+    },
+  );
+  test('invalid consumer range identifies the contract and repair', () async {
+    final result = await _generate('''$_source
+const component = CCComponent(id: CCComponentId('account'), version: '1.0.0',
+  dependencies: [owner], uiDependencies: [
+    CCUIFragmentDependency<Summary>(alias: 'summary', versionRange: 'latest')]);
+''');
     expect(result.output, isEmpty);
-    expect(result.logs, contains('dependencyMissing'));
+    expect(result.logs, contains('orders.summary'));
+    expect(result.logs, contains('account'));
+    expect(result.logs, contains('versionRange'));
+    expect(result.logs, contains('^1.0.0'));
   });
   test('Renderer signature must match exact schema', () async {
     final result = await _generate('''$_source
@@ -313,6 +373,102 @@ Widget render(CCUIFragmentRenderInput<String, Action> input) => const SizedBox()
 ''');
     expect(result.output, isEmpty);
     expect(result.logs, contains('rendererSignatureMismatch'));
+  });
+  test(
+    'UI metadata proves marker renderer and consumer source locations',
+    () async {
+      final result = await _generate('''$_source
+@CCUIFragmentRenderer(Summary)
+Widget render(CCUIFragmentRenderInput<Props, Action> input) => const SizedBox();
+const component = CCComponent(id: CCComponentId('account'), version: '1.0.0',
+  dependencies: [owner], uiDependencies: [CCUIFragmentDependency<Summary>(alias: 'card', versionRange: '*')]);
+''');
+      final metadata = jsonDecode(result.output) as Map;
+      for (final (field, reference, symbol) in [
+        ('uiContracts', 'declaration', 'Summary'),
+        ('uiRenderers', 'implementation', 'render'),
+        ('uiRequirements', 'consumerDeclaration', 'component'),
+      ]) {
+        final location = (metadata[field] as List).single[reference];
+        expect(
+          location['packageUri'],
+          'package:ccrouter_test/src/ui_probe.dart',
+        );
+        expect(location['symbol'], symbol);
+        expect(location['line'], greaterThan(1));
+        expect(location['column'], greaterThan(0));
+      }
+    },
+  );
+  test('UI workspace diagnostics preserve portable consumer location', () {
+    final contract = <String, Object?>{
+      'componentId': 'orders',
+      'id': 'orders.summary',
+      'version': '1.0.0',
+      'shapeFingerprint': 'shape',
+      'declaration': {
+        'packageUri': 'package:contracts/ui.dart',
+        'symbol': 'Summary',
+        'line': 4,
+        'column': 1,
+      },
+    };
+    final documents = <Map<String, Object?>>[
+      {
+        'package': 'contracts',
+        'uiSchemaVersion': 1,
+        'uiContracts': [contract],
+      },
+      {
+        'package': 'account',
+        'components': [
+          {
+            'id': 'account',
+            'dependencies': ['orders'],
+          },
+        ],
+        'uiRequirements': [
+          {
+            ...contract,
+            'consumer': 'account',
+            'versionRange': '^1.0.0',
+            'consumerDeclaration': {
+              'packageUri': 'package:account/component.dart',
+              'symbol': 'component',
+              'line': 7,
+              'column': 9,
+            },
+          },
+        ],
+      },
+    ];
+    final issue = validateUIFragmentWorkspaceDiagnostics(
+      documents,
+      host: true,
+    ).single;
+    expect(issue.code, 'ccrouter_ui_missing_implementation');
+    expect(issue.primaryLocation?.uri, 'package:account/component.dart');
+    expect(issue.primaryLocation?.line, 7);
+    expect(issue.primaryLocation?.column, 9);
+    expect(issue.correction, contains('Host'));
+    expect(
+      issue.relatedLocations.single.location.uri,
+      'package:contracts/ui.dart',
+    );
+    expect(
+      validateUIFragmentWorkspaceDiagnostics(documents, host: false),
+      isEmpty,
+    );
+    (documents[1]['uiRequirements'] as List).single.remove(
+      'consumerDeclaration',
+    );
+    expect(
+      validateUIFragmentWorkspaceDiagnostics(
+        documents,
+        host: true,
+      ).single.primaryLocation,
+      isNull,
+    );
   });
   test('Host validation rejects missing or foreign-owner Renderer', () {
     final contract = {
@@ -343,7 +499,15 @@ Widget render(CCUIFragmentRenderInput<String, Action> input) => const SizedBox()
     expect(validateUIFragmentWorkspace(documents, host: false), isEmpty);
     expect(
       validateUIFragmentWorkspace(documents, host: true),
-      contains(contains('missingImplementation')),
+      contains(
+        allOf(
+          contains('missingImplementation'),
+          contains('account'),
+          contains('orders/orders.summary'),
+          contains('@CCUIFragmentRenderer'),
+          contains('Host'),
+        ),
+      ),
     );
     documents.add({
       'package': 'evil',
@@ -352,6 +516,45 @@ Widget render(CCUIFragmentRenderInput<String, Action> input) => const SizedBox()
     expect(
       validateUIFragmentWorkspace(documents, host: true),
       contains(contains('ownerMismatch')),
+    );
+  });
+  test('Host reports the consumer behind a missing required UI owner edge', () {
+    final contract = {
+      'componentId': 'orders',
+      'id': 'orders.summary',
+      'version': '1.0.0',
+      'shapeFingerprint': 'shape',
+    };
+    final documents = <Map<String, Object?>>[
+      {
+        'package': 'contracts',
+        'uiContracts': [contract],
+      },
+      {
+        'package': 'a',
+        'components': [
+          {
+            'id': 'account',
+            'dependencies': <String>[],
+            'optionalDependencies': ['orders'],
+          },
+        ],
+        'uiRequirements': [
+          {...contract, 'consumer': 'account', 'versionRange': '^1.0.0'},
+        ],
+      },
+    ];
+    expect(
+      validateUIFragmentWorkspace(documents, host: false),
+      contains(
+        allOf(
+          contains('dependencyMissing'),
+          contains('account'),
+          contains('orders/orders.summary'),
+          contains('CCComponent.dependencies'),
+          contains('optionalDependencies'),
+        ),
+      ),
     );
   });
 }

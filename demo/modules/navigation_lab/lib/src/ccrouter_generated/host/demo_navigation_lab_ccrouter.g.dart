@@ -24,7 +24,7 @@ final ccrouterGeneratedPackageBundle = CCGeneratedPackageBundle(
   packageName: 'demo_navigation_lab',
   packageVersion: '0.1.0',
   contentFingerprint:
-      '41e1b79e0a0282e65a4806cade5243091a97d1a9f4439023680cacc9b61eeaa2',
+      '6c4dc104739ffb0f48403cbd18ba132a494becf9ac717087ee268f50d3c6397b',
   contractBundle: CCContractBundleDescriptor(
     packageName: 'demo_navigation_lab',
     packageVersion: '0.1.0',

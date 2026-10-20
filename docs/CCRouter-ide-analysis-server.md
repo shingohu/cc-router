@@ -1,7 +1,7 @@
 # CCRouter IDE / Analysis Server 集成
 
 > 文档状态：当前接入契约与已知限制。Plugin 提供单文件诊断、按需类型解析和 Metadata 驱动的
-> Service/Command Owner 检查，Generator/Workspace Validator 仍是跨 Package 正确性的最终门禁。
+> Service/Command/UI Owner 检查，Generator/Workspace Validator 仍是跨 Package 正确性的最终门禁。
 
 ## Host 生命周期边界
 
@@ -12,6 +12,24 @@
 导入需要的 SPI。测试／工具、生成物和同名外部类不误报；无法证明角色或转导出身份时暂缓。
 Host 判定复用 `.metadata`、`ccrouter.yaml` 和直接依赖，已保存角色变动会刷新诊断。
 同一个 Host Package 内的装配代码与业务页面仍需审查，Plugin 不提供安全隔离或自动角色修复。
+
+## UI Fragment 检测
+
+UI v1 的编辑时诊断包括 `ccrouter_ui_alias_invalid`、`ccrouter_ui_alias_duplicate`、
+`ccrouter_ui_dependency_duplicate`、`ccrouter_ui_version_range_invalid`、
+`ccrouter_ui_action_invalid`、`ccrouter_ui_renderer_invalid` 和 `ccrouter_ui_spi_access`。
+使用框架声明身份，支持 prefix 和公共转导出；无法证明的类型和不完整输入暂缓。范围检查仅
+拒绝明显不支持的字面量，Props 完整 schema 和最终 Host 闭包仍由 Generator 验证。
+
+UI Owner 使用 `ccrouter_component_owner_dependency_missing`。Quick Fix 仅补已导入的唯一
+公共 Owner 常量，要求 required 列表缺省或可直接编辑；不猜 import，不改 spread/计算集合。
+旧 metadata 缺 marker declaration 时暂缓 Owner 检查，重新生成后可用。组件不得引用 UI
+Host SPI，手写代码不得引用 Generated SPI；测试和生成物豁免。Host Package 内业务边界仍需审查。
+
+Host 聚合产生有稳定 code 和可移植位置的 UI 诊断：缺 Renderer、重复 Contract/Renderer、
+Owner 错位、依赖缺失、版本越界、指纹变化和陈旧生成物，经现有 watch/Host one-shot 快照
+通道进入 IDE。快照身份和过期清除规则不变；无源码位置的旧 metadata 只在 CLI 报错。
+插件不会运行生成器、自动重写 Renderer/Action 或证明 Flutter 资源释放。
 
 ## 目标与边界
 
@@ -41,7 +59,7 @@ Fix 时才会提交一个有界源码编辑。插件不可用时，项目仍可�
 | `ccrouter_identifier_invalid` | error | 校验可确定的字面量 Route/Service/Command/Event/InitTask/Gate ID |
 | `ccrouter_alias_invalid` | error | 校验可确定的 Service/Command Client alias |
 | `ccrouter_timeout_invalid` | error | 拒绝可确定的零值或负值 InitTask timeout |
-| `ccrouter_component_owner_dependency_missing` | error | Service/Command Contract Owner 未进入消费组件 required `dependencies` |
+| `ccrouter_component_owner_dependency_missing` | error | Service/Command/UI Contract Owner 未进入消费组件 required `dependencies` |
 | `ccrouter_host_component_owner_missing` | error | active watch 已证明 Host closure 缺少能力声明的 Owner；同一根因的级联错误折叠显示 |
 | `ccrouter_pub_resolution_stale` | warning | 保存的 Host dependencies 与 resolved Pub graph 不一致；先运行 Pub get，期间暂停 Owner 推断 |
 | `ccrouter_service_disposable_missing` | warning | 注解 Service 已有兼容的实例 `dispose()`，却未实现 Scope 识别的 `CCDisposable` |

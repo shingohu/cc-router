@@ -469,9 +469,18 @@ the log and is never mixed into Flutter Tool's machine stream.
   `<componentId>.ui.api.g.dart`; do not copy factories into Core bundles or
   import another component's generated Client. UI Package indexes use schema 3;
   non-UI indexes retain schema 2. UI source metadata requires both schema 5 and
-  `uiSchemaVersion: 1`. UI-specific `find --usage`, DevTools Catalog views and
-  Analyzer Plugin diagnostics are not implemented; use generation validation
-  and the [UI integration guide](../ccrouter-integration-development/references/ui-fragments.md).
+  `uiSchemaVersion: 1`. UI metadata also records portable marker, Renderer and
+  consumer declarations for Owner checks and structured IDE diagnostics.
+  UI-specific `find --usage` and DevTools Catalog views remain unimplemented.
+  The optional Analyzer Plugin checks deterministic declarations and safe Owner
+  fixes; Host UI errors use the existing validated snapshot bridge. Full schema
+  and final correctness remain generation-owned; follow the
+  [UI integration guide](../ccrouter-integration-development/references/ui-fragments.md).
+  Consumer Builder errors identify the consumer/contract and distinguish
+  invalid aliases, duplicate aliases and duplicate contracts. Repair the authored
+  declaration first: multiple instances share one UI dependency and use Keys.
+  A missing Renderer error names the consumer and requires checking the actual
+  Host implementation closure; a successful Package-local build is insufficient.
 - Never edit `lib/src/ccrouter_generated/` by hand.
 - Never add a generated `part` directive to authored source.
 - Do not manually register a generated Route, Service, Command, Event, or

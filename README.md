@@ -97,6 +97,16 @@ Runtime 关闭立即使旧 Action 失效；重新初始化后 Host 必须显式�
 [UI Fragment 设计与实施](docs/CCRouter-ui-fragment-design.md)。Demo 首页“展示”中的
 “类型化 UI Fragment”演示多实例、Tab 保活、Props 更新、模拟账号重建和业务错误。
 
+首次接入涉及 contracts、Renderer、消费者依赖及 Host 装配，完整步骤与错误修正见
+[UI 接入指南](skills/ccrouter-integration-development/references/ui-fragments.md)。同一 Fragment
+渲染多个实例只声明一次依赖，以 Key 区分实例。v1 enum Action 不能回传 B 私有加载列表中
+所选项的动态 ID；该交互尚不支持，不应通过共享可变状态或 Event 绕过。
+[易用性与收敛审查](docs/CCRouter-ui-fragment-usability-review.md)区分已有能力、接入成本和待设计扩展。
+可选 Analyzer Plugin 提供 UI alias、重复依赖、明显非法版本范围、普通 enum Action、
+Renderer 签名及 Host/Generated SPI 越界检查；缺少 required Owner 可在公共常量已导入时
+提供保守 Quick Fix。Host 完整性错误通过有效的 Generator 结构化快照进入 IDE；
+完整 Props schema 和最终正确性仍以 `generate --check` 为准。
+
 ### IDE / Analysis Server 诊断
 
 生成的 Route API 已经提供类型补全和自动导包。需要编辑时实时检查跨组件内部生成物引用、

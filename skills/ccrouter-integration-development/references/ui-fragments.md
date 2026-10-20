@@ -5,6 +5,111 @@ and A must consume it through a contract. Use ordinary public Flutter widgets
 for simple presentation reuse, Service for data-only reuse, and Route for full
 destinations. A Fragment has no RouteEntry, result Future, Scope or Deep Link.
 
+## Check the business interaction first
+
+Before adding declarations, check what A must receive from B. v1 Action is a
+plain enum and cannot carry a selected ID or other dynamic payload. A can capture
+an ID it already supplied in Props (for example, a fixed order summary). A cannot
+recover the selected ID of a list loaded privately by B from an enum Action.
+That interaction is not supported by the current Fragment contract. Do not use
+global mutable selection, a Service returning Widget/callback, an Event detour,
+or a private implementation import to make it appear supported. B may handle
+the action internally if that is the actual product requirement; otherwise use
+ordinary public Flutter composition with explicit ownership or defer the
+Fragment integration until a data-bearing Action contract is supported.
+
+## Complete first integration path
+
+The short generated call is only the last step. Reuse existing Packages where
+possible; this feature does not require creating a new contracts Package for
+each Fragment. The first integration crosses these authored edit points:
+
+| Role | Authored changes | Check |
+| --- | --- | --- |
+| Pure Dart contracts | Direct `ccrouter_contracts` dependency, marker/Props/Action, explicit public exports including the Owner ID | No Flutter dependency; all referenced schema types are public |
+| B implementation | Direct contracts and `ccrouter_ui` dependencies, annotated top-level Renderer | Returns an ordinary Widget; State owns asynchronous work and resources |
+| A consumer | Direct contracts and `ccrouter_ui` dependencies, required Owner edge and `uiDependencies`, page call | Imports its own stable UI Client, never B's implementation |
+| Host | Resolved A/B implementation dependencies and direct `ccrouter_ui` dependency, normal generation | Initialize once with the generated Assembly; no handwritten UI registry |
+
+For example, an existing Pure Dart contracts Package can declare:
+
+```dart
+import 'package:ccrouter_contracts/ccrouter_contracts.dart' show CCComponentId;
+import 'package:ccrouter_contracts/ccrouter_ui_contracts.dart';
+
+const orderComponentId = CCComponentId('order_component');
+
+final class OrderSummaryProps {
+  const OrderSummaryProps({required this.orderId});
+  final int orderId;
+}
+
+enum OrderSummaryAction { openDetails }
+
+@CCUIFragmentContract<OrderSummaryProps, OrderSummaryAction>(
+  componentId: orderComponentId,
+  id: 'order.summary',
+  version: '1.0.0',
+)
+abstract final class OrderSummaryFragmentContract {}
+```
+
+Its public barrel explicitly exports `orderComponentId`,
+`OrderSummaryFragmentContract`, `OrderSummaryProps` and `OrderSummaryAction`.
+Reuse the canonical Owner ID when one already exists. B's existing `CCComponent`
+uses that same ID. Its Renderer imports `ccrouter_ui.dart`, the public contracts
+and Flutter's `material.dart`:
+
+```dart
+@CCUIFragmentRenderer(OrderSummaryFragmentContract)
+Widget renderOrderSummary(
+  CCUIFragmentRenderInput<OrderSummaryProps, OrderSummaryAction> input,
+) => TextButton(
+  onPressed: input.active
+      ? () => input.onAction(OrderSummaryAction.openDetails)
+      : null,
+  child: Text('Order ${input.props.orderId}'),
+);
+```
+
+A imports `ccrouter.dart`, `ccrouter_ui.dart` and the public contracts in its
+component definition:
+
+```dart
+const accountComponent = CCComponent(
+  id: CCComponentId('account_component'),
+  version: '0.1.0',
+  dependencies: [orderComponentId],
+  uiDependencies: [
+    CCUIFragmentDependency<OrderSummaryFragmentContract>(
+      versionRange: '^1.0.0',
+      alias: 'orderSummary',
+    ),
+  ],
+);
+```
+
+After Host generation, A imports its own
+`src/ccrouter_generated/account_component.ui.api.g.dart` and composes:
+
+```dart
+AccountComponentFragments.orderSummary(
+  key: const ValueKey('summary'),
+  props: const OrderSummaryProps(orderId: 1001),
+  onAction: (action) {
+    // A already knows orderId 1001 and decides how to handle openDetails.
+  },
+)
+```
+
+Run the installed CLI's `ccrouter generate <host-root>`, then analyze and test
+the actual consumer. Finish with `ccrouter generate <host-root> --no-cache --check`
+after stopping any active watch. In this framework repository, the Host is
+`demo`, and the executable is
+`fvm dart run --verbosity=error ccrouter_generator:ccrouter`. A successful root
+Workspace Pub get is not a Host generation check. Generated code, fingerprints
+and Assembly glue are never authored manually.
+
 ## Contracts and dependencies
 
 The public contracts Package imports
@@ -73,8 +178,34 @@ integration with actual Host `generate --no-cache --check`.
 UI metadata schema 5 / UI schema 1 and Package Index schema 3 are opt-in.
 Older generators reject these artifacts. Use matching framework/UI/generator
 sources. Packages without UI retain their existing schema and generated API.
-The current Analyzer Plugin has no UI-specific diagnostics or Quick Fix;
-Generator validation is authoritative. Do not change Plugin pins for this work.
+The optional Analyzer Plugin checks aliases, repeated dependencies, clearly
+invalid range tokens, plain enum Actions, Renderer signatures and UI SPI access.
+Required UI Owner checks share the conservative imported-public-constant Quick
+Fix with Service/Command dependencies. Regenerate old metadata to provide UI
+marker identity and source positions. Host completeness errors enter the IDE
+only through a current validated Generator snapshot. Full schema validation is
+still Generator-owned; see [IDE setup and boundaries](ide-analysis-server.md).
+Plugin updates follow the two-stage remote commit then Demo pin workflow.
+
+## Repair generation failures
+
+Builder errors point to the authored declaration. Start with that error before
+reading generated glue. UI consumer errors include the consumer and contract:
+
+| Error | Correction |
+| --- | --- |
+| `dependencyMissing` | Add the public Owner ID to the consumer's `CCComponent.dependencies`; `optionalDependencies` is insufficient. Same-owner UI should use its ordinary local Widget. |
+| `invalidAlias` | Choose a valid Dart member name outside the generated Client's reserved members. |
+| `duplicateAlias` | Give different Fragment dependencies unique aliases. |
+| `duplicateDependency` | Keep one dependency for the same Owner/contract; render multiple instances through its one generated method. |
+| Invalid `versionRange` | Supply a supported SemVer range matching the public Contract; do not guess a component version. |
+| `missingImplementation` | Ensure the required Owner implementation and its annotated Renderer participate in the actual Host dependency closure, then regenerate that Host. |
+
+Aliases name generated methods, not mounted instance identities. Multiple cards
+of the same Fragment use one dependency and distinct stable business Keys.
+Do not add duplicate dependencies just to render a second card. UI-specific
+`find --usage` and DevTools views remain unavailable; the only UI Quick Fix
+is the proven missing required Owner edge described above.
 
 ## Lifecycle and failures
 

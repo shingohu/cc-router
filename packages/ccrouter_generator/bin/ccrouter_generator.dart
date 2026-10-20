@@ -456,11 +456,17 @@ Future<bool> _aggregate(Directory root, _Arguments parsed) async {
     root,
     documents,
   )..sort();
-  additionalErrors.addAll(validateUIFragmentWorkspace(documents, host: true));
-  final errors = [...result.errors, ...additionalErrors]..sort();
+  final uiDiagnostics = validateUIFragmentWorkspaceDiagnostics(
+    documents,
+    host: true,
+  );
+  final diagnostics = [...result.diagnostics, ...uiDiagnostics];
+  final uiErrors = [for (final issue in uiDiagnostics) issue.message];
+  final errors = [...result.errors, ...additionalErrors, ...uiErrors]..sort();
   if (errors.isNotEmpty) {
+    _recordGenerationDiagnostics(diagnostics);
     _writeWorkspaceValidationFailure(
-      diagnostics: result.diagnostics,
+      diagnostics: diagnostics,
       allErrors: errors,
       additionalErrors: additionalErrors,
       includeRawDetails: parsed.profile,
@@ -1164,20 +1170,24 @@ Future<bool> _generateResolvedWorkspace(
         package.name: package.root,
     },
   )..sort();
-  additionalErrors.addAll(
-    validateUIFragmentWorkspace(documents, host: hostGeneration),
+  final uiDiagnostics = validateUIFragmentWorkspaceDiagnostics(
+    documents,
+    host: hostGeneration,
   );
-  final errors = [...?validation?.errors, ...additionalErrors]..sort();
+  final diagnostics = [...?validation?.diagnostics, ...uiDiagnostics];
+  final errors = [
+    ...?validation?.errors,
+    ...additionalErrors,
+    for (final issue in uiDiagnostics) issue.message,
+  ]..sort();
   if (errors.isNotEmpty) {
-    if (validation != null) {
-      _recordGenerationDiagnostics(validation.diagnostics);
-    }
+    _recordGenerationDiagnostics(diagnostics);
     validationSpan?.finish(
       status: 'failed',
       counts: {'documents': validatedDocuments.length, 'errors': errors.length},
     );
     _writeWorkspaceValidationFailure(
-      diagnostics: validation?.diagnostics ?? const [],
+      diagnostics: diagnostics,
       allErrors: errors,
       additionalErrors: additionalErrors,
       includeRawDetails: parsed.profile,

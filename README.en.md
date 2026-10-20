@@ -91,8 +91,21 @@ after reinitialization the Host must explicitly remount the UI subtree.
 
 Use an ordinary Flutter package for presentation-only reuse and Route for a
 complete routed page. See the [UI Fragment design](docs/CCRouter-ui-fragment-design.md).
+
+The [UI integration guide](skills/ccrouter-integration-development/references/ui-fragments.md)
+covers the complete contracts/Renderer/consumer/Host path and generation error repairs.
+Multiple instances share one dependency and use distinct Keys. v1 enum Actions cannot
+return the dynamic ID selected from a list privately loaded by B; do not bypass this
+boundary through global mutable selection or an Event detour. The
+[usability review](docs/CCRouter-ui-fragment-usability-review.md) records the remaining scope.
 The Demo's Showcase entry demonstrates multiple instances, Tab retention,
 Props updates, account-key recreation, and business errors.
+The optional Analyzer Plugin checks UI aliases, repeated dependencies, clearly
+invalid ranges, plain enum Actions, Renderer signatures, and Host/Generated SPI
+boundaries. It offers a conservative missing required Owner fix only when the
+public constant is already imported. Validated Generator snapshots bridge Host
+closure errors into the IDE; full Props schemas and final correctness remain
+owned by `generate --check`.
 
 ### IDE / Analysis Server Diagnostics
 

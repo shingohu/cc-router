@@ -1,5 +1,36 @@
 # IDE / Analysis Server
 
+
+UI Fragment v1 checks use canonical framework symbols, including prefixed and
+transitive public exports. They report `ccrouter_ui_alias_invalid`,
+`ccrouter_ui_alias_duplicate`, `ccrouter_ui_dependency_duplicate`,
+`ccrouter_ui_version_range_invalid` (only definitely unsupported tokens),
+`ccrouter_ui_action_invalid`, and `ccrouter_ui_renderer_invalid`. Unknown or
+ambiguous types defer. The Generator remains authoritative for the complete
+Props schema, Contract identity/version grammar, and Host closure.
+
+`ccrouter_ui_spi_access` rejects handwritten Generated SPI and component access
+to UI Host SPI, including conditional imports/exports and resolved canonical
+type references. Host assembly remains allowed in Host Packages; tests and
+generated libraries are exempt. UI dependencies join the existing
+`ccrouter_component_owner_dependency_missing` rule using UI metadata declaration
+identity. Its Quick Fix requires an exact public Owner constant already imported
+and a missing/direct editable required list; hidden constants, computed lists,
+spreads and ambiguous evidence never trigger speculative edits. Legacy metadata
+without UI declaration identity defers until regeneration. No alias, Action,
+Renderer or import rewrite is offered. Self-owner UI declarations defer to the
+Generator; a cyclic self dependency is never suggested.
+
+Generator UI metadata records portable Contract, Renderer and consumer
+locations. Validated watch/Host one-shot snapshots can publish
+`ccrouter_ui_missing_implementation`, `ccrouter_ui_owner_mismatch`,
+`ccrouter_ui_implementation_duplicate`, `ccrouter_ui_contract_duplicate`,
+`ccrouter_ui_dependency_missing`, `ccrouter_ui_fingerprint_changed`,
+`ccrouter_ui_version_out_of_range`, and `ccrouter_ui_stale_generated_output`.
+Snapshots retain the existing exact identity/staleness rules. Records without
+a proven authored position remain CLI-only errors. The Plugin does not run
+generation, infer runtime visibility, or prove resource disposal.
+
 The Plugin reports `ccrouter_host_lifecycle_access` as an error when a
 non-Host participating Package exposes `CCRouterHost` through a direct
 `ccrouter_host.dart` import/export, including conditional branches, or references

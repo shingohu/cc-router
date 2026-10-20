@@ -5,7 +5,7 @@
     "name": "demo_order_contracts",
     "version": "0.1.0"
   },
-  "contentFingerprint": "9a30300b0a257958d7ed621f834ad4167b9cd05c3c2b3c94e645445e07b696a4",
+  "contentFingerprint": "cca3899a7695dcd07aad42696a33b55ef859dfaebd139ad083c3fe89a06b1ea9",
   "bundle": null,
   "dependencies": [],
   "metadata": [
@@ -18,6 +18,12 @@
       "uiLibrary": "lib/src/ccrouter_generated/ui/order_fragments.ui.g.dart",
       "uiContracts": [
         {
+          "declaration": {
+            "symbol": "OrderSummaryFragmentContract",
+            "packageUri": "package:demo_order_contracts/src/order_fragments.dart",
+            "line": 19,
+            "column": 22
+          },
           "componentId": "demo_order_component",
           "id": "order.summary",
           "version": "1.0.0",
@@ -41,6 +47,12 @@
           ]
         },
         {
+          "declaration": {
+            "symbol": "OrderRecommendationsFragmentContract",
+            "packageUri": "package:demo_order_contracts/src/order_fragments.dart",
+            "line": 33,
+            "column": 22
+          },
           "componentId": "demo_order_component",
           "id": "order.recommendations",
           "version": "1.0.0",

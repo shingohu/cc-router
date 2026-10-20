@@ -10,6 +10,7 @@ import 'package:ccrouter_analyzer_plugin/src/contract_owner_index.dart';
 import 'package:ccrouter_analyzer_plugin/src/service_lifecycle_analysis.dart';
 import 'resolved_symbols.dart';
 import 'host_lifecycle_analysis.dart';
+import 'ui_fragment_analysis.dart';
 import 'project_context.dart';
 import 'package:path/path.dart' as path;
 import 'package:yaml/yaml.dart';
@@ -439,6 +440,24 @@ abstract final class CCRouterSourceAnalyzer {
       }
     }
     diagnostics.addAll(_singleFileRuleDiagnostics(unit));
+    for (final issue in CCRouterUIFragmentAnalysis.issues(
+      unit: unit,
+      filePath: filePath,
+      packageRoot: root,
+      packageName: owner,
+      projectRole: projectRole,
+    )) {
+      diagnostics.add(
+        CCRouterAnalyzerDiagnostic(
+          offset: issue.node.offset,
+          length: issue.node.length,
+          code: issue.code,
+          message: issue.message,
+          correction: issue.correction,
+          severity: AnalysisErrorSeverity.ERROR,
+        ),
+      );
+    }
     for (final (declaration, fixable)
         in CCRouterServiceLifecycleAnalysis.issues(unit)) {
       diagnostics.add(
@@ -465,9 +484,11 @@ abstract final class CCRouterSourceAnalyzer {
         sourcePackage: owner,
         owners: contractOwners,
       )) {
-        final kind = missing.contractKind == CCRouterContractKind.service
-            ? 'Service'
-            : 'Command';
+        final kind = switch (missing.contractKind) {
+          CCRouterContractKind.service => 'Service',
+          CCRouterContractKind.command => 'Command',
+          CCRouterContractKind.uiFragment => 'UI Fragment',
+        };
         final symbol = missing.owner.componentIdSymbol;
         diagnostics.add(
           CCRouterAnalyzerDiagnostic(

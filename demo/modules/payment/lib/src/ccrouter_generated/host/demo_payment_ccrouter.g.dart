@@ -19,7 +19,7 @@ final ccrouterGeneratedPackageBundle = CCGeneratedPackageBundle(
   packageName: 'demo_payment',
   packageVersion: '0.1.0',
   contentFingerprint:
-      'f74af6d77547cc22d43f5d11a8a0241480e2461275b89b447a9bf774320efa18',
+      '53ece294a050343528df2500e28df38cafc2f7246e0dc578215a2b2accc4322a',
   contractBundle: CCContractBundleDescriptor(
     packageName: 'demo_payment',
     packageVersion: '0.1.0',

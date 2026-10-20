@@ -44,6 +44,7 @@ final class _Contract {
         marker.isPrivate) {
       _fail('UI contract must be a public non-generic marker class.', marker);
     }
+    declaration = _sourceReference(marker);
     final arguments = (annotation.type! as InterfaceType).typeArguments;
     props = arguments[0];
     action = arguments[1];
@@ -68,7 +69,13 @@ final class _Contract {
         (props as InterfaceType).element is! ClassElement ||
         action is! InterfaceType ||
         (action as InterfaceType).element is! EnumElement) {
-      _fail('UI v1 requires immutable DTO Props and enum Action.', marker);
+      _fail(
+        'UI v1 requires immutable DTO Props and enum Action for '
+        '"${marker.displayName}" ($owner/$id). '
+        'Action payload DTOs and sealed unions are not supported; '
+        'a plain enum cannot return a dynamic selected ID to the consumer.',
+        marker,
+      );
     }
     final shape = {
       'schemaVersion': 1,
@@ -112,6 +119,9 @@ final class _Contract {
     ];
   }
 
+  /// Portable marker identity and authored location for IDE/Owner tooling.
+  late final Map<String, Object?> declaration;
+
   /// Immutable input DTO type.
   late final DartType props;
 
@@ -135,6 +145,7 @@ final class _Contract {
 
   /// Normalized record consumed by Host validation and rendering codegen.
   Map<String, Object?> get record => {
+    'declaration': declaration,
     'componentId': owner,
     'id': id,
     'version': version,
@@ -435,7 +446,11 @@ final class _UIFragmentBuilder implements Builder {
       contributions.add(
         'CCUIRenderer<$props, $action>(contract: ${contract.expression}, renderer: $sourcePrefix.${function.displayName})',
       );
-      renderers.add({...contract.record, 'function': function.displayName});
+      renderers.add({
+        ...contract.record,
+        'function': function.displayName,
+        'implementation': _sourceReference(function),
+      });
     }
     for (final variable in library.topLevelVariables) {
       if (!_checker('CCComponent').isExactlyType(variable.type)) continue;
@@ -475,29 +490,59 @@ final class _UIFragmentBuilder implements Builder {
             alias == 'hashCode' ||
             alias == 'runtimeType' ||
             alias == 'toString' ||
-            alias == 'noSuchMethod' ||
-            !aliases.add(alias) ||
-            !identities.add('${contract.owner}/${contract.id}')) {
+            alias == 'noSuchMethod') {
           _fail(
-            'UI aliases and contract dependencies must be unique Dart members.',
+            'UI invalidAlias: "$alias" for "${contract.owner}/${contract.id}" '
+            'in consumer "$consumer". Set alias in uiDependencies to a valid '
+            'Dart member name that is not reserved by the generated Client.',
+            variable,
+          );
+        }
+        if (!aliases.add(alias)) {
+          _fail(
+            'UI duplicateAlias: "$alias" for "${contract.owner}/${contract.id}" '
+            'in consumer "$consumer". Give each Fragment dependency a '
+            'unique alias in uiDependencies.',
+            variable,
+          );
+        }
+        if (!identities.add('${contract.owner}/${contract.id}')) {
+          _fail(
+            'UI duplicateDependency: "${contract.owner}/${contract.id}" '
+            'in consumer "$consumer". Keep one dependency in uiDependencies; '
+            'render multiple instances through that method with distinct Keys.',
             variable,
           );
         }
         if (!owners.contains(contract.owner) || consumer == contract.owner) {
           _fail(
-            'dependencyMissing: UI owner must be a required external component.',
+            consumer == contract.owner
+                ? 'dependencyMissing: UI consumer "$consumer" owns '
+                      '"${contract.id}". Use the ordinary local Widget; '
+                      'uiDependencies requires an external owner.'
+                : 'dependencyMissing: UI consumer "$consumer" requires owner '
+                      '"${contract.owner}" for "${contract.id}". Add the public '
+                      'Owner CCComponentId to CCComponent.dependencies; '
+                      'optionalDependencies does not satisfy uiDependencies.',
             variable,
           );
         }
         try {
           CCContractVersionRange.parse(range);
         } catch (_) {
-          _fail('UI dependency requires a valid version range.', variable);
+          _fail(
+            'UI dependency requires a valid versionRange for '
+            '"${contract.owner}/${contract.id}" in consumer "$consumer"; '
+            'received "$range". Use a supported SemVer range such as '
+            '"^${contract.version}" for the public Contract version.',
+            variable,
+          );
         }
         final requirement =
             'const CCUIFragmentRequirement(consumer: ${jsonEncode(consumer)}, contract: ${contract.expression}, versionRange: ${jsonEncode(range)})';
         requirements.add({
           ...contract.record,
+          'consumerDeclaration': _sourceReference(variable),
           'consumer': consumer,
           'versionRange': range,
         });
@@ -549,4 +594,19 @@ final class _UIFragmentBuilder implements Builder {
       _formatter.format(source.toString()),
     );
   }
+}
+
+/// Encodes authored identity and position without checkout-specific paths.
+Map<String, Object?> _sourceReference(Element element) {
+  final fragment = element.firstFragment;
+  final library = fragment.libraryFragment!;
+  final location = library.lineInfo.getLocation(
+    fragment.nameOffset ?? fragment.offset,
+  );
+  return {
+    'symbol': element.displayName,
+    'packageUri': library.source.uri.toString(),
+    'line': location.lineNumber,
+    'column': location.columnNumber,
+  };
 }

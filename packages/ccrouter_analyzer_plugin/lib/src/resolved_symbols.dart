@@ -18,6 +18,8 @@ abstract final class CCRouterResolvedSymbols {
     'CCEventSubscription': 'messaging',
     'CCInitTask': 'initialization',
     'CCComponentContribution': 'component',
+    'CCUIFragmentContract': 'ui_fragment',
+    'CCUIFragmentRenderer': 'ui_fragment',
   };
 
   /// Returns only a proven framework annotation identity, shared with fixes.
@@ -85,14 +87,91 @@ abstract final class CCRouterResolvedSymbols {
           directive.deferredKeyword != null)
         return null;
       final uri = directive.uri.stringValue;
-      if (uri == 'package:ccrouter/ccrouter.dart' ||
-          uri == 'package:ccrouter_contracts/ccrouter_contracts.dart') {
-        found = true;
+      if (_publicFrameworkLibraries.contains(uri)) {
+        if (file == 'ui_fragment'
+            ? _publicUILibraries.contains(uri)
+            : !_publicUILibraries.contains(uri))
+          found = true;
       } else if (uri == null || !uri.startsWith('dart:')) {
         return null;
       }
     }
     return found ? symbol : null;
+  }
+
+  /// Public libraries whose export boundaries are known without a new session.
+  static const _publicFrameworkLibraries = {
+    'package:ccrouter/ccrouter.dart',
+    'package:ccrouter_contracts/ccrouter_contracts.dart',
+    ..._publicUILibraries,
+  };
+
+  /// Explicit UI declaration barrels; ordinary CCRouter barrels omit UI types.
+  static const _publicUILibraries = {
+    'package:ccrouter_ui/ccrouter_ui.dart',
+    'package:ccrouter_contracts/ccrouter_ui_contracts.dart',
+  };
+
+  /// Proves a constructor identity; partial/foreign resolved types defer.
+  /// Parser-only checks require an exact public import and no shadowing.
+  static bool isFrameworkConstructor(
+    Expression expression,
+    String name,
+    String file,
+  ) {
+    final type = expression.staticType;
+    if (type is InterfaceType) return isFrameworkType(type, name, file);
+    final unit = expression.thisOrAncestorOfType<CompilationUnit>();
+    if (unit == null || unit.declaredFragment != null) return false;
+    final (prefix, symbol) = switch (expression) {
+      InstanceCreationExpression e => (
+        e.constructorName.type.importPrefix?.name.lexeme,
+        e.constructorName.type.name.lexeme,
+      ),
+      MethodInvocation e when e.target == null => (null, e.methodName.name),
+      MethodInvocation e when e.target is SimpleIdentifier => (
+        (e.target as SimpleIdentifier).name,
+        e.methodName.name,
+      ),
+      _ => (null, ''),
+    };
+    if (symbol != name ||
+        unit.directives.any((d) => d is PartDirective || d is PartOfDirective))
+      return false;
+    if (unit.declarations.any(
+      (d) => switch (d) {
+        NamedCompilationUnitMember d => d.name.lexeme == (prefix ?? name),
+        TopLevelVariableDeclaration d => d.variables.variables.any(
+          (v) => v.name.lexeme == (prefix ?? name),
+        ),
+        _ => false,
+      },
+    ))
+      return false;
+    var found = false;
+    for (final directive in unit.directives.whereType<ImportDirective>()) {
+      if (directive.prefix?.name != prefix) continue;
+      if (!directive.combinators.every(
+        (c) => switch (c) {
+          ShowCombinator c => c.shownNames.any((n) => n.name == name),
+          HideCombinator c => !c.hiddenNames.any((n) => n.name == name),
+        },
+      ))
+        continue;
+      if (directive.configurations.isNotEmpty ||
+          directive.deferredKeyword != null)
+        return false;
+      final uri = directive.uri.stringValue;
+      if (_publicFrameworkLibraries.contains(uri)) {
+        if (file == 'ui_fragment'
+            ? _publicUILibraries.contains(uri)
+            : !_publicUILibraries.contains(uri))
+          found = true;
+      } else if (uri == null || !uri.startsWith('dart:')) {
+        return false;
+      }
+    }
+    return found;
   }
 
   /// Finds unambiguous references already visible in this library.

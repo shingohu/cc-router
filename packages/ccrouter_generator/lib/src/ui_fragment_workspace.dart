@@ -1,5 +1,7 @@
 import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 
+import 'workspace_validator.dart';
+
 /// Validates UI metadata independently of the original five Contract families.
 ///
 /// Package-local generation checks local declarations; only Host generation
@@ -8,8 +10,53 @@ List<String> validateUIFragmentWorkspace(
   Iterable<Map<String, Object?>> documents, {
   required bool host,
 }) {
+  return [
+    for (final issue in validateUIFragmentWorkspaceDiagnostics(
+      documents,
+      host: host,
+    ))
+      issue.message,
+  ]..sort();
+}
+
+/// Emits typed UI failures without parsing human messages in CLI or IDE code.
+/// Legacy records without proven locations still fail CLI validation, but do
+/// not acquire speculative IDE source positions.
+List<CCWorkspaceDiagnostic> validateUIFragmentWorkspaceDiagnostics(
+  Iterable<Map<String, Object?>> documents, {
+  required bool host,
+}) {
   final values = documents.toList();
-  final errors = <String>[];
+  final errors = <CCWorkspaceDiagnostic>[];
+  void report(
+    String code,
+    String message,
+    Map<String, Object?> record,
+    String locationKey,
+    String correction,
+  ) {
+    final primary = _location(record[locationKey]);
+    final declaration = _location(record['declaration']);
+    errors.add(
+      CCWorkspaceDiagnostic(
+        code: 'ccrouter_ui_$code',
+        severity: CCWorkspaceDiagnosticSeverity.error,
+        message: message,
+        rootCauseGroup:
+            'ui:$code:${_identity(record)}:${record['consumer'] ?? ''}',
+        primaryLocation: primary,
+        correction: correction,
+        relatedLocations: [
+          if (declaration != null && locationKey != 'declaration')
+            CCWorkspaceRelatedDiagnosticLocation(
+              message: 'UI Contract declaration.',
+              location: declaration,
+            ),
+        ],
+      ),
+    );
+  }
+
   final components = <String, Map<String, Object?>>{};
   final owners = <String, String>{};
   final contracts = <String, Map<String, Object?>>{};
@@ -21,14 +68,24 @@ List<String> validateUIFragmentWorkspace(
     }
     if (document.containsKey('uiSchemaVersion') &&
         document['uiSchemaVersion'] != 1) {
-      errors.add(
+      report(
+        'stale_generated_output',
         'UI staleGeneratedOutput: unsupported UI schema; upgrade generator.',
+        const {},
+        'declaration',
+        'Upgrade the Generator and regenerate UI metadata.',
       );
     }
     for (final contract in _objects(document['uiContracts'])) {
       final identity = _identity(contract);
       if (contracts.containsKey(identity)) {
-        errors.add('UI duplicate contract: $identity.');
+        report(
+          'contract_duplicate',
+          'UI duplicate contract: $identity.',
+          contract,
+          'declaration',
+          'Keep one public UI Contract for this identity.',
+        );
       }
       contracts[identity] = contract;
     }
@@ -37,14 +94,32 @@ List<String> validateUIFragmentWorkspace(
     for (final renderer in _objects(document['uiRenderers'])) {
       final identity = _identity(renderer);
       if (owners['${document['package']}'] != renderer['componentId']) {
-        errors.add('UI ownerMismatch: $identity.');
+        report(
+          'owner_mismatch',
+          'UI ownerMismatch: $identity.',
+          renderer,
+          'implementation',
+          'Move the Renderer to the declared Owner component.',
+        );
       }
       if (implementations.containsKey(identity)) {
-        errors.add('UI duplicateImplementation: $identity.');
+        report(
+          'implementation_duplicate',
+          'UI duplicateImplementation: $identity.',
+          renderer,
+          'implementation',
+          'Keep one Renderer in the Host closure.',
+        );
       }
       implementations[identity] = renderer;
       if (!_sameSchema(contracts[identity], renderer)) {
-        errors.add('UI staleGeneratedOutput: Renderer $identity.');
+        report(
+          'stale_generated_output',
+          'UI staleGeneratedOutput: Renderer $identity.',
+          renderer,
+          'implementation',
+          'Regenerate the Renderer and Host against the current Contract.',
+        );
       }
     }
     for (final requirement in _objects(document['uiRequirements'])) {
@@ -55,10 +130,26 @@ List<String> validateUIFragmentWorkspace(
           !_strings(
             consumer['dependencies'],
           ).contains('${requirement['componentId']}')) {
-        errors.add('UI dependencyMissing: $identity.');
+        report(
+          'dependency_missing',
+          'UI dependencyMissing: $identity for consumer '
+              '"${requirement['consumer']}" in Package "${document['package']}". '
+              'Verify the declaring consumer and add the public Owner CCComponentId '
+              'to its CCComponent.dependencies; optionalDependencies is insufficient. '
+              'Regenerate the consumer and Host after correcting the declaration.',
+          requirement,
+          'consumerDeclaration',
+          'Add the public Owner CCComponentId to required dependencies and regenerate the consumer and Host.',
+        );
       }
       if (!_sameSchema(contracts[identity], requirement)) {
-        errors.add('UI staleGeneratedOutput: consumer $identity.');
+        report(
+          'stale_generated_output',
+          'UI staleGeneratedOutput: consumer $identity.',
+          requirement,
+          'consumerDeclaration',
+          'Regenerate the consumer and Host against the current Contract.',
+        );
       }
     }
   }
@@ -68,27 +159,52 @@ List<String> validateUIFragmentWorkspace(
         final identity = _identity(requirement);
         final renderer = implementations[identity];
         if (renderer == null) {
-          errors.add('UI missingImplementation: $identity.');
+          report(
+            'missing_implementation',
+            'UI missingImplementation: $identity required by consumer '
+                '"${requirement['consumer']}". Include the Owner implementation '
+                'with its @CCUIFragmentRenderer in the Host dependency closure, '
+                'then regenerate that Host.',
+            requirement,
+            'consumerDeclaration',
+            'Include the Owner implementation with its Renderer in the Host dependency closure and regenerate that Host.',
+          );
         } else if (renderer['shapeFingerprint'] !=
             requirement['shapeFingerprint']) {
-          errors.add('UI fingerprintChanged: $identity.');
+          report(
+            'fingerprint_changed',
+            'UI fingerprintChanged: $identity.',
+            requirement,
+            'consumerDeclaration',
+            'Regenerate the consumer, Renderer and Host against the same Contract shape.',
+          );
         } else {
           try {
             if (!CCContractVersionRange.parse(
               '${requirement['versionRange']}',
             ).allowsText('${renderer['version']}')) {
-              errors.add('UI versionOutOfRange: $identity.');
+              report(
+                'version_out_of_range',
+                'UI versionOutOfRange: $identity.',
+                requirement,
+                'consumerDeclaration',
+                'Align the required version range and installed Renderer version.',
+              );
             }
           } on FormatException {
-            errors.add(
+            report(
+              'stale_generated_output',
               'UI staleGeneratedOutput: invalid version for $identity.',
+              requirement,
+              'consumerDeclaration',
+              'Repair the Contract version or consumer range and regenerate.',
             );
           }
         }
       }
     }
   }
-  return errors..sort();
+  return errors..sort((a, b) => a.message.compareTo(b.message));
 }
 
 /// Composite public identity independent of instance Key.
@@ -109,3 +225,28 @@ Iterable<Map<String, Object?>> _objects(Object? value) => value is List
 /// Reads component dependency identities from normalized metadata.
 Iterable<String> _strings(Object? value) =>
     value is List ? value.whereType<String>() : const [];
+
+/// Accepts only portable authored positions; missing legacy evidence defers IDE.
+CCWorkspaceDiagnosticLocation? _location(Object? value) {
+  if (value is! Map) return null;
+  final uri = value['packageUri'];
+  final line = value['line'];
+  final column = value['column'];
+  final parsed = uri is String ? Uri.tryParse(uri) : null;
+  if (parsed == null ||
+      parsed.scheme != 'package' ||
+      parsed.pathSegments.length < 2 ||
+      parsed.pathSegments.any((s) => s == '..' || s == '.') ||
+      line is! int ||
+      line < 1 ||
+      column is! int ||
+      column < 1)
+    return null;
+  final symbol = value['symbol'];
+  return CCWorkspaceDiagnosticLocation(
+    uri: uri as String,
+    line: line,
+    column: column,
+    length: symbol is String && symbol.isNotEmpty ? symbol.length : 1,
+  );
+}

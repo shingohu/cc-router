@@ -17,6 +17,9 @@ enum CCRouterContractKind {
 
   /// A cross-component Command payload.
   command,
+
+  /// An optional typed UI Fragment marker with a required Owner edge.
+  uiFragment,
 }
 
 /// Metadata-proven owner of one cross-component Contract type.
@@ -578,6 +581,44 @@ final class CCRouterContractOwnerIndexCache {
       if (metadataDocuments is List) {
         for (final value in metadataDocuments.whereType<Map>()) {
           final metadata = value.cast<String, Object?>();
+          if (metadata['uiSchemaVersion'] == 1 &&
+              metadata['uiContracts'] is List) {
+            for (final ui
+                in (metadata['uiContracts'] as List).whereType<Map>()) {
+              final declaration = ui['declaration'];
+              if (declaration is! Map ||
+                  declaration['symbol'] is! String ||
+                  ui['componentId'] is! String)
+                continue;
+              final uri = Uri.tryParse('${declaration['packageUri']}');
+              if (uri == null ||
+                  uri.scheme != 'package' ||
+                  uri.pathSegments.length < 2)
+                continue;
+              final contractPackage = uri.pathSegments.first;
+              final sourceRoot = roots[contractPackage];
+              if (sourceRoot == null) continue;
+              final sourcePath = path.normalize(
+                path.join(
+                  sourceRoot,
+                  'lib',
+                  path.joinAll(uri.pathSegments.skip(1)),
+                ),
+              );
+              if (!path.isWithin(path.join(sourceRoot, 'lib'), sourcePath))
+                continue;
+              watched.add(sourcePath);
+              final item = _PendingContractOwner(
+                kind: CCRouterContractKind.uiFragment,
+                contractSymbol: declaration['symbol'] as String,
+                contractPackage: contractPackage,
+                componentId: ui['componentId'] as String,
+                contractSourcePath: sourcePath,
+              );
+              pending['uiFragment\u0000$contractPackage\u0000${item.contractSymbol}\u0000${item.componentId}'] =
+                  item;
+            }
+          }
           final components = metadata['components'];
           final sourcePackage = metadata['package'];
           final source = metadata['source'];
@@ -697,9 +738,11 @@ final class CCRouterContractOwnerIndexCache {
       };
       if (name != owner.contractSymbol) continue;
       for (final annotation in metadata) {
-        final expected = owner.kind == CCRouterContractKind.service
-            ? 'CCServiceContract'
-            : 'CCCommandContract';
+        final expected = switch (owner.kind) {
+          CCRouterContractKind.service => 'CCServiceContract',
+          CCRouterContractKind.command => 'CCCommandContract',
+          CCRouterContractKind.uiFragment => 'CCUIFragmentContract',
+        };
         if (_annotationName(annotation) != expected) continue;
         final expression = _namedArgument(annotation, 'componentId');
         return switch (expression) {

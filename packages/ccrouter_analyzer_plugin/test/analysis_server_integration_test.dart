@@ -108,9 +108,50 @@ void main() {
     );
   });
 
-  for (final lsp in [false, true]) {
+  test(
+    'real LSP reports and clears UI alias diagnostics on editor overlay',
+    () async {
+      const file = 'lib/src/ui.dart';
+      const source =
+          "import 'package:ccrouter_contracts/ccrouter_contracts.dart';\nimport 'package:ccrouter_contracts/ccrouter_ui_contracts.dart';\nclass Marker {}\nconst component = CCComponent(id: CCComponentId('consumer'), version: '1.0.0', uiDependencies: [CCUIFragmentDependency<Marker>(alias: 'bad-alias', versionRange: '*')]);\n";
+      final server = await AnalysisServerSession.start({
+        file: source,
+      }, lsp: true);
+      addTearDown(server.close);
+      final uri = Uri.file(server.path(file)).toString();
+      server.notify('textDocument/didOpen', {
+        'textDocument': {
+          'uri': uri,
+          'languageId': 'dart',
+          'version': 1,
+          'text': source,
+        },
+      });
+      const code = 'ccrouter_ui_alias_invalid';
+      await server.waitFor(file, (errors) => _has(errors, code));
+      final revision = server.revisions[server.path(file)]!;
+      server.notify('textDocument/didChange', {
+        'textDocument': {'uri': uri, 'version': 2},
+        'contentChanges': [
+          {'text': source.replaceFirst('bad-alias', 'card')},
+        ],
+      });
+      await server.waitFor(
+        file,
+        (errors) => !_has(errors, code),
+        after: revision,
+      );
+    },
+    timeout: const Timeout(Duration(minutes: 2)),
+  );
+
+  for (final (lsp, bridgeCode) in [
+    (false, 'ccrouter_host_component_owner_missing'),
+    (true, 'ccrouter_host_component_owner_missing'),
+    (true, 'ccrouter_ui_missing_implementation'),
+  ]) {
     test(
-      'real ${lsp ? 'LSP' : 'legacy'} server bridges and clears current watch diagnostics',
+      'real ${lsp ? 'LSP' : 'legacy'} $bridgeCode server bridges and clears current watch diagnostics',
       () async {
         const sourcePath = 'lib/src/bridge.dart';
         final server = await AnalysisServerSession.start({
@@ -136,7 +177,7 @@ void main() {
             'cycleResolutionState': 'matched',
             'diagnostics': [
               {
-                'code': 'ccrouter_host_component_owner_missing',
+                'code': bridgeCode,
                 'severity': 'error',
                 'message': 'Host closure is missing owner component "orders".',
                 'correction': 'Restore the owner Package and run Pub get.',
@@ -156,7 +197,7 @@ void main() {
           jsonEncode({...identity(7), 'active': true, 'lastEvent': 'failed'}),
         );
 
-        const code = 'ccrouter_host_component_owner_missing';
+        final code = bridgeCode;
         await server.waitFor(sourcePath, (errors) => _has(errors, code));
         final failedRevision = server.revisions[server.path(sourcePath)]!;
         server.write(

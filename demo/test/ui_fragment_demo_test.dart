@@ -30,6 +30,9 @@ void main() {
       final entries = CCRouter.activeRouteEntries.length;
       expect(find.text('订单摘要 · 1'), findsOneWidget);
       expect(find.text('订单摘要 · 2'), findsOneWidget);
+      await tester.tap(find.text('选择').first);
+      await tester.pump();
+      expect(find.text('A 收到订单 1 的选择'), findsOneWidget);
       await tester.enterText(find.byType(TextField).first, '只属于第一个实例');
       expect(
         tester.widget<TextField>(find.byType(TextField).at(1)).controller!.text,
@@ -58,6 +61,9 @@ void main() {
         tester.widget<TextField>(find.byType(TextField).first).controller!.text,
         '只属于第一个实例',
       );
+      await tester.tap(find.text('选择').first);
+      await tester.pump();
+      expect(find.text('A 收到订单 3 的选择'), findsOneWidget);
       await tester.tap(find.text('切换模拟账号'));
       await _settle(tester);
       expect(

@@ -196,7 +196,8 @@ abstract final class CCRouterQuickFixes {
               .where(
                 (argument) =>
                     argument.name.label.name == 'serviceDependencies' ||
-                    argument.name.label.name == 'commandDependencies',
+                    argument.name.label.name == 'commandDependencies' ||
+                    argument.name.label.name == 'uiDependencies',
               )
               .where(
                 (argument) =>
