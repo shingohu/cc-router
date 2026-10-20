@@ -102,10 +102,19 @@ Route/Proxy 默认集合保持常量的实际泛型类型，不能因参数声�
 required `dependencies`。Generator 校验 DTO、普通 enum、有效默认值指纹和静态 Renderer
 装配，生成消费者专属 `<componentId>.ui.api.g.dart`。消费方不得导入 Owner Renderer 或
 `ui/*.ui.g.dart` SPI。实际消费 UI 的 Host 直接依赖 `ccrouter_ui`，启动仍传一个完整 Assembly。
-UI source metadata 使用 schema 5 / `uiSchemaVersion: 1`，UI Package Index 使用 schema 3；
+UI source metadata 使用 schema 5；enum Action 保留 `uiSchemaVersion: 1` / Index schema 3，
+受限 DTO Action 使用 UI schema 2 / Index schema 4，混合文档取最高版本；
 未声明 UI 的 Package 保持原 schema。必须配套使用匹配版本的 Generator、Contracts、CCRouter
-和 UI Package。UI 专属 `find --usage`、DevTools Catalog 与 Analyzer 诊断尚未实现；详见
+和 UI Package。`create ui-fragment ... --dry-run` 可预览契约、公共入口及可选 Renderer；
+UI `find --usage` 从索引中的完整 schema 公共导出和实际 alias 输出接入步骤，旧索引需重生成。
+脚手架默认 enum Action，动态选择 ID 可显式改为受限 DTO；根 scalar Action 不支持。
+参与生成的 contracts、Owner、Consumer 各包需声明自己的 `ccrouter_generator` dev dependency，
+Host 同时需要 `build_runner`。生成后核对组件/UI 数量，Host 依赖不能代替成员包声明。
+`ccrouter_ui` 是框架依赖，无需业务 Portable State；外部分发业务组件仍需自己的有效状态。
+Analyzer 已有保守 UI 诊断和 required Owner Quick Fix；UI DevTools Catalog 仍未实现。详见
 [UI Fragment 接入指南](../../skills/ccrouter-integration-development/references/ui-fragments.md)。
+[独立 enum/DTO 验证](../../docs/validation/ui-fragment-adoption-20261020/README.md)记录本地闭环与
+复现源码；该结果不代表公开 API 冻结、正式分发或真实平台验收完成。
 
 `dependencies`、`serviceDependencies` 和 `commandDependencies` 目前必须显式维护。生成器会从
 Contract 元数据解析 Owner 并校验三者一致，不会因为发现某个 Contracts Package 或 Pub 依赖而

@@ -1,0 +1,18 @@
+UI Fragment catalog.selection (component: catalog_component)
+  Declaring package: adoption_fragment_contracts
+  Contract/declaration: package:adoption_fragment_contracts/src/selection_card_fragment.dart:19:22 (SelectionCardFragmentContract)
+  Implementation: package:adoption_catalog/src/selection_card_fragment_renderer.dart:7:8 (renderSelectionCard)
+Usage recipe for component dashboard_component
+  Consumer package: adoption_dashboard
+  Owner component: catalog_component
+  Public import: package:adoption_fragment_contracts/selection_card_fragment.dart
+  Framework import: package:ccrouter_ui/ccrouter_ui.dart
+  Pub dependency: satisfied (adoption_fragment_contracts)
+  Pub dependency: satisfied (ccrouter_ui)
+  Owner dependency: satisfied (catalog_component; required edge)
+  UI dependency: satisfied
+  Generated API entry: package:adoption_dashboard/src/ccrouter_generated/dashboard_component.ui.api.g.dart
+  Generated Client: DashboardComponentFragments.selectionCard
+  Typed call: DashboardComponentFragments.selectionCard(key: ValueKey(instanceId), props: props, onAction: (action) { /* consumer decision */ }, active: isActive)
+  Multiple instances share one dependency and use distinct stable Keys. Hidden kept-alive Tabs pass active: false; State owns resource cleanup.
+  Include A/B implementations and a direct ccrouter_ui dependency in the actual Host, then run ccrouter generate <host-root> --no-cache --check after generation and stopping any active watch.

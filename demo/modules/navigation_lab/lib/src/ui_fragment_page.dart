@@ -77,7 +77,9 @@ final class _UIFragmentLabPageState extends State<UIFragmentLabPage> {
                       category: _error ? 'error' : '精选',
                     ),
                     active: _tab == 1,
-                    onAction: (_) => setState(() => _status = 'A 收到推荐选择'),
+                    onAction: (action) => setState(
+                      () => _status = 'A 收到推荐 ${action.selectedId} 的选择',
+                    ),
                   ),
                 ],
               ),

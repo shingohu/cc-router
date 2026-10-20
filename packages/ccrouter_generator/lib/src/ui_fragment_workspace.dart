@@ -66,8 +66,23 @@ List<CCWorkspaceDiagnostic> validateUIFragmentWorkspaceDiagnostics(
       components['${component['id']}'] = component;
       owners['${document['package']}'] = '${component['id']}';
     }
-    if (document.containsKey('uiSchemaVersion') &&
-        document['uiSchemaVersion'] != 1) {
+    final records = [
+      ..._objects(document['uiContracts']),
+      ..._objects(document['uiRenderers']),
+      ..._objects(document['uiRequirements']),
+    ];
+    final requiredSchema = records.any((r) => r['uiSchemaVersion'] == 2)
+        ? 2
+        : 1;
+    if ((document.containsKey('uiSchemaVersion') &&
+            document['uiSchemaVersion'] != requiredSchema) ||
+        (!document.containsKey('uiSchemaVersion') && requiredSchema > 1) ||
+        records.any(
+          (r) =>
+              r.containsKey('uiSchemaVersion') &&
+              r['uiSchemaVersion'] != 1 &&
+              r['uiSchemaVersion'] != 2,
+        )) {
       report(
         'stale_generated_output',
         'UI staleGeneratedOutput: unsupported UI schema; upgrade generator.',
@@ -214,6 +229,7 @@ String _identity(Map<String, Object?> record) =>
 /// Verifies that generated Renderer and consumer snapshots match authored shape.
 bool _sameSchema(Map<String, Object?>? a, Map<String, Object?> b) =>
     a != null &&
+    (a['uiSchemaVersion'] ?? 1) == (b['uiSchemaVersion'] ?? 1) &&
     a['shapeFingerprint'] == b['shapeFingerprint'] &&
     a['version'] == b['version'];
 

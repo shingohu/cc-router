@@ -5,6 +5,8 @@
 - 最近全量对齐：2026-10-07。
 - 最近增量对齐：2026-10-16，覆盖 Host-only 生命周期、类型化 UI Fragment、默认路由族、
   Android 预测返回自动桥与丢失终态恢复、watch 初始化失败清理；不表示重新执行全平台验收。
+- UI 专项文档收口：2026-10-20，统一 enum/受限 DTO、接入工具、独立技术验证及历史记录；
+  不表示公开 API 已冻结，也不扩大正式发布或平台验收结论。
 - 2026-10-19 的[核心价值增量回归](CCRouter-core-principles-audit.md)补充 13 条约定的当前证据、
   Demo 静态分析修正、真实消费者与独立本地源码快照的最小闭环，并提供首次接入入口；
   历史全量、平台和 IDE 结论不自动延续，本地快照验证不关闭 Hosted/发布归档门禁。
@@ -13,7 +15,9 @@
   回收、单在途有界投递、启动回滚与跨 error Zone 关闭等待；主机验证不替代业务真机验收。
 - 当前实现事实依次以生产代码、自动化测试、生成物和本文状态矩阵为准。
 - 2026-10-20 的[UI Fragment 易用性与收敛审查](CCRouter-ui-fragment-usability-review.md)
-  补充三个接入场景、完整编辑路径和生成诊断；数据型 Action 仍是待设计能力，未宣称完成外部可用性研究。
+  记录场景、接入工具及 enum/受限 DTO Action 的演进；
+  [独立首次接入技术验证](validation/ui-fragment-adoption-20261020/README.md)补充完整闭环、
+  外部 UI runtime 包识别修正和手工编辑点，未宣称完成新人可用性研究或 API 冻结。
 - 专项设计文档用于解释语义和历史决策；其中的 Proposal、阶段计划和旧基准不能单独证明能力已实现。
 - 性能数字、测试数量和平台验证结果只代表文档注明日期的快照，不自动代表后续提交。
 - Package 当前仍是开发期 `0.1.0`；文档中的“架构 1.x”表示当前静态组件架构代际，不表示
@@ -48,7 +52,7 @@
 - 五类 Contract SemVer、shape fingerprint、Owner/消费者范围，以及生成、Host 聚合和 Runtime
   三层兼容门禁。
 - `ccrouter generate/find/clean`、Host generation watch、`watch status/follow`、角色化
-  package-local generation、显式 Portable State prepare/publish、Pub Hook、六类非覆盖式脚手架、
+  package-local generation、显式 Portable State prepare/publish、Pub Hook、七类非覆盖式脚手架、
   增量缓存和 `--no-cache --check` 全量参考门禁。
 - Analysis Server 的跨 Package 生成物导入、确定性同源能力生成物缺失、required InitTask 声明
   诊断，以及基于精确 resolution 身份的 watch/one-shot Generator 结构化诊断桥接。
@@ -74,8 +78,9 @@
   直接 List Quick Fix；复杂集合和 import 插入仍不自动处理。CLI 已提供 Host-only 的只读
   `analyzer status/doctor` 和 maintainer `pin-check`；legacy 安装/升级/卸载仍保留为可回退管理
   路径，Hosted 发布后优先普通 `dev_dependency`，完整 Hosted/IDE/SDK 矩阵仍待外部验收。
-- UI Fragment 工具链：已支持生成、兼容校验和 Portable State；UI 专属 `find --usage`、
-  DevTools Catalog 视图、Analyzer 诊断与 Quick Fix 尚未实现。
+- UI Fragment 工具链：已支持生成、兼容校验、Portable State、`create ui-fragment --dry-run`、
+  UI `find --usage` 和保守 Analyzer 诊断/Owner Quick Fix；UI DevTools Catalog 尚未实现。
+  [Action payload 设计与验证](CCRouter-ui-fragment-action-payload-design.md)记录受限 DTO 增量及兼容边界。
 - 零 Subscriber Event：正常生成 Client、Workspace Validator 和 Runtime publisher identity 已覆盖；
   generated SPI 被手工伪造时没有独立 Event Contract Runtime Registry。该 Registry 仅在 generated
   SPI 需要成为严格防伪边界时再实现。
@@ -144,6 +149,10 @@
 
 - [类型化 UI Fragment 设计与实施计划](CCRouter-ui-fragment-design.md)
 - [类型化 UI Fragment 实施验收与核心价值回归](CCRouter-ui-fragment-acceptance.md)
+- [类型化 UI Fragment 接入指南](../skills/ccrouter-integration-development/references/ui-fragments.md)
+- [UI Fragment 易用性与收敛审查](CCRouter-ui-fragment-usability-review.md)
+- [UI Fragment Action payload 设计与验证](CCRouter-ui-fragment-action-payload-design.md)
+- [UI Fragment 独立首次接入技术验证与复现源码](validation/ui-fragment-adoption-20261020/README.md)
 - [Service 生命周期设计](CCRouter-service-lifecycle-design.md)
 - [Service Proxy 生成设计](CCRouter-service-proxy-generation-design.md)
 - [Service 实施计划](CCRouter-service-completion-plan.md)

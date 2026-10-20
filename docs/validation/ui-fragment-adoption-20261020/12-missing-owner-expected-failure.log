@@ -1,0 +1,53 @@
+Generating Package artifacts for adoption_catalog, adoption_dashboard, adoption_fragment_contracts, ui_adoption_host from <fixture>/consumer/....
+  0s ccrouter_generator:ui_metadata on 5 inputs; adoption_fragment_contracts|lib/src/selection_card_fragment.dart
+  0s ccrouter_generator:ui_fragments on 5 inputs; adoption_fragment_contracts|lib/src/selection_card_fragment.dart
+  0s ccrouter_generator:service_contracts on 5 inputs; adoption_fragment_contracts|lib/src/selection_card_fragment.dart
+  0s ccrouter_generator:services on 5 inputs; adoption_fragment_contracts|lib/src/selection_card_fragment.dart
+  0s ccrouter_generator:service_proxies on 5 inputs; adoption_fragment_contracts|lib/src/selection_card_fragment.dart
+  0s ccrouter_generator:service_metadata on 9 inputs; adoption_fragment_contracts|lib/owner.dart
+  0s ccrouter_generator:route_contracts on 5 inputs; adoption_fragment_contracts|lib/src/selection_card_fragment.dart
+  0s ccrouter_generator:routes on 5 inputs; adoption_fragment_contracts|lib/src/selection_card_fragment.dart
+  0s ccrouter_generator:route_metadata on 9 inputs; adoption_fragment_contracts|lib/owner.dart
+  0s ccrouter_generator:route_bindings on 5 inputs; adoption_fragment_contracts|lib/src/selection_card_fragment.dart
+  0s ccrouter_generator:init_tasks on 5 inputs; adoption_fragment_contracts|lib/src/selection_card_fragment.dart
+  0s ccrouter_generator:init_task_metadata on 9 inputs; adoption_fragment_contracts|lib/owner.dart
+  0s ccrouter_generator:events on 5 inputs; adoption_fragment_contracts|lib/src/selection_card_fragment.dart
+  0s ccrouter_generator:event_metadata on 9 inputs; adoption_fragment_contracts|lib/owner.dart
+  0s ccrouter_generator:component_metadata on 9 inputs; adoption_fragment_contracts|lib/owner.dart
+  0s ccrouter_generator:commands on 5 inputs; adoption_fragment_contracts|lib/src/selection_card_fragment.dart
+  0s ccrouter_generator:command_metadata on 9 inputs; adoption_fragment_contracts|lib/owner.dart
+E ccrouter_generator:ui_metadata on adoption_dashboard|lib/src/dashboard_component.dart:
+  dependencyMissing: UI consumer "dashboard_component" requires owner "catalog_component" for "catalog.selection". Add the public Owner CCComponentId to CCComponent.dependencies; optionalDependencies does not satisfy uiDependencies.
+  package:adoption_dashboard/src/dashboard_component.dart:5:7
+    ╷
+  5 │ const dashboardComponent = CCComponent(
+    │       ^^^^^^^^^^^^^^^^^^
+    ╵
+  4s ccrouter_generator:ui_metadata on 5 inputs: 3 skipped, 1 no-op; spent 3s analyzing; adoption_dashboard|lib/src/selection_pair.dart
+  4s ccrouter_generator:ui_metadata on 5 inputs: 4 skipped, 1 no-op; spent 3s analyzing
+E ccrouter_generator:ui_fragments on adoption_dashboard|lib/src/dashboard_component.dart:
+  dependencyMissing: UI consumer "dashboard_component" requires owner "catalog_component" for "catalog.selection". Add the public Owner CCComponentId to CCComponent.dependencies; optionalDependencies does not satisfy uiDependencies.
+  package:adoption_dashboard/src/dashboard_component.dart:5:7
+    ╷
+  5 │ const dashboardComponent = CCComponent(
+    │       ^^^^^^^^^^^^^^^^^^
+    ╵
+  0s ccrouter_generator:ui_fragments on 5 inputs: 4 skipped, 1 no-op
+  0s ccrouter_generator:service_contracts on 5 inputs: 3 skipped, 2 no-op
+  0s ccrouter_generator:services on 5 inputs: 3 skipped, 2 no-op
+  0s ccrouter_generator:service_proxies on 5 inputs: 3 skipped, 2 no-op
+  0s ccrouter_generator:route_contracts on 5 inputs: 3 skipped, 2 no-op
+  0s ccrouter_generator:routes on 5 inputs: 3 skipped, 2 no-op
+  0s ccrouter_generator:route_bindings on 5 inputs: 3 skipped, 2 no-op
+  0s ccrouter_generator:init_tasks on 5 inputs: 3 skipped, 2 no-op
+  0s ccrouter_generator:events on 5 inputs: 3 skipped, 2 no-op
+  0s ccrouter_generator:commands on 5 inputs: 3 skipped, 2 no-op
+  0s ccrouter_generator:service_metadata on 9 inputs: 5 skipped, 4 no-op
+  0s ccrouter_generator:route_metadata on 9 inputs: 5 skipped, 4 no-op
+  0s ccrouter_generator:init_task_metadata on 9 inputs: 5 skipped, 4 no-op
+  0s ccrouter_generator:event_metadata on 9 inputs: 5 skipped, 4 no-op
+  0s ccrouter_generator:component_metadata on 9 inputs: 5 skipped, 1 output, 3 no-op
+  0s ccrouter_generator:command_metadata on 9 inputs: 5 skipped, 4 no-op
+  Failed to build with build_runner/aot in 4s; wrote 1 output.
+error: build_runner failed with exit code 1.
+CCRouter generation failed: elapsed=5313ms.

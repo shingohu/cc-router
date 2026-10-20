@@ -1,11 +1,11 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "generatorVersion": "0.1.5",
   "package": {
     "name": "demo_order_contracts",
     "version": "0.1.0"
   },
-  "contentFingerprint": "878aa7b1dd564b9dcb28bf331b9d2f00746d8e038e1b406fdb4e2e648fecbeba",
+  "contentFingerprint": "9be062d35979f3c2565898c66ff5fb39a8d5fbdce046e4ff8adbae333fe359fd",
   "bundle": null,
   "dependencies": [],
   "metadata": [
@@ -14,7 +14,7 @@
       "componentDeclarations": [],
       "package": "demo_order_contracts",
       "source": "lib/src/order_fragments.dart",
-      "uiSchemaVersion": 1,
+      "uiSchemaVersion": 2,
       "uiLibrary": "lib/src/ccrouter_generated/ui/order_fragments.ui.g.dart",
       "uiContracts": [
         {
@@ -33,47 +33,66 @@
             {
               "package": "demo_order_contracts",
               "source": "lib/src/order_fragments.dart",
-              "symbol": "OrderSummaryAction"
+              "symbol": "OrderSummaryAction",
+              "publicLibraries": [
+                "package:demo_order_contracts/demo_order_contracts.dart"
+              ]
             },
             {
               "package": "demo_order_contracts",
               "source": "lib/src/order_fragments.dart",
-              "symbol": "OrderSummaryFragmentContract"
+              "symbol": "OrderSummaryFragmentContract",
+              "publicLibraries": [
+                "package:demo_order_contracts/demo_order_contracts.dart"
+              ]
             },
             {
               "package": "demo_order_contracts",
               "source": "lib/src/order_fragments.dart",
-              "symbol": "OrderSummaryProps"
+              "symbol": "OrderSummaryProps",
+              "publicLibraries": [
+                "package:demo_order_contracts/demo_order_contracts.dart"
+              ]
             }
           ]
         },
         {
+          "uiSchemaVersion": 2,
           "declaration": {
             "symbol": "OrderRecommendationsFragmentContract",
             "packageUri": "package:demo_order_contracts/src/order_fragments.dart",
             "libraryUri": "package:demo_order_contracts/src/order_fragments.dart",
-            "line": 33,
+            "line": 37,
             "column": 22
           },
           "componentId": "demo_order_component",
           "id": "order.recommendations",
-          "version": "1.0.0",
-          "shapeFingerprint": "981dd30de35264dbec8ff547af3cd8af2c3f2eb680958b7c0b7626a395e9dc30",
+          "version": "2.0.0",
+          "shapeFingerprint": "0fd30e583936c0c3b491f660086fe5dbdd9fd1088ddb55e5c84a6bf9c81e7b45",
           "publicTypes": [
             {
               "package": "demo_order_contracts",
               "source": "lib/src/order_fragments.dart",
-              "symbol": "OrderRecommendationsAction"
+              "symbol": "OrderRecommendationsAction",
+              "publicLibraries": [
+                "package:demo_order_contracts/demo_order_contracts.dart"
+              ]
             },
             {
               "package": "demo_order_contracts",
               "source": "lib/src/order_fragments.dart",
-              "symbol": "OrderRecommendationsFragmentContract"
+              "symbol": "OrderRecommendationsFragmentContract",
+              "publicLibraries": [
+                "package:demo_order_contracts/demo_order_contracts.dart"
+              ]
             },
             {
               "package": "demo_order_contracts",
               "source": "lib/src/order_fragments.dart",
-              "symbol": "OrderRecommendationsProps"
+              "symbol": "OrderRecommendationsProps",
+              "publicLibraries": [
+                "package:demo_order_contracts/demo_order_contracts.dart"
+              ]
             }
           ]
         }

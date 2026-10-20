@@ -24,12 +24,15 @@ final class CCRouteBarrelExportValidator {
   }) {
     final metadata = documents.toList(growable: false);
     final indexes = <String, _PackageBarrelExportIndex>{};
-    _PackageBarrelExportIndex? indexFor(String packageName) {
+    _PackageBarrelExportIndex? indexFor(
+      String packageName, {
+      bool importProof = false,
+    }) {
       final root = packageRoots[packageName];
       if (root == null) return null;
       return indexes.putIfAbsent(
-        packageName,
-        () => _PackageBarrelExportIndex.build(root),
+        '$packageName:$importProof',
+        () => _PackageBarrelExportIndex.build(root, importProof: importProof),
       );
     }
 
@@ -41,6 +44,30 @@ final class CCRouteBarrelExportValidator {
       final source = '${document['source'] ?? ''}';
       if (!source.startsWith('lib/')) continue;
       final sourceFile = File(_join(packageRoot.path, source));
+
+      // UI schemas may reference DTOs from several libraries or Packages.
+      // Preserve an import proof for each type rather than assuming one barrel
+      // exports the complete shape.
+      for (final contract in _mutableObjects(document, 'uiContracts')) {
+        for (final type in _mutableObjects(contract, 'publicTypes')) {
+          final typePackage = '${type['package'] ?? ''}';
+          final typeRoot = packageRoots[typePackage];
+          final typeIndex = indexFor(typePackage, importProof: true);
+          final typeSource = '${type['source'] ?? ''}';
+          final symbol = '${type['symbol'] ?? ''}';
+          if (typeRoot == null ||
+              typeIndex == null ||
+              !typeSource.startsWith('lib/') ||
+              symbol.isEmpty)
+            continue;
+          _attachPublicLibraries(
+            type,
+            typeIndex.publicLibraries(File(_join(typeRoot.path, typeSource)), {
+              symbol,
+            }, packageName: typePackage),
+          );
+        }
+      }
 
       for (final route in _mutableObjects(document, 'routes')) {
         if (route['exposure'] == 'internal') continue;
@@ -360,11 +387,24 @@ final class _BarrelExportRequirement {
 /// of the number of metadata documents or public contracts in the Package.
 final class _PackageBarrelExportIndex {
   /// Creates an index from normalized target paths to their export directives.
-  const _PackageBarrelExportIndex(this._packageRoot, this._exportsByTarget);
+  const _PackageBarrelExportIndex(
+    this._packageRoot,
+    this._exportsByTarget,
+    this._unprovenBarrels,
+    this._contestedSymbols,
+  );
 
   /// Builds one export index for every Dart library below [packageRoot].
-  factory _PackageBarrelExportIndex.build(Directory packageRoot) {
+  /// [importProof] declines conditional or invalid namespaces and applies every
+  /// combinator, while the legacy validation path retains its existing rules.
+  factory _PackageBarrelExportIndex.build(
+    Directory packageRoot, {
+    bool importProof = false,
+  }) {
     final exportsByTarget = <String, List<_BarrelExport>>{};
+    final unprovenBarrels = <String>{};
+    final contestedSymbols = <String, Set<String>>{};
+    final exportTargets = <String, Set<String>>{};
     for (final file in CCRouteBarrelExportValidator._dartFiles(packageRoot)) {
       final content = file.readAsStringSync();
       if (!content.contains('export')) continue;
@@ -374,19 +414,80 @@ final class _PackageBarrelExportIndex {
       } on FormatException {
         continue;
       }
+      if (importProof && parsed.errors.isNotEmpty) continue;
+      final barrelPath = file.absolute.path;
+      if (importProof) {
+        if (parsed.unit.directives.any(
+          (d) => d is PartDirective || d is PartOfDirective,
+        )) {
+          unprovenBarrels.add(barrelPath);
+        }
+        contestedSymbols[barrelPath] = {
+          for (final declaration in parsed.unit.declarations)
+            ...switch (declaration) {
+              TopLevelVariableDeclaration d => d.variables.variables.map(
+                (v) => v.name.lexeme,
+              ),
+              ClassDeclaration d => [d.namePart.typeName.lexeme],
+              EnumDeclaration d => [d.namePart.typeName.lexeme],
+              MixinDeclaration d => [d.name.lexeme],
+              ExtensionTypeDeclaration d => [
+                d.primaryConstructor.typeName.lexeme,
+              ],
+              ClassTypeAlias d => [d.name.lexeme],
+              ExtensionDeclaration d => [if (d.name != null) d.name!.lexeme],
+              FunctionDeclaration d => [d.name.lexeme],
+              GenericTypeAlias d => [d.name.lexeme],
+              FunctionTypeAlias d => [d.name.lexeme],
+              _ => const <String>[],
+            },
+        };
+      }
       for (final directive
           in parsed.unit.directives.whereType<ExportDirective>()) {
         final uri = directive.uri.stringValue;
-        if (uri == null) continue;
+        if (uri == null || importProof && directive.configurations.isNotEmpty) {
+          if (importProof) unprovenBarrels.add(barrelPath);
+          continue;
+        }
         final resolved = Uri.file(file.absolute.path).resolve(uri);
-        if (resolved.scheme != 'file') continue;
+        if (resolved.scheme != 'file') {
+          if (importProof) unprovenBarrels.add(barrelPath);
+          continue;
+        }
         final shown = <String>{};
+        var hasShow = false;
         for (final combinator in directive.combinators) {
           if (combinator is ShowCombinator) {
-            shown.addAll(combinator.shownNames.map((name) => name.name));
+            final names = combinator.shownNames
+                .map((name) => name.name)
+                .toSet();
+            if (importProof && hasShow) {
+              shown.retainAll(names);
+            } else {
+              shown.addAll(names);
+            }
+            hasShow = true;
+          }
+        }
+        if (importProof) {
+          for (final combinator
+              in directive.combinators.whereType<HideCombinator>()) {
+            shown.removeAll(combinator.hiddenNames.map((name) => name.name));
           }
         }
         final targetPath = File(resolved.toFilePath()).absolute.path;
+        if (importProof) {
+          if (!hasShow) unprovenBarrels.add(barrelPath);
+          for (final symbol in shown) {
+            final targets = exportTargets.putIfAbsent(
+              '$barrelPath\u0000$symbol',
+              () => {},
+            );
+            targets.add(targetPath);
+            if (targets.length > 1) contestedSymbols[barrelPath]!.add(symbol);
+          }
+        }
         exportsByTarget
             .putIfAbsent(targetPath, () => <_BarrelExport>[])
             .add(
@@ -400,6 +501,8 @@ final class _PackageBarrelExportIndex {
     return _PackageBarrelExportIndex(
       packageRoot.absolute.path,
       exportsByTarget,
+      unprovenBarrels,
+      contestedSymbols,
     );
   }
 
@@ -425,7 +528,11 @@ final class _PackageBarrelExportIndex {
     while (pending.isNotEmpty) {
       final current = pending.removeLast();
       for (final export in _exportsByTarget[current] ?? const []) {
-        if (!export.shownSymbols.containsAll(requiredSymbols) ||
+        if (_unprovenBarrels.contains(export.barrelPath) ||
+            (_contestedSymbols[export.barrelPath] ?? const <String>{})
+                .intersection(requiredSymbols)
+                .isNotEmpty ||
+            !export.shownSymbols.containsAll(requiredSymbols) ||
             !visited.add(export.barrelPath)) {
           continue;
         }
@@ -467,6 +574,12 @@ final class _PackageBarrelExportIndex {
 
   /// Export directives grouped by their resolved target library path.
   final Map<String, List<_BarrelExport>> _exportsByTarget;
+
+  /// Unknown broad, conditional or external namespaces cannot prove imports.
+  final Set<String> _unprovenBarrels;
+
+  /// Local declarations or distinct export targets can shadow a proposed type.
+  final Map<String, Set<String>> _contestedSymbols;
 }
 
 /// One public barrel export and the explicit symbols exposed by its `show`.

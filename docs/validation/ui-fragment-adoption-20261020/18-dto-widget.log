@@ -1,0 +1,5 @@
+00:00 +0: loading <fixture>/consumer/test/fragment_test.dart
+00:00 +0: private DTO selections stay isolated across activity, Props and callbacks
+00:01 +1: unmount cancels pending private loads
+00:01 +2: shutdown invalidates old actions and a fresh mount uses the new Host
+00:01 +3: All tests passed!

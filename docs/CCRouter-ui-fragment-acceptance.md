@@ -3,6 +3,12 @@
 日期：2026-10-15。实施分支：`codex/typed-ui-fragment`，基线 `c8812f8`。
 本文记录本次增量验证，不替代正式发布门禁或既有全框架审计。
 
+本文为首次静态 UI 实施及随后 review/合并的历史记录。文中的“暂未实现”、测试数量和
+平台结果仅对应各节注明的快照：后来已增加 enum/受限 DTO Action、UI 脚手架、`find --usage`
+和保守 Analyzer 检测。当前接入以[UI 指南](../skills/ccrouter-integration-development/references/ui-fragments.md)
+为准；后续证据见[Action payload 记录](CCRouter-ui-fragment-action-payload-design.md)及
+[独立接入验证](validation/ui-fragment-adoption-20261020/README.md)。公开 API 尚未最终冻结。
+
 ## 1. 问题、取舍与实现
 
 A 组件需要嵌入 B 组件的一块局部 UI。直接 import B 实现会破坏组件隔离；通过 Service
@@ -59,7 +65,7 @@ shutdown/reinitialize。Demo 的 Timer 与 TextEditingController 均由 State �
 | 8 | 非侵入式 | 普通 Widget/State 无强制基类，不缓存 Context；A 不 import B 实现；Renderer-only 旧 Host 不新增 UI 依赖 |
 | 9 | 可降级回退 | required 装配错误不静默降级，业务 loading/retry 自管；可移除 UI 消费声明并重新生成，旧能力调用与 Service 限制不变 |
 | 10 | 明确生命周期 | Flutter State 拥有实例资源，Host binding 拥有 catalog generation，无隐式 Route Scope |
-| 11 | 可观测可诊断可溯源 | 有界 payload-free 生命周期诊断；UI 专属 find/DevTools/IDE 诊断暂未实现 |
+| 11 | 可观测可诊断可溯源 | 有界 payload-free 生命周期诊断；本次首次实施时 UI 专属 find/DevTools/IDE 诊断尚未实现，后续状态见文首链接 |
 | 12 | 并发安全 | 初始化重入 gate、失败逆序回滚、旧 generation Action 丢弃；请求竞态由 B State 自管 |
 | 13 | 性能和稳定 | 无反射或每帧全局注册，诊断有界，既有生成缓存/无缓存门禁；没有未经测量的帧耗时承诺 |
 

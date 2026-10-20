@@ -2,9 +2,14 @@ import 'component.dart';
 
 /// Declares a non-generic marker for one statically composed UI capability.
 ///
-/// [P] is an immutable input DTO; [A] is a public enum. Neither may contain
-/// Flutter objects, functions, streams, or asynchronous values. This annotation
-/// does not create a Route or extend the Service type system.
+/// [P] is an immutable input DTO; [A] is a plain public enum or an immutable
+/// output DTO. DTOs are public final Pure Dart classes with const generative
+/// constructors and public final stored scalar, plain enum or nested DTO fields.
+/// Neither type may contain Flutter objects, functions, collections, streams,
+/// asynchronous values or sealed unions. DTO Actions require a Generator that
+/// supports UI schema 2; changing an enum to a DTO is a breaking Contract change.
+/// Output belongs to the mounted consumer callback, without serialization or
+/// payload retention in diagnostics. This annotation creates no Route or Scope.
 final class CCUIFragmentContract<P extends Object, A extends Object> {
   /// Defines the public identity and semantic version of a Fragment.
   const CCUIFragmentContract({

@@ -85,10 +85,11 @@ Package 声明 `@CCUIFragmentContract<Props, Action>`，在实现 Package 提供
 代理限制保持原语义。UI metadata 使用新的 opt-in schema，启用方必须同时使用本实现的
 Generator、Contracts、CCRouter 和 UI Package，不能混用旧生成工具。
 
-v1 支持 final、const、无继承的 DTO Props（scalar、普通 enum、嵌套 DTO）与普通 enum
-Action，暂不支持集合、sealed Action、函数型 Props、动态 Slot 或 Renderer 热替换。
+支持 final、const、无继承的 DTO Props（scalar、普通 enum、嵌套 DTO）；Action 可用普通 enum
+或同样受限的单一不可变 DTO，暂不支持集合、sealed Action、函数型 Props、动态 Slot 或 Renderer 热替换。
+scalar 只能用于 DTO 字段，不能直接作为 Action 类型。
 普通 enum 不允许自定义成员、构造器、mixin 或 interface。DTO 通过 `this.field` 参数或字段
-声明处的常量初始值构造，两处默认值均计入指纹；v1 拒绝初始化列表赋值和重定向构造器。
+声明处的常量初始值构造，两处默认值均计入指纹；当前拒绝初始化列表赋值和重定向构造器。
 UI 层允许类型化 `onAction`，不放宽 Service 对 Widget、BuildContext、callback、Stream
 的限制。实例身份、更新和释放遵循 Flutter Key/State；`active` 是宿主许可，不是自动曝光。
 Runtime 关闭立即使旧 Action 失效；重新初始化后 Host 必须显式重挂 UI 子树。
@@ -99,10 +100,11 @@ Runtime 关闭立即使旧 Action 失效；重新初始化后 Host 必须显式�
 
 首次接入涉及 contracts、Renderer、消费者依赖及 Host 装配，完整步骤与错误修正见
 [UI 接入指南](skills/ccrouter-integration-development/references/ui-fragments.md)。同一 Fragment
-渲染多个实例只声明一次依赖，以 Key 区分实例。v1 enum Action 不能回传 B 私有加载列表中
-所选项的动态 ID；该交互尚不支持，不应通过共享可变状态或 Event 绕过。
+渲染多个实例只声明一次依赖，以 Key 区分实例。B 私有加载列表后，可通过 DTO Action
+回传所选项 ID；enum 仍适合无 payload 通知。enum 改 DTO 是破坏性变更，需 major SemVer
+并重生成 A/B/Host。DTO 使用 UI schema 2 / Package Index schema 4，旧工具明确拒绝。
 [易用性与收敛审查](docs/CCRouter-ui-fragment-usability-review.md)区分已有能力、接入成本和待设计扩展。
-可选 Analyzer Plugin 提供 UI alias、重复依赖、明显非法版本范围、普通 enum Action、
+可选 Analyzer Plugin 提供 UI alias、重复依赖、明显非法版本范围、enum/DTO Action、
 Renderer 签名及 Host/Generated SPI 越界检查；缺少 required Owner 可在公共常量已导入时
 提供保守 Quick Fix。Host 完整性错误通过有效的 Generator 结构化快照进入 IDE；
 完整 Props schema 和最终正确性仍以 `generate --check` 为准。
@@ -110,6 +112,17 @@ UI 依赖检查只接受真实框架构造器，返回同类型的普通函数�
 Owner 按声明 Library 和符号区分；Renderer 必须声明在 Library 顶层，不能嵌套在函数或方法内。
 已解析的 `CCComponent` / `CCUIFragmentDependency` typedef 构造器也支持 Owner 检查与修复。
 契约在 `part` 中时，重新生成 metadata 以分别记录源码位置和所属 Library 身份。
+首次接入可用 `create ui-fragment ... --dry-run` 预览契约、公共入口及可选 Renderer，
+再按输出补齐显式依赖，并在 Consumer 组件定义中导入公共契约和 `package:ccrouter_ui/ccrouter_ui.dart`；
+生成后用 `find <ui-id> <host-root> --usage <consumer-id>`
+查询真实 Client 和接入步骤。旧索引缺少公共导出或 alias 证据时需重新生成。
+脚手架默认生成 enum Action；动态选择结果可按[DTO Action 设计与验证](docs/CCRouter-ui-fragment-action-payload-design.md)改为受限 DTO。
+参与生成的 Contract、A、B 各包都需声明 `ccrouter_generator` 开发依赖，Host 还需 `build_runner`。
+`ccrouter_ui` 属于框架依赖，无需业务组件的 Portable State；分发业务组件的原有校验继续保留。
+
+[独立接入验证](docs/validation/ui-fragment-adoption-20261020/README.md)提供 enum/DTO 两条路径的
+可复现源码、日志与条件化成本记录。当前已完成本地技术闭环；未参与实现者的首次接入、
+正式分发、真实平台矩阵和长期内存/性能仍待验证，公开 API 尚未最终冻结。
 
 ### IDE / Analysis Server 诊断
 
@@ -1908,7 +1921,7 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo --check
 - 不虚构当前尚未实现的 Action Pipeline 或动态组件；Command/Event/InitTask 生成能力与 Service Proxy 只使用当前支持的显式声明和方法矩阵。
 - 生成后执行 analyze、针对性测试与 `generate --check`。
 
-CLI Skill 覆盖已经实现的 `generate`、`find`、`clean`、六类 `create` 脚手架、
+CLI Skill 覆盖已经实现的 `generate`、`find`、`clean`、七类 `create` 脚手架（含显式 UI Contract）、
 `analyzer status/doctor/install/upgrade/uninstall` 和显式 `pub-hook` 管理。Contract
 Scaffold/Promotion/Migration、alias 迁移和扩展生成失败诊断目前仍是 AI 辅助工作流，不是可直接
 调用的 CLI 命令；五类 Contract 版本兼容核心门禁已经由生成器、Host 聚合和 Runtime 自动执行。

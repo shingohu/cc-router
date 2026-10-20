@@ -75,7 +75,7 @@ weaken lifecycle, type, failure, or diagnostic semantics to make the feature
 appear supported.
 
 UI Fragment editor diagnostics cover aliases, repeated dependencies, definitely
-invalid range tokens, plain enum Action, exact Renderer signatures and UI SPI
+invalid range tokens, enum/DTO Action, exact Renderer signatures and UI SPI
 boundaries. Metadata-proven UI Owners share the conservative required-edge fix;
 full Props schemas and Host completeness remain Generator-owned, with Host
 failures bridged only from current structured snapshots. Follow
@@ -88,6 +88,25 @@ Resolved `CCComponent` / `CCUIFragmentDependency` typedef constructors retain
 Owner diagnostics and fixes. For contracts in `part` files, regenerate metadata:
 `packageUri` locates the declaration and `libraryUri` proves the defining library.
 Old part metadata without that proof defers; never match by Package + name alone.
+For a first Fragment, use `create ui-fragment ... --dry-run` to preview new
+Contract/public-barrel/Renderer files, then follow the printed dependency steps.
+The Consumer component definition imports both the public Contract and
+`package:ccrouter_ui/ccrouter_ui.dart` before declaring its UI dependencies.
+Each participating Contract, Owner and Consumer Package declares a
+`ccrouter_generator` dev dependency; the Host also declares `build_runner`.
+The `ccrouter_ui` framework dependency does not need business component Portable
+State. Distributed business Packages still require their own verified state.
+After generation, `find <ui-id> <host-root> --usage <consumer-id>` reads verified
+UI schema exports and the actual alias; old indexes defer until regeneration.
+Both workflows preserve explicit Owner edges. The scaffold defaults to enum
+Actions; change to a restricted immutable DTO when B must return a privately loaded selection ID.
+Scalar types are supported only inside DTOs, not as root Actions.
+DTO Actions require UI schema 2 / Package Index schema 4 and matching Plugin support;
+enum-to-DTO migration needs major SemVer and regeneration of A/B/Host.
+Treat the local enum/DTO technical workflow as verified, with API freeze, first
+use by uninvolved developers, distribution/upgrades, real platform coverage and
+long-term memory/performance still pending. See the UI reference's adoption
+status; historical design plans are not instructions to call unsupported APIs.
 
 For live IDE boundary feedback, use the optional `ccrouter_analyzer_plugin`.
 It reports deterministic source diagnostics and uses the current Analysis Server

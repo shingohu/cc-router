@@ -65,20 +65,26 @@ final class _Contract {
     } catch (_) {
       _fail('UI contract requires a valid SemVer.', marker);
     }
+    final actionElement = action is InterfaceType
+        ? (action as InterfaceType).element
+        : null;
+    // Require a package-declared Action before recursive schema validation,
+    // which also accepts dart:core scalars for DTO fields.
     if (props is! InterfaceType ||
         (props as InterfaceType).element is! ClassElement ||
-        action is! InterfaceType ||
-        (action as InterfaceType).element is! EnumElement) {
+        (actionElement is! EnumElement &&
+            (actionElement is! ClassElement ||
+                actionElement.library.uri.scheme != 'package'))) {
       _fail(
-        'UI v1 requires immutable DTO Props and enum Action for '
+        'UI requires immutable DTO Props and plain enum or immutable DTO Action for '
         '"${marker.displayName}" ($owner/$id). '
-        'Action payload DTOs and sealed unions are not supported; '
-        'a plain enum cannot return a dynamic selected ID to the consumer.',
+        'Sealed unions and arbitrary payload types are unsupported.',
         marker,
       );
     }
+    schemaVersion = actionElement is EnumElement ? 1 : 2;
     final shape = {
-      'schemaVersion': 1,
+      'schemaVersion': schemaVersion,
       'owner': owner,
       'id': id,
       'props': _schema(props, <Element>{}, marker),
@@ -125,8 +131,11 @@ final class _Contract {
   /// Immutable input DTO type.
   late final DartType props;
 
-  /// Closed public Action enum.
+  /// Plain public enum or closed immutable output DTO.
   late final DartType action;
+
+  /// Minimum UI reader version; enum contracts preserve their original shape.
+  late final int schemaVersion;
 
   /// Canonical component identity.
   late final String owner;
@@ -145,6 +154,7 @@ final class _Contract {
 
   /// Normalized record consumed by Host validation and rendering codegen.
   Map<String, Object?> get record => {
+    if (schemaVersion > 1) 'uiSchemaVersion': schemaVersion,
     'declaration': declaration,
     'componentId': owner,
     'id': id,
@@ -160,7 +170,7 @@ final class _Contract {
       'version: ${jsonEncode(version)}, fingerprint: ${jsonEncode(fingerprint)})';
 }
 
-/// Computes a conservative closed schema; collection and sealed unions await v2.
+/// Computes the shared closed DTO schema; collections and unions are unsupported.
 Object _schema(DartType type, Set<Element> stack, Element origin) {
   if (type is! InterfaceType ||
       type.element.isPrivate ||
@@ -224,6 +234,8 @@ Object _schema(DartType type, Set<Element> stack, Element origin) {
       element.interfaces.isNotEmpty ||
       element.mixins.isNotEmpty ||
       element.methods.isNotEmpty ||
+      element.getters.any((getter) => getter.isOriginDeclaration) ||
+      element.setters.any((setter) => setter.isOriginDeclaration) ||
       !stack.add(element)) {
     _fail(
       'UI DTOs must be final, acyclic Pure Dart data classes without inheritance.',
@@ -544,6 +556,7 @@ final class _UIFragmentBuilder implements Builder {
           ...contract.record,
           'consumerDeclaration': _sourceReference(variable),
           'consumer': consumer,
+          'alias': alias,
           'versionRange': range,
         });
         final props = imports.type(contract.props);
@@ -561,9 +574,17 @@ final class _UIFragmentBuilder implements Builder {
     );
     final generated = 'lib/src/ccrouter_generated/ui/$stem.ui.g.dart';
     if (metadata) {
+      final schemaVersion =
+          [
+            ...contracts,
+            ...renderers,
+            ...requirements,
+          ].any((record) => record['uiSchemaVersion'] == 2)
+          ? 2
+          : 1;
       await buildStep.writeAsString(
         buildStep.allowedOutputs.single,
-        '${jsonEncode({'schemaVersion': 5, 'componentDeclarations': <String>[], 'package': buildStep.inputId.package, 'source': buildStep.inputId.path, 'uiSchemaVersion': 1, 'uiLibrary': generated, 'uiContracts': contracts, 'uiRenderers': renderers, 'uiRequirements': requirements})}\n',
+        '${jsonEncode({'schemaVersion': 5, 'componentDeclarations': <String>[], 'package': buildStep.inputId.package, 'source': buildStep.inputId.path, 'uiSchemaVersion': schemaVersion, 'uiLibrary': generated, 'uiContracts': contracts, 'uiRenderers': renderers, 'uiRequirements': requirements})}\n',
       );
       return;
     }

@@ -7,16 +7,25 @@ destinations. A Fragment has no RouteEntry, result Future, Scope or Deep Link.
 
 ## Check the business interaction first
 
-Before adding declarations, check what A must receive from B. v1 Action is a
-plain enum and cannot carry a selected ID or other dynamic payload. A can capture
-an ID it already supplied in Props (for example, a fixed order summary). A cannot
-recover the selected ID of a list loaded privately by B from an enum Action.
-That interaction is not supported by the current Fragment contract. Do not use
-global mutable selection, a Service returning Widget/callback, an Event detour,
-or a private implementation import to make it appear supported. B may handle
-the action internally if that is the actual product requirement; otherwise use
-ordinary public Flutter composition with explicit ownership or defer the
-Fragment integration until a data-bearing Action contract is supported.
+Before adding declarations, check what A must receive from B. Use a plain enum
+for payload-free notification when A already knows the relevant input ID. Use a
+single immutable DTO Action when B privately loads or discovers the selected ID:
+
+```dart
+final class RecommendationSelected {
+  const RecommendationSelected({required this.selectedId});
+  final String selectedId;
+}
+```
+
+Declare it as the Contract's Action type and explicitly export it with all nested
+types. B calls `input.onAction(RecommendationSelected(selectedId: loaded.id))`;
+A receives the exact type through its generated Client's `onAction`. The payload
+is process-local and synchronous, with no JSON conversion or diagnostic retention.
+DTO Actions share the restricted Props schema below. Sealed unions and heterogeneous
+`kind + nullable fields` modeling are outside this increment. Use ordinary public
+Flutter composition when Fragment version/assembly guarantees are unnecessary;
+never route selection through global state, a Service getter or a broadcast Event.
 
 ## Complete first integration path
 
@@ -30,6 +39,15 @@ each Fragment. The first integration crosses these authored edit points:
 | B implementation | Direct contracts and `ccrouter_ui` dependencies, annotated top-level Renderer | Returns an ordinary Widget; State owns asynchronous work and resources |
 | A consumer | Direct contracts and `ccrouter_ui` dependencies, required Owner edge and `uiDependencies`, page call | Imports its own stable UI Client, never B's implementation |
 | Host | Resolved A/B implementation dependencies and direct `ccrouter_ui` dependency, normal generation | Initialize once with the generated Assembly; no handwritten UI registry |
+
+Every participating contracts, A and B Package also declares `ccrouter_generator`
+in `dev_dependencies`; the Host declares both `ccrouter_generator` and
+`build_runner`. A Host's generator dependency alone does not activate Builders
+for all dependency Packages. Confirm the generated component/UI counts before
+using `find`; a successful command with empty indexes is not a completed integration.
+The `ccrouter_ui` runtime is a framework Package and does not require business
+component Portable State. External business Packages still publish their own
+verified generated state; do not disable that check to complete an integration.
 
 For example, an existing Pure Dart contracts Package can declare:
 
@@ -112,17 +130,62 @@ and Assembly glue are never authored manually.
 
 ## Contracts and dependencies
 
+### Scaffold and inspect a first Fragment
+
+The optional CLI scaffold reuses an existing Owner constant and creates new
+authored files only. For an existing Pure Dart contracts Package, preview:
+
+```bash
+ccrouter create ui-fragment OrderBadge demo/modules/order_contracts \
+  --owner-source lib/src/order_detail_route_contract.dart \
+  --owner-symbol demoOrderComponentId --id order.badge \
+  --renderer-root demo/modules/order --dry-run
+```
+
+Remove `--dry-run` to create `lib/src/order_badge_fragment.dart`, the explicit
+public barrel `lib/order_badge_fragment.dart`, and the optional Owner Renderer.
+The Owner source must be an authored library in this contracts Package declaring
+the requested public top-level const. Semantic `CCComponentId` identity and the
+Renderer's true Owner are verified during generation. A scaffold is not proof
+that the chosen business schema or Owner is correct.
+Without `--renderer-root`, only the Contract and public barrel are created.
+Existing targets, linked parents and nested Package targets are refused.
+Pubspecs, existing barrels/component definitions and generated output remain
+unchanged; the printed steps name the required direct Pub/Owner/UI/Host edits.
+In the Consumer component definition, import both the new public Contract barrel
+and `package:ccrouter_ui/ccrouter_ui.dart` before adding `CCUIFragmentDependency`.
+Choose dependency sources explicitly, complete the templates, resolve Pub and
+generate the actual Host. The starter Props uses an `itemId` already known by A;
+its enum Action is a starter notification. Replace it with a restricted DTO for dynamic selection payloads.
+
+Then inspect a proven recipe for an existing consumer:
+
+```bash
+ccrouter find order.summary demo --usage demo_navigation_lab_component
+```
+
+UI lookup reads validated Package indexes, locates Contract/Renderer declarations
+and reports complete schema public imports, direct dependencies, the required
+Owner edge and the declared UI alias. The stable Client retains the full
+component ID (`DemoNavigationLabComponentFragments`, including `Component`).
+Missing UI dependencies receive a placeholder alias, not a claimed generated
+method. Old indexes without public-type import proofs or alias defer until
+regeneration; the command never scans source, edits files or runs generation.
+Same-owner usage points to the ordinary local Widget.
+
 The public contracts Package imports
 `package:ccrouter_contracts/ccrouter_ui_contracts.dart` and exports the marker,
 Props, Action and canonical `CCComponentId` through its authored public barrel.
 Declare a public non-generic marker with
 `@CCUIFragmentContract<Props, Action>(componentId: owner, id: ..., version: ...)`.
-v1 Props are final classes with only const generative constructors, public final
+Props and DTO Actions are final classes with only const generative constructors, public final
 stored fields, no inheritance/mixins/interfaces or declared methods. Fields may
 contain scalar values, ordinary enums and nested DTOs, with supported nullable
 fields. Generic collections, dynamic/Object, Flutter types, Future/Stream,
 functions, enhanced enums, and sealed Action unions are unsupported.
-Use a plain public enum for Action and enum fields: no authored fields, getters,
+Scalar types (`String`, `int`, `bool`, `num`, `double`) are DTO field types only;
+the root Action must be a plain enum or a restricted immutable DTO.
+Enum Actions and DTO enum fields must be plain public enums: no authored fields, getters,
 setters, methods, constructors, mixins or interfaces, including static members.
 DTO constructors accept only `this.field` parameters. Each stored field must
 either have a constant declaration initializer or be initialized by every
@@ -182,15 +245,19 @@ the UI catalog or require that Host to add `ccrouter_ui` directly.
 Package-local generation does not require unrelated implementations; finish
 integration with actual Host `generate --no-cache --check`.
 
-UI metadata schema 5 / UI schema 1 and Package Index schema 3 are opt-in.
-Older generators reject these artifacts. Use matching framework/UI/generator
+Source metadata schema 5 remains opt-in for UI. Enum contracts retain UI schema 1 and Package
+Index schema 3 with unchanged shape fingerprints and signatures. DTO Actions use
+UI schema 2 and Package Index schema 4; Contract, Renderer and consumer records
+carry the required version and mixed documents declare the highest UI version.
+Older generators reject these artifacts. Changing an enum Action to DTO requires
+major Contract SemVer, updated consumer range and regeneration of A/B/Host. Use matching framework/UI/generator
 sources. Packages without UI retain their existing schema and generated API.
 The optional Analyzer Plugin checks aliases, repeated dependencies, clearly
-invalid range tokens, plain enum Actions, Renderer signatures and UI SPI access.
+invalid range tokens, enum/DTO Actions, Renderer signatures and UI SPI access.
 Required UI Owner checks share the conservative imported-public-constant Quick
 Fix with Service/Command dependencies. Regenerate old metadata to provide UI
 marker identity and source positions. Host completeness errors enter the IDE
-only through a current validated Generator snapshot. Full schema validation is
+only through a current validated Generator snapshot. Complete constructor/default/schema validation is
 still Generator-owned; see [IDE setup and boundaries](ide-analysis-server.md).
 Plugin updates follow the two-stage remote commit then Demo pin workflow.
 Dependency checks and fixes require an actual framework constructor; a function
@@ -216,7 +283,7 @@ reading generated glue. UI consumer errors include the consumer and contract:
 Aliases name generated methods, not mounted instance identities. Multiple cards
 of the same Fragment use one dependency and distinct stable business Keys.
 Do not add duplicate dependencies just to render a second card. UI-specific
-`find --usage` and DevTools views remain unavailable; the only UI Quick Fix
+DevTools views remain unavailable; the only UI Quick Fix
 is the proven missing required Owner edge described above.
 
 ## Lifecycle and failures
@@ -250,3 +317,31 @@ Test real generation, required edges, type rejection, multi-instance identity,
 callback updates, hidden Tab recovery, request races, Session reset, shutdown
 and disposal. UI tests currently use the real default Host lifecycle; do not
 assume the optional catalog follows `CCRouterTestHost` Zone overlays.
+
+## Adoption status and completion checks
+
+The local enum/DTO workflow has been verified in a separate consumer Pub
+Workspace using copied framework sources outside that Workspace: scaffold
+preview/create, explicit configuration, generation, lookup, typed rendering and
+callbacks, Owner rejection, DTO migration and reference freshness checks.
+Four Widget tests covered the enum and DTO paths. This is agent-executed
+technical validation; no uninvolved developer was timed or interviewed.
+
+For an adoption change, complete these steps before calling it integrated:
+
+1. Resolve each participating Package's direct dependencies and generator
+   prerequisites. Confirm the actual Host sees the intended components/UI records.
+2. Generate, then use `find --usage` to inspect the proven imports, required
+   Owner and actual Client alias. Keep the generated Client in its owning
+   component; Host tests may use a component-local test fixture with real Assembly.
+3. Verify typed output, independent instances, current Props/callbacks and
+   applicable inactive, request-race, Session, unmount and shutdown behavior.
+4. Run analysis, focused tests and actual Host `generate --no-cache --check`.
+   Keep existing enum contracts as a compatibility control when migrating DTOs.
+
+The public API is not finally frozen. Independent human first use, published
+installation/upgrades, real platform/device coverage, production backend data,
+and long-term memory/performance require separate evidence. UI DevTools Catalog,
+complete editor-time schema validation, sealed Actions and dynamic Slots remain
+outside the implemented scope. Prefer ordinary Flutter composition when its
+ownership and dependency boundary already meets the application need.

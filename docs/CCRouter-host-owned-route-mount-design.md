@@ -74,7 +74,9 @@ Host 导航拓扑缺少独立组合层，分类为新的通用框架能力。
 - 不允许覆盖 `hostId`；v1 只支持单 Host 下的 Shell/Outlet 组合。
 - 不自动生成 Tab UI、标签、图标、排序、权限或业务可见性规则。
 - 不让生成器推断 GoRouter Shell 树；Host 仍显式拥有 Backend 拓扑。
-- 不支持页面局部 UI Fragment；局部内容继续使用普通 Flutter 组合或 Service 数据契约。
+- Route Mount 不承载局部 UI。跨组件局部业务 UI 使用独立的可选
+  [UI Fragment](../skills/ccrouter-integration-development/references/ui-fragments.md)；
+  普通展示复用使用 Flutter 组合，仅需数据时使用 Service 契约。
 
 ## 3. 设计原则
 

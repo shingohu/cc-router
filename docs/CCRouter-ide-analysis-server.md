@@ -15,11 +15,14 @@ Host 判定复用 `.metadata`、`ccrouter.yaml` 和直接依赖，已保存角�
 
 ## UI Fragment 检测
 
-UI v1 的编辑时诊断包括 `ccrouter_ui_alias_invalid`、`ccrouter_ui_alias_duplicate`、
+当前 UI 的编辑时诊断包括 `ccrouter_ui_alias_invalid`、`ccrouter_ui_alias_duplicate`、
 `ccrouter_ui_dependency_duplicate`、`ccrouter_ui_version_range_invalid`、
 `ccrouter_ui_action_invalid`、`ccrouter_ui_renderer_invalid` 和 `ccrouter_ui_spi_access`。
 使用框架声明身份，支持 prefix 和公共转导出；无法证明的类型和不完整输入暂缓。范围检查仅
 拒绝明显不支持的字面量，Props 完整 schema 和最终 Host 闭包仍由 Generator 验证。
+Action 接受普通 enum 或受限不可变 DTO；根 scalar、可变类型及确定的行为/循环 schema 被拒绝，
+scalar 仅可作为 DTO 字段。DTO 使用 UI schema 2 / Package Index 4，需配套 Generator 和 Plugin。
+完整约束与迁移步骤见[UI 接入指南](../skills/ccrouter-integration-development/references/ui-fragments.md)。
 
 UI Owner 使用 `ccrouter_component_owner_dependency_missing`。Quick Fix 仅补已导入的唯一
 公共 Owner 常量，要求 required 列表缺省或可直接编辑；不猜 import，不改 spread/计算集合。

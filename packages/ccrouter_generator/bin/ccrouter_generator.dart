@@ -32,6 +32,7 @@ import 'src/route_find.dart' as route_find;
 import 'src/pub_hook.dart';
 import 'src/pub_hook_watch_coordination.dart';
 import 'src/scaffold.dart';
+import 'src/ui_fragment_scaffold.dart';
 import 'package:ccrouter_generator/src/ui_fragment_workspace.dart';
 
 part 'src/build_plan.dart';
@@ -71,6 +72,12 @@ Future<void> main(List<String> arguments) async {
 }
 
 Future<void> _runCommand(List<String> arguments) async {
+  if (arguments.length >= 2 &&
+      arguments[0] == 'create' &&
+      arguments[1] == 'ui-fragment') {
+    if (!await runUIFragmentScaffold(arguments.skip(2).toList())) exitCode = 1;
+    return;
+  }
   final totalWatch = Stopwatch()..start();
   final parsed = _parseArguments(arguments);
   if (parsed.help) {
@@ -594,6 +601,7 @@ const _usage = '''Usage:
   ccrouter create command <CommandName> [component-directory]
   ccrouter create event <EventName> [component-directory] [--with-subscriber]
   ccrouter create init-task <TaskName> [component-directory] [--with-contract]
+  ccrouter create ui-fragment <Name> <contracts-root> --owner-source <lib/path.dart> --owner-symbol <constant> --id <capability-id> [--renderer-root <owner-root>] [--dry-run]
   ccrouter analyzer status [host-root]
   ccrouter analyzer doctor [host-root]
   ccrouter analyzer pin-check [host-root]

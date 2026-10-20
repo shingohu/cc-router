@@ -1,0 +1,3 @@
+00:00 +0: loading <fixture>/consumer/test/fragment_test.dart
+00:00 +0: scaffold enum renders two instances and returns typed actions
+00:00 +1: All tests passed!

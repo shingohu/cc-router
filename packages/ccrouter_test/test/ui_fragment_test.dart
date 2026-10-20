@@ -66,6 +66,17 @@ final class _Props {
 
 enum _Action { select }
 
+final class _Selection {
+  const _Selection(this.id);
+  final String id;
+}
+
+final _payloadCallbacks = <ValueChanged<_Selection>>[];
+Widget _payloadRenderer(CCUIFragmentRenderInput<_Props, _Selection> input) {
+  _payloadCallbacks.add(input.onAction);
+  return const SizedBox();
+}
+
 int _created = 0;
 int _disposed = 0;
 final _actions = <void Function()>[];
@@ -470,6 +481,77 @@ void main() {
       oldAction();
       expect(count, 1);
       await tester.pumpWidget(const SizedBox());
+    },
+  );
+
+  testWidgets(
+    'DTO payload uses latest instance callback and is invalid after unmount or shutdown',
+    (tester) async {
+      CCHostAssembly assembly() => _assembly(
+        contributions: [
+          const CCUIRenderer<_Props, _Selection>(
+            contract: _contract,
+            renderer: _payloadRenderer,
+          ),
+        ],
+      );
+      final first = <String>[];
+      final latest = <String>[];
+      final second = <String>[];
+      Widget tree({bool active = true, bool update = false, int session = 0}) =>
+          Row(
+            textDirection: TextDirection.ltr,
+            children: [
+              CCUIGeneratedFragment<_Props, _Selection>(
+                key: ValueKey('first-$session'),
+                props: const _Props(1),
+                requirement: _requirement,
+                active: active,
+                onAction: (value) => (update ? latest : first).add(value.id),
+              ),
+              CCUIGeneratedFragment<_Props, _Selection>(
+                key: ValueKey('second-$session'),
+                props: const _Props(2),
+                requirement: _requirement,
+                onAction: (value) => second.add(value.id),
+              ),
+            ],
+          );
+      _payloadCallbacks.clear();
+      CCRouterHost.initialize(hostAssembly: assembly());
+      await tester.pumpWidget(tree());
+      final emitFirst = _payloadCallbacks[0];
+      final emitSecond = _payloadCallbacks[1];
+      emitFirst(const _Selection('private-first'));
+      emitSecond(const _Selection('private-second'));
+      expect(first, ['private-first']);
+      expect(second, ['private-second']);
+      await tester.pumpWidget(tree(update: true));
+      emitFirst(const _Selection('latest'));
+      expect(latest, ['latest']);
+      await tester.pumpWidget(tree(active: false, update: true));
+      emitFirst(const _Selection('hidden'));
+      expect(latest, ['latest']);
+      await tester.pumpWidget(tree(update: true));
+      emitFirst(const _Selection('resumed'));
+      expect(latest, ['latest', 'resumed']);
+      await tester.pumpWidget(tree(update: true, session: 1));
+      emitFirst(const _Selection('old-session'));
+      expect(latest, hasLength(2));
+      final current = _payloadCallbacks.last;
+      await CCRouterHost.shutdown();
+      current(const _Selection('shutdown'));
+      expect(second, ['private-second']);
+      CCRouterHost.initialize(hostAssembly: assembly());
+      current(const _Selection('old-generation'));
+      await tester.pumpWidget(tree(session: 2));
+      _payloadCallbacks.last(const _Selection('new-generation'));
+      expect(second, ['private-second', 'new-generation']);
+      await tester.pumpWidget(const SizedBox());
+      current(const _Selection('disposed'));
+      expect(second, hasLength(2));
+      expect(tester.takeException(), isNull);
+      _payloadCallbacks.clear();
     },
   );
 

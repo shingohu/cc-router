@@ -2,8 +2,24 @@
 
 ## 0.1.0 - Unreleased
 
+- Recognize `ccrouter_ui` as a framework Package so external UI consumers do
+  not require business Portable State for the runtime. Keep that validation for
+  business components and print per-Package generator prerequisites in scaffolds.
+
+- Reject scalar root UI Actions while retaining scalar DTO fields. Print the
+  required Consumer UI import in the UI Fragment scaffold's next steps.
+
+- Accept restricted immutable DTO Actions using UI schema 2 / Package Index 4;
+  preserve enum contract fingerprints and generated signatures. Validate mixed
+  record/document versions and reject downgraded indexes.
+
 - Record defining-library identity separately from source locations in UI
   metadata so part-declared Contracts retain exact Analyzer Owner matching.
+
+- Add non-overwriting `create ui-fragment` templates with an exact dry-run
+  preview, canonical Owner references and optional Renderer output. Extend
+  read-only `find --usage` to UI metadata with complete public-type import
+  proofs and actual consumer aliases; old indexes defer until regeneration.
 
 - Added opt-in typed UI Fragment generation, consumer Client barrels, static
   Renderer/Host assembly validation, and portable output support. Reject enhanced

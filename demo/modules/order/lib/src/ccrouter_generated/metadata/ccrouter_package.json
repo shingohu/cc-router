@@ -1,11 +1,11 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "generatorVersion": "0.1.5",
   "package": {
     "name": "demo_order",
     "version": "0.1.0"
   },
-  "contentFingerprint": "a5e898938d9bcee9bfb067956a92475e36acf7812152c24edcc0f5b58c989617",
+  "contentFingerprint": "ecc9f4411fb9c1f93e43e3abd5820e4e25cfb23e53595ebf03f6c14a4db4c5f0",
   "bundle": {
     "library": "lib/src/ccrouter_generated/host/demo_order_ccrouter.g.dart",
     "symbol": "ccrouterGeneratedPackageBundle"
@@ -19,7 +19,7 @@
     {
       "name": "demo_order_contracts",
       "version": "0.1.0",
-      "contentFingerprint": "878aa7b1dd564b9dcb28bf331b9d2f00746d8e038e1b406fdb4e2e648fecbeba"
+      "contentFingerprint": "9be062d35979f3c2565898c66ff5fb39a8d5fbdce046e4ff8adbae333fe359fd"
     }
   ],
   "metadata": [
@@ -28,7 +28,7 @@
       "componentDeclarations": [],
       "package": "demo_order",
       "source": "lib/src/order_fragment_renderers.dart",
-      "uiSchemaVersion": 1,
+      "uiSchemaVersion": 2,
       "uiLibrary": "lib/src/ccrouter_generated/ui/order_fragment_renderers.ui.g.dart",
       "uiContracts": [],
       "uiRenderers": [
@@ -71,17 +71,18 @@
           }
         },
         {
+          "uiSchemaVersion": 2,
           "declaration": {
             "symbol": "OrderRecommendationsFragmentContract",
             "packageUri": "package:demo_order_contracts/src/order_fragments.dart",
             "libraryUri": "package:demo_order_contracts/src/order_fragments.dart",
-            "line": 33,
+            "line": 37,
             "column": 22
           },
           "componentId": "demo_order_component",
           "id": "order.recommendations",
-          "version": "1.0.0",
-          "shapeFingerprint": "981dd30de35264dbec8ff547af3cd8af2c3f2eb680958b7c0b7626a395e9dc30",
+          "version": "2.0.0",
+          "shapeFingerprint": "0fd30e583936c0c3b491f660086fe5dbdd9fd1088ddb55e5c84a6bf9c81e7b45",
           "publicTypes": [
             {
               "package": "demo_order_contracts",

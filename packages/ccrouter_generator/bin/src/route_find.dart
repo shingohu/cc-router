@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:ccrouter_generator/src/generated_client_naming.dart';
 import 'package:ccrouter_generator/src/package_workspace.dart';
 
+import 'ui_fragment_find.dart';
+
 /// Prints capabilities matching an exact ID or Route Pattern in one Host closure.
 ///
 /// This lookup consumes validated published Package indexes without running
@@ -99,12 +101,28 @@ Future<bool> findCapability({
             (record.kind == 'route' && matchingIds.contains(record.id)),
       )
       .toList(growable: false);
-  if (matches.isEmpty) {
+  final uiMatches = findUIFragments(indexes, query);
+  if (matches.isEmpty && uiMatches.isEmpty) {
     stderr.writeln(
       'No capability matched the exact ID or Route declared Pattern.',
     );
     return false;
   }
+  if (usageComponentId != null && matches.length + uiMatches.length != 1) {
+    stderr.writeln(
+      '`--usage` requires one unique capability match; the query '
+      'matched ${matches.length + uiMatches.length}.',
+    );
+    return false;
+  }
+  if (uiMatches.isNotEmpty &&
+      !printUIFragmentMatches(
+        matches: uiMatches,
+        resolved: resolved,
+        indexes: indexes,
+        consumerId: usageComponentId,
+      ))
+    return false;
   for (final record in matches) {
     stdout.writeln(
       '${_capabilityKindLabel(record.kind)} ${record.id} '
@@ -137,6 +155,7 @@ Future<bool> findCapability({
     }
   }
   if (usageComponentId != null) {
+    if (uiMatches.isNotEmpty) return true;
     if (matches.length != 1) {
       stderr.writeln(
         '`--usage` requires one unique capability match; the query matched '

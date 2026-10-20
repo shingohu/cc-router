@@ -11,7 +11,7 @@ Widget renderOrderSummary(
   label: '订单摘要',
   query: '${input.props.orderId}',
   active: input.active,
-  onAction: () => input.onAction(OrderSummaryAction.openDetails),
+  onAction: (_) => input.onAction(OrderSummaryAction.openDetails),
 );
 
 @CCUIFragmentRenderer(OrderRecommendationsFragmentContract)
@@ -22,8 +22,8 @@ Widget renderOrderRecommendations(
   label: '推荐列表',
   query: input.props.category,
   active: input.active,
-  onAction: () =>
-      input.onAction(OrderRecommendationsAction.selectRecommendation),
+  onAction: (selectedId) =>
+      input.onAction(OrderRecommendationsAction(selectedId: selectedId)),
 );
 
 /// B owns loading, retry and controller cleanup; A owns placement and decisions.
@@ -37,7 +37,7 @@ final class _OwnedCard extends StatefulWidget {
   final String label;
   final String query;
   final bool active;
-  final VoidCallback onAction;
+  final ValueChanged<String> onAction;
 
   @override
   State<_OwnedCard> createState() => _OwnedCardState();
@@ -47,7 +47,7 @@ final class _OwnedCardState extends State<_OwnedCard> {
   final _note = TextEditingController();
   Timer? _request;
   int _revision = 0;
-  String? _result;
+  (String, String)? _result;
   bool _failed = false;
 
   @override
@@ -83,7 +83,11 @@ final class _OwnedCardState extends State<_OwnedCard> {
       if (!mounted || revision != _revision) return;
       setState(() {
         _failed = query == 'error';
-        _result = _failed ? null : '${widget.label} · $query';
+        // IDs belong to this private backend fixture, never to A's Props.
+        final id = query == '新品'
+            ? 'recommendation-8426'
+            : 'recommendation-7301';
+        _result = _failed ? null : (id, '${widget.label} · $query');
       });
     });
   }
@@ -119,14 +123,14 @@ final class _OwnedCardState extends State<_OwnedCard> {
               child: const Text('重试'),
             ),
           ] else
-            Text(_result ?? '加载中…'),
+            Text(_result?.$2 ?? '加载中…'),
           TextField(
             controller: _note,
             decoration: const InputDecoration(labelText: '实例备注（切换 Tab 保留）'),
           ),
           TextButton(
             onPressed: widget.active && _result != null
-                ? widget.onAction
+                ? () => widget.onAction(_result!.$1)
                 : null,
             child: const Text('选择'),
           ),

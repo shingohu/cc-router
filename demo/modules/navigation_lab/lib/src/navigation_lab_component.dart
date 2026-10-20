@@ -30,7 +30,7 @@ const demoNavigationLabComponent = CCComponent(
       alias: 'orderSummary',
     ),
     CCUIFragmentDependency<OrderRecommendationsFragmentContract>(
-      versionRange: '^1.0.0',
+      versionRange: '^2.0.0',
       alias: 'orderRecommendations',
     ),
   ],

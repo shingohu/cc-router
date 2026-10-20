@@ -77,9 +77,10 @@ The original five Contract kinds and Service proxy restrictions retain their
 semantics. UI metadata uses an opt-in schema; adopters must use the matching
 Generator, Contracts, CCRouter, and UI packages together.
 
-Version 1 supports final, const DTO Props without inheritance (scalars, plain
-enums, and nested DTOs) and plain enum Actions. Collections, sealed Actions,
+The current implementation supports final, const DTO Props without inheritance (scalars, plain
+enums, and nested DTOs), with plain enum or equally restricted immutable DTO Actions. Collections, sealed Actions,
 function Props, dynamic Slots, and Renderer replacement are unsupported.
+Scalars are supported as DTO fields, not as the Action type itself.
 Enums cannot declare custom members, constructors, mixins, or interfaces.
 DTOs use `this.field` parameters or constant field declarations; both default
 forms enter the fingerprint. Initializer-list assignments and redirecting
@@ -94,14 +95,15 @@ complete routed page. See the [UI Fragment design](docs/CCRouter-ui-fragment-des
 
 The [UI integration guide](skills/ccrouter-integration-development/references/ui-fragments.md)
 covers the complete contracts/Renderer/consumer/Host path and generation error repairs.
-Multiple instances share one dependency and use distinct Keys. v1 enum Actions cannot
-return the dynamic ID selected from a list privately loaded by B; do not bypass this
-boundary through global mutable selection or an Event detour. The
+Multiple instances share one dependency and use distinct Keys. B can return its privately
+loaded selection ID through an immutable DTO Action. Changing enum to DTO requires
+major Contract SemVer and regeneration of A/B/Host. DTO uses UI schema 2 / Index
+schema 4; old generators reject it. The
 [usability review](docs/CCRouter-ui-fragment-usability-review.md) records the remaining scope.
 The Demo's Showcase entry demonstrates multiple instances, Tab retention,
 Props updates, account-key recreation, and business errors.
 The optional Analyzer Plugin checks UI aliases, repeated dependencies, clearly
-invalid ranges, plain enum Actions, Renderer signatures, and Host/Generated SPI
+invalid ranges, enum/DTO Actions, Renderer signatures, and Host/Generated SPI
 boundaries. It offers a conservative missing required Owner fix only when the
 public constant is already imported. Validated Generator snapshots bridge Host
 closure errors into the IDE; full Props schemas and final correctness remain
@@ -113,6 +115,22 @@ not functions nested inside another function or method.
 Resolved typedef constructors for `CCComponent` and `CCUIFragmentDependency`
 support the same Owner checks and fixes. Regenerate metadata for contracts in
 `part` files to record source locations separately from defining-library identity.
+For a first integration, `create ui-fragment ... --dry-run` previews a Contract,
+public barrel and optional Renderer without editing existing configuration.
+Follow its dependency steps and import both the public Contract and
+`package:ccrouter_ui/ccrouter_ui.dart` in the Consumer component definition.
+After generation, `find <ui-id> <host-root> --usage <consumer-id>` reports proven
+imports and the actual Client alias. Old indexes need regeneration. The scaffold
+still emits enum Actions; see the [DTO Action design and validation](docs/CCRouter-ui-fragment-action-payload-design.md) for dynamic selection results.
+Each participating Contract, A and B Package needs a `ccrouter_generator` dev dependency;
+the Host also needs `build_runner`. The `ccrouter_ui` framework dependency does not
+require business component Portable State; distributed business Packages retain that validation.
+
+The [independent adoption validation](docs/validation/ui-fragment-adoption-20261020/README.md)
+provides reproducible enum/DTO sources, logs, and sample-specific edit costs.
+The local technical workflow is verified; first use by an uninvolved developer,
+distribution, real platform coverage, and long-term memory/performance remain
+unvalidated. The public API is not finally frozen.
 
 ### IDE / Analysis Server Diagnostics
 
@@ -1350,7 +1368,7 @@ The integration skill requires agents to:
 - Avoid inventing unsupported Action Pipelines or dynamic components; use only supported explicit declarations/method matrices for Command/Event/InitTask generation and Service Proxies.
 - Run analysis, focused tests, and `generate --check` after generation.
 
-The CLI skill covers implemented `generate`, `find`, `clean`, six `create` scaffold types, `analyzer status/doctor/install/upgrade/uninstall`, and explicit `pub-hook` management. Contract scaffolding/promotion/migration, alias migration, and extended generation-failure diagnostics remain AI-assisted workflows, not directly callable CLI commands. Core compatibility gates for all five Contract kinds are already enforced by the Generator, Host aggregation, and Runtime.
+The CLI skill covers implemented `generate`, `find`, `clean`, seven `create` scaffold types (including explicit UI Contracts), `analyzer status/doctor/install/upgrade/uninstall`, and explicit `pub-hook` management. Route/Service Contract scaffolding/promotion/migration, alias migration, and extended generation-failure diagnostics remain AI-assisted workflows, not directly callable CLI commands. Core compatibility gates for all five Contract kinds are already enforced by the Generator, Host aggregation, and Runtime.
 
 AI-assisted migrations first explain impact and dry-run results. Existing explicit authorization permits implementation; ask only when scope exceeds that authorization or a material decision remains, rather than repeatedly confirming approved edits. AI development can consume NDJSON through `generate <host> --watch=auto --machine`; before completion, still run `generate <host> --no-cache --check`. Watch success is not the authoritative CI gate.
 

@@ -29,9 +29,9 @@ Classify the request as one of these operations:
 | Operation | Use |
 | --- | --- |
 | Generate | Build or refresh Package and Host generated output. |
-| Find | Locate a Route, Service, Command, Event, or InitTask from the current Host index. |
+| Find | Locate a Route, Service, Command, Event, InitTask, or UI Fragment from the current Host index. |
 | Clean | Remove only CCRouter-owned generated source in explicitly writable Packages. |
-| Scaffold | Create non-overwriting Component, Route, Service, Command, Event, or InitTask source. |
+| Scaffold | Create non-overwriting Component, Route, Service, Command, Event, InitTask, or UI Fragment source. |
 | Check | Detect stale output, invalid metadata, dependency violations, or unsupported declarations. |
 | Deferred workflow | Assist with Contract promotion, migration, version review, or generation diagnosis when no command exists. |
 
@@ -49,6 +49,7 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter create service <Servi
 fvm dart run --verbosity=error ccrouter_generator:ccrouter create command <CommandName> <component-directory>
 fvm dart run --verbosity=error ccrouter_generator:ccrouter create event <EventName> <component-directory> [--with-subscriber]
 fvm dart run --verbosity=error ccrouter_generator:ccrouter create init-task <TaskName> <component-directory> [--with-contract]
+fvm dart run --verbosity=error ccrouter_generator:ccrouter create ui-fragment <Name> <contracts-root> --owner-source <lib/path.dart> --owner-symbol <constant> --id <capability-id> [--renderer-root <owner-root>] [--dry-run]
 fvm dart run --verbosity=error ccrouter_generator:ccrouter analyzer status [host-root]
 fvm dart run --verbosity=error ccrouter_generator:ccrouter analyzer doctor [host-root]
 fvm dart run --verbosity=error ccrouter_generator:ccrouter analyzer pin-check [host-root]
@@ -305,6 +306,12 @@ imports, or generated output. Do not guess a public barrel when the Index lacks
 one: require Contract promotion/export and regeneration. Keep Route, Service,
 Command, Event, and InitTask models distinct; in particular, do not invent
 `eventDependencies` or an InitTask business Client.
+UI IDs are also searchable through the published UI metadata. UI `--usage`
+requires public import proofs for every marker/DTO/enum type, uses the exact
+consumer alias and full component ID for the UI Client, and declines speculative
+members for old indexes. Same-owner usage recommends a local Widget. This does
+not extend the legacy DevTools Catalog kind schema. Regenerate old metadata
+before relying on UI import/alias recipes.
 
 ### Clean
 
@@ -327,6 +334,22 @@ require `--with-subscriber`; reusable InitTask Contracts require
 `--with-contract`. The scaffold does not edit Host dependencies, generated
 output, or Contract exposure. A cross-component Contract is a later design
 decision.
+The separate `create ui-fragment` path intentionally starts a public UI Contract
+in an existing Pure Dart contracts Package. It requires an explicit authored
+Owner source, canonical public constant symbol and capability ID. It creates a
+Contract, an explicit public barrel and optionally an Owner Renderer; `--dry-run`
+prints exact new content without writes or Pub. It rejects existing targets,
+linked parents and nested Package scopes; it never edits Pubspecs, existing
+component definitions, public barrels or generated glue. Follow the printed
+direct dependency steps, generate the actual Host, then use UI `find --usage`.
+The scaffold validates source presence/syntax; generation still proves Owner
+identity, schema and implementation closure. It defaults to enum Actions;
+restricted DTO Actions are supported after explicit schema and SemVer review.
+Each participating contracts/Owner/Consumer Package needs its own generator dev
+dependency; the Host also needs `build_runner`. Confirm generated component/UI
+counts, not just a zero exit code. See the
+[UI integration guide](../ccrouter-integration-development/references/ui-fragments.md)
+for exact schema, migration and adoption-completion boundaries.
 Component output includes `.metadata` `project_type: package`. With
 `--with-example`, run the current Flutter SDK's `create --template=app --empty
 --no-pub` in a same-filesystem staging directory, add direct component/runtime/
@@ -471,7 +494,8 @@ the log and is never mixed into Flutter Tool's machine stream.
   non-UI indexes retain schema 2. UI source metadata requires both schema 5 and
   `uiSchemaVersion: 1`. UI metadata also records portable marker, Renderer and
   consumer declarations for Owner checks and structured IDE diagnostics.
-  UI-specific `find --usage` and DevTools Catalog views remain unimplemented.
+  UI-specific `find --usage` reads public-type import proofs and consumer aliases;
+  DevTools Catalog views remain unimplemented.
   The optional Analyzer Plugin checks deterministic declarations and safe Owner
   fixes; Host UI errors use the existing validated snapshot bridge. Full schema
   and final correctness remain generation-owned; follow the

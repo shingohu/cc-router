@@ -1,0 +1,418 @@
+{
+  "date": "2026-10-20",
+  "frameworkBaseCommit": "c06a124c1eafc499efab5fd90181689f92f93e4a",
+  "sourceIdentity": "Current reviewed working-tree snapshots; per-file digests include workspace removal only in copied manifests. Base commit alone does not identify uncommitted changes. Framework digests exclude four copied macOS .DS_Store files; these are not source inputs.",
+  "environment": {
+    "flutter": "3.41.10-ohos-1.0.0",
+    "dart": "3.11.5",
+    "platform": "macOS"
+  },
+  "isolation": {
+    "separatePubResolution": true,
+    "initialPackageConfigAbsent": true,
+    "initialLockfileAbsent": true,
+    "frameworkPackageConfigReused": false,
+    "frameworkPackages": [
+      "ccrouter_contracts",
+      "ccrouter_core",
+      "ccrouter",
+      "ccrouter_ui",
+      "ccrouter_generator"
+    ],
+    "source": "Copied local framework sources outside the consumer Workspace; only copied resolution: workspace lines removed",
+    "pubHook": "Explicitly disabled for isolated Pub; generation invoked explicitly",
+    "pub": "offline with existing download cache"
+  },
+  "verified": {
+    "enumWidgetTests": 1,
+    "dtoWidgetTests": 3,
+    "requiredOwnerNegativeExit": 1,
+    "requiredOwnerRestoredExit": 0,
+    "packageWorkspaceAndToolingTests": 21,
+    "rootAnalyzeExit": 0,
+    "demoPortablePackages": 9,
+    "demoReferenceCheckExit": 0,
+    "dtoPackageSchemas": [
+      {
+        "package": "adoption_fragment_contracts",
+        "indexSchema": 4,
+        "uiSchemas": [
+          2
+        ]
+      },
+      {
+        "package": "adoption_catalog",
+        "indexSchema": 4,
+        "uiSchemas": [
+          2
+        ]
+      },
+      {
+        "package": "adoption_dashboard",
+        "indexSchema": 4,
+        "uiSchemas": [
+          2
+        ]
+      }
+    ]
+  },
+  "discovered": {
+    "frameworkDefect": "ccrouter_ui omitted from framework Package classification; read-only runtime incorrectly required component Portable State",
+    "regressionBeforeFixExit": 1,
+    "regressionBeforeFixActual": true,
+    "regressionBeforeFixExpected": false,
+    "fix": "Add only ccrouter_ui to existing framework Package set; ordinary remote UI components remain subject to Package Index/Portable State checks",
+    "setupPrerequisite": "Each participating Contract/A/B Package declares its own ccrouter_generator dev dependency; Host also declares build_runner. Added to scaffold and integration guidance."
+  },
+  "sampleEditCost": {
+    "assumptions": "Existing Host, A/B/contracts Packages, canonical Owner ID and per-Package generator prerequisites",
+    "scaffoldFiles": 3,
+    "productionFilesWrittenOrUpdatedBeyondScaffold": [
+      "pubspec.yaml",
+      "modules/catalog/pubspec.yaml",
+      "modules/dashboard/pubspec.yaml",
+      "modules/dashboard/lib/src/dashboard_component.dart",
+      "modules/dashboard/lib/src/selection_pair.dart",
+      "modules/dashboard/lib/adoption_dashboard.dart",
+      "lib/main.dart"
+    ],
+    "testFiles": 1,
+    "note": "Includes sample A Widget public entry and Host presentation setup; existing application pages can reuse their own entry. This is not a universal minimum or a human onboarding-time measurement.",
+    "dtoProductionChanges": [
+      "modules/fragment_contracts/lib/src/selection_card_fragment.dart",
+      "modules/catalog/lib/src/selection_card_fragment_renderer.dart",
+      "modules/dashboard/lib/src/dashboard_component.dart"
+    ]
+  },
+  "commands": [
+    {
+      "label": "01-baseline-pub",
+      "command": [
+        "<sdk>/bin/flutter",
+        "pub",
+        "get",
+        "--offline"
+      ],
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "elapsedSeconds": 1.177
+    },
+    {
+      "label": "02-scaffold-preview",
+      "command": [
+        "<sdk>/bin/dart",
+        "run",
+        "--verbosity=error",
+        "ccrouter_generator:ccrouter",
+        "create",
+        "ui-fragment",
+        "SelectionCard",
+        "modules/fragment_contracts",
+        "--owner-source",
+        "lib/owner.dart",
+        "--owner-symbol",
+        "catalogComponentId",
+        "--id",
+        "catalog.selection",
+        "--renderer-root",
+        "modules/catalog",
+        "--dry-run"
+      ],
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "elapsedSeconds": 3.717
+    },
+    {
+      "label": "03-scaffold-create",
+      "command": [
+        "<sdk>/bin/dart",
+        "run",
+        "--verbosity=error",
+        "ccrouter_generator:ccrouter",
+        "create",
+        "ui-fragment",
+        "SelectionCard",
+        "modules/fragment_contracts",
+        "--owner-source",
+        "lib/owner.dart",
+        "--owner-symbol",
+        "catalogComponentId",
+        "--id",
+        "catalog.selection",
+        "--renderer-root",
+        "modules/catalog"
+      ],
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "elapsedSeconds": 0.979
+    },
+    {
+      "label": "04-ui-pub",
+      "command": [
+        "<sdk>/bin/flutter",
+        "pub",
+        "get",
+        "--offline"
+      ],
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "elapsedSeconds": 0.881
+    },
+    {
+      "label": "05-enum-generate",
+      "command": [
+        "<sdk>/bin/dart",
+        "run",
+        "--verbosity=error",
+        "ccrouter_generator:ccrouter",
+        "generate",
+        "."
+      ],
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "elapsedSeconds": 20.498
+    },
+    {
+      "label": "06-enum-find",
+      "command": [
+        "<sdk>/bin/dart",
+        "run",
+        "--verbosity=error",
+        "ccrouter_generator:ccrouter",
+        "find",
+        "catalog.selection",
+        ".",
+        "--usage",
+        "dashboard_component"
+      ],
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "elapsedSeconds": 0.791
+    },
+    {
+      "label": "07-enum-format",
+      "command": [
+        "<sdk>/bin/dart",
+        "format",
+        "test/fragment_test.dart",
+        "lib/main.dart",
+        "modules/fragment_contracts/lib/selection_card_fragment.dart",
+        "modules/fragment_contracts/lib/owner.dart",
+        "modules/fragment_contracts/lib/src/selection_card_fragment.dart",
+        "modules/dashboard/lib/adoption_dashboard.dart",
+        "modules/dashboard/lib/src/dashboard_component.dart",
+        "modules/dashboard/lib/src/selection_pair.dart",
+        "modules/catalog/lib/src/catalog_component.dart",
+        "modules/catalog/lib/src/selection_card_fragment_renderer.dart"
+      ],
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "elapsedSeconds": 0.124
+    },
+    {
+      "label": "08-enum-regenerate",
+      "command": [
+        "<sdk>/bin/dart",
+        "run",
+        "--verbosity=error",
+        "ccrouter_generator:ccrouter",
+        "generate",
+        "."
+      ],
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "elapsedSeconds": 9.336
+    },
+    {
+      "label": "09-enum-analyze",
+      "command": [
+        "<sdk>/bin/dart",
+        "analyze"
+      ],
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "elapsedSeconds": 8.023
+    },
+    {
+      "label": "10-enum-widget",
+      "command": [
+        "<sdk>/bin/flutter",
+        "test",
+        "--no-pub",
+        "--reporter",
+        "expanded",
+        "test/fragment_test.dart"
+      ],
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "elapsedSeconds": 11.41
+    },
+    {
+      "label": "11-enum-check",
+      "command": [
+        "<sdk>/bin/dart",
+        "run",
+        "--verbosity=error",
+        "ccrouter_generator:ccrouter",
+        "generate",
+        ".",
+        "--no-cache",
+        "--check"
+      ],
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "elapsedSeconds": 8.158
+    },
+    {
+      "label": "12-missing-owner-expected-failure",
+      "command": [
+        "<sdk>/bin/dart",
+        "run",
+        "--verbosity=error",
+        "ccrouter_generator:ccrouter",
+        "generate",
+        ".",
+        "--no-cache",
+        "--check"
+      ],
+      "exitCode": 1,
+      "expectedExitCode": 1,
+      "elapsedSeconds": 5.923
+    },
+    {
+      "label": "13-enum-owner-restored-check",
+      "command": [
+        "<sdk>/bin/dart",
+        "run",
+        "--verbosity=error",
+        "ccrouter_generator:ccrouter",
+        "generate",
+        ".",
+        "--check"
+      ],
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "elapsedSeconds": 0.861
+    },
+    {
+      "label": "14-dto-format",
+      "command": [
+        "<sdk>/bin/dart",
+        "format",
+        "test/fragment_test.dart",
+        "lib/main.dart",
+        "modules/fragment_contracts/lib/selection_card_fragment.dart",
+        "modules/fragment_contracts/lib/owner.dart",
+        "modules/fragment_contracts/lib/src/selection_card_fragment.dart",
+        "modules/dashboard/lib/adoption_dashboard.dart",
+        "modules/dashboard/lib/src/dashboard_component.dart",
+        "modules/dashboard/lib/src/selection_pair.dart",
+        "modules/catalog/lib/src/catalog_component.dart",
+        "modules/catalog/lib/src/selection_card_fragment_renderer.dart"
+      ],
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "elapsedSeconds": 0.262
+    },
+    {
+      "label": "15-dto-generate",
+      "command": [
+        "<sdk>/bin/dart",
+        "run",
+        "--verbosity=error",
+        "ccrouter_generator:ccrouter",
+        "generate",
+        "."
+      ],
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "elapsedSeconds": 5.901
+    },
+    {
+      "label": "16-dto-find",
+      "command": [
+        "<sdk>/bin/dart",
+        "run",
+        "--verbosity=error",
+        "ccrouter_generator:ccrouter",
+        "find",
+        "catalog.selection",
+        ".",
+        "--usage",
+        "dashboard_component"
+      ],
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "elapsedSeconds": 0.587
+    },
+    {
+      "label": "17-dto-analyze",
+      "command": [
+        "<sdk>/bin/dart",
+        "analyze"
+      ],
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "elapsedSeconds": 1.677
+    },
+    {
+      "label": "18-dto-widget",
+      "command": [
+        "<sdk>/bin/flutter",
+        "test",
+        "--no-pub",
+        "--reporter",
+        "expanded",
+        "test/fragment_test.dart"
+      ],
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "elapsedSeconds": 3.08
+    },
+    {
+      "label": "19-dto-check",
+      "command": [
+        "<sdk>/bin/dart",
+        "run",
+        "--verbosity=error",
+        "ccrouter_generator:ccrouter",
+        "generate",
+        ".",
+        "--check"
+      ],
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "elapsedSeconds": 0.941
+    },
+    {
+      "label": "20-dto-reference-check",
+      "command": [
+        "<sdk>/bin/dart",
+        "run",
+        "--verbosity=error",
+        "ccrouter_generator:ccrouter",
+        "generate",
+        ".",
+        "--no-cache",
+        "--check"
+      ],
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "elapsedSeconds": 6.419
+    }
+  ],
+  "archive": {
+    "file": "consumer-source.tar.gz",
+    "sha256": "2bd31f520e862ebdf7aa7f375b171f2f91c2b665fe5be54d661f172157de2482",
+    "files": 34,
+    "contains": "Authored enum and DTO consumers plus their lockfiles; no generated outputs, package configs or framework binaries"
+  },
+  "notValidated": [
+    "Independent human first-use timing or interviews",
+    "Hosted/published-package installation or upgrades",
+    "Analysis Server plugin installation and real IDE UX in the independent fixture",
+    "Other SDKs, native builds or physical devices",
+    "Production backend data, long-term memory or performance",
+    "Final API freeze"
+  ]
+}

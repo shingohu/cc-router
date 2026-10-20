@@ -2,18 +2,23 @@
 
 ## 文档状态
 
-- 版本：v0.2（v1 实施记录）
-- 日期：设计 2026-10-13，实施 2026-10-15
-- 状态：静态 v1 已实施；平台实机、长期内存与性能基线仍需后续验证
+- 版本：v0.3（静态 UI 与受限 DTO 增量记录）
+- 日期：设计 2026-10-13，首次实施 2026-10-15，状态收口 2026-10-20
+- 状态：静态装配、enum/受限 DTO Action 和接入工具已实现；公开 API 未最终冻结，尚未正式发布
 - 分类：跨组件 UI 契约与静态装配属于新的通用框架能力；具体 UI 和业务状态仍由组件负责
 - 适用范围：Flutter Widget 树内的跨组件局部 UI 组合
 - 推荐方案：可选 `ccrouter_ui` 模块，采用 UI Contract + generated Client + Renderer 静态注册
 
-本文保留设计依据与分阶段门禁，并按 v1 实现修正已冻结边界。当前公开能力以
+本文保留设计依据与分阶段门禁，并同步当前实现边界。文中的 v1 指静态组合架构，
+不等于 Package 1.0 发布、UI schema 1 或公开 API 最终冻结。当前公开能力以
 [文档索引](README.md)、[接入指导](../skills/ccrouter-integration-development/references/ui-fragments.md)
 和生产代码为准。实施选择 UI Assembly wrapper，未让 Core Bundle 承载 Widget factory。
 实际 API、回归证据、核心价值和剩余边界见
 [实施验收记录](CCRouter-ui-fragment-acceptance.md)。
+该记录为 2026-10-15 历史快照；后续变更见
+[Action payload 设计与验证](CCRouter-ui-fragment-action-payload-design.md)及
+[独立首次接入验证](validation/ui-fragment-adoption-20261020/README.md)。
+当前用法以接入指南为入口；新人可用性、正式分发、真实平台及长期内存/性能不在已完成范围。
 
 ## 1. 问题分析与能力边界
 
@@ -122,7 +127,7 @@ B 的 Renderer implementation 不从公开 Contract barrel 导出。Host 聚合�
 
 ## 6. 契约与消费 API
 
-以下展示已冻结的声明形式；应用类型和 Owner 常量由实际 contracts Package 提供。
+以下展示当前已实现的声明形式；应用类型和 Owner 常量由实际 contracts Package 提供。
 
 ### 6.1 B 声明 UI Contract
 
@@ -142,14 +147,20 @@ final class OrderSummaryProps {
 enum OrderSummaryAction { openDetails, retry }
 ```
 
+后续 DTO 增量：Action 也可使用与 Props 相同约束的单一不可变 DTO，以返回 B 私有加载的
+selectedId/deviceId。该路径采用 UI schema 2 / Package Index schema 4；enum-only 保持原格式。
+enum 改 DTO 需要 major SemVer 与 A/B/Host 重生成，sealed union 继续不支持。完整约束与验证
+见 [Action payload 设计与验证](CCRouter-ui-fragment-action-payload-design.md)。
+
 Contract marker 必须公开且非泛型；Props 为 final class，只提供 const generative constructor，
-不含继承、mixin、interface 或自定义方法；Action 和 DTO 中的 enum 均只能声明枚举值，
+不含继承、mixin、interface 或自定义方法；enum Action 和 DTO 中的 enum 均只能声明枚举值，
 不允许自定义字段、getter/setter、方法、构造器、mixin 或 interface（含 static 成员）。
 DTO 构造器参数只允许 `this.field`；每个字段必须在声明处提供常量初始值，或由每个构造器的
 `this.field` 初始化。参数默认值与字段初始值均按有效常量值计入指纹，等值表达式保持相同指纹。
 v1 拒绝初始化列表赋值和重定向构造器，避免未建模的构造表达式绕过默认值兼容校验。
 Props 字段仅支持 scalar、普通 enum 与无环嵌套 DTO（可空字段可用），不可包含集合、Widget、
 BuildContext、controller、Service 实例、Future、Stream 或 function。
+根 Action 必须为普通 enum 或上述受限 DTO，scalar 只允许作为 DTO 字段类型。
 输入以 UI 所需最小数据为准，不把完整业务对象图或账号凭证传入视图。
 
 v1 每份 Props 必须有明确字段 schema，所有存储字段公开且 final。不得在原对象中
@@ -232,8 +243,15 @@ callback、Stream 和 Flutter 类型的限制保持不变。
 
 UI 使用显式 opt-in `<componentId>.ui.api.g.dart`，保持现有
 `<componentId>.api.g.dart` 的路径和 Pure Dart 使用者依赖不变。具体导出位置与命名
-已冻结。Client 名为完整 component ID 的 PascalCase 加 `Fragments`。
+由当前生成器确定。Client 名为完整 component ID 的 PascalCase 加 `Fragments`。
 无 UI 声明的 Package 不新增 UI import、输出文件或 UI fingerprint 输入。
+
+首次接入可使用非覆盖式 `create ui-fragment ... --dry-run`，再按打印步骤补齐四角色声明。
+contracts、A、B 各包需自己的 `ccrouter_generator` dev dependency，Host 还需 `build_runner`；
+Host 的声明不能代替成员包。生成后用 `find <ui-id> <host-root> --usage <consumer-id>`
+查询公共 import 和真实 Client alias，并核对组件/UI 数量，不能仅凭退出码认定接入完成。
+`ccrouter_ui` 是框架依赖，不需要业务组件 Portable State；外部分发业务组件仍需验证该状态。
+完整命令和配置见[接入指南](../skills/ccrouter-integration-development/references/ui-fragments.md)。
 
 ### 7.2 避免反向依赖
 
@@ -350,8 +368,8 @@ requirement family，复用 SemVer 算法，不直接向旧 enum 追加成员。
 新 metadata 必须显式标识 UI schema 版本；旧工具遇到声明 UI 的新元数据应报告升级要求，
 不能静默忽略后声称装配成功。
 
-UI shape fingerprint 覆盖 identity、Props 字段/类型/必填与默认语义、Action enum/sealed
-成员及 payload schema；不能只 hash 类型名。Renderer 内部布局不作为 shape。
+UI shape fingerprint 覆盖 identity、Props 字段/类型/必填与默认语义、Action enum 成员或
+受限 DTO payload schema；不能只 hash 类型名。sealed Action 尚不支持，Renderer 内部布局不作为 shape。
 行为语义变化仍由 Owner 正确提升 SemVer，fingerprint 无法替代版本责任。
 
 | 现有区域 | 兼容目标 | 必须验证 |
@@ -364,9 +382,15 @@ UI shape fingerprint 覆盖 identity、Props 字段/类型/必填与默认语义
 | 工具与 DevTools | opt-in metadata 扩展 | 旧 fixture、版本拒绝与隐私回归 |
 
 新增默认字段对普通调用可兼容，但生成 SPI、metadata 消费者和 Package 版本必须同步。
-不能声明任意版本的新旧工具可以混用。具体最低版本和迁移说明在实现时形成。
+不能声明任意版本的新旧工具可以混用。enum-only 保留 UI schema 1 / Package Index 3，
+DTO 使用 UI schema 2 / Package Index 4；混合文档声明所需最高版本。
+enum 改 DTO 需要 major Contract SemVer、消费范围更新和 A/B/Host 重生成；
+配套来源与验证边界见[Action payload 记录](CCRouter-ui-fragment-action-payload-design.md)。
 
 ## 11. 实施顺序与验证门禁（原计划，执行结果见验收记录）
+
+以下 P0–P5 保留原实施顺序，其中“冻结”指当时的实现基线，不代表当前 API 已最终冻结。
+已执行项目及未验证边界分别以对应验收记录和独立接入报告为准。
 
 ### P0：冻结契约与基线
 

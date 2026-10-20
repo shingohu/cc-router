@@ -23,11 +23,15 @@ final class OrderRecommendationsProps {
   final String category;
 }
 
-enum OrderRecommendationsAction { selectRecommendation }
+/// One selection result loaded privately by B, delivered to the calling instance.
+final class OrderRecommendationsAction {
+  const OrderRecommendationsAction({required this.selectedId});
+  final String selectedId;
+}
 
 @CCUIFragmentContract<OrderRecommendationsProps, OrderRecommendationsAction>(
   componentId: demoOrderComponentId,
   id: 'order.recommendations',
-  version: '1.0.0',
+  version: '2.0.0',
 )
 abstract final class OrderRecommendationsFragmentContract {}

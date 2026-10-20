@@ -338,22 +338,120 @@ const component = CCComponent(id: CCComponentId('account'), version: '1.0.0',
       expect(result.logs, contains(scenario.repair));
     });
   }
-  test(
-    'data-bearing selection Action fails with the supported boundary',
-    () async {
+  for (final field in ['selectedId', 'deviceId']) {
+    test('cross-Package DTO Action $field uses UI schema 2 everywhere', () async {
+      final source = _source
+          .replaceFirst(
+            "import 'package:ccrouter/ccrouter.dart';",
+            "import 'package:ccrouter/ccrouter.dart';\n"
+                "import 'package:demo_order_contracts/payload_probe.dart' as payload;",
+          )
+          .replaceFirst('enum Action { openDetails }', '')
+          .replaceAll(
+            'CCUIFragmentContract<Props, Action>',
+            'CCUIFragmentContract<Props, payload.Action>',
+          );
+      final result = await _generate(
+        '''$source
+@CCUIFragmentRenderer(Summary)
+Widget render(CCUIFragmentRenderInput<Props, payload.Action> input) => const SizedBox();
+const component = CCComponent(id: CCComponentId('account'), version: '1.0.0',
+  dependencies: [owner], uiDependencies: [CCUIFragmentDependency<Summary>(alias: 'summary', versionRange: '^1.0.0')]);
+''',
+        additionalSources: {
+          'demo_order_contracts|lib/payload_probe.dart':
+              'final class Action { const Action({required this.$field}); final String $field; }',
+        },
+      );
+      expect(result.output, isNotEmpty, reason: result.logs);
+      final metadata = jsonDecode(result.output) as Map;
+      expect(metadata['uiSchemaVersion'], 2);
+      for (final key in ['uiContracts', 'uiRenderers', 'uiRequirements']) {
+        final record = (metadata[key] as List).single;
+        expect(record['uiSchemaVersion'], 2);
+        expect(
+          record['publicTypes'],
+          contains(containsPair('symbol', 'Action')),
+        );
+      }
+    });
+  }
+  for (final type in ['String', 'int', 'bool', 'num', 'double']) {
+    for (final metadata in [true, false]) {
+      test('rejects scalar root Action $type (metadata: $metadata)', () async {
+        final result = await _generate(
+          _source.replaceFirst('<Props, Action>', '<Props, $type>'),
+          metadata: metadata,
+        );
+        expect(result.output, isEmpty);
+        expect(result.logs, contains('plain enum or immutable DTO Action'));
+      });
+    }
+  }
+  test('DTO Action still permits every scalar as a field', () async {
+    final result = await _generate(
+      _source.replaceFirst('enum Action { openDetails }', '''
+final class Action {
+  const Action({required this.id, required this.count, required this.active,
+    required this.amount, required this.ratio});
+  final String id;
+  final int count;
+  final bool active;
+  final num amount;
+  final double ratio;
+}
+'''),
+    );
+    expect(result.output, isNotEmpty, reason: result.logs);
+    expect(jsonDecode(result.output)['uiSchemaVersion'], 2);
+  });
+  test('DTO Action field defaults and types affect the shape', () async {
+    Future<String> shape(String field) async {
       final result = await _generate(
         _source.replaceFirst(
           'enum Action { openDetails }',
-          'final class Action { const Action({required this.selectedId}); '
-              'final int selectedId; }',
+          'final class Action { const Action({this.id = 1}); final $field id; }',
         ),
       );
+      expect(result.output, isNotEmpty, reason: result.logs);
+      return jsonDecode(result.output)['uiContracts'][0]['shapeFingerprint']
+          as String;
+    }
+
+    expect(await shape('num'), isNot(await shape('int')));
+    final first = await _generate(
+      _source.replaceFirst(
+        'enum Action { openDetails }',
+        'final class Action { const Action({this.id = 1}); final int id; }',
+      ),
+    );
+    final second = await _generate(
+      _source.replaceFirst(
+        'enum Action { openDetails }',
+        'final class Action { const Action({this.id = 2}); final int id; }',
+      ),
+    );
+    expect(
+      jsonDecode(first.output)['uiContracts'][0]['shapeFingerprint'],
+      isNot(jsonDecode(second.output)['uiContracts'][0]['shapeFingerprint']),
+    );
+  });
+  for (final action in [
+    'class Action { const Action(); }',
+    'sealed class Action { const Action(); }',
+    'final class Action { Action(); }',
+    'final class Action { const Action({required this.id}); final Object id; }',
+    'final class Action { const Action({required this.id}); final List<int> id; }',
+    'final class Action { const Action(); String get id => "x"; }',
+  ]) {
+    test('invalid DTO Action is rejected: $action', () async {
+      final result = await _generate(
+        _source.replaceFirst('enum Action { openDetails }', action),
+      );
       expect(result.output, isEmpty);
-      expect(result.logs, contains('enum Action'));
-      expect(result.logs, contains('payload'));
-      expect(result.logs, contains('Summary'));
-    },
-  );
+      expect(result.logs, contains('UI DTO'));
+    });
+  }
   test('invalid consumer range identifies the contract and repair', () async {
     final result = await _generate('''$_source
 const component = CCComponent(id: CCComponentId('account'), version: '1.0.0',
@@ -384,6 +482,7 @@ const component = CCComponent(id: CCComponentId('account'), version: '1.0.0',
   dependencies: [owner], uiDependencies: [CCUIFragmentDependency<Summary>(alias: 'card', versionRange: '*')]);
 ''');
       final metadata = jsonDecode(result.output) as Map;
+      expect((metadata['uiRequirements'] as List).single['alias'], 'card');
       for (final (field, reference, symbol) in [
         ('uiContracts', 'declaration', 'Summary'),
         ('uiRenderers', 'implementation', 'render'),
@@ -497,6 +596,73 @@ const component = CCComponent(id: CCComponentId('account'), version: '1.0.0',
       isNull,
     );
   });
+  test(
+    'mixed UI metadata validates record versions and rejects downgraded documents',
+    () {
+      final contract = <String, Object?>{
+        'componentId': 'orders',
+        'id': 'selection',
+        'version': '2.0.0',
+        'shapeFingerprint': 'payload-shape',
+        'uiSchemaVersion': 2,
+      };
+      final documents = <Map<String, Object?>>[
+        {
+          'package': 'contracts',
+          'uiSchemaVersion': 2,
+          'uiContracts': [contract],
+        },
+        {
+          'package': 'orders',
+          'uiSchemaVersion': 2,
+          'components': [
+            {'id': 'orders'},
+          ],
+          'uiRenderers': [contract],
+        },
+        {
+          'package': 'consumer',
+          'uiSchemaVersion': 2,
+          'components': [
+            {
+              'id': 'consumer',
+              'dependencies': ['orders'],
+            },
+          ],
+          'uiRequirements': [
+            {...contract, 'consumer': 'consumer', 'versionRange': '^2.0.0'},
+          ],
+        },
+      ];
+      expect(validateUIFragmentWorkspace(documents, host: true), isEmpty);
+      documents[0]['uiSchemaVersion'] = 1;
+      expect(
+        validateUIFragmentWorkspace(documents, host: true),
+        contains(contains('unsupported UI schema')),
+      );
+      documents[0]['uiSchemaVersion'] = 2;
+      (documents[1]['uiRenderers'] as List)[0] = {
+        ...contract,
+        'uiSchemaVersion': 1,
+      };
+      expect(
+        validateUIFragmentWorkspace(documents, host: true),
+        contains(contains('staleGeneratedOutput: Renderer')),
+      );
+      (documents[1]['uiRenderers'] as List)[0] = contract;
+      (documents[2]['uiRequirements'] as List).single['versionRange'] =
+          '^1.0.0';
+      expect(
+        validateUIFragmentWorkspace(documents, host: true),
+        contains(contains('versionOutOfRange')),
+      );
+      documents[0]['uiSchemaVersion'] = 99;
+      expect(
+        validateUIFragmentWorkspace(documents, host: false),
+        contains(contains('unsupported UI schema')),
+      );
+    },
+  );
   test('Host validation rejects missing or foreign-owner Renderer', () {
     final contract = {
       'componentId': 'orders',

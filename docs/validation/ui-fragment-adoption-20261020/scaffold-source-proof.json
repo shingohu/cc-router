@@ -1,0 +1,9 @@
+{
+  "dryRunAuthoredChanges": 0,
+  "createdFiles": [
+    "modules/catalog/lib/src/selection_card_fragment_renderer.dart",
+    "modules/fragment_contracts/lib/selection_card_fragment.dart",
+    "modules/fragment_contracts/lib/src/selection_card_fragment.dart"
+  ],
+  "existingAuthoredChanges": 0
+}

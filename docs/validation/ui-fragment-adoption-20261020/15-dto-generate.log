@@ -1,0 +1,39 @@
+Generating Package artifacts for adoption_catalog, adoption_dashboard, adoption_fragment_contracts, ui_adoption_host from <fixture>/consumer/....
+  0s ccrouter_generator:ui_metadata on 5 inputs; adoption_fragment_contracts|lib/src/selection_card_fragment.dart
+  0s ccrouter_generator:ui_fragments on 5 inputs; adoption_fragment_contracts|lib/src/selection_card_fragment.dart
+  0s ccrouter_generator:service_contracts on 5 inputs; adoption_fragment_contracts|lib/src/selection_card_fragment.dart
+  0s ccrouter_generator:services on 5 inputs; adoption_fragment_contracts|lib/src/selection_card_fragment.dart
+  0s ccrouter_generator:service_proxies on 5 inputs; adoption_fragment_contracts|lib/src/selection_card_fragment.dart
+  0s ccrouter_generator:service_metadata on 9 inputs; adoption_fragment_contracts|lib/owner.dart
+  0s ccrouter_generator:route_contracts on 5 inputs; adoption_fragment_contracts|lib/src/selection_card_fragment.dart
+  0s ccrouter_generator:routes on 5 inputs; adoption_fragment_contracts|lib/src/selection_card_fragment.dart
+  0s ccrouter_generator:route_metadata on 9 inputs; adoption_fragment_contracts|lib/owner.dart
+  0s ccrouter_generator:route_bindings on 5 inputs; adoption_fragment_contracts|lib/src/selection_card_fragment.dart
+  0s ccrouter_generator:init_tasks on 5 inputs; adoption_fragment_contracts|lib/src/selection_card_fragment.dart
+  0s ccrouter_generator:init_task_metadata on 9 inputs; adoption_fragment_contracts|lib/owner.dart
+  0s ccrouter_generator:events on 5 inputs; adoption_fragment_contracts|lib/src/selection_card_fragment.dart
+  0s ccrouter_generator:event_metadata on 9 inputs; adoption_fragment_contracts|lib/owner.dart
+  0s ccrouter_generator:component_metadata on 9 inputs; adoption_fragment_contracts|lib/owner.dart
+  0s ccrouter_generator:commands on 5 inputs; adoption_fragment_contracts|lib/src/selection_card_fragment.dart
+  0s ccrouter_generator:command_metadata on 9 inputs; adoption_fragment_contracts|lib/owner.dart
+  0s ccrouter_generator:ui_fragments on 5 inputs: 1 no-op; adoption_catalog|lib/src/catalog_component.dart
+  3s ccrouter_generator:ui_metadata on 5 inputs: 1 skipped, 3 output, 1 no-op; spent 2s analyzing
+  0s ccrouter_generator:ui_fragments on 5 inputs: 1 skipped, 2 output, 2 no-op
+  0s ccrouter_generator:service_contracts on 5 inputs: 1 skipped, 4 no-op
+  0s ccrouter_generator:services on 5 inputs: 1 skipped, 4 no-op
+  0s ccrouter_generator:service_proxies on 5 inputs: 1 skipped, 4 no-op
+  0s ccrouter_generator:route_contracts on 5 inputs: 1 skipped, 4 no-op
+  0s ccrouter_generator:routes on 5 inputs: 1 skipped, 4 no-op
+  0s ccrouter_generator:route_bindings on 5 inputs: 1 skipped, 4 no-op
+  0s ccrouter_generator:init_tasks on 5 inputs: 1 skipped, 4 no-op
+  0s ccrouter_generator:events on 5 inputs: 1 skipped, 4 no-op
+  0s ccrouter_generator:commands on 5 inputs: 1 skipped, 4 no-op
+  0s ccrouter_generator:service_metadata on 9 inputs: 2 skipped, 7 no-op
+  0s ccrouter_generator:route_metadata on 9 inputs: 2 skipped, 7 no-op
+  0s ccrouter_generator:init_task_metadata on 9 inputs: 2 skipped, 7 no-op
+  0s ccrouter_generator:event_metadata on 9 inputs: 2 skipped, 7 no-op
+  0s ccrouter_generator:component_metadata on 9 inputs: 2 skipped, 1 output, 6 no-op
+  0s ccrouter_generator:command_metadata on 9 inputs: 2 skipped, 7 no-op
+  Built with build_runner/aot in 3s; wrote 6 outputs.
+Validated 2 components and 0 routes across 5 generated Packages.
+CCRouter generation finished: elapsed=4874ms.

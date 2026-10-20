@@ -47,11 +47,11 @@ abstract final class DemoNavigationLabComponentFragments {
           contract: const CCUIFragmentDescriptor(
             owner: "demo_order_component",
             id: "order.recommendations",
-            version: "1.0.0",
+            version: "2.0.0",
             fingerprint:
-                "981dd30de35264dbec8ff547af3cd8af2c3f2eb680958b7c0b7626a395e9dc30",
+                "0fd30e583936c0c3b491f660086fe5dbdd9fd1088ddb55e5c84a6bf9c81e7b45",
           ),
-          versionRange: "^1.0.0",
+          versionRange: "^2.0.0",
         ),
       );
 }
@@ -74,10 +74,10 @@ const ccUIRequirements = <CCUIFragmentRequirement>[
     contract: CCUIFragmentDescriptor(
       owner: "demo_order_component",
       id: "order.recommendations",
-      version: "1.0.0",
+      version: "2.0.0",
       fingerprint:
-          "981dd30de35264dbec8ff547af3cd8af2c3f2eb680958b7c0b7626a395e9dc30",
+          "0fd30e583936c0c3b491f660086fe5dbdd9fd1088ddb55e5c84a6bf9c81e7b45",
     ),
-    versionRange: "^1.0.0",
+    versionRange: "^2.0.0",
   ),
 ];

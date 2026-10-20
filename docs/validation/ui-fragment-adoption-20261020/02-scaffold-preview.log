@@ -1,0 +1,66 @@
+UI Fragment preview (no writes):
+  <fixture>/consumer/modules/fragment_contracts/lib/src/selection_card_fragment.dart
+import 'package:ccrouter_contracts/ccrouter_ui_contracts.dart';
+import '../owner.dart' show catalogComponentId;
+
+/// Immutable input owned and updated by the consuming component.
+final class SelectionCardProps {
+  const SelectionCardProps({required this.itemId});
+  final String itemId;
+}
+
+/// The consumer already knows itemId; v1 Actions cannot carry dynamic payloads.
+enum SelectionCardAction { openDetails }
+
+/// Public capability implemented only by the canonical Owner.
+@CCUIFragmentContract<SelectionCardProps, SelectionCardAction>(
+  componentId: catalogComponentId,
+  id: 'catalog.selection',
+  version: '1.0.0',
+)
+abstract final class SelectionCardFragmentContract {}
+
+  <fixture>/consumer/modules/fragment_contracts/lib/selection_card_fragment.dart
+/// Public UI Contract; implementation and generated glue remain private.
+library;
+
+export 'src/selection_card_fragment.dart'
+    show SelectionCardProps, SelectionCardAction, SelectionCardFragmentContract;
+export 'owner.dart' show catalogComponentId;
+
+  <fixture>/consumer/modules/catalog/lib/src/selection_card_fragment_renderer.dart
+import 'package:flutter/widgets.dart';
+import 'package:ccrouter_ui/ccrouter_ui.dart';
+import 'package:adoption_fragment_contracts/selection_card_fragment.dart';
+
+/// Builds the Owner Widget; disposable resources belong in its State.
+@CCUIFragmentRenderer(SelectionCardFragmentContract)
+Widget renderSelectionCard(
+  CCUIFragmentRenderInput<SelectionCardProps, SelectionCardAction> input,
+) => GestureDetector(
+  onTap: input.active
+      ? () => input.onAction(SelectionCardAction.openDetails)
+      : null,
+  child: Text(input.props.itemId),
+);
+
+Next steps (existing files are unchanged):
+  1. Contracts pubspec: add direct ccrouter_contracts using your approved Package source.
+     Add ccrouter_generator to dev_dependencies for Contract generation.
+  2. Owner pubspec: add direct adoption_fragment_contracts, ccrouter_ui and Flutter dependencies.
+     Ensure ccrouter_generator is in dev_dependencies.
+     Complete the new Renderer and verify its Package owns catalogComponentId.
+  3. Consumer pubspec: add direct adoption_fragment_contracts and ccrouter_ui dependencies.
+     Ensure ccrouter_generator is in dev_dependencies.
+     In the component definition, add:
+     import 'package:ccrouter_ui/ccrouter_ui.dart';
+     import 'package:adoption_fragment_contracts/selection_card_fragment.dart';
+     Add catalogComponentId to CCComponent.dependencies (required, not optional).
+     Add to uiDependencies: CCUIFragmentDependency<SelectionCardFragmentContract>(versionRange: '^1.0.0', alias: 'selectionCard').
+  4. Actual Host pubspec: include A/B implementation Packages and direct ccrouter_ui.
+     Ensure ccrouter_generator and build_runner are in Host dev_dependencies.
+     Run Flutter pub get from the Host, then ccrouter generate <host-root>.
+  5. Run ccrouter find catalog.selection <host-root> --usage <consumer-component-id> for the proven Client import and call.
+     Use stable business Keys; pass active for hidden Tabs; handle Session reset and State cleanup.
+     Finish with analyze, tests and ccrouter generate <host-root> --no-cache --check after stopping watch.
+  For an ID loaded privately by B, replace the starter enum with a restricted immutable DTO Action.
