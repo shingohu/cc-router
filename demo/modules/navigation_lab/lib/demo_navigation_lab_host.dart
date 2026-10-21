@@ -14,6 +14,7 @@ export 'src/shell_pages.dart'
         demoShellFeedIntent,
         demoShellSettingsIntent,
         demoWorkspaceHomeIntent,
+        demoWorkspaceDetailIntent,
         demoWorkspaceActivityIntent,
         demoWorkspaceProfileIntent;
 export 'src/stack_page.dart' show demoStackIntent;

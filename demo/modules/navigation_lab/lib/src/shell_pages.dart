@@ -292,6 +292,8 @@ CCRouteIntent<void> demoShellSettingsIntent() =>
     DemoNavigationLabRoutes.shellSettings();
 CCRouteIntent<void> demoWorkspaceHomeIntent() =>
     DemoNavigationLabRoutes.workspaceHome();
+CCRouteIntent<void> demoWorkspaceDetailIntent({required int item}) =>
+    DemoNavigationLabRoutes.workspaceDetail(item: item);
 CCRouteIntent<void> demoWorkspaceActivityIntent() =>
     DemoNavigationLabRoutes.workspaceActivity();
 CCRouteIntent<void> demoWorkspaceProfileIntent() =>

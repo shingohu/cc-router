@@ -495,6 +495,11 @@ Composition Root 显式调用；全局拦截器、Deep Link 白名单、Aspect�
 Adapter 路径。建议先保持业务 API 不变，再按 Host 逐个切换到 `CCManagedRouterBackend`；两条
 路径共享同一份 Runtime Route Contract、Intent、PopGuard 和 `close` 语义。
 
+Demo 提供可回滚的对照入口：`CCRouterDemoApp(useManagedBackend: true)` 会使用同一份生成
+Catalog 和 Shell Contract 挂载 Managed Backend；默认值仍为 `false`，因此已有 GoRouter
+测试和集成可以继续运行。迁移时先在一个 Host 或测试 flavor 打开该开关，验证 Shell、Outlet、
+typed result 和 `close` 后再扩大范围。
+
 ```dart
 CCRouterHost.initialize(
   hostAssembly: ccrouterGeneratedHostAssembly,

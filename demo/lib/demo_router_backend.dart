@@ -124,6 +124,106 @@ CCGoRouterBackend createDemoRouterBackend({
   );
 }
 
+/// Creates the opt-in Runtime Managed Backend used by migration tests.
+///
+/// The generated Catalog and Shell contracts are identical to the GoRouter
+/// demo. Keeping this factory beside the compatibility factory makes the two
+/// backends directly comparable while allowing existing demo callers to stay
+/// on GoRouter until their Host is ready to migrate.
+CCManagedRouterBackend createDemoManagedRouterBackend({
+  required CCFlutterRouteCatalog catalog,
+  String hostId = 'default',
+  String initialLocation = '/',
+}) {
+  final single = _DemoShellOutlet(hostId, demoSingleShellOutlet);
+  final home = _DemoShellOutlet(hostId, demoWorkspaceHomeOutlet);
+  final activity = _DemoShellOutlet(hostId, demoWorkspaceActivityOutlet);
+  final profile = _DemoShellOutlet(hostId, demoWorkspaceProfileOutlet);
+  final host = CCNavigationHost(
+    id: hostId,
+    navigatorKeys: {
+      for (final outlet in [single, home, activity, profile])
+        outlet.id: outlet.key,
+      demoAdaptiveListOutlet: GlobalKey<NavigatorState>(
+        debugLabel: '$hostId.$demoAdaptiveListOutlet',
+      ),
+      demoAdaptiveDetailOutlet: GlobalKey<NavigatorState>(
+        debugLabel: '$hostId.$demoAdaptiveDetailOutlet',
+      ),
+    },
+  );
+  return CCManagedRouterBackend(
+    routeCatalog: catalog,
+    host: host,
+    initialLocation: initialLocation,
+    shellBindings: [
+      CCManagedShellBinding(
+        shellId: demoSingleShellId,
+        builder: (context, shell) => Scaffold(
+          body: shell.navigatorFor(demoSingleShellOutlet),
+          bottomNavigationBar: NavigationBar(
+            selectedIndex: 0,
+            onDestinationSelected: (index) => unawaited(
+              CCRouter.navigator.go(
+                index == 0 ? demoShellFeedIntent() : demoShellSettingsIntent(),
+              ),
+            ),
+            destinations: const [
+              NavigationDestination(
+                icon: Icon(Icons.dynamic_feed_outlined),
+                label: 'Feed',
+              ),
+              NavigationDestination(icon: Icon(Icons.tune), label: 'Settings'),
+            ],
+          ),
+        ),
+      ),
+      CCManagedShellBinding(
+        shellId: demoWorkspaceShellId,
+        builder: (context, shell) {
+          final activeIndex = shell.outlets.indexOf(shell.activeOutlet);
+          return Scaffold(
+            body: IndexedStack(
+              index: activeIndex < 0 ? 0 : activeIndex,
+              children: [
+                for (final outlet in shell.outlets) shell.navigatorFor(outlet),
+              ],
+            ),
+            bottomNavigationBar: NavigationBar(
+              selectedIndex: activeIndex < 0 ? 0 : activeIndex,
+              onDestinationSelected: (index) {
+                final outlet = shell.outlets[index];
+                shell.activateOutlet(outlet);
+                unawaited(
+                  CCRouter.navigator.go(switch (index) {
+                    0 => demoWorkspaceHomeIntent(),
+                    1 => demoWorkspaceActivityIntent(),
+                    _ => demoWorkspaceProfileIntent(),
+                  }),
+                );
+              },
+              destinations: const [
+                NavigationDestination(
+                  icon: Icon(Icons.home_outlined),
+                  label: 'Home',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.notifications_none),
+                  label: 'Activity',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.person_outline),
+                  label: 'Profile',
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    ],
+  );
+}
+
 /// Host-owned pairing reused by the Navigator, Shell binding and Adapter.
 final class _DemoShellOutlet {
   _DemoShellOutlet(String hostId, this.id)

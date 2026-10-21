@@ -40,6 +40,12 @@ typed Extra。完整的 macOS 验证矩阵、已修复问题和 Adapter 限制�
 真实窗口 Accessibility Monkey 和小窗口回归方法见
 [macOS Monkey 验证记录](docs/macos_monkey_validation.md)。
 
+Managed Backend 可通过构造 `CCRouterDemoApp(useManagedBackend: true)` 或
+`runDemo(useManagedBackend: true)` 启用。它复用相同的生成 Catalog、单 Navigator Shell 和
+Stateful Shell，用于逐 Host 对比 Managed Stack 与 GoRouter Adapter；默认入口仍保持
+GoRouter，以便现有集成按阶段回滚。Managed 模式的 Widget 回归位于
+`test/demo_router_backend_test.dart`。
+
 首页“展示”→“类型化 UI Fragment”（`/ui-fragments`）使用真实生成 Host：
 `navigation_lab` 只依赖 `order_contracts`，订单组件提供摘要与推荐两个 Renderer。
 可验证两个摘要实例备注独立、切换 Tab 保留备注、更新 Props 保持 State、模拟账号 Key

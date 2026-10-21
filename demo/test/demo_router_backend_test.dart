@@ -2,6 +2,8 @@ import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter/ccrouter_host.dart';
 import 'package:ccrouter_demo/ccrouter_demo.dart';
 import 'package:ccrouter_demo/demo_router_backend.dart';
+import 'package:ccrouter_demo/main.dart';
+import 'package:demo_navigation_lab/demo_navigation_lab_host.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -106,4 +108,34 @@ void main() {
       await tester.pumpAndSettle();
     });
   }
+
+  testWidgets('Managed Backend preserves Shell branches and typed Pop', (
+    tester,
+  ) async {
+    CCRouterHost.initialize(hostAssembly: ccrouterGeneratedHostAssembly);
+    addTearDown(CCRouterHost.shutdown);
+    await tester.pumpWidget(
+      const CCRouterDemoApp(
+        initialLocation: '/shell/feed',
+        listenForPlatformLinks: false,
+        useManagedBackend: true,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Shell Feed'), findsOneWidget);
+    await CCRouter.navigator.go(demoWorkspaceHomeIntent());
+    await tester.pumpAndSettle();
+    expect(find.text('Workspace Home'), findsOneWidget);
+
+    final detail = CCRouter.navigator.push<void>(
+      demoWorkspaceDetailIntent(item: 42),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Workspace Detail #42'), findsOneWidget);
+    CCRouter.navigator.pop();
+    await tester.pumpAndSettle();
+    await detail;
+    expect(find.text('Workspace Home'), findsOneWidget);
+  });
 }

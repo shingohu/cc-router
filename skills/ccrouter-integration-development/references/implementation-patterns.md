@@ -15,17 +15,22 @@ the ordinary Route, Service, Command, Event and InitTask integration patterns.
 
 ### Host
 
-The Host may import `ccrouter_go_router` and `ccrouter_host.dart`. A new GoRouter
-application should first call
-`CCRouterHost.initialize(hostAssembly: ccrouterGeneratedHostAssembly)` and then use
-`const CCGoRouterApp()` for the minimal Host assembly path. The widget resolves
-the exact Catalog retained from initialization through a Host-only Binding; do
-not repeat the Catalog argument or expose it through the business Facade. The
-generated stable Host barrel exports only the atomic Assembly.
-`CCGoRouterApp` never initializes or shuts down the process Runtime. The Host
-owns generated Host assembly, navigation Backend,
-Shell/Outlet topology, platform Deep Link ingress, global policies and final
-`CCRouterHost.shutdown`.
+A new application should use `ccrouter_host.dart` with the Runtime Managed
+Backend: call
+`CCRouterHost.initialize(hostAssembly: ccrouterGeneratedHostAssembly)`, create
+`CCManagedRouterBackend`, and mount it through `CCRouterApp.managed` and
+`MaterialApp.router`. Managed page stacks are the navigation source of truth;
+Flutter `RouterDelegate + Navigator.pages` is only their projection. The
+generated stable Host barrel exports only the atomic Assembly. The Host owns
+the generated Catalog, Backend, Shell/Outlet topology, platform Deep Link
+ingress, global policies, and final `CCRouterHost.shutdown`.
+
+Existing GoRouter applications may import `ccrouter_go_router` and keep using
+`CCGoRouterApp` or `CCGoRouterBackend.attach` as a compatibility Adapter. Keep
+the business `CCRouter.navigator` calls unchanged and migrate one Host at a
+time. The Demo exposes the same comparison through
+`CCRouterDemoApp(useManagedBackend: true)`; its default remains the GoRouter
+path so migration can be A/B tested and rolled back.
 
 If synchronous `CCRouterHost.initialize` fails after constructing the Runtime,
 the Host disposes the unpublished instance automatically and rethrows the
