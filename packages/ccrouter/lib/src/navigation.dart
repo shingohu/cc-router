@@ -82,6 +82,13 @@ abstract interface class CCNavigator {
   /// Pops the active route with an optional typed [result].
   void pop<R>({R? result});
 
+  /// Removes the exact entry, even when covered, respecting its PopGuard.
+  ///
+  /// Capture a handle from [CCRouter.routeEntryHandleOf] during page setup.
+  /// Unsupported adapters return an explicit outcome and never pop another
+  /// page.
+  Future<CCRouteCloseOutcome> close<R>(CCRouteEntryHandle handle, {R? result});
+
   /// Whether the configured adapter can currently pop one route.
   bool canPop();
 }
@@ -169,6 +176,13 @@ final class _CCNavigator implements CCNavigator {
   /// Pops through the Runtime owned by [CCRouter].
   @override
   void pop<R>({R? result}) => CCRouter._runtime.popRoute(result: result);
+
+  /// Delegates exact close to the owning Runtime without active-stack inference.
+  @override
+  Future<CCRouteCloseOutcome> close<R>(
+    CCRouteEntryHandle handle, {
+    R? result,
+  }) => CCRouter._runtime.closeRoute(handle, result: result);
 
   /// Reads Pop capability from the configured Runtime adapter.
   @override

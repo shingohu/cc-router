@@ -12,6 +12,14 @@ extension CCRouterRuntimePopGuard on CCRouterRuntime {
     final target = _activePopTarget;
     final entry = _managedPopTarget(target);
     if (entry == null) return const CCPopAllow();
+    return _evaluatePopGuardsForEntry(entry, trigger);
+  }
+
+  /// Evaluates policy for a selected entry without consulting the active stack.
+  CCPopGuardDecision _evaluatePopGuardsForEntry(
+    _RouteEntryRecord entry,
+    CCPopTrigger trigger,
+  ) {
     final context = CCPopGuardContext(entry: entry.snapshot, trigger: trigger);
     for (final registration in _globalPopGuards) {
       final decision = _evaluatePopGuard(

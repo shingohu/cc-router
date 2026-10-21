@@ -7,7 +7,14 @@ final class _RouteEntryRecord {
     required this.id,
     required this.request,
     required this.address,
-  }) : scope = CCScope('route-$id');
+  }) : scope = CCScope('route-$id'),
+       handle = CCRouteEntryHandle(id);
+
+  /// Payload-free exact identity shared by every snapshot of this entry.
+  final CCRouteEntryHandle handle;
+
+  /// Validates a targeted result before any backend mutation.
+  void Function(Object? result)? validateResult;
 
   /// Stable identity for this concrete route opening.
   final String id;
@@ -46,6 +53,14 @@ extension CCRouterRuntimeRouteEntries on CCRouterRuntime {
   /// navigation objects remain Runtime-owned.
   List<CCRouteEntrySnapshot> get activeRouteEntries =>
       List.unmodifiable(_routeEntries.map((entry) => entry.snapshot));
+
+  /// Returns the Runtime-issued handle for [navigationId], if still retained.
+  ///
+  /// This is an internal bridge for the Flutter facade. Business code must
+  /// capture a handle from its owning Page context instead of resolving one
+  /// from a diagnostic snapshot or stack position.
+  CCRouteEntryHandle? routeEntryHandleForNavigation(String navigationId) =>
+      _routeEntryForNavigation(navigationId)?.handle;
 
   /// Returns a bounded immutable snapshot of Route Entry lifecycle events.
   List<CCRouteEntryLifecycleEvent> get recentRouteEntryEvents =>

@@ -2,6 +2,10 @@
 
 ## 状态说明
 
+- 新增可选[精确 RouteEntry 关闭](CCRouter-targeted-close-design.md)：支持可安全移除的
+  GoRouter imperative 实例、覆盖页和 foreign Popup 保留；声明式与不安全结构明确拒绝。
+  此项不扩大真实平台、浏览器历史或原生多窗口验收结论。
+
 - 2026-10-20 的[最近提交审查与核心价值回归](CCRouter-core-principles-audit.md)复核最近 10 个提交与
   13 条约定；两处生成身份问题和一处 CLI 文档漂移已修复，附修复前后验证及性能边界；
   生成器首次全量有一项超时，单项复跑通过，不记作首次全绿。

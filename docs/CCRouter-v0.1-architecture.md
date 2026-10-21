@@ -1257,7 +1257,7 @@ CCRouter.diagnostics.exportReport();
 11. `CCRouterTest.run`、Service Override 和独立 Test Host。
 12. 生成冲突检查、依赖检查和契约文档。
 
-`*Named` 方法不纳入 API。`popAndPush`、`popUntil`、`pushAndRemoveUntil`、`replaceRouteBelow`、`removeRoute`、`removeRouteBelow` 和对应 Handle/Predicate/SPI 已从 v0.1 整条能力链删除。它们仅在后端具备稳定 Entry identity、原子目标栈提交、混合栈隔离、Pop 拒绝、失败回滚和结果/Scope 生命周期保证后，通过可选版本化栈事务 SPI 重新评估。`popUntilWithResult` 同样保持 Deferred。
+`*Named` 方法不纳入 API。`popAndPush`、`popUntil`、`pushAndRemoveUntil`、`replaceRouteBelow`、`removeRoute`、`removeRouteBelow` 及其按 Flutter Route、Predicate 或栈位置操作的 Handle/SPI 仍不提供。`CCRouter.navigator.close` 使用 Runtime-issued opening `CCRouteEntryHandle`，是可选的精确 opening 能力：仅在后端能证明稳定 Entry identity、目标级提交、混合栈隔离、PopGuard 拒绝和结果/Scope 生命周期收敛时启用，否则返回明确的 `unsupported`，不属于这里已删除的按 Route/Predicate 栈事务 API。`popUntilWithResult` 同样保持 Deferred。
 
 当前已完成官方只读 DevTools Extension、Catalog/Runtime 联动、组件依赖聚焦和单次能力调用链；
 仍暂缓 Runtime 控制型工具、Extension 到任意本地 IDE 的直接绑定、Native/Isolate RPC、多 Engine

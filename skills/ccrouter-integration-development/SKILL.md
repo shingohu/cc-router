@@ -314,6 +314,26 @@ the Service Contract.
 
 ## Navigation Policy Rules
 
+- For async completion that must remove its own covered page, capture
+  `CCRouter.routeEntryHandleOf(context)` during page setup and call
+  `CCRouter.navigator.close(handle, result: ...)`. Never select a route by ID,
+  snapshot index, or the currently visible page when the work finishes. Handles
+  retain no Context/Route/payload and expire with their exact Runtime entry.
+  `CCRouter.activeRouteEntries` and lifecycle/visibility snapshots are
+  diagnostic observations only; they never provide a targeted-close handle.
+- Check `CCRouteCloseOutcome.status`: `closed`, `notFound`, `unsupported`, or
+  `guardDenied`. Close runs the target's managed PopGuards and validates its
+  original result type before mutation. It is an explicit business exit; do not
+  use it as system back or async confirmation UI. Only that result and Scope
+  end, covering pages/foreign Popups stay alive, and async disposal may still
+  be pending. Never fall back from unsupported to ordinary Pop.
+- GoRouter exact close requires an installed observed imperative push/replace
+  entry. Declarative go/reset, retained inactive branches, removal that empties
+  a Shell, and trees containing external `GoRoute.onExit` are unsupported.
+  Custom Host Adapters opt into `CCNavigationTargetedCloseAdapter`; business
+  code must not import that SPI or call a backend directly. Read
+  [production scenarios](references/production-scenarios.md) for validation.
+
 - Use Interceptor only for pre-navigation decisions: authentication, permission, consent, maintenance, forced upgrade, feature flag, redirect, cancel, or defer.
 - Never use Interceptor for PV/UV, page arrival, data loading, UI side effects, or nested navigation.
 - Observe Interceptor cancellation cooperatively. Runtime shutdown ends pending Interceptor/Failure Policy waits with `CCRouteCancelledError` and ignores late decisions; it cannot stop arbitrary Dart work. Defer/resume preserves typed payloads, the original concrete Host, call-site Outlet, and result contract while revalidating policy. Configure a timeout or explicitly cancel abandoned continuations.

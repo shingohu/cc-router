@@ -6,7 +6,10 @@
 处理原则不是按引用次数机械删除，而是同时验证类型安全、混合路由隔离、生命周期、诊断、
 Host 扩展和降级语义。
 
-本文是路由专项的历史收口记录，不是全框架当前状态清单。当前路由 API 已完成本轮回归；
+本文是路由专项的历史收口记录，不是全框架当前状态清单。本文记录的是精确 Entry API 尚未
+具备可验证后端事务语义时的结论；后续可选 `CCRouter.navigator.close` 的实现状态以
+`docs/CCRouter-route-design.md`、`docs/CCRouter-targeted-close-design.md` 和当前测试为准。
+当前路由 API 已完成本轮回归；
 Service、Command、Event 和 InitTask 后续也已形成各自闭环，状态以 `docs/README.md` 与对应
 专项设计为准。组件动态卸载仍未实现，不能据此扩大或冻结对应 API。
 
@@ -25,7 +28,7 @@ Service、Command、Event 和 InitTask 后续也已形成各自闭环，状态�
 - `CCGoRouterNavigationEvent.result`：Flutter `NavigatorObserver` 不提供 Pop result。
 - `CCBackendEntryLifecycleState.unknown`：没有合法创建路径。
 - `CCPopOutcome.resultAvailable`：没有对应的结果值通道；类型安全结果继续由原 Push Future 管理。
-- `CCRouteEntryHandle` 及精确 Entry 操作链：当前后端无法统一保证稳定身份、原子提交和混合栈隔离，完整删除并转为 Deferred 设计。
+- `CCRouteEntryHandle` 及精确 Entry 操作链：本历史复审阶段因后端无法统一保证稳定身份、原子提交和混合栈隔离而删除并转为 Deferred；当前可选 `close` 能力不改变本文的历史结论。
 - `CCFlutterRouteDestination.componentId`：Assembler 不消费；Runtime 单独保存可信组件 owner。
 - 未参与决策的 Capability Boolean：`supportsForeignEntryObservation`、
   `supportsBackendEntryIdentity`、`supportsInitialStackSnapshot`、

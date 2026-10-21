@@ -23,6 +23,7 @@ export 'src/initialization.dart';
 export 'src/lifecycle.dart';
 export 'src/messaging.dart';
 export 'src/navigation.dart';
+export 'src/navigation_close.dart';
 export 'src/navigation_backend.dart';
 export 'src/navigation_capabilities.dart';
 export 'src/navigation_concurrency.dart';

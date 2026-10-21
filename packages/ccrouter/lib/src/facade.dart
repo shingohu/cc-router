@@ -36,10 +36,14 @@ final class _CCManagedNavigationPayload {
   const _CCManagedNavigationPayload({
     required this.navigationId,
     required this.extra,
+    required this.runtimeIdentity,
   });
 
   /// Stable request identity used for exact RouteEntry lookup.
   final String navigationId;
+
+  /// Payload-free Runtime generation token captured at backend dispatch.
+  final Object? runtimeIdentity;
 
   /// Original process-local Extra value decoded by the generated page codec.
   final Object? extra;
@@ -50,16 +54,21 @@ final class _CCRouteServiceBinding extends InheritedWidget {
   /// Wraps [child] with the immutable [navigationId] association.
   const _CCRouteServiceBinding({
     required this.navigationId,
+    required this.runtimeIdentity,
     required super.child,
   });
+
+  /// Runtime generation that admitted this Page, independent of reusable IDs.
+  final Object? runtimeIdentity;
 
   /// Managed navigation whose Route Scope owns descendant Route Services.
   final String navigationId;
 
   @override
-  /// The binding identity never changes for the lifetime of one Page.
+  /// Notifies when either the Page or its Runtime generation changes.
   bool updateShouldNotify(_CCRouteServiceBinding oldWidget) =>
-      oldWidget.navigationId != navigationId;
+      oldWidget.navigationId != navigationId ||
+      !identical(oldWidget.runtimeIdentity, runtimeIdentity);
 }
 
 /// Static business-facing entry point for all CCRouter capabilities.
@@ -160,9 +169,9 @@ abstract final class CCRouter {
 
   /// Snapshot of currently retained managed Route Entries in stack order.
   ///
-  /// Each snapshot exposes an exact [CCRouteEntrySnapshot.handle] for targeted
-  /// removal. The snapshots do not expose Route Scopes, Widgets, or backend
-  /// Navigator objects.
+  /// Snapshots are observational only and do not expose Route Scopes, close
+  /// handles, Widgets, or backend Navigator objects. Capture a targeted-close
+  /// handle from the owning Page with [routeEntryHandleOf].
   static List<CCRouteEntrySnapshot> get activeRouteEntries =>
       _runtime.activeRouteEntries;
 
@@ -321,6 +330,40 @@ abstract final class CCRouter {
     cancellation: cancellation,
   );
 
+  /// Returns the exact managed Page identity inherited by [context].
+  ///
+  /// Capture during page setup, before async work or covering navigation. This
+  /// does not subscribe to inherited changes or infer the current top entry.
+  /// Foreign, initial, or already removed pages return null.
+  static CCRouteEntryHandle? routeEntryHandleOf(BuildContext context) {
+    final binding = _validatedRouteServiceBinding(context);
+    if (binding == null) return null;
+    return _runtimeResolver.activeOrNull!.routeEntryHandleForNavigation(
+      binding.navigationId,
+    );
+  }
+
+  /// Returns the exact binding only while its Runtime generation is active.
+  ///
+  /// A binding can outlive a Runtime shutdown or be rendered from a payload
+  /// created by another Runtime. Such bindings must not be allowed to fall
+  /// back to a reusable navigation ID in the active Runtime.
+  static _CCRouteServiceBinding? _validatedRouteServiceBinding(
+    BuildContext context,
+  ) {
+    final binding = context
+        .getInheritedWidgetOfExactType<_CCRouteServiceBinding>();
+    final runtime = _runtimeResolver.activeOrNull;
+    if (binding == null ||
+        runtime == null ||
+        !runtime.isInitialized ||
+        binding.runtimeIdentity == null ||
+        !identical(binding.runtimeIdentity, _runtimeResolver.activeIdentity)) {
+      return null;
+    }
+    return binding;
+  }
+
   /// Resolves a Route-scoped Service owned by the managed Page at [context].
   ///
   /// Use this for page-instance resources such as draft controllers that must
@@ -334,8 +377,7 @@ abstract final class CCRouter {
     BuildContext context, {
     CCServiceKey<T>? key,
   }) {
-    final binding = context
-        .getInheritedWidgetOfExactType<_CCRouteServiceBinding>();
+    final binding = _validatedRouteServiceBinding(context);
     if (binding == null) {
       throw const CCServiceScopeUnavailableError(CCServiceScope.route);
     }
@@ -355,8 +397,7 @@ abstract final class CCRouter {
     BuildContext context, {
     CCServiceKey<T>? key,
   }) {
-    final binding = context
-        .getInheritedWidgetOfExactType<_CCRouteServiceBinding>();
+    final binding = _validatedRouteServiceBinding(context);
     if (binding == null) {
       throw const CCServiceScopeUnavailableError(CCServiceScope.route);
     }
@@ -376,8 +417,7 @@ abstract final class CCRouter {
     Duration? timeout,
     CCCancellationToken? cancellation,
   }) {
-    final binding = context
-        .getInheritedWidgetOfExactType<_CCRouteServiceBinding>();
+    final binding = _validatedRouteServiceBinding(context);
     if (binding == null) {
       throw const CCServiceScopeUnavailableError(CCServiceScope.route);
     }
@@ -399,8 +439,7 @@ abstract final class CCRouter {
     Duration? timeout,
     CCCancellationToken? cancellation,
   }) {
-    final binding = context
-        .getInheritedWidgetOfExactType<_CCRouteServiceBinding>();
+    final binding = _validatedRouteServiceBinding(context);
     if (binding == null) {
       throw const CCServiceScopeUnavailableError(CCServiceScope.route);
     }
@@ -507,7 +546,15 @@ abstract final class CCRouterHostBinding {
       _CCManagedNavigationPayload(
         navigationId: request.navigationId,
         extra: request.extra,
+        runtimeIdentity: _runtimeResolver.activeIdentity,
       );
+
+  /// Reads a managed opening identity without exposing its payload wrapper.
+  ///
+  /// Host adapters use this only to correlate exact declarative matches. It
+  /// returns null for foreign or initial state and retains no business Extra.
+  static String? navigationIdForPayload(Object? payload) =>
+      payload is _CCManagedNavigationPayload ? payload.navigationId : null;
 
   /// Returns the original business Extra from a managed backend [payload].
   ///
@@ -529,6 +576,7 @@ abstract final class CCRouterHostBinding {
     if (payload is! _CCManagedNavigationPayload) return child;
     return _CCRouteServiceBinding(
       navigationId: payload.navigationId,
+      runtimeIdentity: payload.runtimeIdentity,
       child: child,
     );
   }

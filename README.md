@@ -267,7 +267,7 @@ Managed/Backend Entries、Trace Timeline、Failure/Fallback、InitTask DAG 和�
 | 注解路由与类型安全 Intent | 已支持 | Path、URI、custom scheme、Regex、多 Pattern、Query、Extra、typed result |
 | 页面展示 | 已支持 | 平台默认、Material、Cupertino、fade、scale、bottom-up、透明全屏 |
 | Modal Route | 已支持 | Dialog、modal bottom sheet，可选择是否纳入 CCRouter 契约与生命周期 |
-| 导航操作 | 已支持 | `push`、`replace`、`go`、`reset`、`open`、`pop`、`maybePop`、`canPop` |
+| 导航操作 | 已支持 | `push`、`replace`、`go`、`reset`、`open`、`pop`、`maybePop`、`canPop`、实例级 `close`（可选 Adapter 能力） |
 | GoRouter Backend | 已支持 | 新工程 managed 模式和已有 GoRouter attach 模式 |
 | Shell / StatefulShell / Outlet | 已支持 | 显式 Host 装配，支持多 Outlet 与调用级 Context 定位 |
 | Deep Link | 已支持 | Platform、Notification、QR 入口，Host allowlist 与 Route policy 双重校验 |
@@ -706,6 +706,36 @@ CCRouter.navigator.pop(result: 'confirmed');
 - `pop`：业务主动返回；返回值必须与 Route 的结果类型一致，否则抛出标准导航错误且页面不会被错误移除。
 
 禁止业务代码直接调用 `Navigator.push/pop`、`GoRouter.push/go` 或 Adapter 来操作 CCRouter 管理的页面。临时、局部且不需要组件契约的 Flutter Dialog/BottomSheet 可以继续使用原生 API；它们属于 foreign/overlay，不应改变 Managed Route Scope。
+
+### 精确关闭被覆盖的页面
+
+异步流程结束时，当前栈顶可能已经是另一页或局部弹窗。页面在初始化阶段（例如
+`didChangeDependencies`）捕获自己的身份，再关闭该实例：
+
+```dart
+final handle = CCRouter.routeEntryHandleOf(context); // unmanaged 页返回 null
+// 保存 handle，等待业务流程结束；不要届时重新从 active/top 推断目标。
+if (handle != null) {
+  final outcome = await CCRouter.navigator.close<String>(handle, result: 'done');
+  if (outcome.status == CCRouteCloseStatus.unsupported) {
+    // 由业务选择后续交互，不可改成 pop 关闭其它页面。
+  }
+}
+```
+
+`close` 对选定 Entry 执行全局和本地 PopGuard，先验证原 push 的结果类型，再移除页面；
+它是显式业务退出，不消费 foreign Popup、LocalHistory，也不以当前页的 `PopScope` 代替目标
+策略。结果为 `closed`、`notFound`、`unsupported` 或 `guardDenied`，拒绝时不改栈。
+重复、伪造和跨 Runtime 的句柄不能关闭同路由的新实例。句柄不持有 Context、Route、Scope
+或参数；关闭只完成目标结果并启动一次 Scope 释放，不等待异步 Service disposal。
+`CCRouter.activeRouteEntries` 仅用于诊断观察，不包含可关闭句柄；不得按 routeId、索引或当前栈
+位置推断目标，句柄只能从 owning Page 的 `BuildContext` 捕获。
+
+GoRouter 支持已挂载且有 Observer 身份的 push/replace 实例及安全的嵌套 Shell Outlet；
+声明式 go/reset、保留的非当前分支、移除后会清空 Shell 的结构，以及包含外部
+`GoRoute.onExit` 的配置返回 `unsupported`。自定义 Adapter 可选择实现 Host-only
+`CCNavigationTargetedCloseAdapter`；旧 Adapter 无需改动，普通 pop 行为不变。
+详见 [精确关闭的边界与验证](docs/CCRouter-targeted-close-design.md)。
 
 ### BuildContext 与 Outlet
 

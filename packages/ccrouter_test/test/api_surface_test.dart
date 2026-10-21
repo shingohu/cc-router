@@ -18,6 +18,7 @@ const _adapterSpiNames = <String>{
   'CCNavigationHostCapabilitySource',
   'CCNavigationManagedEntryReleaseSink',
   'CCNavigationPopCoordinator',
+  'CCNavigationTargetedCloseAdapter',
   'CCNavigationPopGuardBinding',
   'CCNavigationPopTarget',
   'CCNavigationPopTargetSource',
@@ -36,6 +37,8 @@ const _adapterSpiNames = <String>{
 
 const _hostContractNames = <String>{
   ..._adapterSpiNames,
+  'CCRouteCloseOutcome',
+  'CCRouteCloseStatus',
   'CCRouteRestorationOpportunityReason',
   'CCContractBundleDescriptor',
   'CCContractCompatibilityCode',
@@ -63,6 +66,9 @@ const _hostSpiTypes = <Type>[
   host.CCNavigationHostCapabilitySource,
   host.CCNavigationManagedEntryReleaseSink,
   host.CCNavigationPopCoordinator,
+  host.CCNavigationTargetedCloseAdapter,
+  host.CCRouteCloseOutcome,
+  host.CCRouteCloseStatus,
   host.CCNavigationPopGuardBinding,
   host.CCNavigationPopTarget,
   host.CCNavigationPopTargetSource,
@@ -103,6 +109,13 @@ void main() {
       RegExp(
         "export 'src/facade.dart'[\\s\\S]*?hide[\\s\\S]*?"
         'CCRouterTestBinding[\\s\\S]*?;',
+      ).hasMatch(businessBarrel),
+      isTrue,
+    );
+    expect(
+      RegExp(
+        "export 'package:ccrouter_core/ccrouter_core.dart'[\\s\\S]*?"
+        'hide[\\s\\S]*?CCRouterRuntimeRouteEntries[\\s\\S]*?;',
       ).hasMatch(businessBarrel),
       isTrue,
     );
@@ -215,8 +228,23 @@ Future<void> probe() async {
     ).readAsStringSync();
 
     expect(_contractCombinatorNames(hostBarrel, 'show'), _hostContractNames);
-    expect(_hostSpiTypes, hasLength(31));
+    expect(_hostSpiTypes, hasLength(34));
+    expect(
+      _HostTargetedCloseAdapter(),
+      isA<host.CCNavigationTargetedCloseAdapter>(),
+    );
   });
+}
+
+final class _HostTargetedCloseAdapter
+    implements host.CCNavigationTargetedCloseAdapter {
+  @override
+  Future<host.CCRouteCloseOutcome> closeNavigation({
+    required String navigationId,
+    required String hostId,
+    required String navigatorOutlet,
+    Object? result,
+  }) async => const host.CCRouteCloseOutcome(host.CCRouteCloseStatus.notFound);
 }
 
 Directory _workspaceRoot() {

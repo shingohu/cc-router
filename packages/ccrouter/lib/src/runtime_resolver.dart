@@ -14,6 +14,19 @@ final class _CCRuntimeResolver {
   /// Runtime installed by the production application host.
   CCRouterRuntime? _defaultRuntime;
 
+  /// Weakly associates Runtime generations with payload-free identity tokens.
+  ///
+  /// Values contain no Runtime reference, so old payloads cannot retain a
+  /// shutdown Runtime through this association.
+  final Expando<Object> _identities = Expando<Object>();
+
+  /// Identity of the initialized active Runtime, without exposing that Runtime.
+  Object? get activeIdentity {
+    final runtime = activeOrNull;
+    if (runtime == null || !runtime.isInitialized) return null;
+    return _identities[runtime] ??= Object();
+  }
+
   /// Returns the production Runtime, if one has been installed.
   CCRouterRuntime? get defaultRuntime => _defaultRuntime;
 

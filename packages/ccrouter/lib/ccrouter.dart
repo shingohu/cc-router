@@ -7,6 +7,7 @@ library;
 export 'package:ccrouter_contracts/ccrouter_contracts.dart'
     hide
         CCNavigationAdapter,
+        CCNavigationTargetedCloseAdapter,
         CCNavigationAdapterCapabilities,
         CCNavigationAdapterCapabilitySource,
         CCNavigationAdapterHostBinding,
@@ -36,6 +37,7 @@ export 'package:ccrouter_contracts/ccrouter_contracts.dart'
 export 'package:ccrouter_core/ccrouter_core.dart'
     hide
         CCRouterRuntime,
+        CCRouterRuntimeRouteEntries,
         CCScope,
         CCScopeState,
         CCMemoryNavigationAdapter,

@@ -205,7 +205,7 @@ The panel displays static Catalog/Runtime relationships, source locations, a sea
 | Annotated routes and type-safe Intents | Supported | Paths, URIs, custom schemes, Regex, multiple patterns, Query, Extra, typed results |
 | Page presentation | Supported | Platform default, Material, Cupertino, fade, scale, bottom-up, transparent fullscreen |
 | Modal Routes | Supported | Dialogs and modal bottom sheets; optional CCRouter contract/lifecycle management |
-| Navigation operations | Supported | `push`, `replace`, `go`, `reset`, `open`, `pop`, `maybePop`, `canPop` |
+| Navigation operations | Supported | `push`, `replace`, `go`, `reset`, `open`, `pop`, `maybePop`, `canPop`, optional exact-entry `close` |
 | GoRouter Backend | Supported | Managed mode for new apps; attach mode for existing GoRouter apps |
 | Shell / StatefulShell / Outlet | Supported | Explicit Host assembly, multiple Outlets, and call-level Context targeting |
 | Deep Link | Supported | Platform, Notification, and QR ingress; both Host allowlist and Route policy validation |
@@ -546,6 +546,31 @@ Semantics:
 - `pop`: an explicit business return; the result must match the Route's result type, otherwise a standard navigation error is thrown without incorrectly removing the page.
 
 Business code must not call `Navigator.push/pop`, `GoRouter.push/go`, or an Adapter directly to manipulate CCRouter-managed pages. Temporary local Flutter Dialogs/BottomSheets without component-contract requirements may still use native APIs; they are foreign/overlay surfaces and must not affect Managed Route Scopes.
+
+### Closing a covered page instance
+
+Capture `CCRouter.routeEntryHandleOf(context)` during page setup, before async
+work or covering navigation. Later call `CCRouter.navigator.close(handle,
+result: value)` and inspect `CCRouteCloseOutcome.status`: `closed`, `notFound`,
+`unsupported`, or `guardDenied`. Never replace an unsupported exact close with
+Pop or infer the target from the current stack. Handles retain no Context,
+Route, Scope, arguments, or result and cannot target another Runtime instance.
+
+Close validates the original result type before mutation and runs the selected
+entry's global/local managed PopGuards with a business trigger. It completes
+only that result and starts Scope disposal once; covering pages and foreign
+Popups remain alive. Async Service disposal may still be pending. This is an
+explicit business exit, independent of system back and local confirmation UI.
+`CCRouter.activeRouteEntries` is observational only and does not expose close
+handles. Never infer a target from a route ID, snapshot index, or current stack;
+capture the handle from the owning Page `BuildContext`.
+
+GoRouter supports installed observed imperative push/replace entries and safe
+nested Shell Outlets. Declarative go/reset, retained inactive branches,
+removal that empties a Shell, and trees containing external `GoRoute.onExit`
+return unsupported. Custom Adapters may implement the Host-only optional
+`CCNavigationTargetedCloseAdapter`; old Adapters and ordinary Pop are unchanged.
+See [exact close design and boundaries](docs/CCRouter-targeted-close-design.md).
 
 ### BuildContext and Outlet
 

@@ -13,6 +13,7 @@ import 'app.dart';
 final class CCMultiHostNavigationAdapter
     implements
         CCNavigationAdapter,
+        CCNavigationTargetedCloseAdapter,
         CCNavigationAdapterHostBinding,
         CCNavigationAdapterCapabilitySource,
         CCNavigationHostCapabilitySource,
@@ -414,6 +415,29 @@ final class CCMultiHostNavigationAdapter
     }
     adapter.pop(result: result);
     return CCPopOutcome(handled: true, hostId: _activeHostId);
+  }
+
+  /// Routes an exact close to its owning Host without changing active Host.
+  @override
+  Future<CCRouteCloseOutcome> closeNavigation({
+    required String navigationId,
+    required String hostId,
+    required String navigatorOutlet,
+    Object? result,
+  }) async {
+    _ensureAvailable();
+    final adapter = _hosts[hostId]?.adapter;
+    if (adapter == null)
+      return const CCRouteCloseOutcome(CCRouteCloseStatus.notFound);
+    if (adapter is! CCNavigationTargetedCloseAdapter) {
+      return const CCRouteCloseOutcome(CCRouteCloseStatus.unsupported);
+    }
+    return (adapter as CCNavigationTargetedCloseAdapter).closeNavigation(
+      navigationId: navigationId,
+      hostId: hostId,
+      navigatorOutlet: navigatorOutlet,
+      result: result,
+    );
   }
 
   /// Whether the active Host backend can currently pop.

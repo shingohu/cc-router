@@ -225,6 +225,64 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     }
   }
 
+  /// Closes one Runtime-issued entry without disturbing covering pages.
+  ///
+  /// Managed guards evaluate the selected entry with a business trigger. A
+  /// malformed result throws before removal; stale/foreign handles and adapters
+  /// without the optional capability return explicit outcomes. Ordinary Pop
+  /// semantics remain independent of this operation.
+  Future<CCRouteCloseOutcome> closeRoute<R>(
+    CCRouteEntryHandle handle, {
+    R? result,
+  }) async {
+    _ensureNavigationCanStart();
+    _ensureInitialized();
+    _RouteEntryRecord? entry;
+    for (final candidate in _routeEntries) {
+      if (identical(candidate.handle, handle)) {
+        entry = candidate;
+        break;
+      }
+    }
+    if (entry == null) {
+      return const CCRouteCloseOutcome(CCRouteCloseStatus.notFound);
+    }
+    entry.validateResult?.call(result);
+    final decision = _evaluatePopGuardsForEntry(entry, CCPopTrigger.business);
+    if (decision is CCPopDeny) {
+      return CCRouteCloseOutcome(
+        CCRouteCloseStatus.guardDenied,
+        guardDeniedCode: decision.code,
+      );
+    }
+    if (!_routeEntries.contains(entry) || _disposed) {
+      return const CCRouteCloseOutcome(CCRouteCloseStatus.notFound);
+    }
+    final adapter = _requiredNavigationAdapter;
+    if (adapter is! CCNavigationTargetedCloseAdapter) {
+      return const CCRouteCloseOutcome(CCRouteCloseStatus.unsupported);
+    }
+    try {
+      final outcome = await (adapter as CCNavigationTargetedCloseAdapter)
+          .closeNavigation(
+            navigationId: entry.request.navigationId,
+            hostId: entry.request.hostId,
+            navigatorOutlet: entry.request.placement.navigatorOutlet,
+            result: result,
+          );
+      if (outcome.status == CCRouteCloseStatus.closed) {
+        _removeRouteEntry(entry, reason: 'targetedClose');
+      }
+      return outcome;
+    } on CCRouterError {
+      rethrow;
+    } catch (error) {
+      throw CCNavigationAdapterError(
+        'Navigation adapter targeted close failed: ${error.runtimeType}.',
+      );
+    }
+  }
+
   /// Whether the active adapter can currently remove one route.
   bool canPopRoute() {
     _ensureInitialized();
@@ -743,6 +801,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     _emitNavigationEvent(request, CCNavigationLifecyclePhase.requested);
     try {
       final dispatchClock = Stopwatch()..start();
+      entry?.validateResult = validateResult;
       late final Future<Object?> pending;
       try {
         pending = action();
