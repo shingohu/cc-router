@@ -17,13 +17,19 @@ the ordinary Route, Service, Command, Event and InitTask integration patterns.
 
 A new application should use `ccrouter_host.dart` with the Runtime Managed
 Backend: call
-`CCRouterHost.initialize(hostAssembly: ccrouterGeneratedHostAssembly)`, create
-`CCManagedRouterBackend`, and mount it through `CCRouterApp.managed` and
-`MaterialApp.router`. Managed page stacks are the navigation source of truth;
+`CCRouterHost.initialize(hostAssembly: ccrouterGeneratedHostAssembly)`, then
+mount `CCManagedRouterApp`. The convenience widget creates
+`CCManagedRouterBackend` from the initialized Catalog and mounts it through
+`CCRouterApp.managed` and `MaterialApp.router`; use its `backendFactory` for
+custom Shell/Outlet topology. Managed page stacks are the navigation source of truth;
 Flutter `RouterDelegate + Navigator.pages` is only their projection. The
 generated stable Host barrel exports only the atomic Assembly. The Host owns
 the generated Catalog, Backend, Shell/Outlet topology, platform Deep Link
 ingress, global policies, and final `CCRouterHost.shutdown`.
+
+For full control, create `CCManagedRouterBackend` explicitly and pass its
+`RouterConfig` to `MaterialApp.router`; this is the advanced/test composition,
+not the default application path.
 
 Existing GoRouter applications may import `ccrouter_go_router` and keep using
 `CCGoRouterApp` or `CCGoRouterBackend.attach` as a compatibility Adapter. Keep

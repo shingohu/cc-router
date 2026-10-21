@@ -72,36 +72,19 @@ Host 只传一个完整 Assembly。下列装配片段假定上一步已生成 Ho
 ```dart
 import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter/ccrouter_host.dart';
-import 'package:ccrouter_go_router/ccrouter_go_router.dart';
-import 'package:adoption_contracts/adoption_contracts.dart';
 import 'package:flutter/material.dart';
 import 'src/ccrouter_generated/ccrouter_host.api.g.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   CCRouterHost.initialize(hostAssembly: ccrouterGeneratedHostAssembly);
-  runApp(CCGoRouterApp(
-    initialLocation: '/',
-    hostRoutes: [
-      GoRoute(
-        path: '/',
-        builder: (_, _) => Scaffold(
-          body: FilledButton(
-            onPressed: () => CCRouter.navigator.push<String>(
-              DetailRoute.intent(itemId: 7),
-            ),
-            child: const Text('Open detail'),
-          ),
-        ),
-      ),
-    ],
-  ));
+  runApp(const CCManagedRouterApp(initialLocation: '/'));
 }
 ```
 
 真实启动任务存在时，由 Host 显式 `runInitTasks(gate: ...)`；没有任务无需增加 DAG。
 Host 最终拥有 `CCRouterHost.shutdown`。页面返回、Tab 切换和单个导航 Host 卸载不能代替
-应用 Runtime 的终止。`CCGoRouterApp` 只管理导航 Backend，不自动 shutdown 共享 Runtime。
+应用 Runtime 的终止。`CCManagedRouterApp` 只管理导航 Backend，不自动 shutdown 共享 Runtime。
 
 ## 4. 用行为完成验收
 

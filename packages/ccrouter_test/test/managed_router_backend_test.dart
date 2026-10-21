@@ -131,12 +131,85 @@ Future<_Harness> _mount(WidgetTester tester) async {
   return _Harness(backend: backend, contexts: contexts, resources: resources);
 }
 
+Future<void> _mountConvenienceApp(
+  WidgetTester tester, {
+  ThemeData? theme,
+}) async {
+  final catalog = CCFlutterRouteCatalog(
+    [
+      CCFlutterRouteDestination.fromDefinition(
+        definition: _homeDefinition(),
+        builder: (_) => const Text('managed-convenience-home'),
+      ),
+      CCFlutterRouteDestination.fromDefinition(
+        definition: _detailDefinition(),
+        builder: (values) => Text('managed-convenience-${values.path['id']}'),
+      ),
+    ],
+    componentVersions: const {'managed': '1.0.0'},
+  );
+  CCRouterHost.initialize(
+    hostAssembly: CCHostAssembly.fromComponents(
+      components: [
+        CCComponentManifest(
+          id: 'managed',
+          version: '1.0.0',
+          registrar: _Registrar(),
+        ),
+      ],
+      routeCatalog: catalog,
+    ),
+  );
+  await tester.pumpWidget(
+    CCManagedRouterApp(
+      initialLocation: '/detail/convenience',
+      debugShowCheckedModeBanner: false,
+      theme: theme,
+    ),
+  );
+  await tester.pumpAndSettle();
+}
+
 void _ignoreResult(Future<Object?> result) {
   unawaited(result.then<void>((_) {}, onError: (_, _) {}));
 }
 
 void main() {
   tearDown(CCRouterHost.shutdown);
+
+  testWidgets('Managed Router App requires an initialized Host', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const CCManagedRouterApp());
+
+    expect(
+      tester.takeException(),
+      isA<FlutterError>().having(
+        (error) => error.message,
+        'message',
+        contains('Call CCRouterHost.initialize'),
+      ),
+    );
+  });
+
+  testWidgets('Managed Router App builds a Backend from the Host Catalog', (
+    tester,
+  ) async {
+    final theme = ThemeData(
+      colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
+    );
+    await _mountConvenienceApp(tester, theme: theme);
+
+    expect(find.text('managed-convenience-convenience'), findsOneWidget);
+    expect(CCRouter.activeRouteEntries, hasLength(1));
+    expect(CCRouter.activeRouteEntries.single.routeId, 'managed.detail');
+    expect(
+      Theme.of(
+        tester.element(find.text('managed-convenience-convenience')),
+      ).colorScheme.primary,
+      theme.colorScheme.primary,
+    );
+  });
 
   testWidgets('initial location enters Runtime and renders a managed Page', (
     tester,

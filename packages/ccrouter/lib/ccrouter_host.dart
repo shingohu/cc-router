@@ -54,5 +54,6 @@ export 'src/host_tool_integration.dart';
 export 'src/host_lifecycle_binding.dart' show CCHostLifecycleBinding;
 export 'src/multi_host.dart';
 export 'src/managed_router.dart';
+export 'src/managed_router_app.dart';
 export 'src/restoration_diagnostics.dart';
 export 'src/route_catalog.dart';

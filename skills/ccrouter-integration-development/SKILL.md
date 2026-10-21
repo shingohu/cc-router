@@ -243,9 +243,13 @@ Read [implementation-patterns.md](references/implementation-patterns.md) when ad
   uses `CCHostAssembly.fromComponents`, while ordinary Runtime tests prefer
   `CCRouterTestHost`. Do not split one generated assembly into separately passed
   manifests, Catalog, Contract, or tooling values.
-- After initialization, new Hosts should prefer `CCManagedRouterBackend` and
-  pass its `RouterConfig` to `MaterialApp.router`; Runtime Managed Stack is the
-  single source of truth projected through `RouterDelegate + Navigator.pages`.
+- After initialization, new Hosts should prefer `CCManagedRouterApp`, which
+  creates `CCManagedRouterBackend` from the initialized Catalog and mounts it
+  through `CCRouterApp.managed` and `MaterialApp.router`. For custom topology,
+  use its `backendFactory`; the explicit `CCManagedRouterBackend` plus
+  `CCRouterApp.managed` composition remains available for advanced Hosts and
+  tests. Runtime Managed Stack is the single source of truth projected through
+  `RouterDelegate + Navigator.pages`.
   `CCGoRouterApp()` and `CCGoRouterBackend.managed/attach` remain Host-only
   compatibility paths for existing projects and progressive migration. Do not
   expose routing metadata through the business Facade.

@@ -474,22 +474,19 @@ Future<void> main() async {
     hostAssembly: ccrouterGeneratedHostAssembly,
   );
   await CCRouterHost.runInitTasks(gate: CCInitTaskGate.appStarted);
-  final backend = CCManagedRouterBackend(
-    routeCatalog: CCRouterHostBinding.routeCatalog,
-  );
-  runApp(
-    CCRouterApp.managed(
-      backend: backend,
-      child: MaterialApp.router(routerConfig: backend.routerConfig),
-    ),
-  );
+  runApp(const CCManagedRouterApp());
 }
 ```
 
-上面的 Managed Backend 自动装配 Router、Root Navigator、Adapter、Host
-和 `MaterialApp.router`，但不会初始化或关闭进程 Runtime。`CCRouterHost.initialize` 始终由
+`CCManagedRouterApp` 是新 Host 的便捷接入入口：它从 `CCRouterHost.initialize` 安装的同一份
+Catalog 创建 Managed Backend，并自动组装 `CCRouterApp.managed` 与 `MaterialApp.router`。
+它不会初始化或关闭进程 Runtime；`CCRouterHost.initialize` 始终由
 Composition Root 显式调用；全局拦截器、Deep Link 白名单、Aspect、Telemetry 等配置也放在
 这里：
+
+需要自定义主题、国际化或 Shell/Outlet 时仍可直接传入对应参数；复杂拓扑使用
+`backendFactory`。底层显式创建 `CCManagedRouterBackend` 并组合
+`CCRouterApp.managed` 的写法仍保留给高级 Host 和测试。
 
 已有 GoRouter 工程可以继续使用 `CCGoRouterApp` 或 `CCGoRouterBackend.attach`，它们是兼容
 Adapter 路径。建议先保持业务 API 不变，再按 Host 逐个切换到 `CCManagedRouterBackend`；两条
@@ -513,13 +510,13 @@ final initResult = await CCRouterHost.runInitTasks(
 runApp(const CCGoRouterApp());
 ```
 
-`CCGoRouterApp` 直接提供 `MaterialApp.router` 的非路由配置，包括主题、高对比度主题、
+`CCManagedRouterApp` 和 `CCGoRouterApp` 都直接提供 `MaterialApp.router` 的非路由配置，包括主题、高对比度主题、
 国际化、`ScaffoldMessenger`、快捷键/Action、Restoration、滚动行为和调试开关。普通 Host
 不需要为了设置 `locale` 再手写一层 `MaterialApp.router`：
 
 ```dart
 runApp(
-  CCGoRouterApp(
+  CCManagedRouterApp(
     locale: const Locale('zh', 'CN'),
     supportedLocales: AppLocalizations.supportedLocales,
     localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -531,7 +528,7 @@ runApp(
 
 `routerConfig`、`routerDelegate`、`routeInformationProvider`、
 `routeInformationParser` 和 `backButtonDispatcher` 不对外透传；它们由
-`CCGoRouterBackend` 唯一管理。需要 Shell、redirect、refresh 或自定义 Router 时使用
+`CCManagedRouterApp` 或对应 Backend 唯一管理。需要自定义 Shell/Outlet 拓扑时使用
 `backendFactory`，不要在应用 Widget 和 Backend 两处重复配置路由所有权。
 
 复杂 Shell/Outlet 或自定义 Router 构造仍可复用同一个 Widget，通过一次性 Factory 消除
@@ -539,7 +536,7 @@ runApp(
 
 ```dart
 runApp(
-  CCGoRouterApp(
+  CCManagedRouterApp(
     backendFactory: (configuration) => createApplicationBackend(
       catalog: configuration.catalog,
       initialLocation: configuration.initialLocation,
@@ -548,8 +545,8 @@ runApp(
 );
 ```
 
-默认 `CCGoRouterApp` 自动使用 `CCRouterHost.initialize` 安装的同一份 Catalog。只有直接使用
-`CCGoRouterBackend.managed/attach` 的高级 Host 或渐进式接入才显式传递 Catalog；业务代码
+默认 `CCManagedRouterApp` 自动使用 `CCRouterHost.initialize` 安装的同一份 Catalog。只有直接使用
+`CCManagedRouterBackend` 的高级 Host 或渐进式接入才显式传递 Catalog；业务代码
 不能通过 `CCRouter` 读取路由表。
 
 同一个 Flutter View 确实需要多个独立 Router Host 时，使用
