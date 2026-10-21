@@ -19,6 +19,8 @@ final class CCManagedRouterBackendConfiguration {
     required this.shellBindings,
     required this.initialLocation,
     required this.additionalObservers,
+    required this.enablePredictiveBack,
+    this.initializeFromRouteInformation = true,
   });
 
   /// Catalog retained by the initialized Host Assembly.
@@ -36,6 +38,12 @@ final class CCManagedRouterBackendConfiguration {
   /// Additional observers installed on Managed Navigators.
   final List<NavigatorObserver> additionalObservers;
 
+  /// Enables the optional Android predictive-back bridge.
+  final bool enablePredictiveBack;
+
+  /// Controls whether this Backend consumes Flutter's initial location.
+  final bool initializeFromRouteInformation;
+
   /// Creates the default Managed Backend from this configuration.
   CCManagedRouterBackend createManagedBackend() => CCManagedRouterBackend(
     routeCatalog: catalog,
@@ -43,6 +51,8 @@ final class CCManagedRouterBackendConfiguration {
     shellBindings: shellBindings,
     initialLocation: initialLocation,
     additionalObservers: additionalObservers,
+    enablePredictiveBack: enablePredictiveBack,
+    initializeFromRouteInformation: initializeFromRouteInformation,
   );
 }
 
@@ -67,6 +77,7 @@ final class CCManagedRouterApp extends StatefulWidget {
     this.shellBindings = const [],
     this.initialLocation = '/',
     this.additionalObservers = const [],
+    this.enablePredictiveBack = false,
     this.title = '',
     this.onGenerateTitle,
     this.onNavigationNotification,
@@ -114,6 +125,9 @@ final class CCManagedRouterApp extends StatefulWidget {
 
   /// Additional observers installed on Managed Navigators.
   final Iterable<NavigatorObserver> additionalObservers;
+
+  /// Enables the optional Android predictive-back bridge for generated Pages.
+  final bool enablePredictiveBack;
 
   /// Material application title.
   final String title;
@@ -236,6 +250,7 @@ final class _CCManagedRouterAppState extends State<CCManagedRouterApp> {
       additionalObservers: List<NavigatorObserver>.unmodifiable(
         widget.additionalObservers,
       ),
+      enablePredictiveBack: widget.enablePredictiveBack,
     );
     _backend =
         widget.backendFactory?.call(configuration) ??
@@ -289,6 +304,7 @@ final class _CCManagedRouterAppState extends State<CCManagedRouterApp> {
     super.didUpdateWidget(oldWidget);
     if (!identical(widget.host, oldWidget.host) ||
         widget.initialLocation != oldWidget.initialLocation ||
+        widget.enablePredictiveBack != oldWidget.enablePredictiveBack ||
         !identical(widget.backendFactory, oldWidget.backendFactory) ||
         !identical(widget.shellBindings, oldWidget.shellBindings) ||
         !identical(widget.additionalObservers, oldWidget.additionalObservers)) {

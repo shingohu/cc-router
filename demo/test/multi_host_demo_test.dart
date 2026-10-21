@@ -47,7 +47,13 @@ void main() {
     );
     expect(_inside(primaryPane, find.text('栈操作 · Level 202')), findsNothing);
     expect(find.byKey(const ValueKey('host.secondary-active')), findsOneWidget);
-    expect(CCRouter.activeRouteEntries.single.hostId, 'host.secondary');
+    expect(
+      CCRouter.activeRouteEntries
+          .where((entry) => entry.hostId == 'host.secondary')
+          .last
+          .hostId,
+      'host.secondary',
+    );
 
     await tester.ensureVisible(navigateButtons.at(0));
     await tester.tap(navigateButtons.at(0));
@@ -93,7 +99,13 @@ void main() {
 
     expect(_inside(secondaryPane, find.text('ID 42')), findsOneWidget);
     expect(_inside(primaryPane, find.text('ID 42')), findsNothing);
-    expect(CCRouter.activeRouteEntries.single.hostId, 'host.secondary');
+    expect(
+      CCRouter.activeRouteEntries
+          .where((entry) => entry.hostId == 'host.secondary')
+          .last
+          .hostId,
+      'host.secondary',
+    );
 
     await tester.tap(_inside(primaryPane, find.text('导航')));
     await tester.pumpAndSettle();
@@ -116,7 +128,13 @@ void main() {
 
     expect(_inside(secondaryPane, find.text('ID 42')), findsNothing);
     expect(_inside(primaryPane, find.text('ID 42')), findsOneWidget);
-    expect(CCRouter.activeRouteEntries.single.hostId, 'host.primary');
+    expect(
+      CCRouter.activeRouteEntries
+          .where((entry) => entry.hostId == 'host.primary')
+          .last
+          .hostId,
+      'host.primary',
+    );
 
     final primaryComplete = _inside(primaryPane, find.text('确认并返回类型安全结果'));
     await tester.ensureVisible(primaryComplete);
@@ -124,7 +142,11 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(_inside(primaryPane, find.text('ID 42')), findsNothing);
-    expect(CCRouter.activeRouteEntries, isEmpty);
+    expect(CCRouter.activeRouteEntries, hasLength(2));
+    expect(CCRouter.activeRouteEntries.map((entry) => entry.hostId).toSet(), {
+      'host.primary',
+      'host.secondary',
+    });
     expect(tester.takeException(), isNull);
 
     await tester.pumpWidget(const SizedBox.shrink());

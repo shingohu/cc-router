@@ -253,7 +253,8 @@ Read [implementation-patterns.md](references/implementation-patterns.md) when ad
   `CCGoRouterApp()` and `CCGoRouterBackend.managed/attach` remain Host-only
   compatibility paths for existing projects and progressive migration. Do not
   expose routing metadata through the business Facade.
-- Use `CCGoRouterMultiHostBackend.managed` only when one application tree truly
+- Use `CCManagedMultiHostBackend.managed` for new native Managed multi-Host trees;
+  use `CCGoRouterMultiHostBackend.managed` only when one application tree truly
   owns multiple independent Router Hosts. Its factories receive the initialized
   Catalog and declared Host ID, while the aggregate owns Adapter and Router
   cleanup. When multiple Host surfaces are simultaneously interactive, the
@@ -345,11 +346,9 @@ the Service Contract.
 - Use PopGuard only for synchronous, in-memory exit decisions. Use Flutter `PopScope` for confirmation UI or asynchronous work.
 - A PopGuard allow decision does not override local `PopScope`/`Form` denial on system back or `maybePop`. Keep the page and its result pending until local policy permits exit; an explicit `pop` after confirmation remains a deliberate application action. Guarded Cupertino pages still disable interactive back, while unguarded pages retain platform gestures.
 - System back, ordinary Pop, and Cupertino gestures use the shared coordination. Android
-  predictive-back automatic observation is currently Host opt-in through
-  the GoRouter compatibility backend (`CCGoRouterApp` / `CCGoRouterBackend` with
-  `enablePredictiveBack: true`). The native Managed Backend does not yet expose
-  this switch or create the CCRouter bridge; Managed pages retain Flutter's
-  ordinary Route/Pop behavior. False preserves original Routes and Flutter
+  predictive-back automatic observation is Host opt-in through either the native
+  Managed Backend or GoRouter compatibility backend (`enablePredictiveBack: true`).
+  Managed generated Pages wire their Host bridge automatically. False preserves original Routes and Flutter
   behavior and installs no CCRouter gesture observer.
   Generated default Android Material pages wire automatically; attached/custom
   or Shell Page builders pass the Adapter bridge as `predictiveBackHandler`

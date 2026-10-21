@@ -106,13 +106,13 @@ them. Keep the existing 1000 values available for an A/B baseline. Analytics
 has its own default queue of 256 and payload limits; use its drop/depth counters
 to tune it rather than increasing navigation history.
 
-### Optional Android predictive back (GoRouter compatibility backend)
+### Optional Android predictive back (Managed and GoRouter backends)
 
-The Host may use `CCGoRouterApp(enablePredictiveBack: true)` or the same option
-on `CCGoRouterBackend` to observe generated default Android Material Route
-gestures. The native `CCManagedRouterApp` / `CCManagedRouterBackend` does not
-yet expose this option or create the CCRouter bridge automatically; Managed
-pages retain Flutter's normal Route/Pop behavior.
+The Host may use `CCManagedRouterApp(enablePredictiveBack: true)`,
+`CCManagedRouterBackend(enablePredictiveBack: true)`, or the same option on
+`CCGoRouterBackend` to observe generated default Android Material Route gestures.
+Managed generated Pages wire their Host bridge automatically; authored GoRouter
+Pages still pass their Adapter bridge explicitly.
 The default false preserves original Route construction and Flutter behavior,
 including native Flutter predictive animations, with no CCRouter gesture
 observer/state machine. Custom GoRouter Backend factories must propagate the
@@ -182,7 +182,8 @@ startup remains false, while `lib/main_predictive_back.dart` is an explicit
 opt-in launch for A/B verification.
 
 When one application tree has multiple genuinely independent Router Hosts, use
-`CCGoRouterMultiHostBackend.managed`. It reads the initialized Catalog once,
+`CCManagedMultiHostBackend.managed` for native Managed children, or
+`CCGoRouterMultiHostBackend.managed` during GoRouter migration. It reads the initialized Catalog once,
 supplies that snapshot and each declared Host ID to the child Backend factories,
 validates their identity, aggregates `CCMultiHostNavigationAdapter`, and releases
 all child Router resources after Runtime Adapter teardown. The application owns

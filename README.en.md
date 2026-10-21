@@ -428,10 +428,10 @@ runApp(
 
 By default, `CCGoRouterApp` uses the exact Catalog installed by `CCRouterHost.initialize`. Only advanced Hosts or incremental integrations using `CCGoRouterBackend.managed/attach` directly pass a Catalog explicitly. Business code cannot read the route table through `CCRouter`.
 
-If a single Flutter View truly needs multiple independent Router Hosts, aggregate their Backends with `CCGoRouterMultiHostBackend.managed`. It reuses the Catalog installed at initialization, validates Host IDs, aggregates `CCMultiHostNavigationAdapter`, and releases all Routers after Runtime shutdown. The application still owns Router surface layout and active Host selection:
+If a single Flutter View truly needs multiple independent Router Hosts, prefer the native `CCManagedMultiHostBackend.managed`; existing GoRouter projects can keep `CCGoRouterMultiHostBackend.managed` during migration. Both reuse the Catalog installed at initialization, validate Host IDs, aggregate `CCMultiHostNavigationAdapter`, and release all child Routers after Runtime shutdown. Managed children own independent Stacks and RouterConfigs without editing a GoRouter match tree. The application still owns Router surface layout and active Host selection:
 
 ```dart
-final backend = CCGoRouterMultiHostBackend.managed(
+final backend = CCManagedMultiHostBackend.managed(
   defaultHostId: 'workspace.primary',
   hostFactories: {
     'workspace.primary': (configuration) => createWorkspaceBackend(
@@ -731,22 +731,19 @@ Resumption revalidates and reruns the interceptor chain. Typed requests preserve
 
 PopGuard handles synchronous pre-exit rules, such as in-memory unsaved edits, noninterruptible steps, or controlled flows. It must be synchronous and fast. Use Flutter `PopScope` for confirmation dialogs, network requests, or asynchronous saving, then call `CCRouter.navigator.pop` after confirmation. Never start another navigation from inside a Guard.
 
-System back, ordinary Pop, and Cupertino gestures share the same coordination. A foreign popup or
-`LocalHistoryEntry` consuming back does not close the underlying Managed Route Scope. Android
-predictive back joins this coordination when the GoRouter compatibility bridge is enabled; the
-native Managed Backend currently retains Flutter's own back handling.
+System back, ordinary Pop, Cupertino gestures, and Android predictive back share the same coordination. A foreign popup or
+`LocalHistoryEntry` consuming back does not close the underlying Managed Route Scope. Both the
+native Managed and GoRouter compatibility backends can enable the Host bridge.
 
-### Optional Android predictive-back bridge for the GoRouter compatibility backend
+### Optional Android predictive-back bridge
 
-The CCRouter predictive-back bridge is currently provided only by the GoRouter
-compatibility backend. Use `CCGoRouterApp(enablePredictiveBack: true)` or the
-same option on `CCGoRouterBackend`. The default `false` preserves existing
+Use `CCManagedRouterApp(enablePredictiveBack: true)`, `CCManagedRouterBackend`
+with the same option, or the GoRouter compatibility backend. The default `false` preserves existing
 Route types and Flutter back handling, including Flutter's own predictive
 animation; it creates no CCRouter gesture observer or phase state. Flutter
-remains the sole animation and Pop driver. `CCManagedRouterApp` and
-`CCManagedRouterBackend` currently do not expose `enablePredictiveBack` and do
-not create the CCRouter bridge automatically; Managed pages retain Flutter's
-normal Route/Pop behavior.
+remains the sole animation and Pop driver. Managed backends create the bridge
+only when explicitly enabled; otherwise Managed pages retain Flutter's normal
+Route/Pop behavior.
 Cancellation keeps lifecycle, typed results and Route Scopes unchanged; a
 committed report follows removal of the exact backend Entry. Navigation during
 a gesture or a closed PopScope/Form at commit cancels the preview without
@@ -886,7 +883,7 @@ CCPageLifecycleListener(
 - Bottom tabs, `ShellRoute`, and `StatefulShellRoute` use one Host with multiple Shells/Outlets.
 - Dialogs, BottomSheets, and Popups are Routes or Overlays in the current Host, not new Windows.
 
-Real macOS/Windows/iPadOS multi-window apps can map windows to multiple Hosts. Current support provides `CCGoRouterMultiHostBackend` aggregation, low-level isolation, and integration capabilities, not complete native multi-window lifecycle integration on every platform.
+Real macOS/Windows/iPadOS multi-window apps can map windows to multiple Hosts. Current support provides native `CCManagedMultiHostBackend` and compatibility `CCGoRouterMultiHostBackend` aggregation, low-level isolation, and integration capabilities, not complete native multi-window lifecycle integration on every platform.
 
 Shells and nested routes are Host topology; the Generator does not infer them. The Host explicitly assembles `CCGoRouterRouteOverride`, `CCGoRouterShellBinding`, and Outlet Observers. Business pages continue to use only `CCRouter.navigator`.
 

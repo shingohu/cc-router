@@ -5,7 +5,6 @@ import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter/ccrouter_host.dart';
 import 'package:ccrouter_demo/ccrouter_demo.dart';
 import 'package:ccrouter_demo/demo_router_backend.dart';
-import 'package:ccrouter_go_router/ccrouter_go_router.dart';
 import 'package:demo_navigation_lab/demo_navigation_lab_host.dart';
 import 'package:flutter/material.dart';
 
@@ -23,14 +22,14 @@ void main() {
 
 Widget createMultiHostDemoApp() => withDemoInitializationActions(
   _MultiHostDemoApp(
-    backend: CCGoRouterMultiHostBackend.managed(
+    backend: CCManagedMultiHostBackend.managed(
       defaultHostId: _primaryHostId,
       hostFactories: {
-        _primaryHostId: (configuration) => createDemoRouterBackend(
+        _primaryHostId: (configuration) => createDemoManagedRouterBackend(
           catalog: configuration.catalog,
           hostId: configuration.hostId,
         ),
-        _secondaryHostId: (configuration) => createDemoRouterBackend(
+        _secondaryHostId: (configuration) => createDemoManagedRouterBackend(
           catalog: configuration.catalog,
           hostId: configuration.hostId,
         ),
@@ -45,7 +44,7 @@ const _secondaryHostId = 'host.secondary';
 final class _MultiHostDemoApp extends StatelessWidget {
   const _MultiHostDemoApp({required this.backend});
 
-  final CCGoRouterMultiHostBackend backend;
+  final CCManagedMultiHostBackend backend;
 
   @override
   Widget build(BuildContext context) => CCRouterApp.managed(
@@ -65,7 +64,7 @@ final class _MultiHostDemoApp extends StatelessWidget {
 final class _MultiHostWorkspace extends StatefulWidget {
   const _MultiHostWorkspace({required this.backend});
 
-  final CCGoRouterMultiHostBackend backend;
+  final CCManagedMultiHostBackend backend;
 
   @override
   State<_MultiHostWorkspace> createState() => _MultiHostWorkspaceState();
@@ -159,7 +158,7 @@ final class _MultiHostWorkspaceState extends State<_MultiHostWorkspace> {
                   key: const ValueKey('host.primary'),
                   title: 'Primary Host',
                   hostId: _primaryHostId,
-                  router: widget.backend.routerFor(_primaryHostId),
+                  router: widget.backend.routerConfigFor(_primaryHostId),
                   isActive:
                       widget.backend.adapter.activeHostId == _primaryHostId,
                   onActivate: () =>
@@ -173,7 +172,7 @@ final class _MultiHostWorkspaceState extends State<_MultiHostWorkspace> {
                   key: const ValueKey('host.secondary'),
                   title: 'Secondary Host',
                   hostId: _secondaryHostId,
-                  router: widget.backend.routerFor(_secondaryHostId),
+                  router: widget.backend.routerConfigFor(_secondaryHostId),
                   host: widget.backend.hostFor(_secondaryHostId),
                   isActive:
                       widget.backend.adapter.activeHostId == _secondaryHostId,
@@ -567,7 +566,7 @@ final class _HostPane extends StatelessWidget {
 
   final String title;
   final String hostId;
-  final GoRouter router;
+  final RouterConfig<CCManagedRouteConfiguration> router;
   final CCNavigationHost? host;
   final bool isActive;
   final VoidCallback onActivate;

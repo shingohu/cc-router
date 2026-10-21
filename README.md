@@ -549,13 +549,15 @@ runApp(
 `CCManagedRouterBackend` 的高级 Host 或渐进式接入才显式传递 Catalog；业务代码
 不能通过 `CCRouter` 读取路由表。
 
-同一个 Flutter View 确实需要多个独立 Router Host 时，使用
-`CCGoRouterMultiHostBackend.managed` 聚合 Host Backend。它自动复用初始化时安装的同一份
-Catalog，校验 Host ID，聚合 `CCMultiHostNavigationAdapter`，并在 Runtime shutdown 后统一
-释放各 Router。应用仍然负责 Router surface 的布局和 active Host 选择：
+同一个 Flutter View 确实需要多个独立 Router Host 时，优先使用
+`CCManagedMultiHostBackend.managed` 聚合原生 Managed Host；已有 GoRouter 项目可继续使用
+`CCGoRouterMultiHostBackend.managed` 兼容路径。两者都会复用初始化时安装的同一份 Catalog、
+校验 Host ID、聚合 `CCMultiHostNavigationAdapter`，并在 Runtime shutdown 后统一释放各子 Router。
+Managed 子 Host 各自维护 Stack 和 `RouterConfig`，不会修改 GoRouter match tree。应用仍然负责
+Router surface 的布局和 active Host 选择：
 
 ```dart
-final backend = CCGoRouterMultiHostBackend.managed(
+final backend = CCManagedMultiHostBackend.managed(
   defaultHostId: 'workspace.primary',
   hostFactories: {
     'workspace.primary': (configuration) => createWorkspaceBackend(
@@ -945,21 +947,20 @@ Runtime shutdown 会取消正在等待的 Interceptor 和 Failure Policy，以 `
 
 PopGuard 用于页面离开前可同步判断的规则，例如内存中的未保存编辑状态、不可中断步骤或受控流程。它必须同步且快速。需要弹确认框、网络请求或异步保存时使用 Flutter `PopScope` 管理 UI，再在确认后调用 `CCRouter.navigator.pop`。不要从 Guard 内再次发起导航。
 
-系统返回、普通 Pop 和 Cupertino 手势进入统一协调；foreign Popup 或 `LocalHistoryEntry` 消费返回时不会关闭底层 Managed Route Scope。启用 GoRouter 兼容后端的预测返回桥后，Android predictive back 也加入同一套协调；原生 Managed Backend 当前仍遵循 Flutter 自身的返回处理。
+系统返回、普通 Pop、Cupertino 手势和 Android predictive back 进入统一协调；foreign Popup 或 `LocalHistoryEntry` 消费返回时不会关闭底层 Managed Route Scope。
 
 系统返回或 `maybePop` 中，框架 Guard 返回 allow 只表示通过框架策略，页面自身的
 `PopScope(canPop: false)` / `Form(canPop: false)` 仍可拒绝退出。页面和结果 Future 会保持
 存活，本地拒绝回调可负责确认 UI。确认后主动调用 `pop` 仍是显式返回操作。Cupertino 页面
 无 Guard 时保留平台默认侧滑，有 Guard 时继续禁用侧滑，不会因本地保护修复而放宽。
 
-### GoRouter 兼容后端的 Android 预测返回（可选自动桥）
+### Android 预测返回（可选自动桥）
 
-当前 CCRouter 预测返回自动桥仅由 GoRouter 兼容后端提供：Host 可使用
-`CCGoRouterApp(enablePredictiveBack: true)` 或 `CCGoRouterBackend` 的同名配置。
+Host 可使用 `CCManagedRouterApp(enablePredictiveBack: true)`、
+`CCManagedRouterBackend(enablePredictiveBack: true)`，或 GoRouter 兼容路径的同名配置。
 默认 `false` 保留原有 Route 类型、返回处理和 Flutter 自带预测动画，不创建 CCRouter
-预测桥、手势观察者或阶段状态机。`CCManagedRouterApp` / `CCManagedRouterBackend`
-当前没有 `enablePredictiveBack` 参数，也不会自动创建 CCRouter 预测桥；Managed 页面继续
-遵循 Flutter 自身的 Route/Pop 返回行为。
+预测桥、手势观察者或阶段状态机。Managed 页面在开关关闭时继续遵循 Flutter 自身的
+Route/Pop 返回行为，开关打开时自动接入 Host bridge。
 
 开启后，自动装配的默认 Android Material 页面报告 start/update/cancel/confirmed commit，
 Flutter 仍唯一驱动动画和实际 Pop。取消不触发正式 PageShow/PageHide、不完成 typed result、
@@ -1126,9 +1127,9 @@ CCPageLifecycleListener(
 - Bottom Tab、`ShellRoute`、`StatefulShellRoute`：一个 Host，多个 Shell/Outlet。
 - Dialog、BottomSheet、Popup：属于当前 Host 的 Route 或 Overlay，不是新 Window。
 
-真实 macOS/Windows/iPadOS 多窗口可以映射为多个 Host，但当前只提供
-`CCGoRouterMultiHostBackend` 聚合、底层隔离和接入能力，不宣称已经完成所有平台多窗口
-生命周期集成。
+真实 macOS/Windows/iPadOS 多窗口可以映射为多个 Host；当前提供
+`CCManagedMultiHostBackend` 与 `CCGoRouterMultiHostBackend` 聚合、底层隔离和接入能力，
+但不宣称已经完成所有平台多窗口生命周期集成。
 
 Shell 与 nested route 是 Host 拓扑，生成器不会猜测。Managed Backend 使用
 `CCManagedShellBinding` 和 `CCManagedOutlet` 显式装配；已有 GoRouter Host 使用

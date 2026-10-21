@@ -7,6 +7,7 @@ import 'package:flutter/widgets.dart';
 import 'app.dart';
 import 'facade.dart';
 import 'flutter_route_factory.dart';
+import 'managed_predictive_back.dart';
 import 'route_catalog.dart';
 
 /// Builds an application-owned layout around managed Shell Outlet Navigators.
@@ -156,6 +157,8 @@ final class CCManagedRouterBackend implements CCRouterAppBackend {
     Iterable<CCManagedShellBinding> shellBindings = const [],
     String? initialLocation = '/',
     Iterable<NavigatorObserver> additionalObservers = const [],
+    bool enablePredictiveBack = false,
+    bool initializeFromRouteInformation = true,
   }) : host = host ?? CCNavigationHost(),
        _initialLocationIsExternal = initialLocation == null,
        _routeInformationProvider = PlatformRouteInformationProvider(
@@ -171,10 +174,12 @@ final class CCManagedRouterBackend implements CCRouterAppBackend {
       host: this.host,
       shellBindings: shellBindings,
       additionalObservers: additionalObservers,
+      enablePredictiveBack: enablePredictiveBack,
     );
     _delegate = _CCManagedRouterDelegate(
       navigationAdapter,
       initialLocationIsExternal: _initialLocationIsExternal,
+      initializeFromRouteInformation: initializeFromRouteInformation,
     );
     routerConfig = RouterConfig<CCManagedRouteConfiguration>(
       routeInformationProvider: _routeInformationProvider,
@@ -248,19 +253,37 @@ final class CCManagedNavigationAdapter
         CCNavigationBackendSnapshotSource,
         CCNavigationPopCoordinator,
         CCNavigationScopedPopCoordinator,
-        CCNavigationPopTargetSource {
+        CCNavigationPopTargetSource,
+        CCNavigationPopGuardBinding,
+        CCNavigationPredictiveBackSourceProvider {
   /// Creates an unattached Store for one [host] and generated [catalog].
   CCManagedNavigationAdapter({
     required CCFlutterRouteCatalog catalog,
     required CCNavigationHost host,
     Iterable<CCManagedShellBinding> shellBindings = const [],
     Iterable<NavigatorObserver> additionalObservers = const [],
+    bool enablePredictiveBack = false,
   }) : _catalog = catalog,
        _host = host,
        _shellBindings = _indexManagedShellBindings(shellBindings),
        _additionalObservers = List.unmodifiable(additionalObservers),
        routeInformationSessionId = Object().hashCode.toRadixString(16) {
     _observers['root'] = _CCManagedNavigatorObserver(this, 'root');
+    if (enablePredictiveBack) {
+      _predictiveBackBridge = CCManagedPredictiveBackBridge(
+        hostId: host.id,
+        activeOutlet: () => _state.focusedOutlet,
+        navigatorForOutlet: _navigatorForOutlet,
+        backendEntryIdForRoute: _backendEntryIdForRoute,
+        hasLiveEntry: (backendEntryId) => _state.entries.any(
+          (entry) => entry.backendEntryId == backendEntryId,
+        ),
+        recordFallback: _recordPredictiveBackFallback,
+      );
+      _predictiveBackBridge!.attach();
+    } else {
+      _predictiveBackBridge = null;
+    }
   }
 
   /// Opaque process-local identity written to browser history state.
@@ -277,6 +300,13 @@ final class CCManagedNavigationAdapter
 
   /// Application-owned Shell renderers indexed by contract identity.
   final Map<String, CCManagedShellBinding> _shellBindings;
+
+  /// Optional platform predictive-back bridge, allocated only when enabled.
+  late final CCManagedPredictiveBackBridge? _predictiveBackBridge;
+
+  /// Bounded Host diagnostics for declined predictive-back starts.
+  final List<CCManagedPredictiveBackFallbackEvent> _predictiveBackFallbacks =
+      [];
 
   /// Runtime Shell metadata indexed by stable Shell identity.
   final Map<String, CCNavigationShell> _shells = {};
@@ -330,7 +360,27 @@ final class CCManagedNavigationAdapter
         supportsStatefulShell: _shellBindings.isNotEmpty,
         supportsModalRoutes: true,
         supportsManagedPopObservation: true,
+        supportsPredictiveBack: _predictiveBackBridge != null,
       );
+
+  /// Optional Managed predictive-back bridge for Host integration.
+  CCManagedPredictiveBackBridge? get predictiveBackBridge =>
+      _predictiveBackBridge;
+
+  /// Runtime predictive-back event source, when enabled.
+  @override
+  CCNavigationPredictiveBackSource? get predictiveBackSource =>
+      _predictiveBackBridge;
+
+  /// Bounded reasons why Flutter fallback was selected.
+  List<CCManagedPredictiveBackFallbackEvent> get predictiveBackFallbacks =>
+      List.unmodifiable(_predictiveBackFallbacks);
+
+  /// Binds Runtime PopGuard evaluation to the optional platform bridge.
+  @override
+  void bindPopGuardEvaluator(CCPopGuardEvaluator? evaluator) {
+    _predictiveBackBridge?.bindPopGuardEvaluator(evaluator);
+  }
 
   /// Current state revision used by Router and focused tests.
   int get revision => _state.revision;
@@ -782,6 +832,37 @@ final class CCManagedNavigationAdapter
       name: request.routeId,
       arguments: request.extra,
       restorationId: entry.backendEntryId,
+      predictiveBackHandler: _predictiveBackBridge,
+    );
+  }
+
+  /// Resolves the Navigator used by one managed Outlet.
+  NavigatorState? _navigatorForOutlet(String outlet) =>
+      _host.navigatorKeyFor(outlet).currentState;
+
+  /// Resolves a live backend identity from a concrete Flutter Route.
+  String? _backendEntryIdForRoute(Route<dynamic> route) {
+    for (final entry in _renderedRoutes.entries) {
+      if (identical(entry.value.target, route)) return entry.key;
+    }
+    return null;
+  }
+
+  /// Records one sanitized predictive-back fallback without retaining Routes.
+  void _recordPredictiveBackFallback(
+    CCManagedPredictiveBackFallbackReason reason,
+  ) {
+    if (_predictiveBackBridge == null) return;
+    if (_predictiveBackFallbacks.length >= 100) {
+      _predictiveBackFallbacks.removeAt(0);
+    }
+    _predictiveBackFallbacks.add(
+      CCManagedPredictiveBackFallbackEvent(
+        reason: reason,
+        hostId: _host.id,
+        navigatorOutlet: _state.focusedOutlet,
+        timestamp: DateTime.now(),
+      ),
     );
   }
 
@@ -1005,6 +1086,7 @@ final class CCManagedNavigationAdapter
     if (_disposed || _state.focusedOutlet == outlet) return;
     if (!_host.containsOutlet(outlet)) return;
     _state = _copyState(entries: _state.entries, focusedOutlet: outlet);
+    _predictiveBackBridge?.invalidateInactiveOutlets();
     _notifyStateListeners();
   }
 
@@ -1026,6 +1108,7 @@ final class CCManagedNavigationAdapter
       visibleOutlets: {outlet},
       activeOutletsByShell: activeOutlets,
     );
+    _predictiveBackBridge?.invalidateInactiveOutlets();
     _notifyStateListeners();
     final entries = _entriesForOutlet(outlet);
     final top = entries.isEmpty ? null : entries.last;
@@ -1183,6 +1266,7 @@ final class CCManagedNavigationAdapter
   void _emit(CCNavigationBackendEvent event) {
     scheduleMicrotask(() {
       if (_disposed) return;
+      _predictiveBackBridge?.observeBackendEvent(event);
       for (final listener in _backendListeners.toList()) {
         try {
           listener(event);
@@ -1260,6 +1344,8 @@ final class CCManagedNavigationAdapter
     _notifyStateListeners();
     _stateListeners.clear();
     _backendListeners.clear();
+    _predictiveBackBridge?.dispose();
+    _predictiveBackFallbacks.clear();
   }
 }
 
@@ -1386,6 +1472,7 @@ final class _CCManagedRouterDelegate
   _CCManagedRouterDelegate(
     this.adapter, {
     required this.initialLocationIsExternal,
+    required this.initializeFromRouteInformation,
   }) {
     adapter._addStateListener(_onStateChanged);
   }
@@ -1395,6 +1482,9 @@ final class _CCManagedRouterDelegate
 
   /// Whether initial Router configuration must pass external ingress policy.
   final bool initialLocationIsExternal;
+
+  /// Whether this child Router admits its platform initial location.
+  final bool initializeFromRouteInformation;
 
   /// Whether this delegate already released its Store listener.
   bool _disposed = false;
@@ -1412,12 +1502,16 @@ final class _CCManagedRouterDelegate
 
   @override
   /// Admits initial Host or platform location through Runtime policy.
-  Future<void> setInitialRoutePath(CCManagedRouteConfiguration configuration) =>
-      CCRouterHostBinding.openRouteInformation(
-        configuration.uri,
-        external: initialLocationIsExternal,
-        placementOverride: CCRoutePlacement(hostId: adapter.hostId),
-      );
+  Future<void> setInitialRoutePath(
+    CCManagedRouteConfiguration configuration,
+  ) async {
+    if (!initializeFromRouteInformation) return;
+    await CCRouterHostBinding.openRouteInformation(
+      configuration.uri,
+      external: initialLocationIsExternal,
+      placementOverride: CCRoutePlacement(hostId: adapter.hostId),
+    );
+  }
 
   @override
   /// Applies browser and platform locations through one Runtime Go transaction.

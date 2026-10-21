@@ -429,6 +429,162 @@ void main() {
   });
 
   test(
+    'native Managed MultiHost keeps child RouterConfig and stack ownership isolated',
+    () {
+      CCRouterHost.initialize(
+        hostAssembly: CCHostAssembly.fromComponents(
+          components: [
+            CCComponentManifest(
+              id: 'managed',
+              version: '1.0.0',
+              registrar: _Registrar(),
+            ),
+          ],
+        ),
+      );
+      final catalog = CCRouterHostBinding.routeCatalog;
+      final backend = CCManagedMultiHostBackend.managed(
+        defaultHostId: 'primary',
+        hostFactories: {
+          'primary': (config) => CCManagedRouterBackend(
+            routeCatalog: config.catalog,
+            host: CCNavigationHost(id: config.hostId),
+          ),
+          'secondary': (config) => CCManagedRouterBackend(
+            routeCatalog: config.catalog,
+            host: CCNavigationHost(id: config.hostId),
+          ),
+        },
+      );
+
+      expect(backend.hostIds, {'primary', 'secondary'});
+      expect(identical(backend.routeCatalog, catalog), isTrue);
+      expect(
+        backend.routerConfigFor('primary'),
+        isNot(same(backend.routerConfigFor('secondary'))),
+      );
+      expect(backend.hostFor('primary').id, 'primary');
+      expect(backend.hostFor('secondary').id, 'secondary');
+      expect(backend.adapter.activeHostId, 'primary');
+
+      backend.navigationAdapter.dispose();
+      return backend.dispose();
+    },
+  );
+
+  test('native Managed MultiHost rolls back already-created children', () {
+    CCRouterHost.initialize(
+      hostAssembly: CCHostAssembly.fromComponents(
+        components: [
+          CCComponentManifest(
+            id: 'managed',
+            version: '1.0.0',
+            registrar: _Registrar(),
+          ),
+        ],
+      ),
+    );
+    final created = <CCManagedRouterBackend>[];
+    expect(
+      () => CCManagedMultiHostBackend.managed(
+        defaultHostId: 'primary',
+        hostFactories: {
+          'primary': (config) {
+            final backend = CCManagedRouterBackend(
+              routeCatalog: config.catalog,
+              host: CCNavigationHost(id: config.hostId),
+            );
+            created.add(backend);
+            return backend;
+          },
+          'secondary': (config) {
+            final backend = CCManagedRouterBackend(
+              routeCatalog: config.catalog,
+              host: CCNavigationHost(id: 'wrong-host'),
+            );
+            created.add(backend);
+            return backend;
+          },
+        },
+      ),
+      throwsA(isA<CCNavigationAdapterError>()),
+    );
+    expect(created, hasLength(2));
+    for (final backend in created) {
+      expect(
+        () => backend.navigationAdapter.canPop(),
+        throwsA(isA<CCNavigationAdapterError>()),
+      );
+    }
+  });
+
+  testWidgets('Managed predictive-back is opt-in and releases its bridge', (
+    tester,
+  ) async {
+    final harness = await _mount(tester);
+    final adapter = harness.backend.navigationAdapter;
+    expect(adapter.predictiveBackBridge, isNull);
+    expect(adapter.capabilities.supportsPredictiveBack, isFalse);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
+    await CCRouterHost.shutdown();
+    final catalog = CCFlutterRouteCatalog(
+      [
+        CCFlutterRouteDestination.fromDefinition(
+          definition: _homeDefinition(),
+          builder: (_) => const Text('predictive-home'),
+        ),
+        CCFlutterRouteDestination.fromDefinition(
+          definition: _detailDefinition(),
+          builder: (_) => const Text('predictive-detail'),
+        ),
+      ],
+      componentVersions: const {'managed': '1.0.0'},
+    );
+    CCRouterHost.initialize(
+      hostAssembly: CCHostAssembly.fromComponents(
+        components: [
+          CCComponentManifest(
+            id: 'managed',
+            version: '1.0.0',
+            registrar: _Registrar(),
+          ),
+        ],
+        routeCatalog: catalog,
+      ),
+    );
+    final predictive = CCManagedRouterBackend(
+      routeCatalog: catalog,
+      enablePredictiveBack: true,
+    );
+    await tester.pumpWidget(
+      CCRouterApp.managed(
+        key: const ValueKey('predictive-managed-app'),
+        backend: predictive,
+        child: MaterialApp.router(routerConfig: predictive.routerConfig),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(predictive.adapter.predictiveBackBridge, isNotNull);
+    expect(predictive.adapter.capabilities.supportsPredictiveBack, isTrue);
+    final phases = <CCPredictiveBackPhase>[];
+    final removeListener = predictive.adapter.predictiveBackBridge!
+        .addPredictiveBackListener((event) => phases.add(event.phase));
+    predictive.adapter.predictiveBackBridge!.started();
+    predictive.adapter.predictiveBackBridge!.updated(.5);
+    predictive.adapter.predictiveBackBridge!.cancelled(.5);
+    removeListener();
+    expect(phases, [
+      CCPredictiveBackPhase.started,
+      CCPredictiveBackPhase.updated,
+      CCPredictiveBackPhase.cancelled,
+    ]);
+    await CCRouterHost.shutdown();
+    expect(predictive.adapter.predictiveBackBridge!.isActive, isFalse);
+  });
+
+  test(
     'initialization fails closed for missing destinations and named Outlet',
     () {
       final catalog = CCFlutterRouteCatalog([
