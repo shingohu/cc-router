@@ -106,14 +106,18 @@ them. Keep the existing 1000 values available for an A/B baseline. Analytics
 has its own default queue of 256 and payload limits; use its drop/depth counters
 to tune it rather than increasing navigation history.
 
-### Optional Android predictive back
+### Optional Android predictive back (GoRouter compatibility backend)
 
-The Host may use `CCGoRouterApp(enablePredictiveBack: true)` or the managed
-Backend option to observe generated default Android Material Route gestures.
+The Host may use `CCGoRouterApp(enablePredictiveBack: true)` or the same option
+on `CCGoRouterBackend` to observe generated default Android Material Route
+gestures. The native `CCManagedRouterApp` / `CCManagedRouterBackend` does not
+yet expose this option or create the CCRouter bridge automatically; Managed
+pages retain Flutter's normal Route/Pop behavior.
 The default false preserves original Route construction and Flutter behavior,
 including native Flutter predictive animations, with no CCRouter gesture
-observer/state machine. Custom Backend factories must propagate the immutable
-configuration's `enablePredictiveBack` instead of silently discarding it.
+observer/state machine. Custom GoRouter Backend factories must propagate the
+immutable configuration's `enablePredictiveBack` instead of silently
+discarding it.
 
 Attached GoRouters and manual overrides keep their authored Page builders.
 After constructing the Adapter, a Host `pageBuilder` can pass

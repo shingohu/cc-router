@@ -314,6 +314,65 @@ void main() {
     expect(CCRouter.activeRouteEntries.single.routeId, 'managed.detail');
   });
 
+  testWidgets(
+    'Managed Stack preserves transaction semantics across operations',
+    (tester) async {
+      final harness = await _mount(tester);
+
+      final first = CCRouter.navigator.push<String>(const _Intent('A'));
+      await tester.pumpAndSettle();
+      final second = CCRouter.navigator.push<String>(const _Intent('B'));
+      await tester.pumpAndSettle();
+
+      final replacement = CCRouter.navigator.replace<String>(
+        const _Intent('C'),
+      );
+      await tester.pumpAndSettle();
+      expect(await second, isNull);
+      expect(CCRouter.activeRouteEntries.map((entry) => entry.routeId), [
+        'managed.home',
+        'managed.detail',
+        'managed.detail',
+      ]);
+
+      await CCRouter.navigator.go(const _Intent('A'));
+      await tester.pumpAndSettle();
+      expect(await replacement, isNull);
+      expect(CCRouter.activeRouteEntries.single.routeId, 'managed.detail');
+
+      await CCRouter.navigator.reset(const _Intent('home'));
+      await tester.pumpAndSettle();
+      expect(await first, isNull);
+      expect(CCRouter.activeRouteEntries.single.routeId, 'managed.home');
+
+      await CCRouter.navigator.open(Uri.parse('/detail/opened'));
+      await tester.pumpAndSettle();
+      expect(
+        harness.backend.adapter.requests.map((request) => request.uri.path),
+        ['/', '/detail/opened'],
+      );
+    },
+  );
+
+  testWidgets('Host shutdown releases Managed Stack resources and results', (
+    tester,
+  ) async {
+    final harness = await _mount(tester);
+    final pending = CCRouter.navigator.push<String>(const _Intent('A'));
+    await tester.pumpAndSettle();
+    final resource = harness.resources['A']!;
+    final pendingError = expectLater(
+      pending,
+      throwsA(isA<CCNavigationAdapterError>()),
+    );
+
+    await CCRouterHost.shutdown();
+
+    await pendingError;
+    expect(resource.disposed, isTrue);
+    expect(CCRouter.isInitialized, isFalse);
+  });
+
   testWidgets('browser history configuration uses Runtime Go semantics', (
     tester,
   ) async {

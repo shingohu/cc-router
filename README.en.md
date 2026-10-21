@@ -731,15 +731,22 @@ Resumption revalidates and reruns the interceptor chain. Typed requests preserve
 
 PopGuard handles synchronous pre-exit rules, such as in-memory unsaved edits, noninterruptible steps, or controlled flows. It must be synchronous and fast. Use Flutter `PopScope` for confirmation dialogs, network requests, or asynchronous saving, then call `CCRouter.navigator.pop` after confirmation. Never start another navigation from inside a Guard.
 
-System back, ordinary Pop, Cupertino gestures, and Android predictive back share the same coordination. A foreign popup or `LocalHistoryEntry` consuming back does not close the underlying Managed Route Scope.
+System back, ordinary Pop, and Cupertino gestures share the same coordination. A foreign popup or
+`LocalHistoryEntry` consuming back does not close the underlying Managed Route Scope. Android
+predictive back joins this coordination when the GoRouter compatibility bridge is enabled; the
+native Managed Backend currently retains Flutter's own back handling.
 
-### Optional Android predictive-back bridge
+### Optional Android predictive-back bridge for the GoRouter compatibility backend
 
-`CCGoRouterApp(enablePredictiveBack: true)` or the matching managed Backend
-option automatically connects generated default Android Material pages. The
-default `false` preserves existing Route types and Flutter back handling,
-including Flutter's own predictive animation; it creates no CCRouter gesture
-observer or phase state. Flutter remains the sole animation and Pop driver.
+The CCRouter predictive-back bridge is currently provided only by the GoRouter
+compatibility backend. Use `CCGoRouterApp(enablePredictiveBack: true)` or the
+same option on `CCGoRouterBackend`. The default `false` preserves existing
+Route types and Flutter back handling, including Flutter's own predictive
+animation; it creates no CCRouter gesture observer or phase state. Flutter
+remains the sole animation and Pop driver. `CCManagedRouterApp` and
+`CCManagedRouterBackend` currently do not expose `enablePredictiveBack` and do
+not create the CCRouter bridge automatically; Managed pages retain Flutter's
+normal Route/Pop behavior.
 Cancellation keeps lifecycle, typed results and Route Scopes unchanged; a
 committed report follows removal of the exact backend Entry. Navigation during
 a gesture or a closed PopScope/Form at commit cancels the preview without
