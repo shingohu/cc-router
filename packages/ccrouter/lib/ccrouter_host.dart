@@ -16,6 +16,9 @@ export 'package:ccrouter_contracts/ccrouter_contracts.dart'
         CCContractKind,
         CCContractRequirement,
         CCNavigationAdapter,
+        CCNavigationTargetedCloseAdapter,
+        CCRouteCloseOutcome,
+        CCRouteCloseStatus,
         CCNavigationAdapterCapabilities,
         CCNavigationAdapterCapabilitySource,
         CCNavigationAdapterHostBinding,
@@ -27,6 +30,7 @@ export 'package:ccrouter_contracts/ccrouter_contracts.dart'
         CCNavigationHostCapabilitySource,
         CCNavigationManagedEntryReleaseSink,
         CCNavigationPopCoordinator,
+        CCNavigationScopedPopCoordinator,
         CCNavigationPopGuardBinding,
         CCNavigationPopTarget,
         CCNavigationPopTargetSource,
@@ -49,5 +53,6 @@ export 'src/generated_package_bundle.dart';
 export 'src/host_tool_integration.dart';
 export 'src/host_lifecycle_binding.dart' show CCHostLifecycleBinding;
 export 'src/multi_host.dart';
+export 'src/managed_router.dart';
 export 'src/restoration_diagnostics.dart';
 export 'src/route_catalog.dart';

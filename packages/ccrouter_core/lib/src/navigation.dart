@@ -47,8 +47,14 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
   /// does not remove a managed Route Entry by stack position. Result-bearing
   /// managed entries close when their Adapter Future completes; complete
   /// identity synchronization is provided by the future Pop coordinator.
-  Future<bool> maybePopRoute<R>({R? result}) async {
-    final outcome = await maybePopOutcomeRoute(result: result);
+  Future<bool> maybePopRoute<R>({
+    R? result,
+    CCRoutePlacement? placementOverride,
+  }) async {
+    final outcome = await maybePopOutcomeRoute(
+      result: result,
+      placementOverride: placementOverride,
+    );
     return outcome.handled;
   }
 
@@ -62,13 +68,27 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
   Future<CCPopOutcome> maybePopOutcomeRoute<R>({
     R? result,
     CCPopTrigger trigger = CCPopTrigger.system,
+    CCRoutePlacement? placementOverride,
   }) async {
     _ensureNavigationCanStart();
     _ensureInitialized();
     try {
-      final guarded = _guardedPopOutcome(trigger);
+      final target = _popTargetForPlacement(placementOverride);
+      final guarded = _guardedPopOutcome(trigger, target: target);
       if (guarded != null) return guarded;
       final adapter = _requiredNavigationAdapter;
+      if (target != null && adapter is CCNavigationScopedPopCoordinator) {
+        final outcome =
+            (await (adapter as CCNavigationScopedPopCoordinator)
+                    .maybePopOutcomeAt(
+                      hostId: target.hostId,
+                      navigatorOutlet: target.navigatorOutlet,
+                      result: result,
+                    ))
+                .copyWith(trigger: trigger);
+        _applyManagedPopOutcome(outcome);
+        return outcome;
+      }
       if (adapter is CCNavigationPopCoordinator) {
         final coordinator = adapter as CCNavigationPopCoordinator;
         final outcome = (await coordinator.maybePopOutcome(
@@ -195,15 +215,27 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
   }
 
   /// Pops the active adapter route with an optional typed [result].
-  void popRoute<R>({R? result}) {
+  void popRoute<R>({R? result, CCRoutePlacement? placementOverride}) {
     _ensureNavigationCanStart();
     _ensureInitialized();
     try {
-      final guarded = _guardedPopOutcome(CCPopTrigger.business);
+      final target = _popTargetForPlacement(placementOverride);
+      final guarded = _guardedPopOutcome(CCPopTrigger.business, target: target);
       if (guarded != null) {
         throw CCPopGuardDeniedError(guarded.guardDeniedCode!);
       }
       final adapter = _requiredNavigationAdapter;
+      if (target != null && adapter is CCNavigationScopedPopCoordinator) {
+        final outcome = (adapter as CCNavigationScopedPopCoordinator)
+            .popOutcomeAt(
+              hostId: target.hostId,
+              navigatorOutlet: target.navigatorOutlet,
+              result: result,
+            )
+            .copyWith(trigger: CCPopTrigger.business);
+        _applyManagedPopOutcome(outcome);
+        return;
+      }
       if (adapter is CCNavigationPopCoordinator) {
         final coordinator = adapter as CCNavigationPopCoordinator;
         final outcome = coordinator
@@ -225,11 +257,77 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     }
   }
 
+  /// Closes one Runtime-issued entry without disturbing covering pages.
+  ///
+  /// Managed guards evaluate the selected entry with a business trigger. A
+  /// malformed result throws before removal; stale/foreign handles and adapters
+  /// without the optional capability return explicit outcomes. Ordinary Pop
+  /// semantics remain independent of this operation.
+  Future<CCRouteCloseOutcome> closeRoute<R>(
+    CCRouteEntryHandle handle, {
+    R? result,
+  }) async {
+    _ensureNavigationCanStart();
+    _ensureInitialized();
+    _RouteEntryRecord? entry;
+    for (final candidate in _routeEntries) {
+      if (identical(candidate.handle, handle)) {
+        entry = candidate;
+        break;
+      }
+    }
+    if (entry == null) {
+      return const CCRouteCloseOutcome(CCRouteCloseStatus.notFound);
+    }
+    entry.validateResult?.call(result);
+    final decision = _evaluatePopGuardsForEntry(entry, CCPopTrigger.business);
+    if (decision is CCPopDeny) {
+      return CCRouteCloseOutcome(
+        CCRouteCloseStatus.guardDenied,
+        guardDeniedCode: decision.code,
+      );
+    }
+    if (!_routeEntries.contains(entry) || _disposed) {
+      return const CCRouteCloseOutcome(CCRouteCloseStatus.notFound);
+    }
+    final adapter = _requiredNavigationAdapter;
+    if (adapter is! CCNavigationTargetedCloseAdapter) {
+      return const CCRouteCloseOutcome(CCRouteCloseStatus.unsupported);
+    }
+    try {
+      final outcome = await (adapter as CCNavigationTargetedCloseAdapter)
+          .closeNavigation(
+            navigationId: entry.request.navigationId,
+            hostId: entry.request.hostId,
+            navigatorOutlet: entry.request.placement.navigatorOutlet,
+            result: result,
+          );
+      if (outcome.status == CCRouteCloseStatus.closed) {
+        _removeRouteEntry(entry, reason: 'targetedClose');
+      }
+      return outcome;
+    } on CCRouterError {
+      rethrow;
+    } catch (error) {
+      throw CCNavigationAdapterError(
+        'Navigation adapter targeted close failed: ${error.runtimeType}.',
+      );
+    }
+  }
+
   /// Whether the active adapter can currently remove one route.
-  bool canPopRoute() {
+  bool canPopRoute({CCRoutePlacement? placementOverride}) {
     _ensureInitialized();
     try {
-      return _requiredNavigationAdapter.canPop();
+      final target = _popTargetForPlacement(placementOverride);
+      final adapter = _requiredNavigationAdapter;
+      if (target != null && adapter is CCNavigationScopedPopCoordinator) {
+        return (adapter as CCNavigationScopedPopCoordinator).canPopAt(
+          hostId: target.hostId,
+          navigatorOutlet: target.navigatorOutlet,
+        );
+      }
+      return adapter.canPop();
     } on CCRouterError {
       rethrow;
     } catch (error) {
@@ -238,6 +336,15 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
       );
     }
   }
+
+  /// Converts an optional Host placement into a stable Pop target.
+  CCNavigationPopTarget? _popTargetForPlacement(CCRoutePlacement? placement) =>
+      placement == null
+      ? null
+      : CCNavigationPopTarget(
+          hostId: placement.hostId,
+          navigatorOutlet: placement.navigatorOutlet,
+        );
 
   /// Executes a result-bearing typed navigation operation.
   Future<R?> _navigateForResult<R>(
@@ -743,6 +850,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     _emitNavigationEvent(request, CCNavigationLifecyclePhase.requested);
     try {
       final dispatchClock = Stopwatch()..start();
+      entry?.validateResult = validateResult;
       late final Future<Object?> pending;
       try {
         pending = action();

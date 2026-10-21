@@ -6,7 +6,7 @@
 
 [简体中文](README.md) | [English](README.en.md) · [查看图标设计](docs/brand/ccrouter-icon-v1/README.md)
 
-CCRouter 是一个面向 Flutter 大型应用的组件化运行时与类型安全路由框架。它把组件装配、路由契约、导航策略、生命周期、跨组件能力调用和诊断统一到稳定的 Core Contract，同时允许 Host 选择 GoRouter 或后续其他导航后端。
+CCRouter 是一个面向 Flutter 大型应用的组件化运行时与类型安全路由框架。它把组件装配、路由契约、导航策略、生命周期、跨组件能力调用和诊断统一到稳定的 Core Contract。默认 Managed Backend 使用 Flutter `RouterDelegate + Navigator.pages`，GoRouter 作为独立兼容 Adapter 保留。
 
 第一次接入或验证真实业务时，先阅读[首次接入指南](skills/ccrouter-integration-development/references/first-integration.md)，
 完成一个 typed Route 的生成、调用、失败与释放闭环，再按需要查阅下文的高级能力和工具维护规则。
@@ -39,7 +39,7 @@ README/CHANGELOG、Hosted 分发和干净消费者回归等阻塞项见
 | `ccrouter_core` | Runtime、Registry、Scope、调度和诊断实现 | 否 |
 | `ccrouter` | Flutter 业务门面、`CCRouterApp`、页面生命周期 | 是 |
 | `ccrouter_ui` | 可选的类型化 UI Fragment、Renderer 与静态 Host 装配 | 按需接入 |
-| `ccrouter_go_router` | 默认 GoRouter Backend、Assembler、Observer 与 Shell 接入 | 仅 Host |
+| `ccrouter_go_router` | GoRouter 兼容 Backend、Assembler、Observer 与 Shell 接入 | 仅 Host |
 | `ccrouter_generator` | 注解处理、Host 聚合、校验、查找与清理 CLI | 仅 dev dependency |
 | `ccrouter_analyzer_plugin` | Analysis Server 实时边界与生成物诊断 | 仅 dev dependency，需显式启用 |
 | `ccrouter_devtools` | 可嵌入的只读 Component/Route/Trace/Failure/InitTask 诊断面板 | 按需作为 Flutter dependency 接入 |
@@ -267,9 +267,10 @@ Managed/Backend Entries、Trace Timeline、Failure/Fallback、InitTask DAG 和�
 | 注解路由与类型安全 Intent | 已支持 | Path、URI、custom scheme、Regex、多 Pattern、Query、Extra、typed result |
 | 页面展示 | 已支持 | 平台默认、Material、Cupertino、fade、scale、bottom-up、透明全屏 |
 | Modal Route | 已支持 | Dialog、modal bottom sheet，可选择是否纳入 CCRouter 契约与生命周期 |
-| 导航操作 | 已支持 | `push`、`replace`、`go`、`reset`、`open`、`pop`、`maybePop`、`canPop` |
-| GoRouter Backend | 已支持 | 新工程 managed 模式和已有 GoRouter attach 模式 |
-| Shell / StatefulShell / Outlet | 已支持 | 显式 Host 装配，支持多 Outlet 与调用级 Context 定位 |
+| 导航操作 | 已支持 | `push`、`replace`、`go`、`reset`、`open`、`pop`、`maybePop`、`canPop`、实例级 `close`（可选 Adapter 能力） |
+| Managed Router Backend | 已支持 | `RouterDelegate + Navigator.pages`，Runtime Managed Stack 为唯一事实来源 |
+| GoRouter Backend | 已支持 | 作为兼容 Adapter 支持已有 GoRouter attach/渐进迁移 |
+| Shell / StatefulShell / Outlet | 已支持 | Managed Shell binding、分区 Stack、多 Outlet 与调用级 Context 定位 |
 | Deep Link | 已支持 | Platform、Notification、QR 入口，Host allowlist 与 Route policy 双重校验 |
 | Interceptor / Redirect / Defer | 已支持 | 全局与路由级策略、超时、取消、Pending 恢复 |
 | PopGuard | 已支持 | 业务 Pop、系统返回、Cupertino 手势和预测返回进入统一判断 |
@@ -450,7 +451,8 @@ Demo / 应用层，不是 CCRouter 框架的存储契约。
 
 ### 5. 初始化 Host
 
-Host 使用生成的 Manifest 与 Catalog。新项目默认使用 managed GoRouter Backend：
+Host 使用生成的 Manifest 与 Catalog。新项目默认使用 Managed Router Backend；它直接把
+Runtime 的 Managed Stack 投影到 Flutter `Navigator.pages`，不维护 GoRouter match tree：
 
 Host 自己的公共 barrel 只需转发生成的
 `src/ccrouter_generated/ccrouter_host.api.g.dart`；不要直接导出 `host/` 下的内部聚合文件或
@@ -465,7 +467,6 @@ Host-only Binding 使用其中的 Catalog，避免重复传参或混用不同代
 ```dart
 import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter/ccrouter_host.dart';
-import 'package:ccrouter_go_router/ccrouter_go_router.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -473,14 +474,26 @@ Future<void> main() async {
     hostAssembly: ccrouterGeneratedHostAssembly,
   );
   await CCRouterHost.runInitTasks(gate: CCInitTaskGate.appStarted);
-  runApp(const CCGoRouterApp());
+  final backend = CCManagedRouterBackend(
+    routeCatalog: CCRouterHostBinding.routeCatalog,
+  );
+  runApp(
+    CCRouterApp.managed(
+      backend: backend,
+      child: MaterialApp.router(routerConfig: backend.routerConfig),
+    ),
+  );
 }
 ```
 
-上面的 `CCGoRouterApp` 会自动装配 managed GoRouter、Root Observer、Adapter、Host
+上面的 Managed Backend 自动装配 Router、Root Navigator、Adapter、Host
 和 `MaterialApp.router`，但不会初始化或关闭进程 Runtime。`CCRouterHost.initialize` 始终由
 Composition Root 显式调用；全局拦截器、Deep Link 白名单、Aspect、Telemetry 等配置也放在
 这里：
+
+已有 GoRouter 工程可以继续使用 `CCGoRouterApp` 或 `CCGoRouterBackend.attach`，它们是兼容
+Adapter 路径。建议先保持业务 API 不变，再按 Host 逐个切换到 `CCManagedRouterBackend`；两条
+路径共享同一份 Runtime Route Contract、Intent、PopGuard 和 `close` 语义。
 
 ```dart
 CCRouterHost.initialize(
@@ -555,10 +568,11 @@ final backend = CCGoRouterMultiHostBackend.managed(
 );
 ```
 
-当多个 Host 同时可交互时，Composition Root 必须在 Pointer 或 Focus 进入某个 Router surface
-时调用 `backend.adapter.activateHost(hostId)`，让无显式 Context 的 Pop、系统返回和默认 placement
-导航始终落到当前交互 Host。不要让业务页面自行选择 Host；需要精确定位 Host/Outlet 的
-`push`、`replace`、`go`、`reset` 或 `open` 仍应传入调用点 `BuildContext`。
+当多个 Host 同时可交互时，Composition Root 可以在 Pointer 或 Focus 进入某个 Router surface
+时调用 `backend.adapter.activateHost(hostId)`，作为无显式 Context 的 Pop、系统返回和默认
+placement 导航 fallback。业务页面不应自行选择 Host；需要精确定位 Host/Outlet 的
+`push`、`replace`、`go`、`reset`、`open`、`maybePop`、`pop` 或 `canPop` 应传入调用点
+`BuildContext`，Managed Adapter 会把 Context 同步解析为稳定 Host/Outlet ID，不保存 Context。
 
 这不是大屏分栏、Bottom Tab 或 Shell 的默认方案；这些场景通常使用一个 Host 下的多个
 Outlet。聚合器也不代表平台 Window，不负责 macOS、Windows 或 iPadOS 原生窗口生命周期。
@@ -707,6 +721,34 @@ CCRouter.navigator.pop(result: 'confirmed');
 
 禁止业务代码直接调用 `Navigator.push/pop`、`GoRouter.push/go` 或 Adapter 来操作 CCRouter 管理的页面。临时、局部且不需要组件契约的 Flutter Dialog/BottomSheet 可以继续使用原生 API；它们属于 foreign/overlay，不应改变 Managed Route Scope。
 
+### 精确关闭被覆盖的页面
+
+异步流程结束时，当前栈顶可能已经是另一页或局部弹窗。页面在初始化阶段（例如
+`didChangeDependencies`）捕获自己的身份，再关闭该实例：
+
+```dart
+final handle = CCRouter.routeEntryHandleOf(context); // unmanaged 页返回 null
+// 保存 handle，等待业务流程结束；不要届时重新从 active/top 推断目标。
+if (handle != null) {
+  final outcome = await CCRouter.navigator.close<String>(handle, result: 'done');
+  if (outcome.status == CCRouteCloseStatus.unsupported) {
+    // 由业务选择后续交互，不可改成 pop 关闭其它页面。
+  }
+}
+```
+
+`close` 对选定 Entry 执行全局和本地 PopGuard，先验证原 push 的结果类型，再移除页面；
+它是显式业务退出，不消费 foreign Popup、LocalHistory，也不以当前页的 `PopScope` 代替目标
+策略。结果为 `closed`、`notFound`、`unsupported` 或 `guardDenied`，拒绝时不改栈。
+重复、伪造和跨 Runtime 的句柄不能关闭同路由的新实例。句柄不持有 Context、Route、Scope
+或参数；关闭只完成目标结果并启动一次 Scope 释放，不等待异步 Service disposal。
+
+GoRouter 支持已挂载且有 Observer 身份的 push/replace 实例及安全的嵌套 Shell Outlet；
+声明式 go/reset、保留的非当前分支、移除后会清空 Shell 的结构，以及包含外部
+`GoRoute.onExit` 的配置返回 `unsupported`。自定义 Adapter 可选择实现 Host-only
+`CCNavigationTargetedCloseAdapter`；旧 Adapter 无需改动，普通 pop 行为不变。
+详见 [精确关闭的边界与验证](docs/CCRouter-targeted-close-design.md)。
+
 ### BuildContext 与 Outlet
 
 通常不传 `BuildContext`，行为与全局 Host 路由一致。只有同一路由需要按调用位置落入当前 Shell、Pane 或嵌套 Navigator 时才传：
@@ -716,6 +758,14 @@ await CCRouter.navigator.push<void>(
   DetailRoutes.detail(id: 1),
   context: context,
 );
+```
+
+Pop 也支持同一作用域解析：
+
+```dart
+await CCRouter.navigator.maybePop(context: context);
+CCRouter.navigator.pop(context: context, result: result);
+final canPop = CCRouter.navigator.canPop(context: context);
 ```
 
 Context 只用于严格解析最近的 Host/Outlet，不会被全局保存。解析失败会报错，不会猜测另一个 Host 或 Outlet。
@@ -1075,7 +1125,10 @@ CCPageLifecycleListener(
 `CCGoRouterMultiHostBackend` 聚合、底层隔离和接入能力，不宣称已经完成所有平台多窗口
 生命周期集成。
 
-Shell 与 nested route 是 Host 拓扑，生成器不会猜测。Host 使用 `CCGoRouterRouteOverride`、`CCGoRouterShellBinding` 和 Outlet Observer 显式装配，业务页面仍只使用 `CCRouter.navigator`。
+Shell 与 nested route 是 Host 拓扑，生成器不会猜测。Managed Backend 使用
+`CCManagedShellBinding` 和 `CCManagedOutlet` 显式装配；已有 GoRouter Host 使用
+`CCGoRouterRouteOverride`、`CCGoRouterShellBinding` 和 Outlet Observer。两条路径都由
+Runtime 保存 Host/Outlet 分区 Stack，业务页面仍只使用 `CCRouter.navigator`。
 
 ## Service
 

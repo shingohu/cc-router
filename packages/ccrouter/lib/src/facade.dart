@@ -36,10 +36,14 @@ final class _CCManagedNavigationPayload {
   const _CCManagedNavigationPayload({
     required this.navigationId,
     required this.extra,
+    required this.runtimeIdentity,
   });
 
   /// Stable request identity used for exact RouteEntry lookup.
   final String navigationId;
+
+  /// Payload-free Runtime generation token captured at backend dispatch.
+  final Object? runtimeIdentity;
 
   /// Original process-local Extra value decoded by the generated page codec.
   final Object? extra;
@@ -50,8 +54,12 @@ final class _CCRouteServiceBinding extends InheritedWidget {
   /// Wraps [child] with the immutable [navigationId] association.
   const _CCRouteServiceBinding({
     required this.navigationId,
+    required this.runtimeIdentity,
     required super.child,
   });
+
+  /// Runtime generation that admitted this Page, independent of reusable IDs.
+  final Object? runtimeIdentity;
 
   /// Managed navigation whose Route Scope owns descendant Route Services.
   final String navigationId;
@@ -321,6 +329,28 @@ abstract final class CCRouter {
     cancellation: cancellation,
   );
 
+  /// Returns the exact managed Page identity inherited by [context].
+  ///
+  /// Capture during page setup, before async work or covering navigation. This
+  /// does not subscribe to inherited changes or infer the current top entry.
+  /// Foreign, initial, or already removed pages return null.
+  static CCRouteEntryHandle? routeEntryHandleOf(BuildContext context) {
+    final binding = context
+        .getInheritedWidgetOfExactType<_CCRouteServiceBinding>();
+    final runtime = _runtimeResolver.activeOrNull;
+    if (binding == null ||
+        runtime == null ||
+        !runtime.isInitialized ||
+        binding.runtimeIdentity == null ||
+        !identical(binding.runtimeIdentity, _runtimeResolver.activeIdentity)) {
+      return null;
+    }
+    for (final entry in runtime.activeRouteEntries) {
+      if (entry.navigationId == binding.navigationId) return entry.handle;
+    }
+    return null;
+  }
+
   /// Resolves a Route-scoped Service owned by the managed Page at [context].
   ///
   /// Use this for page-instance resources such as draft controllers that must
@@ -507,7 +537,15 @@ abstract final class CCRouterHostBinding {
       _CCManagedNavigationPayload(
         navigationId: request.navigationId,
         extra: request.extra,
+        runtimeIdentity: _runtimeResolver.activeIdentity,
       );
+
+  /// Reads a managed opening identity without exposing its payload wrapper.
+  ///
+  /// Host adapters use this only to correlate exact declarative matches. It
+  /// returns null for foreign or initial state and retains no business Extra.
+  static String? navigationIdForPayload(Object? payload) =>
+      payload is _CCManagedNavigationPayload ? payload.navigationId : null;
 
   /// Returns the original business Extra from a managed backend [payload].
   ///
@@ -529,9 +567,29 @@ abstract final class CCRouterHostBinding {
     if (payload is! _CCManagedNavigationPayload) return child;
     return _CCRouteServiceBinding(
       navigationId: payload.navigationId,
+      runtimeIdentity: payload.runtimeIdentity,
       child: child,
     );
   }
+
+  /// Applies one Router or browser location through Runtime route resolution.
+  ///
+  /// Managed Flutter backends call this from `RouterDelegate` after parsing
+  /// platform route information. [external] is true only for an untrusted
+  /// platform location; current-session browser history remains internal while
+  /// still rebuilding the target declarative partition with Go semantics.
+  static Future<void> openRouteInformation(
+    Uri uri, {
+    required bool external,
+    CCRoutePlacement? placementOverride,
+  }) => CCRouter._runtime.openRoute(
+    uri,
+    origin: external
+        ? CCNavigationOrigin.externalPlatform
+        : CCNavigationOrigin.internal,
+    mode: CCDeepLinkOpenMode.go,
+    placementOverride: placementOverride,
+  );
 
   /// Synchronously transfers one ready [adapter] into the active Runtime.
   ///

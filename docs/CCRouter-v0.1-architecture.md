@@ -704,7 +704,8 @@ abstract interface class CCDisposable {
 - Pattern 负责匹配页面；`CCRouteEntry` 负责一次导航实例的生命周期和返回值。
 - Deep Link 外部性由 `CCRouterApp`、平台 Adapter 或受控 Host 入口写入的内部 Origin 决定，不根据 URL 形态或业务埋点 Source 推断；重定向必须继承原始 Origin。
 - Core、Intent 和 Definition 不依赖 Flutter、`BuildContext` 或 `go_router`。
-- 默认提供 GoRouter Adapter，同时允许自定义 Adapter 消费同一份中立 Definition。
+- 默认提供 Managed Router Backend（`RouterDelegate + Navigator.pages`），同时保留 GoRouter
+  Adapter 作为兼容路径；两者消费同一份中立 Definition。
 - 路由展示契约区分普通 Page、模态 BottomSheet 与 Dialog；Page 和 Dialog 分别声明平台默认、Material 或 Cupertino Route 类型。
 - 完整设计见 [CCRouter 路由子系统设计](CCRouter-route-design.md)。
 
@@ -1257,7 +1258,7 @@ CCRouter.diagnostics.exportReport();
 11. `CCRouterTest.run`、Service Override 和独立 Test Host。
 12. 生成冲突检查、依赖检查和契约文档。
 
-`*Named` 方法不纳入 API。`popAndPush`、`popUntil`、`pushAndRemoveUntil`、`replaceRouteBelow`、`removeRoute`、`removeRouteBelow` 和对应 Handle/Predicate/SPI 已从 v0.1 整条能力链删除。它们仅在后端具备稳定 Entry identity、原子目标栈提交、混合栈隔离、Pop 拒绝、失败回滚和结果/Scope 生命周期保证后，通过可选版本化栈事务 SPI 重新评估。`popUntilWithResult` 同样保持 Deferred。
+`*Named` 方法不纳入 API。`popAndPush`、`popUntil`、`pushAndRemoveUntil`、`replaceRouteBelow`、`removeRoute`、`removeRouteBelow` 及其按 Flutter Route、Predicate 或栈位置操作的 Handle/SPI 仍不提供。`CCRouter.navigator.close` 使用 Runtime-issued opening `CCRouteEntryHandle`，是可选的精确 opening 能力：仅在后端能证明稳定 Entry identity、目标级提交、混合栈隔离、PopGuard 拒绝和结果/Scope 生命周期收敛时启用，否则返回明确的 `unsupported`，不属于这里已删除的按 Route/Predicate 栈事务 API。`popUntilWithResult` 同样保持 Deferred。
 
 当前已完成官方只读 DevTools Extension、Catalog/Runtime 联动、组件依赖聚焦和单次能力调用链；
 仍暂缓 Runtime 控制型工具、Extension 到任意本地 IDE 的直接绑定、Native/Isolate RPC、多 Engine

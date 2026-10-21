@@ -8,6 +8,11 @@ published.
 
 ## Unreleased
 
+- Added Runtime-bound route-entry handles and optional exact close for covered
+  managed pages, preserving other results, Scopes, and foreign Popups. GoRouter
+  rejects unsupported declarative/structural/onExit cases without Pop fallback;
+  existing Adapter implementations and ordinary Pop remain compatible.
+
 - Moved default Runtime initialization, shutdown, and InitTask Gate control to
   Host-only `CCRouterHost` APIs. Business `CCRouter` retains Session operations
   and read-only InitTask diagnostics, without lifecycle compatibility aliases.

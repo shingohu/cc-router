@@ -7,11 +7,22 @@ extension CCRouterRuntimePopGuard on CCRouterRuntime {
   /// Foreign, opaque, and unidentifiable backend entries bypass managed guards
   /// so third-party UI can consume back without consulting or mutating the
   /// underlying CCRouter page. Guard failures fail closed with a stable code.
-  CCPopGuardDecision _evaluatePopGuardsForActiveEntry(CCPopTrigger trigger) {
+  CCPopGuardDecision _evaluatePopGuardsForActiveEntry(
+    CCPopTrigger trigger, {
+    CCNavigationPopTarget? target,
+  }) {
     if (!_initialized || _disposed) return const CCPopAllow();
-    final target = _activePopTarget;
-    final entry = _managedPopTarget(target);
+    final effectiveTarget = target ?? _activePopTarget;
+    final entry = _managedPopTarget(effectiveTarget);
     if (entry == null) return const CCPopAllow();
+    return _evaluatePopGuardsForEntry(entry, trigger);
+  }
+
+  /// Evaluates policy for a selected entry without consulting the active stack.
+  CCPopGuardDecision _evaluatePopGuardsForEntry(
+    _RouteEntryRecord entry,
+    CCPopTrigger trigger,
+  ) {
     final context = CCPopGuardContext(entry: entry.snapshot, trigger: trigger);
     for (final registration in _globalPopGuards) {
       final decision = _evaluatePopGuard(
@@ -109,15 +120,20 @@ extension CCRouterRuntimePopGuard on CCRouterRuntime {
   }
 
   /// Converts a denied guard decision into an ownership-safe Pop outcome.
-  CCPopOutcome? _guardedPopOutcome(CCPopTrigger trigger) {
-    final decision = _evaluatePopGuardsForActiveEntry(trigger);
+  CCPopOutcome? _guardedPopOutcome(
+    CCPopTrigger trigger, {
+    CCNavigationPopTarget? target,
+  }) {
+    final decision = _evaluatePopGuardsForActiveEntry(trigger, target: target);
     if (decision is! CCPopDeny) return null;
     return CCPopOutcome(
       handled: true,
       trigger: trigger,
       guardDeniedCode: decision.code,
-      hostId: _activePopTarget?.hostId ?? _activeRouteEntryHostId,
-      navigatorOutlet: _activePopTarget?.navigatorOutlet,
+      hostId:
+          target?.hostId ?? _activePopTarget?.hostId ?? _activeRouteEntryHostId,
+      navigatorOutlet:
+          target?.navigatorOutlet ?? _activePopTarget?.navigatorOutlet,
     );
   }
 

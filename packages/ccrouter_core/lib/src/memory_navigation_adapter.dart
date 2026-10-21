@@ -25,6 +25,7 @@ final class _CCMemoryNavigationEntry {
 final class CCMemoryNavigationAdapter
     implements
         CCNavigationAdapter,
+        CCNavigationTargetedCloseAdapter,
         CCNavigationPopCoordinator,
         CCNavigationPopTargetSource,
         CCNavigationAdapterCapabilitySource,
@@ -149,6 +150,29 @@ final class CCMemoryNavigationAdapter
         _entries.add(_CCMemoryNavigationEntry(request));
         return Future<Object?>.value();
     }
+  }
+
+  /// Removes only the selected opening, preserving every other partition.
+  @override
+  Future<CCRouteCloseOutcome> closeNavigation({
+    required String navigationId,
+    required String hostId,
+    required String navigatorOutlet,
+    Object? result,
+  }) async {
+    _ensureAvailable();
+    for (final entry in _entries.toList()) {
+      if (entry.request.navigationId != navigationId ||
+          entry.request.hostId != hostId ||
+          entry.request.placement.navigatorOutlet != navigatorOutlet)
+        continue;
+      _entries.remove(entry);
+      final completer = entry.result;
+      if (completer != null && !completer.isCompleted)
+        completer.complete(result);
+      return const CCRouteCloseOutcome(CCRouteCloseStatus.closed);
+    }
+    return const CCRouteCloseOutcome(CCRouteCloseStatus.notFound);
   }
 
   /// Pops the current entry when the in-memory stack permits it.

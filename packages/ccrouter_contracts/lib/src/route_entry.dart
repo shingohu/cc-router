@@ -1,4 +1,5 @@
 import 'navigation.dart';
+import 'navigation_close.dart';
 import 'route_diagnostics.dart';
 import 'route_placement.dart';
 
@@ -51,7 +52,11 @@ final class CCRouteEntrySnapshot {
     required this.placement,
     required this.origin,
     required this.lifecycleState,
+    this.handle,
   });
+
+  /// Runtime-issued exact close identity; absent on externally constructed snapshots.
+  final CCRouteEntryHandle? handle;
 
   /// Stable identity for this one opening of a route.
   final String routeEntryId;

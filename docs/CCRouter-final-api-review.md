@@ -6,7 +6,10 @@
 处理原则不是按引用次数机械删除，而是同时验证类型安全、混合路由隔离、生命周期、诊断、
 Host 扩展和降级语义。
 
-本文是路由专项的历史收口记录，不是全框架当前状态清单。当前路由 API 已完成本轮回归；
+本文是路由专项的历史收口记录，不是全框架当前状态清单。精确 Entry API 当前已在 Managed
+Router Backend 和 GoRouter 兼容 Adapter 上形成可选能力；实现状态以
+`docs/CCRouter-route-design.md`、`docs/CCRouter-targeted-close-design.md` 和当前测试为准。
+当前路由 API 已完成本轮回归；
 Service、Command、Event 和 InitTask 后续也已形成各自闭环，状态以 `docs/README.md` 与对应
 专项设计为准。组件动态卸载仍未实现，不能据此扩大或冻结对应 API。
 
@@ -25,7 +28,7 @@ Service、Command、Event 和 InitTask 后续也已形成各自闭环，状态�
 - `CCGoRouterNavigationEvent.result`：Flutter `NavigatorObserver` 不提供 Pop result。
 - `CCBackendEntryLifecycleState.unknown`：没有合法创建路径。
 - `CCPopOutcome.resultAvailable`：没有对应的结果值通道；类型安全结果继续由原 Push Future 管理。
-- `CCRouteEntryHandle` 及精确 Entry 操作链：当前后端无法统一保证稳定身份、原子提交和混合栈隔离，完整删除并转为 Deferred 设计。
+- `CCRouteEntryHandle` 及精确 Entry 操作链：历史复审阶段曾因后端无法统一保证稳定身份而 Deferred；当前由 Managed Stack 提供主路径，GoRouter 通过可选 Host SPI 兼容接入。
 - `CCFlutterRouteDestination.componentId`：Assembler 不消费；Runtime 单独保存可信组件 owner。
 - 未参与决策的 Capability Boolean：`supportsForeignEntryObservation`、
   `supportsBackendEntryIdentity`、`supportsInitialStackSnapshot`、
@@ -82,8 +85,9 @@ library 不需要依赖 Host SPI。API surface 快照测试锁定两侧导出集
 
 `CCRouterHost.initialize(hostAssembly: ...)` 原子初始化完整 Host Assembly。生成、手写和测试
 Host 都通过同一个只读快照提供组件、Contract、Route Catalog 与可选 Tool Integration。新应用由
-`CCGoRouterApp()` 通过 Host-only Binding 自动读取该快照中的 Catalog，不在 Widget 层重复
-传递，也不向业务 `CCRouter` 暴露路由表。`CCRouterAppBackend` 提供 Adapter，
+`CCManagedRouterBackend` 通过 Host-only Binding 使用该快照中的 Catalog；已有工程可继续用
+`CCGoRouterApp()` 兼容接入，不在 Widget 层重复传递，也不向业务 `CCRouter` 暴露路由表。
+`CCRouterAppBackend` 提供 Adapter，
 `CCRouterApp.managed` 通过框架私有协调器完成所有权转移。
 Host/Adapter 的生命周期约束如下：
 
@@ -95,7 +99,7 @@ Host/Adapter 的生命周期约束如下：
 - 异步平台资源必须在 Backend 构造前准备，或在 `CCRouterHost.shutdown()` 阶段释放；
 - Backend 绑定协调器属于框架内部实现，不从 `ccrouter_host.dart` 导出；
 - dispose 后导航必须失败，且 Runtime 不允许重新初始化；
-- managed Backend 在 Runtime 关闭后销毁自有 GoRouter，attach Backend 不销毁应用 Router；
+- managed Backend 在 Runtime 关闭后销毁自有 Router 资源；GoRouter attach Backend 不销毁应用 Router；
 - Session、组件、页面 Pop 均不能触发 Adapter dispose。
 
 ## 5. 明确保留的字段和能力

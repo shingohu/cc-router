@@ -7,7 +7,14 @@ final class _RouteEntryRecord {
     required this.id,
     required this.request,
     required this.address,
-  }) : scope = CCScope('route-$id');
+  }) : scope = CCScope('route-$id'),
+       handle = CCRouteEntryHandle(id);
+
+  /// Payload-free exact identity shared by every snapshot of this entry.
+  final CCRouteEntryHandle handle;
+
+  /// Validates a targeted result before any backend mutation.
+  void Function(Object? result)? validateResult;
 
   /// Stable identity for this concrete route opening.
   final String id;
@@ -27,6 +34,7 @@ final class _RouteEntryRecord {
   /// Converts the internal record into an immutable public snapshot.
   CCRouteEntrySnapshot get snapshot => CCRouteEntrySnapshot(
     routeEntryId: id,
+    handle: handle,
     navigationId: request.navigationId,
     routeId: request.routeId,
     ownerComponentId: request.ownerComponentId,

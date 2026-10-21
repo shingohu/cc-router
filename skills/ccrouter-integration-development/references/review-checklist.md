@@ -31,6 +31,11 @@
 - Is `BuildContext` passed only for explicit Outlet resolution?
 - Are `push`, `replace`, `go`, and `reset` used according to their real stack semantics?
 - Is the Pop result type correct and tested?
+- For exact close, was the handle captured from the owning Page before async
+  work, and are unsupported/notFound/guardDenied handled without a Pop fallback?
+  Verify covered siblings and foreign Popups survive, future pushes cannot
+  resurrect the closed entry, duplicate route results stay separate, the
+  concrete Host/Outlet stays isolated, and result/Scope cleanup happens once.
 - Are local overlays intentionally foreign rather than accidentally registered as routes?
 - If predictive back is enabled, does the custom Backend propagate its flag,
   and do authored Page builders explicitly wire the Host bridge? Verify false

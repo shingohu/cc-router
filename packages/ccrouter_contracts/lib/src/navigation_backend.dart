@@ -644,6 +644,31 @@ abstract interface class CCNavigationPopCoordinator {
   CCPopOutcome popOutcome({Object? result});
 }
 
+/// Optional Pop SPI for an explicit Host/Outlet selected by a Flutter Context.
+///
+/// Runtime falls back to [CCNavigationPopCoordinator] when an adapter does not
+/// implement this interface, preserving older integrations. Implementations
+/// must never retain the originating BuildContext; callers pass only the stable
+/// Host and Outlet identity resolved by the Host facade.
+abstract interface class CCNavigationScopedPopCoordinator {
+  /// Coordinates a conditional Pop in one exact Host/Outlet partition.
+  Future<CCPopOutcome> maybePopOutcomeAt({
+    required String hostId,
+    required String navigatorOutlet,
+    Object? result,
+  });
+
+  /// Executes an approved business Pop in one exact Host/Outlet partition.
+  CCPopOutcome popOutcomeAt({
+    required String hostId,
+    required String navigatorOutlet,
+    Object? result,
+  });
+
+  /// Reports whether one exact Host/Outlet partition can currently Pop.
+  bool canPopAt({required String hostId, required String navigatorOutlet});
+}
+
 /// Optional Adapter SPI exposing the target of its next Pop operation.
 ///
 /// Multi-Host and nested-Navigator adapters should implement this whenever

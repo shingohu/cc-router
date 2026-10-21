@@ -67,15 +67,23 @@ CCRouter 的核心 Runtime 能力并不落后。相较常见方案，CCRouter �
 
 ### 1. Host 最小接入已完成
 
-新项目可以直接使用 `CCGoRouterApp`，由它装配 managed GoRouter、Root Observer、
-Adapter、Host 和 `MaterialApp.router`：
+新项目可以直接使用 `CCManagedRouterBackend`，由它装配 `RouterDelegate + Navigator.pages`、
+Managed Stack、Host 和 `MaterialApp.router`；已有项目可以继续使用 `CCGoRouterApp` 兼容接入：
 
 ```dart
-runApp(const CCGoRouterApp());
+final backend = CCManagedRouterBackend(
+  routeCatalog: CCRouterHostBinding.routeCatalog,
+);
+runApp(
+  CCRouterApp.managed(
+    backend: backend,
+    child: MaterialApp.router(routerConfig: backend.routerConfig),
+  ),
+);
 ```
 
-应用必须先显式调用 `CCRouterHost.initialize(hostAssembly: ...)`；`CCGoRouterApp` 始终只负责
-Host，并自动使用初始化时安装的同一份 Catalog。已有 GoRouter 工程继续使用
+应用必须先显式调用 `CCRouterHost.initialize(hostAssembly: ...)`；Managed Backend 使用
+初始化时安装的同一份 Catalog。已有 GoRouter 工程继续使用
 `CCGoRouterBackend.attach`；复杂 Shell、多 Outlet 或
 自定义 Router 构造可使用一次性 `backendFactory`，只有完全自定义 Widget 树才直接使用
 `CCRouterApp.managed`。这些显式路径是渐进式集成边界，不是新项目必须复制的样板代码。

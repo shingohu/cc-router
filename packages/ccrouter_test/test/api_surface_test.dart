@@ -18,6 +18,8 @@ const _adapterSpiNames = <String>{
   'CCNavigationHostCapabilitySource',
   'CCNavigationManagedEntryReleaseSink',
   'CCNavigationPopCoordinator',
+  'CCNavigationScopedPopCoordinator',
+  'CCNavigationTargetedCloseAdapter',
   'CCNavigationPopGuardBinding',
   'CCNavigationPopTarget',
   'CCNavigationPopTargetSource',
@@ -36,6 +38,8 @@ const _adapterSpiNames = <String>{
 
 const _hostContractNames = <String>{
   ..._adapterSpiNames,
+  'CCRouteCloseOutcome',
+  'CCRouteCloseStatus',
   'CCRouteRestorationOpportunityReason',
   'CCContractBundleDescriptor',
   'CCContractCompatibilityCode',
@@ -63,6 +67,10 @@ const _hostSpiTypes = <Type>[
   host.CCNavigationHostCapabilitySource,
   host.CCNavigationManagedEntryReleaseSink,
   host.CCNavigationPopCoordinator,
+  host.CCNavigationScopedPopCoordinator,
+  host.CCNavigationTargetedCloseAdapter,
+  host.CCRouteCloseOutcome,
+  host.CCRouteCloseStatus,
   host.CCNavigationPopGuardBinding,
   host.CCNavigationPopTarget,
   host.CCNavigationPopTargetSource,
@@ -215,8 +223,23 @@ Future<void> probe() async {
     ).readAsStringSync();
 
     expect(_contractCombinatorNames(hostBarrel, 'show'), _hostContractNames);
-    expect(_hostSpiTypes, hasLength(31));
+    expect(_hostSpiTypes, hasLength(35));
+    expect(
+      _HostTargetedCloseAdapter(),
+      isA<host.CCNavigationTargetedCloseAdapter>(),
+    );
   });
+}
+
+final class _HostTargetedCloseAdapter
+    implements host.CCNavigationTargetedCloseAdapter {
+  @override
+  Future<host.CCRouteCloseOutcome> closeNavigation({
+    required String navigationId,
+    required String hostId,
+    required String navigatorOutlet,
+    Object? result,
+  }) async => const host.CCRouteCloseOutcome(host.CCRouteCloseStatus.notFound);
 }
 
 Directory _workspaceRoot() {

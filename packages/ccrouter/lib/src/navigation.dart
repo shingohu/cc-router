@@ -34,7 +34,7 @@ abstract interface class CCNavigator {
   /// PopupRoute consumed the request; it does not prove that a CCRouter Route
   /// Entry was removed. It is distinct from [canPop], which cannot account for
   /// a backend Pop guard.
-  Future<bool> maybePop<R>({R? result});
+  Future<bool> maybePop<R>({R? result, BuildContext? context});
 
   /// Coordinates a Pop and reports whether a Managed or foreign entry moved.
   ///
@@ -45,6 +45,7 @@ abstract interface class CCNavigator {
   Future<CCPopOutcome> maybePopOutcome<R>({
     R? result,
     CCPopTrigger trigger = CCPopTrigger.system,
+    BuildContext? context,
   });
 
   /// Changes the current location to [intent] without a typed result.
@@ -80,10 +81,17 @@ abstract interface class CCNavigator {
   });
 
   /// Pops the active route with an optional typed [result].
-  void pop<R>({R? result});
+  void pop<R>({R? result, BuildContext? context});
+
+  /// Removes the exact entry, even when covered, respecting its PopGuard.
+  ///
+  /// Capture a handle from [CCRouter.routeEntryHandleOf] during page setup.
+  /// Unsupported adapters return an explicit outcome and never pop another
+  /// page.
+  Future<CCRouteCloseOutcome> close<R>(CCRouteEntryHandle handle, {R? result});
 
   /// Whether the configured adapter can currently pop one route.
-  bool canPop();
+  bool canPop({BuildContext? context});
 }
 
 /// Runtime-backed implementation retained privately by [CCRouter].
@@ -117,16 +125,23 @@ final class _CCNavigator implements CCNavigator {
 
   /// Attempts to pop through the Runtime owned by [CCRouter].
   @override
-  Future<bool> maybePop<R>({R? result}) =>
-      CCRouter._runtime.maybePopRoute(result: result);
+  Future<bool> maybePop<R>({R? result, BuildContext? context}) =>
+      CCRouter._runtime.maybePopRoute(
+        result: result,
+        placementOverride: _resolvePlacement(context),
+      );
 
   /// Coordinates a Pop through the Runtime-owned Adapter.
   @override
   Future<CCPopOutcome> maybePopOutcome<R>({
     R? result,
     CCPopTrigger trigger = CCPopTrigger.system,
-  }) =>
-      CCRouter._runtime.maybePopOutcomeRoute(result: result, trigger: trigger);
+    BuildContext? context,
+  }) => CCRouter._runtime.maybePopOutcomeRoute(
+    result: result,
+    trigger: trigger,
+    placementOverride: _resolvePlacement(context),
+  );
 
   /// Changes location through the Runtime owned by [CCRouter].
   @override
@@ -168,11 +183,23 @@ final class _CCNavigator implements CCNavigator {
 
   /// Pops through the Runtime owned by [CCRouter].
   @override
-  void pop<R>({R? result}) => CCRouter._runtime.popRoute(result: result);
+  void pop<R>({R? result, BuildContext? context}) => CCRouter._runtime.popRoute(
+    result: result,
+    placementOverride: _resolvePlacement(context),
+  );
+
+  /// Delegates exact close to the owning Runtime without active-stack inference.
+  @override
+  Future<CCRouteCloseOutcome> close<R>(
+    CCRouteEntryHandle handle, {
+    R? result,
+  }) => CCRouter._runtime.closeRoute(handle, result: result);
 
   /// Reads Pop capability from the configured Runtime adapter.
   @override
-  bool canPop() => CCRouter._runtime.canPopRoute();
+  bool canPop({BuildContext? context}) => CCRouter._runtime.canPopRoute(
+    placementOverride: _resolvePlacement(context),
+  );
 
   /// Converts an optional Flutter Context into a strict route placement.
   CCRoutePlacement? _resolvePlacement(BuildContext? context) {

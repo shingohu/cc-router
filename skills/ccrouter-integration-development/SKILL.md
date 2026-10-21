@@ -243,18 +243,21 @@ Read [implementation-patterns.md](references/implementation-patterns.md) when ad
   uses `CCHostAssembly.fromComponents`, while ordinary Runtime tests prefer
   `CCRouterTestHost`. Do not split one generated assembly into separately passed
   manifests, Catalog, Contract, or tooling values.
-- After initialization, the default `CCGoRouterApp()` resolves that Assembly's
-  Catalog through the Host-only binding. Do not repeat the Catalog in the
-  widget constructor or expose routing metadata through the business Facade.
-  Direct `CCGoRouterBackend.managed/attach` calls remain Host SPI and keep an
-  explicit Catalog for custom or incremental integration.
+- After initialization, new Hosts should prefer `CCManagedRouterBackend` and
+  pass its `RouterConfig` to `MaterialApp.router`; Runtime Managed Stack is the
+  single source of truth projected through `RouterDelegate + Navigator.pages`.
+  `CCGoRouterApp()` and `CCGoRouterBackend.managed/attach` remain Host-only
+  compatibility paths for existing projects and progressive migration. Do not
+  expose routing metadata through the business Facade.
 - Use `CCGoRouterMultiHostBackend.managed` only when one application tree truly
   owns multiple independent Router Hosts. Its factories receive the initialized
   Catalog and declared Host ID, while the aggregate owns Adapter and Router
   cleanup. When multiple Host surfaces are simultaneously interactive, the
   Composition Root must activate the Host on pointer/focus entry; feature pages
   must not call `activateHost`. Keep large-screen panes, tabs, and Shell branches
-  as Outlets of one Host. The aggregate does not render a layout or model a native
+  as Outlets of one Host. Managed pages resolve exact Host/Outlet from the
+  optional `BuildContext`; `activateHost` is only a fallback for context-free
+  Pop/system-back. The aggregate does not render a layout or model a native
   platform Window.
 
 ### Read-only DevTools
@@ -314,6 +317,24 @@ the Service Contract.
 
 ## Navigation Policy Rules
 
+- For async completion that must remove its own covered page, capture
+  `CCRouter.routeEntryHandleOf(context)` during page setup and call
+  `CCRouter.navigator.close(handle, result: ...)`. Never select a route by ID,
+  snapshot index, or the currently visible page when the work finishes. Handles
+  retain no Context/Route/payload and expire with their exact Runtime entry.
+- Check `CCRouteCloseOutcome.status`: `closed`, `notFound`, `unsupported`, or
+  `guardDenied`. Close runs the target's managed PopGuards and validates its
+  original result type before mutation. It is an explicit business exit; do not
+  use it as system back or async confirmation UI. Only that result and Scope
+  end, covering pages/foreign Popups stay alive, and async disposal may still
+  be pending. Never fall back from unsupported to ordinary Pop.
+- GoRouter exact close requires an installed observed imperative push/replace
+  entry. Declarative go/reset, retained inactive branches, removal that empties
+  a Shell, and trees containing external `GoRoute.onExit` are unsupported.
+  Custom Host Adapters opt into `CCNavigationTargetedCloseAdapter`; business
+  code must not import that SPI or call a backend directly. Read
+  [production scenarios](references/production-scenarios.md) for validation.
+
 - Use Interceptor only for pre-navigation decisions: authentication, permission, consent, maintenance, forced upgrade, feature flag, redirect, cancel, or defer.
 - Never use Interceptor for PV/UV, page arrival, data loading, UI side effects, or nested navigation.
 - Observe Interceptor cancellation cooperatively. Runtime shutdown ends pending Interceptor/Failure Policy waits with `CCRouteCancelledError` and ignores late decisions; it cannot stop arbitrary Dart work. Defer/resume preserves typed payloads, the original concrete Host, call-site Outlet, and result contract while revalidating policy. Configure a timeout or explicitly cancel abandoned continuations.
@@ -353,6 +374,13 @@ the Service Contract.
 - Use `CCPageLifecycleMixin` or `CCPageLifecycleListener` for PageShow/PageHide and application foreground/background observation. Use Flutter `initState/dispose` for Widget lifetime.
 - Use Route Service for page-instance resources that must survive PageHide and be disposed only after the exact managed RouteEntry is removed.
 - Pass `BuildContext` to navigator calls only when call-site Host/Outlet resolution is required. Do not store it globally.
+- Managed Hosts expose `CCManagedShellBinding` for single-Navigator or stateful
+  branch Shells and `CCManagedOutlet` for adaptive named Outlets. A Shell builder
+  must mount `shell.navigatorFor(outlet)` exactly once per declared Outlet and
+  use `shell.activateOutlet(outlet)` only for branch selection; it must not create
+  a second Navigator for the same Outlet. Context-scoped `push`, `go`, `pop`,
+  `maybePop`, and `canPop` are resolved before dispatch, so left/right pane
+  navigation does not depend on focus timing.
 
 ## Lifecycle Rules
 

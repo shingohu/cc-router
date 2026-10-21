@@ -516,6 +516,10 @@ abstract interface class CCNavigator {
   Future<void> reset<R>(CCRouteIntent<R> intent, {CCNavigationSource? source});
   Future<void> open(Uri uri, {CCNavigationSource? source});
   void pop<R>({R? result});
+  Future<CCRouteCloseOutcome> close<R>(
+    CCRouteEntryHandle handle, {
+    R? result,
+  });
   bool canPop();
 }
 ```
@@ -532,10 +536,11 @@ abstract interface class CCNavigator {
 | `popUntilWithResult` | 暂缓后支持 | 需要先定义结果传递给每个被移除 RouteEntry、遇到拒绝 Pop 或没有匹配目标时的完整语义，不能直接照搬第三方扩展方法。 |
 | `pushAndRemoveUntil` | Deferred | 需要后端一次性提交目标栈，并保证失败回滚、pending result 和 Route Scope 一致。 |
 | `replaceRouteBelow` | Deferred | 需要稳定 backend Entry identity 和不依赖栈位置的原子替换能力。 |
-| `removeRoute` / `removeRouteBelow` | Deferred | 需要稳定 backend Entry identity，并保证 Foreign/Opaque Entry 不受影响。 |
+| `close` | 可选支持 | 通过 Runtime-issued `CCRouteEntryHandle` 精确移除一个已安装的 Managed Entry；Adapter 无法证明原子提交、混合栈隔离或结果/Scope 收敛时返回 `unsupported`，不得降级为 Pop。 |
+| `removeRoute` / `removeRouteBelow` | Deferred | 仍不提供按 Flutter Route、Predicate 或栈位置操作的业务 API。 |
 | `popAndPushNamed` / `pushNamedAndRemoveUntil` | 不提供 | 路由系统使用稳定 Route ID、生成的 Intent 和动态 `open(Uri)`，不再增加字符串 Name API。需要动态地址时使用 `open` 组合操作。 |
 
-上述 Deferred 操作已从业务 API、Runtime、基础 Adapter SPI、Capability、内置 Adapter、Demo 和测试中完整删除，不以多个现有操作拼接模拟。统一留待 2.0 评估；重新接入时应使用可选、版本化的栈事务 SPI，而不是继续扩张所有 Adapter 必须实现的基础接口。接入门槛包括：稳定 backend Entry identity、一次性或原子提交目标栈、Managed/Foreign/Opaque 隔离、Shell/Outlet/MultiHost 分区、PopGuard 拒绝语义、失败回滚，以及 pending result 与 Route Scope 生命周期一致。Adapter SPI 不向 Core 暴露 `BuildContext`、Flutter `Route` 或 `NavigatorState`。
+上述 `popAndPush`、`popUntil`、`pushAndRemoveUntil` 和 `replaceRouteBelow` 仍保持 Deferred，不以多个现有操作拼接模拟。`close` 是独立的可选 Adapter 能力：只有后端能按稳定 Entry identity 做目标级提交、隔离 Managed/Foreign/Opaque Entry、遵守 Shell/Outlet/MultiHost 分区、执行目标 PopGuard，并使 pending result 与 Route Scope 收敛时才返回 `closed`；否则返回 `notFound`、`unsupported` 或 `guardDenied`。Adapter SPI 不向 Core 暴露 `BuildContext`、Flutter `Route` 或 `NavigatorState`。
 
 `push<R>` 和 `replace<R>` 返回 `Future<R?>`。系统返回、无值 Pop 或 RouteEntry 被允许取消时完成 `null`；解析、拦截或 Adapter 失败时抛出标准错误。
 
@@ -1048,24 +1053,21 @@ Restoration、桌面窗口重开或异常 Session Marker 等 Host 证据，并�
 已有应用可继续使用默认构造器作为不拥有 Runtime 的 Host Wrapper，或者将已有 Router
 包装为 attach Backend。
 
-新应用的默认 GoRouter 接入：
+新应用的默认 Managed Router 接入；已有 GoRouter 工程可继续使用兼容 Wrapper：
 
 ```dart
 CCRouterHost.initialize(
   hostAssembly: ccrouterGeneratedHostAssembly,
 );
 
-final backend = CCGoRouterBackend.managed(
-  catalog: ccrouterGeneratedHostAssembly.routeCatalog,
-  hostRoutes: [
-    GoRoute(path: '/', builder: (_, _) => const HomePage()),
-  ],
+final backend = CCManagedRouterBackend(
+  routeCatalog: CCRouterHostBinding.routeCatalog,
 );
 
 CCRouterApp.managed(
   backend: backend,
   child: MaterialApp.router(
-    routerConfig: backend.router,
+    routerConfig: backend.routerConfig,
   ),
 );
 ```
@@ -1577,6 +1579,7 @@ Adapter 缺失、能力不支持和后端执行失败统一使用 `CCNavigationA
 Adapter 实现者和应用组合根只通过 `package:ccrouter/ccrouter_host.dart` 使用单独导出的：
 
 - `CCNavigationAdapter`
+- `CCNavigationTargetedCloseAdapter`、`CCRouteCloseOutcome` 与 `CCRouteCloseStatus`
 - `CCNavigationRequest`、`CCNavigationRoute` 与只读 Backend 快照
 - Adapter capability、Host binding、Pop 协调、Predictive Back 和生命周期报告接口
 
@@ -1665,8 +1668,10 @@ CCRouter 契约的 GoRouter 路由可以继续由应用独立保留。
 栈条目，因此 `push` Future、`pop` 返回值、遮罩/拖拽配置和生命周期仍由 Navigator
 处理。Material 与 Cupertino Dialog 可通过 `CCDialogRouteType` 选择，BottomSheet
 配置映射到 Flutter 的 `ModalBottomSheetRoute`。GoRouter 没有公开的原子栈事务 API，
-因此 `popAndPush`、`popUntil`、`pushAndRemoveUntil` 和精确 Entry 操作当前不属于
-CCRouter 能力，Adapter 也不会用多个 imperative 操作模拟。
+因此 `popAndPush`、`popUntil`、`pushAndRemoveUntil` 和按 Route/Predicate 的 Entry 操作当前不属于
+CCRouter 能力，Adapter 也不会用多个 imperative 操作模拟。可选 `close` 只处理由
+`CCRouter.routeEntryHandleOf(context)` 捕获的一个具体 Managed opening，并公开明确的
+unsupported 边界。
 GoRouter Adapter 优先通过 `CCNavigationHost` 接收应用拥有的 Root/Outlet Navigator，
 也保留 `navigatorKeys` 兼容入口，并可把带有
 `shellId`/`navigatorOutlet` placement 的子路由映射到已有 `ShellRoute` Navigator；
@@ -1741,7 +1746,8 @@ Host/Outlet 分区的确定性 fallback，不跨 sibling Outlet。Pop 目标从�
   保持原有行为。传入时只由 Flutter 门面即时解析，不能保存或传入 Core。
 - `CCRouterApp` 负责 Flutter 集成，但不保存全局 Context。
 - Core 保持 Pure Dart。
-- 默认使用 GoRouter Adapter，允许自定义 Adapter。
+- 默认使用 Managed Router Backend（`RouterDelegate + Navigator.pages`），GoRouter Adapter
+  保留用于已有项目渐进迁移；两者允许其它自定义 Adapter 消费同一份中立 Definition。
 - 生成中立 Definition，不直接生成 `GoRoute`。
 - Route ID 与寻址 Pattern 分离。
 - 支持一个可生成地址的主 Pattern，以及多个 Path、结构化 URI、完整 Regex 别名和参数正则约束。

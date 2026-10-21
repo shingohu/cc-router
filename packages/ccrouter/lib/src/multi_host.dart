@@ -13,6 +13,7 @@ import 'app.dart';
 final class CCMultiHostNavigationAdapter
     implements
         CCNavigationAdapter,
+        CCNavigationTargetedCloseAdapter,
         CCNavigationAdapterHostBinding,
         CCNavigationAdapterCapabilitySource,
         CCNavigationHostCapabilitySource,
@@ -20,6 +21,7 @@ final class CCMultiHostNavigationAdapter
         CCNavigationManagedEntryReleaseSink,
         CCNavigationBackendSnapshotSource,
         CCNavigationPopCoordinator,
+        CCNavigationScopedPopCoordinator,
         CCNavigationPopTargetSource,
         CCNavigationPopGuardBinding,
         CCNavigationPredictiveBackSourceProvider,
@@ -396,6 +398,38 @@ final class CCMultiHostNavigationAdapter
               );
   }
 
+  @override
+  /// Coordinates a Pop in the explicitly selected Host and Outlet.
+  Future<CCPopOutcome> maybePopOutcomeAt({
+    required String hostId,
+    required String navigatorOutlet,
+    Object? result,
+  }) {
+    _ensureAvailable();
+    final adapter = _hosts[hostId]?.adapter;
+    if (adapter is CCNavigationScopedPopCoordinator) {
+      return (adapter as CCNavigationScopedPopCoordinator)
+          .maybePopOutcomeAt(
+            hostId: hostId,
+            navigatorOutlet: navigatorOutlet,
+            result: result,
+          )
+          .then(
+            (outcome) => outcome.copyWith(
+              hostId: hostId,
+              navigatorOutlet: navigatorOutlet,
+            ),
+          );
+    }
+    return Future<CCPopOutcome>.value(
+      CCPopOutcome(
+        handled: false,
+        hostId: hostId,
+        navigatorOutlet: navigatorOutlet,
+      ),
+    );
+  }
+
   /// Pops the current entry from the active Host.
   @override
   void pop({Object? result}) => _activeAdapter.pop(result: result);
@@ -416,9 +450,69 @@ final class CCMultiHostNavigationAdapter
     return CCPopOutcome(handled: true, hostId: _activeHostId);
   }
 
+  @override
+  /// Executes a business Pop in the explicitly selected Host and Outlet.
+  CCPopOutcome popOutcomeAt({
+    required String hostId,
+    required String navigatorOutlet,
+    Object? result,
+  }) {
+    _ensureAvailable();
+    final adapter = _hosts[hostId]?.adapter;
+    if (adapter is CCNavigationScopedPopCoordinator) {
+      return (adapter as CCNavigationScopedPopCoordinator)
+          .popOutcomeAt(
+            hostId: hostId,
+            navigatorOutlet: navigatorOutlet,
+            result: result,
+          )
+          .copyWith(hostId: hostId, navigatorOutlet: navigatorOutlet);
+    }
+    return CCPopOutcome(
+      handled: false,
+      hostId: hostId,
+      navigatorOutlet: navigatorOutlet,
+    );
+  }
+
+  /// Routes an exact close to its owning Host without changing active Host.
+  @override
+  Future<CCRouteCloseOutcome> closeNavigation({
+    required String navigationId,
+    required String hostId,
+    required String navigatorOutlet,
+    Object? result,
+  }) async {
+    _ensureAvailable();
+    final adapter = _hosts[hostId]?.adapter;
+    if (adapter == null)
+      return const CCRouteCloseOutcome(CCRouteCloseStatus.notFound);
+    if (adapter is! CCNavigationTargetedCloseAdapter) {
+      return const CCRouteCloseOutcome(CCRouteCloseStatus.unsupported);
+    }
+    return (adapter as CCNavigationTargetedCloseAdapter).closeNavigation(
+      navigationId: navigationId,
+      hostId: hostId,
+      navigatorOutlet: navigatorOutlet,
+      result: result,
+    );
+  }
+
   /// Whether the active Host backend can currently pop.
   @override
   bool canPop() => _activeAdapter.canPop();
+
+  @override
+  /// Reports Pop capability for the explicitly selected Host and Outlet.
+  bool canPopAt({required String hostId, required String navigatorOutlet}) {
+    _ensureAvailable();
+    final adapter = _hosts[hostId]?.adapter;
+    return adapter is CCNavigationScopedPopCoordinator &&
+        (adapter as CCNavigationScopedPopCoordinator).canPopAt(
+          hostId: hostId,
+          navigatorOutlet: navigatorOutlet,
+        );
+  }
 
   /// Reads initial stacks from every snapshot-capable Host.
   @override

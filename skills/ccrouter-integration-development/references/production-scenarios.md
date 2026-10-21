@@ -36,3 +36,34 @@ implementing it, expanding public contracts, or sending an upstream report.
 The framework's expanded governance rationale is optional background:
 [production adoption workflow](https://github.com/shingohu/cc-router/blob/main/docs/CCRouter-production-adoption-workflow.md).
 This local procedure is sufficient when the remote document is unavailable.
+
+## Exact close after asynchronous completion
+
+A managed A covered by B must close its own instance when its work completes;
+ordinary Pop selects B or a foreign Popup. A raw Navigator removal can leave A
+in GoRouter's declarative tree and resurrect it on the next push/pop. This is a
+general optional Adapter capability, not application-specific route matching.
+
+Capture `CCRouter.routeEntryHandleOf(context)` while setting up A, then use
+`CCRouter.navigator.close(handle, result: value)`. Check the explicit outcome;
+never retry unsupported with Pop or same-route lookup. A null capture means an
+unmanaged/initial/removed page, not permission to guess from the active stack.
+The target's global/local managed guards run, a wrong result fails before
+mutation, closed results complete once, and its Scope starts disposal once.
+
+The Managed Router Backend stores Host/Outlet Entries independently and projects
+them through `Navigator.pages`, so covered entries, inactive stateful branches,
+and Shell structural anchors can be removed by identity without mutating a
+match tree. GoRouter remains a compatibility source: safely removable observed
+imperative push/replace entries and supported nested Shell Outlets work there,
+while declarative go/reset entries, inactive retained branches, emptying a Shell,
+and trees with external `GoRoute.onExit` remain adapter-specific limits. Old
+custom Adapters remain source compatible and opt into the Host-only targeted-close
+SPI separately.
+
+Regression evidence must include A covered by B, close A then push/pop C and
+return from B without A resurrection; repeated same-route instances; foreign
+Popup retention; concrete Host/Outlet isolation; denied guards, wrong result,
+stale Runtime identity and concurrent duplicate close; exact Scope cleanup.
+Do not infer arbitrary declarative-tree surgery, native multi-window, or real
+OS gesture coverage from these widget tests.
