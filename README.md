@@ -951,8 +951,12 @@ PopGuard 用于页面离开前可同步判断的规则，例如内存中的未�
 
 系统返回或 `maybePop` 中，框架 Guard 返回 allow 只表示通过框架策略，页面自身的
 `PopScope(canPop: false)` / `Form(canPop: false)` 仍可拒绝退出。页面和结果 Future 会保持
-存活，本地拒绝回调可负责确认 UI。确认后主动调用 `pop` 仍是显式返回操作。Cupertino 页面
-无 Guard 时保留平台默认侧滑，有 Guard 时继续禁用侧滑，不会因本地保护修复而放宽。
+存活，本地拒绝回调可负责确认 UI。确认后主动调用 `pop` 仍是显式返回操作。原生 Managed
+Backend 的默认不透明 iOS 页面会在边缘手势开始前同步执行 Guard：deny 时不启动动画，allow
+时由 Flutter 保持跟手并只提交一次 Pop。允许状态不会跨越取消、未启动手势、Route 移除或
+Backend dispose；本地 `PopScope` / `Form` 仍可拒绝手势。自定义转场、Modal 和无法精确关联
+Route 的场景继续 fail closed。GoRouter 兼容 Backend 的 guarded 页面仍使用非交互 fallback；
+该兼容层已冻结，不再为计划移除的路径扩展 iOS guarded 手势能力。
 
 ### Android 预测返回（可选自动桥）
 
@@ -980,8 +984,8 @@ Flutter 返回行为。读取 `Route.popGestureEnabled` 不会提前解除旧手
 原预览会取消并恢复动画、释放 Navigator 手势状态；迟到 commit 不退出页面，新手势按当前
 Theme 处理。恢复预测 Theme 不会重新激活旧预览。
 
-框架 PopGuard 页面仍走非交互系统 fallback，即使 Guard 最终 allow；Dialog、BottomSheet、
-LocalHistory、自定义转场和非预测 Theme 保留各自返回路径。支持的 Android Theme 转场为 Flutter
+Android predictive-back 下的 PopGuard 页面仍走非交互系统 fallback，即使 Guard 最终 allow；
+Dialog、BottomSheet、LocalHistory、自定义转场和非预测 Theme 保留各自返回路径。支持的 Android Theme 转场为 Flutter
 内置 `PredictiveBackPageTransitionsBuilder` 和 `PredictiveBackFullscreenPageTransitionsBuilder`。
 框架不会改写应用 Manifest。Android Host 必须在有效 `<application>` 上设置
 `android:enableOnBackInvokedCallback="true"`，并在目标设备验证系统版本、embedding、

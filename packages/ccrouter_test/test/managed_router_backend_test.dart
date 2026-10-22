@@ -636,7 +636,7 @@ void main() {
     expect(predictive.adapter.predictiveBackBridge!.isActive, isFalse);
   });
 
-  testWidgets('Managed PopGuard retains non-interactive system fallback', (
+  testWidgets('Managed PopGuard updates iOS gesture gate and system fallback', (
     tester,
   ) async {
     final guard = _TogglePopGuard();
@@ -681,7 +681,10 @@ void main() {
     await tester.pumpWidget(
       CCRouterApp.managed(
         backend: backend,
-        child: MaterialApp.router(routerConfig: backend.routerConfig),
+        child: MaterialApp.router(
+          theme: ThemeData(platform: TargetPlatform.iOS),
+          routerConfig: backend.routerConfig,
+        ),
       ),
     );
     await tester.pumpAndSettle();
@@ -696,6 +699,19 @@ void main() {
     );
     final route = ModalRoute.of(tester.element(find.text('guarded-detail')))!;
     expect(route.popGestureEnabled, isFalse);
+
+    guard.allow = true;
+    expect(route.popGestureEnabled, isTrue);
+    await tester.pump();
+    expect(route.popDisposition, RoutePopDisposition.doNotPop);
+
+    expect(route.popGestureEnabled, isTrue);
+    route.navigator!.didStartUserGesture();
+    route.navigator!.didStopUserGesture();
+    expect(route.popDisposition, RoutePopDisposition.doNotPop);
+    guard.allow = false;
+    expect(route.popGestureEnabled, isFalse);
+    guard.triggers.clear();
 
     await _predictiveBackEvent(tester, 'startBackGesture');
     await _predictiveBackEvent(tester, 'commitBackGesture');

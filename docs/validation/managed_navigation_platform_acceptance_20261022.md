@@ -13,8 +13,9 @@
 | Android | OnePlus NE2211，Android 16 / API 36，1080 x 2412，targetSdk 36 | Managed Back、Guard、monkey、内存 |
 | Android | Samsung SM-S911U1，Android 16 / API 36，1080 x 2340，targetSdk 36 | Managed / GoRouter Predictive Back 真手势 |
 | iOS | iOS 26.5 Simulator | Managed build 与基础栈 smoke |
+| iOS | iPhone 13（iPhone14,5），iOS 15.6.1 | Managed 边缘侧滑、PopGuard、结果与 Scope 真机验收 |
 
-Flutter 为 `3.41.10-ohos-1.0.0` / Dart 3.11.5。当前没有可用 iOS 真机。
+Flutter 为 `3.41.10-ohos-1.0.0` / Dart 3.11.5。
 
 ## macOS MultiHost
 
@@ -135,7 +136,34 @@ predictive phase。提交均只移除一层且 Scope 只释放一次。GoRouter 
 push Entry，因此返回后的既有 Demo 基线为 `0 Route Entries`；Managed 首页由 Runtime 管理，
 基线为 1。这是两种接入模型的既有差异，不是返回行为分叉。
 
-## iOS Simulator
+## iOS
+
+### 真机
+
+设备为 iPhone 13 / iOS 15.6.1。Xcode 26.6 的 CoreDevice/XCUITest 不支持该 legacy iOS
+版本，因此不能把 XCUITest 记为通过；Flutter 的 `ios-deploy` legacy 路径可以正常构建、安装和
+启动。本轮采用人工真实边缘手势，并通过 Demo VM probe 对照 RouteEntry、backend event、typed
+result 和 Route Service dispose 计数。
+
+原生 Managed 入口：
+
+```sh
+fvm flutter run -d 00008110-00142DE43442401E \
+  -t lib/main_managed_predictive_back.dart --debug --no-pub
+```
+
+- 普通 Detail 左缘取消后页面保留，没有 Pop、result 完成或 dispose；完整侧滑只 Pop 一层，
+  `backend/pop`、typed result 完成和 `Detail dispose` 各一次；
+- PopGuard 未保存时页面不跟手，记录一次 gesture deny，RouteEntry、result 和 Scope 保持；
+- 切换为已保存后页面随手势移动，完整提交记录一次 gesture allow，只 Pop 一层，并且 backend
+  Pop、result 完成和 Scope dispose 各一次；
+- 取消、再次开始和最终提交之间没有 gate 残留或重复完成。
+
+GoRouter 兼容入口的普通 Detail 取消/提交仍通过；guarded 页面在 Guard deny 和 allow 时都不
+跟手。该路径保持 fail-closed，不影响数据安全，但不再投入 Route 子类与 gate 生命周期修复；
+`ccrouter_go_router` 进入冻结和后续移除流程，不能把它描述为完整支持 guarded iOS 侧滑。
+
+### Simulator
 
 ```sh
 fvm flutter build ios --simulator --debug \
@@ -146,14 +174,14 @@ fvm flutter build ios --simulator --debug \
 Push typed detail、显示 `ID 42`、确认返回；状态回到 1 Route Entry，并显示
 `detail:42:confirmed`。
 
-Simulator 不能验证 iOS 真机边缘侧滑、交互动画、内存压力和多窗口生命周期。这些仍是发布 gate。
+Simulator 不能替代上述真机边缘侧滑证据，也未覆盖内存压力和 iOS 多窗口生命周期。
 
 ## 结论与 Gate
 
 - backend-neutral feature matrix、生命周期测试和三平台 build/smoke 证据支持继续原生 Managed
-  迁移与 A/B 对比。
+  迁移；iPhone 13 已关闭原生 Managed 单窗口 iOS 边缘侧滑核心 gate。
 - Samsung 真机已关闭 Android 单窗口 Managed / GoRouter Predictive Back 核心 gate；IME、
   PlatformView、原生多窗口和回到桌面动画仍需独立平台场景验证。
-- Android NE2211 的 OEM predictive callback 仍不可用；macOS 完整真实窗口矩阵、iOS 真机
-  侧滑仍未完成。
+- Android NE2211 的 OEM predictive callback 仍不可用；macOS 完整真实窗口矩阵、iOS 内存
+  压力和多窗口生命周期仍未完成。
 - `ccrouter_go_router` 继续保留兼容状态，不标记 deprecated；完成上述 gate 后再评估弃用。

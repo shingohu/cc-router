@@ -1,7 +1,11 @@
 import 'dart:async';
 
 import 'package:ccrouter_contracts/ccrouter_contracts.dart';
+import 'package:flutter/cupertino.dart'
+    show CupertinoApp, CupertinoPageRoute, InheritedCupertinoTheme;
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart'
+    show MaterialApp, MaterialPageRoute, TargetPlatform, Theme;
 import 'package:flutter/widgets.dart';
 
 import 'app.dart';
@@ -869,9 +873,27 @@ final class CCManagedNavigationAdapter
         extra: CCRouterHostBinding.decodeRouteExtra(payload),
       ),
     );
+    final boundChild = CCRouterHostBinding.bindRouteEntry(
+      payload: payload,
+      child: child,
+    );
+    final presentation = request.presentation;
+    if (_routeRequiresPopGuard(request.routeId) &&
+        presentation is CCPagePresentation) {
+      return _CCManagedGuardedPage(
+        child: boundChild,
+        presentation: presentation,
+        adapter: this,
+        key: entry.pageKey,
+        name: request.routeId,
+        arguments: request.extra,
+        restorationId: entry.backendEntryId,
+        predictiveBackHandler: _predictiveBackBridge,
+      );
+    }
     return CCFlutterRouteFactory.createPage<Object?>(
-      child: CCRouterHostBinding.bindRouteEntry(payload: payload, child: child),
-      presentation: request.presentation,
+      child: boundChild,
+      presentation: presentation,
       key: entry.pageKey,
       name: request.routeId,
       arguments: request.extra,
@@ -1233,12 +1255,65 @@ final class CCManagedNavigationAdapter
     }
   }
 
+  /// Opens one guarded Route only when gesture-time Runtime policy allows it.
+  bool _prepareManagedPopGesture(Route<dynamic> route) {
+    final evaluator = _popGuardEvaluator;
+    final modalRoute = route is ModalRoute<Object?> ? route : null;
+    final entry = modalRoute == null
+        ? null
+        : _managedPopGuardEntries[modalRoute];
+    if (_disposed ||
+        evaluator == null ||
+        modalRoute == null ||
+        entry == null ||
+        !modalRoute.isCurrent) {
+      return false;
+    }
+    if (entry.canPopNotifier.value) return true;
+    final decision = evaluator(CCPopTrigger.gesture);
+    if (decision is! CCPopAllow ||
+        _disposed ||
+        !modalRoute.isCurrent ||
+        !identical(_managedPopGuardEntries[modalRoute], entry)) {
+      return false;
+    }
+    entry.canPopNotifier.value = true;
+    _scheduleManagedPopGestureGateClose(modalRoute, entry);
+    return true;
+  }
+
+  /// Closes a prepared gate when no interactive gesture retained ownership.
+  void _scheduleManagedPopGestureGateClose(
+    ModalRoute<Object?> route,
+    _CCManagedPopEntry entry,
+  ) {
+    final binding = WidgetsBinding.instance;
+    binding.addPostFrameCallback((_) {
+      if (_disposed || route.navigator?.userGestureInProgress == true) return;
+      if (identical(_managedPopGuardEntries[route], entry)) {
+        entry.canPopNotifier.value = false;
+      }
+    });
+    // Eligibility can be queried between frames. Schedule the cleanup frame so
+    // a declined recognizer start cannot leave this temporary gate open.
+    binding.scheduleFrame();
+  }
+
+  /// Restores the conservative gate after an iOS gesture cancels or finishes.
+  void _didStopUserGesture(Route<dynamic>? route) {
+    final modalRoute = route is ModalRoute<Object?> ? route : null;
+    final entry = modalRoute == null
+        ? null
+        : _managedPopGuardEntries[modalRoute];
+    if (entry != null) entry.canPopNotifier.value = false;
+  }
+
   /// Installs a conservative system-back gate after Route correlation.
   ///
-  /// Flutter cannot consult Runtime policy before beginning an interactive
-  /// gesture, so guarded Routes remain non-interactive. A rejected system back
-  /// reaches the PopEntry callback, which synchronously evaluates policy and
-  /// retries only the same current Route after an allow decision.
+  /// Generated default iOS Routes evaluate Runtime policy synchronously from
+  /// their gesture eligibility hook. Other presentation families keep this
+  /// gate closed; a rejected system back reaches the PopEntry callback, which
+  /// evaluates policy and retries only the same current Route when allowed.
   void _installManagedPopGuard(Route<dynamic> route) {
     if (_popGuardEvaluator == null || route is! ModalRoute<Object?>) return;
     if (_managedPopGuardEntries.containsKey(route) ||
@@ -1918,6 +1993,118 @@ final class _CCManagedPlaceholderPage extends Page<Object?> {
   );
 }
 
+/// Managed Page that evaluates PopGuard immediately before an iOS edge swipe.
+///
+/// Android and non-interactive presentation paths continue through the shared
+/// route factory so predictive-back and custom-transition behavior is unchanged.
+final class _CCManagedGuardedPage extends CCFlutterPage<Object?> {
+  /// Creates one guarded Page with Adapter-owned gesture coordination.
+  const _CCManagedGuardedPage({
+    required super.child,
+    required super.presentation,
+    required this.adapter,
+    super.key,
+    super.name,
+    super.arguments,
+    super.restorationId,
+    super.predictiveBackHandler,
+  });
+
+  /// Adapter that owns the corresponding managed Entry and PopEntry gate.
+  final CCManagedNavigationAdapter adapter;
+
+  @override
+  /// Creates an iOS-aware guarded Route or preserves the shared fallback.
+  Route<Object?> createRoute(BuildContext context) {
+    final value = presentation;
+    final useCupertino = switch (value.routeType) {
+      CCPageRouteType.cupertino => true,
+      CCPageRouteType.material => false,
+      CCPageRouteType.platformDefault => _usesCupertinoRouteFamily(context),
+    };
+    final usesInteractiveIosTransition =
+        useCupertino || Theme.of(context).platform == TargetPlatform.iOS;
+    if (value.transition != CCPageTransitionType.platformDefault ||
+        !value.opaque ||
+        !usesInteractiveIosTransition) {
+      return super.createRoute(context);
+    }
+    if (useCupertino) {
+      return _CCManagedGuardedCupertinoPageRoute<Object?>(
+        settings: this,
+        fullscreenDialog: value.fullscreenDialog,
+        builder: (_) => child,
+        preparePopGesture: adapter._prepareManagedPopGesture,
+      );
+    }
+    return _CCManagedGuardedMaterialPageRoute<Object?>(
+      settings: this,
+      fullscreenDialog: value.fullscreenDialog,
+      builder: (_) => child,
+      preparePopGesture: adapter._prepareManagedPopGesture,
+    );
+  }
+
+  /// Resolves Material versus Cupertino Host ownership without Theme ambiguity.
+  static bool _usesCupertinoRouteFamily(BuildContext context) {
+    bool? useCupertino;
+    context.visitAncestorElements((element) {
+      final widget = element.widget;
+      if (widget is MaterialApp) {
+        useCupertino = false;
+        return false;
+      }
+      if (widget is CupertinoApp) {
+        useCupertino = true;
+        return false;
+      }
+      return true;
+    });
+    return useCupertino ??
+        context.dependOnInheritedWidgetOfExactType<InheritedCupertinoTheme>() !=
+            null;
+  }
+}
+
+/// Material Route that opens its PopEntry only for an allowed edge swipe.
+final class _CCManagedGuardedMaterialPageRoute<T> extends MaterialPageRoute<T> {
+  /// Creates a Material route coordinated by [preparePopGesture].
+  _CCManagedGuardedMaterialPageRoute({
+    required super.builder,
+    required this.preparePopGesture,
+    super.settings,
+    super.fullscreenDialog,
+  });
+
+  /// Synchronously evaluates and prepares the managed gesture gate.
+  final bool Function(Route<dynamic> route) preparePopGesture;
+
+  @override
+  /// Allows Flutter to start only after Runtime policy opens the PopEntry.
+  bool get popGestureEnabled =>
+      preparePopGesture(this) && super.popGestureEnabled;
+}
+
+/// Cupertino Route that opens its PopEntry only for an allowed edge swipe.
+final class _CCManagedGuardedCupertinoPageRoute<T>
+    extends CupertinoPageRoute<T> {
+  /// Creates a Cupertino route coordinated by [preparePopGesture].
+  _CCManagedGuardedCupertinoPageRoute({
+    required super.builder,
+    required this.preparePopGesture,
+    super.settings,
+    super.fullscreenDialog,
+  });
+
+  /// Synchronously evaluates and prepares the managed gesture gate.
+  final bool Function(Route<dynamic> route) preparePopGesture;
+
+  @override
+  /// Allows Flutter to start only after Runtime policy opens the PopEntry.
+  bool get popGestureEnabled =>
+      preparePopGesture(this) && super.popGestureEnabled;
+}
+
 /// Adapter-owned PopEntry bridging synchronous Runtime policy to Flutter.
 ///
 /// The entry remains closed outside an approved Pop so guarded Routes cannot
@@ -1966,6 +2153,12 @@ final class _CCManagedNavigatorObserver extends NavigatorObserver {
   void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
     adapter._didMountRoute(route);
     topRoute = route;
+  }
+
+  @override
+  /// Re-closes a gesture-time PopEntry after commit or cancellation.
+  void didStopUserGesture() {
+    adapter._didStopUserGesture(topRoute);
   }
 
   @override

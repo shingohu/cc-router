@@ -5,6 +5,14 @@ modes, route assembly, observers, Shell/StatefulShell bindings, Outlet support,
 Flutter Page/Route presentation adapters, and managed aggregation for multiple
 independent Router Hosts.
 
+This package is a frozen compatibility path for existing GoRouter Hosts. New
+Hosts should use `CCManagedRouterApp` from `ccrouter`; no new navigation
+capabilities are added here while the package moves toward deprecation and
+removal. In particular, guarded iOS pages remain fail-closed and use a
+non-interactive system-back fallback even when PopGuard allows exit. Native
+Managed default opaque iOS pages support synchronous Guard evaluation followed
+by Flutter's interactive edge-swipe transition.
+
 Only the application Composition Root should depend on this package. Feature
 code continues to navigate through `CCRouter.navigator` and generated typed
 Intents; it must not call GoRouter directly for CCRouter-managed destinations.

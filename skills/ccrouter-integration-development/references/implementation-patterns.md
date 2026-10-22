@@ -165,8 +165,8 @@ and restores Flutter-owned back handling. An in-flight gesture keeps its owner
 until its terminal callback or cancellation by the next start. Adapter construction
 registers Navigator Observer, RouterDelegate and binding observers atomically and
 rolls all of them back on failure.
-Cancel never completes typed results or closes Scopes. Guarded pages retain
-non-interactive system fallback, even when Guard evaluation allows exit.
+Cancel never completes typed results or closes Scopes. Android predictive-back
+guarded pages retain non-interactive system fallback, even when Guard evaluation allows exit.
 Modals, LocalHistory, custom transitions, Cupertino and other platforms retain
 their documented back paths. Runtime currently reconciles committed phases
 only; the Host bridge is not a new business lifecycle or analytics API.
@@ -427,8 +427,12 @@ For an unsaved editor, local `PopScope` or `Form(canPop: false)` still vetoes
 system back and `CCRouter.navigator.maybePop` even when the framework PopGuard
 allows exit. Use the local refusal callback for confirmation UI and explicitly
 call `CCRouter.navigator.pop` after confirmation; do not trigger navigation from
-the Guard. Cupertino pages with a Guard continue to disable interactive back;
-pages without one keep their default platform gesture.
+the Guard. Native Managed default opaque iOS pages synchronously evaluate the
+Guard before starting an edge swipe: deny does not animate, while allow retains
+Flutter's interactive transition. Cancellation, a declined start, Route removal
+and Backend disposal close the temporary gate. Custom transitions and the frozen
+GoRouter compatibility Backend keep the conservative non-interactive fallback;
+pages without a Guard retain their default platform gesture.
 
 ## Dynamic and External URI
 
