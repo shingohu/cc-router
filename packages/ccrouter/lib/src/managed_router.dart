@@ -70,8 +70,10 @@ final class CCManagedShellScope {
     required this.outlets,
     required this.activeOutlet,
     required Map<String, Widget> navigators,
+    required bool Function(String outlet) hasEntries,
     required void Function(String outlet) activateOutlet,
   }) : _navigators = navigators,
+       _hasEntries = hasEntries,
        _activateOutlet = activateOutlet;
 
   /// Stable Shell identity.
@@ -88,6 +90,9 @@ final class CCManagedShellScope {
 
   /// Prebuilt managed Navigators indexed by Outlet identity.
   final Map<String, Widget> _navigators;
+
+  /// Adapter callback used to inspect lazy branch initialization.
+  final bool Function(String outlet) _hasEntries;
 
   /// Adapter callback used to change a stateful foreground branch.
   final void Function(String outlet) _activateOutlet;
@@ -106,6 +111,16 @@ final class CCManagedShellScope {
     }
     return navigator;
   }
+
+  /// Whether [outlet] already owns at least one managed page Entry.
+  ///
+  /// Host Shell UI can use this to distinguish first branch selection from a
+  /// return to an existing branch. On first selection, activate the branch and
+  /// navigate to its initial Route. Returning to an initialized branch should
+  /// only call [activateOutlet] so its stack and Widget State remain intact.
+  /// Feature pages must not use this Host-only stack query. Unknown Outlet
+  /// identities fail closed with [CCNavigationAdapterError].
+  bool hasEntries(String outlet) => _hasEntries(outlet);
 
   /// Makes [outlet] the foreground branch of a stateful Shell.
   ///
@@ -637,6 +652,20 @@ final class CCManagedNavigationAdapter
       return const CCPopOutcome(handled: false);
     }
     final outlet = navigatorOutlet;
+    final coveringRootRoute = _coveringForeignRootRoute(outlet);
+    if (coveringRootRoute != null) {
+      final rootNavigator = _host.navigatorKey.currentState;
+      if (rootNavigator == null) return _unhandledPop;
+      final handled = await rootNavigator.maybePop<Object?>(result);
+      return CCPopOutcome(
+        handled: handled,
+        removedEntryOwner: handled
+            ? CCPopRemovedEntryOwner.foreign
+            : CCPopRemovedEntryOwner.none,
+        hostId: _host.id,
+        navigatorOutlet: 'root',
+      );
+    }
     final navigator = _host.navigatorKeyFor(outlet).currentState;
     if (navigator == null) return _unhandledPop;
     final top = _observerFor(outlet).topRoute;
@@ -795,6 +824,25 @@ final class CCManagedNavigationAdapter
     return 'root';
   }
 
+  /// Returns a foreign root Route visually covering one nested Outlet.
+  ///
+  /// RouterDelegate Back reaches the managed Adapter before Flutter can select
+  /// a Navigator. A root Dialog or Popup must therefore be offered Pop before
+  /// the focused child Navigator; structural Shell and placeholder Routes are
+  /// not foreign surfaces.
+  Route<dynamic>? _coveringForeignRootRoute(String outlet) {
+    if (outlet == 'root') return null;
+    final route = _observerFor('root').topRoute;
+    if (route == null ||
+        !route.isCurrent ||
+        _entryForRoute(route) != null ||
+        route.settings is _CCManagedShellPage ||
+        route.settings is _CCManagedPlaceholderPage) {
+      return null;
+    }
+    return route;
+  }
+
   @override
   /// Adds a Runtime observer and returns an idempotent removal callback.
   void Function() addBackendEventListener(
@@ -868,7 +916,7 @@ final class CCManagedNavigationAdapter
     final payload = CCRouterHostBinding.encodeNavigationPayload(request);
     final child = destination.build(
       CCRouteCodecValues(
-        path: _pathParameters(destination.route, request.uri),
+        path: request.pathParameters,
         query: request.uri.queryParametersAll,
         extra: CCRouterHostBinding.decodeRouteExtra(payload),
       ),
@@ -930,31 +978,6 @@ final class CCManagedNavigationAdapter
         timestamp: DateTime.now(),
       ),
     );
-  }
-
-  /// Extracts named canonical path values already validated by Runtime.
-  Map<String, String> _pathParameters(CCNavigationRoute route, Uri uri) {
-    final primary = route.patterns.singleWhere((pattern) => pattern.primary);
-    final template = switch (primary) {
-      CCPathPattern(:final template) => template,
-      CCUriPattern(:final template) => Uri.parse(template).path,
-      CCRegexPattern() => throw CCNavigationAdapterError(
-        'Managed route "${route.routeId}" has no reversible primary pattern.',
-      ),
-    };
-    final templateSegments = Uri.parse(template).pathSegments;
-    final actualSegments = uri.pathSegments;
-    final values = <String, String>{};
-    for (var index = 0; index < templateSegments.length; index++) {
-      final segment = templateSegments[index];
-      if (segment.startsWith(':') && index < actualSegments.length) {
-        values[segment.substring(1)] = actualSegments[index];
-      } else if (segment.startsWith('*')) {
-        values[segment.substring(1)] = actualSegments.skip(index).join('/');
-        break;
-      }
-    }
-    return values;
   }
 
   /// Adds a result-bearing Entry above the current root Stack.
@@ -1138,6 +1161,10 @@ final class CCManagedNavigationAdapter
 
   /// Notifies a stable copy so listeners may detach during callbacks.
   void _notifyStateListeners() {
+    CCPageLifecycleHostBridge.setActiveOutlets(
+      hostId: _host.id,
+      outlets: _disposed ? const <String>[] : _state.visibleOutlets,
+    );
     for (final listener in _stateListeners.toList()) {
       listener();
     }
@@ -1199,6 +1226,22 @@ final class CCManagedNavigationAdapter
             ),
         activeNavigatorOutlets: [outlet],
       ),
+    );
+  }
+
+  /// Reports whether one declared Shell Outlet already owns managed Entries.
+  bool _shellHasEntries(String shellId, String outlet) {
+    _ensureAvailable();
+    final shell = _shells[shellId];
+    if (shell == null || !shell.outlets.contains(outlet)) {
+      throw CCNavigationAdapterError(
+        'Managed Shell "$shellId" does not declare Outlet "$outlet".',
+      );
+    }
+    return _state.entries.any(
+      (entry) =>
+          entry.request.placement.shellId == shellId &&
+          entry.request.placement.navigatorOutlet == outlet,
     );
   }
 
@@ -1883,6 +1926,8 @@ final class _CCManagedShellSurfaceState extends State<_CCManagedShellSurface> {
         outlets: shell.outlets,
         activeOutlet: activeOutlet,
         navigators: Map.unmodifiable(navigators),
+        hasEntries: (outlet) =>
+            widget.adapter._shellHasEntries(shell.shellId, outlet),
         activateOutlet: (outlet) =>
             widget.adapter._activateOutlet(shell.shellId, outlet),
       ),
@@ -2187,7 +2232,18 @@ final class _CCManagedNavigatorObserver extends NavigatorObserver {
   @override
   /// Tracks Flutter's confirmed current Route, including foreign Popups.
   void didChangeTop(Route<dynamic> topRoute, Route<dynamic>? previousTopRoute) {
+    super.didChangeTop(topRoute, previousTopRoute);
     this.topRoute = topRoute;
+    if (adapter._disposed) return;
+    CCPageLifecycleHostBridge.didChangeTop(
+      hostId: adapter.hostId,
+      outlet: outlet,
+      topRoute: topRoute,
+      previousTopRoute: previousTopRoute,
+    );
+    if (outlet == 'root') {
+      adapter._predictiveBackBridge?.observeNavigatorTopChange();
+    }
   }
 
   /// Clears any Route retained while the owning Navigator is tearing down.

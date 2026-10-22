@@ -818,6 +818,7 @@ void main() {
         await Future<void>.delayed(Duration.zero);
         expect(adapter.currentRequest?.arguments, same(args));
         expect(adapter.currentRequest?.extra, same(payload));
+        expect(adapter.currentRequest?.pathParameters, {'value': '42'});
         expect(adapter.currentRequest?.hostId, 'secondary');
         expect(adapter.currentRequest?.placement.navigatorOutlet, 'detail');
         runtime.popRoute(result: 'done');
@@ -3219,6 +3220,11 @@ void main() {
       expect(request.operation, CCNavigationOperation.push);
       expect(request.routeId, 'orders.detail');
       expect(request.uri.toString(), '/orders/42?tab=items');
+      expect(request.pathParameters, {'value': '42'});
+      expect(
+        () => request.pathParameters['value'] = 'changed',
+        throwsUnsupportedError,
+      );
       expect(request.arguments, isA<RouteArgs>());
       expect(request.extra, 'snapshot');
       expect(request.origin, CCNavigationOrigin.internal);
@@ -3347,6 +3353,7 @@ void main() {
       expect(request.operation, CCNavigationOperation.open);
       expect(request.origin, CCNavigationOrigin.externalPlatform);
       expect(request.source, same(source));
+      expect(request.pathParameters, {'value': '44'});
       expect((request.arguments as RouteArgs).value, '44');
       expect((request.arguments as RouteArgs).tab, 'items');
       expect(request.extra, isNull);

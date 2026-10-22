@@ -40,6 +40,7 @@ final class _PreparedRoute {
     required this.routeId,
     required this.ownerComponentId,
     required this.uri,
+    required Map<String, String> pathParameters,
     required this.arguments,
     required this.extra,
     required this.presentation,
@@ -47,7 +48,7 @@ final class _PreparedRoute {
     required this.interceptorIds,
     required this.popGuardIds,
     this.typed = false,
-  });
+  }) : pathParameters = Map.unmodifiable(pathParameters);
 
   /// Stable route identity selected by Intent or URI resolution.
   final String routeId;
@@ -57,6 +58,9 @@ final class _PreparedRoute {
 
   /// Canonical generated URI or normalized dynamically supplied URI.
   final Uri uri;
+
+  /// Named path values produced by the selected Pattern or typed Codec.
+  final Map<String, String> pathParameters;
 
   /// Typed route arguments accepted or produced by the registered Codec.
   final Object arguments;
@@ -273,6 +277,7 @@ final class _RouteRegistry {
       routeId: route.definition.routeId,
       ownerComponentId: route.ownerComponentId,
       uri: uri,
+      pathParameters: encoded.path,
       arguments: intent.arguments,
       typed: true,
       extra: encoded.extra,
@@ -304,6 +309,7 @@ final class _RouteRegistry {
       routeId: route.definition.routeId,
       ownerComponentId: route.ownerComponentId,
       uri: uri,
+      pathParameters: resolved.pathParameters,
       arguments: arguments,
       extra: null,
       presentation: route.definition.presentation,

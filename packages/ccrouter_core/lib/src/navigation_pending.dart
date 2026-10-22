@@ -199,6 +199,7 @@ extension CCRouterRuntimePendingNavigation on CCRouterRuntime {
         routeId: resolved.routeId,
         ownerComponentId: resolved.ownerComponentId,
         uri: resolved.uri,
+        pathParameters: resolved.pathParameters,
         arguments: resolved.arguments,
         extra: record.prepared.extra,
         presentation: resolved.presentation,

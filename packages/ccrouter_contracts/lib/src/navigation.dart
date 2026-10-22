@@ -186,7 +186,10 @@ final class CCNavigationRoute {
 /// execute the requested stack operation without repeating business routing.
 final class CCNavigationRequest {
   /// Creates a fully resolved navigation request.
-  const CCNavigationRequest({
+  ///
+  /// [pathParameters] is defensively copied into an unmodifiable snapshot, so
+  /// this Host/Adapter SPI constructor is intentionally not `const`.
+  CCNavigationRequest({
     required this.navigationId,
     required this.operation,
     required this.routeId,
@@ -200,7 +203,9 @@ final class CCNavigationRequest {
     this.placement = const CCRoutePlacement.root(),
     this.extra,
     this.source,
-  }) : assert(
+    Map<String, String> pathParameters = const {},
+  }) : pathParameters = Map.unmodifiable(pathParameters),
+       assert(
          operation == CCNavigationOperation.open
              ? openMode != null
              : openMode == null,
@@ -218,6 +223,13 @@ final class CCNavigationRequest {
 
   /// Canonical generated URI or normalized dynamically opened URI.
   final Uri uri;
+
+  /// Named path values selected by the Runtime's successful Pattern match.
+  ///
+  /// Adapters must consume this snapshot instead of matching [uri] again.
+  /// This preserves URI aliases, regular-expression routes, constraints, and
+  /// typed Intent encoding without duplicating Runtime resolution logic.
+  final Map<String, String> pathParameters;
 
   /// Typed arguments produced or accepted by the route's Codec.
   final Object arguments;

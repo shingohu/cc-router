@@ -355,6 +355,23 @@ abstract base class CCPredictiveBackCoordinator
     }
   }
 
+  /// Cancels previews covered by a Route in an ancestor Navigator.
+  ///
+  /// A popup may be dismissed before the platform's terminal callback. The
+  /// cancellation is therefore recorded when coverage first appears instead
+  /// of relying on commit-time ancestor state, which must not revive the old
+  /// preview after the ancestor becomes current again.
+  @protected
+  void invalidateCoveredPredictiveBackRoutes() {
+    if (_disposed) return;
+    for (final gestureEntry in _gestures.entries.toList()) {
+      final gesture = gestureEntry.value;
+      if (!gesture.commitRequested && _hasCoveredAncestor(gestureEntry.key)) {
+        _cancelGesture(gesture);
+      }
+    }
+  }
+
   /// Reconciles one backend event with the exact pending gesture identity.
   ///
   /// [observedRoute] is supplied by observer-driven backends such as GoRouter.

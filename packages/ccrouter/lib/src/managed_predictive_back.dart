@@ -146,6 +146,9 @@ final class CCManagedPredictiveBackBridge extends CCPredictiveBackCoordinator {
   /// Invalidates previews when another Outlet becomes active.
   void invalidateInactiveOutlets() => invalidateInactivePredictiveBackOutlets();
 
+  /// Invalidates previews newly covered by an ancestor Navigator Route.
+  void observeNavigatorTopChange() => invalidateCoveredPredictiveBackRoutes();
+
   /// Confirms commits and invalidates previews from Store events.
   void observeBackendEvent(CCNavigationBackendEvent event) =>
       observePredictiveBackBackendEvent(event);

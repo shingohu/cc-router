@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter/ccrouter_host.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 final class _Args {
@@ -119,6 +120,26 @@ final class _OutletRegistrar implements CCComponentRegistrar {
 
 void _ignore(Future<Object?> future) {
   unawaited(future.then<void>((_) {}, onError: (_, _) {}));
+}
+
+Future<void> _predictiveBackEvent(WidgetTester tester, String method) async {
+  await tester.binding.defaultBinaryMessenger.handlePlatformMessage(
+    'flutter/backgesture',
+    const StandardMethodCodec().encodeMethodCall(
+      MethodCall(
+        method,
+        method == 'startBackGesture'
+            ? <String, Object>{
+                'touchOffset': <double>[5, 300],
+                'progress': 0.0,
+                'swipeEdge': 0,
+              }
+            : null,
+      ),
+    ),
+    (_) {},
+  );
+  await tester.pump();
 }
 
 void main() {
@@ -256,6 +277,86 @@ void main() {
     },
   );
 
+  testWidgets('managed pages follow top route lifecycle changes', (
+    tester,
+  ) async {
+    CCRouterHost.initialize(
+      hostAssembly: CCHostAssembly.fromComponents(
+        components: const [
+          CCComponentManifest(
+            id: 'outlet',
+            version: '1.0.0',
+            registrar: _OutletRegistrar(includeShell: false),
+          ),
+        ],
+      ),
+    );
+    final definitions = [
+      _route('outlet.root', '/'),
+      _route(
+        'outlet.left.seed',
+        '/left/:value',
+        placement: const CCRoutePlacement(navigatorOutlet: _left),
+      ),
+      _route(
+        'outlet.right.seed',
+        '/right/:value',
+        placement: const CCRoutePlacement(navigatorOutlet: _right),
+      ),
+      _route('outlet.detail', '/detail/:value'),
+    ];
+    final lifecycleEvents = <String>[];
+    final backend = CCManagedRouterBackend(
+      host: CCNavigationHost(
+        navigatorKeys: {
+          _left: GlobalKey<NavigatorState>(),
+          _right: GlobalKey<NavigatorState>(),
+        },
+      ),
+      routeCatalog: CCFlutterRouteCatalog(
+        [
+          for (final definition in definitions)
+            CCFlutterRouteDestination.fromDefinition(
+              definition: definition,
+              builder: (values) {
+                final value = values.path['value'] ?? 'home';
+                return CCPageLifecycleListener(
+                  onPageShow: () => lifecycleEvents.add('$value:show'),
+                  onPageHide: () => lifecycleEvents.add('$value:hide'),
+                  child: Material(child: Text('lifecycle-$value')),
+                );
+              },
+            ),
+        ],
+        componentVersions: const {'outlet': '1.0.0'},
+      ),
+    );
+    await tester.pumpWidget(
+      CCRouterApp.managed(
+        backend: backend,
+        child: MaterialApp.router(routerConfig: backend.routerConfig),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(lifecycleEvents, ['home:show']);
+
+    _ignore(
+      CCRouter.navigator.push<String>(const _Intent('outlet.detail', 'detail')),
+    );
+    await tester.pumpAndSettle();
+    expect(lifecycleEvents, ['home:show', 'home:hide', 'detail:show']);
+
+    CCRouter.navigator.pop();
+    await tester.pumpAndSettle();
+    expect(lifecycleEvents, [
+      'home:show',
+      'home:hide',
+      'detail:show',
+      'detail:hide',
+      'home:show',
+    ]);
+  });
+
   testWidgets(
     'stateful Shell preserves branches and closes inactive identity',
     (tester) async {
@@ -309,6 +410,8 @@ void main() {
         ),
       ];
       final handles = <String, CCRouteEntryHandle>{};
+      final lifecycleEvents = <String>[];
+      CCManagedShellScope? shellScope;
       final backend = CCManagedRouterBackend(
         host: CCNavigationHost(
           navigatorKeys: {
@@ -321,38 +424,42 @@ void main() {
         shellBindings: [
           CCManagedShellBinding(
             shellId: _shellId,
-            builder: (context, shell) => Material(
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      TextButton(
-                        key: const ValueKey<String>('tab-home'),
-                        onPressed: () => shell.activateOutlet(_shellHome),
-                        child: const Text('Home'),
-                      ),
-                      TextButton(
-                        key: const ValueKey<String>('tab-activity'),
-                        onPressed: () => shell.activateOutlet(_shellActivity),
-                        child: const Text('Activity'),
-                      ),
-                    ],
-                  ),
-                  Expanded(
-                    child: IndexedStack(
-                      index: shell.outlets.indexOf(shell.activeOutlet),
+            builder: (context, shell) {
+              shellScope = shell;
+              return Material(
+                child: Column(
+                  children: [
+                    Row(
                       children: [
-                        for (final outlet in shell.outlets)
-                          shell.navigatorFor(outlet),
+                        TextButton(
+                          key: const ValueKey<String>('tab-home'),
+                          onPressed: () => shell.activateOutlet(_shellHome),
+                          child: const Text('Home'),
+                        ),
+                        TextButton(
+                          key: const ValueKey<String>('tab-activity'),
+                          onPressed: () => shell.activateOutlet(_shellActivity),
+                          child: const Text('Activity'),
+                        ),
                       ],
                     ),
-                  ),
-                ],
-              ),
-            ),
+                    Expanded(
+                      child: IndexedStack(
+                        index: shell.outlets.indexOf(shell.activeOutlet),
+                        children: [
+                          for (final outlet in shell.outlets)
+                            shell.navigatorFor(outlet),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
         ],
         initialLocation: '/workspace/home/home',
+        enablePredictiveBack: true,
         routeCatalog: CCFlutterRouteCatalog(
           [
             for (final definition in definitions)
@@ -365,7 +472,13 @@ void main() {
                       final handle = CCRouter.routeEntryHandleOf(context);
                       if (handle != null) handles[value] = handle;
                     });
-                    return Material(child: Center(child: Text('shell-$value')));
+                    return CCPageLifecycleListener(
+                      onPageShow: () => lifecycleEvents.add('$value:show'),
+                      onPageHide: () => lifecycleEvents.add('$value:hide'),
+                      child: Material(
+                        child: Center(child: Text('shell-$value')),
+                      ),
+                    );
                   },
                 ),
               ),
@@ -382,12 +495,59 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('shell-home'), findsOneWidget);
+      expect(shellScope!.hasEntries(_shellHome), isTrue);
+      expect(shellScope!.hasEntries(_shellActivity), isFalse);
+      expect(
+        () => shellScope!.hasEntries('workspace.unknown'),
+        throwsA(isA<CCNavigationAdapterError>()),
+      );
+      expect(lifecycleEvents, contains('home:show'));
       _ignore(
         CCRouter.navigator.push<String>(
           const _Intent('shell.home.detail', 'home-detail'),
         ),
       );
       await tester.pumpAndSettle();
+      final entryCountBeforePopup = CCRouter.activeRouteEntries.length;
+      final popup = showDialog<void>(
+        context: tester.element(find.text('shell-home-detail')),
+        builder: (_) => const AlertDialog(content: Text('root-popup')),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('root-popup'), findsOneWidget);
+
+      expect(await CCRouter.navigator.maybePop(), isTrue);
+      await tester.pumpAndSettle();
+      await popup;
+      expect(find.text('root-popup'), findsNothing);
+      expect(find.text('shell-home-detail'), findsOneWidget);
+      expect(CCRouter.activeRouteEntries, hasLength(entryCountBeforePopup));
+
+      final predictivePhases = <CCPredictiveBackPhase>[];
+      final removePredictiveListener = backend.adapter.predictiveBackBridge!
+          .addPredictiveBackListener(
+            (event) => predictivePhases.add(event.phase),
+          );
+      await _predictiveBackEvent(tester, 'startBackGesture');
+      final transientPopup = showDialog<void>(
+        context: tester.element(find.text('shell-home-detail')),
+        builder: (_) =>
+            const AlertDialog(content: Text('transient-root-popup')),
+      );
+      await tester.pumpAndSettle();
+      Navigator.of(tester.element(find.text('transient-root-popup'))).pop();
+      await tester.pumpAndSettle();
+      await transientPopup;
+      await _predictiveBackEvent(tester, 'commitBackGesture');
+      await tester.pumpAndSettle();
+      expect(find.text('shell-home-detail'), findsOneWidget);
+      expect(CCRouter.activeRouteEntries, hasLength(entryCountBeforePopup));
+      expect(predictivePhases, [
+        CCPredictiveBackPhase.started,
+        CCPredictiveBackPhase.cancelled,
+      ]);
+      removePredictiveListener();
+
       _ignore(
         CCRouter.navigator.push<String>(
           const _Intent('shell.activity', 'activity'),
@@ -396,10 +556,27 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('shell-activity'), findsOneWidget);
+      expect(shellScope!.hasEntries(_shellActivity), isTrue);
+      expect(
+        lifecycleEvents.where((event) => event.startsWith('home-detail:')).last,
+        'home-detail:hide',
+      );
+      expect(
+        lifecycleEvents.where((event) => event.startsWith('activity:')).last,
+        'activity:show',
+      );
       await tester.tap(find.byKey(const ValueKey<String>('tab-home')));
       await tester.pumpAndSettle();
       expect(find.text('shell-home-detail'), findsOneWidget);
       expect(backend.adapter.focusedOutlet, _shellHome);
+      expect(
+        lifecycleEvents.where((event) => event.startsWith('activity:')).last,
+        'activity:hide',
+      );
+      expect(
+        lifecycleEvents.where((event) => event.startsWith('home-detail:')).last,
+        'home-detail:show',
+      );
 
       expect(
         (await CCRouter.navigator.close(handles['activity']!)).status,

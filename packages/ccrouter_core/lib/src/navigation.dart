@@ -828,6 +828,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     operation: operation,
     routeId: prepared.routeId,
     uri: prepared.uri,
+    pathParameters: prepared.pathParameters,
     arguments: prepared.arguments,
     extra: prepared.extra,
     presentation: prepared.presentation,
