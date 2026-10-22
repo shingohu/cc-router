@@ -1,4 +1,9 @@
-/// GoRouter integration for the adapter-neutral CCRouter navigation SPI.
+/// Frozen GoRouter compatibility integration for existing CCRouter Hosts.
+@Deprecated(
+  'Use CCManagedRouterApp, CCManagedRouterBackend, or '
+  'CCManagedMultiHostBackend from package:ccrouter/ccrouter.dart. '
+  'ccrouter_go_router is a frozen compatibility package.',
+)
 library;
 
 export 'src/adapter.dart';

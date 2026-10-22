@@ -5,7 +5,7 @@
     "name": "demo_order_example",
     "version": "0.1.0+1"
   },
-  "contentFingerprint": "f74c961ea35ac44e4fc3d14994231feb037ab8d88191d779fa01bc182b351221",
+  "contentFingerprint": "9b9d74e390eac7bbf9c2f0abd971525d634107094eec5316514c41bb9527e554",
   "bundle": {
     "library": "lib/src/ccrouter_generated/host/demo_order_example_ccrouter.g.dart",
     "symbol": "ccrouterGeneratedPackageBundle"
@@ -22,9 +22,161 @@
       "contentFingerprint": "9be062d35979f3c2565898c66ff5fb39a8d5fbdce046e4ff8adbae333fe359fd"
     }
   ],
-  "metadata": [],
+  "metadata": [
+    {
+      "schemaVersion": 4,
+      "package": "demo_order_example",
+      "source": "lib/src/order_example_component.dart",
+      "componentDeclarations": [
+        "demo_order_example_component"
+      ],
+      "componentManifests": {
+        "demo_order_example_component": "demoOrderExampleComponentManifest"
+      },
+      "componentSymbols": {
+        "demo_order_example_component": "orderExampleComponent"
+      },
+      "components": [
+        {
+          "id": "demo_order_example_component",
+          "version": "0.1.0",
+          "dependencies": [
+            "demo_order_component"
+          ],
+          "optionalDependencies": [],
+          "serviceDependencies": [],
+          "commandDependencies": []
+        }
+      ],
+      "routes": [],
+      "routeImplementations": [],
+      "contributions": []
+    },
+    {
+      "schemaVersion": 4,
+      "package": "demo_order_example",
+      "source": "lib/src/order_example_component.dart",
+      "componentDeclarations": [],
+      "componentManifests": {},
+      "componentSymbols": {},
+      "components": [],
+      "routes": [
+        {
+          "id": "demo_order_example.home",
+          "version": "0.1.0",
+          "shapeFingerprint": "596981c66d9bf22beb1797c772e6236576b84a8a42b1cae628409440fbe98aa9",
+          "componentId": "demo_order_example_component",
+          "exposure": "internal",
+          "deepLink": "disabled",
+          "description": "Standalone Order component development home.",
+          "interceptorIds": [],
+          "popGuardIds": [],
+          "declaration": {
+            "package": "demo_order_example",
+            "library": "lib/src/order_example_component.dart",
+            "kind": "page",
+            "symbol": "OrderExampleHomePage",
+            "packageUri": "package:demo_order_example/src/order_example_component.dart",
+            "line": 22,
+            "column": 13
+          },
+          "navigationSources": [
+            "typedIntent",
+            "internalUri"
+          ],
+          "restoration": {
+            "status": "unsupported"
+          },
+          "placement": {
+            "hostId": "default",
+            "parentRouteId": null,
+            "shellId": null,
+            "navigatorOutlet": "root"
+          },
+          "presentation": {
+            "type": "page",
+            "routeType": "platformDefault",
+            "transition": "none",
+            "opaque": true,
+            "fullscreenDialog": false
+          },
+          "contracts": {
+            "route": "_OrderExampleHomePageRoute",
+            "arguments": "_OrderExampleHomePageRouteArguments",
+            "binding": "_OrderExampleHomePageRouteContractBinding",
+            "package": "demo_order_example",
+            "library": "lib/src/ccrouter_generated/route/order_example_component.route.g.dart",
+            "intentFactory": "CCGeneratedOrderExampleHomePageRouteFactory"
+          },
+          "registration": "ccrouterRegisterOrderExampleHomePageRoute",
+          "registrationLibrary": "lib/src/ccrouter_generated/route/order_example_component.route.g.dart",
+          "destination": {
+            "descriptor": "ccrouterDescribeOrderExampleHomePageRoute",
+            "builder": "ccrouterBuildOrderExampleHomePageRoute",
+            "library": "lib/src/ccrouter_generated/route/order_example_component.route.g.dart",
+            "builderLibrary": "lib/src/ccrouter_generated/binding/order_example_component.route_binding.g.dart"
+          },
+          "generatedArtifacts": [
+            {
+              "role": "routeLibrary",
+              "symbol": "_OrderExampleHomePageRoute",
+              "packageUri": "package:demo_order_example/src/ccrouter_generated/route/order_example_component.route.g.dart"
+            },
+            {
+              "role": "routeBinding",
+              "symbol": "ccrouterBuildOrderExampleHomePageRoute",
+              "packageUri": "package:demo_order_example/src/ccrouter_generated/binding/order_example_component.route_binding.g.dart"
+            }
+          ],
+          "patterns": [
+            {
+              "type": "CCPathPattern",
+              "value": "/",
+              "primary": true,
+              "constraints": {}
+            }
+          ],
+          "parameters": [],
+          "resultType": "void"
+        }
+      ],
+      "routeImplementations": [],
+      "contributions": []
+    }
+  ],
   "capabilityCatalog": {
     "schemaVersion": 1,
-    "records": []
+    "records": [
+      {
+        "kind": "route",
+        "id": "demo_order_example.home",
+        "componentId": "demo_order_example_component",
+        "packageName": "demo_order_example",
+        "contract": {
+          "symbol": "OrderExampleHomePage",
+          "packageUri": "package:demo_order_example/src/order_example_component.dart",
+          "line": 22,
+          "column": 13
+        },
+        "implementation": {
+          "symbol": "OrderExampleHomePage",
+          "packageUri": "package:demo_order_example/src/order_example_component.dart",
+          "line": 22,
+          "column": 13
+        },
+        "generatedArtifacts": [
+          {
+            "role": "routeLibrary",
+            "symbol": "_OrderExampleHomePageRoute",
+            "packageUri": "package:demo_order_example/src/ccrouter_generated/route/order_example_component.route.g.dart"
+          },
+          {
+            "role": "routeBinding",
+            "symbol": "ccrouterBuildOrderExampleHomePageRoute",
+            "packageUri": "package:demo_order_example/src/ccrouter_generated/binding/order_example_component.route_binding.g.dart"
+          }
+        ]
+      }
+    ]
   }
 }

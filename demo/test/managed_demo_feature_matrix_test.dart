@@ -1,6 +1,7 @@
 import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter/ccrouter_host.dart';
 import 'package:ccrouter_demo/ccrouter_demo.dart';
+import 'package:ccrouter_demo/go_router_compat_demo.dart';
 import 'package:ccrouter_demo/main.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -15,12 +16,14 @@ void main() {
     testWidgets(
       '${backend.label} materializes the shared Demo feature matrix',
       (tester) async {
-        await tester.pumpWidget(
-          CCRouterDemoApp(
+        await tester.pumpWidget(switch (backend) {
+          _DemoBackend.managed => const CCRouterDemoApp(
             listenForPlatformLinks: false,
-            useManagedBackend: backend == _DemoBackend.managed,
           ),
-        );
+          _DemoBackend.goRouter => const CCGoRouterCompatibilityDemoApp(
+            listenForPlatformLinks: false,
+          ),
+        });
         await tester.pumpAndSettle();
 
         final cases = <({String uri, Finder content})>[

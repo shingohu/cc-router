@@ -4,7 +4,7 @@ import 'dart:math' as math;
 import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter/ccrouter_host.dart';
 import 'package:ccrouter_demo/ccrouter_demo.dart';
-import 'package:ccrouter_demo/demo_router_backend.dart';
+import 'package:ccrouter_demo/demo_managed_router_backend.dart';
 import 'package:demo_navigation_lab/demo_navigation_lab_host.dart';
 import 'package:flutter/material.dart';
 

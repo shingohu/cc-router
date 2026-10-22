@@ -1,0 +1,17 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// dart format width=80
+
+// ignore_for_file: type=lint, unused_element
+
+// **************************************************************************
+// _RouteBindingGenerator
+// **************************************************************************
+
+import 'package:ccrouter/ccrouter.dart';
+import 'package:demo_order_example/src/order_example_component.dart'
+    as route_page;
+
+/// Package-internal page factory bridge used by generated Flutter catalogs.
+route_page.OrderExampleHomePage ccrouterBuildOrderExampleHomePageRoute(
+  CCRouteCodecValues _,
+) => route_page.OrderExampleHomePage();

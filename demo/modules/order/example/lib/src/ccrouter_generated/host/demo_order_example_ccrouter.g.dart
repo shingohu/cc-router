@@ -11,6 +11,8 @@ import 'package:ccrouter/ccrouter_host.dart'
         CCContractKind,
         CCFlutterRouteCatalog,
         CCGeneratedPackageBundle;
+import 'package:demo_order_example/src/ccrouter_generated/component/demo_order_example_component.component.g.dart'
+    as component_0;
 import 'package:demo_order/src/ccrouter_generated/host/demo_order_ccrouter.g.dart'
     as dependency_demo_order;
 
@@ -19,47 +21,25 @@ final ccrouterGeneratedPackageBundle = CCGeneratedPackageBundle(
   packageName: 'demo_order_example',
   packageVersion: '0.1.0+1',
   contentFingerprint:
-      'f74c961ea35ac44e4fc3d14994231feb037ab8d88191d779fa01bc182b351221',
+      '9b9d74e390eac7bbf9c2f0abd971525d634107094eec5316514c41bb9527e554',
   contractBundle: CCContractBundleDescriptor(
     packageName: 'demo_order_example',
     packageVersion: '0.1.0+1',
     contracts: [
       CCContractDescriptor(
-        kind: CCContractKind.command,
-        id: "demo_order.reserve",
-        ownerComponentId: "demo_order_component",
-        version: "0.1.0",
-        shapeFingerprint:
-            "51da7bd343fa650642a09a23a9efe8e2da9c3537983d1cd33ea0d50dfd885af6",
-      ),
-      CCContractDescriptor(
-        kind: CCContractKind.initTask,
-        id: "demo_order.startup.foundation",
-        ownerComponentId: "demo_order_component",
-        version: "0.1.0",
-        shapeFingerprint:
-            "f9fbdb847ffe8a503fb446cfe6925bf84023a152226fc0d25cc846f9cf778146",
-      ),
-      CCContractDescriptor(
-        kind: CCContractKind.service,
-        id: "demo_order.summary",
-        ownerComponentId: "demo_order_component",
-        version: "0.1.0",
-        shapeFingerprint:
-            "5ae284d3c0990ac5c7edb8608e3bd3238bdd52c7241bb275f182c150913f891b",
-      ),
-      CCContractDescriptor(
         kind: CCContractKind.route,
-        id: "order.detail",
-        ownerComponentId: "demo_order_component",
+        id: "demo_order_example.home",
+        ownerComponentId: "demo_order_example_component",
         version: "0.1.0",
         shapeFingerprint:
-            "6ee7d5adc723f67d460fe0dc28b24514793e3bb1f89e8a2836952223f8dfeb73",
+            "596981c66d9bf22beb1797c772e6236576b84a8a42b1cae628409440fbe98aa9",
       ),
     ],
     requirements: [],
   ),
-  componentManifests: [],
-  routeCatalog: CCFlutterRouteCatalog.merge([]),
+  componentManifests: [component_0.demoOrderExampleComponentManifest],
+  routeCatalog: CCFlutterRouteCatalog.merge([
+    component_0.demoOrderExampleComponentRouteCatalog,
+  ]),
   dependencies: [dependency_demo_order.ccrouterGeneratedPackageBundle],
 );

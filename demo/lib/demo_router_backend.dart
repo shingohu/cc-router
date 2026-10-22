@@ -2,12 +2,13 @@ import 'dart:async';
 
 import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter/ccrouter_host.dart';
+// ignore: deprecated_member_use
 import 'package:ccrouter_go_router/ccrouter_go_router.dart';
 import 'package:demo_navigation_lab/demo_navigation_lab_host.dart';
 import 'package:flutter/material.dart';
 
-const demoAdaptiveListOutlet = 'adaptive.list';
-const demoAdaptiveDetailOutlet = 'adaptive.detail';
+import 'demo_managed_router_backend.dart'
+    show demoAdaptiveDetailOutlet, demoAdaptiveListOutlet;
 
 CCGoRouterBackend createDemoRouterBackend({
   required CCFlutterRouteCatalog catalog,
@@ -121,110 +122,6 @@ CCGoRouterBackend createDemoRouterBackend({
     outletObservers: [for (final outlet in shellOutlets) outlet.observer],
     initialLocation: initialLocation,
     enablePredictiveBack: enablePredictiveBack,
-  );
-}
-
-/// Creates the opt-in Runtime Managed Backend used by migration tests.
-///
-/// The generated Catalog and Shell contracts are identical to the GoRouter
-/// demo. Keeping this factory beside the compatibility factory makes the two
-/// backends directly comparable while allowing existing demo callers to stay
-/// on GoRouter until their Host is ready to migrate.
-CCManagedRouterBackend createDemoManagedRouterBackend({
-  required CCFlutterRouteCatalog catalog,
-  String hostId = 'default',
-  String initialLocation = '/',
-  bool enablePredictiveBack = false,
-  bool initializeFromRouteInformation = true,
-}) {
-  final single = _DemoShellOutlet(hostId, demoSingleShellOutlet);
-  final home = _DemoShellOutlet(hostId, demoWorkspaceHomeOutlet);
-  final activity = _DemoShellOutlet(hostId, demoWorkspaceActivityOutlet);
-  final profile = _DemoShellOutlet(hostId, demoWorkspaceProfileOutlet);
-  final host = CCNavigationHost(
-    id: hostId,
-    navigatorKeys: {
-      for (final outlet in [single, home, activity, profile])
-        outlet.id: outlet.key,
-      demoAdaptiveListOutlet: GlobalKey<NavigatorState>(
-        debugLabel: '$hostId.$demoAdaptiveListOutlet',
-      ),
-      demoAdaptiveDetailOutlet: GlobalKey<NavigatorState>(
-        debugLabel: '$hostId.$demoAdaptiveDetailOutlet',
-      ),
-    },
-  );
-  return CCManagedRouterBackend(
-    routeCatalog: catalog,
-    host: host,
-    initialLocation: initialLocation,
-    enablePredictiveBack: enablePredictiveBack,
-    initializeFromRouteInformation: initializeFromRouteInformation,
-    shellBindings: [
-      CCManagedShellBinding(
-        shellId: demoSingleShellId,
-        builder: (context, shell) => Scaffold(
-          body: shell.navigatorFor(demoSingleShellOutlet),
-          bottomNavigationBar: NavigationBar(
-            selectedIndex: 0,
-            onDestinationSelected: (index) => unawaited(
-              CCRouter.navigator.go(
-                index == 0 ? demoShellFeedIntent() : demoShellSettingsIntent(),
-              ),
-            ),
-            destinations: const [
-              NavigationDestination(
-                icon: Icon(Icons.dynamic_feed_outlined),
-                label: 'Feed',
-              ),
-              NavigationDestination(icon: Icon(Icons.tune), label: 'Settings'),
-            ],
-          ),
-        ),
-      ),
-      CCManagedShellBinding(
-        shellId: demoWorkspaceShellId,
-        builder: (context, shell) {
-          final activeIndex = shell.outlets.indexOf(shell.activeOutlet);
-          return Scaffold(
-            body: IndexedStack(
-              index: activeIndex < 0 ? 0 : activeIndex,
-              children: [
-                for (final outlet in shell.outlets) shell.navigatorFor(outlet),
-              ],
-            ),
-            bottomNavigationBar: NavigationBar(
-              selectedIndex: activeIndex < 0 ? 0 : activeIndex,
-              onDestinationSelected: (index) {
-                final outlet = shell.outlets[index];
-                shell.activateOutlet(outlet);
-                unawaited(
-                  CCRouter.navigator.go(switch (index) {
-                    0 => demoWorkspaceHomeIntent(),
-                    1 => demoWorkspaceActivityIntent(),
-                    _ => demoWorkspaceProfileIntent(),
-                  }),
-                );
-              },
-              destinations: const [
-                NavigationDestination(
-                  icon: Icon(Icons.home_outlined),
-                  label: 'Home',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.notifications_none),
-                  label: 'Activity',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.person_outline),
-                  label: 'Profile',
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    ],
   );
 }
 

@@ -1,6 +1,7 @@
 import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter/ccrouter_host.dart';
 import 'package:ccrouter_demo/ccrouter_demo.dart';
+import 'package:ccrouter_demo/demo_managed_router_backend.dart';
 import 'package:ccrouter_demo/demo_router_backend.dart';
 import 'package:ccrouter_demo/main.dart';
 import 'package:demo_navigation_lab/demo_navigation_lab_host.dart';
@@ -11,6 +12,25 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   const detailId = 'demo_navigation_lab.shell.detail';
   const target = ValueKey('shell-presentation-target');
+
+  testWidgets('default Demo mounts the Managed convenience Host', (
+    tester,
+  ) async {
+    CCRouterHost.initialize(hostAssembly: ccrouterGeneratedHostAssembly);
+    addTearDown(CCRouterHost.shutdown);
+
+    await tester.pumpWidget(
+      const CCRouterDemoApp(listenForPlatformLinks: false),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(CCManagedRouterApp), findsOneWidget);
+    expect(find.text('运行总览'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
+  });
 
   testWidgets('Managed Demo factory propagates predictive-back opt-in', (
     tester,
@@ -141,7 +161,6 @@ void main() {
       const CCRouterDemoApp(
         initialLocation: '/shell/feed',
         listenForPlatformLinks: false,
-        useManagedBackend: true,
       ),
     );
     await tester.pumpAndSettle();

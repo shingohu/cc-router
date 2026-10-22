@@ -2,7 +2,8 @@
 
 This Flutter app is an independently runnable CCRouter Host for the
 `demo_order` component. Its generated Host closure contains only the example,
-the Order implementation, and the Order contracts Package.
+the Order implementation, and the Order contracts Package. The Host-owned home
+page is a generated Managed Route, so this example has no GoRouter dependency.
 
 From the repository root, refresh its generated Host assembly with:
 

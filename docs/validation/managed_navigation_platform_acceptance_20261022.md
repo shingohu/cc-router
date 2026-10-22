@@ -127,8 +127,11 @@ unbind/dispose 会注销 `PopEntry` 并释放其 `ValueNotifier`，延迟注册�
 
 ```sh
 fvm flutter run -d R3CW402QMBJ \
-  -t lib/main_predictive_back.dart --debug --no-pub
+  -t lib/main_go_router_predictive_back.dart --debug --no-pub
 ```
+
+验收发生时该入口名为 `lib/main_predictive_back.dart`；Demo 默认迁移到 Managed 后改为上述显式
+compatibility 名称，行为和冻结实现未改变。
 
 同样完成普通 detail cancel/commit 和 PopGuard deny/allow。普通页记录完整
 `started/cancelled/committed`；guarded 页面只记录 `PopGuard · system · deny/allow`，没有新增
@@ -184,4 +187,5 @@ Simulator 不能替代上述真机边缘侧滑证据，也未覆盖内存压力�
   PlatformView、原生多窗口和回到桌面动画仍需独立平台场景验证。
 - Android NE2211 的 OEM predictive callback 仍不可用；macOS 完整真实窗口矩阵、iOS 内存
   压力和多窗口生命周期仍未完成。
-- `ccrouter_go_router` 继续保留兼容状态，不标记 deprecated；完成上述 gate 后再评估弃用。
+- 原生 Managed 已成为 Demo 默认入口；`ccrouter_go_router` 已标记 deprecated 并冻结，只保留
+  显式迁移入口和 compatibility regression，待最后的存量 Host/示例迁移完成后删除。

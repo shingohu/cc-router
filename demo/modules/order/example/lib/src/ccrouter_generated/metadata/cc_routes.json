@@ -8,6 +8,16 @@
       "optionalDependencies": [],
       "serviceDependencies": [],
       "commandDependencies": []
+    },
+    {
+      "id": "demo_order_example_component",
+      "version": "0.1.0",
+      "dependencies": [
+        "demo_order_component"
+      ],
+      "optionalDependencies": [],
+      "serviceDependencies": [],
+      "commandDependencies": []
     }
   ],
   "routes": [
@@ -136,6 +146,84 @@
           }
         ]
       }
+    },
+    {
+      "id": "demo_order_example.home",
+      "version": "0.1.0",
+      "shapeFingerprint": "596981c66d9bf22beb1797c772e6236576b84a8a42b1cae628409440fbe98aa9",
+      "componentId": "demo_order_example_component",
+      "exposure": "internal",
+      "deepLink": "disabled",
+      "description": "Standalone Order component development home.",
+      "interceptorIds": [],
+      "popGuardIds": [],
+      "declaration": {
+        "package": "demo_order_example",
+        "library": "lib/src/order_example_component.dart",
+        "kind": "page",
+        "symbol": "OrderExampleHomePage",
+        "packageUri": "package:demo_order_example/src/order_example_component.dart",
+        "line": 22,
+        "column": 13
+      },
+      "navigationSources": [
+        "typedIntent",
+        "internalUri"
+      ],
+      "restoration": {
+        "status": "unsupported"
+      },
+      "placement": {
+        "hostId": "default",
+        "parentRouteId": null,
+        "shellId": null,
+        "navigatorOutlet": "root"
+      },
+      "presentation": {
+        "type": "page",
+        "routeType": "platformDefault",
+        "transition": "none",
+        "opaque": true,
+        "fullscreenDialog": false
+      },
+      "contracts": {
+        "route": "_OrderExampleHomePageRoute",
+        "arguments": "_OrderExampleHomePageRouteArguments",
+        "binding": "_OrderExampleHomePageRouteContractBinding",
+        "package": "demo_order_example",
+        "library": "lib/src/ccrouter_generated/route/order_example_component.route.g.dart",
+        "intentFactory": "CCGeneratedOrderExampleHomePageRouteFactory"
+      },
+      "registration": "ccrouterRegisterOrderExampleHomePageRoute",
+      "registrationLibrary": "lib/src/ccrouter_generated/route/order_example_component.route.g.dart",
+      "destination": {
+        "descriptor": "ccrouterDescribeOrderExampleHomePageRoute",
+        "builder": "ccrouterBuildOrderExampleHomePageRoute",
+        "library": "lib/src/ccrouter_generated/route/order_example_component.route.g.dart",
+        "builderLibrary": "lib/src/ccrouter_generated/binding/order_example_component.route_binding.g.dart"
+      },
+      "generatedArtifacts": [
+        {
+          "role": "routeLibrary",
+          "symbol": "_OrderExampleHomePageRoute",
+          "packageUri": "package:demo_order_example/src/ccrouter_generated/route/order_example_component.route.g.dart"
+        },
+        {
+          "role": "routeBinding",
+          "symbol": "ccrouterBuildOrderExampleHomePageRoute",
+          "packageUri": "package:demo_order_example/src/ccrouter_generated/binding/order_example_component.route_binding.g.dart"
+        }
+      ],
+      "patterns": [
+        {
+          "type": "CCPathPattern",
+          "value": "/",
+          "primary": true,
+          "constraints": {}
+        }
+      ],
+      "parameters": [],
+      "resultType": "void"
     }
   ]
 }

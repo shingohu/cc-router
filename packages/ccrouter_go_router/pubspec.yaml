@@ -1,5 +1,5 @@
 name: ccrouter_go_router
-description: GoRouter adapter for CCRouter navigation contracts.
+description: Deprecated GoRouter compatibility adapter for CCRouter Hosts.
 version: 0.1.0
 resolution: workspace
 publish_to: none

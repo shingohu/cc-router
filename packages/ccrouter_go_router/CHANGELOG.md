@@ -2,6 +2,9 @@
 
 ## 0.1.0 - Unreleased
 
+- Deprecated the package-level public library in favor of the native Managed
+  Backend APIs exported by `package:ccrouter/ccrouter.dart`. The implementation
+  remains available as a frozen compatibility path during Host migration.
 - Added default-off `enablePredictiveBack` wiring for managed Android Material
   pages and explicit handler wiring for attached/custom/Shell Pages. Flutter
   drives animation and the sole Pop; the bridge confirms exact Entry removal.

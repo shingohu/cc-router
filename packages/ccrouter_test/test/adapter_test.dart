@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter/ccrouter_host.dart';
 import 'package:ccrouter_core/ccrouter_core.dart';
+// ignore: deprecated_member_use
 import 'package:ccrouter_go_router/ccrouter_go_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';

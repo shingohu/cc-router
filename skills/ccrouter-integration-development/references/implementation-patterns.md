@@ -31,12 +31,18 @@ For full control, create `CCManagedRouterBackend` explicitly and pass its
 `RouterConfig` to `MaterialApp.router`; this is the advanced/test composition,
 not the default application path.
 
-Existing GoRouter applications may import `ccrouter_go_router` and keep using
-`CCGoRouterApp` or `CCGoRouterBackend.attach` as a compatibility Adapter. Keep
-the business `CCRouter.navigator` calls unchanged and migrate one Host at a
-time. The Demo exposes the same comparison through
-`CCRouterDemoApp(useManagedBackend: true)`; its default remains the GoRouter
-path so migration can be A/B tested and rolled back.
+The `ccrouter_go_router` public library is deprecated and frozen. Existing
+GoRouter applications may temporarily keep `CCGoRouterApp` or
+`CCGoRouterBackend.attach` as a compatibility Adapter while retaining business
+`CCRouter.navigator` calls and migrating one Host at a time. The Demo defaults
+to `CCRouterDemoApp` on Managed and exposes explicit
+`CCGoRouterCompatibilityDemoApp` launchers only for migration comparison.
+
+An authored Host Adapter receives fully resolved navigation requests. Build its
+destination from the immutable `CCNavigationRequest.pathParameters`; do not
+match `request.uri` against the primary pattern again. Runtime has already
+selected the actual Path/URI/Regex alias, applied constraints, and preserved
+typed Codec values.
 
 If synchronous `CCRouterHost.initialize` fails after constructing the Runtime,
 the Host disposes the unpublished instance automatically and rethrows the
@@ -187,14 +193,16 @@ visible Router Hosts still require application-owned platform/active-Host
 arbitration; a per-Adapter bridge is not a global window dispatcher.
 Rollback by recreating the Host with the flag false; do not toggle it during
 an active gesture or perform an extra Pop when disabling it. Ordinary Demo
-startup remains false. `lib/main_predictive_back.dart` opts into the GoRouter
-compatibility backend, while `lib/main_managed_predictive_back.dart` opts into
-the native Managed backend. Run platform gesture acceptance separately for
-both entries; success on one backend does not certify the other.
+startup remains false on the native Managed backend.
+`lib/main_predictive_back.dart` opts into Managed predictive back;
+`lib/main_go_router_predictive_back.dart` is the deprecated compatibility
+regression entry, and `lib/main_managed_predictive_back.dart` is a legacy alias.
+Run compatibility acceptance separately only while a production Host still
+depends on GoRouter; success on one backend does not certify the other.
 
 When one application tree has multiple genuinely independent Router Hosts, use
 `CCManagedMultiHostBackend.managed` for native Managed children, or
-`CCGoRouterMultiHostBackend.managed` during GoRouter migration. It reads the initialized Catalog once,
+the deprecated `CCGoRouterMultiHostBackend.managed` during GoRouter migration. It reads the initialized Catalog once,
 supplies that snapshot and each declared Host ID to the child Backend factories,
 validates their identity, aggregates `CCMultiHostNavigationAdapter`, and releases
 all child Router resources after Runtime Adapter teardown. The application owns
@@ -206,6 +214,14 @@ pages. Pass a call-site Context when a forward navigation also needs exact
 Host/Outlet placement. Do not use it for master-detail, tabs, or Shell branches
 that are Outlets of one Host, and do not treat it as a native multi-window
 lifecycle bridge.
+
+For a stateful Managed Shell, mount every declared `shell.navigatorFor(outlet)`
+once in the Host's retained layout. On branch selection, read
+`shell.hasEntries(outlet)` before activation. Activate and navigate to the
+initial Route only when that branch is empty; returning to a populated branch
+must only activate it so its managed stack and Widget State survive. An explicit
+reselection of the already active branch may `go` to its root. This query is
+Host-only lazy-init/reselect policy and must not be passed into feature pages.
 
 A handwritten Host uses the same lifecycle contract:
 
@@ -224,7 +240,7 @@ snapshot internally consistent. A handwritten Host that owns routes must place
 its Catalog in the same `fromComponents` call; `CCGoRouterApp` has no separate
 Catalog override.
 
-`CCGoRouterApp` mirrors the non-routing configuration of `MaterialApp.router`,
+The deprecated `CCGoRouterApp` mirrors the non-routing configuration of `MaterialApp.router`,
 including themes, locale and localization delegates, `ScaffoldMessenger`,
 shortcuts/actions, restoration, scrolling, and debug flags. Configure those
 directly on `CCGoRouterApp`; do not wrap it in another `MaterialApp`. Routing
@@ -246,7 +262,7 @@ after Runtime teardown. Shutdown establishes its reentry gate before callbacks;
 reentrant calls join cleanup, and initialization remains unavailable until it
 finishes. A disposable must not await its own Owner's teardown Future.
 
-Use `CCGoRouterApp.backendFactory` when the application needs custom Shell,
+During migration only, use `CCGoRouterApp.backendFactory` when an existing application needs custom Shell,
 redirect, refresh, or Router construction but can retain the standard Material
 application wrapper. The factory receives immutable configuration and is called
 once. Use `CCRouterApp.managed` with a manually created `CCRouterAppBackend`
@@ -430,8 +446,8 @@ call `CCRouter.navigator.pop` after confirmation; do not trigger navigation from
 the Guard. Native Managed default opaque iOS pages synchronously evaluate the
 Guard before starting an edge swipe: deny does not animate, while allow retains
 Flutter's interactive transition. Cancellation, a declined start, Route removal
-and Backend disposal close the temporary gate. Custom transitions and the frozen
-GoRouter compatibility Backend keep the conservative non-interactive fallback;
+and Backend disposal close the temporary gate. Custom transitions and the
+deprecated, frozen GoRouter compatibility Backend keep the conservative non-interactive fallback;
 pages without a Guard retain their default platform gesture.
 
 ## Dynamic and External URI

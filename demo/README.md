@@ -21,15 +21,18 @@ Flutter SDK 选择：
 
 工程入口为 `lib/main.dart`。示例在 `runApp` 前显式调用
 `CCRouterHost.initialize(hostAssembly: ...)` 和
-`CCRouterHost.runInitTasks(gate: CCInitTaskGate.appStarted)`，再通过 `CCGoRouterApp` 的一次性
-`backendFactory` 复用 Demo Shell/Outlet Backend，并自动创建 `MaterialApp.router` 与 managed
+`CCRouterHost.runInitTasks(gate: CCInitTaskGate.appStarted)`，再通过 `CCManagedRouterApp` 的一次性
+`backendFactory` 复用 Demo Shell/Outlet Backend，并自动创建 `MaterialApp.router` 与 Managed
 Host；业务代码不接触导航 Backend。
 
-高级 Shell 装配集中在 `lib/demo_router_backend.dart`：Demo 私有挂载对象从 Catalog 解码参数、
+原生 Managed Shell 装配集中在 `lib/demo_managed_router_backend.dart`。已 deprecated 的 GoRouter
+对照装配保留在 `lib/demo_router_backend.dart`：Demo 私有挂载对象从 Catalog 解码参数、
 绑定精确 RouteEntry，并复用 `CCFlutterRouteFactory` 创建 Page；同一次挂载同步产生 Adapter
 binding/override，避免再次手写 Route ID 清单。Outlet 的 Key 与 Observer 成对创建和复用。
 Shell 树、相对路径、分支顺序和切换策略仍显式配置；自适应面板的独立 Navigator 不冒充
-GoRouter Shell。这些是 Demo 内部复用，不是新增框架公开 API。
+GoRouter Shell。Stateful Shell 首次进入空分支时创建根页，返回已访问分支时只激活 Outlet，
+因此保留分支 Stack 与 Widget State；重选当前分支才重置到根页。这些是 Host 装配策略，
+业务页面不读取 Managed Stack。
 
 `modules/navigation_lab` 是可交互的路由功能实验室，覆盖 typed navigation、动态 URI、
 栈操作、拦截和重定向、Failure Policy、Aspect、页面/应用生命周期、展示动画、
@@ -40,13 +43,13 @@ typed Extra。完整的 macOS 验证矩阵、已修复问题和 Adapter 限制�
 真实窗口 Accessibility Monkey 和小窗口回归方法见
 [macOS Monkey 验证记录](docs/macos_monkey_validation.md)。
 
-Managed Backend 可通过构造 `CCRouterDemoApp(useManagedBackend: true)` 或
-`runDemo(useManagedBackend: true)` 启用。它复用相同的生成 Catalog、单 Navigator Shell 和
-Stateful Shell，用于逐 Host 对比 Managed Stack 与 GoRouter Adapter；默认入口仍保持
-GoRouter，以便现有集成按阶段回滚。Managed 模式的 Widget 回归位于
-`test/demo_router_backend_test.dart`。`test/managed_demo_feature_matrix_test.dart`
+`CCRouterDemoApp` 和 `lib/main.dart` 默认使用原生 Managed Backend，并复用相同的生成 Catalog、
+单 Navigator Shell 和 Stateful Shell。冻结的 GoRouter 对照只能通过
+`lib/main_go_router_compat.dart` 或 `lib/main_go_router_predictive_back.dart` 显式启动。
+Managed Widget 回归位于 `test/demo_router_backend_test.dart`；
+`test/managed_demo_feature_matrix_test.dart`
 把同一组页面族、Shell、Stateful Shell 和 Pop 断言参数化后分别运行 GoRouter 与 Managed，
-用于阻止两个 Backend 的 Demo 行为矩阵漂移。
+用于阻止迁移期行为矩阵漂移，不代表 deprecated Backend 继续演进。
 
 首页“展示”→“类型化 UI Fragment”（`/ui-fragments`）使用真实生成 Host：
 `navigation_lab` 只依赖 `order_contracts`，订单组件提供摘要与推荐两个 Renderer。
@@ -112,12 +115,14 @@ fvm flutter run
 
 ### Android 预测返回 A/B 验证
 
-默认 `lib/main.dart` 保持 `enablePredictiveBack=false`。两个 Backend 的开启入口分别为：
+默认 `lib/main.dart` 使用 Managed 且保持 `enablePredictiveBack=false`。开启入口分别为：
 
 ```sh
-# GoRouter 兼容 Backend
-fvm flutter run -t lib/main_predictive_back.dart
 # 原生 Managed Backend
+fvm flutter run -t lib/main_predictive_back.dart
+# 已 deprecated 的 GoRouter 迁移回归
+fvm flutter run -t lib/main_go_router_predictive_back.dart
+# Managed 旧入口别名
 fvm flutter run -t lib/main_managed_predictive_back.dart
 fvm flutter test test/predictive_back_demo_test.dart
 ```
@@ -172,8 +177,9 @@ Service 由生成器自动装配，没有专用声明模型的能力放入 `@CCC
 组件生成后端中立的页面 Catalog，宿主只导出原子的
 `ccrouterGeneratedHostAssembly`；`CCRouterHost.initialize` 安装该快照后，默认 managed Host
 通过 Host-only Binding 自动读取同一份 Catalog；
-`CCGoRouterBackend.managed` 从 Catalog 自动创建 GoRouter routes、Adapter bindings 和
-Root Observer。`CCGoRouterApp` 只绑定 Host 和 Backend，不初始化或关闭 Runtime；最终由应用
+`CCManagedRouterApp` 从 Catalog 创建原生 Managed Backend。迁移对照中的
+`CCGoRouterBackend.managed` 仍从 Catalog 创建 GoRouter routes、Adapter bindings 和
+Root Observer；deprecated `CCGoRouterApp` 只绑定 Host 和 Backend，不初始化或关闭 Runtime。最终由应用
 Composition Root 显式调用 `CCRouterHost.shutdown`。业务跳转仍统一通过 `CCRouter.navigator`。
 组件 Registrar、Manifest 与 Route Catalog 由独立 `.component.g.dart` 自动生成，并聚合到
 Host Assembly；组件业务 barrel 不导出 Registrar 或 Manifest。

@@ -27,8 +27,8 @@ listener、PopGuard 和终态 Timer；Backend facade 只解析自身 Entry/Outle
 30 秒的无导航能力终态消费窗口，避免 Timer 保留已结束 Host。该 SPI 不从业务 barrel 导出。
 
 Demo 页面族 matrix 已参数化为 GoRouter/Managed 双跑，但它仍属于 Widget contract 回归，不能
-替代 Android/iOS 手势或 macOS 真实窗口验收。三端新架构验收完成前，`ccrouter_go_router`
-继续作为兼容路径，不标记 deprecated。
+替代 Android/iOS 手势或 macOS 真实窗口验收。原生 Managed 已成为默认入口；
+`ccrouter_go_router` 已 deprecated 并冻结，仅保留迁移回归。
 
 ## 开关与支持范围
 
@@ -116,15 +116,17 @@ microtask 执行，避免修改 Flutter 正在遍历的 observer 列表。超过
 
 ```sh
 fvm flutter run -t lib/main.dart
-# GoRouter 兼容 Backend
+# 原生 Managed Backend，开启 bridge
 fvm flutter run -t lib/main_predictive_back.dart
-# 原生 Managed Backend
+# deprecated GoRouter 兼容 Backend，开启 bridge
+fvm flutter run -t lib/main_go_router_predictive_back.dart
+# Managed 旧入口别名
 fvm flutter run -t lib/main_managed_predictive_back.dart
 fvm flutter test test/predictive_back_demo_test.dart
 ```
 
-普通入口保持 false；两个开启入口共享同一套初始化、页面和场景，但分别构造
-GoRouter 兼容 Backend 与原生 Managed Backend。两者必须分别完成平台手势验收。
+普通 Managed 入口保持 false；两个 Backend 的开启入口共享同一套初始化、页面和场景。
+存量 Host 仍使用 GoRouter 时，必须对 compatibility 入口单独完成平台手势验收。
 Demo 的 `android/app/src/main/AndroidManifest.xml` 已显式启用
 `android:enableOnBackInvokedCallback="true"`；复制入口代码不能替代目标 Host 的有效
 Manifest 合并结果检查。
@@ -187,7 +189,8 @@ channel；仍不代表人工动画观感、IME、WebView、返回桌面或 Andro
 2026-10-22 的 Managed 专用入口、OnePlus OEM 阻断、macOS MultiHost 部分验收、iOS
 Simulator smoke 与两轮 Android monkey 结果见
 [Managed Navigation 平台验收记录](validation/managed_navigation_platform_acceptance_20261022.md)。
-该记录仍保留 iOS 真机和完整 macOS 窗口矩阵 gate，因此不触发 GoRouter deprecated。
+该记录随后已补充 iOS 真机核心手势验收；GoRouter guarded iOS 手势不再继续修复，兼容包已
+deprecated。完整 macOS 窗口矩阵仍是 Managed 发布验收项，不再阻止兼容包弃用。
 
 OHOS 构建未通过：外部 Flutter embedding 的 `OhosAutoFillHelper.ets` 与本机 SDK
 AutoFill API 不匹配（`AutoFillType`、`ViewData`、`requestAutoFill` 等）。本次不升级

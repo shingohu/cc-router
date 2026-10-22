@@ -8,6 +8,15 @@ published.
 
 ## Unreleased
 
+- Made the native Managed Backend the default Demo integration and deprecated
+  the frozen `ccrouter_go_router` public library. Explicit compatibility Demo
+  launchers and regression coverage remain available during Host migration.
+- Connected Managed Navigator/Outlet changes to page lifecycle delivery and
+  added Host-only Shell branch initialization checks so returning to an existing
+  branch preserves its stack and Widget State.
+- Added immutable Runtime-resolved `CCNavigationRequest.pathParameters` for
+  custom Host Adapters. Its defensive copy makes the Host/Adapter SPI
+  constructor non-`const`.
 - Added Runtime-bound route-entry handles and optional exact close for covered
   managed pages, preserving other results, Scopes, and foreign Popups. GoRouter
   rejects unsupported declarative/structural/onExit cases without Pop fallback;

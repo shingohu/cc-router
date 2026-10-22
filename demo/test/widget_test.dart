@@ -437,7 +437,13 @@ void main() {
       expect(route, isA<PageRoute<Object?>>());
       expect((route as PageRoute<Object?>).popGestureEnabled, isTrue);
       expect(
-        CCRouter.activeRouteEntries.single.routeId,
+        CCRouter.activeRouteEntries
+            .where(
+              (entry) =>
+                  entry.routeId == 'demo_navigation_lab.detail',
+            )
+            .single
+            .routeId,
         'demo_navigation_lab.detail',
       );
 
@@ -496,7 +502,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('CCRouter Lab'), findsOneWidget);
-    expect(CCRouter.activeRouteEntries, isEmpty);
+    expect(
+      CCRouter.activeRouteEntries.map((entry) => entry.routeId),
+      ['demo_navigation_lab.home'],
+    );
     expect(
       demoNavigationLabStore.events.any(
         (event) =>
@@ -847,13 +856,19 @@ void main() {
       ),
       isTrue,
     );
-    expect(CCRouter.activeRouteEntries, hasLength(1));
+    expect(
+      CCRouter.activeRouteEntries.map((entry) => entry.routeId),
+      ['demo_navigation_lab.home', 'demo_navigation_lab.guarded'],
+    );
 
     await tester.tap(find.text('存在未保存修改'));
     await tester.tap(find.text('模拟系统返回'));
     await tester.pumpAndSettle();
     expect(find.text('CCRouter Lab'), findsOneWidget);
-    expect(CCRouter.activeRouteEntries, isEmpty);
+    expect(
+      CCRouter.activeRouteEntries.map((entry) => entry.routeId),
+      ['demo_navigation_lab.home'],
+    );
     expect(
       demoNavigationLabStore.events.any(
         (event) => event.contains('PopGuard · system · allow'),
@@ -883,13 +898,16 @@ void main() {
     expect(find.text('initial route: -'), findsOneWidget);
     expect(find.text('failed route: -'), findsOneWidget);
     expect(CCRouter.navigator.canPop(), isTrue);
-    expect(CCRouter.activeRouteEntries, hasLength(1));
+    expect(CCRouter.activeRouteEntries, hasLength(2));
 
     await tester.tap(find.text('返回'));
     await tester.pumpAndSettle();
 
     expect(find.text('CCRouter Lab'), findsOneWidget);
-    expect(CCRouter.activeRouteEntries, isEmpty);
+    expect(
+      CCRouter.activeRouteEntries.map((entry) => entry.routeId),
+      ['demo_navigation_lab.home'],
+    );
 
     await _unmountDemo(tester);
   });
@@ -907,7 +925,10 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('CCRouter Lab'), findsOneWidget);
     expect(find.textContaining('CCRouteResultTypeError'), findsOneWidget);
-    expect(CCRouter.activeRouteEntries, isEmpty);
+    expect(
+      CCRouter.activeRouteEntries.map((entry) => entry.routeId),
+      ['demo_navigation_lab.home'],
+    );
     expect(
       CCRouter.recentNavigationFailures.single.context.reason,
       CCNavigationFailureReason.resultTypeMismatch,
@@ -970,6 +991,7 @@ void main() {
         (event) => event.contains('Lifecycle mixin · onPageHide'),
       ),
       isTrue,
+      reason: demoNavigationLabStore.events.join('\n'),
     );
     await tester.tap(find.text('确认并返回类型安全结果'));
     await tester.pumpAndSettle();
@@ -1096,14 +1118,30 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('增加分支内状态'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('本地计数：1'), findsOneWidget);
+    expect(
+      find.textContaining('本地计数：1'),
+      findsOneWidget,
+      reason: tester
+          .widgetList<Text>(find.byType(Text))
+          .map((widget) => widget.data)
+          .whereType<String>()
+          .join('\n'),
+    );
 
     await tester.tap(find.text('Profile'));
     await tester.pumpAndSettle();
     expect(find.text('Workspace Profile'), findsOneWidget);
     await tester.tap(find.text('Activity'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('本地计数：1'), findsOneWidget);
+    expect(
+      find.textContaining('本地计数：1'),
+      findsOneWidget,
+      reason: tester
+          .widgetList<Text>(find.byType(Text))
+          .map((widget) => widget.data)
+          .whereType<String>()
+          .join('\n'),
+    );
     await tester.tap(find.text('Home'));
     await tester.pumpAndSettle();
     expect(find.text('Workspace Detail #42'), findsOneWidget);

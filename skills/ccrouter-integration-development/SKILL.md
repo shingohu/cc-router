@@ -250,12 +250,13 @@ Read [implementation-patterns.md](references/implementation-patterns.md) when ad
   `CCRouterApp.managed` composition remains available for advanced Hosts and
   tests. Runtime Managed Stack is the single source of truth projected through
   `RouterDelegate + Navigator.pages`.
-  `CCGoRouterApp()` and `CCGoRouterBackend.managed/attach` remain Host-only
-  compatibility paths for existing projects and progressive migration. Do not
-  expose routing metadata through the business Facade.
+  The `ccrouter_go_router` library, `CCGoRouterApp()`, and
+  `CCGoRouterBackend.managed/attach` are deprecated, frozen Host-only
+  compatibility paths for existing projects during progressive migration. Do
+  not use them for a new Host or expose routing metadata through the business Facade.
 - Use `CCManagedMultiHostBackend.managed` for new native Managed multi-Host trees;
-  use `CCGoRouterMultiHostBackend.managed` only when one application tree truly
-  owns multiple independent Router Hosts. Its factories receive the initialized
+  use the deprecated `CCGoRouterMultiHostBackend.managed` only while migrating
+  an existing application tree that truly owns multiple independent Router Hosts. Its factories receive the initialized
   Catalog and declared Host ID, while the aggregate owns Adapter and Router
   cleanup. When multiple Host surfaces are simultaneously interactive, the
   Composition Root must activate the Host on pointer/focus entry; feature pages
@@ -344,10 +345,10 @@ the Service Contract.
 - Never use Interceptor for PV/UV, page arrival, data loading, UI side effects, or nested navigation.
 - Observe Interceptor cancellation cooperatively. Runtime shutdown ends pending Interceptor/Failure Policy waits with `CCRouteCancelledError` and ignores late decisions; it cannot stop arbitrary Dart work. Defer/resume preserves typed payloads, the original concrete Host, call-site Outlet, and result contract while revalidating policy. Configure a timeout or explicitly cancel abandoned continuations.
 - Use PopGuard only for synchronous, in-memory exit decisions. Use Flutter `PopScope` for confirmation UI or asynchronous work.
-- A PopGuard allow decision does not override local `PopScope`/`Form` denial on system back or `maybePop`. Keep the page and its result pending until local policy permits exit; an explicit `pop` after confirmation remains a deliberate application action. Native Managed default opaque iOS pages evaluate the synchronous Guard before an edge swipe: deny stays still, while allow retains Flutter's interactive transition. Cancellation, a declined start, Route removal and Backend disposal close the temporary gate. Custom transitions and the frozen GoRouter compatibility Backend keep the conservative non-interactive fallback; unguarded pages retain platform gestures.
+- A PopGuard allow decision does not override local `PopScope`/`Form` denial on system back or `maybePop`. Keep the page and its result pending until local policy permits exit; an explicit `pop` after confirmation remains a deliberate application action. Native Managed default opaque iOS pages evaluate the synchronous Guard before an edge swipe: deny stays still, while allow retains Flutter's interactive transition. Cancellation, a declined start, Route removal and Backend disposal close the temporary gate. Custom transitions and the deprecated, frozen GoRouter compatibility Backend keep the conservative non-interactive fallback; unguarded pages retain platform gestures.
 - System back, ordinary Pop, and Cupertino gestures use the shared coordination. Android
   predictive-back automatic observation is Host opt-in through either the native
-  Managed Backend or GoRouter compatibility backend (`enablePredictiveBack: true`).
+  Managed Backend or, during migration only, the deprecated GoRouter compatibility backend (`enablePredictiveBack: true`).
   The Android Host must also set
   `android:enableOnBackInvokedCallback="true"` on the effective
   `<application>`; the framework does not rewrite application manifests.
@@ -386,18 +387,27 @@ the Service Contract.
   or manually forward phases for an automatically wired Route. See the Host
   section of `references/implementation-patterns.md` for limits and rollback.
   In this repository's Demo, `lib/main_predictive_back.dart` validates the
-  GoRouter compatibility backend and `lib/main_managed_predictive_back.dart`
-  validates the native Managed backend. Run platform gesture acceptance
-  separately for both entries.
+  native Managed backend. The deprecated GoRouter migration regression uses
+  `lib/main_go_router_predictive_back.dart`; `lib/main_managed_predictive_back.dart`
+  is a compatibility alias for the Managed entry. Run platform gesture
+  acceptance separately when an existing Host still depends on GoRouter.
 - Use `CCNavigationAspect` only for observation and sanitized telemetry. It must not change navigation decisions or synchronously re-enter navigation.
 - Use `CCPageLifecycleMixin` or `CCPageLifecycleListener` for PageShow/PageHide and application foreground/background observation. Use Flutter `initState/dispose` for Widget lifetime.
 - Use Route Service for page-instance resources that must survive PageHide and be disposed only after the exact managed RouteEntry is removed.
 - Pass `BuildContext` to navigator calls only when call-site Host/Outlet resolution is required. Do not store it globally.
+- Custom Host Adapters must build destinations from the immutable
+  `CCNavigationRequest.pathParameters` resolved by Runtime. Never rematch the
+  request URI against a primary pattern; doing so breaks aliases, Regex routes,
+  constraints, and typed Codec values.
 - Managed Hosts expose `CCManagedShellBinding` for single-Navigator or stateful
   branch Shells and `CCManagedOutlet` for adaptive named Outlets. A Shell builder
   must mount `shell.navigatorFor(outlet)` exactly once per declared Outlet and
   use `shell.activateOutlet(outlet)` only for branch selection; it must not create
-  a second Navigator for the same Outlet. Context-scoped `push`, `go`, `pop`,
+  a second Navigator for the same Outlet. Host branch UI may use
+  `shell.hasEntries(outlet)` to distinguish lazy initialization from returning
+  to a retained branch: initialize an empty branch, activate an existing branch
+  without `go`, and reserve root reset for explicit current-branch reselection.
+  Feature pages must not inspect this Host-only stack state. Context-scoped `push`, `go`, `pop`,
   `maybePop`, and `canPop` are resolved before dispatch, so left/right pane
   navigation does not depend on focus timing.
 

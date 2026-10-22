@@ -1,14 +1,15 @@
 # ccrouter_go_router
 
-GoRouter backend integration for CCRouter Hosts. It provides managed and attach
+Deprecated GoRouter compatibility integration for CCRouter Hosts. It provides managed and attach
 modes, route assembly, observers, Shell/StatefulShell bindings, Outlet support,
 Flutter Page/Route presentation adapters, and managed aggregation for multiple
 independent Router Hosts.
 
-This package is a frozen compatibility path for existing GoRouter Hosts. New
+The public library is annotated `@Deprecated` and this package is a frozen
+compatibility path for existing GoRouter Hosts. New
 Hosts should use `CCManagedRouterApp` from `ccrouter`; no new navigation
-capabilities are added here while the package moves toward deprecation and
-removal. In particular, guarded iOS pages remain fail-closed and use a
+capabilities are added here while the package moves toward removal. In
+particular, guarded iOS pages remain fail-closed and use a
 non-interactive system-back fallback even when PopGuard allows exit. Native
 Managed default opaque iOS pages support synchronous Guard evaluation followed
 by Flutter's interactive edge-swipe transition.
@@ -17,9 +18,9 @@ Only the application Composition Root should depend on this package. Feature
 code continues to navigate through `CCRouter.navigator` and generated typed
 Intents; it must not call GoRouter directly for CCRouter-managed destinations.
 
-New single-Host applications initialize CCRouter with their generated Host
-Assembly and mount `CCGoRouterApp()`; the widget resolves the same Route Catalog
-automatically. Initialize, run startup Gates, and shut down the default Runtime
+Existing single-Host applications may initialize CCRouter with their generated
+Host Assembly and mount `CCGoRouterApp()` during migration; new Hosts mount
+`CCManagedRouterApp()`. Initialize, run startup Gates, and shut down the default Runtime
 only through `CCRouterHost` from `ccrouter_host.dart`; unmounting the navigation
 Host does not shut down the shared Runtime.
 An application tree with multiple independent Router surfaces
