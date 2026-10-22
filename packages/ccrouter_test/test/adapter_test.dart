@@ -159,6 +159,7 @@ void main() {
 
     final bridge = adapter.predictiveBackBridge;
     expect(bridge, isNotNull);
+    expect(bridge, isA<CCPredictiveBackCoordinator>());
     expect(adapter.capabilities.supportsPredictiveBack, isTrue);
     adapter.bindPopGuardEvaluator((trigger) {
       expect(trigger, CCPopTrigger.predictiveBack);

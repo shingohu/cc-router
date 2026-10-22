@@ -12,6 +12,29 @@ void main() {
   const detailId = 'demo_navigation_lab.shell.detail';
   const target = ValueKey('shell-presentation-target');
 
+  testWidgets('Managed Demo factory propagates predictive-back opt-in', (
+    tester,
+  ) async {
+    final disabled = createDemoManagedRouterBackend(
+      catalog: ccrouterGeneratedHostAssembly.routeCatalog,
+    );
+    final enabled = createDemoManagedRouterBackend(
+      catalog: ccrouterGeneratedHostAssembly.routeCatalog,
+      enablePredictiveBack: true,
+    );
+    addTearDown(() async {
+      disabled.adapter.dispose();
+      enabled.adapter.dispose();
+      await disabled.dispose();
+      await enabled.dispose();
+    });
+
+    expect(disabled.adapter.predictiveBackBridge, isNull);
+    expect(disabled.adapter.capabilities.supportsPredictiveBack, isFalse);
+    expect(enabled.adapter.predictiveBackBridge, isNotNull);
+    expect(enabled.adapter.capabilities.supportsPredictiveBack, isTrue);
+  });
+
   // Exercise the real Demo Shell tree with a substituted destination, without
   // attaching a Runtime. Existing widget tests cover managed Entry ownership.
   for (final (label, presentation) in <(String, CCRoutePresentation)>[

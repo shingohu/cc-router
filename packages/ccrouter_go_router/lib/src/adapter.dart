@@ -4,13 +4,6 @@ import 'dart:collection' show UnmodifiableListView;
 import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter/ccrouter_host.dart' hide CCRouterHost;
 import 'package:flutter/widgets.dart';
-import 'package:flutter/services.dart' show PredictiveBackEvent;
-import 'package:flutter/material.dart'
-    show
-        Theme,
-        PageTransitionsBuilder,
-        PredictiveBackPageTransitionsBuilder,
-        PredictiveBackFullscreenPageTransitionsBuilder;
 import 'package:go_router/go_router.dart';
 
 import 'route_binding.dart';

@@ -1,6 +1,6 @@
 # CCRouter Android 预测返回自动桥
 
-状态：2026-10-16，已实现可选自动接线，并补齐丢失终态后的新手势恢复；平台验收范围见下文。
+状态：2026-10-22，Managed 与 GoRouter 已共用 backend-neutral 协调器；平台验收范围见下文。
 
 ## 问题与方案选择
 
@@ -14,8 +14,21 @@ Flutter 已负责默认 Material 页面预测动画和实际返回。原 CCRoute
 | 应用 Host 手工转发 | 可做局部平台试验 | 容易重复提交、绑定错误 Route，应用维护成本高 |
 | 新 Core Guard 预判协议 | 可进一步探索 Guard 页交互动画 | 需要独立的策略失效和异步确认设计，本次暂缓 |
 
-不修改业务 Contract、生成器生产代码、Android targetSdk 或 Manifest。业务页面无需
-导入 Host SPI，也不应为了获得动画而放宽 `PopScope.canPop`。
+不修改业务 Contract、生成器生产代码或 Android targetSdk。框架不会改写应用平台配置；
+Android Host 必须在有效 `<application>` 上设置
+`android:enableOnBackInvokedCallback="true"`，否则系统不会向 Flutter embedding 派发
+`OnBackInvokedCallback`。业务页面无需导入 Host SPI，也不应为了获得动画而放宽
+`PopScope.canPop`。
+
+Managed 与 GoRouter 兼容 Backend 现在共用 `ccrouter_host.dart` 导出的
+`CCPredictiveBackCoordinator`。协调器唯一维护 Route 集合、手势状态机、binding observer、
+listener、PopGuard 和终态 Timer；Backend facade 只解析自身 Entry/Outlet 身份、传入观察事件
+并保存有界 fallback。Adapter dispose 与构造回滚会先断开 Backend/callback 引用，再进入最多
+30 秒的无导航能力终态消费窗口，避免 Timer 保留已结束 Host。该 SPI 不从业务 barrel 导出。
+
+Demo 页面族 matrix 已参数化为 GoRouter/Managed 双跑，但它仍属于 Widget contract 回归，不能
+替代 Android/iOS 手势或 macOS 真实窗口验收。三端新架构验收完成前，`ccrouter_go_router`
+继续作为兼容路径，不标记 deprecated。
 
 ## 开关与支持范围
 
@@ -99,15 +112,23 @@ microtask 执行，避免修改 Flutter 正在遍历的 observer 列表。超过
 
 ## Demo 与回归
 
-在 `demo/` 中使用两个入口对比：
+在 `demo/` 中使用关闭入口和两个 Backend 的开启入口对比：
 
 ```sh
 fvm flutter run -t lib/main.dart
+# GoRouter 兼容 Backend
 fvm flutter run -t lib/main_predictive_back.dart
+# 原生 Managed Backend
+fvm flutter run -t lib/main_managed_predictive_back.dart
 fvm flutter test test/predictive_back_demo_test.dart
 ```
 
-普通入口保持 false；开启入口共享同一套初始化、页面与 Backend。导航页的
+普通入口保持 false；两个开启入口共享同一套初始化、页面和场景，但分别构造
+GoRouter 兼容 Backend 与原生 Managed Backend。两者必须分别完成平台手势验收。
+Demo 的 `android/app/src/main/AndroidManifest.xml` 已显式启用
+`android:enableOnBackInvokedCallback="true"`；复制入口代码不能替代目标 Host 的有效
+Manifest 合并结果检查。
+导航页的
 `Push + typed result` 可验证取消后保留原页、提交后仅退出一层；诊断事件显示
 `Predictive back · started/cancelled/committed`，不逐帧记录 update。
 自动桥降级原因可从 `backend.adapter.predictiveBackFallbacks` 读取。
@@ -162,6 +183,11 @@ Android 16 三星 SM-S911U1（手势导航，Demo targetSdk 36）补充完成真
 真机输入注入经过 Android 手势识别与 Flutter embedding，未直接注入 Flutter back
 channel；仍不代表人工动画观感、IME、WebView、返回桌面或 Android 13/14/15/16
 完整平台矩阵已经验收。
+
+2026-10-22 的 Managed 专用入口、OnePlus OEM 阻断、macOS MultiHost 部分验收、iOS
+Simulator smoke 与两轮 Android monkey 结果见
+[Managed Navigation 平台验收记录](validation/managed_navigation_platform_acceptance_20261022.md)。
+该记录仍保留 iOS 真机和完整 macOS 窗口矩阵 gate，因此不触发 GoRouter deprecated。
 
 OHOS 构建未通过：外部 Flutter embedding 的 `OhosAutoFillHelper.ets` 与本机 SDK
 AutoFill API 不匹配（`AutoFillType`、`ViewData`、`requestAutoFill` 等）。本次不升级

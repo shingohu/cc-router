@@ -134,6 +134,7 @@ CCManagedRouterBackend createDemoManagedRouterBackend({
   required CCFlutterRouteCatalog catalog,
   String hostId = 'default',
   String initialLocation = '/',
+  bool enablePredictiveBack = false,
   bool initializeFromRouteInformation = true,
 }) {
   final single = _DemoShellOutlet(hostId, demoSingleShellOutlet);
@@ -157,6 +158,7 @@ CCManagedRouterBackend createDemoManagedRouterBackend({
     routeCatalog: catalog,
     host: host,
     initialLocation: initialLocation,
+    enablePredictiveBack: enablePredictiveBack,
     initializeFromRouteInformation: initializeFromRouteInformation,
     shellBindings: [
       CCManagedShellBinding(

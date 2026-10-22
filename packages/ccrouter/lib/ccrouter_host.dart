@@ -57,5 +57,6 @@ export 'src/managed_router.dart';
 export 'src/managed_multi_host.dart';
 export 'src/managed_predictive_back.dart';
 export 'src/managed_router_app.dart';
+export 'src/predictive_back_coordinator.dart';
 export 'src/restoration_diagnostics.dart';
 export 'src/route_catalog.dart';

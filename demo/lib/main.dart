@@ -102,7 +102,13 @@ final class CCRouterDemoApp extends StatelessWidget {
     final backend = createDemoManagedRouterBackend(
       catalog: ccrouterGeneratedHostAssembly.routeCatalog,
       initialLocation: initialLocation,
+      enablePredictiveBack: enablePredictiveBack,
     );
+    backend.adapter.predictiveBackBridge?.addPredictiveBackListener((event) {
+      if (event.phase != CCPredictiveBackPhase.updated) {
+        demoNavigationLabStore.record('Predictive back · ${event.phase.name}');
+      }
+    });
     return CCRouterApp.managed(
       backend: backend,
       onLifecycleChanged: _recordLifecycle,

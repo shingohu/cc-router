@@ -80,6 +80,9 @@ const _hostSpiTypes = <Type>[
   host.CCNavigationRequest,
   host.CCNavigationShell,
   host.CCPredictiveBackEvent,
+  host.CCPredictiveBackCoordinator,
+  host.CCPredictiveBackFallbackReason,
+  host.CCPredictiveBackRouteIdentity,
   host.CCRouteRestorationOpportunityReason,
   host.CCGeneratedPackageBundle,
   host.CCHostAssembly,
@@ -160,6 +163,7 @@ void probe() {
   print(CCRouterHost);
   print(CCHostAssembly);
   print(CCFlutterPredictiveBackHandler);
+  print(CCPredictiveBackCoordinator);
 }
 """);
         final rejected = await Process.run(dartExecutable, [
@@ -176,6 +180,7 @@ void probe() {
           'CCRouterHost',
           'CCHostAssembly',
           'CCFlutterPredictiveBackHandler',
+          'CCPredictiveBackCoordinator',
         ]) {
           expect(errors, contains(name));
         }
@@ -223,7 +228,7 @@ Future<void> probe() async {
     ).readAsStringSync();
 
     expect(_contractCombinatorNames(hostBarrel, 'show'), _hostContractNames);
-    expect(_hostSpiTypes, hasLength(35));
+    expect(_hostSpiTypes, hasLength(38));
     expect(
       _HostTargetedCloseAdapter(),
       isA<host.CCNavigationTargetedCloseAdapter>(),

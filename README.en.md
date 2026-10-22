@@ -744,10 +744,21 @@ animation; it creates no CCRouter gesture observer or phase state. Flutter
 remains the sole animation and Pop driver. Managed backends create the bridge
 only when explicitly enabled; otherwise Managed pages retain Flutter's normal
 Route/Pop behavior.
+The framework does not rewrite the application manifest. An Android Host must
+set `android:enableOnBackInvokedCallback="true"` on the effective
+`<application>` and verify the merged manifest and gesture-navigation settings
+on target devices. The Demo Android Host includes this setting.
 Cancellation keeps lifecycle, typed results and Route Scopes unchanged; a
 committed report follows removal of the exact backend Entry. Navigation during
 a gesture or a closed PopScope/Form at commit cancels the preview without
-automatically invoking business confirmation UI. Ancestor Navigator popups prevent
+automatically invoking business confirmation UI.
+Managed and GoRouter compatibility backends share the Host-only
+`CCPredictiveBackCoordinator` state machine exported by `ccrouter_host.dart`.
+Each backend only resolves Route/Entry/Outlet identity, reconciles backend events,
+and stores sanitized fallback diagnostics. Feature code does not import or retain
+this SPI. Adapter disposal and construction rollback release its Observer, Timer,
+Routes, listeners, PopGuard, and backend callback references together.
+Ancestor Navigator popups prevent
 new gestures on covered nested pages and invalidate in-flight previews even if
 the popup closes before commit. Disposing an attached Adapter rejects its old
 gesture while restoring Flutter back handling for subsequent gestures on the
@@ -788,8 +799,11 @@ terminal callback or cancellation by the next start, so an eligibility query
 cannot authorize a late commit.
 
 The ordinary Demo stays disabled. From `demo/`, use
-`fvm flutter run -t lib/main_predictive_back.dart` for the opt-in launch and see
-the [integration and validation notes](docs/CCRouter-predictive-back.md).
+`fvm flutter run -t lib/main_predictive_back.dart` for the GoRouter
+compatibility backend and `fvm flutter run -t lib/main_managed_predictive_back.dart`
+for the native Managed backend. The two entries share scenarios but require
+separate platform gesture acceptance. See the
+[integration and validation notes](docs/CCRouter-predictive-back.md).
 
 For system back or `maybePop`, an allow result from a framework Guard only passes framework policy. The page's own `PopScope(canPop: false)` / `Form(canPop: false)` can still reject exit. The page and result Future remain alive, and local rejection callbacks can show confirmation UI. An explicit `pop` after confirmation remains an intentional return operation. Cupertino pages retain default swipe-back without a Guard; with a Guard, swipe-back remains disabled. Local protection fixes do not relax this rule.
 

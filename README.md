@@ -965,6 +965,10 @@ Route/Pop 返回行为，开关打开时自动接入 Host bridge。
 开启后，自动装配的默认 Android Material 页面报告 start/update/cancel/confirmed commit，
 Flutter 仍唯一驱动动画和实际 Pop。取消不触发正式 PageShow/PageHide、不完成 typed result、
 不销毁 Route Scope；提交依据具体 backendEntryId 确认，不能再次调用业务 pop。
+Managed 与 GoRouter 兼容 Backend 共用 `ccrouter_host.dart` 中的
+`CCPredictiveBackCoordinator` 状态机；各 Backend 只负责解析 Route/Entry/Outlet 身份、确认
+Backend 事件和保存脱敏 fallback。Feature 不导入或持有该 Host SPI。协调器在 Adapter 关闭或
+构造回滚时统一释放 Observer、Timer、Route、listener、PopGuard 和 Backend callback 引用。
 手势中发生导航或提交时 PopScope/Form 禁止退出，会终止预览；这种取消不自动弹业务确认框。
 开启时，祖先 Navigator 的弹窗会阻止底下嵌套页面接受新手势；手势中弹出后，即使弹窗先关闭，
 旧提交也不会退出底下页面。attach 模式销毁 Adapter 后，旧手势失效，存续 Router 的新手势恢复
@@ -979,7 +983,9 @@ Theme 处理。恢复预测 Theme 不会重新激活旧预览。
 框架 PopGuard 页面仍走非交互系统 fallback，即使 Guard 最终 allow；Dialog、BottomSheet、
 LocalHistory、自定义转场和非预测 Theme 保留各自返回路径。支持的 Android Theme 转场为 Flutter
 内置 `PredictiveBackPageTransitionsBuilder` 和 `PredictiveBackFullscreenPageTransitionsBuilder`。
-系统版本、embedding、有效 Manifest 和手势导航配置仍由应用验证。
+框架不会改写应用 Manifest。Android Host 必须在有效 `<application>` 上设置
+`android:enableOnBackInvokedCallback="true"`，并在目标设备验证系统版本、embedding、
+最终 Manifest 合并结果和手势导航配置；Demo Android Host 已提供该配置。
 
 应用自建 GoRouter、override 或 Shell Page 不会被改写，Host 须将
 `adapter.predictiveBackBridge` 传给 `ccGoRouterPage` / `CCFlutterRouteFactory.createPage`
@@ -995,8 +1001,11 @@ Adapter 构造期间的 Observer/listener 注册失败会原子回滚。自定�
 `CCFlutterPredictiveBackHandler.isActive` 抛错时，空闲 Route 会解除该 handler 并恢复 Flutter
 原有返回路径；进行中的手势仍保留原提交保护，直到终态到达或下一次 start 先取消旧序列。
 
-Demo 默认入口保持关闭；可用 `fvm flutter run -t lib/main_predictive_back.dart` 从 `demo/`
-启动开启版本。支持范围、接线和回归见 [预测返回接入说明](docs/CCRouter-predictive-back.md)。
+Demo 默认入口保持关闭；从 `demo/` 使用
+`fvm flutter run -t lib/main_predictive_back.dart` 验证 GoRouter 兼容 Backend，使用
+`fvm flutter run -t lib/main_managed_predictive_back.dart` 验证原生 Managed Backend。
+两个入口共享场景但必须分别完成平台手势验收。支持范围、接线和回归见
+[预测返回接入说明](docs/CCRouter-predictive-back.md)。
 
 ## Aspect、Trace、Telemetry 与生命周期
 

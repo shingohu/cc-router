@@ -348,8 +348,16 @@ the Service Contract.
 - System back, ordinary Pop, and Cupertino gestures use the shared coordination. Android
   predictive-back automatic observation is Host opt-in through either the native
   Managed Backend or GoRouter compatibility backend (`enablePredictiveBack: true`).
+  The Android Host must also set
+  `android:enableOnBackInvokedCallback="true"` on the effective
+  `<application>`; the framework does not rewrite application manifests.
   Managed generated Pages wire their Host bridge automatically. False preserves original Routes and Flutter
   behavior and installs no CCRouter gesture observer.
+  Managed and GoRouter compatibility Backends share the Host-only
+  `CCPredictiveBackCoordinator`; Backend facades provide only Entry/Outlet
+  identity and sanitized fallback storage. Feature code must not import or
+  retain the coordinator. Adapter disposal and constructor rollback release its
+  observer, terminal Timer, Routes, listeners, PopGuard, and backend callbacks.
   Generated default Android Material pages wire automatically; attached/custom
   or Shell Page builders pass the Adapter bridge as `predictiveBackHandler`
   explicitly. Stock predictive Theme builders are supported; Guard, modal,
@@ -377,6 +385,10 @@ the Service Contract.
   registration. Never add a second Pop
   or manually forward phases for an automatically wired Route. See the Host
   section of `references/implementation-patterns.md` for limits and rollback.
+  In this repository's Demo, `lib/main_predictive_back.dart` validates the
+  GoRouter compatibility backend and `lib/main_managed_predictive_back.dart`
+  validates the native Managed backend. Run platform gesture acceptance
+  separately for both entries.
 - Use `CCNavigationAspect` only for observation and sanitized telemetry. It must not change navigation decisions or synchronously re-enter navigation.
 - Use `CCPageLifecycleMixin` or `CCPageLifecycleListener` for PageShow/PageHide and application foreground/background observation. Use Flutter `initState/dispose` for Widget lifetime.
 - Use Route Service for page-instance resources that must survive PageHide and be disposed only after the exact managed RouteEntry is removed.

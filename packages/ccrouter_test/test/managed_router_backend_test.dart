@@ -567,6 +567,10 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(predictive.adapter.predictiveBackBridge, isNotNull);
+    expect(
+      predictive.adapter.predictiveBackBridge,
+      isA<CCPredictiveBackCoordinator>(),
+    );
     expect(predictive.adapter.capabilities.supportsPredictiveBack, isTrue);
     final phases = <CCPredictiveBackPhase>[];
     final removeListener = predictive.adapter.predictiveBackBridge!

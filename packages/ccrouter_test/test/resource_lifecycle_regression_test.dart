@@ -1,8 +1,10 @@
 import 'package:ccrouter/ccrouter.dart';
+import 'package:ccrouter/ccrouter_host.dart' as host;
 import 'package:ccrouter_core/ccrouter_core.dart';
 import 'package:ccrouter_go_router/ccrouter_go_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:leak_tracker/leak_tracker.dart' show forceGC;
 import 'package:leak_tracker_flutter_testing/leak_tracker_flutter_testing.dart';
 
 final class _LifecycleArguments {
@@ -71,6 +73,37 @@ void _attemptFailedPredictiveAdapterConstruction() {
     ),
     throwsA(anything),
   );
+}
+
+final class _PredictiveCallbackOwner {
+  String get activeOutlet => 'root';
+
+  NavigatorState? navigatorForOutlet(String _) => null;
+
+  String? backendEntryIdForRoute(Route<dynamic> _) => null;
+
+  bool hasLiveEntry(String _) => false;
+
+  void recordFallback(host.CCManagedPredictiveBackFallbackReason _) {}
+}
+
+({
+  host.CCManagedPredictiveBackBridge bridge,
+  WeakReference<_PredictiveCallbackOwner> owner,
+})
+_disposedManagedPredictiveBridge() {
+  final owner = _PredictiveCallbackOwner();
+  final bridge = host.CCManagedPredictiveBackBridge(
+    hostId: 'managed.retention',
+    activeOutlet: () => owner.activeOutlet,
+    navigatorForOutlet: owner.navigatorForOutlet,
+    backendEntryIdForRoute: owner.backendEntryIdForRoute,
+    hasLiveEntry: owner.hasLiveEntry,
+    recordFallback: owner.recordFallback,
+  );
+  bridge.attach();
+  bridge.dispose();
+  return (bridge: bridge, owner: WeakReference(owner));
 }
 
 void main() {
@@ -196,6 +229,19 @@ void main() {
     (tester) async {
       _attemptFailedPredictiveAdapterConstruction();
       await tester.pump();
+    },
+  );
+
+  testWidgets(
+    'disposed Managed predictive coordinator releases backend callbacks',
+    (tester) async {
+      final retained = _disposedManagedPredictiveBridge();
+      await tester.pump();
+      await tester.runAsync(
+        () => forceGC(fullGcCycles: 3, timeout: const Duration(seconds: 20)),
+      );
+      expect(retained.bridge.isActive, isFalse);
+      expect(retained.owner.target, isNull);
     },
   );
 }

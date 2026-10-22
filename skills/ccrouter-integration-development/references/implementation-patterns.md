@@ -113,6 +113,12 @@ The Host may use `CCManagedRouterApp(enablePredictiveBack: true)`,
 `CCGoRouterBackend` to observe generated default Android Material Route gestures.
 Managed generated Pages wire their Host bridge automatically; authored GoRouter
 Pages still pass their Adapter bridge explicitly.
+Both paths use the Host-only `CCPredictiveBackCoordinator` state machine from
+`ccrouter_host.dart`. Backend facades contribute only exact Entry/Outlet
+resolution, backend-event reconciliation, and bounded fallback storage. Feature
+code must not import or retain the coordinator. Adapter disposal and constructor
+rollback release its observer, terminal Timer, Routes, listeners, PopGuard, and
+backend callback references together.
 The default false preserves original Route construction and Flutter behavior,
 including native Flutter predictive animations, with no CCRouter gesture
 observer/state machine. Custom GoRouter Backend factories must propagate the
@@ -172,14 +178,19 @@ Do not add URIs, arguments, Extra, Widgets, contexts or business results. With
 `enablePredictiveBack: false`, the getter is empty and no fallback history is
 allocated.
 
-OS/embedding/Manifest settings, IME, platform views, native Activities and
-back-to-home animation require separate platform validation. Independently
+The framework does not rewrite application manifests. Android Hosts enabling
+this bridge must set `android:enableOnBackInvokedCallback="true"` on the
+effective `<application>` and verify the merged manifest on target devices.
+OS/embedding settings, IME, platform views, native Activities and back-to-home
+animation require separate platform validation. Independently
 visible Router Hosts still require application-owned platform/active-Host
 arbitration; a per-Adapter bridge is not a global window dispatcher.
 Rollback by recreating the Host with the flag false; do not toggle it during
 an active gesture or perform an extra Pop when disabling it. Ordinary Demo
-startup remains false, while `lib/main_predictive_back.dart` is an explicit
-opt-in launch for A/B verification.
+startup remains false. `lib/main_predictive_back.dart` opts into the GoRouter
+compatibility backend, while `lib/main_managed_predictive_back.dart` opts into
+the native Managed backend. Run platform gesture acceptance separately for
+both entries; success on one backend does not certify the other.
 
 When one application tree has multiple genuinely independent Router Hosts, use
 `CCManagedMultiHostBackend.managed` for native Managed children, or

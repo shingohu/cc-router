@@ -44,7 +44,9 @@ Managed Backend 可通过构造 `CCRouterDemoApp(useManagedBackend: true)` 或
 `runDemo(useManagedBackend: true)` 启用。它复用相同的生成 Catalog、单 Navigator Shell 和
 Stateful Shell，用于逐 Host 对比 Managed Stack 与 GoRouter Adapter；默认入口仍保持
 GoRouter，以便现有集成按阶段回滚。Managed 模式的 Widget 回归位于
-`test/demo_router_backend_test.dart`。
+`test/demo_router_backend_test.dart`。`test/managed_demo_feature_matrix_test.dart`
+把同一组页面族、Shell、Stateful Shell 和 Pop 断言参数化后分别运行 GoRouter 与 Managed，
+用于阻止两个 Backend 的 Demo 行为矩阵漂移。
 
 首页“展示”→“类型化 UI Fragment”（`/ui-fragments`）使用真实生成 Host：
 `navigation_lab` 只依赖 `order_contracts`，订单组件提供摘要与推荐两个 Renderer。
@@ -85,14 +87,15 @@ Query Codec，认证 URL 与 Header 使用进程内 Extra；标准 HTTPS 外部�
 macOS 外部 URL Scheme、冷启动和运行中唤醒的手动验证步骤见
 [外部 Deep Link 验证](docs/external_deep_link.md)。
 
-Host 与自适应布局示例提供两个模式：双 Host 模式把两个独立 GoRouter 同时显示在一个
+Host 与自适应布局示例已使用原生 `CCManagedMultiHostBackend`：双 Host 模式把两个独立
+Managed Stack 与 RouterConfig 同时显示在一个
 Flutter View 中，验证 Host 选择、路由栈和 RouteEntry 生命周期互不串扰；自适应模式
 保持同一个 Host，根据手机横竖屏、桌面窗口缩放和模拟 hinge 更新
 `CCHostLayoutMetrics`，并在单 `adaptive.list` Outlet 与大屏 list/detail 双 Outlet
 之间切换：
 
 ```sh
-fvm flutter run -d macos -t lib/examples/multi_host_demo.dart
+fvm flutter run -d macos -t lib/multi_host_demo.dart
 ```
 
 该入口验证框架的多 Host、自适应布局和 Display Feature 语义，不等同于 macOS 原生多
@@ -109,12 +112,17 @@ fvm flutter run
 
 ### Android 预测返回 A/B 验证
 
-默认 `lib/main.dart` 保持 `enablePredictiveBack=false`。开启自动桥的独立入口：
+默认 `lib/main.dart` 保持 `enablePredictiveBack=false`。两个 Backend 的开启入口分别为：
 
 ```sh
+# GoRouter 兼容 Backend
 fvm flutter run -t lib/main_predictive_back.dart
+# 原生 Managed Backend
+fvm flutter run -t lib/main_managed_predictive_back.dart
 fvm flutter test test/predictive_back_demo_test.dart
 ```
+
+两个入口共享页面、场景和诊断语义，但必须分别完成平台手势验收；一个入口通过不能代替另一个。
 
 从“导航 → Push + typed result”开始左/右边缘手势：取消应保留详情且不新增正式离页；
 提交应只返回一层。开启版本在诊断事件中显示 `Predictive back · started/cancelled/committed`，
@@ -123,7 +131,7 @@ fvm flutter test test/predictive_back_demo_test.dart
 稳定原因；关闭版本该列表始终为空。
 “策略 → PopGuard 未保存表单”保留非交互拒绝，保存后再返回；“Shell / StatefulShell”详情
 验证嵌套 Outlet，手势中切换分支后旧提交不能退出新分支。自建 Shell Page 已显式传入 Host handler。
-每次切换入口重新启动 Demo，不在进行中的手势里切换开关。
+每次切换 Backend 或开关都重新启动 Demo，不在进行中的手势里切换配置。
 Demo widget 回归还覆盖 Shell / StatefulShell 详情上的根弹窗：先弹出时返回只关闭弹窗，
 手势中弹出时取消旧预览，弹窗先关闭也不能恢复旧提交；后续独立手势仍正常。
 “展示 → 类型化 UI Fragment”还覆盖组合回归：取消保留输入内容与页面，提交后退出一层并卸载
@@ -132,8 +140,9 @@ Fragment；对应 Widget 测试使用真实生成 Host，不代表已完成该�
 2026-10-15 已在三星 Android 16 完成开启 / 关闭入口的真机触摸输入注入冒烟；
 结果与限制见[设备验证记录](../docs/validation/android_predictive_back_samsung_20261015.md)。
 
-自动化测试覆盖上述场景；系统派发、有效 Manifest、IME、WebView/原生 Activity 和返回桌面
-仍须在目标设备验证。该入口不修改 targetSdk 或系统手势设置。
+自动化测试覆盖上述场景；Demo Manifest 已在 `<application>` 显式设置
+`android:enableOnBackInvokedCallback="true"`。系统派发、最终 Manifest 合并结果、IME、
+WebView/原生 Activity 和返回桌面仍须在目标设备验证。入口不修改 targetSdk 或系统手势设置。
 
 OHOS 原生模块位于 `ohos/`。在该目录中可使用：
 
