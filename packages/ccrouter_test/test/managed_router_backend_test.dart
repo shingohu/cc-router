@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter/ccrouter_host.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 final class _Arguments {
@@ -71,6 +72,20 @@ final class _Registrar implements CCComponentRegistrar {
   }
 }
 
+final class _TogglePopGuard implements CCPopGuard {
+  bool allow = false;
+
+  final List<CCPopTrigger> triggers = [];
+
+  @override
+  CCPopGuardDecision evaluate(CCPopGuardContext context) {
+    triggers.add(context.trigger);
+    return allow
+        ? const CCPopAllow()
+        : const CCPopDeny(code: 'managed_test_denied');
+  }
+}
+
 final class _Harness {
   const _Harness({
     required this.backend,
@@ -86,7 +101,10 @@ final class _Harness {
       CCRouter.routeEntryHandleOf(contexts[id]!)!;
 }
 
-Future<_Harness> _mount(WidgetTester tester) async {
+Future<_Harness> _mount(
+  WidgetTester tester, {
+  List<CCGlobalPopGuard> globalPopGuards = const [],
+}) async {
   CCRouterHost.initialize(
     hostAssembly: CCHostAssembly.fromComponents(
       components: [
@@ -97,6 +115,7 @@ Future<_Harness> _mount(WidgetTester tester) async {
         ),
       ],
     ),
+    globalPopGuards: globalPopGuards,
   );
   final contexts = <String, BuildContext>{};
   final resources = <String, _RouteResource>{};
@@ -172,6 +191,26 @@ Future<void> _mountConvenienceApp(
 
 void _ignoreResult(Future<Object?> result) {
   unawaited(result.then<void>((_) {}, onError: (_, _) {}));
+}
+
+Future<void> _predictiveBackEvent(WidgetTester tester, String method) async {
+  await tester.binding.defaultBinaryMessenger.handlePlatformMessage(
+    'flutter/backgesture',
+    const StandardMethodCodec().encodeMethodCall(
+      MethodCall(
+        method,
+        method == 'startBackGesture'
+            ? <String, Object>{
+                'touchOffset': <double>[5, 300],
+                'progress': 0.0,
+                'swipeEdge': 0,
+              }
+            : null,
+      ),
+    ),
+    (_) {},
+  );
+  await tester.pump();
 }
 
 void main() {
@@ -357,10 +396,18 @@ void main() {
   testWidgets('Host shutdown releases Managed Stack resources and results', (
     tester,
   ) async {
-    final harness = await _mount(tester);
+    final guard = _TogglePopGuard();
+    final harness = await _mount(
+      tester,
+      globalPopGuards: [
+        CCGlobalPopGuard(id: 'managed.shutdown.guard', guard: guard),
+      ],
+    );
     final pending = CCRouter.navigator.push<String>(const _Intent('A'));
     await tester.pumpAndSettle();
     final resource = harness.resources['A']!;
+    final route = ModalRoute.of(tester.element(find.text('managed-A')))!;
+    expect(route.popGestureEnabled, isFalse);
     final pendingError = expectLater(
       pending,
       throwsA(isA<CCNavigationAdapterError>()),
@@ -370,6 +417,7 @@ void main() {
 
     await pendingError;
     expect(resource.disposed, isTrue);
+    expect(route.popDisposition, RoutePopDisposition.pop);
     expect(CCRouter.isInitialized, isFalse);
   });
 
@@ -586,6 +634,93 @@ void main() {
     ]);
     await CCRouterHost.shutdown();
     expect(predictive.adapter.predictiveBackBridge!.isActive, isFalse);
+  });
+
+  testWidgets('Managed PopGuard retains non-interactive system fallback', (
+    tester,
+  ) async {
+    final guard = _TogglePopGuard();
+    _RouteResource? detailResource;
+    final catalog = CCFlutterRouteCatalog(
+      [
+        CCFlutterRouteDestination.fromDefinition(
+          definition: _homeDefinition(),
+          builder: (_) => const Text('guarded-home'),
+        ),
+        CCFlutterRouteDestination.fromDefinition(
+          definition: _detailDefinition(),
+          builder: (_) => Builder(
+            builder: (context) {
+              detailResource ??= CCRouter.routeService<_RouteResource>(context);
+              return const Text('guarded-detail');
+            },
+          ),
+        ),
+      ],
+      componentVersions: const {'managed': '1.0.0'},
+    );
+    CCRouterHost.initialize(
+      hostAssembly: CCHostAssembly.fromComponents(
+        components: [
+          CCComponentManifest(
+            id: 'managed',
+            version: '1.0.0',
+            registrar: _Registrar(),
+          ),
+        ],
+        routeCatalog: catalog,
+      ),
+      globalPopGuards: [
+        CCGlobalPopGuard(id: 'managed.test.guard', guard: guard),
+      ],
+    );
+    final backend = CCManagedRouterBackend(
+      routeCatalog: catalog,
+      enablePredictiveBack: true,
+    );
+    await tester.pumpWidget(
+      CCRouterApp.managed(
+        backend: backend,
+        child: MaterialApp.router(routerConfig: backend.routerConfig),
+      ),
+    );
+    await tester.pumpAndSettle();
+    var completionCount = 0;
+    final pending = CCRouter.navigator.push<String>(const _Intent('guarded'))
+      ..then<void>((_) => completionCount += 1);
+    await tester.pumpAndSettle();
+
+    final phases = <CCPredictiveBackPhase>[];
+    backend.adapter.predictiveBackBridge!.addPredictiveBackListener(
+      (event) => phases.add(event.phase),
+    );
+    final route = ModalRoute.of(tester.element(find.text('guarded-detail')))!;
+    expect(route.popGestureEnabled, isFalse);
+
+    await _predictiveBackEvent(tester, 'startBackGesture');
+    await _predictiveBackEvent(tester, 'commitBackGesture');
+    await tester.pumpAndSettle();
+
+    expect(find.text('guarded-detail'), findsOneWidget);
+    expect(CCRouter.activeRouteEntries, hasLength(2));
+    expect(phases, isEmpty);
+    expect(guard.triggers, [CCPopTrigger.system]);
+    expect(completionCount, 0);
+    expect(detailResource?.disposed, isFalse);
+
+    guard.allow = true;
+    await _predictiveBackEvent(tester, 'startBackGesture');
+    await _predictiveBackEvent(tester, 'commitBackGesture');
+    await tester.pumpAndSettle();
+
+    expect(find.text('guarded-detail'), findsNothing);
+    expect(find.text('guarded-home'), findsOneWidget);
+    expect(CCRouter.activeRouteEntries, hasLength(1));
+    expect(phases, isEmpty);
+    expect(guard.triggers, [CCPopTrigger.system, CCPopTrigger.system]);
+    expect(await pending, isNull);
+    expect(completionCount, 1);
+    expect(detailResource?.disposed, isTrue);
   });
 
   test(

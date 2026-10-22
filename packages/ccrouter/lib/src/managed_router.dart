@@ -241,8 +241,10 @@ final class CCManagedRouterBackend implements CCRouterAppBackend {
 ///
 /// This is Host SPI exposed for diagnostics and composition tests. Feature code
 /// must navigate through `CCRouter.navigator`. The Adapter owns result channels,
-/// stack listeners, and temporary Navigator observations; it never retains a
-/// `BuildContext`, Widget, or a strong reference to a Flutter Route.
+/// stack listeners, and temporary Navigator observations. Guarded Routes remain
+/// strongly referenced only while their Route-scoped PopEntry is registered;
+/// unmount, unbind, and disposal release both together. The Adapter never
+/// retains a `BuildContext` or Widget.
 final class CCManagedNavigationAdapter
     implements
         CCNavigationAdapter,
@@ -326,6 +328,19 @@ final class CCManagedNavigationAdapter
   /// Weak rendered Route references keyed by backend Entry identity.
   final Map<String, WeakReference<Route<dynamic>>> _renderedRoutes = {};
 
+  /// Runtime-owned synchronous guard evaluator while the Adapter is attached.
+  CCPopGuardEvaluator? _popGuardEvaluator;
+
+  /// Conservative Flutter gates installed on guarded managed Routes.
+  final Map<ModalRoute<Object?>, _CCManagedPopEntry> _managedPopGuardEntries =
+      {};
+
+  /// Routes awaiting a mounted ModalScope before PopEntry registration.
+  final Set<Route<dynamic>> _pendingManagedPopGuardRoutes = {};
+
+  /// Whether a Runtime-approved Pop temporarily opened managed gates.
+  bool _runtimeGuardedPopInProgress = false;
+
   /// Store listeners owned by Router delegates and Outlet renderers.
   final Set<VoidCallback> _stateListeners = {};
 
@@ -376,10 +391,24 @@ final class CCManagedNavigationAdapter
   List<CCManagedPredictiveBackFallbackEvent> get predictiveBackFallbacks =>
       List.unmodifiable(_predictiveBackFallbacks);
 
-  /// Binds Runtime PopGuard evaluation to the optional platform bridge.
+  /// Binds Runtime PopGuard evaluation to platform and Route-level gates.
   @override
   void bindPopGuardEvaluator(CCPopGuardEvaluator? evaluator) {
+    _popGuardEvaluator = evaluator;
     _predictiveBackBridge?.bindPopGuardEvaluator(evaluator);
+    if (evaluator == null) {
+      _removeAllManagedPopGuards();
+      return;
+    }
+    for (final routeReference in _renderedRoutes.values) {
+      final route = routeReference.target;
+      final entry = _entryForRoute(route);
+      if (route != null &&
+          entry != null &&
+          _routeRequiresPopGuard(entry.request.routeId)) {
+        _installManagedPopGuard(route);
+      }
+    }
   }
 
   /// Current state revision used by Router and focused tests.
@@ -611,7 +640,15 @@ final class CCManagedNavigationAdapter
     if (managed != null) {
       _pendingRemovalResults[managed.backendEntryId] = result;
     }
-    final handled = await navigator.maybePop<Object?>(result);
+    _runtimeGuardedPopInProgress = true;
+    _setManagedPopEntriesCanPop(true);
+    late final bool handled;
+    try {
+      handled = await navigator.maybePop<Object?>(result);
+    } finally {
+      _setManagedPopEntriesCanPop(false);
+      _runtimeGuardedPopInProgress = false;
+    }
     if (!handled || (top?.isCurrent ?? false)) {
       if (managed != null) {
         _pendingRemovalResults.remove(managed.backendEntryId);
@@ -679,7 +716,14 @@ final class CCManagedNavigationAdapter
     if (managed != null) {
       _pendingRemovalResults[managed.backendEntryId] = result;
     }
-    navigator.pop<Object?>(result);
+    _runtimeGuardedPopInProgress = true;
+    _setManagedPopEntriesCanPop(true);
+    try {
+      navigator.pop<Object?>(result);
+    } finally {
+      _setManagedPopEntriesCanPop(false);
+      _runtimeGuardedPopInProgress = false;
+    }
     final removedManagedRoute = managed != null && !(top?.isCurrent ?? true);
     if (managed != null && !removedManagedRoute) {
       _pendingRemovalResults.remove(managed.backendEntryId);
@@ -1165,13 +1209,122 @@ final class CCManagedNavigationAdapter
     );
     if (entry != null) {
       _renderedRoutes[entry.backendEntryId] = WeakReference(route);
+      if (_routeRequiresPopGuard(entry.request.routeId)) {
+        _installManagedPopGuard(route);
+      }
     }
   }
 
   /// Drops a rendered correlation without mutating Store ownership.
   void _didUnmountRoute(Route<dynamic> route) {
+    _removeManagedPopGuard(route);
     final entry = _entryForRoute(route);
     if (entry != null) _renderedRoutes.remove(entry.backendEntryId);
+  }
+
+  /// Whether Runtime metadata marks [routeId] as requiring Pop policy.
+  bool _routeRequiresPopGuard(String routeId) =>
+      _routes[routeId]?.hasPopGuard ?? false;
+
+  /// Temporarily opens or closes every guarded Route for an approved Pop.
+  void _setManagedPopEntriesCanPop(bool value) {
+    for (final entry in _managedPopGuardEntries.values) {
+      entry.canPopNotifier.value = value;
+    }
+  }
+
+  /// Installs a conservative system-back gate after Route correlation.
+  ///
+  /// Flutter cannot consult Runtime policy before beginning an interactive
+  /// gesture, so guarded Routes remain non-interactive. A rejected system back
+  /// reaches the PopEntry callback, which synchronously evaluates policy and
+  /// retries only the same current Route after an allow decision.
+  void _installManagedPopGuard(Route<dynamic> route) {
+    if (_popGuardEvaluator == null || route is! ModalRoute<Object?>) return;
+    if (_managedPopGuardEntries.containsKey(route) ||
+        _pendingManagedPopGuardRoutes.contains(route)) {
+      return;
+    }
+    _pendingManagedPopGuardRoutes.add(route);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _pendingManagedPopGuardRoutes.remove(route);
+      if (_disposed || _popGuardEvaluator == null || !route.isActive) return;
+      _attachManagedPopGuard(route);
+    });
+  }
+
+  /// Registers one closed PopEntry after the Route's ModalScope is mounted.
+  void _attachManagedPopGuard(ModalRoute<Object?> route) {
+    if (_popGuardEvaluator == null ||
+        _managedPopGuardEntries.containsKey(route)) {
+      return;
+    }
+    late final _CCManagedPopEntry entry;
+    entry = _CCManagedPopEntry(
+      onInvoked: (didPop, result) {
+        if (didPop || _runtimeGuardedPopInProgress || entry.retrying) return;
+        _retryManagedSystemPop(route, entry, result);
+      },
+    );
+    route.registerPopEntry(entry);
+    _managedPopGuardEntries[route] = entry;
+  }
+
+  /// Retries the same guarded Route after synchronous Runtime approval.
+  void _retryManagedSystemPop(
+    ModalRoute<Object?> route,
+    _CCManagedPopEntry entry,
+    Object? result,
+  ) {
+    final evaluator = _popGuardEvaluator;
+    final navigator = route.navigator;
+    if (_disposed ||
+        evaluator == null ||
+        navigator == null ||
+        !route.isCurrent) {
+      return;
+    }
+    entry.retrying = true;
+    try {
+      final decision = evaluator(CCPopTrigger.system);
+      if (decision is! CCPopAllow ||
+          _disposed ||
+          !route.isCurrent ||
+          !identical(route.navigator, navigator) ||
+          !identical(_managedPopGuardEntries[route], entry)) {
+        return;
+      }
+      entry.canPopNotifier.value = true;
+      if (route.popDisposition != RoutePopDisposition.pop) return;
+      navigator.pop<Object?>(result);
+    } finally {
+      entry.retrying = false;
+      if (identical(_managedPopGuardEntries[route], entry)) {
+        entry.canPopNotifier.value = false;
+      }
+    }
+  }
+
+  /// Removes one Route-scoped gate after Flutter releases the Route.
+  void _removeManagedPopGuard(Route<dynamic> route) {
+    _pendingManagedPopGuardRoutes.remove(route);
+    final modalRoute = route is ModalRoute<Object?> ? route : null;
+    if (modalRoute == null) return;
+    final entry = _managedPopGuardEntries.remove(modalRoute);
+    if (entry == null) return;
+    if (modalRoute.isActive) modalRoute.unregisterPopEntry(entry);
+    entry.dispose();
+  }
+
+  /// Releases every pending and registered Route gate during unbinding.
+  void _removeAllManagedPopGuards() {
+    _pendingManagedPopGuardRoutes.clear();
+    final entries = _managedPopGuardEntries.entries.toList();
+    _managedPopGuardEntries.clear();
+    for (final entry in entries) {
+      if (entry.key.isActive) entry.key.unregisterPopEntry(entry.value);
+      entry.value.dispose();
+    }
   }
 
   /// Returns the managed Entry rendered by [route], if any.
@@ -1333,6 +1486,8 @@ final class CCManagedNavigationAdapter
     }
     _results.clear();
     _routes.clear();
+    _popGuardEvaluator = null;
+    _removeAllManagedPopGuards();
     _renderedRoutes.clear();
     _pendingRemovalResults.clear();
     for (final observer in _observers.values) {
@@ -1761,6 +1916,35 @@ final class _CCManagedPlaceholderPage extends Page<Object?> {
     reverseTransitionDuration: Duration.zero,
     pageBuilder: (_, _, _) => const SizedBox.shrink(),
   );
+}
+
+/// Adapter-owned PopEntry bridging synchronous Runtime policy to Flutter.
+///
+/// The entry remains closed outside an approved Pop so guarded Routes cannot
+/// begin an interactive gesture that would bypass Runtime policy.
+final class _CCManagedPopEntry extends PopEntry<Object?> {
+  /// Creates a closed gate with one result-aware attempt callback.
+  _CCManagedPopEntry({required this.onInvoked})
+    : canPopNotifier = ValueNotifier<bool>(false);
+
+  /// Callback invoked after Flutter accepts or rejects a Pop attempt.
+  final void Function(bool didPop, Object? result) onInvoked;
+
+  /// Prevents an approved retry from recursively evaluating the same guard.
+  bool retrying = false;
+
+  /// Mutable gate consumed by [ModalRoute.popDisposition].
+  @override
+  final ValueNotifier<bool> canPopNotifier;
+
+  @override
+  /// Forwards Flutter's result-aware notification to the Adapter.
+  void onPopInvokedWithResult(bool didPop, Object? result) {
+    onInvoked(didPop, result);
+  }
+
+  /// Releases the notifier after unregistering this PopEntry.
+  void dispose() => canPopNotifier.dispose();
 }
 
 /// Navigator observer retaining only live Route topology and weak correlations.

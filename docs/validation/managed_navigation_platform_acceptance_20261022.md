@@ -1,7 +1,7 @@
 # Managed Navigation 平台验收记录
 
-日期：2026-10-22。代码身份：`c200ac8` 加当前
-`codex/managed-navigation-runtime` worktree 未提交改动。对象为原生 Managed Backend、
+日期：2026-10-22。代码身份：`85b6137` 加当前
+`codex/managed-navigation-runtime` PopGuard 修复。对象为原生 Managed Backend、
 `CCManagedMultiHostBackend` 和 backend-neutral Predictive Back coordinator；该记录不覆盖
 业务应用，也不替代发布候选版本的最终验收。
 
@@ -11,6 +11,7 @@
 | --- | --- | --- |
 | macOS | macOS 26.6.1，Debug App | MultiHost 真实窗口 |
 | Android | OnePlus NE2211，Android 16 / API 36，1080 x 2412，targetSdk 36 | Managed Back、Guard、monkey、内存 |
+| Android | Samsung SM-S911U1，Android 16 / API 36，1080 x 2340，targetSdk 36 | Managed / GoRouter Predictive Back 真手势 |
 | iOS | iOS 26.5 Simulator | Managed build 与基础栈 smoke |
 
 Flutter 为 `3.41.10-ohos-1.0.0` / Dart 3.11.5。当前没有可用 iOS 真机。
@@ -86,6 +87,54 @@ Monkey 的 device flip 事件因 `/dev/input/event0` 权限被拒绝三次，其
 `gfxinfo` 累计 54 frames 中 3 个 deadline jank（5.56%），P50 8 ms、P90 61 ms；样本混入
 Debug 启动和 UI 自动化，不可作为 release 性能结论。
 
+## Android Samsung Predictive Back
+
+设备：Samsung SM-S911U1，Android 16 / API 36，三键/手势配置中的
+`navigation_mode=2`。验收时临时把 `enable_back_animation` 从原值 0 设为 1；全部验收结束后
+已恢复为 0。通过设备侧真实 `MotionEvent` 边缘手势注入验证，系统日志均明确报告
+`mIsAnimationCallback=true`、`dispatchOnBackStarted`，取消路径为
+`onBackNavigationDone triggerBack=false`，提交路径为 `dispatchOnBackInvoked` 和
+`triggerBack=true`。
+
+### Managed Backend
+
+入口：
+
+```sh
+fvm flutter run -d R3CW402QMBJ \
+  -t lib/main_managed_predictive_back.dart --debug --no-pub
+```
+
+- 普通 typed detail 左缘取消后仍显示 `ID 42`，Demo 记录
+  `Predictive back · started`、`cancelled`，没有完成结果或释放 Route Scope；
+- 右缘提交后只移除 detail，记录 `started`、`committed` 和一次 `Detail dispose`，回到
+  Managed 首页基线 `1 Route Entries`；
+- `dirtyForm=true` 的 PopGuard 页面提交系统手势后保留页面，只记录
+  `PopGuard · system · deny`，没有新增 predictive phase；
+- 切换为已保存后再次提交，只记录一次 `PopGuard · system · allow`，只退一层并回到
+  `1 Route Entries`。
+
+真机在这里发现并复现了一个 Framework 缺陷：Managed Adapter 原先没有像 GoRouter
+Adapter 一样为 guarded Route 注册关闭的 Flutter `PopEntry`，Android 手势会直接 Pop，绕过
+Runtime PopGuard。修复在 Managed Adapter 内增加 Route-scoped gate；Runtime 批准的业务 Pop
+临时打开 gate，system fallback 同步求值后只重试同一当前 Route。Route unmount、Adapter
+unbind/dispose 会注销 `PopEntry` 并释放其 `ValueNotifier`，延迟注册也受 dispose 状态隔离。
+
+### GoRouter Compatibility Backend
+
+入口：
+
+```sh
+fvm flutter run -d R3CW402QMBJ \
+  -t lib/main_predictive_back.dart --debug --no-pub
+```
+
+同样完成普通 detail cancel/commit 和 PopGuard deny/allow。普通页记录完整
+`started/cancelled/committed`；guarded 页面只记录 `PopGuard · system · deny/allow`，没有新增
+predictive phase。提交均只移除一层且 Scope 只释放一次。GoRouter 声明式首页不是 Runtime
+push Entry，因此返回后的既有 Demo 基线为 `0 Route Entries`；Managed 首页由 Runtime 管理，
+基线为 1。这是两种接入模型的既有差异，不是返回行为分叉。
+
 ## iOS Simulator
 
 ```sh
@@ -103,5 +152,8 @@ Simulator 不能验证 iOS 真机边缘侧滑、交互动画、内存压力和�
 
 - backend-neutral feature matrix、生命周期测试和三平台 build/smoke 证据支持继续原生 Managed
   迁移与 A/B 对比。
-- Android NE2211 的 OEM predictive callback 阻断、macOS 完整真实窗口矩阵、iOS 真机侧滑仍未完成。
+- Samsung 真机已关闭 Android 单窗口 Managed / GoRouter Predictive Back 核心 gate；IME、
+  PlatformView、原生多窗口和回到桌面动画仍需独立平台场景验证。
+- Android NE2211 的 OEM predictive callback 仍不可用；macOS 完整真实窗口矩阵、iOS 真机
+  侧滑仍未完成。
 - `ccrouter_go_router` 继续保留兼容状态，不标记 deprecated；完成上述 gate 后再评估弃用。
